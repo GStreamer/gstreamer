@@ -23,14 +23,28 @@
     <Member MemberName="Last">
       <MemberSignature Language="C#" Value="Last" />
       <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.MiniObjectFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Readonly">
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.MiniObjectFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Readonly">
       <MemberSignature Language="C#" Value="Readonly" />
       <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.MiniObjectFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
-    
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.MiniObjectFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
   </Members>
 </Type>

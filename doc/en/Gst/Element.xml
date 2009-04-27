@@ -8,502 +8,1884 @@
     <BaseTypeName>Gst.Object</BaseTypeName>
   </Base>
   <Interfaces />
-  <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
-  </Docs>
-  <Members>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="protected Element ();" />
-      <MemberType>Constructor</MemberType>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Element (IntPtr raw);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="AbortState">
-      <MemberSignature Language="C#" Value="public void AbortState ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="AddPad">
-      <MemberSignature Language="C#" Value="public bool AddPad (Gst.Pad p);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="p" Type="Gst.Pad" /></Parameters>
-      <Docs><param name="p">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="BaseTime">
-      <MemberSignature Language="C#" Value="public ulong BaseTime { set; get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Bus">
-      <MemberSignature Language="C#" Value="public Gst.Bus Bus { set; get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.Bus</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ChangeState"><MemberSignature Language="C#" Value="public Gst.StateChangeReturn ChangeState (Gst.StateChange transition);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.StateChangeReturn</ReturnType></ReturnValue><Parameters><Parameter Name="transition" Type="Gst.StateChange" /></Parameters><Docs><param name="transition">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Clock">
-      <MemberSignature Language="C#" Value="public Gst.Clock Clock { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.Clock</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Connect"><MemberSignature Language="C#" Value="public void Connect (string signal, Gst.DynamicSignalHandler handler);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="signal" Type="System.String" /><Parameter Name="handler" Type="Gst.DynamicSignalHandler" /></Parameters><Docs><param name="signal">To be added.</param><param name="handler">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="ContinueState">
-      <MemberSignature Language="C#" Value="public Gst.StateChangeReturn ContinueState (Gst.StateChangeReturn state_change_ret);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.StateChangeReturn</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="state_change_ret" Type="Gst.StateChangeReturn" /></Parameters>
-      <Docs><param name="state_change_ret">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="CreateAllPads">
-      <MemberSignature Language="C#" Value="public void CreateAllPads ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="CurrentState">
-      <MemberSignature Language="C#" Value="public Gst.State CurrentState { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.State</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Disconnect"><MemberSignature Language="C#" Value="public void Disconnect (string signal, Gst.DynamicSignalHandler handler);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="signal" Type="System.String" /><Parameter Name="handler" Type="Gst.DynamicSignalHandler" /></Parameters><Docs><param name="signal">To be added.</param><param name="handler">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Emit"><MemberSignature Language="C#" Value="public object Emit (string signal, object[] parameters);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue><Parameters><Parameter Name="signal" Type="System.String" /><Parameter Name="parameters" Type="System.Object[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters><Docs><param name="signal">To be added.</param><param name="parameters">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Factory">
-      <MemberSignature Language="C#" Value="public Gst.ElementFactory Factory { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.ElementFactory</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FoundTags">
-      <MemberSignature Language="C#" Value="public void FoundTags (Gst.TagList list);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="list" Type="Gst.TagList" /></Parameters>
-      <Docs><param name="list">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FoundTagsForPad">
-      <MemberSignature Language="C#" Value="public void FoundTagsForPad (Gst.Pad pad, Gst.TagList list);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="pad" Type="Gst.Pad" /><Parameter Name="list" Type="Gst.TagList" /></Parameters>
-      <Docs><param name="pad">To be added.</param><param name="list">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetCompatiblePad">
-      <MemberSignature Language="C#" Value="public Gst.Pad GetCompatiblePad (Gst.Pad pad, Gst.Caps caps);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Pad</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="pad" Type="Gst.Pad" /><Parameter Name="caps" Type="Gst.Caps" /></Parameters>
-      <Docs><param name="pad">To be added.</param><param name="caps">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetCompatiblePadTemplate">
-      <MemberSignature Language="C#" Value="public Gst.PadTemplate GetCompatiblePadTemplate (Gst.PadTemplate compattempl);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.PadTemplate</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="compattempl" Type="Gst.PadTemplate" /></Parameters>
-      <Docs><param name="compattempl">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetPad">
-      <MemberSignature Language="C#" Value="public Gst.Pad GetPad (string name);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Pad</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>System.Obsolete</AttributeName></Attribute></Attributes></Member><Member MemberName="GetProperty">
-      <MemberSignature Language="C#" Value="public GLib.Value GetProperty (string propertyName);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>GLib.Value</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="propertyName" Type="System.String" /></Parameters>
-      <Docs><param name="propertyName">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetRequestPad">
-      <MemberSignature Language="C#" Value="public Gst.Pad GetRequestPad (string name);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Pad</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetState">
-      <MemberSignature Language="C#" Value="public Gst.StateChangeReturn GetState (out Gst.State state, out Gst.State pending, ulong timeout);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.StateChangeReturn</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="state" Type="Gst.State&amp;" RefType="out" /><Parameter Name="pending" Type="Gst.State&amp;" RefType="out" /><Parameter Name="timeout" Type="System.UInt64" /></Parameters>
-      <Docs><param name="state">To be added.</param><param name="pending">To be added.</param><param name="timeout">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetStaticPad">
-      <MemberSignature Language="C#" Value="public Gst.Pad GetStaticPad (string name);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Pad</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="HasNoMorePads">
-      <MemberSignature Language="C#" Value="public event EventHandler HasNoMorePads;" />
-      <MemberType>Event</MemberType>
-      <Attributes><Attribute><AttributeName>GLib.Signal("no-more-pads")</AttributeName></Attribute></Attributes>
-      <ReturnValue><ReturnType>System.EventHandler</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Index">
-      <MemberSignature Language="C#" Value="public Gst.Index Index { set; get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.Index</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IsIndexable">
-      <MemberSignature Language="C#" Value="public bool IsIndexable { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IsLockedState">
-      <MemberSignature Language="C#" Value="public bool IsLockedState { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Item"><MemberSignature Language="C#" Value="public object this[string property] { set; get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue><Parameters><Parameter Name="property" Type="System.String" /></Parameters><Docs><param name="property">To be added.</param><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="LastReturn">
-      <MemberSignature Language="C#" Value="public Gst.StateChangeReturn LastReturn { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.StateChangeReturn</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Link">
-      <MemberSignature Language="C#" Value="public bool Link (Gst.Element dest);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="dest" Type="Gst.Element" /></Parameters>
-      <Docs><param name="dest">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="LinkFiltered">
-      <MemberSignature Language="C#" Value="public bool LinkFiltered (Gst.Element dest, Gst.Caps filter);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="dest" Type="Gst.Element" /><Parameter Name="filter" Type="Gst.Caps" /></Parameters>
-      <Docs><param name="dest">To be added.</param><param name="filter">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="LinkMany"><MemberSignature Language="C#" Value="public static bool LinkMany (Gst.Element[] elements);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="elements" Type="Gst.Element[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters><Docs><param name="elements">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="LinkPads">
-      <MemberSignature Language="C#" Value="public bool LinkPads (string srcpadname, Gst.Element dest, string destpadname);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="srcpadname" Type="System.String" /><Parameter Name="dest" Type="Gst.Element" /><Parameter Name="destpadname" Type="System.String" /></Parameters>
-      <Docs><param name="srcpadname">To be added.</param><param name="dest">To be added.</param><param name="destpadname">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="LinkPadsFiltered">
-      <MemberSignature Language="C#" Value="public bool LinkPadsFiltered (string srcpadname, Gst.Element dest, string destpadname, Gst.Caps filter);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="srcpadname" Type="System.String" /><Parameter Name="dest" Type="Gst.Element" /><Parameter Name="destpadname" Type="System.String" /><Parameter Name="filter" Type="Gst.Caps" /></Parameters>
-      <Docs><param name="srcpadname">To be added.</param><param name="dest">To be added.</param><param name="destpadname">To be added.</param><param name="filter">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="LostState">
-      <MemberSignature Language="C#" Value="public void LostState ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="MessageFull">
-      <MemberSignature Language="C#" Value="public void MessageFull (Gst.MessageType type, int domain, int code, string text, string debug, string file, string function, int line);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="type" Type="Gst.MessageType" /><Parameter Name="domain" Type="System.Int32" /><Parameter Name="code" Type="System.Int32" /><Parameter Name="text" Type="System.String" /><Parameter Name="debug" Type="System.String" /><Parameter Name="file" Type="System.String" /><Parameter Name="function" Type="System.String" /><Parameter Name="line" Type="System.Int32" /></Parameters>
-      <Docs><param name="type">To be added.</param><param name="domain">To be added.</param><param name="code">To be added.</param><param name="text">To be added.</param><param name="debug">To be added.</param><param name="file">To be added.</param><param name="function">To be added.</param><param name="line">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NextState">
-      <MemberSignature Language="C#" Value="public Gst.State NextState { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.State</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NoMorePads">
-      <MemberSignature Language="C#" Value="public void NoMorePads ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Numpads">
-      <MemberSignature Language="C#" Value="public ushort Numpads { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.UInt16</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Numsinkpads">
-      <MemberSignature Language="C#" Value="public ushort Numsinkpads { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.UInt16</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Numsrcpads">
-      <MemberSignature Language="C#" Value="public ushort Numsrcpads { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.UInt16</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="OnChangeState"><MemberSignature Language="C#" Value="protected virtual Gst.StateChangeReturn OnChangeState (Gst.StateChange transition);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideChangeState")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>Gst.StateChangeReturn</ReturnType></ReturnValue><Parameters><Parameter Name="transition" Type="Gst.StateChange" /></Parameters><Docs><param name="transition">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnGetIndex"><MemberSignature Language="C#" Value="protected virtual Gst.Index OnGetIndex ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideGetIndex")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>Gst.Index</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnGetQueryTypes"><MemberSignature Language="C#" Value="protected virtual Gst.QueryType OnGetQueryTypes ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideGetQueryTypes")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>Gst.QueryType</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnGetState"><MemberSignature Language="C#" Value="protected virtual Gst.StateChangeReturn OnGetState (out Gst.State state, out Gst.State pending, ulong timeout);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideGetState")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>Gst.StateChangeReturn</ReturnType></ReturnValue><Parameters><Parameter Name="state" Type="Gst.State&amp;" RefType="out" /><Parameter Name="pending" Type="Gst.State&amp;" RefType="out" /><Parameter Name="timeout" Type="System.UInt64" /></Parameters><Docs><param name="state">To be added.</param><param name="pending">To be added.</param><param name="timeout">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnHasNoMorePads">
-      <MemberSignature Language="C#" Value="protected virtual void OnHasNoMorePads ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideHasNoMorePads")</AttributeName></Attribute></Attributes></Member><Member MemberName="OnPadAdded">
-      <MemberSignature Language="C#" Value="protected virtual void OnPadAdded (Gst.Pad pad);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="pad" Type="Gst.Pad" /></Parameters>
-      <Docs><param name="pad">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverridePadAdded")</AttributeName></Attribute></Attributes></Member><Member MemberName="OnPadRemoved">
-      <MemberSignature Language="C#" Value="protected virtual void OnPadRemoved (Gst.Pad pad);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="pad" Type="Gst.Pad" /></Parameters>
-      <Docs><param name="pad">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverridePadRemoved")</AttributeName></Attribute></Attributes></Member><Member MemberName="OnProvideClock"><MemberSignature Language="C#" Value="protected virtual Gst.Clock OnProvideClock ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideProvideClock")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>Gst.Clock</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnQuery"><MemberSignature Language="C#" Value="protected virtual bool OnQuery (Gst.Query query);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideQuery")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="query" Type="Gst.Query" /></Parameters><Docs><param name="query">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnReleasePad"><MemberSignature Language="C#" Value="protected virtual void OnReleasePad (Gst.Pad pad);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideReleasePad")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="pad" Type="Gst.Pad" /></Parameters><Docs><param name="pad">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnRequestNewPad"><MemberSignature Language="C#" Value="protected virtual Gst.Pad OnRequestNewPad (Gst.PadTemplate templ, string name);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideRequestNewPad")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>Gst.Pad</ReturnType></ReturnValue><Parameters><Parameter Name="templ" Type="Gst.PadTemplate" /><Parameter Name="name" Type="System.String" /></Parameters><Docs><param name="templ">To be added.</param><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnSendEvent"><MemberSignature Language="C#" Value="protected virtual bool OnSendEvent (Gst.Event evnt);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideSendEvent")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="evnt" Type="Gst.Event" /></Parameters><Docs><param name="evnt">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnSetBus"><MemberSignature Language="C#" Value="protected virtual void OnSetBus (Gst.Bus bus);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideSetBus")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="bus" Type="Gst.Bus" /></Parameters><Docs><param name="bus">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnSetClock"><MemberSignature Language="C#" Value="protected virtual bool OnSetClock (Gst.Clock clock);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideSetClock")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="clock" Type="Gst.Clock" /></Parameters><Docs><param name="clock">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnSetIndex"><MemberSignature Language="C#" Value="protected virtual void OnSetIndex (Gst.Index index);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideSetIndex")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="index" Type="Gst.Index" /></Parameters><Docs><param name="index">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnSetState"><MemberSignature Language="C#" Value="protected virtual Gst.StateChangeReturn OnSetState (Gst.State state);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideSetState")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>Gst.StateChangeReturn</ReturnType></ReturnValue><Parameters><Parameter Name="state" Type="Gst.State" /></Parameters><Docs><param name="state">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="PadAdded">
-      <MemberSignature Language="C#" Value="public event Gst.PadAddedHandler PadAdded;" />
-      <MemberType>Event</MemberType>
-      <Attributes><Attribute><AttributeName>GLib.Signal("pad-added")</AttributeName></Attribute></Attributes>
-      <ReturnValue><ReturnType>Gst.PadAddedHandler</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PadRemoved">
-      <MemberSignature Language="C#" Value="public event Gst.PadRemovedHandler PadRemoved;" />
-      <MemberType>Event</MemberType>
-      <Attributes><Attribute><AttributeName>GLib.Signal("pad-removed")</AttributeName></Attribute></Attributes>
-      <ReturnValue><ReturnType>Gst.PadRemovedHandler</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Pads">
-      <MemberSignature Language="C#" Value="public GLib.List Pads { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PadsCookie">
-      <MemberSignature Language="C#" Value="public uint PadsCookie { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PendingState">
-      <MemberSignature Language="C#" Value="public Gst.State PendingState { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.State</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PostMessage">
-      <MemberSignature Language="C#" Value="public bool PostMessage (Gst.Message message);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="message" Type="Gst.Message" /></Parameters>
-      <Docs><param name="message">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ProvideClock">
-      <MemberSignature Language="C#" Value="public Gst.Clock ProvideClock ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Clock</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ProvidesClock">
-      <MemberSignature Language="C#" Value="public bool ProvidesClock ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Query">
-      <MemberSignature Language="C#" Value="public bool Query (Gst.Query query);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="query" Type="Gst.Query" /></Parameters>
-      <Docs><param name="query">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="QueryConvert">
-      <MemberSignature Language="C#" Value="public bool QueryConvert (Gst.Format src_format, long src_val, out Gst.Format dest_format, out long dest_val);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="src_format" Type="Gst.Format" /><Parameter Name="src_val" Type="System.Int64" /><Parameter Name="dest_format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="dest_val" Type="System.Int64&amp;" RefType="out" /></Parameters>
-      <Docs><param name="src_format">To be added.</param><param name="src_val">To be added.</param><param name="dest_format">To be added.</param><param name="dest_val">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="QueryDuration">
-      <MemberSignature Language="C#" Value="public bool QueryDuration (Gst.Format format, out long duration);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="format" Type="Gst.Format" /><Parameter Name="duration" Type="System.Int64&amp;" RefType="out" /></Parameters>
-      <Docs><param name="format">To be added.</param><param name="duration">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="QueryPosition">
-      <MemberSignature Language="C#" Value="public bool QueryPosition (Gst.Format format, out long current);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="format" Type="Gst.Format" /><Parameter Name="current" Type="System.Int64&amp;" RefType="out" /></Parameters>
-      <Docs><param name="format">To be added.</param><param name="current">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Register">
-      <MemberSignature Language="C#" Value="public static bool Register (Gst.Plugin plugin, string name, uint rank, GLib.GType type);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="plugin" Type="Gst.Plugin" /><Parameter Name="name" Type="System.String" /><Parameter Name="rank" Type="System.UInt32" /><Parameter Name="type" Type="GLib.GType" /></Parameters>
-      <Docs><param name="plugin">To be added.</param><param name="name">To be added.</param><param name="rank">To be added.</param><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ReleaseRequestPad">
-      <MemberSignature Language="C#" Value="public void ReleaseRequestPad (Gst.Pad pad);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="pad" Type="Gst.Pad" /></Parameters>
-      <Docs><param name="pad">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="RemovePad">
-      <MemberSignature Language="C#" Value="public bool RemovePad (Gst.Pad pad);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="pad" Type="Gst.Pad" /></Parameters>
-      <Docs><param name="pad">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="RequiresClock">
-      <MemberSignature Language="C#" Value="public bool RequiresClock ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Seek">
-      <MemberSignature Language="C#" Value="public bool Seek (double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType cur_type, long cur, Gst.SeekType stop_type, long stop);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="rate" Type="System.Double" /><Parameter Name="format" Type="Gst.Format" /><Parameter Name="flags" Type="Gst.SeekFlags" /><Parameter Name="cur_type" Type="Gst.SeekType" /><Parameter Name="cur" Type="System.Int64" /><Parameter Name="stop_type" Type="Gst.SeekType" /><Parameter Name="stop" Type="System.Int64" /></Parameters>
-      <Docs><param name="rate">To be added.</param><param name="format">To be added.</param><param name="flags">To be added.</param><param name="cur_type">To be added.</param><param name="cur">To be added.</param><param name="stop_type">To be added.</param><param name="stop">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SeekSimple"><MemberSignature Language="C#" Value="public bool SeekSimple (Gst.Format format, Gst.SeekFlags seek_flags, long seek_pos);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="format" Type="Gst.Format" /><Parameter Name="seek_flags" Type="Gst.SeekFlags" /><Parameter Name="seek_pos" Type="System.Int64" /></Parameters><Docs><param name="format">To be added.</param><param name="seek_flags">To be added.</param><param name="seek_pos">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="SendEvent">
-      <MemberSignature Language="C#" Value="public bool SendEvent (Gst.Event evnt);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="evnt" Type="Gst.Event" /></Parameters>
-      <Docs><param name="evnt">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetClock">
-      <MemberSignature Language="C#" Value="public bool SetClock (Gst.Clock clock);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="clock" Type="Gst.Clock" /></Parameters>
-      <Docs><param name="clock">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetLockedState">
-      <MemberSignature Language="C#" Value="public bool SetLockedState (bool locked_state);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="locked_state" Type="System.Boolean" /></Parameters>
-      <Docs><param name="locked_state">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetProperty">
-      <MemberSignature Language="C#" Value="public void SetProperty (string propertyName, GLib.Value value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="propertyName" Type="System.String" /><Parameter Name="value" Type="GLib.Value" /></Parameters>
-      <Docs><param name="propertyName">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetProperty">
-      <MemberSignature Language="C#" Value="public void SetProperty (string propertyName, bool value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="propertyName" Type="System.String" /><Parameter Name="value" Type="System.Boolean" /></Parameters>
-      <Docs><param name="propertyName">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetProperty">
-      <MemberSignature Language="C#" Value="public void SetProperty (string propertyName, double value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="propertyName" Type="System.String" /><Parameter Name="value" Type="System.Double" /></Parameters>
-      <Docs><param name="propertyName">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetProperty"><MemberSignature Language="C#" Value="public void SetProperty (string propertyName, int value);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="propertyName" Type="System.String" /><Parameter Name="value" Type="System.Int32" /></Parameters><Docs><param name="propertyName">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetProperty"><MemberSignature Language="C#" Value="public void SetProperty (string propertyName, object value);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="propertyName" Type="System.String" /><Parameter Name="value" Type="System.Object" /></Parameters><Docs><param name="propertyName">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetProperty">
-      <MemberSignature Language="C#" Value="public void SetProperty (string propertyName, string value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="propertyName" Type="System.String" /><Parameter Name="value" Type="System.String" /></Parameters>
-      <Docs><param name="propertyName">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetState">
-      <MemberSignature Language="C#" Value="public Gst.StateChangeReturn SetState (Gst.State state);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.StateChangeReturn</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="state" Type="Gst.State" /></Parameters>
-      <Docs><param name="state">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Sinkpads">
-      <MemberSignature Language="C#" Value="public GLib.List Sinkpads { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Srcpads">
-      <MemberSignature Language="C#" Value="public GLib.List Srcpads { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="StateChangeReturnGetName"><MemberSignature Language="C#" Value="public static string StateChangeReturnGetName (Gst.StateChangeReturn state_ret);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.String</ReturnType></ReturnValue><Parameters><Parameter Name="state_ret" Type="Gst.StateChangeReturn" /></Parameters><Docs><param name="state_ret">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="StateCookie">
-      <MemberSignature Language="C#" Value="public uint StateCookie { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="StateGetName">
-      <MemberSignature Language="C#" Value="public static string StateGetName (Gst.State state);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="state" Type="Gst.State" /></Parameters>
-      <Docs><param name="state">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SyncStateWithParent">
-      <MemberSignature Language="C#" Value="public bool SyncStateWithParent ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Unlink">
-      <MemberSignature Language="C#" Value="public void Unlink (Gst.Element dest);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="dest" Type="Gst.Element" /></Parameters>
-      <Docs><param name="dest">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="UnlinkMany"><MemberSignature Language="C#" Value="public static void UnlinkMany (Gst.Element[] elements);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="elements" Type="Gst.Element[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters><Docs><param name="elements">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="UnlinkPads">
-      <MemberSignature Language="C#" Value="public void UnlinkPads (string srcpadname, Gst.Element dest, string destpadname);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="srcpadname" Type="System.String" /><Parameter Name="dest" Type="Gst.Element" /><Parameter Name="destpadname" Type="System.String" /></Parameters>
-      <Docs><param name="srcpadname">To be added.</param><param name="dest">To be added.</param><param name="destpadname">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-  </Members>
   <Attributes>
     <Attribute>
       <AttributeName>System.Reflection.DefaultMember("Item")</AttributeName>
     </Attribute>
   </Attributes>
+  <Docs>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+  <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="protected Element ();" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Element (IntPtr raw);" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="raw" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="raw">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AbortState">
+      <MemberSignature Language="C#" Value="public void AbortState ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AddPad">
+      <MemberSignature Language="C#" Value="public bool AddPad (Gst.Pad p);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="p" Type="Gst.Pad" />
+      </Parameters>
+      <Docs>
+        <param name="p">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="BaseTime">
+      <MemberSignature Language="C#" Value="public ulong BaseTime { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt64</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Bus">
+      <MemberSignature Language="C#" Value="public Gst.Bus Bus { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Bus</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ChangeState">
+      <MemberSignature Language="C#" Value="public Gst.StateChangeReturn ChangeState (Gst.StateChange transition);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.StateChangeReturn</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="transition" Type="Gst.StateChange" />
+      </Parameters>
+      <Docs>
+        <param name="transition">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Clock">
+      <MemberSignature Language="C#" Value="public Gst.Clock Clock { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Clock</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Connect">
+      <MemberSignature Language="C#" Value="public void Connect (string signal, Gst.DynamicSignalHandler handler);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="signal" Type="System.String" />
+        <Parameter Name="handler" Type="Gst.DynamicSignalHandler" />
+      </Parameters>
+      <Docs>
+        <param name="signal">To be added.</param>
+        <param name="handler">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ContinueState">
+      <MemberSignature Language="C#" Value="public Gst.StateChangeReturn ContinueState (Gst.StateChangeReturn state_change_ret);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.StateChangeReturn</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="state_change_ret" Type="Gst.StateChangeReturn" />
+      </Parameters>
+      <Docs>
+        <param name="state_change_ret">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateAllPads">
+      <MemberSignature Language="C#" Value="public void CreateAllPads ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CurrentState">
+      <MemberSignature Language="C#" Value="public Gst.State CurrentState { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.State</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Disconnect">
+      <MemberSignature Language="C#" Value="public void Disconnect (string signal, Gst.DynamicSignalHandler handler);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="signal" Type="System.String" />
+        <Parameter Name="handler" Type="Gst.DynamicSignalHandler" />
+      </Parameters>
+      <Docs>
+        <param name="signal">To be added.</param>
+        <param name="handler">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Emit">
+      <MemberSignature Language="C#" Value="public object Emit (string signal, object[] parameters);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Object</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="signal" Type="System.String" />
+        <Parameter Name="parameters" Type="System.Object[]">
+          <Attributes>
+            <Attribute>
+              <AttributeName>System.ParamArray</AttributeName>
+            </Attribute>
+          </Attributes>
+        </Parameter>
+      </Parameters>
+      <Docs>
+        <param name="signal">To be added.</param>
+        <param name="parameters">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Factory">
+      <MemberSignature Language="C#" Value="public Gst.ElementFactory Factory { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.ElementFactory</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FoundTags">
+      <MemberSignature Language="C#" Value="public void FoundTags (Gst.TagList list);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="list" Type="Gst.TagList" />
+      </Parameters>
+      <Docs>
+        <param name="list">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FoundTagsForPad">
+      <MemberSignature Language="C#" Value="public void FoundTagsForPad (Gst.Pad pad, Gst.TagList list);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pad" Type="Gst.Pad" />
+        <Parameter Name="list" Type="Gst.TagList" />
+      </Parameters>
+      <Docs>
+        <param name="pad">To be added.</param>
+        <param name="list">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetCompatiblePad">
+      <MemberSignature Language="C#" Value="public Gst.Pad GetCompatiblePad (Gst.Pad pad, Gst.Caps caps);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Pad</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pad" Type="Gst.Pad" />
+        <Parameter Name="caps" Type="Gst.Caps" />
+      </Parameters>
+      <Docs>
+        <param name="pad">To be added.</param>
+        <param name="caps">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetCompatiblePadTemplate">
+      <MemberSignature Language="C#" Value="public Gst.PadTemplate GetCompatiblePadTemplate (Gst.PadTemplate compattempl);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.PadTemplate</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="compattempl" Type="Gst.PadTemplate" />
+      </Parameters>
+      <Docs>
+        <param name="compattempl">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPad">
+      <MemberSignature Language="C#" Value="public Gst.Pad GetPad (string name);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.Pad</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="name" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="name">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetProperty">
+      <MemberSignature Language="C#" Value="public GLib.Value GetProperty (string propertyName);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>GLib.Value</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="propertyName" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="propertyName">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetRequestPad">
+      <MemberSignature Language="C#" Value="public Gst.Pad GetRequestPad (string name);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Pad</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="name" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="name">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetState">
+      <MemberSignature Language="C#" Value="public Gst.StateChangeReturn GetState (out Gst.State state, out Gst.State pending, ulong timeout);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.StateChangeReturn</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="state" Type="Gst.State&amp;" RefType="out" />
+        <Parameter Name="pending" Type="Gst.State&amp;" RefType="out" />
+        <Parameter Name="timeout" Type="System.UInt64" />
+      </Parameters>
+      <Docs>
+        <param name="state">To be added.</param>
+        <param name="pending">To be added.</param>
+        <param name="timeout">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetStaticPad">
+      <MemberSignature Language="C#" Value="public Gst.Pad GetStaticPad (string name);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Pad</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="name" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="name">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GType">
+      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>GLib.GType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="HasNoMorePads">
+      <MemberSignature Language="C#" Value="public event EventHandler HasNoMorePads;" />
+      <MemberType>Event</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Signal("no-more-pads")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.EventHandler</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Index">
+      <MemberSignature Language="C#" Value="public Gst.Index Index { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Index</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsIndexable">
+      <MemberSignature Language="C#" Value="public bool IsIndexable { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsLockedState">
+      <MemberSignature Language="C#" Value="public bool IsLockedState { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Item">
+      <MemberSignature Language="C#" Value="public object this[string property] { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Object</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="property" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="property">To be added.</param>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="LastReturn">
+      <MemberSignature Language="C#" Value="public Gst.StateChangeReturn LastReturn { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.StateChangeReturn</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Link">
+      <MemberSignature Language="C#" Value="public bool Link (Gst.Element dest);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dest" Type="Gst.Element" />
+      </Parameters>
+      <Docs>
+        <param name="dest">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="LinkFiltered">
+      <MemberSignature Language="C#" Value="public bool LinkFiltered (Gst.Element dest, Gst.Caps filter);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dest" Type="Gst.Element" />
+        <Parameter Name="filter" Type="Gst.Caps" />
+      </Parameters>
+      <Docs>
+        <param name="dest">To be added.</param>
+        <param name="filter">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="LinkMany">
+      <MemberSignature Language="C#" Value="public static bool LinkMany (Gst.Element[] elements);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="elements" Type="Gst.Element[]">
+          <Attributes>
+            <Attribute>
+              <AttributeName>System.ParamArray</AttributeName>
+            </Attribute>
+          </Attributes>
+        </Parameter>
+      </Parameters>
+      <Docs>
+        <param name="elements">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="LinkPads">
+      <MemberSignature Language="C#" Value="public bool LinkPads (string srcpadname, Gst.Element dest, string destpadname);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="srcpadname" Type="System.String" />
+        <Parameter Name="dest" Type="Gst.Element" />
+        <Parameter Name="destpadname" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="srcpadname">To be added.</param>
+        <param name="dest">To be added.</param>
+        <param name="destpadname">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="LinkPadsFiltered">
+      <MemberSignature Language="C#" Value="public bool LinkPadsFiltered (string srcpadname, Gst.Element dest, string destpadname, Gst.Caps filter);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="srcpadname" Type="System.String" />
+        <Parameter Name="dest" Type="Gst.Element" />
+        <Parameter Name="destpadname" Type="System.String" />
+        <Parameter Name="filter" Type="Gst.Caps" />
+      </Parameters>
+      <Docs>
+        <param name="srcpadname">To be added.</param>
+        <param name="dest">To be added.</param>
+        <param name="destpadname">To be added.</param>
+        <param name="filter">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="LostState">
+      <MemberSignature Language="C#" Value="public void LostState ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MessageFull">
+      <MemberSignature Language="C#" Value="public void MessageFull (Gst.MessageType type, int domain, int code, string text, string debug, string file, string function, int line);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="type" Type="Gst.MessageType" />
+        <Parameter Name="domain" Type="System.Int32" />
+        <Parameter Name="code" Type="System.Int32" />
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="debug" Type="System.String" />
+        <Parameter Name="file" Type="System.String" />
+        <Parameter Name="function" Type="System.String" />
+        <Parameter Name="line" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="type">To be added.</param>
+        <param name="domain">To be added.</param>
+        <param name="code">To be added.</param>
+        <param name="text">To be added.</param>
+        <param name="debug">To be added.</param>
+        <param name="file">To be added.</param>
+        <param name="function">To be added.</param>
+        <param name="line">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="NextState">
+      <MemberSignature Language="C#" Value="public Gst.State NextState { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.State</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="NoMorePads">
+      <MemberSignature Language="C#" Value="public void NoMorePads ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Numpads">
+      <MemberSignature Language="C#" Value="public ushort Numpads { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt16</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Numsinkpads">
+      <MemberSignature Language="C#" Value="public ushort Numsinkpads { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt16</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Numsrcpads">
+      <MemberSignature Language="C#" Value="public ushort Numsrcpads { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt16</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnChangeState">
+      <MemberSignature Language="C#" Value="protected virtual Gst.StateChangeReturn OnChangeState (Gst.StateChange transition);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideChangeState")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.StateChangeReturn</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="transition" Type="Gst.StateChange" />
+      </Parameters>
+      <Docs>
+        <param name="transition">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnGetIndex">
+      <MemberSignature Language="C#" Value="protected virtual Gst.Index OnGetIndex ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideGetIndex")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.Index</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnGetQueryTypes">
+      <MemberSignature Language="C#" Value="protected virtual Gst.QueryType OnGetQueryTypes ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideGetQueryTypes")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.QueryType</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnGetState">
+      <MemberSignature Language="C#" Value="protected virtual Gst.StateChangeReturn OnGetState (out Gst.State state, out Gst.State pending, ulong timeout);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideGetState")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.StateChangeReturn</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="state" Type="Gst.State&amp;" RefType="out" />
+        <Parameter Name="pending" Type="Gst.State&amp;" RefType="out" />
+        <Parameter Name="timeout" Type="System.UInt64" />
+      </Parameters>
+      <Docs>
+        <param name="state">To be added.</param>
+        <param name="pending">To be added.</param>
+        <param name="timeout">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnHasNoMorePads">
+      <MemberSignature Language="C#" Value="protected virtual void OnHasNoMorePads ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideHasNoMorePads")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnPadAdded">
+      <MemberSignature Language="C#" Value="protected virtual void OnPadAdded (Gst.Pad pad);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverridePadAdded")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pad" Type="Gst.Pad" />
+      </Parameters>
+      <Docs>
+        <param name="pad">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnPadRemoved">
+      <MemberSignature Language="C#" Value="protected virtual void OnPadRemoved (Gst.Pad pad);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverridePadRemoved")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pad" Type="Gst.Pad" />
+      </Parameters>
+      <Docs>
+        <param name="pad">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnProvideClock">
+      <MemberSignature Language="C#" Value="protected virtual Gst.Clock OnProvideClock ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideProvideClock")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.Clock</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnQuery">
+      <MemberSignature Language="C#" Value="protected virtual bool OnQuery (Gst.Query query);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideQuery")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="query" Type="Gst.Query" />
+      </Parameters>
+      <Docs>
+        <param name="query">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnReleasePad">
+      <MemberSignature Language="C#" Value="protected virtual void OnReleasePad (Gst.Pad pad);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideReleasePad")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pad" Type="Gst.Pad" />
+      </Parameters>
+      <Docs>
+        <param name="pad">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnRequestNewPad">
+      <MemberSignature Language="C#" Value="protected virtual Gst.Pad OnRequestNewPad (Gst.PadTemplate templ, string name);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideRequestNewPad")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.Pad</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="templ" Type="Gst.PadTemplate" />
+        <Parameter Name="name" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="templ">To be added.</param>
+        <param name="name">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnSendEvent">
+      <MemberSignature Language="C#" Value="protected virtual bool OnSendEvent (Gst.Event evnt);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideSendEvent")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="evnt" Type="Gst.Event" />
+      </Parameters>
+      <Docs>
+        <param name="evnt">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnSetBus">
+      <MemberSignature Language="C#" Value="protected virtual void OnSetBus (Gst.Bus bus);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideSetBus")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bus" Type="Gst.Bus" />
+      </Parameters>
+      <Docs>
+        <param name="bus">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnSetClock">
+      <MemberSignature Language="C#" Value="protected virtual bool OnSetClock (Gst.Clock clock);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideSetClock")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="clock" Type="Gst.Clock" />
+      </Parameters>
+      <Docs>
+        <param name="clock">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnSetIndex">
+      <MemberSignature Language="C#" Value="protected virtual void OnSetIndex (Gst.Index index);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideSetIndex")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="index" Type="Gst.Index" />
+      </Parameters>
+      <Docs>
+        <param name="index">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnSetState">
+      <MemberSignature Language="C#" Value="protected virtual Gst.StateChangeReturn OnSetState (Gst.State state);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Element), ConnectionMethod="OverrideSetState")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.StateChangeReturn</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="state" Type="Gst.State" />
+      </Parameters>
+      <Docs>
+        <param name="state">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PadAdded">
+      <MemberSignature Language="C#" Value="public event Gst.PadAddedHandler PadAdded;" />
+      <MemberType>Event</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Signal("pad-added")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.PadAddedHandler</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PadRemoved">
+      <MemberSignature Language="C#" Value="public event Gst.PadRemovedHandler PadRemoved;" />
+      <MemberType>Event</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Signal("pad-removed")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.PadRemovedHandler</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Pads">
+      <MemberSignature Language="C#" Value="public GLib.List Pads { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>GLib.List</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PadsCookie">
+      <MemberSignature Language="C#" Value="public uint PadsCookie { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PendingState">
+      <MemberSignature Language="C#" Value="public Gst.State PendingState { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.State</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PostMessage">
+      <MemberSignature Language="C#" Value="public bool PostMessage (Gst.Message message);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="message" Type="Gst.Message" />
+      </Parameters>
+      <Docs>
+        <param name="message">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ProvideClock">
+      <MemberSignature Language="C#" Value="public Gst.Clock ProvideClock ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Clock</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ProvidesClock">
+      <MemberSignature Language="C#" Value="public bool ProvidesClock ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Query">
+      <MemberSignature Language="C#" Value="public bool Query (Gst.Query query);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="query" Type="Gst.Query" />
+      </Parameters>
+      <Docs>
+        <param name="query">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="QueryConvert">
+      <MemberSignature Language="C#" Value="public bool QueryConvert (Gst.Format src_format, long src_val, out Gst.Format dest_format, out long dest_val);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="src_format" Type="Gst.Format" />
+        <Parameter Name="src_val" Type="System.Int64" />
+        <Parameter Name="dest_format" Type="Gst.Format&amp;" RefType="out" />
+        <Parameter Name="dest_val" Type="System.Int64&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="src_format">To be added.</param>
+        <param name="src_val">To be added.</param>
+        <param name="dest_format">To be added.</param>
+        <param name="dest_val">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="QueryDuration">
+      <MemberSignature Language="C#" Value="public bool QueryDuration (Gst.Format format, out long duration);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="format" Type="Gst.Format" />
+        <Parameter Name="duration" Type="System.Int64&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="format">To be added.</param>
+        <param name="duration">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="QueryPosition">
+      <MemberSignature Language="C#" Value="public bool QueryPosition (Gst.Format format, out long current);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="format" Type="Gst.Format" />
+        <Parameter Name="current" Type="System.Int64&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="format">To be added.</param>
+        <param name="current">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Register">
+      <MemberSignature Language="C#" Value="public static bool Register (Gst.Plugin plugin, string name, uint rank, GLib.GType type);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="plugin" Type="Gst.Plugin" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="rank" Type="System.UInt32" />
+        <Parameter Name="type" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="plugin">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="rank">To be added.</param>
+        <param name="type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ReleaseRequestPad">
+      <MemberSignature Language="C#" Value="public void ReleaseRequestPad (Gst.Pad pad);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pad" Type="Gst.Pad" />
+      </Parameters>
+      <Docs>
+        <param name="pad">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RemovePad">
+      <MemberSignature Language="C#" Value="public bool RemovePad (Gst.Pad pad);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pad" Type="Gst.Pad" />
+      </Parameters>
+      <Docs>
+        <param name="pad">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RequiresClock">
+      <MemberSignature Language="C#" Value="public bool RequiresClock ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Seek">
+      <MemberSignature Language="C#" Value="public bool Seek (double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType cur_type, long cur, Gst.SeekType stop_type, long stop);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rate" Type="System.Double" />
+        <Parameter Name="format" Type="Gst.Format" />
+        <Parameter Name="flags" Type="Gst.SeekFlags" />
+        <Parameter Name="cur_type" Type="Gst.SeekType" />
+        <Parameter Name="cur" Type="System.Int64" />
+        <Parameter Name="stop_type" Type="Gst.SeekType" />
+        <Parameter Name="stop" Type="System.Int64" />
+      </Parameters>
+      <Docs>
+        <param name="rate">To be added.</param>
+        <param name="format">To be added.</param>
+        <param name="flags">To be added.</param>
+        <param name="cur_type">To be added.</param>
+        <param name="cur">To be added.</param>
+        <param name="stop_type">To be added.</param>
+        <param name="stop">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SeekSimple">
+      <MemberSignature Language="C#" Value="public bool SeekSimple (Gst.Format format, Gst.SeekFlags seek_flags, long seek_pos);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="format" Type="Gst.Format" />
+        <Parameter Name="seek_flags" Type="Gst.SeekFlags" />
+        <Parameter Name="seek_pos" Type="System.Int64" />
+      </Parameters>
+      <Docs>
+        <param name="format">To be added.</param>
+        <param name="seek_flags">To be added.</param>
+        <param name="seek_pos">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SendEvent">
+      <MemberSignature Language="C#" Value="public bool SendEvent (Gst.Event evnt);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="evnt" Type="Gst.Event" />
+      </Parameters>
+      <Docs>
+        <param name="evnt">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetClock">
+      <MemberSignature Language="C#" Value="public bool SetClock (Gst.Clock clock);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="clock" Type="Gst.Clock" />
+      </Parameters>
+      <Docs>
+        <param name="clock">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetLockedState">
+      <MemberSignature Language="C#" Value="public bool SetLockedState (bool locked_state);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="locked_state" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="locked_state">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetProperty">
+      <MemberSignature Language="C#" Value="public void SetProperty (string propertyName, GLib.Value value);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="propertyName" Type="System.String" />
+        <Parameter Name="value" Type="GLib.Value" />
+      </Parameters>
+      <Docs>
+        <param name="propertyName">To be added.</param>
+        <param name="value">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetProperty">
+      <MemberSignature Language="C#" Value="public void SetProperty (string propertyName, bool value);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="propertyName" Type="System.String" />
+        <Parameter Name="value" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="propertyName">To be added.</param>
+        <param name="value">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetProperty">
+      <MemberSignature Language="C#" Value="public void SetProperty (string propertyName, double value);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="propertyName" Type="System.String" />
+        <Parameter Name="value" Type="System.Double" />
+      </Parameters>
+      <Docs>
+        <param name="propertyName">To be added.</param>
+        <param name="value">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetProperty">
+      <MemberSignature Language="C#" Value="public void SetProperty (string propertyName, int value);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="propertyName" Type="System.String" />
+        <Parameter Name="value" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="propertyName">To be added.</param>
+        <param name="value">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetProperty">
+      <MemberSignature Language="C#" Value="public void SetProperty (string propertyName, object value);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="propertyName" Type="System.String" />
+        <Parameter Name="value" Type="System.Object" />
+      </Parameters>
+      <Docs>
+        <param name="propertyName">To be added.</param>
+        <param name="value">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetProperty">
+      <MemberSignature Language="C#" Value="public void SetProperty (string propertyName, string value);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="propertyName" Type="System.String" />
+        <Parameter Name="value" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="propertyName">To be added.</param>
+        <param name="value">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetState">
+      <MemberSignature Language="C#" Value="public Gst.StateChangeReturn SetState (Gst.State state);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.StateChangeReturn</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="state" Type="Gst.State" />
+      </Parameters>
+      <Docs>
+        <param name="state">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Sinkpads">
+      <MemberSignature Language="C#" Value="public GLib.List Sinkpads { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>GLib.List</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Srcpads">
+      <MemberSignature Language="C#" Value="public GLib.List Srcpads { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>GLib.List</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StateChangeReturnGetName">
+      <MemberSignature Language="C#" Value="public static string StateChangeReturnGetName (Gst.StateChangeReturn state_ret);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="state_ret" Type="Gst.StateChangeReturn" />
+      </Parameters>
+      <Docs>
+        <param name="state_ret">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StateCookie">
+      <MemberSignature Language="C#" Value="public uint StateCookie { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StateGetName">
+      <MemberSignature Language="C#" Value="public static string StateGetName (Gst.State state);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="state" Type="Gst.State" />
+      </Parameters>
+      <Docs>
+        <param name="state">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SyncStateWithParent">
+      <MemberSignature Language="C#" Value="public bool SyncStateWithParent ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Unlink">
+      <MemberSignature Language="C#" Value="public void Unlink (Gst.Element dest);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dest" Type="Gst.Element" />
+      </Parameters>
+      <Docs>
+        <param name="dest">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="UnlinkMany">
+      <MemberSignature Language="C#" Value="public static void UnlinkMany (Gst.Element[] elements);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="elements" Type="Gst.Element[]">
+          <Attributes>
+            <Attribute>
+              <AttributeName>System.ParamArray</AttributeName>
+            </Attribute>
+          </Attributes>
+        </Parameter>
+      </Parameters>
+      <Docs>
+        <param name="elements">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="UnlinkPads">
+      <MemberSignature Language="C#" Value="public void UnlinkPads (string srcpadname, Gst.Element dest, string destpadname);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="srcpadname" Type="System.String" />
+        <Parameter Name="dest" Type="Gst.Element" />
+        <Parameter Name="destpadname" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="srcpadname">To be added.</param>
+        <param name="dest">To be added.</param>
+        <param name="destpadname">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+  </Members>
 </Type>

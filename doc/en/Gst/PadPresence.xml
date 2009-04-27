@@ -7,6 +7,11 @@
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
+  <Attributes>
+    <Attribute>
+      <AttributeName>GLib.GType(typeof(Gst.PadPresenceGType))</AttributeName>
+    </Attribute>
+  </Attributes>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
@@ -15,25 +20,41 @@
     <Member MemberName="Always">
       <MemberSignature Language="C#" Value="Always" />
       <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.PadPresence</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Request">
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.PadPresence</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Request">
       <MemberSignature Language="C#" Value="Request" />
       <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.PadPresence</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Sometimes">
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.PadPresence</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Sometimes">
       <MemberSignature Language="C#" Value="Sometimes" />
       <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.PadPresence</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
-    
-    
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.PadPresence</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
   </Members>
-  <Attributes>
-    <Attribute>
-      <AttributeName>GLib.GType(typeof(Gst.PadPresenceGType))</AttributeName>
-    </Attribute>
-  </Attributes>
 </Type>

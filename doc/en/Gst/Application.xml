@@ -13,21 +13,75 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
-    
-    <Member MemberName="Deinit"><MemberSignature Language="C#" Value="public static void Deinit ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Init">
+    <Member MemberName="Deinit">
+      <MemberSignature Language="C#" Value="public static void Deinit ();" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Init">
       <MemberSignature Language="C#" Value="public static void Init ();" />
       <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
       <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Init">
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Init">
       <MemberSignature Language="C#" Value="public static void Init (string progname, ref string[] args);" />
       <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="progname" Type="System.String" /><Parameter Name="args" Type="System.String[]&amp;" RefType="ref" /></Parameters>
-      <Docs><param name="progname">To be added.</param><param name="args">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="InitCheck"><MemberSignature Language="C#" Value="public static void InitCheck (string progname, ref string[] args);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="progname" Type="System.String" /><Parameter Name="args" Type="System.String[]&amp;" RefType="ref" /></Parameters><Docs><param name="progname">To be added.</param><param name="args">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="progname" Type="System.String" />
+        <Parameter Name="args" Type="System.String[]&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="progname">To be added.</param>
+        <param name="args">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="InitCheck">
+      <MemberSignature Language="C#" Value="public static void InitCheck (string progname, ref string[] args);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="progname" Type="System.String" />
+        <Parameter Name="args" Type="System.String[]&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="progname">To be added.</param>
+        <param name="args">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
   </Members>
 </Type>

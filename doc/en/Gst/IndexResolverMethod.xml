@@ -7,6 +7,11 @@
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
+  <Attributes>
+    <Attribute>
+      <AttributeName>GLib.GType(typeof(Gst.IndexResolverMethodGType))</AttributeName>
+    </Attribute>
+  </Attributes>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
@@ -15,25 +20,41 @@
     <Member MemberName="Custom">
       <MemberSignature Language="C#" Value="Custom" />
       <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.IndexResolverMethod</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Gtype">
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.IndexResolverMethod</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Gtype">
       <MemberSignature Language="C#" Value="Gtype" />
       <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.IndexResolverMethod</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Path">
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.IndexResolverMethod</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Path">
       <MemberSignature Language="C#" Value="Path" />
       <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.IndexResolverMethod</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
-    
-    
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.IndexResolverMethod</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
   </Members>
-  <Attributes>
-    <Attribute>
-      <AttributeName>GLib.GType(typeof(Gst.IndexResolverMethodGType))</AttributeName>
-    </Attribute>
-  </Attributes>
 </Type>

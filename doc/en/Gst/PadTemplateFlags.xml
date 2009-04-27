@@ -20,12 +20,31 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
-  <Member MemberName="Fixed">
+    <Member MemberName="Fixed">
       <MemberSignature Language="C#" Value="Fixed" />
       <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.PadTemplateFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Last"><MemberSignature Language="C#" Value="Last" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PadTemplateFlags</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member></Members>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.PadTemplateFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Last">
+      <MemberSignature Language="C#" Value="Last" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.PadTemplateFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+  </Members>
 </Type>

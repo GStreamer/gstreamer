@@ -60,7 +60,6 @@
       <Type Name="EventTypeFlags" Kind="Enumeration" />
       <Type Name="FeatureAddedArgs" Kind="Class" />
       <Type Name="FeatureAddedHandler" Kind="Delegate" />
-      <Type Name="Flow" Kind="Class" />
       <Type Name="FlowReturn" Kind="Enumeration" />
       <Type Name="Format" Kind="Enumeration" />
       <Type Name="FormatDefinition" Kind="Structure" />
@@ -152,7 +151,6 @@
       <Type Name="PluginFilter" Kind="Delegate" />
       <Type Name="PluginFlags" Kind="Enumeration" />
       <Type Name="PluginInitFunc" Kind="Delegate" />
-      <Type Name="Print" Kind="Class" />
       <Type Name="ProxyPad" Kind="Class" />
       <Type Name="Query" Kind="Class" />
       <Type Name="QueryType" Kind="Enumeration" />
@@ -162,7 +160,6 @@
       <Type Name="SeekFlags" Kind="Enumeration" />
       <Type Name="SeekType" Kind="Enumeration" />
       <Type Name="Segment" Kind="Class" />
-      <Type Name="Segtrap" Kind="Class" />
       <Type Name="State" Kind="Enumeration" />
       <Type Name="StateChange" Kind="Enumeration" />
       <Type Name="StateChangeReturn" Kind="Enumeration" />

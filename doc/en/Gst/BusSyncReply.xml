@@ -7,33 +7,54 @@
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
-  </Docs>
-  <Members>
-    
-    <Member MemberName="Async">
-      <MemberSignature Language="C#" Value="Async" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.BusSyncReply</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Drop">
-      <MemberSignature Language="C#" Value="Drop" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.BusSyncReply</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Pass">
-      <MemberSignature Language="C#" Value="Pass" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.BusSyncReply</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
-    
-  </Members>
   <Attributes>
     <Attribute>
       <AttributeName>GLib.GType(typeof(Gst.BusSyncReplyGType))</AttributeName>
     </Attribute>
   </Attributes>
+  <Docs>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+  <Members>
+    <Member MemberName="Async">
+      <MemberSignature Language="C#" Value="Async" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.BusSyncReply</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Drop">
+      <MemberSignature Language="C#" Value="Drop" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.BusSyncReply</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Pass">
+      <MemberSignature Language="C#" Value="Pass" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.BusSyncReply</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+  </Members>
 </Type>

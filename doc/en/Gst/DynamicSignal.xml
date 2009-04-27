@@ -13,45 +13,102 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
-    
     <Member MemberName="Connect">
       <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, Gst.DynamicSignalHandler handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="o" Type="GLib.Object" /><Parameter Name="name" Type="System.String" /><Parameter Name="handler" Type="Gst.DynamicSignalHandler" /></Parameters>
-      <Docs><param name="o">To be added.</param><param name="name">To be added.</param><param name="handler">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Connect">
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="handler" Type="Gst.DynamicSignalHandler" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="handler">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Connect">
       <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, bool after, Gst.DynamicSignalHandler handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="o" Type="GLib.Object" /><Parameter Name="name" Type="System.String" /><Parameter Name="after" Type="System.Boolean" /><Parameter Name="handler" Type="Gst.DynamicSignalHandler" /></Parameters>
-      <Docs><param name="o">To be added.</param><param name="name">To be added.</param><param name="after">To be added.</param><param name="handler">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Disconnect">
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="after" Type="System.Boolean" />
+        <Parameter Name="handler" Type="Gst.DynamicSignalHandler" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="after">To be added.</param>
+        <param name="handler">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Disconnect">
       <MemberSignature Language="C#" Value="public static void Disconnect (GLib.Object o, string name, Gst.DynamicSignalHandler handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="o" Type="GLib.Object" /><Parameter Name="name" Type="System.String" /><Parameter Name="handler" Type="Gst.DynamicSignalHandler" /></Parameters>
-      <Docs><param name="o">To be added.</param><param name="name">To be added.</param><param name="handler">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Emit">
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="handler" Type="Gst.DynamicSignalHandler" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="handler">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Emit">
       <MemberSignature Language="C#" Value="public static object Emit (GLib.Object o, string name, object[] parameters);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="o" Type="GLib.Object" /><Parameter Name="name" Type="System.String" /><Parameter Name="parameters" Type="System.Object[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters>
-      <Docs><param name="o">To be added.</param><param name="name">To be added.</param><param name="parameters">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+      <ReturnValue>
+        <ReturnType>System.Object</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="parameters" Type="System.Object[]">
+          <Attributes>
+            <Attribute>
+              <AttributeName>System.ParamArray</AttributeName>
+            </Attribute>
+          </Attributes>
+        </Parameter>
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="parameters">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
     </Member>
   </Members>
 </Type>
