@@ -50,6 +50,7 @@ gst_vdp_device_finalize (GObject * object)
   GstVdpDevice *device = (GstVdpDevice *) object;
 
   device->vdp_device_destroy (device->device);
+  XCloseDisplay (device->display);
   g_free (device->display_name);
 
   G_OBJECT_CLASS (gst_vdp_device_parent_class)->finalize (object);
