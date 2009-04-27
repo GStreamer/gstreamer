@@ -200,7 +200,6 @@ struct _GstBaseParsePrivate
   gboolean flushing;
 
   gint64 offset;
-  gint64 pending_offset;
 
   GList *pending_events;
 
@@ -540,7 +539,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
     {
       gdouble rate, applied_rate;
       GstFormat format;
-      gint64 start, stop, pos;
+      gint64 start, stop, pos, offset = 0;
       gboolean update;
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
@@ -552,7 +551,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 
         /* stop time is allowed to be open-ended, but not start & pos */
         seg_stop = GST_CLOCK_TIME_NONE;
-        parse->priv->pending_offset = pos;
+        offset = pos;
 
         if (gst_base_parse_bytepos_to_time (parse, start, &seg_start) &&
             gst_base_parse_bytepos_to_time (parse, pos, &seg_pos)) {
@@ -593,6 +592,12 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       gst_event_replace (eventp, event);
       gst_event_unref (event);
       handled = TRUE;
+
+      /* but finish the current segment */
+      GST_DEBUG_OBJECT (parse, "draining current segment");
+      gst_base_parse_drain (parse);
+      gst_adapter_clear (parse->priv->adapter);
+      parse->priv->offset = offset;
       break;
     }
 
@@ -979,13 +984,6 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
-
-  /* Make sure that adapter doesn't have any old data after
-     newsegment has been received and update our offset */
-  if (G_UNLIKELY (parse->pending_segment)) {
-    parse->priv->offset = parse->priv->pending_offset;
-    gst_adapter_clear (parse->priv->adapter);
-  }
 
   gst_base_parse_update_upstream_durations (parse);
 
