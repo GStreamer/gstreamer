@@ -469,7 +469,7 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
   GstCaps *srccaps, *peercaps;
   gboolean res;
 
-  /* fill in the defaults, there properties cannot be negotiated. */
+  /* fill in the defaults, their properties cannot be negotiated. */
   srccaps = gst_caps_new_simple ("application/x-rtp",
       "media", G_TYPE_STRING, payload->media,
       "clock-rate", G_TYPE_INT, payload->clock_rate,
