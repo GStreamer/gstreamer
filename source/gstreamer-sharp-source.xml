@@ -9,6 +9,7 @@
         <exclude>../../gstreamer/gst/gstinterface.h</exclude>
         <exclude>../../gstreamer/gst/gsturi.h</exclude>
         <exclude>../../gstreamer/gst/gstpreset.h</exclude>
+        <exclude>../../gstreamer/gst/gstxml.h</exclude>
         <!-- Not bound -->
         <exclude>../../gstreamer/gst/gstconfig.h</exclude>
         <exclude>../../gstreamer/gst/gstfilter.h</exclude>

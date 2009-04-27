@@ -195,7 +195,6 @@
       <Type Name="UnlinkedHandler" Kind="Delegate" />
       <Type Name="Util" Kind="Class" />
       <Type Name="Version" Kind="Class" />
-      <Type Name="XML" Kind="Class" />
     </Namespace>
   </Types>
   <Title>gst-sharp</Title>
