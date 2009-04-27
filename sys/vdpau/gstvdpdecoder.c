@@ -68,6 +68,7 @@ gst_vdp_decoder_push_video_buffer (GstVdpDecoder * dec,
     GST_BUFFER_TIMESTAMP (buffer) =
         gst_util_uint64_scale_int (GST_SECOND * dec->frame_nr,
         dec->framerate_denominator, dec->framerate_numerator);
+    dec->frame_nr++;
   }
   gst_buffer_set_caps (GST_BUFFER (buffer), GST_PAD_CAPS (dec->src));
 
@@ -82,10 +83,10 @@ gst_vdp_decoder_change_state (GstElement * element, GstStateChange transition)
   dec = GST_VDP_DECODER (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       dec->device = gst_vdp_get_device (dec->display_name);
       break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_object_unref (dec->device);
       dec->device = NULL;
       break;
