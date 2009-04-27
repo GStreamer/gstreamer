@@ -380,6 +380,8 @@ gst_vdp_mpeg_decoder_reset (GstVdpMpegDecoder * mpeg_dec)
     gst_buffer_unref (mpeg_dec->f_buffer);
 
   gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
+
+  gst_adapter_clear (mpeg_dec->adapter);
 }
 
 static GstFlowReturn
