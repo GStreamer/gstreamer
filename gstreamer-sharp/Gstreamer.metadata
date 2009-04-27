@@ -632,6 +632,8 @@
 
   <attr path="/api/namespace/callback[@name='StructureMapFunc']" name="hidden">1</attr>
 
+  <attr path="/api/namespace/object[@name='SystemClock']/method[@cname='gst_system_clock_obtain']/return-type" name="owned">true</attr>
+
   <attr path="/api/namespace/object[@name='Task']/field[@name='Func']" name="hidden">1</attr>
 
   <attr path="/api/namespace/class[@name='Tag']" name="disable_void_ctor">1</attr>
