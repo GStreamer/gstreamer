@@ -206,7 +206,6 @@ struct _GstBaseParsePrivate
   gboolean flushing;
 
   gint64 offset;
-  gint64 pending_offset;
 
   GList *pending_events;
 
@@ -547,7 +546,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
     {
       gdouble rate, applied_rate;
       GstFormat format;
-      gint64 start, stop, pos;
+      gint64 start, stop, pos, offset = 0;
       gboolean update;
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
@@ -559,7 +558,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 
         /* stop time is allowed to be open-ended, but not start & pos */
         seg_stop = GST_CLOCK_TIME_NONE;
-        parse->priv->pending_offset = pos;
+        offset = pos;
 
         if (gst_base_parse_bytepos_to_time (parse, start, &seg_start) &&
             gst_base_parse_bytepos_to_time (parse, pos, &seg_pos)) {
@@ -600,6 +599,12 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       gst_event_replace (eventp, event);
       gst_event_unref (event);
       handled = TRUE;
+
+      /* but finish the current segment */
+      GST_DEBUG_OBJECT (parse, "draining current segment");
+      gst_base_parse_drain (parse);
+      gst_adapter_clear (parse->adapter);
+      parse->priv->offset = offset;
       break;
     }
 
@@ -872,19 +877,6 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
-
-  if (G_UNLIKELY (parse->pending_segment)) {
-    parse->priv->offset = parse->priv->pending_offset;
-
-    /* Make sure that adapter doesn't have any old data after
-       newsegment has been pushed */
-
-    /* FIXME: when non-flushing seek occurs, chain is still processing the
-       data from old segment. If this processing loop is then interrupted
-       (e.g. paused), chain function exists and next time it gets called
-       all this old data gets lost and playback continues from new segment */
-    gst_adapter_clear (parse->adapter);
-  }
 
   if (G_LIKELY (buffer)) {
     GST_LOG_OBJECT (parse, "buffer size: %d, offset = %lld",
