@@ -1140,7 +1140,9 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer, guint64 ntpnstime)
        * get the correct SSRC from the session manager before pushing anything. */
       buffer = gst_buffer_make_writable (buffer);
 
-      GST_WARNING ("updating SSRC from %08x to %08x, fix the payloader", ssrc,
+      /* FIXME, we don't want to warn yet because we can't inform any payloader
+       * of the changes SSRC yet because we don't implement pad-alloc. */
+      GST_LOG ("updating SSRC from %08x to %08x, fix the payloader", ssrc,
           src->ssrc);
       gst_rtp_buffer_set_ssrc (buffer, src->ssrc);
     }
