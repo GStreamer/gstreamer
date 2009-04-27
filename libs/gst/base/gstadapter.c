@@ -523,6 +523,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
 {
   GstBuffer *buffer;
   GstBuffer *cur;
+  guint hsize;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (nbytes > 0, NULL);
@@ -535,16 +536,20 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
   if (G_UNLIKELY (nbytes > adapter->size))
     return NULL;
 
-  /* our head buffer has enough data left, return it */
   cur = adapter->buflist->data;
-  if (GST_BUFFER_SIZE (cur) >= nbytes + adapter->skip) {
+  hsize = GST_BUFFER_SIZE (cur);
+
+  /* our head buffer has enough data left, return it */
+  if (adapter->skip == 0 && hsize == nbytes) {
+    GST_LOG_OBJECT (adapter, "providing buffer of %d bytes as head buffer",
+        nbytes);
+    buffer = gst_buffer_ref (cur);
+    goto done;
+  } else if (hsize >= nbytes + adapter->skip) {
     GST_LOG_OBJECT (adapter, "providing buffer of %d bytes via sub-buffer",
         nbytes);
     buffer = gst_buffer_create_sub (cur, adapter->skip, nbytes);
-
-    gst_adapter_flush (adapter, nbytes);
-
-    return buffer;
+    goto done;
   }
 
   if (gst_adapter_try_to_merge_up (adapter, nbytes)) {
@@ -554,10 +559,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
       GST_LOG_OBJECT (adapter, "providing buffer of %d bytes via sub-buffer",
           nbytes);
       buffer = gst_buffer_create_sub (cur, adapter->skip, nbytes);
-
-      gst_adapter_flush (adapter, nbytes);
-
-      return buffer;
+      goto done;
     }
   }
 
@@ -572,6 +574,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
     gst_adapter_peek_into (adapter, GST_BUFFER_DATA (buffer), nbytes);
   }
 
+done:
   gst_adapter_flush (adapter, nbytes);
 
   return buffer;
