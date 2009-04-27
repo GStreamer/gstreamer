@@ -53,7 +53,6 @@ gst_vdp_device_finalize (GObject * object)
   g_free (device->display_name);
 
   G_OBJECT_CLASS (gst_vdp_device_parent_class)->finalize (object);
-
 }
 
 static void
@@ -234,21 +233,18 @@ device_destroyed_cb (gpointer data, GObject * object)
   }
 }
 
-static gpointer
-create_devices_hash (gpointer data)
-{
-  return g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
-}
-
 GstVdpDevice *
 gst_vdp_get_device (const gchar * display_name)
 {
-  static GOnce my_once = G_ONCE_INIT;
-  GHashTable *devices_hash;
+  static gsize once = 0;
+  static GHashTable *devices_hash;
   GstVdpDevice *device;
 
-  g_once (&my_once, create_devices_hash, NULL);
-  devices_hash = my_once.retval;
+  if (g_once_init_enter (&once)) {
+    devices_hash =
+        g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+    g_once_init_leave (&once, 1);
+  }
 
   if (display_name)
     device = g_hash_table_lookup (devices_hash, display_name);
