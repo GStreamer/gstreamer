@@ -64,15 +64,11 @@ GstFlowReturn
 gst_vdp_decoder_push_video_buffer (GstVdpDecoder * dec,
     GstVdpVideoBuffer * buffer)
 {
-  GST_BUFFER_TIMESTAMP (buffer) =
-      gst_util_uint64_scale_int (GST_SECOND * dec->frame_nr,
-      dec->framerate_denominator, dec->framerate_numerator);
-  GST_BUFFER_DURATION (buffer) =
-      gst_util_uint64_scale_int (GST_SECOND, dec->framerate_denominator,
-      dec->framerate_numerator);
-  GST_BUFFER_OFFSET (buffer) = dec->frame_nr;
-  dec->frame_nr++;
-  GST_BUFFER_OFFSET_END (buffer) = dec->frame_nr;
+  if (GST_BUFFER_TIMESTAMP (buffer) == GST_CLOCK_TIME_NONE) {
+    GST_BUFFER_TIMESTAMP (buffer) =
+        gst_util_uint64_scale_int (GST_SECOND * dec->frame_nr,
+        dec->framerate_denominator, dec->framerate_numerator);
+  }
   gst_buffer_set_caps (GST_BUFFER (buffer), GST_PAD_CAPS (dec->src));
 
   return gst_pad_push (dec->src, GST_BUFFER (buffer));

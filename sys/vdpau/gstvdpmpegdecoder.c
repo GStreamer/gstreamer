@@ -139,7 +139,8 @@ typedef struct
 } GstVdpBFrame;
 
 static GstFlowReturn
-gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
+gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
+    GstClockTime timestamp)
 {
   GstVdpDecoder *dec;
   GstBuffer *buffer;
@@ -167,6 +168,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
 
     b_frame = g_slice_new (GstVdpBFrame);
 
+    GST_BUFFER_TIMESTAMP (buffer) = timestamp;
     b_frame->buffer = buffer;
     memcpy (&b_frame->vdp_info, &mpeg_dec->vdp_info,
         sizeof (VdpPictureInfoMPEG1Or2));
@@ -180,6 +182,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
 
   outbuf = gst_vdp_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
       dec->width, dec->height);
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   surface = outbuf->surface;
 
   device = dec->device;
@@ -216,6 +219,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
 
       b_outbuf = gst_vdp_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
           dec->width, dec->height);
+      GST_BUFFER_TIMESTAMP (b_outbuf) = GST_BUFFER_TIMESTAMP (b_frame->buffer);
 
       b_frame->vdp_info.backward_reference = surface;
       vbit[0].struct_version = VDP_BITSTREAM_BUFFER_VERSION;
@@ -428,8 +432,6 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
     switch (data[0]) {
       case MPEG_PACKET_PICTURE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_PICTURE");
-        if (mpeg_dec->vdp_info.slice_count > 0)
-          ret = gst_vdp_mpeg_decoder_decode (mpeg_dec);
 
         gst_vdp_mpeg_decoder_parse_picture (mpeg_dec, packet_start, packet_end);
         break;
@@ -463,6 +465,9 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
         break;
     }
   }
+
+  if (mpeg_dec->vdp_info.slice_count > 0)
+    ret = gst_vdp_mpeg_decoder_decode (mpeg_dec, GST_BUFFER_TIMESTAMP (buffer));
 
   return ret;
 }
