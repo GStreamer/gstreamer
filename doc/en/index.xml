@@ -32,7 +32,7 @@
       <Type Name="ChildRemovedHandler" Kind="Delegate" />
       <Type Name="Clock" Kind="Class" />
       <Type Name="ClockCallback" Kind="Delegate" />
-      <Type Name="ClockEntry" Kind="Structure" />
+      <Type Name="ClockEntry" Kind="Class" />
       <Type Name="ClockEntryType" Kind="Enumeration" />
       <Type Name="ClockFlags" Kind="Enumeration" />
       <Type Name="ClockReturn" Kind="Enumeration" />

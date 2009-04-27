@@ -39,7 +39,7 @@ public Gst.Object Parent {
 extern static uint gstsharp_gst_object_get_lock_offset ();
 
 static uint lock_offset = gstsharp_gst_object_get_lock_offset ();
-private IntPtr LockPtr {
+internal IntPtr LockPtr {
   get {
     unsafe {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + lock_offset);

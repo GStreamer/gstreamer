@@ -56,6 +56,7 @@ customs = 			\
 	Bus.custom		\
 	Caps.custom		\
 	Clock.custom		\
+	ClockEntry.custom		\
 	Debug.custom		\
 	Element.custom		\
 	Message.custom		\

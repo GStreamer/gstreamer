@@ -76,12 +76,7 @@
       <Attributes><Attribute><AttributeName>GLib.Signal("entry-added")</AttributeName></Attribute></Attributes>
       <ReturnValue><ReturnType>Gst.EntryAddedHandler</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Filter">
-      <MemberSignature Language="C#" Value="public Gst.IndexFilter Filter { set; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.IndexFilter</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FilterFull">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Filter"><MemberSignature Language="C#" Value="public Gst.IndexFilter Filter { set; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.IndexFilter</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="FilterFull">
       <MemberSignature Language="C#" Value="public Gst.IndexFilter FilterFull { set; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>Gst.IndexFilter</ReturnType></ReturnValue>

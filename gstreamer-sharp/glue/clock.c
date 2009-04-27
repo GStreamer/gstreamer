@@ -1,38 +1,22 @@
-#include <glib.h>
-#include <gst/gstclock.h>
+#include <gst/gst.h>
 
-guint64
-gstsharp_gst_clock_get_gst_second ()
-{
-  return GST_SECOND;
+uint
+gstsharp_gst_clock_get_entries_changed_offset (void) {
+  return (uint) G_STRUCT_OFFSET (GstClock, entries_changed);
 }
 
-guint64
-gstsharp_gst_clock_get_gst_msecond ()
-{
-  return GST_MSECOND;
+uint
+gstsharp_gst_clock_get_slave_lock_offset (void) {
+  return (uint) G_STRUCT_OFFSET (GstClock, slave_lock);
 }
 
-guint64
-gstsharp_gst_clock_get_gst_usecond ()
-{
-  return GST_USECOND;
+uint
+gstsharp_gst_clock_get_entries_offset (void) {
+  return (uint) G_STRUCT_OFFSET (GstClock, entries);
 }
 
-guint64
-gstsharp_gst_clock_get_gst_nsecond ()
-{
-  return GST_NSECOND;
+uint
+gstsharp_gst_clock_get_times_offset (void) {
+  return (uint) G_STRUCT_OFFSET (GstClock, times);
 }
 
-guint64
-gstsharp_gst_clock_get_time_none ()
-{
-  return GST_CLOCK_TIME_NONE;
-}
-
-gboolean
-gstsharp_gst_clock_time_is_valid (GstClockTime time)
-{
-  return GST_CLOCK_TIME_IS_VALID (time);
-}

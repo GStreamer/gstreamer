@@ -1,5 +1,5 @@
 <Type Name="ClockCallback" FullName="Gst.ClockCallback">
-  <TypeSignature Language="C#" Value="public delegate bool ClockCallback(Clock clock, ulong time, IntPtr id);" />
+  <TypeSignature Language="C#" Value="public delegate bool ClockCallback(Clock clock, ulong time, ClockEntry id);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -10,7 +10,7 @@
   <Parameters>
     <Parameter Name="clock" Type="Gst.Clock" />
     <Parameter Name="time" Type="System.UInt64" />
-    <Parameter Name="id" Type="System.IntPtr" />
+    <Parameter Name="id" Type="Gst.ClockEntry" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Boolean</ReturnType>

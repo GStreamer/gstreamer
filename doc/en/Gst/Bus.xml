@@ -139,12 +139,7 @@
       <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
       <Parameters />
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SyncHandler">
-      <MemberSignature Language="C#" Value="public Gst.BusSyncHandler SyncHandler { set; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.BusSyncHandler</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SyncMessage">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SyncHandler"><MemberSignature Language="C#" Value="public Gst.BusSyncHandler SyncHandler { set; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.BusSyncHandler</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="SyncMessage">
       <MemberSignature Language="C#" Value="public event Gst.SyncMessageHandler SyncMessage;" />
       <MemberType>Event</MemberType>
       <Attributes><Attribute><AttributeName>GLib.Signal("sync-message")</AttributeName></Attribute></Attributes>
