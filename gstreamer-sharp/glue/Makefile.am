@@ -10,6 +10,7 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	bin.c \
 	structure.c \
 	taglist.c \
+	task.c \
 	object.c \
 	gobject.c
 

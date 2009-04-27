@@ -66,6 +66,7 @@ customs = 			\
 	Object.custom		\
 	PadTemplate.custom      \
 	Plugin.custom     	\
+	Task.custom     	\
 	MiniObject.custom       \
 	Registry.custom         \
 	Query.custom 	        \
