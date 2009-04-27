@@ -1,0 +1,5 @@
+To build this Gtk# from trunk is required and the following patches:
+
+https://bugzilla.novell.com/show_bug.cgi?id=497986
+https://bugzilla.novell.com/show_bug.cgi?id=498051
+
