@@ -15,9 +15,9 @@ vdpau_init (GstPlugin * vdpau_plugin)
   gst_element_register (vdpau_plugin, "vdpaumpegdec",
       GST_RANK_NONE, GST_TYPE_VDPAU_MPEG_DECODER);
   gst_element_register (vdpau_plugin, "vdpauvideoyuv",
-      GST_RANK_NONE, GST_TYPE_VDPAU_VIDEO_YUV);
+      GST_RANK_PRIMARY, GST_TYPE_VDPAU_VIDEO_YUV);
   gst_element_register (vdpau_plugin, "vdpauyuvvideo",
-      GST_RANK_NONE, GST_TYPE_VDPAU_YUV_VIDEO);
+      GST_RANK_PRIMARY, GST_TYPE_VDPAU_YUV_VIDEO);
 
   return TRUE;
 }
