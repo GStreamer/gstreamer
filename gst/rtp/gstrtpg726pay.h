@@ -36,6 +36,10 @@ typedef struct _GstRtpG726PayClass GstRtpG726PayClass;
 struct _GstRtpG726Pay
 {
   GstBaseRTPAudioPayload audiopayload;
+
+  gboolean aal2;
+  gboolean force_aal2;
+  gint bitrate;
 };
 
 struct _GstRtpG726PayClass
