@@ -139,6 +139,7 @@ struct _GstOggDemux
   GstPad *sinkpad;
 
   gint64 length;
+  gint64 read_offset;
   gint64 offset;
 
   gboolean seekable;

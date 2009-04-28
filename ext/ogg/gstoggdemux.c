@@ -1542,6 +1542,7 @@ gst_ogg_demux_seek (GstOggDemux * ogg, gint64 offset)
   GST_LOG_OBJECT (ogg, "seeking to %" G_GINT64_FORMAT, offset);
 
   ogg->offset = offset;
+  ogg->read_offset = offset;
   ogg_sync_reset (&ogg->sync);
 }
 
@@ -1555,13 +1556,15 @@ gst_ogg_demux_get_data (GstOggDemux * ogg)
   GstBuffer *buffer;
 
   GST_LOG_OBJECT (ogg, "get data %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
-      ogg->offset, ogg->length);
-  if (ogg->offset == ogg->length)
+      ogg->read_offset, ogg->length);
+  if (ogg->read_offset == ogg->length)
     goto eos;
 
-  ret = gst_pad_pull_range (ogg->sinkpad, ogg->offset, CHUNKSIZE, &buffer);
+  ret = gst_pad_pull_range (ogg->sinkpad, ogg->read_offset, CHUNKSIZE, &buffer);
   if (ret != GST_FLOW_OK)
     goto error;
+
+  ogg->read_offset += GST_BUFFER_SIZE (buffer);
 
   ret = gst_ogg_demux_submit_buffer (ogg, buffer);
 
@@ -1622,8 +1625,9 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary,
 
     if (more < 0) {
       /* skipped n bytes */
-      GST_LOG_OBJECT (ogg, "skipped %ld bytes", more);
       ogg->offset -= more;
+      GST_LOG_OBJECT (ogg, "skipped %ld bytes, offset %" G_GINT64_FORMAT, more,
+          ogg->offset);
     } else if (more == 0) {
       /* we need more data */
       if (boundary == 0)
@@ -1643,9 +1647,6 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary,
       ret = GST_FLOW_OK;
 
       ogg->offset += more;
-      /* need to reset as we do not keep track of the bytes we
-       * sent to the sync layer */
-      ogg_sync_reset (&ogg->sync);
 
       GST_LOG_OBJECT (ogg,
           "got page at %" G_GINT64_FORMAT ", serial %08x, end at %"
@@ -1679,6 +1680,8 @@ gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og, gint64 * offset)
   gint64 end = begin;
   gint64 cur_offset = -1;
 
+  GST_LOG_OBJECT (ogg, "getting page before %" G_GINT64_FORMAT, begin);
+
   while (cur_offset == -1) {
     begin -= CHUNKSIZE;
     if (begin < 0)
@@ -1696,25 +1699,37 @@ gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og, gint64 * offset)
       ret =
           gst_ogg_demux_get_next_page (ogg, og, end - ogg->offset, &new_offset);
       /* we hit the upper limit, offset contains the last page start */
-      if (ret == GST_FLOW_LIMIT)
+      if (ret == GST_FLOW_LIMIT) {
+        GST_LOG_OBJECT (ogg, "hit limit");
         break;
+      }
       /* something went wrong */
-      if (ret == GST_FLOW_UNEXPECTED)
+      if (ret == GST_FLOW_UNEXPECTED) {
         new_offset = 0;
-      else if (ret != GST_FLOW_OK)
+        GST_LOG_OBJECT (ogg, "got unexpected");
+      } else if (ret != GST_FLOW_OK) {
+        GST_LOG_OBJECT (ogg, "got error %d", ret);
         return ret;
+      }
+
+      GST_LOG_OBJECT (ogg, "found page at %" G_GINT64_FORMAT, new_offset);
 
       /* offset is next page start */
       cur_offset = new_offset;
     }
   }
 
+  GST_LOG_OBJECT (ogg, "found previous page at %" G_GINT64_FORMAT, cur_offset);
+
   /* we have the offset.  Actually snork and hold the page now */
   gst_ogg_demux_seek (ogg, cur_offset);
   ret = gst_ogg_demux_get_next_page (ogg, og, -1, NULL);
-  if (ret != GST_FLOW_OK)
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (ogg, "can't get last page at %" G_GINT64_FORMAT,
+        cur_offset);
     /* this shouldn't be possible */
     return ret;
+  }
 
   if (offset)
     *offset = cur_offset;
@@ -2004,7 +2019,8 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
     }
   }
 
-  ogg->offset = best;
+  GST_DEBUG_OBJECT (ogg, "seeking to %" G_GINT64_FORMAT, best);
+  gst_ogg_demux_seek (ogg, best);
   *rchain = chain;
 
   return TRUE;
@@ -2385,6 +2401,10 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     }
     if (!ogg_page_bos (&op)) {
       GST_WARNING_OBJECT (ogg, "page is not BOS page");
+      /* if we did not find a chain yet, assume this is a bogus stream and
+       * ignore it */
+      if (!chain)
+        ret = GST_FLOW_UNEXPECTED;
       break;
     }
 
@@ -2857,9 +2877,11 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
   if (pad) {
     result = gst_ogg_pad_submit_page (pad, page);
   } else {
-    /* no pad, this is pretty fatal. This means an ogg page without bos
-     * has been seen for this serialno. could just ignore it too... */
-    goto unknown_pad;
+    /* no pad. This means an ogg page without bos has been seen for this
+     * serialno. we just ignore it but post a warning... */
+    GST_ELEMENT_WARNING (ogg, STREAM, DECODE,
+        (NULL), ("unknown ogg pad for serial %08x detected", serialno));
+    return GST_FLOW_OK;
   }
   return result;
 
@@ -2868,12 +2890,6 @@ unknown_chain:
   {
     GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
         (NULL), ("unknown ogg chain for serial %08x detected", serialno));
-    return GST_FLOW_ERROR;
-  }
-unknown_pad:
-  {
-    GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
-        (NULL), ("unknown ogg pad for serial %08x detected", serialno));
     return GST_FLOW_ERROR;
   }
 }
