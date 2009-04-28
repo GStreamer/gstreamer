@@ -1293,6 +1293,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
     }
 
     if (GST_BUFFER_IS_DISCONT (buf)) {
+      GST_LOG_OBJECT (pad->collect.pad, "got discont");
       packet.packetno++;
       /* No public API for this; hack things in */
       pad->stream.pageno++;
