@@ -204,6 +204,18 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
           GST_TYPE_BASE_AUDIO_SINK_SLAVE_METHOD, DEFAULT_SLAVE_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstBaseAudioSink:can-activate-pull
+   *
+   * If set to #TRUE, the baseaudiosink will attempt to activate its upstream
+   * peer in pull mode, before falling back to push mode.
+   * When set to #FALSE, push mode will be assumed.
+   * Pull mode is not enabled by default, as it interferes with clock slaving
+   * and trick modes.
+   * not required.
+   *
+   * Since: 0.10.23
+   */
   g_object_class_install_property (gobject_class, PROP_CAN_ACTIVATE_PULL,
       g_param_spec_boolean ("can-activate-pull", "Allow Pull Scheduling",
           "Allow pull-based scheduling", DEFAULT_CAN_ACTIVATE_PULL,
