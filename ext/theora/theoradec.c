@@ -1115,6 +1115,55 @@ theora_dec_push_reverse (GstTheoraDec * dec, GstBuffer * buf)
   return result;
 }
 
+/* Allocate buffer and copy image data into Y444 format */
+static GstFlowReturn
+theora_handle_444_image (GstTheoraDec * dec, yuv_buffer * yuv, GstBuffer ** out)
+{
+  gint width = dec->width;
+  gint height = dec->height;
+  gint out_size;
+  gint stride;
+  GstFlowReturn result;
+  int i, plane;
+
+  stride = GST_ROUND_UP_4 (width);
+  out_size = stride * height * 3;
+
+  /* now copy over the area contained in offset_x,offset_y,
+   * frame_width, frame_height */
+  result =
+      gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+      out_size, GST_PAD_CAPS (dec->srcpad), out);
+  if (G_UNLIKELY (result != GST_FLOW_OK))
+    goto no_buffer;
+
+  {
+    guchar *dest, *src;
+
+    for (plane = 0; plane < 3; plane++) {
+      dest = GST_BUFFER_DATA (*out) + plane * stride * height;
+
+      src = (plane == 0 ? yuv->y : (plane == 1 ? yuv->u : yuv->v)) +
+          dec->offset_x + dec->offset_y * yuv->y_stride;
+
+      for (i = 0; i < height; i++) {
+        memcpy (dest, src, width);
+
+        dest += stride;
+        src += yuv->y_stride;
+      }
+    }
+  }
+
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
+        gst_flow_get_name (result));
+    return result;
+  }
+}
+
+
 /* Allocate buffer and copy image data into YUY2 format */
 static GstFlowReturn
 theora_handle_422_image (GstTheoraDec * dec, yuv_buffer * yuv, GstBuffer ** out)
@@ -1341,12 +1390,10 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
     result = theora_handle_420_image (dec, &yuv, &out);
   } else if (dec->info.pixelformat == OC_PF_422) {
     result = theora_handle_422_image (dec, &yuv, &out);
-#if 0
   } else if (dec->info.pixelformat == OC_PF_444) {
     result = theora_handle_444_image (dec, &yuv, &out);
   } else {
     g_assert_not_reached ();
-#endif
   }
 
   if (result != GST_FLOW_OK)
