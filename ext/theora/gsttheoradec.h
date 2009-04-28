@@ -72,6 +72,7 @@ struct _GstTheoraDec
   gboolean need_keyframe;
   gint width, height;
   gint offset_x, offset_y;
+  gint output_bpp;
 
   gboolean crop;
 
