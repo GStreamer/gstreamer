@@ -2209,9 +2209,11 @@ gst_element_lost_state (GstElement * element)
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   GST_OBJECT_LOCK (element);
-  if (GST_STATE_PENDING (element) != GST_STATE_VOID_PENDING ||
-      GST_STATE_RETURN (element) == GST_STATE_CHANGE_FAILURE)
+  if (GST_STATE_RETURN (element) == GST_STATE_CHANGE_FAILURE)
     goto nothing_lost;
+
+  if (GST_STATE_PENDING (element) != GST_STATE_VOID_PENDING)
+    goto only_async_start;
 
   old_state = GST_STATE (element);
 
@@ -2245,6 +2247,14 @@ gst_element_lost_state (GstElement * element)
 nothing_lost:
   {
     GST_OBJECT_UNLOCK (element);
+    return;
+  }
+only_async_start:
+  {
+    GST_OBJECT_UNLOCK (element);
+
+    message = gst_message_new_async_start (GST_OBJECT_CAST (element), TRUE);
+    gst_element_post_message (element, message);
     return;
   }
 }
