@@ -1,5 +1,5 @@
-<Type Name="PadIntLinkFunction" FullName="Gst.PadIntLinkFunction">
-  <TypeSignature Language="C#" Value="public delegate GLib.List PadIntLinkFunction(Pad pad);" />
+<Type Name="PadBufferProbeCallback" FullName="Gst.PadBufferProbeCallback">
+  <TypeSignature Language="C#" Value="public delegate bool PadBufferProbeCallback(Pad pad, Buffer buffer);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -9,12 +9,14 @@
   </Base>
   <Parameters>
     <Parameter Name="pad" Type="Gst.Pad" />
+    <Parameter Name="buffer" Type="Gst.Buffer" />
   </Parameters>
   <ReturnValue>
-    <ReturnType>GLib.List</ReturnType>
+    <ReturnType>System.Boolean</ReturnType>
   </ReturnValue>
   <Docs>
     <param name="pad">To be added.</param>
+    <param name="buffer">To be added.</param>
     <summary>To be added.</summary>
     <value>To be added.</value>
     <remarks>To be added.</remarks>

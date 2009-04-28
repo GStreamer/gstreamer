@@ -1,101 +1,434 @@
-
 [DllImport ("gstreamer-0.10.dll") ]
-private static extern bool gst_pad_query_position (IntPtr raw, ref Format format, out long cur);
-
-public bool QueryPosition (Gst.Format format, out long current) {
-  return gst_pad_query_position (Handle, ref format, out current);
-}
-
+static extern IntPtr gst_pad_get_pad_template_caps (IntPtr raw);
 [DllImport ("gstreamer-0.10.dll") ]
-private static extern bool gst_pad_query_duration (IntPtr raw, ref Format format, out long duration);
+static extern IntPtr gst_caps_copy (IntPtr raw);
 
-public bool QueryDuration (Gst.Format format, out long duration) {
-  return gst_pad_query_duration (Handle, ref format, out duration);
-}
-
-
-public delegate bool BufferProbeDelegate (Pad pad, Gst.Buffer buffer);
-internal delegate bool BufferProbeNativeDelegate (IntPtr pad, IntPtr buf, IntPtr data);
-
-internal class BufferProbeWrapper {
-  internal BufferProbeNativeDelegate NativeFunc;
-  BufferProbeDelegate managedFunc;
-
-  public BufferProbeWrapper (BufferProbeDelegate func) {
-    managedFunc = func;
-    if (func != null)
-      NativeFunc = new BufferProbeNativeDelegate (BufferProbeMarshaller);
-  }
-
-  public bool BufferProbeMarshaller (IntPtr raw_pad, IntPtr buf, IntPtr data) {
-    Pad pad = GLib.Object.GetObject (raw_pad) as Pad;
-    Gst.Buffer buffer = GLib.Opaque.GetOpaque (buf, typeof (Gst.Buffer), false) as Gst.Buffer;
-    return (bool) (managedFunc (pad, buffer));
+public Gst.Caps PadTemplateCaps {
+  get {
+    IntPtr raw_ret = gst_pad_get_pad_template_caps (Handle);
+    Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (gst_caps_copy (raw_ret), typeof (Gst.Caps), false);
+    return ret;
   }
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
-private static extern ulong gst_pad_add_buffer_probe (IntPtr pad, BufferProbeNativeDelegate func, IntPtr data);
+static extern void gst_pad_remove_data_probe (IntPtr raw, uint handler_id);
 
-public ulong AddBufferProbe (BufferProbeDelegate func) {
-  BufferProbeWrapper func_wrapper;
-  if (PersistentData["AddBufferProbe"] != null) {
-    func_wrapper = PersistentData["AddBufferProbe"] as BufferProbeWrapper;
-  } else {
-    func_wrapper = new BufferProbeWrapper (func);
-    PersistentData["AddBufferProbe"] = func_wrapper;
-  }
-
-  return gst_pad_add_buffer_probe (this.Handle, func_wrapper.NativeFunc, IntPtr.Zero);
+public void RemoveDataProbe (ulong handler_id) {
+  gst_pad_remove_data_probe (Handle, (uint) handler_id);
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
-private static extern void gst_pad_remove_buffer_probe (IntPtr pad, uint handler_id);
+static extern void gst_pad_remove_event_probe (IntPtr raw, uint handler_id);
 
-public void RemoveBufferProbe (uint handler_id) {
-  gst_pad_remove_buffer_probe (this.Handle, handler_id);
-  PersistentData["AddBufferProbe"] = null;
+public void RemoveEventProbe (ulong handler_id) {
+  gst_pad_remove_event_probe (Handle, (uint) handler_id);
 }
 
-public delegate bool DataProbeDelegate (Pad pad, GLib.Opaque miniobject);
-internal delegate bool DataProbeNativeDelegate (IntPtr pad, IntPtr miniobj, IntPtr data);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_remove_buffer_probe (IntPtr raw, uint handler_id);
 
-internal class DataProbeWrapper {
-  internal DataProbeNativeDelegate NativeFunc;
-  DataProbeDelegate ManagedFunc;
+public void RemoveBufferProbe (ulong handler_id) {
+  gst_pad_remove_buffer_probe (Handle, (uint) handler_id);
+}
 
-  public DataProbeWrapper (DataProbeDelegate func) {
-    ManagedFunc = func;
-    if (func != null)
-      NativeFunc = new DataProbeNativeDelegate (DataProbeMarshaller);
-  }
+[DllImport ("gstreamer-0.10.dll") ]
+static extern int gst_pad_alloc_buffer (IntPtr raw, ulong offset, int size, IntPtr caps, out IntPtr buf);
 
-  public bool DataProbeMarshaller (IntPtr raw_pad, IntPtr miniobj, IntPtr data) {
-    Pad pad = GLib.Object.GetObject (raw_pad) as Pad;
-    GLib.Opaque opaque = GLib.Opaque.GetOpaque (miniobj, typeof (GLib.Opaque), true);
-    return ManagedFunc (pad, opaque);
+public Gst.FlowReturn AllocBuffer (ulong offset, int size, Gst.Caps caps, out Gst.Buffer buf) {
+  IntPtr native_buf;
+  int raw_ret = gst_pad_alloc_buffer (Handle, offset, size, caps == null ? IntPtr.Zero : caps.Handle, out native_buf);
+  Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+  buf = native_buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buf, typeof (Gst.Buffer), true);
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern int gst_pad_alloc_buffer_and_set_caps (IntPtr raw, ulong offset, int size, IntPtr caps, out IntPtr buf);
+
+public Gst.FlowReturn AllocBufferAndSetCaps (ulong offset, int size, Gst.Caps caps, out Gst.Buffer buf) {
+  IntPtr native_buf;
+  int raw_ret = gst_pad_alloc_buffer_and_set_caps (Handle, offset, size, caps == null ? IntPtr.Zero : caps.Handle, out native_buf);
+  Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+  buf = native_buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buf, typeof (Gst.Buffer), true);
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_bufferalloc_function (IntPtr raw, GstSharp.PadBufferAllocFunctionNative bufalloc);
+
+public Gst.PadBufferAllocFunction BufferAllocFunction {
+  set {
+    if (PersistentData["BufferAllocFunction"] != null)
+      PersistentData["BufferAllocFunction"] = null;
+
+    GstSharp.PadBufferAllocFunctionWrapper value_wrapper = new GstSharp.PadBufferAllocFunctionWrapper (value);
+    PersistentData["BufferAllocFunction"] = value_wrapper;
+    gst_pad_set_bufferalloc_function (Handle, value_wrapper.NativeDelegate);
   }
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
-static extern uint gst_pad_add_data_probe (IntPtr pad, DataProbeNativeDelegate func, IntPtr data);
+static extern void gst_pad_set_chain_function (IntPtr raw, GstSharp.PadChainFunctionNative chain);
 
-public uint AddDataProbe (DataProbeDelegate func) {
-  DataProbeWrapper func_wrapper;
-  if (PersistentData["AddDataProbe"] != null) {
-    func_wrapper = PersistentData["AddDataProbe"] as DataProbeWrapper;
-  } else {
-    func_wrapper = new DataProbeWrapper (func);
-    PersistentData["AddDataProbe"] = func_wrapper;
+public Gst.PadChainFunction ChainFunction {
+  set {
+    if (PersistentData["ChainFunction"] != null)
+      PersistentData["ChainFunction"] = null;
+
+    GstSharp.PadChainFunctionWrapper value_wrapper = new GstSharp.PadChainFunctionWrapper (value);
+    PersistentData["ChainFunction"] = value_wrapper;
+    gst_pad_set_chain_function (Handle, value_wrapper.NativeDelegate);
   }
-
-  return gst_pad_add_data_probe (this.Handle, func_wrapper.NativeFunc, IntPtr.Zero);
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
-static extern void gst_pad_remove_data_probe (IntPtr pad, uint handler_id);
+static extern void gst_pad_set_checkgetrange_function (IntPtr raw, GstSharp.PadCheckGetRangeFunctionNative check);
 
-public void RemoveDataProbe (uint handler_id) {
-  gst_pad_remove_data_probe (this.Handle, handler_id);
-  PersistentData["AddDataProbe"] = null;
+public Gst.PadCheckGetRangeFunction CheckGetRangeFunction {
+  set {
+    if (PersistentData["CheckGetRangeFunction"] != null)
+      PersistentData["CheckGetRangeFunction"] = null;
+
+    GstSharp.PadCheckGetRangeFunctionWrapper value_wrapper = new GstSharp.PadCheckGetRangeFunctionWrapper (value);
+    PersistentData["CheckGetRangeFunction"] = value_wrapper;
+    gst_pad_set_checkgetrange_function (Handle, value_wrapper.NativeDelegate);
+  }
 }
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_getrange_function (IntPtr raw, GstSharp.PadGetRangeFunctionNative get);
+
+public Gst.PadGetRangeFunction GetRangeFunction {
+  set {
+    if (PersistentData["GetRangeFunction"] != null)
+      PersistentData["GetRangeFunction"] = null;
+
+    GstSharp.PadGetRangeFunctionWrapper value_wrapper = new GstSharp.PadGetRangeFunctionWrapper (value);
+    PersistentData["GetRangeFunction"] = value_wrapper;
+    gst_pad_set_getrange_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_event_function (IntPtr raw, GstSharp.PadEventFunctionNative evnt);
+
+public Gst.PadEventFunction EventFunction {
+  set {
+    if (PersistentData["EventFunction"] != null)
+      PersistentData["EventFunction"] = null;
+
+    GstSharp.PadEventFunctionWrapper value_wrapper = new GstSharp.PadEventFunctionWrapper (value);
+    PersistentData["EventFunction"] = value_wrapper;
+    gst_pad_set_event_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_link_function (IntPtr raw, GstSharp.PadLinkFunctionNative link);
+
+public Gst.PadLinkFunction LinkFunction {
+  set {
+    if (PersistentData["LinkFunction"] != null)
+      PersistentData["LinkFunction"] = null;
+
+    GstSharp.PadLinkFunctionWrapper value_wrapper = new GstSharp.PadLinkFunctionWrapper (value);
+    PersistentData["LinkFunction"] = value_wrapper;
+    gst_pad_set_link_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_unlink_function (IntPtr raw, GstSharp.PadUnlinkFunctionNative unlink);
+
+public Gst.PadUnlinkFunction UnlinkFunction {
+  set {
+    if (PersistentData["UnlinkFunction"] != null)
+      PersistentData["UnlinkFunction"] = null;
+
+    GstSharp.PadUnlinkFunctionWrapper value_wrapper = new GstSharp.PadUnlinkFunctionWrapper (value);
+    PersistentData["UnlinkFunction"] = value_wrapper;
+    gst_pad_set_unlink_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_acceptcaps_function (IntPtr raw, GstSharp.PadAcceptCapsFunctionNative acceptcaps);
+
+public Gst.PadAcceptCapsFunction AcceptCapsFunction {
+  set {
+    if (PersistentData["AcceptCapsFunction"] != null)
+      PersistentData["AcceptCapsFunction"] = null;
+
+    GstSharp.PadAcceptCapsFunctionWrapper value_wrapper = new GstSharp.PadAcceptCapsFunctionWrapper (value);
+    PersistentData["AcceptCapsFunction"] = value_wrapper;
+    gst_pad_set_acceptcaps_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_getcaps_function (IntPtr raw, GstSharp.PadGetCapsFunctionNative getcaps);
+
+public Gst.PadGetCapsFunction GetCapsFunction {
+  set {
+    if (PersistentData["GetCapsFunction"] != null)
+      PersistentData["GetCapsFunction"] = null;
+
+    GstSharp.PadGetCapsFunctionWrapper value_wrapper = new GstSharp.PadGetCapsFunctionWrapper (value);
+    PersistentData["GetCapsFunction"] = value_wrapper;
+    gst_pad_set_getcaps_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_setcaps_function (IntPtr raw, GstSharp.PadSetCapsFunctionNative setcaps);
+
+public Gst.PadSetCapsFunction SetCapsFunction {
+  set {
+    if (PersistentData["SetCapsFunction"] != null)
+      PersistentData["SetCapsFunction"] = null;
+
+    GstSharp.PadSetCapsFunctionWrapper value_wrapper = new GstSharp.PadSetCapsFunctionWrapper (value);
+    PersistentData["SetCapsFunction"] = value_wrapper;
+    gst_pad_set_setcaps_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_fixatecaps_function (IntPtr raw, GstSharp.PadFixateCapsFunctionNative fixatecaps);
+
+public Gst.PadFixateCapsFunction FixateCapsFunction {
+  set {
+    if (PersistentData["FixateCapsFunction"] != null)
+      PersistentData["FixateCapsFunction"] = null;
+
+    GstSharp.PadFixateCapsFunctionWrapper value_wrapper = new GstSharp.PadFixateCapsFunctionWrapper (value);
+    PersistentData["FixateCapsFunction"] = value_wrapper;
+    gst_pad_set_fixatecaps_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_activate_function (IntPtr raw, GstSharp.PadActivateFunctionNative activate);
+
+public Gst.PadActivateFunction ActivateFunction {
+  set {
+    if (PersistentData["ActivateFunction"] != null)
+      PersistentData["ActivateFunction"] = null;
+
+    GstSharp.PadActivateFunctionWrapper value_wrapper = new GstSharp.PadActivateFunctionWrapper (value);
+    PersistentData["ActivateFunction"] = value_wrapper;
+    gst_pad_set_activate_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_activatepull_function (IntPtr raw, GstSharp.PadActivateModeFunctionNative activatepull);
+
+public Gst.PadActivateModeFunction ActivatePullFunction {
+  set {
+    if (PersistentData["ActivatePullFunction"] != null)
+      PersistentData["ActivatePullFunction"] = null;
+
+    GstSharp.PadActivateModeFunctionWrapper value_wrapper = new GstSharp.PadActivateModeFunctionWrapper (value);
+    PersistentData["ActivatePullFunction"] = value_wrapper;
+    gst_pad_set_activatepull_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_activatepush_function (IntPtr raw, GstSharp.PadActivateModeFunctionNative activatepush);
+
+public Gst.PadActivateModeFunction ActivatePushFunction {
+  set {
+    if (PersistentData["ActivatePushFunction"] != null)
+      PersistentData["ActivatePushFunction"] = null;
+
+    GstSharp.PadActivateModeFunctionWrapper value_wrapper = new GstSharp.PadActivateModeFunctionWrapper (value);
+    PersistentData["ActivatePushFunction"] = value_wrapper;
+    gst_pad_set_activatepush_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern int gst_pad_push (IntPtr raw, IntPtr buffer);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_mini_object_ref (IntPtr raw);
+
+public Gst.FlowReturn Push (Gst.Buffer buffer) {
+  int raw_ret = gst_pad_push (Handle, buffer == null ? IntPtr.Zero : gst_mini_object_ref (buffer.Handle));
+  Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_pad_push_event (IntPtr raw, IntPtr evnt);
+
+public bool PushEvent (Gst.Event evnt) {
+  bool raw_ret = gst_pad_push_event (Handle, evnt == null ? IntPtr.Zero : gst_mini_object_ref (evnt.Handle));
+  bool ret = raw_ret;
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern int gst_pad_pull_range (IntPtr raw, ulong offset, uint size, out IntPtr buffer);
+
+public Gst.FlowReturn PullRange (ulong offset, uint size, out Gst.Buffer buffer) {
+  IntPtr native_buffer;
+  int raw_ret = gst_pad_pull_range (Handle, offset, size, out native_buffer);
+  Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+  buffer = native_buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buffer, typeof (Gst.Buffer), true);
+  return ret;
+
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_pad_send_event (IntPtr raw, IntPtr evnt);
+
+public bool SendEvent (Gst.Event evnt) {
+  bool raw_ret = gst_pad_send_event (Handle, evnt == null ? IntPtr.Zero : gst_mini_object_ref (evnt.Handle));
+  bool ret = raw_ret;
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_pad_event_default (IntPtr raw, IntPtr evnt);
+
+public bool EventDefault (Gst.Event evnt) {
+  bool raw_ret = gst_pad_event_default (Handle, evnt == null ? IntPtr.Zero : gst_mini_object_ref (evnt.Handle));
+  bool ret = raw_ret;
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_query_function (IntPtr raw, GstSharp.PadQueryFunctionNative query);
+
+public Gst.PadQueryFunction QueryFunction {
+  set {
+    if (PersistentData["QueryFunction"] != null)
+      PersistentData["QueryFunction"] = null;
+
+    GstSharp.PadQueryFunctionWrapper value_wrapper = new GstSharp.PadQueryFunctionWrapper (value);
+    PersistentData["QueryFunction"] = value_wrapper;
+    gst_pad_set_query_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_set_query_type_function (IntPtr raw, GstSharp.PadQueryTypeFunctionNative query);
+
+public Gst.PadQueryTypeFunction QueryTypeFunction {
+  set {
+    if (PersistentData["QueryTypeFunction"] != null)
+      PersistentData["QueryTypeFunction"] = null;
+
+    GstSharp.PadQueryTypeFunctionWrapper value_wrapper = new GstSharp.PadQueryTypeFunctionWrapper (value);
+    PersistentData["QueryTypeFunction"] = value_wrapper;
+    gst_pad_set_query_type_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_pad_get_query_types (IntPtr raw);
+
+public Gst.QueryType[] QueryTypes {
+  get {
+    IntPtr raw_ret = gst_pad_get_query_types (Handle);
+    if (raw_ret == IntPtr.Zero)
+      return new Gst.QueryType[] {};
+
+    ArrayList result = new ArrayList ();
+    bool term = false;
+    int ofs = 0;
+    while (!term) {
+      Gst.QueryType t = (Gst.QueryType) Marshal.ReadInt32 (raw_ret, ofs);
+      if (t == Gst.QueryType.None) {
+        term = true;
+      } else {
+        result.Add (t);
+        ofs += 4;
+      }
+    }
+
+    return (Gst.QueryType[]) result.ToArray (typeof (Gst.QueryType));
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_pad_get_query_types_default (IntPtr raw);
+
+static Gst.QueryType[] GetQueryTypesDefault (Gst.Pad pad) {
+  IntPtr raw_ret = gst_pad_get_query_types_default ( (pad != null) ? pad.Handle : IntPtr.Zero);
+  if (raw_ret == IntPtr.Zero)
+    return new Gst.QueryType[] {};
+
+  ArrayList result = new ArrayList ();
+  bool term = false;
+  int ofs = 0;
+  while (!term) {
+    Gst.QueryType t = (Gst.QueryType) Marshal.ReadInt32 (raw_ret, ofs);
+    if (t == Gst.QueryType.None) {
+      term = true;
+    } else {
+      result.Add (t);
+      ofs += 4;
+    }
+  }
+
+  return (Gst.QueryType[]) result.ToArray (typeof (Gst.QueryType));
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern int gst_pad_chain (IntPtr raw, IntPtr buffer);
+
+public Gst.FlowReturn Chain (Gst.Buffer buffer) {
+  int raw_ret = gst_pad_chain (Handle, buffer == null ? IntPtr.Zero : gst_mini_object_ref (buffer.Handle));
+  Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+  return ret;
+}
+
+[DllImport ("gstreamersharpglue-0.10") ]
+extern static uint gstsharp_gst_pad_get_stream_lock_offset ();
+
+static uint stream_lock_offset = gstsharp_gst_pad_get_stream_lock_offset ();
+private IntPtr StreamLockPtr {
+  get {
+    unsafe {
+      IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + stream_lock_offset);
+      return (*raw_ptr);
+    }
+  }
+}
+
+[DllImport ("libglib-2.0-0.dll") ]
+static extern void g_static_rec_mutex_lock (IntPtr mutex);
+[DllImport ("libglib-2.0-0.dll") ]
+static extern void g_static_rec_mutex_unlock (IntPtr mutex);
+[DllImport ("libglib-2.0-0.dll") ]
+static extern void g_static_rec_mutex_lock_full (IntPtr mutex, uint depth);
+[DllImport ("libglib-2.0-0.dll") ]
+static extern void g_static_rec_mutex_unlock_full (IntPtr mutex, uint depth);
+[DllImport ("libglib-2.0-0.dll") ]
+static extern bool g_static_rec_mutex_trylock (IntPtr mutex);
+
+public void StreamLock () {
+  g_static_rec_mutex_lock (StreamLockPtr);
+}
+
+public void StreamUnlock () {
+  g_static_rec_mutex_unlock (StreamLockPtr);
+}
+
+public void StreamLock (uint depth) {
+  g_static_rec_mutex_lock_full (StreamLockPtr, depth);
+}
+
+public void StreamUnlock (uint depth) {
+  g_static_rec_mutex_unlock_full (StreamLockPtr, depth);
+}
+
+public bool StreamTryLock () {
+  return g_static_rec_mutex_trylock (StreamLockPtr);
+}
+
+

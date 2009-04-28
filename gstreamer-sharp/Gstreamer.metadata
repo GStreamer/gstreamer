@@ -442,33 +442,120 @@
   <attr path="/api/namespace/object[@name='Pipeline']/method[@name='GetBus']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/object[@name='Pad']/method[@name='GetAllowedCaps']/return-type" name="owned">true</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='RemoveBufferProbe']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='AddBufferProbe']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='AddDataProbe']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='RemoveDataProbe']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='QueryPosition']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='QueryDuration']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='block_callback']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='getcapsfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='setcapsfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='acceptcapsfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='fixatecapsfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='activatefunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='activatepushfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='activatepullfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='linkfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='unlinkfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='chainfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='checkgetrangefunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='getrangefunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='eventfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='querytypefunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='queryfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='intlinkfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='bufferallocfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='iterintlinkfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='block_destroy_data']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='block_callback_called']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_data_probe_full']" name="name">AddDataProbe</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_data_probe_full']/parameters/parameter[@name='handler']" name="type">GstPadDataProbeCallback</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_buffer_probe_full']" name="name">AddBufferProbe</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_buffer_probe_full']/parameters/parameter[@name='handler']" name="type">GstPadBufferProbeCallback</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_event_probe_full']" name="name">AddEventProbe</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_event_probe_full']/parameters/parameter[@name='handler']" name="type">GstPadEventProbeCallback</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_query_duration']/parameters/parameter[@name='format']" name="pass_as">ref</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_query_duration']/parameters/parameter[@name='duration']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_query_position']/parameters/parameter[@name='format']" name="pass_as">ref</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_query_position']/parameters/parameter[@name='cur']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_query_convert']/parameters/parameter[@name='dest_format']" name="pass_as">ref</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_query_peer_position']/parameters/parameter[@name='format']" name="pass_as">ref</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_query_peer_duration']/parameters/parameter[@name='format']" name="pass_as">ref</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_query_peer_convert']/parameters/parameter[@name='dest_format']" name="pass_as">ref</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_parent_element']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_allowed_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_negotiated_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_pad_template_caps']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_peer']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_peer_get_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_blocked_async']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_blocked_async_full']" name="name">SetBlocked</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_remove_buffer_probe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_remove_data_probe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_remove_event_probe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/constructor[@cname='gst_pad_new_from_static_template']" name="hidden">1</attr>
+  <!-- FIXME: https://bugzilla.novell.com/show_bug.cgi?id=498498 -->
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer_and_set_caps']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_pull_range']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer']/parameters/parameter[@name='buf']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer_and_set_caps']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer_and_set_caps']/parameters/parameter[@name='buf']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_pull_range']/parameters/parameter[@name='buffer']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_pull_range']/parameters/parameter[@name='buffer']" name="owned">true</attr>
+  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
+  <attr path="/api/namespace/object[@name='Pad']/field" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_bufferalloc_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_chain_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_checkgetrange_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_getrange_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_event_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_link_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_unlink_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_acceptcaps_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_getcaps_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_setcaps_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_fixatecaps_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_activate_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_activatepull_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_activatepush_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_query_function']" name="hidden">1</attr>
+  <!-- deprecated -->
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_internal_link_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_internal_links']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_internal_links_default']" name="hidden">1</attr>
+  <attr path="/api/namespace/callback[@name='PadIntLinkFunction']" name="hidden">1</attr>
+  <!-- IntPtr is not nice to use -->
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_element_private']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_element_private']" name="hidden">1</attr>
+  <!-- FIXME: This is not parsed for some reason -->
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_query_type_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_query_types']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_query_types_default']" name="hidden">1</attr>
+  <!-- FIXME: GstIterator* binding missing -->
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_iterate_internal_links_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_iterate_internal_links']" name="hidden">1</attr>
+  <add-node path="/api/namespace">
+    <callback name="PadQueryTypeFunction" cname="GstPadQueryTypeFunction" hidden="1">
+      <return-type type="const-GstQueryType*" />
+      <parameters>
+        <parameter type="GstPad*" name="pad" />
+      </parameters>
+    </callback>
+  </add-node>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_push']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_push_event']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_send_event']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_event_default']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_chain']" name="hidden">1</attr>
+  <remove-attr path="/api/namespace/object[@name='Pad']/field[@cname='mode']" name="hidden" />
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='mode']" name="access">public</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='mode']" name="readable">true</attr>
+
+  <remove-node path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_proxy_getcaps']" />
+  <remove-node path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_proxy_setcaps']" />
+  <remove-node path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_fixed_caps_func']" />
+  <add-node path="/api/namespace/object[@name='Pad']">
+      <method name="ProxyGetCaps" cname="gst_pad_proxy_getcaps" shared="true">
+        <return-type type="GstCaps*" />
+        <parameters>
+          <parameter type="GstPad*" name="pad" />
+        </parameters>
+      </method>
+      <method name="ProxySetCaps" cname="gst_pad_proxy_setcaps" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstPad*" name="pad" />
+          <parameter type="GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="GetFixedCapsFunc" cname="gst_pad_get_fixed_caps_func" shared="true">
+        <return-type type="GstCaps*" />
+        <parameters>
+          <parameter type="GstPad*" name="pad" />
+        </parameters>
+      </method>
+  </add-node>
+
+  <attr path="/api/namespace/callback[@name='PadBufferAllocFunction']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
+  <attr path="/api/namespace/callback[@name='PadChainFunction']/parameters/parameter[@name='buffer']" name="owned">true</attr>
 
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_BLOCKED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
@@ -485,6 +572,33 @@
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FIXED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 4</attr>
+
+  <add-node path="/api/namespace">
+    <callback name="PadDataProbeCallback" cname="GstPadDataProbeCallback">
+      <return-type type="gboolean" />
+      <parameters>
+        <parameter type="GstPad*" name="pad" />
+        <parameter type="GstMiniObject*" name="miniobj" />
+        <parameter type="gpointer" name="user_data" />
+      </parameters>
+    </callback>
+    <callback name="PadBufferProbeCallback" cname="GstPadBufferProbeCallback">
+      <return-type type="gboolean" />
+      <parameters>
+        <parameter type="GstPad*" name="pad" />
+        <parameter type="GstBuffer*" name="buffer" />
+        <parameter type="gpointer" name="user_data" />
+      </parameters>
+    </callback>
+    <callback name="PadEventProbeCallback" cname="GstPadEventProbeCallback">
+      <return-type type="gboolean" />
+      <parameters>
+        <parameter type="GstPad*" name="pad" />
+        <parameter type="GstEvent*" name="event" />
+        <parameter type="gpointer" name="user_data" />
+      </parameters>
+    </callback>
+  </add-node>
 
   <attr path="/api/namespace/object[@name='ParamSpecMiniObject']" name="hidden">1</attr>
 

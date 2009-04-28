@@ -1,5 +1,5 @@
-<Type Name="Pad+DataProbeDelegate" FullName="Gst.Pad+DataProbeDelegate">
-  <TypeSignature Language="C#" Value="public delegate bool Pad.DataProbeDelegate(Pad pad, Opaque miniobject);" />
+<Type Name="PadEventProbeCallback" FullName="Gst.PadEventProbeCallback">
+  <TypeSignature Language="C#" Value="public delegate bool PadEventProbeCallback(Pad pad, Event evnt);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -9,14 +9,14 @@
   </Base>
   <Parameters>
     <Parameter Name="pad" Type="Gst.Pad" />
-    <Parameter Name="miniobject" Type="GLib.Opaque" />
+    <Parameter Name="evnt" Type="Gst.Event" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Boolean</ReturnType>
   </ReturnValue>
   <Docs>
     <param name="pad">To be added.</param>
-    <param name="miniobject">To be added.</param>
+    <param name="evnt">To be added.</param>
     <summary>To be added.</summary>
     <value>To be added.</value>
     <remarks>To be added.</remarks>

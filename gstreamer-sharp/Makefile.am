@@ -46,7 +46,9 @@ sources = \
 	Value.cs \
 	plugins-base/PlayBin.cs \
 	plugins-base/DecodeBin.cs \
-	plugins-base/TypeFindElement.cs
+	plugins-base/TypeFindElement.cs \
+	GstSharp.PadQueryTypeFunctionNative.cs \
+	PadQueryTypeFunction.cs
 
 build_sources = $(addprefix $(srcdir)/, $(sources))
 

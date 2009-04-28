@@ -99,8 +99,6 @@
       <Type Name="Object" Kind="Class" />
       <Type Name="ObjectFlags" Kind="Enumeration" />
       <Type Name="Pad" Kind="Class" />
-      <Type Name="Pad+BufferProbeDelegate" Kind="Delegate" />
-      <Type Name="Pad+DataProbeDelegate" Kind="Delegate" />
       <Type Name="PadAcceptCapsFunction" Kind="Delegate" />
       <Type Name="PadActivateFunction" Kind="Delegate" />
       <Type Name="PadActivateModeFunction" Kind="Delegate" />
@@ -108,22 +106,25 @@
       <Type Name="PadAddedHandler" Kind="Delegate" />
       <Type Name="PadBlockCallback" Kind="Delegate" />
       <Type Name="PadBufferAllocFunction" Kind="Delegate" />
+      <Type Name="PadBufferProbeCallback" Kind="Delegate" />
       <Type Name="PadChainFunction" Kind="Delegate" />
       <Type Name="PadCheckGetRangeFunction" Kind="Delegate" />
       <Type Name="PadCreatedArgs" Kind="Class" />
       <Type Name="PadCreatedHandler" Kind="Delegate" />
+      <Type Name="PadDataProbeCallback" Kind="Delegate" />
       <Type Name="PadDirection" Kind="Enumeration" />
       <Type Name="PadDispatcherFunction" Kind="Delegate" />
       <Type Name="PadEventFunction" Kind="Delegate" />
+      <Type Name="PadEventProbeCallback" Kind="Delegate" />
       <Type Name="PadFixateCapsFunction" Kind="Delegate" />
       <Type Name="PadFlags" Kind="Enumeration" />
       <Type Name="PadGetCapsFunction" Kind="Delegate" />
       <Type Name="PadGetRangeFunction" Kind="Delegate" />
-      <Type Name="PadIntLinkFunction" Kind="Delegate" />
       <Type Name="PadLinkFunction" Kind="Delegate" />
       <Type Name="PadLinkReturn" Kind="Enumeration" />
       <Type Name="PadPresence" Kind="Enumeration" />
       <Type Name="PadQueryFunction" Kind="Delegate" />
+      <Type Name="PadQueryTypeFunction" Kind="Delegate" />
       <Type Name="PadRemovedArgs" Kind="Class" />
       <Type Name="PadRemovedHandler" Kind="Delegate" />
       <Type Name="PadSetCapsFunction" Kind="Delegate" />
