@@ -1219,7 +1219,7 @@ theora_handle_422_image (GstTheoraDec * dec, yuv_buffer * yuv, GstBuffer ** out)
 
       curdest = dest + 1;
       src = src_cb;
-      for (j = 0; j < width; j++) {
+      for (j = 0; j < width / 2; j++) {
         *curdest = *src++;
         curdest += 4;
       }
@@ -1227,7 +1227,7 @@ theora_handle_422_image (GstTheoraDec * dec, yuv_buffer * yuv, GstBuffer ** out)
 
       curdest = dest + 3;
       src = src_cr;
-      for (j = 0; j < width; j++) {
+      for (j = 0; j < width / 2; j++) {
         *curdest = *src++;
         curdest += 4;
       }
