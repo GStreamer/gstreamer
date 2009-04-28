@@ -431,12 +431,16 @@ same_clock_rate_fold (gpointer item, GValue * ret, gpointer user_data)
   const GstCaps *accumcaps;
   GstCaps *intersect;
 
-  if (pad == mypad)
+  if (pad == mypad) {
+    gst_object_unref (pad);
     return TRUE;
+  }
 
   peercaps = gst_pad_peer_get_caps (pad);
-  if (!peercaps)
+  if (!peercaps) {
+    gst_object_unref (pad);
     return TRUE;
+  }
 
   othercaps = gst_caps_intersect (peercaps,
       gst_pad_get_pad_template_caps (pad));
@@ -451,6 +455,7 @@ same_clock_rate_fold (gpointer item, GValue * ret, gpointer user_data)
   g_value_take_boxed (ret, intersect);
 
   gst_caps_unref (othercaps);
+  gst_object_unref (pad);
 
   return !gst_caps_is_empty (intersect);
 }
