@@ -149,6 +149,7 @@ gst_video_rate_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_video_rate_src_template));
 }
+
 static void
 gst_video_rate_class_init (GstVideoRateClass * klass)
 {
@@ -357,6 +358,7 @@ gst_video_rate_reset (GstVideoRate * videorate)
   videorate->drop = 0;
   videorate->dup = 0;
   videorate->next_ts = GST_CLOCK_TIME_NONE;
+  videorate->discont = TRUE;
   gst_video_rate_swap_prev (videorate, NULL, 0);
 
   gst_segment_init (&videorate->segment, GST_FORMAT_TIME);
@@ -408,6 +410,12 @@ gst_video_rate_flush_prev (GstVideoRate * videorate)
 
   GST_BUFFER_OFFSET (outbuf) = videorate->out;
   GST_BUFFER_OFFSET_END (outbuf) = videorate->out + 1;
+
+  if (videorate->discont) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    videorate->discont = FALSE;
+  } else
+    GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DISCONT);
 
   /* this is the timestamp we put on the buffer */
   push_ts = videorate->next_ts;
@@ -810,6 +818,9 @@ gst_video_rate_change_state (GstElement * element, GstStateChange transition)
   videorate = GST_VIDEO_RATE (element);
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      videorate->discont = TRUE;
+      break;
     default:
       break;
   }
