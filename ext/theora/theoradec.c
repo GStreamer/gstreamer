@@ -1115,6 +1115,88 @@ theora_dec_push_reverse (GstTheoraDec * dec, GstBuffer * buf)
   return result;
 }
 
+/* Allocate buffer and copy image data into YUY2 format */
+static GstFlowReturn
+theora_handle_422_image (GstTheoraDec * dec, yuv_buffer * yuv, GstBuffer ** out)
+{
+  gint width = dec->width;
+  gint height = dec->height;
+  gint out_size;
+  gint stride;
+  GstFlowReturn result;
+  int i, j;
+
+  stride = GST_ROUND_UP_2 (width) * 2;
+  out_size = stride * height;
+
+  /* now copy over the area contained in offset_x,offset_y,
+   * frame_width, frame_height */
+  result =
+      gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+      out_size, GST_PAD_CAPS (dec->srcpad), out);
+  if (G_UNLIKELY (result != GST_FLOW_OK))
+    goto no_buffer;
+
+  /* The output pixels look like:
+   *   YUYVYUYV....
+   *
+   * Do the interleaving... Note that this is kinda messed up if our width is
+   * odd. In that case, we can't represent it properly in YUY2, so we just
+   * pad out to even in that case (this is why we have GST_ROUND_UP_2() above).
+   */
+  {
+    guchar *src_y;
+    guchar *src_cb;
+    guchar *src_cr;
+    guchar *dest;
+    guchar *curdest;
+    guchar *src;
+
+    dest = GST_BUFFER_DATA (*out);
+
+    src_y = yuv->y + dec->offset_x + dec->offset_y * yuv->y_stride;
+    src_cb = yuv->u + dec->offset_x / 2 + dec->offset_y * yuv->uv_stride;
+    src_cr = yuv->v + dec->offset_x / 2 + dec->offset_y * yuv->uv_stride;
+
+    for (i = 0; i < height; i++) {
+      /* Y first */
+      curdest = dest;
+      src = src_y;
+      for (j = 0; j < width; j++) {
+        *curdest = *src++;
+        curdest += 2;
+      }
+      src_y += yuv->y_stride;
+
+      curdest = dest + 1;
+      src = src_cb;
+      for (j = 0; j < width; j++) {
+        *curdest = *src++;
+        curdest += 4;
+      }
+      src_cb += yuv->uv_stride;
+
+      curdest = dest + 3;
+      src = src_cr;
+      for (j = 0; j < width; j++) {
+        *curdest = *src++;
+        curdest += 4;
+      }
+      src_cr += yuv->uv_stride;
+
+      dest += stride;
+    }
+  }
+
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
+        gst_flow_get_name (result));
+    return result;
+  }
+}
+
+/* Allocate buffer and copy image data into I420 format */
 static GstFlowReturn
 theora_handle_420_image (GstTheoraDec * dec, yuv_buffer * yuv, GstBuffer ** out)
 {
@@ -1257,9 +1339,9 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
 
   if (dec->info.pixelformat == OC_PF_420) {
     result = theora_handle_420_image (dec, &yuv, &out);
-#if 0
   } else if (dec->info.pixelformat == OC_PF_422) {
     result = theora_handle_422_image (dec, &yuv, &out);
+#if 0
   } else if (dec->info.pixelformat == OC_PF_444) {
     result = theora_handle_444_image (dec, &yuv, &out);
   } else {
