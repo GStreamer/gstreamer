@@ -364,27 +364,25 @@ gst_rtp_mux_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstRTPMux *rtp_mux;
   GstStructure *structure;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
   GstRTPMuxPadPrivate *padpriv = gst_pad_get_element_private (pad);
 
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!ret)
+  if (!structure)
     goto out;
 
   if (gst_structure_get_uint (structure, "clock-base", &padpriv->clock_base)) {
     padpriv->have_clock_base = TRUE;
   }
 
-  caps = gst_caps_make_writable (caps);
+  caps = gst_caps_copy (caps);
 
   gst_caps_set_simple (caps,
       "clock-base", G_TYPE_UINT, rtp_mux->ts_base,
       "seqnum-base", G_TYPE_UINT, rtp_mux->seqnum_base, NULL);
-
-  gst_caps_ref (caps);
 
   GST_DEBUG_OBJECT (rtp_mux,
       "setting caps %" GST_PTR_FORMAT " on src pad..", caps);
