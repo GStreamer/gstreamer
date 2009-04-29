@@ -33,6 +33,14 @@
  * Alternatively, one may choose to perform Constant Quantizer or Quality encoding,
  * in which case the #GstX264Enc:quantizer property controls much of the outcome.
  *
+ * The H264 profile that is eventually used depends on a few settings.
+ * If #GstX264Enc:dct8x8 is enabled, then High profile is used.
+ * Otherwise, if #GstX264Enc:cabac entropy coding is enabled or #GstX264Enc:bframes
+ * are allowed, then Main Profile is in effect, and otherwise Baseline profile
+ * applies.  As such, Main is presently the default profile, which is fine for
+ * most players and settings, but in some cases (e.g. hardware platforms)
+ * a more restricted profile/level may be necessary.
+ *
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
@@ -522,6 +530,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264param.i_keyint_max = encoder->keyint_max ? encoder->keyint_max :
       (2 * encoder->fps_num / encoder->fps_den);
   encoder->x264param.b_cabac = encoder->cabac;
+  // TODO
   encoder->x264param.b_aud = 1;
   encoder->x264param.i_sps_id = encoder->sps_id;
   if ((((encoder->height == 576) && ((encoder->width == 720)
