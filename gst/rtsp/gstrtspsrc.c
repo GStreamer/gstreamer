@@ -4674,6 +4674,9 @@ gst_rtspsrc_close (GstRTSPSrc * src)
 
   /* stop task if any */
   if (src->task) {
+    /* release lock before trying to get the streamlock */
+    GST_RTSP_STATE_UNLOCK (src);
+
     gst_task_stop (src->task);
 
     /* make sure it is not running */
@@ -4686,6 +4689,8 @@ gst_rtspsrc_close (GstRTSPSrc * src)
     /* and free the task */
     gst_object_unref (GST_OBJECT (src->task));
     src->task = NULL;
+
+    GST_RTSP_STATE_LOCK (src);
   }
 
   if (!src->connection)
