@@ -71,6 +71,57 @@ gst_flv_demux_query_types (GstPad * pad)
   return query_types;
 }
 
+static void
+parse_flv_date_string (GDate * date, const gchar * s)
+{
+  g_date_set_parse (date, s);
+  if (g_date_valid (date))
+    return;
+
+  /* "Fri Oct 15 15:13:16 2004" needs to be parsed */
+  {
+    static const gchar *months[] = {
+      "Jan", "Feb", "Mar", "Apr",
+      "May", "Jun", "Jul", "Aug",
+      "Sep", "Oct", "Nov", "Dec"
+    };
+    gchar **tokens = g_strsplit (s, " ", -1);
+    guint64 d;
+    gchar *endptr;
+    gint i;
+
+    if (g_strv_length (tokens) != 5)
+      goto out;
+
+    if (strlen (tokens[1]) != 3)
+      goto out;
+    for (i = 0; i < 12; i++) {
+      if (!strcmp (tokens[1], months[i])) {
+        break;
+      }
+    }
+    if (i == 12)
+      goto out;
+    g_date_set_month (date, i + 1);
+
+    d = g_ascii_strtoull (tokens[2], &endptr, 10);
+    if (d == 0 && *endptr != '\0')
+      goto out;
+
+    g_date_set_day (date, d);
+
+    d = g_ascii_strtoull (tokens[4], &endptr, 10);
+    if (d == 0 && *endptr != '\0')
+      goto out;
+
+    g_date_set_year (date, d);
+
+  out:
+    if (tokens)
+      g_strfreev (tokens);
+  }
+}
+
 static gboolean
 gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
     gboolean * end_marker)
@@ -109,28 +160,14 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
 
         gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
             GST_TAG_DURATION, demux->duration, NULL);
+      } else if (!strcmp (tag_name, "AspectRatioX")) {
+        demux->par_x = d;
+        demux->got_par = TRUE;
+      } else if (!strcmp (tag_name, "AspectRatioY")) {
+        demux->par_y = d;
+        demux->got_par = TRUE;
       } else {
-        if (tag_name) {
-          if (!strcmp (tag_name, "AspectRatioX")) {
-            demux->par_x = d;
-            demux->got_par = TRUE;
-          } else if (!strcmp (tag_name, "AspectRatioY")) {
-            demux->par_y = d;
-            demux->got_par = TRUE;
-          }
-          if (!gst_tag_exists (tag_name)) {
-            gst_tag_register (tag_name, GST_TAG_FLAG_META, G_TYPE_DOUBLE,
-                tag_name, tag_name, gst_tag_merge_use_first);
-          }
-
-          if (gst_tag_get_type (tag_name) == G_TYPE_DOUBLE) {
-            gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-                tag_name, d, NULL);
-          } else {
-            GST_WARNING_OBJECT (demux, "tag %s already registered with a "
-                "different type", tag_name);
-          }
-        }
+        GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
       }
 
       break;
@@ -144,20 +181,7 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
 
       GST_DEBUG_OBJECT (demux, "%s => (boolean) %d", tag_name, b);
 
-      if (tag_name) {
-        if (!gst_tag_exists (tag_name)) {
-          gst_tag_register (tag_name, GST_TAG_FLAG_META, G_TYPE_BOOLEAN,
-              tag_name, tag_name, gst_tag_merge_use_first);
-        }
-
-        if (gst_tag_get_type (tag_name) == G_TYPE_BOOLEAN) {
-          gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-              tag_name, b, NULL);
-        } else {
-          GST_WARNING_OBJECT (demux, "tag %s already registered with a "
-              "different type", tag_name);
-        }
-      }
+      GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
 
       break;
     }
@@ -171,19 +195,25 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
 
       GST_DEBUG_OBJECT (demux, "%s => (string) %s", tag_name, s);
 
-      if (tag_name) {
-        if (!gst_tag_exists (tag_name)) {
-          gst_tag_register (tag_name, GST_TAG_FLAG_META, G_TYPE_STRING,
-              tag_name, tag_name, gst_tag_merge_strings_with_comma);
-        }
+      if (!strcmp (tag_name, "creationdate")) {
+        GDate *date = g_date_new ();
 
-        if (gst_tag_get_type (tag_name) == G_TYPE_STRING) {
-          gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-              tag_name, s, NULL);
+        parse_flv_date_string (date, s);
+        if (!g_date_valid (date)) {
+          GST_DEBUG_OBJECT (demux, "Failed to parse string as date");
         } else {
-          GST_WARNING_OBJECT (demux, "tag %s already registered with a "
-              "different type", tag_name);
+          gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+              GST_TAG_DATE, date, NULL);
         }
+        g_date_free (date);
+      } else if (!strcmp (tag_name, "creator")) {
+        gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_ARTIST, s, NULL);
+      } else if (!strcmp (tag_name, "metadatacreator")) {
+        gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_ENCODER, s, NULL);
+      } else {
+        GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
       }
 
       g_free (s);
@@ -297,15 +327,18 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
     case 11:                   // Date
     {
       gdouble d;
+      gint16 i;
 
       if (!gst_byte_reader_get_float64_be (reader, &d))
         goto error;
 
-      /* There are 2 additional bytes */
-      if (!gst_byte_reader_skip (reader, 2))
+      if (!gst_byte_reader_get_int16_be (reader, &i))
         goto error;
 
-      GST_DEBUG_OBJECT (demux, "%s => (date as a double) %f", tag_name, d);
+      GST_DEBUG_OBJECT (demux,
+          "%s => (date as a double) %f, timezone offset %d", tag_name, d, i);
+
+      GST_INFO_OBJECT (demux, "Tag \'%s\' not handled", tag_name);
 
       break;
     }
