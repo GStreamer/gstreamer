@@ -1,0 +1,13 @@
+[_presets_]
+version=0.10
+element-name=GstX264Enc
+
+# see http://mewiki.project357.com/wiki/X264_Settings for x264 properties
+
+# lower default bitrate
+# turn of cabac for devices that do not support main-profile
+[just-an-example]
+_meta/comment=use for mobile pocket video player
+_meta/device=pocketvideo
+bitrate=1024
+cabac=false

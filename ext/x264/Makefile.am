@@ -13,3 +13,9 @@ libgstx264_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstx264_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstx264enc.h
+
+presetdir = $(datadir)/gstreamer-$(GST_MAJORMINOR)/presets
+preset_DATA = GstX264Enc.prs
+
+EXTRA_DIST = $(preset_DATA)
+
