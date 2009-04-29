@@ -5635,8 +5635,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "mpegversion", G_TYPE_INT, 1, NULL);
       break;
     case 0x20736d:
+    case GST_MAKE_FOURCC ('a', 'c', '-', '3'):
       _codec ("AC-3 audio");
       caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+      stream->sampled = TRUE;
       break;
     case GST_MAKE_FOURCC ('M', 'A', 'C', '3'):
       _codec ("MACE-3");
