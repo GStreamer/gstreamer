@@ -1036,9 +1036,15 @@ gst_vorbis_enc_sink_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &position);
-      if (format == GST_FORMAT_TIME)
+      if (format == GST_FORMAT_TIME) {
         gst_segment_set_newsegment (&vorbisenc->segment, update, rate, format,
             start, stop, position);
+        if (vorbisenc->initial_ts == GST_CLOCK_TIME_NONE) {
+          GST_DEBUG_OBJECT (vorbisenc, "Initial segment %" GST_SEGMENT_FORMAT,
+              &vorbisenc->segment);
+          vorbisenc->initial_ts = start;
+        }
+      }
     }
       /* fall through */
     default:
@@ -1099,7 +1105,9 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
 
   timestamp =
       gst_segment_to_running_time (&vorbisenc->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer));
+      GST_BUFFER_TIMESTAMP (buffer)) + vorbisenc->initial_ts;
+  GST_DEBUG_OBJECT (vorbisenc, "Initial ts is %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (vorbisenc->initial_ts));
 
   if (!vorbisenc->header_sent) {
     /* Vorbis streams begin with three headers; the initial header (with
@@ -1428,6 +1436,7 @@ gst_vorbis_enc_change_state (GstElement * element, GstStateChange transition)
       vorbisenc->next_discont = FALSE;
       vorbisenc->header_sent = FALSE;
       gst_segment_init (&vorbisenc->segment, GST_FORMAT_TIME);
+      vorbisenc->initial_ts = GST_CLOCK_TIME_NONE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
