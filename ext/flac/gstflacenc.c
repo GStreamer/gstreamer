@@ -1003,7 +1003,8 @@ gst_flac_enc_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_TAG:
       if (flacenc->tags) {
         gst_event_parse_tag (event, &taglist);
-        gst_tag_list_insert (flacenc->tags, taglist, GST_TAG_MERGE_REPLACE);
+        gst_tag_list_insert (flacenc->tags, taglist,
+            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (flacenc)));
       } else {
         g_assert_not_reached ();
       }
