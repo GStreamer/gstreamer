@@ -4492,12 +4492,12 @@ qtdemux_tag_add_classification (GstQTDemux * qtdemux, const char *tag,
 {
   int offset;
   char *tag_str = NULL;
-  guint32 entity;
+  guint8 *entity;
   guint16 table;
 
 
   offset = 12;
-  entity = QT_FOURCC ((guint8 *) node->data + offset);
+  entity = (guint8 *) node->data + offset;
 
   offset += 4;
   table = QT_UINT16 ((guint8 *) node->data + offset);
@@ -4510,8 +4510,11 @@ qtdemux_tag_add_classification (GstQTDemux * qtdemux, const char *tag,
    * XXXX: classification entity, fixed length 4 chars.
    * Y[YYYY]: classification table, max 5 chars.
    */
-  tag_str = g_strdup_printf ("%" GST_FOURCC_FORMAT "://%u/%s",
-      GST_FOURCC_ARGS (entity), table, (char *) node->data + offset);
+  tag_str = g_strdup_printf ("----://%u/%s",
+      table, (char *) node->data + offset);
+
+  /* memcpy To be sure we're preserving byte order */
+  memcpy (tag_str, entity, 4);
   GST_DEBUG_OBJECT (qtdemux, "classification info: %s", tag_str);
 
   gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_APPEND, tag,
