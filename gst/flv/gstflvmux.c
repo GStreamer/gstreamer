@@ -631,7 +631,7 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
   }
 
   if (mux->have_video) {
-    GstPad *video_pad;
+    GstPad *video_pad = NULL;
     GSList *l = mux->collect->data;
 
     for (; l; l = l->next) {
