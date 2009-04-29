@@ -209,6 +209,9 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
       } else if (!strcmp (tag_name, "creator")) {
         gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
             GST_TAG_ARTIST, s, NULL);
+      } else if (!strcmp (tag_name, "title")) {
+        gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_TITLE, s, NULL);
       } else if (!strcmp (tag_name, "metadatacreator")) {
         gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
             GST_TAG_ENCODER, s, NULL);
@@ -431,7 +434,6 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
       }
     }
   }
-
 
   return ret;
 }
