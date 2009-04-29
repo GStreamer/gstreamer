@@ -31,10 +31,6 @@
  * </refsect2>
  */
 
-/* TODO:
- *   - Write metadata for the file, see FLV spec page 13
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -76,7 +72,19 @@ static GstStaticPadTemplate audiosink_templ = GST_STATIC_PAD_TEMPLATE ("audio",
         "audio/x-speex, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 };")
     );
 
-GST_BOILERPLATE (GstFlvMux, gst_flv_mux, GstElement, GST_TYPE_ELEMENT);
+#define _do_init(type)                                                          \
+  G_STMT_START{                                                                 \
+    static const GInterfaceInfo tag_setter_info = {                             \
+      NULL,                                                                     \
+      NULL,                                                                     \
+      NULL                                                                      \
+    };                                                                          \
+    g_type_add_interface_static (type, GST_TYPE_TAG_SETTER,                     \
+                                 &tag_setter_info);                             \
+  }G_STMT_END
+
+GST_BOILERPLATE_FULL (GstFlvMux, gst_flv_mux, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
 static void gst_flv_mux_finalize (GObject * object);
 static GstFlowReturn
@@ -171,6 +179,10 @@ gst_flv_mux_reset (GstElement * element)
     gst_collect_pads_remove_pad (mux->collect, cpad->collect.pad);
   }
 
+  if (mux->tags)
+    gst_tag_list_free (mux->tags);
+  mux->tags = NULL;
+
   mux->state = GST_FLV_MUX_STATE_HEADER;
 }
 
@@ -199,9 +211,20 @@ gst_flv_mux_handle_sink_event (GstPad * pad, GstEvent * event)
   gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:
-      /* TODO do something with the tags */
+    case GST_EVENT_TAG:{
+      GstTagList *tags;
+
+      if (!mux->tags)
+        mux->tags = gst_tag_list_new ();
+
+      gst_event_parse_tag (event, &tags);
+      if (tags) {
+        gst_tag_list_insert (mux->tags, tags,
+            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
+      }
+
       break;
+    }
     case GST_EVENT_NEWSEGMENT:
       /* We don't support NEWSEGMENT events */
       ret = FALSE;
@@ -505,10 +528,200 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
 }
 
 static GstFlowReturn
+gst_flv_mux_write_metadata (GstFlvMux * mux)
+{
+  GstTagList *merged_tags;
+  const GstTagList *user_tags;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *script_tag, *tmp;
+  guint8 *data;
+  gint i, n_tags, tags_written = 0;
+
+  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
+  GST_DEBUG_OBJECT (mux, "upstream tags = %" GST_PTR_FORMAT, mux->tags);
+  GST_DEBUG_OBJECT (mux, "user-set tags = %" GST_PTR_FORMAT, user_tags);
+
+  merged_tags = gst_tag_list_merge (user_tags, mux->tags,
+      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
+
+  if (!merged_tags) {
+    GST_DEBUG_OBJECT (mux, "No tags to write");
+    return GST_FLOW_OK;
+  }
+
+  GST_DEBUG_OBJECT (mux, "merged tags = %" GST_PTR_FORMAT, merged_tags);
+
+  script_tag = gst_buffer_new_and_alloc (11);
+  data = GST_BUFFER_DATA (script_tag);
+
+  data[0] = 18;
+
+  /* Data size, unknown for now */
+  data[1] = 0;
+  data[2] = 0;
+  data[3] = 0;
+
+  /* Timestamp */
+  data[4] = data[5] = data[6] = data[7] = 0;
+
+  /* Stream ID */
+  data[8] = data[9] = data[10] = 0;
+
+  tmp = gst_buffer_new_and_alloc (13);
+  data = GST_BUFFER_DATA (tmp);
+  data[0] = 2;                  /* string */
+  data[1] = 0;
+  data[2] = 0x0a;               /* length 10 */
+  memcpy (&data[3], "onMetaData", sizeof ("onMetaData"));
+
+  script_tag = gst_buffer_join (script_tag, tmp);
+
+  n_tags = gst_structure_n_fields ((GstStructure *) merged_tags);
+  tmp = gst_buffer_new_and_alloc (5);
+  data = GST_BUFFER_DATA (tmp);
+  data[0] = 8;                  /* ECMA array */
+  GST_WRITE_UINT32_BE (data + 1, n_tags);
+  script_tag = gst_buffer_join (script_tag, tmp);
+
+  for (i = 0; i < n_tags; i++) {
+    const gchar *tag_name =
+        gst_structure_nth_field_name ((const GstStructure *) merged_tags, i);
+    if (!strcmp (tag_name, GST_TAG_DURATION)) {
+      gdouble d;
+      guint64 dur;
+
+      if (!gst_tag_list_get_uint64 (merged_tags, GST_TAG_DURATION, &dur))
+        continue;
+
+      d = gst_guint64_to_gdouble (dur);
+      d /= (gdouble) GST_SECOND;
+
+      tmp = gst_buffer_new_and_alloc (2 + 8 + 1 + 8);
+      data = GST_BUFFER_DATA (tmp);
+      data[0] = 0;              /* 8 bytes name */
+      data[1] = 8;
+      memcpy (&data[2], "duration", sizeof ("duration"));
+      data[10] = 0;             /* double */
+      GST_WRITE_DOUBLE_BE (data + 11, d);
+      script_tag = gst_buffer_join (script_tag, tmp);
+      tags_written++;
+    } else if (!strcmp (tag_name, GST_TAG_ARTIST) ||
+        !strcmp (tag_name, GST_TAG_TITLE)) {
+      gchar *s;
+      const gchar *t;
+
+      if (!strcmp (tag_name, GST_TAG_ARTIST))
+        t = "creator";
+      else if (!strcmp (tag_name, GST_TAG_TITLE))
+        t = "title";
+
+      if (!gst_tag_list_get_string (merged_tags, tag_name, &s))
+        continue;
+
+      tmp = gst_buffer_new_and_alloc (2 + strlen (t) + 1 + 2 + strlen (s));
+      data = GST_BUFFER_DATA (tmp);
+      data[0] = 0;              /* tag name length */
+      data[1] = strlen (t);
+      memcpy (&data[2], t, strlen (t));
+      data[2 + strlen (t)] = 2; /* string */
+      data[3 + strlen (t)] = (strlen (s) >> 8) & 0xff;
+      data[4 + strlen (t)] = (strlen (s)) & 0xff;
+      memcpy (&data[5 + strlen (t)], s, strlen (s));
+      script_tag = gst_buffer_join (script_tag, tmp);
+
+      g_free (s);
+      tags_written++;
+    }
+  }
+
+  {
+    const gchar *s = "GStreamer FLV muxer";
+
+    tmp = gst_buffer_new_and_alloc (2 + 15 + 1 + 2 + strlen (s));
+    data = GST_BUFFER_DATA (tmp);
+    data[0] = 0;                /* 15 bytes name */
+    data[1] = 15;
+    memcpy (&data[2], "metadatacreator", sizeof ("metadatacreator"));
+    data[17] = 2;               /* string */
+    data[18] = (strlen (s) >> 8) & 0xff;
+    data[19] = (strlen (s)) & 0xff;
+    memcpy (&data[20], s, strlen (s));
+    script_tag = gst_buffer_join (script_tag, tmp);
+
+    tags_written++;
+  }
+
+  {
+    GTimeVal tv = { 0, };
+    time_t secs;
+    struct tm *tm;
+    gchar *s;
+    static const gchar *weekdays[] = {
+      "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
+    static const gchar *months[] = {
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+      "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+
+    g_get_current_time (&tv);
+    secs = tv.tv_sec;
+    tm = gmtime (&secs);
+
+    s = g_strdup_printf ("%s %s %d %d:%d:%d %d", weekdays[tm->tm_wday],
+        months[tm->tm_mon], tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec,
+        tm->tm_year + 1900);
+
+    tmp = gst_buffer_new_and_alloc (2 + 12 + 1 + 2 + strlen (s));
+    data = GST_BUFFER_DATA (tmp);
+    data[0] = 0;                /* 12 bytes name */
+    data[1] = 12;
+    memcpy (&data[2], "creationdate", sizeof ("creationdate"));
+    data[14] = 2;               /* string */
+    data[15] = (strlen (s) >> 8) & 0xff;
+    data[16] = (strlen (s)) & 0xff;
+    memcpy (&data[17], s, strlen (s));
+    script_tag = gst_buffer_join (script_tag, tmp);
+
+    g_free (s);
+    tags_written++;
+  }
+
+  tmp = gst_buffer_new_and_alloc (2 + 0 + 1);
+  data = GST_BUFFER_DATA (tmp);
+  data[0] = 0;                  /* 0 byte size */
+  data[1] = 0;
+  data[2] = 9;                  /* end marker */
+  script_tag = gst_buffer_join (script_tag, tmp);
+  tags_written++;
+
+
+  tmp = gst_buffer_new_and_alloc (4);
+  data = GST_BUFFER_DATA (tmp);
+  GST_WRITE_UINT32_BE (data, GST_BUFFER_SIZE (script_tag));
+  script_tag = gst_buffer_join (script_tag, tmp);
+
+  data = GST_BUFFER_DATA (script_tag);
+  data[1] = ((GST_BUFFER_SIZE (script_tag) - 11 - 4) >> 16) & 0xff;
+  data[2] = ((GST_BUFFER_SIZE (script_tag) - 11 - 4) >> 8) & 0xff;
+  data[3] = ((GST_BUFFER_SIZE (script_tag) - 11 - 4) >> 0) & 0xff;
+
+  GST_WRITE_UINT32_BE (data + 11 + 13 + 1, tags_written);
+
+  gst_buffer_set_caps (script_tag, GST_PAD_CAPS (mux->srcpad));
+  ret = gst_pad_push (mux->srcpad, script_tag);
+
+  gst_tag_list_free (merged_tags);
+
+  return ret;
+}
+
+static GstFlowReturn
 gst_flv_mux_write_header (GstFlvMux * mux)
 {
   GstBuffer *header = gst_buffer_new_and_alloc (9 + 4);
   guint8 *data = GST_BUFFER_DATA (header);
+  GstFlowReturn ret;
 
   if (GST_PAD_CAPS (mux->srcpad) == NULL) {
     GstCaps *caps = gst_caps_new_simple ("video/x-flv", NULL);
@@ -528,7 +741,11 @@ gst_flv_mux_write_header (GstFlvMux * mux)
 
   GST_WRITE_UINT32_BE (data + 9, 0);    /* previous tag size */
 
-  return gst_pad_push (mux->srcpad, header);
+  ret = gst_pad_push (mux->srcpad, header);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  return gst_flv_mux_write_metadata (mux);
 }
 
 static GstFlowReturn
