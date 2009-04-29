@@ -389,7 +389,7 @@ gst_rtsp_media_seek (GstRTSPMedia *media, GstRTSPTimeRange *range)
 
   /* depends on the current playing state of the pipeline. We might need to
    * queue this until we get EOS. */
-  flags = GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE;
+  flags = GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_KEY_UNIT;
 
   start_type = stop_type = GST_SEEK_TYPE_NONE;
 
