@@ -544,11 +544,6 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
   merged_tags = gst_tag_list_merge (user_tags, mux->tags,
       gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
 
-  if (!merged_tags) {
-    GST_DEBUG_OBJECT (mux, "No tags to write");
-    return GST_FLOW_OK;
-  }
-
   GST_DEBUG_OBJECT (mux, "merged tags = %" GST_PTR_FORMAT, merged_tags);
 
   script_tag = gst_buffer_new_and_alloc (11);
@@ -576,14 +571,15 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
 
   script_tag = gst_buffer_join (script_tag, tmp);
 
-  n_tags = gst_structure_n_fields ((GstStructure *) merged_tags);
+  n_tags =
+      (merged_tags) ? gst_structure_n_fields ((GstStructure *) merged_tags) : 0;
   tmp = gst_buffer_new_and_alloc (5);
   data = GST_BUFFER_DATA (tmp);
   data[0] = 8;                  /* ECMA array */
   GST_WRITE_UINT32_BE (data + 1, n_tags);
   script_tag = gst_buffer_join (script_tag, tmp);
 
-  for (i = 0; i < n_tags; i++) {
+  for (i = 0; merged_tags && i < n_tags; i++) {
     const gchar *tag_name =
         gst_structure_nth_field_name ((const GstStructure *) merged_tags, i);
     if (!strcmp (tag_name, GST_TAG_DURATION)) {
@@ -631,6 +627,50 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
 
       g_free (s);
       tags_written++;
+    }
+  }
+
+  if (mux->have_video) {
+    GstPad *video_pad;
+    GSList *l = mux->collect->data;
+
+    for (; l; l = l->next) {
+      GstFlvPad *cpad = l->data;
+      if (cpad && cpad->video) {
+        video_pad = cpad->collect.pad;
+        break;
+      }
+    }
+
+    if (video_pad && GST_PAD_CAPS (video_pad)) {
+      GstStructure *s = gst_caps_get_structure (GST_PAD_CAPS (video_pad), 0);
+      gint par_x, par_y;
+
+      if (gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_x, &par_y)) {
+        gdouble d;
+
+        d = par_x;
+        tmp = gst_buffer_new_and_alloc (2 + 12 + 1 + 8);
+        data = GST_BUFFER_DATA (tmp);
+        data[0] = 0;            /* 12 bytes name */
+        data[1] = 12;
+        memcpy (&data[2], "AspectRatioX", sizeof ("AspectRatioX"));
+        data[14] = 0;           /* double */
+        GST_WRITE_DOUBLE_BE (data + 15, d);
+        script_tag = gst_buffer_join (script_tag, tmp);
+        tags_written++;
+
+        d = par_y;
+        tmp = gst_buffer_new_and_alloc (2 + 12 + 1 + 8);
+        data = GST_BUFFER_DATA (tmp);
+        data[0] = 0;            /* 12 bytes name */
+        data[1] = 12;
+        memcpy (&data[2], "AspectRatioY", sizeof ("AspectRatioY"));
+        data[14] = 0;           /* double */
+        GST_WRITE_DOUBLE_BE (data + 15, d);
+        script_tag = gst_buffer_join (script_tag, tmp);
+        tags_written++;
+      }
     }
   }
 
@@ -711,7 +751,8 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
   gst_buffer_set_caps (script_tag, GST_PAD_CAPS (mux->srcpad));
   ret = gst_pad_push (mux->srcpad, script_tag);
 
-  gst_tag_list_free (merged_tags);
+  if (merged_tags)
+    gst_tag_list_free (merged_tags);
 
   return ret;
 }
