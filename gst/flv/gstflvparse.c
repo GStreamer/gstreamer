@@ -478,7 +478,7 @@ gst_flv_parse_audio_negotiate (GstFLVDemux * demux, guint32 codec_tag,
       break;
     case 10:
       caps = gst_caps_new_simple ("audio/mpeg",
-          "mpegversion", G_TYPE_INT, 4, NULL);
+          "mpegversion", G_TYPE_INT, 4, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
       codec_name = "AAC";
       break;
     case 7:
