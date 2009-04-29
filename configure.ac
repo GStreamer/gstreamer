@@ -332,6 +332,7 @@ AG_GST_CHECK_PLUGIN(scaletempo)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
 AG_GST_CHECK_PLUGIN(selector)
+AG_GST_CHECK_PLUGIN(shm)
 AG_GST_CHECK_PLUGIN(siren)
 AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
@@ -1704,6 +1705,7 @@ gst/scaletempo/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
 gst/selector/Makefile
+gst/shm/Makefile
 gst/siren/Makefile
 gst/speed/Makefile
 gst/subenc/Makefile
