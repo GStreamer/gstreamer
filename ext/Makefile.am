@@ -154,6 +154,12 @@ else
 LADSPA_DIR =
 endif
 
+if USE_LV2
+LV2_DIR = lv2
+else
+LV2_DIR =
+endif
+
 # if USE_LCS
 # LCS_DIR=lcs
 # else
@@ -351,6 +357,7 @@ SUBDIRS=\
 	$(JACK_DIR) \
 	$(JP2K_DIR) \
 	$(LADSPA_DIR) \
+	$(LV2_DIR) \
 	$(LCS_DIR) \
 	$(LIBFAME_DIR) \
 	$(LIBMMS_DIR) \

@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
- * gstladspa.h: Header for LADSPA plugin
+ * gstladspa.h: Header for LV2 plugin
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,11 +20,11 @@
  */
 
 
-#ifndef __GST_LADSPA_H__
-#define __GST_LADSPA_H__
+#ifndef __GST_LV2_H__
+#define __GST_LV2_H__
 
 
-#include <ladspa.h>
+#include <slv2/slv2.h>
 
 #include <gst/gst.h>
 
@@ -34,34 +34,34 @@
 G_BEGIN_DECLS
 
 
-typedef struct _ladspa_control_info {
+typedef struct _lv2_control_info {
   gchar *name;
   gchar *param_name;
   gfloat lowerbound, upperbound;
   gfloat def;
   gboolean lower, upper, samplerate;
   gboolean toggled, logarithmic, integer, writable;
-} ladspa_control_info;
+} lv2_control_info;
 
 
-typedef struct _GstLADSPA GstLADSPA;
-typedef struct _GstLADSPAClass GstLADSPAClass;
+typedef struct _GstLV2 GstLV2;
+typedef struct _GstLV2Class GstLV2Class;
 
 
-struct _GstLADSPA {
+struct _GstLV2 {
   GstSignalProcessor parent;
 
-  LADSPA_Descriptor *descriptor;
-  LADSPA_Handle *handle;
+  SLV2Plugin *plugin;
+  SLV2Instance *instance;
 
   gboolean activated;
   gboolean inplace_broken;
 };
 
-struct _GstLADSPAClass {
+struct _GstLV2Class {
   GstSignalProcessorClass parent_class;
 
-  LADSPA_Descriptor *descriptor;
+  SLV2Plugin plugin;
 
   gint *audio_in_portnums;
   gint *audio_out_portnums;
@@ -73,4 +73,4 @@ struct _GstLADSPAClass {
 G_END_DECLS
 
 
-#endif /* __GST_LADSPA_H__ */
+#endif /* __GST_LV2_H__ */

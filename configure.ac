@@ -960,7 +960,7 @@ AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
 dnl *** LV2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LV2, true)
 AG_GST_CHECK_FEATURE(LV2, [lv2], lv2, [
-  PKG_CHECK_MODULES(SLV2, slv2 >= 0.6.0, HAVE_SLV2="yes", HAVE_SLV2="no")
+  PKG_CHECK_MODULES(SLV2, slv2 >= 0.6.0, HAVE_LV2="yes", HAVE_LV2="no")
   AC_SUBST(SLV2_CFLAGS)
   AC_SUBST(SLV2_LIBS)
 ])
@@ -1644,6 +1644,7 @@ gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/dshow/Makefile
 gst-libs/gst/interfaces/Makefile
+gst-libs/gst/signalprocessor/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
@@ -1691,6 +1692,7 @@ ext/ivorbis/Makefile
 ext/jack/Makefile
 ext/jp2k/Makefile
 ext/ladspa/Makefile
+ext/lv2/Makefile
 ext/libmms/Makefile
 ext/Makefile
 ext/metadata/Makefile
