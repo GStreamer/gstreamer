@@ -713,9 +713,6 @@ public void ParseNewClock (out Gst.Clock clock) {
 [DllImport ("gstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_application (IntPtr src, IntPtr structure);
 
-[DllImport ("gstreamer-0.10.dll") ]
-static extern IntPtr gst_structure_copy (IntPtr handle);
-
 public static Message NewApplication (Gst.Object src, Gst.Structure structure) {
   Message msg = (Message) GLib.Opaque.GetOpaque (gst_message_new_application (src.Handle, (structure != null) ? structure.Handle : IntPtr.Zero), typeof (Message), true);
   msg.cached_structure = structure;

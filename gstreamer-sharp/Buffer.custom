@@ -71,9 +71,6 @@ public byte this [uint index] {
   }
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
-static extern IntPtr gst_buffer_make_metadata_writable (IntPtr raw);
-
 /* FIXME: This is not optimal */
 public void MakeMetadataWritable() {
   if (IsMetadataWritable)
