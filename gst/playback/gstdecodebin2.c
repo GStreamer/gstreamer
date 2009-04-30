@@ -655,7 +655,8 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
 
   decode_bin->caps =
       gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb;video/x-raw-gray;"
-      "audio/x-raw-int;audio/x-raw-float;" "text/plain;text/x-pango-markup");
+      "audio/x-raw-int;audio/x-raw-float;" "text/plain;text/x-pango-markup;"
+      "video/x-dvd-subpicture");
 }
 
 static void
