@@ -111,6 +111,8 @@ struct _GstTagDemuxPrivate
   GstSegment segment;
   gboolean need_newseg;
   gboolean newseg_update;
+
+  GList *pending_events;
 };
 
 /* Require at least 8kB of data before we attempt typefind. 
@@ -267,6 +269,11 @@ gst_tag_demux_reset (GstTagDemux * tagdemux)
   gst_segment_init (&tagdemux->priv->segment, GST_FORMAT_UNDEFINED);
   tagdemux->priv->need_newseg = TRUE;
   tagdemux->priv->newseg_update = FALSE;
+
+  g_list_foreach (tagdemux->priv->pending_events,
+      (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (tagdemux->priv->pending_events);
+  tagdemux->priv->pending_events = NULL;
 }
 
 static void
@@ -663,6 +670,8 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
           return GST_FLOW_UNEXPECTED;
       }
       if (outbuf) {
+        GList *events;
+
         if (G_UNLIKELY (demux->priv->srcpad == NULL)) {
           gst_buffer_unref (outbuf);
           return GST_FLOW_ERROR;
@@ -677,7 +686,20 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
           demux->priv->need_newseg = FALSE;
         }
 
-        /* Send pending tag event */
+        /* send any pending events we cached */
+        GST_OBJECT_LOCK (demux);
+        events = demux->priv->pending_events;
+        demux->priv->pending_events = NULL;
+        GST_OBJECT_UNLOCK (demux);
+
+        while (events != NULL) {
+          GST_DEBUG_OBJECT (demux->priv->srcpad, "sending cached %s event: %"
+              GST_PTR_FORMAT, GST_EVENT_TYPE_NAME (events->data), events->data);
+          gst_pad_push_event (demux->priv->srcpad, GST_EVENT (events->data));
+          events = g_list_delete_link (events, events);
+        }
+
+        /* Send our own pending tag event */
         if (demux->priv->send_tag_event) {
           gst_tag_demux_send_tag_event (demux);
           demux->priv->send_tag_event = FALSE;
@@ -735,7 +757,18 @@ gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      ret = gst_pad_event_default (pad, event);
+      if (demux->priv->need_newseg) {
+        /* Cache all events if we have a pending segment, so they don't get
+         * lost (esp. tag events) */
+        GST_INFO_OBJECT (demux, "caching event: %" GST_PTR_FORMAT, event);
+        GST_OBJECT_LOCK (demux);
+        demux->priv->pending_events =
+            g_list_append (demux->priv->pending_events, event);
+        GST_OBJECT_UNLOCK (demux);
+        ret = TRUE;
+      } else {
+        ret = gst_pad_event_default (pad, event);
+      }
       break;
   }
 
