@@ -1317,11 +1317,12 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   gst_rtspsrc_push_event (src, event);
   gst_rtspsrc_loop_send_cmd (src, cmd, flush);
 
-  /* */
+  /* make running time start start at 0 again */
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
 
     for (i = 0; i < 2; i++) {
+      /* for udp case */
       if (stream->udpsrc[i]) {
         if (base_time != -1)
           gst_element_set_base_time (stream->udpsrc[i], base_time);
@@ -1329,6 +1330,9 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
       }
     }
   }
+  /* for tcp interleaved case */
+  if (base_time != -1)
+    gst_element_set_base_time (GST_ELEMENT_CAST (src), base_time);
 }
 
 static GstRTSPResult
