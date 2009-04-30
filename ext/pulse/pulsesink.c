@@ -313,19 +313,20 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
 
   if (t != (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_CHANGE) &&
       t != (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_NEW))
-    return;
+    goto done;
 
   if (!pbuf->stream)
-    return;
+    goto done;
 
   if (idx != pa_stream_get_index (pbuf->stream))
-    return;
+    goto done;
 
   /* Actually this event is also triggered when other properties of
    * the stream change that are unrelated to the volume. However it is
    * probably cheaper to signal the change here and check for the
    * volume when the GObject property is read instead of querying it always. */
 
+done:
   /* inform streaming thread to notify */
   g_atomic_int_compare_and_exchange (&psink->notify, 0, 1);
 }
@@ -482,8 +483,7 @@ gst_pulsering_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 
   if (pbuf->in_commit && (length >= rbuf->spec.segsize)) {
     /* only signal when we are waiting in the commit thread
-     * and got request for atleast a segment
-     */
+     * and got request for atleast a segment */
     pa_threaded_mainloop_signal (psink->mainloop, 0);
   }
 }
@@ -1480,14 +1480,17 @@ gst_pulsesink_sink_input_info_cb (pa_context * c, const pa_sink_input_info * i,
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
   if (!i)
-    return;
+    goto done;
 
   if (!pbuf->stream)
-    return;
+    goto done;
 
   g_assert (i->index == pa_stream_get_index (pbuf->stream));
 
   psink->volume = pa_sw_volume_to_linear (pa_cvolume_max (&i->volume));
+
+done:
+  pa_threaded_mainloop_signal (psink->mainloop, 0);
 }
 
 static gdouble
@@ -1550,15 +1553,18 @@ gst_pulsesink_sink_info_cb (pa_context * c, const pa_sink_info * i, int eol,
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
   if (!i)
-    return;
+    goto done;
 
   if (!pbuf->stream)
-    return;
+    goto done;
 
   g_assert (i->index == pa_stream_get_device_index (pbuf->stream));
 
   g_free (psink->device_description);
   psink->device_description = g_strdup (i->description);
+
+done:
+  pa_threaded_mainloop_signal (psink->mainloop, 0);
 }
 
 static gchar *
