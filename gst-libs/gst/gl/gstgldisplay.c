@@ -2709,6 +2709,10 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay * display)
     default:
       g_assert_not_reached ();
   }
+
+  //make sure no texture is in use in our opengl context
+  //in case we want to use the upload texture in an other opengl context
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 }
 
 
