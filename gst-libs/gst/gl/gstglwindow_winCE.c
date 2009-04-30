@@ -401,10 +401,12 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           eglCreateContext (priv->display, config, priv->external_gl_context,
           contextAttribs);
       if (priv->gl_context != EGL_NO_CONTEXT)
-        g_debug ("gl context created: %d\n", priv->gl_context);
+        g_debug ("gl context created: %lud, external: %lud\n", (gulong) priv->gl_context,
+            (gulong) priv->external_gl_context);
       else
-        g_debug ("failed to create glcontext %d, %d, %s\n", priv->gl_context,
-            hWnd, EGLErrorString ());
+        g_debug ("failed to create glcontext %lud, extenal: %lud, win: %lud, %s\n", 
+            (gulong) priv->gl_context, (gulong) priv->external_gl_context, 
+            (gulong) hWnd, EGLErrorString ());
 
       ReleaseDC (hWnd, priv->display);
 

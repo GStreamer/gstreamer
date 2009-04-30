@@ -403,7 +403,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           g_debug ("failed to share opengl context %lud with %lud\n",
               (gulong) priv->gl_context, (gulong) priv->external_gl_context);
         else
-          g_debug ("share opengl context succeed\n");
+          g_debug ("share opengl context succeed %lud\n", (gulong) priv->external_gl_context);
       }
     }
 

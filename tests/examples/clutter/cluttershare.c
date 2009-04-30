@@ -104,6 +104,8 @@ update_texture_actor (gpointer data)
   GstGLBuffer *gst_gl_buf = (GstGLBuffer *) data;
   CoglHandle cogl_texture = 0;
   ClutterTexture *texture_actor = NULL;
+  GAsyncQueue *queue_buf = NULL;
+  GstGLBuffer *gst_gl_buf_old = NULL;
   ClutterActor *stage = NULL;
 
   /* Create a cogl texture from the gst gl texture */
@@ -113,7 +115,7 @@ update_texture_actor (gpointer data)
       GL_TEXTURE_2D, gst_gl_buf->width, gst_gl_buf->height, 0, 0,
       COGL_PIXEL_FORMAT_RGBA_8888);
   cogl_texture_set_filters (cogl_texture, GL_LINEAR, GL_LINEAR);
-  glDisable (GL_TEXTURE_2D);
+  glBindTexture (GL_TEXTURE_2D, 0);
 
   /* Previous cogl texture is replaced and so its ref counter discreases to 0.
    * According to the source code, glDeleteTexture is not called when the previous
@@ -125,10 +127,11 @@ update_texture_actor (gpointer data)
       cogl_texture);
   cogl_texture_unref (cogl_texture);
 
-  /* Keep a ref on the current gst_gl_buffer associated to the texture_actor.
-   * The old gst_gl_buffer is unref */
-  g_object_set_data_full (G_OBJECT (texture_actor), "gst_gl_buffer",
-      gst_gl_buf, (GDestroyNotify) gst_mini_object_unref);
+  queue_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_buf");
+	gst_gl_buf_old = g_object_get_data (G_OBJECT (texture_actor), "gst_gl_buf");
+	if (gst_gl_buf_old)
+		g_async_queue_push (queue_buf, gst_gl_buf_old);
+	g_object_set_data (G_OBJECT (texture_actor), "gst_gl_buf", gst_gl_buf);
 
   /* we can now show the clutter scene if not yet visible */
   stage = g_object_get_data (G_OBJECT (texture_actor), "stage");
@@ -143,6 +146,14 @@ void
 on_gst_buffer (GstElement * element, GstBuffer * buf, GstPad * pad,
     ClutterActor * texture_actor)
 {
+  /* unref old buffers we have finished to use in clutter */
+  GAsyncQueue *queue_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_buf");
+	if (g_async_queue_length (queue_buf) > 0) {
+		GstGLBuffer *gst_gl_buf_old = g_async_queue_pop (queue_buf);
+		if (gst_gl_buf_old)
+			gst_buffer_unref (gst_gl_buf_old);
+	}
+
   /* increase ref because our pipeline and clutter scene have not a same framerate */
   gst_buffer_ref (buf);
 
@@ -176,12 +187,15 @@ main (int argc, char *argv[])
   GstState state = 0;
   ClutterActor *stage = NULL;
   ClutterActor *clutter_texture = NULL;
+  GAsyncQueue* queue_buf = NULL;
   GstElement *fakesink = NULL;
 
-  /* init clutter then gstreamer */
+  /* init gstreamer then clutter */
 
+	gst_init (&argc, &argv);
+	clutter_threads_init ();
   clutter_init (&argc, &argv);
-  gst_init (&argc, &argv);
+  clutter_threads_enter ();
 
   /* init glew */
 
@@ -192,6 +206,9 @@ main (int argc, char *argv[])
   /* retrieve and turn off clutter opengl context */
 
   stage = clutter_stage_get_default ();
+
+  clutter_ungrab_keyboard ();
+  clutter_ungrab_pointer ();
 
 #ifdef WIN32
   clutter_gl_context = wglGetCurrentContext ();
@@ -220,11 +237,11 @@ main (int argc, char *argv[])
 
   /* play pipeline */
 
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-  state = GST_STATE_PLAYING;
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+  state = GST_STATE_PAUSED;
   if (gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
           GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
-    g_debug ("failed to play pipeline\n");
+    g_debug ("failed to pause pipeline\n");
     return -1;
   }
 
@@ -243,6 +260,12 @@ main (int argc, char *argv[])
   clutter_stage_set_title (CLUTTER_STAGE (stage), "clutter and gst-plugins-gl");
   clutter_texture = setup_stage (CLUTTER_STAGE (stage));
 
+  /* append a gst-gl texture to this queue when you do not need it no more */
+
+  queue_buf = g_async_queue_new ();
+	g_object_set_data (G_OBJECT (clutter_texture), "queue_buf", queue_buf);
+  g_object_set_data (G_OBJECT (clutter_texture), "gst_gl_buf", NULL);
+
   /* set a callback to retrieve the gst gl textures */
 
   fakesink = gst_bin_get_by_name (GST_BIN (pipeline), "fakesink0");
@@ -251,9 +274,24 @@ main (int argc, char *argv[])
       clutter_texture);
   g_object_unref (fakesink);
 
+  /* play gst */
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+
   /* main loop */
 
   clutter_main ();
+
+  /* before to deinitialize the gst-gl-opengl context,
+   * no shared context (here the clutter one) must be current
+   */
+#ifdef WIN32
+  wglMakeCurrent (0, 0);
+#else
+  glXMakeCurrent (clutter_display, None, 0);
+#endif
+
+  clutter_threads_leave ();
 
   /* deinit */
 
