@@ -349,6 +349,8 @@
   <move-node path="/api/namespace/class[@name='Flow']/method[@cname='gst_flow_get_name']" name="name">/api/namespace/class[@name='Util']</move-node>
 
   <attr path="/api/namespace/object[@name='GhostPad']" name="parent">GstPad</attr>
+  <attr path="/api/namespace/object[@name='GhostPad']/method[@cname='gst_ghost_pad_get_target']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='GhostPad']/method[@cname='gst_ghost_pad_construct']" name="hidden">1</attr>
 
   <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_version_string']" />
   <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_default_registry_check_feature_version']" />
