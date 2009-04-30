@@ -416,13 +416,7 @@ gst_dvd_spu_render_spu (GstDVDSpu * dvdspu, GstBuffer * buf)
       state->hl_rect.left, state->hl_rect.top,
       state->hl_rect.right, state->hl_rect.bottom);
 
-  /* We start rendering from the first line of the display rect */
-  y = state->disp_rect.top;
-
-  /* Update our plane references to the first line of the disp_rect */
-  planes[0] += state->Y_stride * y;
-  planes[1] += state->UV_stride * (y / 2);
-  planes[2] += state->UV_stride * (y / 2);
+  GST_DEBUG ("vid_disp %d,%d", state->vid_width, state->vid_height);
 
   /* When reading RLE data, we track the offset in nibbles... */
   state->cur_offsets[0] = state->pix_data[0] * 2;
@@ -442,18 +436,62 @@ gst_dvd_spu_render_spu (GstDVDSpu * dvdspu, GstBuffer * buf)
   } else
     state->cur_chg_col = NULL;
 
+  /* We start rendering from the first line of the display rect */
+  y = state->disp_rect.top;
   /* start_y is always an even number and we render lines in pairs from there, 
    * accumulating 2 lines of chroma then blending it. We might need to render a 
    * single line at the end if the display rect ends on an even line too. */
   last_y = (state->disp_rect.bottom - 1) & ~(0x01);
+
+  /* center the image when display rectangle exceeds the video width */
+  if (state->vid_width < state->disp_rect.right) {
+    gint diff, disp_width;
+
+    disp_width = state->disp_rect.left - state->disp_rect.right;
+    diff = (disp_width - state->vid_width) / 2;
+
+    /* fixme, this is not used yet */
+    state->clip_rect.left = state->disp_rect.left + diff;
+    state->clip_rect.right = state->disp_rect.right - diff;
+
+    GST_DEBUG ("clipping width to %d,%d", state->clip_rect.left,
+        state->clip_rect.right);
+  } else {
+    state->clip_rect.left = state->disp_rect.left;
+    state->clip_rect.right = state->disp_rect.right;
+  }
+
+  /* for the height, chop off the bottom bits of the diplay rectangle because we
+   * assume the picture is in the lower part. We should better check where it
+   * is and do something more clever. */
+  state->clip_rect.bottom = state->disp_rect.bottom;
+  if (state->vid_height < state->disp_rect.bottom) {
+    state->clip_rect.top = state->disp_rect.bottom - state->vid_height;
+    GST_DEBUG ("clipping height to %d,%d", state->clip_rect.top,
+        state->clip_rect.bottom);
+  } else {
+    state->clip_rect.top = state->disp_rect.top;
+    /* Update our plane references to the first line of the disp_rect */
+    planes[0] += state->Y_stride * y;
+    planes[1] += state->UV_stride * (y / 2);
+    planes[2] += state->UV_stride * (y / 2);
+  }
+
   for (state->cur_Y = y; state->cur_Y <= last_y; state->cur_Y++) {
+    gboolean clip;
+
+    clip = (state->cur_Y < state->clip_rect.top
+        || state->cur_Y > state->clip_rect.bottom);
+
     /* Reset the compositing buffer */
     dvdspu_clear_comp_buffers (state);
     /* Render even line */
     state->comp_last_x_ptr = state->comp_last_x;
     dvdspu_render_line (state, planes, &state->cur_offsets[0]);
-    /* Advance the luminance output pointer */
-    planes[0] += state->Y_stride;
+    if (!clip) {
+      /* Advance the luminance output pointer */
+      planes[0] += state->Y_stride;
+    }
     state->cur_Y++;
 
     /* Render odd line */
@@ -462,10 +500,12 @@ gst_dvd_spu_render_spu (GstDVDSpu * dvdspu, GstBuffer * buf)
     /* Blend the accumulated UV compositing buffers onto the output */
     dvdspu_blend_comp_buffers (state, planes);
 
-    /* Update all the output pointers */
-    planes[0] += state->Y_stride;
-    planes[1] += state->UV_stride;
-    planes[2] += state->UV_stride;
+    if (!clip) {
+      /* Update all the output pointers */
+      planes[0] += state->Y_stride;
+      planes[1] += state->UV_stride;
+      planes[2] += state->UV_stride;
+    }
   }
   if (state->cur_Y == state->disp_rect.bottom) {
     g_assert ((state->disp_rect.bottom & 0x01) == 0);

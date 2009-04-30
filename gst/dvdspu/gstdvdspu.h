@@ -122,6 +122,7 @@ struct SpuState {
   GstBuffer *pix_buf; /* Current SPU packet the pix_data references */
   
   SpuRect disp_rect;
+  SpuRect clip_rect;
   SpuRect hl_rect;
 
   guint32 current_clut[16]; /* Colour lookup table from incoming events */
