@@ -14,7 +14,8 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	object.c \
 	pad.c \
 	gobject.c \
-	typefind.c
+	typefind.c \
+	indexentry.c
 
 nodist_libgstreamersharpglue_0_10_la_SOURCES = generated.c 
 

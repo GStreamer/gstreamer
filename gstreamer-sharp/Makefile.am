@@ -71,6 +71,8 @@ customs = 			\
 	Plugin.custom     	\
 	Task.custom     	\
 	MiniObject.custom       \
+	IndexEntry.custom       \
+	Index.custom       \
 	Registry.custom         \
 	Query.custom 	        \
 	Structure.custom        \
