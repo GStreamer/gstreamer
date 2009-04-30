@@ -1,65 +1,7 @@
-
-public object this[string property] {
-  get {
-    return GetProperty (property).Val;
-  }
-  set {
-    SetProperty (property, value);
-  }
-}
-
-public new GLib.Value GetProperty (string propertyName) {
-  return base.GetProperty (propertyName);
-}
-
-public new void SetProperty (string propertyName, GLib.Value value) {
-  base.SetProperty (propertyName, value);
-}
-
-public void SetProperty (string propertyName, object value) {
-  base.SetProperty (propertyName, new GLib.Value (value));
-}
-
-public void SetProperty (string propertyName, string value) {
-  base.SetProperty (propertyName, new GLib.Value (value));
-}
-
-public void SetProperty (string propertyName, int value) {
-  base.SetProperty (propertyName, new GLib.Value (value));
-}
-
-public void SetProperty (string propertyName, double value) {
-  base.SetProperty (propertyName, new GLib.Value (value));
-}
-
-public void SetProperty (string propertyName, bool value) {
-  base.SetProperty (propertyName, new GLib.Value (value));
-}
-
-
-public bool QueryPosition (Gst.Format format, out long current) {
-  return gst_element_query_position (Handle, ref format, out current);
-}
-
-
-public bool QueryDuration (Gst.Format format, out long duration) {
-  return gst_element_query_duration (Handle, ref format, out duration);
-}
-
-public void Connect (string signal, DynamicSignalHandler handler) {
-  DynamicSignal.Connect (this, signal, handler);
-}
-
-public void Disconnect (string signal, DynamicSignalHandler handler) {
-  DynamicSignal.Disconnect (this, signal, handler);
-}
-
-public object Emit (string signal, params object[] parameters) {
-  return DynamicSignal.Emit (this, signal, parameters);
-}
-
 [DllImport ("gobject-2.0-0.dll") ]
 static extern IntPtr g_object_ref (IntPtr raw);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_element_add_pad (IntPtr raw, IntPtr pad);
 
 public bool AddPad (Pad p) {
   bool ret = gst_element_add_pad (this.Handle, p == null ? IntPtr.Zero : p.Handle);
@@ -83,12 +25,169 @@ public static void UnlinkMany (params Element [] elements) {
   }
 }
 
+[DllImport ("gstreamer-0.10.dll") ]
+static extern int gst_iterator_next (IntPtr iterator, out IntPtr elem);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_iterator_resync (IntPtr iterator);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_iterator_free (IntPtr iterator);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_element_iterate_pads (IntPtr element);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_element_iterate_src_pads (IntPtr element);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_element_iterate_sink_pads (IntPtr element);
+
+private class PadEnumerable : IEnumerable {
+  private class PadEnumerator : IEnumerator {
+    Hashtable seen = new Hashtable ();
+    IntPtr iterator;
+
+    private object current = null;
+    public object Current {
+      get {
+        return current;
+      }
+    }
+
+    public bool MoveNext () {
+      IntPtr raw_ret;
+      bool retry = false;
+
+      do {
+        int ret = gst_iterator_next (iterator, out raw_ret);
+        switch (ret) {
+          case 0:
+            return false;
+          case 1:
+            if (seen.Contains (raw_ret)) {
+              retry = true;
+              break;
+            }
+
+            seen.Add (raw_ret, null);
+            current = GLib.Object.GetObject (raw_ret, true);
+            return true;
+          case 2:
+            gst_iterator_resync (iterator);
+            break;
+          default:
+          case 3:
+            throw new Exception ("Error while iterating pads");
+        }
+      } while (retry);
+
+      return false;
+    }
+
+    public void Reset () {
+      seen.Clear ();
+      gst_iterator_resync (iterator);
+    }
+
+    public PadEnumerator (IntPtr iterator) {
+      this.iterator = iterator;
+    }
+  }
+
+  private IntPtr iterator;
+  private PadEnumerator enumerator;
+
+  public PadEnumerable (IntPtr iterator) {
+    this.iterator = iterator;
+    this.enumerator = new PadEnumerator (iterator);
+  }
+
+  public IEnumerator GetEnumerator () {
+    return enumerator;
+  }
+
+  ~PadEnumerable () {
+    gst_iterator_free (iterator);
+  }
+}
+
+public IEnumerable Pads {
+  get {
+    return new PadEnumerable (gst_element_iterate_pads (Handle));
+  }
+}
+
+public IEnumerable SinkPads {
+  get {
+    return new PadEnumerable (gst_element_iterate_sink_pads (Handle));
+  }
+}
+
+public IEnumerable SrcPads {
+  get {
+    return new PadEnumerable (gst_element_iterate_src_pads (Handle));
+  }
+}
+
+public Gst.StateChangeReturn GetState (out Gst.State state, ulong timeout) {
+  Gst.State pending;
+  return GetState (out state, out pending, timeout);
+}
 
 [DllImport ("gstreamer-0.10.dll") ]
-private static extern bool gst_element_query_position (IntPtr raw, ref Format format, out long cur);
+static extern void gst_element_found_tags (IntPtr raw, IntPtr list);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_tag_list_copy (IntPtr raw);
+
+public void FoundTags (Gst.TagList list) {
+  gst_element_found_tags (Handle, list == null ? IntPtr.Zero : gst_tag_list_copy (list.Handle));
+}
 
 [DllImport ("gstreamer-0.10.dll") ]
-private static extern bool gst_element_query_duration (IntPtr raw, ref Format format, out long duration);
+static extern void gst_element_found_tags_for_pad (IntPtr raw, IntPtr pad, IntPtr list);
+
+public void FoundTagsForPad (Gst.Pad pad, Gst.TagList list) {
+  gst_element_found_tags_for_pad (Handle, pad == null ? IntPtr.Zero : pad.Handle, list == null ? IntPtr.Zero : gst_tag_list_copy (list.Handle));
+}
 
 [DllImport ("gstreamer-0.10.dll") ]
-static extern bool gst_element_add_pad (IntPtr raw, IntPtr pad);
+static extern bool gst_element_post_message (IntPtr raw, IntPtr message);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_mini_object_ref (IntPtr raw);
+
+public bool PostMessage (Gst.Message message) {
+  bool raw_ret = gst_element_post_message (Handle, message == null ? IntPtr.Zero : gst_mini_object_ref (message.Handle));
+  bool ret = raw_ret;
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_element_get_query_types (IntPtr raw);
+
+public Gst.QueryType[] GetQueryTypes () {
+  IntPtr raw_ret = gst_element_get_query_types (Handle);
+  if (raw_ret == IntPtr.Zero)
+    return new Gst.QueryType[] {};
+
+  ArrayList result = new ArrayList ();
+  bool term = false;
+  int ofs = 0;
+  while (!term) {
+    Gst.QueryType t = (Gst.QueryType) Marshal.ReadInt32 (raw_ret, ofs);
+    if (t == Gst.QueryType.None) {
+      term = true;
+    } else {
+      result.Add (t);
+      ofs += 4;
+    }
+  }
+
+  return (Gst.QueryType[]) result.ToArray (typeof (Gst.QueryType));
+}
+
+
+		[DllImport("gstreamer-0.10.dll")]
+		static extern bool gst_element_send_event(IntPtr raw, IntPtr evnt);
+
+		public bool SendEvent(Gst.Event evnt) {
+			bool raw_ret = gst_element_send_event(Handle, evnt == null ? IntPtr.Zero : gst_mini_object_ref (evnt.Handle));
+			bool ret = raw_ret;
+			return ret;
+		}
+

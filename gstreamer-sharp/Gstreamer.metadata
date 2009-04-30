@@ -249,13 +249,34 @@
 
   <attr path="/api/namespace/class[@name='Debug']" name="hidden">1</attr>
 
-  <attr path="/api/namespace/object[@name='Element']/method[@name='LinkMany']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Element']/method[@name='UnlinkMany']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_link_many']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/field" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_unlink_many']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_add_pad']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_get_pad']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/signal[@name='NoMorePads']" name="name">HasNoMorePads</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@name='ContinueState']/parameters/*[@name='ret']" name="name">state_change_ret</attr>
-  <attr path="/api/namespace/object[@name='Element']/method[@name='QueryPosition']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Element']/method[@name='QueryDuration']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_query_position']/parameters/parameter[@name='format']" name="pass_as">ref</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_query_duration']/parameters/parameter[@name='format']" name="pass_as">ref</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_query_convert']/parameters/parameter[@name='dest_format']" name="pass_as">ref</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_get_compatible_pad']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_get_request_pad']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_get_static_pad']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_get_bus']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_get_clock']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_get_index']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_provide_clock']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_requires_clock']" name="name">GetRequiresClock</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_provides_clock']" name="name">GetProvidesClock</attr>
+  <move-node path="/api/namespace/object[@name='Element']/method[@cname='gst_element_state_get_name']">/api/namespace/class[@name='Util']</move-node>
+  <move-node path="/api/namespace/object[@name='Element']/method[@cname='gst_element_state_change_return_get_name']">/api/namespace/class[@name='Util']</move-node>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_found_tags']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_found_tags_for_pad']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_message_full']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_post_message']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_send_event']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_seek_simple']" name="name">Seek</attr>
+  <remove-attr path="/api/namespace/object[@name='Element']/field[@name='CurrentState']" name="hidden"/>
 
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Make']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Create']/return-type" name="owned">true</attr>
