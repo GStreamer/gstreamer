@@ -1,0 +1,46 @@
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_type_find_register (IntPtr plugin, IntPtr name, uint rank, GstSharp.TypeFindFunctionNative func, IntPtr extensions, IntPtr possible_caps, IntPtr data, IntPtr data_notify);
+
+public static bool Register (Gst.Plugin plugin, string name, uint rank, Gst.TypeFindFunction func, string extensions, Gst.Caps possible_caps) {
+  IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+  GstSharp.TypeFindFunctionWrapper func_wrapper = new GstSharp.TypeFindFunctionWrapper (func);
+  bool raw_ret = gst_type_find_register (plugin == null ? IntPtr.Zero : plugin.Handle, native_name, rank, func_wrapper.NativeDelegate, GLib.Marshaller.StringToPtrGStrdup (extensions), possible_caps == null ? IntPtr.Zero : possible_caps.Handle, IntPtr.Zero, IntPtr.Zero);
+  bool ret = raw_ret;
+  GLib.Marshaller.Free (native_name);
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_type_find_peek (IntPtr raw, long offset, uint size);
+
+public byte[] Peek (long offset, uint size) {
+  IntPtr raw_ret = gst_type_find_peek (Handle, offset, size);
+  if (raw_ret == IntPtr.Zero)
+    return null;
+
+  byte[] ret = new byte[size];
+  Marshal.Copy (raw_ret, ret, 0, (int) size);
+  return ret;
+}
+
+private GstSharp.TypeFindPeekFunctionWrapper peek;
+private GstSharp.TypeFindSuggestFunctionWrapper suggest;
+private GstSharp.TypeFindGetLengthFunctionWrapper get_length;
+
+[DllImport ("gstreamersharpglue-0.10") ]
+static extern IntPtr gstsharp_gst_type_find_new (GstSharp.TypeFindPeekFunctionNative peek, GstSharp.TypeFindSuggestFunctionNative suggest, GstSharp.TypeFindGetLengthFunctionNative get_length);
+
+
+
+public TypeFind (TypeFindPeekFunction peek, TypeFindSuggestFunction suggest, TypeFindGetLengthFunction get_length) : base () {
+  this.peek = new GstSharp.TypeFindPeekFunctionWrapper (peek);
+  this.suggest = new GstSharp.TypeFindSuggestFunctionWrapper (suggest);
+  this.get_length = new GstSharp.TypeFindGetLengthFunctionWrapper (get_length);
+
+  Raw = gstsharp_gst_type_find_new (this.peek.NativeDelegate, this.suggest.NativeDelegate, this.get_length.NativeDelegate);
+  Owned = true;
+}
+
+protected override void Free (IntPtr raw) {
+  GLib.Marshaller.Free (raw);
+}

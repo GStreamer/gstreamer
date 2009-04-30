@@ -13,7 +13,8 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	task.c \
 	object.c \
 	pad.c \
-	gobject.c
+	gobject.c \
+	typefind.c
 
 nodist_libgstreamersharpglue_0_10_la_SOURCES = generated.c 
 

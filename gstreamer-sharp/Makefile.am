@@ -48,7 +48,8 @@ sources = \
 	plugins-base/DecodeBin.cs \
 	plugins-base/TypeFindElement.cs \
 	GstSharp.PadQueryTypeFunctionNative.cs \
-	PadQueryTypeFunction.cs
+	PadQueryTypeFunction.cs \
+	TypeFindDelegates.cs
 
 build_sources = $(addprefix $(srcdir)/, $(sources))
 
@@ -74,7 +75,8 @@ customs = 			\
 	Query.custom 	        \
 	Structure.custom        \
 	Tag.custom		\
-	TagList.custom
+	TagList.custom		\
+	TypeFind.custom
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 

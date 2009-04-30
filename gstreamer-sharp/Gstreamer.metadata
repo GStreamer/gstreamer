@@ -840,7 +840,10 @@
   <attr path="/api/namespace/callback[@name='TagMergeFunc']/parameters/parameter[@name='dest']" name="pass_as">out</attr>
   <attr path="/api/namespace/callback[@name='TagMergeFunc']/parameters/parameter[@name='src']" name="pass_as">ref</attr>
 
-  <attr path="/api/namespace/struct[@name='TypeFind']/method[@name='Register']" name="hidden">1</attr>
+  <change-node-type path="/api/namespace/struct[@name='TypeFind']">boxed</change-node-type>
+  <attr path="/api/namespace/boxed[@name='TypeFind']" name="opaque">true</attr>
+  <attr path="/api/namespace/boxed[@name='TypeFind']/method[@cname='gst_type_find_register']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='TypeFind']/method[@cname='gst_type_find_peek']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='TypeFindFactory']/method[@cname='gst_type_find_factory_get_list']/return-type" name="element_type">GstTypeFindFactory*</attr>
   <attr path="/api/namespace/object[@name='TypeFindFactory']/method[@cname='gst_type_find_factory_get_list']/return-type" name="elements_owned">true</attr>
