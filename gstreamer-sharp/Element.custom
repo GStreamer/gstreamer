@@ -1,4 +1,4 @@
-[DllImport ("gobject-2.0-0.dll") ]
+[DllImport ("libgobject-2.0-0.dll") ]
 static extern IntPtr g_object_ref (IntPtr raw);
 [DllImport ("gstreamer-0.10.dll") ]
 static extern bool gst_element_add_pad (IntPtr raw, IntPtr pad);

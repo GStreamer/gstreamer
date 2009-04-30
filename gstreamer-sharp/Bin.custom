@@ -26,7 +26,7 @@ public Element [] Children {
 [DllImport ("gstreamer-0.10.dll") ]
 static extern bool gst_bin_add (IntPtr raw, IntPtr element);
 
-[DllImport ("gobject-2.0-0.dll") ]
+[DllImport ("libgobject-2.0-0.dll") ]
 static extern IntPtr g_object_ref (IntPtr raw);
 
 public bool Add (Gst.Element element) {
