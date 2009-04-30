@@ -301,7 +301,8 @@ mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end)
     if (hdr->pic_type == B_FRAME) {
       hdr->full_pel_backward_vector = read_bits (data + 4, 1, 1);
       hdr->f_code[1][0] = hdr->f_code[1][1] = read_bits (data + 4, 2, 3);
-    }
+    } else
+      hdr->full_pel_backward_vector = 0;
   } else {
     hdr->full_pel_forward_vector = 0;
     hdr->full_pel_backward_vector = 0;
