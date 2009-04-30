@@ -182,16 +182,16 @@ public Gst.QueryType[] GetQueryTypes () {
 }
 
 
-		[DllImport("gstreamer-0.10.dll")]
-		static extern bool gst_element_send_event(IntPtr raw, IntPtr evnt);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_element_send_event (IntPtr raw, IntPtr evnt);
 
-		public bool SendEvent(Gst.Event evnt) {
-			bool raw_ret = gst_element_send_event(Handle, evnt == null ? IntPtr.Zero : gst_mini_object_ref (evnt.Handle));
-			bool ret = raw_ret;
-			return ret;
-		}
+public bool SendEvent (Gst.Event evnt) {
+  bool raw_ret = gst_element_send_event (Handle, evnt == null ? IntPtr.Zero : gst_mini_object_ref (evnt.Handle));
+  bool ret = raw_ret;
+  return ret;
+}
 
-[DllImport("gstreamer-0.10.dll")]
+[DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_element_class_add_pad_template (IntPtr klass, IntPtr templ);
 
 protected static void AddPadTemplate (GLib.GType gtype, Gst.PadTemplate templ) {
@@ -199,7 +199,7 @@ protected static void AddPadTemplate (GLib.GType gtype, Gst.PadTemplate templ) {
   gst_element_class_add_pad_template (class_ptr, templ.Handle);
 }
 
-[DllImport("gstreamer-0.10.dll")]
+[DllImport ("gstreamer-0.10.dll") ]
 static extern IntPtr gst_element_class_get_pad_template (IntPtr klass, IntPtr name);
 
 public Gst.PadTemplate GetPadTemplate (string name) {
@@ -212,18 +212,20 @@ public Gst.PadTemplate GetPadTemplate (string name) {
   return GLib.Object.GetObject (raw_ret, false) as Gst.PadTemplate;
 }
 
-[DllImport("gstreamer-0.10.dll")]
+[DllImport ("gstreamer-0.10.dll") ]
 static extern IntPtr gst_element_class_get_pad_template_list (IntPtr klass);
 
-public Gst.PadTemplate[] GetPadTemplates () {
-  GLib.GType gtype = this.LookupGType ().ThresholdType;
-  IntPtr class_ptr = new IntPtr (gtype.ClassPtr.ToInt64 ());
-  IntPtr raw_ret = gst_element_class_get_pad_template_list (class_ptr);
+public Gst.PadTemplate[] PadTemplates {
+  get {
+    GLib.GType gtype = this.LookupGType ().ThresholdType;
+    IntPtr class_ptr = new IntPtr (gtype.ClassPtr.ToInt64 ());
+    IntPtr raw_ret = gst_element_class_get_pad_template_list (class_ptr);
 
-  return (Gst.PadTemplate[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), false, false, typeof(Gst.PadTemplate));
+    return (Gst.PadTemplate[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof (GLib.List), false, false, typeof (Gst.PadTemplate));
+  }
 }
 
-[DllImport("gstreamer-0.10.dll")]
+[DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_element_class_set_details_simple (IntPtr klass, IntPtr longname, IntPtr classification, IntPtr desc, IntPtr author);
 
 protected static void SetDetails (GLib.GType gtype, string longname, string klass, string description, string author) {
