@@ -203,7 +203,7 @@ protected static void AddPadTemplate (GLib.GType gtype, Gst.PadTemplate templ) {
 static extern IntPtr gst_element_class_get_pad_template (IntPtr klass, IntPtr name);
 
 public Gst.PadTemplate GetPadTemplate (string name) {
-  GLib.GType gtype = this.LookupGType ().ThresholdType;
+  GLib.GType gtype = this.LookupGType ();
   IntPtr class_ptr = new IntPtr (gtype.ClassPtr.ToInt64 ());
   IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
   IntPtr raw_ret = gst_element_class_get_pad_template (class_ptr, native_name);
@@ -217,7 +217,7 @@ static extern IntPtr gst_element_class_get_pad_template_list (IntPtr klass);
 
 public Gst.PadTemplate[] PadTemplates {
   get {
-    GLib.GType gtype = this.LookupGType ().ThresholdType;
+    GLib.GType gtype = this.LookupGType ();
     IntPtr class_ptr = new IntPtr (gtype.ClassPtr.ToInt64 ());
     IntPtr raw_ret = gst_element_class_get_pad_template_list (class_ptr);
 
