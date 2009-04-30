@@ -96,7 +96,7 @@ GST_DEBUG_CATEGORY_STATIC (debug);
 static GstElementDetails gst_lame_details = {
   "L.A.M.E. mp3 encoder",
   "Codec/Encoder/Audio",
-  "High-quality free MP3 encoder",
+  "High-quality free MP3 encoder (deprecated)",
   "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>",
 };
 
