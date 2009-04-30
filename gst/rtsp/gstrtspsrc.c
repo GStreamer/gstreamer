@@ -4389,6 +4389,17 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
   GST_DEBUG_OBJECT (src, "range: max %" GST_TIME_FORMAT,
       GST_TIME_ARGS (seconds));
 
+  /* live (WMS) server might send overflowed large max as its idea of infinity,
+   * compensate to prevent problems later on */
+  if (seconds != -1 && seconds < 0) {
+    seconds = -1;
+    GST_DEBUG_OBJECT (src, "insane range, set to NONE");
+  }
+
+  /* live (WMS) might send min == max, which is not worth recording */
+  if (segment->duration == -1 && seconds == segment->start)
+    seconds = -1;
+
   /* don't change duration with unknown value, we might have a valid value
    * there that we want to keep. */
   if (seconds != -1)
