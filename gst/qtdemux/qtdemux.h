@@ -62,6 +62,7 @@ struct _GstQTDemux {
   gint     n_streams;
   gint     n_video_streams;
   gint     n_audio_streams;
+  gint     n_subp_streams;
 
   guint  major_brand;
   GNode *moov_node;
