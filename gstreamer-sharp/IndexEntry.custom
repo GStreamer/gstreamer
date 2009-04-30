@@ -1,4 +1,4 @@
-protected virtual GLib.Opaque Copy (IntPtr raw)
+protected override GLib.Opaque Copy (IntPtr raw)
 {
   return GLib.Opaque.GetOpaque (raw, typeof (Gst.IndexEntry), true);
 }
