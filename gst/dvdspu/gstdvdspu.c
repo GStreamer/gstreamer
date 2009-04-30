@@ -1366,6 +1366,12 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
       /* We don't forward flushes on the spu pad */
       gst_event_unref (event);
       goto done;
+    case GST_EVENT_EOS:
+      /* drop EOS on the subtitle pad, it means there are no more subtitles,
+       * video might still continue, though */
+      gst_event_unref (event);
+      goto done;
+      break;
     default:
       res = gst_pad_event_default (pad, event);
       break;
