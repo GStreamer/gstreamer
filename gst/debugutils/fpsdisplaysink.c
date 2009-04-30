@@ -273,7 +273,7 @@ display_current_fps (gpointer data)
 static void
 fps_display_sink_start (FPSDisplaySink * self)
 {
-  GstPad *target_pad;
+  GstPad *target_pad = NULL;
 
   /* Init counters */
   self->priv->next_ts = GST_CLOCK_TIME_NONE;
