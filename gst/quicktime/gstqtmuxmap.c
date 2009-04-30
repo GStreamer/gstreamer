@@ -124,6 +124,7 @@
   "rate = (int) 16000, " \
   "channels = [ 1, 2 ] "
 
+/* FIXME 0.11 - take a look at bugs #580005 and #340375 */
 GstQTMuxFormatProp gst_qt_mux_format_list[] = {
   /* original QuickTime format; see Apple site (e.g. qtff.pdf) */
   {
@@ -131,7 +132,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "qtmux",
         "QuickTime",
         "GstQTMux",
-        GST_STATIC_CAPS ("video/quicktime"),
+        GST_STATIC_CAPS ("video/quicktime, variant = (string) apple"),
         GST_STATIC_CAPS ("video/x-raw-rgb, "
             COMMON_VIDEO_CAPS "; "
             "video/x-raw-yuv, "
@@ -159,7 +160,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "mp4mux",
         "MP4",
         "GstMP4Mux",
-        GST_STATIC_CAPS ("application/x-iso-mp4"),
+        GST_STATIC_CAPS ("video/quicktime, variant = (string) iso"),
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";"
             "video/x-mp4-part," COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS)
@@ -172,7 +173,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "gppmux",
         "3GPP",
         "GstGPPMux",
-        GST_STATIC_CAPS ("application/x-3gp"),
+        GST_STATIC_CAPS ("video/quicktime, variant = (string) 3gpp"),
         GST_STATIC_CAPS (H263_CAPS "; " H264_CAPS),
         GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS)
       }
