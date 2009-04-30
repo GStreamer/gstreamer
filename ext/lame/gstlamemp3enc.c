@@ -47,7 +47,7 @@
  * gst-launch -v alsasrc ! audioconvert ! lamemp3enc target=bitrate bitrate=192 ! filesink location=alsasrc.mp3
  * ]| Record from a sound card using ALSA and encode to MP3 with an average bitrate of 192kbps
  * |[
- * gst-launch -v filesrc location=music.wav ! decodebin ! audioconvert ! audioresample ! lamemp3enc target=quality vbr-quality=0 ! id3v2mux ! filesink location=music.mp3
+ * gst-launch -v filesrc location=music.wav ! decodebin ! audioconvert ! audioresample ! lamemp3enc target=quality quality=0 ! id3v2mux ! filesink location=music.mp3
  * ]| Transcode from a .wav file to MP3 (the id3v2mux element is optional) with best VBR quality
  * |[
  * gst-launch -v cdda://5 ! audioconvert ! lamemp3enc target=bitrate cbr=true bitrate=192 ! filesink location=track5.mp3
@@ -158,8 +158,7 @@ enum
   ARG_TARGET,
   ARG_BITRATE,
   ARG_CBR,
-  ARG_VBR_QUALITY,
-  ARG_FAST_VBR,
+  ARG_QUALITY,
   ARG_ENCODING_ENGINE_QUALITY,
   ARG_MONO
 };
@@ -167,8 +166,7 @@ enum
 #define DEFAULT_TARGET LAMEMP3ENC_TARGET_QUALITY
 #define DEFAULT_BITRATE 128
 #define DEFAULT_CBR FALSE
-#define DEFAULT_VBR_QUALITY 4
-#define DEFAULT_FAST_VBR FALSE
+#define DEFAULT_QUALITY 4
 #define DEFAULT_ENCODING_ENGINE_QUALITY LAMEMP3ENC_ENCODING_ENGINE_QUALITY_STANDARD
 #define DEFAULT_MONO FALSE
 
@@ -272,13 +270,10 @@ gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CBR,
       g_param_spec_boolean ("cbr", "CBR", "Enforce constant bitrate encoding",
           DEFAULT_CBR, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_QUALITY,
-      g_param_spec_float ("vbr-quality", "VBR Quality",
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
+      g_param_spec_float ("quality", "Quality",
           "VBR Quality from 0 to 10, 0 being the best", 0.0, 9.999,
-          DEFAULT_VBR_QUALITY, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FAST_VBR,
-      g_param_spec_boolean ("fast-vbr", "Fast VBR", "Use fast VBR encoding",
-          DEFAULT_FAST_VBR, G_PARAM_READWRITE));
+          DEFAULT_QUALITY, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_ENCODING_ENGINE_QUALITY, g_param_spec_enum ("encoding-engine-quality",
           "Encoding Engine Quality", "Quality/speed of the encoding engine",
@@ -405,8 +400,7 @@ gst_lamemp3enc_init (GstLameMP3Enc * lame)
   lame->target = DEFAULT_TARGET;
   lame->bitrate = DEFAULT_BITRATE;
   lame->cbr = DEFAULT_CBR;
-  lame->vbr_quality = DEFAULT_VBR_QUALITY;
-  lame->fast_vbr = DEFAULT_FAST_VBR;
+  lame->quality = DEFAULT_QUALITY;
   lame->encoding_engine_quality = DEFAULT_ENCODING_ENGINE_QUALITY;
   lame->mono = DEFAULT_MONO;
 
@@ -468,11 +462,8 @@ gst_lamemp3enc_set_property (GObject * object, guint prop_id,
     case ARG_CBR:
       lame->cbr = g_value_get_boolean (value);
       break;
-    case ARG_VBR_QUALITY:
-      lame->vbr_quality = g_value_get_float (value);
-      break;
-    case ARG_FAST_VBR:
-      lame->fast_vbr = g_value_get_boolean (value);
+    case ARG_QUALITY:
+      lame->quality = g_value_get_float (value);
       break;
     case ARG_ENCODING_ENGINE_QUALITY:
       lame->encoding_engine_quality = g_value_get_enum (value);
@@ -504,11 +495,8 @@ gst_lamemp3enc_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_CBR:
       g_value_set_boolean (value, lame->cbr);
       break;
-    case ARG_VBR_QUALITY:
-      g_value_set_float (value, lame->vbr_quality);
-      break;
-    case ARG_FAST_VBR:
-      g_value_set_boolean (value, lame->fast_vbr);
+    case ARG_QUALITY:
+      g_value_set_float (value, lame->quality);
       break;
     case ARG_ENCODING_ENGINE_QUALITY:
       g_value_set_enum (value, lame->encoding_engine_quality);
@@ -771,11 +759,8 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame)
   CHECK_ERROR (lame_set_num_channels (lame->lgf, lame->num_channels));
 
   if (lame->target == LAMEMP3ENC_TARGET_QUALITY) {
-    if (lame->fast_vbr)
-      CHECK_ERROR (lame_set_VBR (lame->lgf, vbr_rh));
-    else
-      CHECK_ERROR (lame_set_VBR (lame->lgf, vbr_mtrh));
-    CHECK_ERROR (lame_set_VBR_quality (lame->lgf, lame->vbr_quality));
+    CHECK_ERROR (lame_set_VBR (lame->lgf, vbr_default));
+    CHECK_ERROR (lame_set_VBR_quality (lame->lgf, lame->quality));
   } else {
     CHECK_AND_FIXUP_BITRATE (lame, "bitrate", lame->bitrate);
     if (lame->cbr) {
