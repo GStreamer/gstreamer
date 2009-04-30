@@ -2964,6 +2964,7 @@ server_eof:
     GST_DEBUG_OBJECT (src, "we got an eof from the server");
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("The server closed the connection."));
+    src->connected = FALSE;
     return GST_FLOW_UNEXPECTED;
   }
 interrupt:
@@ -3209,6 +3210,7 @@ server_eof:
     GST_DEBUG_OBJECT (src, "we got an eof from the server");
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("The server closed the connection."));
+    src->connected = FALSE;
     return GST_FLOW_UNEXPECTED;
   }
 }
@@ -4717,7 +4719,12 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "stop connection flush");
   gst_rtsp_connection_flush (src->connection, FALSE);
 
-  if (src->methods & (GST_RTSP_PLAY | GST_RTSP_TEARDOWN) && src->connected) {
+  if (!src->connected) {
+    GST_DEBUG_OBJECT (src, "not connected, doing cleanup");
+    goto close;
+  }
+
+  if (src->methods & (GST_RTSP_PLAY | GST_RTSP_TEARDOWN)) {
     /* do TEARDOWN */
     res =
         gst_rtsp_message_init_request (&request, GST_RTSP_TEARDOWN,
