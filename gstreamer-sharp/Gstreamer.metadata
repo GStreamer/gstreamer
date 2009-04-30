@@ -277,6 +277,8 @@
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_send_event']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_seek_simple']" name="name">Seek</attr>
   <remove-attr path="/api/namespace/object[@name='Element']/field[@name='CurrentState']" name="hidden"/>
+  
+  <attr path="/api/namespace/struct[@name='ElementDetails']" name="internal">1</attr>
 
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Make']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Create']/return-type" name="owned">true</attr>
