@@ -318,7 +318,7 @@ gst_qtdemux_get_type (void)
 {
   static GType qtdemux_type = 0;
 
-  if (!qtdemux_type) {
+  if (G_UNLIKELY (!qtdemux_type)) {
     static const GTypeInfo qtdemux_info = {
       sizeof (GstQTDemuxClass),
       (GBaseInitFunc) gst_qtdemux_base_init, NULL,
@@ -2891,24 +2891,24 @@ static gboolean
 qtdemux_parse_container (GstQTDemux * qtdemux, GNode * node, guint8 * buf,
     guint8 * end)
 {
-  while (buf < end) {
+  while (G_UNLIKELY (buf < end)) {
     GNode *child;
     guint32 len;
 
-    if (buf + 4 > end) {
+    if (G_UNLIKELY (buf + 4 > end)) {
       GST_LOG_OBJECT (qtdemux, "buffer overrun");
       break;
     }
     len = QT_UINT32 (buf);
-    if (len == 0) {
+    if (G_UNLIKELY (len == 0)) {
       GST_LOG_OBJECT (qtdemux, "empty container");
       break;
     }
-    if (len < 8) {
+    if (G_UNLIKELY (len < 8)) {
       GST_WARNING_OBJECT (qtdemux, "length too short (%d < 8)", len);
       break;
     }
-    if (len > (end - buf)) {
+    if (G_UNLIKELY (len > (end - buf))) {
       GST_WARNING_OBJECT (qtdemux, "length too long (%d > %d)", len, end - buf);
       break;
     }
@@ -2997,11 +2997,11 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
   node_length = QT_UINT32 (buffer);
   fourcc = QT_FOURCC (buffer + 4);
 
-  type = qtdemux_type_get (fourcc);
-
   /* ignore empty nodes */
-  if (fourcc == 0 || node_length == 8)
+  if (G_UNLIKELY (fourcc == 0 || node_length == 8))
     return TRUE;
+
+  type = qtdemux_type_get (fourcc);
 
   end = buffer + length;
 
@@ -3143,7 +3143,7 @@ qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc)
 
     child_fourcc = QT_FOURCC (buffer + 4);
 
-    if (child_fourcc == fourcc) {
+    if (G_UNLIKELY (child_fourcc == fourcc)) {
       return child;
     }
   }
@@ -3379,10 +3379,6 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if (!(stts = qtdemux_tree_get_child_by_type (stbl, FOURCC_stts)))
     goto corrupt_file;
 
-  /* sample sync, can be NULL */
-  stss = qtdemux_tree_get_child_by_type (stbl, FOURCC_stss);
-  stps = qtdemux_tree_get_child_by_type (stbl, FOURCC_stps);
-
   sample_size = QT_UINT32 (stsz_data + 12);
   if (sample_size == 0 || stream->sampled) {
     n_samples = QT_UINT32 (stsz_data + 16);
@@ -3465,6 +3461,10 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         index++;
       }
     }
+
+    /* sample sync, can be NULL */
+    stss = qtdemux_tree_get_child_by_type (stbl, FOURCC_stss);
+
     if (stss) {
       /* mark keyframes */
       guint32 n_sample_syncs;
@@ -3483,6 +3483,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
           }
         }
       }
+      stps = qtdemux_tree_get_child_by_type (stbl, FOURCC_stps);
       if (stps) {
         /* mark keyframes */
         guint32 n_sample_syncs;

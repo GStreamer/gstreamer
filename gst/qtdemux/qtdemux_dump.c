@@ -431,6 +431,9 @@ qtdemux_node_dump_foreach (GNode * node, gpointer qtdemux)
 void
 qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node)
 {
+  if (__gst_debug_min < GST_LEVEL_LOG)
+    return;
+
   g_node_traverse (qtdemux->moov_node, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
       qtdemux_node_dump_foreach, qtdemux);
 }

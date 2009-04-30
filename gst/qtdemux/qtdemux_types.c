@@ -146,11 +146,12 @@ qtdemux_type_get (guint32 fourcc)
   int i;
 
   for (i = 0; i < n_qt_node_types; i++) {
-    if (qt_node_types[i].fourcc == fourcc)
+    if (G_UNLIKELY (qt_node_types[i].fourcc == fourcc))
       return qt_node_types + i;
   }
 
   GST_WARNING ("unknown QuickTime node type %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (fourcc));
+
   return qt_node_types + n_qt_node_types - 1;
 }
