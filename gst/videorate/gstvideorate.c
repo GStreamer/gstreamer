@@ -268,6 +268,7 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
     videorate->from_rate_denominator = rate_denominator;
     otherpad = videorate->srcpad;
   }
+
   /* now try to find something for the peer */
   opeer = gst_pad_get_peer (otherpad);
   if (opeer) {
@@ -358,6 +359,7 @@ gst_video_rate_reset (GstVideoRate * videorate)
   videorate->drop = 0;
   videorate->dup = 0;
   videorate->next_ts = GST_CLOCK_TIME_NONE;
+  videorate->last_ts = GST_CLOCK_TIME_NONE;
   videorate->discont = TRUE;
   gst_video_rate_swap_prev (videorate, NULL, 0);
 
@@ -584,11 +586,17 @@ gst_video_rate_query (GstPad * pad, GstQuery * query)
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
-          /* add latency. We don't really know since we hold on to the frames
-           * until we get a next frame, which can be anything. We assume
-           * however that this will take from_rate time. */
-          latency = gst_util_uint64_scale (GST_SECOND,
-              videorate->from_rate_denominator, videorate->from_rate_numerator);
+          if (videorate->from_rate_numerator != 0) {
+            /* add latency. We don't really know since we hold on to the frames
+             * until we get a next frame, which can be anything. We assume
+             * however that this will take from_rate time. */
+            latency = gst_util_uint64_scale (GST_SECOND,
+                videorate->from_rate_denominator,
+                videorate->from_rate_numerator);
+          } else {
+            /* no input framerate, we don't know */
+            latency = 0;
+          }
 
           GST_DEBUG_OBJECT (videorate, "Our latency: %"
               GST_TIME_FORMAT, GST_TIME_ARGS (latency));
@@ -621,7 +629,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstVideoRate *videorate;
   GstFlowReturn res = GST_FLOW_OK;
-  GstClockTime intime, in_ts;
+  GstClockTime intime, in_ts, in_dur;
 
   videorate = GST_VIDEO_RATE (GST_PAD_PARENT (pad));
 
@@ -631,9 +639,19 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
     goto not_negotiated;
 
   in_ts = GST_BUFFER_TIMESTAMP (buffer);
+  in_dur = GST_BUFFER_DURATION (buffer);
 
-  if (G_UNLIKELY (in_ts == GST_CLOCK_TIME_NONE))
-    goto invalid_buffer;
+  if (G_UNLIKELY (in_ts == GST_CLOCK_TIME_NONE)) {
+    in_ts = videorate->last_ts;
+    if (G_UNLIKELY (in_ts == GST_CLOCK_TIME_NONE))
+      goto invalid_buffer;
+  }
+
+  /* get the time of the next expected buffer timestamp, we use this when the
+   * next buffer has -1 as a timestamp */
+  videorate->last_ts = in_ts;
+  if (in_dur != GST_CLOCK_TIME_NONE)
+    videorate->last_ts += in_dur;
 
   GST_DEBUG_OBJECT (videorate, "got buffer with timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (in_ts));
@@ -698,7 +716,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
           GST_TIME_ARGS (videorate->next_ts));
 
       /* output first one when its the best */
-      if (diff1 < diff2) {
+      if (diff1 <= diff2) {
         count++;
 
         /* on error the _flush function posted a warning already */
@@ -707,7 +725,8 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
           goto done;
         }
       }
-      /* continue while the first one was the best */
+      /* continue while the first one was the best, if they were equal avoid
+       * going into an infinite loop */
     }
     while (diff1 < diff2);
 
@@ -820,6 +839,7 @@ gst_video_rate_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       videorate->discont = TRUE;
+      videorate->last_ts = -1;
       break;
     default:
       break;
