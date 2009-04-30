@@ -151,7 +151,7 @@
 <ARG>
 <NAME>GstLame::highpass-width</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Highpass width</NICK>
 <BLURB>frequency(kHz) - default 15% of highpass freq.</BLURB>
@@ -171,7 +171,7 @@
 <ARG>
 <NAME>GstLame::lowpass-width</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Lowpass width</NICK>
 <BLURB>frequency(kHz) - default 15% of lowpass freq.</BLURB>
@@ -601,7 +601,7 @@
 <ARG>
 <NAME>GstMPEGParse::max-scr-gap</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max SCR gap</NICK>
 <BLURB>Maximum allowed gap between expected and actual SCR values. -1 means never adjust.</BLURB>
@@ -681,7 +681,7 @@
 <ARG>
 <NAME>GstCdioCddaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
 <BLURB>Read from device at the specified speed (-1 = default).</BLURB>
@@ -791,7 +791,7 @@
 <ARG>
 <NAME>GstTwoLame::psymodel</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,4]</RANGE>
+<RANGE>[G_MAXULONG,4]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Psychoacoustic Model</NICK>
 <BLURB>Psychoacoustic model used to encode the audio.</BLURB>
@@ -846,5 +846,85 @@
 <NICK>VBR max bitrate</NICK>
 <BLURB>Specify maximum VBR bitrate (0=off, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 192, 224, 256, 320, 384).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[8,320]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate (kb/s)</NICK>
+<BLURB>Bitrate in kbit/sec (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256 or 320).</BLURB>
+<DEFAULT>128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::cbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CBR</NICK>
+<BLURB>Enforce constant bitrate encoding.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::encoding-engine-quality</NAME>
+<TYPE>GstLameMP3EncEncodingEngineQuality</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding Engine Quality</NICK>
+<BLURB>Quality/speed of the encoding engine.</BLURB>
+<DEFAULT>Standard</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::fast-vbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fast VBR</NICK>
+<BLURB>Use fast VBR encoding.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::mono</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mono</NICK>
+<BLURB>Enforce mono encoding.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::target</NAME>
+<TYPE>GstLameMP3EncTarget</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target</NICK>
+<BLURB>Optimize for quality or bitrate.</BLURB>
+<DEFAULT>Quality</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::vbr-quality</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,9.999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VBR Quality</NICK>
+<BLURB>VBR Quality from 0 to 10, 0 being the best.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAmrnbDec::variant</NAME>
+<TYPE>GstAmrnbVariant</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Variant</NICK>
+<BLURB>The decoder variant.</BLURB>
+<DEFAULT>IF1</DEFAULT>
 </ARG>
 

@@ -3,16 +3,16 @@
   <description>Decode DVD LPCM frames into standard PCM</description>
   <filename>../../gst/dvdlpcmdec/.libs/libgstdvdlpcmdec.so</filename>
   <basename>libgstdvdlpcmdec.so</basename>
-  <version>0.10.11</version>
+  <version>0.10.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins source release</package>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>dvdlpcmdec</name>
       <longname>DVD LPCM Audio decoder</longname>
-      <class>Codec/Demuxer/Audio</class>
+      <class>Codec/Decoder/Audio</class>
       <description>Decode DVD LPCM frames into standard PCM audio</description>
       <author>Jan Schmidt &lt;jan@noraisin.net&gt;
     Michael Smith &lt;msmith@fluendo.com&gt;</author>
