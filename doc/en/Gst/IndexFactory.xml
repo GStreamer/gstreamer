@@ -44,15 +44,6 @@
       <ReturnValue><ReturnType>Gst.Index</ReturnType></ReturnValue>
       <Parameters />
       <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Destroy">
-      <MemberSignature Language="C#" Value="public void Destroy ();" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="Find">
       <MemberSignature Language="C#" Value="public static Gst.IndexFactory Find (string name);" />
       <MemberType>Method</MemberType>

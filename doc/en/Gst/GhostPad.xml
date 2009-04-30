@@ -61,15 +61,6 @@
       </AssemblyInfo>
       <Parameters><Parameter Name="name" Type="System.String" /><Parameter Name="target" Type="Gst.Pad" /><Parameter Name="templ" Type="Gst.PadTemplate" /></Parameters>
       <Docs><param name="name">To be added.</param><param name="target">To be added.</param><param name="templ">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Construct">
-      <MemberSignature Language="C#" Value="public bool Construct ();" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="GType">
       <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>

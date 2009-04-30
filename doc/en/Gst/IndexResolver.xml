@@ -1,5 +1,5 @@
 <Type Name="IndexResolver" FullName="Gst.IndexResolver">
-  <TypeSignature Language="C#" Value="public delegate bool IndexResolver(Index index, Object writer, string writer_string);" />
+  <TypeSignature Language="C#" Value="public delegate bool IndexResolver(Index index, Object writer, out string writer_string);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -10,7 +10,7 @@
   <Parameters>
     <Parameter Name="index" Type="Gst.Index" />
     <Parameter Name="writer" Type="Gst.Object" />
-    <Parameter Name="writer_string" Type="System.String" />
+    <Parameter Name="writer_string" Type="System.String&amp;" RefType="out" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Boolean</ReturnType>

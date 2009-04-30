@@ -74,12 +74,11 @@
       <Type Name="Index" Kind="Class" />
       <Type Name="IndexAssociation" Kind="Structure" />
       <Type Name="IndexCertainty" Kind="Enumeration" />
-      <Type Name="IndexEntry" Kind="Structure" />
+      <Type Name="IndexEntry" Kind="Class" />
       <Type Name="IndexEntryType" Kind="Enumeration" />
       <Type Name="IndexFactory" Kind="Class" />
       <Type Name="IndexFilter" Kind="Delegate" />
       <Type Name="IndexFlags" Kind="Enumeration" />
-      <Type Name="IndexGroup" Kind="Structure" />
       <Type Name="IndexLookupMethod" Kind="Enumeration" />
       <Type Name="IndexResolver" Kind="Delegate" />
       <Type Name="IndexResolverMethod" Kind="Enumeration" />
@@ -182,12 +181,14 @@
       <Type Name="Task" Kind="Class" />
       <Type Name="TaskFunction" Kind="Delegate" />
       <Type Name="TaskState" Kind="Enumeration" />
-      <Type Name="TypeFind" Kind="Structure" />
+      <Type Name="TypeFind" Kind="Class" />
       <Type Name="TypeFindElement" Kind="Class" />
       <Type Name="TypeFindFactory" Kind="Class" />
       <Type Name="TypeFindFunction" Kind="Delegate" />
+      <Type Name="TypeFindGetLengthFunction" Kind="Delegate" />
+      <Type Name="TypeFindPeekFunction" Kind="Delegate" />
       <Type Name="TypeFindProbability" Kind="Enumeration" />
-      <Type Name="TypeNameData" Kind="Structure" />
+      <Type Name="TypeFindSuggestFunction" Kind="Delegate" />
       <Type Name="UnlinkedArgs" Kind="Class" />
       <Type Name="UnlinkedHandler" Kind="Delegate" />
       <Type Name="Util" Kind="Class" />

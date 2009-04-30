@@ -44,14 +44,6 @@
       <Parameters />
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Index (Gst.Index index);" />
-      <MemberType>Constructor</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Parameters><Parameter Name="index" Type="Gst.Index" /></Parameters>
-      <Docs><param name="index">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Index (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
@@ -59,16 +51,7 @@
       </AssemblyInfo>
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
       <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="AddAssociationv">
-      <MemberSignature Language="C#" Value="public Gst.IndexEntry AddAssociationv (int id, Gst.AssocFlags flags, int n, Gst.IndexAssociation list);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.IndexEntry</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="id" Type="System.Int32" /><Parameter Name="flags" Type="Gst.AssocFlags" /><Parameter Name="n" Type="System.Int32" /><Parameter Name="list" Type="Gst.IndexAssociation" /></Parameters>
-      <Docs><param name="id">To be added.</param><param name="flags">To be added.</param><param name="n">To be added.</param><param name="list">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="AddFormat">
+    </Member><Member MemberName="AddAssociation"><MemberSignature Language="C#" Value="public Gst.IndexEntry AddAssociation (int id, Gst.AssocFlags flags, int n, Gst.IndexAssociation[] list);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.IndexEntry</ReturnType></ReturnValue><Parameters><Parameter Name="id" Type="System.Int32" /><Parameter Name="flags" Type="Gst.AssocFlags" /><Parameter Name="n" Type="System.Int32" /><Parameter Name="list" Type="Gst.IndexAssociation[]" /></Parameters><Docs><param name="id">To be added.</param><param name="flags">To be added.</param><param name="n">To be added.</param><param name="list">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="AddFormat">
       <MemberSignature Language="C#" Value="public Gst.IndexEntry AddFormat (int id, Gst.Format format);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -86,16 +69,7 @@
       <ReturnValue><ReturnType>Gst.IndexEntry</ReturnType></ReturnValue>
       <Parameters><Parameter Name="id" Type="System.Int32" /><Parameter Name="description" Type="System.String" /></Parameters>
       <Docs><param name="id">To be added.</param><param name="description">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="AddObject">
-      <MemberSignature Language="C#" Value="public Gst.IndexEntry AddObject (int id, string key, GLib.GType type, IntPtr objekt);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.IndexEntry</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="id" Type="System.Int32" /><Parameter Name="key" Type="System.String" /><Parameter Name="type" Type="GLib.GType" /><Parameter Name="objekt" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="id">To be added.</param><param name="key">To be added.</param><param name="type">To be added.</param><param name="objekt">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Certainty">
+    </Member><Member MemberName="AddObject"><MemberSignature Language="C#" Value="public Gst.IndexEntry AddObject (int id, string key, GLib.GType type, GLib.Object objekt);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.IndexEntry</ReturnType></ReturnValue><Parameters><Parameter Name="id" Type="System.Int32" /><Parameter Name="key" Type="System.String" /><Parameter Name="type" Type="GLib.GType" /><Parameter Name="objekt" Type="GLib.Object" /></Parameters><Docs><param name="id">To be added.</param><param name="key">To be added.</param><param name="type">To be added.</param><param name="objekt">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Certainty">
       <MemberSignature Language="C#" Value="public Gst.IndexCertainty Certainty { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
@@ -123,14 +97,6 @@
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="Filter">
       <MemberSignature Language="C#" Value="public Gst.IndexFilter Filter { set; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.IndexFilter</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="FilterFull">
-      <MemberSignature Language="C#" Value="public Gst.IndexFilter FilterFull { set; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -171,7 +137,7 @@
       </AssemblyInfo>
       <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="OnAddEntry">
+    </Member><Member MemberName="IsReadable"><MemberSignature Language="C#" Value="public bool IsReadable { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="IsWritable"><MemberSignature Language="C#" Value="public bool IsWritable { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Method"><MemberSignature Language="C#" Value="public Gst.IndexResolverMethod Method { set; get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.Property("resolver")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>Gst.IndexResolverMethod</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="NewGroup"><MemberSignature Language="C#" Value="public int NewGroup ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnAddEntry">
       <MemberSignature Language="C#" Value="protected virtual void OnAddEntry (Gst.IndexEntry entry);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -201,7 +167,7 @@
       <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
       <Parameters><Parameter Name="entry" Type="Gst.IndexEntry" /></Parameters>
       <Docs><param name="entry">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="OnGetWriterId">
+    </Member><Member MemberName="OnGetAssocEntry"><MemberSignature Language="C#" Value="protected virtual Gst.IndexEntry OnGetAssocEntry (int id, Gst.IndexLookupMethod method, Gst.AssocFlags flags, Gst.Format format, long value, IntPtr func, IntPtr user_data);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Index), ConnectionMethod="OverrideGetAssocEntry")</AttributeName></Attribute></Attributes><ReturnValue><ReturnType>Gst.IndexEntry</ReturnType></ReturnValue><Parameters><Parameter Name="id" Type="System.Int32" /><Parameter Name="method" Type="Gst.IndexLookupMethod" /><Parameter Name="flags" Type="Gst.AssocFlags" /><Parameter Name="format" Type="Gst.Format" /><Parameter Name="value" Type="System.Int64" /><Parameter Name="func" Type="System.IntPtr" /><Parameter Name="user_data" Type="System.IntPtr" /></Parameters><Docs><param name="id">To be added.</param><param name="method">To be added.</param><param name="flags">To be added.</param><param name="format">To be added.</param><param name="value">To be added.</param><param name="func">To be added.</param><param name="user_data">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="OnGetWriterId">
       <MemberSignature Language="C#" Value="protected virtual bool OnGetWriterId (out int writer_id, string writer_string);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -213,14 +179,6 @@
       <Docs><param name="writer_id">To be added.</param><param name="writer_string">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="Resolver">
       <MemberSignature Language="C#" Value="public Gst.IndexResolver Resolver { set; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.IndexResolver</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="ResolverFull">
-      <MemberSignature Language="C#" Value="public Gst.IndexResolver ResolverFull { set; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
