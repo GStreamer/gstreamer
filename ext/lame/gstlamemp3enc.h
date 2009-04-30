@@ -63,8 +63,7 @@ struct _GstLameMP3Enc {
   gint bitrate;
   gboolean cbr;
 
-  gfloat vbr_quality;
-  gboolean fast_vbr;
+  gfloat quality;
 
   gint encoding_engine_quality;
 
