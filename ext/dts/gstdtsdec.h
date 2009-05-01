@@ -43,8 +43,8 @@ struct _GstDtsDec {
   GstElement 	 element;
 
   /* pads */
-  GstPad 	*sinkpad,
-  		*srcpad;
+  GstPad 	*sinkpad;
+  GstPad 	*srcpad;
 
   /* stream properties */
   gint 		 bit_rate;
