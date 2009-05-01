@@ -43,9 +43,10 @@ public class PlayBinPlayer
     {
         switch (message.Type) {
             case MessageType.Error:
-                string err = String.Empty;
-                message.ParseError (out err);
-                Console.WriteLine ("Gstreamer error: {0}", err);
+	    	Enum err;
+                string msg;
+                message.ParseError (out err, out msg);
+                Console.WriteLine ("Gstreamer error: {0}", msg);
                 loop.Quit ();
                 break;
             case MessageType.Eos:

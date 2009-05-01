@@ -14,7 +14,7 @@ public static class GstTypefindTest
         typefind = TypeFindElement.Make("typefind");
         Element sink = ElementFactory.Make("fakesink", "sink");
 
-        source.SetProperty("location", args[0]);
+        source["location"] = args[0];
         
         typefind.HaveType += OnHaveType;
         

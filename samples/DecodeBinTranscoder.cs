@@ -46,8 +46,8 @@ public class DecodeBinTranscoder : IDisposable
     
     public void Transcode(string inputFile, string outputFile)
     {
-        filesrc.SetProperty("location", inputFile);
-        filesink.SetProperty("location", outputFile);
+        filesrc["location"] = inputFile;
+        filesink["location"] = outputFile;
         
         pipeline.SetState(State.Playing);
         progress_timeout = GLib.Timeout.Add(250, OnProgressTimeout);
@@ -109,7 +109,7 @@ public class DecodeBinTranscoder : IDisposable
     
     private void OnNewDecodedPad(object o, NewDecodedPadArgs args)
     {
-        Pad sinkpad = audioconvert.GetPad("sink");
+        Pad sinkpad = audioconvert.GetStaticPad("sink");
 
         if(sinkpad.IsLinked) {
             return;
@@ -129,10 +129,11 @@ public class DecodeBinTranscoder : IDisposable
     {
         switch(message.Type) {
             case MessageType.Error:
-                string error;
-                message.ParseError(out error);
+                string msg;
+		Enum err;
+                message.ParseError(out err, out msg);
                 GLib.Source.Remove(progress_timeout);
-                OnError(error);
+                OnError(msg);
                 break;
             case MessageType.Eos:
                 pipeline.SetState(State.Null);
@@ -147,9 +148,9 @@ public class DecodeBinTranscoder : IDisposable
     private bool OnProgressTimeout()
     {
         long duration, position;
+	Gst.Format fmt = Gst.Format.Time;
         
-        if(pipeline.QueryDuration(Gst.Format.Time, out duration) &&
-            encoder.QueryPosition(Gst.Format.Time, out position)) {
+        if(pipeline.QueryDuration(ref fmt, out duration) && fmt == Gst.Format.Time && encoder.QueryPosition(ref fmt, out position) && fmt == Gst.Format.Time) {
             OnProgress(position, duration);
         }
         

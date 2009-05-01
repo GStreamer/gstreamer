@@ -69,9 +69,10 @@ public class HelloWorld
     {
         switch(message.Type) {
             case MessageType.Error:
-                string err = String.Empty;
-                message.ParseError(out err);
-                Console.WriteLine ("Gstreamer error: {0}", err);
+                string msg;
+		Enum err;
+                message.ParseError(out err, out msg);
+                Console.WriteLine ("Gstreamer error: {0}", msg);
                 loop.Quit();
                 break;
             case MessageType.Eos:
@@ -95,7 +96,7 @@ public class HelloWorld
     void OnPadAdded(object o, PadAddedArgs args) 
     {
         Console.WriteLine("Entered OnPadAdded");
-        Pad sinkpad = decoder.GetPad("sink");
+        Pad sinkpad = decoder.GetStaticPad("sink");
         args.Pad.Link(sinkpad);
     }
 }
