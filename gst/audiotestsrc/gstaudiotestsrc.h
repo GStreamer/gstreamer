@@ -105,6 +105,7 @@ struct _GstAudioTestSrc {
   gdouble freq;
     
   /* audio parameters */
+  gint channels;
   gint samplerate;
   gint samples_per_buffer;
   gint sample_size;
