@@ -24,31 +24,47 @@
 
 G_BEGIN_DECLS
 
-#define FPS_TYPE_DISPLAY_SINK \
+#define GST_TYPE_FPS_DISPLAY_SINK \
   (fps_display_sink_get_type())
-#define FPS_DISPLAY_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),FPS_TYPE_DISPLAY_SINK,FPSDisplaySink))
-#define FPS_DISPLAY_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),FPS_TYPE_DISPLAY_SINK,FPSDisplaySinkClass))
-#define FPS_IS_DISPLAY_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),FPS_TYPE_DISPLAY_SINK))
-#define FPS_IS_DISPLAY_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),FPS_TYPE_DISPLAY_SINK))
+#define GST_FPS_DISPLAY_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FPS_DISPLAY_SINK,GstFPSDisplaySink))
+#define GST_FPS_DISPLAY_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FPS_DISPLAY_SINK,GstFPSDisplaySinkClass))
+#define GST_IS_FPS_DISPLAY_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FPS_DISPLAY_SINK))
+#define GST_IS_FPS_DISPLAY_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FPS_DISPLAY_SINK))
 
 GType fps_display_sink_get_type (void);
 
-typedef struct _FPSDisplaySink FPSDisplaySink;
-typedef struct _FPSDisplaySinkClass FPSDisplaySinkClass;
+typedef struct _GstFPSDisplaySink GstFPSDisplaySink;
+typedef struct _GstFPSDisplaySinkClass GstFPSDisplaySinkClass;
 
-typedef struct _FPSDisplaySinkPrivate FPSDisplaySinkPrivate;
-
-struct _FPSDisplaySink
+struct _GstFPSDisplaySink
 {
-  GstBin bin;                   /* we extend GstBin */
-  FPSDisplaySinkPrivate *priv;
+  GstBin bin;
+
+  /*< private >*/
+  /* gstreamer components */
+  GstElement *text_overlay;
+  GstElement *video_sink;
+  GstQuery *query;
+  GstPad *ghost_pad;
+
+  /* statistics */
+  guint64 frames_rendered, last_frames_rendered;
+  guint64 frames_dropped, last_frames_dropped;
+  GstClockTime last_ts;
+  GstClockTime next_ts;
+
+  guint timeout_id;
+
+  /* properties */
+  gboolean sync;
+  gboolean use_text_overlay;
 };
 
-struct _FPSDisplaySinkClass
+struct _GstFPSDisplaySinkClass
 {
   GstBinClass parent_class;
 };

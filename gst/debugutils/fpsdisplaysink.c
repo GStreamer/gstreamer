@@ -70,27 +70,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (fps_display_sink_debug);
 #define GST_CAT_DEFAULT fps_display_sink_debug
 
-struct _FPSDisplaySinkPrivate
-{
-  /* gstreamer components */
-  GstElement *text_overlay;
-  GstElement *video_sink;
-  GstQuery *query;
-  GstPad *ghost_pad;
-
-  /* statistics */
-  guint64 frames_rendered, last_frames_rendered;
-  guint64 frames_dropped, last_frames_dropped;
-  GstClockTime last_ts;
-  GstClockTime next_ts;
-
-  guint timeout_id;
-
-  /* properties */
-  gboolean sync;
-  gboolean use_text_overlay;
-};
-
 enum
 {
   ARG_0,
@@ -110,7 +89,7 @@ static void fps_display_sink_get_property (GObject * object, guint prop_id,
 static void fps_display_sink_dispose (GObject * object);
 
 static void
-fps_display_sink_class_init (FPSDisplaySinkClass * klass)
+fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
 {
   GObjectClass *gobject_klass = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_klass = GST_ELEMENT_CLASS (klass);
@@ -138,32 +117,30 @@ fps_display_sink_class_init (FPSDisplaySinkClass * klass)
       gst_static_pad_template_get (&fps_display_sink_template));
 
   gst_element_class_set_details (gstelement_klass, &fps_display_sink_details);
-
-  g_type_class_add_private (klass, sizeof (FPSDisplaySinkPrivate));
 }
 
 static gboolean
 on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
     gpointer user_data)
 {
-  FPSDisplaySink *self = FPS_DISPLAY_SINK (user_data);
+  GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (user_data);
 
 #if 0
   if (GST_IS_BUFFER (mini_obj)) {
     GstBuffer *buf = GST_BUFFER_CAST (mini_obj);
 
-    if (GST_CLOCK_TIME_IS_VALID (self->priv->next_ts)) {
-      if (GST_BUFFER_TIMESTAMP (buf) <= self->priv->next_ts) {
-        self->priv->frames_rendered++;
+    if (GST_CLOCK_TIME_IS_VALID (self->next_ts)) {
+      if (GST_BUFFER_TIMESTAMP (buf) <= self->next_ts) {
+        self->frames_rendered++;
       } else {
         GST_WARNING_OBJECT (self, "dropping frame : ts %" GST_TIME_FORMAT
             " < expected_ts %" GST_TIME_FORMAT,
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-            GST_TIME_ARGS (self->priv->next_ts));
-        self->priv->frames_dropped++;
+            GST_TIME_ARGS (self->next_ts));
+        self->frames_dropped++;
       }
     } else {
-      self->priv->frames_rendered++;
+      self->frames_rendered++;
     }
   } else
 #endif
@@ -175,11 +152,11 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
       GstClockTime ts;
 
       gst_event_parse_qos (ev, NULL, &diff, &ts);
-      self->priv->next_ts = ts + diff;
+      self->next_ts = ts + diff;
       if (diff <= 0.0) {
-        self->priv->frames_rendered++;
+        self->frames_rendered++;
       } else {
-        self->priv->frames_dropped++;
+        self->frames_dropped++;
       }
     }
   }
@@ -187,67 +164,62 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
 }
 
 static void
-fps_display_sink_init (FPSDisplaySink * self, FPSDisplaySinkClass * g_class)
+fps_display_sink_init (GstFPSDisplaySink * self,
+    GstFPSDisplaySinkClass * g_class)
 {
   GstPad *sink_pad;
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, FPS_TYPE_DISPLAY_SINK,
-      FPSDisplaySinkPrivate);
-
-  self->priv->sync = FALSE;
-  self->priv->use_text_overlay = TRUE;
+  self->sync = FALSE;
+  self->use_text_overlay = TRUE;
 
   /* create child elements */
-  self->priv->video_sink =
+  self->video_sink =
       gst_element_factory_make ("xvimagesink", "fps-display-video_sink");
-  if (!self->priv->video_sink) {
+  if (!self->video_sink) {
     GST_ERROR_OBJECT (self, "element could not be created");
     return;
   }
 
-  g_object_set (self->priv->video_sink, "sync", self->priv->sync, NULL);
+  g_object_set (self->video_sink, "sync", self->sync, NULL);
 
   /* take a ref before bin takes the ownership */
-  gst_object_ref (self->priv->video_sink);
+  gst_object_ref (self->video_sink);
 
-  gst_bin_add (GST_BIN (self), self->priv->video_sink);
+  gst_bin_add (GST_BIN (self), self->video_sink);
 
   /* create ghost pad */
-  self->priv->ghost_pad =
-      gst_ghost_pad_new_no_target ("sink_pad", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (self), self->priv->ghost_pad);
+  self->ghost_pad = gst_ghost_pad_new_no_target ("sink_pad", GST_PAD_SINK);
+  gst_element_add_pad (GST_ELEMENT (self), self->ghost_pad);
 
   /* attach or pad probe */
-  sink_pad = gst_element_get_static_pad (self->priv->video_sink, "sink");
+  sink_pad = gst_element_get_static_pad (self->video_sink, "sink");
   gst_pad_add_data_probe (sink_pad, G_CALLBACK (on_video_sink_data_flow),
       (gpointer) self);
   gst_object_unref (sink_pad);
 
-  self->priv->query = gst_query_new_position (GST_FORMAT_TIME);
+  self->query = gst_query_new_position (GST_FORMAT_TIME);
 }
 
 static gboolean
 display_current_fps (gpointer data)
 {
-  FPSDisplaySink *self = FPS_DISPLAY_SINK (data);
+  GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (data);
   gint64 current_ts;
 
-  gst_element_query (self->priv->video_sink, self->priv->query);
-  gst_query_parse_position (self->priv->query, NULL, &current_ts);
+  gst_element_query (self->video_sink, self->query);
+  gst_query_parse_position (self->query, NULL, &current_ts);
 
-  if (GST_CLOCK_TIME_IS_VALID (self->priv->last_ts)) {
+  if (GST_CLOCK_TIME_IS_VALID (self->last_ts)) {
     gdouble rr, dr, average_fps;
     gchar fps_message[256];
-    gdouble time_diff =
-        (gdouble) (current_ts - self->priv->last_ts) / GST_SECOND;
+    gdouble time_diff = (gdouble) (current_ts - self->last_ts) / GST_SECOND;
 
-    rr = (gdouble) (self->priv->frames_rendered -
-        self->priv->last_frames_rendered) / time_diff;
-    dr = (gdouble) (self->priv->frames_dropped -
-        self->priv->last_frames_dropped) / time_diff;
+    rr = (gdouble) (self->frames_rendered -
+        self->last_frames_rendered) / time_diff;
+    dr = (gdouble) (self->frames_dropped -
+        self->last_frames_dropped) / time_diff;
 
-    average_fps =
-        self->priv->frames_rendered / (gdouble) (current_ts / GST_SECOND);
+    average_fps = self->frames_rendered / (gdouble) (current_ts / GST_SECOND);
 
     if (dr == 0.0) {
       g_snprintf (fps_message, 255, "current: %.2f\naverage: %.2f", rr,
@@ -256,99 +228,98 @@ display_current_fps (gpointer data)
       g_snprintf (fps_message, 255, "fps: %.2f\ndrop rate: %.2f", rr, dr);
     }
 
-    if (self->priv->use_text_overlay) {
-      g_object_set (self->priv->text_overlay, "text", fps_message, NULL);
+    if (self->use_text_overlay) {
+      g_object_set (self->text_overlay, "text", fps_message, NULL);
     } else {
       g_print ("%s\n", fps_message);
     }
   }
 
-  self->priv->last_frames_rendered = self->priv->frames_rendered;
-  self->priv->last_frames_dropped = self->priv->frames_dropped;
-  self->priv->last_ts = current_ts;
+  self->last_frames_rendered = self->frames_rendered;
+  self->last_frames_dropped = self->frames_dropped;
+  self->last_ts = current_ts;
 
   return TRUE;
 }
 
 static void
-fps_display_sink_start (FPSDisplaySink * self)
+fps_display_sink_start (GstFPSDisplaySink * self)
 {
   GstPad *target_pad = NULL;
 
   /* Init counters */
-  self->priv->next_ts = GST_CLOCK_TIME_NONE;
-  self->priv->last_ts = GST_CLOCK_TIME_NONE;
-  self->priv->frames_rendered = G_GUINT64_CONSTANT (0);
-  self->priv->frames_dropped = G_GUINT64_CONSTANT (0);
+  self->next_ts = GST_CLOCK_TIME_NONE;
+  self->last_ts = GST_CLOCK_TIME_NONE;
+  self->frames_rendered = G_GUINT64_CONSTANT (0);
+  self->frames_dropped = G_GUINT64_CONSTANT (0);
 
-  GST_WARNING ("use text-overlay? %d", self->priv->use_text_overlay);
+  GST_WARNING ("use text-overlay? %d", self->use_text_overlay);
 
-  if (self->priv->use_text_overlay) {
-    if (!self->priv->text_overlay) {
-      self->priv->text_overlay =
+  if (self->use_text_overlay) {
+    if (!self->text_overlay) {
+      self->text_overlay =
           gst_element_factory_make ("textoverlay", "fps-display-text-overlay");
-      if (!self->priv->text_overlay) {
+      if (!self->text_overlay) {
         GST_WARNING_OBJECT (self, "text-overlay element could not be created");
-        self->priv->use_text_overlay = FALSE;
+        self->use_text_overlay = FALSE;
         goto no_text_overlay;
       }
-      gst_object_ref (self->priv->text_overlay);
-      g_object_set (self->priv->text_overlay,
+      gst_object_ref (self->text_overlay);
+      g_object_set (self->text_overlay,
           "font-desc", DEFAULT_FONT, "silent", FALSE, NULL);
     }
-    gst_bin_add (GST_BIN (self), self->priv->text_overlay);
+    gst_bin_add (GST_BIN (self), self->text_overlay);
 
-    if (!gst_element_link (self->priv->text_overlay, self->priv->video_sink)) {
+    if (!gst_element_link (self->text_overlay, self->video_sink)) {
       GST_ERROR_OBJECT (self, "Could not link elements");
     }
-    target_pad =
-        gst_element_get_static_pad (self->priv->text_overlay, "video_sink");
+    target_pad = gst_element_get_static_pad (self->text_overlay, "video_sink");
   }
 no_text_overlay:
-  if (!self->priv->use_text_overlay) {
-    if (self->priv->text_overlay) {
-      gst_element_unlink (self->priv->text_overlay, self->priv->video_sink);
-      gst_bin_remove (GST_BIN (self), self->priv->text_overlay);
+  if (!self->use_text_overlay) {
+    if (self->text_overlay) {
+      gst_element_unlink (self->text_overlay, self->video_sink);
+      gst_bin_remove (GST_BIN (self), self->text_overlay);
     }
-    target_pad = gst_element_get_static_pad (self->priv->video_sink, "sink");
+    target_pad = gst_element_get_static_pad (self->video_sink, "sink");
   }
-  gst_ghost_pad_set_target (GST_GHOST_PAD (self->priv->ghost_pad), target_pad);
+  gst_ghost_pad_set_target (GST_GHOST_PAD (self->ghost_pad), target_pad);
   gst_object_unref (target_pad);
 
   /* Set a timeout for the fps display */
-  self->priv->timeout_id =
+  self->timeout_id =
       g_timeout_add (FPS_DISPLAY_INTERVAL_MS,
       display_current_fps, (gpointer) self);
 }
 
 static void
-fps_display_sink_stop (FPSDisplaySink * self)
+fps_display_sink_stop (GstFPSDisplaySink * self)
 {
   /* remove the timeout */
-  if (self->priv->timeout_id) {
-    g_source_remove (self->priv->timeout_id);
-    self->priv->timeout_id = 0;
+  if (self->timeout_id) {
+    g_source_remove (self->timeout_id);
+    self->timeout_id = 0;
   }
 }
 
 static void
 fps_display_sink_dispose (GObject * object)
 {
-  FPSDisplaySink *self = FPS_DISPLAY_SINK (object);
+  GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (object);
 
-  if (self->priv->query) {
-    gst_query_unref (self->priv->query);
-    self->priv->query = NULL;
+  if (self->query) {
+    gst_query_unref (self->query);
+    self->query = NULL;
   }
 
-  if (self->priv->video_sink) {
-    gst_object_unref (self->priv->video_sink);
-    self->priv->video_sink = NULL;
+  if (self->video_sink) {
+    gst_object_unref (self->video_sink);
+    self->video_sink = NULL;
   }
 
-  if (self->priv->text_overlay) {
-    gst_object_unref (self->priv->text_overlay);
-    self->priv->text_overlay = NULL;
+  if (self->text_overlay) {
+    gst_object_unref (self->text_overlay);
+    self->text_overlay = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -358,24 +329,23 @@ static void
 fps_display_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  FPSDisplaySink *self = FPS_DISPLAY_SINK (object);
+  GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (object);
 
   switch (prop_id) {
     case ARG_SYNC:
-      self->priv->sync = g_value_get_boolean (value);
-      g_object_set (self->priv->video_sink, "sync", self->priv->sync, NULL);
+      self->sync = g_value_get_boolean (value);
+      g_object_set (self->video_sink, "sync", self->sync, NULL);
       break;
     case ARG_TEXT_OVERLAY:
-      self->priv->use_text_overlay = g_value_get_boolean (value);
+      self->use_text_overlay = g_value_get_boolean (value);
 
-      if (self->priv->text_overlay) {
-        if (!self->priv->use_text_overlay) {
+      if (self->text_overlay) {
+        if (!self->use_text_overlay) {
           GST_DEBUG_OBJECT (self, "text-overlay set to false");
-          g_object_set (self->priv->text_overlay, "text", "", "silent", TRUE,
-              NULL);
+          g_object_set (self->text_overlay, "text", "", "silent", TRUE, NULL);
         } else {
           GST_DEBUG_OBJECT (self, "text-overlay set to true");
-          g_object_set (self->priv->text_overlay, "silent", FALSE, NULL);
+          g_object_set (self->text_overlay, "silent", FALSE, NULL);
         }
       }
       break;
@@ -389,14 +359,14 @@ static void
 fps_display_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  FPSDisplaySink *self = FPS_DISPLAY_SINK (object);
+  GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (object);
 
   switch (prop_id) {
     case ARG_SYNC:
-      g_value_set_boolean (value, self->priv->sync);
+      g_value_set_boolean (value, self->sync);
       break;
     case ARG_TEXT_OVERLAY:
-      g_value_set_boolean (value, self->priv->use_text_overlay);
+      g_value_set_boolean (value, self->use_text_overlay);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -408,7 +378,7 @@ static GstStateChangeReturn
 fps_display_sink_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  FPSDisplaySink *self = FPS_DISPLAY_SINK (element);
+  GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -439,19 +409,19 @@ fps_display_sink_get_type (void)
 
   if (!fps_display_sink_type) {
     static const GTypeInfo fps_display_sink_info = {
-      sizeof (FPSDisplaySinkClass),
+      sizeof (GstFPSDisplaySinkClass),
       NULL,
       NULL,
       (GClassInitFunc) fps_display_sink_class_init,
       NULL,
       NULL,
-      sizeof (FPSDisplaySink),
+      sizeof (GstFPSDisplaySink),
       0,
       (GInstanceInitFunc) fps_display_sink_init,
     };
 
     fps_display_sink_type = g_type_register_static (GST_TYPE_BIN,
-        "FPSDisplaySink", &fps_display_sink_info, 0);
+        "GstFPSDisplaySink", &fps_display_sink_info, 0);
 
     GST_DEBUG_CATEGORY_INIT (fps_display_sink_debug, "fpsdisplaysink", 0,
         "FPS Display Sink");
