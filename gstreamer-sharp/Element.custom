@@ -54,6 +54,9 @@ private class PadEnumerable : IEnumerable {
       IntPtr raw_ret;
       bool retry = false;
 
+      if (iterator == IntPtr.Zero)
+        return false;
+
       do {
         int ret = gst_iterator_next (iterator, out raw_ret);
         switch (ret) {
@@ -82,7 +85,8 @@ private class PadEnumerable : IEnumerable {
 
     public void Reset () {
       seen.Clear ();
-      gst_iterator_resync (iterator);
+      if (iterator != IntPtr.Zero)
+        gst_iterator_resync (iterator);
     }
 
     public PadEnumerator (IntPtr iterator) {
@@ -103,7 +107,8 @@ private class PadEnumerable : IEnumerable {
   }
 
   ~PadEnumerable () {
-    gst_iterator_free (iterator);
+    if (iterator != IntPtr.Zero)
+      gst_iterator_free (iterator);
   }
 }
 
