@@ -204,7 +204,7 @@ public string[] Fields {
   }
 }
 
-public static Structure NewFromString (string structure) {
+public static Structure FromString (string structure) {
   IntPtr raw_string = GLib.Marshaller.StringToPtrGStrdup (structure);
   IntPtr raw_ret = gst_structure_from_string (raw_string, IntPtr.Zero);
   GLib.Marshaller.Free (raw_string);

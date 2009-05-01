@@ -105,7 +105,6 @@
   <attr path="/api/namespace/boxed[@name='Caps']/field[@name='Type']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/field[@name='Flags']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_from_string']/return-type" name="owned">true</attr>
-  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_from_string']" name="name">NewFromString</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_copy_nth']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_replace']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_make_writable']" name="hidden">1</attr>
