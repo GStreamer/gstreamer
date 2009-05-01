@@ -987,7 +987,7 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   if (offset != src->next_byte) {
     GST_DEBUG_OBJECT (src, "seek to new offset %" G_GUINT64_FORMAT, offset);
     /* we have a discont in the expected sample offset, do a 'seek' */
-    src->next_sample = src->next_byte / (src->sample_size * src->channels);
+    src->next_sample = offset / (src->sample_size * src->channels);
     src->next_time =
         gst_util_uint64_scale_int (src->next_sample, GST_SECOND,
         src->samplerate);
