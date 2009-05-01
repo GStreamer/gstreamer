@@ -452,23 +452,10 @@ fps_display_sink_get_type (void)
 
     fps_display_sink_type = g_type_register_static (GST_TYPE_BIN,
         "FPSDisplaySink", &fps_display_sink_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (fps_display_sink_debug, "fpsdisplaysink", 0,
+        "FPS Display Sink");
   }
 
   return fps_display_sink_type;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (fps_display_sink_debug, "fpsdisplaysink", 0,
-      "FPS Display Sink");
-
-  return gst_element_register (plugin, "fpsdisplaysink",
-      GST_RANK_NONE, FPS_TYPE_DISPLAY_SINK);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "fpsdisplaysink",
-    "A custom sink that show the current FPS of the sink on the video screen",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
