@@ -83,7 +83,6 @@ struct _QtNode
 
 struct _QtDemuxSample
 {
-  guint32 chunk;
   guint32 size;
   guint64 offset;
   GstClockTimeDiff pts_offset;  /* Add this value to timestamp to get the pts */
@@ -2429,10 +2428,9 @@ next_entry_size (GstQTDemux * demux)
     }
 
     GST_LOG_OBJECT (demux,
-        "Checking Stream %d (sample_index:%d / offset:%lld / size:%d / chunk:%d)",
+        "Checking Stream %d (sample_index:%d / offset:%lld / size:%d)",
         i, stream->sample_index, stream->samples[stream->sample_index].offset,
-        stream->samples[stream->sample_index].size,
-        stream->samples[stream->sample_index].chunk);
+        stream->samples[stream->sample_index].size);
 
     if (((smalloffs == -1)
             || (stream->samples[stream->sample_index].offset < smalloffs))
@@ -2620,11 +2618,10 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           if (stream->sample_index >= stream->n_samples)
             continue;
           GST_LOG_OBJECT (demux,
-              "Checking stream %d (sample_index:%d / offset:%lld / size:%d / chunk:%d)",
+              "Checking stream %d (sample_index:%d / offset:%lld / size:%d)",
               i, stream->sample_index,
               stream->samples[stream->sample_index].offset,
-              stream->samples[stream->sample_index].size,
-              stream->samples[stream->sample_index].chunk);
+              stream->samples[stream->sample_index].size);
 
           if (stream->samples[stream->sample_index].offset == demux->offset)
             break;
@@ -3337,7 +3334,6 @@ static gboolean
 qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GNode * stbl)
 {
-  int offset;
   GNode *stsc;
   GNode *stsz;
   GNode *stco;
@@ -3346,7 +3342,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   GNode *stss;
   GNode *stps;
   GNode *ctts;
-  const guint8 *stsc_data, *stsz_data, *stco_data;
+  const guint8 *stsc_data, *stsz_data, *stco_data, *co64_data, *stts_data;
   int sample_size;
   int sample_index;
   int n_samples;
@@ -3361,43 +3357,59 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if (!(stsc = qtdemux_tree_get_child_by_type (stbl, FOURCC_stsc)))
     goto corrupt_file;
   stsc_data = (const guint8 *) stsc->data;
+
   /* sample size */
   if (!(stsz = qtdemux_tree_get_child_by_type (stbl, FOURCC_stsz)))
     goto corrupt_file;
   stsz_data = (const guint8 *) stsz->data;
+
   /* chunk offsets */
   stco = qtdemux_tree_get_child_by_type (stbl, FOURCC_stco);
   co64 = qtdemux_tree_get_child_by_type (stbl, FOURCC_co64);
   if (stco) {
     stco_data = (const guint8 *) stco->data;
+    co64_data = NULL;
   } else {
     stco_data = NULL;
     if (co64 == NULL)
       goto corrupt_file;
+    co64_data = (const guint8 *) co64->data;
   }
   /* sample time */
   if (!(stts = qtdemux_tree_get_child_by_type (stbl, FOURCC_stts)))
     goto corrupt_file;
+  stts_data = (const guint8 *) stts->data;
 
   sample_size = QT_UINT32 (stsz_data + 12);
   if (sample_size == 0 || stream->sampled) {
     n_samples = QT_UINT32 (stsz_data + 16);
+
+    if (n_samples == 0)
+      goto no_samples;
+
     GST_DEBUG_OBJECT (qtdemux, "stsz sample_size 0, allocating n_samples %d",
         n_samples);
     stream->n_samples = n_samples;
     samples = g_new0 (QtDemuxSample, n_samples);
     stream->samples = samples;
 
-    for (i = 0; i < n_samples; i++) {
-      if (sample_size == 0)
-        samples[i].size = QT_UINT32 (stsz_data + i * 4 + 20);
-      else
+    /* set the sample sizes */
+    if (sample_size == 0) {
+      const guint8 *stsz_p = stsz_data + 20;
+      /* different sizes for each sample */
+      for (i = 0; i < n_samples; i++) {
+        samples[i].size = QT_UINT32 (stsz_p);
+        GST_LOG_OBJECT (qtdemux, "sample %d has size %d", i, samples[i].size);
+        stsz_p += 4;
+      }
+    } else {
+      /* samples have the same size */
+      GST_LOG_OBJECT (qtdemux, "all samples have size %d", sample_size);
+      for (i = 0; i < n_samples; i++)
         samples[i].size = sample_size;
-
-      GST_LOG_OBJECT (qtdemux, "sample %d has size %d", i, samples[i].size);
-      /* init other fields to defaults for this sample */
-      samples[i].keyframe = FALSE;
     }
+
+    /* set the sample offsets in the file */
     n_samples_per_chunk = QT_UINT32 (stsc_data + 12);
     index = 0;
     for (i = 0; i < n_samples_per_chunk; i++) {
@@ -3405,7 +3417,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
       guint32 samples_per_chunk;
 
       first_chunk = QT_UINT32 (stsc_data + 16 + i * 12 + 0) - 1;
-      if (i == n_samples_per_chunk - 1) {
+      if (G_UNLIKELY (i == n_samples_per_chunk - 1)) {
         last_chunk = G_MAXUINT32;
       } else {
         last_chunk = QT_UINT32 (stsc_data + 16 + i * 12 + 12) - 1;
@@ -3418,49 +3430,56 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         if (stco) {
           chunk_offset = QT_UINT32 (stco_data + 16 + j * 4);
         } else {
-          chunk_offset = QT_UINT64 ((guint8 *) co64->data + 16 + j * 8);
+          chunk_offset = QT_UINT64 (co64_data + 16 + j * 8);
         }
         for (k = 0; k < samples_per_chunk; k++) {
           GST_LOG_OBJECT (qtdemux, "Creating entry %d with offset %lld",
               index, chunk_offset);
-          samples[index].chunk = j;
           samples[index].offset = chunk_offset;
           chunk_offset += samples[index].size;
           index++;
-          if (index >= n_samples)
+          if (G_UNLIKELY (index >= n_samples))
             goto done2;
         }
       }
     }
   done2:
 
-    n_sample_times = QT_UINT32 ((guint8 *) stts->data + 12);
+    n_sample_times = QT_UINT32 (stts_data + 12);
     timestamp = 0;
     stream->min_duration = 0;
     time = 0;
     index = 0;
-    for (i = 0; (i < n_sample_times) && (index < stream->n_samples); i++) {
+    stts_data += 16;
+    for (i = 0; i < n_sample_times; i++) {
       guint32 n;
       guint32 duration;
 
-      n = QT_UINT32 ((guint8 *) stts->data + 16 + 8 * i);
-      duration = QT_UINT32 ((guint8 *) stts->data + 16 + 8 * i + 4);
-      for (j = 0; (j < n) && (index < stream->n_samples); j++) {
+      n = QT_UINT32 (stts_data);
+      stts_data += 4;
+      duration = QT_UINT32 (stts_data);
+      stts_data += 4;
+
+      /* take first duration for fps */
+      if (G_UNLIKELY (stream->min_duration == 0))
+        stream->min_duration = duration;
+
+      for (j = 0; j < n; j++) {
         GST_DEBUG_OBJECT (qtdemux, "sample %d: timestamp %" GST_TIME_FORMAT,
             index, GST_TIME_ARGS (timestamp));
 
         samples[index].timestamp = timestamp;
-        /* take first duration for fps */
-        if (stream->min_duration == 0)
-          stream->min_duration = duration;
         /* add non-scaled values to avoid rounding errors */
         time += duration;
         timestamp = gst_util_uint64_scale (time, GST_SECOND, stream->timescale);
         samples[index].duration = timestamp - samples[index].timestamp;
 
         index++;
+        if (G_UNLIKELY (index >= n_samples))
+          goto done3;
       }
     }
+  done3:
 
     /* sample sync, can be NULL */
     stss = qtdemux_tree_get_child_by_type (stbl, FOURCC_stss);
@@ -3468,38 +3487,39 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     if (stss) {
       /* mark keyframes */
       guint32 n_sample_syncs;
+      const guint8 *stss_p = (guint8 *) stss->data;
 
-      n_sample_syncs = QT_UINT32 ((guint8 *) stss->data + 12);
+      stss_p += 12;
+      n_sample_syncs = QT_UINT32 (stss_p);
       if (n_sample_syncs == 0) {
         stream->all_keyframe = TRUE;
       } else {
-        offset = 16;
         for (i = 0; i < n_sample_syncs; i++) {
+          stss_p += 4;
           /* note that the first sample is index 1, not 0 */
-          index = QT_UINT32 ((guint8 *) stss->data + offset);
-          if (index > 0 && index <= stream->n_samples) {
+          index = QT_UINT32 (stss_p);
+          if (G_LIKELY (index > 0 && index <= n_samples))
             samples[index - 1].keyframe = TRUE;
-            offset += 4;
-          }
         }
       }
       stps = qtdemux_tree_get_child_by_type (stbl, FOURCC_stps);
       if (stps) {
-        /* mark keyframes */
+        /* stps marks partial sync frames like open GOP I-Frames */
         guint32 n_sample_syncs;
+        const guint8 *stps_p = (guint8 *) stps->data;
 
-        n_sample_syncs = QT_UINT32 ((guint8 *) stps->data + 12);
-        if (n_sample_syncs == 0) {
-          //stream->all_keyframe = TRUE;
+        stps_p += 12;
+        n_sample_syncs = QT_UINT32 (stps_p);
+        if (n_sample_syncs != 0) {
+          /* no entries, the stss table contains the real sync
+           * samples */
         } else {
-          offset = 16;
           for (i = 0; i < n_sample_syncs; i++) {
+            stps_p += 4;
             /* note that the first sample is index 1, not 0 */
-            index = QT_UINT32 ((guint8 *) stps->data + offset);
-            if (index > 0 && index <= stream->n_samples) {
+            index = QT_UINT32 (stps_p);
+            if (G_LIKELY (index > 0 && index <= n_samples))
               samples[index - 1].keyframe = TRUE;
-              offset += 4;
-            }
           }
         }
       }
@@ -3510,13 +3530,16 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   } else {
     GST_DEBUG_OBJECT (qtdemux,
         "stsz sample_size %d != 0, treating chunks as samples", sample_size);
-
     /* treat chunks as samples */
     if (stco) {
       n_samples = QT_UINT32 (stco_data + 12);
     } else {
-      n_samples = QT_UINT32 ((guint8 *) co64->data + 12);
+      n_samples = QT_UINT32 (co64_data + 12);
     }
+
+    if (n_samples == 0)
+      goto no_samples;
+
     stream->n_samples = n_samples;
     GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %d", n_samples);
     samples = g_new0 (QtDemuxSample, n_samples);
@@ -3554,13 +3577,12 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         if (stco) {
           chunk_offset = QT_UINT32 (stco_data + 16 + j * 4);
         } else {
-          chunk_offset = QT_UINT64 ((guint8 *) co64->data + 16 + j * 8);
+          chunk_offset = QT_UINT64 (co64_data + 16 + j * 8);
         }
         GST_LOG_OBJECT (qtdemux,
             "Creating entry %d with offset %" G_GUINT64_FORMAT, j,
             chunk_offset);
 
-        samples[j].chunk = j;
         samples[j].offset = chunk_offset;
 
         if (stream->samples_per_frame * stream->bytes_per_frame) {
@@ -3587,18 +3609,28 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   /* composition time to sample */
   if ((ctts = qtdemux_tree_get_child_by_type (stbl, FOURCC_ctts))) {
-    const guint8 *ctts_data = (const guint8 *) ctts->data;
-    guint32 n_entries = QT_UINT32 (ctts_data + 12);
+    const guint8 *ctts_data, *ctts_p;
+    guint32 n_entries;
     guint32 count;
     gint32 soffset;
 
+    ctts_data = (const guint8 *) ctts->data;
+    n_entries = QT_UINT32 (ctts_data + 12);
+
     /* Fill in the pts_offsets */
-    for (i = 0, j = 0; (j < stream->n_samples) && (i < n_entries); i++) {
-      count = QT_UINT32 (ctts_data + 16 + i * 8);
-      soffset = QT_UINT32 (ctts_data + 20 + i * 8);
-      for (k = 0; (k < count) && (j < stream->n_samples); k++, j++) {
+    index = 0;
+    ctts_p = ctts_data + 16;
+    for (i = 0; i < n_entries; i++) {
+      count = QT_UINT32 (ctts_p);
+      ctts_p += 4;
+      soffset = QT_UINT32 (ctts_p);
+      ctts_p += 4;
+      for (j = 0; j < count; j++) {
         /* we operate with very small soffset values here, it shouldn't overflow */
-        samples[j].pts_offset = soffset * GST_SECOND / stream->timescale;
+        samples[index].pts_offset = soffset * GST_SECOND / stream->timescale;
+        index++;
+        if (G_UNLIKELY (index >= n_samples))
+          goto done;
       }
     }
   }
@@ -3610,6 +3642,11 @@ corrupt_file:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
         (_("This file is corrupt and cannot be played.")), (NULL));
+    return FALSE;
+  }
+no_samples:
+  {
+    GST_WARNING_OBJECT (qtdemux, "stream has no samples");
     return FALSE;
   }
 }
