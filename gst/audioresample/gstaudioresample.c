@@ -525,7 +525,7 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
   gboolean ret = TRUE;
   guint32 ratio_den, ratio_num;
   gint inrate, outrate, gcd;
-  gint width;
+  gint bytes_per_samp, channels;
 
   GST_LOG_OBJECT (base, "asked to transform size %d in direction %s",
       size, direction == GST_PAD_SINK ? "SINK" : "SRC");
@@ -537,37 +537,37 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
     srccaps = caps;
   }
 
+  /* Get sample width -> bytes_per_samp, channels, inrate, outrate */
   ret =
-      gst_audio_resample_parse_caps (caps, othercaps, &width, NULL, &inrate,
-      &outrate, NULL);
+      gst_audio_resample_parse_caps (caps, othercaps, &bytes_per_samp,
+      &channels, &inrate, &outrate, NULL);
   if (G_UNLIKELY (!ret)) {
     GST_ERROR_OBJECT (base, "Wrong caps");
     return FALSE;
   }
+  /* Number of samples in either buffer is size / (width*channels) ->
+   * calculate the factor */
+  bytes_per_samp = bytes_per_samp * channels / 8;
+  /* Convert source buffer size to samples */
+  size /= bytes_per_samp;
 
+  /* Simplify the conversion ratio factors */
   gcd = _gcd (inrate, outrate);
   ratio_num = inrate / gcd;
   ratio_den = outrate / gcd;
 
   if (direction == GST_PAD_SINK) {
-    gint fac = width / 8;
-
-    /* asked to convert size of an incoming buffer */
-    size /= fac;
+    /* asked to convert size of an incoming buffer. Round up the output size */
     *othersize = (size * ratio_den + ratio_num - 1) / ratio_num;
-    *othersize *= fac;
-    size *= fac;
+    *othersize *= bytes_per_samp;
   } else {
-    gint fac = width / 8;
-
-    /* asked to convert size of an outgoing buffer */
-    size /= fac;
-    *othersize = (size * ratio_num + ratio_den - 1) / ratio_den;
-    *othersize *= fac;
-    size *= fac;
+    /* asked to convert size of an outgoing buffer. Round down the input size */
+    *othersize = (size * ratio_num) / ratio_den;
+    *othersize *= bytes_per_samp;
   }
 
-  GST_LOG_OBJECT (base, "transformed size %d to %d", size, *othersize);
+  GST_LOG_OBJECT (base, "transformed size %d to %d", size * bytes_per_samp,
+      *othersize);
 
   return ret;
 }
