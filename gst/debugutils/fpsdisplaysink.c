@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:element-fpsdisplay
+ * SECTION:element-fpsdisplaysink
  *
  * Can display the current and average framerate as a testoverlay or on stdout.
  *

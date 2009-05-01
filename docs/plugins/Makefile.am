@@ -126,6 +126,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/dccp/gstdccpclientsrc.h \
 	$(top_srcdir)/gst/dccp/gstdccpserversink.h \
 	$(top_srcdir)/gst/dccp/gstdccpserversrc.h \
+	$(top_srcdir)/gst/debugutils/fpsdisplaysink.h \
 	$(top_srcdir)/gst/dtmf/gstdtmfsrc.h \
 	$(top_srcdir)/gst/dtmf/gstrtpdtmfsrc.h \
 	$(top_srcdir)/gst/dtmf/gstrtpdtmfdepay.h \

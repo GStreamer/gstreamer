@@ -387,6 +387,20 @@ gst_flv_mux_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-fpsdisplaysink</FILE>
+<TITLE>fpsdisplaysink</TITLE>
+GstFPSDisplaySink
+<SUBSECTION Standard>
+GstFPSDisplaySinkClass
+GST_TYPE_FPS_DISPLAY_SINK
+GST_FPS_DISPLAY_SINK
+GST_IS_FPS_DISPLAY_SINK
+GST_FPS_DISPLAY_SINK_CLASS
+GST_IS_FPS_DISPLAY_SINK_CLASS
+fps_display_sink_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-input-selector</FILE>
 <TITLE>input-selector</TITLE>
 GstInputSelector
