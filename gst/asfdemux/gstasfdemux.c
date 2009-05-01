@@ -337,7 +337,6 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
 
-    case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
       GST_OBJECT_LOCK (demux);
       gst_asf_demux_reset_stream_state_after_discont (demux);
@@ -424,6 +423,52 @@ gst_asf_demux_reset_stream_state_after_discont (GstASFDemux * demux)
   }
 }
 
+/* do a seek in push based mode */
+static gboolean
+gst_asf_demux_handle_seek_push (GstASFDemux * demux, GstEvent * event)
+{
+  gdouble rate;
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
+  guint packet;
+  gboolean res;
+
+  gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
+      &stop_type, &stop);
+
+  stop_type = GST_SEEK_TYPE_NONE;
+  stop = -1;
+
+  GST_DEBUG_OBJECT (demux, "seeking to %" GST_TIME_FORMAT, GST_TIME_ARGS (cur));
+
+  /* determine packet, by index or by estimation */
+  if (!gst_asf_demux_seek_index_lookup (demux, &packet, cur, NULL)) {
+    packet = (guint) gst_util_uint64_scale (demux->num_packets,
+        cur, demux->play_time);
+  }
+
+  if (packet > demux->num_packets) {
+    GST_DEBUG_OBJECT (demux, "could not determine packet to seek to, "
+        "seek aborted.");
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (demux, "seeking to packet %d", packet);
+
+  cur = demux->data_offset + (packet * demux->packet_size);
+
+  GST_DEBUG_OBJECT (demux, "Pushing BYTE seek rate %g, "
+      "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT, rate, cur, stop);
+  /* BYTE seek event */
+  event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type, cur,
+      stop_type, stop);
+  res = gst_pad_push_event (demux->sinkpad, event);
+
+  return res;
+}
+
 static gboolean
 gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 {
@@ -447,6 +492,11 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
     return FALSE;
   }
 
+  if (!demux->activated_streams) {
+    GST_LOG_OBJECT (demux, "streams not yet activated, ignoring seek");
+    return FALSE;
+  }
+
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
 
@@ -465,8 +515,23 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   keyunit_sync = ((flags & GST_SEEK_FLAG_KEY_UNIT) == GST_SEEK_FLAG_KEY_UNIT);
 
   if (demux->streaming) {
+    /* support it safely needs more segment handling, e.g. closing etc */
+    if (!flush) {
+      GST_LOG_OBJECT (demux, "streaming; non-flushing seek not supported");
+      return FALSE;
+    }
+    /* we can (re)construct the start later on, but not the end */
+    if (stop_type != GST_SEEK_TYPE_NONE) {
+      GST_LOG_OBJECT (demux, "streaming; end type must be NONE");
+      return FALSE;
+    }
     gst_event_ref (event);
-    return gst_pad_push_event (demux->sinkpad, event);
+    /* upstream might handle TIME seek, e.g. mms or rtsp,
+     * or not, e.g. http, then we give it a hand */
+    if (!gst_pad_push_event (demux->sinkpad, event))
+      return gst_asf_demux_handle_seek_push (demux, event);
+    else
+      return TRUE;
   }
 
   /* unlock the streaming thread */
@@ -3315,10 +3380,40 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query)
         duration = demux->segment.duration;
         GST_OBJECT_UNLOCK (demux);
 
-        gst_query_set_seeking (query, GST_FORMAT_TIME, demux->seekable,
-            0, duration);
-        res = TRUE;
-      }
+        if (!demux->streaming || !demux->seekable) {
+          gst_query_set_seeking (query, GST_FORMAT_TIME, demux->seekable, 0,
+              duration);
+          res = TRUE;
+        } else {
+          GstFormat fmt;
+          gboolean seekable;
+
+          /* try downstream first in TIME */
+          res = gst_pad_query_default (pad, query);
+
+          gst_query_parse_seeking (query, &fmt, &seekable, NULL, NULL);
+          GST_LOG_OBJECT (demux, "upstream %s seekable %d",
+              GST_STR_NULL (gst_format_get_name (fmt)), seekable);
+          /* if no luck, maybe in BYTES */
+          if (!seekable || fmt != GST_FORMAT_TIME) {
+            GstQuery *q;
+
+            q = gst_query_new_seeking (GST_FORMAT_BYTES);
+            if ((res = gst_pad_peer_query (demux->sinkpad, q))) {
+              gst_query_parse_seeking (q, &fmt, &seekable, NULL, NULL);
+              GST_LOG_OBJECT (demux, "upstream %s seekable %d",
+                  GST_STR_NULL (gst_format_get_name (fmt)), seekable);
+              if (fmt != GST_FORMAT_BYTES)
+                seekable = FALSE;
+            }
+            gst_query_unref (q);
+            gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0,
+                duration);
+            res = TRUE;
+          }
+        }
+      } else
+        GST_LOG_OBJECT (demux, "only support seeking in TIME format");
       break;
     }
 
