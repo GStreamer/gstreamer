@@ -1347,6 +1347,7 @@ gst_dvbsrc_unset_pes_filters (GstDvbSrc * object)
   GST_INFO_OBJECT (object, "clearing PES filter");
 
   for (i = 0; i < MAX_FILTERS; i++) {
+    object->pids[i] = G_MAXUINT16;
     if (object->fd_filters[i] == -1)
       continue;
     close (object->fd_filters[i]);
