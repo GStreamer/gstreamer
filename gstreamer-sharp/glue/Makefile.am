@@ -7,7 +7,6 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	clockentry.c	\
 	message.c \
 	event.c \
-	bin.c \
 	structure.c \
 	taglist.c \
 	task.c \
