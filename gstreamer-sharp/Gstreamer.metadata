@@ -681,6 +681,12 @@
   <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="elements_owned">true</attr>
 
+  <attr path="/api/namespace/object[@name='Pipeline']/field" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_set_new_stream_time']" name="name">SetStreamTime</attr>
+  <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_get_last_stream_time']" name="name">GetStreamTime</attr>
+  <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_get_bus']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_get_clock']/return-type" name="owned">true</attr>
+
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_FIXED_CLOCK']" name="value">BinFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_LAST']" name="value">BinFlags.Last &lt;&lt; 4</attr>
 
