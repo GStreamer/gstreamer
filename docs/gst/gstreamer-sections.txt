@@ -1214,6 +1214,7 @@ gst_object_save_thyself
 gst_object_restore_thyself
 gst_object_ref
 gst_object_unref
+gst_object_ref_sink
 gst_object_sink
 gst_object_replace
 gst_object_get_path_string

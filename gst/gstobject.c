@@ -327,6 +327,39 @@ gst_object_unref (gpointer object)
 }
 
 /**
+ * gst_object_ref_sink:
+ * @object: a #GstObject to sink
+ *
+ * Increase the reference count of @object, and possibly remove the floating
+ * reference, if @object has a floating reference.
+ *
+ * In other words, if the object is floating, then this call "assumes ownership"
+ * of the floating reference, converting it to a normal reference by clearing
+ * the floating flag while leaving the reference count unchanged. If the object
+ * is not floating, then this call adds a new normal reference increasing the
+ * reference count by one.
+ *
+ * MT safe. This function grabs and releases @object lock.
+ *
+ * Since: 0.10.24
+ */
+void
+gst_object_ref_sink (gpointer object)
+{
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  GST_OBJECT_LOCK (object);
+  if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
+    GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unsetting floating flag");
+    GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
+    GST_OBJECT_UNLOCK (object);
+  } else {
+    GST_OBJECT_UNLOCK (object);
+    gst_object_ref (object);
+  }
+}
+
+/**
  * gst_object_sink:
  * @object: a #GstObject to sink
  *

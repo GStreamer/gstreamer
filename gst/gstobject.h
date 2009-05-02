@@ -290,6 +290,7 @@ void            gst_object_default_deep_notify 	(GObject *object, GstObject *ori
 /* refcounting + life cycle */
 gpointer	gst_object_ref			(gpointer object);
 void		gst_object_unref		(gpointer object);
+void 		gst_object_ref_sink		(gpointer object);
 void 		gst_object_sink			(gpointer object);
 
 /* replace object pointer */
