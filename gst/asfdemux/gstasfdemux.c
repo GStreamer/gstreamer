@@ -303,18 +303,23 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment (event, NULL, NULL, &newsegment_format,
           &newsegment_start, NULL, NULL);
 
-      if (newsegment_format != GST_FORMAT_BYTES) {
-        GST_WARNING_OBJECT (demux, "newsegment format not BYTES, ignoring");
+      if (newsegment_format == GST_FORMAT_BYTES) {
+        if (demux->packet_size && newsegment_start > demux->data_offset)
+          demux->packet = (newsegment_start - demux->data_offset) /
+              demux->packet_size;
+        else
+          demux->packet = 0;
+      } else if (newsegment_format == GST_FORMAT_TIME) {
+        /* do not know packet position, not really a problem */
+        demux->packet = -1;
+      } else {
+        GST_WARNING_OBJECT (demux, "unsupported newsegment format , ignoring");
         gst_event_unref (event);
         break;
       }
 
+      /* in either case, clear some state and generate newsegment later on */
       GST_OBJECT_LOCK (demux);
-      if (demux->packet_size && newsegment_start > demux->data_offset)
-        demux->packet = (newsegment_start - demux->data_offset) /
-            demux->packet_size;
-      else
-        demux->packet = 0;
       demux->first_ts = GST_CLOCK_TIME_NONE;
       demux->need_newsegment = TRUE;
       gst_asf_demux_reset_stream_state_after_discont (demux);
@@ -1188,6 +1193,11 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 
   /* do we need to send a newsegment event */
   if (demux->need_newsegment) {
+
+    /* wait until we had a chance to "lock on" some payload's timestamp */
+    if (!GST_CLOCK_TIME_IS_VALID (demux->first_ts))
+      return GST_FLOW_OK;
+
     if (demux->segment.stop == GST_CLOCK_TIME_NONE &&
         demux->segment.duration > 0) {
       demux->segment.stop = demux->segment.duration;
@@ -1421,6 +1431,11 @@ gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
       while (gst_adapter_available (demux->adapter) >= data_size) {
         GstBuffer *buf;
 
+        /* do not overshoot data section when streaming */
+        if (demux->num_packets != 0 && demux->packet >= 0
+            && demux->packet >= demux->num_packets)
+          goto eos;
+
         buf = gst_adapter_take_buffer (demux->adapter, data_size);
 
         /* FIXME: maybe we should just skip broken packets and error out only
@@ -1433,7 +1448,8 @@ gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
 
         ret = gst_asf_demux_push_complete_payloads (demux, FALSE);
 
-        ++demux->packet;
+        if (demux->packet >= 0)
+          ++demux->packet;
       }
       break;
     }
@@ -1441,10 +1457,18 @@ gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
       g_assert_not_reached ();
   }
 
+done:
   if (ret != GST_FLOW_OK)
     GST_DEBUG_OBJECT (demux, "flow: %s", gst_flow_get_name (ret));
 
   return ret;
+
+eos:
+  {
+    GST_DEBUG_OBJECT (demux, "Handled last packet, setting EOS");
+    ret = GST_FLOW_UNEXPECTED;
+    goto done;
+  }
 }
 
 static inline gboolean

@@ -134,7 +134,7 @@ struct _GstASFDemux {
   guint64            data_offset;  /* byte offset where packets start          */
   guint64            data_size;    /* total size of packet data in bytes, or 0 */
   guint64            num_packets;  /* total number of data packets, or 0       */
-  guint64            packet;       /* current packet                           */
+  gint64             packet;       /* current packet                           */
 
   /* bitrates are unused at the moment */
   guint32              bitrate[GST_ASF_DEMUX_NUM_STREAM_IDS];
