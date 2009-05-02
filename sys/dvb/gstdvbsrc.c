@@ -514,7 +514,11 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       pid_string = g_value_dup_string (value);
       if (!strcmp (pid_string, "8192")) {
         /* get the whole ts */
+        int pid_count = 1;
         object->pids[0] = 8192;
+        while (pid_count < MAX_FILTERS) {
+          object->pids[pid_count++] = G_MAXUINT16;
+        }
       } else {
         int pid = 0;
         int pid_count;
@@ -538,6 +542,9 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
             pid_count++;
           }
           pids++;
+        }
+        while (pid_count < MAX_FILTERS) {
+          object->pids[pid_count++] = G_MAXUINT16;
         }
 
         g_strfreev (tmp);
@@ -1347,7 +1354,6 @@ gst_dvbsrc_unset_pes_filters (GstDvbSrc * object)
   GST_INFO_OBJECT (object, "clearing PES filter");
 
   for (i = 0; i < MAX_FILTERS; i++) {
-    object->pids[i] = G_MAXUINT16;
     if (object->fd_filters[i] == -1)
       continue;
     close (object->fd_filters[i]);
