@@ -129,20 +129,13 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
     GST_DEBUG_OBJECT (demux, "first ts: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (payload->ts));
     demux->first_ts = payload->ts;
-    if (demux->streaming) {
-      gst_segment_set_seek (&demux->segment, demux->segment.rate,
-          GST_FORMAT_TIME, demux->segment.flags, GST_SEEK_TYPE_SET,
-          demux->first_ts, GST_SEEK_TYPE_NONE, 0, NULL);
-    }
   }
 
   /* make timestamps start from 0 */
-  if (!demux->streaming) {
-    if (demux->first_ts < payload->ts)
-      payload->ts -= demux->first_ts;
-    else
-      payload->ts = 0;
-  }
+  if (demux->first_ts < payload->ts)
+    payload->ts -= demux->first_ts;
+  else
+    payload->ts = 0;
 
   /* remove any incomplete payloads that will never be completed */
   while (stream->payloads->len > 0) {
@@ -188,6 +181,19 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
 
     /* Mark discontinuity (should be done via stream->discont anyway though) */
     GST_BUFFER_FLAG_SET (payload->buf, GST_BUFFER_FLAG_DISCONT);
+  }
+
+  /* remember the first queued timestamp for the segment */
+  if (!GST_CLOCK_TIME_IS_VALID (demux->segment_ts) &&
+      GST_CLOCK_TIME_IS_VALID (payload->ts)) {
+    GST_DEBUG_OBJECT (demux, "segment ts: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (payload->ts));
+    demux->segment_ts = payload->ts;
+    /* always note, but only determines segment when streaming */
+    if (demux->streaming)
+      gst_segment_set_seek (&demux->segment, demux->segment.rate,
+          GST_FORMAT_TIME, demux->segment.flags, GST_SEEK_TYPE_SET,
+          demux->segment_ts, GST_SEEK_TYPE_NONE, 0, NULL);
   }
 
   g_array_append_vals (stream->payloads, payload, 1);

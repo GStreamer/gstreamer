@@ -207,6 +207,7 @@ gst_asf_demux_reset (GstASFDemux * demux)
   demux->num_streams = 0;
   demux->activated_streams = FALSE;
   demux->first_ts = GST_CLOCK_TIME_NONE;
+  demux->segment_ts = GST_CLOCK_TIME_NONE;
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
   demux->seekable = FALSE;
   demux->broadcast = FALSE;
@@ -313,7 +314,7 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
 
       /* in either case, clear some state and generate newsegment later on */
       GST_OBJECT_LOCK (demux);
-      demux->first_ts = GST_CLOCK_TIME_NONE;
+      demux->segment_ts = GST_CLOCK_TIME_NONE;
       demux->need_newsegment = TRUE;
       gst_asf_demux_reset_stream_state_after_discont (demux);
       GST_OBJECT_UNLOCK (demux);
@@ -1185,7 +1186,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
   if (demux->need_newsegment) {
 
     /* wait until we had a chance to "lock on" some payload's timestamp */
-    if (!GST_CLOCK_TIME_IS_VALID (demux->first_ts))
+    if (!GST_CLOCK_TIME_IS_VALID (demux->segment_ts))
       return GST_FLOW_OK;
 
     if (demux->segment.stop == GST_CLOCK_TIME_NONE &&
