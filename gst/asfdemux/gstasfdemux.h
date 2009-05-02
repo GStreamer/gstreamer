@@ -160,7 +160,7 @@ struct _GstASFDemux {
   guint32              timestamp;       /* in milliseconds              */
   guint64              play_time;
 
-  guint64              preroll;         /* FIXME: make into GstClockTime */
+  guint64              preroll;
   guint64              pts;
 
   gboolean             seekable;

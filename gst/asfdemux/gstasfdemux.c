@@ -1019,7 +1019,7 @@ all_streams_prerolled (GstASFDemux * demux)
   GstClockTime preroll_time;
   guint i, num_no_data = 0;
 
-  preroll_time = demux->preroll * GST_MSECOND;
+  preroll_time = demux->preroll;
 
   /* returns TRUE as long as there isn't a stream which (a) has data queued
    * and (b) the timestamp of last piece of data queued is < demux->preroll
@@ -2459,7 +2459,7 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   else
     demux->play_time = 0;
 
-  demux->preroll = preroll;     /* FIXME: make GstClockTime */
+  demux->preroll = preroll * GST_MSECOND;
 
   if (demux->play_time == 0)
     demux->seekable = FALSE;
@@ -2467,7 +2467,7 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   GST_DEBUG_OBJECT (demux, "play_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (demux->play_time));
   GST_DEBUG_OBJECT (demux, "preroll   %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (demux->preroll * GST_MSECOND));
+      GST_TIME_ARGS (demux->preroll));
 
   if (demux->play_time > 0) {
     gst_segment_set_duration (&demux->segment, GST_FORMAT_TIME,
