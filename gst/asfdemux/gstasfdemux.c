@@ -233,14 +233,8 @@ gst_asf_demux_init (GstASFDemux * demux, GstASFDemuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_asf_demux_activate_push));
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
-  /* We should zero everything to be on the safe side */
-  demux->num_audio_streams = 0;
-  demux->num_video_streams = 0;
-  demux->num_streams = 0;
-
-  demux->taglist = NULL;
-  demux->first_ts = GST_CLOCK_TIME_NONE;
-  demux->state = GST_ASF_DEMUX_STATE_HEADER;
+  /* set initial state */
+  gst_asf_demux_reset (demux);
 }
 
 static gboolean
@@ -1865,8 +1859,9 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   if (extradata)
     gst_buffer_unref (extradata);
 
-  GST_INFO ("Adding video stream %u codec %" GST_FOURCC_FORMAT " (0x%08x)",
-      demux->num_video_streams, GST_FOURCC_ARGS (video->tag), video->tag);
+  GST_INFO ("Adding video stream #%u, id %u, codec %"
+      GST_FOURCC_FORMAT " (0x%08x)", demux->num_video_streams, id,
+      GST_FOURCC_ARGS (video->tag), video->tag);
 
   ++demux->num_video_streams;
 
