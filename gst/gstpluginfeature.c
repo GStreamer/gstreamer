@@ -185,7 +185,7 @@ gst_plugin_feature_set_name (GstPluginFeature * feature, const gchar * name)
   } else {
     feature->name = g_strdup (name);
   }
-  gst_object_set_name (GST_OBJECT (feature), feature->name);
+  gst_object_set_name (GST_OBJECT_CAST (feature), feature->name);
 }
 
 /**

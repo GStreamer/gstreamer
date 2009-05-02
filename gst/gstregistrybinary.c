@@ -938,7 +938,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
 
   if (GST_IS_ELEMENT_FACTORY (feature)) {
     GstBinaryElementFactory *ef;
-    GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
+    GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (feature);
 
     align (*in);
     GST_LOG ("Reading/casting for GstBinaryElementFactory at address %p", *in);

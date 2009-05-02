@@ -357,8 +357,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
 
   GST_LOG_OBJECT (registry, "emitting plugin-added for filename \"%s\"",
       GST_STR_NULL (plugin->filename));
-  g_signal_emit (G_OBJECT (registry), gst_registry_signals[PLUGIN_ADDED], 0,
-      plugin);
+  g_signal_emit (registry, gst_registry_signals[PLUGIN_ADDED], 0, plugin);
 
   return TRUE;
 }
@@ -465,8 +464,7 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   GST_OBJECT_UNLOCK (registry);
 
   GST_LOG_OBJECT (registry, "emitting feature-added for %s", feature->name);
-  g_signal_emit (G_OBJECT (registry), gst_registry_signals[FEATURE_ADDED], 0,
-      feature);
+  g_signal_emit (registry, gst_registry_signals[FEATURE_ADDED], 0, feature);
 
   return TRUE;
 }

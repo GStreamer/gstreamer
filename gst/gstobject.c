@@ -794,7 +794,7 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
     gst_object_ref (object);
   }
 
-  g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_SET], 0, parent);
+  g_signal_emit (object, gst_object_signals[PARENT_SET], 0, parent);
 
   return TRUE;
 
@@ -860,8 +860,7 @@ gst_object_unparent (GstObject * object)
     object->parent = NULL;
     GST_OBJECT_UNLOCK (object);
 
-    g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0,
-        parent);
+    g_signal_emit (object, gst_object_signals[PARENT_UNSET], 0, parent);
 
     gst_object_unref (object);
   } else {
@@ -966,8 +965,7 @@ gst_object_save_thyself (GstObject * object, xmlNodePtr parent)
   if (oclass->save_thyself)
     oclass->save_thyself (object, parent);
 
-  g_signal_emit (G_OBJECT (object), gst_object_signals[OBJECT_SAVED], 0,
-      parent);
+  g_signal_emit (object, gst_object_signals[OBJECT_SAVED], 0, parent);
 
   return parent;
 }
