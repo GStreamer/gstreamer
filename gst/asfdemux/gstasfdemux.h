@@ -170,6 +170,8 @@ struct _GstASFDemux {
 
   gboolean             need_newsegment;  /* do we need to send a new-segment event? */
   GstClockTime         segment_ts;       /* streaming; timestamp for segment start */
+  GstSegment           in_segment;       /* streaming; upstream segment info */
+  GstClockTime         in_gap;           /* streaming; upstream initial segment gap for interpolation */
   gboolean             segment_running;  /* if we've started the current segment    */
   gboolean             streaming;        /* TRUE if we are operating chain-based    */
   GstClockTime         latency;

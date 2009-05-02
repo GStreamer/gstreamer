@@ -208,6 +208,8 @@ gst_asf_demux_reset (GstASFDemux * demux)
   demux->activated_streams = FALSE;
   demux->first_ts = GST_CLOCK_TIME_NONE;
   demux->segment_ts = GST_CLOCK_TIME_NONE;
+  demux->in_gap = 0;
+  gst_segment_init (&demux->in_segment, GST_FORMAT_UNDEFINED);
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
   demux->seekable = FALSE;
   demux->broadcast = FALSE;
@@ -292,10 +294,12 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:{
       GstFormat newsegment_format;
-      gint64 newsegment_start;
+      gint64 newsegment_start, stop, time;
+      gdouble rate, arate;
+      gboolean update;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &newsegment_format,
-          &newsegment_start, NULL, NULL);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate,
+          &newsegment_format, &newsegment_start, &stop, &time);
 
       if (newsegment_format == GST_FORMAT_BYTES) {
         if (demux->packet_size && newsegment_start > demux->data_offset)
@@ -307,14 +311,21 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
         /* do not know packet position, not really a problem */
         demux->packet = -1;
       } else {
-        GST_WARNING_OBJECT (demux, "unsupported newsegment format , ignoring");
+        GST_WARNING_OBJECT (demux, "unsupported newsegment format, ignoring");
         gst_event_unref (event);
         break;
       }
 
+      /* record upstream segment for interpolation */
+      if (newsegment_format != demux->in_segment.format)
+        gst_segment_init (&demux->in_segment, GST_FORMAT_UNDEFINED);
+      gst_segment_set_newsegment_full (&demux->in_segment, update, rate, arate,
+          newsegment_format, newsegment_start, stop, time);
+
       /* in either case, clear some state and generate newsegment later on */
       GST_OBJECT_LOCK (demux);
       demux->segment_ts = GST_CLOCK_TIME_NONE;
+      demux->in_gap = GST_CLOCK_TIME_NONE;
       demux->need_newsegment = TRUE;
       gst_asf_demux_reset_stream_state_after_discont (demux);
       GST_OBJECT_UNLOCK (demux);
@@ -1188,10 +1199,16 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
     /* wait until we had a chance to "lock on" some payload's timestamp */
     if (!GST_CLOCK_TIME_IS_VALID (demux->segment_ts))
       return GST_FLOW_OK;
+    else {
+      /* safe default if insufficient upstream info */
+      if (!GST_CLOCK_TIME_IS_VALID (demux->in_gap))
+        demux->in_gap = 0;
+    }
 
     if (demux->segment.stop == GST_CLOCK_TIME_NONE &&
         demux->segment.duration > 0) {
-      demux->segment.stop = demux->segment.duration;
+      /* slight HACK; prevent clipping of last bit */
+      demux->segment.stop = demux->segment.duration + demux->in_gap;
     }
 
     GST_DEBUG_OBJECT (demux, "sending new-segment event %" GST_SEGMENT_FORMAT,
@@ -1240,7 +1257,11 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 
     gst_buffer_set_caps (payload->buf, stream->caps);
 
-    GST_BUFFER_TIMESTAMP (payload->buf) = payload->ts;
+    /* (sort of) interpolate timestamps using upstream "frame of reference",
+     * typically useful for live src, but might (unavoidably) mess with
+     * position reporting if a live src is playing not so live content
+     * (e.g. rtspsrc taking some time to fall back to tcp) */
+    GST_BUFFER_TIMESTAMP (payload->buf) = payload->ts + demux->in_gap;
     GST_BUFFER_DURATION (payload->buf) = payload->duration;
 
     /* FIXME: we should really set durations on buffers if we can */
@@ -1398,11 +1419,20 @@ gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
 
   demux = GST_ASF_DEMUX (GST_PAD_PARENT (pad));
 
-  GST_LOG_OBJECT (demux, "buffer: size=%u, offset=%" G_GINT64_FORMAT,
-      GST_BUFFER_SIZE (buf), GST_BUFFER_OFFSET (buf));
+  GST_LOG_OBJECT (demux, "buffer: size=%u, offset=%" G_GINT64_FORMAT ", time=%"
+      GST_TIME_FORMAT, GST_BUFFER_SIZE (buf), GST_BUFFER_OFFSET (buf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   if (GST_BUFFER_IS_DISCONT (buf))
     gst_asf_demux_reset_stream_state_after_discont (demux);
+
+  if (!GST_CLOCK_TIME_IS_VALID (demux->in_gap) &&
+      GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    demux->in_gap = GST_BUFFER_TIMESTAMP (buf) - demux->in_segment.start;
+    GST_DEBUG_OBJECT (demux, "upstream segment start %" GST_TIME_FORMAT
+        ", interpolation gap: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (demux->in_segment.start), GST_TIME_ARGS (demux->in_gap));
+  }
 
   gst_adapter_push (demux->adapter, buf);
 

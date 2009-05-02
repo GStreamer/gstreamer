@@ -191,7 +191,7 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
     demux->segment_ts = payload->ts;
     /* always note, but only determines segment when streaming */
     if (demux->streaming)
-      gst_segment_set_seek (&demux->segment, demux->segment.rate,
+      gst_segment_set_seek (&demux->segment, demux->in_segment.rate,
           GST_FORMAT_TIME, demux->segment.flags, GST_SEEK_TYPE_SET,
           demux->segment_ts, GST_SEEK_TYPE_NONE, 0, NULL);
   }
