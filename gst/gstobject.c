@@ -472,12 +472,8 @@ gst_object_dispatch_properties_changed (GObject * object,
   guint i;
   gchar *name, *debug_name;
 
-  /* we fail when this is not a GstObject */
-  g_return_if_fail (GST_IS_OBJECT (object));
-
   /* do the standard dispatching */
-  G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs,
-      pspecs);
+  parent_class->dispatch_properties_changed (object, n_pspecs, pspecs);
 
   gst_object = GST_OBJECT_CAST (object);
   name = gst_object_get_name (gst_object);
@@ -491,8 +487,7 @@ gst_object_dispatch_properties_changed (GObject * object,
           "deep notification from %s (%s)", debug_name, pspecs[i]->name);
 
       g_signal_emit (parent, gst_object_signals[DEEP_NOTIFY],
-          g_quark_from_string (pspecs[i]->name), GST_OBJECT_CAST (object),
-          pspecs[i]);
+          g_quark_from_string (pspecs[i]->name), gst_object, pspecs[i]);
     }
 
     old_parent = parent;
