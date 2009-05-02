@@ -231,8 +231,7 @@ gst_pad_template_init (GstPadTemplate * templ)
    * owned by the creator of the object
    */
   if (GST_OBJECT_IS_FLOATING (templ)) {
-    gst_object_ref (templ);
-    gst_object_sink (templ);
+    gst_object_ref_sink (templ);
   }
 }
 

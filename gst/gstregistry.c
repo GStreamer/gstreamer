@@ -241,8 +241,7 @@ gst_registry_get_default (void)
   g_static_mutex_lock (&_gst_registry_mutex);
   if (G_UNLIKELY (!_gst_registry_default)) {
     _gst_registry_default = g_object_new (GST_TYPE_REGISTRY, NULL);
-    gst_object_ref (GST_OBJECT_CAST (_gst_registry_default));
-    gst_object_sink (GST_OBJECT_CAST (_gst_registry_default));
+    gst_object_ref_sink (GST_OBJECT_CAST (_gst_registry_default));
   }
   registry = _gst_registry_default;
   g_static_mutex_unlock (&_gst_registry_mutex);
@@ -353,8 +352,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
 
   registry->plugins = g_list_prepend (registry->plugins, plugin);
 
-  gst_object_ref (plugin);
-  gst_object_sink (plugin);
+  gst_object_ref_sink (plugin);
   GST_OBJECT_UNLOCK (registry);
 
   GST_LOG_OBJECT (registry, "emitting plugin-added for filename \"%s\"",
@@ -461,8 +459,7 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
     gst_object_unref (existing_feature);
   }
 
-  gst_object_ref (feature);
-  gst_object_sink (feature);
+  gst_object_ref_sink (feature);
   GST_OBJECT_UNLOCK (registry);
 
   GST_LOG_OBJECT (registry, "emitting feature-added for %s", feature->name);

@@ -268,8 +268,7 @@ gst_system_clock_obtain (void)
 
     /* we created the global clock; take ownership so
      * we can hand out instances later */
-    gst_object_ref (clock);
-    gst_object_sink (GST_OBJECT (clock));
+    gst_object_ref_sink (clock);
 
     _the_system_clock = clock;
     g_static_mutex_unlock (&_gst_sysclock_mutex);
