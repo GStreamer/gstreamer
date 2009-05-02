@@ -92,7 +92,6 @@ static gboolean gst_asf_demux_activate_pull (GstPad * sinkpad, gboolean active);
 static void gst_asf_demux_loop (GstASFDemux * demux);
 static void
 gst_asf_demux_process_queued_extended_stream_objects (GstASFDemux * demux);
-static void gst_asf_demux_activate_ext_props_streams (GstASFDemux * demux);
 static gboolean gst_asf_demux_pull_headers (GstASFDemux * demux);
 static void gst_asf_demux_pull_indices (GstASFDemux * demux);
 static void gst_asf_demux_reset_stream_state_after_discont (GstASFDemux * asf);
@@ -757,11 +756,6 @@ gst_asf_demux_chain_headers (GstASFDemux * demux)
   if (demux->num_streams == 0)
     goto no_streams;
 
-  /* FIXME: remove when we activate streams after internal preroll in
-   * streaming mode as well */
-  GST_LOG_OBJECT (demux, "signalling no more pads");
-  gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
-
   g_free (data);
   return GST_FLOW_OK;
 
@@ -935,7 +929,6 @@ gst_asf_demux_parse_data_object_start (GstASFDemux * demux, guint8 * data)
 
   /* process pending stream objects and create pads for those */
   gst_asf_demux_process_queued_extended_stream_objects (demux);
-  gst_asf_demux_activate_ext_props_streams (demux);
 
   GST_INFO_OBJECT (demux, "Stream has %" G_GUINT64_FORMAT " packets, "
       "data_offset=%" G_GINT64_FORMAT ", data_size=%" G_GINT64_FORMAT
@@ -2461,6 +2454,9 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
 
   demux->preroll = preroll * GST_MSECOND;
 
+  /* initial latency */
+  demux->latency = demux->preroll;
+
   if (demux->play_time == 0)
     demux->seekable = FALSE;
 
@@ -3041,6 +3037,7 @@ gst_asf_demux_process_queued_extended_stream_objects (GstASFDemux * demux)
   demux->ext_stream_props = NULL;
 }
 
+#if 0
 static void
 gst_asf_demux_activate_ext_props_streams (GstASFDemux * demux)
 {
@@ -3096,6 +3093,7 @@ gst_asf_demux_activate_ext_props_streams (GstASFDemux * demux)
       gst_asf_demux_activate_stream (demux, stream);
   }
 }
+#endif
 
 static GstFlowReturn
 gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
@@ -3126,11 +3124,6 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
 
       stream =
           gst_asf_demux_parse_stream_object (demux, *p_data, obj_data_size);
-
-      /* FIXME: we should do stream activation based on preroll data in
-       * streaming mode too */
-      if (demux->streaming && stream != NULL)
-        gst_asf_demux_activate_stream (demux, stream);
 
       ret = GST_FLOW_OK;
       break;
