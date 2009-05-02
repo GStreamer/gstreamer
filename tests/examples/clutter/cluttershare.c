@@ -101,12 +101,12 @@ setup_stage (ClutterStage * stage)
 gboolean
 update_texture_actor (gpointer data)
 {
-  GstGLBuffer *gst_gl_buf = (GstGLBuffer *) data;
+  ClutterTexture *texture_actor = (ClutterTexture *) data;
+  GQueue *queue_input_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_input_buf");
+  GQueue *queue_output_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_output_buf");
+  GstGLBuffer *gst_gl_buf = g_queue_pop_head (queue_input_buf);
+  ClutterActor *stage = g_object_get_data (G_OBJECT (texture_actor), "stage");
   CoglHandle cogl_texture = 0;
-  ClutterTexture *texture_actor = NULL;
-  GAsyncQueue *queue_buf = NULL;
-  GstGLBuffer *gst_gl_buf_old = NULL;
-  ClutterActor *stage = NULL;
 
   /* Create a cogl texture from the gst gl texture */
   glEnable (GL_TEXTURE_2D);
@@ -114,60 +114,52 @@ update_texture_actor (gpointer data)
   cogl_texture = cogl_texture_new_from_foreign (gst_gl_buf->texture,
       GL_TEXTURE_2D, gst_gl_buf->width, gst_gl_buf->height, 0, 0,
       COGL_PIXEL_FORMAT_RGBA_8888);
-  cogl_texture_set_filters (cogl_texture, GL_LINEAR, GL_LINEAR);
   glBindTexture (GL_TEXTURE_2D, 0);
 
   /* Previous cogl texture is replaced and so its ref counter discreases to 0.
    * According to the source code, glDeleteTexture is not called when the previous
    * ref counter of the previous cogl texture is reaching 0 because is_foreign is TRUE */
-  texture_actor =
-      g_type_get_qdata (G_TYPE_FROM_INSTANCE (gst_gl_buf),
-      g_quark_from_string ("texture_actor"));
-  clutter_texture_set_cogl_texture (CLUTTER_TEXTURE (texture_actor),
-      cogl_texture);
+  clutter_texture_set_cogl_texture (CLUTTER_TEXTURE (texture_actor), cogl_texture);
   cogl_texture_unref (cogl_texture);
 
-  queue_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_buf");
-	gst_gl_buf_old = g_object_get_data (G_OBJECT (texture_actor), "gst_gl_buf");
-	if (gst_gl_buf_old)
-		g_async_queue_push (queue_buf, gst_gl_buf_old);
-	g_object_set_data (G_OBJECT (texture_actor), "gst_gl_buf", gst_gl_buf);
-
   /* we can now show the clutter scene if not yet visible */
-  stage = g_object_get_data (G_OBJECT (texture_actor), "stage");
   if (!CLUTTER_ACTOR_IS_VISIBLE (stage))
     clutter_actor_show_all (stage);
 
+  /* push buffer so it can be unref later */
+  g_queue_push_tail (queue_output_buf, gst_gl_buf);
+
   return FALSE;
 }
+
 
 /* fakesink handoff callback */
 void
 on_gst_buffer (GstElement * element, GstBuffer * buf, GstPad * pad,
     ClutterActor * texture_actor)
 {
-  /* unref old buffers we have finished to use in clutter */
-  GAsyncQueue *queue_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_buf");
-	if (g_async_queue_length (queue_buf) > 0) {
-		GstGLBuffer *gst_gl_buf_old = g_async_queue_pop (queue_buf);
-		if (gst_gl_buf_old)
-			gst_buffer_unref (gst_gl_buf_old);
+	GQueue *queue_input_buf = NULL;
+	GQueue *queue_output_buf = NULL;
+
+	/* hold clutter lock */
+	clutter_threads_enter ();
+
+  /* ref then push buffer to use it in clutter */
+  gst_buffer_ref (buf);
+	queue_input_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_input_buf");
+  g_queue_push_tail (queue_input_buf, buf);
+  if (g_queue_get_length (queue_input_buf) > 2)
+		clutter_threads_add_idle (update_texture_actor, texture_actor);
+
+  /* pop then unref buffer we have finished to use in clutter */
+  queue_output_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_output_buf");
+  if (g_queue_get_length (queue_output_buf) > 2) {
+		GstGLBuffer *gst_gl_buf_old = g_queue_pop_head (queue_output_buf);
+		gst_buffer_unref (gst_gl_buf_old);
 	}
 
-  /* increase ref because our pipeline and clutter scene have not a same framerate */
-  gst_buffer_ref (buf);
-
-  /* Just to avoid a global variable of texture_actor
-   * Texture_actor is not null because callback connection is set after the
-   * texture_actor was being setted up */
-  g_assert (texture_actor);
-  g_type_set_qdata (G_TYPE_FROM_INSTANCE (buf),
-      g_quark_from_string ("texture_actor"), texture_actor);
-
-  /* Here we are in the pipeline thread. It means that this thread may be
-   * not the same as the clutter thread
-   * make sure that the texture actor is updated in the clutter thread */
-  clutter_threads_add_idle (update_texture_actor, buf);
+  /* release clutter lock */
+	clutter_threads_leave ();
 }
 
 int
@@ -187,7 +179,8 @@ main (int argc, char *argv[])
   GstState state = 0;
   ClutterActor *stage = NULL;
   ClutterActor *clutter_texture = NULL;
-  GAsyncQueue* queue_buf = NULL;
+  GQueue* queue_input_buf = NULL;
+  GQueue* queue_output_buf = NULL;
   GstElement *fakesink = NULL;
 
   /* init gstreamer then clutter */
@@ -203,12 +196,16 @@ main (int argc, char *argv[])
   if (err != GLEW_OK)
     g_debug ("failed to init GLEW: %s", glewGetErrorString (err));
 
+  /* avoid to dispatch unecesary events */
+
+  clutter_ungrab_keyboard ();
+  clutter_ungrab_pointer ();
+
   /* retrieve and turn off clutter opengl context */
 
   stage = clutter_stage_get_default ();
 
-  clutter_ungrab_keyboard ();
-  clutter_ungrab_pointer ();
+  /* retrieve and turn off clutter opengl context */
 
 #ifdef WIN32
   clutter_gl_context = wglGetCurrentContext ();
@@ -235,7 +232,8 @@ main (int argc, char *argv[])
       clutter_gl_context, NULL);
   g_object_unref (glupload);
 
-  /* play pipeline */
+  /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
+   * shared with the clutter one */
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
   state = GST_STATE_PAUSED;
@@ -262,9 +260,10 @@ main (int argc, char *argv[])
 
   /* append a gst-gl texture to this queue when you do not need it no more */
 
-  queue_buf = g_async_queue_new ();
-	g_object_set_data (G_OBJECT (clutter_texture), "queue_buf", queue_buf);
-  g_object_set_data (G_OBJECT (clutter_texture), "gst_gl_buf", NULL);
+  queue_input_buf = g_queue_new ();
+  queue_output_buf = g_queue_new ();
+	g_object_set_data (G_OBJECT (clutter_texture), "queue_input_buf", queue_input_buf);
+	g_object_set_data (G_OBJECT (clutter_texture), "queue_output_buf", queue_output_buf);
 
   /* set a callback to retrieve the gst gl textures */
 
