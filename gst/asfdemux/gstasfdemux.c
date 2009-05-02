@@ -340,6 +340,9 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_asf_demux_reset_stream_state_after_discont (demux);
       GST_OBJECT_UNLOCK (demux);
       gst_asf_demux_send_event_unlocked (demux, event);
+      /* upon activation, latency is no longer introduced, e.g. after seek */
+      if (demux->activated_streams)
+        demux->latency = 0;
       break;
 
     default:
@@ -3426,6 +3429,35 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query)
         }
       } else
         GST_LOG_OBJECT (demux, "only support seeking in TIME format");
+      break;
+    }
+
+    case GST_QUERY_LATENCY:
+    {
+      gboolean live;
+      GstClockTime min, max;
+
+      /* preroll delay does not matter in non-live pipeline,
+       * but we might end up in a live (rtsp) one ... */
+
+      /* first forward */
+      res = gst_pad_query_default (pad, query);
+      if (!res)
+        break;
+
+      gst_query_parse_latency (query, &live, &min, &max);
+
+      GST_DEBUG_OBJECT (demux, "Peer latency: live %d, min %"
+          GST_TIME_FORMAT " max %" GST_TIME_FORMAT, live,
+          GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+      GST_OBJECT_LOCK (demux);
+      if (min != 1)
+        min += demux->latency;
+      if (max != 1)
+        max += demux->latency;
+      GST_OBJECT_UNLOCK (demux);
+      gst_query_set_latency (query, live, min, max);
       break;
     }
 
