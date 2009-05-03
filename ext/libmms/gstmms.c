@@ -60,8 +60,7 @@ static void gst_mms_set_property (GObject * object, guint prop_id,
 static void gst_mms_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static const GstQueryType *gst_mms_get_query_types (GstPad * pad);
-static gboolean gst_mms_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_mms_query (GstBaseSrc * src, GstQuery * query);
 
 static gboolean gst_mms_start (GstBaseSrc * bsrc);
 static gboolean gst_mms_stop (GstBaseSrc * bsrc);
@@ -138,6 +137,7 @@ gst_mms_class_init (GstMMSClass * klass)
   gstbasesrc_class->prepare_seek_segment =
       GST_DEBUG_FUNCPTR (gst_mms_prepare_seek_segment);
   gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_mms_do_seek);
+  gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_mms_query);
 }
 
 /* initialize the new element
@@ -148,11 +148,6 @@ gst_mms_class_init (GstMMSClass * klass)
 static void
 gst_mms_init (GstMMS * mmssrc, GstMMSClass * g_class)
 {
-  gst_pad_set_query_function (GST_BASE_SRC (mmssrc)->srcpad,
-      GST_DEBUG_FUNCPTR (gst_mms_src_query));
-  gst_pad_set_query_type_function (GST_BASE_SRC (mmssrc)->srcpad,
-      GST_DEBUG_FUNCPTR (gst_mms_get_query_types));
-
   mmssrc->uri_name = NULL;
   mmssrc->current_connection_uri_name = NULL;
   mmssrc->connection = NULL;
@@ -186,27 +181,12 @@ gst_mms_finalize (GObject * gobject)
 
 }
 
-/*
- * location querying and so on.
- */
-
-static const GstQueryType *
-gst_mms_get_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    0
-  };
-
-  return types;
-}
-
+/* FIXME operating in TIME rather than BYTES could remove this altogether
+ * and be more convenient elsewhere */
 static gboolean
-gst_mms_src_query (GstPad * pad, GstQuery * query)
+gst_mms_query (GstBaseSrc * src, GstQuery * query)
 {
-
-  GstMMS *mmssrc = GST_MMS (gst_pad_get_parent (pad));
+  GstMMS *mmssrc = GST_MMS (src);
   gboolean res = TRUE;
   GstFormat format;
   gint64 value;
@@ -241,13 +221,13 @@ gst_mms_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     default:
-      res = FALSE;
+      /* chain to parent */
+      res =
+          GST_BASE_SRC_CLASS (parent_class)->query (GST_BASE_SRC (src), query);
       break;
   }
 
-  gst_object_unref (mmssrc);
   return res;
-
 }
 
 
