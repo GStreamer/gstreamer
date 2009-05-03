@@ -40,11 +40,15 @@ struct _GstVdpVideoBuffer {
 
   GstVdpDevice *device;
   VdpVideoSurface surface;
+
+  GSList *refs;
 };
 
 GType gst_vdp_video_buffer_get_type (void);
 
 GstVdpVideoBuffer* gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type, gint width, gint height);
+
+void gst_vdp_video_buffer_add_reference (GstVdpVideoBuffer *buffer, GstVdpVideoBuffer *buf);
 
 #define GST_VDP_VIDEO_CAPS \
   "video/x-vdpau-video, " \

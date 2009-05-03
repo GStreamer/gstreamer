@@ -46,10 +46,10 @@ struct _GstVdpMpegDecoder
   VdpDecoder decoder;
   VdpPictureInfoMPEG1Or2 vdp_info;
   GstBuffer *f_buffer;
+  GstBuffer *b_buffer;
 
-  /* holds B_FRAMES */
-  GSList *b_frames;
-
+  GMutex *mutex;
+  
   gboolean broken_gop;
   
   GstAdapter *adapter;

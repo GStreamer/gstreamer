@@ -24,13 +24,53 @@
 
 #include "gstvdpvideobuffer.h"
 
+
+void
+gst_vdp_video_buffer_add_reference (GstVdpVideoBuffer * buffer,
+    GstVdpVideoBuffer * buf)
+{
+  g_assert (GST_IS_VDPAU_VIDEO_BUFFER (buffer));
+  g_assert (GST_IS_VDPAU_VIDEO_BUFFER (buf));
+
+  gst_buffer_ref (GST_BUFFER (buf));
+  buffer->refs = g_slist_prepend (buffer->refs, buf);
+}
+
+GstVdpVideoBuffer *
+gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type,
+    gint width, gint height)
+{
+  GstVdpVideoBuffer *buffer;
+  VdpStatus status;
+  VdpVideoSurface surface;
+
+  status = device->vdp_video_surface_create (device->device, chroma_type, width,
+      height, &surface);
+  if (status != VDP_STATUS_OK) {
+    GST_ERROR ("Couldn't create a VdpVideoSurface, error returned was: %s",
+        device->vdp_get_error_string (status));
+    return NULL;
+  }
+
+  buffer =
+      (GstVdpVideoBuffer *) gst_mini_object_new (GST_TYPE_VDPAU_VIDEO_BUFFER);
+
+  buffer->device = g_object_ref (device);
+  buffer->surface = surface;
+
+  return buffer;
+}
+
 static GObjectClass *gst_vdp_video_buffer_parent_class;
 
 static void
 gst_vdp_video_buffer_finalize (GstVdpVideoBuffer * buffer)
 {
-  GstVdpDevice *device = buffer->device;
+  GSList *iter;
+  GstVdpDevice *device;
   VdpStatus status;
+
+  device = buffer->device;
 
   status = device->vdp_video_surface_destroy (buffer->surface);
   if (status != VDP_STATUS_OK)
@@ -39,6 +79,14 @@ gst_vdp_video_buffer_finalize (GstVdpVideoBuffer * buffer)
         device->vdp_get_error_string (status));
 
   g_object_unref (buffer->device);
+
+  for (iter = buffer->refs; iter; iter = g_slist_next (iter)) {
+    GstBuffer *buf;
+
+    buf = (GstBuffer *) (iter->data);
+    gst_buffer_unref (buf);
+  }
+  g_slist_free (buffer->refs);
 
   GST_MINI_OBJECT_CLASS (gst_vdp_video_buffer_parent_class)->finalize
       (GST_MINI_OBJECT (buffer));
@@ -49,6 +97,8 @@ gst_vdp_video_buffer_init (GstVdpVideoBuffer * buffer, gpointer g_class)
 {
   buffer->device = NULL;
   buffer->surface = VDP_INVALID_HANDLE;
+
+  buffer->refs = NULL;
 }
 
 static void
@@ -85,30 +135,4 @@ gst_vdp_video_buffer_get_type (void)
         "GstVdpVideoBuffer", &info, 0);
   }
   return _gst_vdp_video_buffer_type;
-}
-
-
-GstVdpVideoBuffer *
-gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type,
-    gint width, gint height)
-{
-  GstVdpVideoBuffer *buffer;
-  VdpStatus status;
-  VdpVideoSurface surface;
-
-  status = device->vdp_video_surface_create (device->device, chroma_type, width,
-      height, &surface);
-  if (status != VDP_STATUS_OK) {
-    GST_ERROR ("Couldn't create a VdpVideoSurface, error returned was: %s",
-        device->vdp_get_error_string (status));
-    return NULL;
-  }
-
-  buffer =
-      (GstVdpVideoBuffer *) gst_mini_object_new (GST_TYPE_VDPAU_VIDEO_BUFFER);
-
-  buffer->device = g_object_ref (device);
-  buffer->surface = surface;
-
-  return buffer;
 }
