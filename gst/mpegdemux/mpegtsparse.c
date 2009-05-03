@@ -350,7 +350,7 @@ mpegts_parse_add_program (MpegTSParse * parse,
   program->pcr_pid = G_MAXUINT16;
   program->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) mpegts_parse_free_stream);
-  program->patcount = 1;
+  program->patcount = 0;
   program->selected = 0;
   program->active = FALSE;
 
@@ -890,14 +890,12 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GstStructure * pat_info)
         g_hash_table_insert (parse->psi_pids,
             GINT_TO_POINTER ((gint) pid), GINT_TO_POINTER (1));
       }
-
-      program->patcount += 1;
     } else {
       g_hash_table_insert (parse->psi_pids,
           GINT_TO_POINTER ((gint) pid), GINT_TO_POINTER (1));
       program = mpegts_parse_add_program (parse, program_number, pid);
     }
-
+    program->patcount += 1;
     if (program->selected && !program->active)
       parse->pads_to_add = g_list_append (parse->pads_to_add,
           mpegts_parse_activate_program (parse, program));
@@ -938,6 +936,7 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GstStructure * pat_info)
 
       mpegts_parse_remove_program (parse, program_number);
       g_hash_table_remove (parse->psi_pids, GINT_TO_POINTER ((gint) pid));
+      mpegts_packetizer_remove_stream (parse->packetizer, pid);
     }
 
     gst_structure_free (old_pat);

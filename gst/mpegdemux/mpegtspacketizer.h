@@ -116,6 +116,8 @@ gboolean mpegts_packetizer_next_packet (MpegTSPacketizer *packetizer,
   MpegTSPacketizerPacket *packet);
 void mpegts_packetizer_clear_packet (MpegTSPacketizer *packetizer,
   MpegTSPacketizerPacket *packet);
+void mpegts_packetizer_remove_stream(MpegTSPacketizer *packetizer, 
+  gint16 pid);
 
 gboolean mpegts_packetizer_push_section (MpegTSPacketizer *packetzer,
   MpegTSPacketizerPacket *packet, MpegTSPacketizerSection *section);

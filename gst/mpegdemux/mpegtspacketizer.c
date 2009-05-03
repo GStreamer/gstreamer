@@ -241,7 +241,8 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer * packetizer,
   data = GST_BUFFER_DATA (section->buffer);
 
   section->table_id = *data++;
-  if ((data[0] & 0x80) == 0)
+  /* if table_id is 0 (pat) then ignore the subtable extension */
+  if ((data[0] & 0x80) == 0 || section->table_id == 0)
     section->subtable_extension = 0;
   else
     section->subtable_extension = GST_READ_UINT16_BE (data + 2);
@@ -1842,6 +1843,22 @@ mpegts_packetizer_clear (MpegTSPacketizer * packetizer)
   /* FIXME can't use remove_all because we don't depend on 2.12 yet */
   g_hash_table_foreach_remove (packetizer->streams, remove_all, NULL);
   gst_adapter_clear (packetizer->adapter);
+}
+
+void
+mpegts_packetizer_remove_stream (MpegTSPacketizer * packetizer, gint16 pid)
+{
+  MpegTSPacketizerStream *stream =
+      (MpegTSPacketizerStream *) g_hash_table_lookup (packetizer->streams,
+      GINT_TO_POINTER ((gint) pid));
+  if (stream) {
+    GST_INFO ("Removing stream for PID %d", pid);
+
+    g_hash_table_remove (packetizer->streams, GINT_TO_POINTER ((gint) pid));
+
+    g_object_unref (stream->section_adapter);
+    g_free (stream);
+  }
 }
 
 MpegTSPacketizer *
