@@ -138,8 +138,20 @@
 
   <attr path="/api/namespace/enum[@name='CapsFlags']" name="hidden">1</attr>
 
-  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildAdded']" name="name">EmitChildAdded</attr>
-  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildRemoved']" name="name">EmitChildRemoved</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_child_added']" name="name">EmitChildAdded</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_child_removed']" name="name">EmitChildRemoved</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_get_child_by_name']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_get_child_by_index']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_lookup']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_get_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_set_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_get_property']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_set_property']" name="hidden">1</attr>
+  <remove-attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_child_added']" name="shared" />
+  <remove-node path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_child_added']/parameters/parameter[@name='object']" />
+  <remove-attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_child_removed']" name="shared" />
+  <remove-node path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_child_removed']/parameters/parameter[@name='object']" />
+  <attr path="/api/namespace/interface[@name='ChildProxy']/virtual_method[@cname='get_child_by_index']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/object[@name='Clock']/field[@name='InternalCalibration']" name="access">protected</attr>
   <attr path="/api/namespace/object[@name='Clock']/field[@name='InternalCalibration']" name="readable">true</attr>
