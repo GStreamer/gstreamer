@@ -158,9 +158,16 @@ static void
 gst_speex_enc_setup_interfaces (GType speexenc_type)
 {
   static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
+  const GInterfaceInfo preset_interface_info = {
+    NULL,                       /* interface_init */
+    NULL,                       /* interface_finalize */
+    NULL                        /* interface_data */
+  };
 
   g_type_add_interface_static (speexenc_type, GST_TYPE_TAG_SETTER,
       &tag_setter_info);
+  g_type_add_interface_static (speexenc_type, GST_TYPE_PRESET,
+      &preset_interface_info);
 
   GST_DEBUG_CATEGORY_INIT (speexenc_debug, "speexenc", 0, "Speex encoder");
 }
