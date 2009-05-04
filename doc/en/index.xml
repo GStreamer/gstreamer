@@ -48,7 +48,6 @@
       <Type Name="Element" Kind="Class" />
       <Type Name="ElementAddedArgs" Kind="Class" />
       <Type Name="ElementAddedHandler" Kind="Delegate" />
-      <Type Name="ElementDetails" Kind="Structure" />
       <Type Name="ElementFactory" Kind="Class" />
       <Type Name="ElementFlags" Kind="Enumeration" />
       <Type Name="ElementRemovedArgs" Kind="Class" />
@@ -95,6 +94,8 @@
       <Type Name="MiniObjectFlags" Kind="Enumeration" />
       <Type Name="NewDecodedPadArgs" Kind="Class" />
       <Type Name="NewDecodedPadHandler" Kind="Delegate" />
+      <Type Name="NewUriArgs" Kind="Class" />
+      <Type Name="NewUriHandler" Kind="Delegate" />
       <Type Name="Object" Kind="Class" />
       <Type Name="ObjectFlags" Kind="Enumeration" />
       <Type Name="Pad" Kind="Class" />
@@ -191,6 +192,10 @@
       <Type Name="TypeFindSuggestFunction" Kind="Delegate" />
       <Type Name="UnlinkedArgs" Kind="Class" />
       <Type Name="UnlinkedHandler" Kind="Delegate" />
+      <Type Name="URIHandler" Kind="Interface" />
+      <Type Name="URIHandlerAdapter" Kind="Class" />
+      <Type Name="URIHandlerImplementor" Kind="Interface" />
+      <Type Name="URIType" Kind="Enumeration" />
       <Type Name="Util" Kind="Class" />
       <Type Name="Version" Kind="Class" />
     </Namespace>

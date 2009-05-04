@@ -424,6 +424,11 @@
       <member cname="GST_TYPE_FIND_NEARLY_CERTAIN" name="NearlyCertain" value="99" />
       <member cname="GST_TYPE_FIND_MAXIMUM" name="Maximum" value="100" />
     </enum>
+    <enum name="URIType" cname="GstURIType" type="enum">
+      <member cname="GST_URI_UNKNOWN" name="Unknown" />
+      <member cname="GST_URI_SINK" name="Sink" />
+      <member cname="GST_URI_SRC" name="Src" />
+    </enum>
     <callback name="BusFunc" cname="GstBusFunc">
       <return-type type="gboolean" />
       <parameters>
@@ -848,6 +853,77 @@
         <return-type type="void" />
         <parameters>
           <parameter type="GstTagMergeMode" name="mode" />
+        </parameters>
+      </method>
+    </interface>
+    <interface name="URIHandler" cname="GstURIHandler">
+      <class_struct cname="GstURIHandlerInterface">
+        <field name="Parent" cname="parent" type="GTypeInterface" />
+        <method signal_vm="new_uri" />
+        <method vm="get_type" />
+        <method vm="get_protocols" />
+        <method vm="get_uri" />
+        <method vm="set_uri" />
+        <method vm="get_type_full" />
+        <method vm="get_protocols_full" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING - 2" />
+      </class_struct>
+      <signal name="NewUri" cname="new-uri" when="LAST" field_name="new_uri">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="const-gchar*" name="uri" />
+        </parameters>
+      </signal>
+      <virtual_method name="GetType" cname="get_type" shared="true">
+        <return-type type="GstURIType" />
+      </virtual_method>
+      <virtual_method name="GetProtocols" cname="get_protocols" shared="true">
+        <return-type type="gchar**" />
+      </virtual_method>
+      <virtual_method name="GetUri" cname="get_uri">
+        <return-type type="const-gchar*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="SetUri" cname="set_uri">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="uri" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetTypeFull" cname="get_type_full" shared="true">
+        <return-type type="GstURIType" />
+        <parameters>
+          <parameter type="GType" name="type" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetProtocolsFull" cname="get_protocols_full" shared="true">
+        <return-type type="gchar**" />
+        <parameters>
+          <parameter type="GType" name="type" />
+        </parameters>
+      </virtual_method>
+      <method name="GetProtocols" cname="gst_uri_handler_get_protocols">
+        <return-type type="gchar**" />
+      </method>
+      <method name="GetType" cname="gst_uri_handler_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="GetUri" cname="gst_uri_handler_get_uri">
+        <return-type type="const-gchar*" />
+      </method>
+      <method name="GetUriType" cname="gst_uri_handler_get_uri_type">
+        <return-type type="guint" />
+      </method>
+      <constructor cname="gst_uri_handler_new_uri">
+        <parameters>
+          <parameter type="GstURIHandler*" name="handler" />
+          <parameter type="const-gchar*" name="uri" />
+        </parameters>
+      </constructor>
+      <method name="SetUri" cname="gst_uri_handler_set_uri">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="uri" />
         </parameters>
       </method>
     </interface>
@@ -1755,6 +1831,14 @@
       </method>
       <method name="LostState" cname="gst_element_lost_state">
         <return-type type="void" />
+      </method>
+      <method name="MakeFromUri" cname="gst_element_make_from_uri" shared="true">
+        <return-type type="GstElement*" />
+        <parameters>
+          <parameter type="const-GstURIType" name="type" />
+          <parameter type="const-gchar*" name="uri" />
+          <parameter type="const-gchar*" name="elementname" />
+        </parameters>
       </method>
       <method name="MessageFull" cname="gst_element_message_full">
         <return-type type="void" />
@@ -5644,9 +5728,6 @@
       <method name="UpdateRegistry" cname="gst_update_registry" shared="true">
         <return-type type="gboolean" />
       </method>
-      <method name="UriTypeGetType" cname="gst_uri_type_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
       <method name="VersionString" cname="gst_version_string" shared="true">
         <return-type type="gchar*" />
       </method>
@@ -5786,6 +5867,53 @@
           <parameter type="const-gchar*" name="nick" />
           <parameter type="const-gchar*" name="blurb" />
           <parameter type="GstTagMergeFunc" name="func" />
+        </parameters>
+      </method>
+    </class>
+    <class name="Uri" cname="GstUri_">
+      <method name="Construct" cname="gst_uri_construct" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="protocol" />
+          <parameter type="const-gchar*" name="location" />
+        </parameters>
+      </method>
+      <method name="GetLocation" cname="gst_uri_get_location" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="uri" />
+        </parameters>
+      </method>
+      <method name="GetProtocol" cname="gst_uri_get_protocol" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="uri" />
+        </parameters>
+      </method>
+      <method name="HasProtocol" cname="gst_uri_has_protocol" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="uri" />
+          <parameter type="const-gchar*" name="protocol" />
+        </parameters>
+      </method>
+      <method name="IsValid" cname="gst_uri_is_valid" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="uri" />
+        </parameters>
+      </method>
+      <method name="ProtocolIsSupported" cname="gst_uri_protocol_is_supported" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-GstURIType" name="type" />
+          <parameter type="const-gchar*" name="protocol" />
+        </parameters>
+      </method>
+      <method name="ProtocolIsValid" cname="gst_uri_protocol_is_valid" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="protocol" />
         </parameters>
       </method>
     </class>

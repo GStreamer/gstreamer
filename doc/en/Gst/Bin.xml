@@ -56,7 +56,8 @@
     
     
     
-    <Member MemberName=".ctor">
+    
+  <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Bin (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
@@ -81,16 +82,7 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="element" Type="Gst.Element" /></Parameters>
       <Docs><param name="element">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="AddMany">
-      <MemberSignature Language="C#" Value="public bool AddMany (Gst.Element[] elements);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="elements" Type="Gst.Element[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters>
-      <Docs><param name="elements">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="AsyncHandling">
+    </Member><Member MemberName="Add"><MemberSignature Language="C#" Value="public bool Add (Gst.Element[] elements);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="elements" Type="Gst.Element[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters><Docs><param name="elements">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="AsyncHandling">
       <MemberSignature Language="C#" Value="public bool AsyncHandling { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
@@ -108,14 +100,6 @@
       <Attributes><Attribute><AttributeName>GLib.Signal("child-added")</AttributeName></Attribute></Attributes>
       <ReturnValue><ReturnType>Gst.ChildAddedHandler</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="ChildBus">
-      <MemberSignature Language="C#" Value="public Gst.Bus ChildBus { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Bus</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="ChildRemoved">
       <MemberSignature Language="C#" Value="public event Gst.ChildRemovedHandler ChildRemoved;" />
       <MemberType>Event</MemberType>
@@ -125,22 +109,6 @@
       <Attributes><Attribute><AttributeName>GLib.Signal("child-removed")</AttributeName></Attribute></Attributes>
       <ReturnValue><ReturnType>Gst.ChildRemovedHandler</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Children">
-      <MemberSignature Language="C#" Value="public Gst.Element[] Children { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Element[]</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="ChildrenCookie">
-      <MemberSignature Language="C#" Value="public uint ChildrenCookie { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="ChildrenCount">
       <MemberSignature Language="C#" Value="public uint ChildrenCount { get; }" />
       <MemberType>Property</MemberType>
@@ -148,22 +116,6 @@
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="ClockDirty">
-      <MemberSignature Language="C#" Value="public bool ClockDirty { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="ClockProvider">
-      <MemberSignature Language="C#" Value="public Gst.Element ClockProvider { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="DoLatency">
       <MemberSignature Language="C#" Value="public event Gst.DoLatencyHandler DoLatency;" />
@@ -192,17 +144,7 @@
       <Attributes><Attribute><AttributeName>GLib.Signal("element-removed")</AttributeName></Attribute></Attributes>
       <ReturnValue><ReturnType>Gst.ElementRemovedHandler</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="FindUnconnectedPad">
-      <MemberSignature Language="C#" Value="public Gst.Pad FindUnconnectedPad (Gst.PadDirection direction);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes><Attribute><AttributeName>System.Obsolete</AttributeName></Attribute></Attributes>
-      <ReturnValue><ReturnType>Gst.Pad</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="direction" Type="Gst.PadDirection" /></Parameters>
-      <Docs><param name="direction">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="FindUnlinkedPad">
+    </Member><Member MemberName="Elements"><MemberSignature Language="C#" Value="public System.Collections.IEnumerable Elements { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Collections.IEnumerable</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="ElementsRecurse"><MemberSignature Language="C#" Value="public System.Collections.IEnumerable ElementsRecurse { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Collections.IEnumerable</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="ElementsSorted"><MemberSignature Language="C#" Value="public System.Collections.IEnumerable ElementsSorted { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Collections.IEnumerable</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="EmitChildAdded"><MemberSignature Language="C#" Value="public void EmitChildAdded (Gst.Object child);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="child" Type="Gst.Object" /></Parameters><Docs><param name="child">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="EmitChildRemoved"><MemberSignature Language="C#" Value="public void EmitChildRemoved (Gst.Object child);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="child" Type="Gst.Object" /></Parameters><Docs><param name="child">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="FindUnlinkedPad">
       <MemberSignature Language="C#" Value="public Gst.Pad FindUnlinkedPad (Gst.PadDirection direction);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -211,7 +153,7 @@
       <ReturnValue><ReturnType>Gst.Pad</ReturnType></ReturnValue>
       <Parameters><Parameter Name="direction" Type="Gst.PadDirection" /></Parameters>
       <Docs><param name="direction">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="GetByInterface">
+    </Member><Member MemberName="GetAllByInterface"><MemberSignature Language="C#" Value="public System.Collections.IEnumerable GetAllByInterface (GLib.GType type);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Collections.IEnumerable</ReturnType></ReturnValue><Parameters><Parameter Name="type" Type="GLib.GType" /></Parameters><Docs><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetAllByInterface"><MemberSignature Language="C#" Value="public System.Collections.IEnumerable GetAllByInterface (Type type);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Collections.IEnumerable</ReturnType></ReturnValue><Parameters><Parameter Name="type" Type="System.Type" /></Parameters><Docs><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetByInterface">
       <MemberSignature Language="C#" Value="public Gst.Element GetByInterface (GLib.GType iface);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -220,7 +162,7 @@
       <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
       <Parameters><Parameter Name="iface" Type="GLib.GType" /></Parameters>
       <Docs><param name="iface">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="GetByName">
+    </Member><Member MemberName="GetByInterface"><MemberSignature Language="C#" Value="public Gst.Element GetByInterface (Type type);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue><Parameters><Parameter Name="type" Type="System.Type" /></Parameters><Docs><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetByName">
       <MemberSignature Language="C#" Value="public Gst.Element GetByName (string name);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -263,22 +205,6 @@
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Messages">
-      <MemberSignature Language="C#" Value="public GLib.List Messages { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Numchildren">
-      <MemberSignature Language="C#" Value="public int Numchildren { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="OnAddElement">
       <MemberSignature Language="C#" Value="protected virtual bool OnAddElement (Gst.Element element);" />
@@ -360,22 +286,6 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="element" Type="Gst.Element" /></Parameters>
       <Docs><param name="element">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Polling">
-      <MemberSignature Language="C#" Value="public bool Polling { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="ProvidedClock">
-      <MemberSignature Language="C#" Value="public Gst.Clock ProvidedClock { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Clock</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="RecalculateLatency">
       <MemberSignature Language="C#" Value="public bool RecalculateLatency ();" />
       <MemberType>Method</MemberType>
@@ -394,23 +304,5 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="element" Type="Gst.Element" /></Parameters>
       <Docs><param name="element">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="RemoveMany">
-      <MemberSignature Language="C#" Value="public bool RemoveMany (Gst.Element[] elements);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="elements" Type="Gst.Element[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters>
-      <Docs><param name="elements">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="StateDirty">
-      <MemberSignature Language="C#" Value="public bool StateDirty { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member>
-  </Members>
+    </Member><Member MemberName="Remove"><MemberSignature Language="C#" Value="public bool Remove (Gst.Element[] elements);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="elements" Type="Gst.Element[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters><Docs><param name="elements">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="SinkElements"><MemberSignature Language="C#" Value="public System.Collections.IEnumerable SinkElements { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Collections.IEnumerable</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="SourceElements"><MemberSignature Language="C#" Value="public System.Collections.IEnumerable SourceElements { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Collections.IEnumerable</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member></Members>
 </Type>

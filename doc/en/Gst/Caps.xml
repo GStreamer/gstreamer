@@ -131,7 +131,7 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters />
       <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="GetEnumerator">
+    </Member><Member MemberName="FromString"><MemberSignature Language="C#" Value="public static Gst.Caps FromString (string str1ng);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue><Parameters><Parameter Name="str1ng" Type="System.String" /></Parameters><Docs><param name="str1ng">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetEnumerator">
       <MemberSignature Language="C#" Value="public System.Collections.IEnumerator GetEnumerator ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -279,15 +279,6 @@
       <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
       <Parameters />
       <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="NewFromString">
-      <MemberSignature Language="C#" Value="public static Gst.Caps NewFromString (string str1ng);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="str1ng" Type="System.String" /></Parameters>
-      <Docs><param name="str1ng">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="Normalize">
       <MemberSignature Language="C#" Value="public Gst.Caps Normalize ();" />
       <MemberType>Method</MemberType>

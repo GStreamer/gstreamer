@@ -136,7 +136,7 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="field_name" Type="System.String" /><Parameter Name="target" Type="System.Int32" /></Parameters>
       <Docs><param name="field_name">To be added.</param><param name="target">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Get">
+    </Member><Member MemberName="FromString"><MemberSignature Language="C#" Value="public static Gst.Structure FromString (string structure);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue><Parameters><Parameter Name="structure" Type="System.String" /></Parameters><Docs><param name="structure">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Get">
       <MemberSignature Language="C#" Value="public object Get (string field);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -205,15 +205,6 @@
       </AssemblyInfo>
       <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="NewFromString">
-      <MemberSignature Language="C#" Value="public static Gst.Structure NewFromString (string structure);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="structure" Type="System.String" /></Parameters>
-      <Docs><param name="structure">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="RemoveAllFields">
       <MemberSignature Language="C#" Value="public void RemoveAllFields ();" />
       <MemberType>Method</MemberType>

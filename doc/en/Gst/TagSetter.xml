@@ -19,34 +19,7 @@
     
     
     
-    <Member MemberName="AddTagValist">
-      <MemberSignature Language="C#" Value="public void AddTagValist (Gst.TagMergeMode mode, string tag, IntPtr var_args);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="mode" Type="Gst.TagMergeMode" /><Parameter Name="tag" Type="System.String" /><Parameter Name="var_args" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="mode">To be added.</param><param name="tag">To be added.</param><param name="var_args">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="AddTagValistValues">
-      <MemberSignature Language="C#" Value="public void AddTagValistValues (Gst.TagMergeMode mode, string tag, IntPtr var_args);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="mode" Type="Gst.TagMergeMode" /><Parameter Name="tag" Type="System.String" /><Parameter Name="var_args" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="mode">To be added.</param><param name="tag">To be added.</param><param name="var_args">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="MergeTags">
-      <MemberSignature Language="C#" Value="public void MergeTags (Gst.TagList list, Gst.TagMergeMode mode);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="list" Type="Gst.TagList" /><Parameter Name="mode" Type="Gst.TagMergeMode" /></Parameters>
-      <Docs><param name="list">To be added.</param><param name="mode">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="ResetTags">
+    <Member MemberName="AddTags"><MemberSignature Language="C#" Value="public void AddTags (Gst.TagList list, Gst.TagMergeMode mode);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="list" Type="Gst.TagList" /><Parameter Name="mode" Type="Gst.TagMergeMode" /></Parameters><Docs><param name="list">To be added.</param><param name="mode">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="ResetTags">
       <MemberSignature Language="C#" Value="public void ResetTags ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>

@@ -20,7 +20,8 @@
     
     
     
-    <Member MemberName=".ctor">
+    
+  <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Util ();" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
@@ -82,7 +83,7 @@
       <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
       <Parameters />
       <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Timestamp">
+    </Member><Member MemberName="StateChangeReturnGetName"><MemberSignature Language="C#" Value="public static string StateChangeReturnGetName (Gst.StateChangeReturn state_ret);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.String</ReturnType></ReturnValue><Parameters><Parameter Name="state_ret" Type="Gst.StateChangeReturn" /></Parameters><Docs><param name="state_ret">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="StateGetName"><MemberSignature Language="C#" Value="public static string StateGetName (Gst.State state);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.String</ReturnType></ReturnValue><Parameters><Parameter Name="state" Type="Gst.State" /></Parameters><Docs><param name="state">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Timestamp">
       <MemberSignature Language="C#" Value="public static ulong Timestamp { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
@@ -90,6 +91,5 @@
       </AssemblyInfo>
       <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member>
-  </Members>
+    </Member><Member MemberName="UriProtocolIsSupported"><MemberSignature Language="C#" Value="public static bool UriProtocolIsSupported (Gst.URIType type, string protocol);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="type" Type="Gst.URIType" /><Parameter Name="protocol" Type="System.String" /></Parameters><Docs><param name="type">To be added.</param><param name="protocol">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member></Members>
 </Type>

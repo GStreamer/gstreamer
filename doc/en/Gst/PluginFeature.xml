@@ -1,5 +1,5 @@
 <Type Name="PluginFeature" FullName="Gst.PluginFeature">
-  <TypeSignature Language="C#" Value="public abstract class PluginFeature : Gst.Object" />
+  <TypeSignature Language="C#" Value="public class PluginFeature : Gst.Object" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>

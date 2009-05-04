@@ -1,5 +1,5 @@
 <Type Name="MiniObject" FullName="Gst.MiniObject">
-  <TypeSignature Language="C#" Value="public abstract class MiniObject : GLib.Opaque" />
+  <TypeSignature Language="C#" Value="public class MiniObject : GLib.Opaque" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>

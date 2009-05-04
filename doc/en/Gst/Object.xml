@@ -1,5 +1,5 @@
 <Type Name="Object" FullName="Gst.Object">
-  <TypeSignature Language="C#" Value="public abstract class Object : GLib.Object" />
+  <TypeSignature Language="C#" Value="public class Object : GLib.Object" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -56,7 +56,7 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="objects" Type="Gst.Object[]" /><Parameter Name="name" Type="System.String" /></Parameters>
       <Docs><param name="objects">To be added.</param><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Flags">
+    </Member><Member MemberName="Connect"><MemberSignature Language="C#" Value="public void Connect (string signal, Gst.DynamicSignalHandler handler);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="signal" Type="System.String" /><Parameter Name="handler" Type="Gst.DynamicSignalHandler" /></Parameters><Docs><param name="signal">To be added.</param><param name="handler">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Disconnect"><MemberSignature Language="C#" Value="public void Disconnect (string signal, Gst.DynamicSignalHandler handler);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="signal" Type="System.String" /><Parameter Name="handler" Type="Gst.DynamicSignalHandler" /></Parameters><Docs><param name="signal">To be added.</param><param name="handler">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Emit"><MemberSignature Language="C#" Value="public object Emit (string signal, object[] parameters);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue><Parameters><Parameter Name="signal" Type="System.String" /><Parameter Name="parameters" Type="System.Object[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters><Docs><param name="signal">To be added.</param><param name="parameters">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Flags">
       <MemberSignature Language="C#" Value="public Gst.ObjectFlags Flags { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
@@ -81,7 +81,7 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="ancestor" Type="Gst.Object" /></Parameters>
       <Docs><param name="ancestor">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Lock">
+    </Member><Member MemberName="Item"><MemberSignature Language="C#" Value="public object this[string property] { set; get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue><Parameters><Parameter Name="property" Type="System.String" /></Parameters><Docs><param name="property">To be added.</param><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Lock">
       <MemberSignature Language="C#" Value="public void Lock ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -198,4 +198,9 @@
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     </Member>
   </Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>System.Reflection.DefaultMember("Item")</AttributeName>
+    </Attribute>
+  </Attributes>
 </Type>

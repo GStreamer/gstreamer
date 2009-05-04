@@ -293,11 +293,13 @@
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_send_event']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_seek_simple']" name="name">Seek</attr>
   <remove-attr path="/api/namespace/object[@name='Element']/field[@name='CurrentState']" name="hidden"/>
+  <move-node path="/api/namespace/object[@name='Element']/method[@cname='gst_element_make_from_uri']">/api/namespace/object[@name='ElementFactory']</move-node>
   
   <attr path="/api/namespace/struct[@name='ElementDetails']" name="internal">1</attr>
 
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Make']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Create']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='MakeFromUri']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_uri_protocols']/return-type" name="null_term_array">1</attr>
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_uri_protocols']/return-type" name="owned">false</attr>
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_uri_protocols']/return-type" name="elements_owned">false</attr>
@@ -308,8 +310,7 @@
   <attr path="/api/namespace/object[@name='ElementFactory']/field[@name='UriProtocols']" name="hidden">1</attr>
   <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
   <attr path="/api/namespace/object[@name='ElementFactory']/field[@name='UriType']" name="hidden">1</attr>
-  <!-- FIXME: Add this once we bind gsturi.h
-  <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_uri_type']/return-type" name="type">GstURIType</attr>-->
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_uri_type']/return-type" name="type">GstURIType</attr>
 
   <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_LOCKED_STATE']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
@@ -944,10 +945,21 @@
 
   <attr path="/api/namespace/struct[@name='TypeNameData']" name="hidden">1</attr>
 
+  <move-node path="/api/namespace/class[@name='Uri']/method[@cname='gst_uri_protocol_is_supported']">/api/namespace/class[@name='Util']</move-node>
+  <attr path="/api/namespace/class[@name='Uri']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/interface[@name='URIHandler']/virtual_method[@cname='get_type']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@name='URIHandler']/virtual_method[@cname='get_protocols']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@name='URIHandler']/method[@cname='gst_uri_handler_get_protocols']/return-type" name="null_term_array">true</attr>
+  <attr path="/api/namespace/interface[@name='URIHandler']/method[@cname='gst_uri_handler_get_uri_type']/return-type" name="type">GstURIType</attr>
+
+  <attr path="/api/namespace/enum[@name='URIType']" name="gtype">gst_uri_type_get_type</attr>
+
   <attr path="/api/namespace/class[@name='Util']" name="disable_void_ctor">1</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_array_binary_search']" name="hidden">1</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_flow_get_name']" name="name">FlowGetName</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_flow_get_name']/parameters/parameter" name="name">flow_ret</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_uri_protocol_is_supported']" name="name">UriProtocolIsSupported</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_formats_contains']" name="hidden">1</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_dump_mem']" name="hidden">1</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_gdouble_to_guint64']" name="hidden">1</attr>
