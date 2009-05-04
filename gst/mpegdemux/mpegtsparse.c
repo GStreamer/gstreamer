@@ -274,6 +274,7 @@ mpegts_parse_init (MpegTSParse * parse, MpegTSParseClass * klass)
   parse->programs = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) mpegts_parse_free_program);
   parse->psi_pids = g_hash_table_new (g_direct_hash, g_direct_equal);
+  parse->pes_pids = g_hash_table_new (g_direct_hash, g_direct_equal);
   mpegts_parse_reset (parse);
 }
 
@@ -303,6 +304,7 @@ mpegts_parse_finalize (GObject * object)
   }
   g_hash_table_destroy (parse->programs);
   g_hash_table_destroy (parse->psi_pids);
+  g_hash_table_destroy (parse->pes_pids);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
     G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -807,6 +809,10 @@ mpegts_parse_is_psi (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
   if (g_hash_table_lookup (parse->psi_pids,
           GINT_TO_POINTER ((gint) packet->pid)) != NULL)
     retval = TRUE;
+  /* check is it is a pes pid */
+  if (g_hash_table_lookup (parse->pes_pids,
+          GINT_TO_POINTER ((gint) packet->pid)) != NULL)
+    return FALSE;
   if (!retval) {
     if (packet->payload_unit_start_indicator) {
       table_id = *(packet->data);
@@ -979,10 +985,13 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
         gst_structure_get_uint (stream, "pid", &pid);
         gst_structure_get_uint (stream, "stream-type", &stream_type);
         mpegts_parse_program_remove_stream (parse, program, (guint16) pid);
+        g_hash_table_remove (parse->pes_pids, GINT_TO_POINTER ((gint) pid));
       }
 
       /* remove pcr stream */
       mpegts_parse_program_remove_stream (parse, program, program->pcr_pid);
+      g_hash_table_remove (parse->pes_pids,
+          GINT_TO_POINTER ((gint) program->pcr_pid));
 
       gst_structure_free (program->pmt_info);
       program->pmt_info = NULL;
@@ -999,6 +1008,8 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   program->pmt_pid = pmt_pid;
   program->pcr_pid = pcr_pid;
   mpegts_parse_program_add_stream (parse, program, (guint16) pcr_pid, -1);
+  g_hash_table_insert (parse->pes_pids, GINT_TO_POINTER ((gint) pcr_pid),
+      GINT_TO_POINTER (1));
 
   for (i = 0; i < gst_value_list_get_size (new_streams); ++i) {
     value = gst_value_list_get_value (new_streams, i);
@@ -1008,6 +1019,9 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
     gst_structure_get_uint (stream, "stream-type", &stream_type);
     mpegts_parse_program_add_stream (parse, program,
         (guint16) pid, (guint8) stream_type);
+    g_hash_table_insert (parse->pes_pids, GINT_TO_POINTER ((gint) pid),
+        GINT_TO_POINTER ((gint) 1));
+
   }
   GST_OBJECT_UNLOCK (parse);
 
