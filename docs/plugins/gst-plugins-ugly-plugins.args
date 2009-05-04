@@ -874,7 +874,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Encoding Engine Quality</NICK>
-<BLURB>Quality/speed of the encoding engine.</BLURB>
+<BLURB>Quality/speed of the encoding engine, this does not affect the bitrate!.</BLURB>
 <DEFAULT>Standard</DEFAULT>
 </ARG>
 

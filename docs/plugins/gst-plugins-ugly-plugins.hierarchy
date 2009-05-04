@@ -57,4 +57,5 @@ GInterface
   GstChildProxy
   GstURIHandler
   GstTagSetter
+  GstPreset
   GstRTSPExtension
