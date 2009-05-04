@@ -94,7 +94,21 @@ static GstFlowReturn gst_jasper_enc_chain (GstPad * pad, GstBuffer * buffer);
 typedef GstJasperEnc GstJp2kEnc;
 typedef GstJasperEncClass GstJp2kEncClass;
 
-GST_BOILERPLATE (GstJp2kEnc, gst_jasper_enc, GstElement, GST_TYPE_ELEMENT);
+static void
+_do_init (GType object_type)
+{
+  const GInterfaceInfo preset_interface_info = {
+    NULL,                       /* interface_init */
+    NULL,                       /* interface_finalize */
+    NULL                        /* interface_data */
+  };
+
+  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
+      &preset_interface_info);
+}
+
+GST_BOILERPLATE_FULL (GstJp2kEnc, gst_jasper_enc, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
 static void
 gst_jasper_enc_base_init (gpointer g_class)
