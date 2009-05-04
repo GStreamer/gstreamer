@@ -613,33 +613,27 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gint
-find_stream_by_id (GstRTSPStream * stream, gconstpointer a)
+find_stream_by_id (GstRTSPStream * stream, gint * id)
 {
-  gint id = GPOINTER_TO_INT (a);
-
-  if (stream->id == id)
+  if (stream->id == *id)
     return 0;
 
   return -1;
 }
 
 static gint
-find_stream_by_channel (GstRTSPStream * stream, gconstpointer a)
+find_stream_by_channel (GstRTSPStream * stream, gint * channel)
 {
-  gint channel = GPOINTER_TO_INT (a);
-
-  if (stream->channel[0] == channel || stream->channel[1] == channel)
+  if (stream->channel[0] == *channel || stream->channel[1] == *channel)
     return 0;
 
   return -1;
 }
 
 static gint
-find_stream_by_pt (GstRTSPStream * stream, gconstpointer a)
+find_stream_by_pt (GstRTSPStream * stream, gint * pt)
 {
-  gint pt = GPOINTER_TO_INT (a);
-
-  if (stream->pt == pt)
+  if (stream->pt == *pt)
     return 0;
 
   return -1;
@@ -774,8 +768,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
       /* If we have a dynamic payload type, see if we have a stream with the
        * same payload number. If there is one, they are part of the same
        * container and we only need to add one pad. */
-      if (find_stream (src, GINT_TO_POINTER (stream->pt),
-              (gpointer) find_stream_by_pt)) {
+      if (find_stream (src, &stream->pt, (gpointer) find_stream_by_pt)) {
         stream->container = TRUE;
       }
     }
@@ -1753,8 +1746,7 @@ new_session_pad (GstElement * session, GstPad * pad, GstRTSPSrc * src)
 
   GST_DEBUG_OBJECT (src, "stream: %u, SSRC %d, PT %d", id, ssrc, pt);
 
-  stream =
-      find_stream (src, GINT_TO_POINTER (id), (gpointer) find_stream_by_id);
+  stream = find_stream (src, &id, (gpointer) find_stream_by_id);
   if (stream == NULL)
     goto unknown_stream;
 
@@ -1815,9 +1807,7 @@ request_pt_map (GstElement * sess, guint session, guint pt, GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "getting pt map for pt %d in session %d", pt, session);
 
   GST_RTSP_STATE_LOCK (src);
-  stream =
-      find_stream (src, GINT_TO_POINTER (session),
-      (gpointer) find_stream_by_id);
+  stream = find_stream (src, &session, (gpointer) find_stream_by_id);
   if (!stream)
     goto unknown_stream;
 
@@ -1844,9 +1834,7 @@ gst_rtspsrc_do_stream_eos (GstRTSPSrc * src, guint session)
   GST_DEBUG_OBJECT (src, "setting stream for session %u to EOS", session);
 
   /* get stream for session */
-  stream =
-      find_stream (src, GINT_TO_POINTER (session),
-      (gpointer) find_stream_by_id);
+  stream = find_stream (src, &session, (gpointer) find_stream_by_id);
   if (!stream)
     goto unknown_stream;
 
@@ -2836,9 +2824,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 
   channel = message.type_data.data.channel;
 
-  stream =
-      find_stream (src, GINT_TO_POINTER (channel),
-      (gpointer) find_stream_by_channel);
+  stream = find_stream (src, &channel, (gpointer) find_stream_by_channel);
   if (!stream)
     goto unknown_stream;
 
