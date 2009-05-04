@@ -382,14 +382,18 @@ static void
 gst_camerabin_handle_scene_mode (GstCameraBin * camera, GstSceneMode scene_mode)
 {
   if (scene_mode == GST_PHOTOGRAPHY_SCENE_MODE_NIGHT) {
-    GST_DEBUG ("enabling night mode, lowering fps");
-    /* Make camerabin select the lowest allowed frame rate */
-    camera->night_mode = TRUE;
-    /* Remember frame rate before setting night mode */
-    camera->pre_night_fps_n = camera->fps_n;
-    camera->pre_night_fps_d = camera->fps_d;
-    g_signal_emit_by_name (camera, "user-res-fps", camera->width,
-        camera->height, 0, 0, 0);
+    if (!camera->night_mode) {
+      GST_DEBUG ("enabling night mode, lowering fps");
+      /* Make camerabin select the lowest allowed frame rate */
+      camera->night_mode = TRUE;
+      /* Remember frame rate before setting night mode */
+      camera->pre_night_fps_n = camera->fps_n;
+      camera->pre_night_fps_d = camera->fps_d;
+      g_signal_emit_by_name (camera, "user-res-fps", camera->width,
+          camera->height, 0, 0, 0);
+    } else {
+      GST_DEBUG ("night mode already enabled");
+    }
   } else {
     if (camera->night_mode) {
       GST_DEBUG ("disabling night mode, restoring fps to %d/%d",
