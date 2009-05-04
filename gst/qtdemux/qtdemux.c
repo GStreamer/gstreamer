@@ -584,28 +584,41 @@ gst_qtdemux_push_pending_newsegment (GstQTDemux * qtdemux)
   }
 }
 
+typedef struct
+{
+  guint64 media_time;
+} FindData;
+
+static gint
+find_func (QtDemuxSample * s1, guint64 * media_time, gpointer user_data)
+{
+  if (s1->timestamp > *media_time)
+    return 1;
+
+  return -1;
+}
+
 /* find the index of the sample that includes the data for @media_time
  *
- * Returns the index of the sample or n_samples when the sample was not
- * found.
+ * Returns the index of the sample.
  */
-/* FIXME, binary search would be nice here */
 static guint32
 gst_qtdemux_find_index (GstQTDemux * qtdemux, QtDemuxStream * str,
     guint64 media_time)
 {
-  guint32 i;
+  QtDemuxSample *result;
+  guint32 index;
 
-  if (str->n_samples == 0)
-    return 0;
+  result = gst_util_array_binary_search (str->samples, str->n_samples,
+      sizeof (QtDemuxSample), (GCompareDataFunc) find_func,
+      GST_SEARCH_MODE_BEFORE, &media_time, NULL);
 
-  for (i = 0; i < str->n_samples; i++) {
-    if (str->samples[i].timestamp > media_time) {
-      /* first sample after media_time, we need the previous one */
-      return (i == 0 ? 0 : i - 1);
-    }
-  }
-  return str->n_samples - 1;
+  if (G_LIKELY (result))
+    index = result - str->samples;
+  else
+    index = 0;
+
+  return index;
 }
 
 /* find the index of the keyframe needed to decode the sample at @index
