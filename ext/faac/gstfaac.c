@@ -118,9 +118,17 @@ gst_faac_get_type (void)
       0,
       (GInstanceInitFunc) gst_faac_init,
     };
+    const GInterfaceInfo preset_interface_info = {
+      NULL,                     /* interface_init */
+      NULL,                     /* interface_finalize */
+      NULL                      /* interface_data */
+    };
 
     gst_faac_type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstFaac", &gst_faac_info, 0);
+
+    g_type_add_interface_static (gst_faac_type, GST_TYPE_PRESET,
+        &preset_interface_info);
   }
 
   return gst_faac_type;
