@@ -197,14 +197,14 @@ speex_dec_convert (GstPad * pad,
 
   dec = GST_SPEEX_DEC (gst_pad_get_parent (pad));
 
-  if (dec->packetno < 1) {
-    res = FALSE;
-    goto cleanup;
-  }
-
   if (src_format == *dest_format) {
     *dest_value = src_value;
     res = TRUE;
+    goto cleanup;
+  }
+
+  if (dec->packetno < 1) {
+    res = FALSE;
     goto cleanup;
   }
 
