@@ -353,12 +353,17 @@ gst_lame_get_type (void)
       NULL,
       NULL
     };
+    static const GInterfaceInfo preset_info = {
+      NULL,
+      NULL,
+      NULL
+    };
 
     gst_lame_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstLame", &gst_lame_info, 0);
     g_type_add_interface_static (gst_lame_type, GST_TYPE_TAG_SETTER,
         &tag_setter_info);
-
+    g_type_add_interface_static (gst_lame_type, GST_TYPE_PRESET, &preset_info);
   }
   return gst_lame_type;
 }

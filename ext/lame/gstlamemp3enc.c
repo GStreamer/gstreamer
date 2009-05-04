@@ -203,10 +203,17 @@ gst_lamemp3enc_get_type (void)
       0,
       (GInstanceInitFunc) gst_lamemp3enc_init,
     };
+    static const GInterfaceInfo preset_info = {
+      NULL,
+      NULL,
+      NULL
+    };
 
     gst_lamemp3enc_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstLameMP3Enc",
         &gst_lamemp3enc_info, 0);
+    g_type_add_interface_static (gst_lamemp3enc_type, GST_TYPE_PRESET,
+        &preset_info);
   }
   return gst_lamemp3enc_type;
 }
