@@ -2937,6 +2937,9 @@ gst_camerabin_user_res_fps (GstCameraBin * camera, gint width, gint height,
   GST_INFO_OBJECT (camera, "switching resolution to %dx%d and fps to %d/%d",
       width, height, fps_n, fps_d);
 
+  /* Interrupt ongoing capture */
+  gst_camerabin_do_stop (camera);
+
   gst_element_get_state (GST_ELEMENT (camera), &state, &pending, 0);
   if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING) {
     GST_INFO_OBJECT (camera,
