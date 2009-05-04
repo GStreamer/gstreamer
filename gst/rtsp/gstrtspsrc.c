@@ -2465,7 +2465,7 @@ gst_rtspsrc_send_dummy_packets (GstRTSPSrc * src)
 {
   GList *walk;
 
-  if (!src->nat_method != GST_RTSP_NAT_DUMMY)
+  if (src->nat_method != GST_RTSP_NAT_DUMMY)
     return TRUE;
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
