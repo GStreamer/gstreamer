@@ -155,8 +155,15 @@ GST_DEBUG_CATEGORY_STATIC (flacenc_debug);
       NULL,                                                                     \
       NULL                                                                      \
     };                                                                          \
+    static const GInterfaceInfo preset_info = {                                 \
+      NULL,                                                                     \
+      NULL,                                                                     \
+      NULL                                                                      \
+    };                                                                          \
     g_type_add_interface_static (type, GST_TYPE_TAG_SETTER,                     \
                                  &tag_setter_info);                             \
+    g_type_add_interface_static (type, GST_TYPE_PRESET,                         \
+                                 &preset_info);                                 \
   }G_STMT_END
 
 GST_BOILERPLATE_FULL (GstFlacEnc, gst_flac_enc, GstElement, GST_TYPE_ELEMENT,
