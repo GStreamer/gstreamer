@@ -283,7 +283,8 @@ gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
           DEFAULT_QUALITY, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_ENCODING_ENGINE_QUALITY, g_param_spec_enum ("encoding-engine-quality",
-          "Encoding Engine Quality", "Quality/speed of the encoding engine",
+          "Encoding Engine Quality", "Quality/speed of the encoding engine, "
+          "this does not affect the bitrate!",
           GST_TYPE_LAMEMP3ENC_ENCODING_ENGINE_QUALITY,
           DEFAULT_ENCODING_ENGINE_QUALITY, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MONO,
