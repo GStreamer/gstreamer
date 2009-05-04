@@ -388,11 +388,14 @@ gst_output_selector_chain (GstPad * pad, GstBuffer * buf)
     /* Do the switch */
     gst_output_selector_switch (osel);
   }
+
+  if (osel->latest_buffer) {
+    gst_buffer_unref (osel->latest_buffer);
+    osel->latest_buffer = NULL;
+  }
   
   if (osel->resend_latest) {
     /* Keep reference to latest buffer to resend it after switch */
-    if (osel->latest_buffer)
-      gst_buffer_unref (osel->latest_buffer);
     osel->latest_buffer = gst_buffer_ref (buf);
   }
 
