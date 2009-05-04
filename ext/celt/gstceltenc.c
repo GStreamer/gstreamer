@@ -106,9 +106,16 @@ static void
 gst_celt_enc_setup_interfaces (GType celtenc_type)
 {
   static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
+  const GInterfaceInfo preset_interface_info = {
+    NULL,                       /* interface_init */
+    NULL,                       /* interface_finalize */
+    NULL                        /* interface_data */
+  };
 
   g_type_add_interface_static (celtenc_type, GST_TYPE_TAG_SETTER,
       &tag_setter_info);
+  g_type_add_interface_static (celtenc_type, GST_TYPE_PRESET,
+      &preset_interface_info);
 
   GST_DEBUG_CATEGORY_INIT (celtenc_debug, "celtenc", 0, "Celt encoder");
 }
