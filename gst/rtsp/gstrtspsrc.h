@@ -154,6 +154,7 @@ struct _GstRTSPSrc {
   GstSegment       segment;
   gboolean         running;
   gboolean         need_range;
+  gboolean         skip;
   gint             free_channel;
   GstEvent        *close_segment;
   GstEvent        *start_segment;

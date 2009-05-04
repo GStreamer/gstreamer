@@ -1381,7 +1381,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   GstSeekFlags flags;
   GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
   gint64 cur, stop;
-  gboolean flush;
+  gboolean flush, skip;
   gboolean update;
   gboolean playing;
   GstSegment seeksegment = { 0, };
@@ -1409,6 +1409,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   /* get flush flag */
   flush = flags & GST_SEEK_FLAG_FLUSH;
+  skip = flags & GST_SEEK_FLAG_SKIP;
 
   /* now we need to make sure the streaming thread is stopped. We do this by
    * either sending a FLUSH_START event downstream which will cause the
@@ -1513,6 +1514,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
     stream->discont = TRUE;
   }
+  src->skip = skip;
 
   GST_RTSP_STREAM_UNLOCK (src);
 
@@ -4413,6 +4415,7 @@ restart:
   gst_segment_init (&src->segment, GST_FORMAT_TIME);
   src->need_range = TRUE;
   src->need_redirect = FALSE;
+  src->skip = FALSE;
 
   /* can't continue without a valid url */
   if (G_UNLIKELY (src->url == NULL))
@@ -4878,6 +4881,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   GstRTSPMessage response = { 0 };
   GstRTSPResult res;
   gchar *hval;
+  gfloat fval;
 
   GST_RTSP_STATE_LOCK (src);
 
@@ -4906,13 +4910,10 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
 
   if (segment->rate != 1.0) {
     hval = gst_rtspsrc_dup_printf ("%f", segment->rate);
-    gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, hval);
-    g_free (hval);
-  }
-
-  if (segment->applied_rate != 1.0) {
-    hval = gst_rtspsrc_dup_printf ("%f", segment->applied_rate);
-    gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, hval);
+    if (src->skip)
+      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, hval);
+    else
+      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, hval);
     g_free (hval);
   }
 
@@ -4927,28 +4928,19 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
           0) == GST_RTSP_OK)
     gst_rtspsrc_parse_range (src, hval, segment);
 
+  /* assume 1.0 rate now, overwrite when the SCALE or SPEED headers are present. */
+  segment->rate = 1.0;
+
   /* parse Speed header. This is the intended playback rate of the stream
    * and should be put in the NEWSEGMENT rate field. */
   if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SPEED, &hval,
           0) == GST_RTSP_OK) {
-    gfloat fval;
-
     if (gst_rtspsrc_get_float (hval, &fval) > 0)
       segment->rate = fval;
-  } else {
-    segment->rate = 1.0;
-  }
-
-  /* parse Scale header. This is the playback rate as sent by the server
-   * and should be put in the NEWSEGMENT applied_rate field. */
-  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SCALE, &hval,
+  } else if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SCALE, &hval,
           0) == GST_RTSP_OK) {
-    gfloat fval;
-
     if (gst_rtspsrc_get_float (hval, &fval) > 0)
-      segment->applied_rate = fval;
-  } else {
-    segment->applied_rate = 1.0;
+      segment->rate = fval;
   }
 
   /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
