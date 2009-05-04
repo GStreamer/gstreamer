@@ -155,7 +155,7 @@ on_gst_buffer (GstElement * element, GstBuffer * buf, GstPad * pad,
   queue_output_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_output_buf");
   if (g_queue_get_length (queue_output_buf) > 2) {
 		GstGLBuffer *gst_gl_buf_old = g_queue_pop_head (queue_output_buf);
-		gst_buffer_unref (gst_gl_buf_old);
+		gst_buffer_unref (GST_BUFFER_CAST (gst_gl_buf_old));
 	}
 
   /* release clutter lock */
