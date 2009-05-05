@@ -182,7 +182,6 @@ gst_vdp_decoder_init (GstVdpDecoder * dec, GstVdpDecoderClass * klass)
       (GST_ELEMENT_CLASS (klass), "sink"), "sink");
   gst_pad_set_setcaps_function (dec->sink, gst_vdp_decoder_sink_set_caps);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sink);
-  gst_pad_set_active (dec->sink, TRUE);
 }
 
 static void
