@@ -489,9 +489,12 @@ gst_vdp_mpeg_decoder_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      g_mutex_lock (mpeg_dec->mutex);
       dec->device = gst_vdp_get_device (dec->display_name);
+      g_mutex_unlock (mpeg_dec->mutex);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_mutex_lock (mpeg_dec->mutex);
       gst_vdp_mpeg_decoder_reset (mpeg_dec);
 
       dec->device->vdp_decoder_destroy (mpeg_dec->decoder);
@@ -499,6 +502,7 @@ gst_vdp_mpeg_decoder_change_state (GstElement * element,
 
       g_object_unref (dec->device);
       dec->device = NULL;
+      g_mutex_unlock (mpeg_dec->mutex);
       break;
     default:
       break;
