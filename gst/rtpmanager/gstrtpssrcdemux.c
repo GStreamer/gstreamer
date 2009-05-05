@@ -483,7 +483,7 @@ gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstBuffer * buf)
           NULL);
       break;
     default:
-      goto invalid_rtcp;
+      goto unexpected_rtcp;
   }
 
   GST_DEBUG_OBJECT (demux, "received RTCP of SSRC %08x", ssrc);
@@ -510,6 +510,12 @@ invalid_rtcp:
         ("Dropping invalid RTCP packet"));
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
+  }
+unexpected_rtcp:
+  {
+    GST_DEBUG_OBJECT (demux, "dropping unexpected RTCP packet");
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
   }
 create_failed:
   {
