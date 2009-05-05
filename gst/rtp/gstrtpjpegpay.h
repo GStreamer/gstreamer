@@ -41,10 +41,13 @@ struct _GstRtpJPEGPay
 {
   GstBaseRTPPayload payload;
 
-  gint height;
   guint8 quality;
   guint8 type;
+
+  gint height;
   gint width;
+
+  guint8 quant;
 };
 
 struct _GstRtpJPEGPayClass
