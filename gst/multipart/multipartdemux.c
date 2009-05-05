@@ -192,6 +192,12 @@ gst_multipart_demux_init (GstMultipartDemux * multipart,
   multipart->autoscan = DEFAULT_AUTOSCAN;
 }
 
+void
+gst_multipart_pad_free (GstMultipartPad * mppad)
+{
+  g_free (mppad->mime);
+  g_free (mppad);
+}
 
 static void
 gst_multipart_demux_finalize (GObject * object)
@@ -201,6 +207,8 @@ gst_multipart_demux_finalize (GObject * object)
   g_object_unref (demux->adapter);
   g_free (demux->boundary);
   g_free (demux->mime_type);
+  g_slist_foreach (demux->srcpads, (GFunc) gst_multipart_pad_free, NULL);
+  g_slist_free (demux->srcpads);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
