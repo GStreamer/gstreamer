@@ -364,12 +364,9 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
 
   mpeg_dec = GST_VDP_MPEG_DECODER (GST_OBJECT_PARENT (pad));
 
-  g_mutex_lock (mpeg_dec->mutex);
-
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (mpeg_dec, "Received discont buffer");
     gst_vdp_mpeg_decoder_reset (mpeg_dec);
-    g_mutex_unlock (mpeg_dec->mutex);
     return GST_FLOW_OK;
   }
 
@@ -404,7 +401,6 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
 
         if (!gst_vdp_mpeg_decoder_parse_picture (mpeg_dec, packet_start,
                 packet_end)) {
-          g_mutex_unlock (mpeg_dec->mutex);
           return GST_FLOW_OK;
         }
         break;
@@ -442,8 +438,6 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
   if (mpeg_dec->vdp_info.slice_count > 0)
     ret = gst_vdp_mpeg_decoder_decode (mpeg_dec, GST_BUFFER_TIMESTAMP (buffer));
 
-  g_mutex_unlock (mpeg_dec->mutex);
-
   return ret;
 }
 
@@ -462,10 +456,7 @@ gst_vdp_mpeg_decoder_sink_event (GstPad * pad, GstEvent * event)
     {
       GST_DEBUG_OBJECT (mpeg_dec, "flush stop");
 
-      g_mutex_lock (mpeg_dec->mutex);
       gst_vdp_mpeg_decoder_reset (mpeg_dec);
-      g_mutex_unlock (mpeg_dec->mutex);
-
       res = gst_pad_push_event (dec->src, event);
 
       break;
@@ -581,8 +572,6 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
   mpeg_dec->decoder = VDP_INVALID_HANDLE;
   gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 
-  mpeg_dec->mutex = g_mutex_new ();
-
   mpeg_dec->broken_gop = FALSE;
 
   mpeg_dec->adapter = gst_adapter_new ();
@@ -596,7 +585,6 @@ gst_vdp_mpeg_decoder_finalize (GObject * object)
 {
   GstVdpMpegDecoder *mpeg_dec = (GstVdpMpegDecoder *) object;
 
-  g_mutex_free (mpeg_dec->mutex);
   g_object_unref (mpeg_dec->adapter);
 }
 

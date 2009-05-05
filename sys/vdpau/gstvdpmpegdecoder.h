@@ -47,8 +47,6 @@ struct _GstVdpMpegDecoder
   VdpPictureInfoMPEG1Or2 vdp_info;
   GstBuffer *f_buffer;
   GstBuffer *b_buffer;
-
-  GMutex *mutex;
   
   gboolean broken_gop;
   
