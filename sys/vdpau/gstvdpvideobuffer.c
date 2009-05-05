@@ -53,7 +53,7 @@ gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type,
   }
 
   buffer =
-      (GstVdpVideoBuffer *) gst_mini_object_new (GST_TYPE_VDPAU_VIDEO_BUFFER);
+      (GstVdpVideoBuffer *) gst_mini_object_new (GST_TYPE_VDP_VIDEO_BUFFER);
 
   buffer->device = g_object_ref (device);
   buffer->surface = surface;

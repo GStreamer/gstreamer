@@ -71,7 +71,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_INIT (gst_vdp_mpeg_decoder_debug, "vdpaumpegdec", 0, "VDPAU powered mpeg decoder");
 
 GST_BOILERPLATE_FULL (GstVdpMpegDecoder, gst_vdp_mpeg_decoder,
-    GstVdpDecoder, GST_TYPE_VDPAU_DECODER, DEBUG_INIT);
+    GstVdpDecoder, GST_TYPE_VDP_DECODER, DEBUG_INIT);
 
 static void gst_vdp_mpeg_decoder_init_info (VdpPictureInfoMPEG1Or2 * vdp_info);
 static void gst_vdp_mpeg_decoder_finalize (GObject * object);

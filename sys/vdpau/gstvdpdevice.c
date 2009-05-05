@@ -209,7 +209,7 @@ gst_vdp_device_new (const gchar * display_name)
 {
   GstVdpDevice *device;
 
-  device = g_object_new (GST_TYPE_VDPAU_DEVICE, "display", display_name, NULL);
+  device = g_object_new (GST_TYPE_VDP_DEVICE, "display", display_name, NULL);
 
   return device;
 }

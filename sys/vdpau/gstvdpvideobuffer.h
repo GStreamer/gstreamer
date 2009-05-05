@@ -30,10 +30,10 @@
 
 typedef struct _GstVdpVideoBuffer GstVdpVideoBuffer;
 
-#define GST_TYPE_VDPAU_VIDEO_BUFFER (gst_vdp_video_buffer_get_type())
+#define GST_TYPE_VDP_VIDEO_BUFFER (gst_vdp_video_buffer_get_type())
 
-#define GST_IS_VDPAU_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VDPAU_VIDEO_BUFFER))
-#define GST_VDP_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDPAU_VIDEO_BUFFER, GstVdpVideoBuffer))
+#define GST_IS_VDPAU_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VDP_VIDEO_BUFFER))
+#define GST_VDP_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDP_VIDEO_BUFFER, GstVdpVideoBuffer))
 
 struct _GstVdpVideoBuffer {
   GstBuffer buffer;
