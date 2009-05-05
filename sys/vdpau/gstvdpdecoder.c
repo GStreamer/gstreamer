@@ -65,12 +65,15 @@ gst_vdp_decoder_push_video_buffer (GstVdpDecoder * dec,
     GstVdpVideoBuffer * buffer)
 {
   if (GST_BUFFER_TIMESTAMP (buffer) == GST_CLOCK_TIME_NONE) {
-    GST_BUFFER_TIMESTAMP (buffer) =
-        gst_util_uint64_scale_int (GST_SECOND * dec->frame_nr,
+    GST_BUFFER_TIMESTAMP (buffer) = dec->time +
+        gst_util_uint64_scale_int (GST_SECOND,
         dec->framerate_denominator, dec->framerate_numerator);
-    dec->frame_nr++;
   }
   gst_buffer_set_caps (GST_BUFFER (buffer), GST_PAD_CAPS (dec->src));
+
+  GST_DEBUG_OBJECT (dec, "Pushin buffer with timestamp: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+  dec->time = GST_BUFFER_TIMESTAMP (buffer);
 
   return gst_pad_push (dec->src, GST_BUFFER (buffer));
 }
@@ -173,7 +176,7 @@ gst_vdp_decoder_init (GstVdpDecoder * dec, GstVdpDecoderClass * klass)
   dec->framerate_numerator = 0;
   dec->framerate_denominator = 0;
 
-  dec->frame_nr = 0;
+  dec->time = 0;
 
   dec->src = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (dec), dec->src);

@@ -52,7 +52,7 @@ struct _GstVdpDecoder {
   gint framerate_numerator, framerate_denominator;
   guint32 format;
 
-  gint frame_nr;
+  GstClockTime time;
 };
 
 struct _GstVdpDecoderClass {
