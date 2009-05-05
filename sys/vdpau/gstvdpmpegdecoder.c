@@ -143,6 +143,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
     GstClockTime timestamp)
 {
   GstVdpDecoder *dec;
+  VdpPictureInfoMPEG1Or2 *info;
   GstBuffer *buffer;
   GstVdpVideoBuffer *outbuf;
   VdpVideoSurface surface;
@@ -151,37 +152,37 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
   VdpStatus status;
 
   dec = GST_VDP_DECODER (mpeg_dec);
+  info = &mpeg_dec->vdp_info;
 
   buffer = gst_adapter_take_buffer (mpeg_dec->adapter,
       gst_adapter_available (mpeg_dec->adapter));
 
-  if (mpeg_dec->vdp_info.picture_coding_type != B_FRAME) {
-    if (mpeg_dec->vdp_info.backward_reference != VDP_INVALID_HANDLE) {
+  if (info->picture_coding_type != B_FRAME) {
+    if (info->backward_reference != VDP_INVALID_HANDLE) {
       gst_buffer_ref (mpeg_dec->b_buffer);
       gst_vdp_decoder_push_video_buffer (dec,
           GST_VDP_VIDEO_BUFFER (mpeg_dec->b_buffer));
     }
 
-    if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE) {
+    if (info->forward_reference != VDP_INVALID_HANDLE) {
       gst_buffer_unref (mpeg_dec->f_buffer);
-      mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
+      info->forward_reference = VDP_INVALID_HANDLE;
     }
 
-    mpeg_dec->vdp_info.forward_reference =
-        mpeg_dec->vdp_info.backward_reference;
+    info->forward_reference = info->backward_reference;
     mpeg_dec->f_buffer = mpeg_dec->b_buffer;
 
-    mpeg_dec->vdp_info.backward_reference = VDP_INVALID_HANDLE;
+    info->backward_reference = VDP_INVALID_HANDLE;
   }
 
   outbuf = gst_vdp_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
       dec->width, dec->height);
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-  if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE &&
-      mpeg_dec->vdp_info.picture_coding_type != I_FRAME)
+  if (info->forward_reference != VDP_INVALID_HANDLE &&
+      info->picture_coding_type != I_FRAME)
     gst_vdp_video_buffer_add_reference (outbuf,
         GST_VDP_VIDEO_BUFFER (mpeg_dec->f_buffer));
-  if (mpeg_dec->vdp_info.backward_reference != VDP_INVALID_HANDLE)
+  if (info->backward_reference != VDP_INVALID_HANDLE)
     gst_vdp_video_buffer_add_reference (outbuf,
         GST_VDP_VIDEO_BUFFER (mpeg_dec->b_buffer));
 
@@ -194,9 +195,9 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
   vbit[0].bitstream_bytes = GST_BUFFER_SIZE (buffer);
 
   status = device->vdp_decoder_render (mpeg_dec->decoder, surface,
-      (VdpPictureInfo *) & mpeg_dec->vdp_info, 1, vbit);
+      (VdpPictureInfo *) info, 1, vbit);
   gst_buffer_unref (buffer);
-  mpeg_dec->vdp_info.slice_count = 0;
+  info->slice_count = 0;
 
   if (status != VDP_STATUS_OK) {
     GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, READ,
@@ -209,10 +210,10 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
     return GST_FLOW_ERROR;
   }
 
-  if (mpeg_dec->vdp_info.picture_coding_type == B_FRAME) {
+  if (info->picture_coding_type == B_FRAME) {
     gst_vdp_decoder_push_video_buffer (dec, GST_VDP_VIDEO_BUFFER (outbuf));
   } else {
-    mpeg_dec->vdp_info.backward_reference = surface;
+    info->backward_reference = surface;
     mpeg_dec->b_buffer = GST_BUFFER (outbuf);
   }
 
