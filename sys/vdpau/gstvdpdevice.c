@@ -221,6 +221,8 @@ device_destroyed_cb (gpointer data, GObject * object)
   GHashTableIter iter;
   gpointer device;
 
+  GST_DEBUG ("Removing object from hash table");
+
   g_hash_table_iter_init (&iter, devices_hash);
   while (g_hash_table_iter_next (&iter, NULL, &device)) {
     if (device == object) {
