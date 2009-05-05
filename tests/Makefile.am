@@ -1,5 +1,5 @@
 if HAVE_GST_CHECK
-SUBDIRS_CHECK = check
+SUBDIRS_CHECK = check files
 else
 SUBDIRS_CHECK =
 endif
@@ -10,7 +10,13 @@ else
 SUBDIRS_ICLES =
 endif
 
-SUBDIRS = $(SUBDIRS_CHECK) $(SUBDIRS_ICLES) examples files
+if BUILD_EXAMPLES
+SUBDIR_EXAMPLES = examples
+else
+SUBDIR_EXAMPLES =
+endif
+
+SUBDIRS = $(SUBDIRS_CHECK) $(SUBDIRS_ICLES) $(SUBDIR_EXAMPLES)
 
 DIST_SUBDIRS = check icles examples files
 
