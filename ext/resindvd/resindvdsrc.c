@@ -1172,6 +1172,7 @@ static RsnNavResult
 rsn_dvdsrc_do_command (resinDvdSrc * src, GstNavigationCommand command)
 {
   RsnNavResult result = RSN_NAV_RESULT_NONE;
+  gint new_angle = 0;
 
   switch (command) {
     case GST_NAVIGATION_COMMAND_DVD_MENU:
@@ -1212,23 +1213,38 @@ rsn_dvdsrc_do_command (resinDvdSrc * src, GstNavigationCommand command)
 
     case GST_NAVIGATION_COMMAND_PREV_ANGLE:{
       gint32 cur, agls;
-      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK
-          && cur > 0
-          && dvdnav_angle_change (src->dvdnav, cur - 1) == DVDNAV_STATUS_OK)
-        GST_INFO_OBJECT (src, "Switched to angle %d", cur - 1);
-      /* Angle switches are seamless and involve no branching */
+      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK) {
+        if (cur > 0 &&
+            dvdnav_angle_change (src->dvdnav, cur - 1) == DVDNAV_STATUS_OK) {
+          new_angle = cur - 1;
+        } else if (cur == 1 &&
+            dvdnav_angle_change (src->dvdnav, agls) == DVDNAV_STATUS_OK) {
+          new_angle = agls;
+        }
+        /* Angle switches are seamless and involve no branching */
+      }
       break;
     }
     case GST_NAVIGATION_COMMAND_NEXT_ANGLE:{
       gint32 cur, agls;
-      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK
-          && dvdnav_angle_change (src->dvdnav, cur + 1) == DVDNAV_STATUS_OK)
-        GST_INFO_OBJECT (src, "Switched to angle %d", cur + 1);
-      /* Angle switches are seamless and involve no branching */
+      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK) {
+        if (cur < agls
+            && dvdnav_angle_change (src->dvdnav, cur + 1) == DVDNAV_STATUS_OK) {
+          new_angle = cur + 1;
+        } else if (cur == agls
+            && dvdnav_angle_change (src->dvdnav, 1) == DVDNAV_STATUS_OK) {
+          new_angle = 1;
+        }
+        /* Angle switches are seamless and involve no branching */
+      }
       break;
     }
     default:
       break;
+  }
+
+  if (new_angle) {
+    GST_INFO_OBJECT (src, "Switched to angle %d", new_angle);
   }
 
   return result;
