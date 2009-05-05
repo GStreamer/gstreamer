@@ -1118,6 +1118,8 @@ gen_text_chain (GstPlaySink * playsink)
      * overlay. the only thing we can do is insert an identity and ghost the src
      * and sink pads. */
     chain->conv = gst_element_factory_make ("identity", "tidentity");
+    g_object_set (chain->conv, "signal-handoffs", FALSE, NULL);
+    g_object_set (chain->conv, "silent", TRUE, NULL);
     gst_bin_add (bin, chain->conv);
     srcpad = gst_element_get_static_pad (chain->conv, "src");
     videosinkpad = gst_element_get_static_pad (chain->conv, "sink");
