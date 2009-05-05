@@ -114,6 +114,8 @@ struct _resinDvdSrc
   GstEvent	*audio_select_event;
   GstEvent	*highlight_event;
 
+  gboolean      angles_changed;
+
   /* GList of NAV packets awaiting activation, and the
    * running times to activate them. */
   GSList *pending_nav_blocks;
@@ -129,6 +131,7 @@ struct _resinDvdSrc
   gint8         cur_spu_phys_stream;
   gboolean      cur_spu_forced_only;
   guint32       cur_clut[16];
+  gint          n_angles;
 };
 
 struct _resinDvdSrcClass 

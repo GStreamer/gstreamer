@@ -391,6 +391,9 @@ rsn_dvdsrc_start (RsnBaseSrc * bsrc)
 
   src->active_button = -1;
 
+  src->angles_changed = FALSE;
+  src->n_angles = 0;
+
   src->cur_spu_phys_stream = -1;
   src->cur_spu_forced_only = FALSE;
   memset (src->cur_clut, 0, sizeof (guint32) * 16);
@@ -859,6 +862,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       break;
     case DVDNAV_CELL_CHANGE:{
       dvdnav_cell_change_event_t *event = (dvdnav_cell_change_event_t *) data;
+      gint n_angles, cur;
 
       src->pgc_duration = MPEGTIME_TO_GSTTIME (event->pgc_length);
       /* event->cell_start has the wrong time - it doesn't handle
@@ -873,6 +877,12 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
           GST_TIME_ARGS (src->cur_position));
 
       rsn_dvdsrc_prepare_streamsinfo_event (src);
+
+      if (dvdnav_get_angle_info (src->dvdnav, &cur,
+              &n_angles) == DVDNAV_STATUS_OK && src->n_angles != n_angles) {
+        src->angles_changed = TRUE;
+        src->n_angles = n_angles;
+      }
 
       break;
     }
@@ -998,6 +1008,7 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   GstEvent *spu_select_event = NULL;
   GstEvent *audio_select_event = NULL;
   GstEvent *highlight_event = NULL;
+  GstMessage *angles_msg = NULL;
 
   *outbuf = NULL;
 
@@ -1019,6 +1030,18 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
 
   clut_event = src->clut_event;
   src->clut_event = NULL;
+
+  if (src->angles_changed) {
+    gint cur, agls;
+    if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK) {
+
+      angles_msg =
+          gst_navigation_message_new_angles_changed (GST_OBJECT_CAST (src),
+          cur, agls);
+      src->n_angles = agls;
+    }
+    src->angles_changed = FALSE;
+  }
 
   g_mutex_unlock (src->dvd_lock);
 
@@ -1087,6 +1110,10 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
     GST_LOG_OBJECT (src, "Pushing highlight event with TS %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_EVENT_TIMESTAMP (highlight_event)));
     gst_pad_push_event (GST_BASE_SRC_PAD (src), highlight_event);
+  }
+
+  if (angles_msg) {
+    gst_element_post_message (GST_ELEMENT_CAST (src), angles_msg);
   }
 
   return ret;
@@ -1172,7 +1199,6 @@ static RsnNavResult
 rsn_dvdsrc_do_command (resinDvdSrc * src, GstNavigationCommand command)
 {
   RsnNavResult result = RSN_NAV_RESULT_NONE;
-  gint new_angle = 0;
 
   switch (command) {
     case GST_NAVIGATION_COMMAND_DVD_MENU:
@@ -1213,6 +1239,7 @@ rsn_dvdsrc_do_command (resinDvdSrc * src, GstNavigationCommand command)
 
     case GST_NAVIGATION_COMMAND_PREV_ANGLE:{
       gint32 cur, agls;
+      gint new_angle = 0;
       if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK) {
         if (cur > 0 &&
             dvdnav_angle_change (src->dvdnav, cur - 1) == DVDNAV_STATUS_OK) {
@@ -1222,11 +1249,16 @@ rsn_dvdsrc_do_command (resinDvdSrc * src, GstNavigationCommand command)
           new_angle = agls;
         }
         /* Angle switches are seamless and involve no branching */
+        if (new_angle) {
+          src->angles_changed = TRUE;
+          GST_INFO_OBJECT (src, "Switched to angle %d", new_angle);
+        }
       }
       break;
     }
     case GST_NAVIGATION_COMMAND_NEXT_ANGLE:{
       gint32 cur, agls;
+      gint new_angle = 0;
       if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK) {
         if (cur < agls
             && dvdnav_angle_change (src->dvdnav, cur + 1) == DVDNAV_STATUS_OK) {
@@ -1236,15 +1268,15 @@ rsn_dvdsrc_do_command (resinDvdSrc * src, GstNavigationCommand command)
           new_angle = 1;
         }
         /* Angle switches are seamless and involve no branching */
+        if (new_angle) {
+          src->angles_changed = TRUE;
+          GST_INFO_OBJECT (src, "Switched to angle %d", new_angle);
+        }
       }
       break;
     }
     default:
       break;
-  }
-
-  if (new_angle) {
-    GST_INFO_OBJECT (src, "Switched to angle %d", new_angle);
   }
 
   return result;
@@ -1258,6 +1290,7 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
   RsnNavResult nav_res = RSN_NAV_RESULT_NONE;
   GstNavigationEventType etype = gst_navigation_event_get_type (event);
   GstMessage *mouse_over_msg = NULL;
+  GstMessage *angles_msg = NULL;
 
   switch (etype) {
     case GST_NAVIGATION_EVENT_KEY_PRESS:{
@@ -1438,6 +1471,18 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
     hl_event = src->highlight_event;
     src->highlight_event = NULL;
 
+    if (src->angles_changed) {
+      gint cur, agls;
+      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK) {
+
+        angles_msg =
+            gst_navigation_message_new_angles_changed (GST_OBJECT_CAST (src),
+            cur, agls);
+        src->n_angles = agls;
+      }
+      src->angles_changed = FALSE;
+    }
+
     g_mutex_unlock (src->dvd_lock);
 
     if (hl_event) {
@@ -1449,6 +1494,10 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
 
   if (mouse_over_msg) {
     gst_element_post_message (GST_ELEMENT_CAST (src), mouse_over_msg);
+  }
+
+  if (angles_msg) {
+    gst_element_post_message (GST_ELEMENT_CAST (src), angles_msg);
   }
 
   return TRUE;
