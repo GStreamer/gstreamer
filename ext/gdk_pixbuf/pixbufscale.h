@@ -23,9 +23,9 @@
 #ifndef __GST_PIXBUFSCALE_H__
 #define __GST_PIXBUFSCALE_H__
 
-#include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 G_BEGIN_DECLS
 

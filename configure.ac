@@ -715,7 +715,7 @@ AG_GST_CHECK_FEATURE(GCONF, [GConf libraries], gconfelements, [
 dnl *** GDK pixbuf ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
 AG_GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbuf, [
-  if test $HAVE_GTK_22 = "yes"; then HAVE_GDK_PIXBUF=yes; fi;
+  AG_GST_PKG_CHECK_MODULES(GDK_PIXBUF, gdk-pixbuf-2.0 >= 2.8.0)
 ])
 
 dnl *** HAL ***
