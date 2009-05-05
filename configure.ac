@@ -303,6 +303,12 @@ AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
       [LAME_CFLAGS="-DGSTLAME_PRESET"],
       [LAME_CFLAGS=""]
     )
+    AC_TRY_COMPILE([#include <lame/lame.h>], [
+        void *ptr = &lame_set_VBR_quality
+      ],
+      [LAME_CFLAGS="$LAME_CFLAGS -DHAVE_LAME_SET_VBR_QUALITY"],
+      [LAME_CFLAGS="$LAME_CFLAGS"]
+    )
   AC_SUBST(LAME_CFLAGS)
   AC_SUBST(LAME_LIBS)
   ])
