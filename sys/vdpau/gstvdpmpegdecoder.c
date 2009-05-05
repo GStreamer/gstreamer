@@ -183,7 +183,8 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
   outbuf = gst_vdp_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
       dec->width, dec->height);
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-  if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
+  if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE &&
+      mpeg_dec->vdp_info.picture_coding_type != I_FRAME)
     gst_vdp_video_buffer_add_reference (outbuf,
         GST_VDP_VIDEO_BUFFER (mpeg_dec->f_buffer));
   if (mpeg_dec->vdp_info.backward_reference != VDP_INVALID_HANDLE)
