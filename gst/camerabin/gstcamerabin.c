@@ -275,6 +275,8 @@ static const GValue *gst_camerabin_find_better_framerate (GstCameraBin * camera,
 static void
 gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps);
 
+static void gst_camerabin_finish_image_capture (GstCameraBin * camera);
+
 /*
  * GObject callback functions declaration
  */
@@ -2062,6 +2064,26 @@ gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps)
 }
 
 /*
+ * gst_camerabin_finish_image_capture:
+ * @camera: camerabin object
+ *
+ * Perform finishing operations after image capture is done and
+ * returning back to view finder mode.
+ */
+static void
+gst_camerabin_finish_image_capture (GstCameraBin * camera)
+{
+  if (camera->image_capture_caps) {
+    /* If we used specific caps for image capture we need to 
+       restore the caps and zoom/crop for view finder mode */
+    GST_DEBUG_OBJECT (camera, "resetting crop in camerabin");
+    g_object_set (camera->src_zoom_crop, "left", 0, "right", 0,
+        "top", 0, "bottom", 0, NULL);
+    gst_camerabin_set_capsfilter_caps (camera, camera->view_finder_caps);
+  }
+}
+
+/*
  * GObject callback functions implementation
  */
 
@@ -2797,20 +2819,23 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * msg)
         /* Image eos */
         GST_DEBUG_OBJECT (camera, "got image eos message");
 
-        /* HACK: v4l2camsrc changes to view finder resolution automatically
-           after one captured still image */
-        if (camera->image_capture_caps) {
-          GST_DEBUG_OBJECT (camera, "resetting crop in camerabin");
-          g_object_set (camera->src_zoom_crop, "left", 0, "right", 0,
-              "top", 0, "bottom", 0, NULL);
-          /* Still image capture buffer handled, restore filter caps */
-          gst_camerabin_set_capsfilter_caps (camera, camera->view_finder_caps);
-        }
+        gst_camerabin_finish_image_capture (camera);
 
         /* Unblock pad to process next buffer */
         gst_pad_set_blocked_async (camera->srcpad_videosrc, FALSE,
             (GstPadBlockCallback) image_pad_blocked, camera);
       }
+      break;
+    case GST_MESSAGE_ERROR:
+      GST_DEBUG_OBJECT (camera, "error from child %" GST_PTR_FORMAT,
+          GST_MESSAGE_SRC (msg));
+      g_mutex_lock (camera->capture_mutex);
+      if (camera->capturing) {
+        gst_camerabin_finish_image_capture (camera);
+        camera->capturing = FALSE;
+        g_cond_signal (camera->cond);
+      }
+      g_mutex_unlock (camera->capture_mutex);
       break;
     default:
       break;
