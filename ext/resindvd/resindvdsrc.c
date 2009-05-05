@@ -1798,7 +1798,7 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
 
   if (button == 0) {
     /* No highlight available, or no button selected - clear the SPU */
-    if (src->active_button < 1) {
+    if (src->active_button != 0) {
       src->active_button = 0;
 
       s = gst_structure_new ("application/x-gst-dvd", "event",
