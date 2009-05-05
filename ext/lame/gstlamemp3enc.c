@@ -67,6 +67,11 @@
 #include "gstlamemp3enc.h"
 #include <gst/gst-i18n-plugin.h>
 
+/* lame < 3.98 */
+#ifndef HAVE_LAME_SET_VBR_QUALITY
+#define lame_set_VBR_quality(flags,q) lame_set_VBR_q((flags),(int)(q))
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (debug);
 #define GST_CAT_DEFAULT debug
 
