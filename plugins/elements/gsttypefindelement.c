@@ -235,6 +235,7 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_type_find_element_change_state);
 }
+
 static void
 gst_type_find_element_init (GstTypeFindElement * typefind,
     GstTypeFindElementClass * g_class)
@@ -278,6 +279,7 @@ gst_type_find_element_init (GstTypeFindElement * typefind,
 
   typefind->store = NULL;
 }
+
 static void
 gst_type_find_element_dispose (GObject * object)
 {
@@ -286,6 +288,10 @@ gst_type_find_element_dispose (GObject * object)
   if (typefind->store) {
     gst_buffer_unref (typefind->store);
     typefind->store = NULL;
+  }
+  if (typefind->force_caps) {
+    gst_caps_unref (typefind->force_caps);
+    typefind->force_caps = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -318,6 +324,7 @@ gst_type_find_element_set_property (GObject * object, guint prop_id,
       break;
   }
 }
+
 static void
 gst_type_find_element_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -607,8 +614,8 @@ gst_type_find_element_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstCaps *
-gst_type_find_guess_by_extension (GstTypeFindElement *typefind, GstPad *pad,
-    GstTypeFindProbability *probability)
+gst_type_find_guess_by_extension (GstTypeFindElement * typefind, GstPad * pad,
+    GstTypeFindProbability * probability)
 {
   GstQuery *query;
   gchar *uri;
@@ -637,12 +644,14 @@ gst_type_find_guess_by_extension (GstTypeFindElement *typefind, GstPad *pad,
       break;
     find--;
   }
-  if (find < 0) 
+  if (find < 0)
     goto no_extension;
 
-  GST_DEBUG_OBJECT (typefind, "found extension %s", &uri[find+1]);
+  GST_DEBUG_OBJECT (typefind, "found extension %s", &uri[find + 1]);
 
-  caps = gst_type_find_helper_for_extension (GST_OBJECT_CAST (typefind), &uri[find+1]);
+  caps =
+      gst_type_find_helper_for_extension (GST_OBJECT_CAST (typefind),
+      &uri[find + 1]);
   if (caps)
     *probability = GST_TYPE_FIND_MAXIMUM;
 
@@ -818,7 +827,7 @@ gst_type_find_element_activate (GstPad * pad)
      3. deactivate pull mode.
      4. src pad might have been activated push by the state change. deactivate.
      5. if we didn't find any caps, try getting the uri extension by doing an uri
-        query.
+     query.
      6. if we didn't find any caps, fail.
      7. emit have-type; maybe the app connected the source pad to something.
      8. if the sink pad is activated, we are in pull mode. succeed.
