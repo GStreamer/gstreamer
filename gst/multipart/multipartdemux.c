@@ -469,6 +469,7 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstMultipartDemux *multipart;
   GstAdapter *adapter;
+  GstClockTime timestamp;
   gint size = 1;
   GstFlowReturn res;
 
@@ -476,6 +477,8 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
   adapter = multipart->adapter;
 
   res = GST_FLOW_OK;
+
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
     gst_adapter_clear (adapter);
@@ -518,7 +521,7 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
       gst_pad_push_event (srcpad->pad, event);
       GST_BUFFER_TIMESTAMP (outbuf) = 0;
     } else {
-      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
+      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     }
     GST_DEBUG_OBJECT (multipart,
         "pushing buffer with timestamp %" GST_TIME_FORMAT,
