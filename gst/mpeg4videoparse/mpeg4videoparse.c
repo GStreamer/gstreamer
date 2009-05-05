@@ -726,6 +726,10 @@ gst_mpeg4vparse_cleanup (GstMpeg4VParse * parse)
   if (parse->adapter) {
     gst_adapter_clear (parse->adapter);
   }
+  if (parse->config != NULL) {
+    gst_buffer_unref (parse->config);
+    parse->config = NULL;
+  }
 
   parse->state = PARSE_NEED_START;
   parse->have_config = FALSE;
@@ -759,6 +763,10 @@ gst_mpeg4vparse_dispose (GObject * object)
   if (parse->adapter) {
     g_object_unref (parse->adapter);
     parse->adapter = NULL;
+  }
+  if (parse->config != NULL) {
+    gst_buffer_unref (parse->config);
+    parse->config = NULL;
   }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
