@@ -360,11 +360,6 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
 
   GST_DEBUG_OBJECT (jpegenc, "width %d, height %d", width, height);
 
-  jpeg_set_defaults (&jpegenc->cinfo);
-  jpegenc->cinfo.dct_method = JDCT_FASTEST;
-  /*jpegenc->cinfo.dct_method = JDCT_DEFAULT; */
-  /*jpegenc->cinfo.smoothing_factor = jpegenc->smoothing; */
-  jpeg_set_quality (&jpegenc->cinfo, jpegenc->quality, TRUE);
 
 #if 0
   switch (jpegenc->format) {
@@ -376,16 +371,18 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
       break;
     case GST_COLORSPACE_YUV420P:
 #endif
-      jpegenc->bufsize = I420_SIZE (jpegenc->width, jpegenc->height);
-      jpegenc->cinfo.raw_data_in = TRUE;
-      jpegenc->cinfo.in_color_space = JCS_YCbCr;
       GST_DEBUG_OBJECT (jpegenc, "setting format to YUV420P");
-      jpegenc->cinfo.comp_info[0].h_samp_factor = 2;
-      jpegenc->cinfo.comp_info[0].v_samp_factor = 2;
-      jpegenc->cinfo.comp_info[1].h_samp_factor = 1;
-      jpegenc->cinfo.comp_info[1].v_samp_factor = 1;
-      jpegenc->cinfo.comp_info[2].h_samp_factor = 1;
-      jpegenc->cinfo.comp_info[2].v_samp_factor = 1;
+
+      jpegenc->bufsize = I420_SIZE (jpegenc->width, jpegenc->height);
+      jpegenc->cinfo.in_color_space = JCS_YCbCr;
+
+      jpeg_set_defaults (&jpegenc->cinfo);
+      jpeg_set_quality (&jpegenc->cinfo, jpegenc->quality, TRUE);
+
+      jpegenc->cinfo.raw_data_in = TRUE;
+      jpegenc->cinfo.dct_method = JDCT_FASTEST;
+      /*jpegenc->cinfo.dct_method = JDCT_DEFAULT; */
+      /*jpegenc->cinfo.smoothing_factor = jpegenc->smoothing; */
 
       if (height != -1) {
         jpegenc->line[0] =
