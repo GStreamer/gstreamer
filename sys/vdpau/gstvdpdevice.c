@@ -196,16 +196,12 @@ gst_vdp_device_class_init (GstVdpDeviceClass * klass)
   object_class->get_property = gst_vdp_device_get_property;
   object_class->set_property = gst_vdp_device_set_property;
 
-
   g_object_class_install_property (object_class,
       PROP_DISPLAY,
       g_param_spec_string ("display",
           "Display",
           "X Display Name",
           "", G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-
-  GST_DEBUG_CATEGORY_INIT (gst_vdp_device_debug, "vdpaudevice",
-      0, "vdpaudevice");
 }
 
 GstVdpDevice *
@@ -242,6 +238,8 @@ gst_vdp_get_device (const gchar * display_name)
   GstVdpDevice *device;
 
   if (g_once_init_enter (&once)) {
+    GST_DEBUG_CATEGORY_INIT (gst_vdp_device_debug, "vdpaudevice",
+        0, "vdpaudevice");
     devices_hash =
         g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
     g_once_init_leave (&once, 1);
