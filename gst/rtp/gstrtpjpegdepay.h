@@ -48,6 +48,8 @@ struct _GstRtpJPEGDepay
 
   /* cached quant tables */
   guint8 * qtables[255];
+
+  gint width, height;
 };
 
 struct _GstRtpJPEGDepayClass

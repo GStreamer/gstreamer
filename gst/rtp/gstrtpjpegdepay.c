@@ -338,7 +338,7 @@ MakeHeaders (guint8 * p, int type, int width, int height, guint8 * qt,
   *p++ = width;                 /* width lsb */
   *p++ = 3;                     /* number of components */
   *p++ = 0;                     /* comp 0 */
-  if (type == 0)
+  if ((type & 0x3f) == 0)
     *p++ = 0x21;                /* hsamp = 2, vsamp = 1 */
   else
     *p++ = 0x22;                /* hsamp = 2, vsamp = 2 */
@@ -380,10 +380,11 @@ MakeHeaders (guint8 * p, int type, int width, int height, guint8 * qt,
 static gboolean
 gst_rtp_jpeg_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
+  GstRtpJPEGDepay *rtpjpegdepay;
   GstStructure *structure;
-  GstCaps *outcaps;
   gint clock_rate;
-  gboolean res;
+
+  rtpjpegdepay = GST_RTP_JPEG_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -391,13 +392,10 @@ gst_rtp_jpeg_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     clock_rate = 90000;
   depayload->clock_rate = clock_rate;
 
-  outcaps =
-      gst_caps_new_simple ("image/jpeg", "framerate", GST_TYPE_FRACTION, 0, 1,
-      NULL);
-  res = gst_pad_set_caps (depayload->srcpad, outcaps);
-  gst_caps_unref (outcaps);
+  rtpjpegdepay->width = 0;
+  rtpjpegdepay->height = 0;
 
-  return res;
+  return TRUE;
 }
 
 static GstBuffer *
@@ -440,6 +438,9 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   Q = payload[5];
   width = payload[6] * 8;
   height = payload[7] * 8;
+
+  if (width == 0 || height == 0)
+    goto invalid_dimension;
 
   GST_DEBUG_OBJECT (rtpjpegdepay, "frag %u, type %u, Q %d, width %u, height %u",
       frag_offset, type, Q, width, height);
@@ -497,7 +498,10 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (length > payload_len)
       goto empty_packet;
 
-    qtable = payload;
+    if (length > 0)
+      qtable = payload;
+    else
+      qtable = rtpjpegdepay->qtables[Q];
 
     payload += length;
     header_len += length;
@@ -510,6 +514,22 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   if (frag_offset == 0) {
     guint size;
+
+    if (rtpjpegdepay->width != width || rtpjpegdepay->height != height) {
+      GstCaps *outcaps;
+
+      outcaps =
+          gst_caps_new_simple ("image/jpeg", "framerate", GST_TYPE_FRACTION, 0,
+          1, "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+      gst_pad_set_caps (depayload->srcpad, outcaps);
+      gst_caps_unref (outcaps);
+
+      rtpjpegdepay->width = width;
+      rtpjpegdepay->height = height;
+    }
+
+    GST_LOG_OBJECT (rtpjpegdepay, "first packet, length %" G_GUINT16_FORMAT,
+        length);
 
     /* first packet */
     if (length == 0) {
@@ -527,6 +547,9 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         }
         /* all 8 bit quantizers */
         precision = 0;
+      } else {
+        if (!qtable)
+          goto no_qtable;
       }
     }
     /* max header length, should be big enough */
@@ -534,7 +557,7 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     size = MakeHeaders (GST_BUFFER_DATA (outbuf), type,
         width, height, qtable, precision, dri);
 
-    GST_DEBUG_OBJECT (rtpjpegdepay, "pushing %u bytes header", size);
+    GST_DEBUG_OBJECT (rtpjpegdepay, "pushing %u bytes of header", size);
 
     GST_BUFFER_SIZE (outbuf) = size;
 
@@ -584,6 +607,17 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpjpegdepay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    return NULL;
+  }
+invalid_dimension:
+  {
+    GST_ELEMENT_WARNING (rtpjpegdepay, STREAM, FORMAT,
+        ("Invalid Dimension %dx%d.", width, height), (NULL));
+    return NULL;
+  }
+no_qtable:
+  {
+    GST_WARNING_OBJECT (rtpjpegdepay, "no qtable");
     return NULL;
   }
 }
