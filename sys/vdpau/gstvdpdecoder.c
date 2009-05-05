@@ -71,7 +71,7 @@ gst_vdp_decoder_push_video_buffer (GstVdpDecoder * dec,
   }
   gst_buffer_set_caps (GST_BUFFER (buffer), GST_PAD_CAPS (dec->src));
 
-  GST_DEBUG_OBJECT (dec, "Pushin buffer with timestamp: %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (dec, "Pushing buffer with timestamp: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
   dec->time = GST_BUFFER_TIMESTAMP (buffer);
 
