@@ -138,12 +138,6 @@ gst_vdp_mpeg_decoder_set_caps (GstVdpDecoder * dec, GstCaps * caps)
   return TRUE;
 }
 
-typedef struct
-{
-  GstBuffer *buffer;
-  VdpPictureInfoMPEG1Or2 vdp_info;
-} GstVdpBFrame;
-
 static GstFlowReturn
 gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
     GstClockTime timestamp)
