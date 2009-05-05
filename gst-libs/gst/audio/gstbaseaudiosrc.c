@@ -984,10 +984,18 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     /* we are not slaved, subtract base_time */
     base_time = GST_ELEMENT_CAST (src)->base_time;
 
-    if (timestamp > base_time)
+    if (timestamp > base_time) {
       timestamp -= base_time;
-    else
+      GST_LOG_OBJECT (src,
+          "buffer timestamp %" GST_TIME_FORMAT " (base_time %" GST_TIME_FORMAT
+          ")", GST_TIME_ARGS (timestamp), GST_TIME_ARGS (base_time));
+    } else {
+      GST_LOG_OBJECT (src,
+          "buffer timestamp 0, ts %" GST_TIME_FORMAT " <= base_time %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
+          GST_TIME_ARGS (base_time));
       timestamp = 0;
+    }
   }
 
 no_sync:
