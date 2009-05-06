@@ -152,6 +152,10 @@
       <Type Name="PluginFilter" Kind="Delegate" />
       <Type Name="PluginFlags" Kind="Enumeration" />
       <Type Name="PluginInitFunc" Kind="Delegate" />
+      <Type Name="Preset" Kind="Interface" />
+      <Type Name="PresetAdapter" Kind="Class" />
+      <Type Name="PresetDefault" Kind="Class" />
+      <Type Name="PresetImplementor" Kind="Interface" />
       <Type Name="ProxyPad" Kind="Class" />
       <Type Name="Query" Kind="Class" />
       <Type Name="QueryType" Kind="Enumeration" />
