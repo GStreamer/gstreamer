@@ -49,7 +49,8 @@ sources = \
 	plugins-base/TypeFindElement.cs \
 	GstSharp.PadQueryTypeFunctionNative.cs \
 	PadQueryTypeFunction.cs \
-	TypeFindDelegates.cs
+	TypeFindDelegates.cs \
+	PresetDefault.cs
 
 overrides = \
 	override/URIHandlerAdapter.cs

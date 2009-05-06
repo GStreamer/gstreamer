@@ -794,6 +794,120 @@
         </parameters>
       </method>
     </interface>
+    <interface name="Preset" cname="GstPreset">
+      <class_struct cname="GstPresetInterface">
+        <field name="Parent" cname="parent" type="GTypeInterface" />
+        <method vm="get_preset_names" />
+        <method vm="get_property_names" />
+        <method vm="load_preset" />
+        <method vm="save_preset" />
+        <method vm="rename_preset" />
+        <method vm="delete_preset" />
+        <method vm="set_meta" />
+        <method vm="get_meta" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <property name="PresetName" cname="preset-name" type="gchar*" writeable="true" />
+      <virtual_method name="GetPresetNames" cname="get_preset_names">
+        <return-type type="gchar**" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="GetPropertyNames" cname="get_property_names">
+        <return-type type="gchar**" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="LoadPreset" cname="load_preset">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SavePreset" cname="save_preset">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="RenamePreset" cname="rename_preset">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="old_name" />
+          <parameter type="const-gchar*" name="new_name" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="DeletePreset" cname="delete_preset">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetMeta" cname="set_meta">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+          <parameter type="const-gchar*" name="tag" />
+          <parameter type="const-gchar*" name="value" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetMeta" cname="get_meta">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+          <parameter type="const-gchar*" name="tag" />
+          <parameter type="gchar**" name="value" />
+        </parameters>
+      </virtual_method>
+      <method name="DeletePreset" cname="gst_preset_delete_preset">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </method>
+      <method name="GetMeta" cname="gst_preset_get_meta">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+          <parameter type="const-gchar*" name="tag" />
+          <parameter type="gchar**" name="value" />
+        </parameters>
+      </method>
+      <method name="GetPresetNames" cname="gst_preset_get_preset_names">
+        <return-type type="gchar**" />
+      </method>
+      <method name="GetPropertyNames" cname="gst_preset_get_property_names">
+        <return-type type="gchar**" />
+      </method>
+      <method name="GetType" cname="gst_preset_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="LoadPreset" cname="gst_preset_load_preset">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </method>
+      <method name="RenamePreset" cname="gst_preset_rename_preset">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="old_name" />
+          <parameter type="const-gchar*" name="new_name" />
+        </parameters>
+      </method>
+      <method name="SavePreset" cname="gst_preset_save_preset">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </method>
+      <method name="SetMeta" cname="gst_preset_set_meta">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+          <parameter type="const-gchar*" name="tag" />
+          <parameter type="const-gchar*" name="value" />
+        </parameters>
+      </method>
+    </interface>
     <interface name="TagSetter" cname="GstTagSetter">
       <class_struct cname="GstTagSetterIFace">
         <field name="GIface" cname="g_iface" type="GTypeInterface" />

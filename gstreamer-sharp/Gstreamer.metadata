@@ -729,6 +729,18 @@
   <attr path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_type_name_filter']" name="hidden">1</attr>
 
   <attr path="/api/namespace/class[@name='Print']" name="hidden">1</attr>
+  
+  <attr path="/api/namespace/interface[@name='Preset']/property" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@name='Preset']/method[@cname='gst_preset_get_preset_names']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/interface[@name='Preset']/method[@cname='gst_preset_get_preset_names']/return-type" name="null_term_array">true</attr>
+  <attr path="/api/namespace/interface[@name='Preset']/virtual_method[@cname='get_preset_names']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/interface[@name='Preset']/virtual_method[@cname='get_preset_names']/return-type" name="null_term_array">true</attr>
+  <attr path="/api/namespace/interface[@name='Preset']/method[@cname='gst_preset_get_property_names']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/interface[@name='Preset']/method[@cname='gst_preset_get_property_names']/return-type" name="null_term_array">true</attr>
+  <attr path="/api/namespace/interface[@name='Preset']/virtual_method[@cname='get_property_names']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/interface[@name='Preset']/virtual_method[@cname='get_property_names']/return-type" name="null_term_array">true</attr>
+  <attr path="/api/namespace/interface[@name='Preset']/method[@cname='gst_preset_get_meta']/parameters/parameter[@name='value']" name="pass_as">out</attr>
+  <attr path="/api/namespace/interface[@name='Preset']/virtual_method[@cname='get_meta']/parameters/parameter[@name='value']" name="pass_as">out</attr>
 
   <change-node-type path="/api/namespace/object[@name='Query']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='Query']" name="opaque">true</attr>
