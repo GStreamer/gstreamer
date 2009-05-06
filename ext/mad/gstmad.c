@@ -1297,7 +1297,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
   discont = GST_BUFFER_IS_DISCONT (buffer);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  GST_DEBUG ("mad in timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
+  GST_DEBUG ("mad in timestamp %" GST_TIME_FORMAT " duration:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp), GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
   /* handle timestamps */
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
@@ -1623,8 +1624,9 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 
         outdata = (gint32 *) GST_BUFFER_DATA (outbuffer);
 
-        GST_DEBUG ("mad out timestamp %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (time_offset));
+        GST_DEBUG ("mad out timestamp %" GST_TIME_FORMAT " dur: %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (time_offset),
+            GST_TIME_ARGS (time_duration));
 
         GST_BUFFER_TIMESTAMP (outbuffer) = time_offset;
         GST_BUFFER_DURATION (outbuffer) = time_duration;
