@@ -481,7 +481,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint jpeg_header_size = 0;
   guint offset;
   gboolean frame_done;
-  gboolean sos_found;
+  gboolean sos_found, sof_found, dqt_found;
   gint i;
 
   pay = GST_RTP_JPEG_PAY (basepayload);
@@ -497,6 +497,8 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* parse the jpeg header for 'start of scan' and read quant tables if needed */
   sos_found = FALSE;
+  dqt_found = FALSE;
+  sof_found = FALSE;
   while (!sos_found && (offset < size)) {
     GST_LOG_OBJECT (pay, "checking from offset %u", offset);
     switch (gst_rtp_jpeg_pay_scan_marker (data, size, &offset)) {
@@ -508,20 +510,18 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       case JPEG_MARKER_SOF:
         if (!gst_rtp_jpeg_pay_read_sof (pay, data, &offset, info))
           goto invalid_format;
+        sof_found = TRUE;
         break;
       case JPEG_MARKER_DQT:
-      {
         GST_LOG ("DQT found");
         offset += gst_rtp_jpeg_pay_read_quant_table (data, offset, tables);
+        dqt_found = TRUE;
         break;
-      }
       case JPEG_MARKER_SOS:
-      {
         sos_found = TRUE;
         GST_LOG_OBJECT (pay, "SOS found");
         jpeg_header_size = offset + gst_rtp_jpeg_pay_header_size (data, offset);
         break;
-      }
       case JPEG_MARKER_EOI:
         GST_WARNING_OBJECT (pay, "EOI reached before SOS!");
         break;
@@ -532,6 +532,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         break;
     }
   }
+  if (!dqt_found || !sof_found)
+    goto unsupported_jpeg;
+
   /* by now we should either have negotiated the width/height or the SOF header
    * should have filled us in */
   if (pay->width == 0 || pay->height == 0)
@@ -652,6 +655,12 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   return ret;
 
   /* ERRORS */
+unsupported_jpeg:
+  {
+    GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("Unsupported JPEG"), (NULL));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_SUPPORTED;
+  }
 no_dimension:
   {
     GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("No size given"), (NULL));
