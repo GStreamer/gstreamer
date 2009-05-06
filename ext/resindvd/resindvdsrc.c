@@ -374,6 +374,8 @@ rsn_dvdsrc_start (RsnBaseSrc * bsrc)
     }
   }
 
+  dvdnav_get_title_string (src->dvdnav, &src->disc_name);
+
   src->first_seek = TRUE;
   src->running = TRUE;
   src->branching = FALSE;
@@ -388,6 +390,8 @@ rsn_dvdsrc_start (RsnBaseSrc * bsrc)
 
   src->vts_n = 0;
   src->in_menu = FALSE;
+  src->title_n = -1;
+  src->part_n = -1;
 
   src->active_button = -1;
 
@@ -518,6 +522,8 @@ rsn_dvdsrc_stop (RsnBaseSrc * bsrc)
     gst_event_unref (src->highlight_event);
     src->highlight_event = NULL;
   }
+
+  src->disc_name = NULL;
 
   if (src->dvdnav) {
     if (dvdnav_close (src->dvdnav) != DVDNAV_STATUS_OK) {
@@ -725,6 +731,71 @@ get_current_pgc (resinDvdSrc * src)
   return pgc;
 }
 
+static void
+update_title_info (resinDvdSrc * src)
+{
+  gint n_angles, cur_agl;
+  gint title_n, part_n;
+
+  if (dvdnav_get_angle_info (src->dvdnav, &cur_agl,
+          &n_angles) == DVDNAV_STATUS_OK && src->n_angles != n_angles) {
+    src->angles_changed = TRUE;
+    src->n_angles = n_angles;
+  }
+
+  if (dvdnav_current_title_info (src->dvdnav, &title_n,
+          &part_n) == DVDNAV_STATUS_OK) {
+    if (title_n != src->title_n || part_n != src->part_n || src->angles_changed) {
+      gchar *title_str = NULL;
+
+      src->title_n = title_n;
+      src->part_n = part_n;
+
+      if (title_n == 0) {
+        static const char *dvd_menu_map[] = {
+          NULL, NULL, "Title", "Root",
+          "Subpicture", "Audio", "Angle", "Part"
+        };
+
+        /* In a menu */
+        if (part_n >= 0 && part_n < G_N_ELEMENTS (dvd_menu_map)
+            && dvd_menu_map[part_n]) {
+          title_str = g_strdup_printf ("DVD %s Menu", dvd_menu_map[part_n]);
+        } else {
+          title_str = g_strdup ("DVD Menu");
+        }
+      } else {
+        /* In a title */
+        if (n_angles > 1) {
+          title_str = g_strdup_printf ("Title %i, Chapter %i, Angle %i of %i",
+              title_n, part_n, cur_agl, n_angles);
+
+        } else {
+          title_str = g_strdup_printf ("Title %i, Chapter %i", title_n, part_n);
+        }
+      }
+
+      if (src->disc_name && src->disc_name[0]) {
+        /* We have a name for this disc, publish it */
+        if (title_str) {
+          gchar *new_title_str =
+              g_strdup_printf ("%s, %s", title_str, src->disc_name);
+          g_free (title_str);
+          title_str = new_title_str;
+        } else {
+          title_str = g_strdup (src->disc_name);
+        }
+      }
+      if (title_str) {
+        GstTagList *tags = gst_tag_list_new ();
+        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
+            title_str, NULL);
+        gst_element_found_tags (GST_ELEMENT_CAST (src), tags);
+      }
+    }
+  }
+}
+
 static GstFlowReturn
 rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 {
@@ -862,7 +933,6 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       break;
     case DVDNAV_CELL_CHANGE:{
       dvdnav_cell_change_event_t *event = (dvdnav_cell_change_event_t *) data;
-      gint n_angles, cur;
 
       src->pgc_duration = MPEGTIME_TO_GSTTIME (event->pgc_length);
       /* event->cell_start has the wrong time - it doesn't handle
@@ -878,11 +948,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 
       rsn_dvdsrc_prepare_streamsinfo_event (src);
 
-      if (dvdnav_get_angle_info (src->dvdnav, &cur,
-              &n_angles) == DVDNAV_STATUS_OK && src->n_angles != n_angles) {
-        src->angles_changed = TRUE;
-        src->n_angles = n_angles;
-      }
+      update_title_info (src);
 
       break;
     }

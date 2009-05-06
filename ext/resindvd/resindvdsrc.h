@@ -58,6 +58,8 @@ struct _resinDvdSrc
   gchar		*device;
   dvdnav_t	*dvdnav;
 
+  const char    *disc_name;
+
   /* dvd_reader instance is used to load and cache VTS/VMG ifo info */
   dvd_reader_t  *dvdread;
 
@@ -72,6 +74,8 @@ struct _resinDvdSrc
   /* Current playback location: VTS 0 = VMG, plus in_menu or not */
   gint		vts_n;
   gboolean	in_menu;
+  gint          title_n; /* Title num */
+  gint          part_n; /* Part num */
 
   gboolean	running;
   gboolean	discont;
