@@ -112,7 +112,7 @@ static void gst_facedetect_get_property (GObject * object, guint prop_id,
 static gboolean gst_facedetect_set_caps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_facedetect_chain (GstPad * pad, GstBuffer * buf);
 
-static void gst_facedetect_load_profile (GObject * object);
+static void gst_facedetect_load_profile (Gstfacedetect * filter);
 
 /* Clean up */
 static void
@@ -167,8 +167,8 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
       g_param_spec_boolean ("display", "Display", "Sets whether the detected faces should be highlighted in the output",
           TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_PROFILE,
-      g_param_spec_char ("profile", "Profile", "Location of Haar cascade file to use for face detection",
-          G_MININT8, G_MAXINT8, DEFAULT_PROFILE, G_PARAM_READWRITE));
+      g_param_spec_string ("profile", "Profile", "Location of Haar cascade file to use for face detection",
+          DEFAULT_PROFILE, G_PARAM_READWRITE));
 }
 
 /* initialize the new element
@@ -207,7 +207,7 @@ gst_facedetect_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PROFILE:
-      filter->profile = g_value_get_char (value);
+      filter->profile = g_value_dup_string (value);
       gst_facedetect_load_profile(filter);
       break;
     case PROP_DISPLAY:
@@ -227,7 +227,7 @@ gst_facedetect_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PROFILE:
-      g_value_set_char (value, filter->profile);
+      g_value_take_string (value, filter->profile);
       break;
     case PROP_DISPLAY:
       g_value_set_boolean (value, filter->display);
@@ -315,9 +315,7 @@ gst_facedetect_chain (GstPad * pad, GstBuffer * buf)
 }
 
 
-static void gst_facedetect_load_profile(GObject * object) {
-  Gstfacedetect *filter = GST_FACEDETECT (object);
-
+static void gst_facedetect_load_profile(Gstfacedetect * filter) {
   filter->cvCascade = (CvHaarClassifierCascade*)cvLoad(filter->profile, 0, 0, 0 );
   if (!filter->cvCascade) {
     GST_WARNING ("Couldn't load Haar classifier cascade: %s.", filter->profile);
