@@ -8,12 +8,14 @@ pygtk.require('2.0')
 import sys
 
 import gobject
+gobject.threads_init()
 
 import pygst
 pygst.require('0.10')
 import gst
 import gst.interfaces
 import gtk
+gtk.gdk.threads_init()
 
 class GstPlayer:
     def __init__(self, videowidget):
@@ -33,9 +35,11 @@ class GstPlayer:
             return
         if message.structure.get_name() == 'prepare-xwindow-id':
             # Sync with the X server before giving the X-id to the sink
+            gtk.gdk.threads_enter()
             gtk.gdk.display_get_default().sync()
             self.videowidget.set_sink(message.src)
             message.src.set_property('force-aspect-ratio', True)
+            gtk.gdk.threads_leave()
             
     def on_message(self, bus, message):
         t = message.type
