@@ -799,7 +799,7 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame)
   if ((retval = lame_init_params (lame->lgf)) >= 0) {
     lame->setup = TRUE;
     /* FIXME: it would be nice to print out the mode here */
-    GST_INFO ("lame encoder setup (%d Hz, %d channels)",
+    GST_INFO ("lame encoder setup (bitrate %d, %d Hz, %d channels)",
         lame->bitrate, lame->samplerate, lame->num_channels);
   } else {
     GST_ERROR_OBJECT (lame, "lame_init_params returned %d", retval);
