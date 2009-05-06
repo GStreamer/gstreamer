@@ -1,13 +1,13 @@
 # Chinese (simplified) translation about gstreamer.
 # This file is put in the public domain.
 # Funda Wang <fundawang@linux.net.cn>, 2005.
-# Ji ZhengYu <zhengyuji@gmail.com>, 2008.
+# Ji ZhengYu <zhengyuji@gmail.com>, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.21.3\n"
+"Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-04-21 20:49+0100\n"
-"PO-Revision-Date: 2009-01-14 12:55+0800\n"
+"POT-Creation-Date: 2009-05-06 15:36+0100\n"
+"PO-Revision-Date: 2009-05-01 11:53中国标准时间\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
 "sourceforge.net>\n"
@@ -346,12 +346,11 @@ msgid ""
 "is hosted)"
 msgstr "媒体来源作为 URI 地址（原始文件或流所在的位置）"
 
-#, fuzzy
 msgid "homepage"
-msgstr "图像"
+msgstr "主页"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
+msgstr "此媒体的主页（艺术家或电影等）"
 
 msgid "description"
 msgstr "描述"
@@ -440,13 +439,11 @@ msgstr "音频编码"
 msgid "codec the audio data is stored in"
 msgstr "音频数据以...编码存储"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "视频编码"
+msgstr "字幕编码"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "视频数据以...编码存储"
+msgstr "字幕编码数据保存在"
 
 msgid "bitrate"
 msgstr "比特率"
@@ -783,9 +780,8 @@ msgstr ""
 msgid "List the plugin contents"
 msgstr "列出插件信息"
 
-#, fuzzy
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr "打印所支持的 URI 形式，带实现方式"
+msgstr "打印所支持的 URI 样式及它们的关联组件"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -806,9 +802,8 @@ msgstr "错误: xml 文件‘%s’解析失败。\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "错误: 文件‘%s’中没有顶级管道组件。\n"
 
-#, fuzzy
 msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "警告: 此时仅支持一个顶级组件。"
+msgstr "警告: 此时仅支持一个一级组件。\n"
 
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
@@ -823,7 +818,7 @@ msgstr "获取信息 #%"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "从组件“%s”中获取 EOS。\n"
+msgstr "收到来自组件“%s”的 EOS 信号。\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -858,7 +853,7 @@ msgstr "重新分配延迟时间...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "%2$s 发起请求时状态设置为 %1$s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "中断: 中止管道 ...\n"
@@ -869,9 +864,8 @@ msgstr "输出标识(也可认为是元数据)"
 msgid "Output status information and property notifications"
 msgstr "输出状态信息和属性通告"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "不输出类型的状态信息"
+msgstr "不打印任何进度信息"
 
 msgid "Output messages"
 msgstr "输出信息"
@@ -894,8 +888,9 @@ msgstr "不安装错误的处理程序"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "打印分配记录(如果在编译时开启的话)"
 
+#, fuzzy
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "关闭管道前强制对源发出 EOS 信号"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -936,17 +931,16 @@ msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "错误: 管道不想播放。\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
+msgstr "允许关闭时发出 EOS 信号 —— 强制对管道发出 EOS 信号\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "等待 EOS 信号...\n"
 
-#, fuzzy
 msgid "EOS received - stopping pipeline...\n"
-msgstr "中断: 中止管道 ...\n"
+msgstr "收到 EOS 信号 - 中止管道 ...\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "等待 EOS 信号时出现一个错误\n"
 
 msgid "Execution ended after %"
 msgstr "在 % 后运行终止"
@@ -957,9 +951,8 @@ msgstr "设置备用管道 ...\n"
 msgid "Setting pipeline to NULL ...\n"
 msgstr "设置 NULL 管道 ...\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "设置 NULL 管道 ...\n"
+msgstr "释放管道资源 ...\n"
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "正在释放管道 ...\n"

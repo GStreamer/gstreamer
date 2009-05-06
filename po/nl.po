@@ -1,4 +1,4 @@
-# translation of gstreamer-0.10.21.3.po to Dutch
+# translation of gstreamer-0.10.22.2.nl.po to Dutch
 # Dutch translation of gstreamer
 # Copyright (C) 2003-2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
@@ -8,10 +8,10 @@
 # Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.21.3\n"
+"Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-04-21 20:49+0100\n"
-"PO-Revision-Date: 2009-01-23 18:32+0100\n"
+"POT-Creation-Date: 2009-05-06 15:36+0100\n"
+"PO-Revision-Date: 2009-05-04 13:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
@@ -364,12 +364,11 @@ msgstr ""
 "oorsprong van het medium als een URI (locatie, waar de oorsprong van het "
 "bestand of stroom wordt gehost)"
 
-#, fuzzy
 msgid "homepage"
-msgstr "afbeelding"
+msgstr "webpagina"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
+msgstr "Webpagina voor dit medium (bijv. artiest of film-webpagina)"
 
 msgid "description"
 msgstr "omschrijving"
@@ -458,13 +457,11 @@ msgstr "audio codec"
 msgid "codec the audio data is stored in"
 msgstr "codec waarin de audiogegevens is opgeslagen"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "video codec"
+msgstr "codec voor ondertiteling"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "codec waarin het stuk is opgeslagen"
+msgstr "codec waarin de ondertiteling is opgeslagen"
 
 msgid "bitrate"
 msgstr "bitsnelheid"
@@ -834,11 +831,10 @@ msgstr "FOUT: verwerken van xml-bestand '%s' mislukt.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FOUT: geen bovenste pijplijn-element gevonden in file '%s'.\n"
 
-#, fuzzy
 msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr ""
 "WAARSCHUWING: slechts één element op het hoogste niveau ondersteund op dit "
-"moment."
+"moment.\n"
 
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
@@ -888,7 +884,7 @@ msgstr "Herverdeel de vertraging...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "Stel de status in op %s zoals verzocht door %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupt: Pijplijn ingesteld op gestopt ...\n"
@@ -899,9 +895,8 @@ msgstr "Tags (ook bekend als metadata) weergeven"
 msgid "Output status information and property notifications"
 msgstr "Statusinformatie en eigenschapswaarschuwingen weergeven"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "Statusinformatie van soort SOORT niet weergeven"
+msgstr "Geen voortgangsinformatie afdrukken"
 
 msgid "Output messages"
 msgstr "Uitvoer"
@@ -925,7 +920,7 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Toewijzingsspoor weergeven (indien aangezet tijdens compileren)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "Forceer een EOS op de bron bij het afsluiten van de pijplijn"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -966,17 +961,16 @@ msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pijplijn wil niet afspelen.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
+msgstr "EOS bij afsluiten ingeschakeld -- Forceer een EOS op de pijplijn\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "Wacht op EOS...\n"
 
-#, fuzzy
 msgid "EOS received - stopping pipeline...\n"
-msgstr "Interrupt: Pijplijn ingesteld op gestopt ...\n"
+msgstr "EOS ontvangen - pijplijn wordt gestopt...\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Er trad een fout op bij het wachten op EOS\n"
 
 msgid "Execution ended after %"
 msgstr "Uitvoering beëindigd na %"
@@ -987,9 +981,5 @@ msgstr "Pijplijn gezet op gereed ...\n"
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Pijplijn gezet op NULL ...\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "Pijplijn gezet op NULL ...\n"
-
-#~ msgid "FREEING pipeline ...\n"
-#~ msgstr "Pijplijn wordt vrijgemaakt ...\n"
+msgstr "Pijplijn wordt vrijgemaakt ...\n"
