@@ -47,7 +47,7 @@
 #define __GST_EDGEDETECT_H__
 
 #include <gst/gst.h>
-#include <opencv/cv.h>
+#include <cv.h>
 
 G_BEGIN_DECLS
 
