@@ -39,7 +39,6 @@
       <Type Name="ClockType" Kind="Enumeration" />
       <Type Name="CoreError" Kind="Enumeration" />
       <Type Name="Date" Kind="Structure" />
-      <Type Name="DecodeBin" Kind="Class" />
       <Type Name="DoLatencyArgs" Kind="Class" />
       <Type Name="DoLatencyHandler" Kind="Delegate" />
       <Type Name="DoubleRange" Kind="Structure" />
@@ -68,8 +67,6 @@
       <Type Name="GhostPad" Kind="Class" />
       <Type Name="HaveDataArgs" Kind="Class" />
       <Type Name="HaveDataHandler" Kind="Delegate" />
-      <Type Name="HaveTypeArgs" Kind="Class" />
-      <Type Name="HaveTypeHandler" Kind="Delegate" />
       <Type Name="ImplementsInterface" Kind="Interface" />
       <Type Name="ImplementsInterfaceAdapter" Kind="Class" />
       <Type Name="ImplementsInterfaceImplementor" Kind="Interface" />
@@ -95,8 +92,6 @@
       <Type Name="MessageType" Kind="Enumeration" />
       <Type Name="MiniObject" Kind="Class" />
       <Type Name="MiniObjectFlags" Kind="Enumeration" />
-      <Type Name="NewDecodedPadArgs" Kind="Class" />
-      <Type Name="NewDecodedPadHandler" Kind="Delegate" />
       <Type Name="NewUriArgs" Kind="Class" />
       <Type Name="NewUriHandler" Kind="Delegate" />
       <Type Name="Object" Kind="Class" />
@@ -144,7 +139,6 @@
       <Type Name="ParseFlags" Kind="Enumeration" />
       <Type Name="Pipeline" Kind="Class" />
       <Type Name="PipelineFlags" Kind="Enumeration" />
-      <Type Name="PlayBin" Kind="Class" />
       <Type Name="Plugin" Kind="Class" />
       <Type Name="PluginAddedArgs" Kind="Class" />
       <Type Name="PluginAddedHandler" Kind="Delegate" />
@@ -190,7 +184,6 @@
       <Type Name="TaskFunction" Kind="Delegate" />
       <Type Name="TaskState" Kind="Enumeration" />
       <Type Name="TypeFind" Kind="Class" />
-      <Type Name="TypeFindElement" Kind="Class" />
       <Type Name="TypeFindFactory" Kind="Class" />
       <Type Name="TypeFindFunction" Kind="Delegate" />
       <Type Name="TypeFindGetLengthFunction" Kind="Delegate" />
@@ -205,6 +198,17 @@
       <Type Name="URIType" Kind="Enumeration" />
       <Type Name="Util" Kind="Class" />
       <Type Name="Version" Kind="Class" />
+    </Namespace>
+    <Namespace Name="Gst.BasePlugins">
+      <Type Name="DecodeBin" Kind="Class" />
+      <Type Name="NewDecodedPadArgs" Kind="Class" />
+      <Type Name="NewDecodedPadHandler" Kind="Delegate" />
+      <Type Name="PlayBin" Kind="Class" />
+    </Namespace>
+    <Namespace Name="Gst.CorePlugins">
+      <Type Name="HaveTypeArgs" Kind="Class" />
+      <Type Name="HaveTypeHandler" Kind="Delegate" />
+      <Type Name="TypeFindElement" Kind="Class" />
     </Namespace>
   </Types>
   <Title>gst-sharp</Title>

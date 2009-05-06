@@ -1,4 +1,4 @@
-<Type Name="DecodeBin" FullName="Gst.DecodeBin">
+<Type Name="DecodeBin" FullName="Gst.BasePlugins.DecodeBin">
   <TypeSignature Language="C#" Value="public class DecodeBin : Gst.Bin" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
@@ -15,7 +15,7 @@
   <Members>
     
     
-    <Member MemberName=".ctor">
+    <Member MemberName=".ctor"><MemberSignature Language="C#" Value="public DecodeBin (GLib.Object o);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="o" Type="GLib.Object" /></Parameters><Docs><param name="o">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public DecodeBin (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
@@ -24,12 +24,12 @@
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
       <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="NewDecodedPad">
-      <MemberSignature Language="C#" Value="public event Gst.NewDecodedPadHandler NewDecodedPad;" />
+      <MemberSignature Language="C#" Value="public event Gst.BasePlugins.NewDecodedPadHandler NewDecodedPad;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.NewDecodedPadHandler</ReturnType></ReturnValue>
+      <ReturnValue><ReturnType>Gst.BasePlugins.NewDecodedPadHandler</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="OnNewDecodedPad">
       <MemberSignature Language="C#" Value="protected virtual void OnNewDecodedPad (object o, GLib.SignalArgs args);" />

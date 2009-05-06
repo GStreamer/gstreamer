@@ -44,13 +44,12 @@ sources = \
 	AssemblyInfo.cs \
 	GError.cs \
 	Value.cs \
-	plugins-base/PlayBin.cs \
-	plugins-base/DecodeBin.cs \
-	plugins-base/TypeFindElement.cs \
 	GstSharp.PadQueryTypeFunctionNative.cs \
 	PadQueryTypeFunction.cs \
 	TypeFindDelegates.cs \
-	PresetDefault.cs
+	PresetDefault.cs \
+	coreplugins/*.cs \
+	baseplugins/*.cs
 
 overrides = \
 	override/URIHandlerAdapter.cs

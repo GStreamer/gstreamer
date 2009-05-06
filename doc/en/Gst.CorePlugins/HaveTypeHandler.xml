@@ -1,4 +1,4 @@
-<Type Name="HaveTypeHandler" FullName="Gst.HaveTypeHandler">
+<Type Name="HaveTypeHandler" FullName="Gst.CorePlugins.HaveTypeHandler">
   <TypeSignature Language="C#" Value="public delegate void HaveTypeHandler(object o, HaveTypeArgs args);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
@@ -9,7 +9,7 @@
   </Base>
   <Parameters>
     <Parameter Name="o" Type="System.Object" />
-    <Parameter Name="args" Type="Gst.HaveTypeArgs" />
+    <Parameter Name="args" Type="Gst.CorePlugins.HaveTypeArgs" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>

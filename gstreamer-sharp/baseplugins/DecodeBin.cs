@@ -10,7 +10,7 @@
 using System;
 using Gst;
 
-namespace Gst
+namespace Gst.BasePlugins
 {
     public delegate void NewDecodedPadHandler(object o, NewDecodedPadArgs args);
 
@@ -32,6 +32,10 @@ namespace Gst
         public DecodeBin(IntPtr raw) : base(raw) 
         {
         } 
+
+	public DecodeBin (GLib.Object o) : base (o.Handle)
+	{
+	}
         
         protected virtual void OnNewDecodedPad(object o, GLib.SignalArgs args)
         {

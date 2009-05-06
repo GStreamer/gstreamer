@@ -1,4 +1,4 @@
-<Type Name="PlayBin" FullName="Gst.PlayBin">
+<Type Name="PlayBin" FullName="Gst.BasePlugins.PlayBin">
   <TypeSignature Language="C#" Value="public class PlayBin : Gst.Pipeline" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
@@ -20,7 +20,7 @@
     
     
     
-    <Member MemberName=".ctor">
+    <Member MemberName=".ctor"><MemberSignature Language="C#" Value="public PlayBin (GLib.Object o);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="o" Type="GLib.Object" /></Parameters><Docs><param name="o">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public PlayBin (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>

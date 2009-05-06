@@ -9,7 +9,7 @@
 
 using System;
 
-namespace Gst
+namespace Gst.CorePlugins
 {
     public delegate void HaveTypeHandler(object o, HaveTypeArgs args);
 
@@ -34,9 +34,13 @@ namespace Gst
         {
         } 
         
+        public TypeFindElement(GLib.Object o) : base(o.Handle) 
+        {
+        } 
+        
         public static TypeFindElement Make(string name)
         {
-            return ElementFactory.Make("typefind", name) as TypeFindElement;
+            return new TypeFindElement (ElementFactory.Make("typefind", name));
         }
 
         protected virtual void OnHaveType(object o, GLib.SignalArgs args)

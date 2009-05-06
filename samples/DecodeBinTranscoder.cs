@@ -9,6 +9,7 @@
 
 using System;
 using Gst;
+using Gst.BasePlugins;
 
 public delegate void ErrorHandler(object o, ErrorArgs args);
 public delegate void ProgressHandler(object o, ProgressArgs args);
@@ -95,7 +96,7 @@ public class DecodeBinTranscoder : IDisposable
         filesink = ElementFactory.Make("filesink", "filesink");
         audioconvert = ElementFactory.Make("audioconvert", "audioconvert");
         encoder = ElementFactory.Make("wavenc", "wavenc");
-        decodebin = ElementFactory.Make("decodebin", "decodebin") as DecodeBin;
+        decodebin = new DecodeBin (ElementFactory.Make("decodebin", "decodebin"));
         decodebin.NewDecodedPad += OnNewDecodedPad;
         
         pipeline.Add (filesrc, decodebin, audioconvert, encoder, filesink);

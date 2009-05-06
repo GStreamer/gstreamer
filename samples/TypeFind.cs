@@ -1,5 +1,6 @@
 using System;
 using Gst;
+using Gst.CorePlugins;
 
 public static class GstTypefindTest
 {

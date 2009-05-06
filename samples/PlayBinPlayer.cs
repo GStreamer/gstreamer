@@ -4,6 +4,7 @@ using System;
 using GLib;
 
 using Gst;
+using Gst.BasePlugins;
 
 
 public class PlayBinPlayer
@@ -25,7 +26,7 @@ public class PlayBinPlayer
         Gst.Application.Init ();
         loop = new MainLoop ();
 
-        play = ElementFactory.Make ("playbin", "play") as PlayBin;
+        play = new PlayBin (ElementFactory.Make ("playbin", "play"));
 
         if (play == null) {
             Console.WriteLine ("error creating a playbin gstreamer object");

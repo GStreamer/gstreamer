@@ -1,4 +1,4 @@
-<Type Name="NewDecodedPadHandler" FullName="Gst.NewDecodedPadHandler">
+<Type Name="NewDecodedPadHandler" FullName="Gst.BasePlugins.NewDecodedPadHandler">
   <TypeSignature Language="C#" Value="public delegate void NewDecodedPadHandler(object o, NewDecodedPadArgs args);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
@@ -9,7 +9,7 @@
   </Base>
   <Parameters>
     <Parameter Name="o" Type="System.Object" />
-    <Parameter Name="args" Type="Gst.NewDecodedPadArgs" />
+    <Parameter Name="args" Type="Gst.BasePlugins.NewDecodedPadArgs" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>

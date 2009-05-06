@@ -11,13 +11,15 @@ using System;
 using System.Collections;
 using System.Runtime.InteropServices;
 
-namespace Gst
+namespace Gst.BasePlugins
 {
     public class PlayBin : Pipeline 
     {
         public PlayBin(IntPtr raw) : base(raw) 
         {
         }
+
+	public PlayBin(GLib.Object o) : base (o.Handle) {}
 
         [GLib.Property("uri")]
         public string Uri {
