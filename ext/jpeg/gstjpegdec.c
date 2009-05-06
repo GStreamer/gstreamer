@@ -446,17 +446,6 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
   while (1) {
     guint frame_len;
 
-    /* enough bytes left for EOI marker? (we need 0xff 0xNN, thus end-1) */
-    if (data >= end - 1) {
-      GST_DEBUG ("at end of input and no EOI marker found, need more data");
-      return 0;
-    }
-
-    if (is_jpeg_end_marker (data)) {
-      GST_DEBUG ("0x%08x: end marker", data - start);
-      goto found_eoi;
-    }
-
     /* do we need to resync? */
     if (*data != 0xff) {
       GST_DEBUG ("Lost sync at 0x%08x, resyncing", data - start);
@@ -485,8 +474,21 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
       }
       GST_DEBUG ("found sync at %p", data - size);
     }
-    while (*data == 0xff)
+
+    while (*data == 0xff && data < end)
       ++data;
+    /* enough bytes left for EOI marker? (we need 0xNN after the 0xff) */
+    if (data >= end) {
+      GST_DEBUG ("at end of input and no EOI marker found, need more data");
+      return 0;
+    }
+
+    if (is_jpeg_end_marker (data - 1)) {
+      data--;
+      GST_DEBUG ("0x%08x: end marker", data - start);
+      goto found_eoi;
+    }
+
     if (data + 2 >= end)
       return 0;
     if (*data >= 0xd0 && *data <= 0xd7)
