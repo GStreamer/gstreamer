@@ -421,7 +421,6 @@ fail:
 static gboolean
 read_vts_info (resinDvdSrc * src)
 {
-  gint i;
   gint n_vts;
 
   if (src->vts_attrs) {
@@ -450,28 +449,48 @@ read_vts_info (resinDvdSrc * src)
     return FALSE;
   g_array_set_size (src->vts_attrs, n_vts + 1);
 
-  for (i = 1; i <= n_vts; i++) {
-    ifo_handle_t *ifo = ifoOpen (src->dvdread, i);
+  return TRUE;
+}
+
+static vtsi_mat_t *
+get_vts_attr (resinDvdSrc * src, gint n)
+{
+  vtsi_mat_t *vts_attr;
+
+  if (src->vts_attrs == NULL || n >= src->vts_attrs->len) {
+    if (src->vts_attrs)
+      GST_ERROR_OBJECT (src, "No stream info for VTS %d (have %d)", n,
+          src->vts_attrs->len);
+    else
+      GST_ERROR_OBJECT (src, "No stream info");
+    return NULL;
+  }
+
+  vts_attr = &g_array_index (src->vts_attrs, vtsi_mat_t, src->vts_n);
+
+  /* Check if we have read this VTS ifo yet */
+  if (vts_attr->vtsm_vobs == 0) {
+    ifo_handle_t *ifo = ifoOpen (src->dvdread, n);
 
     if (!ifo) {
-      GST_ERROR ("Can't open VTS %d", i);
-      return FALSE;
+      GST_ERROR ("Can't open VTS %d", n);
+      return NULL;
     }
 
     GST_DEBUG ("VTS %d, Menu has %d audio %d subpictures. "
-        "Title has %d and %d", i,
+        "Title has %d and %d", n,
         ifo->vtsi_mat->nr_of_vtsm_audio_streams,
         ifo->vtsi_mat->nr_of_vtsm_subp_streams,
         ifo->vtsi_mat->nr_of_vts_audio_streams,
         ifo->vtsi_mat->nr_of_vts_subp_streams);
 
-    memcpy (&g_array_index (src->vts_attrs, vtsi_mat_t, i),
+    memcpy (&g_array_index (src->vts_attrs, vtsi_mat_t, n),
         ifo->vtsi_mat, sizeof (vtsi_mat_t));
 
     ifoClose (ifo);
-  }
+  };
 
-  return TRUE;
+  return vts_attr;
 }
 
 static gboolean
@@ -1646,15 +1665,6 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
   gboolean have_audio;
   gboolean have_subp;
 
-  if (src->vts_attrs == NULL || src->vts_n >= src->vts_attrs->len) {
-    if (src->vts_attrs)
-      GST_ERROR_OBJECT (src, "No stream info for VTS %d (have %d)", src->vts_n,
-          src->vts_attrs->len);
-    else
-      GST_ERROR_OBJECT (src, "No stream info");
-    return FALSE;
-  }
-
   if (src->vts_n == 0) {
     /* VMGM info */
     vts_attr = NULL;
@@ -1665,7 +1675,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
     n_subp = MIN (1, src->vmgm_attr.nr_of_vmgm_subp_streams);
   } else if (src->in_menu) {
     /* VTSM attrs */
-    vts_attr = &g_array_index (src->vts_attrs, vtsi_mat_t, src->vts_n);
+    vts_attr = get_vts_attr (src, src->vts_n);
     v_attr = &vts_attr->vtsm_video_attr;
     a_attrs = &vts_attr->vtsm_audio_attr;
     n_audio = vts_attr->nr_of_vtsm_audio_streams;
@@ -1673,13 +1683,16 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
     n_subp = vts_attr->nr_of_vtsm_subp_streams;
   } else {
     /* VTS domain */
-    vts_attr = &g_array_index (src->vts_attrs, vtsi_mat_t, src->vts_n);
+    vts_attr = get_vts_attr (src, src->vts_n);
     v_attr = &vts_attr->vts_video_attr;
     a_attrs = vts_attr->vts_audio_attr;
     n_audio = vts_attr->nr_of_vts_audio_streams;
     s_attrs = vts_attr->vts_subp_attr;
     n_subp = vts_attr->nr_of_vts_subp_streams;
   }
+
+  if (src->vts_n > 0 && vts_attr == NULL)
+    return FALSE;
 
   GST_DEBUG_OBJECT (src, "Preparing streamsinfo for %d audio and "
       "%d subpicture streams", n_audio, n_subp);
