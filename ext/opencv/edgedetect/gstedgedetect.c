@@ -114,8 +114,24 @@ static void gst_edgedetect_get_property (GObject * object, guint prop_id,
 static gboolean gst_edgedetect_set_caps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_edgedetect_chain (GstPad * pad, GstBuffer * buf);
 
-/* GObject vmethod implementations */
+/* Clean up */
+static void
+gst_edgedetect_finalize (GObject * obj)
+{
+  Gstedgedetect *filter = GST_EDGEDETECT (obj);
 
+  if (filter->cvImage != NULL) 
+  {
+    cvReleaseImage (&filter->cvImage);
+    cvReleaseImage (&filter->cvCEdge);
+    cvReleaseImage (&filter->cvGray);
+    cvReleaseImage (&filter->cvEdge);
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+/* GObject vmethod implementations */
 static void
 gst_edgedetect_base_init (gpointer gclass)
 {
@@ -142,7 +158,9 @@ gst_edgedetect_class_init (GstedgedetectClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_edgedetect_finalize);
   gobject_class->set_property = gst_edgedetect_set_property;
   gobject_class->get_property = gst_edgedetect_get_property;
 
@@ -293,7 +311,6 @@ gst_edgedetect_chain (GstPad * pad, GstBuffer * buf)
 
   return gst_pad_push (filter->srcpad, buf);
 }
-
 
 /* entry point to initialize the plug-in
  * initialize the plug-in itself

@@ -114,8 +114,23 @@ static GstFlowReturn gst_facedetect_chain (GstPad * pad, GstBuffer * buf);
 
 static void gst_facedetect_load_profile (GObject * object);
 
-/* GObject vmethod implementations */
+/* Clean up */
+static void
+gst_facedetect_finalize (GObject * obj)
+{
+  Gstfacedetect *filter = GST_FACEDETECT(obj);
 
+  if (filter->cvImage) 
+  {
+    cvReleaseImage (&filter->cvImage);
+    cvReleaseImage (&filter->cvGray);
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+
+/* GObject vmethod implementations */
 static void
 gst_facedetect_base_init (gpointer gclass)
 {
@@ -142,7 +157,9 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_facedetect_finalize);
   gobject_class->set_property = gst_facedetect_set_property;
   gobject_class->get_property = gst_facedetect_get_property;
 

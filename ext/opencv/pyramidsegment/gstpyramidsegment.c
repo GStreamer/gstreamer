@@ -112,8 +112,22 @@ static void gst_pyramidsegment_get_property (GObject * object, guint prop_id,
 static gboolean gst_pyramidsegment_set_caps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_pyramidsegment_chain (GstPad * pad, GstBuffer * buf);
 
-/* GObject vmethod implementations */
+/* Clean up */
+static void
+gst_pyramidsegment_finalize (GObject * obj) 
+{
+  Gstpyramidsegment *filter = GST_PYRAMIDSEGMENT(obj);
 
+  if (filter->cvImage != NULL) 
+  {
+    cvReleaseImage (&filter->cvImage);
+    cvReleaseImage (&filter->cvSegmentedImage);
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+/* GObject vmethod implementations */
 static void
 gst_pyramidsegment_base_init (gpointer gclass)
 {
@@ -140,7 +154,9 @@ gst_pyramidsegment_class_init (GstpyramidsegmentClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pyramidsegment_finalize);
   gobject_class->set_property = gst_pyramidsegment_set_property;
   gobject_class->get_property = gst_pyramidsegment_get_property;
 
