@@ -39,6 +39,9 @@ G_BEGIN_DECLS
 #define GST_IS_TUNER_CHANNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TUNER_CHANNEL))
 
+typedef struct _GstTunerChannel GstTunerChannel;
+typedef struct _GstTunerChannelClass GstTunerChannelClass;
+
 /**
  * GstTunerChannelFlags:
  * @GST_TUNER_CHANNEL_INPUT: The channel is for input
@@ -77,7 +80,7 @@ typedef enum {
  * @min_signal: Minimum reported signal strength value.
  * @max_signal: Maximum reported signal strength value.
  */
-typedef struct _GstTunerChannel {
+struct _GstTunerChannel {
   GObject              parent;
 
   /*< public >*/
@@ -88,9 +91,9 @@ typedef struct _GstTunerChannel {
   gulong               max_frequency;
   gint                 min_signal;
   gint                 max_signal;
-} GstTunerChannel;
+};
 
-typedef struct _GstTunerChannelClass {
+struct _GstTunerChannelClass {
   GObjectClass parent;
 
   /*< private >*/
@@ -101,7 +104,7 @@ typedef struct _GstTunerChannelClass {
                              gint             signal);
 
   gpointer _gst_reserved[GST_PADDING];
-} GstTunerChannelClass;
+};
 
 GType           gst_tuner_channel_get_type      (void);
 

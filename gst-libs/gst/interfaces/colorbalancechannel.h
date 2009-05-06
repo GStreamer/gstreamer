@@ -39,22 +39,26 @@ G_BEGIN_DECLS
 #define GST_IS_COLOR_BALANCE_CHANNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_COLOR_BALANCE_CHANNEL))
 
+typedef struct _GstColorBalanceChannel GstColorBalanceChannel;
+typedef struct _GstColorBalanceChannelClass GstColorBalanceChannelClass;
+
 /**
  * GstColorBalanceChannel:
  * @label: A string containing a descriptive name for this channel
  * @min_value: The minimum valid value for this channel.
  * @max_value: The maximum valid value for this channel.
  */
-typedef struct _GstColorBalanceChannel {
+struct _GstColorBalanceChannel {
   GObject parent;
 
   /*< public >*/
   gchar  *label;
   gint    min_value;
   gint    max_value;
-} GstColorBalanceChannel;
+};
 
-typedef struct _GstColorBalanceChannelClass {
+
+struct _GstColorBalanceChannelClass {
   GObjectClass parent;
 
   /* signals */
@@ -62,7 +66,7 @@ typedef struct _GstColorBalanceChannelClass {
                           gint                    value);
 
   gpointer _gst_reserved[GST_PADDING];
-} GstColorBalanceChannelClass;
+};
 
 GType   gst_color_balance_channel_get_type (void);
 
