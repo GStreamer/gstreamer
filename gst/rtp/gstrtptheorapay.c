@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (rtptheorapay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_theorapay_details =
-GST_ELEMENT_DETAILS ("RTP Theora depayloader",
+GST_ELEMENT_DETAILS ("RTP Theora payloader",
     "Codec/Payloader/Network",
     "Payload-encode Theora video into RTP packets (draft-01 RFC XXXX)",
     "Wim Taymans <wim.taymans@gmail.com>");
