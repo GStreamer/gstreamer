@@ -70,6 +70,9 @@
       <Type Name="HaveDataHandler" Kind="Delegate" />
       <Type Name="HaveTypeArgs" Kind="Class" />
       <Type Name="HaveTypeHandler" Kind="Delegate" />
+      <Type Name="ImplementsInterface" Kind="Interface" />
+      <Type Name="ImplementsInterfaceAdapter" Kind="Class" />
+      <Type Name="ImplementsInterfaceImplementor" Kind="Interface" />
       <Type Name="Index" Kind="Class" />
       <Type Name="IndexAssociation" Kind="Structure" />
       <Type Name="IndexCertainty" Kind="Enumeration" />

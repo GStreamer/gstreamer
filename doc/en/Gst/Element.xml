@@ -289,7 +289,7 @@
       <Attributes><Attribute><AttributeName>GLib.Signal("no-more-pads")</AttributeName></Attribute></Attributes>
       <ReturnValue><ReturnType>System.EventHandler</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Index">
+    </Member><Member MemberName="ImplementsInterface"><MemberSignature Language="C#" Value="public bool ImplementsInterface (GLib.GType iface_type);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="iface_type" Type="GLib.GType" /></Parameters><Docs><param name="iface_type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Index">
       <MemberSignature Language="C#" Value="public Gst.Index Index { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>

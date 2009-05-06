@@ -794,6 +794,36 @@
         </parameters>
       </method>
     </interface>
+    <interface name="ImplementsInterface" cname="GstImplementsInterface">
+      <class_struct cname="GstImplementsInterfaceClass">
+        <field name="Parent" cname="parent" type="GTypeInterface" />
+        <method vm="supported" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <virtual_method name="Supported" cname="supported">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GType" name="iface_type" />
+        </parameters>
+      </virtual_method>
+      <method name="Cast" cname="gst_implements_interface_cast" shared="true">
+        <return-type type="gpointer" />
+        <parameters>
+          <parameter type="gpointer" name="from" />
+          <parameter type="GType" name="type" />
+        </parameters>
+      </method>
+      <method name="Check" cname="gst_implements_interface_check" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gpointer" name="from" />
+          <parameter type="GType" name="type" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_implements_interface_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+    </interface>
     <interface name="Preset" cname="GstPreset">
       <class_struct cname="GstPresetInterface">
         <field name="Parent" cname="parent" type="GTypeInterface" />
@@ -1890,6 +1920,12 @@
       </method>
       <method name="GetType" cname="gst_element_get_type" shared="true">
         <return-type type="GType" />
+      </method>
+      <method name="ImplementsInterface" cname="gst_element_implements_interface">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GType" name="iface_type" />
+        </parameters>
       </method>
       <method name="IsIndexable" cname="gst_element_is_indexable">
         <return-type type="gboolean" />
@@ -4569,6 +4605,7 @@
         <return-type type="GType" />
       </method>
     </object>
+    <object name="CastT" cname="cast_t" />
     <boxed name="Caps" cname="GstCaps" opaque="true">
       <field name="Type" cname="type" type="GType" access="public" writeable="true" />
       <field name="Refcount" cname="refcount" type="gint" access="public" writeable="true" />

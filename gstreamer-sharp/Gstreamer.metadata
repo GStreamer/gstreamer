@@ -138,6 +138,8 @@
 
   <attr path="/api/namespace/enum[@name='CapsFlags']" name="hidden">1</attr>
 
+  <attr path="/api/namespace/object[@name='CastT']" name="hidden">1</attr>
+
   <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_child_added']" name="name">EmitChildAdded</attr>
   <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_child_removed']" name="name">EmitChildRemoved</attr>
   <attr path="/api/namespace/interface[@name='ChildProxy']/method[@cname='gst_child_proxy_get_child_by_name']/return-type" name="owned">true</attr>
@@ -415,6 +417,17 @@
   <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_error_quark']" />
   <!-- TODO: Might still contain something -->
   <attr path="/api/namespace/class[@name='Global']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/interface[@name='ImplementsInterface']/method[@cname='gst_implements_interface_check']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@name='ImplementsInterface']/method[@cname='gst_implements_interface_cast']" name="hidden">1</attr>
+  <add-node path="/api/namespace/interface[@name='ImplementsInterface']">
+    <method name="Supported" cname="gst_element_implements_interface">
+      <return-type type="gboolean" />
+      <parameters>
+        <parameter type="GType" name="iface_type" />
+      </parameters>
+    </method>
+  </add-node>
 
   <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
   <attr path="/api/namespace/object[@name='Index']/field" name="hidden">1</attr>
