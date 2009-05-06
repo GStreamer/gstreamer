@@ -12,7 +12,20 @@ TESTS_ENVIRONMENT = \
 	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)			\
 	STATE_IGNORE_ELEMENTS="aasink autoaudiosrc autoaudiosink autovideosrc autovideosink cacasink cairotextoverlay gconfaudiosrc gconfvideosrc gconfaudiosink gconfvideosink halaudiosrc halaudiosink v4l2src osssrc osssink pulsesink pulsesrc pulsemixer"
 
-# ths core dumps of some machines have PIDs appended
+# fake device drivers: we could run hardware element tests against dummy drivers
+# v4l2: vivo (part of normal kernel)
+#   modprobe vivo;
+#   gst-launch v4l2src device="/dev/video1" ! xvimagesink;
+#   rmmod vivo
+#
+# alsa: snd-dummy (part of normal alsa, not removable)
+#   modprobe snd-dummy;
+#   gst-launch alsasrc device="hw:2" ! fakesink
+#   gst-launch fakesrc ! alsasink device="hw:2"
+#
+# need a way to figure out value for the device property
+
+# the core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.*
 
 clean-local: clean-local-check
