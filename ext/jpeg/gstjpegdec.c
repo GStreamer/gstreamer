@@ -334,12 +334,6 @@ is_jpeg_start_marker (const guint8 * data)
   return (data[0] == 0xff && data[1] == 0xd8);
 }
 
-static inline gboolean
-is_jpeg_end_marker (const guint8 * data)
-{
-  return (data[0] == 0xff && data[1] == 0xd9);
-}
-
 static gboolean
 gst_jpeg_dec_find_jpeg_header (GstJpegDec * dec)
 {
@@ -445,54 +439,34 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
 
   while (1) {
     guint frame_len;
+    gboolean resync;
 
     /* do we need to resync? */
-    if (*data != 0xff) {
+    resync = (*data != 0xff);
+    if (resync) {
       GST_DEBUG ("Lost sync at 0x%08x, resyncing", data - start);
       /* at the very least we expect 0xff 0xNN, thus end-1 */
       while (*data != 0xff && data < end - 1)
         ++data;
-      if (is_jpeg_end_marker (data)) {
-        GST_DEBUG ("resynced to end marker");
-        goto found_eoi;
-      }
-      /* we need 0xFF 0xNN 0xLL 0xLL */
-      if (data >= end - 1 - 2) {
-        GST_DEBUG ("at end of input, without new sync, need more data");
-        return 0;
-      }
-      /* check if we will still be in sync if we interpret
-       * this as a sync point and skip this frame */
-      frame_len = GST_READ_UINT16_BE (data + 2);
-      GST_DEBUG ("possible sync at 0x%08x, frame_len=%u", data - start,
-          frame_len);
-      if (data + 2 + frame_len >= end - 1 || data[2 + frame_len] != 0xff) {
-        /* ignore and continue resyncing until we hit the end
-         * of our data or find a sync point that looks okay */
-        ++data;
-        continue;
-      }
-      GST_DEBUG ("found sync at %p", data - size);
     }
-
+    /* Skip over extra 0xff */
     while (*data == 0xff && data < end)
       ++data;
-    /* enough bytes left for EOI marker? (we need 0xNN after the 0xff) */
+    /* enough bytes left for marker? (we need 0xNN after the 0xff) */
     if (data >= end) {
       GST_DEBUG ("at end of input and no EOI marker found, need more data");
       return 0;
     }
 
-    if (is_jpeg_end_marker (data - 1)) {
-      data--;
-      GST_DEBUG ("0x%08x: end marker", data - start);
-      goto found_eoi;
+    if (*data == 0xd9) {
+      GST_DEBUG ("0x%08x: EOI marker", data - start);
+      return (data - start + 1);
     }
 
-    if (data + 2 >= end)
-      return 0;
     if (*data >= 0xd0 && *data <= 0xd7)
       frame_len = 0;
+    else if (data >= end - 2)
+      return 0;
     else
       frame_len = GST_READ_UINT16_BE (data + 1);
     GST_DEBUG ("0x%08x: tag %02x, frame_len=%u", data - start - 1, *data,
@@ -500,11 +474,17 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
     /* the frame length includes the 2 bytes for the length; here we want at
      * least 2 more bytes at the end for an end marker, thus end-2 */
     if (data + 1 + frame_len >= end - 2) {
+      if (resync) {
+        GST_DEBUG ("not a valid sync (not enough data).");
+        /* Since *data != 0xff, the next iteration will go into resync again. */
+        continue;
+      }
       /* theoretically we could have lost sync and not really need more
        * data, but that's just tough luck and a broken image then */
       GST_DEBUG ("at end of input and no EOI marker found, need more data");
       return 0;
     }
+
     if (gst_jpeg_dec_parse_tag_has_entropy_segment (*data)) {
       guint8 *d2 = data + 1 + frame_len;
       guint eseglen = 0;
@@ -521,14 +501,19 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
       GST_DEBUG ("entropy segment length=%u => frame_len=%u", eseglen,
           frame_len);
     }
+    if (resync) {
+      /* check if we will still be in sync if we interpret
+       * this as a sync point and skip this frame */
+      if (data[2 + frame_len] != 0xff) {
+        /* ignore and continue resyncing until we hit the end
+         * of our data or find a sync point that looks okay */
+        continue;
+      }
+      GST_DEBUG ("found sync at %p", data - size);
+    }
+
     data += 1 + frame_len;
   }
-
-found_eoi:
-  /* data is assumed to point to the 0xff sync point of the
-   *  EOI marker (so there is one more byte after that) */
-  g_assert (is_jpeg_end_marker (data));
-  return ((data + 1) - start + 1);
 }
 
 /* shamelessly ripped from jpegutils.c in mjpegtools */
