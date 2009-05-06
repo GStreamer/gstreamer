@@ -98,7 +98,7 @@ public class DecodeBinTranscoder : IDisposable
         decodebin = ElementFactory.Make("decodebin", "decodebin") as DecodeBin;
         decodebin.NewDecodedPad += OnNewDecodedPad;
         
-        pipeline.AddMany(filesrc, decodebin, audioconvert, encoder, filesink);
+        pipeline.Add (filesrc, decodebin, audioconvert, encoder, filesink);
         
         filesrc.Link(decodebin);
         audioconvert.Link(encoder);

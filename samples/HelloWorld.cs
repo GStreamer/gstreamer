@@ -34,7 +34,7 @@ public class HelloWorld
         Bin bin = (Bin) pipeline;
         bin.Bus.AddWatch(new BusFunc(BusCall));
 
-        bin.AddMany(source, parser, decoder, conv, identity, sink);
+        bin.Add (source, parser, decoder, conv, identity, sink);
 
         if(!source.Link(parser)) {
             Console.WriteLine("link failed between source and parser");

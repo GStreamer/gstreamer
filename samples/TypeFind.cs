@@ -18,7 +18,7 @@ public static class GstTypefindTest
         
         typefind.HaveType += OnHaveType;
         
-        pipeline.AddMany(source, typefind, sink);
+        pipeline.Add (source, typefind, sink);
         source.Link(typefind);
         typefind.Link(sink);
 
