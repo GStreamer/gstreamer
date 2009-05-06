@@ -7,16 +7,17 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.21.3\n"
+"Project-Id-Version: gst-plugins-base-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-04-21 20:53+0100\n"
-"PO-Revision-Date: 2009-01-18 18:58+0100\n"
+"POT-Creation-Date: 2009-05-06 15:55+0100\n"
+"PO-Revision-Date: 2009-04-27 22:31+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #: ext/alsa/gstalsamixertrack.c:144
 msgid "Master"
@@ -234,31 +235,28 @@ msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Schází jak prvek autoaudiosink, tak alsasink."
 
 #: gst/playback/gstplaysink.c:962
-#, fuzzy
 msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr "Schází jak prvek autovideosink, tak xvimagesink."
+msgstr "Nefunguje ani prvek autovideosink, ani xvimagesink."
 
 #: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "Vlastní prvek kanálu textu není použitelný."
 
 #: gst/playback/gstplaysink.c:1469
 msgid "No volume control found"
 msgstr "Nenalezeno žádné ovládání hlasitosti"
 
 #: gst/playback/gstplaysink.c:1490
-#, fuzzy
 msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr "Schází jak prvek autoaudiosink, tak alsasink."
+msgstr "Nefunguje ani prvek autoaudiosink, ani alsasink."
 
 #: gst/playback/gstplaysink.c:1985
 msgid "Can't play a text file without video."
 msgstr "Textový soubor nelze přehrát bez videa."
 
 #: gst/playback/gstplaysink.c:1993
-#, fuzzy
 msgid "Can't play a text subtitles and subpictures."
-msgstr "Textový soubor nelze přehrát bez videa."
+msgstr "Textové titulky ani podřazené obrázky nelze přehrát."
 
 #: gst/playback/gstqueue2.c:1005
 msgid "No file name specified."
