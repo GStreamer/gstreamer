@@ -757,6 +757,12 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
   running_time =
       gst_segment_to_running_time (&enc->segment, GST_FORMAT_TIME, timestamp);
+  if ((gint64) running_time < 0) {
+    GST_DEBUG_OBJECT (enc, "Dropping buffer, timestamp: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
 
   /* see if we need to schedule a keyframe */
   GST_OBJECT_LOCK (enc);

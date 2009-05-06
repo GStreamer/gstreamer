@@ -51,6 +51,7 @@
 #include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
 #include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 #include "gstvorbisenc.h"
 
 GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
@@ -893,7 +894,8 @@ gst_vorbis_enc_buffer_from_packet (GstVorbisEnc * vorbisenc,
   /* update the next timestamp, taking granulepos_offset and subgranule offset
    * into account */
   vorbisenc->next_ts =
-      granulepos_to_timestamp_offset (vorbisenc, packet->granulepos);
+      granulepos_to_timestamp_offset (vorbisenc, packet->granulepos) +
+      vorbisenc->initial_ts;
   GST_BUFFER_DURATION (outbuf) =
       vorbisenc->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
 
@@ -1097,18 +1099,25 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *buf1, *buf2, *buf3;
   gboolean first = FALSE;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+  GstClockTime running_time = GST_CLOCK_TIME_NONE;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
   if (!vorbisenc->setup)
     goto not_setup;
 
-  timestamp =
+  buffer = gst_audio_buffer_clip (buffer, &vorbisenc->segment,
+      vorbisenc->frequency, 4 * vorbisenc->channels);
+  if (buffer == NULL) {
+    GST_DEBUG_OBJECT (vorbisenc, "Dropping buffer, out of segment");
+    return GST_FLOW_OK;
+  }
+  running_time =
       gst_segment_to_running_time (&vorbisenc->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer)) + vorbisenc->initial_ts;
+      GST_BUFFER_TIMESTAMP (buffer));
+  timestamp = running_time + vorbisenc->initial_ts;
   GST_DEBUG_OBJECT (vorbisenc, "Initial ts is %" GST_TIME_FORMAT,
       GST_TIME_ARGS (vorbisenc->initial_ts));
-
   if (!vorbisenc->header_sent) {
     /* Vorbis streams begin with three headers; the initial header (with
        most of the codec setup parameters) which is mandated by the Ogg
@@ -1168,10 +1177,11 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
     vorbisenc->next_ts = timestamp;
     vorbisenc->expected_ts = timestamp;
     vorbisenc->granulepos_offset = gst_util_uint64_scale
-        (timestamp, vorbisenc->frequency, GST_SECOND);
+        (running_time, vorbisenc->frequency, GST_SECOND);
     vorbisenc->subgranule_offset = 0;
     vorbisenc->subgranule_offset =
-        vorbisenc->next_ts - granulepos_to_timestamp_offset (vorbisenc, 0);
+        (vorbisenc->next_ts - vorbisenc->initial_ts) -
+        granulepos_to_timestamp_offset (vorbisenc, 0);
 
     vorbisenc->header_sent = TRUE;
     first = TRUE;
@@ -1221,7 +1231,7 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
     /* We need to round to the nearest whole number of samples, not just do
      * a truncating division here */
     vorbisenc->granulepos_offset = gst_util_uint64_scale
-        (timestamp + GST_SECOND / vorbisenc->frequency / 2
+        (running_time + GST_SECOND / vorbisenc->frequency / 2
         - vorbisenc->subgranule_offset, vorbisenc->frequency, GST_SECOND);
 
     vorbisenc->header_sent = TRUE;
