@@ -978,22 +978,22 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
     if (xing_flags & XING_TOC_FLAG) {
       int i, percent = 0;
       guchar *table = mp3parse->xing_seek_table;
-      guchar old = 0;
+      guchar old = 0, new;
+      guint first;
 
-      if (data[0] != 0) {
-        GST_WARNING_OBJECT (mp3parse, "Skipping broken Xing TOC");
-        mp3parse->xing_flags &= ~XING_TOC_FLAG;
-        goto skip_toc;
-      }
+      first = data[0];
+      GST_DEBUG_OBJECT (mp3parse,
+          "Subtracting initial offset of %d bytes from Xing TOC", first);
 
       /* xing seek table: percent time -> 1/256 bytepos */
       for (i = 0; i < 100; i++) {
-        mp3parse->xing_seek_table[i] = data[i];
-        if (old > data[i]) {
+        new = data[i] - first;
+        if (old > new) {
           GST_WARNING_OBJECT (mp3parse, "Skipping broken Xing TOC");
           mp3parse->xing_flags &= ~XING_TOC_FLAG;
           goto skip_toc;
         }
+        mp3parse->xing_seek_table[i] = old = new;
       }
 
       /* build inverse table: 1/256 bytepos -> 1/100 percent time */
