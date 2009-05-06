@@ -684,8 +684,7 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
   }
   mp3parse->tracked_offset += size;
 
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf)
-      && GST_BUFFER_DURATION_IS_VALID (outbuf))
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf))
     mp3parse->next_ts =
         GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf);
 
@@ -775,7 +774,6 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
 
   if (G_UNLIKELY ((GST_CLOCK_TIME_IS_VALID (push_start) &&
               GST_BUFFER_TIMESTAMP_IS_VALID (outbuf) &&
-              GST_BUFFER_DURATION_IS_VALID (outbuf) &&
               GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf)
               < push_start))) {
     GST_DEBUG_OBJECT (mp3parse,
@@ -792,12 +790,12 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
     ret = GST_FLOW_OK;
   } else if (G_UNLIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf) &&
           GST_CLOCK_TIME_IS_VALID (mp3parse->segment.stop) &&
-          GST_BUFFER_DURATION_IS_VALID (outbuf) &&
           GST_BUFFER_TIMESTAMP (outbuf) >=
           mp3parse->segment.stop + GST_BUFFER_DURATION (outbuf))) {
     /* Some mp3 streams have an offset in the timestamps, for which we have to
      * push the frame *after* the end position in order for the decoder to be
-     * able to decode everything up until the segment.stop position */
+     * able to decode everything up until the segment.stop position.
+     * That is the reason of the calculated offset */
     GST_DEBUG_OBJECT (mp3parse,
         "Buffer after configured segment range %" GST_TIME_FORMAT " to %"
         GST_TIME_FORMAT ", returning GST_FLOW_UNEXPECTED, timestamp %"
