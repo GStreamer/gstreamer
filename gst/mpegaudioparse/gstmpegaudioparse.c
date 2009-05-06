@@ -1273,13 +1273,15 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 /* mask the bits which are allowed to differ between frames */
 #define HDRMASK ~((0xF << 12)  /* bitrate */ | \
                   (0x1 <<  9)  /* padding */ | \
-                  (0x3 <<  4))  /* mode extension */
+                  (0xf <<  4)  /* mode|mode extension */ | \
+                  (0xf))        /* copyright|emphasis */
 
         /* require 2 matching headers in a row */
         if ((header2 & HDRMASK) != (header & HDRMASK)) {
           GST_DEBUG_OBJECT (mp3parse, "next header doesn't match "
-              "(header=%08X, header2=%08X, bpf=%d)",
-              (unsigned int) header, (unsigned int) header2, bpf);
+              "(header=%08X (%08X), header2=%08X (%08X), bpf=%d)",
+              (guint) header, (guint) header & HDRMASK, (guint) header2,
+              (guint) header2 & HDRMASK, bpf);
           /* This frame is invalid.  Start looking for a valid frame at the 
            * next position in the stream */
           mp3parse->resyncing = TRUE;
