@@ -378,7 +378,8 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
     infolen++;
   }
 
-  /* see that the components are supported */
+  /* see that the components are supported, the first component must use quant
+   * table 0 */
   cptr = &info[0];
   if (cptr->samp == 0x21 && cptr->qt == 0)
     pay->type = 0;
@@ -389,12 +390,13 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
 
   header->type = pay->type;
 
+  /* the other components are free to use quant table 0 or 1 */
   cptr = &info[1];
-  if (!(cptr->samp == 0x11 && cptr->qt == 1))
+  if (!(cptr->samp == 0x11 && cptr->qt < 2))
     goto invalid_comp;
 
   cptr = &info[2];
-  if (!(cptr->samp == 0x11 && cptr->qt == 1))
+  if (!(cptr->samp == 0x11 && cptr->qt < 2))
     goto invalid_comp;
 
   return TRUE;
@@ -484,24 +486,22 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   data = GST_BUFFER_DATA (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
+  GST_LOG_OBJECT (pay, "got buffer size %u, timestamp %" GST_TIME_FORMAT, size,
+      GST_TIME_ARGS (timestamp));
+
   /* parse the jpeg header for 'start of scan' and read quant tables if needed */
   while (!sos_found && (offset < size)) {
+    GST_LOG_OBJECT (pay, "checking from offset %u", offset);
     switch (gst_rtp_jpeg_pay_scan_marker (data, size, &offset)) {
       case JPEG_MARKER_JFIF:
       case JPEG_MARKER_CMT:
+      case JPEG_MARKER_DHT:
         offset += gst_rtp_jpeg_pay_header_size (data, offset);
         break;
       case JPEG_MARKER_SOF:
-        offset += gst_rtp_jpeg_pay_read_sof (pay, data, &offset, &jpeg_header);
+        if (!gst_rtp_jpeg_pay_read_sof (pay, data, &offset, &jpeg_header))
+          goto invalid_format;
         break;
-      case JPEG_MARKER_DHT:
-      {
-        guint len;
-
-        len = gst_rtp_jpeg_pay_header_size (data, offset);
-        offset += len;
-        break;
-      }
       case JPEG_MARKER_DQT:
       {
         GST_LOG ("DQT found");
@@ -520,10 +520,21 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         break;
       }
       case JPEG_MARKER_SOS:
+      {
         sos_found = TRUE;
+        if (quant_table_index == 1) {
+          /* we only had one quant table, duplicate it. We always need 2 quant
+           * tables for the Types we support */
+          jpeg_quantizer_table[1] = jpeg_quantizer_table[0];
+          quant_table_index++;
+          quant_data_size += quant_header.length;
+          quant_header.length += quant_header.length;
+          quant_header.precision |= (quant_header.precision & 1) << 1;
+        }
         GST_LOG_OBJECT (pay, "SOS found");
         jpeg_header_size = offset + gst_rtp_jpeg_pay_header_size (data, offset);
         break;
+      }
       case JPEG_MARKER_EOI:
         GST_WARNING_OBJECT (pay, "EOI reached before SOS!");
         break;
@@ -615,7 +626,11 @@ no_dimension:
     GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("No size given"), (NULL));
     return GST_FLOW_NOT_NEGOTIATED;
   }
-
+invalid_format:
+  {
+    /* error was posted */
+    return GST_FLOW_ERROR;
+  }
 }
 
 static void
