@@ -22,7 +22,7 @@ class SwitchTest:
         self.playing = False
         pipestr = ('videotestsrc pattern=0 ! queue ! s.sink0'
                    ' videotestsrc pattern=1 ! queue ! s.sink1'
-                   ' switch name=s ! autovideosink')
+                   ' input-selector name=s ! autovideosink')
         self.pipeline = gst.parse_launch(pipestr)
         self.videowidget = videowidget
 
@@ -86,7 +86,7 @@ class SwitchTest:
 
         gst.warning('switching from %r to %r'
                     % (switch.get_property('active-pad'), padname))
-        switch.emit('switch', padname, stop_time, start_time)
+        switch.emit('switch', newpad, stop_time, start_time)
 
 class VideoWidget(gtk.DrawingArea):
     def __init__(self):
