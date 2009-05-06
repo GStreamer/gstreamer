@@ -125,7 +125,6 @@ enum
 };
 
 typedef struct _RtpJpegHeader RtpJpegHeader;
-typedef struct _RtpQuantHeader RtpQuantHeader;
 
 /*
  * RtpJpegHeader:
@@ -174,12 +173,25 @@ struct _RtpJpegHeader
  * |                              ...                              |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-struct _RtpQuantHeader
+typedef struct
 {
   guint8 mbz;
   guint8 precision;
   guint16 length;
-};
+} RtpQuantHeader;
+
+typedef struct
+{
+  guint8 size;
+  const guint8 *data;
+} RtpQuantTable;
+
+typedef struct
+{
+  guint8 id;
+  guint8 samp;
+  guint8 qt;
+} CompInfo;
 
 /* FIXME: restart marker header currently unsupported */
 
@@ -293,39 +305,44 @@ gst_rtp_jpeg_pay_header_size (const guint8 * data, guint offset)
 
 static guint
 gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint offset,
-    const guint8 ** quantizer_table, RtpQuantHeader * qtable, guint8 index)
+    RtpQuantTable tables[])
 {
-  gint quant_size;
-
-  quant_size = gst_rtp_jpeg_pay_header_size (data, offset);
-
-  GST_LOG ("read quant table %d, size %d", index, quant_size);
-
-  qtable->precision |= (data[offset + 2] & 0x10) ? (1 << index) : 0x00;
-
-  /* ommit length and precision prefix from table */
-  quantizer_table[index] = &data[offset + QUANT_PREFIX_LEN];
-  quant_size -= QUANT_PREFIX_LEN;
-
-  qtable->length += quant_size;
-
-  return quant_size;
-}
-
-typedef struct
-{
+  gint quant_size, size, result;
+  guint8 prec;
   guint8 id;
-  guint8 samp;
-  guint8 qt;
-} CompInfo;
+
+  result = quant_size = gst_rtp_jpeg_pay_header_size (data, offset);
+  offset += 2;
+  quant_size -= 2;
+
+  while (quant_size > 0) {
+    prec = (data[offset] & 0xf0) >> 4;
+    id = data[offset] & 0xf;
+
+    if (prec)
+      size = 128;
+    else
+      size = 64;
+
+    GST_LOG ("read quant table %d, size %d, prec %02x", id, size, prec);
+
+    tables[id].size = size;
+    tables[id].data = &data[offset + 1];
+
+    size += 1;
+    quant_size -= size;
+    offset += size;
+  }
+  return result;
+}
 
 static gboolean
 gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
-    guint * offset, RtpJpegHeader * header)
+    guint * offset, CompInfo info[])
 {
   guint sof_size;
   guint width, height, infolen;
-  CompInfo elem, info[3], *cptr;
+  CompInfo elem;
   gint i, j;
 
   sof_size = gst_rtp_jpeg_pay_header_size (data, *offset);
@@ -354,9 +371,6 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
   pay->height = height / 8;
   pay->width = width / 8;
 
-  header->width = pay->width;
-  header->height = pay->height;
-
   /* we only support 3 components */
   if (data[(*offset)++] != 3)
     goto bad_components;
@@ -378,25 +392,23 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
     infolen++;
   }
 
-  /* see that the components are supported, the first component must use quant
-   * table 0 */
-  cptr = &info[0];
-  if (cptr->samp == 0x21 && cptr->qt == 0)
+  /* see that the components are supported */
+  if (info[0].samp == 0x21)
     pay->type = 0;
-  else if (cptr->samp == 0x22 && cptr->qt == 0)
+  else if (info[0].samp == 0x22)
     pay->type = 1;
   else
     goto invalid_comp;
 
-  header->type = pay->type;
-
-  /* the other components are free to use quant table 0 or 1 */
-  cptr = &info[1];
-  if (!(cptr->samp == 0x11 && cptr->qt < 2))
+  /* the other components are free to use any quant table but they have to
+   * have the same table id */
+  if (!(info[1].samp == 0x11))
     goto invalid_comp;
 
-  cptr = &info[2];
-  if (!(cptr->samp == 0x11 && cptr->qt < 2))
+  if (!(info[2].samp == 0x11))
+    goto invalid_comp;
+
+  if (info[1].qt != info[2].qt)
     goto invalid_comp;
 
   return TRUE;
@@ -459,37 +471,32 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstFlowReturn ret = GST_FLOW_ERROR;
   RtpJpegHeader jpeg_header;
   RtpQuantHeader quant_header;
-  const guint8 *jpeg_quantizer_table[Q_TABLE_MAX] = { NULL };
+  RtpQuantTable tables[15] = { {0, NULL}, };
+  CompInfo info[3] = { {0,}, };
+  guint quant_data_size;
   guint8 *data;
-  guint8 quant_table_index = 0;
   guint size;
   guint mtu;
   guint bytes_left;
-  guint quant_data_size = sizeof (quant_header);
   guint jpeg_header_size = 0;
-  guint offset = 0;
-  gboolean frame_done = FALSE;
-  gboolean sos_found = FALSE;
+  guint offset;
+  gboolean frame_done;
+  gboolean sos_found;
+  gint i;
 
   pay = GST_RTP_JPEG_PAY (basepayload);
   mtu = GST_BASE_RTP_PAYLOAD_MTU (pay);
 
-  /* will be overwritten by SOF when present */
-  jpeg_header.type_spec = 0;
-  jpeg_header.offset = 0;
-  jpeg_header.type = pay->type;
-  jpeg_header.q = pay->quant;
-  jpeg_header.width = pay->width;
-  jpeg_header.height = pay->height;
-
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  offset = 0;
 
   GST_LOG_OBJECT (pay, "got buffer size %u, timestamp %" GST_TIME_FORMAT, size,
       GST_TIME_ARGS (timestamp));
 
   /* parse the jpeg header for 'start of scan' and read quant tables if needed */
+  sos_found = FALSE;
   while (!sos_found && (offset < size)) {
     GST_LOG_OBJECT (pay, "checking from offset %u", offset);
     switch (gst_rtp_jpeg_pay_scan_marker (data, size, &offset)) {
@@ -499,38 +506,18 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         offset += gst_rtp_jpeg_pay_header_size (data, offset);
         break;
       case JPEG_MARKER_SOF:
-        if (!gst_rtp_jpeg_pay_read_sof (pay, data, &offset, &jpeg_header))
+        if (!gst_rtp_jpeg_pay_read_sof (pay, data, &offset, info))
           goto invalid_format;
         break;
       case JPEG_MARKER_DQT:
       {
         GST_LOG ("DQT found");
-        if ((jpeg_header.q >= 128) && (quant_table_index < Q_TABLE_MAX)) {
-          if (!quant_table_index) {
-            quant_header.length = 0;
-            quant_header.precision = 0;
-            quant_header.mbz = 0;
-          }
-          quant_data_size += gst_rtp_jpeg_pay_read_quant_table (data, offset,
-              jpeg_quantizer_table, &quant_header, quant_table_index);
-
-          quant_table_index++;
-        }
-        offset += gst_rtp_jpeg_pay_header_size (data, offset);
+        offset += gst_rtp_jpeg_pay_read_quant_table (data, offset, tables);
         break;
       }
       case JPEG_MARKER_SOS:
       {
         sos_found = TRUE;
-        if (quant_table_index == 1) {
-          /* we only had one quant table, duplicate it. We always need 2 quant
-           * tables for the Types we support */
-          jpeg_quantizer_table[1] = jpeg_quantizer_table[0];
-          quant_table_index++;
-          quant_data_size += quant_header.length;
-          quant_header.length += quant_header.length;
-          quant_header.precision |= (quant_header.precision & 1) << 1;
-        }
         GST_LOG_OBJECT (pay, "SOS found");
         jpeg_header_size = offset + gst_rtp_jpeg_pay_header_size (data, offset);
         break;
@@ -545,7 +532,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         break;
     }
   }
-  if (jpeg_header.width == 0 || jpeg_header.height == 0)
+  /* by now we should either have negotiated the width/height or the SOF header
+   * should have filled us in */
+  if (pay->width == 0 || pay->height == 0)
     goto no_dimension;
 
   GST_LOG_OBJECT (pay, "header size %u", jpeg_header_size);
@@ -554,9 +543,47 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   data += jpeg_header_size;
   offset = 0;
 
+  /* prepare stuff for the jpeg header */
+  jpeg_header.type_spec = 0;
+  jpeg_header.type = pay->type;
+  jpeg_header.q = pay->quant;
+  jpeg_header.width = pay->width;
+  jpeg_header.height = pay->height;
+
+  /* collect the quant headers sizes */
+  quant_header.mbz = 0;
+  quant_header.precision = 0;
+  quant_header.length = 0;
+  quant_data_size = 0;
+
+  if (pay->quant > 127) {
+    /* for the Y and U component, look up the quant table and its size. quant
+     * tables for U and V should be the same */
+    for (i = 0; i < 2; i++) {
+      guint qsize;
+      guint qt;
+
+      qt = info[i].qt;
+      if (qt > 15)
+        goto invalid_quant;
+
+      qsize = tables[qt].size;
+      if (qsize == 0)
+        goto invalid_quant;
+
+      quant_header.precision |= (qsize == 64 ? 0 : (1 << i));
+      quant_data_size += qsize;
+    }
+    quant_header.length = g_htons (quant_data_size);
+    quant_data_size += sizeof (quant_header);
+  }
+
+  GST_LOG_OBJECT (pay, "quant_data size %u", quant_data_size);
+
   bytes_left = sizeof (jpeg_header) + quant_data_size + size;
 
-  while (!frame_done) {
+  frame_done = FALSE;
+  do {
     GstBuffer *outbuf;
     guint8 *payload;
     guint payload_size = (bytes_left < mtu ? bytes_left : mtu);
@@ -572,34 +599,43 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     payload = gst_rtp_buffer_get_payload (outbuf);
 
+    /* update offset */
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    jpeg_header.offset = ((offset & 0x0000FF) << 16) |
+        ((offset & 0xFF0000) >> 16) | (offset & 0x00FF00);
+#else
+    jpeg_header.offset = offset;
+#endif
     memcpy (payload, &jpeg_header, sizeof (jpeg_header));
     payload += sizeof (jpeg_header);
     payload_size -= sizeof (jpeg_header);
 
     /* only send quant table with first packet */
     if (G_UNLIKELY (quant_data_size > 0)) {
-      guint8 index;
-      const guint8 table_size = quant_header.length / quant_table_index;
-
-      quant_header.length = g_htons (quant_header.length);
-
       memcpy (payload, &quant_header, sizeof (quant_header));
       payload += sizeof (quant_header);
 
-      for (index = 0; index < quant_table_index; index++) {
-        GST_LOG_OBJECT (pay, "sending quant data %d, size %d", index,
-            table_size);
-        memcpy (payload, jpeg_quantizer_table[index], table_size);
-        payload += table_size;
-      }
+      /* copy the quant tables for luma and chrominance */
+      for (i = 0; i < 2; i++) {
+        guint qsize;
+        guint qt;
 
+        qt = info[i].qt;
+        qsize = tables[qt].size;
+        memcpy (payload, tables[qt].data, qsize);
+
+        GST_LOG_OBJECT (pay, "component %d using quant %d, size %d", i, qt,
+            qsize);
+
+        payload += qsize;
+      }
       payload_size -= quant_data_size;
       bytes_left -= quant_data_size;
       quant_data_size = 0;
     }
     GST_LOG_OBJECT (pay, "sending payload size %d", payload_size);
 
-    memcpy (payload, &data[offset], payload_size);
+    memcpy (payload, data, payload_size);
 
     ret = gst_basertppayload_push (basepayload, outbuf);
     if (ret != GST_FLOW_OK)
@@ -607,14 +643,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     bytes_left -= payload_size;
     offset += payload_size;
-
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-    jpeg_header.offset = ((offset & 0x0000FF) << 16) |
-        ((offset & 0xFF0000) >> 16) | (offset & 0x00FF00);
-#else
-    jpeg_header.offset = offset;
-#endif
+    data += payload_size;
   }
+  while (!frame_done);
 
   gst_buffer_unref (buffer);
 
@@ -624,11 +655,19 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 no_dimension:
   {
     GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("No size given"), (NULL));
+    gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 invalid_format:
   {
     /* error was posted */
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
+  }
+invalid_quant:
+  {
+    GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("Invalid quant tables"), (NULL));
+    gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
 }
