@@ -792,10 +792,15 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
     ret = GST_FLOW_OK;
   } else if (G_UNLIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf) &&
           GST_CLOCK_TIME_IS_VALID (mp3parse->segment.stop) &&
-          GST_BUFFER_TIMESTAMP (outbuf) >= mp3parse->segment.stop)) {
+          GST_BUFFER_DURATION_IS_VALID (outbuf) &&
+          GST_BUFFER_TIMESTAMP (outbuf) >=
+          mp3parse->segment.stop + GST_BUFFER_DURATION (outbuf))) {
+    /* Some mp3 streams have an offset in the timestamps, for which we have to
+     * push the frame *after* the end position in order for the decoder to be
+     * able to decode everything up until the segment.stop position */
     GST_DEBUG_OBJECT (mp3parse,
-        "Buffer after configured segment range %" GST_TIME_FORMAT
-        " to %" GST_TIME_FORMAT ", returning GST_FLOW_UNEXPECTED, timestamp %"
+        "Buffer after configured segment range %" GST_TIME_FORMAT " to %"
+        GST_TIME_FORMAT ", returning GST_FLOW_UNEXPECTED, timestamp %"
         GST_TIME_FORMAT " duration %" GST_TIME_FORMAT ", offset 0x%08"
         G_GINT64_MODIFIER "x", GST_TIME_ARGS (push_start),
         GST_TIME_ARGS (mp3parse->segment.stop),
