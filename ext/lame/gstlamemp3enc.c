@@ -848,7 +848,7 @@ gst_lamemp3enc_register (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (debug, "lamemp3enc", 0, "lame mp3 encoder");
 
-  if (!gst_element_register (plugin, "lamemp3enc", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "lamemp3enc", GST_RANK_PRIMARY,
           GST_TYPE_LAMEMP3ENC))
     return FALSE;
 

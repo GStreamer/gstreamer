@@ -1372,7 +1372,7 @@ gst_lame_register (GstPlugin * plugin)
   if (!gst_lame_get_default_settings ())
     return FALSE;
 
-  if (!gst_element_register (plugin, "lame", GST_RANK_NONE, GST_TYPE_LAME))
+  if (!gst_element_register (plugin, "lame", GST_RANK_MARGINAL, GST_TYPE_LAME))
     return FALSE;
 
   return TRUE;
