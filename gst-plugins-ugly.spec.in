@@ -109,6 +109,7 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_DVDNAV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdnavsrc.so
 @USE_DVDREAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdread.so
 @USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
+@USE_TWOLAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttwolame.so
 %doc %{_datadir}/gtk-doc/html/gst-plugins-ugly-plugins-%{majorminor}/*
 
 %changelog
