@@ -38,7 +38,7 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
 
-  if (!gst_element_register (plugin, "flacenc", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "flacenc", GST_RANK_PRIMARY,
           GST_TYPE_FLAC_ENC))
     return FALSE;
   if (!gst_element_register (plugin, "flacdec", GST_RANK_PRIMARY,

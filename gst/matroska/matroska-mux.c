@@ -2584,5 +2584,5 @@ gboolean
 gst_matroska_mux_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "matroskamux",
-      GST_RANK_NONE, GST_TYPE_MATROSKA_MUX);
+      GST_RANK_PRIMARY, GST_TYPE_MATROSKA_MUX);
 }

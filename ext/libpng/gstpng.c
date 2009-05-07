@@ -33,7 +33,8 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_PNGDEC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "pngenc", GST_RANK_NONE, GST_TYPE_PNGENC))
+  if (!gst_element_register (plugin, "pngenc", GST_RANK_PRIMARY,
+          GST_TYPE_PNGENC))
     return FALSE;
 
   return TRUE;
