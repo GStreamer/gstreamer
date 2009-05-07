@@ -122,6 +122,8 @@ struct _GstPlaySink
 
   GMutex *lock;
 
+  gboolean async_pending;
+
   GstPlayFlags flags;
 
   /* chains */
@@ -792,6 +794,32 @@ gst_play_sink_find_property_sinks (GstPlaySink * playsink, GstElement * obj,
       gst_object_unref (result);
   }
   return result;
+}
+
+static void
+do_async_start (GstPlaySink * playsink)
+{
+  GstMessage *message;
+
+  playsink->async_pending = TRUE;
+
+  message = gst_message_new_async_start (GST_OBJECT_CAST (playsink), FALSE);
+  GST_BIN_CLASS (gst_play_sink_parent_class)->handle_message (GST_BIN_CAST
+      (playsink), message);
+}
+
+static void
+do_async_done (GstPlaySink * playsink)
+{
+  GstMessage *message;
+
+  if (playsink->async_pending) {
+    message = gst_message_new_async_done (GST_OBJECT_CAST (playsink));
+    GST_BIN_CLASS (gst_play_sink_parent_class)->handle_message (GST_BIN_CAST
+        (playsink), message);
+
+    playsink->async_pending = FALSE;
+  }
 }
 
 /* try to change the state of an element. This function returns the element when
@@ -1974,6 +2002,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), FALSE);
     }
   }
+  do_async_done (playsink);
   GST_PLAY_SINK_UNLOCK (playsink);
 
   return TRUE;
@@ -2318,22 +2347,30 @@ static GstStateChangeReturn
 gst_play_sink_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
+  GstStateChangeReturn bret;
+
   GstPlaySink *playsink;
 
   playsink = GST_PLAY_SINK (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      do_async_start (playsink);
+      ret = GST_STATE_CHANGE_ASYNC;
       break;
     default:
       break;
   }
 
-  ret =
+  bret =
       GST_ELEMENT_CLASS (gst_play_sink_parent_class)->change_state (element,
       transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
+  if (G_UNLIKELY (bret == GST_STATE_CHANGE_FAILURE))
+    goto activate_failed;
+  else if (G_UNLIKELY (bret == GST_STATE_CHANGE_NO_PREROLL)) {
+    do_async_done (playsink);
+    ret = bret;
+  }
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -2359,10 +2396,19 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         activate_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
         add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
       }
+      do_async_done (playsink);
       break;
     default:
       break;
   }
 
   return ret;
+
+  /* ERRORS */
+activate_failed:
+  {
+    GST_DEBUG_OBJECT (element,
+        "element failed to change states -- activation problem?");
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
