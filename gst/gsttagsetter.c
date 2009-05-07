@@ -301,6 +301,33 @@ gst_tag_setter_add_tag_valist_values (GstTagSetter * setter,
 }
 
 /**
+ * gst_tag_setter_add_tag_value:
+ * @setter: a #GstTagSetter
+ * @mode: the mode to use
+ * @tag: tag to set
+ * @value: GValue to set for the tag
+ *
+ * Adds the given tag / GValue pair on the setter using the given merge mode.
+ *
+ * Since: 0.10.24
+ */
+void
+gst_tag_setter_add_tag_value (GstTagSetter * setter,
+    GstTagMergeMode mode, const gchar * tag, const GValue * value)
+{
+  GstTagData *data;
+
+  g_return_if_fail (GST_IS_TAG_SETTER (setter));
+  g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
+
+  data = gst_tag_setter_get_data (setter);
+  if (!data->list)
+    data->list = gst_tag_list_new ();
+
+  gst_tag_list_add_value (data->list, mode, tag, value);
+}
+
+/**
  * gst_tag_setter_get_tag_list:
  * @setter: a #GstTagSetter
  *

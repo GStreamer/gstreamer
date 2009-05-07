@@ -226,6 +226,10 @@ void         gst_tag_list_add_valist_values (GstTagList       * list,
                                              GstTagMergeMode    mode,
                                              const gchar      * tag,
                                              va_list            var_args);
+void         gst_tag_list_add_value         (GstTagList       * list,
+                                             GstTagMergeMode    mode,
+                                             const gchar      * tag,
+                                             const GValue     * value);
 void         gst_tag_list_remove_tag        (GstTagList       * list,
                                              const gchar      * tag);
 void         gst_tag_list_foreach           (const GstTagList * list,

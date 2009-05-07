@@ -896,6 +896,29 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
 }
 
 /**
+ * gst_tag_list_add_value:
+ * @list: list to set tags in
+ * @mode: the mode to use
+ * @tag: tag
+ * @value: GValue for this tag
+ *
+ * Sets the GValue for a given tag using the specified mode.
+ *
+ * Since: 0.10.24
+ */
+void
+gst_tag_list_add_value (GstTagList * list, GstTagMergeMode mode,
+    const gchar * tag, const GValue * value)
+{
+  g_return_if_fail (GST_IS_TAG_LIST (list));
+  g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
+  g_return_if_fail (tag != NULL);
+
+  gst_tag_list_add_value_internal (list, mode, g_quark_from_string (tag),
+      value);
+}
+
+/**
  * gst_tag_list_remove_tag:
  * @list: list to remove tag from
  * @tag: tag to remove
