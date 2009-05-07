@@ -100,7 +100,7 @@ static const gchar *valid_licenses[] = {
 };
 
 static GstPlugin *gst_plugin_register_func (GstPlugin * plugin,
-    const GstPluginDesc * desc);
+    const GstPluginDesc * desc, gpointer user_data);
 static void gst_plugin_desc_copy (GstPluginDesc * dest,
     const GstPluginDesc * src);
 static void gst_plugin_desc_free (GstPluginDesc * desc);
@@ -242,7 +242,76 @@ gst_plugin_register_static (gint major_version, gint minor_version,
 
   GST_LOG ("attempting to load static plugin \"%s\" now...", name);
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
-  if (gst_plugin_register_func (plugin, &desc) != NULL) {
+  if (gst_plugin_register_func (plugin, &desc, NULL) != NULL) {
+    GST_INFO ("registered static plugin \"%s\"", name);
+    res = gst_default_registry_add_plugin (plugin);
+    GST_INFO ("added static plugin \"%s\", result: %d", name, res);
+  }
+  return res;
+}
+
+/**
+ * gst_plugin_register_static_full:
+ * @major_version: the major version number of the GStreamer core that the
+ *     plugin was compiled for, you can just use GST_VERSION_MAJOR here
+ * @minor_version: the minor version number of the GStreamer core that the
+ *     plugin was compiled for, you can just use GST_VERSION_MINOR here
+ * @name: a unique name of the plugin (ideally prefixed with an application- or
+ *     library-specific namespace prefix in order to avoid name conflicts in
+ *     case a similar plugin with the same name ever gets added to GStreamer)
+ * @description: description of the plugin
+ * @init_full_func: pointer to the init function with user data of this plugin.
+ * @version: version string of the plugin
+ * @license: effective license of plugin. Must be one of the approved licenses
+ *     (see #GstPluginDesc above) or the plugin will not be registered.
+ * @source: source module plugin belongs to
+ * @package: shipped package plugin belongs to
+ * @origin: URL to provider of plugin
+ * @user_data: gpointer to user data
+ *
+ * Registers a static plugin, ie. a plugin which is private to an application
+ * or library and contained within the application or library (as opposed to
+ * being shipped as a separate module file) with a #GstPluginInitFullFunc
+ * which allows user data to be passed to the callback function (useful
+ * for bindings).
+ *
+ * You must make sure that GStreamer has been initialised (with gst_init() or
+ * via gst_init_get_option_group()) before calling this function.
+ *
+ * Returns: TRUE if the plugin was registered correctly, otherwise FALSE.
+ *
+ * Since: 0.10.24
+ *
+ */
+gboolean
+gst_plugin_register_static_full (gint major_version, gint minor_version,
+    const gchar * name, gchar * description,
+    GstPluginInitFullFunc init_full_func, const gchar * version,
+    const gchar * license, const gchar * source, const gchar * package,
+    const gchar * origin, gpointer user_data)
+{
+  GstPluginDesc desc = { major_version, minor_version, name, description,
+    (GstPluginInitFunc) init_full_func, version, license, source, package,
+    origin,
+  };
+  GstPlugin *plugin;
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (name != NULL, FALSE);
+  g_return_val_if_fail (description != NULL, FALSE);
+  g_return_val_if_fail (init_full_func != NULL, FALSE);
+  g_return_val_if_fail (version != NULL, FALSE);
+  g_return_val_if_fail (license != NULL, FALSE);
+  g_return_val_if_fail (source != NULL, FALSE);
+  g_return_val_if_fail (package != NULL, FALSE);
+  g_return_val_if_fail (origin != NULL, FALSE);
+
+  /* make sure gst_init() has been called */
+  g_return_val_if_fail (_gst_plugin_inited != FALSE, FALSE);
+
+  GST_LOG ("attempting to load static plugin \"%s\" now...", name);
+  plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+  if (gst_plugin_register_func (plugin, &desc, user_data) != NULL) {
     GST_INFO ("registered static plugin \"%s\"", name);
     res = gst_default_registry_add_plugin (plugin);
     GST_INFO ("added static plugin \"%s\", result: %d", name, res);
@@ -306,7 +375,8 @@ gst_plugin_check_version (gint major, gint minor)
 }
 
 static GstPlugin *
-gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc)
+gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc,
+    gpointer user_data)
 {
   if (!gst_plugin_check_version (desc->major_version, desc->minor_version)) {
     if (GST_CAT_DEFAULT)
@@ -335,11 +405,20 @@ gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc)
 
   gst_plugin_desc_copy (&plugin->desc, desc);
 
-  if (!((desc->plugin_init) (plugin))) {
-    if (GST_CAT_DEFAULT)
-      GST_WARNING ("plugin \"%s\" failed to initialise", plugin->filename);
-    plugin->module = NULL;
-    return NULL;
+  if (user_data) {
+    if (!(((GstPluginInitFullFunc) (desc->plugin_init)) (plugin, user_data))) {
+      if (GST_CAT_DEFAULT)
+        GST_WARNING ("plugin \"%s\" failed to initialise", plugin->filename);
+      plugin->module = NULL;
+      return NULL;
+    }
+  } else {
+    if (!((desc->plugin_init) (plugin))) {
+      if (GST_CAT_DEFAULT)
+        GST_WARNING ("plugin \"%s\" failed to initialise", plugin->filename);
+      plugin->module = NULL;
+      return NULL;
+    }
   }
 
   if (GST_CAT_DEFAULT)
@@ -547,7 +626,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   GST_LOG ("Plugin %p for file \"%s\" prepared, registering...",
       plugin, filename);
 
-  if (!gst_plugin_register_func (plugin, plugin->orig_desc)) {
+  if (!gst_plugin_register_func (plugin, plugin->orig_desc, NULL)) {
     /* remove signal handler */
     _gst_plugin_fault_handler_restore ();
     GST_DEBUG ("gst_plugin_register_func failed for plugin \"%s\"", filename);

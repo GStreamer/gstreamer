@@ -1643,6 +1643,7 @@ GstPluginError
 GstPlugin
 GstPluginDesc
 GstPluginInitFunc
+GstPluginInitFullFunc
 GST_PLUGIN_DEFINE
 GST_PLUGIN_DEFINE_STATIC
 GST_LICENSE_UNKNOWN
@@ -1663,6 +1664,7 @@ gst_plugin_load
 gst_plugin_load_by_name
 gst_plugin_list_free
 gst_plugin_register_static
+gst_plugin_register_static_full
 <SUBSECTION>
 GstPluginDependencyFlags
 gst_plugin_add_dependency

@@ -110,6 +110,23 @@ typedef enum {
 typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
 
 /**
+ * GstPluginInitFullFunc:
+ * @plugin: The plugin object that can be used to register #GstPluginFeatures for this plugin.
+ * @user_data: The user data.
+ *
+ * A plugin should provide a pointer to a function of either #GstPluginInitFunc
+ * or this type in the plugin_desc struct.
+ * The function will be called by the loader at startup. This version allows
+ * user data to be passed to init function (useful for bindings).
+ *
+ * Returns: %TRUE if plugin initialised successfully
+ *
+ * Since: 0.10.24
+ *
+ */
+typedef gboolean (*GstPluginInitFullFunc) (GstPlugin *plugin, gpointer user_data);
+
+/**
  * GstPluginDesc:
  * @major_version: the major version number of core that plugin was compiled for
  * @minor_version: the minor version number of core that plugin was compiled for
@@ -307,6 +324,18 @@ gboolean		gst_plugin_register_static	(gint major_version,
                                                          const gchar *source,
                                                          const gchar *package,
                                                          const gchar *origin);
+
+gboolean		gst_plugin_register_static_full	(gint major_version,
+                                                         gint minor_version,
+                                                         const gchar *name,
+                                                         gchar *description,
+                                                         GstPluginInitFullFunc init_full_func,
+                                                         const gchar *version,
+                                                         const gchar *license,
+                                                         const gchar *source,
+                                                         const gchar *package,
+                                                         const gchar *origin,
+                                                         gpointer user_data);
 
 G_CONST_RETURN gchar*	gst_plugin_get_name		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_description	(GstPlugin *plugin);
