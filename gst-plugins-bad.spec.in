@@ -126,7 +126,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstrtpmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsiren.so
 %{_libdir}/gstreamer-%{majorminor}/libgstxdgmime.so
-%{_libdir}/gstreamer-%{majorminor}/libgstfpsdisplaysink.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdebugutilsbad.so
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography.h
 %{_libdir}/libgstphotography-0.10.so
@@ -134,6 +134,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstphotography-%{majorminor}.so.0
 %{_libdir}/libgstphotography-%{majorminor}.so.0.0.0
 %{_datadir}/gstreamer-%{majorminor}/presets/GstX264Enc.prs
+%{_datadir}/gstreamer-%{majorminor}/presets/GstFAAC.prs
 # gstreamer-plugins with external dependencies but in the main package
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
 @USE_FAAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
