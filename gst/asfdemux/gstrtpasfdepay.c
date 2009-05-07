@@ -257,7 +257,9 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      *
      * S: packet contains a keyframe.
-     * L: Length or offset present.
+     * L: If 1, Length/Offset contains length, else contains the byte offset
+     *    of the fragment's first byte counted from the beginning of the
+     *    complete ASF data packet.
      * R: relative timestamp present
      * D: duration present
      * I: locationid present
@@ -273,14 +275,25 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     len_offs = (payload[1] << 16) | (payload[2] << 8) | payload[3];
 
-    if (R)
+    if (R) {
+      GST_DEBUG ("Relative timestamp field present : %u",
+          GST_READ_UINT32_BE (payload + hdr_len));
       hdr_len += 4;
-    if (D)
+    }
+    if (D) {
+      GST_DEBUG ("Duration field present : %u",
+          GST_READ_UINT32_BE (payload + hdr_len));
       hdr_len += 4;
-    if (I)
+    }
+    if (I) {
+      GST_DEBUG ("LocationId field present : %u",
+          GST_READ_UINT32_BE (payload + hdr_len));
       hdr_len += 4;
+    }
 
     GST_LOG_OBJECT (depay, "S %d, L %d, R %d, D %d, I %d", S, L, R, D, I);
+    GST_LOG_OBJECT (depay, "payload_len:%d, hdr_len:%d, len_offs:%d",
+        payload_len, hdr_len, len_offs);
 
     if (payload_len < hdr_len)
       goto too_small;
@@ -294,18 +307,59 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       /* L bit set, len contains the length of the packet */
       packet_len = len_offs;
     } else {
-      packet_len = 0;
       /* else it contains an offset which we don't handle yet */
-      g_assert_not_reached ();
+      GST_LOG_OBJECT (depay, "We have a fragmented packet");
+      packet_len = payload_len;
     }
 
     if (packet_len > payload_len)
       packet_len = payload_len;
 
-    GST_LOG_OBJECT (depay, "packet len %u, payload len %u", packet_len,
-        payload_len);
+    GST_LOG_OBJECT (depay, "packet len %u, payload len %u, packet_size:%u",
+        packet_len, payload_len, depay->packet_size);
 
-    if (packet_len >= depay->packet_size) {
+    if (!L) {
+      guint available;
+      GstBuffer *sub;
+
+      /* Fragmented packet handling */
+
+      outbuf = NULL;
+
+      if (len_offs == 0 && (available = gst_adapter_available (depay->adapter))) {
+        /* Beginning of a new fragmented packet, Extract the previous buffer if any */
+        GST_DEBUG ("Extracting previous fragmented buffer from adapter");
+        sub = gst_adapter_take_buffer (depay->adapter, available);
+        if (available < depay->packet_size) {
+          /* Add padding if needed */
+          GST_DEBUG ("Padding outgoing buffer to packet_size (%d, was %d",
+              depay->packet_size, available);
+          outbuf = gst_buffer_new_and_alloc (depay->packet_size);
+          memcpy (GST_BUFFER_DATA (outbuf), GST_BUFFER_DATA (sub), available);
+          memset (GST_BUFFER_DATA (outbuf) + available, 0,
+              depay->packet_size - available);
+          gst_buffer_unref (sub);
+        } else
+          outbuf = sub;
+      }
+      GST_DEBUG ("storing fragmented buffer continuation and returning");
+      available = gst_adapter_available (depay->adapter);
+      GST_DEBUG ("Available bytes (%d), len_offs (%d)", available, len_offs);
+      if ((available = gst_adapter_available (depay->adapter))) {
+        if (available != len_offs) {
+          GST_WARNING ("Available bytes (%d) != len_offs (%d), trimming buffer",
+              available, len_offs);
+          sub = gst_adapter_take_buffer (depay->adapter, len_offs);
+          gst_adapter_clear (depay->adapter);
+          gst_adapter_push (depay->adapter, sub);
+        }
+      }
+      sub = gst_rtp_buffer_get_payload_subbuffer (buf, offset, packet_len);
+      gst_adapter_push (depay->adapter, sub);
+      /* If we haven't completed a full ASF packet, return */
+      if (!outbuf)
+        return NULL;
+    } else if (packet_len >= depay->packet_size) {
       GST_LOG_OBJECT (depay, "creating subbuffer");
       outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, offset, packet_len);
     } else {
