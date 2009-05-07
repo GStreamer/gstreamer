@@ -582,6 +582,14 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_SUBTITLE_CODEC         "subtitle-codec"
 /**
+ * GST_TAG_CONTAINER_FORMAT:
+ *
+ * container format the data is stored in (string)
+ *
+ * Since: 0.10.24
+ */
+#define GST_TAG_CONTAINER_FORMAT       "container-format"
+/**
  * GST_TAG_BITRATE:
  *
  * exact or average bitrate in bits/s (unsigned integer)
