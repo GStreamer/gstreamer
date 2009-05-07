@@ -184,6 +184,14 @@ gst_color_balance_get_value (GstColorBalance * balance,
   return channel->min_value;
 }
 
+GstColorBalanceType
+gst_color_balance_get_balance_type (GstColorBalance * balance)
+{
+  GstColorBalanceClass *klass = GST_COLOR_BALANCE_GET_CLASS (balance);
+
+  return klass->balance_type;
+}
+
 /**
  * gst_color_balance_value_changed:
  * @balance: A #GstColorBalance instance
