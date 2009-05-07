@@ -71,7 +71,8 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "mxfdemux", GST_RANK_PRIMARY,
           GST_TYPE_MXF_DEMUX) ||
-      !gst_element_register (plugin, "mxfmux", GST_RANK_NONE, GST_TYPE_MXF_MUX))
+      !gst_element_register (plugin, "mxfmux", GST_RANK_PRIMARY,
+          GST_TYPE_MXF_MUX))
     return FALSE;
 
   return TRUE;

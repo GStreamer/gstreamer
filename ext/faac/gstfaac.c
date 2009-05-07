@@ -806,7 +806,8 @@ gst_faac_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "faac", GST_RANK_NONE, GST_TYPE_FAAC);
+  return gst_element_register (plugin, "faac", GST_RANK_SECONDARY,
+      GST_TYPE_FAAC);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

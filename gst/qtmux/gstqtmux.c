@@ -1886,7 +1886,7 @@ gst_qt_mux_register (GstPlugin * plugin)
     g_type_set_qdata (type, GST_QT_MUX_PARAMS_QDATA, (gpointer) params);
     g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
 
-    if (!gst_element_register (plugin, prop->name, GST_RANK_NONE, type))
+    if (!gst_element_register (plugin, prop->name, GST_RANK_PRIMARY, type))
       return FALSE;
 
     i++;
