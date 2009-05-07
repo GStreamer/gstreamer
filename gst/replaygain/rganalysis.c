@@ -109,6 +109,14 @@ struct _RgAnalysisCtx
 
   RgAnalysisAcc track;
   RgAnalysisAcc album;
+  void (*post_message) (gpointer analysis,
+      GstClockTime timestamp, GstClockTime duration, gdouble rglevel);
+  gpointer analysis;
+  /* The timestamp of the current incoming buffer. */
+  GstClockTime buffer_timestamp;
+  /* Number of samples processed in current buffer, during emit_signal,
+     this will always be on an RMS window boundary. */
+  guint buffer_n_samples_done;
 };
 
 /* Filter coefficients for the IIR filters that form the equal
@@ -406,6 +414,13 @@ rg_analysis_new (void)
   return ctx;
 }
 
+static void
+reset_silence_detection (RgAnalysisCtx * ctx)
+{
+  ctx->buffer_timestamp = GST_CLOCK_TIME_NONE;
+  ctx->buffer_n_samples_done = 0;
+}
+
 /* Adapt to given sample rate.  Does nothing if already the current
  * rate (returns TRUE then).  Returns FALSE only if given sample rate
  * is not supported.  If the configured rate changes, the last
@@ -458,8 +473,26 @@ rg_analysis_set_sample_rate (RgAnalysisCtx * ctx, gint sample_rate)
       / 1000);
 
   reset_filters (ctx);
+  reset_silence_detection (ctx);
 
   return TRUE;
+}
+
+void
+rg_analysis_init_silence_detection (RgAnalysisCtx * ctx,
+    void (*post_message) (gpointer analysis, GstClockTime timestamp,
+        GstClockTime duration, gdouble rglevel), gpointer analysis)
+{
+  ctx->post_message = post_message;
+  ctx->analysis = analysis;
+  reset_silence_detection (ctx);
+}
+
+void
+rg_analysis_start_buffer (RgAnalysisCtx * ctx, GstClockTime buffer_timestamp)
+{
+  ctx->buffer_timestamp = buffer_timestamp;
+  ctx->buffer_n_samples_done = 0;
 }
 
 void
@@ -665,6 +698,7 @@ rg_analysis_analyze (RgAnalysisCtx * ctx, const gfloat * samples_l,
           * ctx->out_r[ctx->window_n_samples_done + i];
 
     ctx->window_n_samples_done += n_samples_current;
+    ctx->buffer_n_samples_done += n_samples_current;
 
     g_return_if_fail (ctx->window_n_samples_done <= ctx->window_n_samples);
 
@@ -674,6 +708,15 @@ rg_analysis_analyze (RgAnalysisCtx * ctx, const gfloat * samples_l,
           ctx->window_n_samples * 0.5 + 1.e-37);
       gint ival = CLAMP ((gint) val, 0,
           (gint) G_N_ELEMENTS (ctx->track.histogram) - 1);
+      /* Compute the per-window gain */
+      const gdouble gain = PINK_REF - (gdouble) ival / STEPS_PER_DB;
+      const GstClockTime timestamp = (ctx->buffer_timestamp
+          + ctx->buffer_n_samples_done * GST_SECOND / ctx->sample_rate
+          - RMS_WINDOW_MSECS * GST_MSECOND);
+
+      ctx->post_message (ctx->analysis, timestamp,
+          RMS_WINDOW_MSECS * GST_MSECOND, -gain);
+
 
       ctx->track.histogram[ival]++;
       ctx->window_square_sum = 0.;
@@ -736,6 +779,7 @@ rg_analysis_track_result (RgAnalysisCtx * ctx, gdouble * gain, gdouble * peak)
   accumulator_clear (&ctx->track);
 
   reset_filters (ctx);
+  reset_silence_detection (ctx);
 
   return result;
 }
@@ -774,4 +818,5 @@ rg_analysis_reset (RgAnalysisCtx * ctx)
   reset_filters (ctx);
   accumulator_clear (&ctx->track);
   accumulator_clear (&ctx->album);
+  reset_silence_detection (ctx);
 }

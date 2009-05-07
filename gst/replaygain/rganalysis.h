@@ -26,6 +26,7 @@
 #define __RG_ANALYSIS_H__
 
 #include <glib.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
@@ -47,6 +48,12 @@ gboolean rg_analysis_track_result (RgAnalysisCtx * ctx, gdouble * gain,
     gdouble * peak);
 gboolean rg_analysis_album_result (RgAnalysisCtx * ctx, gdouble * gain,
     gdouble * peak);
+void rg_analysis_init_silence_detection (
+    RgAnalysisCtx * ctx,
+    void (*post_message) (gpointer analysis, GstClockTime timestamp, GstClockTime duration, gdouble rglevel),
+    gpointer analysis);
+void rg_analysis_start_buffer (RgAnalysisCtx * ctx,
+                               GstClockTime buffer_timestamp);
 void rg_analysis_reset_album (RgAnalysisCtx * ctx);
 void rg_analysis_reset (RgAnalysisCtx * ctx);
 void rg_analysis_destroy (RgAnalysisCtx * ctx);

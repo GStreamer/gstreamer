@@ -95,13 +95,15 @@ static const GstElementDetails rganalysis_details = {
 
 /* Default property value. */
 #define FORCED_DEFAULT TRUE
+#define DEFAULT_MESSAGE FALSE
 
 enum
 {
   PROP_0,
   PROP_NUM_TRACKS,
   PROP_FORCED,
-  PROP_REFERENCE_LEVEL
+  PROP_REFERENCE_LEVEL,
+  PROP_MESSAGE
 };
 
 /* The ReplayGain algorithm is intended for use with mono and stereo
@@ -272,6 +274,11 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
           "Reference level [dB]", 0.0, 150., RG_REFERENCE_LEVEL,
           G_PARAM_READWRITE));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MESSAGE,
+      g_param_spec_boolean ("message", "Message",
+          "Post statics messages",
+          DEFAULT_MESSAGE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   trans_class = (GstBaseTransformClass *) klass;
   trans_class->start = GST_DEBUG_FUNCPTR (gst_rg_analysis_start);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_rg_analysis_set_caps);
@@ -290,6 +297,7 @@ gst_rg_analysis_init (GstRgAnalysis * filter, GstRgAnalysisClass * gclass)
 
   filter->num_tracks = 0;
   filter->forced = FORCED_DEFAULT;
+  filter->message = DEFAULT_MESSAGE;
   filter->reference_level = RG_REFERENCE_LEVEL;
 
   filter->ctx = NULL;
@@ -302,6 +310,7 @@ gst_rg_analysis_set_property (GObject * object, guint prop_id,
 {
   GstRgAnalysis *filter = GST_RG_ANALYSIS (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_NUM_TRACKS:
       filter->num_tracks = g_value_get_int (value);
@@ -312,10 +321,14 @@ gst_rg_analysis_set_property (GObject * object, guint prop_id,
     case PROP_REFERENCE_LEVEL:
       filter->reference_level = g_value_get_double (value);
       break;
+    case PROP_MESSAGE:
+      filter->message = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void
@@ -324,6 +337,7 @@ gst_rg_analysis_get_property (GObject * object, guint prop_id,
 {
   GstRgAnalysis *filter = GST_RG_ANALYSIS (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_NUM_TRACKS:
       g_value_set_int (value, filter->num_tracks);
@@ -334,11 +348,34 @@ gst_rg_analysis_get_property (GObject * object, guint prop_id,
     case PROP_REFERENCE_LEVEL:
       g_value_set_double (value, filter->reference_level);
       break;
+    case PROP_MESSAGE:
+      g_value_set_boolean (value, filter->message);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
+
+static void
+gst_rg_analysis_post_message (gpointer rganalysis, GstClockTime timestamp,
+    GstClockTime duration, gdouble rglevel)
+{
+  GstRgAnalysis *filter = GST_RG_ANALYSIS (rganalysis);
+  if (filter->message) {
+    GstMessage *m;
+
+    m = gst_message_new_element (GST_OBJECT_CAST (rganalysis),
+        gst_structure_new ("rganalysis",
+            "timestamp", G_TYPE_UINT64, timestamp,
+            "duration", G_TYPE_UINT64, duration,
+            "rglevel", G_TYPE_DOUBLE, rglevel, NULL));
+
+    gst_element_post_message (GST_ELEMENT_CAST (rganalysis), m);
+  }
+}
+
 
 static gboolean
 gst_rg_analysis_start (GstBaseTransform * base)
@@ -353,6 +390,10 @@ gst_rg_analysis_start (GstBaseTransform * base)
   filter->has_album_peak = FALSE;
 
   filter->ctx = rg_analysis_new ();
+  GST_OBJECT_LOCK (filter);
+  rg_analysis_init_silence_detection (filter->ctx, gst_rg_analysis_post_message,
+      filter);
+  GST_OBJECT_UNLOCK (filter);
   filter->analyze = NULL;
 
   GST_LOG_OBJECT (filter, "started");
@@ -452,13 +493,10 @@ gst_rg_analysis_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   if (filter->skip)
     return GST_FLOW_OK;
 
-  /* Buffers made up of silence have no influence on the analysis: */
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
-    return GST_FLOW_OK;
-
   GST_LOG_OBJECT (filter, "processing buffer of size %u",
       GST_BUFFER_SIZE (buf));
 
+  rg_analysis_start_buffer (filter->ctx, GST_BUFFER_TIMESTAMP (buf));
   filter->analyze (filter->ctx, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
       filter->depth);
 

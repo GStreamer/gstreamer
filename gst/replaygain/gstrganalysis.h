@@ -63,6 +63,7 @@ struct _GstRgAnalysis
   guint num_tracks;
   gdouble reference_level;
   gboolean forced;
+  gboolean message;
 
   /* State machinery for skipping. */
   gboolean ignore_tags;
