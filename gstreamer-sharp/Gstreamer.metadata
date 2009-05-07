@@ -27,9 +27,9 @@
   <attr path="/api/namespace/*/field[@array_len='GST_PADDING - 3']" name="array_len">3</attr>
   <attr path="/api/namespace/*/field[@array_len='GST_PADDING - 4']" name="array_len">0</attr>
 
+  <attr path="/api/namespace/object[@name='Bin']/field" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_add_many']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_remove_many']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Bin']/field" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_add']" name="hidden">1</attr> 
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_find_unconnected_pad']" name="hidden">1</attr> 
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_get_by_name']/return-type" name="owned">true</attr> 
@@ -79,8 +79,6 @@
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_MEDIA3']" name="value">MiniObjectFlags.Last &lt;&lt; 7</attr>
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
 
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='Bus']/field" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_post']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_peek']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_pop']/return-type" name="owned">true</attr>
@@ -189,8 +187,6 @@
   <attr path="/api/namespace/object[@name='Clock']/field[@name='ClockID']" name="readable">true</attr>
   <attr path="/api/namespace/object[@name='Clock']/field[@name='ClockID']" name="writeable">true</attr>
   <attr path="/api/namespace/object[@name='Clock']/field[@name='Times']" name="hidden">1</attr>
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='Clock']/field[@name='Resolution']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Clock']/virtual_method[@name='Wait']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Clock']/method[@cname='gst_clock_set_master']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Clock']/method[@cname='gst_clock_get_master']" name="hidden">1</attr>
@@ -267,8 +263,9 @@
 
   <attr path="/api/namespace/class[@name='Debug']" name="hidden">1</attr>
 
-  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_link_many']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/field" name="hidden">1</attr>
+  <remove-attr path="/api/namespace/object[@name='Element']/field[@name='CurrentState']" name="hidden" />
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_link_many']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_unlink_many']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_add_pad']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_get_pad']" name="hidden">1</attr>
@@ -309,10 +306,6 @@
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_static_pad_templates']/return-type" name="element_type">GstStaticPadTemplate</attr>
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_static_pad_templates']/return-type" name="elements_owned">false</attr>
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_static_pad_templates']/return-type" name="owned">false</attr>
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='ElementFactory']/field[@name='UriProtocols']" name="hidden">1</attr>
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='ElementFactory']/field[@name='UriType']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_uri_type']/return-type" name="type">GstURIType</attr>
 
   <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_FLAG_LAST']" name="name">Last</attr>
@@ -430,8 +423,6 @@
     </method>
   </add-node>
 
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='Index']/field" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Index']/virtual_method[@cname='get_assoc_entry']/parameters/parameter[@name='func']" name="type">gpointer</attr>
   <attr path="/api/namespace/object[@name='Index']/property[@cname='resolver']" name="name">Method</attr>
   <attr path="/api/namespace/object[@name='Index']/property[@cname='resolver']" name="type">GstIndexResolverMethod</attr>
@@ -525,9 +516,11 @@
   <attr path="/api/namespace/enum[@name='ObjectFlags']/member[@cname='GST_OBJECT_FLAG_LAST']" name="name">Last</attr>
 
   <attr path="/api/namespace/object[@name='Pipeline']/method[@name='GetBus']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pipeline']/field[@name='FixedClock']" name="hidden">1</attr>
 
+  <attr path="/api/namespace/object[@name='Pad']/field" name="hidden">1</attr>
+  <remove-attr path="/api/namespace/object[@name='Pad']/field[@name='mode']" name="hidden" />
   <attr path="/api/namespace/object[@name='Pad']/method[@name='GetAllowedCaps']/return-type" name="owned">true</attr>
-
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_data_probe_full']" name="name">AddDataProbe</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_data_probe_full']/parameters/parameter[@name='handler']" name="type">GstPadDataProbeCallback</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_buffer_probe_full']" name="name">AddBufferProbe</attr>
@@ -565,8 +558,6 @@
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer_and_set_caps']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_pull_range']/parameters/parameter[@name='buffer']" name="pass_as">out</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_pull_range']/parameters/parameter[@name='buffer']" name="owned">true</attr>
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='Pad']/field" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_bufferalloc_function']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_chain_function']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_checkgetrange_function']" name="hidden">1</attr>
@@ -706,7 +697,6 @@
   <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="elements_owned">true</attr>
 
-  <attr path="/api/namespace/object[@name='Pipeline']/field" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_set_new_stream_time']" name="name">SetStreamTime</attr>
   <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_get_last_stream_time']" name="name">GetStreamTime</attr>
   <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_get_bus']/return-type" name="owned">true</attr>
@@ -715,8 +705,6 @@
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_FIXED_CLOCK']" name="value">BinFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_LAST']" name="value">BinFlags.Last &lt;&lt; 4</attr>
 
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='Plugin']/field" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Plugin']/method[@cname='gst_plugin_error_quark']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Plugin']/method[@cname='gst_plugin_get_name']" name="name">GetPluginName</attr>
   <attr path="/api/namespace/object[@name='Plugin']/method[@cname='gst_plugin_add_dependency']/parameters/parameter[@type='const-gchar**']" name="null_term_array">true</attr>
@@ -732,8 +720,6 @@
 
   <attr path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_set_name']" name="name">SetFeatureName</attr>
   <attr path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_get_name']" name="name">GetFeatureName</attr>
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='PluginFeature']/field[@name='Rank']" name="hidden">1</attr>
   <add-node path="/api/namespace/object[@name='PluginFeature']">
         <method cname="gst_plugin_feature_load" name="Load">
         <return-type type="GstPluginFeature*" owned="true" />
@@ -883,6 +869,7 @@
   <attr path="/api/namespace/object[@name='SystemClock']/method[@cname='gst_system_clock_obtain']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/object[@name='Task']/field[@name='Func']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Task']/field[@name='Data']" name="hidden">1</attr>
 
   <attr path="/api/namespace/class[@name='Tag']" name="disable_void_ctor">1</attr>
   <attr path="/api/namespace/class[@name='Tag']/method[@cname='gst_tag_merge_strings_with_comma']" name="hidden">1</attr>
@@ -951,8 +938,6 @@
   <attr path="/api/namespace/object[@name='TypeFindFactory']/method[@cname='gst_type_find_factory_get_list']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='TypeFindFactory']/method[@cname='gst_type_find_factory_get_extensions']/return-type" name="null_term_array">true</attr>
 
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='Task']/field" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Task']/method[@cname='gst_task_cleanup_all']" name="hidden">1</attr>
   <remove-node path="/api/namespace/object[@name='Task']/method[@cname='gst_task_create']" />>
   <add-node path="/api/namespace/object[@name='Task']">
@@ -963,11 +948,6 @@
         </parameters>
       </constructor>
   </add-node>
-
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='TypeFindFactory']/field[@name='Caps']" name="hidden">1</attr>
-  <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='TypeFindFactory']/field[@name='Extensions']" name="hidden">1</attr>
 
   <attr path="/api/namespace/struct[@name='TypeNameData']" name="hidden">1</attr>
 

@@ -24,16 +24,3 @@ public void Signal () {
   g_cond_signal (CondPtr);
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
-extern static uint gstsharp_gst_task_get_running_offset ();
-
-static uint running_offset = gstsharp_gst_task_get_running_offset ();
-public bool IsRunning {
-  get {
-    unsafe {
-      bool* raw_ptr = (bool*) ( ( (byte*) Handle) + running_offset);
-      return (*raw_ptr);
-    }
-  }
-}
-
