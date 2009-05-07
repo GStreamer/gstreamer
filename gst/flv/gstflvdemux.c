@@ -1311,7 +1311,7 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "flvdemux", GST_RANK_PRIMARY,
           gst_flv_demux_get_type ()) ||
-      !gst_element_register (plugin, "flvmux", GST_RANK_NONE,
+      !gst_element_register (plugin, "flvmux", GST_RANK_PRIMARY,
           gst_flv_mux_get_type ()))
     return FALSE;
 
