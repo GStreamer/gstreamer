@@ -931,6 +931,10 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
         offset += length;
       }
       g_assert (found <= GST_MP3_TYPEFIND_TRY_HEADERS);
+      if (head_data == NULL &&
+          gst_type_find_peek (tf, offset + start_off - 1, 1) == NULL)
+        /* Incomplete last frame - don't count it. */
+        found--;
       if (found == GST_MP3_TYPEFIND_TRY_HEADERS ||
           (found >= GST_MP3_TYPEFIND_MIN_HEADERS && head_data == NULL)) {
         /* we can make a valid guess */
