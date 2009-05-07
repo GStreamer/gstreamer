@@ -470,10 +470,16 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   gst_buffer_copy_metadata (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
   data = GST_BUFFER_DATA (outbuf);
 
-  for (n = 0; n < render->width * render->height; n++) {
-    data[n * 4] = 0;
-    data[n * 4 + 1] = 0;
-    data[n * 4 + 2] = data[n * 4 + 3] = 128;
+  if (render->use_ARGB) {
+    for (n = 0; n < render->width * render->height; n++) {
+      data[n * 4] = 0;
+      data[n * 4 + 1] = data[n * 4 + 2] = data[n * 4 + 3] = 0;
+    }
+  } else {
+    for (n = 0; n < render->width * render->height; n++) {
+      data[n * 4] = data[n * 4 + 1] = 0;
+      data[n * 4 + 2] = data[n * 4 + 3] = 128;
+    }
   }
 
   switch (render->halign) {
