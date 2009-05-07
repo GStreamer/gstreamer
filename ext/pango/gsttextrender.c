@@ -276,12 +276,20 @@ gst_text_render_check_argb (GstTextRender * render)
     GST_DEBUG_OBJECT (render, "peer allowed caps (%u structure(s)) are %"
         GST_PTR_FORMAT, n, peer_caps);
 
+    /* Check if AYUV or ARGB is first */
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (peer_caps, i);
-      /* Check if the peer pad support ARGB format, if yes change caps */
       if (gst_structure_has_name (s, "video/x-raw-rgb") &&
           gst_structure_has_field (s, "alpha_mask")) {
         render->use_ARGB = TRUE;
+        break;
+      } else if (gst_structure_has_name (s, "video/x-raw-yuv")) {
+        guint fourcc;
+        if (gst_structure_get_fourcc (s, "format", &fourcc) &&
+            fourcc == GST_MAKE_FOURCC ('A', 'Y', 'U', 'V')) {
+          render->use_ARGB = FALSE;
+          break;
+        }
       }
     }
     gst_caps_unref (peer_caps);
