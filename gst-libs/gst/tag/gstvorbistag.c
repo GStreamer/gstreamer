@@ -479,7 +479,6 @@ gst_tag_to_coverart (const GValue * image_value)
   if (strcmp (mime_type, "text/uri-list") == 0) {
     /* URI reference */
     coverart_data = g_strndup ((gchar *) buffer->data, buffer->size);
-    mime_type = "-->";
   } else {
     coverart_data = g_base64_encode (buffer->data, buffer->size);
   }
