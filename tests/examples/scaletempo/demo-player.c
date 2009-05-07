@@ -194,7 +194,7 @@ demo_player_build_pipeline (DemoPlayer * player)
   priv->pipeline = playbin;
 
   priv->scaletempo_line = audioline;
-  MAKE_ELEMENT (NULL, priv->scalerate_line, "gconfaudiosink",
+  MAKE_ELEMENT (NULL, priv->scalerate_line, audiosink_name,
       "scaling_audio_sink");
   gst_pad_add_event_probe (gst_element_get_static_pad (priv->scalerate_line,
           "sink"), G_CALLBACK (demo_player_event_listener), player);
