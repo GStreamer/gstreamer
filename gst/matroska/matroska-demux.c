@@ -3996,6 +3996,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         data += 1;
         size -= 1;
 
+        GST_LOG_OBJECT (demux, "time %" G_GUINT16_FORMAT ", flags %d", time,
+            flags);
+
         switch ((flags & 0x06) >> 1) {
           case 0x0:            /* no lacing */
             laces = 1;
@@ -4162,6 +4165,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       case GST_MATROSKA_ID_REFERENCEPRIORITY:
       case GST_MATROSKA_ID_REFERENCEVIRTUAL:
       case GST_MATROSKA_ID_SLICES:
+        GST_DEBUG_OBJECT (demux,
+            "Skipping BlockGroup subelement 0x%x - ignoring", id);
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -4268,6 +4273,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           && stream->set_discont) {
         /* When doing seeks or such, we need to restart on key frames or
          * decoders might choke. */
+        GST_DEBUG_OBJECT (demux, "skipping delta unit");
         goto done;
       }
 
@@ -4371,11 +4377,11 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
       default:
         GST_WARNING ("Unknown Cluster subelement 0x%x - ignoring", id);
         /* fall-through */
-
       case GST_MATROSKA_ID_POSITION:
       case GST_MATROSKA_ID_PREVSIZE:
       case GST_MATROSKA_ID_ENCRYPTEDBLOCK:
       case GST_MATROSKA_ID_SILENTTRACKS:
+        GST_DEBUG ("Skipping Cluster subelement 0x%x - ignoring", id);
         ret = gst_ebml_read_skip (ebml);
         break;
     }
@@ -5257,6 +5263,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         g_value_set_double (&fps_double, videocontext->default_fps);
         g_value_transform (&fps_double, &fps_fraction);
 
+        GST_DEBUG ("using default fps %f", videocontext->default_fps);
+
         gst_structure_set_value (structure, "framerate", &fps_fraction);
         g_value_unset (&fps_double);
         g_value_unset (&fps_fraction);
@@ -5269,6 +5277,9 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         g_value_set_double (&fps_double, (gdouble) GST_SECOND /
             gst_guint64_to_gdouble (context->default_duration));
         g_value_transform (&fps_double, &fps_fraction);
+
+        GST_DEBUG ("using default duration %" G_GUINT64_FORMAT,
+            context->default_duration);
 
         gst_structure_set_value (structure, "framerate", &fps_fraction);
         g_value_unset (&fps_double);
