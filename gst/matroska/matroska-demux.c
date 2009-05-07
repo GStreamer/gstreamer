@@ -3537,7 +3537,8 @@ gst_matroska_demux_push_xiph_codec_priv_data (GstMatroskaDemux * demux,
 {
   GstFlowReturn ret;
   guint8 *p = (guint8 *) stream->codec_priv;
-  gint i, offset, length, num_packets;
+  gint i, offset, num_packets;
+  guint *length, last;
 
   /* start of the stream and vorbis audio or theora video, need to
    * send the codec_priv data as first three packets */
@@ -3545,28 +3546,39 @@ gst_matroska_demux_push_xiph_codec_priv_data (GstMatroskaDemux * demux,
   GST_DEBUG_OBJECT (demux, "%u stream headers, total length=%u bytes",
       (guint) num_packets, stream->codec_priv_size);
 
-  offset = num_packets;         /* offset to data of first packet */
+  length = g_alloca (num_packets * sizeof (guint));
+  last = 0;
+  offset = 1;
 
+  /* first packets, read length values */
   for (i = 0; i < num_packets - 1; i++) {
-    length = p[i + 1];
+    length[i] = 0;
+    while (offset < stream->codec_priv_size) {
+      length[i] += p[offset];
+      if (p[offset++] != 0xff)
+        break;
+    }
+    last += length[i];
+  }
+  if (offset + last > stream->codec_priv_size)
+    return GST_FLOW_ERROR;
 
-    GST_DEBUG_OBJECT (demux, "buffer %d: length=%u bytes", i, (guint) length);
-    if (offset + length > stream->codec_priv_size)
+  /* last packet is the remaining size */
+  length[i] = stream->codec_priv_size - offset - last;
+
+  for (i = 0; i < num_packets; i++) {
+    GST_DEBUG_OBJECT (demux, "buffer %d: length=%u bytes", i,
+        (guint) length[i]);
+    if (offset + length[i] > stream->codec_priv_size)
       return GST_FLOW_ERROR;
 
-    ret = gst_matroska_demux_push_hdr_buf (demux, stream, p + offset, length);
+    ret =
+        gst_matroska_demux_push_hdr_buf (demux, stream, p + offset, length[i]);
     if (ret != GST_FLOW_OK)
       return ret;
 
-    offset += length;
+    offset += length[i];
   }
-
-  length = stream->codec_priv_size - offset;
-  GST_DEBUG_OBJECT (demux, "buffer %d: length=%u bytes", i, (guint) length);
-  ret = gst_matroska_demux_push_hdr_buf (demux, stream, p + offset, length);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
   return GST_FLOW_OK;
 }
 
