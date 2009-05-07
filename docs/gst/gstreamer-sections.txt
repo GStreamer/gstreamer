@@ -2094,6 +2094,7 @@ gst_tag_list_merge
 gst_tag_list_free
 gst_tag_list_get_tag_size
 gst_tag_list_add
+gst_tag_list_add_value
 gst_tag_list_add_values
 gst_tag_list_add_valist
 gst_tag_list_add_valist_values
@@ -2154,6 +2155,7 @@ GstTagSetterIFace
 gst_tag_setter_reset_tags
 gst_tag_setter_merge_tags
 gst_tag_setter_add_tags
+gst_tag_setter_add_tag_value
 gst_tag_setter_add_tag_values
 gst_tag_setter_add_tag_valist
 gst_tag_setter_add_tag_valist_values
