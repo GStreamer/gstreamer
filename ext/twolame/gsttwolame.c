@@ -1039,7 +1039,7 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
-  if (!gst_element_register (plugin, "twolame", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "twolame", GST_RANK_SECONDARY,
           GST_TYPE_TWO_LAME))
     return FALSE;
 
