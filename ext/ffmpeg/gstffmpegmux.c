@@ -769,7 +769,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
   AVOutputFormat *in_plugin;
   GstFFMpegMuxClassParams *params;
 
-  in_plugin = first_oformat;
+  in_plugin = av_oformat_next (NULL);
 
   GST_LOG ("Registering muxers");
 
@@ -880,7 +880,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     g_free (type_name);
 
   next:
-    in_plugin = in_plugin->next;
+    in_plugin = av_oformat_next (in_plugin);
   }
 
   GST_LOG ("Finished registering muxers");

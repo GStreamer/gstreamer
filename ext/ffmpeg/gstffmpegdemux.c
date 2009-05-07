@@ -1786,7 +1786,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     (GInstanceInitFunc) gst_ffmpegdemux_init,
   };
 
-  in_plugin = first_iformat;
+  in_plugin = av_iformat_next (NULL);
 
   GST_LOG ("Registering demuxers");
 
@@ -1967,7 +1967,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
 
   next:
     g_free (name);
-    in_plugin = in_plugin->next;
+    in_plugin = av_iformat_next (in_plugin);
   }
 
   GST_LOG ("Finished registering demuxers");
