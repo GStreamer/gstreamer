@@ -114,6 +114,13 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Uncompressed packed YVU 4:1:0");
       break;
 
+    case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
+      caps = gst_caps_new_simple ("video/x-raw-yuv",
+          "format", GST_TYPE_FOURCC, codec_fcc, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Uncompressed packed YUV 4:2:2");
+      break;
+
     case GST_MAKE_FOURCC ('M', 'J', 'P', 'G'): /* YUY2 MJPEG */
     case GST_MAKE_FOURCC ('A', 'V', 'R', 'n'):
     case GST_MAKE_FOURCC ('I', 'J', 'P', 'G'):
@@ -1684,6 +1691,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('T', 'M', '2', '0'),
     GST_MAKE_FOURCC ('T', 'S', 'C', 'C'),
     GST_MAKE_FOURCC ('U', 'L', 'T', 'I'),
+    GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'),
     GST_MAKE_FOURCC ('V', 'C', 'R', '1'),
     GST_MAKE_FOURCC ('V', 'C', 'R', '2'),
     GST_MAKE_FOURCC ('V', 'D', 'O', 'W'),
