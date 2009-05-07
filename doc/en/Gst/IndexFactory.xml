@@ -19,7 +19,8 @@
     
     
     
-    <Member MemberName=".ctor">
+    
+  <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public IndexFactory (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
@@ -70,6 +71,5 @@
       <ReturnValue><ReturnType>Gst.Index</ReturnType></ReturnValue>
       <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
       <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member>
-  </Members>
+    </Member><Member MemberName="Register"><MemberSignature Language="C#" Value="public static bool Register (Gst.Plugin plugin, string name, string longdesc, GLib.GType gtype);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="plugin" Type="Gst.Plugin" /><Parameter Name="name" Type="System.String" /><Parameter Name="longdesc" Type="System.String" /><Parameter Name="gtype" Type="GLib.GType" /></Parameters><Docs><param name="plugin">To be added.</param><param name="name">To be added.</param><param name="longdesc">To be added.</param><param name="gtype">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member></Members>
 </Type>

@@ -296,6 +296,7 @@
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_seek_simple']" name="name">Seek</attr>
   <remove-attr path="/api/namespace/object[@name='Element']/field[@name='CurrentState']" name="hidden"/>
   <move-node path="/api/namespace/object[@name='Element']/method[@cname='gst_element_make_from_uri']">/api/namespace/object[@name='ElementFactory']</move-node>
+  <move-node path="/api/namespace/object[@name='Element']/method[@cname='gst_element_register']">/api/namespace/object[@name='ElementFactory']</move-node>
   
   <attr path="/api/namespace/struct[@name='ElementDetails']" name="internal">1</attr>
 

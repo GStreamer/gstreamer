@@ -19,7 +19,8 @@
     
     
     
-    <Member MemberName=".ctor">
+    
+  <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="protected TypeFindFactory ();" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
@@ -76,6 +77,5 @@
       </AssemblyInfo>
       <ReturnValue><ReturnType>Gst.TypeFindFactory[]</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member>
-  </Members>
+    </Member><Member MemberName="Register"><MemberSignature Language="C#" Value="public static bool Register (Gst.Plugin plugin, string name, uint rank, Gst.TypeFindFunction func, string[] extensions, Gst.Caps possible_caps);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="plugin" Type="Gst.Plugin" /><Parameter Name="name" Type="System.String" /><Parameter Name="rank" Type="System.UInt32" /><Parameter Name="func" Type="Gst.TypeFindFunction" /><Parameter Name="extensions" Type="System.String[]" /><Parameter Name="possible_caps" Type="Gst.Caps" /></Parameters><Docs><param name="plugin">To be added.</param><param name="name">To be added.</param><param name="rank">To be added.</param><param name="func">To be added.</param><param name="extensions">To be added.</param><param name="possible_caps">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member></Members>
 </Type>

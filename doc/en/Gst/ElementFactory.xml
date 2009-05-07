@@ -156,7 +156,7 @@
       </AssemblyInfo>
       <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="StaticPadTemplates">
+    </Member><Member MemberName="Register"><MemberSignature Language="C#" Value="public static bool Register (Gst.Plugin plugin, string name, uint rank, GLib.GType type);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="plugin" Type="Gst.Plugin" /><Parameter Name="name" Type="System.String" /><Parameter Name="rank" Type="System.UInt32" /><Parameter Name="type" Type="GLib.GType" /></Parameters><Docs><param name="plugin">To be added.</param><param name="name">To be added.</param><param name="rank">To be added.</param><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="StaticPadTemplates">
       <MemberSignature Language="C#" Value="public Gst.StaticPadTemplate[] StaticPadTemplates { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>

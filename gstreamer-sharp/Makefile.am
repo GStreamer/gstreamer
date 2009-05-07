@@ -62,7 +62,7 @@ customs = 			\
 	Bus.custom		\
 	Caps.custom		\
 	Clock.custom		\
-	ClockEntry.custom		\
+	ClockEntry.custom	\
 	Debug.custom		\
 	Element.custom		\
 	Message.custom		\
@@ -76,12 +76,14 @@ customs = 			\
 	MiniObject.custom       \
 	IndexEntry.custom       \
 	Index.custom       \
+	IndexFactory.custom       \
 	Registry.custom         \
 	Query.custom 	        \
 	Structure.custom        \
 	Tag.custom		\
 	TagList.custom		\
-	TypeFind.custom
+	TypeFind.custom		\
+	TypeFindFactory.custom	
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 
