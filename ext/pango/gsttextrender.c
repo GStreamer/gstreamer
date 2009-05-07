@@ -78,13 +78,14 @@ static GstStaticPadTemplate sink_template_factory =
     GST_STATIC_CAPS ("text/x-pango-markup; text/plain")
     );
 
-GST_BOILERPLATE (GstTextRender, gst_text_render, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstTextRender, gst_text_render, GstElement, GST_TYPE_ELEMENT);
 
-     static void gst_text_render_finalize (GObject * object);
-     static void gst_text_render_set_property (GObject * object,
+static void gst_text_render_finalize (GObject * object);
+static void gst_text_render_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 
-     static void gst_text_render_base_init (gpointer g_class)
+static void
+gst_text_render_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
