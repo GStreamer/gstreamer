@@ -276,15 +276,16 @@ gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
           DEFAULT_TARGET, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate (kb/s)",
-          "Bitrate in kbit/sec (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, "
-          "112, 128, 160, 192, 224, 256 or 320)",
-          8, 320, DEFAULT_BITRATE, G_PARAM_READWRITE));
+          "Bitrate in kbit/sec (Only valid if target is bitrate, for CBR one "
+          "of 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, "
+          "256 or 320)", 8, 320, DEFAULT_BITRATE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CBR,
-      g_param_spec_boolean ("cbr", "CBR", "Enforce constant bitrate encoding",
-          DEFAULT_CBR, G_PARAM_READWRITE));
+      g_param_spec_boolean ("cbr", "CBR", "Enforce constant bitrate encoding "
+          "(Only valid if target is bitrate)", DEFAULT_CBR, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_float ("quality", "Quality",
-          "VBR Quality from 0 to 10, 0 being the best", 0.0, 9.999,
+          "VBR Quality from 0 to 10, 0 being the best "
+          "(Only valid if target is quality)", 0.0, 9.999,
           DEFAULT_QUALITY, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_ENCODING_ENGINE_QUALITY, g_param_spec_enum ("encoding-engine-quality",
@@ -775,8 +776,8 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame)
     CHECK_ERROR (lame_set_VBR (lame->lgf, vbr_default));
     CHECK_ERROR (lame_set_VBR_quality (lame->lgf, lame->quality));
   } else {
-    CHECK_AND_FIXUP_BITRATE (lame, "bitrate", lame->bitrate);
     if (lame->cbr) {
+      CHECK_AND_FIXUP_BITRATE (lame, "bitrate", lame->bitrate);
       CHECK_ERROR (lame_set_VBR (lame->lgf, vbr_off));
       CHECK_ERROR (lame_set_brate (lame->lgf, lame->bitrate));
     } else {
