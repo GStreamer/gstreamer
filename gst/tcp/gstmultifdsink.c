@@ -536,7 +536,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * GstMultiFdSink::add-full:
    * @gstmultifdsink: the multifdsink element to emit this signal on
    * @fd:             the file descriptor to add to multifdsink
-   * @keyframe:       start bursting from a keyframe
+   * @sync:           the sync method to use
    * @unit_type_min:  the unit-type of @value_min
    * @value_min:      the minimum amount of data to burst expressed in
    *                  @unit_type_min units.
@@ -551,8 +551,8 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
       g_signal_new ("add-full", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstMultiFdSinkClass,
           add_full), NULL, NULL,
-      gst_tcp_marshal_VOID__INT_BOOLEAN_INT_UINT64_INT_UINT64, G_TYPE_NONE, 6,
-      G_TYPE_INT, G_TYPE_BOOLEAN, GST_TYPE_UNIT_TYPE, G_TYPE_UINT64,
+      gst_tcp_marshal_VOID__INT_ENUM_INT_UINT64_INT_UINT64, G_TYPE_NONE, 6,
+      G_TYPE_INT, GST_TYPE_SYNC_METHOD, GST_TYPE_UNIT_TYPE, G_TYPE_UINT64,
       GST_TYPE_UNIT_TYPE, G_TYPE_UINT64);
   /**
    * GstMultiFdSink::remove:
