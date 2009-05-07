@@ -78,14 +78,13 @@ struct _GstTextRender {
     FT_Bitmap             bitmap;
     gint                  bitmap_buffer_size;
     gint                  baseline_y;
-    gboolean use_ARGB;
-    gboolean check_ARGB;
+    gboolean              use_ARGB;
 
     GstTextRenderVAlign     valign;
     GstTextRenderHAlign     halign;
     GstTextRenderLineAlign  line_align;
 
-	 gint xpad;
+    gint xpad;
     gint ypad;
 };
 

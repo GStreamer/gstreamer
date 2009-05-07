@@ -82,11 +82,7 @@ static GstStaticPadTemplate src_template_factory =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, format = (fourcc) AYUV; "
-        "video/x-raw-rgb, "
-        "bpp = (int) 32, endianness = (int) 4321, red_mask = (int) 16711680, "
-        "green_mask = (int) 65280, blue_mask = (int) 255, "
-        " alpha_mask = (int) -16777216, depth = (int) 32")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_ARGB)
     );
 
 static GstStaticPadTemplate sink_template_factory =
@@ -293,7 +289,6 @@ gst_text_render_check_argb (GstTextRender * render)
       }
     }
     gst_caps_unref (peer_caps);
-    render->check_ARGB = TRUE;
   }
 }
 
@@ -445,27 +440,16 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   pango_layout_set_markup (render->layout, (gchar *) data, size);
   gst_text_render_render_text (render);
 
-  if (G_UNLIKELY (!render->check_ARGB)) {
-    gst_text_render_check_argb (render);
-  }
+  gst_text_render_check_argb (render);
 
   if (!render->use_ARGB) {
-    caps = gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
-        GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'), "width", G_TYPE_INT,
-        render->width, "height", G_TYPE_INT, render->height,
-        "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
+    caps =
+        gst_video_format_new_caps (GST_VIDEO_FORMAT_AYUV, render->width,
+        render->height, 1, 1, 1, 1);
   } else {
-    caps = gst_caps_new_simple ("video/x-raw-rgb",
-        "width", G_TYPE_INT, render->width,
-        "height", G_TYPE_INT, render->height,
-        "framerate", GST_TYPE_FRACTION, 0, 1,
-        "bpp", G_TYPE_INT, 32,
-        "depth", G_TYPE_INT, 32,
-        "red_mask", G_TYPE_INT, 16711680,
-        "green_mask", G_TYPE_INT, 65280,
-        "blue_mask", G_TYPE_INT, 255,
-        "alpha_mask", G_TYPE_INT, -16777216,
-        "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
+    caps =
+        gst_video_format_new_caps (GST_VIDEO_FORMAT_ARGB, render->width,
+        render->height, 1, 1, 1, 1);
   }
 
   if (!gst_pad_set_caps (render->srcpad, caps)) {
@@ -594,7 +578,6 @@ gst_text_render_init (GstTextRender * render, GstTextRenderClass * klass)
   render->height = DEFAULT_RENDER_HEIGHT;
 
   render->use_ARGB = FALSE;
-  render->check_ARGB = FALSE;
 }
 
 static void
