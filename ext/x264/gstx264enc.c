@@ -1303,7 +1303,7 @@ plugin_init (GstPlugin * plugin)
       "h264 encoding element");
 
   return gst_element_register (plugin, "x264enc",
-      GST_RANK_NONE, GST_TYPE_X264_ENC);
+      GST_RANK_PRIMARY, GST_TYPE_X264_ENC);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
