@@ -460,6 +460,40 @@ typedef struct
 }
 MyForEach;
 
+static GList *
+gst_tag_to_coverart (const GValue * image_value)
+{
+  gchar *coverart_data, *data_result, *mime_result;
+  const gchar *mime_type;
+  GstStructure *mime_struct;
+  GstBuffer *buffer;
+  GList *l = NULL;
+
+  g_return_val_if_fail (image_value != NULL, NULL);
+
+  buffer = gst_value_get_buffer (image_value);
+  g_return_val_if_fail (gst_caps_is_fixed (buffer->caps), NULL);
+  mime_struct = gst_caps_get_structure (buffer->caps, 0);
+  mime_type = gst_structure_get_name (mime_struct);
+
+  if (strcmp (mime_type, "text/uri-list") == 0) {
+    /* URI reference */
+    coverart_data = g_strndup ((gchar *) buffer->data, buffer->size);
+    mime_type = "-->";
+  } else {
+    coverart_data = g_base64_encode (buffer->data, buffer->size);
+  }
+
+  data_result = g_strdup_printf ("COVERART=%s", coverart_data);
+  mime_result = g_strdup_printf ("COVERARTMIME=%s", mime_type);
+  g_free (coverart_data);
+
+  l = g_list_append (l, data_result);
+  l = g_list_append (l, mime_result);
+
+  return l;
+}
+
 /**
  * gst_tag_to_vorbis_comments:
  * @list: a #GstTagList
@@ -480,6 +514,18 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
 
   g_return_val_if_fail (list != NULL, NULL);
   g_return_val_if_fail (tag != NULL, NULL);
+
+  /* Special case: cover art is split into two tags to store data and
+   * MIME-type. Even if the tag list contains multiple entries, there is
+   * no reasonable way to save more than one.
+   * If both, preview image and image, are present we prefer the
+   * image tag.
+   */
+  if ((strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0 &&
+          gst_tag_list_get_tag_size (list, GST_TAG_IMAGE) == 0) ||
+      strcmp (tag, GST_TAG_IMAGE) == 0) {
+    return gst_tag_to_coverart (gst_tag_list_get_value_index (list, tag, 0));
+  }
 
   if (strcmp (tag, GST_TAG_EXTENDED_COMMENT) != 0) {
     vorbis_tag = gst_tag_to_vorbis_tag (tag);
