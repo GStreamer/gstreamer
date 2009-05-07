@@ -2359,6 +2359,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       ret = GST_STATE_CHANGE_ASYNC;
       break;
     default:
+      ret = GST_STATE_CHANGE_SUCCESS;
       break;
   }
 
