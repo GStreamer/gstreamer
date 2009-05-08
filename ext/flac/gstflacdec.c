@@ -938,10 +938,11 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         GST_BUFFER_OFFSET (flacdec->pending),
         GST_BUFFER_SIZE (flacdec->pending),
         GST_BUFFER_CAPS (flacdec->pending), &outbuf);
-    if (ret == GST_FLOW_OK)
-      gst_pad_push (flacdec->srcpad, outbuf);
+    if (ret == GST_FLOW_OK) {
+      gst_pad_push (flacdec->srcpad, flacdec->pending);
+      gst_buffer_unref (outbuf);
+    }
 
-    gst_buffer_unref (flacdec->pending);
     outbuf = flacdec->pending = NULL;
     flacdec->segment.last_stop += flacdec->pending_samples;
     flacdec->pending_samples = 0;
