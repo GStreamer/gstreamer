@@ -831,12 +831,16 @@ bin_replace_message (GstBin * bin, GstMessage * message, GstMessageType types)
   if ((src = GST_MESSAGE_SRC (message))) {
     /* first find the previous message posted by this element */
     if ((previous = find_message (bin, src, types))) {
+      GstMessage *previous_msg;
+
       /* if we found a previous message, replace it */
-      gst_message_unref (previous->data);
+      previous_msg = previous->data;
       previous->data = message;
 
-      GST_DEBUG_OBJECT (bin, "replace old message %s from %s",
-          name, GST_ELEMENT_NAME (src));
+      GST_DEBUG_OBJECT (bin, "replace old message %s from %s with %s message",
+          GST_MESSAGE_TYPE_NAME (previous_msg), GST_ELEMENT_NAME (src), name);
+
+      gst_message_unref (previous_msg);
     } else {
       /* keep new message */
       bin->messages = g_list_prepend (bin->messages, message);
