@@ -400,6 +400,8 @@ gst_dvd_spu_render_spu (GstDVDSpu * dvdspu, GstBuffer * buf)
   gint y, last_y;
 
   /* Set up our initial state */
+  if (G_UNLIKELY (state->pix_buf == NULL))
+    return;
 
   /* Store the start of each plane */
   planes[0] = GST_BUFFER_DATA (buf);
