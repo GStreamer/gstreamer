@@ -2355,22 +2355,40 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* we want to go async to PAUSED until we managed to configure and add the
+       * sinks */
       do_async_start (playsink);
       ret = GST_STATE_CHANGE_ASYNC;
       break;
     default:
+      /* all other state changes return SUCCESS by default, this value can be
+       * overridden by the result of the children */
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
   }
 
+  /* do the state change of the children */
   bret =
       GST_ELEMENT_CLASS (gst_play_sink_parent_class)->change_state (element,
       transition);
-  if (G_UNLIKELY (bret == GST_STATE_CHANGE_FAILURE))
-    goto activate_failed;
-  else if (G_UNLIKELY (bret == GST_STATE_CHANGE_NO_PREROLL)) {
-    do_async_done (playsink);
-    ret = bret;
+  /* now look at the result of our children and adjust the return value */
+  switch (bret) {
+    case GST_STATE_CHANGE_FAILURE:
+      /* failure, we stop */
+      goto activate_failed;
+    case GST_STATE_CHANGE_NO_PREROLL:
+      /* some child returned NO_PREROLL. This is strange but we never know. We
+       * commit our async state change (if any) and return the NO_PREROLL */
+      do_async_done (playsink);
+      ret = bret;
+      break;
+    case GST_STATE_CHANGE_ASYNC:
+      /* some child was async, return this */
+      ret = bret;
+      break;
+    default:
+      /* return our previously configured return value */
+      break;
   }
 
   switch (transition) {
