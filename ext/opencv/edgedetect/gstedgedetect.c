@@ -316,8 +316,8 @@ gst_edgedetect_chain (GstPad * pad, GstBuffer * buf)
  * initialize the plug-in itself
  * register the element factories and other features
  */
-static gboolean
-edgedetect_init (GstPlugin * edgedetect)
+gboolean
+gst_edgedetect_plugin_init (GstPlugin * plugin)
 {
   /* debug category for fltering log messages
    *
@@ -326,22 +326,6 @@ edgedetect_init (GstPlugin * edgedetect)
   GST_DEBUG_CATEGORY_INIT (gst_edgedetect_debug, "edgedetect",
       0, "Performs canny edge detection on videos and images");
 
-  return gst_element_register (edgedetect, "edgedetect", GST_RANK_NONE,
+  return gst_element_register (plugin, "edgedetect", GST_RANK_NONE,
       GST_TYPE_EDGEDETECT);
 }
-
-/* gstreamer looks for this structure to register edgedetects
- *
- * exchange the string 'Template edgedetect' with your edgedetect description
- */
-GST_PLUGIN_DEFINE (
-    GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "edgedetect",
-    "Performs canny edge detection on videos and images",
-    edgedetect_init,
-    VERSION,
-    "LGPL",
-    "GStreamer OpenCV Plugins",
-    "http://www.mikeasoft.com/"
-)

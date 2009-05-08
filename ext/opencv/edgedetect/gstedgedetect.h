@@ -86,6 +86,8 @@ struct _GstedgedetectClass
 
 GType gst_edgedetect_get_type (void);
 
+gboolean gst_edgedetect_plugin_init (GstPlugin * plugin);
+
 G_END_DECLS
 
 #endif /* __GST_EDGEDETECT_H__ */

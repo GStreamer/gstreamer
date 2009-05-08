@@ -88,6 +88,8 @@ struct _GstfacedetectClass
 
 GType gst_facedetect_get_type (void);
 
+gboolean gst_facedetect_plugin_init (GstPlugin * plugin);
+
 G_END_DECLS
 
 #endif /* __GST_FACEDETECT_H__ */

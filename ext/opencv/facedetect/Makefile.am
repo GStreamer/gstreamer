@@ -1,6 +1,6 @@
 # plugindir is set in configure
 
-plugin_LTLIBRARIES = libgstfacedetect.la
+noinst_LTLIBRARIES = libgstfacedetect.la
 
 # sources used to compile this plug-in
 libgstfacedetect_la_SOURCES = gstfacedetect.c

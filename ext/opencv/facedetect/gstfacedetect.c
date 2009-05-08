@@ -327,27 +327,13 @@ static void gst_facedetect_load_profile(Gstfacedetect * filter) {
  * initialize the plug-in itself
  * register the element factories and other features
  */
-static gboolean
-facedetect_init (GstPlugin * facedetect)
+gboolean
+gst_facedetect_plugin_init (GstPlugin * plugin)
 {
   /* debug category for fltering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_facedetect_debug, "facedetect",
       0, "Performs face detection on videos and images, providing detected positions via bus messages");
 
-  return gst_element_register (facedetect, "facedetect", GST_RANK_NONE,
+  return gst_element_register (plugin, "facedetect", GST_RANK_NONE,
       GST_TYPE_FACEDETECT);
 }
-
-
-/* gstreamer looks for this structure to register facedetect */
-GST_PLUGIN_DEFINE (
-    GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "facedetect",
-    "Performs face detection on videos and images, providing detected positions via bus messages",
-    facedetect_init,
-    VERSION,
-    "LGPL",
-    "GStreamer OpenCV Plugins",
-    "http://www.mikeasoft.com/"
-)

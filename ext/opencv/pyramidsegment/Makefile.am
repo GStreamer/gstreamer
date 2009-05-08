@@ -1,6 +1,4 @@
-# plugindir is set in configure
-
-plugin_LTLIBRARIES = libgstpyramidsegment.la
+noinst_LTLIBRARIES = libgstpyramidsegment.la
 
 # sources used to compile this plug-in
 libgstpyramidsegment_la_SOURCES = gstpyramidsegment.c

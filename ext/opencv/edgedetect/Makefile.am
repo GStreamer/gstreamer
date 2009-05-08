@@ -1,6 +1,6 @@
 # plugindir is set in configure
 
-plugin_LTLIBRARIES = libgstedgedetect.la
+noinst_LTLIBRARIES = libgstedgedetect.la
 
 # sources used to compile this plug-in
 libgstedgedetect_la_SOURCES = gstedgedetect.c

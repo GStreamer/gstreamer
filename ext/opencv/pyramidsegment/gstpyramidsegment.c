@@ -308,26 +308,13 @@ gst_pyramidsegment_chain (GstPad * pad, GstBuffer * buf)
  * initialize the plug-in itself
  * register the element factories and other features
  */
-static gboolean
-pyramidsegment_init (GstPlugin * pyramidsegment)
+gboolean
+gst_pyramidsegment_plugin_init (GstPlugin * plugin)
 {
   /* debug category for fltering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_pyramidsegment_debug, "pyramidsegment",
       0, "Applies pyramid segmentation to a video or image");
 
-  return gst_element_register (pyramidsegment, "pyramidsegment", GST_RANK_NONE,
+  return gst_element_register (plugin, "pyramidsegment", GST_RANK_NONE,
       GST_TYPE_PYRAMIDSEGMENT);
 }
-
-/* gstreamer looks for this structure to register pyramidsegment */
-GST_PLUGIN_DEFINE (
-    GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "pyramidsegment",
-    "Applies pyramid segmentation to a video or image",
-    pyramidsegment_init,
-    VERSION,
-    "LGPL",
-    "GStreamer OpenCV Plugins",
-    "http://www.mikeasoft.com"
-)

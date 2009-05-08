@@ -92,6 +92,8 @@ struct _GstpyramidsegmentClass
 
 GType gst_pyramidsegment_get_type (void);
 
+gboolean gst_pyramidsegment_plugin_init (GstPlugin * plugin);
+
 G_END_DECLS
 
 #endif /* __GST_PYRAMIDSEGMENT_H__ */
