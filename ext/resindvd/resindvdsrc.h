@@ -119,6 +119,7 @@ struct _resinDvdSrc
   GstEvent	*highlight_event;
 
   gboolean      angles_changed;
+  gboolean      commands_changed;
 
   /* GList of NAV packets awaiting activation, and the
    * running times to activate them. */

@@ -134,6 +134,7 @@ static gboolean rsn_dvdsrc_src_event (RsnBaseSrc * basesrc, GstEvent * event);
 static gboolean rsn_dvdsrc_src_query (RsnBaseSrc * basesrc, GstQuery * query);
 
 static GstClockTime ifotime_to_gsttime (dvd_time_t * ifo_time);
+static void rsn_dvdsrc_send_commands_changed (resinDvdSrc * src);
 
 static GstClockTime
 ifotime_to_gsttime (dvd_time_t * ifo_time)
@@ -397,6 +398,8 @@ rsn_dvdsrc_start (RsnBaseSrc * bsrc)
 
   src->angles_changed = FALSE;
   src->n_angles = 0;
+
+  src->commands_changed = TRUE;
 
   src->cur_spu_phys_stream = -1;
   src->cur_spu_forced_only = FALSE;
@@ -1062,6 +1065,57 @@ branching:
   return GST_FLOW_WRONG_STATE;
 }
 
+/* Send app a bus message that the available commands have changed */
+static void
+rsn_dvdsrc_send_commands_changed (resinDvdSrc * src)
+{
+  GstMessage *cmds_msg =
+      gst_navigation_message_new_commands_changed (GST_OBJECT_CAST (src));
+  gst_element_post_message (GST_ELEMENT_CAST (src), cmds_msg);
+}
+
+static gboolean
+rsn_dvdsrc_handle_cmds_query (resinDvdSrc * src, GstQuery * query)
+{
+  return FALSE;
+}
+
+static gboolean
+rsn_dvdsrc_handle_angles_query (resinDvdSrc * src, GstQuery * query)
+{
+  gint cur_agl, n_angles;
+  gboolean res = FALSE;
+
+  g_mutex_lock (src->dvd_lock);
+  if (dvdnav_get_angle_info (src->dvdnav, &cur_agl,
+          &n_angles) == DVDNAV_STATUS_OK) {
+    gst_navigation_query_set_angles (query, cur_agl, n_angles);
+    res = TRUE;
+  }
+  g_mutex_unlock (src->dvd_lock);
+
+  return res;
+}
+
+static gboolean
+rsn_dvdsrc_handle_navigation_query (resinDvdSrc * src,
+    GstNavigationQueryType nq_type, GstQuery * query)
+{
+  gboolean res;
+  switch (nq_type) {
+    case GST_NAVIGATION_QUERY_COMMANDS:
+      res = rsn_dvdsrc_handle_cmds_query (src, query);
+      break;
+    case GST_NAVIGATION_QUERY_ANGLES:
+      res = rsn_dvdsrc_handle_angles_query (src, query);
+      break;
+    default:
+      res = FALSE;
+  }
+
+  return res;
+}
+
 static GstFlowReturn
 rsn_dvdsrc_prepare_next_block (resinDvdSrc * src, gboolean have_dvd_lock)
 {
@@ -1094,6 +1148,7 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   GstEvent *audio_select_event = NULL;
   GstEvent *highlight_event = NULL;
   GstMessage *angles_msg = NULL;
+  gboolean cmds_changed = FALSE;
 
   *outbuf = NULL;
 
@@ -1126,6 +1181,11 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
       src->n_angles = agls;
     }
     src->angles_changed = FALSE;
+  }
+
+  if (src->commands_changed) {
+    cmds_changed = TRUE;
+    src->commands_changed = FALSE;
   }
 
   g_mutex_unlock (src->dvd_lock);
@@ -1200,6 +1260,9 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   if (angles_msg) {
     gst_element_post_message (GST_ELEMENT_CAST (src), angles_msg);
   }
+
+  if (cmds_changed)
+    rsn_dvdsrc_send_commands_changed (src);
 
   return ret;
 }
@@ -2261,6 +2324,15 @@ rsn_dvdsrc_src_query (RsnBaseSrc * basesrc, GstQuery * query)
       }
       g_mutex_unlock (src->dvd_lock);
       break;
+    case GST_QUERY_CUSTOM:
+    {
+      GstNavigationQueryType nq_type = gst_navigation_query_get_type (query);
+      if (nq_type != GST_NAVIGATION_QUERY_INVALID)
+        res = rsn_dvdsrc_handle_navigation_query (src, nq_type, query);
+      else
+        res = GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
+      break;
+    }
     default:
       res = GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
       break;
