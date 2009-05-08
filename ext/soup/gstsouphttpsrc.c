@@ -621,23 +621,26 @@ gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src, guint64 offset)
 }
 
 static gboolean
-_append_extra_headers (GQuark field_id, const GValue * value,
-    gpointer user_data)
+_append_extra_header (GQuark field_id, const GValue * value, gpointer user_data)
 {
   GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (user_data);
   const gchar *field_name = g_quark_to_string (field_id);
-  const gchar *field_content;
+  gchar *field_content = NULL;
 
-  if (G_VALUE_TYPE (value) != G_TYPE_STRING) {
-    GST_ERROR_OBJECT (src, "Invalid typed extra-headers field '%s'",
-        field_name);
-    return FALSE;
+  if (G_VALUE_TYPE (value) == G_TYPE_STRING) {
+    field_content = g_value_dup_string (value);
+  } else {
+    GValue dest = { 0, };
+
+    g_value_init (&dest, G_TYPE_STRING);
+    if (g_value_transform (value, &dest)) {
+      field_content = g_value_dup_string (&dest);
+    }
   }
 
-  field_content = g_value_get_string (value);
   if (field_content == NULL) {
-    GST_ERROR_OBJECT (src, "extra-headers field '%s' contains no value",
-        field_name);
+    GST_ERROR_OBJECT (src, "extra-headers field '%s' contains no value "
+        "or can't be converted to a string", field_name);
     return FALSE;
   }
 
@@ -645,6 +648,40 @@ _append_extra_headers (GQuark field_id, const GValue * value,
       field_content);
   soup_message_headers_append (src->msg->request_headers, field_name,
       field_content);
+
+  g_free (field_content);
+
+  return TRUE;
+}
+
+static gboolean
+_append_extra_headers (GQuark field_id, const GValue * value,
+    gpointer user_data)
+{
+  if (G_VALUE_TYPE (value) == GST_TYPE_ARRAY) {
+    guint n = gst_value_array_get_size (value);
+    guint i;
+
+    for (i = 0; i < n; i++) {
+      const GValue *v = gst_value_array_get_value (value, i);
+
+      if (!_append_extra_header (field_id, v, user_data))
+        return FALSE;
+    }
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
+    guint n = gst_value_list_get_size (value);
+    guint i;
+
+    for (i = 0; i < n; i++) {
+      const GValue *v = gst_value_list_get_value (value, i);
+
+      if (!_append_extra_header (field_id, v, user_data))
+        return FALSE;
+    }
+  } else {
+    return _append_extra_header (field_id, value, user_data);
+  }
+
   return TRUE;
 }
 
