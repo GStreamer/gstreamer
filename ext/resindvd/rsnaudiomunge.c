@@ -86,8 +86,8 @@ rsn_audiomunge_class_init (RsnAudioMungeClass * klass)
     "Jan Schmidt <thaytan@noraisin.net>"
   };
 
-  GST_DEBUG_CATEGORY_INIT (rsn_audiomunge_debug, "rsn_audiomunge",
-      0, "Resin audio stream regulator");
+  GST_DEBUG_CATEGORY_INIT (rsn_audiomunge_debug, "rsnaudiomunge",
+      0, "ResinDVD audio stream regulator");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
