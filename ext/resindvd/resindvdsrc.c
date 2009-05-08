@@ -665,7 +665,7 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
     /* FIXME: Implement timed stills by sleeping on the clock, possibly
      * in multiple steps if we get paused/unpaused */
     g_mutex_unlock (src->dvd_lock);
-    GST_LOG_OBJECT (src, "cond_timed_wait still");
+    GST_LOG_OBJECT (src, "cond_timed_wait still for %d sec", duration);
     was_signalled =
         g_cond_timed_wait (src->still_cond, src->branch_lock, &end_time);
     was_signalled |= src->branching;
@@ -2109,19 +2109,19 @@ rsn_dvdsrc_nav_clock_cb (GstClock * clock, GstClockTime time, GstClockID id,
   return TRUE;
 }
 
+/* Called with dvd_lock held */
 static void
 rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav)
 {
   GstClock *clock;
   GstClockTime base_ts;
 
-  GST_OBJECT_LOCK (src);
   if (!src->in_playing) {
     GST_LOG_OBJECT (src, "Not scheduling NAV block - state != PLAYING");
-    GST_OBJECT_UNLOCK (src);
     return;                     /* Not in playing state yet */
   }
 
+  GST_OBJECT_LOCK (src);
   clock = GST_ELEMENT_CLOCK (src);
   base_ts = GST_ELEMENT (src)->base_time;
 
@@ -2144,6 +2144,7 @@ rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav)
   gst_object_unref (clock);
 }
 
+/* Called with dvd_lock held */
 static void
 rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src)
 {
@@ -2154,9 +2155,10 @@ rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src)
     return;                     /* Something already scheduled */
   }
   if (src->pending_nav_blocks == NULL) {
-    GST_LOG_OBJECT (src, "No NAV blocks to schedule");
     return;                     /* No nav blocks available yet */
   }
+  if (!src->in_playing)
+    return;                     /* Not in playing state yet */
 
   GST_LOG_OBJECT (src, "Installing NAV callback");
   next_nav = (RsnDvdPendingNav *) src->pending_nav_blocks->data;
@@ -2164,8 +2166,6 @@ rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src)
   rsn_dvdsrc_schedule_nav_cb (src, next_nav);
 }
 
-/* Use libdvdread to read and cache info from the IFO file about
- * streams in each VTS */
 static gboolean
 rsn_dvdsrc_src_event (RsnBaseSrc * basesrc, GstEvent * event)
 {
