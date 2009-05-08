@@ -767,47 +767,53 @@ update_title_info (resinDvdSrc * src)
   }
 
   if (dvdnav_current_title_info (src->dvdnav, &title_n,
-          &part_n) == DVDNAV_STATUS_OK) {
-    if (title_n != src->title_n || part_n != src->part_n ||
-        src->n_angles != n_angles || src->cur_angle != cur_agl) {
-      gchar *title_str = NULL;
+          &part_n) != DVDNAV_STATUS_OK) {
+    if (!src->in_menu)
+      return;                   /* Can't update now */
+    /* Must be in the first play sequence */
+    title_n = -1;
+    part_n = 0;
+  }
 
-      src->title_n = title_n;
-      src->part_n = part_n;
-      src->n_angles = n_angles;
-      src->cur_angle = cur_agl;
+  if (title_n != src->title_n || part_n != src->part_n ||
+      src->n_angles != n_angles || src->cur_angle != cur_agl) {
+    gchar *title_str = NULL;
 
-      if (title_n == 0) {
-        /* In a menu */
-        title_str = g_strdup ("DVD Menu");
+    src->title_n = title_n;
+    src->part_n = part_n;
+    src->n_angles = n_angles;
+    src->cur_angle = cur_agl;
+
+    if (title_n == 0) {
+      /* In a menu */
+      title_str = g_strdup ("DVD Menu");
+    } else if (title_n > 0) {
+      /* In a title */
+      if (n_angles > 1) {
+        title_str = g_strdup_printf ("Title %i, Chapter %i, Angle %i of %i",
+            title_n, part_n, cur_agl, n_angles);
+
       } else {
-        /* In a title */
-        if (n_angles > 1) {
-          title_str = g_strdup_printf ("Title %i, Chapter %i, Angle %i of %i",
-              title_n, part_n, cur_agl, n_angles);
-
-        } else {
-          title_str = g_strdup_printf ("Title %i, Chapter %i", title_n, part_n);
-        }
+        title_str = g_strdup_printf ("Title %i, Chapter %i", title_n, part_n);
       }
+    }
 
-      if (src->disc_name && src->disc_name[0]) {
-        /* We have a name for this disc, publish it */
-        if (title_str) {
-          gchar *new_title_str =
-              g_strdup_printf ("%s, %s", title_str, src->disc_name);
-          g_free (title_str);
-          title_str = new_title_str;
-        } else {
-          title_str = g_strdup (src->disc_name);
-        }
-      }
+    if (src->disc_name && src->disc_name[0]) {
+      /* We have a name for this disc, publish it */
       if (title_str) {
-        GstTagList *tags = gst_tag_list_new ();
-        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
-            title_str, NULL);
-        gst_element_found_tags (GST_ELEMENT_CAST (src), tags);
+        gchar *new_title_str =
+            g_strdup_printf ("%s, %s", title_str, src->disc_name);
+        g_free (title_str);
+        title_str = new_title_str;
+      } else {
+        title_str = g_strdup (src->disc_name);
       }
+    }
+    if (title_str) {
+      GstTagList *tags = gst_tag_list_new ();
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
+          title_str, NULL);
+      gst_element_found_tags (GST_ELEMENT_CAST (src), tags);
     }
   }
 }
@@ -911,7 +917,6 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
         src->next_is_nav_block = FALSE;
         src->next_nav_ts = GST_CLOCK_TIME_NONE;
       }
-
       break;
     }
     case DVDNAV_STOP:
