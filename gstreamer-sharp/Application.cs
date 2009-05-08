@@ -49,6 +49,8 @@ namespace Gst {
       t = Gst.Structure.GType;
       t = Gst.TagList.GType;
       t = Gst.MiniObject.GType;
+
+      GtkSharp.GstreamerSharp.ObjectManager.Initialize ();
     }
 
     private static void FullInit (string progname, ref string [] args, bool check) {

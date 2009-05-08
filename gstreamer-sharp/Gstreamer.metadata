@@ -27,6 +27,7 @@
   <attr path="/api/namespace/*/field[@array_len='GST_PADDING - 3']" name="array_len">3</attr>
   <attr path="/api/namespace/*/field[@array_len='GST_PADDING - 4']" name="array_len">0</attr>
 
+  <!-- GStreamer core -->
   <attr path="/api/namespace/object[@name='Bin']/field" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_add_many']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_remove_many']" name="hidden">1</attr>
@@ -375,7 +376,7 @@
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_BOTH']" name="name">CustomBoth</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_BOTH_OOB']" name="name">CustomBothOob</attr>
 
-  <add-node path="/api/namespace/enum[@name='EventTypeFlags']">
+  <add-node path="/api/namespace[@name='Gst']/enum[@name='EventTypeFlags']">
     <member cname="GST_EVENT_TYPE_BOTH" name="Both" value="Gst.EventTypeFlags.Downstream | Gst.EventTypeFlags.Upstream" />
   </add-node>
 
@@ -401,7 +402,7 @@
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_formats_contains']">/api/namespace/class[@name='Util']</move-node>
   <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_format_to_quark']" />
   <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_is_tag_list']" />
-  <add-node path="/api/namespace"><class name="Parse" cname="GstParse" disable_void_ctor="1"></class></add-node>
+  <add-node path="/api/namespace[@name='Gst']"><class name="Parse" cname="GstParse" disable_void_ctor="1"></class></add-node>
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_launch']">/api/namespace/class[@name='Parse']</move-node>
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_launch_full']">/api/namespace/class[@name='Parse']</move-node>
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_launchv']">/api/namespace/class[@name='Parse']</move-node>
@@ -588,7 +589,7 @@
   <!-- FIXME: GstIterator* binding missing -->
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_iterate_internal_links_function']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_iterate_internal_links']" name="hidden">1</attr>
-  <add-node path="/api/namespace">
+  <add-node path="/api/namespace[@name='Gst']">
     <callback name="PadQueryTypeFunction" cname="GstPadQueryTypeFunction" hidden="1">
       <return-type type="const-GstQueryType*" />
       <parameters>
@@ -649,7 +650,7 @@
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FIXED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 4</attr>
 
-  <add-node path="/api/namespace">
+  <add-node path="/api/namespace[@name='Gst']">
     <callback name="PadDataProbeCallback" cname="GstPadDataProbeCallback">
       <return-type type="gboolean" />
       <parameters>
@@ -978,4 +979,41 @@
 
   <!-- We implement this ourselves -->
   <attr path="/api/namespace/class[@name='Value']" name="hidden">1</attr>
+
+  <!-- GStreamer Interfaces library -->
+  <attr path="/api/namespace/enum[@cname='GstColorBalanceType']" name="name">ColorBalanceType</attr>
+  <attr path="/api/namespace/enum[@cname='GstMixerFlags']" name="name">MixerFlags</attr>
+  <attr path="/api/namespace/enum[@cname='GstMixerMessageType']" name="name">MixerMessageType</attr>
+  <attr path="/api/namespace/enum[@cname='GstMixerTrackFlags']" name="name">MixerTrackFlags</attr>
+  <attr path="/api/namespace/enum[@cname='GstMixerType']" name="name">MixerType</attr>
+  <attr path="/api/namespace/enum[@cname='GstNavigationCommand']" name="name">NavigationCommand</attr>
+  <attr path="/api/namespace/enum[@cname='GstNavigationEventType']" name="name">NavigationEventType</attr>
+  <attr path="/api/namespace/enum[@cname='GstNavigationMessageType']" name="name">NavigationMessageType</attr>
+  <attr path="/api/namespace/enum[@cname='GstNavigationQueryType']" name="name">NavigationQueryType</attr>
+  <attr path="/api/namespace/enum[@cname='GstTunerChannelFlags']" name="name">TunerChannelFlags</attr>
+  <attr path="/api/namespace/interface[@cname='GstColorBalance']" name="name">ColorBalance</attr>
+  <attr path="/api/namespace/interface[@cname='GstColorBalance']/virtual_method[@cname='list_channels']/return-type" name="element_type">GstColorBalanceChannel</attr>
+  <attr path="/api/namespace/interface[@cname='GstColorBalance']/method[@cname='gst_color_balance_list_channels']/return-type" name="element_type">GstColorBalanceChannel</attr>
+  <attr path="/api/namespace/interface[@cname='GstColorBalance']/method[@cname='gst_color_balance_value_changed']" name="name">EmitValueChanged</attr>
+
+  <attr path="/api/namespace/object[@cname='GstColorBalanceChannel']" name="name">ColorBalanceChannel</attr>
+  <attr path="/api/namespace/object[@cname='GstColorBalanceChannel']/field" name="writeable">true</attr>
+
+  <attr path="/api/namespace/interface[@cname='GstMixer']" name="name">Mixer</attr>
+  <attr path="/api/namespace/interface[@cname='GstMixer']/signal" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstMixer']/method[@cname='gst_mixer_list_tracks']/return-type" name="element_type">GstMixerTrack</attr>
+  <attr path="/api/namespace/interface[@cname='GstMixer']/virtual_method[@cname='list_tracks']/return-type" name="element_type">GstMixerTrack</attr>
+
+  <attr path="/api/namespace/enum[@cname='GstMixerType']" name="name">MixerType</attr>
+
+  <attr path="/api/namespace/enum[@cname='GstMixerFlags']" name="name">MixerFlags</attr>
+
+  <attr path="/api/namespace/enum[@cname='GstMixerMessageType']" name="name">MixerMessageType</attr>
+
+  <attr path="/api/namespace/interface[@cname='GstMixer']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstPropertyProbe']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstTuner']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstXOverlay']" name="hidden">1</attr>
 </metadata>

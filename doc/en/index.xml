@@ -210,6 +210,40 @@
       <Type Name="HaveTypeHandler" Kind="Delegate" />
       <Type Name="TypeFindElement" Kind="Class" />
     </Namespace>
+    <Namespace Name="Gst.Interfaces">
+      <Type Name="ColorBalance" Kind="Interface" />
+      <Type Name="ColorBalanceAdapter" Kind="Class" />
+      <Type Name="ColorBalanceChannel" Kind="Class" />
+      <Type Name="ColorBalanceImplementor" Kind="Interface" />
+      <Type Name="ColorBalanceType" Kind="Enumeration" />
+      <Type Name="FrequencyChangedArgs" Kind="Class" />
+      <Type Name="FrequencyChangedHandler" Kind="Delegate" />
+      <Type Name="GstMixerOptions" Kind="Class" />
+      <Type Name="GstMixerTrack" Kind="Class" />
+      <Type Name="GstTunerChannel" Kind="Class" />
+      <Type Name="GstTunerNorm" Kind="Class" />
+      <Type Name="MixerFlags" Kind="Enumeration" />
+      <Type Name="MixerMessageType" Kind="Enumeration" />
+      <Type Name="MixerTrackFlags" Kind="Enumeration" />
+      <Type Name="MixerType" Kind="Enumeration" />
+      <Type Name="MuteToggledArgs" Kind="Class" />
+      <Type Name="MuteToggledHandler" Kind="Delegate" />
+      <Type Name="NavigationCommand" Kind="Enumeration" />
+      <Type Name="NavigationEventType" Kind="Enumeration" />
+      <Type Name="NavigationMessageType" Kind="Enumeration" />
+      <Type Name="NavigationQueryType" Kind="Enumeration" />
+      <Type Name="OptionChangedArgs" Kind="Class" />
+      <Type Name="OptionChangedHandler" Kind="Delegate" />
+      <Type Name="RecordToggledArgs" Kind="Class" />
+      <Type Name="RecordToggledHandler" Kind="Delegate" />
+      <Type Name="SignalChangedArgs" Kind="Class" />
+      <Type Name="SignalChangedHandler" Kind="Delegate" />
+      <Type Name="TunerChannelFlags" Kind="Enumeration" />
+      <Type Name="ValueChangedArgs" Kind="Class" />
+      <Type Name="ValueChangedHandler" Kind="Delegate" />
+      <Type Name="VolumeChangedArgs" Kind="Class" />
+      <Type Name="VolumeChangedHandler" Kind="Delegate" />
+    </Namespace>
   </Types>
   <Title>gst-sharp</Title>
 </Overview>

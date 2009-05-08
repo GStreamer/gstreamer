@@ -28,6 +28,11 @@
         <exclude>../../gstreamer/gst/gstquark.h</exclude>
         <exclude>../../gstreamer/gst/gettext.h</exclude>
       </namespace>
+      <namespace name="Gst.Interfaces">
+        <dir>../../gst-plugins-base/gst-libs/gst/interfaces</dir>
+	<!-- Not bound -->
+	<exclude>../../gst-plugins-base/gst-libs/gst/interfaces/interfaces-marshal.h</exclude>
+      </namespace>
     </library>
   </api>
 </gapi-parser-input>

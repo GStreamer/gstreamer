@@ -6174,4 +6174,1029 @@
       </method>
     </class>
   </namespace>
+  <namespace name="Gst.Interfaces" library="gstreamer-0.10.dll">
+    <enum name="GstColorBalanceType" cname="GstColorBalanceType" gtype="gst_color_balance_type_get_type" type="enum">
+      <member cname="GST_COLOR_BALANCE_HARDWARE" name="Hardware" />
+      <member cname="GST_COLOR_BALANCE_SOFTWARE" name="Software" />
+    </enum>
+    <enum name="GstMixerFlags" cname="GstMixerFlags" gtype="gst_mixer_flags_get_type" type="flags">
+      <member cname="GST_MIXER_FLAG_NONE" name="None" />
+      <member cname="GST_MIXER_FLAG_AUTO_NOTIFICATIONS" name="AutoNotifications" value="1 &lt;&lt; 0" />
+      <member cname="GST_MIXER_FLAG_HAS_WHITELIST" name="HasWhitelist" value="1 &lt;&lt; 1" />
+      <member cname="GST_MIXER_FLAG_GROUPING" name="Grouping" value="1 &lt;&lt; 2" />
+    </enum>
+    <enum name="GstMixerMessageType" cname="GstMixerMessageType" gtype="gst_mixer_message_type_get_type" type="enum">
+      <member cname="GST_MIXER_MESSAGE_INVALID" name="Invalid" />
+      <member cname="GST_MIXER_MESSAGE_MUTE_TOGGLED" name="MuteToggled" />
+      <member cname="GST_MIXER_MESSAGE_RECORD_TOGGLED" name="RecordToggled" />
+      <member cname="GST_MIXER_MESSAGE_VOLUME_CHANGED" name="VolumeChanged" />
+      <member cname="GST_MIXER_MESSAGE_OPTION_CHANGED" name="OptionChanged" />
+      <member cname="GST_MIXER_MESSAGE_OPTIONS_LIST_CHANGED" name="OptionsListChanged" />
+      <member cname="GST_MIXER_MESSAGE_MIXER_CHANGED" name="MixerChanged" />
+    </enum>
+    <enum name="GstMixerTrackFlags" cname="GstMixerTrackFlags" gtype="gst_mixer_track_flags_get_type" type="flags">
+      <member cname="GST_MIXER_TRACK_INPUT" name="Input" value="1 &lt;&lt; 0" />
+      <member cname="GST_MIXER_TRACK_OUTPUT" name="Output" value="1 &lt;&lt; 1" />
+      <member cname="GST_MIXER_TRACK_MUTE" name="Mute" value="1 &lt;&lt; 2" />
+      <member cname="GST_MIXER_TRACK_RECORD" name="Record" value="1 &lt;&lt; 3" />
+      <member cname="GST_MIXER_TRACK_MASTER" name="Master" value="1 &lt;&lt; 4" />
+      <member cname="GST_MIXER_TRACK_SOFTWARE" name="Software" value="1 &lt;&lt; 5" />
+      <member cname="GST_MIXER_TRACK_NO_RECORD" name="NoRecord" value="1 &lt;&lt; 6" />
+      <member cname="GST_MIXER_TRACK_NO_MUTE" name="NoMute" value="1 &lt;&lt; 7" />
+      <member cname="GST_MIXER_TRACK_WHITELIST" name="Whitelist" value="1 &lt;&lt; 8" />
+    </enum>
+    <enum name="GstMixerType" cname="GstMixerType" gtype="gst_mixer_type_get_type" type="enum">
+      <member cname="GST_MIXER_HARDWARE" name="Hardware" />
+      <member cname="GST_MIXER_SOFTWARE" name="Software" />
+    </enum>
+    <enum name="GstNavigationCommand" cname="GstNavigationCommand" gtype="gst_navigation_command_get_type" type="enum">
+      <member cname="GST_NAVIGATION_COMMAND_INVALID" name="Invalid" />
+      <member cname="GST_NAVIGATION_COMMAND_MENU1" name="Menu1" value="1" />
+      <member cname="GST_NAVIGATION_COMMAND_MENU2" name="Menu2" value="2" />
+      <member cname="GST_NAVIGATION_COMMAND_MENU3" name="Menu3" value="3" />
+      <member cname="GST_NAVIGATION_COMMAND_MENU4" name="Menu4" value="4" />
+      <member cname="GST_NAVIGATION_COMMAND_MENU5" name="Menu5" value="5" />
+      <member cname="GST_NAVIGATION_COMMAND_MENU6" name="Menu6" value="6" />
+      <member cname="GST_NAVIGATION_COMMAND_MENU7" name="Menu7" value="7" />
+      <member cname="GST_NAVIGATION_COMMAND_LEFT" name="Left" value="20" />
+      <member cname="GST_NAVIGATION_COMMAND_RIGHT" name="Right" value="21" />
+      <member cname="GST_NAVIGATION_COMMAND_UP" name="Up" value="22" />
+      <member cname="GST_NAVIGATION_COMMAND_DOWN" name="Down" value="23" />
+      <member cname="GST_NAVIGATION_COMMAND_ACTIVATE" name="Activate" value="24" />
+      <member cname="GST_NAVIGATION_COMMAND_PREV_ANGLE" name="PrevAngle" value="30" />
+      <member cname="GST_NAVIGATION_COMMAND_NEXT_ANGLE" name="NextAngle" value="31" />
+    </enum>
+    <enum name="GstNavigationEventType" cname="GstNavigationEventType" gtype="gst_navigation_event_type_get_type" type="enum">
+      <member cname="GST_NAVIGATION_EVENT_INVALID" name="Invalid" />
+      <member cname="GST_NAVIGATION_EVENT_KEY_PRESS" name="KeyPress" value="1" />
+      <member cname="GST_NAVIGATION_EVENT_KEY_RELEASE" name="KeyRelease" value="2" />
+      <member cname="GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS" name="MouseButtonPress" value="3" />
+      <member cname="GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE" name="MouseButtonRelease" value="4" />
+      <member cname="GST_NAVIGATION_EVENT_MOUSE_MOVE" name="MouseMove" value="5" />
+      <member cname="GST_NAVIGATION_EVENT_COMMAND" name="Command" value="6" />
+    </enum>
+    <enum name="GstNavigationMessageType" cname="GstNavigationMessageType" gtype="gst_navigation_message_type_get_type" type="enum">
+      <member cname="GST_NAVIGATION_MESSAGE_INVALID" name="Invalid" />
+      <member cname="GST_NAVIGATION_MESSAGE_MOUSE_OVER" name="MouseOver" />
+      <member cname="GST_NAVIGATION_MESSAGE_COMMANDS_CHANGED" name="CommandsChanged" />
+      <member cname="GST_NAVIGATION_MESSAGE_ANGLES_CHANGED" name="AnglesChanged" />
+    </enum>
+    <enum name="GstNavigationQueryType" cname="GstNavigationQueryType" gtype="gst_navigation_query_type_get_type" type="enum">
+      <member cname="GST_NAVIGATION_QUERY_INVALID" name="Invalid" />
+      <member cname="GST_NAVIGATION_QUERY_COMMANDS" name="Commands" value="1" />
+      <member cname="GST_NAVIGATION_QUERY_ANGLES" name="Angles" value="2" />
+    </enum>
+    <enum name="GstTunerChannelFlags" cname="GstTunerChannelFlags" gtype="gst_tuner_channel_flags_get_type" type="flags">
+      <member cname="GST_TUNER_CHANNEL_INPUT" name="Input" value="1 &lt;&lt; 0" />
+      <member cname="GST_TUNER_CHANNEL_OUTPUT" name="Output" value="1 &lt;&lt; 1" />
+      <member cname="GST_TUNER_CHANNEL_FREQUENCY" name="Frequency" value="1 &lt;&lt; 2" />
+      <member cname="GST_TUNER_CHANNEL_AUDIO" name="Audio" value="1 &lt;&lt; 3" />
+    </enum>
+    <interface name="GstColorBalance" cname="GstColorBalance">
+      <class_struct cname="GstColorBalanceClass">
+        <field name="Klass" cname="klass" type="GTypeInterface" />
+        <field name="BalanceType" cname="balance_type" type="GstColorBalanceType" />
+        <method vm="list_channels" />
+        <method vm="set_value" />
+        <method vm="get_value" />
+        <method signal_vm="value_changed" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <signal name="ValueChanged" cname="value-changed" when="LAST" field_name="value_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstColorBalanceChannel*" name="channel" />
+          <parameter type="gint" name="value" />
+        </parameters>
+      </signal>
+      <virtual_method name="ListChannels" cname="list_channels">
+        <return-type type="GList*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="SetValue" cname="set_value">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstColorBalanceChannel*" name="channel" />
+          <parameter type="gint" name="value" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetValue" cname="get_value">
+        <return-type type="gint" />
+        <parameters>
+          <parameter type="GstColorBalanceChannel*" name="channel" />
+        </parameters>
+      </virtual_method>
+      <method name="GetType" cname="gst_color_balance_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="GetValue" cname="gst_color_balance_get_value">
+        <return-type type="gint" />
+        <parameters>
+          <parameter type="GstColorBalanceChannel*" name="channel" />
+        </parameters>
+      </method>
+      <method name="ListChannels" cname="gst_color_balance_list_channels">
+        <return-type type="const-GList*" />
+      </method>
+      <method name="SetValue" cname="gst_color_balance_set_value">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstColorBalanceChannel*" name="channel" />
+          <parameter type="gint" name="value" />
+        </parameters>
+      </method>
+      <method name="ValueChanged" cname="gst_color_balance_value_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstColorBalanceChannel*" name="channel" />
+          <parameter type="gint" name="value" />
+        </parameters>
+      </method>
+    </interface>
+    <interface name="GstMixer" cname="GstMixer">
+      <class_struct cname="GstMixerClass">
+        <field name="Klass" cname="klass" type="GTypeInterface" />
+        <field name="MixerType" cname="mixer_type" type="GstMixerType" />
+        <method vm="list_tracks" />
+        <method vm="set_volume" />
+        <method vm="get_volume" />
+        <method vm="set_mute" />
+        <method vm="set_record" />
+        <method signal_vm="mute_toggled" />
+        <method signal_vm="record_toggled" />
+        <method signal_vm="volume_changed" />
+        <method vm="set_option" />
+        <method vm="get_option" />
+        <method signal_vm="option_changed" />
+        <method vm="get_mixer_flags" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING-1" />
+      </class_struct>
+      <signal name="RecordToggled" cname="record-toggled" when="LAST" field_name="record_toggled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="channel" />
+          <parameter type="gboolean" name="record" />
+        </parameters>
+      </signal>
+      <signal name="MuteToggled" cname="mute-toggled" when="LAST" field_name="mute_toggled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="channel" />
+          <parameter type="gboolean" name="mute" />
+        </parameters>
+      </signal>
+      <signal name="VolumeChanged" cname="volume-changed" when="LAST" manual="true" field_name="volume_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="channel" />
+          <parameter type="gint*" name="volumes" />
+        </parameters>
+      </signal>
+      <signal name="OptionChanged" cname="option-changed" when="LAST" field_name="option_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerOptions*" name="opts" />
+          <parameter type="gchar*" name="option" />
+        </parameters>
+      </signal>
+      <virtual_method name="ListTracks" cname="list_tracks">
+        <return-type type="GList*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="SetVolume" cname="set_volume">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gint*" name="volumes" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetVolume" cname="get_volume">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gint*" name="volumes" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetMute" cname="set_mute">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gboolean" name="mute" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetRecord" cname="set_record">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gboolean" name="record" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetOption" cname="set_option">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerOptions*" name="opts" />
+          <parameter type="gchar*" name="value" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetOption" cname="get_option">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="GstMixerOptions*" name="opts" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetMixerFlags" cname="get_mixer_flags">
+        <return-type type="GstMixerFlags" />
+        <parameters />
+      </virtual_method>
+      <method name="GetMixerFlags" cname="gst_mixer_get_mixer_flags">
+        <return-type type="GstMixerFlags" />
+      </method>
+      <method name="GetOption" cname="gst_mixer_get_option">
+        <return-type type="const-gchar*" />
+        <parameters>
+          <parameter type="GstMixerOptions*" name="opts" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_mixer_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="GetVolume" cname="gst_mixer_get_volume">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gint*" name="volumes" />
+        </parameters>
+      </method>
+      <method name="ListTracks" cname="gst_mixer_list_tracks">
+        <return-type type="const-GList*" />
+      </method>
+      <method name="MessageGetType" cname="gst_mixer_message_get_type" shared="true">
+        <return-type type="GstMixerMessageType" />
+        <parameters>
+          <parameter type="GstMessage*" name="message" />
+        </parameters>
+      </method>
+      <method name="MessageParseMuteToggled" cname="gst_mixer_message_parse_mute_toggled" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMessage*" name="message" />
+          <parameter type="GstMixerTrack**" name="track" />
+          <parameter type="gboolean*" name="mute" />
+        </parameters>
+      </method>
+      <method name="MessageParseOptionChanged" cname="gst_mixer_message_parse_option_changed" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMessage*" name="message" />
+          <parameter type="GstMixerOptions**" name="options" />
+          <parameter type="const-gchar**" name="value" />
+        </parameters>
+      </method>
+      <method name="MessageParseOptionsListChanged" cname="gst_mixer_message_parse_options_list_changed" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMessage*" name="message" />
+          <parameter type="GstMixerOptions**" name="options" />
+        </parameters>
+      </method>
+      <method name="MessageParseRecordToggled" cname="gst_mixer_message_parse_record_toggled" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMessage*" name="message" />
+          <parameter type="GstMixerTrack**" name="track" />
+          <parameter type="gboolean*" name="record" />
+        </parameters>
+      </method>
+      <method name="MessageParseVolumeChanged" cname="gst_mixer_message_parse_volume_changed" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMessage*" name="message" />
+          <parameter type="GstMixerTrack**" name="track" />
+          <parameter type="gint**" name="volumes" />
+          <parameter type="gint*" name="num_channels" />
+        </parameters>
+      </method>
+      <method name="MixerChanged" cname="gst_mixer_mixer_changed">
+        <return-type type="void" />
+      </method>
+      <method name="MuteToggled" cname="gst_mixer_mute_toggled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gboolean" name="mute" />
+        </parameters>
+      </method>
+      <method name="OptionChanged" cname="gst_mixer_option_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerOptions*" name="opts" />
+          <parameter type="gchar*" name="value" />
+        </parameters>
+      </method>
+      <method name="RecordToggled" cname="gst_mixer_record_toggled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gboolean" name="record" />
+        </parameters>
+      </method>
+      <method name="SetMute" cname="gst_mixer_set_mute">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gboolean" name="mute" />
+        </parameters>
+      </method>
+      <method name="SetOption" cname="gst_mixer_set_option">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerOptions*" name="opts" />
+          <parameter type="gchar*" name="value" />
+        </parameters>
+      </method>
+      <method name="SetRecord" cname="gst_mixer_set_record">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gboolean" name="record" />
+        </parameters>
+      </method>
+      <method name="SetVolume" cname="gst_mixer_set_volume">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gint*" name="volumes" />
+        </parameters>
+      </method>
+      <method name="VolumeChanged" cname="gst_mixer_volume_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixerTrack*" name="track" />
+          <parameter type="gint*" name="volumes" />
+        </parameters>
+      </method>
+    </interface>
+    <interface name="GstNavigation" cname="GstNavigation">
+      <method name="EventGetType" cname="gst_navigation_event_get_type" shared="true">
+        <return-type type="GstNavigationEventType" />
+        <parameters>
+          <parameter type="GstEvent*" name="event" />
+        </parameters>
+      </method>
+      <method name="EventParseCommand" cname="gst_navigation_event_parse_command" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstEvent*" name="event" />
+          <parameter type="GstNavigationCommand*" name="command" />
+        </parameters>
+      </method>
+      <method name="EventParseKeyEvent" cname="gst_navigation_event_parse_key_event" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstEvent*" name="event" />
+          <parameter type="const-gchar**" name="key" />
+        </parameters>
+      </method>
+      <method name="EventParseMouseButtonEvent" cname="gst_navigation_event_parse_mouse_button_event" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstEvent*" name="event" />
+          <parameter type="gint*" name="button" />
+          <parameter type="gdouble*" name="x" />
+          <parameter type="gdouble*" name="y" />
+        </parameters>
+      </method>
+      <method name="EventParseMouseMoveEvent" cname="gst_navigation_event_parse_mouse_move_event" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstEvent*" name="event" />
+          <parameter type="gdouble*" name="x" />
+          <parameter type="gdouble*" name="y" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_navigation_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="MessageGetType" cname="gst_navigation_message_get_type" shared="true">
+        <return-type type="GstNavigationMessageType" />
+        <parameters>
+          <parameter type="GstMessage*" name="message" />
+        </parameters>
+      </method>
+      <method name="MessageNewAnglesChanged" cname="gst_navigation_message_new_angles_changed" shared="true">
+        <return-type type="GstMessage*" />
+        <parameters>
+          <parameter type="GstObject*" name="src" />
+          <parameter type="guint" name="cur_angle" />
+          <parameter type="guint" name="n_angles" />
+        </parameters>
+      </method>
+      <method name="MessageNewCommandsChanged" cname="gst_navigation_message_new_commands_changed" shared="true">
+        <return-type type="GstMessage*" />
+        <parameters>
+          <parameter type="GstObject*" name="src" />
+        </parameters>
+      </method>
+      <method name="MessageNewMouseOver" cname="gst_navigation_message_new_mouse_over" shared="true">
+        <return-type type="GstMessage*" />
+        <parameters>
+          <parameter type="GstObject*" name="src" />
+          <parameter type="gboolean" name="active" />
+        </parameters>
+      </method>
+      <method name="MessageParseAnglesChanged" cname="gst_navigation_message_parse_angles_changed" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstMessage*" name="message" />
+          <parameter type="guint*" name="cur_angle" />
+          <parameter type="guint*" name="n_angles" />
+        </parameters>
+      </method>
+      <method name="MessageParseMouseOver" cname="gst_navigation_message_parse_mouse_over" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstMessage*" name="message" />
+          <parameter type="gboolean*" name="active" />
+        </parameters>
+      </method>
+      <method name="QueryGetType" cname="gst_navigation_query_get_type" shared="true">
+        <return-type type="GstNavigationQueryType" />
+        <parameters>
+          <parameter type="GstQuery*" name="query" />
+        </parameters>
+      </method>
+      <method name="QueryNewAngles" cname="gst_navigation_query_new_angles" shared="true">
+        <return-type type="GstQuery*" />
+      </method>
+      <method name="QueryNewCommands" cname="gst_navigation_query_new_commands" shared="true">
+        <return-type type="GstQuery*" />
+      </method>
+      <method name="QueryParseAngles" cname="gst_navigation_query_parse_angles" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstQuery*" name="query" />
+          <parameter type="guint*" name="cur_angle" />
+          <parameter type="guint*" name="n_angles" />
+        </parameters>
+      </method>
+      <method name="QueryParseCommandsLength" cname="gst_navigation_query_parse_commands_length" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstQuery*" name="query" />
+          <parameter type="guint*" name="n_cmds" />
+        </parameters>
+      </method>
+      <method name="QueryParseCommandsNth" cname="gst_navigation_query_parse_commands_nth" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstQuery*" name="query" />
+          <parameter type="guint" name="nth" />
+          <parameter type="GstNavigationCommand*" name="cmd" />
+        </parameters>
+      </method>
+      <method name="QuerySetAngles" cname="gst_navigation_query_set_angles" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstQuery*" name="query" />
+          <parameter type="guint" name="cur_angle" />
+          <parameter type="guint" name="n_angles" />
+        </parameters>
+      </method>
+      <method name="QuerySetCommands" cname="gst_navigation_query_set_commands" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstQuery*" name="query" />
+          <parameter type="gint" name="n_cmds" />
+          <parameter ellipsis="true" />
+        </parameters>
+      </method>
+      <method name="QuerySetCommandsv" cname="gst_navigation_query_set_commandsv" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstQuery*" name="query" />
+          <parameter type="gint" name="n_cmds" />
+          <parameter type="GstNavigationCommand*" name="cmds" />
+        </parameters>
+      </method>
+      <method name="SendCommand" cname="gst_navigation_send_command">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstNavigationCommand" name="command" />
+        </parameters>
+      </method>
+      <method name="SendEvent" cname="gst_navigation_send_event">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstStructure*" name="structure" />
+        </parameters>
+      </method>
+      <method name="SendKeyEvent" cname="gst_navigation_send_key_event">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="const-char*" name="event" />
+          <parameter type="const-char*" name="key" />
+        </parameters>
+      </method>
+      <method name="SendMouseEvent" cname="gst_navigation_send_mouse_event">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="const-char*" name="event" />
+          <parameter type="int" name="button" />
+          <parameter type="double" name="x" />
+          <parameter type="double" name="y" />
+        </parameters>
+      </method>
+    </interface>
+    <interface name="GstPropertyProbe" cname="GstPropertyProbe">
+      <class_struct cname="GstPropertyProbeInterface">
+        <field name="Klass" cname="klass" type="GTypeInterface" />
+        <method vm="probe_needed" />
+        <method vm="get_properties" />
+        <method vm="needs_probe" />
+        <method vm="probe_property" />
+        <method vm="get_values" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <virtual_method name="ProbeNeeded" cname="probe_needed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="const-GParamSpec*" name="pspec" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetProperties" cname="get_properties">
+        <return-type type="GList*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="NeedsProbe" cname="needs_probe">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint" name="prop_id" />
+          <parameter type="const-GParamSpec*" name="pspec" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="ProbeProperty" cname="probe_property">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint" name="prop_id" />
+          <parameter type="const-GParamSpec*" name="pspec" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetValues" cname="get_values">
+        <return-type type="GValueArray*" />
+        <parameters>
+          <parameter type="guint" name="prop_id" />
+          <parameter type="const-GParamSpec*" name="pspec" />
+        </parameters>
+      </virtual_method>
+      <method name="GetProperties" cname="gst_property_probe_get_properties">
+        <return-type type="const-GList*" />
+      </method>
+      <method name="GetProperty" cname="gst_property_probe_get_property">
+        <return-type type="const-GParamSpec*" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_property_probe_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="GetValues" cname="gst_property_probe_get_values">
+        <return-type type="GValueArray*" />
+        <parameters>
+          <parameter type="const-GParamSpec*" name="pspec" />
+        </parameters>
+      </method>
+      <method name="GetValuesName" cname="gst_property_probe_get_values_name">
+        <return-type type="GValueArray*" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </method>
+      <method name="NeedsProbe" cname="gst_property_probe_needs_probe">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-GParamSpec*" name="pspec" />
+        </parameters>
+      </method>
+      <method name="NeedsProbeName" cname="gst_property_probe_needs_probe_name">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </method>
+      <method name="ProbeAndGetValues" cname="gst_property_probe_probe_and_get_values">
+        <return-type type="GValueArray*" />
+        <parameters>
+          <parameter type="const-GParamSpec*" name="pspec" />
+        </parameters>
+      </method>
+      <method name="ProbeAndGetValuesName" cname="gst_property_probe_probe_and_get_values_name">
+        <return-type type="GValueArray*" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </method>
+      <method name="ProbeProperty" cname="gst_property_probe_probe_property">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="const-GParamSpec*" name="pspec" />
+        </parameters>
+      </method>
+      <method name="ProbePropertyName" cname="gst_property_probe_probe_property_name">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="const-gchar*" name="name" />
+        </parameters>
+      </method>
+    </interface>
+    <interface name="GstTuner" cname="GstTuner">
+      <class_struct cname="GstTunerClass">
+        <field name="Klass" cname="klass" type="GTypeInterface" />
+        <method vm="list_channels" />
+        <method vm="set_channel" />
+        <method vm="get_channel" />
+        <method vm="list_norms" />
+        <method vm="set_norm" />
+        <method vm="get_norm" />
+        <method vm="set_frequency" />
+        <method vm="get_frequency" />
+        <method vm="signal_strength" />
+        <method signal_vm="channel_changed" />
+        <method signal_vm="norm_changed" />
+        <method signal_vm="frequency_changed" />
+        <method signal_vm="signal_changed" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <signal name="NormChanged" cname="norm-changed" when="LAST" field_name="norm_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerNorm*" name="norm" />
+        </parameters>
+      </signal>
+      <signal name="ChannelChanged" cname="channel-changed" when="LAST" field_name="channel_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+        </parameters>
+      </signal>
+      <signal name="FrequencyChanged" cname="frequency-changed" when="LAST" field_name="frequency_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+          <parameter type="gulong" name="frequency" />
+        </parameters>
+      </signal>
+      <signal name="SignalChanged" cname="signal-changed" when="LAST" field_name="signal_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+          <parameter type="gint" name="signal" />
+        </parameters>
+      </signal>
+      <virtual_method name="ListChannels" cname="list_channels">
+        <return-type type="GList*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="SetChannel" cname="set_channel">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetChannel" cname="get_channel">
+        <return-type type="GstTunerChannel*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="ListNorms" cname="list_norms">
+        <return-type type="GList*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="SetNorm" cname="set_norm">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerNorm*" name="norm" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetNorm" cname="get_norm">
+        <return-type type="GstTunerNorm*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="SetFrequency" cname="set_frequency">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+          <parameter type="gulong" name="frequency" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetFrequency" cname="get_frequency">
+        <return-type type="gulong" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SignalStrength" cname="signal_strength">
+        <return-type type="gint" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+        </parameters>
+      </virtual_method>
+      <method name="FindChannelByName" cname="gst_tuner_find_channel_by_name">
+        <return-type type="GstTunerChannel*" />
+        <parameters>
+          <parameter type="gchar*" name="channel" />
+        </parameters>
+      </method>
+      <method name="FindNormByName" cname="gst_tuner_find_norm_by_name">
+        <return-type type="GstTunerNorm*" />
+        <parameters>
+          <parameter type="gchar*" name="norm" />
+        </parameters>
+      </method>
+      <method name="FrequencyChanged" cname="gst_tuner_frequency_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+          <parameter type="gulong" name="frequency" />
+        </parameters>
+      </method>
+      <method name="GetChannel" cname="gst_tuner_get_channel">
+        <return-type type="GstTunerChannel*" />
+      </method>
+      <method name="GetFrequency" cname="gst_tuner_get_frequency">
+        <return-type type="gulong" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+        </parameters>
+      </method>
+      <method name="GetNorm" cname="gst_tuner_get_norm">
+        <return-type type="GstTunerNorm*" />
+      </method>
+      <method name="GetType" cname="gst_tuner_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="ListChannels" cname="gst_tuner_list_channels">
+        <return-type type="const-GList*" />
+      </method>
+      <method name="ListNorms" cname="gst_tuner_list_norms">
+        <return-type type="const-GList*" />
+      </method>
+      <method name="SetChannel" cname="gst_tuner_set_channel">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+        </parameters>
+      </method>
+      <method name="SetFrequency" cname="gst_tuner_set_frequency">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+          <parameter type="gulong" name="frequency" />
+        </parameters>
+      </method>
+      <method name="SetNorm" cname="gst_tuner_set_norm">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerNorm*" name="norm" />
+        </parameters>
+      </method>
+      <method name="SignalChanged" cname="gst_tuner_signal_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+          <parameter type="gint" name="signal" />
+        </parameters>
+      </method>
+      <method name="SignalStrength" cname="gst_tuner_signal_strength">
+        <return-type type="gint" />
+        <parameters>
+          <parameter type="GstTunerChannel*" name="channel" />
+        </parameters>
+      </method>
+    </interface>
+    <interface name="GstVideoOrientation" cname="GstVideoOrientation">
+      <method name="GetHcenter" cname="gst_video_orientation_get_hcenter">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint*" name="center" />
+        </parameters>
+      </method>
+      <method name="GetHflip" cname="gst_video_orientation_get_hflip">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean*" name="flip" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_video_orientation_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="GetVcenter" cname="gst_video_orientation_get_vcenter">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint*" name="center" />
+        </parameters>
+      </method>
+      <method name="GetVflip" cname="gst_video_orientation_get_vflip">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean*" name="flip" />
+        </parameters>
+      </method>
+      <method name="SetHcenter" cname="gst_video_orientation_set_hcenter">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint" name="center" />
+        </parameters>
+      </method>
+      <method name="SetHflip" cname="gst_video_orientation_set_hflip">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean" name="flip" />
+        </parameters>
+      </method>
+      <method name="SetVcenter" cname="gst_video_orientation_set_vcenter">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint" name="center" />
+        </parameters>
+      </method>
+      <method name="SetVflip" cname="gst_video_orientation_set_vflip">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean" name="flip" />
+        </parameters>
+      </method>
+    </interface>
+    <interface name="GstXOverlay" cname="GstXOverlay">
+      <method name="Expose" cname="gst_x_overlay_expose">
+        <return-type type="void" />
+      </method>
+      <method name="GetType" cname="gst_x_overlay_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="GotXwindowId" cname="gst_x_overlay_got_xwindow_id">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gulong" name="xwindow_id" />
+        </parameters>
+      </method>
+      <method name="HandleEvents" cname="gst_x_overlay_handle_events">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="handle_events" />
+        </parameters>
+      </method>
+      <method name="PrepareXwindowId" cname="gst_x_overlay_prepare_xwindow_id">
+        <return-type type="void" />
+      </method>
+      <method name="SetXwindowId" cname="gst_x_overlay_set_xwindow_id">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gulong" name="xwindow_id" />
+        </parameters>
+      </method>
+    </interface>
+    <object name="GstColorBalanceChannel" cname="GstColorBalanceChannel" parent="GObject">
+      <class_struct cname="GstColorBalanceChannelClass">
+        <field name="Parent" cname="parent" type="GObjectClass" />
+        <method signal_vm="value_changed" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Label" cname="label" type="gchar*" access="public" />
+      <field name="MinValue" cname="min_value" type="gint" access="public" />
+      <field name="MaxValue" cname="max_value" type="gint" access="public" />
+      <signal name="ValueChanged" cname="value-changed" when="LAST" field_name="value_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gint" name="value" />
+        </parameters>
+      </signal>
+      <method name="GetType" cname="gst_color_balance_channel_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+    </object>
+    <object name="GstMixerOptions" cname="GstMixerOptions" parent="GstMixerTrack">
+      <class_struct cname="GstMixerOptionsClass">
+        <field name="Parent" cname="parent" type="GstMixerTrackClass" />
+        <method signal_vm="option_changed" />
+        <method vm="get_values" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING-1" />
+      </class_struct>
+      <field name="Values" cname="values" type="GList*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <signal name="OptionChanged" cname="option_changed" when="LAST" field_name="option_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gchar*" name="value" />
+        </parameters>
+      </signal>
+      <virtual_method name="GetValues" cname="get_values">
+        <return-type type="GList*" />
+        <parameters />
+      </virtual_method>
+      <method name="GetType" cname="gst_mixer_options_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="GetValues" cname="gst_mixer_options_get_values">
+        <return-type type="GList*" />
+      </method>
+      <method name="ListChanged" cname="gst_mixer_options_list_changed" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstMixer*" name="mixer" />
+          <parameter type="GstMixerOptions*" name="opts" />
+        </parameters>
+      </method>
+    </object>
+    <object name="GstMixerTrack" cname="GstMixerTrack" parent="GObject">
+      <class_struct cname="GstMixerTrackClass">
+        <field name="Parent" cname="parent" type="GObjectClass" />
+        <method signal_vm="mute_toggled" />
+        <method signal_vm="record_toggled" />
+        <method signal_vm="volume_changed" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Label" cname="label" type="gchar*" />
+      <field name="Flags" cname="flags" type="GstMixerTrackFlags" />
+      <field name="NumChannels" cname="num_channels" type="gint" />
+      <field name="MinVolume" cname="min_volume" type="gint" />
+      <field name="MaxVolume" cname="max_volume" type="gint" />
+      <property name="Label" cname="label" type="gchar*" readable="true" />
+      <property name="UntranslatedLabel" cname="untranslated-label" type="gchar*" readable="true" writeable="true" construct-only="true" />
+      <property name="Index" cname="index" type="guint" readable="true" writeable="true" construct-only="true" />
+      <property name="MinVolume" cname="min-volume" type="gint" readable="true" />
+      <property name="MaxVolume" cname="max-volume" type="gint" readable="true" />
+      <property name="Flags" cname="flags" type="guint" readable="true" />
+      <property name="NumChannels" cname="num-channels" type="gint" readable="true" />
+      <signal name="RecordToggled" cname="record_toggled" when="LAST" field_name="record_toggled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="record" />
+        </parameters>
+      </signal>
+      <signal name="MuteToggled" cname="mute_toggled" when="LAST" field_name="mute_toggled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="mute" />
+        </parameters>
+      </signal>
+      <signal name="VolumeChanged" cname="volume_changed" when="LAST" manual="true" field_name="volume_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gint*" name="volumes" />
+        </parameters>
+      </signal>
+      <method name="GetType" cname="gst_mixer_track_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+    </object>
+    <object name="GstTunerChannel" cname="GstTunerChannel" parent="GObject">
+      <class_struct cname="GstTunerChannelClass">
+        <field name="Parent" cname="parent" type="GObjectClass" />
+        <method signal_vm="frequency_changed" />
+        <method signal_vm="signal_changed" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Label" cname="label" type="gchar*" access="public" />
+      <field name="Flags" cname="flags" type="GstTunerChannelFlags" access="public" />
+      <field name="FreqMultiplicator" cname="freq_multiplicator" type="gfloat" access="public" />
+      <field name="MinFrequency" cname="min_frequency" type="gulong" access="public" />
+      <field name="MaxFrequency" cname="max_frequency" type="gulong" access="public" />
+      <field name="MinSignal" cname="min_signal" type="gint" access="public" />
+      <field name="MaxSignal" cname="max_signal" type="gint" access="public" />
+      <signal name="FrequencyChanged" cname="frequency-changed" when="LAST" field_name="frequency_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gulong" name="frequency" />
+        </parameters>
+      </signal>
+      <signal name="SignalChanged" cname="signal-changed" when="LAST" field_name="signal_changed">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gint" name="signal" />
+        </parameters>
+      </signal>
+      <method name="Changed" cname="gst_tuner_channel_changed" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTuner*" name="tuner" />
+          <parameter type="GstTunerChannel*" name="channel" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_tuner_channel_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+    </object>
+    <object name="GstTunerNorm" cname="GstTunerNorm">
+      <method name="Changed" cname="gst_tuner_norm_changed" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTuner*" name="tuner" />
+          <parameter type="GstTunerNorm*" name="norm" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_tuner_norm_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+    </object>
+  </namespace>
 </api>

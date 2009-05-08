@@ -15,7 +15,7 @@ ASSEMBLY = $(ASSEMBLY_NAME).dll
 gapidir = $(datadir)/gapi
 gapi_DATA = $(APIS)
 
-glue_includes="gst/gst.h"
+glue_includes="gst/gst.h gst/interfaces/colorbalance.h gst/interfaces/colorbalancechannel.h gst/interfaces/tuner.h gst/interfaces/tunerchannel.h gst/interfaces/tunernorm.h"
 
 CLEANFILES = $(ASSEMBLY) $(ASSEMBLY).mdb generated-stamp generated/*.cs glue/generated.c $(API) $(KEYFILE)
 DISTCLEANFILES = $(ASSEMBLY).config AssemblyInfo.cs
@@ -52,7 +52,9 @@ sources = \
 	baseplugins/*.cs
 
 overrides = \
-	override/URIHandlerAdapter.cs
+	override/URIHandlerAdapter.cs \
+	override/ColorBalanceAdapter.cs \
+	override/ColorBalance.cs 
 
 build_sources = $(addprefix $(srcdir)/, $(sources))
 
@@ -61,6 +63,7 @@ customs = 			\
 	Buffer.custom           \
 	Bus.custom		\
 	Caps.custom		\
+	ColorBalanceChannel.custom		\
 	Clock.custom		\
 	ClockEntry.custom	\
 	Debug.custom		\
@@ -108,6 +111,7 @@ generated-stamp: $(API) $(GAPI_CODEGEN) $(build_customs) $(overrides)
 		--gluelib-name=gstreamersharpglue-0.10 --glue-filename=glue/generated.c \
 		--glue-includes=$(glue_includes) \
 	&& cp $(overrides) $(builddir)/generated \
+	&& sed -i 's;public class ObjectManager;internal class ObjectManager;g' generated/ObjectManager.cs \
 	&& touch generated-stamp
 
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
