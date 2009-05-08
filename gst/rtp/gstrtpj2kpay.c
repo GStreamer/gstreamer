@@ -133,6 +133,9 @@ static void gst_rtp_j2k_pay_set_property (GObject * object, guint prop_id,
 static void gst_rtp_j2k_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstStateChangeReturn
+gst_rtp_j2k_pay_change_state (GstElement * element, GstStateChange transition);
+
 static gboolean gst_rtp_j2k_pay_setcaps (GstBaseRTPPayload * basepayload,
     GstCaps * caps);
 
@@ -159,13 +162,17 @@ static void
 gst_rtp_j2k_pay_class_init (GstRtpJ2KPayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->set_property = gst_rtp_j2k_pay_set_property;
   gobject_class->get_property = gst_rtp_j2k_pay_get_property;
+
+  gstelement_class->change_state = gst_rtp_j2k_pay_change_state;
 
   gstbasertppayload_class->set_caps = gst_rtp_j2k_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_j2k_pay_handle_buffer;
@@ -361,6 +368,8 @@ gst_rtp_j2k_pay_handle_buffer (GstBaseRTPPayload * basepayload,
           else
             j2k_header.MHF = 2;
         }
+        if (end >= size)
+          gst_rtp_buffer_set_marker (outbuf, TRUE);
       }
 
       /* copy the header and push the packet */
@@ -421,6 +430,37 @@ gst_rtp_j2k_pay_get_property (GObject * object, guint prop_id,
       break;
   }
 }
+
+static GstStateChangeReturn
+gst_rtp_j2k_pay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstRtpJ2KPay *rtpj2kpay;
+  GstStateChangeReturn ret;
+
+  rtpj2kpay = GST_RTP_J2K_PAY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+  return ret;
+}
+
 
 gboolean
 gst_rtp_j2k_pay_plugin_init (GstPlugin * plugin)
