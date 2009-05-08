@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-06 15:55+0100\n"
+"POT-Creation-Date: 2009-05-07 22:27+0100\n"
 "PO-Revision-Date: 2009-01-11 20:45+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -208,7 +208,7 @@ msgstr "これはメディアファイルではありません"
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "字幕のストリームを認識しましたが、動画ストリームがありません"
 
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:958
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:986
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "autovideosink と xvimagesink エレメントの両方が見つかりません"
 
@@ -216,45 +216,45 @@ msgstr "autovideosink と xvimagesink エレメントの両方が見つかりま
 #: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
 #: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
 #: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:906 gst/playback/gstplaysink.c:924
-#: gst/playback/gstplaysink.c:1091 gst/playback/gstplaysink.c:1103
-#: gst/playback/gstplaysink.c:1258 gst/playback/gstplaysink.c:1271
-#: gst/playback/gstplaysink.c:1396 gst/playback/gstplaysink.c:1414
-#: gst/playback/gstplaysink.c:1433 gst/playback/gstplaysink.c:1639
-#: gst/playback/gstplaysink.c:1648 gst/playback/gstplaysink.c:1657
+#: gst/playback/gstplaysink.c:934 gst/playback/gstplaysink.c:952
+#: gst/playback/gstplaysink.c:1119 gst/playback/gstplaysink.c:1131
+#: gst/playback/gstplaysink.c:1286 gst/playback/gstplaysink.c:1299
+#: gst/playback/gstplaysink.c:1424 gst/playback/gstplaysink.c:1442
+#: gst/playback/gstplaysink.c:1461 gst/playback/gstplaysink.c:1667
+#: gst/playback/gstplaysink.c:1676 gst/playback/gstplaysink.c:1685
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 "エレメント '%s' が見つかりません - GStreamer のインストールが失敗している可能"
 "性があります"
 
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1487
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1515
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "autovideosink と alsasink エレメントの両方が見つかりません"
 
-#: gst/playback/gstplaysink.c:962
+#: gst/playback/gstplaysink.c:990
 #, fuzzy
 msgid "Both autovideosink and xvimagesink elements are not working."
 msgstr "autovideosink と xvimagesink エレメントの両方が見つかりません"
 
-#: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
+#: gst/playback/gstplaysink.c:1106 gst/playback/gstplaysink.c:1263
 msgid "Custom text sink element is not usable."
 msgstr ""
 
-#: gst/playback/gstplaysink.c:1469
+#: gst/playback/gstplaysink.c:1497
 msgid "No volume control found"
 msgstr "ボリュームコントロールが見つかりません"
 
-#: gst/playback/gstplaysink.c:1490
+#: gst/playback/gstplaysink.c:1518
 #, fuzzy
 msgid "Both autoaudiosink and alsasink elements are not working."
 msgstr "autovideosink と alsasink エレメントの両方が見つかりません"
 
-#: gst/playback/gstplaysink.c:1985
+#: gst/playback/gstplaysink.c:2014
 msgid "Can't play a text file without video."
 msgstr ""
 
-#: gst/playback/gstplaysink.c:1993
+#: gst/playback/gstplaysink.c:2022
 msgid "Can't play a text subtitles and subpictures."
 msgstr ""
 

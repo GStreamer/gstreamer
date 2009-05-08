@@ -1,3 +1,315 @@
+2009-05-07 22:01:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/tcp/gstmultifdsink.c:
+	* gst/tcp/gsttcp-marshal.list:
+	  multifdsink: fix signature of the add-full signal
+	  The second parameter is a GstSyncMethod enum, not a boolean.
+
+2009-05-07 15:19:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: initialize variable too
+
+2009-05-07 14:28:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playbin2: make playsink go ASYNC to PAUSED
+	  Make playsink go async to the PAUSED state instead of relying on uridecodebin
+	  for async behaviour in playbin. This solves some problems (mainly with DVD)
+	  where the pipeline would go to PLAYING before preroll completed, failing to
+	  select the audiosink clock.
+	  Fixes #581727
+
+2009-05-06 16:09:52 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  0.10.22.4 pre-release
+
+2009-05-06 13:19:34 +0100  Zaheer Merali <zaheerabbas@merali.org>
+
+	* ext/theora/theoraenc.c:
+	* ext/vorbis/vorbisenc.c:
+	  vorbisenc, theoraenc: Ensure gp is computed consistently + clip to segment
+	  With vorbisenc, compute the granulepos with running time and clip incoming
+	  buffers to segment.
+	  With theoraenc, drop out of segment buffers.
+
+2009-05-01 16:47:53 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/audioresample/gstaudioresample.c:
+	  audioresample: Fix buffer size transformations
+	  When calculating the input/output buffer sizes in the transform_size function,
+	  take the number of channels into account, so we don't end up calculating
+	  a buffer size that only contains a partial number of audio frames.
+	  Also, when going from output size to input size, round down rather than
+	  up, so as to calculate the minimum number of samples that *might* yield
+	  a buffer of the intended destination size.
+	  Fixes: #580470 and #580952
+
+2009-04-29 16:45:27 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/vorbis/gstvorbisenc.h:
+	* ext/vorbis/vorbisenc.c:
+	  vorbisenc: Ensure output buffers fall within the segment
+	  Add the start position of the first segment to the running time
+	  used to generate buffer timestamps in vorbisenc. This avoids generating
+	  buffers which fall outside the initial segment. The element segment
+	  handling requires more extensive fixing, but this at least prevents
+	  regressions. Fixes: #580020
+
+2009-04-29 11:18:42 +0200  Andy Wingo <wingo@oblong.net>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	  Revert "add can-activate-pull property to baseaudiosink"
+	  This reverts commit c4074a2ee4f1e6cac734a145bf675bbb16fac985.
+
+2009-04-29 11:18:33 +0200  Andy Wingo <wingo@oblong.net>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	  Revert "[baseaudiosink] add docs for can-activate-pull"
+	  This reverts commit 416ce16f26b39c76ab35e1ef6a75dc41ec69f75b.
+
+2009-04-28 18:48:33 +0200  Andy Wingo <wingo@oblong.net>
+
+	  [baseaudiosink] add docs for can-activate-pull
+	  * gst-libs/gst/audio/gstbaseaudiosink.c: Add documentation for
+	  can-activate-pull.
+
+2009-01-21 12:33:59 +0100  Andy Wingo <wingo@oblong.net>
+
+	  add can-activate-pull property to baseaudiosink
+	  * gst-libs/gst/audio/gstbaseaudiosink.c: Add can-activate-pull property
+	  to baseaudiosink.
+
+2009-04-28 11:32:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videorate/gstvideorate.c:
+	* gst/videorate/gstvideorate.h:
+	  videorate: clear discont on duplicated buffers
+	  When videorate duplicates a buffer with a DISCONT flag, it copies the discont on
+	  the first pushed buffer but fails to clear it for subsequent buffers. This
+	  causes theoraenc!oggmux and possibly other elements to consider this a discont
+	  stream.
+	  Fix videorate to produce discont as the first buffer and after a flushing seek.
+	  Fixes #580271.
+
+2009-04-24 18:13:00 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/Makefile.am:
+	  check: Disable the playbin2 for this release, as it is a bit racy.
+	  Disable the test, as per the discussion in #580120. Needs re-enabling
+	  after the release, when playbin2 is fixed.
+
+2009-04-23 08:41:19 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: Don't reduce max-size-time of exposed groups. Fixes #579912
+	  The 2s limit is way too small for a lot of files (which have an interleave
+	  in time of between 3 and 5s). Instead, leave it to the initial 5s value
+	  and reduce the other limits (allowing us to stay memory-efficient).
+
+2009-04-21 21:06:59 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  0.10.22.3 pre-release
+
+2009-04-21 20:41:23 +0100  René Stadler <mail@renestadler.de>
+
+	* gst/audioresample/gstaudioresample.c:
+	  audioresample: Fix unused variable in compilation with --disable-gst-debug
+	  Fixes: #579668
+
+2009-04-21 22:12:28 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From b3941ea to 6ab11d1
+
+2009-04-21 20:57:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybasebin.c:
+	  playbin: only use raw_decoding_mode when it's true
+	  First check the pad caps if they are raw before setting the raw_decoding_mode to
+	  TRUE. Fixes playback of transport streams and other streams that require large
+	  queues.
+	  Fixes #579734
+
+2009-04-19 18:15:28 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	* tests/check/libs/cddabasesrc.c:
+	  cddabasesrc: fix posting of discid tags after MERGE_MODE_REPLACE_ALL changes in core
+	  Don't use REPLACE_ALL merge mode when that's not really what we want,
+	  as now that REPLACE_ALL actually does what it's supposed to do in
+	  core, we drop tags we wanted to keep, such as the various disc id
+	  tags. Add unit test for this as well. Fixes #579463.
+
+2009-04-17 10:34:54 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: don't use GLib-2.16 API, we require only 2.14
+	  Fixes #579267.
+
+2009-04-17 10:55:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	  baseaudiosink: don't unparent the ringbuffer
+	  when going to NULL, don't unparent the ringbuffer because we don't support going
+	  back to 0 very well yet.
+	  Fixes #579203
+
+2009-04-17 10:53:10 +0200  Olivier Crete <tester at tester.ca>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c:
+	  RTCP: don't fail when retrieving invalid PT
+	  We can't meaningfully assert on valid packet types so just return the type as it
+	  is. Update the comments to reflect this.
+	  Fixes #579192.
+
+2009-04-16 12:12:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/app/gstappsink.h:
+	* gst-libs/gst/app/gstappsrc.h:
+	  app: add trivial cast macros
+	  Add trivial cast macros for appsrc and appsink. Mark them as being since 0.10.23
+	  and add the macros to the standard macros in the docs.
+	  Fixes #579130
+
+2009-04-16 12:09:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* pkgconfig/gstreamer-plugins-base-uninstalled.pc.in:
+	  pkgconfig: add the app/ directory to Libs
+	  Add the appsrc/appsink directory to the Libs in the uninstalled
+	  pkgconfig file so that one can build against it.
+	  Fixes #579129
+
+2009-04-15 22:59:31 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  0.10.22.2 pre-release
+
+2009-04-15 22:56:15 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	  ChangeLog: regenerate changelog with the gen-changelog script
+
+2009-04-16 00:41:13 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: Update po files from TP
+
+2009-04-16 00:40:59 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	* win32/common/gstrtsp-enumtypes.c:
+	* win32/common/interfaces-enumtypes.c:
+	* win32/common/interfaces-enumtypes.h:
+	* win32/common/video-enumtypes.c:
+	  win32: Update win32 build files
+
+2009-04-16 00:31:55 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/libs/video.c:
+	  check: Add GST_VIDEO_FORMAT_YVYU to the test so it passes.
+
+2009-04-16 00:31:00 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/elements/playbin2.c:
+	  check: Fix the input uri in playbin2 test.
+	  Don't try and use a random file in wim's home directory as a test input
+
 2009-04-15 15:35:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* gst-libs/gst/video/video.h:

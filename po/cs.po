@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-06 15:55+0100\n"
+"POT-Creation-Date: 2009-05-07 22:27+0100\n"
 "PO-Revision-Date: 2009-04-27 22:31+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -212,7 +212,7 @@ msgstr "Toto není multimediální soubor"
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Byl rozpoznán proud titulků, ale nikoliv obrazový proud."
 
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:958
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:986
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Schází jak prvek autovideosink, tak xvimagesink."
 
@@ -220,41 +220,41 @@ msgstr "Schází jak prvek autovideosink, tak xvimagesink."
 #: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
 #: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
 #: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:906 gst/playback/gstplaysink.c:924
-#: gst/playback/gstplaysink.c:1091 gst/playback/gstplaysink.c:1103
-#: gst/playback/gstplaysink.c:1258 gst/playback/gstplaysink.c:1271
-#: gst/playback/gstplaysink.c:1396 gst/playback/gstplaysink.c:1414
-#: gst/playback/gstplaysink.c:1433 gst/playback/gstplaysink.c:1639
-#: gst/playback/gstplaysink.c:1648 gst/playback/gstplaysink.c:1657
+#: gst/playback/gstplaysink.c:934 gst/playback/gstplaysink.c:952
+#: gst/playback/gstplaysink.c:1119 gst/playback/gstplaysink.c:1131
+#: gst/playback/gstplaysink.c:1286 gst/playback/gstplaysink.c:1299
+#: gst/playback/gstplaysink.c:1424 gst/playback/gstplaysink.c:1442
+#: gst/playback/gstplaysink.c:1461 gst/playback/gstplaysink.c:1667
+#: gst/playback/gstplaysink.c:1676 gst/playback/gstplaysink.c:1685
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Schází prvek \"%s\" - zkontrolujte prosím instalaci systému GStreamer."
 
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1487
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1515
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Schází jak prvek autoaudiosink, tak alsasink."
 
-#: gst/playback/gstplaysink.c:962
+#: gst/playback/gstplaysink.c:990
 msgid "Both autovideosink and xvimagesink elements are not working."
 msgstr "Nefunguje ani prvek autovideosink, ani xvimagesink."
 
-#: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
+#: gst/playback/gstplaysink.c:1106 gst/playback/gstplaysink.c:1263
 msgid "Custom text sink element is not usable."
 msgstr "Vlastní prvek kanálu textu není použitelný."
 
-#: gst/playback/gstplaysink.c:1469
+#: gst/playback/gstplaysink.c:1497
 msgid "No volume control found"
 msgstr "Nenalezeno žádné ovládání hlasitosti"
 
-#: gst/playback/gstplaysink.c:1490
+#: gst/playback/gstplaysink.c:1518
 msgid "Both autoaudiosink and alsasink elements are not working."
 msgstr "Nefunguje ani prvek autoaudiosink, ani alsasink."
 
-#: gst/playback/gstplaysink.c:1985
+#: gst/playback/gstplaysink.c:2014
 msgid "Can't play a text file without video."
 msgstr "Textový soubor nelze přehrát bez videa."
 
-#: gst/playback/gstplaysink.c:1993
+#: gst/playback/gstplaysink.c:2022
 msgid "Can't play a text subtitles and subpictures."
 msgstr "Textové titulky ani podřazené obrázky nelze přehrát."
 

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-06 15:55+0100\n"
+"POT-Creation-Date: 2009-05-07 22:27+0100\n"
 "PO-Revision-Date: 2009-04-16 21:03-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -210,7 +210,7 @@ msgstr "Este não é um arquivo de mídia"
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Um fluxo de legenda foi detectado, mas nenhum fluxo de vídeo."
 
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:958
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:986
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Os elementos autovideosink e xvimagesink estão faltando."
 
@@ -218,42 +218,42 @@ msgstr "Os elementos autovideosink e xvimagesink estão faltando."
 #: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
 #: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
 #: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:906 gst/playback/gstplaysink.c:924
-#: gst/playback/gstplaysink.c:1091 gst/playback/gstplaysink.c:1103
-#: gst/playback/gstplaysink.c:1258 gst/playback/gstplaysink.c:1271
-#: gst/playback/gstplaysink.c:1396 gst/playback/gstplaysink.c:1414
-#: gst/playback/gstplaysink.c:1433 gst/playback/gstplaysink.c:1639
-#: gst/playback/gstplaysink.c:1648 gst/playback/gstplaysink.c:1657
+#: gst/playback/gstplaysink.c:934 gst/playback/gstplaysink.c:952
+#: gst/playback/gstplaysink.c:1119 gst/playback/gstplaysink.c:1131
+#: gst/playback/gstplaysink.c:1286 gst/playback/gstplaysink.c:1299
+#: gst/playback/gstplaysink.c:1424 gst/playback/gstplaysink.c:1442
+#: gst/playback/gstplaysink.c:1461 gst/playback/gstplaysink.c:1667
+#: gst/playback/gstplaysink.c:1676 gst/playback/gstplaysink.c:1685
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 "O elemento \"%s\" está faltando, verifique a instalação do seu GStreamer."
 
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1487
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1515
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Os elementos autoaudiosink e alsasink estão faltando."
 
-#: gst/playback/gstplaysink.c:962
+#: gst/playback/gstplaysink.c:990
 msgid "Both autovideosink and xvimagesink elements are not working."
 msgstr "Os elementos autovideosink e xvimagesink não estão funcionando."
 
-#: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
+#: gst/playback/gstplaysink.c:1106 gst/playback/gstplaysink.c:1263
 msgid "Custom text sink element is not usable."
 msgstr "O elemento consumidor personalizado de texto não é utilizável."
 
-#: gst/playback/gstplaysink.c:1469
+#: gst/playback/gstplaysink.c:1497
 msgid "No volume control found"
 msgstr "Nenhum controle de volume encontrado"
 
-#: gst/playback/gstplaysink.c:1490
+#: gst/playback/gstplaysink.c:1518
 msgid "Both autoaudiosink and alsasink elements are not working."
 msgstr "Os elementos autoaudiosink e alsasink não estão funcionando."
 
-#: gst/playback/gstplaysink.c:1985
+#: gst/playback/gstplaysink.c:2014
 msgid "Can't play a text file without video."
 msgstr "Não é possível reproduzir um arquivo de texto sem vídeo."
 
-#: gst/playback/gstplaysink.c:1993
+#: gst/playback/gstplaysink.c:2022
 msgid "Can't play a text subtitles and subpictures."
 msgstr "Não é possível reproduzir legendas de texto e subimagens."
 
