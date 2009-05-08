@@ -145,13 +145,8 @@ typedef struct _RtpJpegHeader RtpJpegHeader;
  */
 struct _RtpJpegHeader
 {
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
   guint type_spec:8;
   guint offset:24;
-#else
-  guint offset:24;
-  guint type_spec:8;
-#endif
   guint8 type;
   guint8 q;
   guint8 width;
