@@ -350,6 +350,7 @@ gst_deinterlace2_modes_get_type (void)
   static const GEnumValue modes_types[] = {
     {GST_DEINTERLACE2_MODE_AUTO, "Auto detection", "auto"},
     {GST_DEINTERLACE2_MODE_INTERLACED, "Enfore deinterlacing", "interlaced"},
+    {GST_DEINTERLACE2_MODE_DISABLED, "Run in passthrough mode", "disabled"},
     {0, NULL, NULL},
   };
 
@@ -729,14 +730,17 @@ gst_deinterlace2_set_property (GObject * object, guint prop_id,
   self = GST_DEINTERLACE2 (object);
 
   switch (prop_id) {
-    case PROP_MODE:
-      if (GST_STATE (self) >= GST_STATE_PAUSED) {
-        g_warning ("Setting the 'mode' property is only allowed in "
-            "states other than PAUSED and PLAYING");
-      } else {
-        self->mode = g_value_get_enum (value);
-      }
+    case PROP_MODE:{
+      gint oldmode;
+
+      GST_OBJECT_LOCK (self);
+      oldmode = self->mode;
+      self->mode = g_value_get_enum (value);
+      if (self->mode != oldmode && GST_PAD_CAPS (self->srcpad))
+        gst_deinterlace2_setcaps (self->sinkpad, GST_PAD_CAPS (self->sinkpad));
+      GST_OBJECT_UNLOCK (self);
       break;
+    }
     case PROP_METHOD:
       gst_deinterlace2_set_method (self, g_value_get_enum (value));
       break;
@@ -925,7 +929,8 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
 
   self = GST_DEINTERLACE2 (GST_PAD_PARENT (pad));
 
-  if (!self->interlaced && self->mode != GST_DEINTERLACE2_MODE_INTERLACED)
+  if (self->mode == GST_DEINTERLACE2_MODE_DISABLED || (!self->interlaced
+          && self->mode != GST_DEINTERLACE2_MODE_INTERLACED))
     return gst_pad_push (self->srcpad, buf);
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
@@ -1133,7 +1138,8 @@ gst_deinterlace2_getcaps (GstPad * pad)
   GST_OBJECT_UNLOCK (self);
 
   if ((self->interlaced || self->mode == GST_DEINTERLACE2_MODE_INTERLACED) &&
-      self->fields == GST_DEINTERLACE2_ALL) {
+      self->fields == GST_DEINTERLACE2_ALL
+      && self->mode != GST_DEINTERLACE2_MODE_DISABLED) {
     for (len = gst_caps_get_size (ret); len > 0; len--) {
       GstStructure *s = gst_caps_get_structure (ret, len - 1);
       const GValue *val;
@@ -1269,7 +1275,8 @@ gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps)
     goto invalid_caps;
 
   if ((self->interlaced || self->mode == GST_DEINTERLACE2_MODE_INTERLACED) &&
-      self->fields == GST_DEINTERLACE2_ALL) {
+      self->fields == GST_DEINTERLACE2_ALL
+      && self->mode != GST_DEINTERLACE2_MODE_DISABLED) {
     gint fps_n = self->frame_rate_n, fps_d = self->frame_rate_d;
 
     if (!gst_fraction_double (&fps_n, &fps_d, otherpad != self->srcpad))
@@ -1418,7 +1425,8 @@ gst_deinterlace2_src_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
-      if (self->interlaced || self->mode == GST_DEINTERLACE2_MODE_INTERLACED) {
+      if ((self->interlaced || self->mode == GST_DEINTERLACE2_MODE_INTERLACED)
+          && self->mode != GST_DEINTERLACE2_MODE_DISABLED) {
         GstClockTime min, max;
         gboolean live;
         GstPad *peer;
