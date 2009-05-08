@@ -34,6 +34,7 @@
 
 /* This example shows how to use textures that come from a
  * gst-plugins-gl pipeline, into the clutter framework
+ * It requires at least clutter 0.8.6
  */
 
 /* hack */
@@ -49,50 +50,58 @@ struct _GstGLBuffer
   GLuint texture;
 };
 
+/* rotation */
+void
+on_new_frame (ClutterTimeline * timeline, gint frame_num, gpointer data)
+{
+  ClutterActor *rect_actor = CLUTTER_ACTOR (data);
+  ClutterActor *texture_actor =
+      g_object_get_data (G_OBJECT (timeline), "texture_actor");
+
+  clutter_actor_set_rotation (rect_actor, CLUTTER_Z_AXIS, (gdouble) frame_num,
+      clutter_actor_get_width (rect_actor) / 2,
+      clutter_actor_get_height (rect_actor) / 2, 0);
+
+  clutter_actor_set_rotation (texture_actor, CLUTTER_Z_AXIS,
+      (gdouble) frame_num, clutter_actor_get_width (texture_actor) / 2,
+      clutter_actor_get_height (texture_actor) / 2, 0);
+}
+
+
 /* clutter scene */
 ClutterActor *
 setup_stage (ClutterStage * stage)
 {
   ClutterTimeline *timeline = NULL;
-  ClutterEffectTemplate *effect_template = NULL;
   ClutterActor *texture_actor = NULL;
   ClutterColor rect_color = { 125, 50, 200, 255 };
-  ClutterActor *actorRect = NULL;
-
-  /* timeline */
-
-  timeline = clutter_timeline_new (120, 50);
-  clutter_timeline_set_loop (timeline, TRUE);
-  clutter_timeline_start (timeline);
-
-  /* effect template */
-
-  effect_template =
-      clutter_effect_template_new (timeline, CLUTTER_ALPHA_SINE_INC);
+  ClutterActor *rect_actor = NULL;
 
   /* texture actor */
 
   texture_actor = clutter_texture_new ();
   clutter_container_add_actor (CLUTTER_CONTAINER (stage), texture_actor);
   clutter_actor_set_position (texture_actor, 300, 170);
-  clutter_actor_set_scale (texture_actor, 0.8, 0.8);
-  clutter_effect_rotate (effect_template, texture_actor,
-      CLUTTER_Z_AXIS, 180.0, 50, 50, 0, CLUTTER_ROTATE_CW, NULL, NULL);
+  clutter_actor_set_scale (texture_actor, 0.6, 0.6);
   clutter_actor_show (texture_actor);
   g_object_set_data (G_OBJECT (texture_actor), "stage", stage);
 
-  g_object_unref (effect_template);
-  g_object_unref (timeline);
-
   /* rectangle actor */
 
-  actorRect = clutter_rectangle_new_with_color (&rect_color);
-  clutter_container_add_actor (CLUTTER_CONTAINER (stage), actorRect);
-  clutter_actor_set_size (actorRect, 50, 50);
-  clutter_actor_set_position (actorRect, 300, 300);
-  clutter_effect_rotate (effect_template, actorRect,
-      CLUTTER_Z_AXIS, 180.0, 25, 25, 0, CLUTTER_ROTATE_CW, NULL, NULL);
-  clutter_actor_show (actorRect);
+  rect_actor = clutter_rectangle_new_with_color (&rect_color);
+  clutter_container_add_actor (CLUTTER_CONTAINER (stage), rect_actor);
+  clutter_actor_set_size (rect_actor, 50, 50);
+  clutter_actor_set_position (rect_actor, 300, 300);
+  clutter_actor_show (rect_actor);
+
+  /* timeline */
+
+  timeline = clutter_timeline_new (360, 60);
+  g_object_set_data (G_OBJECT (timeline), "texture_actor", texture_actor);
+  clutter_timeline_set_loop (timeline, TRUE);
+  clutter_timeline_start (timeline);
+  g_signal_connect (timeline, "new-frame", G_CALLBACK (on_new_frame),
+      rect_actor);
 
   return texture_actor;
 }
@@ -102,24 +111,29 @@ gboolean
 update_texture_actor (gpointer data)
 {
   ClutterTexture *texture_actor = (ClutterTexture *) data;
-  GQueue *queue_input_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_input_buf");
-  GQueue *queue_output_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_output_buf");
+  GQueue *queue_input_buf =
+      g_object_get_data (G_OBJECT (texture_actor), "queue_input_buf");
+  GQueue *queue_output_buf =
+      g_object_get_data (G_OBJECT (texture_actor), "queue_output_buf");
   GstGLBuffer *gst_gl_buf = g_queue_pop_head (queue_input_buf);
   ClutterActor *stage = g_object_get_data (G_OBJECT (texture_actor), "stage");
   CoglHandle cogl_texture = 0;
 
   /* Create a cogl texture from the gst gl texture */
-  glEnable (GL_TEXTURE_2D);
-  glBindTexture (GL_TEXTURE_2D, gst_gl_buf->texture);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, gst_gl_buf->texture);
+  if (glGetError () != GL_NO_ERROR)
+    g_debug ("failed to bind texture that comes from gst-gl\n");
   cogl_texture = cogl_texture_new_from_foreign (gst_gl_buf->texture,
-      GL_TEXTURE_2D, gst_gl_buf->width, gst_gl_buf->height, 0, 0,
+      CGL_TEXTURE_RECTANGLE_ARB, gst_gl_buf->width, gst_gl_buf->height, 0, 0,
       COGL_PIXEL_FORMAT_RGBA_8888);
-  glBindTexture (GL_TEXTURE_2D, 0);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 
   /* Previous cogl texture is replaced and so its ref counter discreases to 0.
    * According to the source code, glDeleteTexture is not called when the previous
    * ref counter of the previous cogl texture is reaching 0 because is_foreign is TRUE */
-  clutter_texture_set_cogl_texture (CLUTTER_TEXTURE (texture_actor), cogl_texture);
+  clutter_texture_set_cogl_texture (CLUTTER_TEXTURE (texture_actor),
+      cogl_texture);
   cogl_texture_unref (cogl_texture);
 
   /* we can now show the clutter scene if not yet visible */
@@ -138,28 +152,30 @@ void
 on_gst_buffer (GstElement * element, GstBuffer * buf, GstPad * pad,
     ClutterActor * texture_actor)
 {
-	GQueue *queue_input_buf = NULL;
-	GQueue *queue_output_buf = NULL;
+  GQueue *queue_input_buf = NULL;
+  GQueue *queue_output_buf = NULL;
 
-	/* hold clutter lock */
-	clutter_threads_enter ();
+  /* hold clutter lock */
+  clutter_threads_enter ();
 
   /* ref then push buffer to use it in clutter */
   gst_buffer_ref (buf);
-	queue_input_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_input_buf");
+  queue_input_buf =
+      g_object_get_data (G_OBJECT (texture_actor), "queue_input_buf");
   g_queue_push_tail (queue_input_buf, buf);
   if (g_queue_get_length (queue_input_buf) > 2)
-		clutter_threads_add_idle (update_texture_actor, texture_actor);
+    clutter_threads_add_idle (update_texture_actor, texture_actor);
 
   /* pop then unref buffer we have finished to use in clutter */
-  queue_output_buf = g_object_get_data (G_OBJECT (texture_actor), "queue_output_buf");
+  queue_output_buf =
+      g_object_get_data (G_OBJECT (texture_actor), "queue_output_buf");
   if (g_queue_get_length (queue_output_buf) > 2) {
-		GstGLBuffer *gst_gl_buf_old = g_queue_pop_head (queue_output_buf);
-		gst_buffer_unref (GST_BUFFER_CAST (gst_gl_buf_old));
-	}
+    GstGLBuffer *gst_gl_buf_old = g_queue_pop_head (queue_output_buf);
+    gst_buffer_unref (GST_BUFFER_CAST (gst_gl_buf_old));
+  }
 
   /* release clutter lock */
-	clutter_threads_leave ();
+  clutter_threads_leave ();
 }
 
 int
@@ -179,16 +195,17 @@ main (int argc, char *argv[])
   GstState state = 0;
   ClutterActor *stage = NULL;
   ClutterActor *clutter_texture = NULL;
-  GQueue* queue_input_buf = NULL;
-  GQueue* queue_output_buf = NULL;
+  GQueue *queue_input_buf = NULL;
+  GQueue *queue_output_buf = NULL;
   GstElement *fakesink = NULL;
 
   /* init gstreamer then clutter */
 
-	gst_init (&argc, &argv);
-	clutter_threads_init ();
+  gst_init (&argc, &argv);
+  clutter_threads_init ();
   clutter_init (&argc, &argv);
   clutter_threads_enter ();
+  g_print ("clutter version: %s\n", CLUTTER_VERSION_S);
 
   /* init glew */
 
@@ -262,8 +279,10 @@ main (int argc, char *argv[])
 
   queue_input_buf = g_queue_new ();
   queue_output_buf = g_queue_new ();
-	g_object_set_data (G_OBJECT (clutter_texture), "queue_input_buf", queue_input_buf);
-	g_object_set_data (G_OBJECT (clutter_texture), "queue_output_buf", queue_output_buf);
+  g_object_set_data (G_OBJECT (clutter_texture), "queue_input_buf",
+      queue_input_buf);
+  g_object_set_data (G_OBJECT (clutter_texture), "queue_output_buf",
+      queue_output_buf);
 
   /* set a callback to retrieve the gst gl textures */
 
