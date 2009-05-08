@@ -118,7 +118,8 @@ enum
   PROP_IRADIO_GENRE,
   PROP_IRADIO_URL,
   PROP_IRADIO_TITLE,
-  PROP_TIMEOUT
+  PROP_TIMEOUT,
+  PROP_EXTRA_HEADERS
 };
 
 #define DEFAULT_USER_AGENT           "GStreamer souphttpsrc "
@@ -281,6 +282,10 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
       g_param_spec_uint ("timeout", "timeout",
           "Value in seconds to timeout a blocking I/O (0 = No timeout).", 0,
           3600, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_EXTRA_HEADERS,
+      g_param_spec_boxed ("extra-headers", "Extra Headers",
+          "Extra headers to append to the HTTP request",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE));
 
   /* icecast stuff */
   g_object_class_install_property (gobject_class,
@@ -480,6 +485,15 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
     case PROP_TIMEOUT:
       src->timeout = g_value_get_uint (value);
       break;
+    case PROP_EXTRA_HEADERS:{
+      const GstStructure *s = gst_value_get_structure (value);
+
+      if (src->extra_headers)
+        gst_structure_free (src->extra_headers);
+
+      src->extra_headers = s ? gst_structure_copy (s) : NULL;
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -550,6 +564,9 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
     case PROP_TIMEOUT:
       g_value_set_uint (value, src->timeout);
       break;
+    case PROP_EXTRA_HEADERS:
+      gst_value_set_structure (value, src->extra_headers);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -602,6 +619,45 @@ gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src, guint64 offset)
   src->read_position = offset;
   return TRUE;
 }
+
+static gboolean
+_append_extra_headers (GQuark field_id, const GValue * value,
+    gpointer user_data)
+{
+  GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (user_data);
+  const gchar *field_name = g_quark_to_string (field_id);
+  const gchar *field_content;
+
+  if (G_VALUE_TYPE (value) != G_TYPE_STRING) {
+    GST_ERROR_OBJECT (src, "Invalid typed extra-headers field '%s'",
+        field_name);
+    return FALSE;
+  }
+
+  field_content = g_value_get_string (value);
+  if (field_content == NULL) {
+    GST_ERROR_OBJECT (src, "extra-headers field '%s' contains no value",
+        field_name);
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (src, "Appending extra header: \"%s: %s\"", field_name,
+      field_content);
+  soup_message_headers_append (src->msg->request_headers, field_name,
+      field_content);
+  return TRUE;
+}
+
+
+static gboolean
+gst_soup_http_src_add_extra_headers (GstSoupHTTPSrc * src)
+{
+  if (!src->extra_headers)
+    return TRUE;
+
+  return gst_structure_foreach (src->extra_headers, _append_extra_headers, src);
+}
+
 
 static void
 gst_soup_http_src_session_unpause_message (GstSoupHTTPSrc * src)
@@ -1035,6 +1091,8 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src)
       gst_soup_http_src_chunk_allocator, src, NULL);
   gst_soup_http_src_add_range_header (src, src->request_position);
 
+  gst_soup_http_src_add_extra_headers (src);
+
   return TRUE;
 }
 
@@ -1166,6 +1224,10 @@ gst_soup_http_src_stop (GstBaseSrc * bsrc)
     g_main_context_unref (src->context);
     src->loop = NULL;
     src->context = NULL;
+  }
+  if (src->extra_headers) {
+    gst_structure_free (src->extra_headers);
+    src->extra_headers = NULL;
   }
 
   return TRUE;
