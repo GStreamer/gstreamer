@@ -41,6 +41,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <libavc1394/avc1394.h>
 #include <libavc1394/avc1394_vcr.h>
