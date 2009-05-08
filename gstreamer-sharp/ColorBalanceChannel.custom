@@ -1,0 +1,5 @@
+public ColorBalanceChannel (string label, int min, int max) : this () {
+  Label = label;
+  MaxValue = max;
+  MinValue = min;
+}
