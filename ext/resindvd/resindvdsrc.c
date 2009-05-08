@@ -778,18 +778,8 @@ update_title_info (resinDvdSrc * src)
       src->cur_angle = cur_agl;
 
       if (title_n == 0) {
-        static const char *dvd_menu_map[] = {
-          NULL, NULL, "Title", "Root",
-          "Subpicture", "Audio", "Angle", "Part"
-        };
-
         /* In a menu */
-        if (part_n >= 0 && part_n < G_N_ELEMENTS (dvd_menu_map)
-            && dvd_menu_map[part_n]) {
-          title_str = g_strdup_printf ("DVD %s Menu", dvd_menu_map[part_n]);
-        } else {
-          title_str = g_strdup ("DVD Menu");
-        }
+        title_str = g_strdup ("DVD Menu");
       } else {
         /* In a title */
         if (n_angles > 1) {
