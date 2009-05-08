@@ -94,7 +94,7 @@ static GstFlowReturn gst_dvd_spu_video_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_dvd_spu_video_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_dvd_spu_buffer_alloc (GstPad * sinkpad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
-static void gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu);
+static void gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force);
 
 static void gst_dvd_spu_check_still_updates (GstDVDSpu * dvdspu);
 static GstFlowReturn gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf);
@@ -429,7 +429,7 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
             /* And re-draw the still frame to make sure it appears on
              * screen, otherwise the last frame  might have been discarded 
              * by QoS */
-            gst_dvd_spu_redraw_still (dvdspu);
+            gst_dvd_spu_redraw_still (dvdspu, TRUE);
           } else
             state->flags &= ~(SPU_STATE_STILL_FRAME);
           DVD_SPU_UNLOCK (dvdspu);
@@ -633,15 +633,17 @@ no_ref_frame:
 
 /* With SPU LOCK */
 static void
-gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu)
+gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force)
 {
   /* If we have an active SPU command set and a reference frame, copy the
    * frame, redraw the SPU and store it as the pending frame for output */
   if (dvdspu->ref_frame) {
-    if ((dvdspu->spu_state.flags & SPU_STATE_FORCED_DSP) ||
-        ((dvdspu->spu_state.flags & SPU_STATE_FORCED_ONLY) == 0 &&
-            (dvdspu->spu_state.flags & SPU_STATE_DISPLAY))) {
-      GstBuffer *buf = gst_buffer_copy (dvdspu->ref_frame);
+    gboolean redraw = (dvdspu->spu_state.flags & SPU_STATE_FORCED_DSP);
+    redraw |= (dvdspu->spu_state.flags & SPU_STATE_FORCED_ONLY) == 0 &&
+        (dvdspu->spu_state.flags & SPU_STATE_DISPLAY);
+
+    if (redraw) {
+      GstBuffer *buf = gst_buffer_ref (dvdspu->ref_frame);
 
       buf = gst_buffer_make_writable (buf);
 
@@ -654,9 +656,21 @@ gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu)
       /* Render the SPU overlay onto the buffer */
       gst_dvd_spu_render_spu (dvdspu, buf);
       gst_buffer_replace (&dvdspu->pending_frame, buf);
+      gst_buffer_unref (buf);
+    } else if (force) {
+      /* Simply output the reference frame */
+      GstBuffer *buf = gst_buffer_ref (dvdspu->ref_frame);
+      buf = gst_buffer_make_metadata_writable (buf);
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+
+      GST_DEBUG_OBJECT (dvdspu, "Pushing reference frame at start of still");
+
+      gst_buffer_replace (&dvdspu->pending_frame, buf);
+      gst_buffer_unref (buf);
     } else {
-      GST_LOG_OBJECT (dvdspu,
-          "Redraw due to Still Frame skipped - no SPU to draw");
+      GST_LOG_OBJECT (dvdspu, "Redraw due to Still Frame skipped");
     }
   } else {
     GST_LOG_OBJECT (dvdspu, "Not redrawing still frame - no ref frame");
@@ -1000,7 +1014,7 @@ gst_dvd_spu_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
   }
 
   if (hl_change && (state->flags & SPU_STATE_STILL_FRAME)) {
-    gst_dvd_spu_redraw_still (dvdspu);
+    gst_dvd_spu_redraw_still (dvdspu, FALSE);
   }
 
   gst_event_unref (event);
