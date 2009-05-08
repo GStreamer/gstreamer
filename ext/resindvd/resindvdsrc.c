@@ -398,6 +398,7 @@ rsn_dvdsrc_start (RsnBaseSrc * bsrc)
 
   src->angles_changed = FALSE;
   src->n_angles = 0;
+  src->cur_angle = 0;
 
   src->commands_changed = TRUE;
 
@@ -761,17 +762,20 @@ update_title_info (resinDvdSrc * src)
 
   if (dvdnav_get_angle_info (src->dvdnav, &cur_agl,
           &n_angles) == DVDNAV_STATUS_OK && src->n_angles != n_angles) {
+    /* Make sure we send an angles-changed message soon */
     src->angles_changed = TRUE;
-    src->n_angles = n_angles;
   }
 
   if (dvdnav_current_title_info (src->dvdnav, &title_n,
           &part_n) == DVDNAV_STATUS_OK) {
-    if (title_n != src->title_n || part_n != src->part_n || src->angles_changed) {
+    if (title_n != src->title_n || part_n != src->part_n ||
+        src->n_angles != n_angles || src->cur_angle != cur_agl) {
       gchar *title_str = NULL;
 
       src->title_n = title_n;
       src->part_n = part_n;
+      src->n_angles = n_angles;
+      src->cur_angle = cur_agl;
 
       if (title_n == 0) {
         static const char *dvd_menu_map[] = {
@@ -1178,7 +1182,6 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
       angles_msg =
           gst_navigation_message_new_angles_changed (GST_OBJECT_CAST (src),
           cur, agls);
-      src->n_angles = agls;
     }
     src->angles_changed = FALSE;
   }
@@ -1626,9 +1629,10 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
         angles_msg =
             gst_navigation_message_new_angles_changed (GST_OBJECT_CAST (src),
             cur, agls);
-        src->n_angles = agls;
       }
       src->angles_changed = FALSE;
+
+      update_title_info (src);
     }
 
     g_mutex_unlock (src->dvd_lock);

@@ -76,6 +76,8 @@ struct _resinDvdSrc
   gboolean	in_menu;
   gint          title_n; /* Title num */
   gint          part_n; /* Part num */
+  gint          n_angles; /* number of angles */
+  gint          cur_angle; /* current angle */
 
   gboolean	running;
   gboolean	discont;
@@ -136,7 +138,6 @@ struct _resinDvdSrc
   gint8         cur_spu_phys_stream;
   gboolean      cur_spu_forced_only;
   guint32       cur_clut[16];
-  gint          n_angles;
 };
 
 struct _resinDvdSrcClass 
