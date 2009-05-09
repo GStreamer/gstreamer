@@ -49,13 +49,16 @@ sources = \
 	PadQueryTypeFunction.cs \
 	TypeFindDelegates.cs \
 	PresetDefault.cs \
+	MixerMessage.cs \
 	coreplugins/*.cs \
 	baseplugins/*.cs
 
 overrides = \
 	override/URIHandlerAdapter.cs \
 	override/ColorBalanceAdapter.cs \
-	override/ColorBalance.cs 
+	override/ColorBalance.cs  \
+	override/Mixer.cs \
+	override/MixerAdapter.cs
 
 build_sources = $(addprefix $(srcdir)/, $(sources))
 
@@ -87,7 +90,8 @@ customs = 			\
 	Tag.custom		\
 	TagList.custom		\
 	TypeFind.custom		\
-	TypeFindFactory.custom	
+	TypeFindFactory.custom	\
+	MixerTrack.custom
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 

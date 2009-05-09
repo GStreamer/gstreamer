@@ -1002,6 +1002,8 @@
   <attr path="/api/namespace/interface[@cname='GstMixer']/signal" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstMixer']/method[@cname='gst_mixer_list_tracks']/return-type" name="element_type">GstMixerTrack</attr>
   <attr path="/api/namespace/interface[@cname='GstMixer']/virtual_method[@cname='list_tracks']/return-type" name="element_type">GstMixerTrack</attr>
+  <remove-attr path="/api/namespace/interface[@cname='GstMixer']/method[@cname='gst_mixer_options_list_changed']" name="shared" />
+  <remove-node path="/api/namespace/interface[@cname='GstMixer']/method[@cname='gst_mixer_options_list_changed']/parameters/parameter[@name='mixer']" />
 
   <attr path="/api/namespace/enum[@cname='GstMixerType']" name="name">MixerType</attr>
 
@@ -1009,7 +1011,16 @@
 
   <attr path="/api/namespace/enum[@cname='GstMixerMessageType']" name="name">MixerMessageType</attr>
 
-  <attr path="/api/namespace/interface[@cname='GstMixer']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstMixerTrack']" name="name">MixerTrack</attr>
+  <attr path="/api/namespace/object[@cname='GstMixerTrack']/signal" name="hidden">1</attr>
+
+  <attr path="/api/namespace/object[@cname='GstMixerOptions']" name="name">MixerOptions</attr>
+  <attr path="/api/namespace/object[@cname='GstMixerOptions']/field[@name='Values']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstMixerOptions']/signal" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstMixerOptions']/method[@cname='gst_mixer_options_get_values']/return-type" name="element_type">gchar*</attr>
+  <attr path="/api/namespace/object[@cname='GstMixerOptions']/virtual_method[@cname='get_values']/return-type" name="element_type">gchar*</attr>
+  <move-node path="/api/namespace/object[@cname='GstMixerOptions']/method[@cname='gst_mixer_options_list_changed']">/api/namespace/interface[@cname='GstMixer']</move-node>
+
   <attr path="/api/namespace/interface[@cname='GstNavigation']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstPropertyProbe']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstTuner']" name="hidden">1</attr>
