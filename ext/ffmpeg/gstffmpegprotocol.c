@@ -104,7 +104,8 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
   g_return_val_if_fail (h->flags == URL_RDONLY, AVERROR_IO);
   info = (GstProtocolInfo *) h->priv_data;
 
-  GST_DEBUG ("Pulling %d bytes at position %lld", size, info->offset);
+  GST_DEBUG ("Pulling %d bytes at position %" G_GUINT64_FORMAT, size,
+      info->offset);
 
   ret = gst_pad_pull_range (info->pad, info->offset, (guint) size, &inbuf);
 
@@ -140,7 +141,8 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
 
   info = (GstProtocolInfo *) h->priv_data;
 
-  GST_DEBUG ("Reading %d bytes of data at position %lld", size, info->offset);
+  GST_DEBUG ("Reading %d bytes of data at position %" G_GUINT64_FORMAT, size,
+      info->offset);
 
   res = gst_ffmpegdata_peek (h, buf, size);
   if (res >= 0)
@@ -250,7 +252,8 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
       break;
   }
 
-  GST_DEBUG ("Now at offset %lld (returning %lld)", info->offset, newpos);
+  GST_DEBUG ("Now at offset %" G_GUINT64_FORMAT " (returning %" G_GUINT64_FORMAT
+      ")", info->offset, newpos);
   return newpos;
 }
 

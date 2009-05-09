@@ -475,8 +475,9 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment * segment)
   }
 
   GST_DEBUG_OBJECT (demux,
-      "About to call av_seek_frame (context, %d, %lld, 0) for time %"
-      GST_TIME_FORMAT, index, fftarget, GST_TIME_ARGS (target));
+      "About to call av_seek_frame (context, %d, %" G_GINT64_FORMAT
+      ", 0) for time %" GST_TIME_FORMAT, index, fftarget,
+      GST_TIME_ARGS (target));
 
   if ((seekret =
           av_seek_frame (demux->context, index, fftarget,
@@ -1315,8 +1316,8 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
   GST_DEBUG_OBJECT (demux,
       "pkt pts:%" GST_TIME_FORMAT
       " / size:%d / stream_index:%d / flags:%d / duration:%" GST_TIME_FORMAT
-      " / pos:%lld", GST_TIME_ARGS (timestamp), pkt.size, pkt.stream_index,
-      pkt.flags, GST_TIME_ARGS (duration), pkt.pos);
+      " / pos:%" G_GINT64_FORMAT, GST_TIME_ARGS (timestamp), pkt.size,
+      pkt.stream_index, pkt.flags, GST_TIME_ARGS (duration), pkt.pos);
 
   /* check start_time */
   if (demux->start_time != -1 && demux->start_time > timestamp)
