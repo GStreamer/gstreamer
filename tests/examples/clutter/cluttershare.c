@@ -173,6 +173,43 @@ on_gst_buffer (GstElement * element, GstBuffer * buf, GstPad * pad,
   }
 }
 
+/* gst bus signal watch callback */
+void
+end_stream_cb (GstBus * bus, GstMessage * msg, gpointer data)
+{
+  switch (GST_MESSAGE_TYPE (msg)) {
+
+    case GST_MESSAGE_EOS:
+      g_print ("End-of-stream\n");
+      g_print
+          ("For more information, try to run: GST_DEBUG=gldisplay:2 ./cluttershare\n");
+      break;
+
+    case GST_MESSAGE_ERROR:
+    {
+      gchar *debug = NULL;
+      GError *err = NULL;
+
+      gst_message_parse_error (msg, &err, &debug);
+
+      g_print ("Error: %s\n", err->message);
+      g_error_free (err);
+
+      if (debug) {
+        g_print ("Debug deails: %s\n", debug);
+        g_free (debug);
+      }
+
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  clutter_main_quit ();
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -186,6 +223,7 @@ main (int argc, char *argv[])
   GLXContext clutter_gl_context = NULL;
 #endif
   GstPipeline *pipeline = NULL;
+  GstBus *bus = NULL;
   GstElement *glupload = NULL;
   GstState state = 0;
   ClutterActor *stage = NULL;
@@ -236,6 +274,15 @@ main (int argc, char *argv[])
       GST_PIPELINE (gst_parse_launch
       ("videotestsrc ! video/x-raw-rgb, bpp=32, depth=32, width=320, height=240, framerate=(fraction)30/1 ! "
           "glupload ! fakesink sync=1", NULL));
+
+  /* setup bus */
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), NULL);
+  g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), NULL);
+  g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), NULL);
+  gst_object_unref (bus);
 
   /* clutter_gl_context is an external OpenGL context with which gst-plugins-gl want to share textures */
 
