@@ -1,0 +1,2 @@
+- Interfaces currently contain things that should only be called by implementors
+- GstMiniObject binding is broken, we need our own codegen and handle it like a GObject without toggle refs, signals and properties
