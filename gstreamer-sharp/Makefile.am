@@ -44,6 +44,7 @@ sources = \
 	AssemblyInfo.cs \
 	GError.cs \
 	Value.cs \
+	Iterator.cs \
 	GstSharp.PadQueryTypeFunctionNative.cs \
 	PadQueryTypeFunction.cs \
 	TypeFindDelegates.cs \
