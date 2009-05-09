@@ -163,6 +163,8 @@ gst_mxf_mux_finalize (GObject * object)
   if (mux->metadata) {
     g_hash_table_destroy (mux->metadata);
     mux->metadata = NULL;
+    g_list_free (mux->metadata_list);
+    mux->metadata_list = NULL;
   }
 
   gst_object_unref (mux->collect);
@@ -216,6 +218,8 @@ gst_mxf_mux_reset (GstMXFMux * mux)
   if (mux->metadata) {
     g_hash_table_destroy (mux->metadata);
     mux->preface = NULL;
+    g_list_free (mux->metadata_list);
+    mux->metadata_list = NULL;
   }
   mux->metadata = mxf_metadata_hash_table_new ();
 
@@ -280,6 +284,7 @@ gst_mxf_mux_setcaps (GstPad * pad, GstCaps * caps)
   gboolean ret = TRUE;
   MXFUUID d_instance_uid = { {0,} };
   MXFMetadataFileDescriptor *old_descriptor = cpad->descriptor;
+  GList *l;
 
   GST_DEBUG_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, caps);
 
@@ -308,6 +313,19 @@ gst_mxf_mux_setcaps (GstPad * pad, GstCaps * caps)
 
   memcpy (&MXF_METADATA_BASE (cpad->descriptor)->instance_uid, &d_instance_uid,
       16);
+
+  if (old_descriptor) {
+    for (l = mux->metadata_list; l; l = l->next) {
+      MXFMetadataBase *tmp = l->data;
+
+      if (mxf_uuid_is_equal (&d_instance_uid, &tmp->instance_uid)) {
+        l->data = cpad->descriptor;
+        break;
+      }
+    }
+  } else {
+    mux->metadata_list = g_list_prepend (mux->metadata_list, cpad->descriptor);
+  }
 
   g_hash_table_replace (mux->metadata,
       &MXF_METADATA_BASE (cpad->descriptor)->instance_uid, cpad->descriptor);
@@ -449,6 +467,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
       mux->metadata);
   g_hash_table_insert (mux->metadata,
       &MXF_METADATA_BASE (mux->preface)->instance_uid, mux->preface);
+  mux->metadata_list = g_list_prepend (mux->metadata_list, mux->preface);
 
   mxf_timestamp_set_now (&mux->preface->last_modified_date);
   mux->preface->version = 258;
@@ -505,6 +524,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
         mux->metadata);
     g_hash_table_insert (mux->metadata,
         &MXF_METADATA_BASE (identification)->instance_uid, identification);
+    mux->metadata_list = g_list_prepend (mux->metadata_list, identification);
 
     mxf_uuid_init (&identification->this_generation_uid, NULL);
 
@@ -561,6 +581,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
     mxf_uuid_init (&MXF_METADATA_BASE (cstorage)->instance_uid, mux->metadata);
     g_hash_table_insert (mux->metadata,
         &MXF_METADATA_BASE (cstorage)->instance_uid, cstorage);
+    mux->metadata_list = g_list_prepend (mux->metadata_list, cstorage);
 
     cstorage->n_packages = 2;
     cstorage->packages = g_new0 (MXFMetadataGenericPackage *, 2);
@@ -576,6 +597,8 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
       g_hash_table_insert (mux->metadata,
           &MXF_METADATA_BASE (cstorage->packages[1])->instance_uid,
           cstorage->packages[1]);
+      mux->metadata_list =
+          g_list_prepend (mux->metadata_list, cstorage->packages[1]);
       p = (MXFMetadataSourcePackage *) cstorage->packages[1];
 
       mxf_umid_init (&p->parent.package_uid);
@@ -601,6 +624,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
         mxf_uuid_init (&MXF_METADATA_BASE (d)->instance_uid, mux->metadata);
         g_hash_table_insert (mux->metadata,
             &MXF_METADATA_BASE (d)->instance_uid, d);
+        mux->metadata_list = g_list_prepend (mux->metadata_list, d);
       }
 
       /* Tracks */
@@ -621,6 +645,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               mux->metadata);
           g_hash_table_insert (mux->metadata,
               &MXF_METADATA_BASE (track)->instance_uid, track);
+          mux->metadata_list = g_list_prepend (mux->metadata_list, track);
 
           track->parent.track_id = n + 1;
           track->parent.track_number =
@@ -637,6 +662,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               mux->metadata);
           g_hash_table_insert (mux->metadata,
               &MXF_METADATA_BASE (sequence)->instance_uid, sequence);
+          mux->metadata_list = g_list_prepend (mux->metadata_list, sequence);
 
           memcpy (&sequence->data_definition, &cpad->writer->data_definition,
               16);
@@ -653,6 +679,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               mux->metadata);
           g_hash_table_insert (mux->metadata,
               &MXF_METADATA_BASE (clip)->instance_uid, clip);
+          mux->metadata_list = g_list_prepend (mux->metadata_list, clip);
 
           memcpy (&clip->parent.data_definition, &sequence->data_definition,
               16);
@@ -687,6 +714,8 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
       g_hash_table_insert (mux->metadata,
           &MXF_METADATA_BASE (cstorage->packages[0])->instance_uid,
           cstorage->packages[0]);
+      mux->metadata_list =
+          g_list_prepend (mux->metadata_list, cstorage->packages[0]);
       p = (MXFMetadataMaterialPackage *) cstorage->packages[0];
 
       mxf_umid_init (&p->package_uid);
@@ -724,6 +753,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               mux->metadata);
           g_hash_table_insert (mux->metadata,
               &MXF_METADATA_BASE (track)->instance_uid, track);
+          mux->metadata_list = g_list_prepend (mux->metadata_list, track);
 
           track->parent.track_id = n + 1;
           track->parent.track_number = 0;
@@ -757,6 +787,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               mux->metadata);
           g_hash_table_insert (mux->metadata,
               &MXF_METADATA_BASE (sequence)->instance_uid, sequence);
+          mux->metadata_list = g_list_prepend (mux->metadata_list, sequence);
 
           memcpy (&sequence->data_definition, &cpad->writer->data_definition,
               16);
@@ -772,6 +803,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               mux->metadata);
           g_hash_table_insert (mux->metadata,
               &MXF_METADATA_BASE (clip)->instance_uid, clip);
+          mux->metadata_list = g_list_prepend (mux->metadata_list, clip);
 
           memcpy (&clip->parent.data_definition, &sequence->data_definition,
               16);
@@ -798,6 +830,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               mux->metadata);
           g_hash_table_insert (mux->metadata,
               &MXF_METADATA_BASE (track)->instance_uid, track);
+          mux->metadata_list = g_list_prepend (mux->metadata_list, track);
 
           track->parent.track_id = n + 1;
           track->parent.track_number = 0;
@@ -811,6 +844,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               mux->metadata);
           g_hash_table_insert (mux->metadata,
               &MXF_METADATA_BASE (sequence)->instance_uid, sequence);
+          mux->metadata_list = g_list_prepend (mux->metadata_list, sequence);
 
           memcpy (&sequence->data_definition,
               mxf_metadata_track_identifier_get
@@ -828,6 +862,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
               mux->metadata);
           g_hash_table_insert (mux->metadata,
               &MXF_METADATA_BASE (component)->instance_uid, component);
+          mux->metadata_list = g_list_prepend (mux->metadata_list, component);
 
           memcpy (&component->parent.data_definition,
               &sequence->data_definition, 16);
@@ -884,12 +919,50 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
     g_hash_table_insert (mux->metadata,
         &MXF_METADATA_BASE (cstorage->essence_container_data[0])->instance_uid,
         cstorage->essence_container_data[0]);
+    mux->metadata_list =
+        g_list_prepend (mux->metadata_list,
+        cstorage->essence_container_data[0]);
 
     cstorage->essence_container_data[0]->linked_package =
         MXF_METADATA_SOURCE_PACKAGE (cstorage->packages[1]);
     cstorage->essence_container_data[0]->index_sid = 0;
     cstorage->essence_container_data[0]->body_sid = 1;
   }
+
+  /* Sort descriptors at the correct places */
+  {
+    GList *l;
+    GList *descriptors;
+
+    for (l = mux->metadata_list; l; l = l->next) {
+      MXFMetadataBase *m = l->data;
+
+      if (MXF_IS_METADATA_GENERIC_DESCRIPTOR (m)
+          && !MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (m)) {
+        descriptors = l;
+        l->prev->next = NULL;
+        l->prev = NULL;
+        break;
+      }
+    }
+
+    for (l = mux->metadata_list; l; l = l->next) {
+      MXFMetadataBase *m = l->data;
+      GList *s;
+
+      if (MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (m) ||
+          MXF_IS_METADATA_SOURCE_PACKAGE (m)) {
+        s = l->prev;
+        l->prev = g_list_last (descriptors);
+        s->next = descriptors;
+        descriptors->prev = s;
+        l->prev->next = l;
+        break;
+      }
+    }
+  }
+
+  mux->metadata_list = g_list_reverse (mux->metadata_list);
 
   return ret;
 }
@@ -953,37 +1026,16 @@ gst_mxf_mux_write_header_metadata (GstMXFMux * mux)
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buf;
   GList *buffers = NULL;
-#if GLIB_CHECK_VERSION (2, 16, 0)
-  GHashTableIter iter;
-#else
-  GList *values;
-#endif
-  MXFMetadataBase *m;
   GList *l;
+  MXFMetadataBase *m;
   guint64 header_byte_count = 0;
 
-  buf =
-      mxf_metadata_base_to_buffer (MXF_METADATA_BASE (mux->preface),
-      &mux->primer);
-  header_byte_count += GST_BUFFER_SIZE (buf);
-  buffers = g_list_prepend (buffers, buf);
-
-#if GLIB_CHECK_VERSION (2, 16, 0)
-  g_hash_table_iter_init (&iter, mux->metadata);
-  while (g_hash_table_iter_next (&iter, NULL, (gpointer) & m)) {
-#else
-  values = g_hash_table_get_values (mux->metadata);
-  for (l = values; l; l = l->next) {
+  for (l = mux->metadata_list; l; l = l->next) {
     m = l->data;
-#endif
     buf = mxf_metadata_base_to_buffer (m, &mux->primer);
     header_byte_count += GST_BUFFER_SIZE (buf);
     buffers = g_list_prepend (buffers, buf);
   }
-
-#if !GLIB_CHECK_VERSION (2, 16, 0)
-  g_list_free (values);
-#endif
 
   buffers = g_list_reverse (buffers);
   buf = mxf_primer_pack_to_buffer (&mux->primer);

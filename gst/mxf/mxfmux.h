@@ -85,6 +85,7 @@ typedef struct _GstMXFMux {
   MXFPrimerPack primer;
   
   GHashTable *metadata;
+  GList *metadata_list;
   MXFMetadataPreface *preface;
 
   MXFFraction min_edit_rate;
