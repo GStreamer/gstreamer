@@ -2,15 +2,6 @@
 version=0.10
 element-name=GstX264Enc
 
-[Pass 1]
-pass=pass1
-
-[Pass 2]
-pass=pass2
-
-[Pass 3]
-pass=pass3
-
 [Profile Baseline]
 _meta/comment=Baseline Profile
 bframes=0
