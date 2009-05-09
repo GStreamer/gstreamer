@@ -111,11 +111,11 @@ gboolean
 update_texture_actor (gpointer data)
 {
   ClutterTexture *texture_actor = (ClutterTexture *) data;
-  GQueue *queue_input_buf =
+  GAsyncQueue *queue_input_buf =
       g_object_get_data (G_OBJECT (texture_actor), "queue_input_buf");
-  GQueue *queue_output_buf =
+  GAsyncQueue *queue_output_buf =
       g_object_get_data (G_OBJECT (texture_actor), "queue_output_buf");
-  GstGLBuffer *gst_gl_buf = g_queue_pop_head (queue_input_buf);
+  GstGLBuffer *gst_gl_buf = g_async_queue_pop (queue_input_buf);
   ClutterActor *stage = g_object_get_data (G_OBJECT (texture_actor), "stage");
   CoglHandle cogl_texture = 0;
 
@@ -141,7 +141,7 @@ update_texture_actor (gpointer data)
     clutter_actor_show_all (stage);
 
   /* push buffer so it can be unref later */
-  g_queue_push_tail (queue_output_buf, gst_gl_buf);
+  g_async_queue_push (queue_output_buf, gst_gl_buf);
 
   return FALSE;
 }
@@ -152,30 +152,25 @@ void
 on_gst_buffer (GstElement * element, GstBuffer * buf, GstPad * pad,
     ClutterActor * texture_actor)
 {
-  GQueue *queue_input_buf = NULL;
-  GQueue *queue_output_buf = NULL;
-
-  /* hold clutter lock */
-  clutter_threads_enter ();
+  GAsyncQueue *queue_input_buf = NULL;
+  GAsyncQueue *queue_output_buf = NULL;
 
   /* ref then push buffer to use it in clutter */
   gst_buffer_ref (buf);
   queue_input_buf =
       g_object_get_data (G_OBJECT (texture_actor), "queue_input_buf");
-  g_queue_push_tail (queue_input_buf, buf);
-  if (g_queue_get_length (queue_input_buf) > 2)
-    clutter_threads_add_idle (update_texture_actor, texture_actor);
+  g_async_queue_push (queue_input_buf, buf);
+  if (g_async_queue_length (queue_input_buf) > 2)
+    clutter_threads_add_idle_full (G_PRIORITY_HIGH, update_texture_actor,
+        texture_actor, NULL);
 
   /* pop then unref buffer we have finished to use in clutter */
   queue_output_buf =
       g_object_get_data (G_OBJECT (texture_actor), "queue_output_buf");
-  if (g_queue_get_length (queue_output_buf) > 2) {
-    GstGLBuffer *gst_gl_buf_old = g_queue_pop_head (queue_output_buf);
-    gst_buffer_unref (GST_BUFFER_CAST (gst_gl_buf_old));
+  if (g_async_queue_length (queue_output_buf) > 2) {
+    GstBuffer *buf_old = g_async_queue_pop (queue_output_buf);
+    gst_buffer_unref (buf_old);
   }
-
-  /* release clutter lock */
-  clutter_threads_leave ();
 }
 
 int
@@ -195,8 +190,8 @@ main (int argc, char *argv[])
   GstState state = 0;
   ClutterActor *stage = NULL;
   ClutterActor *clutter_texture = NULL;
-  GQueue *queue_input_buf = NULL;
-  GQueue *queue_output_buf = NULL;
+  GAsyncQueue *queue_input_buf = NULL;
+  GAsyncQueue *queue_output_buf = NULL;
   GstElement *fakesink = NULL;
 
   /* init gstreamer then clutter */
@@ -277,8 +272,8 @@ main (int argc, char *argv[])
 
   /* append a gst-gl texture to this queue when you do not need it no more */
 
-  queue_input_buf = g_queue_new ();
-  queue_output_buf = g_queue_new ();
+  queue_input_buf = g_async_queue_new ();
+  queue_output_buf = g_async_queue_new ();
   g_object_set_data (G_OBJECT (clutter_texture), "queue_input_buf",
       queue_input_buf);
   g_object_set_data (G_OBJECT (clutter_texture), "queue_output_buf",
@@ -320,13 +315,13 @@ main (int argc, char *argv[])
    * between clutter and gst-gl
    */
 
-  while (g_queue_get_length (queue_input_buf) > 0) {
-    GstBuffer *buf = g_queue_pop_head (queue_input_buf);
+  while (g_async_queue_length (queue_input_buf) > 0) {
+    GstBuffer *buf = g_async_queue_pop (queue_input_buf);
     gst_buffer_unref (buf);
   }
 
-  while (g_queue_get_length (queue_output_buf) > 0) {
-    GstBuffer *buf = g_queue_pop_head (queue_output_buf);
+  while (g_async_queue_length (queue_output_buf) > 0) {
+    GstBuffer *buf = g_async_queue_pop (queue_output_buf);
     gst_buffer_unref (buf);
   }
 
