@@ -2,12 +2,52 @@
 version=0.10
 element-name=GstX264Enc
 
-# see http://mewiki.project357.com/wiki/X264_Settings for x264 properties
+[Pass 1]
+pass=pass1
 
-# lower default bitrate
-# turn of cabac for devices that do not support main-profile
-[just-an-example]
-_meta/comment=use for mobile pocket video player
-_meta/device=pocketvideo
-bitrate=1024
+[Pass 2]
+pass=pass2
+
+[Pass 3]
+pass=pass3
+
+[Profile Baseline]
+_meta/comment=Baseline Profile
+bframes=0
 cabac=false
+dct8x8=false
+
+[Profile Main]
+_meta/comment=Main Profile
+cabac=true
+dct8x8=false
+
+[Profile High]
+_meta/comment=High Profile
+cabac=true
+dct8x8=true
+
+[Quality Low]
+_meta/comment=Low quality
+pass=qual
+quantizer=27
+subme=4
+threads=0
+
+[Quality Normal]
+_meta/comment=Normal quality
+pass=qual
+quantizer=21
+me=umh
+subme=6
+ref=3
+threads=0
+
+[Quality High]
+_meta/comment=High quality
+pass=qual
+quantizer=18
+me=umh
+subme=6
+ref=3
+threads=0
