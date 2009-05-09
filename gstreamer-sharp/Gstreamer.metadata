@@ -997,7 +997,6 @@
   <attr path="/api/namespace/interface[@cname='GstColorBalance']/method[@cname='gst_color_balance_value_changed']" name="name">EmitValueChanged</attr>
 
   <attr path="/api/namespace/object[@cname='GstColorBalanceChannel']" name="name">ColorBalanceChannel</attr>
-  <attr path="/api/namespace/object[@cname='GstColorBalanceChannel']/field" name="writeable">true</attr>
 
   <attr path="/api/namespace/interface[@cname='GstMixer']" name="name">Mixer</attr>
   <attr path="/api/namespace/interface[@cname='GstMixer']/signal" name="hidden">1</attr>
