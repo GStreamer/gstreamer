@@ -272,8 +272,9 @@ main (int argc, char *argv[])
 
   pipeline =
       GST_PIPELINE (gst_parse_launch
-      ("videotestsrc ! video/x-raw-rgb, bpp=32, depth=32, width=320, height=240, framerate=(fraction)30/1 ! "
-          "glupload ! fakesink sync=1", NULL));
+      ("videotestsrc ! video/x-raw-yuv, width=320, height=240, framerate=(fraction)30/1 ! "
+          "glupload ! gleffects effect=5 ! glfiltercube ! fakesink sync=1",
+          NULL));
 
   /* setup bus */
 
