@@ -1447,7 +1447,6 @@ gst_mp3parse_set_property (GObject * object, guint prop_id,
 {
   GstMPEGAudioParse *src;
 
-  g_return_if_fail (GST_IS_MP3PARSE (object));
   src = GST_MP3PARSE (object);
 
   switch (prop_id) {
@@ -1465,7 +1464,6 @@ gst_mp3parse_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstMPEGAudioParse *src;
 
-  g_return_if_fail (GST_IS_MP3PARSE (object));
   src = GST_MP3PARSE (object);
 
   switch (prop_id) {
@@ -1675,7 +1673,6 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
     guint64 sum = 0;
     gdouble a, b, fa, fb;
 
-
     do {
       sum += mp3parse->vbri_seek_table[i];
       i++;
@@ -1853,10 +1850,10 @@ no_pos:
 static gboolean
 mp3parse_src_event (GstPad * pad, GstEvent * event)
 {
-  GstMPEGAudioParse *mp3parse = GST_MP3PARSE (gst_pad_get_parent (pad));
+  GstMPEGAudioParse *mp3parse;
   gboolean res = FALSE;
 
-  g_return_val_if_fail (mp3parse != NULL, FALSE);
+  mp3parse = GST_MP3PARSE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -1877,11 +1874,11 @@ mp3parse_src_query (GstPad * pad, GstQuery * query)
 {
   GstFormat format;
   GstClockTime total;
-  GstMPEGAudioParse *mp3parse = GST_MP3PARSE (gst_pad_get_parent (pad));
+  GstMPEGAudioParse *mp3parse;
   gboolean res = FALSE;
   GstPad *peer;
 
-  g_return_val_if_fail (mp3parse != NULL, FALSE);
+  mp3parse = GST_MP3PARSE (gst_pad_get_parent (pad));
 
   GST_LOG_OBJECT (pad, "%s query", GST_QUERY_TYPE_NAME (query));
 
