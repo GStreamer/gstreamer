@@ -3996,7 +3996,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         data += 1;
         size -= 1;
 
-        GST_LOG_OBJECT (demux, "time %" G_GUINT16_FORMAT ", flags %d", time,
+        GST_LOG_OBJECT (demux, "time %" G_GUINT64_FORMAT ", flags %d", time,
             flags);
 
         switch ((flags & 0x06) >> 1) {
