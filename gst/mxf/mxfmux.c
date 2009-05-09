@@ -1150,10 +1150,11 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
           best = cpad;
           break;
         }
-      } else if (have_data && !l->next) {
+      }
+
+      if (have_data && !l->next) {
         mux->last_gc_position++;
         mux->last_gc_timestamp = next_gc_timestamp;
-        have_data = FALSE;
         best = NULL;
         break;
       }
