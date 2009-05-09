@@ -311,10 +311,24 @@ main (int argc, char *argv[])
 
   clutter_threads_leave ();
 
-  /* deinit */
+  /* stop and clean up the pipeline */
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   g_object_unref (pipeline);
+
+  /* make sure there is no pending gst gl buffer in the communication queues 
+   * between clutter and gst-gl
+   */
+
+  while (g_queue_get_length (queue_input_buf) > 0) {
+    GstBuffer *buf = g_queue_pop_head (queue_input_buf);
+    gst_buffer_unref (buf);
+  }
+
+  while (g_queue_get_length (queue_output_buf) > 0) {
+    GstBuffer *buf = g_queue_pop_head (queue_output_buf);
+    gst_buffer_unref (buf);
+  }
 
   return 0;
 }
