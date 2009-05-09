@@ -1357,7 +1357,7 @@ gst_mpeg2dec_sink_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_TIME:
           if (info->sequence && info->sequence->byte_rate) {
             *dest_value =
-                gst_util_uint64_scale_int (GST_SECOND, src_value,
+                gst_util_uint64_scale (GST_SECOND, src_value,
                 info->sequence->byte_rate);
             GST_WARNING_OBJECT (mpeg2dec, "dest_value:%" GST_TIME_FORMAT,
                 GST_TIME_ARGS (*dest_value));
