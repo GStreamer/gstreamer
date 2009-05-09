@@ -1006,7 +1006,7 @@ gst_mxf_mux_write_header_metadata (GstMXFMux * mux)
     if ((ret = gst_mxf_mux_push (mux, buf)) != GST_FLOW_OK) {
       GST_ERROR_OBJECT (mux, "Failed pushing buffer: %s",
           gst_flow_get_name (ret));
-      g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+      g_list_foreach (l, (GFunc) gst_mini_object_unref, NULL);
       g_list_free (buffers);
       return ret;
     }
