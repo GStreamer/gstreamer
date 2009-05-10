@@ -390,6 +390,7 @@ gst_color_balance_list_channels
 gst_color_balance_get_value
 gst_color_balance_set_value
 gst_color_balance_value_changed
+gst_color_balance_get_balance_type
 <SUBSECTION Standard>
 GST_COLOR_BALANCE
 GST_COLOR_BALANCE_CLASS
@@ -443,6 +444,7 @@ gst_mixer_get_option
 gst_mixer_mixer_changed
 
 gst_mixer_get_mixer_flags
+gst_mixer_get_mixer_type
 
 gst_mixer_message_get_type
 gst_mixer_message_parse_mute_toggled
