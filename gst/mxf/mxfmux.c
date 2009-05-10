@@ -932,7 +932,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
   /* Sort descriptors at the correct places */
   {
     GList *l;
-    GList *descriptors;
+    GList *descriptors = NULL;
 
     for (l = mux->metadata_list; l; l = l->next) {
       MXFMetadataBase *m = l->data;
@@ -945,6 +945,8 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
         break;
       }
     }
+
+    g_assert (descriptors != NULL);
 
     for (l = mux->metadata_list; l; l = l->next) {
       MXFMetadataBase *m = l->data;
