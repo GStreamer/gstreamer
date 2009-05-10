@@ -1,3 +1,149 @@
+=== release 0.10.15 ===
+
+2009-05-11  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.15, "We built a wall"
+
+2009-05-07 14:57:57 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  0.10.14.5 pre-release
+
+2009-05-07 13:49:18 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gst-pb-0.10.23.ignore:
+	  gst-pb-0.10.23: Fix the ignores, globs need to go in a special section.
+	  Finishes fixing #581729
+
+2009-05-07 13:48:54 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gst-0.10.23.ignore:
+	  gst-0.10.23.ignore: Add newly added enum values. Partially fixes #581729
+
+2009-05-07 13:48:01 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* codegen/codegen.py:
+	  codegen: Allow ignoring enum values. Partially fixes #581729
+	  This is needed to ignore new enum values that are added in new gstreamer
+	  core/base versions.
+
+2009-05-06 23:38:54 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* examples/switch.py:
+	  examples: Port switch.py to input-selector
+	  The switch element hasn't existed for a while now - use the
+	  replacement element input-selector instead.
+	  Partially (and finally) fixes #581737
+
+2009-05-06 23:38:08 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* examples/play.py:
+	* examples/remuxer.py:
+	* examples/switch.py:
+	* examples/synchronizer.py:
+	  examples: Make xoverlay installation thread safe using the GDK lock.
+	  We can't call into the GDK functions in our sync-message handler
+	  without taking the GDK lock, so do so.
+	  Partially fixes #581737
+
+2009-05-06 16:48:40 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  0.10.14.4 pre-release
+
+2009-04-23 17:14:20 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* testsuite/Makefile.am:
+	  testsuite: Dist new test file.
+
+2009-04-18 23:52:08 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	* gst/gst.override:
+	* testsuite/test_gst.py:
+	  TIME_ARGS: Catch bad input. Fixes #579455
+
+2009-04-21 21:14:21 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  0.10.14.3 pre-release
+
+2009-04-21 22:14:07 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From b3941ea to 6ab11d1
+
+2009-04-18 17:13:12 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	  Merge branch 'master' of ssh://git.freedesktop.org/git/gstreamer/gst-python
+
+2009-04-18 16:39:42 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/gstelement.override:
+	* gst/gstmessage.override:
+	* gst/gstpad.override:
+	  python: Fix some locking problems
+	  Add some python pyg_begin_allow_threads/end_allow_threads when calling into some gstreamer functions that might
+	  call into python.
+
+2009-04-18 09:05:09 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* plugin/gstpythonplugin.c:
+	  gstpythonplugin: Use strcmp for old glib. Fixes #579383
+
+2009-04-17 19:34:23 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* Makefile.am:
+	  Don't forget to dist gstlibtoolimporter.py. Fixes #579325
+
+2009-04-17 19:28:08 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/audio.defs:
+	* gst/audio.override:
+	* gst/gst-pb-0.10.23.ignore:
+	* gst/gstversion.override.in:
+	* gst/interfaces.defs:
+	* gst/interfaces.override:
+	* gst/video.defs:
+	  Wrap gst-plugins-base-0.10.23 API additions. Partially fixes #578848
+
+2009-04-17 18:51:40 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/base.defs:
+	* gst/gst-0.10.23.ignore:
+	* gst/gst-extrafuncs.defs:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gstmodule.c:
+	* gst/gstversion.override.in:
+	* gst/libs.defs:
+	  Wrap new API added in gstreamer-0.10.23. Partially fixes #578848
+
+2009-04-17 11:33:18 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/gst.defs:
+	  query_new_seeking wrapper must return query with refcount 1.  Fixes #579183.
+
+2009-04-15 22:58:56 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  0.10.14.2 pre-release
+
+2009-04-15 22:57:36 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	  ChangeLog: regenerate changelog with the gen-changelog script
+
+2009-04-15 22:38:28 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	  Merge branch 'bz-577735'
+
 2009-04-12 21:27:33 +0200  Edward Hervey <bilboed@bilboed.com>
 
 	* gst/__init__.py:
@@ -49,6 +195,10 @@
 	  Fix uninstalled usage with python 2.6. Fixes #576546
 	  Also imports submodules as mentionned by Philippe Normand.
 
+2009-04-10 15:43:35 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	  Merge branch 'master' of ssh://thomasvs@git.freedesktop.org/git/gstreamer/gst-python into bz-577735
+
 2009-04-04 21:19:46 +0300  Felipe Contreras <felipe.contreras@gmail.com>
 
 	* common:
@@ -77,6 +227,17 @@
 	* gst/gst.defs:
 	* gst/gst.override:
 	  Provide wrapper for gst_tag_get_type.  Fixes #571156.
+
+2009-04-02 18:06:12 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	* testsuite/test_pipeline.py:
+	  make sure that we actually get the clock-provide message
+
+2009-04-02 17:21:58 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	* gst/gstbin.override:
+	* testsuite/test_pipeline.py:
+	  Fix for #577735: do_handle_message leaks messages
 
 2009-03-26 16:18:04 +0100  Edward Hervey <bilboed@bilboed.com>
 

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Python bindings 0.10.14 "you better think"
+Release notes for GStreamer Python bindings 0.10.15 "We built a wall"
         
 
 
@@ -17,22 +17,35 @@ It is, however, parallel installable with the 0.8.x series.
 
 Features of this release
     
-      * Handle keep-refcount for GBoxed arguments
-      * Mark gst.message* that take ownership of the gst.Structure/gst.TagList
-      * Wrap new API in Core and Base
-      * Various other bug fixes and improvements
+      * Support new API in core/base
+      * Fixes for python 2.6
+      * Other bug-fixes and improvements
 
 Bugs fixed in this release
      
-      * 543961 : Memory leak in gst.Bin.do_handle_message
-      * 553131 : Import modules in correct order
-      * 553134 : Assumes wrong RTLD constants for Linux/MIPS
-      * 554545 : gst.Pad methods that return a new buffer as function argu...
-      * 556054 : codegen: Add 'keep-refcount' handling for GBoxed arguments
-      * 559406 : Add proxy for gst_base_transform_transform_size
-      * 559768 : Fix gst-python on systems that don't support RTLD_GLOBAL ...
-      * 564580 : Memory leak  in gst.Structure.keys()
-      * 566903 : gst.Pad.iterate_internal_links may raise critical warning...
+      * 304361 : Python plugin loader
+      * 576145 : pygst programs skip python plugins on registry update
+      * 514717 : memleak in Pad.set_blocked_async()
+      * 571156 : gst_tag_get_type not wrapped
+      * 571380 : Allow user to specify filename and line number for gst_de...
+      * 572487 : Fix licensing screwups
+      * 574251 : leaks the flow name
+      * 574258 : _wrap_gst_install_plugins_sync might leak details
+      * 574272 : Python plugin loader causes SIGSEGV if " import gst " fails
+      * 576505 : not all gst_adapter_* methods are wrapped
+      * 577735 : python bins with do_handle_message leak messages
+      * 578435 : gst-python pkgconfig file lies about needing pygtk
+      * 578731 : Python plugin loader deadlocks registry scanning
+      * 578848 : Wrap new core/base API
+      * 579183 : freshly created QUERY_SEEKING is immutable
+      * 579325 : gstlibtoolimporter is not disted
+      * 579383 : gst-python doesn't compile with glib < = 2.16.0
+      * 581546 : Elements do_query function is broken
+      * 581729 : Fails to build with previous core/base releases (0.10.22)
+      * 581737 : Python examples need to take the GDK lock
+      * 579416 : Nasty gst-python deadlock
+      * 579455 : gst.TIME_ARGS doesn't validate input
+      * 576546 : Problems with Python 2.6
 
 Download
 
@@ -51,8 +64,7 @@ http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
 
 Developers
 
-CVS is hosted on cvs.freedesktop.org.
-All code is in CVS and can be checked out from there.
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
 Interested developers of the core library, plug-ins, and applications should
 subscribe to the gstreamer-devel list. If there is sufficient interest we
 will create more lists as necessary.
@@ -63,10 +75,14 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
-      * Alexander Wirt
+      * David Schleef
       * Edward Hervey
+      * Felipe Contreras
       * Jan Schmidt
+      * Laszlo Pandy
+      * Mark Nauwelaerts
+      * Olivier Crete
       * Sebastian Dröge
-      * Thiemo Seufer
-      * Vincent GENIEUX
+      * Stefan Kost
+      * Thomas Vander Stichele
  
