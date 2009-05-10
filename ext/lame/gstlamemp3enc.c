@@ -771,6 +771,7 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame)
   }
 
   CHECK_ERROR (lame_set_num_channels (lame->lgf, lame->num_channels));
+  CHECK_ERROR (lame_set_bWriteVbrTag (lame->lgf, 0));
 
   if (lame->target == LAMEMP3ENC_TARGET_QUALITY) {
     CHECK_ERROR (lame_set_VBR (lame->lgf, vbr_default));
