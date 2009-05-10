@@ -174,7 +174,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "3GPP",
         "GstGPPMux",
         GST_STATIC_CAPS ("video/quicktime, variant = (string) 3gpp"),
-        GST_STATIC_CAPS (H263_CAPS "; " H264_CAPS),
+        GST_STATIC_CAPS (H263_CAPS "; " MPEG4V_CAPS "; " H264_CAPS),
         GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS)
       }
   ,
