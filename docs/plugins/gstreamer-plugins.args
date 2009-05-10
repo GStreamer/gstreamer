@@ -679,6 +679,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstTee::alloc-pad</NAME>
+<TYPE>GstPad*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Allocation Src Pad</NICK>
+<BLURB>The pad used for gst_pad_alloc_buffer.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstTypeFindElement::caps</NAME>
 <TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>

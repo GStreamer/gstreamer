@@ -1,4 +1,72 @@
-This is GStreamer 0.10.22 "I heard a disturbing sound"
+This is GStreamer 0.10.23 "Alaboo Alaboo"
+
+Changes since 0.10.22:
+      * Support files > 4GB on Windows
+      * Controller interpolation fixes
+      * Add timer support to GstPoll and use it for clocking
+      * Attempt to typefind contents from the file extension if all else fails
+      * GStreamer revision control switched to Git
+      * Many other bug fixes and improvements
+
+Bugs fixed since 0.10.22:
+     
+      * 579177 : GstInfo: maintain ABI compatibility
+      * 163577 : [RFC] Interlaced/progressive media support in GStreamer.
+      * 574160 : collectpads does not reliably eos when last pad is removed
+      * 575598 : hierarchical pipelines accumulate segment-done wrongly
+      * 575922 : disabling subsystems cause API break
+      * 576842 : loading a broken registry file can crash
+      * 555978 : [ladspa] no elements exposed/found on Cygwin
+      * 565607 : Broken macros in gsturi.h and gstinterface.h
+      * 566936 : [ghostpads] unlink function wrongly called on target
+      * 567692 : gstinfo.h header not compatible with C++
+      * 567725 : [qtdemux] stopping at a time sometimes shows a different ...
+      * 568289 : gst_pad_template_new() leaks caps it's supposed to take o...
+      * 568438 : gst_poll_wait calling read() on control socket
+      * 568481 : GStreamer linking failures.
+      * 568632 : __MSVCRT_VERSION__ not defined with mingw, causing " stora...
+      * 568678 : filesrc doesn't logs offsets
+      * 570910 : Removing the target of a ghostpad does not re-target the ...
+      * 571227 : Add home page tag
+      * 571559 : [API] add GST_PARAM_MUTABLE_PLAYING etc. to indicate vali...
+      * 572480 : unref and copy functions should not be macros
+      * 573623 : [API] Array binary search utility function
+      * 574024 : [GstAdapter] gst_adapter_push should not accept empty buf...
+      * 574211 : gst_poll_*_control always returns FALSE on Windows
+      * 574213 : [gstcheck] fix for libcheck > 0.9.6
+      * 574241 : gst_tag_list_add and gst_tag_list_add_values behave incon...
+      * 574484 : [patch] Make caps in DOT debug graphs more readable
+      * 574623 : [dot_file_with_ts] ':' not a valid character for a filename
+      * 574805 : [capsfilter] Doesn't reset the internal suggestion with A...
+      * 575695 : build fails on OpenSolaris due to incorrect header file i...
+      * 575814 : flag for EOS on gst-launch when exiting with ctrl-c
+      * 576381 : [basesink] QoS: emergency rendering not always done
+      * 576563 : pidgin crashes on exit in gst_plugin_ext_dep_free()
+      * 576582 : A patch to enable the use of 'name' in Enum parameters
+      * 577887 : Missing GST_DISABLE_GST_DEBUG in gstregistrybinary.c
+      * 577891 : add alloc-pad property on tee
+      * 578114 : API: add two new log levels: FIXME and MEMDUMP
+      * 578201 : _gst_plugin_fault_handler_is_setup undefined under HAVE_W...
+      * 579127 : gst-launch: disable CLOCK_LOST message handling
+      * 580121 : race condition in GStreamer state changes causes problems...
+      * 361155 : Add monotonic clock
+      * 517231 : threadsafe/colored windows logging
+      * 572591 : Another batch of " differs in signedness " warnings
+      * 573823 : pad block callback if it is re-blocked while the previous...
+      * 574163 : Fix gst_pad_activate_pull deactivation with unlinked element
+      * 575682 : Add gst_pad_is_compatible()
+      * 575988 : On Windows filesink can't write files longer than 2-4 GiB...
+
+API additions since 0.10.22:
+    
+      * New FIXME and MEMDUMP debug levels
+      * gst_tag_list_get_buffer() and gst_tag_list_get_buffer_index()
+      * New tags: GST_TAG_SUBTITLE_CODEC, GST_TAG_HOMEPAGE
+      * gst_util_array_binary_search()
+      * gst_message_new_request_state(), gst_message_parse_request_state(), GST_MESSAGE_REQUEST_STATE
+      * GstPoll::gst_poll_new_timer()
+      * GstPoll::gst_poll_write_control()
+      * GstPoll::gst_poll_read_control()
 
 Changes since 0.10.21:
 

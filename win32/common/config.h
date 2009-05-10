@@ -44,7 +44,7 @@
 #define GST_MAJORMINOR "0.10"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer CVS/prerelease"
+#define GST_PACKAGE_NAME "GStreamer source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -277,13 +277,13 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.10.22.4"
+#define PACKAGE_STRING "GStreamer 0.10.23"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.22.4"
+#define PACKAGE_VERSION "0.10.23"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -302,7 +302,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.22.4"
+#define VERSION "0.10.23"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

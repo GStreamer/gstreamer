@@ -1,3 +1,150 @@
+=== release 0.10.23 ===
+
+2009-05-10  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.23, "Alaboo Alaboo"
+
+2009-05-06 16:10:11 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  0.10.22.4 pre-release
+
+2009-04-24 19:36:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c:
+	  GstBin: set PENDING_STATE correctly
+	  Set the pending state correctly when we are going to perform an async
+	  state_continue on the bin.
+	  Fixes #580121
+
+2009-04-21 20:50:55 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  0.10.22.3 pre-release
+
+2009-04-21 22:12:04 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From b3941ea to 6ab11d1
+
+2009-04-17 15:46:52 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  win32: define __MSVCRT_VERSION__ when compiling with MingW, for __stat64
+	  Need to define this when using MingW, so that the includes provide
+	  __stat64 and friends. We need at least Windows XP SP2 for this.
+	  Fixes #568632.
+
+2009-04-16 22:26:00 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	  gstdebug: compete stubs. Fixes #579177.
+	  Avoid defines when including gstinfo.h ourself and complete stubs. Sync stub
+	  returns with the defines.
+
+2009-04-17 11:44:11 +0100  Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+	* configure.ac:
+	  configure.ac: fork() during registry scanning is unsafe on Cygwin
+	  Fixes #555978.
+
+2009-04-17 11:39:59 +0100  Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+	* gst/gst.c:
+	  gst_init: relocatability is unnecessary on Cygwin
+	  See #555978.
+
+2009-04-17 10:11:21 +0100  Brian Cameron <brian.cameron@sun.com>
+
+	* gst/gstinfo.h:
+	  gstinfo: don't assume G_HAVE_ISO_VARARGS implies ISO C99
+	  Makes headers C++ clean, esp. with the Sun compilers.
+	  Fixes #567692.
+
+2009-04-17 09:17:40 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstplugin.c:
+	  GstPlugin: fix compilation if both HAVE_WIN32 and HAVE_SIGACTION are defined
+	  Move _gst_plugin_fault_handler_is_setup into the ifdef block where it's
+	  used. Fixes #578201.
+
+2009-04-16 12:01:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tools/gst-launch.c:
+	  -launch: disable CLOCK_LOST message handling
+	  Disable the handling of the CLOCK_LOST messages until we fixed and released the
+	  elements (rtspsrc) that break when we quickly PAUSE/PLAY the pipeline.
+	  Fixes #579127
+
 2009-04-15 22:24:45 +0100  Jan Schmidt <thaytan@noraisin.net>
 
 	* configure.ac:

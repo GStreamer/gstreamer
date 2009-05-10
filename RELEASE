@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.22 "I heard a disturbing sound"
+Release notes for GStreamer 0.10.23 "Alaboo Alaboo"
         
 
 
@@ -37,83 +37,74 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * GstController improvements
-      * Extensions to the latency setting behaviours
-      * Ability for plugins to register dependencies to trigger re-scanning
-      * Optimisations in some common operations on caps and values and elsewhere
-      * Add sequence numbers to events so dependent events can be associated with the event that caused them
-      * New macros for reading and writing float values
-      * Many improvements in the basesink base class
-      * Support non-default main contexts for GstBus watches
-      * Improvements in pull-mode scheduling of sinks
-      * Fixes for alignment issues on sparc
-      * Ghost pad fixes
-      * New bit-reader assistance API
+      * Support files > 4GB on Windows
+      * Controller interpolation fixes
+      * Add timer support to GstPoll and use it for clocking
+      * Attempt to typefind contents from the file extension if all else fails
+      * GStreamer revision control switched to Git
       * Many other bug fixes and improvements
 
 Bugs fixed in this release
      
-      * 567002 : --gst-disable-registry-update also skips registry creation
-      * 350477 : [Registry] Provide a way for plugins to delegate the 'cha...
-      * 510354 : post GST_MESSAGE_STRUCTURE_CHANGE when linking and unlink...
-      * 526044 : Crash if there is more than one watcher for a GstBus
-      * 539108 : gst_ghost_pad_new() does more than call g_object_new()
-      * 544003 : [parse] Links to wrong pad if no padtemplate name is given
-      * 544293 : rtspsrc / gstpoll regression
-      * 545714 : GST_READ_UINT_* and GST_WRITE_UINT_* are not always safe ...
-      * 548786 : [win32] search for plugins based on location of DLL
-      * 551676 : Small Memleak fix in gst_pad_link_check_compatible_unlocked
-      * 552778 : add free_func in gstbuffer instances
-      * 553554 : [base] Add a generic bit reader
-      * 553874 : query_position broken during seek
-      * 555196 : Move floating point endian conversion macros into core
-      * 555307 : Need to push latency event into the pipeline
-      * 555631 : Banshee crashes; gstreamer GST_CAPS GST_IS_CAPS warnings
-      * 556091 : libtool-2.2 and old gettext don't mix
-      * 556900 : a copy & paste bug in helloworld example
-      * 557154 : Allow totem to run without write-access to home directory
-      * 557300 : libgstnet needs to link against $(WIN32_LIBS)
-      * 557438 : Gstreamer crashes when Banshee supposed to change track
-      * 557649 : GstBaseTransform can cause ivalid memory references
-      * 559250 : segments need identifiers.
-      * 560301 : Add --plugin to gst-inspect
-      * 560360 : Excessive statting when reading binary cache
-      * 560399 : Unnecessary CRC checksum for binary registry cache
-      * 560442 : GNOME Goal: Remove deprecated GLib symbols
-      * 561501 : g_type_class_ref without unref
-      * 562170 : GstBus watch doesn't work with non-default main context
-      * 562949 : [API] Add an URI query type for querying the source/sink URI
-      * 564863 : Caps are not propagated from a ghostpad's target to the g...
-      * 567225 : volatile gonce_data in BOILERPLATE not initialized to 0
-      * 566393 : [deadlock] Setting index on a pipeline
+      * 579177 : GstInfo: maintain ABI compatibility
+      * 163577 : [RFC] Interlaced/progressive media support in GStreamer.
+      * 574160 : collectpads does not reliably eos when last pad is removed
+      * 575598 : hierarchical pipelines accumulate segment-done wrongly
+      * 575922 : disabling subsystems cause API break
+      * 576842 : loading a broken registry file can crash
+      * 555978 : [ladspa] no elements exposed/found on Cygwin
+      * 565607 : Broken macros in gsturi.h and gstinterface.h
+      * 566936 : [ghostpads] unlink function wrongly called on target
+      * 567692 : gstinfo.h header not compatible with C++
+      * 567725 : [qtdemux] stopping at a time sometimes shows a different ...
+      * 568289 : gst_pad_template_new() leaks caps it's supposed to take o...
+      * 568438 : gst_poll_wait calling read() on control socket
+      * 568481 : GStreamer linking failures.
+      * 568632 : __MSVCRT_VERSION__ not defined with mingw, causing " stora...
+      * 568678 : filesrc doesn't logs offsets
+      * 570910 : Removing the target of a ghostpad does not re-target the ...
+      * 571227 : Add home page tag
+      * 571559 : [API] add GST_PARAM_MUTABLE_PLAYING etc. to indicate vali...
+      * 572480 : unref and copy functions should not be macros
+      * 573623 : [API] Array binary search utility function
+      * 574024 : [GstAdapter] gst_adapter_push should not accept empty buf...
+      * 574211 : gst_poll_*_control always returns FALSE on Windows
+      * 574213 : [gstcheck] fix for libcheck > 0.9.6
+      * 574241 : gst_tag_list_add and gst_tag_list_add_values behave incon...
+      * 574484 : [patch] Make caps in DOT debug graphs more readable
+      * 574623 : [dot_file_with_ts] ':' not a valid character for a filename
+      * 574805 : [capsfilter] Doesn't reset the internal suggestion with A...
+      * 575695 : build fails on OpenSolaris due to incorrect header file i...
+      * 575814 : flag for EOS on gst-launch when exiting with ctrl-c
+      * 576381 : [basesink] QoS: emergency rendering not always done
+      * 576563 : pidgin crashes on exit in gst_plugin_ext_dep_free()
+      * 576582 : A patch to enable the use of 'name' in Enum parameters
+      * 577887 : Missing GST_DISABLE_GST_DEBUG in gstregistrybinary.c
+      * 577891 : add alloc-pad property on tee
+      * 578114 : API: add two new log levels: FIXME and MEMDUMP
+      * 578201 : _gst_plugin_fault_handler_is_setup undefined under HAVE_W...
+      * 579127 : gst-launch: disable CLOCK_LOST message handling
+      * 580121 : race condition in GStreamer state changes causes problems...
+      * 361155 : Add monotonic clock
+      * 517231 : threadsafe/colored windows logging
+      * 572591 : Another batch of " differs in signedness " warnings
+      * 573823 : pad block callback if it is re-blocked while the previous...
+      * 574163 : Fix gst_pad_activate_pull deactivation with unlinked element
+      * 575682 : Add gst_pad_is_compatible()
+      * 575988 : On Windows filesink can't write files longer than 2-4 GiB...
 
 API changed in this release
      
 - API additions:
     
-* Add bit reader and byte reader classes.
-* gst_message_new_structure_change()
-* gst_message_parse_structure_change()
-* GST_BUFFER_FREE_FUNC()
-* Add GST_READ_UINT24_(LE|BE) and GST_WRITE_UINT24_(LE|BE).
-* GstBaseSrc::gst_base_src_set_blocksize()
-* GstBaseSrc::gst_base_src_get_blocksize()
-* GstBaseSink::gst_base_sink_set_blocksize()
-* GstBaseSink::gst_base_sink_get_blocksize()
-* GstBaseSink::blocksize
-* GstBaseSink::gst_base_sink_do_preroll()
-* Add gst_byte_reader_get_data and gst_byte_reader_peek_data
-* Move float endianness conversion macros from libgstfloatcast to core
-* gst_util_seqnum_next, gst_util_seqnum_compare
-* gst_event_get_seqnum, gst_event_set_seqnum
-* gst_message_get_seqnum, gst_message_set_seqnum
-* GstSeekFlags::GST_SEEK_FLAG_SKIP
-* gst_bin_recalculate_latency()
-* GstBin::do-latency
-* gst_tag_setter_reset_tags()
-* gst_query_new_uri, gst_query_set_uri, gst_query_parse_uri
-* add gst_plugin_add_dependency()
-* add gst_plugin_add_dependency_simple()
+* New FIXME and MEMDUMP debug levels
+* gst_tag_list_get_buffer() and gst_tag_list_get_buffer_index()
+* New tags: GST_TAG_SUBTITLE_CODEC, GST_TAG_HOMEPAGE
+* gst_util_array_binary_search()
+* gst_message_new_request_state(), gst_message_parse_request_state(), GST_MESSAGE_REQUEST_STATE
+* GstPoll::gst_poll_new_timer()
+* GstPoll::gst_poll_write_control()
+* GstPoll::gst_poll_read_control()
 
 Download
 
@@ -132,8 +123,7 @@ http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
 
 Developers
 
-CVS is hosted on cvs.freedesktop.org.
-All code is in CVS and can be checked out from there.
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
 Interested developers of the core library, plug-ins, and applications should
 subscribe to the gstreamer-devel list. If there is sufficient interest we
 will create more lists as necessary.
@@ -149,25 +139,32 @@ Let us know if you want to be added to this list.
 Contributors to this release
     
       * Alessandro Decina
-      * Andrew Feren
+      * Ali Sabil
       * Andy Wingo
       * Antoine Tremblay
-      * Cygwin Ports maintainer
+      * Brian Cameron
+      * Damien Lespiau
+      * David Adam
+      * David Flynn
       * David Schleef
-      * Dig Ge
       * Edward Hervey
+      * Felipe Contreras
       * Jan Schmidt
-      * Jan Schmidt - Sun Microsystems
+      * Jan Schmidt - Sun Microsystems - Dublin Ireland
       * Jonas Holmberg
-      * Michael Smith
+      * LRN
+      * Laszlo Pandy
+      * Mark Nauwelaerts
       * Olivier Crete
+      * Olivier Crête
       * Peter Kjellerstedt
       * Sebastian Dröge
-      * Simon Holm Thøgersen
       * Stefan Kost
+      * Thiago Santos
       * Thijs Vermeir
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans
-      * 이문형
+      * Yaakov Selkowitz
+      * Zeeshan Ali (Khattak)
  
