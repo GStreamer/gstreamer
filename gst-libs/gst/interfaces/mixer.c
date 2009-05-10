@@ -324,6 +324,24 @@ gst_mixer_get_option (GstMixer * mixer, GstMixerOptions * opts)
 }
 
 /**
+ * gst_mixer_get_mixer_type:
+ * @mixer: The #GstMixer implementation
+ *
+ * Get the #GstMixerType of this mixer implementation.
+ *
+ * Returns: A the #GstMixerType.
+ *
+ * Since: 0.10.24
+ */
+GstMixerType
+gst_mixer_get_mixer_type (GstMixer * mixer)
+{
+  GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
+
+  return klass->mixer_type;
+}
+
+/**
  * gst_mixer_get_mixer_flags:
  * @mixer: The #GstMixer implementation
  *

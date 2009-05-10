@@ -204,6 +204,7 @@ void            gst_mixer_mixer_changed   (GstMixer        *mixer);
 void            gst_mixer_options_list_changed (GstMixer        *mixer,
                                                 GstMixerOptions *opts);
 
+GstMixerType    gst_mixer_get_mixer_type  (GstMixer *mixer);
 
 GstMixerFlags   gst_mixer_get_mixer_flags (GstMixer *mixer);
 
