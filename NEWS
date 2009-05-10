@@ -1,4 +1,126 @@
-This is GStreamer Base Plug-ins 0.10.22, "Hidey Hidey Hidey Ho"
+This is GStreamer Base Plug-ins 0.10.23, "Emergency de-stress signal"
+
+Changes since 0.10.22:
+    
+      * New navigation API to support DVD playback
+      * playbin2 improvements
+      * RTSP extensions to allow extra headers and options
+      * Replace audioresampler with speexresample based code
+      * Support interlacing flags in the gstvideo library
+      * Support new RIFF formats
+      * Improve typefinding
+      * Support more frame formats in videoscale
+      * Many other bug-fixes and improvements
+
+Bugs fixed since 0.10.22:
+     
+      * 577637 : [playbin2] expose temp-location property
+      * 580120 : [playbin2] unit test fails
+      * 478512 : [alsamixer] volume control slider not working
+      * 574962 : rhythmbox crash in flac_type_find
+      * 564139 : Documentation of TCP plugins
+      * 577436 : xvimagesink should use xcontext- > depth and not count bits...
+      * 350311 : [playbin2] support for subpicture subtitles
+      * 378094 : Enable pango elements to handle UYVY
+      * 543591 : Gnonlin can not play theora streams
+      * 553295 : [riff] fuzzed AVI file causes segfault
+      * 565105 : Gstreamer does not change from READY back to PAUSED in sa...
+      * 565777 : [riff] unrecognised video fourcc 0x10000002 for mpeg2 in avi
+      * 566661 : [typefind] Fall back to file extension using uri query
+      * 567255 : [riff] doesn't detect codec_id 0x706d as AAC (amongst other)
+      * 567636 : [pbutils] Missing plugins code shouldn't ask for the same...
+      * 567740 : bogus warning in decodebin2?
+      * 568482 : linking problems in gst-plugins-base
+      * 569655 : [ffmpegcolorspace] Add UYVY422 to GRAY8 conversion function
+      * 570142 : Documentation is broken for uridecodebin
+      * 570356 : aac typefinder failure
+      * 570768 : [ximagesink] wrong mouse pointer position if output windo...
+      * 570832 : Add flags to enhance mixer interfaces
+      * 571009 : [tagdemux] WMA file with id3v2 tag causes assertion to fail
+      * 571147 : [ffmpegcolorspace/videotestsrc] Add support for packed/pl...
+      * 572577 : [playbin2] deadlock on shutdown
+      * 572872 : [ffmpegcolorspace] Add YVYU colorspace
+      * 572993 : [subparse] broken libregex dependency on Windows
+      * 573165 : Generate additional export files for gstreamer app plugin
+      * 573528 : Wrong format modifier in gstgiobasesink.c
+      * 573529 : In gstrtspconnection.c some functions are called with wro...
+      * 574293 : [decodebin2] deadlock on shutdown
+      * 574319 : Missing HAVE_PROCESS_H in win32/common/config.h
+      * 574447 : gstadder.c: line 904: error C2036: 'gpointer' : unknown size
+      * 574939 : [typefinding] flac typefinder mis-typefinds PDFs as flac ...
+      * 575550 : srt subtitle file keeps playbin2 from playing
+      * 575638 : kissfft copyright
+      * 575649 : [oggdemux] duration query in time format returns true wit...
+      * 576019 : On Windows queue2 can't write files longer than 2-4 GiB, ...
+      * 576142 : [vorbisenc] Non-header output buffers have NULL caps
+      * 576180 : [playbin2] Uses unref'd audiosink volume if using gconfau...
+      * 576586 : [alsamixer] gnome-sound-properties freeze
+      * 577054 : [videoscale] Not valgrind clean
+      * 577709 : Review new navigation API
+      * 577827 : [appsink] Have appsink new_buffer-callback return GstFlow...
+      * 578583 : [PATCH] multifdsink doesn't handle sync-method=latest-key...
+      * 578656 : Implement upstream GstForceKeyUnit events in theoraenc
+      * 579129 : pkgconfig: appsrc/appsink can not be linked to uninstalled
+      * 579130 : app: expose trivial type macros
+      * 579192 : gst_rtcp_packet_get_type should not assert on packet content
+      * 579203 : baseaudiosink: unparenting the ringbuffer in NULL causes ...
+      * 579267 : [rtspconnection] g_async_queue_new_full() is GLib-2.16 AP...
+      * 579463 : [cddabasesrc] [cdparanoiasrc] no longer emits discid
+      * 579668 : audioresample fails to build with --disable-gst-debug
+      * 579734 : [playbin] raw_decoding_mode seems to be set unconditionally
+      * 579912 : [decodebin2] multiqueue is too small in time (interleave ...
+      * 580470 : [audioresample] causes pipelines to go out of sync and be...
+      * 580952 : [audioresample] bad quality/pops compared to plughw
+      * 581727 : [playbin2] make playsink go to PAUSED async
+      * 569682 : playbin2 leaks request pad from input selector
+      * 580020 : [vorbisenc] causes buffers to be out of segment if new se...
+      * 562794 : rtspsrc fails to create a socket on Win32 sometimes.
+      * 567396 : playbin2: DECODE_BIN_LOCK occasionally called twice withi...
+      * 567982 :  " queued_bytes " field isn't updated while flushing the que...
+      * 571299 : [appsink] Handoff callback API
+      * 574443 : rtsp win32 - forgotten variable
+      * 574516 : [typefind] add typefinder for photoshop .psd files
+      * 574964 : gst_app_src_end_of_stream(), mutex on error return
+      * 575256 : rtspsrc fails to resolve hostnames
+      * 575588 : decodebin2 deadlock
+      * 576187 : [playbin2] Stalls video sink when disabling subtitles in ...
+      * 576188 : [playbin2] Reusing a playbin2 instance with visualization...
+      * 576190 : [playbin2] Deadlock when reusing playbin2 after an error
+      * 577288 :  " Internal playbin error " when seeking to the end of files
+      * 577610 : RTCP feedback messages support in GstRTCPPacket
+      * 577794 : [playbin2] leaks elements set through properties
+      * 578118 : [multifdsink] add option to not resend the streamheader w...
+      * 578506 : Pipeline with alsasrc and alsasink cannot change state ba...
+      * 578942 : Missing RTSP headers related to Windows Media extension.
+      * 580271 : videorate: fails to clear discont flag on duplicated buffers
+      * 580649 : uridecodebin: bug on documentation published in website
+
+API added since 0.10.22:
+    
+      * GstRTSP::gst_rtsp_options_as_text()
+      * GstRTSPMessage::gst_rtsp_message_take_header()
+      * GstRTSPRange::gst_rtsp_range_to_string()
+      * New Navigation interface commands, queries and messages
+      * gst_rtsp_channel_new()
+      * gst_rtsp_channel_unref()
+      * gst_rtsp_channel_attach()
+      * gst_rtsp_channel_queue_message()
+      * gst_rtsp_connection_accept()
+      * GstAppSink::gst_app_sink_set_callbacks()
+      * GST_VIDEO_FORMAT_YVYU,GST_VIDEO_BUFFER_TFF,GST_VIDEO_BUFFER_RFF,GST_VIDEO_BUFFER_ONEFIELD
+      * GST_MIXER_FLAG_HAS_WHITELIST,GST_MIXER_FLAG_GROUPING,GST_MIXER_TRACK_NO_RECORD,GST_MIXER_TRACK_NO_MUTE,GST_MIXER_TRACK_WHITELIST
+      * GstAppSrc::emit-signals
+      * GstAppSrc::gst_app_src_set_emit_signals()
+      * GstAppSrc::gst_app_src_get_emit_signals()
+      * GstAppSrc::gst_app_src_set_callbacks()
+      * RTSP::gst_rtsp_connection_get_url()
+      * GstRTSPLowerTrans::GST_RTSP_LOWER_TRANS_HTTP
+      * RTSP:gst_rtsp_connection_set_tunneled()
+      * RTSP:gst_rtsp_connection_is_tunneled()
+      * RTSP::gst_rtsp_connection_set_ip()
+      * RTSP::gst_rtsp_connection_get_tunnelid()
+      * RTSP::gst_rtsp_connection_do_tunnel()
+      * RTSP::gst_rtsp_watch_reset()
 
 IMPORTANT NOTES
 

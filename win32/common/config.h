@@ -66,7 +66,7 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins CVS/prerelease"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -304,13 +304,13 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.22.6"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.23"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.22.6"
+#define PACKAGE_VERSION "0.10.23"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -338,7 +338,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.22.6"
+#define VERSION "0.10.23"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

@@ -3,11 +3,11 @@
   <description>URI Decoder bin</description>
   <filename>../../gst/playback/.libs/libgstdecodebin2.so</filename>
   <basename>libgstdecodebin2.so</basename>
-  <version>0.10.22.1</version>
+  <version>0.10.23</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>decodebin2</name>

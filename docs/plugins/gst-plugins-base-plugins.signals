@@ -60,7 +60,7 @@ gint  arg1
 <FLAGS>la</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
-gboolean  arg2
+GstSyncMethod  arg2
 GstTCPUnitType  arg3
 guint64  arg4
 GstTCPUnitType  arg5

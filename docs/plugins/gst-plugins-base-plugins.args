@@ -839,6 +839,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiFdSink::handle-read</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Handle Read</NICK>
+<BLURB>Handle client reads and discard the data.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::resend-streamheader</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Resend streamheader</NICK>
+<BLURB>Resend the streamheader if it changes in the caps.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecodeBin::threaded</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -2379,6 +2399,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPlayBin2::text-sink</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Text plugin</NICK>
+<BLURB>the text output element to use (NULL = default textoverlay).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGioSink::location</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -2746,6 +2776,16 @@
 <NICK>Stream Type</NICK>
 <BLURB>the type of the stream.</BLURB>
 <DEFAULT>Stream</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::emit-signals</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Emit signals</NICK>
+<BLURB>Emit new-preroll and new-buffer signals.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
