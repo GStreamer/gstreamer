@@ -1,5 +1,6 @@
 EXPORTS
 	gst_color_balance_channel_get_type
+	gst_color_balance_get_balance_type
 	gst_color_balance_get_type
 	gst_color_balance_get_value
 	gst_color_balance_list_channels
@@ -8,6 +9,7 @@ EXPORTS
 	gst_color_balance_value_changed
 	gst_mixer_flags_get_type
 	gst_mixer_get_mixer_flags
+	gst_mixer_get_mixer_type
 	gst_mixer_get_option
 	gst_mixer_get_type
 	gst_mixer_get_volume
