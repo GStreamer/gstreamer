@@ -689,6 +689,7 @@ EXPORTS
 	gst_plugin_load_file
 	gst_plugin_name_filter
 	gst_plugin_register_static
+	gst_plugin_register_static_full
 	gst_poll_add_fd
 	gst_poll_fd_can_read
 	gst_poll_fd_can_write
@@ -880,6 +881,7 @@ EXPORTS
 	gst_tag_list_add
 	gst_tag_list_add_valist
 	gst_tag_list_add_valist_values
+	gst_tag_list_add_value
 	gst_tag_list_add_values
 	gst_tag_list_copy
 	gst_tag_list_copy_value
@@ -929,6 +931,7 @@ EXPORTS
 	gst_tag_register
 	gst_tag_setter_add_tag_valist
 	gst_tag_setter_add_tag_valist_values
+	gst_tag_setter_add_tag_value
 	gst_tag_setter_add_tag_values
 	gst_tag_setter_add_tags
 	gst_tag_setter_get_tag_list
