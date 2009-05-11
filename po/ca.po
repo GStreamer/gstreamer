@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-20 23:36+0000\n"
+"POT-Creation-Date: 2009-05-12 00:07+0100\n"
 "PO-Revision-Date: 2004-08-05 15:48+0200\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -15,17 +15,17 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:352
 #, fuzzy
 msgid "Could not read title information for DVD."
 msgstr "No s'ha pogut escriure al fitxer «%s»."
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:358
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "No s'ha pogut tancar el dispositiu de control «%s»."
 
-#: ext/resindvd/resindvdsrc.c:345
+#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
@@ -57,22 +57,22 @@ msgstr ""
 msgid "Could not write to file \"%s\"."
 msgstr "No s'ha pogut escriure al fitxer «%s»."
 
-#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
+#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "El dispositiu «%s» no existeix."
 
-#: sys/dvb/gstdvbsrc.c:703
+#: sys/dvb/gstdvbsrc.c:710
 #, fuzzy, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "No s'ha pogut tancar el dispositiu de control «%s»."
 
-#: sys/dvb/gstdvbsrc.c:715
+#: sys/dvb/gstdvbsrc.c:722
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "No s'han pogut obtenir búfers suficients del dispositiu «%s»."
 
-#: sys/dvb/gstdvbsrc.c:796
+#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."

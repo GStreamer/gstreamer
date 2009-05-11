@@ -1,14 +1,14 @@
-# translation of gst-plugins-bad-0.10.8.3.po to Español
+# translation of gst-plugins-bad-0.10.10.2.po to Español
 # spanish translation for gst-plugins-bad
 # This file is put in the public domain.
 #
-# Jorge González González <aloriel@gmail.com>, 2007, 2008.
+# Jorge González González <aloriel@gmail.com>, 2007, 20, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-20 23:36+0000\n"
-"PO-Revision-Date: 2008-10-18 17:06+0200\n"
+"POT-Creation-Date: 2009-05-12 00:07+0100\n"
+"PO-Revision-Date: 2009-04-04 13:31+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -17,18 +17,18 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:352
 msgid "Could not read title information for DVD."
 msgstr "No se pudo leer la información del título para el DVD."
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:358
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Falló abrir el dispositivo DVD «%s»."
 
-#: ext/resindvd/resindvdsrc.c:345
+#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
-msgstr ""
+msgstr "Falló al establecer la búsqueda basada en PGC."
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
@@ -57,22 +57,22 @@ msgstr "Error en el flujo de datos interno."
 msgid "Could not write to file \"%s\"."
 msgstr "No se pudo escribir en el archivo «%s»."
 
-#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
+#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "El dispositivo «%s» no existe."
 
-#: sys/dvb/gstdvbsrc.c:703
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "No se pudo abrir el dispositivo frontend «%s»."
 
-#: sys/dvb/gstdvbsrc.c:715
+#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "No se pudieron obtener los ajustes del dispositivo frontend «%s»."
 
-#: sys/dvb/gstdvbsrc.c:796
+#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "No se pudo abrir el archivo «%s» para leer."

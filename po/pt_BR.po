@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-20 23:36+0000\n"
+"POT-Creation-Date: 2009-05-12 00:07+0100\n"
 "PO-Revision-Date: 2009-03-11 02:31-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -17,16 +17,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:352
 msgid "Could not read title information for DVD."
 msgstr "Não foi possível ler as informações de título do DVD."
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:358
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Falha ao abrir o dispositivo de DVD \"%s\"."
 
-#: ext/resindvd/resindvdsrc.c:345
+#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr "Falha ao definir busca baseada em PGC."
 
@@ -57,23 +57,23 @@ msgstr "Erro interno de fluxo de dados."
 msgid "Could not write to file \"%s\"."
 msgstr "Não foi possível gravar no arquivo \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
+#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "O dispositivo \"%s\" não existe."
 
-#: sys/dvb/gstdvbsrc.c:703
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Não foi possível abrir o dispositivo de interface \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:715
+#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr ""
 "Não foi possível obter as configurações do dispositivo de interface \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:796
+#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."

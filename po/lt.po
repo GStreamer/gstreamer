@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.6.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-20 23:36+0000\n"
+"POT-Creation-Date: 2009-05-12 00:07+0100\n"
 "PO-Revision-Date: 2008-05-14 02:13+0300\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -17,17 +17,17 @@ msgstr ""
 "Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%"
 "100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:352
 #, fuzzy
 msgid "Could not read title information for DVD."
 msgstr "Nepavyko rašyti į failą „%s“."
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:358
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nepavyko atverti išorinės pusės įrenginio „%s“."
 
-#: ext/resindvd/resindvdsrc.c:345
+#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
@@ -60,22 +60,22 @@ msgstr "Vidinė duomenų srauto klaida."
 msgid "Could not write to file \"%s\"."
 msgstr "Nepavyko rašyti į failą „%s“."
 
-#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
+#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Įrenginys „%s“ neegzistuoja."
 
-#: sys/dvb/gstdvbsrc.c:703
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nepavyko atverti išorinės pusės įrenginio „%s“."
 
-#: sys/dvb/gstdvbsrc.c:715
+#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nepavyko gauti nustatymų iš išorinės pusės įrenginio „%s“."
 
-#: sys/dvb/gstdvbsrc.c:796
+#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nepavyko atverti failo „%s“ skaitymui."

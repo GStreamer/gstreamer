@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-20 23:36+0000\n"
+"POT-Creation-Date: 2009-05-12 00:07+0100\n"
 "PO-Revision-Date: 2009-01-23 00:44+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -15,16 +15,16 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:352
 msgid "Could not read title information for DVD."
 msgstr "Kunde inte läsa titelinformation för dvd."
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:358
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Misslyckades med att öppna dvd-enheten \"%s\"."
 
-#: ext/resindvd/resindvdsrc.c:345
+#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr "Misslyckades med att ställa in PGC-baserad spolning."
 
@@ -55,22 +55,22 @@ msgstr "Internt fel i dataström."
 msgid "Could not write to file \"%s\"."
 msgstr "Kunde inte skriva till filen \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
+#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enheten \"%s\" finns inte."
 
-#: sys/dvb/gstdvbsrc.c:703
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kunde inte öppna framändsenheten \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:715
+#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kunde inte få inställningar från framändsenheten \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:796
+#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."

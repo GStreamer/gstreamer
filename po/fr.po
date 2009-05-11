@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-20 23:36+0000\n"
+"POT-Creation-Date: 2009-05-12 00:07+0100\n"
 "PO-Revision-Date: 2008-10-21 09:59+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -16,16 +16,16 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:352
 msgid "Could not read title information for DVD."
 msgstr "Impossible de lire les informations de titre du DVD."
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:358
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Impossible d'ouvrir le périphérique du DVD « %s »."
 
-#: ext/resindvd/resindvdsrc.c:345
+#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
@@ -56,22 +56,22 @@ msgstr "Erreur interne de flux de données."
 msgid "Could not write to file \"%s\"."
 msgstr "Impossible d'écrire dans le fichier « %s »."
 
-#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
+#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Le périphérique « %s » n'existe pas."
 
-#: sys/dvb/gstdvbsrc.c:703
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Impossible d'ouvrir le périphérique frontal « %s »."
 
-#: sys/dvb/gstdvbsrc.c:715
+#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Impossible d'obtenir les paramètres du périphérique frontal « %s »."
 
-#: sys/dvb/gstdvbsrc.c:796
+#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossible d'ouvrir le fichier « %s » en lecture."

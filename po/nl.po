@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-20 23:36+0000\n"
+"POT-Creation-Date: 2009-05-12 00:07+0100\n"
 "PO-Revision-Date: 2009-01-23 18:06+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -18,16 +18,16 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:352
 msgid "Could not read title information for DVD."
 msgstr "Kan de titelinformatie voor de DVD niet lezen."
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:358
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Kan het DVD-apparaat '%s' niet openen."
 
-#: ext/resindvd/resindvdsrc.c:345
+#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr "Het instellen van het zoeken op basis van PGC is mislukt."
 
@@ -58,22 +58,22 @@ msgstr "Interne fout in gegevensstroom."
 msgid "Could not write to file \"%s\"."
 msgstr "Kan niet in bestand \"%s\" schrijven."
 
-#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
+#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Apparaat \"%s\" bestaat niet."
 
-#: sys/dvb/gstdvbsrc.c:703
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kan het frontend-apparaat \"%s\" niet openen."
 
-#: sys/dvb/gstdvbsrc.c:715
+#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kan de instellingen van het frontend-apparaat \"%s\" niet verkrijgen."
 
-#: sys/dvb/gstdvbsrc.c:796
+#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kan bestand \"%s\" niet openen om te lezen."

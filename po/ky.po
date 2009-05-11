@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-20 23:36+0000\n"
+"POT-Creation-Date: 2009-05-12 00:07+0100\n"
 "PO-Revision-Date: 2007-11-13 17:16+0600\n"
 "Last-Translator: Ilyas Bakirov <just_ilyas@yahoo.com>\n"
 "Language-Team: Kirghiz <i18n-team-ky-kyrgyz@lists.sourceforge.net>\n"
@@ -16,16 +16,16 @@ msgstr ""
 "X-Poedit-Language: Kyrgyz\n"
 "X-Poedit-Country: KYRGYZSTAN\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:352
 msgid "Could not read title information for DVD."
 msgstr ""
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:358
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Алдын \"%s\" жабдыкты ачалган жок."
 
-#: ext/resindvd/resindvdsrc.c:345
+#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
@@ -56,22 +56,22 @@ msgstr ""
 msgid "Could not write to file \"%s\"."
 msgstr "Алдын \"%s\" жабдыкты ачалган жок."
 
-#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
+#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "\"%s\" мындай жабдык жок."
 
-#: sys/dvb/gstdvbsrc.c:703
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Алдын \"%s\" жабдыкты ачалган жок."
 
-#: sys/dvb/gstdvbsrc.c:715
+#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Алдын \"%s\" жабдыктан ырастоолор алынган жок."
 
-#: sys/dvb/gstdvbsrc.c:796
+#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\"  файлы окууга ачылган жок."

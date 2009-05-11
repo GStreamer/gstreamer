@@ -1,33 +1,33 @@
 # Danish translation of gst-plugins-bad.
-# Copyright (C) 2008 gst.
+# Copyright (C) 2009 gst.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2008.
+# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-0.10.8.3\n"
+"Project-Id-Version: gst-plugins-bad-0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-20 23:36+0000\n"
-"PO-Revision-Date: 2008-11-05 11:28+0200\n"
+"POT-Creation-Date: 2009-05-12 00:07+0100\n"
+"PO-Revision-Date: 2009-04-13 11:28+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:352
 msgid "Could not read title information for DVD."
 msgstr "Kunne ikke læse titelinformation for dvd."
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:358
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Kunne ikke åbne dvd-enhed »%s«."
 
-#: ext/resindvd/resindvdsrc.c:345
+#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
-msgstr ""
+msgstr "Kunne ikke indstille PGC-baseret søgning."
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
@@ -45,7 +45,7 @@ msgstr "Intet filnavn er angivet til skrivning."
 #: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Kunne ikke åbne filen »%s« for skrivning."
+msgstr "Kunne ikke åbne filen »%s« til skrivning."
 
 #: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
@@ -56,22 +56,22 @@ msgstr "Intern datastrømfejl."
 msgid "Could not write to file \"%s\"."
 msgstr "Kunne ikke skrive til fil »%s«."
 
-#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
+#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enheden »%s« eksisterer ikke."
 
-#: sys/dvb/gstdvbsrc.c:703
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kunne ikke åbne forende-enheden »%s«."
 
-#: sys/dvb/gstdvbsrc.c:715
+#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kunne ikke hente indstillinger fra forende-enheden »%s«."
 
-#: sys/dvb/gstdvbsrc.c:796
+#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åbne filen »%s« for læsning."
