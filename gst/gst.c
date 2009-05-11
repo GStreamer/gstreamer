@@ -766,11 +766,7 @@ scan_and_update_registry (GstRegistry * default_registry,
   }
 
   GST_INFO ("Registry cache changed. Writing new registry cache");
-#ifdef USE_BINARY_REGISTRY
   if (!gst_registry_binary_write_cache (default_registry, registry_file)) {
-#else
-  if (!gst_registry_xml_write_cache (default_registry, registry_file)) {
-#endif
     g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
         _("Error writing registry cache to %s: %s"),
         registry_file, g_strerror (errno));
@@ -884,11 +880,7 @@ ensure_current_registry_forking (GstRegistry * default_registry,
     if (result_code == REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED) {
       GST_DEBUG ("Child succeeded. Parent reading registry cache");
       _priv_gst_registry_remove_cache_plugins (default_registry);
-#ifdef USE_BINARY_REGISTRY
       gst_registry_binary_read_cache (default_registry, registry_file);
-#else
-      gst_registry_xml_read_cache (default_registry, registry_file);
-#endif
     } else if (result_code == REGISTRY_SCAN_AND_UPDATE_FAILURE) {
       GST_DEBUG ("Child failed. Parent re-scanning registry, ignoring errors.");
       scan_and_update_registry (default_registry, registry_file, FALSE, NULL);
@@ -911,21 +903,12 @@ ensure_current_registry (GError ** error)
   default_registry = gst_registry_get_default ();
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
   if (registry_file == NULL) {
-#ifdef USE_BINARY_REGISTRY
     registry_file = g_build_filename (g_get_home_dir (),
         ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".bin", NULL);
-#else
-    registry_file = g_build_filename (g_get_home_dir (),
-        ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".xml", NULL);
-#endif
   }
 
   GST_INFO ("reading registry cache: %s", registry_file);
-#ifdef USE_BINARY_REGISTRY
   have_cache = gst_registry_binary_read_cache (default_registry, registry_file);
-#else
-  have_cache = gst_registry_xml_read_cache (default_registry, registry_file);
-#endif
 
   if (have_cache) {
     do_update = !_gst_disable_registry_update;

@@ -174,26 +174,6 @@ if test "x$USE_POISONING" = xyes; then
     [Define if we should poison deallocated memory])
 fi
 
-dnl Use binary registry
-AC_ARG_ENABLE(binary-registry,
-  AC_HELP_STRING([--disable-binary-registry],
-    [disable binary registry]),
-  [
-    case "${enableval}" in
-      yes) USE_BINARY_REGISTRY=yes ;;
-      no)  USE_BINARY_REGISTRY=no ;;
-      *)   AC_MSG_ERROR(bad value ${enableval} for --disable-binary-registry) ;;
-    esac
-  ],
-  [USE_BINARY_REGISTRY=yes]) dnl Default value
-
-if test "x$USE_BINARY_REGISTRY" = xyes; then
-  dnl for config.h:
-  AC_DEFINE(USE_BINARY_REGISTRY, 1,
-    [Define if we should use binary registry instead xml registry])
-fi
-AM_CONDITIONAL(USE_BINARY_REGISTRY, test "x$USE_BINARY_REGISTRY" = "xyes")
-
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *
@@ -511,9 +491,7 @@ GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 AC_SUBST(GLIB_PREFIX)
 
 dnl libxml 2 is optional in some cases
-if test "x$GST_DISABLE_LOADSAVE" = "xyes" && \
-   ( test "x$GST_DISABLE_REGISTRY" = "xyes" || \
-   test "x$USE_BINARY_REGISTRY" = "xyes" )
+if test "x$GST_DISABLE_LOADSAVE" = "xyes" -a "x$GST_DISABLE_REGISTRY" = "xyes"
 then
   AC_MSG_NOTICE([XML registry and load/save are disabled, not checking for libxml2])
   GST_DISABLE_XML_DEFINE="#define GST_DISABLE_XML 1"
@@ -749,7 +727,6 @@ sed \
     -e 's/.* PACKAGE_TARNAME$/#define PACKAGE_TARNAME "'$PACKAGE_TARNAME'"/' \
     -e 's/.* PACKAGE_VERSION$/#define PACKAGE_VERSION "'$PACKAGE_VERSION'"/' \
     -e 's/.* PLUGINDIR$/#ifdef _DEBUG\n#  define PLUGINDIR PREFIX "\\\\debug\\\\lib\\\\gstreamer-0.10"\n#else\n#  define PLUGINDIR PREFIX "\\\\lib\\\\gstreamer-0.10"\n#endif/' \
-    -e 's/.* USE_BINARY_REGISTRY$/#define USE_BINARY_REGISTRY/' \
     -e 's/.* VERSION$/#define VERSION "'$VERSION'"/' \
     config.h.in >win32/common/config.h-new
 

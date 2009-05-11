@@ -105,15 +105,8 @@ gboolean  priv_gst_structure_append_to_gstring (const GstStructure * structure,
 
 /* registry cache backends */
 /* FIXME 0.11: use priv_ prefix */
-#ifdef USE_BINARY_REGISTRY
 gboolean 		gst_registry_binary_read_cache 	(GstRegistry * registry, const char *location);
 gboolean 		gst_registry_binary_write_cache	(GstRegistry * registry, const char *location);
-/* FIXME 0.11: this is in registry.h for backwards compatibility
-#else 
-gboolean 		gst_registry_xml_read_cache 	(GstRegistry * registry, const char *location);
-gboolean 		gst_registry_xml_write_cache 	(GstRegistry * registry, const char *location);
-*/
-#endif
 
 /*** debugging categories *****************************************************/
 
