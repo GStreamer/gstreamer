@@ -36,6 +36,11 @@ typedef struct {
   guint8        rep_data[256];     /* the length should be stored in a byte  */
   GstClockTime  ts;
   GstClockTime  duration;          /* is not always available                */
+  guint8        par_x;             /* not always available (0:deactivated)   */
+  guint8        par_y;             /* not always available (0:deactivated)   */
+  gboolean      interlaced;        /* default: FALSE */
+  gboolean      tff;
+  gboolean      rff;
   GstBuffer    *buf;
 } AsfPayload;
 

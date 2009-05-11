@@ -224,7 +224,31 @@ asf_payload_parse_replicated_data_extensions (AsfStream * stream,
           GST_WARNING ("unexpected DURATION extensions len %u", ext->len);
         }
         break;
+      case ASF_PAYLOAD_EXTENSION_SYSTEM_CONTENT:
+        if (ext->len == 1) {
+          guint8 data = payload->rep_data[off];
+
+          payload->interlaced = data & 0x1;
+          payload->rff = data & 0x8;
+          payload->tff = (data & 0x2) || !(data & 0x4);
+          GST_WARNING ("data:0x%x, interlaced:%d, rff:%d, tff:%d",
+              data, payload->interlaced, payload->rff, payload->tff);
+        } else {
+          GST_WARNING ("unexpected SYSTEM_CONTE extensions len %u", ext->len);
+        }
+        break;
+      case ASF_PAYLOAD_EXTENSION_SYSTEM_PIXEL_ASPECT_RATIO:
+        if (ext->len == 2) {
+          payload->par_x = payload->rep_data[off];
+          payload->par_y = payload->rep_data[off + 1];
+          GST_WARNING ("PAR %d / %d", payload->par_x, payload->par_y);
+        } else {
+          GST_WARNING ("unexpected SYSTEM_PIXEL_ASPECT_RATIO extensions len %u",
+              ext->len);
+        }
+        break;
       default:
+        GST_WARNING ("UNKNOWN PAYLOAD EXTENSION !");
         break;
     }
     off += ext->len;
@@ -254,6 +278,11 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
 
   payload.ts = GST_CLOCK_TIME_NONE;
   payload.duration = GST_CLOCK_TIME_NONE;
+  payload.par_x = 0;
+  payload.par_y = 0;
+  payload.interlaced = FALSE;
+  payload.tff = FALSE;
+  payload.rff = FALSE;
 
   payload.mo_number =
       asf_packet_read_varlen_int (packet->prop_flags, 4, p_data, p_size);
