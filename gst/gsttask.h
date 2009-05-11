@@ -47,6 +47,7 @@ typedef void         (*GstTaskFunction)          (void *data);
 
 typedef struct _GstTask GstTask;
 typedef struct _GstTaskClass GstTaskClass;
+typedef struct _GstTaskPrivate GstTaskPrivate;
 
 /**
  * GstTaskState:
@@ -108,6 +109,28 @@ typedef enum {
 #define GST_TASK_GET_LOCK(task)		(GST_TASK_CAST(task)->lock)
 
 /**
+ * GstTaskCallbacks:
+ * @create_thread: Create a thread that calls @func with @task as the argument
+ * @enter_thread: a thread is entered
+ * @leave_thread: a thread is exiting
+ * @join_thread: a thread is joined
+ *
+ * Custom GstTask thread callback functions that can be installed.
+ *
+ * Since: 0.10.24
+ */
+typedef struct {
+  /* creating threads */
+  GThread * (*create_thread)    (GstTask *task, GThreadFunc func, gpointer user_data);
+  /* manage the lifetime of the thread */
+  void      (*enter_thread)     (GstTask *task, GThread *thread, gpointer user_data);
+  void      (*leave_thread)     (GstTask *task, GThread *thread, gpointer user_data);
+  void      (*join_thread)      (GstTask *task, GThread *thread, gpointer user_data);
+  /*< private >*/
+  gpointer     _gst_reserved[GST_PADDING];
+} GstTaskThreadCallbacks;
+
+/**
  * GstTask:
  * @state: the state of the task
  * @cond: used to pause/resume the task
@@ -138,10 +161,10 @@ struct _GstTask {
       /* thread this task is currently running in */
       GThread  *thread;
     } ABI;
-    /* adding + 0 to mark ABI change to be undone later */
-    gpointer _gst_reserved[GST_PADDING + 0];
+    gpointer _gst_reserved[GST_PADDING - 1];
   } abidata;
 
+  GstTaskPrivate *priv;
 };
 
 struct _GstTaskClass {
@@ -160,6 +183,11 @@ GType           gst_task_get_type       (void);
 
 GstTask*	gst_task_create		(GstTaskFunction func, gpointer data);
 void		gst_task_set_lock	(GstTask *task, GStaticRecMutex *mutex);
+
+void            gst_task_set_thread_callbacks  (GstTask *task,
+                                                GstTaskThreadCallbacks *callbacks,
+						gpointer user_data,
+						GDestroyNotify notify);
 
 GstTaskState	gst_task_get_state	(GstTask *task);
 gboolean        gst_task_set_state      (GstTask *task, GstTaskState state);

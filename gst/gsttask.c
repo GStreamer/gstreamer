@@ -67,6 +67,17 @@
 GST_DEBUG_CATEGORY_STATIC (task_debug);
 #define GST_CAT_DEFAULT (task_debug)
 
+#define GST_TASK_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_TASK, GstTaskPrivate))
+
+struct _GstTaskPrivate
+{
+  /* callbacks for managing the thread of this task */
+  GstTaskThreadCallbacks thr_callbacks;
+  gpointer thr_user_data;
+  GDestroyNotify thr_notify;
+};
+
 static void gst_task_class_init (GstTaskClass * klass);
 static void gst_task_init (GstTask * task);
 static void gst_task_finalize (GObject * object);
@@ -102,6 +113,7 @@ gst_task_class_init (GstTaskClass * klass)
 static void
 gst_task_init (GstTask * task)
 {
+  task->priv = GST_TASK_GET_PRIVATE (task);
   task->running = FALSE;
   task->abidata.ABI.thread = NULL;
   task->lock = NULL;
@@ -246,6 +258,13 @@ gst_task_cleanup_all (void)
  * The function cannot be changed after the task has been created. You
  * must create a new #GstTask to change the function.
  *
+ * This function will not yet create and start a thread. Use gst_task_start() or
+ * gst_task_pause() to create and start the GThread.
+ *
+ * Before the task can be used, a #GStaticRecMutex must be configured using the
+ * gst_task_set_lock() function. This lock will always be acquired while
+ * @func is called.
+ *
  * Returns: A new #GstTask.
  *
  * MT safe.
@@ -296,6 +315,55 @@ is_running:
   }
 }
 
+/**
+ * gst_task_thread_callbacks:
+ * @task: The #GstTask to use
+ * @callbacks: a #GstTaskThreadCallbacks pointer
+ * @user_data: user data passed to the callbacks
+ * @notify: called when @user_data is no longer referenced
+ *
+ * Set callbacks which will be executed when a new thread is needed, the thread
+ * function is entered and left and when the thread is joined.
+ *
+ * By default a thread for @task will be created from a default thread pool.
+ * Elements can use custom GThreads for the task by installing callbacks.
+ *
+ * Since: 0.10.24
+ *
+ * MT safe.
+ */
+void
+gst_task_set_thread_callbacks (GstTask * task,
+    GstTaskThreadCallbacks * callbacks, gpointer user_data,
+    GDestroyNotify notify)
+{
+  GDestroyNotify old_notify;
+
+  g_return_if_fail (task != NULL);
+  g_return_if_fail (GST_IS_TASK (task));
+  g_return_if_fail (callbacks != NULL);
+
+  GST_OBJECT_LOCK (task);
+  old_notify = task->priv->thr_notify;
+
+  if (old_notify) {
+    gpointer old_data;
+
+    old_data = task->priv->thr_user_data;
+
+    task->priv->thr_user_data = NULL;
+    task->priv->thr_notify = NULL;
+    GST_OBJECT_UNLOCK (task);
+
+    old_notify (old_data);
+
+    GST_OBJECT_LOCK (task);
+  }
+  task->priv->thr_callbacks = *callbacks;
+  task->priv->thr_user_data = user_data;
+  task->priv->thr_notify = notify;
+  GST_OBJECT_UNLOCK (task);
+}
 
 /**
  * gst_task_get_state:
