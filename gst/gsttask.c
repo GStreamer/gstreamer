@@ -334,7 +334,7 @@ is_running:
 }
 
 /**
- * gst_task_thread_callbacks:
+ * gst_task_set_thread_callbacks:
  * @task: The #GstTask to use
  * @callbacks: a #GstTaskThreadCallbacks pointer
  * @user_data: user data passed to the callbacks
@@ -344,7 +344,9 @@ is_running:
  * function is entered and left and when the thread is joined.
  *
  * By default a thread for @task will be created from a default thread pool.
- * Elements can use custom GThreads for the task by installing callbacks.
+ *
+ * Objects can use custom GThreads or can perform additional configuration of
+ * the threads (such as changing the thread priority) by installing callbacks.
  *
  * Since: 0.10.24
  *

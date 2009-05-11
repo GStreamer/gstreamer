@@ -4844,10 +4844,8 @@ pad_leave_thread (GstTask * task, GThread * thread, gpointer user_data)
 }
 
 static GstTaskThreadCallbacks thr_callbacks = {
-  NULL,
   pad_enter_thread,
   pad_leave_thread,
-  NULL
 };
 
 /**
