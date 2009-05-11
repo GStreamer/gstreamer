@@ -351,7 +351,7 @@ gst_avi_demux_index_entry_for_time (GstAviDemux * avi,
     gint stream_nr, guint64 time)
 {
   gst_avi_index_entry *entry = NULL;
-  guint n;
+  guint n = 0;
 
   GST_LOG_OBJECT (avi, "stream_nr:%d , time:%" GST_TIME_FORMAT,
       stream_nr, GST_TIME_ARGS (time));
