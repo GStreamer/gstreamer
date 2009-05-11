@@ -1025,5 +1025,6 @@
   <attr path="/api/namespace/interface[@cname='GstPropertyProbe']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstTuner']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstVideoOrientation']" name="hidden">1</attr>
-  <attr path="/api/namespace/interface[@cname='GstXOverlay']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/interface[@cname='GstXOverlay']" name="name">XOverlay</attr>
 </metadata>
