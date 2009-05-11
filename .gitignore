@@ -15,6 +15,7 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache
+autoregen.sh
 compile
 config.guess
 config.h
@@ -31,3 +32,5 @@ missing
 stamp-h1
 bindings/python/rtspserver.c
 tags
+gst-rtsp.spec
+stamp-h.in
