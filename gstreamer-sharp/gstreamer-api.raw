@@ -6537,6 +6537,17 @@
       </method>
     </interface>
     <interface name="GstNavigation" cname="GstNavigation">
+      <class_struct cname="GstNavigationInterface">
+        <field name="GIface" cname="g_iface" type="GTypeInterface" />
+        <method vm="send_event" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <virtual_method name="SendEvent" cname="send_event">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstStructure*" name="structure" />
+        </parameters>
+      </virtual_method>
       <method name="EventGetType" cname="gst_navigation_event_get_type" shared="true">
         <return-type type="GstNavigationEventType" />
         <parameters>
@@ -6974,6 +6985,66 @@
       </method>
     </interface>
     <interface name="GstVideoOrientation" cname="GstVideoOrientation">
+      <class_struct cname="GstVideoOrientationInterface">
+        <field name="Parent" cname="parent" type="GTypeInterface" />
+        <method vm="get_hflip" />
+        <method vm="get_vflip" />
+        <method vm="get_hcenter" />
+        <method vm="get_vcenter" />
+        <method vm="set_hflip" />
+        <method vm="set_vflip" />
+        <method vm="set_hcenter" />
+        <method vm="set_vcenter" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <virtual_method name="GetHflip" cname="get_hflip">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean*" name="flip" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetVflip" cname="get_vflip">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean*" name="flip" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetHcenter" cname="get_hcenter">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint*" name="center" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetVcenter" cname="get_vcenter">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint*" name="center" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetHflip" cname="set_hflip">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean" name="flip" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetVflip" cname="set_vflip">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean" name="flip" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetHcenter" cname="set_hcenter">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint" name="center" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetVcenter" cname="set_vcenter">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint" name="center" />
+        </parameters>
+      </virtual_method>
       <method name="GetHcenter" cname="gst_video_orientation_get_hcenter">
         <return-type type="gboolean" />
         <parameters>
@@ -7027,6 +7098,29 @@
       </method>
     </interface>
     <interface name="GstXOverlay" cname="GstXOverlay">
+      <class_struct cname="GstXOverlayClass">
+        <field name="Klass" cname="klass" type="GTypeInterface" />
+        <method vm="set_xwindow_id" />
+        <method vm="expose" />
+        <method vm="handle_events" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING - 1" />
+      </class_struct>
+      <virtual_method name="SetXwindowId" cname="set_xwindow_id">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gulong" name="xwindow_id" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Expose" cname="expose">
+        <return-type type="void" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="HandleEvents" cname="handle_events">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="handle_events" />
+        </parameters>
+      </virtual_method>
       <method name="Expose" cname="gst_x_overlay_expose">
         <return-type type="void" />
       </method>
