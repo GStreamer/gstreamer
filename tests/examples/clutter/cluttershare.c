@@ -63,8 +63,8 @@ on_new_frame (ClutterTimeline * timeline, gint frame_num, gpointer data)
       clutter_actor_get_height (rect_actor) / 2, 0);
 
   clutter_actor_set_rotation (texture_actor, CLUTTER_Z_AXIS,
-      (gdouble) frame_num, clutter_actor_get_width (texture_actor) / 2,
-      clutter_actor_get_height (texture_actor) / 2, 0);
+      (gdouble) frame_num, clutter_actor_get_width (texture_actor) / 6,
+      clutter_actor_get_height (texture_actor) / 6, 0);
 }
 
 
