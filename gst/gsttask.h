@@ -109,23 +109,20 @@ typedef enum {
 #define GST_TASK_GET_LOCK(task)		(GST_TASK_CAST(task)->lock)
 
 /**
- * GstTaskCallbacks:
- * @create_thread: Create a thread that calls @func with @task as the argument
- * @enter_thread: a thread is entered
- * @leave_thread: a thread is exiting
- * @join_thread: a thread is joined
+ * GstTaskThreadCallbacks:
+ * @enter_thread: a thread is entered, this callback is called when the new
+ *   thread enters its function.
+ * @leave_thread: a thread is exiting, this is called when the thread is about
+ *   to leave its function
  *
  * Custom GstTask thread callback functions that can be installed.
  *
  * Since: 0.10.24
  */
 typedef struct {
-  /* creating threads */
-  GThread * (*create_thread)    (GstTask *task, GThreadFunc func, gpointer user_data);
   /* manage the lifetime of the thread */
   void      (*enter_thread)     (GstTask *task, GThread *thread, gpointer user_data);
   void      (*leave_thread)     (GstTask *task, GThread *thread, gpointer user_data);
-  void      (*join_thread)      (GstTask *task, GThread *thread, gpointer user_data);
   /*< private >*/
   gpointer     _gst_reserved[GST_PADDING];
 } GstTaskThreadCallbacks;
