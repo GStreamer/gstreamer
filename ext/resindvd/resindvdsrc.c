@@ -590,6 +590,12 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
   if (src->in_still_state == FALSE) {
     GST_DEBUG_OBJECT (src, "**** Start STILL FRAME. Duration %d ****",
         duration);
+
+    if (duration == 255)
+      src->still_time_remaining = GST_CLOCK_TIME_NONE;
+    else
+      src->still_time_remaining = GST_SECOND * duration;
+
     /* Send a close-segment event, and a dvd-still start
      * event, then sleep */
     s = gst_structure_new ("application/x-gst-dvd",
@@ -622,7 +628,9 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
 
     src->in_still_state = TRUE;
   } else {
-    GST_DEBUG_OBJECT (src, "Re-entering still wait");
+    GST_DEBUG_OBJECT (src,
+        "Re-entering still wait with %" GST_TIME_FORMAT " remaining",
+        GST_TIME_ARGS (src->still_time_remaining));
     g_mutex_lock (src->branch_lock);
   }
 
@@ -659,26 +667,42 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
     GTimeVal end_time;
     gboolean was_signalled;
 
-    g_get_current_time (&end_time);
-    g_time_val_add (&end_time, duration * G_USEC_PER_SEC);
+    if (src->still_time_remaining > 0) {
+      g_get_current_time (&end_time);
+      g_time_val_add (&end_time, src->still_time_remaining / GST_USECOND);
 
-    /* FIXME: Implement timed stills by sleeping on the clock, possibly
-     * in multiple steps if we get paused/unpaused */
-    g_mutex_unlock (src->dvd_lock);
-    GST_LOG_OBJECT (src, "cond_timed_wait still for %d sec", duration);
-    was_signalled =
-        g_cond_timed_wait (src->still_cond, src->branch_lock, &end_time);
-    was_signalled |= src->branching;
+      /* Implement timed stills by sleeping, possibly
+       * in multiple steps if we get paused/unpaused */
+      g_mutex_unlock (src->dvd_lock);
+      GST_LOG_OBJECT (src, "cond_timed_wait still for %d sec", duration);
+      was_signalled =
+          g_cond_timed_wait (src->still_cond, src->branch_lock, &end_time);
+      was_signalled |= src->branching;
 
-    g_mutex_unlock (src->branch_lock);
-    g_mutex_lock (src->dvd_lock);
+      g_mutex_unlock (src->branch_lock);
+      g_mutex_lock (src->dvd_lock);
 
-    if (was_signalled) {
-      /* Signalled - must be flushing */
-      GST_LOG_OBJECT (src,
-          "cond_timed_wait still over. Signalled, branching = %d",
-          src->branching);
-      return TRUE;
+      if (was_signalled) {
+        /* Signalled - must be flushing */
+        GTimeVal cur_time;
+        GstClockTimeDiff remain;
+
+        g_get_current_time (&cur_time);
+        remain =
+            (end_time.tv_sec - cur_time.tv_sec) * GST_SECOND +
+            (end_time.tv_usec - cur_time.tv_usec) * GST_USECOND;
+        if (remain < 0)
+          src->still_time_remaining = 0;
+        else
+          src->still_time_remaining = remain;
+
+        GST_LOG_OBJECT (src,
+            "cond_timed_wait still aborted by signal with %" GST_TIME_FORMAT
+            " remaining. branching = %d",
+            GST_TIME_ARGS (src->still_time_remaining), src->branching);
+
+        return TRUE;
+      }
     }
 
     /* Else timed out, end the still */
@@ -690,11 +714,16 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
     }
 
     /* Tell downstream the still is over.
-     * Later: We'll only do this if the still isn't interrupted: */
+     * We only do this if the still isn't interrupted: */
     s = gst_structure_new ("application/x-gst-dvd",
         "event", G_TYPE_STRING, "dvd-still",
         "still-state", G_TYPE_BOOLEAN, FALSE, NULL);
     still_event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+
+    /* If the segment was too short in a timed still, it may need extending */
+    if (segment->last_stop < segment->start + GST_SECOND * duration)
+      gst_segment_set_last_stop (segment, GST_FORMAT_TIME,
+          segment->start + (GST_SECOND * duration));
 
     g_mutex_unlock (src->dvd_lock);
     gst_pad_push_event (GST_BASE_SRC_PAD (src), still_event);
@@ -2040,8 +2069,10 @@ rsn_dvdsrc_activate_nav_block (resinDvdSrc * src, GstBuffer * nav_buf)
 
   /* highlight might change, let's check */
   rsn_dvdsrc_update_highlight (src);
-  if (src->highlight_event)
+  if (src->highlight_event && src->in_still_state) {
+    GST_LOG_OBJECT (src, "Signalling still condition due to highlight change");
     g_cond_broadcast (src->still_cond);
+  }
 }
 
 static void

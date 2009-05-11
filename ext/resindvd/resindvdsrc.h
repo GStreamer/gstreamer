@@ -90,6 +90,9 @@ struct _resinDvdSrc
 
   gboolean      was_mouse_over;
 
+  /* Remaining time to wait in a timed still: */
+  GstClockTime  still_time_remaining;
+
   GstBuffer	*alloc_buf;
   GstBuffer	*next_buf;
   /* TRUE if the next_buf is a nav block that needs enqueueing */
