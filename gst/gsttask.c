@@ -550,6 +550,9 @@ start_task (GstTask * task)
   gboolean res = TRUE;
   GstTaskClass *tclass;
   GError *error = NULL;
+  GstTaskPrivate *priv;
+
+  priv = task->priv;
 
   /* new task, We ref before so that it remains alive while
    * the thread is running. */
@@ -717,7 +720,7 @@ gst_task_pause (GstTask * task)
 gboolean
 gst_task_join (GstTask * task)
 {
-  GThread *tself, *thread;
+  GThread *tself;
   GstTaskPrivate *priv;
   gpointer id;
   GstTaskPool *pool = NULL;
