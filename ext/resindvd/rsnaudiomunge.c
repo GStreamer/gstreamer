@@ -288,15 +288,12 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (segment, update,
           rate, arate, format, start, stop, time);
 
-      if (munge->have_audio) {
-        ret = gst_pad_push_event (munge->srcpad, event);
-        break;
-      }
-
       /*
        * FIXME:
-       * If the accum >= threshold or we're in a still frame and there's been
-       * no audio received, then we need to generate some audio data.
+       * If this is a segment update and accum >= threshold,
+       * or we're in a still frame and there's been no audio received,
+       * then we need to generate some audio data.
+       *
        * If caused by a segment start update (time advancing in a gap) adjust
        * the new-segment and send the buffer.
        *
@@ -304,32 +301,38 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
        * in the closing segment.
        */
       if (!update) {
-        GST_DEBUG_OBJECT (munge, "Sending newsegment: start %" GST_TIME_FORMAT
-            " stop %" GST_TIME_FORMAT " accum now %" GST_TIME_FORMAT,
+        GST_DEBUG_OBJECT (munge,
+            "Sending newsegment: update %d start %" GST_TIME_FORMAT " stop %"
+            GST_TIME_FORMAT " accum now %" GST_TIME_FORMAT, update,
             GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
             GST_TIME_ARGS (segment->accum));
 
         ret = gst_pad_push_event (munge->srcpad, event);
       }
 
-      if (segment->accum >= AUDIO_FILL_THRESHOLD || munge->in_still) {
-        GST_DEBUG_OBJECT (munge,
-            "Sending audio fill: accum = %" GST_TIME_FORMAT " still-state=%d",
-            GST_TIME_ARGS (segment->accum), munge->in_still);
+      if (!munge->have_audio) {
+        if ((update && segment->accum >= AUDIO_FILL_THRESHOLD)
+            || munge->in_still) {
+          GST_DEBUG_OBJECT (munge,
+              "Sending audio fill with ts %" GST_TIME_FORMAT ": accum = %"
+              GST_TIME_FORMAT " still-state=%d", GST_TIME_ARGS (segment->start),
+              GST_TIME_ARGS (segment->accum), munge->in_still);
 
-        /* Just generate a 100ms silence buffer for now. FIXME: Fill the gap */
-        if (rsn_audiomunge_make_audio (munge, segment->start,
-                GST_SECOND / 10) == GST_FLOW_OK)
-          munge->have_audio = TRUE;
-      } else {
-        GST_LOG_OBJECT (munge, "Not sending audio fill buffer: "
-            "segment accum below thresh: accum = %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (segment->accum));
+          /* Just generate a 100ms silence buffer for now. FIXME: Fill the gap */
+          if (rsn_audiomunge_make_audio (munge, segment->start,
+                  GST_SECOND / 10) == GST_FLOW_OK)
+            munge->have_audio = TRUE;
+        } else {
+          GST_LOG_OBJECT (munge, "Not sending audio fill buffer: "
+              "Not segment update, or segment accum below thresh: accum = %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (segment->accum));
+        }
       }
 
       if (update) {
-        GST_DEBUG_OBJECT (munge, "Sending newsegment: start %" GST_TIME_FORMAT
-            " stop %" GST_TIME_FORMAT " accum now %" GST_TIME_FORMAT,
+        GST_DEBUG_OBJECT (munge,
+            "Sending newsegment: update %d start %" GST_TIME_FORMAT " stop %"
+            GST_TIME_FORMAT " accum now %" GST_TIME_FORMAT, update,
             GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
             GST_TIME_ARGS (segment->accum));
 
