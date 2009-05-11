@@ -2031,7 +2031,7 @@ static gboolean
 gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     GstPad * pad, GstEvent * event)
 {
-  GstMatroskaIndex *entry;
+  GstMatroskaIndex *entry = NULL;
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   GstFormat format;
@@ -2063,7 +2063,9 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   /* check sanity before we start flushing and all that */
   if (cur_type == GST_SEEK_TYPE_SET) {
     GST_OBJECT_LOCK (demux);
-    if (!gst_matroskademux_do_index_seek (demux, track, cur, -1, FALSE)) {
+    if ((entry =
+            gst_matroskademux_do_index_seek (demux, track, cur, -1,
+                FALSE)) == NULL) {
       GST_DEBUG_OBJECT (demux, "No matching seek entry in index");
       GST_OBJECT_UNLOCK (demux);
       return FALSE;
@@ -2118,8 +2120,9 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
       "New segment positions: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (segment_start), GST_TIME_ARGS (segment_stop));
 
-  entry = gst_matroskademux_do_index_seek (demux, track, segment_start,
-      segment_stop, keyunit);
+  if (entry == NULL)
+    entry = gst_matroskademux_do_index_seek (demux, track, segment_start,
+        segment_stop, keyunit);
 
   if (!entry) {
     GST_DEBUG_OBJECT (demux, "No matching seek entry in index");
