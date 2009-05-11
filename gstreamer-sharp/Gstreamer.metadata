@@ -1024,7 +1024,16 @@
   <attr path="/api/namespace/interface[@cname='GstNavigation']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstPropertyProbe']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstTuner']" name="hidden">1</attr>
-  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']" name="name">VideoOrientation</attr>
+  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/virtual_method[@cname='get_hflip']/parameters/parameter[@name='flip']" name="pass_as">out</attr>
+  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/virtual_method[@cname='get_vflip']/parameters/parameter[@name='flip']" name="pass_as">out</attr>
+  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/virtual_method[@cname='get_hcenter']/parameters/parameter[@name='center']" name="pass_as">out</attr>
+  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/virtual_method[@cname='get_vcenter']/parameters/parameter[@name='center']" name="pass_as">out</attr>
+  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/method[@cname='gst_video_orientation_get_hflip']/parameters/parameter[@name='flip']" name="pass_as">out</attr>
+  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/method[@cname='gst_video_orientation_get_vflip']/parameters/parameter[@name='flip']" name="pass_as">out</attr>
+  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/method[@cname='gst_video_orientation_get_hcenter']/parameters/parameter[@name='center']" name="pass_as">out</attr>
+  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/method[@cname='gst_video_orientation_get_vcenter']/parameters/parameter[@name='center']" name="pass_as">out</attr>
 
   <attr path="/api/namespace/interface[@cname='GstXOverlay']" name="name">XOverlay</attr>
 </metadata>
