@@ -42,6 +42,7 @@ G_BEGIN_DECLS
  * Opaque #GstVideoOrientation data structure.
  */
 typedef struct _GstVideoOrientation GstVideoOrientation;
+typedef struct _GstVideoOrientationInterface GstVideoOrientationInterface;
 
 /**
  * GstVideoOrientationInterface:
@@ -57,7 +58,7 @@ typedef struct _GstVideoOrientation GstVideoOrientation;
  *
  * #GstVideoOrientationInterface interface.
  */
-typedef struct _GstVideoOrientationInterface {
+struct _GstVideoOrientationInterface {
   GTypeInterface parent;
 
   /* virtual functions */
@@ -73,7 +74,7 @@ typedef struct _GstVideoOrientationInterface {
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
-} GstVideoOrientationInterface;
+};
 
 GType           gst_video_orientation_get_type              (void);
 

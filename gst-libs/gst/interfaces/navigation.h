@@ -37,15 +37,16 @@ G_BEGIN_DECLS
     (G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_NAVIGATION, GstNavigationInterface))
 
 typedef struct _GstNavigation GstNavigation;
+typedef struct _GstNavigationInterface GstNavigationInterface;
 
-typedef struct _GstNavigationInterface {
+struct _GstNavigationInterface {
   GTypeInterface g_iface;
 
   /* virtual functions */
   void (*send_event) (GstNavigation *navigation, GstStructure *structure);
   
   gpointer _gst_reserved[GST_PADDING];
-} GstNavigationInterface;
+};
 
 GType           gst_navigation_get_type (void);
 

@@ -47,6 +47,7 @@ G_BEGIN_DECLS
  * Opaque #GstXOverlay data structure.
  */
 typedef struct _GstXOverlay GstXOverlay;
+typedef struct _GstXOverlayClass GstXOverlayClass;
 
 /**
  * GstXOverlayClass:
@@ -57,7 +58,7 @@ typedef struct _GstXOverlay GstXOverlay;
  *
  * #GstXOverlay interface
  */
-typedef struct _GstXOverlayClass {
+struct _GstXOverlayClass {
   GTypeInterface klass;
 
   /* virtual functions */
@@ -71,7 +72,7 @@ typedef struct _GstXOverlayClass {
 
   /*< private >*/
   gpointer                 _gst_reserved[GST_PADDING - 1];
-} GstXOverlayClass;
+};
 
 GType   gst_x_overlay_get_type          (void);
 
