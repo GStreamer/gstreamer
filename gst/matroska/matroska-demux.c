@@ -271,6 +271,9 @@ gst_matroska_track_free (GstMatroskaTrackContext * track)
   if (track->pending_tags)
     gst_tag_list_free (track->pending_tags);
 
+  if (track->index_table)
+    g_array_free (track->index_table, TRUE);
+
   g_free (track);
 }
 
@@ -1932,60 +1935,40 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
   return ret;
 }
 
+static gint
+gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
+    gpointer user_data)
+{
+  if (i1->time < *time)
+    return -1;
+  else if (i1->time > *time)
+    return 1;
+  else
+    return 0;
+}
+
 static GstMatroskaIndex *
-gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, guint track,
-    gint64 seek_pos, gint64 segment_stop, gboolean keyunit)
+gst_matroskademux_do_index_seek (GstMatroskaDemux * demux,
+    GstMatroskaTrackContext * track, gint64 seek_pos, gint64 segment_stop,
+    gboolean keyunit)
 {
   GstMatroskaIndex *entry = NULL;
-  guint n;
+  GArray *index;
 
   if (!demux->index || !demux->index->len)
     return NULL;
 
   /* find entry just before or at the requested position */
-  for (n = 0; n < demux->index->len; n++) {
-    GstMatroskaIndex *index;
+  if (track && track->index_table)
+    index = track->index_table;
+  else
+    index = demux->index;
 
-    index = &g_array_index (demux->index, GstMatroskaIndex, n);
-
-    if (index->time <= seek_pos && ((track && index->track == track) || !track))
-      entry = index;
-    else
-      break;
-  }
-
-  if (keyunit) {
-    /* find index entry closest to the requested position.
-     * n contains the index of the GstMatroskaIndex after
-     * entry
-     */
-    if (entry && n < demux->index->len) {
-      GstMatroskaIndex *index;
-      GstClockTimeDiff d_this, d_entry;
-
-      do {
-        index = &g_array_index (demux->index, GstMatroskaIndex, n);
-      } while (n++ < demux->index->len && ((track && index->track == track)
-              || !track));
-
-      d_entry = GST_CLOCK_DIFF (entry->time, seek_pos);
-      if (d_entry < 0)
-        d_entry = -d_entry;
-
-      d_this = GST_CLOCK_DIFF (index->time, seek_pos);
-      if (d_this < 0)
-        d_this = -d_this;
-
-      if (d_this < d_entry &&
-          (index->time < segment_stop || segment_stop == -1)) {
-        entry = index;
-      }
-    }
-  }
-
-  if (entry == NULL && track)
-    entry = gst_matroskademux_do_index_seek (demux, 0,
-        seek_pos, segment_stop, keyunit);
+  entry =
+      gst_util_array_binary_search (index->data, index->len,
+      sizeof (GstMatroskaIndex),
+      (GCompareDataFunc) gst_matroska_index_seek_find, GST_SEARCH_MODE_BEFORE,
+      &seek_pos, NULL);
 
   return entry;
 }
@@ -2054,12 +2037,10 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   gint64 cur, stop;
   gint64 segment_start, segment_stop;
   gint i;
-  guint track = 0;
+  GstMatroskaTrackContext *track = NULL;
 
-  if (pad) {
-    GstMatroskaTrackContext *context = gst_pad_get_element_private (pad);
-    track = context->num;
-  }
+  if (pad)
+    track = gst_pad_get_element_private (pad);
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
@@ -2079,7 +2060,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   /* check sanity before we start flushing and all that */
   if (cur_type == GST_SEEK_TYPE_SET) {
     GST_OBJECT_LOCK (demux);
-    if (!gst_matroskademux_do_index_seek (demux, 0, cur, -1, FALSE)) {
+    if (!gst_matroskademux_do_index_seek (demux, track, cur, -1, FALSE)) {
       GST_DEBUG_OBJECT (demux, "No matching seek entry in index");
       GST_OBJECT_UNLOCK (demux);
       return FALSE;
@@ -2605,6 +2586,7 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux)
   GstEbmlRead *ebml = GST_EBML_READ (demux);
   guint32 id;
   GstFlowReturn ret = GST_FLOW_OK;
+  guint i;
 
   if (demux->index)
     g_array_free (demux->index, TRUE);
@@ -2648,6 +2630,28 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux)
 
   /* Sort index by time, smallest time first, for easier searching */
   g_array_sort (demux->index, (GCompareFunc) gst_matroska_index_compare);
+
+  /* Now sort the track specific index entries into their own arrays */
+  for (i = 0; i < demux->index->len; i++) {
+    GstMatroskaIndex *idx = &g_array_index (demux->index, GstMatroskaIndex, i);
+    gint track_num;
+    GstMatroskaTrackContext *ctx;
+
+    if (idx->track == 0)
+      continue;
+
+    track_num = gst_matroska_demux_stream_from_num (demux, idx->track);
+    if (track_num == -1)
+      continue;
+
+    ctx = g_ptr_array_index (demux->src, track_num);
+
+    if (ctx->index_table == NULL)
+      ctx->index_table =
+          g_array_sized_new (FALSE, FALSE, sizeof (GstMatroskaIndex), 128);
+
+    g_array_append_vals (ctx->index_table, idx, 1);
+  }
 
   demux->index_parsed = TRUE;
 

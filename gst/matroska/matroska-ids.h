@@ -465,6 +465,8 @@ struct _GstMatroskaTrackContext {
   guint         index;
   GstFlowReturn last_flow;
 
+  GArray       *index_table;
+
   /* some often-used info */
   gchar        *codec_id, *codec_name, *name, *language;
   gpointer      codec_priv;
