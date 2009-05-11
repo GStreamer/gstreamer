@@ -162,6 +162,7 @@ GstTask*	gst_task_create		(GstTaskFunction func, gpointer data);
 void		gst_task_set_lock	(GstTask *task, GStaticRecMutex *mutex);
 
 GstTaskState	gst_task_get_state	(GstTask *task);
+gboolean        gst_task_set_state      (GstTask *task, GstTaskState state);
 
 gboolean	gst_task_start		(GstTask *task);
 gboolean	gst_task_stop		(GstTask *task);

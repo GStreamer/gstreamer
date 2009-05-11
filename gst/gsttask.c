@@ -320,6 +320,105 @@ gst_task_get_state (GstTask * task)
   return result;
 }
 
+/* make sure the task is running and start a thread if it's not.
+ * This function must be called with the task LOCK. */
+static gboolean
+start_task (GstTask * task)
+{
+  gboolean res = TRUE;
+  GstTaskClass *tclass;
+  GError *error = NULL;
+
+  /* new task, We ref before so that it remains alive while
+   * the thread is running. */
+  gst_object_ref (task);
+  /* mark task as running so that a join will wait until we schedule
+   * and exit the task function. */
+  task->running = TRUE;
+
+  tclass = GST_TASK_GET_CLASS (task);
+
+  /* push on the thread pool */
+  g_static_mutex_lock (&pool_lock);
+  g_thread_pool_push (tclass->pool, task, &error);
+  g_static_mutex_unlock (&pool_lock);
+
+  if (error != NULL) {
+    g_warning ("failed to create thread: %s", error->message);
+    g_error_free (error);
+    res = FALSE;
+  }
+  return res;
+}
+
+
+/**
+ * gst_task_set_state:
+ * @task: a #GstTask
+ * @state: the new task state
+ *
+ * Sets the state of @task to @state.
+ *
+ * The @task must have a lock associated with it using
+ * gst_task_set_lock() when going to GST_TASK_STARTED or GST_TASK_PAUSED or
+ * this function will return %FALSE.
+ *
+ * Returns: %TRUE if the state could be changed.
+ *
+ * Since: 0.10.24
+ *
+ * MT safe.
+ */
+gboolean
+gst_task_set_state (GstTask * task, GstTaskState state)
+{
+  GstTaskState old;
+  gboolean res = TRUE;
+
+  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
+
+  GST_DEBUG_OBJECT (task, "Changing task %p to state %d", task, state);
+
+  GST_OBJECT_LOCK (task);
+  if (state != GST_TASK_STOPPED)
+    if (G_UNLIKELY (GST_TASK_GET_LOCK (task) == NULL))
+      goto no_lock;
+
+  /* if the state changed, do our thing */
+  old = task->state;
+  if (old != state) {
+    task->state = state;
+    switch (old) {
+      case GST_TASK_STOPPED:
+        /* If the task already has a thread scheduled we don't have to do
+         * anything. */
+        if (G_UNLIKELY (!task->running))
+          res = start_task (task);
+        break;
+      case GST_TASK_PAUSED:
+        /* when we are paused, signal to go to the new state */
+        GST_TASK_SIGNAL (task);
+        break;
+      case GST_TASK_STARTED:
+        /* if we were started, we'll go to the new state after the next
+         * iteration. */
+        break;
+    }
+  }
+  GST_OBJECT_UNLOCK (task);
+
+  return res;
+
+  /* ERRORS */
+no_lock:
+  {
+    GST_WARNING_OBJECT (task, "state %d set on task without a lock", state);
+    GST_OBJECT_UNLOCK (task);
+    g_warning ("task without a lock can't be set to state %d", state);
+    return FALSE;
+  }
+}
+
 /**
  * gst_task_start:
  * @task: The #GstTask to start
@@ -334,62 +433,7 @@ gst_task_get_state (GstTask * task)
 gboolean
 gst_task_start (GstTask * task)
 {
-  GstTaskState old;
-
-  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
-
-  GST_DEBUG_OBJECT (task, "Starting task %p", task);
-
-  GST_OBJECT_LOCK (task);
-  if (G_UNLIKELY (GST_TASK_GET_LOCK (task) == NULL))
-    goto no_lock;
-
-  old = task->state;
-  task->state = GST_TASK_STARTED;
-  switch (old) {
-    case GST_TASK_STOPPED:
-    {
-      GstTaskClass *tclass;
-
-      /* If the task already has a thread scheduled we don't have to do
-       * anything. */
-      if (task->running)
-        break;
-
-      /* new task, push on thread pool. We ref before so
-       * that it remains alive while on the thread pool. */
-      gst_object_ref (task);
-      /* mark task as running so that a join will wait until we schedule
-       * and exit the task function. */
-      task->running = TRUE;
-
-      tclass = GST_TASK_GET_CLASS (task);
-
-      g_static_mutex_lock (&pool_lock);
-      g_thread_pool_push (tclass->pool, task, NULL);
-      g_static_mutex_unlock (&pool_lock);
-      break;
-    }
-    case GST_TASK_PAUSED:
-      /* PAUSE to PLAY, signal */
-      GST_TASK_SIGNAL (task);
-      break;
-    case GST_TASK_STARTED:
-      /* was OK */
-      break;
-  }
-  GST_OBJECT_UNLOCK (task);
-
-  return TRUE;
-
-  /* ERRORS */
-no_lock:
-  {
-    GST_WARNING_OBJECT (task, "starting task without a lock");
-    GST_OBJECT_UNLOCK (task);
-    g_warning ("starting task without a lock");
-    return FALSE;
-  }
+  return gst_task_set_state (task, GST_TASK_STARTED);
 }
 
 /**
@@ -407,27 +451,7 @@ no_lock:
 gboolean
 gst_task_stop (GstTask * task)
 {
-  GstTaskState old;
-
-  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
-
-  GST_DEBUG_OBJECT (task, "Stopping task %p", task);
-
-  GST_OBJECT_LOCK (task);
-  old = task->state;
-  task->state = GST_TASK_STOPPED;
-  switch (old) {
-    case GST_TASK_STOPPED:
-      break;
-    case GST_TASK_PAUSED:
-      GST_TASK_SIGNAL (task);
-      break;
-    case GST_TASK_STARTED:
-      break;
-  }
-  GST_OBJECT_UNLOCK (task);
-
-  return TRUE;
+  return gst_task_set_state (task, GST_TASK_STOPPED);
 }
 
 /**
@@ -446,53 +470,7 @@ gst_task_stop (GstTask * task)
 gboolean
 gst_task_pause (GstTask * task)
 {
-  GstTaskState old;
-
-  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
-
-  GST_DEBUG_OBJECT (task, "Pausing task %p", task);
-
-  GST_OBJECT_LOCK (task);
-  if (G_UNLIKELY (GST_TASK_GET_LOCK (task) == NULL))
-    goto no_lock;
-
-  old = task->state;
-  task->state = GST_TASK_PAUSED;
-  switch (old) {
-    case GST_TASK_STOPPED:
-    {
-      GstTaskClass *tclass;
-
-      if (task->running)
-        break;
-
-      gst_object_ref (task);
-      task->running = TRUE;
-
-      tclass = GST_TASK_GET_CLASS (task);
-
-      g_static_mutex_lock (&pool_lock);
-      g_thread_pool_push (tclass->pool, task, NULL);
-      g_static_mutex_unlock (&pool_lock);
-      break;
-    }
-    case GST_TASK_PAUSED:
-      break;
-    case GST_TASK_STARTED:
-      break;
-  }
-  GST_OBJECT_UNLOCK (task);
-
-  return TRUE;
-
-  /* ERRORS */
-no_lock:
-  {
-    GST_WARNING_OBJECT (task, "pausing task without a lock");
-    GST_OBJECT_UNLOCK (task);
-    g_warning ("pausing task without a lock");
-    return FALSE;
-  }
+  return gst_task_set_state (task, GST_TASK_PAUSED);
 }
 
 /**
