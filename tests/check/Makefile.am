@@ -163,9 +163,9 @@ elements_videocrop_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 # FIXME: configure should check for gdk-pixbuf not gtk
 # only need video.h header, not the lib
 elements_gdkpixbufsink_CFLAGS = \
-	$(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS) $(GTK_CFLAGS)
+	$(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS) $(GDK_PIXBUF_CFLAGS)
 elements_gdkpixbufsink_LDADD = \
-	$(LDADD) $(GTK_LIBS)
+	$(LDADD) $(GDK_PIXBUF_LIBS)
 
 
 pipelines_wavpack_LDADD = $(LDADD) $(GST_BASE_LIBS)
