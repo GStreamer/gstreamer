@@ -2355,14 +2355,27 @@ gst_mpegts_demux_parse_transport_packet (GstMpegTSDemux * demux,
       MPEGTS_NORMAL_TS_PACKETSIZE - 1);
 
   if (demux->pcr[1] != -1 && demux->bitrate == -1) {
-    GST_DEBUG_OBJECT (demux, "stream->last_PCR_difference: %" G_GINT64_FORMAT
+    guint64 bitrate;
+    GST_DEBUG_OBJECT (demux, "pcr[0]:%" G_GUINT64_FORMAT, demux->pcr[0]);
+    GST_DEBUG_OBJECT (demux, "pcr[1]:%" G_GUINT64_FORMAT, demux->pcr[1]);
+    GST_DEBUG_OBJECT (demux, "diff in time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->pcr[1] - demux->pcr[0])));
+    GST_DEBUG_OBJECT (demux, "stream->last_PCR_difference: %" G_GUINT64_FORMAT
         ", demux->num_packets %" G_GUINT64_FORMAT,
         demux->pcr[1] - demux->pcr[0], demux->num_packets);
-    demux->bitrate = gst_util_uint64_scale (GST_SECOND,
+    bitrate = gst_util_uint64_scale (GST_SECOND,
         MPEGTS_NORMAL_TS_PACKETSIZE * demux->num_packets,
         MPEGTIME_TO_GSTTIME (demux->pcr[1] - demux->pcr[0]));
-    GST_DEBUG_OBJECT (demux, "bitrate is %" G_GINT64_FORMAT
-        " bytes per second", demux->bitrate);
+    /* somehow... I doubt a bitrate below one packet per second is valid */
+    if (bitrate > MPEGTS_NORMAL_TS_PACKETSIZE - 1) {
+      demux->bitrate = bitrate;
+      GST_DEBUG_OBJECT (demux, "bitrate is %" G_GINT64_FORMAT
+          " bytes per second", demux->bitrate);
+    } else {
+      GST_WARNING_OBJECT (demux, "Couldn't compute valid bitrate, recomputing");
+      demux->pcr[0] = demux->pcr[1] = -1;
+      demux->num_packets = -1;
+    }
   }
   demux->num_packets++;
   return ret;

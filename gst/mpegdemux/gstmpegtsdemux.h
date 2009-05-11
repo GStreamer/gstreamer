@@ -213,7 +213,7 @@ struct _GstMpegTSDemux {
   gint64            bitrate;
 
   /* Two PCRs observations to calculate bitrate */
-  gint64            pcr[2];
+  guint64            pcr[2];
 
   /* Cached duration estimation */
   GstClockTime      cache_duration;
