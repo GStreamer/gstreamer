@@ -318,9 +318,9 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
               GST_TIME_FORMAT " still-state=%d", GST_TIME_ARGS (segment->start),
               GST_TIME_ARGS (segment->accum), munge->in_still);
 
-          /* Just generate a 100ms silence buffer for now. FIXME: Fill the gap */
+          /* Just generate a 200ms silence buffer for now. FIXME: Fill the gap */
           if (rsn_audiomunge_make_audio (munge, segment->start,
-                  GST_SECOND / 10) == GST_FLOW_OK)
+                  GST_SECOND / 5) == GST_FLOW_OK)
             munge->have_audio = TRUE;
         } else {
           GST_LOG_OBJECT (munge, "Not sending audio fill buffer: "
