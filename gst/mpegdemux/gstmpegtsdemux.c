@@ -843,7 +843,7 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
   demux = stream->demux;
   srcpad = stream->pad;
 
-  GST_LOG_OBJECT (demux, "got data on PID 0x%04x", stream->PID);
+  GST_DEBUG_OBJECT (demux, "got data on PID 0x%04x", stream->PID);
 
   if (first && filter->pts != -1) {
     pts = filter->pts;
@@ -947,7 +947,7 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
     pts = -1;
   }
 
-  GST_LOG_OBJECT (demux, "setting PTS to (%" G_GUINT64_FORMAT ") time: %"
+  GST_DEBUG_OBJECT (demux, "setting PTS to (%" G_GUINT64_FORMAT ") time: %"
       GST_TIME_FORMAT " on buffer %p first buffer: %d base_time: %"
       GST_TIME_FORMAT, pts, GST_TIME_ARGS (time), buffer, first,
       GST_TIME_ARGS (stream->base_time));
@@ -996,7 +996,7 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
     gst_mpegts_demux_send_new_segment (demux, stream, pts);
   }
 
-  GST_DEBUG_OBJECT (demux, "pushing buffer");
+  GST_DEBUG_OBJECT (srcpad, "pushing buffer");
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (srcpad));
   ret = gst_pad_push (srcpad, buffer);
   ret = gst_mpegts_demux_combine_flows (demux, stream, ret);
@@ -1199,16 +1199,16 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
     if (gst_mpegts_demux_calc_crc32 (data - 3, datalen) != 0)
       goto wrong_crc;
 
-  GST_DEBUG_OBJECT (demux, "PMT section_length: %d", datalen - 3);
+  GST_LOG_OBJECT (demux, "PMT section_length: %d", datalen - 3);
 
   PMT = &stream->PMT;
 
   /* check if version number changed */
   version_number = (data[2] & 0x3e) >> 1;
-  GST_DEBUG_OBJECT (demux, "PMT version_number: %d", version_number);
+  GST_LOG_OBJECT (demux, "PMT version_number: %d", version_number);
 
   current_next_indicator = (data[2] & 0x01);
-  GST_DEBUG_OBJECT (demux, "PMT current_next_indicator %d",
+  GST_LOG_OBJECT (demux, "PMT current_next_indicator %d",
       current_next_indicator);
   if (current_next_indicator == 0)
     goto not_yet_applicable;
@@ -1574,7 +1574,7 @@ gst_mpegts_demux_parse_adaptation_field (GstMpegTSStream * stream,
   if (length > 0) {
     guint8 flags = *data++;
 
-    GST_DEBUG_OBJECT (demux, "flags 0x%02x", flags);
+    GST_LOG_OBJECT (demux, "flags 0x%02x", flags);
     /* discontinuity flag */
     if (flags & 0x80) {
       GST_DEBUG_OBJECT (demux, "discontinuity flag set");
@@ -1593,9 +1593,12 @@ gst_mpegts_demux_parse_adaptation_field (GstMpegTSStream * stream,
       pcr_ext = (pcr2 & 0x01ff);
       if (pcr_ext)
         pcr = (pcr * 300 + pcr_ext % 300) / 300;
-      GST_DEBUG_OBJECT (demux, "have PCR %" G_GUINT64_FORMAT " on PID 0x%04x "
-          "and last pcr is %" G_GUINT64_FORMAT,
-          pcr, stream->PID, stream->last_PCR);
+      GST_DEBUG_OBJECT (demux,
+          "have PCR %" G_GUINT64_FORMAT "(%" GST_TIME_FORMAT ") on PID 0x%04x "
+          "and last pcr is %" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT ")", pcr,
+          GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (pcr)), stream->PID,
+          stream->last_PCR,
+          GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (stream->last_PCR)));
       /* pcr has been converted into units of 90Khz ticks 
        * so assume discont if last pcr was > 900000 (10 second) lower */
       if (stream->last_PCR != -1 &&
@@ -2119,7 +2122,7 @@ gst_mpegts_demux_parse_stream (GstMpegTSDemux * demux, GstMpegTSStream * stream,
   data += 3;
   datalen -= 3;
 
-  GST_DEBUG_OBJECT (demux, "afc 0x%x, pusi %d, PID 0x%04x datalen %u",
+  GST_LOG_OBJECT (demux, "afc 0x%x, pusi %d, PID 0x%04x datalen %u",
       adaptation_field_control, payload_unit_start_indicator, PID, datalen);
 
   ret = GST_FLOW_OK;
@@ -2141,13 +2144,12 @@ gst_mpegts_demux_parse_stream (GstMpegTSDemux * demux, GstMpegTSStream * stream,
 
     data += consumed;
     datalen -= consumed;
-    GST_DEBUG_OBJECT (demux, "consumed: %u datalen: %u", consumed, datalen);
+    GST_LOG_OBJECT (demux, "consumed: %u datalen: %u", consumed, datalen);
   }
 
   /* If this packet has a payload, handle it */
   if (adaptation_field_control & 0x1) {
-    GST_DEBUG_OBJECT (demux, "Packet payload %d bytes, PID 0x%04x", datalen,
-        PID);
+    GST_LOG_OBJECT (demux, "Packet payload %d bytes, PID 0x%04x", datalen, PID);
 
     /* For unknown streams, check if the PID is in the partial PIDs
      * list as an elementary stream and override the type if so 
