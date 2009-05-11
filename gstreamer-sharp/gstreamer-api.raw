@@ -7280,7 +7280,13 @@
         <return-type type="GType" />
       </method>
     </object>
-    <object name="GstTunerNorm" cname="GstTunerNorm">
+    <object name="GstTunerNorm" cname="GstTunerNorm" parent="GObject">
+      <class_struct cname="GstTunerNormClass">
+        <field name="Parent" cname="parent" type="GObjectClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Label" cname="label" type="gchar*" access="public" />
+      <field name="Framerate" cname="framerate" type="GValue" access="public" />
       <method name="Changed" cname="gst_tuner_norm_changed" shared="true">
         <return-type type="void" />
         <parameters>
