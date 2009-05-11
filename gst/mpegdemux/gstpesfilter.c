@@ -565,14 +565,8 @@ gst_pes_filter_process (GstPESFilter * filter)
           ret = GST_FLOW_OK;
         } else {
           GstBuffer *out;
-          guint8 *data;
 
-          data = gst_adapter_take (filter->adapter, avail);
-
-          out = gst_buffer_new ();
-          GST_BUFFER_DATA (out) = data;
-          GST_BUFFER_SIZE (out) = avail;
-          GST_BUFFER_MALLOCDATA (out) = data;
+          out = gst_adapter_take_buffer (filter->adapter, avail);
 
           ret = gst_pes_filter_data_push (filter, filter->first, out);
           filter->first = FALSE;
