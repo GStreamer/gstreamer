@@ -1970,6 +1970,9 @@ gst_matroskademux_do_index_seek (GstMatroskaDemux * demux,
       (GCompareDataFunc) gst_matroska_index_seek_find, GST_SEARCH_MODE_BEFORE,
       &seek_pos, NULL);
 
+  if (entry == NULL)
+    entry = &g_array_index (index, GstMatroskaIndex, 0);
+
   return entry;
 }
 
