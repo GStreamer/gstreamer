@@ -362,10 +362,19 @@ gst_avi_demux_index_entry_for_time (GstAviDemux * avi,
       (GCompareDataFunc) gst_avi_demux_index_entry_search,
       GST_SEARCH_MODE_BEFORE, &time, NULL);
 
-  n = (entry - avi->index_entries) / sizeof (gst_avi_index_entry);
-  while (entry->stream_nr != stream_nr && n > 0) {
-    n--;
-    entry = &avi->index_entries[n];
+  if (entry == NULL) {
+    entry = &avi->index_entries[0];
+    n = 0;
+    while (entry->stream_nr != stream_nr && n < avi->index_size - 1) {
+      n++;
+      entry = &avi->index_entries[n];
+    }
+  } else if (entry->stream_nr != stream_nr) {
+    n = (entry - avi->index_entries) / sizeof (gst_avi_index_entry);
+    while (entry->stream_nr != stream_nr && n > 0) {
+      n--;
+      entry = &avi->index_entries[n];
+    }
   }
 
   GST_LOG_OBJECT (avi,
