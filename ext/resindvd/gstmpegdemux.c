@@ -28,7 +28,8 @@
 #include "gstmpegdefs.h"
 #include "gstmpegdemux.h"
 
-#define SEGMENT_THRESHOLD (GST_SECOND/2)
+#define SEGMENT_THRESHOLD (300*GST_MSECOND)
+#define VIDEO_SEGMENT_THRESHOLD (500*GST_MSECOND)
 
 /* The SCR_MUNGE value is used to offset the scr_adjust value, to avoid
  * ever generating a negative timestamp */
@@ -248,6 +249,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   gchar *name;
   GstFluPSDemuxClass *klass = GST_FLUPS_DEMUX_GET_CLASS (demux);
   GstCaps *caps;
+  GstClockTime threshold = SEGMENT_THRESHOLD;
 
   name = NULL;
   template = NULL;
@@ -277,6 +279,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
       caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, mpeg_version,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+      threshold = VIDEO_SEGMENT_THRESHOLD;
       break;
     }
     case ST_AUDIO_MPEG1:
@@ -296,6 +299,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
       template = klass->video_template;
       name = g_strdup_printf ("video_%02x", id);
       caps = gst_caps_new_simple ("video/x-h264", NULL);
+      threshold = VIDEO_SEGMENT_THRESHOLD;
       break;
     case ST_PS_AUDIO_AC3:
       template = klass->audio_template;
@@ -335,6 +339,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   stream->notlinked = FALSE;
   stream->type = stream_type;
   stream->pad = gst_pad_new_from_template (template, name);
+  stream->segment_thresh = threshold;
   gst_pad_set_event_function (stream->pad, gst_flups_demux_src_event);
   gst_pad_set_query_function (stream->pad, gst_flups_demux_src_query);
   gst_pad_use_fixed_caps (stream->pad);
@@ -487,11 +492,14 @@ gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
       if (stream->last_ts == GST_CLOCK_TIME_NONE ||
           stream->last_ts < demux->src_segment.start)
         stream->last_ts = demux->src_segment.start;
-      if (stream->last_ts + SEGMENT_THRESHOLD < new_time) {
+      if (stream->last_ts + stream->segment_thresh < new_time) {
 #if 0
         g_print ("Segment update to pad %s time %" GST_TIME_FORMAT "\n",
             GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_time));
 #endif
+        GST_DEBUG_OBJECT (demux,
+            "Segment update to pad %s time %" GST_TIME_FORMAT,
+            GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_time));
         if (event == NULL) {
           event = gst_event_new_new_segment_full (TRUE,
               demux->src_segment.rate, demux->src_segment.applied_rate,

@@ -64,6 +64,7 @@ struct _GstFluPSStream {
   gboolean       need_segment;
  
   GstClockTime   last_ts;
+  GstClockTime   segment_thresh;
 };
 
 struct _GstFluPSDemux {
