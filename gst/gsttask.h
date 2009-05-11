@@ -24,6 +24,7 @@
 #define __GST_TASK_H__
 
 #include <gst/gstobject.h>
+#include <gst/gsttaskpool.h>
 
 G_BEGIN_DECLS
 
@@ -168,7 +169,7 @@ struct _GstTaskClass {
   GstObjectClass parent_class;
 
   /*< private >*/
-  GThreadPool *pool;
+  GstTaskPool *pool;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
