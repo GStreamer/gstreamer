@@ -413,13 +413,14 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
         break;
       }
 
-      GST_DEBUG_OBJECT (dvdspu,
-          "DVD event of type %s on video pad", event_type);
-
       if (strcmp (event_type, "dvd-still") == 0) {
         gboolean in_still;
 
         if (gst_structure_get_boolean (structure, "still-state", &in_still)) {
+          GST_DEBUG_OBJECT (dvdspu,
+              "DVD event of type %s on video pad: in-still = %d", event_type,
+              in_still);
+
           DVD_SPU_LOCK (dvdspu);
           if (in_still) {
             state->flags |= SPU_STATE_STILL_FRAME;
@@ -430,14 +431,18 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
              * screen, otherwise the last frame  might have been discarded 
              * by QoS */
             gst_dvd_spu_redraw_still (dvdspu, TRUE);
-          } else
+          } else {
             state->flags &= ~(SPU_STATE_STILL_FRAME);
+          }
           DVD_SPU_UNLOCK (dvdspu);
         }
         gst_event_unref (event);
         res = TRUE;
-      } else
+      } else {
+        GST_DEBUG_OBJECT (dvdspu,
+            "DVD event of type %s on video pad", event_type);
         res = gst_pad_event_default (pad, event);
+      }
       break;
     }
     case GST_EVENT_NEWSEGMENT:
