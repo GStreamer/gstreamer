@@ -326,6 +326,16 @@ gst_avi_demux_index_prev (GstAviDemux * avi, gint stream_nr, gint last,
   return result;
 }
 
+static gint
+gst_avi_demux_index_entry_search (gst_avi_index_entry * entry, guint64 * time)
+{
+  if (entry->ts < *time)
+    return -1;
+  else if (entry->ts > *time)
+    return 1;
+  return 0;
+}
+
 /*
  * gst_avi_index_entry:
  * @avi: Avi object
@@ -340,30 +350,30 @@ static gst_avi_index_entry *
 gst_avi_demux_index_entry_for_time (GstAviDemux * avi,
     gint stream_nr, guint64 time)
 {
-  gst_avi_index_entry *entry = NULL, *last_entry = NULL;
-  gint i;
+  gst_avi_index_entry *entry = NULL;
+  guint n;
 
   GST_LOG_OBJECT (avi, "stream_nr:%d , time:%" GST_TIME_FORMAT,
       stream_nr, GST_TIME_ARGS (time));
 
-  for (i = 0; i < avi->index_size; i++) {
-    entry = &avi->index_entries[i];
+  entry = gst_util_array_binary_search (avi->index_entries,
+      avi->index_size,
+      sizeof (gst_avi_index_entry),
+      (GCompareDataFunc) gst_avi_demux_index_entry_search,
+      GST_SEARCH_MODE_BEFORE, &time, NULL);
 
-    if (entry->stream_nr != stream_nr)
-      continue;
-
-    if (entry->ts > time)
-      break;
-
-    last_entry = entry;
-
-    GST_LOG_OBJECT (avi,
-        "best at entry %d / ts:%" GST_TIME_FORMAT " / dur:%" GST_TIME_FORMAT
-        " flags:%02x", i, GST_TIME_ARGS (entry->ts), GST_TIME_ARGS (entry->dur),
-        entry->flags);
+  n = (entry - avi->index_entries) / sizeof (gst_avi_index_entry);
+  while (entry->stream_nr != stream_nr && n > 0) {
+    n--;
+    entry = &avi->index_entries[n];
   }
 
-  return last_entry;
+  GST_LOG_OBJECT (avi,
+      "best at entry %u / ts:%" GST_TIME_FORMAT " / dur:%" GST_TIME_FORMAT
+      " flags:%02x", n, GST_TIME_ARGS (entry->ts), GST_TIME_ARGS (entry->dur),
+      entry->flags);
+
+  return entry;
 }
 
 /* GstElement methods */
