@@ -23,7 +23,8 @@ always_dirs = \
 	manual     \
 	metadata   \
 	streams    \
-	queue
+	queue      \
+	stepping
 
 #appreader
 #cutter

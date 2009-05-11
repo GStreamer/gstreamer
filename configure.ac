@@ -654,6 +654,7 @@ tests/misc/Makefile
 tests/examples/Makefile
 tests/examples/adapter/Makefile
 tests/examples/controller/Makefile
+tests/examples/stepping/Makefile
 tests/examples/helloworld/Makefile
 tests/examples/launch/Makefile
 tests/examples/manual/Makefile
