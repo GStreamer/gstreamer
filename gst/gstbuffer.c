@@ -201,7 +201,8 @@ gst_buffer_copy_metadata (GstBuffer * dest, const GstBuffer * src,
     /* copy relevant flags */
     mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
         GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
-        GST_BUFFER_FLAG_GAP;
+        GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
+        GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;
     GST_MINI_OBJECT_FLAGS (dest) |= GST_MINI_OBJECT_FLAGS (src) & mask;
   }
 
