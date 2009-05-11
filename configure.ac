@@ -229,8 +229,8 @@ if test "x$BUILD_EXAMPLES" = "xyes"; then
   PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.8.0, HAVE_GTK=yes, HAVE_GTK=no)
   AC_SUBST(GTK_LIBS)
   AC_SUBST(GTK_CFLAGS)
-  AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 fi
+AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
 dnl should we install schemas ?
 translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
