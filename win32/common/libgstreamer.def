@@ -940,6 +940,7 @@ EXPORTS
 	gst_task_pause
 	gst_task_set_lock
 	gst_task_set_state
+	gst_task_set_thread_callbacks
 	gst_task_start
 	gst_task_state_get_type
 	gst_task_stop
