@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-19 20:06+0000\n"
+"POT-Creation-Date: 2009-05-11 22:52+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,21 +16,21 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/esd/esdsink.c:258 ext/esd/esdsink.c:363
+#: ext/esd/esdsink.c:256 ext/esd/esdsink.c:361
 msgid "Could not establish connection to sound server"
 msgstr ""
 
-#: ext/esd/esdsink.c:265
+#: ext/esd/esdsink.c:263
 msgid "Failed to query sound server capabilities"
 msgstr ""
 
-#: ext/flac/gstflacdec.c:1261 ext/libpng/gstpngdec.c:328
-#: ext/libpng/gstpngdec.c:516 ext/wavpack/gstwavpackparse.c:1165
-#: gst/avi/gstavidemux.c:4162 gst/avi/gstavidemux.c:4170
+#: ext/flac/gstflacdec.c:1111 ext/libpng/gstpngdec.c:336
+#: ext/libpng/gstpngdec.c:346 ext/libpng/gstpngdec.c:536
+#: ext/wavpack/gstwavpackparse.c:1165 gst/avi/gstavidemux.c:4218
 msgid "Internal data stream error."
 msgstr ""
 
-#: ext/jpeg/gstjpegdec.c:1049
+#: ext/jpeg/gstjpegdec.c:1136
 msgid "Failed to decode JPEG image"
 msgstr ""
 
@@ -43,32 +43,44 @@ msgstr "Не могу да затворим управљачки уређај �
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
 
-#: gst/qtdemux/qtdemux.c:988 gst/qtdemux/qtdemux.c:2008
+#: gst/qtdemux/qtdemux.c:1291 gst/qtdemux/qtdemux.c:2375
 msgid "This file contains no playable streams."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:1106 gst/qtdemux/qtdemux.c:2149
+#: gst/qtdemux/qtdemux.c:1412 gst/qtdemux/qtdemux.c:2524
 msgid "This file is invalid and cannot be played."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:1164
+#: gst/qtdemux/qtdemux.c:1470
 msgid "This file is incomplete and cannot be played."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:2865
+#: gst/qtdemux/qtdemux.c:3256
 msgid "The video in this file might not play correctly."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:2940
+#: gst/qtdemux/qtdemux.c:3338
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:3223 gst/qtdemux/qtdemux.c:3918
+#: gst/qtdemux/qtdemux.c:3657 gst/qtdemux/qtdemux.c:4387
 msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-#: gst/wavparse/gstwavparse.c:1887
+#: gst/rtsp/gstrtspsrc.c:4317
+msgid ""
+"No supported stream was found. You might need to install a GStreamer RTSP "
+"extension plugin for Real media streams."
+msgstr ""
+
+#: gst/rtsp/gstrtspsrc.c:4322
+msgid ""
+"No supported stream was found. You might be missing the right GStreamer RTSP "
+"extension plugin."
+msgstr ""
+
+#: gst/wavparse/gstwavparse.c:1969
 msgid "Internal data flow error."
 msgstr ""
 
@@ -172,30 +184,30 @@ msgstr "Радио"
 msgid "Monitor"
 msgstr "Праћење"
 
-#: sys/oss/gstosssink.c:406
+#: sys/oss/gstosssink.c:402
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
 
-#: sys/oss/gstosssink.c:413
+#: sys/oss/gstosssink.c:409
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
 
-#: sys/oss/gstosssink.c:421
+#: sys/oss/gstosssink.c:417
 #, fuzzy
 msgid "Could not open audio device for playback."
 msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
 
-#: sys/oss/gstosssrc.c:377
+#: sys/oss/gstosssrc.c:373
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
 
-#: sys/oss/gstosssrc.c:385
+#: sys/oss/gstosssrc.c:381
 #, fuzzy
 msgid "Could not open audio device for recording."
 msgstr "Не могу да отворим ЦД уређај ради читања."
@@ -204,17 +216,17 @@ msgstr "Не могу да отворим ЦД уређај ради читањ�
 msgid "Gain"
 msgstr ""
 
-#: sys/v4l2/gstv4l2src.c:1259
+#: sys/v4l2/gstv4l2src.c:1286
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Не могу да примим бафере са уређаја „%s“."
 
-#: sys/v4l2/gstv4l2src.c:1290
+#: sys/v4l2/gstv4l2src.c:1317
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr ""
 
-#: sys/v4l2/gstv4l2src.c:1308
+#: sys/v4l2/gstv4l2src.c:1335
 #, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr ""
@@ -236,72 +248,72 @@ msgstr ""
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
 
-#: sys/v4l2/v4l2_calls.c:205
+#: sys/v4l2/v4l2_calls.c:206
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:254 sys/v4l2/v4l2_calls.c:332
+#: sys/v4l2/v4l2_calls.c:256 sys/v4l2/v4l2_calls.c:334
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:462
+#: sys/v4l2/v4l2_calls.c:471
 #, fuzzy, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Не могу да пишем на видео уређај „%s“."
 
-#: sys/v4l2/v4l2_calls.c:469
+#: sys/v4l2/v4l2_calls.c:478
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:476
+#: sys/v4l2/v4l2_calls.c:485
 #, fuzzy, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
 
-#: sys/v4l2/v4l2_calls.c:483
+#: sys/v4l2/v4l2_calls.c:492
 #, fuzzy, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Уређај „%s“ не представља уређај за снимање."
 
-#: sys/v4l2/v4l2_calls.c:578
+#: sys/v4l2/v4l2_calls.c:590
 #, fuzzy, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Не могу да примим бафере са уређаја „%s“."
 
-#: sys/v4l2/v4l2_calls.c:616
+#: sys/v4l2/v4l2_calls.c:628
 #, fuzzy, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
 
-#: sys/v4l2/v4l2_calls.c:658
+#: sys/v4l2/v4l2_calls.c:670
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:692
+#: sys/v4l2/v4l2_calls.c:704
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:728
+#: sys/v4l2/v4l2_calls.c:740
 #, fuzzy, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Не могу да затворим управљачки уређај „%s“."
 
-#: sys/v4l2/v4l2_calls.c:763
+#: sys/v4l2/v4l2_calls.c:775
 #, fuzzy, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Не могу да затворим управљачки уређај „%s“."
 
-#: sys/v4l2/v4l2_calls.c:792
+#: sys/v4l2/v4l2_calls.c:804
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:814
+#: sys/v4l2/v4l2_calls.c:826
 #, fuzzy, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Не могу да отворим радио уређај '%s'"
@@ -316,13 +328,13 @@ msgstr "Не могу да примим бафере са уређаја „%s�
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1139 sys/v4l2/v4l2src_calls.c:1156
-#: sys/v4l2/v4l2src_calls.c:1165
+#: sys/v4l2/v4l2src_calls.c:1140 sys/v4l2/v4l2src_calls.c:1157
+#: sys/v4l2/v4l2src_calls.c:1166
 #, fuzzy, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
 
-#: sys/v4l2/v4l2src_calls.c:1141
+#: sys/v4l2/v4l2src_calls.c:1142
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
@@ -330,85 +342,85 @@ msgid ""
 "device %s"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1150
+#: sys/v4l2/v4l2src_calls.c:1151
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1150
+#: sys/v4l2/v4l2src_calls.c:1151
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1158
+#: sys/v4l2/v4l2src_calls.c:1159
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1167
+#: sys/v4l2/v4l2src_calls.c:1168
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1249
+#: sys/v4l2/v4l2src_calls.c:1250
 #, fuzzy, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Не могу да примим бафере са уређаја „%s“."
 
-#: sys/v4l2/v4l2src_calls.c:1279
+#: sys/v4l2/v4l2src_calls.c:1280
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1296
+#: sys/v4l2/v4l2src_calls.c:1297
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Уређај „%s“ не представља уређај за снимање."
 
-#: sys/v4l2/v4l2src_calls.c:1304 sys/v4l2/v4l2src_calls.c:1313
+#: sys/v4l2/v4l2src_calls.c:1305 sys/v4l2/v4l2src_calls.c:1314
 #, fuzzy, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Уређај „%s“ не представља уређај за снимање."
 
-#: sys/v4l2/v4l2src_calls.c:1322
+#: sys/v4l2/v4l2src_calls.c:1323
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1400
+#: sys/v4l2/v4l2src_calls.c:1401
 #, fuzzy, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Не могу да примим бафере са уређаја „%s“."
 
-#: sys/v4l2/v4l2src_calls.c:1409
+#: sys/v4l2/v4l2src_calls.c:1410
 #, fuzzy, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
 
-#: sys/v4l2/v4l2src_calls.c:1418
+#: sys/v4l2/v4l2src_calls.c:1419
 #, fuzzy, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Не могу да примим бафере са уређаја „%s“."
 
-#: sys/v4l2/v4l2src_calls.c:1426
+#: sys/v4l2/v4l2src_calls.c:1427
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1471
+#: sys/v4l2/v4l2src_calls.c:1472
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1515
+#: sys/v4l2/v4l2src_calls.c:1516
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr ""
 
-#: sys/ximage/gstximagesrc.c:722
+#: sys/ximage/gstximagesrc.c:719
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 
-#: sys/ximage/gstximagesrc.c:736
+#: sys/ximage/gstximagesrc.c:733
 msgid "Cannot operate without a clock"
 msgstr ""
 
