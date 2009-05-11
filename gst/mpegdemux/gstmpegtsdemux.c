@@ -1694,16 +1694,23 @@ gst_mpegts_demux_parse_adaptation_field (GstMpegTSStream * stream,
         }
         stream->last_PCR_difference = pcr - stream->last_PCR;
       }
+
       GST_DEBUG_OBJECT (demux,
           "valid pcr: %d last PCR difference: %" G_GUINT64_FORMAT, valid_pcr,
           stream->last_PCR_difference);
       if (valid_pcr) {
-        if (demux->pcr[0] == -1) {
-          demux->pcr[0] = pcr;
-          demux->num_packets = 0;
-        } /* Considering a difference of 1 sec ie 90000 ticks */
-        else if (demux->pcr[1] == -1 && ((pcr - demux->pcr[0]) >= 90000)) {
-          demux->pcr[1] = pcr;
+        GstMpegTSStream *PMT_stream = demux->streams[demux->current_PMT];
+
+        if (PMT_stream && PMT_stream->PMT.PCR_PID == stream->PID) {
+          if (demux->pcr[0] == -1) {
+            GST_DEBUG ("RECORDING pcr[0]:%" G_GUINT64_FORMAT, pcr);
+            demux->pcr[0] = pcr;
+            demux->num_packets = 0;
+          } /* Considering a difference of 1 sec ie 90000 ticks */
+          else if (demux->pcr[1] == -1 && ((pcr - demux->pcr[0]) >= 90000)) {
+            GST_DEBUG ("RECORDING pcr[1]:%" G_GUINT64_FORMAT, pcr);
+            demux->pcr[1] = pcr;
+          }
         }
         stream->last_PCR = pcr;
 
