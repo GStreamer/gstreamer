@@ -82,25 +82,6 @@ typedef GstBuffer* (*GstBufferListDoFunction) (GstBuffer * buffer);
  */
 typedef GstBuffer* (*GstBufferListDoDataFunction) (GstBuffer * buffer, gpointer data);
 
-/**
- * GstBufferList:
- * @mini_object: the parent structure
- *
- * List of grouped buffers.
- */
-struct _GstBufferList {
-  GstMiniObject mini_object;
-
-  /*< private >*/
-  GList *buffers;
-
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstBufferListClass {
-  GstMiniObjectClass mini_object_class;
-};
-
 GType gst_buffer_list_get_type (void);
 
 /* allocation */

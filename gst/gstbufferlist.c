@@ -132,9 +132,28 @@
 static const gpointer STOLEN = "";
 
 /**
+ * GstBufferList:
+ * @mini_object: the parent structure
+ *
+ * Opaque list of grouped buffers.
+ */
+struct _GstBufferList
+{
+  GstMiniObject mini_object;
+
+  /*< private > */
+  GList *buffers;
+};
+
+struct _GstBufferListClass
+{
+  GstMiniObjectClass mini_object_class;
+};
+
+/**
  * GstBufferListIterator:
  *
- * Iterator for a #GstBufferList.
+ * Opaque iterator for a #GstBufferList.
  */
 struct _GstBufferListIterator
 {
