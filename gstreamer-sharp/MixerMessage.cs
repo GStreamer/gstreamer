@@ -8,7 +8,7 @@ namespace Gst.Interfaces {
 	using Gst.Interfaces;
 
 	public static class MixerMessage {
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern int gst_mixer_message_get_type(IntPtr message);
 
 		public static Gst.Interfaces.MixerMessageType MessageGetType(Gst.Message message) {
@@ -17,7 +17,7 @@ namespace Gst.Interfaces {
 			return ret;
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_mixer_message_parse_mute_toggled(IntPtr message, out IntPtr track, out bool mute);
 
 		public static void ParseMuteToggled(Gst.Message message, out Gst.Interfaces.MixerTrack track, out bool mute) {
@@ -28,7 +28,7 @@ namespace Gst.Interfaces {
 			track = (MixerTrack) GLib.Object.GetObject (native_ptr, false);
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_mixer_message_parse_option_changed(IntPtr message, out IntPtr options, out IntPtr value);
 
 		public static void MessageParseOptionChanged(Gst.Message message, out Gst.Interfaces.MixerOptions options, out string value) {
@@ -41,7 +41,7 @@ namespace Gst.Interfaces {
 			value = GLib.Marshaller.Utf8PtrToString (native_value);
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_mixer_message_parse_record_toggled(IntPtr message, out IntPtr track, out bool record);
 
 		public static void MessageParseRecordToggled(Gst.Message message, out Gst.Interfaces.MixerTrack track, out bool record) {
@@ -51,7 +51,7 @@ namespace Gst.Interfaces {
 			track = (MixerTrack) GLib.Object.GetObject (native_ptr, false);
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_mixer_message_parse_volume_changed(IntPtr message, out IntPtr track, out IntPtr volumes, out int num_channels);
 
 		public static void MessageParseVolumeChanged(Gst.Message message, out Gst.Interfaces.MixerTrack track, out int[] volumes) {
@@ -68,7 +68,7 @@ namespace Gst.Interfaces {
 			GLib.Marshaller.Free (native_volumes);
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_mixer_message_parse_options_list_changed(IntPtr message, out IntPtr options);
 
 		public static void MessageParseOptionsListChanged(Gst.Message message, out Gst.Interfaces.MixerOptions options) {

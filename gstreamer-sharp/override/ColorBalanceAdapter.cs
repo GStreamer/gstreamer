@@ -118,7 +118,7 @@ namespace Gst.Interfaces {
 			this.handle = handle;
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern IntPtr gst_color_balance_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_color_balance_get_type ());
@@ -174,14 +174,14 @@ namespace Gst.Interfaces {
 			}
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_color_balance_set_value(IntPtr raw, IntPtr channel, int value);
 
 		public void SetValue(Gst.Interfaces.ColorBalanceChannel channel, int value) {
 			gst_color_balance_set_value(Handle, channel == null ? IntPtr.Zero : channel.Handle, value);
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern IntPtr gst_color_balance_list_channels(IntPtr raw);
 
 		public Gst.Interfaces.ColorBalanceChannel[] ListChannels() {
@@ -190,7 +190,7 @@ namespace Gst.Interfaces {
 			return ret;
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern int gst_color_balance_get_value(IntPtr raw, IntPtr channel);
 
 		public int GetValue(Gst.Interfaces.ColorBalanceChannel channel) {
@@ -199,7 +199,7 @@ namespace Gst.Interfaces {
 			return ret;
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_color_balance_value_changed(IntPtr raw, IntPtr channel, int value);
 
 		public void EmitValueChanged(Gst.Interfaces.ColorBalanceChannel channel, int value) {
