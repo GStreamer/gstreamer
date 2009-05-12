@@ -2,7 +2,7 @@ AC_PREREQ(2.52)
 
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
-dnl releases only do Wall, cvs and prerelease does Werror too
+dnl releases only do Wall, git and prerelease does Werror too
 AC_INIT(GStreamer, 0.10.23.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer)
@@ -15,7 +15,7 @@ dnl define PACKAGE_VERSION_* variables
 AS_VERSION
 
 dnl check if this is a release version
-AS_NANO(GST_CVS="no", GST_CVS="yes")
+AS_NANO(GST_GIT="no", GST_GIT="yes")
 
 dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([gst/gst.c])
@@ -540,10 +540,10 @@ GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-no-export-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CFLAGS($GST_GIT)
 
 dnl define correct level for debugging messages
-AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
+AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
 
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
@@ -566,7 +566,7 @@ AC_SUBST(PROFILE_CFLAGS)
 # functionality from the API that gstreamer uses
 # GST_REMOVE_DEPRECATED: don't compile deprecated functionality (breaks ABI)
 if test "x$PACKAGE_VERSION_NANO" = "x1"; then
-  dnl Define _only_ during CVS (not pre-releases or releases)
+  dnl Define _only_ when compiling from git (not for pre-releases or releases)
   DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
 else
   DEPRECATED_CFLAGS=""
