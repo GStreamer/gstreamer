@@ -53,6 +53,15 @@ typedef enum
   RSN_NAV_RESULT_BRANCH_AND_HIGHLIGHT
 } RsnNavResult;
 
+typedef enum
+{
+  RSN_BTN_NONE = 0x00,
+  RSN_BTN_LEFT = 0x01,
+  RSN_BTN_RIGHT = 0x02,
+  RSN_BTN_UP = 0x04,
+  RSN_BTN_DOWN = 0x04
+} RsnBtnMask;
+
 enum
 {
   /* FILL ME */
@@ -395,6 +404,7 @@ rsn_dvdsrc_start (RsnBaseSrc * bsrc)
   src->part_n = -1;
 
   src->active_button = -1;
+  src->cur_btn_mask = RSN_BTN_NONE;
 
   src->angles_changed = FALSE;
   src->n_angles = 0;
@@ -583,6 +593,7 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
 {
   GstEvent *still_event;
   GstEvent *hl_event;
+  gboolean cmds_changed;
   GstStructure *s;
   GstEvent *seg_event;
   GstSegment *segment = &(GST_BASE_SRC (src)->segment);
@@ -612,6 +623,8 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
     /* Grab any pending highlight event to send too */
     hl_event = src->highlight_event;
     src->highlight_event = NULL;
+    cmds_changed = src->commands_changed;
+    src->commands_changed = FALSE;
 
     /* Now, send the events. We need to drop the dvd lock while doing so,
      * and then check after if we got flushed */
@@ -622,6 +635,9 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
       GST_LOG_OBJECT (src, "Sending highlight event before still");
       gst_pad_push_event (GST_BASE_SRC_PAD (src), hl_event);
     }
+    if (cmds_changed)
+      rsn_dvdsrc_send_commands_changed (src);
+
     g_mutex_lock (src->dvd_lock);
 
     g_mutex_lock (src->branch_lock);
@@ -1106,7 +1122,46 @@ rsn_dvdsrc_send_commands_changed (resinDvdSrc * src)
 static gboolean
 rsn_dvdsrc_handle_cmds_query (resinDvdSrc * src, GstQuery * query)
 {
-  return FALSE;
+  /* Expand this array if we have more commands in the future: */
+  GstNavigationCommand cmds[16];
+  gint n_cmds = 0;
+
+  /* Fill out the standard set of commands we support */
+  cmds[n_cmds++] = GST_NAVIGATION_COMMAND_DVD_MENU;
+  cmds[n_cmds++] = GST_NAVIGATION_COMMAND_DVD_TITLE_MENU;
+  cmds[n_cmds++] = GST_NAVIGATION_COMMAND_DVD_ROOT_MENU;
+  cmds[n_cmds++] = GST_NAVIGATION_COMMAND_DVD_SUBPICTURE_MENU;
+  cmds[n_cmds++] = GST_NAVIGATION_COMMAND_DVD_AUDIO_MENU;
+  cmds[n_cmds++] = GST_NAVIGATION_COMMAND_DVD_ANGLE_MENU;
+  cmds[n_cmds++] = GST_NAVIGATION_COMMAND_DVD_CHAPTER_MENU;
+
+  g_mutex_lock (src->dvd_lock);
+
+  /* Multiple angles available? */
+  if (src->n_angles > 1) {
+    cmds[n_cmds++] = GST_NAVIGATION_COMMAND_PREV_ANGLE;
+    cmds[n_cmds++] = GST_NAVIGATION_COMMAND_NEXT_ANGLE;
+  }
+
+  /* Add button selection commands if we have them */
+  if (src->active_button > 0) {
+    /* We have a valid current button */
+    cmds[n_cmds++] = GST_NAVIGATION_COMMAND_ACTIVATE;
+  }
+  /* Check for buttons in each direction */
+  if (src->cur_btn_mask & RSN_BTN_LEFT)
+    cmds[n_cmds++] = GST_NAVIGATION_COMMAND_LEFT;
+  if (src->cur_btn_mask & RSN_BTN_RIGHT)
+    cmds[n_cmds++] = GST_NAVIGATION_COMMAND_RIGHT;
+  if (src->cur_btn_mask & RSN_BTN_UP)
+    cmds[n_cmds++] = GST_NAVIGATION_COMMAND_UP;
+  if (src->cur_btn_mask & RSN_BTN_DOWN)
+    cmds[n_cmds++] = GST_NAVIGATION_COMMAND_DOWN;
+  g_mutex_unlock (src->dvd_lock);
+
+  gst_navigation_query_set_commandsv (query, n_cmds, cmds);
+
+  return TRUE;
 }
 
 static gboolean
@@ -1131,6 +1186,9 @@ rsn_dvdsrc_handle_navigation_query (resinDvdSrc * src,
     GstNavigationQueryType nq_type, GstQuery * query)
 {
   gboolean res;
+
+  GST_LOG_OBJECT (src, "Have Navigation query of type %d", nq_type);
+
   switch (nq_type) {
     case GST_NAVIGATION_QUERY_COMMANDS:
       res = rsn_dvdsrc_handle_cmds_query (src, query);
@@ -1211,10 +1269,8 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
     src->angles_changed = FALSE;
   }
 
-  if (src->commands_changed) {
-    cmds_changed = TRUE;
-    src->commands_changed = FALSE;
-  }
+  cmds_changed = src->commands_changed;
+  src->commands_changed = FALSE;
 
   g_mutex_unlock (src->dvd_lock);
 
@@ -1600,6 +1656,7 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
 
   if (have_lock) {
     gboolean channel_hop = FALSE;
+    gboolean cmds_changed;
 
     if (nav_res != RSN_NAV_RESULT_NONE) {
       if (nav_res == RSN_NAV_RESULT_BRANCH) {
@@ -1660,6 +1717,9 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
       update_title_info (src);
     }
 
+    cmds_changed = src->commands_changed;
+    src->commands_changed = FALSE;
+
     g_mutex_unlock (src->dvd_lock);
 
     if (hl_event) {
@@ -1667,6 +1727,9 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
           src->active_button);
       gst_pad_push_event (GST_BASE_SRC_PAD (src), hl_event);
     }
+
+    if (cmds_changed)
+      rsn_dvdsrc_send_commands_changed (src);
   }
 
   if (mouse_over_msg) {
@@ -1978,6 +2041,10 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
       if (src->highlight_event)
         gst_event_unref (src->highlight_event);
       src->highlight_event = event;
+      if (src->cur_btn_mask != RSN_BTN_NONE) {
+        src->cur_btn_mask = RSN_BTN_NONE;
+        src->commands_changed = TRUE;
+      }
     }
     return;
   }
@@ -1996,6 +2063,8 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
       area.sx != src->area.sx || area.sy != src->area.sy ||
       area.ex != src->area.ex || area.ey != src->area.ey ||
       area.palette != src->area.palette) {
+    btni_t *btn_info = pci->hli.btnit + button - 1;
+    guint32 btn_mask;
 
     GST_DEBUG_OBJECT (src, "Setting highlight. Button %d @ %d,%d "
         "active %d palette 0x%x (from button %d @ %d,%d palette 0x%x)",
@@ -2026,6 +2095,22 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
     if (src->highlight_event)
       gst_event_unref (src->highlight_event);
     src->highlight_event = event;
+
+    /* Calculate whether the available set of button motions is changed */
+    btn_mask = 0;
+    if (btn_info->left && btn_info->left != button)
+      btn_mask |= RSN_BTN_LEFT;
+    if (btn_info->right && btn_info->right != button)
+      btn_mask |= RSN_BTN_RIGHT;
+    if (btn_info->up && btn_info->up != button)
+      btn_mask |= RSN_BTN_UP;
+    if (btn_info->down && btn_info->down != button)
+      btn_mask |= RSN_BTN_DOWN;
+
+    if (btn_mask != src->cur_btn_mask) {
+      src->cur_btn_mask = btn_mask;
+      src->commands_changed = TRUE;
+    }
   }
 }
 

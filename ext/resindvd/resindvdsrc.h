@@ -141,6 +141,8 @@ struct _resinDvdSrc
   gint8         cur_spu_phys_stream;
   gboolean      cur_spu_forced_only;
   guint32       cur_clut[16];
+
+  guint32       cur_btn_mask;
 };
 
 struct _resinDvdSrcClass 
