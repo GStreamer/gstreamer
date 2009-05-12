@@ -197,7 +197,7 @@ _gst_buffer_list_copy (GstBufferList * list)
   /* shallow copy of list and pointers */
   list_copy->buffers = g_list_copy (list->buffers);
 
-  /* copy all buffers in the list */
+  /* ref all buffers in the list */
   tmp = list_copy->buffers;
   while (tmp) {
     if (tmp->data != GROUP_START && tmp->data != STOLEN) {
