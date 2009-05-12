@@ -132,7 +132,7 @@ gst_audiostestsrc_wave_get_type (void)
     {GST_AUDIO_TEST_SRC_WAVE_SILENCE, "Silence", "silence"},
     {GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE, "White noise", "white-noise"},
     {GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE, "Pink noise", "pink-noise"},
-    {GST_AUDIO_TEST_SRC_WAVE_SINE_TAB, "Sine table", "sine table"},
+    {GST_AUDIO_TEST_SRC_WAVE_SINE_TAB, "Sine table", "sine-table"},
     {GST_AUDIO_TEST_SRC_WAVE_TICKS, "Periodic Ticks", "ticks"},
     {0, NULL, NULL},
   };
