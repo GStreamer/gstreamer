@@ -26,6 +26,8 @@
 
 G_BEGIN_DECLS
 
+#include <gst/base/gstadapter.h>
+
 typedef struct _GstFFMpegEnc GstFFMpegEnc;
 
 struct _GstFFMpegEnc
@@ -39,7 +41,10 @@ struct _GstFFMpegEnc
   AVCodecContext *context;
   AVFrame *picture;
   gboolean opened;
-  GstBuffer *cache;
+  GstClockTime adapter_ts;
+  guint64 adapter_consumed;
+  GstAdapter *adapter;
+  gboolean discont;
 
   /* cache */
   gulong bitrate;

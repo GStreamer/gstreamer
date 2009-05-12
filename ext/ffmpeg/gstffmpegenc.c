@@ -255,6 +255,8 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
 
   gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->srcpad);
+
+  ffmpegenc->adapter = gst_adapter_new ();
 }
 
 static void
@@ -276,6 +278,8 @@ gst_ffmpegenc_finalize (GObject * object)
 
   g_queue_free (ffmpegenc->delay);
   g_free (ffmpegenc->filename);
+
+  g_object_unref (ffmpegenc->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -698,101 +702,177 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
 }
 
 static GstFlowReturn
-gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
+gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, GstBuffer * inbuf,
+    gint max_size, gboolean discont)
 {
-  GstBuffer *outbuf = NULL, *subbuf;
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_OBJECT_PARENT (pad));
-  gint size, ret_size = 0, in_size, frame_size;
+  GstBuffer *outbuf;
+  AVCodecContext *ctx;
+  guint8 *audio_out, *audio_in;
+  GstClockTime timestamp, duration;
+  gint res;
   GstFlowReturn ret;
 
-  size = GST_BUFFER_SIZE (inbuf);
+  ctx = ffmpegenc->context;
 
-  /* FIXME: events (discont (flush!) and eos (close down) etc.) */
+  /* caller should set timestamps on inbuf */
+  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+  duration = GST_BUFFER_DURATION (inbuf);
+  audio_in = GST_BUFFER_DATA (inbuf);
 
-  frame_size = ffmpegenc->context->frame_size * 2 *
-      ffmpegenc->context->channels;
-  in_size = size;
-  if (ffmpegenc->cache)
-    in_size += GST_BUFFER_SIZE (ffmpegenc->cache);
+  outbuf = gst_buffer_new_and_alloc (max_size);
+  audio_out = GST_BUFFER_DATA (outbuf);
 
-  GST_DEBUG_OBJECT (ffmpegenc,
-      "Received buffer of time %" GST_TIME_FORMAT " and size %d (cache: %d)",
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)), size, in_size - size);
+  GST_LOG_OBJECT (ffmpegenc, "encoding buffer of max size %d", max_size);
 
-  while (1) {
-    /* do we have enough data for one frame? */
-    if (in_size / (2 * ffmpegenc->context->channels) <
-        ffmpegenc->context->frame_size) {
-      if (in_size > size) {
-        /* this is panic! we got a buffer, but still don't have enough
-         * data. Merge them and retry in the next cycle... */
-        ffmpegenc->cache = gst_buffer_join (ffmpegenc->cache, inbuf);
-      } else if (in_size == size) {
-        /* exactly the same! how wonderful */
-        ffmpegenc->cache = inbuf;
-      } else if (in_size > 0) {
-        ffmpegenc->cache = gst_buffer_create_sub (inbuf, size - in_size,
-            in_size);
-        GST_BUFFER_DURATION (ffmpegenc->cache) =
-            GST_BUFFER_DURATION (inbuf) * GST_BUFFER_SIZE (ffmpegenc->cache) /
-            size;
-        GST_BUFFER_TIMESTAMP (ffmpegenc->cache) =
-            GST_BUFFER_TIMESTAMP (inbuf) +
-            (GST_BUFFER_DURATION (inbuf) * (size - in_size) / size);
-        gst_buffer_unref (inbuf);
-      } else {
-        gst_buffer_unref (inbuf);
-      }
-      return GST_FLOW_OK;
-    }
+  res = avcodec_encode_audio (ctx, audio_out, max_size, (short *) audio_in);
+  gst_buffer_unref (inbuf);
 
-    /* create the frame */
-    if (in_size > size) {
-      /* merge */
-      subbuf = gst_buffer_create_sub (inbuf, 0, frame_size - (in_size - size));
-      GST_BUFFER_DURATION (subbuf) =
-          GST_BUFFER_DURATION (inbuf) * GST_BUFFER_SIZE (subbuf) / size;
-      subbuf = gst_buffer_join (ffmpegenc->cache, subbuf);
-      ffmpegenc->cache = NULL;
-    } else {
-      subbuf = gst_buffer_create_sub (inbuf, size - in_size, frame_size);
-      GST_BUFFER_DURATION (subbuf) =
-          GST_BUFFER_DURATION (inbuf) * GST_BUFFER_SIZE (subbuf) / size;
-      GST_BUFFER_TIMESTAMP (subbuf) =
-          GST_BUFFER_TIMESTAMP (inbuf) + (GST_BUFFER_DURATION (inbuf) *
-          (size - in_size) / size);
-    }
-
-    outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (subbuf));
-    ret_size = avcodec_encode_audio (ffmpegenc->context,
-        GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), (const short int *)
-        GST_BUFFER_DATA (subbuf));
-
-    if (ret_size < 0) {
-      GST_ERROR_OBJECT (ffmpegenc, "Failed to encode buffer");
-      gst_buffer_unref (inbuf);
-      gst_buffer_unref (outbuf);
-      gst_buffer_unref (subbuf);
-      return GST_FLOW_OK;
-    }
-
-    GST_BUFFER_SIZE (outbuf) = ret_size;
-    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (subbuf);
-    GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (subbuf);
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
-    gst_buffer_unref (subbuf);
-
-    ret = gst_pad_push (ffmpegenc->srcpad, outbuf);
-    if (ret != GST_FLOW_OK) {
-      /* cleanup and return */
-      gst_buffer_unref (inbuf);
-      return ret;
-    }
-
-    in_size -= frame_size;
+  if (res < 0) {
+    GST_ERROR_OBJECT (ffmpegenc, "Failed to encode buffer: %d", res);
+    gst_buffer_unref (outbuf);
+    return GST_FLOW_OK;
   }
+  GST_LOG_OBJECT (ffmpegenc, "got output size %d", res);
+
+  GST_BUFFER_SIZE (outbuf) = res;
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_DURATION (outbuf) = duration;
+  if (discont)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
+
+  GST_LOG_OBJECT (ffmpegenc, "pushing size %d, timestamp %" GST_TIME_FORMAT,
+      res, GST_TIME_ARGS (timestamp));
+
+  ret = gst_pad_push (ffmpegenc->srcpad, outbuf);
 
   return ret;
+}
+
+static GstFlowReturn
+gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
+{
+  GstFFMpegEnc *ffmpegenc;
+  GstFFMpegEncClass *oclass;
+  AVCodecContext *ctx;
+  GstClockTime timestamp, duration;
+  guint size, frame_size;
+  gint osize;
+  GstFlowReturn ret;
+  gint out_size;
+  gboolean discont;
+
+  ffmpegenc = (GstFFMpegEnc *) (GST_OBJECT_PARENT (pad));
+  oclass = (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
+
+  ctx = ffmpegenc->context;
+
+  size = GST_BUFFER_SIZE (inbuf);
+  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+  duration = GST_BUFFER_DURATION (inbuf);
+  discont = GST_BUFFER_IS_DISCONT (inbuf);
+
+  GST_DEBUG_OBJECT (ffmpegenc,
+      "Received time %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
+      ", size %d", GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration), size);
+
+  frame_size = ctx->frame_size;
+  osize = av_get_bits_per_sample_format (ctx->sample_fmt) / 8;
+
+  if (frame_size > 1) {
+    /* we have a frame_size, feed the encoder multiples of this frame size */
+    guint avail, frame_bytes;
+
+    if (discont) {
+      GST_LOG_OBJECT (ffmpegenc, "DISCONT, clear adapter");
+      gst_adapter_clear (ffmpegenc->adapter);
+      ffmpegenc->discont = TRUE;
+    }
+
+    if (gst_adapter_available (ffmpegenc->adapter) == 0) {
+      /* lock on to new timestamp */
+      GST_LOG_OBJECT (ffmpegenc, "taking buffer timestamp %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (timestamp));
+      ffmpegenc->adapter_ts = timestamp;
+      ffmpegenc->adapter_consumed = 0;
+    } else {
+      /* use timestamp at head of the adapter */
+      GST_LOG_OBJECT (ffmpegenc, "taking adapter timestamp %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (ffmpegenc->adapter_ts));
+      timestamp = ffmpegenc->adapter_ts;
+      timestamp +=
+          gst_util_uint64_scale (ffmpegenc->adapter_consumed, GST_SECOND,
+          ctx->sample_rate);
+    }
+
+    GST_LOG_OBJECT (ffmpegenc, "pushing buffer in adapter");
+    gst_adapter_push (ffmpegenc->adapter, inbuf);
+
+    /* first see how many bytes we need to feed to the decoder. */
+    frame_bytes = frame_size * osize * ctx->channels;
+    avail = gst_adapter_available (ffmpegenc->adapter);
+
+    GST_LOG_OBJECT (ffmpegenc, "frame_bytes %u, avail %u", frame_bytes, avail);
+
+    /* while there is more than a frame size in the adapter, consume it */
+    while (avail >= frame_bytes) {
+      GST_LOG_OBJECT (ffmpegenc, "taking %u bytes from the adapter",
+          frame_bytes);
+
+      /* take an audio buffer out of the adapter */
+      inbuf = gst_adapter_take_buffer (ffmpegenc->adapter, frame_bytes);
+      ffmpegenc->adapter_consumed += frame_size;
+
+      /* calculate timestamp and duration relative to start of adapter and to
+       * the amount of samples we consumed */
+      duration =
+          gst_util_uint64_scale (ffmpegenc->adapter_consumed, GST_SECOND,
+          ctx->sample_rate);
+      duration -= (timestamp - ffmpegenc->adapter_ts);
+
+      GST_BUFFER_TIMESTAMP (inbuf) = timestamp;
+      GST_BUFFER_DURATION (inbuf) = duration;
+
+      /* advance the adapter timestamp with the duration */
+      timestamp += duration;
+
+      /* 4 times the input size should be big enough... */
+      out_size = frame_bytes * 4;
+
+      ret = gst_ffmpegenc_encode_audio (ffmpegenc, inbuf, out_size,
+          ffmpegenc->discont);
+      if (ret != GST_FLOW_OK)
+        goto push_failed;
+
+      ffmpegenc->discont = FALSE;
+      avail = gst_adapter_available (ffmpegenc->adapter);
+    }
+    GST_LOG_OBJECT (ffmpegenc, "%u bytes left in the adapter", avail);
+  } else {
+    /* we have no frame_size, feed the encoder all the data and expect a fixed
+     * output size */
+    int coded_bps = av_get_bits_per_sample (oclass->in_plugin->id) / 8;
+
+    GST_LOG_OBJECT (ffmpegenc, "coded bps %d, osize %d", coded_bps, osize);
+
+    out_size = size / osize;
+    if (coded_bps)
+      out_size *= coded_bps;
+
+    ret = gst_ffmpegenc_encode_audio (ffmpegenc, inbuf, out_size, discont);
+    if (ret != GST_FLOW_OK)
+      goto push_failed;
+  }
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+push_failed:
+  {
+    GST_DEBUG_OBJECT (ffmpegenc, "Failed to push buffer %d (%s)", ret,
+        gst_flow_get_name (ret));
+    return ret;
+  }
 }
 
 static void
@@ -1000,10 +1080,8 @@ gst_ffmpegenc_change_state (GstElement * element, GstStateChange transition)
         gst_ffmpeg_avcodec_close (ffmpegenc->context);
         ffmpegenc->opened = FALSE;
       }
-      if (ffmpegenc->cache) {
-        gst_buffer_unref (ffmpegenc->cache);
-        ffmpegenc->cache = NULL;
-      }
+      gst_adapter_clear (ffmpegenc->adapter);
+
       if (ffmpegenc->file) {
         fclose (ffmpegenc->file);
         ffmpegenc->file = NULL;
