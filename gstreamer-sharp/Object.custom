@@ -3,7 +3,10 @@ public object this[string property] {
     return GetProperty (property).Val;
   }
   set {
-    SetProperty (property, new GLib.Value (value));
+    GLib.Value v = new GLib.Value (this, property);
+    v.Val = value;
+    SetProperty (property, v);
+    v.Dispose ();
   }
 }
 

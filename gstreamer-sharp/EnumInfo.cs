@@ -127,7 +127,6 @@ namespace Gst {
       }
 
       g_type_class_unref (class_ptr);
-
     }
   }
 
@@ -199,6 +198,5 @@ namespace Gst {
 
       g_type_class_unref (class_ptr);
     }
-
   }
 }
