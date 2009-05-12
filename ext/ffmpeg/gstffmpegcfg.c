@@ -262,6 +262,9 @@ gst_ffmpeg_flags_get_type (void)
 
   if (!ffmpeg_flags_type) {
     static const GFlagsValue ffmpeg_flags[] = {
+      {CODEC_FLAG_OBMC, "Use overlapped block motion compensation (h263+)",
+          "obmc"},
+      {CODEC_FLAG_QSCALE, "Use fixed qscale", "qscale"},
       {CODEC_FLAG_4MV, "Allow 4 MV per MB", "4mv"},
       {CODEC_FLAG_H263P_AIV, "H.263 alternative inter VLC", "aiv"},
       {CODEC_FLAG_QPEL, "Quartel Pel Motion Compensation", "qpel"},
