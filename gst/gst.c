@@ -1011,6 +1011,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_clock_return_get_type ());
   g_type_class_ref (gst_clock_entry_type_get_type ());
   g_type_class_ref (gst_clock_flags_get_type ());
+  g_type_class_ref (gst_clock_type_get_type ());
   g_type_class_ref (gst_debug_graph_details_get_type ());
   g_type_class_ref (gst_state_get_type ());
   g_type_class_ref (gst_state_change_return_get_type ());
@@ -1051,8 +1052,11 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_rank_get_type ());
   g_type_class_ref (gst_query_type_get_type ());
   g_type_class_ref (gst_buffering_mode_get_type ());
+  g_type_class_ref (gst_stream_status_type_get_type ());
+  g_type_class_ref (gst_structure_change_type_get_type ());
   g_type_class_ref (gst_tag_merge_mode_get_type ());
   g_type_class_ref (gst_tag_flag_get_type ());
+  g_type_class_ref (gst_task_pool_get_type ());
   g_type_class_ref (gst_task_state_get_type ());
   g_type_class_ref (gst_alloc_trace_flags_get_type ());
   g_type_class_ref (gst_type_find_probability_get_type ());
