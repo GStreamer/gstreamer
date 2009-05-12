@@ -44,7 +44,7 @@ namespace Gst {
 				GLib.GType gt = new GLib.GType (gtype);
 				System.Type t = (System.Type) gt;
 
-				PropertyInfo pi = t.GetProperty ("Type", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+				System.Reflection.PropertyInfo pi = t.GetProperty ("Type", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 				Gst.URIType __result = Gst.URIType.Unknown;
 				if (pi != null && pi.PropertyType == typeof (Gst.URIType))
 				  __result = (Gst.URIType) pi.GetValue (null, null);
@@ -72,7 +72,7 @@ namespace Gst {
 				  return (IntPtr[]) protocols_cache[gtype];
 				}
 
-				PropertyInfo pi = t.GetProperty ("Protocols", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+				System.Reflection.PropertyInfo pi = t.GetProperty ("Protocols", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 				string[] __result;
 				if (pi != null && pi.PropertyType == typeof (string[]))
 				  __result = (string[]) pi.GetValue (null, null);
