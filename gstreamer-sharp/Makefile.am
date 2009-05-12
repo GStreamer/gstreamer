@@ -45,6 +45,7 @@ sources = \
 	GError.cs \
 	Value.cs \
 	PropertyInfo.cs \
+	EnumInfo.cs \
 	Iterator.cs \
 	GstSharp.PadQueryTypeFunctionNative.cs \
 	PadQueryTypeFunction.cs \

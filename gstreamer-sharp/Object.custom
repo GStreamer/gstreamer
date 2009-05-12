@@ -62,7 +62,8 @@ public PropertyInfo[] Properties {
       ret[i].controllable = ( (pspec.Flags & (1 << 9)) != 0);
       /* TODO: Add more flags later, like the mutable flags */
 
-      ret[i].type = (System.Type) new GLib.GType (pspec.ValueType);
+      ret[i].gtype = new GLib.GType (pspec.ValueType);
+      ret[i].type = (System.Type) ret[i].gtype;
 
       try {
         GLib.Value v = new GLib.Value (new GLib.GType (pspec.ValueType));
@@ -70,14 +71,20 @@ public PropertyInfo[] Properties {
         ret[i].dflt = v.Val;
         v.Dispose ();
 
-        GLib.Value min = new GLib.Value (new GLib.GType (pspec.ValueType));
-        GLib.Value max = new GLib.Value (new GLib.GType (pspec.ValueType));
-        if (gstsharp_g_param_spec_get_range (pspec_ptr, ref min, ref max)) {
-          ret[i].min = (object) min.Val;
-          ret[i].max = (object) max.Val;
+        if (EnumInfo.IsEnumType (ret[i].gtype)) {
+          EnumInfo ei = new EnumInfo (ret[i].gtype);
+          ret[i].min = ei.Min;
+          ret[i].max = ei.Max;
+        } else {
+          GLib.Value min = new GLib.Value (new GLib.GType (pspec.ValueType));
+          GLib.Value max = new GLib.Value (new GLib.GType (pspec.ValueType));
+          if (gstsharp_g_param_spec_get_range (pspec_ptr, ref min, ref max)) {
+            ret[i].min = (object) min.Val;
+            ret[i].max = (object) max.Val;
+          }
+          min.Dispose ();
+          max.Dispose ();
         }
-        min.Dispose ();
-        max.Dispose ();
       } catch (Exception) {}
     }
 
