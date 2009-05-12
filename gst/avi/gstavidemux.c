@@ -351,7 +351,7 @@ gst_avi_demux_index_entry_for_time (GstAviDemux * avi,
     gint stream_nr, guint64 time)
 {
   gst_avi_index_entry *entry = NULL;
-  guint n = 0;
+  guint n;
 
   GST_LOG_OBJECT (avi, "stream_nr:%d , time:%" GST_TIME_FORMAT,
       stream_nr, GST_TIME_ARGS (time));
@@ -362,6 +362,7 @@ gst_avi_demux_index_entry_for_time (GstAviDemux * avi,
       (GCompareDataFunc) gst_avi_demux_index_entry_search,
       GST_SEARCH_MODE_BEFORE, &time, NULL);
 
+  n = entry - avi->index_entries;
   if (entry == NULL) {
     entry = &avi->index_entries[0];
     n = 0;
@@ -370,7 +371,6 @@ gst_avi_demux_index_entry_for_time (GstAviDemux * avi,
       entry = &avi->index_entries[n];
     }
   } else if (entry->stream_nr != stream_nr) {
-    n = (entry - avi->index_entries) / sizeof (gst_avi_index_entry);
     while (entry->stream_nr != stream_nr && n > 0) {
       n--;
       entry = &avi->index_entries[n];
