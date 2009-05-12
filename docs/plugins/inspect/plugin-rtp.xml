@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.10.14</version>
+  <version>0.10.14.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -221,7 +221,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], encoding-name=(string){ G726, G726-16, G726-24, G726-32, G726-40 }, clock-rate=(int)8000</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], encoding-name=(string){ G726, G726-16, G726-24, G726-32, G726-40, AAL2-G726-16, AAL2-G726-24, AAL2-G726-32, AAL2-G726-40 }, clock-rate=(int)8000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -242,7 +242,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string){ G726-16, G726-24, G726-32, G726-40 }</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string){ G726-16, G726-24, G726-32, G726-40, AAL2-G726-16, AAL2-G726-24, AAL2-G726-32, AAL2-G726-40 }</details>
         </caps>
         <caps>
           <name>sink</name>
@@ -359,10 +359,10 @@
     </element>
     <element>
       <name>rtph263pay</name>
-      <longname>RTP H263 payloader</longname>
+      <longname>RTP H263 packet payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encodes H263 video in RTP packets (RFC 2190)</description>
-      <author>Neil Stratford &lt;neils@vipadia.com&gt;</author>
+      <author>Neil Stratford &lt;neils@vipadia.com&gt;Dejan Sakelsak &lt;dejan.sakelsak@marand.si&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -505,6 +505,48 @@
       </pads>
     </element>
     <element>
+      <name>rtpj2kdepay</name>
+      <longname>RTP JPEG 2000 depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts JPEG 2000 video from RTP packets (RFC 5371)</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)JPEG2000</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/x-jpc</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpj2kpay</name>
+      <longname>RTP JPEG 2000 payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload-encodes JPEG 2000 pictures into RTP packets (RFC 5371)</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/x-jpc</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)JPEG2000</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpjpegdepay</name>
       <longname>RTP JPEG depayloader</longname>
       <class>Codec/Depayloader/Network</class>
@@ -536,7 +578,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>image/jpeg, height=(int)[ 0, 2040 ], width=(int)[ 0, 2040 ]; video/x-jpeg, height=(int)[ 0, 2040 ], width=(int)[ 0, 2040 ]</details>
+          <details>image/jpeg; video/x-jpeg</details>
         </caps>
         <caps>
           <name>src</name>
@@ -627,7 +669,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int)4, framed=(boolean)false</details>
+          <details>audio/mpeg, mpegversion=(int)4, framed=(boolean)true</details>
         </caps>
       </pads>
     </element>
@@ -905,6 +947,48 @@
       </pads>
     </element>
     <element>
+      <name>rtpsirendepay</name>
+      <longname>RTP Siren packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts Siren audio from RTP packets</description>
+      <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)SIREN, dct-length=(int)320</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-siren, dct-length=(int)320</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpsirenpay</name>
+      <longname>RTP Payloader for Siren Audio</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Packetize Siren audio streams into RTP packets</description>
+      <author>Youness Alaoui &lt;kakaroto@kakaroto.homelinux.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)SIREN, dct-length=(int)320</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-siren, dct-length=(int)320</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpspeexdepay</name>
       <longname>RTP Speex depayloader</longname>
       <class>Codec/Depayloader/Network</class>
@@ -990,7 +1074,7 @@
     </element>
     <element>
       <name>rtptheorapay</name>
-      <longname>RTP Theora depayloader</longname>
+      <longname>RTP Theora payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encode Theora video into RTP packets (draft-01 RFC XXXX)</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>

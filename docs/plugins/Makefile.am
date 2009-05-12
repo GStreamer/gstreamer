@@ -141,6 +141,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer3bands.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer10bands.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizernbands.h \
+	$(top_srcdir)/gst/flv/gstflvdemux.h \
+	$(top_srcdir)/gst/flv/gstflvmux.h \
 	$(top_srcdir)/gst/goom/gstgoom.h \
 	$(top_srcdir)/gst/goom2k1/gstgoom.h \
 	$(top_srcdir)/gst/law/alaw-decode.h \

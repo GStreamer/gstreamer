@@ -411,7 +411,7 @@
 <ARG>
 <NAME>GstUDPSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP reception. (-1 == allocate).</BLURB>
@@ -461,7 +461,7 @@
 <ARG>
 <NAME>GstUDPSrc::sock</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket currently in use for UDP reception. (-1 = no socket).</BLURB>
@@ -476,6 +476,16 @@
 <NICK>Auto Multicast</NICK>
 <BLURB>Automatically join/leave multicast groups.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUDPSrc::multicast-iface</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multicast Interface</NICK>
+<BLURB>The network interface on which to join the multicast group.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -616,6 +626,26 @@
 <NICK>NAT Method</NICK>
 <BLURB>Method to use for traversing firewalls and NAT.</BLURB>
 <DEFAULT>Send Dummy packets</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::do-rtcp</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Do RTCP</NICK>
+<BLURB>Send RTCP packets, disable for old incompatible server.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::proxy</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Proxy</NICK>
+<BLURB>Proxy settings for HTTP tunneling. Format: [http://][user:passwd@]host[:port].</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1461,7 +1491,7 @@
 <ARG>
 <NAME>GstDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,16]</RANGE>
+<RANGE>[G_MAXULONG,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -1671,7 +1701,7 @@
 <ARG>
 <NAME>GstTest::allowed-timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>allowed timestamp deviation</NICK>
 <BLURB>allowed average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
@@ -1681,7 +1711,7 @@
 <ARG>
 <NAME>GstTest::buffer-count</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>buffer count</NICK>
 <BLURB>number of buffers in stream.</BLURB>
@@ -1691,7 +1721,7 @@
 <ARG>
 <NAME>GstTest::expected-buffer-count</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected buffer count</NICK>
 <BLURB>expected number of buffers in stream.</BLURB>
@@ -1701,7 +1731,7 @@
 <ARG>
 <NAME>GstTest::expected-length</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected length</NICK>
 <BLURB>expected length of stream.</BLURB>
@@ -1721,7 +1751,7 @@
 <ARG>
 <NAME>GstTest::length</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>length</NICK>
 <BLURB>length of stream.</BLURB>
@@ -1741,7 +1771,7 @@
 <ARG>
 <NAME>GstTest::timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>timestamp deviation</NICK>
 <BLURB>average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
@@ -1811,7 +1841,7 @@
 <ARG>
 <NAME>GstBreakMyData::set-to</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,255]</RANGE>
+<RANGE>[G_MAXULONG,255]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>set-to</NICK>
 <BLURB>set changed bytes to this value (-1 means random value.</BLURB>
@@ -2131,7 +2161,7 @@
 <ARG>
 <NAME>GstDynUDPSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,32767]</RANGE>
+<RANGE>[G_MAXULONG,32767]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>socket handle</NICK>
 <BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
@@ -2201,7 +2231,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::sock</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket currently in use for UDP sending. (-1 == no socket).</BLURB>
@@ -2211,7 +2241,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
@@ -2241,7 +2271,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::qos-dscp</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,63]</RANGE>
+<RANGE>[G_MAXULONG,63]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>QoS diff srv code point</NICK>
 <BLURB>Quality of Service, differentiated services code point (-1 default).</BLURB>
@@ -2811,7 +2841,7 @@
 <ARG>
 <NAME>GstV4l2Src::device-fd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>File descriptor</NICK>
 <BLURB>File descriptor of the device.</BLURB>
@@ -3031,7 +3061,7 @@
 <ARG>
 <NAME>GstRndBufferSize::max</NAME>
 <TYPE>glong</TYPE>
-<RANGE>>= 1</RANGE>
+<RANGE>[1,G_MAXINT]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>maximum</NICK>
 <BLURB>maximum buffer size.</BLURB>
@@ -3041,7 +3071,7 @@
 <ARG>
 <NAME>GstRndBufferSize::min</NAME>
 <TYPE>glong</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>[0,G_MAXINT]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>mininum</NICK>
 <BLURB>mininum buffer size.</BLURB>
@@ -3051,7 +3081,7 @@
 <ARG>
 <NAME>GstRndBufferSize::seed</NAME>
 <TYPE>gulong</TYPE>
-<RANGE></RANGE>
+<RANGE><= G_MAXUINT</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>random number seed</NICK>
 <BLURB>seed for randomness (initialized when going from READY to PAUSED).</BLURB>
@@ -3286,6 +3316,26 @@
 <NICK>user-pw</NICK>
 <BLURB>HTTP location URI user password for authentication.</BLURB>
 <DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::extra-headers</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Extra Headers</NICK>
+<BLURB>Extra headers to append to the HTTP request.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSoupHTTPSrc::timeout</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 3600</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>timeout</NICK>
+<BLURB>Value in seconds to timeout a blocking I/O (0 = No timeout).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19589,6 +19639,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRgAnalysis::message</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Message</NICK>
+<BLURB>Post statics messages.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstHDV1394Src::channel</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[0,64]</RANGE>
@@ -19621,7 +19681,7 @@
 <ARG>
 <NAME>GstHDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,16]</RANGE>
+<RANGE>[G_MAXULONG,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -19664,7 +19724,7 @@
 <RANGE>[0,255]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Quality</NICK>
-<BLURB>Quality factor on JPEG data.</BLURB>
+<BLURB>Quality factor on JPEG data (unused).</BLURB>
 <DEFAULT>255</DEFAULT>
 </ARG>
 
@@ -19674,7 +19734,7 @@
 <RANGE>[0,255]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Type</NICK>
-<BLURB>JPEG Type.</BLURB>
+<BLURB>Default JPEG Type, overwritten by SOF when present.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -19826,5 +19886,35 @@
 <NICK>aspect-ratio</NICK>
 <BLURB>Target aspect-ratio of video.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpG726Depay::force-aal2</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force AAL2</NICK>
+<BLURB>Force AAL2 decoding for compatibility with bad payloaders.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpG726Pay::force-aal2</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force AAL2</NICK>
+<BLURB>Force AAL2 encoding for compatibility with bad depayloaders.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpH263Pay::modea-only</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fragment packets in mode A Only</NICK>
+<BLURB>Disable packetization modes B and C.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 

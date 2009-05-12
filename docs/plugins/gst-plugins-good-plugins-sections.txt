@@ -692,6 +692,36 @@ gst_flac_tag_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-flvdemux</FILE>
+<TITLE>flvdemux</TITLE>
+GstFLVDemux
+<SUBSECTION Standard>
+GstFLVDemuxClass
+GstFLVDemuxFlags
+GST_FLV_DEMUX
+GST_FLV_DEMUX_CLASS
+GST_IS_FLV_DEMUX
+GST_IS_FLV_DEMUX_CLASS
+GST_TYPE_FLV_DEMUX
+gst_flv_demux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-flvmux</FILE>
+<TITLE>flvmux</TITLE>
+GstFlvMux
+<SUBSECTION Standard>
+GstFlvMuxClass
+GstFlvMuxFlags
+GST_FLV_MUX
+GST_FLV_MUX_CLASS
+GST_IS_FLV_MUX
+GST_IS_FLV_MUX_CLASS
+GST_TYPE_FLV_MUX
+gst_flv_mux_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-gamma</FILE>
 <TITLE>gamma</TITLE>
 GstGamma
