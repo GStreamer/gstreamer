@@ -22,4 +22,5 @@ ffmpegcolorspace
 videoscale
 vorbistag
 playbin
+playbin2
 subparse

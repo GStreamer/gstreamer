@@ -689,7 +689,7 @@ GST_START_TEST (test_preference_passthrough)
 
   pipeline = gst_parse_launch ("audiotestsrc num-buffers=1 name=src ! "
       "audioresample ! audio/x-raw-int,channels=1,width=16,depth=16,"
-      "endianness=1234,signed=true,rate=8000 ! "
+      "endianness=BYTE_ORDER,signed=true,rate=8000 ! "
       "fakesink can-activate-pull=false", &error);
   fail_unless (pipeline != NULL, "Error parsing pipeline: %s",
       error ? error->message : "(invalid error)");
