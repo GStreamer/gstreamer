@@ -23,6 +23,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <mpeg2.h>
 
 G_BEGIN_DECLS
@@ -96,6 +97,7 @@ struct _GstMpeg2dec {
   gint           frame_rate_code;
   gint64         total_frames;
   gint64         frame_period;
+  gboolean       interlaced;
 
   gint           size;
   gint           u_offs;

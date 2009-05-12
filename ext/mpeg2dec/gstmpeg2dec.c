@@ -601,7 +601,8 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
       "height", G_TYPE_INT, mpeg2dec->height,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, mpeg2dec->pixel_width,
       mpeg2dec->pixel_height,
-      "framerate", GST_TYPE_FRACTION, mpeg2dec->fps_n, mpeg2dec->fps_d, NULL);
+      "framerate", GST_TYPE_FRACTION, mpeg2dec->fps_n, mpeg2dec->fps_d,
+      "interlaced", G_TYPE_BOOLEAN, mpeg2dec->interlaced, NULL);
 
   gst_pad_set_caps (mpeg2dec->srcpad, caps);
   gst_caps_unref (caps);
@@ -658,6 +659,9 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   mpeg2dec->fps_d = info->sequence->frame_period;
   mpeg2dec->frame_period = info->sequence->frame_period * GST_USECOND / 27;
 
+  mpeg2dec->interlaced =
+      !(info->sequence->flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE);
+
   GST_DEBUG_OBJECT (mpeg2dec,
       "sequence flags: %d, frame period: %d (%g), frame rate: %d/%d",
       info->sequence->flags, info->sequence->frame_period,
@@ -668,6 +672,13 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   GST_DEBUG_OBJECT (mpeg2dec, "transfer chars: %d, matrix coef: %d",
       info->sequence->transfer_characteristics,
       info->sequence->matrix_coefficients);
+  GST_DEBUG_OBJECT (mpeg2dec,
+      "FLAGS: CONSTRAINED_PARAMETERS:%d, PROGRESSIVE_SEQUENCE:%d",
+      info->sequence->flags & SEQ_FLAG_CONSTRAINED_PARAMETERS,
+      info->sequence->flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE);
+  GST_DEBUG_OBJECT (mpeg2dec, "FLAGS: LOW_DELAY:%d, COLOUR_DESCRIPTION:%d",
+      info->sequence->flags & SEQ_FLAG_LOW_DELAY,
+      info->sequence->flags & SEQ_FLAG_COLOUR_DESCRIPTION);
 
   if (!gst_mpeg2dec_negotiate_format (mpeg2dec))
     goto negotiate_failed;
@@ -927,11 +938,20 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   }
   mpeg2dec->next_time += GST_BUFFER_DURATION (outbuf);
 
+  if (picture->flags & PIC_FLAG_TOP_FIELD_FIRST)
+    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_TFF);
+
+  if (picture->flags & PIC_FLAG_REPEAT_FIRST_FIELD)
+    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_RFF);
+
   GST_DEBUG_OBJECT (mpeg2dec,
-      "picture: %s %s fields:%d off:%" G_GINT64_FORMAT " ts:%"
+      "picture: %s %s %s %s %s fields:%d off:%" G_GINT64_FORMAT " ts:%"
       GST_TIME_FORMAT,
-      (picture->flags & PIC_FLAG_TOP_FIELD_FIRST ? "tff " : "    "),
       (picture->flags & PIC_FLAG_PROGRESSIVE_FRAME ? "prog" : "    "),
+      (picture->flags & PIC_FLAG_TOP_FIELD_FIRST ? "tff" : "   "),
+      (picture->flags & PIC_FLAG_REPEAT_FIRST_FIELD ? "rff" : "   "),
+      (picture->flags & PIC_FLAG_SKIP ? "skip" : "    "),
+      (picture->flags & PIC_FLAG_COMPOSITE_DISPLAY ? "composite" : "         "),
       picture->nb_fields, GST_BUFFER_OFFSET (outbuf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
 
@@ -989,6 +1009,7 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
         outbuf,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
+    GST_LOG_OBJECT (mpeg2dec, "... with flags %x", GST_BUFFER_FLAGS (outbuf));
 
     ret = gst_pad_push (mpeg2dec->srcpad, outbuf);
     GST_DEBUG_OBJECT (mpeg2dec, "pushed with result %s",
