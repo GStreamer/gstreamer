@@ -164,6 +164,7 @@ gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay)
   rtpmp4vpay->rate = 90000;
   rtpmp4vpay->profile = 1;
   rtpmp4vpay->send_config = DEFAULT_SEND_CONFIG;
+  rtpmp4vpay->need_config = TRUE;
 
   rtpmp4vpay->config = NULL;
 
@@ -281,7 +282,7 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
    * over multiple packets. */
   avail = gst_adapter_available (rtpmp4vpay->adapter);
 
-  if (rtpmp4vpay->config == NULL) {
+  if (rtpmp4vpay->config == NULL && rtpmp4vpay->need_config) {
     /* when we don't have a config yet, flush things out */
     gst_adapter_flush (rtpmp4vpay->adapter, avail);
     avail = 0;
@@ -401,6 +402,10 @@ gst_rtp_mp4v_pay_depay_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
       GST_DEBUG_OBJECT (enc, "VOP");
       /* VOP startcode, we don't have to flush the packet */
       result = FALSE;
+      break;
+    case 0x00000100:
+      enc->need_config = FALSE;
+      result = TRUE;
       break;
     default:
       if (code >= 0x20 && code <= 0x2f) {
