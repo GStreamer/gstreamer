@@ -441,8 +441,8 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
     } else if (media_src && media_sink) {
       /* dot has some issues with placement of head and taillabels,
        * we need an empty label to make space */
-      fprintf (out, "%s%s_%s -> %s_%s [labeldistance=\"5\", labelangle=\"0\", "
-          "label=\"                         \", "
+      fprintf (out, "%s%s_%s -> %s_%s [labeldistance=\"10\", labelangle=\"0\", "
+          "label=\"                                                  \", "
           "headlabel=\"%s\", taillabel=\"%s\"]\n",
           spc, element_name, pad_name, peer_element_name, peer_pad_name,
           media_src, media_sink);
@@ -650,13 +650,13 @@ _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
         "digraph pipeline {\n"
         "  rankdir=LR;\n"
         "  fontname=\"sans\";\n"
-        "  fontsize=\"8\";\n"
+        "  fontsize=\"10\";\n"
         "  labelloc=t;\n"
         "  nodesep=.1;\n"
         "  ranksep=.2;\n"
         "  label=\"<%s>\\n%s%s%s\";\n"
-        "  node [style=filled, shape=box, fontsize=\"7\", fontname=\"sans\", margin=\"0.0,0.0\"];\n"
-        "  edge [labelfontsize=\"7\", fontsize=\"7\", fontname=\"monospace\"];\n"
+        "  node [style=filled, shape=box, fontsize=\"9\", fontname=\"sans\", margin=\"0.0,0.0\"];\n"
+        "  edge [labelfontsize=\"6\", fontsize=\"9\", fontname=\"monospace\"];\n"
         "\n", G_OBJECT_TYPE_NAME (bin), GST_OBJECT_NAME (bin),
         (state_name ? state_name : ""), (param_name ? param_name : "")
         );
