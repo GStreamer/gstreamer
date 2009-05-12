@@ -132,8 +132,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/dtmf/gstrtpdtmfdepay.h \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \
-	$(top_srcdir)/gst/flv/gstflvdemux.h \
-	$(top_srcdir)/gst/flv/gstflvmux.h \
 	$(top_srcdir)/gst/legacyresample/gstlegacyresample.h \
 	$(top_srcdir)/gst/liveadder/liveadder.h \
 	$(top_srcdir)/gst/mxf/mxfdemux.h \
