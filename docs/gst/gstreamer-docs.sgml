@@ -50,6 +50,7 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gst.xml" />
     <xi:include href="xml/gstbin.xml" />
     <xi:include href="xml/gstbuffer.xml" />
+    <xi:include href="xml/gstbufferlist.xml" />
     <xi:include href="xml/gstbus.xml" />
     <xi:include href="xml/gstcaps.xml" />
     <xi:include href="xml/gstchildproxy.xml" />

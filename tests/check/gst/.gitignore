@@ -3,6 +3,7 @@ gst
 gstabi
 gstbin
 gstbuffer
+gstbufferlist
 gstbus
 gstcaps
 gstdata

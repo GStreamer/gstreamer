@@ -76,6 +76,7 @@ endif
 check_PROGRAMS =				\
 	gst/gstabi			     	\
 	gst/gstbuffer				\
+	gst/gstbufferlist			\
 	gst/gstbus				\
 	gst/gstcaps     			\
 	gst/gstinfo		 		\

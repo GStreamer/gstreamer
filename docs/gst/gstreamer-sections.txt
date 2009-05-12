@@ -208,6 +208,45 @@ gst_buffer_flag_get_type
 gst_buffer_copy_flags_get_type
 </SECTION>
 
+<SECTION>
+<FILE>gstbufferlist</FILE>
+<TITLE>GstBufferList</TITLE>
+GstBufferList
+GstBufferListIterator
+GstBufferListDoFunction
+GstBufferListDoDataFunction
+gst_buffer_list_new
+gst_buffer_list_ref
+gst_buffer_list_unref
+gst_buffer_list_copy
+gst_buffer_list_is_writable
+gst_buffer_list_make_writable
+gst_buffer_list_n_groups
+gst_buffer_list_iterate
+gst_buffer_list_iterator_free
+gst_buffer_list_iterator_n_buffers
+gst_buffer_list_iterator_add
+gst_buffer_list_iterator_add_group
+gst_buffer_list_iterator_next
+gst_buffer_list_iterator_next_group
+gst_buffer_list_iterator_remove
+gst_buffer_list_iterator_steal
+gst_buffer_list_iterator_take
+gst_buffer_list_iterator_do
+gst_buffer_list_iterator_do_data
+gst_buffer_list_iterator_merge_group
+<SUBSECTION Standard>
+GstBufferListClass
+GST_BUFFER_LIST
+GST_BUFFER_LIST_CLASS
+GST_BUFFER_LIST_GET_CLASS
+GST_IS_BUFFER_LIST
+GST_IS_BUFFER_LIST_CLASS
+GST_TYPE_BUFFER_LIST
+GST_BUFFER_LIST_CAST
+<SUBSECTION Private>
+gst_buffer_list_get_type
+</SECTION>
 
 <SECTION>
 <FILE>gstcaps</FILE>

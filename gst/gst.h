@@ -33,6 +33,7 @@
 
 #include <gst/gstbin.h>
 #include <gst/gstbuffer.h>
+#include <gst/gstbufferlist.h>
 #include <gst/gstcaps.h>
 #include <gst/gstchildproxy.h>
 #include <gst/gstclock.h>
