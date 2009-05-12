@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-10 22:30+0100\n"
+"POT-Creation-Date: 2009-05-12 01:43+0100\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -471,6 +471,14 @@ msgstr "視像編碼"
 
 #, fuzzy
 msgid "codec the subtitle data is stored in"
+msgstr "音效"
+
+#, fuzzy
+msgid "container format"
+msgstr "連絡資訊"
+
+#, fuzzy
+msgid "container format the data is stored in"
 msgstr "音效"
 
 msgid "bitrate"

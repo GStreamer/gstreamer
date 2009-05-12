@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-10 22:30+0100\n"
+"POT-Creation-Date: 2009-05-12 01:43+0100\n"
 "PO-Revision-Date: 2007-09-07 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -460,6 +460,14 @@ msgstr "відео кодек"
 #, fuzzy
 msgid "codec the subtitle data is stored in"
 msgstr "кодек, яким закодовані відео дані"
+
+#, fuzzy
+msgid "container format"
+msgstr "контактна інформація"
+
+#, fuzzy
+msgid "container format the data is stored in"
+msgstr "кодек, яким закодовані дані"
 
 msgid "bitrate"
 msgstr "щільність потоку бітів"

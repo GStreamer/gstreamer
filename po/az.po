@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-10 22:30+0100\n"
+"POT-Creation-Date: 2009-05-12 01:43+0100\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -444,6 +444,13 @@ msgid "subtitle codec"
 msgstr ""
 
 msgid "codec the subtitle data is stored in"
+msgstr ""
+
+#, fuzzy
+msgid "container format"
+msgstr "əlaqə mə'lumatı"
+
+msgid "container format the data is stored in"
 msgstr ""
 
 msgid "bitrate"

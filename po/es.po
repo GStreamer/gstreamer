@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-10 22:30+0100\n"
+"POT-Creation-Date: 2009-05-12 01:43+0100\n"
 "PO-Revision-Date: 2009-04-04 13:33+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -467,6 +467,14 @@ msgstr "códec de vídeo"
 #, fuzzy
 msgid "codec the subtitle data is stored in"
 msgstr "los datos del códec de vídeo se almacenan en"
+
+#, fuzzy
+msgid "container format"
+msgstr "información de contacto"
+
+#, fuzzy
+msgid "container format the data is stored in"
+msgstr "el códec en el que están almacenados los datos"
 
 msgid "bitrate"
 msgstr "tasa de bits"

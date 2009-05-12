@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-10 22:30+0100\n"
+"POT-Creation-Date: 2009-05-12 01:43+0100\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -614,6 +614,14 @@ msgstr "Videwo..."
 #, fuzzy
 msgid "codec the subtitle data is stored in"
 msgstr "i Videwo... Ibyatanzwe ni in"
+
+#, fuzzy
+msgid "container format"
+msgstr "Umuntu Ibisobanuro"
+
+#, fuzzy
+msgid "container format the data is stored in"
+msgstr "i Ibyatanzwe ni in"
 
 msgid "bitrate"
 msgstr ""

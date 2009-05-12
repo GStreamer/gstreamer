@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-10 22:30+0100\n"
+"POT-Creation-Date: 2009-05-12 01:43+0100\n"
 "PO-Revision-Date: 2005-01-27 16:58+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -490,6 +490,14 @@ msgstr "видео кодирање"
 #, fuzzy
 msgid "codec the subtitle data is stored in"
 msgstr "на који начин су видео подаци кодирани"
+
+#, fuzzy
+msgid "container format"
+msgstr "подаци за ступање у везу"
+
+#, fuzzy
+msgid "container format the data is stored in"
+msgstr "на који начин су подаци кодирани"
 
 msgid "bitrate"
 msgstr "брзина битова"

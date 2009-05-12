@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-10 22:30+0100\n"
+"POT-Creation-Date: 2009-05-12 01:43+0100\n"
 "PO-Revision-Date: 2009-04-19 10:57+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -463,6 +463,14 @@ msgstr "kodek för undertext"
 
 msgid "codec the subtitle data is stored in"
 msgstr "kodek som undertextdata lagrats med"
+
+#, fuzzy
+msgid "container format"
+msgstr "kontaktinformation"
+
+#, fuzzy
+msgid "container format the data is stored in"
+msgstr "komprimeringsmetod som dessa data lagras med"
 
 msgid "bitrate"
 msgstr "bitfrekvens"

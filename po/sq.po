@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-10 22:30+0100\n"
+"POT-Creation-Date: 2009-05-12 01:43+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -482,6 +482,14 @@ msgstr "video codec"
 #, fuzzy
 msgid "codec the subtitle data is stored in"
 msgstr "codec ku janë regjistruar të dhënat video"
+
+#, fuzzy
+msgid "container format"
+msgstr "informacione në lidhje me kontaktin"
+
+#, fuzzy
+msgid "container format the data is stored in"
+msgstr "codec ku janë regjistruar të dhënat"
 
 msgid "bitrate"
 msgstr "bitrate"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.12\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-10 22:30+0100\n"
+"POT-Creation-Date: 2009-05-12 01:43+0100\n"
 "PO-Revision-Date: 2007-03-28 00:09+0200\n"
 "Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -465,6 +465,14 @@ msgstr "videokodeformat"
 #, fuzzy
 msgid "codec the subtitle data is stored in"
 msgstr "det kodeformat videodataene er gemt i"
+
+#, fuzzy
+msgid "container format"
+msgstr "kontaktinformation"
+
+#, fuzzy
+msgid "container format the data is stored in"
+msgstr "det kodeformat dataene er gemt i"
 
 msgid "bitrate"
 msgstr "bithastighed"

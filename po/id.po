@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-10 22:30+0100\n"
+"POT-Creation-Date: 2009-05-12 01:43+0100\n"
 "PO-Revision-Date: 2009-04-18 20:31+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -460,6 +460,14 @@ msgstr "codec subjudul"
 
 msgid "codec the subtitle data is stored in"
 msgstr "codec data subjudul tersimpan di"
+
+#, fuzzy
+msgid "container format"
+msgstr "informasi kontak"
+
+#, fuzzy
+msgid "container format the data is stored in"
+msgstr "codec data tersimpan"
 
 msgid "bitrate"
 msgstr "bitrasi"
