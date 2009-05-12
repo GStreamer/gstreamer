@@ -1023,7 +1023,27 @@
 
   <attr path="/api/namespace/interface[@cname='GstNavigation']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstPropertyProbe']" name="hidden">1</attr>
-  <attr path="/api/namespace/interface[@cname='GstTuner']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/interface[@cname='GstTuner']" name="name">Tuner</attr>
+  <remove-node path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_norm_changed']/parameters/parameter[@name='tuner']" />
+  <remove-attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_norm_changed']" name="shared" />
+  <remove-node path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_channel_changed']/parameters/parameter[@name='tuner']" />
+  <remove-attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_channel_changed']" name="shared" />
+  <attr path="/api/namespace/interface[@cname='GstTuner']/virtual_method[@cname='list_channels']/return-type" name="element_type">GstTunerChannel</attr>
+  <attr path="/api/namespace/interface[@cname='GstTuner']/virtual_method[@cname='list_norms']/return-type" name="element_type">GstTunerChannel</attr>
+  <attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_list_channels']/return-type" name="element_type">GstTunerChannel</attr>
+  <attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_list_norms']/return-type" name="element_type">GstTunerChannel</attr>
+  <attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_channel_changed']" name="name">EmitChannelChanged</attr>
+  <attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_norm_changed']" name="name">EmitNormChanged</attr>
+  <attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_frequency_changed']" name="name">EmitFrequencyChanged</attr>
+  <attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_signal_changed']" name="name">EmitSignalChanged</attr>
+
+  <attr path="/api/namespace/object[@cname='GstTunerChannel']" name="name">TunerChannel</attr>
+  <move-node path="/api/namespace/object[@cname='GstTunerChannel']/method[@cname='gst_tuner_channel_changed']">/api/namespace/interface[@cname='GstTuner']</move-node>
+
+  <attr path="/api/namespace/object[@cname='GstTunerNorm']" name="name">TunerNorm</attr>
+  <attr path="/api/namespace/object[@cname='GstTunerNorm']/field[@name='Framerate']" name="hidden">1</attr>
+  <move-node path="/api/namespace/object[@cname='GstTunerNorm']/method[@cname='gst_tuner_norm_changed']">/api/namespace/interface[@cname='GstTuner']</move-node>
 
   <attr path="/api/namespace/interface[@cname='GstVideoOrientation']" name="name">VideoOrientation</attr>
   <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/virtual_method[@cname='get_hflip']/parameters/parameter[@name='flip']" name="pass_as">out</attr>

@@ -91,7 +91,9 @@ customs = 			\
 	TagList.custom		\
 	TypeFind.custom		\
 	TypeFindFactory.custom	\
-	MixerTrack.custom
+	MixerTrack.custom	\
+	TunerNorm.custom	\
+	TunerChannel.custom
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 

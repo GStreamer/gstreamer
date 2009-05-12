@@ -16,7 +16,8 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	typefind.c \
 	indexentry.c \
 	indexfactory.c \
-	mixertrack.c
+	mixertrack.c \
+	tunernorm.c
 
 nodist_libgstreamersharpglue_0_10_la_SOURCES = generated.c 
 
