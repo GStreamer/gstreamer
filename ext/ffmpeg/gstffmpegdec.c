@@ -31,6 +31,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
@@ -61,6 +62,7 @@ struct _GstFFMpegDec
       gint clip_width, clip_height;
       gint fps_n, fps_d;
       gint old_fps_n, old_fps_d;
+      gboolean interlaced;
 
       enum PixelFormat pix_fmt;
     } video;
@@ -184,7 +186,8 @@ static void gst_ffmpegdec_set_property (GObject * object,
 static void gst_ffmpegdec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec);
+static gboolean gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec,
+    gboolean force);
 
 /* some sort of bufferpool handling, but different */
 static int gst_ffmpegdec_get_buffer (AVCodecContext * context,
@@ -531,6 +534,7 @@ gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
 
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
+  ffmpegdec->format.video.interlaced = FALSE;
 }
 
 /* with LOCK */
@@ -592,6 +596,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
       ffmpegdec->format.video.clip_width = -1;
       ffmpegdec->format.video.clip_height = -1;
       ffmpegdec->format.video.pix_fmt = PIX_FMT_NB;
+      ffmpegdec->format.video.interlaced = FALSE;
       break;
     case CODEC_TYPE_AUDIO:
       ffmpegdec->format.audio.samplerate = 0;
@@ -790,7 +795,7 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
   GST_LOG_OBJECT (ffmpegdec, "alloc output buffer");
 
   /* see if we need renegotiation */
-  if (G_UNLIKELY (!gst_ffmpegdec_negotiate (ffmpegdec)))
+  if (G_UNLIKELY (!gst_ffmpegdec_negotiate (ffmpegdec, FALSE)))
     goto negotiate_failed;
 
   /* get the size of the gstreamer output buffer given a
@@ -869,7 +874,6 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
   GST_LOG_OBJECT (ffmpegdec, "dimension %dx%d, coded %dx%d", width, height,
       coded_width, coded_height);
-
   if (!ffmpegdec->current_dr) {
     GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
     res = avcodec_default_get_buffer (context, picture);
@@ -1065,7 +1069,7 @@ no_par:
 }
 
 static gboolean
-gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
+gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
 {
   GstFFMpegDecClass *oclass;
   GstCaps *caps;
@@ -1074,11 +1078,11 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
 
   switch (oclass->in_plugin->type) {
     case CODEC_TYPE_VIDEO:
-      if (ffmpegdec->format.video.width == ffmpegdec->context->width &&
-          ffmpegdec->format.video.height == ffmpegdec->context->height &&
-          ffmpegdec->format.video.fps_n == ffmpegdec->format.video.old_fps_n &&
-          ffmpegdec->format.video.fps_d == ffmpegdec->format.video.old_fps_d &&
-          ffmpegdec->format.video.pix_fmt == ffmpegdec->context->pix_fmt)
+      if (!force && ffmpegdec->format.video.width == ffmpegdec->context->width
+          && ffmpegdec->format.video.height == ffmpegdec->context->height
+          && ffmpegdec->format.video.fps_n == ffmpegdec->format.video.old_fps_n
+          && ffmpegdec->format.video.fps_d == ffmpegdec->format.video.old_fps_d
+          && ffmpegdec->format.video.pix_fmt == ffmpegdec->context->pix_fmt)
         return TRUE;
       GST_DEBUG_OBJECT (ffmpegdec,
           "Renegotiating video from %dx%d@ %d/%d fps to %dx%d@ %d/%d fps",
@@ -1095,7 +1099,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
     case CODEC_TYPE_AUDIO:
     {
       gint depth = av_smp_format_depth (ffmpegdec->context->sample_fmt);
-      if (ffmpegdec->format.audio.samplerate ==
+      if (!force && ffmpegdec->format.audio.samplerate ==
           ffmpegdec->context->sample_rate &&
           ffmpegdec->format.audio.channels == ffmpegdec->context->channels &&
           ffmpegdec->format.audio.depth == depth)
@@ -1124,9 +1128,11 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
     case CODEC_TYPE_VIDEO:
     {
       gint width, height;
+      gboolean interlaced;
 
       width = ffmpegdec->format.video.clip_width;
       height = ffmpegdec->format.video.clip_height;
+      interlaced = ffmpegdec->format.video.interlaced;
 
       if (width != -1 && height != -1) {
         /* overwrite the output size with the dimension of the
@@ -1134,6 +1140,9 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
         gst_caps_set_simple (caps,
             "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
       }
+      gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, interlaced,
+          NULL);
+
       /* If a demuxer provided a framerate then use it (#313970) */
       if (ffmpegdec->format.video.fps_n != -1) {
         gst_caps_set_simple (caps, "framerate",
@@ -1565,6 +1574,17 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
       ffmpegdec->picture->display_picture_number);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: opaque %p",
       ffmpegdec->picture->opaque);
+  GST_DEBUG_OBJECT (ffmpegdec, "repeat_pict:%d",
+      ffmpegdec->picture->repeat_pict);
+
+  if (G_UNLIKELY (ffmpegdec->picture->interlaced_frame !=
+          ffmpegdec->format.video.interlaced)) {
+    GST_WARNING ("Change in interlacing ! picture:%d, recorded:%d",
+        ffmpegdec->picture->interlaced_frame,
+        ffmpegdec->format.video.interlaced);
+    ffmpegdec->format.video.interlaced = ffmpegdec->picture->interlaced_frame;
+    gst_ffmpegdec_negotiate (ffmpegdec, TRUE);
+  }
 
   /* check if we are dealing with a keyframe here, this will also check if we
    * are dealing with B frames. */
@@ -1719,6 +1739,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   if (!iskeyframe)
     GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
+  if (ffmpegdec->picture->top_field_first)
+    GST_BUFFER_FLAG_SET (*outbuf, GST_VIDEO_BUFFER_TFF);
+
+
 beach:
   GST_DEBUG_OBJECT (ffmpegdec, "return flow %d, out %p, len %d",
       *ret, *outbuf, len);
@@ -1841,7 +1865,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
 
   if (len >= 0 && have_data > 0) {
     GST_DEBUG_OBJECT (ffmpegdec, "Creating output buffer");
-    if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
+    if (!gst_ffmpegdec_negotiate (ffmpegdec, FALSE)) {
       gst_buffer_unref (*outbuf);
       *outbuf = NULL;
       len = -1;
