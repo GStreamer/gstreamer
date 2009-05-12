@@ -57,6 +57,7 @@
  * ]| Encode to a fixed sample rate
  * </refsect2>
  *
+ * Since: 0.10.12
  */
 
 #ifdef HAVE_CONFIG_H
