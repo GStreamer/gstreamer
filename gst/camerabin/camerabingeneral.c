@@ -150,9 +150,9 @@ gst_camerabin_try_add_element (GstBin * bin, GstElement * new_elem)
   }
 
   /* Get pads for linking */
-  GST_DEBUG ("finding unconnected src pad");
   bin_pad = gst_bin_find_unlinked_pad (bin, GST_PAD_SRC);
-  GST_DEBUG ("unconnected pad %s:%s", GST_DEBUG_PAD_NAME (bin_pad));
+  GST_DEBUG ("adding %" GST_PTR_FORMAT " to %s:%s", new_elem,
+      GST_DEBUG_PAD_NAME (bin_pad));
   /* Add to bin */
   gst_bin_add (GST_BIN (bin), new_elem);
   /* Link, if unconnected pad was found, otherwise just add it to bin */
@@ -185,7 +185,6 @@ gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name)
 {
   GstElement *new_elem = NULL;
 
-  GST_DEBUG ("adding %s", elem_name);
   new_elem = gst_element_factory_make (elem_name, NULL);
   if (!new_elem) {
     GST_ELEMENT_ERROR (bin, CORE, MISSING_PLUGIN, (NULL),

@@ -196,6 +196,7 @@ gst_camerabin_image_change_state (GstElement * element,
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstCameraBinImage *img = GST_CAMERABIN_IMAGE (element);
+  GstObject *camerabin = NULL;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -221,6 +222,14 @@ gst_camerabin_image_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      camerabin = gst_element_get_parent (img);
+      /* Write debug graph to file */
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (camerabin),
+          GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE |
+          GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS, "imagebin.playing");
+      gst_object_unref (camerabin);
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_camerabin_image_destroy_elements (img);
       break;
@@ -530,6 +539,7 @@ gst_camerabin_image_destroy_elements (GstCameraBinImage * img)
 void
 gst_camerabin_image_set_encoder (GstCameraBinImage * img, GstElement * encoder)
 {
+  GST_DEBUG ("setting encoder %" GST_PTR_FORMAT, encoder);
   if (img->user_enc)
     gst_object_unref (img->user_enc);
   if (encoder)
@@ -542,6 +552,7 @@ void
 gst_camerabin_image_set_postproc (GstCameraBinImage * img,
     GstElement * postproc)
 {
+  GST_DEBUG ("setting post processing element %" GST_PTR_FORMAT, postproc);
   if (img->post)
     gst_object_unref (img->post);
   if (postproc)
