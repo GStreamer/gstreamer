@@ -134,6 +134,7 @@ gst_bus_sync_reply_get_type
 GstBusPrivate
 </SECTION>
 
+
 <SECTION>
 <FILE>gstbuffer</FILE>
 <TITLE>GstBuffer</TITLE>
@@ -1354,6 +1355,9 @@ GstPadBufferAllocFunction
 gst_pad_set_chain_function
 GstPadChainFunction
 
+gst_pad_set_chain_list_function
+GstPadChainListFunction
+
 gst_pad_set_checkgetrange_function
 GstPadCheckGetRangeFunction
 
@@ -1398,6 +1402,7 @@ GstPadActivateModeFunction
 
 gst_pad_push
 gst_pad_push_event
+gst_pad_push_list
 gst_pad_check_pull_range
 gst_pad_pull_range
 gst_pad_activate_pull
@@ -1441,6 +1446,7 @@ gst_pad_get_element_private
 
 <SUBSECTION Core>
 gst_pad_chain
+gst_pad_chain_list
 
 gst_pad_start_task
 gst_pad_pause_task
@@ -1516,6 +1522,7 @@ GST_PAD_ACTIVATEPULLFUNC
 GST_PAD_ACTIVATEPUSHFUNC
 GST_PAD_BUFFERALLOCFUNC
 GST_PAD_CHAINFUNC
+GST_PAD_CHAINLISTFUNC
 GST_PAD_CHECKGETRANGEFUNC
 GST_PAD_EVENTFUNC
 GST_PAD_FIXATECAPSFUNC

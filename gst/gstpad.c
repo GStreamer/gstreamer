@@ -1235,6 +1235,29 @@ gst_pad_set_chain_function (GstPad * pad, GstPadChainFunction chain)
 }
 
 /**
+ * gst_pad_set_chain_list_function:
+ * @pad: a sink #GstPad.
+ * @chainlist: the #GstPadChainListFunction to set.
+ *
+ * Sets the given chain list function for the pad. The chainlist function is
+ * called to process a #GstBufferList input buffer list. See
+ * #GstPadChainListFunction for more details.
+ *
+ * Since: 0.10.24
+ */
+void
+gst_pad_set_chain_list_function (GstPad * pad,
+    GstPadChainListFunction chainlist)
+{
+  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (GST_PAD_IS_SINK (pad));
+
+  GST_PAD_CHAINLISTFUNC (pad) = chainlist;
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "chainlistfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (chainlist));
+}
+
+/**
  * gst_pad_set_getrange_function:
  * @pad: a source #GstPad.
  * @get: the #GstPadGetRangeFunction to set.
@@ -3925,15 +3948,48 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
   return res;
 }
 
+static void
+gst_pad_data_unref (gboolean is_buffer, void *data)
+{
+  if (G_LIKELY (is_buffer)) {
+    gst_buffer_unref (data);
+  } else {
+    gst_buffer_list_unref (data);
+  }
+}
+
+static GstCaps *
+gst_pad_data_get_caps (gboolean is_buffer, void *data)
+{
+  GstCaps *caps;
+
+  if (G_LIKELY (is_buffer)) {
+    caps = GST_BUFFER_CAPS (data);
+  } else {
+    GstBufferListIterator *it;
+    GstBuffer *buf;
+
+    caps = NULL;
+    it = gst_buffer_list_iterate (GST_BUFFER_LIST_CAST (data));
+    if (gst_buffer_list_iterator_next_group (it)) {
+      buf = gst_buffer_list_iterator_next (it);
+      if (buf != NULL) {
+        caps = GST_BUFFER_CAPS (buf);
+      }
+    }
+    gst_buffer_list_iterator_free (it);
+  }
+  return caps;
+}
+
 /* this is the chain function that does not perform the additional argument
  * checking for that little extra speed.
  */
 static inline GstFlowReturn
-gst_pad_chain_unchecked (GstPad * pad, GstBuffer * buffer)
+gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
 {
   GstCaps *caps;
   gboolean caps_changed;
-  GstPadChainFunction chainfunc;
   GstFlowReturn ret;
   gboolean emit_signal;
 
@@ -3943,7 +3999,7 @@ gst_pad_chain_unchecked (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
-  caps = GST_BUFFER_CAPS (buffer);
+  caps = gst_pad_data_get_caps (is_buffer, data);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
 
   emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
@@ -3952,8 +4008,14 @@ gst_pad_chain_unchecked (GstPad * pad, GstBuffer * buffer)
   /* see if the signal should be emited, we emit before caps nego as
    * we might drop the buffer and do capsnego for nothing. */
   if (G_UNLIKELY (emit_signal)) {
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer)))
-      goto dropping;
+    if (G_LIKELY (is_buffer)) {
+      if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (data)))
+        goto dropping;
+    } else {
+      /* chain all groups in the buffer list one by one to avoid problems with
+       * buffer probes that push buffers or events */
+      goto chain_groups;
+    }
   }
 
   /* we got a new datatype on the pad, see if it can handle it */
@@ -3968,26 +4030,81 @@ gst_pad_chain_unchecked (GstPad * pad, GstBuffer * buffer)
    * the data to the wrong function. This is not really a
    * problem since functions are assigned at creation time
    * and don't change that often... */
-  if (G_UNLIKELY ((chainfunc = GST_PAD_CHAINFUNC (pad)) == NULL))
-    goto no_function;
+  if (G_LIKELY (is_buffer)) {
+    GstPadChainFunction chainfunc;
 
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "calling chainfunction &%s", GST_DEBUG_FUNCPTR_NAME (chainfunc));
+    if (G_UNLIKELY ((chainfunc = GST_PAD_CHAINFUNC (pad)) == NULL))
+      goto no_function;
 
-  ret = chainfunc (pad, buffer);
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "calling chainfunction &%s", GST_DEBUG_FUNCPTR_NAME (chainfunc));
 
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "called chainfunction &%s, returned %s",
-      GST_DEBUG_FUNCPTR_NAME (chainfunc), gst_flow_get_name (ret));
+    ret = chainfunc (pad, GST_BUFFER_CAST (data));
+
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "called chainfunction &%s, returned %s",
+        GST_DEBUG_FUNCPTR_NAME (chainfunc), gst_flow_get_name (ret));
+  } else {
+    GstPadChainListFunction chainlistfunc;
+
+    if (G_UNLIKELY ((chainlistfunc = GST_PAD_CHAINLISTFUNC (pad)) == NULL))
+      goto chain_groups;
+
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "calling chainlistfunction &%s",
+        GST_DEBUG_FUNCPTR_NAME (chainlistfunc));
+
+    ret = chainlistfunc (pad, GST_BUFFER_LIST_CAST (data));
+
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "called chainlistfunction &%s, returned %s",
+        GST_DEBUG_FUNCPTR_NAME (chainlistfunc), gst_flow_get_name (ret));
+  }
 
   GST_PAD_STREAM_UNLOCK (pad);
 
   return ret;
 
+chain_groups:
+  {
+    GstBufferList *list;
+    GstBufferListIterator *it;
+    GstBuffer *group;
+
+    GST_PAD_STREAM_UNLOCK (pad);
+
+    GST_INFO_OBJECT (pad, "chaining each group in list as a merged buffer");
+
+    list = GST_BUFFER_LIST_CAST (data);
+    it = gst_buffer_list_iterate (list);
+
+    ret = GST_FLOW_OK;
+    if (gst_buffer_list_iterator_next_group (it)) {
+      do {
+        group = gst_buffer_list_iterator_merge_group (it);
+        if (group == NULL) {
+          group = gst_buffer_new ();
+          GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining empty group");
+        } else {
+          GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining group");
+        }
+        ret = gst_pad_chain_data_unchecked (pad, TRUE, group);
+      } while (ret == GST_FLOW_OK && gst_buffer_list_iterator_next_group (it));
+    } else {
+      GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining empty group");
+      ret = gst_pad_chain_data_unchecked (pad, TRUE, gst_buffer_new ());
+    }
+
+    gst_buffer_list_iterator_free (it);
+    gst_buffer_list_unref (list);
+
+    return ret;
+  }
+
   /* ERRORS */
 flushing:
   {
-    gst_buffer_unref (buffer);
+    gst_pad_data_unref (is_buffer, data);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
@@ -3996,22 +4113,22 @@ flushing:
   }
 dropping:
   {
-    gst_buffer_unref (buffer);
+    gst_pad_data_unref (is_buffer, data);
     GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_OK;
   }
 not_negotiated:
   {
-    gst_buffer_unref (buffer);
+    gst_pad_data_unref (is_buffer, data);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pushing buffer but pad did not accept");
+        "pushing data but pad did not accept");
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 no_function:
   {
-    gst_buffer_unref (buffer);
+    gst_pad_data_unref (is_buffer, data);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but not chainhandler");
     GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
@@ -4055,7 +4172,173 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  return gst_pad_chain_unchecked (pad, buffer);
+  return gst_pad_chain_data_unchecked (pad, TRUE, buffer);
+}
+
+/**
+ * gst_pad_chain_list:
+ * @pad: a sink #GstPad, returns GST_FLOW_ERROR if not.
+ * @list: the #GstBufferList to send, return GST_FLOW_ERROR if not.
+ *
+ * Chain a bufferlist to @pad.
+ *
+ * The function returns #GST_FLOW_WRONG_STATE if the pad was flushing.
+ *
+ * If the caps on the first buffer of @list are different from the current
+ * caps on @pad, this function will call any setcaps function
+ * (see gst_pad_set_setcaps_function()) installed on @pad. If the new caps
+ * are not acceptable for @pad, this function returns #GST_FLOW_NOT_NEGOTIATED.
+ *
+ * The function proceeds calling the chainlist function installed on @pad (see
+ * gst_pad_set_chain_list_function()) and the return value of that function is
+ * returned to the caller. #GST_FLOW_NOT_SUPPORTED is returned if @pad has no
+ * chainlist function.
+ *
+ * In all cases, success or failure, the caller loses its reference to @list
+ * after calling this function.
+ *
+ * Returns: a #GstFlowReturn from the pad.
+ *
+ * Since: 0.10.24
+ *
+ * MT safe.
+ */
+GstFlowReturn
+gst_pad_chain_list (GstPad * pad, GstBufferList * list)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
+
+  return gst_pad_chain_data_unchecked (pad, FALSE, list);
+}
+
+static GstFlowReturn
+gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
+{
+  GstPad *peer;
+  GstFlowReturn ret;
+  GstCaps *caps;
+  gboolean caps_changed;
+
+  GST_OBJECT_LOCK (pad);
+
+  /* FIXME: this check can go away; pad_set_blocked could be implemented with
+   * probes completely or probes with an extended pad block. */
+  while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
+    if ((ret = handle_pad_block (pad)) != GST_FLOW_OK)
+      goto flushed;
+
+  /* we emit signals on the pad arg, the peer will have a chance to
+   * emit in the _chain() function */
+  if (G_UNLIKELY (GST_PAD_DO_BUFFER_SIGNALS (pad) > 0)) {
+    /* unlock before emitting */
+    GST_OBJECT_UNLOCK (pad);
+
+    if (G_LIKELY (is_buffer)) {
+      /* if the signal handler returned FALSE, it means we should just drop the
+       * buffer */
+      if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (data)))
+        goto dropped;
+    } else {
+      /* push all buffers in the list */
+      goto push_groups;
+    }
+    GST_OBJECT_LOCK (pad);
+  }
+
+  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
+    goto not_linked;
+
+  /* Before pushing the buffer to the peer pad, ensure that caps
+   * are set on this pad */
+  caps = gst_pad_data_get_caps (is_buffer, data);
+  caps_changed = caps && caps != GST_PAD_CAPS (pad);
+
+  /* take ref to peer pad before releasing the lock */
+  gst_object_ref (peer);
+
+  GST_OBJECT_UNLOCK (pad);
+
+  /* we got a new datatype from the pad, it had better handle it */
+  if (G_UNLIKELY (caps_changed)) {
+    GST_DEBUG_OBJECT (pad,
+        "caps changed from %" GST_PTR_FORMAT " to %p %" GST_PTR_FORMAT,
+        GST_PAD_CAPS (pad), caps, caps);
+    if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, TRUE)))
+      goto not_negotiated;
+  }
+
+  ret = gst_pad_chain_data_unchecked (peer, is_buffer, data);
+
+  gst_object_unref (peer);
+
+  return ret;
+
+push_groups:
+  {
+    GstBufferList *list;
+    GstBufferListIterator *it;
+    GstBuffer *group;
+
+    GST_INFO_OBJECT (pad, "pushing each group in list as a merged buffer");
+
+    list = GST_BUFFER_LIST_CAST (data);
+    it = gst_buffer_list_iterate (list);
+
+    ret = GST_FLOW_OK;
+    if (gst_buffer_list_iterator_next_group (it)) {
+      do {
+        group = gst_buffer_list_iterator_merge_group (it);
+        if (group == NULL) {
+          group = gst_buffer_new ();
+          GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "pushing empty group");
+        } else {
+          GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "pushing group");
+        }
+        ret = gst_pad_push_data (pad, TRUE, group);
+      } while (ret == GST_FLOW_OK && gst_buffer_list_iterator_next_group (it));
+    } else {
+      GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "pushing empty group");
+      ret = gst_pad_push_data (pad, TRUE, gst_buffer_new ());
+    }
+
+    gst_buffer_list_iterator_free (it);
+    gst_buffer_list_unref (list);
+
+    return ret;
+  }
+
+  /* ERROR recovery here */
+flushed:
+  {
+    gst_pad_data_unref (is_buffer, data);
+    GST_DEBUG_OBJECT (pad, "pad block stopped by flush");
+    GST_OBJECT_UNLOCK (pad);
+    return ret;
+  }
+dropped:
+  {
+    gst_pad_data_unref (is_buffer, data);
+    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
+    return GST_FLOW_OK;
+  }
+not_linked:
+  {
+    gst_pad_data_unref (is_buffer, data);
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pushing, but it was not linked");
+    GST_OBJECT_UNLOCK (pad);
+    return GST_FLOW_NOT_LINKED;
+  }
+not_negotiated:
+  {
+    gst_pad_data_unref (is_buffer, data);
+    gst_object_unref (peer);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "element pushed data then refused to accept the caps");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 /**
@@ -4087,96 +4370,56 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
 GstFlowReturn
 gst_pad_push (GstPad * pad, GstBuffer * buffer)
 {
-  GstPad *peer;
-  GstFlowReturn ret;
-
-  GstCaps *caps;
-  gboolean caps_changed;
-
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  GST_OBJECT_LOCK (pad);
+  return gst_pad_push_data (pad, TRUE, buffer);
+}
 
-  /* FIXME: this check can go away; pad_set_blocked could be implemented with
-   * probes completely or probes with an extended pad block. */
-  while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
-    if ((ret = handle_pad_block (pad)) != GST_FLOW_OK)
-      goto flushed;
+/**
+ * gst_pad_push_list:
+ * @pad: a source #GstPad, returns #GST_FLOW_ERROR if not.
+ * @list: the #GstBufferList to push returns GST_FLOW_ERROR if not.
+ *
+ * Pushes a buffer list to the peer of @pad.
+ *
+ * This function will call an installed pad block before triggering any
+ * installed pad probes.
+ *
+ * If the caps on the first buffer in the first group of @list are different
+ * from the currently configured caps on @pad, this function will call any
+ * installed setcaps function on @pad (see gst_pad_set_setcaps_function()). In
+ * case of failure to renegotiate the new format, this function returns
+ * #GST_FLOW_NOT_NEGOTIATED.
+ *
+ * If there are any probes installed on @pad every group of the buffer list
+ * will be merged into a normal #GstBuffer and pushed via gst_pad_push and the
+ * buffer list will be unreffed.
+ *
+ * The function proceeds calling the chain function on the peer pad and returns
+ * the value from that function. If @pad has no peer, #GST_FLOW_NOT_LINKED will
+ * be returned. If the peer pad does not have any installed chainlist function
+ * every group buffer of the list will be merged into a normal #GstBuffer and
+ * chained via gst_pad_chain().
+ *
+ * In all cases, success or failure, the caller loses its reference to @list
+ * after calling this function.
+ *
+ * Returns: a #GstFlowReturn from the peer pad.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.24
+ */
+GstFlowReturn
+gst_pad_push_list (GstPad * pad, GstBufferList * list)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  /* we emit signals on the pad arg, the peer will have a chance to
-   * emit in the _chain() function */
-  if (G_UNLIKELY (GST_PAD_DO_BUFFER_SIGNALS (pad) > 0)) {
-    /* unlock before emitting */
-    GST_OBJECT_UNLOCK (pad);
-
-    /* if the signal handler returned FALSE, it means we should just drop the
-     * buffer */
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer)))
-      goto dropped;
-
-    GST_OBJECT_LOCK (pad);
-  }
-
-  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
-    goto not_linked;
-
-  /* take ref to peer pad before releasing the lock */
-  gst_object_ref (peer);
-
-  /* Before pushing the buffer to the peer pad, ensure that caps
-   * are set on this pad */
-  caps = GST_BUFFER_CAPS (buffer);
-  caps_changed = caps && caps != GST_PAD_CAPS (pad);
-
-  GST_OBJECT_UNLOCK (pad);
-
-  /* we got a new datatype from the pad, it had better handle it */
-  if (G_UNLIKELY (caps_changed)) {
-    GST_DEBUG_OBJECT (pad,
-        "caps changed from %" GST_PTR_FORMAT " to %p %" GST_PTR_FORMAT,
-        GST_PAD_CAPS (pad), caps, caps);
-    if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, TRUE)))
-      goto not_negotiated;
-  }
-
-  ret = gst_pad_chain_unchecked (peer, buffer);
-
-  gst_object_unref (peer);
-
-  return ret;
-
-  /* ERROR recovery here */
-flushed:
-  {
-    gst_buffer_unref (buffer);
-    GST_DEBUG_OBJECT (pad, "pad block stopped by flush");
-    GST_OBJECT_UNLOCK (pad);
-    return ret;
-  }
-dropped:
-  {
-    gst_buffer_unref (buffer);
-    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
-    return GST_FLOW_OK;
-  }
-not_linked:
-  {
-    gst_buffer_unref (buffer);
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pushing, but it was not linked");
-    GST_OBJECT_UNLOCK (pad);
-    return GST_FLOW_NOT_LINKED;
-  }
-not_negotiated:
-  {
-    gst_buffer_unref (buffer);
-    gst_object_unref (peer);
-    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "element pushed buffer then refused to accept the caps");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
+  return gst_pad_push_data (pad, FALSE, list);
 }
 
 /**

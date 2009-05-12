@@ -556,6 +556,7 @@ EXPORTS
 	gst_pad_alloc_buffer_and_set_caps
 	gst_pad_can_link
 	gst_pad_chain
+	gst_pad_chain_list
 	gst_pad_check_pull_range
 	gst_pad_direction_get_type
 	gst_pad_dispatcher
@@ -600,6 +601,7 @@ EXPORTS
 	gst_pad_pull_range
 	gst_pad_push
 	gst_pad_push_event
+	gst_pad_push_list
 	gst_pad_query
 	gst_pad_query_convert
 	gst_pad_query_default
@@ -623,6 +625,7 @@ EXPORTS
 	gst_pad_set_bufferalloc_function
 	gst_pad_set_caps
 	gst_pad_set_chain_function
+	gst_pad_set_chain_list_function
 	gst_pad_set_checkgetrange_function
 	gst_pad_set_element_private
 	gst_pad_set_event_function

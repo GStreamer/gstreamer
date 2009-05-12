@@ -28,6 +28,7 @@
 
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
+#include <gst/gstbufferlist.h>
 #include <gst/gstcaps.h>
 #include <gst/gstevent.h>
 #include <gst/gstquery.h>
@@ -230,6 +231,26 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
  * Returns: #GST_FLOW_OK for success
  */
 typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
+
+/**
+ * GstPadChainListFunction:
+ * @pad: the sink #GstPad that performed the chain.
+ * @list: the #GstBufferList that is chained, not %NULL.
+ *
+ * A function that will be called on sinkpads when chaining buffer lists.
+ * The function typically processes the data contained in the buffer list and
+ * either consumes the data or passes it on to the internally linked pad(s).
+ *
+ * The implementer of this function receives a refcount to @list and
+ * should gst_buffer_list_unref() when the list is no longer needed.
+ *
+ * When a chainlist function detects an error in the data stream, it must
+ * post an error on the bus and return an appropriate #GstFlowReturn value.
+ *
+ * Returns: #GST_FLOW_OK for success
+ */
+typedef GstFlowReturn		(*GstPadChainListFunction)	(GstPad *pad, GstBufferList *list);
+
 /**
  * GstPadGetRangeFunction:
  * @pad: the src #GstPad to perform the getrange on.
@@ -546,7 +567,8 @@ typedef struct _GstPadTemplate GstPadTemplate;
  * @unlinkfunc: function called when pad is unlinked
  * @peer: the pad this pad is linked to
  * @sched_private: private storage for the scheduler
- * @chainfunc: function to chain data to pad
+ * @chainfunc: function to chain buffer to pad
+ * @chainlistfunc: function to chain buffer list to pad
  * @checkgetrangefunc: function to check if pad can operate in pull mode
  * @getrangefunc: function to get a range of data from a pad
  * @eventfunc: function to send an event to a pad
@@ -629,6 +651,7 @@ struct _GstPad {
   /* ABI added */
   /* iterate internal links */
   GstPadIterIntLinkFunction     iterintlinkfunc;
+  GstPadChainListFunction       chainlistfunc;
 
   /* free block_data */
   GDestroyNotify block_destroy_data;
@@ -638,7 +661,7 @@ struct _GstPad {
     struct {
       gboolean                      block_callback_called;
     } ABI;
-    gpointer _gst_reserved[GST_PADDING - 2];
+    gpointer _gst_reserved[GST_PADDING - 3];
   } abidata;
 };
 
@@ -670,6 +693,7 @@ struct _GstPadClass {
 #define GST_PAD_ACTIVATEPUSHFUNC(pad)	(GST_PAD_CAST(pad)->activatepushfunc)
 #define GST_PAD_ACTIVATEPULLFUNC(pad)	(GST_PAD_CAST(pad)->activatepullfunc)
 #define GST_PAD_CHAINFUNC(pad)		(GST_PAD_CAST(pad)->chainfunc)
+#define GST_PAD_CHAINLISTFUNC(pad)	(GST_PAD_CAST(pad)->chainlistfunc)
 #define GST_PAD_CHECKGETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->checkgetrangefunc)
 #define GST_PAD_GETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->getrangefunc)
 #define GST_PAD_EVENTFUNC(pad)		(GST_PAD_CAST(pad)->eventfunc)
@@ -840,6 +864,7 @@ void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activ
 void			gst_pad_set_activatepull_function	(GstPad *pad, GstPadActivateModeFunction activatepull);
 void			gst_pad_set_activatepush_function	(GstPad *pad, GstPadActivateModeFunction activatepush);
 void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);
+void			gst_pad_set_chain_list_function	(GstPad *pad, GstPadChainListFunction chainlist);
 void			gst_pad_set_getrange_function		(GstPad *pad, GstPadGetRangeFunction get);
 void			gst_pad_set_checkgetrange_function	(GstPad *pad, GstPadCheckGetRangeFunction check);
 void			gst_pad_set_event_function		(GstPad *pad, GstPadEventFunction event);
@@ -878,6 +903,7 @@ GstCaps *		gst_pad_get_negotiated_caps		(GstPad * pad);
 
 /* data passing functions to peer */
 GstFlowReturn		gst_pad_push				(GstPad *pad, GstBuffer *buffer);
+GstFlowReturn		gst_pad_push_list			(GstPad *pad, GstBufferList *list);
 gboolean		gst_pad_check_pull_range		(GstPad *pad);
 GstFlowReturn		gst_pad_pull_range			(GstPad *pad, guint64 offset, guint size,
 								 GstBuffer **buffer);
@@ -886,6 +912,7 @@ gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
 
 /* data passing functions on pad */
 GstFlowReturn		gst_pad_chain				(GstPad *pad, GstBuffer *buffer);
+GstFlowReturn		gst_pad_chain_list                      (GstPad *pad, GstBufferList *list);
 GstFlowReturn		gst_pad_get_range			(GstPad *pad, guint64 offset, guint size,
 								 GstBuffer **buffer);
 gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);

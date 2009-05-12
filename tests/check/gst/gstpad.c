@@ -399,6 +399,87 @@ GST_START_TEST (test_push_linked)
 
 GST_END_TEST;
 
+static GstBuffer *
+buffer_from_string (gchar * str)
+{
+  guint size;
+  GstBuffer *buf;
+
+  size = strlen (str);
+  buf = gst_buffer_new_and_alloc (size);
+  memcpy (GST_BUFFER_DATA (buf), str, size);
+  GST_BUFFER_SIZE (buf) = size;
+
+  return buf;
+}
+
+GST_START_TEST (test_push_buffer_list_compat)
+{
+  GstPad *src, *sink;
+  GstPadLinkReturn plr;
+  GstCaps *caps;
+  GstBufferList *list;
+  GstBufferListIterator *it;
+  GstBuffer *buffer;
+
+  /* setup */
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_if (sink == NULL);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+  /* leave chainlistfunc unset */
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  fail_if (src == NULL);
+
+  caps = gst_caps_from_string ("foo/bar");
+
+  gst_pad_set_caps (src, caps);
+  gst_pad_set_caps (sink, caps);
+
+  plr = gst_pad_link (src, sink);
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
+
+  list = gst_buffer_list_new ();
+
+  /* activate pads */
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (sink, TRUE);
+
+  /* test */
+  /* adding to a buffer list will drop the ref to the buffer */
+  it = gst_buffer_list_iterate (list);
+  gst_buffer_list_iterator_add_group (it);
+  gst_buffer_list_iterator_add (it, buffer_from_string ("List"));
+  gst_buffer_list_iterator_add (it, buffer_from_string ("Group"));
+  gst_buffer_list_iterator_add_group (it);
+  gst_buffer_list_iterator_add (it, buffer_from_string ("Another"));
+  gst_buffer_list_iterator_add (it, buffer_from_string ("List"));
+  gst_buffer_list_iterator_add (it, buffer_from_string ("Group"));
+  gst_buffer_list_iterator_free (it);
+  fail_unless (gst_pad_push_list (src, list) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 2);
+  buffer = GST_BUFFER (buffers->data);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  fail_unless (memcmp (GST_BUFFER_DATA (buffer), "ListGroup", 9) == 0);
+  gst_buffer_unref (buffer);
+  buffers = g_list_delete_link (buffers, buffers);
+  buffer = GST_BUFFER (buffers->data);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  fail_unless (memcmp (GST_BUFFER_DATA (buffer), "AnotherListGroup", 16) == 0);
+  gst_buffer_unref (buffer);
+  buffers = g_list_delete_link (buffers, buffers);
+  fail_unless (buffers == NULL);
+
+  /* teardown */
+  gst_pad_unlink (src, sink);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_flowreturn)
 {
   GstFlowReturn ret;
@@ -904,6 +985,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_name_is_valid);
   tcase_add_test (tc_chain, test_push_unlinked);
   tcase_add_test (tc_chain, test_push_linked);
+  tcase_add_test (tc_chain, test_push_buffer_list_compat);
   tcase_add_test (tc_chain, test_flowreturn);
   tcase_add_test (tc_chain, test_push_negotiation);
   tcase_add_test (tc_chain, test_src_unref_unlink);
