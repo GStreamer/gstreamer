@@ -47,6 +47,10 @@ RELEASE PROCEDURE:
     - Run bin/data-get in www/ to sync data from website
     - Bump the nano number to > 2 (eg, first pre-release for 
       0.10.12 is 0.10.11.2)
+    - When releasing -base/-good/-ugly/-bad/gnonlin, make sure GST_REQ and
+      GST_PBREQ are up-to-date. In particular, keep GST_REQ of the
+      to-be-released -base module in sync with the core version that is to
+      be released at the same time
     - Re-autogen if not in maintainer-mode (which you should be)
     - run 'make release' to build the tarballs
     - copy tarballs+md5 sums to the data/src/$module/pre/ dir
@@ -95,7 +99,7 @@ RELEASE PROCEDURE:
     + Edit src/htdocs/news/news.xml and add a new item at the bottom.
   - commit additions to website
   - add versions and milestones in bugzilla
-  - upload new core or base tarballs to gnome ftp
+  - upload new core, -base and -good tarballs to gnome ftp
     + e.g:
        scp gstreamer-0.10.42.tar.gz master.gnome.org:
        ssh master.gnome.org
