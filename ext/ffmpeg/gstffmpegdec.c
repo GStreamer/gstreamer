@@ -2633,6 +2633,8 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     if (!strcmp (in_plugin->name, "h264_vdpau") ||
         !strcmp (in_plugin->name, "mpeg_vdpau") ||
         !strcmp (in_plugin->name, "mpeg1_vdpau") ||
+        !strcmp (in_plugin->name, "mpegvideo_vdpau") ||
+        !strcmp (in_plugin->name, "mpeg1video_vdpau") ||
         !strcmp (in_plugin->name, "vc1_vdpau") ||
         !strcmp (in_plugin->name, "wmv3_vdpau")) {
       GST_DEBUG
