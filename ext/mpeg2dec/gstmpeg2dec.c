@@ -941,15 +941,22 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   if (picture->flags & PIC_FLAG_TOP_FIELD_FIRST)
     GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_TFF);
 
+#if MPEG2_RELEASE >= MPEG2_VERSION(0,5,0)
+  /* repeat field introduced in 0.5.0 */
   if (picture->flags & PIC_FLAG_REPEAT_FIRST_FIELD)
     GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_RFF);
+#endif
 
   GST_DEBUG_OBJECT (mpeg2dec,
       "picture: %s %s %s %s %s fields:%d off:%" G_GINT64_FORMAT " ts:%"
       GST_TIME_FORMAT,
       (picture->flags & PIC_FLAG_PROGRESSIVE_FRAME ? "prog" : "    "),
       (picture->flags & PIC_FLAG_TOP_FIELD_FIRST ? "tff" : "   "),
+#if MPEG2_RELEASE >= MPEG2_VERSION(0,5,0)
       (picture->flags & PIC_FLAG_REPEAT_FIRST_FIELD ? "rff" : "   "),
+#else
+      "unknown rff",
+#endif
       (picture->flags & PIC_FLAG_SKIP ? "skip" : "    "),
       (picture->flags & PIC_FLAG_COMPOSITE_DISPLAY ? "composite" : "         "),
       picture->nb_fields, GST_BUFFER_OFFSET (outbuf),
