@@ -419,6 +419,7 @@ struct _GstPlayBinClass
 #define DEFAULT_VIDEO_SINK        NULL
 #define DEFAULT_VIS_PLUGIN        NULL
 #define DEFAULT_TEXT_SINK         NULL
+#define DEFAULT_SUBPIC_SINK       NULL
 #define DEFAULT_VOLUME            1.0
 #define DEFAULT_MUTE              FALSE
 #define DEFAULT_FRAME             NULL
@@ -445,6 +446,7 @@ enum
   PROP_VIDEO_SINK,
   PROP_VIS_PLUGIN,
   PROP_TEXT_SINK,
+  PROP_SUBPIC_SINK,
   PROP_VOLUME,
   PROP_MUTE,
   PROP_FRAME,
@@ -703,6 +705,10 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_TEXT_SINK,
       g_param_spec_object ("text-sink", "Text plugin",
           "the text output element to use (NULL = default textoverlay)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_klass, PROP_SUBPIC_SINK,
+      g_param_spec_object ("subpic-sink", "Subpicture plugin",
+          "the subpicture output element to use (NULL = default dvdspu)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_VOLUME,
@@ -1432,11 +1438,11 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       gst_play_bin_set_encoding (playbin, g_value_get_string (value));
       break;
     case PROP_VIDEO_SINK:
-      gst_play_sink_set_video_sink (playbin->playsink,
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
           g_value_get_object (value));
       break;
     case PROP_AUDIO_SINK:
-      gst_play_sink_set_audio_sink (playbin->playsink,
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
           g_value_get_object (value));
       break;
     case PROP_VIS_PLUGIN:
@@ -1444,7 +1450,11 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
           g_value_get_object (value));
       break;
     case PROP_TEXT_SINK:
-      gst_play_sink_set_text_sink (playbin->playsink,
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_TEXT,
+          g_value_get_object (value));
+      break;
+    case PROP_SUBPIC_SINK:
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_SUBPIC,
           g_value_get_object (value));
       break;
     case PROP_VOLUME:
@@ -1571,11 +1581,11 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_VIDEO_SINK:
       g_value_set_object (value,
-          gst_play_sink_get_video_sink (playbin->playsink));
+          gst_play_sink_get_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO));
       break;
     case PROP_AUDIO_SINK:
       g_value_set_object (value,
-          gst_play_sink_get_audio_sink (playbin->playsink));
+          gst_play_sink_get_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO));
       break;
     case PROP_VIS_PLUGIN:
       g_value_set_object (value,
@@ -1583,7 +1593,12 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TEXT_SINK:
       g_value_set_object (value,
-          gst_play_sink_get_text_sink (playbin->playsink));
+          gst_play_sink_get_sink (playbin->playsink, GST_PLAY_SINK_TYPE_TEXT));
+      break;
+    case PROP_SUBPIC_SINK:
+      g_value_set_object (value,
+          gst_play_sink_get_sink (playbin->playsink,
+              GST_PLAY_SINK_TYPE_SUBPIC));
       break;
     case PROP_VOLUME:
       g_value_set_double (value, gst_play_sink_get_volume (playbin->playsink));
@@ -2142,11 +2157,13 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   /* get klass to figure out if it's audio or video */
   if (strstr (klass, "Audio")) {
     GST_DEBUG_OBJECT (playbin, "configure audio sink");
-    gst_play_sink_set_audio_sink (playbin->playsink, element);
+    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
+        element);
     g_object_notify (G_OBJECT (playbin), "audio-sink");
   } else if (strstr (klass, "Video")) {
     GST_DEBUG_OBJECT (playbin, "configure video sink");
-    gst_play_sink_set_video_sink (playbin->playsink, element);
+    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
+        element);
     g_object_notify (G_OBJECT (playbin), "video-sink");
   } else {
     GST_WARNING_OBJECT (playbin, "unknown sink klass %s found", klass);

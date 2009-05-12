@@ -36,6 +36,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PLAY_SINK))
 #define GST_IS_PLAY_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLAY_SINK))
+#define GST_PLAY_SINK_CAST(obj) \
+  ((GstPlaySink*)(obj))
 
 /**
  * GstPlaySinkType:
@@ -70,20 +72,11 @@ GType gst_play_sink_get_type (void);
 GstPad *         gst_play_sink_request_pad    (GstPlaySink *playsink, GstPlaySinkType type);
 void             gst_play_sink_release_pad    (GstPlaySink *playsink, GstPad *pad);
 
-void             gst_play_sink_set_video_sink (GstPlaySink * playsink, GstElement * sink);
-GstElement *     gst_play_sink_get_video_sink (GstPlaySink * playsink);
-
-void             gst_play_sink_set_audio_sink (GstPlaySink * playsink, GstElement * sink);
-GstElement *     gst_play_sink_get_audio_sink (GstPlaySink * playsink);
+void             gst_play_sink_set_sink       (GstPlaySink * playsink, GstPlaySinkType type, GstElement * sink);
+GstElement *     gst_play_sink_get_sink       (GstPlaySink * playsink, GstPlaySinkType type);
 
 void             gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis);
 GstElement *     gst_play_sink_get_vis_plugin (GstPlaySink * playsink);
-
-void             gst_play_sink_set_text_sink  (GstPlaySink * playsink, GstElement * sink);
-GstElement *     gst_play_sink_get_text_sink  (GstPlaySink * playsink);
-
-void             gst_play_sink_set_subp_sink  (GstPlaySink * playsink, GstElement * sink);
-GstElement *     gst_play_sink_get_subp_sink  (GstPlaySink * playsink);
 
 void             gst_play_sink_set_volume     (GstPlaySink *playsink, gdouble volume);
 gdouble          gst_play_sink_get_volume     (GstPlaySink *playsink);

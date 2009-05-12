@@ -330,70 +330,96 @@ gst_play_sink_finalize (GObject * object)
 }
 
 void
-gst_play_sink_set_video_sink (GstPlaySink * playsink, GstElement * sink)
+gst_play_sink_set_sink (GstPlaySink * playsink, GstPlaySinkType type,
+    GstElement * sink)
 {
-  GST_PLAY_SINK_LOCK (playsink);
-  if (playsink->video_sink)
-    gst_object_unref (playsink->video_sink);
+  GstElement **elem = NULL, *old = NULL;
 
-  if (sink) {
-    gst_object_ref (sink);
-    gst_object_sink (sink);
+  GST_PLAY_SINK_LOCK (playsink);
+  switch (type) {
+    case GST_PLAY_SINK_TYPE_AUDIO:
+    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
+      elem = &playsink->audio_sink;
+      break;
+    case GST_PLAY_SINK_TYPE_VIDEO:
+    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
+      elem = &playsink->video_sink;
+      break;
+    case GST_PLAY_SINK_TYPE_TEXT:
+      elem = &playsink->text_sink;
+      break;
+    case GST_PLAY_SINK_TYPE_SUBPIC:
+      elem = &playsink->subp_sink;
+      break;
+    default:
+      break;
   }
-  playsink->video_sink = sink;
+  if (elem) {
+    old = *elem;
+    if (sink) {
+      gst_object_ref (sink);
+      gst_object_sink (sink);
+    }
+    *elem = sink;
+  }
   GST_PLAY_SINK_UNLOCK (playsink);
+
+  if (old) {
+    gst_element_set_state (old, GST_STATE_NULL);
+    gst_object_unref (old);
+  }
 }
 
 GstElement *
-gst_play_sink_get_video_sink (GstPlaySink * playsink)
+gst_play_sink_get_sink (GstPlaySink * playsink, GstPlaySinkType type)
 {
   GstElement *result = NULL;
-  GstPlayVideoChain *chain;
+  GstElement *elem = NULL, *chainp = NULL;
 
   GST_PLAY_SINK_LOCK (playsink);
-  if ((chain = (GstPlayVideoChain *) playsink->videochain)) {
-    /* we have an active chain, get the sink */
-    if (chain->sink)
-      result = gst_object_ref (chain->sink);
+  switch (type) {
+    case GST_PLAY_SINK_TYPE_AUDIO:
+    {
+      GstPlayAudioChain *chain;
+      if ((chain = (GstPlayAudioChain *) playsink->audiochain))
+        chainp = chain->sink;
+      elem = playsink->audio_sink;
+      break;
+    }
+    case GST_PLAY_SINK_TYPE_VIDEO:
+    {
+      GstPlayVideoChain *chain;
+      if ((chain = (GstPlayVideoChain *) playsink->videochain))
+        chainp = chain->sink;
+      elem = playsink->video_sink;
+      break;
+    }
+    case GST_PLAY_SINK_TYPE_TEXT:
+    {
+      GstPlayTextChain *chain;
+      if ((chain = (GstPlayTextChain *) playsink->textchain))
+        chainp = chain->sink;
+      elem = playsink->text_sink;
+      break;
+    }
+    case GST_PLAY_SINK_TYPE_SUBPIC:
+    {
+      GstPlaySubpChain *chain;
+      if ((chain = (GstPlaySubpChain *) playsink->subpchain))
+        chainp = chain->sink;
+      elem = playsink->subp_sink;
+      break;
+    }
+    default:
+      break;
+  }
+  if (chainp) {
+    /* we have an active chain with a sink, get the sink */
+    result = gst_object_ref (chainp);
   }
   /* nothing found, return last configured sink */
-  if (result == NULL && playsink->video_sink)
-    result = gst_object_ref (playsink->video_sink);
-  GST_PLAY_SINK_UNLOCK (playsink);
-
-  return result;
-}
-
-void
-gst_play_sink_set_audio_sink (GstPlaySink * playsink, GstElement * sink)
-{
-  GST_PLAY_SINK_LOCK (playsink);
-  if (playsink->audio_sink)
-    gst_object_unref (playsink->audio_sink);
-
-  if (sink) {
-    gst_object_ref (sink);
-    gst_object_sink (sink);
-  }
-  playsink->audio_sink = sink;
-  GST_PLAY_SINK_UNLOCK (playsink);
-}
-
-GstElement *
-gst_play_sink_get_audio_sink (GstPlaySink * playsink)
-{
-  GstElement *result = NULL;
-  GstPlayAudioChain *chain;
-
-  GST_PLAY_SINK_LOCK (playsink);
-  if ((chain = (GstPlayAudioChain *) playsink->audiochain)) {
-    /* we have an active chain, get the sink */
-    if (chain->sink)
-      result = gst_object_ref (chain->sink);
-  }
-  /* nothing found, return last configured sink */
-  if (result == NULL && playsink->audio_sink)
-    result = gst_object_ref (playsink->audio_sink);
+  if (result == NULL && elem)
+    result = gst_object_ref (elem);
   GST_PLAY_SINK_UNLOCK (playsink);
 
   return result;
@@ -513,76 +539,6 @@ gst_play_sink_get_vis_plugin (GstPlaySink * playsink)
   /* nothing found, return last configured sink */
   if (result == NULL && playsink->visualisation)
     result = gst_object_ref (playsink->visualisation);
-  GST_PLAY_SINK_UNLOCK (playsink);
-
-  return result;
-}
-
-void
-gst_play_sink_set_text_sink (GstPlaySink * playsink, GstElement * sink)
-{
-  GST_PLAY_SINK_LOCK (playsink);
-  if (playsink->text_sink)
-    gst_object_unref (playsink->text_sink);
-
-  if (sink) {
-    gst_object_ref (sink);
-    gst_object_sink (sink);
-  }
-  playsink->text_sink = sink;
-  GST_PLAY_SINK_UNLOCK (playsink);
-}
-
-GstElement *
-gst_play_sink_get_text_sink (GstPlaySink * playsink)
-{
-  GstElement *result = NULL;
-  GstPlayTextChain *chain;
-
-  GST_PLAY_SINK_LOCK (playsink);
-  if ((chain = (GstPlayTextChain *) playsink->textchain)) {
-    /* we have an active chain, get the sink */
-    if (chain->sink)
-      result = gst_object_ref (chain->sink);
-  }
-  /* nothing found, return last configured sink */
-  if (result == NULL && playsink->text_sink)
-    result = gst_object_ref (playsink->text_sink);
-  GST_PLAY_SINK_UNLOCK (playsink);
-
-  return result;
-}
-
-void
-gst_play_sink_set_subp_sink (GstPlaySink * playsink, GstElement * sink)
-{
-  GST_PLAY_SINK_LOCK (playsink);
-  if (playsink->subp_sink)
-    gst_object_unref (playsink->subp_sink);
-
-  if (sink) {
-    gst_object_ref (sink);
-    gst_object_sink (sink);
-  }
-  playsink->subp_sink = sink;
-  GST_PLAY_SINK_UNLOCK (playsink);
-}
-
-GstElement *
-gst_play_sink_get_subp_sink (GstPlaySink * playsink)
-{
-  GstElement *result = NULL;
-  GstPlaySubpChain *chain;
-
-  GST_PLAY_SINK_LOCK (playsink);
-  if ((chain = (GstPlaySubpChain *) playsink->subpchain)) {
-    /* we have an active chain, get the sink */
-    if (chain->sink)
-      result = gst_object_ref (chain->sink);
-  }
-  /* nothing found, return last configured sink */
-  if (result == NULL && playsink->subp_sink)
-    result = gst_object_ref (playsink->subp_sink);
   GST_PLAY_SINK_UNLOCK (playsink);
 
   return result;
@@ -1810,8 +1766,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
           playsink->audio_tee_vissrc = NULL;
         }
         srcpad =
-            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
-                vischain->chain.bin), "src");
+            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+                chain.bin), "src");
         gst_pad_unlink (srcpad, playsink->videochain->sinkpad);
       }
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
@@ -1976,8 +1932,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "setting up vis chain");
       srcpad =
-          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
-              vischain->chain.bin), "src");
+          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+              chain.bin), "src");
       add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       if (playsink->audio_tee_vissrc == NULL) {
@@ -2415,12 +2371,15 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         activate_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
         add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
       }
+      if (playsink->subpchain) {
+        activate_chain (GST_PLAY_CHAIN (playsink->subpchain), FALSE);
+        add_chain (GST_PLAY_CHAIN (playsink->subpchain), FALSE);
+      }
       do_async_done (playsink);
       break;
     default:
       break;
   }
-
   return ret;
 
   /* ERRORS */
