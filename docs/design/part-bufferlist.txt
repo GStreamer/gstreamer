@@ -1,0 +1,94 @@
+Buffer Lists
+------------
+
+GstBuffer provides a datastructure to manage:
+
+ - a continuous region of memory
+ - functions to copy/free the memory
+ - metadata associated with that memory such as timestamps and caps.
+
+It is the primary means of transfering data between pads and elements.
+
+GstBufferList expands on GstBuffer to allow multiple GstBuffers (conceptually 
+organized in a list) to be treated as a multiple groups of GstBuffers. This allows
+for the following extra functionality:
+
+ - A logical GstBuffer (called a group) can consist of disjoint memory each with
+   their own copy/free and metadata. Logicallty the group should be treated as
+   one single GstBuffer.
+ - Multiple groups can be put into one bufferlist. This allows for a single
+   method call to pass multiple (logical) buffers downstream.
+
+
+Use cases
+---------
+
+A typical use case for multimedia pipelines is to append or remove 'headers'
+from packets of data.
+
+* Generating RTP packets from h264 video
+
+ We receive as input a GstBuffer with an encoded h264 image and we need to
+ create RTP packets containing this h264 data as the payload. We typically need
+ to fragment the h264 data into multiple packets, each with their own RTP and
+ payload specific header.
+
+                       +-------+-------+---------------------------+--------+
+  input H264 buffer:   | NALU1 | NALU2 |  .....                    | NALUx  |
+                       +-------+-------+---------------------------+--------+
+                             |
+                             V
+                       +-+ +-------+  +-+ +-------+            +-+ +-------+
+  output bufferlist:   | | | NALU1 |  | | | NALU2 |   ....     | | | NALUx |
+                       +-+ +-------+  +-+ +-------+            +-+ +-------+
+ 
+                       \-----------/  \-----------/
+                         group 1        group 2 
+
+ The output bufferlist consists of x groups consisting of an RTP payload header
+ and a subbuffer of the original input H264 buffer. Since the rtp headers and
+ the h264 data don't need to be contiguous in memory, we can avoid to memcpy the
+ h264 data into the rtp packets.
+
+ Since we can generate a bufferlist with multiple groups, we can push all the
+ RTP packets for the input data to the next element in one operation.
+
+ A typical udpsink will then use something like sendmsg to send the groups on
+ the network inside one UDP packet. This will further avoid having to memcpy
+ data into contiguous memory.
+
+
+API
+---
+
+The GstBufferList is an opaque data structure and is operated on using an
+iterator. It derives from GstMiniObject so that it has basic refcounting and
+copy/free functions.
+
+The bufferlist is writable when its refcount is 1 and it's not marked as
+readonly. A writable bufferlist means that elements can be added and removed
+form the list but it does not mean that the actual buffers in the list are
+writable.
+
+To modify the data in the buffers of the bufferlist, both the list and the
+buffer must be writable.
+
+Methods exist for navigating the groups in the list and the buffers inside a
+group. 
+
+
+Metadata
+--------
+
+Each of the buffers inside the bufferlist can have metadata assiociated with it.
+
+The metadata of the bufferlist is always the metadata of the first buffer of the
+first group in the bufferlist. This means that:
+
+  - Before pushing the list to a pad, negotiation happens with (only) the caps of
+    the first buffer in the list. Caps of other buffers is ignore.
+
+  - synchronisation happens on the timestamp of the first buffer in the list.
+
+This allows for efficient (re)timestamping and re-typing (caps) of a group of
+buffers without having to modify each of the buffer's metadata.
