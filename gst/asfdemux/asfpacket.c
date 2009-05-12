@@ -231,8 +231,8 @@ asf_payload_parse_replicated_data_extensions (AsfStream * stream,
           payload->interlaced = data & 0x1;
           payload->rff = data & 0x8;
           payload->tff = (data & 0x2) || !(data & 0x4);
-          GST_WARNING ("data:0x%x, interlaced:%d, rff:%d, tff:%d",
-              data, payload->interlaced, payload->rff, payload->tff);
+          GST_DEBUG ("SYSTEM_CONTENT: interlaced:%d, rff:%d, tff:%d",
+              payload->interlaced, payload->rff, payload->tff);
         } else {
           GST_WARNING ("unexpected SYSTEM_CONTE extensions len %u", ext->len);
         }
@@ -241,7 +241,7 @@ asf_payload_parse_replicated_data_extensions (AsfStream * stream,
         if (ext->len == 2) {
           payload->par_x = payload->rep_data[off];
           payload->par_y = payload->rep_data[off + 1];
-          GST_WARNING ("PAR %d / %d", payload->par_x, payload->par_y);
+          GST_DEBUG ("PAR %d / %d", payload->par_x, payload->par_y);
         } else {
           GST_WARNING ("unexpected SYSTEM_PIXEL_ASPECT_RATIO extensions len %u",
               ext->len);
