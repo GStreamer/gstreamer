@@ -101,6 +101,17 @@ namespace Gst {
       }
     }
 
+    public EnumValue this[int val] {
+      get {
+	foreach (EnumValue v in Values) {
+	  if (v.value == val)
+	    return v;
+	}
+
+	throw new Exception ();
+      }
+    }
+
     public static bool IsEnumType (GLib.GType gtype) {
       return (g_type_is_a (gtype.Val, GType.Enum.Val));
     }
@@ -174,6 +185,21 @@ namespace Gst {
 
     public static bool IsFlagsType (GLib.GType gtype) {
       return (g_type_is_a (gtype.Val, GType.Flags.Val));
+    }
+
+    public FlagsValue[] this[uint flags] {
+      get {
+        System.Collections.ArrayList ret = new System.Collections.ArrayList ();
+
+	foreach (FlagsValue v in Values) {
+	  if (flags == 0 && v.value == 0)
+	    ret.Add (v);
+	  else if ((v.value & flags) != 0)
+	    ret.Add (v);
+	}
+
+	return (FlagsValue[]) ret.ToArray (typeof (FlagsValue));
+      }
     }
 
     public FlagsInfo (GLib.GType gtype) {
