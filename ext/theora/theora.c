@@ -34,7 +34,7 @@ plugin_init (GstPlugin * plugin)
           gst_theora_dec_get_type ()))
     return FALSE;
 
-  if (!gst_element_register (plugin, "theoraenc", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "theoraenc", GST_RANK_PRIMARY,
           gst_theora_enc_get_type ()))
     return FALSE;
 
