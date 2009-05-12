@@ -51,6 +51,13 @@ namespace Gst {
       }
     }
 
+    internal GLib.GType gtype;
+    public GLib.GType GType {
+      get {
+        return gtype;
+      }
+    }
+
     internal object dflt;
     public object Default {
       get {
