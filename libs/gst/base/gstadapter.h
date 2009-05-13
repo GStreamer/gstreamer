@@ -63,7 +63,13 @@ struct _GstAdapter {
   /* Remember where the end of our buffer list is to
    * speed up the push */
   GSList *buflist_end;
-  gpointer _gst_reserved[GST_PADDING - 1];
+  union {
+    struct {
+      GstClockTime timestamp;
+      guint64      distance;
+    } ABI;
+    gpointer _gst_reserved[GST_PADDING - 1];
+  } abidata;
 };
 
 struct _GstAdapterClass {
@@ -87,6 +93,8 @@ guint8*			gst_adapter_take		(GstAdapter *adapter, guint nbytes);
 GstBuffer*		gst_adapter_take_buffer		(GstAdapter *adapter, guint nbytes);
 guint			gst_adapter_available		(GstAdapter *adapter);
 guint			gst_adapter_available_fast    	(GstAdapter *adapter);
+
+GstClockTime            gst_adapter_prev_timestamp      (GstAdapter *adapter, guint64 *distance);
 
 G_END_DECLS
 

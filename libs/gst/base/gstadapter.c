@@ -131,6 +131,8 @@ gst_adapter_init (GstAdapter * adapter, GstAdapterClass * g_class)
 {
   adapter->assembled_data = g_malloc (DEFAULT_SIZE);
   adapter->assembled_size = DEFAULT_SIZE;
+  adapter->abidata.ABI.timestamp = GST_CLOCK_TIME_NONE;
+  adapter->abidata.ABI.distance = 0;
 }
 
 static void
@@ -184,6 +186,22 @@ gst_adapter_clear (GstAdapter * adapter)
   adapter->size = 0;
   adapter->skip = 0;
   adapter->assembled_len = 0;
+  adapter->abidata.ABI.timestamp = GST_CLOCK_TIME_NONE;
+  adapter->abidata.ABI.distance = 0;
+}
+
+static inline void
+update_timestamp (GstAdapter * adapter, GstBuffer * buf)
+{
+  GstClockTime timestamp;
+
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    GST_LOG_OBJECT (adapter, "new timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+    adapter->abidata.ABI.timestamp = timestamp;
+    adapter->abidata.ABI.distance = 0;
+  }
 }
 
 /**
@@ -216,6 +234,7 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
     if (G_UNLIKELY (adapter->buflist == NULL)) {
       GST_LOG_OBJECT (adapter, "pushing first %u bytes", size);
       adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
+      update_timestamp (adapter, buf);
     } else {
       /* Otherwise append to the end, and advance our end pointer */
       GST_LOG_OBJECT (adapter, "pushing %u bytes at end, size now %u", size,
@@ -448,16 +467,21 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
       GST_LOG_OBJECT (adapter, "flushing out head buffer");
       flush -= size;
       adapter->skip = 0;
+      adapter->abidata.ABI.distance += size;
       adapter->buflist =
           g_slist_delete_link (adapter->buflist, adapter->buflist);
 
       if (G_UNLIKELY (adapter->buflist == NULL)) {
         GST_LOG_OBJECT (adapter, "adapter empty now");
         adapter->buflist_end = NULL;
+      } else {
+        /* there is a new head buffer, update the timestamp */
+        update_timestamp (adapter, GST_BUFFER_CAST (adapter->buflist->data));
       }
       gst_buffer_unref (cur);
     } else {
       adapter->skip += flush;
+      adapter->abidata.ABI.distance += flush;
       break;
     }
   }
@@ -639,4 +663,31 @@ gst_adapter_available_fast (GstAdapter * adapter)
 
   /* we can quickly get the data of the first buffer */
   return size - adapter->skip;
+}
+
+/**
+ * gst_adapter_prev_timestamp:
+ * @adapter: a #GstAdapter
+ * @distance: pointer to location for distance or NULL
+ *
+ * Get the timestamp that was before the current byte in the adapter. When
+ * @distance is given, the amount of bytes between the timestamp and the current
+ * position is returned.
+ *
+ * The timestamp is reset to GST_CLOCK_TIME_NONE when the adapter is first
+ * created or when it is cleared.
+ *
+ * Returns: The previously seen timestamp.
+ *
+ * Since: 0.10.24
+ */
+GstClockTime
+gst_adapter_prev_timestamp (GstAdapter * adapter, guint64 * distance)
+{
+  g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
+
+  if (distance)
+    *distance = adapter->abidata.ABI.distance;
+
+  return adapter->abidata.ABI.timestamp;
 }
