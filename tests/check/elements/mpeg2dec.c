@@ -1403,12 +1403,13 @@ GST_START_TEST (test_decode_stream1)
       gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
       GST_STR_FOURCC ("I420"), "width", G_TYPE_INT, 176, "height", G_TYPE_INT,
       144, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, "framerate",
-      GST_TYPE_FRACTION, 25, 1, NULL);
+      GST_TYPE_FRACTION, 25, 1, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
 
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
+    GST_LOG ("buffer caps %" GST_PTR_FORMAT, GST_BUFFER_CAPS (outbuffer));
     fail_unless (gst_caps_is_equal_fixed (GST_BUFFER_CAPS (outbuffer),
             out_caps), "Incorrect buffer caps");
 
@@ -1469,12 +1470,13 @@ GST_START_TEST (test_decode_stream2)
       gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
       GST_STR_FOURCC ("I420"), "width", G_TYPE_INT, 183, "height", G_TYPE_INT,
       217, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, "framerate",
-      GST_TYPE_FRACTION, 25, 1, NULL);
+      GST_TYPE_FRACTION, 25, 1, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
 
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
+    GST_LOG ("buffer caps %" GST_PTR_FORMAT, GST_BUFFER_CAPS (outbuffer));
     fail_unless (gst_caps_is_equal_fixed (GST_BUFFER_CAPS (outbuffer),
             out_caps), "Incorrect buffer caps");
 
