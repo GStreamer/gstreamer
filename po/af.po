@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-21 00:28+0000\n"
+"POT-Creation-Date: 2009-05-13 01:54+0100\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,81 +15,63 @@ msgstr ""
 "Content-Type: text/plain; charset=iso-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/cdio/gstcdiocddasrc.c:205
 #, fuzzy
 msgid "Could not read from CD."
 msgstr "Kon nie skryf na lêer \"%s\" nie."
 
-#: ext/cdio/gstcdiocddasrc.c:280
 msgid "Could not open CD device for reading."
 msgstr "Kon nie CD-toestel oopmaak om te lees nie."
 
-#: ext/cdio/gstcdiocddasrc.c:287
 #, fuzzy
 msgid "Disc is not an Audio CD."
 msgstr "Toestel is nie oop nie."
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
-#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr ""
 
-#: ext/dvdnav/dvdnavsrc.c:1968
 #, fuzzy
 msgid "Could not read title information for DVD."
 msgstr "Kon nie skryf na lêer \"%s\" nie."
 
-#: ext/dvdnav/dvdnavsrc.c:1990
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
 
-#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
-#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
-#: ext/dvdread/dvdreadsrc.c:601
 #, fuzzy, c-format
 msgid "Could not open DVD title %d"
 msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
 
-#: ext/dvdread/dvdreadsrc.c:248
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr ""
 
-#: ext/dvdread/dvdreadsrc.c:608
 #, c-format
 msgid ""
 "Could not open DVD title %d. Interactive titles are not supported by this "
 "element"
 msgstr ""
 
-#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 
-#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
 
-#: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr ""
 

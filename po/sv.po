@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-21 00:28+0000\n"
+"POT-Creation-Date: 2009-05-13 01:54+0100\n"
 "PO-Revision-Date: 2009-03-10 16:12+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -15,52 +15,39 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/cdio/gstcdiocddasrc.c:205
 msgid "Could not read from CD."
 msgstr "Kunde inte läsa från cd."
 
-#: ext/cdio/gstcdiocddasrc.c:280
 msgid "Could not open CD device for reading."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
 msgstr "Skivan är inte en ljud-cd."
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
-#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "Kunde inte öppna dvd"
 
-#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr "Ogiltig titelinformation på dvd."
 
-#: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
 msgstr "Kunde inte läsa titelinformation för dvd."
 
-#: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Misslyckades med att öppna dvd-enheten \"%s\"."
 
-#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr "Misslyckades med att ställa in PGC-baserad spolning."
 
-#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
-#: ext/dvdread/dvdreadsrc.c:601
 #, c-format
 msgid "Could not open DVD title %d"
 msgstr "Kunde inte öppna dvd-titel %d"
 
-#: ext/dvdread/dvdreadsrc.c:248
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr "Misslyckades med att gå till kapitel %d för dvd-titel %d"
 
-#: ext/dvdread/dvdreadsrc.c:608
 #, c-format
 msgid ""
 "Could not open DVD title %d. Interactive titles are not supported by this "
@@ -69,13 +56,11 @@ msgstr ""
 "Kunde inte öppna dvd-titel %d. Interaktiva titlar stöds inte av det här "
 "elementet"
 
-#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 "Misslyckades med att konfigurera LAME-kodaren. Kontrollera dina "
 "kodningsparametrar."
 
-#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
@@ -84,17 +69,14 @@ msgstr ""
 "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. "
 "Bitfrekvensen ändrades till %d kbit/s."
 
-#: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
 "Misslyckades med att konfigurera TwoLAME-kodaren. Kontrollera dina "
 "kodningsparametrar."
 
-#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Den här strömmen innehåller inget data."
 
-#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "Fel i intern dataström."
 
