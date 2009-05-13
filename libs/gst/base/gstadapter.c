@@ -36,6 +36,10 @@
  * in chunks of the desired size using gst_adapter_peek(). After the data is
  * processed, it is freed using gst_adapter_flush().
  *
+ * Other methods such as gst_adapter_take() and gst_adapter_take_buffer()
+ * combine gst_adapter_peek() and gst_adapter_flush() in one method and are
+ * potentially more convenient for some use cases. 
+ *
  * For example, a sink pad's chain function that needs to pass data to a library
  * in 512-byte chunks could be implemented like this:
  * <programlisting>
@@ -74,11 +78,22 @@
  * Also check the GST_BUFFER_FLAG_DISCONT flag on the buffer. Some elements might
  * need to clear the adapter after a discontinuity.
  *
+ * Since 0.10.24, the adapter will keep track of the timestamps of the buffers
+ * that were pushed. The last seen timestamp before the current position
+ * can be queried with gst_adapter_prev_timestamp(). This function can
+ * optionally return the amount of bytes between the start of the buffer that
+ * carried the timestamp and the current adapter position. The distance is
+ * useful when dealing with, for example, raw audio samples because it allows
+ * you to calculate the timestamp of the current adapter position by using the
+ * last seen timestamp and the amount of bytes since.
+ *
  * A last thing to note is that while GstAdapter is pretty optimized,
- * merging buffers still might be an operation that requires a memcpy()
- * operation, and this operation is not the fastest. Because of this, some
- * functions like gst_adapter_available_fast() are provided to help speed up
- * such cases should you want to.
+ * merging buffers still might be an operation that requires a malloc() and
+ * memcpy() operation, and these operations are not the fastest. Because of
+ * this, some functions like gst_adapter_available_fast() are provided to help
+ * speed up such cases should you want to. To avoid repeated memory allocations,
+ * gst_adapter_copy() can be used to copy data into a (statically allocated)
+ * user provided buffer.
  *
  * GstAdapter is not MT safe. All operations on an adapter must be serialized by
  * the caller. This is not normally a problem, however, as the normal use case
@@ -90,7 +105,7 @@
  * access the buffer later. The adapter will never modify the data in the
  * buffer pushed in it.
  *
- * Last reviewed on 2006-04-04 (0.10.6).
+ * Last reviewed on 2009-05-13 (0.10.24).
  */
 
 
