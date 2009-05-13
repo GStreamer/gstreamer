@@ -837,7 +837,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
       timestamp += duration;
 
       /* 4 times the input size should be big enough... */
-      out_size = frame_bytes * 4;
+      out_size = MAX (frame_bytes * 4, FF_MIN_BUFFER_SIZE);
 
       ret = gst_ffmpegenc_encode_audio (ffmpegenc, inbuf, out_size,
           ffmpegenc->discont);
