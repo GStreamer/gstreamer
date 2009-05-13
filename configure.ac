@@ -158,13 +158,6 @@ GST_CHECK_FIONREAD
 dnl *** checks for structures ***
 
 dnl *** checks for compiler characteristics ***
-dnl check if we have GCC inline-asm
-AS_GCC_INLINE_ASSEMBLY([HAVE_GCC_ASM=yes], [HAVE_GCC_ASM=no])
-if test x$HAVE_GCC_ASM = xyes ; then
-  AC_DEFINE(HAVE_GCC_ASM, 1,
-    [Define if compiler supports gcc inline assembly])
-fi
-AM_CONDITIONAL(HAVE_GCC_ASM, test "x$HAVE_GCC_ASM" = "xyes")
 
 dnl *** checks for library functions ***
 AC_CHECK_FUNCS([gmtime_r])
@@ -267,8 +260,6 @@ AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(dccp)
 AG_GST_CHECK_PLUGIN(debugutils)
-AG_GST_CHECK_PLUGIN(deinterlace)
-AG_GST_CHECK_PLUGIN(deinterlace2)
 AG_GST_CHECK_PLUGIN(dtmf)
 AG_GST_CHECK_PLUGIN(dvdspu)
 AG_GST_CHECK_PLUGIN(festival)
@@ -1538,8 +1529,6 @@ gst/camerabin/Makefile
 gst/cdxaparse/Makefile
 gst/dccp/Makefile
 gst/debugutils/Makefile
-gst/deinterlace/Makefile
-gst/deinterlace2/Makefile
 gst/dtmf/Makefile
 gst/dvdspu/Makefile
 gst/festival/Makefile

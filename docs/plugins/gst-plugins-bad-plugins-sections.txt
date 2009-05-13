@@ -210,34 +210,6 @@ gst_dccp_server_src_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-deinterlace</FILE>
-<TITLE>deinterlace</TITLE>
-GstDeinterlace
-<SUBSECTION Standard>
-GstDeinterlaceClass
-GST_DEINTERLACE
-GST_DEINTERLACE_CLASS
-GST_IS_DEINTERLACE
-GST_IS_DEINTERLACE_CLASS
-GST_TYPE_DEINTERLACE
-gst_deinterlace_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-deinterlace2</FILE>
-<TITLE>deinterlace2</TITLE>
-GstDeinterlace2
-<SUBSECTION Standard>
-GstDeinterlace2Class
-GST_IS_DEINTERLACE2
-GST_IS_DEINTERLACE2_CLASS
-GST_DEINTERLACE2
-GST_DEINTERLACE2_CLASS
-GST_TYPE_DEINTERLACE2
-gst_deinterlace2_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-dfbvideosink</FILE>
 <TITLE>dfbvideosink</TITLE>
 GstDfbVideoSink

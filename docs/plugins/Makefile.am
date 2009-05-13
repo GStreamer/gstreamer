@@ -120,8 +120,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/amrparse/gstamrparse.h \
 	$(top_srcdir)/gst/autoconvert/gstautoconvert.h \
 	$(top_srcdir)/gst/camerabin/gstcamerabin.h \
-	$(top_srcdir)/gst/deinterlace/gstdeinterlace.h \
-	$(top_srcdir)/gst/deinterlace2/gstdeinterlace2.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsink.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsrc.h \
 	$(top_srcdir)/gst/dccp/gstdccpserversink.h \
