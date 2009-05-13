@@ -394,6 +394,14 @@ GST_START_TEST (test_timestamp)
   fail_unless (timestamp == 2 * GST_SECOND);
   fail_unless (dist == 100);
 
+  /* clear everything */
+  gst_adapter_clear (adapter);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 0);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless (dist == 0);
+
   g_object_unref (adapter);
 }
 
