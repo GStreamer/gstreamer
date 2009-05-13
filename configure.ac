@@ -282,6 +282,7 @@ AG_GST_CHECK_PLUGIN(cutter)
 AG_GST_CHECK_PLUGIN(debugutils)
 AG_GST_CHECK_PLUGIN(effectv)
 AG_GST_CHECK_PLUGIN(equalizer)
+AG_GST_CHECK_PLUGIN(flv)
 AG_GST_CHECK_PLUGIN(id3demux)
 AG_GST_CHECK_PLUGIN(icydemux)
 AG_GST_CHECK_PLUGIN(interleave)
@@ -1057,6 +1058,7 @@ gst/cutter/Makefile
 gst/debugutils/Makefile
 gst/effectv/Makefile
 gst/equalizer/Makefile
+gst/flv/Makefile
 gst/id3demux/Makefile
 gst/icydemux/Makefile
 gst/interleave/Makefile
