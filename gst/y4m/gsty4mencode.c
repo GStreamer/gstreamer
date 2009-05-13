@@ -231,6 +231,7 @@ gst_y4m_encode_chain (GstPad * pad, GstBuffer * buf)
 {
   GstY4mEncode *filter = GST_Y4M_ENCODE (GST_PAD_PARENT (pad));
   GstBuffer *outbuf;
+  GstClockTime timestamp;
 
   /* check we got some decent info from caps */
   if (filter->width < 0) {
@@ -239,6 +240,8 @@ gst_y4m_encode_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
   }
+
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   if (G_UNLIKELY (!filter->header)) {
     outbuf = gst_y4m_encode_get_stream_header (filter);
@@ -252,8 +255,9 @@ gst_y4m_encode_chain (GstPad * pad, GstBuffer * buf)
   /* decorate */
   gst_buffer_make_metadata_writable (outbuf);
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (filter->srcpad));
-  /* strip to avoid sink dropping on time-base, decorate and send */
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
+
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+
   return gst_pad_push (filter->srcpad, outbuf);
 }
 
