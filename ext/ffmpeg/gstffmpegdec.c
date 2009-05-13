@@ -2765,12 +2765,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_COOK:
         rank = GST_RANK_PRIMARY;
         break;
-      case CODEC_ID_MPEG2VIDEO:
-        /* We have a good MPEG2 decoder in -ugly but this one is a lot
-         * faster, especially at high resolutions. See bug #574461
-         */
-        rank = GST_RANK_SECONDARY;
-        break;
       case CODEC_ID_DVVIDEO:
         /* we have a good dv decoder, fast on both ppc as well as x86. they say
            libdv's quality is better though. leave as secondary.
