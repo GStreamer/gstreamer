@@ -69,6 +69,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_templatematch_debug);
 #define GST_CAT_DEFAULT gst_templatematch_debug
 
 #define DEFAULT_TEMPLATE NULL
+#define DEFAULT_METHOD (3)
 
 /* Filter signals and args */
 enum
@@ -80,8 +81,9 @@ enum
 enum
 {
     PROP_0,
+    PROP_METHOD,
+    PROP_TEMPLATE,
     PROP_DISPLAY,
-    PROP_TEMPLATE
 };
 
 /* the capabilities of the inputs and outputs.
@@ -114,7 +116,7 @@ static void gst_templatematch_get_property (GObject * object, guint prop_id,
 static gboolean gst_templatematch_set_caps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_templatematch_chain (GstPad * pad, GstBuffer * buf);
 
-static void gst_templatematch_load_template (GObject * object);
+static void gst_templatematch_load_template(GstTemplateMatch *filter);
 static void gst_templatematch_match(IplImage *input, IplImage *template,
                                     IplImage *dist_image, double *best_res, CvPoint *best_pos, int method);
 
@@ -151,12 +153,15 @@ gst_templatematch_class_init (GstTemplateMatchClass * klass)
     gobject_class->set_property = gst_templatematch_set_property;
     gobject_class->get_property = gst_templatematch_get_property;
 
-    g_object_class_install_property (gobject_class, PROP_DISPLAY,
-                                     g_param_spec_boolean ("display", "Display", "Sets whether the detected template should be highlighted in the output",
-                                                           TRUE, G_PARAM_READWRITE));
+    g_object_class_install_property (gobject_class, PROP_METHOD,
+                                     g_param_spec_int ("method", "Method", "Specifies the way the template must be compared with image regions. 0=SQDIFF, 1=SQDIFF_NORMED, 2=CCOR, 3=CCOR_NORMED, 4=CCOEFF, 5=CCOEFF_NORMED.",
+                                                       0, 5, DEFAULT_METHOD, G_PARAM_READWRITE));
     g_object_class_install_property (gobject_class, PROP_TEMPLATE,
                                      g_param_spec_string ("template", "Template", "Filename of template image",
                                                           DEFAULT_TEMPLATE, G_PARAM_READWRITE));
+    g_object_class_install_property (gobject_class, PROP_DISPLAY,
+                                     g_param_spec_boolean ("display", "Display", "Sets whether the detected template should be highlighted in the output",
+                                                           TRUE, G_PARAM_READWRITE));
 }
 
 /* initialize the new element
@@ -187,6 +192,7 @@ gst_templatematch_init (GstTemplateMatch * filter,
     filter->cvTemplateImage = NULL;
     filter->cvDistImage = NULL;
     filter->cvImage = NULL;
+    filter->method = DEFAULT_METHOD;
     gst_templatematch_load_template(filter);
 }
 
@@ -197,6 +203,22 @@ gst_templatematch_set_property (GObject * object, guint prop_id,
     GstTemplateMatch *filter = GST_TEMPLATEMATCH (object);
 
     switch (prop_id) {
+    case PROP_METHOD:
+        switch (g_value_get_int (value)) {
+        case 0:
+            filter->method = CV_TM_SQDIFF; break;
+        case 1:
+            filter->method = CV_TM_SQDIFF_NORMED; break;
+        case 2:
+            filter->method = CV_TM_CCORR; break;
+        case 3:
+            filter->method = CV_TM_CCORR_NORMED; break;
+        case 4:
+            filter->method = CV_TM_CCOEFF; break;
+        case 5:
+            filter->method = CV_TM_CCOEFF_NORMED; break;
+        }
+        break;
     case PROP_TEMPLATE:
         filter->template = g_value_get_string (value);
         gst_templatematch_load_template(filter);
@@ -217,6 +239,9 @@ gst_templatematch_get_property (GObject * object, guint prop_id,
     GstTemplateMatch *filter = GST_TEMPLATEMATCH (object);
 
     switch (prop_id) {
+    case PROP_METHOD:
+        g_value_set_int(value, filter->method);
+        break;
     case PROP_TEMPLATE:
         g_value_set_string (value, filter->template);
         break;
@@ -298,7 +323,7 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
     }
     if (filter->cvTemplateImage) {
         gst_templatematch_match(filter->cvImage, filter->cvTemplateImage,
-                                filter->cvDistImage, &best_res, &best_pos, CV_TM_CCORR);
+                                filter->cvDistImage, &best_res, &best_pos, filter->method);
         
         GstStructure *s = gst_structure_new ("template_match",
                                              "x", G_TYPE_UINT, best_pos.x,
@@ -350,9 +375,7 @@ static void gst_templatematch_match(IplImage *input, IplImage *template,
 }
 
 
-static void gst_templatematch_load_template(GObject * object) {
-    GstTemplateMatch *filter = GST_TEMPLATEMATCH (object);
-
+static void gst_templatematch_load_template(GstTemplateMatch *filter) {
     if (filter->template) {
         filter->cvTemplateImage = cvLoadImage(filter->template, CV_LOAD_IMAGE_COLOR);
         if (!filter->cvTemplateImage) {

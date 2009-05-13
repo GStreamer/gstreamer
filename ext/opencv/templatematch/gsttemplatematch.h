@@ -73,6 +73,7 @@ struct _GstTemplateMatch
 
   GstPad *sinkpad, *srcpad;
 
+    gint method;
   gboolean display;
 
   gchar *template;
