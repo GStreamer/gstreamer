@@ -40,6 +40,33 @@
 /* define to enable alternative buffer refcounting algorithm */
 #undef EXTRA_REF
 
+#define TS_MAP_COUNT 0xFF
+#define TS_MAP_INC(ind) ind = (ind + 1) & TS_MAP_COUNT
+
+typedef struct _GstTSMap GstTSMap;
+
+struct _GstTSMap
+{
+  /* timestamp */
+  guint64 ts;
+
+  /* buffer size */
+  gint size;
+};
+
+typedef struct _GstTSHandler GstTSHandler;
+
+struct _GstTSHandler
+{
+  /* ts list indexes */
+  gint buf_head;
+  gint buf_tail;
+  guint64 buf_count;
+
+  /* incomming buffer timestamp tracking */
+  GstTSMap buffers[TS_MAP_COUNT + 1];
+};
+
 typedef struct _GstFFMpegDec GstFFMpegDec;
 
 struct _GstFFMpegDec
@@ -109,6 +136,8 @@ struct _GstFFMpegDec
   GstSegment segment;
 
   gboolean is_realvideo;
+
+  GstTSHandler ts_handler;
 
   /* reverse playback queue */
   GList *queued;
@@ -194,6 +223,12 @@ static int gst_ffmpegdec_get_buffer (AVCodecContext * context,
     AVFrame * picture);
 static void gst_ffmpegdec_release_buffer (AVCodecContext * context,
     AVFrame * picture);
+
+static void gst_ts_handler_init (GstFFMpegDec * ffmpegdec);
+static void gst_ts_handler_append (GstFFMpegDec * ffmpegdec,
+    GstBuffer * buffer);
+static void gst_ts_handler_consume (GstFFMpegDec * ffmpegdec, gint size);
+static guint64 gst_ts_handler_get_ts (GstFFMpegDec * ffmpegdec);
 
 #define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("ffdec-params")
 
@@ -368,6 +403,8 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->do_padding = DEFAULT_DO_PADDING;
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
   ffmpegdec->crop = DEFAULT_CROP;
+
+  gst_ts_handler_init (ffmpegdec);
 
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
@@ -1542,9 +1579,17 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     ffmpegdec->context->hurry_up = 2;
   }
 
+  ffmpegdec->context->reordered_opaque = gst_ts_handler_get_ts (ffmpegdec);
+
   /* now decode the frame */
   len = avcodec_decode_video (ffmpegdec->context,
       ffmpegdec->picture, &have_data, data, size);
+
+  gst_ts_handler_consume (ffmpegdec, len);
+  if (have_data) {
+    /* recuperate the reordered timestamp */
+    in_timestamp = ffmpegdec->picture->reordered_opaque;
+  }
 
   /* restore previous state */
   if (!decode)
@@ -1648,21 +1693,19 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
    *  3) else copy input timestamp
    */
   out_timestamp = -1;
-  if (out_pts != -1) {
+  if (GST_CLOCK_TIME_IS_VALID (in_timestamp)) {
+    out_timestamp = in_timestamp;
+    GST_LOG_OBJECT (ffmpegdec, "using in timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (out_timestamp));
+  } else if (GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts)) {
+    out_timestamp = ffmpegdec->next_ts;
+    GST_LOG_OBJECT (ffmpegdec, "using next timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (out_timestamp));
+  } else if (out_pts != -1) {
     /* Get (interpolated) timestamp from FFMPEG */
     out_timestamp = (GstClockTime) out_pts;
     GST_LOG_OBJECT (ffmpegdec, "using timestamp %" GST_TIME_FORMAT
         " returned by ffmpeg", GST_TIME_ARGS (out_timestamp));
-  }
-  if (!GST_CLOCK_TIME_IS_VALID (out_timestamp) && ffmpegdec->next_ts != -1) {
-    out_timestamp = ffmpegdec->next_ts;
-    GST_LOG_OBJECT (ffmpegdec, "using next timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (out_timestamp));
-  }
-  if (!GST_CLOCK_TIME_IS_VALID (out_timestamp)) {
-    out_timestamp = in_timestamp;
-    GST_LOG_OBJECT (ffmpegdec, "using in timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (out_timestamp));
   }
   GST_BUFFER_TIMESTAMP (*outbuf) = out_timestamp;
 
@@ -1724,6 +1767,8 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   if (out_timestamp != -1 && out_duration != -1)
     ffmpegdec->next_ts = out_timestamp + out_duration;
+  else
+    ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
 
   /* palette is not part of raw video frame in gst and the size
    * of the outgoing buffer needs to be adjusted accordingly */
@@ -2270,6 +2315,9 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
    * interpollation can work. */
   ffmpegdec->clear_ts = TRUE;
 
+  /* append the unaltered buffer timestamp to list */
+  gst_ts_handler_append (ffmpegdec, inbuf);
+
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   /* do early keyframe check pretty bad to rely on the keyframe flag in the
@@ -2757,4 +2805,81 @@ gst_ffmpegdec_register (GstPlugin * plugin)
   GST_LOG ("Finished Registering decoders");
 
   return TRUE;
+}
+
+/** initialize the timestamp handler */
+static void
+gst_ts_handler_init (GstFFMpegDec * ffmpegdec)
+{
+  GstTSHandler *ts_handler = &ffmpegdec->ts_handler;
+  memset (ts_handler, 0, sizeof (GstTSHandler));
+  ts_handler->buf_tail = 1;
+}
+
+/** add a new entry to the list from a GstBuffer */
+static void
+gst_ts_handler_append (GstFFMpegDec * ffmpegdec, GstBuffer * buffer)
+{
+  GstTSHandler *ts_handler = &ffmpegdec->ts_handler;
+  guint64 ts = GST_BUFFER_TIMESTAMP (buffer);
+  gint size = GST_BUFFER_SIZE (buffer);
+  gint ind = ts_handler->buf_head;
+
+  if ((ts != -1) || (!ts && !ts_handler->buf_count)) {
+    /* null timestamps are only valid for the first entry */
+    TS_MAP_INC (ind);
+    /** debugging trace
+    printf ("app [%02X] %4d\t%6.3f\t%8d\n",
+        ind, ts_handler->buf_count,
+        ts != -1 ? (double) ts / GST_SECOND : -1.0, size);
+    **/
+    ts_handler->buffers[ind].ts = ts;
+    ts_handler->buffers[ind].size = size;
+    ts_handler->buf_head = ind;
+    ts_handler->buf_count++;
+  } else {
+    /* append size to existing entry */
+    ts_handler->buffers[ind].size += size;
+  }
+}
+
+/** indicate that the decoder has consumed some data */
+static void
+gst_ts_handler_consume (GstFFMpegDec * ffmpegdec, gint size)
+{
+  GstTSHandler *ts_handler = &ffmpegdec->ts_handler;
+  gint buf = ts_handler->buf_tail;
+
+  /* eat some bytes from the buffer map */
+  while (size > 0) {
+    if (size >= ts_handler->buffers[buf].size) {
+      size -= ts_handler->buffers[buf].size;
+      /* reset this entry */
+      memset (ts_handler->buffers + buf, -1, sizeof (GstTSMap));
+      TS_MAP_INC (buf);
+      /* update the buffer tail */
+      ts_handler->buf_tail = buf;
+    } else {
+      ts_handler->buffers[buf].size -= size;
+      size = 0;
+    }
+  }
+  if (size == -1) {
+    /* just consume the one buffer regardless */
+    memset (ts_handler->buffers + buf, -1, sizeof (GstTSMap));
+    TS_MAP_INC (buf);
+    /* update the buffer tail */
+    ts_handler->buf_tail = buf;
+    size = 0;
+  }
+}
+
+/** get the timestamp from the tail of the list */
+static guint64
+gst_ts_handler_get_ts (GstFFMpegDec * ffmpegdec)
+{
+  GstTSHandler *ts_handler = &ffmpegdec->ts_handler;
+  guint64 ts = ts_handler->buffers[ts_handler->buf_tail].ts;
+  ts_handler->buffers[ts_handler->buf_tail].ts = -1;
+  return ts;
 }
