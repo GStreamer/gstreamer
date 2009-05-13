@@ -73,6 +73,8 @@ struct _GstAdapterClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GType			gst_adapter_get_type		(void);
+
 GstAdapter *		gst_adapter_new			(void);
 
 void			gst_adapter_clear		(GstAdapter *adapter);
@@ -85,7 +87,6 @@ guint8*			gst_adapter_take		(GstAdapter *adapter, guint nbytes);
 GstBuffer*		gst_adapter_take_buffer		(GstAdapter *adapter, guint nbytes);
 guint			gst_adapter_available		(GstAdapter *adapter);
 guint			gst_adapter_available_fast    	(GstAdapter *adapter);
-GType			gst_adapter_get_type		(void);
 
 G_END_DECLS
 

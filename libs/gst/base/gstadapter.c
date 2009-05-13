@@ -210,7 +210,6 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
     GST_LOG_OBJECT (adapter, "discarding empty buffer");
     gst_buffer_unref (buf);
   } else {
-
     adapter->size += size;
 
     /* Note: merging buffers at this point is premature. */
@@ -433,6 +432,7 @@ void
 gst_adapter_flush (GstAdapter * adapter, guint flush)
 {
   GstBuffer *cur;
+  guint size;
 
   g_return_if_fail (GST_IS_ADAPTER (adapter));
   g_return_if_fail (flush <= adapter->size);
@@ -442,14 +442,19 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
   adapter->assembled_len = 0;
   while (flush > 0) {
     cur = adapter->buflist->data;
-    if (GST_BUFFER_SIZE (cur) <= flush + adapter->skip) {
+    size = GST_BUFFER_SIZE (cur) - adapter->skip;
+    if (size <= flush) {
       /* can skip whole buffer */
-      flush -= GST_BUFFER_SIZE (cur) - adapter->skip;
+      GST_LOG_OBJECT (adapter, "flushing out head buffer");
+      flush -= size;
       adapter->skip = 0;
       adapter->buflist =
           g_slist_delete_link (adapter->buflist, adapter->buflist);
-      if (G_UNLIKELY (adapter->buflist == NULL))
+
+      if (G_UNLIKELY (adapter->buflist == NULL)) {
+        GST_LOG_OBJECT (adapter, "adapter empty now");
         adapter->buflist_end = NULL;
+      }
       gst_buffer_unref (cur);
     } else {
       adapter->skip += flush;
