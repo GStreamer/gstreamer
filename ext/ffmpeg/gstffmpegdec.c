@@ -900,6 +900,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
    * picture back from ffmpeg we can use this to correctly timestamp the output
    * buffer */
   picture->pts = ffmpegdec->in_ts;
+  picture->reordered_opaque = context->reordered_opaque;
   /* make sure we don't free the buffer when it's not ours */
   picture->opaque = NULL;
 
