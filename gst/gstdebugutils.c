@@ -27,6 +27,11 @@
  * - changing node-shape from box into record
  * - use labels like : element [ label="{element | <src> src | <sink> sink}"]
  * - point to record-connectors : element1:src -> element2:sink
+ * - we use head/tail labels for pad-caps right now
+ *   - this does not work well, as dot seems to not llok at their sizen when
+ *     doing the layout
+ *   - we could add the caps to the pad itself, then we should use one line per
+ *     caps (simple caps = one line)
  */
 
 #include "gst_private.h"
@@ -131,18 +136,52 @@ debug_dump_get_element_params (GstElement * element)
 }
 
 static void
+debug_dump_pad (GstPad * pad, gchar * color_name, gchar * element_name,
+    FILE * out, const gint indent)
+{
+  GstPadTemplate *pad_templ;
+  GstPadPresence presence;
+  gchar *pad_name, *style_name;
+  gchar pad_flags[6];
+  const gchar *activation_mode = "-><";
+  const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
+
+  pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
+
+  /* pad availability */
+  style_name = "filled,solid";
+  if ((pad_templ = gst_pad_get_pad_template (pad))) {
+    presence = GST_PAD_TEMPLATE_PRESENCE (pad_templ);
+    if (presence == GST_PAD_SOMETIMES) {
+      style_name = "filled,dotted";
+    } else if (presence == GST_PAD_REQUEST) {
+      style_name = "filled,dashed";
+    }
+  }
+  /* check if pad flags */
+  pad_flags[0] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKED) ? 'B' : 'b';
+  pad_flags[1] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING) ? 'F' : 'f';
+  pad_flags[2] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS) ? 'G' : 'g';
+  pad_flags[3] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS) ? 's' : 's';
+  pad_flags[4] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKING) ? 'B' : 'b';
+  pad_flags[5] = '\0';
+
+  fprintf (out, "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\\n[%c][%s]\", height=\"0.2\", style=\"%s\"];\n", spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad), activation_mode[pad->mode],      /* NONE/PUSH/PULL */
+      pad_flags, style_name);
+
+  g_free (pad_name);
+}
+
+static void
 debug_dump_element_pad (GstPad * pad, GstElement * element,
     GstDebugGraphDetails details, FILE * out, const gint indent)
 {
   GstElement *target_element;
   GstPad *target_pad, *tmp_pad;
   GstPadDirection dir;
-  GstPadTemplate *pad_templ;
-  GstPadPresence presence;
   gchar *pad_name, *element_name;
-  gchar *target_pad_name, *target_element_name;
-  gchar *color_name, *style_name;
-  const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
+  gchar *target_element_name;
+  gchar *color_name;
 
   dir = gst_pad_get_direction (pad);
   pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
@@ -154,27 +193,14 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
     /* output target-pad so that it belongs to this element */
     if ((tmp_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad)))) {
       if ((target_pad = gst_pad_get_peer (tmp_pad))) {
-        target_pad_name = debug_dump_make_object_name (GST_OBJECT (target_pad));
         if ((target_element = gst_pad_get_parent_element (target_pad))) {
           target_element_name =
               debug_dump_make_object_name (GST_OBJECT (target_element));
         } else {
           target_element_name = "";
         }
-        style_name = "filled,solid";
-        if ((pad_templ = gst_pad_get_pad_template (target_pad))) {
-          presence = GST_PAD_TEMPLATE_PRESENCE (pad_templ);
-          if (presence == GST_PAD_SOMETIMES) {
-            style_name = "filled,dotted";
-          } else if (presence == GST_PAD_REQUEST) {
-            style_name = "filled,dashed";
-          }
-        }
-        fprintf (out,
-            "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\", height=\"0.2\", style=\"%s\"];\n",
-            spc, target_element_name, target_pad_name, color_name,
-            GST_OBJECT_NAME (target_pad), style_name);
-        g_free (target_pad_name);
+        debug_dump_pad (target_pad, color_name, target_element_name, out,
+            indent);
         if (target_element) {
           g_free (target_element_name);
           gst_object_unref (target_element);
@@ -189,21 +215,7 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
             GST_PAD_SINK) ? "#aaaaff" : "#cccccc");
   }
   /* pads */
-  style_name = "filled,solid";
-  if ((pad_templ = gst_pad_get_pad_template (pad))) {
-    presence = GST_PAD_TEMPLATE_PRESENCE (pad_templ);
-    if (presence == GST_PAD_SOMETIMES) {
-      style_name = "filled,dotted";
-    } else if (presence == GST_PAD_REQUEST) {
-      style_name = "filled,dashed";
-    }
-  }
-  fprintf (out,
-      "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\", height=\"0.2\", style=\"%s\"];\n",
-      spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad),
-      style_name);
-
-  g_free (pad_name);
+  debug_dump_pad (pad, color_name, element_name, out, indent);
   g_free (element_name);
 }
 
