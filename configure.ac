@@ -1057,6 +1057,7 @@ gst/autodetect/Makefile
 gst/avi/Makefile
 gst/cutter/Makefile
 gst/deinterlace/Makefile
+gst/debugutils/Makefile
 gst/effectv/Makefile
 gst/equalizer/Makefile
 gst/flv/Makefile
