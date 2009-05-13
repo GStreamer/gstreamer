@@ -44,6 +44,9 @@ GST_DEBUG_CATEGORY_EXTERN (resindvd_debug);
 #define DVDBIN_LOCK(d) g_mutex_lock((d)->dvd_lock)
 #define DVDBIN_UNLOCK(d) g_mutex_unlock((d)->dvd_lock)
 
+#define DVDBIN_PREROLL_LOCK(d) g_mutex_lock((d)->preroll_lock)
+#define DVDBIN_PREROLL_UNLOCK(d) g_mutex_unlock((d)->preroll_lock)
+
 #define DEFAULT_DEVICE "/dev/dvd"
 enum
 {
@@ -159,6 +162,7 @@ static void
 rsn_dvdbin_init (RsnDvdBin * dvdbin, RsnDvdBinClass * gclass)
 {
   dvdbin->dvd_lock = g_mutex_new ();
+  dvdbin->preroll_lock = g_mutex_new ();
 }
 
 static void
@@ -167,6 +171,7 @@ rsn_dvdbin_finalize (GObject * object)
   RsnDvdBin *dvdbin = RESINDVDBIN (object);
 
   g_mutex_free (dvdbin->dvd_lock);
+  g_mutex_free (dvdbin->preroll_lock);
   g_free (dvdbin->last_uri);
   g_free (dvdbin->device);
 
@@ -741,58 +746,57 @@ failed:
 static void
 dvdbin_pad_blocked_cb (GstPad * pad, gboolean blocked, RsnDvdBin * dvdbin)
 {
-  gboolean changed = FALSE;
+  gboolean added_last_pad = FALSE;
   gboolean added = FALSE;
   if (!blocked)
     return;
 
   if (pad == dvdbin->subpicture_pad) {
     GST_DEBUG_OBJECT (dvdbin, "Pad block -> subpicture pad");
-    GST_OBJECT_LOCK (dvdbin);
+    DVDBIN_PREROLL_LOCK (dvdbin);
     added = dvdbin->subpicture_added;
     dvdbin->subpicture_added = TRUE;
-    GST_OBJECT_UNLOCK (dvdbin);
 
     if (!added) {
       gst_element_add_pad (GST_ELEMENT (dvdbin), dvdbin->subpicture_pad);
-      changed = TRUE;
+      added_last_pad = (dvdbin->audio_added && dvdbin->video_added);
     }
+    DVDBIN_PREROLL_UNLOCK (dvdbin);
 
     gst_pad_set_blocked_async (pad, FALSE,
         (GstPadBlockCallback) dvdbin_pad_blocked_cb, dvdbin);
   } else if (pad == dvdbin->audio_pad) {
     GST_DEBUG_OBJECT (dvdbin, "Pad block -> audio pad");
-    GST_OBJECT_LOCK (dvdbin);
+    DVDBIN_PREROLL_LOCK (dvdbin);
     added = dvdbin->audio_added;
     dvdbin->audio_added = TRUE;
-    GST_OBJECT_UNLOCK (dvdbin);
 
     if (!added) {
       gst_element_add_pad (GST_ELEMENT (dvdbin), dvdbin->audio_pad);
-      changed = TRUE;
+      added_last_pad = (dvdbin->subpicture_added && dvdbin->video_added);
     }
+    DVDBIN_PREROLL_UNLOCK (dvdbin);
 
     gst_pad_set_blocked_async (pad, FALSE,
         (GstPadBlockCallback) dvdbin_pad_blocked_cb, dvdbin);
   } else if (pad == dvdbin->video_pad) {
     GST_DEBUG_OBJECT (dvdbin, "Pad block -> video pad");
 
-    GST_OBJECT_LOCK (dvdbin);
+    DVDBIN_PREROLL_LOCK (dvdbin);
     added = dvdbin->video_added;
     dvdbin->video_added = TRUE;
-    GST_OBJECT_UNLOCK (dvdbin);
 
     if (!added) {
       gst_element_add_pad (GST_ELEMENT (dvdbin), dvdbin->video_pad);
-      changed = TRUE;
+      added_last_pad = (dvdbin->subpicture_added && dvdbin->audio_added);
     }
+    DVDBIN_PREROLL_UNLOCK (dvdbin);
 
     gst_pad_set_blocked_async (pad, FALSE,
         (GstPadBlockCallback) dvdbin_pad_blocked_cb, dvdbin);
   }
 
-  if (changed &&
-      dvdbin->video_added && dvdbin->audio_added && dvdbin->subpicture_added) {
+  if (added_last_pad) {
     GST_DEBUG_OBJECT (dvdbin, "Firing no more pads from pad-blocked cb");
     gst_element_no_more_pads (GST_ELEMENT (dvdbin));
   }
