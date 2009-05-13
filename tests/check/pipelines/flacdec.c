@@ -19,15 +19,45 @@
 
 #include <gst/check/gstcheck.h>
 
+static guint16
+buffer_get_first_sample (GstBuffer * buf)
+{
+  GstStructure *s;
+  gint w, d, c, r, e;
+
+  fail_unless (buf != NULL, "NULL buffer");
+  fail_unless (GST_BUFFER_CAPS (buf) != NULL, "buffer without caps");
+
+  /* log buffer details */
+  GST_DEBUG ("buffer with size=%u, caps=%" GST_PTR_FORMAT,
+      GST_BUFFER_SIZE (buf), GST_BUFFER_CAPS (buf));
+  GST_MEMDUMP ("buffer data from decoder", GST_BUFFER_DATA (buf),
+      GST_BUFFER_SIZE (buf));
+
+  /* make sure it's the format we expect */
+  s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+  fail_unless_equals_string (gst_structure_get_name (s), "audio/x-raw-int");
+  fail_unless (gst_structure_get_int (s, "width", &w));
+  fail_unless_equals_int (w, 16);
+  fail_unless (gst_structure_get_int (s, "depth", &d));
+  fail_unless_equals_int (d, 16);
+  fail_unless (gst_structure_get_int (s, "rate", &r));
+  fail_unless_equals_int (r, 44100);
+  fail_unless (gst_structure_get_int (s, "channels", &c));
+  fail_unless_equals_int (c, 1);
+  fail_unless (gst_structure_get_int (s, "endianness", &e));
+  if (e == G_BIG_ENDIAN)
+    return GST_READ_UINT16_BE (GST_BUFFER_DATA (buf));
+  else
+    return GST_READ_UINT16_LE (GST_BUFFER_DATA (buf));
+}
+
 GST_START_TEST (test_decode)
 {
   GstElement *pipeline;
-
   GstElement *appsink;
-
   GstBuffer *buffer = NULL;
-
-  guint8 firstbyte = 0;
+  guint16 first_sample = 0;
   guint size = 0;
 
   pipeline = gst_parse_launch ("filesrc location=audiotestsrc.flac"
@@ -43,20 +73,24 @@ GST_START_TEST (test_decode)
     g_signal_emit_by_name (appsink, "pull-buffer", &buffer);
     if (buffer == NULL)
       break;
-    if (firstbyte == 0)
-      firstbyte = GST_BUFFER_DATA (buffer)[0];
+    if (first_sample == 0)
+      first_sample = buffer_get_first_sample (buffer);
     g_print ("buffer: %d\n", buffer->size);
-    g_print ("buffer: %08x\n", GST_BUFFER_DATA (buffer)[0]);
+    g_print ("buffer: %04x\n", buffer_get_first_sample (buffer));
     size += buffer->size;
+
+    gst_buffer_unref (buffer);
+    buffer = NULL;
   }
   while (TRUE);
 
   /* audiotestsrc with samplesperbuffer 1024 and 10 num-buffers */
   fail_unless_equals_int (size, 20480);
-  fail_unless_equals_int (firstbyte, 0x6a);
+  fail_unless_equals_int (first_sample, 0x066a);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   g_object_unref (pipeline);
+  g_object_unref (appsink);
 }
 
 GST_END_TEST;
@@ -64,15 +98,10 @@ GST_END_TEST;
 GST_START_TEST (test_decode_seek_full)
 {
   GstElement *pipeline;
-
   GstElement *appsink;
-
   GstEvent *event;
-
   GstBuffer *buffer = NULL;
-
-  guint8 firstbyte = 0;
-
+  guint16 first_sample = 0;
   gboolean result;
   guint size = 0;
 
@@ -97,20 +126,24 @@ GST_START_TEST (test_decode_seek_full)
     g_signal_emit_by_name (appsink, "pull-buffer", &buffer);
     if (buffer == NULL)
       break;
-    if (firstbyte == 0)
-      firstbyte = GST_BUFFER_DATA (buffer)[0];
+    if (first_sample == 0)
+      first_sample = buffer_get_first_sample (buffer);
     size += buffer->size;
+
+    gst_buffer_unref (buffer);
+    buffer = NULL;
   }
   while (TRUE);
 
   /* file was generated with audiotestsrc
    * with 1024 samplesperbuffer and 10 num-buffers in 16 bit audio */
   fail_unless_equals_int (size, 20480);
-  fail_unless_equals_int (firstbyte, 0x6a);
+  fail_unless_equals_int (first_sample, 0x066a);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   g_object_unref (pipeline);
+  g_object_unref (appsink);
 }
 
 GST_END_TEST;
@@ -118,16 +151,12 @@ GST_END_TEST;
 GST_START_TEST (test_decode_seek_partial)
 {
   GstElement *pipeline;
-
   GstElement *appsink;
-
   GstEvent *event;
-
   GstBuffer *buffer = NULL;
-
   gboolean result;
   guint size = 0;
-  guint8 firstbyte = 0;
+  guint16 first_sample = 0;
 
   pipeline = gst_parse_launch ("filesrc location=audiotestsrc.flac"
       " ! flacdec ! appsink name=sink", NULL);
@@ -154,20 +183,24 @@ GST_START_TEST (test_decode_seek_partial)
     GST_DEBUG ("pulled buffer %x", buffer);
     if (buffer == NULL)
       break;
-    if (firstbyte == 0) {
+    if (first_sample == 0) {
       fail_unless_equals_int (GST_BUFFER_OFFSET (buffer), 0L);
-      firstbyte = GST_BUFFER_DATA (buffer)[0];
+      first_sample = buffer_get_first_sample (buffer);
     }
     size += buffer->size;
+
+    gst_buffer_unref (buffer);
+    buffer = NULL;
   }
   while (TRUE);
 
   fail_unless_equals_int (size, 2048);
-  fail_unless_equals_int (firstbyte, 0x6a);
+  fail_unless_equals_int (first_sample, 0x066a);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   g_object_unref (pipeline);
+  g_object_unref (appsink);
 }
 
 GST_END_TEST;
