@@ -208,6 +208,7 @@ gst_adapter_take_buffer
 gst_adapter_prev_timestamp
 <SUBSECTION Standard>
 GstAdapterClass
+GstAdapterPrivate
 GST_ADAPTER
 GST_IS_ADAPTER
 GST_TYPE_ADAPTER

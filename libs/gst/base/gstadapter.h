@@ -40,6 +40,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstAdapter GstAdapter;
 typedef struct _GstAdapterClass GstAdapterClass;
+typedef struct _GstAdapterPrivate GstAdapterPrivate;
 
 /**
  * GstAdapter:
@@ -60,16 +61,14 @@ struct _GstAdapter {
   guint		assembled_size;
   guint		assembled_len;
 
+  /* ABI added */
   /* Remember where the end of our buffer list is to
    * speed up the push */
   GSList *buflist_end;
-  union {
-    struct {
-      GstClockTime timestamp;
-      guint64      distance;
-    } ABI;
-    gpointer _gst_reserved[GST_PADDING - 1];
-  } abidata;
+
+  GstAdapterPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 struct _GstAdapterClass {

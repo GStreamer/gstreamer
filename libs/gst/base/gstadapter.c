@@ -118,6 +118,15 @@
 GST_DEBUG_CATEGORY_STATIC (gst_adapter_debug);
 #define GST_CAT_DEFAULT gst_adapter_debug
 
+#define GST_ADAPTER_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_ADAPTER, GstAdapterPrivate))
+
+struct _GstAdapterPrivate
+{
+  GstClockTime timestamp;
+  guint64 distance;
+};
+
 #define _do_init(thing) \
   GST_DEBUG_CATEGORY_INIT (gst_adapter_debug, "adapter", 0, "object to splice and merge buffers to desired size")
 GST_BOILERPLATE_FULL (GstAdapter, gst_adapter, GObject, G_TYPE_OBJECT,
@@ -137,6 +146,8 @@ gst_adapter_class_init (GstAdapterClass * klass)
 {
   GObjectClass *object = G_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GstAdapterPrivate));
+
   object->dispose = gst_adapter_dispose;
   object->finalize = gst_adapter_finalize;
 }
@@ -144,10 +155,11 @@ gst_adapter_class_init (GstAdapterClass * klass)
 static void
 gst_adapter_init (GstAdapter * adapter, GstAdapterClass * g_class)
 {
+  adapter->priv = GST_ADAPTER_GET_PRIVATE (adapter);
   adapter->assembled_data = g_malloc (DEFAULT_SIZE);
   adapter->assembled_size = DEFAULT_SIZE;
-  adapter->abidata.ABI.timestamp = GST_CLOCK_TIME_NONE;
-  adapter->abidata.ABI.distance = 0;
+  adapter->priv->timestamp = GST_CLOCK_TIME_NONE;
+  adapter->priv->distance = 0;
 }
 
 static void
@@ -201,8 +213,8 @@ gst_adapter_clear (GstAdapter * adapter)
   adapter->size = 0;
   adapter->skip = 0;
   adapter->assembled_len = 0;
-  adapter->abidata.ABI.timestamp = GST_CLOCK_TIME_NONE;
-  adapter->abidata.ABI.distance = 0;
+  adapter->priv->timestamp = GST_CLOCK_TIME_NONE;
+  adapter->priv->distance = 0;
 }
 
 static inline void
@@ -214,8 +226,8 @@ update_timestamp (GstAdapter * adapter, GstBuffer * buf)
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     GST_LOG_OBJECT (adapter, "new timestamp %" GST_TIME_FORMAT,
         GST_TIME_ARGS (timestamp));
-    adapter->abidata.ABI.timestamp = timestamp;
-    adapter->abidata.ABI.distance = 0;
+    adapter->priv->timestamp = timestamp;
+    adapter->priv->distance = 0;
   }
 }
 
@@ -482,7 +494,7 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
       GST_LOG_OBJECT (adapter, "flushing out head buffer");
       flush -= size;
       adapter->skip = 0;
-      adapter->abidata.ABI.distance += size;
+      adapter->priv->distance += size;
       adapter->buflist =
           g_slist_delete_link (adapter->buflist, adapter->buflist);
 
@@ -496,7 +508,7 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
       gst_buffer_unref (cur);
     } else {
       adapter->skip += flush;
-      adapter->abidata.ABI.distance += flush;
+      adapter->priv->distance += flush;
       break;
     }
   }
@@ -702,7 +714,7 @@ gst_adapter_prev_timestamp (GstAdapter * adapter, guint64 * distance)
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
 
   if (distance)
-    *distance = adapter->abidata.ABI.distance;
+    *distance = adapter->priv->distance;
 
-  return adapter->abidata.ABI.timestamp;
+  return adapter->priv->timestamp;
 }
