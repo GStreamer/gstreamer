@@ -1032,6 +1032,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         "not pushing %d samples at offset %" G_GINT64_FORMAT
         " (in seek)", samples, GST_BUFFER_OFFSET (outbuf));
     gst_buffer_replace (&flacdec->pending, outbuf);
+    gst_buffer_unref (outbuf);
     flacdec->pending_samples = samples;
     ret = GST_FLOW_OK;
   }
