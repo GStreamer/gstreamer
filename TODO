@@ -1,2 +1,5 @@
 - Interfaces currently contain things that should only be called by implementors
 - GstMiniObject binding is broken, we need our own codegen and handle it like a GObject without toggle refs, signals and properties
+- Check vmethods and write them by hand if there are parameters that should be hidden (Gst.Index!)
+- Check ownership of callback parameters and vmethods
+- Make sure callbacks are only GC'd when they can be (TagMergeFunc, TypeFind, ..)
