@@ -44,6 +44,7 @@ When performing a seek, the following steps have to be taken by the application:
       - how accurate the seek should be (ACCURATE)
       - how to perform the seek (FLUSH) 
       - what to do when the stop position is reached (SEGMENT).
+      - extra playback options (SKIP)
     - a format to seek in, this can be time, bytes, units (frames, samples), ...
     - a playback rate, 1.0 is normal playback speed, positive values bigger than 1.0
       mean fast playback. negative values mean reverse playback. A playback speed of
@@ -135,7 +136,8 @@ client side forward trickmodes
 The seek happens as stated above. a NEW_SEGMENT event is sent downstream with a rate
 different from 1.0. Plugins receiving the NEW_SEGMENT can decide to perform the 
 rate conversion of the media data (retimestamp video frames, resample audio, ...).
-A plugin can also decide to drop frames in the case of fast playback or use a more
+A plugin should not drop frames unless the SKIP flag is set.  When the SKIP flag is
+set, a plugin can decide to drop frames in the case of fast playback or use a more
 efficient decoding algorithm (skip B frames, ...). If a plugin decides to resample
 or retimestamp, it should modify the NEW_SEGMENT with a rate of 1.0 and update the 
 applied rate so that downstream elements don't resample again but are aware that the
