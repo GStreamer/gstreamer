@@ -1069,6 +1069,9 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       break;
     }
     case DVDNAV_HIGHLIGHT:{
+      dvdnav_highlight_event_t *event = (dvdnav_highlight_event_t *) data;
+      GST_DEBUG_OBJECT (src, "highlight change event, button %d",
+          event->buttonN);
       rsn_dvdsrc_update_highlight (src);
       break;
     }
@@ -2011,21 +2014,26 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
   int button = 0;
   pci_t *pci = &src->cur_pci;
   dvdnav_highlight_area_t area;
-  int mode = 0;
+  int mode = src->active_highlight ? 1 : 0;
   GstEvent *event = NULL;
   GstStructure *s;
 
   if (src->have_pci) {
-    if (dvdnav_get_current_highlight (src->dvdnav, &button) != DVDNAV_STATUS_OK) {
-      GST_ELEMENT_ERROR (src, LIBRARY, FAILED, (NULL),
-          ("dvdnav_get_current_highlight: %s",
-              dvdnav_err_to_string (src->dvdnav)));
-      return;
+    if (dvdnav_get_current_highlight (src->dvdnav, &button) == DVDNAV_STATUS_OK) {
+      GST_LOG_OBJECT (src, "current dvdnav button is %d, we have %d",
+          button, src->active_button);
     }
 
-    if (pci->hli.hl_gi.hli_ss == 0 || (button > pci->hli.hl_gi.btn_ns) ||
-        (button < 1)) {
+    if (pci->hli.hl_gi.hli_ss == 0 || button < 0) {
+      button = 0;
+    } else if (button > pci->hli.hl_gi.btn_ns) {
       /* button is out of the range of possible buttons. */
+      button = pci->hli.hl_gi.btn_ns;
+      dvdnav_button_select (src->dvdnav, &src->cur_pci, button);
+    }
+
+    if (button > 0 && dvdnav_get_highlight_area (pci, button, mode,
+            &area) != DVDNAV_STATUS_OK) {
       button = 0;
     }
   }
@@ -2046,15 +2054,6 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
         src->commands_changed = TRUE;
       }
     }
-    return;
-  }
-
-  if (src->active_highlight)
-    mode = 1;
-
-  if (dvdnav_get_highlight_area (pci, button, mode, &area) != DVDNAV_STATUS_OK) {
-    GST_ELEMENT_ERROR (src, LIBRARY, FAILED, (NULL),
-        ("dvdnav_get_highlight_area: %s", dvdnav_err_to_string (src->dvdnav)));
     return;
   }
 
@@ -2149,12 +2148,14 @@ rsn_dvdsrc_activate_nav_block (resinDvdSrc * src, GstBuffer * nav_buf)
   src->have_pci = TRUE;
 
   forced_button = src->cur_pci.hli.hl_gi.fosl_btnn & 0x3f;
-
-  if (forced_button != 0)
+  if (forced_button != 0) {
+    GST_DEBUG_OBJECT (src, "Selecting button %d based on nav packet command",
+        forced_button);
     dvdnav_button_select (src->dvdnav, &src->cur_pci, forced_button);
-
+  }
   /* highlight might change, let's check */
   rsn_dvdsrc_update_highlight (src);
+
   if (src->highlight_event && src->in_still_state) {
     GST_LOG_OBJECT (src, "Signalling still condition due to highlight change");
     g_cond_broadcast (src->still_cond);
