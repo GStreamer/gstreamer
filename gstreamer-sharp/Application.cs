@@ -7,12 +7,34 @@
 //
 // Copyright (C) 2002 Alp Toker
 // Copyright (C) 2006 Novell, Inc.
+// Copyright (C) 2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
 //
 
 using System;
+using System.Reflection;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace Gst {
+
+  [AttributeUsage (AttributeTargets.Enum | AttributeTargets.Class | AttributeTargets.Struct) ]
+  public sealed class GTypeNameAttribute : Attribute {
+    string type_name;
+
+    public GTypeNameAttribute (string gtype_name) {
+      this.type_name = gtype_name;
+    }
+
+    public string TypeName {
+      get {
+        return type_name;
+      }
+      set {
+        type_name = value;
+      }
+    }
+  }
+
   public static class Application {
     public static void Init() {
       IntPtr argv = new IntPtr (0);
@@ -34,7 +56,53 @@ namespace Gst {
       gst_deinit();
     }
 
+    private static System.Type GstTypeMapping (GLib.GType gtype, string gtype_name) {
+      Assembly[] assemblies = (Assembly[]) AppDomain.CurrentDomain.GetAssemblies ().Clone ();
+
+      foreach (Assembly asm in assemblies) {
+        Type[] ts = asm.GetTypes ();
+        foreach (Type t in ts) {
+          if (t.IsDefined (typeof (Gst.GTypeNameAttribute), false)) {
+            GTypeNameAttribute gattr = (GTypeNameAttribute) Attribute.GetCustomAttribute (t, typeof (GTypeNameAttribute), false);
+            if (gtype_name.Equals (gattr.TypeName)) {
+              return t;
+            }
+          }
+        }
+      }
+
+      foreach (Assembly asm in assemblies) {
+        foreach (AssemblyName ref_name in asm.GetReferencedAssemblies ()) {
+          string asm_dir = Path.GetDirectoryName (asm.Location);
+          try {
+            Assembly ref_asm;
+            if (File.Exists (Path.Combine (asm_dir, ref_name.Name + ".dll")))
+              ref_asm = Assembly.LoadFrom (Path.Combine (asm_dir, ref_name.Name + ".dll"));
+            else
+              ref_asm = Assembly.Load (ref_name);
+
+            Type[] ts = asm.GetTypes ();
+            foreach (Type t in ts) {
+              if (t.IsDefined (typeof (Gst.GTypeNameAttribute), false)) {
+                GTypeNameAttribute gattr = (GTypeNameAttribute) Attribute.GetCustomAttribute (t, typeof (GTypeNameAttribute), false);
+                if (gtype_name.Equals (gattr.TypeName)) {
+                  return t;
+                }
+              }
+            }
+
+          } catch (Exception) {
+            /* Failure to load a referenced assembly is not an error */
+          }
+        }
+      }
+
+      return null;
+    }
+
     private static void RegisterManagedTypes() {
+      GLib.GType.GTypeMapping += GstTypeMapping;
+
       GLib.GType t;
 
       t = Gst.Fraction.GType;
