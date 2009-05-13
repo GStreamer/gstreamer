@@ -2951,6 +2951,7 @@ server_eof:
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("The server closed the connection."));
     src->connected = FALSE;
+    gst_rtsp_message_unset (&message);
     return GST_FLOW_UNEXPECTED;
   }
 interrupt:
@@ -3001,6 +3002,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
 {
   gboolean restart = FALSE;
   GstRTSPResult res;
+  GstRTSPMessage message = { 0 };
 
   GST_OBJECT_LOCK (src);
   if (src->loop_cmd == CMD_STOP)
@@ -3010,7 +3012,6 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
     GST_OBJECT_UNLOCK (src);
 
     while (TRUE) {
-      GstRTSPMessage message = { 0 };
       GTimeVal tv_timeout;
 
       /* get the next timeout interval */
@@ -3161,6 +3162,7 @@ handle_request_failed:
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not handle server message. (%s)", str));
     g_free (str);
+    gst_rtsp_message_unset (&message);
     return GST_FLOW_ERROR;
   }
 connect_error:
@@ -3197,6 +3199,7 @@ server_eof:
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("The server closed the connection."));
     src->connected = FALSE;
+    gst_rtsp_message_unset (&message);
     return GST_FLOW_UNEXPECTED;
   }
 }
@@ -3647,6 +3650,7 @@ receive_error:
 handle_request_failed:
   {
     /* ERROR was posted */
+    gst_rtsp_message_unset (response);
     return res;
   }
 server_eof:
@@ -3654,6 +3658,7 @@ server_eof:
     GST_DEBUG_OBJECT (src, "we got an eof from the server");
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("The server closed the connection."));
+    gst_rtsp_message_unset (response);
     return GST_FLOW_UNEXPECTED;
   }
 }
