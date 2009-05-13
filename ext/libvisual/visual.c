@@ -576,12 +576,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
   /* resync on DISCONT */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
     gst_adapter_clear (visual->adapter);
-    visual->next_ts = -1;
   }
-
-  /* Match timestamps from the incoming audio */
-  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE)
-    visual->next_ts = GST_BUFFER_TIMESTAMP (buffer);
 
   GST_DEBUG_OBJECT (visual,
       "Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
@@ -592,6 +587,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
   while (TRUE) {
     gboolean need_skip;
     const guint16 *data;
+    guint64 dist, timestamp;
 
     GST_DEBUG_OBJECT (visual, "processing buffer");
 
@@ -606,12 +602,20 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     if (avail < visual->spf * visual->bps)
       break;
 
-    if (visual->next_ts != -1) {
+    /* get timestamp of the current adapter byte */
+    timestamp = gst_adapter_prev_timestamp (visual->adapter, &dist);
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      /* convert bytes to time */
+      dist /= visual->bps;
+      timestamp += gst_util_uint64_scale_int (dist, GST_SECOND, visual->rate);
+    }
+
+    if (timestamp != -1) {
       gint64 qostime;
 
       /* QoS is done on running time */
       qostime = gst_segment_to_running_time (&visual->segment, GST_FORMAT_TIME,
-          visual->next_ts);
+          timestamp);
 
       GST_OBJECT_LOCK (visual);
       /* check for QoS, don't compute buffers that are known to be late */
@@ -722,17 +726,13 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     visual_video_set_buffer (visual->video, NULL);
     GST_DEBUG_OBJECT (visual, "rendered one frame");
 
-    GST_BUFFER_TIMESTAMP (outbuf) = visual->next_ts;
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     GST_BUFFER_DURATION (outbuf) = visual->duration;
 
     ret = gst_pad_push (visual->srcpad, outbuf);
     outbuf = NULL;
 
   skip:
-    /* interpollate next timestamp */
-    if (visual->next_ts != -1)
-      visual->next_ts += visual->duration;
-
     GST_DEBUG_OBJECT (visual, "finished frame, flushing %u samples from input",
         visual->spf);
 
