@@ -1855,7 +1855,7 @@ init_failed:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "mpeg2dec", GST_RANK_MARGINAL,
+  if (!gst_element_register (plugin, "mpeg2dec", GST_RANK_PRIMARY,
           GST_TYPE_MPEG2DEC))
     return FALSE;
 
