@@ -47,7 +47,6 @@ struct _GstVisual
   /* pads */
   GstPad *sinkpad;
   GstPad *srcpad;
-  GstClockTime next_ts;
   GstSegment segment;
 
   /* libvisual stuff */
@@ -256,7 +255,6 @@ gst_visual_dispose (GObject * object)
 static void
 gst_visual_reset (GstVisual * visual)
 {
-  visual->next_ts = -1;
   gst_adapter_clear (visual->adapter);
   gst_segment_init (&visual->segment, GST_FORMAT_UNDEFINED);
 
