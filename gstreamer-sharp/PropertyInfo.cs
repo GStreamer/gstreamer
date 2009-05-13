@@ -111,7 +111,7 @@ namespace Gst {
       public IntPtr OwnerType;
     }
 
-    internal PropertyInfo (IntPtr pspec_ptr) {
+    public PropertyInfo (IntPtr pspec_ptr) {
       GParamSpec pspec = (GParamSpec) Marshal.PtrToStructure (pspec_ptr, typeof (GParamSpec));
       IntPtr name = g_param_spec_get_name (pspec_ptr);
       IntPtr nick = g_param_spec_get_nick (pspec_ptr);
