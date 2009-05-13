@@ -7,6 +7,7 @@ EXPORTS
 	gst_adapter_get_type
 	gst_adapter_new
 	gst_adapter_peek
+	gst_adapter_prev_timestamp
 	gst_adapter_push
 	gst_adapter_take
 	gst_adapter_take_buffer
