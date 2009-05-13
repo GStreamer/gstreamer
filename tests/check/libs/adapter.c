@@ -282,6 +282,123 @@ GST_START_TEST (test_take_buf_order)
 
 GST_END_TEST;
 
+GST_START_TEST (test_timestamp)
+{
+  GstAdapter *adapter;
+  GstBuffer *buffer;
+  guint avail;
+  GstClockTime timestamp;
+  guint64 dist;
+
+  adapter = gst_adapter_new ();
+  fail_unless (adapter != NULL);
+
+  buffer = gst_buffer_new_and_alloc (100);
+
+  /* push in the adapter */
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 100);
+
+  /* timestamp is now undefined */
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless (dist == 0);
+
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 50);
+
+  /* still undefined, dist changed, though */
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless (dist == 50);
+
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
+
+  /* push in the adapter */
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 150);
+
+  /* timestamp is still undefined */
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == GST_CLOCK_TIME_NONE);
+  fail_unless (dist == 50);
+
+  /* flush out first buffer we are now at the second buffer timestamp */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 100);
+
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless (dist == 0);
+
+  /* move some more, still the same timestamp but further away */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 50);
+
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless (dist == 50);
+
+  /* push a buffer without timestamp in the adapter */
+  buffer = gst_buffer_new_and_alloc (100);
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 150);
+  /* push a buffer with timestamp in the adapter */
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 250);
+
+  /* timestamp still as it was before the push */
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless (dist == 50);
+
+  /* flush away buffer with the timestamp */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 200);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless (dist == 100);
+
+  /* move into the second buffer */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 150);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 1 * GST_SECOND);
+  fail_unless (dist == 150);
+
+  /* move to third buffer we move to the new timestamp */
+  gst_adapter_flush (adapter, 50);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 100);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 2 * GST_SECOND);
+  fail_unless (dist == 0);
+
+  /* move everything out */
+  gst_adapter_flush (adapter, 100);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 0);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 2 * GST_SECOND);
+  fail_unless (dist == 100);
+
+  g_object_unref (adapter);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_adapter_suite (void)
 {
@@ -297,6 +414,7 @@ gst_adapter_suite (void)
   tcase_add_test (tc_chain, test_take3);
   tcase_add_test (tc_chain, test_take_order);
   tcase_add_test (tc_chain, test_take_buf_order);
+  tcase_add_test (tc_chain, test_timestamp);
 
   return s;
 }
