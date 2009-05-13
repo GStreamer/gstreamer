@@ -402,8 +402,10 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
     adapter->assembled_size = (size / DEFAULT_SIZE + 1) * DEFAULT_SIZE;
     GST_DEBUG_OBJECT (adapter, "resizing internal buffer to %u",
         adapter->assembled_size);
-    adapter->assembled_data =
-        g_realloc (adapter->assembled_data, adapter->assembled_size);
+    /* no g_realloc to avoid a memcpy that is not desired here since we are
+     * going to copy new data into the area below */
+    g_free (adapter->assembled_data);
+    adapter->assembled_data = g_malloc (adapter->assembled_size);
   }
   adapter->assembled_len = size;
 
