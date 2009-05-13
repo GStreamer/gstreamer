@@ -34,7 +34,7 @@
 
 #include "_stdint.h"
 
-#include "gstdeinterlace2.h"
+#include "gstdeinterlace.h"
 #include <string.h>
 
 #define GST_TYPE_DEINTERLACE_METHOD_GREEDY_L	(gst_deinterlace_method_greedy_l_get_type ())
@@ -335,7 +335,7 @@ deinterlace_greedy_packed422_scanline_mmxext (GstDeinterlaceMethodGreedyL *
 
 static void
 deinterlace_frame_di_greedy (GstDeinterlaceMethod * d_method,
-    GstDeinterlace2 * object, GstBuffer * outbuf)
+    GstDeinterlace * object, GstBuffer * outbuf)
 {
   GstDeinterlaceMethodGreedyL *self =
       GST_DEINTERLACE_METHOD_GREEDY_L (d_method);

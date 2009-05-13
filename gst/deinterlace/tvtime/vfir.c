@@ -34,7 +34,7 @@
 #endif
 
 #include "_stdint.h"
-#include "gstdeinterlace2.h"
+#include "gstdeinterlace.h"
 #include <string.h>
 
 #define GST_TYPE_DEINTERLACE_METHOD_VFIR	(gst_deinterlace_method_vfir_get_type ())
@@ -62,7 +62,7 @@ typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodVFIRClass;
   * C implementation.
   */
 static inline void
-deinterlace_line_c (GstDeinterlaceMethod * self, GstDeinterlace2 * parent,
+deinterlace_line_c (GstDeinterlaceMethod * self, GstDeinterlace * parent,
     guint8 * dst, GstDeinterlaceScanlineData * scanlines, gint width)
 {
   gint sum;
@@ -92,7 +92,7 @@ deinterlace_line_c (GstDeinterlaceMethod * self, GstDeinterlace2 * parent,
 #ifdef BUILD_X86_ASM
 #include "mmx.h"
 static void
-deinterlace_line_mmx (GstDeinterlaceMethod * self, GstDeinterlace2 * parent,
+deinterlace_line_mmx (GstDeinterlaceMethod * self, GstDeinterlace * parent,
     guint8 * dst, GstDeinterlaceScanlineData * scanlines, gint width)
 {
   mmx_t rounder;

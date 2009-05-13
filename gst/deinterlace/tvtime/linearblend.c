@@ -27,7 +27,7 @@
 #endif
 
 #include "_stdint.h"
-#include "gstdeinterlace2.h"
+#include "gstdeinterlace.h"
 #include <string.h>
 
 #define GST_TYPE_DEINTERLACE_METHOD_LINEAR_BLEND	(gst_deinterlace_method_linear_blend_get_type ())
@@ -47,7 +47,7 @@ typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodLinearBlendClass;
 
 static inline void
 deinterlace_scanline_linear_blend_c (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlace * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
   guint8 *t0 = scanlines->t0;
@@ -63,7 +63,7 @@ deinterlace_scanline_linear_blend_c (GstDeinterlaceMethod * self,
 
 static inline void
 deinterlace_scanline_linear_blend2_c (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlace * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
   guint8 *m0 = scanlines->m0;
@@ -80,7 +80,7 @@ deinterlace_scanline_linear_blend2_c (GstDeinterlaceMethod * self,
 #include "mmx.h"
 static inline void
 deinterlace_scanline_linear_blend_mmx (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlace * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
   guint8 *t0 = scanlines->t0;
@@ -137,7 +137,7 @@ deinterlace_scanline_linear_blend_mmx (GstDeinterlaceMethod * self,
 
 static inline void
 deinterlace_scanline_linear_blend2_mmx (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlace * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
   guint8 *m0 = scanlines->m0;

@@ -23,7 +23,7 @@
 #endif
 
 #include "_stdint.h"
-#include "gstdeinterlace2.h"
+#include "gstdeinterlace.h"
 #include <string.h>
 
 #define GST_TYPE_DEINTERLACE_METHOD_LINEAR	(gst_deinterlace_method_linear_get_type ())
@@ -42,7 +42,7 @@ typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodLinearClass;
 
 static void
 deinterlace_scanline_linear_c (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlace * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
   gint i;
@@ -56,7 +56,7 @@ deinterlace_scanline_linear_c (GstDeinterlaceMethod * self,
 #include "mmx.h"
 static void
 deinterlace_scanline_linear_mmx (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlace * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
   const mmx_t shiftmask = { 0xfefffefffefffeffULL };    /* To avoid shifting chroma to luma. */
@@ -128,7 +128,7 @@ deinterlace_scanline_linear_mmx (GstDeinterlaceMethod * self,
 #include "sse.h"
 static void
 deinterlace_scanline_linear_mmxext (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlace * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
   gint i;

@@ -280,6 +280,7 @@ AG_GST_CHECK_PLUGIN(autodetect)
 AG_GST_CHECK_PLUGIN(avi)
 AG_GST_CHECK_PLUGIN(cutter)
 AG_GST_CHECK_PLUGIN(debugutils)
+AG_GST_CHECK_PLUGIN(deinterlace)
 AG_GST_CHECK_PLUGIN(effectv)
 AG_GST_CHECK_PLUGIN(equalizer)
 AG_GST_CHECK_PLUGIN(flv)
@@ -1055,7 +1056,7 @@ gst/auparse/Makefile
 gst/autodetect/Makefile
 gst/avi/Makefile
 gst/cutter/Makefile
-gst/debugutils/Makefile
+gst/deinterlace/Makefile
 gst/effectv/Makefile
 gst/equalizer/Makefile
 gst/flv/Makefile

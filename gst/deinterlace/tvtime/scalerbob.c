@@ -23,7 +23,7 @@
 #endif
 
 #include "_stdint.h"
-#include "gstdeinterlace2.h"
+#include "gstdeinterlace.h"
 #include <string.h>
 
 #define GST_TYPE_DEINTERLACE_METHOD_SCALER_BOB	(gst_deinterlace_method_scaler_bob_get_type ())
@@ -43,7 +43,7 @@ typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodScalerBobClass;
 
 static void
 deinterlace_scanline_scaler_bob (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlace * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
   oil_memcpy (out, scanlines->t0, parent->row_stride);

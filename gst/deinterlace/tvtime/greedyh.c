@@ -37,7 +37,7 @@
 
 #include "gst/gst.h"
 #include "plugins.h"
-#include "gstdeinterlace2.h"
+#include "gstdeinterlace.h"
 
 #define GST_TYPE_DEINTERLACE_METHOD_GREEDY_H	(gst_deinterlace_method_greedy_h_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_GREEDY_H(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_GREEDY_H))
@@ -235,7 +235,7 @@ greedyDScaler_C (GstDeinterlaceMethodGreedyH * self, uint8_t * L1, uint8_t * L2,
 
 static void
 deinterlace_frame_di_greedyh (GstDeinterlaceMethod * d_method,
-    GstDeinterlace2 * object, GstBuffer * outbuf)
+    GstDeinterlace * object, GstBuffer * outbuf)
 {
   GstDeinterlaceMethodGreedyH *self =
       GST_DEINTERLACE_METHOD_GREEDY_H (d_method);

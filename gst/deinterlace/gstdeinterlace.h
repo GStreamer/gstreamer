@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_DEINTERLACE_2_H__
-#define __GST_DEINTERLACE_2_H__
+#ifndef __GST_DEINTERLACE_H__
+#define __GST_DEINTERLACE_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
@@ -36,19 +36,19 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_DEINTERLACE2 \
-  (gst_deinterlace2_get_type())
-#define GST_DEINTERLACE2(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DEINTERLACE2,GstDeinterlace2))
-#define GST_DEINTERLACE2_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DEINTERLACE2,GstDeinterlace2))
-#define GST_IS_DEINTERLACE2(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DEINTERLACE2))
-#define GST_IS_DEINTERLACE2_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DEINTERLACE2))
+#define GST_TYPE_DEINTERLACE \
+  (gst_deinterlace_get_type())
+#define GST_DEINTERLACE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DEINTERLACE,GstDeinterlace))
+#define GST_DEINTERLACE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DEINTERLACE,GstDeinterlace))
+#define GST_IS_DEINTERLACE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DEINTERLACE))
+#define GST_IS_DEINTERLACE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DEINTERLACE))
 
-typedef struct _GstDeinterlace2 GstDeinterlace2;
-typedef struct _GstDeinterlace2Class GstDeinterlace2Class;
+typedef struct _GstDeinterlace GstDeinterlace;
+typedef struct _GstDeinterlaceClass GstDeinterlaceClass;
 
 #define GST_TYPE_DEINTERLACE_METHOD		(gst_deinterlace_method_get_type ())
 #define GST_IS_DEINTERLACE_METHOD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD))
@@ -74,7 +74,7 @@ struct _GstDeinterlaceMethodClass {
   guint fields_required;
   guint latency;
 
-  void (*deinterlace_frame) (GstDeinterlaceMethod *self, GstDeinterlace2 * parent, GstBuffer *outbuf);
+  void (*deinterlace_frame) (GstDeinterlaceMethod *self, GstDeinterlace * parent, GstBuffer *outbuf);
 
   const gchar *name;
   const gchar *nick;
@@ -137,8 +137,8 @@ struct _GstDeinterlaceSimpleMethod {
 struct _GstDeinterlaceSimpleMethodClass {
   GstDeinterlaceMethodClass parent_class;
 
-  void (*interpolate_scanline) (GstDeinterlaceMethod *self, GstDeinterlace2 * parent, guint8 *out, GstDeinterlaceScanlineData *scanlines, gint width);
-  void (*copy_scanline) (GstDeinterlaceMethod *self, GstDeinterlace2 * parent, guint8 *out, GstDeinterlaceScanlineData *scanlines, gint width);
+  void (*interpolate_scanline) (GstDeinterlaceMethod *self, GstDeinterlace * parent, guint8 *out, GstDeinterlaceScanlineData *scanlines, gint width);
+  void (*copy_scanline) (GstDeinterlaceMethod *self, GstDeinterlace * parent, guint8 *out, GstDeinterlaceScanlineData *scanlines, gint width);
 };
 
 GType gst_deinterlace_simple_method_get_type (void);
@@ -161,39 +161,39 @@ typedef struct
 
 typedef enum
 {
-  GST_DEINTERLACE2_TOMSMOCOMP,
-  GST_DEINTERLACE2_GREEDY_H,
-  GST_DEINTERLACE2_GREEDY_L,
-  GST_DEINTERLACE2_VFIR,
-  GST_DEINTERLACE2_LINEAR,
-  GST_DEINTERLACE2_LINEAR_BLEND,
-  GST_DEINTERLACE2_SCALER_BOB,
-  GST_DEINTERLACE2_WEAVE,
-  GST_DEINTERLACE2_WEAVE_TFF,
-  GST_DEINTERLACE2_WEAVE_BFF
-} GstDeinterlace2Methods;
+  GST_DEINTERLACE_TOMSMOCOMP,
+  GST_DEINTERLACE_GREEDY_H,
+  GST_DEINTERLACE_GREEDY_L,
+  GST_DEINTERLACE_VFIR,
+  GST_DEINTERLACE_LINEAR,
+  GST_DEINTERLACE_LINEAR_BLEND,
+  GST_DEINTERLACE_SCALER_BOB,
+  GST_DEINTERLACE_WEAVE,
+  GST_DEINTERLACE_WEAVE_TFF,
+  GST_DEINTERLACE_WEAVE_BFF
+} GstDeinterlaceMethods;
 
 typedef enum
 {
-  GST_DEINTERLACE2_ALL,         /* All (missing data is interp.) */
-  GST_DEINTERLACE2_TF,          /* Top Fields Only */
-  GST_DEINTERLACE2_BF           /* Bottom Fields Only */
-} GstDeinterlace2Fields;
+  GST_DEINTERLACE_ALL,         /* All (missing data is interp.) */
+  GST_DEINTERLACE_TF,          /* Top Fields Only */
+  GST_DEINTERLACE_BF           /* Bottom Fields Only */
+} GstDeinterlaceFields;
 
 typedef enum
 {
-  GST_DEINTERLACE2_LAYOUT_AUTO,
-  GST_DEINTERLACE2_LAYOUT_TFF,
-  GST_DEINTERLACE2_LAYOUT_BFF
-} GstDeinterlace2FieldLayout;
+  GST_DEINTERLACE_LAYOUT_AUTO,
+  GST_DEINTERLACE_LAYOUT_TFF,
+  GST_DEINTERLACE_LAYOUT_BFF
+} GstDeinterlaceFieldLayout;
 
 typedef enum {
-  GST_DEINTERLACE2_MODE_AUTO,
-  GST_DEINTERLACE2_MODE_INTERLACED,
-  GST_DEINTERLACE2_MODE_DISABLED
-} GstDeinterlace2Mode;
+  GST_DEINTERLACE_MODE_AUTO,
+  GST_DEINTERLACE_MODE_INTERLACED,
+  GST_DEINTERLACE_MODE_DISABLED
+} GstDeinterlaceMode;
 
-struct _GstDeinterlace2
+struct _GstDeinterlace
 {
   GstElement parent;
 
@@ -201,9 +201,9 @@ struct _GstDeinterlace2
 
   /* <private> */
 
-  GstDeinterlace2Mode mode;
+  GstDeinterlaceMode mode;
 
-  GstDeinterlace2FieldLayout field_layout;
+  GstDeinterlaceFieldLayout field_layout;
 
   guint frame_size;
   gint frame_rate_n, frame_rate_d;
@@ -212,9 +212,9 @@ struct _GstDeinterlace2
   /* Duration of one field */
   GstClockTime field_duration;
 
-  GstDeinterlace2Fields fields;
+  GstDeinterlaceFields fields;
 
-  GstDeinterlace2Methods method_id;
+  GstDeinterlaceMethods method_id;
   GstDeinterlaceMethod *method;
 
   /* The most recent pictures 
@@ -248,12 +248,12 @@ struct _GstDeinterlace2
   guint field_stride;
 };
 
-struct _GstDeinterlace2Class
+struct _GstDeinterlaceClass
 {
   GstElementClass parent_class;
 };
 
-GType gst_deinterlace2_get_type (void);
+GType gst_deinterlace_get_type (void);
 
 G_END_DECLS
-#endif /* __GST_DEINTERLACE_2_H__ */
+#endif /* __GST_DEINTERLACE_H__ */

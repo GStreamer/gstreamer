@@ -19918,3 +19918,43 @@
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstDeinterlace::fields</NAME>
+<TYPE>GstDeinterlaceFields</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>fields</NICK>
+<BLURB>Fields to use for deinterlacing.</BLURB>
+<DEFAULT>All fields</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterlace::method</NAME>
+<TYPE>GstDeinterlaceMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Method</NICK>
+<BLURB>Deinterlace Method.</BLURB>
+<DEFAULT>Motion Adaptive: Advanced Detection</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterlace::mode</NAME>
+<TYPE>GstDeinterlaceModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Deinterlace Mode.</BLURB>
+<DEFAULT>Enfore deinterlacing</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDeinterlace::tff</NAME>
+<TYPE>GstDeinterlaceFieldLayout</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>tff</NICK>
+<BLURB>Deinterlace top field first.</BLURB>
+<DEFAULT>Auto detection</DEFAULT>
+</ARG>
+

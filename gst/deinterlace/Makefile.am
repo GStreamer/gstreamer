@@ -1,7 +1,7 @@
-plugin_LTLIBRARIES = libgstdeinterlace2.la
+plugin_LTLIBRARIES = libgstdeinterlace.la
 
-libgstdeinterlace2_la_SOURCES = \
-	gstdeinterlace2.c \
+libgstdeinterlace_la_SOURCES = \
+	gstdeinterlace.c \
 	tvtime/greedy.c \
 	tvtime/greedyh.c \
 	tvtime/vfir.c \
@@ -13,15 +13,15 @@ libgstdeinterlace2_la_SOURCES = \
 	tvtime/linearblend.c \
 	tvtime/scalerbob.c
 
-libgstdeinterlace2_la_CFLAGS = $(GST_CFLAGS) \
+libgstdeinterlace_la_CFLAGS = $(GST_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(LIBOIL_CFLAGS)
-libgstdeinterlace2_la_LIBADD = $(GST_LIBS) \
+libgstdeinterlace_la_LIBADD = $(GST_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(LIBOIL_LIBS)
-libgstdeinterlace2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdeinterlace2_la_LIBTOOLFLAGS = --tag=disable-static
+libgstdeinterlace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstdeinterlace_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
-	gstdeinterlace2.h \
+	gstdeinterlace.h \
 	tvtime/mmx.h \
 	tvtime/sse.h \
 	tvtime/greedyh.asm \

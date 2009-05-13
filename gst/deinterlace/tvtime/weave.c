@@ -24,7 +24,7 @@
 #endif
 
 #include "_stdint.h"
-#include "gstdeinterlace2.h"
+#include "gstdeinterlace.h"
 #include <string.h>
 
 #define GST_TYPE_DEINTERLACE_METHOD_WEAVE	(gst_deinterlace_method_weave_get_type ())
@@ -44,14 +44,14 @@ typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodWeaveClass;
 
 static void
 deinterlace_scanline_weave (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent, guint8 * out,
+    GstDeinterlace * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
   oil_memcpy (out, scanlines->m1, parent->row_stride);
 }
 
 static void
-copy_scanline (GstDeinterlaceMethod * self, GstDeinterlace2 * parent,
+copy_scanline (GstDeinterlaceMethod * self, GstDeinterlace * parent,
     guint8 * out, GstDeinterlaceScanlineData * scanlines, gint width)
 {
   oil_memcpy (out, scanlines->m0, parent->row_stride);

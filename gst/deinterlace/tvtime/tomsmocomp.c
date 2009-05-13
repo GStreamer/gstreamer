@@ -26,7 +26,7 @@
 #include <string.h>
 
 #include "gst/gst.h"
-#include "gstdeinterlace2.h"
+#include "gstdeinterlace.h"
 #include "plugins.h"
 
 #define GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP	(gst_deinterlace_method_tomsmocomp_get_type ())

@@ -40,4 +40,6 @@ GstSpeexEnc GstTagSetter GstPreset
 GstOssMixerElement GstImplementsInterface GstMixer
 GstMatroskaMux GstTagSetter
 GstVideoMixer GstChildProxy
+GstFlvMux GstTagSetter
 GstAviMux GstTagSetter
+GstDeinterlace GstChildProxy

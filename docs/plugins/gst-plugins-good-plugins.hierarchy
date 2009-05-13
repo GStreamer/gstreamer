@@ -142,6 +142,8 @@ GObject
         GstID3Demux
       GstGoom
       GstGoom2k1
+      GstFLVDemux
+      GstFlvMux
       GstMultipartDemux
       GstMultipartMux
       GstMuLawEnc
@@ -187,6 +189,7 @@ GObject
       GstInterleave
       GstDeinterleave
       GstMonoscope
+      GstDeinterlace
       GstWavEnc
       GstAuParse
       GstRTPDepay

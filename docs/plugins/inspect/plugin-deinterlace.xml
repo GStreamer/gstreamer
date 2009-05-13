@@ -1,0 +1,34 @@
+<plugin>
+  <name>deinterlace</name>
+  <description>Deinterlacer</description>
+  <filename>../../gst/deinterlace/.libs/libgstdeinterlace.so</filename>
+  <basename>libgstdeinterlace.so</basename>
+  <version>0.10.14.2</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>deinterlace</name>
+      <longname>Deinterlacer</longname>
+      <class>Filter/Video</class>
+      <description>Deinterlace Methods ported from DScaler/TvTime</description>
+      <author>Martin Eikermann &lt;meiker@upb.de&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)YUY2, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc)YVYU, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)YUY2, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc)YVYU, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
