@@ -5,6 +5,7 @@ http://bugzilla.novell.com/show_bug.cgi?id=497667
 http://bugzilla.novell.com/show_bug.cgi?id=503048
 http://bugzilla.novell.com/show_bug.cgi?id=503060
 http://bugzilla.novell.com/show_bug.cgi?id=499900
+http://bugzilla.novell.com/show_bug.cgi?id=503467
 
 If you're using Mono < 2.4 you also need to apply:
 http://bugzilla.novell.com/show_bug.cgi?id=477396

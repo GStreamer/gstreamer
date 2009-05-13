@@ -1022,7 +1022,7 @@
   <move-node path="/api/namespace/object[@cname='GstMixerOptions']/method[@cname='gst_mixer_options_list_changed']">/api/namespace/interface[@cname='GstMixer']</move-node>
 
   <attr path="/api/namespace/interface[@cname='GstNavigation']" name="hidden">1</attr>
-  <attr path="/api/namespace/interface[@cname='GstPropertyProbe']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstPropertyProbe']" name="name">PropertyProbe</attr>
 
   <attr path="/api/namespace/interface[@cname='GstTuner']" name="name">Tuner</attr>
   <remove-node path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_norm_changed']/parameters/parameter[@name='tuner']" />

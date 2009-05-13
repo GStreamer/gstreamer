@@ -60,7 +60,10 @@ overrides = \
 	override/ColorBalanceAdapter.cs \
 	override/ColorBalance.cs  \
 	override/Mixer.cs \
-	override/MixerAdapter.cs
+	override/MixerAdapter.cs \
+	override/PropertyProbe.cs \
+	override/PropertyProbeAdapter.cs \
+	override/ProbeNeededHandler.cs
 
 build_sources = $(addprefix $(srcdir)/, $(sources))
 
