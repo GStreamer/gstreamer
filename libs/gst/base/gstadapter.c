@@ -398,12 +398,12 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
   }
 
   /* Gonna need to copy stuff out */
-  if (adapter->assembled_size < size) {
+  if (G_UNLIKELY (adapter->assembled_size < size)) {
     adapter->assembled_size = (size / DEFAULT_SIZE + 1) * DEFAULT_SIZE;
-    GST_DEBUG_OBJECT (adapter, "setting size of internal buffer to %u",
+    GST_DEBUG_OBJECT (adapter, "resizing internal buffer to %u",
         adapter->assembled_size);
-    g_free (adapter->assembled_data);
-    adapter->assembled_data = g_malloc (adapter->assembled_size);
+    adapter->assembled_data =
+        g_realloc (adapter->assembled_data, adapter->assembled_size);
   }
   adapter->assembled_len = size;
 
