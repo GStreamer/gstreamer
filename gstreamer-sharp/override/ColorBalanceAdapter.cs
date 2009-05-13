@@ -89,9 +89,12 @@ namespace Gst.Interfaces {
 			GCHandle gch = (GCHandle) data;
 			ColorBalanceAdapter adapter = gch.Target as ColorBalanceAdapter;
 
-			PropertyInfo pi = adapter.Type.GetProperty ("BalanceType", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
-			if (pi != null && pi.PropertyType == typeof (Gst.Interfaces.ColorBalanceType))
-			  native_iface.BalanceType = (Gst.Interfaces.ColorBalanceType) pi.GetValue (null, null);
+			ColorBalanceImplementor implementor = adapter.Implementor;
+			if (implementor != null) {
+			  PropertyInfo pi = implementor.GetType().GetProperty ("BalanceType", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+			  if (pi != null && pi.PropertyType == typeof (Gst.Interfaces.ColorBalanceType))
+			    native_iface.BalanceType = (Gst.Interfaces.ColorBalanceType) pi.GetValue (null, null);
+			}
 
 			Marshal.StructureToPtr (native_iface, ifaceptr, false);
 			gch.Free ();

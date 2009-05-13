@@ -189,9 +189,13 @@ namespace Gst.Interfaces {
 
 			GCHandle gch = (GCHandle) data;
                         MixerAdapter adapter = gch.Target as MixerAdapter;
-			PropertyInfo pi = adapter.Type.GetProperty ("MixerType", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
-                        if (pi != null && pi.PropertyType == typeof (Gst.Interfaces.MixerType))
-                          native_iface.MixerType = (Gst.Interfaces.MixerType) pi.GetValue (null, null);
+                        MixerImplementor implementor = adapter.Implementor;
+
+			if (implementor != null) {
+			  PropertyInfo pi = implementor.GetType().GetProperty ("MixerType", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+                          if (pi != null && pi.PropertyType == typeof (Gst.Interfaces.MixerType))
+                            native_iface.MixerType = (Gst.Interfaces.MixerType) pi.GetValue (null, null);
+			}
 
 			Marshal.StructureToPtr (native_iface, ifaceptr, false);
 			gch.Free ();
