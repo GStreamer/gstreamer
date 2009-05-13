@@ -702,22 +702,17 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
 }
 
 static GstFlowReturn
-gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, GstBuffer * inbuf,
-    gint max_size, gboolean discont)
+gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, guint8 * audio_in,
+    guint max_size, GstClockTime timestamp, GstClockTime duration,
+    gboolean discont)
 {
   GstBuffer *outbuf;
   AVCodecContext *ctx;
-  guint8 *audio_out, *audio_in;
-  GstClockTime timestamp, duration;
+  guint8 *audio_out;
   gint res;
   GstFlowReturn ret;
 
   ctx = ffmpegenc->context;
-
-  /* caller should set timestamps on inbuf */
-  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
-  duration = GST_BUFFER_DURATION (inbuf);
-  audio_in = GST_BUFFER_DATA (inbuf);
 
   outbuf = gst_buffer_new_and_alloc (max_size);
   audio_out = GST_BUFFER_DATA (outbuf);
@@ -725,7 +720,6 @@ gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, GstBuffer * inbuf,
   GST_LOG_OBJECT (ffmpegenc, "encoding buffer of max size %d", max_size);
 
   res = avcodec_encode_audio (ctx, audio_out, max_size, (short *) audio_in);
-  gst_buffer_unref (inbuf);
 
   if (res < 0) {
     GST_ERROR_OBJECT (ffmpegenc, "Failed to encode buffer: %d", res);
@@ -761,6 +755,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
   GstFlowReturn ret;
   gint out_size;
   gboolean discont;
+  guint8 *in_data;
 
   ffmpegenc = (GstFFMpegEnc *) (GST_OBJECT_PARENT (pad));
   oclass = (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
@@ -820,7 +815,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
           frame_bytes);
 
       /* take an audio buffer out of the adapter */
-      inbuf = gst_adapter_take_buffer (ffmpegenc->adapter, frame_bytes);
+      in_data = (guint8 *) gst_adapter_peek (ffmpegenc->adapter, frame_bytes);
       ffmpegenc->adapter_consumed += frame_size;
 
       /* calculate timestamp and duration relative to start of adapter and to
@@ -830,19 +825,19 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
           ctx->sample_rate);
       duration -= (timestamp - ffmpegenc->adapter_ts);
 
-      GST_BUFFER_TIMESTAMP (inbuf) = timestamp;
-      GST_BUFFER_DURATION (inbuf) = duration;
-
-      /* advance the adapter timestamp with the duration */
-      timestamp += duration;
-
       /* 4 times the input size should be big enough... */
       out_size = MAX (frame_bytes * 4, FF_MIN_BUFFER_SIZE);
 
-      ret = gst_ffmpegenc_encode_audio (ffmpegenc, inbuf, out_size,
-          ffmpegenc->discont);
+      ret = gst_ffmpegenc_encode_audio (ffmpegenc, in_data, out_size,
+          timestamp, duration, ffmpegenc->discont);
+
+      gst_adapter_flush (ffmpegenc->adapter, frame_bytes);
+
       if (ret != GST_FLOW_OK)
         goto push_failed;
+
+      /* advance the adapter timestamp with the duration */
+      timestamp += duration;
 
       ffmpegenc->discont = FALSE;
       avail = gst_adapter_available (ffmpegenc->adapter);
@@ -859,7 +854,11 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
     if (coded_bps)
       out_size *= coded_bps;
 
-    ret = gst_ffmpegenc_encode_audio (ffmpegenc, inbuf, out_size, discont);
+    in_data = (guint8 *) GST_BUFFER_DATA (inbuf);
+    ret = gst_ffmpegenc_encode_audio (ffmpegenc, in_data, out_size,
+        timestamp, duration, discont);
+    gst_buffer_unref (inbuf);
+
     if (ret != GST_FLOW_OK)
       goto push_failed;
   }
