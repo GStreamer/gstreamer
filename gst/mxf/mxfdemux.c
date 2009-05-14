@@ -203,7 +203,7 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
 {
   GST_DEBUG_OBJECT (demux, "Resetting metadata");
 
-  g_mutex_lock (demux->metadata_lock);
+  g_static_rw_lock_writer_lock (&demux->metadata_lock);
 
   demux->update_metadata = TRUE;
   demux->metadata_resolved = FALSE;
@@ -217,7 +217,7 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
   }
   demux->metadata = mxf_metadata_hash_table_new ();
 
-  g_mutex_unlock (demux->metadata_lock);
+  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
 }
 
 static void
@@ -513,11 +513,14 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
   GstStructure *structure;
   GstTagList *taglist;
 
+  g_static_rw_lock_writer_lock (&demux->metadata_lock);
+
   GST_DEBUG_OBJECT (demux, "Resolve metadata references");
   demux->update_metadata = FALSE;
 
   if (!demux->metadata) {
     GST_ERROR_OBJECT (demux, "No metadata yet");
+    g_static_rw_lock_writer_unlock (&demux->metadata_lock);
     return GST_FLOW_ERROR;
   }
 #if GLIB_CHECK_VERSION (2, 16, 0)
@@ -565,6 +568,8 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
   g_list_free (values);
 #endif
 
+  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+
   return ret;
 
 error:
@@ -573,6 +578,7 @@ error:
 #endif
 
   demux->metadata_resolved = FALSE;
+  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
 
   return ret;
 }
@@ -913,24 +919,29 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
   gboolean first_run;
   guint component_index;
   GstFlowReturn ret;
+  GList *pads = NULL, *l;
 
+  g_static_rw_lock_writer_lock (&demux->metadata_lock);
   GST_DEBUG_OBJECT (demux, "Updating tracks");
 
   if ((ret = gst_mxf_demux_update_essence_tracks (demux)) != GST_FLOW_OK) {
-    return ret;
+    goto error;
   }
 
   current_package = gst_mxf_demux_choose_package (demux);
 
   if (!current_package) {
     GST_ERROR_OBJECT (demux, "Unable to find current package");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto error;
   } else if (!current_package->tracks) {
     GST_ERROR_OBJECT (demux, "Current package has no (resolved) tracks");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto error;
   } else if (!current_package->n_essence_tracks) {
     GST_ERROR_OBJECT (demux, "Current package has no essence tracks");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto error;
   }
 
   first_run = (demux->src->len == 0);
@@ -977,10 +988,12 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
     if (!track->parent.sequence) {
       GST_WARNING_OBJECT (demux, "Track with no sequence");
-      if (!pad)
+      if (!pad) {
         continue;
-      else
-        return GST_FLOW_ERROR;
+      } else {
+        ret = GST_FLOW_ERROR;
+        goto error;
+      }
     }
 
     sequence = track->parent.sequence;
@@ -1021,20 +1034,24 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
     if (track->parent.type && (track->parent.type & 0xf0) != 0x30) {
       GST_DEBUG_OBJECT (demux, "No essence track");
-      if (!pad)
+      if (!pad) {
         continue;
-      else
-        return GST_FLOW_ERROR;
+      } else {
+        ret = GST_FLOW_ERROR;
+        goto error;
+      }
     }
 
     if (!source_package || track->parent.type == MXF_METADATA_TRACK_UNKNOWN
         || !source_track) {
       GST_WARNING_OBJECT (demux,
           "No source package or track type for track found");
-      if (!pad)
+      if (!pad) {
         continue;
-      else
-        return GST_FLOW_ERROR;
+      } else {
+        ret = GST_FLOW_ERROR;
+        goto error;
+      }
     }
 
     for (k = 0; k < demux->essence_tracks->len; k++) {
@@ -1050,44 +1067,54 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
     if (!etrack) {
       GST_WARNING_OBJECT (demux, "No essence track for this track found");
-      if (!pad)
+      if (!pad) {
         continue;
-      else
-        return GST_FLOW_ERROR;
+      } else {
+        ret = GST_FLOW_ERROR;
+        goto error;
+      }
     }
 
     if (track->edit_rate.n <= 0 || track->edit_rate.d <= 0 ||
         source_track->edit_rate.n <= 0 || source_track->edit_rate.d <= 0) {
       GST_WARNING_OBJECT (demux, "Track has an invalid edit rate");
-      if (!pad)
+      if (!pad) {
         continue;
-      else
-        return GST_FLOW_ERROR;
+      } else {
+        ret = GST_FLOW_ERROR;
+        goto error;
+      }
     }
 
     if (MXF_IS_METADATA_MATERIAL_PACKAGE (current_package) && !component) {
       GST_WARNING_OBJECT (demux,
           "Playing material package but found no component for track");
-      if (!pad)
+      if (!pad) {
         continue;
-      else
-        return GST_FLOW_ERROR;
+      } else {
+        ret = GST_FLOW_ERROR;
+        goto error;
+      }
     }
 
     if (!source_package->descriptor) {
       GST_WARNING_OBJECT (demux, "Source package has no descriptors");
-      if (!pad)
+      if (!pad) {
         continue;
-      else
-        return GST_FLOW_ERROR;
+      } else {
+        ret = GST_FLOW_ERROR;
+        goto error;
+      }
     }
 
     if (!source_track->parent.descriptor) {
       GST_WARNING_OBJECT (demux, "No descriptor found for track");
-      if (!pad)
+      if (!pad) {
         continue;
-      else
-        return GST_FLOW_ERROR;
+      } else {
+        ret = GST_FLOW_ERROR;
+        goto error;
+      }
     }
 
     if (!pad && first_run) {
@@ -1178,15 +1205,12 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
       gst_pad_use_fixed_caps (GST_PAD_CAST (pad));
       gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
 
-      gst_element_add_pad (GST_ELEMENT_CAST (demux), gst_object_ref (pad));
+      pads = g_list_prepend (pads, gst_object_ref (pad));
 
       g_ptr_array_add (demux->src, pad);
       pad->discont = TRUE;
     }
   }
-
-  if (first_run)
-    gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
 
   if (demux->src->len > 0) {
     for (i = 0; i < demux->src->len; i++) {
@@ -1194,15 +1218,30 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
       if (!pad->material_track || !pad->material_package) {
         GST_ERROR_OBJECT (demux, "Unable to update existing pad");
-        return GST_FLOW_ERROR;
+        ret = GST_FLOW_ERROR;
+        goto error;
       }
     }
   } else {
     GST_ERROR_OBJECT (demux, "Couldn't create any streams");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto error;
   }
 
+  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+
+  for (l = pads; l; l = l->next)
+    gst_element_add_pad (GST_ELEMENT_CAST (demux), l->data);
+  g_list_free (pads);
+
+  if (first_run)
+    gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
+
   return GST_FLOW_OK;
+
+error:
+  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
+  return ret;
 }
 
 static GstFlowReturn
@@ -1276,7 +1315,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     return GST_FLOW_OK;
   }
 
-  g_mutex_lock (demux->metadata_lock);
+  g_static_rw_lock_writer_lock (&demux->metadata_lock);
   demux->update_metadata = TRUE;
 
   if (MXF_IS_METADATA_PREFACE (metadata)) {
@@ -1287,7 +1326,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
 
   g_hash_table_replace (demux->metadata,
       &MXF_METADATA_BASE (metadata)->instance_uid, metadata);
-  g_mutex_unlock (demux->metadata_lock);
+  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
 
   return ret;
 }
@@ -1365,7 +1404,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
     return GST_FLOW_OK;
   }
 
-  g_mutex_lock (demux->metadata_lock);
+  g_static_rw_lock_writer_lock (&demux->metadata_lock);
 
   demux->update_metadata = TRUE;
   gst_mxf_demux_reset_linked_metadata (demux);
@@ -1373,7 +1412,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
   g_hash_table_replace (demux->metadata, &MXF_METADATA_BASE (m)->instance_uid,
       m);
 
-  g_mutex_unlock (demux->metadata_lock);
+  g_static_rw_lock_writer_unlock (&demux->metadata_lock);
 
   return ret;
 }
@@ -2224,17 +2263,14 @@ next_try:
 
   /* resolve references etc */
 
-  g_mutex_lock (demux->metadata_lock);
   if (gst_mxf_demux_resolve_references (demux) !=
       GST_FLOW_OK || gst_mxf_demux_update_tracks (demux) != GST_FLOW_OK) {
     demux->current_partition->parsed_metadata = TRUE;
     demux->offset =
         demux->run_in + demux->current_partition->partition.this_partition -
         demux->current_partition->partition.prev_partition;
-    g_mutex_unlock (demux->metadata_lock);
     goto next_try;
   }
-  g_mutex_unlock (demux->metadata_lock);
 
 out:
   if (buffer)
@@ -2253,7 +2289,6 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
 #endif
   GstFlowReturn ret = GST_FLOW_OK;
 
-  g_mutex_lock (demux->metadata_lock);
   if (demux->update_metadata
       && demux->preface
       && (demux->offset >=
@@ -2265,16 +2300,13 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
     demux->current_partition->parsed_metadata = TRUE;
     if ((ret = gst_mxf_demux_resolve_references (demux)) != GST_FLOW_OK ||
         (ret = gst_mxf_demux_update_tracks (demux)) != GST_FLOW_OK) {
-      g_mutex_unlock (demux->metadata_lock);
       goto beach;
     }
   } else if (demux->metadata_resolved && demux->requested_package_string) {
     if ((ret = gst_mxf_demux_update_tracks (demux)) != GST_FLOW_OK) {
-      g_mutex_unlock (demux->metadata_lock);
       goto beach;
     }
   }
-  g_mutex_unlock (demux->metadata_lock);
 
   if (!mxf_is_mxf_packet (key)) {
     GST_WARNING_OBJECT (demux,
@@ -3106,15 +3138,12 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
     guint64 new_offset = -1;
     GstEvent *e;
 
-    g_mutex_lock (demux->metadata_lock);
     if (!demux->metadata_resolved || demux->update_metadata) {
       if (gst_mxf_demux_resolve_references (demux) != GST_FLOW_OK ||
           gst_mxf_demux_update_tracks (demux) != GST_FLOW_OK) {
-        g_mutex_unlock (demux->metadata_lock);
         goto unresolved_metadata;
       }
     }
-    g_mutex_unlock (demux->metadata_lock);
 
     /* Do the actual seeking */
     for (i = 0; i < demux->src->len; i++) {
@@ -3266,15 +3295,12 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   if (flush || seeksegment.last_stop != demux->segment.last_stop) {
     guint64 new_offset = -1;
 
-    g_mutex_lock (demux->metadata_lock);
     if (!demux->metadata_resolved || demux->update_metadata) {
       if (gst_mxf_demux_resolve_references (demux) != GST_FLOW_OK ||
           gst_mxf_demux_update_tracks (demux) != GST_FLOW_OK) {
-        g_mutex_unlock (demux->metadata_lock);
         goto unresolved_metadata;
       }
     }
-    g_mutex_unlock (demux->metadata_lock);
 
     /* Do the actual seeking */
     for (i = 0; i < demux->src->len; i++) {
@@ -3455,11 +3481,11 @@ gst_mxf_demux_src_query (GstPad * pad, GstQuery * query)
 
       pos = mxfpad->last_stop;
 
-      g_mutex_lock (demux->metadata_lock);
+      g_static_rw_lock_reader_lock (&demux->metadata_lock);
       if (format == GST_FORMAT_DEFAULT && pos != GST_CLOCK_TIME_NONE) {
         if (!mxfpad->material_track || mxfpad->material_track->edit_rate.n == 0
             || mxfpad->material_track->edit_rate.d == 0) {
-          g_mutex_unlock (demux->metadata_lock);
+          g_static_rw_lock_reader_unlock (&demux->metadata_lock);
           goto error;
         }
 
@@ -3468,7 +3494,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstQuery * query)
             mxfpad->material_track->edit_rate.n,
             mxfpad->material_track->edit_rate.d * GST_SECOND);
       }
-      g_mutex_unlock (demux->metadata_lock);
+      g_static_rw_lock_reader_unlock (&demux->metadata_lock);
 
       GST_DEBUG_OBJECT (pad,
           "Returning position %" G_GINT64_FORMAT " in format %s", pos,
@@ -3487,9 +3513,9 @@ gst_mxf_demux_src_query (GstPad * pad, GstQuery * query)
       if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT)
         goto error;
 
-      g_mutex_lock (demux->metadata_lock);
+      g_static_rw_lock_reader_lock (&demux->metadata_lock);
       if (!mxfpad->material_track || !mxfpad->material_track->parent.sequence) {
-        g_mutex_unlock (demux->metadata_lock);
+        g_static_rw_lock_reader_unlock (&demux->metadata_lock);
         goto error;
       }
 
@@ -3500,7 +3526,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstQuery * query)
       if (duration != -1 && format == GST_FORMAT_TIME) {
         if (mxfpad->material_track->edit_rate.n == 0 ||
             mxfpad->material_track->edit_rate.d == 0) {
-          g_mutex_unlock (demux->metadata_lock);
+          g_static_rw_lock_reader_unlock (&demux->metadata_lock);
           goto error;
         }
 
@@ -3509,7 +3535,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstQuery * query)
             GST_SECOND * mxfpad->material_track->edit_rate.d,
             mxfpad->material_track->edit_rate.n);
       }
-      g_mutex_unlock (demux->metadata_lock);
+      g_static_rw_lock_reader_unlock (&demux->metadata_lock);
 
       GST_DEBUG_OBJECT (pad,
           "Returning duration %" G_GINT64_FORMAT " in format %s", duration,
@@ -3746,7 +3772,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
       if (demux->src->len == 0)
         goto done;
 
-      g_mutex_lock (demux->metadata_lock);
+      g_static_rw_lock_reader_lock (&demux->metadata_lock);
       for (i = 0; i < demux->src->len; i++) {
         GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
         gint64 pdur = -1;
@@ -3765,7 +3791,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
             pad->material_track->edit_rate.n);
         duration = MAX (duration, pdur);
       }
-      g_mutex_unlock (demux->metadata_lock);
+      g_static_rw_lock_reader_unlock (&demux->metadata_lock);
 
       if (duration == -1) {
         GST_DEBUG_OBJECT (demux, "No duration known (yet)");
@@ -3862,7 +3888,7 @@ gst_mxf_demux_get_property (GObject * object, guint prop_id,
     case PROP_STRUCTURE:{
       GstStructure *s;
 
-      g_mutex_lock (demux->metadata_lock);
+      g_static_rw_lock_reader_lock (&demux->metadata_lock);
       if (demux->preface)
         s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (demux->preface));
       else
@@ -3873,7 +3899,7 @@ gst_mxf_demux_get_property (GObject * object, guint prop_id,
       if (s)
         gst_structure_free (s);
 
-      g_mutex_unlock (demux->metadata_lock);
+      g_static_rw_lock_reader_unlock (&demux->metadata_lock);
       break;
     }
     default:
@@ -3911,10 +3937,7 @@ gst_mxf_demux_finalize (GObject * object)
 
   g_hash_table_destroy (demux->metadata);
 
-  if (demux->metadata_lock) {
-    g_mutex_free (demux->metadata_lock);
-    demux->metadata_lock = NULL;
-  }
+  g_static_rw_lock_free (&demux->metadata_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -3990,7 +4013,7 @@ gst_mxf_demux_init (GstMXFDemux * demux, GstMXFDemuxClass * g_class)
   demux->max_drift = 500 * GST_MSECOND;
 
   demux->adapter = gst_adapter_new ();
-  demux->metadata_lock = g_mutex_new ();
+  g_static_rw_lock_init (&demux->metadata_lock);
 
   demux->src = g_ptr_array_new ();
   demux->essence_tracks =
