@@ -408,15 +408,23 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
     if (messages) {
       const GstStructure *s;
       guint32 seqnum;
+      gchar *src_name;
 
       seqnum = gst_message_get_seqnum (message);
 
       s = gst_message_get_structure (message);
 
+      src_name =
+          GST_MESSAGE_SRC (message) ?
+          gst_object_get_path_string (GST_MESSAGE_SRC (message)) : NULL;
+
       g_print (_("Got Message #%" G_GUINT32_FORMAT
-              " from element \"%s\" (%s): "), seqnum,
-          GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))),
+              " from object \"%s\" (%s): "), seqnum,
+          GST_STR_NULL (src_name),
           gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+
+      g_free (src_name);
+
       if (s) {
         gchar *sstr;
 
@@ -448,21 +456,26 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         gst_element_set_state (pipeline, GST_STATE_PLAYING);
 #endif
         break;
-      case GST_MESSAGE_EOS:
+      case GST_MESSAGE_EOS:{
+        gchar *src_name = GST_MESSAGE_SRC (message) ?
+            gst_object_get_path_string (GST_MESSAGE_SRC (message)) : NULL;
         waiting_eos = FALSE;
-        g_print (_
-            ("Got EOS from element \"%s\".\n"),
-            GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
+        g_print (_("Got EOS from object \"%s\".\n"), GST_STR_NULL (src_name));
+        g_free (src_name);
         goto exit;
+      }
       case GST_MESSAGE_TAG:
         if (tags) {
           GstTagList *tags;
+          gchar *src_name = GST_MESSAGE_SRC (message) ?
+              gst_object_get_path_string (GST_MESSAGE_SRC (message)) : NULL;
 
           gst_message_parse_tag (message, &tags);
-          g_print (_("FOUND TAG      : found by element \"%s\".\n"),
-              GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
+          g_print (_("FOUND TAG      : found by object \"%s\".\n"),
+              GST_STR_NULL (src_name));
           gst_tag_list_foreach (tags, print_tag, NULL);
           gst_tag_list_free (tags);
+          g_free (src_name);
         }
         break;
       case GST_MESSAGE_INFO:{
