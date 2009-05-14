@@ -2176,15 +2176,16 @@ complete:
 }
 
 /**
- * gst_element_lost_state:
+ * gst_element_lost_state_full:
  * @element: a #GstElement the state is lost of
+ * @new_base_time: if a new base time should be distributed
  *
  * Brings the element to the lost state. The current state of the
  * element is copied to the pending state so that any call to
  * gst_element_get_state() will return %GST_STATE_CHANGE_ASYNC.
  *
- * An ASYNC_START message is posted with an indication to distribute a new
- * base_time to the element.
+ * An ASYNC_START message is posted with indication to distribute a new
+ * base_time to the element when @new_base_time is %TRUE.
  * If the element was PLAYING, it will go to PAUSED. The element
  * will be restored to its PLAYING state by the parent pipeline when it
  * prerolls again.
@@ -2198,10 +2199,12 @@ complete:
  * This function is used internally and should normally not be called from
  * plugins or applications.
  *
+ * Since: 0.10.24
+ *
  * MT safe.
  */
 void
-gst_element_lost_state (GstElement * element)
+gst_element_lost_state_full (GstElement * element, gboolean new_base_time)
 {
   GstState old_state, new_state;
   GstMessage *message;
@@ -2239,7 +2242,8 @@ gst_element_lost_state (GstElement * element)
       new_state, new_state, new_state);
   gst_element_post_message (element, message);
 
-  message = gst_message_new_async_start (GST_OBJECT_CAST (element), TRUE);
+  message =
+      gst_message_new_async_start (GST_OBJECT_CAST (element), new_base_time);
   gst_element_post_message (element, message);
 
   return;
@@ -2257,6 +2261,24 @@ only_async_start:
     gst_element_post_message (element, message);
     return;
   }
+}
+
+/**
+ * gst_element_lost_state:
+ * @element: a #GstElement the state is lost of
+ *
+ * Brings the element to the lost state. This function calls
+ * gst_element_lost_state_full() with the new_base_time set to %TRUE.
+ *
+ * This function is used internally and should normally not be called from
+ * plugins or applications.
+ *
+ * MT safe.
+ */
+void
+gst_element_lost_state (GstElement * element)
+{
+  gst_element_lost_state_full (element, TRUE);
 }
 
 /**

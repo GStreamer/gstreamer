@@ -548,6 +548,7 @@ gst_element_is_locked_state
 gst_element_abort_state
 gst_element_continue_state
 gst_element_lost_state
+gst_element_lost_state_full
 gst_element_state_get_name
 gst_element_state_change_return_get_name
 gst_element_sync_state_with_parent
