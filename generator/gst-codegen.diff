@@ -1,0 +1,24 @@
+Index: FieldBase.cs
+===================================================================
+--- FieldBase.cs	(Revision 134154)
++++ FieldBase.cs	(Arbeitskopie)
+@@ -89,7 +89,7 @@
+ 		void CheckGlue ()
+ 		{
+ 			getterName = setterName = getOffsetName = null;
+-			if (Access != "public")
++			if (DefaultAccess != "public" && (!elem.HasAttribute ("access") || (Access != "public" && Access != "protected" && Access != "internal")))
+ 				return;
+ 
+ 			string prefix = (container_type.NS + "Sharp_" + container_type.NS + "_" + container_type.Name).Replace(".", "__").ToLower ();
+@@ -154,8 +154,9 @@
+ 			StreamWriter sw = gen_info.Writer;
+ 			string modifiers = elem.HasAttribute ("new_flag") ? "new " : "";
+ 			bool is_struct = table.IsStruct (CType) || table.IsBoxed (CType);
++			string access = elem.HasAttribute ("access") ? elem.GetAttribute ("access") : "public";
+ 
+-			sw.WriteLine (indent + "public " + modifiers + CSType + " " + Name + " {");
++			sw.WriteLine (indent + access + " " + modifiers + CSType + " " + Name + " {");
+ 
+ 			if (Getter != null) {
+ 				sw.Write (indent + "\tget ");

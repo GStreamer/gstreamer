@@ -121,8 +121,8 @@ $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA) $(srcdir)/$(SYMBOLS)
 	$(MONO) $(top_builddir)/parser/gst-gapi-fixup.exe --api=$(API) --metadata=$(srcdir)/$(METADATA) \
 		--symbols=$(srcdir)/$(SYMBOLS)
 
-generated-stamp: $(API) $(GAPI_CODEGEN) $(build_customs) $(overrides)
-	$(GAPI_CODEGEN) --generate $(API) \
+generated-stamp: $(API) $(build_customs) $(overrides)
+	 $(MONO) $(top_builddir)/generator/gst-gapi_codegen.exe--generate $(API) \
 		--outdir=generated --customdir=$(srcdir) --assembly-name=$(ASSEMBLY_NAME) \
 		--gluelib-name=gstreamersharpglue-0.10 --glue-filename=glue/generated.c \
 		--glue-includes=$(glue_includes) \

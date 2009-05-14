@@ -122,16 +122,6 @@ AM_CONDITIONAL(ENABLE_MONODOC, test "x$enable_monodoc" = "xyes")
 ## Check for the gapi programs
 PKG_CHECK_MODULES(GAPI, gapi-2.0 >= $GLIBSHARP_REQUIRED_VERSION)
 
-AC_PATH_PROG(GAPI_CODEGEN, gapi2-codegen, no)
-if test "x$GAPI_CODEGEN" = "xno"; then
-        AC_MSG_ERROR([You need to install gtk-sharp-gapi])
-fi
- 
-AC_PATH_PROG(GAPI_FIXUP, gapi2-fixup, no)
-if test "x$GAPI_FIXUP" = "xno"; then
-        AC_MSG_ERROR([You need to install gtk-sharp-gapi])
-fi
-
 AC_PATH_PROG(GAPI_PARSER, gapi2-parser, no)
 if test "x$GAPI_PARSER" = "xno"; then
         AC_MSG_ERROR([You need to install gtk-sharp-gapi])
@@ -144,9 +134,14 @@ if test "x$do_tests" = "xno"; then
 	AC_MSG_WARN([Could not find mono-nunit: tests will not be available])
 fi
 
+AC_CHECK_SIZEOF(off_t)
+OFF_T_FLAGS="-define:OFF_T_$ac_cv_sizeof_off_t"
+AC_SUBST(OFF_T_FLAGS)
+
 AC_OUTPUT([
 source/Makefile
 parser/Makefile
+generator/Makefile
 gstreamer-sharp/Makefile
 gstreamer-sharp/AssemblyInfo.cs
 gstreamer-sharp/gstreamer-sharp.dll.config
