@@ -31,7 +31,7 @@ namespace Gst.Interfaces {
 		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_mixer_message_parse_option_changed(IntPtr message, out IntPtr options, out IntPtr value);
 
-		public static void MessageParseOptionChanged(Gst.Message message, out Gst.Interfaces.MixerOptions options, out string value) {
+		public static void ParseOptionChanged(Gst.Message message, out Gst.Interfaces.MixerOptions options, out string value) {
 			IntPtr native_value;
 			IntPtr native_options;
 
@@ -44,7 +44,7 @@ namespace Gst.Interfaces {
 		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_mixer_message_parse_record_toggled(IntPtr message, out IntPtr track, out bool record);
 
-		public static void MessageParseRecordToggled(Gst.Message message, out Gst.Interfaces.MixerTrack track, out bool record) {
+		public static void ParseRecordToggled(Gst.Message message, out Gst.Interfaces.MixerTrack track, out bool record) {
 			IntPtr native_ptr;
 
 			gst_mixer_message_parse_record_toggled(message == null ? IntPtr.Zero : message.Handle, out native_ptr, out record);
@@ -54,7 +54,7 @@ namespace Gst.Interfaces {
 		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_mixer_message_parse_volume_changed(IntPtr message, out IntPtr track, out IntPtr volumes, out int num_channels);
 
-		public static void MessageParseVolumeChanged(Gst.Message message, out Gst.Interfaces.MixerTrack track, out int[] volumes) {
+		public static void ParseVolumeChanged(Gst.Message message, out Gst.Interfaces.MixerTrack track, out int[] volumes) {
 			IntPtr native_track;
 			IntPtr native_volumes;
 			int n_native_volumes;
@@ -71,7 +71,7 @@ namespace Gst.Interfaces {
 		[DllImport("gstinterfaces-0.10.dll")]
 		static extern void gst_mixer_message_parse_options_list_changed(IntPtr message, out IntPtr options);
 
-		public static void MessageParseOptionsListChanged(Gst.Message message, out Gst.Interfaces.MixerOptions options) {
+		public static void ParseOptionsListChanged(Gst.Message message, out Gst.Interfaces.MixerOptions options) {
 			IntPtr native_options;
 
 			gst_mixer_message_parse_options_list_changed(message == null ? IntPtr.Zero : message.Handle, out native_options);
