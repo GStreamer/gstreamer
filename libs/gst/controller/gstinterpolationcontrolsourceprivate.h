@@ -90,9 +90,8 @@ struct _GstInterpolationControlSourcePrivate
   GValue maximum_value;         /* max value for the handled property */
   GstInterpolateMode interpolation_mode;
   
-  GList *values;                /* List of GstControlPoint */
+  GSequence *values;            /* List of GstControlPoint */
   gint nvalues;                 /* Number of control points */
-  GList *last_requested_value;  /* last search result, can be used for incremental searches */
   gboolean valid_cache;
 };
 

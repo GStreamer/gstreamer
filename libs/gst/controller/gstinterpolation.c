@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) <2005> Stefan Kost <ensonic at users dot sf dot net>
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007,2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * gstinterpolation.c: Interpolation methods for dynamic properties
  *
@@ -35,49 +35,53 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 
 /* common helper */
 
+static gint
+gst_control_point_find (gconstpointer p1, gconstpointer p2)
+{
+  GstClockTime ct1 = ((GstControlPoint *) p1)->timestamp;
+  GstClockTime ct2 = *(GstClockTime *) p2;
+
+  return ((ct1 < ct2) ? -1 : ((ct1 == ct2) ? 0 : 1));
+}
+
 /*
- * gst_interpolation_control_source_find_control_point_node:
+ * gst_interpolation_control_source_find_control_point_iter:
  * @self: the interpolation control source to search in
  * @timestamp: the search key
  *
  * Find last value before given timestamp in control point list.
  *
- * Returns: the found #GList node or %NULL
+ * Returns: the found #GSequenceIter or %NULL
  */
-static GList *gst_interpolation_control_source_find_control_point_node
+static GSequenceIter *gst_interpolation_control_source_find_control_point_iter
     (GstInterpolationControlSource * self, GstClockTime timestamp)
 {
-  GList *prev_node = g_list_last (self->priv->values);
-  GList *node;
+  GSequenceIter *iter;
   GstControlPoint *cp;
 
-  /* Check if we can start from the last requested value
-   * to save some time */
-  node = self->priv->values;
-  if (self->priv->last_requested_value) {
-    GstControlPoint *last_cp = self->priv->last_requested_value->data;
+  if (!self->priv->values)
+    return NULL;
 
-    if (timestamp > last_cp->timestamp)
-      node = self->priv->last_requested_value;
-  }
+  iter =
+      g_sequence_search (self->priv->values, &timestamp,
+      (GCompareDataFunc) gst_control_point_find, NULL);
 
-  /* iterate over timed value list */
-  for (; node; node = g_list_next (node)) {
-    cp = node->data;
-    /* this timestamp is newer that the one we look for */
-    if (timestamp < cp->timestamp) {
-      /* get previous one again */
-      prev_node = g_list_previous (node);
-      break;
-    }
-  }
+  /* g_sequence_search() returns the iter where timestamp
+   * would be inserted, i.e. the iter > timestamp, so
+   * we need to get the previous one */
+  iter = g_sequence_iter_prev (iter);
 
-  /* If we have something to return save it as a
-   * potential start position for the next search */
-  if (prev_node)
-    self->priv->last_requested_value = prev_node;
+  /* g_sequence_iter_prev () on the begin iter returns
+   * the begin iter. Check if the prev iter is still
+   * after our timestamp, in that case return NULL
+   */
+  cp = g_sequence_get (iter);
+  if (cp->timestamp > timestamp)
+    return NULL;
 
-  return prev_node;
+  /* If the iter is the end iter return NULL as no
+   * data is linked to the end iter */
+  return G_UNLIKELY (g_sequence_iter_is_end (iter)) ? NULL : iter;
 }
 
 /*  steps-like (no-)interpolation, default */
@@ -88,11 +92,11 @@ static inline GValue * \
 _interpolate_none_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp) \
 { \
   GValue *ret; \
-  GList *node; \
+  GSequenceIter *iter; \
   \
-  if ((node = \
-          gst_interpolation_control_source_find_control_point_node (self, timestamp))) { \
-    GstControlPoint *cp = node->data; \
+  if ((iter = \
+          gst_interpolation_control_source_find_control_point_iter (self, timestamp))) { \
+    GstControlPoint *cp = g_sequence_get (iter); \
     g##type ret_val = g_value_get_##type (&cp->value); \
     \
     if (g_value_get_##type (&self->priv->minimum_value) > ret_val) \
@@ -162,13 +166,13 @@ static inline GValue *
 _interpolate_none_get (GstInterpolationControlSource * self,
     GstClockTime timestamp)
 {
-  GList *node;
+  GSequenceIter *iter;
   GValue *ret;
 
-  if ((node =
-          gst_interpolation_control_source_find_control_point_node (self,
+  if ((iter =
+          gst_interpolation_control_source_find_control_point_iter (self,
               timestamp))) {
-    GstControlPoint *cp = node->data;
+    GstControlPoint *cp = g_sequence_get (iter);
 
     ret = &cp->value;
   } else {
@@ -300,13 +304,13 @@ static GstInterpolateMethod interpolate_none = {
 static inline GValue * \
 _interpolate_trigger_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp) \
 { \
-  GList *node; \
+  GSequenceIter *iter; \
   GstControlPoint *cp; \
   \
   /* check if there is a value at the registered timestamp */ \
-  if ((node = \
-          gst_interpolation_control_source_find_control_point_node (self, timestamp))) { \
-    cp = node->data; \
+  if ((iter = \
+          gst_interpolation_control_source_find_control_point_iter (self, timestamp))) { \
+    cp = g_sequence_get (iter); \
     if (timestamp == cp->timestamp) { \
       g##type ret = g_value_get_##type (&cp->value); \
       if (g_value_get_##type (&self->priv->minimum_value) > ret) \
@@ -379,14 +383,14 @@ static inline GValue *
 _interpolate_trigger_get (GstInterpolationControlSource * self,
     GstClockTime timestamp)
 {
-  GList *node;
+  GSequenceIter *iter;
   GstControlPoint *cp;
 
   /* check if there is a value at the registered timestamp */
-  if ((node =
-          gst_interpolation_control_source_find_control_point_node (self,
+  if ((iter =
+          gst_interpolation_control_source_find_control_point_iter (self,
               timestamp))) {
-    cp = node->data;
+    cp = g_sequence_get (iter);
     if (timestamp == cp->timestamp) {
       return &cp->value;
     }
@@ -518,25 +522,26 @@ static GstInterpolateMethod interpolate_trigger = {
 static inline gboolean \
 _interpolate_linear_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, g##vtype *ret) \
 { \
-  GList *node; \
+  GSequenceIter *iter; \
   GstControlPoint *cp1 = NULL, *cp2, cp={0,}; \
   \
-  node = gst_interpolation_control_source_find_control_point_node (self, timestamp); \
-  if (node) { \
-    cp1 = node->data; \
-    node = g_list_next (node); \
+  iter = gst_interpolation_control_source_find_control_point_iter (self, timestamp); \
+  if (iter) { \
+    cp1 = g_sequence_get (iter); \
+    iter = g_sequence_iter_next (iter); \
+    iter = g_sequence_iter_is_end (iter) ? NULL : iter; \
   } else { \
     cp.timestamp = G_GUINT64_CONSTANT(0); \
     g_value_init (&cp.value, self->priv->type); \
     g_value_copy (&self->priv->default_value, &cp.value); \
     cp1 = &cp; \
-    node = self->priv->values; \
+    iter = g_sequence_get_begin_iter (self->priv->values); \
   } \
-  if (node) { \
+  if (iter) { \
     gdouble slope; \
     g##vtype value1,value2; \
     \
-    cp2 = node->data; \
+    cp2 = g_sequence_get (iter); \
     \
     value1 = g_value_get_##vtype (&cp1->value); \
     value2 = g_value_get_##vtype (&cp2->value); \
@@ -655,21 +660,21 @@ _interpolate_cubic_update_cache_##vtype (GstInterpolationControlSource *self) \
   gdouble *b = g_new0 (gdouble, n); \
   gdouble *z = g_new0 (gdouble, n); \
   \
-  GList *node; \
+  GSequenceIter *iter; \
   GstControlPoint *cp; \
   GstClockTime x_prev, x, x_next; \
   g##vtype y_prev, y, y_next; \
   \
   /* Fill linear system of equations */ \
-  node = self->priv->values; \
-  cp = node->data; \
+  iter = g_sequence_get_begin_iter (self->priv->values); \
+  cp = g_sequence_get (iter); \
   x = cp->timestamp; \
   y = g_value_get_##vtype (&cp->value); \
   \
   p[0] = 1.0; \
   \
-  node = node->next; \
-  cp = node->data; \
+  iter = g_sequence_iter_next (iter); \
+  cp = g_sequence_get (iter); \
   x_next = cp->timestamp; \
   y_next = g_value_get_##vtype (&cp->value); \
   h[0] = gst_guint64_to_gdouble (x_next - x); \
@@ -680,8 +685,8 @@ _interpolate_cubic_update_cache_##vtype (GstInterpolationControlSource *self) \
     y_prev = y; \
     x = x_next; \
     y = y_next; \
-    node = node->next; \
-    cp = node->data; \
+    iter = g_sequence_iter_next (iter); \
+    cp = g_sequence_get (iter); \
     x_next = cp->timestamp; \
     y_next = g_value_get_##vtype (&cp->value); \
     \
@@ -707,12 +712,12 @@ _interpolate_cubic_update_cache_##vtype (GstInterpolationControlSource *self) \
   \
   /* Save cache next in the GstControlPoint */ \
   \
-  node = self->priv->values; \
+  iter = g_sequence_get_begin_iter (self->priv->values); \
   for (i = 0; i < n; i++) { \
-    cp = node->data; \
+    cp = g_sequence_get (iter); \
     cp->cache.cubic.h = h[i]; \
     cp->cache.cubic.z = z[i]; \
-    node = node->next; \
+    iter = g_sequence_iter_next (iter); \
   } \
   \
   /* Free our temporary arrays */ \
@@ -727,7 +732,7 @@ _interpolate_cubic_update_cache_##vtype (GstInterpolationControlSource *self) \
 static inline gboolean \
 _interpolate_cubic_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, g##vtype *ret) \
 { \
-  GList *node; \
+  GSequenceIter *iter; \
   GstControlPoint *cp1 = NULL, *cp2, cp={0,}; \
   \
   if (self->priv->nvalues <= 2) \
@@ -738,23 +743,24 @@ _interpolate_cubic_get_##vtype (GstInterpolationControlSource *self, GstClockTim
     self->priv->valid_cache = TRUE; \
   } \
   \
-  node = gst_interpolation_control_source_find_control_point_node (self, timestamp); \
-  if (node) { \
-    cp1 = node->data; \
-    node = g_list_next (node); \
+  iter = gst_interpolation_control_source_find_control_point_iter (self, timestamp); \
+  if (iter) { \
+    cp1 = g_sequence_get (iter); \
+    iter = g_sequence_iter_next (iter); \
+    iter = g_sequence_iter_is_end (iter) ? NULL : iter; \
   } else { \
     cp.timestamp = G_GUINT64_CONSTANT(0); \
     g_value_init (&cp.value, self->priv->type); \
     g_value_copy (&self->priv->default_value, &cp.value); \
     cp1 = &cp; \
-    node = self->priv->values; \
+    iter = g_sequence_get_begin_iter (self->priv->values); \
   } \
-  if (node) { \
+  if (iter) { \
     gdouble diff1, diff2; \
     g##vtype value1,value2; \
     gdouble out; \
     \
-    cp2 = node->data; \
+    cp2 = g_sequence_get (iter); \
     \
     value1 = g_value_get_##vtype (&cp1->value); \
     value2 = g_value_get_##vtype (&cp2->value); \

@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007,2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * gstinterpolationcontrolsource.c: Control source that provides several
  *                                  interpolation methods
@@ -89,13 +89,11 @@ gst_interpolation_control_source_reset (GstInterpolationControlSource * self)
     g_value_unset (&self->priv->maximum_value);
 
   if (self->priv->values) {
-    g_list_foreach (self->priv->values, (GFunc) gst_control_point_free, NULL);
-    g_list_free (self->priv->values);
+    g_sequence_free (self->priv->values);
     self->priv->values = NULL;
   }
 
   self->priv->nvalues = 0;
-  self->priv->last_requested_value = NULL;
   self->priv->valid_cache = FALSE;
 }
 
@@ -125,9 +123,8 @@ gst_interpolation_control_source_new (void)
  * Returns: %TRUE if the interpolation mode could be set, %FALSE otherwise
  */
 gboolean
-gst_interpolation_control_source_set_interpolation_mode
-    (GstInterpolationControlSource * self, GstInterpolateMode mode)
-{
+    gst_interpolation_control_source_set_interpolation_mode
+    (GstInterpolationControlSource * self, GstInterpolateMode mode) {
   gboolean ret = TRUE;
   GstControlSource *csource = GST_CONTROL_SOURCE (self);
 
@@ -416,44 +413,6 @@ gst_control_point_find (gconstpointer p1, gconstpointer p2)
   return ((ct1 < ct2) ? -1 : ((ct1 == ct2) ? 0 : 1));
 }
 
-/*
- * _list_find_sorted_custom:
- *
- * This works like g_list_find_custom() with the difference that it expects the
- * list to be sorted in ascending order (0->MAX), stops when it the list-values
- * are bigger that what is searched for and optionaly delivers the last node
- * back in the @prev_node argument. This can be used to quickly insert a new
- * node at the correct position. 
- */
-static GList *
-_list_find_sorted_custom (GList * list, gconstpointer data, GCompareFunc func,
-    GList ** prev_node)
-{
-  GList *prev = list;
-  gint cmp;
-
-  g_return_val_if_fail (func != NULL, list);
-
-  while (list) {
-    cmp = func (list->data, data);
-    switch (cmp) {
-      case -1:
-        prev = list;
-        list = list->next;
-        break;
-      case 0:
-        return list;
-      case 1:
-        if (prev_node)
-          *prev_node = prev;
-        return NULL;
-    }
-  }
-  if (prev_node)
-    *prev_node = prev;
-  return NULL;
-}
-
 static GstControlPoint *
 _make_new_cp (GstInterpolationControlSource * self, GstClockTime timestamp,
     GValue * value)
@@ -473,43 +432,38 @@ static void
 gst_interpolation_control_source_set_internal (GstInterpolationControlSource *
     self, GstClockTime timestamp, GValue * value)
 {
-  GList *node, *prev = self->priv->values;
-
-  /* check if we can shortcut and append */
-  if ((node = g_list_last (self->priv->values))) {
-    GstControlPoint *last_cp = node->data;
-
-    if (timestamp > last_cp->timestamp) {
-      /* pass 'node' instead of list, and also deliberately ignore the result */
-      node = g_list_append (node, _make_new_cp (self, timestamp, value));
-      self->priv->nvalues++;
-      goto done;
-    }
-  }
+  GSequenceIter *iter;
 
   /* check if a control point for the timestamp already exists */
-  if ((node = _list_find_sorted_custom (self->priv->values, &timestamp,
-              gst_control_point_find, &prev))) {
-    /* update control point */
-    GstControlPoint *cp = node->data;
-    g_value_reset (&cp->value);
-    g_value_copy (value, &cp->value);
-  } else {
-    /* sort new cp into the prop->values list */
-    if (self->priv->values) {
-      GList *new_list;
 
-      /* pass 'prev' instead of list */
-      new_list = g_list_insert_sorted (prev,
-          _make_new_cp (self, timestamp, value), gst_control_point_compare);
-      if (self->priv->values == prev)
-        self->priv->values = new_list;
-    } else {
-      self->priv->values = g_list_prepend (NULL,
-          _make_new_cp (self, timestamp, value));
+  /* iter contains the iter right *after* timestamp */
+  if (self->priv->values) {
+    iter =
+        g_sequence_search (self->priv->values, &timestamp,
+        (GCompareDataFunc) gst_control_point_find, NULL);
+    if (iter) {
+      GSequenceIter *prev = g_sequence_iter_prev (iter);
+      GstControlPoint *cp = g_sequence_get (prev);
+
+      /* If the timestamp is the same just update the control point value */
+      if (cp->timestamp == timestamp) {
+        /* update control point */
+        g_value_reset (&cp->value);
+        g_value_copy (value, &cp->value);
+        goto done;
+      }
     }
-    self->priv->nvalues++;
   }
+
+  /* sort new cp into the prop->values list */
+  if (!self->priv->values)
+    self->priv->values =
+        g_sequence_new ((GDestroyNotify) gst_control_point_free);
+
+  g_sequence_insert_sorted (self->priv->values, _make_new_cp (self, timestamp,
+          value), (GCompareDataFunc) gst_control_point_compare, NULL);
+  self->priv->nvalues++;
+
 done:
   self->priv->valid_cache = FALSE;
 }
@@ -595,7 +549,7 @@ gboolean
 gst_interpolation_control_source_unset (GstInterpolationControlSource * self,
     GstClockTime timestamp)
 {
-  GList *node;
+  GSequenceIter *iter;
   gboolean res = FALSE;
 
   g_return_val_if_fail (GST_IS_INTERPOLATION_CONTROL_SOURCE (self), FALSE);
@@ -603,15 +557,22 @@ gst_interpolation_control_source_unset (GstInterpolationControlSource * self,
 
   g_mutex_lock (self->lock);
   /* check if a control point for the timestamp exists */
-  if ((node = g_list_find_custom (self->priv->values, &timestamp,
-              gst_control_point_find))) {
-    if (node == self->priv->last_requested_value)
-      self->priv->last_requested_value = NULL;
-    gst_control_point_free (node->data);        /* free GstControlPoint */
-    self->priv->values = g_list_delete_link (self->priv->values, node);
-    self->priv->nvalues--;
-    self->priv->valid_cache = FALSE;
-    res = TRUE;
+  if ((iter =
+          g_sequence_search (self->priv->values, &timestamp,
+              (GCompareDataFunc) gst_control_point_find, NULL))) {
+    GstControlPoint *cp;
+
+    /* Iter contains the iter right after timestamp, i.e.
+     * we need to get the previous one and check the timestamp
+     */
+    iter = g_sequence_iter_prev (iter);
+    cp = g_sequence_get (iter);
+    if (cp->timestamp == timestamp) {
+      g_sequence_remove (iter);
+      self->priv->nvalues--;
+      self->priv->valid_cache = FALSE;
+      res = TRUE;
+    }
   }
   g_mutex_unlock (self->lock);
 
@@ -633,14 +594,18 @@ gst_interpolation_control_source_unset_all (GstInterpolationControlSource *
 
   g_mutex_lock (self->lock);
   /* free GstControlPoint structures */
-  g_list_foreach (self->priv->values, (GFunc) gst_control_point_free, NULL);
-  g_list_free (self->priv->values);
-  self->priv->last_requested_value = NULL;
+  g_sequence_free (self->priv->values);
   self->priv->values = NULL;
   self->priv->nvalues = 0;
   self->priv->valid_cache = FALSE;
 
   g_mutex_unlock (self->lock);
+}
+
+static void
+_append_control_point (GstControlPoint * cp, GList ** l)
+{
+  *l = g_list_prepend (*l, cp);
 }
 
 /**
@@ -661,10 +626,11 @@ gst_interpolation_control_source_get_all (GstInterpolationControlSource * self)
 
   g_mutex_lock (self->lock);
   if (self->priv->values)
-    res = g_list_copy (self->priv->values);
+    g_sequence_foreach (self->priv->values, (GFunc) _append_control_point,
+        &res);
   g_mutex_unlock (self->lock);
 
-  return res;
+  return g_list_reverse (res);
 }
 
 /**
