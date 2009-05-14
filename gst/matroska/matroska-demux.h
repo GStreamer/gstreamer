@@ -51,6 +51,9 @@ typedef struct _GstMatroskaDemux {
 
   /* < private > */
 
+  GstIndex                *element_index;
+  gint                     element_index_writer_id;
+
   /* pads */
   GstPad                  *sinkpad;
   GPtrArray               *src;

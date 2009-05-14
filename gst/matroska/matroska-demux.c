@@ -152,6 +152,9 @@ static gboolean gst_matroska_demux_handle_src_query (GstPad * pad,
 static GstStateChangeReturn
 gst_matroska_demux_change_state (GstElement * element,
     GstStateChange transition);
+static void
+gst_matroska_demux_set_index (GstElement * element, GstIndex * index);
+static GstIndex *gst_matroska_demux_get_index (GstElement * element);
 
 /* caps functions */
 static GstCaps *gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext
@@ -220,6 +223,11 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_matroska_demux_element_send_event);
   gstelement_class->query =
       GST_DEBUG_FUNCPTR (gst_matroska_demux_element_query);
+
+  gstelement_class->set_index =
+      GST_DEBUG_FUNCPTR (gst_matroska_demux_set_index);
+  gstelement_class->get_index =
+      GST_DEBUG_FUNCPTR (gst_matroska_demux_get_index);
 }
 
 static void
@@ -384,6 +392,12 @@ gst_matroska_demux_reset (GstElement * element)
     gst_event_unref (demux->new_segment);
     demux->new_segment = NULL;
   }
+
+  if (demux->element_index) {
+    gst_object_unref (demux->element_index);
+    demux->element_index = NULL;
+  }
+  demux->element_index_writer_id = -1;
 }
 
 static gint
@@ -1025,6 +1039,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   context = g_new0 (GstMatroskaTrackContext, 1);
   g_ptr_array_add (demux->src, context);
   context->index = demux->num_streams;
+  context->index_writer_id = -1;
   context->type = 0;            /* no type yet */
   context->default_duration = 0;
   context->pos = 0;
@@ -2643,6 +2658,33 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux)
     gint track_num;
     GstMatroskaTrackContext *ctx;
 
+    if (demux->element_index) {
+      gint writer_id;
+
+      if (idx->track != 0 &&
+          (track_num =
+              gst_matroska_demux_stream_from_num (demux, idx->track)) != -1) {
+        ctx = g_ptr_array_index (demux->src, track_num);
+
+        if (ctx->index_writer_id == -1)
+          gst_index_get_writer_id (demux->element_index, GST_OBJECT (ctx->pad),
+              &ctx->index_writer_id);
+        writer_id = ctx->index_writer_id;
+      } else {
+        if (demux->element_index_writer_id == -1)
+          gst_index_get_writer_id (demux->element_index, GST_OBJECT (demux),
+              &demux->element_index_writer_id);
+        writer_id = demux->element_index_writer_id;
+      }
+
+      GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
+          G_GUINT64_FORMAT " for writer id %d", GST_TIME_ARGS (idx->time),
+          idx->pos, writer_id);
+      gst_index_add_association (demux->element_index, writer_id,
+          GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME, idx->time,
+          GST_FORMAT_BYTES, idx->pos + demux->ebml_segment_start, NULL);
+    }
+
     if (idx->track == 0)
       continue;
 
@@ -3929,7 +3971,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
 
 static GstFlowReturn
 gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
-    guint64 cluster_time, gboolean is_simpleblock)
+    guint64 cluster_time, guint64 cluster_offset, gboolean is_simpleblock)
 {
   GstMatroskaTrackContext *stream = NULL;
   GstEbmlRead *ebml = GST_EBML_READ (demux);
@@ -4299,6 +4341,22 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (sub)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (sub)));
 
+      if (demux->element_index) {
+        if (stream->index_writer_id == -1)
+          gst_index_get_writer_id (demux->element_index,
+              GST_OBJECT (stream->pad), &stream->index_writer_id);
+
+        GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
+            G_GUINT64_FORMAT " for writer id %d",
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (sub)), cluster_offset,
+            stream->index_writer_id);
+        gst_index_add_association (demux->element_index,
+            stream->index_writer_id, GST_BUFFER_FLAG_IS_SET (sub,
+                GST_BUFFER_FLAG_DELTA_UNIT) ? 0 : GST_ASSOCIATION_FLAG_KEY_UNIT,
+            GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (sub), GST_FORMAT_BYTES,
+            cluster_offset, NULL);
+      }
+
       gst_buffer_set_caps (sub, GST_PAD_CAPS (stream->pad));
 
       /* Postprocess the buffers depending on the codec used */
@@ -4334,6 +4392,7 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 cluster_time = GST_CLOCK_TIME_NONE;
   guint32 id;
+  guint64 cluster_offset = demux->parent.offset;
 
   DEBUG_ELEMENT_START (demux, ebml, "Cluster");
 
@@ -4370,7 +4429,7 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
         DEBUG_ELEMENT_START (demux, ebml, "BlockGroup");
         if ((ret = gst_ebml_read_master (ebml, &id)) == GST_FLOW_OK) {
           ret = gst_matroska_demux_parse_blockgroup_or_simpleblock (demux,
-              cluster_time, FALSE);
+              cluster_time, cluster_offset, FALSE);
         }
         DEBUG_ELEMENT_STOP (demux, ebml, "BlockGroup", ret);
         break;
@@ -4379,7 +4438,7 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
       {
         DEBUG_ELEMENT_START (demux, ebml, "SimpleBlock");
         ret = gst_matroska_demux_parse_blockgroup_or_simpleblock (demux,
-            cluster_time, TRUE);
+            cluster_time, cluster_offset, TRUE);
         DEBUG_ELEMENT_STOP (demux, ebml, "SimpleBlock", ret);
         break;
       }
@@ -4401,6 +4460,21 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
       break;
     }
   }
+
+  if (demux->element_index) {
+    if (demux->element_index_writer_id == -1)
+      gst_index_get_writer_id (demux->element_index,
+          GST_OBJECT (demux), &demux->element_index_writer_id);
+
+    GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
+        G_GUINT64_FORMAT " for writer id %d",
+        GST_TIME_ARGS (cluster_time), cluster_offset,
+        demux->element_index_writer_id);
+    gst_index_add_association (demux->element_index,
+        demux->element_index_writer_id, GST_ASSOCIATION_FLAG_KEY_UNIT,
+        GST_FORMAT_TIME, cluster_time, GST_FORMAT_BYTES, cluster_offset, NULL);
+  }
+
   DEBUG_ELEMENT_STOP (demux, ebml, "Cluster", ret);
 
   return ret;
@@ -5687,6 +5761,35 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
   }
 
   return caps;
+}
+
+static void
+gst_matroska_demux_set_index (GstElement * element, GstIndex * index)
+{
+  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
+
+  GST_OBJECT_LOCK (demux);
+  if (demux->element_index)
+    gst_object_unref (demux->element_index);
+  demux->element_index = gst_object_ref (index);
+  GST_OBJECT_UNLOCK (demux);
+  GST_DEBUG_OBJECT (demux, "Set index %" GST_PTR_FORMAT, demux->element_index);
+}
+
+static GstIndex *
+gst_matroska_demux_get_index (GstElement * element)
+{
+  GstIndex *result = NULL;
+  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
+
+  GST_OBJECT_LOCK (demux);
+  if (demux->element_index)
+    result = gst_object_ref (demux->element_index);
+  GST_OBJECT_UNLOCK (demux);
+
+  GST_DEBUG_OBJECT (demux, "Returning index %" GST_PTR_FORMAT, result);
+
+  return result;
 }
 
 static GstStateChangeReturn
