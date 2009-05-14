@@ -469,7 +469,7 @@ gst_flups_demux_clear_times (GstFluPSDemux * demux)
     GstFluPSStream *stream = demux->streams[id];
 
     if (stream) {
-      stream->last_ts = GST_CLOCK_TIME_NONE;
+      stream->last_seg_start = stream->last_ts = GST_CLOCK_TIME_NONE;
     }
   }
 }
@@ -494,8 +494,9 @@ gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
         stream->last_ts = demux->src_segment.start;
       if (stream->last_ts + stream->segment_thresh < new_time) {
 #if 0
-        g_print ("Segment update to pad %s time %" GST_TIME_FORMAT "\n",
-            GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_time));
+        g_print ("Segment update to pad %s time %" GST_TIME_FORMAT " stop now %"
+            GST_TIME_FORMAT "\n", GST_PAD_NAME (stream->pad),
+            GST_TIME_ARGS (new_time), GST_TIME_ARGS (demux->src_segment.stop));
 #endif
         GST_DEBUG_OBJECT (demux,
             "Segment update to pad %s time %" GST_TIME_FORMAT,
@@ -509,7 +510,7 @@ gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
         }
         gst_event_ref (event);
         gst_pad_push_event (stream->pad, event);
-        stream->last_ts = new_time;
+        stream->last_seg_start = stream->last_ts = new_time;
       }
     }
   }
@@ -528,23 +529,30 @@ gst_flups_demux_send_segment_close (GstFluPSDemux * demux)
     GstFluPSStream *stream = demux->streams[id];
 
     if (stream) {
-      if (stream->last_ts == GST_CLOCK_TIME_NONE ||
-          stream->last_ts < demux->src_segment.start)
-        stream->last_ts = demux->src_segment.start;
+      GstClockTime start = demux->src_segment.start;
 
+      if (stream->last_seg_start != GST_CLOCK_TIME_NONE &&
+          stream->last_seg_start > start)
+        start = stream->last_seg_start;
 #if 0
-      g_print ("Segment update to pad %s start %" GST_TIME_FORMAT
+      g_print ("Segment close to pad %s start %" GST_TIME_FORMAT
           " stop %" GST_TIME_FORMAT "\n",
-          GST_PAD_NAME (stream->pad), GST_TIME_ARGS (stream->last_ts),
+          GST_PAD_NAME (stream->pad), GST_TIME_ARGS (start),
           GST_TIME_ARGS (demux->src_segment.stop));
 #endif
+      if (start > demux->src_segment.stop) {
+        g_print ("Problem on pad %s with start %" GST_TIME_FORMAT " > stop %"
+            GST_TIME_FORMAT "\n",
+            gst_object_get_name (GST_OBJECT (stream->pad)),
+            GST_TIME_ARGS (start), GST_TIME_ARGS (demux->src_segment.stop));
+      }
       event = gst_event_new_new_segment_full (TRUE,
           demux->src_segment.rate, demux->src_segment.applied_rate,
-          GST_FORMAT_TIME, stream->last_ts,
+          GST_FORMAT_TIME, start,
           demux->src_segment.stop,
-          demux->src_segment.time +
-          (stream->last_ts - demux->src_segment.start));
-      gst_pad_push_event (stream->pad, event);
+          demux->src_segment.time + (start - demux->src_segment.start));
+      if (event)
+        gst_pad_push_event (stream->pad, event);
     }
   }
 }
@@ -1354,6 +1362,10 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
   new_time = MPEGTIME_TO_GSTTIME (scr_adjusted);
   if (new_time != GST_CLOCK_TIME_NONE) {
     // g_print ("SCR now %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (new_time));
+    if (new_time > GST_SECOND / 2)
+      new_time -= GST_SECOND / 2;
+    else
+      new_time = 0;
     gst_flups_demux_send_segment_updates (demux, new_time);
     demux->src_segment.last_stop = new_time;
   }

@@ -63,6 +63,7 @@ struct _GstFluPSStream {
   gboolean       notlinked;
   gboolean       need_segment;
  
+  GstClockTime   last_seg_start;
   GstClockTime   last_ts;
   GstClockTime   segment_thresh;
 };
