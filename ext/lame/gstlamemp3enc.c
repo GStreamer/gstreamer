@@ -802,8 +802,10 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame)
   if ((retval = lame_init_params (lame->lgf)) >= 0) {
     lame->setup = TRUE;
     /* FIXME: it would be nice to print out the mode here */
-    GST_INFO ("lame encoder setup (bitrate %d, %d Hz, %d channels)",
-        lame->bitrate, lame->samplerate, lame->num_channels);
+    GST_INFO
+        ("lame encoder setup (target %s, quality %f, bitrate %d, %d Hz, %d channels)",
+        (lame->target == LAMEMP3ENC_TARGET_QUALITY) ? "quality" : "bitrate",
+        lame->quality, lame->bitrate, lame->samplerate, lame->num_channels);
   } else {
     GST_ERROR_OBJECT (lame, "lame_init_params returned %d", retval);
   }
