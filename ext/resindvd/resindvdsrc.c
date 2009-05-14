@@ -842,6 +842,7 @@ update_title_info (resinDvdSrc * src)
       GstTagList *tags = gst_tag_list_new ();
       gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
           title_str, NULL);
+      g_free (title_str);
       gst_element_found_tags (GST_ELEMENT_CAST (src), tags);
     }
   }
