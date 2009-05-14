@@ -76,6 +76,8 @@ typedef struct _GstFlvMux {
   gboolean have_video;
 
   GstTagList *tags;
+  GList *index;
+  guint64 byte_count;
 } GstFlvMux;
 
 typedef struct _GstFlvMuxClass {

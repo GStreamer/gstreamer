@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * Copyright (c) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (c) 2008,2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -100,6 +100,18 @@ gst_flv_mux_change_state (GstElement * element, GstStateChange transition);
 
 static void gst_flv_mux_reset (GstElement * element);
 
+typedef struct
+{
+  gdouble position;
+  gdouble time;
+} GstFlvMuxIndexEntry;
+
+static void
+gst_flv_mux_index_entry_free (GstFlvMuxIndexEntry * entry)
+{
+  g_slice_free (GstFlvMuxIndexEntry, entry);
+}
+
 static void
 gst_flv_mux_base_init (gpointer g_class)
 {
@@ -182,6 +194,11 @@ gst_flv_mux_reset (GstElement * element)
   if (mux->tags)
     gst_tag_list_free (mux->tags);
   mux->tags = NULL;
+
+  g_list_foreach (mux->index, (GFunc) gst_flv_mux_index_entry_free, NULL);
+  g_list_free (mux->index);
+  mux->index = NULL;
+  mux->byte_count = 0;
 
   mux->state = GST_FLV_MUX_STATE_HEADER;
 }
@@ -528,6 +545,22 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
 }
 
 static GstFlowReturn
+gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
+{
+  mux->byte_count += GST_BUFFER_SIZE (buffer);
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+    GstFlvMuxIndexEntry *entry = g_slice_new (GstFlvMuxIndexEntry);
+    entry->position = mux->byte_count;
+    entry->time =
+        gst_guint64_to_gdouble (GST_BUFFER_TIMESTAMP (buffer)) / GST_MSECOND;
+    mux->index = g_list_prepend (mux->index, entry);
+  }
+
+  return gst_pad_push (mux->srcpad, buffer);
+}
+
+static GstFlowReturn
 gst_flv_mux_write_metadata (GstFlvMux * mux)
 {
   GstTagList *merged_tags;
@@ -749,7 +782,7 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
   GST_WRITE_UINT32_BE (data + 11 + 13 + 1, tags_written);
 
   gst_buffer_set_caps (script_tag, GST_PAD_CAPS (mux->srcpad));
-  ret = gst_pad_push (mux->srcpad, script_tag);
+  ret = gst_flv_mux_push (mux, script_tag);
 
   if (merged_tags)
     gst_tag_list_free (merged_tags);
@@ -782,7 +815,7 @@ gst_flv_mux_write_header (GstFlvMux * mux)
 
   GST_WRITE_UINT32_BE (data + 9, 0);    /* previous tag size */
 
-  ret = gst_pad_push (mux->srcpad, header);
+  ret = gst_flv_mux_push (mux, header);
   if (ret != GST_FLOW_OK)
     return ret;
 
@@ -825,6 +858,7 @@ next:
   size += 4;
 
   tag = gst_buffer_new_and_alloc (size);
+  GST_BUFFER_TIMESTAMP (tag) = timestamp * GST_MSECOND;
   data = GST_BUFFER_DATA (tag);
   memset (data, 0, size);
 
@@ -899,7 +933,7 @@ next:
     second_run = FALSE;
     cpad->sent_codec_data = TRUE;
 
-    ret = gst_pad_push (mux->srcpad, tag);
+    ret = gst_flv_mux_push (mux, tag);
     if (ret != GST_FLOW_OK) {
       gst_buffer_unref (buffer);
       return ret;
@@ -917,10 +951,119 @@ next:
 
   gst_buffer_unref (buffer);
 
-  ret = gst_pad_push (mux->srcpad, tag);
+  ret = gst_flv_mux_push (mux, tag);
 
   if (ret == GST_FLOW_OK)
     cpad->last_timestamp = timestamp;
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_flv_mux_write_index (GstFlvMux * mux)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *script_tag, *tmp;
+  guint8 *data;
+  GList *l;
+  guint32 index_len;
+  guint32 i, index_skip;
+
+  if (!mux->index)
+    return GST_FLOW_OK;
+
+  script_tag = gst_buffer_new_and_alloc (11);
+  data = GST_BUFFER_DATA (script_tag);
+
+  data[0] = 18;
+
+  /* Data size, unknown for now */
+  data[1] = 0;
+  data[2] = 0;
+  data[3] = 0;
+
+  /* Timestamp */
+  data[4] = data[5] = data[6] = data[7] = 0;
+
+  /* Stream ID */
+  data[8] = data[9] = data[10] = 0;
+
+  tmp = gst_buffer_new_and_alloc (13);
+  data = GST_BUFFER_DATA (tmp);
+  data[0] = 2;                  /* string */
+  data[1] = 0;
+  data[2] = 0x0a;               /* length 10 */
+  memcpy (&data[3], "onMetaData", sizeof ("onMetaData"));
+
+  script_tag = gst_buffer_join (script_tag, tmp);
+
+  tmp = gst_buffer_new_and_alloc (5);
+  data = GST_BUFFER_DATA (tmp);
+  data[0] = 8;                  /* ECMA array */
+  GST_WRITE_UINT32_BE (data + 1, 2);
+  script_tag = gst_buffer_join (script_tag, tmp);
+
+  mux->index = g_list_reverse (mux->index);
+  index_len = g_list_length (mux->index);
+
+  /* We write at most 128 elements */
+  index_skip = (index_len > 128) ? 1 + index_len / 128 : 1;
+  index_len =
+      (index_len <= 128) ? 1 : (index_len + index_skip - 1) / index_skip;
+
+  tmp = gst_buffer_new_and_alloc (2 + 5 + 1 + 4 + index_len * (1 + 8));
+  data = GST_BUFFER_DATA (tmp);
+  data[0] = 0;                  /* 5 bytes name */
+  data[1] = 5;
+  memcpy (&data[2], "times", 5);
+  data[7] = 10;                 /* array */
+  GST_WRITE_UINT32_BE (&data[8], index_len);
+  data += 12;
+
+  for (i = 0, l = mux->index; l; l = l->next, i++) {
+    GstFlvMuxIndexEntry *entry = l->data;
+
+    if (i % index_skip != 0)
+      continue;
+
+    data[0] = 0;
+    GST_WRITE_DOUBLE_BE (&data[1], entry->time);
+    data += 9;
+  }
+  script_tag = gst_buffer_join (script_tag, tmp);
+
+  tmp = gst_buffer_new_and_alloc (2 + 13 + 1 + 4 + index_len * (1 + 8));
+  data = GST_BUFFER_DATA (tmp);
+  data[0] = 0;                  /* 13 bytes name */
+  data[1] = 13;
+  memcpy (&data[2], "filepositions", 13);
+  data[15] = 10;                /* array */
+  GST_WRITE_UINT32_BE (&data[16], index_len);
+  data += 20;
+
+  for (i = 0, l = mux->index; l; l = l->next, i++) {
+    GstFlvMuxIndexEntry *entry = l->data;
+
+    if (i % index_skip != 0)
+      continue;
+    data[0] = 0;
+    GST_WRITE_DOUBLE_BE (&data[1], entry->position);
+    data += 9;
+  }
+  script_tag = gst_buffer_join (script_tag, tmp);
+
+  tmp = gst_buffer_new_and_alloc (4);
+  data = GST_BUFFER_DATA (tmp);
+  GST_WRITE_UINT32_BE (data, GST_BUFFER_SIZE (script_tag));
+  script_tag = gst_buffer_join (script_tag, tmp);
+
+  data = GST_BUFFER_DATA (script_tag);
+  data[1] = ((GST_BUFFER_SIZE (script_tag) - 11 - 4) >> 16) & 0xff;
+  data[2] = ((GST_BUFFER_SIZE (script_tag) - 11 - 4) >> 8) & 0xff;
+  data[3] = ((GST_BUFFER_SIZE (script_tag) - 11 - 4) >> 0) & 0xff;
+
+  gst_buffer_set_caps (script_tag, GST_PAD_CAPS (mux->srcpad));
+  ret = gst_flv_mux_push (mux, script_tag);
 
   return ret;
 }
@@ -994,6 +1137,7 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
   if (!eos && best) {
     return gst_flv_mux_write_buffer (mux, best);
   } else if (eos) {
+    gst_flv_mux_write_index (mux);
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
     return GST_FLOW_UNEXPECTED;
   } else {
