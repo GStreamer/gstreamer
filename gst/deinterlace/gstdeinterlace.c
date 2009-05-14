@@ -1459,8 +1459,6 @@ gst_deinterlace_src_query (GstPad * pad, GstQuery * query)
             min += latency;
             if (max != GST_CLOCK_TIME_NONE)
               max += latency;
-            else
-              max = latency;
 
             GST_DEBUG_OBJECT (self, "Calculated total latency : min %"
                 GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
