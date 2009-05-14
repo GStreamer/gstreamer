@@ -569,6 +569,7 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
   GstBuffer *script_tag, *tmp;
   guint8 *data;
   gint i, n_tags, tags_written = 0;
+  GstClockTime duration = GST_CLOCK_TIME_NONE;
 
   user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
   GST_DEBUG_OBJECT (mux, "upstream tags = %" GST_PTR_FORMAT, mux->tags);
@@ -616,24 +617,11 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
     const gchar *tag_name =
         gst_structure_nth_field_name ((const GstStructure *) merged_tags, i);
     if (!strcmp (tag_name, GST_TAG_DURATION)) {
-      gdouble d;
       guint64 dur;
 
       if (!gst_tag_list_get_uint64 (merged_tags, GST_TAG_DURATION, &dur))
         continue;
-
-      d = gst_guint64_to_gdouble (dur);
-      d /= (gdouble) GST_SECOND;
-
-      tmp = gst_buffer_new_and_alloc (2 + 8 + 1 + 8);
-      data = GST_BUFFER_DATA (tmp);
-      data[0] = 0;              /* 8 bytes name */
-      data[1] = 8;
-      memcpy (&data[2], "duration", sizeof ("duration"));
-      data[10] = 0;             /* double */
-      GST_WRITE_DOUBLE_BE (data + 11, d);
-      script_tag = gst_buffer_join (script_tag, tmp);
-      tags_written++;
+      duration = dur;
     } else if (!strcmp (tag_name, GST_TAG_ARTIST) ||
         !strcmp (tag_name, GST_TAG_TITLE)) {
       gchar *s;
@@ -661,6 +649,44 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
       g_free (s);
       tags_written++;
     }
+  }
+
+
+  if (duration == GST_CLOCK_TIME_NONE) {
+    GSList *l;
+
+    GstFormat fmt = GST_FORMAT_TIME;
+    guint64 dur;
+
+    for (l = mux->collect->data; l; l = l->next) {
+      GstCollectData *cdata = l->data;
+
+      fmt = GST_FORMAT_TIME;
+
+      if (gst_pad_query_peer_duration (cdata->pad, &fmt, (gint64 *) & dur) &&
+          fmt == GST_FORMAT_TIME && dur != GST_CLOCK_TIME_NONE) {
+        if (duration == GST_CLOCK_TIME_NONE)
+          duration = dur;
+        else
+          duration = MAX (dur, duration);
+      }
+    }
+  }
+
+  if (duration != GST_CLOCK_TIME_NONE) {
+    gdouble d;
+    d = gst_guint64_to_gdouble (duration);
+    d /= (gdouble) GST_SECOND;
+
+    tmp = gst_buffer_new_and_alloc (2 + 8 + 1 + 8);
+    data = GST_BUFFER_DATA (tmp);
+    data[0] = 0;                /* 8 bytes name */
+    data[1] = 8;
+    memcpy (&data[2], "duration", sizeof ("duration"));
+    data[10] = 0;               /* double */
+    GST_WRITE_DOUBLE_BE (data + 11, d);
+    script_tag = gst_buffer_join (script_tag, tmp);
+    tags_written++;
   }
 
   if (mux->have_video) {
