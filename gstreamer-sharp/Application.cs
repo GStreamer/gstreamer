@@ -56,7 +56,7 @@ namespace Gst {
       gst_deinit();
     }
 
-    private static System.Type GstTypeMapping (GLib.GType gtype, string gtype_name) {
+    private static System.Type GstTypeResolver (GLib.GType gtype, string gtype_name) {
       Assembly[] assemblies = (Assembly[]) AppDomain.CurrentDomain.GetAssemblies ().Clone ();
 
       foreach (Assembly asm in assemblies) {
@@ -101,7 +101,7 @@ namespace Gst {
     }
 
     private static void RegisterManagedTypes() {
-      GLib.GType.GTypeMapping += GstTypeMapping;
+      GLib.GType.TypeResolver += GstTypeResolver;
 
       GLib.GType t;
 
