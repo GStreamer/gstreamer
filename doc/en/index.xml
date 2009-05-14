@@ -53,11 +53,15 @@
       <Type Name="ElementRemovedHandler" Kind="Delegate" />
       <Type Name="EntryAddedArgs" Kind="Class" />
       <Type Name="EntryAddedHandler" Kind="Delegate" />
+      <Type Name="EnumInfo" Kind="Structure" />
+      <Type Name="EnumValue" Kind="Structure" />
       <Type Name="Event" Kind="Class" />
       <Type Name="EventType" Kind="Enumeration" />
       <Type Name="EventTypeFlags" Kind="Enumeration" />
       <Type Name="FeatureAddedArgs" Kind="Class" />
       <Type Name="FeatureAddedHandler" Kind="Delegate" />
+      <Type Name="FlagsInfo" Kind="Structure" />
+      <Type Name="FlagsValue" Kind="Structure" />
       <Type Name="FlowReturn" Kind="Enumeration" />
       <Type Name="Format" Kind="Enumeration" />
       <Type Name="FormatDefinition" Kind="Structure" />
@@ -65,6 +69,7 @@
       <Type Name="Fraction" Kind="Structure" />
       <Type Name="FractionRange" Kind="Structure" />
       <Type Name="GhostPad" Kind="Class" />
+      <Type Name="GTypeNameAttribute" Kind="Class" />
       <Type Name="HaveDataArgs" Kind="Class" />
       <Type Name="HaveDataHandler" Kind="Delegate" />
       <Type Name="ImplementsInterface" Kind="Interface" />
@@ -153,6 +158,7 @@
       <Type Name="PresetAdapter" Kind="Class" />
       <Type Name="PresetDefault" Kind="Class" />
       <Type Name="PresetImplementor" Kind="Interface" />
+      <Type Name="PropertyInfo" Kind="Structure" />
       <Type Name="ProxyPad" Kind="Class" />
       <Type Name="Query" Kind="Class" />
       <Type Name="QueryType" Kind="Enumeration" />
@@ -211,6 +217,8 @@
       <Type Name="TypeFindElement" Kind="Class" />
     </Namespace>
     <Namespace Name="Gst.Interfaces">
+      <Type Name="ChannelChangedArgs" Kind="Class" />
+      <Type Name="ChannelChangedHandler" Kind="Delegate" />
       <Type Name="ColorBalance" Kind="Interface" />
       <Type Name="ColorBalanceAdapter" Kind="Class" />
       <Type Name="ColorBalanceChannel" Kind="Class" />
@@ -218,31 +226,49 @@
       <Type Name="ColorBalanceType" Kind="Enumeration" />
       <Type Name="FrequencyChangedArgs" Kind="Class" />
       <Type Name="FrequencyChangedHandler" Kind="Delegate" />
-      <Type Name="GstMixerOptions" Kind="Class" />
-      <Type Name="GstMixerTrack" Kind="Class" />
-      <Type Name="GstTunerChannel" Kind="Class" />
-      <Type Name="GstTunerNorm" Kind="Class" />
+      <Type Name="Mixer" Kind="Interface" />
+      <Type Name="MixerAdapter" Kind="Class" />
       <Type Name="MixerFlags" Kind="Enumeration" />
+      <Type Name="MixerImplementor" Kind="Interface" />
+      <Type Name="MixerMessage" Kind="Class" />
       <Type Name="MixerMessageType" Kind="Enumeration" />
+      <Type Name="MixerOptions" Kind="Class" />
+      <Type Name="MixerTrack" Kind="Class" />
       <Type Name="MixerTrackFlags" Kind="Enumeration" />
       <Type Name="MixerType" Kind="Enumeration" />
-      <Type Name="MuteToggledArgs" Kind="Class" />
-      <Type Name="MuteToggledHandler" Kind="Delegate" />
+      <Type Name="Navigation" Kind="Interface" />
+      <Type Name="NavigationAdapter" Kind="Class" />
       <Type Name="NavigationCommand" Kind="Enumeration" />
+      <Type Name="NavigationEvent" Kind="Class" />
       <Type Name="NavigationEventType" Kind="Enumeration" />
+      <Type Name="NavigationImplementor" Kind="Interface" />
+      <Type Name="NavigationMessage" Kind="Class" />
       <Type Name="NavigationMessageType" Kind="Enumeration" />
+      <Type Name="NavigationQuery" Kind="Class" />
       <Type Name="NavigationQueryType" Kind="Enumeration" />
-      <Type Name="OptionChangedArgs" Kind="Class" />
-      <Type Name="OptionChangedHandler" Kind="Delegate" />
-      <Type Name="RecordToggledArgs" Kind="Class" />
-      <Type Name="RecordToggledHandler" Kind="Delegate" />
+      <Type Name="NormChangedArgs" Kind="Class" />
+      <Type Name="NormChangedHandler" Kind="Delegate" />
+      <Type Name="ProbeNeededArgs" Kind="Class" />
+      <Type Name="ProbeNeededHandler" Kind="Delegate" />
+      <Type Name="PropertyProbe" Kind="Interface" />
+      <Type Name="PropertyProbeAdapter" Kind="Class" />
+      <Type Name="PropertyProbeImplementor" Kind="Interface" />
       <Type Name="SignalChangedArgs" Kind="Class" />
       <Type Name="SignalChangedHandler" Kind="Delegate" />
+      <Type Name="Tuner" Kind="Interface" />
+      <Type Name="TunerAdapter" Kind="Class" />
+      <Type Name="TunerChannel" Kind="Class" />
       <Type Name="TunerChannelFlags" Kind="Enumeration" />
+      <Type Name="TunerImplementor" Kind="Interface" />
+      <Type Name="TunerNorm" Kind="Class" />
       <Type Name="ValueChangedArgs" Kind="Class" />
       <Type Name="ValueChangedHandler" Kind="Delegate" />
-      <Type Name="VolumeChangedArgs" Kind="Class" />
-      <Type Name="VolumeChangedHandler" Kind="Delegate" />
+      <Type Name="VideoOrientation" Kind="Interface" />
+      <Type Name="VideoOrientationAdapter" Kind="Class" />
+      <Type Name="VideoOrientationImplementor" Kind="Interface" />
+      <Type Name="XOverlay" Kind="Interface" />
+      <Type Name="XOverlayAdapter" Kind="Class" />
+      <Type Name="XOverlayImplementor" Kind="Interface" />
     </Namespace>
   </Types>
   <Title>gst-sharp</Title>

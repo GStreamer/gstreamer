@@ -1,5 +1,5 @@
-<Type Name="OptionChangedArgs" FullName="Gst.Interfaces.OptionChangedArgs">
-  <TypeSignature Language="C#" Value="public class OptionChangedArgs : GLib.SignalArgs" />
+<Type Name="ProbeNeededArgs" FullName="Gst.Interfaces.ProbeNeededArgs">
+  <TypeSignature Language="C#" Value="public class ProbeNeededArgs : GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -15,15 +15,15 @@
   <Members>
     
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public OptionChangedArgs ();" />
+      <MemberSignature Language="C#" Value="public ProbeNeededArgs ();" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Value">
-      <MemberSignature Language="C#" Value="public string Value { get; }" />
+    </Member><Member MemberName="Property">
+      <MemberSignature Language="C#" Value="public string Property { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>

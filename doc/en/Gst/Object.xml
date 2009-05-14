@@ -64,7 +64,7 @@
       </AssemblyInfo>
       <ReturnValue><ReturnType>Gst.ObjectFlags</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="GType">
+    </Member><Member MemberName="GetPropertyInfo"><MemberSignature Language="C#" Value="public Gst.PropertyInfo GetPropertyInfo (string property);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PropertyInfo</ReturnType></ReturnValue><Parameters><Parameter Name="property" Type="System.String" /></Parameters><Docs><param name="property">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GType">
       <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
@@ -161,7 +161,7 @@
       </AssemblyInfo>
       <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Raw">
+    </Member><Member MemberName="Properties"><MemberSignature Language="C#" Value="public Gst.PropertyInfo[] Properties { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PropertyInfo[]</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Raw">
       <MemberSignature Language="C#" Value="protected override IntPtr Raw { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>

@@ -1,5 +1,5 @@
-<Type Name="MuteToggledArgs" FullName="Gst.Interfaces.MuteToggledArgs">
-  <TypeSignature Language="C#" Value="public class MuteToggledArgs : GLib.SignalArgs" />
+<Type Name="NormChangedArgs" FullName="Gst.Interfaces.NormChangedArgs">
+  <TypeSignature Language="C#" Value="public class NormChangedArgs : GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -15,20 +15,20 @@
   <Members>
     
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public MuteToggledArgs ();" />
+      <MemberSignature Language="C#" Value="public NormChangedArgs ();" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Mute">
-      <MemberSignature Language="C#" Value="public bool Mute { get; }" />
+    </Member><Member MemberName="Norm">
+      <MemberSignature Language="C#" Value="public Gst.Interfaces.TunerNorm Norm { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <ReturnValue><ReturnType>Gst.Interfaces.TunerNorm</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     </Member>
   </Members>

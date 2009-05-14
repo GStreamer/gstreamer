@@ -1,5 +1,5 @@
-<Type Name="GstTunerChannel" FullName="Gst.Interfaces.GstTunerChannel">
-  <TypeSignature Language="C#" Value="public class GstTunerChannel : GLib.Object" />
+<Type Name="TunerChannel" FullName="Gst.Interfaces.TunerChannel">
+  <TypeSignature Language="C#" Value="public class TunerChannel : GLib.Object" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -26,8 +26,9 @@
     
     
     
+    
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="protected GstTunerChannel ();" />
+      <MemberSignature Language="C#" Value="protected TunerChannel ();" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -35,13 +36,21 @@
       <Parameters />
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public GstTunerChannel (IntPtr raw);" />
+      <MemberSignature Language="C#" Value="public TunerChannel (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
       <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public TunerChannel (string label, Gst.Interfaces.TunerChannelFlags flags, float freq_multiplicator, ulong min_frequency, ulong max_frequency, int min_signal, int max_signal);" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters><Parameter Name="label" Type="System.String" /><Parameter Name="flags" Type="Gst.Interfaces.TunerChannelFlags" /><Parameter Name="freq_multiplicator" Type="System.Single" /><Parameter Name="min_frequency" Type="System.UInt64" /><Parameter Name="max_frequency" Type="System.UInt64" /><Parameter Name="min_signal" Type="System.Int32" /><Parameter Name="max_signal" Type="System.Int32" /></Parameters>
+      <Docs><param name="label">To be added.</param><param name="flags">To be added.</param><param name="freq_multiplicator">To be added.</param><param name="min_frequency">To be added.</param><param name="max_frequency">To be added.</param><param name="min_signal">To be added.</param><param name="max_signal">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     </Member><Member MemberName="Flags">
       <MemberSignature Language="C#" Value="public Gst.Interfaces.TunerChannelFlags Flags { get; }" />
       <MemberType>Property</MemberType>
@@ -121,7 +130,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Interfaces.GstTunerChannel), ConnectionMethod="OverrideFrequencyChanged")</AttributeName></Attribute></Attributes>
+      <Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Interfaces.TunerChannel), ConnectionMethod="OverrideFrequencyChanged")</AttributeName></Attribute></Attributes>
       <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
       <Parameters><Parameter Name="frequency" Type="System.UInt64" /></Parameters>
       <Docs><param name="frequency">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
@@ -131,7 +140,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Interfaces.GstTunerChannel), ConnectionMethod="OverrideSignalChanged")</AttributeName></Attribute></Attributes>
+      <Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Interfaces.TunerChannel), ConnectionMethod="OverrideSignalChanged")</AttributeName></Attribute></Attributes>
       <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
       <Parameters><Parameter Name="signal" Type="System.Int32" /></Parameters>
       <Docs><param name="signal">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>

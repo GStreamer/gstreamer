@@ -1,5 +1,5 @@
-<Type Name="VolumeChangedHandler" FullName="Gst.Interfaces.VolumeChangedHandler">
-  <TypeSignature Language="C#" Value="public delegate void VolumeChangedHandler(object o, VolumeChangedArgs args);" />
+<Type Name="ChannelChangedHandler" FullName="Gst.Interfaces.ChannelChangedHandler">
+  <TypeSignature Language="C#" Value="public delegate void ChannelChangedHandler(object o, ChannelChangedArgs args);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -9,7 +9,7 @@
   </Base>
   <Parameters>
     <Parameter Name="o" Type="System.Object" />
-    <Parameter Name="args" Type="Gst.Interfaces.VolumeChangedArgs" />
+    <Parameter Name="args" Type="Gst.Interfaces.ChannelChangedArgs" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>

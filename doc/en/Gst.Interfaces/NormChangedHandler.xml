@@ -1,5 +1,5 @@
-<Type Name="OptionChangedHandler" FullName="Gst.Interfaces.OptionChangedHandler">
-  <TypeSignature Language="C#" Value="public delegate void OptionChangedHandler(object o, OptionChangedArgs args);" />
+<Type Name="NormChangedHandler" FullName="Gst.Interfaces.NormChangedHandler">
+  <TypeSignature Language="C#" Value="public delegate void NormChangedHandler(object o, NormChangedArgs args);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -9,7 +9,7 @@
   </Base>
   <Parameters>
     <Parameter Name="o" Type="System.Object" />
-    <Parameter Name="args" Type="Gst.Interfaces.OptionChangedArgs" />
+    <Parameter Name="args" Type="Gst.Interfaces.NormChangedArgs" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>

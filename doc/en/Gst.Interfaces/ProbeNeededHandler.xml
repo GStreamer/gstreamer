@@ -1,5 +1,5 @@
-<Type Name="RecordToggledHandler" FullName="Gst.Interfaces.RecordToggledHandler">
-  <TypeSignature Language="C#" Value="public delegate void RecordToggledHandler(object o, RecordToggledArgs args);" />
+<Type Name="ProbeNeededHandler" FullName="Gst.Interfaces.ProbeNeededHandler">
+  <TypeSignature Language="C#" Value="public delegate void ProbeNeededHandler(object o, ProbeNeededArgs args);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -9,7 +9,7 @@
   </Base>
   <Parameters>
     <Parameter Name="o" Type="System.Object" />
-    <Parameter Name="args" Type="Gst.Interfaces.RecordToggledArgs" />
+    <Parameter Name="args" Type="Gst.Interfaces.ProbeNeededArgs" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>
