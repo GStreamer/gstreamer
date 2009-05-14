@@ -145,9 +145,11 @@ static void
 gst_vorbis_enc_add_interfaces (GType vorbisenc_type)
 {
   static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
+  static const GInterfaceInfo preset_info = { NULL, NULL, NULL };
 
   g_type_add_interface_static (vorbisenc_type, GST_TYPE_TAG_SETTER,
       &tag_setter_info);
+  g_type_add_interface_static (vorbisenc_type, GST_TYPE_PRESET, &preset_info);
 }
 
 static void
