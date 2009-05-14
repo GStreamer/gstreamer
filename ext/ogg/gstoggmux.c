@@ -149,10 +149,17 @@ gst_ogg_mux_get_type (void)
       0,
       (GInstanceInitFunc) gst_ogg_mux_init,
     };
+    static const GInterfaceInfo preset_info = {
+      NULL,
+      NULL,
+      NULL
+    };
 
     ogg_mux_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstOggMux", &ogg_mux_info,
         0);
+
+    g_type_add_interface_static (ogg_mux_type, GST_TYPE_PRESET, &preset_info);
   }
   return ogg_mux_type;
 }
