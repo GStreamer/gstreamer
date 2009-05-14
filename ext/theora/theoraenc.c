@@ -181,7 +181,21 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-theora")
     );
 
-GST_BOILERPLATE (GstTheoraEnc, gst_theora_enc, GstElement, GST_TYPE_ELEMENT);
+static void
+_do_init (GType object_type)
+{
+  const GInterfaceInfo preset_interface_info = {
+    NULL,                       /* interface_init */
+    NULL,                       /* interface_finalize */
+    NULL                        /* interface_data */
+  };
+
+  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
+      &preset_interface_info);
+}
+
+GST_BOILERPLATE_FULL (GstTheoraEnc, gst_theora_enc, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
 
 static gboolean theora_enc_sink_event (GstPad * pad, GstEvent * event);
 static gboolean theora_enc_src_event (GstPad * pad, GstEvent * event);
