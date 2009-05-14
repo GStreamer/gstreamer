@@ -2065,10 +2065,12 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
     btni_t *btn_info = pci->hli.btnit + button - 1;
     guint32 btn_mask;
 
-    GST_DEBUG_OBJECT (src, "Setting highlight. Button %d @ %d,%d "
-        "active %d palette 0x%x (from button %d @ %d,%d palette 0x%x)",
-        button, src->area.sx, src->area.sy, mode, src->area.palette,
-        src->active_button, area.sx, area.sy, area.palette);
+    GST_DEBUG_OBJECT (src, "Setting highlight. Button %d @ %d,%d,%d,%d "
+        "active %d palette 0x%x (from button %d @ %d,%d,%d,%d palette 0x%x)",
+        button, area.sx, area.sy, area.ex, area.ey,
+        mode, area.palette,
+        src->active_button, src->area.sx, src->area.sy, src->area.ex,
+        src->area.ey, src->area.palette);
 
     memcpy (&(src->area), &area, sizeof (dvdnav_highlight_area_t));
 
