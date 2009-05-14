@@ -123,6 +123,7 @@ struct _GstPlaySink
   GMutex *lock;
 
   gboolean async_pending;
+  gboolean need_async_start;
 
   GstPlayFlags flags;
 
@@ -243,6 +244,7 @@ gst_play_sink_init (GstPlaySink * playsink)
   playsink->flags = GST_PLAY_FLAG_SOFT_VOLUME;
 
   playsink->lock = g_mutex_new ();
+  playsink->need_async_start = TRUE;
 }
 
 static void
@@ -755,8 +757,12 @@ do_async_start (GstPlaySink * playsink)
 {
   GstMessage *message;
 
+  if (!playsink->need_async_start)
+    return;
+
   playsink->async_pending = TRUE;
 
+  GST_INFO_OBJECT (playsink, "Sending async_start message");
   message = gst_message_new_async_start (GST_OBJECT_CAST (playsink), FALSE);
   GST_BIN_CLASS (gst_play_sink_parent_class)->handle_message (GST_BIN_CAST
       (playsink), message);
@@ -768,12 +774,15 @@ do_async_done (GstPlaySink * playsink)
   GstMessage *message;
 
   if (playsink->async_pending) {
+    GST_INFO_OBJECT (playsink, "Sending async_done message");
     message = gst_message_new_async_done (GST_OBJECT_CAST (playsink));
     GST_BIN_CLASS (gst_play_sink_parent_class)->handle_message (GST_BIN_CAST
         (playsink), message);
 
     playsink->async_pending = FALSE;
   }
+
+  playsink->need_async_start = FALSE;
 }
 
 /* try to change the state of an element. This function returns the element when
@@ -2352,6 +2361,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* FIXME Release audio device when we implement that */
+      playsink->need_async_start = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* remove sinks we added */
