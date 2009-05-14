@@ -52,6 +52,9 @@ sources = \
 	TypeFindDelegates.cs \
 	PresetDefault.cs \
 	MixerMessage.cs \
+	NavigationMessage.cs \
+	NavigationEvent.cs \
+	NavigationQuery.cs \
 	coreplugins/*.cs \
 	baseplugins/*.cs
 
@@ -63,7 +66,8 @@ overrides = \
 	override/MixerAdapter.cs \
 	override/PropertyProbe.cs \
 	override/PropertyProbeAdapter.cs \
-	override/ProbeNeededHandler.cs
+	override/ProbeNeededHandler.cs \
+	override/NavigationAdapter.cs
 
 build_sources = $(addprefix $(srcdir)/, $(sources))
 

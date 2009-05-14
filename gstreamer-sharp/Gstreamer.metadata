@@ -987,7 +987,18 @@
   <attr path="/api/namespace/enum[@cname='GstMixerMessageType']" name="name">MixerMessageType</attr>
   <attr path="/api/namespace/enum[@cname='GstMixerTrackFlags']" name="name">MixerTrackFlags</attr>
   <attr path="/api/namespace/enum[@cname='GstMixerType']" name="name">MixerType</attr>
+
   <attr path="/api/namespace/enum[@cname='GstNavigationCommand']" name="name">NavigationCommand</attr>
+  <add-node path="/api/namespace/enum[@cname='GstNavigationCommand']">
+    <member cname="GST_NAVIGATION_COMMAND_MENU1" name="DvdMenu" value="1" />
+    <member cname="GST_NAVIGATION_COMMAND_MENU2" name="DvdTitleMenu" value="2" />
+    <member cname="GST_NAVIGATION_COMMAND_MENU3" name="DvdRootMenu" value="3" />
+    <member cname="GST_NAVIGATION_COMMAND_MENU4" name="DvdSubPictureMenu" value="4" />
+    <member cname="GST_NAVIGATION_COMMAND_MENU5" name="DvdAudioMenu" value="5" />
+    <member cname="GST_NAVIGATION_COMMAND_MENU6" name="DvdAngleMenu" value="6" />
+    <member cname="GST_NAVIGATION_COMMAND_MENU7" name="DvdChapterMenu" value="7" />
+  </add-node>
+
   <attr path="/api/namespace/enum[@cname='GstNavigationEventType']" name="name">NavigationEventType</attr>
   <attr path="/api/namespace/enum[@cname='GstNavigationMessageType']" name="name">NavigationMessageType</attr>
   <attr path="/api/namespace/enum[@cname='GstNavigationQueryType']" name="name">NavigationQueryType</attr>
@@ -1022,7 +1033,30 @@
   <attr path="/api/namespace/object[@cname='GstMixerOptions']/virtual_method[@cname='get_values']/return-type" name="element_type">gchar*</attr>
   <move-node path="/api/namespace/object[@cname='GstMixerOptions']/method[@cname='gst_mixer_options_list_changed']">/api/namespace/interface[@cname='GstMixer']</move-node>
 
-  <attr path="/api/namespace/interface[@cname='GstNavigation']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']" name="name">Navigation</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/virtual_method[@cname='send_event']/parameters/parameter" name="owned">true</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_message_get_type']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_message_new_angles_changed']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_message_parse_angles_changed']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_message_new_commands_changed']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_message_new_mouse_over']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_message_parse_mouse_over']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_get_type']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_new_angles']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_new_commands']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_parse_angles']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_parse_commands_length']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_parse_commands_nth']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_set_angles']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_set_commands']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_set_commandsv']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_event_get_type']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_event_parse_key_event']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_event_parse_mouse_button_event']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_event_parse_mouse_move_event']" name="hidden">1</attr>
+  <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_event_parse_command']" name="hidden">1</attr>
+
+
   <attr path="/api/namespace/interface[@cname='GstPropertyProbe']" name="name">PropertyProbe</attr>
 
   <attr path="/api/namespace/interface[@cname='GstTuner']" name="name">Tuner</attr>
