@@ -266,6 +266,7 @@
 
   <attr path="/api/namespace/object[@name='Element']/field" name="hidden">1</attr>
   <remove-attr path="/api/namespace/object[@name='Element']/field[@name='CurrentState']" name="hidden" />
+  <attr path="/api/namespace/object[@name='Element']/virtual_method[@cname='get_index']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_link_many']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_unlink_many']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_add_pad']" name="hidden">1</attr>
