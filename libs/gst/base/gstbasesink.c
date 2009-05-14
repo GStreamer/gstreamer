@@ -154,15 +154,16 @@ GST_DEBUG_CATEGORY_STATIC (gst_base_sink_debug);
 
 typedef struct
 {
-  guint cookie;
-  guint32 seqnum;
-  GstFormat format;
-  guint64 remaining;
-  guint64 amount;
-  guint64 duration;
-  gdouble rate;
-  gboolean intermediate;
-  gboolean need_preroll;
+  gboolean valid;               /* if this info is valid */
+  guint32 seqnum;               /* the seqnum of the STEP event */
+  GstFormat format;             /* the format of the amount */
+  guint64 amount;               /* the total amount of data to skip */
+  guint64 remaining;            /* the remaining amount of data to skip */
+  guint64 duration;             /* the duration in time of the skipped data */
+  guint64 start;                /* running_time of the start */
+  gdouble rate;                 /* rate of skipping */
+  gboolean intermediate;        /* if this is an intermediate step */
+  gboolean need_preroll;        /* if we need preroll after this step */
 } GstStepInfo;
 
 /* FIXME, some stuff in ABI.data and other in Private...
@@ -238,7 +239,9 @@ struct _GstBaseSinkPrivate
 
   gboolean call_preroll;
 
-  GstStepInfo step;
+  /* we have a pending and a current step operation */
+  GstStepInfo current_step;
+  GstStepInfo pending_step;
 };
 
 #define DO_RUNNING_AVG(avg,val,size) (((val) + ((size)-1) * (avg)) / (size))
@@ -1469,6 +1472,97 @@ async_failed:
   }
 }
 
+static void
+start_stepping (GstBaseSink * sink, GstSegment * segment,
+    GstStepInfo * pending, GstStepInfo * current)
+{
+  gint64 start;
+
+  GST_DEBUG_OBJECT (sink, "update pending step");
+  memcpy (current, pending, sizeof (GstStepInfo));
+  pending->valid = FALSE;
+
+  /* get the running time of the current segment start and remember it */
+  start =
+      gst_segment_to_running_time (segment, segment->format, segment->start);
+
+  /* update the segment, accumulating what was consumed at the old rate, setting
+   * the new rate. */
+  gst_segment_set_newsegment_full (segment, TRUE, current->rate,
+      segment->applied_rate, segment->format, segment->start, segment->stop,
+      segment->time);
+
+  GST_DEBUG_OBJECT (sink, "step start %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (start));
+  current->start = start;
+}
+
+static void
+stop_stepping (GstBaseSink * sink, GstSegment * segment,
+    GstStepInfo * current, gint64 * cstart, gint64 * cstop)
+{
+  GstMessage *message;
+  gint64 stop;
+
+  GST_DEBUG_OBJECT (sink, "step complete");
+
+  /* get the end of the step segment */
+  stop = gst_segment_to_running_time (segment, segment->format, *cstart);
+
+  GST_DEBUG_OBJECT (sink, "step stop %" GST_TIME_FORMAT, GST_TIME_ARGS (stop));
+  /* configure the duration of the elapsed segment */
+  current->duration = stop - current->start;
+
+  /* update the segment, discarding what was consumed */
+  segment->start = *cstart;
+
+  message =
+      gst_message_new_step_done (GST_OBJECT_CAST (sink), current->format,
+      current->amount, current->rate, current->duration, current->intermediate);
+  gst_message_set_seqnum (message, current->seqnum);
+  gst_element_post_message (GST_ELEMENT_CAST (sink), message);
+
+  if (!current->intermediate)
+    sink->need_preroll = current->need_preroll;
+  current->valid = FALSE;
+}
+
+static gboolean
+handle_stepping (GstBaseSink * sink, GstSegment * segment,
+    GstStepInfo * current)
+{
+  GstBaseSinkPrivate *priv;
+  gboolean step_end = FALSE;
+
+  priv = sink->priv;
+
+  /* see if we need to skip this buffer because of stepping */
+  switch (current->format) {
+    case GST_FORMAT_TIME:
+      GST_DEBUG_OBJECT (sink,
+          "got time step %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (current->remaining), GST_TIME_ARGS (current->amount));
+      break;
+    case GST_FORMAT_BUFFERS:
+      GST_DEBUG_OBJECT (sink,
+          "got default step %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
+          current->remaining, current->amount);
+
+      if (current->remaining > 0) {
+        current->remaining--;
+      } else {
+        step_end = TRUE;
+      }
+      break;
+    case GST_FORMAT_DEFAULT:
+    default:
+      GST_DEBUG_OBJECT (sink,
+          "got unknown step %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
+          current->remaining, current->amount);
+      break;
+  }
+  return step_end;
+}
 
 /* with STREAM_LOCK, PREROLL_LOCK
  *
@@ -1482,7 +1576,7 @@ static gboolean
 gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     GstClockTime * rsstart, GstClockTime * rsstop,
     GstClockTime * rrstart, GstClockTime * rrstop, gboolean * do_sync,
-    GstSegment * segment)
+    gboolean * stepped, GstSegment * segment, GstStepInfo * step)
 {
   GstBaseSinkClass *bclass;
   GstBuffer *buffer;
@@ -1492,11 +1586,14 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   GstClockTime sstart, sstop;   /* clipped timestamps converted to stream time */
   GstFormat format;
   GstBaseSinkPrivate *priv;
+  gboolean step_end;
 
   priv = basesink->priv;
 
   /* start with nothing */
   start = stop = -1;
+
+  step_end = FALSE;
 
   if (G_UNLIKELY (GST_IS_EVENT (obj))) {
     GstEvent *event = GST_EVENT_CAST (obj);
@@ -1525,6 +1622,8 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
         *do_sync = rstart != -1;
         GST_DEBUG_OBJECT (basesink, "sync times for EOS %" GST_TIME_FORMAT,
             GST_TIME_ARGS (rstart));
+        /* if we are stepping, we end now */
+        step_end = step->valid;
         goto done;
       }
       default:
@@ -1543,11 +1642,14 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
-  /* just get the times to see if we need syncing */
+  /* just get the times to see if we need syncing, if the start returns -1 we
+   * don't sync. */
   if (bclass->get_times)
     bclass->get_times (basesink, buffer, &start, &stop);
 
   if (start == -1) {
+    /* we don't need to sync but we still want to get the timestamps for
+     * tracking the position */
     gst_base_sink_get_times (basesink, buffer, &start, &stop);
     *do_sync = FALSE;
   } else {
@@ -1561,7 +1663,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   /* collect segment and format for code clarity */
   format = segment->format;
 
-  /* no timestamp clipping if we did not * get a TIME segment format */
+  /* no timestamp clipping if we did not get a TIME segment format */
   if (G_UNLIKELY (format != GST_FORMAT_TIME)) {
     cstart = start;
     cstop = stop;
@@ -1595,7 +1697,16 @@ do_times:
   rstart = gst_segment_to_running_time (segment, format, cstart);
   rstop = gst_segment_to_running_time (segment, format, cstop);
 
+  if (G_UNLIKELY (step->valid)) {
+    if (!(step_end = handle_stepping (basesink, segment, step)))
+      *stepped = TRUE;
+  }
+
 done:
+  /* done label called when doing EOS */
+  if (step_end)
+    stop_stepping (basesink, segment, &priv->current_step, &cstart, &cstop);
+
   /* save times */
   *rsstart = sstart;
   *rsstop = sstop;
@@ -1897,58 +2008,6 @@ flushing:
   }
 }
 
-static gboolean
-handle_stepping (GstBaseSink * basesink)
-{
-  GstBaseSinkPrivate *priv;
-
-  priv = basesink->priv;
-
-  /* see if we need to skip this buffer because of stepping */
-  if (priv->step.remaining != -1) {
-    GstMessage *message;
-    GstStepInfo *step;
-
-    step = &priv->step;
-
-    switch (step->format) {
-      case GST_FORMAT_TIME:
-        GST_DEBUG_OBJECT (basesink,
-            "got time step %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT,
-            GST_TIME_ARGS (step->remaining), GST_TIME_ARGS (step->amount));
-        break;
-      case GST_FORMAT_BUFFERS:
-        GST_DEBUG_OBJECT (basesink,
-            "got default step %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
-            step->remaining, step->amount);
-        if (step->remaining > 0) {
-          step->remaining--;
-          return FALSE;
-        }
-        break;
-      case GST_FORMAT_DEFAULT:
-      default:
-        GST_DEBUG_OBJECT (basesink,
-            "got unknown step %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
-            step->remaining, step->amount);
-        break;
-    }
-    GST_DEBUG_OBJECT (basesink, "step complete");
-
-    message =
-        gst_message_new_step_done (GST_OBJECT_CAST (basesink), step->format,
-        step->amount, step->rate, step->duration, step->intermediate);
-    gst_message_set_seqnum (message, step->seqnum);
-    gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
-
-    step->remaining = -1;
-    if (!step->intermediate)
-      basesink->need_preroll = step->need_preroll;
-  }
-  return TRUE;
-
-}
-
 /* with STREAM_LOCK, PREROLL_LOCK
  *
  * Make sure we are in PLAYING and synchronize an object to the clock.
@@ -1982,28 +2041,34 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
   gboolean do_sync;
   GstBaseSinkPrivate *priv;
   GstFlowReturn ret;
-  guint step_cookie;
+  GstStepInfo *current, *pending;
+  gboolean stepped;
 
   priv = basesink->priv;
 
 do_step:
   sstart = sstop = rstart = rstop = -1;
   do_sync = TRUE;
+  stepped = FALSE;
 
   priv->current_rstart = -1;
 
+  /* get stepping info */
+  current = &priv->current_step;
+  pending = &priv->pending_step;
+
   /* get timing information for this object against the render segment */
   syncable = gst_base_sink_get_sync_times (basesink, obj,
-      &sstart, &sstop, &rstart, &rstop, &do_sync, &basesink->segment);
+      &sstart, &sstop, &rstart, &rstop, &do_sync, &stepped, &basesink->segment,
+      current);
+
+  if (G_UNLIKELY (stepped))
+    goto step_skipped;
 
   /* a syncable object needs to participate in preroll and
    * clocking. All buffers and EOS are syncable. */
   if (G_UNLIKELY (!syncable))
     goto not_syncable;
-
-  /* see if we need to skip this buffer as part of stepping */
-  if (!handle_stepping (basesink))
-    goto step_skipped;
 
   /* store timing info for current object */
   priv->current_rstart = rstart;
@@ -2011,8 +2076,6 @@ do_step:
 
   /* save sync time for eos when the previous object needed sync */
   priv->eos_rtime = (do_sync ? priv->current_rstop : -1);
-
-  step_cookie = priv->step.cookie;
 
 again:
   /* first do preroll, this makes sure we commit our state
@@ -2022,8 +2085,12 @@ again:
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto preroll_failed;
 
-  if (step_cookie != priv->step.cookie)
+  /* update the segment with a pending step if the current one is invalid and we
+   * have a new pending one. We only accept new step updates after a preroll */
+  if (G_UNLIKELY (pending->valid && !current->valid)) {
+    start_stepping (basesink, &basesink->segment, pending, current);
     goto do_step;
+  }
 
   /* After rendering we store the position of the last buffer so that we can use
    * it to report the position. We need to take the lock here. */
@@ -2087,6 +2154,7 @@ done:
 step_skipped:
   {
     GST_DEBUG_OBJECT (basesink, "skipped stepped object %p", obj);
+    *late = TRUE;
     return GST_FLOW_OK;
   }
 not_syncable:
@@ -3282,15 +3350,14 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       bclass->unlock (sink);
 
     GST_PAD_PREROLL_LOCK (sink->sinkpad);
-    priv->step.cookie++;
-
     /* update the segment */
-    priv->step.seqnum = seqnum;
-    priv->step.format = format;
-    priv->step.amount = amount;
-    priv->step.remaining = amount;
-    priv->step.rate = rate;
-    priv->step.intermediate = intermediate;
+    priv->pending_step.seqnum = seqnum;
+    priv->pending_step.format = format;
+    priv->pending_step.amount = amount;
+    priv->pending_step.remaining = amount;
+    priv->pending_step.rate = rate;
+    priv->pending_step.intermediate = intermediate;
+    priv->pending_step.valid = TRUE;
 
     /* now that we have the PREROLL lock, clear our unlock request */
     if (bclass->unlock_stop)
@@ -3300,7 +3367,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       /* and we need to commit our state again on the next
        * prerolled buffer */
       sink->playing_async = TRUE;
-      priv->step.need_preroll = TRUE;
+      priv->pending_step.need_preroll = TRUE;
       sink->need_preroll = FALSE;
       gst_element_lost_state_full (GST_ELEMENT_CAST (sink), FALSE);
     } else {
@@ -3314,9 +3381,6 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
     if (sink->clock_id) {
       gst_clock_id_unschedule (sink->clock_id);
     }
-
-    gst_element_post_message (GST_ELEMENT_CAST (sink),
-        gst_message_new_async_start (GST_OBJECT_CAST (sink), FALSE));
 
     GST_DEBUG_OBJECT (sink, "signal waiter");
     GST_PAD_PREROLL_SIGNAL (sink->sinkpad);
@@ -4190,7 +4254,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       gst_base_sink_reset_qos (basesink);
       priv->commited = FALSE;
       priv->call_preroll = TRUE;
-      priv->step.remaining = -1;
+      priv->current_step.valid = FALSE;
+      priv->pending_step.valid = FALSE;
       if (priv->async_enabled) {
         GST_DEBUG_OBJECT (basesink, "doing async state change");
         /* when async enabled, post async-start message and return ASYNC from
