@@ -417,6 +417,8 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
         gboolean in_still;
 
         if (gst_structure_get_boolean (structure, "still-state", &in_still)) {
+          GstBuffer *to_push = NULL;
+
           GST_DEBUG_OBJECT (dvdspu,
               "DVD event of type %s on video pad: in-still = %d", event_type,
               in_still);
@@ -431,10 +433,15 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
              * screen, otherwise the last frame  might have been discarded 
              * by QoS */
             gst_dvd_spu_redraw_still (dvdspu, TRUE);
+            to_push = dvdspu->pending_frame;
+            dvdspu->pending_frame = NULL;
+
           } else {
             state->flags &= ~(SPU_STATE_STILL_FRAME);
           }
           DVD_SPU_UNLOCK (dvdspu);
+          if (to_push)
+            gst_pad_push (dvdspu->srcpad, to_push);
         }
         gst_event_unref (event);
         res = TRUE;
