@@ -218,6 +218,8 @@ enum
 
   PROP_RESEND_STREAMHEADER,
 
+  PROP_NUM_FDS,
+
   PROP_LAST
 };
 
@@ -519,6 +521,11 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
           "Resend the streamheader if it changes in the caps",
           DEFAULT_RESEND_STREAMHEADER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_NUM_FDS,
+      g_param_spec_uint ("num-fds", "Number of fds",
+          "The current number of client file descriptors.",
+          0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMultiFdSink::add:
@@ -2797,6 +2804,9 @@ gst_multi_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_RESEND_STREAMHEADER:
       g_value_set_boolean (value, multifdsink->resend_streamheader);
+      break;
+    case PROP_NUM_FDS:
+      g_value_set_uint (value, g_hash_table_size (multifdsink->fd_hash));
       break;
 
     default:
