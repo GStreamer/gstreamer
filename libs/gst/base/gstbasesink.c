@@ -1486,35 +1486,46 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
   start =
       gst_segment_to_running_time (segment, segment->format, segment->start);
 
-  /* update the segment, accumulating what was consumed at the old rate, setting
-   * the new rate. */
-  gst_segment_set_newsegment_full (segment, TRUE, current->rate,
-      segment->applied_rate, segment->format, segment->start, segment->stop,
-      segment->time);
+  /* set the new rate */
+  segment->rate = current->rate;
 
-  GST_DEBUG_OBJECT (sink, "step start %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (sink, "step started at running_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (start));
   current->start = start;
+
+  if (current->amount == -1) {
+    GST_DEBUG_OBJECT (sink, "step amount == -1, stop stepping");
+    current->valid = FALSE;
+  } else {
+    GST_DEBUG_OBJECT (sink, "step amount: %" G_GUINT64_FORMAT ", format: %s, "
+        "rate: %f", current->amount, gst_format_get_name (current->format),
+        current->rate);
+  }
 }
 
 static void
 stop_stepping (GstBaseSink * sink, GstSegment * segment,
-    GstStepInfo * current, gint64 * cstart, gint64 * cstop)
+    GstStepInfo * current, guint64 cstart, guint64 cstop, gint64 * rstart,
+    gint64 * rstop)
 {
   GstMessage *message;
-  gint64 stop;
 
   GST_DEBUG_OBJECT (sink, "step complete");
 
-  /* get the end of the step segment */
-  stop = gst_segment_to_running_time (segment, segment->format, *cstart);
+  GST_DEBUG_OBJECT (sink, "step stop at running_time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (*rstart));
 
-  GST_DEBUG_OBJECT (sink, "step stop %" GST_TIME_FORMAT, GST_TIME_ARGS (stop));
   /* configure the duration of the elapsed segment */
-  current->duration = stop - current->start;
+  current->duration = *rstart - current->start;
+  GST_DEBUG_OBJECT (sink, "step elapsed running_time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (current->duration));
 
-  /* update the segment, discarding what was consumed */
-  segment->start = *cstart;
+  /* update the segment, discarding what was consumed, running time goes
+   * backwards with the duration of the data we skipped. FIXME, this only works
+   * in PAUSED. */
+  segment->start = cstart;
+  *rstart -= current->duration;
+  *rstop -= current->duration;
 
   message =
       gst_message_new_step_done (GST_OBJECT_CAST (sink), current->format,
@@ -1524,6 +1535,8 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
 
   if (!current->intermediate)
     sink->need_preroll = current->need_preroll;
+
+  /* and the current step info finished and becomes invalid */
   current->valid = FALSE;
 }
 
@@ -1624,7 +1637,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
             GST_TIME_ARGS (rstart));
         /* if we are stepping, we end now */
         step_end = step->valid;
-        goto done;
+        goto eos_done;
       }
       default:
         /* other events do not need syncing */
@@ -1672,7 +1685,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     goto do_times;
   }
 
-  /* clip */
+  /* clip, only when we know about time */
   if (G_UNLIKELY (!gst_segment_clip (segment, GST_FORMAT_TIME,
               (gint64) start, (gint64) stop, &cstart, &cstop)))
     goto out_of_segment;
@@ -1702,10 +1715,11 @@ do_times:
       *stepped = TRUE;
   }
 
-done:
-  /* done label called when doing EOS */
+eos_done:
+  /* done label only called when doing EOS, we also stop stepping then */
   if (step_end)
-    stop_stepping (basesink, segment, &priv->current_step, &cstart, &cstop);
+    stop_stepping (basesink, segment, &priv->current_step, cstart, cstop,
+        &rstart, &rstop);
 
   /* save times */
   *rsstart = sstart;
