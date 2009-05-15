@@ -20,7 +20,8 @@ event_loop (GstElement * pipe)
         gst_message_unref (message);
         return;
       case GST_MESSAGE_WARNING:
-      case GST_MESSAGE_ERROR:{
+      case GST_MESSAGE_ERROR:
+      {
         GError *gerror;
         gchar *debug;
 
@@ -29,6 +30,22 @@ event_loop (GstElement * pipe)
         gst_message_unref (message);
         g_error_free (gerror);
         g_free (debug);
+        return;
+      }
+      case GST_MESSAGE_STEP_DONE:
+      {
+        GstFormat format;
+        guint64 amount;
+        gdouble rate;
+        guint64 duration;
+        gboolean intermediate;
+
+        gst_message_parse_step_done (message, &format, &amount, &rate,
+            &duration, &intermediate);
+
+        g_message ("step done: %" GST_TIME_FORMAT " skipped in %"
+            G_GUINT64_FORMAT " frames", GST_TIME_ARGS (duration), amount);
+
         return;
       }
       default:
@@ -72,7 +89,7 @@ main (int argc, char *argv[])
   appsink = gst_element_factory_make ("appsink", "appsink");
   g_assert (appsink);
   g_object_set (appsink, "emit-signals", TRUE, NULL);
-  g_object_set (appsink, "sync", FALSE, NULL);
+  g_object_set (appsink, "sync", TRUE, NULL);
   g_signal_connect (appsink, "new-preroll", (GCallback) new_preroll, NULL);
 
   /* add objects to the main pipeline */
@@ -92,7 +109,10 @@ main (int argc, char *argv[])
   g_assert (gst_element_send_event (bin,
           gst_event_new_step (GST_FORMAT_BUFFERS, 2, 1.0, TRUE, FALSE)));
 
-  /* wait for step to complete */
+  /* blocks and returns when we received the step done message */
+  event_loop (bin);
+
+  /* wait for step to really complete */
   gst_element_get_state (bin, NULL, NULL, -1);
 
   g_message ("stepped two frames");
