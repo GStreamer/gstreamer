@@ -35,7 +35,6 @@ static gboolean gst_base_video_encoder_sink_event (GstPad * pad,
     GstEvent * event);
 static GstFlowReturn gst_base_video_encoder_chain (GstPad * pad,
     GstBuffer * buf);
-//static GstFlowReturn gst_base_video_encoder_process (GstBaseVideoEncoder *base_video_encoder);
 static GstStateChangeReturn gst_base_video_encoder_change_state (GstElement *
     element, GstStateChange transition);
 static const GstQueryType *gst_base_video_encoder_get_query_types (GstPad *
@@ -82,7 +81,6 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
   gst_pad_set_chain_function (pad, gst_base_video_encoder_chain);
   gst_pad_set_event_function (pad, gst_base_video_encoder_sink_event);
   gst_pad_set_setcaps_function (pad, gst_base_video_encoder_sink_setcaps);
-  //gst_pad_set_query_function (pad, gst_base_video_encoder_sink_query);
 
   pad = GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder);
 
@@ -150,7 +148,6 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
           base_video_encoder->presentation_frame_number;
       frame->presentation_duration = 0;
       frame->is_eos = TRUE;
-      //frame->presentation_duration = 0;
       base_video_encoder->presentation_frame_number++;
 
       base_video_encoder->frames =
@@ -212,8 +209,6 @@ static const GstQueryType *
 gst_base_video_encoder_get_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
-    //GST_QUERY_POSITION,
-    //GST_QUERY_DURATION,
     GST_QUERY_CONVERT,
     GST_QUERY_LATENCY,
     0

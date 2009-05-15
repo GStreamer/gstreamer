@@ -42,15 +42,8 @@ enum
 
 static void gst_base_video_codec_finalize (GObject * object);
 
-//static const GstQueryType *gst_base_video_codec_get_query_types (GstPad *pad);
-//static gboolean gst_base_video_codec_src_query (GstPad *pad, GstQuery *query);
-//static gboolean gst_base_video_codec_sink_query (GstPad *pad, GstQuery *query);
-//static gboolean gst_base_video_codec_src_event (GstPad *pad, GstEvent *event);
-//static gboolean gst_base_video_codec_sink_event (GstPad *pad, GstEvent *event);
 static GstStateChangeReturn gst_base_video_codec_change_state (GstElement *
     element, GstStateChange transition);
-//static GstFlowReturn gst_base_video_codec_push_all (GstBaseVideoCodec *base_video_codec, 
-//    gboolean at_eos);
 
 
 GST_BOILERPLATE (GstBaseVideoCodec, gst_base_video_codec, GstElement,
@@ -91,8 +84,6 @@ gst_base_video_codec_init (GstBaseVideoCodec * base_video_codec,
   g_return_if_fail (pad_template != NULL);
 
   base_video_codec->sinkpad = gst_pad_new_from_template (pad_template, "sink");
-  //gst_pad_set_query_function (base_video_codec->sinkpad,
-  //    gst_base_video_codec_sink_query);
   gst_element_add_pad (GST_ELEMENT (base_video_codec),
       base_video_codec->sinkpad);
 
@@ -116,7 +107,6 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 
   base_video_codec->system_frame_number = 0;
 
-  //gst_segment_init (&base_video_codec->state.segment, GST_FORMAT_TIME);
   gst_adapter_clear (base_video_codec->input_adapter);
   gst_adapter_clear (base_video_codec->output_adapter);
 

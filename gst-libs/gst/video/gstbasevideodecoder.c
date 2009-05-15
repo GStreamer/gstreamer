@@ -40,7 +40,6 @@ static GstFlowReturn gst_base_video_decoder_chain (GstPad * pad,
     GstBuffer * buf);
 static gboolean gst_base_video_decoder_sink_query (GstPad * pad,
     GstQuery * query);
-//static GstFlowReturn gst_base_video_decoder_process (GstBaseVideoDecoder *base_video_decoder);
 static GstStateChangeReturn gst_base_video_decoder_change_state (GstElement *
     element, GstStateChange transition);
 static const GstQueryType *gst_base_video_decoder_get_query_types (GstPad *
@@ -193,7 +192,6 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
       frame->presentation_frame_number =
           base_video_decoder->presentation_frame_number;
       frame->presentation_duration = 0;
-      //frame->presentation_duration = 0;
       base_video_decoder->presentation_frame_number++;
 
       base_video_decoder->frames =
@@ -224,10 +222,6 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
         goto newseg_wrong_format;
 
       GST_DEBUG ("new segment %lld %lld", start, position);
-
-      //gst_base_video_decoder_reset (base_video_decoder);
-
-      //base_video_decoder->timestamp_offset = start;
 
       gst_segment_set_newsegment_full (&base_video_decoder->state.segment,
           update, rate, applied_rate, format, start, stop, position);
@@ -453,8 +447,6 @@ static const GstQueryType *
 gst_base_video_decoder_get_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
-    //GST_QUERY_POSITION,
-    //GST_QUERY_DURATION,
     GST_QUERY_CONVERT,
     0
   };
@@ -584,7 +576,6 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder)
     gst_caps_unref (base_video_decoder->caps);
     base_video_decoder->caps = NULL;
   }
-  //gst_segment_init (&base_video_decoder->state.segment, GST_FORMAT_TIME);
 
   if (base_video_decoder->current_frame) {
     gst_base_video_decoder_free_frame (base_video_decoder->current_frame);
