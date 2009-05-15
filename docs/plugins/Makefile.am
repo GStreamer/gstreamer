@@ -185,6 +185,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/videomixer/videomixerpad.h \
 	$(top_srcdir)/gst/wavenc/gstwavenc.h \
 	$(top_srcdir)/gst/wavparse/gstwavparse.h \
+	$(top_srcdir)/gst/y4m/gsty4mencode.h \
 	$(top_srcdir)/sys/directdraw/gstdirectdrawsink.h \
 	$(top_srcdir)/sys/directsound/gstdirectsoundsink.h \
 	$(top_srcdir)/sys/oss/gstossmixerelement.h \
@@ -196,7 +197,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/sys/v4l2/gstv4l2src.h \
 	$(top_srcdir)/sys/waveform/gstwaveformsink.h \
 	$(top_srcdir)/sys/ximage/gstximagesrc.h
-
 
 # example code that needs to be converted to xml and placed in xml/
 EXAMPLE_CFILES = \

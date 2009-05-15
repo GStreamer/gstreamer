@@ -94,6 +94,7 @@ check_PROGRAMS = \
 	elements/spectrum \
 	elements/videocrop \
 	elements/videofilter \
+	elements/y4menc \
 	pipelines/simple-launch-lines \
 	pipelines/flacdec \
 	$(check_gdkpixbuf) \

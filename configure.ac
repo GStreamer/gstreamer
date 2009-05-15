@@ -308,6 +308,7 @@ AG_GST_CHECK_PLUGIN(videocrop)
 AG_GST_CHECK_PLUGIN(videomixer)
 AG_GST_CHECK_PLUGIN(wavenc)
 AG_GST_CHECK_PLUGIN(wavparse)
+AG_GST_CHECK_PLUGIN(y4m)
 
 dnl *** checks for socket and nsl libraries ***
 AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
@@ -1086,6 +1087,7 @@ gst/videomixer/Makefile
 gst/wavenc/Makefile
 gst/wavparse/Makefile
 gst/flx/Makefile
+gst/y4m/Makefile
 ext/jpeg/Makefile
 ext/Makefile
 ext/aalib/Makefile
