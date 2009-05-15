@@ -59,7 +59,6 @@ read_tags_from_file (const gchar * file, gboolean push_mode)
   GstMessage *msg;
   GstElement *src, *sep, *sink, *id3demux, *pipeline;
   GstBus *bus;
-  const gchar *dir;
   gchar *path;
 
   pipeline = gst_pipeline_new ("pipeline");
@@ -96,10 +95,7 @@ read_tags_from_file (const gchar * file, gboolean push_mode)
   /* can't link id3demux and sink yet, do that later */
   g_signal_connect (id3demux, "pad-added", G_CALLBACK (pad_added_cb), pipeline);
 
-  dir = g_getenv ("GST_TEST_FILES_PATH");
-  fail_unless (dir != NULL, "GST_TEST_FILES_PATH environment variable not set");
-
-  path = g_build_filename (dir, file, NULL);
+  path = g_build_filename (GST_TEST_FILES_PATH, file, NULL);
   GST_LOG ("reading file '%s'", path);
   g_object_set (src, "location", path, NULL);
 

@@ -18,6 +18,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <glib/gstdio.h>
 
 static guint16
 buffer_get_first_sample (GstBuffer * buf)
@@ -59,6 +60,8 @@ GST_START_TEST (test_decode)
   GstBuffer *buffer = NULL;
   guint16 first_sample = 0;
   guint size = 0;
+
+  fail_unless_equals_int (g_chdir (GST_TEST_FILES_PATH), 0);
 
   pipeline = gst_parse_launch ("filesrc location=audiotestsrc.flac"
       " ! flacdec ! appsink name=sink", NULL);
@@ -104,6 +107,8 @@ GST_START_TEST (test_decode_seek_full)
   guint16 first_sample = 0;
   gboolean result;
   guint size = 0;
+
+  fail_unless_equals_int (g_chdir (GST_TEST_FILES_PATH), 0);
 
   pipeline = gst_parse_launch ("filesrc location=audiotestsrc.flac"
       " ! flacdec ! appsink name=sink", NULL);
@@ -158,6 +163,8 @@ GST_START_TEST (test_decode_seek_partial)
   guint size = 0;
   guint16 first_sample = 0;
 
+  fail_unless_equals_int (g_chdir (GST_TEST_FILES_PATH), 0);
+
   pipeline = gst_parse_launch ("filesrc location=audiotestsrc.flac"
       " ! flacdec ! appsink name=sink", NULL);
   fail_unless (pipeline != NULL);
@@ -206,7 +213,7 @@ GST_START_TEST (test_decode_seek_partial)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 flacdec_suite (void)
 {
   Suite *s = suite_create ("flacdec");
@@ -224,20 +231,4 @@ flacdec_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = flacdec_suite ();
-
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (flacdec);

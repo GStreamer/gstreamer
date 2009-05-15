@@ -563,8 +563,8 @@ run_server (guint * http_port, guint * https_port)
   SoupServer *server, *ssl_server;
   guint port = SOUP_ADDRESS_ANY_PORT;
   guint ssl_port = SOUP_ADDRESS_ANY_PORT;
-  const char *ssl_cert_file = G_STRINGIFY (CHECKDATA_DIR) "/test-cert.pem";
-  const char *ssl_key_file = G_STRINGIFY (CHECKDATA_DIR) "/test-key.pem";
+  const char *ssl_cert_file = GST_TEST_FILES_PATH "/test-cert.pem";
+  const char *ssl_key_file = GST_TEST_FILES_PATH "/test-key.pem";
   static int server_running = 0;
 
   SoupAuthDomain *domain = NULL;
