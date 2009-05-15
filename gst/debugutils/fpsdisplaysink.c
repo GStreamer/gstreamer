@@ -267,11 +267,11 @@ fps_display_sink_start (GstFPSDisplaySink * self)
       gst_object_ref (self->text_overlay);
       g_object_set (self->text_overlay,
           "font-desc", DEFAULT_FONT, "silent", FALSE, NULL);
-    }
-    gst_bin_add (GST_BIN (self), self->text_overlay);
+      gst_bin_add (GST_BIN (self), self->text_overlay);
 
-    if (!gst_element_link (self->text_overlay, self->video_sink)) {
-      GST_ERROR_OBJECT (self, "Could not link elements");
+      if (!gst_element_link (self->text_overlay, self->video_sink)) {
+        GST_ERROR_OBJECT (self, "Could not link elements");
+      }
     }
     target_pad = gst_element_get_static_pad (self->text_overlay, "video_sink");
   }
@@ -280,6 +280,7 @@ no_text_overlay:
     if (self->text_overlay) {
       gst_element_unlink (self->text_overlay, self->video_sink);
       gst_bin_remove (GST_BIN (self), self->text_overlay);
+      self->text_overlay = NULL;
     }
     target_pad = gst_element_get_static_pad (self->video_sink, "sink");
   }
@@ -299,6 +300,13 @@ fps_display_sink_stop (GstFPSDisplaySink * self)
   if (self->timeout_id) {
     g_source_remove (self->timeout_id);
     self->timeout_id = 0;
+  }
+
+  if (self->text_overlay) {
+    gst_element_unlink (self->text_overlay, self->video_sink);
+    gst_bin_remove (GST_BIN (self), self->text_overlay);
+    gst_object_unref (self->text_overlay);
+    self->text_overlay = NULL;
   }
 }
 
