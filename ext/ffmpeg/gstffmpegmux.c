@@ -719,6 +719,10 @@ gst_ffmpegmux_get_id_caps (enum CodecID * id_list)
     if ((t = gst_ffmpeg_codecid_to_caps (id_list[i], NULL, TRUE)))
       gst_caps_append (caps, t);
   }
+  if (gst_caps_is_empty (caps)) {
+    gst_caps_unref (caps);
+    return NULL;
+  }
 
   return caps;
 }
