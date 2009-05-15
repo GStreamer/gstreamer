@@ -158,7 +158,7 @@ typedef struct
   guint32 seqnum;               /* the seqnum of the STEP event */
   GstFormat format;             /* the format of the amount */
   guint64 amount;               /* the total amount of data to skip */
-  guint64 remaining;            /* the remaining amount of data to skip */
+  guint64 position;             /* the position in the stepped data */
   guint64 duration;             /* the duration in time of the skipped data */
   guint64 start;                /* running_time of the start */
   gdouble rate;                 /* rate of skipping */
@@ -1512,8 +1512,9 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
 
   GST_DEBUG_OBJECT (sink, "step complete");
 
-  GST_DEBUG_OBJECT (sink, "step stop at running_time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (*rstart));
+  GST_DEBUG_OBJECT (sink,
+      "step stop at running_time %" GST_TIME_FORMAT ", timestamp %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (*rstart), GST_TIME_ARGS (cstart));
 
   /* configure the duration of the elapsed segment */
   current->duration = *rstart - current->start;
@@ -1523,8 +1524,14 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
   /* update the segment, discarding what was consumed, running time goes
    * backwards with the duration of the data we skipped. FIXME, this only works
    * in PAUSED. */
+  segment->time = gst_segment_to_stream_time (segment, segment->format, cstart);
   segment->start = cstart;
-  *rstart -= current->duration;
+  segment->accum = current->start;
+
+  /* the clip segment is used for position report in paused... */
+  memcpy (sink->abidata.ABI.clip_segment, segment, sizeof (GstSegment));
+
+  *rstart = current->start;
   *rstop -= current->duration;
 
   message =
@@ -1542,7 +1549,8 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
 
 static gboolean
 handle_stepping (GstBaseSink * sink, GstSegment * segment,
-    GstStepInfo * current)
+    GstStepInfo * current, gint64 * cstart, gint64 * cstop, gint64 * rstart,
+    gint64 * rstop)
 {
   GstBaseSinkPrivate *priv;
   gboolean step_end = FALSE;
@@ -1552,17 +1560,31 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
   /* see if we need to skip this buffer because of stepping */
   switch (current->format) {
     case GST_FORMAT_TIME:
+    {
+      guint64 end;
+
+      end = current->start + current->amount;
+
+      current->position = *rstart - current->start;
+
       GST_DEBUG_OBJECT (sink,
           "got time step %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (current->remaining), GST_TIME_ARGS (current->amount));
+          GST_TIME_ARGS (current->position), GST_TIME_ARGS (current->amount));
+
+      if (current->position >= current->amount || *rstop >= end) {
+        step_end = TRUE;
+        *cstart += end - *rstart;
+        *rstart = end;
+      }
       break;
+    }
     case GST_FORMAT_BUFFERS:
       GST_DEBUG_OBJECT (sink,
           "got default step %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
-          current->remaining, current->amount);
+          current->position, current->amount);
 
-      if (current->remaining > 0) {
-        current->remaining--;
+      if (current->position < current->amount) {
+        current->position++;
       } else {
         step_end = TRUE;
       }
@@ -1571,7 +1593,7 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
     default:
       GST_DEBUG_OBJECT (sink,
           "got unknown step %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
-          current->remaining, current->amount);
+          current->position, current->amount);
       break;
   }
   return step_end;
@@ -1711,15 +1733,15 @@ do_times:
   rstop = gst_segment_to_running_time (segment, format, cstop);
 
   if (G_UNLIKELY (step->valid)) {
-    if (!(step_end = handle_stepping (basesink, segment, step)))
+    if (!(step_end = handle_stepping (basesink, segment, step, &cstart, &cstop,
+                &rstart, &rstop)))
       *stepped = TRUE;
   }
 
 eos_done:
   /* done label only called when doing EOS, we also stop stepping then */
   if (step_end)
-    stop_stepping (basesink, segment, &priv->current_step, cstart, cstop,
-        &rstart, &rstop);
+    stop_stepping (basesink, segment, step, cstart, cstop, &rstart, &rstop);
 
   /* save times */
   *rsstart = sstart;
@@ -3368,7 +3390,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
     priv->pending_step.seqnum = seqnum;
     priv->pending_step.format = format;
     priv->pending_step.amount = amount;
-    priv->pending_step.remaining = amount;
+    priv->pending_step.position = 0;
     priv->pending_step.rate = rate;
     priv->pending_step.intermediate = intermediate;
     priv->pending_step.valid = TRUE;
