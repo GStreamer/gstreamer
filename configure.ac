@@ -566,6 +566,12 @@ AG_GST_CHECK_FEATURE(PANGO, [Pango font rendering], pango, [
   AG_GST_PKG_CHECK_MODULES(PANGO, pango pangoft2)
 ])
 
+dnl *** schroedinger ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SCHRO, true)
+AG_GST_CHECK_FEATURE(SCHRO, [Schroedinger video codec], schro, [
+  AG_GST_PKG_CHECK_MODULES(SCHRO, schroedinger-1.0 >= 1.0.7)
+])
+
 dnl *** theora ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORA, true)
 AG_GST_CHECK_FEATURE(THEORA, [Xiph Theora video codec], theora, [
@@ -619,6 +625,7 @@ AM_CONDITIONAL(USE_GIO, false)
 AM_CONDITIONAL(USE_LIBVISUAL, false)
 AM_CONDITIONAL(USE_OGG, false)
 AM_CONDITIONAL(USE_PANGO, false)
+AM_CONDITIONAL(USE_SCHRO, false)
 AM_CONDITIONAL(USE_THEORA, false)
 AM_CONDITIONAL(USE_VORBIS, false)
 
@@ -735,6 +742,7 @@ ext/gio/Makefile
 ext/libvisual/Makefile
 ext/ogg/Makefile
 ext/pango/Makefile
+ext/schroedinger/Makefile
 ext/theora/Makefile
 ext/vorbis/Makefile
 gst-libs/Makefile

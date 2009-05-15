@@ -52,6 +52,12 @@ else
 THEORA_DIR=
 endif
 
+if USE_SCHRO
+SCHRO_DIR=schroedinger
+else
+SCHRO_DIR=
+endif
+
 SUBDIRS = \
   $(ALSA_DIR) \
   $(CDPARANOIA_DIR) \
@@ -60,6 +66,7 @@ SUBDIRS = \
   $(LIBVISUAL_DIR) \
   $(OGG_DIR) \
   $(PANGO_DIR) \
+  $(SCHRO_DIR) \
   $(THEORA_DIR) \
   $(VORBIS_DIR)
 
@@ -71,5 +78,6 @@ DIST_SUBDIRS = \
   libvisual \
   ogg \
   pango \
+  schroedinger \
   theora \
   vorbis
