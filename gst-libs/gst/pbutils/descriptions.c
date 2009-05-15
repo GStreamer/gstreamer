@@ -67,6 +67,7 @@ static const FormatInfo formats[] = {
   {"application/x-ape", N_("APE tag"), FLAG_CONTAINER},
   {"application/x-apetag", N_("APE tag"), FLAG_CONTAINER},
   {"application/x-icy", N_("ICY internet radio"), FLAG_CONTAINER},
+  {"application/x-3gp", "3GP", FLAG_CONTAINER},
   {"video/x-fli", "FLI/FLC/FLX Animation", FLAG_CONTAINER},
   {"video/x-flv", "Flash", FLAG_CONTAINER},
   {"video/x-matroska", "Matroska", FLAG_CONTAINER},
@@ -74,6 +75,7 @@ static const FormatInfo formats[] = {
   {"video/x-msvideo", "AVI", FLAG_CONTAINER},
   {"video/x-quicktime", "Quicktime", FLAG_CONTAINER},
   {"video/quicktime", "Quicktime", FLAG_CONTAINER},
+  {"video/mj2", "Motion JPEG 2000", FLAG_CONTAINER},
 
   /* audio formats with static descriptions */
   {"audio/x-ac3", "AC-3 (ATSC A/52)", 0},
@@ -198,6 +200,9 @@ static const FormatInfo formats[] = {
   {"image/tiff", "TIFF", 0},
   {"image/x-cmu-raster", "CMU Raster Format", 0},
   {"image/x-icon", "ICO", 0},
+  {"image/x-j2c", "JPEG 2000", 0},
+  {"image/x-jpc", "JPEG 2000", 0},
+  {"image/jp2", "JPEG 2000", 0},
   {"image/x-xcf", "XFC", 0},
   {"image/x-pixmap", "XPM", 0},
   {"image/x-xpixmap", "XPM", 0},
