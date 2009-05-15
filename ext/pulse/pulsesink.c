@@ -1516,9 +1516,11 @@ gst_pulsesink_sink_input_info_cb (pa_context * c, const pa_sink_input_info * i,
   if (!pbuf->stream)
     goto done;
 
-  g_assert (i->index == pa_stream_get_index (pbuf->stream));
-
-  psink->volume = pa_sw_volume_to_linear (pa_cvolume_max (&i->volume));
+  /* If the index doesn't match our current stream,
+   * it implies we just recreated the stream (caps change)
+   */
+  if (i->index == pa_stream_get_index (pbuf->stream))
+    psink->volume = pa_sw_volume_to_linear (pa_cvolume_max (&i->volume));
 
 done:
   pa_threaded_mainloop_signal (psink->mainloop, 0);
