@@ -1,15 +1,13 @@
 
 EXTRA_DIST = \
 	draft-framestep.txt \
-	draft-ghostpads.txt \
 	draft-klass.txt \
-	draft-latency.txt \
-	draft-missing-plugins.txt \
 	draft-push-pull.txt \
 	draft-tagreading.txt \
 	part-activation.txt \
 	part-block.txt \
 	part-buffering.txt \
+	part-bufferlist.txt \
 	part-caps.txt \
 	part-clocks.txt \
 	part-conventions.txt \
@@ -24,8 +22,10 @@ EXTRA_DIST = \
 	part-gstghostpad.txt \
 	part-gstobject.txt \
 	part-gstpipeline.txt \
+	part-latency.txt \
 	part-live-source.txt \
 	part-messages.txt \
+	part-missing-plugins.txt \
 	part-MT-refcounting.txt \
 	part-negotiation.txt \
 	part-overview.txt \
@@ -40,6 +40,7 @@ EXTRA_DIST = \
 	part-sparsestreams.txt \
 	part-standards.txt \
 	part-states.txt \
+	part-stream-status.txt \
 	part-streams.txt \
 	part-synchronisation.txt \
 	part-TODO.txt \

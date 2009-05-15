@@ -45,7 +45,7 @@ built_source_make = gstenumtypes.c gstmarshal.c
 
 EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstmarshal.list gsttrace.c gstxml.c \
-	gstregistryxml.c gstregistrybinary.c
+	gstregistrybinary.c
 
 
 # temporarily not used
