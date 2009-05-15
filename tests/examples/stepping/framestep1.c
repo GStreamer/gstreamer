@@ -43,8 +43,13 @@ event_loop (GstElement * pipe)
         gst_message_parse_step_done (message, &format, &amount, &rate,
             &duration, &intermediate);
 
-        g_message ("step done: %" GST_TIME_FORMAT " skipped in %"
-            G_GUINT64_FORMAT " frames", GST_TIME_ARGS (duration), amount);
+        if (format == GST_FORMAT_DEFAULT) {
+          g_message ("step done: %" GST_TIME_FORMAT " skipped in %"
+              G_GUINT64_FORMAT " frames", GST_TIME_ARGS (duration), amount);
+        } else {
+          g_message ("step done: %" GST_TIME_FORMAT " skipped",
+              GST_TIME_ARGS (duration));
+        }
 
         return;
       }
@@ -73,6 +78,8 @@ int
 main (int argc, char *argv[])
 {
   GstElement *bin, *videotestsrc, *appsink;
+  GstFormat format;
+  gint64 pos;
 
   gst_init (&argc, &argv);
 
@@ -105,7 +112,7 @@ main (int argc, char *argv[])
   gst_element_get_state (bin, NULL, NULL, -1);
 
   /* step two frames, flush so that new preroll is queued */
-  g_message ("stepping two frames");
+  g_message ("stepping three frames");
   g_assert (gst_element_send_event (bin,
           gst_event_new_step (GST_FORMAT_BUFFERS, 2, 1.0, TRUE, FALSE)));
 
@@ -115,7 +122,27 @@ main (int argc, char *argv[])
   /* wait for step to really complete */
   gst_element_get_state (bin, NULL, NULL, -1);
 
-  g_message ("stepped two frames");
+  format = GST_FORMAT_TIME;
+  gst_element_query_position (bin, &format, &pos);
+  g_message ("stepped two frames, now at %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (pos));
+
+  /* step 3 frames, flush so that new preroll is queued */
+  g_message ("stepping 120 milliseconds ");
+  g_assert (gst_element_send_event (bin,
+          gst_event_new_step (GST_FORMAT_TIME, 120 * GST_MSECOND, 1.0, TRUE,
+              FALSE)));
+
+  /* blocks and returns when we received the step done message */
+  event_loop (bin);
+
+  /* wait for step to really complete */
+  gst_element_get_state (bin, NULL, NULL, -1);
+
+  format = GST_FORMAT_TIME;
+  gst_element_query_position (bin, &format, &pos);
+  g_message ("stepped 120ms frames, now at %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (pos));
 
   g_message ("playing until EOS");
   gst_element_set_state (bin, GST_STATE_PLAYING);
