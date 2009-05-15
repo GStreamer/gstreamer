@@ -118,10 +118,11 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   GST_DEBUG_OBJECT (e, "  channels");
   /* and now, the channels */
   for (n = 0;; n++) {
-    struct v4l2_input input = { 0, };
+    struct v4l2_input input;
     GstV4l2TunerChannel *v4l2channel;
-
     GstTunerChannel *channel;
+
+    memset (&input, 0, sizeof (input));
 
     input.index = n;
     if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_ENUMINPUT, &input) < 0) {
@@ -141,7 +142,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     GST_LOG_OBJECT (e, "   name:      '%s'", input.name);
     GST_LOG_OBJECT (e, "   type:      %08x", input.type);
     GST_LOG_OBJECT (e, "   audioset:  %08x", input.audioset);
-    GST_LOG_OBJECT (e, "   std:       %016x", input.std);
+    GST_LOG_OBJECT (e, "   std:       %016x", (guint) input.std);
     GST_LOG_OBJECT (e, "   status:    %08x", input.status);
 
     v4l2channel = g_object_new (GST_TYPE_V4L2_TUNER_CHANNEL, NULL);

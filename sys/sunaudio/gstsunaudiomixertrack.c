@@ -68,7 +68,6 @@ gst_sunaudiomixer_track_new (GstSunAudioTrackType track_num,
   GstMixerTrack *track;
   GObjectClass *klass;
   const gchar *untranslated_label;
-  gint volume;
 
   if ((guint) track_num < G_N_ELEMENTS (labels))
     untranslated_label = labels[track_num];

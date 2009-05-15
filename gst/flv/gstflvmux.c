@@ -604,7 +604,7 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
     } else if (!strcmp (tag_name, GST_TAG_ARTIST) ||
         !strcmp (tag_name, GST_TAG_TITLE)) {
       gchar *s;
-      const gchar *t;
+      const gchar *t = NULL;
 
       if (!strcmp (tag_name, GST_TAG_ARTIST))
         t = "creator";

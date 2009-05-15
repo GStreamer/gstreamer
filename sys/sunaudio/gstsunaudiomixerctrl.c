@@ -201,6 +201,9 @@ gst_sunaudiomixer_ctrl_get_volume (GstSunAudioMixerCtrl * mixer,
       gain = (int) audioinfo.monitor_gain;
       balance = audioinfo.record.balance;
       break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
 
   if (balance == AUDIO_MID_BALANCE) {
