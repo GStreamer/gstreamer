@@ -96,7 +96,6 @@ check_PROGRAMS = \
 	elements/mxfdemux \
 	elements/mxfmux \
 	pipelines/mxf \
-	elements/y4menc   \
 	$(check_metadata)
 
 noinst_HEADERS = elements/mxfdemux.h elements/amrparse_data.h elements/aacparse_data.h

@@ -83,7 +83,6 @@
     <xi:include href="xml/element-videoparse.xml" />
     <xi:include href="xml/element-wildmidi.xml" />
     <xi:include href="xml/element-x264enc.xml" />
-    <xi:include href="xml/element-y4menc.xml" />
   </chapter>
 
   <chapter>
@@ -162,7 +161,6 @@
     <xi:include href="xml/plugin-wildmidi.xml" />
     <xi:include href="xml/plugin-x264.xml" />
     <xi:include href="xml/plugin-xvid.xml" />
-    <xi:include href="xml/plugin-y4menc.xml" />
   </chapter>
 
   <chapter>

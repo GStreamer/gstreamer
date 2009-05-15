@@ -293,7 +293,6 @@ AG_GST_CHECK_PLUGIN(valve)
 AG_GST_CHECK_PLUGIN(videosignal)
 AG_GST_CHECK_PLUGIN(vmnc)
 AG_GST_CHECK_PLUGIN(xdgmime)
-AG_GST_CHECK_PLUGIN(y4m)
 
 dnl *** plug-ins to exclude ***
 
@@ -1562,7 +1561,6 @@ gst/videosignal/Makefile
 gst/vmnc/Makefile
 gst/real/Makefile
 gst/xdgmime/Makefile
-gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/dshow/Makefile
