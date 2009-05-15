@@ -94,6 +94,7 @@ struct _GstRTSPMediaStream {
 
   /* pads on the rtpbin */
   GstPad       *recv_rtcp_sink;
+  GstPad       *recv_rtp_sink;
   GstPad       *send_rtp_sink;
   GstPad       *send_rtp_src;
   GstPad       *send_rtcp_src;
@@ -108,6 +109,8 @@ struct _GstRTSPMediaStream {
   /* for TCP transport */
   GstElement   *appsrc[2];
   GstElement   *appsink[2];
+
+  GstElement   *selector[2];
 
   /* server ports for sending/receiving */
   GstRTSPRange  server_port;

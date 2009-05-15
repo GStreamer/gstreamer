@@ -761,7 +761,7 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
   GstPad *pad, *teepad, *selpad;
   GstPadLinkReturn ret;
   gint i;
-  GstElement *tee, *selector;
+  GstElement *tee;
 
   /* allocate udp ports, we will have 4 of them, 2 for receiving RTP/RTCP and 2
    * for sending RTP/RTCP. The sender and receiver ports are shared between the
@@ -800,6 +800,9 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
   g_free (name);
   name = g_strdup_printf ("recv_rtcp_sink_%d", idx);
   stream->recv_rtcp_sink = gst_element_get_request_pad (media->rtpbin, name);
+  g_free (name);
+  name = g_strdup_printf ("recv_rtp_sink_%d", idx);
+  stream->recv_rtp_sink = gst_element_get_request_pad (media->rtpbin, name);
   g_free (name);
 
   /* get the session */
@@ -864,22 +867,43 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
   gst_object_unref (pad);
   gst_object_unref (teepad);
 
-  /* make selector for the RTCP receivers */
-  selector = gst_element_factory_make ("input-selector", NULL);
-  g_object_set (selector, "select-all", TRUE, NULL);
-  gst_bin_add (GST_BIN_CAST (media->pipeline), selector);
+  /* make selector for the RTP receivers */
+  stream->selector[0] = gst_element_factory_make ("input-selector", NULL);
+  g_object_set (stream->selector[0], "select-all", TRUE, NULL);
+  gst_bin_add (GST_BIN_CAST (media->pipeline), stream->selector[0]);
 
-  pad = gst_element_get_static_pad (selector, "src");
+  pad = gst_element_get_static_pad (stream->selector[0], "src");
+  gst_pad_link (pad, stream->recv_rtp_sink);
+  gst_object_unref (pad);
+
+  selpad = gst_element_get_request_pad (stream->selector[0], "sink%d");
+  pad = gst_element_get_static_pad (stream->udpsrc[0], "src");
+  gst_pad_link (pad, selpad);
+  gst_object_unref (pad);
+  gst_object_unref (selpad);
+
+  selpad = gst_element_get_request_pad (stream->selector[0], "sink%d");
+  pad = gst_element_get_static_pad (stream->appsrc[0], "src");
+  gst_pad_link (pad, selpad);
+  gst_object_unref (pad);
+  gst_object_unref (selpad);
+
+  /* make selector for the RTCP receivers */
+  stream->selector[1] = gst_element_factory_make ("input-selector", NULL);
+  g_object_set (stream->selector[1], "select-all", TRUE, NULL);
+  gst_bin_add (GST_BIN_CAST (media->pipeline), stream->selector[1]);
+
+  pad = gst_element_get_static_pad (stream->selector[1], "src");
   gst_pad_link (pad, stream->recv_rtcp_sink);
   gst_object_unref (pad);
 
-  selpad = gst_element_get_request_pad (selector, "sink%d");
+  selpad = gst_element_get_request_pad (stream->selector[1], "sink%d");
   pad = gst_element_get_static_pad (stream->udpsrc[1], "src");
   gst_pad_link (pad, selpad);
   gst_object_unref (pad);
   gst_object_unref (selpad);
 
-  selpad = gst_element_get_request_pad (selector, "sink%d");
+  selpad = gst_element_get_request_pad (stream->selector[1], "sink%d");
   pad = gst_element_get_static_pad (stream->appsrc[1], "src");
   gst_pad_link (pad, selpad);
   gst_object_unref (pad);
