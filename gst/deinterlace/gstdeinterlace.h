@@ -225,6 +225,14 @@ struct _GstDeinterlace
   GstPicture field_history[MAX_FIELD_HISTORY];
   guint history_count;
 
+  /* Set to TRUE if we're in still frame mode,
+     i.e. just forward all buffers
+   */
+  gboolean still_frame_mode;
+
+  /* Last buffer that was pushed in */
+  GstBuffer *last_buffer;
+
   /* Number of bytes of actual data in each scanline.  May be less than
      OverlayPitch since the overlay's scanlines might have alignment
      requirements.  Generally equal to FrameWidth * 2.

@@ -687,6 +687,8 @@ gst_deinterlace_init (GstDeinterlace * self, GstDeinterlaceClass * klass)
   self->fields = DEFAULT_FIELDS;
   self->field_layout = DEFAULT_FIELD_LAYOUT;
 
+  self->still_frame_mode = FALSE;
+
   gst_deinterlace_reset (self);
 }
 
@@ -703,6 +705,10 @@ gst_deinterlace_reset_history (GstDeinterlace * self)
   }
   memset (self->field_history, 0, MAX_FIELD_HISTORY * sizeof (GstPicture));
   self->history_count = 0;
+
+  if (self->last_buffer)
+    gst_buffer_unref (self->last_buffer);
+  self->last_buffer = NULL;
 }
 
 static void
@@ -913,7 +919,9 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   self->history_count += fields_to_push;
   GST_DEBUG_OBJECT (self, "push, size(history): %d", self->history_count);
 
-  gst_buffer_unref (buffer);
+  if (self->last_buffer)
+    gst_buffer_unref (self->last_buffer);
+  self->last_buffer = buffer;
 }
 
 static GstFlowReturn
@@ -928,7 +936,8 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
 
   self = GST_DEINTERLACE (GST_PAD_PARENT (pad));
 
-  if (self->mode == GST_DEINTERLACE_MODE_DISABLED || (!self->interlaced
+  if (self->still_frame_mode ||
+      self->mode == GST_DEINTERLACE_MODE_DISABLED || (!self->interlaced
           && self->mode != GST_DEINTERLACE_MODE_INTERLACED))
     return gst_pad_push (self->srcpad, buf);
 
@@ -1345,7 +1354,41 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (pad, "received %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_STOP:
+    case GST_EVENT_CUSTOM_DOWNSTREAM:{
+      const GstStructure *s = gst_event_get_structure (event);
+
+      if (gst_structure_has_name (s, "application/x-gst-dvd")) {
+        const gchar *event_type;
+        gboolean still_state;
+
+        GST_DEBUG_OBJECT (self, "Received DVD event: %" GST_PTR_FORMAT, s);
+
+        event_type = gst_structure_get_string (s, "event");
+        if (event_type && !strcmp (event_type, "dvd-still") &&
+            gst_structure_get_boolean (s, "still-state", &still_state)) {
+
+          if (still_state) {
+            GstFlowReturn ret;
+
+            GST_DEBUG_OBJECT (self, "Handling still frame");
+            self->still_frame_mode = TRUE;
+            if (self->last_buffer) {
+              ret =
+                  gst_pad_push (self->srcpad,
+                  gst_buffer_ref (self->last_buffer));
+              GST_DEBUG_OBJECT (self, "Pushed still frame, result: %s",
+                  gst_flow_get_name (ret));
+            } else {
+              GST_WARNING_OBJECT (self, "No pending buffer!");
+            }
+          } else {
+            GST_DEBUG_OBJECT (self, "Ending still frames");
+            self->still_frame_mode = FALSE;
+          }
+        }
+      }
+    }
+      /* fall through */
     case GST_EVENT_EOS:
     case GST_EVENT_NEWSEGMENT:
       gst_deinterlace_reset_history (self);
@@ -1353,6 +1396,15 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
       /* fall through */
     default:
       res = gst_pad_event_default (pad, event);
+      break;
+
+    case GST_EVENT_FLUSH_STOP:
+      if (self->still_frame_mode) {
+        GST_DEBUG_OBJECT (self, "Ending still frames");
+        self->still_frame_mode = FALSE;
+      }
+      res = gst_pad_event_default (pad, event);
+      gst_deinterlace_reset_history (self);
       break;
   }
 
