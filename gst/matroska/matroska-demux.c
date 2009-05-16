@@ -3706,7 +3706,7 @@ gst_matroska_demux_push_dvd_clut_change_event (GstMatroskaDemux * demux,
   buf = g_strndup ((gchar *) stream->codec_priv, stream->codec_priv_size);
 
   /* just locate and parse palette part */
-  start = strstr ((gchar *) stream->codec_priv, "palette:");
+  start = strstr (buf, "palette:");
   if (start) {
     gint i;
     guint32 clut[16];
