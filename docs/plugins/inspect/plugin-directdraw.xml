@@ -1,0 +1,20 @@
+<plugin>
+  <name>directdraw</name>
+  <description>Direct Draw plugin</description>
+  <filename>../../win32/vs6/release/libgstdirectdraw.dll</filename>
+  <basename>libgstdirectdraw.dll</basename>
+  <version>0.10.4.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>directdrawsink</name>
+      <longname>Direct Draw video sink</longname>
+      <class>Sink/Video</class>
+      <description>Direct Draw video sink</description>
+      <author>Sebastien Moutte &lt;sebastien@moutte.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

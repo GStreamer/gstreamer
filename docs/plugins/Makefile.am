@@ -155,6 +155,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/videosignal/gstvideodetect.h \
 	$(top_srcdir)/gst/videosignal/gstvideomark.h \
 	$(top_srcdir)/gst/valve/gstvalve.h \
+	$(top_srcdir)/sys/directdraw/gstdirectdrawsink.h \
 	$(top_srcdir)/sys/dvb/gstdvbsrc.h
 
 # Images to copy into HTML directory.

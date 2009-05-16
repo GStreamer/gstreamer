@@ -230,6 +230,25 @@ gst_dfbsurface_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-directdrawsink</FILE>
+<TITLE>directdrawsink</TITLE>
+GstDirectDrawSink
+<SUBSECTION Standard>
+GstDirectDrawSinkClass
+GST_DIRECTDRAW_SINK
+GST_DIRECTDRAW_SINK_CLASS
+GST_IS_DIRECTDRAW_SINK
+GST_IS_DIRECTDRAW_SINK_CLASS
+GST_TYPE_DIRECTDRAW_SINK
+gst_directdraw_sink_get_type
+GstDDrawSurface
+GST_DDRAWSURFACE
+GST_IS_DDRAWSURFACE
+GST_TYPE_DDRAWSURFACE
+DIRECTDRAW_VERSION
+</SECTION>
+
+<SECTION>
 <FILE>element-dtmfsrc</FILE>
 <TITLE>dtmfsrc</TITLE>
 GstDTMFSrc
