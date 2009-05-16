@@ -60,12 +60,17 @@ GST_START_TEST (test_decode)
   GstBuffer *buffer = NULL;
   guint16 first_sample = 0;
   guint size = 0;
+  gchar *path =
+      g_build_filename (GST_TEST_FILES_PATH, "audiotestsrc.flac", NULL);
+  gchar *pipe_desc =
+      g_strdup_printf ("filesrc location=\"%s\" ! flacdec ! appsink name=sink",
+      path);
 
-  fail_unless_equals_int (g_chdir (GST_TEST_FILES_PATH), 0);
-
-  pipeline = gst_parse_launch ("filesrc location=audiotestsrc.flac"
-      " ! flacdec ! appsink name=sink", NULL);
+  pipeline = gst_parse_launch (pipe_desc, NULL);
   fail_unless (pipeline != NULL);
+
+  g_free (path);
+  g_free (pipe_desc);
 
   appsink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
   fail_unless (appsink != NULL);
@@ -107,12 +112,17 @@ GST_START_TEST (test_decode_seek_full)
   guint16 first_sample = 0;
   gboolean result;
   guint size = 0;
+  gchar *path =
+      g_build_filename (GST_TEST_FILES_PATH, "audiotestsrc.flac", NULL);
+  gchar *pipe_desc =
+      g_strdup_printf ("filesrc location=\"%s\" ! flacdec ! appsink name=sink",
+      path);
 
-  fail_unless_equals_int (g_chdir (GST_TEST_FILES_PATH), 0);
-
-  pipeline = gst_parse_launch ("filesrc location=audiotestsrc.flac"
-      " ! flacdec ! appsink name=sink", NULL);
+  pipeline = gst_parse_launch (pipe_desc, NULL);
   fail_unless (pipeline != NULL);
+
+  g_free (pipe_desc);
+  g_free (path);
 
   appsink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
   fail_unless (appsink != NULL);
@@ -162,12 +172,17 @@ GST_START_TEST (test_decode_seek_partial)
   gboolean result;
   guint size = 0;
   guint16 first_sample = 0;
+  gchar *path =
+      g_build_filename (GST_TEST_FILES_PATH, "audiotestsrc.flac", NULL);
+  gchar *pipe_desc =
+      g_strdup_printf ("filesrc location=\"%s\" ! flacdec ! appsink name=sink",
+      path);
 
-  fail_unless_equals_int (g_chdir (GST_TEST_FILES_PATH), 0);
-
-  pipeline = gst_parse_launch ("filesrc location=audiotestsrc.flac"
-      " ! flacdec ! appsink name=sink", NULL);
+  pipeline = gst_parse_launch (pipe_desc, NULL);
   fail_unless (pipeline != NULL);
+
+  g_free (path);
+  g_free (pipe_desc);
 
   appsink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
   fail_unless (appsink != NULL);
