@@ -52,7 +52,6 @@
     <xi:include href="xml/element-cutter.xml" />
     <xi:include href="xml/element-deinterlace.xml" />
     <xi:include href="xml/element-deinterleave.xml" />
-    <xi:include href="xml/element-directdrawsink.xml" />
     <xi:include href="xml/element-directsoundsink.xml" />
     <xi:include href="xml/element-dv1394src.xml" />
     <xi:include href="xml/element-dvdec.xml" />
@@ -158,7 +157,6 @@
     <xi:include href="xml/plugin-cutter.xml" />
     <xi:include href="xml/plugin-debug.xml" />
     <xi:include href="xml/plugin-deinterlace.xml" />
-    <xi:include href="xml/plugin-directdraw.xml" />
     <xi:include href="xml/plugin-directsound.xml" />
     <xi:include href="xml/plugin-dv.xml" />
     <xi:include href="xml/plugin-efence.xml" />
