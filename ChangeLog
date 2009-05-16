@@ -1,3 +1,2955 @@
+2009-05-16 02:37:06 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/pipelines/flacdec.c:
+	  check: Don't change directory in the test
+	  Changing directory invalidates the paths the registry has picked
+	  up for our plugins, because the test environment specifies relative
+	  paths. Fixing that is a separate problem, in the meantime, build a
+	  path to the test files instead of changing directory. Fixes the
+	  distcheck.
+
+2009-05-16 01:53:46 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* win32/MANIFEST:
+	  win32: Remove directdraw project files from the win32 manifest
+
+2009-05-16 01:21:34 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/elements/rganalysis.c:
+	  check: Remove assertion that breaks check again git master
+	  Remove the assertion that the sender of the tags message is the
+	  element until we decide whether that's going to be true or not.
+
+2009-05-16 01:11:33 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-directdraw.xml:
+	* sys/Makefile.am:
+	* sys/directdraw/Makefile.am:
+	* sys/directdraw/gstdirectdrawplugin.c:
+	* sys/directdraw/gstdirectdrawsink.c:
+	* sys/directdraw/gstdirectdrawsink.h:
+	* win32/vs6/libgstdirectdraw.dsp:
+	* win32/vs7/libgstdirectdraw.vcproj:
+	* win32/vs8/libgstdirectdraw.vcproj:
+	  Moved 'directdraw' from -good to -bad
+
+2009-05-16 00:18:34 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/pipelines/.gitignore:
+	  ignores: Ignore the flacdec check binary
+
+2009-05-16 00:17:57 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* docs/plugins/inspect/plugin-avi.xml:
+	  docs: Update inspection details for the avi plugin
+
+2009-05-16 00:00:07 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/check/elements/y4menc.c:
+	  Moved 'y4menc' from -bad to -good
+
+2009-05-13 17:55:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] y4menc: change my email
+	  change my email to something more current
+	  See #580783
+
+2009-05-13 17:54:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] y4menc: don't strip timestamps
+	  Fixes #582483
+
+2008-11-04 12:42:30 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD] Don't install static libs for plugins. Fixes #550851 for -bad.
+	  Original commit message from CVS:
+	  * ext/alsaspdif/Makefile.am:
+	  * ext/amrwb/Makefile.am:
+	  * ext/apexsink/Makefile.am:
+	  * ext/arts/Makefile.am:
+	  * ext/artsd/Makefile.am:
+	  * ext/audiofile/Makefile.am:
+	  * ext/audioresample/Makefile.am:
+	  * ext/bz2/Makefile.am:
+	  * ext/cdaudio/Makefile.am:
+	  * ext/celt/Makefile.am:
+	  * ext/dc1394/Makefile.am:
+	  * ext/dirac/Makefile.am:
+	  * ext/directfb/Makefile.am:
+	  * ext/divx/Makefile.am:
+	  * ext/dts/Makefile.am:
+	  * ext/faac/Makefile.am:
+	  * ext/faad/Makefile.am:
+	  * ext/gsm/Makefile.am:
+	  * ext/hermes/Makefile.am:
+	  * ext/ivorbis/Makefile.am:
+	  * ext/jack/Makefile.am:
+	  * ext/jp2k/Makefile.am:
+	  * ext/ladspa/Makefile.am:
+	  * ext/lcs/Makefile.am:
+	  * ext/libfame/Makefile.am:
+	  * ext/libmms/Makefile.am:
+	  * ext/metadata/Makefile.am:
+	  * ext/mpeg2enc/Makefile.am:
+	  * ext/mplex/Makefile.am:
+	  * ext/musepack/Makefile.am:
+	  * ext/musicbrainz/Makefile.am:
+	  * ext/mythtv/Makefile.am:
+	  * ext/nas/Makefile.am:
+	  * ext/neon/Makefile.am:
+	  * ext/ofa/Makefile.am:
+	  * ext/polyp/Makefile.am:
+	  * ext/resindvd/Makefile.am:
+	  * ext/sdl/Makefile.am:
+	  * ext/shout/Makefile.am:
+	  * ext/snapshot/Makefile.am:
+	  * ext/sndfile/Makefile.am:
+	  * ext/soundtouch/Makefile.am:
+	  * ext/spc/Makefile.am:
+	  * ext/swfdec/Makefile.am:
+	  * ext/tarkin/Makefile.am:
+	  * ext/theora/Makefile.am:
+	  * ext/timidity/Makefile.am:
+	  * ext/twolame/Makefile.am:
+	  * ext/x264/Makefile.am:
+	  * ext/xine/Makefile.am:
+	  * ext/xvid/Makefile.am:
+	  * gst-libs/gst/app/Makefile.am:
+	  * gst-libs/gst/dshow/Makefile.am:
+	  * gst/aiffparse/Makefile.am:
+	  * gst/app/Makefile.am:
+	  * gst/audiobuffer/Makefile.am:
+	  * gst/bayer/Makefile.am:
+	  * gst/cdxaparse/Makefile.am:
+	  * gst/chart/Makefile.am:
+	  * gst/colorspace/Makefile.am:
+	  * gst/dccp/Makefile.am:
+	  * gst/deinterlace/Makefile.am:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/dvdspu/Makefile.am:
+	  * gst/festival/Makefile.am:
+	  * gst/filter/Makefile.am:
+	  * gst/flacparse/Makefile.am:
+	  * gst/flv/Makefile.am:
+	  * gst/games/Makefile.am:
+	  * gst/h264parse/Makefile.am:
+	  * gst/librfb/Makefile.am:
+	  * gst/mixmatrix/Makefile.am:
+	  * gst/modplug/Makefile.am:
+	  * gst/mpeg1sys/Makefile.am:
+	  * gst/mpeg4videoparse/Makefile.am:
+	  * gst/mpegdemux/Makefile.am:
+	  * gst/mpegtsmux/Makefile.am:
+	  * gst/mpegvideoparse/Makefile.am:
+	  * gst/mve/Makefile.am:
+	  * gst/nsf/Makefile.am:
+	  * gst/nuvdemux/Makefile.am:
+	  * gst/overlay/Makefile.am:
+	  * gst/passthrough/Makefile.am:
+	  * gst/pcapparse/Makefile.am:
+	  * gst/playondemand/Makefile.am:
+	  * gst/rawparse/Makefile.am:
+	  * gst/real/Makefile.am:
+	  * gst/rtjpeg/Makefile.am:
+	  * gst/rtpmanager/Makefile.am:
+	  * gst/scaletempo/Makefile.am:
+	  * gst/sdp/Makefile.am:
+	  * gst/selector/Makefile.am:
+	  * gst/smooth/Makefile.am:
+	  * gst/smoothwave/Makefile.am:
+	  * gst/speed/Makefile.am:
+	  * gst/speexresample/Makefile.am:
+	  * gst/stereo/Makefile.am:
+	  * gst/subenc/Makefile.am:
+	  * gst/tta/Makefile.am:
+	  * gst/vbidec/Makefile.am:
+	  * gst/videodrop/Makefile.am:
+	  * gst/videosignal/Makefile.am:
+	  * gst/virtualdub/Makefile.am:
+	  * gst/vmnc/Makefile.am:
+	  * gst/y4m/Makefile.am:
+	  * sys/acmenc/Makefile.am:
+	  * sys/cdrom/Makefile.am:
+	  * sys/dshowdecwrapper/Makefile.am:
+	  * sys/dshowsrcwrapper/Makefile.am:
+	  * sys/dvb/Makefile.am:
+	  * sys/dxr3/Makefile.am:
+	  * sys/fbdev/Makefile.am:
+	  * sys/oss4/Makefile.am:
+	  * sys/qcam/Makefile.am:
+	  * sys/qtwrapper/Makefile.am:
+	  * sys/vcd/Makefile.am:
+	  * sys/wininet/Makefile.am:
+	  * win32/common/config.h:
+	  Don't install static libs for plugins. Fixes #550851 for -bad.
+
+2008-06-26 15:52:40 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD] Add documentation for YUV4MPEG2 encoder element.
+	  Original commit message from CVS:
+	  * docs/plugins/Makefile.am:
+	  * docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	  * docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	  * gst/y4m/gsty4mencode.c:
+	  Add documentation for YUV4MPEG2 encoder element.
+
+2007-04-24 15:49:18 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	  [MOVED FROM BAD] Plug some leaks; try to make build bot happy again.
+	  Original commit message from CVS:
+	  * gst/y4m/gsty4mencode.c: (gst_y4m_encode_init),
+	  (gst_y4m_encode_setcaps):
+	  * tests/check/elements/y4menc.c: (GST_START_TEST):
+	  Plug some leaks; try to make build bot happy again.
+
+2006-11-13 18:55:57 +0000  Mark Nauwelaerts <manauw@skynet.be>
+
+	  [MOVED FROM BAD] configure.ac: Enable cdaudio and y4m.
+	  Original commit message from CVS:
+	  Patch by: Mark Nauwelaerts <manauw at skynet be>
+	  * configure.ac:
+	  Enable cdaudio and y4m.
+	  * gst/y4m/Makefile.am:
+	  * gst/y4m/gsty4mencode.c: (gst_y4m_encode_base_init),
+	  (gst_y4m_encode_class_init), (gst_y4m_encode_init),
+	  (gst_y4m_encode_reset), (gst_y4m_encode_setcaps),
+	  (gst_y4m_encode_get_stream_header),
+	  (gst_y4m_encode_get_frame_header), (gst_y4m_encode_chain),
+	  (gst_y4m_encode_set_property), (gst_y4m_encode_get_property),
+	  (gst_y4m_encode_change_state), (plugin_init):
+	  * gst/y4m/gsty4mencode.h:
+	  Port of y4mencode to 0.10.
+
+2006-04-25 21:56:38 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD] Define GstElementDetails as const and also static (when defined as global)
+	  Original commit message from CVS:
+	  * ext/amrwb/gstamrwbdec.c:
+	  * ext/amrwb/gstamrwbenc.c:
+	  * ext/amrwb/gstamrwbparse.c:
+	  * ext/arts/gst_arts.c:
+	  * ext/artsd/gstartsdsink.c:
+	  * ext/audiofile/gstafparse.c:
+	  * ext/audiofile/gstafsink.c:
+	  * ext/audiofile/gstafsrc.c:
+	  * ext/audioresample/gstaudioresample.c:
+	  * ext/bz2/gstbz2dec.c:
+	  * ext/bz2/gstbz2enc.c:
+	  * ext/cdaudio/gstcdaudio.c:
+	  * ext/directfb/dfbvideosink.c:
+	  * ext/divx/gstdivxdec.c:
+	  * ext/divx/gstdivxenc.c:
+	  * ext/dts/gstdtsdec.c: (gst_dtsdec_base_init):
+	  * ext/faac/gstfaac.c: (gst_faac_base_init):
+	  * ext/faad/gstfaad.c:
+	  * ext/gsm/gstgsmdec.c:
+	  * ext/gsm/gstgsmenc.c:
+	  * ext/hermes/gsthermescolorspace.c:
+	  * ext/ivorbis/vorbisfile.c:
+	  * ext/lcs/gstcolorspace.c:
+	  * ext/libfame/gstlibfame.c:
+	  * ext/libmms/gstmms.c: (gst_mms_base_init):
+	  * ext/musepack/gstmusepackdec.c: (gst_musepackdec_base_init):
+	  * ext/musicbrainz/gsttrm.c: (gst_musicbrainz_base_init):
+	  * ext/nas/nassink.c: (gst_nassink_base_init):
+	  * ext/neon/gstneonhttpsrc.c:
+	  * ext/sdl/sdlaudiosink.c:
+	  * ext/sdl/sdlvideosink.c:
+	  * ext/shout/gstshout.c:
+	  * ext/snapshot/gstsnapshot.c:
+	  * ext/sndfile/gstsf.c:
+	  * ext/swfdec/gstswfdec.c:
+	  * ext/tarkin/gsttarkindec.c:
+	  * ext/tarkin/gsttarkinenc.c:
+	  * ext/theora/theoradec.c:
+	  * ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init):
+	  * ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_base_init):
+	  * ext/xvid/gstxviddec.c:
+	  * ext/xvid/gstxvidenc.c:
+	  * gst/cdxaparse/gstcdxaparse.c: (gst_cdxa_parse_base_init):
+	  * gst/cdxaparse/gstcdxastrip.c: (gst_cdxastrip_base_init):
+	  * gst/chart/gstchart.c:
+	  * gst/colorspace/gstcolorspace.c:
+	  * gst/deinterlace/gstdeinterlace.c:
+	  * gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_base_init):
+	  * gst/festival/gstfestival.c:
+	  * gst/filter/gstbpwsinc.c:
+	  * gst/filter/gstiir.c:
+	  * gst/filter/gstlpwsinc.c:
+	  * gst/freeze/gstfreeze.c:
+	  * gst/games/gstpuzzle.c: (gst_puzzle_base_init):
+	  * gst/librfb/gstrfbsrc.c:
+	  * gst/mixmatrix/mixmatrix.c:
+	  * gst/mpeg1sys/gstmpeg1systemencode.c:
+	  * gst/mpeg1videoparse/gstmp1videoparse.c:
+	  * gst/mpeg2sub/gstmpeg2subt.c:
+	  * gst/mpegaudioparse/gstmpegaudioparse.c:
+	  * gst/multifilesink/gstmultifilesink.c:
+	  * gst/overlay/gstoverlay.c:
+	  * gst/passthrough/gstpassthrough.c:
+	  * gst/playondemand/gstplayondemand.c:
+	  * gst/qtdemux/qtdemux.c:
+	  * gst/rtjpeg/gstrtjpegdec.c:
+	  * gst/rtjpeg/gstrtjpegenc.c:
+	  * gst/smooth/gstsmooth.c:
+	  * gst/smoothwave/gstsmoothwave.c:
+	  * gst/spectrum/gstspectrum.c:
+	  * gst/speed/gstspeed.c:
+	  * gst/stereo/gststereo.c:
+	  * gst/switch/gstswitch.c:
+	  * gst/tta/gstttadec.c: (gst_tta_dec_base_init):
+	  * gst/tta/gstttaparse.c: (gst_tta_parse_base_init):
+	  * gst/vbidec/gstvbidec.c:
+	  * gst/videocrop/gstvideocrop.c:
+	  * gst/videodrop/gstvideodrop.c:
+	  * gst/virtualdub/gstxsharpen.c:
+	  * gst/xingheader/gstxingmux.c: (gst_xing_mux_base_init):
+	  * gst/y4m/gsty4mencode.c:
+	  * sys/cdrom/gstcdplayer.c:
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  * sys/directsound/gstdirectsoundsink.c:
+	  * sys/glsink/glimagesink.c:
+	  * sys/qcam/gstqcamsrc.c:
+	  * sys/v4l2/gstv4l2src.c:
+	  * sys/vcd/vcdsrc.c: (gst_vcdsrc_base_init):
+	  * sys/ximagesrc/ximagesrc.c:
+	  Define GstElementDetails as const and also static (when defined as
+	  global)
+
+2006-04-08 21:48:01 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD] Fix #337365 (g_type_class_ref <-> g_type_class_peek_parent)
+	  Original commit message from CVS:
+	  * ext/amrwb/gstamrwbdec.c: (gst_amrwbdec_class_init):
+	  * ext/amrwb/gstamrwbenc.c: (gst_amrwbenc_class_init):
+	  * ext/amrwb/gstamrwbparse.c: (gst_amrwbparse_class_init):
+	  * ext/arts/gst_arts.c: (gst_arts_class_init):
+	  * ext/artsd/gstartsdsink.c: (gst_artsdsink_class_init):
+	  * ext/audiofile/gstafsink.c: (gst_afsink_class_init):
+	  * ext/audiofile/gstafsrc.c: (gst_afsrc_class_init):
+	  * ext/audioresample/gstaudioresample.c:
+	  * ext/cdaudio/gstcdaudio.c: (gst_cdaudio_class_init):
+	  * ext/directfb/dfbvideosink.c: (gst_dfbvideosink_class_init):
+	  * ext/divx/gstdivxdec.c: (gst_divxdec_class_init):
+	  * ext/hermes/gsthermescolorspace.c:
+	  (gst_hermes_colorspace_class_init):
+	  * ext/ivorbis/vorbisfile.c: (gst_ivorbisfile_class_init):
+	  * ext/jack/gstjack.c: (gst_jack_class_init):
+	  * ext/jack/gstjackbin.c: (gst_jack_bin_class_init):
+	  * ext/lcs/gstcolorspace.c: (gst_colorspace_class_init):
+	  * ext/libfame/gstlibfame.c: (gst_fameenc_class_init):
+	  * ext/musicbrainz/gsttrm.c: (gst_musicbrainz_class_init):
+	  * ext/nas/nassink.c: (gst_nassink_class_init):
+	  * ext/shout/gstshout.c: (gst_icecastsend_class_init):
+	  * ext/snapshot/gstsnapshot.c: (gst_snapshot_class_init):
+	  * ext/sndfile/gstsf.c: (gst_sf_class_init):
+	  * ext/swfdec/gstswfdec.c: (gst_swfdecbuffer_class_init),
+	  (gst_swfdec_class_init):
+	  * ext/tarkin/gsttarkindec.c: (gst_tarkindec_class_init):
+	  * ext/tarkin/gsttarkinenc.c: (gst_tarkinenc_class_init):
+	  * gst/cdxaparse/gstcdxastrip.c: (gst_cdxastrip_class_init):
+	  * gst/chart/gstchart.c: (gst_chart_class_init):
+	  * gst/colorspace/gstcolorspace.c: (gst_colorspace_class_init):
+	  * gst/deinterlace/gstdeinterlace.c: (gst_deinterlace_class_init):
+	  * gst/festival/gstfestival.c: (gst_festival_class_init):
+	  * gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init):
+	  * gst/filter/gstiir.c: (gst_iir_class_init):
+	  * gst/filter/gstlpwsinc.c: (gst_lpwsinc_class_init):
+	  * gst/librfb/gstrfbsrc.c: (gst_rfbsrc_class_init):
+	  * gst/mixmatrix/mixmatrix.c: (gst_mixmatrix_class_init):
+	  * gst/mpeg1sys/gstmpeg1systemencode.c:
+	  (gst_system_encode_class_init):
+	  * gst/mpeg1videoparse/gstmp1videoparse.c:
+	  (gst_mp1videoparse_class_init):
+	  * gst/mpeg2sub/gstmpeg2subt.c: (gst_mpeg2subt_class_init):
+	  * gst/mpegaudioparse/gstmpegaudioparse.c:
+	  (gst_mp3parse_class_init):
+	  * gst/overlay/gstoverlay.c: (gst_overlay_class_init):
+	  * gst/passthrough/gstpassthrough.c: (passthrough_class_init):
+	  * gst/playondemand/gstplayondemand.c: (play_on_demand_class_init):
+	  * gst/rtjpeg/gstrtjpegdec.c: (gst_rtjpegdec_class_init):
+	  * gst/rtjpeg/gstrtjpegenc.c: (gst_rtjpegenc_class_init):
+	  * gst/smooth/gstsmooth.c: (gst_smooth_class_init):
+	  * gst/smoothwave/gstsmoothwave.c: (gst_smoothwave_class_init):
+	  * gst/spectrum/gstspectrum.c: (gst_spectrum_class_init):
+	  * gst/stereo/gststereo.c: (gst_stereo_class_init):
+	  * gst/switch/gstswitch.c: (gst_switch_class_init):
+	  * gst/tta/gstttadec.c: (gst_tta_dec_class_init):
+	  * gst/tta/gstttaparse.c: (gst_tta_parse_class_init):
+	  * gst/vbidec/gstvbidec.c: (gst_vbidec_class_init):
+	  * gst/videocrop/gstvideocrop.c: (gst_video_crop_class_init):
+	  * gst/virtualdub/gstxsharpen.c: (gst_xsharpen_class_init):
+	  * gst/y4m/gsty4mencode.c: (gst_y4mencode_class_init):
+	  * sys/cdrom/gstcdplayer.c: (cdplayer_class_init):
+	  * sys/directsound/gstdirectsoundsink.c:
+	  (gst_directsoundsink_class_init):
+	  * sys/dxr3/dxr3audiosink.c: (dxr3audiosink_class_init):
+	  * sys/dxr3/dxr3spusink.c: (dxr3spusink_class_init):
+	  * sys/dxr3/dxr3videosink.c: (dxr3videosink_class_init):
+	  * sys/qcam/gstqcamsrc.c: (gst_qcamsrc_class_init):
+	  * sys/v4l2/gstv4l2colorbalance.c:
+	  (gst_v4l2_color_balance_channel_class_init):
+	  * sys/v4l2/gstv4l2tuner.c: (gst_v4l2_tuner_channel_class_init),
+	  (gst_v4l2_tuner_norm_class_init):
+	  * sys/ximagesrc/ximagesrc.c: (gst_ximagesrc_class_init):
+	  Fix #337365 (g_type_class_ref <-> g_type_class_peek_parent)
+
+2006-04-08 19:04:01 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD] gst/: Fix more broken GObject macros
+	  Original commit message from CVS:
+	  * gst/colorspace/gstcolorspace.h:
+	  * gst/deinterlace/gstdeinterlace.h:
+	  * gst/passthrough/gstpassthrough.h:
+	  * gst/y4m/gsty4mencode.h:
+	  Fix more broken GObject macros
+
+2006-04-06 11:35:26 +0000  j@bootlab.org <j@bootlab.org>
+
+	  [MOVED FROM BAD] Unify the long descriptions in the plugin details (#337263).
+	  Original commit message from CVS:
+	  Patch by: j^  <j at bootlab dot org>
+	  * ext/amrwb/gstamrwbdec.c:
+	  * ext/amrwb/gstamrwbenc.c:
+	  * ext/amrwb/gstamrwbparse.c:
+	  * ext/arts/gst_arts.c:
+	  * ext/artsd/gstartsdsink.c:
+	  * ext/audiofile/gstafparse.c:
+	  * ext/audiofile/gstafsink.c:
+	  * ext/audiofile/gstafsrc.c:
+	  * ext/cdaudio/gstcdaudio.c:
+	  * ext/directfb/dfbvideosink.c:
+	  * ext/divx/gstdivxdec.c:
+	  * ext/divx/gstdivxenc.c:
+	  * ext/dts/gstdtsdec.c: (gst_dtsdec_base_init):
+	  * ext/faac/gstfaac.c: (gst_faac_base_init):
+	  * ext/faad/gstfaad.c:
+	  * ext/gsm/gstgsmdec.c:
+	  * ext/gsm/gstgsmenc.c:
+	  * ext/hermes/gsthermescolorspace.c:
+	  * ext/ivorbis/vorbisfile.c:
+	  * ext/lcs/gstcolorspace.c:
+	  * ext/libfame/gstlibfame.c:
+	  * ext/libmms/gstmms.c: (gst_mms_base_init):
+	  * ext/musicbrainz/gsttrm.c: (gst_musicbrainz_base_init):
+	  * ext/nas/nassink.c: (gst_nassink_base_init):
+	  * ext/neon/gstneonhttpsrc.c:
+	  * ext/polyp/polypsink.c: (gst_polypsink_base_init):
+	  * ext/sdl/sdlaudiosink.c:
+	  * ext/sdl/sdlvideosink.c:
+	  * ext/shout/gstshout.c:
+	  * ext/snapshot/gstsnapshot.c:
+	  * ext/sndfile/gstsf.c:
+	  * ext/tarkin/gsttarkindec.c:
+	  * ext/tarkin/gsttarkinenc.c:
+	  * ext/theora/theoradec.c:
+	  * ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init):
+	  * ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_base_init):
+	  * ext/xvid/gstxviddec.c:
+	  * ext/xvid/gstxvidenc.c:
+	  * gst/cdxaparse/gstcdxaparse.c: (gst_cdxa_parse_base_init):
+	  * gst/cdxaparse/gstcdxastrip.c: (gst_cdxastrip_base_init):
+	  * gst/chart/gstchart.c:
+	  * gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_base_init):
+	  * gst/festival/gstfestival.c:
+	  * gst/filter/gstiir.c:
+	  * gst/filter/gstlpwsinc.c:
+	  * gst/freeze/gstfreeze.c:
+	  * gst/games/gstpuzzle.c: (gst_puzzle_base_init):
+	  * gst/mixmatrix/mixmatrix.c:
+	  * gst/mpeg1sys/gstmpeg1systemencode.c:
+	  * gst/mpeg1videoparse/gstmp1videoparse.c:
+	  * gst/mpeg2sub/gstmpeg2subt.c:
+	  * gst/mpegaudioparse/gstmpegaudioparse.c:
+	  * gst/multifilesink/gstmultifilesink.c:
+	  * gst/overlay/gstoverlay.c:
+	  * gst/passthrough/gstpassthrough.c:
+	  * gst/playondemand/gstplayondemand.c:
+	  * gst/qtdemux/qtdemux.c:
+	  * gst/rtjpeg/gstrtjpegdec.c:
+	  * gst/rtjpeg/gstrtjpegenc.c:
+	  * gst/smooth/gstsmooth.c:
+	  * gst/tta/gstttadec.c: (gst_tta_dec_base_init):
+	  * gst/tta/gstttaparse.c: (gst_tta_parse_base_init):
+	  * gst/videocrop/gstvideocrop.c:
+	  * gst/videodrop/gstvideodrop.c:
+	  * gst/virtualdub/gstxsharpen.c:
+	  * gst/xingheader/gstxingmux.c: (gst_xing_mux_base_init):
+	  * gst/y4m/gsty4mencode.c:
+	  Unify the long descriptions in the plugin details (#337263).
+
+2006-04-01 10:09:11 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] rework build; add translations for v4l2
+	  Original commit message from CVS:
+	  rework build; add translations for v4l2
+
+2005-09-05 17:20:29 +0000  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] Fix up all the state change functions.
+	  Original commit message from CVS:
+	  Fix up all the state change functions.
+
+2005-07-05 10:51:49 +0000  Andy Wingo <wingo@pobox.com>
+
+	  [MOVED FROM BAD] Way, way, way too many files: Remove crack comment from the 2000 era.
+	  Original commit message from CVS:
+	  2005-07-05  Andy Wingo  <wingo@pobox.com>
+	  * Way, way, way too many files:
+	  Remove crack comment from the 2000 era.
+
+2005-01-14 18:36:42 +0000  Stéphane Loeuillet <gstreamer@leroutier.net>
+
+	  [MOVED FROM BAD] I'm a bad boy. using /1001. to force C to do float division and not integer division (as it did in my last commit)
+	  Original commit message from CVS:
+	  * ext/dv/gstdvdec.c:
+	  * gst/subparse/gstsubparse.c: (parse_mdvdsub):
+	  * gst/y4m/gsty4mencode.c: (gst_y4mencode_sinkconnect):
+	  I'm a bad boy. using /1001. to force C to do float division
+	  and not integer division (as it did in my last commit)
+	  Thanks to David I. Lehn for pointing this mistake.
+
+2005-01-14 12:27:22 +0000  Stéphane Loeuillet <gstreamer@leroutier.net>
+
+	  [MOVED FROM BAD] replace framerate aproximations by their real value (24000/1001, 30000/1001, 60000/1001)
+	  Original commit message from CVS:
+	  * ext/dv/gstdvdec.c:
+	  * ext/libfame/gstlibfame.c:
+	  * gst/subparse/gstsubparse.c: (parse_mdvdsub):
+	  * gst/y4m/gsty4mencode.c: (gst_y4mencode_sinkconnect):
+	  replace framerate aproximations by their real value
+	  (24000/1001, 30000/1001, 60000/1001)
+	  Finish fixing bug #164049
+
+2004-07-27 21:41:30 +0000  Steve Lhomme <steve.lhomme@free.fr>
+
+	* gst/y4m/y4menc.vcproj:
+	  [MOVED FROM BAD] more working plugins
+	  Original commit message from CVS:
+	  more working plugins
+
+2004-07-27 09:57:33 +0000  Steve Lhomme <steve.lhomme@free.fr>
+
+	* gst/y4m/y4menc.vcproj:
+	  [MOVED FROM BAD] rename GStreamer-0.8.lib to libgstreamer.lib
+	  Original commit message from CVS:
+	  rename GStreamer-0.8.lib to libgstreamer.lib
+
+2004-07-27 09:48:51 +0000  Steve Lhomme <steve.lhomme@free.fr>
+
+	* gst/y4m/y4menc.vcproj:
+	  [MOVED FROM BAD] avoid problems with math.h, fix release dependancy
+	  Original commit message from CVS:
+	  avoid problems with math.h, fix release dependancy
+
+2004-07-26 13:20:11 +0000  Steve Lhomme <steve.lhomme@free.fr>
+
+	* gst/y4m/y4menc.vcproj:
+	  [MOVED FROM BAD] more plugins supported under windows
+	  Original commit message from CVS:
+	  more plugins supported under windows
+
+2004-04-01 11:48:27 +0000  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] a52dec:   Use a debug category, Output timestamps correctly
+	  Original commit message from CVS:
+	  a52dec:   Use a debug category, Output timestamps correctly
+	  Emit tag info, Handle events, tell liba52dec about cpu
+	  capabilities so it can use MMX etc.
+	  dvdec:    Fix a crasher accessing invalid memory
+	  dvdnavsrc:Some support for byte-format seeking.
+	  Small fixes for still frames and menu button overlays
+	  mpeg2dec: Use a debug category. Adjust the report level of several items to
+	  LOG. Call mpeg2_custom_fbuf to mark our buffers as 'custom buffers'
+	  so it doesn't lose the GstBuffer pointer
+	  navseek:  Add the navseek debug element for seeking back and forth in a
+	  video stream using arrow keys.
+	  mpeg2subt:Pretty much a complete rewrite. Now a loopbased element. May still
+	  require work to properly synchronise subtitle buffers.
+	  mpegdemux:
+	  dvddemux: Don't attempt to create subbuffers of size 0
+	  Reduce a couple of error outputs to warnings.
+	  y4mencode:Output the y4m frame header correctly
+
+2004-03-15 19:32:27 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] don't mix tabs and spaces
+	  Original commit message from CVS:
+	  don't mix tabs and spaces
+
+2004-03-15 16:32:54 +0000  Johan Dahlin <johan@gnome.org>
+
+	  [MOVED FROM BAD] *.h: Revert indenting
+	  Original commit message from CVS:
+	  * *.h: Revert indenting
+
+2004-03-14 22:34:33 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* gst/y4m/gsty4mencode.c:
+	* gst/y4m/gsty4mencode.h:
+	  [MOVED FROM BAD] gst-indent
+	  Original commit message from CVS:
+	  gst-indent
+
+2004-01-12 02:01:52 +0000  Benjamin Otte <otte@gnome.org>
+
+	  [MOVED FROM BAD] gst-libs/gst/video/video.h: Fix caps template names to be understandable.
+	  Original commit message from CVS:
+	  2004-01-12  Benjamin Otte  <in7y118@public.uni-hamburg.de>
+	  * gst-libs/gst/video/video.h:
+	  Fix caps template names to be understandable.
+	  Prefix everything with GST_VIDEO.
+	  * ext/aalib/gstaasink.c:
+	  * ext/divx/gstdivxdec.c:
+	  * ext/divx/gstdivxenc.c:
+	  * ext/gdk_pixbuf/gstgdkpixbuf.c:
+	  * ext/hermes/gstcolorspace.c: (gst_colorspace_base_init):
+	  * ext/jpeg/gstjpegdec.c: (raw_caps_factory):
+	  * ext/jpeg/gstjpegenc.c: (raw_caps_factory):
+	  * ext/libcaca/gstcacasink.c:
+	  * ext/libpng/gstpngenc.c: (raw_caps_factory):
+	  * ext/snapshot/gstsnapshot.c:
+	  * ext/swfdec/gstswfdec.c:
+	  * ext/xvid/gstxviddec.c:
+	  * ext/xvid/gstxvidenc.c:
+	  * gst/chart/gstchart.c:
+	  * gst/deinterlace/gstdeinterlace.c:
+	  * gst/effectv/gsteffectv.c:
+	  * gst/flx/gstflxdec.c: (gst_flxdec_loop):
+	  * gst/goom/gstgoom.c:
+	  * gst/median/gstmedian.c:
+	  * gst/monoscope/gstmonoscope.c: (gst_monoscope_init),
+	  (gst_monoscope_srcconnect), (gst_monoscope_chain):
+	  * gst/overlay/gstoverlay.c:
+	  * gst/smooth/gstsmooth.c:
+	  * gst/smpte/gstsmpte.c:
+	  * gst/synaesthesia/gstsynaesthesia.c:
+	  * gst/videocrop/gstvideocrop.c:
+	  * gst/videodrop/gstvideodrop.c:
+	  * gst/y4m/gsty4mencode.c:
+	  * sys/qcam/gstqcamsrc.c:
+	  * sys/v4l/gstv4lsrc.c: (gst_v4lsrc_palette_to_caps):
+	  Make them work with new video.h file.
+	  * sys/ximage/ximagesink.c: (gst_ximagesink_chain),
+	  (gst_ximagesink_buffer_free), (gst_ximagesink_buffer_alloc):
+	  * sys/xvimage/xvimagesink.c: (gst_xvimagesink_chain),
+	  (gst_xvimagesink_buffer_free), (gst_xvimagesink_buffer_alloc):
+	  Make it work with new buffer allocation system.
+
+2003-12-22 01:47:09 +0000  David Schleef <ds@schleef.org>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] Merge CAPS branch
+	  Original commit message from CVS:
+	  Merge CAPS branch
+
+2003-12-04 10:37:38 +0000  Andy Wingo <wingo@pobox.com>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] remove copyright field from plugins
+	  Original commit message from CVS:
+	  remove copyright field from plugins
+
+2003-11-16 22:02:23 +0000  Leif Johnson <leif@ambient.2y.net>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] + checking in plugin category changes
+	  Original commit message from CVS:
+	  + checking in plugin category changes
+
+2003-11-07 12:47:02 +0000  Ronald S. Bultje <rbultje@ronald.bitfreak.net>
+
+	* gst/y4m/gsty4mencode.h:
+	  [MOVED FROM BAD] Remove all config.h includes from header files, add it to each source file and remove duplicate config.h includes fro...
+	  Original commit message from CVS:
+	  Remove all config.h includes from header files, add it to each source file and remove duplicate config.h includes from several source files
+
+2003-11-02 19:17:27 +0000  Benjamin Otte <otte@gnome.org>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] fix to new plugin system
+	  Original commit message from CVS:
+	  fix to new plugin system
+
+2003-10-08 16:08:19 +0000  Andy Wingo <wingo@pobox.com>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] /GstBuffer/GstData/ in the API where you can pass events. Fix the plugins to deal with that. Fixes #113488.
+	  Original commit message from CVS:
+	  /GstBuffer/GstData/ in the API where you can pass events. Fix the plugins to deal with that. Fixes #113488.
+
+2003-08-10 00:01:58 +0000  David Schleef <ds@schleef.org>
+
+	* gst/y4m/Makefile.am:
+	  [MOVED FROM BAD] Remove redundant plugindir definition
+	  Original commit message from CVS:
+	  Remove redundant plugindir definition
+
+2003-07-06 20:49:52 +0000  Ronald S. Bultje <rbultje@ronald.bitfreak.net>
+
+	* gst/y4m/gsty4mencode.c:
+	* gst/y4m/gsty4mencode.h:
+	  [MOVED FROM BAD] New mimetypes gone into effect today - this commit changes all old mimetypes over to the new mimetypes spec as descri...
+	  Original commit message from CVS:
+	  New mimetypes gone into effect today - this commit changes all old mimetypes over to the new mimetypes spec as described in the previous commit's document. Note: some plugins will break, some pipelines will break, expect HEAD to be broken or at least not 100% working for a few days, but don't forget to report bugs
+
+2003-06-29 19:46:13 +0000  Benjamin Otte <otte@gnome.org>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] compatibility fix for new GST_DEBUG stuff.
+	  Original commit message from CVS:
+	  compatibility fix for new GST_DEBUG stuff.
+	  Includes fixes for missing includes for config.h and unistd.h
+	  I only ensured for plugins I can build that they work, so if some of them are still broken, you gotta fix them yourselves unfortunately.
+
+2003-01-10 13:38:32 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] PadConnect -> PadLink
+	  Original commit message from CVS:
+	  PadConnect -> PadLink
+
+2003-01-10 10:22:25 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] another batch of connect->link fixes please let me know about issues and please refrain of making them yourself, so t...
+	  Original commit message from CVS:
+	  another batch of connect->link fixes
+	  please let me know about issues
+	  and please refrain of making them yourself, so that I don't spend double
+	  the time resolving conflicts
+
+2002-12-08 14:50:10 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* gst/y4m/Makefile.am:
+	  [MOVED FROM BAD] parallel install fixes
+	  Original commit message from CVS:
+	  parallel install fixes
+
+2002-09-18 19:02:52 +0000  Christian Schaller <uraeus@gnome.org>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] plugins part of license field patch
+	  Original commit message from CVS:
+	  plugins part of license field patch
+
+2002-06-17 10:29:30 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* gst/y4m/Makefile.am:
+	  [MOVED FROM BAD] cosmetic change
+	  Original commit message from CVS:
+	  cosmetic change
+
+2002-05-03 09:59:10 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] various name fixes and sundry
+	  Original commit message from CVS:
+	  various name fixes and sundry
+
+2002-04-20 21:42:51 +0000  Andy Wingo <wingo@pobox.com>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] a hack to work around intltool's brokenness a current check for mpeg2dec details->klass reorganizations an element br...
+	  Original commit message from CVS:
+	  * a hack to work around intltool's brokenness
+	  * a current check for mpeg2dec
+	  * details->klass reorganizations
+	  * an element browser that uses details->klass
+	  * separated cdxa parse out from the avi directory
+
+2002-04-11 20:42:26 +0000  Andy Wingo <wingo@pobox.com>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] GstPadTemplate <-> gst_pad_template <-> GST_PAD_TEMPLATE same with *factory and typefind.
+	  Original commit message from CVS:
+	  GstPadTemplate <-> gst_pad_template <-> GST_PAD_TEMPLATE
+	  same with *factory and typefind.
+	  also, some -Werror fixes.
+
+2002-03-30 17:06:26 +0000  Wim Taymans <wim.taymans@gmail.com>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] Changed to the new props API
+	  Original commit message from CVS:
+	  Changed to the new props API
+	  Other small tuff.
+
+2002-03-20 21:45:04 +0000  Andy Wingo <wingo@pobox.com>
+
+	* gst/y4m/gsty4mencode.c:
+	* gst/y4m/gsty4mencode.h:
+	  [MOVED FROM BAD] s/Gnome-Streamer/GStreamer/
+	  Original commit message from CVS:
+	  s/Gnome-Streamer/GStreamer/
+
+2002-03-19 04:10:06 +0000  Andy Wingo <wingo@pobox.com>
+
+	* gst/y4m/Makefile.am:
+	* gst/y4m/gsty4mencode.c:
+	* gst/y4m/gsty4mencode.h:
+	  [MOVED FROM BAD] removal of //-style comments don't link plugins to core libs -- the versioning is done internally to the plugins with...
+	  Original commit message from CVS:
+	  * removal of //-style comments
+	  * don't link plugins to core libs -- the versioning is done internally to the plugins with the plugin_info struct,
+	  and symbol resolution is lazy, so we can always know if a plugin can be loaded by the plugin_info data. in theory.
+
+2002-03-19 01:39:43 +0000  Andy Wingo <wingo@pobox.com>
+
+	* gst/y4m/Makefile.am:
+	  [MOVED FROM BAD] s/@GST_PLUGIN_LDFLAGS@/$(GST_PLUGIN_LDFLAGS)/ @-substitued variables variables are defined as make variables automagi...
+	  Original commit message from CVS:
+	  s/@GST_PLUGIN_LDFLAGS@/$(GST_PLUGIN_LDFLAGS)/
+	  @-substitued variables variables are defined as make variables automagically,
+	  and this gives the user the freedom to say make GST_PLUGIN_LDFLAGS=-myflag
+
+2002-01-18 11:37:19 +0000  Wrobell <wrobell@ite.pl>
+
+	* gst/y4m/Makefile.am:
+	  [MOVED FROM BAD] - plugins are built without versioning info
+	  Original commit message from CVS:
+	  - plugins are built without versioning info
+
+2002-01-13 22:27:25 +0000  Wim Taymans <wim.taymans@gmail.com>
+
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] Bring the plugins in sync with the new core capsnego system.
+	  Original commit message from CVS:
+	  Bring the plugins in sync with the new core capsnego system.
+	  Added some features, enhancements...
+
+2002-01-12 03:34:27 +0000  David I. Lehn <dlehn@users.sourceforge.net>
+
+	* gst/y4m/Makefile.am:
+	  [MOVED FROM BAD] s/filter/plugin/ link plugins to GST_LIBS rearrange rules to a common format
+	  Original commit message from CVS:
+	  * s/filter/plugin/
+	  * link plugins to GST_LIBS
+	  * rearrange rules to a common format
+
+2001-12-23 20:21:20 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* gst/y4m/Makefile.am:
+	* gst/y4m/gsty4mencode.c:
+	  [MOVED FROM BAD] more fixes
+	  Original commit message from CVS:
+	  more fixes
+
+2001-12-23 13:17:36 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* gst/y4m/Makefile.am:
+	* gst/y4m/gsty4mencode.c:
+	* gst/y4m/gsty4mencode.h:
+	  [MOVED FROM BAD] BBB asked me to rename lav to y4m can someone who knows the plugin do this in the source as well ?
+	  Original commit message from CVS:
+	  BBB asked me to rename lav to y4m
+	  can someone who knows the plugin do this in the source as well ?
+
+2009-05-15 18:17:35 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/Makevars:
+	  po: add Makevars magic so we don't get line numbers in *.po files
+	  This avoids the number one reason for local modifications in *.po
+	  files and and makes things less annoying when working with git (or
+	  any other VCS for that matter).
+
+2009-05-15 17:11:27 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/audiotestsrc.flac:
+	* tests/check/elements/id3demux.c:
+	* tests/check/elements/souphttpsrc.c:
+	* tests/check/pipelines/flacdec.c:
+	* tests/check/test-cert.pem:
+	* tests/check/test-key.pem:
+	* tests/files/Makefile.am:
+	* tests/files/audiotestsrc.flac:
+	* tests/files/test-cert.pem:
+	* tests/files/test-key.pem:
+	  checks: move files required by unit tests into tests/files and make sure they're disted
+	  Move unit test data into the directory where it belongs and make in particular
+	  the flacdec unit test cd into the directory with the test files instead of making
+	  assumptions about the current working directory in that unit test. As a side effect
+	  of movng those files, there's only one EXTRA_DIST in tests/check/Makefile.am now,
+	  which is likely to work better than having two. Hopefully fixes #582753.
+
+2009-05-14 21:43:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: If the upstream max latency is unbound return unbound max latency
+	  Fixes bug #582661.
+
+2009-05-15 08:44:39 +0200  James Andrewartha <trs80@ucc.gu.uwa.edu.au>
+
+	* gst/flv/gstflvmux.c:
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	* sys/sunaudio/gstsunaudiomixertrack.c:
+	* sys/sunaudio/gstsunaudiosrc.c:
+	* sys/v4l2/v4l2_calls.c:
+	  Fix compiler warnings
+	  Fixes bug #582715.
+
+2009-05-13 22:46:44 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* configure.ac:
+	  Recovered debugutils line accidentally removed in deinterlace2 move.
+
+2009-05-13 10:46:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* gst/deinterlace/Makefile.am:
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/deinterlace/gstdeinterlace.h:
+	* gst/deinterlace/tvtime/greedy.c:
+	* gst/deinterlace/tvtime/greedyh.asm:
+	* gst/deinterlace/tvtime/greedyh.c:
+	* gst/deinterlace/tvtime/greedyhmacros.h:
+	* gst/deinterlace/tvtime/linear.c:
+	* gst/deinterlace/tvtime/linearblend.c:
+	* gst/deinterlace/tvtime/mmx.h:
+	* gst/deinterlace/tvtime/plugins.h:
+	* gst/deinterlace/tvtime/scalerbob.c:
+	* gst/deinterlace/tvtime/sse.h:
+	* gst/deinterlace/tvtime/tomsmocomp.c:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoop0A.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopEdgeA.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopEdgeA8.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopOddA.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopOddA2.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopOddA6.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopOddAH.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopOddAH2.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopTop.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopVA.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/SearchLoopVAH.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/StrangeBob.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/WierdBob.inc:
+	* gst/deinterlace/tvtime/tomsmocomp/tomsmocompmacros.h:
+	* gst/deinterlace/tvtime/vfir.c:
+	* gst/deinterlace/tvtime/weave.c:
+	* gst/deinterlace/tvtime/weavebff.c:
+	* gst/deinterlace/tvtime/weavetff.c:
+	* gst/deinterlace/tvtime/x86-64_macros.inc:
+	* gst/deinterlace2/Makefile.am:
+	* gst/deinterlace2/gstdeinterlace2.c:
+	* gst/deinterlace2/gstdeinterlace2.h:
+	* gst/deinterlace2/tvtime/greedy.c:
+	* gst/deinterlace2/tvtime/greedyh.asm:
+	* gst/deinterlace2/tvtime/greedyh.c:
+	* gst/deinterlace2/tvtime/greedyhmacros.h:
+	* gst/deinterlace2/tvtime/linear.c:
+	* gst/deinterlace2/tvtime/linearblend.c:
+	* gst/deinterlace2/tvtime/mmx.h:
+	* gst/deinterlace2/tvtime/plugins.h:
+	* gst/deinterlace2/tvtime/scalerbob.c:
+	* gst/deinterlace2/tvtime/sse.h:
+	* gst/deinterlace2/tvtime/tomsmocomp.c:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoop0A.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopEdgeA.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopEdgeA8.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA2.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA6.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddAH.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddAH2.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopVA.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopVAH.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/StrangeBob.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/WierdBob.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
+	* gst/deinterlace2/tvtime/vfir.c:
+	* gst/deinterlace2/tvtime/weave.c:
+	* gst/deinterlace2/tvtime/weavebff.c:
+	* gst/deinterlace2/tvtime/weavetff.c:
+	* gst/deinterlace2/tvtime/x86-64_macros.inc:
+	  Moved 'deinterlace2' from -bad to -good
+	  And rename it to deinterlace.
+
+2009-05-08 15:39:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	* gst/deinterlace2/gstdeinterlace2.h:
+	  [MOVED FROM BAD 56/56] deinterlace2: Add a disabled mode for passthrough operation
+	  Also allow to change the mode in PAUSED and PLAYING by updating
+	  the caps if necessary.
+
+2009-04-22 19:43:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	* gst/deinterlace2/gstdeinterlace2.h:
+	  [MOVED FROM BAD 55/56] deinterlace2: Add documentation and integrate into the build system
+
+2009-04-19 17:18:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	  [MOVED FROM BAD 54/56] deinterlace2: Make it possible to select interlacing autodetection or to enfore deinterlacing
+	  For this add a "mode" property that defaults to "interlaced" for now as
+	  most decoders/demuxers don't properly set the "interlaced" field on the
+	  caps yet.
+	  If this property is set to "auto" the element will work in passthrough
+	  mode unless the caps contain the "interlaced" field.
+
+2009-04-17 15:39:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	  [MOVED FROM BAD 53/56] deinterlace2: Use GST_(DEBUG|WARNING|ERROR)_OBJECT instead of the non-OBJECT ones
+
+2009-04-17 15:39:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	  [MOVED FROM BAD 52/56] deinterlace2: Reset history if DISCONT is set on the incoming buffer
+
+2009-04-17 15:39:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	  [MOVED FROM BAD 51/56] deinterlace2: Fix timestamps for buffers with RFF flag set
+
+2009-04-16 17:41:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	* gst/deinterlace2/gstdeinterlace2.h:
+	* gst/deinterlace2/tvtime/greedy.c:
+	* gst/deinterlace2/tvtime/greedyh.c:
+	* gst/deinterlace2/tvtime/scalerbob.c:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	* gst/deinterlace2/tvtime/weave.c:
+	* gst/deinterlace2/tvtime/weavebff.c:
+	* gst/deinterlace2/tvtime/weavetff.c:
+	  [MOVED FROM BAD 50/56] deinterlace2: Rename line_length to row_stride and remove output_stride
+
+2009-04-16 15:52:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	  [MOVED FROM BAD 49/56] deinterlace2: Implement support for RFF and ONEFIELD buffer flags
+
+2009-04-15 15:46:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	* gst/deinterlace2/gstdeinterlace2.h:
+	* gst/deinterlace2/tvtime/greedy.c:
+	* gst/deinterlace2/tvtime/greedyh.c:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	  [MOVED FROM BAD 48/56] deinterlace2: Move output buffer from the instance struct to a function parameter
+
+2009-04-15 15:33:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	* gst/deinterlace2/gstdeinterlace2.h:
+	  [MOVED FROM BAD 47/56] deinterlace2: Add initial support for automatic detection of the field order
+
+2009-04-15 14:47:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	  [MOVED FROM BAD 46/56] deinterlace2: Add support for YVYU colorspace
+	  This is the same as YUY2 with just Cr and Cb swapped. As
+	  we don't make a difference between them when deinterlacing
+	  this works.
+
+2008-11-06 14:05:55 +0000  Wim Taymans <wim.taymans@gmail.com>
+
+	  [MOVED FROM BAD 45/56] gst/deinterlace2/gstdeinterlace2.c: Bring properties into this century.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace2_class_init), (gst_deinterlace2_init),
+	  (gst_deinterlace2_set_property), (gst_deinterlace2_get_property):
+	  Bring properties into this century.
+
+2008-11-04 12:42:30 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD 44/56] Don't install static libs for plugins. Fixes #550851 for -bad.
+	  Original commit message from CVS:
+	  * ext/alsaspdif/Makefile.am:
+	  * ext/amrwb/Makefile.am:
+	  * ext/apexsink/Makefile.am:
+	  * ext/arts/Makefile.am:
+	  * ext/artsd/Makefile.am:
+	  * ext/audiofile/Makefile.am:
+	  * ext/audioresample/Makefile.am:
+	  * ext/bz2/Makefile.am:
+	  * ext/cdaudio/Makefile.am:
+	  * ext/celt/Makefile.am:
+	  * ext/dc1394/Makefile.am:
+	  * ext/dirac/Makefile.am:
+	  * ext/directfb/Makefile.am:
+	  * ext/divx/Makefile.am:
+	  * ext/dts/Makefile.am:
+	  * ext/faac/Makefile.am:
+	  * ext/faad/Makefile.am:
+	  * ext/gsm/Makefile.am:
+	  * ext/hermes/Makefile.am:
+	  * ext/ivorbis/Makefile.am:
+	  * ext/jack/Makefile.am:
+	  * ext/jp2k/Makefile.am:
+	  * ext/ladspa/Makefile.am:
+	  * ext/lcs/Makefile.am:
+	  * ext/libfame/Makefile.am:
+	  * ext/libmms/Makefile.am:
+	  * ext/metadata/Makefile.am:
+	  * ext/mpeg2enc/Makefile.am:
+	  * ext/mplex/Makefile.am:
+	  * ext/musepack/Makefile.am:
+	  * ext/musicbrainz/Makefile.am:
+	  * ext/mythtv/Makefile.am:
+	  * ext/nas/Makefile.am:
+	  * ext/neon/Makefile.am:
+	  * ext/ofa/Makefile.am:
+	  * ext/polyp/Makefile.am:
+	  * ext/resindvd/Makefile.am:
+	  * ext/sdl/Makefile.am:
+	  * ext/shout/Makefile.am:
+	  * ext/snapshot/Makefile.am:
+	  * ext/sndfile/Makefile.am:
+	  * ext/soundtouch/Makefile.am:
+	  * ext/spc/Makefile.am:
+	  * ext/swfdec/Makefile.am:
+	  * ext/tarkin/Makefile.am:
+	  * ext/theora/Makefile.am:
+	  * ext/timidity/Makefile.am:
+	  * ext/twolame/Makefile.am:
+	  * ext/x264/Makefile.am:
+	  * ext/xine/Makefile.am:
+	  * ext/xvid/Makefile.am:
+	  * gst-libs/gst/app/Makefile.am:
+	  * gst-libs/gst/dshow/Makefile.am:
+	  * gst/aiffparse/Makefile.am:
+	  * gst/app/Makefile.am:
+	  * gst/audiobuffer/Makefile.am:
+	  * gst/bayer/Makefile.am:
+	  * gst/cdxaparse/Makefile.am:
+	  * gst/chart/Makefile.am:
+	  * gst/colorspace/Makefile.am:
+	  * gst/dccp/Makefile.am:
+	  * gst/deinterlace/Makefile.am:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/dvdspu/Makefile.am:
+	  * gst/festival/Makefile.am:
+	  * gst/filter/Makefile.am:
+	  * gst/flacparse/Makefile.am:
+	  * gst/flv/Makefile.am:
+	  * gst/games/Makefile.am:
+	  * gst/h264parse/Makefile.am:
+	  * gst/librfb/Makefile.am:
+	  * gst/mixmatrix/Makefile.am:
+	  * gst/modplug/Makefile.am:
+	  * gst/mpeg1sys/Makefile.am:
+	  * gst/mpeg4videoparse/Makefile.am:
+	  * gst/mpegdemux/Makefile.am:
+	  * gst/mpegtsmux/Makefile.am:
+	  * gst/mpegvideoparse/Makefile.am:
+	  * gst/mve/Makefile.am:
+	  * gst/nsf/Makefile.am:
+	  * gst/nuvdemux/Makefile.am:
+	  * gst/overlay/Makefile.am:
+	  * gst/passthrough/Makefile.am:
+	  * gst/pcapparse/Makefile.am:
+	  * gst/playondemand/Makefile.am:
+	  * gst/rawparse/Makefile.am:
+	  * gst/real/Makefile.am:
+	  * gst/rtjpeg/Makefile.am:
+	  * gst/rtpmanager/Makefile.am:
+	  * gst/scaletempo/Makefile.am:
+	  * gst/sdp/Makefile.am:
+	  * gst/selector/Makefile.am:
+	  * gst/smooth/Makefile.am:
+	  * gst/smoothwave/Makefile.am:
+	  * gst/speed/Makefile.am:
+	  * gst/speexresample/Makefile.am:
+	  * gst/stereo/Makefile.am:
+	  * gst/subenc/Makefile.am:
+	  * gst/tta/Makefile.am:
+	  * gst/vbidec/Makefile.am:
+	  * gst/videodrop/Makefile.am:
+	  * gst/videosignal/Makefile.am:
+	  * gst/virtualdub/Makefile.am:
+	  * gst/vmnc/Makefile.am:
+	  * gst/y4m/Makefile.am:
+	  * sys/acmenc/Makefile.am:
+	  * sys/cdrom/Makefile.am:
+	  * sys/dshowdecwrapper/Makefile.am:
+	  * sys/dshowsrcwrapper/Makefile.am:
+	  * sys/dvb/Makefile.am:
+	  * sys/dxr3/Makefile.am:
+	  * sys/fbdev/Makefile.am:
+	  * sys/oss4/Makefile.am:
+	  * sys/qcam/Makefile.am:
+	  * sys/qtwrapper/Makefile.am:
+	  * sys/vcd/Makefile.am:
+	  * sys/wininet/Makefile.am:
+	  * win32/common/config.h:
+	  Don't install static libs for plugins. Fixes #550851 for -bad.
+
+2008-10-09 19:38:52 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 43/56] gst/deinterlace2/tvtime/tomsmocomp.c: Fix unused variable compiler warning when not building
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/tomsmocomp.c:
+	  (gst_deinterlace_method_tomsmocomp_class_init):
+	  Fix unused variable compiler warning when not building
+	  X86 assembly.
+
+2008-08-28 17:16:51 +0000  Jan Schmidt <thaytan@mad.scientist.com>
+
+	  [MOVED FROM BAD 42/56] gst/dccp/: Fix compilation on Solaris by including filio.h as needed.
+	  Original commit message from CVS:
+	  * gst/dccp/gstdccp.c:
+	  * gst/dccp/gstdccpclientsrc.c:
+	  Fix compilation on Solaris by including filio.h as needed.
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	  Fix compilation with Forte - apparently it hates concatenating a
+	  macro argument that starts with an underscore??
+
+2008-08-26 12:33:16 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 41/56] gst/deinterlace2/tvtime/tomsmocomp/: Unroll the loop to handle two bytes at once. This should give a small speedup an...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/StrangeBob.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/WierdBob.inc:
+	  Unroll the loop to handle two bytes at once. This should give
+	  a small speedup and makes it possible to handle chroma and luma
+	  different which is needed later.
+
+2008-08-25 14:37:45 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 40/56] gst/deinterlace2/: First part of the C implementation of the tomsmocomp deinterlacing algorithm. This only supports s...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace_method_class_init):
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  * gst/deinterlace2/tvtime/tomsmocomp.c:
+	  (gst_deinterlace_method_tomsmocomp_class_init):
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/StrangeBob.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/WierdBob.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
+	  First part of the C implementation of the tomsmocomp deinterlacing
+	  algorithm. This only supports search-effort=0 currently, is painfully
+	  slow and needs some cleanup later when all search-effort settings
+	  are implemented in C.
+
+2008-08-02 18:48:17 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 39/56] gst/deinterlace2/: Use oil_memcpy() instead of memcpy() as it's faster for the sizes that are usually used here.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace_simple_method_interpolate_scanline),
+	  (gst_deinterlace_simple_method_copy_scanline),
+	  (gst_deinterlace_simple_method_deinterlace_frame):
+	  * gst/deinterlace2/tvtime/greedy.c: (deinterlace_frame_di_greedy):
+	  * gst/deinterlace2/tvtime/greedyh.c:
+	  (deinterlace_frame_di_greedyh):
+	  * gst/deinterlace2/tvtime/scalerbob.c:
+	  (deinterlace_scanline_scaler_bob):
+	  * gst/deinterlace2/tvtime/tomsmocomp.c: (Fieldcopy):
+	  * gst/deinterlace2/tvtime/weave.c: (deinterlace_scanline_weave),
+	  (copy_scanline):
+	  * gst/deinterlace2/tvtime/weavebff.c: (deinterlace_scanline_weave),
+	  (copy_scanline):
+	  * gst/deinterlace2/tvtime/weavetff.c: (deinterlace_scanline_weave),
+	  (copy_scanline):
+	  Use oil_memcpy() instead of memcpy() as it's faster for the sizes that
+	  are usually used here.
+
+2008-08-02 18:36:11 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 38/56] gst/deinterlace2/: Add the remaining tvtime deinterlacing methods and fix the deinterlace_frame() implementation of G...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace_simple_method_deinterlace_frame),
+	  (gst_deinterlace2_methods_get_type), (gst_deinterlace2_set_method):
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  * gst/deinterlace2/tvtime/linear.c:
+	  (deinterlace_scanline_linear_c), (deinterlace_scanline_linear_mmx),
+	  (deinterlace_scanline_linear_mmxext),
+	  (gst_deinterlace_method_linear_class_init),
+	  (gst_deinterlace_method_linear_init):
+	  * gst/deinterlace2/tvtime/linearblend.c:
+	  (deinterlace_scanline_linear_blend_c),
+	  (deinterlace_scanline_linear_blend2_c),
+	  (deinterlace_scanline_linear_blend_mmx),
+	  (deinterlace_scanline_linear_blend2_mmx),
+	  (gst_deinterlace_method_linear_blend_class_init),
+	  (gst_deinterlace_method_linear_blend_init):
+	  * gst/deinterlace2/tvtime/plugins.h:
+	  * gst/deinterlace2/tvtime/scalerbob.c:
+	  (deinterlace_scanline_scaler_bob),
+	  (gst_deinterlace_method_scaler_bob_class_init),
+	  (gst_deinterlace_method_scaler_bob_init):
+	  * gst/deinterlace2/tvtime/weave.c: (deinterlace_scanline_weave),
+	  (copy_scanline), (gst_deinterlace_method_weave_class_init),
+	  (gst_deinterlace_method_weave_init):
+	  * gst/deinterlace2/tvtime/weavebff.c: (deinterlace_scanline_weave),
+	  (copy_scanline), (gst_deinterlace_method_weave_bff_class_init),
+	  (gst_deinterlace_method_weave_bff_init):
+	  * gst/deinterlace2/tvtime/weavetff.c: (deinterlace_scanline_weave),
+	  (copy_scanline), (gst_deinterlace_method_weave_tff_class_init),
+	  (gst_deinterlace_method_weave_tff_init):
+	  Add the remaining tvtime deinterlacing methods and fix the
+	  deinterlace_frame() implementation of GstDeinterlaceSimpleMethod.
+
+2008-08-02 18:30:56 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 37/56] gst/deinterlace2/tvtime/vfir.c: Implement the VFIR deinterlacing method as simple method.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/vfir.c: (deinterlace_line_c),
+	  (deinterlace_line_mmx), (gst_deinterlace_method_vfir_class_init):
+	  Implement the VFIR deinterlacing method as simple method.
+
+2008-08-02 18:18:54 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 36/56] gst/deinterlace2/gstdeinterlace2.*: Add a GstDeinterlaceSimpleMethod subclass of GstDeinterlaceMethod that can be use...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace_simple_method_interpolate_scanline),
+	  (gst_deinterlace_simple_method_copy_scanline),
+	  (gst_deinterlace_simple_method_deinterlace_frame),
+	  (gst_deinterlace_simple_method_class_init),
+	  (gst_deinterlace_simple_method_init):
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  Add a GstDeinterlaceSimpleMethod subclass of GstDeinterlaceMethod that
+	  can be used by simple deinterlacing methods. They only have to provide
+	  a function for interpolating a scanline or copying a scanline.
+
+2008-08-02 18:15:49 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 35/56] gst/deinterlace2/gstdeinterlace2.c: Respect the latency of the deinterlacing algorithm for the timestamps of every bu...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_chain):
+	  Respect the latency of the deinterlacing algorithm for the timestamps
+	  of every buffer.
+
+2008-08-02 18:13:20 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 34/56] gst/deinterlace2/tvtime/: Add the MMX registers to the clobbered registers only if __MMX__ is defined.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedyh.asm:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	  Add the MMX registers to the clobbered registers only if __MMX__ is
+	  defined.
+
+2008-08-02 18:09:56 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 33/56] gst/deinterlace2/: Enable tomsmocomp again as the C port will be ready for the next release.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace2_methods_get_type), (gst_deinterlace2_set_method),
+	  (gst_deinterlace2_class_init):
+	  Enable tomsmocomp again as the C port will be ready for the next
+	  release.
+
+2008-08-02 18:02:44 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 32/56] gst/deinterlace2/gstdeinterlace2.c: Don't use proxy_getcaps() but implement our own getcaps() function that doubles/h...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_init),
+	  (gst_greatest_common_divisor), (gst_fraction_double),
+	  (gst_deinterlace2_getcaps), (gst_deinterlace2_setcaps):
+	  Don't use proxy_getcaps() but implement our own getcaps() function
+	  that doubles/halfs the framerate if all fields should be sent out.
+
+2008-07-18 08:34:06 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 31/56] Disable the tomsmocomp algorithm for this release as it's buggy and has no C implementation yet.
+	  Original commit message from CVS:
+	  * configure.ac:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace2_methods_get_type), (gst_deinterlace2_set_method),
+	  (gst_deinterlace2_class_init), (gst_deinterlace2_init):
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  * gst/deinterlace2/tvtime/greedy.c:
+	  (gst_deinterlace_method_greedy_l_class_init):
+	  * gst/deinterlace2/tvtime/greedyh.c:
+	  (gst_deinterlace_method_greedy_h_class_init):
+	  * gst/deinterlace2/tvtime/vfir.c:
+	  (gst_deinterlace_method_vfir_class_init):
+	  Disable the tomsmocomp algorithm for this release as it's buggy
+	  and has no C implementation yet.
+	  Build the deinterlace2 plugin on all architectures but still mark it
+	  as experimental.
+	  Build the x86 inline assembly only if GCC inline assembly is supported
+	  and only on x86 or amd64. Fixes bug #543286.
+
+2008-07-14 14:13:54 +0000  Edward Hervey <bilboed@bilboed.com>
+
+	  [MOVED FROM BAD 30/56] gst/deinterlace2/tvtime/: Fix build on x86_64
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedy.c:
+	  (gst_deinterlace_method_greedy_l_class_init):
+	  * gst/deinterlace2/tvtime/greedyh.c:
+	  (gst_deinterlace_method_greedy_h_class_init):
+	  * gst/deinterlace2/tvtime/vfir.c:
+	  (gst_deinterlace_method_vfir_class_init):
+	  Fix build on x86_64
+
+2008-07-13 10:56:45 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 29/56] gst/deinterlace2/tvtime/greedyh.asm: Always use the C implementation if width is not a multiple of 4. The assembly op...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedyh.asm:
+	  Always use the C implementation if width is not a multiple of 4. The
+	  assembly optimized version only handle this and calling the C
+	  implementation for the remaining part doesn't work because it needs
+	  previous calculations.
+
+2008-07-13 10:52:03 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 28/56] gst/deinterlace2/tvtime/: Some cleanup, use 3DNOW instead of TDNOW in macros.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedyh.asm:
+	  * gst/deinterlace2/tvtime/greedyh.c:
+	  * gst/deinterlace2/tvtime/greedyhmacros.h:
+	  Some cleanup, use 3DNOW instead of TDNOW in macros.
+	  * gst/deinterlace2/tvtime/tomsmocomp.c:
+	  (gst_deinterlace_method_tomsmocomp_class_init):
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
+	  The SSE method in fact only needs MMXEXT, declare it as such.
+
+2008-07-08 13:31:37 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 27/56] Don't use declarations after statements in the remaining code.
+	  Original commit message from CVS:
+	  * ext/spc/gstspc.c: (spc_setup):
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	  Don't use declarations after statements in the remaining code.
+
+2008-07-06 20:43:58 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 26/56] gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc: Mark internal processing functions as static inline for quite ...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	  Mark internal processing functions as static inline for quite some
+	  speedup as they're used only once and need to get many local variables
+	  passed as parameter.
+
+2008-07-05 19:20:30 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 25/56] gst/deinterlace2/gstdeinterlace2.*: Call the current instance "self" instead of "object".
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace_method_deinterlace_frame),
+	  (gst_deinterlace2_set_method), (gst_deinterlace2_init),
+	  (gst_deinterlace2_reset_history), (gst_deinterlace2_reset),
+	  (gst_deinterlace2_set_property), (gst_deinterlace2_get_property),
+	  (gst_deinterlace2_pop_history), (gst_deinterlace2_head_history),
+	  (gst_deinterlace2_push_history), (gst_deinterlace2_chain),
+	  (gst_deinterlace2_setcaps), (gst_deinterlace2_sink_event),
+	  (gst_deinterlace2_change_state), (gst_deinterlace2_src_event),
+	  (gst_deinterlace2_src_query):
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  Call the current instance "self" instead of "object".
+
+2008-07-05 19:11:56 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 24/56] gst/deinterlace2/gstdeinterlace2.*: Include latency of the method in the returned latency.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace_method_get_latency),
+	  (gst_deinterlace2_set_method), (gst_deinterlace2_class_init),
+	  (gst_deinterlace2_push_history), (gst_deinterlace2_chain),
+	  (gst_deinterlace2_setcaps), (gst_deinterlace2_src_query):
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  Include latency of the method in the returned latency.
+	  Fix outputting of all fields, i.e. doubling of the framerate.
+
+2008-07-05 16:47:32 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 23/56] gst/deinterlace2/: Use a GstObject subtype for the deinterlacing methods and export the different settings for each d...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace_method_class_init), (gst_deinterlace_method_init),
+	  (gst_deinterlace_method_deinterlace_frame),
+	  (gst_deinterlace_method_get_fields_required),
+	  (gst_deinterlace2_methods_get_type), (_do_init),
+	  (gst_deinterlace2_set_method), (gst_deinterlace2_class_init),
+	  (gst_deinterlace2_child_proxy_get_child_by_index),
+	  (gst_deinterlace2_child_proxy_get_children_count),
+	  (gst_deinterlace2_child_proxy_interface_init),
+	  (gst_deinterlace2_init), (gst_deinterlace2_finalize),
+	  (gst_deinterlace2_chain), (gst_deinterlace2_src_query):
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  * gst/deinterlace2/tvtime/greedy.c:
+	  (deinterlace_greedy_packed422_scanline_c),
+	  (deinterlace_greedy_packed422_scanline_mmx),
+	  (deinterlace_greedy_packed422_scanline_mmxext),
+	  (deinterlace_frame_di_greedy),
+	  (gst_deinterlace_method_greedy_l_set_property),
+	  (gst_deinterlace_method_greedy_l_get_property),
+	  (gst_deinterlace_method_greedy_l_class_init),
+	  (gst_deinterlace_method_greedy_l_init):
+	  * gst/deinterlace2/tvtime/greedyh.asm:
+	  * gst/deinterlace2/tvtime/greedyh.c: (greedyDScaler_C),
+	  (deinterlace_frame_di_greedyh),
+	  (gst_deinterlace_method_greedy_h_set_property),
+	  (gst_deinterlace_method_greedy_h_get_property),
+	  (gst_deinterlace_method_greedy_h_class_init),
+	  (gst_deinterlace_method_greedy_h_init):
+	  * gst/deinterlace2/tvtime/greedyh.h:
+	  * gst/deinterlace2/tvtime/plugins.h:
+	  * gst/deinterlace2/tvtime/tomsmocomp.c:
+	  (gst_deinterlace_method_tomsmocomp_set_property),
+	  (gst_deinterlace_method_tomsmocomp_get_property),
+	  (gst_deinterlace_method_tomsmocomp_class_init),
+	  (gst_deinterlace_method_tomsmocomp_init):
+	  * gst/deinterlace2/tvtime/tomsmocomp.h:
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	  * gst/deinterlace2/tvtime/vfir.c: (deinterlace_frame_vfir),
+	  (gst_deinterlace_method_vfir_class_init),
+	  (gst_deinterlace_method_vfir_init):
+	  Use a GstObject subtype for the deinterlacing methods and export
+	  the different settings for each deinterlacing method via GObject
+	  properties.
+	  Implement GstChildProxy interface to allow access to the used
+	  deinterlacing method and to allow adjusting the different settings.
+	  Move global variables of the tomsmocomp deinterlacing method into
+	  function local variables to make it possible to use this deinterlacing
+	  method from different instances.
+
+2008-07-05 12:22:37 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 22/56] gst/deinterlace2/tvtime/greedyh.asm: Support widths that are not a multiply of 4 when using the assembly optimized gr...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedyh.asm:
+	  Support widths that are not a multiply of 4 when using the assembly
+	  optimized greedyh implementations.
+
+2008-07-04 18:54:15 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 21/56] gst/deinterlace2/tvtime/greedyh.c: Only build the assembly optimized implementations on x86.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedyh.c:
+	  (deinterlace_frame_di_greedyh):
+	  Only build the assembly optimized implementations on x86.
+
+2008-06-30 07:51:07 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 20/56] gst/deinterlace2/: Remove useless file and mark everything possible as static.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/deinterlace2/tvtime/tomsmocomp.c: (tomsmocomp_init),
+	  (tomsmocomp_filter_mmx), (tomsmocomp_filter_3dnow),
+	  (tomsmocomp_filter_sse), (deinterlace_frame_di_tomsmocomp):
+	  * gst/deinterlace2/tvtime/tomsmocomp.h:
+	  Remove useless file and mark everything possible as static.
+	  * gst/deinterlace2/tvtime/greedy.c:
+	  * gst/deinterlace2/tvtime/greedyh.c:
+	  Use "_stdint.h" instead of <stdint.h>.
+
+2008-06-29 10:56:47 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 19/56] gst/deinterlace2/: Get rid of speedy.[ch] as we don't use most of it's code anyway and it doesn't seem to be relicens...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_init):
+	  * gst/deinterlace2/tvtime/greedy.c: (deinterlace_frame_di_greedy):
+	  * gst/deinterlace2/tvtime/greedyh.c:
+	  (deinterlace_frame_di_greedyh):
+	  * gst/deinterlace2/tvtime/speedtools.h:
+	  * gst/deinterlace2/tvtime/speedy.c:
+	  * gst/deinterlace2/tvtime/speedy.h:
+	  * gst/deinterlace2/tvtime/tomsmocomp.c: (Fieldcopy):
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	  * gst/deinterlace2/tvtime/vfir.c: (deinterlace_frame_vfir):
+	  Get rid of speedy.[ch] as we don't use most of it's code anyway
+	  and it doesn't seem to be relicensed to LGPL. Use memcpy() instead
+	  of the speedy memcpy everywhere instead.
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  Remove many unused declarations.
+
+2008-06-28 18:13:08 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 18/56] gst/deinterlace2/gstdeinterlace2.c: Divide latency be 2 to convert from fields to frames.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c: (gst_deinterlace2_src_query):
+	  Divide latency be 2 to convert from fields to frames.
+
+2008-06-28 18:10:52 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 17/56] gst/deinterlace2/tvtime/greedy.c: Don't use scanlines function from gstdeinterlace2 as it's not appropiate for this m...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedy.c:
+	  (deinterlace_greedy_packed422_scanline_c),
+	  (deinterlace_greedy_packed422_scanline_mmx),
+	  (deinterlace_greedy_packed422_scanline_mmxext),
+	  (deinterlace_frame_di_greedy):
+	  Don't use scanlines function from gstdeinterlace2 as it's
+	  not appropiate for this method. Instead implement deinterlace_frame
+	  function by taking the one from greedyh.
+	  * gst/deinterlace2/tvtime/greedyh.c: (greedyDScaler_C):
+	  Small fix for the C implementation.
+	  * gst/deinterlace2/tvtime/vfir.c: (deinterlace_frame_vfir):
+	  Don't use the scanlines function from gstdeinterlace2 as it's only
+	  used for this method and will be removed. Instead implement
+	  deinterlace_frame function and make it a bit more efficient.
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace2_class_init), (gst_deinterlace2_set_method),
+	  (gst_deinterlace2_push_history), (gst_deinterlace2_chain),
+	  (gst_deinterlace2_setcaps), (gst_deinterlace2_sink_event),
+	  (gst_deinterlace2_change_state), (gst_deinterlace2_src_event),
+	  (gst_deinterlace2_src_query):
+	  Fix coding style and remove scanlines function as it's unused now.
+
+2008-06-28 17:25:56 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 16/56] gst/deinterlace2/tvtime/: Add a C implementation for the greedyh deinterlacing method, clean up the code a bit and ma...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedyh.asm:
+	  * gst/deinterlace2/tvtime/greedyh.c: (greedyDScaler_C),
+	  (deinterlace_frame_di_greedyh), (dscaler_greedyh_get_method):
+	  * gst/deinterlace2/tvtime/greedyhmacros.h:
+	  Add a C implementation for the greedyh deinterlacing method, clean
+	  up the code a bit and mark the SSE version as MMXEXT as it doesn't
+	  require any SSE instructions.
+
+2008-06-27 13:22:34 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 15/56] gst/deinterlace2/gstdeinterlace2.c: If we're outputting all fields the framerate has to be doubled.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace2_set_property), (gst_deinterlace2_chain),
+	  (gst_deinterlace2_setcaps):
+	  If we're outputting all fields the framerate has to be doubled.
+	  Set duration on the outgoing buffers.
+
+2008-06-25 16:05:08 +0000  Edward Hervey <bilboed@bilboed.com>
+
+	  [MOVED FROM BAD 14/56] gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h: Remove unneeded macros that break build on macosx.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
+	  Remove unneeded macros that break build on macosx.
+
+2008-06-24 12:08:47 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 13/56] gst/deinterlace2/tvtime/greedy.c: Optimize MMX/MMXEXT implementations a bit by requiring two less memory accesses and...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedy.c:
+	  (deinterlace_greedy_packed422_scanline_mmx),
+	  (deinterlace_greedy_packed422_scanline_mmxext):
+	  Optimize MMX/MMXEXT implementations a bit by requiring two less
+	  memory accesses and fix the workaround for the missing right shift
+	  on bytes to unset the highest bit of every byte.
+
+2008-06-24 10:15:41 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 12/56] gst/deinterlace2/tvtime/greedy.c: Remove sfence instruction as it's not needed and actually is an SSE instruction.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedy.c:
+	  (deinterlace_greedy_packed422_scanline_mmxext):
+	  Remove sfence instruction as it's not needed and actually is an SSE
+	  instruction.
+
+2008-06-24 10:12:08 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 11/56] gst/deinterlace2/tvtime/greedy.c: Add plain MMX implementation for the greedyl method.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedy.c:
+	  (deinterlace_greedy_packed422_scanline_mmx),
+	  (deinterlace_greedy_packed422_scanline):
+	  Add plain MMX implementation for the greedyl method.
+
+2008-06-24 09:40:03 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 10/56] gst/deinterlace2/Makefile.am: Move the assembly includes to noinst_HEADERS where they belong.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/Makefile.am:
+	  Move the assembly includes to noinst_HEADERS where they belong.
+	  * gst/deinterlace2/tvtime/vfir.c: (deinterlace_line_c),
+	  (deinterlace_line_mmx):
+	  Fix C and MMX implementations a bit more.
+
+2008-06-24 09:10:46 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 09/56] gst/deinterlace2/tvtime/greedy.c: Fix the C implementation to produce correct results and optimize the
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedy.c:
+	  (deinterlace_greedy_packed422_scanline_c),
+	  (deinterlace_greedy_packed422_scanline_mmxext),
+	  (deinterlace_greedy_packed422_scanline):
+	  Fix the C implementation to produce correct results and optimize the
+	  MMXEXT implementation.
+	  Handle odd widths and don't read over array boundaries in the MMXEXT
+	  implementation.
+	  * gst/deinterlace2/tvtime/vfir.c: (deinterlace_line_c),
+	  (deinterlace_line_mmx), (deinterlace_scanline_vfir):
+	  Fix a small rounding bug in the MMX implementation, the MMX
+	  implementation doesn't actually need MMXEXT instructions so don't mark
+	  it as such.
+	  Handle odd widths in both implementations.
+
+2008-06-21 09:05:00 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 08/56] gst/deinterlace2/tvtime/greedy.c: Implement a C version of the greedy low motion algorithm and mark the assembly opti...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/greedy.c:
+	  (deinterlace_greedy_packed422_scanline_sse),
+	  (deinterlace_greedy_packed422_scanline_c),
+	  (deinterlace_greedy_packed422_scanline):
+	  Implement a C version of the greedy low motion algorithm and mark the
+	  assembly optimized version as SSE as it uses SSE instructions
+	  additional to MMX instructions.
+
+2008-06-20 14:48:40 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 07/56] gst/deinterlace2/tvtime/vfir.c: Make it possible to use the vfir method on X86 CPUs without MMXEXT too but use the MM...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/vfir.c: (deinterlace_line_mmxext),
+	  (deinterlace_line_c), (deinterlace_scanline_vfir):
+	  Make it possible to use the vfir method on X86 CPUs without MMXEXT too
+	  but use the MMXEXT optimized code whenever possible.
+
+2008-06-20 14:35:25 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 06/56] gst/deinterlace2/gstdeinterlace2.*: Reset element state on PAUSED->READY properly, don't leak any buffers when finali...
+	  Original commit message from CVS:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace2_class_init), (gst_deinterlace2_init),
+	  (gst_deinterlace2_reset_history), (gst_deinterlace2_reset),
+	  (gst_deinterlace2_finalize), (gst_deinterlace2_chain),
+	  (gst_deinterlace2_sink_event), (gst_deinterlace2_change_state),
+	  (gst_deinterlace2_src_query):
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  Reset element state on PAUSED->READY properly, don't leak any buffers
+	  when finalizing, allocate buffers with gst_pad_alloc_buffer() and
+	  properly return flow returns from gst_pad_push() instead of ignoring them.
+
+2008-06-20 13:45:08 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 05/56] gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h: Add missing header.
+	  Original commit message from CVS:
+	  * gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
+	  Add missing header.
+
+2008-06-20 13:24:29 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 04/56] Fix compilation on generic x86/amd64 and include deinterlace2 in the build system. Because of several bugs it's still...
+	  Original commit message from CVS:
+	  * configure.ac:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/deinterlace2/tvtime/greedyh.asm:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	  Fix compilation on generic x86/amd64 and include deinterlace2 in the
+	  build system. Because of several bugs it's still enabled only
+	  by --enable-experimental.
+
+2008-06-18 06:31:13 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD 03/56] Fix gtk-doc warnings. Also don't misuse api-doc comments for normal comments.
+	  Original commit message from CVS:
+	  * docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	  * examples/app/appsrc-ra.c:
+	  * examples/app/appsrc-seekable.c:
+	  * examples/app/appsrc-stream.c:
+	  * examples/app/appsrc-stream2.c:
+	  * ext/directfb/dfbvideosink.h:
+	  * ext/metadata/gstbasemetadata.c:
+	  * ext/metadata/gstbasemetadata.h:
+	  * ext/metadata/metadata.c:
+	  * ext/metadata/metadataexif.c:
+	  * ext/theora/theoradec.h:
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  * gst/deinterlace2/tvtime/speedy.c:
+	  * gst/deinterlace2/tvtime/speedy.h:
+	  * gst/deinterlace2/tvtime/vfir.c:
+	  Fix gtk-doc warnings. Also don't misuse api-doc comments for normal
+	  comments.
+
+2008-06-11 11:12:49 +0000  Martin Eikermann <meiker@upb.de>
+
+	  [MOVED FROM BAD 02/56] gst/deinterlace2/: Add a deinterlacer plugin based on the tvtime/DScaler deinterlacer, which was relicensed to LGPL f...
+	  Original commit message from CVS:
+	  Based on a patch by: Martin Eikermann <meiker at upb dot de>
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace2_method_get_type),
+	  (gst_deinterlace2_fields_get_type),
+	  (gst_deinterlace2_field_layout_get_type),
+	  (gst_deinterlace2_base_init), (gst_deinterlace2_class_init),
+	  (gst_deinterlace2_init), (gst_deinterlace2_set_method),
+	  (gst_deinterlace2_set_property), (gst_deinterlace2_get_property),
+	  (gst_deinterlace2_finalize), (gst_deinterlace2_pop_history),
+	  (gst_deinterlace2_head_history), (gst_deinterlace2_push_history),
+	  (gst_deinterlace2_deinterlace_scanlines), (gst_deinterlace2_chain),
+	  (gst_deinterlace2_setcaps), (gst_deinterlace2_sink_event),
+	  (gst_deinterlace2_change_state), (gst_deinterlace2_src_event),
+	  (gst_deinterlace2_src_query), (gst_deinterlace2_src_query_types),
+	  (plugin_init):
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  * gst/deinterlace2/tvtime/greedy.c: (copy_scanline),
+	  (deinterlace_greedy_packed422_scanline_mmxext),
+	  (dscaler_greedyl_get_method):
+	  * gst/deinterlace2/tvtime/greedyh.asm:
+	  * gst/deinterlace2/tvtime/greedyh.c:
+	  (deinterlace_frame_di_greedyh), (dscaler_greedyh_get_method),
+	  (greedyh_init), (greedyh_filter_mmx), (greedyh_filter_3dnow),
+	  (greedyh_filter_sse):
+	  * gst/deinterlace2/tvtime/greedyh.h:
+	  * gst/deinterlace2/tvtime/greedyhmacros.h:
+	  * gst/deinterlace2/tvtime/mmx.h:
+	  * gst/deinterlace2/tvtime/plugins.h:
+	  * gst/deinterlace2/tvtime/speedtools.h:
+	  * gst/deinterlace2/tvtime/speedy.c: (multiply_alpha), (clip255),
+	  (comb_factor_packed422_scanline_mmx),
+	  (diff_factor_packed422_scanline_c),
+	  (diff_factor_packed422_scanline_mmx),
+	  (diff_packed422_block8x8_mmx), (diff_packed422_block8x8_c),
+	  (packed444_to_packed422_scanline_c),
+	  (packed422_to_packed444_scanline_c),
+	  (packed422_to_packed444_rec601_scanline_c),
+	  (vfilter_chroma_121_packed422_scanline_mmx),
+	  (vfilter_chroma_121_packed422_scanline_c),
+	  (vfilter_chroma_332_packed422_scanline_mmx),
+	  (vfilter_chroma_332_packed422_scanline_c),
+	  (kill_chroma_packed422_inplace_scanline_mmx),
+	  (kill_chroma_packed422_inplace_scanline_c),
+	  (invert_colour_packed422_inplace_scanline_mmx),
+	  (invert_colour_packed422_inplace_scanline_c),
+	  (mirror_packed422_inplace_scanline_c),
+	  (interpolate_packed422_scanline_c),
+	  (convert_uyvy_to_yuyv_scanline_mmx),
+	  (convert_uyvy_to_yuyv_scanline_c),
+	  (interpolate_packed422_scanline_mmx),
+	  (interpolate_packed422_scanline_mmxext),
+	  (blit_colour_packed422_scanline_c),
+	  (blit_colour_packed422_scanline_mmx),
+	  (blit_colour_packed422_scanline_mmxext),
+	  (blit_colour_packed4444_scanline_c),
+	  (blit_colour_packed4444_scanline_mmx),
+	  (blit_colour_packed4444_scanline_mmxext), (small_memcpy),
+	  (speedy_memcpy_c), (speedy_memcpy_mmx), (speedy_memcpy_mmxext),
+	  (blit_packed422_scanline_c), (blit_packed422_scanline_mmx),
+	  (blit_packed422_scanline_mmxext),
+	  (composite_colour4444_alpha_to_packed422_scanline_c),
+	  (composite_colour4444_alpha_to_packed422_scanline_mmxext),
+	  (composite_packed4444_alpha_to_packed422_scanline_c),
+	  (composite_packed4444_alpha_to_packed422_scanline_mmxext),
+	  (composite_packed4444_to_packed422_scanline_c),
+	  (composite_packed4444_to_packed422_scanline_mmxext),
+	  (composite_alphamask_to_packed4444_scanline_c),
+	  (composite_alphamask_to_packed4444_scanline_mmxext),
+	  (composite_alphamask_alpha_to_packed4444_scanline_c),
+	  (premultiply_packed4444_scanline_c),
+	  (premultiply_packed4444_scanline_mmxext),
+	  (blend_packed422_scanline_c), (blend_packed422_scanline_mmxext),
+	  (quarter_blit_vertical_packed422_scanline_mmxext),
+	  (quarter_blit_vertical_packed422_scanline_c),
+	  (subpix_blit_vertical_packed422_scanline_c),
+	  (a8_subpix_blit_scanline_c), (myround), (init_RGB_to_YCbCr_tables),
+	  (init_YCbCr_to_RGB_tables), (rgb24_to_packed444_rec601_scanline_c),
+	  (rgba32_to_packed4444_rec601_scanline_c),
+	  (packed444_to_rgb24_rec601_scanline_c),
+	  (packed444_to_nonpremultiplied_packed4444_scanline_c),
+	  (aspect_adjust_packed4444_scanline_c), (setup_speedy_calls),
+	  (speedy_get_accel):
+	  * gst/deinterlace2/tvtime/speedy.h:
+	  * gst/deinterlace2/tvtime/sse.h:
+	  * gst/deinterlace2/tvtime/tomsmocomp.c: (Fieldcopy),
+	  (deinterlace_frame_di_tomsmocomp), (dscaler_tomsmocomp_get_method),
+	  (tomsmocomp_init), (tomsmocomp_filter_mmx),
+	  (tomsmocomp_filter_3dnow), (tomsmocomp_filter_sse):
+	  * gst/deinterlace2/tvtime/tomsmocomp.h:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoop0A.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopEdgeA.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopEdgeA8.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA2.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA6.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddAH.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddAH2.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopVA.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopVAH.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/StrangeBob.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/WierdBob.inc:
+	  * gst/deinterlace2/tvtime/vfir.c: (deinterlace_line),
+	  (deinterlace_scanline_vfir), (copy_scanline),
+	  (dscaler_vfir_get_method):
+	  * gst/deinterlace2/tvtime/x86-64_macros.inc:
+	  Add a deinterlacer plugin based on the tvtime/DScaler deinterlacer,
+	  which was relicensed to LGPL for GStreamer and in theory provides
+	  better and faster results than the simple deinterlace element.
+	  Fixes bug #163578.
+	  Ported to GStreamer 0.10 but still not enabled or included in the
+	  build system by default because of bad artefacts caused by a bug
+	  somewhere and as it can be only build on x86/amd64 ATM and requires
+	  special CFLAGS. Will be fixed soon.
+
+2008-06-11 11:12:14 +0000  Martin Eikermann <meiker@upb.de>
+
+	  [MOVED FROM BAD 01/56] gst/deinterlace2/: Add a deinterlacer plugin based on the tvtime/DScaler deinterlacer, which was relicensed to LGPL f...
+	  Original commit message from CVS:
+	  Based on a patch by: Martin Eikermann <meiker at upb dot de>
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/deinterlace2/gstdeinterlace2.c:
+	  (gst_deinterlace2_method_get_type),
+	  (gst_deinterlace2_fields_get_type),
+	  (gst_deinterlace2_field_layout_get_type),
+	  (gst_deinterlace2_base_init), (gst_deinterlace2_class_init),
+	  (gst_deinterlace2_init), (gst_deinterlace2_set_method),
+	  (gst_deinterlace2_set_property), (gst_deinterlace2_get_property),
+	  (gst_deinterlace2_finalize), (gst_deinterlace2_pop_history),
+	  (gst_deinterlace2_head_history), (gst_deinterlace2_push_history),
+	  (gst_deinterlace2_deinterlace_scanlines), (gst_deinterlace2_chain),
+	  (gst_deinterlace2_setcaps), (gst_deinterlace2_sink_event),
+	  (gst_deinterlace2_change_state), (gst_deinterlace2_src_event),
+	  (gst_deinterlace2_src_query), (gst_deinterlace2_src_query_types),
+	  (plugin_init):
+	  * gst/deinterlace2/gstdeinterlace2.h:
+	  * gst/deinterlace2/tvtime/greedy.c: (copy_scanline),
+	  (deinterlace_greedy_packed422_scanline_mmxext),
+	  (dscaler_greedyl_get_method):
+	  * gst/deinterlace2/tvtime/greedyh.asm:
+	  * gst/deinterlace2/tvtime/greedyh.c:
+	  (deinterlace_frame_di_greedyh), (dscaler_greedyh_get_method),
+	  (greedyh_init), (greedyh_filter_mmx), (greedyh_filter_3dnow),
+	  (greedyh_filter_sse):
+	  * gst/deinterlace2/tvtime/greedyh.h:
+	  * gst/deinterlace2/tvtime/greedyhmacros.h:
+	  * gst/deinterlace2/tvtime/mmx.h:
+	  * gst/deinterlace2/tvtime/plugins.h:
+	  * gst/deinterlace2/tvtime/speedtools.h:
+	  * gst/deinterlace2/tvtime/speedy.c: (multiply_alpha), (clip255),
+	  (comb_factor_packed422_scanline_mmx),
+	  (diff_factor_packed422_scanline_c),
+	  (diff_factor_packed422_scanline_mmx),
+	  (diff_packed422_block8x8_mmx), (diff_packed422_block8x8_c),
+	  (packed444_to_packed422_scanline_c),
+	  (packed422_to_packed444_scanline_c),
+	  (packed422_to_packed444_rec601_scanline_c),
+	  (vfilter_chroma_121_packed422_scanline_mmx),
+	  (vfilter_chroma_121_packed422_scanline_c),
+	  (vfilter_chroma_332_packed422_scanline_mmx),
+	  (vfilter_chroma_332_packed422_scanline_c),
+	  (kill_chroma_packed422_inplace_scanline_mmx),
+	  (kill_chroma_packed422_inplace_scanline_c),
+	  (invert_colour_packed422_inplace_scanline_mmx),
+	  (invert_colour_packed422_inplace_scanline_c),
+	  (mirror_packed422_inplace_scanline_c),
+	  (interpolate_packed422_scanline_c),
+	  (convert_uyvy_to_yuyv_scanline_mmx),
+	  (convert_uyvy_to_yuyv_scanline_c),
+	  (interpolate_packed422_scanline_mmx),
+	  (interpolate_packed422_scanline_mmxext),
+	  (blit_colour_packed422_scanline_c),
+	  (blit_colour_packed422_scanline_mmx),
+	  (blit_colour_packed422_scanline_mmxext),
+	  (blit_colour_packed4444_scanline_c),
+	  (blit_colour_packed4444_scanline_mmx),
+	  (blit_colour_packed4444_scanline_mmxext), (small_memcpy),
+	  (speedy_memcpy_c), (speedy_memcpy_mmx), (speedy_memcpy_mmxext),
+	  (blit_packed422_scanline_c), (blit_packed422_scanline_mmx),
+	  (blit_packed422_scanline_mmxext),
+	  (composite_colour4444_alpha_to_packed422_scanline_c),
+	  (composite_colour4444_alpha_to_packed422_scanline_mmxext),
+	  (composite_packed4444_alpha_to_packed422_scanline_c),
+	  (composite_packed4444_alpha_to_packed422_scanline_mmxext),
+	  (composite_packed4444_to_packed422_scanline_c),
+	  (composite_packed4444_to_packed422_scanline_mmxext),
+	  (composite_alphamask_to_packed4444_scanline_c),
+	  (composite_alphamask_to_packed4444_scanline_mmxext),
+	  (composite_alphamask_alpha_to_packed4444_scanline_c),
+	  (premultiply_packed4444_scanline_c),
+	  (premultiply_packed4444_scanline_mmxext),
+	  (blend_packed422_scanline_c), (blend_packed422_scanline_mmxext),
+	  (quarter_blit_vertical_packed422_scanline_mmxext),
+	  (quarter_blit_vertical_packed422_scanline_c),
+	  (subpix_blit_vertical_packed422_scanline_c),
+	  (a8_subpix_blit_scanline_c), (myround), (init_RGB_to_YCbCr_tables),
+	  (init_YCbCr_to_RGB_tables), (rgb24_to_packed444_rec601_scanline_c),
+	  (rgba32_to_packed4444_rec601_scanline_c),
+	  (packed444_to_rgb24_rec601_scanline_c),
+	  (packed444_to_nonpremultiplied_packed4444_scanline_c),
+	  (aspect_adjust_packed4444_scanline_c), (setup_speedy_calls),
+	  (speedy_get_accel):
+	  * gst/deinterlace2/tvtime/speedy.h:
+	  * gst/deinterlace2/tvtime/sse.h:
+	  * gst/deinterlace2/tvtime/tomsmocomp.c: (Fieldcopy),
+	  (deinterlace_frame_di_tomsmocomp), (dscaler_tomsmocomp_get_method),
+	  (tomsmocomp_init), (tomsmocomp_filter_mmx),
+	  (tomsmocomp_filter_3dnow), (tomsmocomp_filter_sse):
+	  * gst/deinterlace2/tvtime/tomsmocomp.h:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoop0A.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopEdgeA.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopEdgeA8.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA2.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA6.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddAH.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddAH2.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopVA.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/SearchLoopVAH.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/StrangeBob.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	  * gst/deinterlace2/tvtime/tomsmocomp/WierdBob.inc:
+	  * gst/deinterlace2/tvtime/vfir.c: (deinterlace_line),
+	  (deinterlace_scanline_vfir), (copy_scanline),
+	  (dscaler_vfir_get_method):
+	  * gst/deinterlace2/tvtime/x86-64_macros.inc:
+	  Add a deinterlacer plugin based on the tvtime/DScaler deinterlacer,
+	  which was relicensed to LGPL for GStreamer and in theory provides
+	  better and faster results than the simple deinterlace element.
+	  Fixes bug #163578.
+	  Ported to GStreamer 0.10 but still not enabled or included in the
+	  build system by default because of bad artefacts caused by a bug
+	  somewhere and as it can be only build on x86/amd64 ATM and requires
+	  special CFLAGS. Will be fixed soon.
+
+2009-05-13 10:30:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  flv: Actually add the flv plugin to configure.ac
+
+2009-05-13 09:24:26 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/pipelines/flacdec.c:
+	  checks: fix flacdec unit tests on big-endian machines and under valgrind
+	  Flacdec outputs 16-bit samples, so let's check if the value of the first
+	  sample is what we expect rather than just the first byte, which may be
+	  different from what we expect depending on the host's endianness. Fixes
+	  the flacdec unit tests on PPC. Also fix a bunch of leaks in the unit
+	  tests to make valgrind happy. Fixes #582420.
+
+2009-05-13 09:18:07 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/flac/gstflacdec.c:
+	  flacdec: fix buffer leak
+	  gst_buffer_replace() will take its own ref, so we still have
+	  to unref the buffer if we don't need it any longer.
+
+2009-05-12 21:20:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Fix pointer arithmetic
+	  This fixes a seeking regression, bug #134522.
+
+2009-05-12 21:36:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-annodex.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-efence.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-esdsink.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gamma.xml:
+	* docs/plugins/inspect/plugin-gconfelements.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-halelements.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-monoscope.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-quicktime.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobalance.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videoflip.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	  Moved 'flv' from -bad to -good
+
+2009-05-07 17:53:42 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* gst/flv/gstflvdemux.c:
+	  [MOVED FROM BAD 57/57] Add ranks to various muxers and encoders in -bad
+
+2009-04-29 18:52:20 +0100  Tristan Matthews <le.businessman@gmail.com>
+
+	* gst/flv/gstflvmux.c:
+	  [MOVED FROM BAD 56/57] flvmux: init variable to NULL to fix compiler warning
+	  Fixes #580786.
+
+2009-04-29 13:56:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/flv/gstflvmux.c:
+	* gst/flv/gstflvparse.c:
+	  [MOVED FROM BAD 55/57] flv: Set/require the framed/parsed fields of the audio/mpeg caps to TRUE
+
+2009-04-29 13:16:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/flv/gstflvmux.c:
+	  [MOVED FROM BAD 54/57] flv: Always write at least the minimal tags and write the PAR as tags
+
+2009-04-29 13:03:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/flv/gstflvmux.c:
+	* gst/flv/gstflvmux.h:
+	  [MOVED FROM BAD 53/57] flv: Add support for muxing some tags
+
+2009-04-29 13:03:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/flv/gstflvparse.c:
+	  [MOVED FROM BAD 52/57] flv: Add support for title tag
+
+2009-04-29 09:40:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/flv/gstflvparse.c:
+	  [MOVED FROM BAD 51/57] flv: Fix parsing of tags and add new mappings
+	  We shouldn't register a new GstTag for every unknown tag
+	  we find as this might lead to conflicts and also those
+	  tags are essentially unknown.
+	  Add mappings for some known tags and also convert string
+	  dates to GDate, as found in many FLV files.
+
+2009-04-22 19:52:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvmux.c:
+	* gst/flv/gstflvmux.h:
+	  [MOVED FROM BAD 50/57] flv: Add documentation to flvmux and flvdemux
+	  Partially fixes bug #573737.
+
+2009-01-22 13:39:34 +0100  Jan Urbanski <j.urbanski@students.mimuw.edu.pl>
+
+	* gst/flv/gstflvparse.c:
+	  [MOVED FROM BAD 49/57] Add support for ECMA arrays in script tags. Fixes bug #567965.
+	  Add support for ECMA arrays in script tags. This fixes
+	  seeking on some files that have the seek table stored
+	  inside an ECMA array instead of the normal array.
+
+2008-12-03 11:43:00 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 48/57] gst/flv/gstflvparse.c: Check if strings are valid UTF8 before using them.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c: (FLV_GET_STRING):
+	  Check if strings are valid UTF8 before using them.
+
+2008-11-24 11:17:19 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 47/57] gst/flv/gstflvdemux.c: Fix non key unit seeking by always going to the previous keyframe. Mark the discont flag when ...
+	  Original commit message from CVS:
+	  2008-11-24  Julien Moutte  <julien@fluendo.com>
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_find_offset),
+	  (gst_flv_demux_handle_seek_push),
+	  (gst_flv_demux_handle_seek_pull):
+	  Fix non key unit seeking by always going to the previous
+	  keyframe. Mark
+	  the discont flag when we've moved in the file.
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_audio_negotiate): MP3
+	  streams
+	  are parsed already, makes autoplugged pipelines shorter.
+
+2008-11-04 12:42:30 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD 46/57] Don't install static libs for plugins. Fixes #550851 for -bad.
+	  Original commit message from CVS:
+	  * ext/alsaspdif/Makefile.am:
+	  * ext/amrwb/Makefile.am:
+	  * ext/apexsink/Makefile.am:
+	  * ext/arts/Makefile.am:
+	  * ext/artsd/Makefile.am:
+	  * ext/audiofile/Makefile.am:
+	  * ext/audioresample/Makefile.am:
+	  * ext/bz2/Makefile.am:
+	  * ext/cdaudio/Makefile.am:
+	  * ext/celt/Makefile.am:
+	  * ext/dc1394/Makefile.am:
+	  * ext/dirac/Makefile.am:
+	  * ext/directfb/Makefile.am:
+	  * ext/divx/Makefile.am:
+	  * ext/dts/Makefile.am:
+	  * ext/faac/Makefile.am:
+	  * ext/faad/Makefile.am:
+	  * ext/gsm/Makefile.am:
+	  * ext/hermes/Makefile.am:
+	  * ext/ivorbis/Makefile.am:
+	  * ext/jack/Makefile.am:
+	  * ext/jp2k/Makefile.am:
+	  * ext/ladspa/Makefile.am:
+	  * ext/lcs/Makefile.am:
+	  * ext/libfame/Makefile.am:
+	  * ext/libmms/Makefile.am:
+	  * ext/metadata/Makefile.am:
+	  * ext/mpeg2enc/Makefile.am:
+	  * ext/mplex/Makefile.am:
+	  * ext/musepack/Makefile.am:
+	  * ext/musicbrainz/Makefile.am:
+	  * ext/mythtv/Makefile.am:
+	  * ext/nas/Makefile.am:
+	  * ext/neon/Makefile.am:
+	  * ext/ofa/Makefile.am:
+	  * ext/polyp/Makefile.am:
+	  * ext/resindvd/Makefile.am:
+	  * ext/sdl/Makefile.am:
+	  * ext/shout/Makefile.am:
+	  * ext/snapshot/Makefile.am:
+	  * ext/sndfile/Makefile.am:
+	  * ext/soundtouch/Makefile.am:
+	  * ext/spc/Makefile.am:
+	  * ext/swfdec/Makefile.am:
+	  * ext/tarkin/Makefile.am:
+	  * ext/theora/Makefile.am:
+	  * ext/timidity/Makefile.am:
+	  * ext/twolame/Makefile.am:
+	  * ext/x264/Makefile.am:
+	  * ext/xine/Makefile.am:
+	  * ext/xvid/Makefile.am:
+	  * gst-libs/gst/app/Makefile.am:
+	  * gst-libs/gst/dshow/Makefile.am:
+	  * gst/aiffparse/Makefile.am:
+	  * gst/app/Makefile.am:
+	  * gst/audiobuffer/Makefile.am:
+	  * gst/bayer/Makefile.am:
+	  * gst/cdxaparse/Makefile.am:
+	  * gst/chart/Makefile.am:
+	  * gst/colorspace/Makefile.am:
+	  * gst/dccp/Makefile.am:
+	  * gst/deinterlace/Makefile.am:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/dvdspu/Makefile.am:
+	  * gst/festival/Makefile.am:
+	  * gst/filter/Makefile.am:
+	  * gst/flacparse/Makefile.am:
+	  * gst/flv/Makefile.am:
+	  * gst/games/Makefile.am:
+	  * gst/h264parse/Makefile.am:
+	  * gst/librfb/Makefile.am:
+	  * gst/mixmatrix/Makefile.am:
+	  * gst/modplug/Makefile.am:
+	  * gst/mpeg1sys/Makefile.am:
+	  * gst/mpeg4videoparse/Makefile.am:
+	  * gst/mpegdemux/Makefile.am:
+	  * gst/mpegtsmux/Makefile.am:
+	  * gst/mpegvideoparse/Makefile.am:
+	  * gst/mve/Makefile.am:
+	  * gst/nsf/Makefile.am:
+	  * gst/nuvdemux/Makefile.am:
+	  * gst/overlay/Makefile.am:
+	  * gst/passthrough/Makefile.am:
+	  * gst/pcapparse/Makefile.am:
+	  * gst/playondemand/Makefile.am:
+	  * gst/rawparse/Makefile.am:
+	  * gst/real/Makefile.am:
+	  * gst/rtjpeg/Makefile.am:
+	  * gst/rtpmanager/Makefile.am:
+	  * gst/scaletempo/Makefile.am:
+	  * gst/sdp/Makefile.am:
+	  * gst/selector/Makefile.am:
+	  * gst/smooth/Makefile.am:
+	  * gst/smoothwave/Makefile.am:
+	  * gst/speed/Makefile.am:
+	  * gst/speexresample/Makefile.am:
+	  * gst/stereo/Makefile.am:
+	  * gst/subenc/Makefile.am:
+	  * gst/tta/Makefile.am:
+	  * gst/vbidec/Makefile.am:
+	  * gst/videodrop/Makefile.am:
+	  * gst/videosignal/Makefile.am:
+	  * gst/virtualdub/Makefile.am:
+	  * gst/vmnc/Makefile.am:
+	  * gst/y4m/Makefile.am:
+	  * sys/acmenc/Makefile.am:
+	  * sys/cdrom/Makefile.am:
+	  * sys/dshowdecwrapper/Makefile.am:
+	  * sys/dshowsrcwrapper/Makefile.am:
+	  * sys/dvb/Makefile.am:
+	  * sys/dxr3/Makefile.am:
+	  * sys/fbdev/Makefile.am:
+	  * sys/oss4/Makefile.am:
+	  * sys/qcam/Makefile.am:
+	  * sys/qtwrapper/Makefile.am:
+	  * sys/vcd/Makefile.am:
+	  * sys/wininet/Makefile.am:
+	  * win32/common/config.h:
+	  Don't install static libs for plugins. Fixes #550851 for -bad.
+
+2008-10-28 18:44:44 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 45/57] gst/flv/gstflvdemux.c: Implement position query in time format.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_query):
+	  Implement position query in time format.
+
+2008-10-28 18:41:19 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 44/57] gst/flv/: Put the GstSegment directly into the instance struct instead of allocating and free'ing it again.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
+	  (gst_flv_demux_loop), (gst_flv_demux_handle_seek_push),
+	  (gst_flv_demux_handle_seek_pull), (gst_flv_demux_sink_event),
+	  (gst_flv_demux_dispose), (gst_flv_demux_init):
+	  * gst/flv/gstflvdemux.h:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video), (gst_flv_parse_tag_timestamp):
+	  Put the GstSegment directly into the instance struct instead of
+	  allocating and free'ing it again.
+	  Push tags already if only one pad was added, no need to wait for
+	  the second one.
+	  When generating our index set has_video and has_audio if we find
+	  video or audio in case the FLV header has incorrect data.
+
+2008-10-27 09:45:04 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 43/57] gst/flv/: Don't memcpy() all data we want to push downstream, instead just create subbuffers and push them downstream.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_chain),
+	  (gst_flv_demux_pull_tag), (gst_flv_demux_pull_header),
+	  (gst_flv_demux_create_index):
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_script),
+	  (gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	  (gst_flv_parse_tag_timestamp), (gst_flv_parse_tag_type),
+	  (gst_flv_parse_header):
+	  * gst/flv/gstflvparse.h:
+	  Don't memcpy() all data we want to push downstream, instead just
+	  create subbuffers and push them downstream.
+	  Fix some minor memory leaks.
+
+2008-10-27 09:41:18 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 42/57] gst/flv/Makefile.am: Fix (non-critical) syntax error and add all required CFLAGS and LIBS.
+	  Original commit message from CVS:
+	  * gst/flv/Makefile.am:
+	  Fix (non-critical) syntax error and add all required CFLAGS and LIBS.
+	  * gst/flv/gstflvparse.c: (FLV_GET_STRING),
+	  (gst_flv_parse_metadata_item), (gst_flv_parse_tag_script),
+	  (gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	  (gst_flv_parse_tag_timestamp), (gst_flv_parse_tag_type):
+	  Rewrite the script tag parsing to make sure we don't try to read
+	  more data than we have. Also use GST_READ_UINT24_BE directly and
+	  fix some minor memory leaks.
+	  This should make all crashes on fuzzed FLV files disappear.
+
+2008-10-27 09:37:21 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 41/57] gst/flv/gstflvparse.c: Properly check everywhere that we have enough data to parse and don't read outside the allocat...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c: (FLV_GET_STRING),
+	  (gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	  (gst_flv_parse_tag_type), (gst_flv_parse_header):
+	  Properly check everywhere that we have enough data to parse and
+	  don't read outside the allocated memory region.
+
+2008-10-27 09:35:34 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 40/57] gst/flv/gstflvparse.c: If the caps change during playback and negotiation fails error out instead of trying to continue.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video):
+	  If the caps change during playback and negotiation fails error out
+	  instead of trying to continue.
+
+2008-10-27 09:33:40 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 39/57] gst/flv/: Add support for Speex audio and allow buffers without valid timestamp in the muxer.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvmux.c: (gst_flv_mux_audio_pad_setcaps),
+	  (gst_flv_mux_request_new_pad), (gst_flv_mux_write_buffer),
+	  (gst_flv_mux_collected):
+	  * gst/flv/gstflvmux.h:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_audio_negotiate):
+	  Add support for Speex audio and allow buffers without valid
+	  timestamp in the muxer.
+
+2008-10-27 09:32:03 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 38/57] gst/flv/gstflvdemux.c: Don't post an error message on the bus if sending EOS downstream didn't work. Fixes bug #550454.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_loop),
+	  (gst_flv_demux_find_offset), (gst_flv_demux_handle_seek_push),
+	  (gst_flv_demux_handle_seek_pull):
+	  Don't post an error message on the bus if sending EOS downstream
+	  didn't work. Fixes bug #550454.
+	  Fix seek event handling to look at the flags of the seek event
+	  instead of assuming some random flags, don't send segment-start
+	  messages when operating in push mode and push seek events upstream
+	  if we couldn't handle them.
+
+2008-10-27 09:27:18 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 37/57] gst/flv/gstflvdemux.c: Error out early if pulling a tag failed.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_pull_tag):
+	  Error out early if pulling a tag failed.
+
+2008-10-27 09:25:11 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 36/57] gst/flv/: In pull mode we create our own index before doing anything else and don't use the index provided by some fi...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_create_index),
+	  (gst_flv_demux_loop):
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_script),
+	  (gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	  (gst_flv_parse_tag_timestamp):
+	  * gst/flv/gstflvparse.h:
+	  In pull mode we create our own index before doing anything else
+	  and don't use the index provided by some files (which are more than
+	  often incorrect and cause failed seeks).
+	  For push mode we still use the index provided by the file and extend it
+	  while doing the playback.
+
+2008-10-27 09:20:01 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 35/57] gst/flv/gstflvdemux.c: Instead of using gst_pad_event_default() use a small gst_pad_push_event() wrapper that only do...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_push_src_event),
+	  (gst_flv_demux_loop), (gst_flv_demux_handle_seek_pull),
+	  (gst_flv_demux_sink_event):
+	  Instead of using gst_pad_event_default() use a small
+	  gst_pad_push_event() wrapper that only does what we want and is much
+	  more simple.
+
+2008-10-27 09:14:45 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 34/57] gst/flv/gstflvdemux.*: If our index was created by the element and not provided from the outside we should destroy it...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_change_state),
+	  (gst_flv_demux_set_index), (gst_flv_demux_init):
+	  * gst/flv/gstflvdemux.h:
+	  If our index was created by the element and not provided from the
+	  outside we should destroy it when starting a new stream to get
+	  all old entries removed.
+
+2008-10-27 09:12:33 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 33/57] gst/flv/gstflvdemux.c: Improve debugging a bit when pulling a buffer from upstream fails.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_pull_range):
+	  Improve debugging a bit when pulling a buffer from upstream fails.
+
+2008-10-27 09:10:54 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 32/57] gst/flv/: Close the currently playing segment from the streaming thread instead of the thread where the seek event is...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
+	  (gst_flv_demux_handle_seek_pull), (gst_flv_demux_dispose):
+	  * gst/flv/gstflvdemux.h:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video):
+	  Close the currently playing segment from the streaming thread
+	  instead of the thread where the seek event is handled.
+
+2008-10-16 15:21:15 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 31/57] gst/flv/gstflvmux.c: Don't set video_codec to the value that actually should go into audio codec, otherwise we create...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvmux.c: (gst_flv_mux_audio_pad_setcaps),
+	  (gst_flv_mux_write_buffer):
+	  Don't set video_codec to the value that actually should go
+	  into audio codec, otherwise we create invalid files.
+	  Fixes bug #556564.
+
+2008-10-12 17:08:10 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 30/57] gst/flv/gstflvdemux.c: Fix regression of handling flow returns in pull mode.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_pull_tag),
+	  (gst_flv_demux_pull_header):
+	  Fix regression of handling flow returns in pull mode.
+	  Fixes bug #556003.
+
+2008-10-10 16:33:36 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 29/57] gst/flv/gstflvparse.c: Use gst_pad_alloc_buffer_and_set_caps() to make sure we get a buffer with caps that we can wor...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video):
+	  Use gst_pad_alloc_buffer_and_set_caps() to make sure we get
+	  a buffer with caps that we can work with (i.e. the pad's caps).
+	  Add non-keyframe video frames to the index too but without the
+	  keyframe flag.
+	  Add audio frames to the index only if we have no video stream.
+
+2008-10-10 16:15:09 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 28/57] gst/flv/gstflvparse.c: Create pads from the pad templates, use fixed caps on them and only activate them after the ca...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video):
+	  Create pads from the pad templates, use fixed caps on them
+	  and only activate them after the caps are set.
+
+2008-10-09 16:20:26 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 27/57] gst/flv/: Get an approximate duration of the file by looking at the timestamp of the last tag in pull mode. If we get...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_loop):
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_timestamp):
+	  * gst/flv/gstflvparse.h:
+	  Get an approximate duration of the file by looking at the timestamp
+	  of the last tag in pull mode. If we get (maybe better) duration from
+	  metadata later we'll use that instead.
+
+2008-10-09 15:43:02 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 26/57] gst/flv/gstflvdemux.c: Refactor _pull_range() logic with checks into a seperate function to make things a bit more re...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_pull_range),
+	  (gst_flv_demux_pull_tag), (gst_flv_demux_pull_header):
+	  Refactor _pull_range() logic with checks into a seperate function
+	  to make things a bit more readable.
+
+2008-10-09 15:26:56 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 25/57] gst/flv/gstflvdemux.c: Use gst_element_class_set_details_simple().
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_chain),
+	  (gst_flv_demux_base_init):
+	  Use gst_element_class_set_details_simple().
+	  If we get GST_FLOW_NOT_LINKED in the parse loop but at least
+	  one of the pads is linked continue the loop.
+
+2008-10-09 10:00:51 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 24/57] gst/flv/gstflvparse.c: Correct caps for video codec id 5: It's On2 VP6 with alpha channel which needs a different dec...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_audio_negotiate),
+	  (gst_flv_parse_tag_audio), (gst_flv_parse_video_negotiate):
+	  Correct caps for video codec id 5: It's On2 VP6 with alpha channel
+	  which needs a different decoder and has different caps.
+	  Add support for audio codec id 14, which is MP3 with 8kHz sampling
+	  rate.
+	  Fix endianness and signedness for raw audio codec ids.
+	  Add support for alaw and mulaw audio.
+
+2008-10-09 09:48:46 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 23/57] gst/flv/gstflvdemux.c: Go out of the parse loop as soon as we get an error instead of parsing until the GstAdapter is...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_chain):
+	  Go out of the parse loop as soon as we get an error instead
+	  of parsing until the GstAdapter is empty.
+	  Add some explanations about the header and tag size.
+	  Don't print synchronizing message if everything is fine.
+
+2008-10-09 09:26:58 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM BAD 22/57] gst/flv/: Add first version of a FLV muxer. The only missing feature is writing of stream metadata.
+	  Original commit message from CVS:
+	  * gst/flv/Makefile.am:
+	  * gst/flv/gstflvdemux.c: (plugin_init):
+	  * gst/flv/gstflvmux.c: (gst_flv_mux_base_init),
+	  (gst_flv_mux_class_init), (gst_flv_mux_init),
+	  (gst_flv_mux_finalize), (gst_flv_mux_reset),
+	  (gst_flv_mux_handle_src_event), (gst_flv_mux_handle_sink_event),
+	  (gst_flv_mux_video_pad_setcaps), (gst_flv_mux_audio_pad_setcaps),
+	  (gst_flv_mux_request_new_pad), (gst_flv_mux_release_pad),
+	  (gst_flv_mux_write_header), (gst_flv_mux_write_buffer),
+	  (gst_flv_mux_collected), (gst_flv_mux_change_state):
+	  * gst/flv/gstflvmux.h:
+	  Add first version of a FLV muxer. The only missing feature is writing
+	  of stream metadata.
+
+2008-06-13 22:46:43 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 21/57] gst/flv/: Introduce demuxing support for AAC and
+	  Original commit message from CVS:
+	  2008-06-14  Julien Moutte  <julien@fluendo.com>
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
+	  (gst_flv_demux_dispose):
+	  * gst/flv/gstflvdemux.h:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_audio_negotiate),
+	  (gst_flv_parse_tag_audio), (gst_flv_parse_video_negotiate),
+	  (gst_flv_parse_tag_video): Introduce demuxing support for AAC
+	  and
+	  H.264/AVC inside FLV.
+	  * sys/dshowdecwrapper/gstdshowaudiodec.c:
+	  (gst_dshowaudiodec_init),
+	  (gst_dshowaudiodec_chain), (gst_dshowaudiodec_push_buffer),
+	  (gst_dshowaudiodec_sink_event), (gst_dshowaudiodec_setup_graph):
+	  * sys/dshowdecwrapper/gstdshowaudiodec.h:
+	  * sys/dshowdecwrapper/gstdshowvideodec.c:
+	  (gst_dshowvideodec_init),
+	  (gst_dshowvideodec_sink_event), (gst_dshowvideodec_chain),
+	  (gst_dshowvideodec_push_buffer),
+	  (gst_dshowvideodec_src_getcaps):
+	  * sys/dshowdecwrapper/gstdshowvideodec.h: Lot of random fixes
+	  to improve stability (ref counting, safety checks...)
+
+2008-04-25 08:07:36 +0000  Wim Taymans <wim.taymans@gmail.com>
+
+	  [MOVED FROM BAD 20/57] gst/flv/gstflvdemux.c: Forward unknown queries upstream instead of returning FALSE on them.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_query):
+	  Forward unknown queries upstream instead of returning FALSE on them.
+
+2008-04-11 23:19:21 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	  [MOVED FROM BAD 19/57] gst/flv/gstflvparse.c: Handle NULL returns from FLV_GET_STRING() more gracefully. Fixes crash caused by a strlen on a...
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_metadata_item),
+	  (gst_flv_parse_tag_script):
+	  Handle NULL returns from FLV_GET_STRING() more gracefully. Fixes
+	  crash caused by a strlen on a NULL string (#527622).
+
+2007-12-11 11:54:43 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	  [MOVED FROM BAD 18/57] gst/flv/gstflvparse.c: Don't strdup (and thus leak) codec name strings when passing them to gst_tag_list_add().
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video):
+	  Don't strdup (and thus leak) codec name strings when passing
+	  them to gst_tag_list_add().
+
+2007-12-09 19:37:53 +0000  Edward Hervey <bilboed@bilboed.com>
+
+	  [MOVED FROM BAD 17/57] gst/flv/gstflvparse.c: Fix list of supported and known codecs.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video):
+	  Fix list of supported and known codecs.
+	  Emit tag with the codec name so it gets properly reported in totem and
+	  other applications.
+
+2007-11-25 10:45:09 +0000  Edward Hervey <bilboed@bilboed.com>
+
+	  [MOVED FROM BAD 16/57] gst/flv/gstflvparse.c: Output segment with proper 'stop' value, makes flvdemux 100% compatible with gnonlin.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video):
+	  Output segment with proper 'stop' value, makes flvdemux 100% compatible
+	  with gnonlin.
+
+2007-11-12 19:22:24 +0000  Edward Hervey <bilboed@bilboed.com>
+
+	  [MOVED FROM BAD 15/57] gst/flv/gstflvparse.c: Add mapping for Nellymoser ASAO audio codec.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvparse.c:
+	  Add mapping for Nellymoser ASAO audio codec.
+	  (gst_flv_parse_tag_audio), (gst_flv_parse_tag_video): Make sure we
+	  actually have data to read at the end of the tag. This avoids trying
+	  to allocate negative buffers.
+
+2007-10-22 15:45:49 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 14/57] gst/flv/gstflvparse.c: Don't emit no-more-pads for single pad scenarios as the header is definitely not reliable. We ...
+	  Original commit message from CVS:
+	  2007-10-22  Julien MOUTTE  <julien@moutte.net>
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video), (gst_flv_parse_tag_type): Don't
+	  emit no-more-pads for single pad scenarios as the header
+	  is definitely not reliable. We emit them for 2 pads scenarios
+	  though to speed up media discovery.
+
+2007-09-27 10:06:23 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 13/57] gst/flv/gstflvparse.c: I got it wrong again, audio rate was not detected correctly in all cases.
+	  Original commit message from CVS:
+	  2007-09-27  Julien MOUTTE  <julien@moutte.net>
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video): I got it wrong again, audio rate
+	  was not detected correctly in all cases.
+
+2007-09-26 16:30:50 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 12/57] gst/flv/gstflvparse.c: codec_data is needed for every tag not just the first one. (Fix a stupid bug i introduced with...
+	  Original commit message from CVS:
+	  2007-09-26  Julien MOUTTE  <julien@moutte.net>
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video): codec_data is needed for every tag
+	  not just the first one. (Fix a stupid bug i introduced without
+	  testing)
+
+2007-09-26 11:17:08 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 11/57] gst/flv/gstflvparse.c: Fix bit masks operations to be sure we detect the codec_tags and sample rates correctly.
+	  Original commit message from CVS:
+	  2007-09-26  Julien MOUTTE  <julien@moutte.net>
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video): Fix bit masks operations to be
+	  sure we detect the codec_tags and sample rates correctly.
+	  Fix raw audio caps generation.
+
+2007-09-12 08:38:22 +0000  Peter Kjellerstedt <pkj@axis.com>
+
+	  [MOVED FROM BAD 10/57] gst/: Printf format fixes (#476128).
+	  Original commit message from CVS:
+	  Patch by: Peter Kjellerstedt  <pkj at axis com>
+	  * gst-libs/gst/app/gstappsink.c:
+	  * gst/flv/gstflvdemux.c:
+	  * gst/flv/gstflvparse.c:
+	  * gst/interleave/deinterleave.c:
+	  * gst/switch/gstswitch.c:
+	  Printf format fixes (#476128).
+
+2007-08-27 14:56:05 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 09/57] gst/flv/gstflvdemux.c: Make sure we initialize the seek result.
+	  Original commit message from CVS:
+	  2007-08-27  Julien MOUTTE  <julien@moutte.net>
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_handle_seek_pull):
+	  Make sure we initialize the seek result.
+
+2007-08-24 17:03:15 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 08/57] gst/flv/gstflvdemux.c: Remove some useless ifdef.
+	  Original commit message from CVS:
+	  2007-08-24  Julien MOUTTE  <julien@moutte.net>
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_flush),
+	  (gst_flv_demux_chain), (gst_flv_demux_pull_tag),
+	  (gst_flv_demux_find_offset), (gst_flv_demux_handle_seek_push),
+	  (gst_flv_demux_handle_seek_pull), (gst_flv_demux_sink_event),
+	  (gst_flv_demux_src_event): Remove some useless ifdef.
+
+2007-08-24 15:31:26 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 07/57] gst/flv/gstflvdemux.c: Implement seeking in push mode.
+	  Original commit message from CVS:
+	  2007-08-24  Julien MOUTTE  <julien@moutte.net>
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_flush),
+	  (gst_flv_demux_cleanup), (gst_flv_demux_chain),
+	  (gst_flv_demux_pull_tag), (gst_flv_demux_find_offset),
+	  (gst_flv_demux_handle_seek_push),
+	  (gst_flv_demux_handle_seek_pull),
+	  (gst_flv_demux_sink_event), (gst_flv_demux_src_event): Implement
+	  seeking in push mode.
+	  * gst/flv/gstflvdemux.h:
+
+2007-08-22 14:50:51 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 06/57] gst/flv/: Handle pixel aspect ratio through metadata tags like ASF does. Fluendo muxer supports this and
+	  Original commit message from CVS:
+	  2007-08-22  Julien MOUTTE  <julien@moutte.net>
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
+	  (gst_flv_demux_pull_tag):
+	  * gst/flv/gstflvdemux.h:
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_metadata_item),
+	  (gst_flv_parse_tag_script), (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video): Handle pixel aspect ratio through
+	  metadata tags like ASF does. Fluendo muxer supports this and
+	  Flash players can support it as well this way.
+
+2007-08-22 14:03:42 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 05/57] gst/flv/: Make sure we don't try filling up the index if no times object was parsed. Fix the way we decide to push ta...
+	  Original commit message from CVS:
+	  2007-08-22  Julien MOUTTE  <julien@moutte.net>
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_pull_tag):
+	  * gst/flv/gstflvparse.c: (gst_flv_parse_metadata_item),
+	  (gst_flv_parse_tag_script), (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video): Make sure we don't try filling up the
+	  index if no times object was parsed. Fix the way we decide to
+	  push
+	  tags and emit no-more-pads. Fix some printf typing in debugging.
+
+2007-08-14 14:56:20 +0000  Wim Taymans <wim.taymans@gmail.com>
+
+	  [MOVED FROM BAD 04/57] gst/flv/gstflvdemux.c: Fix locking and refcounting on the index.
+	  Original commit message from CVS:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_set_index),
+	  (gst_flv_demux_get_index):
+	  Fix locking and refcounting on the index.
+
+2007-08-14 14:22:09 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 03/57] gst/flv/gstflvdemux.c: First method for seeking in pull mode using the index built step by step or coming from metadata.
+	  Original commit message from CVS:
+	  2007-08-14  Julien MOUTTE  <julien@moutte.net>
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
+	  (gst_flv_demux_adapter_flush), (gst_flv_demux_chain),
+	  (gst_flv_demux_pull_tag), (gst_flv_demux_do_seek),
+	  (gst_flv_demux_handle_seek), (gst_flv_demux_sink_event),
+	  (gst_flv_demux_src_event), (gst_flv_demux_query),
+	  (gst_flv_demux_change_state), (gst_flv_demux_set_index),
+	  (gst_flv_demux_get_index), (gst_flv_demux_dispose),
+	  (gst_flv_demux_class_init): First method for seeking in pull
+	  mode using the index built step by step or coming from metadata.
+	  * gst/flv/gstflvdemux.h:
+	  * gst/flv/gstflvparse.c: (FLV_GET_STRING),
+	  (gst_flv_parse_metadata_item), (gst_flv_parse_tag_script),
+	  (gst_flv_parse_tag_audio), (gst_flv_parse_tag_video): Parse
+	  more metadata types and keyframes index.
+
+2007-07-25 13:29:04 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 02/57] gst/flv/: Handle not linked pads, try to make it reusable, more safety checks.
+	  Original commit message from CVS:
+	  2007-07-25  Julien MOUTTE  <julien@moutte.net>
+	  (gst_flv_demux_chain), (gst_flv_demux_pull_tag),
+	  (gst_flv_demux_change_state), (gst_flv_demux_dispose),
+	  (gst_flv_demux_init):
+	  * gst/flv/gstflvdemux.h:
+	  * gst/flv/gstflvparse.c: (FLV_GET_STRING),
+	  (gst_flv_parse_metadata_item), (gst_flv_parse_tag_script),
+	  (gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	  (gst_flv_parse_header):
+	  * gst/flv/gstflvparse.h: Handle not linked pads, try to make it
+	  reusable, more safety checks.
+
+2007-07-19 15:05:30 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM BAD 01/57] Adds a first draft of an FLV demuxer.
+	  Original commit message from CVS:
+	  2007-07-19  Julien MOUTTE  <julien@moutte.net>
+	  * configure.ac:
+	  * gst/flv/Makefile.am:
+	  * gst/flv/gstflvdemux.c: (gst_flv_demux_flush),
+	  (gst_flv_demux_cleanup), (gst_flv_demux_chain),
+	  (gst_flv_demux_pull_tag), (gst_flv_demux_pull_header),
+	  (gst_flv_demux_seek_to_prev_keyframe), (gst_flv_demux_loop),
+	  (gst_flv_demux_sink_activate),
+	  (gst_flv_demux_sink_activate_push),
+	  (gst_flv_demux_sink_activate_pull), (gst_flv_demux_sink_event),
+	  (gst_flv_demux_change_state), (gst_flv_demux_dispose),
+	  (gst_flv_demux_base_init), (gst_flv_demux_class_init),
+	  (gst_flv_demux_init), (plugin_init):
+	  * gst/flv/gstflvdemux.h:
+	  * gst/flv/gstflvparse.c: (FLV_GET_BEUI24), (FLV_GET_STRING),
+	  (gst_flv_demux_query_types), (gst_flv_demux_query),
+	  (gst_flv_parse_metadata_item), (gst_flv_parse_tag_script),
+	  (gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	  (gst_flv_parse_tag_type), (gst_flv_parse_header):
+	  * gst/flv/gstflvparse.h: Adds a first draft of an FLV demuxer.
+	  It does not do seeking yet, it supports pull and push mode so
+	  YES
+	  you can use it to play youtube videos directly from an HTTP uri.
+	  Not so much testing done yet but it parses metadata, reply to
+	  duration queries, etc...
+
+2009-05-12 13:00:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtp/Makefile.am:
+	  rtp: Link to -lm
+	  Fixes bug #582281.
+
+2009-05-12 11:16:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/rganalysis.c:
+	  rganalysis: Remove invalid unit test
+	  The test creates buffers with non-silence, sets the GAP
+	  flag on it and expects rganalysis to ignore the content and assume silence.
+	  That's not the way how GAP buffers should be used, if the GAP flag is set
+	  elements *can* assume that they only contain silence but they're not *required*
+	  to assume that. The GAP flag must only be set on silence buffers.
+	  Fixes bug #582252.
+
+2009-05-12 00:48:49 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	* win32/common/config.h:
+	  0.10.14.2 pre-release
+
+2009-05-11 23:13:20 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/files/Makefile.am:
+	  checks: dist id3-577468-unsynced-tag.tag test file
+
 2009-05-11 21:02:27 +0200  Tristan Matthews <le.businessman at gmail.com>
 
 	* gst/avi/gstavidemux.c:

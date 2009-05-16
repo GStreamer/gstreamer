@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-11 22:52+0100\n"
+"POT-Creation-Date: 2009-05-16 01:55+0100\n"
 "PO-Revision-Date: 2008-10-11 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -17,174 +17,131 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/esd/esdsink.c:256 ext/esd/esdsink.c:361
 msgid "Could not establish connection to sound server"
 msgstr "Kunne ikke skabe kontakt til lyd-serveren"
 
-#: ext/esd/esdsink.c:263
 msgid "Failed to query sound server capabilities"
 msgstr "Listning af lydservers egenskaber fejlede"
 
-#: ext/flac/gstflacdec.c:1111 ext/libpng/gstpngdec.c:336
-#: ext/libpng/gstpngdec.c:346 ext/libpng/gstpngdec.c:536
-#: ext/wavpack/gstwavpackparse.c:1165 gst/avi/gstavidemux.c:4218
 msgid "Internal data stream error."
 msgstr "Intern datastrømsfejl."
 
-#: ext/jpeg/gstjpegdec.c:1136
 msgid "Failed to decode JPEG image"
 msgstr "Mislykkedes i at afkode JPEG-billede"
 
-#: ext/shout2/gstshout2.c:558
 msgid "Could not connect to server"
 msgstr "Kunne ikke forbinde til server"
 
-#: gst/avi/gstavimux.c:1610
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Ingen eller defekt inddata lyd, AVI-sekvens vil blive ødelagt."
 
-#: gst/qtdemux/qtdemux.c:1291 gst/qtdemux/qtdemux.c:2375
 msgid "This file contains no playable streams."
 msgstr "Denne fil indeholder ingen spilbar strøm."
 
-#: gst/qtdemux/qtdemux.c:1412 gst/qtdemux/qtdemux.c:2524
 msgid "This file is invalid and cannot be played."
 msgstr "Denne fil er ufuldstændig og kan ikke afspilles."
 
-#: gst/qtdemux/qtdemux.c:1470
 msgid "This file is incomplete and cannot be played."
 msgstr "Denne fil er ufuldstændig og kan ikke afspilles."
 
-#: gst/qtdemux/qtdemux.c:3256
 msgid "The video in this file might not play correctly."
 msgstr "Videoen i denne fil afspilles måske ikke korrekt."
 
-#: gst/qtdemux/qtdemux.c:3338
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Denne fil indeholder for mange strømme. Afspil først kun %d"
 
-#: gst/qtdemux/qtdemux.c:3657 gst/qtdemux/qtdemux.c:4387
 msgid "This file is corrupt and cannot be played."
 msgstr "Denne fil er ødelagt og kan ikke afspilles."
 
-#: gst/rtsp/gstrtspsrc.c:4317
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
 
-#: gst/rtsp/gstrtspsrc.c:4322
 msgid ""
 "No supported stream was found. You might be missing the right GStreamer RTSP "
 "extension plugin."
 msgstr ""
 
-#: gst/wavparse/gstwavparse.c:1969
 msgid "Internal data flow error."
 msgstr "Intern datastrømsfejl."
 
-#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
 msgstr "Lydstyrke"
 
-#: sys/oss/gstossmixertrack.c:99
 msgid "Bass"
 msgstr "Bas"
 
-#: sys/oss/gstossmixertrack.c:100
 msgid "Treble"
 msgstr "Treble"
 
-#: sys/oss/gstossmixertrack.c:101
 msgid "Synth"
 msgstr "Synth"
 
-#: sys/oss/gstossmixertrack.c:102
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss/gstossmixertrack.c:103
 msgid "Speaker"
 msgstr "Højtaler"
 
-#: sys/oss/gstossmixertrack.c:104
 msgid "Line-in"
 msgstr "Linje-ind"
 
-#: sys/oss/gstossmixertrack.c:105
 msgid "Microphone"
 msgstr "Mikrofon"
 
-#: sys/oss/gstossmixertrack.c:106
 msgid "CD"
 msgstr "Cd"
 
-#: sys/oss/gstossmixertrack.c:107
 msgid "Mixer"
 msgstr "Mikser"
 
-#: sys/oss/gstossmixertrack.c:108
 msgid "PCM-2"
 msgstr "PCM-2"
 
-#: sys/oss/gstossmixertrack.c:109
 msgid "Record"
 msgstr "Optag"
 
-#: sys/oss/gstossmixertrack.c:110
 msgid "In-gain"
 msgstr "Ind-forhøjelse"
 
-#: sys/oss/gstossmixertrack.c:111
 msgid "Out-gain"
 msgstr "Ud-forhøjelse"
 
-#: sys/oss/gstossmixertrack.c:112
 msgid "Line-1"
 msgstr "Linje-1"
 
-#: sys/oss/gstossmixertrack.c:113
 msgid "Line-2"
 msgstr "Linje-2"
 
-#: sys/oss/gstossmixertrack.c:114
 msgid "Line-3"
 msgstr "Linje-3"
 
-#: sys/oss/gstossmixertrack.c:115
 msgid "Digital-1"
 msgstr "Digital-1"
 
-#: sys/oss/gstossmixertrack.c:116
 msgid "Digital-2"
 msgstr "Digital-2"
 
-#: sys/oss/gstossmixertrack.c:117
 msgid "Digital-3"
 msgstr "Digital-3"
 
-#: sys/oss/gstossmixertrack.c:118
 msgid "Phone-in"
 msgstr "Lyd-ind"
 
-#: sys/oss/gstossmixertrack.c:119
 msgid "Phone-out"
 msgstr "Lyd-ud"
 
-#: sys/oss/gstossmixertrack.c:120
 msgid "Video"
 msgstr "Video"
 
-#: sys/oss/gstossmixertrack.c:121
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/oss/gstosssink.c:402
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -192,7 +149,6 @@ msgstr ""
 "Kunne ikke åbne lydenhed til afspilning. Enheden anvendes af et andet "
 "program."
 
-#: sys/oss/gstosssink.c:409
 #, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
@@ -201,11 +157,9 @@ msgstr ""
 "Kunne ikke åbne lydenhed til afspilning. Du har ikke rettigheder til at åbne "
 "enheden."
 
-#: sys/oss/gstosssink.c:417
 msgid "Could not open audio device for playback."
 msgstr "Kunne ikke åbne enhed til afspilning."
 
-#: sys/oss/gstosssrc.c:373
 #, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
@@ -214,30 +168,24 @@ msgstr ""
 "Kunne ikke åbne lydenhed til optagelse. Du har ikke rettigheder til at åbne "
 "enheden."
 
-#: sys/oss/gstosssrc.c:381
 msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åbne lydenhed til optagelse."
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "Forhøjelse"
 
-#: sys/v4l2/gstv4l2src.c:1286
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Fejl ved læs()ning af %d byte på enhed '%s'."
 
-#: sys/v4l2/gstv4l2src.c:1317
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Fik uventet billedstørrelse på %u i steden for %u."
 
-#: sys/v4l2/gstv4l2src.c:1335
 #, fuzzy, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr "Fejl ved læs()ning af %d byte på enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:93
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
@@ -246,106 +194,85 @@ msgstr ""
 "Fejl ved hentning af egenskaber for enhed '%s': Det er ikke en v412 driver. "
 "Kontroller om det er en v411 driver."
 
-#: sys/v4l2/v4l2_calls.c:132
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr "Listning af inddata-attributter for %d i enhed %s fejlede"
 
-#: sys/v4l2/v4l2_calls.c:162
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "Hentning af indstillinger for tuner %d på enhed '%s' fejlede."
 
-#: sys/v4l2/v4l2_calls.c:206
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr "Listning af standard på enhed '%s' fejlede."
 
-#: sys/v4l2/v4l2_calls.c:256 sys/v4l2/v4l2_calls.c:334
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Hentning af kontrolattributter for enhed '%s' fejlede."
 
-#: sys/v4l2/v4l2_calls.c:471
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Kan ikke identificere enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:478
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Dette er ikke en enheds '%s'."
 
-#: sys/v4l2/v4l2_calls.c:485
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Kunne ikke tilgå enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:492
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Enhed '%s' er ikke en optageenhed."
 
-#: sys/v4l2/v4l2_calls.c:590
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Indstilling af standard for enhed '%s' fejlede."
 
-#: sys/v4l2/v4l2_calls.c:628
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "Kunne ikke hente nuværende tuner-frekvens for enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:670
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr "Kunne ikke sætte nuværende tuner-frekvens for enhed '%s' til %lu Hz."
 
-#: sys/v4l2/v4l2_calls.c:704
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Kunne ikke hente signalstyrke for enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:740
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Kunne ikke hente værdi af kontrol %d for enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:775
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Kunne ikke sætte værdi %d på kontrol %d for enhed '%s'."
 
-#: sys/v4l2/v4l2_calls.c:804
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Kunne ikke hente nuværende inddata for enhed '%s'. Måske er det en radio-"
 "enhed"
 
-#: sys/v4l2/v4l2_calls.c:826
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Kunne ikke sætte inddata %d for enhed %s."
 
-#: sys/v4l2/v4l2src_calls.c:360
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Kunne ikke hente buffere fra enhed '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:561
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 "Kunne ikke liste mulige videoformater, som '%s' enheden kan arbejde med"
 
-#: sys/v4l2/v4l2src_calls.c:1140 sys/v4l2/v4l2src_calls.c:1157
-#: sys/v4l2/v4l2src_calls.c:1166
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Forsøg på at hente videorammer fra enhed '%s' mislykkedes."
 
-#: sys/v4l2/v4l2src_calls.c:1142
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
@@ -356,90 +283,73 @@ msgstr ""
 "er ikke blevet tildelt buffere endnu, eller userptr eller længde er defekt. "
 "enhed %s"
 
-#: sys/v4l2/v4l2src_calls.c:1151
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
 "Forsøg på at hente videorammer fra enhed '%s' mislykkedes. Ikke "
 "tilstrækkeligt hukommelse."
 
-#: sys/v4l2/v4l2src_calls.c:1151
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
 "ikke tilstrækkeligt med hukommelse til at indrangere en brugerviserbuffer. "
 "enhed %s."
 
-#: sys/v4l2/v4l2src_calls.c:1159
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Fejlede efter %d forsøg. enhed %s. systemfejl: %s"
 
-#: sys/v4l2/v4l2src_calls.c:1168
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr "Ingen ledige buffere fundet i puljen ved indeks %d."
 
-#: sys/v4l2/v4l2src_calls.c:1250
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Kunne ikke hente parametre fra enhed '%s'"
 
-#: sys/v4l2/v4l2src_calls.c:1280
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 "Enheden til videoinddata accepterede ikke ny indstilling for billedrate."
 
-#: sys/v4l2/v4l2src_calls.c:1297
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Enhed '%s' undersøtter ikke video-optagning"
 
-#: sys/v4l2/v4l2src_calls.c:1305 sys/v4l2/v4l2src_calls.c:1314
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Enhed '%s' kan ikke optage ved %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1323
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Enhed '%s' kan ikke optage i det angivet format"
 
-#: sys/v4l2/v4l2src_calls.c:1401
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Kunne ikke hente buffere fra enhed '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1410
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Kunne ikke hente tilstrækkeligt med buffere fra enhed '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1419
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Kunne ikke afbilde buffere fra enhed '%s'"
 
-#: sys/v4l2/v4l2src_calls.c:1427
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr "Driveren til enhed '%s' understøtter ingen kendt optagemetode."
 
-#: sys/v4l2/v4l2src_calls.c:1472
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Kunne ikke starte strømningsoptagelse fra enhed '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1516
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Kunne ikke stoppe strømningsoptagelse fra enhed '%s'."
 
-#: sys/ximage/gstximagesrc.c:719
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
 
-#: sys/ximage/gstximagesrc.c:733
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke fungere uden et ur"
 

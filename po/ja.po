@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good HEAD\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-11 22:52+0100\n"
+"POT-Creation-Date: 2009-05-16 01:55+0100\n"
 "PO-Revision-Date: 2006-08-08 19:05+0200\n"
 "Last-Translator: Takao Fujiwara <takao.fujiwara@sun.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -13,355 +13,282 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/esd/esdsink.c:256 ext/esd/esdsink.c:361
 msgid "Could not establish connection to sound server"
 msgstr ""
 
-#: ext/esd/esdsink.c:263
 msgid "Failed to query sound server capabilities"
 msgstr ""
 
-#: ext/flac/gstflacdec.c:1111 ext/libpng/gstpngdec.c:336
-#: ext/libpng/gstpngdec.c:346 ext/libpng/gstpngdec.c:536
-#: ext/wavpack/gstwavpackparse.c:1165 gst/avi/gstavidemux.c:4218
 msgid "Internal data stream error."
 msgstr ""
 
-#: ext/jpeg/gstjpegdec.c:1136
 msgid "Failed to decode JPEG image"
 msgstr ""
 
-#: ext/shout2/gstshout2.c:558
 msgid "Could not connect to server"
 msgstr ""
 
 # SUN REVIEWED
-#: gst/avi/gstavimux.c:1610
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "入力オーディオが存在しないか無効であるため、AVI ストリームは壊れます。"
 
-#: gst/qtdemux/qtdemux.c:1291 gst/qtdemux/qtdemux.c:2375
 msgid "This file contains no playable streams."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:1412 gst/qtdemux/qtdemux.c:2524
 msgid "This file is invalid and cannot be played."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:1470
 msgid "This file is incomplete and cannot be played."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:3256
 msgid "The video in this file might not play correctly."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:3338
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:3657 gst/qtdemux/qtdemux.c:4387
 msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-#: gst/rtsp/gstrtspsrc.c:4317
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
 
-#: gst/rtsp/gstrtspsrc.c:4322
 msgid ""
 "No supported stream was found. You might be missing the right GStreamer RTSP "
 "extension plugin."
 msgstr ""
 
-#: gst/wavparse/gstwavparse.c:1969
 msgid "Internal data flow error."
 msgstr ""
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
 msgstr "音量"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:99
 msgid "Bass"
 msgstr "低音"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:100
 msgid "Treble"
 msgstr "高音"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:101
 msgid "Synth"
 msgstr "シンセ"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:102
 msgid "PCM"
 msgstr "PCM"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:103
 msgid "Speaker"
 msgstr "スピーカ"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:104
 msgid "Line-in"
 msgstr "ラインイン"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:105
 msgid "Microphone"
 msgstr "マイクロフォン"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:106
 msgid "CD"
 msgstr "CD"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:107
 msgid "Mixer"
 msgstr "ミキサー"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:108
 msgid "PCM-2"
 msgstr "PCM-2"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:109
 msgid "Record"
 msgstr "録音"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:110
 msgid "In-gain"
 msgstr "入力ゲイン"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:111
 msgid "Out-gain"
 msgstr "出力ゲイン"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:112
 msgid "Line-1"
 msgstr "ライン 1"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:113
 msgid "Line-2"
 msgstr "ライン 2"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:114
 msgid "Line-3"
 msgstr "ライン 3"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:115
 msgid "Digital-1"
 msgstr "デジタル 1"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:116
 msgid "Digital-2"
 msgstr "デジタル 2"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:117
 msgid "Digital-3"
 msgstr "デジタル 3"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:118
 msgid "Phone-in"
 msgstr "フォン入力"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:119
 msgid "Phone-out"
 msgstr "フォン出力"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:120
 msgid "Video"
 msgstr "ビデオ"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:121
 msgid "Radio"
 msgstr "ラジオ"
 
 # SUN REVIEWED
-#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
 msgstr "モニター"
 
-#: sys/oss/gstosssink.c:402
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
 
-#: sys/oss/gstosssink.c:409
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
 
 # SUN REVIEWED
-#: sys/oss/gstosssink.c:417
 #, fuzzy
 msgid "Could not open audio device for playback."
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
-#: sys/oss/gstosssrc.c:373
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
 
 # SUN REVIEWED
-#: sys/oss/gstosssrc.c:381
 #, fuzzy
 msgid "Could not open audio device for recording."
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
 # SUN REVIEWED
-#: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "ゲイン"
 
 # SUN REVIEWED
-#: sys/v4l2/gstv4l2src.c:1286
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
-#: sys/v4l2/gstv4l2src.c:1317
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr ""
 
-#: sys/v4l2/gstv4l2src.c:1335
 #, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:93
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:132
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:162
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:206
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:256 sys/v4l2/v4l2_calls.c:334
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:471
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:478
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr ""
 
 # SUN REVIEWED
-#: sys/v4l2/v4l2_calls.c:485
 #, fuzzy, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
-#: sys/v4l2/v4l2_calls.c:492
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:590
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:628
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:670
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:704
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:740
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:775
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:804
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:826
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:360
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:561
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1140 sys/v4l2/v4l2src_calls.c:1157
-#: sys/v4l2/v4l2src_calls.c:1166
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1142
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
@@ -369,87 +296,70 @@ msgid ""
 "device %s"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1151
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1151
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1159
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1168
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr ""
 
 # SUN REVIEWED
-#: sys/v4l2/v4l2src_calls.c:1250
 #, fuzzy, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
-#: sys/v4l2/v4l2src_calls.c:1280
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1297
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1305 sys/v4l2/v4l2src_calls.c:1314
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1323
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1401
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1410
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr ""
 
 # SUN REVIEWED
-#: sys/v4l2/v4l2src_calls.c:1419
 #, fuzzy, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
-#: sys/v4l2/v4l2src_calls.c:1427
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1472
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1516
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr ""
 
-#: sys/ximage/gstximagesrc.c:719
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 
-#: sys/ximage/gstximagesrc.c:733
 msgid "Cannot operate without a clock"
 msgstr ""
 

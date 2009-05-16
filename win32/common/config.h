@@ -15,7 +15,7 @@
 #define DEFAULT_AUDIOSRC "audiotestsrc"
 
 /* Default video sink */
-#define DEFAULT_VIDEOSINK "directdrawsink"
+#undef DEFAULT_VIDEOSINK
 
 /* Default video source */
 #define DEFAULT_VIDEOSRC "videotestsrc"
@@ -119,9 +119,6 @@
 /* Define if the GNU dcgettext() function is already present or preinstalled.
    */
 #undef HAVE_DCGETTEXT
-
-/* Define to enable DirectDraw plug-in (used by directdrawsink). */
-#undef HAVE_DIRECTDRAW
 
 /* Define to enable DirectSound plug-in (used by directsoundsink). */
 #undef HAVE_DIRECTSOUND
@@ -338,13 +335,13 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.14.2"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.14.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.14.2"
+#define PACKAGE_VERSION "0.10.14.3"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -375,7 +372,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.14.2"
+#define VERSION "0.10.14.3"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API

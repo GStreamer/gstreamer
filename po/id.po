@@ -4,184 +4,145 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-11 22:52+0100\n"
-"PO-Revision-Date: 2009-02-11 22:40+0700\n"
+"POT-Creation-Date: 2009-05-16 01:55+0100\n"
+"PO-Revision-Date: 2009-05-14 22:01+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/esd/esdsink.c:256 ext/esd/esdsink.c:361
 msgid "Could not establish connection to sound server"
 msgstr "Tak dapat membangun koneksi ke server suara"
 
-#: ext/esd/esdsink.c:263
 msgid "Failed to query sound server capabilities"
 msgstr "Gagal untuk kueri kemampuan server suara"
 
-#: ext/flac/gstflacdec.c:1111 ext/libpng/gstpngdec.c:336
-#: ext/libpng/gstpngdec.c:346 ext/libpng/gstpngdec.c:536
-#: ext/wavpack/gstwavpackparse.c:1165 gst/avi/gstavidemux.c:4218
 msgid "Internal data stream error."
 msgstr "Galat arus data internal."
 
-#: ext/jpeg/gstjpegdec.c:1136
 msgid "Failed to decode JPEG image"
 msgstr "Gagal untuk mengawasandi citra JPEG"
 
-#: ext/shout2/gstshout2.c:558
 msgid "Could not connect to server"
 msgstr "Tak dapat menghubungi server"
 
-#: gst/avi/gstavimux.c:1610
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Masukan audio tidak ada atau tidak sah, arus AVI akan rusak."
 
-#: gst/qtdemux/qtdemux.c:1291 gst/qtdemux/qtdemux.c:2375
 msgid "This file contains no playable streams."
 msgstr "Berkas ini tidak berisi arus yang dapat diputar."
 
-#: gst/qtdemux/qtdemux.c:1412 gst/qtdemux/qtdemux.c:2524
 msgid "This file is invalid and cannot be played."
 msgstr "Berkas ini tidak sah dan tak dapat diputar."
 
-#: gst/qtdemux/qtdemux.c:1470
 msgid "This file is incomplete and cannot be played."
 msgstr "Berkas ini tidak lengkap dan tak dapat diputar."
 
-#: gst/qtdemux/qtdemux.c:3256
 msgid "The video in this file might not play correctly."
 msgstr "Video di berkas ini mungkin tak dapat diputar dengan benar."
 
-#: gst/qtdemux/qtdemux.c:3338
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Berkas ini berisi terlalu banyak arus. Hanya memutar %d pertama"
 
-#: gst/qtdemux/qtdemux.c:3657 gst/qtdemux/qtdemux.c:4387
 msgid "This file is corrupt and cannot be played."
 msgstr "Berkas ini rusak dan tak dapat diputar."
 
-#: gst/rtsp/gstrtspsrc.c:4317
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
+"Tak ada arus didukung yang ditemukan. Anda mungkin perlu menginstal plugin "
+"ekstensi GStreamer RTSP untuk arus Real media."
 
-#: gst/rtsp/gstrtspsrc.c:4322
 msgid ""
 "No supported stream was found. You might be missing the right GStreamer RTSP "
 "extension plugin."
 msgstr ""
+"Tak ada arus didukung yang ditemukan. Anda mungkin kehilangan plugin "
+"ekstensi GStreamer RTSP yang benar."
 
-#: gst/wavparse/gstwavparse.c:1969
 msgid "Internal data flow error."
 msgstr "Galat aliran data internal."
 
-#: sys/oss/gstossmixertrack.c:98 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Volume"
 msgstr "Volume"
 
-#: sys/oss/gstossmixertrack.c:99
 msgid "Bass"
 msgstr "Bas"
 
-#: sys/oss/gstossmixertrack.c:100
 msgid "Treble"
 msgstr "Treble"
 
-#: sys/oss/gstossmixertrack.c:101
 msgid "Synth"
 msgstr "Synth"
 
-#: sys/oss/gstossmixertrack.c:102
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss/gstossmixertrack.c:103
 msgid "Speaker"
 msgstr "Pengeras Suara"
 
-#: sys/oss/gstossmixertrack.c:104
 msgid "Line-in"
 msgstr "Jalur masuk"
 
-#: sys/oss/gstossmixertrack.c:105
 msgid "Microphone"
 msgstr "Mikrofon"
 
-#: sys/oss/gstossmixertrack.c:106
 msgid "CD"
 msgstr "CD"
 
-#: sys/oss/gstossmixertrack.c:107
 msgid "Mixer"
 msgstr "Mixer"
 
-#: sys/oss/gstossmixertrack.c:108
 msgid "PCM-2"
 msgstr "PCM-2"
 
-#: sys/oss/gstossmixertrack.c:109
 msgid "Record"
 msgstr "Rekam"
 
-#: sys/oss/gstossmixertrack.c:110
 msgid "In-gain"
 msgstr "Masukan-gain"
 
-#: sys/oss/gstossmixertrack.c:111
 msgid "Out-gain"
 msgstr "Keluaran-gain"
 
-#: sys/oss/gstossmixertrack.c:112
 msgid "Line-1"
 msgstr "Jalur-1"
 
-#: sys/oss/gstossmixertrack.c:113
 msgid "Line-2"
 msgstr "Jalur-2"
 
-#: sys/oss/gstossmixertrack.c:114
 msgid "Line-3"
 msgstr "Jalur-3"
 
-#: sys/oss/gstossmixertrack.c:115
 msgid "Digital-1"
 msgstr "Digital-1"
 
-#: sys/oss/gstossmixertrack.c:116
 msgid "Digital-2"
 msgstr "Digital-2"
 
-#: sys/oss/gstossmixertrack.c:117
 msgid "Digital-3"
 msgstr "Digital-3"
 
-#: sys/oss/gstossmixertrack.c:118
 msgid "Phone-in"
 msgstr "Telepon-masuk"
 
-#: sys/oss/gstossmixertrack.c:119
 msgid "Phone-out"
 msgstr "Telepon-keluar"
 
-#: sys/oss/gstossmixertrack.c:120
 msgid "Video"
 msgstr "Video"
 
-#: sys/oss/gstossmixertrack.c:121
 msgid "Radio"
 msgstr "Radio"
 
-#: sys/oss/gstossmixertrack.c:122 sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/oss/gstosssink.c:402
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -189,7 +150,6 @@ msgstr ""
 "Tak dapat membuka divais audio untuk putar kembali. Divais sedang digunakan "
 "oleh aplikasi lain."
 
-#: sys/oss/gstosssink.c:409
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -197,11 +157,9 @@ msgstr ""
 "Tak dapat membuka divais audio untuk putar kembali. Anda tak memiliki hak "
 "akses untuk membuka divais."
 
-#: sys/oss/gstosssink.c:417
 msgid "Could not open audio device for playback."
 msgstr "Tak dapat membuka divais audio untuk putar kembali."
 
-#: sys/oss/gstosssrc.c:373
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
@@ -209,30 +167,24 @@ msgstr ""
 "Tak dapat membuka divais audio untuk merekam. Anda tak memiliki hak akses "
 "untuk membuka divais."
 
-#: sys/oss/gstosssrc.c:381
 msgid "Could not open audio device for recording."
 msgstr "Tak dapat membuka divais audio untuk merekam."
 
-#: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "Gain"
 
-#: sys/v4l2/gstv4l2src.c:1286
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Galat membaca %d bita dari divais '%s'."
 
-#: sys/v4l2/gstv4l2src.c:1317
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Mendapatkan ukuran bingkai %u ketimbang %u yang tak diharapkan."
 
-#: sys/v4l2/gstv4l2src.c:1335
 #, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr "Galat membaca %d bita pada divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:93
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
@@ -241,106 +193,85 @@ msgstr ""
 "Galat mendapatkan kemampuan untuk divais '%s': Itu bukan diver v4l2. Cek "
 "apakah itu merupakan driver v4l1."
 
-#: sys/v4l2/v4l2_calls.c:132
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr "Gagal kueri atribut masukan %d di divais %s"
 
-#: sys/v4l2/v4l2_calls.c:162
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "Gagal mendapatkan pengaturan tuner %d di divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:206
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr "Gagal kueri standar di divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:256 sys/v4l2/v4l2_calls.c:334
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Gagal mendapatkan kendali atribut di divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:471
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Tak dapat mengidentifikasi divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:478
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Ini bukan divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:485
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Tak dapat membuka divais '%s' untuk dibaca dan ditulis."
 
-#: sys/v4l2/v4l2_calls.c:492
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Divais '%s' bukan divais penangkap."
 
-#: sys/v4l2/v4l2_calls.c:590
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Gagal mengatur standar untuk divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:628
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "Gagal untuk mendapatkan frekuensi tuner terkini untuk divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:670
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr "Gagal mengatur frekuensi tuner terkini untuk divais '%s' ke %lu Hz."
 
-#: sys/v4l2/v4l2_calls.c:704
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Gagal mendapatkan kekuatan sinyal untuk divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:740
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Gagal mendapatkan nilai untuk kendali %d di divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:775
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Gagal mengatur nilai %d untuk kendali %d di divais '%s'."
 
-#: sys/v4l2/v4l2_calls.c:804
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Gagal mendapatkan masukan terkini di divais '%s'. Mungkin itu divais radio"
 
-#: sys/v4l2/v4l2_calls.c:826
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Gagal mengatur masukan %d di divais %s."
 
-#: sys/v4l2/v4l2src_calls.c:360
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Tak dapat mengantrekan penyangga di divais '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:561
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 "Gagal menyebutkan kemungkinan format video yang dapat bekerja dengan divais "
 "'%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1140 sys/v4l2/v4l2src_calls.c:1157
-#: sys/v4l2/v4l2src_calls.c:1166
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Gagal mencoba untuk mendapatkan bingkai video dari divais '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1142
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
@@ -351,89 +282,72 @@ msgstr ""
 "penyangga yang telah dialokasikan, atau userptr atau panjang tidak sah. "
 "divais %s"
 
-#: sys/v4l2/v4l2src_calls.c:1151
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
 "Gagal mencoba untuk mendapatkan bingkai video dari divais '%s'. Tak cukup "
 "memori."
 
-#: sys/v4l2/v4l2src_calls.c:1151
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
 "kekurangan memori untuk mengantrekan penyangga penunjuk pengguna. divais %s."
 
-#: sys/v4l2/v4l2src_calls.c:1159
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Gagal setelah %d percobaan. divais %s. galat sistem: %s"
 
-#: sys/v4l2/v4l2src_calls.c:1168
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr "Tak ada penyangga bebas ditemukan di lubuk pada indeks %d."
 
-#: sys/v4l2/v4l2src_calls.c:1250
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Tak bisa mendapatkan parameter di divais '%s'"
 
-#: sys/v4l2/v4l2src_calls.c:1280
 msgid "Video input device did not accept new frame rate setting."
 msgstr "Divais masukan video tak menerima pengaturan rasio bingkai baru."
 
-#: sys/v4l2/v4l2src_calls.c:1297
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Divais '%s' tak mendukung penangkap video"
 
-#: sys/v4l2/v4l2src_calls.c:1305 sys/v4l2/v4l2src_calls.c:1314
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Divais '%s' tak dapat menangkap di %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1323
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Divais '%s' tak dapat menangkap dalam format yang ditentukan"
 
-#: sys/v4l2/v4l2src_calls.c:1401
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Tak bisa mendapatkan penyangga dari divais '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1410
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Tak bisa mendapatkan penyangga yang cukup dari divais '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1419
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Tak dapat memetakan penyangga dari divais '%s'"
 
-#: sys/v4l2/v4l2src_calls.c:1427
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 "Driver dari divais '%s' tak mendukung metode penangkap apapun yang dikenal."
 
-#: sys/v4l2/v4l2src_calls.c:1472
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Galat memulai penangkapan arus dari divais '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1516
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Galat menghentikan penangkapan arus dari divais '%s'."
 
-#: sys/ximage/gstximagesrc.c:719
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Mengubah resolusi saat waktu berjalan belum didukung."
 
-#: sys/ximage/gstximagesrc.c:733
 msgid "Cannot operate without a clock"
 msgstr "Tak dapat beroperasi tanpa jam"
 
