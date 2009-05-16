@@ -258,8 +258,6 @@ poll_tags (GstElement * element)
   message = gst_bus_poll (bus, GST_MESSAGE_TAG, GST_SECOND);
   fail_unless (message != NULL, "Could not poll for TAG message: Timed out");
 
-  fail_unless (GST_MESSAGE_SRC (message) == GST_OBJECT (element));
-
   gst_message_parse_tag (message, &tag_list);
   gst_message_unref (message);
   gst_object_unref (bus);
