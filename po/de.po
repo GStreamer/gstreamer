@@ -2,13 +2,14 @@
 # Copyright (C) 2007 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Andre Klapper <ak-47@gmx.net>, 2008.
+# Christian Kirbach <Christian.Kirbach@googlemail.com>, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.5.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 00:07+0100\n"
-"PO-Revision-Date: 2008-01-01 20:00+0100\n"
+"POT-Creation-Date: 2009-05-16 01:36+0100\n"
+"PO-Revision-Date: 2009-05-14 21:52+0200\n"
 "Last-Translator: Andre Klapper <ak-47@gmx.net>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -16,379 +17,292 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ext/resindvd/resindvdsrc.c:352
-#, fuzzy
 msgid "Could not read title information for DVD."
-msgstr "Es konnte nicht in Datei »%s« geschrieben werden."
+msgstr "Es konnte keine Titelinformationen der DVD gelesen werden."
 
-#: ext/resindvd/resindvdsrc.c:358
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Frontend-Gerät »%s« konnte nicht geöffnet werden."
+msgstr "Öffnen des DVD-Geräts »%s« schlug fehl."
 
-#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
-#: ext/resindvd/rsnbasesrc.c:1659
-#, fuzzy
 msgid "Internal clock error."
-msgstr "Interner Datenstromfehler."
+msgstr "Interner Zeitfehler."
 
-#: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1265
-#, fuzzy
 msgid "Internal data flow error."
 msgstr "Interner Datenstromfehler."
 
-#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
 msgstr "Kein Dateiname zum Schreiben angegeben."
 
-#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Datei »%s« konnte nicht zum Schreiben geöffnet werden."
 
-#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
 msgstr "Interner Datenstromfehler."
 
-#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Es konnte nicht in Datei »%s« geschrieben werden."
 
-#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Gerät »%s« existiert nicht."
 
-#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Frontend-Gerät »%s« konnte nicht geöffnet werden."
 
-#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Einstellungen des Frontend-Geräts »%s« konnten nicht aufgerufen werden."
 
-#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Datei »%s« konnte nicht zum Lesen geöffnet werden."
 
-#: sys/oss4/oss4-mixer.c:302
-#, fuzzy
 msgid "Could not open audio device for mixer control handling."
-msgstr "Datei »%s« konnte nicht zum Lesen geöffnet werden."
+msgstr "Audio-Gerät konnte nicht zum Regeln geöffnet werden."
 
-#: sys/oss4/oss4-mixer.c:316
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
+"Audio-Gerät konnte nicht zum Regeln geöffnet werden. Diese Version des Open "
+"Sound System (OSS) wird nicht von diesem Element unterstützt."
 
-#: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
-msgstr ""
+msgstr "Schnell"
 
-#: sys/oss4/oss4-mixer.c:721
 msgid "Low"
-msgstr ""
+msgstr "Tief"
 
-#: sys/oss4/oss4-mixer.c:722
 msgid "Medium"
-msgstr ""
+msgstr "Mittel"
 
-#: sys/oss4/oss4-mixer.c:723
 msgid "High"
-msgstr ""
+msgstr "Hoch"
 
-#: sys/oss4/oss4-mixer.c:724
 msgid "Very high"
-msgstr ""
+msgstr "Sehr hoch"
 
-#: sys/oss4/oss4-mixer.c:725
 msgid "Production"
-msgstr ""
+msgstr "Produktion"
 
-#: sys/oss4/oss4-mixer.c:726
 msgid "Off"
-msgstr ""
+msgstr "Aus"
 
-#: sys/oss4/oss4-mixer.c:727
 msgid "On"
-msgstr ""
+msgstr "Ein"
 
-#: sys/oss4/oss4-mixer.c:728
 msgid "Stereo"
-msgstr ""
+msgstr "Stereo"
 
-#: sys/oss4/oss4-mixer.c:729
 msgid "Surround sound"
-msgstr ""
+msgstr "Surround-Ton"
 
-#: sys/oss4/oss4-mixer.c:730 sys/oss4/oss4-mixer.c:805
 msgid "Input mix"
-msgstr ""
+msgstr "Aufnahmemixer"
 
-#: sys/oss4/oss4-mixer.c:731 sys/oss4/oss4-mixer.c:800
 msgid "Front"
-msgstr ""
+msgstr "Vorne"
 
-#: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
 msgid "Rear"
-msgstr ""
+msgstr "Hinten"
 
-#: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
 msgid "Side"
-msgstr ""
+msgstr "Seite"
 
-#: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
 msgid "Center / LFE"
-msgstr ""
+msgstr "Mitte / LFE"
 
-#: sys/oss4/oss4-mixer.c:735 sys/oss4/oss4-mixer.c:794
 msgid "Microphone"
-msgstr ""
+msgstr "Mikrofon"
 
-#: sys/oss4/oss4-mixer.c:736 sys/oss4/oss4-mixer.c:795
 msgid "Front panel microphone"
-msgstr ""
+msgstr "Mikrofon am Fronteingang"
 
-#: sys/oss4/oss4-mixer.c:737
 msgid "Input"
-msgstr ""
+msgstr "Aufnahme"
 
-#: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
 msgid "Line-in"
-msgstr ""
+msgstr "Line-in"
 
-#: sys/oss4/oss4-mixer.c:739
 msgid "PCM 1"
-msgstr ""
+msgstr "PCM 1"
 
-#: sys/oss4/oss4-mixer.c:740
 msgid "PCM 2"
-msgstr ""
+msgstr "PCM 2"
 
-#: sys/oss4/oss4-mixer.c:741
 msgid "PCM 3"
-msgstr ""
+msgstr "PCM 3"
 
-#: sys/oss4/oss4-mixer.c:742
 msgid "PCM 4"
-msgstr ""
+msgstr "PCM 4"
 
-#: sys/oss4/oss4-mixer.c:754
 msgid "Green connector"
-msgstr ""
+msgstr "Grüner Stecker"
 
-#: sys/oss4/oss4-mixer.c:755
 msgid "Green front panel connector"
-msgstr ""
+msgstr "Grüner Frontstecker"
 
-#: sys/oss4/oss4-mixer.c:756
 msgid "Pink connector"
-msgstr ""
+msgstr "Rosa Stecker"
 
-#: sys/oss4/oss4-mixer.c:757
 msgid "Pink front panel connector"
-msgstr ""
+msgstr "Rosa Frontstecker"
 
-#: sys/oss4/oss4-mixer.c:758
 msgid "Blue connector"
-msgstr ""
+msgstr "Blauer Stecker"
 
-#: sys/oss4/oss4-mixer.c:759
 msgid "Blue front panel connector"
-msgstr ""
+msgstr "Blauer Frontstecker"
 
-#: sys/oss4/oss4-mixer.c:760
 msgid "Orange connector"
-msgstr ""
+msgstr "Oranger Stecker"
 
-#: sys/oss4/oss4-mixer.c:761
 msgid "Orange front panel connector"
-msgstr ""
+msgstr "Oranger Frontstecker"
 
-#: sys/oss4/oss4-mixer.c:762
 msgid "Black connector"
-msgstr ""
+msgstr "Schwarzer Stecker"
 
-#: sys/oss4/oss4-mixer.c:763
 msgid "Black front panel connector"
-msgstr ""
+msgstr "Schwarzer Frontstecker"
 
-#: sys/oss4/oss4-mixer.c:764
 msgid "Gray connector"
-msgstr ""
+msgstr "Grauer Stecker"
 
-#: sys/oss4/oss4-mixer.c:765
 msgid "Gray front panel connector"
-msgstr ""
+msgstr "Grauer Frontstecker"
 
-#: sys/oss4/oss4-mixer.c:766
 msgid "White connector"
-msgstr ""
+msgstr "Weißer Stecker"
 
-#: sys/oss4/oss4-mixer.c:767
 msgid "White front panel connector"
-msgstr ""
+msgstr "Weißer Frontstecker"
 
-#: sys/oss4/oss4-mixer.c:768
 msgid "Red connector"
-msgstr ""
+msgstr "Roter Stecker"
 
-#: sys/oss4/oss4-mixer.c:769
 msgid "Red front panel connector"
-msgstr ""
+msgstr "Roter Frontstecker"
 
-#: sys/oss4/oss4-mixer.c:770
 msgid "Yellow connector"
-msgstr ""
+msgstr "Gelber Stecker"
 
-#: sys/oss4/oss4-mixer.c:771
 msgid "Yellow front panel connector"
-msgstr ""
+msgstr "Gelber Frontstecker"
 
-#: sys/oss4/oss4-mixer.c:774
 msgid "Green connector function"
-msgstr ""
+msgstr "Funktion des grünen Steckers"
 
-#: sys/oss4/oss4-mixer.c:775
 msgid "Green front panel connector function"
-msgstr ""
+msgstr "Funktion des grünen Frontsteckers"
 
-#: sys/oss4/oss4-mixer.c:776
 msgid "Pink connector function"
-msgstr ""
+msgstr "Funktion des rosa Steckers"
 
-#: sys/oss4/oss4-mixer.c:777
 msgid "Pink front panel connector function"
-msgstr ""
+msgstr "Funktion des rosa Frontsteckers"
 
-#: sys/oss4/oss4-mixer.c:778
 msgid "Blue connector function"
-msgstr ""
+msgstr "Funktion des blauen Steckers"
 
-#: sys/oss4/oss4-mixer.c:779
 msgid "Blue front panel connector function"
-msgstr ""
+msgstr "Funktion des blauen Frontsteckers"
 
-#: sys/oss4/oss4-mixer.c:780
 msgid "Orange connector function"
-msgstr ""
+msgstr "Funktion des orangen Steckers"
 
-#: sys/oss4/oss4-mixer.c:781
 msgid "Orange front panel connector function"
-msgstr ""
+msgstr "Funktion des orangen Frontsteckers"
 
-#: sys/oss4/oss4-mixer.c:782
 msgid "Black connector function"
-msgstr ""
+msgstr "Funktion des schwarzen Steckers"
 
-#: sys/oss4/oss4-mixer.c:783
 msgid "Black front panel connector function"
-msgstr ""
+msgstr "Funktion des schwarzen Frontsteckers"
 
-#: sys/oss4/oss4-mixer.c:784
 msgid "Gray connector function"
-msgstr ""
+msgstr "Funktion des grauen Steckers"
 
-#: sys/oss4/oss4-mixer.c:785
 msgid "Gray front panel connector function"
-msgstr ""
+msgstr "Funktion des grauen Frontsteckers"
 
-#: sys/oss4/oss4-mixer.c:786
 msgid "White connector function"
-msgstr ""
+msgstr "Funktion des weißen Steckers"
 
-#: sys/oss4/oss4-mixer.c:787
 msgid "White front panel connector function"
-msgstr ""
+msgstr "Funktion des weißen Frontsteckers"
 
-#: sys/oss4/oss4-mixer.c:788
 msgid "Red connector function"
-msgstr ""
+msgstr "Funktion des roten Steckers"
 
-#: sys/oss4/oss4-mixer.c:789
 msgid "Red front panel connector function"
-msgstr ""
+msgstr "Funktion des roten Frontsteckers"
 
-#: sys/oss4/oss4-mixer.c:790
 msgid "Yellow connector function"
-msgstr ""
+msgstr "Funktion des gelben Steckers"
 
-#: sys/oss4/oss4-mixer.c:791
 msgid "Yellow front panel connector function"
-msgstr ""
+msgstr "Funktion des gelben Frontsteckers"
 
-#: sys/oss4/oss4-mixer.c:797
 msgid "Front panel line-in"
-msgstr ""
+msgstr "Front-Line-in"
 
-#: sys/oss4/oss4-mixer.c:798
 msgid "Headphones"
-msgstr ""
+msgstr "Kopfhörer"
 
-#: sys/oss4/oss4-mixer.c:799
 msgid "Front panel headphones"
-msgstr ""
+msgstr "Front-Kopfhörer"
 
-#: sys/oss4/oss4-mixer.c:804
 msgid "PCM"
-msgstr ""
+msgstr "PCM"
 
-#: sys/oss4/oss4-mixer.c:846
 msgid "Virtual mixer input"
-msgstr ""
+msgstr "Eingang des virtuellen Mischers"
 
-#: sys/oss4/oss4-mixer.c:848
 msgid "Virtual mixer output"
-msgstr ""
+msgstr "Ausgang des virtuellen Mischers"
 
-#: sys/oss4/oss4-mixer.c:850
 msgid "Virtual mixer channel configuration"
-msgstr ""
+msgstr "Konfiguration des virtuellen Mischers"
 
-#: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
+"Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Das Gerät wird "
+"von einer anderen Anwendung verwendet."
 
-#: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
+"Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden.  Sie haben "
+"nicht die Berechtigungen zum Öffnen des Gerätes."
 
-#: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "Frontend-Gerät »%s« konnte nicht geöffnet werden."
+msgstr "Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. "
 
-#: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
+"Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Diese Version "
+"des Open Sound System (OSS) wird nicht von diesem Element unterstützt."
 
-#: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
-msgstr ""
+msgstr "Die Wiedergabe wird nicht von diesem Audio-Gerät unterstützt."
 
-#: sys/oss4/oss4-sink.c:529
 msgid "Audio playback error."
-msgstr ""
+msgstr "Fehler bei Audio-Wiedergabe."
 
-#: sys/oss4/oss4-source.c:520
 msgid "Recording is not supported by this audio device."
-msgstr ""
+msgstr "Die Aufnahme wird nicht von diesem Audio-Gerät unterstützt."
 
-#: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
-msgstr ""
+msgstr "Fehler bei der Aufnahme vom Audio-Gerät."

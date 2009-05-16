@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 00:07+0100\n"
-"PO-Revision-Date: 2009-01-26 20:24+1030\n"
+"POT-Creation-Date: 2009-05-16 01:36+0100\n"
+"PO-Revision-Date: 2009-05-12 21:32+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -17,71 +17,55 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.8\n"
 
-#: ext/resindvd/resindvdsrc.c:352
 msgid "Could not read title information for DVD."
 msgstr "Không thể đọc thông tin tựa đề về đĩa DVD."
 
-#: ext/resindvd/resindvdsrc.c:358
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Không mở được thiết bị đĩa DVD « %s »."
 
-#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr "Không đặt được chức năng tìm nơi dựa vào PGC."
 
-#: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr "Lỗi đồng hồ nội bộ."
 
-#: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
-#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
 msgstr "Chưa ghi rõ tên tập tin để ghi vào."
 
-#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Không thể mở tập tin « %s » để ghi."
 
-#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
-#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Không thể ghi vào tập tin « %s »."
 
-#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Thiết bị « %s » không tồn tại."
 
-#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Không thể mở thiết bị giao diện « %s »."
 
-#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Không thể lấy thiết lập từ thiết bị giao diện « %s »."
 
-#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không thể mở tập tin « %s » để đọc."
 
-#: sys/oss4/oss4-mixer.c:302
 msgid "Could not open audio device for mixer control handling."
 msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng."
 
-#: sys/oss4/oss4-mixer.c:316
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
@@ -89,271 +73,204 @@ msgstr ""
 "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng. Phiên "
 "bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
 
-#: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
 msgstr "Nhanh"
 
-#: sys/oss4/oss4-mixer.c:721
 msgid "Low"
 msgstr "Thấp"
 
-#: sys/oss4/oss4-mixer.c:722
 msgid "Medium"
 msgstr "Vừa"
 
-#: sys/oss4/oss4-mixer.c:723
 msgid "High"
 msgstr "Cao"
 
-#: sys/oss4/oss4-mixer.c:724
 msgid "Very high"
 msgstr "Rất cao"
 
-#: sys/oss4/oss4-mixer.c:725
 msgid "Production"
 msgstr "Sản xuất"
 
-#: sys/oss4/oss4-mixer.c:726
 msgid "Off"
 msgstr "Tắt"
 
-#: sys/oss4/oss4-mixer.c:727
 msgid "On"
 msgstr "Bật"
 
-#: sys/oss4/oss4-mixer.c:728
 msgid "Stereo"
 msgstr "Âm lập thể"
 
-#: sys/oss4/oss4-mixer.c:729
 msgid "Surround sound"
 msgstr "Âm thanh vòm"
 
-#: sys/oss4/oss4-mixer.c:730 sys/oss4/oss4-mixer.c:805
 msgid "Input mix"
 msgstr "Hoà tiếng đầu vào"
 
-#: sys/oss4/oss4-mixer.c:731 sys/oss4/oss4-mixer.c:800
 msgid "Front"
 msgstr "Trước"
 
-#: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
 msgid "Rear"
 msgstr "Sau"
 
-#: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
 msgid "Side"
 msgstr "Bên"
 
-#: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
 msgid "Center / LFE"
 msgstr "Giữa/LFE"
 
-#: sys/oss4/oss4-mixer.c:735 sys/oss4/oss4-mixer.c:794
 msgid "Microphone"
 msgstr "Máy vi âm"
 
-#: sys/oss4/oss4-mixer.c:736 sys/oss4/oss4-mixer.c:795
 msgid "Front panel microphone"
 msgstr "Máy vi âm bảng trước"
 
-#: sys/oss4/oss4-mixer.c:737
 msgid "Input"
 msgstr "Vào"
 
-#: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
 msgid "Line-in"
 msgstr "Dây vào"
 
-#: sys/oss4/oss4-mixer.c:739
 msgid "PCM 1"
 msgstr "PCM 1"
 
-#: sys/oss4/oss4-mixer.c:740
 msgid "PCM 2"
 msgstr "PCM 2"
 
-#: sys/oss4/oss4-mixer.c:741
 msgid "PCM 3"
 msgstr "PCM 3"
 
-#: sys/oss4/oss4-mixer.c:742
 msgid "PCM 4"
 msgstr "PCM 4"
 
-#: sys/oss4/oss4-mixer.c:754
 msgid "Green connector"
 msgstr "Đầu kẹp lục"
 
-#: sys/oss4/oss4-mixer.c:755
 msgid "Green front panel connector"
 msgstr "Đầu kẹp lục bảng trước"
 
-#: sys/oss4/oss4-mixer.c:756
 msgid "Pink connector"
 msgstr "Đầu kẹp hồng"
 
-#: sys/oss4/oss4-mixer.c:757
 msgid "Pink front panel connector"
 msgstr "Đầu kẹp hồng bảng trước"
 
-#: sys/oss4/oss4-mixer.c:758
 msgid "Blue connector"
 msgstr "Đầu kẹp xanh"
 
-#: sys/oss4/oss4-mixer.c:759
 msgid "Blue front panel connector"
 msgstr "Đầu kẹp xanh bảng trước"
 
-#: sys/oss4/oss4-mixer.c:760
 msgid "Orange connector"
 msgstr "Đầu kẹp cam"
 
-#: sys/oss4/oss4-mixer.c:761
 msgid "Orange front panel connector"
 msgstr "Đầu kẹp cam bảng trước"
 
-#: sys/oss4/oss4-mixer.c:762
 msgid "Black connector"
 msgstr "Đầu kẹp đen"
 
-#: sys/oss4/oss4-mixer.c:763
 msgid "Black front panel connector"
 msgstr "Đầu kẹp đen bảng trước"
 
-#: sys/oss4/oss4-mixer.c:764
 msgid "Gray connector"
 msgstr "Đầu kẹp xám"
 
-#: sys/oss4/oss4-mixer.c:765
 msgid "Gray front panel connector"
 msgstr "Đầu kẹp xám bảng trước"
 
-#: sys/oss4/oss4-mixer.c:766
 msgid "White connector"
 msgstr "Đầu kẹp trắng"
 
-#: sys/oss4/oss4-mixer.c:767
 msgid "White front panel connector"
 msgstr "Đầu kẹp trắng bảng trước"
 
-#: sys/oss4/oss4-mixer.c:768
 msgid "Red connector"
 msgstr "Đầu kẹp đỏ"
 
-#: sys/oss4/oss4-mixer.c:769
 msgid "Red front panel connector"
 msgstr "Đầu kẹp đỏ bảng trước"
 
-#: sys/oss4/oss4-mixer.c:770
 msgid "Yellow connector"
 msgstr "Đầu kẹp vàng"
 
-#: sys/oss4/oss4-mixer.c:771
 msgid "Yellow front panel connector"
 msgstr "Đầu kẹp vàng bảng trước"
 
-#: sys/oss4/oss4-mixer.c:774
 msgid "Green connector function"
 msgstr "Chức năng đầu kẹp lục"
 
-#: sys/oss4/oss4-mixer.c:775
 msgid "Green front panel connector function"
 msgstr "Chức năng đầu kẹp lục bảng trước"
 
-#: sys/oss4/oss4-mixer.c:776
 msgid "Pink connector function"
 msgstr "Chức năng đầu kẹp hồng"
 
-#: sys/oss4/oss4-mixer.c:777
 msgid "Pink front panel connector function"
 msgstr "Chức năng đầu kẹp hồng bảng trước"
 
-#: sys/oss4/oss4-mixer.c:778
 msgid "Blue connector function"
 msgstr "Chức năng đầu kẹp xanh"
 
-#: sys/oss4/oss4-mixer.c:779
 msgid "Blue front panel connector function"
 msgstr "Chức năng đầu kẹp xanh bảng trước"
 
-#: sys/oss4/oss4-mixer.c:780
 msgid "Orange connector function"
 msgstr "Chức năng đầu kẹp cam"
 
-#: sys/oss4/oss4-mixer.c:781
 msgid "Orange front panel connector function"
 msgstr "Chức năng đầu kẹp cam bảng trước"
 
-#: sys/oss4/oss4-mixer.c:782
 msgid "Black connector function"
 msgstr "Chức năng đầu kẹp đen"
 
-#: sys/oss4/oss4-mixer.c:783
 msgid "Black front panel connector function"
 msgstr "Chức năng đầu kẹp đen bảng trước"
 
-#: sys/oss4/oss4-mixer.c:784
 msgid "Gray connector function"
 msgstr "Chức năng đầu kẹp xám"
 
-#: sys/oss4/oss4-mixer.c:785
 msgid "Gray front panel connector function"
 msgstr "Chức năng đầu kẹp xám bảng trước"
 
-#: sys/oss4/oss4-mixer.c:786
 msgid "White connector function"
 msgstr "Chức năng đầu kẹp trắng"
 
-#: sys/oss4/oss4-mixer.c:787
 msgid "White front panel connector function"
 msgstr "Chức năng đầu kẹp trắng bảng trước"
 
-#: sys/oss4/oss4-mixer.c:788
 msgid "Red connector function"
 msgstr "Chức năng đầu kẹp đỏ"
 
-#: sys/oss4/oss4-mixer.c:789
 msgid "Red front panel connector function"
 msgstr "Chức năng đầu kẹp đỏ bảng trước"
 
-#: sys/oss4/oss4-mixer.c:790
 msgid "Yellow connector function"
 msgstr "Chức năng đầu kẹp vàng"
 
-#: sys/oss4/oss4-mixer.c:791
 msgid "Yellow front panel connector function"
 msgstr "Chức năng đầu kẹp vàng bảng trước"
 
-#: sys/oss4/oss4-mixer.c:797
 msgid "Front panel line-in"
 msgstr "Dây vào bảng trước"
 
-#: sys/oss4/oss4-mixer.c:798
 msgid "Headphones"
 msgstr "Tai nghe"
 
-#: sys/oss4/oss4-mixer.c:799
 msgid "Front panel headphones"
 msgstr "Tai nghe bảng trước"
 
-#: sys/oss4/oss4-mixer.c:804
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss4/oss4-mixer.c:846
 msgid "Virtual mixer input"
 msgstr "Đầu vào bộ hoà tiếng ảo"
 
-#: sys/oss4/oss4-mixer.c:848
 msgid "Virtual mixer output"
 msgstr "Đầu ra bộ hoà tiếng ảo"
 
-#: sys/oss4/oss4-mixer.c:850
 msgid "Virtual mixer channel configuration"
 msgstr "Cấu hình kênh bộ hoà tiếng ảo"
 
-#: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -361,7 +278,6 @@ msgstr ""
 "Không thể mở thiết bị âm thanh để phát lại. Thiết bị này đang được ứng dụng "
 "khác sử dụng."
 
-#: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -369,11 +285,9 @@ msgstr ""
 "Không thể mở thiết bị âm thanh để phát lại. Bạn không có quyền mở thiết bị "
 "này."
 
-#: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Không thể mở thiết bị âm thanh để phát lại."
 
-#: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -381,30 +295,14 @@ msgstr ""
 "Không thể mở thiết bị âm thanh để phát lại. Phiên bản Hệ thống Âm thanh Mở "
 "này không được yếu tố này hỗ trợ."
 
-#: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
 msgstr "Thiết bị âm thanh này không hỗ trợ chức năng phát lại."
 
-#: sys/oss4/oss4-sink.c:529
 msgid "Audio playback error."
 msgstr "Lỗi phát lại âm thanh."
 
-#: sys/oss4/oss4-source.c:520
 msgid "Recording is not supported by this audio device."
 msgstr "Thiết bị âm thanh này không hỗ trợ chức năng thu."
 
-#: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
 msgstr "Lỗi thu từ thiết bị âm thanh."
-
-#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Không cấu hình được bộ biên mã TwoLAME. Hãy kiểm tra lại các tham số biên "
-#~ "mã."
-
-#~ msgid ""
-#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-#~ "bitrate was changed to %d kbit/s."
-#~ msgstr ""
-#~ "Không cho phép tỷ lệ bit yêu cầu %d kbit/giây cho thuộc tính « %s ». Tỷ lê "
-#~ "bit đã được thay đổi thành %d kbit/giây."

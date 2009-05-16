@@ -1,3 +1,1080 @@
+2009-05-16 01:58:33 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* win32/common/config.h:
+	  0.10.11.3 pre-release
+
+2009-05-16 01:53:15 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* win32/MANIFEST:
+	  win32: Add directdraw project files to the win32 manifest
+
+2009-05-16 01:14:23 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-directdraw.xml:
+	* sys/Makefile.am:
+	  Moved 'directdraw' from -good to -bad
+
+2007-06-15 09:13:55 +0000  Jan Schmidt <thaytan@mad.scientist.com>
+
+	  [MOVED FROM GOOD] win32/vs6/: Mark *.dsp & *.dsw as binary files and convert to DOS line endings, as they don't load into VS6 correctly...
+	  Original commit message from CVS:
+	  * win32/vs6/autogen.dsp:
+	  * win32/vs6/gst_plugins_good.dsw:
+	  * win32/vs6/libgstalaw.dsp:
+	  * win32/vs6/libgstalpha.dsp:
+	  * win32/vs6/libgstalphacolor.dsp:
+	  * win32/vs6/libgstapetag.dsp:
+	  * win32/vs6/libgstaudiofx.dsp:
+	  * win32/vs6/libgstauparse.dsp:
+	  * win32/vs6/libgstautodetect.dsp:
+	  * win32/vs6/libgstavi.dsp:
+	  * win32/vs6/libgstcutter.dsp:
+	  * win32/vs6/libgstdirectdraw.dsp:
+	  * win32/vs6/libgstdirectsound.dsp:
+	  * win32/vs6/libgsteffectv.dsp:
+	  * win32/vs6/libgstflx.dsp:
+	  * win32/vs6/libgstgoom.dsp:
+	  * win32/vs6/libgsticydemux.dsp:
+	  * win32/vs6/libgstid3demux.dsp:
+	  * win32/vs6/libgstinterleave.dsp:
+	  * win32/vs6/libgstjpeg.dsp:
+	  * win32/vs6/libgstlevel.dsp:
+	  * win32/vs6/libgstmatroska.dsp:
+	  * win32/vs6/libgstmedian.dsp:
+	  * win32/vs6/libgstmonoscope.dsp:
+	  * win32/vs6/libgstmulaw.dsp:
+	  * win32/vs6/libgstmultipart.dsp:
+	  * win32/vs6/libgstqtdemux.dsp:
+	  * win32/vs6/libgstrtp.dsp:
+	  * win32/vs6/libgstrtsp.dsp:
+	  * win32/vs6/libgstsmpte.dsp:
+	  * win32/vs6/libgstspeex.dsp:
+	  * win32/vs6/libgstudp.dsp:
+	  * win32/vs6/libgstvideobalance.dsp:
+	  * win32/vs6/libgstvideobox.dsp:
+	  * win32/vs6/libgstvideocrop.dsp:
+	  * win32/vs6/libgstvideoflip.dsp:
+	  * win32/vs6/libgstvideomixer.dsp:
+	  * win32/vs6/libgstwaveform.dsp:
+	  * win32/vs6/libgstwavenc.dsp:
+	  * win32/vs6/libgstwavparse.dsp:
+	  Mark *.dsp & *.dsw as binary files and convert to DOS line
+	  endings, as they don't load into VS6 correctly otherwise.
+
+2007-02-11 15:26:49 +0000  Sébastien Moutte <sebastien@moutte.net>
+
+	  [MOVED FROM GOOD] Makefile.am: Add win32 MANIFEST
+	  Original commit message from CVS:
+	  * Makefile.am:
+	  Add win32 MANIFEST
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  * sys/directdraw/gstdirectdrawsink.h:
+	  Clear unused code and add comments.
+	  Remove yuv from template caps, it only supports RGB
+	  actually.
+	  Implement XOverlay interface and remove window and fullscreen
+	  properties.
+	  Add debug logs.
+	  Test for blit capabilities to return only the current colorspace if
+	  the hardware can't blit for one colorspace to another.
+	  * sys/directsound/gstdirectsoundsink.c:
+	  Add some debugs.
+	  * win32/MANIFEST:
+	  Add VS7 project files and solution.
+	  * win32/vs6/gst_plugins_bad.dsw:
+	  * win32/vs6/libgstdirectdraw.dsp:
+	  * win32/vs6/libgstdirectsound.dsp:
+	  * win32/vs6/libgstqtdemux.dsp:
+	  Update project files.
+
+2006-11-01 10:19:18 +0000  Sergey Scobich <sergey.scobich@gmail.com>
+
+	  [MOVED FROM GOOD] sys/: Wait until the window is created before using it; guard unistd.h includes with HAVE_UNISTD_H. (#366523)
+	  Original commit message from CVS:
+	  Patch by: Sergey Scobich  <sergey dot scobich at gmail com>
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  (gst_directdrawsink_window_thread),
+	  (gst_directdrawsink_create_default_window):
+	  * sys/directdraw/gstdirectdrawsink.h:
+	  * sys/directsound/gstdirectsoundsink.c:
+	  Wait until the window is created before using it; guard unistd.h
+	  includes with HAVE_UNISTD_H. (#366523)
+	  * win32/vs8/libgstdirectdraw.vcproj:
+	  * win32/vs8/libgstdirectsound.vcproj:
+	  Update project files.
+
+2006-07-24 21:43:06 +0000  Sébastien Moutte <sebastien@moutte.net>
+
+	  [MOVED FROM GOOD] sys/directsound/gstdirectsoundsink.*: Add an attenuation property that will directly attenuate the directsound buffer.
+	  Original commit message from CVS:
+	  * sys/directsound/gstdirectsoundsink.h:
+	  * sys/directsound/gstdirectsoundsink.c:
+	  Add an attenuation property that will directly attenuate the
+	  directsound buffer.
+	  Change the size of the directsound secondary buffer to a half second.
+	  Add more debug logs.
+	  Add a lock to protect dsound buffer write access.
+	  Fix a bad implementation of reset.
+	  * sys/directsound/gstdirectdrawsink.c:
+	  * sys/directsound/gstdirectdrawsink.h:
+	  Add a keep_aspect_ratio property.
+	  Do not use overlay if not supported.
+	  Add more debug logs.
+	  Remove overwrite of WM_ERASEBKGND message handling. It was not
+	  redrawing border when keep_aspect_ratio was enabled.
+	  * win32/common/config.h:
+	  update version waiting an auto-generated config.h
+
+2006-03-03 23:45:23 +0000  Sébastien Moutte <sebastien@moutte.net>
+
+	  [MOVED FROM GOOD] sys/: sinks are now using GST_RANK_PRIMARY to be used with autodectection
+	  Original commit message from CVS:
+	  * sys/directdraw:
+	  * sys/directsound:
+	  sinks are now using GST_RANK_PRIMARY to be used with autodectection
+	  * win32/vs6:
+	  project files updated to fix some bugs
+	  * win32/vs7:
+	  * win32/vs8:
+	  vs7 and vs8 project files added
+
+2006-01-05 23:17:44 +0000  Sébastien Moutte <sebastien@moutte.net>
+
+	* win32/vs6/libgstdirectdraw.dsp:
+	  [MOVED FROM GOOD] added sys/directdraw added sys/directsound added win32/vs6/gst_plugins_bad.dsw added win32/vs6/libgstdirectsound.dsp ...
+	  Original commit message from CVS:
+	  2006-01-05  Sebastien Moutte  <sebastien@moutte.net>
+	  * added sys/directdraw
+	  * added sys/directsound
+	  * added win32/vs6/gst_plugins_bad.dsw
+	  * added win32/vs6/libgstdirectsound.dsp
+	  * added win32/vs6/libgstdirectdraw.dsp
+	  * added win32/common/config.h
+
+2009-02-27 20:40:31 +0100  LRN <lrn1986@gmail.com>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  [MOVED FROM GOOD] directdrawsink: Fix type mismatches
+	  Fixes bug #573343.
+
+2009-01-29 11:07:59 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  [MOVED FROM GOOD] Remove version numbers from a few gst-launch examples.
+	  The majority of the examples doe not use -0.10 and this will also help us to maintain the docs.
+
+2009-01-29 10:10:08 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  [MOVED FROM GOOD] Update and add documentation for platform specific plugins (sys).
+	  Link to properties. Correct titles for examples. Fix examples.
+
+2008-11-04 12:28:34 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM GOOD] Don't install static libs for plugins. Fixes #550851 for -good.
+	  Original commit message from CVS:
+	  * ext/aalib/Makefile.am:
+	  * ext/annodex/Makefile.am:
+	  * ext/cairo/Makefile.am:
+	  * ext/dv/Makefile.am:
+	  * ext/esd/Makefile.am:
+	  * ext/flac/Makefile.am:
+	  * ext/gconf/Makefile.am:
+	  * ext/gdk_pixbuf/Makefile.am:
+	  * ext/hal/Makefile.am:
+	  * ext/jpeg/Makefile.am:
+	  * ext/ladspa/Makefile.am:
+	  * ext/libcaca/Makefile.am:
+	  * ext/libmng/Makefile.am:
+	  * ext/libpng/Makefile.am:
+	  * ext/mikmod/Makefile.am:
+	  * ext/pulse/Makefile.am:
+	  * ext/raw1394/Makefile.am:
+	  * ext/shout2/Makefile.am:
+	  * ext/soup/Makefile.am:
+	  * ext/speex/Makefile.am:
+	  * ext/taglib/Makefile.am:
+	  * ext/wavpack/Makefile.am:
+	  * gst/alpha/Makefile.am:
+	  * gst/apetag/Makefile.am:
+	  * gst/audiofx/Makefile.am:
+	  * gst/auparse/Makefile.am:
+	  * gst/autodetect/Makefile.am:
+	  * gst/avi/Makefile.am:
+	  * gst/cutter/Makefile.am:
+	  * gst/debug/Makefile.am:
+	  * gst/effectv/Makefile.am:
+	  * gst/equalizer/Makefile.am:
+	  * gst/flx/Makefile.am:
+	  * gst/goom/Makefile.am:
+	  * gst/goom2k1/Makefile.am:
+	  * gst/icydemux/Makefile.am:
+	  * gst/id3demux/Makefile.am:
+	  * gst/interleave/Makefile.am:
+	  * gst/law/Makefile.am:
+	  * gst/level/Makefile.am:
+	  * gst/matroska/Makefile.am:
+	  * gst/median/Makefile.am:
+	  * gst/monoscope/Makefile.am:
+	  * gst/multifile/Makefile.am:
+	  * gst/multipart/Makefile.am:
+	  * gst/oldcore/Makefile.am:
+	  * gst/qtdemux/Makefile.am:
+	  * gst/replaygain/Makefile.am:
+	  * gst/rtp/Makefile.am:
+	  * gst/rtsp/Makefile.am:
+	  * gst/smpte/Makefile.am:
+	  * gst/spectrum/Makefile.am:
+	  * gst/udp/Makefile.am:
+	  * gst/videobox/Makefile.am:
+	  * gst/videocrop/Makefile.am:
+	  * gst/videofilter/Makefile.am:
+	  * gst/videomixer/Makefile.am:
+	  * gst/wavenc/Makefile.am:
+	  * gst/wavparse/Makefile.am:
+	  * sys/directdraw/Makefile.am:
+	  * sys/directsound/Makefile.am:
+	  * sys/oss/Makefile.am:
+	  * sys/osxaudio/Makefile.am:
+	  * sys/osxvideo/Makefile.am:
+	  * sys/sunaudio/Makefile.am:
+	  * sys/v4l2/Makefile.am:
+	  * sys/waveform/Makefile.am:
+	  * sys/ximage/Makefile.am:
+	  Don't install static libs for plugins. Fixes #550851 for -good.
+
+2008-08-21 21:56:19 +0000  Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_buffer_alloc, gst_directdraw_sink_bufferpool_clear):
+	  Original commit message from CVS:
+	  * sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_buffer_alloc,
+	  gst_directdraw_sink_bufferpool_clear):
+	  Fix two more buffer ref leaks.
+
+2008-08-21 15:28:09 +0000  Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c: Fix buffer ref leak.
+	  Original commit message from CVS:
+	  Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas at tandberg com>
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  (gst_directdraw_sink_show_frame):
+	  Fix buffer ref leak.
+
+2008-05-07 15:33:52 +0000  Haakon Sporsheim <haakon.sporsheim@tandberg.com>
+
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_setup_ddraw): Do IDirectDrawClipper_SetHWnd() if the window I...
+	  Original commit message from CVS:
+	  patch by: Haakon Sporsheim <haakon.sporsheim at tandberg com>
+	  * sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_setup_ddraw):
+	  Do IDirectDrawClipper_SetHWnd() if the window ID has already been
+	  set after creating the clipper.
+
+2008-05-07 15:28:06 +0000  Haakon Sporsheim <haakon.sporsheim@tandberg.com>
+
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_show_frame): Added checking of surface lost case after an uns...
+	  Original commit message from CVS:
+	  patch by: Haakon Sporsheim <haakon.sporsheim at tandberg com>
+	  * sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_show_frame):
+	  Added checking of surface lost case after an unsuccessful
+	  IDirectDrawSurface7_Lock() call.
+	  If surface is lost, return GST_FLOW_OK.
+
+2008-05-07 15:19:47 +0000  Haakon Sporsheim <haakon.sporsheim@tandberg.com>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_show_frame,
+	  Original commit message from CVS:
+	  patch by: Haakon Sporsheim <haakon.sporsheim at tandberg com>
+	  * sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_show_frame,
+	  WndProc, gst_directdraw_sink_window_thread):
+	  Improved Windows message loop and fixed window destruction issue.
+	  When the window which DirectDraw is rendering to is destroyed, the
+	  render/show_frame function will return GST_FLOW_ERROR.
+	  Partially fixes #520885.
+
+2008-05-07 15:09:10 +0000  Haakon Sporsheim <haakon.sporsheim@tandberg.com>
+
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_set_caps): Fixed mid stream resolution change bug, the offscr...
+	  Original commit message from CVS:
+	  patch by: Haakon Sporsheim <haakon.sporsheim at tandberg com>
+	  * sys/directdraw/gstdirectdrawsink.c (gst_directdraw_sink_set_caps):
+	  Fixed mid stream resolution change bug, the offscreen surface is now
+	  released when set_caps is called.
+	  Partially fixes #520885.
+
+2008-05-07 14:56:22 +0000  Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c
+	  Original commit message from CVS:
+	  * sys/directdraw/gstdirectdrawsink.c
+	  (gst_directdraw_sink_buffer_alloc):
+	  Make it so that gst_directdraw_sink_buffer_alloc uses the right
+	  width/height.
+	  Especially when looking through the pool of buffers, make sure that
+	  the width/height of caps is used instead of the already negotiated
+	  dimensions.
+	  For example if a buffer with different caps is requested, i.e.
+	  higher resolution, the caller would get a buffer with the old
+	  dimensions and thus corrupt the heap.
+
+2008-05-07 14:43:39 +0000  Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c
+	  Original commit message from CVS:
+	  * sys/directdraw/gstdirectdrawsink.c
+	  (gst_directdraw_sink_buffer_alloc):
+	  Clear the flags on recycled buffers from buffer_alloc.
+	  Partially fixes #520885.
+	  The right fix this time.
+
+2008-05-07 14:39:45 +0000  Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c
+	  Original commit message from CVS:
+	  * sys/directdraw/gstdirectdrawsink.c
+	  (gst_directdraw_sink_buffer_alloc):
+	  Reverting previous commit, it had it all mixed up, was for a different
+	  patch (major automation screw-up). Sorry!
+
+2008-05-07 13:48:28 +0000  Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c
+	  Original commit message from CVS:
+	  * sys/directdraw/gstdirectdrawsink.c
+	  (gst_directdraw_sink_buffer_alloc):
+	  Clear the flags on recycled buffers from buffer_alloc.
+	  Partially fixes #520885.
+
+2008-02-12 12:22:48 +0000  Sebastian Dröge <slomo@circular-chaos.org>
+
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c: Properly chain up finalize functions. Fixes bug #515980.
+	  Original commit message from CVS:
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  (gst_ddrawsurface_class_init), (gst_ddrawsurface_finalize),
+	  (gst_directdraw_sink_finalize):
+	  Properly chain up finalize functions. Fixes bug #515980.
+
+2008-01-07 16:41:00 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c: FALSE is not a gpointer.
+	  Original commit message from CVS:
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  (gst_directdraw_sink_window_thread):
+	  FALSE is not a gpointer.
+
+2008-01-05 21:20:08 +0000  Julien Moutte <julien@moutte.net>
+
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c: Make sure we create our internal window only when we need it. That will give a ch...
+	  Original commit message from CVS:
+	  2008-01-05  Julien Moutte  <julien@fluendo.com>
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  (gst_directdraw_sink_set_window_id),
+	  (gst_directdraw_sink_set_caps),
+	  (gst_directdraw_sink_change_state),
+	  (gst_directdraw_sink_buffer_alloc),
+	  (gst_directdraw_sink_draw_borders),
+	  (gst_directdraw_sink_show_frame),
+	  (gst_directdraw_sink_setup_ddraw),
+	  (gst_directdraw_sink_window_thread),
+	  (gst_directdraw_sink_get_ddrawcaps),
+	  (gst_directdraw_sink_surface_create): Make sure we create our
+	  internal window only when we need it. That will give a chance to
+	  the application to get the prepare-xwindow-id bus message. Draw
+	  black borders when keeping aspect ratio. Handle the case where
+	  our
+	  rendering window disappears (closed or errors) like other sinks
+	  do. Various 80 columns fixes, improve state change order. That
+	  element could need some more love.
+
+2007-09-22 08:12:57 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	* sys/directdraw/gstdirectdrawsink.h:
+	  [MOVED FROM GOOD] fix header and comments
+	  Original commit message from CVS:
+	  fix header and comments
+
+2007-06-14 12:14:24 +0000  Jan Schmidt <thaytan@mad.scientist.com>
+
+	  [MOVED FROM GOOD] Make sure to dist everything needed for win32 builds.
+	  Original commit message from CVS:
+	  * configure.ac:
+	  * sys/Makefile.am:
+	  * sys/directdraw/Makefile.am:
+	  * sys/directsound/Makefile.am:
+	  * sys/waveform/Makefile.am:
+	  Make sure to dist everything needed for win32 builds.
+
+2007-06-08 16:31:15 +0000  Jan Schmidt <thaytan@mad.scientist.com>
+
+	  [MOVED FROM GOOD] Rename the keep-aspect-ratio property to force-aspect-ratio to make it consistent with xvimagesink and ximagesink.
+	  Original commit message from CVS:
+	  * docs/plugins/gst-plugins-bad-plugins.args:
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  (gst_directdraw_sink_class_init):
+	  Rename the keep-aspect-ratio property to force-aspect-ratio to make
+	  it consistent with xvimagesink and ximagesink.
+
+2007-05-24 08:35:23 +0000  Vincent Torri <vtorri@univ-evry.fr>
+
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.*: Fix more warnings when compiling with MingW (#439914).
+	  Original commit message from CVS:
+	  Patch by: Vincent Torri  <vtorri at univ-evry fr>
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  (gst_directdraw_sink_buffer_alloc),
+	  (gst_directdraw_sink_show_frame),
+	  (gst_directdraw_sink_check_primary_surface),
+	  (gst_directdraw_sink_check_offscreen_surface),
+	  (EnumModesCallback2), (gst_directdraw_sink_get_ddrawcaps),
+	  (gst_directdraw_sink_surface_create):
+	  * sys/directdraw/gstdirectdrawsink.h:
+	  Fix more warnings when compiling with MingW (#439914).
+
+2007-05-20 14:59:46 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.c: Bunch of small fixes: remove static function that doesn't exist; declare another ...
+	  Original commit message from CVS:
+	  * sys/directdraw/gstdirectdrawsink.c: (gst_ddrawsurface_finalize),
+	  (gst_directdraw_sink_buffer_alloc),
+	  (gst_directdraw_sink_get_ddrawcaps),
+	  (gst_directdraw_sink_surface_create):
+	  Bunch of small fixes: remove static function that doesn't exist;
+	  declare another one that does; printf format fix; use right macro
+	  when specifying debug category; remove a bunch of unused variables;
+	  #if 0 out an unused chunk of code (partially fixes #439914).
+
+2007-05-15 17:22:58 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	  [MOVED FROM GOOD] Add DIRECTDRAW_CFLAGS and DIRECTSOUND_CFLAGS to Makefile.am; save and restore the various flags in the directdraw/dir...
+	  Original commit message from CVS:
+	  * configure.ac:
+	  * sys/directdraw/Makefile.am:
+	  * sys/directsound/Makefile.am:
+	  Add DIRECTDRAW_CFLAGS and DIRECTSOUND_CFLAGS to Makefile.am; save
+	  and restore the various flags in the directdraw/directsound
+	  detection section. Apparently improves cross-compiling for win32
+	  with mingw32 under some circumstances (#437539).
+
+2007-04-29 13:56:18 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	  [MOVED FROM GOOD] 80 char police
+	  Original commit message from CVS:
+	  80 char police
+
+2007-03-11 22:23:04 +0000  Sébastien Moutte <sebastien@moutte.net>
+
+	  [MOVED FROM GOOD] sys/directdraw/gstdirectdrawsink.*: Handle display mode changes during playback.
+	  Original commit message from CVS:
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  * sys/directdraw/gstdirectdrawsink.h:
+	  Handle display mode changes during playback.
+
+2007-02-27 12:02:03 +0000  Christian Schaller <uraeus@gnome.org>
+
+	* sys/directdraw/gstdirectdrawplugin.c:
+	* sys/directdraw/gstdirectdrawsink.c:
+	* sys/directdraw/gstdirectdrawsink.h:
+	  [MOVED FROM GOOD] update copyright statements
+	  Original commit message from CVS:
+	  update copyright statements
+
+2007-02-18 18:00:51 +0000  Sébastien Moutte <sebastien@moutte.net>
+
+	  [MOVED FROM GOOD] sys/directdraw/: Prepare the plugin to move to good:
+	  Original commit message from CVS:
+	  * sys/directdraw/gstdirectdrawplugin.c:
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  * sys/directdraw/gstdirectdrawsink.h:
+	  Prepare the plugin to move to good:
+	  Remove unused/untested code (rendering to an extern surface,
+	  yuv format rendering).Use GST_(DEBUG/*)_OBJECT macros
+	  Rename all functions from gst_directdrawsink to gst_directdraw_sink.
+	  Add gtk doc section
+	  Fix a bug in gst_directdraw_sink_show_frame, memcpy line by line
+	  respecting destination surface stride.
+	  * sys/directsound/gstdirectsoundplugin.c:
+	  * sys/directsound/gstdirectsoundsink.c:
+	  * sys/directsound/gstdirectsoundsink.h:
+	  Prepare the plugin to move to good:
+	  Rename all functions from gst_directsoundsink to gst_directsound_sink.
+	  Add gtk doc section
+	  * win32/common/config.h.in:
+	  * win32/MANIFEST:
+	  Add config.h.in
+
+2007-02-11 15:26:49 +0000  Sébastien Moutte <sebastien@moutte.net>
+
+	  [MOVED FROM GOOD] Makefile.am: Add win32 MANIFEST
+	  Original commit message from CVS:
+	  * Makefile.am:
+	  Add win32 MANIFEST
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  * sys/directdraw/gstdirectdrawsink.h:
+	  Clear unused code and add comments.
+	  Remove yuv from template caps, it only supports RGB
+	  actually.
+	  Implement XOverlay interface and remove window and fullscreen
+	  properties.
+	  Add debug logs.
+	  Test for blit capabilities to return only the current colorspace if
+	  the hardware can't blit for one colorspace to another.
+	  * sys/directsound/gstdirectsoundsink.c:
+	  Add some debugs.
+	  * win32/MANIFEST:
+	  Add VS7 project files and solution.
+	  * win32/vs6/gst_plugins_bad.dsw:
+	  * win32/vs6/libgstdirectdraw.dsp:
+	  * win32/vs6/libgstdirectsound.dsp:
+	  * win32/vs6/libgstqtdemux.dsp:
+	  Update project files.
+
+2007-01-03 19:54:33 +0000  Vincent Torri <vtorri@univ-evry.fr>
+
+	  [MOVED FROM GOOD] Add directdrawsink to build and dist it, so it gets built when compiling with MingW on win32 and the required headers...
+	  Original commit message from CVS:
+	  Patch by: Vincent Torri  <vtorri at univ-evry fr>
+	  * configure.ac:
+	  * sys/Makefile.am:
+	  * sys/directdraw/Makefile.am:
+	  Add directdrawsink to build and dist it, so it gets built when
+	  compiling with MingW on win32 and the required headers and libraries
+	  are available (fixes: #392313).
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  (gst_directdrawsink_center_rect), (gst_directdrawsink_show_frame),
+	  (gst_directdrawsink_setup_ddraw),
+	  (gst_directdrawsink_surface_create):
+	  Comment out some unused things and fix some printf format issues in
+	  order to avoid warnings when buildling with MingW (#392313).
+
+2006-11-01 10:19:18 +0000  Sergey Scobich <sergey.scobich@gmail.com>
+
+	  [MOVED FROM GOOD] sys/: Wait until the window is created before using it; guard unistd.h includes with HAVE_UNISTD_H. (#366523)
+	  Original commit message from CVS:
+	  Patch by: Sergey Scobich  <sergey dot scobich at gmail com>
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  (gst_directdrawsink_window_thread),
+	  (gst_directdrawsink_create_default_window):
+	  * sys/directdraw/gstdirectdrawsink.h:
+	  * sys/directsound/gstdirectsoundsink.c:
+	  Wait until the window is created before using it; guard unistd.h
+	  includes with HAVE_UNISTD_H. (#366523)
+	  * win32/vs8/libgstdirectdraw.vcproj:
+	  * win32/vs8/libgstdirectsound.vcproj:
+	  Update project files.
+
+2006-07-24 21:43:06 +0000  Sébastien Moutte <sebastien@moutte.net>
+
+	  [MOVED FROM GOOD] sys/directsound/gstdirectsoundsink.*: Add an attenuation property that will directly attenuate the directsound buffer.
+	  Original commit message from CVS:
+	  * sys/directsound/gstdirectsoundsink.h:
+	  * sys/directsound/gstdirectsoundsink.c:
+	  Add an attenuation property that will directly attenuate the
+	  directsound buffer.
+	  Change the size of the directsound secondary buffer to a half second.
+	  Add more debug logs.
+	  Add a lock to protect dsound buffer write access.
+	  Fix a bad implementation of reset.
+	  * sys/directsound/gstdirectdrawsink.c:
+	  * sys/directsound/gstdirectdrawsink.h:
+	  Add a keep_aspect_ratio property.
+	  Do not use overlay if not supported.
+	  Add more debug logs.
+	  Remove overwrite of WM_ERASEBKGND message handling. It was not
+	  redrawing border when keep_aspect_ratio was enabled.
+	  * win32/common/config.h:
+	  update version waiting an auto-generated config.h
+
+2006-06-12 10:53:26 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	  [MOVED FROM GOOD] ext/libmms/gstmms.c: Set caps on outgoing buffers.
+	  Original commit message from CVS:
+	  * ext/libmms/gstmms.c: (gst_mms_create):
+	  Set caps on outgoing buffers.
+	  * sys/directdraw/gstdirectdrawsink.c: (gst_directdrawsink_init):
+	  Comment out unused global instance variable.
+
+2006-06-01 22:00:26 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM GOOD] Fix more gobject macros: obj<->klass, GstXXX<->GstXXXClass
+	  Original commit message from CVS:
+	  * ext/alsaspdif/alsaspdifsink.h:
+	  * ext/amrwb/gstamrwbdec.h:
+	  * ext/amrwb/gstamrwbenc.h:
+	  * ext/amrwb/gstamrwbparse.h:
+	  * ext/arts/gst_arts.h:
+	  * ext/artsd/gstartsdsink.h:
+	  * ext/audiofile/gstafparse.h:
+	  * ext/audiofile/gstafsink.h:
+	  * ext/audiofile/gstafsrc.h:
+	  * ext/audioresample/gstaudioresample.h:
+	  * ext/bz2/gstbz2dec.h:
+	  * ext/bz2/gstbz2enc.h:
+	  * ext/dirac/gstdiracdec.h:
+	  * ext/directfb/dfbvideosink.h:
+	  * ext/divx/gstdivxdec.h:
+	  * ext/divx/gstdivxenc.h:
+	  * ext/dts/gstdtsdec.h:
+	  * ext/faac/gstfaac.h:
+	  * ext/gsm/gstgsmdec.h:
+	  * ext/gsm/gstgsmenc.h:
+	  * ext/ivorbis/vorbisenc.h:
+	  * ext/libfame/gstlibfame.h:
+	  * ext/nas/nassink.h:
+	  * ext/neon/gstneonhttpsrc.h:
+	  * ext/polyp/polypsink.h:
+	  * ext/sdl/sdlaudiosink.h:
+	  * ext/sdl/sdlvideosink.h:
+	  * ext/shout/gstshout.h:
+	  * ext/snapshot/gstsnapshot.h:
+	  * ext/sndfile/gstsf.h:
+	  * ext/swfdec/gstswfdec.h:
+	  * ext/tarkin/gsttarkindec.h:
+	  * ext/tarkin/gsttarkinenc.h:
+	  * ext/theora/theoradec.h:
+	  * ext/wavpack/gstwavpackdec.h:
+	  * ext/wavpack/gstwavpackparse.h:
+	  * ext/xine/gstxine.h:
+	  * ext/xvid/gstxviddec.h:
+	  * ext/xvid/gstxvidenc.h:
+	  * gst/cdxaparse/gstcdxaparse.h:
+	  * gst/cdxaparse/gstcdxastrip.h:
+	  * gst/colorspace/gstcolorspace.h:
+	  * gst/festival/gstfestival.h:
+	  * gst/freeze/gstfreeze.h:
+	  * gst/gdp/gstgdpdepay.h:
+	  * gst/gdp/gstgdppay.h:
+	  * gst/modplug/gstmodplug.h:
+	  * gst/mpeg1sys/gstmpeg1systemencode.h:
+	  * gst/mpeg1videoparse/gstmp1videoparse.h:
+	  * gst/mpeg2sub/gstmpeg2subt.h:
+	  * gst/mpegaudioparse/gstmpegaudioparse.h:
+	  * gst/multifilesink/gstmultifilesink.h:
+	  * gst/overlay/gstoverlay.h:
+	  * gst/playondemand/gstplayondemand.h:
+	  * gst/qtdemux/qtdemux.h:
+	  * gst/rtjpeg/gstrtjpegdec.h:
+	  * gst/rtjpeg/gstrtjpegenc.h:
+	  * gst/smooth/gstsmooth.h:
+	  * gst/smoothwave/gstsmoothwave.h:
+	  * gst/spectrum/gstspectrum.h:
+	  * gst/speed/gstspeed.h:
+	  * gst/stereo/gststereo.h:
+	  * gst/switch/gstswitch.h:
+	  * gst/tta/gstttadec.h:
+	  * gst/tta/gstttaparse.h:
+	  * gst/videodrop/gstvideodrop.h:
+	  * gst/xingheader/gstxingmux.h:
+	  * sys/directdraw/gstdirectdrawsink.h:
+	  * sys/directsound/gstdirectsoundsink.h:
+	  * sys/dxr3/dxr3audiosink.h:
+	  * sys/dxr3/dxr3spusink.h:
+	  * sys/dxr3/dxr3videosink.h:
+	  * sys/qcam/gstqcamsrc.h:
+	  * sys/vcd/vcdsrc.h:
+	  Fix more gobject macros: obj<->klass, GstXXX<->GstXXXClass
+
+2006-04-25 21:56:38 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM GOOD] Define GstElementDetails as const and also static (when defined as global)
+	  Original commit message from CVS:
+	  * ext/amrwb/gstamrwbdec.c:
+	  * ext/amrwb/gstamrwbenc.c:
+	  * ext/amrwb/gstamrwbparse.c:
+	  * ext/arts/gst_arts.c:
+	  * ext/artsd/gstartsdsink.c:
+	  * ext/audiofile/gstafparse.c:
+	  * ext/audiofile/gstafsink.c:
+	  * ext/audiofile/gstafsrc.c:
+	  * ext/audioresample/gstaudioresample.c:
+	  * ext/bz2/gstbz2dec.c:
+	  * ext/bz2/gstbz2enc.c:
+	  * ext/cdaudio/gstcdaudio.c:
+	  * ext/directfb/dfbvideosink.c:
+	  * ext/divx/gstdivxdec.c:
+	  * ext/divx/gstdivxenc.c:
+	  * ext/dts/gstdtsdec.c: (gst_dtsdec_base_init):
+	  * ext/faac/gstfaac.c: (gst_faac_base_init):
+	  * ext/faad/gstfaad.c:
+	  * ext/gsm/gstgsmdec.c:
+	  * ext/gsm/gstgsmenc.c:
+	  * ext/hermes/gsthermescolorspace.c:
+	  * ext/ivorbis/vorbisfile.c:
+	  * ext/lcs/gstcolorspace.c:
+	  * ext/libfame/gstlibfame.c:
+	  * ext/libmms/gstmms.c: (gst_mms_base_init):
+	  * ext/musepack/gstmusepackdec.c: (gst_musepackdec_base_init):
+	  * ext/musicbrainz/gsttrm.c: (gst_musicbrainz_base_init):
+	  * ext/nas/nassink.c: (gst_nassink_base_init):
+	  * ext/neon/gstneonhttpsrc.c:
+	  * ext/sdl/sdlaudiosink.c:
+	  * ext/sdl/sdlvideosink.c:
+	  * ext/shout/gstshout.c:
+	  * ext/snapshot/gstsnapshot.c:
+	  * ext/sndfile/gstsf.c:
+	  * ext/swfdec/gstswfdec.c:
+	  * ext/tarkin/gsttarkindec.c:
+	  * ext/tarkin/gsttarkinenc.c:
+	  * ext/theora/theoradec.c:
+	  * ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init):
+	  * ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_base_init):
+	  * ext/xvid/gstxviddec.c:
+	  * ext/xvid/gstxvidenc.c:
+	  * gst/cdxaparse/gstcdxaparse.c: (gst_cdxa_parse_base_init):
+	  * gst/cdxaparse/gstcdxastrip.c: (gst_cdxastrip_base_init):
+	  * gst/chart/gstchart.c:
+	  * gst/colorspace/gstcolorspace.c:
+	  * gst/deinterlace/gstdeinterlace.c:
+	  * gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_base_init):
+	  * gst/festival/gstfestival.c:
+	  * gst/filter/gstbpwsinc.c:
+	  * gst/filter/gstiir.c:
+	  * gst/filter/gstlpwsinc.c:
+	  * gst/freeze/gstfreeze.c:
+	  * gst/games/gstpuzzle.c: (gst_puzzle_base_init):
+	  * gst/librfb/gstrfbsrc.c:
+	  * gst/mixmatrix/mixmatrix.c:
+	  * gst/mpeg1sys/gstmpeg1systemencode.c:
+	  * gst/mpeg1videoparse/gstmp1videoparse.c:
+	  * gst/mpeg2sub/gstmpeg2subt.c:
+	  * gst/mpegaudioparse/gstmpegaudioparse.c:
+	  * gst/multifilesink/gstmultifilesink.c:
+	  * gst/overlay/gstoverlay.c:
+	  * gst/passthrough/gstpassthrough.c:
+	  * gst/playondemand/gstplayondemand.c:
+	  * gst/qtdemux/qtdemux.c:
+	  * gst/rtjpeg/gstrtjpegdec.c:
+	  * gst/rtjpeg/gstrtjpegenc.c:
+	  * gst/smooth/gstsmooth.c:
+	  * gst/smoothwave/gstsmoothwave.c:
+	  * gst/spectrum/gstspectrum.c:
+	  * gst/speed/gstspeed.c:
+	  * gst/stereo/gststereo.c:
+	  * gst/switch/gstswitch.c:
+	  * gst/tta/gstttadec.c: (gst_tta_dec_base_init):
+	  * gst/tta/gstttaparse.c: (gst_tta_parse_base_init):
+	  * gst/vbidec/gstvbidec.c:
+	  * gst/videocrop/gstvideocrop.c:
+	  * gst/videodrop/gstvideodrop.c:
+	  * gst/virtualdub/gstxsharpen.c:
+	  * gst/xingheader/gstxingmux.c: (gst_xing_mux_base_init):
+	  * gst/y4m/gsty4mencode.c:
+	  * sys/cdrom/gstcdplayer.c:
+	  * sys/directdraw/gstdirectdrawsink.c:
+	  * sys/directsound/gstdirectsoundsink.c:
+	  * sys/glsink/glimagesink.c:
+	  * sys/qcam/gstqcamsrc.c:
+	  * sys/v4l2/gstv4l2src.c:
+	  * sys/vcd/vcdsrc.c: (gst_vcdsrc_base_init):
+	  * sys/ximagesrc/ximagesrc.c:
+	  Define GstElementDetails as const and also static (when defined as
+	  global)
+
+2006-04-01 10:09:11 +0000  Thomas Vander Stichele <thomas@apestaart.org>
+
+	* sys/directdraw/gstdirectdrawplugin.c:
+	  [MOVED FROM GOOD] rework build; add translations for v4l2
+	  Original commit message from CVS:
+	  rework build; add translations for v4l2
+
+2006-03-03 23:45:23 +0000  Sébastien Moutte <sebastien@moutte.net>
+
+	  [MOVED FROM GOOD] sys/: sinks are now using GST_RANK_PRIMARY to be used with autodectection
+	  Original commit message from CVS:
+	  * sys/directdraw:
+	  * sys/directsound:
+	  sinks are now using GST_RANK_PRIMARY to be used with autodectection
+	  * win32/vs6:
+	  project files updated to fix some bugs
+	  * win32/vs7:
+	  * win32/vs8:
+	  vs7 and vs8 project files added
+
+2006-01-05 23:17:44 +0000  Sébastien Moutte <sebastien@moutte.net>
+
+	* sys/directdraw/gstdirectdrawplugin.c:
+	* sys/directdraw/gstdirectdrawsink.c:
+	* sys/directdraw/gstdirectdrawsink.h:
+	  [MOVED FROM GOOD] added sys/directdraw added sys/directsound added win32/vs6/gst_plugins_bad.dsw added win32/vs6/libgstdirectsound.dsp ...
+	  Original commit message from CVS:
+	  2006-01-05  Sebastien Moutte  <sebastien@moutte.net>
+	  * added sys/directdraw
+	  * added sys/directsound
+	  * added win32/vs6/gst_plugins_bad.dsw
+	  * added win32/vs6/libgstdirectsound.dsp
+	  * added win32/vs6/libgstdirectdraw.dsp
+	  * added win32/common/config.h
+
+2009-05-15 10:45:45 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/debugutils/fpsdisplaysink.c:
+	  fpsdisplaysink: Fix resetting of the sink in NULL
+	  Reset the fpsdisplaysink in NULL by removing the textoverlay if we
+	  created it.
+	  Fixes: #582633
+
+2009-05-16 00:17:00 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst/y4m/Makefile.am:
+	* gst/y4m/gsty4mencode.c:
+	* gst/y4m/gsty4mencode.h:
+	* gst/y4m/y4menc.vcproj:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/check/elements/y4menc.c:
+	  Moved 'y4menc' from -bad to -good
+
+2009-05-15 18:24:41 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/Makevars:
+	  po: add Makevars magic so we don't get line numbers in *.po files
+	  This avoids the number one reason for local modifications in *.po
+	  files and and makes things less annoying when working with git (or
+	  any other VCS for that matter).
+
+2009-05-15 01:54:44 -0300  Thiago Santos <thiagoss@embedded.ufcg.edu.br>
+
+	* gst/qtmux/atoms.c:
+	  [qtmux] Fixes segfault when adding a blob as first tag.
+	  Moves tags data initialization to the function that actually appends
+	  the tags to the list. Fixes #582702
+	  Also fixes some style caught by the pre-commit hook.
+
+2009-05-14 21:20:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c:
+	* gst/mxf/mxfdemux.h:
+	  mxfdemux: Use a RW lock to protect metadata and add all pads at once without a lock held
+	  This makes it possible, among other things, to do a query in the
+	  pad-added callback.
+	  Fixes bug #582656.
+
+2009-05-14 10:34:08 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/resindvdsrc.c:
+	  resindvd: Fix the argument order in a debug statement
+	  Make the debug statement correctly show the 'old' and 'new' button
+	  coordinates, instead of the wrong way around.
+
+2009-05-14 09:53:25 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/gstmpegdemux.c:
+	* ext/resindvd/gstmpegdemux.h:
+	  resindvd: Make segment updates less aggressive.
+	  When updating a pad, send the update to half a second behind the SCR,
+	  which avoids ever updating the start time for a pad to beyond the end of
+	  the cell. Also, remember the last actual new-segment start time for each
+	  pad, and use it when closing the segment.
+
+2009-05-13 12:47:43 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/resindvdsrc.c:
+	  resindvd: Rework button highlight calculation slightly
+	  When the current button number is higher than the number of available
+	  buttons, switch to the highest numbered button rather than the lowest.
+	  Also, don't throw errors when we fail to retrieve some button info
+	  from libdvdnav, just reset the highlight.
+
+2009-05-12 23:42:00 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/resindvdsrc.c:
+	* ext/resindvd/resindvdsrc.h:
+	  resindvd: Send commands-changed on button change and handle commands query
+	  Send the commands-changed navigation message when the set of available
+	  DVD menu button actions changes, and handle the commands navigation
+	  query so that (e.g.) Totem can know about the available navigation
+	  commands.
+
+2009-05-14 08:42:24 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/resindvdsrc.c:
+	  resindvd: Fix a leak of the DVD title string
+
+2009-05-14 10:55:38 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/dvdspu/gstdvdspu.c:
+	  dvdspu: Push update frame, if any, when entering stills.
+	  When entering a still frame generates an updated buffer, make sure
+	  to push it out, otherwise we may not put a frame onscreen with a
+	  rendered button, causing raciness as to whether buttons get drawn
+	  or not when jumping back to the menu on some discs.
+
+2009-05-13 10:29:36 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/resindvdbin.c:
+	* ext/resindvd/resindvdbin.h:
+	  resindvd: Fix raciness in rsndvdbin when initially creating pads
+	  Protect pad exposure with a preroll lock to avoid situations
+	  where no-more-pads is fired more than once, or fired just before
+	  the last pad is actually added.
+
+2009-05-13 17:55:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/y4m/gsty4mencode.c:
+	  y4menc: change my email
+	  change my email to something more current
+	  See #580783
+
+2009-05-13 17:54:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/y4m/gsty4mencode.c:
+	  y4menc: don't strip timestamps
+	  Fixes #582483
+
+2009-05-13 10:47:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-deinterlace2.xml:
+	* docs/plugins/inspect/plugin-gstinterlace.xml:
+	* gst/deinterlace/.gitignore:
+	* gst/deinterlace/Makefile.am:
+	* gst/deinterlace/deinterlace.vcproj:
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/deinterlace/gstdeinterlace.h:
+	* gst/deinterlace2/Makefile.am:
+	* gst/deinterlace2/gstdeinterlace2.c:
+	* gst/deinterlace2/gstdeinterlace2.h:
+	* gst/deinterlace2/tvtime/greedy.c:
+	* gst/deinterlace2/tvtime/greedyh.asm:
+	* gst/deinterlace2/tvtime/greedyh.c:
+	* gst/deinterlace2/tvtime/greedyhmacros.h:
+	* gst/deinterlace2/tvtime/linear.c:
+	* gst/deinterlace2/tvtime/linearblend.c:
+	* gst/deinterlace2/tvtime/mmx.h:
+	* gst/deinterlace2/tvtime/plugins.h:
+	* gst/deinterlace2/tvtime/scalerbob.c:
+	* gst/deinterlace2/tvtime/sse.h:
+	* gst/deinterlace2/tvtime/tomsmocomp.c:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoop0A.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopBottom.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopEdgeA.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopEdgeA8.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA2.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddA6.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddAH.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopOddAH2.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopTop.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopVA.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/SearchLoopVAH.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/StrangeBob.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/TomsMoCompAll2.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/WierdBob.inc:
+	* gst/deinterlace2/tvtime/tomsmocomp/tomsmocompmacros.h:
+	* gst/deinterlace2/tvtime/vfir.c:
+	* gst/deinterlace2/tvtime/weave.c:
+	* gst/deinterlace2/tvtime/weavebff.c:
+	* gst/deinterlace2/tvtime/weavetff.c:
+	* gst/deinterlace2/tvtime/x86-64_macros.inc:
+	  Moved 'deinterlace2' from -bad to -good
+	  And remove old deinterlace plugin as deinterlace2 will
+	  be called deinterlace in -good.
+
+2009-05-12 21:50:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flvdemux.xml:
+	* gst/flv/Makefile.am:
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvmux.c:
+	* gst/flv/gstflvmux.h:
+	* gst/flv/gstflvparse.c:
+	* gst/flv/gstflvparse.h:
+	  Moved 'flv' from -bad to -good
+
+2009-05-12 00:50:01 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* win32/common/config.h:
+	  0.10.11.2 pre-release
+
 2009-05-11 17:50:41 +0100  Jan Schmidt <thaytan@noraisin.net>
 
 	* ext/resindvd/gstmpegdemux.c:

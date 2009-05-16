@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 00:07+0100\n"
+"POT-Creation-Date: 2009-05-16 01:36+0100\n"
 "PO-Revision-Date: 2009-01-23 18:06+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -18,71 +18,55 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: ext/resindvd/resindvdsrc.c:352
 msgid "Could not read title information for DVD."
 msgstr "Kan de titelinformatie voor de DVD niet lezen."
 
-#: ext/resindvd/resindvdsrc.c:358
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Kan het DVD-apparaat '%s' niet openen."
 
-#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr "Het instellen van het zoeken op basis van PGC is mislukt."
 
-#: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr "Interne fout met de klok."
 
-#: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
 msgstr "Interne fout met gegevensdoorvoer."
 
-#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
 msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
 
-#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
 
-#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
 msgstr "Interne fout in gegevensstroom."
 
-#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kan niet in bestand \"%s\" schrijven."
 
-#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Apparaat \"%s\" bestaat niet."
 
-#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kan het frontend-apparaat \"%s\" niet openen."
 
-#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kan de instellingen van het frontend-apparaat \"%s\" niet verkrijgen."
 
-#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kan bestand \"%s\" niet openen om te lezen."
 
-#: sys/oss4/oss4-mixer.c:302
 msgid "Could not open audio device for mixer control handling."
 msgstr "Kan het audio-apparaat niet openen voor de mixerbesturing."
 
-#: sys/oss4/oss4-mixer.c:316
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
@@ -90,271 +74,204 @@ msgstr ""
 "Kan het audio-apparaat niet openen voor de mixerbesturing. Deze versie van "
 "het Open Soundsysteem wordt niet ondersteund door dit element."
 
-#: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
 msgstr "Snel"
 
-#: sys/oss4/oss4-mixer.c:721
 msgid "Low"
 msgstr "Laag"
 
-#: sys/oss4/oss4-mixer.c:722
 msgid "Medium"
 msgstr "Gemiddeld"
 
-#: sys/oss4/oss4-mixer.c:723
 msgid "High"
 msgstr "Hoog"
 
-#: sys/oss4/oss4-mixer.c:724
 msgid "Very high"
 msgstr "Erg hoog"
 
-#: sys/oss4/oss4-mixer.c:725
 msgid "Production"
 msgstr "Productie"
 
-#: sys/oss4/oss4-mixer.c:726
 msgid "Off"
 msgstr "Uit"
 
-#: sys/oss4/oss4-mixer.c:727
 msgid "On"
 msgstr "Aan"
 
-#: sys/oss4/oss4-mixer.c:728
 msgid "Stereo"
 msgstr "Stereo"
 
-#: sys/oss4/oss4-mixer.c:729
 msgid "Surround sound"
 msgstr "Surround geluid"
 
-#: sys/oss4/oss4-mixer.c:730 sys/oss4/oss4-mixer.c:805
 msgid "Input mix"
 msgstr "Invoermix"
 
-#: sys/oss4/oss4-mixer.c:731 sys/oss4/oss4-mixer.c:800
 msgid "Front"
 msgstr "Voorzijde"
 
-#: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
 msgid "Rear"
 msgstr "Achterzijde"
 
-#: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
 msgid "Side"
 msgstr "Zijkant"
 
-#: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
 msgid "Center / LFE"
 msgstr "Midden / LFE"
 
-#: sys/oss4/oss4-mixer.c:735 sys/oss4/oss4-mixer.c:794
 msgid "Microphone"
 msgstr "Microfoon"
 
-#: sys/oss4/oss4-mixer.c:736 sys/oss4/oss4-mixer.c:795
 msgid "Front panel microphone"
 msgstr "Microfoon in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:737
 msgid "Input"
 msgstr "Invoer"
 
-#: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
 msgid "Line-in"
 msgstr "Lijn-in"
 
-#: sys/oss4/oss4-mixer.c:739
 msgid "PCM 1"
 msgstr "PCM 1"
 
-#: sys/oss4/oss4-mixer.c:740
 msgid "PCM 2"
 msgstr "PCM 2"
 
-#: sys/oss4/oss4-mixer.c:741
 msgid "PCM 3"
 msgstr "PCM 3"
 
-#: sys/oss4/oss4-mixer.c:742
 msgid "PCM 4"
 msgstr "PCM 4"
 
-#: sys/oss4/oss4-mixer.c:754
 msgid "Green connector"
 msgstr "Groene connector"
 
-#: sys/oss4/oss4-mixer.c:755
 msgid "Green front panel connector"
 msgstr "Groene connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:756
 msgid "Pink connector"
 msgstr "Roze connector"
 
-#: sys/oss4/oss4-mixer.c:757
 msgid "Pink front panel connector"
 msgstr "Roze connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:758
 msgid "Blue connector"
 msgstr "Blauwe connector"
 
-#: sys/oss4/oss4-mixer.c:759
 msgid "Blue front panel connector"
 msgstr "Blauwe connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:760
 msgid "Orange connector"
 msgstr "Oranje connector"
 
-#: sys/oss4/oss4-mixer.c:761
 msgid "Orange front panel connector"
 msgstr "Oranje connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:762
 msgid "Black connector"
 msgstr "Zwarte connector"
 
-#: sys/oss4/oss4-mixer.c:763
 msgid "Black front panel connector"
 msgstr "Zwarte connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:764
 msgid "Gray connector"
 msgstr "Grijze connector"
 
-#: sys/oss4/oss4-mixer.c:765
 msgid "Gray front panel connector"
 msgstr "Grijze connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:766
 msgid "White connector"
 msgstr "Witte connector"
 
-#: sys/oss4/oss4-mixer.c:767
 msgid "White front panel connector"
 msgstr "Witte connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:768
 msgid "Red connector"
 msgstr "Rode connector"
 
-#: sys/oss4/oss4-mixer.c:769
 msgid "Red front panel connector"
 msgstr "Rode connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:770
 msgid "Yellow connector"
 msgstr "Gele connector"
 
-#: sys/oss4/oss4-mixer.c:771
 msgid "Yellow front panel connector"
 msgstr "Gele connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:774
 msgid "Green connector function"
 msgstr "Functie van groene connector"
 
-#: sys/oss4/oss4-mixer.c:775
 msgid "Green front panel connector function"
 msgstr "Functie van groene connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:776
 msgid "Pink connector function"
 msgstr "Functie van roze connector"
 
-#: sys/oss4/oss4-mixer.c:777
 msgid "Pink front panel connector function"
 msgstr "Functie van roze connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:778
 msgid "Blue connector function"
 msgstr "Functie van blauwe connector"
 
-#: sys/oss4/oss4-mixer.c:779
 msgid "Blue front panel connector function"
 msgstr "Functie van blauwe connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:780
 msgid "Orange connector function"
 msgstr "Functie van oranje connector"
 
-#: sys/oss4/oss4-mixer.c:781
 msgid "Orange front panel connector function"
 msgstr "Functie van oranje connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:782
 msgid "Black connector function"
 msgstr "Functie van zwarte connector"
 
-#: sys/oss4/oss4-mixer.c:783
 msgid "Black front panel connector function"
 msgstr "Functie van zwarte connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:784
 msgid "Gray connector function"
 msgstr "Functie van grijze connector"
 
-#: sys/oss4/oss4-mixer.c:785
 msgid "Gray front panel connector function"
 msgstr "Functie van grijze connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:786
 msgid "White connector function"
 msgstr "Functie van witte connector"
 
-#: sys/oss4/oss4-mixer.c:787
 msgid "White front panel connector function"
 msgstr "Functie van witte connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:788
 msgid "Red connector function"
 msgstr "Functie van rode connector"
 
-#: sys/oss4/oss4-mixer.c:789
 msgid "Red front panel connector function"
 msgstr "Functie van rode connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:790
 msgid "Yellow connector function"
 msgstr "Functie van gele connector"
 
-#: sys/oss4/oss4-mixer.c:791
 msgid "Yellow front panel connector function"
 msgstr "Functie van gele connector in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:797
 msgid "Front panel line-in"
 msgstr "Lijn-in in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:798
 msgid "Headphones"
 msgstr "Hoofdtelefoon"
 
-#: sys/oss4/oss4-mixer.c:799
 msgid "Front panel headphones"
 msgstr "Hoofdtelefoon in frontpaneel"
 
-#: sys/oss4/oss4-mixer.c:804
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss4/oss4-mixer.c:846
 msgid "Virtual mixer input"
 msgstr "Virtuele mixer-invoer"
 
-#: sys/oss4/oss4-mixer.c:848
 msgid "Virtual mixer output"
 msgstr "Virtuele mixer-uitvoer"
 
-#: sys/oss4/oss4-mixer.c:850
 msgid "Virtual mixer channel configuration"
 msgstr "Kanaalconfiguratie van virtuele mixer "
 
-#: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -362,7 +279,6 @@ msgstr ""
 "Kan het audio-apparaat niet openen voor afspelen. Apparaat is in gebruik bij "
 "een andere applicatie."
 
-#: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -370,11 +286,9 @@ msgstr ""
 "Kan het audio-apparaat niet openen voor afspelen. U hebt geen toestemming om "
 "het apparaat te openen."
 
-#: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Kan het audio-apparaat niet openen voor afspelen."
 
-#: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -382,19 +296,15 @@ msgstr ""
 "Kan het audio-apparaat niet openen voor afspelen. Deze versie van het Open "
 "Soundsysteem wordt niet ondersteund door dit element."
 
-#: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
 msgstr "Afspelen wordt door dit audio-apparaat niet ondersteund."
 
-#: sys/oss4/oss4-sink.c:529
 msgid "Audio playback error."
 msgstr "Fout bij audio-afspelen."
 
-#: sys/oss4/oss4-source.c:520
 msgid "Recording is not supported by this audio device."
 msgstr "Opnemen wordt door dit audio-apparaat niet ondersteund."
 
-#: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
 msgstr "Fout bij opnemen met dit audio-apparaat."
 

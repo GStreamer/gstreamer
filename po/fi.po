@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 00:07+0100\n"
+"POT-Creation-Date: 2009-05-16 01:36+0100\n"
 "PO-Revision-Date: 2009-03-11 08:23+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -21,71 +21,55 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: KBabel 1.11.2\n"
 
-#: ext/resindvd/resindvdsrc.c:352
 msgid "Could not read title information for DVD."
 msgstr "DVD:n otsikkotietoja ei voitu lukea."
 
-#: ext/resindvd/resindvdsrc.c:358
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "DVD-laitetta \"%s\" ei voitu avata."
 
-#: ext/resindvd/resindvdsrc.c:364
 msgid "Failed to set PGC based seeking."
 msgstr "PGC-pohjaisen kelauksen asetus epäonnistui."
 
-#: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr "Sisäinen kellovirhe."
 
-#: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
 msgstr "Sisäinen tietovirtavirhe."
 
-#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
 msgstr "Kirjoitettavaa tiedostonimeä ei annettu."
 
-#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Tiedostoa \"%s\" ei voi avata kirjoitettavaksi."
 
-#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
 msgstr "Sisäisen tietovirran virhe."
 
-#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Tiedostoon \"%s\" ei voitu kirjoittaa."
 
-#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Laitetta \"%s\" ei ole olemassa."
 
-#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Edustalaitetta \"%s\" ei voitu avata."
 
-#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Edustalaitteen \"%s\" asetuksia ei saatu."
 
-#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tiedostoa \"%s\" ei voi avata luettavaksi."
 
-#: sys/oss4/oss4-mixer.c:302
 msgid "Could not open audio device for mixer control handling."
 msgstr "Äänilaitetta ei voitu avata mikserinhallinnan käsiteltäväksi."
 
-#: sys/oss4/oss4-mixer.c:316
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
@@ -93,271 +77,204 @@ msgstr ""
 "Äänilaitetta ei voitu avata mikserinhallinnan käsiteltäväksi. Tämä elementti "
 "ei tue tätä versiota Open Sound Systemistä."
 
-#: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
 msgstr "Nopea"
 
-#: sys/oss4/oss4-mixer.c:721
 msgid "Low"
 msgstr "Matala"
 
-#: sys/oss4/oss4-mixer.c:722
 msgid "Medium"
 msgstr "Keskitaso"
 
-#: sys/oss4/oss4-mixer.c:723
 msgid "High"
 msgstr "Korkea"
 
-#: sys/oss4/oss4-mixer.c:724
 msgid "Very high"
 msgstr "Erittäin korkea"
 
-#: sys/oss4/oss4-mixer.c:725
 msgid "Production"
 msgstr "Tuotanto"
 
-#: sys/oss4/oss4-mixer.c:726
 msgid "Off"
 msgstr "Poissa"
 
-#: sys/oss4/oss4-mixer.c:727
 msgid "On"
 msgstr "Päällä"
 
-#: sys/oss4/oss4-mixer.c:728
 msgid "Stereo"
 msgstr "Stereo"
 
-#: sys/oss4/oss4-mixer.c:729
 msgid "Surround sound"
 msgstr "Surround-ääni"
 
-#: sys/oss4/oss4-mixer.c:730 sys/oss4/oss4-mixer.c:805
 msgid "Input mix"
 msgstr "Sisääntulomiksaus"
 
-#: sys/oss4/oss4-mixer.c:731 sys/oss4/oss4-mixer.c:800
 msgid "Front"
 msgstr "Etu"
 
-#: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
 msgid "Rear"
 msgstr "Taka"
 
-#: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
 msgid "Side"
 msgstr "Sivu"
 
-#: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
 msgid "Center / LFE"
 msgstr "Keski / LFE"
 
-#: sys/oss4/oss4-mixer.c:735 sys/oss4/oss4-mixer.c:794
 msgid "Microphone"
 msgstr "Mikrofoni"
 
-#: sys/oss4/oss4-mixer.c:736 sys/oss4/oss4-mixer.c:795
 msgid "Front panel microphone"
 msgstr "Etupaneelin mikrofoni"
 
-#: sys/oss4/oss4-mixer.c:737
 msgid "Input"
 msgstr "Sisääntulo"
 
-#: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
 msgid "Line-in"
 msgstr "Linja sisään"
 
-#: sys/oss4/oss4-mixer.c:739
 msgid "PCM 1"
 msgstr "PCM 1"
 
-#: sys/oss4/oss4-mixer.c:740
 msgid "PCM 2"
 msgstr "PCM 2"
 
-#: sys/oss4/oss4-mixer.c:741
 msgid "PCM 3"
 msgstr "PCM 3"
 
-#: sys/oss4/oss4-mixer.c:742
 msgid "PCM 4"
 msgstr "PCM 4"
 
-#: sys/oss4/oss4-mixer.c:754
 msgid "Green connector"
 msgstr "Vihreä liitin"
 
-#: sys/oss4/oss4-mixer.c:755
 msgid "Green front panel connector"
 msgstr "Vihreä etupaneelin liitin"
 
-#: sys/oss4/oss4-mixer.c:756
 msgid "Pink connector"
 msgstr "Violetti liitin"
 
-#: sys/oss4/oss4-mixer.c:757
 msgid "Pink front panel connector"
 msgstr "Violetti etupaneelin liitin"
 
-#: sys/oss4/oss4-mixer.c:758
 msgid "Blue connector"
 msgstr "Sininen liitin"
 
-#: sys/oss4/oss4-mixer.c:759
 msgid "Blue front panel connector"
 msgstr "Sininen etupaneelin liitin"
 
-#: sys/oss4/oss4-mixer.c:760
 msgid "Orange connector"
 msgstr "Oranssi liitin"
 
-#: sys/oss4/oss4-mixer.c:761
 msgid "Orange front panel connector"
 msgstr "Oranssi etupaneelin liitin"
 
-#: sys/oss4/oss4-mixer.c:762
 msgid "Black connector"
 msgstr "Musta liitin"
 
-#: sys/oss4/oss4-mixer.c:763
 msgid "Black front panel connector"
 msgstr "Musta etupaneelin liitin"
 
-#: sys/oss4/oss4-mixer.c:764
 msgid "Gray connector"
 msgstr "Harmaa liitin"
 
-#: sys/oss4/oss4-mixer.c:765
 msgid "Gray front panel connector"
 msgstr "Harmaa etupaneelin liitin"
 
-#: sys/oss4/oss4-mixer.c:766
 msgid "White connector"
 msgstr "Valkoinen liitin"
 
-#: sys/oss4/oss4-mixer.c:767
 msgid "White front panel connector"
 msgstr "Valkoinen etupaneelin liitin"
 
-#: sys/oss4/oss4-mixer.c:768
 msgid "Red connector"
 msgstr "Punainen liitin"
 
-#: sys/oss4/oss4-mixer.c:769
 msgid "Red front panel connector"
 msgstr "Punainen etupaneelin liitin"
 
-#: sys/oss4/oss4-mixer.c:770
 msgid "Yellow connector"
 msgstr "Keltainen liitin"
 
-#: sys/oss4/oss4-mixer.c:771
 msgid "Yellow front panel connector"
 msgstr "Keltainen etupaneelin liitin"
 
-#: sys/oss4/oss4-mixer.c:774
 msgid "Green connector function"
 msgstr "Vihreän liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:775
 msgid "Green front panel connector function"
 msgstr "Vihreän etupaneelin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:776
 msgid "Pink connector function"
 msgstr "Violetin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:777
 msgid "Pink front panel connector function"
 msgstr "Violetin etupaneelin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:778
 msgid "Blue connector function"
 msgstr "Sinisen liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:779
 msgid "Blue front panel connector function"
 msgstr "Sinisen etupaneelin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:780
 msgid "Orange connector function"
 msgstr "Oranssin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:781
 msgid "Orange front panel connector function"
 msgstr "Oranssin etupaneelin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:782
 msgid "Black connector function"
 msgstr "Mustan liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:783
 msgid "Black front panel connector function"
 msgstr "Mustan etupaneelin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:784
 msgid "Gray connector function"
 msgstr "Harmaan liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:785
 msgid "Gray front panel connector function"
 msgstr "Harmaan etupaneelin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:786
 msgid "White connector function"
 msgstr "Valkoisen liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:787
 msgid "White front panel connector function"
 msgstr "Valkoisen etupaneelin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:788
 msgid "Red connector function"
 msgstr "Punaisen liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:789
 msgid "Red front panel connector function"
 msgstr "Punaisen etupaneelin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:790
 msgid "Yellow connector function"
 msgstr "Keltaisen liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:791
 msgid "Yellow front panel connector function"
 msgstr "Keltaisen etupaneelin liittimen toiminto"
 
-#: sys/oss4/oss4-mixer.c:797
 msgid "Front panel line-in"
 msgstr "Etupaneelin linjasisääntulo"
 
-#: sys/oss4/oss4-mixer.c:798
 msgid "Headphones"
 msgstr "Kuulokkeet"
 
-#: sys/oss4/oss4-mixer.c:799
 msgid "Front panel headphones"
 msgstr "Etupaneelin kuulokkeet"
 
-#: sys/oss4/oss4-mixer.c:804
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss4/oss4-mixer.c:846
 msgid "Virtual mixer input"
 msgstr "Näennäinen mikserisisääntulo"
 
-#: sys/oss4/oss4-mixer.c:848
 msgid "Virtual mixer output"
 msgstr "Näennäinen mikseriulostulo"
 
-#: sys/oss4/oss4-mixer.c:850
 msgid "Virtual mixer channel configuration"
 msgstr "Näennäinen mikserikanava-asetus"
 
-#: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -365,7 +282,6 @@ msgstr ""
 "Äänialaitetta ei voitu avata toistoa varten. Laite on toisen sovelluksen "
 "käytössä."
 
-#: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -373,11 +289,9 @@ msgstr ""
 "Äänialaitetta ei voitu avata toistoa varten. Sinulla ei ole oikeuksia avata "
 "laitetta."
 
-#: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Äänialaitetta ei voitu avata toistoa varten."
 
-#: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -385,18 +299,14 @@ msgstr ""
 "Äänialaitetta ei voitu avata toistoa varten. Tämä elementti ei tue tätä "
 "versiota Open Sound Systemistä."
 
-#: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
 msgstr "Tämä äänilaite ei tue toistamista."
 
-#: sys/oss4/oss4-sink.c:529
 msgid "Audio playback error."
 msgstr "Äänentoistovirhe."
 
-#: sys/oss4/oss4-source.c:520
 msgid "Recording is not supported by this audio device."
 msgstr "Tämä äänilaite ei tue nauhoitusta."
 
-#: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
 msgstr "Virhe nauhoitettaessa äänilaitteelta."
