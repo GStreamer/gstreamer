@@ -140,13 +140,13 @@ struct _GstClockPrivate
 
 /* seqlocks */
 #define read_seqbegin(clock)                                   \
-  g_atomic_int_get (&clock->priv->post_count);
+  g_atomic_int_get (&clock->ABI.priv->post_count);
 
 static inline gboolean
 read_seqretry (GstClock * clock, gint seq)
 {
   /* no retry if the seqnum did not change */
-  if (G_LIKELY (seq == g_atomic_int_get (&clock->priv->pre_count)))
+  if (G_LIKELY (seq == g_atomic_int_get (&clock->ABI.priv->pre_count)))
     return FALSE;
 
   /* wait for the writer to finish and retry */
@@ -158,12 +158,12 @@ read_seqretry (GstClock * clock, gint seq)
 #define write_seqlock(clock)                      \
 G_STMT_START {                                    \
   GST_OBJECT_LOCK (clock);                        \
-  g_atomic_int_inc (&clock->priv->pre_count);     \
+  g_atomic_int_inc (&clock->ABI.priv->pre_count);     \
 } G_STMT_END;
 
 #define write_sequnlock(clock)                    \
 G_STMT_START {                                    \
-  g_atomic_int_inc (&clock->priv->post_count);    \
+  g_atomic_int_inc (&clock->ABI.priv->post_count);    \
   GST_OBJECT_UNLOCK (clock);                      \
 } G_STMT_END;
 
@@ -607,7 +607,7 @@ gst_clock_init (GstClock * clock)
   clock->entries_changed = g_cond_new ();
   clock->stats = FALSE;
 
-  clock->priv =
+  clock->ABI.priv =
       G_TYPE_INSTANCE_GET_PRIVATE (clock, GST_TYPE_CLOCK, GstClockPrivate);
 
   clock->internal_calibration = 0;

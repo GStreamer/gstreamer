@@ -448,9 +448,10 @@ struct _GstClock {
   GstClockID     clockid;
 
   /*< private >*/
-  GstClockPrivate *priv;
-
-  GstClockTime	 _gst_reserved[GST_PADDING-1];
+  union {
+    GstClockPrivate *priv;
+    GstClockTime     _gst_reserved[GST_PADDING];
+  } ABI;
 };
 
 /**
