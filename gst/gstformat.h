@@ -35,11 +35,15 @@ G_BEGIN_DECLS
  * GstFormat:
  * @GST_FORMAT_UNDEFINED: undefined format
  * @GST_FORMAT_DEFAULT: the default format of the pad/element. This can be
- *    samples for raw audio, frames/fields for raw video.
+ *    samples for raw audio, frames/fields for raw video (some, but not all,
+ *    elements support this; use @GST_FORMAT_TIME if you don't have a good
+ *    reason to query for samples/frames)
  * @GST_FORMAT_BYTES: bytes
  * @GST_FORMAT_TIME: time in nanoseconds
- * @GST_FORMAT_BUFFERS: buffers
- * @GST_FORMAT_PERCENT: percentage of stream
+ * @GST_FORMAT_BUFFERS: buffers (few, if any, elements implement this as of
+ *     May 2009)
+ * @GST_FORMAT_PERCENT: percentage of stream (few, if any, elements implement
+ *     this as of May 2009)
  *
  * Standard predefined formats
  */
