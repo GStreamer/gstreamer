@@ -582,6 +582,7 @@ forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
         event, GST_EVENT_TYPE_NAME (event));
   }
   gst_object_unref (pad);
+  /* continue on other pads, even if one failed */
   return TRUE;
 }
 
@@ -596,6 +597,7 @@ forward_event (GstAdder * adder, GstEvent * event)
 {
   gboolean ret;
   GstIterator *it;
+  GstIteratorResult ires;
   GValue vret = { 0 };
 
   GST_LOG_OBJECT (adder, "Forwarding event %p (%s)", event,
@@ -606,12 +608,29 @@ forward_event (GstAdder * adder, GstEvent * event)
   g_value_init (&vret, G_TYPE_BOOLEAN);
   g_value_set_boolean (&vret, TRUE);
   it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (adder));
-  gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func, &vret,
-      event);
+  while (TRUE) {
+    ires = gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func,
+        &vret, event);
+    switch (ires) {
+      case GST_ITERATOR_RESYNC:
+        GST_WARNING ("resync");
+        gst_iterator_resync (it);
+        g_value_set_boolean (&vret, TRUE);
+        break;
+      case GST_ITERATOR_OK:
+      case GST_ITERATOR_DONE:
+        ret = g_value_get_boolean (&vret);
+        goto done;
+      default:
+        ret = FALSE;
+        goto done;
+    }
+  }
+done:
   gst_iterator_free (it);
+  GST_LOG_OBJECT (adder, "Forwarded event %p (%s), ret=%d", event,
+      GST_EVENT_TYPE_NAME (event), ret);
   gst_event_unref (event);
-
-  ret = g_value_get_boolean (&vret);
 
   return ret;
 }
