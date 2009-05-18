@@ -37,11 +37,11 @@ event_loop (GstElement * pipe)
         GstFormat format;
         guint64 amount;
         gdouble rate;
+        gboolean flush, intermediate;
         guint64 duration;
-        gboolean intermediate;
 
         gst_message_parse_step_done (message, &format, &amount, &rate,
-            &duration, &intermediate);
+            &flush, &intermediate, &duration);
 
         if (format == GST_FORMAT_DEFAULT) {
           g_message ("step done: %" GST_TIME_FORMAT " skipped in %"

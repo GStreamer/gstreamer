@@ -385,10 +385,11 @@ GstMessage *	gst_message_new_state_dirty	(GstObject * src);
 
 /* STEP_DONE */
 GstMessage *    gst_message_new_step_done       (GstObject * src, GstFormat format, guint64 amount,
-                                                 gdouble rate, guint64 duration, gboolean intermediate);
+                                                 gdouble rate, gboolean flush, gboolean intermediate, 
+						 guint64 duration);
 void            gst_message_parse_step_done     (GstMessage * message, GstFormat *format, guint64 *amount,
-                                                 gdouble *rate, guint64 *duration, gboolean *intermediate);
-
+                                                 gdouble *rate, gboolean *flush, gboolean *intermediate,
+						 guint64 *duration);
 /* CLOCK_PROVIDE */
 GstMessage *	gst_message_new_clock_provide	(GstObject * src, GstClock *clock, gboolean ready);
 void		gst_message_parse_clock_provide (GstMessage *message, GstClock **clock,

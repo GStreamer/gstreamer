@@ -1641,8 +1641,9 @@ gst_message_get_stream_status_object (GstMessage * message)
  * @format: the format of @amount
  * @amount: the amount of stepped data
  * @rate: the rate of the stepped amount
- * @duration: the duration of the data
+ * @flush: is this an flushing step
  * @intermediate: is this an intermediate step
+ * @duration: the duration of the data
  *
  * This message is posted by elements when they complete a part, when @intermediate set
  * to TRUE, or a complete step operation.
@@ -1658,7 +1659,7 @@ gst_message_get_stream_status_object (GstMessage * message)
  */
 GstMessage *
 gst_message_new_step_done (GstObject * src, GstFormat format, guint64 amount,
-    gdouble rate, guint64 duration, gboolean intermediate)
+    gdouble rate, gboolean flush, gboolean intermediate, guint64 duration)
 {
   GstMessage *message;
   GstStructure *structure;
@@ -1667,8 +1668,9 @@ gst_message_new_step_done (GstObject * src, GstFormat format, guint64 amount,
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (AMOUNT), G_TYPE_UINT64, amount,
       GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
-      GST_QUARK (DURATION), G_TYPE_UINT64, duration,
-      GST_QUARK (INTERMEDIATE), G_TYPE_BOOLEAN, intermediate, NULL);
+      GST_QUARK (FLUSH), G_TYPE_BOOLEAN, flush,
+      GST_QUARK (INTERMEDIATE), G_TYPE_BOOLEAN, intermediate,
+      GST_QUARK (DURATION), G_TYPE_UINT64, duration, NULL);
   message = gst_message_new_custom (GST_MESSAGE_STEP_DONE, src, structure);
 
   return message;
@@ -1680,8 +1682,9 @@ gst_message_new_step_done (GstObject * src, GstFormat format, guint64 amount,
  * @format: result location for the format
  * @amount: result location for the amount
  * @rate: result location for the rate
- * @duration: result location for the duration
+ * @flush: result location for the flush flag
  * @intermediate: result location for the intermediate flag
+ * @duration: result location for the duration
  *
  * Extract the requested state from the request_state message.
  *
@@ -1691,8 +1694,8 @@ gst_message_new_step_done (GstObject * src, GstFormat format, guint64 amount,
  */
 void
 gst_message_parse_step_done (GstMessage * message, GstFormat * format,
-    guint64 * amount, gdouble * rate, guint64 * duration,
-    gboolean * intermediate)
+    guint64 * amount, gdouble * rate, gboolean * flush, gboolean * intermediate,
+    guint64 * duration)
 {
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STEP_DONE);
@@ -1707,12 +1710,16 @@ gst_message_parse_step_done (GstMessage * message, GstFormat * format,
   if (rate)
     *rate = g_value_get_double (gst_structure_id_get_value (message->structure,
             GST_QUARK (RATE)));
-  if (duration)
-    *duration =
-        g_value_get_uint64 (gst_structure_id_get_value (message->structure,
-            GST_QUARK (DURATION)));
+  if (flush)
+    *flush =
+        g_value_get_boolean (gst_structure_id_get_value (message->structure,
+            GST_QUARK (FLUSH)));
   if (intermediate)
     *intermediate =
         g_value_get_boolean (gst_structure_id_get_value (message->structure,
             GST_QUARK (INTERMEDIATE)));
+  if (duration)
+    *duration =
+        g_value_get_uint64 (gst_structure_id_get_value (message->structure,
+            GST_QUARK (DURATION)));
 }

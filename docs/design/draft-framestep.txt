@@ -180,13 +180,19 @@ messages
   "rate", G_TYPE_DOUBLE
      The rate and direction at which the frames were stepped.
 
-  "duration", G_TYPE_UINT64
-     The total duration of the stepped units in GST_FORMAT_TIME.
+  "flush", G_TYPE_BOOLEAN
+     If the stepped frames were flushed.
 
   "intermediate", G_TYPE_BOOLEAN
      If this is an intermediate step operation that completed.
 
- The message is emited by the element that performs the step operation.
+  "duration", G_TYPE_UINT64
+     The total duration of the stepped units in GST_FORMAT_TIME.
+
+ The message is emited by the element that performs the step operation. The
+ purpose is to return the duration in GST_FORMAT_TIME of the stepped media. This
+ especially interesting to align other stream in case of stepping frames on the
+ video sink element.
 
 
 Direction switch
