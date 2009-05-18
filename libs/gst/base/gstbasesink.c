@@ -2509,12 +2509,16 @@ static GstFlowReturn
 gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
     GstMiniObject * obj)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn ret;
   GstBaseSinkClass *bclass;
-  gboolean late = FALSE;
+  gboolean late;
+
   GstBaseSinkPrivate *priv;
 
   priv = basesink->priv;
+
+  late = FALSE;
+  ret = GST_FLOW_OK;
 
   /* synchronize this object, non syncable objects return OK
    * immediatly. */
@@ -3384,6 +3388,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   GstFormat format;
   guint64 amount;
   guint seqnum;
+  GstStepInfo *pending;
 
   bclass = GST_BASE_SINK_GET_CLASS (sink);
   priv = sink->priv;
@@ -3393,6 +3398,8 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   gst_event_parse_step (event, &format, &amount, &rate, &flush, &intermediate);
   seqnum = gst_event_get_seqnum (event);
 
+  pending = &priv->pending_step;
+
   if (flush) {
     /* we need to call ::unlock before locking PREROLL_LOCK
      * since we lock it before going into ::render */
@@ -3401,14 +3408,14 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
 
     GST_PAD_PREROLL_LOCK (sink->sinkpad);
     /* update the segment */
-    priv->pending_step.seqnum = seqnum;
-    priv->pending_step.format = format;
-    priv->pending_step.amount = amount;
-    priv->pending_step.position = 0;
-    priv->pending_step.rate = rate;
-    priv->pending_step.flush = flush;
-    priv->pending_step.intermediate = intermediate;
-    priv->pending_step.valid = TRUE;
+    pending->seqnum = seqnum;
+    pending->format = format;
+    pending->amount = amount;
+    pending->position = 0;
+    pending->rate = rate;
+    pending->flush = flush;
+    pending->intermediate = intermediate;
+    pending->valid = TRUE;
 
     /* now that we have the PREROLL lock, clear our unlock request */
     if (bclass->unlock_stop)
