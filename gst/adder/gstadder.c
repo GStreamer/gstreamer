@@ -644,10 +644,6 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
   adder = GST_ADDER (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_QOS:
-      /* QoS might be tricky */
-      result = FALSE;
-      break;
     case GST_EVENT_SEEK:
     {
       GstSeekFlags flags;
@@ -667,6 +663,7 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
          * when all pads received a FLUSH_STOP. */
         gst_pad_push_event (adder->srcpad, gst_event_new_flush_start ());
       }
+      GST_DEBUG_OBJECT (adder, "handling seek event: %" GST_PTR_FORMAT, event);
       /* now wait for the collected to be finished and mark a new
        * segment */
       GST_OBJECT_LOCK (adder->collect);
@@ -676,16 +673,24 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
         adder->segment_position = 0;
       adder->segment_pending = TRUE;
       GST_OBJECT_UNLOCK (adder->collect);
+      GST_DEBUG_OBJECT (adder, "forwarding seek event: %" GST_PTR_FORMAT,
+          event);
 
       result = forward_event (adder, event);
       break;
     }
+    case GST_EVENT_QOS:
+      /* QoS might be tricky */
+      result = FALSE;
+      break;
     case GST_EVENT_NAVIGATION:
       /* navigation is rather pointless. */
       result = FALSE;
       break;
     default:
       /* just forward the rest for now */
+      GST_DEBUG_OBJECT (adder, "forward unhandled event: %s",
+          GST_EVENT_TYPE_NAME (event));
       result = forward_event (adder, event);
       break;
   }
@@ -988,9 +993,18 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     event = gst_event_new_new_segment_full (FALSE, adder->segment_rate,
         1.0, GST_FORMAT_TIME, adder->timestamp, -1, adder->segment_position);
 
-    gst_pad_push_event (adder->srcpad, event);
-    adder->segment_pending = FALSE;
-    adder->segment_position = 0;
+    if (event) {
+      if (!gst_pad_push_event (adder->srcpad, event)) {
+        GST_WARNING_OBJECT (adder->srcpad, "Sending event  %p (%s) failed.",
+            event, GST_EVENT_TYPE_NAME (event));
+      }
+      adder->segment_pending = FALSE;
+      adder->segment_position = 0;
+    } else {
+      GST_WARNING_OBJECT (adder->srcpad, "Creating new segment event for "
+          "start:%" G_GINT64_FORMAT "  pos:%" G_GINT64_FORMAT " failed",
+          adder->timestamp, adder->segment_position);
+    }
   }
 
   /* set timestamps on the output buffer */
@@ -1015,6 +1029,8 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   GST_LOG_OBJECT (adder, "pushing outbuf, timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
   ret = gst_pad_push (adder->srcpad, outbuf);
+
+  GST_LOG_OBJECT (adder, "pushed outbuf, result = %s", gst_flow_get_name (ret));
 
   return ret;
 
