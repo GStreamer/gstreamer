@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch dvdreadsrc title=1 ! dvddemux ! a52dec ! audioresample ! audioconvert ! alsasink
+ * gst-launch dvdreadsrc title=1 ! mpegpsdemux ! a52dec ! audioresample ! audioconvert ! alsasink
  * ]| Play audio track from a dvd.
  * |[
  * gst-launch filesrc location=abc.ac3 ! a52dec ! audioresample ! audioconvert ! alsasink
@@ -58,7 +58,7 @@ static GstElementDetails gst_a52dec_details = {
   "ATSC A/52 audio decoder",
   "Codec/Decoder/Audio",
   "Decodes ATSC A/52 encoded audio streams",
-  "David I. Lehn <dlehn@users.sourceforge.net>",
+  "David I. Lehn <dlehn@users.sourceforge.net>"
 };
 
 #ifdef LIBA52_DOUBLE
@@ -94,9 +94,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 4000, 96000 ], " "channels = (int) [ 1, 6 ]")
     );
 
-static void gst_a52dec_base_init (GstA52DecClass * klass);
-static void gst_a52dec_class_init (GstA52DecClass * klass);
-static void gst_a52dec_init (GstA52Dec * a52dec);
+GST_BOILERPLATE (GstA52Dec, gst_a52dec, GstElement, GST_TYPE_ELEMENT);
 
 static GstFlowReturn gst_a52dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf);
@@ -109,8 +107,6 @@ static void gst_a52dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_a52dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
-static GstElementClass *parent_class = NULL;
 
 #define GST_TYPE_A52DEC_MODE (gst_a52dec_mode_get_type())
 static GType
@@ -135,35 +131,10 @@ gst_a52dec_mode_get_type (void)
   return a52dec_mode_type;
 }
 
-
-GType
-gst_a52dec_get_type (void)
-{
-  static GType a52dec_type = 0;
-
-  if (!a52dec_type) {
-    static const GTypeInfo a52dec_info = {
-      sizeof (GstA52DecClass),
-      (GBaseInitFunc) gst_a52dec_base_init,
-      NULL,
-      (GClassInitFunc) gst_a52dec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstA52Dec),
-      0,
-      (GInstanceInitFunc) gst_a52dec_init,
-    };
-
-    a52dec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstA52Dec", &a52dec_info, 0);
-  }
-  return a52dec_type;
-}
-
 static void
-gst_a52dec_base_init (GstA52DecClass * klass)
+gst_a52dec_base_init (gpointer g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
@@ -185,19 +156,37 @@ gst_a52dec_class_init (GstA52DecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = gst_a52dec_set_property;
   gobject_class->get_property = gst_a52dec_get_property;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_a52dec_change_state);
 
+  /**
+   * GstA52Dec::drc
+   *
+   * Set to true to apply the recommended Dolby Digital dynamic range compression
+   * to the audio stream. Dynamic range compression makes loud sounds
+   * softer and soft sounds louder, so you can more easily listen
+   * to the stream without disturbing other people.
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRC,
       g_param_spec_boolean ("drc", "Dynamic Range Compression",
           "Use Dynamic Range Compression", FALSE, G_PARAM_READWRITE));
+  /**
+   * GstA52Dec::mode
+   *
+   * Force a particular output channel configuration from the decoder. By default,
+   * the channel downmix (if any) is chosen automatically based on the downstream
+   * capabilities of the pipeline. 
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
       g_param_spec_enum ("mode", "Decoder Mode", "Decoding Mode (default 3f2r)",
           GST_TYPE_A52DEC_MODE, A52_3F2R, G_PARAM_READWRITE));
+  /**
+   * GstA52Dec::lfe
+   *
+   * Whether to output the LFE (Low Frequency Emitter) channel of the audio stream.
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LFE,
       g_param_spec_boolean ("lfe", "LFE", "LFE", TRUE, G_PARAM_READWRITE));
 
@@ -216,14 +205,10 @@ gst_a52dec_class_init (GstA52DecClass * klass)
 }
 
 static void
-gst_a52dec_init (GstA52Dec * a52dec)
+gst_a52dec_init (GstA52Dec * a52dec, GstA52DecClass * g_class)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (a52dec);
-
   /* create the sink and src pads */
-  a52dec->sinkpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-          "sink"), "sink");
+  a52dec->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (a52dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_a52dec_sink_setcaps));
   gst_pad_set_chain_function (a52dec->sinkpad,
@@ -232,21 +217,19 @@ gst_a52dec_init (GstA52Dec * a52dec)
       GST_DEBUG_FUNCPTR (gst_a52dec_sink_event));
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->sinkpad);
 
-  a52dec->srcpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-          "src"), "src");
+  a52dec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
   a52dec->request_channels = A52_CHANNEL;
   a52dec->dynamic_range_compression = FALSE;
-  a52dec->cache = NULL;
+
   gst_segment_init (&a52dec->segment, GST_FORMAT_UNDEFINED);
 }
 
-static int
+static gint
 gst_a52dec_channels (int flags, GstAudioChannelPosition ** _pos)
 {
-  int chans = 0;
+  gint chans = 0;
   GstAudioChannelPosition *pos = NULL;
 
   /* allocated just for safety. Number makes no sense */
@@ -541,6 +524,7 @@ gst_a52dec_update_streaminfo (GstA52Dec * a52dec)
   taglist = gst_tag_list_new ();
 
   gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
+      GST_TAG_AUDIO_CODEC, "Dolby Digital (AC-3)",
       GST_TAG_BITRATE, (guint) a52dec->bit_rate, NULL);
 
   gst_element_found_tags_for_pad (GST_ELEMENT (a52dec),
@@ -619,6 +603,7 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
     flags = a52dec->using_channels;
   }
   /* process */
+  flags |= A52_ADJUST_LEVEL;
   a52dec->level = 1;
   if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
     GST_WARNING ("a52_frame error");
@@ -632,7 +617,7 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
   }
 
   /* negotiate if required */
-  if (need_reneg == TRUE) {
+  if (need_reneg) {
     GST_DEBUG ("a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d",
         a52dec->sample_rate, a52dec->stream_channels, a52dec->using_channels);
     if (!gst_a52dec_reneg (a52dec, a52dec->srcpad)) {
@@ -750,7 +735,6 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
   }
 
 done:
-
   return ret;
 
 /* ERRORS */
@@ -771,11 +755,13 @@ bad_first_access_parameter:
 static GstFlowReturn
 gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
 {
-  GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
+  GstA52Dec *a52dec;
   guint8 *data;
   guint size;
   gint length = 0, flags, sample_rate, bit_rate;
   GstFlowReturn result = GST_FLOW_OK;
+
+  a52dec = GST_A52DEC (GST_PAD_PARENT (pad));
 
   if (!a52dec->sent_segment) {
     GstSegment segment;
@@ -816,16 +802,17 @@ gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
   while (size >= 7) {
     length = a52_syncinfo (data, &flags, &sample_rate, &bit_rate);
 
-    if (flags != a52dec->prev_flags)
-      a52dec->flag_update = TRUE;
-    a52dec->prev_flags = flags;
-
     if (length == 0) {
       /* no sync */
       data++;
       size--;
     } else if (length <= size) {
       GST_DEBUG ("Sync: %d", length);
+
+      if (flags != a52dec->prev_flags)
+        a52dec->flag_update = TRUE;
+      a52dec->prev_flags = flags;
+
       result = gst_a52dec_handle_frame (a52dec, data,
           length, flags, sample_rate, bit_rate);
       if (result != GST_FLOW_OK) {
@@ -852,7 +839,6 @@ gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
   }
 
   gst_buffer_unref (buf);
-  gst_object_unref (a52dec);
 
   return result;
 }
