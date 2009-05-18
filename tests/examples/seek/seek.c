@@ -2295,7 +2295,8 @@ print_usage (int argc, char **argv)
 int
 main (int argc, char **argv)
 {
-  GtkWidget *window, *hbox, *vbox, *panel, *boxes, *flagtable, *boxes2;
+  GtkWidget *window, *hbox, *vbox, *panel, *expander, *pb2vbox, *boxes,
+      *flagtable, *boxes2;
   GtkWidget *play_button, *pause_button, *stop_button, *shot_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox, *rate_spinbutton;
@@ -2525,9 +2526,13 @@ main (int argc, char **argv)
   gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_spinbutton, 4, 5, 1,
       2);
   if (panel && boxes && boxes2) {
-    gtk_box_pack_start (GTK_BOX (vbox), panel, FALSE, FALSE, 2);
-    gtk_box_pack_start (GTK_BOX (vbox), boxes, FALSE, FALSE, 2);
-    gtk_box_pack_start (GTK_BOX (vbox), boxes2, FALSE, FALSE, 2);
+    expander = gtk_expander_new ("playbin2 options");
+    pb2vbox = gtk_vbox_new (FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (pb2vbox), panel, FALSE, FALSE, 2);
+    gtk_box_pack_start (GTK_BOX (pb2vbox), boxes, FALSE, FALSE, 2);
+    gtk_box_pack_start (GTK_BOX (pb2vbox), boxes2, FALSE, FALSE, 2);
+    gtk_container_add (GTK_CONTAINER (expander), pb2vbox);
+    gtk_box_pack_start (GTK_BOX (vbox), expander, FALSE, FALSE, 2);
   }
   gtk_box_pack_start (GTK_BOX (vbox), hscale, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), statusbar, FALSE, FALSE, 2);
