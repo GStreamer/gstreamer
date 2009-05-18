@@ -288,7 +288,7 @@ gst_adder_setcaps (GstPad * pad, GstCaps * caps)
     gst_structure_get_int (structure, "endianness", &adder->endianness);
     gst_structure_get_boolean (structure, "signed", &adder->is_signed);
 
-    GST_INFO_OBJECT (adder, "parse_caps sets adder to format int, %d bit",
+    GST_INFO_OBJECT (pad, "parse_caps sets adder to format int, %d bit",
         adder->width);
 
     if (adder->endianness != G_BYTE_ORDER)
@@ -315,7 +315,7 @@ gst_adder_setcaps (GstPad * pad, GstCaps * caps)
     gst_structure_get_int (structure, "width", &adder->width);
     gst_structure_get_int (structure, "endianness", &adder->endianness);
 
-    GST_INFO_OBJECT (adder, "parse_caps sets adder to format float, %d bit",
+    GST_INFO_OBJECT (pad, "parse_caps sets adder to format float, %d bit",
         adder->width);
 
     if (adder->endianness != G_BYTE_ORDER)
