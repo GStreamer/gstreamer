@@ -51,6 +51,22 @@
 #include <unistd.h>
 #endif
 
+#ifdef G_OS_WIN32
+#ifdef _MSC_VER
+#include <Winsock2.h>
+#endif
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ *  * minwg32 headers check WINVER before allowing the use of these */
+#ifndef WINVER
+#define WINVER 0x0501
+#endif
+#include <ws2tcpip.h>
+#else
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
@@ -348,6 +364,39 @@ gst_sdp_demux_stream_free (GstSDPDemux * demux, GstSDPStream * stream)
   g_free (stream);
 }
 
+static gboolean
+is_multicast_address (const gchar * host_name)
+{
+  struct addrinfo hints;
+  struct addrinfo *ai;
+  struct addrinfo *res;
+  gboolean ret = FALSE;
+  int err;
+
+  memset (&hints, 0, sizeof (hints));
+  hints.ai_socktype = SOCK_DGRAM;
+
+  g_return_val_if_fail (host_name, FALSE);
+
+  if ((err = getaddrinfo (host_name, NULL, &hints, &res)) < 0)
+    return FALSE;
+
+  for (ai = res; !ret && ai; ai = ai->ai_next) {
+    if (ai->ai_family == AF_INET)
+      ret =
+          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->
+              sin_addr.s_addr));
+    else
+      ret =
+          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->
+              ai_addr)->sin6_addr);
+  }
+
+  freeaddrinfo (res);
+
+  return ret;
+}
+
 static GstSDPStream *
 gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
 {
@@ -395,6 +444,7 @@ gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
 
   stream->destination = conn->address;
   stream->ttl = conn->ttl;
+  stream->multicast = is_multicast_address (stream->destination);
 
   stream->rtp_port = gst_sdp_media_get_port (media);
   if ((rtcp = gst_sdp_media_get_attribute_val (media, "rtcp"))) {
@@ -885,18 +935,24 @@ start_session_failure:
 static gboolean
 gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
 {
-  gchar *uri, *name;
+  gchar *uri, *name, *destination;
   GstPad *pad;
 
   GST_DEBUG_OBJECT (demux, "creating UDP sources for multicast");
 
+  /* if the destination is not a multicast address, we just want to listen on
+   * our local ports */
+  if (!stream->multicast)
+    destination = "0.0.0.0";
+  else
+    destination = stream->destination;
+
   /* creating UDP source */
   if (stream->rtp_port != -1) {
-    GST_DEBUG_OBJECT (demux, "receiving RTP from %s:%d", stream->destination,
+    GST_DEBUG_OBJECT (demux, "receiving RTP from %s:%d", destination,
         stream->rtp_port);
 
-    uri = g_strdup_printf ("udp://%s:%d", stream->destination,
-        stream->rtp_port);
+    uri = g_strdup_printf ("udp://%s:%d", destination, stream->rtp_port);
     stream->udpsrc[0] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
     g_free (uri);
     if (stream->udpsrc[0] == NULL)
@@ -933,10 +989,9 @@ gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
 
   /* creating another UDP source */
   if (stream->rtcp_port != -1) {
-    GST_DEBUG_OBJECT (demux, "receiving RTCP from %s:%d", stream->destination,
+    GST_DEBUG_OBJECT (demux, "receiving RTCP from %s:%d", destination,
         stream->rtcp_port);
-    uri =
-        g_strdup_printf ("udp://%s:%d", stream->destination, stream->rtcp_port);
+    uri = g_strdup_printf ("udp://%s:%d", destination, stream->rtcp_port);
     stream->udpsrc[1] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
     g_free (uri);
     if (stream->udpsrc[1] == NULL)
@@ -987,6 +1042,13 @@ gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
   g_free (uri);
   if (stream->udpsink == NULL)
     goto no_sink_element;
+
+  /* we clear all destinations because we don't really know where to send the
+   * RTCP to and we want to avoid sending it to our own ports.
+   * FIXME when we get an RTCP packet from the sender, we could look at its
+   * source port and address and try to send RTCP there. */
+  if (!stream->multicast)
+    g_signal_emit_by_name (stream->udpsink, "clear");
 
   /* no sync needed */
   g_object_set (G_OBJECT (stream->udpsink), "sync", FALSE, NULL);
