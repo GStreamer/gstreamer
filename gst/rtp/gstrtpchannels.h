@@ -111,7 +111,7 @@ static const GstAudioChannelPosition pos_8_3[] = {
 };
 
 static const GstAudioChannelPosition pos_def_1[] = {
-  GST_AUDIO_CHANNEL_POSITION_NONE
+  GST_AUDIO_CHANNEL_POSITION_FRONT_MONO
 };
 
 static const GstAudioChannelPosition pos_def_2[] = {
