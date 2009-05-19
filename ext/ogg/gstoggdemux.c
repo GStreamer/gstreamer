@@ -1550,13 +1550,18 @@ gst_ogg_demux_seek (GstOggDemux * ogg, gint64 offset)
  * the ogg sync layer.
  */
 static GstFlowReturn
-gst_ogg_demux_get_data (GstOggDemux * ogg)
+gst_ogg_demux_get_data (GstOggDemux * ogg, gint64 end_offset)
 {
   GstFlowReturn ret;
   GstBuffer *buffer;
 
-  GST_LOG_OBJECT (ogg, "get data %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
-      ogg->read_offset, ogg->length);
+  GST_LOG_OBJECT (ogg,
+      "get data %" G_GINT64_FORMAT " %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
+      ogg->read_offset, ogg->length, end_offset);
+
+  if (end_offset > 0 && ogg->read_offset >= end_offset)
+    goto boundary_reached;
+
   if (ogg->read_offset == ogg->length)
     goto eos;
 
@@ -1571,6 +1576,11 @@ gst_ogg_demux_get_data (GstOggDemux * ogg)
   return ret;
 
   /* ERROR */
+boundary_reached:
+  {
+    GST_LOG_OBJECT (ogg, "reached boundary");
+    return GST_FLOW_LIMIT;
+  }
 eos:
   {
     GST_LOG_OBJECT (ogg, "reached EOS");
@@ -1603,7 +1613,7 @@ static GstFlowReturn
 gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary,
     gint64 * offset)
 {
-  gint64 end_offset = 0;
+  gint64 end_offset = -1;
   GstFlowReturn ret;
 
   GST_LOG_OBJECT (ogg,
@@ -1616,7 +1626,7 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary,
   while (TRUE) {
     glong more;
 
-    if (boundary > 0 && ogg->offset >= end_offset)
+    if (end_offset > 0 && ogg->offset >= end_offset)
       goto boundary_reached;
 
     more = ogg_sync_pageseek (&ogg->sync, og);
@@ -1634,7 +1644,7 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary,
         goto boundary_reached;
 
       GST_LOG_OBJECT (ogg, "need more data");
-      ret = gst_ogg_demux_get_data (ogg);
+      ret = gst_ogg_demux_get_data (ogg, end_offset);
       if (ret != GST_FLOW_OK)
         break;
     } else {
