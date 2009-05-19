@@ -749,14 +749,21 @@ gst_decode_bin_finalize (GObject * object)
 static void
 gst_decode_bin_set_caps (GstDecodeBin * dbin, GstCaps * caps)
 {
+  GstCaps *old;
+
   GST_DEBUG_OBJECT (dbin, "Setting new caps: %" GST_PTR_FORMAT, caps);
 
   GST_OBJECT_LOCK (dbin);
-  if (dbin->caps)
-    gst_caps_unref (dbin->caps);
-  if (caps)
-    gst_caps_ref (caps);
-  dbin->caps = caps;
+  old = dbin->caps;
+  if (old != caps) {
+    if (caps)
+      gst_caps_ref (caps);
+
+    dbin->caps = caps;
+
+    if (old)
+      gst_caps_unref (old);
+  }
   GST_OBJECT_UNLOCK (dbin);
 }
 
@@ -766,7 +773,6 @@ gst_decode_bin_set_caps (GstDecodeBin * dbin, GstCaps * caps)
  *
  * MT-safe
  */
-
 static GstCaps *
 gst_decode_bin_get_caps (GstDecodeBin * dbin)
 {
