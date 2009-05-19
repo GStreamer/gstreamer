@@ -707,3 +707,80 @@ gst_adapter_prev_timestamp (GstAdapter * adapter, guint64 * distance)
 
   return adapter->priv->timestamp;
 }
+
+/**
+ * gst_adapter_masked_scan_uint32:
+ * @adapter: a #GstAdapter
+ * @mask: mask to apply to data before matching against @pattern
+ * @pattern: pattern to match (after mask is applied)
+ * @offset: offset into the adapter data from which to start scanning, returns
+ *          the last scanned position.
+ * @size: number of bytes to scan from offset
+ *
+ * Scan for pattern @pattern with applied mask @mask in the adapter data,
+ * starting from offset @offset.
+ *
+ * It is an error to call this function without making sure that there is
+ * enough data (offset+size bytes) in the adapter.
+ *
+ * Returns: offset of the first match, or -1 if no match was found.
+ *
+ * Since: 0.10.24
+ */
+guint
+gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
+    guint32 pattern, guint offset, guint size)
+{
+  GSList *g;
+  guint skip, bsize, i;
+  guint32 state;
+  guint8 *bdata;
+
+  g_return_val_if_fail (size > 0, -1);
+  g_return_val_if_fail (offset + size <= adapter->size, -1);
+
+  /* we can't find the pattern with less than 4 bytes */
+  if (G_UNLIKELY (size < 4))
+    return -1;
+
+  skip = offset + adapter->skip;
+
+  /* first step, do skipping and position on the first buffer */
+  g = adapter->buflist;
+  bsize = GST_BUFFER_SIZE (g->data);
+  while (skip >= bsize) {
+    skip -= bsize;
+    g = g_slist_next (g);
+    bsize = GST_BUFFER_SIZE (g->data);
+  }
+  /* get the data now */
+  bsize -= skip;
+  bdata = GST_BUFFER_DATA (g->data) + skip;
+
+  /* set the state to something that does not match */
+  state = ~pattern;
+
+  /* now find data */
+  while (size > 0) {
+    bsize = MIN (bsize, size);
+    for (i = bsize; i; i--) {
+      state = ((state << 8) | *bdata++);
+      if (G_UNLIKELY ((state & mask) == pattern)) {
+        offset += (bsize - i) - 3;
+        goto found;
+      }
+    }
+    size -= bsize;
+    if (size > 0) {
+      /* nothing found yet, go to next buffer */
+      offset += bsize;
+      g = g_slist_next (g);
+      bsize = GST_BUFFER_SIZE (g->data);
+      bdata = GST_BUFFER_DATA (g->data);
+    }
+  }
+  /* nothing found */
+  offset = -1;
+found:
+  return offset;
+}

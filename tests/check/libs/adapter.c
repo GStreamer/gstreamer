@@ -407,6 +407,183 @@ GST_START_TEST (test_timestamp)
 
 GST_END_TEST;
 
+GST_START_TEST (test_scan)
+{
+  GstAdapter *adapter;
+  GstBuffer *buffer;
+  guint8 *data;
+  guint offset;
+  guint i;
+
+  adapter = gst_adapter_new ();
+  fail_unless (adapter != NULL);
+
+  buffer = gst_buffer_new_and_alloc (100);
+  data = GST_BUFFER_DATA (buffer);
+  /* fill with pattern */
+  for (i = 0; i < 100; i++)
+    data[i] = i;
+
+  gst_adapter_push (adapter, buffer);
+
+  /* find first bytes */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x00010203, 0, 100);
+  fail_unless (offset == 0);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x01020304, 0, 100);
+  fail_unless (offset == 1);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x01020304, 1, 99);
+  fail_unless (offset == 1);
+  /* offset is past the pattern start */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x01020304, 2, 98);
+  fail_unless (offset == -1);
+  /* not enough bytes to find the pattern */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x02030405, 2, 3);
+  fail_unless (offset == -1);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x02030405, 2, 4);
+  fail_unless (offset == 2);
+  /* size does not include the last scanned byte */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x40414243, 0, 0x41);
+  fail_unless (offset == -1);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x40414243, 0, 0x43);
+  fail_unless (offset == -1);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x40414243, 0, 0x44);
+  fail_unless (offset == 0x40);
+  /* past the start */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x40414243, 65, 10);
+  fail_unless (offset == -1);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x40414243, 64, 5);
+  fail_unless (offset == 64);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x60616263, 65, 35);
+  fail_unless (offset == 0x60);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x60616263, 0x60, 4);
+  fail_unless (offset == 0x60);
+  /* past the start */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x60616263, 0x61, 3);
+  fail_unless (offset == -1);
+
+  /* add another buffer */
+  buffer = gst_buffer_new_and_alloc (100);
+  data = GST_BUFFER_DATA (buffer);
+  /* fill with pattern */
+  for (i = 0; i < 100; i++)
+    data[i] = i + 100;
+
+  gst_adapter_push (adapter, buffer);
+
+  /* past the start */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x60616263, 0x61, 6);
+  fail_unless (offset == -1);
+  /* this should work */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x61626364, 0x61, 4);
+  fail_unless (offset == 0x61);
+  /* not enough data */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x62636465, 0x61, 4);
+  fail_unless (offset == -1);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x62636465, 0x61, 5);
+  fail_unless (offset == 0x62);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x62636465, 0, 120);
+  fail_unless (offset == 0x62);
+
+  /* border conditions */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x62636465, 0, 200);
+  fail_unless (offset == 0x62);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x63646566, 0, 200);
+  fail_unless (offset == 0x63);
+  /* we completely searched the first list */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x64656667, 0, 200);
+  fail_unless (offset == 0x64);
+  /* skip first buffer */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x64656667, 0x64,
+      100);
+  fail_unless (offset == 0x64);
+  /* past the start */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x64656667, 0x65,
+      10);
+  fail_unless (offset == -1);
+  /* not enough data to scan */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x64656667, 0x63, 4);
+  fail_unless (offset == -1);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x64656667, 0x63, 5);
+  fail_unless (offset == 0x64);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0xc4c5c6c7, 0, 199);
+  fail_unless (offset == -1);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0xc4c5c6c7, 0x62,
+      102);
+  fail_unless (offset == 0xc4);
+  /* different masks */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0x00ffffff, 0x00656667, 0x64,
+      100);
+  fail_unless (offset == 0x64);
+  /* does not even exist */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0x00ffffff, 0xffffffff, 0x65,
+      99);
+  fail_unless (offset == -1);
+
+  /* flush some bytes */
+  gst_adapter_flush (adapter, 0x20);
+
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x20212223, 0, 100);
+  fail_unless (offset == 0);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x20212223, 0, 4);
+  fail_unless (offset == 0);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0xc4c5c6c7, 0x62,
+      70);
+  fail_unless (offset == 0xa4);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0xc4c5c6c7, 0, 168);
+  fail_unless (offset == 0xa4);
+
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0xc4c5c6c7, 164, 4);
+  fail_unless (offset == 0xa4);
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0xc4c5c6c7, 0x44,
+      100);
+  fail_unless (offset == 0xa4);
+  /* not enough bytes */
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0xc4c5c6c7, 0x44,
+      99);
+  fail_unless (offset == -1);
+
+  g_object_unref (adapter);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_adapter_suite (void)
 {
@@ -423,6 +600,7 @@ gst_adapter_suite (void)
   tcase_add_test (tc_chain, test_take_order);
   tcase_add_test (tc_chain, test_take_buf_order);
   tcase_add_test (tc_chain, test_timestamp);
+  tcase_add_test (tc_chain, test_scan);
 
   return s;
 }
