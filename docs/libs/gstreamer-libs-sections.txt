@@ -206,6 +206,7 @@ gst_adapter_available_fast
 gst_adapter_take
 gst_adapter_take_buffer
 gst_adapter_prev_timestamp
+gst_adapter_masked_scan_uint32
 <SUBSECTION Standard>
 GstAdapterClass
 GstAdapterPrivate
