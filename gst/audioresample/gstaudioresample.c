@@ -778,6 +778,10 @@ gst_audio_resample_push_drain (GstAudioResample * resample)
   if (!resample->state)
     return;
 
+  /* Don't drain samples if we were resetted. */
+  if (resample->next_ts == -1)
+    return;
+
   need_convert = (resample->funcs->width != resample->width);
 
   resample->funcs->get_ratio (resample->state, &num, &den);
