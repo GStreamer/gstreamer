@@ -1514,23 +1514,16 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
 
   GST_DEBUG_OBJECT (sink, "step complete");
 
-  GST_DEBUG_OBJECT (sink,
-      "step stop at running_time %" GST_TIME_FORMAT ", timestamp %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (*rstart), GST_TIME_ARGS (cstart));
-
-  /* configure the duration of the elapsed segment */
-  if (segment->rate > 0.0)
-    current->duration = *rstart - current->start;
-  else
-    current->duration = *rstop - current->start;
-
-  GST_DEBUG_OBJECT (sink, "step elapsed running_time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (current->duration));
 
   /* update the segment, discarding what was consumed, running time goes
    * backwards with the duration of the data we skipped. FIXME, this only works
    * in PAUSED. */
   if (segment->rate > 0.0) {
+    GST_DEBUG_OBJECT (sink,
+        "step stop at running_time %" GST_TIME_FORMAT ", timestamp %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (*rstart), GST_TIME_ARGS (cstart));
+    current->duration = *rstart - current->start;
+
     segment->time =
         gst_segment_to_stream_time (segment, segment->format, cstart);
     segment->start = cstart;
@@ -1538,11 +1531,19 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
     *rstart = current->start;
     *rstop -= current->duration;
   } else {
+    GST_DEBUG_OBJECT (sink,
+        "step stop at running_time %" GST_TIME_FORMAT ", timestamp %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (*rstop), GST_TIME_ARGS (cstop));
+    current->duration = *rstop - current->start;
+
     segment->stop = cstop;
     *rstop = current->start;
     *rstart -= current->duration;
   }
   segment->accum = current->start;
+
+  GST_DEBUG_OBJECT (sink, "step elapsed running_time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (current->duration));
 
   /* the clip segment is used for position report in paused... */
   memcpy (sink->abidata.ABI.clip_segment, segment, sizeof (GstSegment));
@@ -1576,19 +1577,31 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
     case GST_FORMAT_TIME:
     {
       guint64 end;
+      gint64 last;
 
       end = current->start + current->amount;
 
-      current->position = *rstart - current->start;
+      if (segment->rate > 0.0) {
+        current->position = *rstart - current->start;
+        last = *rstop;
+      } else {
+        current->position = *rstop - current->start;
+        last = *rstart;
+      }
 
       GST_DEBUG_OBJECT (sink,
           "got time step %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT,
           GST_TIME_ARGS (current->position), GST_TIME_ARGS (current->amount));
 
-      if (current->position >= current->amount || *rstop >= end) {
+      if (current->position >= current->amount || last >= end) {
         step_end = TRUE;
-        *cstart += end - *rstart;
-        *rstart = end;
+        if (segment->rate > 0.0) {
+          *cstart += end - *rstart;
+          *rstart = end;
+        } else {
+          *cstop += end - *rstop;
+          *rstop = end;
+        }
       }
       break;
     }
