@@ -66,7 +66,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) { I420, YUY2, Y444 }, "
+        "format = (fourcc) { I420, Y42B, Y444 }, "
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -895,7 +895,7 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
     fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
   } else if (dec->info.pixelformat == OC_PF_422) {
     dec->output_bpp = 16;
-    fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
+    fourcc = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
   } else if (dec->info.pixelformat == OC_PF_444) {
     dec->output_bpp = 24;
     fourcc = GST_MAKE_FOURCC ('Y', '4', '4', '4');
@@ -1164,19 +1164,22 @@ no_buffer:
 }
 
 
-/* Allocate buffer and copy image data into YUY2 format */
+/* Allocate buffer and copy image data into Y42B format */
 static GstFlowReturn
 theora_handle_422_image (GstTheoraDec * dec, yuv_buffer * yuv, GstBuffer ** out)
 {
   gint width = dec->width;
+  gint uvwidth = dec->width / 2;
   gint height = dec->height;
   gint out_size;
-  gint stride;
+  gint ystride, uvstride;
   GstFlowReturn result;
-  int i, j;
+  int i;
+  guint8 *dst, *src;
 
-  stride = GST_ROUND_UP_2 (width) * 2;
-  out_size = stride * height;
+  ystride = GST_ROUND_UP_4 (width);
+  uvstride = GST_ROUND_UP_8 (width) / 2;
+  out_size = ystride * height + uvstride * height * 2;
 
   /* now copy over the area contained in offset_x,offset_y,
    * frame_width, frame_height */
@@ -1186,55 +1189,27 @@ theora_handle_422_image (GstTheoraDec * dec, yuv_buffer * yuv, GstBuffer ** out)
   if (G_UNLIKELY (result != GST_FLOW_OK))
     goto no_buffer;
 
-  /* The output pixels look like:
-   *   YUYVYUYV....
-   *
-   * Do the interleaving... Note that this is kinda messed up if our width is
-   * odd. In that case, we can't represent it properly in YUY2, so we just
-   * pad out to even in that case (this is why we have GST_ROUND_UP_2() above).
-   */
-  {
-    guchar *src_y;
-    guchar *src_cb;
-    guchar *src_cr;
-    guchar *dest;
-    guchar *curdest;
-    guchar *src;
+  dst = GST_BUFFER_DATA (*out);
 
-    dest = GST_BUFFER_DATA (*out);
+  src = yuv->y;
+  for (i = 0; i < height; i++) {
+    memcpy (dst, src, width);
+    src += yuv->y_stride;
+    dst += ystride;
+  }
 
-    src_y = yuv->y + dec->offset_x + dec->offset_y * yuv->y_stride;
-    src_cb = yuv->u + dec->offset_x / 2 + dec->offset_y * yuv->uv_stride;
-    src_cr = yuv->v + dec->offset_x / 2 + dec->offset_y * yuv->uv_stride;
+  src = yuv->u;
+  for (i = 0; i < height; i++) {
+    memcpy (dst, src, uvwidth);
+    src += yuv->uv_stride;
+    dst += uvstride;
+  }
 
-    for (i = 0; i < height; i++) {
-      /* Y first */
-      curdest = dest;
-      src = src_y;
-      for (j = 0; j < width; j++) {
-        *curdest = *src++;
-        curdest += 2;
-      }
-      src_y += yuv->y_stride;
-
-      curdest = dest + 1;
-      src = src_cb;
-      for (j = 0; j < width / 2; j++) {
-        *curdest = *src++;
-        curdest += 4;
-      }
-      src_cb += yuv->uv_stride;
-
-      curdest = dest + 3;
-      src = src_cr;
-      for (j = 0; j < width / 2; j++) {
-        *curdest = *src++;
-        curdest += 4;
-      }
-      src_cr += yuv->uv_stride;
-
-      dest += stride;
-    }
+  src = yuv->v;
+  for (i = 0; i < height; i++) {
+    memcpy (dst, src, uvwidth);
+    src += yuv->uv_stride;
+    dst += uvstride;
   }
 
 no_buffer:
