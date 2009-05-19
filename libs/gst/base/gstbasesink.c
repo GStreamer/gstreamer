@@ -152,6 +152,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_base_sink_debug);
 #define GST_BASE_SINK_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_SINK, GstBaseSinkPrivate))
 
+#define GST_FLOW_STEP GST_FLOW_CUSTOM_ERROR
+
 typedef struct
 {
   gboolean valid;               /* if this info is valid */
@@ -239,6 +241,7 @@ struct _GstBaseSinkPrivate
   guint32 seqnum;
 
   gboolean call_preroll;
+  gboolean step_unlock;
 
   /* we have a pending and a current step operation */
   GstStepInfo current_step;
@@ -1276,6 +1279,7 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   basesink->eos = FALSE;
   basesink->priv->received_eos = FALSE;
   basesink->have_preroll = FALSE;
+  basesink->priv->step_unlock = FALSE;
   basesink->eos_queued = FALSE;
   basesink->preroll_queued = 0;
   basesink->buffers_queued = 0;
@@ -1731,6 +1735,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     cstop = stop;
     /* do running and stream time in TIME format */
     format = GST_FORMAT_TIME;
+    GST_LOG_OBJECT (basesink, "not time format, don't clip");
     goto do_times;
   }
 
@@ -1934,6 +1939,8 @@ gst_base_sink_wait_preroll (GstBaseSink * sink)
   sink->have_preroll = FALSE;
   if (G_UNLIKELY (sink->flushing))
     goto stopping;
+  if (G_UNLIKELY (sink->priv->step_unlock))
+    goto step_unlocked;
   GST_DEBUG_OBJECT (sink, "continue after preroll");
 
   return GST_FLOW_OK;
@@ -1941,8 +1948,14 @@ gst_base_sink_wait_preroll (GstBaseSink * sink)
   /* ERRORS */
 stopping:
   {
-    GST_DEBUG_OBJECT (sink, "preroll interrupted");
+    GST_DEBUG_OBJECT (sink, "preroll interrupted because of flush");
     return GST_FLOW_WRONG_STATE;
+  }
+step_unlocked:
+  {
+    sink->priv->step_unlock = FALSE;
+    GST_DEBUG_OBJECT (sink, "preroll interrupted because of step");
+    return GST_FLOW_STEP;
   }
 }
 
@@ -1980,8 +1993,12 @@ gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
     if (G_LIKELY (sink->need_preroll)) {
       /* block until the state changes, or we get a flush, or something */
       ret = gst_base_sink_wait_preroll (sink);
-      if (ret != GST_FLOW_OK)
-        goto preroll_failed;
+      if (ret != GST_FLOW_OK) {
+        if (ret == GST_FLOW_STEP)
+          ret = GST_FLOW_OK;
+        else
+          goto preroll_failed;
+      }
     }
   }
   return GST_FLOW_OK;
@@ -2029,8 +2046,12 @@ gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
     /* first wait for the playing state before we can continue */
     if (G_UNLIKELY (sink->need_preroll)) {
       ret = gst_base_sink_wait_preroll (sink);
-      if (ret != GST_FLOW_OK)
-        goto flushing;
+      if (ret != GST_FLOW_OK) {
+        if (ret == GST_FLOW_STEP)
+          ret = GST_FLOW_OK;
+        else
+          goto flushing;
+      }
     }
 
     /* preroll done, we can sync since we are in PLAYING now. */
@@ -2530,6 +2551,7 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
 
   priv = basesink->priv;
 
+again:
   late = FALSE;
   ret = GST_FLOW_OK;
 
@@ -2567,10 +2589,13 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
 
       ret = bclass->render (basesink, buf);
 
-      priv->rendered++;
-
       if (do_qos)
         gst_base_sink_do_render_stats (basesink, FALSE);
+
+      if (ret == GST_FLOW_STEP)
+        goto again;
+
+      priv->rendered++;
     }
   } else {
     GstEvent *event = GST_EVENT_CAST (obj);
@@ -3420,7 +3445,11 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       bclass->unlock (sink);
 
     GST_PAD_PREROLL_LOCK (sink->sinkpad);
-    /* update the segment */
+    /* now that we have the PREROLL lock, clear our unlock request */
+    if (bclass->unlock_stop)
+      bclass->unlock_stop (sink);
+
+    /* update the stepinfo and make it valid */
     pending->seqnum = seqnum;
     pending->format = format;
     pending->amount = amount;
@@ -3429,10 +3458,6 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
     pending->flush = flush;
     pending->intermediate = intermediate;
     pending->valid = TRUE;
-
-    /* now that we have the PREROLL lock, clear our unlock request */
-    if (bclass->unlock_stop)
-      bclass->unlock_stop (sink);
 
     if (sink->priv->async_enabled) {
       /* and we need to commit our state again on the next
@@ -3453,9 +3478,11 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       gst_clock_id_unschedule (sink->clock_id);
     }
 
-    GST_DEBUG_OBJECT (sink, "signal waiter");
-    GST_PAD_PREROLL_SIGNAL (sink->sinkpad);
-
+    if (sink->have_preroll) {
+      GST_DEBUG_OBJECT (sink, "signal waiter");
+      priv->step_unlock = TRUE;
+      GST_PAD_PREROLL_SIGNAL (sink->sinkpad);
+    }
     GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
   }
 
@@ -4314,6 +4341,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
           GST_FORMAT_UNDEFINED);
       basesink->offset = 0;
       basesink->have_preroll = FALSE;
+      priv->step_unlock = FALSE;
       basesink->need_preroll = TRUE;
       basesink->playing_async = TRUE;
       priv->current_sstart = -1;
