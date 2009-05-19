@@ -2184,6 +2184,17 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
 }
 #endif
 
+static gboolean
+handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
+{
+  if (state < GST_STATE_PAUSED) {
+    gdk_draw_rectangle (widget->window, widget->style->black_gc, TRUE,
+        0, 0, widget->allocation.width, widget->allocation.height);
+  }
+  return FALSE;
+}
+
+
 static void
 msg_eos (GstBus * bus, GstMessage * message, GstPipeline * data)
 {
@@ -2367,6 +2378,8 @@ main (int argc, char **argv)
   tips = gtk_tooltips_new ();
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   video_window = gtk_drawing_area_new ();
+  g_signal_connect (G_OBJECT (video_window), "expose-event",
+      G_CALLBACK (handle_expose_cb), NULL);
   gtk_widget_set_double_buffered (video_window, FALSE);
   statusbar = gtk_statusbar_new ();
   status_id = gtk_statusbar_get_context_id (GTK_STATUSBAR (statusbar), "seek");
@@ -2421,6 +2434,7 @@ main (int argc, char **argv)
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
   hscale = gtk_hscale_new (adjustment);
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
+  gtk_scale_set_value_pos (GTK_SCALE (hscale), GTK_POS_RIGHT);
 #if GTK_CHECK_VERSION(2,12,0)
   gtk_range_set_show_fill_level (GTK_RANGE (hscale), TRUE);
   gtk_range_set_fill_level (GTK_RANGE (hscale), 100.0);
