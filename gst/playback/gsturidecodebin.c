@@ -74,6 +74,7 @@ struct _GstURIDecodeBin
   gchar *encoding;
 
   gboolean is_stream;
+  gboolean need_queue;
   guint64 buffer_duration;      /* When streaming, buffer duration (ns) */
   guint buffer_size;            /* When streaming, buffer size (bytes) */
 
@@ -756,6 +757,9 @@ static const gchar *stream_uris[] = { "http://", "mms://", "mmsh://",
   "mmsu://", "mmst://", NULL
 };
 
+/* list of URIs that need a queue because they are pretty bursty */
+static const gchar *queue_uris[] = { "cdda://", NULL };
+
 /* blacklisted URIs, we know they will always fail. */
 static const gchar *blacklisted_uris[] = { NULL };
 
@@ -774,6 +778,7 @@ static const gchar *raw_media[] = {
 };
 
 #define IS_STREAM_URI(uri)          (array_has_value (stream_uris, uri))
+#define IS_QUEUE_URI(uri)           (array_has_value (queue_uris, uri))
 #define IS_BLACKLISTED_URI(uri)     (array_has_value (blacklisted_uris, uri))
 #define IS_NO_MEDIA_MIME(mime)      (array_has_value (no_media_mimes, mime))
 #define IS_RAW_MEDIA(media)         (array_has_value (raw_media, media))
@@ -804,8 +809,10 @@ gen_source_element (GstURIDecodeBin * decoder)
   GST_LOG_OBJECT (decoder, "found source type %s", G_OBJECT_TYPE_NAME (source));
 
   decoder->is_stream = IS_STREAM_URI (decoder->uri);
-
   GST_LOG_OBJECT (decoder, "source is stream: %d", decoder->is_stream);
+
+  decoder->need_queue = IS_QUEUE_URI (decoder->uri);
+  GST_LOG_OBJECT (decoder, "source needs queue: %d", decoder->need_queue);
 
   /* make HTTP sources send extra headers so we get icecast
    * metadata in case the stream is an icecast stream */
@@ -926,6 +933,7 @@ done:
  * @is_raw: are all pads raw data
  * @have_out: does the source have output
  * @is_dynamic: is this a dynamic source
+ * @use_queue: put a queue before raw output pads
  *
  * Check the source of @decoder and collect information about it.
  *
@@ -942,7 +950,7 @@ done:
  */
 static gboolean
 analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
-    gboolean * have_out, gboolean * is_dynamic)
+    gboolean * have_out, gboolean * is_dynamic, gboolean use_queue)
 {
   GstIterator *pads_iter;
   gboolean done = FALSE;
@@ -981,8 +989,28 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
         }
 
         /* caps on source pad are all raw, we can add the pad */
-        if (*is_raw)
-          new_decoded_pad_cb (decoder->source, pad, FALSE, decoder);
+        if (*is_raw) {
+          GstElement *outelem;
+
+          if (use_queue) {
+            GstPad *sinkpad;
+
+            /* insert a queue element right before the raw pad */
+            outelem = gst_element_factory_make ("queue2", "queue");
+            gst_bin_add (GST_BIN_CAST (decoder), outelem);
+
+            sinkpad = gst_element_get_static_pad (outelem, "sink");
+            gst_pad_link (pad, sinkpad);
+            gst_object_unref (sinkpad);
+            gst_object_unref (pad);
+
+            /* get the new raw srcpad */
+            pad = gst_element_get_static_pad (outelem, "src");
+          } else {
+            outelem = decoder->source;
+          }
+          new_decoded_pad_cb (outelem, pad, FALSE, decoder);
+        }
         gst_object_unref (pad);
         break;
     }
@@ -1384,7 +1412,8 @@ setup_source (GstURIDecodeBin * decoder)
    * if so, we can create streams for the pads and be done with it.
    * Also check that is has source pads, if not, we assume it will
    * do everything itself.  */
-  if (!analyse_source (decoder, &is_raw, &have_out, &is_dynamic))
+  if (!analyse_source (decoder, &is_raw, &have_out, &is_dynamic,
+          decoder->need_queue))
     goto invalid_source;
 
   if (is_raw) {
