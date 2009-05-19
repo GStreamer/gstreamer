@@ -672,6 +672,8 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       else
         adder->segment_position = 0;
       adder->segment_pending = TRUE;
+      adder->flush_stop_pending =
+          ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
       GST_OBJECT_UNLOCK (adder->collect);
       GST_DEBUG_OBJECT (adder, "forwarding seek event: %" GST_PTR_FORMAT,
           event);
@@ -719,6 +721,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
        * and downstream (using our source pad, the bastard!).
        */
       adder->segment_pending = TRUE;
+      adder->flush_stop_pending = FALSE;
       break;
     default:
       break;
@@ -1005,6 +1008,10 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
           "start:%" G_GINT64_FORMAT "  pos:%" G_GINT64_FORMAT " failed",
           adder->timestamp, adder->segment_position);
     }
+  }
+  if (adder->flush_stop_pending) {
+    gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop ());
+    adder->flush_stop_pending = FALSE;
   }
 
   /* set timestamps on the output buffer */
