@@ -672,13 +672,20 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       else
         adder->segment_position = 0;
       adder->segment_pending = TRUE;
-      adder->flush_stop_pending =
-          ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
       GST_OBJECT_UNLOCK (adder->collect);
       GST_DEBUG_OBJECT (adder, "forwarding seek event: %" GST_PTR_FORMAT,
           event);
 
       result = forward_event (adder, event);
+      if (result) {
+        /* seek failed. maybe source is a live source. send a flush_stop
+         * FIXME: ideally we just forward flush event, but live sources don't
+         * send anything and we need a flush events to unlock the collect
+         * function
+         */
+        adder->flush_stop_pending =
+            ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
+      }
       break;
     }
     case GST_EVENT_QOS:
