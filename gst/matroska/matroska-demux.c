@@ -121,7 +121,7 @@ static GstStaticPadTemplate subtitle_src_templ =
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("text/plain; application/x-ssa; application/x-ass; "
         "application/x-usf; video/x-dvd-subpicture; "
-        "application/x-subtitle-unknown")
+        "subpicture/x-pgs; " "application/x-subtitle-unknown")
     );
 
 static GstFlowReturn gst_matroska_demux_parse_contents (GstMatroskaDemux *
@@ -5670,6 +5670,8 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB)) {
     caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
     ((GstMatroskaTrackContext *) subtitlecontext)->send_dvd_event = TRUE;
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_HDMVPGS)) {
+    caps = gst_caps_new_simple ("subpicture/x-pgs", NULL);
   } else {
     GST_DEBUG ("Unknown subtitle stream: codec_id='%s'", codec_id);
     caps = gst_caps_new_simple ("application/x-subtitle-unknown", NULL);
