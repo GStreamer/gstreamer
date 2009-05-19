@@ -152,8 +152,6 @@ gst_tcp_client_src_init (GstTCPClientSrc * this, GstTCPClientSrcClass * g_class)
   this->protocol = GST_TCP_PROTOCOL_NONE;
   this->caps = NULL;
 
-  gst_base_src_set_live (GST_BASE_SRC (this), TRUE);
-
   GST_OBJECT_FLAG_UNSET (this, GST_TCP_CLIENT_SRC_OPEN);
 }
 
