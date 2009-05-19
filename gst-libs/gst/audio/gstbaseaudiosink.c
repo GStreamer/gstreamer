@@ -1489,7 +1489,7 @@ no_sync:
       break;
 
     /* else something interrupted us and we wait for preroll. */
-    if (gst_base_sink_wait_preroll (bsink) != GST_FLOW_OK)
+    if ((ret = gst_base_sink_wait_preroll (bsink)) != GST_FLOW_OK)
       goto stopping;
 
     /* if we got interrupted, we cannot assume that the next sample should
@@ -1549,7 +1549,7 @@ wrong_size:
 stopping:
   {
     GST_DEBUG_OBJECT (sink, "ringbuffer is stopping");
-    return GST_FLOW_WRONG_STATE;
+    return ret;
   }
 sync_latency_failed:
   {
