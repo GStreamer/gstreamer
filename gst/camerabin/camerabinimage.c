@@ -526,7 +526,6 @@ gst_camerabin_image_destroy_elements (GstCameraBinImage * img)
 
   gst_camerabin_remove_elements_from_bin (GST_BIN (img));
 
-  img->post = NULL;
   img->tee = NULL;
   img->enc = NULL;
   img->meta_mux = NULL;
