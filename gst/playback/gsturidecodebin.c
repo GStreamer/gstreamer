@@ -1151,6 +1151,10 @@ make_decoder (GstURIDecodeBin * decoder)
   if (!decodebin)
     goto no_decodebin;
 
+  /* configure caps if we have any */
+  if (decoder->caps)
+    g_object_set (decodebin, "caps", decoder->caps, NULL);
+
   /* connect signals to proxy */
   g_signal_connect (G_OBJECT (decodebin), "unknown-type",
       G_CALLBACK (proxy_unknown_type_signal), decoder);
