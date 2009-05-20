@@ -173,6 +173,8 @@
 #define ST_HDV_PRIVATE_A0		0xa0
 #define ST_HDV_PRIVATE_A1		0xa1
 #define ST_PS_DVD_SUBPICTURE            0xff
+/* Blu-ray PGS subpictures */
+#define ST_BD_PGS_SUBPICTURE            0x90
 
 /* Un-official time-code stream */
 #define ST_PS_TIMECODE                  0xd2

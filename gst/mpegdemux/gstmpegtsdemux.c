@@ -157,6 +157,10 @@ enum
     "audio/x-dts" \
   )
 
+/* Can also use the subpicture pads for text subtitles? */
+#define SUBPICTURE_CAPS \
+    GST_STATIC_CAPS ("subpicture/x-pgs; video/x-dvd-subpicture")
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -174,6 +178,12 @@ GST_STATIC_PAD_TEMPLATE ("audio_%04x",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     AUDIO_CAPS);
+
+static GstStaticPadTemplate subpicture_template =
+GST_STATIC_PAD_TEMPLATE ("subpicture_%04x",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    SUBPICTURE_CAPS);
 
 static GstStaticPadTemplate private_template =
 GST_STATIC_PAD_TEMPLATE ("private_%04x",
@@ -250,10 +260,14 @@ gst_mpegts_demux_base_init (GstMpegTSDemuxClass * klass)
   klass->sink_template = gst_static_pad_template_get (&sink_template);
   klass->video_template = gst_static_pad_template_get (&video_template);
   klass->audio_template = gst_static_pad_template_get (&audio_template);
+  klass->subpicture_template =
+      gst_static_pad_template_get (&subpicture_template);
   klass->private_template = gst_static_pad_template_get (&private_template);
 
   gst_element_class_add_pad_template (element_class, klass->video_template);
   gst_element_class_add_pad_template (element_class, klass->audio_template);
+  gst_element_class_add_pad_template (element_class,
+      klass->subpicture_template);
   gst_element_class_add_pad_template (element_class, klass->private_template);
   gst_element_class_add_pad_template (element_class, klass->sink_template);
 
@@ -675,6 +689,14 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
       caps = gst_caps_new_simple ("audio/x-lpcm", NULL);
       break;
     case ST_PS_DVD_SUBPICTURE:
+      template = klass->subpicture_template;
+      name = g_strdup_printf ("subpicture_%04x", stream->PID);
+      caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
+      break;
+    case ST_BD_PGS_SUBPICTURE:
+      template = klass->subpicture_template;
+      name = g_strdup_printf ("subpicture_%04x", stream->PID);
+      caps = gst_caps_new_simple ("subpicture/x-pgs", NULL);
       break;
     default:
       break;
@@ -992,8 +1014,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
       goto unknown_type;
 
     GST_DEBUG_OBJECT (demux,
-        "New stream 0x%04x of type %d with caps %" GST_PTR_FORMAT, stream->PID,
-        stream->stream_type, GST_PAD_CAPS (stream->pad));
+        "New stream 0x%04x of type 0x%02x with caps %" GST_PTR_FORMAT,
+        stream->PID, stream->stream_type, GST_PAD_CAPS (stream->pad));
 
     srcpad = stream->pad;
 
@@ -1017,7 +1039,7 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
 unknown_type:
   {
     GST_DEBUG_OBJECT (demux, "got unknown stream id 0x%02x, type 0x%02x",
-        filter->id, filter->type);
+        filter->id, stream->stream_type);
     gst_buffer_unref (buffer);
     return gst_mpegts_demux_combine_flows (demux, stream, GST_FLOW_NOT_LINKED);
   }

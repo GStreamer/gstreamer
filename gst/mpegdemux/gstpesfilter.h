@@ -84,8 +84,6 @@ struct _GstPESFilter {
   gboolean           unbounded_packet;
   guint16            length;
 
-  guint8             type;
-
   gint64             pts;
   gint64             dts;
 };
