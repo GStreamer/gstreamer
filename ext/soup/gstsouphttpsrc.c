@@ -744,6 +744,8 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 
   guint64 newsize;
 
+  GHashTable *params = NULL;
+
   GST_DEBUG_OBJECT (src, "got headers");
 
   if (src->automatic_redirect && SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
@@ -792,7 +794,38 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
       src->src_caps = gst_caps_new_simple ("application/x-icy",
           "metadata-interval", G_TYPE_INT, icy_metaint, NULL);
     }
+  } else if ((value =
+          soup_message_headers_get_content_type (msg->response_headers,
+              &params)) != NULL) {
+    GST_DEBUG_OBJECT (src, "Content-Type: %s", value);
+    if (g_ascii_strcasecmp (value, "audio/L16") == 0) {
+      gint channels = 2;
+      gint rate = 44100;
+      char *param;
+
+      if (src->src_caps)
+        gst_caps_unref (src->src_caps);
+
+      param = g_hash_table_lookup (params, "channels");
+      if (param != NULL)
+        channels = atol (param);
+
+      param = g_hash_table_lookup (params, "rate");
+      if (param != NULL)
+        rate = atol (param);
+
+      src->src_caps = gst_caps_new_simple ("audio/x-raw-int",
+          "channels", G_TYPE_INT, channels,
+          "rate", G_TYPE_INT, rate,
+          "width", G_TYPE_INT, 16,
+          "depth", G_TYPE_INT, 16,
+          "signed", G_TYPE_BOOLEAN, TRUE,
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
+    }
   }
+
+  if (params != NULL)
+    g_hash_table_destroy (params);
 
   if ((value =
           soup_message_headers_get (msg->response_headers,
