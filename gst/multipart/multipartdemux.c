@@ -231,6 +231,36 @@ gst_multipart_demux_get_gstname (GstMultipartDemux * demux, gchar * mimetype)
   return gstname;
 }
 
+static GstFlowReturn
+gst_multipart_combine_flows (GstMultipartDemux * demux, GstMultipartPad * pad,
+    GstFlowReturn ret)
+{
+  GSList *walk;
+
+  /* store the value */
+  pad->last_ret = ret;
+
+  /* any other error that is not-linked can be returned right
+   * away */
+  if (ret != GST_FLOW_NOT_LINKED)
+    goto done;
+
+  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
+  for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
+    GstMultipartPad *opad = (GstMultipartPad *) walk->data;
+
+    ret = opad->last_ret;
+    /* some other return value (must be SUCCESS but we can return
+     * other values as well) */
+    if (ret != GST_FLOW_NOT_LINKED)
+      goto done;
+  }
+  /* if we get here, all other pads were unlinked and we return
+   * NOT_LINKED then */
+done:
+  return ret;
+}
+
 static GstMultipartPad *
 gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     gboolean * created)
@@ -278,6 +308,7 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
 
     mppad->pad = pad;
     mppad->mime = g_strdup (mime);
+    mppad->last_ret = GST_FLOW_OK;
 
     demux->srcpads = g_slist_prepend (demux->srcpads, mppad);
     demux->numpads++;
@@ -535,6 +566,7 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG_OBJECT (multipart, "buffer has caps %" GST_PTR_FORMAT,
           GST_BUFFER_CAPS (outbuf));
       res = gst_pad_push (srcpad->pad, outbuf);
+      res = gst_multipart_combine_flows (multipart, srcpad, res);
       if (res != GST_FLOW_OK)
         break;
     }

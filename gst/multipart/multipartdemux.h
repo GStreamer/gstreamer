@@ -50,6 +50,8 @@ typedef struct
   GstPad *pad;                  /* reference for this pad is held by element we belong to */
 
   gchar *mime;
+
+  GstFlowReturn last_ret;
 }
 GstMultipartPad;
 
