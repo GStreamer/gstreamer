@@ -3611,12 +3611,12 @@ gst_bin_save_thyself (GstObject * object, xmlNodePtr parent)
   GST_CAT_INFO (GST_CAT_XML, "[%s]: saving %d children",
       GST_ELEMENT_NAME (bin), bin->numchildren);
 
-  children = bin->children;
+  children = g_list_last (bin->children);
   while (children) {
     child = GST_ELEMENT (children->data);
     elementnode = xmlNewChild (childlist, NULL, (xmlChar *) "element", NULL);
     gst_object_save_thyself (GST_OBJECT (child), elementnode);
-    children = g_list_next (children);
+    children = g_list_previous (children);
   }
   return childlist;
 }

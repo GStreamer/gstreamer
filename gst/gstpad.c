@@ -3645,6 +3645,7 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
 {
   xmlNodePtr field = self->xmlChildrenNode;
   GstPad *pad = NULL, *targetpad;
+  GstPadTemplate *tmpl;
   gchar *peer = NULL;
   gchar **split;
   GstElement *target;
@@ -3655,7 +3656,8 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
     if (!strcmp ((char *) field->name, "name")) {
       name = (gchar *) xmlNodeGetContent (field);
       pad = gst_element_get_static_pad (GST_ELEMENT (parent), name);
-      if (!pad)
+      if ((!pad) || ((tmpl = gst_pad_get_pad_template (pad))
+              && (GST_PAD_REQUEST == GST_PAD_TEMPLATE_PRESENCE (tmpl))))
         pad = gst_element_get_request_pad (GST_ELEMENT (parent), name);
       g_free (name);
     } else if (!strcmp ((char *) field->name, "peer")) {
@@ -3699,7 +3701,10 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
   if (targetpad == NULL)
     goto cleanup;
 
-  gst_pad_link (pad, targetpad);
+  if (gst_pad_get_direction (pad) == GST_PAD_SRC)
+    gst_pad_link (pad, targetpad);
+  else
+    gst_pad_link (targetpad, pad);
 
 cleanup:
   g_strfreev (split);

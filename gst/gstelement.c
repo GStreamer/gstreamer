@@ -2886,7 +2886,7 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
 
   g_free (specs);
 
-  pads = GST_ELEMENT_PADS (element);
+  pads = g_list_last (GST_ELEMENT_PADS (element));
 
   while (pads) {
     GstPad *pad = GST_PAD_CAST (pads->data);
@@ -2897,7 +2897,7 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
 
       gst_object_save_thyself (GST_OBJECT_CAST (pad), padtag);
     }
-    pads = g_list_next (pads);
+    pads = g_list_previous (pads);
   }
 
   return parent;
