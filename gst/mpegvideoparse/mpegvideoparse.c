@@ -261,6 +261,7 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
         "height", G_TYPE_INT, new_hdr.height,
         "framerate", GST_TYPE_FRACTION, new_hdr.fps_n, new_hdr.fps_d,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, new_hdr.par_w, new_hdr.par_h,
+        "interlaced", G_TYPE_BOOLEAN, !new_hdr.progressive,
         "codec_data", GST_TYPE_BUFFER, seq_buf, NULL);
 
     GST_DEBUG ("New mpegvideoparse caps: %" GST_PTR_FORMAT, caps);

@@ -498,6 +498,9 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
     case MPEG_PACKET_EXT_SEQUENCE:
     {
       /* Parse a Sequence Extension */
+      guint8 profile_level;
+      gboolean low_delay;
+      guint8 chroma_format;
       guint8 horiz_size_ext, vert_size_ext;
       guint8 fps_n_ext, fps_d_ext;
 
@@ -505,8 +508,12 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
         /* need at least 10 bytes, minus 4 for the start code 000001b5 */
         return FALSE;
 
+      profile_level = ((data[0] << 4) & 0xf0) | ((data[1]) >> 4);
+      hdr->progressive = data[1] & 0x08;
+      chroma_format = (data[1] >> 2) & 0x03;
       horiz_size_ext = ((data[1] << 1) & 0x02) | ((data[2] >> 7) & 0x01);
       vert_size_ext = (data[2] >> 5) & 0x03;
+      low_delay = data[5] >> 7;
       fps_n_ext = (data[5] >> 5) & 0x03;
       fps_d_ext = data[5] & 0x1f;
 

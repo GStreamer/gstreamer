@@ -76,6 +76,8 @@ struct MPEGSeqHdr
   gint width, height;
   /* Framerate */
   gint fps_n, fps_d;
+
+  gboolean progressive;
 };
 
 struct MPEGPictureHdr
