@@ -60,7 +60,7 @@ static const GstElementDetails gst_multipart_demux_details =
 GST_ELEMENT_DETAILS ("Multipart demuxer",
     "Codec/Demuxer",
     "demux multipart streams",
-    "Wim Taymans <wim@fluendo.com>, Sjoerd Simons <sjoerd@luon.net>");
+    "Wim Taymans <wim.taymans@gmail.com>, Sjoerd Simons <sjoerd@luon.net>");
 
 
 /* signals and args */
@@ -99,14 +99,22 @@ typedef struct
   const gchar *val;
 } GstNamesMap;
 
-/* convert from mime types to gst structure names. Add more when needed. */
+/* convert from mime types to gst structure names. Add more when needed. The
+ * mime-type is stored as lowercase */
 static const GstNamesMap gstnames[] = {
   /* RFC 2046 says audio/basic is mulaw, mono, 8000Hz */
   {"audio/basic", "audio/x-mulaw, channels=1, rate=8000"},
-  {"audio/G726-16", "audio/x-adpcm, bitrate=16000"},
-  {"audio/G726-24", "audio/x-adpcm, bitrate=24000"},
-  {"audio/G726-32", "audio/x-adpcm, bitrate=32000"},
-  {"audio/G726-40", "audio/x-adpcm, bitrate=40000"},
+  {"audio/g726-16",
+      "audio/x-adpcm, bitrate=16000, layout=g726, channels=1, rate=8000"},
+  {"audio/g726-24",
+      "audio/x-adpcm, bitrate=24000, layout=g726, channels=1, rate=8000"},
+  {"audio/g726-32",
+      "audio/x-adpcm, bitrate=32000, layout=g726, channels=1, rate=8000"},
+  {"audio/g726-40",
+      "audio/x-adpcm, bitrate=40000, layout=g726, channels=1, rate=8000"},
+  /* Panasonic Network Cameras non-standard types */
+  {"audio/g726",
+      "audio/x-adpcm, bitrate=32000, layout=g726, channels=1, rate=8000"},
   {NULL, NULL}
 };
 
@@ -420,7 +428,7 @@ multipart_parse_header (GstMultipartDemux * multipart)
 
     if (len >= 14 && !g_ascii_strncasecmp ("content-type:", (gchar *) pos, 13)) {
       g_free (multipart->mime_type);
-      multipart->mime_type = g_strndup ((gchar *) pos + 14, len - 14);
+      multipart->mime_type = g_ascii_strdown ((gchar *) pos + 14, len - 14);
     } else if (len >= 15 &&
         !g_ascii_strncasecmp ("content-length:", (gchar *) pos, 15)) {
       multipart->content_length =
