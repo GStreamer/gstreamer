@@ -502,35 +502,42 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
     if ((size = multipart_find_boundary (multipart, &datalen)) < 0) {
       goto nodata;
     }
-    srcpad =
-        gst_multipart_find_pad_by_mime (multipart,
-        multipart->mime_type, &created);
-    outbuf = gst_adapter_take_buffer (adapter, datalen);
-    gst_adapter_flush (adapter, size - datalen);
 
     /* Invalidate header info */
     multipart->header_completed = FALSE;
     multipart->content_length = -1;
 
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (srcpad->pad));
-    if (created) {
-      GstEvent *event;
-
-      /* Push new segment, first buffer has 0 timestamp */
-      event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
-      gst_pad_push_event (srcpad->pad, event);
-      GST_BUFFER_TIMESTAMP (outbuf) = 0;
+    if (G_UNLIKELY (datalen <= 0)) {
+      GST_DEBUG_OBJECT (multipart, "skipping empty content.");
+      gst_adapter_flush (adapter, size - datalen);
     } else {
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+      srcpad =
+          gst_multipart_find_pad_by_mime (multipart,
+          multipart->mime_type, &created);
+      outbuf = gst_adapter_take_buffer (adapter, datalen);
+      gst_adapter_flush (adapter, size - datalen);
+
+      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (srcpad->pad));
+      if (created) {
+        GstEvent *event;
+
+        /* Push new segment, first buffer has 0 timestamp */
+        event =
+            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+        gst_pad_push_event (srcpad->pad, event);
+        GST_BUFFER_TIMESTAMP (outbuf) = 0;
+      } else {
+        GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+      }
+      GST_DEBUG_OBJECT (multipart,
+          "pushing buffer with timestamp %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
+      GST_DEBUG_OBJECT (multipart, "buffer has caps %" GST_PTR_FORMAT,
+          GST_BUFFER_CAPS (outbuf));
+      res = gst_pad_push (srcpad->pad, outbuf);
+      if (res != GST_FLOW_OK)
+        break;
     }
-    GST_DEBUG_OBJECT (multipart,
-        "pushing buffer with timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
-    GST_DEBUG_OBJECT (multipart, "buffer has caps %" GST_PTR_FORMAT,
-        GST_BUFFER_CAPS (outbuf));
-    res = gst_pad_push (srcpad->pad, outbuf);
-    if (res != GST_FLOW_OK)
-      break;
   }
 
 nodata:
