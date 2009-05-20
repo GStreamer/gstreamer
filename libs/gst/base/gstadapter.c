@@ -244,7 +244,7 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
   g = adapter->buflist;
   buf = g->data;
   bsize = GST_BUFFER_SIZE (buf);
-  while (skip >= bsize) {
+  while (G_UNLIKELY (skip >= bsize)) {
     skip -= bsize;
     g = g_slist_next (g);
     buf = g->data;
@@ -257,14 +257,14 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
   dest += csize;
 
   /* second step, copy remainder */
-  while (size > 0) {
+  do {
     g = g_slist_next (g);
     buf = g->data;
     csize = MIN (GST_BUFFER_SIZE (buf), size);
     memcpy (dest, GST_BUFFER_DATA (buf), csize);
     size -= csize;
     dest += csize;
-  }
+  } while (size > 0);
 }
 
 /**
@@ -747,7 +747,7 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
   g = adapter->buflist;
   buf = g->data;
   bsize = GST_BUFFER_SIZE (buf);
-  while (skip >= bsize) {
+  while (G_UNLIKELY (skip >= bsize)) {
     skip -= bsize;
     g = g_slist_next (g);
     buf = g->data;
@@ -761,7 +761,7 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
   state = ~pattern;
 
   /* now find data */
-  while (size > 0) {
+  do {
     bsize = MIN (bsize, size);
     for (i = bsize; i; i--) {
       state = ((state << 8) | *bdata++);
@@ -771,15 +771,17 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
       }
     }
     size -= bsize;
-    if (size > 0) {
-      /* nothing found yet, go to next buffer */
-      offset += bsize;
-      g = g_slist_next (g);
-      buf = g->data;
-      bsize = GST_BUFFER_SIZE (buf);
-      bdata = GST_BUFFER_DATA (buf);
-    }
-  }
+    if (size == 0)
+      break;
+
+    /* nothing found yet, go to next buffer */
+    offset += bsize;
+    g = g_slist_next (g);
+    buf = g->data;
+    bsize = GST_BUFFER_SIZE (buf);
+    bdata = GST_BUFFER_DATA (buf);
+  } while (TRUE);
+
   /* nothing found */
   offset = -1;
 found:
