@@ -382,7 +382,7 @@ gst_tag_list_new_from_id3v1 (const guint8 * data)
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, date, NULL);
     g_date_free (date);
   }
-  if (data[125] == 0) {
+  if (data[125] == 0 && data[126] != 0) {
     gst_tag_extract_id3v1_string (list, GST_TAG_COMMENT, (gchar *) & data[97],
         28);
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER,
