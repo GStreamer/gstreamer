@@ -240,29 +240,26 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
   GstBuffer *buf;
   guint bsize, csize;
 
-  /* first step, do skipping and copy partial first buffer, we don't have to
-   * check for valid list entries, we keep things consistent. */
+  /* first step, do skipping */
   g = adapter->buflist;
-  while (skip > 0) {
-    buf = g->data;
+  buf = g->data;
+  bsize = GST_BUFFER_SIZE (buf);
+  while (skip >= bsize) {
+    skip -= bsize;
     g = g_slist_next (g);
+    buf = g->data;
     bsize = GST_BUFFER_SIZE (buf);
-    if (G_LIKELY (skip < bsize)) {
-      /* last bit */
-      csize = MIN (bsize - skip, size);
-      memcpy (dest, GST_BUFFER_DATA (buf) + skip, csize);
-      size -= csize;
-      dest += csize;
-      /* break out and move to next step */
-      break;
-    } else {
-      skip -= bsize;
-    }
   }
+  /* copy partial buffer */
+  csize = MIN (bsize - skip, size);
+  memcpy (dest, GST_BUFFER_DATA (buf) + skip, csize);
+  size -= csize;
+  dest += csize;
+
   /* second step, copy remainder */
   while (size > 0) {
-    buf = g->data;
     g = g_slist_next (g);
+    buf = g->data;
     csize = MIN (GST_BUFFER_SIZE (buf), size);
     memcpy (dest, GST_BUFFER_DATA (buf), csize);
     size -= csize;
@@ -735,6 +732,7 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
   guint skip, bsize, i;
   guint32 state;
   guint8 *bdata;
+  GstBuffer *buf;
 
   g_return_val_if_fail (size > 0, -1);
   g_return_val_if_fail (offset + size <= adapter->size, -1);
@@ -747,15 +745,17 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
 
   /* first step, do skipping and position on the first buffer */
   g = adapter->buflist;
-  bsize = GST_BUFFER_SIZE (g->data);
+  buf = g->data;
+  bsize = GST_BUFFER_SIZE (buf);
   while (skip >= bsize) {
     skip -= bsize;
     g = g_slist_next (g);
-    bsize = GST_BUFFER_SIZE (g->data);
+    buf = g->data;
+    bsize = GST_BUFFER_SIZE (buf);
   }
   /* get the data now */
   bsize -= skip;
-  bdata = GST_BUFFER_DATA (g->data) + skip;
+  bdata = GST_BUFFER_DATA (buf) + skip;
 
   /* set the state to something that does not match */
   state = ~pattern;
@@ -775,8 +775,9 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
       /* nothing found yet, go to next buffer */
       offset += bsize;
       g = g_slist_next (g);
-      bsize = GST_BUFFER_SIZE (g->data);
-      bdata = GST_BUFFER_DATA (g->data);
+      buf = g->data;
+      bsize = GST_BUFFER_SIZE (buf);
+      bdata = GST_BUFFER_DATA (buf);
     }
   }
   /* nothing found */
