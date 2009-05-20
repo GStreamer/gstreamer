@@ -475,6 +475,10 @@ GST_START_TEST (test_scan)
       gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x60616263, 0x61, 3);
   fail_unless (offset == -1);
 
+  offset =
+      gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x60616263, 99, 1);
+  fail_unless (offset == -1);
+
   /* add another buffer */
   buffer = gst_buffer_new_and_alloc (100);
   data = GST_BUFFER_DATA (buffer);
