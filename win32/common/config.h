@@ -40,7 +40,7 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Good Plug-ins CVS/prerelease"
+#define GST_PACKAGE_NAME "GStreamer Good Plug-ins source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -335,13 +335,13 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.14.3"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.15"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.14.3"
+#define PACKAGE_VERSION "0.10.15"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -372,7 +372,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.14.3"
+#define VERSION "0.10.15"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API

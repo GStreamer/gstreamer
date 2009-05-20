@@ -1,4 +1,85 @@
-This is GStreamer Good Plug-ins 0.10.14, "Disaffected Affectation"
+This is GStreamer Good Plug-ins 0.10.15, "I've been up all night"
+
+Changes since 0.10.14:
+    
+      * Some fixes for seeking in wav and FLAC files
+      * Faster seeking in Matroska and AVI files
+      * RTSP and RTP improvements
+      * directdrawsink moved to Bad
+      * y4menc and flvmux/flvdemux moved from Bad
+      * deinterlace2 moved from Bad, replacing deinterlace
+      * Many bug fixes and improvements
+      * Pulseaudio sink completely overhauled
+
+Bugs fixed since 0.10.14:
+     
+      * 572551 : mpeg4videoparse fails to extract codec_data from this net...
+      * 577318 : rtspsrc appears to be leaking memory
+      * 576286 : [videomixer] Should accept/output non-alpha streams
+      * 581333 : rtspsrc: request_pt_map in gstrtspsrc.c fails to return c...
+      * 478092 : gstid3v2mux.cc:deprecated conversion from string constant...
+      * 486915 : [videomixer] segmentation fault on gst-inspect
+      * 509311 : [rtph263pay] rtph263pay does not follow rfc2190
+      * 516031 : flac within ogg container can't be played on Jokosher
+      * 537537 : [pulse] Latency issues
+      * 537609 : RTSP - rtspsrc module  support for Scale header
+      * 552650 : [rtspsrc] (partially) fails SETUP with MS RTSP servers
+      * 562168 : Good plugins' configury overloads --disable-debug
+      * 563574 : v4l2src should capture in non-blocking mode
+      * 567140 : G726 Packetizer issue for 24kbps & 40 kbps datarate
+      * 567857 : [udpsrc] loop on gst_poll_wait when POLLERR because of icmp
+      * 570781 : [alawdec] spews ERROR debug messages on shutdown/seek/not...
+      * 571153 : [pulsemixer] compiler warnings (on ARM)
+      * 571321 : gconfvideo{src,sink} don't disconnect gconf notifications
+      * 572256 : gst/avi/gstavidemux.c: Alignment trap in gst_avi_demux_pa...
+      * 572358 : law encoders _getcaps ignore rate/channel if not both are...
+      * 572413 : [jpegenc] crashes if no input format has been set
+      * 573173 : Added Quicktime HTTP tunneling to the RTSP src element
+      * 573342 : Unconditioned EAFNOSUPPORT in gstudpnetutils.c
+      * 573343 : Type mismatches in gstdirectdrawsink.c
+      * 573721 : [PLUGIN-MOVE] move directdrawsink back to -bad
+      * 573737 : [PLUGIN-MOVE] Move FLV to -good
+      * 574270 : [rtspsrc] Range request is wrong (should say: npt=now-)
+      * 574275 : flacdec ! appsink with a seek seems to drop the first buffer
+      * 577468 : [id3demux] Frames not extracted if tag is unsynchronised
+      * 577609 : [id3v2mux] write RVA2 frames for peak/gain volume data
+      * 577671 : [rtspsrc] deadlock on shutdown (locking order problem?)
+      * 578052 : gstavidemux: support seeking and duration query in defaul...
+      * 578135 : [qtdemux] missing 3gpp Asset metadata handling
+      * 578310 : [matroskamux] - Should suppport speex
+      * 579070 : [sunaudio] fix compiler warnings
+      * 579422 : flacdec can block allocating before it sent a new-segment
+      * 579808 : [jpegdec] Doesn't support additional 0xff before end marker
+      * 580746 : [qtdemux] 3GPP classification entity byte order reversed
+      * 580783 : [PLUGIN-MOVE] Move y4menc to -good
+      * 580851 : rtspsrc: various; sanity of ranges, setting of base_time ...
+      * 580880 : gstrtpjpegpay is not functioning properly; rtp jpeg paylo...
+      * 581329 : rtspsrc: NAT dummy packets not being sent
+      * 581568 : ability for replaygain plugin to post level messages
+      * 581806 : [souphttpsrc] Should allow overriding the referer
+      * 581884 : [PLUGIN-MOVE] Move deinterlace2 to gst-plugins-good
+      * 582252 : rganalysis test broken by recent commit
+      * 582281 : [rtp] Forgets to link to $(LIBM)
+      * 582387 : [avidemux] Seeking regression
+      * 582420 : flacdec unit test broken on PPC
+      * 582661 : [deinterlace] Fix latency query to return unbound max lat...
+      * 582715 : gcc warnings about unitialized
+      * 582753 : flacdec check fails
+      * 582794 : rganalysis unit test fails with git core
+      * 568278 : [qtdemux] add support for vob subtitle streams
+      * 569611 : GStreamer videobox element draws thin green lines on edge...
+      * 571294 : [matroskamux] Should ignore framerate of 0/1
+      * 574169 : avidemux/theoradec don't work well together
+      * 575234 : Network interface selection for multicasting with the udp...
+      * 576729 : [rtspsrc] perform EOS handling earlier
+      * 578257 : Image problems using rtpjpeg(de)pay
+      * 579069 : rtp h263pay build fixes
+      * 580554 : PATCH: qtdemux: fix demuxing of m4v streams with ac-3 audio
+      * 581432 : [multipartdemux] source pads are leaked
+      * 581444 : [multipartdemux] free memory read of buffer timestamp
+      * 582218 : Uninitialized variable may be used in gstavidemux.c
+      * 575937 : udp/gstudpnetutils.c: ip_mreqn unavailable on Solaris (an...
+
 
 Changes since 0.10.13:
     
