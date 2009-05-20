@@ -4984,7 +4984,7 @@ gboolean
   s = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_boolean (s, "interlaced", &interlaced) || !interlaced)
-    self->frame_layout = 1;
+    self->frame_layout = 0;
   else
     self->frame_layout = 3;
 
