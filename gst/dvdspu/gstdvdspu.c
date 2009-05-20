@@ -32,11 +32,14 @@
 #  include <config.h>
 #endif
 
+#include <gst/gst-i18n-plugin.h>
+
 #include <string.h>
 
 #include <gst/gst.h>
 
 #include "gstdvdspu.h"
+#include "gstspu-pgs.h"
 
 #define DUMP_DCSQ 0
 
@@ -73,10 +76,10 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate subpic_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("subpicture",
+    GST_STATIC_PAD_TEMPLATE ("subpicture",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-dvd-subpicture")
+    GST_STATIC_CAPS ("video/x-dvd-subpicture; subpicture/x-pgs")
     );
 
 static const guint32 default_clut[16] = {
@@ -106,6 +109,7 @@ static void gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force);
 static void gst_dvd_spu_check_still_updates (GstDVDSpu * dvdspu);
 static GstFlowReturn gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event);
+static gboolean gst_dvd_spu_subpic_set_caps (GstPad * pad, GstCaps * caps);
 
 static void gst_dvd_spu_clear (GstDVDSpu * dvdspu);
 static void gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu,
@@ -173,7 +177,8 @@ gst_dvd_spu_init (GstDVDSpu * dvdspu, GstDVDSpuClass * gclass)
       gst_pad_new_from_static_template (&subpic_sink_factory, "subpicture");
   gst_pad_set_chain_function (dvdspu->subpic_sinkpad, gst_dvd_spu_subpic_chain);
   gst_pad_set_event_function (dvdspu->subpic_sinkpad, gst_dvd_spu_subpic_event);
-  gst_pad_use_fixed_caps (dvdspu->subpic_sinkpad);
+  gst_pad_set_setcaps_function (dvdspu->subpic_sinkpad,
+      gst_dvd_spu_subpic_set_caps);
 
   gst_element_add_pad (GST_ELEMENT (dvdspu), dvdspu->videosinkpad);
   gst_element_add_pad (GST_ELEMENT (dvdspu), dvdspu->subpic_sinkpad);
@@ -1192,10 +1197,66 @@ gst_dvd_spu_check_still_updates (GstDVDSpu * dvdspu)
   }
 }
 
+static void
+submit_new_spu_packet (GstDVDSpu * dvdspu, GstBuffer * buf)
+{
+  SpuPacket *spu_packet;
+  GstClockTime ts;
+  GstClockTime run_ts = GST_CLOCK_TIME_NONE;
+
+  GST_DEBUG_OBJECT (dvdspu,
+      "Complete subpicture buffer of %u bytes with TS %" GST_TIME_FORMAT,
+      GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+  /* Decide whether to pass this buffer through to the rendering code */
+  ts = GST_BUFFER_TIMESTAMP (buf);
+  if (GST_CLOCK_TIME_IS_VALID (ts)) {
+    if (ts < (GstClockTime) dvdspu->subp_seg.start) {
+      GstClockTimeDiff diff = dvdspu->subp_seg.start - ts;
+
+      /* Buffer starts before segment, see if we can calculate a running time */
+      run_ts =
+          gst_segment_to_running_time (&dvdspu->subp_seg, GST_FORMAT_TIME,
+          dvdspu->subp_seg.start);
+      if (run_ts >= (GstClockTime) diff)
+        run_ts -= diff;
+      else
+        run_ts = GST_CLOCK_TIME_NONE;   /* No running time possible for this subpic */
+    } else {
+      /* TS within segment, convert to running time */
+      run_ts =
+          gst_segment_to_running_time (&dvdspu->subp_seg, GST_FORMAT_TIME, ts);
+    }
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (run_ts)) {
+    /* Complete SPU packet, push it onto the queue for processing when
+     * video packets come past */
+    spu_packet = g_new0 (SpuPacket, 1);
+    spu_packet->buf = buf;
+
+    /* Store the activation time of this buffer in running time */
+    spu_packet->event_ts = run_ts;
+    GST_INFO_OBJECT (dvdspu,
+        "Pushing SPU buf with TS %" GST_TIME_FORMAT " running time %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (ts),
+        GST_TIME_ARGS (spu_packet->event_ts));
+
+    g_queue_push_tail (dvdspu->pending_spus, spu_packet);
+
+    /* In a still frame condition, advance the SPU to make sure the state is 
+     * up to date */
+    gst_dvd_spu_check_still_updates (dvdspu);
+  } else {
+    gst_buffer_unref (buf);
+  }
+}
+
 static GstFlowReturn
 gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
 {
   GstDVDSpu *dvdspu = (GstDVDSpu *) (gst_object_get_parent (GST_OBJECT (pad)));
+  GstFlowReturn ret = GST_FLOW_OK;
 
   g_return_val_if_fail (dvdspu != NULL, GST_FLOW_ERROR);
 
@@ -1210,6 +1271,11 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
         GST_BUFFER_TIMESTAMP (buf));
   }
 
+  if (GST_BUFFER_IS_DISCONT (buf) && dvdspu->partial_spu) {
+    gst_buffer_unref (dvdspu->partial_spu);
+    dvdspu->partial_spu = NULL;
+  }
+
   if (dvdspu->partial_spu != NULL) {
     dvdspu->partial_spu = gst_buffer_join (dvdspu->partial_spu, buf);
   } else {
@@ -1221,85 +1287,55 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
       gst_buffer_unref (buf);
   }
 
-  if (dvdspu->partial_spu != NULL && GST_BUFFER_SIZE (dvdspu->partial_spu) > 4) {
-    guint16 packet_size;
-    guint8 *data;
+  if (dvdspu->partial_spu == NULL)
+    goto done;
 
-    data = GST_BUFFER_DATA (dvdspu->partial_spu);
-    packet_size = GST_READ_UINT16_BE (data);
+  switch (dvdspu->spu_input_type) {
+    case SPU_INPUT_TYPE_VOBSUB:
+      if (GST_BUFFER_SIZE (dvdspu->partial_spu) > 4) {
+        guint16 packet_size;
+        guint8 *data;
 
-    if (packet_size == GST_BUFFER_SIZE (dvdspu->partial_spu)) {
-      SpuPacket *spu_packet;
-      GstClockTime ts;
-      GstClockTime run_ts = GST_CLOCK_TIME_NONE;
+        data = GST_BUFFER_DATA (dvdspu->partial_spu);
+        packet_size = GST_READ_UINT16_BE (data);
 
-      GST_DEBUG_OBJECT (dvdspu,
-          "Complete subpicture buffer of %u bytes with TS %" GST_TIME_FORMAT,
-          GST_BUFFER_SIZE (dvdspu->partial_spu),
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (dvdspu->partial_spu)));
+        if (packet_size == GST_BUFFER_SIZE (dvdspu->partial_spu)) {
+          submit_new_spu_packet (dvdspu, dvdspu->partial_spu);
+          dvdspu->partial_spu = NULL;
+        } else if (packet_size < GST_BUFFER_SIZE (dvdspu->partial_spu)) {
+          /* Somehow we collected too much - something is wrong. Drop the
+           * packet entirely and wait for a new one */
+          GST_DEBUG_OBJECT (dvdspu, "Discarding invalid SPU buffer of size %u",
+              GST_BUFFER_SIZE (dvdspu->partial_spu));
 
-      /* Decide whether to pass this buffer through to the rendering code */
-      ts = GST_BUFFER_TIMESTAMP (dvdspu->partial_spu);
-      if (GST_CLOCK_TIME_IS_VALID (ts)) {
-        if (ts < (GstClockTime) dvdspu->subp_seg.start) {
-          GstClockTimeDiff diff = dvdspu->subp_seg.start - ts;
-
-          /* Buffer starts before segment, see if we can calculate a running time */
-          run_ts =
-              gst_segment_to_running_time (&dvdspu->subp_seg, GST_FORMAT_TIME,
-              dvdspu->subp_seg.start);
-          if (run_ts >= (GstClockTime) diff)
-            run_ts -= diff;
-          else
-            run_ts = GST_CLOCK_TIME_NONE;       /* No running time possible for this subpic */
+          gst_buffer_unref (dvdspu->partial_spu);
+          dvdspu->partial_spu = NULL;
         } else {
-          /* TS within segment, convert to running time */
-          run_ts =
-              gst_segment_to_running_time (&dvdspu->subp_seg, GST_FORMAT_TIME,
-              ts);
+          GST_LOG_OBJECT (dvdspu,
+              "SPU buffer claims to be of size %u. Collected %u so far.",
+              packet_size, GST_BUFFER_SIZE (dvdspu->partial_spu));
         }
       }
-
-      if (GST_CLOCK_TIME_IS_VALID (run_ts)) {
-        /* Complete SPU packet, push it onto the queue for processing when
-         * video packets come past */
-        spu_packet = g_new0 (SpuPacket, 1);
-        spu_packet->buf = dvdspu->partial_spu;
-
-        /* Store the activation time of this buffer in running time */
-        spu_packet->event_ts =
-            gst_segment_to_running_time (&dvdspu->subp_seg, GST_FORMAT_TIME,
-            ts);
-        GST_INFO_OBJECT (dvdspu,
-            "Pushing SPU buf with TS %" GST_TIME_FORMAT " running time %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (ts),
-            GST_TIME_ARGS (spu_packet->event_ts));
-
-        g_queue_push_tail (dvdspu->pending_spus, spu_packet);
-        dvdspu->partial_spu = NULL;
-
-        /* In a still frame condition, advance the SPU to make sure the state is 
-         * up to date */
-        gst_dvd_spu_check_still_updates (dvdspu);
-      } else {
-        gst_buffer_unref (dvdspu->partial_spu);
-        dvdspu->partial_spu = NULL;
-      }
-    } else if (packet_size < GST_BUFFER_SIZE (dvdspu->partial_spu)) {
-      /* Somehow we collected too much - something is wrong. Drop the
-       * packet entirely and wait for a new one */
-      GST_DEBUG_OBJECT (dvdspu, "Discarding invalid SPU buffer of size %u",
-          GST_BUFFER_SIZE (dvdspu->partial_spu));
-
+      break;
+    case SPU_INPUT_TYPE_PGS:
+      gstspu_dump_pgs_buffer (dvdspu->partial_spu);
       gst_buffer_unref (dvdspu->partial_spu);
       dvdspu->partial_spu = NULL;
-    }
+      break;
+    default:
+      GST_ERROR_OBJECT (dvdspu, "Input type not configured before SPU passing");
+      goto caps_not_set;
   }
 
+done:
   DVD_SPU_UNLOCK (dvdspu);
-
   gst_object_unref (dvdspu);
-  return GST_FLOW_OK;
+  return ret;
+caps_not_set:
+  GST_ELEMENT_ERROR (dvdspu, RESOURCE, NO_SPACE_LEFT,
+      (_("Subpicture format was not configured before data flow")), (NULL));
+  ret = GST_FLOW_ERROR;
+  goto done;
 }
 
 static gboolean
@@ -1388,8 +1424,11 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
           GST_TIME_ARGS (stop), GST_TIME_ARGS (time));
 
       DVD_SPU_LOCK (dvdspu);
+
       gst_segment_set_newsegment_full (&dvdspu->subp_seg, update, rate, arate,
           format, start, stop, time);
+      GST_LOG_OBJECT (dvdspu, "Subpicture segment now: %" GST_SEGMENT_FORMAT,
+          &dvdspu->subp_seg);
       DVD_SPU_UNLOCK (dvdspu);
 
       gst_event_unref (event);
@@ -1421,6 +1460,39 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
 done:
   gst_object_unref (dvdspu);
 
+  return res;
+}
+
+static gboolean
+gst_dvd_spu_subpic_set_caps (GstPad * pad, GstCaps * caps)
+{
+  GstDVDSpu *dvdspu = GST_DVD_SPU (gst_pad_get_parent (pad));
+  gboolean res = FALSE;
+  GstStructure *s;
+  SpuInputType input_type;
+
+  s = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_has_name (s, "video/x-dvd-subpicture")) {
+    input_type = SPU_INPUT_TYPE_VOBSUB;
+  } else if (gst_structure_has_name (s, "subpicture/x-pgs")) {
+    input_type = SPU_INPUT_TYPE_PGS;
+  } else {
+    goto done;
+  }
+
+  DVD_SPU_LOCK (dvdspu);
+  if (dvdspu->spu_input_type != input_type) {
+    GST_INFO_OBJECT (dvdspu, "Incoming SPU packet type changed to %u",
+        input_type);
+    gst_dvd_spu_flush_spu_info (dvdspu, TRUE);
+    dvdspu->spu_input_type = input_type;
+  }
+
+  DVD_SPU_UNLOCK (dvdspu);
+  res = TRUE;
+done:
+  gst_object_unref (dvdspu);
   return res;
 }
 

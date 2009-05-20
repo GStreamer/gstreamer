@@ -45,6 +45,7 @@ typedef struct SpuPixCtrlI SpuPixCtrlI;
 typedef struct SpuLineCtrlI SpuLineCtrlI;
 typedef struct SpuColour SpuColour;
 typedef enum SpuStateFlags SpuStateFlags;
+typedef enum SpuInputType SpuInputType;
 typedef struct SpuState SpuState;
 typedef struct SpuPacket SpuPacket;
 typedef enum SpuCmd SpuCmd;
@@ -104,6 +105,12 @@ enum SpuStateFlags {
   SPU_STATE_STILL_FRAME = 0x04,
   /* Persistent flags */
   SPU_STATE_FORCED_ONLY = 0x100
+};
+
+enum SpuInputType {
+  SPU_INPUT_TYPE_NONE   = 0x00,
+  SPU_INPUT_TYPE_VOBSUB = 0x01,
+  SPU_INPUT_TYPE_PGS    = 0x02
 };
 
 #define SPU_STATE_FLAGS_MASK (0xff)
@@ -198,6 +205,7 @@ struct _GstDVDSpu {
   GstSegment subp_seg;
 
   SpuState spu_state;
+  SpuInputType spu_input_type;
 
   /* GQueue of SpuBuf structures */
   GQueue *pending_spus;
