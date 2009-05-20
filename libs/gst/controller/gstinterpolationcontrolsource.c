@@ -594,8 +594,10 @@ gst_interpolation_control_source_unset_all (GstInterpolationControlSource *
 
   g_mutex_lock (self->lock);
   /* free GstControlPoint structures */
-  g_sequence_free (self->priv->values);
-  self->priv->values = NULL;
+  if (self->priv->values) {
+    g_sequence_free (self->priv->values);
+    self->priv->values = NULL;
+  }
   self->priv->nvalues = 0;
   self->priv->valid_cache = FALSE;
 
