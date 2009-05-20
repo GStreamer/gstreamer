@@ -149,6 +149,7 @@ struct _GstFluPSDemuxClass
   GstPadTemplate *sink_template;
   GstPadTemplate *video_template;
   GstPadTemplate *audio_template;
+  GstPadTemplate *subpicture_template;
   GstPadTemplate *private_template;
 };
 

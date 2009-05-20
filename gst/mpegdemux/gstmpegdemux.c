@@ -39,6 +39,7 @@
   * Fluendo, S.L. All Rights Reserved.
   *
   * Contributor(s): Wim Taymans <wim@fluendo.com>
+  *                 Jan Schmidt <thaytan@noraisin.net>
   */
 
 #ifdef HAVE_CONFIG_H
@@ -177,6 +178,13 @@ static GstStaticPadTemplate audio_template =
         "audio/x-private1-ac3;" "audio/x-private1-dts;" "audio/ac3")
     );
 
+static GstStaticPadTemplate subpicture_template =
+GST_STATIC_PAD_TEMPLATE ("subpicture_%02x",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS ("video/x-dvd-subpicture")
+    );
+
 static GstStaticPadTemplate private_template =
 GST_STATIC_PAD_TEMPLATE ("private_%d",
     GST_PAD_SRC,
@@ -250,10 +258,14 @@ gst_flups_demux_base_init (GstFluPSDemuxClass * klass)
   klass->sink_template = gst_static_pad_template_get (&sink_template);
   klass->video_template = gst_static_pad_template_get (&video_template);
   klass->audio_template = gst_static_pad_template_get (&audio_template);
+  klass->subpicture_template =
+      gst_static_pad_template_get (&subpicture_template);
   klass->private_template = gst_static_pad_template_get (&private_template);
 
   gst_element_class_add_pad_template (element_class, klass->video_template);
   gst_element_class_add_pad_template (element_class, klass->audio_template);
+  gst_element_class_add_pad_template (element_class,
+      klass->subpicture_template);
   gst_element_class_add_pad_template (element_class, klass->private_template);
   gst_element_class_add_pad_template (element_class, klass->sink_template);
 
@@ -404,6 +416,9 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
       caps = gst_caps_new_simple ("audio/x-private1-lpcm", NULL);
       break;
     case ST_PS_DVD_SUBPICTURE:
+      template = klass->subpicture_template;
+      name = g_strdup_printf ("subpicture_%02x", id);
+      caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
       break;
     case ST_GST_AUDIO_RAWA52:
       template = klass->audio_template;
@@ -1839,18 +1854,26 @@ gst_flups_demux_data_cb (GstPESFilter * filter, gboolean first,
         }
 
         if (G_LIKELY (stream_type == -1)) {
-          /* new id */
+          /* new id is in the first byte */
           id = data[offset++];
-          /* Number of audio frames in this packet */
-          nframes = data[offset++];
-
-          GST_DEBUG_OBJECT (demux, "private type 0x%02x, %d frames", id,
-              nframes);
-
-          datalen -= 2;
+          datalen--;
 
           /* and remap */
           stream_type = demux->psm[id];
+
+          /* Now, if it's a subpicture stream - no more, otherwise
+           * take the first byte too, since it's the frame count in audio
+           * streams and our backwards compat convention is to strip it off */
+          if (stream_type != ST_PS_DVD_SUBPICTURE) {
+            /* Number of audio frames in this packet */
+            nframes = data[offset++];
+            datalen--;
+            GST_DEBUG_OBJECT (demux, "private type 0x%02x, %d frames", id,
+                nframes);
+          } else {
+            GST_DEBUG_OBJECT (demux, "private type 0x%02x, stream type %d", id,
+                stream_type);
+          }
         }
       }
       if (stream_type == -1)
