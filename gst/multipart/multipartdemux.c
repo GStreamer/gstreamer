@@ -81,7 +81,7 @@ enum
 };
 
 static GstStaticPadTemplate multipart_demux_src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src_%d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
