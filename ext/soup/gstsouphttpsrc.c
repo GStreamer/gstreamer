@@ -342,7 +342,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src, GstSoupHTTPSrcClass * g_class)
   src->proxy_id = NULL;
   src->proxy_pw = NULL;
   src->cookies = NULL;
-  src->icy_caps = NULL;
+  src->src_caps = NULL;
   src->iradio_mode = FALSE;
   src->iradio_name = NULL;
   src->iradio_genre = NULL;
@@ -397,9 +397,9 @@ gst_soup_http_src_dispose (GObject * gobject)
   src->iradio_url = NULL;
   g_free (src->iradio_title);
   src->iradio_title = NULL;
-  if (src->icy_caps) {
-    gst_caps_unref (src->icy_caps);
-    src->icy_caps = NULL;
+  if (src->src_caps) {
+    gst_caps_unref (src->src_caps);
+    src->src_caps = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (gobject);
@@ -786,10 +786,10 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 
     GST_DEBUG_OBJECT (src, "icy-metaint: %s (parsed: %d)", value, icy_metaint);
     if (icy_metaint > 0) {
-      if (src->icy_caps)
-        gst_caps_unref (src->icy_caps);
+      if (src->src_caps)
+        gst_caps_unref (src->src_caps);
 
-      src->icy_caps = gst_caps_new_simple ("application/x-icy",
+      src->src_caps = gst_caps_new_simple ("application/x-icy",
           "metadata-interval", G_TYPE_INT, icy_metaint, NULL);
     }
   }
@@ -953,7 +953,7 @@ gst_soup_http_src_chunk_allocator (SoupMessage * msg, gsize max_len,
 
   rc = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (basesrc),
       GST_BUFFER_OFFSET_NONE, length,
-      src->icy_caps ? src->icy_caps :
+      src->src_caps ? src->src_caps :
       GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)), &gstbuf);
   if (G_UNLIKELY (rc != GST_FLOW_OK)) {
     /* Failed to allocate buffer. Stall SoupSession and return error code
@@ -997,7 +997,7 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
   GST_BUFFER_OFFSET (*src->outbuf) = basesrc->segment.last_stop;
 
   gst_buffer_set_caps (*src->outbuf,
-      (src->icy_caps) ? src->icy_caps :
+      (src->src_caps) ? src->src_caps :
       GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)));
 
   new_position = src->read_position + chunk->length;
