@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plug-ins 0.10.11 "A precious stone"
+Release notes for GStreamer Bad Plug-ins 0.10.12 "More than I can handle"
         
 
 
@@ -60,45 +60,62 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * Add ASS/SSA subtitle handling element assrender
-      * Leak fixes in the QuickTime decoder wrapper
-      * Better DirectShow output on Windows
-      * Extend QT muxing support to include AMR and H.263
-      * mms seeking support
-      * Extended MXF file format handling
-      * camerabin and photography API for digital camera interfacing
-      * Merge elements from Farsight: liveadder, sirendec, sirenenc, valve, rtpdtmfsrc, rtpdtmdepay, dtmfsrc, rtpdtmfmux, autoconvert, mimdec, mimenc
-      * typefinder based on xdgmime
+      * Presets support in several elements
+      * Support ITV MPEG-TS streams
+      * New element: flvmux
+      * New element: osxvideosrc
+      * Fixes in RTP elements
+      * camerabin fixes
+      * Improved QT/mp4 muxing
+      * xdgmime based content type guessing
+      * deinterlace2 moved to the Good plugins (replacing deinterlace)
+      * Support for MXF muxing, and improved MXF demuxing
+      * Greatly improved DVD playback
+      * DirectDraw element moved back from Good plugins
+      * Many other bug fixes and improvements
 
 Bugs fixed in this release
      
-      * 573369 : [gstfaad] Memory corruption and segfault
-      * 568704 : Metadatamux: unable to configure byte order for EXIF
-      * 354908 : videoflipping interface for v4l2src
-      * 369912 : missing inclusion in rpm spec file
-      * 469930 : [mmssrc] seeking support PATCH
-      * 481075 : Full support for ASS/SSA subtitles
-      * 549645 : merge useful elements from gst-plugins-farsight into core
-      * 567003 : [ladspa] improve plugin scanning
-      * 567371 : [mpegtsparse] memory leak in mpegtspacketizer
-      * 567828 : rtpmanager and RTCP BYE packet
-      * 567965 : [flvdemux] add support for ECMA arrays in script tags
-      * 568480 : gst-plugins-bad dccp plugin won't compile on Soalris
-      * 568483 : Problems linking gst-plugins-bad
-      * 568837 : RFE: allow building against the system modplug library
-      * 569323 : [qtmux] should support audio/AMR sink
-      * 570996 : bpmdetect relibably crashes with SIGSEGV on particular file
-      * 571560 : gstdshowaudio decoder doesn't compile.
-      * 572315 : Compiling camerabin on Windows with Visual Studio
-      * 572900 : gstrtpsession should not forward recv side event to the s...
-      * 573288 : [mpegtsdemux] memory leak when pusi is missed due to pack...
-      * 573391 : [videoanalyse] Wrong brightness calculation
-      * 575157 : xdgmime typefinder: make more conservative
-      * 575565 : [mxf] mxf plugin uses symbols not in glib 2.6 (minimum gl...
-      * 564114 : [PATCH] fbdev: fix depth calculation
-      * 573850 : Use Glib's byte order in gstgsmdec
-      * 573851 : Use glib integer types in gstfaad
-      * 172043 : [mpegpsdemux] wrong video length on mpeg file
+      * 573852 : Update celt to 0.5.x
+      * 574401 : metadatamux fails^WIS failure
+      * 580091 : soundtouch plugin fails to load
+      * 153684 : [osxvideosrc] Mac users needs an osxvideosrc
+      * 537700 : [scaletempo] Scale audio tempo in sync with playback rate
+      * 569437 : mpegtsparse: flow error or crashes while dynamicly changi...
+      * 569673 : [Mpegtsparse] PAT changes not always signaled
+      * 569781 : [Mpegtsparse] drop of valid TS packets
+      * 573595 : plugins-bad mingw ports
+      * 573846 : Check for soundtouch-1.4 too
+      * 573847 : Use SDL static-libs for conftest and libs for gstsdl*
+      * 573848 : Use native CPU number detection in mpeg2enc
+      * 573849 : modplug's sndfile.h conflicts with libsndfile's sndfile.h
+      * 575388 : [aacparse] deadlocks in busy loop when seeking
+      * 575736 : mpeg2enc's bitrate parameter does not work properly
+      * 576408 : [playbin2] Deadlock when using resindvd as source
+      * 577690 : rtpdtmfmux: missing pad unref
+      * 577864 : [residvd] dvdnav version requirements should be higher
+      * 578112 : x264enc: I-frame request
+      * 578562 : dshowdecwrapper missing check for GST_DISABLE_GST_DEBUG
+      * 578563 : win32 export files are not disted
+      * 580133 : Regression in baseparse since last release
+      * 580144 : emit notify::internal-ssrc when there is a ssrc collision
+      * 580786 : [flvmux] " uninitialized variable " compiler warning
+      * 580901 : Uninitialized variable may be used in fpsdisplaysink.c
+      * 581375 : rtpssrcdemux crashes on SR-less rtcp packets
+      * 582013 : uninitialized var in mxfmux.c prevents gst-plugins-bad bu...
+      * 582074 : [faad] Fails to build with faad 2.6 (misdetected as 2.7)
+      * 582208 : [PATCH] fix for soundtouch-1.4
+      * 582483 : y4menc doesn't pass timestamps on
+      * 582656 : [mxfdemux] Fix deadlock when querying from the pad-added ...
+      * 582702 : qtmux: crash in atom_moov_add_blob_tag
+      * 583337 : [mxfmux] Wrong layout for non-interlaced formats
+      * 580585 : rtpmux memleak
+      * 577843 : input-selector causes problems with DVD menus in playbin2
+      * 581593 : gppmux doesn't support MPEG4 part 2 in sink caps
+      * 575284 : add auto-connect-forced mode to jackaudiosrc and jackaudi...
+      * 576021 : On Windows qtmux can't write files longer than 2-4 GiB, u...
+      * 576712 : Output-selector keeps reference to latest buffer when cha...
+      * 581427 : [mpeg4videoparse] config buffer is leaked
 
 Download
 
@@ -127,46 +144,38 @@ Applications
   
 Contributors to this release
     
-      * Andoni Morales
-      * Andrzej Polatyński
+      * Alan Falloon
+      * Alessandro Decina
       * Andy Wingo
-      * Benjamin Schmitz
-      * Brian Cameron
+      * Arnout Vandecappelle
       * Christian Schaller
       * David Schleef
       * Edward Hervey
-      * Hans de Goede
-      * Håvard Graff
+      * Felipe Contreras
+      * Haakon Sporsheim
       * Jan Schmidt
-      * Jan Urbanski
-      * Josep Torra
+      * Janin Kolenc
       * Julien Moutte
-      * LRN
       * Lasse Laukkanen
       * Laurent Glayal
+      * Marc-Andre Lureau
       * Mark Nauwelaerts
       * Michael Smith
-      * Nokia Corporation
-      * Olivier Crete
+      * Ole André Vadla Ravnås
       * Olivier Crête
-      * Peter Kjellerstedt
-      * Philipe Kalaf
-      * Philippe Khalaf
       * René Stadler
+      * Rov Juvano
       * Sebastian Dröge
-      * Sebastian Pölsterl
-      * Simon McVittie
-      * Sjoerd Simons
+      * Sergey Scobich
       * Stefan Kost
-      * Thiago Sousa Santos
+      * Sébastien Moutte
+      * Thiago Santos
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Tristan Matthews
+      * Vincent Genieux
+      * Vincent Torri
       * Wim Taymans
-      * Youness Alaoui
-      * Zaheer Merali
-      * Zeeshan Ali
-      * philippe.kalaf@collabora.co.uk
-      * sjoerd@luon.net
-      * vanista
-      * zeenix@gmail.com
-      * zeeshan.ali@nokia.com
+      * Zaheer Abbas Merali
+      * Руслан Ижбулатов
  

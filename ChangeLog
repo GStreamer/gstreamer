@@ -1,5 +1,18 @@
+=== release 0.10.12 ===
+
+2009-05-20  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.12, "More than I can handle"
+
+2009-05-20 17:10:40 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/mxf/mxfmetadata.c:
+	  mxf: Fix frame_layout for non-interlaced formats. Fixes #583337
+
 2009-05-16 01:58:33 +0100  Jan Schmidt <thaytan@noraisin.net>
 
+	* ChangeLog:
 	* configure.ac:
 	* po/af.po:
 	* po/az.po:
