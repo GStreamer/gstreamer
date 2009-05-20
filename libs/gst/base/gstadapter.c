@@ -113,7 +113,7 @@
 #include <string.h>
 
 /* default size for the assembled data buffer */
-#define DEFAULT_SIZE 16
+#define DEFAULT_SIZE 4096
 
 GST_DEBUG_CATEGORY_STATIC (gst_adapter_debug);
 #define GST_CAT_DEFAULT gst_adapter_debug
@@ -528,14 +528,17 @@ gst_adapter_take (GstAdapter * adapter, guint nbytes)
   if (G_UNLIKELY (nbytes > adapter->size))
     return NULL;
 
-  data = g_malloc (nbytes);
-
-  /* we have enough assembled data, copy from there */
+  /* we have enough assembled data, take from there */
   if (adapter->assembled_len >= nbytes) {
     GST_LOG_OBJECT (adapter, "taking %u bytes already assembled", nbytes);
-    memcpy (data, adapter->assembled_data, nbytes);
+    data = adapter->assembled_data;
+    /* allocate new data, assembled_len will be set to 0 in the flush below */
+    adapter->assembled_data = g_malloc (adapter->assembled_size);
   } else {
+    /* we need to allocate and copy. We could potentially copy bytes from the
+     * assembled data before doing the copy_into */
     GST_LOG_OBJECT (adapter, "taking %u bytes by collection", nbytes);
+    data = g_malloc (nbytes);
     copy_into_unchecked (adapter, data, adapter->skip, nbytes);
   }
 
@@ -608,13 +611,19 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
     }
   }
 
-  buffer = gst_buffer_new_and_alloc (nbytes);
-
   /* we have enough assembled data, copy from there */
   if (adapter->assembled_len >= nbytes) {
     GST_LOG_OBJECT (adapter, "taking %u bytes already assembled", nbytes);
-    memcpy (GST_BUFFER_DATA (buffer), adapter->assembled_data, nbytes);
+    buffer = gst_buffer_new ();
+    GST_BUFFER_SIZE (buffer) = nbytes;
+    GST_BUFFER_DATA (buffer) = adapter->assembled_data;
+    GST_BUFFER_MALLOCDATA (buffer) = adapter->assembled_data;
+    /* flush will set the assembled_len to 0 */
+    adapter->assembled_data = g_malloc (adapter->assembled_size);
   } else {
+    /* we need to allocate and copy. We could potentially copy bytes from the
+     * assembled data before doing the copy_into */
+    buffer = gst_buffer_new_and_alloc (nbytes);
     GST_LOG_OBJECT (adapter, "taking %u bytes by collection", nbytes);
     copy_into_unchecked (adapter, GST_BUFFER_DATA (buffer), skip, nbytes);
   }
