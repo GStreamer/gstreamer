@@ -214,6 +214,8 @@ gst_pulsering_destroy_stream (GstPulseRingBuffer * pbuf)
     /* Make sure we don't get any further callbacks */
     pa_stream_set_state_callback (pbuf->stream, NULL, NULL);
     pa_stream_set_write_callback (pbuf->stream, NULL, NULL);
+    pa_stream_set_underflow_callback (pbuf->stream, NULL, NULL);
+    pa_stream_set_overflow_callback (pbuf->stream, NULL, NULL);
 
     pa_stream_unref (pbuf->stream);
     pbuf->stream = NULL;
@@ -488,6 +490,31 @@ gst_pulsering_stream_request_cb (pa_stream * s, size_t length, void *userdata)
   }
 }
 
+static void
+gst_pulsering_stream_underflow_cb (pa_stream * s, void *userdata)
+{
+  GstPulseSink *psink;
+  GstPulseRingBuffer *pbuf;
+
+  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+
+  GST_WARNING_OBJECT (psink, "Got underflow");
+}
+
+
+static void
+gst_pulsering_stream_overflow_cb (pa_stream * s, void *userdata)
+{
+  GstPulseSink *psink;
+  GstPulseRingBuffer *pbuf;
+
+  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+
+  GST_WARNING_OBJECT (psink, "Got overflow");
+}
+
 /* This method should create a new stream of the given @spec. No playback should
  * start yet so we start in the corked state. */
 static gboolean
@@ -547,6 +574,10 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       gst_pulsering_stream_state_cb, pbuf);
   pa_stream_set_write_callback (pbuf->stream,
       gst_pulsering_stream_request_cb, pbuf);
+  pa_stream_set_underflow_callback (pbuf->stream,
+      gst_pulsering_stream_underflow_cb, pbuf);
+  pa_stream_set_overflow_callback (pbuf->stream,
+      gst_pulsering_stream_overflow_cb, pbuf);
 
   /* buffering requirements. When setting prebuf to 0, the stream will not pause
    * when we cause an underrun, which causes time to continue. */
