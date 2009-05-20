@@ -3131,6 +3131,11 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
           qtdemux_parse_container (qtdemux, node, buffer + offset, end);
         break;
       }
+      case FOURCC_in24:
+      {
+        qtdemux_parse_container (qtdemux, node, buffer + 0x34, end);
+        break;
+      }
       default:
         break;
     }
@@ -4234,6 +4239,30 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc, NULL, 0,
         &codec);
+
+    switch (fourcc) {
+      case FOURCC_in24:
+      {
+        GNode *enda;
+        GNode *in24;
+
+        in24 = qtdemux_tree_get_child_by_type (stsd, FOURCC_in24);
+
+        enda = qtdemux_tree_get_child_by_type (in24, FOURCC_enda);
+        if (!enda) {
+          wave = qtdemux_tree_get_child_by_type (in24, FOURCC_wave);
+          if (wave)
+            enda = qtdemux_tree_get_child_by_type (wave, FOURCC_enda);
+        }
+        if (enda) {
+          gst_caps_set_simple (stream->caps,
+              "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, NULL);
+        }
+        break;
+      }
+      default:
+        break;
+    }
 
     if (codec) {
       list = gst_tag_list_new ();
@@ -5664,8 +5693,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("audio/x-raw-float", "width", G_TYPE_INT, 32,
           "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
       break;
-    case GST_MAKE_FOURCC ('i', 'n', '2', '4'):
+    case FOURCC_in24:
       _codec ("Raw 24-bit PCM audio");
+      /* we assume BIG ENDIAN, an enda box will tell us to change this to little
+       * endian later */
       caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 24,
           "depth", G_TYPE_INT, 24,
           "endianness", G_TYPE_INT, G_BIG_ENDIAN,
