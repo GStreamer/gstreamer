@@ -257,14 +257,14 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
   dest += csize;
 
   /* second step, copy remainder */
-  do {
+  while (size > 0) {
     g = g_slist_next (g);
     buf = g->data;
     csize = MIN (GST_BUFFER_SIZE (buf), size);
     memcpy (dest, GST_BUFFER_DATA (buf), csize);
     size -= csize;
     dest += csize;
-  } while (size > 0);
+  }
 }
 
 /**
@@ -763,12 +763,10 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
   /* now find data */
   do {
     bsize = MIN (bsize, size);
-    for (i = bsize; i; i--) {
-      state = ((state << 8) | *bdata++);
-      if (G_UNLIKELY ((state & mask) == pattern)) {
-        offset += (bsize - i) - 3;
-        goto found;
-      }
+    for (i = 0; i < bsize; i++) {
+      state = ((state << 8) | bdata[i]);
+      if (G_UNLIKELY ((state & mask) == pattern))
+        return offset + i - 3;
     }
     size -= bsize;
     if (size == 0)
@@ -783,7 +781,5 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
   } while (TRUE);
 
   /* nothing found */
-  offset = -1;
-found:
-  return offset;
+  return -1;
 }
