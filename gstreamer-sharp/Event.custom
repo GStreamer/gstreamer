@@ -1,5 +1,3 @@
-protected Event () : base () { }
-
 public Event (GLib.Value val) : base (val) { }
 
 [DllImport ("gstreamersharpglue-0.10") ]
@@ -143,7 +141,7 @@ public static uint GetTypeNumber (Gst.EventType type) {
 static extern IntPtr gst_event_new_custom (Gst.EventType type, IntPtr structure);
 
 public static Gst.Event NewCustom (Gst.EventType type, Gst.Structure structure) {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_custom (type, (structure != null) ? structure.Handle : IntPtr.Zero), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_custom (type, (structure != null) ? structure.Handle : IntPtr.Zero), true);
   ev.cached_structure = structure;
   structure.FreeNative = false;
 
@@ -154,7 +152,7 @@ public static Gst.Event NewCustom (Gst.EventType type, Gst.Structure structure) 
 static extern IntPtr gst_event_new_flush_start ();
 
 public static Gst.Event NewFlushStart () {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_flush_start (), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_flush_start (), true);
 
   return ev;
 }
@@ -163,7 +161,7 @@ public static Gst.Event NewFlushStart () {
 static extern IntPtr gst_event_new_flush_stop ();
 
 public static Gst.Event NewFlushStop () {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_flush_stop (), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_flush_stop (), true);
 
   return ev;
 }
@@ -172,7 +170,7 @@ public static Gst.Event NewFlushStop () {
 static extern IntPtr gst_event_new_eos ();
 
 public static Gst.Event NewEos () {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_eos (), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_eos (), true);
 
   return ev;
 }
@@ -181,7 +179,7 @@ public static Gst.Event NewEos () {
 static extern IntPtr gst_event_new_new_segment_full (bool update, double rate, double applied_rate, Gst.Format format, long start, long stop, long position);
 
 public static Gst.Event NewNewSegment (bool update, double rate, double applied_rate, Gst.Format format, long start, long stop, long position) {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_new_segment_full (update, rate, applied_rate, format, start, stop, position), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_new_segment_full (update, rate, applied_rate, format, start, stop, position), true);
 
   return ev;
 }
@@ -213,7 +211,7 @@ static extern IntPtr gst_event_new_tag (IntPtr tags);
 static extern IntPtr gst_tag_list_copy (IntPtr raw);
 
 public static Gst.Event NewTag (Gst.TagList tags) {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_tag ( (tags != null) ? gst_tag_list_copy (tags.Handle) : IntPtr.Zero), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_tag ( (tags != null) ? gst_tag_list_copy (tags.Handle) : IntPtr.Zero), true);
 
   return ev;
 }
@@ -239,7 +237,7 @@ public void ParseTag (out TagList tags) {
 static extern IntPtr gst_event_new_buffer_size (Gst.Format format, long min, long max, bool async);
 
 public static Gst.Event NewBufferSize (Gst.Format format, long min, long max, bool async) {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_buffer_size (format, min, max, async), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_buffer_size (format, min, max, async), true);
 
   return ev;
 }
@@ -258,7 +256,7 @@ public void ParseBufferSize (out Gst.Format format, out long min, out long max, 
 static extern IntPtr gst_event_new_qos (double proportion, long diff, ulong timestamp);
 
 public static Gst.Event NewQos (double proportion, long diff, ulong timestamp) {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_qos (proportion, diff, timestamp), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_qos (proportion, diff, timestamp), true);
 
   return ev;
 }
@@ -278,7 +276,7 @@ public void ParseQos (out double proportion, out long diff, out ulong timestamp)
 static extern IntPtr gst_event_new_seek (double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType start_type, long start, Gst.SeekType stop_type, long stop);
 
 public static Gst.Event NewSeek (double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType start_type, long start, Gst.SeekType stop_type, long stop) {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_seek (rate, format, flags, start_type, start, stop_type, stop), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_seek (rate, format, flags, start_type, start, stop_type, stop), true);
 
   return ev;
 }
@@ -297,7 +295,7 @@ public void ParseSeek (out double rate, out Gst.Format format, out Gst.SeekFlags
 static extern IntPtr gst_event_new_navigation (IntPtr structure);
 
 public static Gst.Event NewNavigation (Gst.Structure structure) {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_navigation (structure.Handle), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_navigation (structure.Handle), true);
   ev.cached_structure = structure;
   structure.FreeNative = false;
 
@@ -308,7 +306,7 @@ public static Gst.Event NewNavigation (Gst.Structure structure) {
 static extern IntPtr gst_event_new_latency (ulong latency);
 
 public static Gst.Event NewLatency (ulong latency) {
-  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_latency (latency), typeof (Gst.Event), true);
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_latency (latency), true);
 
   return ev;
 }

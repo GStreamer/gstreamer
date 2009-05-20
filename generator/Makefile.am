@@ -35,6 +35,7 @@ sources = 				\
 	MethodBase.cs			\
 	MethodBody.cs			\
 	Method.cs			\
+	MiniObjectGen.cs		\
 	ObjectField.cs			\
 	ObjectBase.cs			\
 	ObjectGen.cs			\

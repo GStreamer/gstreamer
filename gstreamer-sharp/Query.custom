@@ -34,7 +34,7 @@ public string TypeName {
 static extern IntPtr gst_query_new_application (QueryType type, IntPtr structure);
 
 public static Query NewApplication (Gst.QueryType type, Structure structure) {
-  Query query = (Query) GLib.Opaque.GetOpaque (gst_query_new_application (type, (structure != null) ? structure.Handle : IntPtr.Zero), typeof (Query), true);
+  Query query = (Query) Gst.MiniObject.GetObject (gst_query_new_application (type, (structure != null) ? structure.Handle : IntPtr.Zero), true);
   query.cached_structure = structure;
   structure.FreeNative = false;
 
@@ -45,7 +45,7 @@ public static Query NewApplication (Gst.QueryType type, Structure structure) {
 static extern IntPtr gst_query_new_convert (Gst.Format src_format, long value, Gst.Format dest_format);
 
 public static Query NewConvert (Gst.Format src_format, long value, Gst.Format dest_format) {
-  Query query = (Query) GLib.Opaque.GetOpaque (gst_query_new_convert (src_format, value, dest_format), typeof (Query), true);
+  Query query = (Query) Gst.MiniObject.GetObject (gst_query_new_convert (src_format, value, dest_format), true);
 
   return query;
 }
@@ -76,7 +76,7 @@ public void ParseConvert (out Gst.Format src_format, out long src_value, out Gst
 static extern IntPtr gst_query_new_position (Gst.Format format);
 
 public static Query NewPosition (Gst.Format format) {
-  Query query = (Query) GLib.Opaque.GetOpaque (gst_query_new_position (format), typeof (Query), true);
+  Query query = (Query) Gst.MiniObject.GetObject (gst_query_new_position (format), true);
 
   return query;
 }
@@ -107,7 +107,7 @@ public void ParsePosition (out Gst.Format format, out long cur) {
 static extern IntPtr gst_query_new_duration (Gst.Format format);
 
 public static Query NewDuration (Gst.Format format) {
-  Query query = (Query) GLib.Opaque.GetOpaque (gst_query_new_duration (format), typeof (Query), true);
+  Query query = (Query) Gst.MiniObject.GetObject (gst_query_new_duration (format), true);
 
   return query;
 }
@@ -138,7 +138,7 @@ public void ParseDuration (out Gst.Format format, out long duration) {
 static extern IntPtr gst_query_new_latency ();
 
 public static Query NewLatency() {
-  Query query = (Query) GLib.Opaque.GetOpaque (gst_query_new_latency (), typeof (Query), true);
+  Query query = (Query) Gst.MiniObject.GetObject (gst_query_new_latency (), true);
 
   return query;
 }
@@ -169,7 +169,7 @@ public void ParseLatency (out bool live, out ulong min, out ulong max) {
 static extern IntPtr gst_query_new_seeking (Gst.Format format);
 
 public static Query NewSeeking (Gst.Format format) {
-  Query query = (Query) GLib.Opaque.GetOpaque (gst_query_new_seeking (format), typeof (Query), true);
+  Query query = (Query) Gst.MiniObject.GetObject (gst_query_new_seeking (format), true);
 
   return query;
 }
@@ -200,7 +200,7 @@ public void ParseSeeking (out Gst.Format format, out bool seekable, out long seg
 static extern IntPtr gst_query_new_formats ();
 
 public static Query NewFormats() {
-  Query query = (Query) GLib.Opaque.GetOpaque (gst_query_new_formats (), typeof (Query), true);
+  Query query = (Query) Gst.MiniObject.GetObject (gst_query_new_formats (), true);
 
   return query;
 }
@@ -238,7 +238,7 @@ public void ParseFormats (out Gst.Format[] formats) {
 static extern IntPtr gst_query_new_segment (Gst.Format format);
 
 public static Query NewSegment (Gst.Format format) {
-  Query query = (Query) GLib.Opaque.GetOpaque (gst_query_new_segment (format), typeof (Query), true);
+  Query query = (Query) Gst.MiniObject.GetObject (gst_query_new_segment (format), true);
 
   return query;
 }
@@ -269,7 +269,7 @@ public void ParseSegment (out double rate, out Gst.Format format, out long segme
 static extern IntPtr gst_query_new_buffering (Gst.Format format);
 
 public static Query NewBuffering (Gst.Format format) {
-  Query query = (Query) GLib.Opaque.GetOpaque (gst_query_new_buffering (format), typeof (Query), true);
+  Query query = (Query) Gst.MiniObject.GetObject (gst_query_new_buffering (format), true);
 
   return query;
 }
@@ -344,7 +344,7 @@ public void ParseBufferingRange (out Gst.Format format, out long start, out long
 static extern IntPtr gst_query_new_uri ();
 
 public static Query NewUri() {
-  Query query = (Query) GLib.Opaque.GetOpaque (gst_query_new_uri (), typeof (Query), true);
+  Query query = (Query) Gst.MiniObject.GetObject (gst_query_new_uri (), true);
 
   return query;
 }

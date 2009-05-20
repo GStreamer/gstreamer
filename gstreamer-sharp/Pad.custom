@@ -39,7 +39,7 @@ public Gst.FlowReturn AllocBuffer (ulong offset, int size, Gst.Caps caps, out Gs
   IntPtr native_buf;
   int raw_ret = gst_pad_alloc_buffer (Handle, offset, size, caps == null ? IntPtr.Zero : caps.Handle, out native_buf);
   Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
-  buf = native_buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buf, typeof (Gst.Buffer), true);
+  buf = native_buf == IntPtr.Zero ? null : (Gst.Buffer) Gst.MiniObject.GetObject (native_buf, true);
   return ret;
 }
 
@@ -50,7 +50,7 @@ public Gst.FlowReturn AllocBufferAndSetCaps (ulong offset, int size, Gst.Caps ca
   IntPtr native_buf;
   int raw_ret = gst_pad_alloc_buffer_and_set_caps (Handle, offset, size, caps == null ? IntPtr.Zero : caps.Handle, out native_buf);
   Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
-  buf = native_buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buf, typeof (Gst.Buffer), true);
+  buf = native_buf == IntPtr.Zero ? null : (Gst.Buffer) Gst.MiniObject.GetObject (native_buf, true);
   return ret;
 }
 
@@ -277,7 +277,7 @@ public Gst.FlowReturn PullRange (ulong offset, uint size, out Gst.Buffer buffer)
   IntPtr native_buffer;
   int raw_ret = gst_pad_pull_range (Handle, offset, size, out native_buffer);
   Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
-  buffer = native_buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buffer, typeof (Gst.Buffer), true);
+  buffer = native_buffer == IntPtr.Zero ? null : (Gst.Buffer) Gst.MiniObject.GetObject (native_buffer, true);
   return ret;
 
 }

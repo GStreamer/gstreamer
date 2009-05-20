@@ -71,17 +71,18 @@ public byte this [uint index] {
   }
 }
 
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_mini_object_unref (IntPtr raw);
+
 /* FIXME: This is not optimal */
 public void MakeMetadataWritable() {
   if (IsMetadataWritable)
     return;
 
-  IntPtr sub = gst_buffer_create_sub (Raw, 0, Size);
+  IntPtr old = Handle;
+  IntPtr sub = gst_buffer_create_sub (Handle, 0, Size);
   Raw = sub;
-  /* ^--- Takes a second ref, not good */
-  Unref (Raw);
-  /* ^--- Sets Owned = false, wrong! */
-  Owned = true;
+  gst_mini_object_unref (old);
 }
 
 [DllImport ("gstreamer-0.10.dll") ]

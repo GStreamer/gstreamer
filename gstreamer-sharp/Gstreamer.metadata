@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <metadata>
   <attr path="/api/namespace/object" name="disable_gtype_ctor">1</attr>
+  <attr path="/api/namespace/mini-object" name="disable_gtype_ctor">1</attr>
 
   <attr path="/api/namespace/enum/member[@name='NumErrors']" name="hidden">1</attr>
 
@@ -45,28 +46,27 @@
 
   <attr path="/api/namespace/enum[@name='BinFlags']/member[@cname='GST_BIN_FLAG_LAST']" name="value">ElementFlags.Last &lt;&lt; 5</attr>
 
-  <change-node-type path="/api/namespace/object[@name='Buffer']">boxed</change-node-type>
-  <attr path="/api/namespace/boxed[@name='Buffer']" name="opaque">true</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_get_type']" name="new_flag">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_get_caps']/return-type" name="owned">true</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='Data']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='Duration']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='MallocData']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='Offset']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='OffsetEnd']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='Timestamp']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='Caps']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='FreeFunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_get_caps']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_set_caps']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_stamp']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_join']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_make_metadata_writable']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/constructor[@cname='gst_buffer_new_and_alloc']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_try_new_and_alloc']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_create_sub']/return-type" name="owned">true</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_merge']/return-type" name="owned">true</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_span']/return-type" name="owned">true</attr>
+  <change-node-type path="/api/namespace/object[@name='Buffer']">mini-object</change-node-type>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_get_type']" name="new_flag">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_get_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Data']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Duration']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='MallocData']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Offset']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='OffsetEnd']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Timestamp']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Caps']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='FreeFunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_get_caps']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_set_caps']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_stamp']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_join']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_make_metadata_writable']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/constructor[@cname='gst_buffer_new_and_alloc']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_try_new_and_alloc']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_create_sub']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_merge']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_span']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/enum[@name='BufferFlag']" name="name">BufferFlags</attr>
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_READONLY']" name="value">MiniObjectFlags.Readonly</attr>
@@ -316,18 +316,17 @@
   <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_UNPARENTING']" name="value">ObjectFlags.Last &lt;&lt; 2</attr>
   <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 16</attr>
 
-  <change-node-type path="/api/namespace/object[@name='Event']">boxed</change-node-type>
-  <attr path="/api/namespace/boxed[@name='Event']" name="opaque">true</attr>
-  <attr path="/api/namespace/boxed[@name='Event']/method[@cname='gst_event_get_type']" name="new_flag">1</attr>
-  <attr path="/api/namespace/boxed[@name='Event']/field[@name='Timestamp']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Event']/field[@name='Src']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Event']/field[@name='Structure']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Event']/field[@name='Seqnum']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Event']/constructor" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Event']/method" name="hidden">1</attr>
-  <remove-attr path="/api/namespace/boxed[@name='Event']/method[@cname='gst_event_get_type']" name="hidden" />
-  <remove-attr path="/api/namespace/boxed[@name='Event']/method[@cname='gst_event_type_get_name']" name="hidden" />
-  <attr path="/api/namespace/boxed[@name='Event']/method[@cname='gst_event_type_get_name']" name="name">GetTypeName</attr>
+  <change-node-type path="/api/namespace/object[@name='Event']">mini-object</change-node-type>
+  <attr path="/api/namespace/mini-object[@name='Event']/method[@cname='gst_event_get_type']" name="new_flag">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Event']/field[@name='Timestamp']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Event']/field[@name='Src']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Event']/field[@name='Structure']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Event']/field[@name='Seqnum']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Event']/constructor" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Event']/method" name="hidden">1</attr>
+  <remove-attr path="/api/namespace/mini-object[@name='Event']/method[@cname='gst_event_get_type']" name="hidden" />
+  <remove-attr path="/api/namespace/mini-object[@name='Event']/method[@cname='gst_event_type_get_name']" name="hidden" />
+  <attr path="/api/namespace/mini-object[@name='Event']/method[@cname='gst_event_type_get_name']" name="name">GetTypeName</attr>
 
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='0_']" />
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='Flag']" />
@@ -466,30 +465,22 @@
 
   <remove-node path="/api/namespace/class[@name='Init']" />
 
-  <change-node-type path="/api/namespace/object[@name='Message']">boxed</change-node-type>
-  <attr path="/api/namespace/boxed[@name='Message']" name="opaque">true</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_get_type']" name="new_flag">1</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/field[@name='Timestamp']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/field[@name='Src']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/field[@name='Structure']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_type_to_quark']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_type_get_name']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/constructor" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/method" name="hidden">1</attr>
-  <remove-attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_get_type']" name="hidden" />
+  <change-node-type path="/api/namespace/object[@name='Message']">mini-object</change-node-type>
+  <attr path="/api/namespace/mini-object[@name='Message']/method[@cname='gst_message_get_type']" name="new_flag">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Message']/field[@name='Timestamp']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Message']/field[@name='Src']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Message']/field[@name='Structure']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Message']/method[@cname='gst_message_type_to_quark']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Message']/method[@cname='gst_message_type_get_name']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Message']/constructor" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Message']/method" name="hidden">1</attr>
+  <remove-attr path="/api/namespace/mini-object[@name='Message']/method[@cname='gst_message_get_type']" name="hidden" />
 
   <attr path="/api/namespace/enum[@name='MessageType']" name="parent">uint</attr>
   <attr path="/api/namespace/enum[@name='MessageType']/member[@name='Unknown']" name="value">0U</attr>
   <attr path="/api/namespace/enum[@name='MessageType']/member[@name='Any']" name="value">0xffffffff</attr>
   
-  <change-node-type path="/api/namespace/object[@name='MiniObject']">boxed</change-node-type>
-  <attr path="/api/namespace/boxed[@name='MiniObject']" name="opaque">true</attr>
-  <remove-attr path="/api/namespace/boxed[@name='MiniObject']" name="parent" />
-  <attr path="/api/namespace/boxed[@name='MiniObject']/field[@name='Flags']" name="writeable">true</attr>
-  <attr path="/api/namespace/boxed[@name='MiniObject']/field[@name='Flags']" name="type">GstMiniObjectFlags</attr>
-  <attr path="/api/namespace/boxed[@name='MiniObject']/method[@cname='gst_mini_object_copy']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='MiniObject']/method[@cname='gst_mini_object_make_writable']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='MiniObject']/method[@cname='gst_mini_object_replace']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='MiniObject']" name="hidden">1</attr>
 
   <attr path="/api/namespace/callback[@name='MiniObjectCopyFunction']" name="hidden">1</attr>
 
@@ -744,19 +735,19 @@
   <attr path="/api/namespace/interface[@name='Preset']/method[@cname='gst_preset_get_meta']/parameters/parameter[@name='value']" name="pass_as">out</attr>
   <attr path="/api/namespace/interface[@name='Preset']/virtual_method[@cname='get_meta']/parameters/parameter[@name='value']" name="pass_as">out</attr>
 
-  <change-node-type path="/api/namespace/object[@name='Query']">boxed</change-node-type>
-  <attr path="/api/namespace/boxed[@name='Query']" name="opaque">true</attr>
-  <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_get_type']" name="new_flag">1</attr>
-  <attr path="/api/namespace/boxed[@name='Query']/field[@name='Structure']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Query']/method" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Query']/constructor" name="hidden">1</attr>
-  <remove-attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_get_type']" name="hidden" />
-  <remove-attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_get_by_nick']" name="hidden" />
-  <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_get_by_nick']" name="name">GetTypeByNick</attr>
-  <remove-attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_get_name']" name="hidden" />
-  <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_get_name']" name="name">GetTypeName</attr>
-  <remove-attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_register']" name="hidden" />
-  <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_register']" name="name">RegisterType</attr>
+  <change-node-type path="/api/namespace/object[@name='Query']">mini-object</change-node-type>
+  <attr path="/api/namespace/mini-object[@name='Query']" name="opaque">true</attr>
+  <attr path="/api/namespace/mini-object[@name='Query']/method[@cname='gst_query_get_type']" name="new_flag">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Query']/field[@name='Structure']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Query']/method" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Query']/constructor" name="hidden">1</attr>
+  <remove-attr path="/api/namespace/mini-object[@name='Query']/method[@cname='gst_query_get_type']" name="hidden" />
+  <remove-attr path="/api/namespace/mini-object[@name='Query']/method[@cname='gst_query_type_get_by_nick']" name="hidden" />
+  <attr path="/api/namespace/mini-object[@name='Query']/method[@cname='gst_query_type_get_by_nick']" name="name">GetTypeByNick</attr>
+  <remove-attr path="/api/namespace/mini-object[@name='Query']/method[@cname='gst_query_type_get_name']" name="hidden" />
+  <attr path="/api/namespace/mini-object[@name='Query']/method[@cname='gst_query_type_get_name']" name="name">GetTypeName</attr>
+  <remove-attr path="/api/namespace/mini-object[@name='Query']/method[@cname='gst_query_type_register']" name="hidden" />
+  <attr path="/api/namespace/mini-object[@name='Query']/method[@cname='gst_query_type_register']" name="name">RegisterType</attr>
 
   <attr path="/api/namespace/struct[@name='QueryTypeDefinition']" name="hidden">1</attr>
 

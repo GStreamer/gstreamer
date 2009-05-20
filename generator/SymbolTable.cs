@@ -116,6 +116,7 @@ namespace GtkSharp.Generation {
 			// manually wrapped types requiring more complex marshaling
 			AddType (new ManualGen ("GInitiallyUnowned", "GLib.InitiallyUnowned", "GLib.Object.GetObject ({0})"));
 			AddType (new ManualGen ("GObject", "GLib.Object", "GLib.Object.GetObject ({0})"));
+			AddType (new ManualGen ("GstMiniObject", "Gst.MiniObject", "Gst.MiniObject.GetObject ({0})"));
 			AddType (new ManualGen ("GList", "GLib.List"));
 			AddType (new ManualGen ("GPtrArray", "GLib.PtrArray"));
 			AddType (new ManualGen ("GSList", "GLib.SList"));
@@ -338,7 +339,8 @@ namespace GtkSharp.Generation {
 			
 		public bool IsObject(string c_type)
 		{
-			if (this[c_type] is ObjectGen)
+			if ((this[c_type] is ObjectGen) ||
+			    (this[c_type] is MiniObjectGen))
 				return true;
 
 			return false;

@@ -40,7 +40,7 @@ namespace Gst {
               return true;
             case 2:
               gst_iterator_resync (iterator);
-	      retry = true;
+              retry = true;
               break;
             default:
             case 3:

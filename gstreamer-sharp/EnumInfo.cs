@@ -103,12 +103,12 @@ namespace Gst {
 
     public EnumValue this[int val] {
       get {
-	foreach (EnumValue v in Values) {
-	  if (v.value == val)
-	    return v;
-	}
+        foreach (EnumValue v in Values) {
+          if (v.value == val)
+            return v;
+        }
 
-	throw new Exception ();
+        throw new Exception ();
       }
     }
 
@@ -191,14 +191,14 @@ namespace Gst {
       get {
         System.Collections.ArrayList ret = new System.Collections.ArrayList ();
 
-	foreach (FlagsValue v in Values) {
-	  if (flags == 0 && v.value == 0)
-	    ret.Add (v);
-	  else if ((v.value & flags) != 0)
-	    ret.Add (v);
-	}
+        foreach (FlagsValue v in Values) {
+          if (flags == 0 && v.value == 0)
+            ret.Add (v);
+          else if ( (v.value & flags) != 0)
+            ret.Add (v);
+        }
 
-	return (FlagsValue[]) ret.ToArray (typeof (FlagsValue));
+        return (FlagsValue[]) ret.ToArray (typeof (FlagsValue));
       }
     }
 

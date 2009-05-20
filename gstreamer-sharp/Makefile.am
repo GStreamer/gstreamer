@@ -47,6 +47,7 @@ sources = \
 	PropertyInfo.cs \
 	EnumInfo.cs \
 	Iterator.cs \
+	MiniObject.cs \
 	GstSharp.PadQueryTypeFunctionNative.cs \
 	PadQueryTypeFunction.cs \
 	TypeFindDelegates.cs \
@@ -89,7 +90,6 @@ customs = 			\
 	PadTemplate.custom      \
 	Plugin.custom     	\
 	Task.custom     	\
-	MiniObject.custom       \
 	IndexEntry.custom       \
 	Index.custom       \
 	IndexFactory.custom       \
@@ -122,7 +122,7 @@ $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA) $(srcdir)/$(SYMBOLS)
 		--symbols=$(srcdir)/$(SYMBOLS)
 
 generated-stamp: $(API) $(build_customs) $(overrides)
-	 $(MONO) $(top_builddir)/generator/gst-gapi_codegen.exe--generate $(API) \
+	 $(MONO) $(top_builddir)/generator/gst-gapi_codegen.exe --generate $(API) \
 		--outdir=generated --customdir=$(srcdir) --assembly-name=$(ASSEMBLY_NAME) \
 		--gluelib-name=gstreamersharpglue-0.10 --glue-filename=glue/generated.c \
 		--glue-includes=$(glue_includes) \

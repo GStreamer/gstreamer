@@ -138,6 +138,9 @@ namespace GtkSharp.Generation {
 				case "object":
 					result.Add (new ObjectGen (ns, elem));
 					break;
+				case "mini-object":
+					result.Add (new MiniObjectGen (ns, elem));
+					break;
 				case "class":
 					result.Add (new ClassGen (ns, elem));
 					break;
