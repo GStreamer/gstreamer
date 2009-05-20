@@ -467,39 +467,55 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
 {
   GstBuffer *cur;
   guint size;
+  GstAdapterPrivate *priv;
+  GSList *g;
 
   g_return_if_fail (GST_IS_ADAPTER (adapter));
   g_return_if_fail (flush <= adapter->size);
 
   GST_LOG_OBJECT (adapter, "flushing %u bytes", flush);
+
+  /* flushing out 0 bytes will do nothing */
+  if (G_UNLIKELY (flush == 0))
+    return;
+
+  priv = adapter->priv;
+
+  /* clear state */
   adapter->size -= flush;
   adapter->assembled_len = 0;
-  while (flush > 0) {
-    cur = adapter->buflist->data;
-    size = GST_BUFFER_SIZE (cur) - adapter->skip;
-    if (size <= flush) {
-      /* can skip whole buffer */
-      GST_LOG_OBJECT (adapter, "flushing out head buffer");
-      flush -= size;
-      adapter->skip = 0;
-      adapter->priv->distance += size;
-      adapter->buflist =
-          g_slist_delete_link (adapter->buflist, adapter->buflist);
 
-      if (G_UNLIKELY (adapter->buflist == NULL)) {
-        GST_LOG_OBJECT (adapter, "adapter empty now");
-        adapter->buflist_end = NULL;
-      } else {
-        /* there is a new head buffer, update the timestamp */
-        update_timestamp (adapter, GST_BUFFER_CAST (adapter->buflist->data));
-      }
-      gst_buffer_unref (cur);
-    } else {
-      adapter->skip += flush;
-      adapter->priv->distance += flush;
+  /* take skip into account */
+  flush += adapter->skip;
+  /* distance is always at least the amount of skipped bytes */
+  priv->distance -= adapter->skip;
+
+  g = adapter->buflist;
+  cur = g->data;
+  size = GST_BUFFER_SIZE (cur);
+  while (flush >= size) {
+    /* can skip whole buffer */
+    GST_LOG_OBJECT (adapter, "flushing out head buffer");
+    priv->distance += size;
+    flush -= size;
+
+    gst_buffer_unref (cur);
+    g = g_slist_delete_link (g, g);
+
+    if (G_UNLIKELY (g == NULL)) {
+      GST_LOG_OBJECT (adapter, "adapter empty now");
+      adapter->buflist_end = NULL;
       break;
     }
+    /* there is a new head buffer, update the timestamp */
+    cur = g->data;
+    update_timestamp (adapter, cur);
+    size = GST_BUFFER_SIZE (cur);
   }
+  adapter->buflist = g;
+  /* account for the remaining bytes */
+  adapter->skip = flush;
+  adapter->priv->distance += flush;
 }
 
 /**
