@@ -418,10 +418,8 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           GST_MESSAGE_SRC (message) ?
           gst_object_get_path_string (GST_MESSAGE_SRC (message)) : NULL;
 
-      g_print (_("Got Message #%" G_GUINT32_FORMAT
-              " from object \"%s\" (%s): "), seqnum,
-          GST_STR_NULL (src_name),
-          gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+      g_print (_("Got Message #%u from object \"%s\" (%s): "), (guint) seqnum,
+          GST_STR_NULL (src_name), GST_MESSAGE_TYPE_NAME (message));
 
       g_free (src_name);
 
