@@ -57,6 +57,9 @@
 #define SCAN_SCR_SZ                 12
 #define SCAN_PTS_SZ                 80
 
+#define SEGMENT_THRESHOLD (300*GST_MSECOND)
+#define VIDEO_SEGMENT_THRESHOLD (500*GST_MSECOND)
+
 typedef enum
 {
   SCAN_SCR,
@@ -217,6 +220,10 @@ static inline gboolean gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux,
 static inline gboolean gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux,
     guint64 * pos, SCAN_MODE mode, guint64 * rts);
 
+static void gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
+    GstClockTime new_time);
+static void gst_flups_demux_clear_times (GstFluPSDemux * demux);
+
 static GstElementClass *parent_class = NULL;
 
 /*static guint gst_flups_demux_signals[LAST_SIGNAL] = { 0 };*/
@@ -352,6 +359,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   gchar *name;
   GstFluPSDemuxClass *klass = GST_FLUPS_DEMUX_GET_CLASS (demux);
   GstCaps *caps;
+  GstClockTime threshold = SEGMENT_THRESHOLD;
 
   name = NULL;
   template = NULL;
@@ -380,6 +388,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
       caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, mpeg_version,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+      threshold = VIDEO_SEGMENT_THRESHOLD;
       break;
     }
     case ST_AUDIO_MPEG1:
@@ -399,6 +408,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
       template = klass->video_template;
       name = g_strdup_printf ("video_%02x", id);
       caps = gst_caps_new_simple ("video/x-h264", NULL);
+      threshold = VIDEO_SEGMENT_THRESHOLD;
       break;
     case ST_PS_AUDIO_AC3:
       template = klass->audio_template;
@@ -439,6 +449,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   stream->notlinked = FALSE;
   stream->type = stream_type;
   stream->pad = gst_pad_new_from_template (template, name);
+  stream->segment_thresh = threshold;
   gst_pad_set_event_function (stream->pad,
       GST_DEBUG_FUNCPTR (gst_flups_demux_src_event));
   gst_pad_set_query_function (stream->pad,
@@ -573,6 +584,20 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
       " current scr is %" GST_TIME_FORMAT,
       GST_TIME_ARGS (demux->src_segment.last_stop),
       GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->current_scr)));
+
+  if (demux->src_segment.last_stop != GST_CLOCK_TIME_NONE) {
+    GstClockTime new_time = demux->base_time + demux->src_segment.last_stop;
+
+    if (stream->last_ts == GST_CLOCK_TIME_NONE || stream->last_ts < new_time) {
+#if 0
+      g_print ("last_ts update on pad %s to time %" GST_TIME_FORMAT "\n",
+          GST_PAD_NAME (stream->pad), GST_TIME_ARGS (cur_scr_time));
+#endif
+      stream->last_ts = new_time;
+    }
+
+    gst_flups_demux_send_segment_updates (demux, new_time);
+  }
 
   /* Set the buffer discont flag, and clear discont state on the stream */
   if (stream->discont) {
@@ -746,9 +771,73 @@ gst_flups_demux_flush (GstFluPSDemux * demux)
   gst_adapter_clear (demux->adapter);
   gst_adapter_clear (demux->rev_adapter);
   gst_pes_filter_drain (&demux->filter);
+  gst_flups_demux_clear_times (demux);
   demux->adapter_offset = G_MAXUINT64;
   demux->current_scr = G_MAXUINT64;
   demux->bytes_since_scr = 0;
+}
+
+static void
+gst_flups_demux_clear_times (GstFluPSDemux * demux)
+{
+  gint id;
+
+  /* Clear the last ts for all streams */
+  for (id = 0; id < GST_FLUPS_DEMUX_MAX_STREAMS; id++) {
+    GstFluPSStream *stream = demux->streams[id];
+
+    if (stream) {
+      stream->last_seg_start = stream->last_ts = GST_CLOCK_TIME_NONE;
+    }
+  }
+}
+
+static void
+gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
+    GstClockTime new_time)
+{
+  /* Advance all lagging streams by sending a segment update */
+  gint id;
+  GstEvent *event = NULL;
+
+  /* FIXME: Handle reverse playback */
+
+  if (new_time > demux->src_segment.stop)
+    return;
+
+  for (id = 0; id < GST_FLUPS_DEMUX_MAX_STREAMS; id++) {
+    GstFluPSStream *stream = demux->streams[id];
+
+    if (stream) {
+      if (stream->last_ts == GST_CLOCK_TIME_NONE ||
+          stream->last_ts < demux->src_segment.start)
+        stream->last_ts = demux->src_segment.start;
+      if (stream->last_ts + stream->segment_thresh < new_time) {
+#if 0
+        g_print ("Segment update to pad %s time %" GST_TIME_FORMAT " stop now %"
+            GST_TIME_FORMAT "\n", GST_PAD_NAME (stream->pad),
+            GST_TIME_ARGS (new_time), GST_TIME_ARGS (demux->src_segment.stop));
+#endif
+        GST_DEBUG_OBJECT (demux,
+            "Segment update to pad %s time %" GST_TIME_FORMAT,
+            GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_time));
+        if (event == NULL) {
+          event = gst_event_new_new_segment_full (TRUE,
+              demux->src_segment.rate, demux->src_segment.applied_rate,
+              GST_FORMAT_TIME, new_time,
+              demux->src_segment.stop,
+              demux->src_segment.time + (new_time - demux->src_segment.start));
+        }
+        gst_event_ref (event);
+        gst_pad_push_event (stream->pad, event);
+        stream->last_seg_start = stream->last_ts = new_time;
+        stream->need_segment = FALSE;
+      }
+    }
+  }
+
+  if (event)
+    gst_event_unref (event);
 }
 
 static void
@@ -761,6 +850,10 @@ gst_flups_demux_close_segment (GstFluPSDemux * demux)
   GST_INFO_OBJECT (demux, "closing running segment %" GST_SEGMENT_FORMAT,
       &demux->src_segment);
 #endif
+
+  /* FIXME: Need to send a different segment-close to each pad where the
+   * last_seg_start != clock_time_none, as that indicates a sparse-stream
+   * event was sent there */
 
   /* Close the current segment for a linear playback */
   if (demux->src_segment.rate >= 0) {

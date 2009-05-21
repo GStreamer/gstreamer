@@ -86,6 +86,10 @@ struct _GstFluPSStream
   gint type;
   gint size_bound;
 
+  GstClockTime segment_thresh;
+  GstClockTime last_seg_start;
+  GstClockTime last_ts;
+
   gboolean discont;
   gboolean notlinked;
   gboolean need_segment;
