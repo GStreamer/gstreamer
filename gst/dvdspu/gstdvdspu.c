@@ -79,6 +79,13 @@ GST_STATIC_PAD_TEMPLATE ("subpicture",
     GST_STATIC_CAPS ("video/x-dvd-subpicture")
     );
 
+static const guint32 default_clut[16] = {
+  0xb48080, 0x248080, 0x628080, 0xd78080,
+  0x808080, 0x808080, 0x808080, 0x808080,
+  0x808080, 0x808080, 0x808080, 0x808080,
+  0x808080, 0x808080, 0x808080, 0x808080
+};
+
 GST_BOILERPLATE (GstDVDSpu, gst_dvd_spu, GstElement, GST_TYPE_ELEMENT);
 
 static void gst_dvd_spu_dispose (GObject * object);
@@ -183,6 +190,7 @@ gst_dvd_spu_clear (GstDVDSpu * dvdspu)
 {
   gst_dvd_spu_flush_spu_info (dvdspu, FALSE);
   gst_segment_init (&dvdspu->subp_seg, GST_FORMAT_UNDEFINED);
+  memcpy (dvdspu->spu_state.current_clut, default_clut, sizeof (guint32) * 16);
 
   gst_buffer_replace (&dvdspu->ref_frame, NULL);
   gst_buffer_replace (&dvdspu->pending_frame, NULL);
