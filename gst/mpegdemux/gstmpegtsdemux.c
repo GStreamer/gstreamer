@@ -382,8 +382,8 @@ gst_mpegts_demux_reset (GstMpegTSDemux * demux)
         case PID_TYPE_ELEMENTARY:
           gst_pes_filter_uninit (&stream->filter);
           break;
-        case PID_PROGRAM_ASSOCIATION_TABLE:
-        case PID_CONDITIONAL_ACCESS_TABLE:
+        case PID_TYPE_PROGRAM_ASSOCIATION:
+        case PID_TYPE_CONDITIONAL_ACCESS:
         case PID_TYPE_PROGRAM_MAP:
           gst_section_filter_uninit (&stream->section_filter);
           break;
@@ -2620,8 +2620,7 @@ gst_mpegts_demux_provide_clock (GstElement * element)
           "MpegTSClock", NULL);
       demux->clock_base = GST_CLOCK_TIME_NONE;
     }
-
-    return demux->clock;
+    return gst_object_ref (demux->clock);
   }
 
   return NULL;
