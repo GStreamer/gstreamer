@@ -394,7 +394,7 @@ G_STMT_START {								\
  * element by the toplevel #GstPipeline.
  * @base_time: the time of the clock right before the element is set to
  * PLAYING. Subtracting @base_time from the current clock time in the PLAYING
- * state will yield the stream time.
+ * state will yield the running_time against the clock.
  * @numpads: number of pads of the element, includes both source and sink pads.
  * @pads: list of pads
  * @numsrcpads: number of source pads of the element.

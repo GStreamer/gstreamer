@@ -542,7 +542,8 @@ gst_event_parse_new_segment (GstEvent * event, gboolean * update,
  * The newsegment event marks the range of buffers to be processed. All
  * data not within the segment range is not to be processed. This can be
  * used intelligently by plugins to apply more efficient methods of skipping
- * unneeded data.
+ * unneeded data. The valid range is expressed with the @start and @stop
+ * values.
  *
  * The position value of the segment is used in conjunction with the start
  * value to convert the buffer timestamps into the stream time. This is 
@@ -1043,7 +1044,7 @@ gst_event_new_navigation (GstStructure * structure)
  *
  * Create a new latency event. The event is sent upstream from the sinks and
  * notifies elements that they should add an additional @latency to the
- * timestamps before synchronising against the clock.
+ * running time before synchronising against the clock.
  *
  * The latency is mostly used in live sinks and is always expressed in
  * the time format.

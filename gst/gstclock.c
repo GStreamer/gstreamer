@@ -28,7 +28,7 @@
  *
  * GStreamer uses a global clock to synchronize the plugins in a pipeline.
  * Different clock implementations are possible by implementing this abstract
- * base class.
+ * base class or, more conveniently, by subclassing #GstSystemClock.
  *
  * The #GstClock returns a monotonically increasing time with the method
  * gst_clock_get_time(). Its accuracy and base time depend on the specific
@@ -37,7 +37,7 @@
  * meaningful in itself, what matters are the deltas between two clock times.
  * The time returned by a clock is called the absolute time.
  *
- * The pipeline uses the clock to calculate the stream time. Usually all
+ * The pipeline uses the clock to calculate the running time. Usually all
  * renderers synchronize to the global clock using the buffer timestamps, the
  * newsegment events and the element's base time, see #GstPipeline.
  *
@@ -77,7 +77,7 @@
  * state changes and if the entry would be unreffed automatically, the handle 
  * might become invalid without any notification.
  *
- * These clock operations do not operate on the stream time, so the callbacks
+ * These clock operations do not operate on the running time, so the callbacks
  * will also occur when not in PLAYING state as if the clock just keeps on
  * running. Some clocks however do not progress when the element that provided
  * the clock is not PLAYING.
@@ -99,7 +99,7 @@
  * number of samples to use when calibrating and #GstClock:window-threshold
  * defines the minimum number of samples before the calibration is performed.
  *
- * Last reviewed on 2006-08-11 (0.10.10)
+ * Last reviewed on 2009-05-21 (0.10.24)
  */
 
 

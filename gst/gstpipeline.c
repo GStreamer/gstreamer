@@ -62,23 +62,23 @@
  * gst_pipeline_auto_clock() the default clock selection algorithm can be
  * restored.
  *
- * A #GstPipeline maintains a stream time for the elements. The stream
+ * A #GstPipeline maintains a running time for the elements. The running
  * time is defined as the difference between the current clock time and
  * the base time. When the pipeline goes to READY or a flushing seek is
- * performed on it, the stream time is reset to 0. When the pipeline is
+ * performed on it, the running time is reset to 0. When the pipeline is
  * set from PLAYING to PAUSED, the current clock time is sampled and used to
  * configure the base time for the elements when the pipeline is set
- * to PLAYING again. The effect is that the stream time (as the difference
+ * to PLAYING again. The effect is that the running time (as the difference
  * between the clock time and the base time) will count how much time was spent
  * in the PLAYING state. This default behaviour can be changed with the
  * gst_pipeline_set_new_stream_time() method.
  *
  * When sending a flushing seek event to a GstPipeline (see
  * gst_element_seek()), it will make sure that the pipeline is properly
- * PAUSED and resumed as well as set the new stream time to 0 when the
+ * PAUSED and resumed as well as set the new running time to 0 when the
  * seek succeeded.
  *
- * Last reviewed on 2006-03-12 (0.10.5)
+ * Last reviewed on 2009-05-21 (0.10.24)
  */
 
 #include "gst_private.h"
@@ -292,9 +292,9 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* set the stream time to 0 */
+/* set the running time to 0 */
 static void
-reset_stream_time (GstPipeline * pipeline)
+reset_running_time (GstPipeline * pipeline)
 {
   GST_OBJECT_LOCK (pipeline);
   if (pipeline->stream_time != GST_CLOCK_TIME_NONE) {
@@ -364,7 +364,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       delay = pipeline->delay;
       GST_OBJECT_UNLOCK (element);
 
-      /* stream time changed, either with a PAUSED or a flush, we need to check
+      /* running time changed, either with a PAUSED or a flush, we need to check
        * if there is a new clock & update the base time */
       if (update_stream_time) {
         GST_DEBUG_OBJECT (pipeline, "Need to update stream_time");
@@ -444,7 +444,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
-      reset_stream_time (pipeline);
+      reset_running_time (pipeline);
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -462,7 +462,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
         gst_object_unref (clock);
 
         GST_OBJECT_LOCK (element);
-        /* store the current stream time */
+        /* store the current running time */
         if (pipeline->stream_time != GST_CLOCK_TIME_NONE) {
           pipeline->stream_time = now - element->base_time;
           /* we went to PAUSED, when going to PLAYING select clock and new
@@ -540,10 +540,10 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
 
       gst_message_parse_async_start (message, &new_base_time);
 
-      /* reset our stream time if we need to distribute a new base_time to the
+      /* reset our running time if we need to distribute a new base_time to the
        * children. */
       if (new_base_time)
-        reset_stream_time (pipeline);
+        reset_running_time (pipeline);
 
       break;
     }
@@ -572,9 +572,13 @@ gst_pipeline_get_bus (GstPipeline * pipeline)
 /**
  * gst_pipeline_set_new_stream_time:
  * @pipeline: a #GstPipeline
- * @time: the new stream time to set
+ * @time: the new running time to set
  *
- * Set the new stream time of @pipeline to @time. The stream time is used to
+ * Note, the name of this function is wrong, it should be
+ * gst_pipeline_set_new_running_time(), this function does not change the stream
+ * time of the pipeline elements but the running time.
+ *
+ * Set the new running time of @pipeline to @time. The running time is used to
  * set the base time on the elements (see gst_element_set_base_time())
  * in the PAUSED->PLAYING state transition.
  *
@@ -607,10 +611,13 @@ gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
  * gst_pipeline_get_last_stream_time:
  * @pipeline: a #GstPipeline
  *
- * Gets the last stream time of @pipeline. If the pipeline is PLAYING,
- * the returned time is the stream time used to configure the element's
+ * Note, the name of this function is wrong, it should be
+ * gst_pipeline_get_last_running_time().
+ *
+ * Gets the last running time of @pipeline. If the pipeline is PLAYING,
+ * the returned time is the running time used to configure the element's
  * base time in the PAUSED->PLAYING state. If the pipeline is PAUSED, the
- * returned time is the stream time when the pipeline was paused.
+ * returned time is the running time when the pipeline was paused.
  *
  * This function returns #GST_CLOCK_TIME_NONE if the pipeline was
  * configured to not handle the management of the element's base time

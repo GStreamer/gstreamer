@@ -73,7 +73,7 @@
  * toplevel #GstPipeline so the clock functions are only to be used in very
  * specific situations.
  *
- * Last reviewed on 2006-03-12 (0.10.5)
+ * Last reviewed on 2009-05-21 (0.10.24)
  */
 
 #include "gst_private.h"
@@ -510,7 +510,7 @@ gst_element_set_base_time (GstElement * element, GstClockTime time)
  * Returns the base time of the element. The base time is the
  * absolute time of the clock when this element was last put to
  * PLAYING. Subtracting the base time from the clock time gives
- * the stream time of the element.
+ * the running time of the element.
  *
  * Returns: the base time of the element.
  *
