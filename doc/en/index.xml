@@ -38,7 +38,7 @@
       <Type Name="ClockReturn" Kind="Enumeration" />
       <Type Name="ClockType" Kind="Enumeration" />
       <Type Name="CoreError" Kind="Enumeration" />
-      <Type Name="Date" Kind="Structure" />
+      <Type Name="Date" Kind="Class" />
       <Type Name="DoLatencyArgs" Kind="Class" />
       <Type Name="DoLatencyHandler" Kind="Delegate" />
       <Type Name="DoubleRange" Kind="Structure" />
@@ -210,6 +210,7 @@
       <Type Name="NewDecodedPadArgs" Kind="Class" />
       <Type Name="NewDecodedPadHandler" Kind="Delegate" />
       <Type Name="PlayBin" Kind="Class" />
+      <Type Name="XvImageSink" Kind="Class" />
     </Namespace>
     <Namespace Name="Gst.CorePlugins">
       <Type Name="HaveTypeArgs" Kind="Class" />

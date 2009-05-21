@@ -20,7 +20,7 @@
     
     
     
-    <Member MemberName=".ctor"><MemberSignature Language="C#" Value="public PlayBin (GLib.Object o);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="o" Type="GLib.Object" /></Parameters><Docs><param name="o">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
+    <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public PlayBin (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
@@ -93,4 +93,9 @@
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     </Member>
   </Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>Gst.GTypeName("GstPlayBin")</AttributeName>
+    </Attribute>
+  </Attributes>
 </Type>
