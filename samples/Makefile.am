@@ -1,4 +1,4 @@
-TARGETS = playbin-player.exe decodebin-transcoder.exe helloworld.exe typefind.exe
+TARGETS = playbin-player.exe decodebin-transcoder.exe helloworld.exe typefind.exe metadata.exe gtk-video-player.exe
 DEBUGS = $(addsuffix .mdb, $(TARGETS))
 
 all: $(TARGETS) link
@@ -27,6 +27,9 @@ metadata.exe: $(srcdir)/MetaData.cs $(assemblies)
 
 mp3launchparse.exe: $(srcdir)/MP3LaunchParse.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MP3LaunchParse.cs
+
+gtk-video-player.exe: $(srcdir)/GtkVideoPlayer.cs $(assemblies)
+	$(CSC) $(GLIBSHARP_LIBS) $(references) -pkg:gtk-sharp-2.0 $(srcdir)/GtkVideoPlayer.cs /out:gtk-video-player.exe
 
 link:
 	ln -sf $(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll gstreamer-sharp.dll

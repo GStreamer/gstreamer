@@ -1,161 +1,167 @@
-//
 // Authors
-//   Khaled Mohammed (khaled.mohammed@gmail.com)
-//
-// (C) 2006
-//
+//   Copyright (C) 2006 Khaled Mohammed <khaled.mohammed@gmail.com>
+//   Copyright (C) 2008 Paul Burton <paulburton89@gmail.com>
+
+using System;
+using System.IO;
 
 using Gst;
-using System;
 
-public class MetaData 
-{
+public class MetaData {
+  static Element pipeline = null;
+  static Element source = null;
 
-	static Element pipeline = null;
-	static Element source = null;
+  static void PrintTag (TagList list, string tag) {
+    uint count = list.GetTagSize (tag);
 
-	static void PrintTag( TagList list, string tag) {
-		uint count = list.GetTagSize(tag);
-		Console.WriteLine("Tags found = " + count);
-		for(uint i =0; i < count; i++) 
-		{
-			string str;
-			if(Tag.GetGType(tag) == GLib.GType.String) {
-				if(!list.GetStringIndex(tag, i, out str))
-					Console.Error.WriteLine("g_assert_not_reached()???");
-			} else {
-				str = (String) list.GetValueIndex(tag, i).Val; 
-			}
+    //Console.WriteLine ("Tags found = " + count);
 
-			if(i == 0) 
-				Console.WriteLine("{0}:\t {1}", Tag.GetNick(tag), str);
-			else
-				Console.WriteLine("\t{0}", str);
-		}
-	}
+    for (uint i = 0; i < count; i++) {
+      string str;
 
-	static bool MessageLoop(Element element, ref TagList tags) 
-	{
-		Bus bus = element.Bus;
-		bool done = false;
+      try {
+        str = list[tag, i].ToString ();
+      } catch (Exception ex) {
+        str = ex.Message;
+      }
 
-		while(!done) {
-			Message message = bus.Pop();
-			if(message == null)
-				break;
+      if (i == 0)
+        Console.WriteLine ("{0}: {1}", Tag.GetNick (tag).PadRight (25), str);
+      else
+        Console.WriteLine ("{0}{1}", string.Empty.PadRight (27), str);
+    }
+  }
 
-			switch(message.Type) {
-				case MessageType.Error:
-					string error;
-					message.ParseError(out error);
-					message.Dispose();
-					return true;
-				case MessageType.Eos:
-					message.Dispose();
-					return true;
-				case MessageType.Tag: {
-					TagList new_tags = new TagList();
-					message.ParseTag(new_tags);
-					if(tags != null) {
-						tags = tags.Merge(new_tags, TagMergeMode.KeepAll);
-					}
-					else {
-						tags = new_tags;
-					}
-					//tags.Foreach(PrintTag);
-					//new_tags.Dispose();
-					break;
-				}
-				default:
-					break;
-			}	
-			message.Dispose();
-		}
-		bus.Dispose();
-		return true;
-	}
+  static bool MessageLoop (Element element, ref TagList tags) {
+    Bus bus = element.Bus;
+    bool done = false;
 
-	static void MakePipeline() 
-	{
-		Element decodebin;
+    while (!done) {
+      Message message = bus.Pop ();
 
-		if(pipeline != null) {
-			pipeline.Dispose();
-		}
-		
-		pipeline = new Pipeline(String.Empty);
-		source = ElementFactory.Make("filesrc", "source");
-		decodebin = ElementFactory.Make("decodebin", "decodebin");
+      if (message == null)
+        break;
 
-		if(pipeline == null) Console.Error.WriteLine("Pipeline count not be created");
-		if(source == null) Console.Error.WriteLine("Element filesrc could not be created");
-		if(decodebin == null) Console.Error.WriteLine("Element decodebin coult not be created");
+      switch (message.Type) {
+        case MessageType.Error:
+          Enum error;
+          string msg;
+          message.ParseError (out error, out msg);
+          message.Dispose ();
+          return true;
 
-		Bin bin = (Bin) pipeline;
-		bin.AddMany(source, decodebin);
-		if(!source.Link(decodebin))
-			Console.Error.WriteLine("filesrc could not be linked with decodebin");
-		decodebin.Dispose();
-	}
+        case MessageType.Eos:
+          message.Dispose ();
+          return true;
 
-	public static void Main(string [] args) 
-	{
-		Application.Init();
+        case MessageType.Tag:
+          TagList new_tags;
 
-		if(args.Length < 1) 
-		{
-			Console.Error.WriteLine("Please give filenames to read metadata from\n\n");
-			return;
-		}
+          message.ParseTag (out new_tags);
 
-		MakePipeline();		
+          if (tags != null) {
+            tags = tags.Merge (new_tags, TagMergeMode.KeepAll);
+            new_tags.Dispose ();
+          } else
+            tags = new_tags;
 
-		int i=-1;
-		while(++i < args.Length)
-		{
-			State state, pending;
-			TagList tags = null;
+          break;
 
-			string filename = args[i];
-			source.SetProperty("location", filename);
+        default:
+          break;
+      }
 
-			StateChangeReturn sret = pipeline.SetState(State.Paused);
+      message.Dispose ();
+    }
 
-			if(sret == StateChangeReturn.Async) {
-				if(StateChangeReturn.Success != pipeline.GetState(out state, out pending, Clock.Second * 5)) {
-					Console.Error.WriteLine("State change failed for {0}. Aborting\n", filename);
-					break;
-				}
-			} else if(sret != StateChangeReturn.Success) {
-				Console.Error.WriteLine("{0} - Could not read file\n", filename);
-				continue;
-			}
+    bus.Dispose ();
+    return true;
+  }
 
-			if(!MessageLoop(pipeline, ref tags)) {
-				Console.Error.WriteLine("Failed in message reading for {0}", args[i]);
-			}
+  static void MakePipeline () {
+    Element decodebin;
 
-			if(tags != null) {
-				Console.WriteLine("Metadata for {0}:", args[i]);
-				tags.Foreach(new TagForeachFunc(PrintTag));
-				tags.Dispose();
-				tags = null;
-			} else Console.Error.WriteLine("No metadata found for {0}", args[0]);
+    if (pipeline != null)
+      pipeline.Dispose ();
 
-			sret = pipeline.SetState(State.Null);
+    pipeline = new Pipeline (String.Empty);
+    source = ElementFactory.Make ("filesrc", "source");
+    decodebin = ElementFactory.Make ("decodebin", "decodebin");
 
-			if(StateChangeReturn.Async == sret) {
-				if(StateChangeReturn.Failure == pipeline.GetState(out state, out pending, Clock.TimeNone)) {
-					Console.Error.WriteLine("State change failed. Aborting");
-				}
-			}
-		}
+    if (pipeline == null)
+      Console.WriteLine ("Pipeline could not be created");
+    if (source == null)
+      Console.WriteLine ("Element filesrc could not be created");
+    if (decodebin == null)
+      Console.WriteLine ("Element decodebin could not be created");
 
-		if(pipeline != null) 
-		{
-			pipeline.Dispose();
-		}
+    Bin bin = (Bin) pipeline;
+    bin.Add (source, decodebin);
 
-	}
+    if (!source.Link (decodebin))
+      Console.WriteLine ("filesrc could not be linked with decodebin");
+
+    //decodebin.Dispose ();
+  }
+
+  public static void Main (string [] args) {
+    Application.Init ();
+
+    if (args.Length < 1) {
+      Console.WriteLine ("Please give filenames to read metadata from\n\n");
+      return;
+    }
+
+    MakePipeline ();
+
+    int i = -1;
+    while (++i < args.Length) {
+      State state, pending;
+      TagList tags = null;
+
+      string filename = args[i];
+
+      if (!File.Exists (filename)) {
+        Console.WriteLine ("File {0} does not exist", filename);
+        continue;
+      }
+
+      source["location"] = filename;
+
+      StateChangeReturn sret = pipeline.SetState (State.Paused);
+
+      if (sret == StateChangeReturn.Async) {
+        if (StateChangeReturn.Success != pipeline.GetState (out state, out pending, Clock.Second * 5)) {
+          Console.WriteLine ("State change failed for {0}. Aborting\n", filename);
+          break;
+        }
+      } else if (sret != StateChangeReturn.Success) {
+        Console.WriteLine ("{0} - Could not read file ({1})\n", filename, sret);
+        continue;
+      }
+
+      if (!MessageLoop (pipeline, ref tags))
+        Console.Error.WriteLine ("Failed in message reading for {0}", args[i]);
+
+      if (tags != null) {
+        Console.WriteLine ("Metadata for {0}:", filename);
+
+        foreach (string tag in tags.Tags)
+          PrintTag (tags, tag);
+        tags.Dispose ();
+        tags = null;
+      } else
+        Console.WriteLine ("No metadata found for {0}", args[0]);
+
+      sret = pipeline.SetState (State.Null);
+
+      if (StateChangeReturn.Async == sret) {
+        if (StateChangeReturn.Failure == pipeline.GetState (out state, out pending, Clock.TimeNone))
+          Console.WriteLine ("State change failed. Aborting");
+      }
+    }
+
+    if (pipeline != null)
+      pipeline.Dispose ();
+  }
 }
-
