@@ -381,8 +381,15 @@ namespace Gst {
 
   }
 
-  public struct Date {
+  public class Date : IWrapper {
     public DateTime Val;
+
+    private IntPtr handle;
+    public IntPtr Handle {
+      get {
+        return handle;
+      }
+    }
 
     public static GLib.GType GType {
       get {
@@ -390,18 +397,29 @@ namespace Gst {
       }
     }
 
+    ~Date () {
+      g_date_free (handle);
+    }
+
     public Date (DateTime date) {
       this.Val = date;
+      handle = g_date_new_dmy ( (byte) Val.Day, (int) Val.Month, (ushort) Val.Year);
     }
 
     public Date (int day, int month, int year) {
       this.Val = new DateTime (year, month, day);
+      handle = g_date_new_dmy ( (byte) Val.Day, (int) Val.Month, (ushort) Val.Year);
     }
 
     public Date (GLib.Value val) {
       IntPtr date = gst_value_get_date (ref val);
 
       this.Val = new DateTime (g_date_get_year (date), g_date_get_month (date), g_date_get_day (date));
+      handle = g_date_new_dmy ( (byte) Val.Day, (int) Val.Month, (ushort) Val.Year);
+    }
+
+    public static Date New (IntPtr date) {
+      return new Date (g_date_get_day (date), g_date_get_month (date), g_date_get_year (date));
     }
 
     public void SetGValue (ref GLib.Value val) {
@@ -436,6 +454,8 @@ namespace Gst {
     private static extern ushort g_date_get_year (IntPtr date);
     [DllImport ("libglib-2.0-0.dll") ]
     private static extern IntPtr g_date_new_dmy (byte day, int month, ushort year);
+    [DllImport ("libglib-2.0-0.dll") ]
+    private static extern void g_date_free (IntPtr date);
 
     [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_date_get_type ();
