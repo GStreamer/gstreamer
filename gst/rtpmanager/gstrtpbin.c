@@ -2338,8 +2338,13 @@ pad_failed:
 static void
 remove_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 {
-  g_warning ("gstrtpbin: releasing pad %s:%s is not implemented",
-      GST_DEBUG_PAD_NAME (pad));
+  gst_pad_set_active (pad, FALSE);
+  gst_element_remove_pad (GST_ELEMENT (rtpbin), pad);
+
+  if (session->send_rtcp_src) {
+    gst_element_release_request_pad (session->session, session->send_rtcp_src);
+    session->send_rtcp_src = NULL;
+  }
 }
 
 /* If the requested name is NULL we should create a name with
