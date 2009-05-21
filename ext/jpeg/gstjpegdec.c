@@ -48,9 +48,9 @@ GST_ELEMENT_DETAILS ("JPEG image decoder",
     "Wim Taymans <wim@fluendo.com>");
 
 #define MIN_WIDTH  16
-#define MAX_WIDTH  4096
+#define MAX_WIDTH  65535
 #define MIN_HEIGHT 8
-#define MAX_HEIGHT 4096
+#define MAX_HEIGHT 65535
 
 #define DEFAULT_IDCT_METHOD	JDCT_FASTEST
 
