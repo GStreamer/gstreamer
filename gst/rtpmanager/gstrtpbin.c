@@ -1555,6 +1555,8 @@ gst_rtp_bin_set_sdes_string (GstRtpBin * bin, GstRTCPSDESType type,
   if (type < 0 || type > 8)
     return;
 
+  GST_RTP_BIN_LOCK (bin);
+
   GST_OBJECT_LOCK (bin);
   g_free (bin->sdes[type]);
   bin->sdes[type] = g_strdup (data);
@@ -1563,6 +1565,8 @@ gst_rtp_bin_set_sdes_string (GstRtpBin * bin, GstRTCPSDESType type,
   for (item = bin->sessions; item; item = g_slist_next (item))
     g_object_set (item->data, name, bin->sdes[type], NULL);
   GST_OBJECT_UNLOCK (bin);
+
+  GST_RTP_BIN_UNLOCK (bin);
 }
 
 static gchar *
