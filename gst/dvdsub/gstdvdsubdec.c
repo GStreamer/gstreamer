@@ -40,6 +40,7 @@ static void gst_setup_palette (GstDvdSubDec * dec);
 static void gst_dvd_sub_dec_merge_title (GstDvdSubDec * dec, GstBuffer * buf);
 static GstClockTime gst_dvd_sub_dec_get_event_delay (GstDvdSubDec * dec);
 static gboolean gst_dvd_sub_dec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_dvd_sub_dec_sink_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstFlowReturn gst_send_subtitle_frame (GstDvdSubDec * dec,
     GstClockTime end_ts);
@@ -48,7 +49,12 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, format = (fourcc) AYUV, "
-        "width = (int) 720, height = (int) 576, framerate = (fraction) 0/1")
+        "width = (int) 720, height = (int) 576, framerate = (fraction) 0/1; "
+        "video/x-raw-rgb, "
+        "width = (int) 720, height = (int) 576, framerate = (fraction) 0/1, "
+        "bpp = (int) 32, endianness = (int) 4321, red_mask = (int) 16711680, "
+        "green_mask = (int) 65280, blue_mask = (int) 255, "
+        " alpha_mask = (int) -16777216, depth = (int) 32")
     );
 
 static GstStaticPadTemplate subtitle_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -131,13 +137,14 @@ gst_dvd_sub_dec_init (GstDvdSubDec * dec, GstDvdSubDecClass * klass)
   gst_pad_set_event_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_dvd_sub_dec_sink_event));
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
+  gst_pad_set_setcaps_function (dec->sinkpad, gst_dvd_sub_dec_sink_setcaps);
 
   tmpl = gst_static_pad_template_get (&src_template);
   dec->srcpad = gst_pad_new_from_template (tmpl, "src");
   gst_pad_set_event_function (dec->srcpad,
       GST_DEBUG_FUNCPTR (gst_dvd_sub_dec_src_event));
   gst_pad_use_fixed_caps (dec->srcpad);
-  gst_pad_set_caps (dec->srcpad, gst_pad_template_get_caps (tmpl));
+//  gst_pad_set_caps (dec->srcpad, gst_pad_template_get_caps (tmpl));
   gst_object_unref (tmpl);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
@@ -164,6 +171,7 @@ gst_dvd_sub_dec_init (GstDvdSubDec * dec, GstDvdSubDecClass * klass)
 
   dec->out_buffer = NULL;
   dec->buf_dirty = TRUE;
+  dec->use_ARGB = FALSE;
 }
 
 static void
@@ -414,21 +422,49 @@ gst_setup_palette (GstDvdSubDec * dec)
 {
   gint i;
   guint32 col;
-  YUVA_val *target = dec->palette_cache;
-  YUVA_val *target2 = dec->hl_palette_cache;
+  Color_val *target_yuv = dec->palette_cache_yuv;
+  Color_val *target2_yuv = dec->hl_palette_cache_yuv;
+  Color_val *target_rgb = dec->palette_cache_rgb;
+  Color_val *target2_rgb = dec->hl_palette_cache_rgb;
 
-  for (i = 0; i < 4; i++, target2++, target++) {
+  for (i = 0; i < 4; i++, target2_yuv++, target_yuv++) {
     col = dec->current_clut[dec->subtitle_index[i]];
-    target->Y = (col >> 16) & 0xff;
-    target->V = (col >> 8) & 0xff;
-    target->U = col & 0xff;
-    target->A = dec->subtitle_alpha[i] * 0xff / 0xf;
+    target_yuv->Y_R = (col >> 16) & 0xff;
+    target_yuv->V_B = (col >> 8) & 0xff;
+    target_yuv->U_G = col & 0xff;
+    target_yuv->A = dec->subtitle_alpha[i] * 0xff / 0xf;
 
     col = dec->current_clut[dec->menu_index[i]];
-    target2->Y = (col >> 16) & 0xff;
-    target2->V = (col >> 8) & 0xff;
-    target2->U = col & 0xff;
-    target2->A = dec->menu_alpha[i] * 0xff / 0xf;
+    target2_yuv->Y_R = (col >> 16) & 0xff;
+    target2_yuv->V_B = (col >> 8) & 0xff;
+    target2_yuv->U_G = col & 0xff;
+    target2_yuv->A = dec->menu_alpha[i] * 0xff / 0xf;
+
+    /* If ARGB flag set, then convert YUV palette to RGB */
+    /* Using integer aritmetic */
+    if (dec->use_ARGB) {
+      guchar C = target_yuv->Y_R - 16;
+      guchar D = target_yuv->U_G - 128;
+      guchar E = target_yuv->V_B - 128;
+
+      target_rgb->Y_R = CLAMP (((298 * C + 409 * E + 128) >> 8), 0, 255);
+      target_rgb->U_G =
+          CLAMP (((298 * C - 100 * D - 128 * E + 128) >> 8), 0, 255);
+      target_rgb->V_B = CLAMP (((298 * C + 516 * D + 128) >> 8), 0, 255);
+      target_rgb->A = target_yuv->A;
+
+      C = target2_yuv->Y_R - 16;
+      D = target2_yuv->U_G - 128;
+      E = target2_yuv->V_B - 128;
+
+      target2_rgb->Y_R = CLAMP (((298 * C + 409 * E + 128) >> 8), 0, 255);
+      target2_rgb->U_G =
+          CLAMP (((298 * C - 100 * D - 128 * E + 128) >> 8), 0, 255);
+      target2_rgb->V_B = CLAMP (((298 * C + 516 * D + 128) >> 8), 0, 255);
+      target2_rgb->A = target2_yuv->A;
+    }
+    target_rgb++;
+    target2_rgb++;
   }
 }
 
@@ -452,13 +488,13 @@ gst_get_rle_code (guchar * buffer, RLE_state * state)
 
 #define DRAW_RUN(target,len,c)                  \
 G_STMT_START {                                  \
+  gint i = 0;                                   \
   if ((c)->A) {                                 \
-    gint i;                                     \
     for (i = 0; i < (len); i++) {               \
       *(target)++ = (c)->A;                     \
-      *(target)++ = (c)->Y;                     \
-      *(target)++ = (c)->U;                     \
-      *(target)++ = (c)->V;                     \
+      *(target)++ = (c)->Y_R;                   \
+      *(target)++ = (c)->U_G;                   \
+      *(target)++ = (c)->V_B;                   \
     }                                           \
   } else {                                      \
     (target) += 4 * (len);                      \
@@ -467,7 +503,7 @@ G_STMT_START {                                  \
 
 /* 
  * This function steps over each run-length segment, drawing 
- * into the YUVA buffers as it goes. UV are composited and then output
+ * into the YUVA/ARGB buffers as it goes. UV are composited and then output
  * at half width/height
  */
 static void
@@ -485,12 +521,15 @@ gst_draw_rle_line (GstDvdSubDec * dec, guchar * buffer, RLE_state * state)
 
   while (x < right) {
     gboolean in_hl;
-    const YUVA_val *colour_entry;
+    const Color_val *colour_entry;
 
     code = gst_get_rle_code (buffer, state);
     length = code >> 2;
     colourid = code & 3;
-    colour_entry = dec->palette_cache + colourid;
+    if (dec->use_ARGB)
+      colour_entry = dec->palette_cache_rgb + colourid;
+    else
+      colour_entry = dec->palette_cache_yuv + colourid;
 
     /* Length = 0 implies fill to the end of the line */
     /* Restrict the colour run to the end of the line */
@@ -513,7 +552,11 @@ gst_draw_rle_line (GstDvdSubDec * dec, guchar * buffer, RLE_state * state)
 
       /* Draw across the highlight region */
       if (x <= state->hl_right) {
-        const YUVA_val *hl_colour = dec->hl_palette_cache + colourid;
+        const Color_val *hl_colour;
+        if (dec->use_ARGB)
+          hl_colour = dec->hl_palette_cache_rgb + colourid;
+        else
+          hl_colour = dec->hl_palette_cache_yuv + colourid;
 
         run = MIN (length, state->hl_right - x + 1);
 
@@ -635,9 +678,15 @@ gst_send_subtitle_frame (GstDvdSubDec * dec, GstClockTime end_ts)
 
       for (x = 0; x < dec->in_width; x++) {
         line[0] = 0;            /* A */
-        line[1] = 16;           /* Y */
-        line[2] = 128;          /* U */
-        line[3] = 128;          /* V */
+        if (!dec->use_ARGB) {
+          line[1] = 16;         /* Y */
+          line[2] = 128;        /* U */
+          line[3] = 128;        /* V */
+        } else {
+          line[1] = 0;          /* R */
+          line[2] = 0;          /* G */
+          line[3] = 0;          /* B */
+        }
 
         line += 4;
       }
@@ -786,6 +835,78 @@ gst_dvd_sub_dec_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
+  return ret;
+}
+
+static gboolean
+gst_dvd_sub_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstDvdSubDec *dec = GST_DVD_SUB_DEC (gst_pad_get_parent (pad));
+  gboolean ret = FALSE;
+  guint32 fourcc = GST_MAKE_FOURCC ('A', 'Y', 'U', 'V');
+  GstCaps *out_caps = NULL, *peer_caps = NULL;
+
+  GST_DEBUG_OBJECT (dec, "setcaps called with %" GST_PTR_FORMAT, caps);
+
+  dec->out_fourcc = fourcc;
+  out_caps = gst_caps_new_simple ("video/x-raw-yuv",
+      "width", G_TYPE_INT, dec->in_width,
+      "height", G_TYPE_INT, dec->in_height,
+      "format", GST_TYPE_FOURCC, dec->out_fourcc,
+      "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+
+  peer_caps = gst_pad_get_allowed_caps (dec->srcpad);
+  if (G_LIKELY (peer_caps)) {
+    guint i = 0, n = 0;
+    n = gst_caps_get_size (peer_caps);
+    GST_DEBUG_OBJECT (dec, "peer allowed caps (%u structure(s)) are %"
+        GST_PTR_FORMAT, n, peer_caps);
+
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peer_caps, i);
+      /* Check if the peer pad support ARGB format, if yes change caps */
+      if (gst_structure_has_name (s, "video/x-raw-rgb") &&
+          gst_structure_has_field (s, "alpha_mask")) {
+        gst_caps_unref (out_caps);
+        GST_DEBUG_OBJECT (dec, "trying with fourcc %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (fourcc));
+        out_caps = gst_caps_new_simple ("video/x-raw-rgb",
+            "width", G_TYPE_INT, dec->in_width,
+            "height", G_TYPE_INT, dec->in_height,
+            "framerate", GST_TYPE_FRACTION, 0, 1,
+            "bpp", G_TYPE_INT, 32,
+            "depth", G_TYPE_INT, 32,
+            "red_mask", G_TYPE_INT, 16711680,
+            "green_mask", G_TYPE_INT, 65280,
+            "blue_mask", G_TYPE_INT, 255,
+            "alpha_mask", G_TYPE_INT, -16777216,
+            "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
+        if (gst_pad_peer_accept_caps (dec->srcpad, out_caps)) {
+          GST_DEBUG_OBJECT (dec, "peer accepted format %" GST_FOURCC_FORMAT,
+              GST_FOURCC_ARGS (fourcc));
+          /* If ARGB format then set the flag */
+          dec->use_ARGB = TRUE;
+          break;
+        }
+      }
+    }
+    gst_caps_unref (peer_caps);
+  }
+  GST_DEBUG_OBJECT (dec, "setting caps downstream to %" GST_PTR_FORMAT,
+      out_caps);
+  if (gst_pad_set_caps (dec->srcpad, out_caps)) {
+    dec->out_fourcc = fourcc;
+  } else {
+    GST_WARNING_OBJECT (dec, "failed setting downstream caps");
+    gst_caps_unref (out_caps);
+    goto beach;
+  }
+
+  gst_caps_unref (out_caps);
+  ret = TRUE;
+
+beach:
+  gst_object_unref (dec);
   return ret;
 }
 

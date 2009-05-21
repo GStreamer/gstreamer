@@ -30,13 +30,14 @@ typedef struct _GstDvdSubDec GstDvdSubDec;
 typedef struct _GstDvdSubDecClass GstDvdSubDecClass;
 
 /* Hold premultimplied colour values */
-typedef struct YUVA_val
+typedef struct Color_val
 {
-  guchar Y;
-  guchar U;
-  guchar V;
+  guchar Y_R;
+  guchar U_G;
+  guchar V_B;
   guchar A;
-} YUVA_val;
+
+} Color_val;
 
 struct _GstDvdSubDec
 {
@@ -57,9 +58,14 @@ struct _GstDvdSubDec
   guchar menu_alpha[4];
 
   guint32 current_clut[16];
-  YUVA_val palette_cache[4];
-  YUVA_val hl_palette_cache[4];
+  Color_val palette_cache_yuv[4];
+  Color_val hl_palette_cache_yuv[4];
 
+  Color_val palette_cache_rgb[4];
+  Color_val hl_palette_cache_rgb[4];
+
+  gboolean use_ARGB;
+  guint32 out_fourcc;
   GstClockTime next_ts;
 
   /*
