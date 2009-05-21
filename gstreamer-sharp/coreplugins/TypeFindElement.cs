@@ -26,6 +26,7 @@ namespace Gst.CorePlugins
         }
     }
 
+    [GTypeName("GstTypeFindElement")]
     public class TypeFindElement : Element 
     {
         private Delegate have_type_delegate;
@@ -34,13 +35,9 @@ namespace Gst.CorePlugins
         {
         } 
         
-        public TypeFindElement(GLib.Object o) : base(o.Handle) 
-        {
-        } 
-        
         public static TypeFindElement Make(string name)
         {
-            return new TypeFindElement (ElementFactory.Make("typefind", name));
+            return ElementFactory.Make("typefind", name) as TypeFindElement;
         }
 
         protected virtual void OnHaveType(object o, GLib.SignalArgs args)

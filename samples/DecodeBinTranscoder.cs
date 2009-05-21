@@ -96,7 +96,7 @@ public class DecodeBinTranscoder : IDisposable
         filesink = ElementFactory.Make("filesink", "filesink");
         audioconvert = ElementFactory.Make("audioconvert", "audioconvert");
         encoder = ElementFactory.Make("wavenc", "wavenc");
-        decodebin = new DecodeBin (ElementFactory.Make("decodebin", "decodebin"));
+        decodebin = ElementFactory.Make("decodebin", "decodebin") as DecodeBin;
         decodebin.NewDecodedPad += OnNewDecodedPad;
         
         pipeline.Add (filesrc, decodebin, audioconvert, encoder, filesink);

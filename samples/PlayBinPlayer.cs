@@ -26,7 +26,7 @@ public class PlayBinPlayer
         Gst.Application.Init ();
         loop = new MainLoop ();
 
-        play = new PlayBin (ElementFactory.Make ("playbin", "play"));
+        play = ElementFactory.Make ("playbin", "play") as PlayBin;
 
         if (play == null) {
             Console.WriteLine ("error creating a playbin gstreamer object");

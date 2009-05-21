@@ -25,6 +25,7 @@ namespace Gst.BasePlugins
         }
     }
 
+    [GTypeName("GstDecodeBin")]
     public class DecodeBin : Bin 
     {
         private Delegate new_decoded_pad_delegate;
@@ -33,10 +34,6 @@ namespace Gst.BasePlugins
         {
         } 
 
-	public DecodeBin (GLib.Object o) : base (o.Handle)
-	{
-	}
-        
         protected virtual void OnNewDecodedPad(object o, GLib.SignalArgs args)
         {
             BindingHelper.InvokeProxySignalDelegate(new_decoded_pad_delegate, 
