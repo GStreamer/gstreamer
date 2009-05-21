@@ -1548,7 +1548,8 @@ wrong_size:
   }
 stopping:
   {
-    GST_DEBUG_OBJECT (sink, "ringbuffer is stopping");
+    GST_DEBUG_OBJECT (sink, "preroll got interrupted: %d (%s)", ret,
+        gst_flow_get_name (ret));
     return ret;
   }
 sync_latency_failed:
