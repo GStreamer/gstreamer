@@ -2176,8 +2176,18 @@ link_failed:
 static void
 remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 {
-  g_warning ("gstrtpbin: releasing pad %s:%s is not implemented",
-      GST_DEBUG_PAD_NAME (pad));
+  gst_pad_set_active (pad, FALSE);
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
+
+  if (session->sync_src) {
+    /* releasing the request pad should also unref the sync pad */
+    gst_object_unref (session->sync_src);
+    session->sync_src = NULL;
+  }
+  if (session->recv_rtcp_sink) {
+    gst_element_release_request_pad (session->session, session->recv_rtcp_sink);
+    session->recv_rtcp_sink = NULL;
+  }
 }
 
 /* Create a pad for sending RTP for the session in @name. Must be called with
@@ -2339,7 +2349,7 @@ static void
 remove_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 {
   gst_pad_set_active (pad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT (rtpbin), pad);
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
 
   if (session->send_rtcp_src) {
     gst_element_release_request_pad (session->session, session->send_rtcp_src);
