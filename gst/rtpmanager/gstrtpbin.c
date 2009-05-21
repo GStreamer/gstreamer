@@ -554,8 +554,8 @@ free_session (GstRtpBinSession * sess)
 
   GST_DEBUG_OBJECT (bin, "freeing session %p", sess);
 
-  gst_element_set_state (sess->session, GST_STATE_NULL);
   gst_element_set_state (sess->demux, GST_STATE_NULL);
+  gst_element_set_state (sess->session, GST_STATE_NULL);
 
   if (sess->recv_rtp_sink != NULL) {
     gst_element_release_request_pad (sess->session, sess->recv_rtp_sink);
@@ -588,8 +588,6 @@ free_session (GstRtpBinSession * sess)
 
   g_mutex_free (sess->lock);
   g_hash_table_destroy (sess->ptmap);
-
-  bin->sessions = g_slist_remove (bin->sessions, sess);
 
   g_free (sess);
 }
@@ -2511,6 +2509,13 @@ gst_rtp_bin_release_pad (GstElement * element, GstPad * pad)
     remove_send_rtp (rtpbin, session, pad);
   } else if (session->send_rtcp_src == target) {
     remove_rtcp (rtpbin, session, pad);
+  }
+
+  /* no more request pads, free the complete session */
+  if (session->recv_rtp_sink == NULL && session->recv_rtcp_sink == NULL &&
+      session->send_rtp_sink == NULL && session->send_rtcp_src == NULL) {
+    rtpbin->sessions = g_slist_remove (rtpbin->sessions, session);
+    free_session (session);
   }
   GST_RTP_BIN_UNLOCK (rtpbin);
 
