@@ -2081,8 +2081,23 @@ link_failed:
 static void
 remove_recv_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 {
-  g_warning ("gstrtpbin: releasing pad %s:%s is not implemented",
-      GST_DEBUG_PAD_NAME (pad));
+  if (session->demux_newpad_sig) {
+    g_signal_handler_disconnect (session->demux, session->demux_newpad_sig);
+    session->demux_newpad_sig = 0;
+  }
+
+  if (session->recv_rtp_src) {
+    gst_object_unref (session->recv_rtp_src);
+    session->recv_rtp_src = NULL;
+  }
+
+  if (session->recv_rtp_sink) {
+    gst_element_release_request_pad (session->session, session->recv_rtp_sink);
+    session->recv_rtp_sink = NULL;
+  }
+
+  gst_pad_set_active (pad, FALSE);
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
 }
 
 /* Create a pad for receiving RTCP for the session in @name. Must be called with
