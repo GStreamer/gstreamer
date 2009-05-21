@@ -144,7 +144,6 @@ gst_dvd_sub_dec_init (GstDvdSubDec * dec, GstDvdSubDecClass * klass)
   gst_pad_set_event_function (dec->srcpad,
       GST_DEBUG_FUNCPTR (gst_dvd_sub_dec_src_event));
   gst_pad_use_fixed_caps (dec->srcpad);
-//  gst_pad_set_caps (dec->srcpad, gst_pad_template_get_caps (tmpl));
   gst_object_unref (tmpl);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
@@ -158,10 +157,6 @@ gst_dvd_sub_dec_init (GstDvdSubDec * dec, GstDvdSubDecClass * klass)
   dec->forced_display = FALSE;
   dec->visible = FALSE;
 
-  memset (dec->menu_index, 0, sizeof (dec->menu_index));
-  memset (dec->menu_alpha, 0, sizeof (dec->menu_alpha));
-  memset (dec->subtitle_index, 0, sizeof (dec->subtitle_index));
-  memset (dec->subtitle_alpha, 0, sizeof (dec->subtitle_alpha));
   memcpy (dec->current_clut, default_clut, sizeof (guint32) * 16);
 
   gst_setup_palette (dec);
