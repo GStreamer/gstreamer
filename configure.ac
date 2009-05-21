@@ -265,6 +265,7 @@ AG_GST_CHECK_PLUGIN(dvdspu)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(freeze)
 AG_GST_CHECK_PLUGIN(h264parse)
+AG_GST_CHECK_PLUGIN(id3tag)
 AG_GST_CHECK_PLUGIN(librfb)
 AG_GST_CHECK_PLUGIN(liveadder)
 AG_GST_CHECK_PLUGIN(mpegdemux)
@@ -1574,6 +1575,7 @@ gst/dvdspu/Makefile
 gst/festival/Makefile
 gst/freeze/Makefile
 gst/h264parse/Makefile
+gst/id3tag/Makefile
 gst/librfb/Makefile
 gst/mpegdemux/Makefile
 gst/mpegtsmux/Makefile
