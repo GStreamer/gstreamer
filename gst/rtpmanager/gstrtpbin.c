@@ -297,6 +297,9 @@ struct _GstRtpBinStream
 
   /* the jitterbuffer of the SSRC */
   GstElement *buffer;
+  gulong buffer_handlesync_sig;
+  gulong buffer_ptreq_sig;
+  gulong buffer_ntpstop_sig;
 
   /* the PT demuxer of the SSRC */
   GstElement *demux;
@@ -1096,9 +1099,10 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   session->streams = g_slist_prepend (session->streams, stream);
 
   /* provide clock_rate to the jitterbuffer when needed */
-  g_signal_connect (buffer, "request-pt-map",
+  stream->buffer_ptreq_sig = g_signal_connect (buffer, "request-pt-map",
       (GCallback) pt_map_requested, session);
-  g_signal_connect (buffer, "on-npt-stop", (GCallback) on_npt_stop, stream);
+  stream->buffer_ntpstop_sig = g_signal_connect (buffer, "on-npt-stop",
+      (GCallback) on_npt_stop, stream);
 
   /* configure latency and packet lost */
   g_object_set (buffer, "latency", session->bin->latency, NULL);
@@ -1950,7 +1954,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
 
   /* connect to the RTCP sync signal from the jitterbuffer */
   GST_DEBUG_OBJECT (rtpbin, "connecting sync signal");
-  g_signal_connect (stream->buffer,
+  stream->buffer_handlesync_sig = g_signal_connect (stream->buffer,
       "handle-sync", (GCallback) gst_rtp_bin_handle_sync, stream);
 
   /* connect to the new-pad signal of the payload demuxer, this will expose the
