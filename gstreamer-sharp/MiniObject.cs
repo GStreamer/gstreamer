@@ -94,13 +94,14 @@ namespace Gst {
         if (o.handle == IntPtr.Zero)
           continue;
 
+        Objects.Remove (o.handle);
+
         try {
           gst_mini_object_unref (o.handle);
         } catch (Exception e) {
           Console.WriteLine ("Exception while disposing a " + o + " in Gtk#");
           throw e;
         }
-        Objects.Remove (o.handle);
         o.handle = IntPtr.Zero;
       }
       return false;
