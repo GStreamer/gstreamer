@@ -774,7 +774,7 @@ static const gchar *no_media_mimes[] = {
 /* media types we consider raw media */
 static const gchar *raw_media[] = {
   "audio/x-raw", "video/x-raw", "text/plain", "text/x-pango-markup",
-  "video/x-dvd-subpicture", NULL
+  "video/x-dvd-subpicture", "subpicture/x-", NULL
 };
 
 #define IS_STREAM_URI(uri)          (array_has_value (stream_uris, uri))
