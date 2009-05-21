@@ -931,10 +931,14 @@ gst_dvd_spu_setup_cmd_blk (GstDVDSpu * dvdspu, guint16 cmd_blk_offset,
 }
 
 static void
-gst_dvd_spu_handle_new_spu_buf (GstDVDSpu * dvdspu, SpuPacket * packet)
+gst_dvd_spu_handle_new_vobsub_buf (GstDVDSpu * dvdspu, SpuPacket * packet)
 {
   guint8 *start, *end;
   SpuState *state = &dvdspu->spu_state;
+
+#if DUMP_DCSQ
+  gst_dvd_spu_dump_dcsq (dvdspu, packet->event_ts, packet->buf);
+#endif
 
   if (G_UNLIKELY (GST_BUFFER_SIZE (packet->buf) < 4))
     goto invalid;
@@ -1127,12 +1131,20 @@ gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts)
           packet->buf ? "buffer" : "event");
 
       if (packet->buf) {
-#if DUMP_DCSQ
-        gst_dvd_spu_dump_dcsq (dvdspu, packet->event_ts, packet->buf);
-#endif
-        gst_dvd_spu_handle_new_spu_buf (dvdspu, packet);
-      }
-      if (packet->event)
+        switch (dvdspu->spu_input_type) {
+          case SPU_INPUT_TYPE_VOBSUB:
+            gst_dvd_spu_handle_new_vobsub_buf (dvdspu, packet);
+            break;
+          case SPU_INPUT_TYPE_PGS:
+            gstspu_dump_pgs_buffer (packet->buf);
+            gst_buffer_unref (packet->buf);
+            break;
+          default:
+            g_assert_not_reached ();
+            break;
+        }
+        g_assert (packet->event == NULL);
+      } else if (packet->event)
         gst_dvd_spu_handle_dvd_event (dvdspu, packet->event);
 
       g_free (packet);
@@ -1277,6 +1289,9 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
   }
 
   if (dvdspu->partial_spu != NULL) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf))
+      GST_WARNING_OBJECT (dvdspu,
+          "Joining subpicture buffer with timestamp to previous");
     dvdspu->partial_spu = gst_buffer_join (dvdspu->partial_spu, buf);
   } else {
     /* If we don't yet have a buffer, wait for one with a timestamp,
@@ -1317,11 +1332,41 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
         }
       }
       break;
-    case SPU_INPUT_TYPE_PGS:
-      gstspu_dump_pgs_buffer (dvdspu->partial_spu);
-      gst_buffer_unref (dvdspu->partial_spu);
-      dvdspu->partial_spu = NULL;
+    case SPU_INPUT_TYPE_PGS:{
+      /* Collect until we have a command buffer that ends exactly at the size
+       * we've collected */
+      guint8 packet_type;
+      guint16 packet_size;
+      guint8 *data = GST_BUFFER_DATA (dvdspu->partial_spu);
+      guint8 *end = data + GST_BUFFER_SIZE (dvdspu->partial_spu);
+
+      /* FIXME: There's no need to walk the command set each time. We can set a
+       * marker and resume where we left off next time */
+      while (data != end) {
+        if (data + 3 > end)
+          break;
+        packet_type = *data++;
+        packet_size = GST_READ_UINT16_BE (data);
+        data += 2;
+        if (data + packet_size > end)
+          break;
+        data += packet_size;
+        if (packet_type == PGS_COMMAND_END_DISPLAY && data != end) {
+          /* Extra cruft on the end of the packet -> assume invalid */
+          gst_buffer_unref (dvdspu->partial_spu);
+          dvdspu->partial_spu = NULL;
+          break;
+        }
+      }
+
+      if (dvdspu->partial_spu && data == end) {
+        g_print ("Complete packet of size %u\n",
+            GST_BUFFER_SIZE (dvdspu->partial_spu));
+        submit_new_spu_packet (dvdspu, dvdspu->partial_spu);
+        dvdspu->partial_spu = NULL;
+      }
       break;
+    }
     default:
       GST_ERROR_OBJECT (dvdspu, "Input type not configured before SPU passing");
       goto caps_not_set;
