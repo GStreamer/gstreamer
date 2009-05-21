@@ -1861,7 +1861,7 @@ need_data:
   }
 }
 
-static gboolean
+static inline gboolean
 gst_flups_demux_is_pes_sync (guint32 sync)
 {
   return ((sync & 0xfc) == 0xbc) ||
