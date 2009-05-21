@@ -348,6 +348,7 @@ struct _GstRtpBinSession
   GstPad *sync_src;
   GstPad *send_rtp_sink;
   GstPad *send_rtp_src;
+  GstPad *send_rtp_src_ghost;
   GstPad *send_rtcp_src;
 };
 
@@ -2196,7 +2197,7 @@ remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 static GstPad *
 create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
 {
-  GstPad *result, *srcghost;
+  GstPad *result;
   gchar *gname;
   guint sessid;
   GstRtpBinSession *session;
@@ -2240,10 +2241,10 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   klass = GST_ELEMENT_GET_CLASS (rtpbin);
   gname = g_strdup_printf ("send_rtp_src_%d", sessid);
   templ = gst_element_class_get_pad_template (klass, "send_rtp_src_%d");
-  srcghost =
+  session->send_rtp_src_ghost =
       gst_ghost_pad_new_from_template (gname, session->send_rtp_src, templ);
-  gst_pad_set_active (srcghost, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), srcghost);
+  gst_pad_set_active (session->send_rtp_src_ghost, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), session->send_rtp_src_ghost);
   g_free (gname);
 
   return result;
@@ -2281,8 +2282,26 @@ no_srcpad:
 static void
 remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 {
-  g_warning ("gstrtpbin: releasing pad %s:%s is not implemented",
-      GST_DEBUG_PAD_NAME (pad));
+  if (session->send_rtp_src_ghost) {
+    gst_pad_set_active (session->send_rtp_src_ghost, FALSE);
+    gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin),
+        session->send_rtp_src_ghost);
+    session->send_rtp_src_ghost = NULL;
+  }
+
+  if (session->send_rtp_src) {
+    gst_object_unref (session->send_rtp_src);
+    session->send_rtp_src = NULL;
+  }
+
+  if (session->send_rtp_sink) {
+    gst_element_release_request_pad (GST_ELEMENT_CAST (session->session),
+        session->send_rtp_sink);
+    session->send_rtp_sink = NULL;
+  }
+
+  gst_pad_set_active (pad, FALSE);
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
 }
 
 /* Create a pad for sending RTCP for the session in @name. Must be called with
