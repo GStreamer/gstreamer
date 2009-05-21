@@ -103,20 +103,18 @@ namespace Gst {
     private static void RegisterManagedTypes() {
       GLib.GType.TypeResolver += GstTypeResolver;
 
-      GLib.GType t;
-
-      t = Gst.Fraction.GType;
-      t = Gst.DoubleRange.GType;
-      t = Gst.IntRange.GType;
-      t = Gst.FractionRange.GType;
-      t = Gst.Fourcc.GType;
-      t = Gst.Date.GType;
-      t = Gst.List.GType;
-      t = Gst.Array.GType;
-      t = Gst.Caps.GType;
-      t = Gst.Structure.GType;
-      t = Gst.TagList.GType;
-      t = Gst.MiniObject.GType;
+      GLib.GType.Register (Fraction.GType, typeof (Fraction));
+      GLib.GType.Register (IntRange.GType, typeof (IntRange));
+      GLib.GType.Register (DoubleRange.GType, typeof (DoubleRange));
+      GLib.GType.Register (FractionRange.GType, typeof (FractionRange));
+      GLib.GType.Register (Fourcc.GType, typeof (Fourcc));
+      GLib.GType.Register (Date.GType, typeof (Date));
+      GLib.GType.Register (List.GType, typeof (List));
+      GLib.GType.Register (Array.GType, typeof (Array));
+      GLib.GType.Register (Caps.GType, typeof (Caps));
+      GLib.GType.Register (Structure.GType, typeof (Structure));
+      GLib.GType.Register (TagList.GType, typeof (TagList));
+      GLib.GType.Register (MiniObject.GType, typeof (MiniObject));
 
       GtkSharp.GstreamerSharp.ObjectManager.Initialize ();
     }

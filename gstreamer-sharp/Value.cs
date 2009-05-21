@@ -114,10 +114,6 @@ namespace Gst {
       return new Fraction (a.Numerator * b.Denominator, a.Denominator * b.Numerator);
     }
 
-    static Fraction () {
-      GLib.GType.Register (Fraction.GType, typeof (Fraction));
-    }
-
     [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_value_set_fraction (ref GLib.Value v, int numerator, int denominator);
     [DllImport ("gstreamer-0.10.dll") ]
@@ -166,10 +162,6 @@ namespace Gst {
       return val;
     }
 
-    static DoubleRange () {
-      GLib.GType.Register (DoubleRange.GType, typeof (DoubleRange));
-    }
-
     [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_double_range_get_type ();
     [DllImport ("gstreamer-0.10.dll") ]
@@ -216,10 +208,6 @@ namespace Gst {
 
       gst_value_set_int_range (ref val, range.Min, range.Max);
       return val;
-    }
-
-    static IntRange () {
-      GLib.GType.Register (IntRange.GType, typeof (IntRange));
     }
 
     [DllImport ("gstreamer-0.10.dll") ]
@@ -286,10 +274,6 @@ namespace Gst {
       min.Dispose ();
       max.Dispose ();
       return val;
-    }
-
-    static FractionRange () {
-      GLib.GType.Register (FractionRange.GType, typeof (FractionRange));
     }
 
     [DllImport ("gstreamer-0.10.dll") ]
@@ -368,10 +352,6 @@ namespace Gst {
       return fourcc.ToString ();
     }
 
-    static Fourcc () {
-      GLib.GType.Register (Fourcc.GType, typeof (Fourcc));
-    }
-
     [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_fourcc_get_type ();
     [DllImport ("gstreamer-0.10.dll") ]
@@ -440,10 +420,6 @@ namespace Gst {
       date.SetGValue (ref val);
 
       return val;
-    }
-
-    static Date () {
-      GLib.GType.Register (Date.GType, typeof (Date));
     }
 
     [DllImport ("libglib-2.0-0.dll") ]
@@ -536,10 +512,6 @@ namespace Gst {
       }
     }
 
-    static List () {
-      GLib.GType.Register (List.GType, typeof (List));
-    }
-
     [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_list_get_type ();
     [DllImport ("gstreamer-0.10.dll") ]
@@ -619,10 +591,6 @@ namespace Gst {
       get {
         return content[index];
       }
-    }
-
-    static Array () {
-      GLib.GType.Register (Array.GType, typeof (Array));
     }
 
     [DllImport ("gstreamer-0.10.dll") ]
