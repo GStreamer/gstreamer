@@ -352,7 +352,7 @@ plugin_init (GstPlugin * plugin)
     we_initialized = TRUE;
   } else {
     GST_LOG ("python was already initialized");
-    state = pyg_gil_state_ensure ();
+    state = PyGILState_Ensure ();
   }
 
   GST_LOG ("initializing pygobject");
@@ -385,7 +385,7 @@ plugin_init (GstPlugin * plugin)
     /* We need to release the GIL since we're going back to C land */
     PyEval_SaveThread ();
   } else
-    pyg_gil_state_release (state);
+    PyGILState_Release (state);
   return TRUE;
 }
 
