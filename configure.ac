@@ -12,7 +12,7 @@ AC_INIT(GStreamer Good Plug-ins, 0.10.15.1,
 AG_GST_INIT
 
 dnl initialize automake
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([-Wno-portability])
 
 dnl define PACKAGE_VERSION_* variables
 AS_VERSION
