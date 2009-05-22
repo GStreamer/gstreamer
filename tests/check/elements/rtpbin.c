@@ -25,15 +25,17 @@
 GST_START_TEST (test_cleanup_send)
 {
   GstElement *rtpbin;
-  GstPad *rtp_sink, *rtp_src;
+  GstPad *rtp_sink, *rtp_src, *rtcp_src;
   GObject *session;
 
   rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
 
+  /* request session 0 */
   rtp_sink = gst_element_get_request_pad (rtpbin, "send_rtp_sink_0");
   fail_unless (rtp_sink != NULL);
   ASSERT_OBJECT_REFCOUNT (rtp_sink, "rtp_sink", 2);
 
+  /* this static pad should be created automatically now */
   rtp_src = gst_element_get_static_pad (rtpbin, "send_rtp_src_0");
   fail_unless (rtp_src != NULL);
   ASSERT_OBJECT_REFCOUNT (rtp_src, "rtp_src", 2);
@@ -43,20 +45,40 @@ GST_START_TEST (test_cleanup_send)
   fail_unless (session != NULL);
   g_object_unref (session);
 
+  /* get the send RTCP pad too */
+  rtcp_src = gst_element_get_request_pad (rtpbin, "send_rtcp_src_0");
+  fail_unless (rtcp_src != NULL);
+  ASSERT_OBJECT_REFCOUNT (rtcp_src, "rtcp_src", 2);
+
   gst_element_release_request_pad (rtpbin, rtp_sink);
+  /* we should only have our refs to the pads now */
   ASSERT_OBJECT_REFCOUNT (rtp_sink, "rtp_sink", 1);
   ASSERT_OBJECT_REFCOUNT (rtp_src, "rtp_src", 1);
+  ASSERT_OBJECT_REFCOUNT (rtcp_src, "rtp_src", 2);
+
+  /* the other pad should be gone now */
+  fail_unless (gst_element_get_static_pad (rtpbin, "send_rtp_src_0") == NULL);
+
+  /* internal session should still be there */
+  g_signal_emit_by_name (rtpbin, "get-internal-session", 0, &session);
+  fail_unless (session != NULL);
+  g_object_unref (session);
+
+  /* release the RTCP pad */
+  gst_element_release_request_pad (rtpbin, rtcp_src);
+  /* we should only have our refs to the pads now */
+  ASSERT_OBJECT_REFCOUNT (rtp_sink, "rtp_sink", 1);
+  ASSERT_OBJECT_REFCOUNT (rtp_src, "rtp_src", 1);
+  ASSERT_OBJECT_REFCOUNT (rtcp_src, "rtp_src", 1);
 
   /* the session should be gone now */
   g_signal_emit_by_name (rtpbin, "get-internal-session", 0, &session);
   fail_unless (session == NULL);
 
-  /* the other pad should be gone too now */
-  fail_unless (gst_element_get_static_pad (rtpbin, "send_rtp_src_0") == NULL);
-
   /* unref the request pad and the static pad */
   gst_object_unref (rtp_sink);
   gst_object_unref (rtp_src);
+  gst_object_unref (rtcp_src);
 
   gst_object_unref (rtpbin);
 }
