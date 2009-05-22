@@ -518,6 +518,7 @@ create_session (GstRtpBin * rtpbin, gint id)
   GstRtpBinSession *sess;
   GstElement *session, *demux;
   gint i;
+  GstState target;
 
   if (!(session = gst_element_factory_make ("gstrtpsession", NULL)))
     goto no_session;
@@ -566,11 +567,16 @@ create_session (GstRtpBin * rtpbin, gint id)
   g_signal_connect (sess->session, "on-sender-timeout",
       (GCallback) on_sender_timeout, sess);
 
-  /* FIXME, change state only to what's needed */
   gst_bin_add (GST_BIN_CAST (rtpbin), session);
-  gst_element_set_state (session, GST_STATE_PLAYING);
   gst_bin_add (GST_BIN_CAST (rtpbin), demux);
-  gst_element_set_state (demux, GST_STATE_PLAYING);
+
+  GST_OBJECT_LOCK (rtpbin);
+  target = GST_STATE_TARGET (rtpbin);
+  GST_OBJECT_UNLOCK (rtpbin);
+
+  /* change state only to what's needed */
+  gst_element_set_state (demux, target);
+  gst_element_set_state (session, target);
 
   return sess;
 
@@ -589,12 +595,8 @@ no_demux:
 }
 
 static void
-free_session (GstRtpBinSession * sess)
+free_session (GstRtpBinSession * sess, GstRtpBin * bin)
 {
-  GstRtpBin *bin;
-
-  bin = sess->bin;
-
   GST_DEBUG_OBJECT (bin, "freeing session %p", sess);
 
   gst_element_set_state (sess->demux, GST_STATE_NULL);
@@ -848,8 +850,9 @@ get_client (GstRtpBin * bin, guint8 len, guint8 * data, gboolean * created)
 }
 
 static void
-free_client (GstRtpBinClient * client)
+free_client (GstRtpBinClient * client, GstRtpBin * bin)
 {
+  GST_DEBUG_OBJECT (bin, "freeing client %p", client);
   g_slist_free (client->streams);
   g_free (client->cname);
   g_free (client);
@@ -1105,6 +1108,8 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
 {
   GstElement *buffer, *demux;
   GstRtpBinStream *stream;
+  GstRtpBin *rtpbin;
+  GstState target;
 
   if (!(buffer = gst_element_factory_make ("gstrtpjitterbuffer", NULL)))
     goto no_jitterbuffer;
@@ -1112,9 +1117,11 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   if (!(demux = gst_element_factory_make ("gstrtpptdemux", NULL)))
     goto no_demux;
 
+  rtpbin = session->bin;
+
   stream = g_new0 (GstRtpBinStream, 1);
   stream->ssrc = ssrc;
-  stream->bin = session->bin;
+  stream->bin = rtpbin;
   stream->session = session;
   stream->buffer = buffer;
   stream->demux = demux;
@@ -1129,16 +1136,22 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
       (GCallback) on_npt_stop, stream);
 
   /* configure latency and packet lost */
-  g_object_set (buffer, "latency", session->bin->latency, NULL);
-  g_object_set (buffer, "do-lost", session->bin->do_lost, NULL);
+  g_object_set (buffer, "latency", rtpbin->latency, NULL);
+  g_object_set (buffer, "do-lost", rtpbin->do_lost, NULL);
 
-  gst_bin_add (GST_BIN_CAST (session->bin), buffer);
-  gst_element_set_state (buffer, GST_STATE_PLAYING);
-  gst_bin_add (GST_BIN_CAST (session->bin), demux);
-  gst_element_set_state (demux, GST_STATE_PLAYING);
+  gst_bin_add (GST_BIN_CAST (rtpbin), demux);
+  gst_bin_add (GST_BIN_CAST (rtpbin), buffer);
 
   /* link stuff */
   gst_element_link (buffer, demux);
+
+  GST_OBJECT_LOCK (rtpbin);
+  target = GST_STATE_TARGET (rtpbin);
+  GST_OBJECT_UNLOCK (rtpbin);
+
+  /* from sink to source */
+  gst_element_set_state (demux, target);
+  gst_element_set_state (buffer, target);
 
   return stream;
 
@@ -1512,11 +1525,11 @@ gst_rtp_bin_dispose (GObject * object)
   rtpbin = GST_RTP_BIN (object);
 
   GST_DEBUG_OBJECT (object, "freeing sessions");
-  g_slist_foreach (rtpbin->sessions, (GFunc) free_session, NULL);
+  g_slist_foreach (rtpbin->sessions, (GFunc) free_session, rtpbin);
   g_slist_free (rtpbin->sessions);
   rtpbin->sessions = NULL;
   GST_DEBUG_OBJECT (object, "freeing clients");
-  g_slist_foreach (rtpbin->clients, (GFunc) free_client, NULL);
+  g_slist_foreach (rtpbin->clients, (GFunc) free_client, rtpbin);
   g_slist_free (rtpbin->clients);
   rtpbin->clients = NULL;
 
@@ -2494,7 +2507,7 @@ gst_rtp_bin_request_new_pad (GstElement * element,
     pad_name = g_strdup (name);
   }
 
-  GST_DEBUG ("Trying to request a pad with name %s", pad_name);
+  GST_DEBUG_OBJECT (rtpbin, "Trying to request a pad with name %s", pad_name);
 
   /* figure out the template */
   if (templ == gst_element_class_get_pad_template (klass, "recv_rtp_sink_%d")) {
@@ -2542,6 +2555,9 @@ gst_rtp_bin_release_pad (GstElement * element, GstPad * pad)
   g_return_if_fail (target);
 
   GST_RTP_BIN_LOCK (rtpbin);
+  GST_DEBUG_OBJECT (rtpbin, "Trying to release pad %s:%s",
+      GST_DEBUG_PAD_NAME (target));
+
   if (!(session = find_session_by_pad (rtpbin, target)))
     goto unknown_pad;
 
@@ -2558,8 +2574,9 @@ gst_rtp_bin_release_pad (GstElement * element, GstPad * pad)
   /* no more request pads, free the complete session */
   if (session->recv_rtp_sink == NULL && session->recv_rtcp_sink == NULL &&
       session->send_rtp_sink == NULL && session->send_rtcp_src == NULL) {
+    GST_DEBUG_OBJECT (rtpbin, "no more pads for session %p", session);
     rtpbin->sessions = g_slist_remove (rtpbin->sessions, session);
-    free_session (session);
+    free_session (session, rtpbin);
   }
   GST_RTP_BIN_UNLOCK (rtpbin);
 
