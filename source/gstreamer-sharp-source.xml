@@ -29,7 +29,7 @@
         <exclude>../../gstreamer/gst/gettext.h</exclude>
       </namespace>
     </library>
-    <library name="gstbase-0.10.dll">
+    <library name="gstinterfaces-0.10.dll">
       <namespace name="Gst.Interfaces">
         <dir>../../gst-plugins-base/gst-libs/gst/interfaces</dir>
 	<!-- Not bound -->
