@@ -2199,9 +2199,9 @@ complete:
  * This function is used internally and should normally not be called from
  * plugins or applications.
  *
- * Since: 0.10.24
- *
  * MT safe.
+ *
+ * Since: 0.10.24
  */
 void
 gst_element_lost_state_full (GstElement * element, gboolean new_base_time)

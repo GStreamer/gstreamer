@@ -303,9 +303,9 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
  *
  * Returns: The message's sequence number.
  *
- * Since: 0.10.22
- *
  * MT safe.
+ *
+ * Since: 0.10.22
  */
 guint32
 gst_message_get_seqnum (GstMessage * message)
@@ -326,9 +326,9 @@ gst_message_get_seqnum (GstMessage * message)
  * the message relates to other messages or events. See gst_message_get_seqnum()
  * for more information.
  *
- * Since: 0.10.22
- *
  * MT safe.
+ *
+ * Since: 0.10.22
  */
 void
 gst_message_set_seqnum (GstMessage * message, guint32 seqnum)
@@ -429,9 +429,9 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
  *
  * Returns: The new info message.
  *
- * Since: 0.10.12
- *
  * MT safe.
+ *
+ * Since: 0.10.12
  */
 GstMessage *
 gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
@@ -490,9 +490,9 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  *
  * Returns: The new buffering message.
  *
- * Since: 0.10.11
- *
  * MT safe.
+ *
+ * Since: 0.10.11
  */
 GstMessage *
 gst_message_new_buffering (GstObject * src, gint percent)
@@ -985,9 +985,9 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
  * Extracts the buffering percent from the GstMessage. see also
  * gst_message_new_buffering().
  *
- * Since: 0.10.11
- *
  * MT safe.
+ *
+ * Since: 0.10.11
  */
 void
 gst_message_parse_buffering (GstMessage * message, gint * percent)
@@ -1500,9 +1500,9 @@ gst_message_new_stream_status (GstObject * src, GstStreamStatusType type,
  * owner remains valid for as long as the reference to @message is valid and
  * should thus not be unreffed.
  *
- * Since: 0.10.24.
- *
  * MT safe.
+ *
+ * Since: 0.10.24.
  */
 void
 gst_message_parse_stream_status (GstMessage * message,

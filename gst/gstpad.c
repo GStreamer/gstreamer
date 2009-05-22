@@ -4204,9 +4204,9 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
  *
  * Returns: a #GstFlowReturn from the pad.
  *
- * Since: 0.10.24
- *
  * MT safe.
+ *
+ * Since: 0.10.24
  */
 GstFlowReturn
 gst_pad_chain_list (GstPad * pad, GstBufferList * list)

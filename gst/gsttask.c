@@ -481,9 +481,9 @@ gst_task_set_pool (GstTask * task, GstTaskPool * pool)
  * Objects can use custom GThreads or can perform additional configuration of
  * the threads (such as changing the thread priority) by installing callbacks.
  *
- * Since: 0.10.24
- *
  * MT safe.
+ *
+ * Since: 0.10.24
  */
 void
 gst_task_set_thread_callbacks (GstTask * task,
@@ -592,9 +592,9 @@ start_task (GstTask * task)
  *
  * Returns: %TRUE if the state could be changed.
  *
- * Since: 0.10.24
- *
  * MT safe.
+ *
+ * Since: 0.10.24
  */
 gboolean
 gst_task_set_state (GstTask * task, GstTaskState state)
