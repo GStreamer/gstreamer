@@ -1,55 +1,55 @@
 #include <gst/gst.h>
 
-uint
+guint
 gstsharp_gst_index_entry_get_id_description_offset (void)
 {
-  return (uint) G_STRUCT_OFFSET (GstIndexEntry, data.id.description);
+  return (guint) G_STRUCT_OFFSET (GstIndexEntry, data.id.description);
 }
 
-uint
+guint
 gstsharp_gst_index_entry_get_assoc_nassocs_offset (void)
 {
-  return (uint) G_STRUCT_OFFSET (GstIndexEntry, data.assoc.nassocs);
+  return (guint) G_STRUCT_OFFSET (GstIndexEntry, data.assoc.nassocs);
 }
 
-uint
+guint
 gstsharp_gst_index_entry_get_assoc_assocs_offset (void)
 {
-  return (uint) G_STRUCT_OFFSET (GstIndexEntry, data.assoc.assocs);
+  return (guint) G_STRUCT_OFFSET (GstIndexEntry, data.assoc.assocs);
 }
 
-uint
+guint
 gstsharp_gst_index_entry_get_assoc_flags_offset (void)
 {
-  return (uint) G_STRUCT_OFFSET (GstIndexEntry, data.assoc.flags);
+  return (guint) G_STRUCT_OFFSET (GstIndexEntry, data.assoc.flags);
 }
 
-uint
+guint
 gstsharp_gst_index_entry_get_object_key_offset (void)
 {
-  return (uint) G_STRUCT_OFFSET (GstIndexEntry, data.object.key);
+  return (guint) G_STRUCT_OFFSET (GstIndexEntry, data.object.key);
 }
 
-uint
+guint
 gstsharp_gst_index_entry_get_object_type_offset (void)
 {
-  return (uint) G_STRUCT_OFFSET (GstIndexEntry, data.object.type);
+  return (guint) G_STRUCT_OFFSET (GstIndexEntry, data.object.type);
 }
 
-uint
+guint
 gstsharp_gst_index_entry_get_object_object_offset (void)
 {
-  return (uint) G_STRUCT_OFFSET (GstIndexEntry, data.object.object);
+  return (guint) G_STRUCT_OFFSET (GstIndexEntry, data.object.object);
 }
 
-uint
+guint
 gstsharp_gst_index_entry_get_format_format_offset (void)
 {
-  return (uint) G_STRUCT_OFFSET (GstIndexEntry, data.format.format);
+  return (guint) G_STRUCT_OFFSET (GstIndexEntry, data.format.format);
 }
 
-uint
+guint
 gstsharp_gst_index_entry_get_format_key_offset (void)
 {
-  return (uint) G_STRUCT_OFFSET (GstIndexEntry, data.format.key);
+  return (guint) G_STRUCT_OFFSET (GstIndexEntry, data.format.key);
 }

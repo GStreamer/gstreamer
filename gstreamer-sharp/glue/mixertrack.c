@@ -1,28 +1,28 @@
 #include <gst/gst.h>
 #include <gst/interfaces/mixertrack.h>
 
-uint
+guint
 gst__interfacessharp_gst__interfaces_mixertrack_get_label_offset (void) {
-  return (uint) G_STRUCT_OFFSET (GstMixerTrack, label);
+  return (guint) G_STRUCT_OFFSET (GstMixerTrack, label);
 }
 
-uint
+guint
 gst__interfacessharp_gst__interfaces_mixertrack_get_flags_offset (void) {
-  return (uint) G_STRUCT_OFFSET (GstMixerTrack, flags);
+  return (guint) G_STRUCT_OFFSET (GstMixerTrack, flags);
 }
 
-uint
+guint
 gst__interfacessharp_gst__interfaces_mixertrack_get_num_channels_offset (void) {
-  return (uint) G_STRUCT_OFFSET (GstMixerTrack, num_channels);
+  return (guint) G_STRUCT_OFFSET (GstMixerTrack, num_channels);
 }
 
-uint
+guint
 gst__interfacessharp_gst__interfaces_mixertrack_get_min_volume_offset (void) {
-  return (uint) G_STRUCT_OFFSET (GstMixerTrack, min_volume);
+  return (guint) G_STRUCT_OFFSET (GstMixerTrack, min_volume);
 }
 
-uint
+guint
 gst__interfacessharp_gst__interfaces_mixertrack_get_max_volume_offset (void) {
-  return (uint) G_STRUCT_OFFSET (GstMixerTrack, max_volume);
+  return (guint) G_STRUCT_OFFSET (GstMixerTrack, max_volume);
 }
 

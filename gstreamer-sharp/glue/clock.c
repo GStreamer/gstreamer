@@ -1,22 +1,22 @@
 #include <gst/gst.h>
 
-uint
+guint
 gstsharp_gst_clock_get_entries_changed_offset (void) {
-  return (uint) G_STRUCT_OFFSET (GstClock, entries_changed);
+  return (guint) G_STRUCT_OFFSET (GstClock, entries_changed);
 }
 
-uint
+guint
 gstsharp_gst_clock_get_slave_lock_offset (void) {
-  return (uint) G_STRUCT_OFFSET (GstClock, slave_lock);
+  return (guint) G_STRUCT_OFFSET (GstClock, slave_lock);
 }
 
-uint
+guint
 gstsharp_gst_clock_get_entries_offset (void) {
-  return (uint) G_STRUCT_OFFSET (GstClock, entries);
+  return (guint) G_STRUCT_OFFSET (GstClock, entries);
 }
 
-uint
+guint
 gstsharp_gst_clock_get_times_offset (void) {
-  return (uint) G_STRUCT_OFFSET (GstClock, times);
+  return (guint) G_STRUCT_OFFSET (GstClock, times);
 }
 

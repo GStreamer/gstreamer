@@ -1,8 +1,8 @@
 #include <gst/gst.h>
 
-uint
+guint
 gstsharp_gst_task_get_cond_offset (void)
 {
-  return (uint) G_STRUCT_OFFSET (GstTask, cond);
+  return (guint) G_STRUCT_OFFSET (GstTask, cond);
 }
 
