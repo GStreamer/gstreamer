@@ -445,9 +445,26 @@ gst_byte_reader_peek_float64_le
 gst_byte_reader_peek_float64_be
 
 gst_byte_reader_get_data
+gst_byte_reader_dup_data
 gst_byte_reader_peek_data
 
 gst_byte_reader_masked_scan_uint32
+
+gst_byte_reader_get_string
+gst_byte_reader_get_string_utf8
+
+gst_byte_reader_peek_string
+gst_byte_reader_peek_string_utf8
+
+gst_byte_reader_dup_string
+gst_byte_reader_dup_string_utf8
+gst_byte_reader_dup_string_utf16
+gst_byte_reader_dup_string_utf32
+
+gst_byte_reader_skip_string
+gst_byte_reader_skip_string_utf8
+gst_byte_reader_skip_string_utf16
+gst_byte_reader_skip_string_utf32
 </SECTION>
 
 <SECTION>

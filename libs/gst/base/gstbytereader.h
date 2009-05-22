@@ -102,8 +102,32 @@ gboolean gst_byte_reader_peek_float32_be (GstByteReader *reader, gfloat *val);
 gboolean gst_byte_reader_peek_float64_le (GstByteReader *reader, gdouble *val);
 gboolean gst_byte_reader_peek_float64_be (GstByteReader *reader, gdouble *val);
 
-gboolean gst_byte_reader_get_data (GstByteReader *reader, guint size, const guint8 **val);
-gboolean gst_byte_reader_peek_data (GstByteReader *reader, guint size, const guint8 **val);
+gboolean gst_byte_reader_dup_data  (GstByteReader * reader, guint size, guint8       ** val);
+gboolean gst_byte_reader_get_data  (GstByteReader * reader, guint size, const guint8 ** val);
+gboolean gst_byte_reader_peek_data (GstByteReader * reader, guint size, const guint8 ** val);
+
+#define gst_byte_reader_dup_string(reader,str) \
+    gst_byte_reader_dup_string_utf8(reader,str)
+
+gboolean gst_byte_reader_dup_string_utf8  (GstByteReader * reader, gchar   ** str);
+gboolean gst_byte_reader_dup_string_utf16 (GstByteReader * reader, guint16 ** str);
+gboolean gst_byte_reader_dup_string_utf32 (GstByteReader * reader, guint32 ** str);
+
+#define gst_byte_reader_skip_string(reader) \
+    gst_byte_reader_skip_string_utf8(reader)
+
+gboolean gst_byte_reader_skip_string_utf8  (GstByteReader * reader);
+gboolean gst_byte_reader_skip_string_utf16 (GstByteReader * reader);
+gboolean gst_byte_reader_skip_string_utf32 (GstByteReader * reader);
+
+#define gst_byte_reader_get_string(reader,str) \
+    gst_byte_reader_get_string_utf8(reader,str)
+
+#define gst_byte_reader_peek_string(reader,str) \
+    gst_byte_reader_peek_string_utf8(reader,str)
+
+gboolean gst_byte_reader_get_string_utf8   (GstByteReader * reader, const gchar ** str);
+gboolean gst_byte_reader_peek_string_utf8  (GstByteReader * reader, const gchar ** str);
 
 guint    gst_byte_reader_masked_scan_uint32 (GstByteReader * reader,
                                              guint32         mask,

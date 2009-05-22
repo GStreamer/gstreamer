@@ -551,6 +551,135 @@ GST_START_TEST (test_scan)
 
 GST_END_TEST;
 
+GST_START_TEST (test_string_funcs)
+{
+  GstByteReader reader, backup;
+  const gchar *s8;
+  guint32 *c32;
+  guint16 *c16;
+  gchar *c8;
+  guint8 data[200], *d;
+  guint i;
+
+  /* fill half the buffer with a pattern */
+  for (i = 0; i < 100; i++)
+    data[i] = i + 1;
+
+  gst_byte_reader_init (&reader, data, 100);
+
+  /* no NUL terminator, so these should all fail */
+  fail_if (gst_byte_reader_get_string (&reader, &s8));
+  fail_if (gst_byte_reader_get_string_utf8 (&reader, &s8));
+  fail_if (gst_byte_reader_dup_string (&reader, &c8));
+  fail_if (gst_byte_reader_dup_string_utf8 (&reader, &c8));
+  fail_if (gst_byte_reader_skip_string (&reader));
+  fail_if (gst_byte_reader_skip_string_utf8 (&reader));
+  fail_if (gst_byte_reader_skip_string_utf16 (&reader));
+  fail_if (gst_byte_reader_skip_string_utf32 (&reader));
+  fail_if (gst_byte_reader_peek_string (&reader, &s8));
+  fail_if (gst_byte_reader_peek_string_utf8 (&reader, &s8));
+  fail_if (gst_byte_reader_dup_string_utf16 (&reader, &c16));
+  fail_if (gst_byte_reader_dup_string_utf32 (&reader, &c32));
+
+  /* let's add a single NUL terminator */
+  data[80] = '\0';
+  backup = reader;
+  fail_if (gst_byte_reader_skip_string_utf32 (&reader));
+  fail_if (gst_byte_reader_skip_string_utf16 (&reader));
+  fail_if (gst_byte_reader_dup_string_utf16 (&reader, &c16));
+  fail_if (gst_byte_reader_dup_string_utf32 (&reader, &c32));
+  fail_unless (gst_byte_reader_skip_string (&reader));
+  reader = backup;
+  fail_unless (gst_byte_reader_skip_string_utf8 (&reader));
+  reader = backup;
+  fail_unless (gst_byte_reader_peek_string (&reader, &s8));
+  fail_unless (gst_byte_reader_peek_string_utf8 (&reader, &s8));
+  fail_if (gst_byte_reader_dup_string_utf16 (&reader, &c16));
+  fail_if (gst_byte_reader_dup_string_utf32 (&reader, &c32));
+
+  /* let's add another NUL terminator */
+  data[81] = '\0';
+  reader = backup;
+  fail_if (gst_byte_reader_skip_string_utf32 (&reader));
+  fail_if (gst_byte_reader_dup_string_utf32 (&reader, &c32));
+  fail_unless (gst_byte_reader_skip_string_utf16 (&reader));
+  reader = backup;
+  fail_unless (gst_byte_reader_dup_string_utf16 (&reader, &c16));
+  g_free (c16);
+  reader = backup;
+  fail_unless (gst_byte_reader_skip_string (&reader));
+  reader = backup;
+  fail_unless (gst_byte_reader_skip_string_utf8 (&reader));
+  reader = backup;
+  fail_unless (gst_byte_reader_peek_string (&reader, &s8));
+  fail_unless (gst_byte_reader_peek_string_utf8 (&reader, &s8));
+  fail_if (gst_byte_reader_dup_string_utf32 (&reader, &c32));
+
+  /* two more NUL terminators */
+  data[79] = '\0';
+  data[82] = '\0';
+  reader = backup;
+  /* we're at pos. 80 now, so have only 3 NUL terminators in front of us */
+  fail_if (gst_byte_reader_skip_string_utf32 (&reader));
+  /* let's rewind */
+  gst_byte_reader_init (&reader, data, 100);
+  backup = reader;
+  /* oops, 79 is not dividable by 4, so not aligned, so should fail as well! */
+  fail_if (gst_byte_reader_skip_string_utf32 (&reader));
+  /* let's try that again */
+  data[83] = '\0';
+  gst_byte_reader_init (&reader, data, 100);
+  backup = reader;
+  fail_unless (gst_byte_reader_skip_string_utf16 (&reader));
+  reader = backup;
+  fail_unless (gst_byte_reader_skip_string (&reader));
+  reader = backup;
+  fail_unless (gst_byte_reader_skip_string_utf8 (&reader));
+  reader = backup;
+  fail_unless (gst_byte_reader_peek_string (&reader, &s8));
+  fail_unless (gst_byte_reader_peek_string_utf8 (&reader, &s8));
+  fail_unless (gst_byte_reader_dup_string_utf16 (&reader, &c16));
+  g_free (c16);
+  reader = backup;
+  fail_unless (gst_byte_reader_dup_string_utf32 (&reader, &c32));
+  g_free (c32);
+
+  /* and again from the start */
+  gst_byte_reader_init (&reader, data, 100);
+  fail_unless (gst_byte_reader_skip_string_utf16 (&reader));
+  fail_if (gst_byte_reader_dup_data (&reader, 200, &d));
+  fail_if (gst_byte_reader_dup_data (&reader, 100, &d));
+  fail_if (gst_byte_reader_dup_data (&reader, 20, &d));
+  fail_unless (gst_byte_reader_dup_data (&reader, 10, &d));
+  fail_unless_equals_int (d[0], 0);
+  fail_unless_equals_int (d[1], 0);
+  fail_unless_equals_int (d[2], 85);
+  fail_unless_equals_int (d[3], 86);
+  g_free (d);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_dup_string)
+{
+  const gchar moredata[] = { 0x99, 0x10, 'f', '0', '0', '!', '\0', 0xff };
+  GstByteReader reader;
+  guint16 num;
+  guint8 x;
+  gchar *s;
+
+  gst_byte_reader_init (&reader, (guint8 *) moredata, sizeof (moredata));
+  fail_unless (gst_byte_reader_get_uint16_be (&reader, &num));
+  fail_unless_equals_int (num, 0x9910);
+  fail_unless (gst_byte_reader_dup_string (&reader, &s));
+  fail_unless_equals_string (s, "f00!");
+  fail_unless (gst_byte_reader_get_uint8 (&reader, &x));
+  fail_unless_equals_int (x, 0xff);
+  g_free (s);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_byte_reader_suite (void)
 {
@@ -568,6 +697,8 @@ gst_byte_reader_suite (void)
   tcase_add_test (tc_chain, test_get_float_be);
   tcase_add_test (tc_chain, test_position_tracking);
   tcase_add_test (tc_chain, test_scan);
+  tcase_add_test (tc_chain, test_string_funcs);
+  tcase_add_test (tc_chain, test_dup_string);
 
   return s;
 }
