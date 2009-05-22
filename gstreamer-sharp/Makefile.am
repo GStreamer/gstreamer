@@ -127,7 +127,8 @@ generated-stamp: $(API) $(build_customs) $(overrides)
 		--gluelib-name=gstreamersharpglue-0.10 --glue-filename=glue/generated.c \
 		--glue-includes=$(glue_includes) \
 	&& cp $(overrides) $(builddir)/generated \
-	&& sed -i 's;public class ObjectManager;internal class ObjectManager;g' generated/ObjectManager.cs \
+	&& sed 's;public class ObjectManager;internal class ObjectManager;g' generated/ObjectManager.cs > generated/ObjectManager.cs.tmp \
+	&& mv generated/ObjectManager.cs.tmp generated/ObjectManager.cs \
 	&& touch generated-stamp
 
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
