@@ -122,9 +122,12 @@ gst_interpolation_control_source_new (void)
  *
  * Returns: %TRUE if the interpolation mode could be set, %FALSE otherwise
  */
+/* *INDENT-OFF* */
 gboolean
-    gst_interpolation_control_source_set_interpolation_mode
-    (GstInterpolationControlSource * self, GstInterpolateMode mode) {
+gst_interpolation_control_source_set_interpolation_mode (
+    GstInterpolationControlSource * self, GstInterpolateMode mode)
+/* *INDENT-ON* */
+{
   gboolean ret = TRUE;
   GstControlSource *csource = GST_CONTROL_SOURCE (self);
 
@@ -437,7 +440,7 @@ gst_interpolation_control_source_set_internal (GstInterpolationControlSource *
   /* check if a control point for the timestamp already exists */
 
   /* iter contains the iter right *after* timestamp */
-  if (self->priv->values) {
+  if (G_LIKELY (self->priv->values)) {
     iter =
         g_sequence_search (self->priv->values, &timestamp,
         (GCompareDataFunc) gst_control_point_find, NULL);
@@ -453,13 +456,12 @@ gst_interpolation_control_source_set_internal (GstInterpolationControlSource *
         goto done;
       }
     }
+  } else {
+    self->priv->values =
+        g_sequence_new ((GDestroyNotify) gst_control_point_free);
   }
 
   /* sort new cp into the prop->values list */
-  if (!self->priv->values)
-    self->priv->values =
-        g_sequence_new ((GDestroyNotify) gst_control_point_free);
-
   g_sequence_insert_sorted (self->priv->values, _make_new_cp (self, timestamp,
           value), (GCompareDataFunc) gst_control_point_compare, NULL);
   self->priv->nvalues++;
@@ -627,7 +629,7 @@ gst_interpolation_control_source_get_all (GstInterpolationControlSource * self)
   g_return_val_if_fail (GST_IS_INTERPOLATION_CONTROL_SOURCE (self), NULL);
 
   g_mutex_lock (self->lock);
-  if (self->priv->values)
+  if (G_LIKELY (self->priv->values))
     g_sequence_foreach (self->priv->values, (GFunc) _append_control_point,
         &res);
   g_mutex_unlock (self->lock);

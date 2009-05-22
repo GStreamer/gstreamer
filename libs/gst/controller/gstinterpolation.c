@@ -535,7 +535,7 @@ _interpolate_linear_get_##vtype (GstInterpolationControlSource *self, GstClockTi
     g_value_init (&cp.value, self->priv->type); \
     g_value_copy (&self->priv->default_value, &cp.value); \
     cp1 = &cp; \
-    if (self->priv->values) \
+    if (G_LIKELY (self->priv->values)) \
       iter = g_sequence_get_begin_iter (self->priv->values); \
   } \
   if (iter) { \
