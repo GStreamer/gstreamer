@@ -2,6 +2,7 @@ Makefile
 Makefile.in
 caps
 complexity
+controller
 gstclockstress
 gstpollstress
 mass-elements
