@@ -31,7 +31,16 @@ main (gint argc, gchar ** argv)
   bin = gst_pipeline_new ("pipeline");
   clock = gst_pipeline_get_clock (GST_PIPELINE (bin));
   src = gst_element_factory_make ("audiotestsrc", "gen_audio");
-  sink = gst_element_factory_make ("alsasink", "play_audio");
+  if (!src) {
+    GST_WARNING ("need audiotestsrc from gst-plugins-base");
+    goto Error;
+  }
+  sink = gst_element_factory_make ("autoaudiosink", "play_audio");
+  if (!sink) {
+    GST_WARNING ("need autoaudiosink from gst-plugins-base");
+    goto Error;
+  }
+
   gst_bin_add_many (GST_BIN (bin), src, sink, NULL);
   if (!gst_element_link (src, sink)) {
     GST_WARNING ("can't link elements");
