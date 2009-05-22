@@ -23,6 +23,8 @@ guint8 *rle_data = NULL;
 guint32 rle_data_size = 0, rle_data_used = 0;
 PgsPaletteEntry palette[256];
 
+#define DUMP_FULL_IMAGE 0
+
 static void
 dump_bytes (guint8 * data, guint16 len)
 {
@@ -43,8 +45,6 @@ dump_rle_data (guint8 * data, guint32 len)
 {
   guint8 *end = data + len;
   guint16 obj_w, obj_h;
-  gint i;
-  guint x = 0;
 
   if (data + 4 > end)
     return;
@@ -104,24 +104,30 @@ dump_rle_data (guint8 * data, guint32 len)
       }
     }
 
+#if DUMP_FULL_IMAGE
+    {
+      gint i;
+      guint x = 0;
 #if 1
-    if (palette[pal_id].A) {
-      for (i = 0; i < run_len; i++)
-        g_print ("%02x ", pal_id);
-    } else {
-      for (i = 0; i < run_len; i++)
-        g_print ("   ");
-    }
-    x += run_len;
-    if (!run_len || x > obj_w) {
-      g_print ("\n");
-      x = 0;
-    }
+      if (palette[pal_id].A) {
+        for (i = 0; i < run_len; i++)
+          g_print ("%02x ", pal_id);
+      } else {
+        for (i = 0; i < run_len; i++)
+          g_print ("   ");
+      }
+      x += run_len;
+      if (!run_len || x > obj_w) {
+        g_print ("\n");
+        x = 0;
+      }
 #else
-    g_print ("Run x: %d pix: %d col: %d\n", x, run_len, pal_id);
-    x += run_len;
-    if (x >= obj_w)
-      x = 0;
+      g_print ("Run x: %d pix: %d col: %d\n", x, run_len, pal_id);
+      x += run_len;
+      if (x >= obj_w)
+        x = 0;
+#endif
+    }
 #endif
 
   };
@@ -413,6 +419,8 @@ gstspu_dump_pgs_buffer (GstBuffer * buf)
     return -1;
   }
 
+  g_print ("Begin dumping command buffer of size %u ts %" GST_TIME_FORMAT "\n",
+      end - pos, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
   do {
     type = *pos++;
     packet_len = GST_READ_UINT16_BE (pos);
@@ -430,5 +438,6 @@ gstspu_dump_pgs_buffer (GstBuffer * buf)
     pos += packet_len;
   } while (pos + 3 <= end);
 
+  g_print ("End dumping command buffer with %u bytes remaining\n", end - pos);
   return (pos - GST_BUFFER_DATA (buf));
 }
