@@ -521,16 +521,16 @@ gst_type_find_helper_for_extension (GstObject * obj, const gchar * extension)
     /* we only want to check those factories without a function */
     if (factory->function != NULL)
       continue;
-    
+
     /* there are extension, see if one of them matches the requested
      * extension */
     for (i = 0; ext[i]; i++) {
       if (strcmp (ext[i], extension) == 0) {
-	/* we found a matching extension, take the caps */
-	if ((result = gst_type_find_factory_get_caps (factory))) {
+        /* we found a matching extension, take the caps */
+        if ((result = gst_type_find_factory_get_caps (factory))) {
           gst_caps_ref (result);
-	  goto done;
-	}
+          goto done;
+        }
       }
     }
   }
