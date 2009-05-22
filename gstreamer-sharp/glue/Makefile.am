@@ -23,6 +23,10 @@ nodist_libgstreamersharpglue_0_10_la_SOURCES = generated.c
 
 libgstreamersharpglue_0_10_la_LIBADD = $(GST_LIBS)
 
+libgstreamersharpglue_0_10_la_LDFLAGS = -module -avoid-version -no-undefined
+libstreamersharpglue.dll: $(libstreamersharpglue_0_10_la_OBJECTS) libstreamersharpglue.rc libstreamersharpglue.def
+	./build-dll libstreamersharpglue-0.10 $(VERSION)
+
 INCLUDES = -Wall $(GST_CFLAGS) -I$(top_srcdir)
 
 CLEANFILES= lib*.a lib*.la
