@@ -7,8 +7,7 @@ assemblies=$(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll
 references=$(addprefix /r:, $(assemblies))
 
 playbin-player.exe: $(srcdir)/PlayBinPlayer.cs $(assemblies)
-	$(CSC) $(GLIBSHARP_LIBS) $(references) $(srcdir)/PlayBinPlayer.cs \
-		/out:playbin-player.exe
+	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/PlayBinPlayer.cs
 
 decodebin-transcoder.exe: $(srcdir)/DecodeBinTranscoder.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/DecodeBinTranscoder.cs 
@@ -29,7 +28,7 @@ mp3launchparse.exe: $(srcdir)/MP3LaunchParse.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MP3LaunchParse.cs
 
 gtk-video-player.exe: $(srcdir)/GtkVideoPlayer.cs $(assemblies)
-	$(CSC) $(GLIBSHARP_LIBS) $(references) -pkg:gtk-sharp-2.0 $(srcdir)/GtkVideoPlayer.cs /out:gtk-video-player.exe
+	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) -pkg:gtk-sharp-2.0 $(srcdir)/GtkVideoPlayer.cs
 
 link:
 	ln -sf $(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll gstreamer-sharp.dll
