@@ -766,10 +766,6 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
 
     if (!gst_registry_binary_write_chunk (registry, cache, cur->data, cur->size,
             &file_position, cur->align)) {
-      if (!(cur->flags & GST_BINARY_REGISTRY_FLAG_CONST))
-        g_free (cur->data);
-      g_free (cur);
-      walk->data = NULL;
       goto fail_free_list;
     }
     if (!(cur->flags & GST_BINARY_REGISTRY_FLAG_CONST))
@@ -790,11 +786,9 @@ fail_free_list:
     for (walk = to_write; walk; walk = g_list_next (walk)) {
       GstBinaryChunk *cur = walk->data;
 
-      if (cur) {
-        if (!(cur->flags & GST_BINARY_REGISTRY_FLAG_CONST))
-          g_free (cur->data);
-        g_free (cur);
-      }
+      if (!(cur->flags & GST_BINARY_REGISTRY_FLAG_CONST))
+        g_free (cur->data);
+      g_free (cur);
     }
     g_list_free (to_write);
 
