@@ -398,9 +398,10 @@ find_session_by_pad (GstRtpBin * rtpbin, GstPad * pad)
   for (walk = rtpbin->sessions; walk; walk = g_slist_next (walk)) {
     GstRtpBinSession *sess = (GstRtpBinSession *) walk->data;
 
-    if ((sess->recv_rtp_sink == pad) ||
-        (sess->recv_rtcp_sink == pad) ||
-        (sess->send_rtp_sink == pad) || (sess->send_rtcp_src == pad))
+    if ((sess->recv_rtp_sink_ghost == pad) ||
+        (sess->recv_rtcp_sink_ghost == pad) ||
+        (sess->send_rtp_sink_ghost == pad)
+        || (sess->send_rtcp_src_ghost == pad))
       return sess;
   }
   return NULL;
@@ -2126,7 +2127,7 @@ link_failed:
 }
 
 static void
-remove_recv_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
+remove_recv_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session)
 {
   if (session->demux_newpad_sig) {
     g_signal_handler_disconnect (session->demux, session->demux_newpad_sig);
@@ -2145,10 +2146,12 @@ remove_recv_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
     gst_object_unref (session->recv_rtp_sink);
     session->recv_rtp_sink = NULL;
   }
-
-  gst_pad_set_active (pad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
-  session->recv_rtp_sink_ghost = NULL;
+  if (session->recv_rtp_sink_ghost) {
+    gst_pad_set_active (session->recv_rtp_sink_ghost, FALSE);
+    gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin),
+        session->recv_rtp_sink_ghost);
+    session->recv_rtp_sink_ghost = NULL;
+  }
 }
 
 /* Create a pad for receiving RTCP for the session in @name. Must be called with
@@ -2235,12 +2238,14 @@ link_failed:
 }
 
 static void
-remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
+remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session)
 {
-  session->recv_rtcp_sink_ghost = NULL;
-  gst_pad_set_active (pad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
-
+  if (session->recv_rtcp_sink_ghost) {
+    gst_pad_set_active (session->recv_rtcp_sink_ghost, FALSE);
+    gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin),
+        session->recv_rtcp_sink_ghost);
+    session->recv_rtcp_sink_ghost = NULL;
+  }
   if (session->sync_src) {
     /* releasing the request pad should also unref the sync pad */
     gst_object_unref (session->sync_src);
@@ -2335,7 +2340,7 @@ no_srcpad:
 }
 
 static void
-remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
+remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session)
 {
   if (session->send_rtp_src_ghost) {
     gst_pad_set_active (session->send_rtp_src_ghost, FALSE);
@@ -2343,22 +2348,22 @@ remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
         session->send_rtp_src_ghost);
     session->send_rtp_src_ghost = NULL;
   }
-
   if (session->send_rtp_src) {
     gst_object_unref (session->send_rtp_src);
     session->send_rtp_src = NULL;
   }
-
   if (session->send_rtp_sink) {
     gst_element_release_request_pad (GST_ELEMENT_CAST (session->session),
         session->send_rtp_sink);
     gst_object_unref (session->send_rtp_sink);
     session->send_rtp_sink = NULL;
   }
-
-  session->send_rtp_sink_ghost = NULL;
-  gst_pad_set_active (pad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
+  if (session->send_rtp_sink_ghost) {
+    gst_pad_set_active (session->send_rtp_sink_ghost, FALSE);
+    gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin),
+        session->send_rtp_sink_ghost);
+    session->send_rtp_sink_ghost = NULL;
+  }
 }
 
 /* Create a pad for sending RTCP for the session in @name. Must be called with
@@ -2415,12 +2420,14 @@ pad_failed:
 }
 
 static void
-remove_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
+remove_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session)
 {
-  session->send_rtcp_src_ghost = NULL;
-  gst_pad_set_active (pad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
-
+  if (session->send_rtcp_src_ghost) {
+    gst_pad_set_active (session->send_rtcp_src_ghost, FALSE);
+    gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin),
+        session->send_rtcp_src_ghost);
+    session->send_rtcp_src_ghost = NULL;
+  }
   if (session->send_rtcp_src) {
     gst_element_release_request_pad (session->session, session->send_rtcp_src);
     gst_object_unref (session->send_rtcp_src);
@@ -2526,43 +2533,39 @@ gst_rtp_bin_release_pad (GstElement * element, GstPad * pad)
 {
   GstRtpBinSession *session;
   GstRtpBin *rtpbin;
-  GstPad *target = NULL;
 
   g_return_if_fail (GST_IS_GHOST_PAD (pad));
   g_return_if_fail (GST_IS_RTP_BIN (element));
 
   rtpbin = GST_RTP_BIN (element);
 
-  target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-  g_return_if_fail (target);
-
   GST_RTP_BIN_LOCK (rtpbin);
   GST_DEBUG_OBJECT (rtpbin, "Trying to release pad %s:%s",
-      GST_DEBUG_PAD_NAME (target));
+      GST_DEBUG_PAD_NAME (pad));
 
-  if (!(session = find_session_by_pad (rtpbin, target)))
+  if (!(session = find_session_by_pad (rtpbin, pad)))
     goto unknown_pad;
 
-  if (session->recv_rtp_sink == target) {
-    remove_recv_rtp (rtpbin, session, pad);
-  } else if (session->recv_rtcp_sink == target) {
-    remove_recv_rtcp (rtpbin, session, pad);
-  } else if (session->send_rtp_sink == target) {
-    remove_send_rtp (rtpbin, session, pad);
-  } else if (session->send_rtcp_src == target) {
-    remove_rtcp (rtpbin, session, pad);
+  if (session->recv_rtp_sink_ghost == pad) {
+    remove_recv_rtp (rtpbin, session);
+  } else if (session->recv_rtcp_sink_ghost == pad) {
+    remove_recv_rtcp (rtpbin, session);
+  } else if (session->send_rtp_sink_ghost == pad) {
+    remove_send_rtp (rtpbin, session);
+  } else if (session->send_rtcp_src_ghost == pad) {
+    remove_rtcp (rtpbin, session);
   }
 
   /* no more request pads, free the complete session */
-  if (session->recv_rtp_sink == NULL && session->recv_rtcp_sink == NULL &&
-      session->send_rtp_sink == NULL && session->send_rtcp_src == NULL) {
+  if (session->recv_rtp_sink_ghost == NULL
+      && session->recv_rtcp_sink_ghost == NULL
+      && session->send_rtp_sink_ghost == NULL
+      && session->send_rtcp_src_ghost == NULL) {
     GST_DEBUG_OBJECT (rtpbin, "no more pads for session %p", session);
     rtpbin->sessions = g_slist_remove (rtpbin->sessions, session);
     free_session (session, rtpbin);
   }
   GST_RTP_BIN_UNLOCK (rtpbin);
-
-  gst_object_unref (target);
 
   return;
 
@@ -2570,7 +2573,6 @@ gst_rtp_bin_release_pad (GstElement * element, GstPad * pad)
 unknown_pad:
   {
     GST_RTP_BIN_UNLOCK (rtpbin);
-    gst_object_unref (target);
     g_warning ("gstrtpbin: %s:%s is not one of our request pads",
         GST_DEBUG_PAD_NAME (pad));
     return;
