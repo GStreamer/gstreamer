@@ -25,8 +25,8 @@
 
 #include <gst/tag/tag.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_id3tag_debug);
-#define GST_CAT_DEFAULT gst_id3tag_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_id3_tag_debug);
+#define GST_CAT_DEFAULT gst_id3_tag_debug
 
 #define ID3V2_APIC_PICTURE_OTHER 0
 #define ID3V2_APIC_PICTURE_FILE_ICON 1

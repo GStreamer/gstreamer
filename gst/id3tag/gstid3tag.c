@@ -56,8 +56,8 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY (gst_id3tag_debug);
-#define GST_CAT_DEFAULT gst_id3tag_debug
+GST_DEBUG_CATEGORY (gst_id3_tag_debug);
+#define GST_CAT_DEFAULT gst_id3_tag_debug
 
 enum
 {
@@ -76,20 +76,20 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-id3"));
 
-GST_BOILERPLATE (GstId3Tag, gst_id3tag, GstTagMux, GST_TYPE_TAG_MUX);
+GST_BOILERPLATE (GstId3Tag, gst_id3_tag, GstTagMux, GST_TYPE_TAG_MUX);
 
-static GstBuffer *gst_id3tag_render_v2_tag (GstTagMux * mux,
+static GstBuffer *gst_id3_tag_render_v2_tag (GstTagMux * mux,
     GstTagList * taglist);
-static GstBuffer *gst_id3tag_render_v1_tag (GstTagMux * mux,
+static GstBuffer *gst_id3_tag_render_v1_tag (GstTagMux * mux,
     GstTagList * taglist);
 
-static void gst_id3tag_set_property (GObject * object, guint prop_id,
+static void gst_id3_tag_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_id3tag_get_property (GObject * object, guint prop_id,
+static void gst_id3_tag_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void
-gst_id3tag_base_init (gpointer g_class)
+gst_id3_tag_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -102,17 +102,17 @@ gst_id3tag_base_init (gpointer g_class)
       "Michael Smith <msmith@songbirdnest.com>, "
       "Tim-Philipp Müller <tim centricular net>");
 
-  GST_DEBUG_CATEGORY_INIT (gst_id3tag_debug, "id3tag", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_id3_tag_debug, "id3tag", 0,
       "ID3 v1 and v2 tag muxer");
 }
 
 static void
-gst_id3tag_class_init (GstId3TagClass * klass)
+gst_id3_tag_class_init (GstId3TagClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class->set_property = gst_id3tag_set_property;
-  gobject_class->get_property = gst_id3tag_get_property;
+  gobject_class->set_property = gst_id3_tag_set_property;
+  gobject_class->get_property = gst_id3_tag_get_property;
 
   g_object_class_install_property (gobject_class, ARG_WRITE_V1,
       g_param_spec_boolean ("write-v1", "Write id3v1 tag",
@@ -131,13 +131,13 @@ gst_id3tag_class_init (GstId3TagClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   GST_TAG_MUX_CLASS (klass)->render_start_tag =
-      GST_DEBUG_FUNCPTR (gst_id3tag_render_v2_tag);
+      GST_DEBUG_FUNCPTR (gst_id3_tag_render_v2_tag);
 
-  GST_TAG_MUX_CLASS (klass)->render_end_tag = gst_id3tag_render_v1_tag;
+  GST_TAG_MUX_CLASS (klass)->render_end_tag = gst_id3_tag_render_v1_tag;
 }
 
 static void
-gst_id3tag_init (GstId3Tag * id3mux, GstId3TagClass * id3mux_class)
+gst_id3_tag_init (GstId3Tag * id3mux, GstId3TagClass * id3mux_class)
 {
   id3mux->write_v1 = DEFAULT_WRITE_V1;
   id3mux->write_v2 = DEFAULT_WRITE_V2;
@@ -146,7 +146,7 @@ gst_id3tag_init (GstId3Tag * id3mux, GstId3TagClass * id3mux_class)
 }
 
 static void
-gst_id3tag_set_property (GObject * object, guint prop_id,
+gst_id3_tag_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstId3Tag *mux = GST_ID3TAG (object);
@@ -168,7 +168,7 @@ gst_id3tag_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_id3tag_get_property (GObject * object, guint prop_id,
+gst_id3_tag_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstId3Tag *mux = GST_ID3TAG (object);
@@ -190,7 +190,7 @@ gst_id3tag_get_property (GObject * object, guint prop_id,
 }
 
 static GstBuffer *
-gst_id3tag_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
+gst_id3_tag_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
 {
   GstId3Tag *id3mux = GST_ID3TAG (mux);
 
@@ -201,7 +201,7 @@ gst_id3tag_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
 }
 
 static GstBuffer *
-gst_id3tag_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
+gst_id3_tag_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
 {
   GstId3Tag *id3mux = GST_ID3TAG (mux);
 

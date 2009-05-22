@@ -45,7 +45,7 @@ struct _GstId3TagClass {
 };
 
 #define GST_TYPE_ID3TAG \
-  (gst_id3tag_get_type())
+  (gst_id3_tag_get_type())
 #define GST_ID3TAG(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ID3TAG,GstId3Tag))
 #define GST_ID3TAG_CLASS(klass) \
@@ -55,7 +55,7 @@ struct _GstId3TagClass {
 #define GST_IS_ID3TAG_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ID3TAG))
 
-GType gst_id3tag_get_type (void);
+GType gst_id3_tag_get_type (void);
 
 G_END_DECLS
 
