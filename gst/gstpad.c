@@ -3297,9 +3297,9 @@ no_parent:
  * inside of the parent element.
  * The caller must free this list after use.
  *
- * Returns: a newly allocated #GList of pads, free with g_list_free().
- *
  * Not MT safe.
+ *
+ * Returns: a newly allocated #GList of pads, free with g_list_free().
  * 
  * Deprecated: This function does not ref the pads in the list so that they
  * could become invalid by the time the application accesses them. It's also
@@ -4202,9 +4202,9 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
  * In all cases, success or failure, the caller loses its reference to @list
  * after calling this function.
  *
- * Returns: a #GstFlowReturn from the pad.
- *
  * MT safe.
+ *
+ * Returns: a #GstFlowReturn from the pad.
  *
  * Since: 0.10.24
  */

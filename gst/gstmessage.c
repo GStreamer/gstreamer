@@ -427,9 +427,9 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
  * Create a new info message. The message will make copies of @error and
  * @debug.
  *
- * Returns: The new info message.
- *
  * MT safe.
+ *
+ * Returns: The new info message.
  *
  * Since: 0.10.12
  */
@@ -488,9 +488,9 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * message with @percent set to 100, which can happen after the pipeline
  * completed prerolling. 
  *
- * Returns: The new buffering message.
- *
  * MT safe.
+ *
+ * Returns: The new buffering message.
  *
  * Since: 0.10.11
  */

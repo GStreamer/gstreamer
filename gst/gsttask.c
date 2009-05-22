@@ -590,9 +590,9 @@ start_task (GstTask * task)
  * gst_task_set_lock() when going to GST_TASK_STARTED or GST_TASK_PAUSED or
  * this function will return %FALSE.
  *
- * Returns: %TRUE if the state could be changed.
- *
  * MT safe.
+ *
+ * Returns: %TRUE if the state could be changed.
  *
  * Since: 0.10.24
  */

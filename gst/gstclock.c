@@ -555,7 +555,7 @@ gst_clock_id_unschedule (GstClockID id)
 }
 
 
-/**
+/*
  * GstClock abstract base class implementation
  */
 G_DEFINE_TYPE (GstClock, gst_clock, GST_TYPE_OBJECT);

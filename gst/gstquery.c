@@ -832,7 +832,7 @@ gst_query_get_structure (GstQuery * query)
 }
 
 /**
- * gst_query_new_seeking (GstFormat *format)
+ * gst_query_new_seeking:
  * @format: the default #GstFormat for the new query
  *
  * Constructs a new query object for querying seeking properties of
