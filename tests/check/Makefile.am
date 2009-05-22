@@ -92,6 +92,7 @@ check_PROGRAMS = \
 	elements/camerabin \
 	elements/legacyresample \
 	elements/qtmux \
+	elements/rtpbin \
 	elements/selector \
 	elements/mxfdemux \
 	elements/mxfmux \

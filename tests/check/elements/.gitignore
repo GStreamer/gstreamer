@@ -18,6 +18,7 @@ souphttpsrc
 rganalysis
 rglimiter
 rgvolume
+rtpbin
 selector
 spectrum
 timidity
@@ -26,3 +27,4 @@ wavpackdec
 wavpackenc
 wavpackparse
 x264enc
+y4menc
