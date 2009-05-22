@@ -12,7 +12,7 @@ AC_INIT(GStreamer Ugly Plug-ins, 0.10.11.1,
 AG_GST_INIT
 
 dnl initialize automake
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([-Wno-portability])
 
 dnl define PACKAGE_VERSION_* variables
 AS_VERSION
