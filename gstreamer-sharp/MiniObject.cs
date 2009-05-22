@@ -69,8 +69,6 @@ namespace Gst {
     IntPtr handle;
     bool disposed = false;
     static Hashtable Objects = new Hashtable();
-    static ArrayList PendingDestroys = new ArrayList ();
-    static bool idle_queued;
 
     ~MiniObject () {
       Dispose ();
@@ -79,46 +77,21 @@ namespace Gst {
     [DllImport ("gstreamer-0.10.dll") ]
     static extern void gst_mini_object_unref (IntPtr raw);
 
-    static bool PerformQueuedUnrefs () {
-      MiniObject [] objects;
-
-      lock (PendingDestroys) {
-        objects = new MiniObject [PendingDestroys.Count];
-        PendingDestroys.CopyTo (objects, 0);
-        PendingDestroys.Clear ();
-      }
-      lock (typeof (MiniObject))
-        idle_queued = false;
-
-      foreach (MiniObject o in objects) {
-        if (o.handle == IntPtr.Zero)
-          continue;
-
-        Objects.Remove (o.handle);
-
-        try {
-          gst_mini_object_unref (o.handle);
-        } catch (Exception e) {
-          Console.WriteLine ("Exception while disposing a " + o + " in Gtk#");
-          throw e;
-        }
-        o.handle = IntPtr.Zero;
-      }
-      return false;
-    }
-
     public virtual void Dispose () {
       if (disposed)
         return;
 
       disposed = true;
-      lock (PendingDestroys) {
-        PendingDestroys.Add (this);
-        lock (typeof (MiniObject)) {
-          if (!idle_queued) {
-            Timeout.Add (50, new TimeoutHandler (PerformQueuedUnrefs));
-            idle_queued = true;
+      lock (typeof (MiniObject)) {
+        if (handle != IntPtr.Zero) {
+          Objects.Remove (handle);
+          try {
+            gst_mini_object_unref (handle);
+          } catch (Exception e) {
+            Console.WriteLine ("Exception while disposing a " + this + " in Gtk#");
+            throw e;
           }
+          handle = IntPtr.Zero;
         }
       }
       GC.SuppressFinalize (this);
@@ -132,17 +105,17 @@ namespace Gst {
         return null;
 
       MiniObject obj = null;
-      WeakReference weak_ref = Objects[o] as WeakReference;
+      lock (typeof (MiniObject)) {
+        WeakReference weak_ref = Objects[o] as WeakReference;
 
-      if (weak_ref != null && weak_ref.IsAlive)
-        obj = weak_ref.Target as MiniObject;
+        if (weak_ref != null && weak_ref.IsAlive)
+          obj = weak_ref.Target as MiniObject;
 
-      if (obj == null)
-        obj = Objects[o] as MiniObject;
+        if (obj == null)
+          obj = Objects[o] as MiniObject;
+      }
 
       if (obj != null && obj.handle == o) {
-        lock (PendingDestroys)
-          PendingDestroys.Remove (obj);
         if (owned_ref)
           gst_mini_object_unref (obj.handle);
         obj.disposed = false;
@@ -331,8 +304,6 @@ namespace Gst {
     [DllImport ("glibsharpglue-2") ]
     static extern IntPtr gtksharp_register_type (IntPtr name, IntPtr parent_type);
 
-    static Hashtable g_types = new Hashtable ();
-
     protected GType LookupGType () {
       if (Handle != IntPtr.Zero) {
         GTypeInstance obj = (GTypeInstance) Marshal.PtrToStructure (Handle, typeof (GTypeInstance));
@@ -344,12 +315,9 @@ namespace Gst {
     }
 
     protected internal static GType LookupGType (System.Type t) {
-      if (g_types.Contains (t))
-        return (GType) g_types [t];
-
-      System.Reflection.PropertyInfo pi = t.GetProperty ("GType", BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public);
-      if (pi != null)
-        return (GType) pi.GetValue (null, null);
+      GType gtype = (GType) t;
+      if (gtype.ToString () != "GtkSharpValue")
+        return gtype;
 
       return RegisterGType (t);
     }
