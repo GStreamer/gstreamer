@@ -84,8 +84,6 @@ gboolean gst_base_video_state_from_caps (GstVideoState *state,
 GstClockTime gst_video_state_get_timestamp (const GstVideoState *state,
     int frame_number);
 
-GstBuffer *gst_adapter_get_buffer (GstAdapter *adapter);
-
 G_END_DECLS
 
 #endif

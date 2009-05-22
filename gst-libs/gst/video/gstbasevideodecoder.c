@@ -596,6 +596,13 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder)
   }
 }
 
+static GstBuffer *
+gst_adapter_get_buffer (GstAdapter * adapter)
+{
+  return gst_buffer_ref (GST_BUFFER (adapter->buflist->data));
+
+}
+
 static GstFlowReturn
 gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -685,6 +692,7 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
+  /* FIXME: use gst_adapter_prev_timestamp() here instead? */
   buffer = gst_adapter_get_buffer (base_video_decoder->input_adapter);
 
   base_video_decoder->buffer_timestamp = GST_BUFFER_TIMESTAMP (buffer);

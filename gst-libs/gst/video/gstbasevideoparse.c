@@ -579,6 +579,13 @@ gst_base_video_parse_push_all (GstBaseVideoParse * base_video_parse,
   return ret;
 }
 
+static GstBuffer *
+gst_adapter_get_buffer (GstAdapter * adapter)
+{
+  return gst_buffer_ref (GST_BUFFER (adapter->buflist->data));
+
+}
+
 static GstFlowReturn
 gst_base_video_parse_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -631,6 +638,7 @@ gst_base_video_parse_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
+  /* FIXME: use gst_adapter_prev_timestamp() here instead? */
   buffer = gst_adapter_get_buffer (base_video_parse->input_adapter);
 
   gst_buffer_unref (buffer);

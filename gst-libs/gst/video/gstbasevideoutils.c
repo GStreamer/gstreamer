@@ -160,10 +160,3 @@ gst_video_state_get_timestamp (const GstVideoState * state, int frame_number)
         state->fps_d * GST_SECOND, state->fps_n);
   }
 }
-
-GstBuffer *
-gst_adapter_get_buffer (GstAdapter * adapter)
-{
-  return gst_buffer_ref (GST_BUFFER (adapter->buflist->data));
-
-}
