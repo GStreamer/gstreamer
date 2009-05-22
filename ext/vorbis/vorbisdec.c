@@ -761,11 +761,16 @@ static GstFlowReturn
 vorbis_handle_type_packet (GstVorbisDec * vd)
 {
   GList *walk;
+  gint res;
 
   g_assert (vd->initialized == FALSE);
 
-  vorbis_synthesis_init (&vd->vd, &vd->vi);
-  vorbis_block_init (&vd->vd, &vd->vb);
+  if (G_UNLIKELY ((res = vorbis_synthesis_init (&vd->vd, &vd->vi))))
+    goto synthesis_init_error;
+
+  if (G_UNLIKELY ((res = vorbis_block_init (&vd->vd, &vd->vb))))
+    goto block_init_error;
+
   vd->initialized = TRUE;
 
   if (vd->pendingevents) {
@@ -780,21 +785,35 @@ vorbis_handle_type_packet (GstVorbisDec * vd)
     gst_pad_push_event (vd->srcpad, gst_event_new_tag (vd->taglist));
     vd->taglist = NULL;
   }
-
   return GST_FLOW_OK;
+
+  /* ERRORS */
+synthesis_init_error:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
+        (NULL), ("couldn't initialize synthesis (%d)", res));
+    return GST_FLOW_ERROR;
+  }
+block_init_error:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
+        (NULL), ("couldn't initialize block (%d)", res));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
 vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   GstFlowReturn res;
+  gint ret;
 
   GST_DEBUG_OBJECT (vd, "parsing header packet");
 
   /* Packetno = 0 if the first byte is exactly 0x01 */
   packet->b_o_s = (packet->packet[0] == 0x1) ? 1 : 0;
 
-  if (vorbis_synthesis_headerin (&vd->vi, &vd->vc, packet))
+  if ((ret = vorbis_synthesis_headerin (&vd->vi, &vd->vc, packet)))
     goto header_read_error;
 
   switch (packet->packet[0]) {
@@ -819,7 +838,7 @@ vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
 header_read_error:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-        (NULL), ("couldn't read header packet"));
+        (NULL), ("couldn't read header packet (%d)", ret));
     return GST_FLOW_ERROR;
   }
 }
