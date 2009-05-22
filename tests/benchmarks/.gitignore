@@ -2,6 +2,7 @@ Makefile
 Makefile.in
 caps
 complexity
+gstclockstress
 gstpollstress
 mass-elements
 *.gcno
