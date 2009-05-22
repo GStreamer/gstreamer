@@ -347,13 +347,17 @@ struct _GstRtpBinSession
 
   /* the pads of the session */
   GstPad *recv_rtp_sink;
+  GstPad *recv_rtp_sink_ghost;
   GstPad *recv_rtp_src;
   GstPad *recv_rtcp_sink;
+  GstPad *recv_rtcp_sink_ghost;
   GstPad *sync_src;
   GstPad *send_rtp_sink;
+  GstPad *send_rtp_sink_ghost;
   GstPad *send_rtp_src;
   GstPad *send_rtp_src_ghost;
   GstPad *send_rtcp_src;
+  GstPad *send_rtcp_src_ghost;
 };
 
 /* Manages the RTP streams that come from one client and should therefore be
@@ -2034,7 +2038,7 @@ no_stream:
 static GstPad *
 create_recv_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
 {
-  GstPad *result, *sinkdpad;
+  GstPad *sinkdpad;
   guint sessid;
   GstRtpBinSession *session;
   GstPadLinkReturn lres;
@@ -2056,8 +2060,8 @@ create_recv_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   }
 
   /* check if pad was requested */
-  if (session->recv_rtp_sink != NULL)
-    goto existed;
+  if (session->recv_rtp_sink_ghost != NULL)
+    return session->recv_rtp_sink_ghost;
 
   GST_DEBUG_OBJECT (rtpbin, "getting RTP sink pad");
   /* get recv_rtp pad and store */
@@ -2091,12 +2095,12 @@ create_recv_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
       "pad-removed", (GCallback) ssrc_demux_pad_removed, session);
 
   GST_DEBUG_OBJECT (rtpbin, "ghosting session sink pad");
-  result =
+  session->recv_rtp_sink_ghost =
       gst_ghost_pad_new_from_template (name, session->recv_rtp_sink, templ);
-  gst_pad_set_active (result, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), result);
+  gst_pad_set_active (session->recv_rtp_sink_ghost, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), session->recv_rtp_sink_ghost);
 
-  return result;
+  return session->recv_rtp_sink_ghost;
 
   /* ERRORS */
 no_name:
@@ -2107,12 +2111,6 @@ no_name:
 create_error:
   {
     /* create_session already warned */
-    return NULL;
-  }
-existed:
-  {
-    g_warning ("gstrtpbin: recv_rtp pad already requested for session %d",
-        sessid);
     return NULL;
   }
 pad_failed:
@@ -2150,6 +2148,7 @@ remove_recv_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 
   gst_pad_set_active (pad, FALSE);
   gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
+  session->recv_rtp_sink_ghost = NULL;
 }
 
 /* Create a pad for receiving RTCP for the session in @name. Must be called with
@@ -2159,7 +2158,6 @@ static GstPad *
 create_recv_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
     const gchar * name)
 {
-  GstPad *result;
   guint sessid;
   GstRtpBinSession *session;
   GstPad *sinkdpad;
@@ -2182,8 +2180,8 @@ create_recv_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
   }
 
   /* check if pad was requested */
-  if (session->recv_rtcp_sink != NULL)
-    goto existed;
+  if (session->recv_rtcp_sink_ghost != NULL)
+    return session->recv_rtcp_sink_ghost;
 
   /* get recv_rtp pad and store */
   GST_DEBUG_OBJECT (rtpbin, "getting RTCP sink pad");
@@ -2205,12 +2203,13 @@ create_recv_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
   if (lres != GST_PAD_LINK_OK)
     goto link_failed;
 
-  result =
+  session->recv_rtcp_sink_ghost =
       gst_ghost_pad_new_from_template (name, session->recv_rtcp_sink, templ);
-  gst_pad_set_active (result, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), result);
+  gst_pad_set_active (session->recv_rtcp_sink_ghost, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin),
+      session->recv_rtcp_sink_ghost);
 
-  return result;
+  return session->recv_rtcp_sink_ghost;
 
   /* ERRORS */
 no_name:
@@ -2221,12 +2220,6 @@ no_name:
 create_error:
   {
     /* create_session already warned */
-    return NULL;
-  }
-existed:
-  {
-    g_warning ("gstrtpbin: recv_rtcp pad already requested for session %d",
-        sessid);
     return NULL;
   }
 pad_failed:
@@ -2244,6 +2237,7 @@ link_failed:
 static void
 remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 {
+  session->recv_rtcp_sink_ghost = NULL;
   gst_pad_set_active (pad, FALSE);
   gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
 
@@ -2265,7 +2259,6 @@ remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 static GstPad *
 create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
 {
-  GstPad *result;
   gchar *gname;
   guint sessid;
   GstRtpBinSession *session;
@@ -2285,8 +2278,8 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   }
 
   /* check if pad was requested */
-  if (session->send_rtp_sink != NULL)
-    goto existed;
+  if (session->send_rtp_sink_ghost != NULL)
+    return session->send_rtp_sink_ghost;
 
   /* get send_rtp pad and store */
   session->send_rtp_sink =
@@ -2294,10 +2287,10 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   if (session->send_rtp_sink == NULL)
     goto pad_failed;
 
-  result =
+  session->send_rtp_sink_ghost =
       gst_ghost_pad_new_from_template (name, session->send_rtp_sink, templ);
-  gst_pad_set_active (result, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), result);
+  gst_pad_set_active (session->send_rtp_sink_ghost, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), session->send_rtp_sink_ghost);
 
   /* get srcpad */
   session->send_rtp_src =
@@ -2315,7 +2308,7 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), session->send_rtp_src_ghost);
   g_free (gname);
 
-  return result;
+  return session->send_rtp_sink_ghost;
 
   /* ERRORS */
 no_name:
@@ -2326,12 +2319,6 @@ no_name:
 create_error:
   {
     /* create_session already warned */
-    return NULL;
-  }
-existed:
-  {
-    g_warning ("gstrtpbin: send_rtp pad already requested for session %d",
-        sessid);
     return NULL;
   }
 pad_failed:
@@ -2369,6 +2356,7 @@ remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
     session->send_rtp_sink = NULL;
   }
 
+  session->send_rtp_sink_ghost = NULL;
   gst_pad_set_active (pad, FALSE);
   gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
 }
@@ -2379,7 +2367,6 @@ remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 static GstPad *
 create_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
 {
-  GstPad *result;
   guint sessid;
   GstRtpBinSession *session;
 
@@ -2393,8 +2380,8 @@ create_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
     goto no_session;
 
   /* check if pad was requested */
-  if (session->send_rtcp_src != NULL)
-    goto existed;
+  if (session->send_rtcp_src_ghost != NULL)
+    return session->send_rtcp_src_ghost;
 
   /* get rtcp_src pad and store */
   session->send_rtcp_src =
@@ -2402,12 +2389,12 @@ create_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   if (session->send_rtcp_src == NULL)
     goto pad_failed;
 
-  result =
+  session->send_rtcp_src_ghost =
       gst_ghost_pad_new_from_template (name, session->send_rtcp_src, templ);
-  gst_pad_set_active (result, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), result);
+  gst_pad_set_active (session->send_rtcp_src_ghost, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), session->send_rtcp_src_ghost);
 
-  return result;
+  return session->send_rtcp_src_ghost;
 
   /* ERRORS */
 no_name:
@@ -2420,12 +2407,6 @@ no_session:
     g_warning ("gstrtpbin: session with id %d does not exist", sessid);
     return NULL;
   }
-existed:
-  {
-    g_warning ("gstrtpbin: send_rtcp_src pad already requested for session %d",
-        sessid);
-    return NULL;
-  }
 pad_failed:
   {
     g_warning ("gstrtpbin: failed to get rtcp pad for session %d", sessid);
@@ -2436,6 +2417,7 @@ pad_failed:
 static void
 remove_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 {
+  session->send_rtcp_src_ghost = NULL;
   gst_pad_set_active (pad, FALSE);
   gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), pad);
 
