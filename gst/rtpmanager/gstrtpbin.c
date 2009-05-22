@@ -2131,6 +2131,7 @@ remove_recv_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
   }
   if (session->recv_rtp_sink) {
     gst_element_release_request_pad (session->session, session->recv_rtp_sink);
+    gst_object_unref (session->recv_rtp_sink);
     session->recv_rtp_sink = NULL;
   }
 
@@ -2240,6 +2241,7 @@ remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
   }
   if (session->recv_rtcp_sink) {
     gst_element_release_request_pad (session->session, session->recv_rtcp_sink);
+    gst_object_unref (session->recv_rtcp_sink);
     session->recv_rtcp_sink = NULL;
   }
 }
@@ -2350,6 +2352,7 @@ remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
   if (session->send_rtp_sink) {
     gst_element_release_request_pad (GST_ELEMENT_CAST (session->session),
         session->send_rtp_sink);
+    gst_object_unref (session->send_rtp_sink);
     session->send_rtp_sink = NULL;
   }
 
@@ -2425,6 +2428,7 @@ remove_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session, GstPad * pad)
 
   if (session->send_rtcp_src) {
     gst_element_release_request_pad (session->session, session->send_rtcp_src);
+    gst_object_unref (session->send_rtcp_src);
     session->send_rtcp_src = NULL;
   }
 }
