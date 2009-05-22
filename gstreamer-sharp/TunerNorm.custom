@@ -1,4 +1,4 @@
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gst__interfacessharp_gst__interfaces_tunernorm_get_framerate_offset ();
 
 static uint framerate_offset = gst__interfacessharp_gst__interfaces_tunernorm_get_framerate_offset ();
