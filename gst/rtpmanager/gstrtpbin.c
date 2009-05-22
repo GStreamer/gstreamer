@@ -493,27 +493,18 @@ find_stream_by_ssrc (GstRtpBinSession * session, guint32 ssrc)
 }
 
 static void
-ssrc_demux_pad_removed (GstElement * element, GstPad * pad,
+ssrc_demux_pad_removed (GstElement * element, guint ssrc, GstPad * pad,
     GstRtpBinSession * session)
 {
-  guint ssrc;
   GstRtpBinStream *stream = NULL;
-  gchar *name;
-  gint res;
-
-  name = gst_pad_get_name (pad);
-  res = sscanf (name, "src_%d", &ssrc);
-  g_free (name);
-
-  if (res != 1)
-    return;
 
   GST_RTP_SESSION_LOCK (session);
-  if ((stream = find_stream_by_ssrc (session, ssrc))) {
+  if ((stream = find_stream_by_ssrc (session, ssrc)))
     session->streams = g_slist_remove (session->streams, stream);
-    free_stream (stream);
-  }
   GST_RTP_SESSION_UNLOCK (session);
+
+  if (stream)
+    free_stream (stream);
 }
 
 /* create a session with the given id.  Must be called with RTP_BIN_LOCK */
@@ -2093,7 +2084,7 @@ create_recv_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   session->demux_newpad_sig = g_signal_connect (session->demux,
       "new-ssrc-pad", (GCallback) new_ssrc_pad_found, session);
   session->demux_padremoved_sig = g_signal_connect (session->demux,
-      "pad-removed", (GCallback) ssrc_demux_pad_removed, session);
+      "removed-ssrc-pad", (GCallback) ssrc_demux_pad_removed, session);
 
   GST_DEBUG_OBJECT (rtpbin, "ghosting session sink pad");
   session->recv_rtp_sink_ghost =
