@@ -1,6 +1,5 @@
 EXPORTS
 	gst_adapter_get_buffer
-	gst_adapter_masked_scan_uint32
 	gst_base_video_codec_free_frame
 	gst_base_video_codec_get_type
 	gst_base_video_codec_new_frame
