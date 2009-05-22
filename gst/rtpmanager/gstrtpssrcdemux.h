@@ -50,7 +50,11 @@ struct _GstRtpSsrcDemuxClass
   GstElementClass parent_class;
 
   /* signals */
-  void (*new_ssrc_pad) (GstElement *element, guint32 ssrc, GstPad *pad);
+  void (*new_ssrc_pad)     (GstRtpSsrcDemux *demux, guint32 ssrc, GstPad *pad);
+  void (*removed_ssrc_pad) (GstRtpSsrcDemux *demux, guint32 ssrc, GstPad *pad);
+
+  /* actions */
+  void (*clear_ssrc)       (GstRtpSsrcDemux *demux, guint32 ssrc);
 };
 
 GType gst_rtp_ssrc_demux_get_type (void);
