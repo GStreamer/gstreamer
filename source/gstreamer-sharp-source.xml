@@ -1,6 +1,6 @@
 <gapi-parser-input>
   <api filename="../gstreamer-sharp/gstreamer-api.raw">
-    <library name="gstreamer-0.10.dll">
+    <library name="libgstreamer-0.10.dll">
       <namespace name="Gst">
         <dir>../../gstreamer/gst</dir>
         <!-- Needs to be bound -->
@@ -29,7 +29,7 @@
         <exclude>../../gstreamer/gst/gettext.h</exclude>
       </namespace>
     </library>
-    <library name="gstinterfaces-0.10.dll">
+    <library name="libgstinterfaces-0.10.dll">
       <namespace name="Gst.Interfaces">
         <dir>../../gst-plugins-base/gst-libs/gst/interfaces</dir>
 	<!-- Not bound -->
