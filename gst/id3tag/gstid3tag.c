@@ -76,7 +76,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-id3"));
 
-GST_BOILERPLATE (GstID3Tag, gst_id3tag, GstTagMux, GST_TYPE_TAG_MUX);
+GST_BOILERPLATE (GstId3Tag, gst_id3tag, GstTagMux, GST_TYPE_TAG_MUX);
 
 static GstBuffer *gst_id3tag_render_v2_tag (GstTagMux * mux,
     GstTagList * taglist);
@@ -107,7 +107,7 @@ gst_id3tag_base_init (gpointer g_class)
 }
 
 static void
-gst_id3tag_class_init (GstID3TagClass * klass)
+gst_id3tag_class_init (GstId3TagClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
@@ -137,7 +137,7 @@ gst_id3tag_class_init (GstID3TagClass * klass)
 }
 
 static void
-gst_id3tag_init (GstID3Tag * id3mux, GstID3TagClass * id3mux_class)
+gst_id3tag_init (GstId3Tag * id3mux, GstId3TagClass * id3mux_class)
 {
   id3mux->write_v1 = DEFAULT_WRITE_V1;
   id3mux->write_v2 = DEFAULT_WRITE_V2;
@@ -149,7 +149,7 @@ static void
 gst_id3tag_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstID3Tag *mux = GST_ID3TAG (object);
+  GstId3Tag *mux = GST_ID3TAG (object);
 
   switch (prop_id) {
     case ARG_WRITE_V1:
@@ -171,7 +171,7 @@ static void
 gst_id3tag_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstID3Tag *mux = GST_ID3TAG (object);
+  GstId3Tag *mux = GST_ID3TAG (object);
 
   switch (prop_id) {
     case ARG_WRITE_V1:
@@ -192,7 +192,7 @@ gst_id3tag_get_property (GObject * object, guint prop_id,
 static GstBuffer *
 gst_id3tag_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
 {
-  GstID3Tag *id3mux = GST_ID3TAG (mux);
+  GstId3Tag *id3mux = GST_ID3TAG (mux);
 
   if (id3mux->write_v2)
     return gst_id3mux_render_v2_tag (mux, taglist, id3mux->v2_major_version);
@@ -203,7 +203,7 @@ gst_id3tag_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
 static GstBuffer *
 gst_id3tag_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
 {
-  GstID3Tag *id3mux = GST_ID3TAG (mux);
+  GstId3Tag *id3mux = GST_ID3TAG (mux);
 
   if (id3mux->write_v1)
     return gst_id3mux_render_v1_tag (mux, taglist);

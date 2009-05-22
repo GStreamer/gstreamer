@@ -57,10 +57,10 @@ gst_tag_mux_iface_init (GType tag_type)
 
 /* make sure to register a less generic type so we can easily move this
  * GstTagMux base class into -base without causing GType name conflicts */
-typedef GstTagMux GstID3TagMux;
-typedef GstTagMuxClass GstID3TagMuxClass;
+typedef GstTagMux GstId3TagMux;
+typedef GstTagMuxClass GstId3TagMuxClass;
 
-GST_BOILERPLATE_FULL (GstID3TagMux, gst_tag_mux,
+GST_BOILERPLATE_FULL (GstId3TagMux, gst_tag_mux,
     GstElement, GST_TYPE_ELEMENT, gst_tag_mux_iface_init);
 
 

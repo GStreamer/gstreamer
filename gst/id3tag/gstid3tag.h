@@ -28,10 +28,10 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstID3Tag GstID3Tag;
-typedef struct _GstID3TagClass GstID3TagClass;
+typedef struct _GstId3Tag GstId3Tag;
+typedef struct _GstId3TagClass GstId3TagClass;
 
-struct _GstID3Tag {
+struct _GstId3Tag {
   GstTagMux  tagmux;
 
   gboolean write_v1;
@@ -40,16 +40,16 @@ struct _GstID3Tag {
   gint     v2_major_version;
 };
 
-struct _GstID3TagClass {
+struct _GstId3TagClass {
   GstTagMuxClass  tagmux_class;
 };
 
 #define GST_TYPE_ID3TAG \
   (gst_id3tag_get_type())
 #define GST_ID3TAG(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ID3TAG,GstID3Tag))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ID3TAG,GstId3Tag))
 #define GST_ID3TAG_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ID3TAG,GstID3TagClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ID3TAG,GstId3TagClass))
 #define GST_IS_ID3TAG(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ID3TAG))
 #define GST_IS_ID3TAG_CLASS(klass) \
