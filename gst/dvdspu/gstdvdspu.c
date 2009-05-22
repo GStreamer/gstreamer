@@ -101,10 +101,12 @@ static GstFlowReturn gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event);
 
 static void gst_dvd_spu_clear (GstDVDSpu * dvdspu);
-static void gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu);
+static void gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu,
+    gboolean process_events);
 static void gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts);
 static GstFlowReturn
 dvdspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf);
+static void gst_dvd_spu_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event);
 
 static void
 gst_dvd_spu_base_init (gpointer gclass)
@@ -179,7 +181,8 @@ gst_dvd_spu_init (GstDVDSpu * dvdspu, GstDVDSpuClass * gclass)
 static void
 gst_dvd_spu_clear (GstDVDSpu * dvdspu)
 {
-  gst_dvd_spu_flush_spu_info (dvdspu);
+  gst_dvd_spu_flush_spu_info (dvdspu, FALSE);
+  gst_segment_init (&dvdspu->subp_seg, GST_FORMAT_UNDEFINED);
 
   gst_buffer_replace (&dvdspu->ref_frame, NULL);
   gst_buffer_replace (&dvdspu->pending_frame, NULL);
@@ -223,14 +226,12 @@ gst_dvd_spu_finalize (GObject * object)
 
 /* With SPU lock held, clear the queue of SPU packets */
 static void
-gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu)
+gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu, gboolean process_events)
 {
   SpuPacket *packet;
   SpuState *state = &dvdspu->spu_state;
 
   GST_INFO_OBJECT (dvdspu, "Flushing SPU information");
-
-  gst_segment_init (&dvdspu->subp_seg, GST_FORMAT_UNDEFINED);
 
   if (dvdspu->partial_spu) {
     gst_buffer_unref (dvdspu->partial_spu);
@@ -239,10 +240,15 @@ gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu)
 
   packet = (SpuPacket *) g_queue_pop_head (dvdspu->pending_spus);
   while (packet != NULL) {
-    if (packet->buf)
+    if (packet->buf) {
       gst_buffer_unref (packet->buf);
-    if (packet->event)
-      gst_event_unref (packet->event);
+      g_assert (packet->event == NULL);
+    } else if (packet->event) {
+      if (process_events)
+        gst_dvd_spu_handle_dvd_event (dvdspu, packet->event);
+      else
+        gst_event_unref (packet->event);
+    }
     g_free (packet);
     packet = (SpuPacket *) g_queue_pop_head (dvdspu->pending_spus);
   }
@@ -1386,7 +1392,8 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
       goto done;
     case GST_EVENT_FLUSH_STOP:
       DVD_SPU_LOCK (dvdspu);
-      gst_dvd_spu_flush_spu_info (dvdspu);
+      gst_segment_init (&dvdspu->subp_seg, GST_FORMAT_UNDEFINED);
+      gst_dvd_spu_flush_spu_info (dvdspu, TRUE);
       DVD_SPU_UNLOCK (dvdspu);
 
       /* We don't forward flushes on the spu pad */
