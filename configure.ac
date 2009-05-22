@@ -251,6 +251,7 @@ dnl *** plug-ins to include ***
 
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(aacparse)
+AG_GST_CHECK_PLUGIN(adpcmdec)
 AG_GST_CHECK_PLUGIN(aiffparse)
 AG_GST_CHECK_PLUGIN(amrparse)
 AG_GST_CHECK_PLUGIN(autoconvert)
@@ -1560,6 +1561,7 @@ common/shave-libtool
 gst-plugins-bad.spec
 gst/Makefile
 gst/aacparse/Makefile
+gst/adpcmdec/Makefile
 gst/aiffparse/Makefile
 gst/amrparse/Makefile
 gst/autoconvert/Makefile
