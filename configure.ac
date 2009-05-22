@@ -116,6 +116,9 @@ AM_PROG_CC_C_O
 dnl find an assembler
 AM_PROG_AS
 
+dnl check if the compiler supports do while(0) macros
+AG_GST_CHECK_DOWHILE_MACROS
+
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 

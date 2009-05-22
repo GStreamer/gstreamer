@@ -1,7 +1,7 @@
 AC_DEFUN([GST_CHECK_FIONREAD], [
 
   AC_MSG_CHECKING(for FIONREAD in sys/ioctl.h)
-  AC_CACHE_VAL(GST_FIONREAD_IN_SYS_IOCTL, [
+  AC_CACHE_VAL(_cv_gst_fionread_in_sys_ioctl, [
     AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -9,18 +9,18 @@ AC_DEFUN([GST_CHECK_FIONREAD], [
 int x = FIONREAD;
 if ( x )
   return 0;
-    ], GST_FIONREAD_IN_SYS_IOCTL="yes",GST_FIONREAD_IN_SYS_IOCTL="no")
+    ], _cv_gst_fionread_in_sys_ioctl="yes",_cv_gst_fionread_in_sys_ioctl="no")
   ])
 
-  AC_MSG_RESULT($GST_FIONREAD_IN_SYS_IOCTL)
+  AC_MSG_RESULT($_cv_gst_fionread_in_sys_ioctl)
 
-  if test "$GST_FIONREAD_IN_SYS_IOCTL" = "yes"; then
+  if test "$_cv_gst_fionread_in_sys_ioctl" = "yes"; then
     AC_DEFINE([HAVE_FIONREAD_IN_SYS_IOCTL], 1, [FIONREAD ioctl found in sys/ioclt.h])
 
   else
 
     AC_MSG_CHECKING(for FIONREAD in sys/filio.h)
-    AC_CACHE_VAL(GST_FIONREAD_IN_SYS_FILIO, [
+    AC_CACHE_VAL(_cv_gst_fionread_in_sys_filio, [
       AC_TRY_COMPILE([
   #include <sys/types.h>
   #include <sys/filio.h>
@@ -28,12 +28,12 @@ if ( x )
   int x = FIONREAD;
   if ( x )
     return 0;
-      ], GST_FIONREAD_IN_SYS_FILIO="yes",GST_FIONREAD_IN_SYS_FILIO="no")
+      ], _cv_gst_fionread_in_sys_filio="yes",_cv_gst_fionread_in_sys_filio="no")
     ])
 
-    AC_MSG_RESULT($GST_FIONREAD_IN_SYS_FILIO)
+    AC_MSG_RESULT($_cv_gst_fionread_in_sys_filio)
 
-    if test "$GST_FIONREAD_IN_SYS_FILIO" = "yes"; then   
+    if test "$_cv_gst_fionread_in_sys_filio" = "yes"; then
       AC_DEFINE([HAVE_FIONREAD_IN_SYS_FILIO], 1, [FIONREAD ioctl found in sys/filio.h])
     fi
 
