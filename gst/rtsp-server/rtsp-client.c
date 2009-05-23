@@ -538,6 +538,9 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *ses
 
       infocount++;
     }
+    else {
+      g_warning ("RTP-Info cannot be determined for stream %d", i);
+    }
   }
 
   /* construct the response now */
@@ -545,8 +548,13 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *ses
   gst_rtsp_message_init_response (&response, code, gst_rtsp_status_as_text (code), request);
 
   /* add the RTP-Info header */
-  str = g_string_free (rtpinfo, FALSE);
-  gst_rtsp_message_take_header (&response, GST_RTSP_HDR_RTP_INFO, str);
+  if (infocount > 0) {
+    str = g_string_free (rtpinfo, FALSE);
+    gst_rtsp_message_take_header (&response, GST_RTSP_HDR_RTP_INFO, str);
+  }
+  else {
+    g_string_free (rtpinfo, TRUE);
+  }
 
   /* add the range */
   str = gst_rtsp_range_to_string (&media->media->range);
