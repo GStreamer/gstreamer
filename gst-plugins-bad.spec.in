@@ -79,9 +79,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstfreeze.so
 %{_libdir}/gstreamer-%{majorminor}/libgsth264parse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstnsf.so
-%{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstnuvdemux.so
-%{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrfbsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstreal.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmve.so
@@ -101,7 +99,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstselector.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoss4audio.so
-%{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace2.so
 %{_libdir}/gstreamer-%{majorminor}/libresindvd.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaiffparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdccp.so
@@ -109,7 +106,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstscaletempoplugin.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegdemux.so
-%{_libdir}/gstreamer-%{majorminor}/libgstflv.so
 %{_libdir}/gstreamer-%{majorminor}/libgstjp2k.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapexsink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaacparse.so
@@ -126,6 +122,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstrtpmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsiren.so
 %{_libdir}/gstreamer-%{majorminor}/libgstxdgmime.so
+%{_libdir}/gstreamer-%{majorminor}/libgstadpcmdec.so
+%{_libdir}/gstreamer-%{majorminor}/libgstid3tag.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdebugutilsbad.so
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography.h
