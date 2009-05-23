@@ -36,6 +36,21 @@ GST_DEBUG_CATEGORY_EXTERN (dvdspu_debug);
 /* Convert an STM offset in the SPU sequence to a GStreamer timestamp */
 #define STM_TO_GST(stm) ((GST_MSECOND * 1024 * (stm)) / 90)
 
+typedef enum SpuVobsubCmd SpuVobsubCmd;
+
+enum SpuVobsubCmd
+{
+  SPU_CMD_FSTA_DSP = 0x00,      /* Forced Display */
+  SPU_CMD_DSP = 0x01,           /* Display Start */
+  SPU_CMD_STP_DSP = 0x02,       /* Display Off */
+  SPU_CMD_SET_COLOR = 0x03,     /* Set the color indexes for the palette */
+  SPU_CMD_SET_ALPHA = 0x04,     /* Set the alpha indexes for the palette */
+  SPU_CMD_SET_DAREA = 0x05,     /* Set the display area for the SPU */
+  SPU_CMD_DSPXA = 0x06,         /* Pixel data addresses */
+  SPU_CMD_CHG_COLCON = 0x07,    /* Change Color & Contrast */
+  SPU_CMD_END = 0xff
+};
+
 static void
 gst_dvd_spu_parse_chg_colcon (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
 {
@@ -45,10 +60,10 @@ gst_dvd_spu_parse_chg_colcon (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
   gint16 i;
 
   /* Clear any existing chg colcon info */
-  state->n_line_ctrl_i = 0;
-  if (state->line_ctrl_i != NULL) {
-    g_free (state->line_ctrl_i);
-    state->line_ctrl_i = NULL;
+  state->vobsub.n_line_ctrl_i = 0;
+  if (state->vobsub.line_ctrl_i != NULL) {
+    g_free (state->vobsub.line_ctrl_i);
+    state->vobsub.line_ctrl_i = NULL;
   }
   GST_DEBUG_OBJECT (dvdspu, "Change Color & Contrast. Pixel data = %d bytes",
       (gint16) (end - data));
@@ -75,12 +90,12 @@ gst_dvd_spu_parse_chg_colcon (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
     n_entries++;
   }
 
-  state->n_line_ctrl_i = n_entries;
-  state->line_ctrl_i = g_new (SpuLineCtrlI, n_entries);
+  state->vobsub.n_line_ctrl_i = n_entries;
+  state->vobsub.line_ctrl_i = g_new (SpuVobsubLineCtrlI, n_entries);
 
   cur = data;
   for (i = 0; i < n_entries; i++) {
-    SpuLineCtrlI *cur_line_ctrl = state->line_ctrl_i + i;
+    SpuVobsubLineCtrlI *cur_line_ctrl = state->vobsub.line_ctrl_i + i;
     guint8 n_changes = CLAMP ((cur[2] >> 4), 1, 8);
     guint8 c;
 
@@ -93,7 +108,7 @@ gst_dvd_spu_parse_chg_colcon (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
     cur += 4;
 
     for (c = 0; c < n_changes; c++) {
-      SpuPixCtrlI *cur_pix_ctrl = cur_line_ctrl->pix_ctrl_i + c;
+      SpuVobsubPixCtrlI *cur_pix_ctrl = cur_line_ctrl->pix_ctrl_i + c;
 
       cur_pix_ctrl->left = ((cur[0] << 8) & 0x300) | cur[1];
       cur_pix_ctrl->palette = GST_READ_UINT32_BE (cur + 2);
@@ -134,17 +149,17 @@ gst_dvd_spu_exec_cmd_blk (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
         if (G_UNLIKELY (data + 3 >= end))
           return;               /* Invalid SET_COLOR cmd at the end of the blk */
 
-        state->main_idx[3] = data[1] >> 4;
-        state->main_idx[2] = data[1] & 0x0f;
-        state->main_idx[1] = data[2] >> 4;
-        state->main_idx[0] = data[2] & 0x0f;
+        state->vobsub.main_idx[3] = data[1] >> 4;
+        state->vobsub.main_idx[2] = data[1] & 0x0f;
+        state->vobsub.main_idx[1] = data[2] >> 4;
+        state->vobsub.main_idx[0] = data[2] & 0x0f;
 
-        state->main_pal_dirty = TRUE;
+        state->vobsub.main_pal_dirty = TRUE;
 
         GST_DEBUG_OBJECT (dvdspu,
             " Set Color bg %u pattern %u emph-1 %u emph-2 %u",
-            state->main_idx[0], state->main_idx[1], state->main_idx[2],
-            state->main_idx[3]);
+            state->vobsub.main_idx[0], state->vobsub.main_idx[1],
+            state->vobsub.main_idx[2], state->vobsub.main_idx[3]);
         data += 3;
         break;
       }
@@ -152,22 +167,22 @@ gst_dvd_spu_exec_cmd_blk (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
         if (G_UNLIKELY (data + 3 >= end))
           return;               /* Invalid SET_ALPHA cmd at the end of the blk */
 
-        state->main_alpha[3] = data[1] >> 4;
-        state->main_alpha[2] = data[1] & 0x0f;
-        state->main_alpha[1] = data[2] >> 4;
-        state->main_alpha[0] = data[2] & 0x0f;
+        state->vobsub.main_alpha[3] = data[1] >> 4;
+        state->vobsub.main_alpha[2] = data[1] & 0x0f;
+        state->vobsub.main_alpha[1] = data[2] >> 4;
+        state->vobsub.main_alpha[0] = data[2] & 0x0f;
 
-        state->main_pal_dirty = TRUE;
+        state->vobsub.main_pal_dirty = TRUE;
 
         GST_DEBUG_OBJECT (dvdspu,
             " Set Alpha bg %u pattern %u emph-1 %u emph-2 %u",
-            state->main_alpha[0], state->main_alpha[1], state->main_alpha[2],
-            state->main_alpha[3]);
+            state->vobsub.main_alpha[0], state->vobsub.main_alpha[1],
+            state->vobsub.main_alpha[2], state->vobsub.main_alpha[3]);
         data += 3;
         break;
       }
       case SPU_CMD_SET_DAREA:{
-        SpuRect *r = &state->disp_rect;
+        SpuRect *r = &state->vobsub.disp_rect;
 
         if (G_UNLIKELY (data + 7 >= end))
           return;               /* Invalid SET_DAREA cmd at the end of the blk */
@@ -188,14 +203,14 @@ gst_dvd_spu_exec_cmd_blk (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
         if (G_UNLIKELY (data + 5 >= end))
           return;               /* Invalid SET_DSPXE cmd at the end of the blk */
 
-        state->pix_data[0] = GST_READ_UINT16_BE (data + 1);
-        state->pix_data[1] = GST_READ_UINT16_BE (data + 3);
-        /* Store a reference to the current command buffer, as that's where 
+        state->vobsub.pix_data[0] = GST_READ_UINT16_BE (data + 1);
+        state->vobsub.pix_data[1] = GST_READ_UINT16_BE (data + 3);
+        /* Store a reference to the current command buffer, as that's where
          * we'll need to take our pixel data from */
-        gst_buffer_replace (&state->pix_buf, state->buf);
+        gst_buffer_replace (&state->vobsub.pix_buf, state->vobsub.buf);
 
         GST_DEBUG_OBJECT (dvdspu, " Set Pixel Data Offsets top: %u bot: %u",
-            state->pix_data[0], state->pix_data[1]);
+            state->vobsub.pix_data[0], state->vobsub.pix_data[1]);
 
         data += 5;
         break;
@@ -214,7 +229,7 @@ gst_dvd_spu_exec_cmd_blk (GstDVDSpu * dvdspu, guint8 * data, guint8 * end)
           return;               /* Invalid CHG_COLCON cmd at the end of the blk */
 
         gst_dvd_spu_parse_chg_colcon (dvdspu, data + 2, data + field_size);
-        state->line_ctrl_i_pal_dirty = TRUE;
+        state->vobsub.line_ctrl_i_pal_dirty = TRUE;
         data += field_size;
         break;
       }
@@ -232,8 +247,8 @@ gst_dvd_spu_finish_spu_buf (GstDVDSpu * dvdspu)
 {
   SpuState *state = &dvdspu->spu_state;
 
-  state->next_ts = state->base_ts = GST_CLOCK_TIME_NONE;
-  gst_buffer_replace (&state->buf, NULL);
+  state->next_ts = state->vobsub.base_ts = GST_CLOCK_TIME_NONE;
+  gst_buffer_replace (&state->vobsub.buf, NULL);
 
   GST_DEBUG_OBJECT (dvdspu, "Finished SPU buffer");
 }
@@ -250,11 +265,11 @@ gst_dvd_spu_setup_cmd_blk (GstDVDSpu * dvdspu, guint16 cmd_blk_offset,
     return FALSE;               /* No valid command block to read */
 
   delay = GST_READ_UINT16_BE (cmd_blk);
-  state->next_ts = state->base_ts + STM_TO_GST (delay);
-  state->cur_cmd_blk = cmd_blk_offset;
+  state->next_ts = state->vobsub.base_ts + STM_TO_GST (delay);
+  state->vobsub.cur_cmd_blk = cmd_blk_offset;
 
   GST_DEBUG_OBJECT (dvdspu, "Setup CMD Block @ %u with TS %" GST_TIME_FORMAT,
-      state->cur_cmd_blk, GST_TIME_ARGS (state->next_ts));
+      state->vobsub.cur_cmd_blk, GST_TIME_ARGS (state->next_ts));
   return TRUE;
 }
 
@@ -304,36 +319,37 @@ gst_dvd_spu_dump_dcsq (GstDVDSpu * dvdspu,
 #endif
 
 void
-gst_dvd_spu_handle_new_vobsub_buf (GstDVDSpu * dvdspu, SpuPacket * packet)
+gstspu_vobsub_handle_new_buf (GstDVDSpu * dvdspu, GstClockTime event_ts,
+    GstBuffer * buf)
 {
   guint8 *start, *end;
   SpuState *state = &dvdspu->spu_state;
 
 #if DUMP_DCSQ
-  gst_dvd_spu_dump_dcsq (dvdspu, packet->event_ts, packet->buf);
+  gst_dvd_spu_dump_dcsq (dvdspu, event_ts, buf);
 #endif
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (packet->buf) < 4))
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < 4))
     goto invalid;
 
-  if (state->buf != NULL) {
-    gst_buffer_unref (state->buf);
-    state->buf = NULL;
+  if (state->vobsub.buf != NULL) {
+    gst_buffer_unref (state->vobsub.buf);
+    state->vobsub.buf = NULL;
   }
-  state->buf = packet->buf;
-  state->base_ts = packet->event_ts;
+  state->vobsub.buf = buf;
+  state->vobsub.base_ts = event_ts;
 
-  start = GST_BUFFER_DATA (state->buf);
-  end = start + GST_BUFFER_SIZE (state->buf);
+  start = GST_BUFFER_DATA (state->vobsub.buf);
+  end = start + GST_BUFFER_SIZE (state->vobsub.buf);
 
   /* Configure the first command block in this buffer as our initial blk */
-  state->cur_cmd_blk = GST_READ_UINT16_BE (start + 2);
-  gst_dvd_spu_setup_cmd_blk (dvdspu, state->cur_cmd_blk, start, end);
+  state->vobsub.cur_cmd_blk = GST_READ_UINT16_BE (start + 2);
+  gst_dvd_spu_setup_cmd_blk (dvdspu, state->vobsub.cur_cmd_blk, start, end);
   /* Clear existing chg-colcon info */
-  state->n_line_ctrl_i = 0;
-  if (state->line_ctrl_i != NULL) {
-    g_free (state->line_ctrl_i);
-    state->line_ctrl_i = NULL;
+  state->vobsub.n_line_ctrl_i = 0;
+  if (state->vobsub.line_ctrl_i != NULL) {
+    g_free (state->vobsub.line_ctrl_i);
+    state->vobsub.line_ctrl_i = NULL;
   }
   return;
 
@@ -342,36 +358,156 @@ invalid:
   gst_dvd_spu_finish_spu_buf (dvdspu);
 }
 
-void
-gst_dvdspu_vobsub_execute_event (GstDVDSpu * dvdspu)
+gboolean
+gstspu_vobsub_execute_event (GstDVDSpu * dvdspu)
 {
   guint8 *start, *cmd_blk, *end;
   guint16 next_blk;
   SpuState *state = &dvdspu->spu_state;
 
+  if (state->vobsub.buf == NULL)
+    return FALSE;
+
   GST_DEBUG_OBJECT (dvdspu, "Executing cmd blk with TS %" GST_TIME_FORMAT
-      " @ offset %u", GST_TIME_ARGS (state->next_ts), state->cur_cmd_blk);
+      " @ offset %u", GST_TIME_ARGS (state->next_ts),
+      state->vobsub.cur_cmd_blk);
 
-  start = GST_BUFFER_DATA (state->buf);
-  end = start + GST_BUFFER_SIZE (state->buf);
+  start = GST_BUFFER_DATA (state->vobsub.buf);
+  end = start + GST_BUFFER_SIZE (state->vobsub.buf);
 
-  cmd_blk = start + state->cur_cmd_blk;
+  cmd_blk = start + state->vobsub.cur_cmd_blk;
 
   if (G_UNLIKELY (cmd_blk + 5 >= end)) {
     /* Invalid. Finish the buffer and loop again */
     gst_dvd_spu_finish_spu_buf (dvdspu);
-    return;
+    return FALSE;
   }
 
   gst_dvd_spu_exec_cmd_blk (dvdspu, cmd_blk + 4, end);
 
   next_blk = GST_READ_UINT16_BE (cmd_blk + 2);
-  if (next_blk != state->cur_cmd_blk) {
+  if (next_blk != state->vobsub.cur_cmd_blk) {
     /* Advance to the next block of commands */
     gst_dvd_spu_setup_cmd_blk (dvdspu, next_blk, start, end);
   } else {
     /* Next Block points to the current block, so we're finished with this
      * SPU buffer */
     gst_dvd_spu_finish_spu_buf (dvdspu);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gstspu_vobsub_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
+{
+  const gchar *event_type;
+  const GstStructure *structure = gst_event_get_structure (event);
+  SpuState *state = &dvdspu->spu_state;
+  gboolean hl_change = FALSE;
+
+  event_type = gst_structure_get_string (structure, "event");
+
+  if (strcmp (event_type, "dvd-spu-clut-change") == 0) {
+    gchar prop_name[32];
+    gint i;
+    gint entry;
+
+    for (i = 0; i < 16; i++) {
+      g_snprintf (prop_name, 32, "clut%02d", i);
+      if (!gst_structure_get_int (structure, prop_name, &entry))
+        entry = 0;
+      state->vobsub.current_clut[i] = (guint32) entry;
+    }
+
+    state->vobsub.main_pal_dirty = TRUE;
+    state->vobsub.hl_pal_dirty = TRUE;
+    state->vobsub.line_ctrl_i_pal_dirty = TRUE;
+    hl_change = TRUE;
+  } else if (strcmp (event_type, "dvd-spu-highlight") == 0) {
+    gint val;
+
+    if (gst_structure_get_int (structure, "palette", &val)) {
+      state->vobsub.hl_idx[3] = ((guint32) (val) >> 28) & 0x0f;
+      state->vobsub.hl_idx[2] = ((guint32) (val) >> 24) & 0x0f;
+      state->vobsub.hl_idx[1] = ((guint32) (val) >> 20) & 0x0f;
+      state->vobsub.hl_idx[0] = ((guint32) (val) >> 16) & 0x0f;
+
+      state->vobsub.hl_alpha[3] = ((guint32) (val) >> 12) & 0x0f;
+      state->vobsub.hl_alpha[2] = ((guint32) (val) >> 8) & 0x0f;
+      state->vobsub.hl_alpha[1] = ((guint32) (val) >> 4) & 0x0f;
+      state->vobsub.hl_alpha[0] = ((guint32) (val) >> 0) & 0x0f;
+
+      state->vobsub.hl_pal_dirty = TRUE;
+    }
+    if (gst_structure_get_int (structure, "sx", &val))
+      state->vobsub.hl_rect.left = (gint16) val;
+    if (gst_structure_get_int (structure, "sy", &val))
+      state->vobsub.hl_rect.top = (gint16) val;
+    if (gst_structure_get_int (structure, "ex", &val))
+      state->vobsub.hl_rect.right = (gint16) val;
+    if (gst_structure_get_int (structure, "ey", &val))
+      state->vobsub.hl_rect.bottom = (gint16) val;
+
+    GST_INFO_OBJECT (dvdspu, "Highlight rect is now (%d,%d) to (%d,%d)",
+        state->vobsub.hl_rect.left, state->vobsub.hl_rect.top,
+        state->vobsub.hl_rect.right, state->vobsub.hl_rect.bottom);
+    hl_change = TRUE;
+  } else if (strcmp (event_type, "dvd-spu-reset-highlight") == 0) {
+    if (state->vobsub.hl_rect.top != -1 || state->vobsub.hl_rect.bottom != -1)
+      hl_change = TRUE;
+    state->vobsub.hl_rect.top = -1;
+    state->vobsub.hl_rect.bottom = -1;
+    GST_INFO_OBJECT (dvdspu, "Highlight off");
+  } else if (strcmp (event_type, "dvd-set-subpicture-track") == 0) {
+    gboolean forced_only;
+
+    if (gst_structure_get_boolean (structure, "forced-only", &forced_only)) {
+      gboolean was_forced = (state->flags & SPU_STATE_FORCED_ONLY);
+
+      if (forced_only)
+        state->flags |= SPU_STATE_FORCED_ONLY;
+      else
+        state->flags &= ~(SPU_STATE_FORCED_ONLY);
+
+      if (was_forced != forced_only)
+        hl_change = TRUE;
+    }
+  }
+
+  gst_event_unref (event);
+
+  return hl_change;
+}
+
+void
+gstspu_vobsub_flush (GstDVDSpu * dvdspu)
+{
+  SpuState *state = &dvdspu->spu_state;
+
+  if (state->vobsub.buf) {
+    gst_buffer_unref (state->vobsub.buf);
+    state->vobsub.buf = NULL;
+  }
+  if (state->vobsub.pix_buf) {
+    gst_buffer_unref (state->vobsub.pix_buf);
+    state->vobsub.pix_buf = NULL;
+  }
+
+  state->vobsub.base_ts = GST_CLOCK_TIME_NONE;
+  state->vobsub.pix_data[0] = 0;
+  state->vobsub.pix_data[1] = 0;
+
+  state->vobsub.hl_rect.top = -1;
+  state->vobsub.hl_rect.bottom = -1;
+
+  state->vobsub.disp_rect.top = -1;
+  state->vobsub.disp_rect.bottom = -1;
+
+  state->vobsub.n_line_ctrl_i = 0;
+  if (state->vobsub.line_ctrl_i != NULL) {
+    g_free (state->vobsub.line_ctrl_i);
+    state->vobsub.line_ctrl_i = NULL;
   }
 }

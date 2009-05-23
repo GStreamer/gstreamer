@@ -20,41 +20,87 @@
 #ifndef __GSTSPU_PGS_H__
 #define __GSTSPU_PGS_H__
 
-typedef enum PgsCommandType {
-  PGS_COMMAND_SET_PALETTE                       = 0x14,
-  PGS_COMMAND_SET_OBJECT_DATA                   = 0x15,
-  PGS_COMMAND_PRESENTATION_SEGMENT              = 0x16,
-  PGS_COMMAND_SET_WINDOW                        = 0x17,
-  PGS_COMMAND_INTERACTIVE_SEGMENT               = 0x18,
+#include "gstspu-common.h"
 
-  PGS_COMMAND_END_DISPLAY                       = 0x80,
+typedef struct SpuPgsState SpuPgsState;
+typedef enum PgsCompositionObjectFlags PgsCompositionObjectFlags;
+typedef enum PgsPresentationSegmentFlags PgsPresentationSegmentFlags;
+typedef enum PgsObjectUpdateFlags PgsObjectUpdateFlags;
 
-  PGS_COMMAND_INVALID                           = 0xFFFF
-} PgsCommandType;
+typedef struct PgsPresentationSegment PgsPresentationSegment;
+typedef struct PgsCompositionObject PgsCompositionObject;
 
-typedef enum PgsPresSegmentFlags {
-  PGS_PRES_SEGMENT_FLAG_UPDATE_PALETTE          = 0x80
-} PgsPresSegmentFlags;
+enum PgsPresentationSegmentFlags
+{
+  PGS_PRES_SEGMENT_FLAG_UPDATE_PALETTE = 0x80
+};
 
-typedef enum PgsCompObjectFlags {
-  PGS_COMP_OBJECT_FLAG_CROPPED                  = 0x80,
-  PGS_COMP_OBJECT_FLAG_FORCED                   = 0x40
-} PgsCompObjectFlags;
+enum PgsCompositionObjectFlags
+{
+  PGS_COMPOSITION_OBJECT_FLAG_CROPPED = 0x80,
+  PGS_COMPOSITION_OBJECT_FLAG_FORCED = 0x40
+};
 
-typedef enum PgsObjectUpdateFlags {
+enum PgsObjectUpdateFlags
+{
   /* Set in an object_update if this is the beginning of new RLE data.
    * If not set, the data is a continuation to be appended */
-  PGS_OBJECT_UPDATE_FLAG_START_RLE              = 0x80
-} PgsObjectUpdateFlags;
+  PGS_OBJECT_UPDATE_FLAG_START_RLE = 0x80,
+  PGS_OBJECT_UPDATE_FLAG_END_RLE = 0x40 /* This one is a guess */
+};
 
-typedef struct PgsPaletteEntry {
-  guint8 n;
-  guint8 Y;
-  guint8 Cb;
-  guint8 Cr;
-  guint8 A;
-} PgsPaletteEntry;
+struct PgsPresentationSegment
+{
+  guint16 composition_no;
+  guint8 composition_state;
 
-gint gstspu_dump_pgs_buffer (GstBuffer *buf);
+  PgsPresentationSegmentFlags flags;
+
+  guint8 palette_id;
+
+  guint16 vid_w, vid_h;
+  guint8  vid_fps_code;
+
+  GArray *objects;
+};
+
+struct PgsCompositionObject
+{
+  guint16 id;
+  guint8 version;
+  PgsCompositionObjectFlags flags;
+
+  guint8 win_id;
+
+  guint8 rle_data_ver;
+  guint8 *rle_data;
+  guint32 rle_data_size;
+  guint32 rle_data_used;
+
+  /* Top left corner of this object */
+  guint16 x, y;
+
+  /* Only valid if PGS_COMPOSITION_OBJECT_FLAG_CROPPED is set */
+  guint16 crop_x, crop_y, crop_w, crop_h;
+};
+
+struct SpuPgsState {
+  GstBuffer *pending_cmd;
+
+  gboolean in_presentation_segment;
+  gboolean have_presentation_segment;
+
+  PgsPresentationSegment pres_seg;
+
+  SpuColour palette[256];
+
+  guint16 win_x, win_y, win_w, win_h;
+};
+
+void gstspu_pgs_handle_new_buf (GstDVDSpu * dvdspu, GstClockTime event_ts, GstBuffer *buf);
+gboolean gstspu_pgs_execute_event (GstDVDSpu *dvdspu);
+void gstspu_pgs_render (GstDVDSpu *dvdspu, GstBuffer *buf);
+gboolean gstspu_pgs_handle_dvd_event (GstDVDSpu *dvdspu, GstEvent *event);
+void gstspu_pgs_flush (GstDVDSpu *dvdspu);
 
 #endif

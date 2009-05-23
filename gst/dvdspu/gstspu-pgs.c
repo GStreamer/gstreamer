@@ -23,6 +23,7 @@
 #include <string.h>
 #include <gst/gst.h>
 
+#include "gstdvdspu.h"
 #include "gstspu-pgs.h"
 
 const struct PgsFrameRateEntry
@@ -35,12 +36,32 @@ const struct PgsFrameRateEntry
   64, 30000, 1001}              /* 29.97 FPS */
 };
 
-gboolean in_presentation_segment = FALSE;
-guint8 *rle_data = NULL;
-guint32 rle_data_size = 0, rle_data_used = 0;
-PgsPaletteEntry palette[256];
+typedef enum PgsCommandType PgsCommandType;
 
+enum PgsCommandType
+{
+  PGS_COMMAND_SET_PALETTE = 0x14,
+  PGS_COMMAND_SET_OBJECT_DATA = 0x15,
+  PGS_COMMAND_PRESENTATION_SEGMENT = 0x16,
+  PGS_COMMAND_SET_WINDOW = 0x17,
+  PGS_COMMAND_INTERACTIVE_SEGMENT = 0x18,
+
+  PGS_COMMAND_END_DISPLAY = 0x80,
+
+  PGS_COMMAND_INVALID = 0xFFFF
+};
+
+static gint gstspu_exec_pgs_buffer (GstDVDSpu * dvdspu, GstBuffer * buf);
+
+#define DUMP_CMDS 0
 #define DUMP_FULL_IMAGE 0
+#define DUMP_FULL_PALETTE 0
+
+#if DUMP_CMDS
+#define PGS_DUMP(...) g_print(__VA_ARGS__)
+#else
+#define PGS_DUMP(...)
+#endif
 
 static void
 dump_bytes (guint8 * data, guint16 len)
@@ -49,19 +70,20 @@ dump_bytes (guint8 * data, guint16 len)
 
   /* Dump the numbers */
   for (i = 0; i < len; i++) {
-    g_print ("0x%02x ", data[i]);
+    PGS_DUMP ("0x%02x ", data[i]);
     if (!((i + 1) % 16))
-      g_print ("\n");
+      PGS_DUMP ("\n");
   }
   if (len > 0 && (i % 16))
-    g_print ("\n");
+    PGS_DUMP ("\n");
 }
 
 static void
-dump_rle_data (guint8 * data, guint32 len)
+dump_rle_data (GstDVDSpu * dvdspu, guint8 * data, guint32 len)
 {
   guint8 *end = data + len;
   guint16 obj_w, obj_h;
+  guint x = 0;
 
   if (data + 4 > end)
     return;
@@ -70,42 +92,36 @@ dump_rle_data (guint8 * data, guint32 len)
   obj_w = GST_READ_UINT16_BE (data);
   obj_h = GST_READ_UINT16_BE (data + 2);
   data += 4;
-  g_print ("RLE image is %ux%u\n", obj_w, obj_h);
+  PGS_DUMP ("RLE image is %ux%u\n", obj_w, obj_h);
 
   while (data < end) {
     guint8 pal_id;
     guint16 run_len;
 
-    if (data[0] != 0) {
-      // g_print ("data 0x%02x\n", data[0]);
-      pal_id = *data++;
+    pal_id = *data++;
+    if (pal_id != 0) {
+      // PGS_DUMP ("data 0x%02x\n", data[0]);
       run_len = 1;
     } else {
-      data++;
-
       if (data + 1 > end)
         return;
       switch (data[0] & 0xC0) {
         case 0x00:
-          //g_print ("data 0x%02x\n", data[0]);
+          //PGS_DUMP ("data 0x%02x\n", data[0]);
           run_len = (data[0] & 0x3f);
-          if (run_len > 0)
-            pal_id = 0;
           data++;
           break;
         case 0x40:
           if (data + 2 > end)
             return;
-          //g_print ("data 0x%02x 0x%02x\n", data[0], data[1]);
+          //PGS_DUMP ("data 0x%02x 0x%02x\n", data[0], data[1]);
           run_len = ((data[0] << 8) | data[1]) & 0x3fff;
-          if (run_len > 0)
-            pal_id = 0;
           data += 2;
           break;
         case 0x80:
           if (data + 2 > end)
             return;
-          //g_print ("data 0x%02x 0x%02x\n", data[0], data[1]);
+          //PGS_DUMP ("data 0x%02x 0x%02x\n", data[0], data[1]);
           run_len = (data[0] & 0x3f);
           pal_id = data[1];
           data += 2;
@@ -113,7 +129,7 @@ dump_rle_data (guint8 * data, guint32 len)
         case 0xC0:
           if (data + 3 > end)
             return;
-          //g_print ("data 0x%02x 0x%02x 0x%02x\n", data[0], data[1], data[2]);
+          //PGS_DUMP ("data 0x%02x 0x%02x 0x%02x\n", data[0], data[1], data[2]);
           run_len = ((data[0] << 8) | data[1]) & 0x3fff;
           pal_id = data[2];
           data += 3;
@@ -124,113 +140,302 @@ dump_rle_data (guint8 * data, guint32 len)
 #if DUMP_FULL_IMAGE
     {
       gint i;
-      guint x = 0;
 #if 1
-      if (palette[pal_id].A) {
+      if (dvdspu->spu_state.pgs.palette[pal_id].A) {
+        guint8 val = dvdspu->spu_state.pgs.palette[pal_id].A;
         for (i = 0; i < run_len; i++)
-          g_print ("%02x ", pal_id);
+          PGS_DUMP ("%02x ", val);
       } else {
         for (i = 0; i < run_len; i++)
-          g_print ("   ");
+          PGS_DUMP ("   ");
       }
-      x += run_len;
-      if (!run_len || x > obj_w) {
-        g_print ("\n");
-        x = 0;
-      }
+      if (!run_len || (x + run_len) > obj_w)
+        PGS_DUMP ("\n");
 #else
-      g_print ("Run x: %d pix: %d col: %d\n", x, run_len, pal_id);
-      x += run_len;
-      if (x >= obj_w)
-        x = 0;
+      PGS_DUMP ("Run x: %d pix: %d col: %d\n", x, run_len, pal_id);
 #endif
     }
 #endif
 
+    x += run_len;
+    if (!run_len || x > obj_w)
+      x = 0;
   };
 
-  g_print ("\n");
+  PGS_DUMP ("\n");
+}
+
+static void
+pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
+    GstBuffer * dest_buf)
+{
+  SpuColour *colour;
+  guint8 *planes[3];            /* YUV frame pointers */
+  guint8 *data, *end;
+  guint16 obj_w, obj_h;
+  guint x, y, i, max_x;
+
+  if (G_UNLIKELY (obj->rle_data == NULL || obj->rle_data_size == 0
+          || obj->rle_data_used != obj->rle_data_size))
+    return;
+
+  data = obj->rle_data;
+  end = data + obj->rle_data_used;
+
+  if (data + 4 > end)
+    return;
+
+  /* FIXME: Calculate and use the cropping window for the output, as the
+   * intersection of the crop rectangle for this object (if any) and the
+   * window specified by the object's window_id */
+
+  /* Store the start of each plane */
+  planes[0] = GST_BUFFER_DATA (dest_buf);
+  planes[1] = planes[0] + (state->Y_height * state->Y_stride);
+  planes[2] = planes[1] + (state->UV_height * state->UV_stride);
+
+  /* Sanity check */
+  g_return_if_fail (planes[2] + (state->UV_height * state->UV_stride) <=
+      GST_BUFFER_DATA (dest_buf) + GST_BUFFER_SIZE (dest_buf));
+
+  x = obj->x;
+  y = obj->y;
+
+  planes[0] += state->Y_stride * y;
+  planes[1] += state->UV_stride * (y / 2);
+  planes[2] += state->UV_stride * (y / 2);
+
+  /* RLE data: */
+  obj_w = GST_READ_UINT16_BE (data);
+  obj_h = GST_READ_UINT16_BE (data + 2);
+  data += 4;
+
+  max_x = x + obj_w;
+
+  state->comp_left = x;
+  state->comp_right = max_x;
+
+  gstspu_clear_comp_buffers (state);
+
+  while (data < end) {
+    guint8 pal_id;
+    guint16 run_len;
+
+    pal_id = *data++;
+    if (pal_id != 0) {
+      run_len = 1;
+    } else {
+      if (data + 1 > end)
+        return;
+      switch (data[0] & 0xC0) {
+        case 0x00:
+          run_len = (data[0] & 0x3f);
+          data++;
+          break;
+        case 0x40:
+          if (data + 2 > end)
+            return;
+          run_len = ((data[0] << 8) | data[1]) & 0x3fff;
+          data += 2;
+          break;
+        case 0x80:
+          if (data + 2 > end)
+            return;
+          run_len = (data[0] & 0x3f);
+          pal_id = data[1];
+          data += 2;
+          break;
+        case 0xC0:
+          if (data + 3 > end)
+            return;
+          run_len = ((data[0] << 8) | data[1]) & 0x3fff;
+          pal_id = data[2];
+          data += 3;
+          break;
+      }
+    }
+
+    colour = &state->pgs.palette[pal_id];
+    if (colour->A) {
+      guint32 inv_A = 0xff - colour->A;
+
+      for (i = 0; i < run_len; i++) {
+        planes[0][x] = (inv_A * planes[0][x] + colour->Y) / 0xff;
+
+        state->comp_bufs[0][x / 2] += colour->U;
+        state->comp_bufs[1][x / 2] += colour->V;
+        state->comp_bufs[2][x / 2] += colour->A;
+        x++;
+      }
+    } else {
+      x += run_len;
+    }
+
+    if (!run_len || x > max_x) {
+      x = state->pgs.win_x;
+      planes[0] += state->Y_stride;
+
+      if (y % 2) {
+        gstspu_blend_comp_buffers (state, planes);
+        gstspu_clear_comp_buffers (state);
+
+        planes[1] += state->UV_stride;
+        planes[2] += state->UV_stride;
+      }
+      y++;
+    }
+  }
+
+  if (y % 2)
+    gstspu_blend_comp_buffers (state, planes);
+}
+
+static void
+pgs_composition_object_clear (PgsCompositionObject * obj)
+{
+  if (obj->rle_data) {
+    g_free (obj->rle_data);
+    obj->rle_data = NULL;
+  }
+  obj->rle_data_size = obj->rle_data_used = 0;
+}
+
+static void
+pgs_presentation_segment_set_object_count (PgsPresentationSegment * ps,
+    guint8 n_objects)
+{
+  if (ps->objects == NULL) {
+    ps->objects =
+        g_array_sized_new (FALSE, TRUE, sizeof (PgsCompositionObject),
+        n_objects);
+    g_array_set_size (ps->objects, n_objects);
+    return;
+  }
+
+  /* Clear memory in any extraneous objects */
+  if (ps->objects->len > n_objects) {
+    guint i;
+    for (i = n_objects; i < ps->objects->len; i++) {
+      PgsCompositionObject *cur =
+          &g_array_index (ps->objects, PgsCompositionObject, i);
+      pgs_composition_object_clear (cur);
+    }
+  }
+
+  g_array_set_size (ps->objects, n_objects);
+
+  if (n_objects == 0) {
+    g_array_free (ps->objects, TRUE);
+    ps->objects = NULL;
+  }
+}
+
+static PgsCompositionObject *
+pgs_presentation_segment_find_object (PgsPresentationSegment * ps,
+    guint16 obj_id)
+{
+  guint i;
+  if (ps->objects == NULL)
+    return NULL;
+
+  for (i = 0; i < ps->objects->len; i++) {
+    PgsCompositionObject *cur =
+        &g_array_index (ps->objects, PgsCompositionObject, i);
+    if (cur->id == obj_id)
+      return cur;
+  }
+
+  return NULL;
 }
 
 static int
-parse_presentation_segment (guint8 type, guint8 * payload, guint16 len)
+parse_presentation_segment (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
+    guint16 len)
 {
   guint8 *end = payload + len;
-  guint16 vid_w, vid_h;
-  gint8 vid_fps;
-  guint16 composition_desc_no;
-  guint8 composition_desc_state;
-  guint8 pres_seg_flags;
-  guint8 palette_id;
-  guint8 n_objects;
+  PgsPresentationSegment *ps = &dvdspu->spu_state.pgs.pres_seg;
+  guint8 n_objects, palette_id;
   gint i;
 
   /* Parse video descriptor */
   if (payload + 5 > end)
     return 0;
-  vid_w = GST_READ_UINT16_BE (payload);
-  vid_h = GST_READ_UINT16_BE (payload + 2);
-  vid_fps = payload[4];
+
+  ps->vid_w = GST_READ_UINT16_BE (payload);
+  ps->vid_h = GST_READ_UINT16_BE (payload + 2);
+  ps->vid_fps_code = payload[4];
   payload += 5;
 
   /* Parse composition descriptor */
   if (payload + 3 > end)
     return 0;
-  composition_desc_no = GST_READ_UINT16_BE (payload);
-  composition_desc_state = payload[2];
+  ps->composition_no = GST_READ_UINT16_BE (payload);
+  ps->composition_state = payload[2];
   payload += 3;
 
   /* Parse other bits */
   if (payload + 3 > end)
     return 0;
 
-  pres_seg_flags = payload[0];
+  ps->flags = payload[0];
+
   palette_id = payload[1];
   n_objects = payload[2];
   payload += 3;
 
-  g_print ("Video width %u height %u fps code %u\n", vid_w, vid_h, vid_fps);
-  g_print
-      ("Composition num %u state %u flags 0x%02x palette id %u n_objects %u\n",
-      composition_desc_no, composition_desc_state, pres_seg_flags, palette_id,
+  if (ps->flags & PGS_PRES_SEGMENT_FLAG_UPDATE_PALETTE)
+    ps->palette_id = palette_id;
+
+  PGS_DUMP ("Video width %u height %u fps code %u\n", ps->vid_w, ps->vid_h,
+      ps->vid_fps_code);
+  PGS_DUMP
+      ("Composition num %u state 0x%02x flags 0x%02x palette id %u n_objects %u\n",
+      ps->composition_no, ps->composition_state, ps->flags, ps->palette_id,
       n_objects);
 
+  pgs_presentation_segment_set_object_count (ps, n_objects);
+
   for (i = 0; i < (gint) n_objects; i++) {
-    guint16 obj_id;
-    guint8 win_id;
-    guint8 obj_flags;
-    guint16 x, y;
+    PgsCompositionObject *obj =
+        &g_array_index (ps->objects, PgsCompositionObject, i);
 
     if (payload + 8 > end)
       break;
-    obj_id = GST_READ_UINT16_BE (payload);
-    win_id = payload[2];
-    obj_flags = payload[3];
-    x = GST_READ_UINT16_BE (payload + 4);
-    y = GST_READ_UINT16_BE (payload + 6);
+    obj->id = GST_READ_UINT16_BE (payload);
+    obj->win_id = payload[2];
+    obj->flags = payload[3];
+    obj->x = GST_READ_UINT16_BE (payload + 4);
+    obj->y = GST_READ_UINT16_BE (payload + 6);
+    obj->rle_data_size = obj->rle_data_used = 0;
+
     payload += 8;
 
-    g_print ("Composition object %d Object ID %u Window ID %u flags 0x%02x "
-        "x %u y %u\n", i, obj_id, win_id, obj_flags, x, y);
+    PGS_DUMP ("Composition object %d Object ID %u Window ID %u flags 0x%02x "
+        "x %u y %u\n", i, obj->id, obj->win_id, obj->flags, obj->x, obj->y);
 
-    if (obj_flags & PGS_COMP_OBJECT_FLAG_CROPPED) {
-      guint16 crop_x, crop_y, crop_w, crop_h;
+    if (obj->flags & PGS_COMPOSITION_OBJECT_FLAG_CROPPED) {
       if (payload + 8 > end)
         break;
 
-      crop_x = GST_READ_UINT16_BE (payload);
-      crop_y = GST_READ_UINT16_BE (payload + 2);
-      crop_w = GST_READ_UINT16_BE (payload + 4);
-      crop_h = GST_READ_UINT16_BE (payload + 6);
+      obj->crop_x = GST_READ_UINT16_BE (payload);
+      obj->crop_y = GST_READ_UINT16_BE (payload + 2);
+      obj->crop_w = GST_READ_UINT16_BE (payload + 4);
+      obj->crop_h = GST_READ_UINT16_BE (payload + 6);
+
       payload += 8;
 
-      g_print ("Cropping window x %u y %u w %u h %u\n",
-          crop_x, crop_y, crop_w, crop_h);
+      PGS_DUMP ("Cropping window x %u y %u w %u h %u\n",
+          obj->crop_x, obj->crop_y, obj->crop_w, obj->crop_h);
     }
+
+    if (obj->flags & ~(PGS_COMPOSITION_OBJECT_FLAG_CROPPED |
+            PGS_COMPOSITION_OBJECT_FLAG_FORCED))
+      g_warning ("PGS Composition Object has unknown flags: 0x%02x",
+          obj->flags);
   }
 
   if (payload != end) {
-    g_print ("%u bytes left over:\n", end - payload);
+    g_warning ("PGS Composition Object: %d bytes not consumed", end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -238,8 +443,11 @@ parse_presentation_segment (guint8 type, guint8 * payload, guint16 len)
 }
 
 static int
-parse_set_palette (guint8 type, guint8 * payload, guint16 len)
+parse_set_palette (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
+    guint16 len)
 {
+  SpuState *state = &dvdspu->spu_state;
+
   const gint PGS_PALETTE_ENTRY_SIZE = 5;
   guint8 *end = payload + len;
   guint8 palette_id;
@@ -254,33 +462,40 @@ parse_set_palette (guint8 type, guint8 * payload, guint16 len)
 
   n_entries = (len - 2) / PGS_PALETTE_ENTRY_SIZE;
 
-  g_print ("Palette ID %u version %u. %d entries\n",
+  PGS_DUMP ("Palette ID %u version %u. %d entries\n",
       palette_id, palette_version, n_entries);
+  for (i = 0; i < 256; i++)
+    state->pgs.palette[i].A = 0;
   for (i = 0; i < n_entries; i++) {
-    guint8 n, Y, Cb, Cr, A;
+    guint8 n, Y, U, V, A;
     n = payload[0];
-    palette[n].n = n;
-    palette[n].Y = Y = payload[1];
-    palette[n].Cb = Cb = payload[2];
-    palette[n].Cr = Cr = payload[3];
-    palette[n].A = A = payload[4];
+    Y = payload[1];
+    U = payload[2];
+    V = payload[3];
+    A = payload[4];
 
-    g_print ("Entry %3d: Y %3d Cb %3d Cr %3d A %3d  ", n, Y, Cb, Cr, A);
+#if DUMP_FULL_PALETTE
+    PGS_DUMP ("Entry %3d: Y %3d U %3d V %3d A %3d  ", n, Y, U, V, A);
     if (((i + 1) % 2) == 0)
-      g_print ("\n");
+      PGS_DUMP ("\n");
+#endif
+
+    /* Premultiply the palette entries by the alpha */
+    state->pgs.palette[n].Y = Y * A;
+    state->pgs.palette[n].U = U * A;
+    state->pgs.palette[n].V = V * A;
+    state->pgs.palette[n].A = A;
 
     payload += PGS_PALETTE_ENTRY_SIZE;
   }
-  for (i = n_entries; i < 256; i++) {
-    palette[i].n = i;
-    palette[i].A = 0;
-  }
 
+#if DUMP_FULL_PALETTE
   if (n_entries > 0 && (i % 2))
-    g_print ("\n");
+    PGS_DUMP ("\n");
+#endif
 
   if (payload != end) {
-    g_print ("%u bytes left over:\n", end - payload);
+    g_warning ("PGS Set Palette: %d bytes not consumed", end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -288,11 +503,12 @@ parse_set_palette (guint8 type, guint8 * payload, guint16 len)
 }
 
 static int
-parse_set_window (guint8 type, guint8 * payload, guint16 len)
+parse_set_window (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
+    guint16 len)
 {
+  SpuState *state = &dvdspu->spu_state;
   guint8 *end = payload + len;
   guint8 win_id, win_ver;
-  guint16 x, y, w, h;
 
   if (payload + 10 > end)
     return 0;
@@ -302,17 +518,18 @@ parse_set_window (guint8 type, guint8 * payload, guint16 len)
   /* FIXME: This is just a guess as to what the numbers mean: */
   win_id = payload[0];
   win_ver = payload[1];
-  x = GST_READ_UINT16_BE (payload + 2);
-  y = GST_READ_UINT16_BE (payload + 4);
-  w = GST_READ_UINT16_BE (payload + 6);
-  h = GST_READ_UINT16_BE (payload + 8);
+  state->pgs.win_x = GST_READ_UINT16_BE (payload + 2);
+  state->pgs.win_y = GST_READ_UINT16_BE (payload + 4);
+  state->pgs.win_w = GST_READ_UINT16_BE (payload + 6);
+  state->pgs.win_h = GST_READ_UINT16_BE (payload + 8);
   payload += 10;
 
-  g_print ("Win ID %u version %d x %d y %d w %d h %d\n",
-      win_id, win_ver, x, y, w, h);
+  PGS_DUMP ("Win ID %u version %d x %d y %d w %d h %d\n",
+      win_id, win_ver, state->pgs.win_x, state->pgs.win_y, state->pgs.win_w,
+      state->pgs.win_h);
 
   if (payload != end) {
-    g_print ("%u bytes left over:\n", end - payload);
+    g_warning ("PGS Set Window: %d bytes not consumed", end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -320,51 +537,60 @@ parse_set_window (guint8 type, guint8 * payload, guint16 len)
 }
 
 static int
-parse_set_object_data (guint8 type, guint8 * payload, guint16 len)
+parse_set_object_data (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
+    guint16 len)
 {
+  SpuPgsState *pgs_state = &dvdspu->spu_state.pgs;
+  PgsCompositionObject *obj;
   guint8 *end = payload + len;
   guint16 obj_id;
-  guint8 obj_ver, obj_flags;
+  guint8 obj_ver, flags;
 
   if (payload + 4 > end)
     return 0;
+
   obj_id = GST_READ_UINT16_BE (payload);
   obj_ver = payload[2];
-  obj_flags = payload[3];
+  flags = payload[3];
   payload += 4;
 
-  g_print ("Object ID %d ver %u flags 0x%02x\n", obj_id, obj_ver, obj_flags);
+  obj = pgs_presentation_segment_find_object (&(pgs_state->pres_seg), obj_id);
 
-  if (obj_flags & PGS_OBJECT_UPDATE_FLAG_START_RLE) {
+  PGS_DUMP ("Object ID %d ver %u flags 0x%02x\n", obj_id, obj_ver, flags);
+
+  if (flags & PGS_OBJECT_UPDATE_FLAG_START_RLE) {
+    obj->rle_data_ver = obj_ver;
 
     if (payload + 3 > end)
       return 0;
 
-    rle_data_size = GST_READ_UINT24_BE (payload);
+    obj->rle_data_size = GST_READ_UINT24_BE (payload);
     payload += 3;
 
-    g_print ("%d bytes of RLE data, of %d bytes total.\n",
-        end - payload, rle_data_size);
+    PGS_DUMP ("%d bytes of RLE data, of %d bytes total.\n",
+        end - payload, obj->rle_data_size);
 
-    rle_data = g_realloc (rle_data, rle_data_size);
-    rle_data_used = end - payload;
-    memcpy (rle_data, payload, end - payload);
+    obj->rle_data = g_realloc (obj->rle_data, obj->rle_data_size);
+    obj->rle_data_used = end - payload;
+    memcpy (obj->rle_data, payload, end - payload);
     payload = end;
   } else {
-    g_print ("%d bytes of additional RLE data\n", end - payload);
-    if (rle_data_size < rle_data_used + end - payload)
-      return 0;
+    PGS_DUMP ("%d bytes of additional RLE data\n", end - payload);
+    /* Check that the data chunk is for this object version, and fits in the buffer */
+    if (obj->rle_data_ver == obj_ver &&
+        obj->rle_data_used + end - payload <= obj->rle_data_size) {
 
-    memcpy (rle_data + rle_data_used, payload, end - payload);
-    rle_data_used += end - payload;
-    payload = end;
+      memcpy (obj->rle_data + obj->rle_data_used, payload, end - payload);
+      obj->rle_data_used += end - payload;
+      payload = end;
+    }
   }
 
-  if (rle_data_size == rle_data_used)
-    dump_rle_data (rle_data, rle_data_size);
+  if (obj->rle_data_size == obj->rle_data_used)
+    dump_rle_data (dvdspu, obj->rle_data, obj->rle_data_size);
 
   if (payload != end) {
-    g_print ("%u bytes left over:\n", end - payload);
+    g_warning ("PGS Set Object Data: %d bytes not consumed", end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -372,56 +598,61 @@ parse_set_object_data (guint8 type, guint8 * payload, guint16 len)
 }
 
 static int
-parse_pgs_packet (guint8 type, guint8 * payload, guint16 len)
+parse_pgs_packet (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
+    guint16 len)
 {
+  SpuPgsState *pgs_state = &dvdspu->spu_state.pgs;
   int ret = 0;
 
-  if (!in_presentation_segment && type != PGS_COMMAND_PRESENTATION_SEGMENT) {
-    g_print ("Expected BEGIN PRESENTATION SEGMENT command. "
+  if (!pgs_state->in_presentation_segment
+      && type != PGS_COMMAND_PRESENTATION_SEGMENT) {
+    PGS_DUMP ("Expected BEGIN PRESENTATION SEGMENT command. "
         "Got command type 0x%02x len %u. Skipping\n", type, len);
     return 0;
   }
 
   switch (type) {
     case PGS_COMMAND_PRESENTATION_SEGMENT:
-      g_print ("*******************************************\n"
+      PGS_DUMP ("*******************************************\n"
           "Begin PRESENTATION_SEGMENT (0x%02x) packet len %u\n", type, len);
-      in_presentation_segment = TRUE;
-      ret = parse_presentation_segment (type, payload, len);
+      pgs_state->in_presentation_segment =
+          pgs_state->have_presentation_segment = TRUE;
+      ret = parse_presentation_segment (dvdspu, type, payload, len);
       break;
     case PGS_COMMAND_SET_OBJECT_DATA:
-      g_print ("***   Set Object Data (0x%02x) packet len %u\n", type, len);
-      ret = parse_set_object_data (type, payload, len);
+      PGS_DUMP ("***   Set Object Data (0x%02x) packet len %u\n", type, len);
+      ret = parse_set_object_data (dvdspu, type, payload, len);
       break;
     case PGS_COMMAND_SET_PALETTE:
-      g_print ("***   Set Palette (0x%02x) packet len %u\n", type, len);
-      ret = parse_set_palette (type, payload, len);
+      PGS_DUMP ("***   Set Palette (0x%02x) packet len %u\n", type, len);
+      ret = parse_set_palette (dvdspu, type, payload, len);
       break;
     case PGS_COMMAND_SET_WINDOW:
-      g_print ("***   Set Window command (0x%02x) packet len %u\n", type, len);
-      ret = parse_set_window (type, payload, len);
+      PGS_DUMP ("***   Set Window command (0x%02x) packet len %u\n", type, len);
+      ret = parse_set_window (dvdspu, type, payload, len);
       break;
     case PGS_COMMAND_INTERACTIVE_SEGMENT:
-      g_print ("***   Interactive Segment command(0x%02x) packet len %u\n",
+      PGS_DUMP ("***   Interactive Segment command(0x%02x) packet len %u\n",
           type, len);
       dump_bytes (payload, len);
       break;
     case PGS_COMMAND_END_DISPLAY:
-      g_print ("***   End Display command (0x%02x) packet len %u\n", type, len);
-      in_presentation_segment = FALSE;
+      PGS_DUMP ("***   End Display command (0x%02x) packet len %u\n", type,
+          len);
+      pgs_state->in_presentation_segment = FALSE;
       break;
     default:
-      g_print ("*** Unknown command: type 0x%02x len %u. Skipping\n", type,
-          len);
+      g_warning ("Unknown PGS command: type 0x%02x len %u", type, len);
+      dump_bytes (payload, len);
       break;
   }
-  g_print ("\n");
+  PGS_DUMP ("\n");
 
   return ret;
 }
 
 gint
-gstspu_dump_pgs_buffer (GstBuffer * buf)
+gstspu_exec_pgs_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
 {
   guint8 *pos, *end;
   guint8 type;
@@ -432,11 +663,11 @@ gstspu_dump_pgs_buffer (GstBuffer * buf)
 
   /* Need at least 3 bytes */
   if (pos + 3 > end) {
-    g_print ("Not enough bytes to be a PGS packet\n");
+    PGS_DUMP ("Not enough bytes to be a PGS packet\n");
     return -1;
   }
 
-  g_print ("Begin dumping command buffer of size %u ts %" GST_TIME_FORMAT "\n",
+  PGS_DUMP ("Begin dumping command buffer of size %u ts %" GST_TIME_FORMAT "\n",
       end - pos, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
   do {
     type = *pos++;
@@ -444,17 +675,88 @@ gstspu_dump_pgs_buffer (GstBuffer * buf)
     pos += 2;
 
     if (pos + packet_len > end) {
-      g_print ("Invalid packet length %u (only have %u bytes)\n", packet_len,
+      PGS_DUMP ("Invalid packet length %u (only have %u bytes)\n", packet_len,
           end - pos);
       return -1;
     }
 
-    if (parse_pgs_packet (type, pos, packet_len))
+    if (parse_pgs_packet (dvdspu, type, pos, packet_len))
       return -1;
 
     pos += packet_len;
   } while (pos + 3 <= end);
 
-  g_print ("End dumping command buffer with %u bytes remaining\n", end - pos);
+  PGS_DUMP ("End dumping command buffer with %u bytes remaining\n", end - pos);
   return (pos - GST_BUFFER_DATA (buf));
+}
+
+void
+gstspu_pgs_handle_new_buf (GstDVDSpu * dvdspu, GstClockTime event_ts,
+    GstBuffer * buf)
+{
+  SpuState *state = &dvdspu->spu_state;
+
+  state->next_ts = event_ts;
+  state->pgs.pending_cmd = buf;
+}
+
+gboolean
+gstspu_pgs_execute_event (GstDVDSpu * dvdspu)
+{
+  SpuState *state = &dvdspu->spu_state;
+
+  if (state->pgs.pending_cmd) {
+    gstspu_exec_pgs_buffer (dvdspu, state->pgs.pending_cmd);
+    gst_buffer_unref (state->pgs.pending_cmd);
+    state->pgs.pending_cmd = NULL;
+  }
+
+  state->next_ts = GST_CLOCK_TIME_NONE;
+
+  state->flags &= ~SPU_STATE_DISPLAY;
+  if (state->pgs.have_presentation_segment) {
+    if (state->pgs.pres_seg.objects && state->pgs.pres_seg.objects->len > 0)
+      state->flags |= SPU_STATE_DISPLAY;
+  }
+  return FALSE;
+}
+
+void
+gstspu_pgs_render (GstDVDSpu * dvdspu, GstBuffer * buf)
+{
+  SpuState *state = &dvdspu->spu_state;
+  PgsPresentationSegment *ps = &state->pgs.pres_seg;
+  guint i;
+
+  if (ps->objects == NULL)
+    return;
+
+  for (i = 0; i < ps->objects->len; i++) {
+    PgsCompositionObject *cur =
+        &g_array_index (ps->objects, PgsCompositionObject, i);
+    pgs_composition_object_render (cur, state, buf);
+  }
+}
+
+gboolean
+gstspu_pgs_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
+{
+  return FALSE;
+}
+
+void
+gstspu_pgs_flush (GstDVDSpu * dvdspu)
+{
+  SpuPgsState *pgs_state = &dvdspu->spu_state.pgs;
+
+  if (pgs_state->pending_cmd) {
+    gst_buffer_unref (pgs_state->pending_cmd);
+    pgs_state->pending_cmd = NULL;
+  }
+
+  pgs_state->have_presentation_segment = FALSE;
+  pgs_state->in_presentation_segment = FALSE;
+  pgs_presentation_segment_set_object_count (&pgs_state->pres_seg, 0);
+
+  pgs_state->win_x = pgs_state->win_y = pgs_state->win_w = pgs_state->win_h = 0;
 }

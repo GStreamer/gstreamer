@@ -39,10 +39,6 @@
 #include <gst/gst.h>
 
 #include "gstdvdspu.h"
-#include "gstspu-vobsub.h"
-#include "gstspu-pgs.h"
-
-extern void gst_dvd_spu_render_spu (GstDVDSpu * dvdspu, GstBuffer * buf);
 
 GST_DEBUG_CATEGORY (dvdspu_debug);
 #define GST_CAT_DEFAULT dvdspu_debug
@@ -111,6 +107,7 @@ static void gst_dvd_spu_clear (GstDVDSpu * dvdspu);
 static void gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu,
     gboolean process_events);
 static void gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts);
+static void gstspu_render (GstDVDSpu * dvdspu, GstBuffer * buf);
 static GstFlowReturn
 dvdspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf);
 static void gst_dvd_spu_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event);
@@ -119,11 +116,11 @@ static void
 gst_dvd_spu_base_init (gpointer gclass)
 {
   static GstElementDetails element_details =
-      GST_ELEMENT_DETAILS ("Fluendo DVD Player Sub-picture Overlay",
-      "Mixer/Video/Overlay/DVD",
-      "Parses the DVD Sub-Picture command stream and renders the SPU overlay "
+      GST_ELEMENT_DETAILS ("GStreamer Sub-picture Overlay",
+      "Mixer/Video/Overlay/DVD/Bluray",
+      "Parses Sub-Picture command streams and renders the SPU overlay "
       "onto the video as it passes through",
-      "Jan Schmidt <jan@fluendo.com>");
+      "Jan Schmidt <thaytan@noraisin.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_add_pad_template (element_class,
@@ -191,7 +188,8 @@ gst_dvd_spu_clear (GstDVDSpu * dvdspu)
 {
   gst_dvd_spu_flush_spu_info (dvdspu, FALSE);
   gst_segment_init (&dvdspu->subp_seg, GST_FORMAT_UNDEFINED);
-  memcpy (dvdspu->spu_state.current_clut, default_clut, sizeof (guint32) * 16);
+
+  dvdspu->spu_input_type = SPU_INPUT_TYPE_NONE;
 
   gst_buffer_replace (&dvdspu->ref_frame, NULL);
   gst_buffer_replace (&dvdspu->pending_frame, NULL);
@@ -235,10 +233,11 @@ gst_dvd_spu_finalize (GObject * object)
 
 /* With SPU lock held, clear the queue of SPU packets */
 static void
-gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu, gboolean process_events)
+gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu, gboolean keep_events)
 {
   SpuPacket *packet;
   SpuState *state = &dvdspu->spu_state;
+  GQueue tmp_q = G_QUEUE_INIT;
 
   GST_INFO_OBJECT (dvdspu, "Flushing SPU information");
 
@@ -252,40 +251,34 @@ gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu, gboolean process_events)
     if (packet->buf) {
       gst_buffer_unref (packet->buf);
       g_assert (packet->event == NULL);
+      g_free (packet);
     } else if (packet->event) {
-      if (process_events)
-        gst_dvd_spu_handle_dvd_event (dvdspu, packet->event);
-      else
+      if (keep_events) {
+        g_queue_push_tail (&tmp_q, packet);
+      } else {
         gst_event_unref (packet->event);
+        g_free (packet);
+      }
     }
-    g_free (packet);
     packet = (SpuPacket *) g_queue_pop_head (dvdspu->pending_spus);
   }
+  /* Push anything we decided to keep back onto the pending_spus list */
+  for (packet = g_queue_pop_head (&tmp_q); packet != NULL;
+      packet = g_queue_pop_head (&tmp_q))
+    g_queue_push_tail (dvdspu->pending_spus, packet);
 
-  if (state->buf) {
-    gst_buffer_unref (state->buf);
-    state->buf = NULL;
-  }
-  if (state->pix_buf) {
-    gst_buffer_unref (state->pix_buf);
-    state->pix_buf = NULL;
-  }
-
-  state->base_ts = state->next_ts = GST_CLOCK_TIME_NONE;
   state->flags &= ~(SPU_STATE_FLAGS_MASK);
-  state->pix_data[0] = 0;
-  state->pix_data[1] = 0;
+  state->next_ts = GST_CLOCK_TIME_NONE;
 
-  state->hl_rect.top = -1;
-  state->hl_rect.bottom = -1;
-
-  state->disp_rect.top = -1;
-  state->disp_rect.bottom = -1;
-
-  state->n_line_ctrl_i = 0;
-  if (state->line_ctrl_i != NULL) {
-    g_free (state->line_ctrl_i);
-    state->line_ctrl_i = NULL;
+  switch (dvdspu->spu_input_type) {
+    case SPU_INPUT_TYPE_VOBSUB:
+      gstspu_vobsub_flush (dvdspu);
+      break;
+    case SPU_INPUT_TYPE_PGS:
+      gstspu_pgs_flush (dvdspu);
+      break;
+    default:
+      break;
   }
 }
 
@@ -357,7 +350,7 @@ gst_dvd_spu_video_set_caps (GstPad * pad, GstCaps * caps)
     state->UV_stride = GST_ROUND_UP_4 (state->Y_stride / 2);
     for (i = 0; i < 3; i++) {
       state->comp_bufs[i] = g_realloc (state->comp_bufs[i],
-          sizeof (guint16) * state->UV_stride);
+          sizeof (guint32) * state->UV_stride);
     }
   }
   DVD_SPU_UNLOCK (dvdspu);
@@ -629,7 +622,7 @@ dvdspu_handle_vid_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
     /* Render the SPU overlay onto the buffer */
     buf = gst_buffer_make_writable (buf);
 
-    gst_dvd_spu_render_spu (dvdspu, buf);
+    gstspu_render (dvdspu, buf);
   } else {
     if (using_ref == FALSE) {
       /* Not going to draw anything on this frame, just store a reference
@@ -658,6 +651,22 @@ no_ref_frame:
   return GST_FLOW_OK;
 }
 
+
+static void
+gstspu_render (GstDVDSpu * dvdspu, GstBuffer * buf)
+{
+  switch (dvdspu->spu_input_type) {
+    case SPU_INPUT_TYPE_VOBSUB:
+      gstspu_vobsub_render (dvdspu, buf);
+      break;
+    case SPU_INPUT_TYPE_PGS:
+      gstspu_pgs_render (dvdspu, buf);
+      break;
+    default:
+      break;
+  }
+}
+
 /* With SPU LOCK */
 static void
 gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force)
@@ -681,7 +690,7 @@ gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force)
       GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
 
       /* Render the SPU overlay onto the buffer */
-      gst_dvd_spu_render_spu (dvdspu, buf);
+      gstspu_render (dvdspu, buf);
       gst_buffer_replace (&dvdspu->pending_frame, buf);
       gst_buffer_unref (buf);
     } else if (force) {
@@ -707,87 +716,44 @@ gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force)
 static void
 gst_dvd_spu_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
 {
-  const gchar *event_type;
   const GstStructure *structure = gst_event_get_structure (event);
-  SpuState *state = &dvdspu->spu_state;
+  const gchar *event_type = gst_structure_get_string (structure, "event");
   gboolean hl_change = FALSE;
 
-  event_type = gst_structure_get_string (structure, "event");
   GST_INFO_OBJECT (dvdspu, "DVD event of type %s on subp pad OOB=%d",
       event_type, (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM_OOB));
 
-  if (strcmp (event_type, "dvd-spu-clut-change") == 0) {
-    gchar prop_name[32];
-    gint i;
-    gint entry;
-
-    for (i = 0; i < 16; i++) {
-      g_snprintf (prop_name, 32, "clut%02d", i);
-      if (!gst_structure_get_int (structure, prop_name, &entry))
-        entry = 0;
-      state->current_clut[i] = (guint32) entry;
-    }
-
-    state->main_pal_dirty = TRUE;
-    state->hl_pal_dirty = TRUE;
-    state->line_ctrl_i_pal_dirty = TRUE;
-    hl_change = TRUE;
-  } else if (strcmp (event_type, "dvd-spu-highlight") == 0) {
-    gint val;
-
-    if (gst_structure_get_int (structure, "palette", &val)) {
-      state->hl_idx[3] = ((guint32) (val) >> 28) & 0x0f;
-      state->hl_idx[2] = ((guint32) (val) >> 24) & 0x0f;
-      state->hl_idx[1] = ((guint32) (val) >> 20) & 0x0f;
-      state->hl_idx[0] = ((guint32) (val) >> 16) & 0x0f;
-
-      state->hl_alpha[3] = ((guint32) (val) >> 12) & 0x0f;
-      state->hl_alpha[2] = ((guint32) (val) >> 8) & 0x0f;
-      state->hl_alpha[1] = ((guint32) (val) >> 4) & 0x0f;
-      state->hl_alpha[0] = ((guint32) (val) >> 0) & 0x0f;
-
-      state->hl_pal_dirty = TRUE;
-    }
-    if (gst_structure_get_int (structure, "sx", &val))
-      state->hl_rect.left = (gint16) val;
-    if (gst_structure_get_int (structure, "sy", &val))
-      state->hl_rect.top = (gint16) val;
-    if (gst_structure_get_int (structure, "ex", &val))
-      state->hl_rect.right = (gint16) val;
-    if (gst_structure_get_int (structure, "ey", &val))
-      state->hl_rect.bottom = (gint16) val;
-
-    GST_INFO_OBJECT (dvdspu, "Highlight rect is now (%d,%d) to (%d,%d)",
-        state->hl_rect.left, state->hl_rect.top,
-        state->hl_rect.right, state->hl_rect.bottom);
-    hl_change = TRUE;
-  } else if (strcmp (event_type, "dvd-spu-reset-highlight") == 0) {
-    if (state->hl_rect.top != -1 || state->hl_rect.bottom != -1)
-      hl_change = TRUE;
-    state->hl_rect.top = -1;
-    state->hl_rect.bottom = -1;
-    GST_INFO_OBJECT (dvdspu, "Highlight off");
-  } else if (strcmp (event_type, "dvd-set-subpicture-track") == 0) {
-    gboolean forced_only;
-
-    if (gst_structure_get_boolean (structure, "forced-only", &forced_only)) {
-      gboolean was_forced = (state->flags & SPU_STATE_FORCED_ONLY);
-
-      if (forced_only)
-        state->flags |= SPU_STATE_FORCED_ONLY;
-      else
-        state->flags &= ~(SPU_STATE_FORCED_ONLY);
-
-      if ((was_forced && !forced_only) || (!was_forced && forced_only))
-        hl_change = TRUE;
-    }
+  switch (dvdspu->spu_input_type) {
+    case SPU_INPUT_TYPE_VOBSUB:
+      hl_change = gstspu_vobsub_handle_dvd_event (dvdspu, event);
+      break;
+    case SPU_INPUT_TYPE_PGS:
+      hl_change = gstspu_pgs_handle_dvd_event (dvdspu, event);
+      break;
+    default:
+      break;
   }
 
-  if (hl_change && (state->flags & SPU_STATE_STILL_FRAME)) {
+  if (hl_change && (dvdspu->spu_state.flags & SPU_STATE_STILL_FRAME)) {
     gst_dvd_spu_redraw_still (dvdspu, FALSE);
   }
+}
 
-  gst_event_unref (event);
+static gboolean
+gstspu_execute_event (GstDVDSpu * dvdspu)
+{
+  switch (dvdspu->spu_input_type) {
+    case SPU_INPUT_TYPE_VOBSUB:
+      return gstspu_vobsub_execute_event (dvdspu);
+      break;
+    case SPU_INPUT_TYPE_PGS:
+      return gstspu_pgs_execute_event (dvdspu);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+  return FALSE;
 }
 
 /* Advance the SPU packet/command queue to a time. new_ts is in running time */
@@ -796,8 +762,15 @@ gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts)
 {
   SpuState *state = &dvdspu->spu_state;
 
+  if (G_UNLIKELY (dvdspu->spu_input_type == SPU_INPUT_TYPE_NONE))
+    return;
+
   while (state->next_ts == GST_CLOCK_TIME_NONE || state->next_ts <= new_ts) {
-    if (state->buf == NULL) {
+    GST_DEBUG_OBJECT (dvdspu,
+        "Advancing SPU from TS %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (state->next_ts), GST_TIME_ARGS (new_ts));
+
+    if (!gstspu_execute_event (dvdspu)) {
       GstClockTime vid_run_ts;
 
       /* No current command buffer, try and get one */
@@ -820,11 +793,11 @@ gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts)
       if (packet->buf) {
         switch (dvdspu->spu_input_type) {
           case SPU_INPUT_TYPE_VOBSUB:
-            gst_dvd_spu_handle_new_vobsub_buf (dvdspu, packet);
+            gstspu_vobsub_handle_new_buf (dvdspu, packet->event_ts,
+                packet->buf);
             break;
           case SPU_INPUT_TYPE_PGS:
-            gstspu_dump_pgs_buffer (packet->buf);
-            gst_buffer_unref (packet->buf);
+            gstspu_pgs_handle_new_buf (dvdspu, packet->event_ts, packet->buf);
             break;
           default:
             g_assert_not_reached ();
@@ -837,16 +810,6 @@ gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts)
       g_free (packet);
       continue;
     }
-
-    GST_DEBUG_OBJECT (dvdspu,
-        "Advancing SPU from TS %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (state->next_ts), GST_TIME_ARGS (new_ts));
-
-    /* If we get here, we have an SPU buffer, and it's time to process the
-     * next cmd */
-    g_assert (state->buf != NULL);
-
-    gst_dvdspu_vobsub_execute_event (dvdspu);
   }
 }
 
@@ -1005,6 +968,7 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
 
       /* FIXME: There's no need to walk the command set each time. We can set a
        * marker and resume where we left off next time */
+      /* FIXME: Move the packet parsing and sanity checking into the format-specific modules */
       while (data != end) {
         if (data + 3 > end)
           break;
@@ -1014,7 +978,8 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
         if (data + packet_size > end)
           break;
         data += packet_size;
-        if (packet_type == PGS_COMMAND_END_DISPLAY && data != end) {
+        /* 0x80 is the END command for PGS packets */
+        if (packet_type == 0x80 && data != end) {
           /* Extra cruft on the end of the packet -> assume invalid */
           gst_buffer_unref (dvdspu->partial_spu);
           dvdspu->partial_spu = NULL;
@@ -1023,7 +988,8 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
       }
 
       if (dvdspu->partial_spu && data == end) {
-        g_print ("Complete packet of size %u\n",
+        GST_DEBUG_OBJECT (dvdspu,
+            "Have complete PGS packet of size %u. Enqueueing.",
             GST_BUFFER_SIZE (dvdspu->partial_spu));
         submit_new_spu_packet (dvdspu, dvdspu->partial_spu);
         dvdspu->partial_spu = NULL;
@@ -1071,7 +1037,8 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
       DVD_SPU_LOCK (dvdspu);
       if (GST_EVENT_IS_SERIALIZED (event)) {
         SpuPacket *spu_packet = g_new0 (SpuPacket, 1);
-
+        GST_DEBUG_OBJECT (dvdspu,
+            "Enqueueing DVD event on subpicture pad for later");
         spu_packet->event = event;
         g_queue_push_tail (dvdspu->pending_spus, spu_packet);
       } else {
@@ -1146,6 +1113,7 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       goto done;
     case GST_EVENT_FLUSH_STOP:
+      GST_DEBUG_OBJECT (dvdspu, "Have flush-stop event on SPU pad");
       DVD_SPU_LOCK (dvdspu);
       gst_segment_init (&dvdspu->subp_seg, GST_FORMAT_UNDEFINED);
       gst_dvd_spu_flush_spu_info (dvdspu, TRUE);
@@ -1193,8 +1161,8 @@ gst_dvd_spu_subpic_set_caps (GstPad * pad, GstCaps * caps)
   if (dvdspu->spu_input_type != input_type) {
     GST_INFO_OBJECT (dvdspu, "Incoming SPU packet type changed to %u",
         input_type);
-    gst_dvd_spu_flush_spu_info (dvdspu, TRUE);
     dvdspu->spu_input_type = input_type;
+    gst_dvd_spu_flush_spu_info (dvdspu, TRUE);
   }
 
   DVD_SPU_UNLOCK (dvdspu);
@@ -1228,8 +1196,8 @@ gst_dvd_spu_change_state (GstElement * element, GstStateChange transition)
 gboolean
 gst_dvd_spu_plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (dvdspu_debug, "gstdvdspu",
-      0, "DVD Sub-picture Overlay decoder/renderer");
+  GST_DEBUG_CATEGORY_INIT (dvdspu_debug, "gstspu",
+      0, "Sub-picture Overlay decoder/renderer");
 
   return gst_element_register (plugin, "dvdspu",
       GST_RANK_NONE, GST_TYPE_DVD_SPU);

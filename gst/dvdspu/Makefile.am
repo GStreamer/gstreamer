@@ -1,7 +1,7 @@
 
 plugin_LTLIBRARIES = libgstdvdspu.la
 
-libgstdvdspu_la_SOURCES = gstdvdspu.c gstdvdspu-render.c gstspu-vobsub.c gstspu-pgs.c
+libgstdvdspu_la_SOURCES = gstdvdspu.c gstdvdspu-render.c gstspu-vobsub.c gstspu-vobsub-render.c gstspu-pgs.c
 
 libgstdvdspu_la_CFLAGS = $(GST_CFLAGS)
 libgstdvdspu_la_LIBADD = $(GST_LIBS)
