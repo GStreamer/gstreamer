@@ -311,7 +311,7 @@ gst_schro_parse_scan_for_sync (GstAdapter * adapter, gboolean at_eos,
 
   n_available -= 3;
 
-  return gst_adapter_masked_scan_uint32 (adapter, 0x42424344, 0xffffffff,
+  return gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x42424344,
       offset, MIN (n, n_available - 3));
 }
 
