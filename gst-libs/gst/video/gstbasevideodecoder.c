@@ -666,6 +666,10 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
     n = gst_adapter_available (base_video_decoder->input_adapter);
     m = klass->scan_for_sync (base_video_decoder, FALSE, 0, n);
 
+    if (m >= n) {
+      g_warning ("subclass scanned past end %d >= %d", m, n);
+    }
+
     gst_adapter_flush (base_video_decoder->input_adapter, m);
 
     if (m < n) {
@@ -876,8 +880,9 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   gst_base_video_decoder_set_src_caps (base_video_decoder);
 
   src_buffer = frame->src_buffer;
+  frame->src_buffer = NULL;
 
-  g_free (frame);
+  gst_base_video_decoder_free_frame (frame);
 
   if (base_video_decoder->sink_clipping) {
     gint64 start = GST_BUFFER_TIMESTAMP (src_buffer);
