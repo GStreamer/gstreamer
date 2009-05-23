@@ -396,15 +396,53 @@ parse_error:
   }
 }
 
+/* try to find all the payloader elements, they should be named 'pay%d'. for
+ * each of the payloaders we will create a stream and collect the source pad. */
+static void
+collect_streams (GstRTSPMediaFactory *factory, const GstRTSPUrl *url,
+    GstRTSPMedia *media)
+{
+  GstElement *element, *pay;
+  GstPad * pad;
+  gint i;
+  GstRTSPMediaStream *stream;
+
+  element = media->element;
+
+  for (i = 0; ; i++) {
+    gchar *name;
+
+    name = g_strdup_printf ("pay%d", i);
+    if (!(pay = gst_bin_get_by_name (GST_BIN (element), name))) {
+      /* no more payloaders found, we have found all the streams and we can
+       * end the loop */
+      g_free (name);
+      break;
+    }
+    /* create the stream */
+    stream = g_new0 (GstRTSPMediaStream, 1);
+    stream->payloader = pay;
+
+    g_message ("found stream %d with payloader %p", i, pay);
+
+    pad = gst_element_get_static_pad (pay, "src");
+
+    /* ghost the pad of the payloader to the element */
+    stream->srcpad = gst_ghost_pad_new (name, pad);
+    gst_element_add_pad (media->element, stream->srcpad);
+    gst_object_unref (pay);
+    g_free (name);
+
+    /* add stream now */
+    g_array_append_val (media->streams, stream);
+  }
+}
 
 static GstRTSPMedia *
 default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 {
   GstRTSPMedia *media;
-  GstRTSPMediaStream *stream;
-  GstElement *pay, *element;
-  GstPad * pad;
-  gint i;
+  GstElement *element;
   GstRTSPMediaFactoryClass *klass;
 
   klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
@@ -420,36 +458,7 @@ default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
   media = gst_rtsp_media_new ();
   media->element = element;
 
-  /* try to find all the payloader elements, they should be named 'pay%d'. for
-   * each of the payloaders we will create a stream and collect the source pad.
-   */
-  for (i = 0; ; i++) {
-    gchar *name;
-
-    name = g_strdup_printf ("pay%d", i);
-
-    if (!(pay = gst_bin_get_by_name (GST_BIN (element), name))) {
-      /* no more payloaders found, we have found all the streams and we can
-       * end the loop */
-      g_free (name);
-      break;
-    }
-    
-    /* create the stream */
-    stream = g_new0 (GstRTSPMediaStream, 1);
-    stream->payloader = pay;
-
-    pad = gst_element_get_static_pad (pay, "src");
-
-    /* ghost the pad of the payloader to the element */
-    stream->srcpad = gst_ghost_pad_new (name, pad);
-    gst_element_add_pad (media->element, stream->srcpad);
-    gst_object_unref (pay);
-    g_free (name);
-
-    /* add stream now */
-    g_array_append_val (media->streams, stream);
-  }
+  collect_streams (factory, url, media);
 
   return media;
 
