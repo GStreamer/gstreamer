@@ -1355,6 +1355,7 @@ _benchmark_integer_resampling (void)
   OilProfile a, b;
   gdouble av, bv;
   SpeexResamplerState *sta, *stb;
+  int i;
 
   oil_profile_init (&a);
   oil_profile_init (&b);
@@ -1372,29 +1373,21 @@ _benchmark_integer_resampling (void)
     return FALSE;
   }
 
-  /* Warm up cache */
-  if (!_benchmark_int_float (sta))
-    goto error;
-  if (!_benchmark_int_float (sta))
-    goto error;
+  /* Benchmark */
+  for (i = 0; i < 10; i++) {
+    oil_profile_start (&a);
+    if (!_benchmark_int_float (sta))
+      goto error;
+    oil_profile_stop (&a);
+  }
 
   /* Benchmark */
-  oil_profile_start (&a);
-  if (!_benchmark_int_float (sta))
-    goto error;
-  oil_profile_stop (&a);
-
-  /* Warm up cache */
-  if (!_benchmark_int_int (stb))
-    goto error;
-  if (!_benchmark_int_int (stb))
-    goto error;
-
-  /* Benchmark */
-  oil_profile_start (&b);
-  if (!_benchmark_int_int (stb))
-    goto error;
-  oil_profile_stop (&b);
+  for (i = 0; i < 10; i++) {
+    oil_profile_start (&b);
+    if (!_benchmark_int_int (stb))
+      goto error;
+    oil_profile_stop (&b);
+  }
 
   /* Handle results */
   oil_profile_get_ave_std (&a, &av, NULL);
