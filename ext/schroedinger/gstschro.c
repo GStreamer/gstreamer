@@ -50,5 +50,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "schro",
-    "Schro plugins",
-    plugin_init, VERSION, "LGPL", "schroedinger", GST_PACKAGE_ORIGIN)
+    "Schroedinger plugin",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
