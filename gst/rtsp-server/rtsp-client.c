@@ -465,7 +465,7 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *ses
   GstRTSPMessage response = { 0 };
   GstRTSPStatusCode code;
   GString *rtpinfo;
-  guint n_streams, i;
+  guint n_streams, i, infocount;
   guint timestamp, seqnum;
   gchar *str;
   GstRTSPTimeRange *range;
@@ -498,10 +498,11 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *ses
   rtpinfo = g_string_new ("");
 
   n_streams = gst_rtsp_media_n_streams (media->media);
-  for (i = 0; i < n_streams; i++) {
+  for (i = 0, infocount = 0; i < n_streams; i++) {
     GstRTSPSessionStream *sstream;
     GstRTSPMediaStream *stream;
     GstRTSPTransport *tr;
+    GObjectClass *payobjclass;
     gchar *uristr;
 
     /* get the stream as configured in the session */
@@ -517,15 +518,26 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *ses
 
     stream = sstream->media_stream;
 
-    g_object_get (G_OBJECT (stream->payloader), "seqnum", &seqnum, NULL);
-    g_object_get (G_OBJECT (stream->payloader), "timestamp", &timestamp, NULL);
+    payobjclass = G_OBJECT_GET_CLASS (stream->payloader);
 
-    if (i > 0)
-      g_string_append (rtpinfo, ", ");
+    if (g_object_class_find_property (payobjclass, "seqnum") &&
+	g_object_class_find_property (payobjclass, "timestamp")) {
+      GObject *payobj;
 
-    uristr = gst_rtsp_url_get_request_uri (uri);
-    g_string_append_printf (rtpinfo, "url=%s/stream=%d;seq=%u;rtptime=%u", uristr, i, seqnum, timestamp);
-    g_free (uristr);
+      payobj = G_OBJECT (stream->payloader);
+
+      /* only add RTP-Info for streams with seqnum and timestamp */
+      g_object_get (payobj, "seqnum", &seqnum, "timestamp", &timestamp, NULL);
+
+      if (infocount > 0)
+        g_string_append (rtpinfo, ", ");
+
+      uristr = gst_rtsp_url_get_request_uri (uri);
+      g_string_append_printf (rtpinfo, "url=%s/stream=%d;seq=%u;rtptime=%u", uristr, i, seqnum, timestamp);
+      g_free (uristr);
+
+      infocount++;
+    }
   }
 
   /* construct the response now */
