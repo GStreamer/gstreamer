@@ -344,10 +344,12 @@ preset_get_keyfile (GstPreset * preset)
 
     /* compare version to check for merge */
     if (in_system) {
-      if (!in_user || preset_parse_version (str_version_system) >
+      /* keep system presets if there is no user preset or when the system
+       * version is higher than the user version. */
+      if (!in_user) {
+        presets = in_system;
+      } else if (preset_parse_version (str_version_system) >
           preset_parse_version (str_version_user)) {
-        /* keep system presets if there is no user preset or when the system
-         * version is higher than the user version. */
         presets = in_system;
         updated_from_system = TRUE;
       }
