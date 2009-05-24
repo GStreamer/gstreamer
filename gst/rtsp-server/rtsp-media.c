@@ -1342,9 +1342,11 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
 	if (add) {
           g_message ("adding TCP %s", trans->destination);
 	  stream->transports = g_list_prepend (stream->transports, tr);
+	  media->active++;
 	} else if (remove) {
           g_message ("removing TCP %s", trans->destination);
 	  stream->transports = g_list_remove (stream->transports, tr);
+	  media->active--;
 	}
         break;
       default:
