@@ -2263,7 +2263,7 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     g_object_set (G_OBJECT (stream->fakesrc), "filltype", 3, "num-buffers", 5,
         NULL);
     g_object_set (G_OBJECT (stream->fakesrc), "sizetype", 2, "sizemax", 200,
-        NULL);
+        "silent", TRUE, NULL);
 
     /* we don't want to consider this a sink */
     GST_OBJECT_FLAG_UNSET (stream->udpsink[0], GST_ELEMENT_IS_SINK);
