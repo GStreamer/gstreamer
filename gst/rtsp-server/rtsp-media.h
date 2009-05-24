@@ -110,6 +110,7 @@ struct _GstRTSPMediaStream {
   GstElement   *appsrc[2];
   GstElement   *appsink[2];
 
+  GstElement   *tee[2];
   GstElement   *selector[2];
 
   /* server ports for sending/receiving */
@@ -153,11 +154,13 @@ struct _GstRTSPMedia {
 
   GstElement   *element;
   GArray       *streams;
+  GList        *dynamic;
   gboolean      prepared;
   gint          active;
 
   /* the pipeline for the media */
   GstElement   *pipeline;
+  GstElement   *fakesink;
   GSource      *source;
   guint         id;
 

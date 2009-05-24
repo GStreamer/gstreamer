@@ -402,39 +402,52 @@ static void
 collect_streams (GstRTSPMediaFactory *factory, const GstRTSPUrl *url,
     GstRTSPMedia *media)
 {
-  GstElement *element, *pay;
+  GstElement *element, *elem;
   GstPad * pad;
   gint i;
   GstRTSPMediaStream *stream;
+  gboolean have_elem;
 
   element = media->element;
 
-  for (i = 0; ; i++) {
+  have_elem = TRUE;
+  for (i = 0; have_elem ; i++) {
     gchar *name;
 
+    have_elem = FALSE;
+
     name = g_strdup_printf ("pay%d", i);
-    if (!(pay = gst_bin_get_by_name (GST_BIN (element), name))) {
-      /* no more payloaders found, we have found all the streams and we can
-       * end the loop */
-      g_free (name);
-      break;
+    if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
+      /* create the stream */
+      stream = g_new0 (GstRTSPMediaStream, 1);
+      stream->payloader = elem;
+
+      g_message ("found stream %d with payloader %p", i, elem);
+
+      pad = gst_element_get_static_pad (elem, "src");
+
+      /* ghost the pad of the payloader to the element */
+      stream->srcpad = gst_ghost_pad_new (name, pad);
+      gst_element_add_pad (media->element, stream->srcpad);
+      gst_object_unref (elem);
+
+      /* add stream now */
+      g_array_append_val (media->streams, stream);
+      have_elem = TRUE;
     }
-    /* create the stream */
-    stream = g_new0 (GstRTSPMediaStream, 1);
-    stream->payloader = pay;
-
-    g_message ("found stream %d with payloader %p", i, pay);
-
-    pad = gst_element_get_static_pad (pay, "src");
-
-    /* ghost the pad of the payloader to the element */
-    stream->srcpad = gst_ghost_pad_new (name, pad);
-    gst_element_add_pad (media->element, stream->srcpad);
-    gst_object_unref (pay);
     g_free (name);
 
-    /* add stream now */
-    g_array_append_val (media->streams, stream);
+    name = g_strdup_printf ("dynpay%d", i);
+    if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
+      /* a stream that will dynamically create pads to provide RTP packets */
+
+      g_message ("found dynamic element %d, %p", i, elem);
+
+      media->dynamic = g_list_prepend (media->dynamic, elem);
+
+      have_elem = TRUE;
+    }
+    g_free (name);
   }
 }
 

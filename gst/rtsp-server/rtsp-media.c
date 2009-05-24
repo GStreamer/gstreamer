@@ -134,6 +134,9 @@ gst_rtsp_media_finalize (GObject * obj)
   }
   g_array_free (media->streams, TRUE);
 
+  g_list_foreach (media->dynamic, (GFunc) gst_object_unref, NULL);
+  g_list_free (media->dynamic);
+
   if (media->source) {
     g_source_destroy (media->source);
     g_source_unref (media->source);
@@ -761,7 +764,6 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
   GstPad *pad, *teepad, *selpad;
   GstPadLinkReturn ret;
   gint i;
-  GstElement *tee;
 
   /* allocate udp ports, we will have 4 of them, 2 for receiving RTP/RTCP and 2
    * for sending RTP/RTCP. The sender and receiver ports are shared between the
@@ -826,42 +828,42 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
     goto link_failed;
 
   /* make tee for RTP and link to stream */
-  tee = gst_element_factory_make ("tee", NULL);
-  gst_bin_add (GST_BIN_CAST (media->pipeline), tee);
+  stream->tee[0] = gst_element_factory_make ("tee", NULL);
+  gst_bin_add (GST_BIN_CAST (media->pipeline), stream->tee[0]);
 
-  pad = gst_element_get_static_pad (tee, "sink");
+  pad = gst_element_get_static_pad (stream->tee[0], "sink");
   gst_pad_link (stream->send_rtp_src, pad);
   gst_object_unref (pad);
 
   /* link RTP sink, we're pretty sure this will work. */
-  teepad = gst_element_get_request_pad (tee, "src%d");
+  teepad = gst_element_get_request_pad (stream->tee[0], "src%d");
   pad = gst_element_get_static_pad (stream->udpsink[0], "sink");
   gst_pad_link (teepad, pad);
   gst_object_unref (pad);
   gst_object_unref (teepad);
 
-  teepad = gst_element_get_request_pad (tee, "src%d");
+  teepad = gst_element_get_request_pad (stream->tee[0], "src%d");
   pad = gst_element_get_static_pad (stream->appsink[0], "sink");
   gst_pad_link (teepad, pad);
   gst_object_unref (pad);
   gst_object_unref (teepad);
 
   /* make tee for RTCP */
-  tee = gst_element_factory_make ("tee", NULL);
-  gst_bin_add (GST_BIN_CAST (media->pipeline), tee);
+  stream->tee[1] = gst_element_factory_make ("tee", NULL);
+  gst_bin_add (GST_BIN_CAST (media->pipeline), stream->tee[1]);
 
-  pad = gst_element_get_static_pad (tee, "sink");
+  pad = gst_element_get_static_pad (stream->tee[1], "sink");
   gst_pad_link (stream->send_rtcp_src, pad);
   gst_object_unref (pad);
 
   /* link RTCP elements */
-  teepad = gst_element_get_request_pad (tee, "src%d");
+  teepad = gst_element_get_request_pad (stream->tee[1], "src%d");
   pad = gst_element_get_static_pad (stream->udpsink[1], "sink");
   gst_pad_link (teepad, pad);
   gst_object_unref (pad);
   gst_object_unref (teepad);
 
-  teepad = gst_element_get_request_pad (tee, "src%d");
+  teepad = gst_element_get_request_pad (stream->tee[1], "src%d");
   pad = gst_element_get_static_pad (stream->appsink[1], "sink");
   gst_pad_link (teepad, pad);
   gst_object_unref (pad);
@@ -1046,6 +1048,56 @@ bus_message (GstBus *bus, GstMessage *message, GstRTSPMedia *media)
   return ret;
 }
 
+static void
+pad_added_cb (GstElement *element, GstPad *pad, GstRTSPMedia *media)
+{
+  GstRTSPMediaStream *stream;
+  gchar *name;
+  gint i;
+
+  i = media->streams->len + 1;
+
+  g_message ("pad added %s:%s, stream %d", GST_DEBUG_PAD_NAME (pad), i);
+
+  stream = g_new0 (GstRTSPMediaStream, 1);
+  stream->payloader = element;
+
+  name = g_strdup_printf ("dynpay%d", i);
+
+  /* ghost the pad of the payloader to the element */
+  stream->srcpad = gst_ghost_pad_new (name, pad);
+  gst_pad_set_active (stream->srcpad, TRUE);
+  gst_element_add_pad (media->element, stream->srcpad);
+  g_free (name);
+
+  /* add stream now */
+  g_array_append_val (media->streams, stream);
+
+  setup_stream (stream, i, media);
+
+  for (i = 0; i < 2; i++) {
+    gst_element_set_state (stream->udpsink[i], GST_STATE_PAUSED);
+    gst_element_set_state (stream->appsink[i], GST_STATE_PAUSED);
+    gst_element_set_state (stream->tee[i], GST_STATE_PAUSED);
+    gst_element_set_state (stream->selector[i], GST_STATE_PAUSED);
+    gst_element_set_state (stream->appsrc[i], GST_STATE_PAUSED);
+  }
+}
+
+static void
+no_more_pads_cb (GstElement *element, GstRTSPMedia *media)
+{
+  g_message ("no more pads");
+  if (media->fakesink) {
+    gst_object_ref (media->fakesink);
+    gst_bin_remove (GST_BIN (media->pipeline), media->fakesink);
+    gst_element_set_state (media->fakesink, GST_STATE_NULL);
+    gst_object_unref (media->fakesink);
+    media->fakesink = NULL;
+    g_message ("removed fakesink");
+  }
+}
+
 /**
  * gst_rtsp_media_prepare:
  * @obj: a #GstRTSPMedia
@@ -1065,6 +1117,7 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
   guint i, n_streams;
   GstRTSPMediaClass *klass;
   GstBus *bus;
+  GList *walk;
 
   if (media->prepared)
     goto was_prepared;
@@ -1090,10 +1143,11 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
 
   media->rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
 
-  /* add stuf to the bin */
+  /* add stuff to the bin */
   gst_bin_add (GST_BIN (media->pipeline), media->rtpbin);
 
-  /* link streams we already have */
+  /* link streams we already have, other streams might appear when we have
+   * dynamic elements */
   n_streams = gst_rtsp_media_n_streams (media);
   for (i = 0; i < n_streams; i++) {
     GstRTSPMediaStream *stream;
@@ -1101,6 +1155,16 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
     stream = gst_rtsp_media_get_stream (media, i);
 
     setup_stream (stream, i, media);
+  }
+
+  for (walk = media->dynamic; walk; walk = g_list_next (walk)) {
+    GstElement *elem = walk->data;
+
+    g_signal_connect (elem, "pad-added", (GCallback) pad_added_cb, media);
+    g_signal_connect (elem, "no-more-pads", (GCallback) no_more_pads_cb, media);
+
+    media->fakesink = gst_element_factory_make ("fakesink", "fakesink");
+    gst_bin_add (GST_BIN (media->pipeline), media->fakesink);
   }
 
   /* first go to PAUSED */
@@ -1129,11 +1193,6 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto state_failed;
 
-  /* and back to PAUSED for live pipelines */
-  ret = gst_element_set_state (media->pipeline, GST_STATE_PAUSED);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto state_failed;
-
   /* collect stats about the media */
   collect_media_stats (media);
 
@@ -1158,7 +1217,7 @@ state_failed:
   }
 is_reused:
   {
-    g_warning ("can not reused media %p", media);
+    g_warning ("can not reuse media %p", media);
     return FALSE;
   }
 }
@@ -1281,8 +1340,10 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
       }
       case GST_RTSP_LOWER_TRANS_TCP:
 	if (add) {
+          g_message ("adding TCP %s", trans->destination);
 	  stream->transports = g_list_prepend (stream->transports, tr);
 	} else if (remove) {
+          g_message ("removing TCP %s", trans->destination);
 	  stream->transports = g_list_remove (stream->transports, tr);
 	}
         break;
