@@ -572,7 +572,7 @@ gst_flups_demux_send_event (GstFluPSDemux * demux, GstEvent * event)
   for (id = 0; id < GST_FLUPS_DEMUX_MAX_STREAMS; id++) {
     GstFluPSStream *stream = demux->streams[id];
 
-    if (stream && !stream->notlinked) {
+    if (stream) {
       (void) gst_event_ref (event);
 
       if (!gst_pad_push_event (stream->pad, event)) {
@@ -739,6 +739,8 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
             "event", G_TYPE_STRING, "select-pad", NULL);
         GstEvent *sel_event =
             gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+
+        temp->notlinked = FALSE;
         gst_pad_push_event (temp->pad, sel_event);
 
         gst_event_ref (event);
