@@ -4709,6 +4709,10 @@ gst_rtspsrc_close (GstRTSPSrc * src)
     GST_DEBUG_OBJECT (src, "not connected, doing cleanup");
     goto close;
   }
+  if (src->state < GST_RTSP_STATE_READY) {
+    GST_DEBUG_OBJECT (src, "not ready, doing cleanup");
+    goto close;
+  }
 
   if (src->methods & (GST_RTSP_PLAY | GST_RTSP_TEARDOWN)) {
     /* do TEARDOWN */
