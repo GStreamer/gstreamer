@@ -87,14 +87,16 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
     caps_enc = gst_structure_get_string (s, "encoding-name");
     caps_params = gst_structure_get_string (s, "encoding-params");
 
-    if (caps_params)
-      tmp = g_strdup_printf ("%d %s/%d/%s", caps_pt, caps_enc, caps_rate,
+    if (caps_enc) {
+      if (caps_params)
+        tmp = g_strdup_printf ("%d %s/%d/%s", caps_pt, caps_enc, caps_rate,
                       caps_params);
-    else
-      tmp = g_strdup_printf ("%d %s/%d", caps_pt, caps_enc, caps_rate);
+      else
+        tmp = g_strdup_printf ("%d %s/%d", caps_pt, caps_enc, caps_rate);
 
-    gst_sdp_media_add_attribute (smedia, "rtpmap", tmp);
-    g_free (tmp);
+      gst_sdp_media_add_attribute (smedia, "rtpmap", tmp);
+      g_free (tmp);
+    }
 
     /* the config uri */
     tmp = g_strdup_printf ("stream=%d", i);
