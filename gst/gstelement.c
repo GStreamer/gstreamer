@@ -1893,7 +1893,7 @@ gst_element_get_state_func (GstElement * element,
     } else {
       timeval = NULL;
     }
-    /* get cookie to dected state change during waiting */
+    /* get cookie to detect state changes during waiting */
     cookie = element->state_cookie;
 
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
