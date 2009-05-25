@@ -61,6 +61,16 @@ struct _GstSystemClockPrivate
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_SYSTEM_CLOCK, \
         GstSystemClockPrivate))
 
+#ifdef HAVE_POSIX_TIMERS
+# ifdef HAVE_MONOTONIC_CLOCK
+#  define DEFAULT_CLOCK_TYPE GST_CLOCK_TYPE_MONOTONIC
+# else
+#  define DEFAULT_CLOCK_TYPE GST_CLOCK_TYPE_REALTIME
+# endif
+#else
+#define DEFAULT_CLOCK_TYPE GST_CLOCK_TYPE_REALTIME
+#endif
+
 enum
 {
   PROP_0,
@@ -122,7 +132,7 @@ gst_system_clock_class_init (GstSystemClockClass * klass)
   g_object_class_install_property (gobject_class, PROP_CLOCK_TYPE,
       g_param_spec_enum ("clock-type", "Clock type",
           "The type of underlying clock implementation used",
-          GST_TYPE_CLOCK_TYPE, GST_CLOCK_TYPE_REALTIME, G_PARAM_READWRITE));
+          GST_TYPE_CLOCK_TYPE, DEFAULT_CLOCK_TYPE, G_PARAM_READWRITE));
 
   gstclock_class->get_internal_time = gst_system_clock_get_internal_time;
   gstclock_class->get_resolution = gst_system_clock_get_resolution;
@@ -142,7 +152,7 @@ gst_system_clock_init (GstSystemClock * clock)
 
   clock->priv = GST_SYSTEM_CLOCK_GET_PRIVATE (clock);
 
-  clock->priv->clock_type = GST_CLOCK_TYPE_REALTIME;
+  clock->priv->clock_type = DEFAULT_CLOCK_TYPE;
   clock->priv->timer = gst_poll_new_timer ();
 
 #if 0
