@@ -2347,7 +2347,7 @@ static FORCE_INLINE GstFlowReturn
 gst_mpegts_demux_parse_transport_packet (GstMpegTSDemux * demux,
     const guint8 * data)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint16 PID;
   GstMpegTSStream *stream;
 
@@ -2356,6 +2356,10 @@ gst_mpegts_demux_parse_transport_packet (GstMpegTSDemux * demux,
 
   /* get PID */
   PID = ((data[0] & 0x1f) << 8) | data[1];
+
+  /* Skip NULL packets */
+  if (G_UNLIKELY (PID == 0x1fff))
+    goto beach;
 
   /* get the stream. */
   stream = gst_mpegts_demux_get_stream_for_PID (demux, PID);
@@ -2387,6 +2391,8 @@ gst_mpegts_demux_parse_transport_packet (GstMpegTSDemux * demux,
       demux->num_packets = -1;
     }
   }
+
+beach:
   demux->num_packets++;
   return ret;
 
