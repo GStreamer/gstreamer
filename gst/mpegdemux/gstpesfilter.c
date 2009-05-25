@@ -167,6 +167,9 @@ gst_pes_filter_parse (GstPESFilter * filter)
     avail = MIN (avail, filter->length + 6);
   }
 
+  if (avail < 7)
+    goto need_more_data;
+
   /* read more data, either the whole packet if there is a length
    * or whatever we have available if this in an unbounded packet. */
   if (!(data = gst_adapter_peek (filter->adapter, avail)))
@@ -197,9 +200,6 @@ gst_pes_filter_parse (GstPESFilter * filter)
     default:
       break;
   }
-
-  if (datalen < 1)
-    goto need_more_data;
 
   filter->pts = filter->dts = -1;
 
