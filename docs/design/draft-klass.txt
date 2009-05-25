@@ -86,6 +86,9 @@ Proposal:
 
      * Audio         : operates on audio data
      * Video         : operates on video data
+     * Image         : operates on image data. Usually this media type can also
+                       be used to make a video stream in which case it is added
+		       together with the Video media type.
      * Text          : operates on text data
      * Metadata      : operates on metadata
      * ...
