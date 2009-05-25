@@ -100,6 +100,211 @@ GST_START_TEST (test_cleanup_send)
 
 GST_END_TEST;
 
+typedef struct
+{
+  guint16 seqnum;
+  gboolean pad_added;
+  GstPad *pad;
+  GMutex *lock;
+  GCond *cond;
+  GstPad *sinkpad;
+  GList *pads;
+} CleanupData;
+
+static void
+init_data (CleanupData * data)
+{
+  data->seqnum = 10;
+  data->pad_added = FALSE;
+  data->lock = g_mutex_new ();
+  data->cond = g_cond_new ();
+  data->pads = NULL;
+}
+
+static void
+clean_data (CleanupData * data)
+{
+  g_list_foreach (data->pads, (GFunc) gst_object_unref, NULL);
+  g_list_free (data->pads);
+  g_mutex_free (data->lock);
+  g_cond_free (data->cond);
+}
+
+static guint8 rtp_packet[] = { 0x80, 0x60, 0x94, 0xbc, 0x8f, 0x37, 0x4e, 0xb8,
+  0x44, 0xa8, 0xf3, 0x7c, 0x06, 0x6a, 0x0c, 0xce,
+  0x13, 0x25, 0x19, 0x69, 0x1f, 0x93, 0x25, 0x9d,
+  0x2b, 0x82, 0x31, 0x3b, 0x36, 0xc1, 0x3c, 0x13
+};
+
+static GstBuffer *
+make_rtp_packet (CleanupData * data)
+{
+  static GstCaps *caps = NULL;
+  GstBuffer *result;
+  guint8 *datap;
+
+  if (caps == NULL) {
+    caps = gst_caps_from_string ("application/x-rtp,"
+        "media=(string)audio, clock-rate=(int)44100, "
+        "encoding-name=(string)L16, encoding-params=(string)1, channels=(int)1");
+    data->seqnum = 0;
+  }
+
+  result = gst_buffer_new_and_alloc (sizeof (rtp_packet));
+  datap = GST_BUFFER_DATA (result);
+  memcpy (datap, rtp_packet, sizeof (rtp_packet));
+
+  datap[2] = (data->seqnum >> 8) & 0xff;
+  datap[3] = data->seqnum & 0xff;
+
+  data->seqnum++;
+
+  gst_buffer_set_caps (result, caps);
+
+  return result;
+}
+
+static GstFlowReturn
+dummy_chain (GstPad * pad, GstBuffer * buffer)
+{
+  gst_buffer_unref (buffer);
+
+  return GST_FLOW_OK;
+}
+
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtp"));
+
+
+static GstPad *
+make_sinkpad (CleanupData * data)
+{
+  GstPad *pad;
+
+  pad = gst_pad_new_from_static_template (&sink_factory, "sink");
+
+  gst_pad_set_chain_function (pad, dummy_chain);
+  gst_pad_set_active (pad, TRUE);
+
+  data->pads = g_list_prepend (data->pads, pad);
+
+  return pad;
+}
+
+static void
+pad_added_cb (GstElement * rtpbin, GstPad * pad, CleanupData * data)
+{
+  GstPad *sinkpad;
+
+  GST_DEBUG ("pad added %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+
+  if (GST_PAD_IS_SINK (pad))
+    return;
+
+  fail_unless (data->pad_added == FALSE);
+
+  sinkpad = make_sinkpad (data);
+  fail_unless (gst_pad_link (pad, sinkpad) == GST_PAD_LINK_OK);
+
+  g_mutex_lock (data->lock);
+  data->pad_added = TRUE;
+  data->pad = pad;
+  g_cond_signal (data->cond);
+  g_mutex_unlock (data->lock);
+}
+
+static void
+pad_removed_cb (GstElement * rtpbin, GstPad * pad, CleanupData * data)
+{
+  GST_DEBUG ("pad removed %s:%s\n", GST_DEBUG_PAD_NAME (pad));
+
+  if (data->pad != pad)
+    return;
+
+  fail_unless (data->pad_added == TRUE);
+
+  g_mutex_lock (data->lock);
+  data->pad_added = FALSE;
+  g_cond_signal (data->cond);
+  g_mutex_unlock (data->lock);
+}
+
+GST_START_TEST (test_cleanup_recv)
+{
+  GstElement *rtpbin;
+  GstPad *rtp_sink;
+  CleanupData data;
+  GstStateChangeReturn ret;
+  GstFlowReturn res;
+  GstBuffer *buffer;
+  gint count = 2;
+
+  init_data (&data);
+
+  rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
+
+  g_signal_connect (rtpbin, "pad-added", (GCallback) pad_added_cb, &data);
+  g_signal_connect (rtpbin, "pad-removed", (GCallback) pad_removed_cb, &data);
+
+  ret = gst_element_set_state (rtpbin, GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+  while (count--) {
+    /* request session 0 */
+    rtp_sink = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_0");
+    fail_unless (rtp_sink != NULL);
+    ASSERT_OBJECT_REFCOUNT (rtp_sink, "rtp_sink", 2);
+
+    /* no sourcepads are created yet */
+    fail_unless (rtpbin->numsinkpads == 1);
+    fail_unless (rtpbin->numsrcpads == 0);
+
+    buffer = make_rtp_packet (&data);
+    res = gst_pad_chain (rtp_sink, buffer);
+    GST_DEBUG ("res %d, %s\n", res, gst_flow_get_name (res));
+    fail_unless (res == GST_FLOW_OK);
+
+    buffer = make_rtp_packet (&data);
+    res = gst_pad_chain (rtp_sink, buffer);
+    GST_DEBUG ("res %d, %s\n", res, gst_flow_get_name (res));
+    fail_unless (res == GST_FLOW_OK);
+
+    /* we wait for the new pad to appear now */
+    g_mutex_lock (data.lock);
+    while (!data.pad_added)
+      g_cond_wait (data.cond, data.lock);
+    g_mutex_unlock (data.lock);
+
+    /* sourcepad created now */
+    fail_unless (rtpbin->numsinkpads == 1);
+    fail_unless (rtpbin->numsrcpads == 1);
+
+    /* remove the session */
+    gst_element_release_request_pad (rtpbin, rtp_sink);
+    gst_object_unref (rtp_sink);
+
+    /* pad should be gone now */
+    g_mutex_lock (data.lock);
+    while (data.pad_added)
+      g_cond_wait (data.cond, data.lock);
+    g_mutex_unlock (data.lock);
+
+    /* nothing left anymore now */
+    fail_unless (rtpbin->numsinkpads == 0);
+    fail_unless (rtpbin->numsrcpads == 0);
+  }
+
+  ret = gst_element_set_state (rtpbin, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (rtpbin);
+
+  clean_data (&data);
+}
+
+GST_END_TEST;
 
 Suite *
 gstrtpbin_suite (void)
@@ -109,6 +314,7 @@ gstrtpbin_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_cleanup_send);
+  tcase_add_test (tc_chain, test_cleanup_recv);
 
   return s;
 }
