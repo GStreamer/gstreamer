@@ -119,6 +119,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstqueue2.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapp.so
+%{_libdir}/gstreamer-%{majorminor}/libgstschro.so
 
 # Here are packages not in the base plugins package but not dependant
 # on an external lib
@@ -213,6 +214,11 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audio-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideocodec.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideodecoder.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoencoder.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoparse.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoutils.h
 
 %{_libdir}/libgstfft-%{majorminor}.so
 %{_libdir}/libgstrtsp-%{majorminor}.so
