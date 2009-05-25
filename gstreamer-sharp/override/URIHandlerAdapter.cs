@@ -157,7 +157,7 @@ namespace Gst {
 			this.handle = handle;
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("libgstreamer-0.10.dll")]
 		static extern IntPtr gst_uri_handler_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_uri_handler_get_type ());
@@ -213,7 +213,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("libgstreamer-0.10.dll")]
 		static extern uint gst_uri_handler_get_uri_type(IntPtr raw);
 
 		public Gst.URIType UriType { 
@@ -224,7 +224,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("libgstreamer-0.10.dll")]
 		static extern bool gst_uri_handler_set_uri(IntPtr raw, IntPtr uri);
 
 		public bool SetUri(string uri) {
@@ -235,7 +235,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("libgstreamer-0.10.dll")]
 		static extern IntPtr gst_uri_handler_get_protocols(IntPtr raw);
 
 		public string[] Protocols { 
@@ -246,7 +246,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("libgstreamer-0.10.dll")]
 		static extern IntPtr gst_uri_handler_get_uri(IntPtr raw);
 
 		public string Uri { 

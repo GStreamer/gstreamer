@@ -74,7 +74,7 @@ namespace Gst {
       Dispose ();
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     static extern void gst_mini_object_unref (IntPtr raw);
 
     public virtual void Dispose () {
@@ -97,7 +97,7 @@ namespace Gst {
       GC.SuppressFinalize (this);
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     static extern IntPtr gst_mini_object_ref (IntPtr raw);
 
     public static MiniObject GetObject (IntPtr o, bool owned_ref) {
@@ -330,7 +330,7 @@ namespace Gst {
       CreateNativeObject ();
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     static extern IntPtr gst_mini_object_new (IntPtr gtype);
 
     protected virtual void CreateNativeObject () {
@@ -352,7 +352,7 @@ namespace Gst {
       }
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     static extern IntPtr gst_mini_object_get_type();
 
     public static GLib.GType GType {
@@ -436,7 +436,7 @@ namespace Gst {
       }
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     static extern bool gst_mini_object_is_writable (IntPtr raw);
 
     public bool IsWritable {
@@ -447,14 +447,14 @@ namespace Gst {
       }
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_dup_mini_object (ref GLib.Value v);
 
     public MiniObject (GLib.Value val) : base () {
       Raw = gst_value_dup_mini_object (ref val);
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     private static extern void gst_value_set_mini_object (ref GLib.Value v, IntPtr o);
 
     public static explicit operator GLib.Value (MiniObject o) {
@@ -480,7 +480,7 @@ namespace Gst {
       gst_mini_object_unref (old);
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     static extern IntPtr gst_mini_object_copy (IntPtr raw);
 
     public Gst.MiniObject Copy() {

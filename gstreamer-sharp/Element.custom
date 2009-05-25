@@ -1,6 +1,6 @@
 [DllImport ("libgobject-2.0-0.dll") ]
 static extern IntPtr g_object_ref (IntPtr raw);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_element_add_pad (IntPtr raw, IntPtr pad);
 
 public bool AddPad (Pad p) {
@@ -25,11 +25,11 @@ public static void UnlinkMany (params Element [] elements) {
   }
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_element_iterate_pads (IntPtr element);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_element_iterate_src_pads (IntPtr element);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_element_iterate_sink_pads (IntPtr element);
 
 public IEnumerable Pads {
@@ -55,25 +55,25 @@ public Gst.StateChangeReturn GetState (out Gst.State state, ulong timeout) {
   return GetState (out state, out pending, timeout);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_element_found_tags (IntPtr raw, IntPtr list);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_tag_list_copy (IntPtr raw);
 
 public void FoundTags (Gst.TagList list) {
   gst_element_found_tags (Handle, list == null ? IntPtr.Zero : gst_tag_list_copy (list.Handle));
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_element_found_tags_for_pad (IntPtr raw, IntPtr pad, IntPtr list);
 
 public void FoundTagsForPad (Gst.Pad pad, Gst.TagList list) {
   gst_element_found_tags_for_pad (Handle, pad == null ? IntPtr.Zero : pad.Handle, list == null ? IntPtr.Zero : gst_tag_list_copy (list.Handle));
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_element_post_message (IntPtr raw, IntPtr message);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_mini_object_ref (IntPtr raw);
 
 public bool PostMessage (Gst.Message message) {
@@ -82,7 +82,7 @@ public bool PostMessage (Gst.Message message) {
   return ret;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_element_get_query_types (IntPtr raw);
 
 public Gst.QueryType[] GetQueryTypes () {
@@ -107,7 +107,7 @@ public Gst.QueryType[] GetQueryTypes () {
 }
 
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_element_send_event (IntPtr raw, IntPtr evnt);
 
 public bool SendEvent (Gst.Event evnt) {
@@ -116,7 +116,7 @@ public bool SendEvent (Gst.Event evnt) {
   return ret;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_element_class_add_pad_template (IntPtr klass, IntPtr templ);
 
 protected static void AddPadTemplate (GLib.GType gtype, Gst.PadTemplate templ) {
@@ -124,7 +124,7 @@ protected static void AddPadTemplate (GLib.GType gtype, Gst.PadTemplate templ) {
   gst_element_class_add_pad_template (class_ptr, templ.Handle);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_element_class_get_pad_template (IntPtr klass, IntPtr name);
 
 public Gst.PadTemplate GetPadTemplate (string name) {
@@ -137,7 +137,7 @@ public Gst.PadTemplate GetPadTemplate (string name) {
   return GLib.Object.GetObject (raw_ret, false) as Gst.PadTemplate;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_element_class_get_pad_template_list (IntPtr klass);
 
 public Gst.PadTemplate[] PadTemplates {
@@ -150,7 +150,7 @@ public Gst.PadTemplate[] PadTemplates {
   }
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_element_class_set_details_simple (IntPtr klass, IntPtr longname, IntPtr classification, IntPtr desc, IntPtr author);
 
 protected static void SetDetails (GLib.GType gtype, string longname, string klass, string description, string author) {

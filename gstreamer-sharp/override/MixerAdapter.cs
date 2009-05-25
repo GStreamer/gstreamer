@@ -222,7 +222,7 @@ namespace Gst.Interfaces {
 			this.handle = handle;
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern IntPtr gst_mixer_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_mixer_get_type ());
@@ -266,7 +266,7 @@ namespace Gst.Interfaces {
 			}
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_volume_changed(IntPtr raw, IntPtr track, IntPtr volumes);
 
 		public void VolumeChanged(Gst.Interfaces.MixerTrack track, int[] volumes) {
@@ -282,7 +282,7 @@ namespace Gst.Interfaces {
 			GLib.Marshaller.Free (native_volumes);
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern IntPtr gst_mixer_list_tracks(IntPtr raw);
 
 		public Gst.Interfaces.MixerTrack[] ListTracks() {
@@ -291,14 +291,14 @@ namespace Gst.Interfaces {
 			return ret;
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_set_option(IntPtr raw, IntPtr opts, IntPtr value);
 
 		public void SetOption(Gst.Interfaces.MixerOptions opts, string value) {
 			gst_mixer_set_option(Handle, opts == null ? IntPtr.Zero : opts.Handle, GLib.Marshaller.StringToPtrGStrdup(value));
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_set_volume(IntPtr raw, IntPtr track, IntPtr volumes);
 
 		public void SetVolume(Gst.Interfaces.MixerTrack track, int[] volumes) {
@@ -315,28 +315,28 @@ namespace Gst.Interfaces {
 			GLib.Marshaller.Free (volumes_native);
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_mute_toggled(IntPtr raw, IntPtr track, bool mute);
 
 		public void MuteToggled(Gst.Interfaces.MixerTrack track, bool mute) {
 			gst_mixer_mute_toggled(Handle, track == null ? IntPtr.Zero : track.Handle, mute);
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_option_changed(IntPtr raw, IntPtr opts, IntPtr value);
 
 		public void OptionChanged(Gst.Interfaces.MixerOptions opts, string value) {
 			gst_mixer_option_changed(Handle, opts == null ? IntPtr.Zero : opts.Handle, GLib.Marshaller.StringToPtrGStrdup(value));
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_options_list_changed(IntPtr raw, IntPtr opts);
 
 		public void OptionsListChanged(Gst.Interfaces.MixerOptions opts) {
 			gst_mixer_options_list_changed(Handle, opts == null ? IntPtr.Zero : opts.Handle);
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern IntPtr gst_mixer_get_option(IntPtr raw, IntPtr opts);
 
 		public string GetOption(Gst.Interfaces.MixerOptions opts) {
@@ -345,21 +345,21 @@ namespace Gst.Interfaces {
 			return ret;
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_set_record(IntPtr raw, IntPtr track, bool record);
 
 		public void SetRecord(Gst.Interfaces.MixerTrack track, bool record) {
 			gst_mixer_set_record(Handle, track == null ? IntPtr.Zero : track.Handle, record);
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_record_toggled(IntPtr raw, IntPtr track, bool record);
 
 		public void RecordToggled(Gst.Interfaces.MixerTrack track, bool record) {
 			gst_mixer_record_toggled(Handle, track == null ? IntPtr.Zero : track.Handle, record);
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_get_volume(IntPtr raw, IntPtr track, ref IntPtr volumes);
 
 		public int[] GetVolume(Gst.Interfaces.MixerTrack track) {
@@ -375,7 +375,7 @@ namespace Gst.Interfaces {
 			return volumes;
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern int gst_mixer_get_mixer_flags(IntPtr raw);
 
 		public Gst.Interfaces.MixerFlags MixerFlags { 
@@ -386,14 +386,14 @@ namespace Gst.Interfaces {
 			}
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_mixer_changed(IntPtr raw);
 
 		public void MixerChanged() {
 			gst_mixer_mixer_changed(Handle);
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_mixer_set_mute(IntPtr raw, IntPtr track, bool mute);
 
 		public void SetMute(Gst.Interfaces.MixerTrack track, bool mute) {

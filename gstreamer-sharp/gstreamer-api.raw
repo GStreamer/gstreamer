@@ -6,7 +6,7 @@
         Please DO NOT MODIFY THIS FILE, modify .metadata files instead.
 
 -->
-  <namespace name="Gst" library="gstreamer-0.10.dll">
+  <namespace name="Gst" library="libgstreamer-0.10.dll">
     <enum name="ActivateMode" cname="GstActivateMode" gtype="gst_activate_mode_get_type" type="enum">
       <member cname="GST_ACTIVATE_NONE" name="None" />
       <member cname="GST_ACTIVATE_PUSH" name="Push" />
@@ -6174,7 +6174,7 @@
       </method>
     </class>
   </namespace>
-  <namespace name="Gst.Interfaces" library="gstinterfaces-0.10.dll">
+  <namespace name="Gst.Interfaces" library="libgstinterfaces-0.10.dll">
     <enum name="GstColorBalanceType" cname="GstColorBalanceType" gtype="gst_color_balance_type_get_type" type="enum">
       <member cname="GST_COLOR_BALANCE_HARDWARE" name="Hardware" />
       <member cname="GST_COLOR_BALANCE_SOFTWARE" name="Software" />

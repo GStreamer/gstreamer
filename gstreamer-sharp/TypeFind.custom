@@ -1,4 +1,4 @@
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_type_find_peek (IntPtr raw, long offset, uint size);
 
 public byte[] Peek (long offset, uint size) {

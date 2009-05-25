@@ -12,7 +12,7 @@ public Gst.Fraction Framerate {
   }
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 private static extern void gst_value_set_fraction (IntPtr v, int numerator, int denominator);
 
 public TunerNorm (string label, Gst.Fraction framerate) {

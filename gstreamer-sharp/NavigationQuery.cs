@@ -8,7 +8,7 @@ namespace Gst.Interfaces {
   using Gst.Interfaces;
 
   public static class NavigationQuery {
-    [DllImport ("gstinterfaces-0.10.dll") ]
+    [DllImport("libgstinterfaces-0.10.dll") ]
     static extern int gst_navigation_query_get_type (IntPtr query);
 
     public static Gst.Interfaces.NavigationQueryType QueryGetType (Gst.Query query) {
@@ -17,7 +17,7 @@ namespace Gst.Interfaces {
       return ret;
     }
 
-    [DllImport ("gstinterfaces-0.10.dll") ]
+    [DllImport("libgstinterfaces-0.10.dll") ]
     static extern IntPtr gst_navigation_query_new_commands ();
 
     public static Gst.Query NewCommands () {
@@ -25,7 +25,7 @@ namespace Gst.Interfaces {
       return query;
     }
 
-    [DllImport ("gstinterfaces-0.10.dll") ]
+    [DllImport("libgstinterfaces-0.10.dll") ]
     static extern void gst_navigation_query_set_commandsv (IntPtr query, uint n_commands, int[] cmds);
 
     public static void SetCommands (Gst.Query query, Gst.Interfaces.NavigationCommand[] cmds) {
@@ -39,9 +39,9 @@ namespace Gst.Interfaces {
       gst_navigation_query_set_commandsv (query.Handle, (uint) raw_cmds.Length, raw_cmds);
     }
 
-    [DllImport ("gstinterfaces-0.10.dll") ]
+    [DllImport("libgstinterfaces-0.10.dll") ]
     static extern bool gst_navigation_query_parse_commands_length (IntPtr query, out uint n_commands);
-    [DllImport ("gstinterfaces-0.10.dll") ]
+    [DllImport("libgstinterfaces-0.10.dll") ]
     static extern bool gst_navigation_query_parse_commands_nth (IntPtr query, uint nth, out int cmd);
 
     public static bool ParseCommands (Gst.Query query, out Gst.Interfaces.NavigationCommand[] cmds) {
@@ -64,7 +64,7 @@ namespace Gst.Interfaces {
       return true;
     }
 
-    [DllImport ("gstinterfaces-0.10.dll") ]
+    [DllImport("libgstinterfaces-0.10.dll") ]
     static extern IntPtr gst_navigation_query_new_angles ();
 
     public static Gst.Query NewAngles () {
@@ -72,7 +72,7 @@ namespace Gst.Interfaces {
       return query;
     }
 
-    [DllImport ("gstinterfaces-0.10.dll") ]
+    [DllImport("libgstinterfaces-0.10.dll") ]
     static extern void gst_navigation_query_set_angles (IntPtr query, uint cur_angle, uint n_angles);
 
     public static void SetAngles (Gst.Query query, uint cur_angle, uint n_angles) {
@@ -82,7 +82,7 @@ namespace Gst.Interfaces {
       gst_navigation_query_set_angles (query.Handle, cur_angle, n_angles);
     }
 
-    [DllImport ("gstinterfaces-0.10.dll") ]
+    [DllImport("libgstinterfaces-0.10.dll") ]
     static extern bool gst_navigation_query_parse_angles (IntPtr query, out uint cur_angle, out uint n_angles);
 
     public static bool ParseAngles (Gst.Query query, out uint cur_angle, out uint n_angles) {

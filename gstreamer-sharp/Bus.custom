@@ -1,6 +1,6 @@
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_bus_post (IntPtr raw, IntPtr message);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_mini_object_copy (IntPtr raw);
 
 public bool Post (Gst.Message message) {
@@ -10,7 +10,7 @@ public bool Post (Gst.Message message) {
 }
 
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern int gst_bus_sync_signal_handler (IntPtr raw, IntPtr message, IntPtr data);
 
 public Gst.BusSyncReply SyncSignalHandler (Gst.Message message) {
@@ -23,7 +23,7 @@ public uint AddWatch (Gst.BusFunc func) {
   return AddWatch (0, func);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_bus_async_signal_func (IntPtr raw, IntPtr message, IntPtr data);
 
 public bool AsyncSignalFunc (Gst.Message message) {

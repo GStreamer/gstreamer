@@ -92,9 +92,9 @@ public bool TrySlaveLock () {
   return g_mutex_trylock (SlaveLockPtr);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_clock_get_master (IntPtr raw);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_clock_set_master (IntPtr raw, IntPtr master);
 public Gst.Clock Master {
   get  {

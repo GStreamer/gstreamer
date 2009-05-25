@@ -1,4 +1,4 @@
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_structure_to_string (IntPtr handle);
 
 public override string ToString () {
@@ -7,7 +7,7 @@ public override string ToString () {
   return ret;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern int gst_structure_n_fields (IntPtr raw);
 
 public int Size {
@@ -18,9 +18,9 @@ public int Size {
   }
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_tag_list_copy_value (ref GLib.Value dest, IntPtr list, IntPtr tag);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_tag_list_get_value_index (IntPtr raw, IntPtr tag, uint index);
 
 public object this[string tag, uint index] {
@@ -84,7 +84,7 @@ public void Add (Gst.TagMergeMode mode, params object[] parameters) {
   }
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_structure_nth_field_name (IntPtr raw, uint index);
 
 private string NthFieldName (uint index) {
@@ -103,7 +103,7 @@ public string[] Tags {
   }
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_structure_get_value (IntPtr raw, IntPtr fieldname);
 
 public Gst.List GetTag (string tag) {

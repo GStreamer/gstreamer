@@ -1,7 +1,7 @@
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_pad_template_new (IntPtr name_template, int direction, int presence, IntPtr caps);
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_caps_ref (IntPtr handle);
 
 public PadTemplate (string name_template, Gst.PadDirection direction, Gst.PadPresence presence, Gst.Caps caps) : base (IntPtr.Zero) {

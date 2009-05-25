@@ -70,7 +70,7 @@ namespace Gst.Interfaces {
 			this.handle = handle;
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern IntPtr gst_navigation_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_navigation_get_type ());
@@ -114,17 +114,17 @@ namespace Gst.Interfaces {
 			}
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_navigation_send_event(IntPtr raw, IntPtr structure);
 
-		[DllImport("gstreamer-0.10.dll")]
+		[DllImport("libgstreamer-0.10.dll")]
 		static extern IntPtr gst_structure_copy (IntPtr raw);
 
 		public void SendEvent(Gst.Structure structure) {
 			gst_navigation_send_event(Handle, structure == null ? IntPtr.Zero : gst_structure_copy (structure.Handle));
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_navigation_send_mouse_event(IntPtr raw, IntPtr evnt, int button, double x, double y);
 
 		public void SendMouseEvent(string evnt, int button, double x, double y) {
@@ -133,7 +133,7 @@ namespace Gst.Interfaces {
 			GLib.Marshaller.Free (native_evnt);
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_navigation_send_key_event(IntPtr raw, IntPtr evnt, IntPtr key);
 
 		public void SendKeyEvent(string evnt, string key) {
@@ -144,7 +144,7 @@ namespace Gst.Interfaces {
 			GLib.Marshaller.Free (native_key);
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_navigation_send_command(IntPtr raw, int command);
 
 		public void SendCommand(Gst.Interfaces.NavigationCommand command) {

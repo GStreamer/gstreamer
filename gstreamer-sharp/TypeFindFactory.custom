@@ -1,4 +1,4 @@
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_type_find_register (IntPtr plugin, IntPtr name, uint rank, GstSharp.TypeFindFunctionNative func, IntPtr[] extensions, IntPtr possible_caps, IntPtr data, IntPtr data_notify);
 
 public static bool Register (Gst.Plugin plugin, string name, uint rank, Gst.TypeFindFunction func, string[] extensions, Gst.Caps possible_caps) {

@@ -79,11 +79,11 @@ namespace Gst {
         gst_iterator_free (iterator);
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     static extern int gst_iterator_next (IntPtr iterator, out IntPtr elem);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     static extern void gst_iterator_resync (IntPtr iterator);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     static extern void gst_iterator_free (IntPtr iterator);
 
   }

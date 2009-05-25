@@ -11,7 +11,7 @@ public Caps (Structure[] s) : this () {
     Append (o);
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_caps_get_refcount_offset ();
 
 static uint refcount_offset = gstsharp_gst_caps_get_refcount_offset ();
@@ -57,7 +57,7 @@ private void RemoveStructureReferences () {
   }
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 private static extern IntPtr gst_caps_get_structure (IntPtr handle, uint index);
 
 public Structure this [uint index] {
@@ -116,10 +116,10 @@ public IEnumerator GetEnumerator() {
   return new StructureEnumerator (this);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_caps_append_structure (IntPtr caps, IntPtr structure);
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_structure_copy (IntPtr raw);
 
 public void Append (Structure s) {
@@ -129,7 +129,7 @@ public void Append (Structure s) {
   gst_caps_append_structure (Handle, gst_structure_copy (s.Handle));
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_caps_append (IntPtr caps, IntPtr caps2);
 
 public void Append (Caps caps) {
@@ -139,7 +139,7 @@ public void Append (Caps caps) {
   gst_caps_append (Handle, gst_caps_copy (caps.Handle));
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_caps_merge_structure (IntPtr caps, IntPtr structure);
 
 public void Merge (Structure s) {
@@ -149,7 +149,7 @@ public void Merge (Structure s) {
   gst_caps_merge_structure (Handle, gst_structure_copy (s.Handle));
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_caps_merge (IntPtr caps, IntPtr caps2);
 
 public void Merge (Caps caps) {
@@ -163,7 +163,7 @@ public void Merge (Caps caps) {
   gst_caps_merge (Handle, gst_caps_copy (caps.Handle));
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_caps_remove_structure (IntPtr caps, uint index);
 
 public void RemoveStructure (uint index) {
@@ -179,7 +179,7 @@ public void RemoveStructure (uint index) {
   gst_caps_remove_structure (Handle, index);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_caps_do_simplify (IntPtr caps);
 
 public bool DoSimplify () {
@@ -193,7 +193,7 @@ public bool DoSimplify () {
   return gst_caps_do_simplify (Handle);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_caps_truncate (IntPtr caps);
 
 public void Truncate () {
@@ -206,7 +206,7 @@ public void Truncate () {
   gst_caps_truncate (Handle);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_caps_unref (IntPtr raw);
 
 protected override void Unref (IntPtr raw) {

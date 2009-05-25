@@ -150,7 +150,7 @@ namespace Gst.Interfaces {
 			this.handle = handle;
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern IntPtr gst_property_probe_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_property_probe_get_type ());
@@ -207,7 +207,7 @@ namespace Gst.Interfaces {
 			}
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern bool gst_property_probe_needs_probe_name(IntPtr raw, IntPtr name);
 
 		public bool NeedsProbe(string name) {
@@ -218,7 +218,7 @@ namespace Gst.Interfaces {
 			return ret;
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern void gst_property_probe_probe_property_name(IntPtr raw, IntPtr name);
 
 		public void Probe(string name) {
@@ -227,7 +227,7 @@ namespace Gst.Interfaces {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern IntPtr gst_property_probe_get_properties(IntPtr raw);
 
 		public string[] Properties { 
@@ -248,7 +248,7 @@ namespace Gst.Interfaces {
 			}
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern IntPtr gst_property_probe_get_values_name (IntPtr raw, IntPtr name);
 
 		public object[] GetValues (string name) {
@@ -268,7 +268,7 @@ namespace Gst.Interfaces {
 			return (object[]) ret.ToArray (typeof (object));		
 		}
 
-		[DllImport("gstinterfaces-0.10.dll")]
+		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern IntPtr gst_property_probe_probe_and_get_values_name (IntPtr raw, IntPtr name);
 
 		public object[] ProbeAndGetValues (string name) {

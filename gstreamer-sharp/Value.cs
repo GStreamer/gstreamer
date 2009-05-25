@@ -114,13 +114,13 @@ namespace Gst {
       return new Fraction (a.Numerator * b.Denominator, a.Denominator * b.Numerator);
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern void gst_value_set_fraction (ref GLib.Value v, int numerator, int denominator);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern int gst_value_get_fraction_numerator (ref GLib.Value v);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern int gst_value_get_fraction_denominator (ref GLib.Value v);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_fraction_get_type ();
   }
 
@@ -162,13 +162,13 @@ namespace Gst {
       return val;
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_double_range_get_type ();
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern void gst_value_set_double_range (ref GLib.Value v, double min, double max);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern double gst_value_get_double_range_min (ref GLib.Value v);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern double gst_value_get_double_range_max (ref GLib.Value v);
   }
 
@@ -210,13 +210,13 @@ namespace Gst {
       return val;
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_int_range_get_type ();
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern void gst_value_set_int_range (ref GLib.Value v, int min, int max);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern int gst_value_get_int_range_min (ref GLib.Value v);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern int gst_value_get_int_range_max (ref GLib.Value v);
   }
 
@@ -276,13 +276,13 @@ namespace Gst {
       return val;
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_fraction_range_get_type ();
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern void gst_value_set_fraction_range (ref GLib.Value v, ref GLib.Value min, ref GLib.Value max);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_get_fraction_range_min (ref GLib.Value v);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_get_fraction_range_max (ref GLib.Value v);
   }
 
@@ -352,11 +352,11 @@ namespace Gst {
       return fourcc.ToString ();
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_fourcc_get_type ();
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern void gst_value_set_fourcc (ref GLib.Value v, uint fourcc);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern uint gst_value_get_fourcc (ref GLib.Value v);
 
   }
@@ -433,11 +433,11 @@ namespace Gst {
     [DllImport ("libglib-2.0-0.dll") ]
     private static extern void g_date_free (IntPtr date);
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_date_get_type ();
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_get_date (ref GLib.Value val);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern void gst_value_set_date (ref GLib.Value val, IntPtr date);
   }
 
@@ -512,13 +512,13 @@ namespace Gst {
       }
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_list_get_type ();
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern uint gst_value_list_get_size (ref GLib.Value val);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_list_get_value (ref GLib.Value val, uint index);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern void gst_value_list_append_value (ref GLib.Value val, ref GLib.Value el);
   }
 
@@ -593,13 +593,13 @@ namespace Gst {
       }
     }
 
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_array_get_type ();
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern uint gst_value_array_get_size (ref GLib.Value val);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_array_get_value (ref GLib.Value val, uint index);
-    [DllImport ("gstreamer-0.10.dll") ]
+    [DllImport("libgstreamer-0.10.dll") ]
     private static extern void gst_value_array_append_value (ref GLib.Value val, ref GLib.Value el);
   }
 }

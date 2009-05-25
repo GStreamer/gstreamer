@@ -53,10 +53,10 @@ public Gst.Object Src {
   }
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern uint gst_event_get_seqnum (IntPtr raw);
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_event_set_seqnum (IntPtr raw, uint seqnum);
 
 public uint Seqnum {
@@ -76,7 +76,7 @@ public uint Seqnum {
 
 private Gst.Structure cached_structure = null;
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_get_structure (IntPtr raw);
 
 public Gst.Structure Structure {
@@ -123,7 +123,7 @@ public bool IsSerialized {
   }
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern Gst.EventTypeFlags gst_event_type_get_flags (Gst.EventType type);
 
 public static Gst.EventTypeFlags GetTypeFlags (Gst.EventType type) {
@@ -138,7 +138,7 @@ public static uint GetTypeNumber (Gst.EventType type) {
   return ( (uint) type) >> 4;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_custom (Gst.EventType type, IntPtr structure);
 
 public static Gst.Event NewCustom (Gst.EventType type, Gst.Structure structure) {
@@ -149,7 +149,7 @@ public static Gst.Event NewCustom (Gst.EventType type, Gst.Structure structure) 
   return ev;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_flush_start ();
 
 public static Gst.Event NewFlushStart () {
@@ -158,7 +158,7 @@ public static Gst.Event NewFlushStart () {
   return ev;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_flush_stop ();
 
 public static Gst.Event NewFlushStop () {
@@ -167,7 +167,7 @@ public static Gst.Event NewFlushStop () {
   return ev;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_eos ();
 
 public static Gst.Event NewEos () {
@@ -176,7 +176,7 @@ public static Gst.Event NewEos () {
   return ev;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_new_segment_full (bool update, double rate, double applied_rate, Gst.Format format, long start, long stop, long position);
 
 public static Gst.Event NewNewSegment (bool update, double rate, double applied_rate, Gst.Format format, long start, long stop, long position) {
@@ -189,7 +189,7 @@ public static Gst.Event NewNewSegment (bool update, double rate, Gst.Format form
   return NewNewSegment (update, rate, 1.0, format, start, stop, position);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_event_parse_new_segment_full (IntPtr raw, out bool update, out double rate, out double applied_rate, out Gst.Format format, out long start, out long stop, out long position);
 
 public void ParseNewSegment (out bool update, out double rate, out double applied_rate, out Gst.Format format, out long start, out long stop, out long position) {
@@ -205,10 +205,10 @@ public void ParseNewSegment (out bool update, out double rate, Gst.Format format
   ParseNewSegment (out update, out rate, out applied_rate, out format, out start, out stop, out position);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_tag (IntPtr tags);
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_tag_list_copy (IntPtr raw);
 
 public static Gst.Event NewTag (Gst.TagList tags) {
@@ -217,7 +217,7 @@ public static Gst.Event NewTag (Gst.TagList tags) {
   return ev;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_event_parse_tag (IntPtr ev, out IntPtr tags);
 
 public void ParseTag (out TagList tags) {
@@ -234,7 +234,7 @@ public void ParseTag (out TagList tags) {
 }
 
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_buffer_size (Gst.Format format, long min, long max, bool async);
 
 public static Gst.Event NewBufferSize (Gst.Format format, long min, long max, bool async) {
@@ -243,7 +243,7 @@ public static Gst.Event NewBufferSize (Gst.Format format, long min, long max, bo
   return ev;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_event_parse_buffer_size (IntPtr ev, out Gst.Format format, out long min, out long max, out bool async);
 
 public void ParseBufferSize (out Gst.Format format, out long min, out long max, out bool async) {
@@ -253,7 +253,7 @@ public void ParseBufferSize (out Gst.Format format, out long min, out long max, 
   gst_event_parse_buffer_size (Handle, out format, out min, out max, out async);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_qos (double proportion, long diff, ulong timestamp);
 
 public static Gst.Event NewQos (double proportion, long diff, ulong timestamp) {
@@ -262,7 +262,7 @@ public static Gst.Event NewQos (double proportion, long diff, ulong timestamp) {
   return ev;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_event_parse_qos (IntPtr ev, out double proportion, out long diff, out ulong timestamp);
 
 public void ParseQos (out double proportion, out long diff, out ulong timestamp) {
@@ -273,7 +273,7 @@ public void ParseQos (out double proportion, out long diff, out ulong timestamp)
 }
 
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_seek (double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType start_type, long start, Gst.SeekType stop_type, long stop);
 
 public static Gst.Event NewSeek (double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType start_type, long start, Gst.SeekType stop_type, long stop) {
@@ -282,7 +282,7 @@ public static Gst.Event NewSeek (double rate, Gst.Format format, Gst.SeekFlags f
   return ev;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_event_parse_seek (IntPtr ev, out double rate, out Gst.Format format, out Gst.SeekFlags flags, out Gst.SeekType start_type, out long start, out Gst.SeekType stop_type, out long stop);
 
 public void ParseSeek (out double rate, out Gst.Format format, out Gst.SeekFlags flags, out Gst.SeekType start_type, out long start, out Gst.SeekType stop_type, out long stop) {
@@ -292,7 +292,7 @@ public void ParseSeek (out double rate, out Gst.Format format, out Gst.SeekFlags
   gst_event_parse_seek (Handle, out rate, out format, out flags, out start_type, out start, out stop_type, out stop);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_navigation (IntPtr structure);
 
 public static Gst.Event NewNavigation (Gst.Structure structure) {
@@ -303,7 +303,7 @@ public static Gst.Event NewNavigation (Gst.Structure structure) {
   return ev;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_latency (ulong latency);
 
 public static Gst.Event NewLatency (ulong latency) {
@@ -312,7 +312,7 @@ public static Gst.Event NewLatency (ulong latency) {
   return ev;
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_event_parse_latency (IntPtr ev, out ulong latency);
 
 public void ParseLatency (out ulong latency) {

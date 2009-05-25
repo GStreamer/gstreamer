@@ -1,4 +1,4 @@
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_bin_add (IntPtr raw, IntPtr element);
 
 [DllImport ("libgobject-2.0-0.dll") ]
@@ -51,17 +51,17 @@ public Gst.Element GetByInterface (System.Type type) {
   return GetByInterface (t);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_bin_iterate_elements (IntPtr bin);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_bin_iterate_recurse (IntPtr bin);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_bin_iterate_sinks (IntPtr bin);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_bin_iterate_sorted (IntPtr bin);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_bin_iterate_sources (IntPtr bin);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_bin_iterate_all_by_interface (IntPtr bin, IntPtr gtype);
 
 public IEnumerable Elements {

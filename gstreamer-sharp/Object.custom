@@ -58,9 +58,9 @@ public object Emit (string signal, params object[] parameters) {
   return DynamicSignal.Emit (this, signal, parameters);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_object_sink (IntPtr raw);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_object_ref (IntPtr raw);
 
 protected override IntPtr Raw {
@@ -77,9 +77,9 @@ protected override IntPtr Raw {
 }
 
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_object_set_parent (IntPtr raw, IntPtr parent);
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_object_get_parent (IntPtr raw);
 
 public Gst.Object Parent {
@@ -127,7 +127,7 @@ public bool TryLock () {
   return g_mutex_trylock (LockPtr);
 }
 
-[DllImport ("gstreamer-0.10.dll") ]
+[DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_object_check_uniqueness (IntPtr list, IntPtr name);
 
 public static bool CheckUniqueness (Gst.Object[] objects, string name) {
