@@ -514,7 +514,7 @@ gst_pngdec_task (GstPad * pad)
 
   /* Read the actual picture */
   png_read_image (pngdec->png, rows);
-  free (rows);
+  g_free (rows);
 
   /* Push the raw RGB frame */
   ret = gst_pad_push (pngdec->srcpad, buffer);
