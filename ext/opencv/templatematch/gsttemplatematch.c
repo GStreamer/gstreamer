@@ -52,7 +52,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-0.10 videotestsrc ! decodebin ! ffmpegcolorspace ! templatematch ! ffmpegcolorspace ! xvimagesink
+ * gst-launch-0.10 videotestsrc ! decodebin ! ffmpegcolorspace ! templatematch template=/path/to/file.jpg ! ffmpegcolorspace ! xvimagesink
  * ]|
  * </refsect2>
  */
@@ -68,7 +68,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_templatematch_debug);
 #define GST_CAT_DEFAULT gst_templatematch_debug
 
-#define DEFAULT_TEMPLATE NULL
 #define DEFAULT_METHOD (3)
 
 /* Filter signals and args */
@@ -158,7 +157,7 @@ gst_templatematch_class_init (GstTemplateMatchClass * klass)
                                                        0, 5, DEFAULT_METHOD, G_PARAM_READWRITE));
     g_object_class_install_property (gobject_class, PROP_TEMPLATE,
                                      g_param_spec_string ("template", "Template", "Filename of template image",
-                                                          DEFAULT_TEMPLATE, G_PARAM_READWRITE));
+                                                          NULL, G_PARAM_READWRITE));
     g_object_class_install_property (gobject_class, PROP_DISPLAY,
                                      g_param_spec_boolean ("display", "Display", "Sets whether the detected template should be highlighted in the output",
                                                            TRUE, G_PARAM_READWRITE));
@@ -187,7 +186,7 @@ gst_templatematch_init (GstTemplateMatch * filter,
 
     gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
     gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-    filter->template = DEFAULT_TEMPLATE;
+    filter->template = NULL;
     filter->display = TRUE;
     filter->cvTemplateImage = NULL;
     filter->cvDistImage = NULL;
@@ -307,7 +306,7 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
 
     filter = GST_TEMPLATEMATCH (GST_OBJECT_PARENT (pad));
     buf = gst_buffer_make_writable(buf);
-    if ((!filter) || (!buf)) {
+    if ((!filter) || (!buf) || filter->template == NULL) {
         return GST_FLOW_OK;
     }
     filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
