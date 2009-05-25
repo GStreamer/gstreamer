@@ -76,6 +76,7 @@ enum
   ARG_PASS,
   ARG_QUANTIZER,
   ARG_STATS_FILE,
+  ARG_MULTIPASS_CACHE_FILE,
   ARG_BYTE_STREAM,
   ARG_BITRATE,
   ARG_VBV_BUF_CAPACITY,
@@ -104,7 +105,8 @@ enum
 #define ARG_THREADS_DEFAULT            1
 #define ARG_PASS_DEFAULT               0
 #define ARG_QUANTIZER_DEFAULT          21
-#define ARG_STATS_FILE_DEFAULT         "x264.log"
+#define ARG_MULTIPASS_CACHE_FILE_DEFAULT "x264.log"
+#define ARG_STATS_FILE_DEFAULT         ARG_MULTIPASS_CACHE_FILE_DEFAULT
 #define ARG_BYTE_STREAM_DEFAULT        FALSE
 #define ARG_BITRATE_DEFAULT            (2 * 1024)
 #define ARG_VBV_BUF_CAPACITY_DEFAULT   600
@@ -300,8 +302,12 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           1, 50, ARG_QUANTIZER_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_STATS_FILE,
       g_param_spec_string ("stats-file", "Stats File",
-          "Filename for multipass statistics",
+          "Filename for multipass statistics (deprecated, use multipass-stats-file)",
           ARG_STATS_FILE_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MULTIPASS_CACHE_FILE,
+      g_param_spec_string ("multipass-cache-file", "Multipass Cache File",
+          "Filename for multipass cache file",
+          ARG_MULTIPASS_CACHE_FILE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BYTE_STREAM,
       g_param_spec_boolean ("byte-stream", "Byte Stream",
           "Generate byte stream format of NALU",
@@ -448,7 +454,7 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->threads = ARG_THREADS_DEFAULT;
   encoder->pass = ARG_PASS_DEFAULT;
   encoder->quantizer = ARG_QUANTIZER_DEFAULT;
-  encoder->stats_file = g_strdup (ARG_STATS_FILE_DEFAULT);
+  encoder->mp_cache_file = g_strdup (ARG_MULTIPASS_CACHE_FILE_DEFAULT);
   encoder->byte_stream = ARG_BYTE_STREAM_DEFAULT;
   encoder->bitrate = ARG_BITRATE_DEFAULT;
   encoder->vbv_buf_capacity = ARG_VBV_BUF_CAPACITY_DEFAULT;
@@ -502,8 +508,8 @@ gst_x264_enc_finalize (GObject * object)
 {
   GstX264Enc *encoder = GST_X264_ENC (object);
 
-  g_free (encoder->stats_file);
-  encoder->stats_file = NULL;
+  g_free (encoder->mp_cache_file);
+  encoder->mp_cache_file = NULL;
   g_free (encoder->buffer);
   encoder->buffer = NULL;
   g_queue_free (encoder->delay);
@@ -637,8 +643,8 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
       encoder->x264param.rc.b_stat_write = 1;
       break;
   }
-  encoder->x264param.rc.psz_stat_in = encoder->stats_file;
-  encoder->x264param.rc.psz_stat_out = encoder->stats_file;
+  encoder->x264param.rc.psz_stat_in = encoder->mp_cache_file;
+  encoder->x264param.rc.psz_stat_out = encoder->mp_cache_file;
 
   GST_OBJECT_UNLOCK (encoder);
 
@@ -1110,9 +1116,10 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       encoder->quantizer = g_value_get_uint (value);
       break;
     case ARG_STATS_FILE:
-      if (encoder->stats_file)
-        g_free (encoder->stats_file);
-      encoder->stats_file = g_value_dup_string (value);
+    case ARG_MULTIPASS_CACHE_FILE:
+      if (encoder->mp_cache_file)
+        g_free (encoder->mp_cache_file);
+      encoder->mp_cache_file = g_value_dup_string (value);
       break;
     case ARG_BYTE_STREAM:
       encoder->byte_stream = g_value_get_boolean (value);
@@ -1218,7 +1225,8 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       g_value_set_uint (value, encoder->quantizer);
       break;
     case ARG_STATS_FILE:
-      g_value_set_string (value, encoder->stats_file);
+    case ARG_MULTIPASS_CACHE_FILE:
+      g_value_set_string (value, encoder->mp_cache_file);
       break;
     case ARG_BYTE_STREAM:
       g_value_set_boolean (value, encoder->byte_stream);

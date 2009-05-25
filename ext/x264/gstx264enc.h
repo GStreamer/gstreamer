@@ -57,7 +57,7 @@ struct _GstX264Enc
   guint threads;
   gint pass;
   guint quantizer;
-  gchar *stats_file;
+  gchar *mp_cache_file;
   gboolean byte_stream;
   guint bitrate;
   gint me;
