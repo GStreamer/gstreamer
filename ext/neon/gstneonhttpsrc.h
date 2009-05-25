@@ -71,6 +71,9 @@ struct _GstNeonhttpSrc {
   /* enable Neon HTTP debug messages */
   gboolean neon_http_debug;
 
+  /* accept self-signed certificates */
+  gboolean accept_self_signed;
+
   gint64 read_position;
   gboolean seekable;
 };
