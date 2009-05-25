@@ -243,14 +243,6 @@ done:
   task->abidata.ABI.thread = NULL;
 
 exit:
-  /* now we allow messing with the lock again by setting the running flag to
-   * FALSE. Together with the SIGNAL this is the sign for the _join() to 
-   * complete. 
-   * Note that we still have not dropped the final ref on the task. We could
-   * check here if there is a pending join() going on and drop the last ref
-   * before releasing the lock as we can be sure that a ref is held by the
-   * caller of the join(). */
-  task->running = FALSE;
   if (priv->thr_callbacks.leave_thread) {
     /* fire the leave_thread callback when we need to. We need to do this before
      * we signal the task and with the task lock released. */
@@ -262,6 +254,14 @@ exit:
      * touch the priority when a custom callback has been installed. */
     g_thread_set_priority (tself, G_THREAD_PRIORITY_NORMAL);
   }
+  /* now we allow messing with the lock again by setting the running flag to
+   * FALSE. Together with the SIGNAL this is the sign for the _join() to 
+   * complete. 
+   * Note that we still have not dropped the final ref on the task. We could
+   * check here if there is a pending join() going on and drop the last ref
+   * before releasing the lock as we can be sure that a ref is held by the
+   * caller of the join(). */
+  task->running = FALSE;
   GST_TASK_SIGNAL (task);
   GST_OBJECT_UNLOCK (task);
 
