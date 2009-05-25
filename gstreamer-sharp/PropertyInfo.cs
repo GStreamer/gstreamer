@@ -93,7 +93,7 @@ namespace Gst {
     [DllImport ("libgobject-2.0-0.dll") ]
     static extern void g_param_value_set_default (IntPtr pspec, ref GLib.Value val);
 
-    [DllImport ("gstreamersharpglue-0.10") ]
+    [DllImport ("gstreamersharpglue-0.10.dll") ]
     static extern bool gstsharp_g_param_spec_get_range (IntPtr pspec, ref GLib.Value min, ref GLib.Value max);
 
 

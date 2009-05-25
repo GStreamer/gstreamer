@@ -1,4 +1,4 @@
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_task_get_cond_offset ();
 
 static uint cond_offset = gstsharp_gst_task_get_cond_offset ();

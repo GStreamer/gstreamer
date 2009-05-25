@@ -220,7 +220,7 @@ public bool FixateFieldNearestFraction (string field_name, Fraction target) {
 }
 
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_structure_get_parent_refcount_offset ();
 
 static uint parent_refcount_offset = gstsharp_gst_structure_get_parent_refcount_offset ();

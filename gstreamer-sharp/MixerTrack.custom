@@ -1,16 +1,16 @@
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gst__interfacessharp_gst__interfaces_mixertrack_get_label_offset ();
 static uint label_offset = gst__interfacessharp_gst__interfaces_mixertrack_get_label_offset ();
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gst__interfacessharp_gst__interfaces_mixertrack_get_flags_offset ();
 static uint flags_offset = gst__interfacessharp_gst__interfaces_mixertrack_get_flags_offset ();
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gst__interfacessharp_gst__interfaces_mixertrack_get_num_channels_offset ();
 static uint num_channels_offset = gst__interfacessharp_gst__interfaces_mixertrack_get_num_channels_offset ();
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gst__interfacessharp_gst__interfaces_mixertrack_get_min_volume_offset ();
 static uint min_volume_offset = gst__interfacessharp_gst__interfaces_mixertrack_get_min_volume_offset ();
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gst__interfacessharp_gst__interfaces_mixertrack_get_max_volume_offset ();
 static uint max_volume_offset = gst__interfacessharp_gst__interfaces_mixertrack_get_max_volume_offset ();
 

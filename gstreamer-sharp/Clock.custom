@@ -8,7 +8,7 @@ public static bool TimeIsValid (ulong time) {
   return (time != TimeNone);
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_clock_get_entries_changed_offset ();
 
 static uint entries_changed_offset = gstsharp_gst_clock_get_entries_changed_offset ();
@@ -60,7 +60,7 @@ public void Broadcast () {
   g_cond_broadcast (EntriesChangedPtr);
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_clock_get_slave_lock_offset ();
 
 static uint slave_lock_offset = gstsharp_gst_clock_get_slave_lock_offset ();
@@ -108,7 +108,7 @@ public Gst.Clock Master {
   }
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_clock_get_entries_offset ();
 
 static uint entries_offset = gstsharp_gst_clock_get_entries_offset ();
@@ -127,7 +127,7 @@ protected Gst.ClockEntry[] Entries {
   }
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_clock_get_times_offset ();
 
 static uint times_offset = gstsharp_gst_clock_get_times_offset ();

@@ -1,6 +1,6 @@
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 static extern GstSharp.ClockCallbackNative gstsharp_gst_clock_entry_get_func (IntPtr raw);
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 static extern void gstsharp_gst_clock_entry_set_func (IntPtr raw, GstSharp.ClockCallbackNative func);
 
 private GstSharp.ClockCallbackWrapper wrapper;

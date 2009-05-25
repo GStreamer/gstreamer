@@ -14,9 +14,9 @@ public Buffer (byte[] data) : this () {
   Data = data;
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_buffer_get_data_offset ();
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static void gstsharp_gst_buffer_set_data (IntPtr handle, IntPtr data, uint size);
 [DllImport ("libglib-2.0-0.dll") ]
 extern static IntPtr g_try_malloc (int size);
@@ -103,7 +103,7 @@ public Gst.Caps Caps {
   }
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_buffer_get_timestamp_offset ();
 static uint timestamp_offset = gstsharp_gst_buffer_get_timestamp_offset ();
 
@@ -126,7 +126,7 @@ public ulong Timestamp {
   }
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_buffer_get_duration_offset ();
 static uint duration_offset = gstsharp_gst_buffer_get_duration_offset ();
 
@@ -149,7 +149,7 @@ public ulong Duration {
   }
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_buffer_get_offset_offset ();
 static uint offset_offset = gstsharp_gst_buffer_get_offset_offset ();
 
@@ -172,7 +172,7 @@ public ulong Offset {
   }
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_buffer_get_offset_end_offset ();
 static uint offset_end_offset = gstsharp_gst_buffer_get_offset_end_offset ();
 

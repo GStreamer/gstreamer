@@ -124,7 +124,7 @@ $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA) $(srcdir)/$(SYMBOLS)
 generated-stamp: $(API) $(build_customs) $(overrides)
 	 $(MONO) $(top_builddir)/generator/gst-gapi_codegen.exe --generate $(API) \
 		--outdir=generated --customdir=$(srcdir) --assembly-name=$(ASSEMBLY_NAME) \
-		--gluelib-name=gstreamersharpglue-0.10 --glue-filename=glue/generated.c \
+		--gluelib-name=gstreamersharpglue-0.10.dll --glue-filename=glue/generated.c \
 		--glue-includes=$(glue_includes) \
 	&& cp $(overrides) $(builddir)/generated \
 	&& sed 's;public class ObjectManager;internal class ObjectManager;g' generated/ObjectManager.cs > generated/ObjectManager.cs.tmp \

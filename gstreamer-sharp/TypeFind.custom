@@ -15,7 +15,7 @@ private GstSharp.TypeFindPeekFunctionWrapper peek;
 private GstSharp.TypeFindSuggestFunctionWrapper suggest;
 private GstSharp.TypeFindGetLengthFunctionWrapper get_length;
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 static extern IntPtr gstsharp_gst_type_find_new (GstSharp.TypeFindPeekFunctionNative peek, GstSharp.TypeFindSuggestFunctionNative suggest, GstSharp.TypeFindGetLengthFunctionNative get_length);
 
 

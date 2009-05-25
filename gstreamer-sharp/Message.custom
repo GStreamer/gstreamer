@@ -1,6 +1,6 @@
 public Message (GLib.Value val) : base (val) { }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_message_get_timestamp_offset ();
 
 static uint timestamp_offset = gstsharp_gst_message_get_timestamp_offset ();
@@ -22,7 +22,7 @@ public ulong Timestamp {
   }
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_message_get_src_offset ();
 
 [DllImport ("libgobject-2.0.dll") ]

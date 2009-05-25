@@ -57,7 +57,7 @@ public object this[string tag] {
   }
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 static extern void gstsharp_gst_tag_list_add_value (IntPtr list, Gst.TagMergeMode mode, IntPtr tag, ref GLib.Value v);
 
 public void Add (Gst.TagMergeMode mode, string tag, object value) {

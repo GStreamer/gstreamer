@@ -95,7 +95,7 @@ public Gst.Object Parent {
   }
 }
 
-[DllImport ("gstreamersharpglue-0.10") ]
+[DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_object_get_lock_offset ();
 
 static uint lock_offset = gstsharp_gst_object_get_lock_offset ();
