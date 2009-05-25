@@ -189,7 +189,8 @@ gst_pes_filter_parse (GstPESFilter * filter)
     case ID_PROGRAM_STREAM_DIRECTORY:
     case ID_DSMCC_STREAM:
     case ID_ITU_TREC_H222_TYPE_E_STREAM:
-      goto skip;
+      /* Push directly out */
+      goto push_out;
     case ID_PADDING_STREAM:
       GST_DEBUG ("skipping padding stream");
       goto skip;
@@ -404,6 +405,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
     goto lost_sync;
   }
 
+push_out:
   {
     GstBuffer *out;
     guint16 consumed;
