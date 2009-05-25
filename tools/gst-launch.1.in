@@ -272,14 +272,19 @@ Plays a .WAV file that contains raw audio data (PCM).
 Convert a .WAV file containing raw audio data into an Ogg Vorbis or mp3 file
 
 .B
-        gst\-launch cdparanoia ! lame ! filesink location=cd.mp3
+        gst\-launch cdparanoiasrc mode=continuous ! audioconvert ! lame ! id3v2mux ! filesink location=cd.mp3
 .br
 rips all tracks from compact disc and convert them into a single mp3 file
 
-Using \fBgst\-inspect\fR(1), it is possible to discover settings for cdparanoia
-that will tell it to rip individual tracks. Alternatively, you can use an URI
-and gst-launch will find an element (such as cdparanoia) that supports that
-protocol for you, e.g.:
+.B
+        gst\-launch cdparanoiasrc track=5 ! audioconvert ! lame ! id3v2mux ! filesink location=track5.mp3
+.br
+rips track 5 from the CD and converts it into a single mp3 file
+
+Using \fBgst\-inspect\fR(1), it is possible to discover settings like the above
+for cdparanoiasrc that will tell it to rip the entire cd or only tracks of it.
+Alternatively, you can use an URI and gst-launch will find an element (such as
+cdparanoia) that supports that protocol for you, e.g.:
 .B
        gst\-launch cdda://5 ! lame vbr=new vbr-quality=6 ! filesink location=track5.mp3
 
