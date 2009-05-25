@@ -170,6 +170,8 @@
 #define ST_PS_AUDIO_AC3			0x81
 #define ST_PS_AUDIO_DTS			0x8a
 #define ST_PS_AUDIO_LPCM		0x8b
+#define ST_HDV_PRIVATE_A0		0xa0
+#define ST_HDV_PRIVATE_A1		0xa1
 #define ST_PS_DVD_SUBPICTURE            0xff
 
 /* Un-official time-code stream */

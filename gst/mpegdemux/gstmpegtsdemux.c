@@ -620,6 +620,16 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
         caps = gst_caps_new_simple ("private/teletext", NULL);
       }
       break;
+    case ST_HDV_PRIVATE_A0:
+      template = klass->private_template;
+      name = g_strdup_printf ("private_%04x", stream->PID);
+      caps = gst_caps_new_simple ("private/hdv-a0", NULL);
+      break;
+    case ST_HDV_PRIVATE_A1:
+      template = klass->private_template;
+      name = g_strdup_printf ("private_%04x", stream->PID);
+      caps = gst_caps_new_simple ("private/hdv-a1", NULL);
+      break;
     case ST_PRIVATE_SECTIONS:
     case ST_MHEG:
     case ST_DSMCC:
