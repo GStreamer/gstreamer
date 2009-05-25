@@ -401,7 +401,12 @@ gst_ffmpeg_cfg_init ()
   gst_ffmpeg_add_pspec (pspec, quantizer, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_string ("statsfile", "Statistics Filename",
-      "Filename to store data for 2-pass encoding", "stats.log",
+      "Filename to store data for 2-pass encoding (deprecated, use multipass-cache-file)",
+      "stats.log", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  gst_ffmpeg_add_pspec (pspec, filename, FALSE, mpeg, NULL);
+
+  pspec = g_param_spec_string ("multipass-cache-file", "Multipass Cache File",
+      "Filename for multipass cache file", "stats.log",
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, filename, FALSE, mpeg, NULL);
 
