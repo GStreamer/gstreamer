@@ -5127,16 +5127,19 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
     gst_task_set_lock (task, GST_PAD_GET_STREAM_LOCK (pad));
     gst_task_set_thread_callbacks (task, &thr_callbacks, pad, NULL);
     GST_DEBUG_OBJECT (pad, "created task");
+    GST_PAD_TASK (pad) = task;
+    gst_object_ref (task);
     /* release lock to post the message */
     GST_OBJECT_UNLOCK (pad);
 
     do_stream_status (pad, GST_STREAM_STATUS_TYPE_CREATE, NULL, task);
 
+    gst_object_unref (task);
+
     GST_OBJECT_LOCK (pad);
     /* nobody else is supposed to have changed the pad now */
-    if (GST_PAD_TASK (pad) != NULL)
-      goto concurrent_start;
-    GST_PAD_TASK (pad) = task;
+    if (GST_PAD_TASK (pad) != task)
+      goto concurrent_stop;
   }
   res = gst_task_set_state (task, GST_TASK_STARTED);
   GST_OBJECT_UNLOCK (pad);
@@ -5144,13 +5147,10 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
   return res;
 
   /* ERRORS */
-concurrent_start:
+concurrent_stop:
   {
-    g_warning ("two threads started pad %s:%s at the same time",
-        GST_DEBUG_PAD_NAME (pad));
     GST_OBJECT_UNLOCK (pad);
-    gst_object_unref (task);
-    return FALSE;
+    return TRUE;
   }
 }
 
