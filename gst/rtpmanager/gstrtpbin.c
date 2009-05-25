@@ -306,6 +306,8 @@ struct _GstRtpBinStream
   gulong demux_newpad_sig;
   gulong demux_ptreq_sig;
   gulong demux_pt_change_sig;
+  /* ghostpads from the ptdemuxer */
+  GSList *pads;
 
   /* if we have calculated a valid unix_delta for this stream */
   gboolean have_sync;
@@ -1169,6 +1171,7 @@ static void
 free_stream (GstRtpBinStream * stream)
 {
   GstRtpBinSession *session;
+  GSList *walk;
 
   session = stream->session;
 
@@ -1183,6 +1186,14 @@ free_stream (GstRtpBinStream * stream)
 
   gst_bin_remove (GST_BIN_CAST (session->bin), stream->buffer);
   gst_bin_remove (GST_BIN_CAST (session->bin), stream->demux);
+
+  for (walk = stream->pads; walk; walk = g_slist_next (walk)) {
+    GstPad *gpad = GST_PAD_CAST (walk->data);
+
+    gst_pad_set_active (gpad, FALSE);
+    gst_element_remove_pad (GST_ELEMENT_CAST (session->bin), gpad);
+  }
+  g_slist_free (stream->pads);
 
   g_free (stream);
 }
@@ -1879,6 +1890,8 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
   gst_pad_set_caps (gpad, GST_PAD_CAPS (pad));
   gst_pad_set_active (gpad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
+
+  stream->pads = g_slist_prepend (stream->pads, gpad);
 
   GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
 
