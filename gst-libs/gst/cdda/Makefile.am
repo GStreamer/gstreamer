@@ -1,9 +1,7 @@
 lib_LTLIBRARIES = libgstcdda-@GST_MAJORMINOR@.la
 
 libgstcdda_@GST_MAJORMINOR@_la_SOURCES = \
-	gstcddabasesrc.c \
-	sha1.c \
-	sha1.h
+	gstcddabasesrc.c
 
 libgstcdda_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/cdda
 libgstcdda_@GST_MAJORMINOR@include_HEADERS = \

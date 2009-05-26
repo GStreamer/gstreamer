@@ -1081,36 +1081,35 @@ cddb_sum (gint n)
   return ret;
 }
 
-#include "sha1.h"
-
 static void
 gst_cddabasesrc_calculate_musicbrainz_discid (GstCddaBaseSrc * src)
 {
   GString *s;
-  SHA_INFO sha;
+  GChecksum *sha;
   guchar digest[20];
   gchar *ptr;
   gchar tmp[9];
   gulong i;
   guint leadout_sector;
+  gsize digest_len;
 
   s = g_string_new (NULL);
 
   leadout_sector = src->tracks[src->num_tracks - 1].end + 1 + CD_MSF_OFFSET;
 
   /* generate SHA digest */
-  sha_init (&sha);
+  sha = g_checksum_new (G_CHECKSUM_SHA1);
   g_snprintf (tmp, sizeof (tmp), "%02X", src->tracks[0].num);
   g_string_append_printf (s, "%02X", src->tracks[0].num);
-  sha_update (&sha, (SHA_BYTE *) tmp, 2);
+  g_checksum_update (sha, (guchar *) tmp, 2);
 
   g_snprintf (tmp, sizeof (tmp), "%02X", src->tracks[src->num_tracks - 1].num);
   g_string_append_printf (s, " %02X", src->tracks[src->num_tracks - 1].num);
-  sha_update (&sha, (SHA_BYTE *) tmp, 2);
+  g_checksum_update (sha, (guchar *) tmp, 2);
 
   g_snprintf (tmp, sizeof (tmp), "%08X", leadout_sector);
   g_string_append_printf (s, " %08X", leadout_sector);
-  sha_update (&sha, (SHA_BYTE *) tmp, 8);
+  g_checksum_update (sha, (guchar *) tmp, 8);
 
   for (i = 0; i < 99; i++) {
     if (i < src->num_tracks) {
@@ -1118,15 +1117,17 @@ gst_cddabasesrc_calculate_musicbrainz_discid (GstCddaBaseSrc * src)
 
       g_snprintf (tmp, sizeof (tmp), "%08X", frame_offset);
       g_string_append_printf (s, " %08X", frame_offset);
-      sha_update (&sha, (SHA_BYTE *) tmp, 8);
+      g_checksum_update (sha, (guchar *) tmp, 8);
     } else {
-      sha_update (&sha, (SHA_BYTE *) "00000000", 8);
+      g_checksum_update (sha, (guchar *) "00000000", 8);
     }
   }
-  sha_final (digest, &sha);
+  digest_len = 20;
+  g_checksum_get_digest (sha, (guint8 *) & digest, &digest_len);
 
   /* re-encode to base64 */
-  ptr = g_base64_encode (digest, 20);
+  ptr = g_base64_encode (digest, digest_len);
+  g_checksum_free (sha);
   i = strlen (ptr);
 
   g_assert (i < sizeof (src->mb_discid) + 1);
