@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include "gstdvdlpcmdec.h"
+#include <gst/audio/multichannel.h>
 
 GST_DEBUG_CATEGORY_STATIC (dvdlpcm_debug);
 #define GST_CAT_DEFAULT dvdlpcm_debug
@@ -175,13 +176,111 @@ gst_dvdlpcmdec_init (GstDvdLpcmDec * dvdlpcmdec)
   gst_dvdlpcm_reset (dvdlpcmdec);
 }
 
+static GstAudioChannelPosition *
+get_audio_channel_positions (GstDvdLpcmDec * dvdlpcmdec)
+{
+  gint n_channels = dvdlpcmdec->channels;
+  GstAudioChannelPosition *ret = g_new (GstAudioChannelPosition, n_channels);
+
+  /* FIXME: The channel layouts for 5.1 and 7.1 are just guesses, I can't
+   * find any samples or confirmation */
+  switch (n_channels) {
+    case 8:
+      ret[7] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
+      ret[6] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
+      /* Fall through */
+    case 6:
+      ret[5] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      ret[4] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+      ret[3] = GST_AUDIO_CHANNEL_POSITION_LFE;
+      ret[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+      /* Fall through */
+    case 2:
+      ret[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      ret[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      break;
+    case 4:
+      ret[3] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      ret[2] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+      ret[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      ret[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      break;
+    case 1:
+      ret[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+      break;
+    default:
+      g_free (ret);
+      ret = NULL;
+      break;
+  }
+
+  return ret;
+}
+
+static void
+gst_dvdlpcmdec_send_tags (GstDvdLpcmDec * dvdlpcmdec)
+{
+  GstTagList *taglist;
+  guint bitrate = dvdlpcmdec->channels * dvdlpcmdec->out_width *
+      dvdlpcmdec->rate;
+
+  taglist = gst_tag_list_new ();
+
+  gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
+      GST_TAG_AUDIO_CODEC, "LPCM Audio", GST_TAG_BITRATE, bitrate, NULL);
+
+  gst_element_found_tags_for_pad (GST_ELEMENT (dvdlpcmdec), dvdlpcmdec->srcpad,
+      taglist);
+}
+
+static gboolean
+gst_dvdlpcmdec_set_outcaps (GstDvdLpcmDec * dvdlpcmdec)
+{
+  gboolean res = TRUE;
+  GstCaps *src_caps;
+  GstAudioChannelPosition *pos;
+
+  /* Build caps to set on the src pad, which we know from the incoming caps */
+  src_caps = gst_caps_new_simple ("audio/x-raw-int",
+      "rate", G_TYPE_INT, dvdlpcmdec->rate,
+      "channels", G_TYPE_INT, dvdlpcmdec->channels,
+      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+      "depth", G_TYPE_INT, dvdlpcmdec->out_width,
+      "width", G_TYPE_INT, dvdlpcmdec->out_width,
+      "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  pos = get_audio_channel_positions (dvdlpcmdec);
+  if (pos) {
+    gst_audio_set_channel_positions (gst_caps_get_structure (src_caps, 0), pos);
+    g_free (pos);
+  }
+
+  GST_DEBUG_OBJECT (dvdlpcmdec, "Set rate %d, channels %d, width %d (out %d)",
+      dvdlpcmdec->rate, dvdlpcmdec->channels, dvdlpcmdec->width,
+      dvdlpcmdec->out_width);
+
+  res = gst_pad_set_caps (dvdlpcmdec->srcpad, src_caps);
+  if (res) {
+    GST_DEBUG_OBJECT (dvdlpcmdec, "Successfully set output caps: %"
+        GST_PTR_FORMAT, src_caps);
+
+    gst_dvdlpcmdec_send_tags (dvdlpcmdec);
+  } else {
+    GST_DEBUG_OBJECT (dvdlpcmdec, "Failed to set output caps: %"
+        GST_PTR_FORMAT, src_caps);
+  }
+
+  gst_caps_unref (src_caps);
+
+  return res;
+}
+
 static gboolean
 gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
   gboolean res = TRUE;
   GstDvdLpcmDec *dvdlpcmdec;
-  GstCaps *src_caps;
 
   g_return_val_if_fail (caps != NULL, FALSE);
   g_return_val_if_fail (pad != NULL, FALSE);
@@ -190,7 +289,8 @@ gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  /* If we have the DVD structured LPCM (including header) */
+  /* If we have the DVD structured LPCM (including header) then we wait
+   * for incoming data before creating the output pad caps */
   if (gst_structure_has_name (structure, "audio/x-private1-lpcm")) {
     gst_pad_set_chain_function (dvdlpcmdec->sinkpad, gst_dvdlpcmdec_chain_dvd);
     goto done;
@@ -216,40 +316,18 @@ gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
   else
     dvdlpcmdec->out_width = dvdlpcmdec->width;
 
-  /* Build caps to set on the src pad, which we know from the incoming caps */
-  src_caps = gst_caps_new_simple ("audio/x-raw-int",
-      "rate", G_TYPE_INT, dvdlpcmdec->rate,
-      "channels", G_TYPE_INT, dvdlpcmdec->channels,
-      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-      "depth", G_TYPE_INT, dvdlpcmdec->out_width,
-      "width", G_TYPE_INT, dvdlpcmdec->out_width,
-      "signed", G_TYPE_BOOLEAN, TRUE, NULL);
-
-  GST_DEBUG_OBJECT (dvdlpcmdec, "Set rate %d, channels %d, width %d (out %d)",
-      dvdlpcmdec->rate, dvdlpcmdec->channels, dvdlpcmdec->width,
-      dvdlpcmdec->out_width);
-
-  if (!gst_pad_set_caps (dvdlpcmdec->srcpad, src_caps)) {
-    GST_DEBUG_OBJECT (dvdlpcmdec, "Failed to set caps!");
-    res = FALSE;
-  } else {
-    GST_DEBUG_OBJECT (dvdlpcmdec, "Successfully set caps: %" GST_PTR_FORMAT,
-        caps);
-  }
-
-  gst_caps_unref (src_caps);
+  res = gst_dvdlpcmdec_set_outcaps (dvdlpcmdec);
 
 done:
   gst_object_unref (dvdlpcmdec);
-
   return res;
 
   /* ERRORS */
 caps_parse_error:
   {
     GST_DEBUG_OBJECT (dvdlpcmdec, "Couldn't get parameters; missing caps?");
-    res = FALSE;
-    goto done;
+    gst_object_unref (dvdlpcmdec);
+    return FALSE;
   }
 }
 
@@ -382,26 +460,10 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
 
   /* see if we have a new header */
   if (header != dvdlpcmdec->header) {
-    GstCaps *src_caps;
-
     parse_header (dvdlpcmdec, header);
 
-    /* Build caps to set on the src pad from what we've just parsed */
-    src_caps = gst_caps_new_simple ("audio/x-raw-int",
-        "rate", G_TYPE_INT, dvdlpcmdec->rate,
-        "channels", G_TYPE_INT, dvdlpcmdec->channels,
-        "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-        "depth", G_TYPE_INT, dvdlpcmdec->out_width,
-        "width", G_TYPE_INT, dvdlpcmdec->out_width,
-        "signed", G_TYPE_BOOLEAN, TRUE, NULL);
-
-    GST_DEBUG_OBJECT (dvdlpcmdec, "Set rate %d, channels %d, width %d",
-        dvdlpcmdec->rate, dvdlpcmdec->channels, dvdlpcmdec->width);
-
-    if (!gst_pad_set_caps (dvdlpcmdec->srcpad, src_caps))
+    if (!gst_dvdlpcmdec_set_outcaps (dvdlpcmdec))
       goto negotiation_failed;
-
-    gst_caps_unref (src_caps);
 
     dvdlpcmdec->header = header;
   }
@@ -502,7 +564,8 @@ done:
   /* ERRORS */
 negotiation_failed:
   {
-    GST_DEBUG_OBJECT (dvdlpcmdec, "Failed to set caps!");
+    GST_ELEMENT_ERROR (dvdlpcmdec, STREAM, FORMAT, (NULL),
+        ("Failed to configure output format"));
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }
@@ -540,6 +603,8 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
       /* We can just pass 16-bits straight through intact, once we set 
        * appropriate things on the buffer */
       samples = size / dvdlpcmdec->channels / 2;
+      if (samples < 1)
+        goto drop;
       buf = gst_buffer_make_metadata_writable (buf);
       break;
     }
@@ -553,6 +618,9 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
       guint8 *dest;
       GstBuffer *outbuf;
       GstCaps *bufcaps = GST_PAD_CAPS (dvdlpcmdec->srcpad);
+
+      if (samples < 1)
+        goto drop;
 
       ret = gst_pad_alloc_buffer_and_set_caps (dvdlpcmdec->srcpad, 0,
           samples * 3, bufcaps, &outbuf);
@@ -602,6 +670,9 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
 
       samples = size / dvdlpcmdec->channels / 3;
 
+      if (samples < 1)
+        goto drop;
+
       /* Ensure our output buffer is writable */
       buf = gst_buffer_make_writable (buf);
 
@@ -640,6 +711,14 @@ done:
   return ret;
 
   /* ERRORS */
+drop:
+  {
+    GST_DEBUG_OBJECT (dvdlpcmdec, "Buffer of size %u is too small. Dropping",
+        GST_BUFFER_SIZE (buf));
+    gst_buffer_unref (buf);
+    ret = GST_FLOW_OK;
+    goto done;
+  }
 not_negotiated:
   {
     GST_ELEMENT_ERROR (dvdlpcmdec, STREAM, FORMAT, (NULL),
