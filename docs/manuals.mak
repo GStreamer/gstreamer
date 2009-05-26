@@ -80,12 +80,12 @@ debug:
 
 # a rule to copy all of the source for docs into $(builddir)/build
 $(BUILDDIR)/$(MAIN): $(XML) $(CSS) $(EXTRA_SRC)
-	@-mkdir -p $(BUILDDIR)
-	@if test "x$(EXTRA_SRC)" != "x"; then for a in $(EXTRA_SRC); do cp $(srcdir)/$$a $(BUILDDIR); done; fi
-	@for a in $(XML); do cp $(srcdir)/$$a $(BUILDDIR); done
-	@for a in $(CSS); do cp $(srcdir)/$$a $(BUILDDIR); done
-	@cp ../version.entities $(BUILDDIR)
-	@cp $(top_srcdir)/docs/url.entities $(BUILDDIR)
+	@-mkdir -p $(BUILDDIR); \
+	if test "x$(EXTRA_SRC)" != "x"; then for a in $(EXTRA_SRC); do cp $(srcdir)/$$a $(BUILDDIR); done; fi ; \
+	for a in $(XML); do cp $(srcdir)/$$a $(BUILDDIR); done ; \
+	for a in $(CSS); do cp $(srcdir)/$$a $(BUILDDIR); done ; \
+	cp ../version.entities $(BUILDDIR) ; \
+	cp $(top_srcdir)/docs/url.entities $(BUILDDIR)
 
 # we should switch to xsltproc
 # docbook2html aka jade can't add the encoding easily to the html meta
