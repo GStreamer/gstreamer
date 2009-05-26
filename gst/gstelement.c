@@ -531,6 +531,62 @@ gst_element_get_base_time (GstElement * element)
 }
 
 /**
+ * gst_element_set_start_time:
+ * @element: a #GstElement.
+ * @time: the base time to set.
+ *
+ * Set the start time of an element. See gst_element_get_start_time().
+ *
+ * MT safe.
+ *
+ * Since: 0.10.24
+ */
+void
+gst_element_set_start_time (GstElement * element, GstClockTime time)
+{
+  GstClockTime old;
+
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  GST_OBJECT_LOCK (element);
+  old = GST_ELEMENT_START_TIME (element);
+  GST_ELEMENT_START_TIME (element) = time;
+  GST_OBJECT_UNLOCK (element);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, element,
+      "set start_time=%" GST_TIME_FORMAT ", old %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time), GST_TIME_ARGS (old));
+}
+
+/**
+ * gst_element_get_start_time:
+ * @element: a #GstElement.
+ *
+ * Returns the start time of the element. The start time is the
+ * running time of the clock when this element was last put to
+ * PAUSED. 
+ *
+ * MT safe.
+ *
+ * Returns: the start time of the element.
+ *
+ * Since: 0.10.24
+ */
+GstClockTime
+gst_element_get_start_time (GstElement * element)
+{
+  GstClockTime result;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_TIME_NONE);
+
+  GST_OBJECT_LOCK (element);
+  result = GST_ELEMENT_START_TIME (element);
+  GST_OBJECT_UNLOCK (element);
+
+  return result;
+}
+
+/**
  * gst_element_is_indexable:
  * @element: a #GstElement.
  *

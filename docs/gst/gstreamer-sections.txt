@@ -482,6 +482,7 @@ GST_ELEMENT_PARENT
 GST_ELEMENT_BUS
 GST_ELEMENT_CLOCK
 GST_ELEMENT_PADS
+GST_ELEMENT_START_TIME
 GST_ELEMENT_ERROR
 GST_ELEMENT_WARNING
 GST_ELEMENT_INFO
@@ -523,6 +524,8 @@ gst_element_link_filtered
 <SUBSECTION element-properties>
 gst_element_set_base_time
 gst_element_get_base_time
+gst_element_set_start_time
+gst_element_get_start_time
 gst_element_set_bus
 gst_element_get_bus
 gst_element_get_factory
