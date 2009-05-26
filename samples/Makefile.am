@@ -1,10 +1,13 @@
-TARGETS = playbin-player.exe decodebin-transcoder.exe helloworld.exe typefind.exe metadata.exe gtk-video-player.exe
+if USE_MONO_COMPILER
+MCS_TARGETS = gtk-video-player.exe
+endif
+TARGETS = playbin-player.exe decodebin-transcoder.exe helloworld.exe typefind.exe metadata.exe $(MCS_TARGETS)
 DEBUGS = $(addsuffix .mdb, $(TARGETS))
 
 all: $(TARGETS) link
 
 assemblies=$(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll
-references=$(addprefix /r:, $(assemblies))
+references=$(addprefix -r:, $(assemblies))
 
 playbin-player.exe: $(srcdir)/PlayBinPlayer.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/PlayBinPlayer.cs

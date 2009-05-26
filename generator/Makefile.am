@@ -64,5 +64,5 @@ EXTRA_DIST =					\
 	$(dist_sources)
 
 gst-gapi_codegen.exe: $(build_sources)
-	$(CSC) /debug /out:gst-gapi_codegen.exe $(OFF_T_FLAGS) $(references) $(build_sources)
+	$(CSC) -debug -out:gst-gapi_codegen.exe $(OFF_T_FLAGS) $(references) $(build_sources)
 

@@ -71,6 +71,11 @@ overrides = \
 	override/NavigationAdapter.cs
 
 build_sources = $(addprefix $(srcdir)/, $(sources))
+if USE_MONO_COMPILER
+csc_build_sources = $(build_sources)
+else
+csc_build_sources = $(subst /,\\,$(build_sources)) 
+endif
 
 customs = 			\
 	Bin.custom		\
@@ -135,5 +140,5 @@ $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
 	cp $(top_srcdir)/gstreamer-sharp.snk .
 
 $(ASSEMBLY): $(build_sources) generated-stamp $(KEYFILE)
-	$(CSC) /nowarn:0612 /debug /unsafe /out:$(ASSEMBLY) /target:library $(references) $(build_sources) $(GENERATED_SOURCES)
+	$(CSC) -nowarn:0612 -debug -unsafe -out:$(ASSEMBLY) -target:library $(references) $(csc_build_sources) $(GENERATED_SOURCES)
 

@@ -42,12 +42,13 @@ else
 		LIB_SUFFIX=.dll
 	fi
 fi
-                                                                                
+AM_CONDITIONAL(USE_MONO_COMPILER, test "x$has_mono" = "xtrue")
+
 CS="C#"
 if test "x$CSC" = "xno" ; then
         AC_MSG_ERROR([No $CS compiler found])
 fi
-                                                                                
+
 AC_PATH_PROG(GACUTIL, gacutil, no)
 if test "x$GACUTIL" = "xno" ; then
         AC_MSG_ERROR([No gacutil tool found])
