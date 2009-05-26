@@ -1,6 +1,9 @@
 public object this[string property] {
   get {
-    return GetProperty (property).Val;
+    GLib.Value v = GetProperty (property);
+    object o = v.Val;
+    v.Dispose ();
+    return o;
   }
   set {
     GLib.Value v = new GLib.Value (this, property);
