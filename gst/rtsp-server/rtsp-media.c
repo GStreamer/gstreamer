@@ -761,11 +761,18 @@ on_new_ssrc (GObject *session, GObject *source, GstRTSPMediaStream *stream)
     if (stats) {
       const gchar *rtcp_from;
 
+      dump_structure (stats);
+
       rtcp_from = gst_structure_get_string (stats, "rtcp-from");
       if ((trans = find_transport (stream, rtcp_from))) {
         g_message ("%p: found transport %p for source  %p", stream, trans, source);
+
+	/* keep ref to the source */
+	trans->rtpsource = source;
+
         g_object_set_qdata (source, ssrc_stream_map_key, trans);
       }
+      gst_structure_free (stats);
     }
   } else {
     g_message ("%p: source %p for transport %p", stream, source, trans);
@@ -775,30 +782,20 @@ on_new_ssrc (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 static void
 on_ssrc_sdes (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 {
-  GstStructure *sdes;
-
   g_message ("%p: new SDES %p", stream, source);
-  g_object_get (source, "sdes", &sdes, NULL);
-  dump_structure (sdes);
 }
 
 static void
 on_ssrc_active (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 {
-  GstStructure *stats;
   GstRTSPMediaTrans *trans;
 
   trans = g_object_get_qdata (source, ssrc_stream_map_key);
 
   g_message ("%p: source %p in transport %p is active", stream, trans, source);
 
-  if (trans && trans->keep_alive) {
+  if (trans && trans->keep_alive)
     trans->keep_alive (trans->ka_user_data);
-  }
-
-  g_object_get (source, "stats", &stats, NULL);
-  dump_structure (stats);
-  gst_structure_free (stats);
 }
 
 static void
@@ -810,13 +807,27 @@ on_bye_ssrc (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 static void
 on_bye_timeout (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 {
+  GstRTSPMediaTrans *trans;
+
   g_message ("%p: source %p bye timeout", stream, source);
+
+  if ((trans = g_object_get_qdata (source, ssrc_stream_map_key))) {
+    trans->rtpsource = NULL;
+    trans->timeout = TRUE;
+  }
 }
 
 static void
 on_timeout (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 {
+  GstRTSPMediaTrans *trans;
+
   g_message ("%p: source %p timeout", stream, source);
+
+  if ((trans = g_object_get_qdata (source, ssrc_stream_map_key))) {
+    trans->rtpsource = NULL;
+    trans->timeout = TRUE;
+  }
 }
 
 static GstFlowReturn
