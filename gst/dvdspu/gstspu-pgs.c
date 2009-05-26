@@ -430,12 +430,13 @@ parse_presentation_segment (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 
     if (obj->flags & ~(PGS_COMPOSITION_OBJECT_FLAG_CROPPED |
             PGS_COMPOSITION_OBJECT_FLAG_FORCED))
-      g_warning ("PGS Composition Object has unknown flags: 0x%02x",
+      GST_ERROR ("PGS Composition Object has unknown flags: 0x%02x",
           obj->flags);
   }
 
   if (payload != end) {
-    g_warning ("PGS Composition Object: %ld bytes not consumed", end - payload);
+    GST_ERROR ("PGS Composition Object: %" G_GSSIZE_FORMAT
+        " bytes not consumed", end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -495,7 +496,8 @@ parse_set_palette (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 #endif
 
   if (payload != end) {
-    g_warning ("PGS Set Palette: %ld bytes not consumed", end - payload);
+    GST_ERROR ("PGS Set Palette: %" G_GSSIZE_FORMAT " bytes not consumed",
+        end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -529,7 +531,8 @@ parse_set_window (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
       state->pgs.win_h);
 
   if (payload != end) {
-    g_warning ("PGS Set Window: %ld bytes not consumed", end - payload);
+    GST_ERROR ("PGS Set Window: %" G_GSSIZE_FORMAT " bytes not consumed",
+        end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -590,7 +593,8 @@ parse_set_object_data (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
     dump_rle_data (dvdspu, obj->rle_data, obj->rle_data_size);
 
   if (payload != end) {
-    g_warning ("PGS Set Object Data: %ld bytes not consumed", end - payload);
+    GST_ERROR ("PGS Set Object Data: %" G_GSSIZE_FORMAT " bytes not consumed",
+        end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -642,7 +646,7 @@ parse_pgs_packet (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
       pgs_state->in_presentation_segment = FALSE;
       break;
     default:
-      g_warning ("Unknown PGS command: type 0x%02x len %u", type, len);
+      GST_ERROR ("Unknown PGS command: type 0x%02x len %u", type, len);
       dump_bytes (payload, len);
       break;
   }
