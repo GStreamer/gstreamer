@@ -4528,7 +4528,7 @@
 (define-method get_missing_elements
   (of-object "GstParseContext")
   (c-name "gst_parse_context_get_missing_elements")
-  (return-type "gchar**")
+  (return-type "GStrv")
 )
 
 (define-method free
@@ -5042,13 +5042,13 @@
 (define-method get_preset_names
   (of-object "GstPreset")
   (c-name "gst_preset_get_preset_names")
-  (return-type "gchar**")
+  (return-type "GStrv")
 )
 
 (define-method get_property_names
   (of-object "GstPreset")
   (c-name "gst_preset_get_property_names")
-  (return-type "gchar**")
+  (return-type "GStrv")
 )
 
 (define-method load_preset
