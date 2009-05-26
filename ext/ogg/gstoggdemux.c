@@ -1620,7 +1620,7 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary,
       "get next page, current offset %" G_GINT64_FORMAT ", bytes boundary %"
       G_GINT64_FORMAT, ogg->offset, boundary);
 
-  if (boundary > 0)
+  if (boundary >= 0)
     end_offset = ogg->offset + boundary;
 
   while (TRUE) {
