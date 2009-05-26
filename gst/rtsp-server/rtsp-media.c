@@ -713,18 +713,19 @@ find_transport (GstRTSPMediaStream *stream, const gchar *rtcp_from)
 {
   GList *walk;
   GstRTSPMediaTrans *result = NULL;
-  const gchar *dest;
+  const gchar *tmp;
+  gchar *dest;
   guint port;
 
   if (rtcp_from == NULL)
     return NULL;
 
-  dest = g_strrstr (rtcp_from, ":");
-  if (dest == NULL)
+  tmp = g_strrstr (rtcp_from, ":");
+  if (tmp == NULL)
     return NULL;
 
-  port = atoi (dest + 1);
-  dest = g_strndup (rtcp_from, dest - rtcp_from);
+  port = atoi (tmp + 1);
+  dest = g_strndup (rtcp_from, tmp - rtcp_from);
 
   g_message ("finding %s:%d", dest, port);
 
@@ -740,6 +741,8 @@ find_transport (GstRTSPMediaStream *stream, const gchar *rtcp_from)
       break;
     }
   }
+  g_free (dest);
+
   return result;
 }
 
