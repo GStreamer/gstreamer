@@ -201,7 +201,8 @@ make_address_string (GstNetAddress * addr, gchar * dest, gulong n)
       gst_netaddress_get_ip4_address (addr, &address, &port);
 
       g_snprintf (dest, n, "%d.%d.%d.%d:%d", (address >> 24) & 0xff,
-          (address >> 16) & 0xff, (address >> 8) & 0xff, address & 0xff, port);
+          (address >> 16) & 0xff, (address >> 8) & 0xff, address & 0xff,
+          g_ntohs (port));
       break;
     }
     case GST_NET_TYPE_IP6:
@@ -216,7 +217,7 @@ make_address_string (GstNetAddress * addr, gchar * dest, gulong n)
           (address[4] << 8) | address[5], (address[6] << 8) | address[7],
           (address[8] << 8) | address[9], (address[10] << 8) | address[11],
           (address[12] << 8) | address[13], (address[14] << 8) | address[15],
-          port);
+          g_ntohs (port));
       break;
     }
     default:
