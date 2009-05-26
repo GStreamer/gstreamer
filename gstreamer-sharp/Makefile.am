@@ -17,7 +17,7 @@ gapi_DATA = $(APIS)
 
 glue_includes="gst/gst.h gst/interfaces/colorbalance.h gst/interfaces/colorbalancechannel.h gst/interfaces/tuner.h gst/interfaces/tunerchannel.h gst/interfaces/tunernorm.h"
 
-CLEANFILES = $(ASSEMBLY) $(ASSEMBLY).mdb generated-stamp generated/*.cs glue/generated.c $(API) $(KEYFILE)
+CLEANFILES = $(ASSEMBLY) $(ASSEMBLY).mdb $(ASSEMBLY_NAME).pdb generated-stamp generated/*.cs glue/generated.c $(API) $(KEYFILE)
 DISTCLEANFILES = $(ASSEMBLY).config AssemblyInfo.cs
 MAINTAINERCLEANFILES = Makefile.in
 
