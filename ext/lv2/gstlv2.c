@@ -177,8 +177,11 @@ gst_lv2_base_init (gpointer g_class)
   g_assert (control_in_count == gsp_class->num_control_in);
   g_assert (control_out_count == gsp_class->num_control_out);
 
-  /*if (!LV2_IS_INPLACE_BROKEN (desc->Properties))
-     GST_SIGNAL_PROCESSOR_CLASS_SET_CAN_PROCESS_IN_PLACE (klass); */
+  val = slv2_value_new_uri (world,
+      "http://lv2plug.in/ns/lv2core#inPlaceBroken");
+  if (!slv2_plugin_has_feature (lv2plugin, val))
+    GST_SIGNAL_PROCESSOR_CLASS_SET_CAN_PROCESS_IN_PLACE (klass);
+  slv2_value_free (val);
 
   klass->plugin = lv2plugin;
 }
