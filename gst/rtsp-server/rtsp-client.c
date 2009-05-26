@@ -857,6 +857,8 @@ handle_options_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *
             GST_RTSP_PAUSE |
             GST_RTSP_PLAY |
             GST_RTSP_SETUP |
+	    GST_RTSP_GET_PARAMETER |
+	    GST_RTSP_SET_PARAMETER |
             GST_RTSP_TEARDOWN;
 
   str = gst_rtsp_options_as_text (options);
@@ -997,11 +999,13 @@ handle_request (GstRTSPClient *client, GstRTSPMessage *request)
     case GST_RTSP_TEARDOWN:
       handle_teardown_request (client, uri, session, request);
       break;
-    case GST_RTSP_ANNOUNCE:
+    case GST_RTSP_SET_PARAMETER:
     case GST_RTSP_GET_PARAMETER:
+      send_generic_response (client, GST_RTSP_STS_OK, request);
+      break;
+    case GST_RTSP_ANNOUNCE:
     case GST_RTSP_RECORD:
     case GST_RTSP_REDIRECT:
-    case GST_RTSP_SET_PARAMETER:
       send_generic_response (client, GST_RTSP_STS_NOT_IMPLEMENTED, request);
       break;
     case GST_RTSP_INVALID:
