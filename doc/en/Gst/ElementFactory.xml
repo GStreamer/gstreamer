@@ -13,23 +13,6 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="protected ElementFactory ();" />
       <MemberType>Constructor</MemberType>
@@ -37,149 +20,339 @@
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName=".ctor">
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public ElementFactory (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Author">
+      <Parameters>
+        <Parameter Name="raw" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="raw">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Author">
       <MemberSignature Language="C#" Value="public string Author { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="CanSinkCaps">
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CanSinkCaps">
       <MemberSignature Language="C#" Value="public bool CanSinkCaps (Gst.Caps caps);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="caps" Type="Gst.Caps" /></Parameters>
-      <Docs><param name="caps">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="CanSrcCaps">
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="caps" Type="Gst.Caps" />
+      </Parameters>
+      <Docs>
+        <param name="caps">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CanSrcCaps">
       <MemberSignature Language="C#" Value="public bool CanSrcCaps (Gst.Caps caps);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="caps" Type="Gst.Caps" /></Parameters>
-      <Docs><param name="caps">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Create">
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="caps" Type="Gst.Caps" />
+      </Parameters>
+      <Docs>
+        <param name="caps">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Create">
       <MemberSignature Language="C#" Value="public Gst.Element Create (string name);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Description">
+      <ReturnValue>
+        <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="name" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="name">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Description">
       <MemberSignature Language="C#" Value="public string Description { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="ElementType">
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ElementType">
       <MemberSignature Language="C#" Value="public GLib.GType ElementType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Find">
+      <ReturnValue>
+        <ReturnType>GLib.GType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Find">
       <MemberSignature Language="C#" Value="public static Gst.ElementFactory Find (string name);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.ElementFactory</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="GType">
+      <ReturnValue>
+        <ReturnType>Gst.ElementFactory</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="name" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="name">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GType">
       <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="HasInterface">
+      <ReturnValue>
+        <ReturnType>GLib.GType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="HasInterface">
       <MemberSignature Language="C#" Value="public bool HasInterface (string interfacename);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="interfacename" Type="System.String" /></Parameters>
-      <Docs><param name="interfacename">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Klass">
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="interfacename" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="interfacename">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Klass">
       <MemberSignature Language="C#" Value="public string Klass { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Longname">
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Longname">
       <MemberSignature Language="C#" Value="public string Longname { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Make">
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Make">
       <MemberSignature Language="C#" Value="public static Gst.Element Make (string factoryname, string name);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="factoryname" Type="System.String" /><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="factoryname">To be added.</param><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="MakeFromUri"><MemberSignature Language="C#" Value="public static Gst.Element MakeFromUri (Gst.URIType type, string uri, string elementname);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue><Parameters><Parameter Name="type" Type="Gst.URIType" /><Parameter Name="uri" Type="System.String" /><Parameter Name="elementname" Type="System.String" /></Parameters><Docs><param name="type">To be added.</param><param name="uri">To be added.</param><param name="elementname">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="NumPadTemplates">
+      <ReturnValue>
+        <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="factoryname" Type="System.String" />
+        <Parameter Name="name" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="factoryname">To be added.</param>
+        <param name="name">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MakeFromUri">
+      <MemberSignature Language="C#" Value="public static Gst.Element MakeFromUri (Gst.URIType type, string uri, string elementname);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="type" Type="Gst.URIType" />
+        <Parameter Name="uri" Type="System.String" />
+        <Parameter Name="elementname" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="type">To be added.</param>
+        <param name="uri">To be added.</param>
+        <param name="elementname">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="NumPadTemplates">
       <MemberSignature Language="C#" Value="public uint NumPadTemplates { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Register"><MemberSignature Language="C#" Value="public static bool Register (Gst.Plugin plugin, string name, uint rank, GLib.GType type);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="plugin" Type="Gst.Plugin" /><Parameter Name="name" Type="System.String" /><Parameter Name="rank" Type="System.UInt32" /><Parameter Name="type" Type="GLib.GType" /></Parameters><Docs><param name="plugin">To be added.</param><param name="name">To be added.</param><param name="rank">To be added.</param><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="StaticPadTemplates">
+      <ReturnValue>
+        <ReturnType>System.UInt32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Register">
+      <MemberSignature Language="C#" Value="public static bool Register (Gst.Plugin plugin, string name, uint rank, GLib.GType type);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="plugin" Type="Gst.Plugin" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="rank" Type="System.UInt32" />
+        <Parameter Name="type" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="plugin">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="rank">To be added.</param>
+        <param name="type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StaticPadTemplates">
       <MemberSignature Language="C#" Value="public Gst.StaticPadTemplate[] StaticPadTemplates { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.StaticPadTemplate[]</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="UriProtocols">
+      <ReturnValue>
+        <ReturnType>Gst.StaticPadTemplate[]</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="UriProtocols">
       <MemberSignature Language="C#" Value="public string[] UriProtocols { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.String[]</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="UriType">
+      <ReturnValue>
+        <ReturnType>System.String[]</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="UriType">
       <MemberSignature Language="C#" Value="public Gst.URIType UriType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.URIType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+      <ReturnValue>
+        <ReturnType>Gst.URIType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
     </Member>
   </Members>
 </Type>

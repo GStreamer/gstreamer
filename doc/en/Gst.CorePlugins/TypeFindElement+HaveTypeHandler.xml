@@ -1,5 +1,5 @@
-<Type Name="HaveTypeHandler" FullName="Gst.CorePlugins.HaveTypeHandler">
-  <TypeSignature Language="C#" Value="public delegate void HaveTypeHandler(object o, HaveTypeArgs args);" />
+<Type Name="TypeFindElement+HaveTypeHandler" FullName="Gst.CorePlugins.TypeFindElement+HaveTypeHandler">
+  <TypeSignature Language="C#" Value="public delegate void TypeFindElement.HaveTypeHandler(object o, TypeFindElement.HaveTypeArgs args);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -9,7 +9,7 @@
   </Base>
   <Parameters>
     <Parameter Name="o" Type="System.Object" />
-    <Parameter Name="args" Type="Gst.CorePlugins.HaveTypeArgs" />
+    <Parameter Name="args" Type="Gst.CorePlugins.TypeFindElement+HaveTypeArgs" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>

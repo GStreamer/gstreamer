@@ -17,32 +17,44 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
     <Member MemberName="After">
       <MemberSignature Language="C#" Value="After" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.IndexLookupMethod</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Before">
+      <ReturnValue>
+        <ReturnType>Gst.IndexLookupMethod</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Before">
       <MemberSignature Language="C#" Value="Before" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.IndexLookupMethod</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Exact">
+      <ReturnValue>
+        <ReturnType>Gst.IndexLookupMethod</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Exact">
       <MemberSignature Language="C#" Value="Exact" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.IndexLookupMethod</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
+      <ReturnValue>
+        <ReturnType>Gst.IndexLookupMethod</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
     </Member>
   </Members>
 </Type>

@@ -17,41 +17,57 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
-    
     <Member MemberName="Download">
       <MemberSignature Language="C#" Value="Download" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferingMode</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Live">
+      <ReturnValue>
+        <ReturnType>Gst.BufferingMode</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Live">
       <MemberSignature Language="C#" Value="Live" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferingMode</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Stream">
+      <ReturnValue>
+        <ReturnType>Gst.BufferingMode</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Stream">
       <MemberSignature Language="C#" Value="Stream" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferingMode</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Timeshift">
+      <ReturnValue>
+        <ReturnType>Gst.BufferingMode</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Timeshift">
       <MemberSignature Language="C#" Value="Timeshift" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferingMode</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
+      <ReturnValue>
+        <ReturnType>Gst.BufferingMode</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
     </Member>
   </Members>
 </Type>

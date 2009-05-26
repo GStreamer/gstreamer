@@ -20,95 +20,135 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
-    
-    
-    
-    
-    
-    
-    
     <Member MemberName="DeltaUnit">
       <MemberSignature Language="C#" Value="DeltaUnit" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Discont">
+      <ReturnValue>
+        <ReturnType>Gst.BufferFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Discont">
       <MemberSignature Language="C#" Value="Discont" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Gap">
+      <ReturnValue>
+        <ReturnType>Gst.BufferFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Gap">
       <MemberSignature Language="C#" Value="Gap" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="InCaps">
+      <ReturnValue>
+        <ReturnType>Gst.BufferFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="InCaps">
       <MemberSignature Language="C#" Value="InCaps" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Last">
+      <ReturnValue>
+        <ReturnType>Gst.BufferFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Last">
       <MemberSignature Language="C#" Value="Last" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Media1">
+      <ReturnValue>
+        <ReturnType>Gst.BufferFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Media1">
       <MemberSignature Language="C#" Value="Media1" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Media2">
+      <ReturnValue>
+        <ReturnType>Gst.BufferFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Media2">
       <MemberSignature Language="C#" Value="Media2" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Media3">
+      <ReturnValue>
+        <ReturnType>Gst.BufferFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Media3">
       <MemberSignature Language="C#" Value="Media3" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Preroll">
+      <ReturnValue>
+        <ReturnType>Gst.BufferFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Preroll">
       <MemberSignature Language="C#" Value="Preroll" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Readonly">
+      <ReturnValue>
+        <ReturnType>Gst.BufferFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Readonly">
       <MemberSignature Language="C#" Value="Readonly" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
+      <ReturnValue>
+        <ReturnType>Gst.BufferFlags</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
     </Member>
   </Members>
 </Type>

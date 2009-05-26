@@ -17,23 +17,31 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
     <Member MemberName="Link">
       <MemberSignature Language="C#" Value="Link" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.StructureChangeType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Unlink">
+      <ReturnValue>
+        <ReturnType>Gst.StructureChangeType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Unlink">
       <MemberSignature Language="C#" Value="Unlink" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.StructureChangeType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
+      <ReturnValue>
+        <ReturnType>Gst.StructureChangeType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
     </Member>
   </Members>
 </Type>

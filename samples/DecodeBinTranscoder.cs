@@ -108,7 +108,7 @@ public class DecodeBinTranscoder : IDisposable
         pipeline.Bus.AddWatch(new BusFunc(OnBusMessage));
     }
     
-    private void OnNewDecodedPad(object o, NewDecodedPadArgs args)
+    private void OnNewDecodedPad(object o, DecodeBin.NewDecodedPadArgs args)
     {
         Pad sinkpad = audioconvert.GetStaticPad("sink");
 

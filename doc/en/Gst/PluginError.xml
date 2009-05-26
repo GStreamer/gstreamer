@@ -17,32 +17,44 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
     <Member MemberName="Dependencies">
       <MemberSignature Language="C#" Value="Dependencies" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.PluginError</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Module">
+      <ReturnValue>
+        <ReturnType>Gst.PluginError</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Module">
       <MemberSignature Language="C#" Value="Module" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.PluginError</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="NameMismatch">
+      <ReturnValue>
+        <ReturnType>Gst.PluginError</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="NameMismatch">
       <MemberSignature Language="C#" Value="NameMismatch" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.PluginError</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
+      <ReturnValue>
+        <ReturnType>Gst.PluginError</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
     </Member>
   </Members>
 </Type>

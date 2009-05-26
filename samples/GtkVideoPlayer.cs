@@ -106,7 +106,7 @@ public class MainWindow : Gtk.Window {
 
       _pipeline.Add (playbin);
 
-      sink.XwindowId = gdk_x11_drawable_get_xid (_da.GdkWindow.Handle);
+      (sink as XOverlay).XwindowId = gdk_x11_drawable_get_xid (_da.GdkWindow.Handle);
 
       playbin["video-sink"] = sink;
       playbin["uri"] = "file://" + dialog.Filename;

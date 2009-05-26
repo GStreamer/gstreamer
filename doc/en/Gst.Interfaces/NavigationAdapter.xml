@@ -1,5 +1,5 @@
 <Type Name="NavigationAdapter" FullName="Gst.Interfaces.NavigationAdapter">
-  <TypeSignature Language="C#" Value="public class NavigationAdapter : GLib.GInterfaceAdapter, Gst.Interfaces.Navigation" />
+  <TypeSignature Language="C#" Value="public class NavigationAdapter : GLib.GInterfaceAdapter, GLib.IWrapper, Gst.Interfaces.Navigation" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -9,6 +9,9 @@
   </Base>
   <Interfaces>
     <Interface>
+      <InterfaceName>GLib.IWrapper</InterfaceName>
+    </Interface>
+    <Interface>
       <InterfaceName>Gst.Interfaces.Navigation</InterfaceName>
     </Interface>
   </Interfaces>
@@ -17,15 +20,6 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
-    
-    
-    
-    
-    
-    
-    
     <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public NavigationAdapter ();" />
       <MemberType>Constructor</MemberType>
@@ -33,85 +27,205 @@
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName=".ctor">
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public NavigationAdapter (Gst.Interfaces.NavigationImplementor implementor);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <Parameters><Parameter Name="implementor" Type="Gst.Interfaces.NavigationImplementor" /></Parameters>
-      <Docs><param name="implementor">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName=".ctor">
+      <Parameters>
+        <Parameter Name="implementor" Type="Gst.Interfaces.NavigationImplementor" />
+      </Parameters>
+      <Docs>
+        <param name="implementor">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public NavigationAdapter (IntPtr handle);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <Parameters><Parameter Name="handle" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="handle">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="GetObject">
+      <Parameters>
+        <Parameter Name="handle" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="handle">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetObject">
       <MemberSignature Language="C#" Value="public static Gst.Interfaces.Navigation GetObject (GLib.Object obj);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Interfaces.Navigation</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="obj" Type="GLib.Object" /></Parameters>
-      <Docs><param name="obj">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="GetObject">
+      <ReturnValue>
+        <ReturnType>Gst.Interfaces.Navigation</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="obj" Type="GLib.Object" />
+      </Parameters>
+      <Docs>
+        <param name="obj">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetObject">
       <MemberSignature Language="C#" Value="public static Gst.Interfaces.Navigation GetObject (IntPtr handle, bool owned);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Interfaces.Navigation</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="handle" Type="System.IntPtr" /><Parameter Name="owned" Type="System.Boolean" /></Parameters>
-      <Docs><param name="handle">To be added.</param><param name="owned">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Implementor">
+      <ReturnValue>
+        <ReturnType>Gst.Interfaces.Navigation</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="handle" Type="System.IntPtr" />
+        <Parameter Name="owned" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="handle">To be added.</param>
+        <param name="owned">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GType">
+      <MemberSignature Language="C#" Value="public override GLib.GType GType { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>GLib.GType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Handle">
+      <MemberSignature Language="C#" Value="public override IntPtr Handle { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.IntPtr</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Implementor">
       <MemberSignature Language="C#" Value="public Gst.Interfaces.NavigationImplementor Implementor { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Interfaces.NavigationImplementor</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="SendCommand">
+      <ReturnValue>
+        <ReturnType>Gst.Interfaces.NavigationImplementor</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SendCommand">
       <MemberSignature Language="C#" Value="public void SendCommand (Gst.Interfaces.NavigationCommand command);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="command" Type="Gst.Interfaces.NavigationCommand" /></Parameters>
-      <Docs><param name="command">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="SendEvent">
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="command" Type="Gst.Interfaces.NavigationCommand" />
+      </Parameters>
+      <Docs>
+        <param name="command">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SendEvent">
       <MemberSignature Language="C#" Value="public void SendEvent (Gst.Structure structure);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="structure" Type="Gst.Structure" /></Parameters>
-      <Docs><param name="structure">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="SendKeyEvent">
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="structure" Type="Gst.Structure" />
+      </Parameters>
+      <Docs>
+        <param name="structure">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SendKeyEvent">
       <MemberSignature Language="C#" Value="public void SendKeyEvent (string evnt, string key);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="evnt" Type="System.String" /><Parameter Name="key" Type="System.String" /></Parameters>
-      <Docs><param name="evnt">To be added.</param><param name="key">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="SendMouseEvent">
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="evnt" Type="System.String" />
+        <Parameter Name="key" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="evnt">To be added.</param>
+        <param name="key">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SendMouseEvent">
       <MemberSignature Language="C#" Value="public void SendMouseEvent (string evnt, int button, double x, double y);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="evnt" Type="System.String" /><Parameter Name="button" Type="System.Int32" /><Parameter Name="x" Type="System.Double" /><Parameter Name="y" Type="System.Double" /></Parameters>
-      <Docs><param name="evnt">To be added.</param><param name="button">To be added.</param><param name="x">To be added.</param><param name="y">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="evnt" Type="System.String" />
+        <Parameter Name="button" Type="System.Int32" />
+        <Parameter Name="x" Type="System.Double" />
+        <Parameter Name="y" Type="System.Double" />
+      </Parameters>
+      <Docs>
+        <param name="evnt">To be added.</param>
+        <param name="button">To be added.</param>
+        <param name="x">To be added.</param>
+        <param name="y">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
     </Member>
   </Members>
 </Type>

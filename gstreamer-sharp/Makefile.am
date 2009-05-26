@@ -1,4 +1,4 @@
-SUBDIRS = . glue
+SUBDIRS = coreplugins baseplugins . glue
 
 TARGET = $(ASSEMBLY)
 noinst_DATA = $(TARGET)
@@ -141,4 +141,9 @@ $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
 
 $(ASSEMBLY): $(build_sources) generated-stamp $(KEYFILE)
 	$(CSC) -nowarn:0612 -debug -unsafe -out:$(ASSEMBLY) -target:library $(references) $(csc_build_sources) $(GENERATED_SOURCES)
+
+
+plugins-update:
+	$(MAKE) -C coreplugins plugins-update
+	$(MAKE) -C baseplugins plugins-update
 

@@ -1,0 +1,280 @@
+<element>
+ <name>xvimagesink</name>
+ <details>
+  <long-name>Video sink</long-name>
+  <class>Sink/Video</class>
+  <description>A Xv based videosink</description>
+  <authors>Julien Moutte &lt;julien@moutte.net&gt;</authors>
+ </details>
+ <object name="GstXvImageSink">
+  <object name="GstVideoSink">
+   <object name="GstBaseSink">
+    <object name="GstElement">
+     <object name="GstObject">
+      <object name="GObject">
+      </object>
+     </object>
+    </object>
+   </object>
+  </object>
+ </object>
+ <interfaces>
+  <interface name="GstPropertyProbe" />
+  <interface name="GstImplementsInterface" />
+  <interface name="GstNavigation" />
+  <interface name="GstXOverlay" />
+  <interface name="GstColorBalance" />
+ </interfaces>
+ <pad-templates>
+  <pad-template>
+   <name>sink</name>
+   <direction>sink</direction>
+   <presence>always</presence>
+   <caps>video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-raw-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</caps>
+  </pad-template>
+ </pad-templates>
+ <element-flags>
+ </element-flags>
+ <element-implementation>
+  <state-change function="gst_xvimagesink_change_state"/>
+  <save function="gst_element_save_thyself"/>
+  <load function="gst_element_restore_thyself"/>
+ </element-implementation>
+ <clocking-interaction>
+ </clocking-interaction>
+ <pads>
+  <pad>
+   <name>sink</name>
+   <direction>sink</direction>
+   <template>sink</template>
+   <implementation>
+    <chain-based function="gst_base_sink_chain"/>
+    <event-function function="gst_base_sink_event"/>
+    <bufferalloc-function function="gst_base_sink_pad_buffer_alloc"/>
+   </implementation>
+  </pad>
+ </pads>
+ <element-properties>
+  <element-property>
+   <name>name</name>
+   <type>gchararray</type>
+   <nick>Name</nick>
+   <blurb>The name of the object</blurb>
+   <flags>RW</flags>
+   <default>&quot;element&quot;</default>
+  </element-property>
+  <element-property>
+   <name>preroll-queue-len</name>
+   <type>guint</type>
+   <nick>Preroll queue length</nick>
+   <blurb>Number of buffers to queue during preroll</blurb>
+   <flags>RW</flags>
+   <range min="0" max="4294967295"/>
+   <default>0</default>
+  </element-property>
+  <element-property>
+   <name>sync</name>
+   <type>gboolean</type>
+   <nick>Sync</nick>
+   <blurb>Sync on the clock</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+  <element-property>
+   <name>max-lateness</name>
+   <type>gint64</type>
+   <nick>Max Lateness</nick>
+   <blurb>Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)</blurb>
+   <flags>RW</flags>
+   <range min="-1" max="9223372036854775807"/>
+   <default>20000000</default>
+  </element-property>
+  <element-property>
+   <name>qos</name>
+   <type>gboolean</type>
+   <nick>Qos</nick>
+   <blurb>Generate Quality-of-Service events upstream</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+  <element-property>
+   <name>async</name>
+   <type>gboolean</type>
+   <nick>Async</nick>
+   <blurb>Go asynchronously to PAUSED</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+  <element-property>
+   <name>ts-offset</name>
+   <type>gint64</type>
+   <nick>TS Offset</nick>
+   <blurb>Timestamp offset in nanoseconds</blurb>
+   <flags>RW</flags>
+   <range min="-9223372036854775808" max="9223372036854775807"/>
+   <default>0</default>
+  </element-property>
+  <element-property>
+   <name>last-buffer</name>
+   <type>GstBuffer</type>
+   <nick>Last Buffer</nick>
+   <blurb>The last buffer received in the sink</blurb>
+   <flags>RW</flags>
+  </element-property>
+  <element-property>
+   <name>blocksize</name>
+   <type>guint</type>
+   <nick>Block size</nick>
+   <blurb>Size in bytes to pull per buffer (0 = default)</blurb>
+   <flags>RW</flags>
+   <range min="0" max="4294967295"/>
+   <default>4096</default>
+  </element-property>
+  <element-property>
+   <name>render-delay</name>
+   <type>guint64</type>
+   <nick>Render Delay</nick>
+   <blurb>Additional render delay of the sink in nanoseconds</blurb>
+   <flags>RW</flags>
+   <range min="0" max="18446744073709551615"/>
+   <default>0</default>
+  </element-property>
+  <element-property>
+   <name>contrast</name>
+   <type>gint</type>
+   <nick>Contrast</nick>
+   <blurb>The contrast of the video</blurb>
+   <flags>RW</flags>
+   <range min="-1000" max="1000"/>
+   <default>0</default>
+  </element-property>
+  <element-property>
+   <name>brightness</name>
+   <type>gint</type>
+   <nick>Brightness</nick>
+   <blurb>The brightness of the video</blurb>
+   <flags>RW</flags>
+   <range min="-1000" max="1000"/>
+   <default>0</default>
+  </element-property>
+  <element-property>
+   <name>hue</name>
+   <type>gint</type>
+   <nick>Hue</nick>
+   <blurb>The hue of the video</blurb>
+   <flags>RW</flags>
+   <range min="-1000" max="1000"/>
+   <default>0</default>
+  </element-property>
+  <element-property>
+   <name>saturation</name>
+   <type>gint</type>
+   <nick>Saturation</nick>
+   <blurb>The saturation of the video</blurb>
+   <flags>RW</flags>
+   <range min="-1000" max="1000"/>
+   <default>0</default>
+  </element-property>
+  <element-property>
+   <name>display</name>
+   <type>gchararray</type>
+   <nick>Display</nick>
+   <blurb>X Display name</blurb>
+   <flags>RW</flags>
+   <default>NULL</default>
+  </element-property>
+  <element-property>
+   <name>synchronous</name>
+   <type>gboolean</type>
+   <nick>Synchronous</nick>
+   <blurb>When enabled, runs the X display in synchronous mode. (used only for debugging)</blurb>
+   <flags>RW</flags>
+   <default>FALSE</default>
+  </element-property>
+  <element-property>
+   <name>pixel-aspect-ratio</name>
+   <type>gchararray</type>
+   <nick>Pixel Aspect Ratio</nick>
+   <blurb>The pixel aspect ratio of the device</blurb>
+   <flags>RW</flags>
+   <default>NULL</default>
+  </element-property>
+  <element-property>
+   <name>force-aspect-ratio</name>
+   <type>gboolean</type>
+   <nick>Force aspect ratio</nick>
+   <blurb>When enabled, scaling will respect original aspect ratio</blurb>
+   <flags>RW</flags>
+   <default>FALSE</default>
+  </element-property>
+  <element-property>
+   <name>handle-events</name>
+   <type>gboolean</type>
+   <nick>Handle XEvents</nick>
+   <blurb>When enabled, XEvents will be selected and handled</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+  <element-property>
+   <name>device</name>
+   <type>gchararray</type>
+   <nick>Adaptor number</nick>
+   <blurb>The number of the video adaptor</blurb>
+   <flags>RW</flags>
+   <default>&quot;0&quot;</default>
+  </element-property>
+  <element-property>
+   <name>device-name</name>
+   <type>gchararray</type>
+   <nick>Adaptor name</nick>
+   <blurb>The name of the video adaptor</blurb>
+   <flags>RW</flags>
+   <default>NULL</default>
+  </element-property>
+  <element-property>
+   <name>handle-expose</name>
+   <type>gboolean</type>
+   <nick>Handle expose</nick>
+   <blurb>When enabled, the current frame will always be drawn in response to X Expose events</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+  <element-property>
+   <name>double-buffer</name>
+   <type>gboolean</type>
+   <nick>Double-buffer</nick>
+   <blurb>Whether to double-buffer the output</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+  <element-property>
+   <name>autopaint-colorkey</name>
+   <type>gboolean</type>
+   <nick>Autofill with colorkey</nick>
+   <blurb>Whether to autofill overlay with colorkey</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+  <element-property>
+   <name>colorkey</name>
+   <type>gint</type>
+   <nick>Colorkey</nick>
+   <blurb>Color to use for the overlay mask</blurb>
+   <flags>RW</flags>
+   <range min="-2147483648" max="2147483647"/>
+   <default>526352</default>
+  </element-property>
+  <element-property>
+   <name>draw-borders</name>
+   <type>gboolean</type>
+   <nick>Colorkey</nick>
+   <blurb>Draw black borders to fill unused area in force-aspect-ratio mode</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+ </element-properties>
+ <element-signals>
+ </element-signals>
+ <element-actions>
+ </element-actions>
+</element>

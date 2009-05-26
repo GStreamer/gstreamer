@@ -1,5 +1,5 @@
-<Type Name="NewDecodedPadHandler" FullName="Gst.BasePlugins.NewDecodedPadHandler">
-  <TypeSignature Language="C#" Value="public delegate void NewDecodedPadHandler(object o, NewDecodedPadArgs args);" />
+<Type Name="DecodeBin+NewDecodedPadHandler" FullName="Gst.BasePlugins.DecodeBin+NewDecodedPadHandler">
+  <TypeSignature Language="C#" Value="public delegate void DecodeBin.NewDecodedPadHandler(object o, DecodeBin.NewDecodedPadArgs args);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -9,7 +9,7 @@
   </Base>
   <Parameters>
     <Parameter Name="o" Type="System.Object" />
-    <Parameter Name="args" Type="Gst.BasePlugins.NewDecodedPadArgs" />
+    <Parameter Name="args" Type="Gst.BasePlugins.DecodeBin+NewDecodedPadArgs" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>

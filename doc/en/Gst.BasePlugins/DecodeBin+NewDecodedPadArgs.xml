@@ -1,5 +1,5 @@
-<Type Name="NewDecodedPadArgs" FullName="Gst.BasePlugins.NewDecodedPadArgs">
-  <TypeSignature Language="C#" Value="public class NewDecodedPadArgs : GLib.SignalArgs" />
+<Type Name="DecodeBin+NewDecodedPadArgs" FullName="Gst.BasePlugins.DecodeBin+NewDecodedPadArgs">
+  <TypeSignature Language="C#" Value="public class DecodeBin.NewDecodedPadArgs : GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -13,8 +13,6 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
     <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public NewDecodedPadArgs ();" />
       <MemberType>Constructor</MemberType>
@@ -22,23 +20,40 @@
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Last">
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Last">
       <MemberSignature Language="C#" Value="public bool Last { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Pad">
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Pad">
       <MemberSignature Language="C#" Value="public Gst.Pad Pad { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Pad</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+      <ReturnValue>
+        <ReturnType>Gst.Pad</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
     </Member>
   </Members>
 </Type>

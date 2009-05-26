@@ -1,5 +1,5 @@
-<Type Name="HaveTypeArgs" FullName="Gst.CorePlugins.HaveTypeArgs">
-  <TypeSignature Language="C#" Value="public class HaveTypeArgs : GLib.SignalArgs" />
+<Type Name="TypeFindElement+HaveTypeArgs" FullName="Gst.CorePlugins.TypeFindElement+HaveTypeArgs">
+  <TypeSignature Language="C#" Value="public class TypeFindElement.HaveTypeArgs : GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -13,8 +13,6 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
     <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public HaveTypeArgs ();" />
       <MemberType>Constructor</MemberType>
@@ -22,23 +20,40 @@
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Caps">
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Caps">
       <MemberSignature Language="C#" Value="public Gst.Caps Caps { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Probability">
+      <ReturnValue>
+        <ReturnType>Gst.Caps</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Probability">
       <MemberSignature Language="C#" Value="public uint Probability { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+      <ReturnValue>
+        <ReturnType>System.UInt32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
     </Member>
   </Members>
 </Type>

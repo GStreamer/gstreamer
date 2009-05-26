@@ -142,10 +142,13 @@ AC_SUBST(OFF_T_FLAGS)
 AC_OUTPUT([
 source/Makefile
 parser/Makefile
+elementgen/Makefile
 generator/Makefile
 gstreamer-sharp/Makefile
 gstreamer-sharp/AssemblyInfo.cs
 gstreamer-sharp/gstreamer-sharp.dll.config
+gstreamer-sharp/coreplugins/Makefile
+gstreamer-sharp/baseplugins/Makefile
 gstreamer-sharp/glue/Makefile
 doc/Makefile
 tests/Makefile

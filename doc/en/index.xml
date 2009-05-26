@@ -207,15 +207,16 @@
     </Namespace>
     <Namespace Name="Gst.BasePlugins">
       <Type Name="DecodeBin" Kind="Class" />
-      <Type Name="NewDecodedPadArgs" Kind="Class" />
-      <Type Name="NewDecodedPadHandler" Kind="Delegate" />
+      <Type Name="DecodeBin+NewDecodedPadArgs" Kind="Class" />
+      <Type Name="DecodeBin+NewDecodedPadHandler" Kind="Delegate" />
       <Type Name="PlayBin" Kind="Class" />
       <Type Name="XvImageSink" Kind="Class" />
     </Namespace>
     <Namespace Name="Gst.CorePlugins">
-      <Type Name="HaveTypeArgs" Kind="Class" />
-      <Type Name="HaveTypeHandler" Kind="Delegate" />
+      <Type Name="CapsFilter" Kind="Class" />
       <Type Name="TypeFindElement" Kind="Class" />
+      <Type Name="TypeFindElement+HaveTypeArgs" Kind="Class" />
+      <Type Name="TypeFindElement+HaveTypeHandler" Kind="Delegate" />
     </Namespace>
     <Namespace Name="Gst.Interfaces">
       <Type Name="ChannelChangedArgs" Kind="Class" />

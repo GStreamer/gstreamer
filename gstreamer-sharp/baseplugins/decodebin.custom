@@ -1,0 +1,35 @@
+public delegate void NewDecodedPadHandler (object o, NewDecodedPadArgs args);
+
+public class NewDecodedPadArgs : GLib.SignalArgs {
+  public Gst.Pad Pad {
+    get {
+      return (Gst.Pad) Args[0];
+    }
+  }
+
+  public bool Last {
+    get {
+      return (bool) Args[1];
+    }
+  }
+}
+
+private Delegate new_decoded_pad_delegate;
+
+protected virtual void OnNewDecodedPad (object o, GLib.SignalArgs args) {
+  BindingHelper.InvokeProxySignalDelegate (new_decoded_pad_delegate,
+      typeof (NewDecodedPadArgs), o, args);
+}
+
+public event NewDecodedPadHandler NewDecodedPad {
+  add {
+    new_decoded_pad_delegate = BindingHelper.AddProxySignalDelegate (this,
+    "new-decoded-pad", OnNewDecodedPad, new_decoded_pad_delegate, value);
+  }
+
+  remove {
+    new_decoded_pad_delegate = BindingHelper.RemoveProxySignalDelegate (this,
+                               "new-decoded-pad", OnNewDecodedPad, new_decoded_pad_delegate, value);
+  }
+}
+

@@ -13,65 +13,135 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    
-    
-    
-    
-    
     <Member MemberName="BinFromDescription">
       <MemberSignature Language="C#" Value="public static Gst.Element BinFromDescription (string bin_description, bool ghost_unlinked_pads);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="bin_description" Type="System.String" /><Parameter Name="ghost_unlinked_pads" Type="System.Boolean" /></Parameters>
-      <Docs><param name="bin_description">To be added.</param><param name="ghost_unlinked_pads">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="BinFromDescription">
+      <ReturnValue>
+        <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bin_description" Type="System.String" />
+        <Parameter Name="ghost_unlinked_pads" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="bin_description">To be added.</param>
+        <param name="ghost_unlinked_pads">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="BinFromDescription">
       <MemberSignature Language="C#" Value="public static Gst.Element BinFromDescription (string bin_description, bool ghost_unlinked_pads, Gst.ParseContext context, Gst.ParseFlags flags);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="bin_description" Type="System.String" /><Parameter Name="ghost_unlinked_pads" Type="System.Boolean" /><Parameter Name="context" Type="Gst.ParseContext" /><Parameter Name="flags" Type="Gst.ParseFlags" /></Parameters>
-      <Docs><param name="bin_description">To be added.</param><param name="ghost_unlinked_pads">To be added.</param><param name="context">To be added.</param><param name="flags">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Launch">
+      <ReturnValue>
+        <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bin_description" Type="System.String" />
+        <Parameter Name="ghost_unlinked_pads" Type="System.Boolean" />
+        <Parameter Name="context" Type="Gst.ParseContext" />
+        <Parameter Name="flags" Type="Gst.ParseFlags" />
+      </Parameters>
+      <Docs>
+        <param name="bin_description">To be added.</param>
+        <param name="ghost_unlinked_pads">To be added.</param>
+        <param name="context">To be added.</param>
+        <param name="flags">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Launch">
       <MemberSignature Language="C#" Value="public static Gst.Element Launch (string pipeline_description);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="pipeline_description" Type="System.String" /></Parameters>
-      <Docs><param name="pipeline_description">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Launch">
+      <ReturnValue>
+        <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pipeline_description" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="pipeline_description">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Launch">
       <MemberSignature Language="C#" Value="public static Gst.Element Launch (string[] argv);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="argv" Type="System.String[]" /></Parameters>
-      <Docs><param name="argv">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Launch">
+      <ReturnValue>
+        <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="argv" Type="System.String[]" />
+      </Parameters>
+      <Docs>
+        <param name="argv">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Launch">
       <MemberSignature Language="C#" Value="public static Gst.Element Launch (string pipeline_description, Gst.ParseContext context, Gst.ParseFlags flags);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="pipeline_description" Type="System.String" /><Parameter Name="context" Type="Gst.ParseContext" /><Parameter Name="flags" Type="Gst.ParseFlags" /></Parameters>
-      <Docs><param name="pipeline_description">To be added.</param><param name="context">To be added.</param><param name="flags">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Launch">
+      <ReturnValue>
+        <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pipeline_description" Type="System.String" />
+        <Parameter Name="context" Type="Gst.ParseContext" />
+        <Parameter Name="flags" Type="Gst.ParseFlags" />
+      </Parameters>
+      <Docs>
+        <param name="pipeline_description">To be added.</param>
+        <param name="context">To be added.</param>
+        <param name="flags">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Launch">
       <MemberSignature Language="C#" Value="public static Gst.Element Launch (string[] argv, Gst.ParseContext context, Gst.ParseFlags flags);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="argv" Type="System.String[]" /><Parameter Name="context" Type="Gst.ParseContext" /><Parameter Name="flags" Type="Gst.ParseFlags" /></Parameters>
-      <Docs><param name="argv">To be added.</param><param name="context">To be added.</param><param name="flags">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+      <ReturnValue>
+        <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="argv" Type="System.String[]" />
+        <Parameter Name="context" Type="Gst.ParseContext" />
+        <Parameter Name="flags" Type="Gst.ParseFlags" />
+      </Parameters>
+      <Docs>
+        <param name="argv">To be added.</param>
+        <param name="context">To be added.</param>
+        <param name="flags">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
     </Member>
   </Members>
 </Type>
