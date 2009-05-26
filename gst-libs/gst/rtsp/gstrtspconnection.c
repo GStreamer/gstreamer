@@ -2808,12 +2808,9 @@ static void
 gst_rtsp_source_finalize (GSource * source)
 {
   GstRTSPWatch *watch = (GstRTSPWatch *) source;
-  gpointer rtsp_rec;
 
   build_reset (&watch->builder);
 
-  while ((rtsp_rec = g_async_queue_try_pop (watch->messages)))
-    gst_rtsp_rec_free (rtsp_rec);
   g_async_queue_unref (watch->messages);
   watch->messages = NULL;
 
@@ -2865,8 +2862,7 @@ gst_rtsp_watch_new (GstRTSPConnection * conn,
   result->conn = conn;
   result->builder.state = STATE_START;
 
-  /* FIXME: use g_async_queue_new_full() once we depend on GLib >= 2.16 */
-  result->messages = g_async_queue_new ();
+  result->messages = g_async_queue_new_full (gst_rtsp_rec_free);
 
   result->readfd.fd = -1;
   result->writefd.fd = -1;
