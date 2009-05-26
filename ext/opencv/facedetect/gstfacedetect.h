@@ -50,7 +50,6 @@
 #include <cv.h>
 
 G_BEGIN_DECLS
-
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_FACEDETECT \
   (gst_facedetect_get_type())
@@ -62,8 +61,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FACEDETECT))
 #define GST_IS_FACEDETECT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FACEDETECT))
-
-typedef struct _Gstfacedetect      Gstfacedetect;
+typedef struct _Gstfacedetect Gstfacedetect;
 typedef struct _GstfacedetectClass GstfacedetectClass;
 
 struct _Gstfacedetect
@@ -81,7 +79,7 @@ struct _Gstfacedetect
   CvMemStorage *cvStorage;
 };
 
-struct _GstfacedetectClass 
+struct _GstfacedetectClass
 {
   GstElementClass parent_class;
 };
@@ -91,5 +89,4 @@ GType gst_facedetect_get_type (void);
 gboolean gst_facedetect_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_FACEDETECT_H__ */

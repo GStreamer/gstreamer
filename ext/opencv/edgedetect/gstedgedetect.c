@@ -90,21 +90,16 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-    "video/x-raw-rgb"
-    )
-);
+    GST_STATIC_CAPS ("video/x-raw-rgb")
+    );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-    "video/x-raw-rgb"
-    )
-);
+    GST_STATIC_CAPS ("video/x-raw-rgb")
+    );
 
-GST_BOILERPLATE (Gstedgedetect, gst_edgedetect, GstElement,
-    GST_TYPE_ELEMENT);
+GST_BOILERPLATE (Gstedgedetect, gst_edgedetect, GstElement, GST_TYPE_ELEMENT);
 
 static void gst_edgedetect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -120,8 +115,7 @@ gst_edgedetect_finalize (GObject * obj)
 {
   Gstedgedetect *filter = GST_EDGEDETECT (obj);
 
-  if (filter->cvImage != NULL) 
-  {
+  if (filter->cvImage != NULL) {
     cvReleaseImage (&filter->cvImage);
     cvReleaseImage (&filter->cvCEdge);
     cvReleaseImage (&filter->cvGray);
@@ -137,11 +131,11 @@ gst_edgedetect_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple(element_class,
-    "edgedetect",
-    "Filter/Effect/Video",
-    "Performs canny edge detection on videos and images.",
-    "Michael Sheldon <mike@mikeasoft.com>");
+  gst_element_class_set_details_simple (element_class,
+      "edgedetect",
+      "Filter/Effect/Video",
+      "Performs canny edge detection on videos and images.",
+      "Michael Sheldon <mike@mikeasoft.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -165,17 +159,21 @@ gst_edgedetect_class_init (GstedgedetectClass * klass)
   gobject_class->get_property = gst_edgedetect_get_property;
 
   g_object_class_install_property (gobject_class, PROP_MASK,
-      g_param_spec_boolean ("mask", "Mask", "Sets whether the detected edges should be used as a mask on the original input or not",
+      g_param_spec_boolean ("mask", "Mask",
+          "Sets whether the detected edges should be used as a mask on the original input or not",
           TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_THRESHOLD1,
-      g_param_spec_int ("threshold1", "Threshold1", "Threshold value for canny edge detection",
-          0, 1000, 50, G_PARAM_READWRITE));
+      g_param_spec_int ("threshold1", "Threshold1",
+          "Threshold value for canny edge detection", 0, 1000, 50,
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_THRESHOLD2,
-      g_param_spec_int ("threshold2", "Threshold2", "Second threshold value for canny edge detection",
-          0, 1000, 150, G_PARAM_READWRITE));
+      g_param_spec_int ("threshold2", "Threshold2",
+          "Second threshold value for canny edge detection", 0, 1000, 150,
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_APERTURE,
-      g_param_spec_int ("aperture", "Aperture", "Aperture size for Sobel operator (Must be either 3, 5 or 7",
-          3, 7, 3, G_PARAM_READWRITE));
+      g_param_spec_int ("aperture", "Aperture",
+          "Aperture size for Sobel operator (Must be either 3, 5 or 7", 3, 7, 3,
+          G_PARAM_READWRITE));
 }
 
 /* initialize the new element
@@ -184,20 +182,19 @@ gst_edgedetect_class_init (GstedgedetectClass * klass)
  * initialize instance structure
  */
 static void
-gst_edgedetect_init (Gstedgedetect * filter,
-    GstedgedetectClass * gclass)
+gst_edgedetect_init (Gstedgedetect * filter, GstedgedetectClass * gclass)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_edgedetect_set_caps));
+      GST_DEBUG_FUNCPTR (gst_edgedetect_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (filter->sinkpad,
-                              GST_DEBUG_FUNCPTR(gst_edgedetect_chain));
+      GST_DEBUG_FUNCPTR (gst_edgedetect_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
-                                GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
@@ -273,10 +270,10 @@ gst_edgedetect_set_caps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
 
-  filter->cvImage = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-  filter->cvCEdge = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-  filter->cvGray = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-  filter->cvEdge = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+  filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
+  filter->cvCEdge = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
+  filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
+  filter->cvEdge = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
 
   otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
   gst_object_unref (filter);
@@ -296,18 +293,20 @@ gst_edgedetect_chain (GstPad * pad, GstBuffer * buf)
 
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
 
-  cvCvtColor(filter->cvImage, filter->cvGray, CV_RGB2GRAY);
-  cvSmooth(filter->cvGray, filter->cvEdge, CV_BLUR, 3, 3, 0, 0 );
-  cvNot(filter->cvGray, filter->cvEdge);
-  cvCanny(filter->cvGray, filter->cvEdge, filter->threshold1, filter->threshold2, filter->aperture);
+  cvCvtColor (filter->cvImage, filter->cvGray, CV_RGB2GRAY);
+  cvSmooth (filter->cvGray, filter->cvEdge, CV_BLUR, 3, 3, 0, 0);
+  cvNot (filter->cvGray, filter->cvEdge);
+  cvCanny (filter->cvGray, filter->cvEdge, filter->threshold1,
+      filter->threshold2, filter->aperture);
 
-  cvZero(filter->cvCEdge);
-  if(filter-> mask) {
-    cvCopy(filter->cvImage, filter->cvCEdge, filter->cvEdge);
+  cvZero (filter->cvCEdge);
+  if (filter->mask) {
+    cvCopy (filter->cvImage, filter->cvCEdge, filter->cvEdge);
   } else {
-    cvCvtColor(filter->cvEdge, filter->cvCEdge, CV_GRAY2RGB);
+    cvCvtColor (filter->cvEdge, filter->cvCEdge, CV_GRAY2RGB);
   }
-  gst_buffer_set_data(buf, filter->cvCEdge->imageData, filter->cvCEdge->imageSize);
+  gst_buffer_set_data (buf, filter->cvCEdge->imageData,
+      filter->cvCEdge->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);
 }

@@ -88,21 +88,16 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-    "video/x-raw-rgb"
-    )
-);
+    GST_STATIC_CAPS ("video/x-raw-rgb")
+    );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-    "video/x-raw-rgb"
-    )
-);
+    GST_STATIC_CAPS ("video/x-raw-rgb")
+    );
 
-GST_BOILERPLATE (Gstfacedetect, gst_facedetect, GstElement,
-    GST_TYPE_ELEMENT);
+GST_BOILERPLATE (Gstfacedetect, gst_facedetect, GstElement, GST_TYPE_ELEMENT);
 
 static void gst_facedetect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -118,10 +113,9 @@ static void gst_facedetect_load_profile (Gstfacedetect * filter);
 static void
 gst_facedetect_finalize (GObject * obj)
 {
-  Gstfacedetect *filter = GST_FACEDETECT(obj);
+  Gstfacedetect *filter = GST_FACEDETECT (obj);
 
-  if (filter->cvImage) 
-  {
+  if (filter->cvImage) {
     cvReleaseImage (&filter->cvImage);
     cvReleaseImage (&filter->cvGray);
   }
@@ -136,11 +130,11 @@ gst_facedetect_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple(element_class,
-    "facedetect",
-    "Filter/Effect/Video",
-    "Performs face detection on videos and images, providing detected positions via bus messages",
-    "Michael Sheldon <mike@mikeasoft.com>");
+  gst_element_class_set_details_simple (element_class,
+      "facedetect",
+      "Filter/Effect/Video",
+      "Performs face detection on videos and images, providing detected positions via bus messages",
+      "Michael Sheldon <mike@mikeasoft.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -164,10 +158,12 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
   gobject_class->get_property = gst_facedetect_get_property;
 
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
-      g_param_spec_boolean ("display", "Display", "Sets whether the detected faces should be highlighted in the output",
+      g_param_spec_boolean ("display", "Display",
+          "Sets whether the detected faces should be highlighted in the output",
           TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_PROFILE,
-      g_param_spec_string ("profile", "Profile", "Location of Haar cascade file to use for face detection",
+      g_param_spec_string ("profile", "Profile",
+          "Location of Haar cascade file to use for face detection",
           DEFAULT_PROFILE, G_PARAM_READWRITE));
 }
 
@@ -177,26 +173,25 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
  * initialize instance structure
  */
 static void
-gst_facedetect_init (Gstfacedetect * filter,
-    GstfacedetectClass * gclass)
+gst_facedetect_init (Gstfacedetect * filter, GstfacedetectClass * gclass)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_facedetect_set_caps));
+      GST_DEBUG_FUNCPTR (gst_facedetect_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (filter->sinkpad,
-                              GST_DEBUG_FUNCPTR(gst_facedetect_chain));
+      GST_DEBUG_FUNCPTR (gst_facedetect_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
-                                GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   filter->profile = DEFAULT_PROFILE;
   filter->display = TRUE;
-  gst_facedetect_load_profile(filter);
+  gst_facedetect_load_profile (filter);
 }
 
 static void
@@ -208,7 +203,7 @@ gst_facedetect_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PROFILE:
       filter->profile = g_value_dup_string (value);
-      gst_facedetect_load_profile(filter);
+      gst_facedetect_load_profile (filter);
       break;
     case PROP_DISPLAY:
       filter->display = g_value_get_boolean (value);
@@ -254,9 +249,9 @@ gst_facedetect_set_caps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
 
-  filter->cvImage = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-  filter->cvGray = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-  filter->cvStorage = cvCreateMemStorage(0);
+  filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
+  filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
+  filter->cvStorage = cvCreateMemStorage (0);
 
   otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
   gst_object_unref (filter);
@@ -278,20 +273,22 @@ gst_facedetect_chain (GstPad * pad, GstBuffer * buf)
 
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
 
-  cvCvtColor(filter->cvImage, filter->cvGray, CV_RGB2GRAY);
-  cvClearMemStorage(filter->cvStorage);
+  cvCvtColor (filter->cvImage, filter->cvGray, CV_RGB2GRAY);
+  cvClearMemStorage (filter->cvStorage);
 
   if (filter->cvCascade) {
-    faces = cvHaarDetectObjects(filter->cvGray, filter->cvCascade, filter->cvStorage, 1.1, 2, 0, cvSize(30, 30));
-    
-    for (i = 0; i < (faces ? faces->total : 0); i++) {   
-      CvRect* r = (CvRect *) cvGetSeqElem(faces, i);
+    faces =
+        cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
+        filter->cvStorage, 1.1, 2, 0, cvSize (30, 30));
+
+    for (i = 0; i < (faces ? faces->total : 0); i++) {
+      CvRect *r = (CvRect *) cvGetSeqElem (faces, i);
 
       GstStructure *s = gst_structure_new ("face",
-                      "x", G_TYPE_UINT, r->x,
-                      "y", G_TYPE_UINT, r->y,
-                      "width", G_TYPE_UINT, r->width,
-                      "height", G_TYPE_UINT, r->height, NULL);
+          "x", G_TYPE_UINT, r->x,
+          "y", G_TYPE_UINT, r->y,
+          "width", G_TYPE_UINT, r->width,
+          "height", G_TYPE_UINT, r->height, NULL);
 
       GstMessage *m = gst_message_new_element (GST_OBJECT (filter), s);
       gst_element_post_message (GST_ELEMENT (filter), m);
@@ -299,24 +296,29 @@ gst_facedetect_chain (GstPad * pad, GstBuffer * buf)
       if (filter->display) {
         CvPoint center;
         int radius;
-        center.x = cvRound((r->x + r->width*0.5));
-        center.y = cvRound((r->y + r->height*0.5));
-        radius = cvRound((r->width + r->height)*0.25);
-        cvCircle(filter->cvImage, center, radius, CV_RGB(255, 32, 32), 3, 8, 0);
+        center.x = cvRound ((r->x + r->width * 0.5));
+        center.y = cvRound ((r->y + r->height * 0.5));
+        radius = cvRound ((r->width + r->height) * 0.25);
+        cvCircle (filter->cvImage, center, radius, CV_RGB (255, 32, 32), 3, 8,
+            0);
       }
-    
+
     }
 
   }
 
-  gst_buffer_set_data(buf, filter->cvImage->imageData, filter->cvImage->imageSize);
+  gst_buffer_set_data (buf, filter->cvImage->imageData,
+      filter->cvImage->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);
 }
 
 
-static void gst_facedetect_load_profile(Gstfacedetect * filter) {
-  filter->cvCascade = (CvHaarClassifierCascade*)cvLoad(filter->profile, 0, 0, 0 );
+static void
+gst_facedetect_load_profile (Gstfacedetect * filter)
+{
+  filter->cvCascade =
+      (CvHaarClassifierCascade *) cvLoad (filter->profile, 0, 0, 0);
   if (!filter->cvCascade) {
     GST_WARNING ("Couldn't load Haar classifier cascade: %s.", filter->profile);
   }
@@ -332,7 +334,8 @@ gst_facedetect_plugin_init (GstPlugin * plugin)
 {
   /* debug category for fltering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_facedetect_debug, "facedetect",
-      0, "Performs face detection on videos and images, providing detected positions via bus messages");
+      0,
+      "Performs face detection on videos and images, providing detected positions via bus messages");
 
   return gst_element_register (plugin, "facedetect", GST_RANK_NONE,
       GST_TYPE_FACEDETECT);

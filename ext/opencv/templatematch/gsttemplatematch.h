@@ -51,7 +51,6 @@
 #include <opencv/highgui.h>
 
 G_BEGIN_DECLS
-
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_TEMPLATEMATCH \
   (gst_templatematch_get_type())
@@ -63,8 +62,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TEMPLATEMATCH))
 #define GST_IS_TEMPLATEMATCH_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TEMPLATEMATCH))
-
-typedef struct _GstTemplateMatch      GstTemplateMatch;
+typedef struct _GstTemplateMatch GstTemplateMatch;
 typedef struct _GstTemplateMatchClass GstTemplateMatchClass;
 
 struct _GstTemplateMatch
@@ -73,15 +71,15 @@ struct _GstTemplateMatch
 
   GstPad *sinkpad, *srcpad;
 
-    gint method;
+  gint method;
   gboolean display;
 
   gchar *template;
 
-    IplImage *cvImage, *cvGray, *cvTemplateImage, *cvDistImage;
+  IplImage *cvImage, *cvGray, *cvTemplateImage, *cvDistImage;
 };
 
-struct _GstTemplateMatchClass 
+struct _GstTemplateMatchClass
 {
   GstElementClass parent_class;
 };
@@ -91,5 +89,4 @@ GType gst_templatematch_get_type (void);
 gboolean gst_templatematch_plugin_init (GstPlugin * templatematch);
 
 G_END_DECLS
-
 #endif /* __GST_TEMPLATEMATCH_H__ */

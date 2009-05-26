@@ -87,21 +87,16 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-    "video/x-raw-rgb"
-    )
-);
+    GST_STATIC_CAPS ("video/x-raw-rgb")
+    );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-    "video/x-raw-rgb"
-    )
-);
+    GST_STATIC_CAPS ("video/x-raw-rgb")
+    );
 
-GST_BOILERPLATE (Gstfaceblur, gst_faceblur, GstElement,
-    GST_TYPE_ELEMENT);
+GST_BOILERPLATE (Gstfaceblur, gst_faceblur, GstElement, GST_TYPE_ELEMENT);
 
 static void gst_faceblur_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -117,10 +112,9 @@ static void gst_faceblur_load_profile (Gstfaceblur * filter);
 static void
 gst_faceblur_finalize (GObject * obj)
 {
-  Gstfaceblur *filter = GST_FACEBLUR(obj);
+  Gstfaceblur *filter = GST_FACEBLUR (obj);
 
-  if (filter->cvImage) 
-  {
+  if (filter->cvImage) {
     cvReleaseImage (&filter->cvImage);
     cvReleaseImage (&filter->cvGray);
   }
@@ -135,11 +129,11 @@ gst_faceblur_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple(element_class,
-    "faceblur",
-    "Filter/Effect/Video",
-    "Blurs faces in images and videos",
-    "Michael Sheldon <mike@mikeasoft.com>");
+  gst_element_class_set_details_simple (element_class,
+      "faceblur",
+      "Filter/Effect/Video",
+      "Blurs faces in images and videos",
+      "Michael Sheldon <mike@mikeasoft.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -163,7 +157,8 @@ gst_faceblur_class_init (GstfaceblurClass * klass)
   gobject_class->get_property = gst_faceblur_get_property;
 
   g_object_class_install_property (gobject_class, PROP_PROFILE,
-      g_param_spec_string ("profile", "Profile", "Location of Haar cascade file to use for face blurion",
+      g_param_spec_string ("profile", "Profile",
+          "Location of Haar cascade file to use for face blurion",
           DEFAULT_PROFILE, G_PARAM_READWRITE));
 }
 
@@ -173,25 +168,24 @@ gst_faceblur_class_init (GstfaceblurClass * klass)
  * initialize instance structure
  */
 static void
-gst_faceblur_init (Gstfaceblur * filter,
-    GstfaceblurClass * gclass)
+gst_faceblur_init (Gstfaceblur * filter, GstfaceblurClass * gclass)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_faceblur_set_caps));
+      GST_DEBUG_FUNCPTR (gst_faceblur_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (filter->sinkpad,
-                              GST_DEBUG_FUNCPTR(gst_faceblur_chain));
+      GST_DEBUG_FUNCPTR (gst_faceblur_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
-                                GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   filter->profile = DEFAULT_PROFILE;
-  gst_faceblur_load_profile(filter);
+  gst_faceblur_load_profile (filter);
 }
 
 static void
@@ -203,7 +197,7 @@ gst_faceblur_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PROFILE:
       filter->profile = g_value_dup_string (value);
-      gst_faceblur_load_profile(filter);
+      gst_faceblur_load_profile (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -243,9 +237,9 @@ gst_faceblur_set_caps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
 
-  filter->cvImage = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-  filter->cvGray = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-  filter->cvStorage = cvCreateMemStorage(0);
+  filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
+  filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
+  filter->cvStorage = cvCreateMemStorage (0);
 
   otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
   gst_object_unref (filter);
@@ -267,30 +261,36 @@ gst_faceblur_chain (GstPad * pad, GstBuffer * buf)
 
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
 
-  cvCvtColor(filter->cvImage, filter->cvGray, CV_RGB2GRAY);
-  cvClearMemStorage(filter->cvStorage);
+  cvCvtColor (filter->cvImage, filter->cvGray, CV_RGB2GRAY);
+  cvClearMemStorage (filter->cvStorage);
 
   if (filter->cvCascade) {
-    faces = cvHaarDetectObjects(filter->cvGray, filter->cvCascade, filter->cvStorage, 1.1, 2, 0, cvSize(30, 30));
-    
-    for (i = 0; i < (faces ? faces->total : 0); i++) {   
-      CvRect* r = (CvRect *) cvGetSeqElem(faces, i);
-      cvSetImageROI(filter->cvImage, *r);
-      cvSmooth(filter->cvImage, filter->cvImage, CV_BLUR, 11, 11, 0, 0);
-      cvSmooth(filter->cvImage, filter->cvImage, CV_GAUSSIAN, 11, 11, 0, 0);
-      cvResetImageROI(filter->cvImage);
+    faces =
+        cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
+        filter->cvStorage, 1.1, 2, 0, cvSize (30, 30));
+
+    for (i = 0; i < (faces ? faces->total : 0); i++) {
+      CvRect *r = (CvRect *) cvGetSeqElem (faces, i);
+      cvSetImageROI (filter->cvImage, *r);
+      cvSmooth (filter->cvImage, filter->cvImage, CV_BLUR, 11, 11, 0, 0);
+      cvSmooth (filter->cvImage, filter->cvImage, CV_GAUSSIAN, 11, 11, 0, 0);
+      cvResetImageROI (filter->cvImage);
     }
 
   }
 
-  gst_buffer_set_data(buf, filter->cvImage->imageData, filter->cvImage->imageSize);
+  gst_buffer_set_data (buf, filter->cvImage->imageData,
+      filter->cvImage->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);
 }
 
 
-static void gst_faceblur_load_profile(Gstfaceblur * filter) {
-  filter->cvCascade = (CvHaarClassifierCascade*)cvLoad(filter->profile, 0, 0, 0 );
+static void
+gst_faceblur_load_profile (Gstfaceblur * filter)
+{
+  filter->cvCascade =
+      (CvHaarClassifierCascade *) cvLoad (filter->profile, 0, 0, 0);
   if (!filter->cvCascade) {
     GST_WARNING ("Couldn't load Haar classifier cascade: %s.", filter->profile);
   }

@@ -50,7 +50,6 @@
 #include <cv.h>
 
 G_BEGIN_DECLS
-
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_EDGEDETECT \
   (gst_edgedetect_get_type())
@@ -62,8 +61,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EDGEDETECT))
 #define GST_IS_EDGEDETECT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EDGEDETECT))
-
-typedef struct _Gstedgedetect      Gstedgedetect;
+typedef struct _Gstedgedetect Gstedgedetect;
 typedef struct _GstedgedetectClass GstedgedetectClass;
 
 struct _Gstedgedetect
@@ -79,7 +77,7 @@ struct _Gstedgedetect
   IplImage *cvEdge, *cvGray, *cvImage, *cvCEdge;
 };
 
-struct _GstedgedetectClass 
+struct _GstedgedetectClass
 {
   GstElementClass parent_class;
 };
@@ -89,5 +87,4 @@ GType gst_edgedetect_get_type (void);
 gboolean gst_edgedetect_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_EDGEDETECT_H__ */

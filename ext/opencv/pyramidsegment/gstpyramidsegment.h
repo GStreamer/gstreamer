@@ -50,7 +50,6 @@
 #include <cv.h>
 
 G_BEGIN_DECLS
-
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_PYRAMIDSEGMENT \
   (gst_pyramidsegment_get_type())
@@ -62,8 +61,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PYRAMIDSEGMENT))
 #define GST_IS_PYRAMIDSEGMENT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PYRAMIDSEGMENT))
-
-typedef struct _Gstpyramidsegment      Gstpyramidsegment;
+typedef struct _Gstpyramidsegment Gstpyramidsegment;
 typedef struct _GstpyramidsegmentClass GstpyramidsegmentClass;
 
 struct _Gstpyramidsegment
@@ -81,11 +79,11 @@ struct _Gstpyramidsegment
   CvSeq *comp;
 
   double threshold1, threshold2;
-  
+
   int level;
 };
 
-struct _GstpyramidsegmentClass 
+struct _GstpyramidsegmentClass
 {
   GstElementClass parent_class;
 };
@@ -95,5 +93,4 @@ GType gst_pyramidsegment_get_type (void);
 gboolean gst_pyramidsegment_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_PYRAMIDSEGMENT_H__ */

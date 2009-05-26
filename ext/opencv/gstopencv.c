@@ -36,18 +36,18 @@ plugin_init (GstPlugin * plugin)
   if (!gst_edgedetect_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_faceblur_plugin_init(plugin))
+  if (!gst_faceblur_plugin_init (plugin))
     return FALSE;
 
   if (!gst_facedetect_plugin_init (plugin))
     return FALSE;
- 
+
   if (!gst_pyramidsegment_plugin_init (plugin))
     return FALSE;
 
   if (!gst_templatematch_plugin_init (plugin))
     return FALSE;
-      
+
   return TRUE;
 }
 

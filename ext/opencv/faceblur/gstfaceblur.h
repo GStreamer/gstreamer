@@ -50,7 +50,6 @@
 #include <cv.h>
 
 G_BEGIN_DECLS
-
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_FACEBLUR \
   (gst_faceblur_get_type())
@@ -62,8 +61,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FACEBLUR))
 #define GST_IS_FACEBLUR_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FACEBLUR))
-
-typedef struct _Gstfaceblur      Gstfaceblur;
+typedef struct _Gstfaceblur Gstfaceblur;
 typedef struct _GstfaceblurClass GstfaceblurClass;
 
 struct _Gstfaceblur
@@ -81,7 +79,7 @@ struct _Gstfaceblur
   CvMemStorage *cvStorage;
 };
 
-struct _GstfaceblurClass 
+struct _GstfaceblurClass
 {
   GstElementClass parent_class;
 };
@@ -91,5 +89,4 @@ GType gst_faceblur_get_type (void);
 gboolean gst_faceblur_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_FACEBLUR_H__ */

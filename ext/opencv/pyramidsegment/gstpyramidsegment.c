@@ -114,12 +114,11 @@ static GstFlowReturn gst_pyramidsegment_chain (GstPad * pad, GstBuffer * buf);
 
 /* Clean up */
 static void
-gst_pyramidsegment_finalize (GObject * obj) 
+gst_pyramidsegment_finalize (GObject * obj)
 {
-  Gstpyramidsegment *filter = GST_PYRAMIDSEGMENT(obj);
+  Gstpyramidsegment *filter = GST_PYRAMIDSEGMENT (obj);
 
-  if (filter->cvImage != NULL) 
-  {
+  if (filter->cvImage != NULL) {
     cvReleaseImage (&filter->cvImage);
     cvReleaseImage (&filter->cvSegmentedImage);
   }
@@ -133,11 +132,11 @@ gst_pyramidsegment_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple(element_class,
-    "pyramidsegment",
-    "Filter/Effect/Video",
-    "Applies pyramid segmentation to a video or image.",
-    "Michael Sheldon <mike@mikeasoft.com>");
+  gst_element_class_set_details_simple (element_class,
+      "pyramidsegment",
+      "Filter/Effect/Video",
+      "Applies pyramid segmentation to a video or image.",
+      "Michael Sheldon <mike@mikeasoft.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -165,16 +164,19 @@ gst_pyramidsegment_class_init (GstpyramidsegmentClass * klass)
           FALSE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD1,
-      g_param_spec_double ("threshold1", "Threshold1", "Error threshold for establishing links",
-          0, 1000, 50, G_PARAM_READWRITE));
+      g_param_spec_double ("threshold1", "Threshold1",
+          "Error threshold for establishing links", 0, 1000, 50,
+          G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD2,
-      g_param_spec_double ("threshold2", "Threshold2", "Error threshold for segment clustering",
-          0, 1000, 60, G_PARAM_READWRITE));
+      g_param_spec_double ("threshold2", "Threshold2",
+          "Error threshold for segment clustering", 0, 1000, 60,
+          G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_LEVEL,
-      g_param_spec_int ("level", "Level", "Maximum level of the pyramid segmentation",
-          0, 4, 4, G_PARAM_READWRITE));
+      g_param_spec_int ("level", "Level",
+          "Maximum level of the pyramid segmentation", 0, 4, 4,
+          G_PARAM_READWRITE));
 }
 
 /* initialize the new element
@@ -188,20 +190,21 @@ gst_pyramidsegment_init (Gstpyramidsegment * filter,
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_pyramidsegment_set_caps));
+      GST_DEBUG_FUNCPTR (gst_pyramidsegment_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (filter->sinkpad,
-                              GST_DEBUG_FUNCPTR(gst_pyramidsegment_chain));
+      GST_DEBUG_FUNCPTR (gst_pyramidsegment_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
-                                GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  filter->storage = cvCreateMemStorage ( BLOCK_SIZE );
-  filter->comp = cvCreateSeq(0, sizeof(CvSeq), sizeof(CvPoint), filter->storage);
+  filter->storage = cvCreateMemStorage (BLOCK_SIZE);
+  filter->comp =
+      cvCreateSeq (0, sizeof (CvSeq), sizeof (CvPoint), filter->storage);
   filter->silent = FALSE;
   filter->threshold1 = 50.0;
   filter->threshold2 = 60.0;
@@ -274,8 +277,8 @@ gst_pyramidsegment_set_caps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
-  
-  filter->cvImage = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+
+  filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
 
   otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
   gst_object_unref (filter);
@@ -294,11 +297,13 @@ gst_pyramidsegment_chain (GstPad * pad, GstBuffer * buf)
   filter = GST_PYRAMIDSEGMENT (GST_OBJECT_PARENT (pad));
 
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
-  filter->cvSegmentedImage = cvCloneImage(filter->cvImage);
+  filter->cvSegmentedImage = cvCloneImage (filter->cvImage);
 
-  cvPyrSegmentation(filter->cvImage, filter->cvSegmentedImage, filter->storage, &(filter->comp), filter->level, filter->threshold1, filter->threshold2);
+  cvPyrSegmentation (filter->cvImage, filter->cvSegmentedImage, filter->storage,
+      &(filter->comp), filter->level, filter->threshold1, filter->threshold2);
 
-  gst_buffer_set_data(buf, filter->cvSegmentedImage->imageData, filter->cvSegmentedImage->imageSize);
+  gst_buffer_set_data (buf, filter->cvSegmentedImage->imageData,
+      filter->cvSegmentedImage->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);
 }
