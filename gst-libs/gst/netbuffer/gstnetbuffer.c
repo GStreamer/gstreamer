@@ -137,6 +137,9 @@ gst_netbuffer_new (void)
  * @port: a port number to set.
  *
  * Set @naddr with the IPv4 @address and @port pair.
+ *
+ * Note that @port must be expressed in network byte order, use g_htons() to convert
+ * it to network byte order order.
  */
 void
 gst_netaddress_set_ip4_address (GstNetAddress * naddr, guint32 address,
@@ -156,6 +159,9 @@ gst_netaddress_set_ip4_address (GstNetAddress * naddr, guint32 address,
  * @port: a port number to set.
  *
  * Set @naddr with the IPv6 @address and @port pair.
+ *
+ * Note that @port must be expressed in network byte order, use g_htons() to convert
+ * it to network byte order order.
  */
 void
 gst_netaddress_set_ip6_address (GstNetAddress * naddr, guint8 address[16],
@@ -193,6 +199,9 @@ gst_netaddress_get_net_type (GstNetAddress * naddr)
  * Get the IPv4 address stored in @naddr into @address. This function requires
  * that the address type of @naddr is of type #GST_NET_TYPE_IP4.
  *
+ * Note that @port is expressed in network byte order, use g_ntohs() to convert
+ * it to host order.
+ *
  * Returns: TRUE if the address could be retrieved.
  */
 gboolean
@@ -222,6 +231,9 @@ gst_netaddress_get_ip4_address (GstNetAddress * naddr, guint32 * address,
  *
  * If @naddr is of type GST_NET_TYPE_IP4, the transitional IP6 address is
  * returned.
+ *
+ * Note that @port is expressed in network byte order, use g_ntohs() to convert
+ * it to host order.
  *
  * Returns: TRUE if the address could be retrieved.
  */
@@ -257,6 +269,9 @@ gst_netaddress_get_ip6_address (GstNetAddress * naddr, guint8 address[16],
  * @port: a location to store the port.
  *
  * Get just the address bytes stored in @naddr into @address.
+ *
+ * Note that @port is expressed in network byte order, use g_ntohs() to convert
+ * it to host order.
  *
  * Returns: number of bytes actually copied
  *
@@ -295,6 +310,9 @@ gst_netaddress_get_address_bytes (GstNetAddress * naddr, guint8 address[16],
  * @port: a location to store the port.
  *
  * Set just the address bytes stored in @naddr into @address.
+ *
+ * Note that @port must be expressed in network byte order, use g_htons() to convert
+ * it to network byte order order.
  *
  * Returns: number of bytes actually copied
  *
