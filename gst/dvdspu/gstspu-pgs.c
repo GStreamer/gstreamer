@@ -435,7 +435,7 @@ parse_presentation_segment (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
   }
 
   if (payload != end) {
-    g_warning ("PGS Composition Object: %d bytes not consumed", end - payload);
+    g_warning ("PGS Composition Object: %ld bytes not consumed", end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -495,7 +495,7 @@ parse_set_palette (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 #endif
 
   if (payload != end) {
-    g_warning ("PGS Set Palette: %d bytes not consumed", end - payload);
+    g_warning ("PGS Set Palette: %ld bytes not consumed", end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -529,7 +529,7 @@ parse_set_window (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
       state->pgs.win_h);
 
   if (payload != end) {
-    g_warning ("PGS Set Window: %d bytes not consumed", end - payload);
+    g_warning ("PGS Set Window: %ld bytes not consumed", end - payload);
     dump_bytes (payload, end - payload);
   }
 
@@ -590,7 +590,7 @@ parse_set_object_data (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
     dump_rle_data (dvdspu, obj->rle_data, obj->rle_data_size);
 
   if (payload != end) {
-    g_warning ("PGS Set Object Data: %d bytes not consumed", end - payload);
+    g_warning ("PGS Set Object Data: %ld bytes not consumed", end - payload);
     dump_bytes (payload, end - payload);
   }
 
