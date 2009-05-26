@@ -17,6 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
+
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 
@@ -38,6 +40,8 @@ enum
   SIGNAL_UNPREPARED,
   SIGNAL_LAST
 };
+
+static GQuark ssrc_stream_map_key;
 
 static void gst_rtsp_media_get_property (GObject *object, guint propid,
     GValue *value, GParamSpec *pspec);
@@ -87,6 +91,8 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
     g_critical ("could not start bus thread: %s", error->message);
   }
   klass->handle_message = default_handle_message;
+
+  ssrc_stream_map_key = g_quark_from_static_string ("GstRTSPServer.stream");
 }
 
 static void
@@ -105,6 +111,8 @@ gst_rtsp_media_stream_free (GstRTSPMediaStream *stream)
 
   if (stream->caps)
     gst_caps_unref (stream->caps);
+
+  g_list_free (stream->transports);
 
   g_free (stream);
 }
@@ -700,48 +708,112 @@ dump_structure (const GstStructure *s)
   g_free (sstr);
 }
 
-static void
-on_new_ssrc (GObject *session, GObject *source, GstRTSPMedia *media)
+static GstRTSPMediaTrans *
+find_transport (GstRTSPMediaStream *stream, const gchar *rtcp_from)
 {
-  g_message ("%p: new source %p", media, source);
+  GList *walk;
+  GstRTSPMediaTrans *result = NULL;
+  const gchar *dest;
+  guint port;
+
+  if (rtcp_from == NULL)
+    return NULL;
+
+  dest = g_strrstr (rtcp_from, ":");
+  if (dest == NULL)
+    return NULL;
+
+  port = atoi (dest + 1);
+  dest = g_strndup (rtcp_from, dest - rtcp_from);
+
+  g_message ("finding %s:%d", dest, port);
+
+  for (walk = stream->transports; walk; walk = g_list_next (walk)) {
+    GstRTSPMediaTrans *trans = walk->data;
+    gint min, max;
+
+    min = trans->transport->client_port.min;
+    max = trans->transport->client_port.max;
+
+    if ((strcmp (trans->transport->destination, dest) == 0) && (min == port || max == port)) {
+      result = trans;
+      break;
+    }
+  }
+  return result;
 }
 
 static void
-on_ssrc_sdes (GObject *session, GObject *source, GstRTSPMedia *media)
+on_new_ssrc (GObject *session, GObject *source, GstRTSPMediaStream *stream)
+{
+  GstStructure *stats;
+  GstRTSPMediaTrans *trans;
+
+  g_message ("%p: new source %p", stream, source);
+
+  /* see if we have a stream to match with the origin of the RTCP packet */
+  trans = g_object_get_qdata (source, ssrc_stream_map_key);
+  if (trans == NULL) {
+    g_object_get (source, "stats", &stats, NULL);
+    if (stats) {
+      const gchar *rtcp_from;
+
+      rtcp_from = gst_structure_get_string (stats, "rtcp-from");
+      if ((trans = find_transport (stream, rtcp_from))) {
+        g_message ("%p: found transport %p for source  %p", stream, trans, source);
+        g_object_set_qdata (source, ssrc_stream_map_key, trans);
+      }
+    }
+  } else {
+    g_message ("%p: source %p for transport %p", stream, source, trans);
+  }
+}
+
+static void
+on_ssrc_sdes (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 {
   GstStructure *sdes;
 
-  g_message ("%p: new SDES %p", media, source);
+  g_message ("%p: new SDES %p", stream, source);
   g_object_get (source, "sdes", &sdes, NULL);
   dump_structure (sdes);
 }
 
 static void
-on_ssrc_active (GObject *session, GObject *source, GstRTSPMedia *media)
+on_ssrc_active (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 {
   GstStructure *stats;
+  GstRTSPMediaTrans *trans;
 
-  g_message ("%p: source %p is active", media, source);
+  trans = g_object_get_qdata (source, ssrc_stream_map_key);
+
+  g_message ("%p: source %p in transport %p is active", stream, trans, source);
+
+  if (trans && trans->keep_alive) {
+    trans->keep_alive (trans->ka_user_data);
+  }
+
   g_object_get (source, "stats", &stats, NULL);
   dump_structure (stats);
+  gst_structure_free (stats);
 }
 
 static void
-on_bye_ssrc (GObject *session, GObject *source, GstRTSPMedia *media)
+on_bye_ssrc (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 {
-  g_message ("%p: source %p bye", media, source);
+  g_message ("%p: source %p bye", stream, source);
 }
 
 static void
-on_bye_timeout (GObject *session, GObject *source, GstRTSPMedia *media)
+on_bye_timeout (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 {
-  g_message ("%p: source %p bye timeout", media, source);
+  g_message ("%p: source %p bye timeout", stream, source);
 }
 
 static void
-on_timeout (GObject *session, GObject *source, GstRTSPMedia *media)
+on_timeout (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 {
-  g_message ("%p: source %p timeout", media, source);
+  g_message ("%p: source %p timeout", stream, source);
 }
 
 static GstFlowReturn
@@ -836,17 +908,17 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
 		  &stream->session);
 
   g_signal_connect (stream->session, "on-new-ssrc", (GCallback) on_new_ssrc,
-      media);
+      stream);
   g_signal_connect (stream->session, "on-ssrc-sdes", (GCallback) on_ssrc_sdes,
-      media);
+      stream);
   g_signal_connect (stream->session, "on-ssrc-active", (GCallback) on_ssrc_active,
-      media);
+      stream);
   g_signal_connect (stream->session, "on-bye-ssrc", (GCallback) on_bye_ssrc,
-      media);
+      stream);
   g_signal_connect (stream->session, "on-bye-timeout", (GCallback) on_bye_timeout,
-      media);
+      stream);
   g_signal_connect (stream->session, "on-timeout", (GCallback) on_timeout,
-      media);
+      stream);
 
   /* link the RTP pad to the session manager */
   ret = gst_pad_link (stream->srcpad, stream->send_rtp_sink);
@@ -1361,12 +1433,14 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
           g_message ("adding %s:%d-%d", dest, min, max);
           g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
           g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
+	  stream->transports = g_list_prepend (stream->transports, tr);
 	  tr->active = TRUE;
 	  media->active++;
 	} else if (remove && tr->active) {
           g_message ("removing %s:%d-%d", dest, min, max);
           g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
           g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
+	  stream->transports = g_list_remove (stream->transports, tr);
 	  tr->active = FALSE;
 	  media->active--;
 	}

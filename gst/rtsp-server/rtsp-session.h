@@ -146,6 +146,10 @@ void                   gst_rtsp_session_stream_set_callbacks (GstRTSPSessionStre
                                                               GstRTSPSendFunc send_rtcp,
                                                               gpointer user_data,
                                                               GDestroyNotify  notify);
+void                   gst_rtsp_session_stream_set_keepalive (GstRTSPSessionStream *stream,
+                                                              GstRTSPKeepAliveFunc keep_alive,
+                                                              gpointer user_data,
+                                                              GDestroyNotify  notify);
 
 G_END_DECLS
 

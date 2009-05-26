@@ -41,7 +41,8 @@ typedef struct _GstRTSPMedia GstRTSPMedia;
 typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 typedef struct _GstRTSPMediaTrans GstRTSPMediaTrans;
 
-typedef gboolean (*GstRTSPSendFunc) (GstBuffer *buffer, guint8 channel, gpointer user_data);
+typedef gboolean (*GstRTSPSendFunc)      (GstBuffer *buffer, guint8 channel, gpointer user_data);
+typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
 
 /**
  * GstRTSPMediaTrans:
@@ -50,20 +51,33 @@ typedef gboolean (*GstRTSPSendFunc) (GstBuffer *buffer, guint8 channel, gpointer
  * @send_rtcp: callback for sending RTCP messages
  * @user_data: user data passed in the callbacks
  * @notify: free function for the user_data.
+ * @keep_alive: keep alive callback
+ * @ka_user_data: data passed to @keep_alive
+ * @ka_notify: called when @ka_user_data is freed
+ * @active: if we are actively sending
+ * @timeout: if we timed out
  * @transport: a transport description
+ * @rtpsource: the receiver rtp source object
  *
  * A Transport description for stream @idx
  */
 struct _GstRTSPMediaTrans {
   guint idx;
 
-  GstRTSPSendFunc send_rtp;
-  GstRTSPSendFunc send_rtcp;
-  gpointer        user_data;
-  GDestroyNotify  notify;
-  gboolean        active;
+  GstRTSPSendFunc      send_rtp;
+  GstRTSPSendFunc      send_rtcp;
+  gpointer             user_data;
+  GDestroyNotify       notify;
 
-  GstRTSPTransport *transport;
+  GstRTSPKeepAliveFunc keep_alive;
+  gpointer             ka_user_data;
+  GDestroyNotify       ka_notify;
+  gboolean             active;
+  gboolean             timeout;
+
+  GstRTSPTransport    *transport;
+
+  GObject             *rtpsource;
 };
 
 /**

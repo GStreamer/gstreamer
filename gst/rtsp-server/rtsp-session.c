@@ -74,6 +74,10 @@ gst_rtsp_session_free_stream (GstRTSPSessionStream *stream)
 {
   g_message ("free session stream %p", stream);
 
+  /* remove callbacks now */
+  gst_rtsp_session_stream_set_callbacks (stream, NULL, NULL, NULL, NULL);
+  gst_rtsp_session_stream_set_keepalive (stream, NULL, NULL, NULL);
+
   if (stream->trans.transport)
     gst_rtsp_transport_free (stream->trans.transport);
 
@@ -308,7 +312,7 @@ gst_rtsp_session_media_get_stream (GstRTSPSessionMedia *media, guint idx)
     result->trans.transport = NULL;
     result->media_stream = media_stream;
 
-    g_array_insert_val (media->streams, idx, result);
+    g_array_index (media->streams, GstRTSPSessionStream *, idx) = result;
   }
   return result;
 
@@ -510,6 +514,27 @@ gst_rtsp_session_stream_set_callbacks (GstRTSPSessionStream *stream,
     stream->trans.notify (stream->trans.user_data);
   stream->trans.user_data = user_data;
   stream->trans.notify = notify;
+}
+
+/**
+ * gst_rtsp_session_stream_set_keepalive:
+ * @stream: a #GstRTSPSessionStream
+ * @keep_alive: a callback called when the receiver is active
+ * @user_data: user data passed to callback
+ * @notify: called with the user_data when no longer needed.
+ *
+ * Install callbacks that will be called when RTCP packets are received from the
+ * receiver of @stream.
+ */
+void
+gst_rtsp_session_stream_set_keepalive (GstRTSPSessionStream *stream,
+    GstRTSPKeepAliveFunc keep_alive, gpointer user_data, GDestroyNotify  notify)
+{
+  stream->trans.keep_alive = keep_alive;
+  if (stream->trans.ka_notify)
+    stream->trans.ka_notify (stream->trans.ka_user_data);
+  stream->trans.ka_user_data = user_data;
+  stream->trans.ka_notify = notify;
 }
 
 /**
