@@ -691,15 +691,39 @@ caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
 }
 
 static void
+dump_structure (const GstStructure *s)
+{
+  gchar *sstr;
+
+  sstr = gst_structure_to_string (s);
+  g_message ("structure: %s", sstr);
+  g_free (sstr);
+}
+
+static void
 on_new_ssrc (GObject *session, GObject *source, GstRTSPMedia *media)
 {
   g_message ("%p: new source %p", media, source);
 }
 
 static void
+on_ssrc_sdes (GObject *session, GObject *source, GstRTSPMedia *media)
+{
+  GstStructure *sdes;
+
+  g_message ("%p: new SDES %p", media, source);
+  g_object_get (source, "sdes", &sdes, NULL);
+  dump_structure (sdes);
+}
+
+static void
 on_ssrc_active (GObject *session, GObject *source, GstRTSPMedia *media)
 {
+  GstStructure *stats;
+
   g_message ("%p: source %p is active", media, source);
+  g_object_get (source, "stats", &stats, NULL);
+  dump_structure (stats);
 }
 
 static void
@@ -812,6 +836,8 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
 		  &stream->session);
 
   g_signal_connect (stream->session, "on-new-ssrc", (GCallback) on_new_ssrc,
+      media);
+  g_signal_connect (stream->session, "on-ssrc-sdes", (GCallback) on_ssrc_sdes,
       media);
   g_signal_connect (stream->session, "on-ssrc-active", (GCallback) on_ssrc_active,
       media);
@@ -1023,6 +1049,10 @@ default_handle_message (GstRTSPMedia *media, GstMessage *message)
       g_warning ("%p: got warning %s (%s)", media, gerror->message, debug);
       g_error_free (gerror);
       g_free (debug);
+      break;
+    }
+    case GST_MESSAGE_ELEMENT:
+    {
       break;
     }
     default:
@@ -1279,11 +1309,13 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
 
   add = remove = FALSE;
 
+  g_message ("going to state %s media %p", gst_element_state_get_name (state), media);
+
   switch (state) {
     case GST_STATE_NULL:
       /* unlock the streams so that they follow the state changes from now on */
       unlock_streams (media);
-      break;
+      /* fallthrough */
     case GST_STATE_PAUSED:
       /* we're going from PLAYING to PAUSED, READY or NULL, remove */
       if (media->target_state == GST_STATE_PLAYING)
@@ -1325,27 +1357,31 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
 	min = trans->client_port.min;
 	max = trans->client_port.max;
 
-	if (add) {
+	if (add && !tr->active) {
           g_message ("adding %s:%d-%d", dest, min, max);
           g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
           g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
+	  tr->active = TRUE;
 	  media->active++;
-	} else if (remove) {
+	} else if (remove && tr->active) {
           g_message ("removing %s:%d-%d", dest, min, max);
           g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
           g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
+	  tr->active = FALSE;
 	  media->active--;
 	}
         break;
       }
       case GST_RTSP_LOWER_TRANS_TCP:
-	if (add) {
+	if (add && !tr->active) {
           g_message ("adding TCP %s", trans->destination);
 	  stream->transports = g_list_prepend (stream->transports, tr);
+	  tr->active = TRUE;
 	  media->active++;
-	} else if (remove) {
+	} else if (remove && tr->active) {
           g_message ("removing TCP %s", trans->destination);
 	  stream->transports = g_list_remove (stream->transports, tr);
+	  tr->active = FALSE;
 	  media->active--;
 	}
         break;

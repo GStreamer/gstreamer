@@ -61,6 +61,7 @@ struct _GstRTSPMediaTrans {
   GstRTSPSendFunc send_rtcp;
   gpointer        user_data;
   GDestroyNotify  notify;
+  gboolean        active;
 
   GstRTSPTransport *transport;
 };
