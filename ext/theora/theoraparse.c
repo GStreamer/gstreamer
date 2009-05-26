@@ -408,17 +408,24 @@ theora_parse_clear_queue (GstTheoraParse * parse)
 static gint64
 make_granulepos (GstTheoraParse * parse, gint64 keyframe, gint64 frame)
 {
+  gint64 iframe;
+
   if (keyframe == -1)
     keyframe = 0;
-  /* If using newer theora, offset the granulepos by +1, see comment
-   * in theora_parse_set_streamheader */
+  /* If using newer theora, offset the granulepos by +1, see comment in
+   * theora_parse_set_streamheader.
+   * 
+   * We don't increment keyframe directly, as internally we always index frames
+   * starting from 0 and we do some sanity checking below. */
   if (!parse->is_old_bitstream)
-    keyframe += 1;
+    iframe = keyframe + 1;
+  else
+    iframe = keyframe;
 
   g_return_val_if_fail (frame >= keyframe, -1);
   g_return_val_if_fail (frame - keyframe < 1 << parse->shift, -1);
 
-  return (keyframe << parse->shift) + (frame - keyframe);
+  return (iframe << parse->shift) + (frame - keyframe);
 }
 
 static void
