@@ -75,6 +75,8 @@ enum PixelFormat {
     PIX_FMT_RGB565,    ///< always stored in cpu endianness 
     PIX_FMT_RGB555,    ///< always stored in cpu endianness, most significant bit to 1 
     PIX_FMT_GRAY8,
+    PIX_FMT_GRAY16_L,
+    PIX_FMT_GRAY16_B,
     PIX_FMT_MONOWHITE, ///< 0 is white 
     PIX_FMT_MONOBLACK, ///< 0 is black 
     PIX_FMT_PAL8,      ///< 8 bit with RGBA palette 

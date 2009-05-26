@@ -367,6 +367,28 @@ static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         /* .y_chroma_shift = */ 0,
         /* .depth          = */ 8,
       },
+  /* [PIX_FMT_GRAY16_L] = */ {
+        /* .format         = */ PIX_FMT_GRAY16_L,
+        /* .name           = */ "gray",
+        /* .nb_channels    = */ 1,
+        /* .color_type     = */ FF_COLOR_GRAY,
+        /* .pixel_type     = */ FF_PIXEL_PLANAR,
+        /* .is_alpha       = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth          = */ 16,
+      },
+  /* [PIX_FMT_GRAY16_B] = */ {
+        /* .format         = */ PIX_FMT_GRAY16_B,
+        /* .name           = */ "gray",
+        /* .nb_channels    = */ 1,
+        /* .color_type     = */ FF_COLOR_GRAY,
+        /* .pixel_type     = */ FF_PIXEL_PLANAR,
+        /* .is_alpha       = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth          = */ 16,
+      },
   /* [PIX_FMT_MONOWHITE] = */ {
         /* .format         = */ PIX_FMT_MONOWHITE,
         /* .name           = */ "monow",
@@ -2152,6 +2174,133 @@ bitcopy_n (unsigned int a, int n)
 #include "imgconvert_template.h"
 
 static void
+gray_to_gray16_l (AVPicture * dst, const AVPicture * src, int width, int height)
+{
+  const unsigned char *p;
+  unsigned char *q;
+  int dst_wrap, src_wrap;
+  int x, y;
+
+  p = src->data[0];
+  src_wrap = src->linesize[0] - width;
+
+  q = dst->data[0];
+  dst_wrap = dst->linesize[0] - 2 * width;
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      GST_WRITE_UINT16_LE (q, (*p << 8));
+      q += 2;
+      p++;
+    }
+    p += src_wrap;
+    q += dst_wrap;
+  }
+}
+
+static void
+gray_to_gray16_b (AVPicture * dst, const AVPicture * src, int width, int height)
+{
+  const unsigned char *p;
+  unsigned char *q;
+  int dst_wrap, src_wrap;
+  int x, y;
+
+  p = src->data[0];
+  src_wrap = src->linesize[0] - width;
+
+  q = dst->data[0];
+  dst_wrap = dst->linesize[0] - 2 * width;
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      GST_WRITE_UINT16_BE (q, (*p << 8));
+      q += 2;
+      p++;
+    }
+    p += src_wrap;
+    q += dst_wrap;
+  }
+}
+
+static void
+gray16_l_to_gray (AVPicture * dst, const AVPicture * src, int width, int height)
+{
+  const unsigned char *p;
+  unsigned char *q;
+  int dst_wrap, src_wrap;
+  int x, y;
+
+  p = src->data[0];
+  src_wrap = src->linesize[0] - 2 * width;
+
+  q = dst->data[0];
+  dst_wrap = dst->linesize[0] - width;
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      q[0] = GST_READ_UINT16_LE (p) >> 8;
+      q++;
+      p += 2;
+    }
+    p += src_wrap;
+    q += dst_wrap;
+  }
+}
+
+static void
+gray16_b_to_gray (AVPicture * dst, const AVPicture * src, int width, int height)
+{
+  const unsigned char *p;
+  unsigned char *q;
+  int dst_wrap, src_wrap;
+  int x, y;
+
+  p = src->data[0];
+  src_wrap = src->linesize[0] - 2 * width;
+
+  q = dst->data[0];
+  dst_wrap = dst->linesize[0] - width;
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      q[0] = GST_READ_UINT16_BE (p) >> 8;
+      q++;
+      p += 2;
+    }
+    p += src_wrap;
+    q += dst_wrap;
+  }
+}
+
+static void
+gray16_b_to_gray16_l (AVPicture * dst, const AVPicture * src,
+    int width, int height)
+{
+  const unsigned char *p;
+  unsigned char *q;
+  int dst_wrap, src_wrap;
+  int x, y;
+
+  p = src->data[0];
+  src_wrap = src->linesize[0] - 2 * width;
+
+  q = dst->data[0];
+  dst_wrap = dst->linesize[0] - 2 * width;
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      q[0] = p[1];
+      q[1] = p[0];
+      q += 2;
+      p += 2;
+    }
+    p += src_wrap;
+    q += dst_wrap;
+  }
+}
+
+static void
 mono_to_gray (AVPicture * dst, const AVPicture * src,
     int width, int height, int xor_mask)
 {
@@ -2488,10 +2637,17 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_GRAY8, PIX_FMT_ABGR32, gray_to_abgr32},
   {PIX_FMT_GRAY8, PIX_FMT_MONOWHITE, gray_to_monowhite},
   {PIX_FMT_GRAY8, PIX_FMT_MONOBLACK, gray_to_monoblack},
+  {PIX_FMT_GRAY8, PIX_FMT_GRAY16_L, gray_to_gray16_l},
+  {PIX_FMT_GRAY8, PIX_FMT_GRAY16_B, gray_to_gray16_b},
 
   {PIX_FMT_MONOWHITE, PIX_FMT_GRAY8, monowhite_to_gray},
 
   {PIX_FMT_MONOBLACK, PIX_FMT_GRAY8, monoblack_to_gray},
+
+  {PIX_FMT_GRAY16_L, PIX_FMT_GRAY8, gray16_l_to_gray},
+  {PIX_FMT_GRAY16_L, PIX_FMT_GRAY16_B, gray16_b_to_gray16_l},
+  {PIX_FMT_GRAY16_B, PIX_FMT_GRAY8, gray16_b_to_gray},
+  {PIX_FMT_GRAY16_B, PIX_FMT_GRAY16_L, gray16_b_to_gray16_l},
 
   {PIX_FMT_PAL8, PIX_FMT_RGB555, pal8_to_rgb555},
   {PIX_FMT_PAL8, PIX_FMT_RGB565, pal8_to_rgb565},
