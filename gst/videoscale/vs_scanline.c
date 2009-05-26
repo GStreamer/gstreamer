@@ -95,6 +95,76 @@ vs_scanline_merge_linear_Y (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   oil_merge_linear_u8 (dest, src1, src2, &value, n);
 }
 
+void
+vs_scanline_downsample_Y16 (uint8_t * dest, uint8_t * src, int n)
+{
+  int i;
+  uint16_t *d = (uint16_t *) dest, *s = (uint16_t *) src;
+
+  for (i = 0; i < n; i++) {
+    d[i] = (s[i * 2] + s[i * 2 + 1]) / 2;
+  }
+}
+
+void
+vs_scanline_resample_nearest_Y16 (uint8_t * dest, uint8_t * src, int src_width,
+    int n, int *accumulator, int increment)
+{
+  int acc = *accumulator;
+  int i;
+  int j;
+  int x;
+  uint16_t *d = (uint16_t *) dest, *s = (uint16_t *) src;
+
+  for (i = 0; i < n; i++) {
+    j = acc >> 16;
+    x = acc & 0xffff;
+    d[i] = (x < 32768 || j + 1 >= src_width) ? s[j] : s[j + 1];
+
+    acc += increment;
+  }
+
+  *accumulator = acc;
+}
+
+#include <glib.h>
+void
+vs_scanline_resample_linear_Y16 (uint8_t * dest, uint8_t * src, int src_width,
+    int n, int *accumulator, int increment)
+{
+  int acc = *accumulator;
+  int i;
+  int j;
+  int x;
+  uint16_t *d = (uint16_t *) dest, *s = (uint16_t *) src;
+
+  for (i = 0; i < n; i++) {
+    j = acc >> 16;
+    x = acc & 0xffff;
+
+    if (j + 1 < src_width)
+      d[i] = (s[j] * (65536 - x) + s[j + 1] * x) >> 16;
+    else
+      d[i] = s[j];
+
+    acc += increment;
+  }
+
+  *accumulator = acc;
+}
+
+void
+vs_scanline_merge_linear_Y16 (uint8_t * dest, uint8_t * src1, uint8_t * src2,
+    int n, int x)
+{
+  int i;
+  uint16_t *d = (uint16_t *) dest, *s1 = (uint16_t *) src1, *s2 =
+      (uint16_t *) src2;
+
+  for (i = 0; i < n; i++) {
+    d[i] = (s1[i] * (65536 - x) + s2[i] * x) >> 16;
+  }
+}
 
 /* RGBA */
 

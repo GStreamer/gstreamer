@@ -692,6 +692,136 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
   }
 }
 
+void
+vs_image_scale_nearest_Y16 (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf)
+{
+  int acc;
+  int y_increment;
+  int x_increment;
+  int i;
+  int j;
+  int x;
+  int xacc;
+
+  if (dest->height == 1)
+    y_increment = 0;
+  else
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+
+  if (dest->width == 1)
+    x_increment = 0;
+  else
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+
+  acc = 0;
+  for (i = 0; i < dest->height; i++) {
+    j = acc >> 16;
+    x = acc & 0xffff;
+
+    xacc = 0;
+    vs_scanline_resample_nearest_Y16 (dest->pixels + i * dest->stride,
+        src->pixels + j * src->stride, src->width, dest->width, &xacc,
+        x_increment);
+
+    acc += y_increment;
+  }
+}
+
+void
+vs_image_scale_linear_Y16 (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf)
+{
+  int acc;
+  int y_increment;
+  int x_increment;
+  uint8_t *tmp1;
+  uint8_t *tmp2;
+  int y1;
+  int y2;
+  int i;
+  int j;
+  int x;
+  int dest_size;
+  int xacc;
+
+  if (dest->height == 1)
+    y_increment = 0;
+  else
+    y_increment = ((src->height - 1) << 16) / (dest->height - 1);
+
+  if (dest->width == 1)
+    x_increment = 0;
+  else
+    x_increment = ((src->width - 1) << 16) / (dest->width - 1);
+
+  dest_size = 2 * dest->width;
+
+  tmp1 = tmpbuf;
+  tmp2 = tmpbuf + dest_size;
+
+  acc = 0;
+  xacc = 0;
+  y2 = -1;
+  vs_scanline_resample_linear_Y16 (tmp1, src->pixels, src->width, dest->width,
+      &xacc, x_increment);
+  y1 = 0;
+  for (i = 0; i < dest->height; i++) {
+    j = acc >> 16;
+    x = acc & 0xffff;
+
+    if (x == 0) {
+      if (j == y1) {
+        memcpy (dest->pixels + i * dest->stride, tmp1, dest_size);
+      } else if (j == y2) {
+        memcpy (dest->pixels + i * dest->stride, tmp2, dest_size);
+      } else {
+        xacc = 0;
+        vs_scanline_resample_linear_Y16 (tmp1, src->pixels + j * src->stride,
+            src->width, dest->width, &xacc, x_increment);
+        y1 = j;
+        memcpy (dest->pixels + i * dest->stride, tmp1, dest_size);
+      }
+    } else {
+      if (j == y1) {
+        if (j + 1 != y2) {
+          xacc = 0;
+          vs_scanline_resample_linear_Y16 (tmp2,
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
+          y2 = j + 1;
+        }
+        vs_scanline_merge_linear_Y16 (dest->pixels + i * dest->stride,
+            tmp1, tmp2, dest->width, x);
+      } else if (j == y2) {
+        if (j + 1 != y1) {
+          xacc = 0;
+          vs_scanline_resample_linear_Y16 (tmp1,
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
+          y1 = j + 1;
+        }
+        vs_scanline_merge_linear_Y16 (dest->pixels + i * dest->stride,
+            tmp2, tmp1, dest->width, x);
+      } else {
+        xacc = 0;
+        vs_scanline_resample_linear_Y16 (tmp1, src->pixels + j * src->stride,
+            src->width, dest->width, &xacc, x_increment);
+        y1 = j;
+        xacc = 0;
+        vs_scanline_resample_linear_Y16 (tmp2,
+            src->pixels + (j + 1) * src->stride, src->width, dest->width, &xacc,
+            x_increment);
+        y2 = (j + 1);
+        vs_scanline_merge_linear_Y16 (dest->pixels + i * dest->stride,
+            tmp1, tmp2, dest->width, x);
+      }
+    }
+
+    acc += y_increment;
+  }
+}
+
 /* RGB565 */
 
 void

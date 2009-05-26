@@ -74,5 +74,10 @@ void vs_image_scale_nearest_RGB555 (const VSImage *dest, const VSImage *src,
 void vs_image_scale_linear_RGB555 (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);
 
+void vs_image_scale_nearest_Y16 (const VSImage *dest, const VSImage *src,
+    uint8_t *tmpbuf);
+void vs_image_scale_linear_Y16 (const VSImage *dest, const VSImage *src,
+    uint8_t *tmpbuf);
+
 #endif
 

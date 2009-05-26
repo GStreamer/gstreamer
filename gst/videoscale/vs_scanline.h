@@ -65,6 +65,10 @@ void vs_scanline_resample_nearest_RGB555 (uint8_t *dest, uint8_t *src, int src_w
 void vs_scanline_resample_linear_RGB555 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
 void vs_scanline_merge_linear_RGB555 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
+void vs_scanline_downsample_Y16 (uint8_t *dest, uint8_t *src, int n);
+void vs_scanline_resample_nearest_Y16 (uint8_t *dest, uint8_t *src, int n, int src_width, int *accumulator, int increment);
+void vs_scanline_resample_linear_Y16 (uint8_t *dest, uint8_t *src, int n, int src_width, int *accumulator, int increment);
+void vs_scanline_merge_linear_Y16 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
 #endif
 
