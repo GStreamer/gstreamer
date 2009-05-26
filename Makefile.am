@@ -106,7 +106,7 @@ check-enum-gettypes: $(top_builddir)/gst/gstenumtypes.h
 	FUNCS=`grep '_get_type (' gst/gstenumtypes.h | sed -e 's/^.*gst_/gst_/' -e 's/_get_type.*$$/_get_type/'`;\
 	MISSING_FUNCS='';                                                                                        \
 	for f in $$FUNCS; do                                                                                     \
-	  INIT_LINE=`grep $$f gst/*.c | grep g_type_class_ref`;                                                  \
+	  INIT_LINE=`grep $$f $(top_srcdir)/gst/*.c | grep g_type_class_ref`;                                    \
 	  if test "x$$INIT_LINE" = "x"; then                                                                     \
 	    MISSING_FUNCS="$$MISSING_FUNCS $$f";                                                                 \
 	  fi;                                                                                                    \
