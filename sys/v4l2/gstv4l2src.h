@@ -28,8 +28,11 @@
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 
+/* size of v4l2 buffer pool in streaming case */
 #define GST_V4L2_MAX_BUFFERS 16
-#define GST_V4L2_MIN_BUFFERS 2
+#define GST_V4L2_MIN_BUFFERS 1
+
+/* max frame width/height */
 #define GST_V4L2_MAX_SIZE (1<<15) /* 2^15 == 32768 */
 
 G_BEGIN_DECLS
@@ -88,14 +91,12 @@ struct _GstV4l2Src
   GstV4l2Object * v4l2object;
 
   /* pads */
-  GstPad *srcpad;
-
   GstCaps *probed_caps;
 
   /* internal lists */
   GSList *formats;              /* list of available capture formats */
 
-  /* buffers */
+  /* buffer handling */
   GstV4l2BufferPool *pool;
 
   guint32 num_buffers;

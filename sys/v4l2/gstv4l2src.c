@@ -57,16 +57,18 @@
 #include "gstv4l2vidorient.h"
 
 static const GstElementDetails gst_v4l2src_details =
-GST_ELEMENT_DETAILS ("Video (video4linux2/raw) Source",
+GST_ELEMENT_DETAILS ("Video (video4linux2) Source",
     "Source/Video",
-    "Reads raw frames from a video4linux2 (BT8x8) device",
+    "Reads frames from a video4linux2 (BT8x8) device",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>,"
-    " Edgard Lima <edgard.lima@indt.org.br>");
+    " Edgard Lima <edgard.lima@indt.org.br>,"
+    " Stefan Kost <ensonic@users.sf.net>");
 
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
-#define DEFAULT_PROP_ALWAYS_COPY        TRUE
+#define PROP_DEF_QUEUE_SIZE         2
+#define PROP_DEF_ALWAYS_COPY        TRUE
 
 enum
 {
@@ -234,28 +236,18 @@ GST_BOILERPLATE_FULL (GstV4l2Src, gst_v4l2src, GstPushSrc, GST_TYPE_PUSH_SRC,
     gst_v4l2src_init_interfaces);
 
 static void gst_v4l2src_dispose (GObject * object);
-
 static void gst_v4l2src_finalize (GstV4l2Src * v4l2src);
 
 /* basesrc methods */
 static gboolean gst_v4l2src_start (GstBaseSrc * src);
-
 static gboolean gst_v4l2src_unlock (GstBaseSrc * src);
-
 static gboolean gst_v4l2src_unlock_stop (GstBaseSrc * src);
-
 static gboolean gst_v4l2src_stop (GstBaseSrc * src);
-
 static gboolean gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps);
-
 static GstCaps *gst_v4l2src_get_caps (GstBaseSrc * src);
-
 static gboolean gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query);
-
 static GstFlowReturn gst_v4l2src_create (GstPushSrc * src, GstBuffer ** out);
-
 static void gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
-
 static gboolean gst_v4l2src_negotiate (GstBaseSrc * basesrc);
 
 static void gst_v4l2src_set_property (GObject * object, guint prop_id,
@@ -269,7 +261,6 @@ static void
 gst_v4l2src_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
   GstV4l2SrcClass *gstv4l2src_class = GST_V4L2SRC_CLASS (g_class);
 
   gstv4l2src_class->v4l2_class_devices = NULL;
@@ -288,9 +279,7 @@ static void
 gst_v4l2src_class_init (GstV4l2SrcClass * klass)
 {
   GObjectClass *gobject_class;
-
   GstBaseSrcClass *basesrc_class;
-
   GstPushSrcClass *pushsrc_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
@@ -305,13 +294,13 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   gst_v4l2_object_install_properties_helper (gobject_class);
   g_object_class_install_property (gobject_class, PROP_QUEUE_SIZE,
       g_param_spec_uint ("queue-size", "Queue size",
-          "Number of buffers to be enqueud in the driver",
-          GST_V4L2_MIN_BUFFERS, GST_V4L2_MAX_BUFFERS, GST_V4L2_MIN_BUFFERS,
+          "Number of buffers to be enqueud in the driver in streaming mode",
+          GST_V4L2_MIN_BUFFERS, GST_V4L2_MAX_BUFFERS, PROP_DEF_QUEUE_SIZE,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_ALWAYS_COPY,
       g_param_spec_boolean ("always-copy", "Always Copy",
           "If the buffer will or not be used directly from mmap",
-          DEFAULT_PROP_ALWAYS_COPY, G_PARAM_READWRITE));
+          PROP_DEF_ALWAYS_COPY, G_PARAM_READWRITE));
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_get_caps);
   basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_set_caps);
@@ -334,9 +323,9 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
       gst_v4l2_get_input, gst_v4l2_set_input, NULL);
 
   /* number of buffers requested */
-  v4l2src->num_buffers = GST_V4L2_MIN_BUFFERS;
+  v4l2src->num_buffers = PROP_DEF_QUEUE_SIZE;
 
-  v4l2src->always_copy = DEFAULT_PROP_ALWAYS_COPY;
+  v4l2src->always_copy = PROP_DEF_ALWAYS_COPY;
 
   v4l2src->formats = NULL;
 
@@ -362,7 +351,6 @@ gst_v4l2src_dispose (GObject * object)
   if (v4l2src->probed_caps) {
     gst_caps_unref (v4l2src->probed_caps);
   }
-
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -428,7 +416,6 @@ static void
 gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 {
   GstStructure *structure;
-
   gint i;
 
   GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
@@ -468,11 +455,8 @@ static gboolean
 gst_v4l2src_negotiate (GstBaseSrc * basesrc)
 {
   GstCaps *thiscaps;
-
   GstCaps *caps = NULL;
-
   GstCaps *peercaps = NULL;
-
   gboolean result = FALSE;
 
   /* first see what is possible on our source pad */
@@ -793,7 +777,6 @@ static struct v4l2_fmtdesc *
 gst_v4l2src_get_format_from_fourcc (GstV4l2Src * v4l2src, guint32 fourcc)
 {
   struct v4l2_fmtdesc *fmt;
-
   GSList *walk;
 
   if (fourcc == 0)
@@ -846,9 +829,7 @@ static GstCaps *
 gst_v4l2src_get_caps (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
-
   GstCaps *ret;
-
   GSList *walk;
 
   if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object)) {
@@ -909,13 +890,9 @@ gst_v4l2_get_caps_info (GstV4l2Src * v4l2src, GstCaps * caps,
     guint * fps_d, guint * size)
 {
   GstStructure *structure;
-
   const GValue *framerate;
-
   guint32 fourcc;
-
   const gchar *mimetype;
-
   guint outsize;
 
   /* default unknown values */
@@ -1056,13 +1033,9 @@ static gboolean
 gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 {
   GstV4l2Src *v4l2src;
-
   gint w = 0, h = 0;
-
   struct v4l2_fmtdesc *format;
-
   guint fps_n, fps_d;
-
   guint size;
 
   v4l2src = GST_V4L2SRC (src);
@@ -1294,14 +1267,9 @@ static GstFlowReturn
 gst_v4l2src_get_mmap (GstV4l2Src * v4l2src, GstBuffer ** buf)
 {
   GstBuffer *temp;
-
   GstFlowReturn ret;
-
   guint size;
-
-  guint count;
-
-  count = 0;
+  guint count = 0;
 
 again:
   ret = gst_v4l2src_grab_frame (v4l2src, &temp);
