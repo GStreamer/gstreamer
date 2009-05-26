@@ -25,10 +25,10 @@ public ulong Timestamp {
 [DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_event_get_src_offset ();
 
-[DllImport ("libgobject-2.0.dll") ]
+[DllImport ("libgobject-2.0-0.dll") ]
 extern static IntPtr g_object_ref (IntPtr handle);
 
-[DllImport ("libgobject-2.0.dll") ]
+[DllImport ("libgobject-2.0-0.dll") ]
 extern static void g_object_unref (IntPtr handle);
 
 static uint src_offset = gstsharp_gst_event_get_src_offset ();
