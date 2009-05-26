@@ -418,8 +418,8 @@ gst_rtsp_session_next_timeout (GstRTSPSession *session, GTimeVal *now)
   g_return_val_if_fail (now != NULL, -1);
 
   last_access = GST_TIMEVAL_TO_TIME (session->last_access);
-  /* add timeout */
-  last_access += session->timeout * GST_SECOND;
+  /* add timeout allow for 5 seconds of extra time */
+  last_access += session->timeout * GST_SECOND + (5 * GST_SECOND);
 
   now_ns = GST_TIMEVAL_TO_TIME (*now);
 
