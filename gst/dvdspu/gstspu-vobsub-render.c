@@ -343,7 +343,7 @@ gstspu_vobsub_blend_comp_buffers (SpuState * state, guint8 * planes[3])
   gstspu_blend_comp_buffers (state, planes);
 }
 
-void
+static void
 gstspu_vobsub_clear_comp_buffers (SpuState * state)
 {
   state->comp_left = state->vobsub.disp_rect.left;
@@ -452,7 +452,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
         || state->vobsub.cur_Y > state->vobsub.clip_rect.bottom);
 
     /* Reset the compositing buffer */
-    gstspu_clear_comp_buffers (state);
+    gstspu_vobsub_clear_comp_buffers (state);
     /* Render even line */
     state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x;
     gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[0]);
@@ -480,7 +480,7 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
 
     /* Render a remaining lone last even line. y already has the correct value
      * after the above loop exited. */
-    gstspu_clear_comp_buffers (state);
+    gstspu_vobsub_clear_comp_buffers (state);
     state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x;
     gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[0]);
     gstspu_vobsub_blend_comp_buffers (state, planes);
