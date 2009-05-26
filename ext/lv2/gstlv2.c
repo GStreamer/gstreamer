@@ -297,19 +297,15 @@ gst_lv2_class_init (GstLV2Class * klass, SLV2Plugin lv2plugin)
 static void
 gst_lv2_init (GstLV2 * lv2, GstLV2Class * klass)
 {
-#if 0
   lv2->plugin = klass->plugin;
   lv2->instance = NULL;
   lv2->activated = FALSE;
-  lv2->inplace_broken = LV2_IS_INPLACE_BROKEN (lv2->descriptor->Properties);
-#endif
 }
 
 static void
 gst_lv2_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-#if 0
   GstSignalProcessor *gsp;
   GstSignalProcessorClass *gsp_class;
 
@@ -325,7 +321,7 @@ gst_lv2_set_property (GObject * object, guint prop_id, const GValue * value,
   /* now see what type it is */
   switch (pspec->value_type) {
     case G_TYPE_BOOLEAN:
-      gsp->control_in[prop_id] = g_value_get_boolean (value) ? 1.f : 0.f;
+      gsp->control_in[prop_id] = g_value_get_boolean (value) ? 0.0f : 1.0f;
       break;
     case G_TYPE_INT:
       gsp->control_in[prop_id] = g_value_get_int (value);
@@ -336,14 +332,12 @@ gst_lv2_set_property (GObject * object, guint prop_id, const GValue * value,
     default:
       g_assert_not_reached ();
   }
-#endif
 }
 
 static void
 gst_lv2_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-#if 0
   GstSignalProcessor *gsp;
   GstSignalProcessorClass *gsp_class;
   gfloat *controls;
@@ -366,7 +360,7 @@ gst_lv2_get_property (GObject * object, guint prop_id, GValue * value,
   /* now see what type it is */
   switch (pspec->value_type) {
     case G_TYPE_BOOLEAN:
-      g_value_set_boolean (value, controls[prop_id] > 0.5);
+      g_value_set_boolean (value, controls[prop_id] > 0.0f);
       break;
     case G_TYPE_INT:
       g_value_set_int (value, CLAMP (controls[prop_id], G_MININT, G_MAXINT));
@@ -377,64 +371,52 @@ gst_lv2_get_property (GObject * object, guint prop_id, GValue * value,
     default:
       g_return_if_reached ();
   }
-#endif
 }
 
 static gboolean
 gst_lv2_setup (GstSignalProcessor * gsp, guint sample_rate)
 {
-#if 0
-  GstLV2 *ladspa;
+  GstLV2 *lv2;
   GstLV2Class *oclass;
   GstSignalProcessorClass *gsp_class;
-  LV2_Descriptor *desc;
   int i;
 
   gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (gsp);
-  ladspa = (GstLV2 *) gsp;
+  lv2 = (GstLV2 *) gsp;
   oclass = (GstLV2Class *) gsp_class;
-  desc = ladspa->descriptor;
 
-  g_return_val_if_fail (ladspa->handle == NULL, FALSE);
-  g_return_val_if_fail (ladspa->activated == FALSE, FALSE);
+  g_return_val_if_fail (lv2->activated == FALSE, FALSE);
 
-  GST_DEBUG_OBJECT (ladspa, "instantiating the plugin at %d Hz", sample_rate);
+  GST_DEBUG_OBJECT (lv2, "instantiating the plugin at %d Hz", sample_rate);
 
-  ladspa->handle = desc->instantiate (desc, sample_rate);
+  lv2->instance = slv2_plugin_instantiate (oclass->plugin, sample_rate, NULL);
 
-  g_return_val_if_fail (ladspa->handle != NULL, FALSE);
+  g_return_val_if_fail (lv2->instance != NULL, FALSE);
 
   /* connect the control ports */
   for (i = 0; i < gsp_class->num_control_in; i++)
-    desc->connect_port (ladspa->handle,
+    slv2_instance_connect_port (lv2->instance,
         oclass->control_in_portnums[i], &(gsp->control_in[i]));
   for (i = 0; i < gsp_class->num_control_out; i++)
-    desc->connect_port (ladspa->handle,
+    slv2_instance_connect_port (lv2->instance,
         oclass->control_out_portnums[i], &(gsp->control_out[i]));
-#endif
+
   return TRUE;
 }
 
 static gboolean
 gst_lv2_start (GstSignalProcessor * gsp)
 {
-#if 0
-  GstLV2 *ladspa;
-  LV2_Descriptor *desc;
+  GstLV2 *lv2 = (GstLV2 *) gsp;
 
-  ladspa = (GstLV2 *) gsp;
-  desc = ladspa->descriptor;
+  g_return_val_if_fail (lv2->activated == FALSE, FALSE);
+  g_return_val_if_fail (lv2->instance != NULL, FALSE);
 
-  g_return_val_if_fail (ladspa->activated == FALSE, FALSE);
-  g_return_val_if_fail (ladspa->handle != NULL, FALSE);
+  GST_DEBUG_OBJECT (lv2, "activating");
 
-  GST_DEBUG_OBJECT (ladspa, "activating");
+  slv2_instance_activate (lv2->instance);
 
-  if (desc->activate)
-    desc->activate (ladspa->handle);
-
-  ladspa->activated = TRUE;
-#endif
+  lv2->activated = TRUE;
 
   return TRUE;
 }
@@ -442,71 +424,53 @@ gst_lv2_start (GstSignalProcessor * gsp)
 static void
 gst_lv2_stop (GstSignalProcessor * gsp)
 {
-#if 0
-  GstLV2 *ladspa;
-  LV2_Descriptor *desc;
+  GstLV2 *lv2 = (GstLV2 *) gsp;
 
-  ladspa = (GstLV2 *) gsp;
-  desc = ladspa->descriptor;
+  g_return_if_fail (lv2->activated == TRUE);
+  g_return_if_fail (lv2->instance != NULL);
 
-  g_return_if_fail (ladspa->activated == TRUE);
-  g_return_if_fail (ladspa->handle != NULL);
+  GST_DEBUG_OBJECT (lv2, "deactivating");
 
-  GST_DEBUG_OBJECT (ladspa, "deactivating");
+  slv2_instance_deactivate (lv2->instance);
 
-  if (desc->activate)
-    desc->activate (ladspa->handle);
-
-  ladspa->activated = FALSE;
-#endif
+  lv2->activated = FALSE;
 }
 
 static void
 gst_lv2_cleanup (GstSignalProcessor * gsp)
 {
-#if 0
-  GstLV2 *ladspa;
-  LV2_Descriptor *desc;
+  GstLV2 *lv2 = (GstLV2 *) gsp;
 
-  ladspa = (GstLV2 *) gsp;
-  desc = ladspa->descriptor;
+  g_return_if_fail (lv2->activated == FALSE);
+  g_return_if_fail (lv2->instance != NULL);
 
-  g_return_if_fail (ladspa->activated == FALSE);
-  g_return_if_fail (ladspa->handle != NULL);
+  GST_DEBUG_OBJECT (lv2, "cleaning up");
 
-  GST_DEBUG_OBJECT (ladspa, "cleaning up");
+  slv2_instance_free (lv2->instance);
 
-  if (desc->cleanup)
-    desc->cleanup (ladspa->handle);
-
-  ladspa->handle = NULL;
-#endif
+  lv2->instance = NULL;
 }
 
 static void
 gst_lv2_process (GstSignalProcessor * gsp, guint nframes)
 {
-#if 0
   GstSignalProcessorClass *gsp_class;
-  GstLV2 *ladspa;
+  GstLV2 *lv2;
   GstLV2Class *oclass;
-  LV2_Descriptor *desc;
   guint i;
 
   gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (gsp);
-  ladspa = (GstLV2 *) gsp;
+  lv2 = (GstLV2 *) gsp;
   oclass = (GstLV2Class *) gsp_class;
-  desc = ladspa->descriptor;
 
   for (i = 0; i < gsp_class->num_audio_in; i++)
-    desc->connect_port (ladspa->handle, oclass->audio_in_portnums[i],
-        gsp->audio_in[i]);
+    slv2_instance_connect_port (lv2->instance,
+        oclass->audio_in_portnums[i], gsp->audio_in[i]);
   for (i = 0; i < gsp_class->num_audio_out; i++)
-    desc->connect_port (ladspa->handle, oclass->audio_out_portnums[i],
-        gsp->audio_out[i]);
+    slv2_instance_connect_port (lv2->instance,
+        oclass->audio_out_portnums[i], gsp->audio_out[i]);
 
-  desc->run (ladspa->handle, nframes);
-#endif
+  slv2_instance_run (lv2->instance, nframes);
 }
 
 /* search the plugin path

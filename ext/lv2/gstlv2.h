@@ -51,11 +51,10 @@ typedef struct _GstLV2Class GstLV2Class;
 struct _GstLV2 {
   GstSignalProcessor parent;
 
-  SLV2Plugin *plugin;
-  SLV2Instance *instance;
+  SLV2Plugin plugin;
+  SLV2Instance instance;
 
   gboolean activated;
-  gboolean inplace_broken;
 };
 
 struct _GstLV2Class {
