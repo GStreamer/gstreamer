@@ -290,7 +290,7 @@ gst_base_parse_base_init (gpointer g_class)
   GstBaseParseClass *klass = GST_BASE_PARSE_CLASS (g_class);
   GstBaseParseClassPrivate *priv;
 
-  GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "flacbaseparse", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "aacbaseparse", 0,
       "baseparse element");
 
   /* TODO: Remove this once GObject supports class private data */
