@@ -1162,7 +1162,7 @@ gst_flups_demux_reset_psm (GstFluPSDemux * demux)
   FILL_TYPE (0x40, 0x7f, -1);
   FILL_TYPE (0x80, 0x87, ST_PS_AUDIO_AC3);
   FILL_TYPE (0x88, 0x9f, ST_PS_AUDIO_DTS);
-  FILL_TYPE (0xa0, 0xbf, ST_PS_AUDIO_LPCM);
+  FILL_TYPE (0xa0, 0xaf, ST_PS_AUDIO_LPCM);
   FILL_TYPE (0xbd, 0xbd, -1);
   FILL_TYPE (0xc0, 0xdf, ST_AUDIO_MPEG1);
   FILL_TYPE (0xe0, 0xef, ST_GST_VIDEO_MPEG1_OR_2);
