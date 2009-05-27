@@ -193,6 +193,10 @@ gst_buffer_copy_metadata (GstBuffer * dest, const GstBuffer * src,
   g_return_if_fail (dest != NULL);
   g_return_if_fail (src != NULL);
 
+  /* nothing to copy if the buffers are the same */
+  if (G_UNLIKELY (dest == src))
+    return;
+
   GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p", src, dest);
 
   if (flags & GST_BUFFER_COPY_FLAGS) {
@@ -214,10 +218,7 @@ gst_buffer_copy_metadata (GstBuffer * dest, const GstBuffer * src,
   }
 
   if (flags & GST_BUFFER_COPY_CAPS) {
-    if (GST_BUFFER_CAPS (src))
-      GST_BUFFER_CAPS (dest) = gst_caps_ref (GST_BUFFER_CAPS (src));
-    else
-      GST_BUFFER_CAPS (dest) = NULL;
+    gst_caps_replace (&GST_BUFFER_CAPS (dest), GST_BUFFER_CAPS (src));
   }
 }
 
