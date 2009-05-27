@@ -989,8 +989,9 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   /* distribute the bus */
   gst_element_set_bus (element, bin->child_bus);
 
-  /* propagate the current base_time and clock */
+  /* propagate the current base_time, start_time and clock */
   gst_element_set_base_time (element, GST_ELEMENT (bin)->base_time);
+  gst_element_set_start_time (element, GST_ELEMENT_START_TIME (bin));
   /* it's possible that the element did not accept the clock but
    * that is not important right now. When the pipeline goes to PLAYING,
    * a new clock will be selected */
@@ -1969,14 +1970,16 @@ gst_bin_iterate_sorted (GstBin * bin)
 
 static GstStateChangeReturn
 gst_bin_element_set_state (GstBin * bin, GstElement * element,
-    GstClockTime base_time, GstState current, GstState next)
+    GstClockTime base_time, GstClockTime start_time, GstState current,
+    GstState next)
 {
   GstStateChangeReturn ret;
   gboolean locked;
   GList *found;
 
-  /* set base_time on child */
+  /* set base_time and start time on child */
   gst_element_set_base_time (element, base_time);
+  gst_element_set_start_time (element, start_time);
 
   GST_STATE_LOCK (element);
 
@@ -2233,7 +2236,7 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
   GstState current, next;
   gboolean have_async;
   gboolean have_no_preroll;
-  GstClockTime base_time;
+  GstClockTime base_time, start_time;
   GstIterator *it;
   gboolean done;
 
@@ -2307,6 +2310,7 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
 restart:
   /* take base_time */
   base_time = gst_element_get_base_time (element);
+  start_time = gst_element_get_start_time (element);
 
   have_no_preroll = FALSE;
 
@@ -2322,7 +2326,9 @@ restart:
         child = GST_ELEMENT_CAST (data);
 
         /* set state and base_time now */
-        ret = gst_bin_element_set_state (bin, child, base_time, current, next);
+        ret =
+            gst_bin_element_set_state (bin, child, base_time, start_time,
+            current, next);
 
         switch (ret) {
           case GST_STATE_CHANGE_SUCCESS:
@@ -2387,12 +2393,13 @@ done:
 
   GST_OBJECT_LOCK (bin);
   bin->polling = FALSE;
-  /* it's possible that we did not get ASYNC form the children while the bin is
+  /* it's possible that we did not get ASYNC from the children while the bin is
    * simulating ASYNC behaviour by posting an ASYNC_DONE message on the bus with
    * itself as the source. In that case we still want to check if the state
    * change completed. */
   if (ret != GST_STATE_CHANGE_ASYNC && !bin->priv->pending_async_done) {
-    /* no element returned ASYNC, we can just complete. */
+    /* no element returned ASYNC and there are no pending async_done messages,
+     * we can just complete. */
     GST_DEBUG_OBJECT (bin, "no async elements");
     goto state_end;
   }
