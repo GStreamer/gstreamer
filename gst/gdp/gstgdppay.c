@@ -486,6 +486,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     goto done;
   }
   if (this->tag_buf) {
+    gst_buffer_set_caps (this->tag_buf, caps);
     GST_DEBUG_OBJECT (this, "Pushing GDP tag buffer %p", this->tag_buf);
     /* we stored these bufs with refcount 1, so make sure we keep a ref */
     r = gst_pad_push (this->srcpad, gst_buffer_ref (this->tag_buf));
@@ -543,6 +544,7 @@ gst_gdp_queue_buffer (GstGDPPay * this, GstBuffer * buffer)
   if (this->sent_streamheader) {
     GST_LOG_OBJECT (this, "Pushing GDP buffer %p, caps %" GST_PTR_FORMAT,
         buffer, this->caps);
+    gst_buffer_set_caps (buffer, GST_PAD_CAPS (this->srcpad));
     return gst_pad_push (this->srcpad, buffer);
   }
 
