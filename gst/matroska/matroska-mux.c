@@ -61,11 +61,13 @@ enum
 {
   ARG_0,
   ARG_WRITING_APP,
-  ARG_MATROSKA_VERSION
+  ARG_MATROSKA_VERSION,
+  ARG_MIN_INDEX_INTERVAL
 };
 
 #define  DEFAULT_MATROSKA_VERSION        1
 #define  DEFAULT_WRITING_APP             "GStreamer Matroska muxer"
+#define  DEFAULT_MIN_INDEX_INTERVAL      0
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -293,6 +295,10 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       g_param_spec_int ("version", "Matroska version",
           "This parameter determines what matroska features can be used.",
           1, 2, DEFAULT_MATROSKA_VERSION, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MIN_INDEX_INTERVAL,
+      g_param_spec_int64 ("min-index-interval", "Minimum time between index "
+          "entries", "An index entry is created every so many nanoseconds.",
+          0, G_MAXINT64, DEFAULT_MIN_INDEX_INTERVAL, G_PARAM_READWRITE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);
@@ -327,6 +333,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
   /* property defaults */
   mux->matroska_version = DEFAULT_MATROSKA_VERSION;
   mux->writing_app = g_strdup (DEFAULT_WRITING_APP);
+  mux->min_index_interval = DEFAULT_MIN_INDEX_INTERVAL;
 
   /* initialize internal variables */
   mux->index = NULL;
@@ -2514,40 +2521,41 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   if (GST_BUFFER_DURATION_IS_VALID (buf))
     collect_pad->duration += GST_BUFFER_DURATION (buf);
 
-  /* We currently write an index entry for each keyframe in a
-   * video track or one entry for each cluster in an audio track
-   * for audio only files. This can be largely improved, such as doing
-   * one for each keyframe or each second (for all-keyframe
-   * streams), only the *first* video track. But that'll come later... */
+  /* We currently write index entries for all video tracks or for the audio
+   * track in a single-track audio file.  This could be improved by keeping the
+   * index only for the *first* video track. */
 
   /* TODO: index is useful for every track, should contain the number of
-   * the block in the cluster which contains the timestamp
+   * the block in the cluster which contains the timestamp, should also work
+   * for files with multiple audio tracks.
    */
-  if (is_video_keyframe) {
-    GstMatroskaIndex *idx;
+  if (is_video_keyframe ||
+      ((collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
+          (mux->num_streams == 1))) {
+    gint last_idx = -1;
 
-    if (mux->num_indexes % 32 == 0) {
-      mux->index = g_renew (GstMatroskaIndex, mux->index,
-          mux->num_indexes + 32);
+    if (mux->min_index_interval != 0) {
+      for (last_idx = mux->num_indexes - 1; last_idx >= 0; last_idx--) {
+        if (mux->index[last_idx].track == collect_pad->track->num)
+          break;
+      }
     }
-    idx = &mux->index[mux->num_indexes++];
 
-    idx->pos = mux->cluster_pos;
-    idx->time = GST_BUFFER_TIMESTAMP (buf);
-    idx->track = collect_pad->track->num;
-  } else if ((collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
-      (mux->num_streams == 1)) {
-    GstMatroskaIndex *idx;
+    if (last_idx < 0 || mux->min_index_interval == 0 ||
+        (GST_CLOCK_DIFF (mux->index[last_idx].time, GST_BUFFER_TIMESTAMP (buf))
+            >= mux->min_index_interval)) {
+      GstMatroskaIndex *idx;
 
-    if (mux->num_indexes % 32 == 0) {
-      mux->index = g_renew (GstMatroskaIndex, mux->index,
-          mux->num_indexes + 32);
+      if (mux->num_indexes % 32 == 0) {
+        mux->index = g_renew (GstMatroskaIndex, mux->index,
+            mux->num_indexes + 32);
+      }
+      idx = &mux->index[mux->num_indexes++];
+
+      idx->pos = mux->cluster_pos;
+      idx->time = GST_BUFFER_TIMESTAMP (buf);
+      idx->track = collect_pad->track->num;
     }
-    idx = &mux->index[mux->num_indexes++];
-
-    idx->pos = mux->cluster_pos;
-    idx->time = GST_BUFFER_TIMESTAMP (buf);
-    idx->track = collect_pad->track->num;
   }
 
   /* Check if the duration differs from the default duration. */
@@ -2746,6 +2754,9 @@ gst_matroska_mux_set_property (GObject * object,
     case ARG_MATROSKA_VERSION:
       mux->matroska_version = g_value_get_int (value);
       break;
+    case ARG_MIN_INDEX_INTERVAL:
+      mux->min_index_interval = g_value_get_int64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2767,6 +2778,9 @@ gst_matroska_mux_get_property (GObject * object,
       break;
     case ARG_MATROSKA_VERSION:
       g_value_set_int (value, mux->matroska_version);
+      break;
+    case ARG_MIN_INDEX_INTERVAL:
+      g_value_set_int64 (value, mux->min_index_interval);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

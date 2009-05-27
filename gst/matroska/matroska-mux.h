@@ -110,7 +110,8 @@ typedef struct _GstMatroskaMux {
   /* a cue (index) table */
   GstMatroskaIndex *index;
   guint          num_indexes;
-
+  GstClockTimeDiff min_index_interval;
+ 
   /* timescale in the file */
   guint64        time_scale;
 
