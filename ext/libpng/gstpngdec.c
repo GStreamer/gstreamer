@@ -201,7 +201,14 @@ user_info_callback (png_structp png_ptr, png_infop info)
 
   /* Allocate output buffer */
   pngdec->rowbytes = png_get_rowbytes (pngdec->png, pngdec->info);
-  buffer_size = pngdec->height * GST_ROUND_UP_4 (pngdec->rowbytes);
+  if (pngdec->rowbytes > (G_MAXUINT32 - 3)
+      || pngdec->height > G_MAXUINT32 / pngdec->rowbytes) {
+    ret = GST_FLOW_ERROR;
+    goto beach;
+  }
+  pngdec->rowbytes = GST_ROUND_UP_4 (pngdec->rowbytes);
+  buffer_size = pngdec->height * pngdec->rowbytes;
+
   ret =
       gst_pad_alloc_buffer_and_set_caps (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
       buffer_size, GST_PAD_CAPS (pngdec->srcpad), &buffer);
@@ -228,7 +235,7 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
   /* If buffer_out doesn't exist, it means buffer_alloc failed, which 
    * will already have set the return code */
   if (GST_IS_BUFFER (pngdec->buffer_out)) {
-    size_t offset = row_num * GST_ROUND_UP_4 (pngdec->rowbytes);
+    size_t offset = row_num * pngdec->rowbytes;
 
     GST_LOG ("got row %u, copying in buffer %p at offset %" G_GSIZE_FORMAT,
         (guint) row_num, pngdec->buffer_out, offset);
@@ -496,7 +503,12 @@ gst_pngdec_task (GstPad * pad)
 
   /* Allocate output buffer */
   rowbytes = png_get_rowbytes (pngdec->png, pngdec->info);
-  buffer_size = pngdec->height * GST_ROUND_UP_4 (rowbytes);
+  if (rowbytes > (G_MAXUINT32 - 3) || pngdec->height > G_MAXUINT32 / rowbytes) {
+    ret = GST_FLOW_ERROR;
+    goto pause;
+  }
+  rowbytes = GST_ROUND_UP_4 (rowbytes);
+  buffer_size = pngdec->height * rowbytes;
   ret =
       gst_pad_alloc_buffer_and_set_caps (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
       buffer_size, GST_PAD_CAPS (pngdec->srcpad), &buffer);
@@ -509,7 +521,7 @@ gst_pngdec_task (GstPad * pad)
 
   for (i = 0; i < pngdec->height; i++) {
     rows[i] = inp;
-    inp += GST_ROUND_UP_4 (rowbytes);
+    inp += rowbytes;
   }
 
   /* Read the actual picture */
