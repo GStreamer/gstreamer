@@ -136,10 +136,10 @@ generated-stamp: $(API) $(build_customs) $(overrides)
 	&& mv generated/ObjectManager.cs.tmp generated/ObjectManager.cs \
 	&& touch generated-stamp
 
-coreplugins/*.cs: $(API) coreplugins/*.custom coreplugins/inspect/*.raw
+coreplugins/*.cs: $(API) coreplugins/*.metadata coreplugins/inspect/*.raw
 	$(MAKE) -C coreplugins
 
-baseplugins/*.cs: $(API) baseplugins/*.custom baseplugins/inspect/*.raw
+baseplugins/*.cs: $(API) baseplugins/*.metadata baseplugins/inspect/*.raw
 	$(MAKE) -C baseplugins
 
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk

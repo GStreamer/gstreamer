@@ -20,6 +20,11 @@ public class EnumInfo {
   public ArrayList values;
 }
 
+public class SignalParameter {
+  public string name;
+  public string type;
+}
+
 public class SignalInfo {
   public string name;
   public string managed_name;
@@ -147,7 +152,14 @@ public class ElementGen {
       if (parms != null) {
         si.parameters = new ArrayList ();
         foreach (XmlElement parm in parms.ChildNodes) {
-          si.parameters.Add (parm.InnerText);
+	  SignalParameter par = new SignalParameter ();
+	  par.type = parm.InnerText;
+
+	  if (parm.Attributes["name"] == null)
+	    throw new Exception ("All signal parameters need the 'name' attribute");
+
+	  par.name = parm.Attributes["name"].InnerText;
+          si.parameters.Add (par);
         }
       }
 
@@ -178,7 +190,14 @@ public class ElementGen {
       if (parms != null) {
         si.parameters = new ArrayList ();
         foreach (XmlElement parm in parms.ChildNodes) {
-          si.parameters.Add (parm.InnerText);
+	  SignalParameter par = new SignalParameter ();
+	  par.type = parm.InnerText;
+
+	  if (parm.Attributes["name"] == null)
+	    throw new Exception ("All signal parameters need the 'name' attribute");
+
+	  par.name = parm.Attributes["name"].InnerText;
+          si.parameters.Add (par);
         }
       }
 
@@ -288,14 +307,55 @@ public class ElementGen {
       writer.WriteLine ("\t\t}\n");
     }
 
-    /* FIXME: We can't write signal/action code as we don't know the parameter names! */
-
     writer.WriteLine ();
+
+    if (ei.signals.Count > 0) {
+      foreach (SignalInfo si in ei.signals) {
+        string managed_name = (si.managed_name != null) ? si.managed_name : PropToCamelCase (si.name);
+
+	writer.WriteLine ("\t\tpublic delegate void " + managed_name + "Handler (object o, " + managed_name + "Args args);\n");
+	
+	writer.WriteLine ("\t\tpublic class " + managed_name + "Args : GLib.SignalArgs {");
+	for (int i = 0; i < si.parameters.Count; i++) {
+	  SignalParameter param = (SignalParameter) si.parameters[i];
+          string managed_type = CTypeToManagedType (param.type, api_doc);
+	  writer.WriteLine ("\t\t\tpublic " + managed_type + " " + param.name + " {");
+	  writer.WriteLine ("\t\t\t\tget {");
+	  writer.WriteLine ("\t\t\t\t\treturn (" + managed_type + ") Args[" + i + "];");
+	  writer.WriteLine ("\t\t\t\t}");
+	  writer.WriteLine ("\t\t\t}\n");
+
+	}
+	writer.WriteLine ("\t\t}\n");
+
+	writer.WriteLine ("\t\tprivate Delegate " + managed_name + "_delegate;\n");
+	
+	writer.WriteLine ("\t\tprotected virtual void On" + managed_name + " (object o, GLib.SignalArgs args) {");
+	writer.WriteLine ("\t\t\tBindingHelper.InvokeProxySignalDelegate (" + managed_name + "_delegate, typeof (" + managed_name + "Args), o, args);");
+	writer.WriteLine ("\t\t}\n");
+
+	writer.WriteLine ("\t\tpublic event " + managed_name + "Handler " + managed_name + " {");
+	writer.WriteLine ("\t\t\tadd {");
+	writer.WriteLine ("\t\t\t\t" + managed_name + "_delegate = BindingHelper.AddProxySignalDelegate (this, \"" + si.name + "\", On" + managed_name + ", " + managed_name + "_delegate, value);");
+	writer.WriteLine ("\t\t\t}\n");
+
+	writer.WriteLine ("\t\t\tremove {");
+	writer.WriteLine ("\t\t\t\t" + managed_name + "_delegate = BindingHelper.RemoveProxySignalDelegate (this, \"" + si.name + "\", On" + managed_name + ", " + managed_name + "_delegate, value);");
+	writer.WriteLine ("\t\t\t}");
+	writer.WriteLine ("\t\t}");
+      }
+    }
+
+    if (ei.actions.Count > 0)
+      throw new Exception ("No support for actions yet");
 
     if (ei.interfaces.Count > 0) {
       string path = Path.GetDirectoryName (System.Reflection.Assembly.GetCallingAssembly ().Location);
 
       foreach (string iface in ei.interfaces) {
+        writer.WriteLine ("#endregion");
+        writer.WriteLine ("#region Customized code");
+        writer.WriteLine ("#line 1 \"" + iface + ".cs\"");
         StreamReader interface_code = System.IO.File.OpenText (path + "/interfaces/" + iface + ".cs");
 	string iface_code = interface_code.ReadToEnd ();
 	writer.WriteLine (iface_code);

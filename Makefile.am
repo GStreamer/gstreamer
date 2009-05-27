@@ -1,4 +1,4 @@
-SUBDIRS = source parser gstreamer-sharp doc tests samples
+SUBDIRS = source parser elementgen gstreamer-sharp doc tests samples
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer-sharp-0.10.pc

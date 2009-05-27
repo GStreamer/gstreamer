@@ -3,8 +3,8 @@ ELEMENTS = capsfilter typefind
 
 NAMESPACE = Gst.CorePlugins
 INSPECT_FILES = $(patsubst %,inspect/%.raw,$(ELEMENTS))
-CUSTOM_FILES = typefind.custom
-METADATA_FILES = 
+CUSTOM_FILES = 
+METADATA_FILES = typefind.metadata
 CS_FILES = $(patsubst %,%.cs,$(ELEMENTS))
 XML_FILES = $(patsubst %,%.xml,$(ELEMENTS))
 
