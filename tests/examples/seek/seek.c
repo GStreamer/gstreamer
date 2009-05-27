@@ -26,6 +26,7 @@
 #endif
 
 #include <stdlib.h>
+#include <math.h>
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <gst/gst.h>
@@ -121,6 +122,8 @@ typedef struct
 static GArray *vis_entries;
 
 static void clear_streams (GstElement * pipeline);
+static void volume_notify_cb (GstElement * pipeline, GParamSpec * arg,
+    gpointer user_dat);
 
 /* pipeline construction */
 
@@ -924,7 +927,12 @@ make_playerbin_pipeline (const gchar * location)
 static GstElement *
 make_playerbin2_pipeline (const gchar * location)
 {
-  return construct_playerbin ("playbin2", location);
+  GstElement *pipeline = construct_playerbin ("playbin2", location);
+
+  /* FIXME: this is not triggered, playbin2 is not forwarding it from the sink */
+  g_signal_connect (pipeline, "notify::volume", G_CALLBACK (volume_notify_cb),
+      NULL);
+  return pipeline;
 }
 
 #ifndef GST_DISABLE_PARSE
@@ -1214,6 +1222,11 @@ update_scale (gpointer data)
 
   if (duration > 0) {
     set_scale (position * 100.0 / duration);
+  }
+
+  /* FIXME: see make_playerbin2_pipeline() and volume_notify_cb() */
+  if (pipeline_type == 16) {
+    g_object_notify (G_OBJECT (pipeline), "volume");
   }
 
   return TRUE;
@@ -1916,6 +1929,22 @@ volume_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
 }
 
 static void
+volume_notify_cb (GstElement * pipeline, GParamSpec * arg, gpointer user_dat)
+{
+  gdouble cur_volume, new_volume;
+
+  g_object_get (pipeline, "volume", &new_volume, NULL);
+  cur_volume = gtk_spin_button_get_value (GTK_SPIN_BUTTON (volume_spinbutton));
+  if (fabs (cur_volume - new_volume) > 0.001) {
+    g_signal_handlers_block_by_func (volume_spinbutton,
+        volume_spinbutton_changed_cb, pipeline);
+    gtk_spin_button_set_value (GTK_SPIN_BUTTON (volume_spinbutton), new_volume);
+    g_signal_handlers_unblock_by_func (volume_spinbutton,
+        volume_spinbutton_changed_cb, pipeline);
+  }
+}
+
+static void
 shot_cb (GtkButton * button, gpointer data)
 {
   GstBuffer *buffer;
@@ -2314,7 +2343,7 @@ main (int argc, char **argv)
   GtkWidget *play_button, *pause_button, *stop_button, *shot_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox, *rate_spinbutton;
-  GtkWidget *rate_label;
+  GtkWidget *rate_label, *volume_label;
   GtkTooltips *tips;
   GOptionEntry options[] = {
     {"stats", 's', 0, G_OPTION_ARG_NONE, &stats,
@@ -2473,6 +2502,7 @@ main (int argc, char **argv)
     audio_checkbox = gtk_check_button_new_with_label ("Audio");
     text_checkbox = gtk_check_button_new_with_label ("Text");
     mute_checkbox = gtk_check_button_new_with_label ("Mute");
+    volume_label = gtk_label_new ("Volume");
     volume_spinbutton = gtk_spin_button_new_with_range (0, 10.0, 0.1);
     gtk_spin_button_set_value (GTK_SPIN_BUTTON (volume_spinbutton), 1.0);
     gtk_box_pack_start (GTK_BOX (boxes), video_checkbox, TRUE, TRUE, 2);
@@ -2480,6 +2510,7 @@ main (int argc, char **argv)
     gtk_box_pack_start (GTK_BOX (boxes), text_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), vis_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), mute_checkbox, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (boxes), volume_label, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), volume_spinbutton, TRUE, TRUE, 2);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (vis_checkbox), FALSE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (audio_checkbox), TRUE);
