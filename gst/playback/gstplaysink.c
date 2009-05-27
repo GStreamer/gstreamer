@@ -1909,6 +1909,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         }
         add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
+        playsink->audiochain->volume = NULL;
+        playsink->audiochain->mute = NULL;
         free_chain ((GstPlayChain *) playsink->audiochain);
         playsink->audiochain = NULL;
         playsink->volume_changed = playsink->mute_changed = FALSE;
@@ -1942,6 +1944,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         gst_object_unref (playsink->audio_tee_asrc);
         playsink->audio_tee_asrc = NULL;
       }
+      playsink->audiochain->volume = NULL;
+      playsink->audiochain->mute = NULL;
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
     }
@@ -2342,6 +2346,15 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       do_async_start (playsink);
       ret = GST_STATE_CHANGE_ASYNC;
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (playsink->audiochain) {
+        /* remove our links to the mute and volume elements */
+        playsink->audiochain->volume = NULL;
+        playsink->audiochain->mute = NULL;
+      }
+      ret = GST_STATE_CHANGE_SUCCESS;
+      break;
     default:
       /* all other state changes return SUCCESS by default, this value can be
        * overridden by the result of the children */
@@ -2381,6 +2394,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       playsink->need_async_start = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       /* remove sinks we added */
       if (playsink->videochain) {
         activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
