@@ -200,10 +200,13 @@ rsn_audiomunge_make_audio (RsnAudioMunge * munge,
   guint buf_size;
 
   /* Just generate a 48khz stereo buffer for now */
+  /* FIXME: Adapt to the allowed formats, according to the currently
+   * plugged decoder, or at least add a source pad that accepts the
+   * caps we're outputting if the upstream decoder does not */
 #if 0
   caps =
       gst_caps_from_string
-      ("audio/x-raw-int,rate=48000,channels=2,width=16,depth=16,signed=(boolean)true,endianness=1234");
+      ("audio/x-raw-int,rate=48000,channels=2,width=16,depth=16,signed=(boolean)true,endianness=4321");
   buf_size = 4 * (48000 * fill_time / GST_SECOND);
 #else
   caps = gst_caps_from_string ("audio/x-raw-float, endianness=(int)1234,"

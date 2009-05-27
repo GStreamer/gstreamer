@@ -356,7 +356,7 @@ gst_flups_demux_get_stream (GstFluPSDemux * demux, gint id, gint type)
 {
   GstFluPSStream *stream = demux->streams[id];
 
-  if (stream == NULL) {
+  if (stream == NULL && !demux->disable_stream_creation) {
     if (!(stream = gst_flups_demux_create_stream (demux, id, type)))
       goto unknown_stream;
 
@@ -612,6 +612,8 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
 
     GST_DEBUG_OBJECT (demux, "Handling language codes event");
 
+    demux->disable_stream_creation = FALSE;
+
     /* Create a video pad to ensure it exists before emitting no more pads */
     temp = gst_flups_demux_get_stream (demux, 0xe0, ST_VIDEO_MPEG2);
     /* Send a video format event downstream */
@@ -719,6 +721,8 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
           ST_PS_DVD_SUBPICTURE);
     }
 
+    demux->disable_stream_creation = TRUE;
+
     GST_DEBUG_OBJECT (demux, "Created all pads from Language Codes event, "
         "signalling no-more-pads");
 
@@ -767,32 +771,33 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
           stream_id += 0x80;
           temp = demux->streams[stream_id];
           break;
-#if 0                           /* FIXME: Ignore non AC-3 requests until the decoder bin can handle them */
         case 0x2:
         case 0x3:
           /* MPEG audio without and with extension stream are 
            * treated the same */
-          stream_id = 0xC0 + i;
+          stream_id += 0xC0;
           temp = demux->streams[stream_id];
           break;
         case 0x4:
           /* LPCM */
-          stream_id = 0xA0 + i;
+          stream_id += 0xA0;
           temp = demux->streams[stream_id];
           break;
         case 0x6:
           /* DTS */
-          stream_id = 0x88 + i;
+          stream_id += 0x88;
           temp = demux->streams[stream_id];
           break;
         case 0x7:
           /* FIXME: What range is SDDS? */
+          temp = NULL;
           break;
-#endif
         default:
           temp = NULL;
           break;
       }
+      GST_INFO_OBJECT (demux, "Have DVD audio stream select event: "
+          "stream 0x%02x", stream_id);
       if (temp != NULL && temp->pad != NULL) {
         /* Send event to the selector to activate the desired pad */
         GstStructure *s = gst_structure_new ("application/x-gst-dvd",

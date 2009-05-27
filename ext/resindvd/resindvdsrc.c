@@ -1882,7 +1882,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
     GST_DEBUG_OBJECT (src, "mapped logical audio %d to MPEG substream %d",
         i, phys_id);
 
-#if 1
+#if 0
     /* FIXME: Only output A52 streams for now, until the decoder switching
      * is ready */
     if (a->audio_format != 0) {
@@ -1891,7 +1891,8 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
       continue;
     }
 #endif
-    have_audio = TRUE;
+    if (a->audio_format == 0)
+      have_audio = TRUE;
 
     GST_DEBUG_OBJECT (src, "Audio stream %d is format %d, substream %d", i,
         (int) a->audio_format, phys_id);
@@ -1917,7 +1918,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
   }
 
   if (have_audio == FALSE) {
-    /* Always create at least one audio stream */
+    /* Always create at least one audio stream of the required type */
     gst_structure_set (s, "audio-0-format", G_TYPE_INT, (int) 0,
         "audio-0-stream", G_TYPE_INT, (int) 0, NULL);
   }
