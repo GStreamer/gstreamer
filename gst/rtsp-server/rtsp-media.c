@@ -27,6 +27,9 @@
 #define DEFAULT_SHARED         FALSE
 #define DEFAULT_REUSABLE       FALSE
 
+/* define to dump received RTCP packets */
+#undef DUMP_STATS
+
 enum
 {
   PROP_0,
@@ -792,10 +795,21 @@ on_ssrc_active (GObject *session, GObject *source, GstRTSPMediaStream *stream)
 
   trans = g_object_get_qdata (source, ssrc_stream_map_key);
 
-  g_message ("%p: source %p in transport %p is active", stream, trans, source);
+  g_message ("%p: source %p in transport %p is active", stream, source, trans);
 
   if (trans && trans->keep_alive)
     trans->keep_alive (trans->ka_user_data);
+
+#ifdef DUMP_STATS
+  {
+    GstStructure *stats;
+    g_object_get (source, "stats", &stats, NULL);
+    if (stats) {
+      dump_structure (stats);
+      gst_structure_free (stats);
+    }
+  }
+#endif
 }
 
 static void
