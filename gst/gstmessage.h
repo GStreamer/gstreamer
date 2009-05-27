@@ -360,7 +360,9 @@ void		gst_message_parse_info 		(GstMessage *message, GError **gerror, gchar **de
 
 /* TAG */
 GstMessage *	gst_message_new_tag		(GstObject * src, GstTagList * tag_list);
+GstMessage *	gst_message_new_tag_full	(GstObject * src, GstPad *pad, GstTagList * tag_list);
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
+void		gst_message_parse_tag_full	(GstMessage *message, GstPad **pad, GstTagList **tag_list);
 
 /* BUFFERING */
 GstMessage *	gst_message_new_buffering	  (GstObject * src, gint percent);

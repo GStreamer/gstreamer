@@ -1108,7 +1108,9 @@ gst_message_parse_warning
 gst_message_new_info
 gst_message_parse_info
 gst_message_new_tag
+gst_message_new_tag_full
 gst_message_parse_tag
+gst_message_parse_tag_full
 gst_message_new_buffering
 gst_message_parse_buffering
 gst_message_set_buffering_stats

@@ -490,6 +490,7 @@ EXPORTS
 	gst_message_new_stream_status
 	gst_message_new_structure_change
 	gst_message_new_tag
+	gst_message_new_tag_full
 	gst_message_new_warning
 	gst_message_parse_async_start
 	gst_message_parse_buffering
@@ -507,6 +508,7 @@ EXPORTS
 	gst_message_parse_stream_status
 	gst_message_parse_structure_change
 	gst_message_parse_tag
+	gst_message_parse_tag_full
 	gst_message_parse_warning
 	gst_message_set_buffering_stats
 	gst_message_set_seqnum
