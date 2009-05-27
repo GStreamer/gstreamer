@@ -1,4 +1,4 @@
-SUBDIRS = coreplugins baseplugins . glue
+SUBDIRS = . glue coreplugins baseplugins
 
 TARGET = $(ASSEMBLY)
 noinst_DATA = $(TARGET)
@@ -136,12 +136,17 @@ generated-stamp: $(API) $(build_customs) $(overrides)
 	&& mv generated/ObjectManager.cs.tmp generated/ObjectManager.cs \
 	&& touch generated-stamp
 
+coreplugins/*.cs: $(API) coreplugins/*.custom coreplugins/inspect/*.raw
+	$(MAKE) -C coreplugins
+
+baseplugins/*.cs: $(API) baseplugins/*.custom baseplugins/inspect/*.raw
+	$(MAKE) -C baseplugins
+
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
 	cp $(top_srcdir)/gstreamer-sharp.snk .
 
 $(ASSEMBLY): $(build_sources) generated-stamp $(KEYFILE)
 	$(CSC) -nowarn:0612 -debug -unsafe -out:$(ASSEMBLY) -target:library $(references) $(csc_build_sources) $(GENERATED_SOURCES)
-
 
 plugins-update:
 	$(MAKE) -C coreplugins plugins-update
