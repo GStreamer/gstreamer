@@ -199,6 +199,7 @@ make_address_string (GstNetAddress * addr, gchar * dest, gulong n)
       guint16 port;
 
       gst_netaddress_get_ip4_address (addr, &address, &port);
+      address = g_ntohl (address);
 
       g_snprintf (dest, n, "%d.%d.%d.%d:%d", (address >> 24) & 0xff,
           (address >> 16) & 0xff, (address >> 8) & 0xff, address & 0xff,
