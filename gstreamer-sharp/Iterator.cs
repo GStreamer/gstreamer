@@ -7,6 +7,7 @@ namespace Gst {
 
   internal class Enumerable : IEnumerable {
     private class Enumerator : IEnumerator {
+      Enumerable enumerable;
       Hashtable seen = new Hashtable ();
       IntPtr iterator;
 
@@ -57,7 +58,8 @@ namespace Gst {
           gst_iterator_resync (iterator);
       }
 
-      public Enumerator (IntPtr iterator) {
+      public Enumerator (Enumerable enumerable, IntPtr iterator) {
+        this.enumerable = enumerable;
         this.iterator = iterator;
       }
     }
@@ -67,11 +69,11 @@ namespace Gst {
 
     public Enumerable (IntPtr iterator) {
       this.iterator = iterator;
-      this.enumerator = new Enumerator (iterator);
+      this.enumerator = new Enumerator (this, iterator);
     }
 
     public IEnumerator GetEnumerator () {
-      return enumerator;
+      return this.enumerator;
     }
 
     ~Enumerable () {
@@ -79,11 +81,11 @@ namespace Gst {
         gst_iterator_free (iterator);
     }
 
-    [DllImport("libgstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     static extern int gst_iterator_next (IntPtr iterator, out IntPtr elem);
-    [DllImport("libgstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     static extern void gst_iterator_resync (IntPtr iterator);
-    [DllImport("libgstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     static extern void gst_iterator_free (IntPtr iterator);
 
   }
