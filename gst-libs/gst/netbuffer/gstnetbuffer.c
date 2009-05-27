@@ -138,8 +138,8 @@ gst_netbuffer_new (void)
  *
  * Set @naddr with the IPv4 @address and @port pair.
  *
- * Note that @port must be expressed in network byte order, use g_htons() to convert
- * it to network byte order order.
+ * Note that @port and @address must be expressed in network byte order,
+ * use g_htons() and g_htonl() to convert them to network byte order.
  */
 void
 gst_netaddress_set_ip4_address (GstNetAddress * naddr, guint32 address,
@@ -161,7 +161,7 @@ gst_netaddress_set_ip4_address (GstNetAddress * naddr, guint32 address,
  * Set @naddr with the IPv6 @address and @port pair.
  *
  * Note that @port must be expressed in network byte order, use g_htons() to convert
- * it to network byte order order.
+ * it to network byte order.
  */
 void
 gst_netaddress_set_ip6_address (GstNetAddress * naddr, guint8 address[16],
@@ -199,8 +199,8 @@ gst_netaddress_get_net_type (GstNetAddress * naddr)
  * Get the IPv4 address stored in @naddr into @address. This function requires
  * that the address type of @naddr is of type #GST_NET_TYPE_IP4.
  *
- * Note that @port is expressed in network byte order, use g_ntohs() to convert
- * it to host order.
+ * Note that @port and @address are expressed in network byte order, use
+ * g_ntohs() and g_ntohl() to convert them to host order.
  *
  * Returns: TRUE if the address could be retrieved.
  */
@@ -271,7 +271,7 @@ gst_netaddress_get_ip6_address (GstNetAddress * naddr, guint8 address[16],
  * Get just the address bytes stored in @naddr into @address.
  *
  * Note that @port is expressed in network byte order, use g_ntohs() to convert
- * it to host order.
+ * it to host order. IP4 addresses are also stored in network byte order.
  *
  * Returns: number of bytes actually copied
  *
@@ -312,7 +312,8 @@ gst_netaddress_get_address_bytes (GstNetAddress * naddr, guint8 address[16],
  * Set just the address bytes stored in @naddr into @address.
  *
  * Note that @port must be expressed in network byte order, use g_htons() to convert
- * it to network byte order order.
+ * it to network byte order order. IP4 address bytes must also be stored in
+ * network byte order.
  *
  * Returns: number of bytes actually copied
  *
