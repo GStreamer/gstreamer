@@ -269,9 +269,25 @@ public class ElementGen {
     writer.WriteLine (" {");
 
     writer.WriteLine ("\t\tpublic " + class_name + " (IntPtr raw) : base (raw) { }\n");
+
+    writer.WriteLine ("\t\t[DllImport(\"libgstreamer-0.10.dll\") ]");
+    writer.WriteLine ("\t\tstatic extern IntPtr gst_element_factory_make (IntPtr element, IntPtr name);\n");
+
+    writer.WriteLine ("\t\tpublic " + class_name + " (string name) : base (IntPtr.Zero) {");
+    writer.WriteLine ("\t\t\tIntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);");
+    writer.WriteLine ("\t\t\tIntPtr native_element = GLib.Marshaller.StringToPtrGStrdup (\"" + ei.name + "\");");
+    writer.WriteLine ("\t\t\tRaw = gst_element_factory_make (native_element, native_name);");
+    writer.WriteLine ("\t\t\tGLib.Marshaller.Free (native_name);");
+    writer.WriteLine ("\t\t\tGLib.Marshaller.Free (native_element);");
+    writer.WriteLine ("\t\t}\n");
+
+    writer.WriteLine ("\t\tpublic " + class_name + " () : this ((string) null) { }\n");
+
     writer.WriteLine ("\t\tpublic static " + class_name + " Make (string name) {");
     writer.WriteLine ("\t\t\treturn Gst.ElementFactory.Make (\"" + ei.name + "\", name) as " + class_name + ";");
     writer.WriteLine ("\t\t}\n");
+
+    writer.WriteLine ("\t\tpublic static " + class_name + " Make () { return Make (null); } \n");
 
     foreach (PropertyInfo pinfo in ei.properties) {
       string managed_name = (pinfo.managed_name != null) ? pinfo.managed_name : PropToCamelCase (pinfo.name);
@@ -346,6 +362,7 @@ public class ElementGen {
       }
     }
 
+    //TODO
     if (ei.actions.Count > 0)
       throw new Exception ("No support for actions yet");
 
