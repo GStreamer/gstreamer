@@ -31,6 +31,8 @@ gstreamer-sharp-0.10.pc
 .libs
 *~
 *.exe
+*.mdb
+*.pdb
 *.dll
 *.la
 *.lo
