@@ -740,12 +740,36 @@ gst_adapter_prev_timestamp (GstAdapter * adapter, guint64 * distance)
  * @size: number of bytes to scan from offset
  *
  * Scan for pattern @pattern with applied mask @mask in the adapter data,
- * starting from offset @offset.
+ * starting from offset @offset. 
+ *
+ * The bytes in @pattern and @mask are interpreted left-to-right, regardless
+ * of endianness.  All four bytes of the pattern must be present in the
+ * adapter for it to match, even if the first or last bytes are masked out.
  *
  * It is an error to call this function without making sure that there is
  * enough data (offset+size bytes) in the adapter.
  *
  * Returns: offset of the first match, or -1 if no match was found.
+ *
+ * Example:
+ * <programlisting>
+ * // Assume the adapter contains 0x00 0x01 0x02 ... 0xfe 0xff
+ * 
+ * gst_adapter_masked_scan_uint32 (adapter, 0x00010203, 0xffffffff, 0, 256);
+ * // -> returns 0
+ * gst_adapter_masked_scan_uint32 (adapter, 0x00010203, 0xffffffff, 1, 255);
+ * // -> returns -1
+ * gst_adapter_masked_scan_uint32 (adapter, 0x01020304, 0xffffffff, 1, 255);
+ * // -> returns 1
+ * gst_adapter_masked_scan_uint32 (adapter, 0x0001, 0xffff, 0, 256);
+ * // -> returns -1
+ * gst_adapter_masked_scan_uint32 (adapter, 0x0203, 0xffff, 0, 256);
+ * // -> returns 0
+ * gst_adapter_masked_scan_uint32 (adapter, 0x02030000, 0xffff0000, 0, 256);
+ * // -> returns 2
+ * gst_adapter_masked_scan_uint32 (adapter, 0x02030000, 0xffff0000, 0, 4);
+ * // -> returns -1
+ * </programlisting>
  *
  * Since: 0.10.24
  */
@@ -781,6 +805,7 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
   /* get the data now */
   bsize -= skip;
   bdata = GST_BUFFER_DATA (buf) + skip;
+  skip = 0;
 
   /* set the state to something that does not match */
   state = ~pattern;
@@ -790,15 +815,19 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
     bsize = MIN (bsize, size);
     for (i = 0; i < bsize; i++) {
       state = ((state << 8) | bdata[i]);
-      if (G_UNLIKELY ((state & mask) == pattern))
-        return offset + i - 3;
+      if (G_UNLIKELY ((state & mask) == pattern)) {
+        /* we have a match but we need to have skipped at
+         * least 4 bytes to fill the state. */
+        if (G_LIKELY (skip + i >= 3))
+          return offset + skip + i - 3;
+      }
     }
     size -= bsize;
     if (size == 0)
       break;
 
     /* nothing found yet, go to next buffer */
-    offset += bsize;
+    skip += bsize;
     g = g_slist_next (g);
     buf = g->data;
     bsize = GST_BUFFER_SIZE (buf);
