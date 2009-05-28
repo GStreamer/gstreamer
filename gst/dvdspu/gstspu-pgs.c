@@ -134,6 +134,9 @@ dump_rle_data (GstDVDSpu * dvdspu, guint8 * data, guint32 len)
           pal_id = data[2];
           data += 3;
           break;
+        default:
+          run_len = 0;
+          break;
       }
     }
 
@@ -251,6 +254,9 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
           run_len = ((data[0] << 8) | data[1]) & 0x3fff;
           pal_id = data[2];
           data += 3;
+          break;
+        default:
+          run_len = 0;
           break;
       }
     }
@@ -436,7 +442,7 @@ parse_presentation_segment (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 
   if (payload != end) {
     GST_ERROR ("PGS Composition Object: %" G_GSSIZE_FORMAT
-        " bytes not consumed", end - payload);
+        " bytes not consumed", (gssize) (end - payload));
     dump_bytes (payload, end - payload);
   }
 
@@ -497,7 +503,7 @@ parse_set_palette (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 
   if (payload != end) {
     GST_ERROR ("PGS Set Palette: %" G_GSSIZE_FORMAT " bytes not consumed",
-        end - payload);
+        (gssize) (end - payload));
     dump_bytes (payload, end - payload);
   }
 
@@ -532,7 +538,7 @@ parse_set_window (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 
   if (payload != end) {
     GST_ERROR ("PGS Set Window: %" G_GSSIZE_FORMAT " bytes not consumed",
-        end - payload);
+        (gssize) (end - payload));
     dump_bytes (payload, end - payload);
   }
 
@@ -594,7 +600,7 @@ parse_set_object_data (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 
   if (payload != end) {
     GST_ERROR ("PGS Set Object Data: %" G_GSSIZE_FORMAT " bytes not consumed",
-        end - payload);
+        (gssize) (end - payload));
     dump_bytes (payload, end - payload);
   }
 
