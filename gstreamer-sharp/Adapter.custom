@@ -1,0 +1,7 @@
+		[DllImport("libgstbase-0.10.dll")]
+		static extern void gst_adapter_push(IntPtr raw, IntPtr buf);
+
+		public void Push(Gst.Buffer buf) {
+			gst_adapter_push(Handle, buf == null ? IntPtr.Zero : buf.OwnedHandle);
+		}
+

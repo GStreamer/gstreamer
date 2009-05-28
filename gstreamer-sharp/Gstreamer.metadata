@@ -972,6 +972,28 @@
   <!-- We implement this ourselves -->
   <attr path="/api/namespace/class[@name='Value']" name="hidden">1</attr>
 
+  <!-- GStreamer Base library -->
+  <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']" name="name">BaseSrcFlags</attr>
+  <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']/member[@cname='GST_BASE_SRC_STARTED']" name="value">Gst.ElementFlags.Last &lt;&lt; 0</attr>
+  <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']/member[@cname='GST_BASE_SRC_FLAG_LAST']" name="value">Gst.ElementFlags.Last &lt;&lt; 2</attr>
+
+  <attr path="/api/namespace/callback[@cname='GstTypeFindHelperGetRangeFunction']" name="name">TypeFindHelperGetRangeFunction</attr>
+  <attr path="/api/namespace/callback[@cname='GstTypeFindHelperGetRangeFunction']/parameters/parameter[@name='buffer']" name="pass_as">out</attr>
+  <attr path="/api/namespace/callback[@cname='GstTypeFindHelperGetRangeFunction']/parameters/parameter[@name='buffer']" name="owned">true</attr>
+
+  <attr path="/api/namespace/object[@cname='GstAdapter']" name="name">Adapter</attr>
+  <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_push']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_peek']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_copy']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_take']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_take_buffer']" name="name">Take</attr>
+  <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_take_buffer']/return-type" name="owned">true</attr>
+
+  <attr path="/api/namespace/object[@cname='GstBaseSrc']" name="name">BaseSrc</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSink']" name="name">BaseSink</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseTransform']" name="name">BaseTransform</attr>
+  <attr path="/api/namespace/object[@cname='GstPushSrc']" name="name">PushSrc</attr>
+
   <!-- GStreamer Interfaces library -->
   <attr path="/api/namespace/enum[@cname='GstColorBalanceType']" name="name">ColorBalanceType</attr>
   <attr path="/api/namespace/enum[@cname='GstMixerFlags']" name="name">MixerFlags</attr>

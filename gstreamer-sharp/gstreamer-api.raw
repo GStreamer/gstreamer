@@ -6174,6 +6174,705 @@
       </method>
     </class>
   </namespace>
+  <namespace name="Gst.Base" library="libgstbase-0.10.dll">
+    <enum name="GstBaseSrcFlags" cname="GstBaseSrcFlags" type="flags">
+      <member cname="GST_BASE_SRC_STARTED" name="Started" value="GST_ELEMENT_FLAG_LAST &lt;&lt; 0" />
+      <member cname="GST_BASE_SRC_FLAG_LAST" name="FlagLast" value="GST_ELEMENT_FLAG_LAST &lt;&lt; 2" />
+    </enum>
+    <callback name="GstTypeFindHelperGetRangeFunction" cname="GstTypeFindHelperGetRangeFunction">
+      <return-type type="GstFlowReturn" />
+      <parameters>
+        <parameter type="GstObject*" name="obj" />
+        <parameter type="guint64" name="offset" />
+        <parameter type="guint" name="length" />
+        <parameter type="GstBuffer**" name="buffer" />
+      </parameters>
+    </callback>
+    <object name="GstAdapter" cname="GstAdapter" parent="GObject">
+      <class_struct cname="GstAdapterClass">
+        <field name="ParentClass" cname="parent_class" type="GObjectClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Buflist" cname="buflist" type="GSList*" />
+      <field name="Size" cname="size" type="guint" />
+      <field name="Skip" cname="skip" type="guint" />
+      <field name="AssembledData" cname="assembled_data" type="guint8*" />
+      <field name="AssembledSize" cname="assembled_size" type="guint" />
+      <field name="AssembledLen" cname="assembled_len" type="guint" />
+      <field name="BuflistEnd" cname="buflist_end" type="GSList*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING - 1" type="gpointer" />
+      <method name="Available" cname="gst_adapter_available">
+        <return-type type="guint" />
+      </method>
+      <method name="AvailableFast" cname="gst_adapter_available_fast">
+        <return-type type="guint" />
+      </method>
+      <method name="Clear" cname="gst_adapter_clear">
+        <return-type type="void" />
+      </method>
+      <method name="Copy" cname="gst_adapter_copy">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint8*" name="dest" />
+          <parameter type="guint" name="offset" />
+          <parameter type="guint" name="size" />
+        </parameters>
+      </method>
+      <method name="Flush" cname="gst_adapter_flush">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint" name="flush" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_adapter_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <constructor cname="gst_adapter_new" />
+      <method name="Peek" cname="gst_adapter_peek">
+        <return-type type="const-guint8*" />
+        <parameters>
+          <parameter type="guint" name="size" />
+        </parameters>
+      </method>
+      <method name="Push" cname="gst_adapter_push">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buf" />
+        </parameters>
+      </method>
+      <method name="Take" cname="gst_adapter_take">
+        <return-type type="guint8*" />
+        <parameters>
+          <parameter type="guint" name="nbytes" />
+        </parameters>
+      </method>
+      <method name="TakeBuffer" cname="gst_adapter_take_buffer">
+        <return-type type="GstBuffer*" />
+        <parameters>
+          <parameter type="guint" name="nbytes" />
+        </parameters>
+      </method>
+    </object>
+    <object name="GstBaseSink" cname="GstBaseSink" parent="GstElement">
+      <class_struct cname="GstBaseSinkClass">
+        <field name="ParentClass" cname="parent_class" type="GstElementClass" />
+        <method vm="get_caps" />
+        <method vm="set_caps" />
+        <method vm="buffer_alloc" />
+        <method vm="get_times" />
+        <method vm="start" />
+        <method vm="stop" />
+        <method vm="unlock" />
+        <method vm="event" />
+        <method vm="preroll" />
+        <method vm="render" />
+        <method vm="async_play" />
+        <method vm="activate_pull" />
+        <method vm="fixate" />
+        <method vm="unlock_stop" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING_LARGE-4" />
+      </class_struct>
+      <field name="Sinkpad" cname="sinkpad" type="GstPad*" />
+      <field name="PadMode" cname="pad_mode" type="GstActivateMode" />
+      <field name="Offset" cname="offset" type="guint64" />
+      <field name="CanActivatePull" cname="can_activate_pull" type="gboolean" />
+      <field name="CanActivatePush" cname="can_activate_push" type="gboolean" />
+      <field name="PrerollQueue" cname="preroll_queue" type="GQueue*" />
+      <field name="PrerollQueueMaxLen" cname="preroll_queue_max_len" type="gint" />
+      <field name="PrerollQueued" cname="preroll_queued" type="gint" />
+      <field name="BuffersQueued" cname="buffers_queued" type="gint" />
+      <field name="EventsQueued" cname="events_queued" type="gint" />
+      <field name="Eos" cname="eos" type="gboolean" />
+      <field name="EosQueued" cname="eos_queued" type="gboolean" />
+      <field name="NeedPreroll" cname="need_preroll" type="gboolean" />
+      <field name="HavePreroll" cname="have_preroll" type="gboolean" />
+      <field name="PlayingAsync" cname="playing_async" type="gboolean" />
+      <field name="HaveNewsegment" cname="have_newsegment" type="gboolean" />
+      <field name="Segment" cname="segment" type="GstSegment" />
+      <field name="ClockId" cname="clock_id" type="GstClockID" />
+      <field name="EndTime" cname="end_time" type="GstClockTime" />
+      <field name="Sync" cname="sync" type="gboolean" />
+      <field name="Flushing" cname="flushing" type="gboolean" />
+      <field name="ClipSegment" cname="clip_segment" type="GstSegment*" />
+      <field name="Priv" cname="priv" type="GstBaseSinkPrivate*" />
+      <property name="PrerollQueueLen" cname="preroll-queue-len" type="guint" readable="true" writeable="true" construct="true" />
+      <property name="Sync" cname="sync" type="gboolean" readable="true" writeable="true" />
+      <property name="MaxLateness" cname="max-lateness" type="gint64" readable="true" writeable="true" />
+      <property name="Qos" cname="qos" type="gboolean" readable="true" writeable="true" />
+      <property name="Async" cname="async" type="gboolean" readable="true" writeable="true" />
+      <property name="TsOffset" cname="ts-offset" type="gint64" readable="true" writeable="true" />
+      <property name="" cname="" type="class" />
+      <property name="Blocksize" cname="blocksize" type="guint" readable="true" writeable="true" />
+      <property name="RenderDelay" cname="render-delay" type="guint64" readable="true" writeable="true" />
+      <virtual_method name="GetCaps" cname="get_caps">
+        <return-type type="GstCaps*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="SetCaps" cname="set_caps">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstCaps*" name="caps" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="BufferAlloc" cname="buffer_alloc">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="guint64" name="offset" />
+          <parameter type="guint" name="size" />
+          <parameter type="GstCaps*" name="caps" />
+          <parameter type="GstBuffer**" name="buf" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetTimes" cname="get_times">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buffer" />
+          <parameter type="GstClockTime*" name="start" />
+          <parameter type="GstClockTime*" name="end" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Start" cname="start">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Stop" cname="stop">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Unlock" cname="unlock">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Event" cname="event">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstEvent*" name="event" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Preroll" cname="preroll">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buffer" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Render" cname="render">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buffer" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="AsyncPlay" cname="async_play">
+        <return-type type="GstStateChangeReturn" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="ActivatePull" cname="activate_pull">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean" name="active" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Fixate" cname="fixate">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstCaps*" name="caps" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="UnlockStop" cname="unlock_stop">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <method name="DoPreroll" cname="gst_base_sink_do_preroll">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstMiniObject*" name="obj" />
+        </parameters>
+      </method>
+      <method name="GetBlocksize" cname="gst_base_sink_get_blocksize">
+        <return-type type="guint" />
+      </method>
+      <method name="GetLastBuffer" cname="gst_base_sink_get_last_buffer">
+        <return-type type="GstBuffer*" />
+      </method>
+      <method name="GetLatency" cname="gst_base_sink_get_latency">
+        <return-type type="GstClockTime" />
+      </method>
+      <method name="GetMaxLateness" cname="gst_base_sink_get_max_lateness">
+        <return-type type="gint64" />
+      </method>
+      <method name="GetRenderDelay" cname="gst_base_sink_get_render_delay">
+        <return-type type="GstClockTime" />
+      </method>
+      <method name="GetSync" cname="gst_base_sink_get_sync">
+        <return-type type="gboolean" />
+      </method>
+      <method name="GetTsOffset" cname="gst_base_sink_get_ts_offset">
+        <return-type type="GstClockTimeDiff" />
+      </method>
+      <method name="GetType" cname="gst_base_sink_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="IsAsyncEnabled" cname="gst_base_sink_is_async_enabled">
+        <return-type type="gboolean" />
+      </method>
+      <method name="IsQosEnabled" cname="gst_base_sink_is_qos_enabled">
+        <return-type type="gboolean" />
+      </method>
+      <method name="QueryLatency" cname="gst_base_sink_query_latency">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean*" name="live" />
+          <parameter type="gboolean*" name="upstream_live" />
+          <parameter type="GstClockTime*" name="min_latency" />
+          <parameter type="GstClockTime*" name="max_latency" />
+        </parameters>
+      </method>
+      <method name="SetAsyncEnabled" cname="gst_base_sink_set_async_enabled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="enabled" />
+        </parameters>
+      </method>
+      <method name="SetBlocksize" cname="gst_base_sink_set_blocksize">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint" name="blocksize" />
+        </parameters>
+      </method>
+      <method name="SetMaxLateness" cname="gst_base_sink_set_max_lateness">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gint64" name="max_lateness" />
+        </parameters>
+      </method>
+      <method name="SetQosEnabled" cname="gst_base_sink_set_qos_enabled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="enabled" />
+        </parameters>
+      </method>
+      <method name="SetRenderDelay" cname="gst_base_sink_set_render_delay">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstClockTime" name="delay" />
+        </parameters>
+      </method>
+      <method name="SetSync" cname="gst_base_sink_set_sync">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="sync" />
+        </parameters>
+      </method>
+      <method name="SetTsOffset" cname="gst_base_sink_set_ts_offset">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstClockTimeDiff" name="offset" />
+        </parameters>
+      </method>
+      <method name="WaitClock" cname="gst_base_sink_wait_clock">
+        <return-type type="GstClockReturn" />
+        <parameters>
+          <parameter type="GstClockTime" name="time" />
+          <parameter type="GstClockTimeDiff*" name="jitter" />
+        </parameters>
+      </method>
+      <method name="WaitEos" cname="gst_base_sink_wait_eos">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstClockTime" name="time" />
+          <parameter type="GstClockTimeDiff*" name="jitter" />
+        </parameters>
+      </method>
+      <method name="WaitPreroll" cname="gst_base_sink_wait_preroll">
+        <return-type type="GstFlowReturn" />
+      </method>
+    </object>
+    <object name="GstBaseSrc" cname="GstBaseSrc" parent="GstElement">
+      <class_struct cname="GstBaseSrcClass">
+        <field name="ParentClass" cname="parent_class" type="GstElementClass" />
+        <method vm="get_caps" />
+        <method vm="set_caps" />
+        <method vm="negotiate" />
+        <method vm="newsegment" />
+        <method vm="start" />
+        <method vm="stop" />
+        <method vm="get_times" />
+        <method vm="get_size" />
+        <method vm="is_seekable" />
+        <method vm="unlock" />
+        <method vm="event" />
+        <method vm="create" />
+        <method vm="do_seek" />
+        <method vm="query" />
+        <method vm="check_get_range" />
+        <method vm="fixate" />
+        <method vm="unlock_stop" />
+        <method vm="prepare_seek_segment" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING_LARGE - 6" />
+      </class_struct>
+      <field name="Srcpad" cname="srcpad" type="GstPad*" />
+      <field name="LiveLock" cname="live_lock" type="GMutex*" />
+      <field name="LiveCond" cname="live_cond" type="GCond*" />
+      <field name="IsLive" cname="is_live" type="gboolean" />
+      <field name="LiveRunning" cname="live_running" type="gboolean" />
+      <field name="Blocksize" cname="blocksize" type="gint" />
+      <field name="CanActivatePush" cname="can_activate_push" type="gboolean" />
+      <field name="PadMode" cname="pad_mode" type="GstActivateMode" />
+      <field name="Seekable" cname="seekable" type="gboolean" />
+      <field name="RandomAccess" cname="random_access" type="gboolean" />
+      <field name="ClockId" cname="clock_id" type="GstClockID" />
+      <field name="EndTime" cname="end_time" type="GstClockTime" />
+      <field name="Segment" cname="segment" type="GstSegment" />
+      <field name="NeedNewsegment" cname="need_newsegment" type="gboolean" />
+      <field name="Offset" cname="offset" type="guint64" />
+      <field name="Size" cname="size" type="guint64" />
+      <field name="NumBuffers" cname="num_buffers" type="gint" />
+      <field name="NumBuffersLeft" cname="num_buffers_left" type="gint" />
+      <field name="Typefind" cname="typefind" type="gboolean" />
+      <field name="Priv" cname="priv" type="GstBaseSrcPrivate*" />
+      <property name="Blocksize" cname="blocksize" type="ulong" readable="true" writeable="true" />
+      <property name="NumBuffers" cname="num-buffers" type="gint" readable="true" writeable="true" />
+      <property name="Typefind" cname="typefind" type="gboolean" readable="true" writeable="true" />
+      <property name="DoTimestamp" cname="do-timestamp" type="gboolean" readable="true" writeable="true" />
+      <virtual_method name="GetCaps" cname="get_caps">
+        <return-type type="GstCaps*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="SetCaps" cname="set_caps">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstCaps*" name="caps" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Negotiate" cname="negotiate">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Newsegment" cname="newsegment">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Start" cname="start">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Stop" cname="stop">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="GetTimes" cname="get_times">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buffer" />
+          <parameter type="GstClockTime*" name="start" />
+          <parameter type="GstClockTime*" name="end" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetSize" cname="get_size">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint64*" name="size" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="IsSeekable" cname="is_seekable">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Unlock" cname="unlock">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Event" cname="event">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstEvent*" name="event" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Create" cname="create">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="guint64" name="offset" />
+          <parameter type="guint" name="size" />
+          <parameter type="GstBuffer**" name="buf" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="DoSeek" cname="do_seek">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstSegment*" name="segment" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Query" cname="query">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstQuery*" name="query" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="CheckGetRange" cname="check_get_range">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Fixate" cname="fixate">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstCaps*" name="caps" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="UnlockStop" cname="unlock_stop">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="PrepareSeekSegment" cname="prepare_seek_segment">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstEvent*" name="seek" />
+          <parameter type="GstSegment*" name="segment" />
+        </parameters>
+      </virtual_method>
+      <method name="GetBlocksize" cname="gst_base_src_get_blocksize">
+        <return-type type="gulong" />
+      </method>
+      <method name="GetDoTimestamp" cname="gst_base_src_get_do_timestamp">
+        <return-type type="gboolean" />
+      </method>
+      <method name="GetType" cname="gst_base_src_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="IsLive" cname="gst_base_src_is_live">
+        <return-type type="gboolean" />
+      </method>
+      <method name="QueryLatency" cname="gst_base_src_query_latency">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gboolean*" name="live" />
+          <parameter type="GstClockTime*" name="min_latency" />
+          <parameter type="GstClockTime*" name="max_latency" />
+        </parameters>
+      </method>
+      <method name="SetBlocksize" cname="gst_base_src_set_blocksize">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gulong" name="blocksize" />
+        </parameters>
+      </method>
+      <method name="SetDoTimestamp" cname="gst_base_src_set_do_timestamp">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="timestamp" />
+        </parameters>
+      </method>
+      <method name="SetFormat" cname="gst_base_src_set_format">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstFormat" name="format" />
+        </parameters>
+      </method>
+      <method name="SetLive" cname="gst_base_src_set_live">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="live" />
+        </parameters>
+      </method>
+      <method name="WaitPlaying" cname="gst_base_src_wait_playing">
+        <return-type type="GstFlowReturn" />
+      </method>
+    </object>
+    <object name="GstBaseTransform" cname="GstBaseTransform" parent="GstElement">
+      <class_struct cname="GstBaseTransformClass">
+        <field name="ParentClass" cname="parent_class" type="GstElementClass" />
+        <method vm="transform_caps" />
+        <method vm="fixate_caps" />
+        <method vm="transform_size" />
+        <method vm="get_unit_size" />
+        <method vm="set_caps" />
+        <method vm="start" />
+        <method vm="stop" />
+        <method vm="event" />
+        <method vm="transform" />
+        <method vm="transform_ip" />
+        <field name="PassthroughOnSameCaps" cname="passthrough_on_same_caps" type="gboolean" />
+        <method vm="prepare_output_buffer" />
+        <method vm="src_event" />
+        <method vm="before_transform" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING_LARGE - 2" />
+      </class_struct>
+      <field name="Sinkpad" cname="sinkpad" type="GstPad*" />
+      <field name="Srcpad" cname="srcpad" type="GstPad*" />
+      <field name="Passthrough" cname="passthrough" type="gboolean" />
+      <field name="AlwaysInPlace" cname="always_in_place" type="gboolean" />
+      <field name="CacheCaps1" cname="cache_caps1" type="GstCaps*" />
+      <field name="CacheCaps1Size" cname="cache_caps1_size" type="guint" />
+      <field name="CacheCaps2" cname="cache_caps2" type="GstCaps*" />
+      <field name="CacheCaps2Size" cname="cache_caps2_size" type="guint" />
+      <field name="HaveSameCaps" cname="have_same_caps" type="gboolean" />
+      <field name="DelayConfigure" cname="delay_configure" type="gboolean" />
+      <field name="PendingConfigure" cname="pending_configure" type="gboolean" />
+      <field name="Negotiated" cname="negotiated" type="gboolean" />
+      <field name="HaveNewsegment" cname="have_newsegment" type="gboolean" />
+      <field name="Segment" cname="segment" type="GstSegment" />
+      <field name="TransformLock" cname="transform_lock" type="GMutex*" />
+      <field name="Priv" cname="priv" type="GstBaseTransformPrivate*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING_LARGE - 1" type="gpointer" />
+      <property name="Qos" cname="qos" type="gboolean" readable="true" writeable="true" />
+      <virtual_method name="TransformCaps" cname="transform_caps">
+        <return-type type="GstCaps*" />
+        <parameters>
+          <parameter type="GstPadDirection" name="direction" />
+          <parameter type="GstCaps*" name="caps" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="FixateCaps" cname="fixate_caps">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstPadDirection" name="direction" />
+          <parameter type="GstCaps*" name="caps" />
+          <parameter type="GstCaps*" name="othercaps" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="TransformSize" cname="transform_size">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstPadDirection" name="direction" />
+          <parameter type="GstCaps*" name="caps" />
+          <parameter type="guint" name="size" />
+          <parameter type="GstCaps*" name="othercaps" />
+          <parameter type="guint*" name="othersize" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetUnitSize" cname="get_unit_size">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstCaps*" name="caps" />
+          <parameter type="guint*" name="size" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetCaps" cname="set_caps">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstCaps*" name="incaps" />
+          <parameter type="GstCaps*" name="outcaps" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Start" cname="start">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Stop" cname="stop">
+        <return-type type="gboolean" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Event" cname="event">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstEvent*" name="event" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Transform" cname="transform">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBuffer*" name="inbuf" />
+          <parameter type="GstBuffer*" name="outbuf" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="TransformIp" cname="transform_ip">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buf" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="PrepareOutputBuffer" cname="prepare_output_buffer">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBuffer*" name="input" />
+          <parameter type="gint" name="size" />
+          <parameter type="GstCaps*" name="caps" />
+          <parameter type="GstBuffer**" name="buf" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SrcEvent" cname="src_event">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstEvent*" name="event" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="BeforeTransform" cname="before_transform">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buffer" />
+        </parameters>
+      </virtual_method>
+      <method name="GetType" cname="gst_base_transform_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="IsInPlace" cname="gst_base_transform_is_in_place">
+        <return-type type="gboolean" />
+      </method>
+      <method name="IsPassthrough" cname="gst_base_transform_is_passthrough">
+        <return-type type="gboolean" />
+      </method>
+      <method name="IsQosEnabled" cname="gst_base_transform_is_qos_enabled">
+        <return-type type="gboolean" />
+      </method>
+      <method name="Reconfigure" cname="gst_base_transform_reconfigure">
+        <return-type type="void" />
+      </method>
+      <method name="SetGapAware" cname="gst_base_transform_set_gap_aware">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="gap_aware" />
+        </parameters>
+      </method>
+      <method name="SetInPlace" cname="gst_base_transform_set_in_place">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="in_place" />
+        </parameters>
+      </method>
+      <method name="SetPassthrough" cname="gst_base_transform_set_passthrough">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="passthrough" />
+        </parameters>
+      </method>
+      <method name="SetQosEnabled" cname="gst_base_transform_set_qos_enabled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="enabled" />
+        </parameters>
+      </method>
+      <method name="Suggest" cname="gst_base_transform_suggest">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstCaps*" name="caps" />
+          <parameter type="guint" name="size" />
+        </parameters>
+      </method>
+      <method name="UpdateQos" cname="gst_base_transform_update_qos">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gdouble" name="proportion" />
+          <parameter type="GstClockTimeDiff" name="diff" />
+          <parameter type="GstClockTime" name="timestamp" />
+        </parameters>
+      </method>
+    </object>
+    <object name="GstPushSrc" cname="GstPushSrc" parent="GstBaseSrc">
+      <class_struct cname="GstPushSrcClass">
+        <field name="ParentClass" cname="parent_class" type="GstBaseSrcClass" />
+        <method vm="create" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <virtual_method name="Create" cname="create">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBuffer**" name="buf" />
+        </parameters>
+      </virtual_method>
+      <method name="GetType" cname="gst_push_src_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+    </object>
+  </namespace>
   <namespace name="Gst.Interfaces" library="libgstinterfaces-0.10.dll">
     <enum name="GstColorBalanceType" cname="GstColorBalanceType" gtype="gst_color_balance_type_get_type" type="enum">
       <member cname="GST_COLOR_BALANCE_HARDWARE" name="Hardware" />
