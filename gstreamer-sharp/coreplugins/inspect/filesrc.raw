@@ -96,7 +96,7 @@
    <type>gint</type>
    <nick>File-descriptor</nick>
    <blurb>File-descriptor for the file being mmap()d</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <range min="0" max="2147483647"/>
    <default>0</default>
   </element-property>

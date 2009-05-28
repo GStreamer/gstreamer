@@ -57,7 +57,7 @@
    <type>gint</type>
    <nick>Num Src Pads</nick>
    <blurb>The number of source pads</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <range min="0" max="2147483647"/>
    <default>0</default>
   </element-property>
@@ -90,7 +90,7 @@
    <type>gchararray</type>
    <nick>Last Message</nick>
    <blurb>The message describing current status</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <default>NULL</default>
   </element-property>
   <element-property>

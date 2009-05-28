@@ -60,7 +60,7 @@
    <type>GstElement</type>
    <nick>Source</nick>
    <blurb>Source element</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <object-type>GstElement</object-type>
   </element-property>
   <element-property>
@@ -85,7 +85,7 @@
    <type>gint</type>
    <nick>Number Video</nick>
    <blurb>Total number of video streams</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <range min="0" max="2147483647"/>
    <default>0</default>
   </element-property>
@@ -103,7 +103,7 @@
    <type>gint</type>
    <nick>Number Audio</nick>
    <blurb>Total number of audio streams</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <range min="0" max="2147483647"/>
    <default>0</default>
   </element-property>
@@ -121,7 +121,7 @@
    <type>gint</type>
    <nick>Number Text</nick>
    <blurb>Total number of text streams</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <range min="0" max="2147483647"/>
    <default>0</default>
   </element-property>
@@ -204,7 +204,7 @@
    <type>GstBuffer</type>
    <nick>Frame</nick>
    <blurb>The last frame (NULL = no video available)</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
   </element-property>
   <element-property>
    <name>subtitle-font-desc</name>

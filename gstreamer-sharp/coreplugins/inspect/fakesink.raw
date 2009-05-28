@@ -104,7 +104,7 @@
    <type>GstBuffer</type>
    <nick>Last Buffer</nick>
    <blurb>The last buffer received in the sink</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
   </element-property>
   <element-property>
    <name>blocksize</name>
@@ -170,7 +170,7 @@
    <type>gchararray</type>
    <nick>Last Message</nick>
    <blurb>The message describing current status</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <default>NULL</default>
   </element-property>
   <element-property>

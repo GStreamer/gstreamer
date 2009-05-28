@@ -66,7 +66,7 @@
    <type>guint</type>
    <nick>Current level (buffers)</nick>
    <blurb>Current number of buffers in the queue</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <range min="0" max="4294967295"/>
    <default>0</default>
   </element-property>
@@ -75,7 +75,7 @@
    <type>guint</type>
    <nick>Current level (kB)</nick>
    <blurb>Current amount of data in the queue (bytes)</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <range min="0" max="4294967295"/>
    <default>0</default>
   </element-property>
@@ -84,7 +84,7 @@
    <type>guint64</type>
    <nick>Current level (ns)</nick>
    <blurb>Current amount of data in the queue (in ns)</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <range min="0" max="18446744073709551615"/>
    <default>0</default>
   </element-property>

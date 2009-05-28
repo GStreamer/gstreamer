@@ -223,7 +223,6 @@ print_element_properties (GstElement * element, gint pfx)
   GParamSpec **property_specs;
   guint num_properties;
   gint i;
-  gboolean readable;
 
   property_specs = g_object_class_list_properties
       (G_OBJECT_GET_CLASS (element), &num_properties);
@@ -233,14 +232,18 @@ print_element_properties (GstElement * element, gint pfx)
   for (i = 0; i < num_properties; i++) {
     GValue value = { 0, };
     GParamSpec *param = property_specs[i];
+    gboolean readable, writeable;
 
-    readable = FALSE;
+    readable = writeable = FALSE;
 
     g_value_init (&value, param->value_type);
     if (param->flags & G_PARAM_READABLE) {
       g_object_get_property (G_OBJECT (element), param->name, &value);
       readable = TRUE;
     }
+
+    if (param->flags & G_PARAM_WRITABLE)
+      writeable = TRUE;
 
     /* Ignore GstObject, GstElement, GstBin, GstPipeline properties */
     if (param->owner_type == GST_TYPE_OBJECT ||
@@ -254,9 +257,11 @@ print_element_properties (GstElement * element, gint pfx)
     PUT_ESCAPED (pfx + 2, "type", g_type_name (param->value_type));
     PUT_ESCAPED (pfx + 2, "nick", g_param_spec_get_nick (param));
     PUT_ESCAPED (pfx + 2, "blurb", g_param_spec_get_blurb (param));
-    if (readable) {
+    if (readable && writeable) {
       PUT_ESCAPED (pfx + 2, "flags", "RW");
-    } else {
+    } else if (readable) {
+      PUT_ESCAPED (pfx + 2, "flags", "R");
+    } else if (writeable) {
       PUT_ESCAPED (pfx + 2, "flags", "W");
     }
 

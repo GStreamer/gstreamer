@@ -128,7 +128,7 @@
    <type>gchararray</type>
    <nick>last-message</nick>
    <blurb>last-message</blurb>
-   <flags>RW</flags>
+   <flags>R</flags>
    <default>NULL</default>
   </element-property>
   <element-property>
