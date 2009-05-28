@@ -15,10 +15,36 @@
   </Docs>
   <Members>
     <Member MemberName="AddProxySignalDelegate">
-      <MemberSignature Language="C#" Value="public static Delegate AddProxySignalDelegate (Gst.Element element, string signal, Gst.DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate addHandler);" />
+      <MemberSignature Language="C#" Value="public static Delegate AddProxySignalDelegate (GLib.Object o, string signal, Gst.DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate addHandler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Delegate</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="signal" Type="System.String" />
+        <Parameter Name="baseHandler" Type="Gst.DynamicSignalHandler" />
+        <Parameter Name="existingHandler" Type="System.Delegate" />
+        <Parameter Name="addHandler" Type="System.Delegate" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="signal">To be added.</param>
+        <param name="baseHandler">To be added.</param>
+        <param name="existingHandler">To be added.</param>
+        <param name="addHandler">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AddProxySignalDelegate">
+      <MemberSignature Language="C#" Value="public static Delegate AddProxySignalDelegate (Gst.Element element, string signal, Gst.DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate addHandler);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -68,10 +94,36 @@
       </Docs>
     </Member>
     <Member MemberName="RemoveProxySignalDelegate">
-      <MemberSignature Language="C#" Value="public static Delegate RemoveProxySignalDelegate (Gst.Element element, string signal, Gst.DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate removeHandler);" />
+      <MemberSignature Language="C#" Value="public static Delegate RemoveProxySignalDelegate (GLib.Object o, string signal, Gst.DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate removeHandler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Delegate</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="signal" Type="System.String" />
+        <Parameter Name="baseHandler" Type="Gst.DynamicSignalHandler" />
+        <Parameter Name="existingHandler" Type="System.Delegate" />
+        <Parameter Name="removeHandler" Type="System.Delegate" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="signal">To be added.</param>
+        <param name="baseHandler">To be added.</param>
+        <param name="existingHandler">To be added.</param>
+        <param name="removeHandler">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RemoveProxySignalDelegate">
+      <MemberSignature Language="C#" Value="public static Delegate RemoveProxySignalDelegate (Gst.Element element, string signal, Gst.DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate removeHandler);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>

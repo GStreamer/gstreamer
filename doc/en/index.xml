@@ -231,6 +231,10 @@
       <Type Name="DecodeBin2+UnknownTypeArgs" Kind="Class" />
       <Type Name="DecodeBin2+UnknownTypeHandler" Kind="Delegate" />
       <Type Name="PlayBin" Kind="Class" />
+      <Type Name="PlayBin+StreamInfo" Kind="Class" />
+      <Type Name="PlayBin+StreamInfo+MutedArgs" Kind="Class" />
+      <Type Name="PlayBin+StreamInfo+MutedHandler" Kind="Delegate" />
+      <Type Name="PlayBin+StreamInfo+StreamType" Kind="Enumeration" />
       <Type Name="PlayBin2" Kind="Class" />
       <Type Name="PlayBin2+AboutToFinishArgs" Kind="Class" />
       <Type Name="PlayBin2+AboutToFinishHandler" Kind="Delegate" />

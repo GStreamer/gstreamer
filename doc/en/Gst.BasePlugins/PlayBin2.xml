@@ -268,7 +268,7 @@
       </Docs>
     </Member>
     <Member MemberName="Frame">
-      <MemberSignature Language="C#" Value="public Gst.Buffer Frame { set; get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Buffer Frame { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -546,7 +546,7 @@
       </Docs>
     </Member>
     <Member MemberName="NAudio">
-      <MemberSignature Language="C#" Value="public int NAudio { set; get; }" />
+      <MemberSignature Language="C#" Value="public int NAudio { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -566,7 +566,7 @@
       </Docs>
     </Member>
     <Member MemberName="NText">
-      <MemberSignature Language="C#" Value="public int NText { set; get; }" />
+      <MemberSignature Language="C#" Value="public int NText { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -586,7 +586,7 @@
       </Docs>
     </Member>
     <Member MemberName="NVideo">
-      <MemberSignature Language="C#" Value="public int NVideo { set; get; }" />
+      <MemberSignature Language="C#" Value="public int NVideo { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -686,7 +686,7 @@
       </Docs>
     </Member>
     <Member MemberName="Source">
-      <MemberSignature Language="C#" Value="public Gst.Element Source { set; get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Element Source { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>

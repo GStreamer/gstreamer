@@ -189,7 +189,7 @@
       </Docs>
     </Member>
     <Member MemberName="LastBuffer">
-      <MemberSignature Language="C#" Value="public Gst.Buffer LastBuffer { set; get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Buffer LastBuffer { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>

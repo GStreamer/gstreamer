@@ -275,7 +275,7 @@
       </Docs>
     </Member>
     <Member MemberName="LastMessage">
-      <MemberSignature Language="C#" Value="public string LastMessage { set; get; }" />
+      <MemberSignature Language="C#" Value="public string LastMessage { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>

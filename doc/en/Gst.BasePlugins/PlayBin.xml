@@ -223,7 +223,7 @@
       </Docs>
     </Member>
     <Member MemberName="Frame">
-      <MemberSignature Language="C#" Value="public Gst.Buffer Frame { set; get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Buffer Frame { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -394,7 +394,7 @@
       </Docs>
     </Member>
     <Member MemberName="Nstreams">
-      <MemberSignature Language="C#" Value="public int Nstreams { set; get; }" />
+      <MemberSignature Language="C#" Value="public int Nstreams { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -478,7 +478,7 @@
       </Docs>
     </Member>
     <Member MemberName="Source">
-      <MemberSignature Language="C#" Value="public Gst.Element Source { set; get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Element Source { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -491,6 +491,26 @@
       </Attributes>
       <ReturnValue>
         <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StreamInfos">
+      <MemberSignature Language="C#" Value="public Gst.BasePlugins.PlayBin.StreamInfo[] StreamInfos { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("stream-info-value-array")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.BasePlugins.PlayBin+StreamInfo[]</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>

@@ -61,7 +61,7 @@
       </Docs>
     </Member>
     <Member MemberName="CurrentLevelBuffers">
-      <MemberSignature Language="C#" Value="public uint CurrentLevelBuffers { set; get; }" />
+      <MemberSignature Language="C#" Value="public uint CurrentLevelBuffers { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -81,7 +81,7 @@
       </Docs>
     </Member>
     <Member MemberName="CurrentLevelBytes">
-      <MemberSignature Language="C#" Value="public uint CurrentLevelBytes { set; get; }" />
+      <MemberSignature Language="C#" Value="public uint CurrentLevelBytes { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -101,7 +101,7 @@
       </Docs>
     </Member>
     <Member MemberName="CurrentLevelTime">
-      <MemberSignature Language="C#" Value="public ulong CurrentLevelTime { set; get; }" />
+      <MemberSignature Language="C#" Value="public ulong CurrentLevelTime { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>

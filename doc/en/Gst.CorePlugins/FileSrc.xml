@@ -105,7 +105,7 @@
       </Docs>
     </Member>
     <Member MemberName="Fd">
-      <MemberSignature Language="C#" Value="public int Fd { set; get; }" />
+      <MemberSignature Language="C#" Value="public int Fd { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>

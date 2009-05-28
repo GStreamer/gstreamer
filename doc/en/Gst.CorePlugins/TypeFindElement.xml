@@ -58,7 +58,7 @@
       </Docs>
     </Member>
     <Member MemberName="Caps">
-      <MemberSignature Language="C#" Value="public Gst.Caps Caps { set; get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Caps Caps { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
