@@ -298,7 +298,8 @@ public class ElementGen {
       } else if (managed_type == null) {
         pinfo.enuminfo.name = pinfo.type;
         enums.Add (pinfo.enuminfo);
-	managed_type = pinfo.type.StartsWith ("Gst") ? pinfo.type.Substring (3) : pinfo.type;
+	managed_type = pinfo.type.StartsWith (ei.gtype_name) ? pinfo.type.Substring (ei.gtype_name.Length) : pinfo.type.StartsWith ("Gst") ? pinfo.type.Substring (3) : pinfo.type;
+	managed_type += "Type";
       }
 
       writer.WriteLine ("\t\t[GLib.Property (\"" + pinfo.name + "\")]");
@@ -414,6 +415,8 @@ public class ElementGen {
 	  writer.WriteLine ("\t\t[Flags]");
 
 	string enum_name = eni.name.StartsWith (ei.gtype_name) ? eni.name.Substring (ei.gtype_name.Length) : eni.name.StartsWith ("Gst") ? eni.name.Substring (3) : eni.name;
+
+	enum_name += "Type";
 
 	writer.WriteLine ("\t\tpublic enum " + enum_name + " {");
 	if (eni.flag) {
