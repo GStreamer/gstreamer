@@ -115,7 +115,7 @@
  * GNOME-based applications, for example, will usually want to create
  * gconfaudiosink and gconfvideosink elements and make playbin use those,
  * so that output happens to whatever the user has configured in the GNOME
- * Multimedia System Selector confinguration dialog.
+ * Multimedia System Selector configuration dialog.
  *
  * The sink elements do not necessarily need to be ready-made sinks. It is
  * possible to create container elements that look like a sink to playbin,
@@ -251,7 +251,7 @@ typedef struct _GstSourceSelect GstSourceSelect;
 /* has the info for a selector and provides the link to the sink */
 struct _GstSourceSelect
 {
-  const gchar *media;           /* the media type of the selector */
+  const gchar *media_list[3];   /* the media types for the selector */
   GstPlaySinkType type;         /* the sink pad type of the selector */
 
   GstElement *selector;         /* the selector */
@@ -968,22 +968,26 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   /* init selectors. The selector is found by finding the first prefix that
    * matches the media. */
   group->playbin = playbin;
-  group->selector[0].media = "audio/x-raw-";
+  /* If you add any items to these lists, check that media_list[] is defined
+   * above to be large enough to hold MAX(items)+1, so as to accomodate a
+   * NULL terminator (set when the memory is zeroed on allocation) */
+  group->selector[0].media_list[0] = "audio/x-raw-";
   group->selector[0].type = GST_PLAY_SINK_TYPE_AUDIO_RAW;
   group->selector[0].channels = group->audio_channels;
-  group->selector[1].media = "audio/";
+  group->selector[1].media_list[0] = "audio/";
   group->selector[1].type = GST_PLAY_SINK_TYPE_AUDIO;
   group->selector[1].channels = group->audio_channels;
-  group->selector[2].media = "video/x-raw-";
+  group->selector[2].media_list[0] = "video/x-raw-";
   group->selector[2].type = GST_PLAY_SINK_TYPE_VIDEO_RAW;
   group->selector[2].channels = group->video_channels;
-  group->selector[3].media = "video/x-dvd-subpicture";
+  group->selector[3].media_list[0] = "video/x-dvd-subpicture";
+  group->selector[3].media_list[1] = "subpicture/x-pgs";
   group->selector[3].type = GST_PLAY_SINK_TYPE_SUBPIC;
   group->selector[3].channels = group->subp_channels;
-  group->selector[4].media = "video/";
+  group->selector[4].media_list[0] = "video/";
   group->selector[4].type = GST_PLAY_SINK_TYPE_VIDEO;
   group->selector[4].channels = group->video_channels;
-  group->selector[5].media = "text/";
+  group->selector[5].media_list[0] = "text/";
   group->selector[5].type = GST_PLAY_SINK_TYPE_TEXT;
   group->selector[5].channels = group->text_channels;
 }
@@ -1703,7 +1707,7 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
 /* mime types we are not handling on purpose right now, don't post a
  * missing-plugin message for these */
 static const gchar *blacklisted_mimes[] = {
-  "video/x-dvd-subpicture", NULL
+  "video/x-dvd-subpicture", "subpicture/x-pgs", NULL
 };
 
 static void
@@ -1785,6 +1789,19 @@ selector_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
   GST_DEBUG_OBJECT (pad, "blocked callback, blocked: %d", blocked);
 }
 
+/* helper function to lookup stuff in lists */
+static gboolean
+array_has_value (const gchar * values[], const gchar * value)
+{
+  gint i;
+
+  for (i = 0; values[i]; i++) {
+    if (g_str_has_prefix (value, values[i]))
+      return TRUE;
+  }
+  return FALSE;
+}
+
 /* this function is called when a new pad is added to decodebin. We check the
  * type of the pad and add it to the selector element of the group. 
  */
@@ -1813,7 +1830,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
   /* major type of the pad, this determines the selector to use */
   for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
-    if (g_str_has_prefix (name, group->selector[i].media)) {
+    if (array_has_value (group->selector[i].media_list, name)) {
       select = &group->selector[i];
       break;
     }
@@ -2040,8 +2057,8 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
       select->sinkpad =
           gst_play_sink_request_pad (playbin->playsink, select->type);
       res = gst_pad_link (select->srcpad, select->sinkpad);
-      GST_DEBUG_OBJECT (playbin, "linked type %s, result: %d", select->media,
-          res);
+      GST_DEBUG_OBJECT (playbin, "linked type %s, result: %d",
+          select->media_list[0], res);
       if (res != GST_PAD_LINK_OK) {
         GST_ELEMENT_ERROR (playbin, CORE, PAD,
             ("Internal playbin error."),
@@ -2509,7 +2526,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
   for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
 
-    GST_DEBUG_OBJECT (playbin, "unlinking selector %s", select->media);
+    GST_DEBUG_OBJECT (playbin, "unlinking selector %s", select->media_list[0]);
 
     if (select->srcpad) {
       if (select->sinkpad) {
