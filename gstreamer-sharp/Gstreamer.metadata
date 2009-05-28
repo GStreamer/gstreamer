@@ -1014,6 +1014,8 @@
   <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='prepare_output_buffer']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
 
   <attr path="/api/namespace/object[@cname='GstPushSrc']" name="name">PushSrc</attr>
+  <attr path="/api/namespace/object[@cname='GstPushSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstPushSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
 
   <!-- GStreamer Interfaces library -->
   <attr path="/api/namespace/enum[@cname='GstColorBalanceType']" name="name">ColorBalanceType</attr>
