@@ -104,6 +104,7 @@ void gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
 void gst_videomixer_fill_ayuv_checker (guint8 * dest, gint width, gint height);
 void gst_videomixer_fill_ayuv_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV);
+size_t gst_videomixer_calculate_frame_size_ayuv (gint width, gint height);
 /*BGRA function definitions see file: blend_ayuv*/
 void gst_videomixer_blend_bgra_bgra (guint8 * src, gint xpos, gint ypos,
     gint src_width, gint src_height, gdouble src_alpha,
@@ -111,6 +112,7 @@ void gst_videomixer_blend_bgra_bgra (guint8 * src, gint xpos, gint ypos,
 void gst_videomixer_fill_bgra_checker (guint8 * dest, gint width, gint height);
 void gst_videomixer_fill_bgra_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV);
+size_t gst_videomixer_calculate_frame_size_bgra (gint width, gint height);
 /*I420 function definitions see file: blend_i420.c*/
 void gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
     gint src_width, gint src_height, gdouble src_alpha,
@@ -118,6 +120,7 @@ void gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
 void gst_videomixer_fill_i420_checker (guint8 * dest, gint width, gint height);
 void gst_videomixer_fill_i420_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV);
+size_t gst_videomixer_calculate_frame_size_i420 (gint width, gint height);
 
 #define DEFAULT_PAD_ZORDER 0
 #define DEFAULT_PAD_XPOS   0
@@ -927,36 +930,36 @@ gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
     int ret;
     ret = gst_structure_get_fourcc (str, "format", &format);
     if (!ret) {
-      mixer->blend = 0;
-      mixer->fill_checker = 0;
-      mixer->fill_color = 0;
-      mixer->bpp = 0;
+      mixer->blend = NULL;
+      mixer->fill_checker = NULL;
+      mixer->fill_color = NULL;
+      mixer->calculate_frame_size = NULL;
     } else if (format == GST_STR_FOURCC ("AYUV")) {
       mixer->blend = gst_videomixer_blend_ayuv_ayuv;
       mixer->fill_checker = gst_videomixer_fill_ayuv_checker;
       mixer->fill_color = gst_videomixer_fill_ayuv_color;
-      mixer->bpp = 32;
+      mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_ayuv;
     } else if (format == GST_STR_FOURCC ("I420")) {
       mixer->blend = gst_videomixer_blend_i420_i420;
       mixer->fill_checker = gst_videomixer_fill_i420_checker;
       mixer->fill_color = gst_videomixer_fill_i420_color;
-      mixer->bpp = 12;
+      mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_i420;
     } else {
-      mixer->blend = 0;
-      mixer->fill_checker = 0;
-      mixer->fill_color = 0;
-      mixer->bpp = 0;
+      mixer->blend = NULL;
+      mixer->fill_checker = NULL;
+      mixer->fill_color = NULL;
+      mixer->calculate_frame_size = NULL;
     }
   } else if (gst_structure_has_name (str, "video/x-raw-rgb")) {
     mixer->blend = gst_videomixer_blend_bgra_bgra;
     mixer->fill_checker = gst_videomixer_fill_bgra_checker;
     mixer->fill_color = gst_videomixer_fill_bgra_color;
-    mixer->bpp = 32;
+    mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_bgra;
   } else {
-    mixer->blend = 0;
-    mixer->fill_checker = 0;
-    mixer->fill_color = 0;
-    mixer->bpp = 0;
+    mixer->blend = NULL;
+    mixer->fill_checker = NULL;
+    mixer->fill_color = NULL;
+    mixer->calculate_frame_size = NULL;
   }
   gst_object_unref (element);
 
@@ -1301,7 +1304,6 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
     newcaps = gst_caps_make_writable
         (gst_pad_get_negotiated_caps (GST_PAD (mix->master)));
     gst_caps_set_simple (newcaps,
-        //"format", GST_TYPE_FOURCC, GST_STR_FOURCC ("AYUV"),
         "width", G_TYPE_INT, mix->in_width,
         "height", G_TYPE_INT, mix->in_height, NULL);
 
@@ -1310,17 +1312,15 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
     mix->setcaps = FALSE;
 
     /* Calculating out buffer size from input size */
-    gst_pad_set_caps (mix->srcpad, newcaps);    //bpp would be 0 otherwise
-    outsize =
-        (mix->bpp / 8.0) * mix->in_width * GST_ROUND_UP_2 (mix->in_height);
+    gst_pad_set_caps (mix->srcpad, newcaps);
+    outsize = mix->calculate_frame_size (mix->out_width, mix->out_height);
     ret =
         gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
         outsize, newcaps, &outbuf);
     gst_caps_unref (newcaps);
   } else {                      /* Otherwise we just allocate a buffer from current caps */
     /* Calculating out buffer size from input size */
-    outsize =
-        (mix->bpp / 8.0) * mix->in_width * GST_ROUND_UP_2 (mix->in_height);
+    outsize = mix->calculate_frame_size (mix->out_width, mix->out_height);
     ret =
         gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
         outsize, GST_PAD_CAPS (mix->srcpad), &outbuf);
@@ -1333,7 +1333,7 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
   switch (mix->background) {
     case VIDEO_MIXER_BACKGROUND_CHECKER:
       if (G_UNLIKELY (mix->fill_checker == NULL)) {
-        g_warning ("fill checker function pointer not set");
+        goto error;
       } else {
         mix->fill_checker (GST_BUFFER_DATA (outbuf), mix->out_width,
             mix->out_height);
@@ -1341,7 +1341,7 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
       break;
     case VIDEO_MIXER_BACKGROUND_BLACK:
       if (G_UNLIKELY (mix->fill_color == NULL)) {
-        g_warning ("fill color function pointer not set");
+        goto error;
       } else {
         mix->fill_color (GST_BUFFER_DATA (outbuf), mix->out_width,
             mix->out_height, 16, 128, 128);
@@ -1350,7 +1350,7 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
     case VIDEO_MIXER_BACKGROUND_WHITE:
 
       if (G_UNLIKELY (mix->fill_color == NULL)) {
-        g_warning ("fill color function pointer not set");
+        goto error;
       } else {
         mix->fill_color (GST_BUFFER_DATA (outbuf), mix->out_width,
             mix->out_height, 240, 128, 128);

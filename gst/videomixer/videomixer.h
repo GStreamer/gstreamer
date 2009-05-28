@@ -82,7 +82,6 @@ struct _GstVideoMixer
 
   gint in_width, in_height;
   gint out_width, out_height;
-  gint bpp;
   gboolean setcaps;
   gboolean sendseg;
 
@@ -104,6 +103,7 @@ struct _GstVideoMixer
   void (*fill_checker) (guint8 * dest, gint width, gint height);
 
   void (*fill_color) (guint8 * dest, gint width, gint height, gint colY, gint colU, gint colV);
+  size_t (*calculate_frame_size) (gint width, gint height);
 };
 
 struct _GstVideoMixerClass

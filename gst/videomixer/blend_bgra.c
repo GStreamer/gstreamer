@@ -111,7 +111,6 @@ gst_videomixer_fill_bgra_color (guint8 * dest, gint width, gint height,
   gint red, green, blue;
   gint i, j;
 
-//check this conversion 
   red = 1.164 * (colY - 16) + 1.596 * (colV - 128);
   green = 1.164 * (colY - 16) - 0.813 * (colV - 128) - 0.391 * (colU - 128);
   blue = 1.164 * (colY - 16) + 2.018 * (colU - 128);
@@ -125,4 +124,10 @@ gst_videomixer_fill_bgra_color (guint8 * dest, gint width, gint height,
       *dest++ = colV;
     }
   }
+}
+
+size_t
+gst_videomixer_calculate_frame_size_bgra (gint width, gint height)
+{
+  return GST_ROUND_UP_4 (width) * height * 4;
 }

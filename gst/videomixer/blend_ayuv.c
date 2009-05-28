@@ -176,13 +176,9 @@ gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
     guint8 * dest, gint dest_width, gint dest_height)
 {
   gint alpha, b_alpha;
-
   gint i, j;
-
   gint src_stride, dest_stride;
-
   gint src_add, dest_add;
-
   gint Y, U, V;
 
   src_stride = src_width * 4;
@@ -267,4 +263,10 @@ gst_videomixer_fill_ayuv_color (guint8 * dest, gint width, gint height,
       *dest++ = colV;
     }
   }
+}
+
+size_t
+gst_videomixer_calculate_frame_size_ayuv (gint width, gint height)
+{
+  return GST_ROUND_UP_4 (width) * height * 4;
 }
