@@ -42,7 +42,6 @@ struct _GstOutputSelector {
   GstElement element;
 
   GstPad *sinkpad;
-  GstPad *allocpad;
 
   GstPad *active_srcpad;
   GstPad *pending_srcpad;
