@@ -185,13 +185,18 @@
 
 inline static void
 gst_i420_do_blend (guint8 * src, guint8 * dest,
-    gint src_stride, gint dest_stride, gint src_width, gint src_height)
+    gint src_stride, gint dest_stride, gint src_width, gint src_height,
+    gint dest_width, gdouble src_alpha)
 {
-  int i;
+  int i, j;
   for (i = 0; i < src_height; i++) {
-    memcpy (dest, src, src_width);
-    src += src_stride;
-    dest += dest_stride;
+    for (j = 0; j < src_width; j++) {
+      *dest = src_alpha * (*dest) + (1. - src_alpha) * (*src);
+      dest++;
+      src++;
+    }
+    src += src_stride - src_width;
+    dest += dest_stride - dest_width;
   }
 }
 
@@ -246,7 +251,8 @@ gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
   gst_i420_do_blend (b_src + xoffset + yoffset * VIDEO_Y_ROWSTRIDE (src_width),
       b_dest + xpos + ypos * VIDEO_Y_ROWSTRIDE (dest_width),
       VIDEO_Y_ROWSTRIDE (src_width),
-      VIDEO_Y_ROWSTRIDE (dest_width), b_src_width, b_src_height);
+      VIDEO_Y_ROWSTRIDE (dest_width), b_src_width, b_src_height,
+      dest_width, src_alpha);
 
   b_src = src + VIDEO_U_OFFSET (src_width, src_height);
   b_dest = dest + VIDEO_U_OFFSET (dest_width, dest_height);
@@ -255,7 +261,8 @@ gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
       yoffset / 2 * VIDEO_U_ROWSTRIDE (src_width),
       b_dest + xpos / 2 + ypos / 2 * VIDEO_U_ROWSTRIDE (dest_width),
       VIDEO_U_ROWSTRIDE (src_width), VIDEO_U_ROWSTRIDE (dest_width),
-      b_src_width / 2, GST_ROUND_UP_2 (b_src_height) / 2);
+      b_src_width / 2, GST_ROUND_UP_2 (b_src_height) / 2, dest_width / 2,
+      src_alpha);
 
   b_src = src + VIDEO_V_OFFSET (src_width, src_height);
   b_dest = dest + VIDEO_V_OFFSET (dest_width, dest_height);
@@ -264,7 +271,8 @@ gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
       yoffset / 2 * VIDEO_V_ROWSTRIDE (src_width),
       b_dest + xpos / 2 + ypos / 2 * VIDEO_V_ROWSTRIDE (dest_width),
       VIDEO_V_ROWSTRIDE (src_width), VIDEO_V_ROWSTRIDE (dest_width),
-      b_src_width / 2, GST_ROUND_UP_2 (b_src_height) / 2);
+      b_src_width / 2, GST_ROUND_UP_2 (b_src_height) / 2, dest_width / 2,
+      src_alpha);
 }
 
 #undef BLEND_MODE
@@ -273,8 +281,23 @@ gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
 void
 gst_videomixer_fill_i420_checker (guint8 * dest, gint width, gint height)
 {
-  //TODO: implementation of this method in i420mixer.c was for AYUV, which has 32bpp ans is packed
-  //I420 has 12 bpp and is planar
+  int size;
+  gint i, j;
+  static int tab[] = { 80, 160, 80, 160 };
+  guint8 *p = dest;
+
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+      *p++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];
+    }
+    p += VIDEO_Y_ROWSTRIDE (width) - width;
+  }
+
+  size = (VIDEO_U_ROWSTRIDE (width) * height) / 2;
+  memset (dest + VIDEO_U_OFFSET (width, height), 0x80, size);
+
+  size = (VIDEO_V_ROWSTRIDE (width) * height) / 2;
+  memset (dest + VIDEO_V_OFFSET (width, height), 0x80, size);
 }
 
 void
