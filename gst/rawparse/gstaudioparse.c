@@ -33,7 +33,9 @@
 typedef enum
 {
   GST_AUDIO_PARSE_FORMAT_INT,
-  GST_AUDIO_PARSE_FORMAT_FLOAT
+  GST_AUDIO_PARSE_FORMAT_FLOAT,
+  GST_AUDIO_PARSE_FORMAT_MULAW,
+  GST_AUDIO_PARSE_FORMAT_ALAW
 } GstAudioParseFormat;
 
 typedef enum
@@ -69,7 +71,7 @@ enum
   ARG_ENDIANNESS,
   ARG_WIDTH,
   ARG_DEPTH,
-  ARG_SIGNED,
+  ARG_SIGNED
 };
 
 
@@ -81,6 +83,8 @@ gst_audio_parse_format_get_type (void)
   static const GEnumValue format_types[] = {
     {GST_AUDIO_PARSE_FORMAT_INT, "Integer", "int"},
     {GST_AUDIO_PARSE_FORMAT_FLOAT, "Floating Point", "float"},
+    {GST_AUDIO_PARSE_FORMAT_ALAW, "A-Law", "alaw"},
+    {GST_AUDIO_PARSE_FORMAT_MULAW, "\302\265-Law", "mulaw"},
     {0, NULL, NULL}
   };
 
@@ -137,7 +141,9 @@ gst_audio_parse_base_init (gpointer g_class)
       "audio/x-raw-float,"
       " width=(int) { 32, 64 },"
       " endianness=(int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
-      " rate=(int)[1,MAX]," " channels=(int)[1,MAX]");
+      " rate=(int)[1,MAX], channels=(int)[1,MAX]; "
+      "audio/x-alaw, rate=(int)[1,MAX], channels=(int)[1,MAX]; "
+      "audio/x-mulaw, rate=(int)[1,MAX], channels=(int)[1,MAX]");
 
   gst_raw_parse_class_set_src_pad_template (rp_class, caps);
   gst_raw_parse_class_set_multiple_frames_per_buffer (rp_class, TRUE);
@@ -282,9 +288,21 @@ gst_audio_parse_get_property (GObject * object, guint prop_id, GValue * value,
 void
 gst_audio_parse_update_frame_size (GstAudioParse * ap)
 {
-  gint framesize;
+  gint framesize, width;
 
-  framesize = (ap->width / 8) * ap->channels;
+  switch (ap->format) {
+    case GST_AUDIO_PARSE_FORMAT_ALAW:
+    case GST_AUDIO_PARSE_FORMAT_MULAW:
+      width = 8;
+      break;
+    case GST_AUDIO_PARSE_FORMAT_INT:
+    case GST_AUDIO_PARSE_FORMAT_FLOAT:
+    default:
+      width = ap->width;
+      break;
+  }
+
+  framesize = (width / 8) * ap->channels;
 
   gst_raw_parse_set_framesize (GST_RAW_PARSE (ap), framesize);
 }
@@ -299,20 +317,37 @@ gst_audio_parse_get_caps (GstRawParse * rp)
 
   gst_raw_parse_get_fps (rp, &fps_n, &fps_d);
 
-  if (ap->format == GST_AUDIO_PARSE_FORMAT_INT) {
-    caps = gst_caps_new_simple ("audio/x-raw-int",
-        "rate", G_TYPE_INT, fps_n,
-        "channels", G_TYPE_INT, ap->channels,
-        "width", G_TYPE_INT, ap->width,
-        "depth", G_TYPE_INT, ap->depth,
-        "signed", G_TYPE_BOOLEAN, ap->signedness,
-        "endianness", G_TYPE_INT, ap->endianness, NULL);
-  } else {
-    caps = gst_caps_new_simple ("audio/x-raw-float",
-        "rate", G_TYPE_INT, fps_n,
-        "channels", G_TYPE_INT, ap->channels,
-        "width", G_TYPE_INT, ap->width,
-        "endianness", G_TYPE_INT, ap->endianness, NULL);
+  switch (ap->format) {
+    case GST_AUDIO_PARSE_FORMAT_INT:
+      caps = gst_caps_new_simple ("audio/x-raw-int",
+          "rate", G_TYPE_INT, fps_n,
+          "channels", G_TYPE_INT, ap->channels,
+          "width", G_TYPE_INT, ap->width,
+          "depth", G_TYPE_INT, ap->depth,
+          "signed", G_TYPE_BOOLEAN, ap->signedness,
+          "endianness", G_TYPE_INT, ap->endianness, NULL);
+      break;
+    case GST_AUDIO_PARSE_FORMAT_FLOAT:
+      caps = gst_caps_new_simple ("audio/x-raw-float",
+          "rate", G_TYPE_INT, fps_n,
+          "channels", G_TYPE_INT, ap->channels,
+          "width", G_TYPE_INT, ap->width,
+          "endianness", G_TYPE_INT, ap->endianness, NULL);
+      break;
+    case GST_AUDIO_PARSE_FORMAT_ALAW:
+      caps = gst_caps_new_simple ("audio/x-alaw",
+          "rate", G_TYPE_INT, fps_n,
+          "channels", G_TYPE_INT, ap->channels, NULL);
+      break;
+    case GST_AUDIO_PARSE_FORMAT_MULAW:
+      caps = gst_caps_new_simple ("audio/x-mulaw",
+          "rate", G_TYPE_INT, fps_n,
+          "channels", G_TYPE_INT, ap->channels, NULL);
+      break;
+    default:
+      caps = gst_caps_new_empty ();
+      GST_ERROR_OBJECT (rp, "unexpected format %d", ap->format);
+      break;
   }
   return caps;
 }
