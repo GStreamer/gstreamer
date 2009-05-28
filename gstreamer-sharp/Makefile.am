@@ -87,6 +87,7 @@ customs = 			\
 	ClockEntry.custom	\
 	Debug.custom		\
 	Element.custom		\
+	ElementFactory.custom	\
 	Message.custom		\
 	Event.custom		\
 	Pad.custom		\
