@@ -40,6 +40,10 @@
  * Last reviewed on 2008-06-20 (0.10.21)
  */
 
+/* FIXME: this ignores basesrc::blocksize property, which could be used as an
+ * alias to ::sizemax (see gst_base_src_get_blocksize()).
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
