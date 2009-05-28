@@ -19,40 +19,73 @@
 
 #include <gst/gst.h>
 
-#include <cairo.h>
+#define BLEND_NORMAL(B1,G1,R1,B2,G2,R2,B,G,R,alpha)     \
+        B = ((B1*(255-alpha))+(B2*alpha))>>8;           \
+        G = ((G1*(255-alpha))+(G2*alpha))>>8;           \
+        R = ((R1*(255-alpha))+(R2*alpha))>>8;
+
+#define BLEND_MODE BLEND_NORMAL
 
 void
 gst_videomixer_blend_bgra_bgra (guint8 * src, gint xpos, gint ypos,
     gint src_width, gint src_height, gdouble src_alpha,
     guint8 * dest, gint dest_width, gint dest_height)
 {
-  cairo_surface_t *srcSurface = 0;
-  cairo_surface_t *destSurface = 0;
-  cairo_t *cairo = 0;
+  gint alpha, b_alpha;
+  gint i, j;
+  gint src_stride, dest_stride;
+  gint src_add, dest_add;
+  gint B, G, R;
 
-  srcSurface =
-      cairo_image_surface_create_for_data (src, CAIRO_FORMAT_ARGB32, src_width,
-      src_height, src_width * 4);
-  g_assert (srcSurface);
-  destSurface =
-      cairo_image_surface_create_for_data (dest, CAIRO_FORMAT_ARGB32,
-      dest_width, dest_height, dest_width * 4);
-  g_assert (destSurface);
-  cairo = cairo_create (destSurface);
-  g_assert (cairo);
+  src_stride = src_width * 4;
+  dest_stride = dest_width * 4;
 
-  //copy source buffer in destiation
-  cairo_translate (cairo, xpos, ypos);
-  cairo_set_source_surface (cairo, srcSurface, 0, 0);
-  cairo_paint (cairo);
+  b_alpha = (gint) (src_alpha * 255);
 
-  cairo_surface_finish (srcSurface);
-  cairo_surface_finish (destSurface);
-  cairo_surface_destroy (srcSurface);
-  cairo_surface_destroy (destSurface);
-  cairo_destroy (cairo);
+  /* adjust src pointers for negative sizes */
+  if (xpos < 0) {
+    src += -xpos * 4;
+    src_width -= -xpos;
+    xpos = 0;
+  }
+  if (ypos < 0) {
+    src += -ypos * src_stride;
+    src_height -= -ypos;
+    ypos = 0;
+  }
+  /* adjust width/height if the src is bigger than dest */
+  if (xpos + src_width > dest_width) {
+    src_width = dest_width - xpos;
+  }
+  if (ypos + src_height > dest_height) {
+    src_height = dest_height - ypos;
+  }
 
+  src_add = src_stride - (4 * src_width);
+  dest_add = dest_stride - (4 * src_width);
+
+  dest = dest + 4 * xpos + (ypos * dest_stride);
+
+  /* we convert a square of 2x2 samples to generate 4 Luma and 2 chroma samples */
+  for (i = 0; i < src_height; i++) {
+    for (j = 0; j < src_width; j++) {
+      alpha = (src[3] * b_alpha) >> 8;
+      BLEND_MODE (dest[1], dest[2], dest[3], src[1], src[2], src[3],
+          B, G, R, alpha);
+      dest[0] = B;
+      dest[1] = G;
+      dest[2] = R;
+      dest[3] = 0xff;
+
+      src += 4;
+      dest += 4;
+    }
+    src += src_add;
+    dest += dest_add;
+  }
 }
+
+#undef BLEND_MODE
 
 /* fill a buffer with a checkerboard pattern */
 void
