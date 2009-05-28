@@ -50,40 +50,6 @@
  </pads>
  <element-properties>
   <element-property>
-   <name>blocksize</name>
-   <type>gulong</type>
-   <nick>Block size</nick>
-   <blurb>Size in bytes to read per buffer (-1 = default)</blurb>
-   <flags>RW</flags>
-   <range min="0" max="18446744073709551615"/>
-   <default>4096</default>
-  </element-property>
-  <element-property>
-   <name>num-buffers</name>
-   <type>gint</type>
-   <nick>num-buffers</nick>
-   <blurb>Number of buffers to output before sending EOS (-1 = unlimited)</blurb>
-   <flags>RW</flags>
-   <range min="-1" max="2147483647"/>
-   <default>-1</default>
-  </element-property>
-  <element-property>
-   <name>typefind</name>
-   <type>gboolean</type>
-   <nick>Typefind</nick>
-   <blurb>Run typefind before negotiating</blurb>
-   <flags>RW</flags>
-   <default>FALSE</default>
-  </element-property>
-  <element-property>
-   <name>do-timestamp</name>
-   <type>gboolean</type>
-   <nick>Do timestamp</nick>
-   <blurb>Apply current stream time to buffers</blurb>
-   <flags>RW</flags>
-   <default>FALSE</default>
-  </element-property>
-  <element-property>
    <name>location</name>
    <type>gchararray</type>
    <nick>File Location</nick>

@@ -19,11 +19,11 @@
   </object>
  </object>
  <interfaces>
+  <interface name="GstPropertyProbe" />
   <interface name="GstImplementsInterface" />
   <interface name="GstNavigation" />
   <interface name="GstXOverlay" />
   <interface name="GstColorBalance" />
-  <interface name="GstPropertyProbe" />
  </interfaces>
  <pad-templates>
   <pad-template>
@@ -55,82 +55,6 @@
   </pad>
  </pads>
  <element-properties>
-  <element-property>
-   <name>preroll-queue-len</name>
-   <type>guint</type>
-   <nick>Preroll queue length</nick>
-   <blurb>Number of buffers to queue during preroll</blurb>
-   <flags>RW</flags>
-   <range min="0" max="4294967295"/>
-   <default>0</default>
-  </element-property>
-  <element-property>
-   <name>sync</name>
-   <type>gboolean</type>
-   <nick>Sync</nick>
-   <blurb>Sync on the clock</blurb>
-   <flags>RW</flags>
-   <default>TRUE</default>
-  </element-property>
-  <element-property>
-   <name>max-lateness</name>
-   <type>gint64</type>
-   <nick>Max Lateness</nick>
-   <blurb>Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)</blurb>
-   <flags>RW</flags>
-   <range min="-1" max="9223372036854775807"/>
-   <default>20000000</default>
-  </element-property>
-  <element-property>
-   <name>qos</name>
-   <type>gboolean</type>
-   <nick>Qos</nick>
-   <blurb>Generate Quality-of-Service events upstream</blurb>
-   <flags>RW</flags>
-   <default>TRUE</default>
-  </element-property>
-  <element-property>
-   <name>async</name>
-   <type>gboolean</type>
-   <nick>Async</nick>
-   <blurb>Go asynchronously to PAUSED</blurb>
-   <flags>RW</flags>
-   <default>TRUE</default>
-  </element-property>
-  <element-property>
-   <name>ts-offset</name>
-   <type>gint64</type>
-   <nick>TS Offset</nick>
-   <blurb>Timestamp offset in nanoseconds</blurb>
-   <flags>RW</flags>
-   <range min="-9223372036854775808" max="9223372036854775807"/>
-   <default>0</default>
-  </element-property>
-  <element-property>
-   <name>last-buffer</name>
-   <type>GstBuffer</type>
-   <nick>Last Buffer</nick>
-   <blurb>The last buffer received in the sink</blurb>
-   <flags>R</flags>
-  </element-property>
-  <element-property>
-   <name>blocksize</name>
-   <type>guint</type>
-   <nick>Block size</nick>
-   <blurb>Size in bytes to pull per buffer (0 = default)</blurb>
-   <flags>RW</flags>
-   <range min="0" max="4294967295"/>
-   <default>4096</default>
-  </element-property>
-  <element-property>
-   <name>render-delay</name>
-   <type>guint64</type>
-   <nick>Render Delay</nick>
-   <blurb>Additional render delay of the sink in nanoseconds</blurb>
-   <flags>RW</flags>
-   <range min="0" max="18446744073709551615"/>
-   <default>0</default>
-  </element-property>
   <element-property>
    <name>contrast</name>
    <type>gint</type>

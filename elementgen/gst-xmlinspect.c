@@ -27,6 +27,10 @@
 #include <glib/gprintf.h>
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesrc.h>
+#include <gst/base/gstbasesink.h>
+#include <gst/base/gstbasetransform.h>
+#include <gst/base/gstpushsrc.h>
 
 #define PUT_START_TAG(pfx,tag)                                  \
 G_STMT_START{                                                   \
@@ -249,7 +253,11 @@ print_element_properties (GstElement * element, gint pfx)
     if (param->owner_type == GST_TYPE_OBJECT ||
         param->owner_type == GST_TYPE_ELEMENT ||
 	param->owner_type == GST_TYPE_BIN ||
-	param->owner_type == GST_TYPE_PIPELINE)
+	param->owner_type == GST_TYPE_PIPELINE ||
+	param->owner_type == GST_TYPE_BASE_SRC ||
+	param->owner_type == GST_TYPE_BASE_SINK ||
+	param->owner_type == GST_TYPE_BASE_TRANSFORM ||
+	param->owner_type == GST_TYPE_PUSH_SRC)
       continue;
 
     PUT_START_TAG (pfx + 1, "element-property");

@@ -20,14 +20,14 @@
  </interfaces>
  <pad-templates>
   <pad-template>
-   <name>sink</name>
-   <direction>sink</direction>
+   <name>src</name>
+   <direction>src</direction>
    <presence>always</presence>
    <caps>ANY</caps>
   </pad-template>
   <pad-template>
-   <name>src</name>
-   <direction>src</direction>
+   <name>sink</name>
+   <direction>sink</direction>
    <presence>always</presence>
    <caps>ANY</caps>
   </pad-template>
@@ -63,14 +63,6 @@
   </pad>
  </pads>
  <element-properties>
-  <element-property>
-   <name>qos</name>
-   <type>gboolean</type>
-   <nick>QoS</nick>
-   <blurb>Handle Quality-of-Service events</blurb>
-   <flags>RW</flags>
-   <default>FALSE</default>
-  </element-property>
   <element-property>
    <name>caps</name>
    <type>GstCaps</type>
