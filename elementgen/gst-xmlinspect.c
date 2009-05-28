@@ -242,9 +242,11 @@ print_element_properties (GstElement * element, gint pfx)
       readable = TRUE;
     }
 
-    /* Ignore GstObject, GstElement properties */
+    /* Ignore GstObject, GstElement, GstBin, GstPipeline properties */
     if (param->owner_type == GST_TYPE_OBJECT ||
-        param->owner_type == GST_TYPE_ELEMENT)
+        param->owner_type == GST_TYPE_ELEMENT ||
+	param->owner_type == GST_TYPE_BIN ||
+	param->owner_type == GST_TYPE_PIPELINE)
       continue;
 
     PUT_START_TAG (pfx + 1, "element-property");
