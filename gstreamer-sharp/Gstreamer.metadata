@@ -983,6 +983,7 @@
   <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']" name="name">BaseSrcFlags</attr>
   <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']/member[@cname='GST_BASE_SRC_STARTED']" name="value">Gst.ElementFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']/member[@cname='GST_BASE_SRC_FLAG_LAST']" name="value">Gst.ElementFlags.Last &lt;&lt; 2</attr>
+  <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']/member[@cname='GST_BASE_SRC_FLAG_LAST']" name="name">Last</attr>
 
   <attr path="/api/namespace/callback[@cname='GstTypeFindHelperGetRangeFunction']" name="name">TypeFindHelperGetRangeFunction</attr>
   <attr path="/api/namespace/callback[@cname='GstTypeFindHelperGetRangeFunction']/parameters/parameter[@name='buffer']" name="pass_as">out</attr>
