@@ -339,6 +339,8 @@ gst_play_sink_set_sink (GstPlaySink * playsink, GstPlaySinkType type,
 {
   GstElement **elem = NULL, *old = NULL;
 
+  GST_LOG ("Setting sink %" GST_PTR_FORMAT " as sink type %d", sink, type);
+
   GST_PLAY_SINK_LOCK (playsink);
   switch (type) {
     case GST_PLAY_SINK_TYPE_AUDIO:
@@ -360,10 +362,8 @@ gst_play_sink_set_sink (GstPlaySink * playsink, GstPlaySinkType type,
   }
   if (elem) {
     old = *elem;
-    if (sink) {
+    if (sink)
       gst_object_ref (sink);
-      gst_object_sink (sink);
-    }
     *elem = sink;
   }
   GST_PLAY_SINK_UNLOCK (playsink);
@@ -1327,7 +1327,8 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   GST_DEBUG_OBJECT (playsink, "making audio chain %p", chain);
 
   if (playsink->audio_sink) {
-    GST_DEBUG_OBJECT (playsink, "trying configured audiosink");
+    GST_DEBUG_OBJECT (playsink, "trying configured audiosink %" GST_PTR_FORMAT,
+        playsink->audio_sink);
     chain->sink = try_element (playsink, playsink->audio_sink, FALSE);
   }
   if (chain->sink == NULL) {

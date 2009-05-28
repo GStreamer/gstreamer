@@ -376,6 +376,11 @@ struct _GstPlayBin
   gboolean have_selector;       /* set to FALSE when we fail to create an
                                  * input-selector, so that we only post a
                                  * warning once */
+
+  GstElement *audio_sink;       /* configured audio sink, or NULL      */
+  GstElement *video_sink;       /* configured video sink, or NULL      */
+  GstElement *subpic_sink;      /* configured subpicture sink, or NULL */
+  GstElement *text_sink;        /* configured text sink, or NULL       */
 };
 
 struct _GstPlayBinClass
@@ -1049,6 +1054,14 @@ gst_play_bin_finalize (GObject * object)
 
   if (playbin->source)
     gst_object_unref (playbin->source);
+  if (playbin->video_sink)
+    gst_object_unref (playbin->video_sink);
+  if (playbin->audio_sink)
+    gst_object_unref (playbin->audio_sink);
+  if (playbin->text_sink)
+    gst_object_unref (playbin->text_sink);
+  if (playbin->subpic_sink)
+    gst_object_unref (playbin->subpic_sink);
 
   g_value_array_free (playbin->elements);
   g_free (playbin->encoding);
@@ -1416,6 +1429,29 @@ gst_play_bin_set_encoding (GstPlayBin * playbin, const gchar * encoding)
 }
 
 static void
+gst_play_bin_set_sink (GstPlayBin * playbin, GstElement ** elem,
+    const gchar * dbg, GstElement * sink)
+{
+  GST_INFO_OBJECT (playbin, "Setting %s sink to %" GST_PTR_FORMAT, dbg, sink);
+
+  GST_PLAY_BIN_LOCK (playbin);
+  if (*elem != sink) {
+    GstElement *old;
+
+    old = *elem;
+    if (sink) {
+      gst_object_ref (sink);
+      gst_object_sink (sink);
+    }
+    *elem = sink;
+    if (old)
+      gst_object_unref (old);
+  }
+  GST_LOG_OBJECT (playbin, "%s sink now %" GST_PTR_FORMAT, dbg, *elem);
+  GST_PLAY_BIN_UNLOCK (playbin);
+}
+
+static void
 gst_play_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -1447,11 +1483,11 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       gst_play_bin_set_encoding (playbin, g_value_get_string (value));
       break;
     case PROP_VIDEO_SINK:
-      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
+      gst_play_bin_set_sink (playbin, &playbin->video_sink, "video",
           g_value_get_object (value));
       break;
     case PROP_AUDIO_SINK:
-      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
+      gst_play_bin_set_sink (playbin, &playbin->audio_sink, "audio",
           g_value_get_object (value));
       break;
     case PROP_VIS_PLUGIN:
@@ -1459,11 +1495,11 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
           g_value_get_object (value));
       break;
     case PROP_TEXT_SINK:
-      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_TEXT,
+      gst_play_bin_set_sink (playbin, &playbin->text_sink, "text",
           g_value_get_object (value));
       break;
     case PROP_SUBPIC_SINK:
-      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_SUBPIC,
+      gst_play_bin_set_sink (playbin, &playbin->subpic_sink, "subpicture",
           g_value_get_object (value));
       break;
     case PROP_VOLUME:
@@ -1491,6 +1527,24 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstElement *
+gst_play_bin_get_current_sink (GstPlayBin * playbin, GstElement ** elem,
+    const gchar * dbg, GstPlaySinkType type)
+{
+  GstElement *sink;
+
+  sink = gst_play_sink_get_sink (playbin->playsink, type);
+
+  GST_LOG_OBJECT (playbin, "play_sink_get_sink() returned %s sink %"
+      GST_PTR_FORMAT ", the originally set %s sink is %" GST_PTR_FORMAT,
+      dbg, sink, dbg, *elem);
+
+  if (sink == NULL)
+    sink = *elem;
+
+  return sink;
 }
 
 static void
@@ -1590,11 +1644,13 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_VIDEO_SINK:
       g_value_set_object (value,
-          gst_play_sink_get_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO));
+          gst_play_bin_get_current_sink (playbin, &playbin->video_sink,
+              "video", GST_PLAY_SINK_TYPE_VIDEO));
       break;
     case PROP_AUDIO_SINK:
       g_value_set_object (value,
-          gst_play_sink_get_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO));
+          gst_play_bin_get_current_sink (playbin, &playbin->audio_sink,
+              "audio", GST_PLAY_SINK_TYPE_AUDIO));
       break;
     case PROP_VIS_PLUGIN:
       g_value_set_object (value,
@@ -1602,12 +1658,13 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TEXT_SINK:
       g_value_set_object (value,
-          gst_play_sink_get_sink (playbin->playsink, GST_PLAY_SINK_TYPE_TEXT));
+          gst_play_bin_get_current_sink (playbin, &playbin->text_sink,
+              "text", GST_PLAY_SINK_TYPE_TEXT));
       break;
     case PROP_SUBPIC_SINK:
       g_value_set_object (value,
-          gst_play_sink_get_sink (playbin->playsink,
-              GST_PLAY_SINK_TYPE_SUBPIC));
+          gst_play_bin_get_current_sink (playbin, &playbin->subpic_sink,
+              "subpicture", GST_PLAY_SINK_TYPE_SUBPIC));
       break;
     case PROP_VOLUME:
       g_value_set_double (value, gst_play_sink_get_volume (playbin->playsink));
@@ -2012,12 +2069,28 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
   if (configure) {
     /* if we have custom sinks, configure them now */
     GST_SOURCE_GROUP_LOCK (group);
-    GST_LOG_OBJECT (playbin, "setting custom audio sink %p", group->audio_sink);
-    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
-        group->audio_sink);
-    GST_LOG_OBJECT (playbin, "setting custom video sink %p", group->video_sink);
-    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
-        group->video_sink);
+    if (group->audio_sink) {
+      GST_INFO_OBJECT (playbin, "setting custom audio sink %" GST_PTR_FORMAT,
+          group->audio_sink);
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
+          group->audio_sink);
+    } else {
+      GST_INFO_OBJECT (playbin, "setting default audio sink %" GST_PTR_FORMAT,
+          playbin->audio_sink);
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
+          playbin->audio_sink);
+    }
+    if (group->video_sink) {
+      GST_INFO_OBJECT (playbin, "setting custom video sink %" GST_PTR_FORMAT,
+          group->video_sink);
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
+          group->video_sink);
+    } else {
+      GST_INFO_OBJECT (playbin, "setting default video sink %" GST_PTR_FORMAT,
+          playbin->video_sink);
+      gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
+          playbin->video_sink);
+    }
     GST_SOURCE_GROUP_UNLOCK (group);
 
     GST_LOG_OBJECT (playbin, "reconfigure sink");
