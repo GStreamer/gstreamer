@@ -322,7 +322,8 @@ rtp_source_create_sdes (RTPSource * src)
   GstStructure *s;
   gchar *str;
 
-  s = gst_structure_new ("application/x-rtp-source-sdes", NULL);
+  s = gst_structure_new ("application/x-rtp-source-sdes",
+      "ssrc", G_TYPE_UINT, (guint) src->ssrc, NULL);
 
   if ((str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_CNAME))) {
     gst_structure_set (s, "cname", G_TYPE_STRING, str, NULL);
