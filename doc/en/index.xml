@@ -213,7 +213,34 @@
       <Type Name="DecodeBin+RemovedDecodedPadHandler" Kind="Delegate" />
       <Type Name="DecodeBin+UnknownTypeArgs" Kind="Class" />
       <Type Name="DecodeBin+UnknownTypeHandler" Kind="Delegate" />
+      <Type Name="DecodeBin2" Kind="Class" />
+      <Type Name="DecodeBin2+AutoplugContinueArgs" Kind="Class" />
+      <Type Name="DecodeBin2+AutoplugContinueHandler" Kind="Delegate" />
+      <Type Name="DecodeBin2+AutoplugFactoriesArgs" Kind="Class" />
+      <Type Name="DecodeBin2+AutoplugFactoriesHandler" Kind="Delegate" />
+      <Type Name="DecodeBin2+AutoplugSelectArgs" Kind="Class" />
+      <Type Name="DecodeBin2+AutoplugSelectHandler" Kind="Delegate" />
+      <Type Name="DecodeBin2+AutoplugSortArgs" Kind="Class" />
+      <Type Name="DecodeBin2+AutoplugSortHandler" Kind="Delegate" />
+      <Type Name="DecodeBin2+DrainedArgs" Kind="Class" />
+      <Type Name="DecodeBin2+DrainedHandler" Kind="Delegate" />
+      <Type Name="DecodeBin2+NewDecodedPadArgs" Kind="Class" />
+      <Type Name="DecodeBin2+NewDecodedPadHandler" Kind="Delegate" />
+      <Type Name="DecodeBin2+RemovedDecodedPadArgs" Kind="Class" />
+      <Type Name="DecodeBin2+RemovedDecodedPadHandler" Kind="Delegate" />
+      <Type Name="DecodeBin2+UnknownTypeArgs" Kind="Class" />
+      <Type Name="DecodeBin2+UnknownTypeHandler" Kind="Delegate" />
       <Type Name="PlayBin" Kind="Class" />
+      <Type Name="PlayBin2" Kind="Class" />
+      <Type Name="PlayBin2+AboutToFinishArgs" Kind="Class" />
+      <Type Name="PlayBin2+AboutToFinishHandler" Kind="Delegate" />
+      <Type Name="PlayBin2+AudioChangedArgs" Kind="Class" />
+      <Type Name="PlayBin2+AudioChangedHandler" Kind="Delegate" />
+      <Type Name="PlayBin2+PlayFlagsType" Kind="Enumeration" />
+      <Type Name="PlayBin2+TextChangedArgs" Kind="Class" />
+      <Type Name="PlayBin2+TextChangedHandler" Kind="Delegate" />
+      <Type Name="PlayBin2+VideoChangedArgs" Kind="Class" />
+      <Type Name="PlayBin2+VideoChangedHandler" Kind="Delegate" />
       <Type Name="XvImageSink" Kind="Class" />
     </Namespace>
     <Namespace Name="Gst.CorePlugins">

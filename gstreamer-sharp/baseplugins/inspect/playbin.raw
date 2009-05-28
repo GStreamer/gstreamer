@@ -42,31 +42,6 @@
  </pads>
  <element-properties>
   <element-property>
-   <name>async-handling</name>
-   <type>gboolean</type>
-   <nick>Async Handling</nick>
-   <blurb>The bin will handle Asynchronous state changes</blurb>
-   <flags>RW</flags>
-   <default>FALSE</default>
-  </element-property>
-  <element-property>
-   <name>delay</name>
-   <type>guint64</type>
-   <nick>Delay</nick>
-   <blurb>Expected delay needed for elements to spin up to PLAYING in nanoseconds</blurb>
-   <flags>RW</flags>
-   <range min="0" max="18446744073709551615"/>
-   <default>0</default>
-  </element-property>
-  <element-property>
-   <name>auto-flush-bus</name>
-   <type>gboolean</type>
-   <nick>Auto Flush Bus</nick>
-   <blurb>Whether to automatically flush the pipeline&apos;s bus when going from READY into NULL state</blurb>
-   <flags>RW</flags>
-   <default>TRUE</default>
-  </element-property>
-  <element-property>
    <name>uri</name>
    <type>gchararray</type>
    <nick>URI</nick>

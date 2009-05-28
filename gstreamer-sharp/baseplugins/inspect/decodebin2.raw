@@ -1,12 +1,12 @@
 <element>
- <name>decodebin</name>
+ <name>decodebin2</name>
  <details>
   <long-name>Decoder Bin</long-name>
   <class>Generic/Bin/Decoder</class>
   <description>Autoplug and decode to raw media</description>
-  <authors>Wim Taymans &lt;wim.taymans@gmail.com&gt;</authors>
+  <authors>Edward Hervey &lt;edward@fluendo.com&gt;</authors>
  </details>
- <object name="GstDecodeBin">
+ <object name="GstDecodeBin2">
   <object name="GstBin">
    <object name="GstElement">
     <object name="GstObject">
@@ -62,6 +62,22 @@
  </pads>
  <element-properties>
   <element-property>
+   <name>caps</name>
+   <type>GstCaps</type>
+   <nick>Caps</nick>
+   <blurb>The caps on which to stop decoding.</blurb>
+   <flags>RW</flags>
+  <caps>video/x-raw-yuv; video/x-raw-rgb; video/x-raw-gray; audio/x-raw-int; audio/x-raw-float; text/plain; text/x-pango-markup; video/x-dvd-subpicture</caps>
+  </element-property>
+  <element-property>
+   <name>subtitle-encoding</name>
+   <type>gchararray</type>
+   <nick>subtitle encoding</nick>
+   <blurb>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</blurb>
+   <flags>RW</flags>
+   <default>NULL</default>
+  </element-property>
+  <element-property>
    <name>sink-caps</name>
    <type>GstCaps</type>
    <nick>Sink Caps</nick>
@@ -74,7 +90,7 @@
   <signal>
    <name>new-decoded-pad</name>
    <return-type>void</return-type>
-   <object-type>GstDecodeBin</object-type>
+   <object-type>GstDecodeBin2</object-type>
    <params>
     <type>GstPad</type>
     <type>gboolean</type>
@@ -83,7 +99,7 @@
   <signal>
    <name>removed-decoded-pad</name>
    <return-type>void</return-type>
-   <object-type>GstDecodeBin</object-type>
+   <object-type>GstDecodeBin2</object-type>
    <params>
     <type>GstPad</type>
    </params>
@@ -91,10 +107,55 @@
   <signal>
    <name>unknown-type</name>
    <return-type>void</return-type>
-   <object-type>GstDecodeBin</object-type>
+   <object-type>GstDecodeBin2</object-type>
    <params>
     <type>GstPad</type>
     <type>GstCaps</type>
+   </params>
+  </signal>
+  <signal>
+   <name>autoplug-continue</name>
+   <return-type>gboolean</return-type>
+   <object-type>GstDecodeBin2</object-type>
+   <params>
+    <type>GstPad</type>
+    <type>GstCaps</type>
+   </params>
+  </signal>
+  <signal>
+   <name>autoplug-factories</name>
+   <return-type>GValueArray</return-type>
+   <object-type>GstDecodeBin2</object-type>
+   <params>
+    <type>GstPad</type>
+    <type>GstCaps</type>
+   </params>
+  </signal>
+  <signal>
+   <name>autoplug-sort</name>
+   <return-type>GValueArray</return-type>
+   <object-type>GstDecodeBin2</object-type>
+   <params>
+    <type>GstPad</type>
+    <type>GstCaps</type>
+    <type>GValueArray</type>
+   </params>
+  </signal>
+  <signal>
+   <name>autoplug-select</name>
+   <return-type>GstAutoplugSelectResult</return-type>
+   <object-type>GstDecodeBin2</object-type>
+   <params>
+    <type>GstPad</type>
+    <type>GstCaps</type>
+    <type>GstElementFactory</type>
+   </params>
+  </signal>
+  <signal>
+   <name>drained</name>
+   <return-type>void</return-type>
+   <object-type>GstDecodeBin2</object-type>
+   <params>
    </params>
   </signal>
  </element-signals>

@@ -1,9 +1,9 @@
-ELEMENTS = decodebin playbin xvimagesink
+ELEMENTS = decodebin playbin xvimagesink decodebin2 playbin2
 
 NAMESPACE = Gst.BasePlugins
 INSPECT_FILES = $(patsubst %,inspect/%.raw,$(ELEMENTS))
 CUSTOM_FILES = 
-METADATA_FILES = decodebin.metadata playbin.metadata
+METADATA_FILES = decodebin.metadata playbin.metadata decodebin2.metadata playbin2.metadata
 CS_FILES = $(patsubst %,%.cs,$(ELEMENTS))
 XML_FILES = $(patsubst %,%.xml,$(ELEMENTS))
 

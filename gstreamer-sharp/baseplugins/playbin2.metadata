@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<metadata>
+  <attr path="/element/element-actions/signal/name[child::text()='get-video-tags']/../params/type[1]" name="name">index</attr>
+  <attr path="/element/element-actions/signal/name[child::text()='get-audio-tags']/../params/type[1]" name="name">index</attr>
+  <attr path="/element/element-actions/signal/name[child::text()='get-text-tags']/../params/type[1]" name="name">index</attr>
+  <attr path="/element/element-actions/signal/name[child::text()='convert-frame']/../params/type[1]" name="name">caps</attr>
+  <attr path="/element/element-actions/signal/name[child::text()='get-video-pad']/../params/type[1]" name="name">index</attr>
+  <attr path="/element/element-actions/signal/name[child::text()='get-audio-pad']/../params/type[1]" name="name">index</attr>
+  <attr path="/element/element-actions/signal/name[child::text()='get-text-pad']/../params/type[1]" name="name">index</attr>
+</metadata>

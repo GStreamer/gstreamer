@@ -1,0 +1,23 @@
+<Type Name="PlayBin2+AudioChangedHandler" FullName="Gst.BasePlugins.PlayBin2+AudioChangedHandler">
+  <TypeSignature Language="C#" Value="public delegate void PlayBin2.AudioChangedHandler(object o, PlayBin2.AudioChangedArgs args);" />
+  <AssemblyInfo>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="o" Type="System.Object" />
+    <Parameter Name="args" Type="Gst.BasePlugins.PlayBin2+AudioChangedArgs" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>System.Void</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="o">To be added.</param>
+    <param name="args">To be added.</param>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>
