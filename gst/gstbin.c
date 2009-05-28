@@ -1977,14 +1977,13 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
   gboolean locked;
   GList *found;
 
-  /* set base_time and start time on child */
-  gst_element_set_base_time (element, base_time);
-  gst_element_set_start_time (element, start_time);
-
   GST_STATE_LOCK (element);
 
-  /* peel off the locked flag */
   GST_OBJECT_LOCK (element);
+  /* set base_time and start time on child */
+  GST_ELEMENT_START_TIME (element) = start_time;
+  element->base_time = base_time;
+  /* peel off the locked flag */
   locked = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
   /* get previous state return */
   ret = GST_STATE_RETURN (element);
