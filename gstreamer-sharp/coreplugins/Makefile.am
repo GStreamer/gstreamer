@@ -1,10 +1,12 @@
-#ELEMENTS = capsfilter fakesrc fakesink fdsrc fdsink filesrc filesink identity queue tee typefind multiqueue
-ELEMENTS = capsfilter typefind
+ELEMENTS = capsfilter fakesrc fakesink fdsrc fdsink filesrc filesink identity queue tee typefind multiqueue
 
 NAMESPACE = Gst.CorePlugins
 INSPECT_FILES = $(patsubst %,inspect/%.raw,$(ELEMENTS))
 CUSTOM_FILES = 
-METADATA_FILES = typefind.metadata
+METADATA_FILES = typefind.metadata \
+		fakesrc.metadata \
+		fakesink.metadata \
+		identity.metadata
 CS_FILES = $(patsubst %,%.cs,$(ELEMENTS))
 XML_FILES = $(patsubst %,%.xml,$(ELEMENTS))
 

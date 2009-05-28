@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<metadata>
+  <attr path="/element/element-signals/signal/name[child::text()='handoff']/../params/type[1]" name="name">Buffer</attr>
+</metadata>
+

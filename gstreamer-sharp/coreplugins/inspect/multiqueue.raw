@@ -1,0 +1,119 @@
+<element>
+ <name>multiqueue</name>
+ <details>
+  <long-name>MultiQueue</long-name>
+  <class>Generic</class>
+  <description>Multiple data queue</description>
+  <authors>Edward Hervey &lt;edward@fluendo.com&gt;</authors>
+ </details>
+ <object name="GstMultiQueue">
+  <object name="GstElement">
+   <object name="GstObject">
+    <object name="GObject">
+    </object>
+   </object>
+  </object>
+ </object>
+ <interfaces>
+ </interfaces>
+ <pad-templates>
+  <pad-template>
+   <name>src%d</name>
+   <direction>src</direction>
+   <presence>sometimes</presence>
+   <caps>ANY</caps>
+  </pad-template>
+  <pad-template>
+   <name>sink%d</name>
+   <direction>sink</direction>
+   <presence>request</presence>
+   <request-function>gst_multi_queue_request_new_pad</request-function>
+   <caps>ANY</caps>
+  </pad-template>
+ </pad-templates>
+ <element-flags>
+ </element-flags>
+ <element-implementation>
+  <state-change function="gst_element_change_state_func"/>
+  <save function="gst_element_save_thyself"/>
+  <load function="gst_element_restore_thyself"/>
+ </element-implementation>
+ <clocking-interaction>
+ </clocking-interaction>
+ <pads>
+ </pads>
+ <element-properties>
+  <element-property>
+   <name>extra-size-bytes</name>
+   <type>guint</type>
+   <nick>Extra Size (kB)</nick>
+   <blurb>Amount of data the queues can grow if one of them is empty (bytes, 0=disable)</blurb>
+   <flags>RW</flags>
+   <range min="0" max="4294967295"/>
+   <default>10485760</default>
+  </element-property>
+  <element-property>
+   <name>extra-size-buffers</name>
+   <type>guint</type>
+   <nick>Extra Size (buffers)</nick>
+   <blurb>Amount of buffers the queues can grow if one of them is empty (0=disable)</blurb>
+   <flags>RW</flags>
+   <range min="0" max="4294967295"/>
+   <default>5</default>
+  </element-property>
+  <element-property>
+   <name>extra-size-time</name>
+   <type>guint64</type>
+   <nick>Extra Size (ns)</nick>
+   <blurb>Amount of time the queues can grow if one of them is empty (in ns, 0=disable)</blurb>
+   <flags>RW</flags>
+   <range min="0" max="18446744073709551615"/>
+   <default>3000000000</default>
+  </element-property>
+  <element-property>
+   <name>max-size-bytes</name>
+   <type>guint</type>
+   <nick>Max. size (kB)</nick>
+   <blurb>Max. amount of data in the queue (bytes, 0=disable)</blurb>
+   <flags>RW</flags>
+   <range min="0" max="4294967295"/>
+   <default>10485760</default>
+  </element-property>
+  <element-property>
+   <name>max-size-buffers</name>
+   <type>guint</type>
+   <nick>Max. size (buffers)</nick>
+   <blurb>Max. number of buffers in the queue (0=disable)</blurb>
+   <flags>RW</flags>
+   <range min="0" max="4294967295"/>
+   <default>5</default>
+  </element-property>
+  <element-property>
+   <name>max-size-time</name>
+   <type>guint64</type>
+   <nick>Max. size (ns)</nick>
+   <blurb>Max. amount of data in the queue (in ns, 0=disable)</blurb>
+   <flags>RW</flags>
+   <range min="0" max="18446744073709551615"/>
+   <default>2000000000</default>
+  </element-property>
+ </element-properties>
+ <element-signals>
+  <signal>
+   <name>underrun</name>
+   <return-type>void</return-type>
+   <object-type>GstMultiQueue</object-type>
+   <params>
+   </params>
+  </signal>
+  <signal>
+   <name>overrun</name>
+   <return-type>void</return-type>
+   <object-type>GstMultiQueue</object-type>
+   <params>
+   </params>
+  </signal>
+ </element-signals>
+ <element-actions>
+ </element-actions>
+</element>
