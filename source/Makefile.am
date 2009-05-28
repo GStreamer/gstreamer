@@ -1,7 +1,8 @@
 MAINTAINERCLEANFILES = Makefile.in
 
 api:
-	$(GAPI_PARSER) gstreamer-sharp-source.xml
+	$(MONO) $(top_builddir)/parser/gst-gapi-parser.exe \
+		gstreamer-sharp-source.xml
 	grep -v "public const string " \
 		$(top_srcdir)/gstreamer-sharp/Tag.custom \
 		> $(top_srcdir)/gstreamer-sharp/Tag.custom.tmp
