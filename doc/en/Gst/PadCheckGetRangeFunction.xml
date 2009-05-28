@@ -2,6 +2,7 @@
   <TypeSignature Language="C#" Value="public delegate bool PadCheckGetRangeFunction(Pad pad);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

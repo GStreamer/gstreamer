@@ -2,6 +2,7 @@
   <TypeSignature Language="C#" Value="public static class BindingHelper" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -17,6 +18,7 @@
       <MemberSignature Language="C#" Value="public static Delegate AddProxySignalDelegate (Gst.Element element, string signal, Gst.DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate addHandler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -44,6 +46,7 @@
       <MemberSignature Language="C#" Value="public static void InvokeProxySignalDelegate (Delegate raiseDelegate, Type type, object o, GLib.SignalArgs args);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -68,6 +71,7 @@
       <MemberSignature Language="C#" Value="public static Delegate RemoveProxySignalDelegate (Gst.Element element, string signal, Gst.DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate removeHandler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>

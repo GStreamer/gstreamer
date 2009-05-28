@@ -2,6 +2,7 @@
   <TypeSignature Language="C#" Value="public interface ChildProxy : GLib.IWrapper" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Interfaces>
@@ -18,6 +19,7 @@
       <MemberSignature Language="C#" Value="public event Gst.ChildAddedHandler ChildAdded;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -32,6 +34,7 @@
       <MemberSignature Language="C#" Value="public event Gst.ChildRemovedHandler ChildRemoved;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -46,6 +49,7 @@
       <MemberSignature Language="C#" Value="public uint ChildrenCount { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -61,6 +65,7 @@
       <MemberSignature Language="C#" Value="public void EmitChildAdded (Gst.Object child);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -79,6 +84,7 @@
       <MemberSignature Language="C#" Value="public void EmitChildRemoved (Gst.Object child);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -97,6 +103,7 @@
       <MemberSignature Language="C#" Value="public Gst.Object GetChildByIndex (uint index);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -116,6 +123,7 @@
       <MemberSignature Language="C#" Value="public Gst.Object GetChildByName (string name);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>

@@ -2,6 +2,7 @@
   <TypeSignature Language="C#" Value="public interface Mixer : GLib.IWrapper" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Interfaces>
@@ -18,6 +19,7 @@
       <MemberSignature Language="C#" Value="public string GetOption (Gst.Interfaces.MixerOptions opts);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -37,6 +39,7 @@
       <MemberSignature Language="C#" Value="public int[] GetVolume (Gst.Interfaces.MixerTrack track);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -56,6 +59,7 @@
       <MemberSignature Language="C#" Value="public Gst.Interfaces.MixerTrack[] ListTracks ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -72,6 +76,7 @@
       <MemberSignature Language="C#" Value="public void MixerChanged ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -87,6 +92,7 @@
       <MemberSignature Language="C#" Value="public Gst.Interfaces.MixerFlags MixerFlags { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -102,6 +108,7 @@
       <MemberSignature Language="C#" Value="public Gst.Interfaces.MixerType MixerType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -117,6 +124,7 @@
       <MemberSignature Language="C#" Value="public void MuteToggled (Gst.Interfaces.MixerTrack track, bool mute);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -137,6 +145,7 @@
       <MemberSignature Language="C#" Value="public void OptionChanged (Gst.Interfaces.MixerOptions opts, string value);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -157,6 +166,7 @@
       <MemberSignature Language="C#" Value="public void OptionsListChanged (Gst.Interfaces.MixerOptions opts);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -175,6 +185,7 @@
       <MemberSignature Language="C#" Value="public void RecordToggled (Gst.Interfaces.MixerTrack track, bool record);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -195,6 +206,7 @@
       <MemberSignature Language="C#" Value="public void SetMute (Gst.Interfaces.MixerTrack track, bool mute);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -215,6 +227,7 @@
       <MemberSignature Language="C#" Value="public void SetOption (Gst.Interfaces.MixerOptions opts, string value);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -235,6 +248,7 @@
       <MemberSignature Language="C#" Value="public void SetRecord (Gst.Interfaces.MixerTrack track, bool record);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -255,6 +269,7 @@
       <MemberSignature Language="C#" Value="public void SetVolume (Gst.Interfaces.MixerTrack track, int[] volumes);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -275,6 +290,7 @@
       <MemberSignature Language="C#" Value="public void VolumeChanged (Gst.Interfaces.MixerTrack track, int[] volumes);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>

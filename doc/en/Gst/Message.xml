@@ -2,6 +2,7 @@
   <TypeSignature Language="C#" Value="public class Message : Gst.MiniObject" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -17,6 +18,7 @@
       <MemberSignature Language="C#" Value="protected Message ();" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
@@ -29,6 +31,7 @@
       <MemberSignature Language="C#" Value="public Message (GLib.Value val);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
@@ -44,6 +47,7 @@
       <MemberSignature Language="C#" Value="public Message (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
@@ -59,6 +63,7 @@
       <MemberSignature Language="C#" Value="~Message ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -74,6 +79,7 @@
       <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -89,6 +95,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewApplication (Gst.Object src, Gst.Structure structure);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -110,6 +117,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewAsyncDone (Gst.Object src);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -129,6 +137,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewAsyncStart (Gst.Object src, bool new_base_time);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -150,6 +159,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewBuffering (Gst.Object src, int percent);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -171,6 +181,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewClockLost (Gst.Object src, Gst.Clock clock);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -192,6 +203,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewClockProvide (Gst.Object src, Gst.Clock clock, bool ready);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -215,6 +227,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewCustom (Gst.MessageType type, Gst.Object src, Gst.Structure structure);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -238,6 +251,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewDuration (Gst.Object src, Gst.Format format, long duration);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -261,6 +275,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewElement (Gst.Object src, Gst.Structure structure);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -282,6 +297,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewEos (Gst.Object src);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -301,6 +317,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.CoreError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -322,6 +339,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.LibraryError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -343,6 +361,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.ResourceError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -364,6 +383,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.StreamError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -385,6 +405,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.CoreError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -408,6 +429,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.LibraryError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -431,6 +453,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.ResourceError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -454,6 +477,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.StreamError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -477,6 +501,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.CoreError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -502,6 +527,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.LibraryError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -527,6 +553,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.ResourceError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -552,6 +579,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewError (Gst.Object src, Gst.StreamError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -577,6 +605,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.CoreError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -598,6 +627,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.LibraryError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -619,6 +649,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.ResourceError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -640,6 +671,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.StreamError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -661,6 +693,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.CoreError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -684,6 +717,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.LibraryError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -707,6 +741,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.ResourceError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -730,6 +765,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.StreamError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -753,6 +789,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.CoreError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -778,6 +815,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.LibraryError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -803,6 +841,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.ResourceError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -828,6 +867,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewInfo (Gst.Object src, Gst.StreamError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -853,6 +893,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewLatency (Gst.Object src);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -872,6 +913,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewNewClock (Gst.Object src, Gst.Clock clock);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -893,6 +935,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewSegmentDone (Gst.Object src, Gst.Format format, long position);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -916,6 +959,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewSegmentStart (Gst.Object src, Gst.Format format, long position);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -939,6 +983,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewStateChanged (Gst.Object src, Gst.State oldstate, Gst.State newstate, Gst.State pendingstate);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -964,6 +1009,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewStateDirty (Gst.Object src);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -983,6 +1029,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewStructureChange (Gst.Object src, Gst.StructureChangeType type, Gst.Element owner, bool busy);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1008,6 +1055,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewTag (Gst.Object src, Gst.TagList tags);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1029,6 +1077,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.CoreError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1050,6 +1099,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.LibraryError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1071,6 +1121,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.ResourceError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1092,6 +1143,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.StreamError error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1113,6 +1165,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.CoreError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1136,6 +1189,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.LibraryError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1159,6 +1213,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.ResourceError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1182,6 +1237,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.StreamError error, string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1205,6 +1261,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.CoreError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1230,6 +1287,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.LibraryError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1255,6 +1313,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.ResourceError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1280,6 +1339,7 @@
       <MemberSignature Language="C#" Value="public static Gst.Message NewWarning (Gst.Object src, Gst.StreamError error, string message, string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1305,6 +1365,7 @@
       <MemberSignature Language="C#" Value="public void ParseAsyncStart (out bool new_base_time);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1323,6 +1384,7 @@
       <MemberSignature Language="C#" Value="public void ParseBuffering (out int percent);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1341,6 +1403,7 @@
       <MemberSignature Language="C#" Value="public void ParseBufferingStats (out Gst.BufferingMode mode, out int avg_in, out int avg_out, out long buffering_left);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1365,6 +1428,7 @@
       <MemberSignature Language="C#" Value="public void ParseClockLost (out Gst.Clock clock);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1383,6 +1447,7 @@
       <MemberSignature Language="C#" Value="public void ParseClockProvide (out Gst.Clock clock, out bool ready);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1403,6 +1468,7 @@
       <MemberSignature Language="C#" Value="public void ParseDuration (out Gst.Format format, out long duration);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1423,6 +1489,7 @@
       <MemberSignature Language="C#" Value="public void ParseError (out Enum error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1441,6 +1508,7 @@
       <MemberSignature Language="C#" Value="public void ParseError (out Enum error, out string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1461,6 +1529,7 @@
       <MemberSignature Language="C#" Value="public void ParseError (out Enum error, out string message, out string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1483,6 +1552,7 @@
       <MemberSignature Language="C#" Value="public void ParseInfo (out Enum error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1501,6 +1571,7 @@
       <MemberSignature Language="C#" Value="public void ParseInfo (out Enum error, out string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1521,6 +1592,7 @@
       <MemberSignature Language="C#" Value="public void ParseInfo (out Enum error, out string message, out string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1543,6 +1615,7 @@
       <MemberSignature Language="C#" Value="public void ParseNewClock (out Gst.Clock clock);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1561,6 +1634,7 @@
       <MemberSignature Language="C#" Value="public void ParseSegmentDone (out Gst.Format format, out long position);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1581,6 +1655,7 @@
       <MemberSignature Language="C#" Value="public void ParseSegmentStart (out Gst.Format format, out long position);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1601,6 +1676,7 @@
       <MemberSignature Language="C#" Value="public void ParseStateChanged (out Gst.State oldstate, out Gst.State newstate, out Gst.State pendingstate);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1623,6 +1699,7 @@
       <MemberSignature Language="C#" Value="public void ParseStructureChange (out Gst.StructureChangeType type, out Gst.Element owner, out bool busy);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1645,6 +1722,7 @@
       <MemberSignature Language="C#" Value="public void ParseTag (out Gst.TagList tags);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1663,6 +1741,7 @@
       <MemberSignature Language="C#" Value="public void ParseWarning (out Enum error);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1681,6 +1760,7 @@
       <MemberSignature Language="C#" Value="public void ParseWarning (out Enum error, out string message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1701,6 +1781,7 @@
       <MemberSignature Language="C#" Value="public void ParseWarning (out Enum error, out string message, out string debug);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1723,6 +1804,7 @@
       <MemberSignature Language="C#" Value="public uint Seqnum { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1738,6 +1820,7 @@
       <MemberSignature Language="C#" Value="public void SetBufferingStats (Gst.BufferingMode mode, int avg_in, int avg_out, long buffering_left);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1762,6 +1845,7 @@
       <MemberSignature Language="C#" Value="public Gst.Object Src { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1777,6 +1861,7 @@
       <MemberSignature Language="C#" Value="public Gst.Structure Structure { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1792,6 +1877,7 @@
       <MemberSignature Language="C#" Value="public ulong Timestamp { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1807,6 +1893,7 @@
       <MemberSignature Language="C#" Value="public Gst.MessageType Type { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>

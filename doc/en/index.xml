@@ -1,6 +1,6 @@
 <Overview>
   <Assemblies>
-    <Assembly Name="gstreamer-sharp" Version="0.9.5.99" />
+    <Assembly Name="gstreamer-sharp" Version="0.9.0.0" />
   </Assemblies>
   <Remarks>To be added.</Remarks>
   <Copyright>To be added.</Copyright>
@@ -209,6 +209,10 @@
       <Type Name="DecodeBin" Kind="Class" />
       <Type Name="DecodeBin+NewDecodedPadArgs" Kind="Class" />
       <Type Name="DecodeBin+NewDecodedPadHandler" Kind="Delegate" />
+      <Type Name="DecodeBin+RemovedDecodedPadArgs" Kind="Class" />
+      <Type Name="DecodeBin+RemovedDecodedPadHandler" Kind="Delegate" />
+      <Type Name="DecodeBin+UnknownTypeArgs" Kind="Class" />
+      <Type Name="DecodeBin+UnknownTypeHandler" Kind="Delegate" />
       <Type Name="PlayBin" Kind="Class" />
       <Type Name="XvImageSink" Kind="Class" />
     </Namespace>

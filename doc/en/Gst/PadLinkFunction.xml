@@ -2,6 +2,7 @@
   <TypeSignature Language="C#" Value="public delegate Gst.PadLinkReturn PadLinkFunction(Pad pad, Pad peer);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

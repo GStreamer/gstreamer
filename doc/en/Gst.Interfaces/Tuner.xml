@@ -2,6 +2,7 @@
   <TypeSignature Language="C#" Value="public interface Tuner : GLib.IWrapper" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Interfaces>
@@ -18,6 +19,7 @@
       <MemberSignature Language="C#" Value="public Gst.Interfaces.TunerChannel Channel { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -33,6 +35,7 @@
       <MemberSignature Language="C#" Value="public event Gst.Interfaces.ChannelChangedHandler ChannelChanged;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -47,6 +50,7 @@
       <MemberSignature Language="C#" Value="public void EmitChannelChanged (Gst.Interfaces.TunerChannel channel);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -65,6 +69,7 @@
       <MemberSignature Language="C#" Value="public void EmitFrequencyChanged (Gst.Interfaces.TunerChannel channel, ulong frequency);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -85,6 +90,7 @@
       <MemberSignature Language="C#" Value="public void EmitNormChanged (Gst.Interfaces.TunerNorm norm);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -103,6 +109,7 @@
       <MemberSignature Language="C#" Value="public void EmitSignalChanged (Gst.Interfaces.TunerChannel channel, int signal);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -123,6 +130,7 @@
       <MemberSignature Language="C#" Value="public Gst.Interfaces.TunerChannel FindChannelByName (string channel);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -142,6 +150,7 @@
       <MemberSignature Language="C#" Value="public Gst.Interfaces.TunerNorm FindNormByName (string norm);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -161,6 +170,7 @@
       <MemberSignature Language="C#" Value="public event Gst.Interfaces.FrequencyChangedHandler FrequencyChanged;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -175,6 +185,7 @@
       <MemberSignature Language="C#" Value="public ulong GetFrequency (Gst.Interfaces.TunerChannel channel);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -194,6 +205,7 @@
       <MemberSignature Language="C#" Value="public Gst.Interfaces.TunerChannel[] ListChannels ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -210,6 +222,7 @@
       <MemberSignature Language="C#" Value="public Gst.Interfaces.TunerChannel[] ListNorms ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -226,6 +239,7 @@
       <MemberSignature Language="C#" Value="public Gst.Interfaces.TunerNorm Norm { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -241,6 +255,7 @@
       <MemberSignature Language="C#" Value="public event Gst.Interfaces.NormChangedHandler NormChanged;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -255,6 +270,7 @@
       <MemberSignature Language="C#" Value="public void SetFrequency (Gst.Interfaces.TunerChannel channel, ulong frequency);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -275,6 +291,7 @@
       <MemberSignature Language="C#" Value="public event Gst.Interfaces.SignalChangedHandler SignalChanged;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -289,6 +306,7 @@
       <MemberSignature Language="C#" Value="public int SignalStrength (Gst.Interfaces.TunerChannel channel);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
