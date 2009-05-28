@@ -111,17 +111,18 @@ gst_videomixer_fill_bgra_color (guint8 * dest, gint width, gint height,
   gint red, green, blue;
   gint i, j;
 
-  red = 1.164 * (colY - 16) + 1.596 * (colV - 128);
-  green = 1.164 * (colY - 16) - 0.813 * (colV - 128) - 0.391 * (colU - 128);
-  blue = 1.164 * (colY - 16) + 2.018 * (colU - 128);
-
+  red = CLAMP (1.164 * (colY - 16) + 1.596 * (colV - 128), 0, 255);
+  green =
+      CLAMP (1.164 * (colY - 16) - 0.813 * (colV - 128) - 0.391 * (colU - 128),
+      0, 255);
+  blue = CLAMP (1.164 * (colY - 16) + 2.018 * (colU - 128), 0, 255);
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
+      *dest++ = blue;
+      *dest++ = green;
+      *dest++ = red;
       *dest++ = 0xff;
-      *dest++ = colY;
-      *dest++ = colU;
-      *dest++ = colV;
     }
   }
 }
