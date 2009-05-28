@@ -59,7 +59,8 @@ typedef enum {
  *               GST_PIPELINE_FLAG_FIXED_CLOCK is set.
  * @stream_time: The stream time of the pipeline. A better name for this
  *         property would be the running_time, the total time spent in the
- *         PLAYING state without being flushed.
+ *         PLAYING state without being flushed. (deprecated, use the start_time
+ *         on GstElement).
  * @delay: Extra delay added to base_time to compensate for computing delays
  *         when setting elements to PLAYING.
  *
