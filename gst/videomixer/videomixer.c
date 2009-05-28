@@ -20,10 +20,15 @@
 /**
  * SECTION:element-videomixer
  *
- * Videomixer can only accept AYUV video streams. For each of the requested
+ * Videomixer can accept AYUV and BGRA video streams. For each of the requested
  * sink pads it will compare the incoming geometry and framerate to define the
  * output parameters. Indeed output video frames will have the geometry of the
  * biggest incoming video stream and the framerate of the fastest incoming one.
+ *
+ * All sink pads must be either AYUV or BGRA, but a mixture of them is not 
+ * supported. The src pad will have the same colorspace as the sinks. 
+ * No colorspace conversion is done. 
+ * 
  *
  * Individual parameters for each input stream can be configured on the
  * #GstVideoMixerPad.
@@ -39,6 +44,12 @@
  * the left vertically centered with a small transparency showing the first
  * video test source behind and the checker pattern under it. Note that the
  * framerate of the output video is 10 frames per second.
+ * |[
+ * gst-launch videotestsrc pattern=1 ! video/x-raw-rgb, framerate=\(fraction\)10/1, width=100, height=100 ! videomixer name=mix ! ffmpegcolorspace ! ximagesink videotestsrc ! video/x-raw-rgb, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
+ * ]| A pipeline to demostrate bgra mixing. (This does not demonstrate alpha blending). 
+ * |[
+ * gst-launch   videotestsrc pattern=1 ! video/x-raw-yuv,format =\(fourcc\)I420, framerate=\(fraction\)10/1, width=100, height=100 ! videomixer name=mix ! ffmpegcolorspace ! ximagesink videotestsrc ! video/x-raw-yuv,format=\(fourcc\)I420, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
+ * ]| A pipeline to test I420
  * </refsect2>
  */
 
@@ -49,6 +60,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 #include <gst/controller/gstcontroller.h>
+#include <gst/video/video.h>
 
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
@@ -84,6 +96,28 @@ static gboolean gst_videomixer_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_videomixer_sink_event (GstPad * pad, GstEvent * event);
 
 static void gst_videomixer_sort_pads (GstVideoMixer * mix);
+
+/*AYUV function definitions see file: blend_ayuv*/
+void gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
+    gint src_width, gint src_height, gdouble src_alpha,
+    guint8 * dest, gint dest_width, gint dest_height);
+void gst_videomixer_fill_ayuv_checker (guint8 * dest, gint width, gint height);
+void gst_videomixer_fill_ayuv_color (guint8 * dest, gint width, gint height,
+    gint colY, gint colU, gint colV);
+/*BGRA function definitions see file: blend_ayuv*/
+void gst_videomixer_blend_bgra_bgra (guint8 * src, gint xpos, gint ypos,
+    gint src_width, gint src_height, gdouble src_alpha,
+    guint8 * dest, gint dest_width, gint dest_height);
+void gst_videomixer_fill_bgra_checker (guint8 * dest, gint width, gint height);
+void gst_videomixer_fill_bgra_color (guint8 * dest, gint width, gint height,
+    gint colY, gint colU, gint colV);
+/*I420 function definitions see file: blend_i420.c*/
+void gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
+    gint src_width, gint src_height, gdouble src_alpha,
+    guint8 * dest, gint dest_width, gint dest_heighty);
+void gst_videomixer_fill_i420_checker (guint8 * dest, gint width, gint height);
+void gst_videomixer_fill_i420_color (guint8 * dest, gint width, gint height,
+    gint colY, gint colU, gint colV);
 
 #define DEFAULT_PAD_ZORDER 0
 #define DEFAULT_PAD_XPOS   0
@@ -262,6 +296,7 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   gint in_width, in_height;
   gboolean ret = FALSE;
   const GValue *framerate;
+  GST_INFO_OBJECT (pad, "setcaps:\n%" GST_PTR_FORMAT, vscaps);
 
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
   mixpad = GST_VIDEO_MIXER_PAD (pad);
@@ -296,6 +331,55 @@ beach:
   return ret;
 }
 
+/**
+* We accept the caps if it has the same format as other sink pads in 
+* the element.
+*/
+static gboolean
+gst_videomixer_pad_sink_acceptcaps (GstPad * pad, GstCaps * vscaps)
+{
+  gboolean ret;
+  GstVideoMixer *mix;
+  GstCaps *acceptedCaps;
+  mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
+  GST_DEBUG_OBJECT (pad, "TRACE: \n%" GST_PTR_FORMAT, vscaps);
+  GST_VIDEO_MIXER_STATE_LOCK (mix);
+
+  if (mix->master) {
+    acceptedCaps = gst_pad_get_fixed_caps_func (GST_PAD (mix->master));
+    acceptedCaps = gst_caps_make_writable (acceptedCaps);
+    GST_LOG ("\nmaster's caps\n%" GST_PTR_FORMAT "\n", acceptedCaps);
+    if (GST_CAPS_IS_SIMPLE (acceptedCaps)) {
+      int templCapsSize =
+          gst_caps_get_size (gst_pad_get_pad_template_caps (pad));
+      guint i;
+      for (i = 0; i < templCapsSize; i++) {
+        GstCaps *caps1 = gst_caps_copy (acceptedCaps);
+        GstCaps *caps2 =
+            gst_caps_copy_nth (gst_pad_get_pad_template_caps (pad), i);
+        gst_caps_merge (caps1, caps2);  //caps2 is unrefed
+        gst_caps_do_simplify (caps1);
+        if (GST_CAPS_IS_SIMPLE (caps1)) {
+          gst_caps_replace (&acceptedCaps, caps1);
+          gst_caps_unref (caps1);
+          break;
+        }
+        gst_caps_unref (caps1);
+      }
+    }
+  } else {
+    acceptedCaps = gst_pad_get_fixed_caps_func (pad);
+  }
+  GST_INFO ("\n\n%" GST_PTR_FORMAT "\n\n", vscaps);
+  GST_INFO ("\n\n*********\n%" GST_PTR_FORMAT "\n\n", acceptedCaps);
+
+  ret = gst_caps_is_always_compatible (vscaps, acceptedCaps);
+  gst_caps_unref (acceptedCaps);
+  GST_VIDEO_MIXER_STATE_UNLOCK (mix);
+  gst_object_unref (mix);
+  return ret;
+}
+
 static void
 gst_videomixer_pad_link (GstPad * pad, GstPad * peer, gpointer data)
 {
@@ -319,6 +403,8 @@ gst_videomixer_pad_init (GstVideoMixerPad * mixerpad)
   /* setup some pad functions */
   gst_pad_set_setcaps_function (GST_PAD (mixerpad),
       gst_videomixer_pad_sink_setcaps);
+  gst_pad_set_acceptcaps_function (GST_PAD (mixerpad),
+      GST_DEBUG_FUNCPTR (gst_videomixer_pad_sink_acceptcaps));
 
   mixerpad->zorder = DEFAULT_PAD_ZORDER;
   mixerpad->xpos = DEFAULT_PAD_XPOS;
@@ -372,24 +458,21 @@ gst_video_mixer_background_get_type (void)
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv,"
-        "format = (fourcc) AYUV,"
-        "width = (int) [ 1, max ],"
-        "height = (int) [ 1, max ]," "framerate = (fraction) [ 0/1, MAX ]")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_YUV ("I420"))
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("video/x-raw-yuv,"
-        "format = (fourcc) AYUV,"
-        "width = (int) [ 1, max ],"
-        "height = (int) [ 1, max ]," "framerate = (fraction) [ 0/1, MAX ]")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_YUV ("I420"))
     );
 
 static void gst_videomixer_finalize (GObject * object);
 
 static GstCaps *gst_videomixer_getcaps (GstPad * pad);
+static gboolean gst_videomixer_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_videomixer_query (GstPad * pad, GstQuery * query);
 
 static GstFlowReturn gst_videomixer_collected (GstCollectPads * pads,
@@ -557,6 +640,8 @@ gst_videomixer_init (GstVideoMixer * mix, GstVideoMixerClass * g_class)
           "src"), "src");
   gst_pad_set_getcaps_function (GST_PAD (mix->srcpad),
       GST_DEBUG_FUNCPTR (gst_videomixer_getcaps));
+  gst_pad_set_setcaps_function (GST_PAD (mix->srcpad),
+      GST_DEBUG_FUNCPTR (gst_videomixer_setcaps));
   gst_pad_set_query_function (GST_PAD (mix->srcpad),
       GST_DEBUG_FUNCPTR (gst_videomixer_query));
   gst_pad_set_event_function (GST_PAD (mix->srcpad),
@@ -790,26 +875,92 @@ gst_videomixer_getcaps (GstPad * pad)
   GstVideoMixer *mix;
   GstCaps *caps;
   GstStructure *structure;
+  int numCaps;
+  GST_LOG_OBJECT (pad, "TRACE");
 
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (mix->srcpad));
 
-  structure = gst_caps_get_structure (caps, 0);
+  if (mix->master) {
+    caps =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_PAD (mix->master)));
+  } else {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (mix->srcpad));
+  }
 
-  if (mix->out_width != 0) {
-    gst_structure_set (structure, "width", G_TYPE_INT, mix->out_width, NULL);
-  }
-  if (mix->out_height != 0) {
-    gst_structure_set (structure, "height", G_TYPE_INT, mix->out_height, NULL);
-  }
-  if (mix->fps_d != 0) {
-    gst_structure_set (structure,
-        "framerate", GST_TYPE_FRACTION, mix->fps_n, mix->fps_d, NULL);
+  numCaps = gst_caps_get_size (caps) - 1;
+  for (; numCaps >= 0; numCaps--) {
+    structure = gst_caps_get_structure (caps, numCaps);
+    if (mix->out_width != 0) {
+      gst_structure_set (structure, "width", G_TYPE_INT, mix->out_width, NULL);
+    }
+    if (mix->out_height != 0) {
+      gst_structure_set (structure, "height", G_TYPE_INT, mix->out_height,
+          NULL);
+    }
+    if (mix->fps_d != 0) {
+      gst_structure_set (structure,
+          "framerate", GST_TYPE_FRACTION, mix->fps_n, mix->fps_d, NULL);
+    }
   }
 
   gst_object_unref (mix);
 
   return caps;
+}
+
+static gboolean
+gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstElement *element;
+  GstVideoMixer *mixer;
+  GstStructure *str;
+  element = gst_pad_get_parent_element (pad);
+  g_assert (element);
+  mixer = GST_VIDEO_MIXER (element);
+  g_assert (mixer);
+  GST_INFO_OBJECT (mixer, "set src caps: \n%" GST_PTR_FORMAT, caps);
+
+  str = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_has_name (str, "video/x-raw-yuv")) {
+    guint32 format;
+    int ret;
+    ret = gst_structure_get_fourcc (str, "format", &format);
+    if (!ret) {
+      mixer->blend = 0;
+      mixer->fill_checker = 0;
+      mixer->fill_color = 0;
+      mixer->bpp = 0;
+    } else if (format == GST_STR_FOURCC ("AYUV")) {
+      mixer->blend = gst_videomixer_blend_ayuv_ayuv;
+      mixer->fill_checker = gst_videomixer_fill_ayuv_checker;
+      mixer->fill_color = gst_videomixer_fill_ayuv_color;
+      mixer->bpp = 32;
+    } else if (format == GST_STR_FOURCC ("I420")) {
+      mixer->blend = gst_videomixer_blend_i420_i420;
+      mixer->fill_checker = gst_videomixer_fill_i420_checker;
+      mixer->fill_color = gst_videomixer_fill_i420_color;
+      mixer->bpp = 12;
+    } else {
+      mixer->blend = 0;
+      mixer->fill_checker = 0;
+      mixer->fill_color = 0;
+      mixer->bpp = 0;
+    }
+  } else if (gst_structure_has_name (str, "video/x-raw-rgb")) {
+    mixer->blend = gst_videomixer_blend_bgra_bgra;
+    mixer->fill_checker = gst_videomixer_fill_bgra_checker;
+    mixer->fill_color = gst_videomixer_fill_bgra_color;
+    mixer->bpp = 32;
+  } else {
+    mixer->blend = 0;
+    mixer->fill_checker = 0;
+    mixer->fill_color = 0;
+    mixer->bpp = 0;
+  }
+  gst_object_unref (element);
+
+  return TRUE;
 }
 
 static GstPad *
@@ -919,217 +1070,6 @@ error:
   GST_VIDEO_MIXER_STATE_UNLOCK (mix);
 }
 
-#define BLEND_NORMAL(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)     \
-        Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;           \
-        U = ((U1*(255-alpha))+(U2*alpha))>>8;           \
-        V = ((V1*(255-alpha))+(V2*alpha))>>8;
-
-#define BLEND_ADD(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)                \
-        Y = Y1+((Y2*alpha)>>8);                                 \
-        U = U1+(((127*(255-alpha)+(U2*alpha)))>>8)-127;         \
-        V = V1+(((127*(255-alpha)+(V2*alpha)))>>8)-127;         \
-        if (Y>255) {                                            \
-          gint mult = MAX (0, 288-Y);                           \
-          U = ((U*mult) + (127*(32-mult)))>>5;                  \
-          V = ((V*mult) + (127*(32-mult)))>>5;                  \
-          Y = 255;                                              \
-        }                                                       \
-        U = MIN (U,255);                                        \
-        V = MIN (V,255);
-
-#define BLEND_SUBTRACT(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)           \
-        Y = Y1-((Y2*alpha)>>8);                                 \
-        U = U1+(((127*(255-alpha)+(U2*alpha)))>>8)-127;         \
-        V = V1+(((127*(255-alpha)+(V2*alpha)))>>8)-127;         \
-        if (Y<0) {                                              \
-          gint mult = MIN (32, -Y);                             \
-          U = ((U*(32-mult)) + (127*mult))>>5;                  \
-          V = ((V*(32-mult)) + (127*mult))>>5;                  \
-          Y = 0;                                                \
-        }
-
-#define BLEND_DARKEN(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)     \
-        if (Y1 < Y2) {                                  \
-          Y = Y1; U = U1; V = V1;                       \
-        }                                               \
-        else {                                          \
-          Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;         \
-          U = ((U1*(255-alpha))+(U2*alpha))>>8;         \
-          V = ((V1*(255-alpha))+(V2*alpha))>>8;         \
-        }
-
-#define BLEND_LIGHTEN(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)    \
-        if (Y1 > Y2) {                                  \
-          Y = Y1; U = U1; V = V1;                       \
-        }                                               \
-        else {                                          \
-          Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;         \
-          U = ((U1*(255-alpha))+(U2*alpha))>>8;         \
-          V = ((V1*(255-alpha))+(V2*alpha))>>8;         \
-        }
-
-#define BLEND_MULTIPLY(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)                   \
-        Y = (Y1*(256*(255-alpha) +(Y2*alpha)))>>16;                     \
-        U = ((U1*(255-alpha)*256)+(alpha*(U1*Y2+128*(256-Y2))))>>16;    \
-        V = ((V1*(255-alpha)*256)+(alpha*(V1*Y2+128*(256-Y2))))>>16;
-
-#define BLEND_DIFFERENCE(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)         \
-        Y = ABS((gint)Y1-(gint)Y2)+127;                         \
-        U = ABS((gint)U1-(gint)U2)+127;                         \
-        V = ABS((gint)V1-(gint)V2)+127;                         \
-        Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;                    \
-        U = ((U*alpha)+(U1*(255-alpha)))>>8;                    \
-        V = ((V*alpha)+(V1*(255-alpha)))>>8;                    \
-        if (Y>255) {                                            \
-          gint mult = MAX (0, 288-Y);                           \
-          U = ((U*mult) + (127*(32-mult)))>>5;                  \
-          V = ((V*mult) + (127*(32-mult)))>>5;                  \
-          Y = 255;                                              \
-        } else if (Y<0) {                                       \
-          gint mult = MIN (32, -Y);                             \
-          U = ((U*(32-mult)) + (127*mult))>>5;                  \
-          V = ((V*(32-mult)) + (127*mult))>>5;                  \
-          Y = 0;                                                \
-        }                                                       \
-        U = CLAMP(U, 0, 255);                                   \
-        V = CLAMP(V, 0, 255);
-
-#define BLEND_EXCLUSION(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)          \
-        Y = ((gint)(Y1^0xff)*Y2+(gint)(Y2^0xff)*Y1)>>8;         \
-        U = ((gint)(U1^0xff)*Y2+(gint)(Y2^0xff)*U1)>>8;         \
-        V = ((gint)(V1^0xff)*Y2+(gint)(Y2^0xff)*V1)>>8;         \
-        Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;                    \
-        U = ((U*alpha)+(U1*(255-alpha)))>>8;                    \
-        V = ((V*alpha)+(V1*(255-alpha)))>>8;                    \
-        if (Y>255) {                                            \
-          gint mult = MAX (0, 288-Y);                           \
-          U = ((U*mult) + (127*(32-mult)))>>5;                  \
-          V = ((V*mult) + (127*(32-mult)))>>5;                  \
-          Y = 255;                                              \
-        } else if (Y<0) {                                       \
-          gint mult = MIN (32, -Y);                             \
-          U = ((U*(32-mult)) + (127*mult))>>5;                  \
-          V = ((V*(32-mult)) + (127*mult))>>5;                  \
-          Y = 0;                                                \
-        }                                                       \
-        U = CLAMP(U, 0, 255);                                   \
-        V = CLAMP(V, 0, 255);
-
-#define BLEND_SOFTLIGHT(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)          \
-        Y = (gint)Y1+(gint)Y2 - 127;                            \
-        U = (gint)U1+(gint)U2 - 127;                            \
-        V = (gint)V1+(gint)V2 - 127;                            \
-        Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;                    \
-        U = ((U*alpha)+(U1*(255-alpha)))>>8;                    \
-        V = ((V*alpha)+(V1*(255-alpha)))>>8;                    \
-        if (Y>255) {                                            \
-          gint mult = MAX (0, 288-Y);                           \
-          U = ((U*mult) + (127*(32-mult)))>>5;                  \
-          V = ((V*mult) + (127*(32-mult)))>>5;                  \
-          Y = 255;                                              \
-        } else if (Y<0) {                                       \
-          gint mult = MIN (32, -Y);                             \
-          U = ((U*(32-mult)) + (127*mult))>>5;                  \
-          V = ((V*(32-mult)) + (127*mult))>>5;                  \
-          Y = 0;                                                \
-        }                                                       \
-
-#define BLEND_HARDLIGHT(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)          \
-        Y = (gint)Y1+(gint)Y2*2 - 255;                          \
-        U = (gint)U1+(gint)U2 - 127;                            \
-        V = (gint)V1+(gint)V2 - 127;                            \
-        Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;                    \
-        U = ((U*alpha)+(U1*(255-alpha)))>>8;                    \
-        V = ((V*alpha)+(V1*(255-alpha)))>>8;                    \
-        if (Y>255) {                                            \
-          gint mult = MAX (0, 288-Y);                           \
-          U = ((U*mult) + (127*(32-mult)))>>5;                  \
-          V = ((V*mult) + (127*(32-mult)))>>5;                  \
-          Y = 255;                                              \
-        } else if (Y<0) {                                       \
-          gint mult = MIN (32, -Y);                             \
-          U = ((U*(32-mult)) + (127*mult))>>5;                  \
-          V = ((V*(32-mult)) + (127*mult))>>5;                  \
-          Y = 0;                                                \
-        }                                                       \
-
-#define BLEND_MODE BLEND_NORMAL
-#if 0
-#define BLEND_MODE BLEND_NORMAL
-#define BLEND_MODE BLEND_ADD
-#define BLEND_MODE BLEND_SUBTRACT
-#define BLEND_MODE BLEND_LIGHTEN
-#define BLEND_MODE BLEND_DARKEN
-#define BLEND_MODE BLEND_MULTIPLY
-#define BLEND_MODE BLEND_DIFFERENCE
-#define BLEND_MODE BLEND_EXCLUSION
-#define BLEND_MODE BLEND_SOFTLIGHT
-#define BLEND_MODE BLEND_HARDLIGHT
-#endif
-
-/* note that this function does packing conversion and blending at the
- * same time */
-static void
-gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height)
-{
-  gint alpha, b_alpha;
-  gint i, j;
-  gint src_stride, dest_stride;
-  gint src_add, dest_add;
-  gint Y, U, V;
-
-  src_stride = src_width * 4;
-  dest_stride = dest_width * 4;
-
-  b_alpha = (gint) (src_alpha * 255);
-
-  /* adjust src pointers for negative sizes */
-  if (xpos < 0) {
-    src += -xpos * 4;
-    src_width -= -xpos;
-    xpos = 0;
-  }
-  if (ypos < 0) {
-    src += -ypos * src_stride;
-    src_height -= -ypos;
-    ypos = 0;
-  }
-  /* adjust width/height if the src is bigger than dest */
-  if (xpos + src_width > dest_width) {
-    src_width = dest_width - xpos;
-  }
-  if (ypos + src_height > dest_height) {
-    src_height = dest_height - ypos;
-  }
-
-  src_add = src_stride - (4 * src_width);
-  dest_add = dest_stride - (4 * src_width);
-
-  dest = dest + 4 * xpos + (ypos * dest_stride);
-
-  /* we convert a square of 2x2 samples to generate 4 Luma and 2 chroma samples */
-  for (i = 0; i < src_height; i++) {
-    for (j = 0; j < src_width; j++) {
-      alpha = (src[0] * b_alpha) >> 8;
-      BLEND_MODE (dest[1], dest[2], dest[3], src[1], src[2], src[3],
-          alpha, Y, U, V);
-      dest[0] = 0xff;
-      dest[1] = Y;
-      dest[2] = U;
-      dest[3] = V;
-
-      src += 4;
-      dest += 4;
-    }
-    src += src_add;
-    dest += dest_add;
-  }
-}
-
-#undef BLEND_MODE
-
 static int
 pad_zorder_compare (const GstVideoMixerPad * pad1,
     const GstVideoMixerPad * pad2)
@@ -1142,39 +1082,6 @@ gst_videomixer_sort_pads (GstVideoMixer * mix)
 {
   mix->sinkpads = g_slist_sort (mix->sinkpads,
       (GCompareFunc) pad_zorder_compare);
-}
-
-/* fill a buffer with a checkerboard pattern */
-static void
-gst_videomixer_fill_checker (guint8 * dest, gint width, gint height)
-{
-  gint i, j;
-  static int tab[] = { 80, 160, 80, 160 };
-
-  for (i = 0; i < height; i++) {
-    for (j = 0; j < width; j++) {
-      *dest++ = 0xff;
-      *dest++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];
-      *dest++ = 128;
-      *dest++ = 128;
-    }
-  }
-}
-
-static void
-gst_videomixer_fill_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV)
-{
-  gint i, j;
-
-  for (i = 0; i < height; i++) {
-    for (j = 0; j < width; j++) {
-      *dest++ = 0xff;
-      *dest++ = colY;
-      *dest++ = colU;
-      *dest++ = colV;
-    }
-  }
 }
 
 /* try to get a buffer on all pads. As long as the queued value is
@@ -1299,9 +1206,13 @@ gst_videomixer_blend_buffers (GstVideoMixer * mix, GstBuffer * outbuf)
       if (GST_CLOCK_TIME_IS_VALID (stream_time))
         gst_object_sync_values (G_OBJECT (pad), stream_time);
 
-      gst_videomixer_blend_ayuv_ayuv (GST_BUFFER_DATA (mixcol->buffer),
-          pad->xpos, pad->ypos, pad->in_width, pad->in_height, pad->alpha,
-          GST_BUFFER_DATA (outbuf), mix->out_width, mix->out_height);
+      if (G_UNLIKELY (mix->blend == NULL)) {
+        GST_ERROR_OBJECT (mix, "blend function not set");
+      } else {
+        (mix->blend) (GST_BUFFER_DATA (mixcol->buffer),
+            pad->xpos, pad->ypos, pad->in_width, pad->in_height, pad->alpha,
+            GST_BUFFER_DATA (outbuf), mix->out_width, mix->out_height);
+      }
 
       if (pad == mix->master) {
         gint64 running_time;
@@ -1337,7 +1248,7 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
     } else {
       interval = GST_SECOND * mix->fps_d / mix->fps_n;
     }
-    GST_DEBUG_OBJECT (mix, "set interval to %" G_GUINT64_FORMAT, interval);
+    GST_LOG_OBJECT (mix, "set interval to %" G_GUINT64_FORMAT, interval);
   }
 
   walk = mix->sinkpads;
@@ -1349,9 +1260,9 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
 
     if (mixcol->buffer != NULL) {
       pad->queued -= interval;
-      GST_DEBUG_OBJECT (pad, "queued now %" G_GINT64_FORMAT, pad->queued);
+      GST_LOG_OBJECT (pad, "queued now %" G_GINT64_FORMAT, pad->queued);
       if (pad->queued <= 0) {
-        GST_DEBUG ("unreffing buffer");
+        GST_LOG ("unreffing buffer");
         gst_buffer_unref (mixcol->buffer);
         mixcol->buffer = NULL;
       }
@@ -1382,9 +1293,6 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
     goto error;
   }
 
-  /* Calculating out buffer size from input size */
-  outsize = 4 * mix->in_width * GST_ROUND_UP_2 (mix->in_height);
-
   /* If geometry has changed we need to set new caps on the buffer */
   if (mix->in_width != mix->out_width || mix->in_height != mix->out_height
       || mix->setcaps) {
@@ -1393,7 +1301,7 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
     newcaps = gst_caps_make_writable
         (gst_pad_get_negotiated_caps (GST_PAD (mix->master)));
     gst_caps_set_simple (newcaps,
-        "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("AYUV"),
+        //"format", GST_TYPE_FOURCC, GST_STR_FOURCC ("AYUV"),
         "width", G_TYPE_INT, mix->in_width,
         "height", G_TYPE_INT, mix->in_height, NULL);
 
@@ -1401,11 +1309,18 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
     mix->out_height = mix->in_height;
     mix->setcaps = FALSE;
 
+    /* Calculating out buffer size from input size */
+    gst_pad_set_caps (mix->srcpad, newcaps);    //bpp would be 0 otherwise
+    outsize =
+        (mix->bpp / 8.0) * mix->in_width * GST_ROUND_UP_2 (mix->in_height);
     ret =
         gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
         outsize, newcaps, &outbuf);
     gst_caps_unref (newcaps);
   } else {                      /* Otherwise we just allocate a buffer from current caps */
+    /* Calculating out buffer size from input size */
+    outsize =
+        (mix->bpp / 8.0) * mix->in_width * GST_ROUND_UP_2 (mix->in_height);
     ret =
         gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
         outsize, GST_PAD_CAPS (mix->srcpad), &outbuf);
@@ -1417,16 +1332,29 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
 
   switch (mix->background) {
     case VIDEO_MIXER_BACKGROUND_CHECKER:
-      gst_videomixer_fill_checker (GST_BUFFER_DATA (outbuf),
-          mix->out_width, mix->out_height);
+      if (G_UNLIKELY (mix->fill_checker == NULL)) {
+        g_warning ("fill checker function pointer not set");
+      } else {
+        mix->fill_checker (GST_BUFFER_DATA (outbuf), mix->out_width,
+            mix->out_height);
+      }
       break;
     case VIDEO_MIXER_BACKGROUND_BLACK:
-      gst_videomixer_fill_color (GST_BUFFER_DATA (outbuf),
-          mix->out_width, mix->out_height, 16, 128, 128);
+      if (G_UNLIKELY (mix->fill_color == NULL)) {
+        g_warning ("fill color function pointer not set");
+      } else {
+        mix->fill_color (GST_BUFFER_DATA (outbuf), mix->out_width,
+            mix->out_height, 16, 128, 128);
+      }
       break;
     case VIDEO_MIXER_BACKGROUND_WHITE:
-      gst_videomixer_fill_color (GST_BUFFER_DATA (outbuf),
-          mix->out_width, mix->out_height, 240, 128, 128);
+
+      if (G_UNLIKELY (mix->fill_color == NULL)) {
+        g_warning ("fill color function pointer not set");
+      } else {
+        mix->fill_color (GST_BUFFER_DATA (outbuf), mix->out_width,
+            mix->out_height, 240, 128, 128);
+      }
       break;
   }
 

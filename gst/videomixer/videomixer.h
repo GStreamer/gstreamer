@@ -82,6 +82,7 @@ struct _GstVideoMixer
 
   gint in_width, in_height;
   gint out_width, out_height;
+  gint bpp;
   gboolean setcaps;
   gboolean sendseg;
 
@@ -97,6 +98,12 @@ struct _GstVideoMixer
   GstPadEventFunction collect_event;
   guint64	segment_position;
   gdouble	segment_rate;
+
+  void (*blend) (guint8 * src, gint xpos, gint ypos, gint src_width, gint src_height, gdouble src_alpha,
+                 guint8 * dest, gint dest_width, gint dest_height);
+  void (*fill_checker) (guint8 * dest, gint width, gint height);
+
+  void (*fill_color) (guint8 * dest, gint width, gint height, gint colY, gint colU, gint colV);
 };
 
 struct _GstVideoMixerClass
