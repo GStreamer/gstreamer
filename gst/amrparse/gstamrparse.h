@@ -61,6 +61,7 @@ struct _GstAmrParse {
   GstBaseParse element;
   const gint *block_size;
   gboolean need_header;
+  gint header;
   gboolean wide;
   gboolean eos;
   gboolean sync;
