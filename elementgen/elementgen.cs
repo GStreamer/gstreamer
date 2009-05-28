@@ -228,6 +228,8 @@ public class ElementGen {
 	   return "float";
 	 case "gdouble":
 	   return "double";
+	 case "GValueArray":
+	   return "GLib.ValueArray";
 	}
 	
 	XPathNavigator api_nav = api_doc.CreateNavigator ();
