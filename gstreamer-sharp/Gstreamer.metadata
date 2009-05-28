@@ -1009,6 +1009,10 @@
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
 
   <attr path="/api/namespace/object[@cname='GstBaseTransform']" name="name">BaseTransform</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='transform_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='prepare_output_buffer']/parameters/parameter[@name='buf']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='prepare_output_buffer']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
+
   <attr path="/api/namespace/object[@cname='GstPushSrc']" name="name">PushSrc</attr>
 
   <!-- GStreamer Interfaces library -->
