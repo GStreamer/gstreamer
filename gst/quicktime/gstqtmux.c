@@ -1507,7 +1507,10 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
         break;
     }
   } else if (strcmp (mimetype, "video/x-h263") == 0) {
-    entry.fourcc = FOURCC_h263;
+    if (format == GST_QT_MUX_FORMAT_QT)
+      entry.fourcc = FOURCC_h263;
+    else
+      entry.fourcc = FOURCC_s263;
     ext_atom = build_h263_extension ();
   } else if (strcmp (mimetype, "video/x-divx") == 0 ||
       strcmp (mimetype, "video/mpeg") == 0) {
