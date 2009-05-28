@@ -152,7 +152,8 @@ namespace GtkSharp.Parsing {
 								
 						string[] filenames = (string[]) realfiles.ToArray (typeof (string));
 						string pp_args = String.Join (" ", filenames);
-						system ("gapi_pp.pl " + pp_args + " | gapi2xml.pl " + ns + " " + prefile + " " + lib);
+						string path = Path.GetDirectoryName (System.Reflection.Assembly.GetCallingAssembly ().Location);
+						system (path + "/gapi_pp.pl " + pp_args + " | " + path + "/gapi2xml.pl " + ns + " " + prefile + " " + lib);
 					}
 				}
 			
