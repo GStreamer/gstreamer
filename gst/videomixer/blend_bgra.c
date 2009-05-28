@@ -70,7 +70,7 @@ gst_videomixer_blend_bgra_bgra (guint8 * src, gint xpos, gint ypos,
   for (i = 0; i < src_height; i++) {
     for (j = 0; j < src_width; j++) {
       alpha = (src[3] * b_alpha) >> 8;
-      BLEND_MODE (dest[1], dest[2], dest[3], src[1], src[2], src[3],
+      BLEND_MODE (dest[0], dest[1], dest[2], src[0], src[1], src[2],
           B, G, R, alpha);
       dest[0] = B;
       dest[1] = G;
