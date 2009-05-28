@@ -205,6 +205,16 @@
       <Type Name="Util" Kind="Class" />
       <Type Name="Version" Kind="Class" />
     </Namespace>
+    <Namespace Name="Gst.Base">
+      <Type Name="Adapter" Kind="Class" />
+      <Type Name="BaseSink" Kind="Class" />
+      <Type Name="BaseSrc" Kind="Class" />
+      <Type Name="BaseSrcFlags" Kind="Enumeration" />
+      <Type Name="BaseTransform" Kind="Class" />
+      <Type Name="PushSrc" Kind="Class" />
+      <Type Name="TypeFindHelper" Kind="Class" />
+      <Type Name="TypeFindHelperGetRangeFunction" Kind="Delegate" />
+    </Namespace>
     <Namespace Name="Gst.BasePlugins">
       <Type Name="DecodeBin" Kind="Class" />
       <Type Name="DecodeBin+NewDecodedPadArgs" Kind="Class" />

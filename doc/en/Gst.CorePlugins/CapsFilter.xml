@@ -1,12 +1,12 @@
 <Type Name="CapsFilter" FullName="Gst.CorePlugins.CapsFilter">
-  <TypeSignature Language="C#" Value="public class CapsFilter : Gst.Element" />
+  <TypeSignature Language="C#" Value="public class CapsFilter : Gst.Base.BaseTransform" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>Gst.Element</BaseTypeName>
+    <BaseTypeName>Gst.Base.BaseTransform</BaseTypeName>
   </Base>
   <Interfaces />
   <Attributes>
@@ -143,7 +143,6 @@
       <MemberSignature Language="C#" Value="public bool Qos { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
