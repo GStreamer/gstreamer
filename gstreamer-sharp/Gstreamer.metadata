@@ -1018,6 +1018,43 @@
   <attr path="/api/namespace/object[@cname='GstPushSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstPushSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
 
+  <!-- FIXME: Why can't this be parsed?! -->
+  <add-node path="/api/namespace[@name='Gst.Base']">
+    <class name="TypeFindHelper" cname="GstTypeFindHelper">
+        <method name="TypeFind" cname="gst_type_find_helper" shared="true">
+          <return-type type="GstCaps*" owned="true" />
+	  <parameters>
+	    <parameter type="GstPad*" name="src" />
+	    <parameter type="guint64" name="size" />
+	  </parameters>
+        </method>
+        <method name="TypeFind" cname="gst_type_find_helper_for_buffer" shared="true">
+          <return-type type="GstCaps*" owned="true" />
+	  <parameters>
+	    <parameter type="GstObject*" name="obj" />
+	    <parameter type="GstBuffer*" name="buf" />
+	    <parameter type="GstTypeFindProbability*" name="prob" pass_as="out"/>
+	  </parameters>
+        </method>
+        <method name="TypeFind" cname="gst_type_find_helper_for_extension" shared="true">
+          <return-type type="GstCaps*" owned="true" />
+	  <parameters>
+	    <parameter type="GstObject*" name="obj" />
+	    <parameter type="const-gchar*" name="extension" />
+	  </parameters>
+        </method>
+        <method name="TypeFind" cname="gst_type_find_helper_get_range" shared="true">
+          <return-type type="GstCaps*" owned="true" />
+	  <parameters>
+	    <parameter type="GstObject*" name="obj" />
+	    <parameter type="GstTypeFindHelperGetRangeFunction" name="func" />
+	    <parameter type="guint64" name="size" />
+	    <parameter type="GstTypeFindProbability*" name="prob" pass_as="out"/>
+	  </parameters>
+        </method>
+    </class>
+  </add-node>
+
   <!-- GStreamer Interfaces library -->
   <attr path="/api/namespace/enum[@cname='GstColorBalanceType']" name="name">ColorBalanceType</attr>
   <attr path="/api/namespace/enum[@cname='GstMixerFlags']" name="name">MixerFlags</attr>
