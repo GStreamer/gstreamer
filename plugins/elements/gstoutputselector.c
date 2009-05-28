@@ -19,7 +19,7 @@
 
 /**
  * SECTION:element-output-selector
- * @see_also: #GstTee, #GstInputSelector
+ * @see_also: #GstOutputSelector, #GstInputSelector
  *
  * Direct input stream to one out of N output pads.
  */
@@ -74,6 +74,8 @@ static GstPad *gst_output_selector_request_new_pad (GstElement * element,
 static void gst_output_selector_release_pad (GstElement * element,
     GstPad * pad);
 static GstFlowReturn gst_output_selector_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_output_selector_buffer_alloc (GstPad * pad,
+    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstStateChangeReturn gst_output_selector_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_output_selector_handle_sink_event (GstPad * pad,
@@ -136,17 +138,17 @@ gst_output_selector_init (GstOutputSelector * sel,
       GST_DEBUG_FUNCPTR (gst_output_selector_chain));
   gst_pad_set_event_function (sel->sinkpad,
       GST_DEBUG_FUNCPTR (gst_output_selector_handle_sink_event));
-
-  gst_element_add_pad (GST_ELEMENT (sel), sel->sinkpad);
-
+  gst_pad_set_bufferalloc_function (sel->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_output_selector_buffer_alloc));
   /*
-     gst_pad_set_bufferalloc_function (sel->sinkpad,
-     GST_DEBUG_FUNCPTR (gst_output_selector_bufferalloc));
      gst_pad_set_setcaps_function (sel->sinkpad,
      GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
      gst_pad_set_getcaps_function (sel->sinkpad,
      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
    */
+
+  gst_element_add_pad (GST_ELEMENT (sel), sel->sinkpad);
+
   /* srcpad management */
   sel->active_srcpad = NULL;
   sel->nb_srcpads = 0;
@@ -249,6 +251,37 @@ gst_output_selector_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstFlowReturn
+gst_output_selector_buffer_alloc (GstPad * pad, guint64 offset, guint size,
+    GstCaps * caps, GstBuffer ** buf)
+{
+  GstOutputSelector *sel;
+  GstFlowReturn res;
+  GstPad *allocpad;
+
+  sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
+
+  res = GST_FLOW_NOT_LINKED;
+
+  GST_OBJECT_LOCK (sel);
+  if ((allocpad = sel->active_srcpad)) {
+    /* if we had a previous pad we used for allocating a buffer, continue using
+     * it. */
+    GST_DEBUG_OBJECT (sel, "using pad %s:%s for alloc",
+        GST_DEBUG_PAD_NAME (allocpad));
+    gst_object_ref (allocpad);
+    GST_OBJECT_UNLOCK (sel);
+
+    res = gst_pad_alloc_buffer (allocpad, offset, size, caps, buf);
+    gst_object_unref (allocpad);
+
+    GST_OBJECT_LOCK (sel);
+  }
+  GST_OBJECT_UNLOCK (sel);
+
+  return res;
 }
 
 static GstPad *
