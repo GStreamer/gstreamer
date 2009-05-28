@@ -362,9 +362,37 @@ public class ElementGen {
       }
     }
 
-    //TODO
-    if (ei.actions.Count > 0)
-      throw new Exception ("No support for actions yet");
+    if (ei.actions.Count > 0) {
+      foreach (SignalInfo si in ei.actions) {
+        string managed_name = (si.managed_name != null) ? si.managed_name : PropToCamelCase (si.name);
+	string managed_return = CTypeToManagedType (si.return_type, api_doc);
+
+	writer.Write ("\t\tpublic " + managed_return + " " + managed_name + " (");
+
+	for (int i = 0; i < si.parameters.Count; i++) {
+	  SignalParameter param = (SignalParameter) si.parameters[i];
+          string managed_type = CTypeToManagedType (param.type, api_doc);
+
+	  if (i == 0)
+	    writer.Write (managed_type + " " + param.name);
+	  else
+	    writer.Write (", " + managed_type + " " + param.name);
+	}
+	writer.WriteLine (") {");
+
+	writer.WriteLine ("\t\t\tobject[] parameters = new object[" + si.parameters.Count + "];");
+	
+	for (int i = 0; i < si.parameters.Count; i++) {
+	  SignalParameter param = (SignalParameter) si.parameters[i];
+	  
+	  writer.WriteLine ("\t\t\tparameters[" + i + "] = " + param.name + ";");
+	}
+
+	writer.WriteLine ("\t\t\treturn (" + managed_return + ") Emit (\"" + si.name + "\", parameters);");
+
+	writer.WriteLine ("\t\t}\n");
+      }
+    }
 
     if (ei.interfaces.Count > 0) {
       string path = Path.GetDirectoryName (System.Reflection.Assembly.GetCallingAssembly ().Location);
