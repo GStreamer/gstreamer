@@ -13,20 +13,20 @@ using GLib;
 
 namespace Gst {
   public static class BindingHelper {
-    public static Delegate AddProxySignalDelegate (Element element, string signal,
+    public static Delegate AddProxySignalDelegate (GLib.Object o, string signal,
         DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate addHandler) {
       if (existingHandler == null) {
-        element.Connect (signal, baseHandler);
+        DynamicSignal.Connect (o, signal, baseHandler);
       }
 
       return Delegate.Combine (existingHandler, addHandler);
     }
 
-    public static Delegate RemoveProxySignalDelegate (Element element, string signal,
+    public static Delegate RemoveProxySignalDelegate (GLib.Object o, string signal,
         DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate removeHandler) {
       Delegate temp_delegate = Delegate.Remove (existingHandler, removeHandler);
       if (temp_delegate == null) {
-        element.Disconnect (signal, baseHandler);
+        DynamicSignal.Disconnect (o, signal, baseHandler);
       }
 
       return temp_delegate;

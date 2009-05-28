@@ -1,0 +1,131 @@
+[GLib.Property ("stream-info-value-array") ]
+public StreamInfo[] StreamInfos {
+  get {
+    GLib.Value val = GetProperty ("stream-info-value-array");
+    GLib.ValueArray va = (GLib.ValueArray) val;
+    StreamInfo[] ret = new StreamInfo[va.Count];
+    for (int i = 0; i < va.Count; i++)
+      ret[i] = (StreamInfo) va[i];
+
+    va.Dispose ();
+    val.Dispose ();
+    return ret;
+  }
+}
+
+public class StreamInfo : GLib.Object {
+
+  [GLib.Property ("object") ]
+  public Gst.Object Object {
+    get {
+      GLib.Value val = GetProperty ("object");
+      Gst.Object ret = (Gst.Object) val;
+      val.Dispose ();
+      return ret;
+    }
+  }
+
+  [GLib.Property ("type") ]
+  public StreamType Type {
+    get {
+      GLib.Value val = GetProperty ("type");
+      StreamType ret = (StreamType) val;
+      val.Dispose ();
+      return ret;
+    }
+  }
+
+  [GLib.Property ("decoder") ]
+  public string Decoder {
+    get {
+      GLib.Value val = GetProperty ("decoder");
+      string ret = (string) val;
+      val.Dispose ();
+      return ret;
+    }
+  }
+
+  [GLib.Property ("mute") ]
+  public bool Mute {
+    get {
+      GLib.Value val = GetProperty ("mute");
+      bool ret = (bool) val;
+      val.Dispose ();
+      return ret;
+    }
+    set {
+      GLib.Value val = new GLib.Value (this, "mute");
+      val.Val = value;
+      SetProperty ("mute", val);
+      val.Dispose ();
+    }
+  }
+
+
+  [GLib.Property ("caps") ]
+  public Gst.Caps Caps {
+    get {
+      GLib.Value val = GetProperty ("caps");
+      Gst.Caps ret = (Gst.Caps) val;
+      val.Dispose ();
+      return ret;
+    }
+  }
+
+  [GLib.Property ("language-code") ]
+  public string LanguageCode {
+    get {
+      GLib.Value val = GetProperty ("language-code");
+      string ret = (string) val;
+      val.Dispose ();
+      return ret;
+    }
+  }
+
+  [GLib.Property ("codec") ]
+  public string Codec {
+    get {
+      GLib.Value val = GetProperty ("codec");
+      string ret = (string) val;
+      val.Dispose ();
+      return ret;
+    }
+  }
+
+  public delegate void MutedHandler (object o, MutedArgs args);
+
+  public class MutedArgs : GLib.SignalArgs {
+    public bool Mute {
+      get {
+        return (bool) Args[0];
+      }
+    }
+
+  }
+
+  private Delegate Muted_delegate;
+
+  protected virtual void OnMuted (object o, GLib.SignalArgs args) {
+    BindingHelper.InvokeProxySignalDelegate (Muted_delegate, typeof (MutedArgs), o, args);
+  }
+
+  public event MutedHandler Muted {
+    add {
+      Muted_delegate = BindingHelper.AddProxySignalDelegate (this, "muted", OnMuted, Muted_delegate, value);
+    }
+
+    remove {
+      Muted_delegate = BindingHelper.RemoveProxySignalDelegate (this, "muted", OnMuted, Muted_delegate, value);
+    }
+  }
+
+  [GTypeName ("GstStreamType") ]
+  public enum StreamType {
+    Unknown = 0,
+    Audio = 1,
+    Video = 2,
+    Text = 3,
+    Subpicture = 4,
+    Element = 5
+  }
+}

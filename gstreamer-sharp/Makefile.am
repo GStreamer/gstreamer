@@ -140,7 +140,7 @@ generated-stamp: $(API) $(build_customs) $(overrides)
 coreplugins/*.cs: $(API) coreplugins/*.metadata coreplugins/inspect/*.raw
 	$(MAKE) -C coreplugins
 
-baseplugins/*.cs: $(API) baseplugins/*.metadata baseplugins/inspect/*.raw
+baseplugins/*.cs: $(API) baseplugins/*.custom baseplugins/*.metadata baseplugins/inspect/*.raw
 	$(MAKE) -C baseplugins
 
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
