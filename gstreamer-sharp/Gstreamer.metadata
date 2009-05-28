@@ -1020,7 +1020,7 @@
 
   <!-- FIXME: Why can't this be parsed?! -->
   <add-node path="/api/namespace[@name='Gst.Base']">
-    <class name="TypeFindHelper" cname="GstTypeFindHelper">
+    <class name="TypeFindHelper" cname="GstTypeFindHelper" disable_void_ctor="1">
         <method name="TypeFind" cname="gst_type_find_helper" shared="true">
           <return-type type="GstCaps*" owned="true" />
 	  <parameters>
