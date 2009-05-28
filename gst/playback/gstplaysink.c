@@ -556,10 +556,14 @@ gst_play_sink_set_volume (GstPlaySink * playsink, gdouble volume)
   playsink->volume = volume;
   chain = (GstPlayAudioChain *) playsink->audiochain;
   if (chain && chain->volume) {
+    GST_LOG_OBJECT (playsink, "elements: volume=%" GST_PTR_FORMAT ", mute=%"
+        GST_PTR_FORMAT "; new volume=%.03f, mute=%d", chain->volume,
+        chain->mute, volume, playsink->mute);
     /* if there is a mute element or we are not muted, set the volume */
     if (chain->mute || !playsink->mute)
       g_object_set (chain->volume, "volume", volume, NULL);
   } else {
+    GST_LOG_OBJECT (playsink, "no volume element");
     playsink->volume_changed = TRUE;
   }
   GST_PLAY_SINK_UNLOCK (playsink);
@@ -1556,8 +1560,22 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   } else {
     /* no volume, we need to add a volume element when we can */
     GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
-    chain->volume = NULL;
-    chain->mute = NULL;
+    if (!raw) {
+      GST_LOG_OBJECT (playsink, "non-raw format, can't do soft volume control");
+      chain->volume = NULL;
+      chain->mute = NULL;
+    } else {
+      /* both last and current chain are raw audio, there should be a volume
+       * element already, unless the sink changed from one with a volume
+       * property to one that hasn't got a volume property, in which case we
+       * re-generate the chain */
+      if (chain->volume == NULL) {
+        GST_DEBUG_OBJECT (playsink, "no existing volume element to re-use");
+        return FALSE;
+      }
+
+      GST_DEBUG_OBJECT (playsink, "reusing existing volume element");
+    }
   }
   return TRUE;
 }
