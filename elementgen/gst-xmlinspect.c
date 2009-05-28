@@ -241,6 +241,12 @@ print_element_properties (GstElement * element, gint pfx)
       g_object_get_property (G_OBJECT (element), param->name, &value);
       readable = TRUE;
     }
+
+    /* Ignore GstObject, GstElement properties */
+    if (param->owner_type == GST_TYPE_OBJECT ||
+        param->owner_type == GST_TYPE_ELEMENT)
+      continue;
+
     PUT_START_TAG (pfx + 1, "element-property");
     PUT_ESCAPED (pfx + 2, "name", g_param_spec_get_name (param));
     PUT_ESCAPED (pfx + 2, "type", g_type_name (param->value_type));

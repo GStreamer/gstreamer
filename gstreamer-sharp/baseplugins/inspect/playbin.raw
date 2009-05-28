@@ -42,14 +42,6 @@
  </pads>
  <element-properties>
   <element-property>
-   <name>name</name>
-   <type>gchararray</type>
-   <nick>Name</nick>
-   <blurb>The name of the object</blurb>
-   <flags>RW</flags>
-   <default>&quot;element&quot;</default>
-  </element-property>
-  <element-property>
    <name>async-handling</name>
    <type>gboolean</type>
    <nick>Async Handling</nick>

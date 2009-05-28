@@ -56,14 +56,6 @@
  </pads>
  <element-properties>
   <element-property>
-   <name>name</name>
-   <type>gchararray</type>
-   <nick>Name</nick>
-   <blurb>The name of the object</blurb>
-   <flags>RW</flags>
-   <default>&quot;element&quot;</default>
-  </element-property>
-  <element-property>
    <name>preroll-queue-len</name>
    <type>guint</type>
    <nick>Preroll queue length</nick>
