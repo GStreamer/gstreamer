@@ -96,10 +96,10 @@ gst_videomixer_fill_bgra_checker (guint8 * dest, gint width, gint height)
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
-      *dest++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];       //blue
-      *dest++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];       //green
-      *dest++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];       //red    
-      *dest++ = 0xFF;           //alpha
+      *dest++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];       /* blue */
+      *dest++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];       /* green */
+      *dest++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];       /* red */
+      *dest++ = 0xFF;           /* alpha */
     }
   }
 }

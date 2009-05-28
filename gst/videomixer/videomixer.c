@@ -360,7 +360,7 @@ gst_videomixer_pad_sink_acceptcaps (GstPad * pad, GstCaps * vscaps)
         GstCaps *caps1 = gst_caps_copy (acceptedCaps);
         GstCaps *caps2 =
             gst_caps_copy_nth (gst_pad_get_pad_template_caps (pad), i);
-        gst_caps_merge (caps1, caps2);  //caps2 is unrefed
+        gst_caps_merge (caps1, caps2);
         gst_caps_do_simplify (caps1);
         if (GST_CAPS_IS_SIMPLE (caps1)) {
           gst_caps_replace (&acceptedCaps, caps1);

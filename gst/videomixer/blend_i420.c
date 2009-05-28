@@ -207,7 +207,6 @@ gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
     gint src_width, gint src_height, gdouble src_alpha,
     guint8 * dest, gint dest_width, gint dest_height)
 {
-  //gint alpha, b_alpha;
   guint8 *b_src;
   guint8 *b_dest;
   gint b_src_width = src_width;
