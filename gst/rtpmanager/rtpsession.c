@@ -384,6 +384,7 @@ copy_source (gpointer key, RTPSource * source, GValueArray * arr)
 
   g_value_init (&value, RTP_TYPE_SOURCE);
   g_value_take_object (&value, source);
+  /* copies the value */
   g_value_array_append (arr, &value);
 }
 
@@ -1339,7 +1340,6 @@ rtp_session_create_new_ssrc (RTPSession * sess)
             GINT_TO_POINTER (ssrc)) == NULL)
       break;
   }
-
   return ssrc;
 }
 
