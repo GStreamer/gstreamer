@@ -1758,7 +1758,7 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
       const GstStructure *s = gst_message_get_structure (message);
 
       /* we change the structure name and add the session ID to it */
-      if (gst_structure_has_name (s, "GstRTPSessionSDES")) {
+      if (gst_structure_has_name (s, "application/x-rtp-source-sdes")) {
         GSList *walk;
 
         /* find the session, the message source has it */
@@ -1770,8 +1770,6 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
           if (GST_OBJECT_CAST (sess->session) == GST_MESSAGE_SRC (message)) {
             message = gst_message_make_writable (message);
             s = gst_message_get_structure (message);
-
-            gst_structure_set_name ((GstStructure *) s, "GstRTPBinSDES");
 
             gst_structure_set ((GstStructure *) s, "session", G_TYPE_UINT,
                 sess->id, NULL);
