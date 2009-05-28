@@ -55,6 +55,7 @@ typedef struct
   GstElement *conv;
   GstElement *resample;
   GstElement *volume;           /* element with the volume property */
+  gboolean sink_volume;         /* if the volume was provided by the sink */
   GstElement *mute;             /* element with the mute property */
   GstElement *sink;
 } GstPlayAudioChain;
@@ -1371,6 +1372,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 
     GST_DEBUG_OBJECT (playsink, "the sink has a volume property");
     have_volume = TRUE;
+    chain->sink_volume = TRUE;
     /* if the sink also has a mute property we can use this as well. We'll only
      * use the mute property if there is a volume property. We can simulate the
      * mute with the volume otherwise. */
@@ -1395,6 +1397,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     /* no volume, we need to add a volume element when we can */
     GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
     have_volume = FALSE;
+    chain->sink_volume = FALSE;
   }
 
   if (raw && !(playsink->flags & GST_PLAY_FLAG_NATIVE_AUDIO)) {
@@ -1792,8 +1795,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
           playsink->audio_tee_vissrc = NULL;
         }
         srcpad =
-            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
-                vischain->chain.bin), "src");
+            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+                chain.bin), "src");
         gst_pad_unlink (srcpad, playsink->videochain->sinkpad);
       }
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
@@ -1945,8 +1948,10 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         gst_object_unref (playsink->audio_tee_asrc);
         playsink->audio_tee_asrc = NULL;
       }
-      playsink->audiochain->volume = NULL;
-      playsink->audiochain->mute = NULL;
+      if (playsink->audiochain->sink_volume) {
+        playsink->audiochain->volume = NULL;
+        playsink->audiochain->mute = NULL;
+      }
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
     }
@@ -1963,8 +1968,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "setting up vis chain");
       srcpad =
-          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
-              vischain->chain.bin), "src");
+          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+              chain.bin), "src");
       add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       if (playsink->audio_tee_vissrc == NULL) {
@@ -2349,8 +2354,9 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (playsink->audiochain) {
-        /* remove our links to the mute and volume elements */
+      if (playsink->audiochain && playsink->audiochain->sink_volume) {
+        /* remove our links to the mute and volume elements when they were
+         * provided by a sink */
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
       }
