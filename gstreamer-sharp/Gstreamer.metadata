@@ -28,6 +28,13 @@
   <attr path="/api/namespace/*/field[@array_len='GST_PADDING - 3']" name="array_len">3</attr>
   <attr path="/api/namespace/*/field[@array_len='GST_PADDING - 4']" name="array_len">0</attr>
 
+
+  <attr path="/api/namespace/*/*/field[@array_len='GST_PADDING_LARGE']" name="array_len">20</attr>
+  <attr path="/api/namespace/*/*/field[@array_len='GST_PADDING_LARGE - 2']" name="array_len">18</attr>
+  <attr path="/api/namespace/*/*/field[@array_len='GST_PADDING_LARGE - 6']" name="array_len">14</attr>
+  <attr path="/api/namespace/*/*/field[@array_len='GST_PADDING_LARGE-4']" name="array_len">16</attr>
+  <attr path="/api/namespace/*/field[@array_len='GST_PADDING_LARGE - 1']" name="array_len">19</attr>
+
   <!-- GStreamer core -->
   <attr path="/api/namespace/object[@name='Bin']/field" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_add_many']" name="hidden">1</attr>
@@ -989,8 +996,15 @@
   <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_take_buffer']" name="name">Take</attr>
   <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_take_buffer']/return-type" name="owned">true</attr>
 
-  <attr path="/api/namespace/object[@cname='GstBaseSrc']" name="name">BaseSrc</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSink']" name="name">BaseSink</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='get_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='buffer_alloc']/parameters/parameter[@name='buf']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='buffer_alloc']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='get_times']/parameters/parameter[@name='start']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='get_times']/parameters/parameter[@name='end']" name="pass_as">out</attr>
+
+  <attr path="/api/namespace/object[@cname='GstBaseSrc']" name="name">BaseSrc</attr>
+
   <attr path="/api/namespace/object[@cname='GstBaseTransform']" name="name">BaseTransform</attr>
   <attr path="/api/namespace/object[@cname='GstPushSrc']" name="name">PushSrc</attr>
 
