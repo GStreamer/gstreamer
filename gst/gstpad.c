@@ -95,6 +95,16 @@ enum
   /* FILL ME */
 };
 
+#define GST_PAD_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PAD, GstPadPrivate))
+
+#define GST_PAD_CHAINLISTFUNC(pad) ((pad)->abidata.ABI.priv->chainlistfunc)
+
+struct _GstPadPrivate
+{
+  GstPadChainListFunction chainlistfunc;
+};
+
 static void gst_pad_dispose (GObject * object);
 static void gst_pad_finalize (GObject * object);
 static void gst_pad_set_property (GObject * object, guint prop_id,
@@ -230,6 +240,8 @@ gst_pad_class_init (GstPadClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstobject_class = GST_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GstPadPrivate));
+
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pad_dispose);
@@ -314,6 +326,8 @@ gst_pad_class_init (GstPadClass * klass)
 static void
 gst_pad_init (GstPad * pad)
 {
+  pad->abidata.ABI.priv = GST_PAD_GET_PRIVATE (pad);
+
   GST_PAD_DIRECTION (pad) = GST_PAD_UNKNOWN;
   GST_PAD_PEER (pad) = NULL;
 

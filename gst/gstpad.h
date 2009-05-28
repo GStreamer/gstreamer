@@ -48,6 +48,7 @@ G_BEGIN_DECLS
 
 
 typedef struct _GstPad GstPad;
+typedef struct _GstPadPrivate GstPadPrivate;
 typedef struct _GstPadClass GstPadClass;
 
 /**
@@ -568,7 +569,6 @@ typedef struct _GstPadTemplate GstPadTemplate;
  * @peer: the pad this pad is linked to
  * @sched_private: private storage for the scheduler
  * @chainfunc: function to chain buffer to pad
- * @chainlistfunc: function to chain buffer list to pad
  * @checkgetrangefunc: function to check if pad can operate in pull mode
  * @getrangefunc: function to get a range of data from a pad
  * @eventfunc: function to send an event to a pad
@@ -651,7 +651,6 @@ struct _GstPad {
   /* ABI added */
   /* iterate internal links */
   GstPadIterIntLinkFunction     iterintlinkfunc;
-  GstPadChainListFunction       chainlistfunc;
 
   /* free block_data */
   GDestroyNotify block_destroy_data;
@@ -660,8 +659,9 @@ struct _GstPad {
   union {
     struct {
       gboolean                      block_callback_called;
+      GstPadPrivate                *priv;
     } ABI;
-    gpointer _gst_reserved[GST_PADDING - 3];
+    gpointer _gst_reserved[GST_PADDING - 2];
   } abidata;
 };
 
@@ -693,7 +693,6 @@ struct _GstPadClass {
 #define GST_PAD_ACTIVATEPUSHFUNC(pad)	(GST_PAD_CAST(pad)->activatepushfunc)
 #define GST_PAD_ACTIVATEPULLFUNC(pad)	(GST_PAD_CAST(pad)->activatepullfunc)
 #define GST_PAD_CHAINFUNC(pad)		(GST_PAD_CAST(pad)->chainfunc)
-#define GST_PAD_CHAINLISTFUNC(pad)	(GST_PAD_CAST(pad)->chainlistfunc)
 #define GST_PAD_CHECKGETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->checkgetrangefunc)
 #define GST_PAD_GETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->getrangefunc)
 #define GST_PAD_EVENTFUNC(pad)		(GST_PAD_CAST(pad)->eventfunc)
