@@ -3,5 +3,3 @@ To build this Gtk# from trunk is required and the following patches:
 http://bugzilla.novell.com/show_bug.cgi?id=497667
 http://bugzilla.novell.com/show_bug.cgi?id=499900
 
-If you're using Mono < 2.4 you also need to apply:
-http://bugzilla.novell.com/show_bug.cgi?id=477396
