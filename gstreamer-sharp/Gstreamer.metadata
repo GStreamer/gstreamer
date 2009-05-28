@@ -1004,6 +1004,9 @@
   <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='get_times']/parameters/parameter[@name='end']" name="pass_as">out</attr>
 
   <attr path="/api/namespace/object[@cname='GstBaseSrc']" name="name">BaseSrc</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='get_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
 
   <attr path="/api/namespace/object[@cname='GstBaseTransform']" name="name">BaseTransform</attr>
   <attr path="/api/namespace/object[@cname='GstPushSrc']" name="name">PushSrc</attr>
