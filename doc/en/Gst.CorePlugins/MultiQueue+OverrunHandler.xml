@@ -1,0 +1,23 @@
+<Type Name="MultiQueue+OverrunHandler" FullName="Gst.CorePlugins.MultiQueue+OverrunHandler">
+  <TypeSignature Language="C#" Value="public delegate void MultiQueue.OverrunHandler(object o, MultiQueue.OverrunArgs args);" />
+  <AssemblyInfo>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="o" Type="System.Object" />
+    <Parameter Name="args" Type="Gst.CorePlugins.MultiQueue+OverrunArgs" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>System.Void</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="o">To be added.</param>
+    <param name="args">To be added.</param>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

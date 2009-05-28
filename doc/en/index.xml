@@ -218,6 +218,43 @@
     </Namespace>
     <Namespace Name="Gst.CorePlugins">
       <Type Name="CapsFilter" Kind="Class" />
+      <Type Name="FakeSink" Kind="Class" />
+      <Type Name="FakeSink+HandoffArgs" Kind="Class" />
+      <Type Name="FakeSink+HandoffHandler" Kind="Delegate" />
+      <Type Name="FakeSink+PrerollHandoffArgs" Kind="Class" />
+      <Type Name="FakeSink+PrerollHandoffHandler" Kind="Delegate" />
+      <Type Name="FakeSink+StateErrorType" Kind="Enumeration" />
+      <Type Name="FakeSrc" Kind="Class" />
+      <Type Name="FakeSrc+DataTypeType" Kind="Enumeration" />
+      <Type Name="FakeSrc+FillTypeType" Kind="Enumeration" />
+      <Type Name="FakeSrc+HandoffArgs" Kind="Class" />
+      <Type Name="FakeSrc+HandoffHandler" Kind="Delegate" />
+      <Type Name="FakeSrc+SizeTypeType" Kind="Enumeration" />
+      <Type Name="FdSink" Kind="Class" />
+      <Type Name="FdSrc" Kind="Class" />
+      <Type Name="FileSink" Kind="Class" />
+      <Type Name="FileSink+BufferModeType" Kind="Enumeration" />
+      <Type Name="FileSrc" Kind="Class" />
+      <Type Name="Identity" Kind="Class" />
+      <Type Name="Identity+HandoffArgs" Kind="Class" />
+      <Type Name="Identity+HandoffHandler" Kind="Delegate" />
+      <Type Name="MultiQueue" Kind="Class" />
+      <Type Name="MultiQueue+OverrunArgs" Kind="Class" />
+      <Type Name="MultiQueue+OverrunHandler" Kind="Delegate" />
+      <Type Name="MultiQueue+UnderrunArgs" Kind="Class" />
+      <Type Name="MultiQueue+UnderrunHandler" Kind="Delegate" />
+      <Type Name="Queue" Kind="Class" />
+      <Type Name="Queue+LeakyType" Kind="Enumeration" />
+      <Type Name="Queue+OverrunArgs" Kind="Class" />
+      <Type Name="Queue+OverrunHandler" Kind="Delegate" />
+      <Type Name="Queue+PushingArgs" Kind="Class" />
+      <Type Name="Queue+PushingHandler" Kind="Delegate" />
+      <Type Name="Queue+RunningArgs" Kind="Class" />
+      <Type Name="Queue+RunningHandler" Kind="Delegate" />
+      <Type Name="Queue+UnderrunArgs" Kind="Class" />
+      <Type Name="Queue+UnderrunHandler" Kind="Delegate" />
+      <Type Name="Tee" Kind="Class" />
+      <Type Name="Tee+PullModeType" Kind="Enumeration" />
       <Type Name="TypeFindElement" Kind="Class" />
       <Type Name="TypeFindElement+HaveTypeArgs" Kind="Class" />
       <Type Name="TypeFindElement+HaveTypeHandler" Kind="Delegate" />

@@ -1,0 +1,29 @@
+<Type Name="Queue+RunningArgs" FullName="Gst.CorePlugins.Queue+RunningArgs">
+  <TypeSignature Language="C#" Value="public class Queue.RunningArgs : GLib.SignalArgs" />
+  <AssemblyInfo>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>GLib.SignalArgs</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+  <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public RunningArgs ();" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

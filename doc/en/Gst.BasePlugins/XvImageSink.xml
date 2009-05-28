@@ -855,7 +855,6 @@
       <MemberSignature Language="C#" Value="public string Name { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>

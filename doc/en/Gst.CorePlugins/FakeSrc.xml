@@ -1,21 +1,25 @@
-<Type Name="PlayBin" FullName="Gst.BasePlugins.PlayBin">
-  <TypeSignature Language="C#" Value="public class PlayBin : Gst.Pipeline" />
+<Type Name="FakeSrc" FullName="Gst.CorePlugins.FakeSrc">
+  <TypeSignature Language="C#" Value="public class FakeSrc : Gst.Element" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
-    <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>Gst.Pipeline</BaseTypeName>
+    <BaseTypeName>Gst.Element</BaseTypeName>
   </Base>
   <Interfaces />
+  <Attributes>
+    <Attribute>
+      <AttributeName>Gst.GTypeName("GstFakeSrc")</AttributeName>
+    </Attribute>
+  </Attributes>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public PlayBin ();" />
+      <MemberSignature Language="C#" Value="public FakeSrc ();" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -27,11 +31,10 @@
       </Docs>
     </Member>
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public PlayBin (IntPtr raw);" />
+      <MemberSignature Language="C#" Value="public FakeSrc (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="raw" Type="System.IntPtr" />
@@ -43,7 +46,7 @@
       </Docs>
     </Member>
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public PlayBin (string name);" />
+      <MemberSignature Language="C#" Value="public FakeSrc (string name);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -57,163 +60,15 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="AsyncHandling">
-      <MemberSignature Language="C#" Value="public bool AsyncHandling { set; get; }" />
+    <Member MemberName="Blocksize">
+      <MemberSignature Language="C#" Value="public ulong Blocksize { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("async-handling")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="AudioSink">
-      <MemberSignature Language="C#" Value="public Gst.Element AudioSink { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("audio-sink")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>Gst.Element</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="AutoFlushBus">
-      <MemberSignature Language="C#" Value="public bool AutoFlushBus { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("auto-flush-bus")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ConnectionSpeed">
-      <MemberSignature Language="C#" Value="public uint ConnectionSpeed { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("connection-speed")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.UInt32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="CurrentAudio">
-      <MemberSignature Language="C#" Value="public int CurrentAudio { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("current-audio")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="CurrentText">
-      <MemberSignature Language="C#" Value="public int CurrentText { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("current-text")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="CurrentVideo">
-      <MemberSignature Language="C#" Value="public int CurrentVideo { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("current-video")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Delay">
-      <MemberSignature Language="C#" Value="public ulong Delay { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("delay")</AttributeName>
+          <AttributeName>GLib.Property("blocksize")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -225,20 +80,19 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Frame">
-      <MemberSignature Language="C#" Value="public Gst.Buffer Frame { set; get; }" />
+    <Member MemberName="CanActivatePull">
+      <MemberSignature Language="C#" Value="public bool CanActivatePull { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("frame")</AttributeName>
+          <AttributeName>GLib.Property("can-activate-pull")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
-        <ReturnType>Gst.Buffer</ReturnType>
+        <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -246,15 +100,19 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Gst.ChildProxy.ChildrenCount">
-      <MemberSignature Language="C#" Value="uint Gst.ChildProxy.ChildrenCount { get; }" />
+    <Member MemberName="CanActivatePush">
+      <MemberSignature Language="C#" Value="public bool CanActivatePush { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("can-activate-push")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
-        <ReturnType>System.UInt32</ReturnType>
+        <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -262,92 +120,188 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Gst.ChildProxy.EmitChildAdded">
-      <MemberSignature Language="C#" Value="void ChildProxy.EmitChildAdded (Gst.Object child);" />
-      <MemberType>Method</MemberType>
+    <Member MemberName="Data">
+      <MemberSignature Language="C#" Value="public Gst.CorePlugins.FakeSrc.DataTypeType Data { set; get; }" />
+      <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("data")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.CorePlugins.FakeSrc+DataTypeType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Datarate">
+      <MemberSignature Language="C#" Value="public int Datarate { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("datarate")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DoTimestamp">
+      <MemberSignature Language="C#" Value="public bool DoTimestamp { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("do-timestamp")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Dump">
+      <MemberSignature Language="C#" Value="public bool Dump { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("dump")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Filltype">
+      <MemberSignature Language="C#" Value="public Gst.CorePlugins.FakeSrc.FillTypeType Filltype { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("filltype")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.CorePlugins.FakeSrc+FillTypeType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Format">
+      <MemberSignature Language="C#" Value="public Gst.Format Format { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("format")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.Format</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Handoff">
+      <MemberSignature Language="C#" Value="public event Gst.CorePlugins.FakeSrc.HandoffHandler Handoff;" />
+      <MemberType>Event</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
+        <ReturnType>Gst.CorePlugins.FakeSrc+HandoffHandler</ReturnType>
       </ReturnValue>
-      <Parameters>
-        <Parameter Name="child" Type="Gst.Object" />
-      </Parameters>
       <Docs>
-        <param name="child">To be added.</param>
         <summary>To be added.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Gst.ChildProxy.EmitChildRemoved">
-      <MemberSignature Language="C#" Value="void ChildProxy.EmitChildRemoved (Gst.Object child);" />
-      <MemberType>Method</MemberType>
+    <Member MemberName="IsLive">
+      <MemberSignature Language="C#" Value="public bool IsLive { set; get; }" />
+      <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("is-live")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
+        <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
-      <Parameters>
-        <Parameter Name="child" Type="Gst.Object" />
-      </Parameters>
       <Docs>
-        <param name="child">To be added.</param>
         <summary>To be added.</summary>
+        <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Gst.ChildProxy.GetChildByIndex">
-      <MemberSignature Language="C#" Value="Gst.Object ChildProxy.GetChildByIndex (uint index);" />
-      <MemberType>Method</MemberType>
+    <Member MemberName="LastMessage">
+      <MemberSignature Language="C#" Value="public string LastMessage { set; get; }" />
+      <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("last-message")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
-        <ReturnType>Gst.Object</ReturnType>
+        <ReturnType>System.String</ReturnType>
       </ReturnValue>
-      <Parameters>
-        <Parameter Name="index" Type="System.UInt32" />
-      </Parameters>
       <Docs>
-        <param name="index">To be added.</param>
         <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Gst.ChildProxy.GetChildByName">
-      <MemberSignature Language="C#" Value="Gst.Object ChildProxy.GetChildByName (string name);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>Gst.Object</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="name" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="name">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Make">
-      <MemberSignature Language="C#" Value="public static Gst.BasePlugins.PlayBin Make ();" />
+      <MemberSignature Language="C#" Value="public static Gst.CorePlugins.FakeSrc Make ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.BasePlugins.PlayBin</ReturnType>
+        <ReturnType>Gst.CorePlugins.FakeSrc</ReturnType>
       </ReturnValue>
       <Parameters />
       <Docs>
@@ -357,14 +311,13 @@
       </Docs>
     </Member>
     <Member MemberName="Make">
-      <MemberSignature Language="C#" Value="public static Gst.BasePlugins.PlayBin Make (string name);" />
+      <MemberSignature Language="C#" Value="public static Gst.CorePlugins.FakeSrc Make (string name);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.BasePlugins.PlayBin</ReturnType>
+        <ReturnType>Gst.CorePlugins.FakeSrc</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="name" Type="System.String" />
@@ -376,36 +329,15 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Name">
-      <MemberSignature Language="C#" Value="public string Name { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("name")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.String</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Nstreams">
-      <MemberSignature Language="C#" Value="public int Nstreams { set; get; }" />
+    <Member MemberName="NumBuffers">
+      <MemberSignature Language="C#" Value="public int NumBuffers { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("nstreams")</AttributeName>
+          <AttributeName>GLib.Property("num-buffers")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -417,20 +349,39 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="QueueMinThreshold">
-      <MemberSignature Language="C#" Value="public ulong QueueMinThreshold { set; get; }" />
+    <Member MemberName="OnHandoff">
+      <MemberSignature Language="C#" Value="protected virtual void OnHandoff (object o, GLib.SignalArgs args);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="System.Object" />
+        <Parameter Name="args" Type="GLib.SignalArgs" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="args">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Parentsize">
+      <MemberSignature Language="C#" Value="public int Parentsize { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("queue-min-threshold")</AttributeName>
+          <AttributeName>GLib.Property("parentsize")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
+        <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -438,79 +389,15 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="QueueSize">
-      <MemberSignature Language="C#" Value="public ulong QueueSize { set; get; }" />
+    <Member MemberName="Pattern">
+      <MemberSignature Language="C#" Value="public string Pattern { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("queue-size")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="QueueThreshold">
-      <MemberSignature Language="C#" Value="public ulong QueueThreshold { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("queue-threshold")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Source">
-      <MemberSignature Language="C#" Value="public Gst.Element Source { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("source")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>Gst.Element</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SubtitleEncoding">
-      <MemberSignature Language="C#" Value="public string SubtitleEncoding { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("subtitle-encoding")</AttributeName>
+          <AttributeName>GLib.Property("pattern")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -522,20 +409,19 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="SubtitleFontDesc">
-      <MemberSignature Language="C#" Value="public string SubtitleFontDesc { set; }" />
+    <Member MemberName="SignalHandoffs">
+      <MemberSignature Language="C#" Value="public bool SignalHandoffs { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("subtitle-font-desc")</AttributeName>
+          <AttributeName>GLib.Property("signal-handoffs")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
-        <ReturnType>System.String</ReturnType>
+        <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -543,20 +429,19 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Suburi">
-      <MemberSignature Language="C#" Value="public string Suburi { set; get; }" />
+    <Member MemberName="Silent">
+      <MemberSignature Language="C#" Value="public bool Silent { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("suburi")</AttributeName>
+          <AttributeName>GLib.Property("silent")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
-        <ReturnType>System.String</ReturnType>
+        <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -564,20 +449,19 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Uri">
-      <MemberSignature Language="C#" Value="public string Uri { set; get; }" />
+    <Member MemberName="Sizemax">
+      <MemberSignature Language="C#" Value="public int Sizemax { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("uri")</AttributeName>
+          <AttributeName>GLib.Property("sizemax")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
-        <ReturnType>System.String</ReturnType>
+        <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -585,20 +469,19 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="VideoSink">
-      <MemberSignature Language="C#" Value="public Gst.Element VideoSink { set; get; }" />
+    <Member MemberName="Sizemin">
+      <MemberSignature Language="C#" Value="public int Sizemin { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("video-sink")</AttributeName>
+          <AttributeName>GLib.Property("sizemin")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
-        <ReturnType>Gst.Element</ReturnType>
+        <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -606,20 +489,19 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="VisPlugin">
-      <MemberSignature Language="C#" Value="public Gst.Element VisPlugin { set; get; }" />
+    <Member MemberName="Sizetype">
+      <MemberSignature Language="C#" Value="public Gst.CorePlugins.FakeSrc.SizeTypeType Sizetype { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("vis-plugin")</AttributeName>
+          <AttributeName>GLib.Property("sizetype")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
-        <ReturnType>Gst.Element</ReturnType>
+        <ReturnType>Gst.CorePlugins.FakeSrc+SizeTypeType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -627,20 +509,39 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Volume">
-      <MemberSignature Language="C#" Value="public double Volume { set; get; }" />
+    <Member MemberName="Sync">
+      <MemberSignature Language="C#" Value="public bool Sync { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("volume")</AttributeName>
+          <AttributeName>GLib.Property("sync")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
-        <ReturnType>System.Double</ReturnType>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Typefind">
+      <MemberSignature Language="C#" Value="public bool Typefind { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.Property("typefind")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -649,9 +550,4 @@
       </Docs>
     </Member>
   </Members>
-  <Attributes>
-    <Attribute>
-      <AttributeName>Gst.GTypeName("GstPlayBin")</AttributeName>
-    </Attribute>
-  </Attributes>
 </Type>
