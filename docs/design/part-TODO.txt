@@ -36,13 +36,6 @@ API/ABI
   incrementaly when needed. We can do this with a gst_pad_iterate_caps() call.
   We also need to incrementally return intersections etc, for this.
 
-- When an element goes to PAUSED there is no way to figure out the running time
-  when this happened. One could think that we can store this time in the
-  base_time field of the element but that causes problems when the element is
-  still using the base_time before really PAUSING. We seem to need a new element
-  field for this. The running time when an element is paused can be usefull to
-  clip late buffers instead of prerolling on them.
-
 - Elements in a bin have no clue about the final state of the parent element
   since the bin sets the target state on its children in small steps. This
   causes problems for elements that like to know the final state (rtspsrc going
