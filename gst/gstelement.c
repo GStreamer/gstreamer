@@ -73,7 +73,7 @@
  * toplevel #GstPipeline so the clock functions are only to be used in very
  * specific situations.
  *
- * Last reviewed on 2009-05-21 (0.10.24)
+ * Last reviewed on 2009-05-29 (0.10.24)
  */
 
 #include "gst_private.h"
@@ -535,7 +535,16 @@ gst_element_get_base_time (GstElement * element)
  * @element: a #GstElement.
  * @time: the base time to set.
  *
- * Set the start time of an element. See gst_element_get_start_time().
+ * Set the start time of an element. The start time of the element is the
+ * running time of the element when it last went to the PAUSED state. In READY
+ * or after a flushing seek, it is set to 0.
+ *
+ * Toplevel elements like #GstPipeline will manage the start_time and
+ * base_time on its children. Setting the start_time to #GST_CLOCK_TIME_NONE
+ * on such a toplevel element will disable the distribution of the base_time to
+ * the children and can be useful if the application manages the base_time
+ * itself, for example if you want to synchronize capture from multiple
+ * pipelines, and you can also ensure that the pipelines have the same clock.
  *
  * MT safe.
  *
@@ -563,8 +572,10 @@ gst_element_set_start_time (GstElement * element, GstClockTime time)
  * @element: a #GstElement.
  *
  * Returns the start time of the element. The start time is the
- * running time of the clock when this element was last put to
- * PAUSED. 
+ * running time of the clock when this element was last put to PAUSED. 
+ *
+ * Usually the start_time is managed by a toplevel element such as
+ * #GstPipeline. 
  *
  * MT safe.
  *

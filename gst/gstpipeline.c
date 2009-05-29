@@ -71,14 +71,14 @@
  * to PLAYING again. The effect is that the running time (as the difference
  * between the clock time and the base time) will count how much time was spent
  * in the PLAYING state. This default behaviour can be changed with the
- * gst_pipeline_set_new_stream_time() method.
+ * gst_element_set_start_time() method.
  *
  * When sending a flushing seek event to a GstPipeline (see
  * gst_element_seek()), it will make sure that the pipeline is properly
  * PAUSED and resumed as well as set the new running time to 0 when the
  * seek succeeded.
  *
- * Last reviewed on 2009-05-21 (0.10.24)
+ * Last reviewed on 2009-05-29 (0.10.24)
  */
 
 #include "gst_private.h"
