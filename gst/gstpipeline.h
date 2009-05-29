@@ -93,8 +93,10 @@ GstElement*	gst_pipeline_new		(const gchar *name);
 
 GstBus*		gst_pipeline_get_bus		(GstPipeline *pipeline);
 
+#ifndef GST_DISABLE_DEPRECATED
 void		gst_pipeline_set_new_stream_time  (GstPipeline *pipeline, GstClockTime time);
 GstClockTime	gst_pipeline_get_last_stream_time (GstPipeline *pipeline);
+#endif
 
 void            gst_pipeline_use_clock          (GstPipeline *pipeline, GstClock *clock);
 gboolean        gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);

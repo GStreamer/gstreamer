@@ -573,11 +573,7 @@ gst_pipeline_get_bus (GstPipeline * pipeline)
  * @pipeline: a #GstPipeline
  * @time: the new running time to set
  *
- * Note, the name of this function is wrong, it should be
- * gst_pipeline_set_new_running_time(), this function does not change the stream
- * time of the pipeline elements but the running time.
- *
- * Set the new running time of @pipeline to @time. The running time is used to
+ * Set the new start time of @pipeline to @time. The start time is used to
  * set the base time on the elements (see gst_element_set_base_time())
  * in the PAUSED->PLAYING state transition.
  *
@@ -588,29 +584,26 @@ gst_pipeline_get_bus (GstPipeline * pipeline)
  * pipelines have the same clock.
  *
  * MT safe.
+ *
+ * Deprecated: This function has the wrong name and is equivalent to
+ * gst_element_set_start_time(). 
  */
+#ifndef GST_REMOVE_DEPRECATED
 void
 gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
 {
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
 
-  GST_OBJECT_LOCK (pipeline);
-  GST_ELEMENT_START_TIME (pipeline) = time;
-  GST_OBJECT_UNLOCK (pipeline);
-
-  GST_DEBUG_OBJECT (pipeline, "set new stream_time to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (time));
+  gst_element_set_start_time (GST_ELEMENT_CAST (pipeline), time);
 
   if (time == GST_CLOCK_TIME_NONE)
     GST_DEBUG_OBJECT (pipeline, "told not to adjust base_time");
 }
+#endif /* GST_REMOVE_DEPRECATED */
 
 /**
  * gst_pipeline_get_last_stream_time:
  * @pipeline: a #GstPipeline
- *
- * Note, the name of this function is wrong, it should be
- * gst_pipeline_get_last_running_time().
  *
  * Gets the last running time of @pipeline. If the pipeline is PLAYING,
  * the returned time is the running time used to configure the element's
@@ -621,10 +614,14 @@ gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
  * configured to not handle the management of the element's base time
  * (see gst_pipeline_set_new_stream_time()).
  *
+ * MT safe.
+ *
  * Returns: a #GstClockTime.
  *
- * MT safe.
+ * Deprecated: This function has the wrong name and is equivalent to
+ * gst_element_get_start_time(). 
  */
+#ifndef GST_REMOVE_DEPRECATED
 GstClockTime
 gst_pipeline_get_last_stream_time (GstPipeline * pipeline)
 {
@@ -632,12 +629,11 @@ gst_pipeline_get_last_stream_time (GstPipeline * pipeline)
 
   g_return_val_if_fail (GST_IS_PIPELINE (pipeline), GST_CLOCK_TIME_NONE);
 
-  GST_OBJECT_LOCK (pipeline);
-  result = GST_ELEMENT_START_TIME (pipeline);
-  GST_OBJECT_UNLOCK (pipeline);
+  result = gst_element_get_start_time (GST_ELEMENT_CAST (pipeline));
 
   return result;
 }
+#endif /* GST_REMOVE_DEPRECATED */
 
 static GstClock *
 gst_pipeline_provide_clock_func (GstElement * element)

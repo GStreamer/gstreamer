@@ -283,7 +283,7 @@ GST_START_TEST (test_base_time)
   fail_unless (clock && GST_IS_CLOCK (clock), "i want a clock dammit");
   gst_pipeline_use_clock (GST_PIPELINE (pipeline), clock);
 
-  fail_unless (gst_pipeline_get_last_stream_time (GST_PIPELINE (pipeline)) == 0,
+  fail_unless (gst_element_get_start_time (pipeline) == 0,
       "stream time doesn't start off at 0");
 
   probe_lock = g_mutex_new ();
@@ -331,7 +331,7 @@ GST_START_TEST (test_base_time)
     fail_unless (upper >= base, "bogus base time: %" GST_TIME_FORMAT " > %"
         GST_TIME_FORMAT, GST_TIME_ARGS (base), GST_TIME_ARGS (upper));
 
-    stream = gst_pipeline_get_last_stream_time (GST_PIPELINE (pipeline));
+    stream = gst_element_get_start_time (pipeline);
 
     fail_unless (stream > 0, "bogus new stream time: %" GST_TIME_FORMAT " > %"
         GST_TIME_FORMAT, GST_TIME_ARGS (stream), GST_TIME_ARGS (0));
@@ -399,7 +399,7 @@ GST_START_TEST (test_base_time)
 
     fail_if (observed == GST_CLOCK_TIME_NONE, "no timestamp recorded");
 
-    stream = gst_pipeline_get_last_stream_time (GST_PIPELINE (pipeline));
+    stream = gst_element_get_start_time (pipeline);
 
     fail_unless (base >= oldbase + WAIT_TIME, "base time not reset");
     fail_unless (upper >= base + stream, "bogus base time: %"
@@ -439,8 +439,7 @@ GST_START_TEST (test_base_time)
     fail_unless (lower >= upper + WAIT_TIME, "clock did not advance?");
 
     /* bling */
-    gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline),
-        GST_CLOCK_TIME_NONE);
+    gst_element_set_start_time (pipeline, GST_CLOCK_TIME_NONE);
 
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     fail_unless (gst_element_get_state (pipeline, NULL, NULL,
@@ -470,7 +469,7 @@ GST_START_TEST (test_base_time)
 
     fail_if (observed == GST_CLOCK_TIME_NONE, "no timestamp recorded");
 
-    fail_unless (gst_pipeline_get_last_stream_time (GST_PIPELINE (pipeline))
+    fail_unless (gst_element_get_start_time (pipeline)
         == GST_CLOCK_TIME_NONE, "stream time was reset");
 
     fail_unless (base == oldbase, "base time was reset");
