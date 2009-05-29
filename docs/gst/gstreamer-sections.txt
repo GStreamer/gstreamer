@@ -1995,6 +1995,7 @@ gst_structure_empty_new
 gst_structure_id_empty_new
 gst_structure_new
 gst_structure_new_valist
+gst_structure_id_new
 gst_structure_copy
 gst_structure_free
 gst_structure_get_name

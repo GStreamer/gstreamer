@@ -608,6 +608,41 @@ gst_structure_id_set_valist (GstStructure * structure,
   }
 }
 
+/**
+ * gst_structure_id_new:
+ * @name_quark: name of new structure
+ * @field_quark: the GQuark for the name of the field to set
+ * @...: variable arguments
+ *
+ * Creates a new #GstStructure with the given name as a GQuark, followed by
+ * fieldname quark, GType, argument(s) "triplets" in the same format as
+ * gst_structure_id_set(). Basically a convenience wrapper around
+ * gst_structure_id_empty_new() and gst_structure_id_set().
+ *
+ * The last variable argument must be NULL (or 0).
+ *
+ * Returns: a new #GstStructure
+ *
+ * Since: 0.10.24
+ */
+GstStructure *
+gst_structure_id_new (GQuark name_quark, GQuark field_quark, ...)
+{
+  GstStructure *s;
+  va_list varargs;
+
+  g_return_val_if_fail (name_quark != 0, NULL);
+  g_return_val_if_fail (field_quark != 0, NULL);
+
+  s = gst_structure_id_empty_new (name_quark);
+
+  va_start (varargs, field_quark);
+  gst_structure_id_set_valist (s, field_quark, varargs);
+  va_end (varargs);
+
+  return s;
+}
+
 /* If the structure currently contains a field with the same name, it is
  * replaced with the provided field. Otherwise, the field is added to the
  * structure. The field's value is not deeply copied.

@@ -381,8 +381,7 @@ gst_message_new_error (GstObject * src, GError * error, const gchar * debug)
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_ERROR));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_ERROR),
       GST_QUARK (GERROR), GST_TYPE_G_ERROR, error,
       GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
   message = gst_message_new_custom (GST_MESSAGE_ERROR, src, structure);
@@ -409,8 +408,7 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_WARNING));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_WARNING),
       GST_QUARK (GERROR), GST_TYPE_G_ERROR, error,
       GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
   message = gst_message_new_custom (GST_MESSAGE_WARNING, src, structure);
@@ -439,9 +437,9 @@ gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_INFO));
-  gst_structure_id_set (structure, GST_QUARK (GERROR), GST_TYPE_G_ERROR,
-      error, GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_INFO),
+      GST_QUARK (GERROR), GST_TYPE_G_ERROR, error,
+      GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
   message = gst_message_new_custom (GST_MESSAGE_INFO, src, structure);
 
   return message;
@@ -535,8 +533,7 @@ gst_message_new_buffering (GstObject * src, gint percent)
 
   g_return_val_if_fail (percent >= 0 && percent <= 100, NULL);
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_BUFFERING));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_BUFFERING),
       GST_QUARK (BUFFER_PERCENT), G_TYPE_INT, percent,
       GST_QUARK (BUFFERING_MODE), GST_TYPE_BUFFERING_MODE, GST_BUFFERING_STREAM,
       GST_QUARK (AVG_IN_RATE), G_TYPE_INT, -1,
@@ -569,8 +566,7 @@ gst_message_new_state_changed (GstObject * src,
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_STATE));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_STATE),
       GST_QUARK (OLD_STATE), GST_TYPE_STATE, (gint) oldstate,
       GST_QUARK (NEW_STATE), GST_TYPE_STATE, (gint) newstate,
       GST_QUARK (PENDING_STATE), GST_TYPE_STATE, (gint) pending, NULL);
@@ -625,8 +621,7 @@ gst_message_new_clock_provide (GstObject * src, GstClock * clock,
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_CLOCK_PROVIDE));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_CLOCK_PROVIDE),
       GST_QUARK (CLOCK), GST_TYPE_CLOCK, clock,
       GST_QUARK (READY), G_TYPE_BOOLEAN, ready, NULL);
   message = gst_message_new_custom (GST_MESSAGE_CLOCK_PROVIDE, src, structure);
@@ -656,8 +651,7 @@ gst_message_new_clock_lost (GstObject * src, GstClock * clock)
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_CLOCK_LOST));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_CLOCK_LOST),
       GST_QUARK (CLOCK), GST_TYPE_CLOCK, clock, NULL);
   message = gst_message_new_custom (GST_MESSAGE_CLOCK_LOST, src, structure);
 
@@ -682,8 +676,7 @@ gst_message_new_new_clock (GstObject * src, GstClock * clock)
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_NEW_CLOCK));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_NEW_CLOCK),
       GST_QUARK (CLOCK), GST_TYPE_CLOCK, clock, NULL);
   message = gst_message_new_custom (GST_MESSAGE_NEW_CLOCK, src, structure);
 
@@ -720,8 +713,7 @@ gst_message_new_structure_change (GstObject * src, GstStructureChangeType type,
   g_return_val_if_fail (GST_PAD_DIRECTION (src) == GST_PAD_SRC, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (owner), NULL);
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_STRUCTURE_CHANGE));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_STRUCTURE_CHANGE),
       GST_QUARK (TYPE), GST_TYPE_STRUCTURE_CHANGE_TYPE, type,
       GST_QUARK (OWNER), GST_TYPE_ELEMENT, owner,
       GST_QUARK (BUSY), G_TYPE_BOOLEAN, busy, NULL);
@@ -754,8 +746,7 @@ gst_message_new_segment_start (GstObject * src, GstFormat format,
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_SEGMENT_START));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_SEGMENT_START),
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (POSITION), G_TYPE_INT64, position, NULL);
   message = gst_message_new_custom (GST_MESSAGE_SEGMENT_START, src, structure);
@@ -785,8 +776,7 @@ gst_message_new_segment_done (GstObject * src, GstFormat format,
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_SEGMENT_DONE));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_SEGMENT_DONE),
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (POSITION), G_TYPE_INT64, position, NULL);
   message = gst_message_new_custom (GST_MESSAGE_SEGMENT_DONE, src, structure);
@@ -858,8 +848,7 @@ gst_message_new_duration (GstObject * src, GstFormat format, gint64 duration)
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_DURATION));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_DURATION),
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (DURATION), G_TYPE_INT64, duration, NULL);
   message = gst_message_new_custom (GST_MESSAGE_DURATION, src, structure);
@@ -888,8 +877,7 @@ gst_message_new_async_start (GstObject * src, gboolean new_base_time)
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_ASYNC_START));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_ASYNC_START),
       GST_QUARK (NEW_BASE_TIME), G_TYPE_BOOLEAN, new_base_time, NULL);
   message = gst_message_new_custom (GST_MESSAGE_ASYNC_START, src, structure);
 
@@ -962,8 +950,7 @@ gst_message_new_request_state (GstObject * src, GstState state)
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_REQUEST_STATE));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_REQUEST_STATE),
       GST_QUARK (NEW_STATE), GST_TYPE_STATE, (gint) state, NULL);
   message = gst_message_new_custom (GST_MESSAGE_REQUEST_STATE, src, structure);
 
@@ -1560,8 +1547,7 @@ gst_message_new_stream_status (GstObject * src, GstStreamStatusType type,
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_id_empty_new (GST_QUARK (MESSAGE_STREAM_STATUS));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_STREAM_STATUS),
       GST_QUARK (TYPE), GST_TYPE_STREAM_STATUS_TYPE, (gint) type,
       GST_QUARK (OWNER), GST_TYPE_ELEMENT, owner, NULL);
   message = gst_message_new_custom (GST_MESSAGE_STREAM_STATUS, src, structure);

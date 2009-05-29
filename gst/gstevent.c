@@ -602,8 +602,7 @@ gst_event_new_new_segment_full (gboolean update, gdouble rate,
   if (stop != -1)
     g_return_val_if_fail (start <= stop, NULL);
 
-  structure = gst_structure_id_empty_new (GST_QUARK (EVENT_NEWSEGMENT));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (EVENT_NEWSEGMENT),
       GST_QUARK (UPDATE), G_TYPE_BOOLEAN, update,
       GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
       GST_QUARK (APPLIED_RATE), G_TYPE_DOUBLE, applied_rate,
@@ -734,8 +733,7 @@ gst_event_new_buffer_size (GstFormat format, gint64 minsize,
       ", maxsize %" G_GINT64_FORMAT ", async %d", gst_format_get_name (format),
       minsize, maxsize, async);
 
-  structure = gst_structure_id_empty_new (GST_QUARK (EVENT_BUFFER_SIZE));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (EVENT_BUFFER_SIZE),
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (MINSIZE), G_TYPE_INT64, minsize,
       GST_QUARK (MAXSIZE), G_TYPE_INT64, maxsize,
@@ -840,8 +838,7 @@ gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
       ", timestamp %" GST_TIME_FORMAT, proportion,
       diff, GST_TIME_ARGS (timestamp));
 
-  structure = gst_structure_id_empty_new (GST_QUARK (EVENT_QOS));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (EVENT_QOS),
       GST_QUARK (PROPORTION), G_TYPE_DOUBLE, proportion,
       GST_QUARK (DIFF), G_TYPE_INT64, diff,
       GST_QUARK (TIMESTAMP), G_TYPE_UINT64, timestamp, NULL);
@@ -953,8 +950,7 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
         stop);
   }
 
-  structure = gst_structure_id_empty_new (GST_QUARK (EVENT_SEEK));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (EVENT_SEEK),
       GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (FLAGS), GST_TYPE_SEEK_FLAGS, flags,
@@ -1062,8 +1058,7 @@ gst_event_new_latency (GstClockTime latency)
   GST_CAT_INFO (GST_CAT_EVENT,
       "creating latency event %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
 
-  structure = gst_structure_id_empty_new (GST_QUARK (EVENT_LATENCY));
-  gst_structure_id_set (structure,
+  structure = gst_structure_id_new (GST_QUARK (EVENT_LATENCY),
       GST_QUARK (LATENCY), G_TYPE_UINT64, latency, NULL);
   event = gst_event_new_custom (GST_EVENT_LATENCY, structure);
 

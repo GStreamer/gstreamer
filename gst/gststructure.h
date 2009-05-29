@@ -95,6 +95,9 @@ GstStructure *          gst_structure_new                  (const gchar *       
 GstStructure *          gst_structure_new_valist           (const gchar *            name,
 						            const gchar *            firstfield,
 							    va_list                  varargs);
+GstStructure *          gst_structure_id_new               (GQuark                   name_quark,
+                                                            GQuark                   field_quark,
+                                                            ...);
 GstStructure *          gst_structure_copy                 (const GstStructure      *structure);
 void			gst_structure_set_parent_refcount  (GstStructure            *structure,
                                                             gint            *refcount);
