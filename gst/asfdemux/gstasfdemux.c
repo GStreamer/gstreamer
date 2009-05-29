@@ -1349,13 +1349,9 @@ eos:
      * less data queued than required for preroll; force stream activation and
      * send any pending payloads before sending EOS */
     if (!demux->activated_streams)
-      flow = gst_asf_demux_push_complete_payloads (demux, TRUE);
+      gst_asf_demux_push_complete_payloads (demux, TRUE);
 
-    if (GST_FLOW_IS_FATAL (flow) || flow == GST_FLOW_NOT_LINKED) {
-      GST_DEBUG_OBJECT (demux, "pushing complete payloads failed");
-      goto pause;
-    }
-
+    /* we want to push an eos or post a segment-done in any case */
     if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
       gint64 stop;
 
