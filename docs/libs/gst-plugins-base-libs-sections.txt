@@ -1690,9 +1690,6 @@ gst_video_sink_get_type
 <SECTION>
 <FILE>private</FILE>
 <SUBSECTION Private>
-sha_init
-sha_final
-sha_update
 bind_textdomain_codeset
 bindtextdomain
 dcgettext
@@ -1703,13 +1700,6 @@ gettext
 gettext_noop
 ngettext
 textdomain
-SHA_BLOCKSIZE
-SHA_BYTE
-SHA_BYTE_ORDER
-SHA_DIGESTSIZE
-SHA_INFO
-SHA_LONG
-SHA_VERSION
 _
 N_
 </SECTION>
