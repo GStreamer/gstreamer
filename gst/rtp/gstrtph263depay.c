@@ -127,6 +127,7 @@ gst_rtp_h263_depay_init (GstRtpH263Depay * rtph263depay,
 
   rtph263depay->offset = 0;
   rtph263depay->leftover = 0;
+  rtph263depay->start = TRUE;
 }
 
 static void
@@ -182,6 +183,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     gst_adapter_clear (rtph263depay->adapter);
     rtph263depay->offset = 0;
     rtph263depay->leftover = 0;
+    rtph263depay->start = FALSE;
   }
 
   payload_len = gst_rtp_buffer_get_payload_len (buf);
@@ -272,53 +274,60 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   if (!EBIT) {
-    GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len);
+    if(rtph263depay->start){
+      GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len);
 
-    /* Copy the entire buffer */
-    memcpy (GST_BUFFER_DATA (tmp), payload, payload_len);
-    gst_adapter_push (rtph263depay->adapter, tmp);
+      /* Copy the entire buffer */
+      memcpy (GST_BUFFER_DATA (tmp), payload, payload_len);
+      gst_adapter_push (rtph263depay->adapter, tmp);
+    }
   } else {
-    GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len - 1);
+    if(rtph263depay->start){
+      GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len - 1);
 
-    /* Copy the entire buffer except for the last byte */
-    memcpy (GST_BUFFER_DATA (tmp), payload, payload_len - 1);
-    gst_adapter_push (rtph263depay->adapter, tmp);
+      /* Copy the entire buffer except for the last byte */
+      memcpy (GST_BUFFER_DATA (tmp), payload, payload_len - 1);
+      gst_adapter_push (rtph263depay->adapter, tmp);
 
-    /* Put the last byte into the leftover */
-    GST_DEBUG ("payload[payload_len - 1] : 0x%x", payload[payload_len - 1]);
-    GST_DEBUG ("mask : 0x%x", 0xFF << EBIT);
-    rtph263depay->leftover = (payload[payload_len - 1] >> EBIT) << EBIT;
-    rtph263depay->offset = 1;
-    GST_DEBUG ("leftover : 0x%x", rtph263depay->leftover);
+      /* Put the last byte into the leftover */
+      GST_DEBUG ("payload[payload_len - 1] : 0x%x", payload[payload_len - 1]);
+      GST_DEBUG ("mask : 0x%x", 0xFF << EBIT);
+      rtph263depay->leftover = (payload[payload_len - 1] >> EBIT) << EBIT;
+      rtph263depay->offset = 1;
+      GST_DEBUG ("leftover : 0x%x", rtph263depay->leftover);
+    }
   }
 
   if (M) {
-    /* frame is completed */
-    guint avail;
-    guint32 timestamp;
+    if(rtph263depay->start){
+      /* frame is completed */
+      guint avail;
+      guint32 timestamp;
 
-    if (rtph263depay->offset) {
-      /* push in the leftover */
-      GstBuffer *buf = gst_buffer_new_and_alloc (1);
+      if (rtph263depay->offset) {
+        /* push in the leftover */
+        GstBuffer *buf = gst_buffer_new_and_alloc (1);
 
-      GST_DEBUG ("Pushing leftover in adapter");
-      GST_BUFFER_DATA (buf)[0] = rtph263depay->leftover;
-      gst_adapter_push (rtph263depay->adapter, buf);
+        GST_DEBUG ("Pushing leftover in adapter");
+        GST_BUFFER_DATA (buf)[0] = rtph263depay->leftover;
+        gst_adapter_push (rtph263depay->adapter, buf);
+      }
+
+      avail = gst_adapter_available (rtph263depay->adapter);
+      outbuf = gst_adapter_take_buffer (rtph263depay->adapter, avail);
+
+      if (I)
+        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+      GST_DEBUG ("Pushing out a buffer of %d bytes", avail);
+
+      timestamp = gst_rtp_buffer_get_timestamp (buf);
+      gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
+      rtph263depay->offset = 0;
+      rtph263depay->leftover = 0;
+    }else{
+      rtph263depay->start = TRUE;
     }
-
-    avail = gst_adapter_available (rtph263depay->adapter);
-    outbuf = gst_adapter_take_buffer (rtph263depay->adapter, avail);
-
-    if (I)
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-
-    GST_DEBUG ("Pushing out a buffer of %d bytes", avail);
-
-    timestamp = gst_rtp_buffer_get_timestamp (buf);
-    gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
-    rtph263depay->offset = 0;
-    rtph263depay->leftover = 0;
-
   }
 
   return NULL;

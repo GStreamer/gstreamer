@@ -47,6 +47,7 @@ struct _GstRtpH263Depay
   guint8 offset;	/* offset to apply to next payload */
   guint8 leftover;	/* leftover from previous payload (if offset != 0) */
   GstAdapter *adapter;
+  gboolean start;
 };
 
 struct _GstRtpH263DepayClass
