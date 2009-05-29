@@ -387,7 +387,7 @@ gst_query_new_position (GstFormat format)
   GstQuery *query;
   GstStructure *structure;
 
-  structure = gst_structure_empty_new ("GstQueryPosition");
+  structure = gst_structure_id_empty_new (GST_QUARK (QUERY_POSITION));
   gst_structure_id_set (structure,
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (CURRENT), G_TYPE_INT64, G_GINT64_CONSTANT (-1), NULL);
@@ -460,7 +460,7 @@ gst_query_new_duration (GstFormat format)
   GstQuery *query;
   GstStructure *structure;
 
-  structure = gst_structure_empty_new ("GstQueryDuration");
+  structure = gst_structure_id_empty_new (GST_QUARK (QUERY_DURATION));
   gst_structure_id_set (structure,
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (DURATION), G_TYPE_INT64, G_GINT64_CONSTANT (-1), NULL);
@@ -535,7 +535,7 @@ gst_query_new_latency (void)
   GstQuery *query;
   GstStructure *structure;
 
-  structure = gst_structure_empty_new ("GstQueryLatency");
+  structure = gst_structure_id_empty_new (GST_QUARK (QUERY_LATENCY));
   gst_structure_id_set (structure,
       GST_QUARK (LIVE), G_TYPE_BOOLEAN, FALSE,
       GST_QUARK (MIN_LATENCY), G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
@@ -623,7 +623,7 @@ gst_query_new_convert (GstFormat src_format, gint64 value,
   GstQuery *query;
   GstStructure *structure;
 
-  structure = gst_structure_empty_new ("GstQueryConvert");
+  structure = gst_structure_id_empty_new (GST_QUARK (QUERY_CONVERT));
   gst_structure_id_set (structure,
       GST_QUARK (SRC_FORMAT), GST_TYPE_FORMAT, src_format,
       GST_QUARK (SRC_VALUE), G_TYPE_INT64, value,
@@ -711,7 +711,7 @@ gst_query_new_segment (GstFormat format)
   GstQuery *query;
   GstStructure *structure;
 
-  structure = gst_structure_empty_new ("GstQuerySegment");
+  structure = gst_structure_id_empty_new (GST_QUARK (QUERY_SEGMENT));
   gst_structure_id_set (structure,
       GST_QUARK (RATE), G_TYPE_DOUBLE, (gdouble) 0.0,
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
@@ -846,7 +846,7 @@ gst_query_new_seeking (GstFormat format)
   GstQuery *query;
   GstStructure *structure;
 
-  structure = gst_structure_empty_new ("GstQuerySeeking");
+  structure = gst_structure_id_empty_new (GST_QUARK (QUERY_SEEKING));
   gst_structure_id_set (structure,
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (SEEKABLE), G_TYPE_BOOLEAN, FALSE,
@@ -935,7 +935,7 @@ gst_query_new_formats (void)
   GstQuery *query;
   GstStructure *structure;
 
-  structure = gst_structure_new ("GstQueryFormats", NULL);
+  structure = gst_structure_id_empty_new (GST_QUARK (QUERY_FORMATS));
   query = gst_query_new (GST_QUERY_FORMATS, structure);
 
   return query;
@@ -1096,7 +1096,7 @@ gst_query_new_buffering (GstFormat format)
   GstQuery *query;
   GstStructure *structure;
 
-  structure = gst_structure_empty_new ("GstQueryBuffering");
+  structure = gst_structure_id_empty_new (GST_QUARK (QUERY_BUFFERING));
   /* by default, we configure the answer as no buffering with a 100% buffering
    * progress */
   gst_structure_id_set (structure,
@@ -1306,7 +1306,7 @@ gst_query_new_uri (void)
   GstQuery *query;
   GstStructure *structure;
 
-  structure = gst_structure_empty_new ("GstQueryURI");
+  structure = gst_structure_id_empty_new (GST_QUARK (QUERY_URI));
   gst_structure_id_set (structure, GST_QUARK (URI), G_TYPE_STRING, NULL, NULL);
 
   query = gst_query_new (GST_QUERY_URI, structure);

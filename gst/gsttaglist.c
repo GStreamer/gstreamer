@@ -38,6 +38,7 @@
 #include "gstinfo.h"
 #include "gstvalue.h"
 #include "gstbuffer.h"
+#include "gstquark.h"
 
 #include <gobject/gvaluecollector.h>
 #include <string.h>
@@ -59,9 +60,6 @@ typedef struct
   GstTagFlag flag;              /* type of tag */
 }
 GstTagInfo;
-
-#define TAGLIST "taglist"
-static GQuark gst_tag_list_quark;
 
 static GMutex *__tag_mutex;
 
@@ -91,7 +89,6 @@ gst_tag_list_get_type (void)
 void
 _gst_tag_initialize (void)
 {
-  gst_tag_list_quark = g_quark_from_static_string (TAGLIST);
   __tag_mutex = g_mutex_new ();
   __tags = g_hash_table_new (g_direct_hash, g_direct_equal);
   gst_tag_register (GST_TAG_TITLE, GST_TAG_FLAG_META,
@@ -532,7 +529,7 @@ gst_tag_is_fixed (const gchar * tag)
 GstTagList *
 gst_tag_list_new (void)
 {
-  return GST_TAG_LIST (gst_structure_new (TAGLIST, NULL));
+  return GST_TAG_LIST (gst_structure_id_empty_new (GST_QUARK (TAGLIST)));
 }
 
 /**
@@ -569,7 +566,7 @@ gst_is_tag_list (gconstpointer p)
 
   g_return_val_if_fail (p != NULL, FALSE);
 
-  return (GST_IS_STRUCTURE (s) && s->name == gst_tag_list_quark);
+  return (GST_IS_STRUCTURE (s) && s->name == GST_QUARK (TAGLIST));
 }
 
 typedef struct
