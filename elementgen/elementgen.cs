@@ -281,6 +281,8 @@ public class ElementGen {
     writer.WriteLine ("\t\t\tRaw = gst_element_factory_make (native_element, native_name);");
     writer.WriteLine ("\t\t\tGLib.Marshaller.Free (native_name);");
     writer.WriteLine ("\t\t\tGLib.Marshaller.Free (native_element);");
+    writer.WriteLine ("\t\t\tif (Raw == IntPtr.Zero)");
+    writer.WriteLine ("\t\t\t\tthrow new Exception (\"Failed to instantiate element \\\"" + ei.name + "\\\"\");");
     writer.WriteLine ("\t\t}\n");
 
     writer.WriteLine ("\t\tpublic " + class_name + " () : this ((string) null) { }\n");
