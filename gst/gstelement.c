@@ -2303,6 +2303,8 @@ gst_element_lost_state_full (GstElement * element, gboolean new_base_time)
   GST_STATE_NEXT (element) = new_state;
   GST_STATE_PENDING (element) = new_state;
   GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
+  if (new_base_time)
+    GST_ELEMENT_START_TIME (element) = 0;
   GST_OBJECT_UNLOCK (element);
 
   message = gst_message_new_state_changed (GST_OBJECT_CAST (element),
