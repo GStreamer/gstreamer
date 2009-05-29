@@ -1485,13 +1485,8 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
   memcpy (current, pending, sizeof (GstStepInfo));
   pending->valid = FALSE;
 
-  /* get the running time of the current segment start and remember it */
-  if (segment->rate > 0.0)
-    current->start =
-        gst_segment_to_running_time (segment, segment->format, segment->start);
-  else
-    current->start =
-        gst_segment_to_running_time (segment, segment->format, segment->stop);
+  /* get the running time of where we paused and remember it */
+  current->start = gst_element_get_start_time (GST_ELEMENT_CAST (sink));
 
   /* set the new rate */
   segment->rate = segment->rate * current->rate;
@@ -1517,7 +1512,6 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
   GstMessage *message;
 
   GST_DEBUG_OBJECT (sink, "step complete");
-
 
   /* update the segment, discarding what was consumed, running time goes
    * backwards with the duration of the data we skipped. FIXME, this only works
