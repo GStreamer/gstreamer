@@ -556,14 +556,24 @@ gst_shape_wipe_blend_16 (GstShapeWipe * self, GstBuffer * inbuf,
   guint i, j;
   guint mask_increment = GST_ROUND_UP_2 (self->width) - self->width;
   gfloat position = self->mask_position;
-  gfloat low = MAX (0.0, position - (self->mask_border / 2.0));
-  gfloat high = MIN (1.0, position + (self->mask_border / 2.0));
+  gfloat low = position - (self->mask_border / 2.0f);
+  gfloat high = position + (self->mask_border / 2.0f);
+
+  if (low < 0.0f) {
+    high = 0.0f;
+    low = 0.0f;
+  }
+
+  if (high > 1.0f) {
+    low = 1.0f;
+    high = 1.0f;
+  }
 
   for (i = 0; i < self->height; i++) {
     for (j = 0; j < self->width; j++) {
-      gfloat in = *mask / 65535.0;
+      gfloat in = *mask / 65535.0f;
 
-      if (in <= low) {
+      if (in < low) {
         output[0] = 0x00;       /* A */
         output[1] = 0x00;       /* Y */
         output[2] = 0x80;       /* U */
@@ -574,7 +584,7 @@ gst_shape_wipe_blend_16 (GstShapeWipe * self, GstBuffer * inbuf,
         output[2] = input[2];   /* U */
         output[3] = input[3];   /* V */
       } else {
-        gfloat val = 255 * ((in - low) / (high - low));
+        gfloat val = 255.0f * ((in - low) / (high - low));
 
         output[0] = CLAMP (val, 0, 255);        /* A */
         output[1] = input[1];   /* Y */
@@ -602,14 +612,24 @@ gst_shape_wipe_blend_8 (GstShapeWipe * self, GstBuffer * inbuf,
   guint i, j;
   guint mask_increment = GST_ROUND_UP_4 (self->width) - self->width;
   gfloat position = self->mask_position;
-  gfloat low = MAX (0.0, position - (self->mask_border / 2.0));
-  gfloat high = MIN (1.0, position + (self->mask_border / 2.0));
+  gfloat low = position - (self->mask_border / 2.0f);
+  gfloat high = position + (self->mask_border / 2.0f);
+
+  if (low < 0.0f) {
+    high = 0.0f;
+    low = 0.0f;
+  }
+
+  if (high > 1.0f) {
+    low = 1.0f;
+    high = 1.0f;
+  }
 
   for (i = 0; i < self->height; i++) {
     for (j = 0; j < self->width; j++) {
-      gfloat in = *mask / 255.0;
+      gfloat in = *mask / 255.0f;
 
-      if (in <= low) {
+      if (in < low) {
         output[0] = 0x00;       /* A */
         output[1] = 0x00;       /* Y */
         output[2] = 0x80;       /* U */
@@ -620,7 +640,7 @@ gst_shape_wipe_blend_8 (GstShapeWipe * self, GstBuffer * inbuf,
         output[2] = input[2];   /* U */
         output[3] = input[3];   /* V */
       } else {
-        gfloat val = 255 * ((in - low) / (high - low));
+        gfloat val = 255.0f * ((in - low) / (high - low));
 
         output[0] = CLAMP (val, 0, 255);        /* A */
         output[1] = input[1];   /* Y */
