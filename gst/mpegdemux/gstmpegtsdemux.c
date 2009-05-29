@@ -822,6 +822,40 @@ no_pcr_stream:
   }
 }
 
+static void
+gst_mpegts_demux_send_tags_for_stream (GstMpegTSDemux * demux,
+    GstMpegTSStream * stream)
+{
+  GstTagList *list = NULL;
+
+  if (stream->ES_info) {
+    guint8 *iso639_languages =
+        gst_mpeg_descriptor_find (stream->ES_info, DESC_ISO_639_LANGUAGE);
+    gint i;
+    if (iso639_languages) {
+      if (DESC_ISO_639_LANGUAGE_codes_n (iso639_languages)) {
+        gchar lang_code[4];
+        gchar *language_n = (gchar *)
+            DESC_ISO_639_LANGUAGE_language_code_nth (iso639_languages, i);
+        lang_code[0] = language_n[0];
+        lang_code[1] = language_n[1];
+        lang_code[2] = language_n[2];
+        lang_code[3] = 0;
+        if (!list)
+          list = gst_tag_list_new ();
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_LANGUAGE_CODE, lang_code, NULL);
+      }
+    }
+  }
+
+  if (list) {
+    GST_DEBUG_OBJECT (demux, "Sending tags %p for pad %s:%s",
+        list, GST_DEBUG_PAD_NAME (stream->pad));
+    gst_element_found_tags_for_pad (GST_ELEMENT (demux), stream->pad, list);
+  }
+}
+
 #ifndef GST_FLOW_IS_SUCCESS
 #define GST_FLOW_IS_SUCCESS(ret) ((ret) >= GST_FLOW_OK)
 #endif
@@ -890,8 +924,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
        * to drop. */
       if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
           && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-          && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
-          discont_PCR) {
+          && demux->streams[demux->streams[stream->PMT_pid]->PMT.
+              PCR_PID]->discont_PCR) {
         GST_WARNING_OBJECT (demux, "middle of discont, dropping");
         goto bad_timestamp;
       }
@@ -913,8 +947,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
          */
         if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
             && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-            && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
-            last_PCR > 0) {
+            && demux->streams[demux->streams[stream->PMT_pid]->PMT.
+                PCR_PID]->last_PCR > 0) {
           GST_DEBUG_OBJECT (demux, "timestamps wrapped before noticed in PCR");
           time = MPEGTIME_TO_GSTTIME (pts) + stream->base_time +
               MPEGTIME_TO_GSTTIME ((guint64) (1) << 33);
@@ -1026,6 +1060,9 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
 
     /* send new_segment */
     gst_mpegts_demux_send_new_segment (demux, stream, pts);
+
+    /* send tags */
+    gst_mpegts_demux_send_tags_for_stream (demux, stream);
   }
 
   GST_DEBUG_OBJECT (srcpad, "pushing buffer");
