@@ -556,8 +556,8 @@ gst_shape_wipe_blend_16 (GstShapeWipe * self, GstBuffer * inbuf,
   guint i, j;
   guint mask_increment = GST_ROUND_UP_2 (self->width) - self->width;
   gfloat position = self->mask_position;
-  gfloat low = MAX (0.0, position - self->mask_border);
-  gfloat high = MIN (1.0, position + self->mask_border);
+  gfloat low = MAX (0.0, position - (self->mask_border / 2.0));
+  gfloat high = MIN (1.0, position + (self->mask_border / 2.0));
 
   for (i = 0; i < self->height; i++) {
     for (j = 0; j < self->width; j++) {
@@ -602,8 +602,8 @@ gst_shape_wipe_blend_8 (GstShapeWipe * self, GstBuffer * inbuf,
   guint i, j;
   guint mask_increment = GST_ROUND_UP_4 (self->width) - self->width;
   gfloat position = self->mask_position;
-  gfloat low = MAX (0.0, position - self->mask_border);
-  gfloat high = MIN (1.0, position + self->mask_border);
+  gfloat low = MAX (0.0, position - (self->mask_border / 2.0));
+  gfloat high = MIN (1.0, position + (self->mask_border / 2.0));
 
   for (i = 0; i < self->height; i++) {
     for (j = 0; j < self->width; j++) {
