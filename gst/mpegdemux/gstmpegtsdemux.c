@@ -831,12 +831,11 @@ gst_mpegts_demux_send_tags_for_stream (GstMpegTSDemux * demux,
   if (stream->ES_info) {
     guint8 *iso639_languages =
         gst_mpeg_descriptor_find (stream->ES_info, DESC_ISO_639_LANGUAGE);
-    gint i;
     if (iso639_languages) {
       if (DESC_ISO_639_LANGUAGE_codes_n (iso639_languages)) {
         gchar lang_code[4];
         gchar *language_n = (gchar *)
-            DESC_ISO_639_LANGUAGE_language_code_nth (iso639_languages, i);
+            DESC_ISO_639_LANGUAGE_language_code_nth (iso639_languages, 0);
         lang_code[0] = language_n[0];
         lang_code[1] = language_n[1];
         lang_code[2] = language_n[2];
