@@ -54,6 +54,7 @@ struct _GstShapeWipe
 
   GstBuffer *mask;
   gfloat mask_position;
+  gfloat mask_border;
   GMutex *mask_mutex;
   GCond *mask_cond;
   gint mask_bpp;
