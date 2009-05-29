@@ -10,5 +10,5 @@ else
 DIRECTFB_DIR=
 endif
 
-SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) switch
-DIST_SUBDIRS= directfb switch scaletempo mxf
+SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) switch shapewipe mxf
+DIST_SUBDIRS= directfb switch scaletempo shapewipe mxf
