@@ -57,7 +57,8 @@ static GstCaps *gst_shape_wipe_src_getcaps (GstPad * pad);
 enum
 {
   PROP_0,
-  PROP_POSITION
+  PROP_POSITION,
+  PROP_BORDER
 };
 
 static GstStaticPadTemplate video_sink_pad_template =
@@ -121,6 +122,10 @@ gst_shape_wipe_class_init (GstShapeWipeClass * klass)
       g_param_spec_float ("position", "Position", "Position of the mask",
           0.0, 1.0, 0.0,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+  g_object_class_install_property (gobject_class, PROP_BORDER,
+      g_param_spec_float ("border", "Border", "Border of the mask",
+          0.0, 1.0, 0.0,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_shape_wipe_change_state);
@@ -176,6 +181,9 @@ gst_shape_wipe_get_property (GObject * object, guint prop_id,
     case PROP_POSITION:
       g_value_set_float (value, self->mask_position);
       break;
+    case PROP_BORDER:
+      g_value_set_float (value, self->mask_border);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -191,6 +199,9 @@ gst_shape_wipe_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_POSITION:
       self->mask_position = g_value_get_float (value);
+      break;
+    case PROP_BORDER:
+      self->mask_border = g_value_get_float (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -227,6 +238,7 @@ gst_shape_wipe_reset (GstShapeWipe * self)
 
   self->width = self->height = 0;
   self->mask_position = 0.0;
+  self->mask_border = 0.0;
   self->mask_bpp = 0;
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
@@ -544,16 +556,27 @@ gst_shape_wipe_blend_16 (GstShapeWipe * self, GstBuffer * inbuf,
   guint i, j;
   guint mask_increment = GST_ROUND_UP_2 (self->width) - self->width;
   gfloat position = self->mask_position;
+  gfloat low = MAX (0.0, position - self->mask_border);
+  gfloat high = MIN (1.0, position + self->mask_border);
 
   for (i = 0; i < self->height; i++) {
     for (j = 0; j < self->width; j++) {
-      if (*mask / 65535.0 < position) {
+      gfloat in = *mask / 65535.0;
+
+      if (in <= low) {
         output[0] = 0x00;       /* A */
         output[1] = 0x00;       /* Y */
         output[2] = 0x80;       /* U */
         output[3] = 0x80;       /* V */
-      } else {
+      } else if (in >= high) {
         output[0] = 0xff;       /* A */
+        output[1] = input[1];   /* Y */
+        output[2] = input[2];   /* U */
+        output[3] = input[3];   /* V */
+      } else {
+        gfloat val = 255 * ((in - low) / (high - low));
+
+        output[0] = CLAMP (val, 0, 255);        /* A */
         output[1] = input[1];   /* Y */
         output[2] = input[2];   /* U */
         output[3] = input[3];   /* V */
@@ -579,16 +602,27 @@ gst_shape_wipe_blend_8 (GstShapeWipe * self, GstBuffer * inbuf,
   guint i, j;
   guint mask_increment = GST_ROUND_UP_4 (self->width) - self->width;
   gfloat position = self->mask_position;
+  gfloat low = MAX (0.0, position - self->mask_border);
+  gfloat high = MIN (1.0, position + self->mask_border);
 
   for (i = 0; i < self->height; i++) {
     for (j = 0; j < self->width; j++) {
-      if (*mask / 255.0 < position) {
+      gfloat in = *mask / 255.0;
+
+      if (in <= low) {
         output[0] = 0x00;       /* A */
         output[1] = 0x00;       /* Y */
         output[2] = 0x80;       /* U */
         output[3] = 0x80;       /* V */
-      } else {
+      } else if (in >= high) {
         output[0] = 0xff;       /* A */
+        output[1] = input[1];   /* Y */
+        output[2] = input[2];   /* U */
+        output[3] = input[3];   /* V */
+      } else {
+        gfloat val = 255 * ((in - low) / (high - low));
+
+        output[0] = CLAMP (val, 0, 255);        /* A */
         output[1] = input[1];   /* Y */
         output[2] = input[2];   /* U */
         output[3] = input[3];   /* V */
