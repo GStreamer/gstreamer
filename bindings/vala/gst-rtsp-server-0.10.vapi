@@ -91,7 +91,7 @@ namespace Gst {
 		public void remove_factory (string path);
 	}
 	[Compact]
-	[CCode (cheader_filename = "gst/rtsp-server/rstp-media.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media.h")]
 	public class RTSPMediaStream {
 		[CCode (array_length = false)]
 		public weak Gst.Element[] appsink;
