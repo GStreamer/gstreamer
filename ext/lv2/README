@@ -1,0 +1,18 @@
+Gst-LV2 Quickstart
+
+Dependencies:
+
+SLV2 0.6.* <http://drobilla.net/software/slv2>
+
+Which in turn depends on:
+
+librdf (redland) >= 1.0.6 <http://librdf.org>
+
+
+Example Pipeline:
+
+Requires swh-lv2 <http://plugin.org.uk/releases/>
+
+gst-launch-0.10 -v filesrc location=/usr/share/sounds/login.wav ! wavparse ! audioconvert ! http---plugin-org-uk-swh-plugins-djFlanger ! audioconvert ! alsasink
+
+(A longer wav will be a better example)
