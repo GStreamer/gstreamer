@@ -469,7 +469,7 @@ public class ElementGen {
 
   public static int Main (string[] args) {
     if (args.Length != 3) {
-      Console.WriteLine ("Usage: element-gen --namespace=<namespace> --api=<api> --input=<in-filename>");
+      Console.Error.WriteLine ("Usage: element-gen --namespace=<namespace> --api=<api> --input=<in-filename>");
       return -1;
     }
 
@@ -488,7 +488,7 @@ public class ElementGen {
           introspect_doc.Load (stream);
           stream.Close ();
         } catch (Exception e) {
-          Console.WriteLine ("Failed to load introspection XML:\n" + e.ToString ());
+          Console.Error.WriteLine ("Failed to load introspection XML:\n" + e.ToString ());
           return -2;
         }
       } else if (arg.StartsWith ("--api=")) {
@@ -500,7 +500,7 @@ public class ElementGen {
           api_doc.Load (stream);
           stream.Close ();
         } catch (Exception e) {
-          Console.WriteLine ("Failed to load API XML:\n" + e.ToString ());
+          Console.Error.WriteLine ("Failed to load API XML:\n" + e.ToString ());
           return 1;
         }
 
@@ -508,13 +508,13 @@ public class ElementGen {
 
         ns = arg.Substring (12);
       } else {
-        Console.WriteLine ("Usage: element-gen --namespace:<namespace> --api=<api> --input:<in-filename>");
+        Console.Error.WriteLine ("Usage: element-gen --namespace:<namespace> --api=<api> --input:<in-filename>");
         return 1;
       }
     }
 
     if (introspect_doc.DocumentElement.Name != "element") {
-      Console.WriteLine ("Invalid introspection XML");
+      Console.Error.WriteLine ("Invalid introspection XML");
       return -3;
     }
 
@@ -523,14 +523,14 @@ public class ElementGen {
     try {
       writer = Console.Out;
     } catch (Exception e) {
-      Console.WriteLine ("Failed to open output file:\n" + e.ToString ());
+      Console.Error.WriteLine ("Failed to open output file:\n" + e.ToString ());
       return -2;
     }
 
     StreamReader custom_code = null;
     try {
       custom_code = System.IO.File.OpenText (filename + ".custom");
-    } catch (Exception e) {}
+    } catch (Exception) {}  // No custom file is OK
 
     if (IsHidden (introspect_doc.DocumentElement))
       return 0;
