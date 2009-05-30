@@ -383,6 +383,21 @@ GST_START_TEST (test_buffer_tags)
 
 GST_END_TEST;
 
+GST_START_TEST (test_empty_tags)
+{
+  GstTagList *tags;
+
+  tags = gst_tag_list_new ();
+  ASSERT_WARNING (gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
+          GST_TAG_ARTIST, NULL, NULL));
+  ASSERT_WARNING (gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
+          GST_TAG_ARTIST, "", NULL));
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "xyz", NULL);
+  gst_tag_list_free (tags);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_tag_suite (void)
 {
@@ -397,6 +412,7 @@ gst_tag_suite (void)
   tcase_add_test (tc_chain, test_type);
   tcase_add_test (tc_chain, test_set_non_utf8_string);
   tcase_add_test (tc_chain, test_buffer_tags);
+  tcase_add_test (tc_chain, test_empty_tags);
 
   return s;
 }

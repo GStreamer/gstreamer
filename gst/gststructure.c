@@ -59,6 +59,7 @@
 #include <string.h>
 
 #include "gst_private.h"
+#include "gstquark.h"
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
 
@@ -76,6 +77,9 @@ struct _GstStructureField
 #define IS_MUTABLE(structure) \
     (!(structure)->parent_refcount || \
      g_atomic_int_get ((structure)->parent_refcount) == 1)
+
+#define IS_TAGLIST(structure) \
+    (structure->name == GST_QUARK (TAGLIST))
 
 static void gst_structure_set_field (GstStructure * structure,
     GstStructureField * field);
@@ -432,17 +436,6 @@ gst_structure_id_set_value (GstStructure * structure,
   g_return_if_fail (G_IS_VALUE (value));
   g_return_if_fail (IS_MUTABLE (structure));
 
-  if (G_VALUE_HOLDS_STRING (value)) {
-    const gchar *s;
-
-    s = g_value_get_string (value);
-    if (G_UNLIKELY (s != NULL && !g_utf8_validate (s, -1, NULL))) {
-      g_warning ("Trying to set string field '%s' on structure, but string is "
-          "not valid UTF-8. Please file a bug.", g_quark_to_string (field));
-      return;
-    }
-  }
-
   gsfield.name = field;
   gst_value_init_and_copy (&gsfield.value, value);
 
@@ -652,6 +645,31 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
 {
   GstStructureField *f;
   guint i;
+
+  if (G_UNLIKELY (G_VALUE_HOLDS_STRING (&field->value))) {
+    const gchar *s;
+
+    s = g_value_get_string (&field->value);
+    /* only check for NULL strings in taglists, as they are allowed in message
+     * structs, e.g. error message debug strings */
+    if (G_UNLIKELY (s == NULL && IS_TAGLIST (structure))) {
+      g_warning ("Trying to set NULL string on field '%s' on taglist. "
+          "Please file a bug.", g_quark_to_string (field->name));
+      return;
+    } else if (G_UNLIKELY (s != NULL && *s == '\0')) {
+      /* empty strings never make sense */
+      g_warning ("Trying to set empty string on %s field '%s'. Please file a "
+          "bug.", IS_TAGLIST (structure) ? "taglist" : "structure",
+          g_quark_to_string (field->name));
+      return;
+    } else if (G_UNLIKELY (s != NULL && !g_utf8_validate (s, -1, NULL))) {
+      g_warning ("Trying to set string on %s field '%s', but string is not "
+          "valid UTF-8. Please file a bug.",
+          IS_TAGLIST (structure) ? "taglist" : "structure",
+          g_quark_to_string (field->name));
+      return;
+    }
+  }
 
   for (i = 0; i < structure->fields->len; i++) {
     f = GST_STRUCTURE_FIELD (structure, i);

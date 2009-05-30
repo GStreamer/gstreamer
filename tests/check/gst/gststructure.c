@@ -385,6 +385,18 @@ GST_START_TEST (test_structure_nested)
 
 GST_END_TEST;
 
+GST_START_TEST (test_empty_string_fields)
+{
+  GstStructure *s;
+
+  s = gst_structure_empty_new ("con/struct");
+  ASSERT_WARNING (gst_structure_set (s, "layout", G_TYPE_STRING, "", NULL));
+  gst_structure_set (s, "debug-string", G_TYPE_STRING, NULL, NULL);
+  gst_structure_free (s);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_structure_suite (void)
 {
@@ -401,6 +413,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_fixate);
   tcase_add_test (tc_chain, test_fixate_frac_list);
   tcase_add_test (tc_chain, test_structure_nested);
+  tcase_add_test (tc_chain, test_empty_string_fields);
   return s;
 }
 
