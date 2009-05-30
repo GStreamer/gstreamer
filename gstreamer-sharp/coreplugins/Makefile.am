@@ -7,12 +7,12 @@ METADATA_FILES = typefind.metadata \
 		fakesrc.metadata \
 		fakesink.metadata \
 		identity.metadata
-CS_FILES = $(patsubst %,%.cs,$(ELEMENTS)) \
-	memindex.cs \
+CS_FILES = $(patsubst %,%.cs,$(ELEMENTS))
+OTHER_CS_FILES = memindex.cs \
 	fileindex.cs
 XML_FILES = $(patsubst %,%.xml,$(ELEMENTS))
 
-EXTRA_DIST = $(CUSTOM_FILES) $(INSPECT_FILES) memindex.cs fileindex.cs
+EXTRA_DIST = $(CUSTOM_FILES) $(INSPECT_FILES) $(OTHER_CS_FILES)
 CLEANFILES = $(XML_FILES) $(CS_FILES)
 
 plugins-update: $(patsubst inspect/%.raw, inspect-%, $(INSPECT_FILES))
