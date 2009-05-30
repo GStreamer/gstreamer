@@ -432,6 +432,8 @@
   </add-node>
 
   <attr path="/api/namespace/object[@name='Index']/virtual_method[@cname='get_assoc_entry']/parameters/parameter[@name='func']" name="type">gpointer</attr>
+  <remove-node path="/api/namespace/object[@name='Index']/virtual_method[@cname='get_assoc_entry']/parameters/parameter[@name='func']" />
+  <remove-node path="/api/namespace/object[@name='Index']/virtual_method[@cname='get_assoc_entry']/parameters/parameter[@name='user_data']" />
   <attr path="/api/namespace/object[@name='Index']/property[@cname='resolver']" name="name">Method</attr>
   <attr path="/api/namespace/object[@name='Index']/property[@cname='resolver']" name="type">GstIndexResolverMethod</attr>
   <attr path="/api/namespace/object[@name='Index']/constructor[@cname='gst_index_new_group']" name="hidden">1</attr>
