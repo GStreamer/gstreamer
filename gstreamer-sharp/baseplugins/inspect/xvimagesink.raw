@@ -19,11 +19,11 @@
   </object>
  </object>
  <interfaces>
-  <interface name="GstPropertyProbe" />
   <interface name="GstImplementsInterface" />
   <interface name="GstNavigation" />
   <interface name="GstXOverlay" />
   <interface name="GstColorBalance" />
+  <interface name="GstPropertyProbe" />
  </interfaces>
  <pad-templates>
   <pad-template>
