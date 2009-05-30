@@ -4,6 +4,7 @@
  *
  * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
  *               <2007> Wim Taymans <wim@fluendo.com>
+ *               <2009> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,6 +24,7 @@
 
 #include <unistd.h>
 
+#include <gst/base/gstpushsrc.h>
 #include <gst/check/gstcheck.h>
 
 typedef struct
@@ -858,6 +860,106 @@ GST_START_TEST (test_position)
 
 GST_END_TEST;
 
+/* like fakesrc, but also pushes an OOB event after each buffer */
+typedef GstPushSrc OOBSource;
+typedef GstPushSrcClass OOBSourceClass;
+
+GST_BOILERPLATE (OOBSource, oob_source, GstPushSrc, GST_TYPE_PUSH_SRC);
+
+static void
+oob_source_base_init (gpointer g_class)
+{
+  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS_ANY);
+
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (g_class),
+      gst_static_pad_template_get (&sinktemplate));
+}
+
+static GstFlowReturn
+oob_source_create (GstPushSrc * src, GstBuffer ** p_buf)
+{
+  *p_buf = gst_buffer_new ();
+
+  gst_pad_push_event (GST_BASE_SRC_PAD (src),
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, NULL));
+
+  return GST_FLOW_OK;
+}
+
+static void
+oob_source_class_init (OOBSourceClass * klass)
+{
+  GstPushSrcClass *pushsrc_class = GST_PUSH_SRC_CLASS (klass);
+
+  pushsrc_class->create = GST_DEBUG_FUNCPTR (oob_source_create);
+}
+
+static void
+oob_source_init (OOBSource * src, OOBSourceClass * g_class)
+{
+  /* nothing to do */
+}
+
+#define NOTIFY_RACE_NUM_PIPELINES 20
+
+typedef struct
+{
+  GstElement *src;
+  GstElement *queue;
+  GstElement *sink;
+  GstElement *pipe;
+} NotifyRacePipeline;
+
+static void
+test_notify_race_setup_pipeline (NotifyRacePipeline * p)
+{
+  p->pipe = gst_pipeline_new ("pipeline");
+  p->src = g_object_new (oob_source_get_type (), NULL);
+
+  p->queue = gst_element_factory_make ("queue", NULL);
+  g_object_set (p->queue, "max-size-buffers", 2, NULL);
+
+  p->sink = gst_element_factory_make ("fakesink", NULL);
+  gst_bin_add (GST_BIN (p->pipe), p->src);
+  gst_bin_add (GST_BIN (p->pipe), p->queue);
+  gst_bin_add (GST_BIN (p->pipe), p->sink);
+  gst_element_link_many (p->src, p->queue, p->sink, NULL);
+
+  fail_unless_equals_int (gst_element_set_state (p->pipe, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless_equals_int (gst_element_get_state (p->pipe, NULL, NULL, -1),
+      GST_STATE_CHANGE_SUCCESS);
+}
+
+static void
+test_notify_race_cleanup_pipeline (NotifyRacePipeline * p)
+{
+  gst_element_set_state (p->pipe, GST_STATE_NULL);
+  gst_object_unref (p->pipe);
+  memset (p, 0, sizeof (NotifyRacePipeline));
+}
+
+/* we create N pipelines to make sure the notify race isn't per-class, but
+ * only per instance */
+GST_START_TEST (test_notify_race)
+{
+  NotifyRacePipeline pipelines[NOTIFY_RACE_NUM_PIPELINES];
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (pipelines); ++i) {
+    test_notify_race_setup_pipeline (&pipelines[i]);
+  }
+
+  g_usleep (2 * G_USEC_PER_SEC);
+
+  for (i = 0; i < G_N_ELEMENTS (pipelines); ++i) {
+    test_notify_race_cleanup_pipeline (&pipelines[i]);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 fakesink_suite (void)
 {
@@ -872,6 +974,7 @@ fakesink_suite (void)
   tcase_add_test (tc_chain, test_eos);
   tcase_add_test (tc_chain, test_eos2);
   tcase_add_test (tc_chain, test_position);
+  tcase_add_test (tc_chain, test_notify_race);
 
   return s;
 }

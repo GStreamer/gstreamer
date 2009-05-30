@@ -82,6 +82,7 @@ struct _GstFakeSink {
   gchar			*last_message;
   gint                  num_buffers;
   gint                  num_buffers_left;
+  GStaticRecMutex       notify_lock;
 };
 
 struct _GstFakeSinkClass {
