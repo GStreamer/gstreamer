@@ -7,7 +7,7 @@ METADATA_FILES = typefind.metadata \
 		fakesrc.metadata \
 		fakesink.metadata \
 		identity.metadata
-CS_FILES = $(patsubst %,%.cs,$(ELEMENTS))
+CS_FILES = $(patsubst %,generated/%.cs,$(ELEMENTS))
 OTHER_CS_FILES = memindex.cs \
 	fileindex.cs
 XML_FILES = $(patsubst %,%.xml,$(ELEMENTS))
@@ -21,9 +21,10 @@ inspect-%:
 
 all: $(XML_FILES) $(CS_FILES)
 
-%.cs: $(top_builddir)/elementgen/element-gen.exe $(CUSTOM_FILES) $(XML_FILES)
+generated/%.cs: $(top_builddir)/elementgen/element-gen.exe $(CUSTOM_FILES) $(XML_FILES)
+	mkdir -p generated
 	$(MONO) $(top_builddir)/elementgen/element-gen.exe --namespace=$(NAMESPACE) \
-		--api=$(srcdir)/../gstreamer-api.xml --input=$(patsubst %.cs,%,$@) > $@
+		--api=$(srcdir)/../gstreamer-api.xml --input=$(patsubst generated/%.cs,%,$@) > $@
 
 %.xml: $(top_builddir)/parser/gst-gapi-fixup.exe $(INSPECT_FILES) $(METADATA_FILES)
 	cp $(patsubst %.xml,inspect/%.raw,$@) $@

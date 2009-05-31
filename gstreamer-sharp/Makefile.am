@@ -56,8 +56,9 @@ sources = \
 	NavigationMessage.cs \
 	NavigationEvent.cs \
 	NavigationQuery.cs \
-	coreplugins/*.cs \
-	baseplugins/*.cs
+	coreplugins/generated/*.cs \
+	baseplugins/generated/*.cs \
+	coreplugins/*.cs
 
 overrides = \
 	override/URIHandlerAdapter.cs \
@@ -140,10 +141,10 @@ generated-stamp: $(API) $(build_customs) $(overrides)
 	&& mv generated/ObjectManager.cs.tmp generated/ObjectManager.cs \
 	&& touch generated-stamp
 
-coreplugins/*.cs: $(API) coreplugins/*.metadata coreplugins/inspect/*.raw
+coreplugins/generated/*.cs: $(API) coreplugins/*.metadata coreplugins/inspect/*.raw
 	$(MAKE) -C coreplugins
 
-baseplugins/*.cs: $(API) baseplugins/*.custom baseplugins/*.metadata baseplugins/inspect/*.raw
+baseplugins/generated/*.cs: $(API) baseplugins/*.custom baseplugins/*.metadata baseplugins/inspect/*.raw
 	$(MAKE) -C baseplugins
 
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
