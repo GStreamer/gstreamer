@@ -4004,6 +4004,8 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         }
       }
       return GST_FLOW_OK;
+    } else if (tag == GST_RIFF_TAG_JUNK) {
+      GST_DEBUG ("JUNK chunk, skipping");
     } else if (tag == GST_RIFF_TAG_idx1) {
       GST_DEBUG ("Found index tag, stream done");
       avi->have_eos = TRUE;
