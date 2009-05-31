@@ -17,6 +17,27 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-shapewipe
+ *
+ * The shapewipe element provides custom transitions on video streams
+ * based on a grayscale bitmap. The state of the transition can be
+ * controlled by the position property and an optional blended border
+ * can be added by the border property.
+ *
+ * Transition bitmaps can be downloaded from the
+ * <ulink url="http://cinelerra.org/transitions.php">Cinelerra transition</ulink>
+ * page.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v videotestsrc ! video/x-raw-yuv,width=640,height=480 ! shapewipe position=0.5 name=shape ! videomixer name=mixer ! ffmpegcolorspace ! autovideosink     filesrc location=mask.png ! typefind ! decodebin2 ! ffmpegcolorspace ! videoscale ! queue ! shape.mask_sink    videotestsrc pattern=snow ! video/x-raw-yuv,width=640,height=480 ! queue ! mixer.
+ * ]| This pipeline adds the transition from mask.png with position 0.5 to an SMPTE test screen and snow.
+ * </refsect2>
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
