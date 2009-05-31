@@ -1575,32 +1575,45 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
     case GST_FORMAT_TIME:
     {
       guint64 end;
-      gint64 last;
-
-      end = current->start + current->amount;
+      gint64 first, last;
 
       if (segment->rate > 0.0) {
-        current->position = *rstart - current->start;
+        first = *rstart;
         last = *rstop;
       } else {
-        current->position = *rstop - current->start;
+        first = *rstop;
         last = *rstart;
       }
 
+      end = current->start + current->amount;
+      current->position = first - current->start;
+
       GST_DEBUG_OBJECT (sink,
-          "got time step %" GST_TIME_FORMAT "/%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (current->position), GST_TIME_ARGS (current->amount));
+          "buffer: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (first), GST_TIME_ARGS (last));
+      GST_DEBUG_OBJECT (sink,
+          "got time step %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT "/%"
+          GST_TIME_FORMAT, GST_TIME_ARGS (current->position),
+          GST_TIME_ARGS (last - current->start),
+          GST_TIME_ARGS (current->amount));
 
       if (current->position >= current->amount || last >= end) {
+        GST_DEBUG_OBJECT (sink, "step ended, we need clipping");
         step_end = TRUE;
         if (segment->rate > 0.0) {
           *cstart += end - *rstart;
           *rstart = end;
         } else {
-          *cstop += end - *rstop;
+          *cstop += *rstop - end;
           *rstop = end;
         }
       }
+      GST_DEBUG_OBJECT (sink,
+          "cstart %" GST_TIME_FORMAT ", rstart %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (*cstart), GST_TIME_ARGS (*rstart));
+      GST_DEBUG_OBJECT (sink,
+          "cstop %" GST_TIME_FORMAT ", rstop %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (*cstop), GST_TIME_ARGS (*rstop));
       break;
     }
     case GST_FORMAT_BUFFERS:
@@ -1751,10 +1764,6 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     gst_segment_set_last_stop (segment, GST_FORMAT_TIME, cstart);
 
 do_times:
-  /* this can produce wrong values if we accumulated non-TIME segments. If this happens,
-   * upstream is behaving very badly */
-  sstart = gst_segment_to_stream_time (segment, format, cstart);
-  sstop = gst_segment_to_stream_time (segment, format, cstop);
   rstart = gst_segment_to_running_time (segment, format, cstart);
   rstop = gst_segment_to_running_time (segment, format, cstop);
 
@@ -1763,6 +1772,10 @@ do_times:
                 &rstart, &rstop)))
       *stepped = TRUE;
   }
+  /* this can produce wrong values if we accumulated non-TIME segments. If this happens,
+   * upstream is behaving very badly */
+  sstart = gst_segment_to_stream_time (segment, format, cstart);
+  sstop = gst_segment_to_stream_time (segment, format, cstop);
 
 eos_done:
   /* done label only called when doing EOS, we also stop stepping then */
@@ -2156,6 +2169,13 @@ do_step:
   priv->eos_rtime = (do_sync ? priv->current_rstop : -1);
 
 again:
+  /* Before preroll we store the position of the last buffer so that we can use
+   * it to report the position. We need to take the lock here. */
+  GST_OBJECT_LOCK (basesink);
+  priv->current_sstart = sstart;
+  priv->current_sstop = (sstop != -1 ? sstop : sstart);
+  GST_OBJECT_UNLOCK (basesink);
+
   /* first do preroll, this makes sure we commit our state
    * to PAUSED and can continue to PLAYING. We cannot perform
    * any clock sync in PAUSED because there is no clock. */
@@ -2169,13 +2189,6 @@ again:
     start_stepping (basesink, &basesink->segment, pending, current);
     goto do_step;
   }
-
-  /* After rendering we store the position of the last buffer so that we can use
-   * it to report the position. We need to take the lock here. */
-  GST_OBJECT_LOCK (basesink);
-  priv->current_sstart = sstart;
-  priv->current_sstop = (sstop != -1 ? sstop : sstart);
-  GST_OBJECT_UNLOCK (basesink);
 
   if (!do_sync)
     goto done;
@@ -3999,6 +4012,11 @@ gst_base_sink_get_position_paused (GstBaseSink * basesink, GstFormat format,
 
   if (oformat == GST_FORMAT_TIME) {
     *cur = basesink->priv->current_sstart;
+    if (segment->rate < 0.0 && basesink->priv->current_sstop != -1) {
+      /* for reverse playback we prefer the stream time stop position if we have
+       * one */
+      *cur = basesink->priv->current_sstop;
+    }
   } else {
     *cur = gst_segment_to_stream_time (segment, oformat, segment->last_stop);
   }
