@@ -51,6 +51,9 @@
 #include <unistd.h>
 #endif
 
+/* include GLIB for G_OS_WIN32 */
+#include <glib.h>
+
 #ifdef G_OS_WIN32
 #ifdef _MSC_VER
 #include <Winsock2.h>
