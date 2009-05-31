@@ -19,12 +19,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #include <gst/gst.h>
 #include <gst/controller/gstcontroller.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 
-#define NUM_CP 5000
+/* a song in buzztard can easily reach 30000 here */
+#define NUM_CP 15000
 #define BLOCK_SIZE 64
 
 static void
