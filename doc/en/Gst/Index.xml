@@ -435,10 +435,41 @@
       </Docs>
     </Member>
     <Member MemberName="OnGetAssocEntry">
-      <MemberSignature Language="C#" Value="protected virtual Gst.IndexEntry OnGetAssocEntry (int id, Gst.IndexLookupMethod method, Gst.AssocFlags flags, Gst.Format format, long value, IntPtr func, IntPtr user_data);" />
+      <MemberSignature Language="C#" Value="protected virtual Gst.IndexEntry OnGetAssocEntry (int id, Gst.IndexLookupMethod method, Gst.AssocFlags flags, Gst.Format format, long value);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetAssocEntry", Type=typeof(Gst.Index))</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.IndexEntry</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="id" Type="System.Int32" />
+        <Parameter Name="method" Type="Gst.IndexLookupMethod" />
+        <Parameter Name="flags" Type="Gst.AssocFlags" />
+        <Parameter Name="format" Type="Gst.Format" />
+        <Parameter Name="value" Type="System.Int64" />
+      </Parameters>
+      <Docs>
+        <param name="id">To be added.</param>
+        <param name="method">To be added.</param>
+        <param name="flags">To be added.</param>
+        <param name="format">To be added.</param>
+        <param name="value">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnGetAssocEntry">
+      <MemberSignature Language="C#" Value="protected virtual Gst.IndexEntry OnGetAssocEntry (int id, Gst.IndexLookupMethod method, Gst.AssocFlags flags, Gst.Format format, long value, IntPtr func, IntPtr user_data);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>

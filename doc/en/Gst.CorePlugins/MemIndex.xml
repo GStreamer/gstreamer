@@ -1,25 +1,28 @@
-<Type Name="DecodeBin+NewDecodedPadArgs" FullName="Gst.BasePlugins.DecodeBin+NewDecodedPadArgs">
-  <TypeSignature Language="C#" Value="public class DecodeBin.NewDecodedPadArgs : GLib.SignalArgs" />
+<Type Name="MemIndex" FullName="Gst.CorePlugins.MemIndex">
+  <TypeSignature Language="C#" Value="public class MemIndex : Gst.Index" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
-    <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.SignalArgs</BaseTypeName>
+    <BaseTypeName>Gst.Index</BaseTypeName>
   </Base>
   <Interfaces />
+  <Attributes>
+    <Attribute>
+      <AttributeName>Gst.GTypeName("GstMemIndex")</AttributeName>
+    </Attribute>
+  </Attributes>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public NewDecodedPadArgs ();" />
+      <MemberSignature Language="C#" Value="public MemIndex ();" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -27,34 +30,34 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Last">
-      <MemberSignature Language="C#" Value="public bool Last { get; }" />
-      <MemberType>Property</MemberType>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public MemIndex (IntPtr raw);" />
+      <MemberType>Constructor</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
+      <Parameters>
+        <Parameter Name="raw" Type="System.IntPtr" />
+      </Parameters>
       <Docs>
+        <param name="raw">To be added.</param>
         <summary>To be added.</summary>
-        <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Pad">
-      <MemberSignature Language="C#" Value="public Gst.Pad Pad { get; }" />
-      <MemberType>Property</MemberType>
+    <Member MemberName="Make">
+      <MemberSignature Language="C#" Value="public static Gst.CorePlugins.MemIndex Make ();" />
+      <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.Pad</ReturnType>
+        <ReturnType>Gst.CorePlugins.MemIndex</ReturnType>
       </ReturnValue>
+      <Parameters />
       <Docs>
         <summary>To be added.</summary>
-        <value>To be added.</value>
+        <returns>To be added.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>

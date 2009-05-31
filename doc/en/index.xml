@@ -257,6 +257,16 @@
       <Type Name="PlayBin2+VideoChangedHandler" Kind="Delegate" />
       <Type Name="XvImageSink" Kind="Class" />
     </Namespace>
+    <Namespace Name="Gst.Controller">
+      <Type Name="Controller" Kind="Class" />
+      <Type Name="ControlSource" Kind="Class" />
+      <Type Name="ControlSource+GetValueArrayCallback" Kind="Delegate" />
+      <Type Name="ControlSource+GetValueCallback" Kind="Delegate" />
+      <Type Name="InterpolateMode" Kind="Enumeration" />
+      <Type Name="InterpolationControlSource" Kind="Class" />
+      <Type Name="LFOControlSource" Kind="Class" />
+      <Type Name="LFOWaveform" Kind="Enumeration" />
+    </Namespace>
     <Namespace Name="Gst.CorePlugins">
       <Type Name="CapsFilter" Kind="Class" />
       <Type Name="FakeSink" Kind="Class" />
@@ -273,12 +283,14 @@
       <Type Name="FakeSrc+SizeTypeType" Kind="Enumeration" />
       <Type Name="FdSink" Kind="Class" />
       <Type Name="FdSrc" Kind="Class" />
+      <Type Name="FileIndex" Kind="Class" />
       <Type Name="FileSink" Kind="Class" />
       <Type Name="FileSink+BufferModeType" Kind="Enumeration" />
       <Type Name="FileSrc" Kind="Class" />
       <Type Name="Identity" Kind="Class" />
       <Type Name="Identity+HandoffArgs" Kind="Class" />
       <Type Name="Identity+HandoffHandler" Kind="Delegate" />
+      <Type Name="MemIndex" Kind="Class" />
       <Type Name="MultiQueue" Kind="Class" />
       <Type Name="MultiQueue+OverrunArgs" Kind="Class" />
       <Type Name="MultiQueue+OverrunHandler" Kind="Delegate" />
