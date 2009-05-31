@@ -347,7 +347,7 @@ gst_hdvparse_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 static gboolean
 HDVParse_init (GstPlugin * HDVParse)
 {
-  return gst_element_register (HDVParse, "hdvparse", GST_RANK_PRIMARY,
+  return gst_element_register (HDVParse, "hdvparse", GST_RANK_NONE,
       GST_TYPE_HDVPARSE);
 }
 
