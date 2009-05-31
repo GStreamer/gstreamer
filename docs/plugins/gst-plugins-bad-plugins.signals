@@ -330,6 +330,23 @@ GstPad *arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpSsrcDemux::clear-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstRtpSsrcDemux *gstrtpssrcdemux
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSsrcDemux::removed-ssrc-pad</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSsrcDemux *gstrtpssrcdemux
+guint  arg1
+GstPad *arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstCDAudio::track-change</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>

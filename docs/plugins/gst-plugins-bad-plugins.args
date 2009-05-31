@@ -41,7 +41,7 @@
 <ARG>
 <NAME>GstXvidEnc::averaging-period</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Averaging Period</NICK>
 <BLURB>[CBR] Number of frames for which XviD averages bitrate.</BLURB>
@@ -91,7 +91,7 @@
 <ARG>
 <NAME>GstXvidEnc::buffer</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer Size</NICK>
 <BLURB>[CBR] Size of the video buffers.</BLURB>
@@ -121,7 +121,7 @@
 <ARG>
 <NAME>GstXvidEnc::container-frame-overhead</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Container Frame Overhead</NICK>
 <BLURB>[PASS2] Average container overhead per frame.</BLURB>
@@ -151,7 +151,7 @@
 <ARG>
 <NAME>GstXvidEnc::flow-control-strength</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flow Control Strength</NICK>
 <BLURB>[PASS2] Overflow control strength per frame.</BLURB>
@@ -211,7 +211,7 @@
 <ARG>
 <NAME>GstXvidEnc::keyframe-reduction</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe Reduction</NICK>
 <BLURB>[PASS2] Keyframe size reduction in % of those within threshold.</BLURB>
@@ -221,7 +221,7 @@
 <ARG>
 <NAME>GstXvidEnc::keyframe-threshold</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe Threshold</NICK>
 <BLURB>[PASS2] Distance between keyframes not to be subject to reduction.</BLURB>
@@ -281,7 +281,7 @@
 <ARG>
 <NAME>GstXvidEnc::max-overflow-degradation</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Overflow Degradation</NICK>
 <BLURB>[PASS2] Amount in % that flow control can decrease frame size compared to ideal curve.</BLURB>
@@ -291,7 +291,7 @@
 <ARG>
 <NAME>GstXvidEnc::max-overflow-improvement</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Overflow Improvement</NICK>
 <BLURB>[PASS2] Amount in % that flow control can increase frame size compared to ideal curve.</BLURB>
@@ -421,7 +421,7 @@
 <ARG>
 <NAME>GstXvidEnc::reaction-delay-factor</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Reaction Delay Factor</NICK>
 <BLURB>[CBR] Reaction delay factor.</BLURB>
@@ -626,6 +626,16 @@
 <NICK>User-Agent</NICK>
 <BLURB>Value of the User-Agent HTTP request header field.</BLURB>
 <DEFAULT>"GStreamer neonhttpsrc"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::accept-self-signed</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>accept-self-signed</NICK>
+<BLURB>Accept self-signed SSL/TLS certificates.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1681,7 +1691,7 @@
 <ARG>
 <NAME>GstDvbSrc::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -17034,7 +17044,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Stats File</NICK>
-<BLURB>Filename for multipass statistics.</BLURB>
+<BLURB>Filename for multipass statistics (deprecated, use multipass-stats-file).</BLURB>
 <DEFAULT>"x264.log"</DEFAULT>
 </ARG>
 
@@ -17176,6 +17186,16 @@
 <NICK>Constant Quantizer</NICK>
 <BLURB>Constant quantizer or quality to apply.</BLURB>
 <DEFAULT>21</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::multipass-cache-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multipass Cache File</NICK>
+<BLURB>Filename for multipass cache file.</BLURB>
+<DEFAULT>"x264.log"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17455,7 +17475,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17495,7 +17515,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18431,7 +18451,7 @@
 <ARG>
 <NAME>DvbBaseBin::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -22376,7 +22396,7 @@
 <ARG>
 <NAME>GstDCCPClientSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22416,7 +22436,7 @@
 <ARG>
 <NAME>GstDCCPServerSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22476,7 +22496,7 @@
 <ARG>
 <NAME>GstDCCPClientSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22536,7 +22556,7 @@
 <ARG>
 <NAME>GstDCCPServerSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22596,7 +22616,7 @@
 <ARG>
 <NAME>GstMpegTSDemux::program-number</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Program Number</NICK>
 <BLURB>Program number to demux for (-1 to ignore).</BLURB>
@@ -22656,7 +22676,7 @@
 <ARG>
 <NAME>GstPcapParse::dst-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Destination port</NICK>
 <BLURB>Destination port to restrict to.</BLURB>
@@ -22676,7 +22696,7 @@
 <ARG>
 <NAME>GstPcapParse::src-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Source port</NICK>
 <BLURB>Source port to restrict to.</BLURB>
@@ -23206,7 +23226,7 @@
 <ARG>
 <NAME>GstRTPDTMFSrc::seqnum-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sequence number Offset</NICK>
 <BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
@@ -23236,7 +23256,7 @@
 <ARG>
 <NAME>GstRTPDTMFSrc::timestamp-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
 <BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
@@ -23286,7 +23306,7 @@
 <ARG>
 <NAME>GstRTPMux::seqnum-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sequence number Offset</NICK>
 <BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
@@ -23306,7 +23326,7 @@
 <ARG>
 <NAME>GstRTPMux::timestamp-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
 <BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
@@ -23391,5 +23411,55 @@
 <NICK>text-overlay</NICK>
 <BLURB>Wether to use text-overlay.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstId3Tag::v2-version</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[3,4]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Version (3 or 4) of id3v2 tag</NICK>
+<BLURB>Set version (3 for id3v2.3, 4 for id3v2.4) of id3v2 tags.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstId3Tag::write-v1</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Write id3v1 tag</NICK>
+<BLURB>Write an id3v1 tag at the end of the file.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstId3Tag::write-v2</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Write id3v2 tag</NICK>
+<BLURB>Write an id3v2 tag at the start of the file.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstShapeWipe::border</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Border</NICK>
+<BLURB>Border of the mask.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstShapeWipe::position</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Position</NICK>
+<BLURB>Position of the mask.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

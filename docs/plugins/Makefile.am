@@ -149,6 +149,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/sdp/gstsdpdemux.h \
 	$(top_srcdir)/gst/selector/gstinputselector.h \
 	$(top_srcdir)/gst/selector/gstoutputselector.h \
+	$(top_srcdir)/gst/shapewipe/gstshapewipe.h \
 	$(top_srcdir)/gst/speed/gstspeed.h \
 	$(top_srcdir)/gst/stereo/gststereo.h \
 	$(top_srcdir)/gst/videosignal/gstvideoanalyse.h \

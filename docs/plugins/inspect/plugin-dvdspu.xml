@@ -3,24 +3,24 @@
   <description>DVD Sub-picture Overlay element</description>
   <filename>../../gst/dvdspu/.libs/libgstdvdspu.so</filename>
   <basename>libgstdvdspu.so</basename>
-  <version>0.10.12</version>
+  <version>0.10.12.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>dvdspu</name>
-      <longname>Fluendo DVD Player Sub-picture Overlay</longname>
-      <class>Mixer/Video/Overlay/DVD</class>
-      <description>Parses the DVD Sub-Picture command stream and renders the SPU overlay onto the video as it passes through</description>
-      <author>Jan Schmidt &lt;jan@fluendo.com&gt;</author>
+      <longname>GStreamer Sub-picture Overlay</longname>
+      <class>Mixer/Video/Overlay/DVD/Bluray</class>
+      <description>Parses Sub-Picture command streams and renders the SPU overlay onto the video as it passes through</description>
+      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;</author>
       <pads>
         <caps>
           <name>subpicture</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-dvd-subpicture</details>
+          <details>video/x-dvd-subpicture; subpicture/x-pgs</details>
         </caps>
         <caps>
           <name>video</name>
