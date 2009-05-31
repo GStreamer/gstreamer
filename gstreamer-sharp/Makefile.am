@@ -109,7 +109,9 @@ customs = 			\
 	MixerTrack.custom	\
 	TunerNorm.custom	\
 	TunerChannel.custom	\
-	Adapter.custom
+	Adapter.custom		\
+	Controller.custom	\
+	ControlSource.custom
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 

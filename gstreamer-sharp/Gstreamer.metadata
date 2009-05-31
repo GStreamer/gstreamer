@@ -1057,6 +1057,59 @@
     </class>
   </add-node>
 
+  <!-- GStreamer Controller library -->
+  <attr path="/api/namespace/enum[@cname='GstInterpolateMode']" name="name">InterpolateMode</attr>
+  <attr path="/api/namespace/enum[@cname='GstLFOWaveform']" name="name">LFOWaveform</attr>
+  <attr path="/api/namespace/callback[@cname='GstControlSourceBind']" name="hidden">1</attr>
+  <attr path="/api/namespace/callback[@cname='GstControlSourceGetValue']" name="hidden">1</attr>
+  <attr path="/api/namespace/callback[@cname='GstControlSourceGetValueArray']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/object[@cname='GstController']" name="name">Controller</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/property" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_get_all']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_get_control_source']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_get_value_array']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_get_value_arrays']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_init']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/constructor[@cname='gst_controller_new']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/constructor[@cname='gst_controller_new_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/constructor[@cname='gst_controller_new_list']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_remove_properties']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_remove_properties_list']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_remove_properties_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_set']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_set_from_list']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_set_interpolation_mode']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_unset']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_unset_all']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/object[@cname='GstControlSource']" name="name">ControlSource</attr>
+  <remove-node path="/api/namespace/object[@cname='GstControlSource']/class_struct" />
+  <add-node path="/api/namespace/object[@cname='GstControlSource']">
+    <class_struct cname="GstControlSourceClass">
+        <field name="ParentClass" cname="parent_class" type="GObjectClass" />
+        <method vm="bind" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="4" />
+    </class_struct>
+    <virtual_method name="Bind" cname="bind" hidden="1">
+      <return-type type="gboolean" />
+      <parameters>
+        <parameter type="GstControlSource*" name="self" />
+        <parameter type="GParamSpec*" name="pspec" />
+      </parameters>
+    </virtual_method>
+  </add-node>
+  <attr path="/api/namespace/object[@cname='GstControlSource']/method[@cname='gst_control_source_get_value']/parameters/parameter[@name='value']" name="pass_as">ref</attr>
+
+  <attr path="/api/namespace/object[@cname='GstInterpolationControlSource']" name="name">InterpolationControlSource</attr>
+  <attr path="/api/namespace/object[@cname='GstInterpolationControlSource']/method[@cname='gst_interpolation_control_source_set']/parameters/parameter[@name='value']" name="pass_as">ref</attr>
+  <attr path="/api/namespace/object[@cname='GstInterpolationControlSource']/method[@cname='gst_interpolation_control_source_set_from_list']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstInterpolationControlSource']/method[@cname='gst_interpolation_control_source_get_all']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstLFOControlSource']" name="name">LFOControlSource</attr>
+  <attr path="/api/namespace/struct[@cname='GstTimedValue']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstValueArray']" name="hidden">1</attr>
+
+
   <!-- GStreamer Interfaces library -->
   <attr path="/api/namespace/enum[@cname='GstColorBalanceType']" name="name">ColorBalanceType</attr>
   <attr path="/api/namespace/enum[@cname='GstMixerFlags']" name="name">MixerFlags</attr>

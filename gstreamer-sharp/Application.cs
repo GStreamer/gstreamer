@@ -41,6 +41,7 @@ namespace Gst {
       int argc = 0;
 
       gst_init (ref argc, ref argv);
+      gst_controller_init (ref argc, ref argv);
       RegisterManagedTypes ();
     }
 
@@ -147,6 +148,8 @@ namespace Gst {
         throw new ApplicationException (init_call + " returned a new argv handle");
       }
 
+      gst_controller_init (ref argc, ref argv_ptr);
+
       if (argc <= 1) {
         args = new string[0];
       } else {
@@ -162,6 +165,9 @@ namespace Gst {
 
     [DllImport("libgstreamer-0.10.dll") ]
     private static extern bool gst_init_check (ref int argc, ref IntPtr argv, out IntPtr error);
+
+    [DllImport("libgstcontroller-0.10.dll") ]
+    private static extern void gst_controller_init (ref int argc, ref IntPtr argv);
 
     [DllImport("libgstreamer-0.10.dll") ]
     private static extern void gst_deinit();

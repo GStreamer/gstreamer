@@ -39,6 +39,15 @@
         <exclude>../../gstreamer/libs/gst/base/gstbytereader.h</exclude>
       </namespace>
     </library>
+    <library name="libgstcontroller-0.10.dll">
+      <namespace name="Gst.Controller">
+        <dir>../../gstreamer/libs/gst/controller</dir>
+	<!-- Needs to be bound -->
+        <exclude>../../gstreamer/libs/gst/controller/gstcontrollerprivate.h</exclude>
+        <exclude>../../gstreamer/libs/gst/controller/gstinterpolationcontrolsourceprivate.h</exclude>
+        <exclude>../../gstreamer/libs/gst/controller/gstlfocontrolsourceprivate.h</exclude>
+      </namespace>
+    </library>
     <library name="libgstinterfaces-0.10.dll">
       <namespace name="Gst.Interfaces">
         <dir>../../gst-plugins-base/gst-libs/gst/interfaces</dir>

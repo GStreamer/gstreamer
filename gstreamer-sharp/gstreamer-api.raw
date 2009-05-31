@@ -6873,6 +6873,310 @@
       </method>
     </object>
   </namespace>
+  <namespace name="Gst.Controller" library="libgstcontroller-0.10.dll">
+    <enum name="GstInterpolateMode" cname="GstInterpolateMode" type="enum">
+      <member cname="GST_INTERPOLATE_NONE" name="None" />
+      <member cname="GST_INTERPOLATE_TRIGGER" name="Trigger" />
+      <member cname="GST_INTERPOLATE_LINEAR" name="Linear" />
+      <member cname="GST_INTERPOLATE_QUADRATIC" name="Quadratic" />
+      <member cname="GST_INTERPOLATE_CUBIC" name="Cubic" />
+      <member cname="GST_INTERPOLATE_USER" name="User" />
+    </enum>
+    <enum name="GstLFOWaveform" cname="GstLFOWaveform" type="enum">
+      <member cname="GST_LFO_WAVEFORM_SINE" name="Sine" />
+      <member cname="GST_LFO_WAVEFORM_SQUARE" name="Square" />
+      <member cname="GST_LFO_WAVEFORM_SAW" name="Saw" />
+      <member cname="GST_LFO_WAVEFORM_REVERSE_SAW" name="ReverseSaw" />
+      <member cname="GST_LFO_WAVEFORM_TRIANGLE" name="Triangle" />
+    </enum>
+    <callback name="GstControlSourceBind" cname="GstControlSourceBind">
+      <return-type type="gboolean" />
+      <parameters>
+        <parameter type="GstControlSource*" name="self" />
+        <parameter type="GParamSpec*" name="pspec" />
+      </parameters>
+    </callback>
+    <callback name="GstControlSourceGetValue" cname="GstControlSourceGetValue">
+      <return-type type="gboolean" />
+      <parameters>
+        <parameter type="GstControlSource*" name="self" />
+        <parameter type="GstClockTime" name="timestamp" />
+        <parameter type="GValue*" name="value" />
+      </parameters>
+    </callback>
+    <callback name="GstControlSourceGetValueArray" cname="GstControlSourceGetValueArray">
+      <return-type type="gboolean" />
+      <parameters>
+        <parameter type="GstControlSource*" name="self" />
+        <parameter type="GstClockTime" name="timestamp" />
+        <parameter type="GstValueArray*" name="value_array" />
+      </parameters>
+    </callback>
+    <object name="GstController" cname="GstController" parent="GObject">
+      <class_struct cname="GstControllerClass">
+        <field name="ParentClass" cname="parent_class" type="GObjectClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Properties" cname="properties" type="GList*" />
+      <field name="Lock" cname="lock" type="GMutex*" />
+      <field name="Object" cname="object" type="GObject*" />
+      <field name="Priv" cname="priv" type="GstControllerPrivate*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING - 1" type="gpointer" />
+      <property name="ControlRate" cname="control-rate" type="guint64" readable="true" writeable="true" />
+      <method name="Get" cname="gst_controller_get">
+        <return-type type="GValue*" />
+        <parameters>
+          <parameter type="gchar*" name="property_name" />
+          <parameter type="GstClockTime" name="timestamp" />
+        </parameters>
+      </method>
+      <method name="GetAll" cname="gst_controller_get_all" deprecated="1">
+        <return-type type="const-GList*" />
+        <parameters>
+          <parameter type="gchar*" name="property_name" />
+        </parameters>
+      </method>
+      <method name="GetControlSource" cname="gst_controller_get_control_source">
+        <return-type type="GstControlSource*" />
+        <parameters>
+          <parameter type="gchar*" name="property_name" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_controller_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="GetValueArray" cname="gst_controller_get_value_array">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstClockTime" name="timestamp" />
+          <parameter type="GstValueArray*" name="value_array" />
+        </parameters>
+      </method>
+      <method name="GetValueArrays" cname="gst_controller_get_value_arrays">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstClockTime" name="timestamp" />
+          <parameter type="GSList*" name="value_arrays" />
+        </parameters>
+      </method>
+      <method name="Init" cname="gst_controller_init" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="int*" name="argc" />
+          <parameter type="char***" name="argv" />
+        </parameters>
+      </method>
+      <constructor cname="gst_controller_new">
+        <parameters>
+          <parameter type="GObject*" name="object" />
+          <parameter ellipsis="true" />
+        </parameters>
+      </constructor>
+      <constructor cname="gst_controller_new_list">
+        <parameters>
+          <parameter type="GObject*" name="object" />
+          <parameter type="GList*" name="list" />
+        </parameters>
+      </constructor>
+      <constructor cname="gst_controller_new_valist">
+        <parameters>
+          <parameter type="GObject*" name="object" />
+          <parameter type="va_list" name="var_args" />
+        </parameters>
+      </constructor>
+      <method name="RemoveProperties" cname="gst_controller_remove_properties">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter ellipsis="true" />
+        </parameters>
+      </method>
+      <method name="RemovePropertiesList" cname="gst_controller_remove_properties_list">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GList*" name="list" />
+        </parameters>
+      </method>
+      <method name="RemovePropertiesValist" cname="gst_controller_remove_properties_valist">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="va_list" name="var_args" />
+        </parameters>
+      </method>
+      <method name="Set" cname="gst_controller_set" deprecated="1">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gchar*" name="property_name" />
+          <parameter type="GstClockTime" name="timestamp" />
+          <parameter type="GValue*" name="value" />
+        </parameters>
+      </method>
+      <method name="SetControlSource" cname="gst_controller_set_control_source">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gchar*" name="property_name" />
+          <parameter type="GstControlSource*" name="csource" />
+        </parameters>
+      </method>
+      <method name="SetDisabled" cname="gst_controller_set_disabled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="disabled" />
+        </parameters>
+      </method>
+      <method name="SetFromList" cname="gst_controller_set_from_list" deprecated="1">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gchar*" name="property_name" />
+          <parameter type="GSList*" name="timedvalues" />
+        </parameters>
+      </method>
+      <method name="SetInterpolationMode" cname="gst_controller_set_interpolation_mode" deprecated="1">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gchar*" name="property_name" />
+          <parameter type="GstInterpolateMode" name="mode" />
+        </parameters>
+      </method>
+      <method name="SetPropertyDisabled" cname="gst_controller_set_property_disabled">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gchar*" name="property_name" />
+          <parameter type="gboolean" name="disabled" />
+        </parameters>
+      </method>
+      <method name="SuggestNextSync" cname="gst_controller_suggest_next_sync">
+        <return-type type="GstClockTime" />
+      </method>
+      <method name="SyncValues" cname="gst_controller_sync_values">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstClockTime" name="timestamp" />
+        </parameters>
+      </method>
+      <method name="Unset" cname="gst_controller_unset" deprecated="1">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gchar*" name="property_name" />
+          <parameter type="GstClockTime" name="timestamp" />
+        </parameters>
+      </method>
+      <method name="UnsetAll" cname="gst_controller_unset_all" deprecated="1">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gchar*" name="property_name" />
+        </parameters>
+      </method>
+    </object>
+    <object name="GstControlSource" cname="GstControlSource" parent="GObject">
+      <class_struct cname="GstControlSourceClass">
+        <field name="ParentClass" cname="parent_class" type="GObjectClass" />
+        <field name="Bind" cname="bind" type="GstControlSourceBind" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="GetValue" cname="get_value" type="GstControlSourceGetValue" access="public" />
+      <field name="GetValueArray" cname="get_value_array" type="GstControlSourceGetValueArray" access="public" />
+      <field name="Bound" cname="bound" type="gboolean" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <method name="Bind" cname="gst_control_source_bind">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GParamSpec*" name="pspec" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_control_source_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="GetValue" cname="gst_control_source_get_value">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstClockTime" name="timestamp" />
+          <parameter type="GValue*" name="value" />
+        </parameters>
+      </method>
+      <method name="GetValueArray" cname="gst_control_source_get_value_array">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstClockTime" name="timestamp" />
+          <parameter type="GstValueArray*" name="value_array" />
+        </parameters>
+      </method>
+    </object>
+    <object name="GstInterpolationControlSource" cname="GstInterpolationControlSource" parent="GstControlSource">
+      <class_struct cname="GstInterpolationControlSourceClass">
+        <field name="ParentClass" cname="parent_class" type="GstControlSourceClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Lock" cname="lock" type="GMutex*" />
+      <field name="Priv" cname="priv" type="GstInterpolationControlSourcePrivate*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <method name="GetAll" cname="gst_interpolation_control_source_get_all">
+        <return-type type="GList*" />
+      </method>
+      <method name="GetCount" cname="gst_interpolation_control_source_get_count">
+        <return-type type="gint" />
+      </method>
+      <method name="GetType" cname="gst_interpolation_control_source_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <constructor cname="gst_interpolation_control_source_new" />
+      <method name="Set" cname="gst_interpolation_control_source_set">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstClockTime" name="timestamp" />
+          <parameter type="GValue*" name="value" />
+        </parameters>
+      </method>
+      <method name="SetFromList" cname="gst_interpolation_control_source_set_from_list">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GSList*" name="timedvalues" />
+        </parameters>
+      </method>
+      <method name="SetInterpolationMode" cname="gst_interpolation_control_source_set_interpolation_mode">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstInterpolateMode" name="mode" />
+        </parameters>
+      </method>
+      <method name="Unset" cname="gst_interpolation_control_source_unset">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstClockTime" name="timestamp" />
+        </parameters>
+      </method>
+      <method name="UnsetAll" cname="gst_interpolation_control_source_unset_all">
+        <return-type type="void" />
+      </method>
+    </object>
+    <object name="GstLFOControlSource" cname="GstLFOControlSource" parent="GstControlSource">
+      <class_struct cname="GstLFOControlSourceClass">
+        <field name="ParentClass" cname="parent_class" type="GstControlSourceClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Priv" cname="priv" type="GstLFOControlSourcePrivate*" />
+      <field name="Lock" cname="lock" type="GMutex*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <property name="Waveform" cname="waveform" type="GstLfoWaveform" readable="true" writeable="true" />
+      <property name="Frequency" cname="frequency" type="gdouble" readable="true" writeable="true" />
+      <property name="Timeshift" cname="timeshift" type="guint64" readable="true" writeable="true" />
+      <property name="Amplitude" cname="amplitude" type="GValue" readable="true" writeable="true" />
+      <property name="Offset" cname="offset" type="GValue" readable="true" writeable="true" />
+      <method name="GetType" cname="gst_lfo_control_source_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <constructor cname="gst_lfo_control_source_new" />
+    </object>
+    <struct name="GstTimedValue" cname="GstTimedValue">
+      <field name="Timestamp" cname="timestamp" type="GstClockTime" />
+      <field name="Value" cname="value" type="GValue" />
+    </struct>
+    <struct name="GstValueArray" cname="GstValueArray">
+      <field name="PropertyName" cname="property_name" type="gchar*" />
+      <field name="Nbsamples" cname="nbsamples" type="gint" />
+      <field name="SampleInterval" cname="sample_interval" type="GstClockTime" />
+      <field name="Values" cname="values" type="gpointer*" />
+    </struct>
+  </namespace>
   <namespace name="Gst.Interfaces" library="libgstinterfaces-0.10.dll">
     <enum name="GstColorBalanceType" cname="GstColorBalanceType" gtype="gst_color_balance_type_get_type" type="enum">
       <member cname="GST_COLOR_BALANCE_HARDWARE" name="Hardware" />
