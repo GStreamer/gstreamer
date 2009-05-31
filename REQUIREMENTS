@@ -118,9 +118,9 @@ libtheora	(for Ogg Theora video support)
 libmms		(for MMS protocol support)
 			(http://www.sf.net/projects/libmms)
 libamrnb	(for AMR-NB support)
-			(http://http://www.penguin.cz/~utx/amr)
+			(http://www.penguin.cz/~utx/amr)
 libamrwb	(for AMR-WB support)
-			(http://http://www.penguin.cz/~utx/amr)
+			(http://www.penguin.cz/~utx/amr)
 
 
 Optional (debian) packages:
