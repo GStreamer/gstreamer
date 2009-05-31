@@ -137,6 +137,7 @@ gst_identity_finalize (GObject * object)
   identity = GST_IDENTITY (object);
 
   g_free (identity->last_message);
+  g_static_rec_mutex_free (&identity->notify_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -289,6 +290,21 @@ gst_identity_init (GstIdentity * identity, GstIdentityClass * g_class)
   identity->dump = DEFAULT_DUMP;
   identity->last_message = NULL;
   identity->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
+  g_static_rec_mutex_init (&identity->notify_lock);
+}
+
+static void
+gst_identity_notify_last_message (GstIdentity * identity)
+{
+  /* FIXME: this hacks around a bug in GLib/GObject: doing concurrent
+   * g_object_notify() on the same object might lead to crashes, see
+   * http://bugzilla.gnome.org/show_bug.cgi?id=166020#c60 and follow-ups.
+   * So we really don't want to do a g_object_notify() here for out-of-band
+   * events with the streaming thread possibly also doing a g_object_notify()
+   * for an in-band buffer or event. */
+  g_static_rec_mutex_lock (&identity->notify_lock);
+  g_object_notify ((GObject *) identity, "last_message");
+  g_static_rec_mutex_unlock (&identity->notify_lock);
 }
 
 static gboolean
@@ -318,7 +334,7 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
     g_free (sstr);
     GST_OBJECT_UNLOCK (identity);
 
-    g_object_notify (G_OBJECT (identity), "last_message");
+    gst_identity_notify_last_message (identity);
   }
 
   if (identity->single_segment
@@ -561,7 +577,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
             GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
             GST_BUFFER_OFFSET_END (buf), GST_BUFFER_FLAGS (buf), buf);
         GST_OBJECT_UNLOCK (identity);
-        g_object_notify (G_OBJECT (identity), "last-message");
+        gst_identity_notify_last_message (identity);
       }
       /* return DROPPED to basetransform. */
       return GST_BASE_TRANSFORM_FLOW_DROPPED;
@@ -585,7 +601,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
         GST_BUFFER_FLAGS (buf), buf);
     GST_OBJECT_UNLOCK (identity);
-    g_object_notify (G_OBJECT (identity), "last-message");
+    gst_identity_notify_last_message (identity);
   }
 
   if (identity->datarate > 0) {
