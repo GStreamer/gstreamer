@@ -29,9 +29,12 @@
 #define SRC_CAPS_CDATA "audio/mpeg, framed=(boolean)false, codec_data=(buffer)1190"
 #define SRC_CAPS_TMPL  "audio/mpeg, framed=(boolean)false, mpegversion=(int){2,4}"
 
-#define SINK_CAPS       "audio/mpeg, framed=(boolean)true"
-#define SINK_CAPS_MPEG2 "audio/mpeg, framed=(boolean)true, mpegversion=2"
-#define SINK_CAPS_MPEG4 "audio/mpeg, framed=(boolean)true, mpegversion=4"
+#define SINK_CAPS \
+    "audio/mpeg, framed=(boolean)true"
+#define SINK_CAPS_MPEG2 \
+    "audio/mpeg, framed=(boolean)true, mpegversion=2, rate=48000, channels=2"
+#define SINK_CAPS_MPEG4 \
+    "audio/mpeg, framed=(boolean)true, mpegversion=4, rate=96000, channels=2"
 #define SINK_CAPS_TMPL  "audio/mpeg, framed=(boolean)true, mpegversion=(int){2,4}"
 
 GList *buffers;
@@ -130,6 +133,8 @@ buffer_verify_adts (void *buffer, void *user_data)
     gchar *bcaps = gst_caps_to_string (GST_BUFFER_CAPS (buffer));
     g_free (bcaps);
 
+    GST_LOG ("%" GST_PTR_FORMAT " = %" GST_PTR_FORMAT " ?",
+        GST_BUFFER_CAPS (buffer), vdata->caps);
     fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), vdata->caps));
   }
 
@@ -226,6 +231,7 @@ GST_START_TEST (test_parse_adif_normal)
   /* For ADIF parser assumes that data is always version 4 */
   scaps = gst_caps_from_string (SINK_CAPS_MPEG4);
   sinkcaps = gst_pad_get_negotiated_caps (sinkpad);
+  GST_LOG ("%" GST_PTR_FORMAT " = %" GST_PTR_FORMAT " ?", sinkcaps, scaps);
   fail_unless (gst_caps_is_equal (sinkcaps, scaps));
   gst_caps_unref (sinkcaps);
   gst_caps_unref (scaps);
@@ -413,6 +419,7 @@ GST_START_TEST (test_parse_adts_detect_mpeg_version)
 
   /* Check that the negotiated caps are as expected */
   sinkcaps = gst_pad_get_negotiated_caps (sinkpad);
+  GST_LOG ("%" GST_PTR_FORMAT " = %" GST_PTR_FORMAT "?", sinkcaps, vdata.caps);
   fail_unless (gst_caps_is_equal (sinkcaps, vdata.caps));
   gst_caps_unref (sinkcaps);
 
@@ -425,7 +432,10 @@ GST_START_TEST (test_parse_adts_detect_mpeg_version)
 
 GST_END_TEST;
 
-
+#define structure_get_int(s,f) \
+    (g_value_get_int(gst_structure_get_value(s,f)))
+#define fail_unless_structure_field_int_equals(s,field,num) \
+    fail_unless_equals_int (structure_get_int(s,field), num)
 /*
  * Test if the parser handles raw stream and codec_data info properly.
  */
@@ -433,7 +443,8 @@ GST_START_TEST (test_parse_handle_codec_data)
 {
   GstElement *aacparse;
   GstBuffer *buffer;
-  GstCaps *scaps, *sinkcaps;
+  GstCaps *sinkcaps;
+  GstStructure *s;
   guint datasum = 0;
   guint i;
 
@@ -449,11 +460,16 @@ GST_START_TEST (test_parse_handle_codec_data)
 
   /* Check that the negotiated caps are as expected */
   /* When codec_data is present, parser assumes that data is version 4 */
-  scaps = gst_caps_from_string (SINK_CAPS_MPEG4);
   sinkcaps = gst_pad_get_negotiated_caps (sinkpad);
-  fail_unless (gst_caps_is_equal (sinkcaps, scaps));
+  GST_LOG ("aac output caps: %" GST_PTR_FORMAT, sinkcaps);
+  s = gst_caps_get_structure (sinkcaps, 0);
+  fail_unless (gst_structure_has_name (s, "audio/mpeg"));
+  fail_unless_structure_field_int_equals (s, "mpegversion", 4);
+  fail_unless_structure_field_int_equals (s, "channels", 2);
+  fail_unless_structure_field_int_equals (s, "rate", 48000);
+  fail_unless (gst_structure_has_field (s, "codec_data"));
+
   gst_caps_unref (sinkcaps);
-  gst_caps_unref (scaps);
 
   g_list_foreach (buffers, buffer_count_size, &datasum);
   fail_unless_equals_int (datasum, 10 * 100);

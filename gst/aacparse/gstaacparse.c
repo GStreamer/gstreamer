@@ -213,17 +213,27 @@ gst_aacparse_finalize (GObject * object)
 static gboolean
 gst_aacparse_set_src_caps (GstAacParse * aacparse)
 {
-  GstCaps *src_caps = NULL;
-  gchar *caps_str = NULL;
+  GstStructure *s;
+  GstCaps *sink_caps, *src_caps = NULL;
   gboolean res = FALSE;
 
-  src_caps = gst_caps_new_simple ("audio/mpeg",
-      "framed", G_TYPE_BOOLEAN, TRUE,
+  sink_caps = GST_PAD_CAPS (GST_BASE_PARSE (aacparse)->sinkpad);
+  GST_DEBUG_OBJECT (aacparse, "sink caps: %" GST_PTR_FORMAT, sink_caps);
+  if (sink_caps)
+    src_caps = gst_caps_copy (sink_caps);
+  else
+    src_caps = gst_caps_new_simple ("audio/mpeg", NULL);
+
+  gst_caps_set_simple (src_caps, "framed", G_TYPE_BOOLEAN, TRUE,
       "mpegversion", G_TYPE_INT, aacparse->mpegversion, NULL);
 
-  caps_str = gst_caps_to_string (src_caps);
-  GST_DEBUG_OBJECT (aacparse, "setting srcpad caps: %s", caps_str);
-  g_free (caps_str);
+  s = gst_caps_get_structure (src_caps, 0);
+  if (!gst_structure_has_field (s, "rate") && aacparse->sample_rate > 0)
+    gst_structure_set (s, "rate", G_TYPE_INT, aacparse->sample_rate, NULL);
+  if (!gst_structure_has_field (s, "channels") && aacparse->channels > 0)
+    gst_structure_set (s, "channels", G_TYPE_INT, aacparse->channels, NULL);
+
+  GST_DEBUG_OBJECT (aacparse, "setting src caps: %" GST_PTR_FORMAT, src_caps);
 
   gst_pad_use_fixed_caps (GST_BASE_PARSE (aacparse)->srcpad);
   res = gst_pad_set_caps (GST_BASE_PARSE (aacparse)->srcpad, src_caps);
