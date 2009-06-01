@@ -518,6 +518,10 @@ typedef struct _AtomTRAK
 
   AtomTKHD tkhd;
   AtomMDIA mdia;
+
+  /* some helper info for structural conformity checks */
+  gboolean is_video;
+  gboolean is_h264;
 } AtomTRAK;
 
 typedef struct _AtomMOOV
