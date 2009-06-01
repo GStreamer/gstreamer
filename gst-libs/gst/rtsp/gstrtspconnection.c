@@ -158,6 +158,8 @@ typedef enum
 
 #define TUNNELID_LEN   24
 
+#define UNKNOWN_CSEQ ((guint) -1)
+
 struct _GstRTSPConnection
 {
   /*< private > */
@@ -1871,7 +1873,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
     GTimeVal * timeout)
 {
   GstRTSPResult res;
-  GstRTSPBuilder builder = { 0 };
+  GstRTSPBuilder builder;
   gint retval;
   GstClockTime to;
 
@@ -1886,6 +1888,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
   gst_poll_fd_ctl_write (conn->fdset, conn->writefd, FALSE);
   gst_poll_fd_ctl_read (conn->fdset, conn->readfd, TRUE);
 
+  memset (&builder, 0, sizeof (GstRTSPBuilder));
   while (TRUE) {
     res = build_next (&builder, message, conn);
     if (res == GST_RTSP_EEOF)
@@ -2692,8 +2695,8 @@ gst_rtsp_source_check (GSource * source)
 }
 
 static gboolean
-gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback,
-    gpointer user_data)
+gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
+    gpointer user_data G_GNUC_UNUSED)
 {
   GstRTSPWatch *watch = (GstRTSPWatch *) source;
   GstRTSPResult res;
@@ -2717,7 +2720,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback,
 
         /* queue the response string */
         str = gen_tunnel_reply (watch->conn, code);
-        queue_response (watch, str, -1);
+        queue_response (watch, str, UNKNOWN_CSEQ);
       } else if (res == GST_RTSP_ETPOST) {
         /* in the callback the connection should be tunneled with the
          * GET connection */
@@ -2763,7 +2766,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback,
       if (res != GST_RTSP_OK)
         goto error;
 
-      if (watch->funcs.message_sent && watch->write_cseq != -1)
+      if (watch->funcs.message_sent && watch->write_cseq != UNKNOWN_CSEQ)
         watch->funcs.message_sent (watch, watch->write_cseq, watch->user_data);
 
     done:
@@ -2822,7 +2825,9 @@ static GSourceFuncs gst_rtsp_source_funcs = {
   gst_rtsp_source_prepare,
   gst_rtsp_source_check,
   gst_rtsp_source_dispatch,
-  gst_rtsp_source_finalize
+  gst_rtsp_source_finalize,
+  NULL,
+  NULL
 };
 
 /**
@@ -3003,7 +3008,7 @@ gst_rtsp_watch_queue_message (GstRTSPWatch * watch, GstRTSPMessage * message)
           0) == GST_RTSP_OK) {
     cseq = atoi (header);
   } else {
-    cseq = -1;
+    cseq = UNKNOWN_CSEQ;
   }
 
   /* make a record with the message as a string and cseq */
