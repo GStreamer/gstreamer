@@ -43,3 +43,25 @@ class TestTagList(TestCase):
         keys = taglist.keys()
         keys.sort()
         self.assertEqual(keys, ['key1', 'key2'])
+
+    def testUnicode(self):
+        taglist = gst.TagList()
+
+        # normal ASCII text
+        taglist[gst.TAG_ARTIST] = 'Artist'
+        self.failUnless(isinstance(taglist[gst.TAG_ARTIST], unicode))
+        self.assertEquals(taglist[gst.TAG_ARTIST], u'Artist')
+        self.assertEquals(taglist[gst.TAG_ARTIST], 'Artist')
+
+        # normal ASCII text as unicode
+        taglist[gst.TAG_ARTIST] = u'Artist'
+        self.failUnless(isinstance(taglist[gst.TAG_ARTIST], unicode))
+        self.assertEquals(taglist[gst.TAG_ARTIST], u'Artist')
+        self.assertEquals(taglist[gst.TAG_ARTIST], 'Artist')
+        
+        # real unicode
+        taglist[gst.TAG_ARTIST] = u'S\xc3\xadgur R\xc3\xb3s'
+        self.failUnless(isinstance(taglist[gst.TAG_ARTIST], unicode))
+        self.assertEquals(taglist[gst.TAG_ARTIST], u'S\xc3\xadgur R\xc3\xb3s')
+        
+

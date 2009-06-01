@@ -44,11 +44,11 @@ class StructureTest(TestCase):
 
     def testString(self):
         assert self.struct.has_key('foo')
-        assert isinstance(self.struct['foo'], str)
+        assert isinstance(self.struct['foo'], unicode)
         assert self.struct['foo'] == 'bar', self.struct['foo']
         self.struct['foo'] = 'baz'
         assert self.struct.has_key('foo')
-        assert isinstance(self.struct['foo'], str)
+        assert isinstance(self.struct['foo'], unicode)
         assert self.struct['foo'] == 'baz', self.struct['foo']
 
     def testBoolean(self):

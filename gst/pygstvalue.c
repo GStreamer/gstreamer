@@ -38,7 +38,7 @@ static PyObject *gstfractionrange_class = NULL;
  * Returns 1 if none other found.
  * This is Euclid's algorithm. */
 static long
-my_gcd(long num, long denom)
+my_gcd (long num, long denom)
 {
   while (denom != 0) {
     long temp = num;
@@ -61,73 +61,81 @@ my_gcd(long num, long denom)
  * Returns: a PyObject representing the value.
  */
 PyObject *
-pygst_value_as_pyobject(const GValue *value, gboolean copy_boxed)
+pygst_value_as_pyobject (const GValue * value, gboolean copy_boxed)
 {
-  PyObject *ret = pyg_value_as_pyobject(value, copy_boxed);
+  PyObject *ret = pyg_value_as_pyobject (value, copy_boxed);
   if (!ret) {
-    PyErr_Clear();
+    PyErr_Clear ();
     if (GST_VALUE_HOLDS_FOURCC (value)) {
       gchar str[5];
-      g_snprintf (str, 5, "%"GST_FOURCC_FORMAT,
-                  GST_FOURCC_ARGS (gst_value_get_fourcc (value)));
+      g_snprintf (str, 5, "%" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (gst_value_get_fourcc (value)));
       ret = PyObject_Call (gstfourcc_class, Py_BuildValue ("(s)", str), NULL);
     } else if (GST_VALUE_HOLDS_INT_RANGE (value)) {
       ret = PyObject_Call
-        (gstintrange_class,
-         Py_BuildValue ("ii",
-                        gst_value_get_int_range_min (value),
-                        gst_value_get_int_range_max (value)),
-         NULL);
+          (gstintrange_class,
+          Py_BuildValue ("ii",
+              gst_value_get_int_range_min (value),
+              gst_value_get_int_range_max (value)), NULL);
     } else if (GST_VALUE_HOLDS_DOUBLE_RANGE (value)) {
       ret = PyObject_Call
-        (gstdoublerange_class,
-         Py_BuildValue ("dd",
-                        gst_value_get_double_range_min (value),
-                        gst_value_get_double_range_max (value)),
-         NULL);
+          (gstdoublerange_class,
+          Py_BuildValue ("dd",
+              gst_value_get_double_range_min (value),
+              gst_value_get_double_range_max (value)), NULL);
     } else if (GST_VALUE_HOLDS_LIST (value)) {
       int i, len;
       len = gst_value_list_get_size (value);
       ret = PyList_New (len);
-      for (i=0; i<len; i++) {
+      for (i = 0; i < len; i++) {
         PyList_SetItem (ret, i,
-                        pygst_value_as_pyobject
-                        (gst_value_list_get_value (value, i), copy_boxed));
+            pygst_value_as_pyobject
+            (gst_value_list_get_value (value, i), copy_boxed));
       }
     } else if (GST_VALUE_HOLDS_ARRAY (value)) {
       int i, len;
       len = gst_value_array_get_size (value);
       ret = PyTuple_New (len);
-      for (i=0; i<len; i++) {
+      for (i = 0; i < len; i++) {
         PyTuple_SetItem (ret, i,
-                         pygst_value_as_pyobject
-                         (gst_value_array_get_value (value, i), copy_boxed));
+            pygst_value_as_pyobject
+            (gst_value_array_get_value (value, i), copy_boxed));
       }
     } else if (GST_VALUE_HOLDS_FRACTION (value)) {
       ret = PyObject_Call
-        (gstfraction_class,
-         Py_BuildValue ("ii",
-                        gst_value_get_fraction_numerator (value),
-                        gst_value_get_fraction_denominator (value)),
-         NULL);
+          (gstfraction_class,
+          Py_BuildValue ("ii",
+              gst_value_get_fraction_numerator (value),
+              gst_value_get_fraction_denominator (value)), NULL);
     } else if (GST_VALUE_HOLDS_FRACTION_RANGE (value)) {
-      const GValue	*min, *max;
+      const GValue *min, *max;
       min = gst_value_get_fraction_range_min (value);
       max = gst_value_get_fraction_range_max (value);
       ret = PyObject_Call
-	(gstfractionrange_class,
-	 Py_BuildValue ("OO",
-			pygst_value_as_pyobject (min, copy_boxed),
-			pygst_value_as_pyobject (max, copy_boxed)),
-	 NULL);
+          (gstfractionrange_class,
+          Py_BuildValue ("OO",
+              pygst_value_as_pyobject (min, copy_boxed),
+              pygst_value_as_pyobject (max, copy_boxed)), NULL);
     } else if (GST_VALUE_HOLDS_BUFFER (value)) {
       return pygstminiobject_new (gst_value_get_mini_object (value));
     } else {
       gchar buf[256];
-      g_snprintf (buf, 256, "unknown type: %s", g_type_name (G_VALUE_TYPE (value)));
-      PyErr_SetString(PyExc_TypeError, buf);
+      g_snprintf (buf, 256, "unknown type: %s",
+          g_type_name (G_VALUE_TYPE (value)));
+      PyErr_SetString (PyExc_TypeError, buf);
     }
   }
+
+  if (G_VALUE_TYPE (value) == G_TYPE_STRING) {
+    PyObject *u = NULL;
+
+    /* FIXME: docs are not clear on whether this sets a python
+       exception when it fails */
+    u = PyUnicode_FromEncodedObject (ret, "utf-8", NULL);
+    Py_DECREF (ret);
+    ret = u;
+  }
+
   return ret;
 }
 
@@ -142,11 +150,11 @@ if (!G_VALUE_HOLDS (v, t)) {\
 }}G_STMT_END
 
 gboolean
-pygst_value_init_for_pyobject (GValue *value, PyObject *obj) 
+pygst_value_init_for_pyobject (GValue * value, PyObject * obj)
 {
   GType t;
-  
-  if (!(t = pyg_type_from_object ((PyObject*)obj->ob_type))) {
+
+  if (!(t = pyg_type_from_object ((PyObject *) obj->ob_type))) {
     if (PyObject_IsInstance (obj, gstvalue_class)) {
       PyErr_Clear ();
       if (PyObject_IsInstance (obj, gstfourcc_class))
@@ -158,12 +166,12 @@ pygst_value_init_for_pyobject (GValue *value, PyObject *obj)
       else if (PyObject_IsInstance (obj, gstfraction_class))
         t = GST_TYPE_FRACTION;
       else if (PyObject_IsInstance (obj, gstfractionrange_class))
-	t = GST_TYPE_FRACTION_RANGE;
+        t = GST_TYPE_FRACTION_RANGE;
       else {
-        PyErr_SetString(PyExc_TypeError, "Unexpected gst.Value instance");
+        PyErr_SetString (PyExc_TypeError, "Unexpected gst.Value instance");
         return FALSE;
       }
-    } else if (PyObject_IsInstance (obj, (PyObject *)&PyGstMiniObject_Type)) {
+    } else if (PyObject_IsInstance (obj, (PyObject *) & PyGstMiniObject_Type)) {
       PyErr_Clear ();
       t = GST_TYPE_MINI_OBJECT;
     } else if (PyTuple_Check (obj)) {
@@ -172,6 +180,10 @@ pygst_value_init_for_pyobject (GValue *value, PyObject *obj)
     } else if (PyList_Check (obj)) {
       PyErr_Clear ();
       t = GST_TYPE_LIST;
+    } else if (PyUnicode_Check (obj)) {
+      /* unicode strings should be converted to UTF-8 */
+      PyErr_Clear ();
+      t = G_TYPE_STRING;
     } else {
       /* pyg_type_from_object already set the error */
       return FALSE;
@@ -194,10 +206,19 @@ pygst_value_init_for_pyobject (GValue *value, PyObject *obj)
  * Returns: 0 on success, -1 on error.
  */
 int
-pygst_value_from_pyobject (GValue *value, PyObject *obj)
+pygst_value_from_pyobject (GValue * value, PyObject * obj)
 {
   GType f = g_type_fundamental (G_VALUE_TYPE (value));
-  
+
+  /* Unicode objects should be converted to utf-8 strings */
+  if (PyObject_TypeCheck (obj, &PyUnicode_Type)) {
+    PyObject *v;
+
+    v = PyUnicode_AsUTF8String (obj);
+    Py_DECREF (obj);
+    obj = v;
+  }
+
   /* work around a bug in pygtk whereby pyg_value_from_pyobject claims success
      for unknown fundamental types without actually doing anything */
   if (f < G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_USER_FIRST)
@@ -228,7 +249,7 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
         return -1;
       high = PyInt_AsLong (pyval);
       g_assert (G_MININT <= high && high <= G_MAXINT);
-      gst_value_set_int_range (value, (int)low, (int)high);
+      gst_value_set_int_range (value, (int) low, (int) high);
     } else if (PyObject_IsInstance (obj, gstdoublerange_class)) {
       PyObject *pyval;
       double low, high;
@@ -248,53 +269,53 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
       if (!(pyval = PyObject_GetAttrString (obj, "num")))
         return -1;
       num = PyInt_AsLong (pyval);
-      if ((num == -1) && PyErr_Occurred())
-	return -1;
+      if ((num == -1) && PyErr_Occurred ())
+        return -1;
       g_assert (G_MININT <= num && num <= G_MAXINT);
       if (!(pyval = PyObject_GetAttrString (obj, "denom")))
         return -1;
       denom = PyInt_AsLong (pyval);
-      if ((denom == -1) && PyErr_Occurred())
-	return -1;
+      if ((denom == -1) && PyErr_Occurred ())
+        return -1;
       /* we need to reduce the values to be smaller than MAXINT */
-      if ((gcd = my_gcd(num, denom))) {
-	num /= gcd;
-	denom /= gcd;
+      if ((gcd = my_gcd (num, denom))) {
+        num /= gcd;
+        denom /= gcd;
       }
       g_assert (G_MININT <= denom && denom <= G_MAXINT);
-      gst_value_set_fraction (value, (int)num, (int)denom);
+      gst_value_set_fraction (value, (int) num, (int) denom);
     } else if (PyObject_IsInstance (obj, gstfractionrange_class)) {
-      GValue	low = {0, };
-      GValue	high = {0, };
-      PyObject	*pylow, *pyhigh;
+      GValue low = { 0, };
+      GValue high = { 0, };
+      PyObject *pylow, *pyhigh;
 
       VALUE_TYPE_CHECK (value, GST_TYPE_FRACTION_RANGE);
       if (!(pylow = PyObject_GetAttrString (obj, "low")))
-	return -1;
+        return -1;
       if (!pygst_value_init_for_pyobject (&low, pylow))
-	return -1;
+        return -1;
       if (pygst_value_from_pyobject (&low, pylow) != 0)
-	return -1;
-      
+        return -1;
+
       if (!(pyhigh = PyObject_GetAttrString (obj, "high")))
-	return -1;
+        return -1;
       if (!pygst_value_init_for_pyobject (&high, pyhigh))
-	return -1;
+        return -1;
       if (pygst_value_from_pyobject (&high, pyhigh) != 0)
-	return -1;
+        return -1;
 
       gst_value_set_fraction_range (value, &low, &high);
     } else {
       gchar buf[256];
-      gchar *str = PyString_AsString (PyObject_Repr(obj));
-      g_snprintf(buf, 256, "Unknown gst.Value type: %s", str);
-      PyErr_SetString(PyExc_TypeError, buf);
+      gchar *str = PyString_AsString (PyObject_Repr (obj));
+      g_snprintf (buf, 256, "Unknown gst.Value type: %s", str);
+      PyErr_SetString (PyExc_TypeError, buf);
       return -1;
     }
     return 0;
-  } else if (PyObject_IsInstance (obj, (PyObject *)&PyGstMiniObject_Type)) {
+  } else if (PyObject_IsInstance (obj, (PyObject *) & PyGstMiniObject_Type)) {
     VALUE_TYPE_CHECK (value, GST_TYPE_MINI_OBJECT);
-    gst_value_set_mini_object (value, pygstminiobject_get(obj));
+    gst_value_set_mini_object (value, pygstminiobject_get (obj));
     return 0;
   } else if (PyTuple_Check (obj)) {
     gint i, len;
@@ -303,7 +324,7 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
     len = PyTuple_Size (obj);
     for (i = 0; i < len; i++) {
       PyObject *o;
-      GValue new = {0,};
+      GValue new = { 0, };
       o = PyTuple_GetItem (obj, i);
       if (!pygst_value_init_for_pyobject (&new, o))
         return -1;
@@ -322,7 +343,7 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
     len = PyList_Size (obj);
     for (i = 0; i < len; i++) {
       PyObject *o;
-      GValue new = {0,};
+      GValue new = { 0, };
       o = PyList_GetItem (obj, i);
       if (!pygst_value_init_for_pyobject (&new, o))
         return -1;
@@ -342,31 +363,33 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
 #define NULL_CHECK(o) if (!o) goto err
 
 gboolean
-pygst_value_init(void)
+pygst_value_init (void)
 {
   PyObject *module, *dict;
-  
-  if ((module = PyImport_ImportModule("gst")) == NULL)
+
+  if ((module = PyImport_ImportModule ("gst")) == NULL)
     return FALSE;
-    
+
   dict = PyModule_GetDict (module);
 
-  gstvalue_class = (PyObject*)PyDict_GetItemString (dict, "Value");
+  gstvalue_class = (PyObject *) PyDict_GetItemString (dict, "Value");
   NULL_CHECK (gstvalue_class);
-  gstfourcc_class = (PyObject*)PyDict_GetItemString (dict, "Fourcc");
+  gstfourcc_class = (PyObject *) PyDict_GetItemString (dict, "Fourcc");
   NULL_CHECK (gstfourcc_class);
-  gstintrange_class = (PyObject*)PyDict_GetItemString (dict, "IntRange");
+  gstintrange_class = (PyObject *) PyDict_GetItemString (dict, "IntRange");
   NULL_CHECK (gstintrange_class);
-  gstdoublerange_class = (PyObject*)PyDict_GetItemString (dict, "DoubleRange");
+  gstdoublerange_class =
+      (PyObject *) PyDict_GetItemString (dict, "DoubleRange");
   NULL_CHECK (gstdoublerange_class);
-  gstfraction_class = (PyObject*)PyDict_GetItemString (dict, "Fraction");
+  gstfraction_class = (PyObject *) PyDict_GetItemString (dict, "Fraction");
   NULL_CHECK (gstfraction_class);
-  gstfractionrange_class = (PyObject*)PyDict_GetItemString (dict, "FractionRange");
+  gstfractionrange_class =
+      (PyObject *) PyDict_GetItemString (dict, "FractionRange");
   NULL_CHECK (gstfractionrange_class);
   return TRUE;
 
 err:
   PyErr_SetString (PyExc_ImportError,
-                   "Failed to get GstValue classes from gst module");
+      "Failed to get GstValue classes from gst module");
   return FALSE;
 }
