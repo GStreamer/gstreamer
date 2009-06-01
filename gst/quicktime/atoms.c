@@ -2804,14 +2804,56 @@ atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
   atom_trak_set_constant_size_samples (trak, sample_size);
 }
 
+AtomInfo *
+build_pasp_extension (AtomTRAK * trak, gint par_width, gint par_height)
+{
+  AtomData *atom_data;
+  GstBuffer *buf;
+  guint8 *data;
+
+  buf = gst_buffer_new_and_alloc (8);
+  data = GST_BUFFER_DATA (buf);
+
+  /* ihdr = image header box */
+  GST_WRITE_UINT32_BE (data, par_width);
+  GST_WRITE_UINT32_BE (data + 4, par_height);
+
+  atom_data = atom_data_new_from_gst_buffer (FOURCC_pasp, buf);
+  gst_buffer_unref (buf);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
 void
 atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
     VisualSampleEntry * entry, guint32 scale, AtomInfo * ext)
 {
   SampleTableEntryMP4V *ste;
+  gint dwidth, dheight;
+  gint par_n = 0, par_d = 0;
 
-  atom_trak_set_video_commons (trak, context, scale, entry->width,
-      entry->height);
+  if ((entry->par_n != 1 || entry->par_d != 1) &&
+      (entry->par_n != entry->par_d)) {
+    par_n = entry->par_n;
+    par_d = entry->par_d;
+  }
+
+  dwidth = entry->width;
+  dheight = entry->height;
+  /* ISO file spec says track header w/h indicates track's visual presentation
+   * (so this together with pixels w/h implicitly defines PAR) */
+  if (par_n && (context->flavor == ATOMS_TREE_FLAVOR_ISOM)) {
+    if (par_n > par_d) {
+      dwidth = entry->width * par_n / par_d;
+      dheight = entry->height;
+    } else {
+      dwidth = entry->width * par_n / par_d;
+      dheight = entry->height;
+    }
+  }
+
+  atom_trak_set_video_commons (trak, context, scale, dwidth, dheight);
   ste = atom_trak_add_video_entry (trak, context, entry->fourcc);
 
   trak->is_video = TRUE;
@@ -2825,6 +2867,12 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
 
   if (ext)
     ste->extension_atoms = g_list_prepend (ste->extension_atoms, ext);
+
+  /* QT spec has a pasp extension atom in stsd that can hold PAR */
+  if (par_n && (context->flavor == ATOMS_TREE_FLAVOR_MOV)) {
+    ste->extension_atoms = g_list_append (ste->extension_atoms,
+        build_pasp_extension (trak, par_n, par_d));
+  }
 }
 
 /* some sample description construction helpers */

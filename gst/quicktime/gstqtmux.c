@@ -1464,7 +1464,6 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   par_den = 1;
   gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_num,
       &par_den);
-  /* FIXME: pixel-aspect-ratio */
 
   qtpad->is_out_of_order = FALSE;
 
@@ -1477,6 +1476,8 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   /* set common properties */
   entry.width = width;
   entry.height = height;
+  entry.par_n = par_num;
+  entry.par_d = par_den;
   /* should be OK according to qt and iso spec, override if really needed */
   entry.color_table_id = -1;
   entry.frame_count = 1;
