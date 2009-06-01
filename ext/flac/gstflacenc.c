@@ -559,15 +559,19 @@ gst_flac_enc_query_peer_total_samples (GstFlacEnc * flacenc, GstPad * pad)
   GstFormat fmt = GST_FORMAT_DEFAULT;
   gint64 duration;
 
+  GST_DEBUG_OBJECT (flacenc, "querying peer for DEFAULT format duration");
   if (gst_pad_query_peer_duration (pad, &fmt, &duration)
       && fmt == GST_FORMAT_DEFAULT && duration != GST_CLOCK_TIME_NONE)
     goto done;
 
   fmt = GST_FORMAT_TIME;
+  GST_DEBUG_OBJECT (flacenc, "querying peer for TIME format duration");
 
   if (gst_pad_query_peer_duration (pad, &fmt, &duration) &&
       fmt == GST_FORMAT_TIME && duration != GST_CLOCK_TIME_NONE) {
-    duration = GST_FRAMES_TO_CLOCK_TIME (duration, flacenc->sample_rate);
+    GST_DEBUG_OBJECT (flacenc, "peer reported duration %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (duration));
+    duration = GST_CLOCK_TIME_TO_FRAMES (duration, flacenc->sample_rate);
 
     goto done;
   }
