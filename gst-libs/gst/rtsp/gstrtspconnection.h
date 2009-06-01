@@ -45,6 +45,7 @@
 
 #include <glib.h>
 
+#include <gst/gstconfig.h>
 #include <gst/rtsp/gstrtspdefs.h>
 #include <gst/rtsp/gstrtspurl.h>
 #include <gst/rtsp/gstrtspmessage.h>
