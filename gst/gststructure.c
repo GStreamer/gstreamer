@@ -655,18 +655,21 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
     if (G_UNLIKELY (s == NULL && IS_TAGLIST (structure))) {
       g_warning ("Trying to set NULL string on field '%s' on taglist. "
           "Please file a bug.", g_quark_to_string (field->name));
+      g_value_unset (&field->value);
       return;
     } else if (G_UNLIKELY (s != NULL && *s == '\0')) {
       /* empty strings never make sense */
       g_warning ("Trying to set empty string on %s field '%s'. Please file a "
           "bug.", IS_TAGLIST (structure) ? "taglist" : "structure",
           g_quark_to_string (field->name));
+      g_value_unset (&field->value);
       return;
     } else if (G_UNLIKELY (s != NULL && !g_utf8_validate (s, -1, NULL))) {
       g_warning ("Trying to set string on %s field '%s', but string is not "
           "valid UTF-8. Please file a bug.",
           IS_TAGLIST (structure) ? "taglist" : "structure",
           g_quark_to_string (field->name));
+      g_value_unset (&field->value);
       return;
     }
   }
