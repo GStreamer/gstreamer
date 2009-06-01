@@ -602,6 +602,8 @@ typedef struct
   guint depth;
   guint frame_count;
   gint color_table_id;
+  guint par_n;
+  guint par_d;
 
   GstBuffer *codec_data;
 } VisualSampleEntry;
