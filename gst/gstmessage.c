@@ -1634,3 +1634,85 @@ gst_message_get_stream_status_object (GstMessage * message)
 
   return result;
 }
+
+/**
+ * gst_message_new_step_done:
+ * @src: The object originating the message.
+ * @format: the format of @amount
+ * @amount: the amount of stepped data
+ * @rate: the rate of the stepped amount
+ * @duration: the duration of the data
+ * @intermediate: is this an intermediate step
+ *
+ * This message is posted by elements when they complete a part, when @intermediate set
+ * to TRUE, or a complete step operation.
+ *
+ * @duration will contain the amount of time (in GST_FORMAT_TIME) of the stepped
+ * @amount of media in format @format.
+ *
+ * Returns: The new step_done message. 
+ *
+ * MT safe.
+ *
+ * Since: 0.10.24
+ */
+GstMessage *
+gst_message_new_step_done (GstObject * src, GstFormat format, guint64 amount,
+    gdouble rate, guint64 duration, gboolean intermediate)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_STEP_DONE),
+      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
+      GST_QUARK (AMOUNT), G_TYPE_UINT64, amount,
+      GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
+      GST_QUARK (DURATION), G_TYPE_UINT64, duration,
+      GST_QUARK (INTERMEDIATE), G_TYPE_BOOLEAN, intermediate, NULL);
+  message = gst_message_new_custom (GST_MESSAGE_STEP_DONE, src, structure);
+
+  return message;
+}
+
+/**
+ * gst_message_parse_step_done:
+ * @message: A valid #GstMessage of type GST_MESSAGE_STEP_DONE.
+ * @format: result location for the format
+ * @amount: result location for the amount
+ * @rate: result location for the rate
+ * @duration: result location for the duration
+ * @intermediate: result location for the intermediate flag
+ *
+ * Extract the requested state from the request_state message.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.24
+ */
+void
+gst_message_parse_step_done (GstMessage * message, GstFormat * format,
+    guint64 * amount, gdouble * rate, guint64 * duration,
+    gboolean * intermediate)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STEP_DONE);
+
+  if (format)
+    *format = g_value_get_enum (gst_structure_id_get_value (message->structure,
+            GST_QUARK (FORMAT)));
+  if (amount)
+    *amount =
+        g_value_get_uint64 (gst_structure_id_get_value (message->structure,
+            GST_QUARK (AMOUNT)));
+  if (rate)
+    *rate = g_value_get_double (gst_structure_id_get_value (message->structure,
+            GST_QUARK (RATE)));
+  if (duration)
+    *duration =
+        g_value_get_uint64 (gst_structure_id_get_value (message->structure,
+            GST_QUARK (DURATION)));
+  if (intermediate)
+    *intermediate =
+        g_value_get_boolean (gst_structure_id_get_value (message->structure,
+            GST_QUARK (INTERMEDIATE)));
+}

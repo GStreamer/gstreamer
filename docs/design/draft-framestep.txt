@@ -114,15 +114,6 @@ events
      rates here, use a seek with a negative rate first to reverse the playback
      direction.
 
-  "intermediate", G_TYPE_BOOLEAN
-     Signal that this step operation is an intermediate step, part of a series
-     of step operations. It is mostly interesting for stepping in the PAUSED state
-     because the sink will only perform a preroll after a non-intermediate step
-     operation completes. Intermediate steps are usefull to flush out data from
-     other sinks in order to not cause excessive queueing. In the PLAYING state
-     the intermediate flag has no visual effect. In all states, the intermediate
-     flag is passed to the corresponding GST_MESSAGE_STEP_DONE.
-
   "flush", G_TYPE_BOOLEAN
      when flushing is TRUE, the step is performed immediatly: 
 
@@ -143,7 +134,16 @@ events
       - In the PLAYING state the step operation will be performed after the
 	current step operation completes. If there was no previous step
 	operation, the step operation will be performed from the position of the
-	last PAUSED state.
+	last PAUSED state. 
+
+  "intermediate", G_TYPE_BOOLEAN
+     Signal that this step operation is an intermediate step, part of a series
+     of step operations. It is mostly interesting for stepping in the PAUSED state
+     because the sink will only perform a preroll after a non-intermediate step
+     operation completes. Intermediate steps are usefull to flush out data from
+     other sinks in order to not cause excessive queueing. In the PLAYING state
+     the intermediate flag has no visual effect. In all states, the intermediate
+     flag is passed to the corresponding GST_MESSAGE_STEP_DONE.
 
 
  The application will create a STEP event to start or stop the stepping
@@ -180,11 +180,11 @@ messages
   "rate", G_TYPE_DOUBLE
      The rate and direction at which the frames were stepped.
 
-  "intermediate", G_TYPE_BOOLEAN
-     If this is an intermediate step operation that completed.
-
   "duration", G_TYPE_UINT64
      The total duration of the stepped units in GST_FORMAT_TIME.
+
+  "intermediate", G_TYPE_BOOLEAN
+     If this is an intermediate step operation that completed.
 
  The message is emited by the element that performs the step operation.
 

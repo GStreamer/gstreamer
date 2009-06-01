@@ -355,6 +355,7 @@ EXPORTS
 	gst_event_new_new_segment_full
 	gst_event_new_qos
 	gst_event_new_seek
+	gst_event_new_step
 	gst_event_new_tag
 	gst_event_parse_buffer_size
 	gst_event_parse_latency
@@ -362,6 +363,7 @@ EXPORTS
 	gst_event_parse_new_segment_full
 	gst_event_parse_qos
 	gst_event_parse_seek
+	gst_event_parse_step
 	gst_event_parse_tag
 	gst_event_set_seqnum
 	gst_event_type_flags_get_type
@@ -489,6 +491,7 @@ EXPORTS
 	gst_message_new_segment_start
 	gst_message_new_state_changed
 	gst_message_new_state_dirty
+	gst_message_new_step_done
 	gst_message_new_stream_status
 	gst_message_new_structure_change
 	gst_message_new_tag
@@ -507,6 +510,7 @@ EXPORTS
 	gst_message_parse_segment_done
 	gst_message_parse_segment_start
 	gst_message_parse_state_changed
+	gst_message_parse_step_done
 	gst_message_parse_stream_status
 	gst_message_parse_structure_change
 	gst_message_parse_tag

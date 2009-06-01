@@ -743,6 +743,9 @@ gst_event_new_navigation
 
 gst_event_new_latency
 gst_event_parse_latency
+
+gst_event_new_step
+gst_event_parse_step
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT
@@ -1121,6 +1124,8 @@ gst_message_parse_buffering_stats
 gst_message_new_state_changed
 gst_message_parse_state_changed
 gst_message_new_state_dirty
+gst_message_new_step_done
+gst_message_parse_step_done
 gst_message_new_clock_provide
 gst_message_parse_clock_provide
 gst_message_new_clock_lost

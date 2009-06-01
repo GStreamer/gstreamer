@@ -1088,3 +1088,90 @@ gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
         g_value_get_uint64 (gst_structure_id_get_value (structure,
             GST_QUARK (LATENCY)));
 }
+
+/**
+ * gst_event_new_step:
+ * @format: the format of @amount
+ * @amount: the amount of data to step
+ * @rate: the step rate
+ * @flush: flushing steps
+ * @intermediate: intermediate steps
+ *
+ * Create a new step event. The purpose of the step event is to instruct a sink
+ * to skip @amount (expressed in @format) of media. It can be used to implement
+ * stepping through the video frame by frame or for doing fast trick modes.
+ *
+ * A rate of <= 0.0 is not allowed, pause the pipeline or reverse the playback
+ * direction of the pipeline to get the same effect.
+ *
+ * The @flush flag will clear any pending data in the pipeline before starting
+ * the step operation.
+ *
+ * The @intermediate flag instructs the pipeline that this step operation is
+ * part of a larger step operation.
+ *
+ * Returns: a new #GstEvent
+ *
+ * Since: 0.10.24
+ */
+GstEvent *
+gst_event_new_step (GstFormat format, guint64 amount, gdouble rate,
+    gboolean flush, gboolean intermediate)
+{
+  GstEvent *event;
+  GstStructure *structure;
+
+  g_return_val_if_fail (rate > 0.0, NULL);
+
+  GST_CAT_INFO (GST_CAT_EVENT, "creating step event");
+
+  structure = gst_structure_id_new (GST_QUARK (EVENT_STEP),
+      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
+      GST_QUARK (AMOUNT), G_TYPE_UINT64, amount,
+      GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
+      GST_QUARK (FLUSH), G_TYPE_BOOLEAN, flush,
+      GST_QUARK (INTERMEDIATE), G_TYPE_BOOLEAN, intermediate, NULL);
+  event = gst_event_new_custom (GST_EVENT_STEP, structure);
+
+  return event;
+}
+
+/**
+ * gst_event_parse_step:
+ * @event: The event to query
+ * @format: A pointer to store the format in.
+ * @amount: A pointer to store the amount in.
+ * @rate: A pointer to store the rate in.
+ * @flush: A pointer to store the flush boolean in.
+ * @intermediate: A pointer to store the intermediate boolean in.
+ *
+ * Parse the step event.
+ *
+ * Since: 0.10.24
+ */
+void
+gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
+    gdouble * rate, gboolean * flush, gboolean * intermediate)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STEP);
+
+  structure = gst_event_get_structure (event);
+  if (format)
+    *format = g_value_get_enum (gst_structure_id_get_value (structure,
+            GST_QUARK (FORMAT)));
+  if (amount)
+    *amount = g_value_get_uint64 (gst_structure_id_get_value (structure,
+            GST_QUARK (AMOUNT)));
+  if (rate)
+    *rate = g_value_get_double (gst_structure_id_get_value (structure,
+            GST_QUARK (RATE)));
+  if (flush)
+    *flush = g_value_get_boolean (gst_structure_id_get_value (structure,
+            GST_QUARK (FLUSH)));
+  if (intermediate)
+    *intermediate = g_value_get_boolean (gst_structure_id_get_value (structure,
+            GST_QUARK (INTERMEDIATE)));
+}
