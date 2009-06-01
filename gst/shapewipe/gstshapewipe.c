@@ -592,7 +592,7 @@ gst_shape_wipe_blend_16 (GstShapeWipe * self, GstBuffer * inbuf,
 
   for (i = 0; i < self->height; i++) {
     for (j = 0; j < self->width; j++) {
-      gfloat in = *mask / 65535.0f;
+      gfloat in = *mask / 65536.0f;
 
       if (in < low) {
         output[0] = 0x00;       /* A */
@@ -648,7 +648,7 @@ gst_shape_wipe_blend_8 (GstShapeWipe * self, GstBuffer * inbuf,
 
   for (i = 0; i < self->height; i++) {
     for (j = 0; j < self->width; j++) {
-      gfloat in = *mask / 255.0f;
+      gfloat in = *mask / 256.0f;
 
       if (in < low) {
         output[0] = 0x00;       /* A */
@@ -699,26 +699,26 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
       GST_TIME_ARGS (timestamp), self->mask_position);
 
   g_mutex_lock (self->mask_mutex);
-  mask = self->mask;
-  if (self->mask)
-    gst_buffer_ref (self->mask);
-  else
+  if (!self->mask)
     g_cond_wait (self->mask_cond, self->mask_mutex);
 
   if (self->mask == NULL) {
     g_mutex_unlock (self->mask_mutex);
+    gst_buffer_unref (buffer);
     return GST_FLOW_UNEXPECTED;
+  } else {
+    mask = gst_buffer_ref (self->mask);
   }
-
-  mask = gst_buffer_ref (self->mask);
-
   g_mutex_unlock (self->mask_mutex);
 
   ret =
       gst_pad_alloc_buffer_and_set_caps (self->srcpad, GST_BUFFER_OFFSET_NONE,
       GST_BUFFER_SIZE (buffer), GST_PAD_CAPS (self->srcpad), &outbuf);
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    gst_buffer_unref (buffer);
+    gst_buffer_unref (mask);
     return ret;
+  }
 
   if (self->mask_bpp == 16)
     ret = gst_shape_wipe_blend_16 (self, buffer, mask, outbuf);
@@ -748,6 +748,8 @@ gst_shape_wipe_mask_sink_chain (GstPad * pad, GstBuffer * buffer)
   gst_buffer_replace (&self->mask, buffer);
   g_cond_signal (self->mask_cond);
   g_mutex_unlock (self->mask_mutex);
+
+  gst_buffer_unref (buffer);
 
   return ret;
 }
