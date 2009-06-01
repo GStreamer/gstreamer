@@ -2476,6 +2476,9 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
      * second, render it anyway so the user sees something */
     if (priv->last_in_time != -1 && start - priv->last_in_time > GST_SECOND) {
       late = FALSE;
+      GST_ELEMENT_WARNING (basesink, CORE, CLOCK,
+          (_("A lot of buffers are dropped.")),
+          ("Maybe there is a timestamp problem or this computer is too slow."));
       GST_DEBUG_OBJECT (basesink,
           "**emergency** last buffer at %" GST_TIME_FORMAT " > GST_SECOND",
           GST_TIME_ARGS (priv->last_in_time));
