@@ -2783,6 +2783,9 @@ atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
   atom_trak_set_audio_commons (trak, context, scale);
   ste = atom_trak_add_audio_entry (trak, context, entry->fourcc);
 
+  trak->is_video = FALSE;
+  trak->is_h264 = FALSE;
+
   ste->version = entry->version;
   ste->compression_id = entry->compression_id;
   ste->sample_size = entry->sample_size;
@@ -2810,6 +2813,9 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
   atom_trak_set_video_commons (trak, context, scale, entry->width,
       entry->height);
   ste = atom_trak_add_video_entry (trak, context, entry->fourcc);
+
+  trak->is_video = TRUE;
+  trak->is_h264 = (entry->fourcc == FOURCC_avc1);
 
   ste->width = entry->width;
   ste->height = entry->height;
