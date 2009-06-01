@@ -1730,18 +1730,14 @@ gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseParseClass *klass;
   gboolean res = TRUE;
 
-  gchar *caps_str = gst_caps_to_string (caps);
-  g_free (caps_str);
-
-  parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
+  parse = GST_BASE_PARSE (GST_PAD_PARENT (pad));
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
-  GST_DEBUG_OBJECT (parse, "setcaps: %s", caps_str);
+  GST_DEBUG_OBJECT (parse, "caps: %" GST_PTR_FORMAT, caps);
 
   if (klass->set_sink_caps)
     res = klass->set_sink_caps (parse, caps);
 
   parse->negotiated = res;
-  gst_object_unref (parse);
   return gst_pad_set_caps (pad, caps);
 }
