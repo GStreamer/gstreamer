@@ -70,22 +70,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_aacparse_debug);
 #define GST_CAT_DEFAULT gst_aacparse_debug
 
 
-static const guint aac_sample_rates[] = {
-  96000,
-  88200,
-  64000,
-  48000,
-  44100,
-  32000,
-  24000,
-  22050,
-  16000,
-  12000,
-  11025,
-  8000
-};
-
-
 #define ADIF_MAX_SIZE 40        /* Should be enough */
 #define ADTS_MAX_SIZE 10        /* Should be enough */
 
@@ -121,6 +105,18 @@ gboolean gst_aacparse_event (GstBaseParse * parse, GstEvent * event);
 GST_BOILERPLATE_FULL (GstAacParse, gst_aacparse, GstBaseParse,
     GST_TYPE_BASE_PARSE, _do_init);
 
+static inline gint
+gst_aacparse_get_sample_rate_from_index (guint sr_idx)
+{
+  static const guint aac_sample_rates[] = { 96000, 88200, 64000, 48000, 44100,
+    32000, 24000, 22050, 16000, 12000, 11025, 8000
+  };
+
+  if (sr_idx < G_N_ELEMENTS (aac_sample_rates))
+    return aac_sample_rates[sr_idx];
+  GST_WARNING ("Invalid sample rate index %u", sr_idx);
+  return 0;
+}
 
 /**
  * gst_aacparse_base_init:
@@ -275,9 +271,11 @@ gst_aacparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
     if (value) {
       GstBuffer *buf = gst_value_get_buffer (value);
       const guint8 *buffer = GST_BUFFER_DATA (buf);
+      guint sr_idx;
+
+      sr_idx = ((buffer[0] & 0x07) << 1) | ((buffer[1] & 0x80) >> 7);
       aacparse->object_type = (buffer[0] & 0xf8) >> 3;
-      aacparse->sample_rate = ((buffer[0] & 0x07) << 1) |
-          ((buffer[1] & 0x80) >> 7);
+      aacparse->sample_rate = gst_aacparse_get_sample_rate_from_index (sr_idx);
       aacparse->channels = (buffer[1] & 0x78) >> 3;
       aacparse->header_type = DSPAAC_HEADER_NONE;
       aacparse->mpegversion = 4;
@@ -477,13 +475,13 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     aacparse->header_type = DSPAAC_HEADER_ADTS;
     sr_idx = (data[2] & 0x3c) >> 2;
 
-    aacparse->sample_rate = aac_sample_rates[sr_idx];
+    aacparse->sample_rate = gst_aacparse_get_sample_rate_from_index (sr_idx);
     aacparse->mpegversion = (data[1] & 0x08) ? 2 : 4;
     aacparse->object_type = (data[2] & 0xc0) >> 6;
     aacparse->channels = ((data[2] & 0x01) << 2) | ((data[3] & 0xc0) >> 6);
     aacparse->bitrate = ((data[5] & 0x1f) << 6) | ((data[6] & 0xfc) >> 2);
 
-    aacparse->frames_per_sec = aac_sample_rates[sr_idx] / 1024.f;
+    aacparse->frames_per_sec = aacparse->sample_rate / 1024.f;
 
     GST_DEBUG ("ADTS: samplerate %d, channels %d, bitrate %d, objtype %d, "
         "fps %f", aacparse->sample_rate, aacparse->channels,
@@ -553,9 +551,9 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
 
     /* FIXME: This gives totally wrong results. Duration calculation cannot
        be based on this */
-    aacparse->sample_rate = aac_sample_rates[sr_idx];
+    aacparse->sample_rate = gst_aacparse_get_sample_rate_from_index (sr_idx);
 
-    aacparse->frames_per_sec = aac_sample_rates[sr_idx] / 1024.f;
+    aacparse->frames_per_sec = aacparse->sample_rate / 1024.f;
     GST_INFO ("ADIF fps: %f", aacparse->frames_per_sec);
 
     // FIXME: Can we assume this?
