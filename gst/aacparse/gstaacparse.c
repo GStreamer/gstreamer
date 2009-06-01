@@ -237,7 +237,6 @@ gst_aacparse_set_src_caps (GstAacParse * aacparse)
 
   gst_pad_use_fixed_caps (GST_BASE_PARSE (aacparse)->srcpad);
   res = gst_pad_set_caps (GST_BASE_PARSE (aacparse)->srcpad, src_caps);
-  gst_pad_fixate_caps (GST_BASE_PARSE (aacparse)->srcpad, src_caps);
   gst_caps_unref (src_caps);
   return res;
 }
