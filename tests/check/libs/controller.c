@@ -797,6 +797,66 @@ GST_START_TEST (controller_interpolate_cubic)
 
 GST_END_TEST;
 
+/* test timed value handling with cubic interpolation */
+GST_START_TEST (controller_interpolate_cubic_too_few_cp)
+{
+  GstController *ctrl;
+  GstInterpolationControlSource *csource;
+  GstElement *elem;
+  gboolean res;
+  GValue val_double = { 0, };
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "double", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* Get interpolation control source */
+  csource = gst_interpolation_control_source_new ();
+
+  fail_unless (csource != NULL);
+  fail_unless (gst_controller_set_control_source (ctrl, "double",
+          GST_CONTROL_SOURCE (csource)));
+
+  /* set interpolation mode */
+  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
+          GST_INTERPOLATE_CUBIC));
+
+  /* set 2 control values */
+  g_value_init (&val_double, G_TYPE_DOUBLE);
+  g_value_set_double (&val_double, 0.0);
+  res =
+      gst_interpolation_control_source_set (csource, 0 * GST_SECOND,
+      &val_double);
+  fail_unless (res, NULL);
+  g_value_set_double (&val_double, 4.0);
+  res =
+      gst_interpolation_control_source_set (csource, 2 * GST_SECOND,
+      &val_double);
+  fail_unless (res, NULL);
+
+  g_object_unref (G_OBJECT (csource));
+
+  /* now pull in values for some timestamps and verify that it used linear
+   * interpolation as we don't gave enough control points
+   */
+  gst_controller_sync_values (ctrl, 0 * GST_SECOND);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_double, 0.0);
+  gst_controller_sync_values (ctrl, 1 * GST_SECOND);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_double, 2.0);
+  gst_controller_sync_values (ctrl, 2 * GST_SECOND);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_double, 4.0);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 /* make sure we don't crash when someone sets an unsupported interpolation
  * mode */
 GST_START_TEST (controller_interpolate_unimplemented)
@@ -2139,6 +2199,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_interpolate_trigger);
   tcase_add_test (tc, controller_interpolate_linear);
   tcase_add_test (tc, controller_interpolate_cubic);
+  tcase_add_test (tc, controller_interpolate_cubic_too_few_cp);
   tcase_add_test (tc, controller_interpolate_unimplemented);
   tcase_add_test (tc, controller_interpolation_unset);
   tcase_add_test (tc, controller_interpolation_unset_all);
