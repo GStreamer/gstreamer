@@ -135,6 +135,7 @@ add_templates (gpointer gclass, PyObject *templates)
   gint i, len;
   PyGObject *templ;
   
+  GST_DEBUG ("Adding templates to gclass %p", gclass);
   if (pygobject_check(templates, &PyGstPadTemplate_Type)) {
     gst_element_class_add_pad_template (gclass, GST_PAD_TEMPLATE (pygobject_get (templates)));
     return 0;
@@ -173,14 +174,15 @@ _pygst_element_set_details (gpointer gclass, PyObject *details)
     return -1;
   }
   if (PyTuple_Size (details) != 4) {
-    PyErr_SetString(PyExc_TypeError, "__gstdetails__ must be contain 4 elements");
+    PyErr_SetString(PyExc_TypeError, "__gstdetails__ must contain 4 elements");
     return -1;
   }
   if (!PyArg_ParseTuple (details, "ssss", &gstdetails.longname, &gstdetails.klass,
     &gstdetails.description, &gstdetails.author)) {
-    PyErr_SetString (PyExc_TypeError, "__gstdetails__ must be contain 4 strings");
+    PyErr_SetString (PyExc_TypeError, "__gstdetails__ must contain 4 strings");
     return -1;
   }
+  GST_DEBUG ("setting details on gclass %p from __gstdetails__, longname %s", gclass, gstdetails.longname);
   gst_element_class_set_details (gclass, &gstdetails);
   return 0;
 }
@@ -190,6 +192,7 @@ _pygst_element_init (gpointer gclass, PyTypeObject *pyclass)
 {
   PyObject *templates, *details;
   
+  GST_DEBUG ("_pygst_element_init for gclass %p", gclass);
   templates = PyDict_GetItemString(pyclass->tp_dict, "__gsttemplates__");
   if (templates) {
     if (add_templates(gclass, templates) != 0)
