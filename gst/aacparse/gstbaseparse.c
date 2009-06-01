@@ -1739,5 +1739,5 @@ gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
     res = klass->set_sink_caps (parse, caps);
 
   parse->negotiated = res;
-  return gst_pad_set_caps (pad, caps);
+  return res && gst_pad_set_caps (pad, caps);
 }
