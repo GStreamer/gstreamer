@@ -330,14 +330,24 @@ gst_output_selector_release_pad (GstElement * element, GstPad * pad)
 static gboolean
 gst_output_selector_switch (GstOutputSelector * osel)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
   GstEvent *ev = NULL;
   GstSegment *seg = NULL;
   gint64 start = 0, position = 0;
 
+  /* Switch */
+  GST_OBJECT_LOCK (GST_OBJECT (osel));
   GST_INFO ("switching to pad %" GST_PTR_FORMAT, osel->pending_srcpad);
-
   if (gst_pad_is_linked (osel->pending_srcpad)) {
+    osel->active_srcpad = osel->pending_srcpad;
+    res = TRUE;
+  }
+  gst_object_unref (osel->pending_srcpad);
+  osel->pending_srcpad = NULL;
+  GST_OBJECT_UNLOCK (GST_OBJECT (osel));
+
+  /* Send NEWSEGMENT event and latest buffer if switching succeeded */
+  if (res) {
     /* Send NEWSEGMENT to the pad we are going to switch to */
     seg = &osel->segment;
     /* If resending then mark newsegment start and position accordingly */
@@ -349,28 +359,21 @@ gst_output_selector_switch (GstOutputSelector * osel)
     }
     ev = gst_event_new_new_segment (TRUE, seg->rate,
         seg->format, start, seg->stop, position);
-    if (!gst_pad_push_event (osel->pending_srcpad, ev)) {
+    if (!gst_pad_push_event (osel->active_srcpad, ev)) {
       GST_WARNING_OBJECT (osel,
           "newsegment handling failed in %" GST_PTR_FORMAT,
-          osel->pending_srcpad);
+          osel->active_srcpad);
     }
 
     /* Resend latest buffer to newly switched pad */
     if (osel->resend_latest && osel->latest_buffer) {
       GST_INFO ("resending latest buffer");
-      gst_pad_push (osel->pending_srcpad, osel->latest_buffer);
+      gst_pad_push (osel->active_srcpad, osel->latest_buffer);
       osel->latest_buffer = NULL;
     }
-
-    /* Switch */
-    osel->active_srcpad = osel->pending_srcpad;
   } else {
     GST_WARNING_OBJECT (osel, "switch failed, pad not linked");
-    res = FALSE;
   }
-
-  gst_object_unref (osel->pending_srcpad);
-  osel->pending_srcpad = NULL;
 
   return res;
 }
@@ -393,7 +396,7 @@ gst_output_selector_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_unref (osel->latest_buffer);
     osel->latest_buffer = NULL;
   }
-  
+
   if (osel->resend_latest) {
     /* Keep reference to latest buffer to resend it after switch */
     osel->latest_buffer = gst_buffer_ref (buf);
