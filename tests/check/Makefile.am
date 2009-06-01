@@ -94,6 +94,7 @@ check_PROGRAMS = \
 	elements/qtmux \
 	elements/rtpbin \
 	elements/selector \
+	elements/shapewipe \
 	elements/mxfdemux \
 	elements/mxfmux \
 	pipelines/mxf \
