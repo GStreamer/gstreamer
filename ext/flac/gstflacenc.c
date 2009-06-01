@@ -864,7 +864,10 @@ push_headers:
 
     buf = GST_BUFFER (l->data);
     gst_buffer_set_caps (buf, caps);
-    GST_LOG ("Pushing header buffer, size %u bytes", GST_BUFFER_SIZE (buf));
+    GST_LOG_OBJECT (enc, "Pushing header buffer, size %u bytes",
+        GST_BUFFER_SIZE (buf));
+    GST_MEMDUMP_OBJECT (enc, "header buffer", GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
     (void) gst_pad_push (enc->srcpad, buf);
     l->data = NULL;
   }
@@ -930,12 +933,15 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
       flacenc->got_headers = TRUE;
     }
   } else if (flacenc->got_headers && samples == 0) {
-    GST_WARNING_OBJECT (flacenc, "Got header packet after data packets");
+    GST_DEBUG_OBJECT (flacenc, "Fixing up headers at pos=%" G_GUINT64_FORMAT
+        ", size=%u", flacenc->offset, (guint) bytes);
+    GST_MEMDUMP_OBJECT (flacenc, "Presumed header fragment",
+        GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
+  } else {
+    GST_LOG ("Pushing buffer: ts=%" GST_TIME_FORMAT ", samples=%u, size=%u, "
+        "pos=%" G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        samples, (guint) bytes, flacenc->offset);
   }
-
-  GST_LOG ("Pushing buffer: ts=%" GST_TIME_FORMAT ", samples=%u, size=%u, "
-      "pos=%" G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-      samples, (guint) bytes, flacenc->offset);
 
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (flacenc->srcpad));
   ret = gst_pad_push (flacenc->srcpad, outbuf);
