@@ -214,9 +214,9 @@ AC_ARG_WITH(system-ffmpeg,
             [AC_HELP_STRING([--with-system-ffmpeg], [use system FFmpeg libraries])])
 
 if test "x$with_system_ffmpeg" = "xyes"; then
-  PKG_CHECK_MODULES(FFMPEG, libavutil libavcodec libavformat)
-  PKG_CHECK_MODULES(POSTPROC, libavutil libavcodec libpostproc)
-  PKG_CHECK_MODULES(SWSCALE, libavutil libswscale)
+  PKG_CHECK_MODULES(FFMPEG, libavformat libavcodec libavutil) 
+  PKG_CHECK_MODULES(POSTPROC, libpostproc libavcodec libavutil)
+  PKG_CHECK_MODULES(SWSCALE, libswscale libavutil)
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $FFMPEG_CFLAGS"
   AC_CHECK_HEADERS([avi.h])
