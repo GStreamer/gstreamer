@@ -633,7 +633,7 @@ gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   if (total_samples != GST_CLOCK_TIME_NONE)
     FLAC__stream_encoder_set_total_samples_estimate (flacenc->encoder,
-        total_samples);
+        MIN (total_samples, G_GUINT64_CONSTANT (0x0FFFFFFFFF)));
 
   gst_flac_enc_set_metadata (flacenc);
 
