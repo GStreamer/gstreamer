@@ -201,6 +201,8 @@ static gboolean gst_play_sink_send_event (GstElement * element,
 static GstStateChangeReturn gst_play_sink_change_state (GstElement * element,
     GstStateChange transition);
 
+static void gst_play_sink_handle_message (GstBin * bin, GstMessage * message);
+
 /* static guint gst_play_sink_signals[LAST_SIGNAL] = { 0 }; */
 
 static const GstElementDetails gst_play_sink_details =
@@ -230,6 +232,9 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_sink_change_state);
   gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_play_sink_send_event);
+
+  gstbin_klass->handle_message =
+      GST_DEBUG_FUNCPTR (gst_play_sink_handle_message);
 
   GST_DEBUG_CATEGORY_INIT (gst_play_sink_debug, "playsink", 0, "play bin");
 }
@@ -2299,6 +2304,51 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
   }
 }
 
+static void
+gst_play_sink_handle_message (GstBin * bin, GstMessage * message)
+{
+  GstPlaySink *playsink;
+
+  playsink = GST_PLAY_SINK_CAST (bin);
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_STEP_DONE:
+    {
+      GstFormat format;
+      guint64 amount;
+      gdouble rate;
+      gboolean flush, intermediate, res;
+      guint64 duration;
+
+      GST_INFO_OBJECT (playsink, "Handling step-done message");
+      gst_message_parse_step_done (message, &format, &amount, &rate, &flush,
+          &intermediate, &duration);
+
+      if (format == GST_FORMAT_BUFFERS) {
+        /* for the buffer format, we align the other streams */
+        if (playsink->audiochain) {
+          GstEvent *event;
+
+          event =
+              gst_event_new_step (GST_FORMAT_TIME, duration, rate, flush,
+              intermediate);
+
+          if (!(res =
+                  gst_element_send_event (playsink->audiochain->chain.bin,
+                      event))) {
+            GST_DEBUG_OBJECT (playsink, "Event failed when sent to audio sink");
+          }
+        }
+      }
+      GST_BIN_CLASS (gst_play_sink_parent_class)->handle_message (bin, message);
+      break;
+    }
+    default:
+      GST_BIN_CLASS (gst_play_sink_parent_class)->handle_message (bin, message);
+      break;
+  }
+}
+
 /* Send an event to our sinks until one of them works; don't then send to the
  * remaining sinks (unlike GstBin)
  */
@@ -2336,12 +2386,36 @@ gst_play_sink_send_event (GstElement * element, GstEvent * event)
 {
   gboolean res = FALSE;
   GstEventType event_type = GST_EVENT_TYPE (event);
+  GstPlaySink *playsink;
+
+  playsink = GST_PLAY_SINK_CAST (element);
 
   switch (event_type) {
     case GST_EVENT_SEEK:
-      GST_DEBUG_OBJECT (element, "Sending seek event to a sink");
-      res = gst_play_sink_send_event_to_sink (GST_PLAY_SINK (element), event);
+      GST_DEBUG_OBJECT (element, "Sending event to a sink");
+      res = gst_play_sink_send_event_to_sink (playsink, event);
       break;
+    case GST_EVENT_STEP:
+    {
+      GstFormat format;
+      guint64 amount;
+      gdouble rate;
+      gboolean flush, intermediate;
+
+      gst_event_parse_step (event, &format, &amount, &rate, &flush,
+          &intermediate);
+
+      if (format == GST_FORMAT_BUFFERS) {
+        /* for buffers, we will try to step video frames, for other formats we
+         * send the step to all sinks */
+        res = gst_play_sink_send_event_to_sink (playsink, event);
+      } else {
+        res =
+            GST_ELEMENT_CLASS (gst_play_sink_parent_class)->send_event (element,
+            event);
+      }
+      break;
+    }
     default:
       res =
           GST_ELEMENT_CLASS (gst_play_sink_parent_class)->send_event (element,

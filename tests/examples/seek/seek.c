@@ -110,7 +110,10 @@ static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
 static GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
 static GtkWidget *skip_checkbox, *video_window;
 
-GList *paths = NULL, *l = NULL;
+static GtkWidget *format_combo, *step_amount_spinbutton, *step_rate_spinbutton;
+static GtkWidget *step_flush_checkbox, *step_button;
+
+static GList *paths = NULL, *l = NULL;
 
 /* we keep an array of the visualisation entries so that we can easily switch
  * with the combo box index. */
@@ -1217,6 +1220,7 @@ update_scale (gpointer data)
     }
     query_rates ();
   }
+
   if (position >= duration)
     duration = position;
 
@@ -2007,6 +2011,43 @@ shot_cb (GtkButton * button, gpointer data)
   }
 }
 
+/* called when the Step button is pressed */
+static void
+step_cb (GtkButton * button, gpointer data)
+{
+  GstEvent *event;
+  GstFormat format;
+  guint64 amount;
+  gdouble rate;
+  gboolean flush, res;
+  gint active;
+
+  active = gtk_combo_box_get_active (GTK_COMBO_BOX (format_combo));
+  amount =
+      gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON
+      (step_amount_spinbutton));
+  rate = gtk_spin_button_get_value (GTK_SPIN_BUTTON (step_rate_spinbutton));
+  flush =
+      gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (step_flush_checkbox));
+
+  switch (active) {
+    case 0:
+      format = GST_FORMAT_BUFFERS;
+      break;
+    case 1:
+      format = GST_FORMAT_TIME;
+      amount *= GST_MSECOND;
+      break;
+    default:
+      format = GST_FORMAT_UNDEFINED;
+      break;
+  }
+
+  event = gst_event_new_step (format, amount, rate, flush, FALSE);
+
+  res = send_event (event);
+}
+
 static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
@@ -2241,6 +2282,12 @@ msg_eos (GstBus * bus, GstMessage * message, GstPipeline * data)
 }
 
 static void
+msg_step_done (GstBus * bus, GstMessage * message, GstPipeline * data)
+{
+  message_received (bus, message, data);
+}
+
+static void
 connect_bus_signals (GstElement * pipeline)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
@@ -2276,6 +2323,8 @@ connect_bus_signals (GstElement * pipeline)
   g_signal_connect (bus, "message::segment-done", (GCallback) message_received,
       pipeline);
   g_signal_connect (bus, "message::buffering", (GCallback) msg_buffering,
+      pipeline);
+  g_signal_connect (bus, "message::step-done", (GCallback) msg_step_done,
       pipeline);
 
   gst_object_unref (bus);
@@ -2339,7 +2388,7 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *hbox, *vbox, *panel, *expander, *pb2vbox, *boxes,
-      *flagtable, *boxes2;
+      *flagtable, *boxes2, *step;
   GtkWidget *play_button, *pause_button, *stop_button, *shot_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox, *rate_spinbutton;
@@ -2457,6 +2506,45 @@ main (int argc, char **argv)
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scrub_checkbox), TRUE);
 
   gtk_spin_button_set_value (GTK_SPIN_BUTTON (rate_spinbutton), rate);
+
+  /* step expander */
+  {
+    GtkWidget *hbox;
+
+    step = gtk_expander_new ("step options");
+    hbox = gtk_hbox_new (FALSE, 0);
+
+    format_combo = gtk_combo_box_new_text ();
+    gtk_combo_box_append_text (GTK_COMBO_BOX (format_combo), "frames");
+    gtk_combo_box_append_text (GTK_COMBO_BOX (format_combo), "time (ms)");
+    gtk_combo_box_set_active (GTK_COMBO_BOX (format_combo), 0);
+    gtk_box_pack_start (GTK_BOX (hbox), format_combo, FALSE, FALSE, 2);
+
+    step_amount_spinbutton = gtk_spin_button_new_with_range (1, 1000, 1);
+    gtk_spin_button_set_digits (GTK_SPIN_BUTTON (step_amount_spinbutton), 0);
+    gtk_spin_button_set_value (GTK_SPIN_BUTTON (step_amount_spinbutton), 1.0);
+    gtk_box_pack_start (GTK_BOX (hbox), step_amount_spinbutton, FALSE, FALSE,
+        2);
+
+    step_rate_spinbutton = gtk_spin_button_new_with_range (0.0, 100, 0.1);
+    gtk_spin_button_set_digits (GTK_SPIN_BUTTON (step_rate_spinbutton), 3);
+    gtk_spin_button_set_value (GTK_SPIN_BUTTON (step_rate_spinbutton), 1.0);
+    gtk_box_pack_start (GTK_BOX (hbox), step_rate_spinbutton, FALSE, FALSE, 2);
+
+    step_flush_checkbox = gtk_check_button_new_with_label ("Flush");
+    gtk_box_pack_start (GTK_BOX (hbox), step_flush_checkbox, FALSE, FALSE, 2);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (step_flush_checkbox),
+        TRUE);
+
+    step_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_FORWARD);
+    gtk_button_set_label (GTK_BUTTON (step_button), "Step");
+    gtk_box_pack_start (GTK_BOX (hbox), step_button, FALSE, FALSE, 2);
+
+    g_signal_connect (G_OBJECT (step_button), "clicked", G_CALLBACK (step_cb),
+        pipeline);
+
+    gtk_container_add (GTK_CONTAINER (step), hbox);
+  }
 
   /* seek bar */
   adjustment =
@@ -2582,6 +2670,7 @@ main (int argc, char **argv)
     gtk_container_add (GTK_CONTAINER (expander), pb2vbox);
     gtk_box_pack_start (GTK_BOX (vbox), expander, FALSE, FALSE, 2);
   }
+  gtk_box_pack_start (GTK_BOX (vbox), step, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), statusbar, FALSE, FALSE, 2);
 
