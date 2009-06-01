@@ -329,14 +329,13 @@ is_multicast_address (const gchar * host_name, guint * family)
   struct addrinfo *ai;
   struct addrinfo *res;
   gboolean ret = FALSE;
-  int err;
 
   memset (&hints, 0, sizeof (hints));
   hints.ai_socktype = SOCK_DGRAM;
 
   g_return_val_if_fail (host_name, FALSE);
 
-  if ((err = getaddrinfo (host_name, NULL, &hints, &res)) < 0)
+  if (getaddrinfo (host_name, NULL, &hints, &res) < 0)
     return FALSE;
 
   for (ai = res; !ret && ai; ai = ai->ai_next) {
