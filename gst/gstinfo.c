@@ -887,19 +887,19 @@ gst_debug_level_get_name (GstDebugLevel level)
     case GST_LEVEL_NONE:
       return "";
     case GST_LEVEL_ERROR:
-      return "ERROR";
+      return "ERROR  ";
     case GST_LEVEL_WARNING:
-      return "WARN ";
+      return "WARN   ";
     case GST_LEVEL_INFO:
-      return "INFO ";
+      return "INFO   ";
     case GST_LEVEL_DEBUG:
-      return "DEBUG";
+      return "DEBUG  ";
     case GST_LEVEL_LOG:
-      return "LOG  ";
+      return "LOG    ";
     case GST_LEVEL_FIXME:
-      return "FIXME";
+      return "FIXME  ";
     case GST_LEVEL_MEMDUMP:
-      return "MEMDUMP  ";
+      return "MEMDUMP";
     default:
       g_warning ("invalid level specified for gst_debug_level_get_name");
       return "";
