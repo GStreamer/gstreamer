@@ -95,15 +95,33 @@ _wrap_gst_tag_list_ass_subscript(PyGObject *self,
 {
 	const char *key;
 	GstStructure* structure;
+	GType tagtype;
 
 	structure = (GstStructure*)self->obj;
 	key = PyString_AsString(py_key);
 	if (py_value != NULL) {
             GValue v = { 0, };
+
             if (!pygst_value_init_for_pyobject (&v, py_value))
                 return -1;
 	    if (pygst_value_from_pyobject(&v, py_value))
 		return -1;
+            
+            /* some tags are supposed to be uint, but there is no unsigned
+             * int python type, so convert here if needed */
+            if (gst_tag_exists (key)) {
+                tagtype = gst_tag_get_type (key);
+
+                if (tagtype && tagtype != G_VALUE_TYPE (&v)) {
+                    GValue w = { 0, };
+
+                    g_value_init (&w, tagtype);
+                    g_value_transform (&v, &w);
+                    g_value_unset (&v);
+                    g_value_init (&v, tagtype);
+                    g_value_copy (&w, &v);
+                }
+            }
 	    gst_structure_set_value(structure, key, &v);
 	    g_value_unset(&v);
 	} else {

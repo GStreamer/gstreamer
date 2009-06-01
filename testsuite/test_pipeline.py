@@ -73,6 +73,38 @@ class Pipeline(TestCase):
         self.pipeline.set_state(gst.STATE_NULL)
         self.assertEqual(self.pipeline.get_state()[1], gst.STATE_NULL)
 
+class PipelineTags(TestCase):
+    def setUp(self):
+        self.gctrack()
+        self.pipeline = gst.parse_launch('audiotestsrc num-buffers=100 ! vorbisenc name=encoder ! oggmux name=muxer ! fakesink')
+
+    def tearDown(self):
+        del self.pipeline
+        self.gccollect()
+        self.gcverify()
+
+    def testRun(self):
+        # in 0.10.15.1, this triggers
+        # sys:1: gobject.Warning: g_value_get_uint: assertion `G_VALUE_HOLDS_UINT (value)' failed
+        # during pipeline playing
+
+        l = gst.TagList()
+        l[gst.TAG_ARTIST] = 'artist'
+        l[gst.TAG_TRACK_NUMBER] = 1
+        encoder = self.pipeline.get_by_name('encoder')
+        encoder.merge_tags(l, gst.TAG_MERGE_APPEND)
+
+        self.assertEqual(self.pipeline.get_state()[1], gst.STATE_NULL)
+        self.pipeline.set_state(gst.STATE_PLAYING)
+        self.assertEqual(self.pipeline.get_state()[1], gst.STATE_PLAYING)
+        
+        time.sleep(1)
+
+        self.assertEqual(self.pipeline.get_state()[1], gst.STATE_PLAYING)
+        self.pipeline.set_state(gst.STATE_NULL)
+        self.assertEqual(self.pipeline.get_state()[1], gst.STATE_NULL)
+
+
 class Bus(TestCase):
     def testGet(self):
         pipeline = gst.Pipeline('test')

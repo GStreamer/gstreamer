@@ -64,4 +64,8 @@ class TestTagList(TestCase):
         self.failUnless(isinstance(taglist[gst.TAG_ARTIST], unicode))
         self.assertEquals(taglist[gst.TAG_ARTIST], u'S\xc3\xadgur R\xc3\xb3s')
         
-
+    def testUnsignedInt(self):
+        taglist = gst.TagList()
+        taglist[gst.TAG_TRACK_NUMBER] = 1
+        vorbis = gst.tag.to_vorbis_comments(taglist, gst.TAG_TRACK_NUMBER)
+        self.assertEquals(vorbis, ['TRACKNUMBER=1'])

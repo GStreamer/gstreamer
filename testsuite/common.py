@@ -78,6 +78,17 @@ except ImportError:
 file = gst.interfaces.__file__
 assert file.startswith(path), 'bad gst.interfaces path: %s' % file
 
+# gst's tags is in topbuilddir/gst
+path = os.path.abspath(os.path.join(topbuilddir, 'gst'))
+try:
+   import gst.tag
+except ImportError:
+   # hack: we import it from our builddir/gst/.libs instead; ugly
+   import tag
+   gst.tag = tag
+file = gst.tag.__file__
+assert file.startswith(path), 'bad gst.tag path: %s' % file
+
 # gst's pbutils is in topbuilddir/gst
 path = os.path.abspath(os.path.join(topbuilddir, 'gst'))
 try:
