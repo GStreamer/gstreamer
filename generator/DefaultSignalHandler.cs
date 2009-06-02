@@ -124,6 +124,8 @@ namespace GtkSharp.Generation {
 
 				if (igen is ObjectGen)
 					return "GLib.GType.Object";
+				if (igen is MiniObjectGen)
+					return "Gst.MiniObject.GType";
 				if (igen is BoxedGen)
 					return retval.CSType + ".GType";
 				if (igen is EnumGen)

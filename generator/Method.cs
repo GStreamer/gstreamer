@@ -118,7 +118,7 @@ namespace GtkSharp.Generation {
 
 			if (Name == "ToString" && Parameters.Count == 0)
 				sw.Write("override ");
-			else if (Name == "GetGType" && container_type is ObjectGen)
+			else if (Name == "GetGType" && (container_type is ObjectGen || container_type is MiniObjectGen))
 				sw.Write("new ");
 			else if (Modifiers == "new " || (dup != null && ((dup.Signature != null && Signature != null && dup.Signature.ToString() == Signature.ToString()) || (dup.Signature == null && Signature == null))))
 				sw.Write("new ");

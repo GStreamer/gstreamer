@@ -37,7 +37,7 @@ namespace GtkSharp.Generation {
 		{
 			if (elem.HasAttribute ("preferred"))
 				preferred = true;
-			if (implementor is ObjectGen)
+			if (implementor is ObjectGen || implementor is MiniObjectGen)
 				needs_chaining = true;
 			name = implementor.Name;
 		}

@@ -146,7 +146,7 @@ namespace GtkSharp.Generation {
 
 			if (IGen is IManualMarshaler)
 				return (IGen as IManualMarshaler).AllocNative (var);
-			else if (IGen is ObjectGen && owned)
+			else if ((IGen is ObjectGen || IGen is MiniObjectGen) && owned)
 				return var + " == null ? IntPtr.Zero : " + var + ".OwnedHandle";
 			else if (IGen is OpaqueGen && owned)
 				return var + " == null ? IntPtr.Zero : " + var + ".OwnedCopy";
