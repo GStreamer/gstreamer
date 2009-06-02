@@ -602,6 +602,10 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
       GST_LOG_OBJECT (rtpvrawpay, "frame complete, set marker");
       gst_rtp_buffer_set_marker (out, TRUE);
     }
+    if (left > 0) {
+      GST_LOG_OBJECT (rtpvrawpay, "we have %u bytes left", left);
+      GST_BUFFER_SIZE (out) -= left;
+    }
 
     /* push buffer */
     ret = gst_basertppayload_push (payload, out);
