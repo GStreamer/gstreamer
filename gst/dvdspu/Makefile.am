@@ -8,6 +8,6 @@ libgstdvdspu_la_LIBADD = $(GST_LIBS)
 libgstdvdspu_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdvdspu_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstdvdspu.h gstspu-pgs.h gstspu-vobsub.h
+noinst_HEADERS = gstdvdspu.h gstspu-pgs.h gstspu-vobsub.h gstspu-common.h
 
 EXTRA_DIST = Notes.txt
