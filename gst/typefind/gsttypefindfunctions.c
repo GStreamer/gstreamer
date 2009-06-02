@@ -2585,8 +2585,10 @@ dv_type_find (GstTypeFind * tf, gpointer private)
 /*** application/ogg and application/x-annodex ***/
 static GstStaticCaps ogg_caps = GST_STATIC_CAPS ("application/ogg");
 static GstStaticCaps annodex_caps = GST_STATIC_CAPS ("application/x-annodex");
+static GstStaticCaps ogg_annodex_caps =
+    GST_STATIC_CAPS ("application/ogg;application/x-annodex");
 
-#define OGGANX_CAPS (gst_static_caps_get(&annodex_caps))
+#define OGGANX_CAPS (gst_static_caps_get(&ogg_annodex_caps))
 
 static void
 ogganx_type_find (GstTypeFind * tf, gpointer private)
@@ -2598,7 +2600,8 @@ ogganx_type_find (GstTypeFind * tf, gpointer private)
     /* Check for an annodex fishbone header */
     data = gst_type_find_peek (tf, 28, 8);
     if (data && memcmp (data, "fishead\0", 8) == 0)
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, OGGANX_CAPS);
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
+          gst_static_caps_get (&annodex_caps));
 
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
         gst_static_caps_get (&ogg_caps));
