@@ -124,6 +124,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstxdgmime.so
 %{_libdir}/gstreamer-%{majorminor}/libgstadpcmdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstid3tag.so
+%{_libdir}/gstreamer-%{majorminor}/libgsthdvparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstshapewipe.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdebugutilsbad.so
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography.h
