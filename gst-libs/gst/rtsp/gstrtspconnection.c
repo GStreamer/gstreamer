@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005-2009> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -1001,7 +1001,7 @@ write_bytes (gint fd, const guint8 * buffer, guint * idx, guint size)
 {
   guint left;
 
-  if (*idx > size)
+  if (G_UNLIKELY (*idx > size))
     return GST_RTSP_ERROR;
 
   left = size - *idx;
@@ -1010,9 +1010,9 @@ write_bytes (gint fd, const guint8 * buffer, guint * idx, guint size)
     gint r;
 
     r = WRITE_SOCKET (fd, &buffer[*idx], left);
-    if (r == 0) {
+    if (G_UNLIKELY (r == 0)) {
       return GST_RTSP_EINTR;
-    } else if (r < 0) {
+    } else if (G_UNLIKELY (r < 0)) {
       if (ERRNO_IS_EAGAIN)
         return GST_RTSP_EINTR;
       if (!ERRNO_IS_EINTR)
@@ -1074,7 +1074,7 @@ read_bytes (gint fd, guint8 * buffer, guint * idx, guint size, DecodeCtx * ctx)
 {
   guint left;
 
-  if (*idx > size)
+  if (G_UNLIKELY (*idx > size))
     return GST_RTSP_ERROR;
 
   left = size - *idx;
@@ -1083,9 +1083,9 @@ read_bytes (gint fd, guint8 * buffer, guint * idx, guint size, DecodeCtx * ctx)
     gint r;
 
     r = fill_bytes (fd, &buffer[*idx], left, ctx);
-    if (r == 0) {
+    if (G_UNLIKELY (r == 0)) {
       return GST_RTSP_EEOF;
-    } else if (r < 0) {
+    } else if (G_UNLIKELY (r < 0)) {
       if (ERRNO_IS_EAGAIN)
         return GST_RTSP_EINTR;
       if (!ERRNO_IS_EINTR)
@@ -1106,9 +1106,9 @@ read_line (gint fd, guint8 * buffer, guint * idx, guint size, DecodeCtx * ctx)
     gint r;
 
     r = fill_bytes (fd, &c, 1, ctx);
-    if (r == 0) {
+    if (G_UNLIKELY (r == 0)) {
       return GST_RTSP_EEOF;
-    } else if (r < 0) {
+    } else if (G_UNLIKELY (r < 0)) {
       if (ERRNO_IS_EAGAIN)
         return GST_RTSP_EINTR;
       if (!ERRNO_IS_EINTR)
@@ -1119,7 +1119,7 @@ read_line (gint fd, guint8 * buffer, guint * idx, guint size, DecodeCtx * ctx)
       if (c == '\r')            /* ignore \r */
         continue;
 
-      if (*idx < size - 1)
+      if (G_LIKELY (*idx < size - 1))
         buffer[(*idx)++] = c;
     }
   }
@@ -1170,9 +1170,9 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
   while (TRUE) {
     /* try to write */
     res = write_bytes (conn->writefd->fd, data, &offset, size);
-    if (res == GST_RTSP_OK)
+    if (G_LIKELY (res == GST_RTSP_OK))
       break;
-    if (res != GST_RTSP_EINTR)
+    if (G_UNLIKELY (res != GST_RTSP_EINTR))
       goto write_error;
 
     /* not all is written, wait until we can write more */
@@ -1180,10 +1180,10 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
       retval = gst_poll_wait (conn->fdset, to);
     } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
 
-    if (retval == 0)
+    if (G_UNLIKELY (retval == 0))
       goto timeout;
 
-    if (retval == -1) {
+    if (G_UNLIKELY (retval == -1)) {
       if (errno == EBUSY)
         goto stopped;
       else
@@ -1321,7 +1321,7 @@ gst_rtsp_connection_send (GstRTSPConnection * conn, GstRTSPMessage * message,
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
 
-  if (!(string = message_to_string (conn, message)))
+  if (G_UNLIKELY (!(string = message_to_string (conn, message))))
     goto no_message;
 
   if (conn->tunneled) {
@@ -1448,12 +1448,12 @@ parse_request_line (GstRTSPConnection * conn, guint8 * buffer,
   }
 
   parse_string (urlstr, sizeof (urlstr), &bptr);
-  if (*urlstr == '\0')
+  if (G_UNLIKELY (*urlstr == '\0'))
     goto invalid_url;
 
   parse_string (versionstr, sizeof (versionstr), &bptr);
 
-  if (*bptr != '\0')
+  if (G_UNLIKELY (*bptr != '\0'))
     goto invalid_version;
 
   if (strcmp (versionstr, "RTSP/1.0") == 0) {
@@ -1501,7 +1501,7 @@ parse_key_value (guint8 * buffer, gchar * key, guint keysize, gchar ** value)
 
   /* read key */
   parse_key (key, keysize, &bptr);
-  if (*bptr != ':')
+  if (G_UNLIKELY (*bptr != ':'))
     goto no_column;
 
   bptr++;
@@ -1529,7 +1529,7 @@ parse_line (GstRTSPConnection * conn, guint8 * buffer, GstRTSPMessage * msg)
   GstRTSPHeaderField field;
 
   res = parse_key_value (buffer, key, sizeof (key), &value);
-  if (res != GST_RTSP_OK)
+  if (G_UNLIKELY (res != GST_RTSP_OK))
     goto parse_error;
 
   if (conn->tstate == TUNNEL_STATE_GET || conn->tstate == TUNNEL_STATE_POST) {
@@ -1759,7 +1759,7 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
   g_return_val_if_fail (data != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (conn->readfd != NULL, GST_RTSP_EINVAL);
 
-  if (size == 0)
+  if (G_UNLIKELY (size == 0))
     return GST_RTSP_OK;
 
   offset = 0;
@@ -1773,11 +1773,11 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
 
   while (TRUE) {
     res = read_bytes (conn->readfd->fd, data, &offset, size, conn->ctxp);
-    if (res == GST_RTSP_EEOF)
+    if (G_UNLIKELY (res == GST_RTSP_EEOF))
       goto eof;
-    if (res == GST_RTSP_OK)
+    if (G_LIKELY (res == GST_RTSP_OK))
       break;
-    if (res != GST_RTSP_EINTR)
+    if (G_UNLIKELY (res != GST_RTSP_EINTR))
       goto read_error;
 
     do {
@@ -1785,10 +1785,10 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
     } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
 
     /* check for timeout */
-    if (retval == 0)
+    if (G_UNLIKELY (retval == 0))
       goto select_timeout;
 
-    if (retval == -1) {
+    if (G_UNLIKELY (retval == -1)) {
       if (errno == EBUSY)
         goto stopped;
       else
@@ -1891,9 +1891,9 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
   memset (&builder, 0, sizeof (GstRTSPBuilder));
   while (TRUE) {
     res = build_next (&builder, message, conn);
-    if (res == GST_RTSP_EEOF)
+    if (G_UNLIKELY (res == GST_RTSP_EEOF))
       goto eof;
-    if (res == GST_RTSP_OK)
+    if (G_LIKELY (res == GST_RTSP_OK))
       break;
     if (res == GST_RTSP_ETGET) {
       GString *str;
@@ -1908,7 +1908,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
       /* tunnel POST request, return the value, the caller now has to link the
        * two connections. */
       break;
-    } else if (res != GST_RTSP_EINTR)
+    } else if (G_UNLIKELY (res != GST_RTSP_EINTR))
       goto read_error;
 
     do {
@@ -1916,10 +1916,10 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
     } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
 
     /* check for timeout */
-    if (retval == 0)
+    if (G_UNLIKELY (retval == 0))
       goto select_timeout;
 
-    if (retval == -1) {
+    if (G_UNLIKELY (retval == -1)) {
       if (errno == EBUSY)
         goto stopped;
       else
@@ -2076,10 +2076,10 @@ gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
     retval = gst_poll_wait (conn->fdset, to);
   } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
 
-  if (retval == 0)
+  if (G_UNLIKELY (retval == 0))
     goto select_timeout;
 
-  if (retval == -1) {
+  if (G_UNLIKELY (retval == -1)) {
     if (errno == EBUSY)
       goto stopped;
     else
@@ -2707,7 +2707,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
       res = build_next (&watch->builder, &watch->message, watch->conn);
       if (res == GST_RTSP_EINTR)
         break;
-      if (res == GST_RTSP_EEOF)
+      if (G_UNLIKELY (res == GST_RTSP_EEOF))
         goto eof;
       if (res == GST_RTSP_ETGET) {
         GString *str;
@@ -2726,10 +2726,10 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
          * GET connection */
         if (watch->funcs.tunnel_complete)
           watch->funcs.tunnel_complete (watch, watch->user_data);
-      } else if (res != GST_RTSP_OK)
+      } else if (G_UNLIKELY (res != GST_RTSP_OK))
         goto error;
 
-      if (res == GST_RTSP_OK) {
+      if (G_LIKELY (res == GST_RTSP_OK)) {
         if (watch->funcs.message_received)
           watch->funcs.message_received (watch, &watch->message,
               watch->user_data);
@@ -2763,7 +2763,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
           &watch->write_off, watch->write_len);
       if (res == GST_RTSP_EINTR)
         break;
-      if (res != GST_RTSP_OK)
+      if (G_UNLIKELY (res != GST_RTSP_OK))
         goto error;
 
       if (watch->funcs.message_sent && watch->write_cseq != UNKNOWN_CSEQ)
