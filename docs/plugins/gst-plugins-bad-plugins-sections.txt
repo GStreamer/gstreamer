@@ -731,21 +731,6 @@ GST_IS_RTP_BIN_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>element-gstrtpclient</FILE>
-<TITLE>gstrtpclient</TITLE>
-GstRtpClient
-<SUBSECTION Standard>
-GstRtpClientClass
-GstRtpClientPrivate
-GST_RTP_CLIENT
-GST_IS_RTP_CLIENT
-GST_TYPE_RTP_CLIENT
-gst_rtp_client_get_type
-GST_RTP_CLIENT_CLASS
-GST_IS_RTP_CLIENT_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>element-gstrtpjitterbuffer</FILE>
 <TITLE>gstrtpjitterbuffer</TITLE>
 GstRtpJitterBuffer

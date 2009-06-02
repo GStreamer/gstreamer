@@ -138,7 +138,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/rawparse/gstaudioparse.h \
 	$(top_srcdir)/gst/rawparse/gstvideoparse.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpbin.h \
-	$(top_srcdir)/gst/rtpmanager/gstrtpclient.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpjitterbuffer.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpptdemux.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpsession.h \
