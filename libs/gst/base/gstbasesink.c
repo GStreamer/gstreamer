@@ -2169,19 +2169,19 @@ do_step:
   priv->eos_rtime = (do_sync ? priv->current_rstop : -1);
 
 again:
-  /* Before preroll we store the position of the last buffer so that we can use
-   * it to report the position. We need to take the lock here. */
-  GST_OBJECT_LOCK (basesink);
-  priv->current_sstart = sstart;
-  priv->current_sstop = (sstop != -1 ? sstop : sstart);
-  GST_OBJECT_UNLOCK (basesink);
-
   /* first do preroll, this makes sure we commit our state
    * to PAUSED and can continue to PLAYING. We cannot perform
    * any clock sync in PAUSED because there is no clock. */
   ret = gst_base_sink_do_preroll (basesink, obj);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto preroll_failed;
+
+  /* After rendering we store the position of the last buffer so that we can use
+   * it to report the position. We need to take the lock here. */
+  GST_OBJECT_LOCK (basesink);
+  priv->current_sstart = sstart;
+  priv->current_sstop = (sstop != -1 ? sstop : sstart);
+  GST_OBJECT_UNLOCK (basesink);
 
   /* update the segment with a pending step if the current one is invalid and we
    * have a new pending one. We only accept new step updates after a preroll */
