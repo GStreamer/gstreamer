@@ -22,7 +22,6 @@
 #endif
 
 #include "gstrtpbin.h"
-#include "gstrtpclient.h"
 #include "gstrtpjitterbuffer.h"
 #include "gstrtpptdemux.h"
 #include "gstrtpsession.h"
@@ -33,10 +32,6 @@ plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "gstrtpbin", GST_RANK_NONE,
           GST_TYPE_RTP_BIN))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "gstrtpclient", GST_RANK_NONE,
-          GST_TYPE_RTP_CLIENT))
     return FALSE;
 
   if (!gst_element_register (plugin, "gstrtpjitterbuffer", GST_RANK_NONE,
