@@ -861,13 +861,14 @@ main (int argc, char *argv[])
       g_print (_("Execution ended after %" G_GUINT64_FORMAT " ns.\n"), diff);
     }
 
-    /* iterate mainloop to process pending stuff */
-    while (g_main_context_iteration (NULL, FALSE));
-
     PRINT (_("Setting pipeline to PAUSED ...\n"));
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     if (caught_error == ELR_NO_ERROR)
       gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
+
+    /* iterate mainloop to process pending stuff */
+    while (g_main_context_iteration (NULL, FALSE));
+
     PRINT (_("Setting pipeline to READY ...\n"));
     gst_element_set_state (pipeline, GST_STATE_READY);
     gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
