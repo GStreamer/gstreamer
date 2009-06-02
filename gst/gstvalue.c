@@ -80,6 +80,9 @@ static GstValueCompareFunc gst_value_get_compare_func (const GValue * value1);
 static gint gst_value_compare_with_func (const GValue * value1,
     const GValue * value2, GstValueCompareFunc compare);
 
+static gchar *gst_string_wrap (const gchar * s);
+static gchar *gst_string_unwrap (const gchar * s);
+
 /********
  * list *
  ********/
@@ -1335,7 +1338,7 @@ gst_value_serialize_structure (const GValue * value)
 {
   GstStructure *structure = g_value_get_boxed (value);
 
-  return gst_structure_to_string (structure);
+  return gst_string_wrap (gst_structure_to_string (structure));
 }
 
 static gboolean
@@ -1343,7 +1346,16 @@ gst_value_deserialize_structure (GValue * dest, const gchar * s)
 {
   GstStructure *structure;
 
-  structure = gst_structure_from_string (s, NULL);
+  if (*s != '"') {
+    structure = gst_structure_from_string (s, NULL);
+  } else {
+    gchar *str = gst_string_unwrap (s);
+
+    if (!str)
+      return FALSE;
+
+    structure = gst_structure_from_string (str, NULL);
+  }
 
   if (structure) {
     g_value_set_boxed (dest, structure);
@@ -1776,11 +1788,6 @@ gst_value_compare_string (const GValue * value1, const GValue * value2)
     return GST_VALUE_EQUAL;
   }
 }
-
-/* keep in sync with gststructure.c */
-#define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
-    ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
-    ((c) == '.'))
 
 static gchar *
 gst_string_wrap (const gchar * s)

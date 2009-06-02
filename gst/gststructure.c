@@ -1560,11 +1560,6 @@ gst_structure_value_get_generic_type (GValue * val)
   return G_VALUE_TYPE (val);
 }
 
-/* keep in sync with gstvalue.c */
-#define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
-      ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
-      ((c) == '.'))
-
 gboolean
 priv_gst_structure_append_to_gstring (const GstStructure * structure,
     GString * s)
@@ -1853,7 +1848,7 @@ gst_structure_parse_field (gchar * str,
   s++;
 
   c = *name_end;
-  *name_end = 0;
+  *name_end = '\0';
   field->name = g_quark_from_string (name);
   *name_end = c;
 
@@ -1876,7 +1871,6 @@ gst_structure_parse_value (gchar * str,
   gchar c;
   int ret = 0;
   GType type = default_type;
-
 
   s = str;
   while (g_ascii_isspace (*s))
@@ -1923,7 +1917,7 @@ gst_structure_parse_value (gchar * str,
       return FALSE;
 
     c = *value_end;
-    *value_end = 0;
+    *value_end = '\0';
     if (type == G_TYPE_INVALID) {
       GType try_types[] =
           { G_TYPE_INT, G_TYPE_DOUBLE, GST_TYPE_FRACTION, G_TYPE_BOOLEAN,
@@ -1991,7 +1985,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   }
 
   save = *w;
-  *w = 0;
+  *w = '\0';
   structure = gst_structure_empty_new (name);
   *w = save;
 
@@ -2024,7 +2018,6 @@ gst_structure_from_string (const gchar * string, gchar ** end)
     if (!gst_structure_parse_field (r, &r, &field))
       goto error;
     gst_structure_set_field (structure, &field);
-
   } while (TRUE);
 
   if (end)

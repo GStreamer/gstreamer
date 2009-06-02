@@ -349,19 +349,20 @@ GST_START_TEST (test_structure_nested)
   GstStructure *sp, *sc1, *sc2;
   gchar *str;
 
-  sc1 =
-      gst_structure_new ("Camera", "XResolution", G_TYPE_INT, 72, "YResolution",
-      G_TYPE_INT, 73, NULL);
+  sc1 = gst_structure_new ("Camera",
+      "XResolution", G_TYPE_INT, 72, "YResolution", G_TYPE_INT, 73, NULL);
   fail_unless (sc1 != NULL);
 
-  sc2 =
-      gst_structure_new ("Image-Data", "Orientation", G_TYPE_STRING, "top-left",
-      NULL);
+  sc2 = gst_structure_new ("Image-Data",
+      "Orientation", G_TYPE_STRING, "top-left",
+      "Comment", G_TYPE_STRING, "super photo", NULL);
   fail_unless (sc2 != NULL);
 
   sp = gst_structure_new ("Exif", "Camera", GST_TYPE_STRUCTURE, sc1,
       "Image Data", GST_TYPE_STRUCTURE, sc2, NULL);
   fail_unless (sp != NULL);
+
+  fail_unless (gst_structure_n_fields (sp) == 2);
 
   fail_unless (gst_structure_has_field_typed (sp, "Camera",
           GST_TYPE_STRUCTURE));
@@ -369,10 +370,12 @@ GST_START_TEST (test_structure_nested)
   str = gst_structure_to_string (sp);
   fail_unless (str != NULL);
 
+  GST_DEBUG ("serialized to '%s'", str);
+
   fail_unless (g_str_equal (str,
           "Exif"
-          ", Camera=(structure)Camera, XResolution=(int)72, YResolution=(int)73;"
-          ", Image Data=(structure)Image-Data, Orientation=(string)top-left;;"));
+          ", Camera=(structure)\"Camera\\,\\ XResolution\\=\\(int\\)72\\,\\ YResolution\\=\\(int\\)73\\;\""
+          ", Image Data=(structure)\"Image-Data\\,\\ Orientation\\=\\(string\\)top-left\\,\\ Comment\\=\\(string\\)\\\"super\\\\\\ photo\\\"\\;\";"));
 
   g_free (str);
   str = NULL;
@@ -380,7 +383,40 @@ GST_START_TEST (test_structure_nested)
   gst_structure_free (sc1);
   gst_structure_free (sc2);
   gst_structure_free (sp);
+}
 
+GST_END_TEST;
+
+GST_START_TEST (test_structure_nested_from_and_to_string)
+{
+  GstStructure *s;
+  gchar *str1, *str2, *end = NULL;
+
+  str1 = "main"
+      ", main-sub1=(structure)\"type-b\\,\\ machine-type\\=\\(int\\)0\\;\""
+      ", main-sub2=(structure)\"type-a\\,\\ plugin-filename\\=\\(string\\)\\\"/home/user/lib/lib\\\\\\ with\\\\\\ spaces.dll\\\"\\,\\ machine-type\\=\\(int\\)1\\;\""
+      ", main-sub3=(structure)\"type-b\\,\\ plugin-filename\\=\\(string\\)/home/user/lib/lib_no_spaces.so\\,\\ machine-type\\=\\(int\\)1\\;\""
+      ";";
+
+  s = gst_structure_from_string (str1, &end);
+  fail_unless (s != NULL);
+
+  GST_DEBUG ("not parsed part : %s", end);
+  fail_unless (*end == '\0');
+
+  fail_unless (gst_structure_n_fields (s) == 3);
+
+  fail_unless (gst_structure_has_field_typed (s, "main-sub1",
+          GST_TYPE_STRUCTURE));
+
+  str2 = gst_structure_to_string (s);
+  fail_unless (str2 != NULL);
+
+  fail_unless (g_str_equal (str1, str2));
+
+  g_free (str2);
+
+  gst_structure_free (s);
 }
 
 GST_END_TEST;
@@ -413,6 +449,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_fixate);
   tcase_add_test (tc_chain, test_fixate_frac_list);
   tcase_add_test (tc_chain, test_structure_nested);
+  tcase_add_test (tc_chain, test_structure_nested_from_and_to_string);
   tcase_add_test (tc_chain, test_empty_string_fields);
   return s;
 }
