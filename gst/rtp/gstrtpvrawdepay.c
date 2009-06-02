@@ -142,7 +142,7 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if (gst_structure_get_string (structure, "interlace"))
     goto interlaced;
 
-  if (gst_structure_get_string (structure, "sampling"))
+  if (!(str = gst_structure_get_string (structure, "sampling")))
     goto no_sampling;
 
   if (!strcmp (str, "RGB")) {
