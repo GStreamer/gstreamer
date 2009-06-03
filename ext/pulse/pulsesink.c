@@ -658,13 +658,15 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   /* get the actual buffering properties now */
   buf_attr_ptr = pa_stream_get_buffer_attr (pbuf->stream);
 
-  GST_INFO_OBJECT (psink, "tlength:   %d", buf_attr_ptr->tlength);
+  GST_INFO_OBJECT (psink, "tlength:   %d (wanted: %d)", buf_attr_ptr->tlength,
+      buf_attr.tlength);
   GST_INFO_OBJECT (psink, "maxlength: %d", buf_attr_ptr->maxlength);
   GST_INFO_OBJECT (psink, "prebuf:    %d", buf_attr_ptr->prebuf);
-  GST_INFO_OBJECT (psink, "minreq:    %d", buf_attr_ptr->minreq);
+  GST_INFO_OBJECT (psink, "minreq:    %d (wanted %d)", buf_attr_ptr->minreq,
+      buf_attr.minreq);
 
-  spec->segsize = buf_attr.minreq;
-  spec->segtotal = buf_attr.tlength / spec->segsize;
+  spec->segsize = buf_attr_ptr->minreq;
+  spec->segtotal = buf_attr_ptr->tlength / spec->segsize;
 
   pa_threaded_mainloop_unlock (psink->mainloop);
 
