@@ -182,6 +182,17 @@ typedef enum
  * Get the object that posted @message.
  */
 #define GST_MESSAGE_SRC(message)	(GST_MESSAGE(message)->src)
+/**
+ * GST_MESSAGE_SRC_NAME:
+ * @message: a #GstMessage
+ *
+ * Get the name of the object that posted @message. Returns "(NULL)" if
+ * the message has no source object set.
+ *
+ * Since: 0.10.24
+ */
+#define GST_MESSAGE_SRC_NAME(message)	(GST_MESSAGE_SRC(message) ? \
+    GST_OBJECT_NAME (GST_MESSAGE_SRC(message)) : "(NULL)")
 
 /**
  * GstStructureChangeType:
