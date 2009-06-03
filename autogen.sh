@@ -11,20 +11,7 @@ then
   echo "+ Setting up common submodule"
   git submodule init
 fi
-
-# only update if the submodule is tracking master at some version,
-# which means there is no branch name
-cd common
-branch=`git branch | grep ^* | cut -c 3-`
-cd ..
-
-if test "x$branch" == "x(no branch)"
-then
-  echo "+ Updating common submodule"
-  git submodule update common
-else
-  echo "+ Not updating common submodule on branch $branch"
-fi
+git submodule update
 
 # source helper functions
 if test ! -f common/gst-autogen.sh;
