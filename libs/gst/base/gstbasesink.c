@@ -1520,6 +1520,9 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
     GST_DEBUG_OBJECT (sink,
         "step stop at running_time %" GST_TIME_FORMAT ", timestamp %"
         GST_TIME_FORMAT, GST_TIME_ARGS (*rstart), GST_TIME_ARGS (cstart));
+    if (*rstart == -1)
+      *rstart = current->start + current->position;
+
     current->duration = *rstart - current->start;
 
     segment->time =
@@ -1527,16 +1530,21 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
     segment->start = cstart;
 
     *rstart = current->start;
-    *rstop -= current->duration;
+    if (*rstop != -1)
+      *rstop -= current->duration;
   } else {
     GST_DEBUG_OBJECT (sink,
         "step stop at running_time %" GST_TIME_FORMAT ", timestamp %"
         GST_TIME_FORMAT, GST_TIME_ARGS (*rstop), GST_TIME_ARGS (cstop));
+    if (*rstop == -1)
+      *rstop = current->start + current->position;
+
     current->duration = *rstop - current->start;
 
     segment->stop = cstop;
     *rstop = current->start;
-    *rstart -= current->duration;
+    if (*rstart != -1)
+      *rstart -= current->duration;
   }
   segment->accum = current->start;
 
@@ -1794,10 +1802,9 @@ eos_done:
   /* special cases */
 out_of_segment:
   {
-    /* should not happen since we clip them in the chain function already, 
-     * we return FALSE so that we don't try to sync on it. */
-    GST_ELEMENT_WARNING (basesink, STREAM, FAILED,
-        (NULL), ("unexpected buffer out of segment found."));
+    /* we usually clip in the chain function already but stepping could cause
+     * the segment to be updated later. we return FALSE so that we don't try
+     * to sync on it. */
     GST_LOG_OBJECT (basesink, "buffer skipped, not in segment");
     return FALSE;
   }
