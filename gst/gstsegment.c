@@ -465,7 +465,7 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
   g_return_if_fail (segment->format == format);
 
   if (update) {
-    if (segment->rate > 0.0) {
+    if (G_LIKELY (segment->rate > 0.0)) {
       /* an update to the current segment is done, elapsed time is
        * difference between the old start and new start. */
       if (start > segment->start)
@@ -511,7 +511,7 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
       last_stop = stop;
   }
   /* use previous rate to calculate duration */
-  if (segment->abs_rate != 1.0)
+  if (G_LIKELY (segment->abs_rate != 1.0))
     duration /= segment->abs_rate;
 
   /* accumulate duration */
@@ -565,7 +565,7 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
 
   /* if we have the position for the same format as the segment, we can compare
    * the start and stop values, otherwise we assume 0 and -1 */
-  if (segment->format == format) {
+  if (G_LIKELY (segment->format == format)) {
     start = segment->start;
     stop = segment->stop;
     time = segment->time;
@@ -593,18 +593,18 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
   abs_applied_rate = ABS (segment->applied_rate);
 
   /* correct for applied rate if needed */
-  if (abs_applied_rate != 1.0)
+  if (G_UNLIKELY (abs_applied_rate != 1.0))
     result *= abs_applied_rate;
 
   /* add or subtract from segment time based on applied rate */
-  if (segment->applied_rate > 0.0) {
+  if (G_LIKELY (segment->applied_rate > 0.0)) {
     /* correct for segment time */
     result += time;
   } else {
     /* correct for segment time, clamp at 0. Streams with a negative
      * applied_rate have timestamps between start and stop, as usual, but have
      * the time member starting high and going backwards.  */
-    if (time > result)
+    if (G_LIKELY (time > result))
       result = time - result;
     else
       result = 0;
@@ -650,7 +650,7 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
 
   /* if we have the position for the same format as the segment, we can compare
    * the start and stop values, otherwise we assume 0 and -1 */
-  if (segment->format == format) {
+  if (G_LIKELY (segment->format == format)) {
     start = segment->start;
     stop = segment->stop;
     accum = segment->accum;
@@ -664,7 +664,7 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
   if (G_UNLIKELY (position < start))
     return -1;
 
-  if (segment->rate > 0.0) {
+  if (G_LIKELY (segment->rate > 0.0)) {
     /* outside of the segment boundary stop */
     if (G_UNLIKELY (stop != -1 && position > stop))
       return -1;
@@ -683,7 +683,7 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
 
   /* scale based on the rate, avoid division by and conversion to 
    * float when not needed */
-  if (segment->abs_rate != 1.0)
+  if (G_UNLIKELY (segment->abs_rate != 1.0))
     result /= segment->abs_rate;
 
   /* correct for accumulated segments */
@@ -760,4 +760,74 @@ gst_segment_clip (GstSegment * segment, GstFormat format, gint64 start,
   }
 
   return TRUE;
+}
+
+/**
+ * gst_segment_to_position:
+ * @segment: a #GstSegment structure.
+ * @format: the format of the segment.
+ * @running_time: the running_time in the segment
+ *
+ * Convert @running_time into a position in the segment so that
+ * gst_segment_to_running_time() with that position returns @running_time.
+ *
+ * Returns: the position in the segment for @running_time.
+ *
+ * Since: 0.10.24
+ */
+gint64
+gst_segment_to_position (GstSegment * segment, GstFormat format,
+    gint64 running_time)
+{
+  gint64 result;
+  gint64 start, stop, accum;
+
+  g_return_val_if_fail (segment != NULL, -1);
+
+  if (G_UNLIKELY (running_time == -1))
+    return -1;
+
+  if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
+    segment->format = format;
+
+  /* if we have the position for the same format as the segment, we can compare
+   * the start and stop values, otherwise we assume 0 and -1 */
+  if (G_LIKELY (segment->format == format)) {
+    start = segment->start;
+    stop = segment->stop;
+    accum = segment->accum;
+  } else {
+    start = 0;
+    stop = -1;
+    accum = 0;
+  }
+
+  /* this running_time was for a previous segment */
+  if (running_time < accum)
+    return -1;
+
+  /* start by subtracting the accumulated time */
+  result = running_time - accum;
+
+  /* move into the segment at the right rate */
+  if (G_UNLIKELY (segment->abs_rate != 1.0))
+    result *= segment->abs_rate;
+
+  if (G_LIKELY (segment->rate > 0.0)) {
+    /* bring to corrected position in segment */
+    result += start;
+
+    /* outside of the segment boundary stop */
+    if (G_UNLIKELY (stop != -1 && result > stop))
+      return -1;
+  } else {
+    /* cannot continue if no stop position set or outside of
+     * the segment. */
+    if (G_UNLIKELY (stop == -1 || result + start > stop))
+      return -1;
+
+    /* bring to corrected position in segment */
+    result = stop - result;
+  }
+  return result;
 }

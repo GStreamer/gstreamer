@@ -1341,16 +1341,24 @@ GST_START_TEST (segment_newsegment_runningtime)
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 0);
   fail_unless (result == 0);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 0);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 100);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
   fail_unless (result == 100);
 
   /* at edge is exactly the segment duration */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 200);
   fail_unless (result == 200);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 200);
 
   /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 
   /***********************************************************
@@ -1371,12 +1379,18 @@ GST_START_TEST (segment_newsegment_runningtime)
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 0);
   fail_unless (result == 200);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 0);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 100);
   fail_unless (result == 250);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 100);
 
   /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 500);
+  fail_unless (result == -1);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, 310);
   fail_unless (result == -1);
 
   /********************************************
@@ -1397,18 +1411,28 @@ GST_START_TEST (segment_newsegment_runningtime)
   /* before segment is invalid */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 400);
   fail_unless (result == -1);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 500);
   fail_unless (result == 300);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 500);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 600);
   fail_unless (result == 400);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 600);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 700);
   fail_unless (result == 500);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 700);
 
   /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 800);
+  fail_unless (result == -1);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, 600);
   fail_unless (result == -1);
 
   /**********************************************************
@@ -1429,18 +1453,28 @@ GST_START_TEST (segment_newsegment_runningtime)
   /* before segment is invalid */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 400);
   fail_unless (result == -1);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, 400);
+  fail_unless (result == -1);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 500);
   fail_unless (result == 700);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 500);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 600);
+  fail_unless (result == 600);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
   fail_unless (result == 600);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 700);
   fail_unless (result == 500);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 700);
 
   /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 800);
+  fail_unless (result == -1);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, 800);
   fail_unless (result == -1);
 
   /**********************************************************
@@ -1461,19 +1495,29 @@ GST_START_TEST (segment_newsegment_runningtime)
   /* before segment is invalid */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 400);
   fail_unless (result == -1);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, 600);
+  fail_unless (result == -1);
 
   /* total scaled segment time is 100, accum is 700, so we get 800 */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 500);
   fail_unless (result == 800);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 500);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 600);
   fail_unless (result == 750);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 600);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 700);
+  fail_unless (result == 700);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
   fail_unless (result == 700);
 
   /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 800);
+  fail_unless (result == -1);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, 900);
   fail_unless (result == -1);
 
   /* see if negative rate closed segment correctly */
@@ -1482,6 +1526,8 @@ GST_START_TEST (segment_newsegment_runningtime)
 
   /* previous segment lasted 100, and was at 700 so we should get 800 */
   fail_unless (segment.accum == 800);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, 800);
+  fail_unless (result == 700);
 }
 
 GST_END_TEST;
@@ -1517,9 +1563,13 @@ GST_START_TEST (segment_newsegment_accum)
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 200);
   fail_unless (result == 0);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 200);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 50);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 150);
 
   /* update segment, this accumulates 50 from the previous segment. */
   gst_segment_set_newsegment_full (&segment, TRUE, -2.0, 1.0,
@@ -1538,10 +1588,14 @@ GST_START_TEST (segment_newsegment_accum)
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 50);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 150);
 
   /* 50 accumulated + 50 / 2 */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 100);
   fail_unless (result == 75);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 100);
 
   /* update segment, this does not accumulate anything. */
   gst_segment_set_newsegment_full (&segment, TRUE, 1.0, 1.0,
@@ -1560,9 +1614,13 @@ GST_START_TEST (segment_newsegment_accum)
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 100);
   fail_unless (result == 50);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 100);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 100);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 150);
 }
 
 GST_END_TEST;
@@ -1595,12 +1653,18 @@ GST_START_TEST (segment_newsegment_accum2)
   /* invalid time gives invalid result */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, -1);
   fail_unless (result == -1);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == -1);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 200);
   fail_unless (result == 0);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 200);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 50);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 150);
 
   /* close segment, this accumulates nothing. */
   gst_segment_set_newsegment_full (&segment, TRUE, -1.0, 1.0,
@@ -1638,9 +1702,13 @@ GST_START_TEST (segment_newsegment_accum2)
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 50);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 150);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 200);
   fail_unless (result == 100);
+  result = gst_segment_to_position (&segment, GST_FORMAT_TIME, result);
+  fail_unless (result == 200);
 }
 
 GST_END_TEST;

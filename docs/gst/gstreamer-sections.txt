@@ -1983,6 +1983,7 @@ gst_segment_set_newsegment_full
 gst_segment_set_seek
 gst_segment_to_running_time
 gst_segment_to_stream_time
+gst_segment_to_position
 <SUBSECTION Standard>
 GST_TYPE_SEGMENT
 gst_segment_get_type

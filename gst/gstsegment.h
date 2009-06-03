@@ -96,6 +96,7 @@ void         gst_segment_set_newsegment_full (GstSegment *segment, gboolean upda
 
 gint64       gst_segment_to_stream_time      (GstSegment *segment, GstFormat format, gint64 position);
 gint64       gst_segment_to_running_time     (GstSegment *segment, GstFormat format, gint64 position);
+gint64       gst_segment_to_position         (GstSegment *segment, GstFormat format, gint64 running_time);
 
 gboolean     gst_segment_clip                (GstSegment *segment, GstFormat format, gint64 start,
                                               gint64 stop, gint64 *clip_start, gint64 *clip_stop);
