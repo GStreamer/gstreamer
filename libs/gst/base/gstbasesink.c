@@ -3480,6 +3480,9 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       sink->priv->have_latency = TRUE;
       sink->need_preroll = FALSE;
     }
+    priv->current_sstart = -1;
+    priv->current_sstop = -1;
+    priv->eos_rtime = -1;
     priv->call_preroll = TRUE;
     gst_base_sink_set_last_buffer (sink, NULL);
     gst_base_sink_reset_qos (sink);
