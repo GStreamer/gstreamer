@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2005-01-27 16:58+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -127,10 +127,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Унутрашња грешка у ГСтримеру: код није написан.  Пријавите грешку."
 
-#, fuzzy
-msgid "Internal GStreamer error: state change failed."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
 msgstr ""
-"Унутрашња грешка у ГСтримеру: неуспешна промена стања.  Пријавите грешку."
 
 #, fuzzy
 msgid "Internal GStreamer error: pad problem."
@@ -709,6 +709,9 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr ""
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -873,7 +876,20 @@ msgstr "ГРЕШКА: не могу да рашчланим %d. аргумент
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "УПОЗОРЕЊЕ: елемент са именом „%s“ није нађен.\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "ГРЕШКА: из елемента %s: %s\n"
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u (%s): "
 msgstr ""
 
 #, fuzzy, c-format
@@ -883,6 +899,17 @@ msgstr "ГРЕШКА: из елемента %s: %s\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "НАЂОХ ОЗНАКУ   : нашао је елемент „%s“.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "НАЂОХ ОЗНАКУ   : нашао је елемент „%s“.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "НАЂОХ ОЗНАКУ   : нашао је елемент „%s“.\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -1014,6 +1041,11 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Покрећем цевовод...\n"
+
+#, fuzzy
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr ""
+#~ "Унутрашња грешка у ГСтримеру: неуспешна промена стања.  Пријавите грешку."
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Искључи убрзане инструкције процесора"

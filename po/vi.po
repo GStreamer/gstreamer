@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2009-01-26 22:21+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -122,8 +122,10 @@ msgstr "Những nhà phát triển GStreamer chưa gán mã lỗi cho lỗi này
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Lỗi nội bộ GStreamer: chưa thi hành mã."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Lỗi nội bộ GStreamer: việc thay đổi trạng thái bị lỗi."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề đệm."
@@ -684,6 +686,9 @@ msgstr "Lỗi đồng hồ nội bộ."
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Vấn đề luồng dữ liệu nội bộ."
 
@@ -846,7 +851,20 @@ msgstr "LỖI: không thể phân tách đối số dòng lệnh %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "CẢNH BÁO : không tìm thấy yếu tố tên « %s ».\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Mới nhận kết thúc luồng (EOS) từ yếu tố « %s ».\n"
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
 msgstr "Nhận được thông điệp #%"
 
 #, c-format
@@ -856,6 +874,17 @@ msgstr "Mới nhận kết thúc luồng (EOS) từ yếu tố « %s ».\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "THẺ ĐÃ TÌM      : được tìm bởi yếu tố « %s ».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "THẺ ĐÃ TÌM      : được tìm bởi yếu tố « %s ».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "THẺ ĐÃ TÌM      : được tìm bởi yếu tố « %s ».\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -988,6 +1017,9 @@ msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
+
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Lỗi nội bộ GStreamer: việc thay đổi trạng thái bị lỗi."
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "ĐANG GIẢI PHÓNG đường ống ...\n"

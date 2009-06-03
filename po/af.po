@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -122,8 +122,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Interne GStreamer-fout: code not implemented."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Interne GStreamer-fout: state change failed."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Interne GStreamer-fout: pad problem."
@@ -685,6 +687,9 @@ msgstr "Interne datavloeifout."
 msgid "Internal data flow error."
 msgstr "Interne datavloeifout."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Interne datavloeiprobleem."
 
@@ -846,8 +851,21 @@ msgstr "FOUT: onverstaanbare bevellynparameter %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSKUWING: element genaamd '%s' nie gevind nie.\n"
 
-msgid "Got Message #%"
-msgstr ""
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Boodskap vanaf element \"%s\" (%s):"
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Boodskap vanaf element \"%s\" (%s):"
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Boodskap vanaf element \"%s\" (%s):"
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
+msgstr "Boodskap vanaf element \"%s\" (%s):"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -856,6 +874,17 @@ msgstr "EOS gekry vanaf element \"%s\".\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ETIKET GEVIND  : gevind by element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "ETIKET GEVIND  : gevind by element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "ETIKET GEVIND  : gevind by element \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -990,11 +1019,11 @@ msgstr "Pyplyn word gestel na NULL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Interne GStreamer-fout: state change failed."
+
 #~ msgid "original location of file as a URI"
 #~ msgstr "oorsprong van lêer gegee as 'n URI"
-
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Boodskap vanaf element \"%s\" (%s):"
 
 #~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 #~ msgstr "Element \"%s\" het verander van SPEEL na POUSE, verlaat dus.\n"

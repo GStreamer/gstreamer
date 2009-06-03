@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2008-10-12 12:12+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -124,8 +124,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Interní chyba GStreameru: kód neimplementován."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Interní chyba GStreameru: změna stavu selhala."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Interní chyba GStreameru: problém při vyplňování."
@@ -678,6 +680,9 @@ msgstr "Interní chyba hodin."
 msgid "Internal data flow error."
 msgstr "Interní chyba toku dat."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Interní problém toku dat."
 
@@ -844,8 +849,21 @@ msgstr "CHYBA: nemohu zpracovat argument %d na příkazovém řádku: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VAROVÁNÍ: element nazvaný '%s' nenalezen.\n"
 
-msgid "Got Message #%"
-msgstr ""
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Dostal jsem zprávu elementu \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Dostal jsem zprávu elementu \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Dostal jsem zprávu elementu \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
+msgstr "Dostal jsem zprávu elementu \"%s\" (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -854,6 +872,17 @@ msgstr "Dostal jsem EOS od elementu \"%s\".\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "NALEZEN TAG    : nalezen elementem \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "NALEZEN TAG    : nalezen elementem \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "NALEZEN TAG    : nalezen elementem \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -993,8 +1022,8 @@ msgstr "Nastavuji rouru na NULL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Nastavuji rouru na NULL ...\n"
 
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Dostal jsem zprávu elementu \"%s\" (%s): "
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Interní chyba GStreameru: změna stavu selhala."
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "UVOLŇUJI rouru ...\n"

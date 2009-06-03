@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2006-01-18 22:26+0200\n"
 "Last-Translator: Ales Nyakhaychyk <nab@mail.by>\n"
 "Language-Team: Belarusian <i18n@mova.org>\n"
@@ -118,7 +118,9 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr ""
 
-msgid "Internal GStreamer error: state change failed."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
 msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
@@ -661,6 +663,9 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr ""
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -820,7 +825,20 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr ""
 
-msgid "Got Message #%"
+#, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u (%s): "
 msgstr ""
 
 #, c-format
@@ -829,6 +847,17 @@ msgstr ""
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr ""
+
+msgid "FOUND TAG\n"
 msgstr ""
 
 #, c-format

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2009-04-19 10:57+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -125,8 +125,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Internt GStreamer-fel: koden inte implementerad."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Internt GStreamer-fel: tillståndsändring misslyckades."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 # Richard Hult säger: "Pad" i gstreamer betyder ungefär "kontakt", man
 # kopplar ihop två element via deras "pads".
@@ -693,6 +695,9 @@ msgstr "Internt klockfel."
 msgid "Internal data flow error."
 msgstr "Internt fel i dataflöde."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Internt dataflödesproblem."
 
@@ -858,7 +863,20 @@ msgstr "FEL: kunde inte tolka kommandoradsargumentet %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VARNING: elementet med namnet \"%s\" hittades inte.\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Fick meddelande från element \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Fick meddelande från element \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Fick meddelande från element \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
 msgstr "Fick meddelande #%"
 
 #, c-format
@@ -868,6 +886,17 @@ msgstr "Fick EOS från element \"%s\".\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -1001,11 +1030,11 @@ msgstr "Ställer in rörledningen till NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Frigör rörledning ...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Internt GStreamer-fel: tillståndsändring misslyckades."
+
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "FRIGÖR rörledning...\n"
-
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Fick meddelande från element \"%s\" (%s): "
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "ursprunglig plats för filen som en URI"

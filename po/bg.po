@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.19.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2008-07-21 11:08+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -127,8 +127,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Вътрешна грешка на GStreamer: кодът не е реализиран."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Вътрешна грешка на GStreamer: неуспех при промяната на състоянието."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Вътрешна грешка на GStreamer: проблем в допълването."
@@ -679,6 +681,9 @@ msgstr "Вътрешна грешка на часовника."
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка на потока от данни."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Вътрешен проблем на потока от данни."
 
@@ -844,8 +849,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: елементът на име „%s“ не е открит.\n"
 
-msgid "Got Message #%"
-msgstr ""
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Получено е съобщение от елемента „%s“ (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Получено е съобщение от елемента „%s“ (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Получено е съобщение от елемента „%s“ (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
+msgstr "Получено е съобщение от елемента „%s“ (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -854,6 +872,17 @@ msgstr "Получен е EOS (край на потока) от елемент �
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ОТКРИТ ЕТИКЕТ      : открит към елемент „%s“.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "ОТКРИТ ЕТИКЕТ      : открит към елемент „%s“.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "ОТКРИТ ЕТИКЕТ      : открит към елемент „%s“.\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -990,11 +1019,11 @@ msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Вътрешна грешка на GStreamer: неуспех при промяната на състоянието."
+
 #~ msgid "original location of file as a URI"
 #~ msgstr "първоначално местоположение като адрес"
-
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Получено е съобщение от елемента „%s“ (%s): "
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "ОСВОБОЖДАВАНЕ на конвейера…\n"

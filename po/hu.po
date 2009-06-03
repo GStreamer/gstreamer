@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2009-04-17 23:54+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -123,8 +123,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Belső GStreamer hiba: a kód nincs megvalósítva."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Belső GStreamer hiba: az állapotváltás meghiúsult."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Belső GStreamer hiba: kitöltési probléma."
@@ -682,6 +684,9 @@ msgstr "Belső órahiba."
 msgid "Internal data flow error."
 msgstr "Belső adatfolyam-hiba."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Belső adatfolyam-probléma."
 
@@ -844,7 +849,20 @@ msgstr "HIBA: nem elemezhető a(z) %d. parancssori argumentum: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "FIGYELMEZTETÉS: a(z) „%s” nevű elem nem található.\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "EOS érkezett a következő elemtől: „%s”.\n"
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
 msgstr "Üzenet érkezett: #%"
 
 #, c-format
@@ -854,6 +872,17 @@ msgstr "EOS érkezett a következő elemtől: „%s”.\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” elem által.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” elem által.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” elem által.\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -983,3 +1012,6 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
+
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Belső GStreamer hiba: az állapotváltás meghiúsult."

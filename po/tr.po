@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -126,10 +126,10 @@ msgid "Internal GStreamer error: code not implemented."
 msgstr ""
 "Dahili GStreamer hatası: kod tamamlanmamış.  Hata bildiriminde bulunun."
 
-#, fuzzy
-msgid "Internal GStreamer error: state change failed."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
 msgstr ""
-"Dahili GStreamer hatası: durum değiştirilemedi.  Hata bildiriminde bulunun."
 
 #, fuzzy
 msgid "Internal GStreamer error: pad problem."
@@ -700,6 +700,9 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr ""
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -861,7 +864,20 @@ msgstr "HATA: komut satırı argümanı %d ayrıştırılamadı: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "UYARI: '%s' isimli öğe bulunamadı.\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "HATA: %s öğesinden: %s\n"
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u (%s): "
 msgstr ""
 
 #, fuzzy, c-format
@@ -871,6 +887,17 @@ msgstr "HATA: %s öğesinden: %s\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -1002,6 +1029,12 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "BORUHATTI çalıştırılıyor ...\n"
+
+#, fuzzy
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr ""
+#~ "Dahili GStreamer hatası: durum değiştirilemedi.  Hata bildiriminde "
+#~ "bulunun."
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Hızlandırılmış CPU işlemlerini kapat"

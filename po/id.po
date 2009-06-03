@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2009-04-18 20:31+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -122,8 +122,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Galat GStreamer internal: kode belum diimplementasikan."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Galat GStreamer internal: mengubah kondisi gagal."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Galat GStreamer internal: masalah landasan."
@@ -682,6 +684,9 @@ msgstr "Galat jam internal."
 msgid "Internal data flow error."
 msgstr "Galat aliran data internal."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Masalah aliran data internal."
 
@@ -843,7 +848,20 @@ msgstr "GALAT: tak dapat menguraikan argumen baris perintah %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "GALAT: elemen yang dinamakan '%s' tak ditemukan.\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Mendapat Pesan dari elemen \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Mendapat Pesan dari elemen \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Mendapat Pesan dari elemen \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
 msgstr "Dapat Pesan #%"
 
 #, c-format
@@ -853,6 +871,17 @@ msgstr "Mendapat EOS dari elemen \"%s\".\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -983,11 +1012,11 @@ msgstr "Mengatur baris pipa ke KOSONG ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Membebaskan baris pipa ...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Galat GStreamer internal: mengubah kondisi gagal."
+
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "MEMBEBASKAN baris pipa...\n"
-
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Mendapat Pesan dari elemen \"%s\" (%s): "
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "lokasi asli berkas dalam bentuk URI"

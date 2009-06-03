@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2009-02-12 14:17+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -125,8 +125,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Внутренняя ошибка GStreamer: функция не реализована."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Внутренняя ошибка GStreamer: не удалось сменить состояние."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Внутренняя ошибка GStreamer: проблема с контактным гнездом."
@@ -685,6 +687,9 @@ msgstr "Внутренняя ошибка синхронизации."
 msgid "Internal data flow error."
 msgstr "Внутренняя ошибка передачи данных."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Внутренняя проблема передачи данных."
 
@@ -851,7 +856,20 @@ msgstr "ОШИБКА: ошибка обработки аргумента ком�
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: элемент с именем «%s» не найден.\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Получено сообщение от элемента «%s» (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Получено сообщение от элемента «%s» (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Получено сообщение от элемента «%s» (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
 msgstr "Получено сообщение #%"
 
 #, c-format
@@ -861,6 +879,17 @@ msgstr "Получен маркер EOS («конец потока») от эл�
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "НАЙДЕН ТЕГ: найден по элементу «%s».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "НАЙДЕН ТЕГ: найден по элементу «%s».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "НАЙДЕН ТЕГ: найден по элементу «%s».\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -994,14 +1023,14 @@ msgstr "Установка конвейера в состояние NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Установка конвейера в состояние NULL...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Внутренняя ошибка GStreamer: не удалось сменить состояние."
+
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "Освобождение конвейера...\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "оригинальное расположение файла в виде URI"
-
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Получено сообщение от элемента «%s» (%s): "
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Отключить специфические команды процессора"

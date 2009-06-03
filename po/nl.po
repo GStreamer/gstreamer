@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2009-05-04 13:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -129,8 +129,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Interne GStreamer-fout: code niet geïmplementeerd."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Interne GStreamer-fout: toestandsverandering mislukt."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Interne GStreamer-fout: padprobleem."
@@ -685,6 +687,9 @@ msgstr "Interne fout met de klok."
 msgid "Internal data flow error."
 msgstr "Interne fout met gegevensdoorvoer."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Intern probleem met gegevensdoorvoer."
 
@@ -852,7 +857,20 @@ msgstr "FOUT: kon argument %d op opdrachtregel niet verwerken: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Einde-stroom ontvangen van element \"%s\".\n"
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
 msgstr "Bericht #% ontvangen"
 
 #, c-format
@@ -862,6 +880,17 @@ msgstr "Einde-stroom ontvangen van element \"%s\".\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -991,3 +1020,6 @@ msgstr "Pijplijn gezet op NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Pijplijn wordt vrijgemaakt ...\n"
+
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Interne GStreamer-fout: toestandsverandering mislukt."

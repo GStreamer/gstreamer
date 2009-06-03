@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2007-11-02 15:43+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -114,7 +114,9 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr ""
 
-msgid "Internal GStreamer error: state change failed."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
 msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
@@ -669,6 +671,9 @@ msgstr "Feil i intern klokke"
 msgid "Internal data flow error."
 msgstr ""
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -827,8 +832,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr ""
 
-msgid "Got Message #%"
-msgstr ""
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "FEIL: fra element %s: %s\n"
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "FEIL: fra element %s: %s\n"
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "FEIL: fra element %s: %s\n"
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
+msgstr "FEIL: fra element %s: %s\n"
 
 #, fuzzy, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -836,6 +854,17 @@ msgstr "FEIL: fra element %s: %s\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr ""
+
+msgid "FOUND TAG\n"
 msgstr ""
 
 #, c-format
@@ -968,7 +997,3 @@ msgstr "FRIGJØR rør...\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "opprinnelig lokasjon for filen som en URI"
-
-#, fuzzy
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "FEIL: fra element %s: %s\n"

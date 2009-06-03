@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -168,9 +168,10 @@ msgstr "Kuri Kugenera... Ikosa ITEGEKONGENGA Kuri iyi Ikosa IDOSIYE a"
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Ikosa ITEGEKONGENGA OYA Idosiye a"
 
-#, fuzzy
-msgid "Internal GStreamer error: state change failed."
-msgstr "Ikosa Leta Guhindura>> Byanze Idosiye a"
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 #, fuzzy
 msgid "Internal GStreamer error: pad problem."
@@ -849,6 +850,9 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr ""
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -1026,8 +1030,21 @@ msgstr "OYA Komandi: Umurongo"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "Ikigize: OYA Byabonetse"
 
-msgid "Got Message #%"
-msgstr ""
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Bivuye Ikigize:"
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Bivuye Ikigize:"
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Bivuye Ikigize:"
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
+msgstr "Bivuye Ikigize:"
 
 #, fuzzy, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -1036,6 +1053,17 @@ msgstr "Bivuye Ikigize:"
 #, fuzzy, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "Byabonetse ku Ikigize:"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "Byabonetse ku Ikigize:"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "Byabonetse ku Ikigize:"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -1177,8 +1205,8 @@ msgid "Freeing pipeline ...\n"
 msgstr ""
 
 #, fuzzy
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Bivuye Ikigize:"
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Ikosa Leta Guhindura>> Byanze Idosiye a"
 
 #, fuzzy
 #~ msgid "original location of file as a URI"

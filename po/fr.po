@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2008-09-21 19:05+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -128,8 +128,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Erreur interne de GStreamer : code non implémenté."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Erreur interne de GStreamer : le changement d'état a échoué."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Erreur interne de GStreamer : problème de remplissage."
@@ -687,6 +689,9 @@ msgstr "Erreur d'horloge interne."
 msgid "Internal data flow error."
 msgstr "Erreur interne de flux de données."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Problème interne de flux de données."
 
@@ -857,8 +862,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVERTISSEMENT : l'élément nommé « %s » est introuvable.\n"
 
-msgid "Got Message #%"
-msgstr ""
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Message reçu de l'élément « %s » (%s) : "
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Message reçu de l'élément « %s » (%s) : "
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Message reçu de l'élément « %s » (%s) : "
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
+msgstr "Message reçu de l'élément « %s » (%s) : "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -867,6 +885,17 @@ msgstr "EOS reçu de l'élément « %s ».\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "BALISE TROUVÉE  : découverte par l'élément « %s ».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "BALISE TROUVÉE  : découverte par l'élément « %s ».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "BALISE TROUVÉE  : découverte par l'élément « %s ».\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -1001,8 +1030,8 @@ msgstr "Définition du pipeline à NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Définition du pipeline à NULL...\n"
 
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Message reçu de l'élément « %s » (%s) : "
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Erreur interne de GStreamer : le changement d'état a échoué."
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "Libération du pipeline (FREE)...\n"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2007-09-07 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -123,8 +123,10 @@ msgstr "Розробники GStreamer не призначили код для �
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Внутрішня помилка GStreamer: код не реалізований."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Внутрішня помилка GStreamer: помилка зміни стану."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Внутрішня помилка GStreamer: проблема наповнення."
@@ -677,6 +679,9 @@ msgstr "Помилка внутрішнього потоку даних."
 msgid "Internal data flow error."
 msgstr "Помилка внутрішнього потоку даних."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Помилка внутрішнього потоку даних."
 
@@ -845,8 +850,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПОПЕРЕДЖЕННЯ: елемент з назвою \"%s\" не існує.\n"
 
-msgid "Got Message #%"
-msgstr ""
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Отримано повідомлення від елементу \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Отримано повідомлення від елементу \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Отримано повідомлення від елементу \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
+msgstr "Отримано повідомлення від елементу \"%s\" (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -855,6 +873,17 @@ msgstr "Отримано ознаку кінця рядка від елемен�
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ЗНАЙДЕНО ТЕГ  : знайдено у елементі \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "ЗНАЙДЕНО ТЕГ  : знайдено у елементі \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "ЗНАЙДЕНО ТЕГ  : знайдено у елементі \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -988,11 +1017,11 @@ msgstr "Канал переводиться у стан NULL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Канал переводиться у стан NULL ...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Внутрішня помилка GStreamer: помилка зміни стану."
+
 #~ msgid "original location of file as a URI"
 #~ msgstr "оригінальне розташування файлу у вигляді URI"
-
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Отримано повідомлення від елементу \"%s\" (%s): "
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "канал ЗВІЛЬНЕННЯ...\n"

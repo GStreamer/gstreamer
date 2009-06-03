@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2009-04-16 21:51-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -136,8 +136,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Erro interno no GStreamer: código não implementado."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Erro interno no GStreamer: falha ao alterar estado."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Erro interno no GStreamer: problema no Pad."
@@ -699,6 +701,9 @@ msgstr "Erro interno no temporizador."
 msgid "Internal data flow error."
 msgstr "Erro interno no fluxo de dados."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Problema interno no fluxo de dados."
 
@@ -864,7 +869,20 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVISO: o elemento com o nome \"%s\" não foi encontrado.\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Obtida mensagem do elemento \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Obtida mensagem do elemento \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Obtida mensagem do elemento \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
 msgstr "Obtida mensagem #%"
 
 #, c-format
@@ -874,6 +892,17 @@ msgstr "Obtido o final do fluxo do elemento \"%s\".\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ETIQ. ENCONTR. : encontrada pelo elemento \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "ETIQ. ENCONTR. : encontrada pelo elemento \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "ETIQ. ENCONTR. : encontrada pelo elemento \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -1013,11 +1042,11 @@ msgstr "Definindo a fila de processamento para NULO...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a fila de processamento...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Erro interno no GStreamer: falha ao alterar estado."
+
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "LIBERANDO a fila de processamento...\n"
-
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Obtida mensagem do elemento \"%s\" (%s): "
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "local original do arquivo como um URI"

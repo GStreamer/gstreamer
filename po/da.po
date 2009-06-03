@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.12\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2007-03-28 00:09+0200\n"
 "Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -124,8 +124,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Intern GStreamer-fejl: kode ikke implementeret."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Intern GStreamer fejl: tilstandsændring mislykkedes."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Intern GStreamer fejl: kontaktproblem."
@@ -682,6 +684,9 @@ msgstr "Intern datastrømsfejl."
 msgid "Internal data flow error."
 msgstr "Intern datastrømsfejl."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Intern datastrømsproblem."
 
@@ -845,8 +850,21 @@ msgstr "FEJL: kunne ikke tolke kommandolinieargumenetet %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ADVARSEL: elementet ved navn '%s' blev ikke fundet.\n"
 
-msgid "Got Message #%"
-msgstr ""
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Modtog besked fra element \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Modtog besked fra element \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Modtog besked fra element \"%s\" (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
+msgstr "Modtog besked fra element \"%s\" (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -855,6 +873,17 @@ msgstr "Modtog EOS fra element \"%s\".\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "FUNDET MÆRKAT       : fundet af element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "FUNDET MÆRKAT       : fundet af element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "FUNDET MÆRKAT       : fundet af element \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -988,11 +1017,11 @@ msgstr "Rørledning sættes til NUL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Rørledning sættes til NUL ...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Intern GStreamer fejl: tilstandsændring mislykkedes."
+
 #~ msgid "original location of file as a URI"
 #~ msgstr "oprindeligt sted for en fil som en URI"
-
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Modtog besked fra element \"%s\" (%s): "
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "Rørledning renses ...\n"

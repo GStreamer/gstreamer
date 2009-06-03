@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2009-04-16 21:46+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -124,8 +124,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Błąd wewnętrzny GStreamera: kod nie zaimplementowany."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "Błąd wewnętrzny GStreamera: zmiana stanu nie powiodła się."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Błąd wewnętrzny GStreamera: problem z wyrównaniem."
@@ -682,6 +684,9 @@ msgstr "Wewnętrzny błąd zegara."
 msgid "Internal data flow error."
 msgstr "Wewnętrzny błąd przepływu danych."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Wewnętrzny problem przepływu danych."
 
@@ -848,7 +853,20 @@ msgstr "BŁĄD: nie udało się przeanalizować argumentu %d linii poleceń: %s.
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "UWAGA: nie znaleziono elementu o nazwie '%s'.\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Otrzymano EOS od elementu \"%s\".\n"
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
 msgstr "Odebrano komunikat #%"
 
 #, c-format
@@ -858,6 +876,17 @@ msgstr "Otrzymano EOS od elementu \"%s\".\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ZNACZNIK       : znaleziony przez element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "ZNACZNIK       : znaleziony przez element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "ZNACZNIK       : znaleziony przez element \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -987,3 +1016,6 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
+
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Błąd wewnętrzny GStreamera: zmiana stanu nie powiodła się."

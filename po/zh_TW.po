@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -123,9 +123,10 @@ msgstr "GStreamer 開發人員未用任何錯誤碼判定這類錯誤。請匯�
 msgid "Internal GStreamer error: code not implemented."
 msgstr "GStreamer 內部錯誤：未完成編程。請匯報錯誤。"
 
-#, fuzzy
-msgid "Internal GStreamer error: state change failed."
-msgstr "GStreamer 內部錯誤：無法更改狀態。請匯報錯誤。"
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 #, fuzzy
 msgid "Internal GStreamer error: pad problem."
@@ -687,6 +688,9 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr ""
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -844,7 +848,20 @@ msgstr "錯誤：無法解析指令的第 %d 個參數：%s。\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr ""
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "錯誤：來自 %s 元件：%s\n"
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u (%s): "
 msgstr ""
 
 #, fuzzy, c-format
@@ -853,6 +870,17 @@ msgstr "錯誤：來自 %s 元件：%s\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr ""
+
+msgid "FOUND TAG\n"
 msgstr ""
 
 #, c-format
@@ -985,6 +1013,10 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "執行管線 ...\n"
+
+#, fuzzy
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "GStreamer 內部錯誤：無法更改狀態。請匯報錯誤。"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "關閉 CPU 優化功能"

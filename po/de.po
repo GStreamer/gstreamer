@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2004-06-05 09:32+0100\n"
 "Last-Translator: Roland Illig <roland.illig@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
@@ -130,11 +130,10 @@ msgstr ""
 "Interner GStreamer-Fehler: Code nicht implementiert. Bitte schreiben Sie "
 "einen Fehlerbericht."
 
-#, fuzzy
-msgid "Internal GStreamer error: state change failed."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
 msgstr ""
-"Interner GStreamer-Fehler: Zustandswechsel fehlgeschlagen. Bitte schreiben "
-"Sie einen Fehlerbericht."
 
 #, fuzzy
 msgid "Internal GStreamer error: pad problem."
@@ -730,6 +729,9 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr ""
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -893,7 +895,20 @@ msgstr "FEHLER: Konnte das Kommandozeilenargument %d nicht parsen: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WARNUNG: Element namens »%s« nicht gefunden.\n"
 
-msgid "Got Message #%"
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "FEHLER: Von Element %s: %s\n"
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u (%s): "
 msgstr ""
 
 #, fuzzy, c-format
@@ -903,6 +918,17 @@ msgstr "FEHLER: Von Element %s: %s\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "KENNZEICHEN GEFUNDEN: Von Element »%s« gefunden.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "KENNZEICHEN GEFUNDEN: Von Element »%s« gefunden.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "KENNZEICHEN GEFUNDEN: Von Element »%s« gefunden.\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -1035,6 +1061,12 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "FÜHRE Leitung AUS ...\n"
+
+#, fuzzy
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr ""
+#~ "Interner GStreamer-Fehler: Zustandswechsel fehlgeschlagen. Bitte "
+#~ "schreiben Sie einen Fehlerbericht."
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Beschleunigte CPU-Befehle deaktivieren"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2008-09-25 09:55+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -131,10 +131,10 @@ msgstr ""
 "Vnútorná chyba GStreamer: kód nebol implementovaný. Ohláste prosím túto "
 "chybu."
 
-msgid "Internal GStreamer error: state change failed."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
 msgstr ""
-"Vnútorná chyba GStreamer: nepodarilo sa zmeniť stav. Ohláste prosím túto "
-"chybu."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr ""
@@ -702,6 +702,9 @@ msgstr "Vnútorná chyba časovača."
 msgid "Internal data flow error."
 msgstr "Vnútorná chyba toku údajov."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Vnútorný problém v toku údajov."
 
@@ -868,8 +871,21 @@ msgstr "CHYBA: nepodarilo sa analyzovať argument príkazového riadku %d: %s.\n
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VAROVANIE: prvok s názvom '%s' sa nenašiel.\n"
 
-msgid "Got Message #%"
-msgstr ""
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Dostal som správu od prvku \"%s\" (%s):"
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Dostal som správu od prvku \"%s\" (%s):"
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Dostal som správu od prvku \"%s\" (%s):"
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
+msgstr "Dostal som správu od prvku \"%s\" (%s):"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -878,6 +894,17 @@ msgstr "Dostal som EOS od prvku \"%s\".\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "NAŠLA SA ZNAČKA    : našiel ju prvok \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "NAŠLA SA ZNAČKA    : našiel ju prvok \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "NAŠLA SA ZNAČKA    : našiel ju prvok \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -1015,8 +1042,10 @@ msgstr "Nastavujem rúru na NULOVÚ ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Nastavujem rúru na NULOVÚ ...\n"
 
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Dostal som správu od prvku \"%s\" (%s):"
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr ""
+#~ "Vnútorná chyba GStreamer: nepodarilo sa zmeniť stav. Ohláste prosím túto "
+#~ "chybu."
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "UVOĽŇUJEM rúru ...\n"

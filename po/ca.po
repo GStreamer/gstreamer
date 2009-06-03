@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-12 01:43+0100\n"
+"POT-Creation-Date: 2009-06-04 00:57+0100\n"
 "PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -126,8 +126,10 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "S'ha produït un error intern de GStreamer: codi no implementat."
 
-msgid "Internal GStreamer error: state change failed."
-msgstr "S'ha produït un error intern de GStreamer: ha fallat el canvi d'estat."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
 msgstr ""
@@ -689,6 +691,9 @@ msgstr "S'ha produït un error intern de flux de dades."
 msgid "Internal data flow error."
 msgstr "S'ha produït un error intern de flux de dades."
 
+msgid "A lot of buffers are dropped."
+msgstr ""
+
 msgid "Internal data flow problem."
 msgstr "Hi ha un problema intern de flux de dades."
 
@@ -851,8 +856,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVÍS: no s'ha trobat l'element anomenat «%s».\n"
 
-msgid "Got Message #%"
-msgstr ""
+#, fuzzy, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "S'ha rebut un missatge de l'element «%s»: (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "S'ha rebut un missatge de l'element «%s»: (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "S'ha rebut un missatge de l'element «%s»: (%s): "
+
+#, fuzzy, c-format
+msgid "Got message #%u (%s): "
+msgstr "S'ha rebut un missatge de l'element «%s»: (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -861,6 +879,17 @@ msgstr "S'ha obtingut un final del flux de l'element «%s».\n"
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "MARCADOR TROBAT: trobat per l'element «%s».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "MARCADOR TROBAT: trobat per l'element «%s».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "MARCADOR TROBAT: trobat per l'element «%s».\n"
+
+msgid "FOUND TAG\n"
+msgstr ""
 
 #, c-format
 msgid ""
@@ -997,14 +1026,15 @@ msgstr "S'està establint el conducte a NUL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "S'està establint el conducte a NUL ...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr ""
+#~ "S'ha produït un error intern de GStreamer: ha fallat el canvi d'estat."
+
 #~ msgid "original location of file as a URI"
 #~ msgstr "ubicació original del fitxer com una URI"
 
 #~ msgid "Could not open file \"%s\" for reading: %s."
 #~ msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura: %s."
-
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "S'ha rebut un missatge de l'element «%s»: (%s): "
 
 #~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 #~ msgstr "L'element «%s» ha canviat de REPRODUINT a PAUSAT, s'està sortint.\n"
