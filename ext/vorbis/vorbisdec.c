@@ -721,18 +721,18 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
   gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
       GST_TAG_ENCODER_VERSION, vd->vi.version,
       GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
-  if (vd->vi.bitrate_nominal > 0) {
+  if (vd->vi.bitrate_nominal > 0 && vd->vi.bitrate_nominal <= 0x7FFFFFFF) {
     gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
     bitrate = vd->vi.bitrate_nominal;
   }
-  if (vd->vi.bitrate_upper > 0) {
+  if (vd->vi.bitrate_upper > 0 && vd->vi.bitrate_upper <= 0x7FFFFFFF) {
     gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
     if (!bitrate)
       bitrate = vd->vi.bitrate_upper;
   }
-  if (vd->vi.bitrate_lower > 0) {
+  if (vd->vi.bitrate_lower > 0 && vd->vi.bitrate_lower <= 0x7FFFFFFF) {
     gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
     if (!bitrate)
