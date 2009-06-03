@@ -1366,7 +1366,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
 
 /* returns the current time of the sink ringbuffer */
 static GstClockTime
-gst_pulse_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
+gst_pulsesink_get_time (GstClock * clock, GstBaseAudioSink * sink)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
@@ -1434,7 +1434,7 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
     gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
   GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
       gst_audio_clock_new ("GstPulseSinkClock",
-      (GstAudioClockGetTimeFunc) gst_pulse_sink_get_time, pulsesink);
+      (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink);
 }
 
 static void
