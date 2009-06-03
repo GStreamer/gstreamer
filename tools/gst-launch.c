@@ -406,22 +406,32 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
     /* check if we need to dump messages to the console */
     if (messages) {
+      GstObject *src_obj;
       const GstStructure *s;
       guint32 seqnum;
-      gchar *src_name;
 
       seqnum = gst_message_get_seqnum (message);
 
       s = gst_message_get_structure (message);
 
-      src_name =
-          GST_MESSAGE_SRC (message) ?
-          gst_object_get_path_string (GST_MESSAGE_SRC (message)) : NULL;
+      src_obj = GST_MESSAGE_SRC (message);
 
-      g_print (_("Got Message #%u from object \"%s\" (%s): "), (guint) seqnum,
-          GST_STR_NULL (src_name), GST_MESSAGE_TYPE_NAME (message));
-
-      g_free (src_name);
+      if (GST_IS_ELEMENT (src_obj)) {
+        g_print (_("Got message #%u from element \"%s\" (%s): "),
+            (guint) seqnum, GST_ELEMENT_NAME (src_obj),
+            GST_MESSAGE_TYPE_NAME (message));
+      } else if (GST_IS_PAD (src_obj)) {
+        g_print (_("Got message #%u from pad \"%s:%s\" (%s): "),
+            (guint) seqnum, GST_DEBUG_PAD_NAME (src_obj),
+            GST_MESSAGE_TYPE_NAME (message));
+      } else if (GST_IS_OBJECT (src_obj)) {
+        g_print (_("Got message #%u from object \"%s\" (%s): "),
+            (guint) seqnum, GST_OBJECT_NAME (src_obj),
+            GST_MESSAGE_TYPE_NAME (message));
+      } else {
+        g_print (_("Got message #%u (%s): "), (guint) seqnum,
+            GST_MESSAGE_TYPE_NAME (message));
+      }
 
       if (s) {
         gchar *sstr;
@@ -455,25 +465,31 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 #endif
         break;
       case GST_MESSAGE_EOS:{
-        gchar *src_name = GST_MESSAGE_SRC (message) ?
-            gst_object_get_path_string (GST_MESSAGE_SRC (message)) : NULL;
         waiting_eos = FALSE;
-        g_print (_("Got EOS from object \"%s\".\n"), GST_STR_NULL (src_name));
-        g_free (src_name);
+        g_print (_("Got EOS from element \"%s\".\n"),
+            GST_MESSAGE_SRC_NAME (message));
         goto exit;
       }
       case GST_MESSAGE_TAG:
         if (tags) {
           GstTagList *tags;
-          gchar *src_name = GST_MESSAGE_SRC (message) ?
-              gst_object_get_path_string (GST_MESSAGE_SRC (message)) : NULL;
+
+          if (GST_IS_ELEMENT (GST_MESSAGE_SRC (message))) {
+            g_print (_("FOUND TAG      : found by element \"%s\".\n"),
+                GST_MESSAGE_SRC_NAME (message));
+          } else if (GST_IS_PAD (GST_MESSAGE_SRC (message))) {
+            g_print (_("FOUND TAG      : found by pad \"%s:%s\".\n"),
+                GST_DEBUG_PAD_NAME (GST_MESSAGE_SRC (message)));
+          } else if (GST_IS_OBJECT (GST_MESSAGE_SRC (message))) {
+            g_print (_("FOUND TAG      : found by object \"%s\".\n"),
+                GST_MESSAGE_SRC_NAME (message));
+          } else {
+            g_print (_("FOUND TAG\n"));
+          }
 
           gst_message_parse_tag (message, &tags);
-          g_print (_("FOUND TAG      : found by object \"%s\".\n"),
-              GST_STR_NULL (src_name));
           gst_tag_list_foreach (tags, print_tag, NULL);
           gst_tag_list_free (tags);
-          g_free (src_name);
         }
         break;
       case GST_MESSAGE_INFO:{
