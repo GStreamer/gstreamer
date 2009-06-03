@@ -143,7 +143,8 @@ _gst_core_errors_init (void)
   TABLE (t, CORE, NOT_IMPLEMENTED,
       N_("Internal GStreamer error: code not implemented." FILE_A_BUG));
   TABLE (t, CORE, STATE_CHANGE,
-      N_("Internal GStreamer error: state change failed." FILE_A_BUG));
+      N_("GStreamer error: state change failed and some element failed to "
+          "post a proper error message with the reason for the failure."));
   TABLE (t, CORE, PAD, N_("Internal GStreamer error: pad problem." FILE_A_BUG));
   TABLE (t, CORE, THREAD,
       N_("Internal GStreamer error: thread problem." FILE_A_BUG));
