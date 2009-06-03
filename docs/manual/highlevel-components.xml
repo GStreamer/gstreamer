@@ -175,6 +175,9 @@ main (gint   argc,
       the commandline, using the command <quote>gst-launch-0.10 playbin
       uri=file:///path/to/file</quote>.
     </para>
+    <para>
+      New applications should use playbin2 instead of the old playbin.
+    </para>
   </sect1>
 
   <sect1 id="section-components-decodebin">
@@ -362,8 +365,16 @@ main (gint   argc,
     </itemizedlist>
     <para>
       Decodebin can be easily tested on the commandline, e.g. by using the
-      command <command>gst-launch-0.8 filesrc location=file.ogg ! decodebin
-      ! audioconvert ! alsasink</command>.
+      command <command>gst-launch-0.10 filesrc location=file.ogg ! decodebin
+      ! audioconvert ! audioresample ! autoaudiosink</command>.
+    </para>
+    <para>
+      New applications should use decodebin2 instead of the old decodebin.
+    </para>
+    <para>
+      The uridecodebin element is very similar to decodebin2, only that it
+      automatically plugs a source plugin based on the protocol of the URI
+      given.
     </para>
   </sect1>
 
