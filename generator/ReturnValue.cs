@@ -110,7 +110,9 @@ namespace GtkSharp.Generation {
 			get {
 				if (IGen == null)
 					return String.Empty;
-				return IGen.ToNativeReturnType + (is_array || is_null_term ? "[]" : String.Empty);
+				else if (is_null_term)
+					return "IntPtr";
+				return IGen.ToNativeReturnType + (is_array ? "[]" : String.Empty);
 			}
 		}
 
@@ -128,7 +130,7 @@ namespace GtkSharp.Generation {
 			} else if (IGen is HandleBase)
 				return ((HandleBase)IGen).FromNative (var, owned);
 			else if (is_null_term)
-				return String.Format ("GLib.Marshaller.NullTermPtrToStringArray ({0}, {1})", var, owned ? "true" : "false");
+				return String.Format ("Gst.Marshaller.NullTermPtrToStringArray ({0}, {1})", var, owned ? "true" : "false");
 			else
 				return IGen.FromNativeReturn (var);
 		}
@@ -142,7 +144,7 @@ namespace GtkSharp.Generation {
 				string args = ", typeof (" + ElementType + "), " + (owned ? "true" : "false") + ", " + (elements_owned ? "true" : "false");
 				var = "new " + IGen.QualifiedName + "(" + var + args + ")";
 			} else if (is_null_term)
-				return String.Format ("GLib.Marshaller.StringArrayToNullTermPointer ({0})", var);
+				return String.Format ("Gst.Marshaller.StringArrayToNullTermPointer ({0})", var);
 
 			if (IGen is IManualMarshaler)
 				return (IGen as IManualMarshaler).AllocNative (var);

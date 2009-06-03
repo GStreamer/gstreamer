@@ -239,7 +239,7 @@ namespace Gst {
         query = new SignalQuery ();
 
         query.signal_id = signal_id;
-        query.signal_name = Marshaller.Utf8PtrToString (q.signal_name);
+        query.signal_name = GLib.Marshaller.Utf8PtrToString (q.signal_name);
         query.itype = new GType (q.itype);
         query.signal_flags = q.signal_flags;
         query.return_type = new GType (q.return_type);
