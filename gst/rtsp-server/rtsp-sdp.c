@@ -63,9 +63,19 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
     GString *fmtp;
 
     stream = gst_rtsp_media_get_stream (media, i);
-    gst_sdp_media_new (&smedia);
+
+    if (stream->caps == NULL) {
+      g_warning ("ignoring stream %d without media type", i);
+      continue;
+    }
 
     s = gst_caps_get_structure (stream->caps, 0);
+    if (s == NULL) {
+      g_warning ("ignoring stream %d without media type", i);
+      continue;
+    }
+
+    gst_sdp_media_new (&smedia);
 
     /* get media type and payload for the m= line */
     caps_str = gst_structure_get_string (s, "media");
