@@ -33,28 +33,6 @@ public void RemoveBufferProbe (ulong handler_id) {
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
-static extern int gst_pad_alloc_buffer (IntPtr raw, ulong offset, int size, IntPtr caps, out IntPtr buf);
-
-public Gst.FlowReturn AllocBuffer (ulong offset, int size, Gst.Caps caps, out Gst.Buffer buf) {
-  IntPtr native_buf;
-  int raw_ret = gst_pad_alloc_buffer (Handle, offset, size, caps == null ? IntPtr.Zero : caps.Handle, out native_buf);
-  Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
-  buf = native_buf == IntPtr.Zero ? null : (Gst.Buffer) Gst.MiniObject.GetObject (native_buf, true);
-  return ret;
-}
-
-[DllImport("libgstreamer-0.10.dll") ]
-static extern int gst_pad_alloc_buffer_and_set_caps (IntPtr raw, ulong offset, int size, IntPtr caps, out IntPtr buf);
-
-public Gst.FlowReturn AllocBufferAndSetCaps (ulong offset, int size, Gst.Caps caps, out Gst.Buffer buf) {
-  IntPtr native_buf;
-  int raw_ret = gst_pad_alloc_buffer_and_set_caps (Handle, offset, size, caps == null ? IntPtr.Zero : caps.Handle, out native_buf);
-  Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
-  buf = native_buf == IntPtr.Zero ? null : (Gst.Buffer) Gst.MiniObject.GetObject (native_buf, true);
-  return ret;
-}
-
-[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_bufferalloc_function (IntPtr raw, GstSharp.PadBufferAllocFunctionNative bufalloc);
 
 public Gst.PadBufferAllocFunction BufferAllocFunction {

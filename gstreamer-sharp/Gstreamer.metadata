@@ -550,9 +550,6 @@
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_remove_data_probe']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_remove_event_probe']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/constructor[@cname='gst_pad_new_from_static_template']" name="hidden">1</attr>
-  <!-- FIXME: https://bugzilla.novell.com/show_bug.cgi?id=498498 -->
-  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer_and_set_caps']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_pull_range']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_alloc_buffer']/parameters/parameter[@name='buf']" name="owned">true</attr>
