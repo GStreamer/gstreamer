@@ -2108,6 +2108,10 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
       gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
           playbin->video_sink);
     }
+    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_TEXT,
+        playbin->text_sink);
+    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_SUBPIC,
+        playbin->subpic_sink);
     GST_SOURCE_GROUP_UNLOCK (group);
 
     GST_LOG_OBJECT (playbin, "reconfigure sink");
