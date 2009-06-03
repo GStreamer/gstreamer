@@ -204,7 +204,7 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
   SetProp (priv->internal_win_id, "gl_window_parent_id", (HWND) id);
   SetProp ((HWND) id, "gl_window_id", priv->internal_win_id);
   SetProp ((HWND) id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
-  SetWindowLongPtr ((HWND) id, GWL_WNDPROC, (DWORD) (guint64) sub_class_proc);
+  SetWindowLongPtr ((HWND) id, GWL_WNDPROC, (LONG_PTR) sub_class_proc);
 
   SetWindowLongPtr (priv->internal_win_id, GWL_STYLE, WS_CHILD | WS_MAXIMIZE);
   SetParent (priv->internal_win_id, (HWND) id);
