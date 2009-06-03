@@ -1718,11 +1718,11 @@ gst_pulsesink_change_title (GstPulseSink * psink, const gchar * t)
 
   pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
 
-  g_free (pbuf->stream_name);
-  pbuf->stream_name = g_strdup (t);
-
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
+
+  g_free (pbuf->stream_name);
+  pbuf->stream_name = g_strdup (t);
 
   if (!(o = pa_stream_set_name (pbuf->stream, pbuf->stream_name, NULL, NULL)))
     goto name_failed;
