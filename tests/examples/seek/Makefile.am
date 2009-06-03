@@ -2,7 +2,7 @@ if HAVE_GTK_X11
 GTK_EXAMPLES=seek scrubby
 endif
 
-examples = $(GTK_EXAMPLES)
+examples = $(GTK_EXAMPLES) stepping
 
 noinst_PROGRAMS = $(examples)
 
