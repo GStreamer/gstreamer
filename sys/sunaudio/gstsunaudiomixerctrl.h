@@ -1,7 +1,9 @@
 /*
  * GStreamer - SunAudio mixer interface element.
- * Copyright (C) 2005,2006 Sun Microsystems, Inc.,
+ * Copyright (C) 2005,2006,2009 Sun Microsystems, Inc.,
  *               Brian Cameron <brian.cameron@sun.com>
+ * Copyright (C) 2009 Sun Microsystems, Inc.,
+ *               Garrett D'Amore <garrett.damore@sun.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -39,7 +41,6 @@ struct _GstSunAudioMixerCtrl {
   gint                  mixer_fd;
 
   gchar *               device;
-  gint                  recdevs;
 };
 
 GstSunAudioMixerCtrl* gst_sunaudiomixer_ctrl_new          (const gchar *device);
@@ -58,6 +59,12 @@ void                  gst_sunaudiomixer_ctrl_set_record   (GstSunAudioMixerCtrl 
 void                  gst_sunaudiomixer_ctrl_set_mute     (GstSunAudioMixerCtrl * mixer,
                                                              GstMixerTrack * track,
                                                           gboolean mute);
+void                  gst_sunaudiomixer_ctrl_set_option   (GstSunAudioMixerCtrl * mixer,
+							  GstMixerOptions * options,
+							  gchar * value);
+const gchar *         gst_sunaudiomixer_ctrl_get_option   (GstSunAudioMixerCtrl * mixer,
+							  GstMixerOptions * options);
+GstMixerFlags	      gst_sunaudiomixer_ctrl_get_mixer_flags	  (GstSunAudioMixerCtrl *mixer);
 
 #define GST_IMPLEMENT_SUNAUDIO_MIXER_CTRL_METHODS(Type, interface_as_function)  \
 static gboolean                                                                 \
@@ -126,7 +133,41 @@ interface_as_function ## _set_mute (GstMixer * mixer, GstMixerTrack * track,    
                                                                                 \
   gst_sunaudiomixer_ctrl_set_mute (this->mixer, track, mute);                   \
 }                                                                               \
+										\
+static const gchar *								\
+interface_as_function ## _get_option (GstMixer * mixer, GstMixerOptions * opts)	\
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
                                                                                 \
+  g_return_val_if_fail (this != NULL, NULL);					\
+  g_return_val_if_fail (this->mixer != NULL, NULL);				\
+                                                                                \
+  return gst_sunaudiomixer_ctrl_get_option (this->mixer, opts);			\
+}                                                                               \
+\
+static void									\
+interface_as_function ## _set_option (GstMixer * mixer, GstMixerOptions * opts,	\
+    gchar * value)								\
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_if_fail (this != NULL);                                              \
+  g_return_if_fail (this->mixer != NULL);                                       \
+                                                                                \
+  gst_sunaudiomixer_ctrl_set_option (this->mixer, opts, value);			\
+}                                                                               \
+\
+static GstMixerFlags                                                            \
+interface_as_function ## _get_mixer_flags (GstMixer * mixer)                    \
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_val_if_fail (this != NULL, GST_MIXER_FLAG_NONE);                     \
+  g_return_val_if_fail (this->mixer != NULL, GST_MIXER_FLAG_NONE);              \
+                                                                                \
+  return gst_sunaudiomixer_ctrl_get_mixer_flags (this->mixer);			\
+}                                                                               \
+										\
 static void                                                                     \
 interface_as_function ## _interface_init (GstMixerClass * klass)                \
 {                                                                               \
@@ -138,6 +179,9 @@ interface_as_function ## _interface_init (GstMixerClass * klass)                
   klass->get_volume  = interface_as_function ## _get_volume;                    \
   klass->set_mute    = interface_as_function ## _set_mute;                      \
   klass->set_record  = interface_as_function ## _set_record;                    \
+  klass->get_option  = interface_as_function ## _get_option;			\
+  klass->set_option  = interface_as_function ## _set_option;			\
+  klass->get_mixer_flags   = interface_as_function ## _get_mixer_flags;		\
 }
 
 G_END_DECLS

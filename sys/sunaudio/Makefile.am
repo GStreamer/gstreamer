@@ -5,6 +5,7 @@ libgstsunaudio_la_SOURCES = gstsunaudio.c \
                             gstsunaudiomixerctrl.c \
                             gstsunaudiomixer.c \
                             gstsunaudiomixertrack.c \
+                            gstsunaudiomixeroptions.c \
                             gstsunaudiosrc.c
 
 libgstsunaudio_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
@@ -20,5 +21,6 @@ noinst_HEADERS = gstsunaudiosink.h \
                  gstsunaudiomixer.h \
                  gstsunaudiomixerctrl.h \
                  gstsunaudiomixertrack.h \
+                 gstsunaudiomixeroptions.h \
                  gstsunaudiosrc.h
 

@@ -1,7 +1,9 @@
 /*
  * GStreamer
- * Copyright (C) 2005,2008 Sun Microsystems, Inc.,
+ * Copyright (C) 2005,2008, 2009 Sun Microsystems, Inc.,
  *               Brian Cameron <brian.cameron@sun.com>
+ * Copyright (C) 2009 Sun Microsystems, Inc.,
+ *               Garrett D'Amore <garrett.damore@sun.com>
  *
  * gstsunaudiomixer.c: mixer interface implementation for OSS
  *
@@ -59,10 +61,19 @@ gst_sunaudiomixer_track_init (GstSunAudioMixerTrack * track)
 }
 
 GstMixerTrack *
-gst_sunaudiomixer_track_new (GstSunAudioTrackType track_num,
-    gint max_chans, gint flags)
+gst_sunaudiomixer_track_new (GstSunAudioTrackType track_num)
 {
-  const gchar *labels[] = { N_("Volume"), N_("Gain"), N_("Monitor") };
+  const gchar *labels[] = { N_("Volume"),
+    N_("Gain"),
+    N_("Monitor"),
+    N_("Built-in Speaker"),
+    N_("Headphone"),
+    N_("Line Out"),
+    N_("SPDIF Out"),
+    N_("AUX 1 Out"),
+    N_("AUX 2 Out"),
+  };
+
 
   GstSunAudioMixerTrack *sunaudiotrack;
   GstMixerTrack *track;
@@ -84,15 +95,66 @@ gst_sunaudiomixer_track_new (GstSunAudioTrackType track_num,
   }
   g_type_class_unref (klass);
 
-  track = GST_MIXER_TRACK (sunaudiotrack);
-  track->label = g_strdup (_(untranslated_label));
-  track->num_channels = max_chans;
-  track->flags = flags;
-  track->min_volume = 0;
-  track->max_volume = 255;
-  sunaudiotrack->track_num = track_num;
-  sunaudiotrack->gain = (0 & 0xff);
-  sunaudiotrack->balance = AUDIO_MID_BALANCE;
+  switch (track_num) {
+    case GST_SUNAUDIO_TRACK_OUTPUT:
+      /* these are sliders */
+      track = GST_MIXER_TRACK (sunaudiotrack);
+      track->label = g_strdup (_(untranslated_label));
+      track->num_channels = 2;
+      track->flags = GST_MIXER_TRACK_OUTPUT | GST_MIXER_TRACK_WHITELIST |
+          GST_MIXER_TRACK_MASTER;
+      track->min_volume = 0;
+      track->max_volume = 255;
+      sunaudiotrack->track_num = track_num;
+      sunaudiotrack->gain = (0 & 0xff);
+      sunaudiotrack->balance = AUDIO_MID_BALANCE;
+      break;
+    case GST_SUNAUDIO_TRACK_RECORD:
+      /* these are sliders */
+      track = GST_MIXER_TRACK (sunaudiotrack);
+      track->label = g_strdup (_(untranslated_label));
+      track->num_channels = 2;
+      track->flags = GST_MIXER_TRACK_INPUT | GST_MIXER_TRACK_NO_RECORD |
+          GST_MIXER_TRACK_WHITELIST;
+      track->min_volume = 0;
+      track->max_volume = 255;
+      sunaudiotrack->track_num = track_num;
+      sunaudiotrack->gain = (0 & 0xff);
+      sunaudiotrack->balance = AUDIO_MID_BALANCE;
+      break;
+    case GST_SUNAUDIO_TRACK_MONITOR:
+      /* these are sliders */
+      track = GST_MIXER_TRACK (sunaudiotrack);
+      track->label = g_strdup (_(untranslated_label));
+      track->num_channels = 2;
+      track->flags = GST_MIXER_TRACK_INPUT | GST_MIXER_TRACK_NO_RECORD;
+      track->min_volume = 0;
+      track->max_volume = 255;
+      sunaudiotrack->track_num = track_num;
+      sunaudiotrack->gain = (0 & 0xff);
+      sunaudiotrack->balance = AUDIO_MID_BALANCE;
+      break;
+    case GST_SUNAUDIO_TRACK_SPEAKER:
+    case GST_SUNAUDIO_TRACK_HP:
+    case GST_SUNAUDIO_TRACK_LINEOUT:
+    case GST_SUNAUDIO_TRACK_SPDIFOUT:
+    case GST_SUNAUDIO_TRACK_AUX1OUT:
+    case GST_SUNAUDIO_TRACK_AUX2OUT:
+      /* these are switches */
+      track = GST_MIXER_TRACK (sunaudiotrack);
+      track->label = g_strdup (_(untranslated_label));
+      track->num_channels = 0;
+      track->flags = GST_MIXER_TRACK_OUTPUT | GST_MIXER_TRACK_WHITELIST;
+      track->min_volume = 0;
+      track->max_volume = 255;
+      sunaudiotrack->track_num = track_num;
+      sunaudiotrack->gain = (0 & 0xff);
+      sunaudiotrack->balance = AUDIO_MID_BALANCE;
+      break;
+    default:
+      g_warning ("Unknown sun audio track num %d", track_num);
+      track = NULL;
+  }
 
   return track;
 }

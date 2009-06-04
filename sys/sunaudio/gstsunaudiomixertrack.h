@@ -1,7 +1,9 @@
 /*
  * GStreamer SunAudio mixer track implementation
- * Copyright (C) 2005,2006 Sun Microsystems, Inc.,
+ * Copyright (C) 2005,2006,2009 Sun Microsystems, Inc.,
  *               Brian Cameron <brian.cameron@sun.com>
+ * Copyright (C) 2009 Sun Microsystems, Inc.,
+ *               Garrett D'Amore <garrett.damore@sun.com>
  *
  * gstsunaudiomixertrack.h: SunAudio mixer tracks
  *
@@ -32,11 +34,16 @@ G_BEGIN_DECLS
 typedef enum
 {
    GST_SUNAUDIO_TRACK_OUTPUT   = 0,
-   GST_SUNAUDIO_TRACK_LINE_IN  = 1,
-   GST_SUNAUDIO_TRACK_MONITOR  = 2,
+   GST_SUNAUDIO_TRACK_RECORD,
+   GST_SUNAUDIO_TRACK_MONITOR,
+   GST_SUNAUDIO_TRACK_SPEAKER,
+   GST_SUNAUDIO_TRACK_HP,
+   GST_SUNAUDIO_TRACK_LINEOUT,
+   GST_SUNAUDIO_TRACK_SPDIFOUT,
+   GST_SUNAUDIO_TRACK_AUX1OUT,
+   GST_SUNAUDIO_TRACK_AUX2OUT,
+   GST_SUNAUDIO_TRACK_RECSRC
 } GstSunAudioTrackType;
-
-#define MIXER_DEVICES 3
 
 #define GST_TYPE_SUNAUDIO_MIXER_TRACK \
   (gst_sunaudiomixer_track_get_type ())
@@ -64,7 +71,7 @@ typedef struct _GstSunAudioMixerTrackClass {
 } GstSunAudioMixerTrackClass;
 
 GType		gst_sunaudiomixer_track_get_type	(void);
-GstMixerTrack*	gst_sunaudiomixer_track_new		(GstSunAudioTrackType track_num, gint max_chans, gint flags);
+GstMixerTrack*	gst_sunaudiomixer_track_new		(GstSunAudioTrackType track_num);
 
 G_END_DECLS
 
