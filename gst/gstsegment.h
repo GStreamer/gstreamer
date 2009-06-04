@@ -101,6 +101,9 @@ gint64       gst_segment_to_position         (GstSegment *segment, GstFormat for
 gboolean     gst_segment_clip                (GstSegment *segment, GstFormat format, gint64 start,
                                               gint64 stop, gint64 *clip_start, gint64 *clip_stop);
 
+gboolean     gst_segment_set_running_time    (GstSegment *segment, GstFormat format, gint64 running_time);
+
+
 G_END_DECLS
 
 #endif /* __GST_SEGMENT_H__ */

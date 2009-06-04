@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2005 Jan Schmidt <thaytan@mad.scientist.com>
+ *               2009 Wim Taymans <wim.taymans@gmail.com>
  *
  * gstsegment.c: Unit test for segments
  *

@@ -771,7 +771,8 @@ gst_segment_clip (GstSegment * segment, GstFormat format, gint64 start,
  * Convert @running_time into a position in the segment so that
  * gst_segment_to_running_time() with that position returns @running_time.
  *
- * Returns: the position in the segment for @running_time.
+ * Returns: the position in the segment for @running_time. This function returns
+ * -1 when @running_time is -1 or when it is not inside @segment.
  *
  * Since: 0.10.24
  */
@@ -830,4 +831,59 @@ gst_segment_to_position (GstSegment * segment, GstFormat format,
     result = stop - result;
   }
   return result;
+}
+
+
+/**
+ * gst_segment_set_running_time:
+ * @segment: a #GstSegment structure.
+ * @format: the format of the segment.
+ * @running_time: the running_time in the segment
+ *
+ * Adjust the start/stop and accum values of @segment such that the next valid
+ * buffer will be one with @running_time.
+ *
+ * Returns: %TRUE if the segment could be updated successfully. If %FALSE is
+ * returned, @running_time is -1 or not in @segment.
+ *
+ * Since: 0.10.24
+ */
+gboolean
+gst_segment_set_running_time (GstSegment * segment, GstFormat format,
+    gint64 running_time)
+{
+  gint64 position;
+  gint64 start, stop, last_stop;
+
+  /* start by bringing the running_time into the segment position */
+  position = gst_segment_to_position (segment, format, running_time);
+
+  /* we must have a valid position now */
+  if (G_UNLIKELY (position == -1))
+    return FALSE;
+
+  start = segment->start;
+  stop = segment->stop;
+  last_stop = segment->last_stop;
+
+  if (G_LIKELY (segment->rate > 0.0)) {
+    /* update the start/last_stop and time values */
+    start = position;
+    if (last_stop < start)
+      last_stop = start;
+  } else {
+    /* reverse, update stop */
+    stop = position;
+    /* if we were past the position, go back */
+    if (last_stop > stop)
+      last_stop = stop;
+  }
+  /* and accumulated time is exactly the running time */
+  segment->time = gst_segment_to_stream_time (segment, format, start);
+  segment->start = start;
+  segment->stop = stop;
+  segment->last_stop = last_stop;
+  segment->accum = running_time;
+
+  return TRUE;
 }
