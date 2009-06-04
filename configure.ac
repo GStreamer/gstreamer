@@ -324,9 +324,6 @@ dnl *** checks for structures ***
 
 dnl *** checks for compiler characteristics ***
 
-dnl make sure we can use "inline" from C code
-AC_C_INLINE
-
 OPT_CFLAGS=
 dnl Check for some compiler flags that optimize our code.
 if test "x$GCC" = xyes; then

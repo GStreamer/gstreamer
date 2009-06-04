@@ -518,6 +518,7 @@ gst_event_type_get_type (void)
     {C_ENUM (GST_EVENT_SEEK), "GST_EVENT_SEEK", "seek"},
     {C_ENUM (GST_EVENT_NAVIGATION), "GST_EVENT_NAVIGATION", "navigation"},
     {C_ENUM (GST_EVENT_LATENCY), "GST_EVENT_LATENCY", "latency"},
+    {C_ENUM (GST_EVENT_STEP), "GST_EVENT_STEP", "step"},
     {C_ENUM (GST_EVENT_CUSTOM_UPSTREAM), "GST_EVENT_CUSTOM_UPSTREAM",
         "custom-upstream"},
     {C_ENUM (GST_EVENT_CUSTOM_DOWNSTREAM), "GST_EVENT_CUSTOM_DOWNSTREAM",
@@ -889,6 +890,36 @@ gst_structure_change_type_get_type (void)
 
   if (g_once_init_enter (&id)) {
     GType tmp = g_enum_register_static ("GstStructureChangeType", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
+gst_stream_status_type_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_STREAM_STATUS_TYPE_CREATE), "GST_STREAM_STATUS_TYPE_CREATE",
+        "create"},
+    {C_ENUM (GST_STREAM_STATUS_TYPE_ENTER), "GST_STREAM_STATUS_TYPE_ENTER",
+        "enter"},
+    {C_ENUM (GST_STREAM_STATUS_TYPE_LEAVE), "GST_STREAM_STATUS_TYPE_LEAVE",
+        "leave"},
+    {C_ENUM (GST_STREAM_STATUS_TYPE_DESTROY), "GST_STREAM_STATUS_TYPE_DESTROY",
+        "destroy"},
+    {C_ENUM (GST_STREAM_STATUS_TYPE_START), "GST_STREAM_STATUS_TYPE_START",
+        "start"},
+    {C_ENUM (GST_STREAM_STATUS_TYPE_PAUSE), "GST_STREAM_STATUS_TYPE_PAUSE",
+        "pause"},
+    {C_ENUM (GST_STREAM_STATUS_TYPE_STOP), "GST_STREAM_STATUS_TYPE_STOP",
+        "stop"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstStreamStatusType", values);
     g_once_init_leave (&id, tmp);
   }
 

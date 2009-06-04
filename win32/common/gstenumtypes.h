@@ -109,6 +109,8 @@ GType gst_message_type_get_type (void);
 #define GST_TYPE_MESSAGE_TYPE (gst_message_type_get_type())
 GType gst_structure_change_type_get_type (void);
 #define GST_TYPE_STRUCTURE_CHANGE_TYPE (gst_structure_change_type_get_type())
+GType gst_stream_status_type_get_type (void);
+#define GST_TYPE_STREAM_STATUS_TYPE (gst_stream_status_type_get_type())
 
 /* enumerations from "gstminiobject.h" */
 GType gst_mini_object_flags_get_type (void);

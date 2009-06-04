@@ -44,7 +44,7 @@
 #define GST_MAJORMINOR "0.10"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer source release"
+#define GST_PACKAGE_NAME "GStreamer git/prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -178,7 +178,7 @@
 /* defined if the compiler implements __PRETTY_FUNCTION__ */
 #undef HAVE_PRETTY_FUNCTION
 
-/* Defined if we have register_printf_function () */
+/* Defined if we have printf specifier extensions available */
 #undef HAVE_PRINTF_EXTENSION
 
 /* Define to 1 if you have the <process.h> header file. */
@@ -189,6 +189,12 @@
 
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
+
+/* Define to 1 if you have the `register_printf_function' function. */
+#undef HAVE_REGISTER_PRINTF_FUNCTION
+
+/* Define to 1 if you have the `register_printf_specifier' function. */
+#undef HAVE_REGISTER_PRINTF_SPECIFIER
 
 /* Define to 1 if you have the `sigaction' function. */
 #undef HAVE_SIGACTION
@@ -277,13 +283,13 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.10.23"
+#define PACKAGE_STRING "GStreamer 0.10.23.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.23"
+#define PACKAGE_VERSION "0.10.23.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -295,14 +301,11 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Define if we should use binary registry instead xml registry */
-#define USE_BINARY_REGISTRY
-
 /* Define if we should poison deallocated memory */
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.23"
+#define VERSION "0.10.23.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
@@ -327,9 +330,3 @@
 
 /* We need at least WinXP SP2 for __stat64 */
 #undef __MSVCRT_VERSION__
-
-/* Define to `__inline__' or `__inline' if that's what the C compiler
-   calls it, or to nothing if 'inline' is not supported under any name.  */
-#ifndef __cplusplus
-#undef inline
-#endif
