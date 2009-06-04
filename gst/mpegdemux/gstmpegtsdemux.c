@@ -923,8 +923,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
        * to drop. */
       if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
           && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-          && demux->streams[demux->streams[stream->PMT_pid]->PMT.
-              PCR_PID]->discont_PCR) {
+          && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
+          discont_PCR) {
         GST_WARNING_OBJECT (demux, "middle of discont, dropping");
         goto bad_timestamp;
       }
@@ -946,8 +946,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
          */
         if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
             && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-            && demux->streams[demux->streams[stream->PMT_pid]->PMT.
-                PCR_PID]->last_PCR > 0) {
+            && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
+            last_PCR > 0) {
           GST_DEBUG_OBJECT (demux, "timestamps wrapped before noticed in PCR");
           time = MPEGTIME_TO_GSTTIME (pts) + stream->base_time +
               MPEGTIME_TO_GSTTIME ((guint64) (1) << 33);
@@ -2884,7 +2884,8 @@ gst_mpegts_demux_chain (GstPad * pad, GstBuffer * buffer)
   /* process all packets */
   for (i = 0; i < sync_count; i++) {
     ret = gst_mpegts_demux_parse_transport_packet (demux, demux->sync_lut[i]);
-    if (G_UNLIKELY (ret == GST_FLOW_LOST_SYNC)) {
+    if (G_UNLIKELY (ret == GST_FLOW_LOST_SYNC
+            || ret == GST_FLOW_NEED_MORE_DATA)) {
       ret = GST_FLOW_OK;
       continue;
     }
