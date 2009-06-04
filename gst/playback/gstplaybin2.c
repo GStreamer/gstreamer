@@ -396,6 +396,11 @@ struct _GstPlayBinClass
   void (*audio_changed) (GstPlayBin * playbin);
   void (*text_changed) (GstPlayBin * playbin);
 
+  /* notify app that the tags of audio/video/text streams changed */
+  void (*video_tags_changed) (GstPlayBin * playbin, gint stream);
+  void (*audio_tags_changed) (GstPlayBin * playbin, gint stream);
+  void (*text_tags_changed) (GstPlayBin * playbin, gint stream);
+
   /* get audio/video/text tags for a stream */
   GstTagList *(*get_video_tags) (GstPlayBin * playbin, gint stream);
   GstTagList *(*get_audio_tags) (GstPlayBin * playbin, gint stream);
@@ -473,6 +478,9 @@ enum
   SIGNAL_VIDEO_CHANGED,
   SIGNAL_AUDIO_CHANGED,
   SIGNAL_TEXT_CHANGED,
+  SIGNAL_VIDEO_TAGS_CHANGED,
+  SIGNAL_AUDIO_TAGS_CHANGED,
+  SIGNAL_TEXT_TAGS_CHANGED,
   SIGNAL_GET_VIDEO_TAGS,
   SIGNAL_GET_AUDIO_TAGS,
   SIGNAL_GET_TEXT_TAGS,
@@ -815,6 +823,54 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBinClass, text_changed), NULL, NULL,
       gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+  /**
+   * GstPlayBin2::video-tags-changed
+   * @playbin: a #GstPlayBin2
+   * @stream: stream index with changed tags
+   *
+   * This signal is emitted whenever the tags of a video stream have changed.
+   * The application will most likely want to get the new tags.
+   *
+   * Since: 0.10.24
+   */
+  gst_play_bin_signals[SIGNAL_VIDEO_TAGS_CHANGED] =
+      g_signal_new ("video-tags-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstPlayBinClass, video_tags_changed), NULL, NULL,
+      gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+
+  /**
+   * GstPlayBin2::audio-tags-changed
+   * @playbin: a #GstPlayBin2
+   * @stream: stream index with changed tags
+   *
+   * This signal is emitted whenever the tags of an audio stream have changed.
+   * The application will most likely want to get the new tags.
+   *
+   * Since: 0.10.24
+   */
+  gst_play_bin_signals[SIGNAL_AUDIO_TAGS_CHANGED] =
+      g_signal_new ("audio-tags-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstPlayBinClass, audio_tags_changed), NULL, NULL,
+      gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+
+  /**
+   * GstPlayBin2::text-tags-changed
+   * @playbin: a #GstPlayBin2
+   * @stream: stream index with changed tags
+   *
+   * This signal is emitted whenever the tags of a text stream have changed.
+   * The application will most likely want to get the new tags.
+   *
+   * Since: 0.10.24
+   */
+  gst_play_bin_signals[SIGNAL_TEXT_TAGS_CHANGED] =
+      g_signal_new ("text-tags-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstPlayBinClass, text_tags_changed), NULL, NULL,
+      gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
    * GstPlayBin2::get-video-tags
@@ -1802,6 +1858,45 @@ array_has_value (const gchar * values[], const gchar * value)
   return FALSE;
 }
 
+typedef struct
+{
+  GstPlayBin *playbin;
+  gint stream_id;
+  GstPlaySinkType type;
+} NotifyTagsData;
+
+static void
+notify_tags_cb (GObject * object, GParamSpec * pspec, gpointer user_data)
+{
+  NotifyTagsData *ntdata = (NotifyTagsData *) user_data;
+  gint signal;
+
+  GST_DEBUG_OBJECT (ntdata->playbin, "Tags on pad %" GST_PTR_FORMAT
+      " with stream id %d and type %d have changed",
+      object, ntdata->stream_id, ntdata->type);
+
+  switch (ntdata->type) {
+    case GST_PLAY_SINK_TYPE_VIDEO:
+    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
+      signal = SIGNAL_VIDEO_TAGS_CHANGED;
+      break;
+    case GST_PLAY_SINK_TYPE_AUDIO:
+    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
+      signal = SIGNAL_AUDIO_TAGS_CHANGED;
+      break;
+    case GST_PLAY_SINK_TYPE_TEXT:
+      signal = SIGNAL_TEXT_TAGS_CHANGED;
+      break;
+    default:
+      signal = -1;
+      break;
+  }
+
+  if (signal >= 0)
+    g_signal_emit (G_OBJECT (ntdata->playbin), gst_play_bin_signals[signal], 0,
+        ntdata->stream_id);
+}
+
 /* this function is called when a new pad is added to decodebin. We check the
  * type of the pad and add it to the selector element of the group. 
  */
@@ -1882,11 +1977,29 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   /* get sinkpad for the new stream */
   if (select->selector) {
     if ((sinkpad = gst_element_get_request_pad (select->selector, "sink%d"))) {
+      gulong notify_tags_handler = 0;
+      NotifyTagsData *ntdata;
+
       GST_DEBUG_OBJECT (playbin, "got pad %s:%s from selector",
           GST_DEBUG_PAD_NAME (sinkpad));
 
       /* store the selector for the pad */
       g_object_set_data (G_OBJECT (sinkpad), "playbin2.select", select);
+
+      /* connect to the notify::tags signal for our
+       * own *-tags-changed signals
+       */
+      ntdata = g_new0 (NotifyTagsData, 1);
+      ntdata->playbin = playbin;
+      ntdata->stream_id = select->channels->len;
+      ntdata->type = select->type;
+
+      notify_tags_handler =
+          g_signal_connect_data (G_OBJECT (sinkpad), "notify::tags",
+          G_CALLBACK (notify_tags_cb), ntdata, (GClosureNotify) g_free,
+          (GConnectFlags) 0);
+      g_object_set_data (G_OBJECT (sinkpad), "playbin2.notify_tags_handler",
+          (gpointer) notify_tags_handler);
 
       /* store the pad in the array */
       GST_DEBUG_OBJECT (playbin, "pad %p added to array", sinkpad);
@@ -1980,6 +2093,15 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     goto not_linked;
 
   if ((select = g_object_get_data (G_OBJECT (peer), "playbin2.select"))) {
+    gulong notify_tags_handler;
+
+    notify_tags_handler =
+        (gulong) g_object_get_data (G_OBJECT (peer),
+        "playbin2.notify_tags_handler");
+    if (notify_tags_handler != 0)
+      g_signal_handler_disconnect (G_OBJECT (peer), notify_tags_handler);
+    g_object_set_data (G_OBJECT (peer), "playbin2.notify_tags_handler", NULL);
+
     /* remove the pad from the array */
     g_ptr_array_remove (select->channels, peer);
     GST_DEBUG_OBJECT (playbin, "pad %p removed from array", peer);
