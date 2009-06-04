@@ -24,7 +24,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
-#include "gstvdpdecoder.h"
+#include "gstvdpdevice.h"
+#include "gstvdpvideobuffer.h"
 
 G_BEGIN_DECLS
 
@@ -39,8 +40,18 @@ typedef struct _GstVdpMpegDecoderClass GstVdpMpegDecoderClass;
 
 struct _GstVdpMpegDecoder
 {
-  GstVdpDecoder dec;
+  GstElement element;
 
+  gchar *display_name;
+  GstVdpDevice *device;
+
+  GstPad *src;
+  GstPad *sink;
+  
+  gint width, height;
+  gint fps_n, fps_d;
+  gboolean interlaced;
+  
   gint version;
   
   VdpDecoder decoder;
@@ -49,13 +60,14 @@ struct _GstVdpMpegDecoder
   GstBuffer *b_buffer;
   
   gboolean broken_gop;
+  GstClockTime time;
   
   GstAdapter *adapter;
 };
 
 struct _GstVdpMpegDecoderClass 
 {
-  GstVdpDecoderClass parent_class;
+  GstElementClass element_class;  
 };
 
 GType gst_vdp_mpeg_decoder_get_type (void);
