@@ -1903,6 +1903,8 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
     /* configure the manager */
     if (src->session == NULL) {
+      GstState target;
+
       if (!(src->session = gst_element_factory_make (manager, NULL))) {
         /* fallback */
         if (gst_rtsp_transport_get_manager (transport->trans, &manager, 1) < 0)
@@ -1918,7 +1920,11 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       /* we manage this element */
       gst_bin_add (GST_BIN_CAST (src), src->session);
 
-      ret = gst_element_set_state (src->session, GST_STATE_PAUSED);
+      GST_OBJECT_LOCK (src);
+      target = GST_STATE_TARGET (src);
+      GST_OBJECT_UNLOCK (src);
+
+      ret = gst_element_set_state (src->session, target);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto start_session_failure;
 
