@@ -60,7 +60,7 @@ struct _GstVdpMpegDecoder
   GstBuffer *b_buffer;
   
   gboolean broken_gop;
-  GstClockTime time;
+  GstClockTime next_timestamp;
   
   GstAdapter *adapter;
 };

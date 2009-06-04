@@ -274,16 +274,17 @@ gst_vdp_mpeg_decoder_push_video_buffer (GstVdpMpegDecoder * mpeg_dec,
     GstVdpVideoBuffer * buffer)
 {
   if (GST_BUFFER_TIMESTAMP (buffer) == GST_CLOCK_TIME_NONE) {
-    GST_BUFFER_TIMESTAMP (buffer) = mpeg_dec->time +
-        gst_util_uint64_scale_int (GST_SECOND,
-        mpeg_dec->fps_d, mpeg_dec->fps_n);
+    GST_BUFFER_TIMESTAMP (buffer) = mpeg_dec->next_timestamp;
   }
+
+  mpeg_dec->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
+      gst_util_uint64_scale_int (GST_SECOND, mpeg_dec->fps_d, mpeg_dec->fps_n);
+
   gst_buffer_set_caps (GST_BUFFER (buffer), GST_PAD_CAPS (mpeg_dec->src));
 
   GST_DEBUG_OBJECT (mpeg_dec,
       "Pushing buffer with timestamp: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
-  mpeg_dec->time = GST_BUFFER_TIMESTAMP (buffer);
 
   return gst_pad_push (mpeg_dec->src, GST_BUFFER (buffer));
 }
@@ -717,7 +718,7 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
   gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 
   mpeg_dec->broken_gop = FALSE;
-  mpeg_dec->time = 0;
+  mpeg_dec->next_timestamp = 0;
 
   mpeg_dec->adapter = gst_adapter_new ();
 }
