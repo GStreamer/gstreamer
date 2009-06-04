@@ -24,9 +24,10 @@
 #include <gst/gst.h>
 
 typedef struct MPEGSeqHdr MPEGSeqHdr;
+typedef struct MPEGSeqExtHdr MPEGSeqExtHdr;
 typedef struct MPEGPictureHdr MPEGPictureHdr;
 typedef struct MPEGPictureExt MPEGPictureExt;
-typedef struct MPEGPictureGOP MPEGPictureGOP;
+typedef struct MPEGGop MPEGGop;
 typedef struct MPEGQuantMatrix MPEGQuantMatrix;
 
 /* Packet ID codes for different packet types we
@@ -53,27 +54,45 @@ typedef struct MPEGQuantMatrix MPEGQuantMatrix;
 
 struct MPEGSeqHdr
 {
-  /* 0 for unknown, else 1 or 2 */
-  guint8 mpeg_version;
-
   /* Pixel-Aspect Ratio from DAR code via set_par_from_dar */
-  gint par_w, par_h;
+  guint par_w, par_h;
   /* Width and Height of the video */
-  gint width, height;
+  guint16 width, height;
   /* Framerate */
-  gint fps_n, fps_d;
+  guint fps_n, fps_d;
 
-  /* mpeg2 decoder profile */
-  gint profile;
+  guint32 bitrate;
+  guint16 vbv_buffer;
 
+  guint8 constrained_parameters_flag;
+  
   guint8 intra_quantizer_matrix[64];
   guint8 non_intra_quantizer_matrix[64];
 };
 
+struct MPEGSeqExtHdr
+{
+
+  /* mpeg2 decoder profile */
+  guint8 profile;
+  /* mpeg2 decoder level */
+  guint8 level;
+
+  guint8 progressive;
+  guint8 chroma_format;
+  
+  guint8 horiz_size_ext, vert_size_ext;
+
+  guint8 fps_n_ext, fps_d_ext;
+  
+};
+
 struct MPEGPictureHdr
 {
+  guint16 tsn;
   guint8 pic_type;
-
+  guint16 vbv_delay;
+  
   guint8 full_pel_forward_vector, full_pel_backward_vector;
 
   guint8 f_code[2][2];
@@ -91,9 +110,10 @@ struct MPEGPictureExt
   guint8 q_scale_type;
   guint8 intra_vlc_format;
   guint8 alternate_scan;
+  guint8 repeat_first_field;
 };
 
-struct MPEGPictureGOP
+struct MPEGGop
 {
   guint8 drop_frame_flag;
 
@@ -109,18 +129,19 @@ struct MPEGQuantMatrix
   guint8 non_intra_quantizer_matrix[64];
 };
 
-gboolean mpeg_util_parse_sequence_hdr (MPEGSeqHdr *hdr, 
-                                       guint8 *data, guint8 *end);
+gboolean mpeg_util_parse_sequence_hdr (MPEGSeqHdr *hdr, GstBuffer *buffer);
 
-gboolean mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end);
+gboolean mpeg_util_parse_sequence_extension (MPEGSeqExtHdr *hdr,
+    GstBuffer *buffer);
 
-gboolean mpeg_util_parse_picture_coding_extension (MPEGPictureExt *ext, guint8 *data, guint8 *end);
+gboolean mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, GstBuffer *buffer);
 
-gboolean mpeg_util_parse_picture_gop (MPEGPictureGOP * gop, guint8 * data, guint8 * end);
+gboolean mpeg_util_parse_picture_coding_extension (MPEGPictureExt *ext,
+    GstBuffer *buffer);
 
-gboolean mpeg_util_parse_quant_matrix (MPEGQuantMatrix * qm, guint8 * data, guint8 * end);
+gboolean mpeg_util_parse_gop (MPEGGop * gop, GstBuffer *buffer);
 
-guint8 *mpeg_util_find_start_code (guint32 * sync_word, guint8 * cur, guint8 * end);
-guint32 read_bits (guint8 * buf, gint start_bit, gint n_bits);
+gboolean mpeg_util_parse_quant_matrix (MPEGQuantMatrix * qm, GstBuffer *buffer);
 
 #endif
+

@@ -36,6 +36,8 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/base/gstbytereader.h>
+#include <gst/base/gstbitreader.h>
 #include <string.h>
 
 #include "mpegutil.h"
@@ -80,14 +82,82 @@ static void gst_vdp_mpeg_decoder_set_property (GObject * object,
 static void gst_vdp_mpeg_decoder_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
+guint8 *
+mpeg_util_find_start_code (guint32 * sync_word, guint8 * cur, guint8 * end)
+{
+  guint32 code;
+
+  if (G_UNLIKELY (cur == NULL))
+    return NULL;
+
+  code = *sync_word;
+
+  while (cur < end) {
+    code <<= 8;
+
+    if (code == 0x00000100) {
+      /* Reset the sync word accumulator */
+      *sync_word = 0xffffffff;
+      return cur;
+    }
+
+    /* Add the next available byte to the collected sync word */
+    code |= *cur++;
+  }
+
+  *sync_word = code;
+  return NULL;
+}
+
+typedef struct
+{
+  GstBuffer *buffer;
+  guint8 *cur;
+  guint8 *end;
+} GstVdpMpegPacketizer;
+
+static GstBuffer *
+gst_vdp_mpeg_packetizer_get_next_packet (GstVdpMpegPacketizer * packetizer)
+{
+  guint32 sync_word = 0xffffff;
+  guint8 *packet_start;
+  guint8 *packet_end;
+
+  if (!packetizer->cur)
+    return NULL;
+
+  packet_start = packetizer->cur - 3;
+  packetizer->cur = packet_end = mpeg_util_find_start_code (&sync_word,
+      packetizer->cur, packetizer->end);
+
+  if (packet_end)
+    packet_end -= 3;
+  else
+    packet_end = packetizer->end;
+
+  return gst_buffer_create_sub (packetizer->buffer,
+      packet_start - GST_BUFFER_DATA (packetizer->buffer),
+      packet_end - packet_start);
+}
+
+static void
+gst_vdp_mpeg_packetizer_init (GstVdpMpegPacketizer * packetizer,
+    GstBuffer * buffer)
+{
+  guint32 sync_word = 0xffffffff;
+
+  packetizer->buffer = buffer;
+  packetizer->end = GST_BUFFER_DATA (buffer) + GST_BUFFER_SIZE (buffer);
+  packetizer->cur = mpeg_util_find_start_code (&sync_word,
+      GST_BUFFER_DATA (buffer), packetizer->end);
+}
+
 static gboolean
 gst_vdp_mpeg_decoder_set_caps (GstVdpDecoder * dec, GstCaps * caps)
 {
   GstVdpMpegDecoder *mpeg_dec;
   GstStructure *structure;
   const GValue *value;
-  GstBuffer *codec_data;
-  MPEGSeqHdr hdr = { 0, };
   VdpDecoderProfile profile;
   GstVdpDevice *device;
   VdpStatus status;
@@ -100,24 +170,43 @@ gst_vdp_mpeg_decoder_set_caps (GstVdpDecoder * dec, GstCaps * caps)
     profile = VDP_DECODER_PROFILE_MPEG1;
 
   value = gst_structure_get_value (structure, "codec_data");
-  codec_data = gst_value_get_buffer (value);
-  mpeg_util_parse_sequence_hdr (&hdr, GST_BUFFER_DATA (codec_data),
-      GST_BUFFER_DATA (codec_data) + GST_BUFFER_SIZE (codec_data));
-  if (mpeg_dec->version != 1) {
-    switch (hdr.profile) {
-      case 5:
-        profile = VDP_DECODER_PROFILE_MPEG2_SIMPLE;
-        break;
-      default:
-        profile = VDP_DECODER_PROFILE_MPEG2_MAIN;
-        break;
+  if (value) {
+    GstBuffer *codec_data, *buf;
+    GstVdpMpegPacketizer packetizer;
+
+    codec_data = gst_value_get_buffer (value);
+    gst_vdp_mpeg_packetizer_init (&packetizer, codec_data);
+    if ((buf = gst_vdp_mpeg_packetizer_get_next_packet (&packetizer))) {
+      MPEGSeqHdr hdr;
+
+      mpeg_util_parse_sequence_hdr (&hdr, buf);
+
+      memcpy (&mpeg_dec->vdp_info.intra_quantizer_matrix,
+          &hdr.intra_quantizer_matrix, 64);
+      memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
+          &hdr.non_intra_quantizer_matrix, 64);
+
+      gst_buffer_unref (buf);
+
+      if ((buf = gst_vdp_mpeg_packetizer_get_next_packet (&packetizer))) {
+        MPEGSeqExtHdr ext;
+
+        mpeg_util_parse_sequence_extension (&ext, buf);
+        if (mpeg_dec->version != 1) {
+          switch (ext.profile) {
+            case 5:
+              profile = VDP_DECODER_PROFILE_MPEG2_SIMPLE;
+              break;
+            default:
+              profile = VDP_DECODER_PROFILE_MPEG2_MAIN;
+              break;
+          }
+        }
+
+        gst_buffer_unref (buf);
+      }
     }
   }
-
-  memcpy (&mpeg_dec->vdp_info.intra_quantizer_matrix,
-      &hdr.intra_quantizer_matrix, 64);
-  memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
-      &hdr.non_intra_quantizer_matrix, 64);
 
   device = dec->device;
 
@@ -224,7 +313,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
 
 static gboolean
 gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
-    guint8 * data, guint8 * end)
+    GstBuffer * buffer)
 {
   GstVdpDecoder *dec;
   MPEGPictureExt pic_ext;
@@ -233,7 +322,7 @@ gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
   dec = GST_VDP_DECODER (mpeg_dec);
   info = &mpeg_dec->vdp_info;
 
-  if (!mpeg_util_parse_picture_coding_extension (&pic_ext, data, end))
+  if (!mpeg_util_parse_picture_coding_extension (&pic_ext, buffer))
     return FALSE;
 
   memcpy (&mpeg_dec->vdp_info.f_code, &pic_ext.f_code, 4);
@@ -252,16 +341,17 @@ gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
 
 static gboolean
 gst_vdp_mpeg_decoder_parse_sequence (GstVdpMpegDecoder * mpeg_dec,
-    guint8 * data, guint8 * end)
+    GstBuffer * buffer)
 {
   GstVdpDecoder *dec;
   MPEGSeqHdr hdr;
 
   dec = GST_VDP_DECODER (mpeg_dec);
 
-  if (!mpeg_util_parse_sequence_hdr (&hdr, data, end))
+  if (!mpeg_util_parse_sequence_hdr (&hdr, buffer))
     return FALSE;
 
+  g_debug ("här");
   memcpy (&mpeg_dec->vdp_info.intra_quantizer_matrix,
       &hdr.intra_quantizer_matrix, 64);
   memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
@@ -272,14 +362,14 @@ gst_vdp_mpeg_decoder_parse_sequence (GstVdpMpegDecoder * mpeg_dec,
 
 static gboolean
 gst_vdp_mpeg_decoder_parse_picture (GstVdpMpegDecoder * mpeg_dec,
-    guint8 * data, guint8 * end)
+    GstBuffer * buffer)
 {
   GstVdpDecoder *dec;
   MPEGPictureHdr pic_hdr;
 
   dec = GST_VDP_DECODER (mpeg_dec);
 
-  if (!mpeg_util_parse_picture_hdr (&pic_hdr, data, end))
+  if (!mpeg_util_parse_picture_hdr (&pic_hdr, buffer))
     return FALSE;
 
   if (pic_hdr.pic_type != I_FRAME
@@ -309,12 +399,12 @@ gst_vdp_mpeg_decoder_parse_picture (GstVdpMpegDecoder * mpeg_dec,
 }
 
 static gboolean
-gst_vdp_mpeg_decoder_parse_gop (GstVdpMpegDecoder * mpeg_dec, guint8 * data,
-    guint8 * end)
+gst_vdp_mpeg_decoder_parse_gop (GstVdpMpegDecoder * mpeg_dec,
+    GstBuffer * buffer)
 {
-  MPEGPictureGOP gop;
+  MPEGGop gop;
 
-  if (!mpeg_util_parse_picture_gop (&gop, data, end))
+  if (!mpeg_util_parse_gop (&gop, buffer))
     return FALSE;
 
   mpeg_dec->broken_gop = gop.broken_gop;
@@ -324,11 +414,11 @@ gst_vdp_mpeg_decoder_parse_gop (GstVdpMpegDecoder * mpeg_dec, guint8 * data,
 
 static gboolean
 gst_vdp_mpeg_decoder_parse_quant_matrix (GstVdpMpegDecoder * mpeg_dec,
-    guint8 * data, guint8 * end)
+    GstBuffer * buffer)
 {
   MPEGQuantMatrix qm;
 
-  if (!mpeg_util_parse_quant_matrix (&qm, data, end))
+  if (!mpeg_util_parse_quant_matrix (&qm, buffer))
     return FALSE;
 
   memcpy (&mpeg_dec->vdp_info.intra_quantizer_matrix,
@@ -355,8 +445,8 @@ static GstFlowReturn
 gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstVdpMpegDecoder *mpeg_dec;
-  guint8 *data, *end;
-  guint32 sync_word = 0xffffffff;
+  GstVdpMpegPacketizer packetizer;
+  GstBuffer *buf;
   GstFlowReturn ret = GST_FLOW_OK;
 
   mpeg_dec = GST_VDP_MPEG_DECODER (GST_OBJECT_PARENT (pad));
@@ -367,69 +457,70 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
     return GST_FLOW_OK;
   }
 
-  data = GST_BUFFER_DATA (buffer);
-  end = GST_BUFFER_DATA (buffer) + GST_BUFFER_SIZE (buffer);
+  gst_vdp_mpeg_packetizer_init (&packetizer, buffer);
+  while ((buf = gst_vdp_mpeg_packetizer_get_next_packet (&packetizer))) {
+    GstBitReader b_reader = GST_BIT_READER_INIT_FROM_BUFFER (buf);
+    guint32 sync_code;
+    guint8 start_code;
 
-  while ((data = mpeg_util_find_start_code (&sync_word, data, end))) {
-    guint8 *packet_start;
-    guint8 *packet_end;
+    /* skip sync_code */
+    gst_bit_reader_get_bits_uint32 (&b_reader, &sync_code, 8 * 3);
 
-    packet_start = data - 3;
-    packet_end = mpeg_util_find_start_code (&sync_word, data, end);
-    if (packet_end)
-      packet_end -= 3;
-    else
-      packet_end = end;
+    /* start_code */
+    gst_bit_reader_get_bits_uint8 (&b_reader, &start_code, 8);
 
-    if (data[0] >= MPEG_PACKET_SLICE_MIN && data[0] <= MPEG_PACKET_SLICE_MAX) {
-      GstBuffer *subbuf;
-
+    if (start_code >= MPEG_PACKET_SLICE_MIN
+        && start_code <= MPEG_PACKET_SLICE_MAX) {
       GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SLICE");
-      subbuf =
-          gst_buffer_create_sub (buffer,
-          packet_start - GST_BUFFER_DATA (buffer), packet_end - packet_start);
-      gst_adapter_push (mpeg_dec->adapter, subbuf);
+
+      gst_buffer_ref (buf);
+      gst_adapter_push (mpeg_dec->adapter, buf);
       mpeg_dec->vdp_info.slice_count++;
     }
 
-    switch (data[0]) {
+    switch (start_code) {
       case MPEG_PACKET_PICTURE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_PICTURE");
 
-        if (!gst_vdp_mpeg_decoder_parse_picture (mpeg_dec, packet_start,
-                packet_end)) {
+        if (!gst_vdp_mpeg_decoder_parse_picture (mpeg_dec, buf)) {
           return GST_FLOW_OK;
         }
         break;
       case MPEG_PACKET_SEQUENCE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SEQUENCE");
-        gst_vdp_mpeg_decoder_parse_sequence (mpeg_dec, packet_start,
-            packet_end);
+        gst_vdp_mpeg_decoder_parse_sequence (mpeg_dec, buf);
         break;
       case MPEG_PACKET_EXTENSION:
+      {
+        guint8 ext_code;
+
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXTENSION");
-        switch (read_bits (data + 1, 0, 4)) {
+
+        /* ext_code */
+        gst_bit_reader_get_bits_uint8 (&b_reader, &ext_code, 4);
+        switch (ext_code) {
           case MPEG_PACKET_EXT_PICTURE_CODING:
             GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXT_PICTURE_CODING");
-            gst_vdp_mpeg_decoder_parse_picture_coding (mpeg_dec, packet_start,
-                packet_end);
+            gst_vdp_mpeg_decoder_parse_picture_coding (mpeg_dec, buf);
             break;
           case MPEG_PACKET_EXT_QUANT_MATRIX:
             GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXT_QUANT_MATRIX");
-            gst_vdp_mpeg_decoder_parse_quant_matrix (mpeg_dec, packet_start,
-                packet_end);
+            gst_vdp_mpeg_decoder_parse_quant_matrix (mpeg_dec, buf);
             break;
           default:
             break;
         }
         break;
+      }
       case MPEG_PACKET_GOP:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_GOP");
-        gst_vdp_mpeg_decoder_parse_gop (mpeg_dec, packet_start, packet_end);
+        gst_vdp_mpeg_decoder_parse_gop (mpeg_dec, buf);
         break;
       default:
         break;
     }
+
+    gst_buffer_unref (buf);
   }
 
   if (mpeg_dec->vdp_info.slice_count > 0)
