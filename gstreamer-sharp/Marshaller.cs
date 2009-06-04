@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using GLib;
 
 namespace Gst {
-	public static class Marshaller {
+	internal static class Marshaller {
 
 		public static IntPtr StringArrayToNullTermPointer (string[] strs)
 		{
