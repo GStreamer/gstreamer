@@ -298,6 +298,7 @@ shapewipe_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_set_timeout (tc_chain, 180);
   tcase_add_test (tc_chain, test_general);
 
   return s;
