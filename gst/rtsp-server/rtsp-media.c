@@ -115,6 +115,17 @@ gst_rtsp_media_stream_free (GstRTSPMediaStream *stream)
   if (stream->caps)
     gst_caps_unref (stream->caps);
 
+  if (stream->send_rtp_sink)
+    gst_object_unref (stream->send_rtp_sink);
+  if (stream->send_rtp_src)
+    gst_object_unref (stream->send_rtp_src);
+  if (stream->send_rtcp_src)
+    gst_object_unref (stream->send_rtcp_src);
+  if (stream->recv_rtcp_sink)
+    gst_object_unref (stream->recv_rtcp_sink);
+  if (stream->recv_rtp_sink)
+    gst_object_unref (stream->recv_rtp_sink);
+
   g_list_free (stream->transports);
 
   g_free (stream);
