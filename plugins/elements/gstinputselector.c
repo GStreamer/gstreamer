@@ -1417,6 +1417,7 @@ gst_input_selector_check_eos (GstElement * selector)
         if (!pad->eos) {
           done = TRUE;
         }
+        gst_object_unref (pad);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (it);
