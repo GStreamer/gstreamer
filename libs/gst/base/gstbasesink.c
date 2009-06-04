@@ -164,6 +164,7 @@ typedef struct
   guint64 duration;             /* the duration in time of the skipped data */
   guint64 start;                /* running_time of the start */
   gdouble rate;                 /* rate of skipping */
+  gdouble start_rate;           /* rate before skipping */
   gboolean flush;               /* if this was a flushing step */
   gboolean intermediate;        /* if this is an intermediate step */
   gboolean need_preroll;        /* if we need preroll after this step */
@@ -1487,9 +1488,14 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
 
   /* get the running time of where we paused and remember it */
   current->start = gst_element_get_start_time (GST_ELEMENT_CAST (sink));
+  gst_segment_set_running_time (segment, GST_FORMAT_TIME, current->start);
 
-  /* set the new rate */
-  segment->rate = segment->rate * current->rate;
+  /* set the new rate for the remainder of the segment */
+  current->start_rate = segment->rate;
+  /* no rate yet, it only works in playing */
+  /* segment->rate *= current->rate; 
+   * segment->abs_rate = ABS (segment->rate);
+   * */
 
   GST_DEBUG_OBJECT (sink, "step started at running_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (current->start));
@@ -1509,47 +1515,35 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
     GstStepInfo * current, guint64 cstart, guint64 cstop, gint64 * rstart,
     gint64 * rstop)
 {
+  gint64 stop;
   GstMessage *message;
 
   GST_DEBUG_OBJECT (sink, "step complete");
 
-  /* update the segment, discarding what was consumed, running time goes
-   * backwards with the duration of the data we skipped. FIXME, this only works
-   * in PAUSED. */
-  if (segment->rate > 0.0) {
-    GST_DEBUG_OBJECT (sink,
-        "step stop at running_time %" GST_TIME_FORMAT ", timestamp %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (*rstart), GST_TIME_ARGS (cstart));
-    if (*rstart == -1)
-      *rstart = current->start + current->position;
+  if (segment->rate > 0.0)
+    stop = *rstart;
+  else
+    stop = *rstop;
 
-    current->duration = *rstart - current->start;
+  GST_DEBUG_OBJECT (sink,
+      "step stop at running_time %" GST_TIME_FORMAT, GST_TIME_ARGS (stop));
 
-    segment->time =
-        gst_segment_to_stream_time (segment, segment->format, cstart);
-    segment->start = cstart;
-
-    *rstart = current->start;
-    if (*rstop != -1)
-      *rstop -= current->duration;
-  } else {
-    GST_DEBUG_OBJECT (sink,
-        "step stop at running_time %" GST_TIME_FORMAT ", timestamp %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (*rstop), GST_TIME_ARGS (cstop));
-    if (*rstop == -1)
-      *rstop = current->start + current->position;
-
-    current->duration = *rstop - current->start;
-
-    segment->stop = cstop;
-    *rstop = current->start;
-    if (*rstart != -1)
-      *rstart -= current->duration;
-  }
-  segment->accum = current->start;
+  if (stop == -1)
+    current->duration = current->position;
+  else
+    current->duration = stop - current->start;
 
   GST_DEBUG_OBJECT (sink, "step elapsed running_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (current->duration));
+
+  /* now move the segment to the new running time */
+  gst_segment_set_running_time (segment, GST_FORMAT_TIME,
+      current->start + current->duration);
+  /* restore the previous rate */
+  segment->rate = current->start_rate;
+  segment->abs_rate = ABS (segment->rate);
+  /* and remove the accumulated time we stepped */
+  segment->accum = current->start;
 
   /* the clip segment is used for position report in paused... */
   memcpy (sink->abidata.ABI.clip_segment, segment, sizeof (GstSegment));
