@@ -673,14 +673,19 @@ static void
 on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 {
   GstCaps *caps;
+  gboolean changed;
 
   g_object_get (internal, "caps", &caps, NULL);
 
   GST_OBJECT_LOCK (pad);
-  gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
+  changed = (GST_PAD_CAPS (pad) != caps);
+  if (changed)
+    gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
   GST_OBJECT_UNLOCK (pad);
 
-  g_object_notify (G_OBJECT (pad), "caps");
+  if (changed)
+    g_object_notify (G_OBJECT (pad), "caps");
+
   if (caps)
     gst_caps_unref (caps);
 }
@@ -689,17 +694,20 @@ static void
 on_src_target_notify (GstPad * target, GParamSpec * unused, GstGhostPad * pad)
 {
   GstCaps *caps;
+  gboolean changed;
 
   g_object_get (target, "caps", &caps, NULL);
 
   GST_OBJECT_LOCK (pad);
+  changed = (GST_PAD_CAPS (pad) != caps);
   gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
   GST_OBJECT_UNLOCK (pad);
 
-  g_object_notify (G_OBJECT (pad), "caps");
+  if (changed)
+    g_object_notify (G_OBJECT (pad), "caps");
+
   if (caps)
     gst_caps_unref (caps);
-
 }
 
 static gboolean
