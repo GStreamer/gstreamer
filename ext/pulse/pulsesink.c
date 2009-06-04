@@ -315,20 +315,19 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
 
   if (t != (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_CHANGE) &&
       t != (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_NEW))
-    goto done;
+    return;
 
   if (!pbuf->stream)
-    goto done;
+    return;
 
   if (idx != pa_stream_get_index (pbuf->stream))
-    goto done;
+    return;
 
   /* Actually this event is also triggered when other properties of
    * the stream change that are unrelated to the volume. However it is
    * probably cheaper to signal the change here and check for the
    * volume when the GObject property is read instead of querying it always. */
 
-done:
   /* inform streaming thread to notify */
   g_atomic_int_compare_and_exchange (&psink->notify, 0, 1);
 }
