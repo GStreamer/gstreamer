@@ -111,6 +111,8 @@ struct MPEGPictureExt
   guint8 intra_vlc_format;
   guint8 alternate_scan;
   guint8 repeat_first_field;
+  guint8 chroma_420_type;
+  guint8 progressive_frame;
 };
 
 struct MPEGGop

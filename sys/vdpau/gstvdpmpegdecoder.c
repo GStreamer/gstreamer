@@ -182,7 +182,7 @@ gst_vdp_mpeg_decoder_set_caps (GstPad * pad, GstCaps * caps)
   /* create src_pad caps */
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
-  gst_structure_get_fraction (structure, "framerate", &fps_d, &fps_d);
+  gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d);
   gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_n, &par_d);
   gst_structure_get_boolean (structure, "interlaced", &interlaced);
 
@@ -278,7 +278,7 @@ gst_vdp_mpeg_decoder_push_video_buffer (GstVdpMpegDecoder * mpeg_dec,
   }
 
   mpeg_dec->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
-      gst_util_uint64_scale_int (GST_SECOND, mpeg_dec->fps_d, mpeg_dec->fps_n);
+      GST_BUFFER_DURATION (buffer);
 
   gst_buffer_set_caps (GST_BUFFER (buffer), GST_PAD_CAPS (mpeg_dec->src));
 
@@ -327,6 +327,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
   outbuf = gst_vdp_video_buffer_new (mpeg_dec->device, VDP_CHROMA_TYPE_420,
       mpeg_dec->width, mpeg_dec->height);
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_DURATION (outbuf) = mpeg_dec->duration;
 
   if (info->forward_reference != VDP_INVALID_HANDLE &&
       info->picture_coding_type != I_FRAME)
@@ -378,6 +379,7 @@ gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
 {
   MPEGPictureExt pic_ext;
   VdpPictureInfoMPEG1Or2 *info;
+  gint fields;
 
   info = &mpeg_dec->vdp_info;
 
@@ -395,6 +397,36 @@ gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
   info->intra_vlc_format = pic_ext.intra_vlc_format;
   info->alternate_scan = pic_ext.alternate_scan;
 
+  fields = 0;
+  if (pic_ext.picture_structure == 3) {
+    if (mpeg_dec->interlaced) {
+      if (pic_ext.progressive_frame == 0)
+        fields = 2;
+      if (pic_ext.progressive_frame == 0 && pic_ext.repeat_first_field == 0)
+        fields = 2;
+      if (pic_ext.progressive_frame == 1 && pic_ext.repeat_first_field == 1)
+        fields = 3;
+    } else {
+      if (pic_ext.repeat_first_field == 0)
+        fields = 2;
+      if (pic_ext.repeat_first_field == 1 && pic_ext.top_field_first == 0)
+        fields = 4;
+      if (pic_ext.repeat_first_field == 1 && pic_ext.top_field_first == 1)
+        fields = 6;
+    }
+  } else
+    fields = 1;
+
+  GST_DEBUG ("fields: %d", fields);
+
+  if (!fields) {
+    GST_DEBUG ("Invalid Picture Extension packet");
+    return FALSE;
+  }
+
+  mpeg_dec->duration = gst_util_uint64_scale (fields,
+      GST_SECOND * mpeg_dec->fps_d, 2 * mpeg_dec->fps_n);
+
   return TRUE;
 }
 
@@ -407,7 +439,6 @@ gst_vdp_mpeg_decoder_parse_sequence (GstVdpMpegDecoder * mpeg_dec,
   if (!mpeg_util_parse_sequence_hdr (&hdr, buffer))
     return FALSE;
 
-  g_debug ("här");
   memcpy (&mpeg_dec->vdp_info.intra_quantizer_matrix,
       &hdr.intra_quantizer_matrix, 64);
   memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
@@ -447,6 +478,9 @@ gst_vdp_mpeg_decoder_parse_picture (GstVdpMpegDecoder * mpeg_dec,
         pic_hdr.full_pel_backward_vector;
     memcpy (&mpeg_dec->vdp_info.f_code, &pic_hdr.f_code, 4);
   }
+
+  mpeg_dec->duration = gst_util_uint64_scale (1, GST_SECOND * mpeg_dec->fps_d,
+      mpeg_dec->fps_n);
 
   return TRUE;
 }

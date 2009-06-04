@@ -333,6 +333,14 @@ mpeg_util_parse_picture_coding_extension (MPEGPictureExt * ext,
   if (!gst_bit_reader_get_bits_uint8 (&reader, &ext->repeat_first_field, 1))
     return FALSE;
 
+  /* chroma_420_type */
+  if (!gst_bit_reader_get_bits_uint8 (&reader, &ext->chroma_420_type, 1))
+    return FALSE;
+
+  /* progressive_frame */
+  if (!gst_bit_reader_get_bits_uint8 (&reader, &ext->progressive_frame, 1))
+    return FALSE;
+
   return TRUE;
 }
 
