@@ -420,6 +420,8 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
         gst_tag_list_free (oldtags);
       GST_DEBUG_OBJECT (pad, "received tags %" GST_PTR_FORMAT, newtags);
       GST_OBJECT_UNLOCK (selpad);
+
+      g_object_notify (G_OBJECT (selpad), "tags");
       break;
     }
     case GST_EVENT_EOS:
