@@ -1603,11 +1603,11 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
         GST_DEBUG_OBJECT (sink, "step ended, we need clipping");
         step_end = TRUE;
         if (segment->rate > 0.0) {
-          *cstart += end - *rstart;
           *rstart = end;
+          *cstart = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
         } else {
-          *cstop += *rstop - end;
           *rstop = end;
+          *cstop = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
         }
       }
       GST_DEBUG_OBJECT (sink,
