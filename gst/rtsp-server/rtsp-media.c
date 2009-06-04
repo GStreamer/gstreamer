@@ -697,7 +697,7 @@ caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
     gst_caps_unref (oldcaps);
 
   capsstr = gst_caps_to_string (newcaps);
-  g_message ("stream %p received caps %s", stream, capsstr);
+  g_message ("stream %p received caps %p, %s", stream, newcaps, capsstr);
   g_free (capsstr);
 }
 
@@ -1152,9 +1152,9 @@ default_handle_message (GstRTSPMedia *media, GstMessage *message)
       break;
     }
     case GST_MESSAGE_ELEMENT:
-    {
       break;
-    }
+    case GST_MESSAGE_STREAM_STATUS:
+      break;
     default:
       g_message ("%p: got message type %s", media, gst_message_type_get_name (type));
       break;
