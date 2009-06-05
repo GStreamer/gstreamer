@@ -1849,8 +1849,9 @@ gen_tunnel_reply (GstRTSPConnection * conn, GstRTSPStatusCode code)
     if (conn->ip)
       g_string_append_printf (str, "x-server-ip-address: %s\r\n", conn->ip);
     g_string_append_printf (str,
-        "Content-Type: application/x-rtsp-tunnelled\r\n" "\r\n");
+        "Content-Type: application/x-rtsp-tunnelled\r\n");
   }
+  g_string_append_printf (str, "\r\n");
   return str;
 }
 
