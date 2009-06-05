@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<refsynopsisdiv>
+  <refsect2>
+    <title>Element Information</title>
+    <variablelist>
+      <varlistentry>
+        <term>plugin</term>
+        <listitem>
+          <simpara>
+            <link linkend="plugin-debugutilsbad">debugutilsbad</link>
+          </simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>author</term>
+        <listitem>
+          <simpara>Zeeshan Ali &lt;zeeshan.ali@nokia.com&gt;, Stefan Kost &lt;stefan.kost@nokia.com&gt;</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>class</term>
+        <listitem>
+          <simpara>Sink/Video</simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect2>
+  <refsect2>
+    <title>Element Pads</title>
+    <variablelist>
+      <varlistentry>
+        <term>name</term>
+        <listitem>
+          <simpara>sink</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>direction</term>
+        <listitem>
+          <simpara>sink</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>presence</term>
+        <listitem>
+          <simpara>always</simpara>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>details</term>
+        <listitem>
+          <simpara>ANY</simpara>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect2>
+</refsynopsisdiv>
