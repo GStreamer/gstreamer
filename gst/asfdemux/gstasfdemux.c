@@ -2276,6 +2276,16 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
                 gst_value_set_date (&tag_value, date);
                 g_date_free (date);
               }
+            } else if (strcmp (gst_tag_name, GST_TAG_GENRE) == 0) {
+              guint id3v1_genre_id;
+              const gchar *genre_str;
+
+              if (sscanf (value_utf8, "(%u)", &id3v1_genre_id) == 1 &&
+                  ((genre_str = gst_tag_id3_genre_get (id3v1_genre_id)))) {
+                GST_DEBUG ("Genre: %s -> %s", value_utf8, genre_str);
+                g_free (value_utf8);
+                value_utf8 = g_strdup (genre_str);
+              }
             } else {
               GType tag_type;
 
