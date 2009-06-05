@@ -2731,20 +2731,18 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     type_name = g_strdup_printf ("ffdec_%s", plugin_name);
     g_free (plugin_name);
 
-    /* if it's already registered, drop it */
-    if (g_type_from_name (type_name)) {
-      g_free (type_name);
-      goto next;
+    type = g_type_from_name (type_name);
+
+    if (!type) {
+      params = g_new0 (GstFFMpegDecClassParams, 1);
+      params->in_plugin = in_plugin;
+      params->srccaps = gst_caps_ref (srccaps);
+      params->sinkcaps = gst_caps_ref (sinkcaps);
+
+      /* create the gtype now */
+      type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
+      g_type_set_qdata (type, GST_FFDEC_PARAMS_QDATA, (gpointer) params);
     }
-
-    params = g_new0 (GstFFMpegDecClassParams, 1);
-    params->in_plugin = in_plugin;
-    params->srccaps = gst_caps_ref (srccaps);
-    params->sinkcaps = gst_caps_ref (sinkcaps);
-
-    /* create the gtype now */
-    type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-    g_type_set_qdata (type, GST_FFDEC_PARAMS_QDATA, (gpointer) params);
 
     /* (Ronald) MPEG-4 gets a higher priority because it has been well-
      * tested and by far outperforms divxdec/xviddec - so we prefer it.

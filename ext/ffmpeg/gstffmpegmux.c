@@ -835,17 +835,6 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       p++;
     }
 
-    /* if it's already registered, drop it */
-    if (g_type_from_name (type_name)) {
-      g_free (type_name);
-      gst_caps_unref (srccaps);
-      if (audiosinkcaps)
-        gst_caps_unref (audiosinkcaps);
-      if (videosinkcaps)
-        gst_caps_unref (videosinkcaps);
-      goto next;
-    }
-
     /* fix up allowed caps for some muxers */
     if (strcmp (in_plugin->name, "flv") == 0) {
       const gint rates[] = { 44100, 22050, 11025 };
@@ -859,17 +848,22 @@ gst_ffmpegmux_register (GstPlugin * plugin)
           gst_caps_from_string ("video/x-raw-rgb, bpp=(int)24, depth=(int)24");
     }
 
-    /* create a cache for these properties */
-    params = g_new0 (GstFFMpegMuxClassParams, 1);
-    params->in_plugin = in_plugin;
-    params->srccaps = srccaps;
-    params->videosinkcaps = videosinkcaps;
-    params->audiosinkcaps = audiosinkcaps;
+    type = g_type_from_name (type_name);
 
-    /* create the type now */
-    type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-    g_type_set_qdata (type, GST_FFMUX_PARAMS_QDATA, (gpointer) params);
-    g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
+    if (!type) {
+      /* create a cache for these properties */
+      params = g_new0 (GstFFMpegMuxClassParams, 1);
+      params->in_plugin = in_plugin;
+      params->srccaps = srccaps;
+      params->videosinkcaps = videosinkcaps;
+      params->audiosinkcaps = audiosinkcaps;
+
+      /* create the type now */
+      type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
+      g_type_set_qdata (type, GST_FFMUX_PARAMS_QDATA, (gpointer) params);
+      g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
+
+    }
 
     if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
       g_free (type_name);

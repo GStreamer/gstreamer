@@ -1177,28 +1177,26 @@ gst_ffmpegenc_register (GstPlugin * plugin)
     /* construct the type */
     type_name = g_strdup_printf ("ffenc_%s", in_plugin->name);
 
-    /* if it's already registered, drop it */
-    if (g_type_from_name (type_name)) {
-      g_free (type_name);
-      goto next;
-    }
+    type = g_type_from_name (type_name);
 
-    params = g_new0 (GstFFMpegEncClassParams, 1);
-    params->in_plugin = in_plugin;
-    params->srccaps = gst_caps_ref (srccaps);
-    params->sinkcaps = gst_caps_ref (sinkcaps);
+    if (!type) {
+      params = g_new0 (GstFFMpegEncClassParams, 1);
+      params->in_plugin = in_plugin;
+      params->srccaps = gst_caps_ref (srccaps);
+      params->sinkcaps = gst_caps_ref (sinkcaps);
 
-    /* create the glib type now */
-    type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-    g_type_set_qdata (type, GST_FFENC_PARAMS_QDATA, (gpointer) params);
+      /* create the glib type now */
+      type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
+      g_type_set_qdata (type, GST_FFENC_PARAMS_QDATA, (gpointer) params);
 
-    {
-      static const GInterfaceInfo preset_info = {
-        NULL,
-        NULL,
-        NULL
-      };
-      g_type_add_interface_static (type, GST_TYPE_PRESET, &preset_info);
+      {
+        static const GInterfaceInfo preset_info = {
+          NULL,
+          NULL,
+          NULL
+        };
+        g_type_add_interface_static (type, GST_TYPE_PRESET, &preset_info);
+      }
     }
 
     if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
