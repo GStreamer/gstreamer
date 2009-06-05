@@ -549,7 +549,6 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (mpeg_dec, "Received discont buffer");
     gst_vdp_mpeg_decoder_reset (mpeg_dec);
-    return GST_FLOW_OK;
   }
 
   gst_vdp_mpeg_packetizer_init (&packetizer, buffer);
