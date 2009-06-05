@@ -41,7 +41,7 @@
 #include <string.h>
 
 #include "mpegutil.h"
-#include "gstvdpmpegdecoder.h"
+#include "gstvdpmpegdec.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdp_mpeg_dec_debug);
 #define GST_CAT_DEFAULT gst_vdp_mpeg_dec_debug

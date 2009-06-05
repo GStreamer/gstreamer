@@ -5,7 +5,7 @@
 
 #include <gst/gst.h>
 
-#include "gstvdpmpegdecoder.h"
+#include "gstvdpmpegdec.h"
 #include "gstvdpvideoyuv.h"
 #include "gstvdpyuvvideo.h"
 
