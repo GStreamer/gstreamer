@@ -301,8 +301,9 @@ gst_vdp_mpeg_decoder_push_video_buffer (GstVdpMpegDecoder * mpeg_dec,
         mpeg_dec->segment.stop, GST_BUFFER_TIMESTAMP (buffer));
 
     gst_pad_push_event (mpeg_dec->src, event);
+
+    mpeg_dec->seeking = FALSE;
   }
-  mpeg_dec->seeking = FALSE;
 
   mpeg_dec->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
       GST_BUFFER_DURATION (buffer);
