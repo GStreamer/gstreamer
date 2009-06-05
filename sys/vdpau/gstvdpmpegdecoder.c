@@ -251,6 +251,10 @@ gst_vdp_mpeg_decoder_set_caps (GstPad * pad, GstCaps * caps)
         gst_buffer_unref (buf);
       }
 
+      mpeg_dec->duration =
+          gst_util_uint64_scale (1, GST_SECOND * mpeg_dec->fps_d,
+          mpeg_dec->fps_n);
+
       mpeg_dec->byterate = bitrate * 50;
       GST_DEBUG ("byterate: %" G_GINT64_FORMAT, mpeg_dec->byterate);
     }
@@ -495,9 +499,6 @@ gst_vdp_mpeg_decoder_parse_picture (GstVdpMpegDecoder * mpeg_dec,
         pic_hdr.full_pel_backward_vector;
     memcpy (&mpeg_dec->vdp_info.f_code, &pic_hdr.f_code, 4);
   }
-
-  mpeg_dec->duration = gst_util_uint64_scale (1, GST_SECOND * mpeg_dec->fps_d,
-      mpeg_dec->fps_n);
 
   mpeg_dec->frame_nr = mpeg_dec->gop_frame + pic_hdr.tsn;
 
@@ -1025,13 +1026,12 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
   mpeg_dec->display_name = NULL;
   mpeg_dec->adapter = gst_adapter_new ();
 
-  mpeg_dec->next_timestamp = 0;
-
   mpeg_dec->device = NULL;
   mpeg_dec->decoder = VDP_INVALID_HANDLE;
-  gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
+  mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
+  mpeg_dec->vdp_info.backward_reference = VDP_INVALID_HANDLE;
 
-  gst_segment_init (&mpeg_dec->segment, GST_FORMAT_TIME);
+  gst_vdp_mpeg_decoder_reset (mpeg_dec);
 }
 
 static void
