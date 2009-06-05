@@ -20,7 +20,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, depth=(int)[ 1, 32 ], width=(int){ 8, 16, 24, 32 }, endianness=(int){ 1234, 4321 }, signed=(boolean){ true, false }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int){ 1234, 4321 }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+          <details>audio/x-raw-int, depth=(int)[ 1, 32 ], width=(int){ 8, 16, 24, 32 }, endianness=(int){ 1234, 4321 }, signed=(boolean){ true, false }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int){ 1234, 4321 }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-alaw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-mulaw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>sink</name>

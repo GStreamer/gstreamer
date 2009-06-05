@@ -9,6 +9,20 @@
   <package>GStreamer Bad Plug-ins git/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
-
+    <element>
+      <name>fpsdisplaysink</name>
+      <longname>Measure and show framerate on videosink</longname>
+      <class>Sink/Video</class>
+      <description>Shows the current frame-rate and drop-rate of the videosink as overlay or text on stdout</description>
+      <author>Zeeshan Ali &lt;zeeshan.ali@nokia.com&gt;, Stefan Kost &lt;stefan.kost@nokia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>
