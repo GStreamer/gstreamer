@@ -1819,8 +1819,8 @@ gst_decode_group_new (GstDecodeBin * dbin, gboolean use_queue)
      * memory. When this queue overruns, we assume the group is complete and can
      * be exposed. */
     g_object_set (G_OBJECT (mq),
-        "max-size-bytes", 2 * 1024 * 1024,
-        "max-size-time", 0, "max-size-buffers", 0, NULL);
+        "max-size-bytes", (guint) 2 * 1024 * 1024,
+        "max-size-time", (guint64) 0, "max-size-buffers", (guint) 0, NULL);
     /* will expose the group */
     group->overrunsig = g_signal_connect (G_OBJECT (mq), "overrun",
         G_CALLBACK (multi_queue_overrun_cb), group);
