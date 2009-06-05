@@ -69,7 +69,7 @@ enum
 
 /* If set to 1, then extra validation will be applied to check
  * for complete spec compliance wherever applicable. */
-#define VALIDATE 1
+#define VALIDATE 0
 
 /* Binary-coded decimal reading macro */
 #define BCD(c) ( ((((c) >> 4) & 0x0f) * 10) + ((c) & 0x0f) )
@@ -186,7 +186,8 @@ sfr_to_framerate (guint8 sfr)
 }
 
 static GstFlowReturn
-parse_dv_multi_pack (GstHDVParse * filter, guint8 * data, guint64 size)
+parse_dv_multi_pack (GstHDVParse * filter, guint8 * data, guint64 size,
+    GstStructure * st)
 {
   guint64 offs = 1;
 
@@ -208,12 +209,15 @@ parse_dv_multi_pack (GstHDVParse * filter, guint8 * data, guint64 size)
 
         GST_LOG ("  Iris position %d (0x%x)", irispos, irispos);
         /* Iris position = 2 ^ (IP/8) (for 0 < IP < 0x3C) */
-        if (irispos < 0x3c)
+        if (irispos < 0x3c) {
           GST_LOG ("   IRIS F%0.2f", powf (2.0, (((float) irispos) / 8.0)));
-        else if (irispos == 0x3d)
+          gst_structure_set (st, "aperture-fnumber", G_TYPE_FLOAT,
+              powf (2.0, (((float) irispos) / 8.0)), NULL);
+        } else if (irispos == 0x3d) {
           GST_LOG ("   IRIS < 1.0");
-        else if (irispos == 0x3e)
+        } else if (irispos == 0x3e) {
           GST_LOG ("    IRIS closed");
+        }
 
         /* AE Mode:
          * 0 : Full automatic
@@ -227,8 +231,9 @@ parse_dv_multi_pack (GstHDVParse * filter, guint8 * data, guint64 size)
 
         GST_LOG ("  AGC: %d (0x%x)", agc, agc);
         if (agc < 0xd) {
-          GST_LOG ("   Gain:%02.2fdB", (agc - 1.0) * 1.5);
-          GST_LOG ("   Gain:%02.2fdB", (agc * 3.0) - 3);
+          /* This is what the spec says.. but I'm not seeing the same on my camera :( */
+          GST_LOG ("   Gain:%02.2fdB", (agc * 3.0) - 3.0);
+          gst_structure_set (st, "gain", G_TYPE_FLOAT, (agc * 3.0) - 3.0, NULL);
         }
         /* White balance mode
          * 0 : Automatic
@@ -301,10 +306,12 @@ parse_dv_multi_pack (GstHDVParse * filter, guint8 * data, guint64 size)
           speedint = speedint / 10 * 10;
 
         GST_LOG (" Shutter speed : 1/%d", speedint);
+        gst_structure_set (st, "shutter-speed", GST_TYPE_FRACTION,
+            1, speedint, NULL);
       }
         break;
       default:
-        gst_util_dump_mem (data + offs, 5);
+        GST_MEMDUMP ("Unknown pack", data + offs, 5);
         break;
     }
     size -= 5;
@@ -314,7 +321,8 @@ parse_dv_multi_pack (GstHDVParse * filter, guint8 * data, guint64 size)
 }
 
 static GstFlowReturn
-parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size)
+parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size,
+    GstStructure * st)
 {
   guint32 etn, bitrate;
   guint8 nbframes, data_h, hdr_size, sfr, sdm;
@@ -405,6 +413,9 @@ parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size)
   GST_LOG_OBJECT (filter, "  Source Frame Rate : %s (0x%x)",
       sfr_to_framerate (sfr), sfr);
 
+  gst_structure_set (st, "DTS", G_TYPE_UINT64, MPEGTIME_TO_GSTTIME (dts),
+      "interlaced", G_TYPE_BOOLEAN, !pf, NULL);
+
   /* Search Data Mode
    *      ---------------------------------
    * 15   |    Search Data Mode           |
@@ -482,7 +493,6 @@ parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size)
       (chroma == 0x1) ? "4:2:0" : "RESERVED", chroma);
   GST_LOG_OBJECT (filter, "  GOP N/M : %d / %d", gop_n, gop_m);
 
-
   /* data availability
    *      ---------------------------------
    * 29   | 0 | 0 | 0 | 0 | 0 |PE2|PE1|PE0|
@@ -494,6 +504,8 @@ parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size)
   if (data[29] & 0x1) {
     guint8 fr, sec, min, hr;
     gboolean bf, df;
+    gchar *ttcs;
+
     /* HD2 TTC
      *      ---------------------------------
      * 30   |BF |DF |Tens Fr|Units of Frames|
@@ -513,12 +525,19 @@ parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size)
     hr = BCD (data[33] & 0x3f);
     GST_LOG_OBJECT (filter, " HD2 Title Time Code");
     GST_LOG_OBJECT (filter, "  BF:%d, Drop Frame:%d", bf, df);
-    GST_LOG_OBJECT (filter, "  Timecode %02d:%02d:%02d.%02d", hr, min, sec, fr);
+    ttcs = g_strdup_printf ("%02d:%02d:%02d.%02d", hr, min, sec, fr);
+    GST_LOG_OBJECT (filter, "  Timecode %s", ttcs);
     /* FIXME : Use framerate information from above to convert to GstClockTime */
+    gst_structure_set (st, "title-time-code", G_TYPE_STRING, ttcs, NULL);
+    g_free (ttcs);
+
   }
+
   if (data[29] & 0x2) {
     gboolean ds, tm;
     guint8 tz, day, dow, month, year;
+    GDate *date;
+
     /* REC DATE
      *      ---------------------------------
      * 34   |DS |TM |Tens TZ|Units of TimeZn|
@@ -542,9 +561,17 @@ parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size)
     GST_LOG_OBJECT (filter, "  ds:%d, tm:%d", ds, tm);
     GST_LOG_OBJECT (filter, "  Timezone: %d", tz);
     GST_LOG_OBJECT (filter, "  Date: %d %02d/%02d/%04d", dow, day, month, year);
+    date = g_date_new_dmy (day, month, year);
+    gst_structure_set (st, "date", GST_TYPE_DATE, date,
+        "timezone", G_TYPE_INT, tz,
+        "daylight-saving", G_TYPE_BOOLEAN, ds, NULL);
+    g_date_free (date);
   }
+
   if (data[29] & 0x4) {
     guint8 fr, sec, min, hr;
+    gchar *times;
+
     /* REC TIME
      *      ---------------------------------
      * 38   | 1 | 1 |Tens Fr|Units of Frames|
@@ -560,7 +587,10 @@ parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size)
     sec = BCD (data[39] & 0x7f);
     min = BCD (data[40] & 0x7f);
     hr = BCD (data[41] & 0x3f);
+    times = g_strdup_printf ("%02d:%02d:%02d", hr, min, sec);
     GST_LOG_OBJECT (filter, " REC TIME %02d:%02d:%02d.%02d", hr, min, sec, fr);
+    gst_structure_set (st, "time", G_TYPE_STRING, times, NULL);
+    g_free (times);
   }
 
   /* MISC
@@ -577,6 +607,8 @@ parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size)
       (recst == 0) ? "PRESENT" : "ABSENT");
   GST_LOG_OBJECT (filter, " ABST : %s",
       (abst == 0) ? "DISCONTINUITY" : "NO DISCONTINUITY");
+
+  gst_structure_set (st, "recording-start-point", G_TYPE_BOOLEAN, !recst, NULL);
 
   /* Extended DV Pack #1
    * 43 - 47
@@ -598,7 +630,8 @@ parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size)
 }
 
 static GstFlowReturn
-parse_audio_frame (GstHDVParse * filter, guint8 * data, guint64 size)
+parse_audio_frame (GstHDVParse * filter, guint8 * data, guint64 size,
+    GstStructure * st)
 {
   guint32 etn;
   guint8 nbmute, nbaau;
@@ -718,6 +751,10 @@ parse_audio_frame (GstHDVParse * filter, guint8 * data, guint64 size)
   GST_LOG_OBJECT (filter, "  CGMS : 0x%x", cgms);
   GST_LOG_OBJECT (filter, "  Recording Start Point %s",
       (recst) ? "ABSENT" : "PRESENT");
+
+  gst_structure_set (st, "PTS", G_TYPE_UINT64, MPEGTIME_TO_GSTTIME (pts),
+      "recording-start-point", G_TYPE_BOOLEAN, !recst, NULL);
+
   return GST_FLOW_OK;
 }
 
@@ -728,6 +765,7 @@ gst_hdvparse_parse (GstHDVParse * filter, GstBuffer * buf)
   guint8 *data = GST_BUFFER_DATA (buf);
   guint64 offs = 0;
   guint64 insize = GST_BUFFER_SIZE (buf);
+  GstStructure *st;
 
   /* Byte | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
    *      ---------------------------------
@@ -753,7 +791,7 @@ gst_hdvparse_parse (GstHDVParse * filter, GstBuffer * buf)
    * 0x7F      : AUX-N NULL PACK
    */
 
-  gst_util_dump_mem (data, insize);
+  st = gst_structure_empty_new ("hdv-aux");
 
   while (res == GST_FLOW_OK && (offs < insize)) {
     guint8 kw = data[offs] & 0x7f;
@@ -767,8 +805,10 @@ gst_hdvparse_parse (GstHDVParse * filter, GstBuffer * buf)
 
     /* Size validation */
     GST_DEBUG ("kw:0x%x, insize:%d, offs:%d, size:%d", kw, insize, offs, size);
-    if (insize < offs + size)
-      return GST_FLOW_ERROR;
+    if (insize < offs + size) {
+      res = GST_FLOW_ERROR;
+      goto beach;
+    }
 
     switch (kw) {
       case 0x01:
@@ -780,7 +820,7 @@ gst_hdvparse_parse (GstHDVParse * filter, GstBuffer * buf)
         break;
       case 0x40:
         GST_LOG ("Audio frame pack");
-        res = parse_audio_frame (filter, data + offs + 1, size);
+        res = parse_audio_frame (filter, data + offs + 1, size, st);
         offs += size + 2;
         break;
       case 0x3f:
@@ -789,7 +829,7 @@ gst_hdvparse_parse (GstHDVParse * filter, GstBuffer * buf)
         break;
       case 0x44:
         GST_LOG ("Video frame pack");
-        res = parse_video_frame (filter, data + offs + 1, size);
+        res = parse_video_frame (filter, data + offs + 1, size, st);
         offs += size + 2;
         break;
       case 0x48:
@@ -797,7 +837,7 @@ gst_hdvparse_parse (GstHDVParse * filter, GstBuffer * buf)
       case 0x4A:
       case 0x4B:
         GST_LOG ("DV multi-pack");
-        res = parse_dv_multi_pack (filter, data + offs + 1, size);
+        res = parse_dv_multi_pack (filter, data + offs + 1, size, st);
         offs += size + 2;
         break;
       default:
@@ -805,6 +845,15 @@ gst_hdvparse_parse (GstHDVParse * filter, GstBuffer * buf)
         res = GST_FLOW_ERROR;
     }
   }
+
+beach:
+  if (gst_structure_n_fields (st)) {
+    GstMessage *msg;
+    /* Emit the element message */
+    msg = gst_message_new_element (GST_OBJECT (filter), st);
+    gst_element_post_message (GST_ELEMENT (filter), msg);
+  } else
+    gst_structure_free (st);
 
   return res;
 
