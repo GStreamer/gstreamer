@@ -278,7 +278,7 @@ parse_dv_multi_pack (GstHDVParse * filter, guint8 * data, guint64 size,
           GST_LOG ("  Horizontal Panning : %d (0x%d)", h_pan, h_pan);
         GST_LOG ("  Stabilizer : %s", is ? "OFF" : "ON");
         if (focal_length != 0xff)
-          GST_LOG ("  Focal Length : %d mm",
+          GST_LOG ("  Focal Length : %f mm",
               (focal_length & 0x7f) * pow (10, focal_length & 0x80));
         if (zen == 0)
           GST_LOG ("  Electric Zoom %02dd.%03d", e_zoom >> 5, e_zoom & 0x1f);
@@ -804,7 +804,8 @@ gst_hdvparse_parse (GstHDVParse * filter, GstBuffer * buf)
       size = 4;
 
     /* Size validation */
-    GST_DEBUG ("kw:0x%x, insize:%d, offs:%d, size:%d", kw, insize, offs, size);
+    GST_DEBUG ("kw:0x%x, insize:%" G_GUINT64_FORMAT ", offs:%" G_GUINT64_FORMAT
+        ", size:%d", kw, insize, offs, size);
     if (insize < offs + size) {
       res = GST_FLOW_ERROR;
       goto beach;
