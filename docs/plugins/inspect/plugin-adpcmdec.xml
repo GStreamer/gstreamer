@@ -1,0 +1,34 @@
+<plugin>
+  <name>adpcmdec</name>
+  <description>ADPCM decoder</description>
+  <filename>../../gst/adpcmdec/.libs/libgstadpcmdec.so</filename>
+  <basename>libgstadpcmdec.so</basename>
+  <version>0.10.12.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>msadpcmdec</name>
+      <longname>MS-ADPCM decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Decode MS AD-PCM audio</description>
+      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-adpcm, layout=(string)microsoft, block_align=(int)[ 64, 8096 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
