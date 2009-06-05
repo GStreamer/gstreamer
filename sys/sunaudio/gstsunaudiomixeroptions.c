@@ -40,6 +40,9 @@
 #include "gstsunaudiomixeroptions.h"
 #include "gstsunaudiomixertrack.h"
 
+GST_DEBUG_CATEGORY_EXTERN (sunaudio_debug);
+#define GST_CAT_DEFAULT sunaudio_debug
+
 static void gst_sunaudiomixer_options_init (GstSunAudioMixerOptions * sun_opts);
 static void gst_sunaudiomixer_options_class_init (gpointer g_class,
     gpointer class_data);
@@ -110,6 +113,9 @@ gst_sunaudiomixer_options_new (GstSunAudioMixerCtrl * mixer, gint track_num)
   sun_opts = GST_SUNAUDIO_MIXER_OPTIONS (opts);
   track = GST_MIXER_TRACK (opts);
 
+  GST_DEBUG_OBJECT (opts, "New mixer options, track %d: %s",
+      track_num, GST_STR_NULL (label));
+
   /* save off names for the record sources */
   sun_opts->names[0] = g_quark_from_string (_("Microphone"));
   sun_opts->names[1] = g_quark_from_string (_("Line In"));
@@ -142,6 +148,8 @@ gst_sunaudiomixer_options_new (GstSunAudioMixerCtrl * mixer, gint track_num)
     if ((1 << i) & audioinfo.record.avail_ports) {
       const char *s = g_quark_to_string (sun_opts->names[i]);
       opts->values = g_list_append (opts->values, g_strdup (s));
+      GST_DEBUG_OBJECT (opts, "option for track %d: %s",
+          track_num, GST_STR_NULL (s));
     }
   }
 

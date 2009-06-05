@@ -71,6 +71,8 @@ gst_sunaudiomixer_ctrl_open (GstSunAudioMixerCtrl * mixer)
   /* Try to set the multiple open flag if we can, but ignore errors */
   ioctl (mixer->mixer_fd, AUDIO_MIXER_MULTIPLE_OPEN);
 
+  GST_DEBUG_OBJECT (mixer, "Opened mixer device %s", mixer->device);
+
   return TRUE;
 }
 
@@ -288,9 +290,9 @@ gst_sunaudiomixer_ctrl_get_volume (GstSunAudioMixerCtrl * mixer,
   }
 
   /* Likewise reset MUTE */
-  if ((sunaudiotrack->track_num == GST_SUNAUDIO_TRACK_OUTPUT &&
-          audioinfo.output_muted == 1) ||
-      (sunaudiotrack->track_num != GST_SUNAUDIO_TRACK_OUTPUT && gain == 0)) {
+  if ((sunaudiotrack->track_num == GST_SUNAUDIO_TRACK_OUTPUT
+          && audioinfo.output_muted == 1)
+      || (sunaudiotrack->track_num != GST_SUNAUDIO_TRACK_OUTPUT && gain == 0)) {
     /*
      * If MUTE is set, then gain is always 0, so don't bother
      * resetting our internal value.
@@ -469,12 +471,19 @@ gst_sunaudiomixer_ctrl_set_mute (GstSunAudioMixerCtrl * mixer,
   }
 
   if (audioinfo.play.port != ((unsigned) ~0)) {
-    /* mask off ports we can't modify */
-    audioinfo.play.port &= oldinfo.play.mod_ports;
-    /* and add in any that are forced to be on */
-    audioinfo.play.port |= (oldinfo.play.port & ~oldinfo.play.mod_ports);
+    /* mask off ports we can't modify. Hack for broken drivers where mod_ports == 0 */
+    if (oldinfo.play.mod_ports != 0) {
+      audioinfo.play.port &= oldinfo.play.mod_ports;
+      /* and add in any that are forced to be on */
+      audioinfo.play.port |= (oldinfo.play.port & ~oldinfo.play.mod_ports);
+    }
   }
   g_return_if_fail (mixer->mixer_fd != -1);
+
+  if (audioinfo.play.port != (guint) (-1) &&
+      audioinfo.play.port != oldinfo.play.port)
+    GST_LOG_OBJECT (mixer, "Changing play port mask to 0x%08x",
+        audioinfo.play.port);
 
   if (ioctl (mixer->mixer_fd, AUDIO_SETINFO, &audioinfo) < 0) {
     g_warning ("Error setting audio settings");
@@ -561,9 +570,15 @@ gst_sunaudiomixer_ctrl_get_option (GstSunAudioMixerCtrl * mixer,
 
   for (i = 0; i < 8; i++) {
     if ((1 << i) == audioinfo.record.port) {
-      return (g_quark_to_string (opts->names[i]));
+      const gchar *s = g_quark_to_string (opts->names[i]);
+      GST_DEBUG_OBJECT (mixer, "Getting value for option %d: %s",
+          opts->track_num, s);
+      return (s);
     }
   }
+
+  GST_DEBUG_OBJECT (mixer, "Unable to get value for option %d",
+      opts->track_num);
 
   g_warning ("Record port value %d seems illegal", audioinfo.record.port);
   return (NULL);

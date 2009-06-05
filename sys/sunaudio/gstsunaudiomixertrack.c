@@ -40,14 +40,17 @@
 
 #include "gstsunaudiomixertrack.h"
 
+GST_DEBUG_CATEGORY_EXTERN (sunaudio_debug);
+#define GST_CAT_DEFAULT sunaudio_debug
+
 #define MASK_BIT_IS_SET(mask, bit) \
   (mask & (1 << bit))
 
 G_DEFINE_TYPE (GstSunAudioMixerTrack, gst_sunaudiomixer_track,
-    GST_TYPE_MIXER_TRACK)
+    GST_TYPE_MIXER_TRACK);
 
-     static void
-         gst_sunaudiomixer_track_class_init (GstSunAudioMixerTrackClass * klass)
+static void
+gst_sunaudiomixer_track_class_init (GstSunAudioMixerTrackClass * klass)
 {
   /* nop */
 }
@@ -77,7 +80,6 @@ gst_sunaudiomixer_track_new (GstSunAudioTrackType track_num)
 
   GstSunAudioMixerTrack *sunaudiotrack;
   GstMixerTrack *track;
-  GObjectClass *klass;
   const gchar *untranslated_label;
 
   if ((guint) track_num < G_N_ELEMENTS (labels))
@@ -85,15 +87,11 @@ gst_sunaudiomixer_track_new (GstSunAudioTrackType track_num)
   else
     untranslated_label = NULL;
 
-  /* FIXME: remove this check once we depend on -base >= 0.10.12.1 */
-  klass = G_OBJECT_CLASS (g_type_class_ref (GST_TYPE_SUNAUDIO_MIXER_TRACK));
-  if (g_object_class_find_property (klass, "untranslated-label")) {
-    sunaudiotrack = g_object_new (GST_TYPE_SUNAUDIO_MIXER_TRACK,
-        "untranslated-label", untranslated_label, NULL);
-  } else {
-    sunaudiotrack = g_object_new (GST_TYPE_SUNAUDIO_MIXER_TRACK, NULL);
-  }
-  g_type_class_unref (klass);
+  sunaudiotrack = g_object_new (GST_TYPE_SUNAUDIO_MIXER_TRACK,
+      "untranslated-label", untranslated_label, NULL);
+
+  GST_DEBUG_OBJECT (sunaudiotrack, "Creating new mixer track of type %d: %s",
+      track_num, GST_STR_NULL (untranslated_label));
 
   switch (track_num) {
     case GST_SUNAUDIO_TRACK_OUTPUT:
