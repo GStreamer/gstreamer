@@ -979,16 +979,13 @@
   <attr path="/api/namespace/class[@name='Value']" name="hidden">1</attr>
 
   <!-- GStreamer Base library -->
-  <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']" name="name">BaseSrcFlags</attr>
   <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']/member[@cname='GST_BASE_SRC_STARTED']" name="value">Gst.ElementFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']/member[@cname='GST_BASE_SRC_FLAG_LAST']" name="value">Gst.ElementFlags.Last &lt;&lt; 2</attr>
   <attr path="/api/namespace/enum[@cname='GstBaseSrcFlags']/member[@cname='GST_BASE_SRC_FLAG_LAST']" name="name">Last</attr>
 
-  <attr path="/api/namespace/callback[@cname='GstTypeFindHelperGetRangeFunction']" name="name">TypeFindHelperGetRangeFunction</attr>
   <attr path="/api/namespace/callback[@cname='GstTypeFindHelperGetRangeFunction']/parameters/parameter[@name='buffer']" name="pass_as">out</attr>
   <attr path="/api/namespace/callback[@cname='GstTypeFindHelperGetRangeFunction']/parameters/parameter[@name='buffer']" name="owned">true</attr>
 
-  <attr path="/api/namespace/object[@cname='GstAdapter']" name="name">Adapter</attr>
   <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_push']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_peek']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_copy']" name="hidden">1</attr>
@@ -996,24 +993,20 @@
   <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_take_buffer']" name="name">Take</attr>
   <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_take_buffer']/return-type" name="owned">true</attr>
 
-  <attr path="/api/namespace/object[@cname='GstBaseSink']" name="name">BaseSink</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='get_caps']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='buffer_alloc']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='buffer_alloc']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='get_times']/parameters/parameter[@name='start']" name="pass_as">out</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='get_times']/parameters/parameter[@name='end']" name="pass_as">out</attr>
 
-  <attr path="/api/namespace/object[@cname='GstBaseSrc']" name="name">BaseSrc</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='get_caps']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
 
-  <attr path="/api/namespace/object[@cname='GstBaseTransform']" name="name">BaseTransform</attr>
   <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='transform_caps']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='prepare_output_buffer']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='prepare_output_buffer']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
 
-  <attr path="/api/namespace/object[@cname='GstPushSrc']" name="name">PushSrc</attr>
   <attr path="/api/namespace/object[@cname='GstPushSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstPushSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
 
@@ -1055,13 +1048,10 @@
   </add-node>
 
   <!-- GStreamer Controller library -->
-  <attr path="/api/namespace/enum[@cname='GstInterpolateMode']" name="name">InterpolateMode</attr>
-  <attr path="/api/namespace/enum[@cname='GstLFOWaveform']" name="name">LFOWaveform</attr>
   <attr path="/api/namespace/callback[@cname='GstControlSourceBind']" name="hidden">1</attr>
   <attr path="/api/namespace/callback[@cname='GstControlSourceGetValue']" name="hidden">1</attr>
   <attr path="/api/namespace/callback[@cname='GstControlSourceGetValueArray']" name="hidden">1</attr>
 
-  <attr path="/api/namespace/object[@cname='GstController']" name="name">Controller</attr>
   <attr path="/api/namespace/object[@cname='GstController']/property" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_get_all']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_get_control_source']/return-type" name="owned">true</attr>
@@ -1080,7 +1070,6 @@
   <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_unset']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstController']/method[@cname='gst_controller_unset_all']" name="hidden">1</attr>
 
-  <attr path="/api/namespace/object[@cname='GstControlSource']" name="name">ControlSource</attr>
   <remove-node path="/api/namespace/object[@cname='GstControlSource']/class_struct" />
   <add-node path="/api/namespace/object[@cname='GstControlSource']">
     <class_struct cname="GstControlSourceClass">
@@ -1098,35 +1087,23 @@
   </add-node>
   <attr path="/api/namespace/object[@cname='GstControlSource']/method[@cname='gst_control_source_get_value']/parameters/parameter[@name='value']" name="pass_as">ref</attr>
 
-  <attr path="/api/namespace/object[@cname='GstInterpolationControlSource']" name="name">InterpolationControlSource</attr>
   <attr path="/api/namespace/object[@cname='GstInterpolationControlSource']/method[@cname='gst_interpolation_control_source_set']/parameters/parameter[@name='value']" name="pass_as">ref</attr>
   <attr path="/api/namespace/object[@cname='GstInterpolationControlSource']/method[@cname='gst_interpolation_control_source_set_from_list']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstInterpolationControlSource']/method[@cname='gst_interpolation_control_source_get_all']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@cname='GstLFOControlSource']" name="name">LFOControlSource</attr>
   <attr path="/api/namespace/struct[@cname='GstTimedValue']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstValueArray']" name="hidden">1</attr>
 
   <!-- GStreamer Cdda library -->
-  <attr path="/api/namespace/enum[@cname='GstCddaBaseSrcMode']" name="name">CddaBaseSrcMode</attr>
-
-  <attr path="/api/namespace/object[@cname='GstCddaBaseSrc']" name="name">CddaBaseSrc</attr>
   <attr path="/api/namespace/object[@cname='GstCddaBaseSrc']/virtual_method[@cname='probe_devices']/return-type" name="null_term_array">true</attr>
   <attr path="/api/namespace/object[@cname='GstCddaBaseSrc']/virtual_method[@cname='read_sector']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstCddaBaseSrc']/field[@cname='tags']" name="access">protected</attr>
   <attr path="/api/namespace/object[@cname='GstCddaBaseSrc']/field[@cname='tags']" name="writeable">true</attr>
 
-  <attr path="/api/namespace/struct[@cname='GstCddaBaseSrcTrack']" name="name">CddaBaseSrcTrack</attr>
   <attr path="/api/namespace/struct[@cname='GstCddaBaseSrcTrack']/field[@cname='_gst_reserved1']" name="array_len">4</attr>
   <remove-node path="/api/namespace/struct[@cname='GstCddaBaseSrcTrack']/field[@cname='_gst_reserved2']" />
 
 
   <!-- GStreamer Interfaces library -->
-  <attr path="/api/namespace/enum[@cname='GstColorBalanceType']" name="name">ColorBalanceType</attr>
-  <attr path="/api/namespace/enum[@cname='GstMixerFlags']" name="name">MixerFlags</attr>
-  <attr path="/api/namespace/enum[@cname='GstMixerMessageType']" name="name">MixerMessageType</attr>
-  <attr path="/api/namespace/enum[@cname='GstMixerTrackFlags']" name="name">MixerTrackFlags</attr>
-  <attr path="/api/namespace/enum[@cname='GstMixerType']" name="name">MixerType</attr>
-
   <attr path="/api/namespace/enum[@cname='GstNavigationCommand']" name="name">NavigationCommand</attr>
   <add-node path="/api/namespace/enum[@cname='GstNavigationCommand']">
     <member cname="GST_NAVIGATION_COMMAND_MENU1" name="DvdMenu" value="1" />
@@ -1138,41 +1115,25 @@
     <member cname="GST_NAVIGATION_COMMAND_MENU7" name="DvdChapterMenu" value="7" />
   </add-node>
 
-  <attr path="/api/namespace/enum[@cname='GstNavigationEventType']" name="name">NavigationEventType</attr>
-  <attr path="/api/namespace/enum[@cname='GstNavigationMessageType']" name="name">NavigationMessageType</attr>
-  <attr path="/api/namespace/enum[@cname='GstNavigationQueryType']" name="name">NavigationQueryType</attr>
-  <attr path="/api/namespace/enum[@cname='GstTunerChannelFlags']" name="name">TunerChannelFlags</attr>
-  <attr path="/api/namespace/interface[@cname='GstColorBalance']" name="name">ColorBalance</attr>
   <attr path="/api/namespace/interface[@cname='GstColorBalance']/virtual_method[@cname='list_channels']/return-type" name="element_type">GstColorBalanceChannel</attr>
   <attr path="/api/namespace/interface[@cname='GstColorBalance']/method[@cname='gst_color_balance_list_channels']/return-type" name="element_type">GstColorBalanceChannel</attr>
   <attr path="/api/namespace/interface[@cname='GstColorBalance']/method[@cname='gst_color_balance_value_changed']" name="name">EmitValueChanged</attr>
 
-  <attr path="/api/namespace/object[@cname='GstColorBalanceChannel']" name="name">ColorBalanceChannel</attr>
 
-  <attr path="/api/namespace/interface[@cname='GstMixer']" name="name">Mixer</attr>
   <attr path="/api/namespace/interface[@cname='GstMixer']/signal" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstMixer']/method[@cname='gst_mixer_list_tracks']/return-type" name="element_type">GstMixerTrack</attr>
   <attr path="/api/namespace/interface[@cname='GstMixer']/virtual_method[@cname='list_tracks']/return-type" name="element_type">GstMixerTrack</attr>
   <remove-attr path="/api/namespace/interface[@cname='GstMixer']/method[@cname='gst_mixer_options_list_changed']" name="shared" />
   <remove-node path="/api/namespace/interface[@cname='GstMixer']/method[@cname='gst_mixer_options_list_changed']/parameters/parameter[@name='mixer']" />
 
-  <attr path="/api/namespace/enum[@cname='GstMixerType']" name="name">MixerType</attr>
-
-  <attr path="/api/namespace/enum[@cname='GstMixerFlags']" name="name">MixerFlags</attr>
-
-  <attr path="/api/namespace/enum[@cname='GstMixerMessageType']" name="name">MixerMessageType</attr>
-
-  <attr path="/api/namespace/object[@cname='GstMixerTrack']" name="name">MixerTrack</attr>
   <attr path="/api/namespace/object[@cname='GstMixerTrack']/signal" name="hidden">1</attr>
 
-  <attr path="/api/namespace/object[@cname='GstMixerOptions']" name="name">MixerOptions</attr>
   <attr path="/api/namespace/object[@cname='GstMixerOptions']/field[@name='Values']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstMixerOptions']/signal" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstMixerOptions']/method[@cname='gst_mixer_options_get_values']/return-type" name="element_type">gchar*</attr>
   <attr path="/api/namespace/object[@cname='GstMixerOptions']/virtual_method[@cname='get_values']/return-type" name="element_type">gchar*</attr>
   <move-node path="/api/namespace/object[@cname='GstMixerOptions']/method[@cname='gst_mixer_options_list_changed']">/api/namespace/interface[@cname='GstMixer']</move-node>
 
-  <attr path="/api/namespace/interface[@cname='GstNavigation']" name="name">Navigation</attr>
   <attr path="/api/namespace/interface[@cname='GstNavigation']/virtual_method[@cname='send_event']/parameters/parameter" name="owned">true</attr>
   <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_message_get_type']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_message_new_angles_changed']" name="hidden">1</attr>
@@ -1196,9 +1157,6 @@
   <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_event_parse_command']" name="hidden">1</attr>
 
 
-  <attr path="/api/namespace/interface[@cname='GstPropertyProbe']" name="name">PropertyProbe</attr>
-
-  <attr path="/api/namespace/interface[@cname='GstTuner']" name="name">Tuner</attr>
   <remove-node path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_norm_changed']/parameters/parameter[@name='tuner']" />
   <remove-attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_norm_changed']" name="shared" />
   <remove-node path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_channel_changed']/parameters/parameter[@name='tuner']" />
@@ -1212,14 +1170,11 @@
   <attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_frequency_changed']" name="name">EmitFrequencyChanged</attr>
   <attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_signal_changed']" name="name">EmitSignalChanged</attr>
 
-  <attr path="/api/namespace/object[@cname='GstTunerChannel']" name="name">TunerChannel</attr>
   <move-node path="/api/namespace/object[@cname='GstTunerChannel']/method[@cname='gst_tuner_channel_changed']">/api/namespace/interface[@cname='GstTuner']</move-node>
 
-  <attr path="/api/namespace/object[@cname='GstTunerNorm']" name="name">TunerNorm</attr>
   <attr path="/api/namespace/object[@cname='GstTunerNorm']/field[@name='Framerate']" name="hidden">1</attr>
   <move-node path="/api/namespace/object[@cname='GstTunerNorm']/method[@cname='gst_tuner_norm_changed']">/api/namespace/interface[@cname='GstTuner']</move-node>
 
-  <attr path="/api/namespace/interface[@cname='GstVideoOrientation']" name="name">VideoOrientation</attr>
   <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/virtual_method[@cname='get_hflip']/parameters/parameter[@name='flip']" name="pass_as">out</attr>
   <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/virtual_method[@cname='get_vflip']/parameters/parameter[@name='flip']" name="pass_as">out</attr>
   <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/virtual_method[@cname='get_hcenter']/parameters/parameter[@name='center']" name="pass_as">out</attr>

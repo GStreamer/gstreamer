@@ -6175,11 +6175,11 @@
     </class>
   </namespace>
   <namespace name="Gst.Base" library="libgstbase-0.10.dll">
-    <enum name="GstBaseSrcFlags" cname="GstBaseSrcFlags" type="flags">
+    <enum name="BaseSrcFlags" cname="GstBaseSrcFlags" type="flags">
       <member cname="GST_BASE_SRC_STARTED" name="Started" value="GST_ELEMENT_FLAG_LAST &lt;&lt; 0" />
       <member cname="GST_BASE_SRC_FLAG_LAST" name="FlagLast" value="GST_ELEMENT_FLAG_LAST &lt;&lt; 2" />
     </enum>
-    <callback name="GstTypeFindHelperGetRangeFunction" cname="GstTypeFindHelperGetRangeFunction">
+    <callback name="TypeFindHelperGetRangeFunction" cname="GstTypeFindHelperGetRangeFunction">
       <return-type type="GstFlowReturn" />
       <parameters>
         <parameter type="GstObject*" name="obj" />
@@ -6188,7 +6188,7 @@
         <parameter type="GstBuffer**" name="buffer" />
       </parameters>
     </callback>
-    <object name="GstAdapter" cname="GstAdapter" parent="GObject">
+    <object name="Adapter" cname="GstAdapter" parent="GObject">
       <class_struct cname="GstAdapterClass">
         <field name="ParentClass" cname="parent_class" type="GObjectClass" />
         <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
@@ -6253,7 +6253,7 @@
         </parameters>
       </method>
     </object>
-    <object name="GstBaseSink" cname="GstBaseSink" parent="GstElement">
+    <object name="BaseSink" cname="GstBaseSink" parent="GstElement">
       <class_struct cname="GstBaseSinkClass">
         <field name="ParentClass" cname="parent_class" type="GstElementClass" />
         <method vm="get_caps" />
@@ -6486,7 +6486,7 @@
         <return-type type="GstFlowReturn" />
       </method>
     </object>
-    <object name="GstBaseSrc" cname="GstBaseSrc" parent="GstElement">
+    <object name="BaseSrc" cname="GstBaseSrc" parent="GstElement">
       <class_struct cname="GstBaseSrcClass">
         <field name="ParentClass" cname="parent_class" type="GstElementClass" />
         <method vm="get_caps" />
@@ -6676,7 +6676,7 @@
         <return-type type="GstFlowReturn" />
       </method>
     </object>
-    <object name="GstBaseTransform" cname="GstBaseTransform" parent="GstElement">
+    <object name="BaseTransform" cname="GstBaseTransform" parent="GstElement">
       <class_struct cname="GstBaseTransformClass">
         <field name="ParentClass" cname="parent_class" type="GstElementClass" />
         <method vm="transform_caps" />
@@ -6855,7 +6855,7 @@
         </parameters>
       </method>
     </object>
-    <object name="GstPushSrc" cname="GstPushSrc" parent="GstBaseSrc">
+    <object name="PushSrc" cname="GstPushSrc" parent="GstBaseSrc">
       <class_struct cname="GstPushSrcClass">
         <field name="ParentClass" cname="parent_class" type="GstBaseSrcClass" />
         <method vm="create" />
@@ -6874,7 +6874,7 @@
     </object>
   </namespace>
   <namespace name="Gst.Controller" library="libgstcontroller-0.10.dll">
-    <enum name="GstInterpolateMode" cname="GstInterpolateMode" type="enum">
+    <enum name="InterpolateMode" cname="GstInterpolateMode" type="enum">
       <member cname="GST_INTERPOLATE_NONE" name="None" />
       <member cname="GST_INTERPOLATE_TRIGGER" name="Trigger" />
       <member cname="GST_INTERPOLATE_LINEAR" name="Linear" />
@@ -6882,21 +6882,21 @@
       <member cname="GST_INTERPOLATE_CUBIC" name="Cubic" />
       <member cname="GST_INTERPOLATE_USER" name="User" />
     </enum>
-    <enum name="GstLFOWaveform" cname="GstLFOWaveform" type="enum">
+    <enum name="LFOWaveform" cname="GstLFOWaveform" type="enum">
       <member cname="GST_LFO_WAVEFORM_SINE" name="Sine" />
       <member cname="GST_LFO_WAVEFORM_SQUARE" name="Square" />
       <member cname="GST_LFO_WAVEFORM_SAW" name="Saw" />
       <member cname="GST_LFO_WAVEFORM_REVERSE_SAW" name="ReverseSaw" />
       <member cname="GST_LFO_WAVEFORM_TRIANGLE" name="Triangle" />
     </enum>
-    <callback name="GstControlSourceBind" cname="GstControlSourceBind">
+    <callback name="ControlSourceBind" cname="GstControlSourceBind">
       <return-type type="gboolean" />
       <parameters>
         <parameter type="GstControlSource*" name="self" />
         <parameter type="GParamSpec*" name="pspec" />
       </parameters>
     </callback>
-    <callback name="GstControlSourceGetValue" cname="GstControlSourceGetValue">
+    <callback name="ControlSourceGetValue" cname="GstControlSourceGetValue">
       <return-type type="gboolean" />
       <parameters>
         <parameter type="GstControlSource*" name="self" />
@@ -6904,7 +6904,7 @@
         <parameter type="GValue*" name="value" />
       </parameters>
     </callback>
-    <callback name="GstControlSourceGetValueArray" cname="GstControlSourceGetValueArray">
+    <callback name="ControlSourceGetValueArray" cname="GstControlSourceGetValueArray">
       <return-type type="gboolean" />
       <parameters>
         <parameter type="GstControlSource*" name="self" />
@@ -6912,7 +6912,7 @@
         <parameter type="GstValueArray*" name="value_array" />
       </parameters>
     </callback>
-    <object name="GstController" cname="GstController" parent="GObject">
+    <object name="Controller" cname="GstController" parent="GObject">
       <class_struct cname="GstControllerClass">
         <field name="ParentClass" cname="parent_class" type="GObjectClass" />
         <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
@@ -7067,7 +7067,7 @@
         </parameters>
       </method>
     </object>
-    <object name="GstControlSource" cname="GstControlSource" parent="GObject">
+    <object name="ControlSource" cname="GstControlSource" parent="GObject">
       <class_struct cname="GstControlSourceClass">
         <field name="ParentClass" cname="parent_class" type="GObjectClass" />
         <field name="Bind" cname="bind" type="GstControlSourceBind" />
@@ -7101,7 +7101,7 @@
         </parameters>
       </method>
     </object>
-    <object name="GstInterpolationControlSource" cname="GstInterpolationControlSource" parent="GstControlSource">
+    <object name="InterpolationControlSource" cname="GstInterpolationControlSource" parent="GstControlSource">
       <class_struct cname="GstInterpolationControlSourceClass">
         <field name="ParentClass" cname="parent_class" type="GstControlSourceClass" />
         <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
@@ -7148,7 +7148,7 @@
         <return-type type="void" />
       </method>
     </object>
-    <object name="GstLFOControlSource" cname="GstLFOControlSource" parent="GstControlSource">
+    <object name="LFOControlSource" cname="GstLFOControlSource" parent="GstControlSource">
       <class_struct cname="GstLFOControlSourceClass">
         <field name="ParentClass" cname="parent_class" type="GstControlSourceClass" />
         <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
@@ -7166,11 +7166,11 @@
       </method>
       <constructor cname="gst_lfo_control_source_new" />
     </object>
-    <struct name="GstTimedValue" cname="GstTimedValue">
+    <struct name="TimedValue" cname="GstTimedValue">
       <field name="Timestamp" cname="timestamp" type="GstClockTime" />
       <field name="Value" cname="value" type="GValue" />
     </struct>
-    <struct name="GstValueArray" cname="GstValueArray">
+    <struct name="ValueArray" cname="GstValueArray">
       <field name="PropertyName" cname="property_name" type="gchar*" />
       <field name="Nbsamples" cname="nbsamples" type="gint" />
       <field name="SampleInterval" cname="sample_interval" type="GstClockTime" />
@@ -7178,11 +7178,11 @@
     </struct>
   </namespace>
   <namespace name="Gst.Cdda" library="libgstcdda-0.10.dll">
-    <enum name="GstCddaBaseSrcMode" cname="GstCddaBaseSrcMode" gtype="gst_cdda_base_src_mode_get_type" type="enum">
+    <enum name="CddaBaseSrcMode" cname="GstCddaBaseSrcMode" gtype="gst_cdda_base_src_mode_get_type" type="enum">
       <member cname="GST_CDDA_BASE_SRC_MODE_NORMAL" name="Normal" />
       <member cname="GST_CDDA_BASE_SRC_MODE_CONTINUOUS" name="Continuous" />
     </enum>
-    <object name="GstCddaBaseSrc" cname="GstCddaBaseSrc" parent="GstPushSrc">
+    <object name="CddaBaseSrc" cname="GstCddaBaseSrc" parent="GstPushSrc">
       <class_struct cname="GstCddaBaseSrcClass">
         <field name="PushsrcClass" cname="pushsrc_class" type="GstPushSrcClass" />
         <method vm="open" />
@@ -7251,7 +7251,7 @@
         <return-type type="GType" />
       </method>
     </object>
-    <struct name="GstCddaBaseSrcTrack" cname="GstCddaBaseSrcTrack">
+    <struct name="CddaBaseSrcTrack" cname="GstCddaBaseSrcTrack">
       <field name="IsAudio" cname="is_audio" type="gboolean" />
       <field name="Num" cname="num" type="guint" />
       <field name="Start" cname="start" type="guint" />
@@ -7262,17 +7262,17 @@
     </struct>
   </namespace>
   <namespace name="Gst.Interfaces" library="libgstinterfaces-0.10.dll">
-    <enum name="GstColorBalanceType" cname="GstColorBalanceType" gtype="gst_color_balance_type_get_type" type="enum">
+    <enum name="ColorBalanceType" cname="GstColorBalanceType" gtype="gst_color_balance_type_get_type" type="enum">
       <member cname="GST_COLOR_BALANCE_HARDWARE" name="Hardware" />
       <member cname="GST_COLOR_BALANCE_SOFTWARE" name="Software" />
     </enum>
-    <enum name="GstMixerFlags" cname="GstMixerFlags" gtype="gst_mixer_flags_get_type" type="flags">
+    <enum name="MixerFlags" cname="GstMixerFlags" gtype="gst_mixer_flags_get_type" type="flags">
       <member cname="GST_MIXER_FLAG_NONE" name="None" />
       <member cname="GST_MIXER_FLAG_AUTO_NOTIFICATIONS" name="AutoNotifications" value="1 &lt;&lt; 0" />
       <member cname="GST_MIXER_FLAG_HAS_WHITELIST" name="HasWhitelist" value="1 &lt;&lt; 1" />
       <member cname="GST_MIXER_FLAG_GROUPING" name="Grouping" value="1 &lt;&lt; 2" />
     </enum>
-    <enum name="GstMixerMessageType" cname="GstMixerMessageType" gtype="gst_mixer_message_type_get_type" type="enum">
+    <enum name="MixerMessageType" cname="GstMixerMessageType" gtype="gst_mixer_message_type_get_type" type="enum">
       <member cname="GST_MIXER_MESSAGE_INVALID" name="Invalid" />
       <member cname="GST_MIXER_MESSAGE_MUTE_TOGGLED" name="MuteToggled" />
       <member cname="GST_MIXER_MESSAGE_RECORD_TOGGLED" name="RecordToggled" />
@@ -7281,7 +7281,7 @@
       <member cname="GST_MIXER_MESSAGE_OPTIONS_LIST_CHANGED" name="OptionsListChanged" />
       <member cname="GST_MIXER_MESSAGE_MIXER_CHANGED" name="MixerChanged" />
     </enum>
-    <enum name="GstMixerTrackFlags" cname="GstMixerTrackFlags" gtype="gst_mixer_track_flags_get_type" type="flags">
+    <enum name="MixerTrackFlags" cname="GstMixerTrackFlags" gtype="gst_mixer_track_flags_get_type" type="flags">
       <member cname="GST_MIXER_TRACK_INPUT" name="Input" value="1 &lt;&lt; 0" />
       <member cname="GST_MIXER_TRACK_OUTPUT" name="Output" value="1 &lt;&lt; 1" />
       <member cname="GST_MIXER_TRACK_MUTE" name="Mute" value="1 &lt;&lt; 2" />
@@ -7292,11 +7292,11 @@
       <member cname="GST_MIXER_TRACK_NO_MUTE" name="NoMute" value="1 &lt;&lt; 7" />
       <member cname="GST_MIXER_TRACK_WHITELIST" name="Whitelist" value="1 &lt;&lt; 8" />
     </enum>
-    <enum name="GstMixerType" cname="GstMixerType" gtype="gst_mixer_type_get_type" type="enum">
+    <enum name="MixerType" cname="GstMixerType" gtype="gst_mixer_type_get_type" type="enum">
       <member cname="GST_MIXER_HARDWARE" name="Hardware" />
       <member cname="GST_MIXER_SOFTWARE" name="Software" />
     </enum>
-    <enum name="GstNavigationCommand" cname="GstNavigationCommand" gtype="gst_navigation_command_get_type" type="enum">
+    <enum name="NavigationCommand" cname="GstNavigationCommand" gtype="gst_navigation_command_get_type" type="enum">
       <member cname="GST_NAVIGATION_COMMAND_INVALID" name="Invalid" />
       <member cname="GST_NAVIGATION_COMMAND_MENU1" name="Menu1" value="1" />
       <member cname="GST_NAVIGATION_COMMAND_MENU2" name="Menu2" value="2" />
@@ -7313,7 +7313,7 @@
       <member cname="GST_NAVIGATION_COMMAND_PREV_ANGLE" name="PrevAngle" value="30" />
       <member cname="GST_NAVIGATION_COMMAND_NEXT_ANGLE" name="NextAngle" value="31" />
     </enum>
-    <enum name="GstNavigationEventType" cname="GstNavigationEventType" gtype="gst_navigation_event_type_get_type" type="enum">
+    <enum name="NavigationEventType" cname="GstNavigationEventType" gtype="gst_navigation_event_type_get_type" type="enum">
       <member cname="GST_NAVIGATION_EVENT_INVALID" name="Invalid" />
       <member cname="GST_NAVIGATION_EVENT_KEY_PRESS" name="KeyPress" value="1" />
       <member cname="GST_NAVIGATION_EVENT_KEY_RELEASE" name="KeyRelease" value="2" />
@@ -7322,24 +7322,24 @@
       <member cname="GST_NAVIGATION_EVENT_MOUSE_MOVE" name="MouseMove" value="5" />
       <member cname="GST_NAVIGATION_EVENT_COMMAND" name="Command" value="6" />
     </enum>
-    <enum name="GstNavigationMessageType" cname="GstNavigationMessageType" gtype="gst_navigation_message_type_get_type" type="enum">
+    <enum name="NavigationMessageType" cname="GstNavigationMessageType" gtype="gst_navigation_message_type_get_type" type="enum">
       <member cname="GST_NAVIGATION_MESSAGE_INVALID" name="Invalid" />
       <member cname="GST_NAVIGATION_MESSAGE_MOUSE_OVER" name="MouseOver" />
       <member cname="GST_NAVIGATION_MESSAGE_COMMANDS_CHANGED" name="CommandsChanged" />
       <member cname="GST_NAVIGATION_MESSAGE_ANGLES_CHANGED" name="AnglesChanged" />
     </enum>
-    <enum name="GstNavigationQueryType" cname="GstNavigationQueryType" gtype="gst_navigation_query_type_get_type" type="enum">
+    <enum name="NavigationQueryType" cname="GstNavigationQueryType" gtype="gst_navigation_query_type_get_type" type="enum">
       <member cname="GST_NAVIGATION_QUERY_INVALID" name="Invalid" />
       <member cname="GST_NAVIGATION_QUERY_COMMANDS" name="Commands" value="1" />
       <member cname="GST_NAVIGATION_QUERY_ANGLES" name="Angles" value="2" />
     </enum>
-    <enum name="GstTunerChannelFlags" cname="GstTunerChannelFlags" gtype="gst_tuner_channel_flags_get_type" type="flags">
+    <enum name="TunerChannelFlags" cname="GstTunerChannelFlags" gtype="gst_tuner_channel_flags_get_type" type="flags">
       <member cname="GST_TUNER_CHANNEL_INPUT" name="Input" value="1 &lt;&lt; 0" />
       <member cname="GST_TUNER_CHANNEL_OUTPUT" name="Output" value="1 &lt;&lt; 1" />
       <member cname="GST_TUNER_CHANNEL_FREQUENCY" name="Frequency" value="1 &lt;&lt; 2" />
       <member cname="GST_TUNER_CHANNEL_AUDIO" name="Audio" value="1 &lt;&lt; 3" />
     </enum>
-    <interface name="GstColorBalance" cname="GstColorBalance">
+    <interface name="ColorBalance" cname="GstColorBalance">
       <class_struct cname="GstColorBalanceClass">
         <field name="Klass" cname="klass" type="GTypeInterface" />
         <field name="BalanceType" cname="balance_type" type="GstColorBalanceType" />
@@ -7400,7 +7400,7 @@
         </parameters>
       </method>
     </interface>
-    <interface name="GstMixer" cname="GstMixer">
+    <interface name="Mixer" cname="GstMixer">
       <class_struct cname="GstMixerClass">
         <field name="Klass" cname="klass" type="GTypeInterface" />
         <field name="MixerType" cname="mixer_type" type="GstMixerType" />
@@ -7623,7 +7623,7 @@
         </parameters>
       </method>
     </interface>
-    <interface name="GstNavigation" cname="GstNavigation">
+    <interface name="Navigation" cname="GstNavigation">
       <class_struct cname="GstNavigationInterface">
         <field name="GIface" cname="g_iface" type="GTypeInterface" />
         <method vm="send_event" />
@@ -7805,7 +7805,7 @@
         </parameters>
       </method>
     </interface>
-    <interface name="GstPropertyProbe" cname="GstPropertyProbe">
+    <interface name="PropertyProbe" cname="GstPropertyProbe">
       <class_struct cname="GstPropertyProbeInterface">
         <field name="Klass" cname="klass" type="GTypeInterface" />
         <method vm="probe_needed" />
@@ -7907,7 +7907,7 @@
         </parameters>
       </method>
     </interface>
-    <interface name="GstTuner" cname="GstTuner">
+    <interface name="Tuner" cname="GstTuner">
       <class_struct cname="GstTunerClass">
         <field name="Klass" cname="klass" type="GTypeInterface" />
         <method vm="list_channels" />
@@ -8071,7 +8071,7 @@
         </parameters>
       </method>
     </interface>
-    <interface name="GstVideoOrientation" cname="GstVideoOrientation">
+    <interface name="VideoOrientation" cname="GstVideoOrientation">
       <class_struct cname="GstVideoOrientationInterface">
         <field name="Parent" cname="parent" type="GTypeInterface" />
         <method vm="get_hflip" />
@@ -8184,7 +8184,7 @@
         </parameters>
       </method>
     </interface>
-    <interface name="GstXOverlay" cname="GstXOverlay">
+    <interface name="XOverlay" cname="GstXOverlay">
       <class_struct cname="GstXOverlayClass">
         <field name="Klass" cname="klass" type="GTypeInterface" />
         <method vm="set_xwindow_id" />
@@ -8236,7 +8236,7 @@
         </parameters>
       </method>
     </interface>
-    <object name="GstColorBalanceChannel" cname="GstColorBalanceChannel" parent="GObject">
+    <object name="ColorBalanceChannel" cname="GstColorBalanceChannel" parent="GObject">
       <class_struct cname="GstColorBalanceChannelClass">
         <field name="Parent" cname="parent" type="GObjectClass" />
         <method signal_vm="value_changed" />
@@ -8255,7 +8255,7 @@
         <return-type type="GType" />
       </method>
     </object>
-    <object name="GstMixerOptions" cname="GstMixerOptions" parent="GstMixerTrack">
+    <object name="MixerOptions" cname="GstMixerOptions" parent="GstMixerTrack">
       <class_struct cname="GstMixerOptionsClass">
         <field name="Parent" cname="parent" type="GstMixerTrackClass" />
         <method signal_vm="option_changed" />
@@ -8288,7 +8288,7 @@
         </parameters>
       </method>
     </object>
-    <object name="GstMixerTrack" cname="GstMixerTrack" parent="GObject">
+    <object name="MixerTrack" cname="GstMixerTrack" parent="GObject">
       <class_struct cname="GstMixerTrackClass">
         <field name="Parent" cname="parent" type="GObjectClass" />
         <method signal_vm="mute_toggled" />
@@ -8330,7 +8330,7 @@
         <return-type type="GType" />
       </method>
     </object>
-    <object name="GstTunerChannel" cname="GstTunerChannel" parent="GObject">
+    <object name="TunerChannel" cname="GstTunerChannel" parent="GObject">
       <class_struct cname="GstTunerChannelClass">
         <field name="Parent" cname="parent" type="GObjectClass" />
         <method signal_vm="frequency_changed" />
@@ -8367,7 +8367,7 @@
         <return-type type="GType" />
       </method>
     </object>
-    <object name="GstTunerNorm" cname="GstTunerNorm" parent="GObject">
+    <object name="TunerNorm" cname="GstTunerNorm" parent="GObject">
       <class_struct cname="GstTunerNormClass">
         <field name="Parent" cname="parent" type="GObjectClass" />
         <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
