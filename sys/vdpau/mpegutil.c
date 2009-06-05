@@ -256,20 +256,22 @@ mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, GstBuffer * buffer)
     if (!gst_bit_reader_get_bits_uint8 (&reader, &hdr->f_code[0][0], 3))
       return FALSE;
     hdr->f_code[0][1] = hdr->f_code[0][0];
-
-    if (hdr->pic_type == B_FRAME) {
-      if (!gst_bit_reader_get_bits_uint8 (&reader,
-              &hdr->full_pel_backward_vector, 1))
-        return FALSE;
-
-      if (!gst_bit_reader_get_bits_uint8 (&reader, &hdr->f_code[1][0], 3))
-        return FALSE;
-      hdr->f_code[1][1] = hdr->f_code[1][0];
-    } else
-      hdr->full_pel_backward_vector = 0;
   } else {
     hdr->full_pel_forward_vector = 0;
+    hdr->f_code[0][0] = hdr->f_code[0][1] = 0;
+  }
+
+  if (hdr->pic_type == B_FRAME) {
+    if (!gst_bit_reader_get_bits_uint8 (&reader,
+            &hdr->full_pel_backward_vector, 1))
+      return FALSE;
+
+    if (!gst_bit_reader_get_bits_uint8 (&reader, &hdr->f_code[1][0], 3))
+      return FALSE;
+    hdr->f_code[1][1] = hdr->f_code[1][0];
+  } else {
     hdr->full_pel_backward_vector = 0;
+    hdr->f_code[1][0] = hdr->f_code[1][1] = 0;
   }
 
   return TRUE;

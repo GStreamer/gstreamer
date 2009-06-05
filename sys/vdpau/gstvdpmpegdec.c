@@ -344,24 +344,6 @@ gst_vdp_mpeg_dec_decode (GstVdpMpegDec * mpeg_dec,
   buffer = gst_adapter_take_buffer (mpeg_dec->adapter,
       gst_adapter_available (mpeg_dec->adapter));
 
-  if (info->picture_coding_type != B_FRAME) {
-    if (info->backward_reference != VDP_INVALID_HANDLE) {
-      gst_buffer_ref (mpeg_dec->b_buffer);
-      gst_vdp_mpeg_dec_push_video_buffer (mpeg_dec,
-          GST_VDP_VIDEO_BUFFER (mpeg_dec->b_buffer));
-    }
-
-    if (info->forward_reference != VDP_INVALID_HANDLE) {
-      gst_buffer_unref (mpeg_dec->f_buffer);
-      info->forward_reference = VDP_INVALID_HANDLE;
-    }
-
-    info->forward_reference = info->backward_reference;
-    mpeg_dec->f_buffer = mpeg_dec->b_buffer;
-
-    info->backward_reference = VDP_INVALID_HANDLE;
-  }
-
   outbuf = gst_vdp_video_buffer_new (mpeg_dec->device, VDP_CHROMA_TYPE_420,
       mpeg_dec->width, mpeg_dec->height);
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
@@ -380,12 +362,31 @@ gst_vdp_mpeg_dec_decode (GstVdpMpegDec * mpeg_dec,
     GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_TFF);
 
 
+  if (info->picture_coding_type != B_FRAME) {
+    if (info->backward_reference != VDP_INVALID_HANDLE) {
+      gst_buffer_ref (mpeg_dec->b_buffer);
+      gst_vdp_mpeg_dec_push_video_buffer (mpeg_dec,
+          GST_VDP_VIDEO_BUFFER (mpeg_dec->b_buffer));
+    }
+
+    if (info->forward_reference != VDP_INVALID_HANDLE) {
+      gst_buffer_unref (mpeg_dec->f_buffer);
+      info->forward_reference = VDP_INVALID_HANDLE;
+    }
+
+    info->forward_reference = info->backward_reference;
+    mpeg_dec->f_buffer = mpeg_dec->b_buffer;
+
+    info->backward_reference = VDP_INVALID_HANDLE;
+  }
+
   if (info->forward_reference != VDP_INVALID_HANDLE &&
       info->picture_coding_type != I_FRAME)
     gst_vdp_video_buffer_add_reference (outbuf,
         GST_VDP_VIDEO_BUFFER (mpeg_dec->f_buffer));
 
-  if (info->backward_reference != VDP_INVALID_HANDLE)
+  if (info->backward_reference != VDP_INVALID_HANDLE
+      && info->picture_coding_type == B_FRAME)
     gst_vdp_video_buffer_add_reference (outbuf,
         GST_VDP_VIDEO_BUFFER (mpeg_dec->b_buffer));
 
