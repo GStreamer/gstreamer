@@ -58,6 +58,12 @@ else
 TWOLAME_DIR =
 endif
 
+if USE_X264
+X264_DIR=x264
+else
+X264_DIR=
+endif
+
 SUBDIRS = \
 	$(A52DEC_DIR) \
 	$(AMRNB_DIR) \
@@ -68,7 +74,8 @@ SUBDIRS = \
 	$(MAD_DIR) \
 	$(MPEG2DEC_DIR) \
 	$(SIDPLAY_DIR) \
-	$(TWOLAME_DIR)
+	$(TWOLAME_DIR) \
+	$(X264_DIR)
 
 DIST_SUBDIRS = \
 	a52dec \
@@ -80,4 +87,5 @@ DIST_SUBDIRS = \
 	mad \
 	mpeg2dec \
 	sidplay \
-	twolame
+	twolame \
+	x264

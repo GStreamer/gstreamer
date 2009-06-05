@@ -36,11 +36,18 @@ else
 MPEG2DEC =
 endif
 
+if USE_X264
+check_x264enc=elements/x264enc
+else
+check_x264enc=
+endif
+
 check_PROGRAMS = \
 	generic/states \
 	$(AMRNB) \
 	$(LAME) \
 	$(MPEG2DEC) \
+	$(check_x264enc) \
 	elements/xingmux
 
 # these tests don't even pass
@@ -52,7 +59,7 @@ AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 
 # valgrind testing
-VALGRIND_TESTS_DISABLE =
+VALGRIND_TESTS_DISABLE = elements/x264enc
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-ugly.supp
 

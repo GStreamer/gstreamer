@@ -36,6 +36,8 @@ BuildRequires:  gcc-c++
 @USE_DVDREAD_TRUE@Provides:       gstreamer-dvdread = %{version}-%{release}
 @USE_MPEG2DEC_TRUE@Provides:       gstreamer-mpeg2dec = %{version}-%{release}
 
+@USE_X264_TRUE@Requires: x264
+
 %description
 GStreamer is a streaming media framework, based on graphs of elements which
 operate on media data.
@@ -111,8 +113,13 @@ rm -rf $RPM_BUILD_ROOT
 @USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
 @USE_TWOLAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttwolame.so
 %doc %{_datadir}/gtk-doc/html/gst-plugins-ugly-plugins-%{majorminor}/*
+@USE_X264_TRUE@%{_datadir}/gstreamer-%{majorminor}/presets/GstX264Enc.prs
+@USE_X264_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstx264.so
 
 %changelog
+* Fri Jun 5 2009 Jan Schmidt <thaytan at mad dot scientist dot com>
+- Move x264enc plugin from -bad
+
 * Fri Dec 15 2006 Thomas Vander Stichele <thomas at apestaart dot org>
 - further cleanup
 - add .doap file
