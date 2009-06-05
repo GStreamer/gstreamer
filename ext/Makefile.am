@@ -312,12 +312,6 @@ endif
 TARKIN_DIR=
 # endif
 
-if USE_X264
-X264_DIR=x264
-else
-X264_DIR=
-endif
-
 # if USE_XINE
 # XINE_DIR=xine
 # else
@@ -382,7 +376,6 @@ SUBDIRS=\
 	$(TARKIN_DIR) \
 	$(THEORA_DIR) \
 	$(TIMIDITY_DIR) \
-	$(X264_DIR) \
 	$(XINE_DIR) \
 	$(XVID_DIR)
 
@@ -426,5 +419,4 @@ DIST_SUBDIRS = \
 	swfdec \
 	theora \
 	timidity \
-	x264 \
 	xvid

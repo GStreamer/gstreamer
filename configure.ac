@@ -1359,29 +1359,6 @@ AG_GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
   AC_SUBST(THEORADEC_CFLAGS)
 ])
 
-dnl *** x264 (MPEG-4 part 10/h.264/AVC encoder) ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_X264, true)
-AG_GST_CHECK_FEATURE(X264, [x264 plug-in], x264, [
-  AG_GST_CHECK_LIBHEADER(X264, x264, x264_nal_encode, -lm, x264.h,
-      AC_MSG_CHECKING([for uptodate x264 API version])
-      dnl _stdint not yet generated, so no compiling
-      AC_TRY_CPP([
-        #include <x264.h>
-        #if X264_BUILD < 55
-        #error "x264 build too old"
-        #endif
-      ], [
-        AC_MSG_RESULT(yes)
-        X264_LIBS="$LDFLAGS -lx264 -lm"
-        X264_CFLAGS="$CFLAGS"
-        AC_SUBST(X264_LIBS)
-        AC_SUBST(X264_CFLAGS)
-      ], [
-        AC_MSG_RESULT(no)
-        HAVE_X264=no
-      ]))
-])
-
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
 AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
@@ -1494,7 +1471,6 @@ AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_SWFDEC, false)
 AM_CONDITIONAL(USE_THEORADEC, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
-AM_CONDITIONAL(USE_X264, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
 AM_CONDITIONAL(USE_WININET, false)
@@ -1680,7 +1656,6 @@ ext/spc/Makefile
 ext/swfdec/Makefile
 ext/theora/Makefile
 ext/timidity/Makefile
-ext/x264/Makefile
 ext/xvid/Makefile
 po/Makefile.in
 docs/Makefile

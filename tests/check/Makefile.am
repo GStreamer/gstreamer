@@ -63,17 +63,9 @@ else
 check_timidity=
 endif
 
-if USE_X264
-check_x264enc=elements/x264enc
-else
-check_x264enc=
-endif
-
-
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
-	elements/mplex \
-	elements/x264enc
+	elements/mplex
 
 # valgrind testing
 VALGRIND_TESTS_DISABLE = \
@@ -86,7 +78,6 @@ check_PROGRAMS = \
 	$(check_neon)      \
 	$(check_ofa)        \
 	$(check_timidity)  \
-	$(check_x264enc)   \
 	elements/aacparse \
 	elements/amrparse \
 	elements/camerabin \

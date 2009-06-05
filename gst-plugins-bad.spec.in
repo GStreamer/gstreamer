@@ -31,7 +31,6 @@ BuildRequires:  gcc-c++
 @USE_GSM_TRUE@Provides:       gstreamer-gsm = %{version}-%{release}
 @USE_LIBMMS_TRUE@Requires: libmms >= 0.1
 @USE_MYTHTV_TRUE@Requires: gmyth
-@USE_X264_TRUE@Requires: x264
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
@@ -133,7 +132,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstcamerabin.so
 %{_libdir}/libgstphotography-%{majorminor}.so.0
 %{_libdir}/libgstphotography-%{majorminor}.so.0.0.0
-%{_datadir}/gstreamer-%{majorminor}/presets/GstX264Enc.prs
 # %{_datadir}/gstreamer-%{majorminor}/presets/GstFAAC.prs
 # gstreamer-plugins with external dependencies but in the main package
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
@@ -152,7 +150,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_DTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdtsdec.so
 @USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 @USE_MYTHTV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmythtvsrc.so
-@USE_X264_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstx264.so
 @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 @USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
 @USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
