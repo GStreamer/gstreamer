@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_VDP_MPEG_DECODER_H__
-#define __GST_VDP_MPEG_DECODER_H__
+#ifndef __GST_VDP_MPEG_DEC_H__
+#define __GST_VDP_MPEG_DEC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
@@ -29,16 +29,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VDP_MPEG_DECODER            (gst_vdp_mpeg_decoder_get_type())
-#define GST_VDP_MPEG_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDP_MPEG_DECODER,GstVdpMpegDecoder))
-#define GST_VDP_MPEG_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDP_MPEG_DECODER,GstVdpMpegDecoderClass))
-#define GST_IS_VDPAU_MPEG_DECODER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDP_MPEG_DECODER))
-#define GST_IS_VDPAU_MPEG_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDP_MPEG_DECODER))
+#define GST_TYPE_VDP_MPEG_DEC            (gst_vdp_mpeg_dec_get_type())
+#define GST_VDP_MPEG_DEC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDP_MPEG_DEC,GstVdpMpegDec))
+#define GST_VDP_MPEG_DEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDP_MPEG_DEC,GstVdpMpegDecClass))
+#define GST_IS_VDPAU_MPEG_DEC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDP_MPEG_DEC))
+#define GST_IS_VDPAU_MPEG_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDP_MPEG_DEC))
 
-typedef struct _GstVdpMpegDecoder      GstVdpMpegDecoder;
-typedef struct _GstVdpMpegDecoderClass GstVdpMpegDecoderClass;
+typedef struct _GstVdpMpegDec      GstVdpMpegDec;
+typedef struct _GstVdpMpegDecClass GstVdpMpegDecClass;
 
-struct _GstVdpMpegDecoder
+struct _GstVdpMpegDec
 {
   GstElement element;
 
@@ -81,13 +81,13 @@ struct _GstVdpMpegDecoder
   
 };
 
-struct _GstVdpMpegDecoderClass 
+struct _GstVdpMpegDecClass 
 {
   GstElementClass element_class;  
 };
 
-GType gst_vdp_mpeg_decoder_get_type (void);
+GType gst_vdp_mpeg_dec_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_VDP_MPEG_DECODER_H__ */
+#endif /* __GST_VDP_MPEG_DEC_H__ */
