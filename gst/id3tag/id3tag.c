@@ -1062,17 +1062,17 @@ id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist, int version)
 #define ID3_V1_TAG_SIZE 128
 
 typedef void (*GstId3v1WriteFunc) (const GstTagList * list,
-    const gchar * gst_tag, guint8 * dst, int len);
+    const gchar * gst_tag, guint8 * dst, int len, gboolean * wrote_tag);
 
 static void
 latin1_convert (const GstTagList * list, const gchar * tag,
-    guint8 * dst, int maxlen)
+    guint8 * dst, int maxlen, gboolean * wrote_tag)
 {
   gchar *str;
   gsize len;
   gchar *latin1;
 
-  if (!gst_tag_list_get_string (list, tag, &str))
+  if (!gst_tag_list_get_string (list, tag, &str) || str == NULL)
     return;
 
   /* Convert to Latin-1 (ISO-8859-1), replacing unrepresentable characters
@@ -1080,9 +1080,10 @@ latin1_convert (const GstTagList * list, const gchar * tag,
   latin1 = g_convert_with_fallback (str, -1, "ISO-8859-1", "UTF-8", "?",
       NULL, &len, NULL);
 
-  if (latin1) {
+  if (latin1 != NULL && *latin1 != '\0') {
     len = MIN (len, maxlen);
     memcpy (dst, latin1, len);
+    *wrote_tag = TRUE;
     g_free (latin1);
   }
 
@@ -1091,7 +1092,7 @@ latin1_convert (const GstTagList * list, const gchar * tag,
 
 static void
 date_v1_convert (const GstTagList * list, const gchar * tag,
-    guint8 * dst, int maxlen)
+    guint8 * dst, int maxlen, gboolean * wrote_tag)
 {
   GDate *date;
 
@@ -1102,6 +1103,7 @@ date_v1_convert (const GstTagList * list, const gchar * tag,
     if (year > 500 && year < 2100) {
       gchar str[5];
       g_snprintf (str, 5, "%.4u", year);
+      *wrote_tag = TRUE;
       memcpy (dst, str, 4);
     } else {
       GST_WARNING ("invalid year %u, skipping", year);
@@ -1113,14 +1115,14 @@ date_v1_convert (const GstTagList * list, const gchar * tag,
 
 static void
 genre_v1_convert (const GstTagList * list, const gchar * tag,
-    guint8 * dst, int maxlen)
+    guint8 * dst, int maxlen, gboolean * wrote_tag)
 {
   gchar *str;
   int genreidx = -1;
   guint i, max;
 
   /* We only support one genre */
-  if (!gst_tag_list_get_string_index (list, tag, 0, &str))
+  if (!gst_tag_list_get_string_index (list, tag, 0, &str) || str == NULL)
     return;
 
   max = gst_tag_id3_genre_count ();
@@ -1133,15 +1135,17 @@ genre_v1_convert (const GstTagList * list, const gchar * tag,
     }
   }
 
-  if (genreidx >= 0 && genreidx <= 127)
+  if (genreidx >= 0 && genreidx <= 127) {
     *dst = (guint8) genreidx;
+    *wrote_tag = TRUE;
+  }
 
   g_free (str);
 }
 
 static void
 track_number_convert (const GstTagList * list, const gchar * tag,
-    guint8 * dst, int maxlen)
+    guint8 * dst, int maxlen, gboolean * wrote_tag)
 {
   guint tracknum;
 
@@ -1149,8 +1153,10 @@ track_number_convert (const GstTagList * list, const gchar * tag,
   if (!gst_tag_list_get_uint_index (list, tag, 0, &tracknum))
     return;
 
-  if (tracknum <= 127)
+  if (tracknum <= 127) {
     *dst = (guint8) tracknum;
+    *wrote_tag = TRUE;
+  }
 }
 
 static const struct
@@ -1176,6 +1182,7 @@ id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (ID3_V1_TAG_SIZE);
   guint8 *data = GST_BUFFER_DATA (buf);
+  gboolean wrote_tag = FALSE;
   int i;
 
   memset (data, 0, ID3_V1_TAG_SIZE);
@@ -1186,7 +1193,13 @@ id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
 
   for (i = 0; i < G_N_ELEMENTS (v1_funcs); i++) {
     v1_funcs[i].func (taglist, v1_funcs[i].gst_tag, data + v1_funcs[i].offset,
-        v1_funcs[i].length);
+        v1_funcs[i].length, &wrote_tag);
+  }
+
+  if (!wrote_tag) {
+    GST_WARNING_OBJECT (mux, "no ID3v1 tag written (no suitable tags found)");
+    gst_buffer_unref (buf);
+    return NULL;
   }
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
