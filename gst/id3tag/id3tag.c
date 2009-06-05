@@ -25,8 +25,8 @@
 
 #include <gst/tag/tag.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_id3_tag_debug);
-#define GST_CAT_DEFAULT gst_id3_tag_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_id3_mux_debug);
+#define GST_CAT_DEFAULT gst_id3_mux_debug
 
 #define ID3V2_APIC_PICTURE_OTHER 0
 #define ID3V2_APIC_PICTURE_FILE_ICON 1
@@ -1024,7 +1024,7 @@ foreach_add_tag (const GstTagList * list, const gchar * tag, gpointer userdata)
 }
 
 GstBuffer *
-gst_id3mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist, int version)
+id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist, int version)
 {
   GstId3v2Tag tag;
   GstBuffer *buf;
@@ -1172,7 +1172,7 @@ static const struct
 };
 
 GstBuffer *
-gst_id3mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
+id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (ID3_V1_TAG_SIZE);
   guint8 *data = GST_BUFFER_DATA (buf);

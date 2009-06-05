@@ -20,18 +20,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef GST_ID3TAG_H
-#define GST_ID3TAG_H
+#ifndef GST_ID3_MUX_H
+#define GST_ID3_MUX_H
 
 #include "gsttagmux.h"
 #include "id3tag.h"
 
 G_BEGIN_DECLS
 
-typedef struct _GstId3Tag GstId3Tag;
-typedef struct _GstId3TagClass GstId3TagClass;
+typedef struct _GstId3Mux GstId3Mux;
+typedef struct _GstId3MuxClass GstId3MuxClass;
 
-struct _GstId3Tag {
+struct _GstId3Mux {
   GstTagMux  tagmux;
 
   gboolean write_v1;
@@ -40,24 +40,24 @@ struct _GstId3Tag {
   gint     v2_major_version;
 };
 
-struct _GstId3TagClass {
+struct _GstId3MuxClass {
   GstTagMuxClass  tagmux_class;
 };
 
-#define GST_TYPE_ID3TAG \
-  (gst_id3_tag_get_type())
-#define GST_ID3TAG(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ID3TAG,GstId3Tag))
-#define GST_ID3TAG_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ID3TAG,GstId3TagClass))
-#define GST_IS_ID3TAG(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ID3TAG))
-#define GST_IS_ID3TAG_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ID3TAG))
+#define GST_TYPE_ID3_MUX \
+  (gst_id3_mux_get_type())
+#define GST_ID3_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ID3_MUX,GstId3Mux))
+#define GST_ID3_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ID3_MUX,GstId3MuxClass))
+#define GST_IS_ID3_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ID3_MUX))
+#define GST_IS_ID3_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ID3_MUX))
 
-GType gst_id3_tag_get_type (void);
+GType gst_id3_mux_get_type (void);
 
 G_END_DECLS
 
-#endif /* GST_ID3TAG_H */
+#endif /* GST_ID3_MUX_H */
 

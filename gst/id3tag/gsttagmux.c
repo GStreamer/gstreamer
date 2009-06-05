@@ -57,10 +57,10 @@ gst_tag_mux_iface_init (GType tag_type)
 
 /* make sure to register a less generic type so we can easily move this
  * GstTagMux base class into -base without causing GType name conflicts */
-typedef GstTagMux GstId3TagMux;
-typedef GstTagMuxClass GstId3TagMuxClass;
+typedef GstTagMux GstId3BaseMux;
+typedef GstTagMuxClass GstId3BaseMuxClass;
 
-GST_BOILERPLATE_FULL (GstId3TagMux, gst_tag_mux,
+GST_BOILERPLATE_FULL (GstId3BaseMux, gst_tag_mux,
     GstElement, GST_TYPE_ELEMENT, gst_tag_mux_iface_init);
 
 
@@ -100,8 +100,8 @@ gst_tag_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_tag_mux_sink_template));
 
-  GST_DEBUG_CATEGORY_INIT (gst_tag_mux_debug, "tagmux", 0,
-      "tag muxer base class");
+  GST_DEBUG_CATEGORY_INIT (gst_tag_mux_debug, "id3basemux", 0,
+      "tag muxer base class for Id3Mux");
 }
 
 static void

@@ -10,7 +10,7 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>id3tag</name>
+      <name>id3mux</name>
       <longname>ID3 v1 and v2 Muxer</longname>
       <class>Formatter/Metadata</class>
       <description>Adds an ID3v2 header and ID3v1 footer to a file</description>

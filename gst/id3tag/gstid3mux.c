@@ -21,12 +21,12 @@
  */
 
 /**
- * SECTION:element-id3tag
+ * SECTION:element-id3mux
  * @see_also: #GstID3Demux, #GstTagSetter
  *
  * This element adds ID3v2 tags to the beginning of a stream, and ID3v1 tags
  * to the end.
- * 
+ *
  * It defaults to writing ID3 version 2.3.0 tags (since those are the most
  * widely supported), but can optionally write version 2.4.0 tags.
  *
@@ -37,7 +37,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=foo.ogg ! decodebin ! audioconvert ! lame ! id3tag ! filesink location=foo.mp3
+ * gst-launch -v filesrc location=foo.ogg ! decodebin ! audioconvert ! lame ! id3mux ! filesink location=foo.mp3
  * ]| A pipeline that transcodes a file from Ogg/Vorbis to mp3 format with
  * ID3 tags that contain the same metadata as the the Ogg/Vorbis file.
  * Make sure the Ogg/Vorbis file actually has comments to preserve.
@@ -51,13 +51,13 @@
 #include <config.h>
 #endif
 
-#include "gstid3tag.h"
+#include "gstid3mux.h"
 #include <gst/tag/tag.h>
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY (gst_id3_tag_debug);
-#define GST_CAT_DEFAULT gst_id3_tag_debug
+GST_DEBUG_CATEGORY (gst_id3_mux_debug);
+#define GST_CAT_DEFAULT gst_id3_mux_debug
 
 enum
 {
@@ -76,20 +76,20 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-id3"));
 
-GST_BOILERPLATE (GstId3Tag, gst_id3_tag, GstTagMux, GST_TYPE_TAG_MUX);
+GST_BOILERPLATE (GstId3Mux, gst_id3_mux, GstTagMux, GST_TYPE_TAG_MUX);
 
-static GstBuffer *gst_id3_tag_render_v2_tag (GstTagMux * mux,
+static GstBuffer *gst_id3_mux_render_v2_tag (GstTagMux * mux,
     GstTagList * taglist);
-static GstBuffer *gst_id3_tag_render_v1_tag (GstTagMux * mux,
+static GstBuffer *gst_id3_mux_render_v1_tag (GstTagMux * mux,
     GstTagList * taglist);
 
-static void gst_id3_tag_set_property (GObject * object, guint prop_id,
+static void gst_id3_mux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_id3_tag_get_property (GObject * object, guint prop_id,
+static void gst_id3_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void
-gst_id3_tag_base_init (gpointer g_class)
+gst_id3_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -101,18 +101,15 @@ gst_id3_tag_base_init (gpointer g_class)
       "Adds an ID3v2 header and ID3v1 footer to a file",
       "Michael Smith <msmith@songbirdnest.com>, "
       "Tim-Philipp Müller <tim centricular net>");
-
-  GST_DEBUG_CATEGORY_INIT (gst_id3_tag_debug, "id3tag", 0,
-      "ID3 v1 and v2 tag muxer");
 }
 
 static void
-gst_id3_tag_class_init (GstId3TagClass * klass)
+gst_id3_mux_class_init (GstId3MuxClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class->set_property = gst_id3_tag_set_property;
-  gobject_class->get_property = gst_id3_tag_get_property;
+  gobject_class->set_property = gst_id3_mux_set_property;
+  gobject_class->get_property = gst_id3_mux_get_property;
 
   g_object_class_install_property (gobject_class, ARG_WRITE_V1,
       g_param_spec_boolean ("write-v1", "Write id3v1 tag",
@@ -131,13 +128,13 @@ gst_id3_tag_class_init (GstId3TagClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   GST_TAG_MUX_CLASS (klass)->render_start_tag =
-      GST_DEBUG_FUNCPTR (gst_id3_tag_render_v2_tag);
+      GST_DEBUG_FUNCPTR (gst_id3_mux_render_v2_tag);
 
-  GST_TAG_MUX_CLASS (klass)->render_end_tag = gst_id3_tag_render_v1_tag;
+  GST_TAG_MUX_CLASS (klass)->render_end_tag = gst_id3_mux_render_v1_tag;
 }
 
 static void
-gst_id3_tag_init (GstId3Tag * id3mux, GstId3TagClass * id3mux_class)
+gst_id3_mux_init (GstId3Mux * id3mux, GstId3MuxClass * id3mux_class)
 {
   id3mux->write_v1 = DEFAULT_WRITE_V1;
   id3mux->write_v2 = DEFAULT_WRITE_V2;
@@ -146,10 +143,10 @@ gst_id3_tag_init (GstId3Tag * id3mux, GstId3TagClass * id3mux_class)
 }
 
 static void
-gst_id3_tag_set_property (GObject * object, guint prop_id,
+gst_id3_mux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstId3Tag *mux = GST_ID3TAG (object);
+  GstId3Mux *mux = GST_ID3_MUX (object);
 
   switch (prop_id) {
     case ARG_WRITE_V1:
@@ -168,10 +165,10 @@ gst_id3_tag_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_id3_tag_get_property (GObject * object, guint prop_id,
+gst_id3_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstId3Tag *mux = GST_ID3TAG (object);
+  GstId3Mux *mux = GST_ID3_MUX (object);
 
   switch (prop_id) {
     case ARG_WRITE_V1:
@@ -190,23 +187,23 @@ gst_id3_tag_get_property (GObject * object, guint prop_id,
 }
 
 static GstBuffer *
-gst_id3_tag_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
+gst_id3_mux_render_v2_tag (GstTagMux * mux, GstTagList * taglist)
 {
-  GstId3Tag *id3mux = GST_ID3TAG (mux);
+  GstId3Mux *id3mux = GST_ID3_MUX (mux);
 
   if (id3mux->write_v2)
-    return gst_id3mux_render_v2_tag (mux, taglist, id3mux->v2_major_version);
+    return id3_mux_render_v2_tag (mux, taglist, id3mux->v2_major_version);
   else
     return NULL;
 }
 
 static GstBuffer *
-gst_id3_tag_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
+gst_id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
 {
-  GstId3Tag *id3mux = GST_ID3TAG (mux);
+  GstId3Mux *id3mux = GST_ID3_MUX (mux);
 
   if (id3mux->write_v1)
-    return gst_id3mux_render_v1_tag (mux, taglist);
+    return id3_mux_render_v1_tag (mux, taglist);
   else
     return NULL;
 }
@@ -214,7 +211,10 @@ gst_id3_tag_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "id3tag", GST_RANK_NONE, GST_TYPE_ID3TAG))
+  GST_DEBUG_CATEGORY_INIT (gst_id3_mux_debug, "id3mux", 0,
+      "ID3 v1 and v2 tag muxer");
+
+  if (!gst_element_register (plugin, "id3mux", GST_RANK_NONE, GST_TYPE_ID3_MUX))
     return FALSE;
 
   gst_tag_register_musicbrainz_tags ();
