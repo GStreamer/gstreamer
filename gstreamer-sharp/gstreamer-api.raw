@@ -8386,4 +8386,241 @@
       </method>
     </object>
   </namespace>
+  <namespace name="Gst.Video" library="libgstvideo-0.10.dll">
+    <enum name="VideoFormat" cname="GstVideoFormat" gtype="gst_video_format_get_type" type="enum">
+      <member cname="GST_VIDEO_FORMAT_UNKNOWN" name="Unknown" />
+      <member cname="GST_VIDEO_FORMAT_I420" name="I420" />
+      <member cname="GST_VIDEO_FORMAT_YV12" name="Yv12" />
+      <member cname="GST_VIDEO_FORMAT_YUY2" name="Yuy2" />
+      <member cname="GST_VIDEO_FORMAT_UYVY" name="Uyvy" />
+      <member cname="GST_VIDEO_FORMAT_AYUV" name="Ayuv" />
+      <member cname="GST_VIDEO_FORMAT_RGBx" name="Rgbx" />
+      <member cname="GST_VIDEO_FORMAT_BGRx" name="Bgrx" />
+      <member cname="GST_VIDEO_FORMAT_xRGB" name="Xrgb" />
+      <member cname="GST_VIDEO_FORMAT_xBGR" name="Xbgr" />
+      <member cname="GST_VIDEO_FORMAT_RGBA" name="Rgba" />
+      <member cname="GST_VIDEO_FORMAT_BGRA" name="Bgra" />
+      <member cname="GST_VIDEO_FORMAT_ARGB" name="Argb" />
+      <member cname="GST_VIDEO_FORMAT_ABGR" name="Abgr" />
+      <member cname="GST_VIDEO_FORMAT_RGB" name="Rgb" />
+      <member cname="GST_VIDEO_FORMAT_BGR" name="Bgr" />
+      <member cname="GST_VIDEO_FORMAT_Y41B" name="Y41b" />
+      <member cname="GST_VIDEO_FORMAT_Y42B" name="Y42b" />
+      <member cname="GST_VIDEO_FORMAT_YVYU" name="Yvyu" />
+    </enum>
+    <object name="VideoFilter" cname="GstVideoFilter" parent="GstBaseTransform">
+      <class_struct cname="GstVideoFilterClass">
+        <field name="ParentClass" cname="parent_class" type="GstBaseTransformClass" />
+      </class_struct>
+      <field name="Inited" cname="inited" type="gboolean" />
+      <method name="GetType" cname="gst_video_filter_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+    </object>
+    <object name="VideoSink" cname="GstVideoSink" parent="GstBaseSink">
+      <class_struct cname="GstVideoSinkClass">
+        <field name="ParentClass" cname="parent_class" type="GstBaseSinkClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Width" cname="width" type="gint" />
+      <field name="Height" cname="height" type="gint" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <method name="CenterRect" cname="gst_video_sink_center_rect" shared="true">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstVideoRectangle" name="src" />
+          <parameter type="GstVideoRectangle" name="dst" />
+          <parameter type="GstVideoRectangle*" name="result" />
+          <parameter type="gboolean" name="scaling" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_video_sink_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+    </object>
+    <struct name="VideoRectangle" cname="GstVideoRectangle">
+      <field name="X" cname="x" type="gint" />
+      <field name="Y" cname="y" type="gint" />
+      <field name="W" cname="w" type="gint" />
+      <field name="H" cname="h" type="gint" />
+    </struct>
+    <class name="Global" cname="Gst.VideoGlobal">
+      <method name="CalculateDisplayRatio" cname="gst_video_calculate_display_ratio" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint*" name="dar_n" />
+          <parameter type="guint*" name="dar_d" />
+          <parameter type="guint" name="video_width" />
+          <parameter type="guint" name="video_height" />
+          <parameter type="guint" name="video_par_n" />
+          <parameter type="guint" name="video_par_d" />
+          <parameter type="guint" name="display_par_n" />
+          <parameter type="guint" name="display_par_d" />
+        </parameters>
+      </method>
+      <method name="FormatConvert" cname="gst_video_format_convert" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+          <parameter type="int" name="width" />
+          <parameter type="int" name="height" />
+          <parameter type="int" name="fps_n" />
+          <parameter type="int" name="fps_d" />
+          <parameter type="GstFormat" name="src_format" />
+          <parameter type="gint64" name="src_value" />
+          <parameter type="GstFormat" name="dest_format" />
+          <parameter type="gint64*" name="dest_value" />
+        </parameters>
+      </method>
+      <method name="FormatFromFourcc" cname="gst_video_format_from_fourcc" shared="true">
+        <return-type type="GstVideoFormat" />
+        <parameters>
+          <parameter type="guint32" name="fourcc" />
+        </parameters>
+      </method>
+      <method name="FormatGetComponentHeight" cname="gst_video_format_get_component_height" shared="true">
+        <return-type type="int" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+          <parameter type="int" name="component" />
+          <parameter type="int" name="height" />
+        </parameters>
+      </method>
+      <method name="FormatGetComponentOffset" cname="gst_video_format_get_component_offset" shared="true">
+        <return-type type="int" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+          <parameter type="int" name="component" />
+          <parameter type="int" name="width" />
+          <parameter type="int" name="height" />
+        </parameters>
+      </method>
+      <method name="FormatGetComponentWidth" cname="gst_video_format_get_component_width" shared="true">
+        <return-type type="int" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+          <parameter type="int" name="component" />
+          <parameter type="int" name="width" />
+        </parameters>
+      </method>
+      <method name="FormatGetPixelStride" cname="gst_video_format_get_pixel_stride" shared="true">
+        <return-type type="int" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+          <parameter type="int" name="component" />
+        </parameters>
+      </method>
+      <method name="FormatGetRowStride" cname="gst_video_format_get_row_stride" shared="true">
+        <return-type type="int" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+          <parameter type="int" name="component" />
+          <parameter type="int" name="width" />
+        </parameters>
+      </method>
+      <method name="FormatGetSize" cname="gst_video_format_get_size" shared="true">
+        <return-type type="int" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+          <parameter type="int" name="width" />
+          <parameter type="int" name="height" />
+        </parameters>
+      </method>
+      <method name="FormatHasAlpha" cname="gst_video_format_has_alpha" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+        </parameters>
+      </method>
+      <method name="FormatIsRgb" cname="gst_video_format_is_rgb" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+        </parameters>
+      </method>
+      <method name="FormatIsYuv" cname="gst_video_format_is_yuv" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+        </parameters>
+      </method>
+      <method name="FormatNewCaps" cname="gst_video_format_new_caps" shared="true">
+        <return-type type="GstCaps*" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+          <parameter type="int" name="width" />
+          <parameter type="int" name="height" />
+          <parameter type="int" name="framerate_n" />
+          <parameter type="int" name="framerate_d" />
+          <parameter type="int" name="par_n" />
+          <parameter type="int" name="par_d" />
+        </parameters>
+      </method>
+      <method name="FormatNewCapsInterlaced" cname="gst_video_format_new_caps_interlaced" shared="true">
+        <return-type type="GstCaps*" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+          <parameter type="int" name="width" />
+          <parameter type="int" name="height" />
+          <parameter type="int" name="framerate_n" />
+          <parameter type="int" name="framerate_d" />
+          <parameter type="int" name="par_n" />
+          <parameter type="int" name="par_d" />
+          <parameter type="gboolean" name="interlaced" />
+        </parameters>
+      </method>
+      <method name="FormatParseCaps" cname="gst_video_format_parse_caps" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstCaps*" name="caps" />
+          <parameter type="GstVideoFormat*" name="format" />
+          <parameter type="int*" name="width" />
+          <parameter type="int*" name="height" />
+        </parameters>
+      </method>
+      <method name="FormatParseCapsInterlaced" cname="gst_video_format_parse_caps_interlaced" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstCaps*" name="caps" />
+          <parameter type="gboolean*" name="interlaced" />
+        </parameters>
+      </method>
+      <method name="FormatToFourcc" cname="gst_video_format_to_fourcc" shared="true">
+        <return-type type="guint32" />
+        <parameters>
+          <parameter type="GstVideoFormat" name="format" />
+        </parameters>
+      </method>
+      <method name="FrameRate" cname="gst_video_frame_rate" shared="true">
+        <return-type type="const-GValue*" />
+        <parameters>
+          <parameter type="GstPad*" name="pad" />
+        </parameters>
+      </method>
+      <method name="GetSize" cname="gst_video_get_size" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstPad*" name="pad" />
+          <parameter type="gint*" name="width" />
+          <parameter type="gint*" name="height" />
+        </parameters>
+      </method>
+      <method name="ParseCapsFramerate" cname="gst_video_parse_caps_framerate" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstCaps*" name="caps" />
+          <parameter type="int*" name="fps_n" />
+          <parameter type="int*" name="fps_d" />
+        </parameters>
+      </method>
+      <method name="ParseCapsPixelAspectRatio" cname="gst_video_parse_caps_pixel_aspect_ratio" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstCaps*" name="caps" />
+          <parameter type="int*" name="par_n" />
+          <parameter type="int*" name="par_d" />
+        </parameters>
+      </method>
+    </class>
+  </namespace>
 </api>

@@ -1185,4 +1185,44 @@
   <attr path="/api/namespace/interface[@cname='GstVideoOrientation']/method[@cname='gst_video_orientation_get_vcenter']/parameters/parameter[@name='center']" name="pass_as">out</attr>
 
   <attr path="/api/namespace/interface[@cname='GstXOverlay']" name="name">XOverlay</attr>
+
+  <!-- GStreamer Video library -->
+  <add-node path="/api/namespace[@name='Gst.Video']"><class name="VideoUtil" cname="GstVideoUtil" disable_void_ctor="1" /></add-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_get_size']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_has_alpha']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_is_rgb']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_is_yuv']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_parse_caps']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_parse_caps_interlaced']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_parse_caps_framerate']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_parse_caps_pixel_aspect_ratio']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_parse_caps_framerate']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_frame_rate']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_calculate_display_ratio']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_convert']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_from_fourcc']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_to_fourcc']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_get_size']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_new_caps']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_new_caps_interlaced']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <attr path="/api/namespace/class[@cname='GstVideoUtil']/method[@name='FormatNewCapsInterlaced']" name="name">FormatNewCaps</attr>
+
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Yv12']" name="name">YV12</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Yuy2']" name="name">YUY2</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Uyvy']" name="name">UYVY</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Ayuv']" name="name">AYUV</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Rgbx']" name="name">RGBX</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Bgrx']" name="name">BGRX</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Xrgb']" name="name">XRGB</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Xbgr']" name="name">XBGR</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Rgba']" name="name">RGBA</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Bgra']" name="name">BGRA</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Argb']" name="name">ARGB</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Abgr']" name="name">ABGR</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Rgb']" name="name">RGB</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Bgr']" name="name">BGR</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Y41b']" name="name">Y41B</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Y42b']" name="name">Y42B</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Yvyu']" name="name">YVYU</attr>
+
 </metadata>

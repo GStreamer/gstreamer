@@ -60,5 +60,10 @@
 	<exclude>../../gst-plugins-base/gst-libs/gst/interfaces/interfaces-marshal.h</exclude>
       </namespace>
     </library>
+    <library name="libgstvideo-0.10.dll">
+      <namespace name="Gst.Video">
+        <dir>../../gst-plugins-base/gst-libs/gst/video</dir>
+      </namespace>
+    </library>
   </api>
 </gapi-parser-input>
