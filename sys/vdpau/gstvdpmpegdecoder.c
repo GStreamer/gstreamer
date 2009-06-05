@@ -893,8 +893,15 @@ gst_vdp_mpeg_decoder_sink_event (GstPad * pad, GstEvent * event)
             stop, position);
       }
 
+      /* if we seek ourselves we don't push out a newsegment now since we
+       * use the calculated timestamp of the first frame for this */
+      if (mpeg_dec->seeking) {
+        gst_event_unref (event);
+        return TRUE;
+      }
+
     convert_error:
-      gst_pad_push_event (mpeg_dec->src, event);
+      res = gst_pad_push_event (mpeg_dec->src, event);
 
       break;
     }
