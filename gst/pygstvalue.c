@@ -193,31 +193,10 @@ pygst_value_init_for_pyobject (GValue * value, PyObject * obj)
   return TRUE;
 }
 
-/**
- * pygst_value_from_pyobject:
- * @value: the GValue object to store the converted value in.
- * @obj: the Python object to convert.
- *
- * This function converts a Python object and stores the result in a
- * GValue.  The GValue must be initialised in advance with
- * g_value_init().  If the Python object can't be converted to the
- * type of the GValue, then an error is returned.
- *
- * Returns: 0 on success, -1 on error.
- */
-int
-pygst_value_from_pyobject (GValue * value, PyObject * obj)
+static int
+pygst_value_from_pyobject_internal (GValue * value, PyObject * obj)
 {
   GType f = g_type_fundamental (G_VALUE_TYPE (value));
-
-  /* Unicode objects should be converted to utf-8 strings */
-  if (PyObject_TypeCheck (obj, &PyUnicode_Type)) {
-    PyObject *v;
-
-    v = PyUnicode_AsUTF8String (obj);
-    Py_DECREF (obj);
-    obj = v;
-  }
 
   /* work around a bug in pygtk whereby pyg_value_from_pyobject claims success
      for unknown fundamental types without actually doing anything */
@@ -358,6 +337,40 @@ pygst_value_from_pyobject (GValue * value, PyObject * obj)
   } else {
     return -1;
   }
+}
+
+/**
+ * pygst_value_from_pyobject:
+ * @value: the GValue object to store the converted value in.
+ * @obj: the Python object to convert.
+ *
+ * This function converts a Python object and stores the result in a
+ * GValue.  The GValue must be initialised in advance with
+ * g_value_init().  If the Python object can't be converted to the
+ * type of the GValue, then an error is returned.
+ *
+ * Returns: 0 on success, -1 on error.
+ */
+int
+pygst_value_from_pyobject (GValue * value, PyObject * obj)
+{
+  PyObject *v = NULL;
+  int res;
+
+  /* Unicode objects should be converted to utf-8 strings */
+  if (PyObject_TypeCheck (obj, &PyUnicode_Type)) {
+
+    v = PyUnicode_AsUTF8String (obj);
+    obj = v;
+  }
+
+  res = pygst_value_from_pyobject_internal (value, obj);
+
+  if (v) {
+    Py_DECREF (obj);
+  }
+
+  return res;
 }
 
 #define NULL_CHECK(o) if (!o) goto err
