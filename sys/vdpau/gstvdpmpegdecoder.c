@@ -500,8 +500,6 @@ gst_vdp_mpeg_decoder_parse_gop (GstVdpMpegDecoder * mpeg_dec,
   if (!mpeg_util_parse_gop (&gop, buffer))
     return FALSE;
 
-  mpeg_dec->broken_gop = gop.broken_gop;
-
   return TRUE;
 }
 
@@ -546,7 +544,6 @@ gst_vdp_mpeg_decoder_reset (GstVdpMpegDecoder * mpeg_dec)
     g_object_unref (mpeg_dec->device);
   mpeg_dec->device = NULL;
 
-  mpeg_dec->broken_gop = FALSE;
   mpeg_dec->next_timestamp = 0;
 }
 
@@ -870,7 +867,6 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
   mpeg_dec->display_name = NULL;
   mpeg_dec->adapter = gst_adapter_new ();
 
-  mpeg_dec->broken_gop = FALSE;
   mpeg_dec->next_timestamp = 0;
 
   mpeg_dec->device = NULL;
