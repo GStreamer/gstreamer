@@ -79,6 +79,8 @@ csc_build_sources = $(subst /,\\,$(build_sources))
 endif
 
 customs = 			\
+	AppSink.custom		\
+	AppSrc.custom		\
 	Bin.custom		\
 	Buffer.custom           \
 	Bus.custom		\

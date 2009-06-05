@@ -7261,6 +7261,301 @@
       <field name="GstReserved2" cname="_gst_reserved2" array_len="GST_PADDING/2" type="gpointer" access="private" />
     </struct>
   </namespace>
+  <namespace name="Gst.App" library="libgstapp-0.10.dll">
+    <enum name="AppStreamType" cname="GstAppStreamType" type="enum">
+      <member cname="GST_APP_STREAM_TYPE_STREAM" name="Stream" />
+      <member cname="GST_APP_STREAM_TYPE_SEEKABLE" name="Seekable" />
+      <member cname="GST_APP_STREAM_TYPE_RANDOM_ACCESS" name="RandomAccess" />
+    </enum>
+    <callback name="AppBufferFinalizeFunc" cname="GstAppBufferFinalizeFunc">
+      <return-type type="void" />
+      <parameters>
+        <parameter type="void*" name="priv" />
+      </parameters>
+    </callback>
+    <object name="AppBuffer" cname="GstAppBuffer" parent="GstBuffer">
+      <class_struct cname="GstAppBufferClass">
+        <field name="BufferClass" cname="buffer_class" type="GstBufferClass" />
+      </class_struct>
+      <field name="Finalize" cname="finalize" type="GstAppBufferFinalizeFunc" />
+      <field name="Priv" cname="priv" type="void*" />
+      <method name="GetType" cname="gst_app_buffer_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <constructor cname="gst_app_buffer_new">
+        <parameters>
+          <parameter type="void*" name="data" />
+          <parameter type="int" name="length" />
+          <parameter type="GstAppBufferFinalizeFunc" name="finalize" />
+          <parameter type="void*" name="priv" />
+        </parameters>
+      </constructor>
+    </object>
+    <object name="AppSink" cname="GstAppSink" parent="GstBaseSink">
+      <class_struct cname="GstAppSinkClass">
+        <field name="BasesinkClass" cname="basesink_class" type="GstBaseSinkClass" />
+        <method signal_vm="eos" />
+        <method signal_vm="new_preroll" />
+        <method signal_vm="new_buffer" />
+        <method signal_vm="pull_preroll" />
+        <method signal_vm="pull_buffer" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Priv" cname="priv" type="GstAppSinkPrivate*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <property name="Caps" cname="caps" type="GstCaps" readable="true" writeable="true" />
+      <property name="Eos" cname="eos" type="gboolean" readable="true" />
+      <property name="EmitSignals" cname="emit-signals" type="gboolean" readable="true" writeable="true" />
+      <property name="MaxBuffers" cname="max-buffers" type="guint" readable="true" writeable="true" />
+      <property name="Drop" cname="drop" type="gboolean" readable="true" writeable="true" />
+      <signal name="Eos" cname="eos" when="LAST" field_name="eos">
+        <return-type type="void" />
+        <parameters />
+      </signal>
+      <signal name="NewPreroll" cname="new-preroll" when="LAST" field_name="new_preroll">
+        <return-type type="void" />
+        <parameters />
+      </signal>
+      <signal name="NewBuffer" cname="new-buffer" when="LAST" field_name="new_buffer">
+        <return-type type="void" />
+        <parameters />
+      </signal>
+      <signal name="PullPreroll" cname="pull-preroll" when="LAST" field_name="pull_preroll">
+        <return-type type="GstBuffer*" />
+        <parameters />
+      </signal>
+      <signal name="PullBuffer" cname="pull-buffer" when="LAST" field_name="pull_buffer">
+        <return-type type="GstBuffer*" />
+        <parameters />
+      </signal>
+      <method name="GetCaps" cname="gst_app_sink_get_caps">
+        <return-type type="GstCaps*" />
+      </method>
+      <method name="GetDrop" cname="gst_app_sink_get_drop">
+        <return-type type="gboolean" />
+      </method>
+      <method name="GetEmitSignals" cname="gst_app_sink_get_emit_signals">
+        <return-type type="gboolean" />
+      </method>
+      <method name="GetMaxBuffers" cname="gst_app_sink_get_max_buffers">
+        <return-type type="guint" />
+      </method>
+      <method name="GetType" cname="gst_app_sink_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="IsEos" cname="gst_app_sink_is_eos">
+        <return-type type="gboolean" />
+      </method>
+      <method name="PullBuffer" cname="gst_app_sink_pull_buffer">
+        <return-type type="GstBuffer*" />
+      </method>
+      <method name="PullPreroll" cname="gst_app_sink_pull_preroll">
+        <return-type type="GstBuffer*" />
+      </method>
+      <method name="SetCallbacks" cname="gst_app_sink_set_callbacks">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstAppSinkCallbacks*" name="callbacks" />
+          <parameter type="gpointer" name="user_data" />
+          <parameter type="GDestroyNotify" name="notify" />
+        </parameters>
+      </method>
+      <method name="SetCaps" cname="gst_app_sink_set_caps">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="SetDrop" cname="gst_app_sink_set_drop">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="drop" />
+        </parameters>
+      </method>
+      <method name="SetEmitSignals" cname="gst_app_sink_set_emit_signals">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="emit" />
+        </parameters>
+      </method>
+      <method name="SetMaxBuffers" cname="gst_app_sink_set_max_buffers">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint" name="max" />
+        </parameters>
+      </method>
+    </object>
+    <object name="AppSrc" cname="GstAppSrc" parent="GstBaseSrc">
+      <class_struct cname="GstAppSrcClass">
+        <field name="BasesrcClass" cname="basesrc_class" type="GstBaseSrcClass" />
+        <method signal_vm="need_data" />
+        <method signal_vm="enough_data" />
+        <method signal_vm="seek_data" />
+        <method signal_vm="push_buffer" />
+        <method signal_vm="end_of_stream" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Priv" cname="priv" type="GstAppSrcPrivate*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <property name="Caps" cname="caps" type="GstCaps" readable="true" writeable="true" />
+      <property name="Format" cname="format" type="GstFormat" readable="true" writeable="true" />
+      <property name="Size" cname="size" type="gint64" readable="true" writeable="true" />
+      <property name="StreamType" cname="stream-type" type="GstAppStreamType" readable="true" writeable="true" />
+      <property name="MaxBytes" cname="max-bytes" type="guint64" readable="true" writeable="true" />
+      <property name="Block" cname="block" type="gboolean" readable="true" writeable="true" />
+      <property name="IsLive" cname="is-live" type="gboolean" readable="true" writeable="true" />
+      <property name="MinLatency" cname="min-latency" type="gint64" readable="true" writeable="true" />
+      <property name="MaxLatency" cname="max-latency" type="gint64" readable="true" writeable="true" />
+      <property name="EmitSignals" cname="emit-signals" type="gboolean" readable="true" writeable="true" />
+      <signal name="NeedData" cname="need-data" when="LAST" field_name="need_data">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint" name="length" />
+        </parameters>
+      </signal>
+      <signal name="EnoughData" cname="enough-data" when="LAST" field_name="enough_data">
+        <return-type type="void" />
+        <parameters />
+      </signal>
+      <signal name="SeekData" cname="seek-data" when="LAST" field_name="seek_data">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint64" name="offset" />
+        </parameters>
+      </signal>
+      <signal name="PushBuffer" cname="push-buffer" when="LAST" field_name="push_buffer">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buffer" />
+        </parameters>
+      </signal>
+      <signal name="EndOfStream" cname="end-of-stream" when="LAST" field_name="end_of_stream">
+        <return-type type="GstFlowReturn" />
+        <parameters />
+      </signal>
+      <method name="EndOfStream" cname="gst_app_src_end_of_stream">
+        <return-type type="GstFlowReturn" />
+      </method>
+      <method name="GetCaps" cname="gst_app_src_get_caps">
+        <return-type type="GstCaps*" />
+      </method>
+      <method name="GetEmitSignals" cname="gst_app_src_get_emit_signals">
+        <return-type type="gboolean" />
+      </method>
+      <method name="GetLatency" cname="gst_app_src_get_latency">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint64*" name="min" />
+          <parameter type="guint64*" name="max" />
+        </parameters>
+      </method>
+      <method name="GetMaxBytes" cname="gst_app_src_get_max_bytes">
+        <return-type type="guint64" />
+      </method>
+      <method name="GetSize" cname="gst_app_src_get_size">
+        <return-type type="gint64" />
+      </method>
+      <method name="GetStreamType" cname="gst_app_src_get_stream_type">
+        <return-type type="GstAppStreamType" />
+      </method>
+      <method name="GetType" cname="gst_app_src_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="PushBuffer" cname="gst_app_src_push_buffer">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buffer" />
+        </parameters>
+      </method>
+      <method name="SetCallbacks" cname="gst_app_src_set_callbacks">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstAppSrcCallbacks*" name="callbacks" />
+          <parameter type="gpointer" name="user_data" />
+          <parameter type="GDestroyNotify" name="notify" />
+        </parameters>
+      </method>
+      <method name="SetCaps" cname="gst_app_src_set_caps">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="SetEmitSignals" cname="gst_app_src_set_emit_signals">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="emit" />
+        </parameters>
+      </method>
+      <method name="SetLatency" cname="gst_app_src_set_latency">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint64" name="min" />
+          <parameter type="guint64" name="max" />
+        </parameters>
+      </method>
+      <method name="SetMaxBytes" cname="gst_app_src_set_max_bytes">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint64" name="max" />
+        </parameters>
+      </method>
+      <method name="SetSize" cname="gst_app_src_set_size">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gint64" name="size" />
+        </parameters>
+      </method>
+      <method name="SetStreamType" cname="gst_app_src_set_stream_type">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstAppStreamType" name="type" />
+        </parameters>
+      </method>
+    </object>
+    <struct name="AppSinkCallbacks" cname="GstAppSinkCallbacks">
+      <callback cname="eos">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstAppSink*" name="sink," />
+        </parameters>
+      </callback>
+      <callback cname="new_preroll">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstAppSink*" name="sink," />
+        </parameters>
+      </callback>
+      <callback cname="new_buffer">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstAppSink*" name="sink," />
+        </parameters>
+      </callback>
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+    </struct>
+    <struct name="AppSrcCallbacks" cname="GstAppSrcCallbacks">
+      <callback cname="need_data">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstAppSrc*" name="src," />
+        </parameters>
+      </callback>
+      <callback cname="enough_data">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstAppSrc*" name="src," />
+        </parameters>
+      </callback>
+      <callback cname="seek_data">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstAppSrc*" name="src," />
+        </parameters>
+      </callback>
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+    </struct>
+  </namespace>
   <namespace name="Gst.Interfaces" library="libgstinterfaces-0.10.dll">
     <enum name="ColorBalanceType" cname="GstColorBalanceType" gtype="gst_color_balance_type_get_type" type="enum">
       <member cname="GST_COLOR_BALANCE_HARDWARE" name="Hardware" />

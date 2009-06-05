@@ -1102,6 +1102,55 @@
   <attr path="/api/namespace/struct[@cname='GstCddaBaseSrcTrack']/field[@cname='_gst_reserved1']" name="array_len">4</attr>
   <remove-node path="/api/namespace/struct[@cname='GstCddaBaseSrcTrack']/field[@cname='_gst_reserved2']" />
 
+  <!-- GStreamer App library -->
+  <attr path="/api/namespace/object[@cname='GstAppSink']" name="disable_void_ctor">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/virtual_method[@cname='pull_preroll']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/virtual_method[@cname='pull_buffer']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/object[@cname='GstAppSink']/class_struct/method[@vm='eos']" name="signal_vm">eos</attr>
+  <remove-attr path="/api/namespace/object[@cname='GstAppSink']/class_struct/method[@vm='eos']" name="vm" />
+  <change-node-type path="/api/namespace/object[@cname='GstAppSink']/virtual_method[@cname='eos']">signal</change-node-type>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='eos']" name="when">LAST</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='eos']" name="field_name">eos</attr>
+
+  <attr path="/api/namespace/object[@cname='GstAppSink']/class_struct/method[@vm='new_preroll']" name="signal_vm">new_preroll</attr>
+  <remove-attr path="/api/namespace/object[@cname='GstAppSink']/class_struct/method[@vm='new_preroll']" name="vm" />
+  <change-node-type path="/api/namespace/object[@cname='GstAppSink']/virtual_method[@cname='new_preroll']">signal</change-node-type>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='new_preroll']" name="when">LAST</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='new_preroll']" name="field_name">new_preroll</attr>
+
+  <attr path="/api/namespace/object[@cname='GstAppSink']/class_struct/method[@vm='new_buffer']" name="signal_vm">new_buffer</attr>
+  <remove-attr path="/api/namespace/object[@cname='GstAppSink']/class_struct/method[@vm='new_buffer']" name="vm" />
+  <change-node-type path="/api/namespace/object[@cname='GstAppSink']/virtual_method[@cname='new_buffer']">signal</change-node-type>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='new_buffer']" name="when">LAST</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='new_buffer']" name="field_name">new_buffer</attr>
+
+
+  <attr path="/api/namespace/object[@cname='GstAppSrc']" name="disable_void_ctor">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/virtual_method[@cname='push_buffer']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/virtual_method[@cname='end_of_stream']" name="hidden">1</attr>
+  <add-node path="/api/namespace/object[@cname='GstAppSrc']"><property name="Block" cname="block" type="gboolean" readable="true" writeable="true" /></add-node>
+  <add-node path="/api/namespace/object[@cname='GstAppSrc']"><property name="Format" cname="format" type="GstFormat" readable="true" writeable="true" /></add-node>
+  <add-node path="/api/namespace/object[@cname='GstAppSrc']"><property name="IsLive" cname="is-live" type="gboolean" readable="true" writeable="true" /></add-node>
+
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/class_struct/method[@vm='need_data']" name="signal_vm">need_data</attr>
+  <remove-attr path="/api/namespace/object[@cname='GstAppSrc']/class_struct/method[@vm='need_data']" name="vm" />
+  <change-node-type path="/api/namespace/object[@cname='GstAppSrc']/virtual_method[@cname='need_data']">signal</change-node-type>
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/signal[@cname='need_data']" name="when">LAST</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/signal[@cname='need_data']" name="field_name">need_data</attr>
+
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/class_struct/method[@vm='enough_data']" name="signal_vm">enough_data</attr>
+  <remove-attr path="/api/namespace/object[@cname='GstAppSrc']/class_struct/method[@vm='enough_data']" name="vm" />
+  <change-node-type path="/api/namespace/object[@cname='GstAppSrc']/virtual_method[@cname='enough_data']">signal</change-node-type>
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/signal[@cname='enough_data']" name="when">LAST</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/signal[@cname='enough_data']" name="field_name">enough_data</attr>
+
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/class_struct/method[@vm='seek_data']" name="signal_vm">seek_data</attr>
+  <remove-attr path="/api/namespace/object[@cname='GstAppSrc']/class_struct/method[@vm='seek_data']" name="vm" />
+  <change-node-type path="/api/namespace/object[@cname='GstAppSrc']/virtual_method[@cname='seek_data']">signal</change-node-type>
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/signal[@cname='seek_data']" name="when">LAST</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/signal[@cname='seek_data']" name="field_name">seek_data</attr>
+
 
   <!-- GStreamer Interfaces library -->
   <attr path="/api/namespace/enum[@cname='GstNavigationCommand']" name="name">NavigationCommand</attr>
