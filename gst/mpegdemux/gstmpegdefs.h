@@ -170,11 +170,16 @@
 #define ST_PS_AUDIO_AC3			0x81
 #define ST_PS_AUDIO_DTS			0x8a
 #define ST_PS_AUDIO_LPCM		0x8b
-#define ST_HDV_PRIVATE_A0		0xa0
-#define ST_HDV_PRIVATE_A1		0xa1
 #define ST_PS_DVD_SUBPICTURE            0xff
 /* Blu-ray PGS subpictures */
 #define ST_BD_PGS_SUBPICTURE            0x90
+
+/* HDV AUX stream mapping
+ * 0xA0      ISO/IEC 61834-11
+ * 0xA1      ISO/IEC 61834-11
+ */
+#define ST_HDV_AUX_A			0xa0
+#define ST_HDV_AUX_V			0xa1
 
 /* Un-official time-code stream */
 #define ST_PS_TIMECODE                  0xd2
