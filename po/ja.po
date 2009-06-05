@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:54+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-08-11 23:34+0100\n"
 "PO-Revision-Date: 2009-01-08 22:44+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -16,64 +16,69 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: ext/cdio/gstcdiocddasrc.c:205
 msgid "Could not read from CD."
 msgstr "CDを読むことができません"
 
+#: ext/cdio/gstcdiocddasrc.c:280
 msgid "Could not open CD device for reading."
 msgstr "読み込み用にCDデバイスを開くことができません"
 
+#: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
 msgstr "ディスクは音声CDではありません"
 
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
+#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "DVDを開くことができません"
 
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr "DVD上のタイトル情報が不正です"
 
+#: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
 msgstr "DVDからタイトル情報を読み込むことができません"
 
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "DVDデバイス '%s' を開くことができません"
 
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr "プログラム・チェーン (PGC) のシークに失敗しました"
 
+#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
+#: ext/dvdread/dvdreadsrc.c:601
 #, c-format
 msgid "Could not open DVD title %d"
 msgstr "DVDタイトル %d を開くことができません"
 
+#: ext/dvdread/dvdreadsrc.c:248
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr "DVDタイトル %d のチャプター %d へ移動できません"
 
+#: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"DVDタイトル %d を開くことが出来ません。このエレメントはインタラクティブタイト"
-"ルをサポートしていません"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "DVDタイトル %d を開くことが出来ません。このエレメントはインタラクティブタイトルをサポートしていません"
 
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "LAMEエンコーダーの構成に失敗しました。パラメータをチェックしてください"
 
+#: ext/lame/gstlame.c:718
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"要求されたビットレート %d kbit/s はプロパティ '%s' では許可されません。そのた"
-"めビットレートは %d kbit/s へ変更されました"
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "要求されたビットレート %d kbit/s はプロパティ '%s' では許可されません。そのためビットレートは %d kbit/s へ変更されました"
 
-#, fuzzy
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "LAMEエンコーダーの構成に失敗しました。パラメータをチェックしてください"
-
+#: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
 msgstr "このストリームはデータを含んでいません"
 
+#: gst/asfdemux/gstasfdemux.c:1371
 msgid "Internal data stream error."
 msgstr "内部データストリームエラー"

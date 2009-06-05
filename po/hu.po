@@ -1,14 +1,14 @@
 # Hungarian translation of gst-plugins-ugly
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Copyright (C) 2007, 2008 Free Software Foundation, Inc.
+# Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
 #
-# Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.7.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:54+0100\n"
-"PO-Revision-Date: 2008-05-12 03:28+0200\n"
+"POT-Creation-Date: 2009-03-10 01:08+0000\n"
+"PO-Revision-Date: 2009-04-20 01:48+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -17,71 +17,73 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-#, fuzzy
+#: ext/cdio/gstcdiocddasrc.c:205
 msgid "Could not read from CD."
-msgstr "A DVD címinformációi nem olvashatók."
+msgstr "A CD nem olvasható."
 
-#, fuzzy
+#: ext/cdio/gstcdiocddasrc.c:280
 msgid "Could not open CD device for reading."
-msgstr "Nem nyitható meg a(z) %d. DVD cím"
+msgstr "Nem nyitható meg a CD eszköz olvasásra."
 
+#: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
-msgstr ""
+msgstr "A lemez nem hang CD."
 
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
+#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "A DVD nem nyitható meg"
 
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr "A DVD címinformációi érvénytelenek."
 
+#: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
 msgstr "A DVD címinformációi nem olvashatók."
 
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nem nyitható meg a DVD eszköz („%s”)."
 
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr "A PGC alapú keresés beállítása meghiúsult."
 
+#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
+#: ext/dvdread/dvdreadsrc.c:601
 #, c-format
 msgid "Could not open DVD title %d"
 msgstr "Nem nyitható meg a(z) %d. DVD cím"
 
+#: ext/dvdread/dvdreadsrc.c:248
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr "A(z) $%2d. DVD cím $%1d. fejezetére ugrás meghiúsult"
 
+#: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"Nem nyitható meg a(z) %d. DVD cím. Ez az elem nem támogatja az interaktív "
-"címeket."
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Nem nyitható meg a(z) %d. DVD cím. Ez az elem nem támogatja az interaktív címeket."
 
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr ""
-"A LAME kódoló beállítása meghiúsult. Ellenőrizze a kódolás beállításait."
+msgstr "A LAME kódoló beállítása meghiúsult. Ellenőrizze a kódolás beállításait."
 
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"A kért %d kbit/s bitsebesség nem engedélyezett a(z) „%s” tulajdonsághoz. A "
-"bitsebesség módosítva %d kbit/s-re."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "A kért %d kbit/s bitsebesség nem engedélyezett a(z) „%s” tulajdonsághoz. A bitsebesség módosítva %d kbit/s-re."
 
-#, fuzzy
+#: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr ""
-"A LAME kódoló beállítása meghiúsult. Ellenőrizze a kódolás beállításait."
+msgstr "A TwoLAME kódoló beállítása meghiúsult. Ellenőrizze a kódolás beállításait."
 
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Ez az adatfolyam nem tartalmaz adatokat."
 
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
-msgstr ""
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Ez a fájl titkosítva van és nem játszható le."
+msgstr "Belső adatfolyam-hiba."

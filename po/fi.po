@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:54+0100\n"
+"POT-Creation-Date: 2009-03-10 01:08+0000\n"
 "PO-Revision-Date: 2009-03-10 20:41+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -21,64 +21,74 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: KBabel 1.11.2\n"
 
+#: ext/cdio/gstcdiocddasrc.c:205
 msgid "Could not read from CD."
 msgstr "Lukeminen CD:ltä ei onnistunut."
 
+#: ext/cdio/gstcdiocddasrc.c:280
 msgid "Could not open CD device for reading."
 msgstr "CD-laitetta ei voitu avata luettavaksi."
 
+#: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
 msgstr "Levy ei ole ääni-CD."
 
+#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
+#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "DVD:tä ei voitu avata"
 
+#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr "DVD:llä on virheellisiä ohjelmatietoja."
 
+#: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
 msgstr "Ohjelmatietoja ei voitu lukea DVD:ltä."
 
+#: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "DVD-laitetta \"%s\" ei voitu avata."
 
+#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr "PGC-pohjaista siirtymistä ei voitu asettaa."
 
+#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
+#: ext/dvdread/dvdreadsrc.c:601
 #, c-format
 msgid "Could not open DVD title %d"
 msgstr "DVD:n ohjelmaa %d ei voitu avata"
 
+#: ext/dvdread/dvdreadsrc.c:248
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr "Ei voitu siirtyä kappaleeseen %d DVD:n ohjelmassa %d"
 
+#: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"DVD:n ohjelmaa %d ei voitu avata. Tämä elementti ei tue interaktiivisia "
-"ohjelmia"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "DVD:n ohjelmaa %d ei voitu avata. Tämä elementti ei tue interaktiivisia ohjelmia"
 
+#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "LAME-kodekkia ei voitu määritellä. Tarkista kodekkiasetuksesi."
 
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Pyydetty bittinopeus %d kb/s ominaisuudelle \"%s\" ei ole sallittu. "
-"Bittinopeus asetettiin arvoon %d kb/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Pyydetty bittinopeus %d kb/s ominaisuudelle \"%s\" ei ole sallittu. Bittinopeus asetettiin arvoon %d kb/s."
 
+#: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr "TwoLAME-kodekkia ei voitu määritellä. Tarkista kodekkiasetuksesi."
 
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Virta ei sisällä tietoa."
 
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "Sisäinen tietovirtavirhe."
 
