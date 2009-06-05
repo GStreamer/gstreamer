@@ -58,18 +58,18 @@ namespace Gst {
 		}
 
 		[GLib.CDeclCallback]
-		delegate IntPtr[] GetProtocolsFullNativeDelegate (IntPtr gtype);
+		delegate IntPtr GetProtocolsFullNativeDelegate (IntPtr gtype);
 
 		static Hashtable protocols_cache = new Hashtable ();
 
-		static IntPtr[] GetProtocolsFull_cb (IntPtr gtype)
+		static IntPtr GetProtocolsFull_cb (IntPtr gtype)
 		{
 			try {
 				GLib.GType gt = new GLib.GType (gtype);
 				System.Type t = (System.Type) gt;
 
 				if (protocols_cache.Contains (gtype)) {
-				  return (IntPtr[]) protocols_cache[gtype];
+				  return (IntPtr) protocols_cache[gtype];
 				}
 
 				System.Reflection.PropertyInfo pi = t.GetProperty ("Protocols", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
@@ -78,7 +78,7 @@ namespace Gst {
 				  __result = (string[]) pi.GetValue (null, null);
 				else
 				  __result = new string[] {};
-				IntPtr[] ret = GLib.Marshaller.StringArrayToNullTermPointer (__result);
+				IntPtr ret = Gst.Marshaller.StringArrayToNullTermPointer (__result);
 				protocols_cache.Add (gtype, ret);
 
 				return ret;
