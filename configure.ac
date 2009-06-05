@@ -217,9 +217,6 @@ dnl *** checks for structures ***
 
 dnl *** checks for compiler characteristics ***
 
-dnl make sure we can use "inline" from C code
-AC_C_INLINE
-
 dnl *** checks for library functions ***
 
 dnl check for fseeko()
