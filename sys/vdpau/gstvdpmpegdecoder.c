@@ -167,7 +167,7 @@ gst_vdp_mpeg_decoder_set_caps (GstPad * pad, GstCaps * caps)
   gint width, height;
   gint fps_n, fps_d;
   gint par_n, par_d;
-  gboolean interlaced;
+  gboolean interlaced = FALSE;
 
   GstCaps *src_caps;
   gboolean res;
@@ -354,6 +354,8 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = mpeg_dec->duration;
   GST_BUFFER_OFFSET (outbuf) = mpeg_dec->frame_nr;
+  if (info->top_field_first)
+    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_TFF);
 
   if (info->forward_reference != VDP_INVALID_HANDLE &&
       info->picture_coding_type != I_FRAME)
