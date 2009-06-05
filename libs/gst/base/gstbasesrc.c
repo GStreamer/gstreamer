@@ -842,8 +842,15 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
 
     case GST_QUERY_SEEKING:
     {
-      gst_query_set_seeking (query, src->segment.format,
-          gst_base_src_seekable (src), 0, src->segment.duration);
+      GstFormat format;
+
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      if (format == src->segment.format) {
+        gst_query_set_seeking (query, src->segment.format,
+            gst_base_src_seekable (src), 0, src->segment.duration);
+      } else {
+        gst_query_set_seeking (query, format, FALSE, 0, -1);
+      }
       res = TRUE;
       break;
     }
