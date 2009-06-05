@@ -2993,7 +2993,6 @@ queue_response (GstRTSPWatch * watch, GString * str, guint cseq)
 guint
 gst_rtsp_watch_queue_message (GstRTSPWatch * watch, GstRTSPMessage * message)
 {
-  GstRTSPRec *data;
   gchar *header;
   guint cseq;
 
@@ -3010,7 +3009,7 @@ gst_rtsp_watch_queue_message (GstRTSPWatch * watch, GstRTSPMessage * message)
   }
 
   /* make a record with the message as a string and cseq */
-  data = queue_response (watch, message_to_string (watch->conn, message), cseq);
+  queue_response (watch, message_to_string (watch->conn, message), cseq);
 
   return cseq;
 }
