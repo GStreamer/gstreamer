@@ -998,14 +998,23 @@
   <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='buffer_alloc']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='get_times']/parameters/parameter[@name='start']" name="pass_as">out</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSink']/virtual_method[@cname='get_times']/parameters/parameter[@name='end']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSink']/method[@cname='gst_base_sink_is_qos_enabled']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSink']/method[@cname='gst_base_sink_set_qos_enabled']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSink']/method[@cname='gst_base_sink_is_async_enabled']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSink']/method[@cname='gst_base_sink_set_async_enabled']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='get_caps']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSrc']/method[@name='IsLive']" name="name">GetLive</attr>
 
   <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='transform_caps']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='prepare_output_buffer']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='prepare_output_buffer']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseTransform']/method[@cname='gst_base_transform_is_qos_enabled']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseTransform']/method[@cname='gst_base_transform_set_qos_enabled']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseTransform']/method[@name='IsInPlace']" name="name">GetInPlace</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseTransform']/method[@name='IsPassthrough']" name="name">GetPassthrough</attr>
 
   <attr path="/api/namespace/object[@cname='GstPushSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstPushSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
