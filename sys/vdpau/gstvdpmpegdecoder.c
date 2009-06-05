@@ -814,7 +814,8 @@ gst_vdp_mpeg_decoder_class_init (GstVdpMpegDecoderClass * klass)
   gobject_class->set_property = gst_vdp_mpeg_decoder_set_property;
   gobject_class->get_property = gst_vdp_mpeg_decoder_get_property;
 
-  gstelement_class->change_state = gst_vdp_mpeg_decoder_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_vdp_mpeg_decoder_change_state);
 
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
       g_param_spec_string ("display", "Display", "X Display name",
@@ -843,15 +844,19 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
     GstVdpMpegDecoderClass * gclass)
 {
   mpeg_dec->src = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_set_query_function (mpeg_dec->src, gst_vdp_mpeg_decoder_src_query);
+  gst_pad_set_query_function (mpeg_dec->src,
+      GST_DEBUG_FUNCPTR (gst_vdp_mpeg_decoder_src_query));
   gst_pad_set_query_type_function (mpeg_dec->src,
-      gst_mpeg_decoder_get_querytypes);
+      GST_DEBUG_FUNCPTR (gst_mpeg_decoder_get_querytypes));
   gst_element_add_pad (GST_ELEMENT (mpeg_dec), mpeg_dec->src);
 
   mpeg_dec->sink = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_setcaps_function (mpeg_dec->sink, gst_vdp_mpeg_decoder_set_caps);
-  gst_pad_set_chain_function (mpeg_dec->sink, gst_vdp_mpeg_decoder_chain);
-  gst_pad_set_event_function (mpeg_dec->sink, gst_vdp_mpeg_decoder_sink_event);
+  gst_pad_set_setcaps_function (mpeg_dec->sink,
+      GST_DEBUG_FUNCPTR (gst_vdp_mpeg_decoder_set_caps));
+  gst_pad_set_chain_function (mpeg_dec->sink,
+      GST_DEBUG_FUNCPTR (gst_vdp_mpeg_decoder_chain));
+  gst_pad_set_event_function (mpeg_dec->sink,
+      GST_DEBUG_FUNCPTR (gst_vdp_mpeg_decoder_sink_event));
   gst_element_add_pad (GST_ELEMENT (mpeg_dec), mpeg_dec->sink);
 
   mpeg_dec->display_name = NULL;
