@@ -49,11 +49,19 @@ public PropertyInfo[] Properties {
   }
 }
 
-public void Connect (string signal, DynamicSignalHandler handler) {
+public void Connect (string signal, SignalHandler handler) {
   DynamicSignal.Connect (this, signal, handler);
 }
 
-public void Disconnect (string signal, DynamicSignalHandler handler) {
+public void Disconnect (string signal, SignalHandler handler) {
+  DynamicSignal.Disconnect (this, signal, handler);
+}
+
+public void Connect (string signal, Delegate handler) {
+  DynamicSignal.Connect (this, signal, handler);
+}
+
+public void Disconnect (string signal, Delegate handler) {
   DynamicSignal.Disconnect (this, signal, handler);
 }
 

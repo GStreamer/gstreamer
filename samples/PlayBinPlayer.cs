@@ -1,11 +1,7 @@
-
 using System;
-
 using GLib;
-
 using Gst;
 using Gst.BasePlugins;
-
 
 public class PlayBinPlayer
 {

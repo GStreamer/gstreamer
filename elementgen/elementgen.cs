@@ -255,7 +255,7 @@ public class ElementGen {
 
     string class_name = (ei.class_name != null) ? ei.class_name : ei.gtype_name.StartsWith ("Gst") ? ei.gtype_name.Substring (3) : ei.gtype_name;
 
-    writer.Write ("\tpublic class " + class_name + " : ");
+    writer.Write ("\tpublic sealed class " + class_name + " : ");
     for (int i = 1; i < ei.hierarchy.Count; i++) {
       string parent_type = (string) ei.hierarchy[i];
       string parent_managed_type = CTypeToManagedType (parent_type, api_doc);
@@ -349,19 +349,13 @@ public class ElementGen {
 	}
 	writer.WriteLine ("\t\t}\n");
 
-	writer.WriteLine ("\t\tprivate Delegate " + managed_name + "_delegate;\n");
-	
-	writer.WriteLine ("\t\tprotected virtual void On" + managed_name + " (object o, GLib.SignalArgs args) {");
-	writer.WriteLine ("\t\t\tBindingHelper.InvokeProxySignalDelegate (" + managed_name + "_delegate, typeof (" + managed_name + "Args), o, args);");
-	writer.WriteLine ("\t\t}\n");
-
 	writer.WriteLine ("\t\tpublic event " + managed_name + "Handler " + managed_name + " {");
 	writer.WriteLine ("\t\t\tadd {");
-	writer.WriteLine ("\t\t\t\t" + managed_name + "_delegate = BindingHelper.AddProxySignalDelegate (this, \"" + si.name + "\", On" + managed_name + ", " + managed_name + "_delegate, value);");
+	writer.WriteLine ("\t\t\t\tDynamicSignal.Connect (this, \"" + si.name + "\", value);");
 	writer.WriteLine ("\t\t\t}\n");
 
 	writer.WriteLine ("\t\t\tremove {");
-	writer.WriteLine ("\t\t\t\t" + managed_name + "_delegate = BindingHelper.RemoveProxySignalDelegate (this, \"" + si.name + "\", On" + managed_name + ", " + managed_name + "_delegate, value);");
+	writer.WriteLine ("\t\t\t\tDynamicSignal.Disconnect (this, \"" + si.name + "\", value);");
 	writer.WriteLine ("\t\t\t}");
 	writer.WriteLine ("\t\t}");
       }

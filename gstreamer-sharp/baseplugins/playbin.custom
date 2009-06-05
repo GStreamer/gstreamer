@@ -103,19 +103,13 @@ public class StreamInfo : GLib.Object {
 
   }
 
-  private Delegate Muted_delegate;
-
-  protected virtual void OnMuted (object o, GLib.SignalArgs args) {
-    BindingHelper.InvokeProxySignalDelegate (Muted_delegate, typeof (MutedArgs), o, args);
-  }
-
   public event MutedHandler Muted {
     add {
-      Muted_delegate = BindingHelper.AddProxySignalDelegate (this, "muted", OnMuted, Muted_delegate, value);
+      DynamicSignal.Connect (this, "muted", value);
     }
 
     remove {
-      Muted_delegate = BindingHelper.RemoveProxySignalDelegate (this, "muted", OnMuted, Muted_delegate, value);
+      DynamicSignal.Disconnect (this, "muted", value);
     }
   }
 

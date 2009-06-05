@@ -38,7 +38,6 @@ clean-local:
 
 sources = \
 	DynamicSignal.cs \
-	BindingHelper.cs \
 	Application.cs \
 	Version.cs \
 	AssemblyInfo.cs \

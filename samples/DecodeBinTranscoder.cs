@@ -9,6 +9,7 @@
 
 using System;
 using Gst;
+using Gst.CorePlugins;
 using Gst.BasePlugins;
 
 public delegate void ErrorHandler(object o, ErrorArgs args);
@@ -28,8 +29,8 @@ public class ProgressArgs : EventArgs
 public class DecodeBinTranscoder : IDisposable
 {
     private Pipeline pipeline;
-    private Element filesrc;
-    private Element filesink;
+    private FileSrc filesrc;
+    private FileSink filesink;
     private Element audioconvert;
     private Element encoder;
     private DecodeBin decodebin;
@@ -47,8 +48,8 @@ public class DecodeBinTranscoder : IDisposable
     
     public void Transcode(string inputFile, string outputFile)
     {
-        filesrc["location"] = inputFile;
-        filesink["location"] = outputFile;
+        filesrc.Location = inputFile;
+        filesink.Location = outputFile;
         
         pipeline.SetState(State.Playing);
         progress_timeout = GLib.Timeout.Add(250, OnProgressTimeout);
@@ -92,8 +93,8 @@ public class DecodeBinTranscoder : IDisposable
     {
         pipeline = new Pipeline("pipeline");
         
-        filesrc = ElementFactory.Make("filesrc", "filesrc");
-        filesink = ElementFactory.Make("filesink", "filesink");
+        filesrc = ElementFactory.Make("filesrc", "filesrc") as FileSrc;
+        filesink = ElementFactory.Make("filesink", "filesink") as FileSink;
         audioconvert = ElementFactory.Make("audioconvert", "audioconvert");
         encoder = ElementFactory.Make("wavenc", "wavenc");
         decodebin = ElementFactory.Make("decodebin", "decodebin") as DecodeBin;

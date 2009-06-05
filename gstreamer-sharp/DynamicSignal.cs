@@ -10,15 +10,16 @@
 
 using GLib;
 using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Collections;
 
 namespace Gst {
 
-  public delegate void DynamicSignalHandler (object o, SignalArgs args);
-
   delegate void GClosureMarshal (IntPtr closure, ref GLib.Value retval, uint argc, IntPtr argsPtr,
                                  IntPtr invocation_hint, IntPtr data);
+
+  public delegate void SignalHandler (object o, SignalArgs args);
 
   public static class DynamicSignal {
 
@@ -50,6 +51,7 @@ namespace Gst {
       uint handlerId;
       IntPtr closure;
       Delegate registeredHandler;
+      Type argsType;
 
       public IntPtr Closure {
         get {
@@ -78,10 +80,79 @@ namespace Gst {
         }
       }
 
+      public Type ArgsType {
+        get {
+          return argsType;
+        }
+        set {
+          argsType = value;
+        }
+      }
+
       public SignalInfo (uint handlerId, IntPtr closure, Delegate registeredHandler) {
         this.handlerId = handlerId;
         this.closure = closure;
         this.registeredHandler = registeredHandler;
+
+	if (!IsValidDelegate (registeredHandler))
+	  throw new Exception ("Invalid delegate");
+
+	MethodInfo mi = registeredHandler.Method;
+	ParameterInfo[] parms = mi.GetParameters ();
+	this.argsType = parms[1].ParameterType;
+      }
+
+      public void UpdateArgsType (Delegate d) {
+        if (!IsCompatibleDelegate (d))
+	  throw new Exception ("Incompatible delegate");
+
+	MethodInfo mi = d.Method;
+	ParameterInfo[] parms = mi.GetParameters ();
+
+	Type t1 = parms[1].ParameterType;
+	Type t2 = argsType;
+
+	if (t1 == t2)
+	  return;
+	
+	if (t1.IsSubclassOf (t2))
+	  argsType = t1;
+	else if (t2.IsSubclassOf (t1))
+	  argsType = t2;
+	else
+	  throw new Exception ("Incompatible delegate");
+      }
+
+      public bool IsCompatibleDelegate (Delegate d) {
+        if (!IsValidDelegate (d))
+	  return false;
+	
+	MethodInfo mi = d.Method;
+	ParameterInfo[] parms = mi.GetParameters ();
+
+	if (parms[1].ParameterType != this.argsType &&
+	  !parms[1].ParameterType.IsSubclassOf (this.argsType) &&
+	  !this.argsType.IsSubclassOf (parms[1].ParameterType))
+	  return false;
+
+	return true;
+      }
+
+      public static bool IsValidDelegate (Delegate d) {
+	MethodInfo mi = d.Method;
+	
+	if (mi.ReturnType != typeof (void))
+	  return false;
+
+	ParameterInfo[] parms = mi.GetParameters ();
+	if (parms.Length != 2)
+	  return false;
+	
+	if (parms[1].ParameterType != typeof (GLib.SignalArgs) &&
+	  !parms[1].ParameterType.IsSubclassOf (typeof (GLib.SignalArgs)))
+	  return false;
+
+	return true;
       }
     }
 
@@ -89,23 +160,42 @@ namespace Gst {
 
     static GClosureMarshal marshalHandler = new GClosureMarshal (OnMarshal);
 
-    public static void Connect (GLib.Object o, string name, DynamicSignalHandler handler) {
+    public static void Connect (GLib.Object o, string name, SignalHandler handler) {
+      Connect (o, name, false, (Delegate) handler);
+    }
+
+    public static void Connect (GLib.Object o, string name,
+                                bool after, SignalHandler handler) {
+      Connect (o, name, after, (Delegate) handler);
+    }
+
+    public static void Connect (GLib.Object o, string name, Delegate handler) {
       Connect (o, name, false, handler);
     }
 
     static int g_closure_sizeof = gstsharp_g_closure_sizeof ();
 
     public static void Connect (GLib.Object o, string name,
-                                bool after, DynamicSignalHandler handler) {
+                                bool after, Delegate handler) {
       Delegate newHandler;
 
       ObjectSignalKey k = new ObjectSignalKey (o, name);
 
+     if (!SignalInfo.IsValidDelegate (handler))
+	throw new Exception ("Invalid delegate");
+
       if (SignalHandlers[k] != null) {
         SignalInfo si = (SignalInfo) SignalHandlers[k];
+	if (!si.IsCompatibleDelegate (handler))
+		throw new Exception ("Incompatible delegate");
+
         newHandler = Delegate.Combine (si.RegisteredHandler, handler);
+	si.UpdateArgsType (handler);
         si.RegisteredHandler = newHandler;
       } else {
+      	if (!SignalInfo.IsValidDelegate (handler))
+		throw new Exception ("Invalid delegate");
+
         IntPtr closure = g_closure_new_simple (g_closure_sizeof, IntPtr.Zero);
         g_closure_set_meta_marshal (closure, (IntPtr) GCHandle.Alloc (k),  marshalHandler);
         uint signalId = g_signal_connect_closure (o.Handle, name, closure, after);
@@ -116,7 +206,7 @@ namespace Gst {
     [DllImport ("gstreamersharpglue-0.10.dll") ]
     static extern int gstsharp_g_closure_sizeof ();
 
-    public static void Disconnect (GLib.Object o, string name, DynamicSignalHandler handler) {
+    public static void Disconnect (GLib.Object o, string name, Delegate handler) {
       ObjectSignalKey k = new ObjectSignalKey (o, name);
       if (SignalHandlers[k] != null) {
         SignalInfo si = (SignalInfo) SignalHandlers[k];
@@ -143,15 +233,15 @@ namespace Gst {
 
       if (data == IntPtr.Zero) {
         Console.Error.WriteLine ("No available data");
+	return;
       }
 
       ObjectSignalKey k = (ObjectSignalKey) ( (GCHandle) data).Target;
       if (k != null) {
-        SignalArgs arg = new SignalArgs();
-        arg.Args = args;
         SignalInfo si = (SignalInfo) SignalHandlers[k];
-        DynamicSignalHandler handler = (DynamicSignalHandler) si.RegisteredHandler;
-        handler (o, arg);
+	GLib.SignalArgs arg = (GLib.SignalArgs) Activator.CreateInstance (si.ArgsType);
+        arg.Args = args;
+        si.RegisteredHandler.DynamicInvoke (new object[] {o, arg});
         if (arg.RetVal != null) {
           retval.Val = arg.RetVal;
         }

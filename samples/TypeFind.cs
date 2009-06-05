@@ -11,11 +11,11 @@ public static class GstTypefindTest
         Application.Init();
     
         Pipeline pipeline = new Pipeline("pipeline");
-        Element source = ElementFactory.Make("filesrc", "source");
+        FileSrc source = FileSrc.Make("source");
         typefind = TypeFindElement.Make("typefind");
-        Element sink = ElementFactory.Make("fakesink", "sink");
+        FakeSink sink = FakeSink.Make("sink");
 
-        source["location"] = args[0];
+        source.Location = args[0];
         
         typefind.HaveType += OnHaveType;
         
@@ -26,16 +26,12 @@ public static class GstTypefindTest
         pipeline.SetState(State.Paused);
         pipeline.SetState(State.Null);
 		
-		source.Dispose();
-		typefind.Dispose();
-		sink.Dispose();
         pipeline.Dispose();
     }
     
-    private static void OnHaveType(object o, GLib.SignalArgs args) 
+    private static void OnHaveType(object o, TypeFindElement.HaveTypeArgs args) 
     {
-	Caps caps = args.Args[1] as Caps;
-        Console.WriteLine("MimeType: {0}", caps);            
+        Console.WriteLine("MimeType: {0}", args.Caps);
     }
 }
 
