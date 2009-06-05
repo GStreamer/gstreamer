@@ -1899,7 +1899,7 @@ gst_structure_parse_value (gchar * str,
     type = gst_structure_gtype_from_abbr (type_name);
     *type_end = c;
 
-    if (type == G_TYPE_INVALID)
+    if (G_UNLIKELY (type == G_TYPE_INVALID))
       return FALSE;
   }
 
@@ -1913,12 +1913,12 @@ gst_structure_parse_value (gchar * str,
     ret = gst_structure_parse_array (s, &s, value, type);
   } else {
     value_s = s;
-    if (!gst_structure_parse_string (s, &value_end, &s))
+    if (G_UNLIKELY (!gst_structure_parse_string (s, &value_end, &s)))
       return FALSE;
 
     c = *value_end;
     *value_end = '\0';
-    if (type == G_TYPE_INVALID) {
+    if (G_UNLIKELY (type == G_TYPE_INVALID)) {
       GType try_types[] =
           { G_TYPE_INT, G_TYPE_DOUBLE, GST_TYPE_FRACTION, G_TYPE_BOOLEAN,
         G_TYPE_STRING
@@ -1936,6 +1936,8 @@ gst_structure_parse_value (gchar * str,
       g_value_init (value, type);
 
       ret = gst_value_deserialize (value, value_s);
+      if (G_UNLIKELY (!ret))
+        g_value_unset (value);
     }
     *value_end = c;
   }
@@ -1989,7 +1991,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   structure = gst_structure_empty_new (name);
   *w = save;
 
-  if (structure == NULL)
+  if (G_UNLIKELY (structure == NULL))
     goto error;
 
   do {

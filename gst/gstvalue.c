@@ -81,6 +81,7 @@ static gint gst_value_compare_with_func (const GValue * value1,
     const GValue * value2, GstValueCompareFunc compare);
 
 static gchar *gst_string_wrap (const gchar * s);
+static gchar *gst_string_take_and_wrap (gchar * s);
 static gchar *gst_string_unwrap (const gchar * s);
 
 /********
@@ -1338,7 +1339,7 @@ gst_value_serialize_structure (const GValue * value)
 {
   GstStructure *structure = g_value_get_boxed (value);
 
-  return gst_string_wrap (gst_structure_to_string (structure));
+  return gst_string_take_and_wrap (gst_structure_to_string (structure));
 }
 
 static gboolean
@@ -1351,14 +1352,15 @@ gst_value_deserialize_structure (GValue * dest, const gchar * s)
   } else {
     gchar *str = gst_string_unwrap (s);
 
-    if (!str)
+    if (G_UNLIKELY (!str))
       return FALSE;
 
     structure = gst_structure_from_string (str, NULL);
+    g_free (str);
   }
 
-  if (structure) {
-    g_value_set_boxed (dest, structure);
+  if (G_LIKELY (structure)) {
+    g_value_take_boxed (dest, structure);
     return TRUE;
   }
   return FALSE;
@@ -1789,55 +1791,85 @@ gst_value_compare_string (const GValue * value1, const GValue * value2)
   }
 }
 
-static gchar *
-gst_string_wrap (const gchar * s)
+static int
+gst_string_measure_wrapping (const gchar * s)
 {
-  const gchar *t;
   int len;
-  gchar *d, *e;
   gboolean wrap = FALSE;
 
+  if (s == NULL)
+    return -1;
+
   len = 0;
-  t = s;
-  if (!s)
-    return NULL;
-  while (*t) {
-    if (GST_ASCII_IS_STRING (*t)) {
+  while (*s) {
+    if (GST_ASCII_IS_STRING (*s)) {
       len++;
-    } else if (*t < 0x20 || *t >= 0x7f) {
+    } else if (*s < 0x20 || *s >= 0x7f) {
       wrap = TRUE;
       len += 4;
     } else {
       wrap = TRUE;
       len += 2;
     }
-    t++;
+    s++;
   }
 
-  if (!wrap)
-    return g_strdup (s);
+  return wrap ? len : -1;
+}
+
+static gchar *
+gst_string_wrap_inner (const gchar * s, int len)
+{
+  gchar *d, *e;
 
   e = d = g_malloc (len + 3);
 
   *e++ = '\"';
-  t = s;
-  while (*t) {
-    if (GST_ASCII_IS_STRING (*t)) {
-      *e++ = *t++;
-    } else if (*t < 0x20 || *t >= 0x7f) {
+  while (*s) {
+    if (GST_ASCII_IS_STRING (*s)) {
+      *e++ = *s++;
+    } else if (*s < 0x20 || *s >= 0x7f) {
       *e++ = '\\';
-      *e++ = '0' + ((*(guchar *) t) >> 6);
-      *e++ = '0' + (((*t) >> 3) & 0x7);
-      *e++ = '0' + ((*t++) & 0x7);
+      *e++ = '0' + ((*(guchar *) s) >> 6);
+      *e++ = '0' + (((*s) >> 3) & 0x7);
+      *e++ = '0' + ((*s++) & 0x7);
     } else {
       *e++ = '\\';
-      *e++ = *t++;
+      *e++ = *s++;
     }
   }
   *e++ = '\"';
   *e = 0;
 
   return d;
+}
+
+/* Do string wrapping/escaping */
+static gchar *
+gst_string_wrap (const gchar * s)
+{
+  int len = gst_string_measure_wrapping (s);
+
+  if (len < 0)
+    return g_strdup (s);
+
+  return gst_string_wrap_inner (s, len);
+}
+
+/* Same as above, but take ownership of the string */
+static gchar *
+gst_string_take_and_wrap (gchar * s)
+{
+  gchar *out;
+  int len = gst_string_measure_wrapping (s);
+
+  if (len < 0)
+    return s;
+
+  out = gst_string_wrap_inner (s, len);
+  g_free (s);
+
+  return out;
 }
 
 /*
@@ -1942,7 +1974,7 @@ gst_value_deserialize_string (GValue * dest, const gchar * s)
   } else {
     gchar *str = gst_string_unwrap (s);
 
-    if (!str)
+    if (G_UNLIKELY (!str))
       return FALSE;
     g_value_take_string (dest, str);
   }
