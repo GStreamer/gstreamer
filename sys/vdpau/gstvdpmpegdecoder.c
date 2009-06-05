@@ -279,9 +279,24 @@ GstFlowReturn
 gst_vdp_mpeg_decoder_push_video_buffer (GstVdpMpegDecoder * mpeg_dec,
     GstVdpVideoBuffer * buffer)
 {
-  if (GST_BUFFER_TIMESTAMP (buffer) == GST_CLOCK_TIME_NONE) {
+  if (GST_BUFFER_TIMESTAMP (buffer) == GST_CLOCK_TIME_NONE
+      && GST_CLOCK_TIME_IS_VALID (mpeg_dec->next_timestamp)) {
     GST_BUFFER_TIMESTAMP (buffer) = mpeg_dec->next_timestamp;
+  } else if (GST_BUFFER_TIMESTAMP (buffer) == GST_CLOCK_TIME_NONE) {
+    GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (mpeg_dec->frame_nr,
+        GST_SECOND * mpeg_dec->fps_d, mpeg_dec->fps_n);
   }
+
+  if (mpeg_dec->seeking) {
+    GstEvent *event;
+
+    event = gst_event_new_new_segment (FALSE,
+        mpeg_dec->segment.rate, GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer),
+        mpeg_dec->segment.stop, GST_BUFFER_TIMESTAMP (buffer));
+
+    gst_pad_push_event (mpeg_dec->src, event);
+  }
+  mpeg_dec->seeking = FALSE;
 
   mpeg_dec->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
       GST_BUFFER_DURATION (buffer);
@@ -334,6 +349,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
       mpeg_dec->width, mpeg_dec->height);
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = mpeg_dec->duration;
+  GST_BUFFER_OFFSET (outbuf) = mpeg_dec->frame_nr;
 
   if (info->forward_reference != VDP_INVALID_HANDLE &&
       info->picture_coding_type != I_FRAME)
@@ -403,7 +419,7 @@ gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
   info->intra_vlc_format = pic_ext.intra_vlc_format;
   info->alternate_scan = pic_ext.alternate_scan;
 
-  fields = 0;
+  fields = 2;
   if (pic_ext.picture_structure == 3) {
     if (mpeg_dec->interlaced) {
       if (pic_ext.progressive_frame == 0)
@@ -424,11 +440,6 @@ gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
     fields = 1;
 
   GST_DEBUG ("fields: %d", fields);
-
-  if (!fields) {
-    GST_WARNING ("Invalid Picture Extension packet");
-    return FALSE;
-  }
 
   mpeg_dec->duration = gst_util_uint64_scale (fields,
       GST_SECOND * mpeg_dec->fps_d, 2 * mpeg_dec->fps_n);
@@ -488,6 +499,8 @@ gst_vdp_mpeg_decoder_parse_picture (GstVdpMpegDecoder * mpeg_dec,
   mpeg_dec->duration = gst_util_uint64_scale (1, GST_SECOND * mpeg_dec->fps_d,
       mpeg_dec->fps_n);
 
+  mpeg_dec->frame_nr = mpeg_dec->gop_frame + pic_hdr.tsn;
+
   return TRUE;
 }
 
@@ -496,9 +509,18 @@ gst_vdp_mpeg_decoder_parse_gop (GstVdpMpegDecoder * mpeg_dec,
     GstBuffer * buffer)
 {
   MPEGGop gop;
+  GstClockTime time;
 
   if (!mpeg_util_parse_gop (&gop, buffer))
     return FALSE;
+
+  time = GST_SECOND * (gop.hour * 3600 + gop.minute * 60 + gop.second);
+
+  GST_DEBUG ("gop timestamp: %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
+
+  mpeg_dec->gop_frame =
+      gst_util_uint64_scale (time, mpeg_dec->fps_n,
+      mpeg_dec->fps_d * GST_SECOND) + gop.frame;
 
   return TRUE;
 }
@@ -530,6 +552,8 @@ gst_vdp_mpeg_decoder_flush (GstVdpMpegDecoder * mpeg_dec)
   gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 
   gst_adapter_clear (mpeg_dec->adapter);
+
+  mpeg_dec->next_timestamp = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -544,7 +568,8 @@ gst_vdp_mpeg_decoder_reset (GstVdpMpegDecoder * mpeg_dec)
     g_object_unref (mpeg_dec->device);
   mpeg_dec->device = NULL;
 
-  mpeg_dec->next_timestamp = 0;
+  gst_segment_init (&mpeg_dec->segment, GST_FORMAT_TIME);
+  mpeg_dec->seeking = FALSE;
 }
 
 static GstFlowReturn
@@ -734,6 +759,94 @@ gst_vdp_mpeg_decoder_src_query (GstPad * pad, GstQuery * query)
 }
 
 static gboolean
+normal_seek (GstPad * pad, GstEvent * event)
+{
+  GstVdpMpegDecoder *mpeg_dec = GST_VDP_MPEG_DECODER (GST_OBJECT_PARENT (pad));
+  gdouble rate;
+  GstFormat format, conv;
+  GstSeekFlags flags;
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
+  gint64 time_cur, bytes_cur;
+  gint64 time_stop, bytes_stop;
+  gboolean res;
+  GstEvent *peer_event;
+
+  GST_DEBUG ("normal seek");
+
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
+
+  conv = GST_FORMAT_TIME;
+  if (!gst_vdp_mpeg_decoder_convert (mpeg_dec, format, cur, conv, &time_cur))
+    goto convert_failed;
+  if (!gst_vdp_mpeg_decoder_convert (mpeg_dec, format, stop, conv, &time_stop))
+    goto convert_failed;
+
+  GST_DEBUG ("seek to time %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time_cur), GST_TIME_ARGS (time_stop));
+
+  peer_event = gst_event_new_seek (rate, GST_FORMAT_TIME, flags,
+      cur_type, time_cur, stop_type, time_stop);
+
+  /* try seek on time then */
+  if ((res = gst_pad_push_event (mpeg_dec->sink, peer_event)))
+    goto done;
+
+  /* else we try to seek on bytes */
+  conv = GST_FORMAT_BYTES;
+  if (!gst_vdp_mpeg_decoder_convert (mpeg_dec, GST_FORMAT_TIME, time_cur,
+          conv, &bytes_cur))
+    goto convert_failed;
+  if (!gst_vdp_mpeg_decoder_convert (mpeg_dec, GST_FORMAT_TIME, time_stop,
+          conv, &bytes_stop))
+    goto convert_failed;
+
+  /* conversion succeeded, create the seek */
+  peer_event =
+      gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
+      cur_type, bytes_cur, stop_type, bytes_stop);
+
+  /* do the seek */
+  res = gst_pad_push_event (mpeg_dec->sink, peer_event);
+
+  mpeg_dec->seeking = TRUE;
+
+done:
+  return res;
+
+  /* ERRORS */
+convert_failed:
+  {
+    /* probably unsupported seek format */
+    GST_DEBUG_OBJECT (mpeg_dec,
+        "failed to convert format %u into GST_FORMAT_TIME", format);
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_vdp_mpeg_decoder_src_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      if (gst_pad_event_default (pad, event))
+        return TRUE;
+
+      res = normal_seek (pad, event);
+      break;
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+  }
+
+  return res;
+}
+
+static gboolean
 gst_vdp_mpeg_decoder_sink_event (GstPad * pad, GstEvent * event)
 {
   GstVdpMpegDecoder *mpeg_dec = GST_VDP_MPEG_DECODER (GST_OBJECT_PARENT (pad));
@@ -746,6 +859,42 @@ gst_vdp_mpeg_decoder_sink_event (GstPad * pad, GstEvent * event)
 
       gst_vdp_mpeg_decoder_flush (mpeg_dec);
       res = gst_pad_push_event (mpeg_dec->src, event);
+
+      break;
+    }
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gboolean update;
+      gdouble rate;
+      GstFormat format;
+      gint64 start;
+      gint64 stop;
+      gint64 position;
+
+      gst_event_parse_new_segment (event, &update, &rate, &format,
+          &start, &stop, &position);
+
+      if (format != GST_FORMAT_TIME) {
+        if (!gst_vdp_mpeg_decoder_convert (mpeg_dec, format, start,
+                GST_FORMAT_TIME, &start))
+          goto convert_error;
+        if (!gst_vdp_mpeg_decoder_convert (mpeg_dec, format, stop,
+                GST_FORMAT_TIME, &stop))
+          goto convert_error;
+        if (!gst_vdp_mpeg_decoder_convert (mpeg_dec, format, position,
+                GST_FORMAT_TIME, &position))
+          goto convert_error;
+
+        gst_segment_set_newsegment (&mpeg_dec->segment, update, rate,
+            GST_FORMAT_TIME, start, stop, position);
+
+        gst_event_unref (event);
+        event = gst_event_new_new_segment (update, rate, GST_FORMAT_TIME, start,
+            stop, position);
+      }
+
+    convert_error:
+      gst_pad_push_event (mpeg_dec->src, event);
 
       break;
     }
@@ -849,6 +998,8 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
     GstVdpMpegDecoderClass * gclass)
 {
   mpeg_dec->src = gst_pad_new_from_static_template (&src_template, "src");
+  gst_pad_set_event_function (mpeg_dec->src,
+      GST_DEBUG_FUNCPTR (gst_vdp_mpeg_decoder_src_event));
   gst_pad_set_query_function (mpeg_dec->src,
       GST_DEBUG_FUNCPTR (gst_vdp_mpeg_decoder_src_query));
   gst_pad_set_query_type_function (mpeg_dec->src,
@@ -872,6 +1023,8 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
   mpeg_dec->device = NULL;
   mpeg_dec->decoder = VDP_INVALID_HANDLE;
   gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
+
+  gst_segment_init (&mpeg_dec->segment, GST_FORMAT_TIME);
 }
 
 static void

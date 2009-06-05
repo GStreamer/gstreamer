@@ -62,6 +62,11 @@ struct _GstVdpMpegDecoder
   GstClockTime duration;
   GstClockTime next_timestamp;
 
+  guint64 gop_frame;
+  guint64 frame_nr;
+
+  GstSegment segment;
+  gboolean seeking;
   gint64 byterate;
   
   GstAdapter *adapter;
