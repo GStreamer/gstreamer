@@ -108,9 +108,6 @@ GST_IS_MAD
 GST_IS_MAD_CLASS
 GST_TYPE_MAD
 gst_mad_get_type
-gst_id3_tag_get_type
-gst_mad_id3_to_tag_list
-gst_mad_tag_list_to_id3_tag
 </SECTION>
 
 <SECTION>

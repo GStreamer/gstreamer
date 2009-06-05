@@ -1,6 +1,6 @@
 <plugin>
   <name>mad</name>
-  <description>id3 tag manipulation and mp3 decoding based on the mad library</description>
+  <description>mp3 decoding based on the mad library</description>
   <filename>../../ext/mad/.libs/libgstmad.so</filename>
   <basename>libgstmad.so</basename>
   <version>0.10.11.1</version>
@@ -9,27 +9,6 @@
   <package>GStreamer Ugly Plug-ins git/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
-    <element>
-      <name>id3mux</name>
-      <longname>id3 tag muxer</longname>
-      <class>Codec/Muxer/Audio</class>
-      <description>Add ID3 tagging information</description>
-      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int)1; audio/x-flac</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-id3</details>
-        </caps>
-      </pads>
-    </element>
     <element>
       <name>mad</name>
       <longname>mad mp3 decoder</longname>
