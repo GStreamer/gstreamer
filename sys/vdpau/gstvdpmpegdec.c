@@ -369,8 +369,16 @@ gst_vdp_mpeg_dec_decode (GstVdpMpegDec * mpeg_dec,
   GST_BUFFER_OFFSET (outbuf) = mpeg_dec->frame_nr;
   GST_BUFFER_SIZE (outbuf) = size;
 
+  if (info->picture_coding_type == I_FRAME)
+    GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+  else
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
   if (info->top_field_first)
     GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_TFF);
+  else
+    GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_TFF);
+
 
   if (info->forward_reference != VDP_INVALID_HANDLE &&
       info->picture_coding_type != I_FRAME)
