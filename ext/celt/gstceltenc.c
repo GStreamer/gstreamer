@@ -77,7 +77,7 @@ GST_ELEMENT_DETAILS ("Celt audio encoder",
     "Encodes audio in Celt format",
     "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-#define DEFAULT_BITRATE         128
+#define DEFAULT_BITRATE         64
 #define DEFAULT_FRAMESIZE       256
 
 enum
@@ -152,11 +152,11 @@ gst_celt_enc_class_init (GstCeltEncClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
       g_param_spec_int ("bitrate", "Encoding Bit-rate",
-          "Specify an encoding bit-rate (in bps). (0 = automatic)",
+          "Specify an encoding bit-rate (in Kbps). (0 = automatic)",
           0, 150, DEFAULT_BITRATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FRAMESIZE,
       g_param_spec_int ("framesize", "Frame Size",
-          "The number of samples per frame", 64, 256, DEFAULT_FRAMESIZE,
+          "The number of samples per frame", 64, 512, DEFAULT_FRAMESIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_celt_enc_finalize);
