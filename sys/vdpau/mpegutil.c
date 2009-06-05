@@ -135,8 +135,11 @@ mpeg_util_parse_sequence_extension (MPEGSeqExtHdr * hdr, GstBuffer * buffer)
   if (!gst_bit_reader_get_bits_uint8 (&reader, &hdr->vert_size_ext, 2))
     return FALSE;
 
+  if (!gst_bit_reader_get_bits_uint16 (&reader, &hdr->bitrate_ext, 12))
+    return FALSE;
+
   /* skip to framerate extension */
-  if (!gst_bit_reader_skip (&reader, 22))
+  if (!gst_bit_reader_skip (&reader, 9))
     return FALSE;
 
   /* framerate extension */

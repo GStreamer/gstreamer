@@ -62,6 +62,8 @@ struct _GstVdpMpegDecoder
   gboolean broken_gop;
   GstClockTime duration;
   GstClockTime next_timestamp;
+
+  gint64 byterate;
   
   GstAdapter *adapter;
 };

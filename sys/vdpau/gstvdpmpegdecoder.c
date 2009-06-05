@@ -220,6 +220,7 @@ gst_vdp_mpeg_decoder_set_caps (GstPad * pad, GstCaps * caps)
     gst_vdp_mpeg_packetizer_init (&packetizer, codec_data);
     if ((buf = gst_vdp_mpeg_packetizer_get_next_packet (&packetizer))) {
       MPEGSeqHdr hdr;
+      guint32 bitrate;
 
       mpeg_util_parse_sequence_hdr (&hdr, buf);
 
@@ -228,6 +229,7 @@ gst_vdp_mpeg_decoder_set_caps (GstPad * pad, GstCaps * caps)
       memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
           &hdr.non_intra_quantizer_matrix, 64);
 
+      bitrate = hdr.bitrate;
       gst_buffer_unref (buf);
 
       if ((buf = gst_vdp_mpeg_packetizer_get_next_packet (&packetizer))) {
@@ -245,8 +247,12 @@ gst_vdp_mpeg_decoder_set_caps (GstPad * pad, GstCaps * caps)
           }
         }
 
+        bitrate += (ext.bitrate_ext << 18);;
         gst_buffer_unref (buf);
       }
+
+      mpeg_dec->byterate = bitrate * 50;
+      GST_DEBUG ("byterate: %" G_GINT64_FORMAT, mpeg_dec->byterate);
     }
   }
 
@@ -526,6 +532,8 @@ gst_vdp_mpeg_decoder_reset (GstVdpMpegDecoder * mpeg_dec)
   gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 
   gst_adapter_clear (mpeg_dec->adapter);
+
+  //mpeg_dec->byterate = -1;
 }
 
 static GstFlowReturn
@@ -614,6 +622,105 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
     ret = gst_vdp_mpeg_decoder_decode (mpeg_dec, GST_BUFFER_TIMESTAMP (buffer));
 
   return ret;
+}
+
+static gboolean
+gst_vdp_mpeg_decoder_convert (GstVdpMpegDecoder * mpeg_dec,
+    GstFormat src_format, gint64 src_value,
+    GstFormat dest_format, gint64 * dest_value)
+{
+
+  if (src_format == dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
+  if (mpeg_dec->byterate == -1)
+    return FALSE;
+
+  if (src_format == GST_FORMAT_BYTES && dest_format == GST_FORMAT_TIME) {
+    *dest_value = gst_util_uint64_scale (GST_SECOND, src_value,
+        mpeg_dec->byterate);
+    return TRUE;
+  }
+
+  if (src_format == GST_FORMAT_TIME && dest_format == GST_FORMAT_BYTES) {
+    *dest_value =
+        gst_util_uint64_scale_int (src_value, mpeg_dec->byterate, GST_SECOND);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static const GstQueryType *
+gst_mpeg_decoder_get_querytypes (GstPad * pad)
+{
+  static const GstQueryType list[] = {
+    GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    0
+  };
+
+  return list;
+}
+
+static gboolean
+gst_vdp_mpeg_decoder_src_query (GstPad * pad, GstQuery * query)
+{
+  GstVdpMpegDecoder *mpeg_dec = GST_VDP_MPEG_DECODER (GST_OBJECT_PARENT (pad));
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+
+      if (gst_pad_query_default (pad, query))
+        return TRUE;
+
+      gst_query_parse_position (query, &format, NULL);
+      if (format == GST_FORMAT_TIME &&
+          GST_CLOCK_TIME_IS_VALID (mpeg_dec->next_timestamp)) {
+        gst_query_set_position (query, GST_FORMAT_TIME,
+            mpeg_dec->next_timestamp);
+        res = TRUE;
+      }
+      break;
+    }
+
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+
+      if (gst_pad_query_default (pad, query))
+        return TRUE;
+
+      gst_query_parse_duration (query, &format, NULL);
+      if (format == GST_FORMAT_TIME) {
+        gint64 bytes;
+
+        format = GST_FORMAT_BYTES;
+        if (gst_pad_query_duration (pad, &format, &bytes)
+            && format == GST_FORMAT_BYTES) {
+          gint64 duration;
+
+          if (gst_vdp_mpeg_decoder_convert (mpeg_dec, GST_FORMAT_BYTES,
+                  bytes, GST_FORMAT_TIME, &duration)) {
+            GST_DEBUG ("duration: %" GST_TIME_FORMAT, GST_TIME_ARGS (duration));
+            gst_query_set_duration (query, GST_FORMAT_TIME, duration);
+            res = TRUE;
+          }
+        }
+      }
+      break;
+    }
+
+    default:
+      res = gst_pad_query_default (pad, query);
+  }
+
+  return res;
 }
 
 static gboolean
@@ -737,6 +844,9 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
     GstVdpMpegDecoderClass * gclass)
 {
   mpeg_dec->src = gst_pad_new_from_static_template (&src_template, "src");
+  gst_pad_set_query_function (mpeg_dec->src, gst_vdp_mpeg_decoder_src_query);
+  gst_pad_set_query_type_function (mpeg_dec->src,
+      gst_mpeg_decoder_get_querytypes);
   gst_element_add_pad (GST_ELEMENT (mpeg_dec), mpeg_dec->src);
 
   mpeg_dec->sink = gst_pad_new_from_static_template (&sink_template, "sink");

@@ -83,6 +83,7 @@ struct MPEGSeqExtHdr
   
   guint8 horiz_size_ext, vert_size_ext;
 
+  guint16 bitrate_ext;
   guint8 fps_n_ext, fps_d_ext;
   
 };
