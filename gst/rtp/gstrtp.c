@@ -23,6 +23,7 @@
 
 #include "gstrtpdepay.h"
 #include "gstrtpac3depay.h"
+#include "gstrtpceltdepay.h"
 #include "gstrtpceltpay.h"
 #include "gstrtpdvdepay.h"
 #include "gstrtpdvpay.h"
@@ -85,6 +86,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_ac3_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_celt_depay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_celt_pay_plugin_init (plugin))
