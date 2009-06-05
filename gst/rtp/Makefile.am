@@ -6,6 +6,7 @@ libgstrtp_la_SOURCES = \
 	gstrtpchannels.c \
 	gstrtpdepay.c \
 	gstrtpac3depay.c \
+	gstrtpceltpay.c \
 	gstrtpdvdepay.c \
 	gstrtpdvpay.c \
 	gstrtpilbcdepay.c \
