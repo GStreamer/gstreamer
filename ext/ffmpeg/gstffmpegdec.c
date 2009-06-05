@@ -1257,9 +1257,13 @@ gst_ffmpegdec_do_qos (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
     goto no_qos;
   }
 
-  /* qos is done on running time */
+  /* qos is done on running time of the timestamp */
   qostime = gst_segment_to_running_time (&ffmpegdec->segment, GST_FORMAT_TIME,
       timestamp);
+
+  /* timestamp can be out of segment, then we don't do QoS */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (qostime)))
+    goto no_qos;
 
   /* see how our next timestamp relates to the latest qos timestamp. negative
    * values mean we are early, positive values mean we are too late. */
