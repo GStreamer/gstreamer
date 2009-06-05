@@ -944,7 +944,7 @@
    ADD_CYCLES(cycles); \
 }
 
-#define SEC() \
+#define SEC_6502() \
 { \
    SET_FLAG(C_FLAG); \
    ADD_CYCLES(2); \
@@ -1798,7 +1798,7 @@ nes6502_execute (int remaining_cycles)
         break;
 
       case 0x38:               /* SEC */
-        SEC ();
+        SEC_6502 ();
         break;
 
       case 0x39:               /* AND $nnnn,Y */
