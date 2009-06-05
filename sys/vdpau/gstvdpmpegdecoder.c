@@ -329,7 +329,7 @@ gst_vdp_mpeg_decoder_push_video_buffer (GstVdpMpegDecoder * mpeg_dec,
 
 static GstFlowReturn
 gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
-    GstClockTime timestamp)
+    GstClockTime timestamp, gint64 size)
 {
   VdpPictureInfoMPEG1Or2 *info;
   GstBuffer *buffer;
@@ -367,7 +367,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = mpeg_dec->duration;
   GST_BUFFER_OFFSET (outbuf) = mpeg_dec->frame_nr;
-  GST_BUFFER_SIZE (outbuf) = mpeg_dec->size;
+  GST_BUFFER_SIZE (outbuf) = size;
 
   if (info->top_field_first)
     GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_TFF);
@@ -608,7 +608,6 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
     gst_vdp_mpeg_decoder_flush (mpeg_dec);
   }
 
-  mpeg_dec->size = GST_BUFFER_SIZE (buffer);
   gst_vdp_mpeg_packetizer_init (&packetizer, buffer);
   while ((buf = gst_vdp_mpeg_packetizer_get_next_packet (&packetizer))) {
     GstBitReader b_reader = GST_BIT_READER_INIT_FROM_BUFFER (buf);
@@ -676,7 +675,8 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   if (mpeg_dec->vdp_info.slice_count > 0)
-    ret = gst_vdp_mpeg_decoder_decode (mpeg_dec, GST_BUFFER_TIMESTAMP (buffer));
+    ret = gst_vdp_mpeg_decoder_decode (mpeg_dec, GST_BUFFER_TIMESTAMP (buffer),
+        GST_BUFFER_SIZE (buffer));
 
   return ret;
 }

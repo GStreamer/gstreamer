@@ -59,7 +59,6 @@ struct _GstVdpMpegDecoder
   /* currently decoded frame info */
   GstAdapter *adapter;
   VdpPictureInfoMPEG1Or2 vdp_info;
-  guint64 size;
   guint64 frame_nr;
   GstClockTime duration;
 
