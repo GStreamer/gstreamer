@@ -308,8 +308,10 @@ gst_vdp_mpeg_decoder_push_video_buffer (GstVdpMpegDecoder * mpeg_dec,
   gst_buffer_set_caps (GST_BUFFER (buffer), GST_PAD_CAPS (mpeg_dec->src));
 
   GST_DEBUG_OBJECT (mpeg_dec,
-      "Pushing buffer with timestamp: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+      "Pushing buffer with timestamp: %" GST_TIME_FORMAT
+      " frame_nr: %" G_GINT64_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      GST_BUFFER_OFFSET (buffer));
 
   return gst_pad_push (mpeg_dec->src, GST_BUFFER (buffer));
 }
