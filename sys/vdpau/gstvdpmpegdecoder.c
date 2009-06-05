@@ -426,7 +426,7 @@ gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
   GST_DEBUG ("fields: %d", fields);
 
   if (!fields) {
-    GST_DEBUG ("Invalid Picture Extension packet");
+    GST_WARNING ("Invalid Picture Extension packet");
     return FALSE;
   }
 
