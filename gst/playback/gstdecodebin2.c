@@ -1820,7 +1820,7 @@ gst_decode_group_new (GstDecodeBin * dbin, gboolean use_queue)
      * be exposed. */
     g_object_set (G_OBJECT (mq),
         "max-size-bytes", 2 * 1024 * 1024,
-        "max-size-time", 5 * GST_SECOND, "max-size-buffers", 0, NULL);
+        "max-size-time", 0, "max-size-buffers", 0, NULL);
     /* will expose the group */
     group->overrunsig = g_signal_connect (G_OBJECT (mq), "overrun",
         G_CALLBACK (multi_queue_overrun_cb), group);
