@@ -522,7 +522,7 @@ gst_vdp_mpeg_decoder_parse_quant_matrix (GstVdpMpegDecoder * mpeg_dec,
 }
 
 static void
-gst_vdp_mpeg_decoder_reset (GstVdpMpegDecoder * mpeg_dec)
+gst_vdp_mpeg_decoder_flush (GstVdpMpegDecoder * mpeg_dec)
 {
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
     gst_buffer_unref (mpeg_dec->f_buffer);
@@ -532,8 +532,22 @@ gst_vdp_mpeg_decoder_reset (GstVdpMpegDecoder * mpeg_dec)
   gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 
   gst_adapter_clear (mpeg_dec->adapter);
+}
 
-  //mpeg_dec->byterate = -1;
+static void
+gst_vdp_mpeg_decoder_reset (GstVdpMpegDecoder * mpeg_dec)
+{
+  gst_vdp_mpeg_decoder_flush (mpeg_dec);
+
+  if (mpeg_dec->decoder != VDP_INVALID_HANDLE)
+    mpeg_dec->device->vdp_decoder_destroy (mpeg_dec->decoder);
+  mpeg_dec->decoder = VDP_INVALID_HANDLE;
+  if (mpeg_dec->device)
+    g_object_unref (mpeg_dec->device);
+  mpeg_dec->device = NULL;
+
+  mpeg_dec->broken_gop = FALSE;
+  mpeg_dec->next_timestamp = 0;
 }
 
 static GstFlowReturn
@@ -548,7 +562,7 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (mpeg_dec, "Received discont buffer");
-    gst_vdp_mpeg_decoder_reset (mpeg_dec);
+    gst_vdp_mpeg_decoder_flush (mpeg_dec);
   }
 
   gst_vdp_mpeg_packetizer_init (&packetizer, buffer);
@@ -733,7 +747,7 @@ gst_vdp_mpeg_decoder_sink_event (GstPad * pad, GstEvent * event)
     {
       GST_DEBUG_OBJECT (mpeg_dec, "flush stop");
 
-      gst_vdp_mpeg_decoder_reset (mpeg_dec);
+      gst_vdp_mpeg_decoder_flush (mpeg_dec);
       res = gst_pad_push_event (mpeg_dec->src, event);
 
       break;
@@ -767,12 +781,6 @@ gst_vdp_mpeg_decoder_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_vdp_mpeg_decoder_reset (mpeg_dec);
-
-      mpeg_dec->device->vdp_decoder_destroy (mpeg_dec->decoder);
-      mpeg_dec->decoder = VDP_INVALID_HANDLE;
-
-      g_object_unref (mpeg_dec->device);
-      mpeg_dec->device = NULL;
       break;
     default:
       break;
@@ -860,15 +868,14 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
   gst_element_add_pad (GST_ELEMENT (mpeg_dec), mpeg_dec->sink);
 
   mpeg_dec->display_name = NULL;
-  mpeg_dec->device = NULL;
-
-  mpeg_dec->decoder = VDP_INVALID_HANDLE;
-  gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
+  mpeg_dec->adapter = gst_adapter_new ();
 
   mpeg_dec->broken_gop = FALSE;
   mpeg_dec->next_timestamp = 0;
 
-  mpeg_dec->adapter = gst_adapter_new ();
+  mpeg_dec->device = NULL;
+  mpeg_dec->decoder = VDP_INVALID_HANDLE;
+  gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 }
 
 static void
