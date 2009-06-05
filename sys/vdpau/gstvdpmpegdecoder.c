@@ -283,6 +283,8 @@ GstFlowReturn
 gst_vdp_mpeg_decoder_push_video_buffer (GstVdpMpegDecoder * mpeg_dec,
     GstVdpVideoBuffer * buffer)
 {
+  gint64 byterate;
+
   if (GST_BUFFER_TIMESTAMP (buffer) == GST_CLOCK_TIME_NONE
       && GST_CLOCK_TIME_IS_VALID (mpeg_dec->next_timestamp)) {
     GST_BUFFER_TIMESTAMP (buffer) = mpeg_dec->next_timestamp;
@@ -304,6 +306,14 @@ gst_vdp_mpeg_decoder_push_video_buffer (GstVdpMpegDecoder * mpeg_dec,
 
   mpeg_dec->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
       GST_BUFFER_DURATION (buffer);
+
+  mpeg_dec->accumulated_duration += GST_BUFFER_DURATION (buffer);
+  mpeg_dec->accumulated_size += GST_BUFFER_SIZE (buffer);
+  byterate = gst_util_uint64_scale (mpeg_dec->accumulated_size, GST_SECOND,
+      mpeg_dec->accumulated_duration);
+  GST_DEBUG ("byterate: %" G_GINT64_FORMAT, mpeg_dec->byterate);
+
+  mpeg_dec->byterate = (mpeg_dec->byterate + byterate) / 2;
 
   gst_buffer_set_caps (GST_BUFFER (buffer), GST_PAD_CAPS (mpeg_dec->src));
 
@@ -356,6 +366,8 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec,
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = mpeg_dec->duration;
   GST_BUFFER_OFFSET (outbuf) = mpeg_dec->frame_nr;
+  GST_BUFFER_SIZE (outbuf) = mpeg_dec->size;
+
   if (info->top_field_first)
     GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_TFF);
 
@@ -575,6 +587,9 @@ gst_vdp_mpeg_decoder_reset (GstVdpMpegDecoder * mpeg_dec)
 
   gst_segment_init (&mpeg_dec->segment, GST_FORMAT_TIME);
   mpeg_dec->seeking = FALSE;
+
+  mpeg_dec->accumulated_size = 0;
+  mpeg_dec->accumulated_duration = 0;
 }
 
 static GstFlowReturn
@@ -592,6 +607,7 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
     gst_vdp_mpeg_decoder_flush (mpeg_dec);
   }
 
+  mpeg_dec->size = GST_BUFFER_SIZE (buffer);
   gst_vdp_mpeg_packetizer_init (&packetizer, buffer);
   while ((buf = gst_vdp_mpeg_packetizer_get_next_packet (&packetizer))) {
     GstBitReader b_reader = GST_BIT_READER_INIT_FROM_BUFFER (buf);

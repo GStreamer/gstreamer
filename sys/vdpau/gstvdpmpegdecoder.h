@@ -42,34 +42,44 @@ struct _GstVdpMpegDecoder
 {
   GstElement element;
 
-  gchar *display_name;
-  GstVdpDevice *device;
-
+  /* pads */
   GstPad *src;
   GstPad *sink;
+
+  gchar *display_name;
+  GstVdpDevice *device;
+  VdpDecoder decoder;
   
+  /* stream info */
   gint width, height;
   gint fps_n, fps_d;
   gboolean interlaced;
-  
   gint version;
-  
-  VdpDecoder decoder;
+
+  /* currently decoded frame info */
+  GstAdapter *adapter;
   VdpPictureInfoMPEG1Or2 vdp_info;
+  guint64 size;
+  guint64 frame_nr;
+  GstClockTime duration;
+
+  /* frame_nr from GOP */
+  guint64 gop_frame;
+  
+  /* forward and backward reference */
   GstBuffer *f_buffer;
   GstBuffer *b_buffer;
-  
-  GstClockTime duration;
+
+  /* calculated timestamp, size and duration */
   GstClockTime next_timestamp;
+  guint64 accumulated_size;
+  guint64 accumulated_duration;
 
-  guint64 gop_frame;
-  guint64 frame_nr;
-
+  /* seek data */
   GstSegment segment;
   gboolean seeking;
   gint64 byterate;
   
-  GstAdapter *adapter;
 };
 
 struct _GstVdpMpegDecoderClass 
