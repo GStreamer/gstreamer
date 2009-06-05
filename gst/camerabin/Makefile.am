@@ -25,9 +25,9 @@ nodist_libgstcamerabin_la_SOURCES = $(built_sources)
 libgstcamerabin_la_CFLAGS = \
 	$(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) -DGST_USE_UNSTABLE_API
 libgstcamerabin_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-$(GST_MAJORMINOR).la \
 	$(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
-	-lgstinterfaces-$(GST_MAJORMINOR)    \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-$(GST_MAJORMINOR).la
+	-lgstinterfaces-$(GST_MAJORMINOR)
 
 libgstcamerabin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcamerabin_la_LIBTOOLFLAGS = --tag=disable-static
