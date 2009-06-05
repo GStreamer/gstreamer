@@ -15,7 +15,7 @@ ASSEMBLY = $(ASSEMBLY_NAME).dll
 gapidir = $(datadir)/gapi
 gapi_DATA = $(APIS)
 
-glue_includes="gst/gst.h gst/interfaces/colorbalance.h gst/interfaces/colorbalancechannel.h gst/interfaces/tuner.h gst/interfaces/tunerchannel.h gst/interfaces/tunernorm.h"
+glue_includes="gst/gst.h gst/interfaces/colorbalance.h gst/interfaces/colorbalancechannel.h gst/interfaces/tuner.h gst/interfaces/tunerchannel.h gst/interfaces/tunernorm.h gst/cdda/gstcddabasesrc.h"
 
 CLEANFILES = $(ASSEMBLY) $(ASSEMBLY).mdb $(ASSEMBLY_NAME).pdb generated-stamp generated/*.cs glue/generated.c $(API) $(KEYFILE)
 DISTCLEANFILES = $(ASSEMBLY).config AssemblyInfo.cs

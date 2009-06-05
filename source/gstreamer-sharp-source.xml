@@ -48,6 +48,11 @@
         <exclude>../../gstreamer/libs/gst/controller/gstlfocontrolsourceprivate.h</exclude>
       </namespace>
     </library>
+    <library name="libgstcdda-0.10.dll">
+      <namespace name="Gst.Cdda">
+        <dir>../../gst-plugins-base/gst-libs/gst/cdda</dir>
+      </namespace>
+    </library>
     <library name="libgstinterfaces-0.10.dll">
       <namespace name="Gst.Interfaces">
         <dir>../../gst-plugins-base/gst-libs/gst/interfaces</dir>

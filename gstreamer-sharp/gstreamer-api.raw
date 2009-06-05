@@ -7177,6 +7177,90 @@
       <field name="Values" cname="values" type="gpointer*" />
     </struct>
   </namespace>
+  <namespace name="Gst.Cdda" library="libgstcdda-0.10.dll">
+    <enum name="GstCddaBaseSrcMode" cname="GstCddaBaseSrcMode" gtype="gst_cdda_base_src_mode_get_type" type="enum">
+      <member cname="GST_CDDA_BASE_SRC_MODE_NORMAL" name="Normal" />
+      <member cname="GST_CDDA_BASE_SRC_MODE_CONTINUOUS" name="Continuous" />
+    </enum>
+    <object name="GstCddaBaseSrc" cname="GstCddaBaseSrc" parent="GstPushSrc">
+      <class_struct cname="GstCddaBaseSrcClass">
+        <field name="PushsrcClass" cname="pushsrc_class" type="GstPushSrcClass" />
+        <method vm="open" />
+        <method vm="close" />
+        <method vm="read_sector" />
+        <method vm="get_default_device" />
+        <method vm="probe_devices" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Tags" cname="tags" type="GstTagList*" />
+      <field name="Mode" cname="mode" type="GstCddaBaseSrcMode" />
+      <field name="Device" cname="device" type="gchar*" />
+      <field name="NumTracks" cname="num_tracks" type="guint" />
+      <field name="NumAllTracks" cname="num_all_tracks" type="guint" />
+      <field name="Tracks" cname="tracks" type="GstCddaBaseSrcTrack*" />
+      <field name="CurTrack" cname="cur_track" type="gint" />
+      <field name="PrevTrack" cname="prev_track" type="gint" />
+      <field name="CurSector" cname="cur_sector" type="gint" />
+      <field name="SeekSector" cname="seek_sector" type="gint" />
+      <field name="UriTrack" cname="uri_track" type="gint" />
+      <field name="Uri" cname="uri" type="gchar*" />
+      <field name="Discid" cname="discid" type="guint32" />
+      <field name="MbDiscid" cname="mb_discid" array_len="32" type="gchar" />
+      <field name="Index" cname="index" type="GstIndex*" />
+      <field name="IndexId" cname="index_id" type="gint" />
+      <field name="TocOffset" cname="toc_offset" type="gint" />
+      <field name="TocBias" cname="toc_bias" type="gboolean" />
+      <field name="GstReserved1" cname="_gst_reserved1" array_len="GST_PADDING/2" type="guint" />
+      <field name="GstReserved2" cname="_gst_reserved2" array_len="GST_PADDING/2" type="gpointer" />
+      <property name="Device" cname="device" type="gchar*" readable="true" writeable="true" />
+      <property name="Mode" cname="mode" type="GstCddaBaseSrcMode" readable="true" writeable="true" />
+      <property name="Track" cname="track" type="guint" readable="true" writeable="true" />
+      <property name="TocOffset" cname="toc-offset" type="gint" readable="true" writeable="true" />
+      <property name="TocBias" cname="toc-bias" type="gboolean" readable="true" writeable="true" />
+      <virtual_method name="Open" cname="open">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar*" name="device" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Close" cname="close">
+        <return-type type="void" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="ReadSector" cname="read_sector">
+        <return-type type="GstBuffer*" />
+        <parameters>
+          <parameter type="gint" name="sector" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetDefaultDevice" cname="get_default_device">
+        <return-type type="gchar*" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="ProbeDevices" cname="probe_devices">
+        <return-type type="gchar**" />
+        <parameters />
+      </virtual_method>
+      <method name="AddTrack" cname="gst_cdda_base_src_add_track">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstCddaBaseSrcTrack*" name="track" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_cdda_base_src_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+    </object>
+    <struct name="GstCddaBaseSrcTrack" cname="GstCddaBaseSrcTrack">
+      <field name="IsAudio" cname="is_audio" type="gboolean" />
+      <field name="Num" cname="num" type="guint" />
+      <field name="Start" cname="start" type="guint" />
+      <field name="End" cname="end" type="guint" />
+      <field name="Tags" cname="tags" type="GstTagList*" />
+      <field name="GstReserved1" cname="_gst_reserved1" array_len="GST_PADDING/2" type="guint" access="private" />
+      <field name="GstReserved2" cname="_gst_reserved2" array_len="GST_PADDING/2" type="gpointer" access="private" />
+    </struct>
+  </namespace>
   <namespace name="Gst.Interfaces" library="libgstinterfaces-0.10.dll">
     <enum name="GstColorBalanceType" cname="GstColorBalanceType" gtype="gst_color_balance_type_get_type" type="enum">
       <member cname="GST_COLOR_BALANCE_HARDWARE" name="Hardware" />

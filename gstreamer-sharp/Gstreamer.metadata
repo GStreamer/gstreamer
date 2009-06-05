@@ -1106,6 +1106,19 @@
   <attr path="/api/namespace/struct[@cname='GstTimedValue']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstValueArray']" name="hidden">1</attr>
 
+  <!-- GStreamer Cdda library -->
+  <attr path="/api/namespace/enum[@cname='GstCddaBaseSrcMode']" name="name">CddaBaseSrcMode</attr>
+
+  <attr path="/api/namespace/object[@cname='GstCddaBaseSrc']" name="name">CddaBaseSrc</attr>
+  <attr path="/api/namespace/object[@cname='GstCddaBaseSrc']/virtual_method[@cname='probe_devices']/return-type" name="null_term_array">true</attr>
+  <attr path="/api/namespace/object[@cname='GstCddaBaseSrc']/virtual_method[@cname='read_sector']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstCddaBaseSrc']/field[@cname='tags']" name="access">protected</attr>
+  <attr path="/api/namespace/object[@cname='GstCddaBaseSrc']/field[@cname='tags']" name="writeable">true</attr>
+
+  <attr path="/api/namespace/struct[@cname='GstCddaBaseSrcTrack']" name="name">CddaBaseSrcTrack</attr>
+  <attr path="/api/namespace/struct[@cname='GstCddaBaseSrcTrack']/field[@cname='_gst_reserved1']" name="array_len">4</attr>
+  <remove-node path="/api/namespace/struct[@cname='GstCddaBaseSrcTrack']/field[@cname='_gst_reserved2']" />
+
 
   <!-- GStreamer Interfaces library -->
   <attr path="/api/namespace/enum[@cname='GstColorBalanceType']" name="name">ColorBalanceType</attr>
