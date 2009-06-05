@@ -1,6 +1,6 @@
 /* GStreamer ASF/WMV/WMA demuxer
  * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) 2006-2007 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2006-2009 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -34,6 +34,7 @@
 
 #include <gst/gstutils.h>
 #include <gst/riff/riff-media.h>
+#include <gst/tag/tag.h>
 #include <gst/gst-i18n-plugin.h>
 #include <stdlib.h>
 #include <string.h>
@@ -2079,6 +2080,7 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf16le,
     "WM/Genre", GST_TAG_GENRE}, {
     "WM/AlbumTitle", GST_TAG_ALBUM}, {
     "WM/AlbumArtist", GST_TAG_ARTIST}, {
+    "WM/Picture", GST_TAG_IMAGE}, {
     "WM/Track", GST_TAG_TRACK_NUMBER}, {
     "WM/Year", GST_TAG_DATE}
     /* { "WM/Composer", GST_TAG_COMPOSER } */
@@ -2131,7 +2133,56 @@ gst_asf_demux_commit_taglist (GstASFDemux * demux, GstTagList * taglist)
 }
 
 #define ASF_DEMUX_DATA_TYPE_UTF16LE_STRING  0
+#define ASF_DEMUX_DATA_TYPE_BYTE_ARRAY      1
 #define ASF_DEMUX_DATA_TYPE_DWORD           3
+
+static void
+asf_demux_parse_picture_tag (GstTagList * tags, const guint8 * tag_data,
+    guint tag_data_len)
+{
+  const guint8 *data = tag_data;
+  guint pic_type, img_data_len;
+  guint len = tag_data_len;
+
+  if (len < (1 + 4 + 2 + 2 + 1))
+    goto not_enough_data;
+
+  pic_type = GST_READ_UINT8 (data);
+  data += 1, len -= 1;
+  img_data_len = GST_READ_UINT32_LE (data);
+  data += 4, len -= 4;
+
+  /* skip mime type string (we don't trust it and do our own typefinding) */
+  while (len >= 2 && GST_READ_UINT16_LE (data) != 0) {
+    data += 2, len -= 2;
+  }
+  if (len < 2)
+    goto not_enough_data;
+  data += 2, len -= 2;
+
+  /* skip description string */
+  while (len >= 2 && GST_READ_UINT16_LE (data) != 0) {
+    data += 2, len -= 2;
+  }
+  if (len < 2)
+    goto not_enough_data;
+  data += 2, len -= 2;
+
+  if (len < img_data_len)
+    goto not_enough_data;
+
+  if (!gst_tag_list_add_id3_image (tags, data, img_data_len, pic_type))
+    GST_DEBUG ("failed to add image extracted from WM/Picture tag to taglist");
+
+  return;
+
+not_enough_data:
+  {
+    GST_DEBUG ("Failed to read WM/Picture tag: not enough data");
+    GST_MEMDUMP ("WM/Picture data", tag_data, tag_data_len);
+    return;
+  }
+}
 
 /* Extended Content Description Object */
 static GstFlowReturn
@@ -2251,6 +2302,15 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
             GST_DEBUG ("Skipping empty string value for %s", gst_tag_name);
           }
           g_free (value_utf8);
+          break;
+        }
+        case ASF_DEMUX_DATA_TYPE_BYTE_ARRAY:{
+          if (!g_str_equal (gst_tag_name, GST_TAG_IMAGE)) {
+            GST_FIXME ("Unhandled byte array tag %s", gst_tag_name);
+            break;
+          } else {
+            asf_demux_parse_picture_tag (taglist, (guint8 *) value, value_len);
+          }
           break;
         }
         case ASF_DEMUX_DATA_TYPE_DWORD:{
