@@ -1587,10 +1587,6 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
       ffmpegdec->picture, &have_data, data, size);
 
   gst_ts_handler_consume (ffmpegdec, len);
-  if (have_data) {
-    /* recuperate the reordered timestamp */
-    in_timestamp = ffmpegdec->picture->reordered_opaque;
-  }
 
   /* restore previous state */
   if (!decode)
@@ -1608,10 +1604,12 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   if (len < 0 || have_data <= 0)
     goto beach;
 
-  /* get pts */
-  out_pts = ffmpegdec->picture->pts;
+  /* recuperate the reordered timestamp */
+  out_pts = ffmpegdec->picture->reordered_opaque;
 
-  GST_DEBUG_OBJECT (ffmpegdec, "picture: pts %" G_GUINT64_FORMAT, out_pts);
+  GST_DEBUG_OBJECT (ffmpegdec, "ts-handler: pts %" G_GUINT64_FORMAT, out_pts);
+  GST_DEBUG_OBJECT (ffmpegdec, "picture: pts %" G_GUINT64_FORMAT,
+      ffmpegdec->picture->pts);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: num %d",
       ffmpegdec->picture->coded_picture_number);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: ref %d",
@@ -1694,19 +1692,21 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
    *  3) else copy input timestamp
    */
   out_timestamp = -1;
-  if (GST_CLOCK_TIME_IS_VALID (in_timestamp)) {
-    out_timestamp = in_timestamp;
-    GST_LOG_OBJECT (ffmpegdec, "using in timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (out_timestamp));
-  } else if (GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts)) {
-    out_timestamp = ffmpegdec->next_ts;
-    GST_LOG_OBJECT (ffmpegdec, "using next timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (out_timestamp));
-  } else if (out_pts != -1) {
+  if (out_pts != -1) {
     /* Get (interpolated) timestamp from FFMPEG */
     out_timestamp = (GstClockTime) out_pts;
     GST_LOG_OBJECT (ffmpegdec, "using timestamp %" GST_TIME_FORMAT
         " returned by ffmpeg", GST_TIME_ARGS (out_timestamp));
+  }
+  if (!GST_CLOCK_TIME_IS_VALID (out_timestamp) && ffmpegdec->next_ts != -1) {
+    out_timestamp = ffmpegdec->next_ts;
+    GST_LOG_OBJECT (ffmpegdec, "using next timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (out_timestamp));
+  }
+  if (!GST_CLOCK_TIME_IS_VALID (out_timestamp)) {
+    out_timestamp = in_timestamp;
+    GST_LOG_OBJECT (ffmpegdec, "using in timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (out_timestamp));
   }
   GST_BUFFER_TIMESTAMP (*outbuf) = out_timestamp;
 
@@ -1768,8 +1768,6 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   if (out_timestamp != -1 && out_duration != -1)
     ffmpegdec->next_ts = out_timestamp + out_duration;
-  else
-    ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
 
   /* palette is not part of raw video frame in gst and the size
    * of the outgoing buffer needs to be adjusted accordingly */
