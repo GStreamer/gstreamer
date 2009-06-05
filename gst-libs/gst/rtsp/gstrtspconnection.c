@@ -647,7 +647,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
 
       resultstr = bptr;
 
-      if (code != 200)
+      if (code != GST_RTSP_STS_OK)
         goto wrong_result;
     } else {
       gchar key[32];
@@ -1832,7 +1832,7 @@ gen_tunnel_reply (GstRTSPConnection * conn, GstRTSPStatusCode code)
 
   status = gst_rtsp_status_as_text (code);
   if (status == NULL) {
-    code = 500;
+    code = GST_RTSP_STS_INTERNAL_SERVER_ERROR;
     status = "Internal Server Error";
   }
 
@@ -1845,7 +1845,7 @@ gen_tunnel_reply (GstRTSPConnection * conn, GstRTSPStatusCode code)
       "Date: %s\r\n"
       "Connection: close\r\n"
       "Cache-Control: no-store\r\n" "Pragma: no-cache\r\n", date_string);
-  if (code == 200) {
+  if (code == GST_RTSP_STS_OK) {
     if (conn->ip)
       g_string_append_printf (str, "x-server-ip-address: %s\r\n", conn->ip);
     g_string_append_printf (str,
