@@ -2953,7 +2953,7 @@ queue_response (GstRTSPWatch * watch, GString * str, guint cseq)
 {
   GstRTSPRec *data;
 
-  /* make a record with the message as a string ans cseq */
+  /* make a record with the message as a string and cseq */
   data = g_slice_new (GstRTSPRec);
   data->str = str;
   data->cseq = cseq;
