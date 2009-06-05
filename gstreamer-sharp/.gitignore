@@ -7,5 +7,6 @@ gstreamer-sharp.dll.config
 gstreamer-sharp.dll.mdb
 gstreamer-sharp.pdb
 gstreamer-sharp.snk
+*plugins/generated/*
 *plugins/*.cs
 *plugins/*.xml
