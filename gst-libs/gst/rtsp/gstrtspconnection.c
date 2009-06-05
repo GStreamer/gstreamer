@@ -704,9 +704,6 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
       url->abspath, url->query ? "?" : "", url->query ? url->query : "",
       hostparam ? hostparam : "", conn->tunnelid);
 
-  /* we start by writing to this fd */
-  conn->writefd = &conn->fd1;
-
   res = gst_rtsp_connection_write (conn, (guint8 *) str, strlen (str), timeout);
   g_free (str);
   if (res != GST_RTSP_OK)
