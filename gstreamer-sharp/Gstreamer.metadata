@@ -1224,7 +1224,14 @@
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_get_size']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_new_caps']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_new_caps_interlaced']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_get_component_height']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_get_component_offset']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_get_component_width']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_get_pixel_stride']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_video_format_get_row_stride']">/api/namespace/class[@cname='GstVideoUtil']</move-node>
   <attr path="/api/namespace/class[@cname='GstVideoUtil']/method[@name='FormatNewCapsInterlaced']" name="name">FormatNewCaps</attr>
+  <attr path="/api/namespace/class[@cname='GstVideoUtil']/method[@cname='gst_video_frame_rate']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@cname='GstVideoUtil']/method[@cname='gst_video_format_to_fourcc']" name="hidden">1</attr>
 
   <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Yv12']" name="name">YV12</attr>
   <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Yuy2']" name="name">YUY2</attr>
@@ -1243,5 +1250,8 @@
   <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Y41b']" name="name">Y41B</attr>
   <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Y42b']" name="name">Y42B</attr>
   <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Yvyu']" name="name">YVYU</attr>
+
+
+  <attr path="/api/namespace/object[@cname='GstVideoSink']/method[@cname='gst_video_sink_center_rect']/parameters/parameter[@name='result']" name="pass_as">ref</attr>
 
 </metadata>

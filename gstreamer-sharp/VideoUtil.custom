@@ -1,0 +1,24 @@
+[DllImport ("libgstvideo-0.10.dll") ]
+static extern IntPtr gst_video_frame_rate (IntPtr pad);
+
+public static Gst.Fraction GetFrameRate (Gst.Pad pad) {
+  IntPtr raw_ret = gst_video_frame_rate (pad == null ? IntPtr.Zero : pad.Handle);
+  if (raw_ret == IntPtr.Zero)
+    return new Gst.Fraction ();
+
+  GLib.Value ret = (GLib.Value) Marshal.PtrToStructure (raw_ret, typeof (GLib.Value));
+  return (Gst.Fraction) ret.Val;
+}
+
+[DllImport ("libgstvideo-0.10.dll") ]
+static extern uint gst_video_format_to_fourcc (int format);
+
+public static Gst.Fourcc FormatToFourcc (Gst.Video.VideoFormat format) {
+  uint raw_ret = gst_video_format_to_fourcc ( (int) format);
+  uint ret = raw_ret;
+  return new Gst.Fourcc (ret);
+}
+
+public static Gst.Video.VideoFormat FormatFromFourcc (Gst.Fourcc fourcc) {
+  return FormatFromFourcc (fourcc.Val);
+}

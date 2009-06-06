@@ -114,7 +114,8 @@ customs = 			\
 	TunerChannel.custom	\
 	Adapter.custom		\
 	Controller.custom	\
-	ControlSource.custom
+	ControlSource.custom	\
+	VideoUtil.custom
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 
