@@ -18,18 +18,28 @@ git submodule update
 
 if test -x $have_svn && [ $have_svn ];
 then
-    if test ! -f $FFMPEG_CO_DIR/configure
-    then
+    co_ffmpeg=no
+
+    if test ! -f $FFMPEG_CO_DIR/configure; then
+      co_ffmpeg=yes
+    else
+      if ! svn info gst-libs/ext/ffmpeg | grep "URL: $FFMPEG_SVN" > /dev/null; then
+        echo "FFmpeg checkout is on the wrong branch. Re-fetching."
+        co_ffmpeg=yes
+      fi
+    fi
+
+    if [ "$co_ffmpeg" = "yes" ]; then
 	# checkout ffmpeg from its repository
 	rm -rf $FFMPEG_CO_DIR
 	echo "+ getting ffmpeg from svn"
 	svn -r $FFMPEG_REVISION co $FFMPEG_SVN $FFMPEG_CO_DIR
-	echo "+ updating externals"
-	svn update -r $FFMPEG_EXTERNALS_REVISION $FFMPEG_CO_DIR/libswscale
     else
 	# update ffmpeg from its repository
 	echo "+ updating ffmpeg checkout"
 	svn -r $FFMPEG_REVISION up $FFMPEG_CO_DIR
+    fi
+    if [ "x$FFMPEG_EXTERNALS_REVISION" != "x" ]; then
 	echo "+ updating externals"
 	svn update -r $FFMPEG_EXTERNALS_REVISION $FFMPEG_CO_DIR/libswscale
     fi

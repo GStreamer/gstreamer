@@ -29,7 +29,9 @@ distclean: dist-clean
 
 dist-local:
 	svn -r $(FFMPEG_REVISION) co $(FFMPEG_SVN) $(TMP_DIST_DIR)
-	svn update -r $(FFMPEG_EXTERNALS_REVISION) $(TMP_DIST_DIR)/libswscale
+	@if [ "x$(FFMPEG_EXTERNALS_REVISION)" != x ]; then \
+		svn update -r $(FFMPEG_EXTERNALS_REVISION) $(TMP_DIST_DIR)/libswscale; \
+	fi
 	mkdir $(DIST_DIR)
 	pwd
 	cp $(TMP_DIST_DIR)/*.c $(TMP_DIST_DIR)/*.h $(TMP_DIST_DIR)/Makefile $(TMP_DIST_DIR)/configure $(TMP_DIST_DIR)/version.sh $(DIST_DIR) 
