@@ -1,12 +1,12 @@
 <Type Name="XvImageSink" FullName="Gst.BasePlugins.XvImageSink">
-  <TypeSignature Language="C#" Value="public class XvImageSink : Gst.Base.BaseSink, Gst.ImplementsInterface, Gst.Interfaces.ColorBalance, Gst.Interfaces.Navigation, Gst.Interfaces.PropertyProbe, Gst.Interfaces.XOverlay" />
+  <TypeSignature Language="C#" Value="public sealed class XvImageSink : Gst.Video.VideoSink, Gst.ImplementsInterface, Gst.Interfaces.ColorBalance, Gst.Interfaces.Navigation, Gst.Interfaces.PropertyProbe, Gst.Interfaces.XOverlay" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>Gst.Base.BaseSink</BaseTypeName>
+    <BaseTypeName>Gst.Video.VideoSink</BaseTypeName>
   </Base>
   <Interfaces>
     <Interface>

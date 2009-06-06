@@ -1,5 +1,5 @@
 <Type Name="FdSrc" FullName="Gst.CorePlugins.FdSrc">
-  <TypeSignature Language="C#" Value="public class FdSrc : Gst.Base.PushSrc, Gst.URIHandler" />
+  <TypeSignature Language="C#" Value="public sealed class FdSrc : Gst.Base.PushSrc, Gst.URIHandler" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>

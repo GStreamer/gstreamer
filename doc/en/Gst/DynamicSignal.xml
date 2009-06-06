@@ -18,7 +18,6 @@
       <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, Gst.DynamicSignalHandler handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -38,10 +37,53 @@
       </Docs>
     </Member>
     <Member MemberName="Connect">
-      <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, bool after, Gst.DynamicSignalHandler handler);" />
+      <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, Gst.SignalHandler handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="handler" Type="Gst.SignalHandler" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="handler">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Connect">
+      <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, Delegate handler);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="handler" Type="System.Delegate" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="handler">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Connect">
+      <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, bool after, Gst.DynamicSignalHandler handler);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -62,11 +104,58 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="Connect">
+      <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, bool after, Gst.SignalHandler handler);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="after" Type="System.Boolean" />
+        <Parameter Name="handler" Type="Gst.SignalHandler" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="after">To be added.</param>
+        <param name="handler">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Connect">
+      <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, bool after, Delegate handler);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="after" Type="System.Boolean" />
+        <Parameter Name="handler" Type="System.Delegate" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="after">To be added.</param>
+        <param name="handler">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Disconnect">
       <MemberSignature Language="C#" Value="public static void Disconnect (GLib.Object o, string name, Gst.DynamicSignalHandler handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -76,6 +165,28 @@
         <Parameter Name="o" Type="GLib.Object" />
         <Parameter Name="name" Type="System.String" />
         <Parameter Name="handler" Type="Gst.DynamicSignalHandler" />
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="handler">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Disconnect">
+      <MemberSignature Language="C#" Value="public static void Disconnect (GLib.Object o, string name, Delegate handler);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="handler" Type="System.Delegate" />
       </Parameters>
       <Docs>
         <param name="o">To be added.</param>

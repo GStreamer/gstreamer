@@ -1,8 +1,8 @@
-<Type Name="DynamicSignalHandler" FullName="Gst.DynamicSignalHandler">
-  <TypeSignature Language="C#" Value="public delegate void DynamicSignalHandler(object o, SignalArgs args);" />
+<Type Name="SignalHandler" FullName="Gst.SignalHandler">
+  <TypeSignature Language="C#" Value="public delegate void SignalHandler(object o, SignalArgs args);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
-    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Delegate</BaseTypeName>

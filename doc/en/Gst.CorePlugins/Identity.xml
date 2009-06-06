@@ -1,5 +1,5 @@
 <Type Name="Identity" FullName="Gst.CorePlugins.Identity">
-  <TypeSignature Language="C#" Value="public class Identity : Gst.Base.BaseTransform" />
+  <TypeSignature Language="C#" Value="public sealed class Identity : Gst.Base.BaseTransform" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -266,26 +266,6 @@
         <param name="name">To be added.</param>
         <summary>To be added.</summary>
         <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="OnHandoff">
-      <MemberSignature Language="C#" Value="protected virtual void OnHandoff (object o, GLib.SignalArgs args);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="o" Type="System.Object" />
-        <Parameter Name="args" Type="GLib.SignalArgs" />
-      </Parameters>
-      <Docs>
-        <param name="o">To be added.</param>
-        <param name="args">To be added.</param>
-        <summary>To be added.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>

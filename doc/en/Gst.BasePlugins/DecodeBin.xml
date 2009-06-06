@@ -1,5 +1,5 @@
 <Type Name="DecodeBin" FullName="Gst.BasePlugins.DecodeBin">
-  <TypeSignature Language="C#" Value="public class DecodeBin : Gst.Bin" />
+  <TypeSignature Language="C#" Value="public sealed class DecodeBin : Gst.Bin" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -246,48 +246,7 @@
       <MemberSignature Language="C#" Value="protected virtual void OnNewDecodedPad (object o, GLib.SignalArgs args);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="o" Type="System.Object" />
-        <Parameter Name="args" Type="GLib.SignalArgs" />
-      </Parameters>
-      <Docs>
-        <param name="o">To be added.</param>
-        <param name="args">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="OnRemovedDecodedPad">
-      <MemberSignature Language="C#" Value="protected virtual void OnRemovedDecodedPad (object o, GLib.SignalArgs args);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="o" Type="System.Object" />
-        <Parameter Name="args" Type="GLib.SignalArgs" />
-      </Parameters>
-      <Docs>
-        <param name="o">To be added.</param>
-        <param name="args">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="OnUnknownType">
-      <MemberSignature Language="C#" Value="protected virtual void OnUnknownType (object o, GLib.SignalArgs args);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>

@@ -1,5 +1,5 @@
 <Type Name="PlayBin" FullName="Gst.BasePlugins.PlayBin">
-  <TypeSignature Language="C#" Value="public class PlayBin : Gst.Pipeline" />
+  <TypeSignature Language="C#" Value="public sealed class PlayBin : Gst.Pipeline" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>

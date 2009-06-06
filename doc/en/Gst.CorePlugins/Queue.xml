@@ -1,5 +1,5 @@
 <Type Name="Queue" FullName="Gst.CorePlugins.Queue">
-  <TypeSignature Language="C#" Value="public class Queue : Gst.Element" />
+  <TypeSignature Language="C#" Value="public sealed class Queue : Gst.Element" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -292,86 +292,6 @@
       <Docs>
         <summary>To be added.</summary>
         <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="OnOverrun">
-      <MemberSignature Language="C#" Value="protected virtual void OnOverrun (object o, GLib.SignalArgs args);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="o" Type="System.Object" />
-        <Parameter Name="args" Type="GLib.SignalArgs" />
-      </Parameters>
-      <Docs>
-        <param name="o">To be added.</param>
-        <param name="args">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="OnPushing">
-      <MemberSignature Language="C#" Value="protected virtual void OnPushing (object o, GLib.SignalArgs args);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="o" Type="System.Object" />
-        <Parameter Name="args" Type="GLib.SignalArgs" />
-      </Parameters>
-      <Docs>
-        <param name="o">To be added.</param>
-        <param name="args">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="OnRunning">
-      <MemberSignature Language="C#" Value="protected virtual void OnRunning (object o, GLib.SignalArgs args);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="o" Type="System.Object" />
-        <Parameter Name="args" Type="GLib.SignalArgs" />
-      </Parameters>
-      <Docs>
-        <param name="o">To be added.</param>
-        <param name="args">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="OnUnderrun">
-      <MemberSignature Language="C#" Value="protected virtual void OnUnderrun (object o, GLib.SignalArgs args);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="o" Type="System.Object" />
-        <Parameter Name="args" Type="GLib.SignalArgs" />
-      </Parameters>
-      <Docs>
-        <param name="o">To be added.</param>
-        <param name="args">To be added.</param>
-        <summary>To be added.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>

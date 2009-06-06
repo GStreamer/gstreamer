@@ -1,5 +1,5 @@
 <Type Name="FdSink" FullName="Gst.CorePlugins.FdSink">
-  <TypeSignature Language="C#" Value="public class FdSink : Gst.Base.BaseSink, Gst.URIHandler" />
+  <TypeSignature Language="C#" Value="public sealed class FdSink : Gst.Base.BaseSink, Gst.URIHandler" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>

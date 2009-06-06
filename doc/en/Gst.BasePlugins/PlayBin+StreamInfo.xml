@@ -159,26 +159,6 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="OnMuted">
-      <MemberSignature Language="C#" Value="protected virtual void OnMuted (object o, GLib.SignalArgs args);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="o" Type="System.Object" />
-        <Parameter Name="args" Type="GLib.SignalArgs" />
-      </Parameters>
-      <Docs>
-        <param name="o">To be added.</param>
-        <param name="args">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
     <Member MemberName="Type">
       <MemberSignature Language="C#" Value="public Gst.BasePlugins.PlayBin.StreamInfo.StreamType Type { get; }" />
       <MemberType>Property</MemberType>

@@ -168,6 +168,7 @@
       <Type Name="SeekFlags" Kind="Enumeration" />
       <Type Name="SeekType" Kind="Enumeration" />
       <Type Name="Segment" Kind="Class" />
+      <Type Name="SignalHandler" Kind="Delegate" />
       <Type Name="State" Kind="Enumeration" />
       <Type Name="StateChange" Kind="Enumeration" />
       <Type Name="StateChangeReturn" Kind="Enumeration" />
@@ -204,6 +205,15 @@
       <Type Name="URIType" Kind="Enumeration" />
       <Type Name="Util" Kind="Class" />
       <Type Name="Version" Kind="Class" />
+    </Namespace>
+    <Namespace Name="Gst.App">
+      <Type Name="AppSink" Kind="Class" />
+      <Type Name="AppSrc" Kind="Class" />
+      <Type Name="AppStreamType" Kind="Enumeration" />
+      <Type Name="NeedDataArgs" Kind="Class" />
+      <Type Name="NeedDataHandler" Kind="Delegate" />
+      <Type Name="SeekDataArgs" Kind="Class" />
+      <Type Name="SeekDataHandler" Kind="Delegate" />
     </Namespace>
     <Namespace Name="Gst.Base">
       <Type Name="Adapter" Kind="Class" />
@@ -256,6 +266,11 @@
       <Type Name="PlayBin2+VideoChangedArgs" Kind="Class" />
       <Type Name="PlayBin2+VideoChangedHandler" Kind="Delegate" />
       <Type Name="XvImageSink" Kind="Class" />
+    </Namespace>
+    <Namespace Name="Gst.Cdda">
+      <Type Name="CddaBaseSrc" Kind="Class" />
+      <Type Name="CddaBaseSrcMode" Kind="Enumeration" />
+      <Type Name="CddaBaseSrcTrack" Kind="Structure" />
     </Namespace>
     <Namespace Name="Gst.Controller">
       <Type Name="Controller" Kind="Class" />
@@ -365,6 +380,13 @@
       <Type Name="XOverlay" Kind="Interface" />
       <Type Name="XOverlayAdapter" Kind="Class" />
       <Type Name="XOverlayImplementor" Kind="Interface" />
+    </Namespace>
+    <Namespace Name="Gst.Video">
+      <Type Name="VideoFilter" Kind="Class" />
+      <Type Name="VideoFormat" Kind="Enumeration" />
+      <Type Name="VideoRectangle" Kind="Structure" />
+      <Type Name="VideoSink" Kind="Class" />
+      <Type Name="VideoUtil" Kind="Class" />
     </Namespace>
   </Types>
   <Title>gst-sharp</Title>

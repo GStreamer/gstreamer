@@ -1,5 +1,5 @@
 <Type Name="CapsFilter" FullName="Gst.CorePlugins.CapsFilter">
-  <TypeSignature Language="C#" Value="public class CapsFilter : Gst.Base.BaseTransform" />
+  <TypeSignature Language="C#" Value="public sealed class CapsFilter : Gst.Base.BaseTransform" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
