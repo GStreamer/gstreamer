@@ -825,7 +825,6 @@ normal_seek (GstVdpMpegDec * mpeg_dec, GstEvent * event)
       cur_type, time_cur, stop_type, time_stop, &update);
 
   if (update) {
-
     /* seek on bytes */
     conv = GST_FORMAT_BYTES;
     if (!gst_vdp_mpeg_dec_convert (mpeg_dec, GST_FORMAT_TIME, time_cur,
@@ -850,8 +849,17 @@ normal_seek (GstVdpMpegDec * mpeg_dec, GstEvent * event)
 
     g_mutex_unlock (mpeg_dec->mutex);
 
-  } else
-    res = FALSE;
+  } else {
+    GstEvent *event;
+
+    /* send segment with new rate */
+    event = gst_event_new_new_segment (TRUE,
+        mpeg_dec->segment.rate, GST_FORMAT_TIME, mpeg_dec->segment.start,
+        mpeg_dec->segment.stop, mpeg_dec->segment.time);
+
+    gst_pad_push_event (mpeg_dec->src, event);
+    res = TRUE;
+  }
 
   return res;
 
