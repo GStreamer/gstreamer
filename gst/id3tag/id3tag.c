@@ -1191,6 +1191,9 @@ id3_mux_render_v1_tag (GstTagMux * mux, GstTagList * taglist)
   data[1] = 'A';
   data[2] = 'G';
 
+  /* Genre #0 stands for 'Blues', so init genre field to an invalid number */
+  data[127] = 255;
+
   for (i = 0; i < G_N_ELEMENTS (v1_funcs); i++) {
     v1_funcs[i].func (taglist, v1_funcs[i].gst_tag, data + v1_funcs[i].offset,
         v1_funcs[i].length, &wrote_tag);
