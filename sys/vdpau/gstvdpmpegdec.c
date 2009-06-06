@@ -161,7 +161,7 @@ gst_vdp_mpeg_packetizer_init (GstVdpMpegPacketizer * packetizer,
 static gboolean
 gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
 {
-  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (GST_OBJECT_PARENT (pad));
+  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (gst_pad_get_parent (pad));
   GstStructure *structure;
 
   gint width, height;
@@ -198,7 +198,7 @@ gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
   res = gst_pad_set_caps (mpeg_dec->src, src_caps);
   gst_caps_unref (src_caps);
   if (!res)
-    return FALSE;
+    goto done;
 
   mpeg_dec->width = width;
   mpeg_dec->height = height;
@@ -274,9 +274,15 @@ gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
         ("Could not create vdpau decoder"),
         ("Error returned from vdpau was: %s",
             device->vdp_get_error_string (status)));
-    return FALSE;
+    res = FALSE;
+    goto done;
   }
-  return TRUE;
+  res = TRUE;
+
+done:
+  gst_object_unref (mpeg_dec);
+
+  return res;
 }
 
 GstFlowReturn
@@ -605,12 +611,10 @@ gst_vdp_mpeg_dec_reset (GstVdpMpegDec * mpeg_dec)
 static GstFlowReturn
 gst_vdp_mpeg_dec_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstVdpMpegDec *mpeg_dec;
+  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (gst_pad_get_parent (pad));
   GstVdpMpegPacketizer packetizer;
   GstBuffer *buf;
   GstFlowReturn ret = GST_FLOW_OK;
-
-  mpeg_dec = GST_VDP_MPEG_DEC (GST_OBJECT_PARENT (pad));
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (mpeg_dec, "Received discont buffer");
@@ -643,9 +647,9 @@ gst_vdp_mpeg_dec_chain (GstPad * pad, GstBuffer * buffer)
       case MPEG_PACKET_PICTURE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_PICTURE");
 
-        if (!gst_vdp_mpeg_dec_parse_picture (mpeg_dec, buf)) {
-          return GST_FLOW_OK;
-        }
+        if (!gst_vdp_mpeg_dec_parse_picture (mpeg_dec, buf))
+          goto done;
+
         break;
       case MPEG_PACKET_SEQUENCE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SEQUENCE");
@@ -687,6 +691,9 @@ gst_vdp_mpeg_dec_chain (GstPad * pad, GstBuffer * buffer)
   if (mpeg_dec->vdp_info.slice_count > 0)
     ret = gst_vdp_mpeg_dec_decode (mpeg_dec, GST_BUFFER_TIMESTAMP (buffer),
         GST_BUFFER_SIZE (buffer));
+
+done:
+  gst_object_unref (mpeg_dec);
 
   return ret;
 }
@@ -735,16 +742,16 @@ gst_mpeg_dec_get_querytypes (GstPad * pad)
 static gboolean
 gst_vdp_mpeg_dec_src_query (GstPad * pad, GstQuery * query)
 {
-  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (GST_OBJECT_PARENT (pad));
-  gboolean res = FALSE;
+  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (gst_pad_get_parent (pad));
+  gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
       GstFormat format;
 
-      if (gst_pad_query_default (pad, query))
-        return TRUE;
+      if ((res = gst_pad_query_default (pad, query)))
+        goto done;
 
       gst_query_parse_position (query, &format, NULL);
       if (format == GST_FORMAT_TIME &&
@@ -760,8 +767,8 @@ gst_vdp_mpeg_dec_src_query (GstPad * pad, GstQuery * query)
     {
       GstFormat format;
 
-      if (gst_pad_query_default (pad, query))
-        return TRUE;
+      if ((res = gst_pad_query_default (pad, query)))
+        goto done;
 
       gst_query_parse_duration (query, &format, NULL);
       if (format == GST_FORMAT_TIME) {
@@ -787,13 +794,15 @@ gst_vdp_mpeg_dec_src_query (GstPad * pad, GstQuery * query)
       res = gst_pad_query_default (pad, query);
   }
 
+done:
+  gst_object_unref (mpeg_dec);
+
   return res;
 }
 
 static gboolean
-normal_seek (GstPad * pad, GstEvent * event)
+normal_seek (GstVdpMpegDec * mpeg_dec, GstEvent * event)
 {
-  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (GST_OBJECT_PARENT (pad));
   gdouble rate;
   GstFormat format, conv;
   GstSeekFlags flags;
@@ -853,20 +862,25 @@ convert_failed:
 static gboolean
 gst_vdp_mpeg_dec_src_event (GstPad * pad, GstEvent * event)
 {
+  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (gst_pad_get_parent (pad));
   gboolean res;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      if (gst_pad_event_default (pad, event))
-        return TRUE;
+      if ((res = gst_pad_event_default (pad, event)))
+        goto done;
 
-      res = normal_seek (pad, event);
+      res = normal_seek (mpeg_dec, event);
+
       break;
     }
     default:
       res = gst_pad_event_default (pad, event);
   }
+
+done:
+  gst_object_unref (mpeg_dec);
 
   return res;
 }
@@ -874,7 +888,7 @@ gst_vdp_mpeg_dec_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_vdp_mpeg_dec_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (GST_OBJECT_PARENT (pad));
+  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (gst_pad_get_parent (pad));
   gboolean res;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -919,7 +933,8 @@ gst_vdp_mpeg_dec_sink_event (GstPad * pad, GstEvent * event)
        * use the calculated timestamp of the first frame for this */
       if (mpeg_dec->seeking) {
         gst_event_unref (event);
-        return TRUE;
+        res = TRUE;
+        goto done;
       }
 
     convert_error:
@@ -930,6 +945,9 @@ gst_vdp_mpeg_dec_sink_event (GstPad * pad, GstEvent * event)
     default:
       res = gst_pad_event_default (pad, event);
   }
+
+done:
+  gst_object_unref (mpeg_dec);
 
   return res;
 }
