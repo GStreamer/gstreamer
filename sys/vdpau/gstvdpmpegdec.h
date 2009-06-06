@@ -78,6 +78,9 @@ struct _GstVdpMpegDec
   GstSegment segment;
   gboolean seeking;
   gint64 byterate;
+
+  /* mutex */
+  GMutex *mutex;
   
 };
 

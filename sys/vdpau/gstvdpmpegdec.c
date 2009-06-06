@@ -840,10 +840,16 @@ normal_seek (GstVdpMpegDec * mpeg_dec, GstEvent * event)
         gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
         cur_type, bytes_cur, stop_type, bytes_stop);
 
-    mpeg_dec->seeking = TRUE;
+    g_mutex_lock (mpeg_dec->mutex);
 
     /* do the seek */
     res = gst_pad_push_event (mpeg_dec->sink, peer_event);
+
+    if (res)
+      mpeg_dec->seeking = TRUE;
+
+    g_mutex_unlock (mpeg_dec->mutex);
+
   } else
     res = FALSE;
 
@@ -929,13 +935,16 @@ gst_vdp_mpeg_dec_sink_event (GstPad * pad, GstEvent * event)
             stop, position);
       }
 
+      g_mutex_lock (mpeg_dec->mutex);
       /* if we seek ourselves we don't push out a newsegment now since we
        * use the calculated timestamp of the first frame for this */
       if (mpeg_dec->seeking) {
         gst_event_unref (event);
         res = TRUE;
+        g_mutex_unlock (mpeg_dec->mutex);
         goto done;
       }
+      g_mutex_unlock (mpeg_dec->mutex);
 
     convert_error:
       res = gst_pad_push_event (mpeg_dec->src, event);
@@ -1069,6 +1078,8 @@ gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec, GstVdpMpegDecClass * gclass)
   mpeg_dec->vdp_info.backward_reference = VDP_INVALID_HANDLE;
 
   gst_vdp_mpeg_dec_reset (mpeg_dec);
+
+  mpeg_dec->mutex = g_mutex_new ();
 }
 
 static void
@@ -1077,6 +1088,7 @@ gst_vdp_mpeg_dec_finalize (GObject * object)
   GstVdpMpegDec *mpeg_dec = (GstVdpMpegDec *) object;
 
   g_object_unref (mpeg_dec->adapter);
+  g_mutex_free (mpeg_dec->mutex);
 }
 
 static void
