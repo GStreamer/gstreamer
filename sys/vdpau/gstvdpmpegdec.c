@@ -308,6 +308,9 @@ gst_vdp_mpeg_dec_push_video_buffer (GstVdpMpegDec * mpeg_dec,
   mpeg_dec->next_timestamp = GST_BUFFER_TIMESTAMP (buffer) +
       GST_BUFFER_DURATION (buffer);
 
+  gst_segment_set_last_stop (&mpeg_dec->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buffer));
+
   mpeg_dec->accumulated_duration += GST_BUFFER_DURATION (buffer);
   mpeg_dec->accumulated_size += GST_BUFFER_SIZE (buffer);
   byterate = gst_util_uint64_scale (mpeg_dec->accumulated_size, GST_SECOND,
@@ -795,53 +798,46 @@ normal_seek (GstPad * pad, GstEvent * event)
   GstFormat format, conv;
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
-  gint64 cur, stop;
   gint64 time_cur, bytes_cur;
   gint64 time_stop, bytes_stop;
   gboolean res;
+  gboolean update;
   GstEvent *peer_event;
 
   GST_DEBUG ("normal seek");
 
   gst_event_parse_seek (event, &rate, &format, &flags,
-      &cur_type, &cur, &stop_type, &stop);
+      &cur_type, &time_cur, &stop_type, &time_stop);
 
-  conv = GST_FORMAT_TIME;
-  if (!gst_vdp_mpeg_dec_convert (mpeg_dec, format, cur, conv, &time_cur))
-    goto convert_failed;
-  if (!gst_vdp_mpeg_dec_convert (mpeg_dec, format, stop, conv, &time_stop))
-    goto convert_failed;
+  if (format != GST_FORMAT_TIME)
+    return FALSE;
 
-  GST_DEBUG ("seek to time %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (time_cur), GST_TIME_ARGS (time_stop));
+  gst_segment_set_seek (&mpeg_dec->segment, rate, GST_FORMAT_TIME, flags,
+      cur_type, time_cur, stop_type, time_stop, &update);
 
-  peer_event = gst_event_new_seek (rate, GST_FORMAT_TIME, flags,
-      cur_type, time_cur, stop_type, time_stop);
+  if (update) {
 
-  /* try seek on time then */
-  if ((res = gst_pad_push_event (mpeg_dec->sink, peer_event)))
-    goto done;
+    /* seek on bytes */
+    conv = GST_FORMAT_BYTES;
+    if (!gst_vdp_mpeg_dec_convert (mpeg_dec, GST_FORMAT_TIME, time_cur,
+            conv, &bytes_cur))
+      goto convert_failed;
+    if (!gst_vdp_mpeg_dec_convert (mpeg_dec, GST_FORMAT_TIME, time_stop,
+            conv, &bytes_stop))
+      goto convert_failed;
 
-  /* else we try to seek on bytes */
-  conv = GST_FORMAT_BYTES;
-  if (!gst_vdp_mpeg_dec_convert (mpeg_dec, GST_FORMAT_TIME, time_cur,
-          conv, &bytes_cur))
-    goto convert_failed;
-  if (!gst_vdp_mpeg_dec_convert (mpeg_dec, GST_FORMAT_TIME, time_stop,
-          conv, &bytes_stop))
-    goto convert_failed;
+    /* conversion succeeded, create the seek */
+    peer_event =
+        gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
+        cur_type, bytes_cur, stop_type, bytes_stop);
 
-  /* conversion succeeded, create the seek */
-  peer_event =
-      gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
-      cur_type, bytes_cur, stop_type, bytes_stop);
+    mpeg_dec->seeking = TRUE;
 
-  /* do the seek */
-  res = gst_pad_push_event (mpeg_dec->sink, peer_event);
+    /* do the seek */
+    res = gst_pad_push_event (mpeg_dec->sink, peer_event);
+  } else
+    res = FALSE;
 
-  mpeg_dec->seeking = TRUE;
-
-done:
   return res;
 
   /* ERRORS */
@@ -913,9 +909,6 @@ gst_vdp_mpeg_dec_sink_event (GstPad * pad, GstEvent * event)
         if (!gst_vdp_mpeg_dec_convert (mpeg_dec, format, position,
                 GST_FORMAT_TIME, &position))
           goto convert_error;
-
-        gst_segment_set_newsegment (&mpeg_dec->segment, update, rate,
-            GST_FORMAT_TIME, start, stop, position);
 
         gst_event_unref (event);
         event = gst_event_new_new_segment (update, rate, GST_FORMAT_TIME, start,
