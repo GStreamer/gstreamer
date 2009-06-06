@@ -251,6 +251,7 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink,
 {
   glimage_sink->display_name = NULL;
   glimage_sink->window_id = 0;
+  glimage_sink->new_window_id = 0;
   glimage_sink->display = NULL;
   glimage_sink->stored_buffer = NULL;
   glimage_sink->clientReshapeCallback = NULL;
@@ -416,6 +417,9 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
     glimage_sink->display = NULL;
   }
 
+  glimage_sink->window_id = 0;
+  //but do not reset glimage_sink->new_window_id
+
   return TRUE;
 }
 
@@ -485,7 +489,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   glimage_sink->par_n = par_n;
   glimage_sink->par_d = par_d;
 
-  if (!glimage_sink->window_id)
+  if (!glimage_sink->window_id && !glimage_sink->new_window_id)
     gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
 
   return TRUE;
@@ -510,10 +514,6 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     if (glimage_sink->display == NULL) {
       glimage_sink->display = g_object_ref (gl_buffer->display);
 
-      if (glimage_sink->window_id)
-        gst_gl_display_set_window_id (glimage_sink->display,
-            glimage_sink->window_id);
-
       gst_gl_display_set_client_reshape_callback (glimage_sink->display,
           glimage_sink->clientReshapeCallback);
 
@@ -531,10 +531,6 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       //init opengl context
       gst_gl_display_create_context (glimage_sink->display,
           glimage_sink->width, glimage_sink->height, 0);
-
-      if (glimage_sink->window_id)
-        gst_gl_display_set_window_id (glimage_sink->display,
-            glimage_sink->window_id);
 
       //init colorspace conversion if needed
       gst_gl_display_init_upload (glimage_sink->display, glimage_sink->format,
@@ -556,6 +552,12 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
         glimage_sink->width, glimage_sink->height, GST_BUFFER_DATA (buf));
 
     //gl_buffer is created in this block, so the gl buffer is already referenced
+  }
+
+  if (glimage_sink->window_id != glimage_sink->new_window_id) {
+    glimage_sink->window_id = glimage_sink->new_window_id;
+    gst_gl_display_set_window_id (glimage_sink->display,
+        glimage_sink->window_id);
   }
 
   //the buffer is cleared when an other comes in
@@ -594,11 +596,7 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay, gulong window_id)
 
   GST_DEBUG ("set_xwindow_id %ld", window_id);
 
-  if (glimage_sink->window_id == window_id)
-    return;
-
-  if (window_id)
-    glimage_sink->window_id = window_id;
+  glimage_sink->new_window_id = window_id;
 }
 
 

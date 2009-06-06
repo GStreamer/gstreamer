@@ -197,26 +197,58 @@ void
 gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
 {
   GstGLWindowPrivate *priv = window->priv;
-  WNDPROC window_parent_proc =
-      (WNDPROC) GetWindowLongPtr ((HWND) id, GWL_WNDPROC);
-  RECT rect;
 
-  SetProp (priv->internal_win_id, "gl_window_parent_id", (HWND) id);
-  SetProp ((HWND) id, "gl_window_id", priv->internal_win_id);
-  SetProp ((HWND) id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
-  SetWindowLongPtr ((HWND) id, GWL_WNDPROC, (LONG_PTR) sub_class_proc);
+  //retrieve parent if previously set
+  HWND parent_id = GetProp (priv->internal_win_id, "gl_window_parent_id");
 
-  SetWindowLongPtr (priv->internal_win_id, GWL_STYLE, WS_CHILD | WS_MAXIMIZE);
-  SetParent (priv->internal_win_id, (HWND) id);
+  if (priv->visible) {
+      ShowWindow (priv->internal_win_id, SW_HIDE);
+      priv->visible = FALSE;
+   }
+  
+  if (parent_id) {
+    WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
 
-  //take changes into account: SWP_FRAMECHANGED
-  GetClientRect ((HWND) id, &rect);
-  SetWindowPos (priv->internal_win_id, HWND_TOP, rect.left, rect.top,
-      rect.right, rect.bottom,
-      SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
-      SWP_FRAMECHANGED | SWP_NOACTIVATE);
-  MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right,
-      rect.bottom, FALSE);
+    g_debug ("release parent %lud\n", (gulong) parent_id);
+
+    g_assert (parent_proc);
+
+    SetWindowLongPtr (parent_id, GWL_WNDPROC, (LONG) parent_proc);
+    SetParent (priv->internal_win_id, NULL);
+
+    RemoveProp (parent_id, "gl_window_parent_proc");
+    RemoveProp (priv->internal_win_id, "gl_window_parent_id");
+  }
+
+  //not 0
+  if (id) {
+    WNDPROC window_parent_proc =
+        (WNDPROC) GetWindowLongPtr ((HWND) id, GWL_WNDPROC);
+    RECT rect;
+
+    g_debug ("set parent %lud\n", (gulong) id);
+
+    SetProp (priv->internal_win_id, "gl_window_parent_id", (HWND) id);
+    SetProp ((HWND) id, "gl_window_id", priv->internal_win_id);
+    SetProp ((HWND) id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
+    SetWindowLongPtr ((HWND) id, GWL_WNDPROC, (LONG_PTR) sub_class_proc);
+
+    SetWindowLongPtr (priv->internal_win_id, GWL_STYLE, WS_CHILD | WS_MAXIMIZE);
+    SetParent (priv->internal_win_id, (HWND) id);
+
+    //take changes into account: SWP_FRAMECHANGED
+    GetClientRect ((HWND) id, &rect);
+    SetWindowPos (priv->internal_win_id, HWND_TOP, rect.left, rect.top,
+        rect.right, rect.bottom,
+        SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+        SWP_FRAMECHANGED | SWP_NOACTIVATE);
+    MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right,
+        rect.bottom, FALSE);
+  } else {
+    //no parent so the internal window needs borders and system menu
+    SetWindowLongPtr (priv->internal_win_id, GWL_STYLE,
+      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW);
+  }
 }
 
 /* Must be called in the gl thread */

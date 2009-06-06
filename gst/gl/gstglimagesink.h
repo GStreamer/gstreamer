@@ -53,6 +53,7 @@ struct _GstGLImageSink
     gchar *display_name;
 
     gulong window_id;
+    gulong new_window_id;
 
     //caps
     GstCaps *caps;
