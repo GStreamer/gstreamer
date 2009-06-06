@@ -30,6 +30,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "gstapexsink.h"
 
 GST_DEBUG_CATEGORY_STATIC (apexsink_debug);
@@ -488,7 +490,7 @@ gst_apexsink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
       GST_APEX_RAOP_SAMPLES_PER_FRAME * GST_APEX_RAOP_BYTES_PER_SAMPLE;
   spec->segtotal = 1;
 
-  bzero (spec->silence_sample, sizeof (spec->silence_sample));
+  memset (spec->silence_sample, 0, sizeof (spec->silence_sample));
 
   GST_INFO_OBJECT (apexsink,
       "PREPARE : ApEx sink ready to stream at %dHz, %d bytes per sample, %d channels, %d bytes segments (%dkB/s)",

@@ -28,6 +28,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "gstapexraop.h"
 
 /* private constants */
@@ -100,7 +102,7 @@ gst_apexraop_send (int desc, void *data, size_t len)
 static int
 gst_apexraop_recv (int desc, void *data, size_t len)
 {
-  bzero (data, len);
+  memset (data, 0, len);
   return recv (desc, data, len, 0);
 }
 
@@ -345,7 +347,11 @@ gst_apexraop_connect (GstApExRAOP * con)
           GST_APEX_RAOP_HDR_DEFAULT_LENGTH) <= 0)
     return GST_RTSP_STS_GONE;
 
-  sscanf (hreq, "%*s %d", (int *) &res);
+  {
+    int tmp;
+    sscanf (hreq, "%*s %d", &tmp);
+    res = (GstRTSPStatusCode) tmp;
+  }
 
   if (res != GST_RTSP_STS_OK)
     return res;
@@ -393,7 +399,11 @@ gst_apexraop_connect (GstApExRAOP * con)
           GST_APEX_RAOP_HDR_DEFAULT_LENGTH) <= 0)
     return GST_RTSP_STS_GONE;
 
-  sscanf (hreq, "%*s %d", (int *) &res);
+  {
+    int tmp;
+    sscanf (hreq, "%*s %d", &tmp);
+    res = (GstRTSPStatusCode) tmp;
+  }
 
   if (res != GST_RTSP_STS_OK)
     return res;
@@ -432,7 +442,11 @@ gst_apexraop_connect (GstApExRAOP * con)
           GST_APEX_RAOP_HDR_DEFAULT_LENGTH) <= 0)
     return GST_RTSP_STS_GONE;
 
-  sscanf (hreq, "%*s %d", (int *) &res);
+  {
+    int tmp;
+    sscanf (hreq, "%*s %d", &tmp);
+    res = (GstRTSPStatusCode) tmp;
+  }
 
   if (res != GST_RTSP_STS_OK)
     return res;
@@ -553,7 +567,11 @@ gst_apexraop_set_volume (GstApExRAOP * con, const guint volume)
           GST_APEX_RAOP_HDR_DEFAULT_LENGTH) <= 0)
     return GST_RTSP_STS_GONE;
 
-  sscanf (hreq, "%*s %d", (int *) &res);
+  {
+    int tmp;
+    sscanf (hreq, "%*s %d", &tmp);
+    res = (GstRTSPStatusCode) tmp;
+  }
 
   return res;
 }
@@ -695,7 +713,11 @@ gst_apexraop_flush (GstApExRAOP * con)
           GST_APEX_RAOP_HDR_DEFAULT_LENGTH) <= 0)
     return GST_RTSP_STS_GONE;
 
-  sscanf (hreq, "%*s %d", (int *) &res);
+  {
+    int tmp;
+    sscanf (hreq, "%*s %d", &tmp);
+    res = (GstRTSPStatusCode) tmp;
+  }
 
   return res;
 }
