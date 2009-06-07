@@ -13,10 +13,12 @@ libgstschro_la_SOURCES = \
 libgstschro_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
+        $(GST_BASE_CFLAGS) \
 	$(SCHRO_CFLAGS)
 libgstschro_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_MAJORMINOR).la \
 	$(GST_LIBS) \
+        $(GST_BASE_LIBS) \
 	$(SCHRO_LIBS)
 libgstschro_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstschro_la_LIBTOOLFLAGS = --tag=disable-static
