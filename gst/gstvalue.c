@@ -2632,6 +2632,9 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
   guint i, size;
   GValue subtraction = { 0, };
   gboolean ret = FALSE;
+  GType ltype;
+
+  ltype = gst_value_list_get_type ();;
 
   size = gst_value_list_get_size (minuend);
   for (i = 0; i < size; i++) {
@@ -2641,15 +2644,8 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
       if (!ret) {
         gst_value_init_and_copy (dest, &subtraction);
         ret = TRUE;
-      } else if (GST_VALUE_HOLDS_LIST (dest)
-          && GST_VALUE_HOLDS_LIST (&subtraction)) {
-        /* unroll */
-        GValue unroll = { 0, };
-
-        gst_value_init_and_copy (&unroll, dest);
-        g_value_unset (dest);
-        gst_value_list_concat (dest, &unroll, &subtraction);
-      } else if (GST_VALUE_HOLDS_LIST (dest)) {
+      } else if (G_VALUE_HOLDS (dest, ltype)
+          && !G_VALUE_HOLDS (&subtraction, ltype)) {
         gst_value_list_append_value (dest, &subtraction);
       } else {
         GValue temp = { 0, };
