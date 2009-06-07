@@ -1429,36 +1429,42 @@ gst_wavparse_stream_headers (GstWavParse * wav)
             const guint data_size = size - 4;
             GstTagList *new;
 
-            GST_INFO_OBJECT (wav, "Have LIST chunk INFO");
+            GST_INFO_OBJECT (wav, "Have LIST chunk INFO size %u", data_size);
             if (wav->streaming) {
               gst_adapter_flush (wav->adapter, 12);
               if (gst_adapter_available (wav->adapter) < data_size) {
                 return GST_FLOW_OK;
               }
               gst_buffer_unref (buf);
-              buf = gst_adapter_take_buffer (wav->adapter, data_size);
+              if (data_size > 0)
+                buf = gst_adapter_take_buffer (wav->adapter, data_size);
             } else {
               wav->offset += 12;
               gst_buffer_unref (buf);
-              if ((res =
-                      gst_pad_pull_range (wav->sinkpad, wav->offset, data_size,
-                          &buf)) != GST_FLOW_OK)
-                goto header_read_error;
+              if (data_size > 0) {
+                if ((res =
+                        gst_pad_pull_range (wav->sinkpad, wav->offset,
+                            data_size, &buf)) != GST_FLOW_OK)
+                  goto header_read_error;
+              }
             }
-            /* parse tags */
-            gst_riff_parse_info (GST_ELEMENT (wav), buf, &new);
-            if (new) {
-              GstTagList *old = wav->tags;
-              wav->tags = gst_tag_list_merge (old, new, GST_TAG_MERGE_REPLACE);
-              if (old)
-                gst_tag_list_free (old);
-              gst_tag_list_free (new);
-            }
-            if (wav->streaming) {
-              gst_adapter_flush (wav->adapter, data_size);
-            } else {
-              gst_buffer_unref (buf);
-              wav->offset += data_size;
+            if (data_size > 0) {
+              /* parse tags */
+              gst_riff_parse_info (GST_ELEMENT (wav), buf, &new);
+              if (new) {
+                GstTagList *old = wav->tags;
+                wav->tags =
+                    gst_tag_list_merge (old, new, GST_TAG_MERGE_REPLACE);
+                if (old)
+                  gst_tag_list_free (old);
+                gst_tag_list_free (new);
+              }
+              if (wav->streaming) {
+                gst_adapter_flush (wav->adapter, data_size);
+              } else {
+                gst_buffer_unref (buf);
+                wav->offset += data_size;
+              }
             }
             break;
           }
@@ -1583,7 +1589,8 @@ unknown_format:
   }
 header_read_error:
   {
-    GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL), ("Couldn't read in header"));
+    GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL),
+        ("Couldn't read in header %d (%s)", res, gst_flow_get_name (res)));
     g_free (codec_name);
     return GST_FLOW_ERROR;
   }
