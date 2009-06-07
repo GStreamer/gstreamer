@@ -145,6 +145,9 @@ static void gst_element_restore_thyself (GstObject * parent, xmlNodePtr self);
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
 
+/* this is used in gstelementfactory.c:gst_element_register() */
+GQuark _gst_elementclass_factory = 0;
+
 GType
 gst_element_get_type (void)
 {
@@ -167,6 +170,9 @@ gst_element_get_type (void)
 
     _type = g_type_register_static (GST_TYPE_OBJECT, "GstElement",
         &element_info, G_TYPE_FLAG_ABSTRACT);
+
+    _gst_elementclass_factory =
+        g_quark_from_static_string ("GST_ELEMENTCLASS_FACTORY");
     g_once_init_leave (&gst_element_type, _type);
   }
   return gst_element_type;
@@ -252,6 +258,13 @@ gst_element_base_class_init (gpointer g_class)
    */
   memset (&element_class->details, 0, sizeof (GstElementDetails));
   element_class->padtemplates = NULL;
+
+  /* set the factory, see gst_element_register() */
+  element_class->elementfactory =
+      g_type_get_qdata (G_TYPE_FROM_CLASS (element_class),
+      _gst_elementclass_factory);
+  GST_DEBUG ("type %s : factory %p", G_OBJECT_CLASS_NAME (element_class),
+      element_class->elementfactory);
 }
 
 static void

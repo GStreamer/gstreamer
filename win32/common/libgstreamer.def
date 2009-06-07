@@ -41,6 +41,7 @@ EXPORTS
 	_gst_debug_nameof_funcptr
 	_gst_debug_register_funcptr
 	_gst_element_error_printf
+	_gst_elementclass_factory DATA
 	_gst_plugin_register_static
 	_gst_trace_add_entry
 	_gst_trace_on DATA

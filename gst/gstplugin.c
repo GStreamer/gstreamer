@@ -535,6 +535,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   gpointer ptr;
   struct stat file_status;
   GstRegistry *registry;
+  gboolean new_plugin = TRUE;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
@@ -544,11 +545,12 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   plugin = gst_registry_lookup (registry, filename);
   if (plugin) {
     if (plugin->module) {
+      /* already loaded */
       g_static_mutex_unlock (&gst_plugin_loading_mutex);
       return plugin;
     } else {
-      gst_object_unref (plugin);
-      plugin = NULL;
+      /* load plugin and update fields */
+      new_plugin = FALSE;
     }
   }
 
@@ -586,13 +588,14 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     goto return_error;
   }
 
-  plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
-
+  if (new_plugin) {
+    plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+    plugin->file_mtime = file_status.st_mtime;
+    plugin->file_size = file_status.st_size;
+  }
   plugin->module = module;
   plugin->filename = g_strdup (filename);
   plugin->basename = g_path_get_basename (filename);
-  plugin->file_mtime = file_status.st_mtime;
-  plugin->file_size = file_status.st_size;
 
   ret = g_module_symbol (module, "gst_plugin_desc", &ptr);
   if (!ret) {
@@ -606,15 +609,17 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   }
   plugin->orig_desc = (GstPluginDesc *) ptr;
 
-  /* check plugin description: complain about bad values but accept them, to
-   * maintain backwards compatibility (FIXME: 0.11) */
-  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, name, filename);
-  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, description, filename);
-  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, version, filename);
-  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, license, filename);
-  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, source, filename);
-  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, package, filename);
-  CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, origin, filename);
+  if (new_plugin) {
+    /* check plugin description: complain about bad values but accept them, to
+     * maintain backwards compatibility (FIXME: 0.11) */
+    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, name, filename);
+    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, description, filename);
+    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, version, filename);
+    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, license, filename);
+    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, source, filename);
+    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, package, filename);
+    CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, origin, filename);
+  }
 
   GST_LOG ("Plugin %p for file \"%s\" prepared, calling entry function...",
       plugin, filename);
@@ -645,8 +650,10 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   _gst_plugin_fault_handler_filename = NULL;
   GST_INFO ("plugin \"%s\" loaded", plugin->filename);
 
-  gst_object_ref (plugin);
-  gst_default_registry_add_plugin (plugin);
+  if (new_plugin) {
+    gst_object_ref (plugin);
+    gst_default_registry_add_plugin (plugin);
+  }
 
   g_static_mutex_unlock (&gst_plugin_loading_mutex);
   return plugin;
