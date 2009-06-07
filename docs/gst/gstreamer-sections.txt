@@ -1717,6 +1717,8 @@ gst_plugin_get_source
 gst_plugin_get_version
 gst_plugin_get_module
 gst_plugin_is_loaded
+gst_plugin_get_cache_data
+gst_plugin_set_cache_data
 gst_plugin_name_filter
 gst_plugin_load_file
 gst_plugin_load

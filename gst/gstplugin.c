@@ -137,6 +137,10 @@ gst_plugin_finalize (GObject * object)
   g_list_free (plugin->priv->deps);
   plugin->priv->deps = NULL;
 
+  if (plugin->priv->cache_data) {
+    gst_structure_free (plugin->priv->cache_data);
+  }
+
   G_OBJECT_CLASS (gst_plugin_parent_class)->finalize (object);
 }
 
@@ -851,6 +855,45 @@ gst_plugin_is_loaded (GstPlugin * plugin)
   g_return_val_if_fail (plugin != NULL, FALSE);
 
   return (plugin->module != NULL || plugin->filename == NULL);
+}
+
+/**
+ * gst_plugin_get_cache_data:
+ * @plugin: a plugin
+ *
+ * Gets the plugin specific data cache. If it is %NULL there is no cached data
+ * stored. This is the case when the registry is getting rebuild.
+ *
+ * Returns: The cached data as a #GstStructure or %NULL.
+ */
+G_CONST_RETURN GstStructure *
+gst_plugin_get_cache_data (GstPlugin * plugin)
+{
+  g_return_val_if_fail (GST_IS_PLUGIN (plugin), NULL);
+
+  return plugin->priv->cache_data;
+}
+
+/**
+ * gst_plugin_set_cache_data:
+ * @plugin: a plugin
+ * @cache_data: a structure containing the data to cache
+ *
+ * Adds plugin specific data to cache. Passes the ownership of the structure to
+ * the @plugin.
+ *
+ * The cache is flushed every time the registry is rebuild.
+ */
+void
+gst_plugin_set_cache_data (GstPlugin * plugin, GstStructure * cache_data)
+{
+  g_return_if_fail (GST_IS_PLUGIN (plugin));
+  g_return_if_fail (GST_IS_STRUCTURE (cache_data));
+
+  if (plugin->priv->cache_data) {
+    gst_structure_free (plugin->priv->cache_data);
+  }
+  plugin->priv->cache_data = cache_data;
 }
 
 #if 0

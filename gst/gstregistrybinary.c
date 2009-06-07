@@ -674,6 +674,14 @@ gst_registry_binary_save_plugin (GList ** list, GstRegistry * registry,
 
   gst_plugin_feature_list_free (plugin_features);
 
+  /* pack cache data */
+  if (plugin->priv->cache_data) {
+    gchar *cache_str = gst_structure_to_string (plugin->priv->cache_data);
+    gst_registry_binary_save_string (list, cache_str);
+  } else {
+    gst_registry_binary_save_const_string (list, "");
+  }
+
   /* pack plugin element strings */
   gst_registry_binary_save_const_string (list, plugin->desc.origin);
   gst_registry_binary_save_const_string (list, plugin->desc.package);
@@ -1111,6 +1119,7 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in,
 {
   GstBinaryPluginElement *pe;
   GstPlugin *plugin = NULL;
+  gchar *cache_str = NULL;
   guint i;
 
   align (*in);
@@ -1141,6 +1150,13 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in,
   GST_LOG ("  desc.source='%s'", plugin->desc.source);
   GST_LOG ("  desc.package='%s'", plugin->desc.package);
   GST_LOG ("  desc.origin='%s'", plugin->desc.origin);
+
+  /* unpack cache data */
+  unpack_string (*in, cache_str, end, fail);
+  if (*cache_str) {
+    plugin->priv->cache_data = gst_structure_from_string (cache_str, NULL);
+  }
+  g_free (cache_str);
 
   plugin->basename = g_path_get_basename (plugin->filename);
 

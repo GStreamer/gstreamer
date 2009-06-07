@@ -32,6 +32,7 @@
 #include <gmodule.h>
 #include <gst/gstobject.h>
 #include <gst/gstmacros.h>
+#include <gst/gststructure.h>
 
 G_BEGIN_DECLS
 
@@ -345,6 +346,9 @@ G_CONST_RETURN gchar*	gst_plugin_get_license		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_source		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_package		(GstPlugin *plugin);
 G_CONST_RETURN gchar*	gst_plugin_get_origin		(GstPlugin *plugin);
+G_CONST_RETURN GstStructure*	gst_plugin_get_cache_data	(GstPlugin * plugin);
+void		gst_plugin_set_cache_data	(GstPlugin * plugin, GstStructure *cache_data);
+
 GModule *		gst_plugin_get_module		(GstPlugin *plugin);
 gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 

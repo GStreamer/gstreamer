@@ -68,6 +68,7 @@ typedef struct {
 
 struct _GstPluginPrivate {
   GList *deps;    /* list of GstPluginDep structures */
+  GstStructure *cache_data;
 };
 
 gboolean _priv_plugin_deps_env_vars_changed (GstPlugin * plugin);
