@@ -32,8 +32,8 @@ G_BEGIN_DECLS
 #define GST_TYPE_VDP_MPEG_DEC            (gst_vdp_mpeg_dec_get_type())
 #define GST_VDP_MPEG_DEC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDP_MPEG_DEC,GstVdpMpegDec))
 #define GST_VDP_MPEG_DEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDP_MPEG_DEC,GstVdpMpegDecClass))
-#define GST_IS_VDPAU_MPEG_DEC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDP_MPEG_DEC))
-#define GST_IS_VDPAU_MPEG_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDP_MPEG_DEC))
+#define GST_IS_VDP_MPEG_DEC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDP_MPEG_DEC))
+#define GST_IS_VDP_MPEG_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDP_MPEG_DEC))
 
 typedef struct _GstVdpMpegDec      GstVdpMpegDec;
 typedef struct _GstVdpMpegDecClass GstVdpMpegDecClass;

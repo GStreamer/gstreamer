@@ -152,7 +152,7 @@ gst_vdp_device_set_property (GObject * object, guint prop_id,
 {
   GstVdpDevice *device;
 
-  g_return_if_fail (GST_IS_VDPAU_DEVICE (object));
+  g_return_if_fail (GST_IS_VDP_DEVICE (object));
 
   device = (GstVdpDevice *) object;
 
@@ -172,7 +172,7 @@ gst_vdp_device_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstVdpDevice *device;
 
-  g_return_if_fail (GST_IS_VDPAU_DEVICE (object));
+  g_return_if_fail (GST_IS_VDP_DEVICE (object));
 
   device = (GstVdpDevice *) object;
 

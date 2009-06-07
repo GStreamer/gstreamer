@@ -29,8 +29,8 @@ void
 gst_vdp_video_buffer_add_reference (GstVdpVideoBuffer * buffer,
     GstVdpVideoBuffer * buf)
 {
-  g_assert (GST_IS_VDPAU_VIDEO_BUFFER (buffer));
-  g_assert (GST_IS_VDPAU_VIDEO_BUFFER (buf));
+  g_assert (GST_IS_VDP_VIDEO_BUFFER (buffer));
+  g_assert (GST_IS_VDP_VIDEO_BUFFER (buf));
 
   gst_buffer_ref (GST_BUFFER (buf));
   buffer->refs = g_slist_prepend (buffer->refs, buf);
