@@ -190,7 +190,13 @@ test_tags (const gchar * tag_str)
 
 GST_START_TEST (test_common_tags)
 {
+  /* The title tag will only work if the XMP backend is enabled.
+   * And since we don't have any programmatic feedback on whether
+   * a tag is properly handled or not... we need to do this kind
+   * of hack. */
+#if HAVE_XMP
   test_tags ("taglist,title=\"test image\"");
+#endif
 }
 
 GST_END_TEST;
