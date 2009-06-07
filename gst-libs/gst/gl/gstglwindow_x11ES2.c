@@ -439,7 +439,7 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
         attr.height);
 
     XReparentWindow (priv->disp_send, priv->internal_win_id, priv->parent,
-        attr.x, attr.y);
+        0, 0);
 
     XSync (priv->disp_send, FALSE);
 
@@ -541,22 +541,17 @@ gst_gl_window_draw (GstGLWindow * window)
         XWindowAttributes attr_parent;
         XGetWindowAttributes (priv->disp_send, priv->parent, &attr_parent);
 
-        if (attr.x != attr_parent.x || attr.y != attr_parent.y ||
-            attr.width != attr_parent.width
-            || attr.height != attr_parent.height) {
+        if (attr.width != attr_parent.width ||
+            attr.height != attr_parent.height) {
           XMoveResizeWindow (priv->disp_send, priv->internal_win_id,
-              attr_parent.x, attr_parent.y, attr_parent.width,
-              attr_parent.height);
+              0, 0, attr_parent.width, attr_parent.height);
           XSync (priv->disp_send, FALSE);
-
-          attr.x = attr_parent.x;
-          attr.y = attr_parent.y;
 
           attr.width = attr_parent.width;
           attr.height = attr_parent.height;
 
-          g_debug ("parent resize:  %d, %d, %d, %d\n", attr_parent.x,
-              attr_parent.y, attr_parent.width, attr_parent.height);
+          g_debug ("parent resize:  %d, %d\n",
+              attr_parent.width, attr_parent.height);
         }
       }
 
