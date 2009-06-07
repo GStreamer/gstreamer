@@ -3464,6 +3464,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   done2:
 
     n_sample_times = QT_UINT32 (stts_data + 12);
+    GST_LOG_OBJECT (qtdemux, "%u timestamp blocks", n_sample_times);
     timestamp = 0;
     stream->min_duration = 0;
     time = 0;
@@ -3477,14 +3478,17 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
       stts_data += 4;
       duration = QT_UINT32 (stts_data);
       stts_data += 4;
+      GST_LOG_OBJECT (qtdemux, "block %d, %u timestamps, duration %u ", i, n,
+          duration);
 
       /* take first duration for fps */
       if (G_UNLIKELY (stream->min_duration == 0))
         stream->min_duration = duration;
 
       for (j = 0; j < n; j++) {
-        GST_DEBUG_OBJECT (qtdemux, "sample %d: timestamp %" GST_TIME_FORMAT,
-            index, GST_TIME_ARGS (timestamp));
+        GST_DEBUG_OBJECT (qtdemux,
+            "sample %d: index %d, timestamp %" GST_TIME_FORMAT, index, j,
+            GST_TIME_ARGS (timestamp));
 
         samples[index].timestamp = timestamp;
         /* add non-scaled values to avoid rounding errors */
@@ -3496,6 +3500,16 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         if (G_UNLIKELY (index >= n_samples))
           goto done3;
       }
+    }
+    /* fill up empty timestamps with the last timestamp, this can happen when
+     * the last samples do not decoder and so we don't have timestamps for them.
+     * We however look at the last timestamp to estimate the track length so we
+     * need something in here. */
+    for (; index < n_samples; index++) {
+      GST_DEBUG_OBJECT (qtdemux, "fill sample %d: timestamp %" GST_TIME_FORMAT,
+          index, GST_TIME_ARGS (timestamp));
+      samples[index].timestamp = timestamp;
+      samples[index].duration = -1;
     }
   done3:
 
@@ -3783,7 +3797,8 @@ done:
     stream->segments[0].media_stop = stream_duration;
     stream->segments[0].rate = 1.0;
 
-    GST_DEBUG_OBJECT (qtdemux, "created dummy segment");
+    GST_DEBUG_OBJECT (qtdemux, "created dummy segment %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (stream_duration));
     stream->n_segments = 1;
   }
   GST_DEBUG_OBJECT (qtdemux, "using %d segments", stream->n_segments);
