@@ -1065,7 +1065,7 @@ gst_value_lcopy_fraction_range (const GValue * value, guint n_collect_values,
 
   dest_values[0][0] = gst_value_get_fraction_numerator (&vals[0]);
   dest_values[1][0] = gst_value_get_fraction_denominator (&vals[0]);
-  dest_values[2][0] = gst_value_get_fraction_denominator (&vals[1]);
+  dest_values[2][0] = gst_value_get_fraction_numerator (&vals[1]);
   dest_values[3][0] = gst_value_get_fraction_denominator (&vals[1]);
   return NULL;
 }
