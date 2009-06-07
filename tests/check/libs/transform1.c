@@ -76,7 +76,7 @@ GST_START_TEST (basetransform_chain_pt1)
   buffer = gst_buffer_new_and_alloc (20);
 
   buffer_alloc_pt1_called = FALSE;
-  set_caps_pt1_called = FALSE;;
+  set_caps_pt1_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
   /* FIXME, passthough without pad-alloc, do pad-alloc on the srcpad */
@@ -95,7 +95,7 @@ GST_START_TEST (basetransform_chain_pt1)
 
   buffer = gst_buffer_new_and_alloc (10);
   buffer_alloc_pt1_called = FALSE;
-  set_caps_pt1_called = FALSE;;
+  set_caps_pt1_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
   /* FIXME, passthough without pad-alloc, do pad-alloc on the srcpad */
@@ -114,7 +114,7 @@ GST_START_TEST (basetransform_chain_pt1)
   GST_DEBUG_OBJECT (trans, "alloc without caps, size 20");
 
   buffer_alloc_pt1_called = FALSE;
-  set_caps_pt1_called = FALSE;;
+  set_caps_pt1_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, NULL, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_pt1_called == TRUE);
@@ -126,7 +126,7 @@ GST_START_TEST (basetransform_chain_pt1)
 
   caps = gst_caps_new_simple ("foo/x-bar", NULL);
   buffer_alloc_pt1_called = FALSE;
-  set_caps_pt1_called = FALSE;;
+  set_caps_pt1_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, caps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_pt1_called == TRUE);
@@ -135,7 +135,7 @@ GST_START_TEST (basetransform_chain_pt1)
 
   /* once more */
   buffer_alloc_pt1_called = FALSE;
-  set_caps_pt1_called = FALSE;;
+  set_caps_pt1_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, caps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_pt1_called == TRUE);
@@ -207,7 +207,7 @@ GST_START_TEST (basetransform_chain_pt2)
   GST_DEBUG_OBJECT (trans, "alloc with caps, size 20");
 
   buffer_alloc_pt1_called = FALSE;
-  set_caps_pt2_called = FALSE;;
+  set_caps_pt2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, caps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_pt1_called == TRUE);
@@ -247,7 +247,7 @@ GST_START_TEST (basetransform_chain_pt2)
   GST_DEBUG_OBJECT (trans, "alloc with caps, size 20");
 
   buffer_alloc_pt1_called = FALSE;
-  set_caps_pt2_called = FALSE;;
+  set_caps_pt2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, caps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_pt1_called == TRUE);
@@ -262,7 +262,7 @@ GST_START_TEST (basetransform_chain_pt2)
   GST_DEBUG_OBJECT (trans, "alloc with superset caps, size 20");
 
   buffer_alloc_pt1_called = FALSE;
-  set_caps_pt2_called = FALSE;;
+  set_caps_pt2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, caps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_pt1_called == TRUE);
@@ -308,8 +308,8 @@ GST_START_TEST (basetransform_chain_ip1)
 
   buffer = gst_buffer_new_and_alloc (20);
 
-  transform_ip_1_called = FALSE;;
-  transform_ip_1_writable = TRUE;;
+  transform_ip_1_called = FALSE;
+  transform_ip_1_writable = TRUE;
   buffer_alloc_pt1_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -331,8 +331,8 @@ GST_START_TEST (basetransform_chain_ip1)
 
   fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 2);
 
-  transform_ip_1_called = FALSE;;
-  transform_ip_1_writable = FALSE;;
+  transform_ip_1_called = FALSE;
+  transform_ip_1_writable = FALSE;
   buffer_alloc_pt1_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -430,10 +430,10 @@ GST_START_TEST (basetransform_chain_ip2)
 
   GST_DEBUG_OBJECT (trans, "buffer without caps, size 20");
 
-  transform_ip_1_called = FALSE;;
-  transform_ip_1_writable = FALSE;;
+  transform_ip_1_called = FALSE;
+  transform_ip_1_writable = FALSE;
   buffer_alloc_pt1_called = FALSE;
-  set_caps_1_called = FALSE;;
+  set_caps_1_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
   fail_unless (transform_ip_1_called == FALSE);
@@ -449,7 +449,7 @@ GST_START_TEST (basetransform_chain_ip2)
 
   transform_ip_1_called = FALSE;
   transform_ip_1_writable = FALSE;
-  set_caps_1_called = FALSE;;
+  set_caps_1_called = FALSE;
   buffer_alloc_pt1_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -487,8 +487,8 @@ GST_START_TEST (basetransform_chain_ip2)
 
   fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 2);
 
-  transform_ip_1_called = FALSE;;
-  transform_ip_1_writable = FALSE;;
+  transform_ip_1_called = FALSE;
+  transform_ip_1_writable = FALSE;
   buffer_alloc_pt1_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -548,7 +548,7 @@ set_caps_ct1 (GstBaseTransform * trans, GstCaps * incaps, GstCaps * outcaps)
   fail_unless (gst_caps_is_equal (incaps, caps1));
   fail_unless (gst_caps_is_equal (outcaps, caps2));
 
-  set_caps_ct1_called = TRUE;;
+  set_caps_ct1_called = TRUE;
 
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
@@ -678,9 +678,9 @@ GST_START_TEST (basetransform_chain_ct1)
 
   GST_DEBUG_OBJECT (trans, "buffer without caps");
 
-  transform_ct1_called = FALSE;;
-  transform_ct1_writable = FALSE;;
-  set_caps_ct1_called = FALSE;;
+  transform_ct1_called = FALSE;
+  transform_ct1_writable = FALSE;
+  set_caps_ct1_called = FALSE;
   buffer_alloc_ct1_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
@@ -697,7 +697,7 @@ GST_START_TEST (basetransform_chain_ct1)
 
   transform_ct1_called = FALSE;
   transform_ct1_writable = FALSE;
-  set_caps_ct1_called = FALSE;;
+  set_caps_ct1_called = FALSE;
   buffer_alloc_ct1_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -721,8 +721,8 @@ GST_START_TEST (basetransform_chain_ct1)
 
   GST_DEBUG_OBJECT (trans, "buffer with caps %" GST_PTR_FORMAT, incaps);
 
-  transform_ct1_called = FALSE;;
-  transform_ct1_writable = FALSE;;
+  transform_ct1_called = FALSE;
+  transform_ct1_writable = FALSE;
   buffer_alloc_ct1_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -797,7 +797,7 @@ set_caps_ct2 (GstBaseTransform * trans, GstCaps * incaps, GstCaps * outcaps)
   fail_unless (gst_caps_is_equal (incaps, caps1));
   fail_unless (gst_caps_is_equal (outcaps, caps2));
 
-  set_caps_ct2_called = TRUE;;
+  set_caps_ct2_called = TRUE;
 
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
@@ -958,9 +958,9 @@ GST_START_TEST (basetransform_chain_ct2)
 
   GST_DEBUG_OBJECT (trans, "buffer without caps");
 
-  transform_ct2_called = FALSE;;
-  transform_ct2_writable = FALSE;;
-  set_caps_ct2_called = FALSE;;
+  transform_ct2_called = FALSE;
+  transform_ct2_writable = FALSE;
+  set_caps_ct2_called = FALSE;
   buffer_alloc_ct2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
@@ -979,7 +979,7 @@ GST_START_TEST (basetransform_chain_ct2)
   set_caps_ct2_case = 1;
   transform_ct2_called = FALSE;
   transform_ct2_writable = FALSE;
-  set_caps_ct2_called = FALSE;;
+  set_caps_ct2_called = FALSE;
   buffer_alloc_ct2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -1003,8 +1003,8 @@ GST_START_TEST (basetransform_chain_ct2)
 
   GST_DEBUG_OBJECT (trans, "buffer with caps %" GST_PTR_FORMAT, incaps);
 
-  transform_ct2_called = FALSE;;
-  transform_ct2_writable = FALSE;;
+  transform_ct2_called = FALSE;
+  transform_ct2_writable = FALSE;
   buffer_alloc_ct2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -1111,9 +1111,9 @@ GST_START_TEST (basetransform_chain_ct3)
 
   GST_DEBUG_OBJECT (trans, "buffer without caps");
 
-  transform_ct2_called = FALSE;;
-  transform_ct2_writable = FALSE;;
-  set_caps_ct2_called = FALSE;;
+  transform_ct2_called = FALSE;
+  transform_ct2_writable = FALSE;
+  set_caps_ct2_called = FALSE;
   buffer_alloc_ct2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
@@ -1131,7 +1131,7 @@ GST_START_TEST (basetransform_chain_ct3)
   buffer_alloc_ct2_case = 1;
   set_caps_ct2_case = 1;
   transform_ct2_called = FALSE;
-  set_caps_ct2_called = FALSE;;
+  set_caps_ct2_called = FALSE;
   buffer_alloc_ct2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -1154,7 +1154,7 @@ GST_START_TEST (basetransform_chain_ct3)
 
   GST_DEBUG_OBJECT (trans, "buffer with caps %" GST_PTR_FORMAT, incaps);
 
-  transform_ct2_called = FALSE;;
+  transform_ct2_called = FALSE;
   buffer_alloc_ct2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -1205,7 +1205,7 @@ GST_START_TEST (basetransform_chain_ct3)
   /* don't suggest anything else */
   buffer_alloc_ct2_case = 1;
   set_caps_ct2_case = 2;
-  transform_ct2_called = FALSE;;
+  transform_ct2_called = FALSE;
   buffer_alloc_ct2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);
@@ -1232,7 +1232,7 @@ GST_START_TEST (basetransform_chain_ct3)
   set_caps_ct2_case = 0;
   buffer_alloc_ct2_case = 1;
   buffer_alloc_ct2_called = FALSE;
-  set_caps_ct2_called = FALSE;;
+  set_caps_ct2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, incaps, &buffer);
   fail_unless (res == GST_FLOW_OK);
   fail_unless (buffer_alloc_ct2_called == TRUE);
@@ -1251,7 +1251,7 @@ GST_START_TEST (basetransform_chain_ct3)
   /* don't suggest anything else */
   buffer_alloc_ct2_suggest = FALSE;
   buffer_alloc_ct2_case = 0;
-  transform_ct2_called = FALSE;;
+  transform_ct2_called = FALSE;
   buffer_alloc_ct2_called = FALSE;
   res = gst_test_trans_push (trans, buffer);
   fail_unless (res == GST_FLOW_OK);

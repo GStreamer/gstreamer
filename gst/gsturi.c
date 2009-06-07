@@ -447,7 +447,7 @@ gst_uri_get_location (const gchar * uri)
 #endif
 
   GST_LOG ("extracted location '%s' from URI '%s'", GST_STR_NULL (unescaped),
-      uri);;
+      uri);
   return unescaped;
 }
 

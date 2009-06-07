@@ -2634,7 +2634,7 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
   gboolean ret = FALSE;
   GType ltype;
 
-  ltype = gst_value_list_get_type ();;
+  ltype = gst_value_list_get_type ();
 
   size = gst_value_list_get_size (minuend);
   for (i = 0; i < size; i++) {
@@ -3024,7 +3024,7 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
   guint i;
   GType ltype, type1, type2;
 
-  ltype = gst_value_list_get_type ();;
+  ltype = gst_value_list_get_type ();
 
   /* special cases */
   if (G_VALUE_HOLDS (value1, ltype) || G_VALUE_HOLDS (value2, ltype))
@@ -3066,7 +3066,7 @@ gst_value_intersect (GValue * dest, const GValue * value1,
   guint i;
   GType ltype, type1, type2;
 
-  ltype = gst_value_list_get_type ();;
+  ltype = gst_value_list_get_type ();
 
   /* special cases first */
   if (G_VALUE_HOLDS (value1, ltype))
@@ -3144,7 +3144,7 @@ gst_value_subtract (GValue * dest, const GValue * minuend,
   guint i;
   GType ltype, mtype, stype;
 
-  ltype = gst_value_list_get_type ();;
+  ltype = gst_value_list_get_type ();
 
   /* special cases first */
   if (G_VALUE_HOLDS (minuend, ltype))
@@ -3200,7 +3200,7 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
   guint i;
   GType ltype, mtype, stype;
 
-  ltype = gst_value_list_get_type ();;
+  ltype = gst_value_list_get_type ();
 
   /* special cases */
   if (G_VALUE_HOLDS (minuend, ltype) || G_VALUE_HOLDS (subtrahend, ltype))
@@ -4190,7 +4190,7 @@ _gst_value_initialize (void)
       gst_value_deserialize_array,
     };
 
-    gst_value.type = gst_value_array_get_type ();;
+    gst_value.type = gst_value_array_get_type ();
     gst_value_register (&gst_value);
   }
 

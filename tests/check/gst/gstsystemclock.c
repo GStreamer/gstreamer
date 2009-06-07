@@ -263,7 +263,7 @@ GST_START_TEST (test_async_order)
   GstClockTime base;
   GstClockReturn result;
 
-  store_lock = g_mutex_new ();;
+  store_lock = g_mutex_new ();
 
   clock = gst_system_clock_obtain ();
   fail_unless (clock != NULL, "Could not create instance of GstSystemClock");
