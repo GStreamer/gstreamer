@@ -1968,7 +1968,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   char *r;
   char save;
   GstStructure *structure = NULL;
-  GstStructureField field = { 0 };
+  GstStructureField field;
 
   g_return_val_if_fail (string != NULL, NULL);
 
