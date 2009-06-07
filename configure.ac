@@ -305,6 +305,10 @@ AC_CHECK_HEADERS([sys/utsname.h])
 dnl Check for stdio_ext.f for __fbufsize
 AC_CHECK_HEADERS([stdio_ext.h])
 
+dnl check for pthreads
+AC_CHECK_HEADERS([pthread.h], HAVE_PTHREAD_H=yes)
+AM_CONDITIONAL(HAVE_PTHREAD_H, test "x$HAVE_PTHREAD_H" = "xyes")
+
 dnl Check for valgrind.h
 dnl separate from HAVE_VALGRIND because you can have the program, but not
 dnl the dev package
