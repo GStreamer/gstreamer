@@ -68,6 +68,7 @@ struct _GstValueSubtractInfo
 };
 
 static GArray *gst_value_table;
+static GHashTable *gst_value_hash;
 static GArray *gst_value_union_funcs;
 static GArray *gst_value_intersect_funcs;
 static GArray *gst_value_subtract_funcs;
@@ -977,10 +978,13 @@ static void
 gst_value_init_fraction_range (GValue * value)
 {
   GValue *vals;
+  GType ftype;
 
-  value->data[0].v_pointer = vals = g_new0 (GValue, 2);
-  g_value_init (&vals[0], GST_TYPE_FRACTION);
-  g_value_init (&vals[1], GST_TYPE_FRACTION);
+  ftype = GST_TYPE_FRACTION;
+
+  value->data[0].v_pointer = vals = g_slice_alloc0 (2 * sizeof (GValue));
+  g_value_init (&vals[0], ftype);
+  g_value_init (&vals[1], ftype);
 }
 
 static void
@@ -991,7 +995,7 @@ gst_value_free_fraction_range (GValue * value)
   if (vals != NULL) {
     g_value_unset (&vals[0]);
     g_value_unset (&vals[1]);
-    g_free (vals);
+    g_slice_free1 (2 * sizeof (GValue), vals);
     value->data[0].v_pointer = NULL;
   }
 }
@@ -1003,12 +1007,9 @@ gst_value_copy_fraction_range (const GValue * src_value, GValue * dest_value)
   GValue *src_vals = (GValue *) src_value->data[0].v_pointer;
 
   if (vals == NULL) {
-    dest_value->data[0].v_pointer = vals = g_new0 (GValue, 2);
-    g_return_if_fail (vals != NULL);
-    g_value_init (&vals[0], GST_TYPE_FRACTION);
-    g_value_init (&vals[1], GST_TYPE_FRACTION);
+    gst_value_init_fraction_range (dest_value);
+    vals = dest_value->data[0].v_pointer;
   }
-
   if (src_vals != NULL) {
     g_value_copy (&src_vals[0], &vals[0]);
     g_value_copy (&src_vals[1], &vals[1]);
@@ -1025,12 +1026,8 @@ gst_value_collect_fraction_range (GValue * value, guint n_collect_values,
     return g_strdup_printf ("not enough value locations for `%s' passed",
         G_VALUE_TYPE_NAME (value));
   if (vals == NULL) {
-    value->data[0].v_pointer = vals = g_new0 (GValue, 2);
-    if (vals == NULL)
-      return g_strdup_printf ("Could not initialise`%s' during collect",
-          G_VALUE_TYPE_NAME (value));
-    g_value_init (&vals[0], GST_TYPE_FRACTION);
-    g_value_init (&vals[1], GST_TYPE_FRACTION);
+    gst_value_init_fraction_range (value);
+    vals = value->data[0].v_pointer;
   }
 
   gst_value_set_fraction (&vals[0], collect_values[0].v_int,
@@ -1049,19 +1046,19 @@ gst_value_lcopy_fraction_range (const GValue * value, guint n_collect_values,
   int *dest_values[4];
   GValue *vals = (GValue *) value->data[0].v_pointer;
 
-  if (n_collect_values != 4)
+  if (G_UNLIKELY (n_collect_values != 4))
     return g_strdup_printf ("not enough value locations for `%s' passed",
         G_VALUE_TYPE_NAME (value));
 
   for (i = 0; i < 4; i++) {
-    if (collect_values[i].v_pointer == NULL) {
+    if (G_UNLIKELY (collect_values[i].v_pointer == NULL)) {
       return g_strdup_printf ("value location for `%s' passed as NULL",
           G_VALUE_TYPE_NAME (value));
     }
     dest_values[i] = collect_values[i].v_pointer;
   }
 
-  if (vals == NULL) {
+  if (G_UNLIKELY (vals == NULL)) {
     return g_strdup_printf ("Uninitialised `%s' passed",
         G_VALUE_TYPE_NAME (value));
   }
@@ -1091,11 +1088,9 @@ gst_value_set_fraction_range (GValue * value, const GValue * start,
 
   vals = (GValue *) value->data[0].v_pointer;
   if (vals == NULL) {
-    value->data[0].v_pointer = vals = g_new0 (GValue, 2);
-    g_value_init (&vals[0], GST_TYPE_FRACTION);
-    g_value_init (&vals[1], GST_TYPE_FRACTION);
+    gst_value_init_fraction_range (value);
+    vals = value->data[0].v_pointer;
   }
-
   g_value_copy (start, &vals[0]);
   g_value_copy (end, &vals[1]);
 }
@@ -2801,33 +2796,6 @@ gst_value_subtract_fraction_range_fraction_range (GValue * dest,
  * comparison *
  **************/
 
-/**
- * gst_value_can_compare:
- * @value1: a value to compare
- * @value2: another value to compare
- *
- * Determines if @value1 and @value2 can be compared.
- *
- * Returns: TRUE if the values can be compared
- */
-gboolean
-gst_value_can_compare (const GValue * value1, const GValue * value2)
-{
-  GstValueTable *table;
-  guint i;
-
-  if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
-    return FALSE;
-
-  for (i = 0; i < gst_value_table->len; i++) {
-    table = &g_array_index (gst_value_table, GstValueTable, i);
-    if (g_type_is_a (G_VALUE_TYPE (value1), table->type) && table->compare)
-      return TRUE;
-  }
-
-  return FALSE;
-}
-
 /*
  * gst_value_get_compare_func:
  * @value1: a value to get the compare function for
@@ -2842,29 +2810,47 @@ gst_value_get_compare_func (const GValue * value1)
 {
   GstValueTable *table, *best = NULL;
   guint i;
+  GType type1;
+  gint key;
+
+  key = type1 = G_VALUE_TYPE (value1);
 
   /* this is a fast check */
-  for (i = 0; i < gst_value_table->len; i++) {
-    table = &g_array_index (gst_value_table, GstValueTable, i);
-    if (table->type == G_VALUE_TYPE (value1) && table->compare != NULL) {
-      best = table;
-      break;
-    }
-  }
+  best = g_hash_table_lookup (gst_value_hash, GINT_TO_POINTER (key));
+
   /* slower checks */
-  if (!best) {
+  if (G_UNLIKELY (!best || !best->compare)) {
+    best = NULL;
     for (i = 0; i < gst_value_table->len; i++) {
       table = &g_array_index (gst_value_table, GstValueTable, i);
-      if (g_type_is_a (G_VALUE_TYPE (value1), table->type)) {
+      if (table->compare && g_type_is_a (type1, table->type)) {
         if (!best || g_type_is_a (table->type, best->type))
           best = table;
       }
     }
   }
-  if (best) {
+  if (G_LIKELY (best))
     return best->compare;
-  }
+
   return NULL;
+}
+
+/**
+ * gst_value_can_compare:
+ * @value1: a value to compare
+ * @value2: another value to compare
+ *
+ * Determines if @value1 and @value2 can be compared.
+ *
+ * Returns: TRUE if the values can be compared
+ */
+gboolean
+gst_value_can_compare (const GValue * value1, const GValue * value2)
+{
+  if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
+    return FALSE;
+
+  return gst_value_get_compare_func (value1) != NULL;
 }
 
 /**
@@ -3040,19 +3026,23 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 {
   GstValueIntersectInfo *intersect_info;
   guint i;
+  GType ltype, type1, type2;
+
+  ltype = gst_value_list_get_type ();;
 
   /* special cases */
-  if (GST_VALUE_HOLDS_LIST (value1) || GST_VALUE_HOLDS_LIST (value2))
+  if (G_VALUE_HOLDS (value1, ltype) || G_VALUE_HOLDS (value2, ltype))
     return TRUE;
+
+  type1 = G_VALUE_TYPE (value1);
+  type2 = G_VALUE_TYPE (value2);
 
   for (i = 0; i < gst_value_intersect_funcs->len; i++) {
     intersect_info = &g_array_index (gst_value_intersect_funcs,
         GstValueIntersectInfo, i);
-    if (intersect_info->type1 == G_VALUE_TYPE (value1) &&
-        intersect_info->type2 == G_VALUE_TYPE (value2))
-      if (intersect_info->type2 == G_VALUE_TYPE (value1) &&
-          intersect_info->type1 == G_VALUE_TYPE (value2))
-        return TRUE;
+    if (intersect_info->type1 == intersect_info->type2 &&
+        intersect_info->type1 == type1 && intersect_info->type2 == type2)
+      return TRUE;
   }
 
   return gst_value_can_compare (value1, value2);
@@ -3078,35 +3068,35 @@ gst_value_intersect (GValue * dest, const GValue * value1,
 {
   GstValueIntersectInfo *intersect_info;
   guint i;
-  gboolean ret = FALSE;
+  GType ltype, type1, type2;
+
+  ltype = gst_value_list_get_type ();;
 
   /* special cases first */
-  if (GST_VALUE_HOLDS_LIST (value1))
+  if (G_VALUE_HOLDS (value1, ltype))
     return gst_value_intersect_list (dest, value1, value2);
-  if (GST_VALUE_HOLDS_LIST (value2))
+  if (G_VALUE_HOLDS (value2, ltype))
     return gst_value_intersect_list (dest, value2, value1);
+
+  if (gst_value_compare (value1, value2) == GST_VALUE_EQUAL) {
+    gst_value_init_and_copy (dest, value1);
+    return TRUE;
+  }
+
+  type1 = G_VALUE_TYPE (value1);
+  type2 = G_VALUE_TYPE (value2);
 
   for (i = 0; i < gst_value_intersect_funcs->len; i++) {
     intersect_info = &g_array_index (gst_value_intersect_funcs,
         GstValueIntersectInfo, i);
-    if (intersect_info->type1 == G_VALUE_TYPE (value1) &&
-        intersect_info->type2 == G_VALUE_TYPE (value2)) {
-      ret = intersect_info->func (dest, value1, value2);
-      return ret;
+    if (intersect_info->type1 == type1 && intersect_info->type2 == type2) {
+      return intersect_info->func (dest, value1, value2);
     }
-    if (intersect_info->type1 == G_VALUE_TYPE (value2) &&
-        intersect_info->type2 == G_VALUE_TYPE (value1)) {
-      ret = intersect_info->func (dest, value2, value1);
-      return ret;
+    if (intersect_info->type1 == type2 && intersect_info->type2 == type1) {
+      return intersect_info->func (dest, value2, value1);
     }
   }
-
-  if (gst_value_compare (value1, value2) == GST_VALUE_EQUAL) {
-    gst_value_init_and_copy (dest, value1);
-    ret = TRUE;
-  }
-
-  return ret;
+  return FALSE;
 }
 
 /**
@@ -3156,17 +3146,22 @@ gst_value_subtract (GValue * dest, const GValue * minuend,
 {
   GstValueSubtractInfo *info;
   guint i;
+  GType ltype, mtype, stype;
+
+  ltype = gst_value_list_get_type ();;
 
   /* special cases first */
-  if (GST_VALUE_HOLDS_LIST (minuend))
+  if (G_VALUE_HOLDS (minuend, ltype))
     return gst_value_subtract_from_list (dest, minuend, subtrahend);
-  if (GST_VALUE_HOLDS_LIST (subtrahend))
+  if (G_VALUE_HOLDS (subtrahend, ltype))
     return gst_value_subtract_list (dest, minuend, subtrahend);
+
+  mtype = G_VALUE_TYPE (minuend);
+  stype = G_VALUE_TYPE (subtrahend);
 
   for (i = 0; i < gst_value_subtract_funcs->len; i++) {
     info = &g_array_index (gst_value_subtract_funcs, GstValueSubtractInfo, i);
-    if (info->minuend == G_VALUE_TYPE (minuend) &&
-        info->subtrahend == G_VALUE_TYPE (subtrahend)) {
+    if (info->minuend == mtype && info->subtrahend == stype) {
       return info->func (dest, minuend, subtrahend);
     }
   }
@@ -3207,15 +3202,20 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
 {
   GstValueSubtractInfo *info;
   guint i;
+  GType ltype, mtype, stype;
+
+  ltype = gst_value_list_get_type ();;
 
   /* special cases */
-  if (GST_VALUE_HOLDS_LIST (minuend) || GST_VALUE_HOLDS_LIST (subtrahend))
+  if (G_VALUE_HOLDS (minuend, ltype) || G_VALUE_HOLDS (subtrahend, ltype))
     return TRUE;
+
+  mtype = G_VALUE_TYPE (minuend);
+  stype = G_VALUE_TYPE (subtrahend);
 
   for (i = 0; i < gst_value_subtract_funcs->len; i++) {
     info = &g_array_index (gst_value_subtract_funcs, GstValueSubtractInfo, i);
-    if (info->minuend == G_VALUE_TYPE (minuend) &&
-        info->subtrahend == G_VALUE_TYPE (subtrahend))
+    if (info->minuend == mtype && info->subtrahend == stype)
       return TRUE;
   }
 
@@ -3257,12 +3257,23 @@ gst_value_register_subtract_func (GType minuend_type, GType subtrahend_type,
  * @table: structure containing functions to register
  *
  * Registers functions to perform calculations on #GValues of a given
- * type.
+ * type. Each type can only be added once.
  */
 void
 gst_value_register (const GstValueTable * table)
 {
+  GstValueTable *found;
+  gint key;
+
   g_array_append_val (gst_value_table, *table);
+
+  key = table->type;
+
+  found = g_hash_table_lookup (gst_value_hash, GINT_TO_POINTER (key));
+  if (found)
+    g_warning ("adding type %d multiple times", key);
+
+  g_hash_table_insert (gst_value_hash, GINT_TO_POINTER (key), (gpointer) table);
 }
 
 /**
@@ -3294,25 +3305,28 @@ gst_value_serialize (const GValue * value)
 {
   guint i;
   GValue s_val = { 0 };
-  GstValueTable *table, *best = NULL;
+  GstValueTable *table, *best;
   char *s;
+  GType type;
+  gint key;
 
   g_return_val_if_fail (G_IS_VALUE (value), NULL);
 
-  for (i = 0; i < gst_value_table->len; i++) {
-    table = &g_array_index (gst_value_table, GstValueTable, i);
-    if (table->serialize == NULL)
-      continue;
-    if (table->type == G_VALUE_TYPE (value)) {
-      best = table;
-      break;
-    }
-    if (g_type_is_a (G_VALUE_TYPE (value), table->type)) {
-      if (!best || g_type_is_a (table->type, best->type))
-        best = table;
+  key = type = G_VALUE_TYPE (value);
+
+  best = g_hash_table_lookup (gst_value_hash, GINT_TO_POINTER (key));
+
+  if (G_UNLIKELY (!best || !best->serialize)) {
+    best = NULL;
+    for (i = 0; i < gst_value_table->len; i++) {
+      table = &g_array_index (gst_value_table, GstValueTable, i);
+      if (table->serialize && g_type_is_a (type, table->type)) {
+        if (!best || g_type_is_a (table->type, best->type))
+          best = table;
+      }
     }
   }
-  if (best)
+  if (G_LIKELY (best))
     return best->serialize (value);
 
   g_value_init (&s_val, G_TYPE_STRING);
@@ -3339,30 +3353,30 @@ gst_value_serialize (const GValue * value)
 gboolean
 gst_value_deserialize (GValue * dest, const gchar * src)
 {
-  GstValueTable *table, *best = NULL;
+  GstValueTable *table, *best;
   guint i;
+  GType type;
+  gint key;
 
   g_return_val_if_fail (src != NULL, FALSE);
   g_return_val_if_fail (G_IS_VALUE (dest), FALSE);
 
-  for (i = 0; i < gst_value_table->len; i++) {
-    table = &g_array_index (gst_value_table, GstValueTable, i);
-    if (table->serialize == NULL)
-      continue;
+  key = type = G_VALUE_TYPE (dest);
 
-    if (table->type == G_VALUE_TYPE (dest)) {
-      best = table;
-      break;
-    }
+  best = g_hash_table_lookup (gst_value_hash, GINT_TO_POINTER (key));
 
-    if (g_type_is_a (G_VALUE_TYPE (dest), table->type)) {
-      if (!best || g_type_is_a (table->type, best->type))
-        best = table;
+  if (G_UNLIKELY (!best || !best->deserialize)) {
+    best = NULL;
+    for (i = 0; i < gst_value_table->len; i++) {
+      table = &g_array_index (gst_value_table, GstValueTable, i);
+      if (table->deserialize && g_type_is_a (type, table->type)) {
+        if (!best || g_type_is_a (table->type, best->type))
+          best = table;
+      }
     }
   }
-  if (best) {
+  if (G_LIKELY (best))
     return best->deserialize (dest, src);
-  }
 
   return FALSE;
 }
@@ -4104,6 +4118,7 @@ void
 _gst_value_initialize (void)
 {
   gst_value_table = g_array_new (FALSE, FALSE, sizeof (GstValueTable));
+  gst_value_hash = g_hash_table_new (NULL, NULL);
   gst_value_union_funcs = g_array_new (FALSE, FALSE,
       sizeof (GstValueUnionInfo));
   gst_value_intersect_funcs = g_array_new (FALSE, FALSE,
