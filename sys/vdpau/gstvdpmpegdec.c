@@ -804,7 +804,7 @@ static gboolean
 normal_seek (GstVdpMpegDec * mpeg_dec, GstEvent * event)
 {
   gdouble rate;
-  GstFormat format, conv;
+  GstFormat format;
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   gint64 time_cur, bytes_cur;
@@ -826,12 +826,11 @@ normal_seek (GstVdpMpegDec * mpeg_dec, GstEvent * event)
 
   if (update) {
     /* seek on bytes */
-    conv = GST_FORMAT_BYTES;
     if (!gst_vdp_mpeg_dec_convert (mpeg_dec, GST_FORMAT_TIME, time_cur,
-            conv, &bytes_cur))
+            GST_FORMAT_BYTES, &bytes_cur))
       goto convert_failed;
     if (!gst_vdp_mpeg_dec_convert (mpeg_dec, GST_FORMAT_TIME, time_stop,
-            conv, &bytes_stop))
+            GST_FORMAT_BYTES, &bytes_stop))
       goto convert_failed;
 
     /* conversion succeeded, create the seek */
