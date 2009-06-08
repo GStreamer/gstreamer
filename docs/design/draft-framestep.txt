@@ -123,9 +123,11 @@ events
 	When the pipeline was stepping while the event is sent, the current step
 	operation is updated with the new amount and format. The sink will do a
 	best effort to comply with the new amount.
-      - In the PLAYING state, the requested amount of data is skipped (not
-	rendered) from the previous STEP request or from the position of the
-	last PAUSED if no previous STEP operation was performed.
+      - In the PLAYING state, the pipeline loses the PLAYING state, the
+        requested amount of data is skipped (not rendered) from the previous STEP
+	request or from the position of the last PAUSED if no previous STEP
+	operation was performed. The pipeline goes back to the PLAYING state
+	when a non-intermediate step completes.
 
      When flushing is FALSE, the step will be performed later.
 

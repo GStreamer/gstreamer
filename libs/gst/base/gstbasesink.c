@@ -1483,8 +1483,11 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
     GstStepInfo * pending, GstStepInfo * current)
 {
   GST_DEBUG_OBJECT (sink, "update pending step");
+
+  GST_OBJECT_LOCK (sink);
   memcpy (current, pending, sizeof (GstStepInfo));
   pending->valid = FALSE;
+  GST_OBJECT_UNLOCK (sink);
 
   /* get the running time of where we paused and remember it */
   current->start = gst_element_get_start_time (GST_ELEMENT_CAST (sink));
@@ -3439,19 +3442,22 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
 }
 
 static void
-set_step_info (GstBaseSink * sink, GstStepInfo * info, guint seqnum,
-    GstFormat format, guint64 amount, gdouble rate, gboolean flush,
-    gboolean intermediate)
+set_step_info (GstBaseSink * sink, GstStepInfo * current, GstStepInfo * pending,
+    guint seqnum, GstFormat format, guint64 amount, gdouble rate,
+    gboolean flush, gboolean intermediate)
 {
   GST_OBJECT_LOCK (sink);
-  info->seqnum = seqnum;
-  info->format = format;
-  info->amount = amount;
-  info->position = 0;
-  info->rate = rate;
-  info->flush = flush;
-  info->intermediate = intermediate;
-  info->valid = TRUE;
+  pending->seqnum = seqnum;
+  pending->format = format;
+  pending->amount = amount;
+  pending->position = 0;
+  pending->rate = rate;
+  pending->flush = flush;
+  pending->intermediate = intermediate;
+  pending->valid = TRUE;
+  /* flush invalidates the current stepping segment */
+  if (flush)
+    current->valid = FALSE;
   GST_OBJECT_UNLOCK (sink);
 }
 
@@ -3465,7 +3471,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   GstFormat format;
   guint64 amount;
   guint seqnum;
-  GstStepInfo *pending;
+  GstStepInfo *pending, *current;
 
   bclass = GST_BASE_SINK_GET_CLASS (sink);
   priv = sink->priv;
@@ -3476,6 +3482,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   seqnum = gst_event_get_seqnum (event);
 
   pending = &priv->pending_step;
+  current = &priv->current_step;
 
   if (flush) {
     /* we need to call ::unlock before locking PREROLL_LOCK
@@ -3489,7 +3496,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       bclass->unlock_stop (sink);
 
     /* update the stepinfo and make it valid */
-    set_step_info (sink, pending, seqnum, format, amount, rate, flush,
+    set_step_info (sink, current, pending, seqnum, format, amount, rate, flush,
         intermediate);
 
     if (sink->priv->async_enabled) {
@@ -3522,7 +3529,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
     GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
   } else {
     /* update the stepinfo and make it valid */
-    set_step_info (sink, pending, seqnum, format, amount, rate, flush,
+    set_step_info (sink, current, pending, seqnum, format, amount, rate, flush,
         intermediate);
   }
 
