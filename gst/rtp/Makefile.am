@@ -84,6 +84,8 @@ noinst_HEADERS =			\
 		 gstrtpL16depay.h 	\
 		 gstrtpL16pay.h 	\
 		 gstrtpac3depay.h 	\
+		 gstrtpceltpay.h	\
+		 gstrtpceltdepay.h	\
 		 gstrtpdvdepay.h 	\
 		 gstrtpdvpay.h 	        \
 		 gstrtpamrdepay.h 	\
