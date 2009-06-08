@@ -1327,6 +1327,9 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     samples -= diff;
     data += diff * bps;
     time = ctime;
+    /* don't align if we clipped */
+    if (bsink->segment.rate >= 0.0)
+      sink->next_sample = -1;
   }
   diff = stop - cstop;
   if (diff > 0) {
@@ -1336,6 +1339,9 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
         G_GUINT64_FORMAT " samples", GST_TIME_ARGS (cstop), diff);
     samples -= diff;
     stop = cstop;
+    /* don't align if we clipped */
+    if (bsink->segment.rate <= 0.0)
+      sink->next_sample = -1;
   }
 
   /* figure out how to sync */
