@@ -216,6 +216,10 @@ static const FormatInfo formats[] = {
   {"application/x-kate", N_("Kate subtitle format"), 0},
   /* add variant field to typefinder? { "application/x-subtitle", N_("subtitle"), 0}, */
 
+  /* non-audio/video/container formats */
+  {"hdv/aux-v", N_("HDV AUX-V"), 0},
+  {"hdv/aux-a", N_("HDV AUX-A"), 0},
+
   /* formats with dynamic descriptions */
   {"audio/mpeg", NULL, 0},
   {"audio/x-adpcm", NULL, 0},
