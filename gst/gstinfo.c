@@ -2,6 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
+ * Copyright (C) 2008-2009 Tim-Philipp Müller <tim centricular net>
  *
  * gstinfo.c: debugging functions
  *
@@ -112,6 +113,7 @@
 
 #include "gst_private.h"
 #include "gstutils.h"
+#include "gstquark.h"
 #include "gstsegment.h"
 #ifdef HAVE_VALGRIND_H
 #  include <valgrind/valgrind.h>
@@ -204,6 +206,9 @@ LogFuncEntry;
 static GStaticMutex __log_func_mutex = G_STATIC_MUTEX_INIT;
 static GSList *__log_functions = NULL;
 
+#define PRETTY_TAGS_DEFAULT  TRUE
+static gboolean pretty_tags = PRETTY_TAGS_DEFAULT;
+
 static gint __default_level;
 static gint __use_color;
 
@@ -288,6 +293,8 @@ _priv_gst_in_valgrind (void)
 void
 _gst_debug_init (void)
 {
+  const gchar *env;
+
   g_atomic_int_set (&__default_level, GST_LEVEL_DEFAULT);
   g_atomic_int_set (&__use_color, 1);
 
@@ -379,6 +386,14 @@ _gst_debug_init (void)
 
   /* print out the valgrind message if we're in valgrind */
   _priv_gst_in_valgrind ();
+
+  env = g_getenv ("GST_DEBUG_OPTIONS");
+  if (env != NULL) {
+    if (strstr (env, "full_tags") || strstr (env, "full-tags"))
+      pretty_tags = FALSE;
+    else if (strstr (env, "pretty_tags") || strstr (env, "pretty-tags"))
+      pretty_tags = TRUE;
+  }
 }
 
 /* we can't do this further above, because we initialize the GST_CAT_DEFAULT struct */
@@ -487,6 +502,54 @@ gst_debug_message_get (GstDebugMessage * message)
   return message->message;
 }
 
+#define MAX_BUFFER_DUMP_STRING_LEN  100
+
+/* structure_to_pretty_string:
+ * @structure: a #GstStructure
+ *
+ * Converts @structure to a human-readable string representation. Basically
+ * the same as gst_structure_to_string(), but if the structure contains large
+ * buffers such as images the hex representation of those buffers will be
+ * shortened so that the string remains readable.
+ *
+ * Returns: a newly-allocated string. g_free() when no longer needed.
+ */
+static gchar *
+structure_to_pretty_string (const GstStructure * s)
+{
+  gchar *str, *pos, *end;
+
+  str = gst_structure_to_string (s);
+  if (str == NULL)
+    return NULL;
+
+  pos = str;
+  while ((pos = strstr (pos, "(buffer)"))) {
+    guint count = 0;
+
+    pos += strlen ("(buffer)");
+    for (end = pos; *end != '\0' && *end != ';' && *end != ' '; ++end)
+      ++count;
+    if (count > MAX_BUFFER_DUMP_STRING_LEN) {
+      memcpy (pos + MAX_BUFFER_DUMP_STRING_LEN - 6, "..", 2);
+      memcpy (pos + MAX_BUFFER_DUMP_STRING_LEN - 4, pos + count - 4, 4);
+      g_memmove (pos + MAX_BUFFER_DUMP_STRING_LEN, pos + count,
+          strlen (pos + count) + 1);
+      pos += MAX_BUFFER_DUMP_STRING_LEN;
+    }
+  }
+
+  return str;
+}
+
+static inline gchar *
+gst_info_structure_to_string (GstStructure * s)
+{
+  if (G_UNLIKELY (pretty_tags && s->name == GST_QUARK (TAGLIST)))
+    return structure_to_pretty_string (s);
+  else
+    return gst_structure_to_string (s);
+}
 
 static gchar *
 gst_debug_print_object (gpointer ptr)
@@ -514,7 +577,7 @@ gst_debug_print_object (gpointer ptr)
     return gst_caps_to_string ((GstCaps *) ptr);
   }
   if (*(GType *) ptr == GST_TYPE_STRUCTURE) {
-    return gst_structure_to_string ((GstStructure *) ptr);
+    return gst_info_structure_to_string ((GstStructure *) ptr);
   }
 #ifdef USE_POISONING
   if (*(guint32 *) ptr == 0xffffffff) {
@@ -535,7 +598,7 @@ gst_debug_print_object (gpointer ptr)
     gchar *s, *ret;
 
     if (msg->structure) {
-      s = gst_structure_to_string (msg->structure);
+      s = gst_info_structure_to_string (msg->structure);
     } else {
       s = g_strdup ("(NULL)");
     }
@@ -550,7 +613,7 @@ gst_debug_print_object (gpointer ptr)
     GstQuery *query = GST_QUERY_CAST (object);
 
     if (query->structure) {
-      return gst_structure_to_string (query->structure);
+      return gst_info_structure_to_string (query->structure);
     } else {
       const gchar *query_type_name;
 
