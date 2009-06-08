@@ -264,7 +264,7 @@ gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
 }
 
 static guint64
-gst_util_uint64_scale_int64 (guint64 val, guint64 num, guint64 denom)
+gst_util_uint64_scale_int64_unchecked (guint64 val, guint64 num, guint64 denom)
 {
   GstUInt64 a0, a1, b0, b1, c0, ct, c1, result;
   GstUInt64 v, n;
@@ -296,7 +296,7 @@ gst_util_uint64_scale_int64 (guint64 val, guint64 num, guint64 denom)
   c1.ll = (guint64) a1.l.high + b0.l.high + ct.l.high + b1.ll;
 
   /* if high bits bigger than denom, we overflow */
-  if (c1.ll >= denom)
+  if (G_UNLIKELY (c1.ll >= denom))
     goto overflow;
 
   /* shortcut for division by 1, c1.ll should be 0 because of the
@@ -326,6 +326,36 @@ overflow:
   }
 }
 
+static inline guint64
+gst_util_uint64_scale_int_unchecked (guint64 val, gint num, gint denom)
+{
+  GstUInt64 result;
+  GstUInt64 low, high;
+
+  /* do 96 bits mult/div */
+  low.ll = val;
+  result.ll = ((guint64) low.l.low) * num;
+  high.ll = ((guint64) low.l.high) * num + (result.l.high);
+
+  low.ll = high.ll / denom;
+  result.l.high = high.ll % denom;
+  result.ll /= denom;
+
+  /* avoid overflow */
+  if (G_UNLIKELY (low.ll + result.l.high > G_MAXUINT32))
+    goto overflow;
+
+  result.l.high += low.l.low;
+
+  return result.ll;
+
+overflow:
+  {
+    return G_MAXUINT64;
+  }
+}
+
+
 /**
  * gst_util_uint64_scale:
  * @val: the number to scale
@@ -344,33 +374,33 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 {
   g_return_val_if_fail (denom != 0, G_MAXUINT64);
 
-  if (num == 0)
+  if (G_UNLIKELY (num == 0))
     return 0;
 
-  if (num == 1 && denom == 1)
+  if (G_UNLIKELY (num == denom))
     return val;
 
   /* if the denom is high, we need to do a 64 muldiv */
-  if (denom > G_MAXINT32)
+  if (G_UNLIKELY (denom > G_MAXINT32))
     goto do_int64;
 
   /* if num and denom are low we can do a 32 bit muldiv */
-  if (num <= G_MAXINT32)
+  if (G_LIKELY (num <= G_MAXINT32))
     goto do_int32;
 
   /* val and num are high, we need 64 muldiv */
-  if (val > G_MAXINT32)
+  if (G_UNLIKELY (val > G_MAXINT32))
     goto do_int64;
 
   /* val is low and num is high, we can swap them and do 32 muldiv */
-  return gst_util_uint64_scale_int (num, (gint) val, (gint) denom);
+  return gst_util_uint64_scale_int_unchecked (num, (gint) val, (gint) denom);
 
 do_int32:
-  return gst_util_uint64_scale_int (val, (gint) num, (gint) denom);
+  return gst_util_uint64_scale_int_unchecked (val, (gint) num, (gint) denom);
 
 do_int64:
   /* to the more heavy implementations... */
-  return gst_util_uint64_scale_int64 (val, num, denom);
+  return gst_util_uint64_scale_int64_unchecked (val, num, denom);
 }
 
 /**
@@ -390,43 +420,20 @@ do_int64:
 guint64
 gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 {
-  GstUInt64 result;
-  GstUInt64 low, high;
-
   g_return_val_if_fail (denom > 0, G_MAXUINT64);
   g_return_val_if_fail (num >= 0, G_MAXUINT64);
 
-  if (num == 0)
+  if (G_UNLIKELY (num == 0))
     return 0;
 
-  if (num == 1 && denom == 1)
+  if (G_UNLIKELY (num == denom))
     return val;
 
   if (val <= G_MAXUINT32)
     /* simple case */
     return val * num / denom;
 
-  /* do 96 bits mult/div */
-  low.ll = val;
-  result.ll = ((guint64) low.l.low) * num;
-  high.ll = ((guint64) low.l.high) * num + (result.l.high);
-
-  low.ll = high.ll / denom;
-  result.l.high = high.ll % denom;
-  result.ll /= denom;
-
-  /* avoid overflow */
-  if (low.ll + result.l.high > G_MAXUINT32)
-    goto overflow;
-
-  result.l.high += low.l.low;
-
-  return result.ll;
-
-overflow:
-  {
-    return G_MAXUINT64;
-  }
+  return gst_util_uint64_scale_int_unchecked (val, num, denom);
 }
 
 /**
