@@ -25,7 +25,9 @@
  *
  * List of tags and values used to describe media metadata.
  *
- * Last reviewed on 2005-11-23 (0.9.5)
+ * Strings must be in ASCII or UTF-8 encoding. No other encodings are allowed.
+ *
+ * Last reviewed on 2009-06-09 (0.10.23)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1433,7 +1435,8 @@ TAG_MERGE_FUNCS (pointer, gpointer, (*value != NULL))
  * to retrieve the first string associated with this tag unmodified.
  *
  * The resulting string in @value will be in UTF-8 encoding and should be
- * freed by the caller using g_free when no longer needed.
+ * freed by the caller using g_free when no longer needed. Since 0.10.24 the
+ * returned string is also guaranteed to be non-NULL and non-empty.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
@@ -1449,7 +1452,8 @@ TAG_MERGE_FUNCS (pointer, gpointer, (*value != NULL))
  * list.
  *
  * The resulting string in @value will be in UTF-8 encoding and should be
- * freed by the caller using g_free when no longer needed.
+ * freed by the caller using g_free when no longer needed. Since 0.10.24 the
+ * returned string is also guaranteed to be non-NULL and non-empty.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.

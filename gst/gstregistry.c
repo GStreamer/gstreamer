@@ -933,12 +933,11 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
 
 /**
  * gst_registry_scan_path:
- * @registry: the registry to add the path to
- * @path: the path to add to the registry
+ * @registry: the registry to add found plugins to
+ * @path: the path to scan
  *
- * Add the given path to the registry. The syntax of the
- * path is specific to the registry. If the path has already been
- * added, do nothing.
+ * Scan the given path for plugins to add to the registry. The syntax of the
+ * path is specific to the registry.
  *
  * Returns: %TRUE if registry changed
  */

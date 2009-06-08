@@ -49,7 +49,10 @@
  * Fields can be removed with gst_structure_remove_field() or
  * gst_structure_remove_fields().
  *
- * Last reviewed on 2007-10-16 (0.10.15)
+ * Strings in structures must be ASCII or UTF-8 encoded. Other encodings are
+ * not allowed. Strings must not be empty either, but may be NULL.
+ *
+ * Last reviewed on 2009-06-08 (0.10.23)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1220,6 +1223,11 @@ gst_structure_get_fourcc (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
+ * On success @value will point to a newly-allocated copy of the date which
+ * should be freed with g_date_free() when no longer needed (note: this is
+ * inconsistent with e.g. gst_structure_get_string() which doesn't return a
+ * copy of the string).
+ *
  * Returns: TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain a data, this function
  * returns FALSE.
@@ -1241,6 +1249,7 @@ gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
   if (!GST_VALUE_HOLDS_DATE (&field->value))
     return FALSE;
 
+  /* FIXME: 0.11 g_value_dup_boxed() -> g_value_get_boxed() */
   *value = g_value_dup_boxed (&field->value);
 
   return TRUE;
