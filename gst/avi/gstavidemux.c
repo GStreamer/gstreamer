@@ -410,6 +410,23 @@ gst_avi_demux_get_src_formats (GstPad * pad)
 }
 #endif
 
+/* assumes stream->strf.auds->av_bps != 0 */
+static inline GstClockTime
+avi_stream_convert_bytes_to_time_unchecked (avi_stream_context * stream,
+    guint64 bytes)
+{
+  return gst_util_uint64_scale (bytes, GST_SECOND, stream->strf.auds->av_bps);
+}
+
+/* assumes stream->strh->rate != 0 */
+static inline GstClockTime
+avi_stream_convert_frames_to_time_unchecked (avi_stream_context * stream,
+    guint64 frames)
+{
+  return gst_util_uint64_scale (frames, stream->strh->scale * GST_SECOND,
+      stream->strh->rate);
+}
+
 static gboolean
 gst_avi_demux_src_convert (GstPad * pad,
     GstFormat src_format,
@@ -458,8 +475,8 @@ gst_avi_demux_src_convert (GstPad * pad,
       switch (*dest_format) {
         case GST_FORMAT_TIME:
           if (stream->strf.auds->av_bps != 0) {
-            *dest_value = gst_util_uint64_scale (src_value, GST_SECOND,
-                (guint64) stream->strf.auds->av_bps);
+            *dest_value = avi_stream_convert_bytes_to_time_unchecked (stream,
+                src_value);
           } else
             res = FALSE;
           break;
@@ -471,8 +488,8 @@ gst_avi_demux_src_convert (GstPad * pad,
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_TIME:
-          *dest_value = gst_util_uint64_scale (src_value,
-              stream->strh->scale * GST_SECOND, (guint64) stream->strh->rate);
+          *dest_value =
+              avi_stream_convert_frames_to_time_unchecked (stream, src_value);
           break;
         default:
           res = FALSE;
@@ -1024,7 +1041,6 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi,
   guint64 baseoff;
   gst_avi_index_entry *entries, *entry;
   GList *entries_list = NULL;
-  GstFormat format = GST_FORMAT_TIME;
   guint size;
 
   *_entries_list = NULL;
@@ -1087,16 +1103,16 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi,
     if (stream->is_vbr) {
       /* VBR stream next timestamp */
       if (stream->strh->type == GST_RIFF_FCC_auds) {
-        gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-            stream->total_blocks + 1, &format, &next_ts);
+        next_ts = avi_stream_convert_frames_to_time_unchecked (stream,
+            stream->total_blocks + 1);
       } else {
-        gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-            stream->total_frames + 1, &format, &next_ts);
+        next_ts = avi_stream_convert_frames_to_time_unchecked (stream,
+            stream->total_frames + 1);
       }
     } else {
       /* CBR get next timestamp */
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_BYTES,
-          stream->total_bytes + entry->size, &format, &next_ts);
+      next_ts = avi_stream_convert_bytes_to_time_unchecked (stream,
+          stream->total_bytes + entry->size);
     }
     /* duration is next - current */
     entry->dur = next_ts - entry->ts;
@@ -1912,16 +1928,16 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
     if (stream->is_vbr) {
       /* VBR stream next timestamp */
       if (stream->strh->type == GST_RIFF_FCC_auds) {
-        gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-            stream->total_blocks + 1, &format, &next_ts);
+        next_ts = avi_stream_convert_frames_to_time_unchecked (stream,
+            stream->total_blocks + 1);
       } else {
-        gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-            stream->total_frames + 1, &format, &next_ts);
+        next_ts = avi_stream_convert_frames_to_time_unchecked (stream,
+            stream->total_frames + 1);
       }
     } else {
       /* constant rate stream */
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_BYTES,
-          stream->total_bytes + target->size, &format, &next_ts);
+      next_ts = avi_stream_convert_bytes_to_time_unchecked (stream,
+          stream->total_bytes + target->size);
     }
     /* duration is next - current */
     target->dur = next_ts - target->ts;
@@ -2364,7 +2380,6 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
   while (TRUE) {
     guint stream_nr;
     guint size = 0;
-    gint64 tmpts, tmpnextts;
 
     res = gst_avi_demux_next_data_buffer (avi, &pos, &tag, &size);
     if (G_UNLIKELY (res != GST_FLOW_OK))
@@ -2404,26 +2419,25 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
     format = GST_FORMAT_TIME;
     if (stream->is_vbr) {
       /* VBR stream */
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-          stream->total_frames, &format, &tmpts);
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-          stream->total_frames + 1, &format, &tmpnextts);
+      entry->ts = avi_stream_convert_frames_to_time_unchecked (stream,
+          stream->total_frames);
+      entry->dur = avi_stream_convert_frames_to_time_unchecked (stream,
+          stream->total_frames + 1);
     } else {
       /* constant rate stream */
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_BYTES,
-          stream->total_bytes, &format, &tmpts);
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_BYTES,
-          stream->total_bytes + entry->size, &format, &tmpnextts);
+      entry->ts = avi_stream_convert_bytes_to_time_unchecked (stream,
+          stream->total_bytes);
+      entry->dur = avi_stream_convert_bytes_to_time_unchecked (stream,
+          stream->total_bytes + entry->size);
     }
-    entry->ts = tmpts;
-    entry->dur = tmpnextts - tmpts;
+    entry->dur -= entry->ts;
 
     /* stream position */
     entry->bytes_before = stream->total_bytes;
     stream->total_bytes += entry->size;
     entry->frames_before = stream->total_frames;
     stream->total_frames++;
-    stream->idx_duration = tmpnextts;
+    stream->idx_duration = entry->ts + entry->dur;
 
     list = g_list_prepend (list, entry);
     GST_DEBUG_OBJECT (avi, "Added index entry %d (in stream: %d), offset %"
@@ -2466,16 +2480,16 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
     /* timestamps */
     if (stream->is_vbr) {
       /* VBR stream */
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-          stream->total_frames, &format, &entry->ts);
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-          stream->total_frames + 1, &format, &entry->dur);
+      entry->ts = avi_stream_convert_frames_to_time_unchecked (stream,
+          stream->total_frames);
+      entry->dur = avi_stream_convert_frames_to_time_unchecked (stream,
+          stream->total_frames + 1);
     } else {
       /* constant rate stream */
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_BYTES,
-          stream->total_bytes, &format, &entry->ts);
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_BYTES,
-          stream->total_bytes + entry->size, &format, &entry->dur);
+      entry->ts = avi_stream_convert_bytes_to_time_unchecked (stream,
+          stream->total_bytes);
+      entry->dur = avi_stream_convert_bytes_to_time_unchecked (stream,
+          stream->total_bytes + entry->size);
     }
     entry->dur -= entry->ts;
 
