@@ -2012,8 +2012,12 @@ gst_structure_get_name
 gst_structure_has_name
 gst_structure_set_name
 gst_structure_get_name_id
+gst_structure_id_get
+gst_structure_id_get_valist
 gst_structure_id_get_value
 gst_structure_id_set_value
+gst_structure_get
+gst_structure_get_valist
 gst_structure_get_value
 gst_structure_set_value
 gst_structure_set

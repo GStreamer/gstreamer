@@ -433,6 +433,108 @@ GST_START_TEST (test_empty_string_fields)
 
 GST_END_TEST;
 
+GST_START_TEST (test_vararg_getters)
+{
+  GstStructure *s;
+  GstBuffer *buf, *buf2;
+  gboolean ret;
+  GstCaps *caps, *caps2;
+  gdouble d;
+  gint64 i64;
+  gchar *c;
+  gint i, num, denom;
+
+  buf = gst_buffer_new_and_alloc (3);
+  GST_BUFFER_DATA (buf)[0] = 0xf0;
+  GST_BUFFER_DATA (buf)[1] = 0x66;
+  GST_BUFFER_DATA (buf)[2] = 0x0d;
+
+  caps = gst_caps_new_simple ("video/x-foo", NULL);
+
+  s = gst_structure_new ("test", "int", G_TYPE_INT, 12345678, "string",
+      G_TYPE_STRING, "Hello World!", "buf", GST_TYPE_BUFFER, buf, "caps",
+      GST_TYPE_CAPS, caps, "int64", G_TYPE_INT64, G_GINT64_CONSTANT (-99),
+      "double", G_TYPE_DOUBLE, G_MAXDOUBLE, "frag", GST_TYPE_FRACTION, 39, 14,
+      NULL);
+
+  /* first the plain one */
+  ret = gst_structure_get (s, "double", G_TYPE_DOUBLE, &d, "string",
+      G_TYPE_STRING, &c, "caps", GST_TYPE_CAPS, &caps2, "buf",
+      GST_TYPE_BUFFER, &buf2, "frag", GST_TYPE_FRACTION, &num, &denom, "int",
+      G_TYPE_INT, &i, "int64", G_TYPE_INT64, &i64, NULL);
+
+  fail_unless (ret);
+  fail_unless_equals_string (c, "Hello World!");
+  fail_unless_equals_int (i, 12345678);
+  fail_unless_equals_float (d, G_MAXDOUBLE);
+  fail_unless_equals_int (num, 39);
+  fail_unless_equals_int (denom, 14);
+  fail_unless (i64 == -99);
+  fail_unless (caps == caps2);
+  fail_unless (buf == buf2);
+
+  /* expected failures */
+  ASSERT_CRITICAL (gst_structure_get (s, NULL, G_TYPE_INT, &i, NULL));
+  fail_if (gst_structure_get (s, "int", G_TYPE_INT, &i, "double",
+          G_TYPE_FLOAT, &d, NULL));
+  fail_if (gst_structure_get (s, "int", G_TYPE_INT, &i, "dooble",
+          G_TYPE_DOUBLE, &d, NULL));
+
+  g_free (c);
+  c = NULL;
+  gst_caps_unref (caps2);
+  caps2 = NULL;
+  gst_buffer_unref (buf2);
+  buf2 = NULL;
+
+  /* and now the _id variant */
+  ret = gst_structure_id_get (s, g_quark_from_static_string ("double"),
+      G_TYPE_DOUBLE, &d, g_quark_from_static_string ("string"), G_TYPE_STRING,
+      &c, g_quark_from_static_string ("caps"), GST_TYPE_CAPS, &caps2,
+      g_quark_from_static_string ("buf"), GST_TYPE_BUFFER, &buf2,
+      g_quark_from_static_string ("int"), G_TYPE_INT, &i,
+      g_quark_from_static_string ("int64"), G_TYPE_INT64, &i64, NULL);
+
+  fail_unless (ret);
+  fail_unless_equals_string (c, "Hello World!");
+  fail_unless_equals_int (i, 12345678);
+  fail_unless_equals_float (d, G_MAXDOUBLE);
+  fail_unless (i64 == -99);
+  fail_unless (caps == caps2);
+  fail_unless (buf == buf2);
+
+  /* expected failures */
+  ASSERT_CRITICAL (gst_structure_get (s, 0, G_TYPE_INT, &i, NULL));
+  fail_if (gst_structure_id_get (s, g_quark_from_static_string ("int"),
+          G_TYPE_INT, &i, g_quark_from_static_string ("double"), G_TYPE_FLOAT,
+          &d, NULL));
+  fail_if (gst_structure_id_get (s, g_quark_from_static_string ("int"),
+          G_TYPE_INT, &i, g_quark_from_static_string ("dooble"), G_TYPE_DOUBLE,
+          &d, NULL));
+
+  g_free (c);
+  gst_caps_unref (caps2);
+  gst_buffer_unref (buf2);
+
+  /* finally make sure NULL as return location is handled gracefully */
+  ret = gst_structure_get (s, "double", G_TYPE_DOUBLE, NULL, "string",
+      G_TYPE_STRING, NULL, "caps", GST_TYPE_CAPS, NULL, "buf",
+      GST_TYPE_BUFFER, NULL, "int", G_TYPE_INT, &i, "frag", GST_TYPE_FRACTION,
+      NULL, NULL, "int64", G_TYPE_INT64, &i64, NULL);
+
+  ASSERT_WARNING (gst_structure_get (s, "frag", GST_TYPE_FRACTION, NULL,
+          &denom, NULL));
+  ASSERT_WARNING (gst_structure_get (s, "frag", GST_TYPE_FRACTION, &num,
+          NULL, NULL));
+
+  /* clean up */
+  gst_caps_unref (caps);
+  gst_buffer_unref (buf);
+  gst_structure_free (s);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_structure_suite (void)
 {
@@ -451,6 +553,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_structure_nested);
   tcase_add_test (tc_chain, test_structure_nested_from_and_to_string);
   tcase_add_test (tc_chain, test_empty_string_fields);
+  tcase_add_test (tc_chain, test_vararg_getters);
   return s;
 }
 

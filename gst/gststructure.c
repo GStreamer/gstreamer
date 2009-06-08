@@ -2342,3 +2342,250 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
 
   return FALSE;
 }
+
+/* our very own version of G_VALUE_LCOPY that allows NULL return locations
+ * (useful for message parsing functions where the return location is user
+ * supplied and the user may pass NULL if the value isn't of interest) */
+#define GST_VALUE_LCOPY(value, var_args, flags, __error, fieldname)           \
+G_STMT_START {                                                                \
+  const GValue *_value = (value);                                             \
+  guint _flags = (flags);                                                     \
+  GType _value_type = G_VALUE_TYPE (_value);                                  \
+  GTypeValueTable *_vtable = g_type_value_table_peek (_value_type);           \
+  gchar *_lcopy_format = _vtable->lcopy_format;                               \
+  GTypeCValue _cvalues[G_VALUE_COLLECT_FORMAT_MAX_LENGTH] = { { 0, }, };      \
+  guint _n_values = 0;                                                        \
+                                                                              \
+  while (*_lcopy_format != '\0') {                                            \
+    g_assert (*_lcopy_format == G_VALUE_COLLECT_POINTER);                     \
+    _cvalues[_n_values++].v_pointer = va_arg ((var_args), gpointer);          \
+    _lcopy_format++;                                                          \
+  }                                                                           \
+  if (_n_values == 2 && !!_cvalues[0].v_pointer != !!_cvalues[1].v_pointer) { \
+    *(__error) = g_strdup_printf ("either all or none of the return "         \
+        "locations for field '%s' need to be NULL", fieldname);               \
+  } else if (_cvalues[0].v_pointer != NULL) {                                 \
+    *(__error) = _vtable->lcopy_value (_value, _n_values, _cvalues, _flags);  \
+  }                                                                           \
+} G_STMT_END
+
+/**
+ * gst_structure_get_valist:
+ * @structure: a #GstStructure
+ * @first_fieldname: the name of the first field to read
+ * @valist: variable arguments
+ *
+ * Parses the variable arguments and reads fields from @structure accordingly.
+ * valist-variant of gst_structure_get(). Look at the documentation of
+ * gst_structure_get() for more details.
+ *
+ * Returns: TRUE, or FALSE if there was a problem reading any of the fields
+ *
+ * Since: 0.10.24
+ */
+gboolean
+gst_structure_get_valist (GstStructure * structure,
+    const char *first_fieldname, va_list args)
+{
+  const char *field_name;
+  GType expected_type = G_TYPE_INVALID;
+
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure), FALSE);
+  g_return_val_if_fail (first_fieldname != NULL, FALSE);
+
+  field_name = first_fieldname;
+  while (field_name) {
+    const GValue *val = NULL;
+    gchar *err = NULL;
+
+    expected_type = va_arg (args, GType);
+
+    val = gst_structure_get_value (structure, field_name);
+
+    if (val == NULL)
+      goto no_such_field;
+
+    if (G_VALUE_TYPE (val) != expected_type)
+      goto wrong_type;
+
+    GST_VALUE_LCOPY (val, args, 0, &err, field_name);
+    if (err) {
+      g_warning ("%s: %s", G_STRFUNC, err);
+      g_free (err);
+      return FALSE;
+    }
+
+    field_name = va_arg (args, const gchar *);
+  }
+
+  return TRUE;
+
+/* ERRORS */
+no_such_field:
+  {
+    GST_WARNING ("Expected field '%s' in structure: %" GST_PTR_FORMAT,
+        field_name, structure);
+    return FALSE;
+  }
+wrong_type:
+  {
+    GST_WARNING ("Expected field '%s' in structure to be of type '%s', but "
+        "field was of type '%s': %" GST_PTR_FORMAT, field_name,
+        GST_STR_NULL (g_type_name (expected_type)),
+        G_VALUE_TYPE_NAME (gst_structure_get_value (structure, field_name)),
+        structure);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_structure_id_get_valist:
+ * @structure: a #GstStructure
+ * @first_field_id: the quark of the first field to read
+ * @valist: variable arguments
+ *
+ * Parses the variable arguments and reads fields from @structure accordingly.
+ * valist-variant of gst_structure_id_get(). Look at the documentation of
+ * gst_structure_id_get() for more details.
+ *
+ * Returns: TRUE, or FALSE if there was a problem reading any of the fields
+ *
+ * Since: 0.10.24
+ */
+gboolean
+gst_structure_id_get_valist (GstStructure * structure, GQuark first_field_id,
+    va_list args)
+{
+  GQuark field_id;
+  GType expected_type = G_TYPE_INVALID;
+
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure), FALSE);
+  g_return_val_if_fail (first_field_id != 0, FALSE);
+
+  field_id = first_field_id;
+  while (field_id) {
+    const GValue *val = NULL;
+    gchar *err = NULL;
+
+    expected_type = va_arg (args, GType);
+
+    val = gst_structure_id_get_value (structure, field_id);
+
+    if (val == NULL)
+      goto no_such_field;
+
+    if (G_VALUE_TYPE (val) != expected_type)
+      goto wrong_type;
+
+    GST_VALUE_LCOPY (val, args, 0, &err, g_quark_to_string (field_id));
+    if (err) {
+      g_warning ("%s: %s", G_STRFUNC, err);
+      g_free (err);
+      return FALSE;
+    }
+
+    field_id = va_arg (args, GQuark);
+  }
+
+  return TRUE;
+
+/* ERRORS */
+no_such_field:
+  {
+    GST_WARNING ("Expected field '%s' in structure: %" GST_PTR_FORMAT,
+        GST_STR_NULL (g_quark_to_string (field_id)), structure);
+    return FALSE;
+  }
+wrong_type:
+  {
+    GST_WARNING ("Expected field '%s' in structure to be of type '%s', but "
+        "field was of type '%s': %" GST_PTR_FORMAT,
+        g_quark_to_string (field_id),
+        GST_STR_NULL (g_type_name (expected_type)),
+        G_VALUE_TYPE_NAME (gst_structure_id_get_value (structure, field_id)),
+        structure);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_structure_get:
+ * @structure: a #GstStructure
+ * @first_fieldname: the name of the first field to read
+ * @...: variable arguments
+ *
+ * Parses the variable arguments and reads fields from @structure accordingly.
+ * Variable arguments should be in the form field name, field type
+ * (as a GType), pointer(s) to a variable(s) to hold the return value(s).
+ * The last variable argument should be NULL.
+ *
+ * For refcounted (mini)objects you will acquire your own reference which
+ * you must release with a suitable _unref() when no longer needed. For
+ * strings and boxed types you will acquire a copy which you will need to
+ * release with either g_free() or the suiteable function for the boxed type.
+ *
+ * Returns: FALSE if there was a problem reading any of the fields (e.g.
+ *     because the field requested did not exist, or was of a type other
+ *     than the type specified), otherwise TRUE.
+ *
+ * Since: 0.10.24
+ */
+gboolean
+gst_structure_get (GstStructure * structure, const char *first_fieldname, ...)
+{
+  gboolean ret;
+  va_list args;
+
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure), FALSE);
+  g_return_val_if_fail (first_fieldname != NULL, FALSE);
+
+  va_start (args, first_fieldname);
+  ret = gst_structure_get_valist (structure, first_fieldname, args);
+  va_end (args);
+
+  return ret;
+}
+
+/**
+ * gst_structure_id_get:
+ * @structure: a #GstStructure
+ * @first_field_id: the quark of the first field to read
+ * @...: variable arguments
+ *
+ * Parses the variable arguments and reads fields from @structure accordingly.
+ * Variable arguments should be in the form field id quark, field type
+ * (as a GType), pointer(s) to a variable(s) to hold the return value(s).
+ * The last variable argument should be NULL (technically it should be a
+ * 0 quark, but we require NULL so compilers that support it can check for
+ * the NULL terminator and warn if it's not there).
+ *
+ * This function is just like gst_structure_get() only that it is slightly
+ * more efficient since it saves the string-to-quark lookup in the global
+ * quark hashtable.
+ *
+ * For refcounted (mini)objects you will acquire your own reference which
+ * you must release with a suitable _unref() when no longer needed. For
+ * strings and boxed types you will acquire a copy which you will need to
+ * release with either g_free() or the suiteable function for the boxed type.
+ *
+ * Returns: FALSE if there was a problem reading any of the fields (e.g.
+ *     because the field requested did not exist, or was of a type other
+ *     than the type specified), otherwise TRUE.
+ *
+ * Since: 0.10.24
+ */
+gboolean
+gst_structure_id_get (GstStructure * structure, GQuark first_field_id, ...)
+{
+  gboolean ret;
+  va_list args;
+
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure), FALSE);
+  g_return_val_if_fail (first_field_id != 0, FALSE);
+
+  va_start (args, first_field_id);
+  ret = gst_structure_id_get_valist (structure, first_field_id, args);
+  va_end (args);
+
+  return ret;
+}

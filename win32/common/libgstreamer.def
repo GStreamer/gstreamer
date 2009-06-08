@@ -866,6 +866,7 @@ EXPORTS
 	gst_structure_foreach
 	gst_structure_free
 	gst_structure_from_string
+	gst_structure_get
 	gst_structure_get_boolean
 	gst_structure_get_clock_time
 	gst_structure_get_date
@@ -880,11 +881,14 @@ EXPORTS
 	gst_structure_get_string
 	gst_structure_get_type
 	gst_structure_get_uint
+	gst_structure_get_valist
 	gst_structure_get_value
 	gst_structure_has_field
 	gst_structure_has_field_typed
 	gst_structure_has_name
 	gst_structure_id_empty_new
+	gst_structure_id_get
+	gst_structure_id_get_valist
 	gst_structure_id_get_value
 	gst_structure_id_new
 	gst_structure_id_set
