@@ -35,6 +35,12 @@ G_BEGIN_DECLS
 #define GST_IS_VDP_MPEG_DEC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDP_MPEG_DEC))
 #define GST_IS_VDP_MPEG_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDP_MPEG_DEC))
 
+typedef enum {
+  GST_VDP_MPEG_DEC_NEED_SEQUENCE,
+  GST_VDP_MPEG_DEC_NEED_GOP,
+  GST_VDP_MPEG_DEC_NEED_DATA
+} GstVdpMpegDecState;
+
 typedef struct _GstVdpMpegDec      GstVdpMpegDec;
 typedef struct _GstVdpMpegDecClass GstVdpMpegDecClass;
 
@@ -56,6 +62,9 @@ struct _GstVdpMpegDec
   gboolean interlaced;
   gint version;
 
+  /* decoder state */
+  GstVdpMpegDecState state;
+  
   /* currently decoded frame info */
   GstAdapter *adapter;
   VdpPictureInfoMPEG1Or2 vdp_info;

@@ -499,6 +499,9 @@ gst_vdp_mpeg_dec_parse_sequence (GstVdpMpegDec * mpeg_dec, GstBuffer * buffer)
   memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
       &hdr.non_intra_quantizer_matrix, 64);
 
+  if (mpeg_dec->state == GST_VDP_MPEG_DEC_NEED_SEQUENCE)
+    mpeg_dec->state = GST_VDP_MPEG_DEC_NEED_DATA;
+
   return TRUE;
 }
 
@@ -555,6 +558,9 @@ gst_vdp_mpeg_dec_parse_gop (GstVdpMpegDec * mpeg_dec, GstBuffer * buffer)
       gst_util_uint64_scale (time, mpeg_dec->fps_n,
       mpeg_dec->fps_d * GST_SECOND) + gop.frame;
 
+  if (mpeg_dec->state == GST_VDP_MPEG_DEC_NEED_GOP)
+    mpeg_dec->state = GST_VDP_MPEG_DEC_NEED_DATA;
+
   return TRUE;
 }
 
@@ -600,6 +606,8 @@ gst_vdp_mpeg_dec_reset (GstVdpMpegDec * mpeg_dec)
   if (mpeg_dec->device)
     g_object_unref (mpeg_dec->device);
   mpeg_dec->device = NULL;
+
+  mpeg_dec->state = GST_VDP_MPEG_DEC_NEED_SEQUENCE;
 
   gst_segment_init (&mpeg_dec->segment, GST_FORMAT_TIME);
   mpeg_dec->seeking = FALSE;
@@ -686,6 +694,12 @@ gst_vdp_mpeg_dec_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     gst_buffer_unref (buf);
+  }
+
+  if (mpeg_dec->state == GST_VDP_MPEG_DEC_NEED_SEQUENCE ||
+      mpeg_dec->state == GST_VDP_MPEG_DEC_NEED_GOP) {
+    gst_adapter_clear (mpeg_dec->adapter);
+    goto done;
   }
 
   if (mpeg_dec->vdp_info.slice_count > 0)
@@ -843,8 +857,10 @@ normal_seek (GstVdpMpegDec * mpeg_dec, GstEvent * event)
     /* do the seek */
     res = gst_pad_push_event (mpeg_dec->sink, peer_event);
 
-    if (res)
+    if (res) {
+      mpeg_dec->state = GST_VDP_MPEG_DEC_NEED_GOP;
       mpeg_dec->seeking = TRUE;
+    }
 
     g_mutex_unlock (mpeg_dec->mutex);
 
