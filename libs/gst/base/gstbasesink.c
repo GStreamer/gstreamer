@@ -1492,10 +1492,8 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
 
   /* set the new rate for the remainder of the segment */
   current->start_rate = segment->rate;
-  /* no rate yet, it only works in playing */
-  /* segment->rate *= current->rate; 
-   * segment->abs_rate = ABS (segment->rate);
-   * */
+  segment->rate *= current->rate;
+  segment->abs_rate = ABS (segment->rate);
 
   GST_DEBUG_OBJECT (sink, "step started at running_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (current->start));
@@ -1515,7 +1513,7 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
     GstStepInfo * current, guint64 cstart, guint64 cstop, gint64 * rstart,
     gint64 * rstop)
 {
-  gint64 stop;
+  gint64 stop, position;
   GstMessage *message;
 
   GST_DEBUG_OBJECT (sink, "step complete");
@@ -1537,17 +1535,23 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
       GST_TIME_ARGS (current->duration));
 
   /* now move the segment to the new running time */
-  gst_segment_set_running_time (segment, GST_FORMAT_TIME,
-      current->start + current->duration);
+  position = current->start + current->duration;
+  gst_segment_set_running_time (segment, GST_FORMAT_TIME, position);
+  gst_element_set_start_time (GST_ELEMENT_CAST (sink), position);
+
   /* restore the previous rate */
   segment->rate = current->start_rate;
   segment->abs_rate = ABS (segment->rate);
-  /* and remove the accumulated time we stepped */
-  segment->accum = current->start;
+
+  if (current->flush) {
+    /* and remove the accumulated time we flushed */
+    segment->accum = current->start;
+  }
 
   /* the clip segment is used for position report in paused... */
   memcpy (sink->abidata.ABI.clip_segment, segment, sizeof (GstSegment));
 
+  /* post the step done when we know the stepped duration in TIME */
   message =
       gst_message_new_step_done (GST_OBJECT_CAST (sink), current->format,
       current->amount, current->rate, current->flush, current->intermediate,
@@ -1589,6 +1593,9 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
 
       end = current->start + current->amount;
       current->position = first - current->start;
+
+      if (G_UNLIKELY (segment->abs_rate != 1.0))
+        current->position /= segment->abs_rate;
 
       GST_DEBUG_OBJECT (sink,
           "buffer: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
@@ -1771,8 +1778,10 @@ do_times:
 
   if (G_UNLIKELY (step->valid)) {
     if (!(step_end = handle_stepping (basesink, segment, step, &cstart, &cstop,
-                &rstart, &rstop)))
-      *stepped = TRUE;
+                &rstart, &rstop))) {
+      /* step is still busy, we discard data when we are flushing */
+      *stepped = step->flush;
+    }
   }
   /* this can produce wrong values if we accumulated non-TIME segments. If this happens,
    * upstream is behaving very badly */
@@ -2920,6 +2929,8 @@ gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad)
   basesink->priv->current_sstop = -1;
   basesink->priv->eos_rtime = -1;
   basesink->priv->call_preroll = TRUE;
+  basesink->priv->current_step.valid = FALSE;
+  basesink->priv->pending_step.valid = FALSE;
   if (basesink->pad_mode == GST_ACTIVATE_PUSH) {
     /* we need new segment info after the flush. */
     basesink->have_newsegment = FALSE;
@@ -3427,6 +3438,23 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   return res;
 }
 
+static void
+set_step_info (GstBaseSink * sink, GstStepInfo * info, guint seqnum,
+    GstFormat format, guint64 amount, gdouble rate, gboolean flush,
+    gboolean intermediate)
+{
+  GST_OBJECT_LOCK (sink);
+  info->seqnum = seqnum;
+  info->format = format;
+  info->amount = amount;
+  info->position = 0;
+  info->rate = rate;
+  info->flush = flush;
+  info->intermediate = intermediate;
+  info->valid = TRUE;
+  GST_OBJECT_UNLOCK (sink);
+}
+
 static gboolean
 gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
 {
@@ -3461,14 +3489,8 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       bclass->unlock_stop (sink);
 
     /* update the stepinfo and make it valid */
-    pending->seqnum = seqnum;
-    pending->format = format;
-    pending->amount = amount;
-    pending->position = 0;
-    pending->rate = rate;
-    pending->flush = flush;
-    pending->intermediate = intermediate;
-    pending->valid = TRUE;
+    set_step_info (sink, pending, seqnum, format, amount, rate, flush,
+        intermediate);
 
     if (sink->priv->async_enabled) {
       /* and we need to commit our state again on the next
@@ -3498,6 +3520,10 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       GST_PAD_PREROLL_SIGNAL (sink->sinkpad);
     }
     GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
+  } else {
+    /* update the stepinfo and make it valid */
+    set_step_info (sink, pending, seqnum, format, amount, rate, flush,
+        intermediate);
   }
 
   return TRUE;
