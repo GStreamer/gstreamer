@@ -214,7 +214,8 @@ gst_rtsp_message_parse_request (GstRTSPMessage * msg,
     GstRTSPMethod * method, const gchar ** uri, GstRTSPVersion * version)
 {
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (msg->type == GST_RTSP_MESSAGE_REQUEST, GST_RTSP_EINVAL);
+  g_return_val_if_fail (msg->type == GST_RTSP_MESSAGE_REQUEST ||
+      msg->type == GST_RTSP_MESSAGE_HTTP_REQUEST, GST_RTSP_EINVAL);
 
   if (method)
     *method = msg->type_data.request.method;
@@ -292,33 +293,40 @@ gst_rtsp_message_init_response (GstRTSPMessage * msg, GstRTSPStatusCode code,
   msg->hdr_fields = g_array_new (FALSE, FALSE, sizeof (RTSPKeyValue));
 
   if (request) {
-    gchar *header;
+    if (request->type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
+      msg->type = GST_RTSP_MESSAGE_HTTP_RESPONSE;
+      if (request->type_data.request.version != GST_RTSP_VERSION_INVALID)
+        msg->type_data.response.version = request->type_data.request.version;
+      else
+        msg->type_data.response.version = GST_RTSP_VERSION_1_1;
+    } else {
+      gchar *header;
 
-    /* copy CSEQ */
-    if (gst_rtsp_message_get_header (request, GST_RTSP_HDR_CSEQ, &header,
-            0) == GST_RTSP_OK) {
-      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CSEQ, header);
-    }
-
-    /* copy session id */
-    if (gst_rtsp_message_get_header (request, GST_RTSP_HDR_SESSION, &header,
-            0) == GST_RTSP_OK) {
-      char *pos;
-
-      header = g_strdup (header);
-      if ((pos = strchr (header, ';'))) {
-        *pos = '\0';
+      /* copy CSEQ */
+      if (gst_rtsp_message_get_header (request, GST_RTSP_HDR_CSEQ, &header,
+              0) == GST_RTSP_OK) {
+        gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CSEQ, header);
       }
-      g_strchomp (header);
-      gst_rtsp_message_take_header (msg, GST_RTSP_HDR_SESSION, header);
-    }
 
-    /* FIXME copy more headers? */
+      /* copy session id */
+      if (gst_rtsp_message_get_header (request, GST_RTSP_HDR_SESSION, &header,
+              0) == GST_RTSP_OK) {
+        char *pos;
+
+        header = g_strdup (header);
+        if ((pos = strchr (header, ';'))) {
+          *pos = '\0';
+        }
+        g_strchomp (header);
+        gst_rtsp_message_take_header (msg, GST_RTSP_HDR_SESSION, header);
+      }
+
+      /* FIXME copy more headers? */
+    }
   }
 
   return GST_RTSP_OK;
 }
-
 
 /**
  * gst_rtsp_message_parse_response:
@@ -340,8 +348,8 @@ gst_rtsp_message_parse_response (GstRTSPMessage * msg,
     GstRTSPStatusCode * code, const gchar ** reason, GstRTSPVersion * version)
 {
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (msg->type == GST_RTSP_MESSAGE_RESPONSE,
-      GST_RTSP_EINVAL);
+  g_return_val_if_fail (msg->type == GST_RTSP_MESSAGE_RESPONSE ||
+      msg->type == GST_RTSP_MESSAGE_HTTP_RESPONSE, GST_RTSP_EINVAL);
 
   if (code)
     *code = msg->type_data.response.code;
@@ -440,9 +448,11 @@ gst_rtsp_message_unset (GstRTSPMessage * msg)
     case GST_RTSP_MESSAGE_INVALID:
       break;
     case GST_RTSP_MESSAGE_REQUEST:
+    case GST_RTSP_MESSAGE_HTTP_REQUEST:
       g_free (msg->type_data.request.uri);
       break;
     case GST_RTSP_MESSAGE_RESPONSE:
+    case GST_RTSP_MESSAGE_HTTP_RESPONSE:
       g_free (msg->type_data.response.reason);
       break;
     case GST_RTSP_MESSAGE_DATA:
@@ -786,6 +796,33 @@ gst_rtsp_message_dump (GstRTSPMessage * msg)
       g_print (" status line:\n");
       g_print ("   code:   '%d'\n", msg->type_data.response.code);
       g_print ("   reason: '%s'\n", msg->type_data.response.reason);
+      g_print ("   version: '%s'\n",
+          gst_rtsp_version_as_text (msg->type_data.response.version));
+      g_print (" headers:\n");
+      key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
+      gst_rtsp_message_get_body (msg, &data, &size);
+      g_print (" body: length %d\n", size);
+      gst_util_dump_mem (data, size);
+      break;
+    case GST_RTSP_MESSAGE_HTTP_REQUEST:
+      g_print ("HTTP request message %p\n", msg);
+      g_print (" request line:\n");
+      g_print ("   method:  '%s'\n",
+          gst_rtsp_method_as_text (msg->type_data.request.method));
+      g_print ("   uri:     '%s'\n", msg->type_data.request.uri);
+      g_print ("   version: '%s'\n",
+          gst_rtsp_version_as_text (msg->type_data.request.version));
+      g_print (" headers:\n");
+      key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
+      g_print (" body:\n");
+      gst_rtsp_message_get_body (msg, &data, &size);
+      gst_util_dump_mem (data, size);
+      break;
+    case GST_RTSP_MESSAGE_HTTP_RESPONSE:
+      g_print ("HTTP response message %p\n", msg);
+      g_print (" status line:\n");
+      g_print ("   code:    '%d'\n", msg->type_data.response.code);
+      g_print ("   reason:  '%s'\n", msg->type_data.response.reason);
       g_print ("   version: '%s'\n",
           gst_rtsp_version_as_text (msg->type_data.response.version));
       g_print (" headers:\n");

@@ -1350,6 +1350,21 @@ message_to_string (GstRTSPConnection * conn, GstRTSPMessage * message)
       g_string_append_printf (str, "RTSP/1.0 %d %s\r\n",
           message->type_data.response.code, message->type_data.response.reason);
       break;
+    case GST_RTSP_MESSAGE_HTTP_REQUEST:
+      /* create request string */
+      g_string_append_printf (str, "%s %s HTTP/%s\r\n",
+          gst_rtsp_method_as_text (message->type_data.request.method),
+          message->type_data.request.uri,
+          gst_rtsp_version_as_text (message->type_data.request.version));
+      /* add any authentication headers */
+      add_auth_header (conn, message);
+      break;
+    case GST_RTSP_MESSAGE_HTTP_RESPONSE:
+      /* create response string */
+      g_string_append_printf (str, "HTTP/%s %d %s\r\n",
+          gst_rtsp_version_as_text (message->type_data.request.version),
+          message->type_data.response.code, message->type_data.response.reason);
+      break;
     case GST_RTSP_MESSAGE_DATA:
     {
       guint8 data_header[4];

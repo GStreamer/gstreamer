@@ -101,6 +101,8 @@ static const gchar *rtsp_methods[] = {
   "SETUP",
   "SET_PARAMETER",
   "TEARDOWN",
+  "GET",
+  "POST",
   NULL
 };
 
@@ -184,9 +186,12 @@ static const gchar *rtsp_headers[] = {
   "X-Receding-PlaylistChange",  /* X-Receding-PlaylistChange */
   "X-RTP-Info",                 /* X-RTP-Info */
   "X-StartupProfile",           /* X-StartupProfile */
+
   "Timestamp",                  /* Timestamp */
 
   "Authentication-Info",        /* Authentication-Info */
+  "Host",                       /* Host */
+  "X-Sessioncookie",            /* X-Sessioncookie */
 
   NULL
 };
@@ -338,6 +343,9 @@ gst_rtsp_version_as_text (GstRTSPVersion version)
   switch (version) {
     case GST_RTSP_VERSION_1_0:
       return "1.0";
+
+    case GST_RTSP_VERSION_1_1:
+      return "1.1";
 
     default:
       return "0.0";

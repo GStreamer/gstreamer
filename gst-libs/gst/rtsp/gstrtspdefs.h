@@ -157,12 +157,14 @@ typedef enum {
  * GstRTSPVersion:
  * @GST_RTSP_VERSION_INVALID: unknown/invalid version
  * @GST_RTSP_VERSION_1_0: version 1.0
+ * @GST_RTSP_VERSION_1_1: version 1.1
  *
  * The supported RTSP versions.
  */
 typedef enum {
   GST_RTSP_VERSION_INVALID = 0x00,
-  GST_RTSP_VERSION_1_0     = 0x10
+  GST_RTSP_VERSION_1_0     = 0x10,
+  GST_RTSP_VERSION_1_1     = 0x11
 } GstRTSPVersion;
 
 /**
@@ -179,6 +181,8 @@ typedef enum {
  * @GST_RTSP_SETUP: the SETUP method
  * @GST_RTSP_SET_PARAMETER: the SET_PARAMETER method
  * @GST_RTSP_TEARDOWN: the TEARDOWN method
+ * @GST_RTSP_GET: the GET method (HTTP)
+ * @GST_RTSP_POST: the POST method (HTTP)
  *
  * The different supported RTSP methods. 
  */
@@ -194,7 +198,9 @@ typedef enum {
   GST_RTSP_REDIRECT         = (1 <<  7),
   GST_RTSP_SETUP            = (1 <<  8),
   GST_RTSP_SET_PARAMETER    = (1 <<  9),
-  GST_RTSP_TEARDOWN         = (1 << 10)
+  GST_RTSP_TEARDOWN         = (1 << 10),
+  GST_RTSP_GET              = (1 << 11),
+  GST_RTSP_POST             = (1 << 12)
 } GstRTSPMethod;
 
 /**
@@ -315,6 +321,8 @@ typedef enum {
 
   /* Since 0.10.25 */
   GST_RTSP_HDR_AUTHENTICATION_INFO, /* Authentication-Info */
+  GST_RTSP_HDR_HOST,                /* Host */
+  GST_RTSP_HDR_X_SESSIONCOOKIE,     /* X-Sessioncookie */
 
   GST_RTSP_HDR_LAST
 } GstRTSPHeaderField;

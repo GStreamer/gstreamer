@@ -52,8 +52,10 @@ G_BEGIN_DECLS
 /**
  * GstRTSPMsgType:
  * @GST_RTSP_MESSAGE_INVALID: invalid message type
- * @GST_RTSP_MESSAGE_REQUEST: request message
- * @GST_RTSP_MESSAGE_RESPONSE: response message
+ * @GST_RTSP_MESSAGE_REQUEST: RTSP request message
+ * @GST_RTSP_MESSAGE_RESPONSE: RTSP response message
+ * @GST_RTSP_MESSAGE_HTTP_REQUEST: HTTP request message
+ * @GST_RTSP_MESSAGE_HTTP_RESPONSE: HTTP response message
  * @GST_RTSP_MESSAGE_DATA: data message
  *
  * The type of a message.
@@ -63,6 +65,8 @@ typedef enum
   GST_RTSP_MESSAGE_INVALID,
   GST_RTSP_MESSAGE_REQUEST,
   GST_RTSP_MESSAGE_RESPONSE,
+  GST_RTSP_MESSAGE_HTTP_REQUEST,
+  GST_RTSP_MESSAGE_HTTP_RESPONSE,
   GST_RTSP_MESSAGE_DATA
 } GstRTSPMsgType;
 
@@ -135,6 +139,7 @@ GstRTSPResult      gst_rtsp_message_parse_response  (GstRTSPMessage *msg,
                                                      GstRTSPStatusCode *code,
                                                      const gchar **reason,
                                                      GstRTSPVersion *version);
+
 /* data */
 GstRTSPResult      gst_rtsp_message_new_data        (GstRTSPMessage **msg,
                                                      guint8 channel);
