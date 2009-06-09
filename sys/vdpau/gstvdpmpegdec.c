@@ -1075,6 +1075,7 @@ static void
 gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec, GstVdpMpegDecClass * gclass)
 {
   mpeg_dec->src = gst_pad_new_from_static_template (&src_template, "src");
+  gst_pad_use_fixed_caps (mpeg_dec->src);
   gst_pad_set_event_function (mpeg_dec->src,
       GST_DEBUG_FUNCPTR (gst_vdp_mpeg_dec_src_event));
   gst_pad_set_query_function (mpeg_dec->src,
