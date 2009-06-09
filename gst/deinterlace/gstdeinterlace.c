@@ -384,6 +384,7 @@ static void gst_deinterlace_get_property (GObject * self, guint prop_id,
 static GstCaps *gst_deinterlace_getcaps (GstPad * pad);
 static gboolean gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_deinterlace_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_deinterlace_sink_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn gst_deinterlace_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn gst_deinterlace_change_state (GstElement * element,
     GstStateChange transition);
@@ -665,6 +666,8 @@ gst_deinterlace_init (GstDeinterlace * self, GstDeinterlaceClass * klass)
       GST_DEBUG_FUNCPTR (gst_deinterlace_setcaps));
   gst_pad_set_getcaps_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_deinterlace_getcaps));
+  gst_pad_set_query_function (self->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_deinterlace_sink_query));
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
@@ -1395,7 +1398,7 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
 
       /* fall through */
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (self->srcpad, event);
       break;
 
     case GST_EVENT_FLUSH_STOP:
@@ -1403,9 +1406,35 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (self, "Ending still frames");
         self->still_frame_mode = FALSE;
       }
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (self->srcpad, event);
       gst_deinterlace_reset_history (self);
       break;
+  }
+
+  gst_object_unref (self);
+  return res;
+}
+
+static gboolean
+gst_deinterlace_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstDeinterlace *self = GST_DEINTERLACE (gst_pad_get_parent (pad));
+  gboolean res = FALSE;
+
+  GST_LOG_OBJECT (self, "%s query", GST_QUERY_TYPE_NAME (query));
+
+  switch (GST_QUERY_TYPE (query)) {
+    default:{
+      GstPad *peer = gst_pad_get_peer (self->srcpad);
+
+      if (peer) {
+        res = gst_pad_query (peer, query);
+        gst_object_unref (peer);
+      } else {
+        res = FALSE;
+      }
+      break;
+    }
   }
 
   gst_object_unref (self);
@@ -1457,7 +1486,7 @@ gst_deinterlace_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (self->sinkpad, event);
       break;
   }
 
@@ -1520,13 +1549,21 @@ gst_deinterlace_src_query (GstPad * pad, GstQuery * query)
           }
           gst_object_unref (peer);
         } else {
-          res = gst_pad_query_default (pad, query);
+          res = FALSE;
         }
         break;
       }
-    default:
-      res = gst_pad_query_default (pad, query);
+    default:{
+      GstPad *peer = gst_pad_get_peer (self->sinkpad);
+
+      if (peer) {
+        res = gst_pad_query (peer, query);
+        gst_object_unref (peer);
+      } else {
+        res = FALSE;
+      }
       break;
+    }
   }
 
   gst_object_unref (self);
