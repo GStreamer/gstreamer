@@ -1722,7 +1722,8 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
         }
 
         /* save session id in the connection for further use */
-        if (gst_rtsp_message_get_header (message, GST_RTSP_HDR_SESSION,
+        if (message->type == GST_RTSP_MESSAGE_RESPONSE &&
+            gst_rtsp_message_get_header (message, GST_RTSP_HDR_SESSION,
                 &session_id, 0) == GST_RTSP_OK) {
           gint maxlen, i;
 
