@@ -75,15 +75,21 @@ gst_rtsp_url_get_type (void)
   return id;
 }
 
+static const gchar *rtsp_url_schemes[] = {
+  "rtsp",
+  "rtspu",
+  "rtspt",
+  "rtsph",
+  NULL
+};
 
-#define RTSP_PROTO      "rtsp://"
-#define RTSP_PROTO_LEN  7
-#define RTSPU_PROTO     "rtspu://"
-#define RTSPU_PROTO_LEN 8
-#define RTSPT_PROTO     "rtspt://"
-#define RTSPT_PROTO_LEN 8
-#define RTSPH_PROTO     "rtsph://"
-#define RTSPH_PROTO_LEN 8
+static GstRTSPLowerTrans rtsp_url_transports[] = {
+  GST_RTSP_LOWER_TRANS_TCP | GST_RTSP_LOWER_TRANS_UDP |
+      GST_RTSP_LOWER_TRANS_UDP_MCAST,
+  GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST,
+  GST_RTSP_LOWER_TRANS_TCP,
+  GST_RTSP_LOWER_TRANS_HTTP | GST_RTSP_LOWER_TRANS_TCP,
+};
 
 /* format is rtsp[u]://[user:passwd@]host[:port]/abspath[?query] where host
  * is a host name, an IPv4 dotted decimal address ("aaa.bbb.ccc.ddd") or an
@@ -107,6 +113,7 @@ gst_rtsp_url_parse (const gchar * urlstr, GstRTSPUrl ** url)
   GstRTSPUrl *res;
   gchar *p, *delim, *at, *col;
   gchar *host_end = NULL;
+  guint scheme;
 
   g_return_val_if_fail (urlstr != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (url != NULL, GST_RTSP_EINVAL);
@@ -114,21 +121,20 @@ gst_rtsp_url_parse (const gchar * urlstr, GstRTSPUrl ** url)
   res = g_new0 (GstRTSPUrl, 1);
 
   p = (gchar *) urlstr;
-  if (g_str_has_prefix (p, RTSP_PROTO)) {
-    res->transports =
-        GST_RTSP_LOWER_TRANS_TCP | GST_RTSP_LOWER_TRANS_UDP |
-        GST_RTSP_LOWER_TRANS_UDP_MCAST;
-    p += RTSP_PROTO_LEN;
-  } else if (g_str_has_prefix (p, RTSPU_PROTO)) {
-    res->transports = GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST;
-    p += RTSPU_PROTO_LEN;
-  } else if (g_str_has_prefix (p, RTSPT_PROTO)) {
-    res->transports = GST_RTSP_LOWER_TRANS_TCP;
-    p += RTSPT_PROTO_LEN;
-  } else if (g_str_has_prefix (p, RTSPH_PROTO)) {
-    res->transports = GST_RTSP_LOWER_TRANS_HTTP | GST_RTSP_LOWER_TRANS_TCP;
-    p += RTSPH_PROTO_LEN;
-  } else
+
+  col = strstr (p, "://");
+  if (col == NULL)
+    goto invalid;
+
+  for (scheme = 0; rtsp_url_schemes[scheme] != NULL; scheme++) {
+    if (g_ascii_strncasecmp (rtsp_url_schemes[scheme], p, col - p) == 0) {
+      res->transports = rtsp_url_transports[scheme];
+      p = col + 3;
+      break;
+    }
+  }
+
+  if (res->transports == GST_RTSP_LOWER_TRANS_UNKNOWN)
     goto invalid;
 
   delim = strpbrk (p, "/?");
