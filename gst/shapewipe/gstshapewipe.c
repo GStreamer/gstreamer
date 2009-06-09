@@ -67,6 +67,8 @@ static gboolean gst_shape_wipe_video_sink_event (GstPad * pad,
 static gboolean gst_shape_wipe_video_sink_setcaps (GstPad * pad,
     GstCaps * caps);
 static GstCaps *gst_shape_wipe_video_sink_getcaps (GstPad * pad);
+static GstFlowReturn gst_shape_wipe_video_sink_bufferalloc (GstPad * pad,
+    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstFlowReturn gst_shape_wipe_mask_sink_chain (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_shape_wipe_mask_sink_event (GstPad * pad, GstEvent * event);
@@ -165,6 +167,8 @@ gst_shape_wipe_init (GstShapeWipe * self, GstShapeWipeClass * g_class)
       GST_DEBUG_FUNCPTR (gst_shape_wipe_video_sink_setcaps));
   gst_pad_set_getcaps_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_shape_wipe_video_sink_getcaps));
+  gst_pad_set_bufferalloc_function (self->video_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_shape_wipe_video_sink_bufferalloc));
   gst_element_add_pad (GST_ELEMENT (self), self->video_sinkpad);
 
   self->mask_sinkpad =
@@ -263,6 +267,25 @@ gst_shape_wipe_reset (GstShapeWipe * self)
   self->mask_bpp = 0;
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
+}
+
+static GstFlowReturn
+gst_shape_wipe_video_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
+    GstCaps * caps, GstBuffer ** buf)
+{
+  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_DEBUG_OBJECT (pad, "Allocating buffer with offset 0x%" G_GINT64_MODIFIER
+      "x and size %u with caps: %" GST_PTR_FORMAT, offset, size, caps);
+
+  *buf = NULL;
+
+  ret = gst_pad_alloc_buffer (self->srcpad, offset, size, caps, buf);
+
+  gst_object_unref (self);
+
+  return ret;
 }
 
 static gboolean
