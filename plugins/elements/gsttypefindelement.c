@@ -162,7 +162,8 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
 {
   g_assert (caps != NULL);
 
-  GST_INFO_OBJECT (typefind, "found caps %" GST_PTR_FORMAT, caps);
+  GST_INFO_OBJECT (typefind, "found caps %" GST_PTR_FORMAT ", probability=%u",
+      caps, probability);
   if (typefind->caps)
     gst_caps_unref (typefind->caps);
   typefind->caps = gst_caps_copy (caps);
