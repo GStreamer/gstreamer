@@ -114,8 +114,8 @@ typedef struct
   guint coutl;
 } DecodeCtx;
 
-static GstRTSPResult read_line (gint fd, guint8 * buffer, guint * idx,
-    guint size, DecodeCtx * ctxp);
+static GstRTSPResult read_line (GstRTSPConnection * conn, guint8 * buffer,
+    guint * idx, guint size);
 static GstRTSPResult parse_key_value (guint8 * buffer, gchar * key,
     guint keysize, gchar ** value);
 static void parse_string (gchar * dest, gint size, gchar ** src);
@@ -185,6 +185,9 @@ struct _GstRTSPConnection
 
   GstPoll *fdset;
   gchar *ip;
+
+  gchar *initial_buffer;
+  gsize initial_buffer_offset;
 
   /* Session state */
   gint cseq;                    /* sequence number */
@@ -638,7 +641,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
 
     idx = 0;
     while (TRUE) {
-      res = read_line (conn->fd0.fd, buffer, &idx, sizeof (buffer), NULL);
+      res = read_line (conn, buffer, &idx, sizeof (buffer));
       if (res == GST_RTSP_EEOF)
         goto eof;
       if (res == GST_RTSP_OK)
@@ -1057,8 +1060,42 @@ write_bytes (gint fd, const guint8 * buffer, guint * idx, guint size)
 }
 
 static gint
-fill_bytes (gint fd, guint8 * buffer, guint size, DecodeCtx * ctx)
+fill_raw_bytes (GstRTSPConnection * conn, guint8 * buffer, guint size)
 {
+  gint out = 0;
+
+  if (G_UNLIKELY (conn->initial_buffer != NULL)) {
+    gsize left = strlen (&conn->initial_buffer[conn->initial_buffer_offset]);
+
+    out = MIN (left, size);
+    memcpy (buffer, &conn->initial_buffer[conn->initial_buffer_offset], out);
+
+    if (left == (gsize) out) {
+      g_free (conn->initial_buffer);
+      conn->initial_buffer = NULL;
+      conn->initial_buffer_offset = 0;
+    } else
+      conn->initial_buffer_offset += out;
+  }
+
+  if (G_LIKELY (size > (guint) out)) {
+    gint r;
+
+    r = READ_SOCKET (conn->readfd->fd, &buffer[out], size - out);
+    if (r <= 0) {
+      if (out == 0)
+        out = r;
+    } else
+      out += r;
+  }
+
+  return out;
+}
+
+static gint
+fill_bytes (GstRTSPConnection * conn, guint8 * buffer, guint size)
+{
+  DecodeCtx *ctx = conn->ctxp;
   gint out = 0;
 
   if (ctx) {
@@ -1078,7 +1115,7 @@ fill_bytes (gint fd, guint8 * buffer, guint size, DecodeCtx * ctx)
         break;
 
       /* try to read more bytes */
-      r = READ_SOCKET (fd, in, sizeof (in));
+      r = fill_raw_bytes (conn, in, sizeof (in));
       if (r <= 0) {
         if (out == 0)
           out = r;
@@ -1091,14 +1128,14 @@ fill_bytes (gint fd, guint8 * buffer, guint size, DecodeCtx * ctx)
           &ctx->save);
     }
   } else {
-    out = READ_SOCKET (fd, buffer, size);
+    out = fill_raw_bytes (conn, buffer, size);
   }
 
   return out;
 }
 
 static GstRTSPResult
-read_bytes (gint fd, guint8 * buffer, guint * idx, guint size, DecodeCtx * ctx)
+read_bytes (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size)
 {
   guint left;
 
@@ -1110,7 +1147,7 @@ read_bytes (gint fd, guint8 * buffer, guint * idx, guint size, DecodeCtx * ctx)
   while (left) {
     gint r;
 
-    r = fill_bytes (fd, &buffer[*idx], left, ctx);
+    r = fill_bytes (conn, &buffer[*idx], left);
     if (G_UNLIKELY (r == 0)) {
       return GST_RTSP_EEOF;
     } else if (G_UNLIKELY (r < 0)) {
@@ -1127,13 +1164,13 @@ read_bytes (gint fd, guint8 * buffer, guint * idx, guint size, DecodeCtx * ctx)
 }
 
 static GstRTSPResult
-read_line (gint fd, guint8 * buffer, guint * idx, guint size, DecodeCtx * ctx)
+read_line (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size)
 {
   while (TRUE) {
     guint8 c;
     gint r;
 
-    r = fill_bytes (fd, &c, 1, ctx);
+    r = fill_bytes (conn, &c, 1);
     if (G_UNLIKELY (r == 0)) {
       return GST_RTSP_EEOF;
     } else if (G_UNLIKELY (r < 0)) {
@@ -1601,8 +1638,7 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
       case STATE_START:
         builder->offset = 0;
         res =
-            read_bytes (conn->readfd->fd, (guint8 *) builder->buffer,
-            &builder->offset, 1, conn->ctxp);
+            read_bytes (conn, (guint8 *) builder->buffer, &builder->offset, 1);
         if (res != GST_RTSP_OK)
           goto done;
 
@@ -1619,8 +1655,7 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
       case STATE_DATA_HEADER:
       {
         res =
-            read_bytes (conn->readfd->fd, (guint8 *) builder->buffer,
-            &builder->offset, 4, conn->ctxp);
+            read_bytes (conn, (guint8 *) builder->buffer, &builder->offset, 4);
         if (res != GST_RTSP_OK)
           goto done;
 
@@ -1636,8 +1671,8 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
       case STATE_DATA_BODY:
       {
         res =
-            read_bytes (conn->readfd->fd, builder->body_data, &builder->offset,
-            builder->body_len, conn->ctxp);
+            read_bytes (conn, builder->body_data, &builder->offset,
+            builder->body_len);
         if (res != GST_RTSP_OK)
           goto done;
 
@@ -1653,8 +1688,8 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
       }
       case STATE_READ_LINES:
       {
-        res = read_line (conn->readfd->fd, builder->buffer, &builder->offset,
-            sizeof (builder->buffer), conn->ctxp);
+        res = read_line (conn, builder->buffer, &builder->offset,
+            sizeof (builder->buffer));
         if (res != GST_RTSP_OK)
           goto done;
 
@@ -1803,7 +1838,7 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
   gst_poll_fd_ctl_read (conn->fdset, conn->readfd, TRUE);
 
   while (TRUE) {
-    res = read_bytes (conn->readfd->fd, data, &offset, size, conn->ctxp);
+    res = read_bytes (conn, data, &offset, size);
     if (G_UNLIKELY (res == GST_RTSP_EEOF))
       goto eof;
     if (G_LIKELY (res == GST_RTSP_OK))
@@ -2011,6 +2046,10 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
 
   g_free (conn->ip);
   conn->ip = NULL;
+
+  g_free (conn->initial_buffer);
+  conn->initial_buffer = NULL;
+  conn->initial_buffer_offset = 0;
 
   REMOVE_POLLFD (conn->fdset, &conn->fd0);
   REMOVE_POLLFD (conn->fdset, &conn->fd1);
@@ -2701,6 +2740,9 @@ gst_rtsp_source_prepare (GSource * source, gint * timeout)
 {
   GstRTSPWatch *watch = (GstRTSPWatch *) source;
 
+  if (watch->conn->initial_buffer != NULL)
+    return TRUE;
+
   *timeout = (watch->conn->timeout * 1000);
 
   return FALSE;
@@ -2728,7 +2770,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
   GstRTSPResult res;
 
   /* first read as much as we can */
-  if (watch->readfd.revents & READ_COND) {
+  if (watch->readfd.revents & READ_COND || watch->conn->initial_buffer != NULL) {
     do {
       res = build_next (&watch->builder, &watch->message, watch->conn);
       if (res == GST_RTSP_EINTR)
