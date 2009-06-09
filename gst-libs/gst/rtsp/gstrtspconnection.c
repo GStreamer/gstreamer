@@ -2811,9 +2811,12 @@ gst_rtsp_source_finalize (GSource * source)
   GstRTSPWatch *watch = (GstRTSPWatch *) source;
 
   build_reset (&watch->builder);
+  gst_rtsp_message_unset (&watch->message);
 
   g_async_queue_unref (watch->messages);
   watch->messages = NULL;
+
+  g_free (watch->write_data);
 
   if (watch->notify)
     watch->notify (watch->user_data);
