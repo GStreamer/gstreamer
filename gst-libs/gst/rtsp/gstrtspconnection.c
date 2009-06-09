@@ -76,14 +76,17 @@
 
 #ifdef G_OS_WIN32
 #include <winsock2.h>
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ * minwg32 headers check WINVER before allowing the use of these */
+#ifndef WINVER
+#define WINVER 0x0501
+#endif
 #include <ws2tcpip.h>
 #define EINPROGRESS WSAEINPROGRESS
 #else
 #include <sys/ioctl.h>
 #include <netdb.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <fcntl.h>
 #endif
 
@@ -94,6 +97,14 @@
 #include "gstrtspconnection.h"
 #include "gstrtspbase64.h"
 #include "md5.h"
+
+union gst_sockaddr
+{
+  struct sockaddr sa;
+  struct sockaddr_in sa_in;
+  struct sockaddr_in6 sa_in6;
+  struct sockaddr_storage sa_stor;
+};
 
 typedef struct
 {
@@ -194,22 +205,6 @@ struct _GstRTSPConnection
   gchar *proxy_host;
   guint proxy_port;
 };
-
-#ifdef G_OS_WIN32
-static int
-inet_aton (const char *c, struct in_addr *paddr)
-{
-  /* note that inet_addr is deprecated on unix because
-   * inet_addr returns -1 (INADDR_NONE) for the valid 255.255.255.255
-   * address. */
-  paddr->s_addr = inet_addr (c);
-
-  if (paddr->s_addr == INADDR_NONE)
-    return 0;
-
-  return 1;
-}
-#endif
 
 enum
 {
@@ -336,24 +331,29 @@ GstRTSPResult
 gst_rtsp_connection_accept (gint sock, GstRTSPConnection ** conn)
 {
   int fd;
-  unsigned int address_len;
   GstRTSPConnection *newconn = NULL;
-  struct sockaddr_in address;
+  union gst_sockaddr sa;
+  socklen_t slen = sizeof (sa);
+  gchar ip[INET6_ADDRSTRLEN];
   GstRTSPUrl *url;
 #ifdef G_OS_WIN32
   gulong flags = 1;
 #endif
 
-  address_len = sizeof (address);
-  memset (&address, 0, address_len);
+  memset (&sa, 0, slen);
 
 #ifndef G_OS_WIN32
-  fd = accept (sock, (struct sockaddr *) &address, &address_len);
+  fd = accept (sock, &sa.sa, &slen);
 #else
-  fd = accept (sock, (struct sockaddr *) &address, (gint *) & address_len);
+  fd = accept (sock, &sa.sa, (gint *) & slen);
 #endif /* G_OS_WIN32 */
   if (fd == -1)
     goto accept_failed;
+
+  if (getnameinfo (&sa.sa, slen, ip, sizeof (ip), NULL, 0, NI_NUMERICHOST) != 0)
+    goto getnameinfo_failed;
+  if (sa.sa.sa_family != AF_INET && sa.sa.sa_family != AF_INET6)
+    goto wrong_family;
 
   /* set to non-blocking mode so that we can cancel the communication */
 #ifndef G_OS_WIN32
@@ -364,8 +364,11 @@ gst_rtsp_connection_accept (gint sock, GstRTSPConnection ** conn)
 
   /* create a url for the client address */
   url = g_new0 (GstRTSPUrl, 1);
-  url->host = g_strdup_printf ("%s", inet_ntoa (address.sin_addr));
-  url->port = address.sin_port;
+  url->host = g_strdup (ip);
+  if (sa.sa.sa_family == AF_INET)
+    url->port = sa.sa_in.sin_port;
+  else
+    url->port = sa.sa_in6.sin6_port;
 
   /* now create the connection object */
   gst_rtsp_connection_create (url, &newconn);
@@ -386,54 +389,59 @@ accept_failed:
   {
     return GST_RTSP_ESYS;
   }
+getnameinfo_failed:
+wrong_family:
+  {
+    close (fd);
+    return GST_RTSP_ERROR;
+  }
 }
 
 static gchar *
 do_resolve (const gchar * host)
 {
-  struct hostent *hostinfo;
-  struct in_addr addr;
-  const gchar *ip;
-#ifdef G_OS_WIN32
-  struct in_addr *addrp;
-#else
-  char **addrs;
-  gchar ipbuf[INET_ADDRSTRLEN];
-#endif /* G_OS_WIN32 */
+  static gchar ip[INET6_ADDRSTRLEN];
+  struct addrinfo *aires;
+  struct addrinfo *ai;
+  gint aierr;
 
-  ip = NULL;
+  aierr = getaddrinfo (host, NULL, NULL, &aires);
+  if (aierr != 0)
+    goto no_addrinfo;
 
-  /* first check if it already is an IP address */
-  if (inet_aton (host, &addr)) {
-    ip = host;
-  } else {
-    hostinfo = gethostbyname (host);
-    if (!hostinfo)
-      goto not_resolved;        /* h_errno set */
-
-    if (hostinfo->h_addrtype != AF_INET)
-      goto not_ip;              /* host not an IP host */
-#ifdef G_OS_WIN32
-    addrp = (struct in_addr *) hostinfo->h_addr_list[0];
-    /* this is not threadsafe */
-    ip = inet_ntoa (*addrp);
-#else
-    addrs = hostinfo->h_addr_list;
-    ip = inet_ntop (AF_INET, (struct in_addr *) addrs[0], ipbuf,
-        sizeof (ipbuf));
-#endif /* G_OS_WIN32 */
+  for (ai = aires; ai; ai = ai->ai_next) {
+    if (ai->ai_family == AF_INET || ai->ai_family == AF_INET6) {
+      break;
+    }
   }
+  if (ai == NULL)
+    goto no_family;
+
+  aierr = getnameinfo (ai->ai_addr, ai->ai_addrlen, ip, sizeof (ip), NULL, 0,
+      NI_NUMERICHOST | NI_NUMERICSERV);
+  if (aierr != 0)
+    goto no_address;
+
+  freeaddrinfo (aires);
+
   return g_strdup (ip);
 
   /* ERRORS */
-not_resolved:
+no_addrinfo:
   {
-    GST_ERROR ("could not resolve %s", host);
+    GST_ERROR ("no addrinfo found for %s: %s", host, gai_strerror (aierr));
     return NULL;
   }
-not_ip:
+no_family:
   {
-    GST_ERROR ("not an IP address");
+    GST_ERROR ("no family found for %s", host);
+    freeaddrinfo (aires);
+    return NULL;
+  }
+no_address:
+  {
+    GST_ERROR ("no address found for %s: %s", host, gai_strerror (aierr));
+    freeaddrinfo (aires);
     return NULL;
   }
 }
@@ -443,7 +451,11 @@ do_connect (const gchar * ip, guint16 port, GstPollFD * fdout,
     GstPoll * fdset, GTimeVal * timeout)
 {
   gint fd;
-  struct sockaddr_in sa_in;
+  struct addrinfo hints;
+  struct addrinfo *aires;
+  struct addrinfo *ai;
+  gint aierr;
+  gchar service[NI_MAXSERV];
   gint ret;
 #ifdef G_OS_WIN32
   unsigned long flags = 1;
@@ -451,12 +463,26 @@ do_connect (const gchar * ip, guint16 port, GstPollFD * fdout,
   GstClockTime to;
   gint retval;
 
-  memset (&sa_in, 0, sizeof (sa_in));
-  sa_in.sin_family = AF_INET;   /* network socket */
-  sa_in.sin_port = htons (port);        /* on port */
-  sa_in.sin_addr.s_addr = inet_addr (ip);       /* on host ip */
+  memset (&hints, 0, sizeof hints);
+  hints.ai_flags = AI_NUMERICHOST;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  g_snprintf (service, sizeof (service) - 1, "%hu", port);
+  service[sizeof (service) - 1] = '\0';
 
-  fd = socket (AF_INET, SOCK_STREAM, 0);
+  aierr = getaddrinfo (ip, service, &hints, &aires);
+  if (aierr != 0)
+    goto no_addrinfo;
+
+  for (ai = aires; ai; ai = ai->ai_next) {
+    if (ai->ai_family == AF_INET || ai->ai_family == AF_INET6) {
+      break;
+    }
+  }
+  if (ai == NULL)
+    goto no_family;
+
+  fd = socket (ai->ai_family, SOCK_STREAM, 0);
   if (fd == -1)
     goto no_socket;
 
@@ -471,7 +497,7 @@ do_connect (const gchar * ip, guint16 port, GstPollFD * fdout,
   ADD_POLLFD (fdset, fdout, fd);
 
   /* we are going to connect ASYNC now */
-  ret = connect (fd, (struct sockaddr *) &sa_in, sizeof (sa_in));
+  ret = connect (fd, ai->ai_addr, ai->ai_addrlen);
   if (ret == 0)
     goto done;
   if (!ERRNO_IS_EINPROGRESS)
@@ -504,26 +530,42 @@ do_connect (const gchar * ip, guint16 port, GstPollFD * fdout,
   }
 
   gst_poll_fd_ignored (fdset, fdout);
+
 done:
+  freeaddrinfo (aires);
 
   return GST_RTSP_OK;
 
   /* ERRORS */
+no_addrinfo:
+  {
+    GST_ERROR ("no addrinfo found for %s: %s", ip, gai_strerror (aierr));
+    return GST_RTSP_ERROR;
+  }
+no_family:
+  {
+    GST_ERROR ("no family found for %s", ip);
+    freeaddrinfo (aires);
+    return GST_RTSP_ERROR;
+  }
 no_socket:
   {
     GST_ERROR ("no socket %d (%s)", errno, g_strerror (errno));
+    freeaddrinfo (aires);
     return GST_RTSP_ESYS;
   }
 sys_error:
   {
     GST_ERROR ("system error %d (%s)", errno, g_strerror (errno));
     REMOVE_POLLFD (fdset, fdout);
+    freeaddrinfo (aires);
     return GST_RTSP_ESYS;
   }
 timeout:
   {
     GST_ERROR ("timeout");
     REMOVE_POLLFD (fdset, fdout);
+    freeaddrinfo (aires);
     return GST_RTSP_ETIMEOUT;
   }
 }
@@ -2329,12 +2371,7 @@ gst_rtsp_connection_clear_auth_params (GstRTSPConnection * conn)
 static GstRTSPResult
 set_qos_dscp (gint fd, guint qos_dscp)
 {
-  union gst_sockaddr
-  {
-    struct sockaddr sa;
-    struct sockaddr_in6 sa_in6;
-    struct sockaddr_storage sa_stor;
-  } sa;
+  union gst_sockaddr sa;
   socklen_t slen = sizeof (sa);
   gint af;
   gint tos;
