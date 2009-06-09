@@ -742,7 +742,7 @@ gst_rtsp_message_steal_body (GstRTSPMessage * msg, guint8 ** data, guint * size)
 }
 
 static void
-dump_key_value (gpointer data, gpointer user_data)
+dump_key_value (gpointer data, gpointer user_data G_GNUC_UNUSED)
 {
   RTSPKeyValue *key_value = (RTSPKeyValue *) data;
 
