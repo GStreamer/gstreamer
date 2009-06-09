@@ -108,6 +108,21 @@ typedef struct
 
 /**
  * GstRTSPTransport:
+ * @trans: the transport mode
+ * @profile: the tansport profile
+ * @lower_transport: the lower transport
+ * @destination: the destination ip/hostname
+ * @source: the source ip/hostname
+ * @layers: the number of layers
+ * @mode_play: if play mode was selected
+ * @mode_record: if record mode was selected
+ * @append: is append mode was selected
+ * @interleaved: the interleave range
+ * @ttl: the time to live for multicast UDP
+ * @port: the port pair for multicast sessions
+ * @client_port: the client port pair for receiving data
+ * @server_port: the server port pair for receiving data
+ * @ssrc: the ssrc that the sender/receiver will use
  *
  * A structure holding the RTSP transport values.
  */
