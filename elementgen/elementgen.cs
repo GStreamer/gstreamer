@@ -334,22 +334,26 @@ public class ElementGen {
       foreach (SignalInfo si in ei.signals) {
         string managed_name = (si.managed_name != null) ? si.managed_name : PropToCamelCase (si.name);
 
-	writer.WriteLine ("\t\tpublic delegate void " + managed_name + "Handler (object o, " + managed_name + "Args args);\n");
+	if (si.parameters.Count > 0) {
+	  writer.WriteLine ("\t\tpublic delegate void " + managed_name + "Handler (object o, " + managed_name + "Args args);\n");
 	
-	writer.WriteLine ("\t\tpublic class " + managed_name + "Args : GLib.SignalArgs {");
-	for (int i = 0; i < si.parameters.Count; i++) {
-	  SignalParameter param = (SignalParameter) si.parameters[i];
-          string managed_type = CTypeToManagedType (param.type, api_doc);
-	  writer.WriteLine ("\t\t\tpublic " + managed_type + " " + param.name + " {");
-	  writer.WriteLine ("\t\t\t\tget {");
-	  writer.WriteLine ("\t\t\t\t\treturn (" + managed_type + ") Args[" + i + "];");
-	  writer.WriteLine ("\t\t\t\t}");
-	  writer.WriteLine ("\t\t\t}\n");
+	  writer.WriteLine ("\t\tpublic class " + managed_name + "Args : GLib.SignalArgs {");
+	  for (int i = 0; i < si.parameters.Count; i++) {
+	    SignalParameter param = (SignalParameter) si.parameters[i];
+            string managed_type = CTypeToManagedType (param.type, api_doc);
+	    writer.WriteLine ("\t\t\tpublic " + managed_type + " " + param.name + " {");
+	    writer.WriteLine ("\t\t\t\tget {");
+	    writer.WriteLine ("\t\t\t\t\treturn (" + managed_type + ") Args[" + i + "];");
+	    writer.WriteLine ("\t\t\t\t}");
+	    writer.WriteLine ("\t\t\t}\n");
+	  }
+	  writer.WriteLine ("\t\t}\n");
 
+	  writer.WriteLine ("\t\tpublic event " + managed_name + "Handler " + managed_name + " {");
+	} else {
+	  writer.WriteLine ("\t\tpublic event SignalHandler " + managed_name + " {");
 	}
-	writer.WriteLine ("\t\t}\n");
 
-	writer.WriteLine ("\t\tpublic event " + managed_name + "Handler " + managed_name + " {");
 	writer.WriteLine ("\t\t\tadd {");
 	writer.WriteLine ("\t\t\t\tDynamicSignal.Connect (this, \"" + si.name + "\", value);");
 	writer.WriteLine ("\t\t\t}\n");
