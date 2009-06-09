@@ -394,6 +394,11 @@ static gboolean gst_deinterlace_src_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_deinterlace_src_query_types (GstPad * pad);
 
 static void gst_deinterlace_reset (GstDeinterlace * self);
+static void gst_deinterlace_update_qos (GstDeinterlace * self,
+    gdouble proportion, GstClockTime diff, GstClockTime time);
+static void gst_deinterlace_reset_qos (GstDeinterlace * self);
+static void gst_deinterlace_read_qos (GstDeinterlace * self,
+    gdouble * proportion, GstClockTime * time);
 
 static void gst_deinterlace_child_proxy_interface_init (gpointer g_iface,
     gpointer iface_data);
@@ -725,7 +730,11 @@ gst_deinterlace_reset (GstDeinterlace * self)
   self->field_height = 0;
   self->field_stride = 0;
 
+  gst_segment_init (&self->segment, GST_FORMAT_TIME);
+
   gst_deinterlace_reset_history (self);
+
+  gst_deinterlace_reset_qos (self);
 }
 
 static void
@@ -927,6 +936,79 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   self->last_buffer = buffer;
 }
 
+static void
+gst_deinterlace_update_qos (GstDeinterlace * self, gdouble proportion,
+    GstClockTime diff, GstClockTime timestamp)
+{
+  GST_OBJECT_LOCK (self);
+  self->proportion = proportion;
+  if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
+    if (G_UNLIKELY (diff > 0))
+      self->earliest_time = timestamp + 2 * diff + self->field_duration;
+    else
+      self->earliest_time = timestamp + diff;
+  } else {
+    self->earliest_time = GST_CLOCK_TIME_NONE;
+  }
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
+gst_deinterlace_reset_qos (GstDeinterlace * self)
+{
+  gst_deinterlace_update_qos (self, 0.5, 0, GST_CLOCK_TIME_NONE);
+}
+
+static void
+gst_deinterlace_read_qos (GstDeinterlace * self, gdouble * proportion,
+    GstClockTime * time)
+{
+  GST_OBJECT_LOCK (self);
+  *proportion = self->proportion;
+  *time = self->earliest_time;
+  GST_OBJECT_UNLOCK (self);
+}
+
+/* Perform qos calculations before processing the next frame. Returns TRUE if
+ * the frame should be processed, FALSE if the frame can be dropped entirely */
+static gboolean
+gst_deinterlace_do_qos (GstDeinterlace * self, GstClockTime timestamp)
+{
+  GstClockTime qostime, earliest_time;
+  gdouble proportion;
+
+  /* no timestamp, can't do QoS => process frame */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (timestamp))) {
+    GST_LOG_OBJECT (self, "invalid timestamp, can't do QoS, process frame");
+    return TRUE;
+  }
+
+  /* get latest QoS observation values */
+  gst_deinterlace_read_qos (self, &proportion, &earliest_time);
+
+  /* skip qos if we have no observation (yet) => process frame */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (earliest_time))) {
+    GST_LOG_OBJECT (self, "no observation yet, process frame");
+    return TRUE;
+  }
+
+  /* qos is done on running time */
+  qostime = gst_segment_to_running_time (&self->segment, GST_FORMAT_TIME,
+      timestamp);
+
+  /* see how our next timestamp relates to the latest qos timestamp */
+  GST_LOG_OBJECT (self, "qostime %" GST_TIME_FORMAT ", earliest %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
+
+  if (qostime != GST_CLOCK_TIME_NONE && qostime <= earliest_time) {
+    GST_DEBUG_OBJECT (self, "we are late, drop frame");
+    return FALSE;
+  }
+
+  GST_LOG_OBJECT (self, "process frame");
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -983,9 +1065,6 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
       if (ret != GST_FLOW_OK)
         return ret;
 
-      /* do magic calculus */
-      gst_deinterlace_method_deinterlace_frame (self->method, self, outbuf);
-
       g_assert (self->history_count - 1 -
           gst_deinterlace_method_get_latency (self->method) >= 0);
       buf =
@@ -993,18 +1072,29 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
           gst_deinterlace_method_get_latency (self->method)].buf;
       timestamp = GST_BUFFER_TIMESTAMP (buf);
 
-      gst_buffer_unref (gst_deinterlace_pop_history (self));
-
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
       if (self->fields == GST_DEINTERLACE_ALL)
         GST_BUFFER_DURATION (outbuf) = self->field_duration;
       else
         GST_BUFFER_DURATION (outbuf) = 2 * self->field_duration;
 
-      ret = gst_pad_push (self->srcpad, outbuf);
-      outbuf = NULL;
-      if (ret != GST_FLOW_OK)
-        return ret;
+      /* Check if we need to drop the frame because of QoS */
+      if (!gst_deinterlace_do_qos (self, GST_BUFFER_TIMESTAMP (buf))) {
+        gst_buffer_unref (gst_deinterlace_pop_history (self));
+        gst_buffer_unref (outbuf);
+        outbuf = NULL;
+        ret = GST_FLOW_OK;
+      } else {
+        /* do magic calculus */
+        gst_deinterlace_method_deinterlace_frame (self->method, self, outbuf);
+
+        gst_buffer_unref (gst_deinterlace_pop_history (self));
+
+        ret = gst_pad_push (self->srcpad, outbuf);
+        outbuf = NULL;
+        if (ret != GST_FLOW_OK)
+          return ret;
+      }
     }
     /* no calculation done: remove excess field */
     else if (self->field_history[cur_field_idx].flags ==
@@ -1030,9 +1120,6 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
       if (ret != GST_FLOW_OK)
         return ret;
 
-      /* do magic calculus */
-      gst_deinterlace_method_deinterlace_frame (self->method, self, outbuf);
-
       g_assert (self->history_count - 1 -
           gst_deinterlace_method_get_latency (self->method) >= 0);
       buf =
@@ -1040,19 +1127,29 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
           gst_deinterlace_method_get_latency (self->method)].buf;
       timestamp = GST_BUFFER_TIMESTAMP (buf);
 
-      gst_buffer_unref (gst_deinterlace_pop_history (self));
-
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
       if (self->fields == GST_DEINTERLACE_ALL)
         GST_BUFFER_DURATION (outbuf) = self->field_duration;
       else
         GST_BUFFER_DURATION (outbuf) = 2 * self->field_duration;
 
-      ret = gst_pad_push (self->srcpad, outbuf);
-      outbuf = NULL;
+      /* Check if we need to drop the frame because of QoS */
+      if (!gst_deinterlace_do_qos (self, GST_BUFFER_TIMESTAMP (buf))) {
+        gst_buffer_unref (gst_deinterlace_pop_history (self));
+        gst_buffer_unref (outbuf);
+        outbuf = NULL;
+        ret = GST_FLOW_OK;
+      } else {
+        /* do magic calculus */
+        gst_deinterlace_method_deinterlace_frame (self->method, self, outbuf);
 
-      if (ret != GST_FLOW_OK)
-        return ret;
+        gst_buffer_unref (gst_deinterlace_pop_history (self));
+
+        ret = gst_pad_push (self->srcpad, outbuf);
+        outbuf = NULL;
+        if (ret != GST_FLOW_OK)
+          return ret;
+      }
     }
     /* no calculation done: remove excess field */
     else if (self->field_history[cur_field_idx].flags ==
@@ -1357,6 +1454,31 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (pad, "received %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat fmt;
+      gboolean is_update;
+      gint64 start, end, base;
+      gdouble rate;
+
+      gst_event_parse_new_segment (event, &is_update, &rate, &fmt, &start,
+          &end, &base);
+      if (fmt == GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (pad,
+            "Got NEWSEGMENT event in GST_FORMAT_TIME, passing on (%"
+            GST_TIME_FORMAT " - %" GST_TIME_FORMAT ")", GST_TIME_ARGS (start),
+            GST_TIME_ARGS (end));
+        gst_segment_set_newsegment (&self->segment, is_update, rate, fmt, start,
+            end, base);
+      } else {
+        gst_segment_init (&self->segment, GST_FORMAT_TIME);
+      }
+
+      gst_deinterlace_reset_qos (self);
+      gst_deinterlace_reset_history (self);
+      res = gst_pad_push_event (self->srcpad, event);
+      break;
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:{
       const GstStructure *s = gst_event_get_structure (event);
 
@@ -1393,7 +1515,6 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
     }
       /* fall through */
     case GST_EVENT_EOS:
-    case GST_EVENT_NEWSEGMENT:
       gst_deinterlace_reset_history (self);
 
       /* fall through */
@@ -1406,6 +1527,7 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (self, "Ending still frames");
         self->still_frame_mode = FALSE;
       }
+      gst_deinterlace_reset_qos (self);
       res = gst_pad_push_event (self->srcpad, event);
       gst_deinterlace_reset_history (self);
       break;
@@ -1485,6 +1607,16 @@ gst_deinterlace_src_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (pad, "received %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:{
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+      gdouble proportion;
+
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+      gst_deinterlace_update_qos (self, proportion, diff, timestamp);
+    }
+      /* fall through */
     default:
       res = gst_pad_push_event (self->sinkpad, event);
       break;

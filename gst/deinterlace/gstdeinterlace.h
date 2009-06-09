@@ -254,6 +254,13 @@ struct _GstDeinterlace
      need not match the pixel width
    */
   guint field_stride;
+
+  /* Current segment */
+  GstSegment segment;
+
+  /* QoS stuff */
+  gdouble proportion;
+  GstClockTime earliest_time;
 };
 
 struct _GstDeinterlaceClass
