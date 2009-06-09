@@ -686,6 +686,7 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *mask = NULL, *outbuf = NULL;
   GstClockTime timestamp;
+  gboolean new_outbuf = FALSE;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   timestamp =
@@ -711,13 +712,21 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
   }
   g_mutex_unlock (self->mask_mutex);
 
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (self->srcpad, GST_BUFFER_OFFSET_NONE,
-      GST_BUFFER_SIZE (buffer), GST_PAD_CAPS (self->srcpad), &outbuf);
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    gst_buffer_unref (buffer);
-    gst_buffer_unref (mask);
-    return ret;
+  /* Try to blend inplace, if it's not possible
+   * get a new buffer from downstream.
+   */
+  if (!gst_buffer_is_writable (buffer)) {
+    ret =
+        gst_pad_alloc_buffer_and_set_caps (self->srcpad, GST_BUFFER_OFFSET_NONE,
+        GST_BUFFER_SIZE (buffer), GST_PAD_CAPS (self->srcpad), &outbuf);
+    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+      gst_buffer_unref (buffer);
+      gst_buffer_unref (mask);
+      return ret;
+    }
+    new_outbuf = TRUE;
+  } else {
+    outbuf = buffer;
   }
 
   if (self->mask_bpp == 16)
@@ -726,7 +735,9 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
     ret = gst_shape_wipe_blend_8 (self, buffer, mask, outbuf);
 
   gst_buffer_unref (mask);
-  gst_buffer_unref (buffer);
+  if (new_outbuf)
+    gst_buffer_unref (buffer);
+
   if (ret != GST_FLOW_OK) {
     gst_buffer_unref (outbuf);
     return ret;
