@@ -3162,6 +3162,8 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             GST_WARNING_OBJECT (avi,
                 "Unknown list %" GST_FOURCC_FORMAT " in AVI header",
                 GST_FOURCC_ARGS (fourcc));
+            GST_MEMDUMP_OBJECT (avi, "Unknown list", GST_BUFFER_DATA (sub),
+                GST_BUFFER_SIZE (sub));
             /* fall-through */
           case GST_RIFF_TAG_JUNK:
             goto next;
@@ -3172,6 +3174,8 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
         GST_WARNING_OBJECT (avi,
             "Unknown tag %" GST_FOURCC_FORMAT " in AVI header at off %d",
             GST_FOURCC_ARGS (tag), offset);
+        GST_MEMDUMP_OBJECT (avi, "Unknown tag", GST_BUFFER_DATA (sub),
+            GST_BUFFER_SIZE (sub));
         /* fall-through */
       case GST_RIFF_TAG_JUNK:
       next:
@@ -3215,40 +3219,55 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
     tag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
     size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
     ltag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 8);
-    gst_buffer_unref (buf);
 
     GST_DEBUG ("tag %" GST_FOURCC_FORMAT ", size %u",
         GST_FOURCC_ARGS (tag), size);
+    GST_MEMDUMP ("Tag content", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    gst_buffer_unref (buf);
 
-    if (tag == GST_RIFF_TAG_LIST) {
-      switch (ltag) {
-        case GST_RIFF_LIST_movi:
-          goto skipping_done;
-        case GST_RIFF_LIST_INFO:
-          res =
-              gst_riff_read_chunk (element, avi->sinkpad, &avi->offset, &tag,
-              &buf);
-          if (res != GST_FLOW_OK) {
-            GST_DEBUG_OBJECT (avi, "couldn't read INFO chunk");
-            goto pull_range_failed;
-          }
-          GST_DEBUG ("got size %u", GST_BUFFER_SIZE (buf));
+    switch (tag) {
+      case GST_RIFF_TAG_LIST:{
+        switch (ltag) {
+          case GST_RIFF_LIST_movi:
+            GST_DEBUG_OBJECT (avi,
+                "Reached the 'movi' tag, we're done with skipping");
+            goto skipping_done;
+          case GST_RIFF_LIST_INFO:
+            res =
+                gst_riff_read_chunk (element, avi->sinkpad, &avi->offset, &tag,
+                &buf);
+            if (res != GST_FLOW_OK) {
+              GST_DEBUG_OBJECT (avi, "couldn't read INFO chunk");
+              goto pull_range_failed;
+            }
+            GST_DEBUG ("got size %u", GST_BUFFER_SIZE (buf));
 
-          sub = gst_buffer_create_sub (buf, 4, GST_BUFFER_SIZE (buf) - 4);
-          gst_riff_parse_info (element, sub, &avi->globaltags);
-          if (sub) {
-            gst_buffer_unref (sub);
-            sub = NULL;
-          }
-          gst_buffer_unref (buf);
-          /* gst_riff_read_chunk() has already advanced avi->offset */
-          break;
-        default:
-          avi->offset += 8 + ((size + 1) & ~1);
-          break;
+            sub = gst_buffer_create_sub (buf, 4, GST_BUFFER_SIZE (buf) - 4);
+            gst_riff_parse_info (element, sub, &avi->globaltags);
+            if (sub) {
+              gst_buffer_unref (sub);
+              sub = NULL;
+            }
+            gst_buffer_unref (buf);
+            /* gst_riff_read_chunk() has already advanced avi->offset */
+            break;
+          default:
+            GST_WARNING_OBJECT (avi,
+                "Skipping unknown list tag %" GST_FOURCC_FORMAT,
+                GST_FOURCC_ARGS (ltag));
+            avi->offset += 8 + ((size + 1) & ~1);
+            break;
+        }
       }
-    } else {
-      avi->offset += 8 + ((size + 1) & ~1);
+        break;
+      default:
+        GST_WARNING_OBJECT (avi, "Skipping unknown tag %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (tag));
+        /* Fall-through */
+      case GST_MAKE_FOURCC ('J', 'U', 'N', 'Q'):
+      case GST_MAKE_FOURCC ('J', 'U', 'N', 'K'):
+        avi->offset += 8 + ((size + 1) & ~1);
+        break;
     }
   } while (1);
 skipping_done:
