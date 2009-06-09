@@ -21,6 +21,7 @@
 
 #include "rtsp-client.h"
 #include "rtsp-sdp.h"
+#include "rtsp-params.h"
 
 #define DEBUG
 
@@ -396,7 +397,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPUrl * uri,
 
   send_response (client, session, &response);
 
-  return FALSE;
+  return TRUE;
 
   /* ERRORS */
 no_session:
@@ -407,6 +408,77 @@ no_session:
 not_found:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
+    return FALSE;
+  }
+}
+
+static gboolean
+handle_get_param_request (GstRTSPClient * client, GstRTSPUrl * uri,
+    GstRTSPSession * session, GstRTSPMessage * request)
+{
+  GstRTSPResult res;
+  guint8 *data;
+  guint size;
+
+  res = gst_rtsp_message_get_body (request, &data, &size);
+  if (res != GST_RTSP_OK)
+    goto bad_request;
+
+  if (size == 0) {
+    /* no body, keep-alive request */
+    send_generic_response (client, GST_RTSP_STS_OK, request);
+  } else {
+    /* there is a body */
+    GstRTSPMessage response = { 0 };
+
+    /* there is a body, handle the params */
+    res = gst_rtsp_params_get (client, uri, session, request, &response);
+    if (res != GST_RTSP_OK)
+      goto bad_request;
+
+    send_response (client, session, &response);
+  }
+  return TRUE;
+
+  /* ERRORS */
+bad_request:
+  {
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, request);
+    return FALSE;
+  }
+}
+
+static gboolean
+handle_set_param_request (GstRTSPClient * client, GstRTSPUrl * uri,
+    GstRTSPSession * session, GstRTSPMessage * request)
+{
+  GstRTSPResult res;
+  guint8 *data;
+  guint size;
+
+  res = gst_rtsp_message_get_body (request, &data, &size);
+  if (res != GST_RTSP_OK)
+    goto bad_request;
+
+  if (size == 0) {
+    /* no body, keep-alive request */
+    send_generic_response (client, GST_RTSP_STS_OK, request);
+  } else {
+    GstRTSPMessage response = { 0 };
+
+    /* there is a body, handle the params */
+    res = gst_rtsp_params_set (client, uri, session, request, &response);
+    if (res != GST_RTSP_OK)
+      goto bad_request;
+
+    send_response (client, session, &response);
+  }
+  return TRUE;
+
+  /* ERRORS */
+bad_request:
+  {
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, request);
     return FALSE;
   }
 }
@@ -448,7 +520,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPUrl * uri,
   /* the state is now READY */
   media->state = GST_RTSP_STATE_READY;
 
-  return FALSE;
+  return TRUE;
 
   /* ERRORS */
 no_session:
@@ -581,7 +653,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPUrl * uri,
 
   media->state = GST_RTSP_STATE_PLAYING;
 
-  return FALSE;
+  return TRUE;
 
   /* ERRORS */
 no_session:
@@ -876,7 +948,7 @@ no_sdp:
   }
 }
 
-static void
+static gboolean
 handle_options_request (GstRTSPClient * client, GstRTSPUrl * uri,
     GstRTSPSession * session, GstRTSPMessage * request)
 {
@@ -900,6 +972,8 @@ handle_options_request (GstRTSPClient * client, GstRTSPUrl * uri,
   g_free (str);
 
   send_response (client, session, &response);
+
+  return TRUE;
 }
 
 /* remove duplicate and trailing '/' */
@@ -1031,8 +1105,10 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
       handle_teardown_request (client, uri, session, request);
       break;
     case GST_RTSP_SET_PARAMETER:
+      handle_set_param_request (client, uri, session, request);
+      break;
     case GST_RTSP_GET_PARAMETER:
-      send_generic_response (client, GST_RTSP_STS_OK, request);
+      handle_get_param_request (client, uri, session, request);
       break;
     case GST_RTSP_ANNOUNCE:
     case GST_RTSP_RECORD:
