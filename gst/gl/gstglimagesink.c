@@ -606,9 +606,17 @@ gst_glimage_sink_expose (GstXOverlay * overlay)
   GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
 
   //redisplay opengl scene
-  if (glimage_sink->display && glimage_sink->window_id)
+  if (glimage_sink->display && glimage_sink->window_id) {
+    
+    if (glimage_sink->window_id != glimage_sink->new_window_id) {
+      glimage_sink->window_id = glimage_sink->new_window_id;
+      gst_gl_display_set_window_id (glimage_sink->display,
+          glimage_sink->window_id);
+    }
+
     gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0, 
       glimage_sink->keep_aspect_ratio);
+  }
 }
 
 
