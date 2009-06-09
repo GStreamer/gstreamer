@@ -44,6 +44,9 @@
 #include "gstinterpolationcontrolsource.h"
 #include "gstinterpolationcontrolsourceprivate.h"
 
+#define GST_CAT_DEFAULT controller_debug
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
+
 static void gst_interpolation_control_source_init (GstInterpolationControlSource
     * self);
 static void
