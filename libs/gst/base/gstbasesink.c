@@ -165,6 +165,7 @@ typedef struct
   guint64 start;                /* running_time of the start */
   gdouble rate;                 /* rate of skipping */
   gdouble start_rate;           /* rate before skipping */
+  guint64 start_start;          /* start position skipping */
   guint64 start_stop;           /* stop position skipping */
   gboolean flush;               /* if this was a flushing step */
   gboolean intermediate;        /* if this is an intermediate step */
@@ -1501,10 +1502,22 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
   segment->rate *= current->rate;
   segment->abs_rate = ABS (segment->rate);
 
-  if (segment->format == GST_FORMAT_TIME) {
+  /* save values */
+  if (segment->rate > 0.0)
     current->start_stop = segment->stop;
+  else
+    current->start_start = segment->start;
+
+  if (current->format == GST_FORMAT_TIME) {
     end = current->start + current->amount;
-    segment->stop = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+    if (!current->flush) {
+      /* update the segment clipping regions for non-flushing seeks */
+      if (segment->rate > 0.0)
+        segment->stop = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+      else
+        segment->start =
+            gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+    }
   }
 
   GST_DEBUG_OBJECT (sink, "segment now %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
@@ -1549,20 +1562,26 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
       GST_TIME_ARGS (current->duration));
 
   position = current->start + current->duration;
-  gst_element_set_start_time (GST_ELEMENT_CAST (sink), position);
 
   /* now move the segment to the new running time */
   gst_segment_set_running_time (segment, GST_FORMAT_TIME, position);
 
   if (current->flush) {
-    /* and remove the accumulated time we flushed */
+    /* and remove the accumulated time we flushed, start time did not change */
     segment->accum = current->start;
+  } else {
+    /* start time is now the stepped position */
+    gst_element_set_start_time (GST_ELEMENT_CAST (sink), position);
   }
 
   /* restore the previous rate */
   segment->rate = current->start_rate;
   segment->abs_rate = ABS (segment->rate);
-  segment->stop = current->start_stop;
+
+  if (segment->rate > 0.0)
+    segment->stop = current->start_stop;
+  else
+    segment->start = current->start_start;
 
   /* the clip segment is used for position report in paused... */
   memcpy (sink->abidata.ABI.clip_segment, segment, sizeof (GstSegment));
@@ -1806,6 +1825,7 @@ do_times:
 eos_done:
   /* done label only called when doing EOS, we also stop stepping then */
   if (*step_end && step->flush) {
+    GST_DEBUG_OBJECT (basesink, "flushing step ended");
     stop_stepping (basesink, segment, step, rstart, rstop);
     *step_end = FALSE;
   }
@@ -2604,7 +2624,7 @@ again:
     GstBuffer *buf;
 
     /* drop late buffers unconditionally, let's hope it's unlikely */
-    if (G_UNLIKELY (late && !step_end))
+    if (G_UNLIKELY (late))
       goto dropped;
 
     buf = GST_BUFFER_CAST (obj);
@@ -2632,12 +2652,6 @@ again:
 
       if (ret == GST_FLOW_STEP)
         goto again;
-
-      if (step_end) {
-        stop_stepping (basesink, &basesink->segment, &priv->current_step,
-            priv->current_rstart, priv->current_rstop);
-        goto again;
-      }
 
       priv->rendered++;
     }
@@ -2700,6 +2714,12 @@ again:
   }
 
 done:
+  if (step_end) {
+    stop_stepping (basesink, &basesink->segment, &priv->current_step,
+        priv->current_rstart, priv->current_rstop);
+    goto again;
+  }
+
   gst_base_sink_perform_qos (basesink, late);
 
   GST_DEBUG_OBJECT (basesink, "object unref after render %p", obj);
