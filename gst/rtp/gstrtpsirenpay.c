@@ -52,7 +52,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 16000, "
-        "encoding-name = (string) \"SIREN\", " "dct-length = (int) 320")
+        "encoding-name = (string) \"SIREN\", "
+        "bitrate = (string) \"16000\", " "dct-length = (int) 320")
     );
 
 static gboolean gst_rtpsirenpay_setcaps (GstBaseRTPPayload * payload,
