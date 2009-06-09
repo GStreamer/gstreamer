@@ -69,6 +69,8 @@ static gboolean gst_shape_wipe_video_sink_setcaps (GstPad * pad,
 static GstCaps *gst_shape_wipe_video_sink_getcaps (GstPad * pad);
 static GstFlowReturn gst_shape_wipe_video_sink_bufferalloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
+static gboolean gst_shape_wipe_video_sink_query (GstPad * pad,
+    GstQuery * query);
 static GstFlowReturn gst_shape_wipe_mask_sink_chain (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_shape_wipe_mask_sink_event (GstPad * pad, GstEvent * event);
@@ -76,6 +78,7 @@ static gboolean gst_shape_wipe_mask_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_shape_wipe_mask_sink_getcaps (GstPad * pad);
 static gboolean gst_shape_wipe_src_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_shape_wipe_src_getcaps (GstPad * pad);
+static gboolean gst_shape_wipe_src_query (GstPad * pad, GstQuery * query);
 
 enum
 {
@@ -169,6 +172,8 @@ gst_shape_wipe_init (GstShapeWipe * self, GstShapeWipeClass * g_class)
       GST_DEBUG_FUNCPTR (gst_shape_wipe_video_sink_getcaps));
   gst_pad_set_bufferalloc_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_shape_wipe_video_sink_bufferalloc));
+  gst_pad_set_query_function (self->video_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_shape_wipe_video_sink_query));
   gst_element_add_pad (GST_ELEMENT (self), self->video_sinkpad);
 
   self->mask_sinkpad =
@@ -188,6 +193,8 @@ gst_shape_wipe_init (GstShapeWipe * self, GstShapeWipeClass * g_class)
       GST_DEBUG_FUNCPTR (gst_shape_wipe_src_event));
   gst_pad_set_getcaps_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_shape_wipe_src_getcaps));
+  gst_pad_set_query_function (self->srcpad,
+      GST_DEBUG_FUNCPTR (gst_shape_wipe_src_query));
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   self->mask_mutex = g_mutex_new ();
@@ -587,6 +594,50 @@ gst_shape_wipe_src_getcaps (GstPad * pad)
 
   GST_DEBUG_OBJECT (pad, "Returning caps: %" GST_PTR_FORMAT, ret);
 
+  return ret;
+}
+
+static gboolean
+gst_shape_wipe_video_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
+  gboolean ret;
+  GstPad *peer = gst_pad_get_peer (self->srcpad);
+
+  GST_DEBUG_OBJECT (pad, "Handling query of type '%s'",
+      gst_query_type_get_name (GST_QUERY_TYPE (query)));
+
+  if (!peer) {
+    GST_INFO_OBJECT (pad, "No peer yet");
+    ret = FALSE;
+  } else {
+    ret = gst_pad_query (peer, query);
+    gst_object_unref (peer);
+  }
+
+  gst_object_unref (self);
+  return ret;
+}
+
+static gboolean
+gst_shape_wipe_src_query (GstPad * pad, GstQuery * query)
+{
+  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
+  gboolean ret;
+  GstPad *peer = gst_pad_get_peer (self->video_sinkpad);
+
+  GST_DEBUG_OBJECT (pad, "Handling query of type '%s'",
+      gst_query_type_get_name (GST_QUERY_TYPE (query)));
+
+  if (!peer) {
+    GST_INFO_OBJECT (pad, "No peer yet");
+    ret = FALSE;
+  } else {
+    ret = gst_pad_query (peer, query);
+    gst_object_unref (peer);
+  }
+
+  gst_object_unref (self);
   return ret;
 }
 
