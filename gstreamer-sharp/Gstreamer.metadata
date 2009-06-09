@@ -134,7 +134,9 @@
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_union']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_normalize']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_subtract']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/constructor[@cname='gst_caps_new_full']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/constructor[@cname='gst_caps_new_full_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/constructor[@cname='gst_caps_new_simple']" name="hidden">1</attr>
   <change-node-type path="/api/namespace/boxed[@name='Caps']/constructor[@cname='gst_caps_new_any']">method</change-node-type>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_new_any']" name="name">NewAny</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_new_any']" name="shared">true</attr>
@@ -431,7 +433,6 @@
     </method>
   </add-node>
 
-  <attr path="/api/namespace/object[@name='Index']/virtual_method[@cname='get_assoc_entry']/parameters/parameter[@name='func']" name="type">gpointer</attr>
   <remove-node path="/api/namespace/object[@name='Index']/virtual_method[@cname='get_assoc_entry']/parameters/parameter[@name='func']" />
   <remove-node path="/api/namespace/object[@name='Index']/virtual_method[@cname='get_assoc_entry']/parameters/parameter[@name='user_data']" />
   <attr path="/api/namespace/object[@name='Index']/property[@cname='resolver']" name="name">Method</attr>
@@ -521,12 +522,14 @@
   <attr path="/api/namespace/object[@name='Pipeline']/field[@name='FixedClock']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='Pad']/field" name="hidden">1</attr>
-  <remove-attr path="/api/namespace/object[@name='Pad']/field[@name='mode']" name="hidden" />
   <attr path="/api/namespace/object[@name='Pad']/method[@name='GetAllowedCaps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_data_probe']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_data_probe_full']" name="name">AddDataProbe</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_data_probe_full']/parameters/parameter[@name='handler']" name="type">GstPadDataProbeCallback</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_buffer_probe']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_buffer_probe_full']" name="name">AddBufferProbe</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_buffer_probe_full']/parameters/parameter[@name='handler']" name="type">GstPadBufferProbeCallback</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_event_probe']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_event_probe_full']" name="name">AddEventProbe</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_add_event_probe_full']/parameters/parameter[@name='handler']" name="type">GstPadEventProbeCallback</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_query_duration']/parameters/parameter[@name='format']" name="pass_as">ref</attr>
@@ -831,6 +834,7 @@
   <remove-attr path="/api/namespace/boxed[@name='Structure']/constructor[@cname='gst_structure_empty_new']" name="shared" />
   <attr path="/api/namespace/boxed[@name='Structure']/field[@cname='type']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_empty_new']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/constructor[@cname='gst_structure_new']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/constructor[@cname='gst_structure_new_valist']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_copy']" name="owned">true</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_value']" name="name">SetValue</attr>

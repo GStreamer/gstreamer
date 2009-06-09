@@ -11,6 +11,10 @@ public Caps (Structure[] s) : this () {
     Append (o);
 }
 
+public Caps (string mediaType, params object[] fields) : this () {
+  Append (new Structure(mediaType, fields));
+}
+
 [DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_caps_get_refcount_offset ();
 
