@@ -224,6 +224,8 @@ static int gst_ffmpegdec_get_buffer (AVCodecContext * context,
 static void gst_ffmpegdec_release_buffer (AVCodecContext * context,
     AVFrame * picture);
 
+static void gst_ffmpegdec_drain (GstFFMpegDec * ffmpegdec);
+
 static void gst_ts_handler_init (GstFFMpegDec * ffmpegdec);
 static void gst_ts_handler_append (GstFFMpegDec * ffmpegdec,
     GstBuffer * buffer);
@@ -685,6 +687,11 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     oclass->in_plugin->id = gst_ffmpeg_caps_to_codecid (caps, NULL);
 
   /* close old session */
+  if (ffmpegdec->opened) {
+    GST_OBJECT_UNLOCK (ffmpegdec);
+    gst_ffmpegdec_drain (ffmpegdec);
+    GST_OBJECT_LOCK (ffmpegdec);
+  }
   gst_ffmpegdec_close (ffmpegdec);
 
   /* set defaults */
