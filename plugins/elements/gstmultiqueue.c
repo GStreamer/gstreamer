@@ -1385,13 +1385,9 @@ single_queue_check_full (GstDataQueue * dataq, guint visible, guint bytes,
   if (IS_FILLED (visible, visible))
     return TRUE;
 
-  if (sq->cur_time != 0) {
-    /* if we have valid time in the queue, check */
-    res = IS_FILLED (time, sq->cur_time);
-  } else {
-    /* no valid time, check bytes */
-    res = IS_FILLED (bytes, bytes);
-  }
+  /* check time or bytes */
+  res = IS_FILLED (time, sq->cur_time) || IS_FILLED (bytes, bytes);
+
   return res;
 }
 
