@@ -25,6 +25,7 @@
 G_BEGIN_DECLS
 
 #define FOURCC_ftyp     GST_MAKE_FOURCC('f','t','y','p')
+#define FOURCC_qt__     GST_MAKE_FOURCC('q','t',' ',' ')
 #define FOURCC_moov     GST_MAKE_FOURCC('m','o','o','v')
 #define FOURCC_mvhd     GST_MAKE_FOURCC('m','v','h','d')
 #define FOURCC_clip     GST_MAKE_FOURCC('c','l','i','p')
@@ -75,6 +76,7 @@ G_BEGIN_DECLS
 #define FOURCC_wave     GST_MAKE_FOURCC('w','a','v','e')
 #define FOURCC_appl     GST_MAKE_FOURCC('a','p','p','l')
 #define FOURCC_esds     GST_MAKE_FOURCC('e','s','d','s')
+#define FOURCC_pasp     GST_MAKE_FOURCC('p','a','s','p')
 #define FOURCC_hnti     GST_MAKE_FOURCC('h','n','t','i')
 #define FOURCC_rtp_     GST_MAKE_FOURCC('r','t','p',' ')
 #define FOURCC_sdp_     GST_MAKE_FOURCC('s','d','p',' ')

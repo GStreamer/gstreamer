@@ -188,6 +188,11 @@ struct _QtDemuxStream
   /* video info */
   gint width;
   gint height;
+  /* aspect ratio */
+  gint display_width;
+  gint display_height;
+  gint par_w;
+  gint par_h;
   /* Numerator/denominator framerate */
   gint fps_n;
   gint fps_d;
@@ -3223,6 +3228,35 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
           "height", G_TYPE_INT, stream->height,
           "framerate", GST_TYPE_FRACTION, stream->fps_n, stream->fps_d, NULL);
 
+      /* iso files:
+       * calculate pixel-aspect-ratio using display width and height */
+      if (qtdemux->major_brand != FOURCC_qt__) {
+        GST_DEBUG_OBJECT (qtdemux,
+            "video size %dx%d, target display size %dx%d", stream->width,
+            stream->height, stream->display_width, stream->display_height);
+
+        if (stream->display_width > 0 && stream->display_height > 0 &&
+            stream->width > 0 && stream->height > 0) {
+          gint n, d;
+
+          /* calculate the pixel aspect ratio using the display and pixel w/h */
+          n = stream->display_width * stream->height;
+          d = stream->display_height * stream->width;
+          if (n != d) {
+            GST_DEBUG_OBJECT (qtdemux, "setting PAR to %d/%d", n, d);
+            gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
+                GST_TYPE_FRACTION, n, d, NULL);
+          }
+        }
+      }
+
+      /* qt file might have pasp atom */
+      if (stream->par_w > 0 && stream->par_h > 0) {
+        GST_DEBUG_OBJECT (qtdemux, "par %d:%d", stream->par_w, stream->par_h);
+        gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION, stream->par_w, stream->par_h, NULL);
+      }
+
       depth = stream->bits_per_sample;
 
       /* more than 32 bits means grayscale */
@@ -3826,6 +3860,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *mp4v;
   GNode *wave;
   GNode *esds;
+  GNode *pasp;
   QtDemuxStream *stream;
   GstTagList *list = NULL;
   gchar *codec = NULL;
@@ -3919,8 +3954,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   if (stream->subtype == FOURCC_vide) {
     guint32 fourcc;
+    const guint8 *tkhd_data = (const guint8 *) tkhd->data;
 
     stream->sampled = TRUE;
+
+    /* version 1 uses some 64-bit ints */
+    offset = (QT_UINT8 (tkhd_data + 8) == 1) ? 96 : 84;
+    stream->display_width = (guint) QT_FP32 (tkhd_data + offset);
+    stream->display_height = (guint) QT_FP32 (tkhd_data + offset + 4);
 
     offset = 16;
     stream->fourcc = fourcc = QT_FOURCC (stsd_data + offset + 4);
@@ -3951,9 +3992,22 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     esds = NULL;
+    pasp = NULL;
     mp4v = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4v);
-    if (mp4v)
+    if (mp4v) {
       esds = qtdemux_tree_get_child_by_type (mp4v, FOURCC_esds);
+      pasp = qtdemux_tree_get_child_by_type (mp4v, FOURCC_pasp);
+    }
+
+    if (pasp) {
+      const guint8 *pasp_data = (const guint8 *) pasp->data;
+
+      stream->par_w = QT_UINT32 (pasp_data + 8);
+      stream->par_h = QT_UINT32 (pasp_data + 12);
+    } else {
+      stream->par_w = 0;
+      stream->par_h = 0;
+    }
 
     if (esds) {
       gst_qtdemux_handle_esds (qtdemux, stream, esds, list);
@@ -4854,7 +4908,7 @@ qtdemux_tag_add_blob (GNode * node, GstQTDemux * demux)
   if (QT_FOURCC (data + 4) == FOURCC_____ ||
       (len > 8 + 12 && QT_FOURCC (data + 12) == FOURCC_data))
     style = "itunes";
-  else if (demux->major_brand == GST_MAKE_FOURCC ('q', 't', ' ', ' '))
+  else if (demux->major_brand == FOURCC_qt__)
     style = "quicktime";
   /* fall back to assuming iso/3gp tag style */
   else
