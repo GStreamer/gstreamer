@@ -20,6 +20,8 @@
  */
 
 
+#include <math.h>
+
 #include "gst_private.h"
 
 #include "gstutils.h"
@@ -812,7 +814,7 @@ gst_segment_to_position (GstSegment * segment, GstFormat format,
 
   /* move into the segment at the right rate */
   if (G_UNLIKELY (segment->abs_rate != 1.0))
-    result *= segment->abs_rate;
+    result = ceil (result * segment->abs_rate);
 
   if (G_LIKELY (segment->rate > 0.0)) {
     /* bring to corrected position in segment */
