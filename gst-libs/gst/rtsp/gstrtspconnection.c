@@ -318,6 +318,75 @@ no_fdset:
 }
 
 /**
+ * gst_rtsp_connection_create_from_fd:
+ * @fd: a file descriptor
+ * @ip: the IP address of the other end
+ * @port: the port used by the other end
+ * @initial_buffer: data already read from @fd
+ * @conn: storage for a #GstRTSPConnection
+ *
+ * Create a new #GstRTSPConnection for handling communication on the existing
+ * file descriptor @fd. The @initial_buffer contains any data already read from
+ * @fd which should be used before starting to read new data.
+ *
+ * Returns: #GST_RTSP_OK when @conn contains a valid connection.
+ *
+ * Since: 0.10.25
+ */
+GstRTSPResult
+gst_rtsp_connection_create_from_fd (gint fd, const gchar * ip, guint16 port,
+    const gchar * initial_buffer, GstRTSPConnection ** conn)
+{
+  GstRTSPConnection *newconn = NULL;
+  GstRTSPUrl *url;
+#ifdef G_OS_WIN32
+  gulong flags = 1;
+#endif
+  GstRTSPResult res;
+
+  g_return_val_if_fail (fd >= 0, GST_RTSP_EINVAL);
+  g_return_val_if_fail (ip != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
+
+  /* set to non-blocking mode so that we can cancel the communication */
+#ifndef G_OS_WIN32
+  fcntl (fd, F_SETFL, O_NONBLOCK);
+#else
+  ioctlsocket (fd, FIONBIO, &flags);
+#endif /* G_OS_WIN32 */
+
+  /* create a url for the client address */
+  url = g_new0 (GstRTSPUrl, 1);
+  url->host = g_strdup (ip);
+  url->port = port;
+
+  /* now create the connection object */
+  GST_RTSP_CHECK (gst_rtsp_connection_create (url, &newconn), newconn_failed);
+  gst_rtsp_url_free (url);
+
+  ADD_POLLFD (newconn->fdset, &newconn->fd0, fd);
+
+  /* both read and write initially */
+  newconn->readfd = &newconn->fd0;
+  newconn->writefd = &newconn->fd0;
+
+  newconn->ip = g_strdup (ip);
+
+  newconn->initial_buffer = g_strdup (initial_buffer);
+
+  *conn = newconn;
+
+  return GST_RTSP_OK;
+
+  /* ERRORS */
+newconn_failed:
+  {
+    gst_rtsp_url_free (url);
+    return res;
+  }
+}
+
+/**
  * gst_rtsp_connection_accept:
  * @sock: a socket
  * @conn: storage for a #GstRTSPConnection
@@ -333,14 +402,13 @@ GstRTSPResult
 gst_rtsp_connection_accept (gint sock, GstRTSPConnection ** conn)
 {
   int fd;
-  GstRTSPConnection *newconn = NULL;
   union gst_sockaddr sa;
   socklen_t slen = sizeof (sa);
   gchar ip[INET6_ADDRSTRLEN];
-  GstRTSPUrl *url;
-#ifdef G_OS_WIN32
-  gulong flags = 1;
-#endif
+  guint16 port;
+
+  g_return_val_if_fail (sock >= 0, GST_RTSP_EINVAL);
+  g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
 
   memset (&sa, 0, slen);
 
@@ -354,37 +422,15 @@ gst_rtsp_connection_accept (gint sock, GstRTSPConnection ** conn)
 
   if (getnameinfo (&sa.sa, slen, ip, sizeof (ip), NULL, 0, NI_NUMERICHOST) != 0)
     goto getnameinfo_failed;
-  if (sa.sa.sa_family != AF_INET && sa.sa.sa_family != AF_INET6)
+
+  if (sa.sa.sa_family == AF_INET)
+    port = sa.sa_in.sin_port;
+  else if (sa.sa.sa_family == AF_INET6)
+    port = sa.sa_in6.sin6_port;
+  else
     goto wrong_family;
 
-  /* set to non-blocking mode so that we can cancel the communication */
-#ifndef G_OS_WIN32
-  fcntl (fd, F_SETFL, O_NONBLOCK);
-#else
-  ioctlsocket (fd, FIONBIO, &flags);
-#endif /* G_OS_WIN32 */
-
-  /* create a url for the client address */
-  url = g_new0 (GstRTSPUrl, 1);
-  url->host = g_strdup (ip);
-  if (sa.sa.sa_family == AF_INET)
-    url->port = sa.sa_in.sin_port;
-  else
-    url->port = sa.sa_in6.sin6_port;
-
-  /* now create the connection object */
-  gst_rtsp_connection_create (url, &newconn);
-  gst_rtsp_url_free (url);
-
-  ADD_POLLFD (newconn->fdset, &newconn->fd0, fd);
-
-  /* both read and write initially */
-  newconn->readfd = &newconn->fd0;
-  newconn->writefd = &newconn->fd0;
-
-  *conn = newconn;
-
-  return GST_RTSP_OK;
+  return gst_rtsp_connection_create_from_fd (fd, ip, port, NULL, conn);
 
   /* ERRORS */
 accept_failed:
