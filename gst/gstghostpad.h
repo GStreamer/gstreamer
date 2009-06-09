@@ -45,7 +45,7 @@ struct _GstProxyPad
 {
   GstPad pad;
 
-  /*< private > */
+  /*< private >*/
   GstProxyPadPrivate *priv;
 };
 
@@ -53,7 +53,7 @@ struct _GstProxyPadClass
 {
   GstPadClass parent_class;
 
-  /*< private > */
+  /*< private >*/
   gpointer _gst_reserved[1];
 };
 
@@ -80,7 +80,7 @@ struct _GstGhostPad
 {
   GstProxyPad pad;
 
-  /*< private > */
+  /*< private >*/
   GstGhostPadPrivate *priv;
 };
 
@@ -88,7 +88,7 @@ struct _GstGhostPadClass
 {
   GstProxyPadClass parent_class;
 
-  /*< private > */
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

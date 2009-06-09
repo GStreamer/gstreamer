@@ -114,7 +114,7 @@ struct _GstBus
 {
   GstObject 	    object;
 
-  /*< private > */
+  /*< private >*/
   GQueue           *queue;
   GMutex           *queue_lock;
 
@@ -124,7 +124,7 @@ struct _GstBus
   guint             signal_watch_id;
   guint             num_signal_watchers;
 
-  /*< private > */
+  /*< private >*/
   GstBusPrivate    *priv;
   gpointer _gst_reserved[GST_PADDING - 1];
 };
@@ -137,7 +137,7 @@ struct _GstBusClass
   void (*message)  	(GstBus *bus, GstMessage *message);
   void (*sync_message)  (GstBus *bus, GstMessage *message);
 
-  /*< private > */
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

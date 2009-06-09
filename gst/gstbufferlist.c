@@ -141,7 +141,6 @@ struct _GstBufferList
 {
   GstMiniObject mini_object;
 
-  /*< private > */
   GList *buffers;
 };
 

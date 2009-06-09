@@ -107,7 +107,7 @@ struct _GstDataQueue
 {
   GObject object;
 
-  /*< private > */
+  /*< private >*/
   /* the queue of data we're keeping our grubby hands on */
   GQueue *queue;
 

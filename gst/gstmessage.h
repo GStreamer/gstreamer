@@ -250,7 +250,7 @@ struct _GstMessage
 {
   GstMiniObject mini_object;
 
-  /*< private > *//* with MESSAGE_LOCK */
+  /*< private >*//* with MESSAGE_LOCK */
   GMutex *lock;                 /* lock and cond for async delivery */
   GCond *cond;
 
@@ -261,7 +261,7 @@ struct _GstMessage
 
   GstStructure *structure;
 
-  /*< private > */
+  /*< private >*/
   union {
     struct {
       guint32 seqnum;
@@ -274,7 +274,7 @@ struct _GstMessage
 struct _GstMessageClass {
   GstMiniObjectClass mini_object_class;
 
-  /*< private > */
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

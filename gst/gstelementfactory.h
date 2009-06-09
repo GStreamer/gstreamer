@@ -65,7 +65,7 @@ struct _GstElementDetails
   gchar *description;
   gchar *author;
 
-  /*< private > */
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

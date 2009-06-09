@@ -154,14 +154,14 @@ struct _GstQuery
 
   GstStructure *structure;
 
-  /*< private > */
+  /*< private >*/
   gpointer _gst_reserved;
 };
 
 struct _GstQueryClass {
   GstMiniObjectClass mini_object_class;
 
-  /*< private > */
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
