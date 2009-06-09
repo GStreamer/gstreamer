@@ -60,6 +60,10 @@ struct _GstShapeWipe
   gint mask_bpp;
 
   gint width, height;
+
+  gdouble proportion;
+  GstClockTime earliest_time;
+  GstClockTime frame_duration;
 };
 
 struct _GstShapeWipeClass

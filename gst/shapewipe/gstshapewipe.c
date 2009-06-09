@@ -56,6 +56,11 @@ static void gst_shape_wipe_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static void gst_shape_wipe_reset (GstShapeWipe * self);
+static void gst_shape_wipe_update_qos (GstShapeWipe * self, gdouble proportion,
+    GstClockTimeDiff diff, GstClockTime time);
+static void gst_shape_wipe_reset_qos (GstShapeWipe * self);
+static void gst_shape_wipe_read_qos (GstShapeWipe * self, gdouble * proportion,
+    GstClockTime * time);
 
 static GstStateChangeReturn gst_shape_wipe_change_state (GstElement * element,
     GstStateChange transition);
@@ -274,6 +279,9 @@ gst_shape_wipe_reset (GstShapeWipe * self)
   self->mask_bpp = 0;
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
+
+  gst_shape_wipe_reset_qos (self);
+  self->frame_duration = 0;
 }
 
 static GstFlowReturn
@@ -302,13 +310,15 @@ gst_shape_wipe_video_sink_setcaps (GstPad * pad, GstCaps * caps)
   gboolean ret = TRUE;
   GstStructure *s;
   gint width, height;
+  gint fps_n, fps_d;
 
   GST_DEBUG_OBJECT (pad, "Setting caps: %" GST_PTR_FORMAT, caps);
 
   s = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (s, "width", &width) ||
-      !gst_structure_get_int (s, "height", &height)) {
+      !gst_structure_get_int (s, "height", &height) ||
+      !gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
     ret = FALSE;
     goto done;
   }
@@ -323,6 +333,8 @@ gst_shape_wipe_video_sink_setcaps (GstPad * pad, GstCaps * caps)
     self->mask = NULL;
     g_mutex_unlock (self->mask_mutex);
   }
+
+  self->frame_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
 
   ret = gst_pad_set_caps (self->srcpad, caps);
 
@@ -641,6 +653,79 @@ gst_shape_wipe_src_query (GstPad * pad, GstQuery * query)
   return ret;
 }
 
+static void
+gst_shape_wipe_update_qos (GstShapeWipe * self, gdouble proportion,
+    GstClockTimeDiff diff, GstClockTime timestamp)
+{
+  GST_OBJECT_LOCK (self);
+  self->proportion = proportion;
+  if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
+    if (G_UNLIKELY (diff > 0))
+      self->earliest_time = timestamp + 2 * diff + self->frame_duration;
+    else
+      self->earliest_time = timestamp + diff;
+  } else {
+    self->earliest_time = GST_CLOCK_TIME_NONE;
+  }
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
+gst_shape_wipe_reset_qos (GstShapeWipe * self)
+{
+  gst_shape_wipe_update_qos (self, 0.5, 0, GST_CLOCK_TIME_NONE);
+}
+
+static void
+gst_shape_wipe_read_qos (GstShapeWipe * self, gdouble * proportion,
+    GstClockTime * time)
+{
+  GST_OBJECT_LOCK (self);
+  *proportion = self->proportion;
+  *time = self->earliest_time;
+  GST_OBJECT_UNLOCK (self);
+}
+
+/* Perform qos calculations before processing the next frame. Returns TRUE if
+ * the frame should be processed, FALSE if the frame can be dropped entirely */
+static gboolean
+gst_shape_wipe_do_qos (GstShapeWipe * self, GstClockTime timestamp)
+{
+  GstClockTime qostime, earliest_time;
+  gdouble proportion;
+
+  /* no timestamp, can't do QoS => process frame */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (timestamp))) {
+    GST_LOG_OBJECT (self, "invalid timestamp, can't do QoS, process frame");
+    return TRUE;
+  }
+
+  /* get latest QoS observation values */
+  gst_shape_wipe_read_qos (self, &proportion, &earliest_time);
+
+  /* skip qos if we have no observation (yet) => process frame */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (earliest_time))) {
+    GST_LOG_OBJECT (self, "no observation yet, process frame");
+    return TRUE;
+  }
+
+  /* qos is done on running time */
+  qostime = gst_segment_to_running_time (&self->segment, GST_FORMAT_TIME,
+      timestamp);
+
+  /* see how our next timestamp relates to the latest qos timestamp */
+  GST_LOG_OBJECT (self, "qostime %" GST_TIME_FORMAT ", earliest %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
+
+  if (qostime != GST_CLOCK_TIME_NONE && qostime <= earliest_time) {
+    GST_DEBUG_OBJECT (self, "we are late, drop frame");
+    return FALSE;
+  }
+
+  GST_LOG_OBJECT (self, "process frame");
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_shape_wipe_blend_16 (GstShapeWipe * self, GstBuffer * inbuf,
     GstBuffer * maskbuf, GstBuffer * outbuf)
@@ -786,6 +871,12 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
   }
   g_mutex_unlock (self->mask_mutex);
 
+  if (!gst_shape_wipe_do_qos (self, GST_BUFFER_TIMESTAMP (buffer))) {
+    gst_buffer_unref (buffer);
+    gst_buffer_unref (mask);
+    return GST_FLOW_OK;
+  }
+
   /* Try to blend inplace, if it's not possible
    * get a new buffer from downstream.
    */
@@ -798,6 +889,7 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
       gst_buffer_unref (mask);
       return ret;
     }
+    gst_buffer_copy_metadata (outbuf, buffer, GST_BUFFER_COPY_ALL);
     new_outbuf = TRUE;
   } else {
     outbuf = buffer;
@@ -898,6 +990,9 @@ gst_shape_wipe_video_sink_event (GstPad * pad, GstEvent * event)
       }
     }
       /* fall through */
+    case GST_EVENT_FLUSH_STOP:
+      gst_shape_wipe_reset_qos (self);
+      /* fall through */
     default:
       ret = gst_pad_push_event (self->srcpad, event);
       break;
@@ -924,6 +1019,16 @@ gst_shape_wipe_src_event (GstPad * pad, GstEvent * event)
   gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:{
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+      gdouble proportion;
+
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+      gst_shape_wipe_update_qos (self, proportion, diff, timestamp);
+    }
+      /* fall through */
     default:
       ret = gst_pad_push_event (self->video_sinkpad, event);
       break;
