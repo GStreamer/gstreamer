@@ -395,7 +395,7 @@ static const GstQueryType *gst_deinterlace_src_query_types (GstPad * pad);
 
 static void gst_deinterlace_reset (GstDeinterlace * self);
 static void gst_deinterlace_update_qos (GstDeinterlace * self,
-    gdouble proportion, GstClockTime diff, GstClockTime time);
+    gdouble proportion, GstClockTimeDiff diff, GstClockTime time);
 static void gst_deinterlace_reset_qos (GstDeinterlace * self);
 static void gst_deinterlace_read_qos (GstDeinterlace * self,
     gdouble * proportion, GstClockTime * time);
@@ -938,13 +938,16 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
 
 static void
 gst_deinterlace_update_qos (GstDeinterlace * self, gdouble proportion,
-    GstClockTime diff, GstClockTime timestamp)
+    GstClockTimeDiff diff, GstClockTime timestamp)
 {
   GST_OBJECT_LOCK (self);
   self->proportion = proportion;
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
     if (G_UNLIKELY (diff > 0))
-      self->earliest_time = timestamp + 2 * diff + self->field_duration;
+      self->earliest_time =
+          timestamp + 2 * diff + ((self->fields ==
+              GST_DEINTERLACE_ALL) ? self->field_duration : 2 *
+          self->field_duration);
     else
       self->earliest_time = timestamp + diff;
   } else {
