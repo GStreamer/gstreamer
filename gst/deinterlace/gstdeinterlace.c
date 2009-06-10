@@ -143,7 +143,7 @@ gst_deinterlace_simple_method_deinterlace_frame (GstDeinterlaceMethod * self,
 
   field0 = GST_BUFFER_DATA (parent->field_history[cur_field_idx].buf);
 
-  g_assert (dm_class->fields_required <= 4);
+  g_return_if_fail (dm_class->fields_required <= 4);
 
   if (dm_class->fields_required >= 2)
     field1 = GST_BUFFER_DATA (parent->field_history[cur_field_idx + 1].buf);
@@ -418,6 +418,7 @@ GST_BOILERPLATE_FULL (GstDeinterlace, gst_deinterlace, GstElement,
 static void
 gst_deinterlace_set_method (GstDeinterlace * self, GstDeinterlaceMethods method)
 {
+  GST_DEBUG_OBJECT (self, "Setting new method %d", method);
 
   if (self->method) {
     gst_child_proxy_child_removed (GST_OBJECT (self),
@@ -476,6 +477,13 @@ gst_deinterlace_clip_buffer (GstDeinterlace * self, GstBuffer * buffer)
   GstClockTime start, stop;
   gint64 cstart, cstop;
 
+  GST_DEBUG_OBJECT (self,
+      "Clipping buffer to the current segment: %" GST_TIME_FORMAT " -- %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
+  GST_DEBUG_OBJECT (self, "Current segment: %" GST_SEGMENT_FORMAT,
+      &self->segment);
+
   if (G_UNLIKELY (self->segment.format != GST_FORMAT_TIME))
     goto beach;
   if (G_UNLIKELY (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer)))
@@ -493,6 +501,14 @@ gst_deinterlace_clip_buffer (GstDeinterlace * self, GstBuffer * buffer)
     GST_BUFFER_DURATION (buffer) = cstop - cstart;
 
 beach:
+  if (ret)
+    GST_DEBUG_OBJECT (self,
+        "Clipped buffer to the current segment: %" GST_TIME_FORMAT " -- %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
+  else
+    GST_DEBUG_OBJECT (self, "Buffer outside the current segment -- dropping");
+
   return ret;
 }
 
@@ -511,7 +527,7 @@ gst_deinterlace_base_init (gpointer klass)
       "Filter/Video",
       "Deinterlace Methods ported from DScaler/TvTime",
       "Martin Eikermann <meiker@upb.de>, "
-      "Sebastian Dröge <slomo@circular-chaos.org>");
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
 static void
@@ -669,7 +685,9 @@ gst_deinterlace_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
 static guint
 gst_deinterlace_child_proxy_get_children_count (GstChildProxy * child_proxy)
 {
-  return 1;
+  GstDeinterlace *self = GST_DEINTERLACE (child_proxy);
+
+  return ((self->method) ? 1 : 0);
 }
 
 static void
@@ -728,6 +746,8 @@ gst_deinterlace_reset_history (GstDeinterlace * self)
 {
   gint i;
 
+  GST_DEBUG_OBJECT (self, "Resetting history");
+
   for (i = 0; i < self->history_count; i++) {
     if (self->field_history[i].buf) {
       gst_buffer_unref (self->field_history[i].buf);
@@ -745,6 +765,8 @@ gst_deinterlace_reset_history (GstDeinterlace * self)
 static void
 gst_deinterlace_reset (GstDeinterlace * self)
 {
+  GST_DEBUG_OBJECT (self, "Resetting internal state");
+
   self->row_stride = 0;
   self->frame_width = 0;
   self->frame_height = 0;
@@ -849,30 +871,24 @@ gst_deinterlace_finalize (GObject * object)
 static GstBuffer *
 gst_deinterlace_pop_history (GstDeinterlace * self)
 {
-  GstBuffer *buffer = NULL;
+  GstBuffer *buffer;
 
-  g_assert (self->history_count > 0);
+  g_return_val_if_fail (self->history_count > 0, NULL);
+
+  GST_DEBUG_OBJECT (self, "Pop last history buffer -- current history size %d",
+      self->history_count);
 
   buffer = self->field_history[self->history_count - 1].buf;
 
   self->history_count--;
-  GST_DEBUG_OBJECT (self, "pop, size(history): %d", self->history_count);
+
+  GST_DEBUG_OBJECT (self, "Returning buffer: %" GST_TIME_FORMAT
+      " with duration %" GST_TIME_FORMAT " and size %u",
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)), GST_BUFFER_SIZE (buffer));
 
   return buffer;
 }
-
-#if 0
-static GstBuffer *
-gst_deinterlace_head_history (GstDeinterlace * self)
-{
-  return self->field_history[self->history_count - 1].buf;
-}
-#endif
-
-
-/* invariant: field with smallest timestamp is self->field_history[self->history_count-1]
-
-*/
 
 static void
 gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
@@ -888,7 +904,12 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   guint fields_to_push = (onefield) ? 1 : (!repeated) ? 2 : 3;
   gint field1_flags, field2_flags;
 
-  g_assert (self->history_count < MAX_FIELD_HISTORY - fields_to_push);
+  g_return_if_fail (self->history_count < MAX_FIELD_HISTORY - fields_to_push);
+
+  GST_DEBUG_OBJECT (self, "Pushing new buffer to the history: %" GST_TIME_FORMAT
+      " with duration %" GST_TIME_FORMAT " and size %u",
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)), GST_BUFFER_SIZE (buffer));
 
   for (i = MAX_FIELD_HISTORY - 1; i >= fields_to_push; i--) {
     self->field_history[i].buf = self->field_history[i - fields_to_push].buf;
@@ -952,7 +973,9 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   }
 
   self->history_count += fields_to_push;
-  GST_DEBUG_OBJECT (self, "push, size(history): %d", self->history_count);
+
+  GST_DEBUG_OBJECT (self, "Pushed buffer -- current history size %d",
+      self->history_count);
 
   if (self->last_buffer)
     gst_buffer_unref (self->last_buffer);
@@ -963,6 +986,11 @@ static void
 gst_deinterlace_update_qos (GstDeinterlace * self, gdouble proportion,
     GstClockTimeDiff diff, GstClockTime timestamp)
 {
+  GST_DEBUG_OBJECT (self,
+      "Updating QoS: proportion %lf, diff %s%" GST_TIME_FORMAT ", timestamp %"
+      GST_TIME_FORMAT, proportion, (diff < 0) ? "-" : "",
+      GST_TIME_ARGS (ABS (diff)), GST_TIME_ARGS (timestamp));
+
   GST_OBJECT_LOCK (self);
   self->proportion = proportion;
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
@@ -1064,17 +1092,17 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
 
   /* Not enough fields in the history */
   if (self->history_count < fields_required + 1) {
-    /* TODO: do bob or just forward frame */
-    GST_DEBUG_OBJECT (self, "HistoryCount=%d", self->history_count);
+    GST_DEBUG_OBJECT (self, "Need more fields (have %d, need %d)",
+        self->history_count, fields_required + 1);
     return GST_FLOW_OK;
   }
 
   while (self->history_count >= fields_required) {
     if (self->fields == GST_DEINTERLACE_ALL)
       GST_DEBUG_OBJECT (self, "All fields");
-    if (self->fields == GST_DEINTERLACE_TF)
+    else if (self->fields == GST_DEINTERLACE_TF)
       GST_DEBUG_OBJECT (self, "Top fields");
-    if (self->fields == GST_DEINTERLACE_BF)
+    else if (self->fields == GST_DEINTERLACE_BF)
       GST_DEBUG_OBJECT (self, "Bottom fields");
 
     cur_field_idx = self->history_count - fields_required;
@@ -1091,8 +1119,10 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
       if (ret != GST_FLOW_OK)
         return ret;
 
-      g_assert (self->history_count - 1 -
-          gst_deinterlace_method_get_latency (self->method) >= 0);
+      g_return_val_if_fail (self->history_count - 1 -
+          gst_deinterlace_method_get_latency (self->method) >= 0,
+          GST_FLOW_ERROR);
+
       buf =
           self->field_history[self->history_count - 1 -
           gst_deinterlace_method_get_latency (self->method)].buf;
@@ -1152,8 +1182,10 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
       if (ret != GST_FLOW_OK)
         return ret;
 
-      g_assert (self->history_count - 1 -
-          gst_deinterlace_method_get_latency (self->method) >= 0);
+      g_return_val_if_fail (self->history_count - 1 -
+          gst_deinterlace_method_get_latency (self->method) >= 0,
+          GST_FLOW_ERROR);
+
       buf =
           self->field_history[self->history_count - 1 -
           gst_deinterlace_method_get_latency (self->method)].buf;
@@ -1196,8 +1228,6 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
       gst_buffer_unref (gst_deinterlace_pop_history (self));
     }
   }
-
-  GST_DEBUG_OBJECT (self, "----chain end ----\n\n");
 
   return ret;
 }
@@ -1464,7 +1494,7 @@ gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps)
         gst_util_uint64_scale (GST_SECOND, self->frame_rate_d,
         2 * self->frame_rate_n);
 
-  GST_DEBUG_OBJECT (self, "Set caps: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (pad, "Set caps: %" GST_PTR_FORMAT, caps);
 
 done:
 
@@ -1581,7 +1611,7 @@ gst_deinterlace_sink_query (GstPad * pad, GstQuery * query)
   GstDeinterlace *self = GST_DEINTERLACE (gst_pad_get_parent (pad));
   gboolean res = FALSE;
 
-  GST_LOG_OBJECT (self, "%s query", GST_QUERY_TYPE_NAME (query));
+  GST_LOG_OBJECT (pad, "%s query", GST_QUERY_TYPE_NAME (query));
 
   switch (GST_QUERY_TYPE (query)) {
     default:{
@@ -1671,7 +1701,7 @@ gst_deinterlace_src_query (GstPad * pad, GstQuery * query)
   GstDeinterlace *self = GST_DEINTERLACE (gst_pad_get_parent (pad));
   gboolean res = FALSE;
 
-  GST_LOG_OBJECT (self, "%s query", GST_QUERY_TYPE_NAME (query));
+  GST_LOG_OBJECT (pad, "%s query", GST_QUERY_TYPE_NAME (query));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
