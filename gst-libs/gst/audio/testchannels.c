@@ -17,14 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include <gst/gst.h>
-
-#include <multichannel.c>
-#include <audio-enumtypes.c>
+#include "multichannel.c"
+#include "audio-enumtypes.c"
 
 gint
 main (gint argc, gchar * argv[])
