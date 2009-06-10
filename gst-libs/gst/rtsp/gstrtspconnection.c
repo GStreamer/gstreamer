@@ -118,7 +118,7 @@ static GstRTSPResult read_line (GstRTSPConnection * conn, guint8 * buffer,
     guint * idx, guint size);
 static GstRTSPResult parse_key_value (guint8 * buffer, gchar * key,
     guint keysize, gchar ** value);
-static void parse_string (gchar * dest, gint size, gchar ** src);
+static GstRTSPResult parse_string (gchar * dest, gint size, gchar ** src);
 
 #ifdef G_OS_WIN32
 #define READ_SOCKET(fd, buf, len) recv (fd, (char *)buf, len, 0)
@@ -1477,9 +1477,10 @@ no_message:
   }
 }
 
-static void
+static GstRTSPResult
 parse_string (gchar * dest, gint size, gchar ** src)
 {
+  GstRTSPResult res = GST_RTSP_OK;
   gint idx;
 
   idx = 0;
@@ -1490,10 +1491,14 @@ parse_string (gchar * dest, gint size, gchar ** src)
   while (!g_ascii_isspace (**src) && **src != '\0') {
     if (idx < size - 1)
       dest[idx++] = **src;
+    else
+      res = GST_RTSP_EPARSE;
     (*src)++;
   }
   if (size > 0)
     dest[idx] = '\0';
+
+  return res;
 }
 
 static void
@@ -1566,9 +1571,11 @@ parse_response_status (guint8 * buffer, GstRTSPMessage * msg)
 
   bptr = (gchar *) buffer;
 
-  parse_string (versionstr, sizeof (versionstr), &bptr);
+  if (parse_string (versionstr, sizeof (versionstr), &bptr) != GST_RTSP_OK)
+    res = GST_RTSP_EPARSE;
 
-  parse_string (codestr, sizeof (codestr), &bptr);
+  if (parse_string (codestr, sizeof (codestr), &bptr) != GST_RTSP_OK)
+    res = GST_RTSP_EPARSE;
   code = atoi (codestr);
   if (G_UNLIKELY (*codestr == '\0' || code < 0 || code >= 600))
     res = GST_RTSP_EPARSE;
@@ -1601,14 +1608,17 @@ parse_request_line (guint8 * buffer, GstRTSPMessage * msg)
 
   bptr = (gchar *) buffer;
 
-  parse_string (methodstr, sizeof (methodstr), &bptr);
+  if (parse_string (methodstr, sizeof (methodstr), &bptr) != GST_RTSP_OK)
+    res = GST_RTSP_EPARSE;
   method = gst_rtsp_find_method (methodstr);
 
-  parse_string (urlstr, sizeof (urlstr), &bptr);
+  if (parse_string (urlstr, sizeof (urlstr), &bptr) != GST_RTSP_OK)
+    res = GST_RTSP_EPARSE;
   if (G_UNLIKELY (*urlstr == '\0'))
     res = GST_RTSP_EPARSE;
 
-  parse_string (versionstr, sizeof (versionstr), &bptr);
+  if (parse_string (versionstr, sizeof (versionstr), &bptr) != GST_RTSP_OK)
+    res = GST_RTSP_EPARSE;
 
   if (G_UNLIKELY (*bptr != '\0'))
     res = GST_RTSP_EPARSE;
