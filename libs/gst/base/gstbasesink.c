@@ -1485,6 +1485,7 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
     GstStepInfo * pending, GstStepInfo * current)
 {
   gint64 end;
+  GstMessage *message;
 
   GST_DEBUG_OBJECT (sink, "update pending step");
 
@@ -1492,6 +1493,11 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
   memcpy (current, pending, sizeof (GstStepInfo));
   pending->valid = FALSE;
   GST_OBJECT_UNLOCK (sink);
+
+  /* post message first */
+  message = gst_message_new_step_start (GST_OBJECT (sink), TRUE);
+  gst_message_set_seqnum (message, current->seqnum);
+  gst_element_post_message (GST_ELEMENT (sink), message);
 
   /* get the running time of where we paused and remember it */
   current->start = gst_element_get_start_time (GST_ELEMENT_CAST (sink));
@@ -1791,8 +1797,20 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
 
   /* clip, only when we know about time */
   if (G_UNLIKELY (!gst_segment_clip (segment, GST_FORMAT_TIME,
-              (gint64) start, (gint64) stop, &cstart, &cstop)))
+              (gint64) start, (gint64) stop, &cstart, &cstop))) {
+    if (step->valid) {
+      /* when we are stepping, pretend we're at the end of the segment */
+      if (segment->rate > 0.0) {
+        cstart = segment->stop;
+        cstop = segment->stop;
+      } else {
+        cstart = segment->start;
+        cstop = segment->start;
+      }
+      goto do_times;
+    }
     goto out_of_segment;
+  }
 
   if (G_UNLIKELY (start != cstart || stop != cstop)) {
     GST_DEBUG_OBJECT (basesink, "clipped to: start %" GST_TIME_FORMAT
@@ -2346,6 +2364,9 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
 
   start = priv->current_rstart;
 
+  if (priv->current_step.valid)
+    return;
+
   /* if Quality-of-Service disabled, do nothing */
   if (!g_atomic_int_get (&priv->qos_enabled) || start == -1)
     return;
@@ -2715,6 +2736,8 @@ again:
 
 done:
   if (step_end) {
+    /* the step ended, check if we need to activate a new step */
+    GST_DEBUG_OBJECT (basesink, "step ended");
     stop_stepping (basesink, &basesink->segment, &priv->current_step,
         priv->current_rstart, priv->current_rstop);
     goto again;
@@ -3513,6 +3536,7 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   guint64 amount;
   guint seqnum;
   GstStepInfo *pending, *current;
+  GstMessage *message;
 
   bclass = GST_BASE_SINK_GET_CLASS (sink);
   priv = sink->priv;
@@ -3524,6 +3548,11 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
 
   pending = &priv->pending_step;
   current = &priv->current_step;
+
+  /* post message first */
+  message = gst_message_new_step_start (GST_OBJECT (sink), FALSE);
+  gst_message_set_seqnum (message, current->seqnum);
+  gst_element_post_message (GST_ELEMENT (sink), message);
 
   if (flush) {
     /* we need to call ::unlock before locking PREROLL_LOCK
