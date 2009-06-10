@@ -349,8 +349,294 @@ gst_qt_mux_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-/* FIXME approach below is pretty Apple/MOV/MP4/iTunes specific,
- * and as such does not comply with e.g. 3GPP specs */
+static void
+gst_qt_mux_add_mp4_tag (GstQTMux * qtmux, const GstTagList * list,
+    const char *tag, const char *tag2, guint32 fourcc)
+{
+  switch (gst_tag_get_type (tag)) {
+      /* strings */
+    case G_TYPE_STRING:
+    {
+      gchar *str = NULL;
+
+      if (!gst_tag_list_get_string (list, tag, &str) || !str)
+        break;
+      GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %s",
+          GST_FOURCC_ARGS (fourcc), str);
+      atom_moov_add_str_tag (qtmux->moov, fourcc, str);
+      g_free (str);
+      break;
+    }
+      /* double */
+    case G_TYPE_DOUBLE:
+    {
+      gdouble value;
+
+      if (!gst_tag_list_get_double (list, tag, &value))
+        break;
+      GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %u",
+          GST_FOURCC_ARGS (fourcc), (gint) value);
+      atom_moov_add_uint_tag (qtmux->moov, fourcc, 21, (gint) value);
+      break;
+    }
+      /* paired unsigned integers */
+    case G_TYPE_UINT:
+    {
+      guint value;
+      guint count;
+
+      if (!gst_tag_list_get_uint (list, tag, &value) ||
+          !gst_tag_list_get_uint (list, tag2, &count))
+        break;
+      GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %u/%u",
+          GST_FOURCC_ARGS (fourcc), value, count);
+      atom_moov_add_uint_tag (qtmux->moov, fourcc, 0,
+          value << 16 | (count & 0xFFFF));
+      break;
+    }
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+
+static void
+gst_qt_mux_add_mp4_date (GstQTMux * qtmux, const GstTagList * list,
+    const char *tag, const char *tag2, guint32 fourcc)
+{
+  GDate *date = NULL;
+  GDateYear year;
+  GDateMonth month;
+  GDateDay day;
+  gchar *str;
+
+  g_return_if_fail (gst_tag_get_type (tag) == GST_TYPE_DATE);
+
+  if (!gst_tag_list_get_date (list, tag, &date) || !date)
+    return;
+
+  year = g_date_get_year (date);
+  month = g_date_get_month (date);
+  day = g_date_get_day (date);
+
+  if (year == G_DATE_BAD_YEAR && month == G_DATE_BAD_MONTH &&
+      day == G_DATE_BAD_DAY) {
+    GST_WARNING_OBJECT (qtmux, "invalid date in tag");
+    return;
+  }
+
+  str = g_strdup_printf ("%u-%u-%u", year, month, day);
+  GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %s",
+      GST_FOURCC_ARGS (fourcc), str);
+  atom_moov_add_str_tag (qtmux->moov, fourcc, str);
+}
+
+static void
+gst_qt_mux_add_mp4_cover (GstQTMux * qtmux, const GstTagList * list,
+    const char *tag, const char *tag2, guint32 fourcc)
+{
+  GValue value = { 0, };
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstStructure *structure;
+  gint flags = 0;
+
+  g_return_if_fail (gst_tag_get_type (tag) == GST_TYPE_BUFFER);
+
+  if (!gst_tag_list_copy_value (&value, list, tag))
+    return;
+
+  buf = gst_value_get_buffer (&value);
+  if (!buf)
+    goto done;
+
+  caps = gst_buffer_get_caps (buf);
+  if (!caps) {
+    GST_WARNING_OBJECT (qtmux, "preview image without caps");
+    goto done;
+  }
+
+  GST_DEBUG_OBJECT (qtmux, "preview image caps %" GST_PTR_FORMAT, caps);
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (gst_structure_has_name (structure, "image/jpeg"))
+    flags = 13;
+  else if (gst_structure_has_name (structure, "image/png"))
+    flags = 14;
+  gst_caps_unref (caps);
+
+  if (!flags) {
+    GST_WARNING_OBJECT (qtmux, "preview image format not supported");
+    goto done;
+  }
+
+  GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT
+      " -> image size %d", GST_FOURCC_ARGS (fourcc), GST_BUFFER_SIZE (buf));
+  atom_moov_add_tag (qtmux->moov, fourcc, flags, GST_BUFFER_DATA (buf),
+      GST_BUFFER_SIZE (buf));
+done:
+  g_value_unset (&value);
+}
+
+static void
+gst_qt_mux_add_3gp_str (GstQTMux * qtmux, const GstTagList * list,
+    const char *tag, const char *tag2, guint32 fourcc)
+{
+  gchar *str = NULL;
+  guint number;
+
+  g_return_if_fail (gst_tag_get_type (tag) == G_TYPE_STRING);
+  g_return_if_fail (!tag2 || gst_tag_get_type (tag2) == G_TYPE_UINT);
+
+  if (!gst_tag_list_get_string (list, tag, &str) || !str)
+    return;
+
+  if (tag2)
+    if (!gst_tag_list_get_uint (list, tag2, &number))
+      tag2 = NULL;
+
+  if (!tag2) {
+    GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %s",
+        GST_FOURCC_ARGS (fourcc), str);
+    atom_moov_add_3gp_str_tag (qtmux->moov, fourcc, str);
+  } else {
+    GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %s/%d",
+        GST_FOURCC_ARGS (fourcc), str, number);
+    atom_moov_add_3gp_str_int_tag (qtmux->moov, fourcc, str, number);
+  }
+
+  g_free (str);
+}
+
+static void
+gst_qt_mux_add_3gp_date (GstQTMux * qtmux, const GstTagList * list,
+    const char *tag, const char *tag2, guint32 fourcc)
+{
+  GDate *date = NULL;
+  GDateYear year;
+
+  g_return_if_fail (gst_tag_get_type (tag) == GST_TYPE_DATE);
+
+  if (!gst_tag_list_get_date (list, tag, &date) || !date)
+    return;
+
+  year = g_date_get_year (date);
+
+  if (year == G_DATE_BAD_YEAR) {
+    GST_WARNING_OBJECT (qtmux, "invalid date in tag");
+    return;
+  }
+
+  GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %d", year);
+  atom_moov_add_3gp_uint_tag (qtmux->moov, fourcc, year);
+}
+
+static void
+gst_qt_mux_add_3gp_location (GstQTMux * qtmux, const GstTagList * list,
+    const char *tag, const char *tag2, guint32 fourcc)
+{
+  gdouble latitude = -360, longitude = -360, altitude = 0;
+  gchar *location = NULL;
+  guint8 *data, *ddata;
+  gint size = 0, len = 0;
+  gboolean ret = FALSE;
+
+  g_return_if_fail (strcmp (tag, GST_TAG_GEO_LOCATION_NAME) == 0);
+
+  ret = gst_tag_list_get_string (list, tag, &location);
+  ret |= gst_tag_list_get_double (list, GST_TAG_GEO_LOCATION_LONGITUDE,
+      &longitude);
+  ret |= gst_tag_list_get_double (list, GST_TAG_GEO_LOCATION_LATITUDE,
+      &latitude);
+  ret |= gst_tag_list_get_double (list, GST_TAG_GEO_LOCATION_ELEVATION,
+      &altitude);
+
+  if (!ret)
+    return;
+
+  if (location)
+    len = strlen (location);
+  size += len + 1 + 2;
+
+  /* role + (long, lat, alt) + body + notes */
+  size += 1 + 3 * 4 + 1 + 1;
+
+  data = ddata = g_malloc (size);
+
+  /* language tag */
+  GST_WRITE_UINT16_BE (data, language_code (GST_QT_MUX_DEFAULT_TAG_LANGUAGE));
+  /* location */
+  if (location)
+    memcpy (data + 2, location, len);
+  GST_WRITE_UINT8 (data + 2 + len, 0);
+  data += len + 1 + 2;
+  /* role */
+  GST_WRITE_UINT8 (data, 0);
+  /* long, lat, alt */
+  GST_WRITE_UINT32_BE (data + 1, (guint32) (longitude * 65536.0));
+  GST_WRITE_UINT32_BE (data + 5, (guint32) (latitude * 65536.0));
+  GST_WRITE_UINT32_BE (data + 9, (guint32) (altitude * 65536.0));
+  /* neither astronomical body nor notes */
+  GST_WRITE_UINT16_BE (data + 13, 0);
+
+  GST_DEBUG_OBJECT (qtmux, "Adding tag 'loci'");
+  atom_moov_add_3gp_tag (qtmux->moov, fourcc, ddata, size);
+  g_free (ddata);
+}
+
+static void
+gst_qt_mux_add_3gp_keywords (GstQTMux * qtmux, const GstTagList * list,
+    const char *tag, const char *tag2, guint32 fourcc)
+{
+  gchar *keywords = NULL;
+  guint8 *data, *ddata;
+  gint size = 0, i;
+  gchar **kwds;
+
+  g_return_if_fail (strcmp (tag, GST_TAG_KEYWORDS) == 0);
+
+  if (!gst_tag_list_get_string (list, tag, &keywords) || !keywords)
+    return;
+
+  kwds = g_strsplit (keywords, ",", 0);
+
+  size = 0;
+  for (i = 0; kwds[i]; i++) {
+    /* size byte + null-terminator */
+    size += strlen (kwds[i]) + 1 + 1;
+  }
+
+  /* language tag + count + keywords */
+  size += 2 + 1;
+
+  data = ddata = g_malloc (size);
+
+  /* language tag */
+  GST_WRITE_UINT16_BE (data, language_code (GST_QT_MUX_DEFAULT_TAG_LANGUAGE));
+  /* count */
+  GST_WRITE_UINT8 (data + 2, i);
+  data += 3;
+  /* keywords */
+  for (i = 0; kwds[i]; ++i) {
+    gint len = strlen (kwds[i]);
+
+    GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %s",
+        GST_FOURCC_ARGS (fourcc), kwds[i]);
+    /* size */
+    GST_WRITE_UINT8 (data, len + 1);
+    memcpy (data + 1, kwds[i], len + 1);
+    data += len + 2;
+  }
+
+  g_strfreev (kwds);
+
+  atom_moov_add_3gp_tag (qtmux->moov, fourcc, ddata, size);
+  g_free (ddata);
+}
+
+
+typedef void (*GstQTMuxAddTagFunc) (GstQTMux * mux, const GstTagList * list,
+    const char *tag, const char *tag2, guint32 fourcc);
 
 /*
  * Struct to record mappings from gstreamer tags to fourcc codes
@@ -360,25 +646,42 @@ typedef struct _GstTagToFourcc
   guint32 fourcc;
   const gchar *gsttag;
   const gchar *gsttag2;
+  const GstQTMuxAddTagFunc func;
 } GstTagToFourcc;
 
 /* tag list tags to fourcc matching */
-static const GstTagToFourcc tag_matches[] = {
-  {FOURCC__alb, GST_TAG_ALBUM,},
-  {FOURCC__ART, GST_TAG_ARTIST,},
-  {FOURCC__cmt, GST_TAG_COMMENT,},
-  {FOURCC__wrt, GST_TAG_COMPOSER,},
-  {FOURCC__gen, GST_TAG_GENRE,},
-  {FOURCC__nam, GST_TAG_TITLE,},
-  {FOURCC__des, GST_TAG_DESCRIPTION,},
-  {FOURCC__too, GST_TAG_ENCODER,},
-  {FOURCC_cprt, GST_TAG_COPYRIGHT,},
-  {FOURCC_keyw, GST_TAG_KEYWORDS,},
-  {FOURCC__day, GST_TAG_DATE,},
-  {FOURCC_tmpo, GST_TAG_BEATS_PER_MINUTE,},
-  {FOURCC_trkn, GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT},
-  {FOURCC_disk, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT},
-  {FOURCC_covr, GST_TAG_PREVIEW_IMAGE,},
+static const GstTagToFourcc tag_matches_mp4[] = {
+  {FOURCC__alb, GST_TAG_ALBUM, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC__ART, GST_TAG_ARTIST, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC__cmt, GST_TAG_COMMENT, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC__wrt, GST_TAG_COMPOSER, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC__gen, GST_TAG_GENRE, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC__nam, GST_TAG_TITLE, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC__des, GST_TAG_DESCRIPTION, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC__too, GST_TAG_ENCODER, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC_cprt, GST_TAG_COPYRIGHT, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC_keyw, GST_TAG_KEYWORDS, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC__day, GST_TAG_DATE, NULL, gst_qt_mux_add_mp4_date},
+  {FOURCC_tmpo, GST_TAG_BEATS_PER_MINUTE, NULL, gst_qt_mux_add_mp4_tag},
+  {FOURCC_trkn, GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT,
+      gst_qt_mux_add_mp4_tag},
+  {FOURCC_disk, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT,
+      gst_qt_mux_add_mp4_tag},
+  {FOURCC_covr, GST_TAG_PREVIEW_IMAGE, NULL, gst_qt_mux_add_mp4_cover},
+  {0, NULL,}
+};
+
+static const GstTagToFourcc tag_matches_3gp[] = {
+  {FOURCC_titl, GST_TAG_TITLE, NULL, gst_qt_mux_add_3gp_str},
+  {FOURCC_dscp, GST_TAG_DESCRIPTION, NULL, gst_qt_mux_add_3gp_str},
+  {FOURCC_cprt, GST_TAG_COPYRIGHT, NULL, gst_qt_mux_add_3gp_str},
+  {FOURCC_perf, GST_TAG_ARTIST, NULL, gst_qt_mux_add_3gp_str},
+  {FOURCC_auth, GST_TAG_COMPOSER, NULL, gst_qt_mux_add_3gp_str},
+  {FOURCC_gnre, GST_TAG_GENRE, NULL, gst_qt_mux_add_3gp_str},
+  {FOURCC_kywd, GST_TAG_KEYWORDS, NULL, gst_qt_mux_add_3gp_keywords},
+  {FOURCC_yrrc, GST_TAG_DATE, NULL, gst_qt_mux_add_3gp_date},
+  {FOURCC_albm, GST_TAG_ALBUM, GST_TAG_TRACK_NUMBER, gst_qt_mux_add_3gp_str},
+  {FOURCC_loci, GST_TAG_GEO_LOCATION_NAME, NULL, gst_qt_mux_add_3gp_location},
   {0, NULL,}
 };
 
@@ -388,127 +691,35 @@ static const GstTagToFourcc tag_matches[] = {
 static void
 gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
 {
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
   guint32 fourcc;
   gint i;
   const gchar *tag, *tag2;
+  const GstTagToFourcc *tag_matches;
+
+  switch (qtmux_klass->format) {
+    case GST_QT_MUX_FORMAT_3GP:
+      tag_matches = tag_matches_3gp;
+      break;
+    case GST_QT_MUX_FORMAT_MJ2:
+      tag_matches = NULL;
+      break;
+    default:
+      /* sort of iTunes style for mp4 and QT (?) */
+      tag_matches = tag_matches_mp4;
+      break;
+  }
+
+  if (!tag_matches)
+    return;
 
   for (i = 0; tag_matches[i].fourcc; i++) {
     fourcc = tag_matches[i].fourcc;
     tag = tag_matches[i].gsttag;
     tag2 = tag_matches[i].gsttag2;
 
-    switch (gst_tag_get_type (tag)) {
-        /* strings */
-      case G_TYPE_STRING:
-      {
-        gchar *str = NULL;
-
-        if (!gst_tag_list_get_string (list, tag, &str) || !str)
-          break;
-        GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %s",
-            GST_FOURCC_ARGS (fourcc), str);
-        atom_moov_add_str_tag (qtmux->moov, fourcc, str);
-        g_free (str);
-        break;
-      }
-        /* double */
-      case G_TYPE_DOUBLE:
-      {
-        gdouble value;
-
-        if (!gst_tag_list_get_double (list, tag, &value))
-          break;
-        GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %u",
-            GST_FOURCC_ARGS (fourcc), (gint) value);
-        atom_moov_add_uint_tag (qtmux->moov, fourcc, 21, (gint) value);
-        break;
-      }
-        /* paired unsigned integers */
-      case G_TYPE_UINT:
-      {
-        guint value;
-        guint count;
-
-        if (!gst_tag_list_get_uint (list, tag, &value) ||
-            !gst_tag_list_get_uint (list, tag2, &count))
-          break;
-        GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %u/%u",
-            GST_FOURCC_ARGS (fourcc), value, count);
-        atom_moov_add_uint_tag (qtmux->moov, fourcc, 0,
-            value << 16 | (count & 0xFFFF));
-        break;
-      }
-      default:
-      {
-        if (gst_tag_get_type (tag) == GST_TYPE_DATE) {
-          GDate *date = NULL;
-          GDateYear year;
-          GDateMonth month;
-          GDateDay day;
-          gchar *str;
-
-          if (!gst_tag_list_get_date (list, tag, &date) || !date)
-            break;
-          year = g_date_get_year (date);
-          month = g_date_get_month (date);
-          day = g_date_get_day (date);
-
-          if (year == G_DATE_BAD_YEAR && month == G_DATE_BAD_MONTH &&
-              day == G_DATE_BAD_DAY) {
-            GST_WARNING_OBJECT (qtmux, "invalid date in tag");
-            break;
-          }
-
-          str = g_strdup_printf ("%u-%u-%u", year, month, day);
-          GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %s",
-              GST_FOURCC_ARGS (fourcc), str);
-          atom_moov_add_str_tag (qtmux->moov, fourcc, str);
-        } else if (gst_tag_get_type (tag) == GST_TYPE_BUFFER) {
-          GValue value = { 0, };
-          GstBuffer *buf;
-          GstCaps *caps;
-          GstStructure *structure;
-          gint flags = 0;
-
-          if (!gst_tag_list_copy_value (&value, list, tag))
-            break;
-
-          buf = gst_value_get_buffer (&value);
-          if (!buf)
-            goto done;
-
-          caps = gst_buffer_get_caps (buf);
-          if (!caps) {
-            GST_WARNING_OBJECT (qtmux, "preview image without caps");
-            goto done;
-          }
-
-          GST_DEBUG_OBJECT (qtmux, "preview image caps %" GST_PTR_FORMAT, caps);
-
-          structure = gst_caps_get_structure (caps, 0);
-          if (gst_structure_has_name (structure, "image/jpeg"))
-            flags = 13;
-          else if (gst_structure_has_name (structure, "image/png"))
-            flags = 14;
-          gst_caps_unref (caps);
-
-          if (!flags) {
-            GST_WARNING_OBJECT (qtmux, "preview image format not supported");
-            goto done;
-          }
-
-          GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT
-              " -> image size %d", GST_FOURCC_ARGS (fourcc),
-              GST_BUFFER_SIZE (buf));
-          atom_moov_add_tag (qtmux->moov, fourcc, flags, GST_BUFFER_DATA (buf),
-              GST_BUFFER_SIZE (buf));
-        done:
-          g_value_unset (&value);
-        } else
-          g_assert_not_reached ();
-        break;
-      }
-    }
+    g_assert (tag_matches[i].func);
+    tag_matches[i].func (qtmux, list, tag, tag2, fourcc);
   }
 
   /* add unparsed blobs if present */
@@ -532,8 +743,12 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
             GST_PTR_FORMAT, i, num_tags, GST_BUFFER_SIZE (buf), caps);
         s = gst_caps_get_structure (caps, 0);
         if (s && (style = gst_structure_get_string (s, "style"))) {
-          /* FIXME make into a parameter */
-          if (strcmp (style, "itunes") == 0) {
+          /* try to prevent some style tag ending up into another variant
+           * (todo: make into a list if more cases) */
+          if ((strcmp (style, "itunes") == 0 &&
+                  qtmux_klass->format == GST_QT_MUX_FORMAT_MP4) ||
+              (strcmp (style, "iso") == 0 &&
+                  qtmux_klass->format == GST_QT_MUX_FORMAT_3GP)) {
             GST_DEBUG_OBJECT (qtmux, "Adding private tag");
             atom_moov_add_blob_tag (qtmux->moov, GST_BUFFER_DATA (buf),
                 GST_BUFFER_SIZE (buf));

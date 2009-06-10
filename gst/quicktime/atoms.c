@@ -1036,7 +1036,8 @@ atom_meta_free (AtomMETA * meta)
 {
   atom_full_clear (&meta->header);
   atom_hdlr_clear (&meta->hdlr);
-  atom_ilst_free (meta->ilst);
+  if (meta->ilst)
+    atom_ilst_free (meta->ilst);
   meta->ilst = NULL;
   g_free (meta);
 }
@@ -1061,8 +1062,11 @@ static void
 atom_udta_free (AtomUDTA * udta)
 {
   atom_clear (&udta->header);
-  atom_meta_free (udta->meta);
+  if (udta->meta)
+    atom_meta_free (udta->meta);
   udta->meta = NULL;
+  if (udta->entries)
+    atom_info_list_free (udta->entries);
   g_free (udta);
 }
 
@@ -1149,6 +1153,7 @@ atom_moov_init (AtomMOOV * moov, AtomsContext * context)
   atom_mvhd_init (&(moov->mvhd));
   moov->udta = NULL;
   moov->traks = NULL;
+  moov->context = *context;
 }
 
 AtomMOOV *
@@ -1170,13 +1175,11 @@ atom_moov_free (AtomMOOV * moov)
 
   walker = moov->traks;
   while (walker) {
-    GList *aux = walker;
-
+    atom_trak_free ((AtomTRAK *) walker->data);
     walker = g_list_next (walker);
-    moov->traks = g_list_remove_link (moov->traks, aux);
-    atom_trak_free ((AtomTRAK *) aux->data);
-    g_list_free (aux);
   }
+  g_list_free (moov->traks);
+  moov->traks = NULL;
 
   if (moov->udta) {
     atom_udta_free (moov->udta);
@@ -2163,6 +2166,10 @@ atom_udta_copy_data (AtomUDTA * udta, guint8 ** buffer, guint64 * size,
     if (!atom_meta_copy_data (udta->meta, buffer, size, offset)) {
       return 0;
     }
+  } else if (udta->entries) {
+    /* extra atoms */
+    if (!atom_info_list_copy_data (udta->entries, buffer, size, offset))
+      return 0;
   }
 
   atom_write_size (buffer, size, offset, original_offset);
@@ -2517,16 +2524,18 @@ atom_moov_chunks_add_offset (AtomMOOV * moov, guint32 offset)
  * Meta tags functions
  */
 static void
-atom_moov_init_metatags (AtomMOOV * moov)
+atom_moov_init_metatags (AtomMOOV * moov, AtomsContext * context)
 {
   if (!moov->udta) {
     moov->udta = atom_udta_new ();
   }
-  if (!moov->udta->meta) {
-    moov->udta->meta = atom_meta_new ();
-  }
-  if (!moov->udta->meta->ilst) {
-    moov->udta->meta->ilst = atom_ilst_new ();
+  if (context->flavor != ATOMS_TREE_FLAVOR_3GP) {
+    if (!moov->udta->meta) {
+      moov->udta->meta = atom_meta_new ();
+    }
+    if (!moov->udta->meta->ilst) {
+      moov->udta->meta->ilst = atom_ilst_new ();
+    }
   }
 }
 
@@ -2543,11 +2552,14 @@ atom_tag_data_alloc_data (AtomTagData * data, guint size)
 static void
 atom_moov_append_tag (AtomMOOV * moov, AtomInfo * tag)
 {
-  AtomILST *ilst;
+  GList **entries;
 
-  atom_moov_init_metatags (moov);
-  ilst = moov->udta->meta->ilst;
-  ilst->entries = g_list_append (ilst->entries, tag);
+  atom_moov_init_metatags (moov, &moov->context);
+  if (moov->udta->meta)
+    entries = &moov->udta->meta->ilst->entries;
+  else
+    entries = &moov->udta->entries;
+  *entries = g_list_append (*entries, tag);
 }
 
 void
@@ -2619,6 +2631,87 @@ atom_moov_add_blob_tag (AtomMOOV * moov, guint8 * data, guint size)
   atom_moov_append_tag (moov,
       build_atom_info_wrapper ((Atom *) data_atom, atom_data_copy_data,
           atom_data_free));
+}
+
+void
+atom_moov_add_3gp_tag (AtomMOOV * moov, guint32 fourcc, guint8 * data,
+    guint size)
+{
+  AtomData *data_atom;
+  GstBuffer *buf;
+  guint8 *bdata;
+
+  /* need full atom */
+  buf = gst_buffer_new_and_alloc (size + 4);
+  bdata = GST_BUFFER_DATA (buf);
+  /* full atom: version and flags */
+  GST_WRITE_UINT32_BE (bdata, 0);
+  memcpy (bdata + 4, data, size);
+
+  data_atom = atom_data_new_from_gst_buffer (fourcc, buf);
+  gst_buffer_unref (buf);
+
+  atom_moov_append_tag (moov,
+      build_atom_info_wrapper ((Atom *) data_atom, atom_data_copy_data,
+          atom_data_free));
+}
+
+guint16
+language_code (const char *lang)
+{
+  g_return_val_if_fail (lang != NULL, 0);
+  g_return_val_if_fail (strlen (lang) == 3, 0);
+
+  return (((lang[0] - 0x60) & 0x1F) << 10) + (((lang[1] - 0x60) & 0x1F) << 5) +
+      ((lang[2] - 0x60) & 0x1F);
+}
+
+void
+atom_moov_add_3gp_str_int_tag (AtomMOOV * moov, guint32 fourcc,
+    const gchar * value, gint16 ivalue)
+{
+  gint len = 0, size = 0;
+  guint8 *data;
+
+  if (value) {
+    len = strlen (value);
+    size = len + 3;
+  }
+
+  if (ivalue >= 0)
+    size += 2;
+
+  data = g_malloc (size + 3);
+  /* language tag and null-terminated UTF-8 string */
+  if (value) {
+    GST_WRITE_UINT16_BE (data, language_code (GST_QT_MUX_DEFAULT_TAG_LANGUAGE));
+    /* include 0 terminator */
+    memcpy (data + 2, value, len + 1);
+  }
+  /* 16-bit unsigned int if standalone, otherwise 8-bit */
+  if (ivalue >= 0) {
+    if (size == 2)
+      GST_WRITE_UINT16_BE (data + size - 2, ivalue);
+    else {
+      GST_WRITE_UINT8 (data + size - 2, ivalue & 0xFF);
+      size--;
+    }
+  }
+
+  atom_moov_add_3gp_tag (moov, fourcc, data, size);
+  g_free (data);
+}
+
+void
+atom_moov_add_3gp_str_tag (AtomMOOV * moov, guint32 fourcc, const gchar * value)
+{
+  atom_moov_add_3gp_str_int_tag (moov, fourcc, value, -1);
+}
+
+void
+atom_moov_add_3gp_uint_tag (AtomMOOV * moov, guint32 fourcc, guint16 value)
+{
+  atom_moov_add_3gp_str_int_tag (moov, fourcc, NULL, value);
 }
 
 /*
@@ -2843,7 +2936,7 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
   dheight = entry->height;
   /* ISO file spec says track header w/h indicates track's visual presentation
    * (so this together with pixels w/h implicitly defines PAR) */
-  if (par_n && (context->flavor == ATOMS_TREE_FLAVOR_ISOM)) {
+  if (par_n && (context->flavor != ATOMS_TREE_FLAVOR_MOV)) {
     if (par_n > par_d) {
       dwidth = entry->width * par_n / par_d;
       dheight = entry->height;

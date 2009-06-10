@@ -182,6 +182,15 @@ G_BEGIN_DECLS
 #define FOURCC_titl     GST_MAKE_FOURCC('t','i','t','l')
 #define FOURCC__cmt     GST_MAKE_FOURCC(0xa9, 'c','m','t')
 
+/* 3gp tags */
+#define FOURCC_dscp     GST_MAKE_FOURCC('d','s','c','p')
+#define FOURCC_perf     GST_MAKE_FOURCC('p','e','r','f')
+#define FOURCC_auth     GST_MAKE_FOURCC('a','u','t','h')
+#define FOURCC_yrrc     GST_MAKE_FOURCC('y','r','r','c')
+#define FOURCC_albm     GST_MAKE_FOURCC('a','l','b','m')
+#define FOURCC_loci     GST_MAKE_FOURCC('l','o','c','i')
+#define FOURCC_kywd     GST_MAKE_FOURCC('k','y','w','d')
+
 G_END_DECLS
 
 #endif /* __FOURCC_H__ */

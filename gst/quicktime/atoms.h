@@ -55,7 +55,8 @@
 typedef enum _AtomsTreeFlavor
 {
   ATOMS_TREE_FLAVOR_MOV,
-  ATOMS_TREE_FLAVOR_ISOM
+  ATOMS_TREE_FLAVOR_ISOM,
+  ATOMS_TREE_FLAVOR_3GP
 } AtomsTreeFlavor;
 
 typedef struct _AtomsContext
@@ -509,6 +510,9 @@ typedef struct _AtomUDTA
 {
   Atom header;
 
+  /* list of AtomInfo */
+  GList* entries;
+  /* or list is further down */
   AtomMETA *meta;
 } AtomUDTA;
 
@@ -526,6 +530,9 @@ typedef struct _AtomTRAK
 
 typedef struct _AtomMOOV
 {
+  /* style */
+  AtomsContext context;
+
   Atom header;
 
   AtomMVHD mvhd;
@@ -650,5 +657,15 @@ void atom_moov_add_uint_tag   (AtomMOOV *moov, guint32 fourcc, guint32 flags,
 void atom_moov_add_tag        (AtomMOOV *moov, guint32 fourcc, guint32 flags,
                                const guint8 * data, guint size);
 void atom_moov_add_blob_tag   (AtomMOOV *moov, guint8 *data, guint size);
+
+void atom_moov_add_3gp_str_tag       (AtomMOOV * moov, guint32 fourcc, const gchar * value);
+void atom_moov_add_3gp_uint_tag      (AtomMOOV * moov, guint32 fourcc, guint16 value);
+void atom_moov_add_3gp_str_int_tag   (AtomMOOV * moov, guint32 fourcc, const gchar * value,
+                                      gint16 ivalue);
+void atom_moov_add_3gp_tag           (AtomMOOV * moov, guint32 fourcc, guint8 * data,
+                                      guint size);
+
+#define GST_QT_MUX_DEFAULT_TAG_LANGUAGE   "eng"
+guint16  language_code               (const char * lang);
 
 #endif /* __ATOMS_H__ */
