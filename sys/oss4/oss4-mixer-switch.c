@@ -49,45 +49,30 @@ gst_oss4_mixer_switch_init (GstOss4MixerSwitch * s)
   /* nothing to do here */
 }
 
-static GstMixerTrackFlags
-gst_oss4_mixer_switch_get_switch_flag (GstMixerTrack * track)
-{
-  if ((track->flags & GST_MIXER_TRACK_INPUT)) {
-    return GST_MIXER_TRACK_RECORD;
-  } else if ((track->flags & GST_MIXER_TRACK_OUTPUT)) {
-    return GST_MIXER_TRACK_MUTE;
-  } else {
-    GST_ERROR_OBJECT (track, "switch neither input nor output track!?");
-  }
-  return 0;
-}
-
 gboolean
-gst_oss4_mixer_switch_set (GstOss4MixerSwitch * s, gboolean enabled)
+gst_oss4_mixer_switch_set (GstOss4MixerSwitch * s, gboolean disabled)
 {
-  GstMixerTrackFlags switch_flag;
   GstMixerTrack *track;
   int newval;
 
   track = GST_MIXER_TRACK (s);
-  switch_flag = gst_oss4_mixer_switch_get_switch_flag (track);
 
-  newval = (enabled) ? 1 : 0;
+  newval = disabled ? GST_MIXER_TRACK_MUTE : 0;
 
-  if (!!newval == !!(track->flags & switch_flag)) {
+  if (newval == (track->flags & GST_MIXER_TRACK_MUTE)) {
     GST_LOG_OBJECT (s, "switch is already %d, doing nothing", newval);
     return TRUE;
   }
 
-  if (!gst_oss4_mixer_set_control_val (s->mixer, s->mc, newval)) {
-    GST_WARNING_OBJECT (s, "could not set switch to %d", newval);
+  if (!gst_oss4_mixer_set_control_val (s->mixer, s->mc, !disabled)) {
+    GST_WARNING_OBJECT (s, "could not set switch to %d", !disabled);
     return FALSE;
   }
 
-  if (newval) {
-    track->flags |= switch_flag;
+  if (disabled) {
+    track->flags |= GST_MIXER_TRACK_MUTE;
   } else {
-    track->flags &= ~switch_flag;
+    track->flags &= ~GST_MIXER_TRACK_MUTE;
   }
 
   GST_LOG_OBJECT (s, "set switch to %d", newval);
@@ -96,31 +81,28 @@ gst_oss4_mixer_switch_set (GstOss4MixerSwitch * s, gboolean enabled)
 }
 
 gboolean
-gst_oss4_mixer_switch_get (GstOss4MixerSwitch * s, gboolean * enabled)
+gst_oss4_mixer_switch_get (GstOss4MixerSwitch * s, gboolean * disabled)
 {
-  GstMixerTrackFlags switch_flag;
   GstMixerTrack *track;
-  int val = -1;
+  int flag;
+  int enabled = -1;
 
   track = GST_MIXER_TRACK (s);
-  switch_flag = gst_oss4_mixer_switch_get_switch_flag (track);
 
-  if (!gst_oss4_mixer_get_control_val (s->mixer, s->mc, &val) || val < 0) {
+  if (!gst_oss4_mixer_get_control_val (s->mixer, s->mc, &enabled)
+      || (enabled < 0)) {
     GST_WARNING_OBJECT (s, "could not get switch state");
     return FALSE;
   }
 
-  *enabled = (val != 0);
+  flag = (enabled == 0) ? GST_MIXER_TRACK_MUTE : 0;
 
-  if (!!val != !!(track->flags & switch_flag)) {
-    GST_INFO_OBJECT (s, "updating inconsistent switch state to %d", !!val);
-    if (*enabled) {
-      track->flags |= switch_flag;
-    } else {
-      track->flags &= ~switch_flag;
-    }
+  if (enabled) {
+    track->flags &= ~GST_MIXER_TRACK_MUTE;
+  } else {
+    track->flags |= GST_MIXER_TRACK_MUTE;
   }
-
+  *disabled = (enabled == 0);
 
   return TRUE;
 }
@@ -149,6 +131,12 @@ gst_oss4_mixer_switch_new (GstOss4Mixer * mixer, GstOss4MixerControl * mc)
   if (!gst_oss4_mixer_get_control_val (s->mixer, s->mc, &cur) || cur < 0)
     return NULL;
 
+  if (cur) {
+    track->flags &= ~GST_MIXER_TRACK_MUTE;
+  } else {
+    track->flags |= GST_MIXER_TRACK_MUTE;
+  }
+
   return track;
 }
 
@@ -161,9 +149,5 @@ gst_oss4_mixer_switch_process_change_unlocked (GstMixerTrack * track)
   if (!s->mc->changed)
     return;
 
-  if ((track->flags & GST_MIXER_TRACK_INPUT)) {
-    gst_mixer_record_toggled (GST_MIXER (s->mixer), track, !!s->mc->last_val);
-  } else {
-    gst_mixer_mute_toggled (GST_MIXER (s->mixer), track, !!s->mc->last_val);
-  }
+  gst_mixer_mute_toggled (GST_MIXER (s->mixer), track, !s->mc->last_val);
 }

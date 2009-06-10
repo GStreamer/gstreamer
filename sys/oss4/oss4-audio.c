@@ -494,29 +494,12 @@ gst_oss4_audio_get_template_caps (void)
   return caps;
 }
 
-static gint
-gst_oss4_audio_ilog2 (gint x)
-{
-  /* well... hacker's delight explains... */
-  x = x | (x >> 1);
-  x = x | (x >> 2);
-  x = x | (x >> 4);
-  x = x | (x >> 8);
-  x = x | (x >> 16);
-  x = x - ((x >> 1) & 0x55555555);
-  x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
-  x = (x + (x >> 4)) & 0x0f0f0f0f;
-  x = x + (x >> 8);
-  x = x + (x >> 16);
-  return (x & 0x0000003f) - 1;
-}
-
 /* called by gst_oss4_sink_prepare() and gst_oss4_source_prepare() */
 gboolean
 gst_oss4_audio_set_format (GstObject * obj, int fd, GstRingBufferSpec * spec)
 {
   struct audio_buf_info info = { 0, };
-  int fmt, chans, rate, fragsize;
+  int fmt, chans, rate;
 
   fmt = gst_oss4_audio_get_oss_format (spec->format);
   if (fmt == 0)
@@ -555,17 +538,6 @@ gst_oss4_audio_set_format (GstObject * obj, int fd, GstRingBufferSpec * spec)
     goto format_not_what_was_requested;
   }
 
-  /* CHECKME: maybe we should just leave the fragsize alone? (tpm) */
-  fragsize = gst_oss4_audio_ilog2 (spec->segsize);
-  fragsize = ((spec->segtotal & 0x7fff) << 16) | fragsize;
-  GST_DEBUG_OBJECT (obj, "setting segsize: %d, segtotal: %d, value: %08x",
-      spec->segsize, spec->segtotal, fragsize);
-
-  /* we could also use the new SNDCTL_DSP_POLICY if there's something in
-   * particular we're trying to achieve here */
-  if (ioctl (fd, SNDCTL_DSP_SETFRAGMENT, &fragsize) == -1)
-    goto set_fragsize_failed;
-
   if (GST_IS_OSS4_SOURCE (obj)) {
     if (ioctl (fd, SNDCTL_DSP_GETISPACE, &info) == -1)
       goto get_ispace_failed;
@@ -575,12 +547,17 @@ gst_oss4_audio_set_format (GstObject * obj, int fd, GstRingBufferSpec * spec)
   }
 
   spec->segsize = info.fragsize;
-  spec->segtotal = info.fragstotal;
+
+  /* we add some extra fragments -- this helps us account for delays due to
+   * conversion buffer, streams queueing, etc.  It is important that these
+   * be taken into account because otherwise the delay counter can wind up
+   * being too large, and the buffer will wrap.  */
+  spec->segtotal = info.fragstotal + 4;
 
   spec->bytes_per_sample = (spec->width / 8) * spec->channels;
 
   GST_DEBUG_OBJECT (obj, "got segsize: %d, segtotal: %d, value: %08x",
-      spec->segsize, spec->segtotal, fragsize);
+      spec->segsize, spec->segtotal, info.fragsize);
 
   return TRUE;
 
@@ -613,12 +590,6 @@ set_rate_failed:
   {
     GST_ELEMENT_ERROR (obj, RESOURCE, SETTINGS, (NULL),
         ("DSP_SPEED(%d) failed: %s", rate, g_strerror (errno)));
-    return FALSE;
-  }
-set_fragsize_failed:
-  {
-    GST_ELEMENT_ERROR (obj, RESOURCE, SETTINGS, (NULL),
-        ("DSP_SETFRAGMENT(%d) failed: %s", fragsize, g_strerror (errno)));
     return FALSE;
   }
 get_ospace_failed:
