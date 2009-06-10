@@ -84,6 +84,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_REQUEST_STATE: Posted by elements when they want the pipeline to
  * change state. This message is a suggestion to the application which can
  * decide to perform the state change on (part of) the pipeline. Since: 0.10.23.
+ * @GST_MESSAGE_STEP_START: A stepping operation was started.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -117,6 +118,7 @@ typedef enum
   GST_MESSAGE_ASYNC_START       = (1 << 20),
   GST_MESSAGE_ASYNC_DONE        = (1 << 21),
   GST_MESSAGE_REQUEST_STATE     = (1 << 22),
+  GST_MESSAGE_STEP_START        = (1 << 23),
   GST_MESSAGE_ANY               = ~0
 } GstMessageType;
 
@@ -462,6 +464,10 @@ const GValue *  gst_message_get_stream_status_object (GstMessage *message);
 /* REQUEST_STATE */
 GstMessage *    gst_message_new_request_state   (GstObject * src, GstState state);
 void            gst_message_parse_request_state (GstMessage * message, GstState *state);
+
+/* STEP_START */
+GstMessage *    gst_message_new_step_start      (GstObject * src, gboolean active);
+void            gst_message_parse_step_start    (GstMessage * message, gboolean *active);
 
 /* custom messages */
 GstMessage *	gst_message_new_custom		(GstMessageType type,

@@ -110,6 +110,7 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_ASYNC_START, "async-start", 0},
   {GST_MESSAGE_ASYNC_DONE, "async-done", 0},
   {GST_MESSAGE_REQUEST_STATE, "request-state", 0},
+  {GST_MESSAGE_STEP_START, "step-start", 0},
   {0, NULL, 0}
 };
 
@@ -1722,4 +1723,29 @@ gst_message_parse_step_done (GstMessage * message, GstFormat * format,
     *duration =
         g_value_get_uint64 (gst_structure_id_get_value (message->structure,
             GST_QUARK (DURATION)));
+}
+
+GstMessage *
+gst_message_new_step_start (GstObject * src, gboolean active)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  structure = gst_structure_id_new (GST_QUARK (MESSAGE_STEP_START),
+      GST_QUARK (ACTIVE), G_TYPE_BOOLEAN, active, NULL);
+  message = gst_message_new_custom (GST_MESSAGE_STEP_START, src, structure);
+
+  return message;
+}
+
+void
+gst_message_parse_step_start (GstMessage * message, gboolean * active)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STEP_START);
+
+  if (active)
+    *active =
+        g_value_get_boolean (gst_structure_id_get_value (message->structure,
+            GST_QUARK (ACTIVE)));
 }
