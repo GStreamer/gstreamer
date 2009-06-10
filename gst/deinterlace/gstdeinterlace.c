@@ -469,6 +469,33 @@ gst_deinterlace_set_method (GstDeinterlace * self, GstDeinterlaceMethods method)
   gst_child_proxy_child_added (GST_OBJECT (self), GST_OBJECT (self->method));
 }
 
+static gboolean
+gst_deinterlace_clip_buffer (GstDeinterlace * self, GstBuffer * buffer)
+{
+  gboolean ret = TRUE;
+  GstClockTime start, stop;
+  gint64 cstart, cstop;
+
+  if (G_UNLIKELY (self->segment.format != GST_FORMAT_TIME))
+    goto beach;
+  if (G_UNLIKELY (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer)))
+    goto beach;
+
+  start = GST_BUFFER_TIMESTAMP (buffer);
+  stop = start + GST_BUFFER_DURATION (buffer);
+
+  if (!(ret = gst_segment_clip (&self->segment, GST_FORMAT_TIME,
+              start, stop, &cstart, &cstop)))
+    goto beach;
+
+  GST_BUFFER_TIMESTAMP (buffer) = cstart;
+  if (GST_CLOCK_TIME_IS_VALID (cstop))
+    GST_BUFFER_DURATION (buffer) = cstop - cstart;
+
+beach:
+  return ret;
+}
+
 static void
 gst_deinterlace_base_init (gpointer klass)
 {
@@ -1089,7 +1116,13 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
 
         gst_buffer_unref (gst_deinterlace_pop_history (self));
 
-        ret = gst_pad_push (self->srcpad, outbuf);
+        if (gst_deinterlace_clip_buffer (self, outbuf)) {
+          ret = gst_pad_push (self->srcpad, outbuf);
+        } else {
+          ret = GST_FLOW_OK;
+          gst_buffer_unref (outbuf);
+        }
+
         outbuf = NULL;
         if (ret != GST_FLOW_OK)
           return ret;
@@ -1144,7 +1177,13 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
 
         gst_buffer_unref (gst_deinterlace_pop_history (self));
 
-        ret = gst_pad_push (self->srcpad, outbuf);
+        if (gst_deinterlace_clip_buffer (self, outbuf)) {
+          ret = gst_pad_push (self->srcpad, outbuf);
+        } else {
+          ret = GST_FLOW_OK;
+          gst_buffer_unref (outbuf);
+        }
+
         outbuf = NULL;
         if (ret != GST_FLOW_OK)
           return ret;
