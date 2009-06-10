@@ -24,7 +24,9 @@
 #define __GST_PRIVATE_H__
 
 #ifdef HAVE_CONFIG_H
+# ifndef GST_LICENSE   /* don't include config.h twice, it has no guards */
 #  include "config.h"
+# endif
 #endif
 
 /* This needs to be before glib.h, since it might be used in inline

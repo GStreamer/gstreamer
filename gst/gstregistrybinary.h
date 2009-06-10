@@ -33,10 +33,6 @@
 #include <gst/gstpad.h>
 #include <gst/gstregistry.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 /*
  * GST_MAGIC_BINARY_REGISTRY_STR:
  *
