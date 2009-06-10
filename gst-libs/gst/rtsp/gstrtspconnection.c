@@ -222,6 +222,7 @@ enum
 typedef struct
 {
   gint state;
+  GstRTSPResult status;
   guint8 buffer[4096];
   guint offset;
 
@@ -1511,9 +1512,53 @@ parse_key (gchar * dest, gint size, gchar ** src)
 }
 
 static GstRTSPResult
+parse_protocol_version (gchar * protocol, GstRTSPMsgType * type,
+    GstRTSPVersion * version)
+{
+  GstRTSPResult res = GST_RTSP_OK;
+  gchar *ver;
+
+  if (G_LIKELY ((ver = strchr (protocol, '/')) != NULL)) {
+    guint major;
+    guint minor;
+    gchar dummychar;
+
+    *ver++ = '\0';
+
+    /* the version number must be formatted as X.Y with nothing following */
+    if (sscanf (ver, "%u.%u%c", &major, &minor, &dummychar) != 2)
+      res = GST_RTSP_EPARSE;
+
+    if (g_ascii_strcasecmp (protocol, "RTSP") == 0) {
+      if (major != 1 || minor != 0) {
+        *version = GST_RTSP_VERSION_INVALID;
+        res = GST_RTSP_ERROR;
+      }
+    } else if (g_ascii_strcasecmp (protocol, "HTTP") == 0) {
+      if (*type == GST_RTSP_MESSAGE_REQUEST)
+        *type = GST_RTSP_MESSAGE_HTTP_REQUEST;
+      else if (*type == GST_RTSP_MESSAGE_RESPONSE)
+        *type = GST_RTSP_MESSAGE_HTTP_RESPONSE;
+
+      if (major == 1 && minor == 1) {
+        *version = GST_RTSP_VERSION_1_1;
+      } else if (major != 1 || minor != 0) {
+        *version = GST_RTSP_VERSION_INVALID;
+        res = GST_RTSP_ERROR;
+      }
+    } else
+      res = GST_RTSP_EPARSE;
+  } else
+    res = GST_RTSP_EPARSE;
+
+  return res;
+}
+
+static GstRTSPResult
 parse_response_status (guint8 * buffer, GstRTSPMessage * msg)
 {
-  GstRTSPResult res;
+  GstRTSPResult res = GST_RTSP_OK;
+  GstRTSPResult res2;
   gchar versionstr[20];
   gchar codestr[4];
   gint code;
@@ -1522,102 +1567,80 @@ parse_response_status (guint8 * buffer, GstRTSPMessage * msg)
   bptr = (gchar *) buffer;
 
   parse_string (versionstr, sizeof (versionstr), &bptr);
+
   parse_string (codestr, sizeof (codestr), &bptr);
   code = atoi (codestr);
+  if (G_UNLIKELY (*codestr == '\0' || code < 0 || code >= 600))
+    res = GST_RTSP_EPARSE;
 
   while (g_ascii_isspace (*bptr))
     bptr++;
 
-  if (strcmp (versionstr, "RTSP/1.0") == 0)
-    GST_RTSP_CHECK (gst_rtsp_message_init_response (msg, code, bptr, NULL),
-        parse_error);
-  else if (strncmp (versionstr, "RTSP/", 5) == 0) {
-    GST_RTSP_CHECK (gst_rtsp_message_init_response (msg, code, bptr, NULL),
-        parse_error);
-    msg->type_data.response.version = GST_RTSP_VERSION_INVALID;
-  } else
-    goto parse_error;
+  if (G_UNLIKELY (gst_rtsp_message_init_response (msg, code, bptr,
+              NULL) != GST_RTSP_OK))
+    res = GST_RTSP_EPARSE;
 
-  return GST_RTSP_OK;
+  res2 = parse_protocol_version (versionstr, &msg->type,
+      &msg->type_data.response.version);
+  if (G_LIKELY (res == GST_RTSP_OK))
+    res = res2;
 
-parse_error:
-  {
-    return GST_RTSP_EPARSE;
-  }
+  return res;
 }
 
 static GstRTSPResult
-parse_request_line (GstRTSPConnection * conn, guint8 * buffer,
-    GstRTSPMessage * msg)
+parse_request_line (guint8 * buffer, GstRTSPMessage * msg)
 {
   GstRTSPResult res = GST_RTSP_OK;
+  GstRTSPResult res2;
   gchar versionstr[20];
   gchar methodstr[20];
   gchar urlstr[4096];
   gchar *bptr;
   GstRTSPMethod method;
-  GstRTSPTunnelState tstate = TUNNEL_STATE_NONE;
 
   bptr = (gchar *) buffer;
 
   parse_string (methodstr, sizeof (methodstr), &bptr);
   method = gst_rtsp_find_method (methodstr);
-  if (method == GST_RTSP_INVALID) {
-    /* a tunnel request is allowed when we don't have one yet */
-    if (conn->tstate != TUNNEL_STATE_NONE)
-      goto invalid_method;
-    /* we need GET or POST for a valid tunnel request */
-    if (!strcmp (methodstr, "GET"))
-      tstate = TUNNEL_STATE_GET;
-    else if (!strcmp (methodstr, "POST"))
-      tstate = TUNNEL_STATE_POST;
-    else
-      goto invalid_method;
-  }
 
   parse_string (urlstr, sizeof (urlstr), &bptr);
   if (G_UNLIKELY (*urlstr == '\0'))
-    goto invalid_url;
+    res = GST_RTSP_EPARSE;
 
   parse_string (versionstr, sizeof (versionstr), &bptr);
 
   if (G_UNLIKELY (*bptr != '\0'))
-    goto invalid_version;
-
-  if (strcmp (versionstr, "RTSP/1.0") == 0) {
-    res = gst_rtsp_message_init_request (msg, method, urlstr);
-  } else if (strncmp (versionstr, "RTSP/", 5) == 0) {
-    res = gst_rtsp_message_init_request (msg, method, urlstr);
-    msg->type_data.request.version = GST_RTSP_VERSION_INVALID;
-  } else if (strcmp (versionstr, "HTTP/1.0") == 0) {
-    /* tunnel request, we need a tunnel method */
-    if (tstate == TUNNEL_STATE_NONE) {
-      res = GST_RTSP_EPARSE;
-    } else {
-      conn->tstate = tstate;
-    }
-  } else {
     res = GST_RTSP_EPARSE;
+
+  if (G_UNLIKELY (gst_rtsp_message_init_request (msg, method,
+              urlstr) != GST_RTSP_OK))
+    res = GST_RTSP_EPARSE;
+
+  res2 = parse_protocol_version (versionstr, &msg->type,
+      &msg->type_data.request.version);
+  if (G_LIKELY (res == GST_RTSP_OK))
+    res = res2;
+
+  if (G_LIKELY (msg->type == GST_RTSP_MESSAGE_REQUEST)) {
+    /* GET and POST are not allowed as RTSP methods */
+    if (msg->type_data.request.method == GST_RTSP_GET ||
+        msg->type_data.request.method == GST_RTSP_POST) {
+      msg->type_data.request.method = GST_RTSP_INVALID;
+      if (res == GST_RTSP_OK)
+        res = GST_RTSP_ERROR;
+    }
+  } else if (msg->type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
+    /* only GET and POST are allowed as HTTP methods */
+    if (msg->type_data.request.method != GST_RTSP_GET &&
+        msg->type_data.request.method != GST_RTSP_POST) {
+      msg->type_data.request.method = GST_RTSP_INVALID;
+      if (res == GST_RTSP_OK)
+        res = GST_RTSP_ERROR;
+    }
   }
 
   return res;
-
-  /* ERRORS */
-invalid_method:
-  {
-    GST_ERROR ("invalid method %s", methodstr);
-    return GST_RTSP_EPARSE;
-  }
-invalid_url:
-  {
-    GST_ERROR ("invalid url %s", urlstr);
-    return GST_RTSP_EPARSE;
-  }
-invalid_version:
-  {
-    GST_ERROR ("invalid version");
-    return GST_RTSP_EPARSE;
-  }
 }
 
 static GstRTSPResult
@@ -1649,7 +1672,7 @@ no_column:
 
 /* parsing lines means reading a Key: Value pair */
 static GstRTSPResult
-parse_line (GstRTSPConnection * conn, guint8 * buffer, GstRTSPMessage * msg)
+parse_line (guint8 * buffer, GstRTSPMessage * msg)
 {
   GstRTSPResult res;
   gchar key[32];
@@ -1660,18 +1683,9 @@ parse_line (GstRTSPConnection * conn, guint8 * buffer, GstRTSPMessage * msg)
   if (G_UNLIKELY (res != GST_RTSP_OK))
     goto parse_error;
 
-  if (conn->tstate == TUNNEL_STATE_GET || conn->tstate == TUNNEL_STATE_POST) {
-    /* save the tunnel session in the connection */
-    if (!strcmp (key, "x-sessioncookie")) {
-      strncpy (conn->tunnelid, value, TUNNELID_LEN);
-      conn->tunnelid[TUNNELID_LEN - 1] = '\0';
-      conn->tunneled = TRUE;
-    }
-  } else {
-    field = gst_rtsp_find_header_field (key);
-    if (field != GST_RTSP_HDR_INVALID)
-      gst_rtsp_message_add_header (msg, field, value);
-  }
+  field = gst_rtsp_find_header_field (key);
+  if (field != GST_RTSP_HDR_INVALID)
+    gst_rtsp_message_add_header (msg, field, value);
 
   return GST_RTSP_OK;
 
@@ -1781,17 +1795,17 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
         /* we have a line */
         if (builder->line == 0) {
           /* first line, check for response status */
-          if (memcmp (builder->buffer, "RTSP", 4) == 0) {
-            res = parse_response_status (builder->buffer, message);
+          if (memcmp (builder->buffer, "RTSP", 4) == 0 ||
+              memcmp (builder->buffer, "HTTP", 4) == 0) {
+            builder->status = parse_response_status (builder->buffer, message);
           } else {
-            res = parse_request_line (conn, builder->buffer, message);
+            builder->status = parse_request_line (builder->buffer, message);
           }
-          /* the first line must parse without errors */
-          if (res != GST_RTSP_OK)
-            goto done;
         } else {
-          /* else just parse the line, ignore errors */
-          parse_line (conn, builder->buffer, message);
+          /* else just parse the line */
+          res = parse_line (builder->buffer, message);
+          if (res != GST_RTSP_OK)
+            builder->status = res;
         }
         builder->line++;
         builder->offset = 0;
@@ -1799,20 +1813,24 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
       }
       case STATE_END:
       {
+        gchar *session_cookie;
         gchar *session_id;
-
-        if (conn->tstate == TUNNEL_STATE_GET) {
-          res = GST_RTSP_ETGET;
-          goto done;
-        } else if (conn->tstate == TUNNEL_STATE_POST) {
-          res = GST_RTSP_ETPOST;
-          goto done;
-        }
 
         if (message->type == GST_RTSP_MESSAGE_DATA) {
           /* data messages don't have headers */
           res = GST_RTSP_OK;
           goto done;
+        }
+
+        /* save the tunnel session in the connection */
+        if (message->type == GST_RTSP_MESSAGE_HTTP_REQUEST &&
+            !conn->manual_http &&
+            conn->tstate == TUNNEL_STATE_NONE &&
+            gst_rtsp_message_get_header (message, GST_RTSP_HDR_X_SESSIONCOOKIE,
+                &session_cookie, 0) == GST_RTSP_OK) {
+          strncpy (conn->tunnelid, session_cookie, TUNNELID_LEN);
+          conn->tunnelid[TUNNELID_LEN - 1] = '\0';
+          conn->tunneled = TRUE;
         }
 
         /* save session id in the connection for further use */
@@ -1846,7 +1864,7 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
           strncpy (conn->session_id, session_id, maxlen);
           conn->session_id[maxlen] = '\0';
         }
-        res = GST_RTSP_OK;
+        res = builder->status;
         goto done;
       }
       default:
@@ -2021,20 +2039,36 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
     res = build_next (&builder, message, conn);
     if (G_UNLIKELY (res == GST_RTSP_EEOF))
       goto eof;
-    if (G_LIKELY (res == GST_RTSP_OK))
-      break;
-    if (res == GST_RTSP_ETGET) {
-      GString *str;
+    else if (G_LIKELY (res == GST_RTSP_OK)) {
+      if (message->type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
+        if (conn->tstate == TUNNEL_STATE_NONE &&
+            message->type_data.request.method == GST_RTSP_GET) {
+          GString *str;
 
-      /* tunnel GET request, we can reply now */
-      str = gen_tunnel_reply (conn, GST_RTSP_STS_OK);
-      res =
-          gst_rtsp_connection_write (conn, (guint8 *) str->str, str->len,
-          timeout);
-      g_string_free (str, TRUE);
-    } else if (res == GST_RTSP_ETPOST) {
-      /* tunnel POST request, return the value, the caller now has to link the
-       * two connections. */
+          conn->tstate = TUNNEL_STATE_GET;
+
+          /* tunnel GET request, we can reply now */
+          str = gen_tunnel_reply (conn, GST_RTSP_STS_OK);
+          res =
+              gst_rtsp_connection_write (conn, (guint8 *) str->str, str->len,
+              timeout);
+          g_string_free (str, TRUE);
+          res = GST_RTSP_ETGET;
+          goto cleanup;
+        } else if (conn->tstate == TUNNEL_STATE_NONE &&
+            message->type_data.request.method == GST_RTSP_POST) {
+          conn->tstate = TUNNEL_STATE_POST;
+
+          /* tunnel POST request, the caller now has to link the two
+           * connections. */
+          res = GST_RTSP_ETPOST;
+          goto cleanup;
+        } else {
+          res = GST_RTSP_EPARSE;
+          goto cleanup;
+        }
+      }
+
       break;
     } else if (G_UNLIKELY (res != GST_RTSP_EINTR))
       goto read_error;
@@ -2836,38 +2870,53 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
       res = build_next (&watch->builder, &watch->message, watch->conn);
       if (res == GST_RTSP_EINTR)
         break;
-      if (G_UNLIKELY (res == GST_RTSP_EEOF))
+      else if (G_UNLIKELY (res == GST_RTSP_EEOF))
         goto eof;
-      if (res == GST_RTSP_ETGET) {
-        GString *str;
-        GstRTSPStatusCode code;
-        guint size;
+      else if (G_LIKELY (res == GST_RTSP_OK)) {
+        if (watch->message.type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
+          if (watch->conn->tstate == TUNNEL_STATE_NONE &&
+              watch->message.type_data.request.method == GST_RTSP_GET) {
+            GString *str;
+            GstRTSPStatusCode code;
+            guint size;
 
-        if (watch->funcs.tunnel_start)
-          code = watch->funcs.tunnel_start (watch, watch->user_data);
-        else
-          code = GST_RTSP_STS_OK;
+            watch->conn->tstate = TUNNEL_STATE_GET;
 
-        /* queue the response string */
-        str = gen_tunnel_reply (watch->conn, code);
-        size = str->len;
-        gst_rtsp_watch_queue_data (watch, (guint8 *) g_string_free (str, FALSE),
-            size);
-      } else if (res == GST_RTSP_ETPOST) {
-        /* in the callback the connection should be tunneled with the
-         * GET connection */
-        if (watch->funcs.tunnel_complete)
-          watch->funcs.tunnel_complete (watch, watch->user_data);
-      } else if (G_UNLIKELY (res != GST_RTSP_OK))
-        goto error;
+            if (watch->funcs.tunnel_start)
+              code = watch->funcs.tunnel_start (watch, watch->user_data);
+            else
+              code = GST_RTSP_STS_OK;
+
+            /* queue the response string */
+            str = gen_tunnel_reply (watch->conn, code);
+            size = str->len;
+            gst_rtsp_watch_queue_data (watch, (guint8 *) g_string_free (str,
+                    FALSE), size);
+            goto read_done;
+          } else if (watch->conn->tstate == TUNNEL_STATE_NONE &&
+              watch->message.type_data.request.method == GST_RTSP_POST) {
+            watch->conn->tstate = TUNNEL_STATE_POST;
+
+            /* in the callback the connection should be tunneled with the
+             * GET connection */
+            if (watch->funcs.tunnel_complete)
+              watch->funcs.tunnel_complete (watch, watch->user_data);
+            goto read_done;
+          } else {
+            res = GST_RTSP_ERROR;
+          }
+        }
+      }
 
       if (G_LIKELY (res == GST_RTSP_OK)) {
         if (watch->funcs.message_received)
           watch->funcs.message_received (watch, &watch->message,
               watch->user_data);
+      } else
+        goto error;
 
-        gst_rtsp_message_unset (&watch->message);
-      }
+    read_done:
+      gst_rtsp_message_unset (&watch->message);
       build_reset (&watch->builder);
     } while (FALSE);
   }
