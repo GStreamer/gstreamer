@@ -39,7 +39,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_H263_PAY))
 // blocks per macroblock
 #define N_BLOCKS 6
-#define DEFAULT_MODE_A TRUE
+#define DEFAULT_MODE_A FALSE
 #define MTU_SECURITY_OFFSET 50
     typedef enum _GstRtpH263PayHeaderMode
 {
