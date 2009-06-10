@@ -596,10 +596,10 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
     plugin->file_mtime = file_status.st_mtime;
     plugin->file_size = file_status.st_size;
+    plugin->filename = g_strdup (filename);
+    plugin->basename = g_path_get_basename (filename);
   }
   plugin->module = module;
-  plugin->filename = g_strdup (filename);
-  plugin->basename = g_path_get_basename (filename);
 
   ret = g_module_symbol (module, "gst_plugin_desc", &ptr);
   if (!ret) {
@@ -623,6 +623,9 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, source, filename);
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, package, filename);
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, origin, filename);
+  } else {
+    /* this is overwritten by gst_plugin_register_func() */
+    g_free (plugin->desc.description);
   }
 
   GST_LOG ("Plugin %p for file \"%s\" prepared, calling entry function...",
