@@ -2245,6 +2245,10 @@ stsc_entry_new (guint32 first_chunk, guint32 samples, guint32 desc_index)
 static void
 atom_stsc_add_new_entry (AtomSTSC * stsc, guint32 first_chunk, guint32 nsamples)
 {
+  if (stsc->entries &&
+      ((STSCEntry *) stsc->entries->data)->samples_per_chunk == nsamples)
+    return;
+
   stsc->entries =
       g_list_prepend (stsc->entries, stsc_entry_new (first_chunk, nsamples, 1));
   stsc->n_entries++;
