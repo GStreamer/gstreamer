@@ -139,6 +139,18 @@ static SubParseInputChunk srt_input2[] = {
       0, 3 * GST_SECOND + 50 * GST_MSECOND, "Just testing."}
 };
 
+/* starts with chunk number 0 and has less than three digits after the comma
+ * and a few extra spaces before the arrow or at the end of the line */
+static SubParseInputChunk srt_input3[] = {
+  {
+        "0\n00:00:01,0 --> 00:00:02,0\nOne\n\n",
+      1000 * GST_MSECOND, 2000 * GST_MSECOND, "One"}, {
+        "1\n00:00:02,5   --> 00:00:03,  5 \nTwo\n\n",
+      2500 * GST_MSECOND, 3005 * GST_MSECOND, "Two"}, {
+        "2\n00:00:03, 9 --> 00:00:04,0   \nThree\n\n",
+      3090 * GST_MSECOND, 4000 * GST_MSECOND, "Three"}
+};
+
 static void
 setup_subparse (void)
 {
@@ -247,6 +259,9 @@ GST_START_TEST (test_srt)
 
   /* try with UTF-8 BOM at the start */
   test_srt_do_test (srt_input1, 0, G_N_ELEMENTS (srt_input2));
+
+  /* try with fewer than three post-comma digits, and some extra spaces */
+  test_srt_do_test (srt_input3, 0, G_N_ELEMENTS (srt_input3));
 }
 
 GST_END_TEST;

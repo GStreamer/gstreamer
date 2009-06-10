@@ -730,11 +730,59 @@ subrip_fix_up_markup (gchar ** p_txt)
   }
 }
 
+static gboolean
+parse_subrip_time (const gchar * ts_string, GstClockTime * t)
+{
+  gchar s[128] = { '\0', };
+  gchar *end, *p;
+  guint hour, min, sec, msec, len;
+
+  while (*ts_string == ' ')
+    ++ts_string;
+
+  g_strlcpy (s, ts_string, sizeof (s));
+  if ((end = strstr (s, "-->")))
+    *end = '\0';
+  g_strchomp (s);
+
+  /* ms may be in these formats:
+   * hh:mm:ss,500 = 500ms
+   * hh:mm:ss,  5 =   5ms
+   * hh:mm:ss, 5  =  50ms
+   * hh:mm:ss, 50 =  50ms
+   * hh:mm:ss,5   = 500ms
+   * and sscanf() doesn't differentiate between '  5' and '5' so munge
+   * the white spaces within the timestamp to '0' (I'm sure there's a
+   * way to make sscanf() do this for us, but how?)
+   */
+  g_strdelimit (s, " ", '0');
+
+  /* make sure we have exactly three digits after he comma */
+  p = strchr (s, ',');
+  g_assert (p != NULL);
+  ++p;
+  len = strlen (p);
+  if (len > 3) {
+    p[3] = '\0';
+  } else
+    while (len < 3) {
+      g_strlcat (&p[len], "0", 2);
+      ++len;
+    }
+
+  GST_LOG ("parsing timestamp '%s'", s);
+  if (sscanf (s, "%u:%u:%u,%u", &hour, &min, &sec, &msec) != 4) {
+    GST_WARNING ("failed to parse subrip timestamp string '%s'", s);
+    return FALSE;
+  }
+
+  *t = ((hour * 3600) + (min * 60) + sec) * GST_SECOND + msec * GST_MSECOND;
+  return TRUE;
+}
+
 static gchar *
 parse_subrip (ParserState * state, const gchar * line)
 {
-  guint h1, m1, s1, ms1;
-  guint h2, m2, s2, ms2;
   int subnum;
   gchar *ret;
 
@@ -745,21 +793,24 @@ parse_subrip (ParserState * state, const gchar * line)
         state->state = 1;
       return NULL;
     case 1:
+    {
+      GstClockTime ts_start, ts_end;
+      gchar *end_time;
+
       /* looking for start_time --> end_time */
-      if (sscanf (line, "%u:%u:%u,%u --> %u:%u:%u,%u",
-              &h1, &m1, &s1, &ms1, &h2, &m2, &s2, &ms2) == 8) {
+      if ((end_time = strstr (line, " --> ")) &&
+          parse_subrip_time (line, &ts_start) &&
+          parse_subrip_time (end_time + strlen (" --> "), &ts_end) &&
+          state->start_time <= ts_end) {
         state->state = 2;
-        state->start_time =
-            (((guint64) h1) * 3600 + m1 * 60 + s1) * GST_SECOND +
-            ms1 * GST_MSECOND;
-        state->duration =
-            (((guint64) h2) * 3600 + m2 * 60 + s2) * GST_SECOND +
-            ms2 * GST_MSECOND - state->start_time;
+        state->start_time = ts_start;
+        state->duration = ts_end - ts_start;
       } else {
-        GST_DEBUG ("error parsing subrip time line");
+        GST_DEBUG ("error parsing subrip time line '%s'", line);
         state->state = 0;
       }
       return NULL;
+    }
     case 2:
     {
       /* No need to parse that text if it's out of segment */
@@ -993,9 +1044,9 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
       }
       break;
     case GST_SUB_PARSE_REGEX_SUBRIP:
-      result = (gpointer) g_regex_new ("^([ 0-9]){0,3}[0-9](\x0d)?\x0a"
-          "[ 0-9][0-9]:[ 0-9][0-9]:[ 0-9][0-9],[ 0-9]{2}[0-9]"
-          " --> ([ 0-9])?[0-9]:[ 0-9][0-9]:[ 0-9][0-9],[ 0-9]{2}[0-9]",
+      result = (gpointer) g_regex_new ("^([ 0-9]){0,3}[0-9]\\s*(\x0d)?\x0a"
+          "[ 0-9][0-9]:[ 0-9][0-9]:[ 0-9][0-9],[ 0-9]{0,2}[0-9]"
+          " +--> +([ 0-9])?[0-9]:[ 0-9][0-9]:[ 0-9][0-9],[ 0-9]{0,2}[0-9]",
           0, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of subrip regex failed: %s", gerr->message);
@@ -1083,7 +1134,7 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
   gchar *data;
   GstSubParseFormat format;
 
-  if (strlen (self->textbuf->str) < 35) {
+  if (strlen (self->textbuf->str) < 30) {
     GST_DEBUG ("File too small to be a subtitles file");
     return NULL;
   }
