@@ -113,7 +113,7 @@ enum
 
 #define MDAT_ATOM_HEADER_SIZE           16
 #define DEFAULT_LARGE_FILE              FALSE
-#define DEFAULT_MOVIE_TIMESCALE         600
+#define DEFAULT_MOVIE_TIMESCALE         1000
 #define DEFAULT_DO_CTTS                 FALSE
 #define DEFAULT_FAST_START              FALSE
 #define DEFAULT_FAST_START_TEMP_FILE    NULL
