@@ -757,7 +757,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_CONNECTION_SPEED,
       g_param_spec_uint ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
-          0, G_MAXUINT, DEFAULT_CONNECTION_SPEED,
+          0, G_MAXUINT / 1000, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_BUFFER_SIZE,
@@ -2519,8 +2519,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   }
 
   /* configure connection speed */
-  g_object_set (uridecodebin, "connection-speed", playbin->connection_speed,
-      NULL);
+  g_object_set (uridecodebin, "connection-speed",
+      playbin->connection_speed / 1000, NULL);
   /* configure subtitle encoding */
   g_object_set (uridecodebin, "subtitle-encoding", playbin->encoding, NULL);
   /* configure uri */
