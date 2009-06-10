@@ -1552,9 +1552,12 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   if (elem) {
     chain->volume = elem;
 
-    GST_DEBUG_OBJECT (playsink, "the sink has a volume property");
-    /* use the sink to control the volume */
-    g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
+    if (playsink->volume_changed) {
+      GST_DEBUG_OBJECT (playsink, "the sink has a volume property, setting %f",
+          playsink->volume);
+      /* use the sink to control the volume */
+      g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
+    }
     /* if the sink also has a mute property we can use this as well. We'll only
      * use the mute property if there is a volume property. We can simulate the
      * mute with the volume otherwise. */
