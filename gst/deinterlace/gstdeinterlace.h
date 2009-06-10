@@ -23,7 +23,7 @@
 #define __GST_DEINTERLACE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
+#include <gst/video/video.h>
 #include <liboil/liboil.h>
 #include <liboil/liboilcpu.h>
 #include <liboil/liboilfunction.h>
@@ -205,33 +205,14 @@ struct _GstDeinterlace
 
   GstDeinterlaceFieldLayout field_layout;
 
-  guint frame_size;
-  gint frame_rate_n, frame_rate_d;
-  gboolean interlaced;
-
-  /* Duration of one field */
-  GstClockTime field_duration;
-
   GstDeinterlaceFields fields;
 
   GstDeinterlaceMethods method_id;
   GstDeinterlaceMethod *method;
 
-  /* The most recent pictures 
-     PictureHistory[0] is always the most recent.
-     Pointers are NULL if the picture in question isn't valid, e.g. because
-     the program just started or a picture was skipped.
-   */
-  GstPicture field_history[MAX_FIELD_HISTORY];
-  guint history_count;
-
-  /* Set to TRUE if we're in still frame mode,
-     i.e. just forward all buffers
-   */
-  gboolean still_frame_mode;
-
-  /* Last buffer that was pushed in */
-  GstBuffer *last_buffer;
+  guint frame_size;
+  gint frame_rate_n, frame_rate_d;
+  gboolean interlaced;
 
   /* Number of bytes of actual data in each scanline.  May be less than
      OverlayPitch since the overlay's scanlines might have alignment
@@ -254,6 +235,25 @@ struct _GstDeinterlace
      need not match the pixel width
    */
   guint field_stride;
+
+  /* Duration of one field */
+  GstClockTime field_duration;
+
+  /* The most recent pictures 
+     PictureHistory[0] is always the most recent.
+     Pointers are NULL if the picture in question isn't valid, e.g. because
+     the program just started or a picture was skipped.
+   */
+  GstPicture field_history[MAX_FIELD_HISTORY];
+  guint history_count;
+
+  /* Set to TRUE if we're in still frame mode,
+     i.e. just forward all buffers
+   */
+  gboolean still_frame_mode;
+
+  /* Last buffer that was pushed in */
+  GstBuffer *last_buffer;
 
   /* Current segment */
   GstSegment segment;

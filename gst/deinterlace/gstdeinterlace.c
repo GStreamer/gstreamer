@@ -37,10 +37,6 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include <liboil/liboil.h>
-
 #include "gstdeinterlace.h"
 #include "tvtime/plugins.h"
 
