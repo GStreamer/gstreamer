@@ -159,8 +159,10 @@ gst_oss4_mixer_slider_set_volume (GstOss4MixerSlider * s, const gint * volumes)
   /* if we're supposed to be muted, and are 'simulating' the mute because
    * we don't have a mute control, don't actually change the volume, just
    * save it as the new desired volume for later when we get unmuted again */
-  if (GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_MUTE) && !s->mc->mute)
-    goto done;
+  if (!GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_NO_MUTE)) {
+    if (GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_MUTE) && !s->mc->mute)
+      goto done;
+  }
 
   val = gst_oss4_mixer_slider_pack_volume (s, volumes);
 
@@ -196,14 +198,21 @@ gst_oss4_mixer_slider_set_mute (GstOss4MixerSlider * s, gboolean mute)
   GstMixerTrack *track = GST_MIXER_TRACK (s);
   gboolean ret;
 
-  /* if we don't have a mute control, simulate mute (which is a bit broken,
-   * since we can't differentiate between capture/playback volume etc., so
+  /* if the control does not support muting, then do not do anything */
+  if (GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_NO_MUTE)) {
+    return TRUE;
+  }
+
+  /* If we do not have a mute control, simulate mute (which is a bit broken,
+   * since we can not differentiate between capture/playback volume etc., so
    * we just assume that setting the volume to 0 would be the same as muting
    * this control) */
   if (s->mc->mute == NULL) {
     int volume;
 
     if (mute) {
+      /* make sure the current volume values get saved. */
+      gst_oss4_mixer_slider_get_volume (s, s->volumes);
       volume = 0;
     } else {
       volume = gst_oss4_mixer_slider_pack_volume (s, s->volumes);

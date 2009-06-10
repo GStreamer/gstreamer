@@ -673,12 +673,12 @@ gst_oss4_mixer_set_control_val (GstOss4Mixer * mixer, GstOss4MixerControl * mc,
   return TRUE;
 }
 
+#if 0
 static gchar *
 gst_oss4_mixer_control_get_pretty_name (GstOss4MixerControl * mc)
 {
   gchar *name;
 
-#if 0
   const gchar *name, *u;
 
   /* "The id field is the original name given by the driver when it called
@@ -694,7 +694,6 @@ gst_oss4_mixer_control_get_pretty_name (GstOss4MixerControl * mc)
 
   /* maybe capitalize the first letter? */
   return g_ascii_strdown (name, -1);
-#endif
   /* the .id thing doesn't really seem to work right, ie. for some sliders
    * it's just '-' so you have to use the name of the parent control etc.
    * let's not use it for now, much too painful. */
@@ -708,102 +707,119 @@ gst_oss4_mixer_control_get_pretty_name (GstOss4MixerControl * mc)
   g_strdelimit (name, ".", ' ');
   return name;
 }
-
-#if 0
-/* FIXME: translations for common option strings */
-static struct
-{
-  const gchar oss_name[32];
-  const gchar *label;
-} option_labels[] = {
-  {
-  "Fast", N_("Fast")}, {
-  "Low", N_("Low")}, {
-  "Medium", N_("Medium")}, {
-  "High", N_("High")}, {
-  "High+", N_("Very high")}, {
-  "Production", N_("Production")}, {
-  "OFF", N_("Off")}, {
-  "ON", N_("On")}, {
-  "Stereo", N_("Stereo")}, {
-  "Multich", N_("Surround sound")}, {
-  "input-mix", N_("Input mix")}, {
-  "front", N_("Front")}, {
-  "rear", N_("Rear")}, {
-  "side", N_("Side")}, {
-  "center/LFE", N_("Center / LFE")}, {
-  "mic", N_("Microphone")}, {
-  "fp-mic", N_("Front panel microphone")}, {
-  "input", N_("Input")}, {
-  "linein", N_("Line-in")}, {
-  "pcm1", N_("PCM 1")}, {
-  "pcm2", N_("PCM 2")}, {
-  "pcm3", N_("PCM 3")}, {
-"pcm4", N_("PCM 4")},};
 #endif
 
-/* these translations are a bit ad-hoc and horribly incomplete; it's not
- * really going to work this way with all the different chipsets and drivers */
+/* these translations are a bit ad-hoc and horribly incomplete; it is not
+ * really going to work this way with all the different chipsets and drivers.
+ * We also use these for translating option values. */
 static struct
 {
   const gchar oss_name[32];
   const gchar *label;
 } labels[] = {
-  /* connectors (e.g. hdaudio) */
   {
-  "jack.green", N_("Green connector")}, {
-  "jack.fp-green", N_("Green front panel connector")}, {
-  "jack.pink", N_("Pink connector")}, {
-  "jack.fp-pink", N_("Pink front panel connector")}, {
-  "jack.blue", N_("Blue connector")}, {
-  "jack.fp-blue", N_("Blue front panel connector")}, {
-  "jack.orange", N_("Orange connector")}, {
-  "jack.fp-orange", N_("Orange front panel connector")}, {
-  "jack.black", N_("Black connector")}, {
-  "jack.fp-black", N_("Black front panel connector")}, {
-  "jack.gray", N_("Gray connector")}, {
-  "jack.fp-gray", N_("Gray front panel connector")}, {
-  "jack.white", N_("White connector")}, {
-  "jack.fp-white", N_("White front panel connector")}, {
-  "jack.red", N_("Red connector")}, {
-  "jack.fp-red", N_("Red front panel connector")}, {
-  "jack.yellow", N_("Yellow connector")}, {
-  "jack.fp-yellow", N_("Yellow front panel connector")},
-      /* connector functions (e.g. hdaudio) */
-  {
-  "jack.green.mode", N_("Green connector function")}, {
-  "jack.fp-green.mode", N_("Green front panel connector function")}, {
-  "jack.pink.mode", N_("Pink connector function")}, {
-  "jack.fp-pink.mode", N_("Pink front panel connector function")}, {
-  "jack.blue.mode", N_("Blue connector function")}, {
-  "jack.fp-blue.mode", N_("Blue front panel connector function")}, {
-  "jack.orange.mode", N_("Orange connector function")}, {
-  "jack.fp-orange.mode", N_("Orange front panel connector function")}, {
-  "jack.black.mode", N_("Black connector function")}, {
-  "jack.fp-black.mode", N_("Black front panel connector function")}, {
-  "jack.gray.mode", N_("Gray connector function")}, {
-  "jack.fp-gray.mode", N_("Gray front panel connector function")}, {
-  "jack.white.mode", N_("White connector function")}, {
-  "jack.fp-white.mode", N_("White front panel connector function")}, {
-  "jack.red.mode", N_("Red connector function")}, {
-  "jack.fp-red.mode", N_("Red front panel connector function")}, {
-  "jack.yellow.mode", N_("Yellow connector function")}, {
-  "jack.fp-yellow.mode", N_("Yellow front panel connector function")},
-      /* other */
-  {
-  "misc.mic", N_("Microphone")}, {
-  "misc.fp-mic", N_("Front panel microphone")}, {
-  "misc.linein", N_("Line-in")}, {
-  "misc.fp-linein", N_("Front panel line-in")}, {
-  "misc.headphone", N_("Headphones")}, {
-  "misc.fp-headphone", N_("Front panel headphones")}, {
-  "misc.front", N_("Front")}, {
-  "misc.rear", N_("Rear")}, {
-  "misc.side", N_("Side")}, {
-  "misc.center/lfe", N_("Center / LFE")}, {
-  "misc.pcm", N_("PCM")}, {
-  "misc.input-mix", N_("Input mix")}
-  /* FIXME translate Audigy NX USB labels) */
+  "volume", N_("Volume")}, {
+  "master", N_("Master")}, {
+  "front", N_("Front")}, {
+  "rear", N_("Rear")}, {
+  "headphones", N_("Headphones")}, {
+  "center", N_("Center")}, {
+  "lfe", N_("LFE")}, {
+  "surround", N_("Surround")}, {
+  "side", N_("Side")}, {
+  "speaker", N_("Built-in Speaker")}, {
+  "aux1-out", N_("AUX 1 Out")}, {
+  "aux2-out", N_("AUX 2 Out")}, {
+  "aux-out", N_("AUX Out")}, {
+  "bass", N_("Bass")}, {
+  "treble", N_("Treble")}, {
+  "3d-depth", N_("3D Depth")}, {
+  "3d-center", N_("3D Center")}, {
+  "3d-enhance", N_("3D Enhance")}, {
+  "phone", N_("Telephone")}, {
+  "mic", N_("Microphone")}, {
+  "line-out", N_("Line Out")}, {
+  "line-in", N_("Line In")}, {
+  "linein", N_("Line In")}, {
+  "cd", N_("Internal CD")}, {
+  "video", N_("Video In")}, {
+  "aux1-in", N_("AUX 1 In")}, {
+  "aux2-in", N_("AUX 2 In")}, {
+  "aux-in", N_("AUX In")}, {
+  "pcm", N_("PCM")}, {
+  "record-gain", N_("Record Gain")}, {
+  "igain", N_("Record Gain")}, {
+  "ogain", N_("Output Gain")}, {
+  "micboost", N_("Microphone Boost")}, {
+  "loopback", N_("Loopback")}, {
+  "diag", N_("Diagnostic")}, {
+  "loudness", N_("Bass Boost")}, {
+  "outputs", N_("Playback Ports")}, {
+  "input", N_("Input")}, {
+  "inputs", N_("Record Source")}, {
+  "record-source", N_("Record Source")}, {
+  "monitor-source", N_("Monitor Source")}, {
+  "beep", N_("Keyboard Beep")}, {
+  "monitor-gain", N_("Monitor")}, {
+  "stereo-simulate", N_("Simulate Stereo")}, {
+  "stereo", N_("Stereo")}, {
+  "multich", N_("Surround Sound")}, {
+  "mic-gain", N_("Microphone Gain")}, {
+  "speaker-source", N_("Speaker Source")}, {
+  "mic-source", N_("Microphone Source")}, {
+  "jack", N_("Jack")}, {
+  "center/lfe", N_("Center / LFE")}, {
+  "stereo-mix", N_("Stereo Mix")}, {
+  "mono-mix", N_("Mono Mix")}, {
+  "input-mix", N_("Input Mix")}, {
+  "spdif-in", N_("SPDIF In")}, {
+  "spdif-out", N_("SPDIF Out")}, {
+  "mic1", N_("Microphone 1")}, {
+  "mic2", N_("Microphone 2")}, {
+  "digital-out", N_("Digital Out")}, {
+  "digital-in", N_("Digital In")}, {
+  "hdmi", N_("HDMI")}, {
+  "modem", N_("Modem")}, {
+  "handset", N_("Handset")}, {
+  "other", N_("Other")}, {
+  "stereo", N_("Stereo")}, {
+  "none", N_("None")}, {
+  "on", N_("On")}, {
+  "off", N_("Off")}, {
+  "mute", N_("Mute")}, {
+  "fast", N_("Fast")}, {
+  "very-low", N_("Very Low")}, {
+  "low", N_("Low")}, {
+  "medium", N_("Medium")}, {
+  "high", N_("High")}, {
+  "very-high", N_("Very High")}, {
+  "high+", N_("Very High")}, {
+  "production", N_("Production")}, {
+  "fp-mic", N_("Front Panel Microphone")}, {
+  "fp-linein", N_("Front Panel Line In")}, {
+  "fp-headphones", N_("Front Panel Headphones")}, {
+  "fp-lineout", N_("Front Panel Line Out")}, {
+  "green", N_("Green Connector")}, {
+  "pink", N_("Pink Connector")}, {
+  "blue", N_("Blue Connector")}, {
+  "white", N_("White Connector")}, {
+  "black", N_("Black Connector")}, {
+  "gray", N_("Gray Connector")}, {
+  "orange", N_("Orange Connector")}, {
+  "red", N_("Red Connector")}, {
+  "yellow", N_("Yellow Connector")}, {
+  "fp-green", N_("Green Front Panel Connector")}, {
+  "fp-pink", N_("Pink Front Panel Connector")}, {
+  "fp-blue", N_("Blue Front Panel Connector")}, {
+  "fp-white", N_("White Front Panel Connector")}, {
+  "fp-black", N_("Black Front Panel Connector")}, {
+  "fp-gray", N_("Gray Front Panel Connector")}, {
+  "fp-orange", N_("Orange Front Panel Connector")}, {
+  "fp-red", N_("Red Front Panel Connector")}, {
+  "fp-yellow", N_("Yellow Front Panel Connector")}, {
+  "spread", N_("Spread Output")}, {
+  "downmix", N_("Downmix")},
+      /* FIXME translate Audigy NX USB labels) */
 /*
   { "rec.src", N_("Record Source") },
   { "output.mute", N_("Mute output") }
@@ -836,42 +852,89 @@ static struct
 const gchar *
 gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
 {
-  gchar name[33] = { 0, };
-  char vmix_str[32] = { '\0', };
+  gchar name[128] = { 0, };
+  gchar scratch[128] = { 0, };
+  gchar fmtbuf[128] = { 0, };
+  gchar vmix_str[32] = { '\0', };
+  gchar *ptr;
   int dummy, i;
+  int num = -1;
+
+  g_strlcpy (fmtbuf, "%s", sizeof (fmtbuf));
 
   /* main virtual mixer controls (we hide the stream volumes) */
   if (sscanf (mc->mixext.extname, "vmix%d-%32c", &dummy, vmix_str) == 2) {
     if (strcmp (vmix_str, "src") == 0)
-      return _("Virtual mixer input");
+      return _("Virtual Mixer Input");
     else if (strcmp (vmix_str, "vol") == 0)
-      return _("Virtual mixer output");
+      return _("Virtual Mixer Output");
     else if (strcmp (vmix_str, "channels") == 0)
-      return _("Virtual mixer channel configuration");
+      return _("Virtual Mixer Channels");
   }
 
-  /* munge connector.foo => jack.foo (change from 4.0 -> 4.1) */
-  if (g_str_has_prefix (mc->mixext.extname, "connector.")) {
-    g_snprintf (name, sizeof (name), "jack.%s", mc->mixext.extname + 10);
-  } else {
-    g_strlcpy (name, mc->mixext.extname, sizeof (name));
+  g_strlcpy (name, mc->mixext.extname, sizeof (name));
+
+  /* we deal with either "connector." or "jack." */
+  if ((g_str_has_prefix (name, "connector.")) ||
+      (g_str_has_prefix (name, "jack."))) {
+    ptr = strchr (mc->mixext.extname, '.');
+    ptr++;
+    g_strlcpy (scratch, ptr, sizeof (scratch));
+    g_strlcpy (name, scratch, sizeof (name));
   }
 
-  /* munge foo.function => foo.mode (change from 4.0 -> 4.1) */
-  if (g_str_has_suffix (name, ".function"))
-    memcpy (name + strlen (name) - strlen (".function"), ".mode", 5 + 1);
-
-  /* chop off trailing numbers */
-  while (strlen (name) > 0 && g_ascii_isdigit (name[strlen (name) - 1]))
-    name[strlen (name) - 1] = '\0';
-
-  for (i = 0; i < G_N_ELEMENTS (labels); ++i) {
-    if (strcmp (name, labels[i].oss_name) == 0)
-      return _(labels[i].label);
+  /* special handling for jack retasking suffixes */
+  if (g_str_has_suffix (name, ".function") || g_str_has_suffix (name, ".mode")) {
+    g_strlcpy (fmtbuf, _("%s Function"), sizeof (fmtbuf));
+    ptr = strrchr (name, '.');
+    *ptr = 0;
   }
 
+  /* parse off trailing numbers */
+  i = strlen (name);
+  while ((i > 0) && (g_ascii_isdigit (name[i - 1]))) {
+    i--;
+  }
+  /* the check catches the case where the control name is just a number */
+  if ((i > 0) && (name[i] != '\0')) {
+    num = atoi (name + i);
+    name[i] = '\0';
+    /* format appends a number to the base, but preserves any surrounding
+       format */
+    g_snprintf (scratch, sizeof (scratch), fmtbuf, _("%s %d"));
+    g_strlcpy (fmtbuf, scratch, sizeof (fmtbuf));
+  }
+
+  /* look for a match, progressively skipping '.' delimited prefixes as we go */
+  ptr = name;
+  do {
+    if (*ptr == '.')
+      ptr++;
+    for (i = 0; i < G_N_ELEMENTS (labels); ++i) {
+      if (g_strcasecmp (ptr, labels[i].oss_name) == 0) {
+        g_snprintf (name, sizeof (name), fmtbuf, _(labels[i].label), num);
+        return g_quark_to_string (g_quark_from_string (name));
+      }
+    }
+  } while ((ptr = strchr (ptr, '.')) != NULL);
+
+  /* failing that, just replace periods with spaces */
   g_strdelimit (name, ".", ' ');
-  return g_quark_to_string (g_quark_from_string (name));        /* eek */
+  g_snprintf (scratch, sizeof (scratch), fmtbuf, name);
+  return g_quark_to_string (g_quark_from_string (scratch));     /* eek */
+}
+
+const gchar *
+gst_oss4_mixer_control_get_translated_option (gchar * name)
+{
+  int i;
+  for (i = 0; i < G_N_ELEMENTS (labels); ++i) {
+    if (g_strcasecmp (name, labels[i].oss_name) == 0) {
+      name = _(labels[i].label);
+      return (name);
+    }
+  }
+  return (name);
 }
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -1063,21 +1126,6 @@ gst_oss4_mixer_get_controls (GstOss4Mixer * mixer)
         mixer_ext_flags_get_string (mix_ext.flags), mix_ext.flags);
     GST_INFO ("  parent : %d", mix_ext.parent);
 
-    /* get tooltip (just for informational purposes for now) */
-    if (MIXEXT_HAS_DESCRIPTION (mix_ext)) {
-      oss_mixer_enuminfo desc = { 0, };
-
-      desc.dev = mix_ext.dev;
-      desc.ctrl = mix_ext.ctrl;
-      if (ioctl (mixer->fd, SNDCTL_MIX_DESCRIPTION, &desc) >= 0) {
-        /* "The string may contain multiple lines. The first line is the
-         *  'tooltip'. Optional subsequent lines may contain more detailed
-         *  help text. Lines are separated by a linefeed character." */
-        g_strdelimit (&desc.strings[desc.strindex[0]], "\n\r", '\0');
-        GST_INFO ("  tooltip: %s", &desc.strings[desc.strindex[0]]);
-      }
-    }
-
     if (!MIXEXT_IS_ROOT (mix_ext)) {
       /* find parent (we assume it comes in the list before the child) */
       for (l = controls; l != NULL; l = l->next) {
@@ -1122,30 +1170,24 @@ static void
 gst_oss4_mixer_controls_guess_master (GstOss4Mixer * mixer,
     const GList * controls)
 {
-  GstOss4MixerControl *firstpcm_mc = NULL;
   GstOss4MixerControl *master_mc = NULL;
   const GList *l;
 
   for (l = controls; l != NULL; l = l->next) {
     GstOss4MixerControl *mc = (GstOss4MixerControl *) l->data;
 
-    if (((mc->mixext.flags & MIXF_MAINVOL)) && master_mc == NULL) {
-      GST_INFO_OBJECT (mixer, "Master control: %s", mc->mixext.extname);
+    /* do we need to check if it's a slider type here? */
+    if ((mc->mixext.flags & MIXF_PCMVOL)) {
+      GST_INFO_OBJECT (mixer, "First PCM control: %s", mc->mixext.extname);
       master_mc = mc;
       break;
     }
-    /* do we need to check if it's a slider type here? */
-    if (((mc->mixext.flags & MIXF_PCMVOL)) && firstpcm_mc == NULL) {
-      GST_INFO_OBJECT (mixer, "First PCM control: %s", mc->mixext.extname);
-      firstpcm_mc = mc;
-    }
-  }
 
-  /* if no control with MIXF_MAINVOL found, use first one with PCMVOL */
-  if (master_mc == NULL && firstpcm_mc != NULL) {
-    GST_INFO_OBJECT (mixer, "Marking first PCM control as master: %s",
-        firstpcm_mc->mixext.extname);
-    master_mc = firstpcm_mc;
+    if (((mc->mixext.flags & MIXF_MAINVOL)) && master_mc == NULL) {
+      GST_INFO_OBJECT (mixer, "First main volume control: %s",
+          mc->mixext.extname);
+      master_mc = mc;
+    }
   }
 
   if (master_mc != NULL)
@@ -1308,7 +1350,9 @@ gst_oss4_mixer_enum_control_update_enum_list (GstOss4Mixer * mixer,
     mc->enum_vals = g_new0 (GQuark, mc->mixext.maxvalue + 1);
     for (i = 0; i < mc->mixext.maxvalue; ++i) {
       GST_LOG ("  %s", ei.strings + ei.strindex[i]);
-      mc->enum_vals[i] = g_quark_from_string (ei.strings + ei.strindex[i]);
+      mc->enum_vals[i] =
+          g_quark_from_string (gst_oss4_mixer_control_get_translated_option
+          (ei.strings + ei.strindex[i]));
     }
   }
 
@@ -1461,7 +1505,8 @@ gst_oss4_mixer_create_tracks (GstOss4Mixer * mixer, const GList * controls)
     if (track == NULL)
       continue;
 
-    track->label = gst_oss4_mixer_control_get_pretty_name (mc);
+    /* The mixer API requires this to be g_strdup'd */
+    track->label = g_strdup (gst_oss4_mixer_control_get_translated_name (mc));
     track->flags = 0;
 
     GST_LOG ("translated label: %s [%s] = %s", track->label, mc->mixext.id,
@@ -1471,20 +1516,41 @@ gst_oss4_mixer_create_tracks (GstOss4Mixer * mixer, const GList * controls)
      * esp. if a slider's role can be changed on the fly, like when you change
      * function of a connector. What should we do in that case? Change the flag
      * and make the app rebuild the interface? Ignore it? */
-    if (g_str_has_prefix (mc->mixext.extname, "record.")) {
-      mc->is_output = FALSE;
-      mc->is_input = TRUE;
+    if (mc->mixext.flags & (MIXF_MAINVOL | MIXF_PCMVOL)) {
+      track->flags = GST_MIXER_TRACK_OUTPUT | GST_MIXER_TRACK_WHITELIST;
+
+    } else if (mc->mixext.flags & MIXF_RECVOL) {
+      /* record gain whitelisted by default */
+      track->flags = GST_MIXER_TRACK_INPUT | GST_MIXER_TRACK_NO_RECORD |
+          GST_MIXER_TRACK_WHITELIST;
+
+    } else if (mc->mixext.flags & MIXF_MONVOL) {
+      /* monitor sources not whitelisted by default */
+      track->flags = GST_MIXER_TRACK_INPUT | GST_MIXER_TRACK_NO_RECORD;
     }
 
-    /* FIXME: determine is_input and is_output */
-    /* must be either INPUT or OUTPUT (but not both and not neither) for now,
-     * or gnome-volume-control aborts */
-    if (mc->is_input)
-      track->flags |= GST_MIXER_TRACK_INPUT;
-    else if (mc->is_output)
+    /*
+     * The kernel may give us better clues about the scope of a control.
+     * If so, try to honor it.
+     */
+    switch (mc->mixext.desc & MIXEXT_SCOPE_MASK) {
+      case MIXEXT_SCOPE_INPUT:
+      case MIXEXT_SCOPE_RECSWITCH:
+        track->flags |= GST_MIXER_TRACK_INPUT | GST_MIXER_TRACK_NO_RECORD |
+            GST_MIXER_TRACK_WHITELIST;
+        break;
+      case MIXEXT_SCOPE_MONITOR:
+        /* don't whitelist monitor tracks by default */
+        track->flags |= GST_MIXER_TRACK_INPUT | GST_MIXER_TRACK_NO_RECORD;
+        break;
+      case MIXEXT_SCOPE_OUTPUT:
+        track->flags = GST_MIXER_TRACK_OUTPUT | GST_MIXER_TRACK_WHITELIST;
+        break;
+    }
+
+    if (mc->is_master) {
       track->flags |= GST_MIXER_TRACK_OUTPUT;
-    else
-      track->flags |= GST_MIXER_TRACK_OUTPUT;
+    }
 
     if (mc->is_master)
       track->flags |= GST_MIXER_TRACK_MASTER;
@@ -1597,6 +1663,10 @@ gst_oss4_mixer_get_volume (GstMixer * mixer, GstMixerTrack * track,
 
   memset (volumes, 0, track->num_channels * sizeof (gint));
 
+  if (GST_IS_OSS4_MIXER_SWITCH (track)) {
+    gboolean enabled = FALSE;
+    gst_oss4_mixer_switch_get (GST_OSS4_MIXER_SWITCH (track), &enabled);
+  }
   if (GST_IS_OSS4_MIXER_SLIDER (track)) {
     gst_oss4_mixer_slider_get_volume (GST_OSS4_MIXER_SLIDER (track), volumes);
   }
@@ -1649,11 +1719,7 @@ gst_oss4_mixer_set_mute (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
   if (GST_IS_OSS4_MIXER_SLIDER (track)) {
     gst_oss4_mixer_slider_set_mute (GST_OSS4_MIXER_SLIDER (track), mute);
   } else if (GST_IS_OSS4_MIXER_SWITCH (track)) {
-    if ((track->flags & GST_MIXER_TRACK_OUTPUT)) {
-      gst_oss4_mixer_switch_set (GST_OSS4_MIXER_SWITCH (track), mute);
-    } else {
-      GST_WARNING_OBJECT (track, "set_mute called on non-OUTPUT track");
-    }
+    gst_oss4_mixer_switch_set (GST_OSS4_MIXER_SWITCH (track), mute);
   }
 
   GST_OBJECT_UNLOCK (oss);
@@ -1717,7 +1783,8 @@ gst_oss4_mixer_get_option (GstMixer * mixer, GstMixerOptions * options)
 static GstMixerFlags
 gst_oss4_mixer_get_mixer_flags (GstMixer * mixer)
 {
-  return GST_MIXER_FLAG_AUTO_NOTIFICATIONS;
+  return GST_MIXER_FLAG_AUTO_NOTIFICATIONS | GST_MIXER_FLAG_HAS_WHITELIST |
+      GST_MIXER_FLAG_GROUPING;
 }
 
 static void
