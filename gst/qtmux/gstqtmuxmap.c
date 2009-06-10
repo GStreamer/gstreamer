@@ -201,6 +201,8 @@ gst_qt_mux_map_format_to_flavor (GstQTMuxFormat format)
 {
   if (format == GST_QT_MUX_FORMAT_QT)
     return ATOMS_TREE_FLAVOR_MOV;
+  else if (format == GST_QT_MUX_FORMAT_3GP)
+    return ATOMS_TREE_FLAVOR_3GP;
   else
     return ATOMS_TREE_FLAVOR_ISOM;
 }
