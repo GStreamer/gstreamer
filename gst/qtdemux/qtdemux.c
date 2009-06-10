@@ -4940,10 +4940,10 @@ static const struct
   FOURCC__nam, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
   FOURCC_titl, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
   FOURCC__grp, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
-  FOURCC__wrt, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+  FOURCC__wrt, GST_TAG_COMPOSER, NULL, qtdemux_tag_add_str}, {
   FOURCC__ART, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
   FOURCC_perf, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
-  FOURCC_auth, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+  FOURCC_auth, GST_TAG_COMPOSER, NULL, qtdemux_tag_add_str}, {
   FOURCC__alb, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
   FOURCC_albm, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
   FOURCC_cprt, GST_TAG_COPYRIGHT, NULL, qtdemux_tag_add_str}, {
