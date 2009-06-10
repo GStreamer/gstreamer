@@ -868,6 +868,8 @@ gst_plugin_is_loaded (GstPlugin * plugin)
  * stored. This is the case when the registry is getting rebuild.
  *
  * Returns: The cached data as a #GstStructure or %NULL.
+ *
+ * Since: 0.10.24
  */
 G_CONST_RETURN GstStructure *
 gst_plugin_get_cache_data (GstPlugin * plugin)
@@ -886,6 +888,8 @@ gst_plugin_get_cache_data (GstPlugin * plugin)
  * the @plugin.
  *
  * The cache is flushed every time the registry is rebuild.
+ *
+ * Since: 0.10.24
  */
 void
 gst_plugin_set_cache_data (GstPlugin * plugin, GstStructure * cache_data)
