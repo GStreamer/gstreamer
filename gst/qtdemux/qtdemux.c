@@ -4517,10 +4517,10 @@ static inline gboolean
 qtdemux_is_string_3gp (GstQTDemux * qtdemux, guint32 fourcc)
 {
   /* Detect if the tag must be handled as 3gpp - i18n metadata. The first
-   * check is for catching all the possible brands, e.g. 3gp4,3gp5,.. and
+   * check is for catching all the possible brands, e.g. 3gp4,3gp5,3gg6,.. and
    * handling properly the tags present in more than one brand.*/
-  return ((qtdemux->major_brand & GST_MAKE_FOURCC (255, 255, 255, 0)) ==
-      GST_MAKE_FOURCC ('3', 'g', 'p', 0)
+  return ((qtdemux->major_brand & GST_MAKE_FOURCC (255, 255, 0, 0)) ==
+      GST_MAKE_FOURCC ('3', 'g', 0, 0)
       && (fourcc == FOURCC_cprt || fourcc == FOURCC_gnre
           || fourcc == FOURCC_kywd)) || fourcc == FOURCC_titl
       || fourcc == FOURCC_dscp || fourcc == FOURCC_perf || fourcc == FOURCC_auth
@@ -4534,38 +4534,49 @@ qtdemux_tag_add_location (GstQTDemux * qtdemux, const char *tag,
   const gchar *env_vars[] = { "GST_QT_TAG_ENCODING", "GST_TAG_ENCODING", NULL };
   int offset;
   char *name;
+  gchar *data;
   gdouble longitude, latitude, altitude;
 
+  data = node->data;
   offset = 14;
 
   /* TODO: language code skipped */
 
-  name = gst_tag_freeform_string_to_utf8 ((char *) node->data + offset,
-      -1, env_vars);
+  name = gst_tag_freeform_string_to_utf8 (data + offset, -1, env_vars);
 
   if (!name) {
-    GST_DEBUG_OBJECT (qtdemux, "failed to convert %s tag to UTF-8", tag);
+    /* do not alarm in trivial case, but bail out otherwise */
+    if (*(data + offset) != 0) {
+      GST_DEBUG_OBJECT (qtdemux, "failed to convert %s tag to UTF-8, "
+          "giving up", tag);
+    }
+  } else {
+    gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_GEO_LOCATION_NAME, name, NULL);
+    offset += strlen (name);
+    g_free (name);
   }
 
-  /* +1 = skip location role byte */
-  offset += strlen (name) + 1 + 1;
-  longitude = QT_FP32 ((guint8 *) node->data + offset);
+  /* +1 +1 = skip null-terminator and location role byte */
+  offset += 1 + 1;
+  longitude = QT_FP32 (data + offset);
 
   offset += 4;
-  latitude = QT_FP32 ((guint8 *) node->data + offset);
+  latitude = QT_FP32 (data + offset);
 
   offset += 4;
-  altitude = QT_FP32 ((guint8 *) node->data + offset);
+  altitude = QT_FP32 (data + offset);
 
-  gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
-      GST_TAG_GEO_LOCATION_NAME, name,
-      GST_TAG_GEO_LOCATION_LATITUDE, latitude,
-      GST_TAG_GEO_LOCATION_LONGITUDE, longitude,
-      GST_TAG_GEO_LOCATION_ELEVATION, altitude, NULL);
+  /* one invalid means all are invalid */
+  if (longitude >= -180.0 && longitude <= 180.0 &&
+      latitude >= -90.0 && latitude <= 90.0) {
+    gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_GEO_LOCATION_LATITUDE, latitude,
+        GST_TAG_GEO_LOCATION_LONGITUDE, longitude,
+        GST_TAG_GEO_LOCATION_ELEVATION, altitude, NULL);
+  }
 
   /* TODO: no GST_TAG_, so astronomical body and additional notes skipped */
-
-  g_free (name);
 }
 
 
@@ -4674,6 +4685,75 @@ qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, const char *dummy,
     } else {
       GST_DEBUG_OBJECT (qtdemux, "failed to convert %s tag to UTF-8", tag);
     }
+  }
+}
+
+static void
+qtdemux_tag_add_keywords (GstQTDemux * qtdemux, const char *tag,
+    const char *dummy, GNode * node)
+{
+  const gchar *env_vars[] = { "GST_QT_TAG_ENCODING", "GST_TAG_ENCODING", NULL };
+  guint8 *data;
+  char *s, *t, *k = NULL;
+  int len;
+  int offset;
+  int count;
+
+  /* re-route to normal string tag if not 3GP */
+  if (!qtdemux_is_string_3gp (qtdemux, FOURCC_kywd))
+    return qtdemux_tag_add_str (qtdemux, tag, dummy, node);
+
+  GST_DEBUG_OBJECT (qtdemux, "found 3gpp keyword tag");
+
+  data = node->data;
+
+  len = QT_UINT32 (data);
+  if (len < 15)
+    goto short_read;
+
+  count = QT_UINT8 (data + 14);
+  offset = 15;
+  for (; count; count--) {
+    gint slen;
+
+    if (offset + 1 > len)
+      goto short_read;
+    slen = QT_UINT8 (data + offset);
+    offset += 1;
+    if (offset + slen > len)
+      goto short_read;
+    s = gst_tag_freeform_string_to_utf8 ((char *) node->data + offset,
+        slen, env_vars);
+    if (s) {
+      GST_DEBUG_OBJECT (qtdemux, "adding keyword %s", GST_STR_NULL (s));
+      if (k) {
+        t = g_strjoin (",", k, s, NULL);
+        g_free (s);
+        g_free (k);
+        k = t;
+      } else {
+        k = s;
+      }
+    } else {
+      GST_DEBUG_OBJECT (qtdemux, "failed to convert keyword to UTF-8");
+    }
+    offset += slen;
+  }
+
+done:
+  if (k) {
+    GST_DEBUG_OBJECT (qtdemux, "adding tag %s", GST_STR_NULL (k));
+    gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag, k, NULL);
+  }
+  g_free (k);
+
+  return;
+
+  /* ERRORS */
+short_read:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "short read parsing 3GP keywords");
+    goto done;
   }
 }
 
@@ -4827,6 +4907,10 @@ qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, const char *dummy,
   int type;
   int n;
 
+  /* re-route to normal string tag if 3GP */
+  if (qtdemux_is_string_3gp (qtdemux, FOURCC_gnre))
+    return qtdemux_tag_add_str (qtdemux, tag, dummy, node);
+
   data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
   if (data) {
     len = QT_UINT32 (data->data);
@@ -4880,7 +4964,7 @@ static const struct
   FOURCC_gnre, GST_TAG_GENRE, NULL, qtdemux_tag_add_gnre}, {
   FOURCC_tmpo, GST_TAG_BEATS_PER_MINUTE, NULL, qtdemux_tag_add_tmpo}, {
   FOURCC_covr, GST_TAG_PREVIEW_IMAGE, NULL, qtdemux_tag_add_covr}, {
-  FOURCC_kywd, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}, {
+  FOURCC_kywd, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_keywords}, {
   FOURCC_keyw, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}, {
   FOURCC__enc, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}, {
   FOURCC_loci, GST_TAG_GEO_LOCATION_NAME, NULL, qtdemux_tag_add_location}, {
