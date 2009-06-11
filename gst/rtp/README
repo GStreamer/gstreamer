@@ -165,7 +165,7 @@ between the RTP and GST timestamps. This information is used by a session
 manager to create SR reports. The NTP time in the report will contain the
 running time converted to NTP time and the corresponding RTP timestamp.
 
-Not that at the sender side, the RTP and GStreamer timestamp both increment at
+Note that at the sender side, the RTP and GStreamer timestamp both increment at
 the same rate, the sender rate. This rate depends on the global pipeline clock
 of the sender. 
 
@@ -225,7 +225,7 @@ and will apply the drift correction to the GStreamer timestamp before pushing
 the buffer downstream. The result is that the depayloader receives a smoothed
 GStreamer timestamp on the RTP packet, which is copied to the depayloaded data.
 
-The following pipeline illustrates the sender with a jitterbuffer.
+The following pipeline illustrates a receiver with a jitterbuffer.
 
     gst-launch udpsrc caps="application/x-rtp, media=(string)video,
       clock-rate=(int)90000, encoding-name=(string)H263-1998" !
@@ -325,6 +325,17 @@ Some gst-launch lines:
 
  The caps on the udpsinks can be retrieved when the server pipeline prerolled to
  PAUSED.
+
+ The above pipeline sets sync=false on the audio and video sink which means that
+ no synchronisation will be performed in the sinks, they play the data when it
+ arrives. If you want to enable synchronisation in the sinks it is highly
+ recommended to use a gstrtpjitterbuffer after the udpsrc elements. 
+ 
+ Even when sync is enabled, the two different streams will not play synchronised
+ against eachother because the receiver does not have enough information to
+ perform this task. For this you need to add the gstrtpbin element in both the
+ sender and receiver pipeline and use additional sources and sinks to transmit
+ RTCP packets used for inter-stream synchronisation.
 
  The caps on the receiver side can be set on the UDP source elements when the
  pipeline went to PAUSED. In that state no data is received from the UDP sources
