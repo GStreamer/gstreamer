@@ -51,9 +51,10 @@ G_BEGIN_DECLS
 #define GST_BASE_VIDEO_DECODER_SRC_NAME     "src"
 
 /**
- *  * GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA:
- *   *
- *    */
+ * GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA:
+ *
+ * Custom GstFlowReturn value indicating that more data is needed.
+ */
 #define GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
 

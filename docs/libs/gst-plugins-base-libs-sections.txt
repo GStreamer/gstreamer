@@ -454,7 +454,6 @@ gst_mixer_message_parse_volume_changed
 gst_mixer_message_parse_options_list_changed
 
 <SUBSECTION Standard>
-GstMixer
 GstMixerClass
 GST_TYPE_MIXER
 GST_TYPE_MIXER_TYPE
