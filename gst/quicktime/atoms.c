@@ -1243,9 +1243,6 @@ atom_copy_data (Atom * atom, guint8 ** buffer, guint64 * size, guint64 * offset)
      * would be a problem for size (re)write code, not to mention memory */
     g_return_val_if_fail (atom->type == FOURCC_mdat, 0);
     prop_copy_uint64 (atom->extended_size, buffer, size, offset);
-  } else {
-    /* just in case some trivially derived atom does not do so */
-    atom_write_size (buffer, size, offset, original_offset);
   }
 
   return *offset - original_offset;
