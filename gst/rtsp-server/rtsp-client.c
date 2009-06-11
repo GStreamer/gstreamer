@@ -1411,7 +1411,8 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   g_object_unref (oclient);
 
   /* we don't need this watch anymore */
-  g_source_remove (client->watchid);
+  g_source_destroy ((GSource *) client->watch);
+  client->watchid = 0;
 
   return GST_RTSP_OK;
 
