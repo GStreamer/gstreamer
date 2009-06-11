@@ -800,6 +800,7 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
   pa_threaded_mainloop_lock (psink->mainloop);
   GST_DEBUG_OBJECT (psink, "starting");
   pbuf->paused = FALSE;
+  gst_pulsering_set_corked (pbuf, FALSE, FALSE);
   pa_threaded_mainloop_unlock (psink->mainloop);
 
   return TRUE;
@@ -927,7 +928,7 @@ G_STMT_START {                                  \
     memcpy (d, se, bps);                        \
     se -= bps;                                  \
     *accum += outr;                             \
-    while ((*accum << 1) >= inr) {              \
+    while (d < de && (*accum << 1) >= inr) {    \
       *accum -= inr;                            \
       d += bps;                                 \
     }                                           \
@@ -944,7 +945,7 @@ G_STMT_START {                                  \
     memcpy (d, se, bps);                        \
     d += bps;                                   \
     *accum += inr;                              \
-    while ((*accum << 1) >= outr) {             \
+    while (s <= se && (*accum << 1) >= outr) {  \
       *accum -= outr;                           \
       se -= bps;                                \
     }                                           \
@@ -1008,6 +1009,8 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
   inr = in_samples - 1;
   outr = out_samples - 1;
+
+  GST_DEBUG_OBJECT (psink, "in %d, out %d", inr, outr);
 
   /* data_end points to the last sample we have to write, not past it. This is
    * needed to properly handle reverse playback: it points to the last sample. */
