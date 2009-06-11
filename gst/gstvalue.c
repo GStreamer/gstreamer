@@ -85,6 +85,18 @@ static gchar *gst_string_wrap (const gchar * s);
 static gchar *gst_string_take_and_wrap (gchar * s);
 static gchar *gst_string_unwrap (const gchar * s);
 
+static inline GstValueTable *
+gst_value_hash_lookup_type (GType type)
+{
+  return g_hash_table_lookup (gst_value_hash, (gpointer) type);
+}
+
+static void
+gst_value_hash_add_type (GType type, const GstValueTable * table)
+{
+  g_hash_table_insert (gst_value_hash, (gpointer) type, (gpointer) table);
+}
+
 /********
  * list *
  ********/
@@ -2807,12 +2819,11 @@ gst_value_get_compare_func (const GValue * value1)
   GstValueTable *table, *best = NULL;
   guint i;
   GType type1;
-  gint key;
 
-  key = type1 = G_VALUE_TYPE (value1);
+  type1 = G_VALUE_TYPE (value1);
 
   /* this is a fast check */
-  best = g_hash_table_lookup (gst_value_hash, GINT_TO_POINTER (key));
+  best = gst_value_hash_lookup_type (type1);
 
   /* slower checks */
   if (G_UNLIKELY (!best || !best->compare)) {
@@ -3259,17 +3270,16 @@ void
 gst_value_register (const GstValueTable * table)
 {
   GstValueTable *found;
-  gint key;
 
   g_array_append_val (gst_value_table, *table);
 
-  key = table->type;
-
-  found = g_hash_table_lookup (gst_value_hash, GINT_TO_POINTER (key));
+  found = gst_value_hash_lookup_type (table->type);
   if (found)
-    g_warning ("adding type %d multiple times", key);
+    g_warning ("adding type %s multiple times", g_type_name (table->type));
 
-  g_hash_table_insert (gst_value_hash, GINT_TO_POINTER (key), (gpointer) table);
+  /* FIXME: we're not really doing the const justice, we assume the table is
+   * static */
+  gst_value_hash_add_type (table->type, table);
 }
 
 /**
@@ -3304,13 +3314,12 @@ gst_value_serialize (const GValue * value)
   GstValueTable *table, *best;
   char *s;
   GType type;
-  gint key;
 
   g_return_val_if_fail (G_IS_VALUE (value), NULL);
 
-  key = type = G_VALUE_TYPE (value);
+  type = G_VALUE_TYPE (value);
 
-  best = g_hash_table_lookup (gst_value_hash, GINT_TO_POINTER (key));
+  best = gst_value_hash_lookup_type (type);
 
   if (G_UNLIKELY (!best || !best->serialize)) {
     best = NULL;
@@ -3352,15 +3361,13 @@ gst_value_deserialize (GValue * dest, const gchar * src)
   GstValueTable *table, *best;
   guint i;
   GType type;
-  gint key;
 
   g_return_val_if_fail (src != NULL, FALSE);
   g_return_val_if_fail (G_IS_VALUE (dest), FALSE);
 
-  key = type = G_VALUE_TYPE (dest);
+  type = G_VALUE_TYPE (dest);
 
-  best = g_hash_table_lookup (gst_value_hash, GINT_TO_POINTER (key));
-
+  best = gst_value_hash_lookup_type (type);
   if (G_UNLIKELY (!best || !best->deserialize)) {
     best = NULL;
     for (i = 0; i < gst_value_table->len; i++) {
