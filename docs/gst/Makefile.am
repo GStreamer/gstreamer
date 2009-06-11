@@ -9,11 +9,11 @@ ERROR_CFLAGS=
 
 BUILT_SOURCES=gstreamer.types
 
-# for upload.mak
+# for upload-doc.mak
 DOC=gstreamer
 FORMATS=html
 html: html-build.stamp
-include $(top_srcdir)/common/upload.mak
+include $(top_srcdir)/common/upload-doc.mak
 
 # generated basefiles
 #basefiles = \

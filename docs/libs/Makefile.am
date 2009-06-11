@@ -7,11 +7,11 @@ DOC_MODULE=gstreamer-libs
 # don't want $(DOC_MODULE)-scan.c to be built with -Werror
 ERROR_CFLAGS=
 
-# for upload.mak
+# for upload-doc.mak
 DOC=gstreamer-libs
 FORMATS=html
 html: html-build.stamp
-include $(top_srcdir)/common/upload.mak
+include $(top_srcdir)/common/upload-doc.mak
 
 # generated basefiles
 #basefiles = \

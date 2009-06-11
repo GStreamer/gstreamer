@@ -2,7 +2,7 @@
 
 # base name of doc
 DOC = faq
-# formats defined for upload.mak
+# formats defined for upload-doc.mak
 FORMATS=html ps pdf
 
 # main xml file
@@ -24,7 +24,7 @@ EXTRA_SRC = gst-uninstalled
 # get the generic docbuilding Makefile stuff
 include $(srcdir)/../manuals.mak
 # get the generic upload target
-include $(top_srcdir)/common/upload.mak
+include $(top_srcdir)/common/upload-doc.mak
 
 ### this is standard automake stuff
 
