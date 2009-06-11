@@ -334,7 +334,7 @@ beach:
   return ret;
 }
 
-/**
+/*
 * We accept the caps if it has the same format as other sink pads in 
 * the element.
 */

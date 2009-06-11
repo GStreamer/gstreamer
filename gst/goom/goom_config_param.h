@@ -21,7 +21,7 @@
 
 #include <stdlib.h>
 
-/**
+/*
  * File created on 2003-05-24 by Jeko.
  * (c)2003, JC Hoelt for iOS-software.
  *
