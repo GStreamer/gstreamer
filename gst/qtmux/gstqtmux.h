@@ -109,7 +109,7 @@ struct _GstQTMux
   guint64 header_size;
   /* accumulated size of raw media data (a priori not including mdat header) */
   guint64 mdat_size;
-  /* position of mdat extended size field (for later updating) */
+  /* position of mdat atom (for later updating) */
   guint64 mdat_pos;
 
   /* atom helper objects */

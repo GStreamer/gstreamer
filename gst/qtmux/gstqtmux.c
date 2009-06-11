@@ -111,7 +111,9 @@ enum
   PROP_FAST_START_TEMP_FILE
 };
 
-#define MDAT_ATOM_HEADER_SIZE           16
+/* some spare for header size as well */
+#define MDAT_LARGE_FILE_LIMIT           ((guint64) 1024 * 1024 * 1024 * 2)
+
 #define DEFAULT_LARGE_FILE              FALSE
 #define DEFAULT_MOVIE_TIMESCALE         1000
 #define DEFAULT_DO_CTTS                 FALSE
@@ -815,7 +817,7 @@ gst_qt_mux_send_buffer (GstQTMux * qtmux, GstBuffer * buf, guint64 * offset,
     res = gst_pad_push (qtmux->srcpad, buf);
   }
 
-  if (offset)
+  if (G_LIKELY (offset))
     *offset += size;
 
   return res;
@@ -905,7 +907,8 @@ seek_failed:
  * seek back to it later and update when the streams have finished.
  */
 static GstFlowReturn
-gst_qt_mux_send_mdat_header (GstQTMux * qtmux, guint64 * off, guint64 size)
+gst_qt_mux_send_mdat_header (GstQTMux * qtmux, guint64 * off, guint64 size,
+    gboolean extended)
 {
   Atom *node_header;
   GstBuffer *buf;
@@ -917,11 +920,15 @@ gst_qt_mux_send_mdat_header (GstQTMux * qtmux, guint64 * off, guint64 size)
 
   node_header = g_malloc0 (sizeof (Atom));
   node_header->type = FOURCC_mdat;
-  /* use extended size */
-  node_header->size = 1;
-  node_header->extended_size = 0;
-  if (size)
-    node_header->extended_size = size;
+  if (extended) {
+    /* use extended size */
+    node_header->size = 1;
+    node_header->extended_size = 0;
+    if (size)
+      node_header->extended_size = size + 16;
+  } else {
+    node_header->size = size + 8;
+  }
 
   size = offset = 0;
   if (atom_copy_data (node_header, &data, &size, &offset) == 0)
@@ -955,14 +962,31 @@ gst_qt_mux_update_mdat_size (GstQTMux * qtmux, guint64 mdat_pos,
 {
   GstEvent *event;
   GstBuffer *buf;
+  gboolean large_file;
+
+  large_file = (mdat_size > MDAT_LARGE_FILE_LIMIT);
+
+  if (large_file)
+    mdat_pos += 8;
 
   /* seek and rewrite the header */
   event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
       mdat_pos, GST_CLOCK_TIME_NONE, 0);
   gst_pad_push_event (qtmux->srcpad, event);
 
-  buf = gst_buffer_new_and_alloc (sizeof (guint64));
-  GST_WRITE_UINT64_BE (GST_BUFFER_DATA (buf), mdat_size);
+  if (large_file) {
+    buf = gst_buffer_new_and_alloc (sizeof (guint64));
+    GST_WRITE_UINT64_BE (GST_BUFFER_DATA (buf), mdat_size + 16);
+  } else {
+    guint8 *data;
+
+    buf = gst_buffer_new_and_alloc (16);
+    data = GST_BUFFER_DATA (buf);
+    GST_WRITE_UINT32_BE (data, 8);
+    GST_WRITE_UINT32_LE (data + 4, FOURCC_free);
+    GST_WRITE_UINT32_BE (data + 8, mdat_size + 8);
+    GST_WRITE_UINT32_LE (data + 12, FOURCC_mdat);
+  }
 
   return gst_qt_mux_send_buffer (qtmux, buf, offset, FALSE);
 }
@@ -1013,6 +1037,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   /* tags into file metadata */
   gst_qt_mux_setup_metadata (qtmux);
 
+  large_file = (qtmux->mdat_size > MDAT_LARGE_FILE_LIMIT);
   /* if faststart, update the offset of the atoms in the movie with the offset
    * that the movie headers before mdat will cause */
   if (qtmux->fast_start_file) {
@@ -1022,7 +1047,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       goto serialize_error;
     GST_DEBUG_OBJECT (qtmux, "calculated moov atom size %" G_GUINT64_FORMAT,
         size);
-    offset += qtmux->header_size + MDAT_ATOM_HEADER_SIZE;
+    offset += qtmux->header_size + (large_file ? 16 : 8);
   } else
     offset = qtmux->header_size;
   atom_moov_chunks_add_offset (qtmux->moov, offset);
@@ -1043,12 +1068,11 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   GST_DEBUG_OBJECT (qtmux, "Pushing movie atoms");
   gst_qt_mux_send_buffer (qtmux, buffer, NULL, FALSE);
 
-  /* total mdat size as of now also includes the atom header */
-  qtmux->mdat_size += MDAT_ATOM_HEADER_SIZE;
   /* if needed, send mdat atom and move buffered data into it */
   if (qtmux->fast_start_file) {
     /* mdat size = accumulated (buffered data) + mdat atom header */
-    ret = gst_qt_mux_send_mdat_header (qtmux, NULL, qtmux->mdat_size);
+    ret = gst_qt_mux_send_mdat_header (qtmux, NULL, qtmux->mdat_size,
+        large_file);
     if (ret != GST_FLOW_OK)
       return ret;
     ret = gst_qt_mux_send_buffered_data (qtmux, NULL);
@@ -1142,9 +1166,9 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
     if (!qtmux->fast_start_file)
       goto open_failed;
   } else {
-    ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0);
-    /* mdat size position = current header pos - extended header size */
-    qtmux->mdat_pos = qtmux->header_size - sizeof (guint64);
+    /* extended to ensure some spare space */
+    qtmux->mdat_pos = qtmux->header_size;
+    ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE);
   }
   GST_OBJECT_UNLOCK (qtmux);
 
