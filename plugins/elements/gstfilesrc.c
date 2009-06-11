@@ -373,7 +373,10 @@ gst_file_src_set_location (GstFileSrc * src, const gchar * location)
   /* ERROR */
 wrong_state:
   {
-    GST_DEBUG_OBJECT (src, "setting location in wrong state");
+    GST_ELEMENT_WARNING (src, RESOURCE, BUSY,
+        ("Changing the `location' property on filesrc when a file is open is "
+            "not supported."),
+        ("setting the 'location' property in wrong state"));
     GST_OBJECT_UNLOCK (src);
     return FALSE;
   }

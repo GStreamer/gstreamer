@@ -251,8 +251,10 @@ gst_file_sink_set_location (GstFileSink * sink, const gchar * location)
   /* ERRORS */
 was_open:
   {
-    g_warning ("Changing the `location' property on filesink when "
-        "a file is open not supported.");
+    GST_ELEMENT_WARNING (sink, RESOURCE, BUSY,
+        ("Changing the `location' property on filesink when a file is open is "
+            "not supported."),
+        ("setting the 'location' property in wrong state"));
     return FALSE;
   }
 }
