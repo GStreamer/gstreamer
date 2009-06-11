@@ -1503,7 +1503,7 @@ G_STMT_START {					\
       memcpy (d, se, bps);			\
     se -= bps;					\
     *accum += outr;				\
-    while ((*accum << 1) >= inr) {		\
+    while (d < de && (*accum << 1) >= inr) {	\
       *accum -= inr;				\
       d += bps;					\
     }						\
@@ -1521,7 +1521,7 @@ G_STMT_START {					\
       memcpy (d, se, bps);			\
     d += bps;					\
     *accum += inr;				\
-    while ((*accum << 1) >= outr) {		\
+    while (s <= se && (*accum << 1) >= outr) {	\
       *accum -= outr;				\
       se -= bps;				\
     }						\
