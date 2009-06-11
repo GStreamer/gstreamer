@@ -67,8 +67,14 @@ struct _GstValueSubtractInfo
   GstValueSubtractFunc func;
 };
 
+#define FUNDAMENTAL_TYPE_ID_MAX \
+    (G_TYPE_FUNDAMENTAL_MAX >> G_TYPE_FUNDAMENTAL_SHIFT)
+#define FUNDAMENTAL_TYPE_ID(type) \
+    ((type) >> G_TYPE_FUNDAMENTAL_SHIFT)
+
 static GArray *gst_value_table;
 static GHashTable *gst_value_hash;
+static GstValueTable *gst_value_tables_fundamental[FUNDAMENTAL_TYPE_ID_MAX + 1];
 static GArray *gst_value_union_funcs;
 static GArray *gst_value_intersect_funcs;
 static GArray *gst_value_subtract_funcs;
@@ -88,12 +94,18 @@ static gchar *gst_string_unwrap (const gchar * s);
 static inline GstValueTable *
 gst_value_hash_lookup_type (GType type)
 {
-  return g_hash_table_lookup (gst_value_hash, (gpointer) type);
+  if (G_LIKELY (G_TYPE_IS_FUNDAMENTAL (type)))
+    return gst_value_tables_fundamental[FUNDAMENTAL_TYPE_ID (type)];
+  else
+    return g_hash_table_lookup (gst_value_hash, (gpointer) type);
 }
 
 static void
 gst_value_hash_add_type (GType type, const GstValueTable * table)
 {
+  if (G_TYPE_IS_FUNDAMENTAL (type))
+    gst_value_tables_fundamental[FUNDAMENTAL_TYPE_ID (type)] = (gpointer) table;
+
   g_hash_table_insert (gst_value_hash, (gpointer) type, (gpointer) table);
 }
 
