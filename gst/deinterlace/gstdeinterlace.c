@@ -382,6 +382,8 @@ static gboolean gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_deinterlace_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_deinterlace_sink_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn gst_deinterlace_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_deinterlace_alloc_buffer (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf);
 static GstStateChangeReturn gst_deinterlace_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -714,6 +716,8 @@ gst_deinterlace_init (GstDeinterlace * self, GstDeinterlaceClass * klass)
       GST_DEBUG_FUNCPTR (gst_deinterlace_getcaps));
   gst_pad_set_query_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_deinterlace_sink_query));
+  gst_pad_set_bufferalloc_function (self->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_deinterlace_alloc_buffer));
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
@@ -723,10 +727,10 @@ gst_deinterlace_init (GstDeinterlace * self, GstDeinterlaceClass * klass)
       GST_DEBUG_FUNCPTR (gst_deinterlace_src_query_types));
   gst_pad_set_query_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_deinterlace_src_query));
-  gst_pad_set_setcaps_function (self->srcpad,
-      GST_DEBUG_FUNCPTR (gst_deinterlace_setcaps));
   gst_pad_set_getcaps_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_deinterlace_getcaps));
+  gst_pad_set_setcaps_function (self->srcpad,
+      GST_DEBUG_FUNCPTR (gst_deinterlace_setcaps));
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   gst_element_no_more_pads (GST_ELEMENT (self));
@@ -776,6 +780,18 @@ gst_deinterlace_reset (GstDeinterlace * self)
   self->field_stride = 0;
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
+
+  if (self->sink_caps)
+    gst_caps_unref (self->sink_caps);
+  self->sink_caps = NULL;
+
+  if (self->src_caps)
+    gst_caps_unref (self->src_caps);
+  self->src_caps = NULL;
+
+  if (self->request_caps)
+    gst_caps_unref (self->request_caps);
+  self->request_caps = NULL;
 
   gst_deinterlace_reset_history (self);
 
@@ -1113,11 +1129,25 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG_OBJECT (self, "deinterlacing top field");
 
       /* create new buffer */
-      ret = gst_pad_alloc_buffer_and_set_caps (self->srcpad,
-          GST_BUFFER_OFFSET_NONE, self->frame_size,
-          GST_PAD_CAPS (self->srcpad), &outbuf);
+      ret = gst_pad_alloc_buffer (self->srcpad,
+          GST_BUFFER_OFFSET_NONE, self->frame_size, self->src_caps, &outbuf);
       if (ret != GST_FLOW_OK)
         return ret;
+
+      if (self->src_caps != GST_BUFFER_CAPS (outbuf) &&
+          !gst_caps_is_equal (self->src_caps, GST_BUFFER_CAPS (outbuf))) {
+        gst_caps_replace (&self->request_caps, GST_BUFFER_CAPS (outbuf));
+        GST_DEBUG_OBJECT (self, "Upstream wants new caps %" GST_PTR_FORMAT,
+            self->request_caps);
+
+        gst_buffer_unref (outbuf);
+        outbuf = gst_buffer_try_new_and_alloc (self->frame_size);
+
+        if (!outbuf)
+          return GST_FLOW_ERROR;
+
+        gst_buffer_set_caps (outbuf, self->src_caps);
+      }
 
       g_return_val_if_fail (self->history_count - 1 -
           gst_deinterlace_method_get_latency (self->method) >= 0,
@@ -1176,11 +1206,25 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG_OBJECT (self, "deinterlacing bottom field");
 
       /* create new buffer */
-      ret = gst_pad_alloc_buffer_and_set_caps (self->srcpad,
-          GST_BUFFER_OFFSET_NONE, self->frame_size,
-          GST_PAD_CAPS (self->srcpad), &outbuf);
+      ret = gst_pad_alloc_buffer (self->srcpad,
+          GST_BUFFER_OFFSET_NONE, self->frame_size, self->src_caps, &outbuf);
       if (ret != GST_FLOW_OK)
         return ret;
+
+      if (self->src_caps != GST_BUFFER_CAPS (outbuf) &&
+          !gst_caps_is_equal (self->src_caps, GST_BUFFER_CAPS (outbuf))) {
+        gst_caps_replace (&self->request_caps, GST_BUFFER_CAPS (outbuf));
+        GST_DEBUG_OBJECT (self, "Upstream wants new caps %" GST_PTR_FORMAT,
+            self->request_caps);
+
+        gst_buffer_unref (outbuf);
+        outbuf = gst_buffer_try_new_and_alloc (self->frame_size);
+
+        if (!outbuf)
+          return GST_FLOW_ERROR;
+
+        gst_buffer_set_caps (outbuf, self->src_caps);
+      }
 
       g_return_val_if_fail (self->history_count - 1 -
           gst_deinterlace_method_get_latency (self->method) >= 0,
@@ -1305,6 +1349,7 @@ gst_deinterlace_getcaps (GstPad * pad)
   peercaps = gst_pad_peer_get_caps (otherpad);
 
   if (peercaps) {
+    GST_DEBUG_OBJECT (pad, "Peer has caps %" GST_PTR_FORMAT, peercaps);
     ret = gst_caps_intersect (ourcaps, peercaps);
     gst_caps_unref (peercaps);
   } else {
@@ -1468,7 +1513,6 @@ gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps)
 
   if (!gst_pad_set_caps (otherpad, othercaps))
     goto caps_not_accepted;
-  gst_caps_unref (othercaps);
 
   self->field_height = self->frame_height / 2;
 
@@ -1494,7 +1538,18 @@ gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps)
         gst_util_uint64_scale (GST_SECOND, self->frame_rate_d,
         2 * self->frame_rate_n);
 
+  if (pad == self->sinkpad) {
+    gst_caps_replace (&self->sink_caps, caps);
+    gst_caps_replace (&self->src_caps, othercaps);
+  } else {
+    gst_caps_replace (&self->src_caps, caps);
+    gst_caps_replace (&self->sink_caps, othercaps);
+  }
+
   GST_DEBUG_OBJECT (pad, "Set caps: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (pad, "Other caps: %" GST_PTR_FORMAT, othercaps);
+
+  gst_caps_unref (othercaps);
 
 done:
 
@@ -1778,6 +1833,78 @@ gst_deinterlace_src_query_types (GstPad * pad)
     GST_QUERY_NONE
   };
   return types;
+}
+
+static GstFlowReturn
+gst_deinterlace_alloc_buffer (GstPad * pad, guint64 offset, guint size,
+    GstCaps * caps, GstBuffer ** buf)
+{
+  GstDeinterlace *self = GST_DEINTERLACE (gst_pad_get_parent (pad));
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  *buf = NULL;
+
+  GST_DEBUG_OBJECT (pad, "alloc with caps %" GST_PTR_FORMAT ", size %u", caps,
+      size);
+
+  if (self->still_frame_mode ||
+      self->mode == GST_DEINTERLACE_MODE_DISABLED || (!self->interlaced
+          && self->mode != GST_DEINTERLACE_MODE_INTERLACED)) {
+    ret = gst_pad_alloc_buffer (self->srcpad, offset, size, caps, buf);
+  } else if (G_LIKELY (!self->request_caps)) {
+    *buf = gst_buffer_try_new_and_alloc (size);
+    if (G_UNLIKELY (!*buf)) {
+      ret = GST_FLOW_ERROR;
+    } else {
+      gst_buffer_set_caps (*buf, caps);
+      GST_BUFFER_OFFSET (*buf) = offset;
+    }
+  } else {
+    gint width, height;
+    GstVideoFormat fmt;
+    guint new_frame_size;
+    GstCaps *new_caps = gst_caps_copy (self->request_caps);
+
+    if ((self->interlaced || self->mode == GST_DEINTERLACE_MODE_INTERLACED) &&
+        self->fields == GST_DEINTERLACE_ALL
+        && self->mode != GST_DEINTERLACE_MODE_DISABLED) {
+      gint n, d;
+      GstStructure *s = gst_caps_get_structure (new_caps, 0);
+
+      gst_structure_get_fraction (s, "framerate", &n, &d);
+
+      if (!gst_fraction_double (&n, &d, TRUE)) {
+        gst_object_unref (self);
+        gst_caps_unref (new_caps);
+        return GST_FLOW_OK;
+      }
+
+      gst_structure_set (s, "framerate", GST_TYPE_FRACTION, n, d, NULL);
+    }
+
+    if (G_UNLIKELY (!gst_video_format_parse_caps (new_caps, &fmt, &width,
+                &height))) {
+      gst_object_unref (self);
+      gst_caps_unref (new_caps);
+      return GST_FLOW_OK;
+    }
+
+    new_frame_size = gst_video_format_get_size (fmt, width, height);
+
+    *buf = gst_buffer_try_new_and_alloc (new_frame_size);
+    if (G_UNLIKELY (!*buf)) {
+      ret = GST_FLOW_ERROR;
+    } else {
+      gst_buffer_set_caps (*buf, new_caps);
+      gst_caps_unref (self->request_caps);
+      self->request_caps = NULL;
+      gst_caps_unref (new_caps);
+    }
+  }
+
+  gst_object_unref (self);
+
+  return ret;
 }
 
 static gboolean

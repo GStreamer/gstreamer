@@ -261,6 +261,12 @@ struct _GstDeinterlace
   /* QoS stuff */
   gdouble proportion;
   GstClockTime earliest_time;
+
+  /* Upstream negotiation stuff */
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+
+  GstCaps *request_caps;
 };
 
 struct _GstDeinterlaceClass
