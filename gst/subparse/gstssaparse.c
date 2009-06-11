@@ -107,6 +107,7 @@ gst_ssa_parse_init (GstSsaParse * parse, GstSsaParseClass * klass)
 
   parse->ini = NULL;
   parse->framed = FALSE;
+  parse->send_tags = FALSE;
 }
 
 static void
@@ -152,6 +153,7 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   }
 
   parse->framed = TRUE;
+  parse->send_tags = TRUE;
 
   priv = (GstBuffer *) gst_value_get_mini_object (val);
   g_return_val_if_fail (priv != NULL, FALSE);
@@ -303,6 +305,16 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
 
   if (G_UNLIKELY (!parse->framed))
     goto not_framed;
+
+  if (G_UNLIKELY (parse->send_tags)) {
+    GstTagList *tags;
+
+    tags = gst_tag_list_new ();
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_SUBTITLE_CODEC,
+        "SubStation Alpha", NULL);
+    gst_element_found_tags_for_pad (GST_ELEMENT (parse), parse->srcpad, tags);
+    parse->send_tags = FALSE;
+  }
 
   /* make double-sure it's 0-terminated and all */
   txt = g_strndup ((gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));

@@ -81,6 +81,7 @@ struct _GstSubParse {
 
   GstSubParseFormat parser_type;
   gboolean parser_detected;
+  const gchar *subtitle_codec;
 
   Parser parse_line;
   ParserState state;

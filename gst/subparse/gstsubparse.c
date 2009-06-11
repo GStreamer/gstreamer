@@ -318,6 +318,31 @@ gst_sub_parse_get_property (GObject * object, guint prop_id,
 }
 
 static gchar *
+gst_sub_parse_get_format_description (GstSubParseFormat format)
+{
+  switch (format) {
+    case GST_SUB_PARSE_FORMAT_MDVDSUB:
+      return "MicroDVD";
+    case GST_SUB_PARSE_FORMAT_SUBRIP:
+      return "SubRip";
+    case GST_SUB_PARSE_FORMAT_MPSUB:
+      return "MPSub";
+    case GST_SUB_PARSE_FORMAT_SAMI:
+      return "SAMI";
+    case GST_SUB_PARSE_FORMAT_TMPLAYER:
+      return "TMPlayer";
+    case GST_SUB_PARSE_FORMAT_MPL2:
+      return "MPL2";
+    case GST_SUB_PARSE_FORMAT_SUBVIEWER:
+      return "SubViewer";
+    default:
+    case GST_SUB_PARSE_FORMAT_UNKNOWN:
+      break;
+  }
+  return NULL;
+}
+
+static gchar *
 gst_convert_to_utf8 (const gchar * str, gsize len, const gchar * encoding,
     gsize * consumed, GError ** err)
 {
@@ -1144,6 +1169,7 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
   g_free (data);
 
   self->parser_type = format;
+  self->subtitle_codec = gst_sub_parse_get_format_description (format);
   parser_state_init (&self->state);
 
   switch (format) {
@@ -1254,6 +1280,16 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
       return GST_FLOW_UNEXPECTED;
     }
     gst_caps_unref (caps);
+
+    /* push tags */
+    if (self->subtitle_codec != NULL) {
+      GstTagList *tags;
+
+      tags = gst_tag_list_new ();
+      gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_SUBTITLE_CODEC,
+          self->subtitle_codec, NULL);
+      gst_element_found_tags_for_pad (GST_ELEMENT (self), self->srcpad, tags);
+    }
   }
 
   while (!self->flushing && (line = get_next_line (self))) {
