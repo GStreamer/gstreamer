@@ -594,7 +594,7 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
  * @size: the size of the packet
  * @duration: the duration of the packet
  *
- * Check if the packet with @size and @duration would exceed the configure
+ * Check if the packet with @size and @duration would exceed the configured
  * maximum size.
  *
  * Returns: %TRUE if the packet of @size and @duration would exceed the
