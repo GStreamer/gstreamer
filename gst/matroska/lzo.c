@@ -36,7 +36,7 @@ typedef struct LZOContext
   int error;
 } LZOContext;
 
-/**
+/*
  * \brief read one byte from input buffer, avoiding overrun
  * \return byte read
  */
@@ -55,7 +55,7 @@ get_byte (LZOContext * c)
 #define GETB(c) get_byte(&(c))
 #endif
 
-/**
+/*
  * \brief decode a length value in the coding used by lzo
  * \param x previous byte value
  * \param mask bits used from x
@@ -86,7 +86,7 @@ get_len (LZOContext * c, int x, int mask)
 #define COPY4(d, s) (d)[0] = (s)[0]; (d)[1] = (s)[1]; (d)[2] = (s)[2]; (d)[3] = (s)[3];
 #endif
 
-/**
+/*
  * \brief copy bytes from input to output buffer with checking
  * \param cnt number of bytes to copy, must be >= 0
  */
@@ -115,7 +115,7 @@ copy (LZOContext * c, int cnt)
   c->out = dst + cnt;
 }
 
-/**
+/*
  * \brief copy previously decoded bytes to current position
  * \param back how many bytes back we start
  * \param cnt number of bytes to copy, must be >= 0
@@ -171,7 +171,7 @@ copy_backptr (LZOContext * c, int back, int cnt)
   c->out = dst;
 }
 
-/**
+/*
  * \brief decode LZO 1x compressed data
  * \param out output buffer
  * \param outlen size of output buffer, number of bytes left are returned here
