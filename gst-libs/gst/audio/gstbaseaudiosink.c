@@ -1511,9 +1511,10 @@ no_sync:
 
     /* update the output samples. FIXME, this will just skip them when pausing
      * during trick mode */
-    if (out_samples > written)
+    if (out_samples > written) {
       out_samples -= written;
-    else
+      accum = 0;
+    } else
       break;
 
     samples -= written;
