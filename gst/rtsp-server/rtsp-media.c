@@ -54,6 +54,7 @@ static void gst_rtsp_media_finalize (GObject * obj);
 
 static gpointer do_loop (GstRTSPMediaClass *klass);
 static gboolean default_handle_message (GstRTSPMedia *media, GstMessage *message);
+static gboolean default_unprepare (GstRTSPMedia *media);
 static void unlock_streams (GstRTSPMedia *media);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
@@ -94,6 +95,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
     g_critical ("could not start bus thread: %s", error->message);
   }
   klass->handle_message = default_handle_message;
+  klass->unprepare = default_unprepare;
 
   ssrc_stream_map_key = g_quark_from_static_string ("GstRTSPServer.stream");
 }
@@ -1373,12 +1375,20 @@ is_reused:
 gboolean
 gst_rtsp_media_unprepare (GstRTSPMedia *media)
 {
+  GstRTSPMediaClass *klass;
+  gboolean success;
+
   if (!media->prepared)
     return TRUE;
 
   g_message ("unprepare media %p", media);
   media->target_state = GST_STATE_NULL;
-  gst_element_set_state (media->pipeline, GST_STATE_NULL);
+
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+  if (klass->unprepare)
+    success = klass->unprepare (media);
+  else
+    success = TRUE;
 
   media->prepared = FALSE;
   media->reused = TRUE;
@@ -1387,6 +1397,12 @@ gst_rtsp_media_unprepare (GstRTSPMedia *media)
    * recreate it */
   g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_UNPREPARED], 0, NULL);
 
+  return success;
+}
+
+static gboolean
+default_unprepare (GstRTSPMedia *media) {
+  gst_element_set_state (media->pipeline, GST_STATE_NULL);
   return TRUE;
 }
 

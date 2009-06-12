@@ -196,6 +196,8 @@ struct _GstRTSPMedia {
  * @loop: the mainloop for message.
  * @thread: the thread dispatching messages.
  * @handle_message: handle a message
+ * @unprepare: the default implementation sets the pipeline's state
+ *             to GST_STATE_NULL.
  *
  * The RTSP media class
  */
@@ -209,6 +211,7 @@ struct _GstRTSPMediaClass {
 
   /* vmethods */
   gboolean     (*handle_message)  (GstRTSPMedia *media, GstMessage *message);
+  gboolean     (*unprepare)       (GstRTSPMedia *media);
 
   /* signals */
   gboolean     (*unprepared)      (GstRTSPMedia *media);
