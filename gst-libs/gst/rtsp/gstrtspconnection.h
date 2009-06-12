@@ -151,7 +151,7 @@ typedef struct _GstRTSPWatch GstRTSPWatch;
 typedef struct {
   GstRTSPResult     (*message_received) (GstRTSPWatch *watch, GstRTSPMessage *message,
                                          gpointer user_data);
-  GstRTSPResult     (*message_sent)     (GstRTSPWatch *watch, guint cseq, 
+  GstRTSPResult     (*message_sent)     (GstRTSPWatch *watch, guint id,
                                          gpointer user_data);
   GstRTSPResult     (*closed)           (GstRTSPWatch *watch, gpointer user_data);
   GstRTSPResult     (*error)            (GstRTSPWatch *watch, GstRTSPResult result,

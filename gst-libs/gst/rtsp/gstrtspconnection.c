@@ -158,8 +158,6 @@ typedef enum
 
 #define TUNNELID_LEN   24
 
-#define UNKNOWN_CSEQ ((guint) -1)
-
 struct _GstRTSPConnection
 {
   /*< private > */
@@ -2635,11 +2633,10 @@ gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
 typedef struct
 {
   GString *str;
-  guint cseq;
+  guint id;
 } GstRTSPRec;
 
-static GstRTSPRec *queue_response (GstRTSPWatch * watch, GString * str,
-    guint cseq);
+static guint queue_response (GstRTSPWatch * watch, GString * str);
 
 /* async functions */
 struct _GstRTSPWatch
@@ -2656,11 +2653,12 @@ struct _GstRTSPWatch
   gboolean write_added;
 
   /* queued message for transmission */
+  guint id;
   GAsyncQueue *messages;
   guint8 *write_data;
   guint write_off;
   guint write_len;
-  guint write_cseq;
+  guint write_id;
 
   GstRTSPWatchFuncs funcs;
 
@@ -2718,7 +2716,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
 
         /* queue the response string */
         str = gen_tunnel_reply (watch->conn, code);
-        queue_response (watch, str, UNKNOWN_CSEQ);
+        queue_response (watch, str);
       } else if (res == GST_RTSP_ETPOST) {
         /* in the callback the connection should be tunneled with the
          * GET connection */
@@ -2751,7 +2749,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
         watch->write_off = 0;
         watch->write_len = data->str->len;
         watch->write_data = (guint8 *) g_string_free (data->str, FALSE);
-        watch->write_cseq = data->cseq;
+        watch->write_id = data->id;
 
         data->str = NULL;
         g_slice_free (GstRTSPRec, data);
@@ -2764,8 +2762,8 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
       if (G_UNLIKELY (res != GST_RTSP_OK))
         goto error;
 
-      if (watch->funcs.message_sent && watch->write_cseq != UNKNOWN_CSEQ)
-        watch->funcs.message_sent (watch, watch->write_cseq, watch->user_data);
+      if (watch->funcs.message_sent)
+        watch->funcs.message_sent (watch, watch->write_id, watch->user_data);
 
     done:
       if (g_async_queue_length (watch->messages) == 0 && watch->write_added) {
@@ -2951,21 +2949,21 @@ gst_rtsp_watch_unref (GstRTSPWatch * watch)
   g_source_unref ((GSource *) watch);
 }
 
-static GstRTSPRec *
-queue_response (GstRTSPWatch * watch, GString * str, guint cseq)
+static guint
+queue_response (GstRTSPWatch * watch, GString * str)
 {
   GstRTSPRec *data;
 
-  /* make a record with the message as a string and cseq */
+  /* make a record with the message as a string and id */
   data = g_slice_new (GstRTSPRec);
   data->str = str;
-  data->cseq = cseq;
+  data->id = ++watch->id;
 
   /* add the record to a queue. FIXME we would like to have an upper limit here */
   g_async_queue_push (watch->messages, data);
 
-  /* FIXME: does the following need to be made thread-safe? (queue_response
-   * might be called from a streaming thread, like appsink's render function) */
+  /* FIXME: does the following need to be made thread-safe? (this might be
+   * called from a streaming thread, like appsink's render function) */
   /* make sure the main context will now also check for writability on the
    * socket */
   if (!watch->write_added) {
@@ -2973,7 +2971,7 @@ queue_response (GstRTSPWatch * watch, GString * str, guint cseq)
     watch->write_added = TRUE;
   }
 
-  return data;
+  return data->id;
 }
 
 /**
@@ -2981,38 +2979,23 @@ queue_response (GstRTSPWatch * watch, GString * str, guint cseq)
  * @watch: a #GstRTSPWatch
  * @message: a #GstRTSPMessage
  *
- * Queue a @message for transmission in @watch. The contents of this 
+ * Queue a @message for transmission in @watch. The contents of this
  * message will be serialized and transmitted when the connection of the
- * watch becomes writable.
+ * @watch becomes writable.
  *
- * The return value of this function will be returned as the cseq argument in
- * the message_sent callback.
+ * The return value of this function will be used as the id argument in the
+ * message_sent callback.
  *
- * Returns: the sequence number of the message or -1 if the cseq could not be
- * determined.
+ * Returns: an id.
  *
  * Since: 0.10.23
  */
 guint
 gst_rtsp_watch_queue_message (GstRTSPWatch * watch, GstRTSPMessage * message)
 {
-  gchar *header;
-  guint cseq;
-
   g_return_val_if_fail (watch != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
 
-  /* get the cseq from the message, when we finish writing this message on the
-   * socket we will have to pass the cseq to the callback. */
-  if (gst_rtsp_message_get_header (message, GST_RTSP_HDR_CSEQ, &header,
-          0) == GST_RTSP_OK) {
-    cseq = atoi (header);
-  } else {
-    cseq = UNKNOWN_CSEQ;
-  }
-
-  /* make a record with the message as a string and cseq */
-  queue_response (watch, message_to_string (watch->conn, message), cseq);
-
-  return cseq;
+  /* make a record with the message as a string and id */
+  return queue_response (watch, message_to_string (watch->conn, message));
 }
