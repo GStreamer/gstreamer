@@ -1691,7 +1691,7 @@ gst_message_new_step_done (GstObject * src, GstFormat format, guint64 amount,
  * @duration: result location for the duration
  * @eos: result location for the EOS flag
  *
- * Extract the requested state from the request_state message.
+ * Extract the values the step_done message.
  *
  * MT safe.
  *
@@ -1714,6 +1714,33 @@ gst_message_parse_step_done (GstMessage * message, GstFormat * format,
       GST_QUARK (EOS), G_TYPE_BOOLEAN, eos, NULL);
 }
 
+/**
+ * gst_message_new_step_start:
+ * @src: The object originating the message.
+ * @active: if the step is active or queued
+ * @format: the format of @amount
+ * @amount: the amount of stepped data
+ * @rate: the rate of the stepped amount
+ * @flush: is this an flushing step
+ * @intermediate: is this an intermediate step
+ *
+ * This message is posted by elements when they accept or activate a new step
+ * event for @amount in @format. 
+ *
+ * @active is set to FALSE when the element accepted the new step event and has
+ * queued it for execution in the streaming threads.
+ *
+ * @active is set to TRUE when the element has activated the step operation and
+ * is now ready to start executing the step in the streaming thread. After this
+ * message is emited, the application can queue a new step operation in the
+ * element.
+ *
+ * Returns: The new step_start message. 
+ *
+ * MT safe.
+ *
+ * Since: 0.10.24
+ */
 GstMessage *
 gst_message_new_step_start (GstObject * src, gboolean active, GstFormat format,
     guint64 amount, gdouble rate, gboolean flush, gboolean intermediate)
@@ -1733,6 +1760,24 @@ gst_message_new_step_start (GstObject * src, gboolean active, GstFormat format,
   return message;
 }
 
+/**
+ * gst_message_parse_step_start:
+ * @message: A valid #GstMessage of type GST_MESSAGE_STEP_DONE.
+ * @active: result location for the active flag
+ * @format: result location for the format
+ * @amount: result location for the amount
+ * @rate: result location for the rate
+ * @flush: result location for the flush flag
+ * @intermediate: result location for the intermediate flag
+ * @duration: result location for the duration
+ * @eos: result location for the EOS flag
+ *
+ * Extract the values from step_start message.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.24
+ */
 void
 gst_message_parse_step_start (GstMessage * message, gboolean * active,
     GstFormat * format, guint64 * amount, gdouble * rate, gboolean * flush,
