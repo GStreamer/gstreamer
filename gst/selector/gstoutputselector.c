@@ -196,7 +196,7 @@ gst_output_selector_set_property (GObject * object, guint prop_id,
 
       next_pad = g_value_get_object (value);
 
-      GST_LOG_OBJECT (sel, "Activating pad %s:%s",
+      GST_INFO_OBJECT (sel, "Activating pad %s:%s",
           GST_DEBUG_PAD_NAME (next_pad));
 
       GST_OBJECT_LOCK (object);
@@ -262,11 +262,11 @@ gst_output_selector_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstPad *allocpad;
 
   sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
-
   res = GST_FLOW_NOT_LINKED;
 
   GST_OBJECT_LOCK (sel);
-  if ((allocpad = sel->active_srcpad)) {
+  allocpad = sel->pending_srcpad ? sel->pending_srcpad : sel->active_srcpad;
+  if (allocpad) {
     /* if we had a previous pad we used for allocating a buffer, continue using
      * it. */
     GST_DEBUG_OBJECT (sel, "using pad %s:%s for alloc",
@@ -278,8 +278,15 @@ gst_output_selector_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     gst_object_unref (allocpad);
 
     GST_OBJECT_LOCK (sel);
+  } else {
+    /* fallback case, allocate a buffer of our own, add pad caps. */
+    GST_DEBUG_OBJECT (pad, "fallback buffer alloc");
+    *buf = NULL;
+    res = GST_FLOW_OK;
   }
   GST_OBJECT_UNLOCK (sel);
+
+  GST_DEBUG_OBJECT (sel, "buffer alloc finished: %s", gst_flow_get_name (res));
 
   return res;
 }
