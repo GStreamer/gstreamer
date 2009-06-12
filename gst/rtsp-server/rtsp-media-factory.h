@@ -77,6 +77,8 @@ struct _GstRTSPMediaFactory {
  *       pay%d to create the streams.
  * @configure: configure the media created with @construct. The default
  *       implementation will configure the 'shared' property of the media.
+ * @create_pipeline: create a new pipeline or re-use an existing one and
+ *       add the #GstRTSPMedia's element created by @construct to the pipeline.
  *
  * The #GstRTSPMediaFactory class structure.
  */
@@ -88,6 +90,7 @@ struct _GstRTSPMediaFactoryClass {
   GstElement *      (*get_element)    (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
   GstRTSPMedia *    (*construct)      (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
   void              (*configure)      (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
+  GstElement *      (*create_pipeline)(GstRTSPMediaFactory *factory, GstRTSPMedia *media);
 };
 
 GType                 gst_rtsp_media_factory_get_type     (void);

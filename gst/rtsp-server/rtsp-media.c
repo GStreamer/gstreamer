@@ -1268,7 +1268,6 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
 
   g_message ("preparing media %p", media);
 
-  media->pipeline = gst_pipeline_new ("media-pipeline");
   bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (media->pipeline));
 
   /* add the pipeline bus to our custom mainloop */
@@ -1279,8 +1278,6 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
   media->id = g_source_attach (media->source, klass->context);
-
-  gst_bin_add (GST_BIN_CAST (media->pipeline), media->element);
 
   media->rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
 

@@ -40,6 +40,7 @@ static gchar * default_gen_key (GstRTSPMediaFactory *factory, const GstRTSPUrl *
 static GstElement * default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
 static GstRTSPMedia * default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
 static void default_configure (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
+static GstElement* default_create_pipeline (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
 
 G_DEFINE_TYPE (GstRTSPMediaFactory, gst_rtsp_media_factory, G_TYPE_OBJECT);
 
@@ -79,6 +80,7 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
   klass->get_element = default_get_element;
   klass->construct = default_construct;
   klass->configure = default_configure;
+  klass->create_pipeline = default_create_pipeline;
 }
 
 static void
@@ -471,6 +473,11 @@ default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
   media = gst_rtsp_media_new ();
   media->element = element;
 
+  if (!klass->create_pipeline)
+    goto no_pipeline;
+
+  media->pipeline = klass->create_pipeline (factory, media);
+
   collect_streams (factory, url, media);
 
   return media;
@@ -481,6 +488,21 @@ no_element:
     g_critical ("could not create element");
     return NULL;
   }
+no_pipeline:
+  {
+    g_critical ("could not create pipeline");
+    return FALSE;
+  }
+}
+
+static GstElement*
+default_create_pipeline (GstRTSPMediaFactory *factory, GstRTSPMedia *media) {
+  GstElement *pipeline;
+
+  pipeline = gst_pipeline_new ("media-pipeline");
+  gst_bin_add (GST_BIN_CAST (pipeline), media->element);
+
+  return pipeline;
 }
 
 static void
