@@ -104,46 +104,59 @@ gst_frei0r_klass_install_properties (GObjectClass * gobject_class,
         break;
       case F0R_PARAM_COLOR:{
         gchar *prop_name_full;
-
-        /* FIXME: Full name, i.e. -R */
+        gchar *prop_nick_full;
 
         prop_name_full = g_strconcat (prop_name, "-r", NULL);
+        prop_nick_full = g_strconcat (param_info->name, "-R", NULL);
         g_object_class_install_property (gobject_class, count++,
-            g_param_spec_float (prop_name_full, param_info->name,
+            g_param_spec_float (prop_name_full, prop_nick_full,
                 param_info->explanation, 0.0, 1.0, 0.0,
                 G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
         g_free (prop_name_full);
+        g_free (prop_nick_full);
+
         prop_name_full = g_strconcat (prop_name, "-g", NULL);
+        prop_nick_full = g_strconcat (param_info->name, "-G", NULL);
         g_object_class_install_property (gobject_class, count++,
             g_param_spec_float (prop_name_full, param_info->name,
                 param_info->explanation, 0.0, 1.0, 0.0,
                 G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
         g_free (prop_name_full);
+        g_free (prop_nick_full);
+
         prop_name_full = g_strconcat (prop_name, "-b", NULL);
+        prop_nick_full = g_strconcat (param_info->name, "-B", NULL);
         g_object_class_install_property (gobject_class, count++,
             g_param_spec_float (prop_name_full, param_info->name,
                 param_info->explanation, 0.0, 1.0, 0.0,
                 G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
         g_free (prop_name_full);
+        g_free (prop_nick_full);
 
         properties[i].n_prop_ids = 3;
         break;
       }
       case F0R_PARAM_POSITION:{
         gchar *prop_name_full;
+        gchar *prop_nick_full;
 
         prop_name_full = g_strconcat (prop_name, "-x", NULL);
+        prop_nick_full = g_strconcat (param_info->name, "-X", NULL);
         g_object_class_install_property (gobject_class, count++,
             g_param_spec_double (prop_name_full, param_info->name,
                 param_info->explanation, 0.0, 1.0, 0.0,
                 G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
         g_free (prop_name_full);
-        prop_name_full = g_strconcat (prop_name, "-y", NULL);
+        g_free (prop_nick_full);
+
+        prop_name_full = g_strconcat (prop_name, "-Y", NULL);
+        prop_nick_full = g_strconcat (param_info->name, "-X", NULL);
         g_object_class_install_property (gobject_class, count++,
             g_param_spec_double (prop_name_full, param_info->name,
                 param_info->explanation, 0.0, 1.0, 0.0,
                 G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
         g_free (prop_name_full);
+        g_free (prop_nick_full);
 
         properties[i].n_prop_ids = 2;
         break;
