@@ -2739,20 +2739,20 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
   if (watch->writefd.revents & WRITE_COND) {
     do {
       if (watch->write_data == NULL) {
-        GstRTSPRec *data;
+        GstRTSPRec *rec;
 
         /* get a new message from the queue */
-        data = g_async_queue_try_pop (watch->messages);
-        if (data == NULL)
+        rec = g_async_queue_try_pop (watch->messages);
+        if (rec == NULL)
           goto done;
 
         watch->write_off = 0;
-        watch->write_len = data->str->len;
-        watch->write_data = (guint8 *) g_string_free (data->str, FALSE);
-        watch->write_id = data->id;
+        watch->write_len = rec->str->len;
+        watch->write_data = (guint8 *) g_string_free (rec->str, FALSE);
+        watch->write_id = rec->id;
 
-        data->str = NULL;
-        g_slice_free (GstRTSPRec, data);
+        rec->str = NULL;
+        g_slice_free (GstRTSPRec, rec);
       }
 
       res = write_bytes (watch->writefd.fd, watch->write_data,
@@ -2952,15 +2952,15 @@ gst_rtsp_watch_unref (GstRTSPWatch * watch)
 static guint
 queue_response (GstRTSPWatch * watch, GString * str)
 {
-  GstRTSPRec *data;
+  GstRTSPRec *rec;
 
   /* make a record with the message as a string and id */
-  data = g_slice_new (GstRTSPRec);
-  data->str = str;
-  data->id = ++watch->id;
+  rec = g_slice_new (GstRTSPRec);
+  rec->str = str;
+  rec->id = ++watch->id;
 
   /* add the record to a queue. FIXME we would like to have an upper limit here */
-  g_async_queue_push (watch->messages, data);
+  g_async_queue_push (watch->messages, rec);
 
   /* FIXME: does the following need to be made thread-safe? (this might be
    * called from a streaming thread, like appsink's render function) */
@@ -2971,7 +2971,7 @@ queue_response (GstRTSPWatch * watch, GString * str)
     watch->write_added = TRUE;
   }
 
-  return data->id;
+  return rec->id;
 }
 
 /**
