@@ -1562,7 +1562,10 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
 
   if (!wait_for_prepare) {
     /* Image queue's srcpad data probe will set imagebin to PLAYING */
-    state_ret = gst_element_set_state (camera->imgbin, GST_STATE_READY);
+    state_ret = gst_element_set_state (camera->imgbin, GST_STATE_PAUSED);
+    GST_DEBUG_OBJECT (camera, "setting imagebin to paused: %s",
+        gst_element_state_change_return_get_name (state_ret));
+
     if (state_ret != GST_STATE_CHANGE_FAILURE) {
       g_mutex_lock (camera->capture_mutex);
       g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", TRUE,

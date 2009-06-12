@@ -193,13 +193,22 @@ gst_camerabin_image_change_state (GstElement * element,
       }
       /* Allow setting filename when image bin in READY state */
       gst_element_set_locked_state (img->sink, TRUE);
+      GST_INFO_OBJECT (img, "locking imagebin->sink state to %s",
+          gst_element_state_get_name (GST_STATE (img->sink)));
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_element_set_locked_state (img->sink, FALSE);
+      if (!g_str_equal (img->filename->str, "")) {
+        GST_INFO_OBJECT (img, "preparing image with filename: %s",
+            img->filename->str);
+        gst_element_set_locked_state (img->sink, FALSE);
+      } else {
+        GST_INFO_OBJECT (img, "keep sink locked, we have no filename yet");
+      }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* Set sink to NULL in order to write the file _now_ */
-      GST_INFO ("write img file: %s", img->filename->str);
+      GST_INFO_OBJECT (img, "write image with filename: %s",
+          img->filename->str);
       gst_element_set_locked_state (img->sink, TRUE);
       gst_element_set_state (img->sink, GST_STATE_NULL);
       break;
@@ -258,11 +267,18 @@ gst_camerabin_image_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_FILENAME:
       g_string_assign (bin->filename, g_value_get_string (value));
+      GST_INFO_OBJECT (bin, "received filename: '%s'", bin->filename->str);
       if (bin->sink) {
-        g_object_set (G_OBJECT (bin->sink), "location", bin->filename->str,
-            NULL);
+        if (!g_str_equal (bin->filename->str, "")) {
+          g_object_set (G_OBJECT (bin->sink), "location", bin->filename->str,
+              NULL);
+          gst_element_set_locked_state (bin->sink, FALSE);
+          gst_element_sync_state_with_parent (bin->sink);
+        } else {
+          GST_INFO_OBJECT (bin, "empty filename");
+        }
       } else {
-        GST_INFO ("no sink, not setting name yet");
+        GST_INFO_OBJECT (bin, "no sink, not setting name yet");
       }
       break;
     default:
