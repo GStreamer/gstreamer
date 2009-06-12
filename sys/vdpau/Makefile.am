@@ -9,9 +9,10 @@ libgstvdpau_la_SOURCES = \
 	gstvdp.c \
 	gstvdpyuvvideo.c
 
-libgstvdpau_la_CFLAGS = $(GST_CFLAGS) $(X11_CFLAGS) -Ivdpau
+libgstvdpau_la_CFLAGS = $(GST_CFLAGS) $(X11_CFLAGS) $(VDPAU_CFLAGS)
 libgstvdpau_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
-	$(GST_PLUGINS_BASE) $(X11_LIBS) -lgstvideo-$(GST_MAJORMINOR) -lvdpau
+	$(GST_PLUGINS_BASE) $(X11_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(VDPAU_LIBS)
 libgstvdpau_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvdpau_la_LIBTOOLFLAGS = --tag=disable-static
 
