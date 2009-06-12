@@ -1868,9 +1868,10 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
  * do seek to time @position, return FALSE or chain and TRUE
  */
 static gboolean
-gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
-    GstOggChain ** rchain)
+gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
+    gboolean accurate, GstOggChain ** rchain)
 {
+  guint64 position;
   GstOggChain *chain = NULL;
   gint64 begin, end;
   gint64 begintime, endtime;
@@ -1880,6 +1881,8 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
   gint64 result = 0;
   GstFlowReturn ret;
   gint i;
+
+  position = segment->last_stop;
 
   /* first find the chain to search in */
   total = ogg->total_time;
@@ -1896,14 +1899,23 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
   begin = chain->offset;
   end = chain->end_offset;
   begintime = chain->begin_time;
-  endtime = chain->begin_time + chain->total_time;
+  endtime = begintime + chain->total_time;
   target = position - total + begintime;
   if (accurate) {
-    /* FIXME, seek 4 seconds early to catch keyframes, better implement
-     * keyframe detection. */
-    target = target - (gint64) 4 *GST_SECOND;
+    if (segment->rate > 0.0) {
+      /* FIXME, seek 2 seconds early to catch keyframes, better implement
+       * keyframe detection. */
+      if (target - 2 * GST_SECOND > begintime)
+        target = target - (gint64) 2 *GST_SECOND;
+      else
+        target = begintime;
+    } else {
+      if (target + GST_SECOND < endtime)
+        target = target + (gint64) GST_SECOND;
+      else
+        target = endtime;
+    }
   }
-  target = MAX (target, 0);
   best = begin;
 
   GST_DEBUG_OBJECT (ogg,
@@ -2175,10 +2187,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
   }
 
   /* for reverse we will already seek accurately */
-  if (rate < 0.0)
-    accurate = FALSE;
-
-  res = gst_ogg_demux_do_seek (ogg, ogg->segment.last_stop, accurate, &chain);
+  res = gst_ogg_demux_do_seek (ogg, &ogg->segment, accurate, &chain);
 
   /* seek failed, make sure we continue the current chain */
   if (!res) {
