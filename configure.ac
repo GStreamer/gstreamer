@@ -265,6 +265,7 @@ AG_GST_CHECK_PLUGIN(dtmf)
 AG_GST_CHECK_PLUGIN(dvdspu)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(freeze)
+AG_GST_CHECK_PLUGIN(frei0r)
 AG_GST_CHECK_PLUGIN(h264parse)
 AG_GST_CHECK_PLUGIN(hdvparse)
 AG_GST_CHECK_PLUGIN(id3tag)
@@ -1557,6 +1558,7 @@ gst/dtmf/Makefile
 gst/dvdspu/Makefile
 gst/festival/Makefile
 gst/freeze/Makefile
+gst/frei0r/Makefile
 gst/h264parse/Makefile
 gst/hdvparse/Makefile
 gst/id3tag/Makefile
