@@ -533,7 +533,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
 
   display->gl_window =
       gst_gl_window_new (display->upload_width, display->upload_height,
-          display->external_gl_context);
+      display->external_gl_context);
 
   if (!display->gl_window) {
     display->isAlive = FALSE;
@@ -1601,7 +1601,7 @@ gst_gl_display_thread_use_fbo (GstGLDisplay * display)
       gluOrtho2D (display->use_fbo_proj_param1, display->use_fbo_proj_param2,
           display->use_fbo_proj_param3, display->use_fbo_proj_param4);
       break;
-    case GST_GL_DISPLAY_PROJECTION_PERSPECIVE:
+    case GST_GL_DISPLAY_PROJECTION_PERSPECTIVE:
       gluPerspective (display->use_fbo_proj_param1,
           display->use_fbo_proj_param2, display->use_fbo_proj_param3,
           display->use_fbo_proj_param4);

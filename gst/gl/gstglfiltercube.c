@@ -118,7 +118,6 @@ static const gchar *cube_v_src =
     "     -sin(zrot),  cos(zrot),        0.0, 0.0,                \n"
     "            0.0,        0.0,        1.0, 0.0,                \n"
     "            0.0,        0.0,        0.0, 1.0 );              \n"
-
     "   gl_Position = matZ * matY * matX * u_matrix * a_position; \n"
     "   v_texCoord = a_texCoord;                                  \n"
     "}                                                            \n";
@@ -292,7 +291,7 @@ gst_gl_filter_cube_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
       filter->fbo, filter->depthbuffer, outbuf->texture,
       gst_gl_filter_cube_callback, inbuf->width, inbuf->height, inbuf->texture,
       cube_filter->fovy, cube_filter->aspect, cube_filter->znear,
-      cube_filter->zfar, GST_GL_DISPLAY_PROJECTION_PERSPECIVE,
+      cube_filter->zfar, GST_GL_DISPLAY_PROJECTION_PERSPECTIVE,
       (gpointer) cube_filter);
 
   return TRUE;
@@ -391,78 +390,78 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   glVertex3f (-1.0f, 1.0f, -1.0f);
   glEnd ();
 #else
-  const GLfloat v_vertices [] = {
-     
+  const GLfloat v_vertices[] = {
+
     //front face
-     1.0f,   1.0f, -1.0f,
-     1.0f,   0.0f,
-     1.0f,  -1.0f, -1.0f,
-     1.0f,   1.0f,
-    -1.0f,  -1.0f, -1.0f,
-     0.0f,   1.0f,
-    -1.0f,   1.0f, -1.0f,
-     0.0f,   0.0f,
-     //back face
-     1.0f,   1.0f,  1.0f,
-     1.0f,   0.0f,
-    -1.0f,   1.0f,  1.0f,
-     0.0f,   0.0f,
-    -1.0f,  -1.0f,  1.0f,
-     0.0f,   1.0f,
-     1.0f,  -1.0f,  1.0f,
-     1.0f,   1.0f, 
-     //right face
-     1.0f,   1.0f,  1.0f,
-             1.0f,  0.0f,
-     1.0f,  -1.0f,  1.0f,
-             0.0f,  0.0f,
-     1.0f,  -1.0f, -1.0f,
-             0.0f,  1.0f,
-     1.0f,   1.0f, -1.0f,
-             1.0f,  1.0f,
-     //left face
-     -1.0f,  1.0f,  1.0f,
-             1.0f,  0.0f,
-     -1.0f,  1.0f, -1.0f,
-             1.0f,  1.0f,
-     -1.0f, -1.0f, -1.0f,
-             0.0f,  1.0f,
-     -1.0f, -1.0f,  1.0f,
-             0.0f,  0.0f,
-     //top face
-      1.0f, -1.0f,  1.0f,
-      1.0f,         0.0f,
-     -1.0f, -1.0f,  1.0f,
-      0.0f,         0.0f,
-     -1.0f, -1.0f, -1.0f,
-      0.0f,         1.0f,
-      1.0f, -1.0f, -1.0f,
-      1.0f,         1.0f,
-      //bottom face
-      1.0f,  1.0f,  1.0f,
-      1.0f,         0.0f,
-      1.0f,  1.0f, -1.0f,
-      1.0f,         1.0f,     
-     -1.0f,  1.0f, -1.0f,
-      0.0f,         1.0f,
-     -1.0f,  1.0f,  1.0f,
-      0.0f,         0.0f
-    };
+    1.0f, 1.0f, -1.0f,
+    1.0f, 0.0f,
+    1.0f, -1.0f, -1.0f,
+    1.0f, 1.0f,
+    -1.0f, -1.0f, -1.0f,
+    0.0f, 1.0f,
+    -1.0f, 1.0f, -1.0f,
+    0.0f, 0.0f,
+    //back face
+    1.0f, 1.0f, 1.0f,
+    1.0f, 0.0f,
+    -1.0f, 1.0f, 1.0f,
+    0.0f, 0.0f,
+    -1.0f, -1.0f, 1.0f,
+    0.0f, 1.0f,
+    1.0f, -1.0f, 1.0f,
+    1.0f, 1.0f,
+    //right face
+    1.0f, 1.0f, 1.0f,
+    1.0f, 0.0f,
+    1.0f, -1.0f, 1.0f,
+    0.0f, 0.0f,
+    1.0f, -1.0f, -1.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f, -1.0f,
+    1.0f, 1.0f,
+    //left face
+    -1.0f, 1.0f, 1.0f,
+    1.0f, 0.0f,
+    -1.0f, 1.0f, -1.0f,
+    1.0f, 1.0f,
+    -1.0f, -1.0f, -1.0f,
+    0.0f, 1.0f,
+    -1.0f, -1.0f, 1.0f,
+    0.0f, 0.0f,
+    //top face
+    1.0f, -1.0f, 1.0f,
+    1.0f, 0.0f,
+    -1.0f, -1.0f, 1.0f,
+    0.0f, 0.0f,
+    -1.0f, -1.0f, -1.0f,
+    0.0f, 1.0f,
+    1.0f, -1.0f, -1.0f,
+    1.0f, 1.0f,
+    //bottom face
+    1.0f, 1.0f, 1.0f,
+    1.0f, 0.0f,
+    1.0f, 1.0f, -1.0f,
+    1.0f, 1.0f,
+    -1.0f, 1.0f, -1.0f,
+    0.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+    0.0f, 0.0f
+  };
 
   GLushort indices[] = {
-     0,  1,  2, 
-     0,  2,  3,
-     4,  5,  6,
-     4,  6,  7,
-     8,  9, 10,
-     8, 10, 11,
+    0, 1, 2,
+    0, 2, 3,
+    4, 5, 6,
+    4, 6, 7,
+    8, 9, 10,
+    8, 10, 11,
     12, 13, 14,
     12, 14, 15,
     16, 17, 18,
     16, 18, 19,
     20, 21, 22,
     20, 22, 23
-    };
+  };
 
   GLint attr_position_loc = 0;
   GLint attr_texture_loc = 0;
@@ -471,7 +470,8 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
     0.5f, 0.0f, 0.0f, 0.0f,
     0.0f, 0.5f, 0.0f, 0.0f,
     0.0f, 0.0f, 0.5f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f};
+    0.0f, 0.0f, 0.0f, 1.0f
+  };
 
   glEnable (GL_DEPTH_TEST);
 
@@ -480,20 +480,18 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_use (cube_filter->shader);
 
-  attr_position_loc = 
-    gst_gl_shader_get_attribute_location (cube_filter->shader, 
-    "a_position");
-  attr_texture_loc = 
-    gst_gl_shader_get_attribute_location (cube_filter->shader, 
-    "a_texCoord");
+  attr_position_loc =
+      gst_gl_shader_get_attribute_location (cube_filter->shader, "a_position");
+  attr_texture_loc =
+      gst_gl_shader_get_attribute_location (cube_filter->shader, "a_texCoord");
 
   //Load the vertex position
-  glVertexAttribPointer (attr_position_loc, 3, GL_FLOAT, 
-    GL_FALSE, 5 * sizeof(GLfloat), v_vertices);
+  glVertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
+      GL_FALSE, 5 * sizeof (GLfloat), v_vertices);
 
   //Load the texture coordinate
   glVertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
-    GL_FALSE, 5 * sizeof(GLfloat), &v_vertices[3]);
+      GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[3]);
 
   glEnableVertexAttribArray (attr_position_loc);
   glEnableVertexAttribArray (attr_texture_loc);
@@ -504,7 +502,8 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (cube_filter->shader, "xrot_degree", xrot);
   gst_gl_shader_set_uniform_1f (cube_filter->shader, "yrot_degree", yrot);
   gst_gl_shader_set_uniform_1f (cube_filter->shader, "zrot_degree", zrot);
-  gst_gl_shader_set_uniform_matrix_4fv (cube_filter->shader, "u_matrix", 1, GL_FALSE, matrix);
+  gst_gl_shader_set_uniform_matrix_4fv (cube_filter->shader, "u_matrix", 1,
+      GL_FALSE, matrix);
 
   glDrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);
 

@@ -192,7 +192,7 @@ gst_gl_filter_glass_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
       filter->fbo, filter->depthbuffer, outbuf->texture,
       gst_gl_filter_glass_callback, inbuf->width, inbuf->height, inbuf->texture,
       80, (gdouble) filter->width / (gdouble) filter->height, 1.0, 5000.0,
-      GST_GL_DISPLAY_PROJECTION_PERSPECIVE, (gpointer) glass_filter);
+      GST_GL_DISPLAY_PROJECTION_PERSPECTIVE, (gpointer) glass_filter);
 
   return TRUE;
 }

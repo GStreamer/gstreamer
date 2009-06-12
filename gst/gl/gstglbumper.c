@@ -353,7 +353,7 @@ gst_gl_bumper_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
       inbuf->width, inbuf->height, inbuf->texture,
       //bumper_filter->fovy, bumper_filter->aspect, bumper_filter->znear, bumper_filter->zfar,
       45, (gdouble) filter->width / (gdouble) filter->height, 0.1, 50,
-      GST_GL_DISPLAY_PROJECTION_PERSPECIVE, bumper_filter);
+      GST_GL_DISPLAY_PROJECTION_PERSPECTIVE, bumper_filter);
 
   return TRUE;
 }

@@ -172,7 +172,7 @@ gst_gl_filter_app_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
         filter->fbo, filter->depthbuffer, outbuf->texture,
         app_filter->clientDrawCallback, inbuf->width, inbuf->height,
         inbuf->texture, 45, (gfloat) filter->width / (gfloat) filter->height,
-        0.1, 100, GST_GL_DISPLAY_PROJECTION_PERSPECIVE, NULL);
+        0.1, 100, GST_GL_DISPLAY_PROJECTION_PERSPECTIVE, NULL);
   }
   //default
   else {
