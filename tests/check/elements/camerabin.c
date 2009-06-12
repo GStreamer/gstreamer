@@ -27,10 +27,7 @@
 #include <unistd.h>
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
-
-#ifdef HAVE_GST_PHOTO_IFACE_H
 #include <gst/interfaces/photography.h>
-#endif
 
 #define SINGLE_IMAGE_FILENAME "image.cap"
 #define BURST_IMAGE_FILENAME "burst_image.cap"
@@ -55,7 +52,7 @@ make_test_file_name (const gchar * base_name)
   g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S "%s",
       g_get_tmp_dir (), base_name);
 
-  GST_INFO ("capturing to: %s", file_name);
+  GST_INFO ("capturing to: %s (cycle_count=%d)", file_name, cycle_count);
   return file_name;
 }
 
@@ -88,18 +85,19 @@ handle_image_captured_cb (gpointer data)
     g_object_set (camera, "mode", 1,
         "filename", make_test_file_name (CYCLE_VIDEO_FILENAME), NULL);
     /* Record video */
-    g_signal_emit_by_name (camera, "user-start", 0);
+    g_signal_emit_by_name (camera, "user-start", NULL);
     g_usleep (G_USEC_PER_SEC);
-    g_signal_emit_by_name (camera, "user-stop", 0);
+    g_signal_emit_by_name (camera, "user-stop", NULL);
     GST_DEBUG ("video captured");
 
     /* Set still image mode */
     g_object_set (camera, "mode", 0,
         "filename", make_test_file_name (CYCLE_IMAGE_FILENAME), NULL);
     /* Take a picture */
-    g_signal_emit_by_name (camera, "user-start", 0);
+    g_signal_emit_by_name (camera, "user-start", NULL);
 
     cycle_count--;
+    GST_DEBUG ("next cycle");
   }
   GST_DEBUG ("handle_image_captured_cb done");
   return FALSE;
@@ -127,6 +125,7 @@ setup_camerabin_elements (GstElement * camera)
 
   /* Use fakesink for view finder */
   vfsink = gst_element_factory_make ("fakesink", NULL);
+  g_object_set (vfsink, "sync", TRUE, NULL);
   audiosrc = gst_element_factory_make ("audiotestsrc", NULL);
   g_object_set (audiosrc, "is-live", TRUE, NULL);
   videosrc = gst_element_factory_make ("videotestsrc", NULL);
@@ -141,6 +140,8 @@ setup_camerabin_elements (GstElement * camera)
     g_object_set (camera, "vfsink", vfsink, "audiosrc", audiosrc, "videosrc",
         videosrc, "audioenc", audioenc, "videoenc", videoenc, "imageenc",
         imageenc, "videomux", videomux, NULL);
+  } else {
+    GST_WARNING ("error setting up test plugins");
   }
 }
 
@@ -151,10 +152,28 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
   const GstStructure *st;
 
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR:
+    case GST_MESSAGE_ERROR:{
+      GError *err = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_error (message, &err, &debug);
+      GST_WARNING ("ERROR: %s [%s]", err->message, debug);
+      g_error_free (err);
+      g_free (debug);
       fail_if (TRUE, "error while capturing");
       g_main_loop_quit (loop);
       break;
+    }
+    case GST_MESSAGE_WARNING:{
+      GError *err = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_warning (message, &err, &debug);
+      GST_WARNING ("WARNING: %s [%s]", err->message, debug);
+      g_error_free (err);
+      g_free (debug);
+      break;
+    }
     case GST_MESSAGE_EOS:
       GST_DEBUG ("eos");
       g_main_loop_quit (loop);
@@ -162,7 +181,7 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
     default:
       st = gst_message_get_structure (message);
       if (st && gst_structure_has_name (st, "image-captured")) {
-        GST_DEBUG ("image-captured");
+        GST_INFO ("image-captured");
       }
       break;
   }
@@ -176,6 +195,8 @@ setup (void)
   gchar *desc_str;
   GstCaps *filter_caps;
   GstBus *bus;
+
+  GST_INFO ("init");
 
   main_loop = g_main_loop_new (NULL, TRUE);
 
@@ -196,6 +217,10 @@ setup (void)
   g_object_set (G_OBJECT (camera), "filter-caps", filter_caps, NULL);
   gst_caps_unref (filter_caps);
 
+  /* force a low framerate here to not timeout the tests because of the
+   * encoders */
+  g_signal_emit_by_name (camera, "user-res-fps", 320, 240, 5, 1, NULL);
+
   /* Set some default tags */
   setter = GST_TAG_SETTER (camera);
   desc_str = g_strdup_printf ("Created by %s", g_get_real_name ());
@@ -206,10 +231,12 @@ setup (void)
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING ("setting camerabin to PLAYING failed");
     gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
     gst_object_unref (camera);
     camera = NULL;
   }
+  GST_INFO ("init finished");
 }
 
 static void
@@ -219,6 +246,8 @@ teardown (void)
   g_cond_free (cam_cond);
   if (camera)
     gst_check_teardown_element (camera);
+
+  GST_INFO ("done");
 }
 
 static void
@@ -343,13 +372,13 @@ static gboolean
 check_file_validity (const gchar * filename)
 {
   GstBus *bus;
-  GMainLoop *loop = g_main_loop_new (NULL, TRUE);
+  GMainLoop *loop = g_main_loop_new (NULL, FALSE);
   GstElement *playbin = gst_element_factory_make ("playbin2", NULL);
   GstElement *fakevideo = gst_element_factory_make ("fakesink", NULL);
   GstElement *fakeaudio = gst_element_factory_make ("fakesink", NULL);
   gchar *uri = g_strconcat ("file://", make_test_file_name (filename), NULL);
 
-  GST_DEBUG ("setting uri: %s", uri);
+  GST_DEBUG ("checking uri: %s", uri);
   g_object_set (G_OBJECT (playbin), "uri", uri, "video-sink", fakevideo,
       "audio-sink", fakeaudio, NULL);
 
@@ -357,7 +386,6 @@ check_file_validity (const gchar * filename)
   gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
 
   gst_element_set_state (playbin, GST_STATE_PLAYING);
-
   g_main_loop_run (loop);
   gst_element_set_state (playbin, GST_STATE_NULL);
 
@@ -381,7 +409,8 @@ GST_START_TEST (test_single_image_capture)
   gst_element_get_state (GST_ELEMENT (camera), NULL, NULL, (2 * GST_SECOND));
   test_photography_settings (camera);
 
-  g_signal_emit_by_name (camera, "user-start", 0);
+  GST_INFO ("starting capture");
+  g_signal_emit_by_name (camera, "user-start", NULL);
 
   g_main_loop_run (main_loop);
 }
@@ -397,10 +426,11 @@ GST_START_TEST (test_video_recording)
   g_object_set (camera, "mode", 1,
       "filename", make_test_file_name (VIDEO_FILENAME), NULL);
 
-  g_signal_emit_by_name (camera, "user-start", 0);
+  GST_INFO ("starting capture");
+  g_signal_emit_by_name (camera, "user-start", NULL);
   /* Record for one seconds  */
   g_usleep (G_USEC_PER_SEC);
-  g_signal_emit_by_name (camera, "user-stop", 0);
+  g_signal_emit_by_name (camera, "user-stop", NULL);
 }
 
 GST_END_TEST;
@@ -416,7 +446,8 @@ GST_START_TEST (test_image_video_cycle)
   g_object_set (camera, "mode", 0,
       "filename", make_test_file_name (CYCLE_IMAGE_FILENAME), NULL);
 
-  g_signal_emit_by_name (camera, "user-start", 0);
+  GST_INFO ("starting capture");
+  g_signal_emit_by_name (camera, "user-start", NULL);
 
   g_main_loop_run (main_loop);
 }
