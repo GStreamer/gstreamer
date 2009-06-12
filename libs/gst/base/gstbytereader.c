@@ -1207,3 +1207,81 @@ gst_byte_reader_peek_data (GstByteReader * reader, guint size,
   *val = reader->data + reader->byte;
   return TRUE;
 }
+
+/**
+ * gst_byte_reader_masked_scan_uint32:
+ * @reader: a #GstByteReader
+ * @mask: mask to apply to data before matching against @pattern
+ * @pattern: pattern to match (after mask is applied)
+ * @offset: offset into the adapter data from which to start scanning
+ * @size: number of bytes to scan from offset
+ *
+ * Scan for pattern @pattern with applied mask @mask in the adapter data,
+ * starting from offset @offset.
+ *
+ * The bytes in @pattern and @mask are interpreted left-to-right, regardless
+ * of endianness.  All four bytes of the pattern must be present in the
+ * adapter for it to match, even if the first or last bytes are masked out.
+ *
+ * It is an error to call this function without making sure that there is
+ * enough data (offset+size bytes) in the byte reader.
+ *
+ * Returns: offset of the first match, or -1 if no match was found.
+ *
+ * Example:
+ * <programlisting>
+ * // Assume the reader contains 0x00 0x01 0x02 ... 0xfe 0xff
+ *
+ * gst_byte_reader_masked_scan_uint32 (reader, 0x00010203, 0xffffffff, 0, 256);
+ * // -> returns 0
+ * gst_byte_reader_masked_scan_uint32 (reader, 0x00010203, 0xffffffff, 1, 255);
+ * // -> returns -1
+ * gst_byte_reader_masked_scan_uint32 (reader, 0x01020304, 0xffffffff, 1, 255);
+ * // -> returns 1
+ * gst_byte_reader_masked_scan_uint32 (reader, 0x0001, 0xffff, 0, 256);
+ * // -> returns -1
+ * gst_byte_reader_masked_scan_uint32 (reader, 0x0203, 0xffff, 0, 256);
+ * // -> returns 0
+ * gst_byte_reader_masked_scan_uint32 (reader, 0x02030000, 0xffff0000, 0, 256);
+ * // -> returns 2
+ * gst_byte_reader_masked_scan_uint32 (reader, 0x02030000, 0xffff0000, 0, 4);
+ * // -> returns -1
+ * </programlisting>
+ *
+ * Since: 0.10.24
+ */
+guint
+gst_byte_reader_masked_scan_uint32 (GstByteReader * reader, guint32 mask,
+    guint32 pattern, guint offset, guint size)
+{
+  const guint8 *data;
+  guint32 state;
+  guint i;
+
+  g_return_val_if_fail (size > 0, -1);
+  g_return_val_if_fail (offset + size <= reader->size, -1);
+
+  /* we can't find the pattern with less than 4 bytes */
+  if (G_UNLIKELY (size < 4))
+    return -1;
+
+  data = reader->data + reader->byte + offset;
+
+  /* set the state to something that does not match */
+  state = ~pattern;
+
+  /* now find data */
+  for (i = 0; i < size; i++) {
+    /* throw away one byte and move in the next byte */
+    state = ((state << 8) | data[i]);
+    if (G_UNLIKELY ((state & mask) == pattern)) {
+      /* we have a match but we need to have skipped at
+       * least 4 bytes to fill the state. */
+      if (G_LIKELY (i >= 3))
+        return offset + i - 3;
+    }
+  }
+
+  /* nothing found */
+  return -1;
+}

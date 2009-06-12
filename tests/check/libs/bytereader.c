@@ -460,6 +460,97 @@ GST_START_TEST (test_position_tracking)
 
 GST_END_TEST;
 
+#define do_scan(r,m,p,o,s,x) \
+    fail_unless_equals_int (gst_byte_reader_masked_scan_uint32 (r,m,p,o,s), x);
+
+GST_START_TEST (test_scan)
+{
+  GstByteReader reader;
+  guint8 data[200];
+  guint i;
+
+  /* fill half the buffer with a pattern */
+  for (i = 0; i < 100; i++)
+    data[i] = i;
+
+  gst_byte_reader_init (&reader, data, 100);
+
+  /* find first bytes */
+  do_scan (&reader, 0xffffffff, 0x00010203, 0, 100, 0);
+  do_scan (&reader, 0xffffffff, 0x01020304, 0, 100, 1);
+  do_scan (&reader, 0xffffffff, 0x01020304, 1, 99, 1);
+  /* offset is past the pattern start */
+  do_scan (&reader, 0xffffffff, 0x01020304, 2, 98, -1);
+  /* not enough bytes to find the pattern */
+  do_scan (&reader, 0xffffffff, 0x02030405, 2, 3, -1);
+  do_scan (&reader, 0xffffffff, 0x02030405, 2, 4, 2);
+  /* size does not include the last scanned byte */
+  do_scan (&reader, 0xffffffff, 0x40414243, 0, 0x41, -1);
+  do_scan (&reader, 0xffffffff, 0x40414243, 0, 0x43, -1);
+  do_scan (&reader, 0xffffffff, 0x40414243, 0, 0x44, 0x40);
+  /* past the start */
+  do_scan (&reader, 0xffffffff, 0x40414243, 65, 10, -1);
+  do_scan (&reader, 0xffffffff, 0x40414243, 64, 5, 64);
+  do_scan (&reader, 0xffffffff, 0x60616263, 65, 35, 0x60);
+  do_scan (&reader, 0xffffffff, 0x60616263, 0x60, 4, 0x60);
+  /* past the start */
+  do_scan (&reader, 0xffffffff, 0x60616263, 0x61, 3, -1);
+  do_scan (&reader, 0xffffffff, 0x60616263, 99, 1, -1);
+
+  /* add more data to the buffer */
+  for (i = 100; i < 200; i++)
+    data[i] = i;
+  gst_byte_reader_init (&reader, data, 200);
+
+  /* past the start */
+  do_scan (&reader, 0xffffffff, 0x60616263, 0x61, 6, -1);
+  /* this should work */
+  do_scan (&reader, 0xffffffff, 0x61626364, 0x61, 4, 0x61);
+  /* not enough data */
+  do_scan (&reader, 0xffffffff, 0x62636465, 0x61, 4, -1);
+  do_scan (&reader, 0xffffffff, 0x62636465, 0x61, 5, 0x62);
+  do_scan (&reader, 0xffffffff, 0x62636465, 0, 120, 0x62);
+
+  /* border conditions */
+  do_scan (&reader, 0xffffffff, 0x62636465, 0, 200, 0x62);
+  do_scan (&reader, 0xffffffff, 0x63646566, 0, 200, 0x63);
+  /* we completely searched the first list */
+  do_scan (&reader, 0xffffffff, 0x64656667, 0, 200, 0x64);
+  /* skip first buffer */
+  do_scan (&reader, 0xffffffff, 0x64656667, 0x64, 100, 0x64);
+  /* past the start */
+  do_scan (&reader, 0xffffffff, 0x64656667, 0x65, 10, -1);
+  /* not enough data to scan */
+  do_scan (&reader, 0xffffffff, 0x64656667, 0x63, 4, -1);
+  do_scan (&reader, 0xffffffff, 0x64656667, 0x63, 5, 0x64);
+  do_scan (&reader, 0xffffffff, 0xc4c5c6c7, 0, 199, -1);
+  do_scan (&reader, 0xffffffff, 0xc4c5c6c7, 0x62, 102, 0xc4);
+  /* different masks */
+  do_scan (&reader, 0x00ffffff, 0x00656667, 0x64, 100, 0x64);
+  do_scan (&reader, 0x000000ff, 0x00000000, 0, 100, -1);
+  do_scan (&reader, 0x000000ff, 0x00000003, 0, 100, 0);
+  do_scan (&reader, 0x000000ff, 0x00000061, 0x61, 100, -1);
+  do_scan (&reader, 0xff000000, 0x61000000, 0, 0x62, -1);
+  /* does not even exist */
+  do_scan (&reader, 0x00ffffff, 0xffffffff, 0x65, 99, -1);
+
+  /* flush some bytes */
+  gst_byte_reader_skip (&reader, 0x20);
+
+  do_scan (&reader, 0xffffffff, 0x20212223, 0, 100, 0);
+  do_scan (&reader, 0xffffffff, 0x20212223, 0, 4, 0);
+  do_scan (&reader, 0xffffffff, 0xc4c5c6c7, 0x62, 70, 0xa4);
+  do_scan (&reader, 0xffffffff, 0xc4c5c6c7, 0, 168, 0xa4);
+
+  do_scan (&reader, 0xffffffff, 0xc4c5c6c7, 164, 4, 0xa4);
+  do_scan (&reader, 0xffffffff, 0xc4c5c6c7, 0x44, 100, 0xa4);
+
+  /* not enough bytes */
+  do_scan (&reader, 0xffffffff, 0xc4c5c6c7, 0x44, 99, -1);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_byte_reader_suite (void)
 {
@@ -476,6 +567,7 @@ gst_byte_reader_suite (void)
   tcase_add_test (tc_chain, test_get_float_le);
   tcase_add_test (tc_chain, test_get_float_be);
   tcase_add_test (tc_chain, test_position_tracking);
+  tcase_add_test (tc_chain, test_scan);
 
   return s;
 }

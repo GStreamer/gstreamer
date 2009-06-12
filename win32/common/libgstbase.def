@@ -101,6 +101,7 @@ EXPORTS
 	gst_byte_reader_get_uint8
 	gst_byte_reader_init
 	gst_byte_reader_init_from_buffer
+	gst_byte_reader_masked_scan_uint32
 	gst_byte_reader_new
 	gst_byte_reader_new_from_buffer
 	gst_byte_reader_peek_data

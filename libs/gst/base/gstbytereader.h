@@ -105,6 +105,12 @@ gboolean gst_byte_reader_peek_float64_be (GstByteReader *reader, gdouble *val);
 gboolean gst_byte_reader_get_data (GstByteReader *reader, guint size, const guint8 **val);
 gboolean gst_byte_reader_peek_data (GstByteReader *reader, guint size, const guint8 **val);
 
+guint    gst_byte_reader_masked_scan_uint32 (GstByteReader * reader,
+                                             guint32         mask,
+                                             guint32         pattern,
+                                             guint           offset,
+                                             guint           size);
+
 /**
  * GST_BYTE_READER_INIT:
  * @data: Data from which the #GstByteReader should read
