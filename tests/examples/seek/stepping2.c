@@ -48,7 +48,9 @@ do_step (GstElement * bin)
 static void
 handle_sync_message (GstBus * bus, GstMessage * message, gpointer data)
 {
-  GstElement *bin = GST_ELEMENT_CAST (data);
+  GstElement *bin;
+
+  bin = GST_ELEMENT_CAST (data);
 
   switch (message->type) {
     case GST_MESSAGE_STEP_DONE:
