@@ -60,12 +60,12 @@ class LineFrequencySentinel (object):
         while True:
             middle = (last_index - first_index) // 2 + first_index
             if middle == first_index:
-                return last_index
+                return first_index
             ts = model_get (model_iter_nth_child (None, middle), col_id)
             if ts < target_ts:
-                first_index = middle + 1
+                first_index = middle
             elif ts > target_ts:
-                last_index = middle - 1
+                last_index = middle
             else:
                 return middle
 
