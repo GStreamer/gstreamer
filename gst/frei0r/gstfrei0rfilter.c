@@ -229,7 +229,7 @@ gst_frei0r_filter_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
   gchar *type_name, *tmp;
   GstFrei0rFilterClassData *class_data;
 
-  tmp = g_strdup_printf ("frei0r-%s", info->name);
+  tmp = g_strdup_printf ("frei0r-filter-%s", info->name);
   type_name = g_ascii_strdown (tmp, -1);
   g_free (tmp);
   g_strcanon (type_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
