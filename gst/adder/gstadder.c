@@ -906,6 +906,11 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (G_UNLIKELY (adder->func == NULL))
     goto not_negotiated;
 
+  if (adder->flush_stop_pending) {
+    gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop ());
+    adder->flush_stop_pending = FALSE;
+  }
+
   /* get available bytes for reading, this can be 0 which could mean empty
    * buffers or EOS, which we will catch when we loop over the pads. */
   outsize = gst_collect_pads_available (pads);
@@ -1015,10 +1020,6 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
           "start:%" G_GINT64_FORMAT "  pos:%" G_GINT64_FORMAT " failed",
           adder->timestamp, adder->segment_position);
     }
-  }
-  if (adder->flush_stop_pending) {
-    gst_pad_push_event (adder->srcpad, gst_event_new_flush_stop ());
-    adder->flush_stop_pending = FALSE;
   }
 
   /* set timestamps on the output buffer */
