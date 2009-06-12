@@ -1495,7 +1495,9 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
   GST_OBJECT_UNLOCK (sink);
 
   /* post message first */
-  message = gst_message_new_step_start (GST_OBJECT (sink), TRUE);
+  message =
+      gst_message_new_step_start (GST_OBJECT (sink), TRUE, current->format,
+      current->amount, current->rate, current->flush, current->intermediate);
   gst_message_set_seqnum (message, current->seqnum);
   gst_element_post_message (GST_ELEMENT (sink), message);
 
@@ -1518,16 +1520,28 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
     end = current->start + current->amount;
     if (!current->flush) {
       /* update the segment clipping regions for non-flushing seeks */
-      if (segment->rate > 0.0)
+      if (segment->rate > 0.0) {
         segment->stop = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
-      else
-        segment->start =
-            gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+        segment->last_stop = segment->stop;
+      } else {
+        gint64 position;
+
+        position = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+        segment->time = position;
+        segment->start = position;
+        segment->last_stop = position;
+      }
     }
   }
 
-  GST_DEBUG_OBJECT (sink, "segment now %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (segment->start), GST_TIME_ARGS (segment->stop));
+  GST_DEBUG_OBJECT (sink,
+      "segment now rate %lf, applied rate %lf, "
+      "format GST_FORMAT_TIME, "
+      "%" GST_TIME_FORMAT " -- %" GST_TIME_FORMAT
+      ", time %" GST_TIME_FORMAT ", accum %" GST_TIME_FORMAT,
+      segment->rate, segment->applied_rate, GST_TIME_ARGS (segment->start),
+      GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time),
+      GST_TIME_ARGS (segment->accum));
 
   GST_DEBUG_OBJECT (sink, "step started at running_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (current->start));
@@ -1544,7 +1558,7 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
 
 static void
 stop_stepping (GstBaseSink * sink, GstSegment * segment,
-    GstStepInfo * current, gint64 rstart, gint64 rstop)
+    GstStepInfo * current, gint64 rstart, gint64 rstop, gboolean eos)
 {
   gint64 stop, position;
   GstMessage *message;
@@ -1596,7 +1610,7 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
   message =
       gst_message_new_step_done (GST_OBJECT_CAST (sink), current->format,
       current->amount, current->rate, current->flush, current->intermediate,
-      current->duration);
+      current->duration, eos);
   gst_message_set_seqnum (message, current->seqnum);
   gst_element_post_message (GST_ELEMENT_CAST (sink), message);
 
@@ -1711,6 +1725,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   GstClockTime sstart, sstop;   /* clipped timestamps converted to stream time */
   GstFormat format;
   GstBaseSinkPrivate *priv;
+  gboolean eos;
 
   priv = basesink->priv;
 
@@ -1746,6 +1761,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
             GST_TIME_ARGS (rstart));
         /* if we are stepping, we end now */
         *step_end = step->valid;
+        eos = TRUE;
         goto eos_done;
       }
       default:
@@ -1758,6 +1774,8 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
         return FALSE;
     }
   }
+
+  eos = FALSE;
 
   /* else do buffer sync code */
   buffer = GST_BUFFER_CAST (obj);
@@ -1799,6 +1817,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   if (G_UNLIKELY (!gst_segment_clip (segment, GST_FORMAT_TIME,
               (gint64) start, (gint64) stop, &cstart, &cstop))) {
     if (step->valid) {
+      GST_DEBUG_OBJECT (basesink, "step out of segment");
       /* when we are stepping, pretend we're at the end of the segment */
       if (segment->rate > 0.0) {
         cstart = segment->stop;
@@ -1841,10 +1860,10 @@ do_times:
   sstop = gst_segment_to_stream_time (segment, format, cstop);
 
 eos_done:
-  /* done label only called when doing EOS, we also stop stepping then */
+  /* eos_done label only called when doing EOS, we also stop stepping then */
   if (*step_end && step->flush) {
     GST_DEBUG_OBJECT (basesink, "flushing step ended");
-    stop_stepping (basesink, segment, step, rstart, rstop);
+    stop_stepping (basesink, segment, step, rstart, rstop, eos);
     *step_end = FALSE;
   }
 
@@ -2326,6 +2345,7 @@ flushing:
 preroll_failed:
   {
     GST_DEBUG_OBJECT (basesink, "preroll failed");
+    *step_end = FALSE;
     return ret;
   }
 }
@@ -2674,6 +2694,9 @@ again:
       if (ret == GST_FLOW_STEP)
         goto again;
 
+      if (G_UNLIKELY (basesink->flushing))
+        goto flushing;
+
       priv->rendered++;
     }
   } else {
@@ -2739,7 +2762,7 @@ done:
     /* the step ended, check if we need to activate a new step */
     GST_DEBUG_OBJECT (basesink, "step ended");
     stop_stepping (basesink, &basesink->segment, &priv->current_step,
-        priv->current_rstart, priv->current_rstop);
+        priv->current_rstart, priv->current_rstop, basesink->eos);
     goto again;
   }
 
@@ -3550,8 +3573,9 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   current = &priv->current_step;
 
   /* post message first */
-  message = gst_message_new_step_start (GST_OBJECT (sink), FALSE);
-  gst_message_set_seqnum (message, current->seqnum);
+  message = gst_message_new_step_start (GST_OBJECT (sink), FALSE, format,
+      amount, rate, flush, intermediate);
+  gst_message_set_seqnum (message, seqnum);
   gst_element_post_message (GST_ELEMENT (sink), message);
 
   if (flush) {

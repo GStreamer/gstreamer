@@ -399,10 +399,10 @@ GstMessage *	gst_message_new_state_dirty	(GstObject * src);
 /* STEP_DONE */
 GstMessage *    gst_message_new_step_done       (GstObject * src, GstFormat format, guint64 amount,
                                                  gdouble rate, gboolean flush, gboolean intermediate, 
-						 guint64 duration);
+						 guint64 duration, gboolean eos);
 void            gst_message_parse_step_done     (GstMessage * message, GstFormat *format, guint64 *amount,
                                                  gdouble *rate, gboolean *flush, gboolean *intermediate,
-						 guint64 *duration);
+						 guint64 *duration, gboolean *eos);
 /* CLOCK_PROVIDE */
 GstMessage *	gst_message_new_clock_provide	(GstObject * src, GstClock *clock, gboolean ready);
 void		gst_message_parse_clock_provide (GstMessage *message, GstClock **clock,
@@ -466,8 +466,12 @@ GstMessage *    gst_message_new_request_state   (GstObject * src, GstState state
 void            gst_message_parse_request_state (GstMessage * message, GstState *state);
 
 /* STEP_START */
-GstMessage *    gst_message_new_step_start      (GstObject * src, gboolean active);
-void            gst_message_parse_step_start    (GstMessage * message, gboolean *active);
+GstMessage *    gst_message_new_step_start      (GstObject * src, gboolean active, GstFormat format,
+                                                 guint64 amount, gdouble rate, gboolean flush,
+						 gboolean intermediate);
+void            gst_message_parse_step_start    (GstMessage * message, gboolean *active, GstFormat *format,
+                                                 guint64 *amount, gdouble *rate, gboolean *flush,
+						 gboolean *intermediate);
 
 /* custom messages */
 GstMessage *	gst_message_new_custom		(GstMessageType type,
