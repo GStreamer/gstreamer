@@ -111,6 +111,10 @@ gboolean              gst_rtsp_media_factory_is_shared    (GstRTSPMediaFactory *
 GstRTSPMedia *        gst_rtsp_media_factory_construct    (GstRTSPMediaFactory *factory,
                                                            const GstRTSPUrl *url);
 
+void                  gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory *factory,
+                                                              const GstRTSPUrl *url,
+                                                              GstRTSPMedia *media);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_MEDIA_FACTORY_H__ */

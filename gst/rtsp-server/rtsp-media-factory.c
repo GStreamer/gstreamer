@@ -400,8 +400,8 @@ parse_error:
 
 /* try to find all the payloader elements, they should be named 'pay%d'. for
  * each of the payloaders we will create a stream and collect the source pad. */
-static void
-collect_streams (GstRTSPMediaFactory *factory, const GstRTSPUrl *url,
+void
+gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory *factory, const GstRTSPUrl *url,
     GstRTSPMedia *media)
 {
   GstElement *element, *elem;
@@ -478,7 +478,7 @@ default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 
   media->pipeline = klass->create_pipeline (factory, media);
 
-  collect_streams (factory, url, media);
+  gst_rtsp_media_factory_collect_streams (factory, url, media);
 
   return media;
 
