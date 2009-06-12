@@ -55,7 +55,7 @@ typedef enum
 typedef enum
 {
   GST_GL_DISPLAY_PROJECTION_ORTHO2D,
-  GST_GL_DISPLAY_PROJECTION_PERSPECIVE
+  GST_GL_DISPLAY_PROJECTION_PERSPECTIVE
 } GstGLDisplayProjection;
 
 //Texture pool elements
