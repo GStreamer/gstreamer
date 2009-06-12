@@ -1,12 +1,38 @@
 <?xml version="1.0"?>
 <api version="1.0">
 	<namespace name="Gst">
+		<function name="rtsp_params_get" symbol="gst_rtsp_params_get">
+			<return-type type="GstRTSPResult"/>
+			<parameters>
+				<parameter name="client" type="GstRTSPClient*"/>
+				<parameter name="uri" type="GstRTSPUrl*"/>
+				<parameter name="session" type="GstRTSPSession*"/>
+				<parameter name="request" type="GstRTSPMessage*"/>
+				<parameter name="response" type="GstRTSPMessage*"/>
+			</parameters>
+		</function>
+		<function name="rtsp_params_set" symbol="gst_rtsp_params_set">
+			<return-type type="GstRTSPResult"/>
+			<parameters>
+				<parameter name="client" type="GstRTSPClient*"/>
+				<parameter name="uri" type="GstRTSPUrl*"/>
+				<parameter name="session" type="GstRTSPSession*"/>
+				<parameter name="request" type="GstRTSPMessage*"/>
+				<parameter name="response" type="GstRTSPMessage*"/>
+			</parameters>
+		</function>
 		<function name="rtsp_sdp_from_media" symbol="gst_rtsp_sdp_from_media">
 			<return-type type="GstSDPMessage*"/>
 			<parameters>
 				<parameter name="media" type="GstRTSPMedia*"/>
 			</parameters>
 		</function>
+		<callback name="GstRTSPKeepAliveFunc">
+			<return-type type="void"/>
+			<parameters>
+				<parameter name="user_data" type="gpointer"/>
+			</parameters>
+		</callback>
 		<callback name="GstRTSPSendFunc">
 			<return-type type="gboolean"/>
 			<parameters>
@@ -41,6 +67,7 @@
 			<field name="payloader" type="GstElement*"/>
 			<field name="prepared" type="gboolean"/>
 			<field name="recv_rtcp_sink" type="GstPad*"/>
+			<field name="recv_rtp_sink" type="GstPad*"/>
 			<field name="send_rtp_sink" type="GstPad*"/>
 			<field name="send_rtp_src" type="GstPad*"/>
 			<field name="send_rtcp_src" type="GstPad*"/>
@@ -49,6 +76,8 @@
 			<field name="udpsink" type="GstElement*[]"/>
 			<field name="appsrc" type="GstElement*[]"/>
 			<field name="appsink" type="GstElement*[]"/>
+			<field name="tee" type="GstElement*[]"/>
+			<field name="selector" type="GstElement*[]"/>
 			<field name="server_port" type="GstRTSPRange"/>
 			<field name="caps_sig" type="gulong"/>
 			<field name="caps" type="GstCaps*"/>
@@ -60,7 +89,13 @@
 			<field name="send_rtcp" type="GstRTSPSendFunc"/>
 			<field name="user_data" type="gpointer"/>
 			<field name="notify" type="GDestroyNotify"/>
+			<field name="keep_alive" type="GstRTSPKeepAliveFunc"/>
+			<field name="ka_user_data" type="gpointer"/>
+			<field name="ka_notify" type="GDestroyNotify"/>
+			<field name="active" type="gboolean"/>
+			<field name="timeout" type="gboolean"/>
 			<field name="transport" type="GstRTSPTransport*"/>
+			<field name="rtpsource" type="GObject*"/>
 		</struct>
 		<struct name="GstRTSPSessionMedia">
 			<method name="get_stream" symbol="gst_rtsp_session_media_get_stream">
@@ -89,6 +124,15 @@
 					<parameter name="stream" type="GstRTSPSessionStream*"/>
 					<parameter name="send_rtp" type="GstRTSPSendFunc"/>
 					<parameter name="send_rtcp" type="GstRTSPSendFunc"/>
+					<parameter name="user_data" type="gpointer"/>
+					<parameter name="notify" type="GDestroyNotify"/>
+				</parameters>
+			</method>
+			<method name="set_keepalive" symbol="gst_rtsp_session_stream_set_keepalive">
+				<return-type type="void"/>
+				<parameters>
+					<parameter name="stream" type="GstRTSPSessionStream*"/>
+					<parameter name="keep_alive" type="GstRTSPKeepAliveFunc"/>
 					<parameter name="user_data" type="gpointer"/>
 					<parameter name="notify" type="GDestroyNotify"/>
 				</parameters>
@@ -243,14 +287,22 @@
 					<parameter name="message" type="GstMessage*"/>
 				</parameters>
 			</vfunc>
+			<vfunc name="unprepare">
+				<return-type type="gboolean"/>
+				<parameters>
+					<parameter name="media" type="GstRTSPMedia*"/>
+				</parameters>
+			</vfunc>
 			<field name="shared" type="gboolean"/>
 			<field name="reusable" type="gboolean"/>
 			<field name="reused" type="gboolean"/>
 			<field name="element" type="GstElement*"/>
 			<field name="streams" type="GArray*"/>
+			<field name="dynamic" type="GList*"/>
 			<field name="prepared" type="gboolean"/>
 			<field name="active" type="gint"/>
 			<field name="pipeline" type="GstElement*"/>
+			<field name="fakesink" type="GstElement*"/>
 			<field name="source" type="GSource*"/>
 			<field name="id" type="guint"/>
 			<field name="is_live" type="gboolean"/>
@@ -260,6 +312,14 @@
 			<field name="range" type="GstRTSPTimeRange"/>
 		</object>
 		<object name="GstRTSPMediaFactory" parent="GObject" type-name="GstRTSPMediaFactory" get-type="gst_rtsp_media_factory_get_type">
+			<method name="collect_streams" symbol="gst_rtsp_media_factory_collect_streams">
+				<return-type type="void"/>
+				<parameters>
+					<parameter name="factory" type="GstRTSPMediaFactory*"/>
+					<parameter name="url" type="GstRTSPUrl*"/>
+					<parameter name="media" type="GstRTSPMedia*"/>
+				</parameters>
+			</method>
 			<method name="construct" symbol="gst_rtsp_media_factory_construct">
 				<return-type type="GstRTSPMedia*"/>
 				<parameters>
@@ -310,6 +370,13 @@
 				<parameters>
 					<parameter name="factory" type="GstRTSPMediaFactory*"/>
 					<parameter name="url" type="GstRTSPUrl*"/>
+				</parameters>
+			</vfunc>
+			<vfunc name="create_pipeline">
+				<return-type type="GstElement*"/>
+				<parameters>
+					<parameter name="factory" type="GstRTSPMediaFactory*"/>
+					<parameter name="media" type="GstRTSPMedia*"/>
 				</parameters>
 			</vfunc>
 			<vfunc name="gen_key">
