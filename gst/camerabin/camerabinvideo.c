@@ -242,11 +242,12 @@ gst_camerabin_video_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_FILENAME:
       g_string_assign (bin->filename, g_value_get_string (value));
+      GST_INFO_OBJECT (bin, "received filename: '%s'", bin->filename->str);
       if (bin->sink) {
         g_object_set (G_OBJECT (bin->sink), "location", bin->filename->str,
             NULL);
       } else {
-        GST_INFO ("no sink, not setting name yet");
+        GST_INFO_OBJECT (bin, "no sink, not setting name yet");
       }
       break;
     default:
@@ -290,7 +291,10 @@ gst_camerabin_video_change_state (GstElement * element,
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstCameraBinVideo *vid = GST_CAMERABIN_VIDEO (element);
-  GstObject *camerabin = NULL;
+
+  GST_DEBUG_OBJECT (element, "changing state: %s -> %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -314,7 +318,7 @@ gst_camerabin_video_change_state (GstElement * element,
 
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* Set sink to NULL in order to write the file _now_ */
-      GST_INFO ("write vid file: %s", vid->filename->str);
+      GST_INFO ("write video file: %s", vid->filename->str);
       gst_element_set_locked_state (vid->sink, TRUE);
       gst_element_set_state (vid->sink, GST_STATE_NULL);
       break;
@@ -326,12 +330,10 @@ gst_camerabin_video_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      camerabin = gst_element_get_parent (vid);
       /* Write debug graph to file */
-      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (camerabin),
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (GST_ELEMENT_PARENT (vid)),
           GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE |
           GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS, "videobin.playing");
-      gst_object_unref (camerabin);
 
       if (vid->pending_eos) {
         /* Video bin is still paused, so push eos directly to video queue */
@@ -359,6 +361,11 @@ gst_camerabin_video_change_state (GstElement * element,
       break;
   }
 
+  GST_DEBUG_OBJECT (element, "changed state: %s -> %s = %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)),
+      gst_element_state_change_return_get_name (ret));
+
   return ret;
 }
 
@@ -366,7 +373,7 @@ gst_camerabin_video_change_state (GstElement * element,
  * static helper functions implementation
  */
 
-/**
+/*
  * camerabin_video_pad_tee_src0_have_buffer:
  * @pad: tee src pad leading to video encoding
  * @event: received buffer
@@ -414,7 +421,7 @@ camerabin_video_pad_tee_src0_have_buffer (GstPad * pad, GstBuffer * buffer,
   return TRUE;
 }
 
-/**
+/*
  * camerabin_video_pad_aud_src_have_buffer:
  * @pad: audio source src pad
  * @event: received buffer
@@ -455,7 +462,7 @@ camerabin_video_pad_aud_src_have_buffer (GstPad * pad, GstBuffer * buffer,
   return TRUE;
 }
 
-/**
+/*
  * camerabin_video_sink_have_event:
  * @pad: video bin sink pad
  * @event: received event
@@ -498,7 +505,7 @@ camerabin_video_sink_have_event (GstPad * pad, GstEvent * event,
   return ret;
 }
 
-/**
+/*
  * gst_camerabin_video_create_elements:
  * @vid: a pointer to #GstCameraBinVideo
  *
@@ -675,7 +682,7 @@ error:
 
 }
 
-/**
+/*
  * gst_camerabin_video_destroy_elements:
  * @vid: a pointer to #GstCameraBinVideo
  *
@@ -716,8 +723,6 @@ gst_camerabin_video_destroy_elements (GstCameraBinVideo * vid)
     gst_event_unref (vid->pending_eos);
     vid->pending_eos = NULL;
   }
-
-  return;
 }
 
 /*

@@ -162,6 +162,8 @@ gst_camerabin_image_init (GstCameraBinImage * img,
 static void
 gst_camerabin_image_dispose (GstCameraBinImage * img)
 {
+  GST_DEBUG_OBJECT (img, "disposing");
+
   g_string_free (img->filename, TRUE);
   img->filename = NULL;
 
@@ -184,7 +186,10 @@ gst_camerabin_image_change_state (GstElement * element,
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstCameraBinImage *img = GST_CAMERABIN_IMAGE (element);
-  GstObject *camerabin = NULL;
+
+  GST_DEBUG_OBJECT (element, "changing state: %s -> %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -221,12 +226,10 @@ gst_camerabin_image_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      camerabin = gst_element_get_parent (img);
       /* Write debug graph to file */
-      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (camerabin),
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (GST_ELEMENT_PARENT (img)),
           GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE |
           GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS, "imagebin.playing");
-      gst_object_unref (camerabin);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_camerabin_image_destroy_elements (img);
@@ -234,6 +237,11 @@ gst_camerabin_image_change_state (GstElement * element,
     default:
       break;
   }
+
+  GST_DEBUG_OBJECT (element, "changed state: %s -> %s = %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)),
+      gst_element_state_change_return_get_name (ret));
 
   return ret;
 }
@@ -308,7 +316,7 @@ gst_camerabin_image_get_property (GObject * object, guint prop_id,
  * static helper functions implementation
  */
 
-/**
+/*
  * metadata_write_probe:
  * @pad: sink pad of metadata muxer
  * @buffer: received buffer
@@ -375,7 +383,7 @@ done:
 }
 
 
-/**
+/*
  * gst_camerabin_image_create_elements:
  * @img: a pointer to #GstCameraBinImage object
  *
@@ -480,7 +488,7 @@ done:
 }
 
 
-/**
+/*
  * gst_camerabin_image_destroy_elements:
  * @img: a pointer to #GstCameraBinImage object
  *
@@ -491,7 +499,7 @@ done:
 static void
 gst_camerabin_image_destroy_elements (GstCameraBinImage * img)
 {
-  GST_LOG ("destroying img elements");
+  GST_LOG ("destroying image elements");
 
   gst_ghost_pad_set_target (GST_GHOST_PAD (img->sinkpad), NULL);
 

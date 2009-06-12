@@ -32,74 +32,6 @@
 
 GST_DEBUG_CATEGORY (gst_camerabin_debug);
 
-static gboolean
-camerabin_general_dbg_have_event (GstPad * pad, GstEvent * event,
-    gpointer u_data)
-{
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-    {
-      GstElement *elem = (GstElement *) u_data;
-      gchar *elem_name = gst_element_get_name (elem);
-      gchar *pad_name = gst_pad_get_name (pad);
-
-      gboolean update;
-      gdouble rate;
-      GstFormat format;
-      gint64 start, stop, pos;
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &pos);
-
-      GST_DEBUG ("element %s, pad %s, new_seg_start =%" GST_TIME_FORMAT
-          ", new_seg_stop =%" GST_TIME_FORMAT
-          ", new_seg_pos =%" GST_TIME_FORMAT "\n", elem_name, pad_name,
-          GST_TIME_ARGS (start), GST_TIME_ARGS (stop), GST_TIME_ARGS (pos));
-
-      g_free (pad_name);
-      g_free (elem_name);
-    }
-      break;
-    default:
-      break;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-camerabin_general_dbg_have_buffer (GstPad * pad, GstBuffer * buffer,
-    gpointer u_data)
-{
-  GstElement *elem = (GstElement *) u_data;
-  gchar *elem_name = gst_element_get_name (elem);
-  gchar *pad_name = gst_pad_get_name (pad);
-
-  GST_DEBUG ("element %s, pad %s, buf_ts =%" GST_TIME_FORMAT "\n", elem_name,
-      pad_name, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
-
-  g_free (pad_name);
-  g_free (elem_name);
-
-  return TRUE;
-
-}
-
-void
-camerabin_general_dbg_set_probe (GstElement * elem, gchar * pad_name,
-    gboolean buf, gboolean evt)
-{
-  GstPad *pad = gst_element_get_static_pad (elem, pad_name);
-
-  if (buf)
-    gst_pad_add_buffer_probe (pad,
-        G_CALLBACK (camerabin_general_dbg_have_buffer), elem);
-  if (evt)
-    gst_pad_add_event_probe (pad,
-        G_CALLBACK (camerabin_general_dbg_have_event), elem);
-
-  gst_object_unref (pad);
-}
-
 /**
  * gst_camerabin_add_element:
  * @bin: add an element to this bin
@@ -151,12 +83,12 @@ gst_camerabin_try_add_element (GstBin * bin, GstElement * new_elem)
 
   /* Get pads for linking */
   bin_pad = gst_bin_find_unlinked_pad (bin, GST_PAD_SRC);
-  GST_DEBUG ("adding %" GST_PTR_FORMAT " to %s:%s", new_elem,
-      GST_DEBUG_PAD_NAME (bin_pad));
   /* Add to bin */
   gst_bin_add (GST_BIN (bin), new_elem);
   /* Link, if unconnected pad was found, otherwise just add it to bin */
   if (bin_pad) {
+    GST_DEBUG_OBJECT (bin, "linking %s to %s:%s", GST_OBJECT_NAME (new_elem),
+        GST_DEBUG_PAD_NAME (bin_pad));
     bin_elem = gst_pad_get_parent_element (bin_pad);
     gst_object_unref (bin_pad);
     if (!gst_element_link (bin_elem, new_elem)) {
@@ -164,6 +96,8 @@ gst_camerabin_try_add_element (GstBin * bin, GstElement * new_elem)
       ret = FALSE;
     }
     gst_object_unref (bin_elem);
+  } else {
+    GST_INFO_OBJECT (bin, "no unlinked source pad in bin");
   }
 
   return ret;

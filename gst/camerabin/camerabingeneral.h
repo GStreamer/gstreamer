@@ -21,43 +21,17 @@
 #ifndef __CAMERABIN_GENERAL_H_
 #define __CAMERABIN_GENERAL_H_
 
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#include <time.h>
-
 #include <gst/gst.h>
 
-
-typedef struct timeval TIME_TYPE;
-#define GET_TIME(t) do { gettimeofday(&(t), NULL); } while(0)
-#define DIFF_TIME(t2,t1,d) do { d = ((t2).tv_sec - (t1).tv_sec) * 1000000 + \
-      (t2).tv_usec - (t1).tv_usec; } while(0)
-
-#define _INIT_TIMER_BLOCK TIME_TYPE t1, t2; guint32 d; do {;}while (0)
-
-#define _OPEN_TIMER_BLOCK { GET_TIME(t1); do {;}while (0)
-#define _CLOSE_TIMER_BLOCK GET_TIME(t2); DIFF_TIME(t2,t1,d); \
-  GST_DEBUG("elapsed time = %u\n", d); \
-  } do {;}while (0)
-
-
-extern void
-camerabin_general_dbg_set_probe (GstElement * elem, gchar * pad_name,
-    gboolean buf, gboolean evt);
-
 gboolean gst_camerabin_try_add_element (GstBin * bin, GstElement * new_elem);
-
 gboolean gst_camerabin_add_element (GstBin * bin, GstElement * new_elem);
-
-GstElement *gst_camerabin_create_and_add_element (GstBin * bin,
-    const gchar * elem_name);
+GstElement *gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name);
 
 void gst_camerabin_remove_elements_from_bin (GstBin * bin);
 
-gboolean
-gst_camerabin_drop_eos_probe (GstPad * pad, GstEvent * event, gpointer u_data);
+gboolean gst_camerabin_drop_eos_probe (GstPad * pad, GstEvent * event, gpointer u_data);
 
+/* debug logging category */
 GST_DEBUG_CATEGORY_EXTERN (gst_camerabin_debug);
 #define GST_CAT_DEFAULT gst_camerabin_debug
 

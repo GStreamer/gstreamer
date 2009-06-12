@@ -207,7 +207,11 @@ static guint camerabin_signals[LAST_SIGNAL];
 #define DEFAULT_CAPTURE_HEIGHT 600
 #define DEFAULT_FPS_N 0         /* makes it use the default */
 #define DEFAULT_FPS_D 1
+
 #define CAMERABIN_DEFAULT_VF_CAPS "video/x-raw-yuv,format=(fourcc)I420"
+#define CAMERABIN_MAX_VF_WIDTH 848
+#define CAMERABIN_MAX_VF_HEIGHT 848
+
 /* Using "bilinear" as default zoom method */
 #define CAMERABIN_DEFAULT_ZOOM_METHOD 1
 
@@ -215,19 +219,20 @@ static guint camerabin_signals[LAST_SIGNAL];
 #define MAX_ZOOM 1000
 #define ZOOM_1X MIN_ZOOM
 
+/* FIXME: this is v4l2camsrc specific */
 #define DEFAULT_V4L2CAMSRC_DRIVER_NAME "omap3cam"
+
+/* pipeline configuration */
+//#define USE_VIEWFINDER_COLOR_CONVERTER 1
+//#define USE_VIEWFINDER_SCALE 1
 
 /* internal element names */
 
-#define USE_COLOR_CONVERTER 1
-
 /* FIXME: Make sure this can work with autovideosrc and use that. */
 #define DEFAULT_SRC_VID_SRC "v4l2src"
-
 #define DEFAULT_VIEW_SINK "autovideosink"
 
-#define CAMERABIN_MAX_VF_WIDTH 848
-#define CAMERABIN_MAX_VF_HEIGHT 848
+/* message names */
 #define PREVIEW_MESSAGE_NAME "preview-image"
 #define IMG_CAPTURED_MESSAGE_NAME "image-captured"
 
@@ -579,6 +584,7 @@ camerabin_create_src_elements (GstCameraBin * camera)
     goto done;
 
   /* Set default "driver-name" for v4l2camsrc if not set */
+  /* FIXME: v4l2camsrc specific */
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src_vid_src),
           "driver-name")) {
     g_object_get (G_OBJECT (camera->src_vid_src), "driver-name",
@@ -650,6 +656,7 @@ camerabin_create_view_elements (GstCameraBin * camera)
   }
   camera->pad_view_src = GST_PAD (pads->data);
 
+#ifdef USE_VIEWFINDER_CONVERTERS
   /* Add videoscale in case we need to downscale frame for view finder */
   if (!(camera->view_scale =
           gst_camerabin_create_and_add_element (GST_BIN (camera),
@@ -663,7 +670,8 @@ camerabin_create_view_elements (GstCameraBin * camera)
               "capsfilter"))) {
     goto error;
   }
-#ifdef USE_COLOR_CONVERTER
+#endif
+#ifdef USE_VIEWFINDER_COLOR_CONVERTER
   if (!gst_camerabin_create_and_add_element (GST_BIN (camera),
           "ffmpegcolorspace")) {
     goto error;
@@ -822,6 +830,7 @@ camerabin_destroy_elements (GstCameraBin * camera)
   }
 
   camera->view_sink = NULL;
+  camera->aspect_filter = NULL;
   camera->view_scale = NULL;
   camera->view_in_sel = NULL;
 
@@ -943,18 +952,24 @@ static void
 gst_camerabin_change_mode (GstCameraBin * camera, gint mode)
 {
   if (camera->mode != mode || !camera->active_bin) {
-    GST_DEBUG_OBJECT (camera, "setting mode: %d", mode);
+    GST_DEBUG_OBJECT (camera, "setting mode: %d (old_mode=%d)",
+        mode, camera->mode);
     /* Interrupt ongoing capture */
     gst_camerabin_do_stop (camera);
     camera->mode = mode;
     if (camera->active_bin) {
+      GST_DEBUG_OBJECT (camera, "stopping active bin");
       gst_element_set_state (camera->active_bin, GST_STATE_NULL);
     }
     if (camera->mode == MODE_IMAGE) {
       GstStateChangeReturn state_ret;
 
       camera->active_bin = camera->imgbin;
+      /* we can't go to playing as filesink would error out if it does not have
+       * a filename yet, we set the filename async with the buffer flow */
       state_ret = gst_element_set_state (camera->active_bin, GST_STATE_READY);
+      GST_DEBUG_OBJECT (camera, "setting imagebin to ready: %s",
+          gst_element_state_change_return_get_name (state_ret));
 
       if (state_ret == GST_STATE_CHANGE_FAILURE) {
         GST_WARNING_OBJECT (camera, "state change failed");
@@ -979,7 +994,7 @@ static void
 gst_camerabin_change_filename (GstCameraBin * camera, const gchar * name)
 {
   if (0 != strcmp (camera->filename->str, name)) {
-    GST_DEBUG_OBJECT (camera, "changing filename from %s to %s",
+    GST_DEBUG_OBJECT (camera, "changing filename from '%s' to '%s'",
         camera->filename->str, name);
     g_string_assign (camera->filename, name);
   }
@@ -1567,6 +1582,7 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
         gst_element_state_change_return_get_name (state_ret));
 
     if (state_ret != GST_STATE_CHANGE_FAILURE) {
+      GST_INFO_OBJECT (camera, "imagebin is PAUSED");
       g_mutex_lock (camera->capture_mutex);
       g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", TRUE,
           "active-pad", camera->pad_src_img, NULL);
@@ -1766,6 +1782,8 @@ done:
      after one captured still image */
   gst_camerabin_finish_image_capture (camera);
 
+  GST_DEBUG_OBJECT (camera, "image captured, switching to viewfinder");
+
   gst_camerabin_reset_to_view_finder (camera);
 
   GST_DEBUG_OBJECT (camera, "switched back to viewfinder");
@@ -1823,7 +1841,7 @@ gst_camerabin_have_src_buffer (GstPad * pad, GstBuffer * buffer,
   /* We can't send real EOS event, since it would switch the image queue
      into "draining mode". Therefore we send our own custom eos and
      catch & drop it later in queue's srcpad data probe */
-  GST_DEBUG_OBJECT (camera, "sending eos to image queue");
+  GST_DEBUG_OBJECT (camera, "sending img-eos to image queue");
   gst_camerabin_send_img_queue_custom_event (camera,
       gst_structure_new ("img-eos", NULL));
 
@@ -1886,13 +1904,14 @@ gst_camerabin_have_queue_data (GstPad * pad, GstMiniObject * mini_obj,
     if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
       GstTagList *tlist;
 
+      GST_DEBUG_OBJECT (camera, "queue sending taglist to image pipeline");
       gst_event_parse_tag (event, &tlist);
       gst_tag_list_insert (camera->event_tags, tlist, GST_TAG_MERGE_REPLACE);
       ret = FALSE;
     } else if (evs && gst_structure_has_name (evs, "img-filename")) {
       const gchar *fname;
 
-      GST_LOG_OBJECT (camera, "queue setting image filename to imagebin");
+      GST_DEBUG_OBJECT (camera, "queue setting image filename to imagebin");
       fname = gst_structure_get_string (evs, "filename");
       g_object_set (G_OBJECT (camera->imgbin), "filename", fname, NULL);
 
@@ -1902,7 +1921,7 @@ gst_camerabin_have_queue_data (GstPad * pad, GstMiniObject * mini_obj,
 
       ret = FALSE;
     } else if (evs && gst_structure_has_name (evs, "img-eos")) {
-      GST_LOG_OBJECT (camera, "queue sending EOS to image pipeline");
+      GST_DEBUG_OBJECT (camera, "queue sending EOS to image pipeline");
       gst_pad_set_blocked_async (camera->pad_src_queue, TRUE,
           (GstPadBlockCallback) image_pad_blocked, camera);
       gst_element_send_event (camera->imgbin, gst_event_new_eos ());
@@ -2140,10 +2159,10 @@ gst_camerabin_find_better_framerate (GstCameraBin * camera, GstStructure * st,
   gint res, comparison;
 
   if (camera->night_mode) {
-    GST_LOG_OBJECT (camera, "finding min framerate");
+    GST_LOG_OBJECT (camera, "finding min framerate in %" GST_PTR_FORMAT, st);
     comparison = GST_VALUE_LESS_THAN;
   } else {
-    GST_LOG_OBJECT (camera, "finding max framerate");
+    GST_LOG_OBJECT (camera, "finding max framerate in %" GST_PTR_FORMAT, st);
     comparison = GST_VALUE_GREATER_THAN;
   }
 
@@ -2198,6 +2217,7 @@ gst_camerabin_find_better_framerate (GstCameraBin * camera, GstStructure * st,
 static void
 gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps)
 {
+#ifdef USE_VIEWFINDER_SCALE
   GstCaps *sink_caps, *ar_caps;
   GstStructure *st;
   gint in_w = 0, in_h = 0, sink_w = 0, sink_h = 0, target_w = 0, target_h = 0;
@@ -2266,6 +2286,7 @@ gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps)
       ar_caps);
   g_object_set (G_OBJECT (camera->aspect_filter), "caps", ar_caps, NULL);
   gst_caps_unref (ar_caps);
+#endif
 }
 
 /*
@@ -2725,6 +2746,7 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   /* view finder elements */
   camera->view_in_sel = NULL;
   camera->view_scale = NULL;
+  camera->aspect_filter = NULL;
   camera->view_sink = NULL;
 
   memset (&camera->photo_settings, 0, sizeof (GstPhotoSettings));
@@ -2971,6 +2993,10 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
   GstCameraBin *camera = GST_CAMERABIN (element);
   GstStateChangeReturn ret;
 
+  GST_DEBUG_OBJECT (element, "changing state: %s -> %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!camerabin_create_elements (camera)) {
@@ -3000,9 +3026,13 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
+  GST_DEBUG_OBJECT (element, "after chaining up: %s -> %s = %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)),
+      gst_element_state_change_return_get_name (ret));
+
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_LOG_OBJECT (camera, "PAUSED to READY");
       g_mutex_lock (camera->capture_mutex);
       if (camera->capturing) {
         GST_WARNING_OBJECT (camera, "was capturing when changing to READY");
@@ -3022,6 +3052,10 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
   }
 
 done:
+  GST_DEBUG_OBJECT (element, "changed state: %s -> %s = %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)),
+      gst_element_state_change_return_get_name (ret));
 
   return ret;
 }
@@ -3128,8 +3162,11 @@ gst_camerabin_user_start (GstCameraBin * camera)
 
   if (camera->active_bin) {
     if (camera->active_bin == camera->imgbin) {
+      GST_INFO_OBJECT (camera, "starting image capture");
       gst_camerabin_start_image_capture (camera);
     } else if (camera->active_bin == camera->vidbin) {
+      GST_INFO_OBJECT (camera,
+          "setting video filename and starting video capture");
       g_object_set (G_OBJECT (camera->active_bin), "filename",
           camera->filename->str, NULL);
       gst_camerabin_start_video_recording (camera);
