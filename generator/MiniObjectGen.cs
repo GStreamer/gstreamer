@@ -312,6 +312,11 @@ namespace GtkSharp.Generation {
 			sw.Close ();
 		}
 
+		public string CallByName (string name, bool owned)
+		{
+			return name + " == null ? IntPtr.Zero : " + name + (owned ? ".OwnedHandle" : ".Handle");
+		}
+
 		public override string FromNative (string var, bool owned)
 		{
 			return "Gst.MiniObject.GetObject(" + var + (owned ? ", true" : "") + ") as " + QualifiedName;
