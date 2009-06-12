@@ -28,8 +28,8 @@
 #include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
 
-#include "gstbitreader.h"
-#include "gstbytereader.h"
+#include <gst/base/gstbitreader.h>
+#include <gst/base/gstbytereader.h>
 
 GST_DEBUG_CATEGORY_STATIC (flacparse_debug);
 #define GST_CAT_DEFAULT flacparse_debug
