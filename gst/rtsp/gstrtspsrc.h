@@ -193,6 +193,7 @@ struct _GstRTSPSrc {
   guint             proxy_port;
   gchar            *proxy_user;
   gchar            *proxy_passwd;
+  guint             rtp_blocksize;
 
   /* state */
   GstRTSPState       state;

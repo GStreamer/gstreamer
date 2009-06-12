@@ -149,6 +149,7 @@ enum
 #define DEFAULT_NAT_METHOD       GST_RTSP_NAT_DUMMY
 #define DEFAULT_DO_RTCP          TRUE
 #define DEFAULT_PROXY            NULL
+#define DEFAULT_RTP_BLOCKSIZE    0
 
 enum
 {
@@ -164,6 +165,7 @@ enum
   PROP_NAT_METHOD,
   PROP_DO_RTCP,
   PROP_PROXY,
+  PROP_RTP_BLOCKSIZE,
   PROP_LAST
 };
 
@@ -239,6 +241,7 @@ static void gst_rtspsrc_loop (GstRTSPSrc * src);
 static void gst_rtspsrc_stream_push_event (GstRTSPSrc * src,
     GstRTSPStream * stream, GstEvent * event);
 static void gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event);
+static gchar *gst_rtspsrc_dup_printf (const gchar * format, ...);
 
 /* commands we send to out loop to notify it of events */
 #define CMD_WAIT	0
@@ -366,6 +369,19 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_param_spec_string ("proxy", "Proxy",
           "Proxy settings for HTTP tunneling. Format: [http://][user:passwd@]host[:port]",
           DEFAULT_PROXY, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  /**
+   * GstRTSPSrc::rtp_blocksize
+   *
+   * RTP package size to suggest to server.
+   *
+   * Since: 0.10.16
+   */
+  g_object_class_install_property (gobject_class, PROP_RTP_BLOCKSIZE,
+      g_param_spec_uint ("rtp-blocksize", "RTP Blocksize",
+          "RTP package size to suggest to server (0 = disabled)",
+          0, 65536, DEFAULT_RTP_BLOCKSIZE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
@@ -542,6 +558,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_PROXY:
       gst_rtspsrc_set_proxy (rtspsrc, g_value_get_string (value));
       break;
+    case PROP_RTP_BLOCKSIZE:
+      rtspsrc->rtp_blocksize = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -606,6 +625,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_take_string (value, str);
       break;
     }
+    case PROP_RTP_BLOCKSIZE:
+      g_value_set_uint (value, rtspsrc->rtp_blocksize);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4074,6 +4096,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   gboolean unsupported_real = FALSE;
   gint rtpport, rtcpport;
   GstRTSPUrl *url;
+  gchar *hval;
 
   url = gst_rtsp_connection_get_url (src->connection);
 
@@ -4160,6 +4183,14 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     /* select transport, copy is made when adding to header so we can free it. */
     gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT, transports);
     g_free (transports);
+
+    /* if the user wants a non default RTP packet size we add the blocksize
+     * parameter */
+    if (src->rtp_blocksize > 0) {
+      hval = gst_rtspsrc_dup_printf ("%d", src->rtp_blocksize);
+      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_BLOCKSIZE, hval);
+      g_free (hval);
+    }
 
     /* handle the code ourselves */
     if ((res = gst_rtspsrc_send (src, &request, &response, &code) < 0))
