@@ -23,6 +23,7 @@
 
 #include "gstfrei0r.h"
 #include "gstfrei0rfilter.h"
+#include "gstfrei0rsrc.h"
 
 #include <string.h>
 
@@ -477,6 +478,8 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
       ret = gst_frei0r_filter_register (plugin, &info, &ftable);
       break;
     case F0R_PLUGIN_TYPE_SOURCE:
+      ret = gst_frei0r_src_register (plugin, &info, &ftable);
+      break;
     case F0R_PLUGIN_TYPE_MIXER2:
     case F0R_PLUGIN_TYPE_MIXER3:
       GST_WARNING
