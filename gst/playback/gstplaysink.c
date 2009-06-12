@@ -2317,12 +2317,12 @@ gst_play_sink_handle_message (GstBin * bin, GstMessage * message)
       GstFormat format;
       guint64 amount;
       gdouble rate;
-      gboolean flush, intermediate, res;
+      gboolean flush, intermediate, res, eos;
       guint64 duration;
 
       GST_INFO_OBJECT (playsink, "Handling step-done message");
       gst_message_parse_step_done (message, &format, &amount, &rate, &flush,
-          &intermediate, &duration);
+          &intermediate, &duration, &eos);
 
       if (format == GST_FORMAT_BUFFERS) {
         /* for the buffer format, we align the other streams */
