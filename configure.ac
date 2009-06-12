@@ -1577,8 +1577,10 @@ dnl po/Makefile.in
 
 AC_CONFIG_FILES(
 Makefile
+common/Makefile
 common/shave
 common/shave-libtool
+common/m4/Makefile
 gst-plugins-bad.spec
 gst/Makefile
 gst/aacparse/Makefile
@@ -1586,8 +1588,6 @@ gst/adpcmdec/Makefile
 gst/aiffparse/Makefile
 gst/amrparse/Makefile
 gst/autoconvert/Makefile
-gst/legacyresample/Makefile
-gst/liveadder/Makefile
 gst/bayer/Makefile
 gst/camerabin/Makefile
 gst/cdxaparse/Makefile
@@ -1601,7 +1601,9 @@ gst/frei0r/Makefile
 gst/h264parse/Makefile
 gst/hdvparse/Makefile
 gst/id3tag/Makefile
+gst/legacyresample/Makefile
 gst/librfb/Makefile
+gst/liveadder/Makefile
 gst/mpegdemux/Makefile
 gst/mpegtsmux/Makefile
 gst/mpegtsmux/tsmux/Makefile
@@ -1614,6 +1616,7 @@ gst/nuvdemux/Makefile
 gst/pcapparse/Makefile
 gst/qtmux/Makefile
 gst/rawparse/Makefile
+gst/real/Makefile
 gst/rtpmanager/Makefile
 gst/rtpmux/Makefile
 gst/scaletempo/Makefile
@@ -1628,7 +1631,6 @@ gst/tta/Makefile
 gst/valve/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile
-gst/real/Makefile
 gst/xdgmime/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
@@ -1652,14 +1654,18 @@ sys/wasapi/Makefile
 sys/wininet/Makefile
 sys/winks/Makefile
 sys/winscreencap/Makefile
+tests/Makefile
+tests/check/Makefile
 tests/examples/Makefile
+tests/examples/camerabin/Makefile
 tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
-tests/examples/shapewipe/Makefile
 tests/examples/scaletempo/Makefile
+tests/examples/shapewipe/Makefile
 tests/examples/switch/Makefile
-ext/amrwb/Makefile
+tests/icles/Makefile
 ext/alsaspdif/Makefile
+ext/amrwb/Makefile
 ext/assrender/Makefile
 ext/apexsink/Makefile
 ext/bz2/Makefile
@@ -1670,7 +1676,6 @@ ext/dirac/Makefile
 ext/directfb/Makefile
 ext/divx/Makefile
 ext/dts/Makefile
-ext/metadata/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
 ext/gsm/Makefile
@@ -1680,7 +1685,7 @@ ext/jp2k/Makefile
 ext/ladspa/Makefile
 ext/libmms/Makefile
 ext/Makefile
-ext/nas/Makefile
+ext/metadata/Makefile
 ext/modplug/Makefile
 ext/mpeg2enc/Makefile
 ext/mimic/Makefile
@@ -1688,6 +1693,7 @@ ext/mplex/Makefile
 ext/musepack/Makefile
 ext/musicbrainz/Makefile
 ext/mythtv/Makefile
+ext/nas/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile
 ext/resindvd/Makefile
@@ -1704,12 +1710,7 @@ docs/Makefile
 docs/plugins/Makefile
 docs/plugins/figures/Makefile
 docs/version.entities
-common/Makefile
-common/m4/Makefile
 m4/Makefile
-tests/Makefile
-tests/check/Makefile
-tests/icles/Makefile
 win32/common/config.h
 )
 AC_OUTPUT

@@ -1,5 +1,5 @@
 if HAVE_GTK
-GTK_EXAMPLES=scaletempo mxf
+GTK_EXAMPLES=camerabin mxf scaletempo
 else
 GTK_EXAMPLES=
 endif
@@ -10,5 +10,5 @@ else
 DIRECTFB_DIR=
 endif
 
-SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) switch shapewipe
-DIST_SUBDIRS= directfb switch scaletempo shapewipe mxf
+SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) shapewipe switch
+DIST_SUBDIRS= directfb mxf scaletempo shapewipe switch
