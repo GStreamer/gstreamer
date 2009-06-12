@@ -26,10 +26,7 @@ def _ (s):
     return s
 
 import sys
-import os
 import os.path
-from operator import add
-from sets import Set
 from bisect import bisect_right, bisect_left
 import logging
 
