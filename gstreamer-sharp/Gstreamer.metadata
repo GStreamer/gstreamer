@@ -1134,6 +1134,7 @@
   <attr path="/api/namespace/object[@cname='GstAppSrc']/method[@cname='gst_app_src_set_callbacks']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstAppSrc']/signal[@cname='push-buffer']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstAppSrc']/signal[@cname='end-of-stream']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/method[@cname='gst_app_src_push_buffer']" name="hidden">1</attr>
 
   <!-- GStreamer Interfaces library -->
   <attr path="/api/namespace/enum[@cname='GstNavigationCommand']" name="name">NavigationCommand</attr>
