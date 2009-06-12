@@ -1281,7 +1281,7 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
   media->id = g_source_attach (media->source, klass->context);
 
-  media->rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
+  media->rtpbin = gst_element_factory_make ("gstrtpbin", NULL);
 
   /* add stuff to the bin */
   gst_bin_add (GST_BIN (media->pipeline), media->rtpbin);
