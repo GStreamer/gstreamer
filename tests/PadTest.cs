@@ -46,14 +46,14 @@ public class PadTest
 
     public static Caps PadGetCapsStub(Pad pad)
     {
-        return Caps.NewFromString("video/x-raw-yuv");
+        return Caps.FromString("video/x-raw-yuv");
     }
 
     [Test]
     public void TestFuncAssigning()
     {
         Pad src = new Pad("src", PadDirection.Src);
-        src.GetcapsFunction = new PadGetCapsFunction(PadGetCapsStub);
+        src.GetCapsFunction = new PadGetCapsFunction(PadGetCapsStub);
 
         Caps caps = src.Caps;
 
@@ -69,8 +69,8 @@ public class PadTest
         Assert.IsNotNull(element);
         Assert.IsFalse(element.Handle == IntPtr.Zero, "Ooops, identity element has null handle");
 
-        Pad src = element.GetPad("src");
-        Pad sink = element.GetPad("sink");
+        Pad src = element.GetStaticPad("src");
+        Pad sink = element.GetStaticPad("sink");
 
         Assert.IsNotNull(src, "Ooops, src pad is null");
         Assert.IsNotNull(sink, "Ooops, sink pad is null");
@@ -92,17 +92,13 @@ public class PadTest
         Assert.IsNotNull(element);
         Assert.IsFalse(element.Handle == IntPtr.Zero, "Ooops, identity element has null handle");
 
-        Assert.AreEqual(2, element.Numpads);
-        Pad [] pads = new Pad [element.Numpads];
-        element.Pads.CopyTo (pads, 0);
-
         bool hassink = false;
         bool hassrc = false;
      
-        for(int i = 0; i < element.Numpads; i++) {
-            if (pads [i].Name == "src") 
+        foreach(Pad pad in element.Pads) {
+            if (pad.Name == "src") 
                 hassrc = true;
-            else if (pads [i].Name == "sink")
+            else if (pad.Name == "sink")
                 hassink = true;
         }
 
@@ -148,7 +144,7 @@ public class PadTest
 		Caps caps = src.AllowedCaps;
 		Assert.IsNull(caps);
 
-		caps = Caps.NewFromString("foo/bar");
+		caps = Caps.FromString("foo/bar");
 
 		src.SetCaps(caps);
 		sink.SetCaps(caps);
@@ -175,13 +171,13 @@ public class PadTest
 		Caps caps = src.AllowedCaps;
 		Assert.IsNull(caps);
 
-		caps = Caps.NewFromString("foo/bar");
+		caps = Caps.FromString("foo/bar");
 		src.SetCaps(caps);
 
 		Gst.Buffer buffer = new Gst.Buffer();
 		Assert.AreEqual(src.Push(buffer), FlowReturn.NotLinked);
 
-		ulong handler_id = src.AddBufferProbe(new Pad.BufferProbeDelegate(ProbeHandler));
+		ulong handler_id = src.AddBufferProbe(new PadBufferProbeCallback(ProbeHandler));
 		buffer = new Gst.Buffer();
 		Assert.AreEqual(src.Push(buffer), FlowReturn.Ok);
 	}

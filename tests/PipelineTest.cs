@@ -11,6 +11,7 @@ using System;
 using NUnit.Framework;
 
 using Gst;
+using Gst.CorePlugins;
 
 [TestFixture]
 public class PipelineTest 
@@ -44,7 +45,7 @@ public class PipelineTest
 		Element sink = ElementFactory.Make("fakesink", null);
 
 		Bin bin = (Bin) pipeline;
-		bin.AddMany(src, sink);
+		bin.Add(src, sink);
 		src.Link(sink);
 
 		Assert.AreEqual(((Element)pipeline).SetState(State.Ready), StateChangeReturn.Success);
@@ -61,7 +62,7 @@ public class PipelineTest
 		Element sink = ElementFactory.Make("fakesink", null);
 
 		Bin bin = (Bin) pipeline;
-		bin.AddMany(src, sink);
+		bin.Add(src, sink);
 		src.Link(sink);
 
 		Bus bus = pipeline.Bus;
@@ -118,7 +119,7 @@ public class PipelineTest
 		Assert.IsNotNull(sink, "Could not create fakesink");
 		
 		Bin bin = (Bin) pipeline;
-		bin.AddMany(src, sink);
+		bin.Add(src, sink);
 		Assert.IsTrue(src.Link(sink), "Could not link between src and sink");
 		
 		Assert.AreEqual(pipeline.SetState(State.Playing), StateChangeReturn.Async);
@@ -135,17 +136,17 @@ public class PipelineTest
 	[Test]
 	public void TestBaseTime() {
 		Element pipeline = ElementFactory.Make("pipeline", "pipeline");
-		Element fakesrc = ElementFactory.Make("fakesrc", "fakesrc");
-		Element fakesink = ElementFactory.Make("fakesink", "fakesink");
+		FakeSrc fakesrc = FakeSrc.Make("fakesrc");
+		FakeSink fakesink = FakeSink.Make("fakesink");
 
 		Assert.IsNotNull(pipeline, "Could not create pipeline");
 		Assert.IsNotNull(fakesrc, "Could not create fakesrc");
 		Assert.IsNotNull(fakesink, "Could not create fakesink");
 		
-		fakesrc.SetProperty("is-live", true);
+		fakesrc.IsLive = true;
 
 		Bin bin = (Bin) pipeline;
-		bin.AddMany(fakesrc, fakesink);
+		bin.Add(fakesrc, fakesink);
 		Assert.IsTrue(fakesrc.Link(fakesink));
 
 		Pad sink = fakesink.GetPad("sink");

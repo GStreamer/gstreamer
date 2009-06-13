@@ -25,12 +25,12 @@ public class MessageTest {
 	[Test]
 	public void TestParsing()
 	{
-		Message message = new Message(null);
+		Message message = Message.NewEos(null);
 		Assert.IsNotNull(message);
 		Assert.AreEqual(message.Type, MessageType.Eos);
 		Assert.IsNull(message.Src);
 
-		message = new Message(null, "error string");
+		message = Message.NewError(null, CoreError.TooLazy);
 		Assert.IsNotNull(message);
 		Assert.AreEqual(message.Type, MessageType.Error);
 		Assert.IsNull(message.Src);

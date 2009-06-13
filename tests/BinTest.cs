@@ -29,17 +29,17 @@ public class BinTest
     }
 
     [Test]
-    public void TestAddMany()
+    public void TestAdd()
     {
         Bin bin = new Bin("test-bin");
         Element e1 = ElementFactory.Make("fakesrc", "fakesrc");
         Element e2 = ElementFactory.Make("fakesink", "fakesink");
 
-		Assert.IsNotNull(bin, "Could not create bin");
-		Assert.IsNotNull(e1, "Could not create fakesrc");
-		Assert.IsNotNull(e2, "Could not create fakesink");
+        Assert.IsNotNull(bin, "Could not create bin");
+        Assert.IsNotNull(e1, "Could not create fakesrc");
+        Assert.IsNotNull(e2, "Could not create fakesink");
 
-        bin.AddMany(e1, e2);
+        bin.Add(e1, e2);
         
         Assert.AreEqual(bin.ChildrenCount, 2);
     }
@@ -75,10 +75,9 @@ public class BinTest
         }
       
         Assert.AreEqual(elements.Length, bin.ChildrenCount);
-        Element [] children = bin.Children;
      
-        for(int i = 0; i < elements.Length; i++) {
-            Assert.AreEqual(elements[elements.Length - i - 1], children[i]);
+        for(uint i = 0; i < elements.Length; i++) {
+            Assert.AreEqual(elements[elements.Length - i - 1], bin.GetChildByIndex(i));
         }
     }
 
