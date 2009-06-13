@@ -91,24 +91,6 @@ public class PipelineTest
 		pipeline.Dispose();
 	}
 
-	[Test]
-	public void TestGetBus()
-	{
-		Pipeline pipeline = new Pipeline(String.Empty);
-		Assert.IsNotNull(pipeline, "Could not create pipeline");
-
-		Assert.AreEqual(pipeline.Refcount, 1, "Refcount is not 1, it is " + pipeline.Refcount);
-
-		Bus bus = pipeline.Bus;
-		Assert.AreEqual(pipeline.Refcount, 1, "Refcount after .Bus");
-		Assert.AreEqual(bus.Refcount, 2, "bus.Refcount != 2, it is " + bus.Refcount);
-
-		pipeline.Dispose();
-
-		Assert.AreEqual(bus.Refcount, 1, "bus after unref pipeline");
-		bus.Dispose();
-	}
-
 	Element pipeline;
 	GLib.MainLoop loop;
 
@@ -148,14 +130,6 @@ public class PipelineTest
 		bin.AddMany(src, sink);
 		Assert.IsTrue(src.Link(sink), "Could not link between src and sink");
 		
-		Bus bus = ((Pipeline)pipeline).Bus;
-		Assert.AreEqual(pipeline.Refcount, 1, "pipeline's refcount after .Bus");
-		Assert.AreEqual(bus.Refcount, 2, "bus");
-
-		uint id = bus.AddWatch(new BusFunc(MessageReceived));
-		Assert.AreEqual(pipeline.Refcount, 1, "pipeline after AddWatch");
-		Assert.AreEqual(bus.Refcount, 3, "bus after add_watch");
-		
 		Assert.AreEqual(pipeline.SetState(State.Playing), StateChangeReturn.Async);
 
 		loop = new GLib.MainLoop();
@@ -166,11 +140,7 @@ public class PipelineTest
 		Assert.AreEqual(pipeline.GetState(out current, out pending, Clock.TimeNone), StateChangeReturn.Success);
 		Assert.AreEqual(current, State.Null, "state is not NULL but " + current);
 		
-		Assert.AreEqual(pipeline.Refcount, 1, "pipeline at start of cleanup");
-		Assert.AreEqual(bus.Refcount, 3, "bus at start of cleanup");
-
 		pipeline.Dispose();
-		bus.Dispose();
 	}
 
 	[Test]

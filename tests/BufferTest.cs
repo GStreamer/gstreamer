@@ -22,37 +22,7 @@ public class BufferTest {
 	{
 		Application.Deinit();
 	}
-/*
-	[Test]
-	public void TestCaps() 
-	{
-		Gst.Buffer buffer = new Gst.Buffer(4);
-		Caps caps = Caps.FromString("audio/x-raw-int");
-		Assert.AreEqual(caps.Refcount, 1, "caps");
-		Assert.IsNull(buffer.Caps, "buffer.Caps is null???");
 
-		buffer.Caps = caps;
-		Assert.AreEqual(caps.Refcount, 2, "caps");
-
-		Caps caps2 = Caps.FromString("audio/x-raw-float");
-		Assert.AreEqual(caps2.Refcount, 1, "caps2");
-
-		buffer.Caps = caps2;
-		Assert.AreEqual(caps.Refcount, 1, "caps");
-		Assert.AreEqual(caps2.Refcount, 1, "caps2");
-
-		buffer.Caps = null;
-		Assert.AreEqual(caps.Refcount, 1, "caps");
-		Assert.AreEqual(caps2.Refcount, 1, "caps2");
-
-		buffer.Caps = caps2;
-		Assert.AreEqual(caps2.Refcount, 2, "caps2");
-		buffer.Dispose();
-		Assert.AreEqual(caps2.Refcount, 1, "caps2");
-		caps.Dispose();
-		caps2.Dispose();
-	}
-*/
 	[Test]
 	public void TestSubbuffer() 
 	{
@@ -60,8 +30,6 @@ public class BufferTest {
 		Gst.Buffer sub = buffer.CreateSub(1, 2);
 		Assert.IsNotNull(sub);
 		Assert.AreEqual(sub.Size, 2, "subbuffer has wrong size");
-		//Assert.AreEqual(buffer.Refcount, 2, "parent");
-		//Assert.AreEqual(sub.Refcount, 1, "subbuffer");
 
 		//sub.Dispose();
 		buffer.Dispose();
