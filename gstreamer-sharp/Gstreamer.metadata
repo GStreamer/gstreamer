@@ -299,8 +299,8 @@
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_found_tags']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_found_tags_for_pad']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_message_full']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_post_message']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_send_event']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_post_message']/parameters/parameter[@name='message']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_send_event']/parameters/parameter[@name='event']" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_seek_simple']" name="name">Seek</attr>
   <remove-attr path="/api/namespace/object[@name='Element']/field[@name='CurrentState']" name="hidden"/>
   <move-node path="/api/namespace/object[@name='Element']/method[@cname='gst_element_make_from_uri']">/api/namespace/object[@name='ElementFactory']</move-node>
@@ -598,11 +598,12 @@
       </parameters>
     </callback>
   </add-node>
-  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_push']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_push_event']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_send_event']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_event_default']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_chain']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_chain']/parameters/parameter[@name='buffer']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_push']/parameters/parameter[@name='buffer']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_push_event']/parameters/parameter[@name='event']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_send_event']/parameters/parameter[@name='event']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_event_default']/parameters/parameter[@name='event']" name="owned">true</attr>
   <remove-attr path="/api/namespace/object[@name='Pad']/field[@cname='mode']" name="hidden" />
   <attr path="/api/namespace/object[@name='Pad']/field[@cname='mode']" name="access">public</attr>
   <attr path="/api/namespace/object[@name='Pad']/field[@cname='mode']" name="readable">true</attr>

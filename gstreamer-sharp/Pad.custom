@@ -229,26 +229,6 @@ public Gst.PadActivateModeFunction ActivatePushFunction {
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
-static extern int gst_pad_push (IntPtr raw, IntPtr buffer);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_mini_object_ref (IntPtr raw);
-
-public Gst.FlowReturn Push (Gst.Buffer buffer) {
-  int raw_ret = gst_pad_push (Handle, buffer == null ? IntPtr.Zero : gst_mini_object_ref (buffer.Handle));
-  Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
-  return ret;
-}
-
-[DllImport("libgstreamer-0.10.dll") ]
-static extern bool gst_pad_push_event (IntPtr raw, IntPtr evnt);
-
-public bool PushEvent (Gst.Event evnt) {
-  bool raw_ret = gst_pad_push_event (Handle, evnt == null ? IntPtr.Zero : gst_mini_object_ref (evnt.Handle));
-  bool ret = raw_ret;
-  return ret;
-}
-
-[DllImport("libgstreamer-0.10.dll") ]
 static extern int gst_pad_pull_range (IntPtr raw, ulong offset, uint size, out IntPtr buffer);
 
 public Gst.FlowReturn PullRange (ulong offset, uint size, out Gst.Buffer buffer) {
@@ -258,24 +238,6 @@ public Gst.FlowReturn PullRange (ulong offset, uint size, out Gst.Buffer buffer)
   buffer = native_buffer == IntPtr.Zero ? null : (Gst.Buffer) Gst.MiniObject.GetObject (native_buffer, true);
   return ret;
 
-}
-
-[DllImport("libgstreamer-0.10.dll") ]
-static extern bool gst_pad_send_event (IntPtr raw, IntPtr evnt);
-
-public bool SendEvent (Gst.Event evnt) {
-  bool raw_ret = gst_pad_send_event (Handle, evnt == null ? IntPtr.Zero : gst_mini_object_ref (evnt.Handle));
-  bool ret = raw_ret;
-  return ret;
-}
-
-[DllImport("libgstreamer-0.10.dll") ]
-static extern bool gst_pad_event_default (IntPtr raw, IntPtr evnt);
-
-public bool EventDefault (Gst.Event evnt) {
-  bool raw_ret = gst_pad_event_default (Handle, evnt == null ? IntPtr.Zero : gst_mini_object_ref (evnt.Handle));
-  bool ret = raw_ret;
-  return ret;
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
@@ -354,15 +316,6 @@ static Gst.QueryType[] GetQueryTypesDefault (Gst.Pad pad) {
   }
 
   return (Gst.QueryType[]) result.ToArray (typeof (Gst.QueryType));
-}
-
-[DllImport("libgstreamer-0.10.dll") ]
-static extern int gst_pad_chain (IntPtr raw, IntPtr buffer);
-
-public Gst.FlowReturn Chain (Gst.Buffer buffer) {
-  int raw_ret = gst_pad_chain (Handle, buffer == null ? IntPtr.Zero : gst_mini_object_ref (buffer.Handle));
-  Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
-  return ret;
 }
 
 [DllImport ("gstreamersharpglue-0.10.dll") ]

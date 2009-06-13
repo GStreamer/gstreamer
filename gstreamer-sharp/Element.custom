@@ -72,17 +72,6 @@ public void FoundTagsForPad (Gst.Pad pad, Gst.TagList list) {
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
-static extern bool gst_element_post_message (IntPtr raw, IntPtr message);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_mini_object_ref (IntPtr raw);
-
-public bool PostMessage (Gst.Message message) {
-  bool raw_ret = gst_element_post_message (Handle, message == null ? IntPtr.Zero : gst_mini_object_ref (message.Handle));
-  bool ret = raw_ret;
-  return ret;
-}
-
-[DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_element_get_query_types (IntPtr raw);
 
 public Gst.QueryType[] GetQueryTypes () {
@@ -104,16 +93,6 @@ public Gst.QueryType[] GetQueryTypes () {
   }
 
   return (Gst.QueryType[]) result.ToArray (typeof (Gst.QueryType));
-}
-
-
-[DllImport("libgstreamer-0.10.dll") ]
-static extern bool gst_element_send_event (IntPtr raw, IntPtr evnt);
-
-public bool SendEvent (Gst.Event evnt) {
-  bool raw_ret = gst_element_send_event (Handle, evnt == null ? IntPtr.Zero : gst_mini_object_ref (evnt.Handle));
-  bool ret = raw_ret;
-  return ret;
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
