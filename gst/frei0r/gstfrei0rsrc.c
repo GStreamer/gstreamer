@@ -26,6 +26,9 @@
 #include "gstfrei0r.h"
 #include "gstfrei0rsrc.h"
 
+GST_DEBUG_CATEGORY_EXTERN (frei0r_debug);
+#define GST_CAT_DEFAULT frei0r_debug
+
 typedef struct
 {
   f0r_plugin_info_t info;
@@ -142,6 +145,20 @@ gst_frei0r_src_start (GstBaseSrc * basesrc)
   GstFrei0rSrc *self = GST_FREI0R_SRC (basesrc);
 
   self->n_frames = 0;
+
+  return TRUE;
+}
+
+static gboolean
+gst_frei0r_src_stop (GstBaseSrc * basesrc)
+{
+  GstFrei0rSrc *self = GST_FREI0R_SRC (basesrc);
+  GstFrei0rSrcClass *klass = GST_FREI0R_SRC_GET_CLASS (basesrc);
+
+  if (self->f0r_instance) {
+    klass->ftable->destruct (self->f0r_instance);
+    self->f0r_instance = NULL;
+  }
 
   return TRUE;
 }
@@ -346,6 +363,7 @@ gst_frei0r_src_class_init (GstFrei0rSrcClass * klass,
   gstbasesrc_class->query = gst_frei0r_src_query;
   gstbasesrc_class->get_times = gst_frei0r_src_get_times;
   gstbasesrc_class->start = gst_frei0r_src_start;
+  gstbasesrc_class->stop = gst_frei0r_src_stop;
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_frei0r_src_create);
 }
