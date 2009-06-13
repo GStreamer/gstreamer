@@ -30,7 +30,7 @@ namespace Gst {
 		public weak Gst.Element fakesink;
 		public uint id;
 		public bool is_live;
-		public weak Gst.Element pipeline;
+		public Gst.Element pipeline;
 		public bool prepared;
 		public weak Gst.RTSPTimeRange range;
 		public bool reused;
@@ -48,6 +48,7 @@ namespace Gst {
 		[CCode (has_construct_function = false)]
 		public RTSPMedia ();
 		public bool prepare ();
+		public void remove_elements ();
 		public bool seek (Gst.RTSPTimeRange range);
 		public void set_reusable (bool reusable);
 		public void set_shared (bool shared);

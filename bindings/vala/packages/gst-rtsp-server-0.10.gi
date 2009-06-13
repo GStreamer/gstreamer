@@ -237,6 +237,12 @@
 					<parameter name="media" type="GstRTSPMedia*"/>
 				</parameters>
 			</method>
+			<method name="remove_elements" symbol="gst_rtsp_media_remove_elements">
+				<return-type type="void"/>
+				<parameters>
+					<parameter name="media" type="GstRTSPMedia*"/>
+				</parameters>
+			</method>
 			<method name="seek" symbol="gst_rtsp_media_seek">
 				<return-type type="gboolean"/>
 				<parameters>
