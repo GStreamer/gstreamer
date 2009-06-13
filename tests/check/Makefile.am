@@ -38,6 +38,12 @@ else
 check_annodex = 
 endif
 
+if USE_FLAC
+check_flac = pipelines/flacdec
+else
+check_flac =
+endif
+
 if USE_GDK_PIXBUF
 check_gdkpixbuf = elements/gdkpixbufsink
 else
@@ -109,7 +115,7 @@ check_PROGRAMS = \
 	elements/videofilter \
 	elements/y4menc \
 	pipelines/simple-launch-lines \
-	pipelines/flacdec \
+	$(check_flac) \
 	$(check_gdkpixbuf) \
 	$(check_soup) \
 	$(check_sunaudio) \
