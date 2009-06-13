@@ -991,7 +991,7 @@
   <attr path="/api/namespace/callback[@cname='GstTypeFindHelperGetRangeFunction']/parameters/parameter[@name='buffer']" name="pass_as">out</attr>
   <attr path="/api/namespace/callback[@cname='GstTypeFindHelperGetRangeFunction']/parameters/parameter[@name='buffer']" name="owned">true</attr>
 
-  <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_push']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_push']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_peek']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_copy']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_take']" name="hidden">1</attr>
@@ -1135,7 +1135,7 @@
   <attr path="/api/namespace/object[@cname='GstAppSrc']/method[@cname='gst_app_src_set_callbacks']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstAppSrc']/signal[@cname='push-buffer']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstAppSrc']/signal[@cname='end-of-stream']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@cname='GstAppSrc']/method[@cname='gst_app_src_push_buffer']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSrc']/method[@cname='gst_app_src_push_buffer']/parameters/parameter[@name='buffer']" name="owned">true</attr>
 
   <!-- GStreamer Interfaces library -->
   <attr path="/api/namespace/enum[@cname='GstNavigationCommand']" name="name">NavigationCommand</attr>

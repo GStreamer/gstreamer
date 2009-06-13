@@ -12,12 +12,3 @@ public AppSrc (string name) : base (IntPtr.Zero) {
 }
 
 public AppSrc () : this ( (string) null) { }
-
-[DllImport ("libgstapp-0.10.dll") ]
-static extern int gst_app_src_push_buffer (IntPtr raw, IntPtr buffer);
-
-public Gst.FlowReturn PushBuffer (Gst.Buffer buffer) {
-  int raw_ret = gst_app_src_push_buffer (Handle, buffer == null ? IntPtr.Zero : buffer.OwnedHandle);
-  Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
-  return ret;
-}
