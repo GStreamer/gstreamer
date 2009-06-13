@@ -244,6 +244,8 @@ GstFlowReturn         gst_rtsp_media_stream_rtcp      (GstRTSPMediaStream *strea
 
 gboolean              gst_rtsp_media_set_state        (GstRTSPMedia *media, GstState state, GArray *trans);
 
+void                  gst_rtsp_media_remove_elements  (GstRTSPMedia *media);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_MEDIA_H__ */

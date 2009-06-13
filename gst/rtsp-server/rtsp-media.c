@@ -142,13 +142,13 @@ gst_rtsp_media_finalize (GObject * obj)
   media = GST_RTSP_MEDIA (obj);
 
   g_message ("finalize media %p", media);
-
+/*
   if (media->pipeline) {
     unlock_streams (media);
     gst_element_set_state (media->pipeline, GST_STATE_NULL);
     gst_object_unref (media->pipeline);
   }
-
+*/
   for (i = 0; i < media->streams->len; i++) {
     GstRTSPMediaStream *stream;
 
@@ -1543,5 +1543,55 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
     collect_media_stats (media);
 
   return TRUE;
+}
+
+void
+gst_rtsp_media_remove_elements (GstRTSPMedia *media)
+{
+  gint i;
+
+  unlock_streams (media);
+  
+  for (i = 0; i < media->streams->len; i++) {
+    GstRTSPMediaStream *stream;
+    
+    g_message ("Removing elements of stream %d from pipeline", i);
+
+    stream = g_array_index (media->streams, GstRTSPMediaStream *, i);
+    
+    gst_pad_unlink (stream->srcpad, stream->send_rtp_sink);
+    
+    gst_element_set_state (stream->udpsrc[0], GST_STATE_NULL);
+    gst_element_set_state (stream->udpsrc[1], GST_STATE_NULL);
+    gst_element_set_state (stream->udpsink[0], GST_STATE_NULL);
+    gst_element_set_state (stream->udpsink[1], GST_STATE_NULL);
+    gst_element_set_state (stream->appsrc[0], GST_STATE_NULL);
+    gst_element_set_state (stream->appsrc[1], GST_STATE_NULL);
+    gst_element_set_state (stream->appsink[0], GST_STATE_NULL);
+    gst_element_set_state (stream->appsink[1], GST_STATE_NULL);
+    gst_element_set_state (stream->tee[0], GST_STATE_NULL);
+    gst_element_set_state (stream->tee[1], GST_STATE_NULL);
+    gst_element_set_state (stream->selector[0], GST_STATE_NULL);
+    gst_element_set_state (stream->selector[1], GST_STATE_NULL);
+    
+    gst_bin_remove (GST_BIN (media->pipeline), stream->udpsrc[0]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->udpsrc[1]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->udpsink[0]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->udpsink[1]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->appsrc[0]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->appsrc[1]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->appsink[0]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->appsink[1]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->tee[0]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->tee[1]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->selector[0]);
+    gst_bin_remove (GST_BIN (media->pipeline), stream->selector[1]);
+
+    gst_rtsp_media_stream_free (stream);
+  }
+  g_array_remove_range (media->streams, 0, media->streams->len);
+  
+  gst_element_set_state (media->rtpbin, GST_STATE_NULL);
+  gst_bin_remove (GST_BIN (media->pipeline), media->rtpbin);
 }
 
