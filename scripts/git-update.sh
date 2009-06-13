@@ -8,21 +8,48 @@
 
 FAILURE=
 
-for m in \
-  gstreamer gst-plugins-base \
-  gst-plugins-good gst-plugins-ugly gst-plugins-bad \
-  gst-ffmpeg \
-  gst-python \
-  ; do
+MODULES="\
+    gstreamer gst-plugins-base \
+    gst-plugins-good gst-plugins-ugly gst-plugins-bad \
+    gst-ffmpeg \
+    gst-python \
+    gnonlin"
+
+for m in $MODULES; do
   if test -d $m; then
+    echo "+ updating $m"
     cd $m
-    cvs update -dP
+
+    git pull origin master
+    if test $? -ne 0
+    then
+      git stash
+      git pull origin master
+      if test $? -ne 0
+      then 
+        git stash apply
+        FAILURE="$FAILURE$m: update\n"
+      else
+        git stash apply
+      fi
+      cd ..
+      continue
+    fi
+    git submodule update
     if test $? -ne 0
     then
       FAILURE="$FAILURE$m: update\n"
       cd ..
       continue
     fi
+    cd ..
+  fi
+done
+
+# then build
+for m in $MODULES; do
+  if test -d $m; then
+    cd $m
     if test ! -e Makefile
     then
       ./autoregen.sh
