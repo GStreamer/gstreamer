@@ -60,6 +60,10 @@ gst_frei0r_mixer_finalize (GObject * object)
         klass->n_properties);
   self->property_cache = NULL;
 
+  if (self->collect)
+    gst_object_unref (self->collect);
+  self->collect = NULL;
+
   G_OBJECT_CLASS (g_type_class_peek_parent (klass))->finalize (object);
 }
 
