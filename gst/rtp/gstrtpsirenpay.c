@@ -125,7 +125,7 @@ gst_rtpsirenpay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
     goto wrong_dct;
 
   payload_name = gst_structure_get_name (structure);
-  if (g_strcasecmp ("audio/x-siren", payload_name))
+  if (g_ascii_strcasecmp ("audio/x-siren", payload_name))
     goto wrong_caps;
 
   gst_basertppayload_set_options (basertppayload, "audio", TRUE, "SIREN",
