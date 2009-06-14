@@ -1834,8 +1834,12 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
   gst_element_no_more_pads (GST_ELEMENT (ogg));
 
   /* FIXME, must be sent from the streaming thread */
-  if (event)
+  if (event) {
     gst_ogg_demux_send_event (ogg, event);
+
+    gst_element_found_tags (GST_ELEMENT_CAST (ogg),
+        gst_tag_list_new_full (GST_TAG_CONTAINER_FORMAT, "Ogg", NULL));
+  }
 
   GST_DEBUG_OBJECT (ogg, "starting chain");
 
@@ -2957,7 +2961,7 @@ gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
       GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
       gst_event_ref (event);
-      GST_DEBUG_OBJECT (ogg, "Pushing event on pad %p", pad);
+      GST_DEBUG_OBJECT (pad, "Pushing event %" GST_PTR_FORMAT, event);
       gst_pad_push_event (GST_PAD (pad), event);
     }
   }

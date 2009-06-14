@@ -721,6 +721,18 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       }
       break;
     }
+    case GST_EVENT_TAG:
+    {
+      if (dec->have_header)
+        /* and forward */
+        ret = gst_pad_push_event (dec->srcpad, event);
+      else {
+        /* store it to send once we're initialized */
+        dec->pendingevents = g_list_append (dec->pendingevents, event);
+        ret = TRUE;
+      }
+      break;
+    }
     default:
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
