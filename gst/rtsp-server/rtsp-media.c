@@ -142,13 +142,13 @@ gst_rtsp_media_finalize (GObject * obj)
   media = GST_RTSP_MEDIA (obj);
 
   g_message ("finalize media %p", media);
-/*
+
   if (media->pipeline) {
     unlock_streams (media);
     gst_element_set_state (media->pipeline, GST_STATE_NULL);
     gst_object_unref (media->pipeline);
   }
-*/
+
   for (i = 0; i < media->streams->len; i++) {
     GstRTSPMediaStream *stream;
 
@@ -1576,11 +1576,15 @@ gst_rtsp_media_remove_elements (GstRTSPMedia *media)
       gst_bin_remove (GST_BIN (media->pipeline), stream->tee[j]);
       gst_bin_remove (GST_BIN (media->pipeline), stream->selector[j]);
     }
+    stream->caps = NULL;
     gst_rtsp_media_stream_free (stream);
   }
   g_array_remove_range (media->streams, 0, media->streams->len);
   
   gst_element_set_state (media->rtpbin, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (media->pipeline), media->rtpbin);
+
+  gst_object_unref (media->pipeline);
+  media->pipeline = NULL;
 }
 
