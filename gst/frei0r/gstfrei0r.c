@@ -24,10 +24,11 @@
 #include "gstfrei0r.h"
 #include "gstfrei0rfilter.h"
 #include "gstfrei0rsrc.h"
+#include "gstfrei0rmixer.h"
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (frei0r_debug);
+GST_DEBUG_CATEGORY (frei0r_debug);
 #define GST_CAT_DEFAULT frei0r_debug
 
 GstCaps *
@@ -455,8 +456,10 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
     goto invalid_frei0r_plugin;
 
   /* One of these must exist */
-  if (!g_module_symbol (module, "f0r_update", (gpointer *) & ftable.update) &&
-      !g_module_symbol (module, "f0r_update2", (gpointer *) & ftable.update2))
+  g_module_symbol (module, "f0r_update", (gpointer *) & ftable.update);
+  g_module_symbol (module, "f0r_update2", (gpointer *) & ftable.update2);
+
+  if (!ftable.update && !ftable.update2)
     goto invalid_frei0r_plugin;
 
   ftable.get_plugin_info (&info);
@@ -482,9 +485,7 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
       break;
     case F0R_PLUGIN_TYPE_MIXER2:
     case F0R_PLUGIN_TYPE_MIXER3:
-      GST_WARNING
-          ("Source, Mixer2 and Mixer3 frei0r plugins not supported yet");
-      g_module_close (module);
+      ret = gst_frei0r_mixer_register (plugin, &info, &ftable);
       break;
     default:
       break;

@@ -26,6 +26,9 @@
 #include "gstfrei0r.h"
 #include "gstfrei0rfilter.h"
 
+GST_DEBUG_CATEGORY_EXTERN (frei0r_debug);
+#define GST_CAT_DEFAULT frei0r_debug
+
 typedef struct
 {
   f0r_plugin_info_t info;
