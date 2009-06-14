@@ -230,7 +230,7 @@ best_overlap_offset_s16 (GstScaletempo * scaletempo)
     ppc = p->buf_pre_corr;
     ppc += p->samples_overlap - p->samples_per_frame;
     ps += p->samples_overlap - p->samples_per_frame;
-    i = -(p->samples_overlap - p->samples_per_frame);
+    i = -((glong) p->samples_overlap - (glong) p->samples_per_frame);
     do {
       corr += ppc[i + 0] * ps[i + 0];
       corr += ppc[i + 1] * ps[i + 1];
