@@ -386,6 +386,7 @@ gst_frei0r_src_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
   GType type;
   gchar *type_name, *tmp;
   GstFrei0rSrcClassData *class_data;
+  gboolean ret = FALSE;
 
   tmp = g_strdup_printf ("frei0r-src-%s", info->name);
   type_name = g_ascii_strdown (tmp, -1);
@@ -408,5 +409,8 @@ gst_frei0r_src_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
   typeinfo.class_data = class_data;
 
   type = g_type_register_static (GST_TYPE_PUSH_SRC, type_name, &typeinfo, 0);
-  return (gst_element_register (plugin, type_name, GST_RANK_NONE, type));
+  ret = gst_element_register (plugin, type_name, GST_RANK_NONE, type);
+
+  g_free (type_name);
+  return ret;
 }
