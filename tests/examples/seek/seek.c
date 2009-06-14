@@ -1423,7 +1423,7 @@ start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
   }
 
   if (changed_id == 0 && flush_seek && scrub) {
-    changed_id = gtk_signal_connect (GTK_OBJECT (hscale),
+    changed_id = g_signal_connect (GTK_OBJECT (hscale),
         "value_changed", G_CALLBACK (seek_cb), pipeline);
   }
 
@@ -2552,7 +2552,6 @@ main (int argc, char **argv)
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox;
   GtkWidget *rate_label, *volume_label;
-  GtkTooltips *tips;
   GOptionEntry options[] = {
     {"stats", 's', 0, G_OPTION_ARG_NONE, &stats,
         "Show pad stats", NULL},
@@ -2612,7 +2611,6 @@ main (int argc, char **argv)
   g_assert (pipeline);
 
   /* initialize gui elements ... */
-  tips = gtk_tooltips_new ();
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   video_window = gtk_drawing_area_new ();
   g_signal_connect (G_OBJECT (video_window), "expose-event",
@@ -2643,23 +2641,18 @@ main (int argc, char **argv)
   gtk_spin_button_set_digits (GTK_SPIN_BUTTON (rate_spinbutton), 3);
   rate_label = gtk_label_new ("Rate");
 
-  gtk_tooltips_set_tip (tips, accurate_checkbox,
-      "accurate position is requested, this might be considerably slower for some formats",
-      NULL);
-  gtk_tooltips_set_tip (tips, key_checkbox,
-      "seek to the nearest keyframe. This might be faster but less accurate",
-      NULL);
-  gtk_tooltips_set_tip (tips, loop_checkbox, "loop playback", NULL);
-  gtk_tooltips_set_tip (tips, flush_checkbox, "flush pipeline after seeking",
-      NULL);
-  gtk_tooltips_set_tip (tips, rate_spinbutton, "define the playback rate, "
-      "negative value trigger reverse playback", NULL);
-  gtk_tooltips_set_tip (tips, scrub_checkbox, "show images while seeking",
-      NULL);
-  gtk_tooltips_set_tip (tips, play_scrub_checkbox, "play video while seeking",
-      NULL);
-  gtk_tooltips_set_tip (tips, skip_checkbox,
-      "Skip frames while playing at high frame rates", NULL);
+  gtk_widget_set_tooltip_text (accurate_checkbox,
+      "accurate position is requested, this might be considerably slower for some formats");
+  gtk_widget_set_tooltip_text (key_checkbox,
+      "seek to the nearest keyframe. This might be faster but less accurate");
+  gtk_widget_set_tooltip_text (loop_checkbox, "loop playback");
+  gtk_widget_set_tooltip_text (flush_checkbox, "flush pipeline after seeking");
+  gtk_widget_set_tooltip_text (rate_spinbutton, "define the playback rate, "
+      "negative value trigger reverse playback");
+  gtk_widget_set_tooltip_text (scrub_checkbox, "show images while seeking");
+  gtk_widget_set_tooltip_text (play_scrub_checkbox, "play video while seeking");
+  gtk_widget_set_tooltip_text (skip_checkbox,
+      "Skip frames while playing at high frame rates");
 
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (flush_checkbox), TRUE);
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scrub_checkbox), TRUE);
@@ -2733,11 +2726,11 @@ main (int argc, char **argv)
 #endif
   gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
-  gtk_signal_connect (GTK_OBJECT (hscale),
+  g_signal_connect (GTK_OBJECT (hscale),
       "button_press_event", G_CALLBACK (start_seek), pipeline);
-  gtk_signal_connect (GTK_OBJECT (hscale),
+  g_signal_connect (GTK_OBJECT (hscale),
       "button_release_event", G_CALLBACK (stop_seek), pipeline);
-  gtk_signal_connect (GTK_OBJECT (hscale),
+  g_signal_connect (GTK_OBJECT (hscale),
       "format_value", G_CALLBACK (format_value), pipeline);
 
   if (pipeline_type == 16) {
@@ -2795,8 +2788,8 @@ main (int argc, char **argv)
     /* playbin2 panel for snapshot */
     boxes2 = gtk_hbox_new (FALSE, 0);
     shot_button = gtk_button_new_from_stock (GTK_STOCK_SAVE);
-    gtk_tooltips_set_tip (tips, shot_button,
-        "save a screenshot .png in the current directory", NULL);
+    gtk_widget_set_tooltip_text (shot_button,
+        "save a screenshot .png in the current directory");
     g_signal_connect (G_OBJECT (shot_button), "clicked", G_CALLBACK (shot_cb),
         pipeline);
     vis_combo = gtk_combo_box_new_text ();

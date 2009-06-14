@@ -152,7 +152,7 @@ static gboolean
 start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 {
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  gtk_timeout_remove (update_id);
+  g_timeout_remove (update_id);
 
   return FALSE;
 }
@@ -181,7 +181,7 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   update_id =
-      gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+      g_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
 
   return FALSE;
 }
@@ -195,7 +195,7 @@ play_cb (GtkButton * button, gpointer data)
   if (state != GST_STATE_PLAYING) {
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     update_id =
-        gtk_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+        g_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
   }
 }
 
@@ -207,7 +207,7 @@ pause_cb (GtkButton * button, gpointer data)
   gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
   if (state != GST_STATE_PAUSED) {
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    gtk_timeout_remove (update_id);
+    g_timeout_remove (update_id);
   }
 }
 
@@ -219,7 +219,7 @@ stop_cb (GtkButton * button, gpointer data)
   gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
   if (state != GST_STATE_READY) {
     gst_element_set_state (pipeline, GST_STATE_READY);
-    gtk_timeout_remove (update_id);
+    g_timeout_remove (update_id);
   }
 }
 
@@ -256,11 +256,11 @@ main (int argc, char **argv)
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
   gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
-  gtk_signal_connect (GTK_OBJECT (hscale),
+  g_signal_connect (GTK_OBJECT (hscale),
       "button_press_event", G_CALLBACK (start_seek), pipeline);
-  gtk_signal_connect (GTK_OBJECT (hscale),
+  g_signal_connect (GTK_OBJECT (hscale),
       "button_release_event", G_CALLBACK (stop_seek), pipeline);
-  gtk_signal_connect (GTK_OBJECT (hscale),
+  g_signal_connect (GTK_OBJECT (hscale),
       "format_value", G_CALLBACK (format_value), pipeline);
 
   /* do the packing stuff ... */
