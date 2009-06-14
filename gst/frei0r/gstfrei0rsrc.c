@@ -58,6 +58,16 @@ gst_frei0r_src_set_caps (GstBaseSrc * src, GstCaps * caps)
   return TRUE;
 }
 
+static GstCaps *
+gst_frei0r_src_get_caps (GstBaseSrc * src)
+{
+  if (GST_PAD_CAPS (GST_BASE_SRC_PAD (src)))
+    return gst_caps_ref (GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
+  else
+    return
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (src)));
+}
+
 static GstFlowReturn
 gst_frei0r_src_create (GstPushSrc * src, GstBuffer ** buf)
 {
@@ -114,29 +124,6 @@ gst_frei0r_src_create (GstPushSrc * src, GstBuffer ** buf)
   *buf = outbuf;
 
   return GST_FLOW_OK;
-}
-
-static void
-gst_frei0r_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end)
-{
-  /* for live sources, sync on the timestamp of the buffer */
-  if (gst_base_src_is_live (basesrc)) {
-    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
-
-    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-      /* get duration to calculate end time */
-      GstClockTime duration = GST_BUFFER_DURATION (buffer);
-
-      if (GST_CLOCK_TIME_IS_VALID (duration)) {
-        *end = timestamp + duration;
-      }
-      *start = timestamp;
-    }
-  } else {
-    *start = -1;
-    *end = -1;
-  }
 }
 
 static gboolean
@@ -358,10 +345,10 @@ gst_frei0r_src_class_init (GstFrei0rSrcClass * klass,
   gst_element_class_add_pad_template (gstelement_class, templ);
 
   gstbasesrc_class->set_caps = gst_frei0r_src_set_caps;
+  gstbasesrc_class->get_caps = gst_frei0r_src_get_caps;
   gstbasesrc_class->is_seekable = gst_frei0r_src_is_seekable;
   gstbasesrc_class->do_seek = gst_frei0r_src_do_seek;
   gstbasesrc_class->query = gst_frei0r_src_query;
-  gstbasesrc_class->get_times = gst_frei0r_src_get_times;
   gstbasesrc_class->start = gst_frei0r_src_start;
   gstbasesrc_class->stop = gst_frei0r_src_stop;
 
