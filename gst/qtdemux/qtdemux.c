@@ -1509,9 +1509,18 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
     }
     default:
     {
+      GstBuffer *unknown;
+
       GST_LOG_OBJECT (qtdemux,
-          "unknown %08x '%" GST_FOURCC_FORMAT "' at %" G_GUINT64_FORMAT, fourcc,
-          GST_FOURCC_ARGS (fourcc), cur_offset);
+          "unknown %08x '%" GST_FOURCC_FORMAT "' of size %" G_GUINT64_FORMAT
+          " at %" G_GUINT64_FORMAT, fourcc, GST_FOURCC_ARGS (fourcc), length,
+          cur_offset);
+      ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length, &unknown);
+      if (ret != GST_FLOW_OK)
+        goto beach;
+      GST_MEMDUMP ("Unknown tag", GST_BUFFER_DATA (unknown),
+          GST_BUFFER_SIZE (unknown));
+      gst_buffer_unref (unknown);
       cur_offset += length;
       qtdemux->offset += length;
       break;
@@ -3136,6 +3145,8 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
         break;
       }
       default:
+        if (!strcmp (type->name, "unknown"))
+          GST_MEMDUMP ("Unknown tag", buffer + 4, end - buffer - 4);
         break;
     }
   }
