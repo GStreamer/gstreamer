@@ -535,6 +535,67 @@ gst_tag_list_new (void)
 }
 
 /**
+ * gst_tag_list_new_full:
+ * @tag: tag
+ * @...: NULL-terminated list of values to set
+ *
+ * Creates a new taglist and appends the values for the given tags. It expects
+ * tag-value pairs like gst_tag_list_add(), and a NULL terminator after the
+ * last pair. The type of the values is implicit and is documented in the API
+ * reference, but can also be queried at runtime with gst_tag_get_type(). It
+ * is an error to pass a value of a type not matching the tag type into this
+ * function. The tag list will make copies of any arguments passed
+ * (e.g. strings, buffers).
+ *
+ * Returns: a new #GstTagList. Free with gst_tag_list_free() when no longer
+ *     needed.
+ *
+ * Since: 0.10.24
+ */
+/* FIXME 0.11: rename gst_tag_list_new_full to _new and _new to _new_empty */
+GstTagList *
+gst_tag_list_new_full (const gchar * tag, ...)
+{
+  GstTagList *list;
+  va_list args;
+
+  g_return_val_if_fail (tag != NULL, NULL);
+
+  list = gst_tag_list_new ();
+  va_start (args, tag);
+  gst_tag_list_add_valist (list, GST_TAG_MERGE_APPEND, tag, args);
+  va_end (args);
+
+  return list;
+}
+
+/**
+ * gst_tag_list_new_full_valist:
+ * @var_args: tag / value pairs to set
+ *
+ * Just like gst_tag_list_new_full(), only that it takes a va_list argument.
+ * Useful mostly for language bindings.
+ *
+ * Returns: a new #GstTagList. Free with gst_tag_list_free() when no longer
+ *     needed.
+ *
+ * Since: 0.10.24
+ */
+GstTagList *
+gst_tag_list_new_full_valist (va_list var_args)
+{
+  GstTagList *list;
+  const gchar *tag;
+
+  list = gst_tag_list_new ();
+
+  tag = va_arg (var_args, gchar *);
+  gst_tag_list_add_valist (list, GST_TAG_MERGE_APPEND, tag, var_args);
+
+  return list;
+}
+
+/**
  * gst_tag_list_is_empty:
  * @list: A #GstTagList.
  *

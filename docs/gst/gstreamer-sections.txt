@@ -2158,6 +2158,8 @@ gst_tag_get_description
 gst_tag_get_flag
 gst_tag_is_fixed
 gst_tag_list_new
+gst_tag_list_new_full
+gst_tag_list_new_full_valist
 gst_is_tag_list
 gst_tag_list_is_empty
 gst_tag_list_copy

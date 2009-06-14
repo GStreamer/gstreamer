@@ -198,6 +198,9 @@ gboolean               gst_tag_is_fixed        (const gchar * tag);
 
 /* tag lists */
 GstTagList * gst_tag_list_new               (void);
+GstTagList * gst_tag_list_new_full          (const gchar * tag, ...);
+GstTagList * gst_tag_list_new_full_valist   (va_list var_args);
+
 gboolean     gst_is_tag_list                (gconstpointer p);
 GstTagList * gst_tag_list_copy              (const GstTagList * list);
 gboolean     gst_tag_list_is_empty          (const GstTagList * list);
