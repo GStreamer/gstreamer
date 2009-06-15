@@ -74,16 +74,19 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
   GstVdpDevice *device;
   VdpVideoSurface surface;
   GstBuffer *outbuf = NULL;
+  GstFlowReturn result = GST_FLOW_ERROR;
 
   video_yuv = GST_VDP_VIDEO_YUV (GST_OBJECT_PARENT (pad));
   device = GST_VDP_VIDEO_BUFFER (buffer)->device;
   surface = GST_VDP_VIDEO_BUFFER (buffer)->surface;
 
+  GST_LOG_OBJECT (video_yuv, "Received buffer format %" GST_FOURCC_FORMAT,
+      GST_FOURCC_ARGS (video_yuv->format));
+
   switch (video_yuv->format) {
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
     {
       gint size;
-      GstFlowReturn result;
       VdpStatus status;
       guint8 *data[3];
       guint32 stride[3];
@@ -94,8 +97,10 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
       result =
           gst_pad_alloc_buffer_and_set_caps (video_yuv->src,
           GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (video_yuv->src), &outbuf);
-      if (G_UNLIKELY (result != GST_FLOW_OK))
-        return result;
+      if (G_UNLIKELY (result != GST_FLOW_OK)) {
+        GST_DEBUG_OBJECT (video_yuv, "Pad alloc_buffer returned %d", result);
+        goto done;
+      }
 
       data[0] = GST_BUFFER_DATA (outbuf) +
           gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
@@ -122,14 +127,13 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        goto error;
+        goto done;
       }
       break;
     }
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
     {
       gint size;
-      GstFlowReturn result;
       VdpStatus status;
       guint8 *data[3];
       guint32 stride[3];
@@ -140,8 +144,10 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
       result =
           gst_pad_alloc_buffer_and_set_caps (video_yuv->src,
           GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (video_yuv->src), &outbuf);
-      if (G_UNLIKELY (result != GST_FLOW_OK))
-        return result;
+      if (G_UNLIKELY (result != GST_FLOW_OK)) {
+        GST_DEBUG_OBJECT (video_yuv, "Pad alloc_buffer returned %d", result);
+        goto done;
+      }
 
       data[0] = GST_BUFFER_DATA (outbuf) +
           gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
@@ -168,14 +174,13 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        goto error;
+        goto done;
       }
       break;
     }
     case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
     {
       gint size;
-      GstFlowReturn result;
       VdpStatus status;
       guint8 *data[2];
       guint32 stride[2];
@@ -186,9 +191,10 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
       result =
           gst_pad_alloc_buffer_and_set_caps (video_yuv->src,
           GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (video_yuv->src), &outbuf);
-      if (G_UNLIKELY (result != GST_FLOW_OK))
-        return result;
-
+      if (G_UNLIKELY (result != GST_FLOW_OK)) {
+        GST_DEBUG_OBJECT (video_yuv, "Pad alloc_buffer returned %d", result);
+        goto done;
+      }
 
       data[0] = GST_BUFFER_DATA (outbuf);
       data[1] = GST_BUFFER_DATA (outbuf) + video_yuv->width * video_yuv->height;
@@ -204,7 +210,7 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        goto error;
+        goto done;
       }
       break;
     }
@@ -217,9 +223,11 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
   gst_buffer_copy_metadata (outbuf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
   return gst_pad_push (video_yuv->src, outbuf);
 
-error:
-  gst_buffer_unref (outbuf);
-  return GST_FLOW_ERROR;
+done:
+  if (outbuf)
+    gst_buffer_unref (outbuf);
+  gst_buffer_unref (buffer);
+  return result;
 }
 
 static GstCaps *
