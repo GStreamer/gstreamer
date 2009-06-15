@@ -2665,11 +2665,10 @@ gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
 
 typedef struct
 {
-  GString *str;
+  guint8 *data;
+  guint size;
   guint id;
 } GstRTSPRec;
-
-static guint queue_response (GstRTSPWatch * watch, GString * str);
 
 /* async functions */
 struct _GstRTSPWatch
@@ -2690,7 +2689,7 @@ struct _GstRTSPWatch
   GAsyncQueue *messages;
   guint8 *write_data;
   guint write_off;
-  guint write_len;
+  guint write_size;
   guint write_id;
 
   GstRTSPWatchFuncs funcs;
@@ -2741,6 +2740,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
       if (res == GST_RTSP_ETGET) {
         GString *str;
         GstRTSPStatusCode code;
+        guint size;
 
         if (watch->funcs.tunnel_start)
           code = watch->funcs.tunnel_start (watch, watch->user_data);
@@ -2749,7 +2749,9 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
 
         /* queue the response string */
         str = gen_tunnel_reply (watch->conn, code);
-        queue_response (watch, str);
+        size = str->len;
+        gst_rtsp_watch_queue_data (watch, (guint8 *) g_string_free (str, FALSE),
+            size);
       } else if (res == GST_RTSP_ETPOST) {
         /* in the callback the connection should be tunneled with the
          * GET connection */
@@ -2780,16 +2782,15 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
           goto done;
 
         watch->write_off = 0;
-        watch->write_len = rec->str->len;
-        watch->write_data = (guint8 *) g_string_free (rec->str, FALSE);
+        watch->write_data = rec->data;
+        watch->write_size = rec->size;
         watch->write_id = rec->id;
 
-        rec->str = NULL;
         g_slice_free (GstRTSPRec, rec);
       }
 
       res = write_bytes (watch->writefd.fd, watch->write_data,
-          &watch->write_off, watch->write_len);
+          &watch->write_off, watch->write_size);
       if (res == GST_RTSP_EINTR)
         break;
       if (G_UNLIKELY (res != GST_RTSP_OK))
@@ -2831,8 +2832,7 @@ gst_rtsp_rec_free (gpointer data)
 {
   GstRTSPRec *rec = data;
 
-  g_string_free (rec->str, TRUE);
-  rec->str = NULL;
+  g_free (rec->data);
   g_slice_free (GstRTSPRec, rec);
 }
 
@@ -2982,15 +2982,42 @@ gst_rtsp_watch_unref (GstRTSPWatch * watch)
   g_source_unref ((GSource *) watch);
 }
 
-static guint
-queue_response (GstRTSPWatch * watch, GString * str)
+/**
+ * gst_rtsp_watch_queue_data:
+ * @watch: a #GstRTSPWatch
+ * @data: the data to queue
+ * @size: the size of @data
+ *
+ * Queue @data for transmission in @watch. It will be transmitted when the
+ * connection of the @watch becomes writable.
+ *
+ * This function will take ownership of @data and g_free() it after use.
+ *
+ * The return value of this function will be used as the id argument in the
+ * message_sent callback.
+ *
+ * Returns: an id.
+ *
+ * Since: 0.10.24
+ */
+guint
+gst_rtsp_watch_queue_data (GstRTSPWatch * watch, const guint8 * data,
+    guint size)
 {
   GstRTSPRec *rec;
 
-  /* make a record with the message as a string and id */
+  g_return_val_if_fail (watch != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (data != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (size != 0, GST_RTSP_EINVAL);
+
+  /* make a record with the data and id */
   rec = g_slice_new (GstRTSPRec);
-  rec->str = str;
-  rec->id = ++watch->id;
+  rec->data = (guint8 *) data;
+  rec->size = size;
+  do {
+    /* make sure rec->id is never 0 */
+    rec->id = ++watch->id;
+  } while (G_UNLIKELY (rec->id == 0));
 
   /* add the record to a queue. FIXME we would like to have an upper limit here */
   g_async_queue_push (watch->messages, rec);
@@ -3026,9 +3053,15 @@ queue_response (GstRTSPWatch * watch, GString * str)
 guint
 gst_rtsp_watch_queue_message (GstRTSPWatch * watch, GstRTSPMessage * message)
 {
+  GString *str;
+  guint size;
+
   g_return_val_if_fail (watch != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
 
   /* make a record with the message as a string and id */
-  return queue_response (watch, message_to_string (watch->conn, message));
+  str = message_to_string (watch->conn, message);
+  size = str->len;
+  return gst_rtsp_watch_queue_data (watch,
+      (guint8 *) g_string_free (str, FALSE), size);
 }

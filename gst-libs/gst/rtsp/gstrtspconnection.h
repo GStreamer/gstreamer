@@ -173,6 +173,9 @@ void               gst_rtsp_watch_unref              (GstRTSPWatch *watch);
 guint              gst_rtsp_watch_attach             (GstRTSPWatch *watch,
                                                       GMainContext *context);
 
+guint              gst_rtsp_watch_queue_data         (GstRTSPWatch * watch,
+                                                      const guint8 * data,
+                                                      guint size);
 guint              gst_rtsp_watch_queue_message      (GstRTSPWatch *watch,
                                                       GstRTSPMessage *message);
 
