@@ -123,7 +123,14 @@ AM_CONDITIONAL(ENABLE_MONODOC, test "x$enable_monodoc" = "xyes")
 ## Check for the gapi programs
 PKG_CHECK_MODULES(GAPI, gapi-2.0 >= $GLIBSHARP_REQUIRED_VERSION)
 
-PKG_CHECK_MODULES(MONO_NUNIT, mono-nunit >= 1.0, do_tests="yes", do_tests="no")
+## NUnit tests
+AC_PATH_PROG(NUNIT_TESTER, nunit-console, no)
+if test "x$NUNIT_TESTER" = "xno" ; then
+	AC_MSG_WARN([Could not find nunit-console: unit tests cannot be executed])
+fi
+AC_SUBST(NUNIT_TESTER)
+
+PKG_CHECK_MODULES(MONO_NUNIT, mono-nunit >= 2.0, do_tests="yes", do_tests="no")
 AC_SUBST(MONO_NUNIT_LIBS)
 AM_CONDITIONAL(ENABLE_TESTS, test "x$do_tests" = "xyes")
 if test "x$do_tests" = "xno"; then
