@@ -26,12 +26,13 @@
 #include "config.h"
 #endif
 
-#include <gst/video/gstvideofilter.h>
-
 #include <math.h>
 #include <string.h>
 
+#include <gst/gst.h>
+
 #include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
 
 #ifndef M_PI
 #define M_PI  3.14159265358979323846
@@ -71,15 +72,10 @@ struct _GstShagadelicTVClass
   GstVideoFilterClass parent_class;
 };
 
-GType gst_shagadelictv_get_type (void);
+GST_BOILERPLATE (GstShagadelicTV, gst_shagadelictv, GstVideoFilter,
+    GST_TYPE_VIDEO_FILTER);
 
 static void gst_shagadelic_initialize (GstShagadelicTV * filter);
-
-static const GstElementDetails shagadelictv_details =
-GST_ELEMENT_DETAILS ("ShagadelicTV",
-    "Filter/Effect/Video",
-    "Oh behave, ShagedelicTV makes images shagadelic!",
-    "Wim Taymans <wim.taymans@chello.be>");
 
 static GstStaticPadTemplate gst_shagadelictv_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -94,8 +90,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
     );
-
-static GstVideoFilterClass *parent_class = NULL;
 
 static gboolean
 gst_shagadelictv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
@@ -128,12 +122,10 @@ static gboolean
 gst_shagadelictv_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     guint * size)
 {
-  GstShagadelicTV *filter;
+  GstShagadelicTV *filter = GST_SHAGADELICTV (btrans);
   GstStructure *structure;
   gboolean ret = FALSE;
   gint width, height;
-
-  filter = GST_SHAGADELICTV (btrans);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -148,10 +140,10 @@ gst_shagadelictv_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
   return ret;
 }
 
-static unsigned int
+static inline guint
 fastrand (void)
 {
-  static unsigned int fastrand_val;
+  static guint fastrand_val;
 
   return (fastrand_val = fastrand_val * 1103515245 + 12345);
 }
@@ -218,17 +210,13 @@ static GstFlowReturn
 gst_shagadelictv_transform (GstBaseTransform * trans, GstBuffer * in,
     GstBuffer * out)
 {
-  GstShagadelicTV *filter;
+  GstShagadelicTV *filter = GST_SHAGADELICTV (trans);
   guint32 *src, *dest;
   gint x, y;
   guint32 v;
   guchar r, g, b;
   gint width, height;
   GstFlowReturn ret = GST_FLOW_OK;
-
-  filter = GST_SHAGADELICTV (trans);
-
-  gst_buffer_copy_metadata (out, in, GST_BUFFER_COPY_TIMESTAMPS);
 
   src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
@@ -272,11 +260,30 @@ gst_shagadelictv_transform (GstBaseTransform * trans, GstBuffer * in,
 }
 
 static void
+gst_shagadelictv_finalize (GObject * object)
+{
+  GstShagadelicTV *filter = GST_SHAGADELICTV (object);
+
+  if (filter->ripple)
+    g_free (filter->ripple);
+  filter->ripple = NULL;
+
+  if (filter->spiral)
+    g_free (filter->spiral);
+  filter->spiral = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_shagadelictv_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &shagadelictv_details);
+  gst_element_class_set_details_simple (element_class, "ShagadelicTV",
+      "Filter/Effect/Video",
+      "Oh behave, ShagedelicTV makes images shagadelic!",
+      "Wim Taymans <wim.taymans@chello.be>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_shagadelictv_sink_template));
@@ -285,13 +292,12 @@ gst_shagadelictv_base_init (gpointer g_class)
 }
 
 static void
-gst_shagadelictv_class_init (gpointer klass, gpointer class_data)
+gst_shagadelictv_class_init (GstShagadelicTVClass * klass)
 {
-  GstBaseTransformClass *trans_class;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
-  trans_class = (GstBaseTransformClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
+  gobject_class->finalize = gst_shagadelictv_finalize;
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_shagadelictv_set_caps);
   trans_class->get_unit_size =
@@ -300,35 +306,8 @@ gst_shagadelictv_class_init (gpointer klass, gpointer class_data)
 }
 
 static void
-gst_shagadelictv_init (GTypeInstance * instance, gpointer g_class)
+gst_shagadelictv_init (GstShagadelicTV * filter, GstShagadelicTVClass * klass)
 {
-  GstShagadelicTV *filter = GST_SHAGADELICTV (instance);
-
   filter->ripple = NULL;
   filter->spiral = NULL;
-}
-
-GType
-gst_shagadelictv_get_type (void)
-{
-  static GType shagadelictv_type = 0;
-
-  if (!shagadelictv_type) {
-    static const GTypeInfo shagadelictv_info = {
-      sizeof (GstShagadelicTVClass),
-      gst_shagadelictv_base_init,
-      NULL,
-      (GClassInitFunc) gst_shagadelictv_class_init,
-      NULL,
-      NULL,
-      sizeof (GstShagadelicTV),
-      0,
-      (GInstanceInitFunc) gst_shagadelictv_init,
-    };
-
-    shagadelictv_type =
-        g_type_register_static (GST_TYPE_VIDEO_FILTER, "GstShagadelicTV",
-        &shagadelictv_info, 0);
-  }
-  return shagadelictv_type;
 }
