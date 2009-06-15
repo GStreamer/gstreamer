@@ -2199,10 +2199,10 @@ gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
   GST_OBJECT_UNLOCK (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-      "committing state from %s to %s, pending %s",
+      "committing state from %s to %s, pending %s, next %s",
       gst_element_state_get_name (old_state),
       gst_element_state_get_name (old_next),
-      gst_element_state_get_name (pending));
+      gst_element_state_get_name (pending), gst_element_state_get_name (next));
 
   message = gst_message_new_state_changed (GST_OBJECT_CAST (element),
       old_state, old_next, pending);
@@ -2440,6 +2440,8 @@ gst_element_set_state_func (GstElement * element, GstState state)
   /* this is the (new) state we should go to. TARGET is the last state we set on
    * the element. */
   if (state != GST_STATE_TARGET (element)) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+        "setting target state to %s", gst_element_state_get_name (state));
     GST_STATE_TARGET (element) = state;
     /* increment state cookie so that we can track each state change. We only do
      * this if this is actually a new state change. */

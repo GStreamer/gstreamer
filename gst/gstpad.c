@@ -3444,6 +3444,8 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
 
+  GST_LOG_OBJECT (pad, "default event handler");
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
