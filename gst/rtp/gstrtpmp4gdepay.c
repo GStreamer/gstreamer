@@ -245,14 +245,10 @@ gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     if (strcmp (str, "audio") == 0) {
       srccaps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4, NULL);
-      /* AAC always has a default constant duration of 1024 but it can be
-       * overriden below. */
-      rtpmp4gdepay->constantDuration = 1024;
     } else if (strcmp (str, "video") == 0) {
       srccaps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, 4,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-      rtpmp4gdepay->constantDuration = 0;
     }
   }
   if (srccaps == NULL)
@@ -279,8 +275,7 @@ gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   rtpmp4gdepay->constantSize =
       gst_rtp_mp4g_depay_parse_int (structure, "constantsize", 0);
   rtpmp4gdepay->constantDuration =
-      gst_rtp_mp4g_depay_parse_int (structure, "constantduration",
-      rtpmp4gdepay->constantDuration);
+      gst_rtp_mp4g_depay_parse_int (structure, "constantduration", 0);
 
 
   /* get config string */
@@ -511,6 +506,7 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
          * reconstruct the AU ordering when interleaving. */
         if (i == 0) {
           AU_index = gst_bs_parse_read (&bs, rtpmp4gdepay->indexlength);
+
           if (AU_index == 0 && rtpmp4gdepay->prev_AU_index == 0) {
             gint diff;
 
@@ -523,6 +519,13 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
               diff = rtptime - rtpmp4gdepay->prev_rtptime;
             else
               diff = -(rtpmp4gdepay->prev_rtptime - rtptime);
+
+            /* if no constantDuration was given, make one */
+            if (rtpmp4gdepay->constantDuration == 0) {
+              rtpmp4gdepay->constantDuration = diff / num_AU_headers;
+              GST_DEBUG_OBJECT (depayload, "guessing constantDuration %d",
+                  rtpmp4gdepay->constantDuration);
+            }
 
             /* get the number of packets by dividing with the duration */
             diff /= rtpmp4gdepay->constantDuration;
