@@ -171,7 +171,7 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
     /* pick a random buffer */
     rand =
         filter->planetable[(filter->current_plane +
-            (fastrand () >> 24)) & (filter->planes - 1)];
+            (fastrand () >> 24)) % filter->planes];
 
     /* Copy the pixel from the random buffer to dest */
     dest[area] = (rand ? ((guint32 *) GST_BUFFER_DATA (rand))[area] : 0);
@@ -250,17 +250,20 @@ gst_quarktv_set_property (GObject * object, guint prop_id, const GValue * value,
         new_planetable =
             (GstBuffer **) g_malloc0 (new_n_planes * sizeof (GstBuffer *));
 
-        for (i = 0; (i < new_n_planes) && (i < filter->planes); i++) {
-          new_planetable[i] = filter->planetable[i];
+        if (filter->planetable) {
+          for (i = 0; (i < new_n_planes) && (i < filter->planes); i++) {
+            new_planetable[i] = filter->planetable[i];
+          }
+          for (; i < filter->planes; i++) {
+            if (filter->planetable[i])
+              gst_buffer_unref (filter->planetable[i]);
+          }
+          g_free (filter->planetable);
         }
-        for (; i < filter->planes; i++) {
-          if (filter->planetable[i])
-            gst_buffer_unref (filter->planetable[i]);
-        }
-        g_free (filter->planetable);
+
         filter->planetable = new_planetable;
-        filter->current_plane = filter->planes - 1;
         filter->planes = new_n_planes;
+        filter->current_plane = filter->planes - 1;
       }
       break;
     }
