@@ -11,6 +11,7 @@
 using System;
 using NUnit.Framework;
 using Gst;
+using Gst.CorePlugins;
 
 [TestFixture]
 public class BinTest
@@ -25,8 +26,8 @@ public class BinTest
 	public void TestAdd()
 	{
 		Bin bin = new Bin("test-bin");
-		Element e1 = ElementFactory.Make("fakesrc", "fakesrc");
-		Element e2 = ElementFactory.Make("fakesink", "fakesink");
+		Element e1 = new FakeSrc("fakesrc");
+		Element e2 = new FakeSink("fakesink");
 
 		Assert.IsNotNull(bin, "Could not create bin");
 		Assert.IsNotNull(e1, "Could not create fakesrc");
@@ -79,7 +80,7 @@ public class BinTest
 		Bin bin = new Bin(String.Empty);
 		Assert.IsNotNull(bin, "Could not create bin");
 
-		Element filesrc = ElementFactory.Make("filesrc", null);
+		Element filesrc = ElementFactory.Make("filesrc");
 		Assert.IsNotNull(filesrc, "Could not create filesrc");
 
 		bin.Add(filesrc);

@@ -59,7 +59,7 @@ public class PadTest
 	[Test]
 	public void TestElementPadAccessByName()
 	{
-		Element element = ElementFactory.Make("identity", null);
+		Element element = ElementFactory.Make("identity");
 		Assert.IsNotNull(element);
 		Assert.IsFalse(element.Handle == IntPtr.Zero, "Ooops, identity element has null handle");
 
@@ -82,7 +82,7 @@ public class PadTest
 	[Test]
 	public void TestElementPadAccessByList()
 	{
-		Element element = ElementFactory.Make("identity", null);
+		Element element = ElementFactory.Make("identity");
 		Assert.IsNotNull(element);
 		Assert.IsFalse(element.Handle == IntPtr.Zero, "Ooops, identity element has null handle");
 
@@ -118,24 +118,14 @@ public class PadTest
 	[Test]
 	public void TestGetAllowedCaps()
 	{
-		/*
-			 Gst.Buffer buffer = new Gst.Buffer();
+		Caps caps;
 
-			 try {
-			 Pad pbuffer = (Pad) buffer;
-			 Caps pcaps = pbuffer.AllowedCaps;
-			 }
-			 catch (Exception ex) {
-			 Assert.Fail("buffer.AllowedCaps failed");
-			 }
-			 */
 		Pad sink = new Pad("sink", PadDirection.Sink);
-		//		try { Caps tcaps = sink.AllowedCaps; }
-		//		catch (Exception) { Assert.Fail("sink.AllowedCaps failed"); }
+		caps = sink.AllowedCaps;
+		Assert.IsNull(caps);
 
 		Pad src = new Pad("src", PadDirection.Src);
-		Assert.IsNotNull(src);
-		Caps caps = src.AllowedCaps;
+		caps = src.AllowedCaps;
 		Assert.IsNull(caps);
 
 		caps = Caps.FromString("foo/bar");
@@ -153,7 +143,7 @@ public class PadTest
 
 	bool ProbeHandler(Pad pad, Gst.Buffer buffer)
 	{
-		//Assert.Fail("event worked");
+		//Console.WriteLine("event worked");
 		return false;
 	}
 
@@ -172,7 +162,8 @@ public class PadTest
 		Assert.AreEqual(src.Push(buffer), FlowReturn.NotLinked);
 
 		ulong handler_id = src.AddBufferProbe(new PadBufferProbeCallback(ProbeHandler));
-		buffer = new Gst.Buffer();
-		Assert.AreEqual(src.Push(buffer), FlowReturn.Ok);
+		buffer = new Gst.Buffer(new byte[] {0});
+		FlowReturn flowreturn = src.Push(buffer);
+		Assert.AreEqual(flowreturn, FlowReturn.Ok);
 	}
 }

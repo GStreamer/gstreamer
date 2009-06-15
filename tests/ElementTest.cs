@@ -21,12 +21,6 @@ public class ElementTest
 	}
 
 	[Test]
-	public void TestErrorNoBus() 
-	{
-		Element e = ElementFactory.Make("fakesrc", "source");
-	}
-
-	[Test]
 	public void TestLinkNoPads() 
 	{
 		Element src = new Bin("src");

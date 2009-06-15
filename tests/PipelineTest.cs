@@ -34,8 +34,8 @@ public class PipelineTest
   public void TestAsyncStateChangeFakeReady()
   {
     Pipeline pipeline = new Pipeline(String.Empty);
-    Element src = ElementFactory.Make("fakesrc", null);
-    Element sink = ElementFactory.Make("fakesink", null);
+    Element src = ElementFactory.Make("fakesrc");
+    Element sink = ElementFactory.Make("fakesink");
 
     Bin bin = (Bin) pipeline;
     bin.Add(src, sink);
@@ -51,8 +51,8 @@ public class PipelineTest
     Pipeline pipeline = new Pipeline(String.Empty);
     Assert.IsNotNull(pipeline, "Could not create pipeline");
 
-    Element src = ElementFactory.Make("fakesrc", null);
-    Element sink = ElementFactory.Make("fakesink", null);
+    Element src = ElementFactory.Make("fakesrc");
+    Element sink = ElementFactory.Make("fakesink");
 
     Bin bin = (Bin) pipeline;
     bin.Add(src, sink);
@@ -67,7 +67,6 @@ public class PipelineTest
       Message message = bus.Poll(MessageType.StateChanged, -1);
       if(message != null) {
         message.ParseStateChanged(out old, out newState, out pending);
-        //Console.WriteLine("state change from {0} to {1}", old, newState);
         if(message.Src == (Gst.Object) pipeline && newState == State.Playing)
           done = true;
       }
@@ -99,22 +98,40 @@ public class PipelineTest
     }
     return true;
   }
+
   [Test]
-  [Ignore("This test does not terminate")]
-  public void TestBus() 
+	[Ignore("This test causes a crash")]
+  public void TestBusAddWatch() 
+  {
+    TestBusCallback(true);
+  }
+
+  [Test]
+  public void TestBusAddSignalWatch() 
+  {
+    TestBusCallback(false);
+  }
+
+  public void TestBusCallback(bool use_AddWatch) 
   {
     pipeline = new Pipeline(String.Empty);
     Assert.IsNotNull(pipeline, "Could not create pipeline");
 
-    Element src = ElementFactory.Make("fakesrc", null);
+    Element src = ElementFactory.Make("fakesrc");
     Assert.IsNotNull(src, "Could not create fakesrc");
-    Element sink = ElementFactory.Make("fakesink", null);
+    Element sink = ElementFactory.Make("fakesink");
     Assert.IsNotNull(sink, "Could not create fakesink");
 
     Bin bin = (Bin) pipeline;
     bin.Add(src, sink);
     Assert.IsTrue(src.Link(sink), "Could not link between src and sink");
 
+    if (use_AddWatch)
+      pipeline.Bus.AddWatch(new BusFunc(MessageReceived));
+    else {
+      pipeline.Bus.AddSignalWatch();
+      pipeline.Bus.Message += delegate (object o, MessageArgs args) {MessageReceived(null, args.Message);};
+    }
     Assert.AreEqual(pipeline.SetState(State.Playing), StateChangeReturn.Async);
 
     loop = new GLib.MainLoop();

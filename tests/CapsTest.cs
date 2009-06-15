@@ -89,12 +89,12 @@ public class CapsTest
 
 		Assert.IsFalse(caps3.IsEmpty, "How come caps are EMPTY?!");
 
-		Assert.AreEqual("video/x-raw-yuv, " + 
+		Caps caps4 = Caps.FromString("video/x-raw-yuv, " + 
 				"format=(fourcc)I420, " + 
 				"width=(int)640; " + 
 				"video/x-raw-yuv, " + 
 				"format=(fourcc)I420, " + 
-				"height=(int)480", 
-				caps3.ToString());
+				"height=(int)480");
+		Assert.IsTrue(caps3.IsEqual(caps4));
 	}
 }
