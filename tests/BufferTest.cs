@@ -10,7 +10,8 @@ using NUnit.Framework;
 using Gst;
 
 [TestFixture]
-public class BufferTest {
+public class BufferTest
+{
 	[TestFixtureSetUp]
 	public void Init()
 	{
@@ -36,11 +37,9 @@ public class BufferTest {
 
 		Gst.Buffer sub2 = buffer.CreateSub(2, 2);
 		Assert.IsNotNull(sub2, "CreateSub of buffer returned null");
-		
+
 		Assert.IsFalse(buffer.IsSpanFast(sub2), "a parent buffer can not be SpanFasted");
 		Assert.IsFalse(sub1.IsSpanFast(buffer), "a parent buffer can not be SpanFasted");
 		Assert.IsTrue(sub1.IsSpanFast(sub2), "two subbuffers next to each other should be SpanFast");
 	}
-
 }
-

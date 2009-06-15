@@ -10,96 +10,95 @@
 
 using System;
 using NUnit.Framework;
-
 using Gst;
 
 [TestFixture]
 public class PadTest
 {
-    [TestFixtureSetUp]
-    public void Init()
-    {
-        Application.Init();
-    }
+	[TestFixtureSetUp]
+	public void Init()
+	{
+		Application.Init();
+	}
 
-    [Test]
-    public void TestPlainCreation()
-    {
-        Pad src = new Pad("src", PadDirection.Src);
-        Pad sink = new Pad("sink", PadDirection.Sink);
-        
-        Assert.IsNotNull(src);
-        Assert.IsNotNull(sink);
+	[Test]
+	public void TestPlainCreation()
+	{
+		Pad src = new Pad("src", PadDirection.Src);
+		Pad sink = new Pad("sink", PadDirection.Sink);
 
-        Assert.IsFalse(src.Handle == IntPtr.Zero, "Ooops, src pad has null handle");
-        Assert.IsFalse(sink.Handle == IntPtr.Zero, "Ooops, sink pad has null handle");
+		Assert.IsNotNull(src);
+		Assert.IsNotNull(sink);
 
-        Assert.AreEqual(PadDirection.Src, src.Direction);
-        Assert.AreEqual(PadDirection.Sink, sink.Direction);
-    }
+		Assert.IsFalse(src.Handle == IntPtr.Zero, "Ooops, src pad has null handle");
+		Assert.IsFalse(sink.Handle == IntPtr.Zero, "Ooops, sink pad has null handle");
 
-    public static Caps PadGetCapsStub(Pad pad)
-    {
-        return Caps.FromString("video/x-raw-yuv");
-    }
+		Assert.AreEqual(PadDirection.Src, src.Direction);
+		Assert.AreEqual(PadDirection.Sink, sink.Direction);
+	}
 
-    [Test]
-		[Ignore("This test causes a crash")]
-    public void TestFuncAssigning()
-    {
-        Pad src = new Pad("src", PadDirection.Src);
-        src.GetCapsFunction = new PadGetCapsFunction(PadGetCapsStub);
+	public static Caps PadGetCapsStub(Pad pad)
+	{
+		return Caps.FromString("video/x-raw-yuv");
+	}
 
-        Caps caps = src.Caps;
+	[Test]
+	[Ignore("This test causes a crash")]
+	public void TestFuncAssigning()
+	{
+		Pad src = new Pad("src", PadDirection.Src);
+		src.GetCapsFunction = new PadGetCapsFunction(PadGetCapsStub);
 
-        Assert.IsNotNull(caps, "Ooops, returned caps is null");
-        Assert.IsFalse(caps.IsEmpty == true, "Ooops, returned caps are empty");
-        Assert.AreEqual("video/x-raw-yuv", caps.ToString ());
-    }
+		Caps caps = src.Caps;
 
-    [Test]
-    public void TestElementPadAccessByName()
-    {
-        Element element = ElementFactory.Make("identity", null);
-        Assert.IsNotNull(element);
-        Assert.IsFalse(element.Handle == IntPtr.Zero, "Ooops, identity element has null handle");
+		Assert.IsNotNull(caps, "Ooops, returned caps is null");
+		Assert.IsFalse(caps.IsEmpty == true, "Ooops, returned caps are empty");
+		Assert.AreEqual("video/x-raw-yuv", caps.ToString ());
+	}
 
-        Pad src = element.GetStaticPad("src");
-        Pad sink = element.GetStaticPad("sink");
+	[Test]
+	public void TestElementPadAccessByName()
+	{
+		Element element = ElementFactory.Make("identity", null);
+		Assert.IsNotNull(element);
+		Assert.IsFalse(element.Handle == IntPtr.Zero, "Ooops, identity element has null handle");
 
-        Assert.IsNotNull(src, "Ooops, src pad is null");
-        Assert.IsNotNull(sink, "Ooops, sink pad is null");
+		Pad src = element.GetStaticPad("src");
+		Pad sink = element.GetStaticPad("sink");
 
-        Assert.IsFalse(src.Handle == IntPtr.Zero, "Ooops, src pad has null handle");
-        Assert.IsFalse(sink.Handle == IntPtr.Zero, "Ooops, sink pad has null handle");
+		Assert.IsNotNull(src, "Ooops, src pad is null");
+		Assert.IsNotNull(sink, "Ooops, sink pad is null");
 
-        Caps srccaps = src.Caps;
-        Assert.IsTrue(srccaps.IsAny, "How come src pad caps is not ANY?");
+		Assert.IsFalse(src.Handle == IntPtr.Zero, "Ooops, src pad has null handle");
+		Assert.IsFalse(sink.Handle == IntPtr.Zero, "Ooops, sink pad has null handle");
 
-        Caps sinkcaps = sink.Caps;
-        Assert.IsTrue(sinkcaps.IsAny, "How come sink pad caps is not ANY?");
-    }
+		Caps srccaps = src.Caps;
+		Assert.IsTrue(srccaps.IsAny, "How come src pad caps is not ANY?");
 
-    [Test]
-    public void TestElementPadAccessByList()
-    {
-        Element element = ElementFactory.Make("identity", null);
-        Assert.IsNotNull(element);
-        Assert.IsFalse(element.Handle == IntPtr.Zero, "Ooops, identity element has null handle");
+		Caps sinkcaps = sink.Caps;
+		Assert.IsTrue(sinkcaps.IsAny, "How come sink pad caps is not ANY?");
+	}
 
-        bool hassink = false;
-        bool hassrc = false;
-     
-        foreach(Pad pad in element.Pads) {
-            if (pad.Name == "src") 
-                hassrc = true;
-            else if (pad.Name == "sink")
-                hassink = true;
-        }
+	[Test]
+	public void TestElementPadAccessByList()
+	{
+		Element element = ElementFactory.Make("identity", null);
+		Assert.IsNotNull(element);
+		Assert.IsFalse(element.Handle == IntPtr.Zero, "Ooops, identity element has null handle");
 
-        Assert.IsTrue(hassink, "Sink pad not found in the list");
-        Assert.IsTrue(hassrc, "Src pad not found in the list");
-    }
+		bool hassink = false;
+		bool hassrc = false;
+
+		foreach(Pad pad in element.Pads) {
+			if (pad.Name == "src") 
+				hassrc = true;
+			else if (pad.Name == "sink")
+				hassink = true;
+		}
+
+		Assert.IsTrue(hassink, "Sink pad not found in the list");
+		Assert.IsTrue(hassrc, "Src pad not found in the list");
+	}
 
 	[Test]
 	public void TestLink()
@@ -115,24 +114,24 @@ public class PadTest
 
 		Assert.AreEqual(src.Link(sink), PadLinkReturn.Noformat);
 	}
-	
+
 	[Test]
 	public void TestGetAllowedCaps()
 	{
-/*
-		Gst.Buffer buffer = new Gst.Buffer();
+		/*
+			 Gst.Buffer buffer = new Gst.Buffer();
 
-		try {
-			Pad pbuffer = (Pad) buffer;
-			Caps pcaps = pbuffer.AllowedCaps;
-		}
-		catch (Exception ex) {
-			Assert.Fail("buffer.AllowedCaps failed");
-		}
-*/
+			 try {
+			 Pad pbuffer = (Pad) buffer;
+			 Caps pcaps = pbuffer.AllowedCaps;
+			 }
+			 catch (Exception ex) {
+			 Assert.Fail("buffer.AllowedCaps failed");
+			 }
+			 */
 		Pad sink = new Pad("sink", PadDirection.Sink);
-//		try { Caps tcaps = sink.AllowedCaps; }
-//		catch (Exception) { Assert.Fail("sink.AllowedCaps failed"); }
+		//		try { Caps tcaps = sink.AllowedCaps; }
+		//		catch (Exception) { Assert.Fail("sink.AllowedCaps failed"); }
 
 		Pad src = new Pad("src", PadDirection.Src);
 		Assert.IsNotNull(src);
@@ -157,7 +156,7 @@ public class PadTest
 		//Assert.Fail("event worked");
 		return false;
 	}
-	
+
 	[Test]
 	public void TestPushUnlinked()
 	{

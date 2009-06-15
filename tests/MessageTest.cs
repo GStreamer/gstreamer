@@ -5,11 +5,12 @@
 // (C) 2006
 //
 
-using Gst;
 using System;
 using NUnit.Framework;
+using Gst;
 
-public class MessageTest {
+public class MessageTest
+{
 	[TestFixtureSetUp]
 	public void Init() 
 	{
@@ -30,4 +31,3 @@ public class MessageTest {
 		Assert.IsNull(message.Src);
 	}
 }
-

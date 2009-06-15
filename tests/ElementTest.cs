@@ -9,7 +9,6 @@
 
 using System;
 using NUnit.Framework;
-
 using Gst;
 
 [TestFixture]
@@ -36,4 +35,3 @@ public class ElementTest
 		Assert.IsFalse(src.Link(sink));
 	}
 }
-
