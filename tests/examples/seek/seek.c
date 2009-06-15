@@ -2694,7 +2694,7 @@ main (int argc, char **argv)
     shuttle_checkbox = gtk_check_button_new_with_label ("Shuttle");
     gtk_box_pack_start (GTK_BOX (hbox), shuttle_checkbox, FALSE, FALSE, 2);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (shuttle_checkbox), FALSE);
-    gtk_signal_connect (GTK_OBJECT (shuttle_checkbox),
+    g_signal_connect (GTK_OBJECT (shuttle_checkbox),
         "toggled", G_CALLBACK (shuttle_toggled), pipeline);
 
     shuttle_adjustment =
@@ -2704,9 +2704,9 @@ main (int argc, char **argv)
     gtk_scale_set_value_pos (GTK_SCALE (shuttle_hscale), GTK_POS_TOP);
     gtk_range_set_update_policy (GTK_RANGE (shuttle_hscale),
         GTK_UPDATE_CONTINUOUS);
-    gtk_signal_connect (GTK_OBJECT (shuttle_hscale), "value_changed",
+    g_signal_connect (GTK_OBJECT (shuttle_hscale), "value_changed",
         G_CALLBACK (shuttle_value_changed), pipeline);
-    gtk_signal_connect (GTK_OBJECT (shuttle_hscale), "format_value",
+    g_signal_connect (GTK_OBJECT (shuttle_hscale), "format_value",
         G_CALLBACK (shuttle_format_value), pipeline);
 
     gtk_box_pack_start (GTK_BOX (hbox), shuttle_hscale, TRUE, TRUE, 2);
