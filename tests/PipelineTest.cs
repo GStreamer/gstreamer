@@ -34,8 +34,6 @@ public class PipelineTest
 		Assert.IsNotNull(pipeline, "Could not create pipeline");
 		
 		Assert.AreEqual(((Element)pipeline).SetState(State.Playing), StateChangeReturn.Success);
-
-		pipeline.Dispose();
 	}
 
 	[Test]
@@ -50,10 +48,6 @@ public class PipelineTest
 		src.Link(sink);
 
 		Assert.AreEqual(((Element)pipeline).SetState(State.Ready), StateChangeReturn.Success);
-
-		pipeline.Dispose();
-		src.Dispose();
-		sink.Dispose();
 	}
 
 	[Test]
@@ -82,13 +76,10 @@ public class PipelineTest
 				//Console.WriteLine("state change from {0} to {1}", old, newState);
 				if(message.Src == (Gst.Object) pipeline && newState == State.Playing)
 					done = true;
-				//message.Dispose();
 			}
 		}
 
 		Assert.AreEqual(((Element)pipeline).SetState(State.Null), StateChangeReturn.Success);
-		//bus.Dispose();
-		pipeline.Dispose();
 	}
 
 	Element pipeline;
@@ -139,8 +130,6 @@ public class PipelineTest
 		State current, pending;
 		Assert.AreEqual(pipeline.GetState(out current, out pending, Clock.TimeNone), StateChangeReturn.Success);
 		Assert.AreEqual(current, State.Null, "state is not NULL but " + current);
-		
-		pipeline.Dispose();
 	}
 
 	[Test]
@@ -160,9 +149,5 @@ public class PipelineTest
 		Assert.IsTrue(fakesrc.Link(fakesink));
 
 		Pad sink = fakesink.GetPad("sink");
-		
-		pipeline.Dispose();
-		fakesrc.Dispose();
-		fakesink.Dispose();
 	}
 }

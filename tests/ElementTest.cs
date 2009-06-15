@@ -31,7 +31,6 @@ public class ElementTest
 	public void TestErrorNoBus() 
 	{
 		Element e = ElementFactory.Make("fakesrc", "source");
-		e.Dispose();
 	}
 
 	[Test]
@@ -41,9 +40,6 @@ public class ElementTest
 		Element sink = new Bin("sink");
 
 		Assert.IsFalse(src.Link(sink));
-
-		src.Dispose();
-		sink.Dispose();
 	}
 
 }

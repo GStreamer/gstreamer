@@ -30,9 +30,6 @@ public class BufferTest {
 		Gst.Buffer sub = buffer.CreateSub(1, 2);
 		Assert.IsNotNull(sub);
 		Assert.AreEqual(sub.Size, 2, "subbuffer has wrong size");
-
-		//sub.Dispose();
-		buffer.Dispose();
 	}
 
 	[Test]
@@ -49,8 +46,6 @@ public class BufferTest {
 		Assert.IsFalse(buffer.IsSpanFast(sub2), "a parent buffer can not be SpanFasted");
 		Assert.IsFalse(sub1.IsSpanFast(buffer), "a parent buffer can not be SpanFasted");
 		Assert.IsTrue(sub1.IsSpanFast(sub2), "two subbuffers next to each other should be SpanFast");
-
-		buffer.Dispose();
 	}
 
 }

@@ -29,12 +29,10 @@ public class MessageTest {
 		Assert.IsNotNull(message);
 		Assert.AreEqual(message.Type, MessageType.Eos);
 		Assert.IsNull(message.Src);
-		message.Dispose();
 
 		message = new Message(null, "error string");
 		Assert.IsNotNull(message);
 		Assert.AreEqual(message.Type, MessageType.Error);
 		Assert.IsNull(message.Src);
-		message.Dispose();
 	}
 }

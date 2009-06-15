@@ -42,9 +42,6 @@ public class PadTest
 
         Assert.AreEqual(PadDirection.Src, src.Direction);
         Assert.AreEqual(PadDirection.Sink, sink.Direction);
-
-        src.Dispose();
-        sink.Dispose();
     }
 
     public static Caps PadGetCapsStub(Pad pad)
@@ -63,9 +60,6 @@ public class PadTest
         Assert.IsNotNull(caps, "Ooops, returned caps is null");
         Assert.IsFalse(caps.IsEmpty == true, "Ooops, returned caps are empty");
         Assert.AreEqual("video/x-raw-yuv", caps.ToString ());
-
-        caps.Dispose();
-        src.Dispose();
     }
 
     [Test]
@@ -89,12 +83,6 @@ public class PadTest
 
         Caps sinkcaps = sink.Caps;
         Assert.IsTrue(sinkcaps.IsAny, "How come sink pad caps is not ANY?");
-
-        element.Dispose();
-        src.Dispose();
-        sink.Dispose();
-        srccaps.Dispose();
-        sinkcaps.Dispose();
     }
 
     [Test]
@@ -120,8 +108,6 @@ public class PadTest
 
         Assert.IsTrue(hassink, "Sink pad not found in the list");
         Assert.IsTrue(hassrc, "Src pad not found in the list");
-
-        element.Dispose();
     }
 
 	[Test]
@@ -137,9 +123,6 @@ public class PadTest
 		Assert.IsNotNull(sink, "Pad could not be created");
 
 		Assert.AreEqual(src.Link(sink), PadLinkReturn.Noformat);
-
-		sink.Dispose();
-		src.Dispose();
 	}
 	
 	[Test]
@@ -155,8 +138,6 @@ public class PadTest
 		catch (Exception ex) {
 			Assert.Fail("buffer.AllowedCaps failed");
 		}
-
-		buffer.Dispose();
 */
 		Pad sink = new Pad("sink", PadDirection.Sink);
 //		try { Caps tcaps = sink.AllowedCaps; }
@@ -178,15 +159,6 @@ public class PadTest
 		Caps gotcaps = src.AllowedCaps;
 		Assert.IsNotNull(gotcaps);
 		Assert.IsTrue(gotcaps.IsEqual(caps));
-
-		gotcaps.Dispose();
-
-		src.Unlink(sink);
-
-		src.Dispose();
-		sink.Dispose();
-		
-		caps.Dispose();
 	}
 
 	bool ProbeHandler(Pad pad, Gst.Buffer buffer)
@@ -208,16 +180,9 @@ public class PadTest
 
 		Gst.Buffer buffer = new Gst.Buffer();
 		Assert.AreEqual(src.Push(buffer), FlowReturn.NotLinked);
-		buffer.Dispose();
 
 		ulong handler_id = src.AddBufferProbe(new Pad.BufferProbeDelegate(ProbeHandler));
 		buffer = new Gst.Buffer();
 		Assert.AreEqual(src.Push(buffer), FlowReturn.Ok);
-		buffer.Dispose();
-		src.RemoveBufferProbe((uint)handler_id);
-
-		src.Dispose();
-
-		caps.Dispose();	
 	}
 }

@@ -33,8 +33,6 @@ public class CapsTest
         Caps caps = new Caps();
         Assert.IsNotNull(caps);
         Assert.IsFalse(caps.Handle == IntPtr.Zero, "Ooops, null handle");
-
-        caps.Dispose();
     }
 
     [Test]
@@ -51,8 +49,6 @@ public class CapsTest
         Assert.IsTrue(caps.IsFixed, "Caps should be FIXED!");
         Assert.IsFalse(caps.IsEmpty, "Caps shouldn't be EMPTY!");
         Assert.IsFalse(caps.IsAny, "Caps shouldn't be ANY!");
-
-        caps.Dispose();
     }
 
     [Test]
@@ -79,10 +75,6 @@ public class CapsTest
         Assert.IsFalse(caps3.IsEmpty, "How come caps are EMPTY?!");
 
         Assert.AreEqual(caps2.ToString() + ", framerate=(fraction)[ 0/1, 100/1 ]", caps3.ToString());
-
-        caps1.Dispose();
-        caps2.Dispose();
-        caps3.Dispose();
     }
 
     [Test]
@@ -111,10 +103,6 @@ public class CapsTest
                         "format=(fourcc)I420, " + 
                         "height=(int)480", 
                         caps3.ToString());
-
-        caps1.Dispose();
-        caps2.Dispose();
-        caps3.Dispose();
     }
 
 }

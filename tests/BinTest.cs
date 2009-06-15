@@ -42,10 +42,6 @@ public class BinTest
         bin.AddMany(e1, e2);
         
         Assert.AreEqual(bin.ChildrenCount, 2);
-        
-        e2.Dispose();
-        e1.Dispose();
-        bin.Dispose();
     }
 
     
@@ -60,9 +56,6 @@ public class BinTest
         
         Assert.IsNotNull(e1);
         Assert.AreEqual(e1.Name, "element-name");
-        
-        e1.Dispose();
-        bin.Dispose();
     }
 
     [Test]
@@ -87,11 +80,6 @@ public class BinTest
         for(int i = 0; i < elements.Length; i++) {
             Assert.AreEqual(elements[elements.Length - i - 1], children[i]);
         }
-
-        bin.Dispose();
-
-		foreach(Element e in elements)
-			e.Dispose();
     }
 
 	[Test]
@@ -104,9 +92,6 @@ public class BinTest
 		Assert.IsNotNull(filesrc, "Could not create filesrc");
 
 		bin.Add(filesrc);
-		
-		filesrc.Dispose();
-		bin.Dispose();
 	}
 
 }
