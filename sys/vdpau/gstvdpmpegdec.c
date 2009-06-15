@@ -72,8 +72,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-vdpau-video, " "chroma-type = (int) 0")
-    );
+    GST_STATIC_CAPS (GST_VDP_VIDEO_CAPS));
 
 #define DEBUG_INIT(bla) \
 GST_DEBUG_CATEGORY_INIT (gst_vdp_mpeg_dec_debug, "vdpaumpegdec", 0, "VDPAU powered mpeg decoder");
@@ -188,7 +187,7 @@ gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
 
   src_caps = gst_caps_new_simple ("video/x-vdpau-video",
       "device", G_TYPE_OBJECT, mpeg_dec->device,
-      "chroma_type", G_TYPE_INT, VDP_CHROMA_TYPE_420,
+      "chroma-type", G_TYPE_INT, VDP_CHROMA_TYPE_420,
       "width", G_TYPE_INT, width,
       "height", G_TYPE_INT, height,
       "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
@@ -247,7 +246,7 @@ gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
           }
         }
 
-        bitrate += (ext.bitrate_ext << 18);;
+        bitrate += (ext.bitrate_ext << 18);
         gst_buffer_unref (buf);
       }
 
