@@ -61,8 +61,16 @@ static const gint dy[8] = { 0, -1, -1, -1, 0, 1, 1, 1 };
 enum
 {
   PROP_0 = 0,
-  PROP_SCRATCH_LINES
+  PROP_SCRATCH_LINES,
+  PROP_COLOR_AGING,
+  PROP_PITS,
+  PROP_DUSTS
 };
+
+#define DEFAULT_SCRATCH_LINES 7
+#define DEFAULT_COLOR_AGING TRUE
+#define DEFAULT_PITS TRUE
+#define DEFAULT_DUSTS TRUE
 
 typedef struct _GstAgingTV GstAgingTV;
 typedef struct _GstAgingTVClass GstAgingTVClass;
@@ -72,6 +80,10 @@ struct _GstAgingTV
   GstVideoFilter videofilter;
 
   gint width, height;
+
+  gboolean color_aging;
+  gboolean pits;
+  gboolean dusts;
 
   gint coloraging_state;
 
@@ -311,6 +323,15 @@ gst_agingtv_get_property (GObject * object, guint prop_id,
     case PROP_SCRATCH_LINES:
       g_value_set_uint (value, agingtv->scratch_lines);
       break;
+    case PROP_COLOR_AGING:
+      g_value_set_boolean (value, agingtv->color_aging);
+      break;
+    case PROP_PITS:
+      g_value_set_boolean (value, agingtv->pits);
+      break;
+    case PROP_DUSTS:
+      g_value_set_boolean (value, agingtv->dusts);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -325,6 +346,15 @@ gst_agingtv_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_SCRATCH_LINES:
       agingtv->scratch_lines = g_value_get_uint (value);
+      break;
+    case PROP_COLOR_AGING:
+      agingtv->color_aging = g_value_get_boolean (value);
+      break;
+    case PROP_PITS:
+      agingtv->pits = g_value_get_boolean (value);
+      break;
+    case PROP_DUSTS:
+      agingtv->dusts = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -361,10 +391,15 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
   if (area_scale <= 0)
     area_scale = 1;
 
-  coloraging (src, dest, video_size, &agingtv->coloraging_state);
+  if (agingtv->color_aging)
+    coloraging (src, dest, video_size, &agingtv->coloraging_state);
+  else
+    memcpy (dest, src, GST_BUFFER_SIZE (in));
+
   scratching (agingtv->scratches, agingtv->scratch_lines, dest, width, height);
-  pits (dest, width, height, area_scale, &agingtv->pits_interval);
-  if (area_scale > 1)
+  if (agingtv->pits)
+    pits (dest, width, height, area_scale, &agingtv->pits_interval);
+  if (area_scale > 1 && agingtv->dusts)
     dusts (dest, width, height, &agingtv->dust_interval, area_scale);
 
   return ret;
@@ -397,7 +432,22 @@ gst_agingtv_class_init (GstAgingTVClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SCRATCH_LINES,
       g_param_spec_uint ("scratch-lines", "Scratch Lines",
-          "Number of scratch lines", 0, SCRATCH_MAX, 7,
+          "Number of scratch lines", 0, SCRATCH_MAX, DEFAULT_SCRATCH_LINES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, PROP_COLOR_AGING,
+      g_param_spec_boolean ("color-aging", "Color Aging",
+          "Color Aging", DEFAULT_COLOR_AGING,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, PROP_PITS,
+      g_param_spec_boolean ("pits", "Pits",
+          "Pits", DEFAULT_PITS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, PROP_DUSTS,
+      g_param_spec_boolean ("dusts", "Dusts",
+          "Dusts", DEFAULT_DUSTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_agingtv_set_caps);
@@ -409,5 +459,8 @@ gst_agingtv_class_init (GstAgingTVClass * klass)
 static void
 gst_agingtv_init (GstAgingTV * agingtv, GstAgingTVClass * klass)
 {
-  agingtv->scratch_lines = 7;
+  agingtv->scratch_lines = DEFAULT_SCRATCH_LINES;
+  agingtv->color_aging = DEFAULT_COLOR_AGING;
+  agingtv->pits = DEFAULT_PITS;
+  agingtv->dusts = DEFAULT_DUSTS;
 }
