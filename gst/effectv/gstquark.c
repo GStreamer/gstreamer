@@ -150,10 +150,11 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
 {
   GstQuarkTV *filter = GST_QUARKTV (trans);
   gint area;
-  guint32 *dest;
+  guint32 *src, *dest;
   GstFlowReturn ret = GST_FLOW_OK;
 
   area = filter->area;
+  src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
 
   if (G_UNLIKELY (filter->planetable == NULL))
@@ -174,7 +175,8 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
             (fastrand () >> 24)) % filter->planes];
 
     /* Copy the pixel from the random buffer to dest */
-    dest[area] = (rand ? ((guint32 *) GST_BUFFER_DATA (rand))[area] : 0);
+    dest[area] =
+        (rand ? ((guint32 *) GST_BUFFER_DATA (rand))[area] : src[area]);
   }
 
   filter->current_plane--;
