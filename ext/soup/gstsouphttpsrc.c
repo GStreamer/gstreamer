@@ -138,44 +138,29 @@ static void gst_soup_http_src_get_property (GObject * object, guint prop_id,
 static GstFlowReturn gst_soup_http_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 static gboolean gst_soup_http_src_start (GstBaseSrc * bsrc);
-
 static gboolean gst_soup_http_src_stop (GstBaseSrc * bsrc);
-
 static gboolean gst_soup_http_src_get_size (GstBaseSrc * bsrc, guint64 * size);
-
 static gboolean gst_soup_http_src_is_seekable (GstBaseSrc * bsrc);
-
 static gboolean gst_soup_http_src_do_seek (GstBaseSrc * bsrc,
     GstSegment * segment);
 static gboolean gst_soup_http_src_unlock (GstBaseSrc * bsrc);
-
 static gboolean gst_soup_http_src_unlock_stop (GstBaseSrc * bsrc);
-
 static gboolean gst_soup_http_src_set_location (GstSoupHTTPSrc * src,
     const gchar * uri);
 static gboolean gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src,
     const gchar * uri);
-
 static char *gst_soup_http_src_unicodify (const char *str);
-
 static gboolean gst_soup_http_src_build_message (GstSoupHTTPSrc * src);
-
 static void gst_soup_http_src_cancel_message (GstSoupHTTPSrc * src);
-
 static void gst_soup_http_src_queue_message (GstSoupHTTPSrc * src);
-
 static gboolean gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src,
     guint64 offset);
 static void gst_soup_http_src_session_unpause_message (GstSoupHTTPSrc * src);
-
 static void gst_soup_http_src_session_pause_message (GstSoupHTTPSrc * src);
-
 static void gst_soup_http_src_session_close (GstSoupHTTPSrc * src);
-
 static void gst_soup_http_src_parse_status (SoupMessage * msg,
     GstSoupHTTPSrc * src);
 static void gst_soup_http_src_chunk_free (gpointer gstbuf);
-
 static SoupBuffer *gst_soup_http_src_chunk_allocator (SoupMessage * msg,
     gsize max_len, gpointer user_data);
 static void gst_soup_http_src_got_chunk_cb (SoupMessage * msg,
@@ -225,9 +210,7 @@ static void
 gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
 {
   GObjectClass *gobject_class;
-
   GstBaseSrcClass *gstbasesrc_class;
-
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -734,19 +717,24 @@ gst_soup_http_src_authenticate_cb (SoupSession * session, SoupMessage * msg,
 }
 
 static void
+gst_soup_http_src_headers_foreach (const gchar * name, const gchar * val,
+    gpointer src)
+{
+  GST_DEBUG_OBJECT (src, " %s: %s", name, val);
+}
+
+static void
 gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 {
   const char *value;
-
   GstTagList *tag_list;
-
   GstBaseSrc *basesrc;
-
   guint64 newsize;
-
   GHashTable *params = NULL;
 
-  GST_DEBUG_OBJECT (src, "got headers");
+  GST_DEBUG_OBJECT (src, "got headers:");
+  soup_message_headers_foreach (msg->response_headers,
+      gst_soup_http_src_headers_foreach, src);
 
   if (src->automatic_redirect && SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
     GST_DEBUG_OBJECT (src, "%u redirect to \"%s\"", msg->status_code,
@@ -965,15 +953,10 @@ gst_soup_http_src_chunk_allocator (SoupMessage * msg, gsize max_len,
     gpointer user_data)
 {
   GstSoupHTTPSrc *src = (GstSoupHTTPSrc *) user_data;
-
   GstBaseSrc *basesrc = GST_BASE_SRC_CAST (src);
-
   GstBuffer *gstbuf;
-
   SoupBuffer *soupbuf;
-
   gsize length;
-
   GstFlowReturn rc;
 
   if (max_len)
@@ -1007,7 +990,6 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
     GstSoupHTTPSrc * src)
 {
   GstBaseSrc *basesrc;
-
   guint64 new_position;
 
   if (G_UNLIKELY (msg != src->msg)) {
@@ -1162,6 +1144,10 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src)
   gst_soup_http_src_add_range_header (src, src->request_position);
 
   gst_soup_http_src_add_extra_headers (src);
+
+  GST_DEBUG_OBJECT (src, "request headers:");
+  soup_message_headers_foreach (src->msg->request_headers,
+      gst_soup_http_src_headers_foreach, src);
 
   return TRUE;
 }
