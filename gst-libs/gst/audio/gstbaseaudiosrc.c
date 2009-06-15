@@ -663,21 +663,31 @@ static gboolean
 gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event)
 {
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
+  gboolean res;
+
+  res = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
+      GST_DEBUG_OBJECT (bsrc, "flush-start");
       gst_ring_buffer_pause (src->ringbuffer);
       gst_ring_buffer_clear_all (src->ringbuffer);
       break;
     case GST_EVENT_FLUSH_STOP:
+      GST_DEBUG_OBJECT (bsrc, "flush-stop");
       /* always resync on sample after a flush */
       src->next_sample = -1;
       gst_ring_buffer_clear_all (src->ringbuffer);
       break;
+    case GST_EVENT_SEEK:
+      GST_DEBUG_OBJECT (bsrc, "refuse to seek");
+      res = FALSE;
+      break;
     default:
+      GST_DEBUG_OBJECT (bsrc, "dropping event %p", event);
       break;
   }
-  return TRUE;
+  return res;
 }
 
 /* get the next offset in the ringbuffer for reading samples.
