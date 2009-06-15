@@ -76,7 +76,8 @@ struct _GstAgingTV
   GstVideoFilter videofilter;
 
   gint width, height;
-  gint aging_mode;
+
+  gint coloraging_state;
 
   scratch scratches[SCRATCH_MAX];
   gint scratch_lines;
@@ -157,26 +158,36 @@ gst_agingtv_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
   return ret;
 }
 
-static unsigned int
+static inline guint
 fastrand (void)
 {
-  static unsigned int fastrand_val;
+  static guint fastrand_val;
 
   return (fastrand_val = fastrand_val * 1103515245 + 12345);
 }
 
 
 static void
-coloraging (guint32 * src, guint32 * dest, gint video_area)
+coloraging (guint32 * src, guint32 * dest, gint video_area, gint * c)
 {
   guint32 a, b;
   gint i;
+  gint c_tmp = *c;
 
-  for (i = video_area; i; i--) {
+  c_tmp -= (gint) (fastrand ()) >> 28;
+  if (c_tmp < 0)
+    c_tmp = 0;
+  if (c_tmp > 0x18)
+    c_tmp = 0x18;
+
+  for (i = 0; i < video_area; i++) {
     a = *src++;
     b = (a & 0xfcfcfc) >> 2;
-    *dest++ = a - b + 0x181818 + ((fastrand () >> 8) & 0x101010);
+    *dest++ =
+        a - b + (c_tmp | (c_tmp << 8) | (c_tmp << 16)) +
+        ((fastrand () >> 8) & 0x101010);
   }
+  *c = c_tmp;
 }
 
 
@@ -230,17 +241,17 @@ scratching (scratch * scratches, gint scratch_lines, guint32 * dest, gint width,
 }
 
 static void
-dusts (guint32 * dest, gint width, gint height, gint dust_interval,
+dusts (guint32 * dest, gint width, gint height, gint * dust_interval,
     gint area_scale)
 {
-  int i, j;
-  int dnum;
-  int d, len;
+  gint i, j;
+  gint dnum;
+  gint d, len;
   guint x, y;
 
-  if (dust_interval == 0) {
+  if (*dust_interval == 0) {
     if ((fastrand () & 0xf0000000) == 0) {
-      dust_interval = fastrand () >> 29;
+      *dust_interval = fastrand () >> 29;
     }
     return;
   }
@@ -262,27 +273,27 @@ dusts (guint32 * dest, gint width, gint height, gint dust_interval,
       d = (d + fastrand () % 3 - 1) & 7;
     }
   }
-  dust_interval--;
+  *dust_interval = *dust_interval - 1;
 }
 
 static void
 pits (guint32 * dest, gint width, gint height, gint area_scale,
-    gint pits_interval)
+    gint * pits_interval)
 {
-  int i, j;
-  int pnum, size, pnumscale;
+  gint i, j;
+  gint pnum, size, pnumscale;
   guint x, y;
 
   pnumscale = area_scale * 2;
-  if (pits_interval) {
+  if (*pits_interval) {
     pnum = pnumscale + (fastrand () % pnumscale);
 
-    pits_interval--;
+    *pits_interval = *pits_interval - 1;
   } else {
     pnum = fastrand () % pnumscale;
 
     if ((fastrand () & 0xf8000000) == 0) {
-      pits_interval = (fastrand () >> 28) + 20;
+      *pits_interval = (fastrand () >> 28) + 20;
     }
   }
   for (i = 0; i < pnum; i++) {
@@ -310,22 +321,20 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
   GstAgingTV *agingtv = GST_AGINGTV (trans);
   gint width = agingtv->width;
   gint height = agingtv->height;
-  int video_size = width * height;
+  gint video_size = width * height;
   guint32 *src = (guint32 *) GST_BUFFER_DATA (in);
   guint32 *dest = (guint32 *) GST_BUFFER_DATA (out);
   gint area_scale = width * height / 64 / 480;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  gst_buffer_copy_metadata (out, in, GST_BUFFER_COPY_TIMESTAMPS);
-
   if (area_scale <= 0)
     area_scale = 1;
 
-  coloraging (src, dest, video_size);
+  coloraging (src, dest, video_size, &agingtv->coloraging_state);
   scratching (agingtv->scratches, agingtv->scratch_lines, dest, width, height);
-  pits (dest, width, height, area_scale, agingtv->pits_interval);
+  pits (dest, width, height, area_scale, &agingtv->pits_interval);
   if (area_scale > 1)
-    dusts (dest, width, height, agingtv->dust_interval, area_scale);
+    dusts (dest, width, height, &agingtv->dust_interval, area_scale);
 
   return ret;
 }
