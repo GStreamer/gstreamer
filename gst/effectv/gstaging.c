@@ -28,12 +28,15 @@
 #include "config.h"
 #endif
 
-#include <gst/video/gstvideofilter.h>
-
 #include <string.h>
 #include <math.h>
 
+#include <gst/gst.h>
+
 #include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
+
+#include <gst/controller/gstcontroller.h>
 
 #define GST_TYPE_AGINGTV \
   (gst_agingtv_get_type())
@@ -387,6 +390,17 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
   guint32 *dest = (guint32 *) GST_BUFFER_DATA (out);
   gint area_scale = width * height / 64 / 480;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_TIMESTAMP (in);
+  stream_time =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (agingtv, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (agingtv), stream_time);
 
   if (area_scale <= 0)
     area_scale = 1;
