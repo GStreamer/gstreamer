@@ -55,7 +55,7 @@ struct _GstDiceTV
   GstVideoFilter videofilter;
 
   gint width, height;
-  gchar *dicemap;
+  guint8 *dicemap;
 
   gint g_cube_bits;
   gint g_cube_size;
@@ -107,8 +107,7 @@ gst_dicetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     g_free (filter->dicemap);
-    filter->dicemap =
-        (gchar *) g_malloc (filter->height * filter->width * sizeof (gchar));
+    filter->dicemap = (guint8 *) g_malloc (filter->height * filter->width);
     gst_dicetv_create_map (filter);
     ret = TRUE;
   }
