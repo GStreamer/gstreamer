@@ -2382,8 +2382,13 @@ restart:
     goto done;
 
   if (have_no_preroll) {
+    GST_CAT_DEBUG (GST_CAT_STATES,
+        "we have NO_PREROLL elements %s -> NO_PREROLL",
+        gst_element_state_change_return_get_name (ret));
     ret = GST_STATE_CHANGE_NO_PREROLL;
   } else if (have_async) {
+    GST_CAT_DEBUG (GST_CAT_STATES, "we have ASYNC elements %s -> ASYNC",
+        gst_element_state_change_return_get_name (ret));
     ret = GST_STATE_CHANGE_ASYNC;
   }
 
@@ -2724,6 +2729,11 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
     /* update current state */
     current = GST_STATE (bin) = old_next;
   } else {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
+        "setting state from %s to %s, pending %s",
+        gst_element_state_get_name (old_state),
+        gst_element_state_get_name (old_state),
+        gst_element_state_get_name (pending));
     current = old_state;
   }
 
@@ -2755,7 +2765,7 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
     cont->pending = pending;
     /* mark busy */
     GST_STATE_RETURN (bin) = GST_STATE_CHANGE_ASYNC;
-    GST_STATE_NEXT (bin) = pending;
+    GST_STATE_NEXT (bin) = GST_STATE_GET_NEXT (old_state, pending);
   }
 
   if (old_next != GST_STATE_PLAYING) {
