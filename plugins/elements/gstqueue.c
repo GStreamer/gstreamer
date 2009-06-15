@@ -825,16 +825,18 @@ out_eos:
 static gboolean
 gst_queue_is_empty (GstQueue * queue)
 {
+  if (queue->queue->length == 0)
+    return TRUE;
+
   /* It is possible that a max size is reached before all min thresholds are.
    * Therefore, only consider it empty if it is not filled. */
-  return (queue->queue->length == 0 ||
-      ((queue->min_threshold.buffers > 0 &&
-              queue->cur_level.buffers < queue->min_threshold.buffers) ||
-          (queue->min_threshold.bytes > 0 &&
-              queue->cur_level.bytes < queue->min_threshold.bytes) ||
-          (queue->min_threshold.time > 0 &&
-              queue->cur_level.time < queue->min_threshold.time)) &&
-      !gst_queue_is_filled (queue));
+  return ((queue->min_threshold.buffers > 0 &&
+          queue->cur_level.buffers < queue->min_threshold.buffers) ||
+      (queue->min_threshold.bytes > 0 &&
+          queue->cur_level.bytes < queue->min_threshold.bytes) ||
+      (queue->min_threshold.time > 0 &&
+          queue->cur_level.time < queue->min_threshold.time)) &&
+      !gst_queue_is_filled (queue);
 }
 
 static gboolean
