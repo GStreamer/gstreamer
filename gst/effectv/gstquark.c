@@ -202,37 +202,34 @@ gst_quarktv_planetable_clear (GstQuarkTV * filter)
   }
 }
 
-static GstStateChangeReturn
-gst_quarktv_change_state (GstElement * element, GstStateChange transition)
+static gboolean
+gst_quarktv_start (GstBaseTransform * trans)
 {
-  GstQuarkTV *filter = GST_QUARKTV (element);
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstQuarkTV *filter = GST_QUARKTV (trans);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      filter->planetable =
-          (GstBuffer **) g_malloc0 (filter->planes * sizeof (GstBuffer *));
-      break;
-    default:
-      break;
+  if (filter->planetable) {
+    gst_quarktv_planetable_clear (filter);
+    g_free (filter->planetable);
   }
+  filter->planetable =
+      (GstBuffer **) g_malloc0 (filter->planes * sizeof (GstBuffer *));
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_quarktv_planetable_clear (filter);
-      g_free (filter->planetable);
-      filter->planetable = NULL;
-      break;
-    default:
-      break;
-  }
-
-  return ret;
+  return TRUE;
 }
 
+static void
+gst_quarktv_finalize (GObject * object)
+{
+  GstQuarkTV *filter = GST_QUARKTV (object);
+
+  if (filter->planetable) {
+    gst_quarktv_planetable_clear (filter);
+    g_free (filter->planetable);
+    filter->planetable = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
 
 static void
 gst_quarktv_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -310,22 +307,22 @@ static void
 gst_quarktv_class_init (GstQuarkTVClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstElementClass *element_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_quarktv_set_property;
   gobject_class->get_property = gst_quarktv_get_property;
+
+  gobject_class->finalize = gst_quarktv_finalize;
 
   g_object_class_install_property (gobject_class, PROP_PLANES,
       g_param_spec_int ("planes", "Planes",
           "Number of planes", 0, 64, PLANES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_quarktv_change_state);
-
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_quarktv_set_caps);
   trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_quarktv_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_quarktv_transform);
+  trans_class->start = GST_DEBUG_FUNCPTR (gst_quarktv_start);
 }
 
 static void
