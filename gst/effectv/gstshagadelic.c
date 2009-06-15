@@ -58,9 +58,9 @@ struct _GstShagadelicTV
 
   gint width, height;
   gint stat;
-  gchar *ripple;
-  gchar *spiral;
-  guchar phase;
+  guint8 *ripple;
+  guint8 *spiral;
+  guint8 phase;
   gint rx, ry;
   gint bx, by;
   gint rvx, rvy;
@@ -108,8 +108,8 @@ gst_shagadelictv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     g_free (filter->ripple);
     g_free (filter->spiral);
 
-    filter->ripple = (gchar *) g_malloc (area * 4);
-    filter->spiral = (gchar *) g_malloc (area);
+    filter->ripple = (guint8 *) g_malloc (area * 4);
+    filter->spiral = (guint8 *) g_malloc (area);
 
     gst_shagadelic_initialize (filter);
     ret = TRUE;
@@ -214,7 +214,7 @@ gst_shagadelictv_transform (GstBaseTransform * trans, GstBuffer * in,
   guint32 *src, *dest;
   gint x, y;
   guint32 v;
-  guchar r, g, b;
+  guint8 r, g, b;
   gint width, height;
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -233,11 +233,11 @@ gst_shagadelictv_transform (GstBaseTransform * trans, GstBuffer * in,
  * v = *src++;
  * *dest++ = v & ((r<<16)|(g<<8)|b);
  */
-      r = (gchar) (filter->ripple[(filter->ry + y) * width * 2 + filter->rx +
-              x] + filter->phase * 2) >> 7;
-      g = (gchar) (filter->spiral[y * width + x] + filter->phase * 3) >> 7;
-      b = (gchar) (filter->ripple[(filter->by + y) * width * 2 + filter->bx +
-              x] - filter->phase) >> 7;
+      r = ((gint8) (filter->ripple[(filter->ry + y) * width * 2 + filter->rx +
+                  x] + filter->phase * 2)) >> 7;
+      g = ((gint8) (filter->spiral[y * width + x] + filter->phase * 3)) >> 7;
+      b = ((gint8) (filter->ripple[(filter->by + y) * width * 2 + filter->bx +
+                  x] - filter->phase)) >> 7;
       *dest++ = v & ((r << 16) | (g << 8) | b);
     }
   }
