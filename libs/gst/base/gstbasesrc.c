@@ -1465,6 +1465,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       GST_OBJECT_UNLOCK (src->srcpad);
 
       if (started) {
+        GST_DEBUG_OBJECT (src, "performing seek");
         /* when we are running in push mode, we can execute the
          * seek right now, we need to unlock. */
         result = gst_base_src_perform_seek (src, event, TRUE);
@@ -1474,6 +1475,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
         /* else we store the event and execute the seek when we
          * get activated */
         GST_OBJECT_LOCK (src);
+        GST_DEBUG_OBJECT (src, "queueing seek");
         event_p = &src->data.ABI.pending_seek;
         gst_event_replace ((GstEvent **) event_p, event);
         GST_OBJECT_UNLOCK (src);
