@@ -29,11 +29,11 @@
 
 struct _elements_entry
 {
-  gchar *name;
+  const gchar *name;
     GType (*type) (void);
 };
 
-static struct _elements_entry _elements[] = {
+static const struct _elements_entry _elements[] = {
   {"edgetv", gst_edgetv_get_type},
   {"agingtv", gst_agingtv_get_type},
   {"dicetv", gst_dicetv_get_type},
