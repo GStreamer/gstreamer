@@ -21,12 +21,6 @@ public class ElementTest
 		Application.Init();
 	}
 
-	[TestFixtureTearDown]
-	public void Deinit() 
-	{
-		Application.Deinit();
-	}
-
 	[Test]
 	public void TestErrorNoBus() 
 	{
@@ -41,6 +35,5 @@ public class ElementTest
 
 		Assert.IsFalse(src.Link(sink));
 	}
-
 }
 

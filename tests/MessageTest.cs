@@ -16,12 +16,6 @@ public class MessageTest {
 		Application.Init();
 	}
 
-	[TestFixtureTearDown]
-	public void Deinit()
-	{
-		Application.Deinit();
-	}
-
 	[Test]
 	public void TestParsing()
 	{
@@ -36,3 +30,4 @@ public class MessageTest {
 		Assert.IsNull(message.Src);
 	}
 }
+

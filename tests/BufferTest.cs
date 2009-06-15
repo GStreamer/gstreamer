@@ -17,12 +17,6 @@ public class BufferTest {
 		Application.Init();
 	}	
 
-	[TestFixtureTearDown]
-	public void Deinit() 
-	{
-		Application.Deinit();
-	}
-
 	[Test]
 	public void TestSubbuffer() 
 	{

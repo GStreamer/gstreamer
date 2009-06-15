@@ -22,12 +22,6 @@ public class BinTest
         Application.Init();
     }
     
-    [TestFixtureTearDown]
-    public void Deinit()
-    {
-        Application.Deinit();
-    }
-
     [Test]
     public void TestAdd()
     {

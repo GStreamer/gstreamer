@@ -17,7 +17,6 @@ public class ApplicationTest
     public void Init()
     {
         Gst.Application.Init();
-        Gst.Application.Deinit();
     }
     
     [Test]
@@ -25,7 +24,6 @@ public class ApplicationTest
     {
         string [] args = { "arg_a", "arg_b" };
         Gst.Application.Init("gstreamer-sharp-test", ref args);
-        Gst.Application.Deinit();
     }
     
     [Test]
@@ -33,7 +31,6 @@ public class ApplicationTest
     {
         string [] args = { "arg_a", "arg_b" };
         Gst.Application.InitCheck("gstreamer-sharp-test", ref args);
-        Gst.Application.Deinit();
     }
 }
 

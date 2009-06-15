@@ -21,12 +21,6 @@ public class CapsTest
         Application.Init();
     }
 
-    [TestFixtureTearDown]
-    public void Deinit()
-    {
-        Application.Deinit();
-    }
-
     [Test]
     public void TestPlainCreation()
     {
@@ -104,5 +98,4 @@ public class CapsTest
                         "height=(int)480", 
                         caps3.ToString());
     }
-
 }
