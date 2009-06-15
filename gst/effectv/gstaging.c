@@ -1,9 +1,12 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
+ * Copyright (C) <2009> Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * EffecTV - Realtime Digital Video Effector
- * Copyright (C) 2001 FUKUCHI Kentarou
+ * Copyright (C) 2001-2002 FUKUCHI Kentarou
+ *
+ * AgingTV - film-aging effect.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,18 +22,6 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
- */
-
-/*
- * This file was (probably) generated from gstvideotemplate.c,
- * gstvideotemplate.c,v 1.11 2004/01/07 08:56:45 ds Exp 
- */
-
-/* From main.c of warp-1.1:
- *
- *      Simple DirectMedia Layer demo
- *      Realtime picture 'gooing'
- *      by sam lantinga slouken@devolution.com
  */
 
 #ifdef HAVE_CONFIG_H
@@ -62,11 +53,16 @@ typedef struct _scratch
   gint x;
   gint dx;
   gint init;
-}
-scratch;
+} scratch;
 
-static int dx[8] = { 1, 1, 0, -1, -1, -1, 0, 1 };
-static int dy[8] = { 0, -1, -1, -1, 0, 1, 1, 1 };
+static const gint dx[8] = { 1, 1, 0, -1, -1, -1, 0, 1 };
+static const gint dy[8] = { 0, -1, -1, -1, 0, 1, 1, 1 };
+
+enum
+{
+  PROP_0 = 0,
+  PROP_SCRATCH_LINES
+};
 
 typedef struct _GstAgingTV GstAgingTV;
 typedef struct _GstAgingTVClass GstAgingTVClass;
@@ -92,14 +88,6 @@ struct _GstAgingTVClass
   GstVideoFilterClass parent_class;
 };
 
-GType gst_agingtv_get_type (void);
-
-static const GstElementDetails agingtv_details =
-GST_ELEMENT_DETAILS ("AgingTV effect",
-    "Filter/Effect/Video",
-    "AgingTV adds age to video input using scratches and dust",
-    "Sam Lantinga <slouken@devolution.com>");
-
 static GstStaticPadTemplate gst_agingtv_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -114,7 +102,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
     );
 
-static GstVideoFilterClass *parent_class = NULL;
+GST_BOILERPLATE (GstAgingTV, gst_agingtv, GstVideoFilter,
+    GST_TYPE_VIDEO_FILTER);
 
 static gboolean
 gst_agingtv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
@@ -138,12 +127,10 @@ static gboolean
 gst_agingtv_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     guint * size)
 {
-  GstAgingTV *filter;
+  GstAgingTV *filter = GST_AGINGTV (btrans);
   GstStructure *structure;
   gboolean ret = FALSE;
   gint width, height;
-
-  filter = GST_AGINGTV (btrans);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -314,6 +301,50 @@ pits (guint32 * dest, gint width, gint height, gint area_scale,
   }
 }
 
+static void
+gst_agingtv_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAgingTV *agingtv = GST_AGINGTV (object);
+
+  switch (prop_id) {
+    case PROP_SCRATCH_LINES:
+      g_value_set_uint (value, agingtv->scratch_lines);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+gst_agingtv_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAgingTV *agingtv = GST_AGINGTV (object);
+
+  switch (prop_id) {
+    case PROP_SCRATCH_LINES:
+      agingtv->scratch_lines = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static gboolean
+gst_agingtv_start (GstBaseTransform * trans)
+{
+  GstAgingTV *agingtv = GST_AGINGTV (trans);
+
+  agingtv->coloraging_state = 0x18;
+  agingtv->dust_interval = 0;
+  agingtv->pits_interval = 0;
+
+  memset (agingtv->scratches, 0, sizeof (agingtv->scratches));
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
     GstBuffer * out)
@@ -344,7 +375,10 @@ gst_agingtv_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &agingtv_details);
+  gst_element_class_set_details_simple (element_class, "AgingTV effect",
+      "Filter/Effect/Video",
+      "AgingTV adds age to video input using scratches and dust",
+      "Sam Lantinga <slouken@devolution.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_agingtv_sink_template));
@@ -353,44 +387,27 @@ gst_agingtv_base_init (gpointer g_class)
 }
 
 static void
-gst_agingtv_class_init (gpointer klass, gpointer class_data)
+gst_agingtv_class_init (GstAgingTVClass * klass)
 {
-  GstBaseTransformClass *trans_class;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
-  trans_class = (GstBaseTransformClass *) klass;
+  gobject_class->set_property = gst_agingtv_set_property;
+  gobject_class->get_property = gst_agingtv_get_property;
 
-  parent_class = g_type_class_peek_parent (klass);
+  g_object_class_install_property (gobject_class, PROP_SCRATCH_LINES,
+      g_param_spec_uint ("scratch-lines", "Scratch Lines",
+          "Number of scratch lines", 0, SCRATCH_MAX, 7,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_agingtv_set_caps);
   trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_agingtv_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_agingtv_transform);
+  trans_class->start = GST_DEBUG_FUNCPTR (gst_agingtv_start);
 }
 
 static void
-gst_agingtv_init (GTypeInstance * instance, gpointer g_class)
+gst_agingtv_init (GstAgingTV * agingtv, GstAgingTVClass * klass)
 {
-}
-
-GType
-gst_agingtv_get_type (void)
-{
-  static GType agingtv_type = 0;
-
-  if (!agingtv_type) {
-    static const GTypeInfo agingtv_info = {
-      sizeof (GstAgingTVClass),
-      gst_agingtv_base_init,
-      NULL,
-      gst_agingtv_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAgingTV),
-      0,
-      gst_agingtv_init,
-    };
-
-    agingtv_type = g_type_register_static (GST_TYPE_VIDEO_FILTER,
-        "GstAgingTV", &agingtv_info, 0);
-  }
-  return agingtv_type;
+  agingtv->scratch_lines = 7;
 }
