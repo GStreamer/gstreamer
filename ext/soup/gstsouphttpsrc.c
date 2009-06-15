@@ -313,6 +313,27 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
 }
 
 static void
+gst_soup_http_src_reset (GstSoupHTTPSrc * src)
+{
+  src->interrupted = FALSE;
+  src->retry = FALSE;
+  src->have_size = FALSE;
+  src->seekable = TRUE;
+  src->read_position = 0;
+  src->request_position = 0;
+
+  gst_caps_replace (&src->src_caps, NULL);
+  g_free (src->iradio_name);
+  src->iradio_name = NULL;
+  g_free (src->iradio_genre);
+  src->iradio_genre = NULL;
+  g_free (src->iradio_url);
+  src->iradio_url = NULL;
+  g_free (src->iradio_title);
+  src->iradio_title = NULL;
+}
+
+static void
 gst_soup_http_src_init (GstSoupHTTPSrc * src, GstSoupHTTPSrcClass * g_class)
 {
   const gchar *proxy;
@@ -325,28 +346,19 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src, GstSoupHTTPSrcClass * g_class)
   src->proxy_id = NULL;
   src->proxy_pw = NULL;
   src->cookies = NULL;
-  src->src_caps = NULL;
   src->iradio_mode = FALSE;
-  src->iradio_name = NULL;
-  src->iradio_genre = NULL;
-  src->iradio_url = NULL;
-  src->iradio_title = NULL;
   src->loop = NULL;
   src->context = NULL;
   src->session = NULL;
   src->msg = NULL;
-  src->interrupted = FALSE;
-  src->retry = FALSE;
-  src->have_size = FALSE;
-  src->seekable = TRUE;
-  src->read_position = 0;
-  src->request_position = 0;
   proxy = g_getenv ("http_proxy");
   if (proxy && !gst_soup_http_src_set_proxy (src, proxy)) {
     GST_WARNING_OBJECT (src,
         "The proxy in the http_proxy env var (\"%s\") cannot be parsed.",
         proxy);
   }
+
+  gst_soup_http_src_reset (src);
 }
 
 static void
@@ -372,18 +384,6 @@ gst_soup_http_src_dispose (GObject * gobject)
   g_free (src->proxy_pw);
   src->proxy_pw = NULL;
   g_strfreev (src->cookies);
-  g_free (src->iradio_name);
-  src->iradio_name = NULL;
-  g_free (src->iradio_genre);
-  src->iradio_genre = NULL;
-  g_free (src->iradio_url);
-  src->iradio_url = NULL;
-  g_free (src->iradio_title);
-  src->iradio_title = NULL;
-  if (src->src_caps) {
-    gst_caps_unref (src->src_caps);
-    src->src_caps = NULL;
-  }
 
   G_OBJECT_CLASS (parent_class)->dispose (gobject);
 }
@@ -1286,6 +1286,7 @@ gst_soup_http_src_stop (GstBaseSrc * bsrc)
     src->extra_headers = NULL;
   }
 
+  gst_soup_http_src_reset (src);
   return TRUE;
 }
 
