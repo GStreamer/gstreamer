@@ -31,6 +31,10 @@
  * Various GStreamer objects provide access to their internal structures using
  * an iterator.
  *
+ * In general, whenever calling a GstIterator function results in your code
+ * receiving a refcounted object, the refcount for that object will have been
+ * increased.  Your code is responsible for unrefing that object after use.
+ *
  * The basic use pattern of an iterator is as follows:
  *
  * <example>
@@ -49,7 +53,7 @@
  *          gst_iterator_resync (it);
  *          break;
  *        case GST_ITERATOR_ERROR:
- *          ...wrong parameter were given...
+ *          ...wrong parameters were given...
  *          done = TRUE;
  *          break;
  *        case GST_ITERATOR_DONE:
@@ -61,7 +65,7 @@
  *   </programlisting>
  * </example>
  *
- * Last reviewed on 2008-08-29 (0.10.21)
+ * Last reviewed on 2009-06-16 (0.10.24)
  */
 
 #include "gst_private.h"
@@ -508,7 +512,8 @@ gst_iterator_filter (GstIterator * it, GCompareFunc func, gpointer user_data)
  * Folds @func over the elements of @iter. That is to say, @func will be called
  * as @func (object, @ret, @user_data) for each object in @it. The normal use
  * of this procedure is to accumulate the results of operating on the objects in
- * @ret.
+ * @ret.  If object is a refcounted object its refcount will be increased 
+ * before @func is called, and it should be unrefed after use in @func.
  *
  * This procedure can be used (and is used internally) to implement the
  * gst_iterator_foreach() and gst_iterator_find_custom() operations.
@@ -573,7 +578,9 @@ foreach_fold_func (gpointer item, GValue * unused, ForeachFoldData * data)
  * @user_data: user data passed to the function
  *
  * Iterate over all element of @it and call the given function @func for
- * each element.
+ * each element.  As in gst_iterator_fold(), the refcount of a refcounted 
+ * object will be increased before @func is called, and should be unrefed
+ * after use.
  *
  * Returns: the result call to gst_iterator_fold(). The iterator will not be
  * freed.
@@ -616,7 +623,9 @@ find_custom_fold_func (gpointer item, GValue * ret, FindCustomFoldData * data)
  * @user_data: user data passed to the compare function
  *
  * Find the first element in @it that matches the compare function @func.
- * @func should return 0 when the element is found.
+ * @func should return 0 when the element is found.  As in gst_iterator_fold(),
+ * the refcount of a refcounted object will be increased before @func is 
+ * called, and should be unrefed after use.
  *
  * The iterator will not be freed.
  *
