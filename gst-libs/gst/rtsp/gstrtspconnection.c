@@ -2858,7 +2858,7 @@ gst_rtsp_connection_get_tunnelid (const GstRTSPConnection * conn)
 /**
  * gst_rtsp_connection_do_tunnel:
  * @conn: a #GstRTSPConnection
- * @conn2: a #GstRTSPConnection
+ * @conn2: a #GstRTSPConnection or %NULL
  *
  * If @conn received the first tunnel connection and @conn2 received
  * the second tunnel connection, link the two connections together so that
@@ -2866,6 +2866,9 @@ gst_rtsp_connection_get_tunnelid (const GstRTSPConnection * conn)
  *
  * After this call, @conn2 cannot be used anymore and must be freed with
  * gst_rtsp_connection_free().
+ *
+ * If @conn2 is %NULL then only the base64 decoding context will be setup for
+ * @conn.
  *
  * Returns: return GST_RTSP_OK on success.
  *
@@ -2876,26 +2879,28 @@ gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
     GstRTSPConnection * conn2)
 {
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (conn2 != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (conn->tstate == TUNNEL_STATE_GET, GST_RTSP_EINVAL);
-  g_return_val_if_fail (conn2->tstate == TUNNEL_STATE_POST, GST_RTSP_EINVAL);
-  g_return_val_if_fail (!memcmp (conn2->tunnelid, conn->tunnelid, TUNNELID_LEN),
-      GST_RTSP_EINVAL);
 
-  /* both connections have fd0 as the read/write socket. start by taking the
-   * socket from conn2 and set it as the socket in conn */
-  conn->fd1 = conn2->fd0;
+  if (conn2 != NULL) {
+    g_return_val_if_fail (conn->tstate == TUNNEL_STATE_GET, GST_RTSP_EINVAL);
+    g_return_val_if_fail (conn2->tstate == TUNNEL_STATE_POST, GST_RTSP_EINVAL);
+    g_return_val_if_fail (!memcmp (conn2->tunnelid, conn->tunnelid,
+            TUNNELID_LEN), GST_RTSP_EINVAL);
 
-  /* clean up some of the state of conn2 */
-  gst_poll_remove_fd (conn2->fdset, &conn2->fd0);
-  conn2->fd0.fd = -1;
-  conn2->readfd = conn2->writefd = NULL;
+    /* both connections have fd0 as the read/write socket. start by taking the
+     * socket from conn2 and set it as the socket in conn */
+    conn->fd1 = conn2->fd0;
 
-  /* We make fd0 the write socket and fd1 the read socket. */
-  conn->writefd = &conn->fd0;
-  conn->readfd = &conn->fd1;
+    /* clean up some of the state of conn2 */
+    gst_poll_remove_fd (conn2->fdset, &conn2->fd0);
+    conn2->fd0.fd = -1;
+    conn2->readfd = conn2->writefd = NULL;
 
-  conn->tstate = TUNNEL_STATE_COMPLETE;
+    /* We make fd0 the write socket and fd1 the read socket. */
+    conn->writefd = &conn->fd0;
+    conn->readfd = &conn->fd1;
+
+    conn->tstate = TUNNEL_STATE_COMPLETE;
+  }
 
   /* we need base64 decoding for the readfd */
   conn->ctx.state = 0;
