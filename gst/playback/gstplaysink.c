@@ -253,6 +253,7 @@ gst_play_sink_init (GstPlaySink * playsink)
 
   playsink->lock = g_mutex_new ();
   playsink->need_async_start = TRUE;
+  GST_OBJECT_FLAG_SET (playsink, GST_ELEMENT_IS_SINK);
 }
 
 static void
