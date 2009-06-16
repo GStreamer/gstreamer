@@ -122,7 +122,7 @@ struct _GstBaseSink {
  * @render: Called when a buffer should be presented or output, at the
  *     correct moment if the #GstBaseSink has been set to sync to the clock.
  * @render_list: Same as @render but used whith buffer lists instead of
- *     buffers
+ *     buffers. Since: 0.10.24
  * @async_play: Subclasses should override this when they need to perform
  *     special processing when changing to the PLAYING state asynchronously.
  *     Called with the OBJECT_LOCK held.
