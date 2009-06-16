@@ -191,10 +191,6 @@ gst_audioringbuffer_class_init (GstAudioRingBufferClass * klass)
   gstringbuffer_class->delay = GST_DEBUG_FUNCPTR (gst_audioringbuffer_delay);
   gstringbuffer_class->activate =
       GST_DEBUG_FUNCPTR (gst_audioringbuffer_activate);
-
-  /* ref class from a thread-safe context to work around missing bit of
-   * thread-safety in GObject */
-  g_type_class_ref (GST_TYPE_AUDIORING_BUFFER);
 }
 
 typedef guint (*WriteFunc) (GstAudioSink * sink, gpointer data, guint length);
@@ -596,6 +592,8 @@ gst_audio_sink_class_init (GstAudioSinkClass * klass)
 
   gstbaseaudiosink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_audio_sink_create_ringbuffer);
+
+  g_type_class_ref (GST_TYPE_AUDIORING_BUFFER);
 }
 
 static void
