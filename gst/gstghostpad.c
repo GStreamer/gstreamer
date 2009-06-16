@@ -182,6 +182,17 @@ gst_proxy_pad_do_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static GstFlowReturn
+gst_proxy_pad_do_chain_list (GstPad * pad, GstBufferList * list)
+{
+  GstFlowReturn res;
+  GstPad *internal = GST_PROXY_PAD_INTERNAL (pad);
+
+  res = gst_pad_push_list (internal, list);
+
+  return res;
+}
+
+static GstFlowReturn
 gst_proxy_pad_do_getrange (GstPad * pad, guint64 offset, guint size,
     GstBuffer ** buffer)
 {
@@ -815,6 +826,8 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_bufferalloc));
     gst_pad_set_chain_function (pad,
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_chain));
+    gst_pad_set_chain_list_function (pad,
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_chain_list));
   } else {
     gst_pad_set_getrange_function (pad,
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_getrange));
@@ -848,6 +861,8 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_bufferalloc));
     gst_pad_set_chain_function (internal,
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_chain));
+    gst_pad_set_chain_list_function (internal,
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_chain_list));
   } else {
     gst_pad_set_getrange_function (internal,
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_getrange));
