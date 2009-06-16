@@ -184,6 +184,7 @@ static const gchar *rtsp_headers[] = {
   "X-Receding-PlaylistChange",  /* X-Receding-PlaylistChange */
   "X-RTP-Info",                 /* X-RTP-Info */
   "X-StartupProfile",           /* X-StartupProfile */
+  "Timestamp",                  /* Timestamp */
 
   NULL
 };

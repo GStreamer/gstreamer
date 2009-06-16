@@ -308,7 +308,10 @@ typedef enum {
   GST_RTSP_HDR_X_PROXY_CLIENT_VERB, /* X-Proxy-Client-Verb */
   GST_RTSP_HDR_X_RECEDING_PLAYLISTCHANGE, /* X-Receding-PlaylistChange */
   GST_RTSP_HDR_X_RTP_INFO,          /* X-RTP-Info */
-  GST_RTSP_HDR_X_STARTUPPROFILE     /* X-StartupProfile */
+  GST_RTSP_HDR_X_STARTUPPROFILE,    /* X-StartupProfile */
+
+  /* Since 0.10.24 */
+  GST_RTSP_HDR_TIMESTAMP            /* Timestamp */
 
 } GstRTSPHeaderField;
 
