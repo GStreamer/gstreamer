@@ -211,6 +211,7 @@ gst_camerabin_image_change_state (GstElement * element,
           img->filename->str);
       gst_element_set_locked_state (img->sink, TRUE);
       gst_element_set_state (img->sink, GST_STATE_NULL);
+      g_string_assign (img->filename, "");
       break;
     default:
       break;
