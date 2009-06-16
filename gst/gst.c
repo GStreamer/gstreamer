@@ -135,6 +135,10 @@
 static gboolean gst_initialized = FALSE;
 static gboolean gst_deinitialized = FALSE;
 
+#ifdef G_OS_WIN32
+static HMODULE gst_dll_handle = NULL;
+#endif
+
 #ifndef GST_DISABLE_REGISTRY
 static GList *plugin_paths = NULL;      /* for delayed processing in post_init */
 #endif
@@ -282,6 +286,16 @@ parse_debug_list (const gchar * list)
 
   g_strfreev (split);
 }
+#endif
+
+#ifdef G_OS_WIN32
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+  if (fdwReason == DLL_PROCESS_ATTACH)
+    gst_dll_handle = (HMODULE) hinstDLL;
+  return TRUE;
+}
+
 #endif
 
 /**
@@ -728,8 +742,8 @@ scan_and_update_registry (GstRegistry * default_registry,
       char *base_dir;
       char *dir;
 
-      base_dir = g_win32_get_package_installation_directory (NULL,
-          "libgstreamer-0.10-0.dll");
+      base_dir = g_win32_get_package_installation_directory_of_module (
+         gst_dll_handle);
 
       dir = g_build_filename (base_dir, "lib", "gstreamer-0.10", NULL);
       GST_DEBUG ("scanning DLL dir %s", dir);
