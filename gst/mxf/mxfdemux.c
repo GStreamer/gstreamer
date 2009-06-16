@@ -439,8 +439,8 @@ gst_mxf_demux_handle_partition_pack (GstMXFDemux * demux, const MXFUL * key,
   for (l = demux->partitions; l; l = l->next) {
     GstMXFDemuxPartition *a, *b;
 
-    if (l->next == NULL);
-    break;
+    if (l->next == NULL)
+      break;
 
     a = l->data;
     b = l->next->data;
@@ -1921,8 +1921,8 @@ gst_mxf_demux_handle_random_index_pack (GstMXFDemux * demux, const MXFUL * key,
   for (l = demux->partitions; l; l = l->next) {
     GstMXFDemuxPartition *a, *b;
 
-    if (l->next == NULL);
-    break;
+    if (l->next == NULL)
+      break;
 
     a = l->data;
     b = l->next->data;
