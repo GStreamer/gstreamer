@@ -426,6 +426,7 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
   GstFrei0rFuncTable ftable = { NULL, };
   gint i;
   f0r_plugin_info_t info = { NULL, };
+  f0r_instance_t *instance = NULL;
 
   GST_DEBUG ("Registering plugin '%s'", filename);
 
@@ -460,6 +461,12 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
   g_module_symbol (module, "f0r_update", (gpointer *) & ftable.update);
   g_module_symbol (module, "f0r_update2", (gpointer *) & ftable.update2);
 
+  if (!ftable.init ()) {
+    GST_WARNING ("Failed to initialize plugin");
+    g_module_close (module);
+    return FALSE;
+  }
+
   if (!ftable.update && !ftable.update2)
     goto invalid_frei0r_plugin;
 
@@ -467,12 +474,14 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
 
   if (info.frei0r_version > 1) {
     GST_WARNING ("Unsupported frei0r version %d", info.frei0r_version);
+    ftable.deinit ();
     g_module_close (module);
     return FALSE;
   }
 
   if (info.color_model > F0R_COLOR_MODEL_PACKED32) {
     GST_WARNING ("Unsupported color model %d", info.color_model);
+    ftable.deinit ();
     g_module_close (module);
     return FALSE;
   }
@@ -483,10 +492,20 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
     ftable.get_param_info (&pinfo, i);
     if (pinfo.type > F0R_PARAM_STRING) {
       GST_WARNING ("Unsupported parameter type %d", pinfo.type);
+      ftable.deinit ();
       g_module_close (module);
       return FALSE;
     }
   }
+
+  instance = ftable.construct (640, 480);
+  if (!instance) {
+    GST_WARNING ("Failed to instanciate plugin '%s'", info.name);
+    ftable.deinit ();
+    g_module_close (module);
+    return FALSE;
+  }
+  ftable.destruct (instance);
 
   switch (info.plugin_type) {
     case F0R_PLUGIN_TYPE_FILTER:
@@ -510,6 +529,7 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
 
 invalid_frei0r_plugin:
   GST_ERROR ("Invalid frei0r plugin");
+  ftable.deinit ();
   g_module_close (module);
 
   return FALSE;

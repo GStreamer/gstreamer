@@ -227,11 +227,6 @@ gst_frei0r_filter_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
     return FALSE;
   }
 
-  if (!ftable->init ()) {
-    GST_ERROR ("Initializing plugin failed");
-    return FALSE;
-  }
-
   class_data = g_new0 (GstFrei0rFilterClassData, 1);
   memcpy (&class_data->info, info, sizeof (f0r_plugin_info_t));
   memcpy (&class_data->ftable, ftable, sizeof (GstFrei0rFuncTable));
