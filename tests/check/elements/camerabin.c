@@ -38,8 +38,6 @@
 #define PHOTO_SETTING_DELAY_US 0
 
 static GstElement *camera;
-static GCond *cam_cond;
-static GMutex *cam_mutex;
 static GMainLoop *main_loop;
 static guint cycle_count = 0;
 
@@ -52,7 +50,7 @@ make_test_file_name (const gchar * base_name)
   g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S "%s",
       g_get_tmp_dir (), base_name);
 
-  GST_INFO ("capturing to: %s (cycle_count=%d)", file_name, cycle_count);
+  GST_INFO ("capturing to: %s (cycle: %d)", file_name, cycle_count);
   return file_name;
 }
 
@@ -79,6 +77,7 @@ handle_image_captured_cb (gpointer data)
 
   GST_DEBUG ("handle_image_captured_cb, cycle: %d", cycle_count);
   if (cycle_count == 0) {
+    GST_DEBUG ("all cycles done");
     g_main_loop_quit (loop);
   } else {
     /* Set video recording mode */
@@ -97,7 +96,7 @@ handle_image_captured_cb (gpointer data)
     g_signal_emit_by_name (camera, "user-start", NULL);
 
     cycle_count--;
-    GST_DEBUG ("next cycle");
+    GST_DEBUG ("next cycle: %d", cycle_count);
   }
   GST_DEBUG ("handle_image_captured_cb done");
   return FALSE;
@@ -160,6 +159,10 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
       GST_WARNING ("ERROR: %s [%s]", err->message, debug);
       g_error_free (err);
       g_free (debug);
+      /* Write debug graph to file */
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (camera),
+          GST_DEBUG_GRAPH_SHOW_ALL, "camerabin.error");
+
       fail_if (TRUE, "error while capturing");
       g_main_loop_quit (loop);
       break;
@@ -172,6 +175,9 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
       GST_WARNING ("WARNING: %s [%s]", err->message, debug);
       g_error_free (err);
       g_free (debug);
+      /* Write debug graph to file */
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (camera),
+          GST_DEBUG_GRAPH_SHOW_ALL, "camerabin.warning");
       break;
     }
     case GST_MESSAGE_EOS:
@@ -199,9 +205,6 @@ setup (void)
   GST_INFO ("init");
 
   main_loop = g_main_loop_new (NULL, TRUE);
-
-  cam_cond = g_cond_new ();
-  cam_mutex = g_mutex_new ();
 
   camera = gst_check_setup_element ("camerabin");
 
@@ -242,8 +245,6 @@ setup (void)
 static void
 teardown (void)
 {
-  g_mutex_free (cam_mutex);
-  g_cond_free (cam_cond);
   if (camera)
     gst_check_teardown_element (camera);
 
