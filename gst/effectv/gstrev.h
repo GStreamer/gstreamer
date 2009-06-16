@@ -67,6 +67,8 @@ struct _GstRevTV
 {
   GstVideoFilter videofilter;
 
+  /* < private > */
+
   gint width, height;
   gint vgrabtime;
   gint vgrab;

@@ -40,6 +40,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-quarktv
+ *
+ * RevTV acts like a video waveform monitor for each line of video
+ * processed. This creates a pseudo 3D effect based on the brightness
+ * of the video along each line.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v videotestsrc ! revtv ! ffmpegcolorspace ! autovideosink
+ * ]| This pipeline shows the effect of revtv on a test stream.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

@@ -19,6 +19,7 @@
   <chapter>
     <title>gst-plugins-good Elements</title>
     <xi:include href="xml/element-aasink.xml" />
+    <xi:include href="xml/element-agingtv.xml" />
     <xi:include href="xml/element-alphacolor.xml" />
     <xi:include href="xml/element-alawdec.xml" />
     <xi:include href="xml/element-alawenc.xml" />
@@ -52,10 +53,12 @@
     <xi:include href="xml/element-cutter.xml" />
     <xi:include href="xml/element-deinterlace.xml" />
     <xi:include href="xml/element-deinterleave.xml" />
+    <xi:include href="xml/element-dicetv.xml" />
     <xi:include href="xml/element-directsoundsink.xml" />
     <xi:include href="xml/element-dv1394src.xml" />
     <xi:include href="xml/element-dvdec.xml" />
     <xi:include href="xml/element-dvdemux.xml" />
+    <xi:include href="xml/element-edgetv.xml" />
     <xi:include href="xml/element-equalizer-10bands.xml" />
     <xi:include href="xml/element-equalizer-3bands.xml" />
     <xi:include href="xml/element-equalizer-nbands.xml" />
@@ -105,13 +108,16 @@
     <xi:include href="xml/element-pulsesink.xml" />
     <xi:include href="xml/element-pulsesrc.xml" />
     <xi:include href="xml/element-pulsemixer.xml" />
+    <xi:include href="xml/element-quarktv.xml" />
     <xi:include href="xml/element-qtdemux.xml" />
+    <xi:include href="xml/element-revtv.xml" />
     <xi:include href="xml/element-rganalysis.xml" />
     <xi:include href="xml/element-rglimiter.xml" />
     <xi:include href="xml/element-rgvolume.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
     <xi:include href="xml/element-rtpjpegpay.xml" />
     <xi:include href="xml/element-rtspsrc.xml" />
+    <xi:include href="xml/element-shagadelictv.xml" />
     <xi:include href="xml/element-smokedec.xml" />
     <xi:include href="xml/element-smokeenc.xml" />
     <xi:include href="xml/element-smpte.xml" />
@@ -124,11 +130,13 @@
     <xi:include href="xml/element-udpsrc.xml" />
     <xi:include href="xml/element-udpsink.xml" />
     <xi:include href="xml/element-v4l2src.xml" />
+    <xi:include href="xml/element-vertigotv.xml" />
     <xi:include href="xml/element-videobalance.xml" />
     <xi:include href="xml/element-videobox.xml" />
     <xi:include href="xml/element-videocrop.xml" />
     <xi:include href="xml/element-videoflip.xml" />
     <xi:include href="xml/element-videomixer.xml" />
+    <xi:include href="xml/element-warptv.xml" />
     <xi:include href="xml/element-wavenc.xml" />
     <xi:include href="xml/element-waveformsink.xml" />
     <xi:include href="xml/element-wavpackdec.xml" />

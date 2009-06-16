@@ -53,6 +53,8 @@ struct _GstDiceTV
 {
   GstVideoFilter videofilter;
 
+  /* < private > */
+
   gint width, height;
   guint8 *dicemap;
 

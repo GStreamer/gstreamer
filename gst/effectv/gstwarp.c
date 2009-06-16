@@ -33,6 +33,19 @@
  *      by sam lantinga slouken@devolution.com
  */
 
+/**
+ * SECTION:element-warptv
+ *
+ * WarpTV does realtime goo'ing of the video input.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink
+ * ]| This pipeline shows the effect of warptv on a test stream.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

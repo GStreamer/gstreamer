@@ -22,6 +22,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-shagadelictv
+ *
+ * Oh behave, ShagedelicTV makes images shagadelic!
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v videotestsrc ! shagadelictv ! ffmpegcolorspace ! autovideosink
+ * ]| This pipeline shows the effect of shagadelictv on a test stream.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

@@ -24,6 +24,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-agingtv
+ *
+ * AgingTV ages a video stream in realtime, changes the colors and adds
+ * scratches and dust.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v videotestsrc ! agingtv ! ffmpegcolorspace ! autovideosink
+ * ]| This pipeline shows the effect of agingtv on a test stream.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

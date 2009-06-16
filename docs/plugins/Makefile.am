@@ -138,6 +138,14 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/debugutils/gsttaginject.h \
 	$(top_srcdir)/gst/debugutils/progressreport.h \
 	$(top_srcdir)/gst/deinterlace/gstdeinterlace.h \
+	$(top_srcdir)/gst/effectv/gstaging.h \
+	$(top_srcdir)/gst/effectv/gstdice.h \
+	$(top_srcdir)/gst/effectv/gstedge.h \
+	$(top_srcdir)/gst/effectv/gstquark.h \
+	$(top_srcdir)/gst/effectv/gstrev.h \
+	$(top_srcdir)/gst/effectv/gstshagadelic.h \
+	$(top_srcdir)/gst/effectv/gstvertigo.h \
+	$(top_srcdir)/gst/effectv/gstwarp.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer3bands.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer10bands.h \

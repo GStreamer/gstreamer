@@ -49,6 +49,8 @@ struct _GstShagadelicTV
 {
   GstVideoFilter videofilter;
 
+  /* < private > */
+
   gint width, height;
   gint stat;
   guint8 *ripple;

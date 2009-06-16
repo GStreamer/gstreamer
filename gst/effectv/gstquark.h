@@ -51,6 +51,8 @@ struct _GstQuarkTV
 {
   GstVideoFilter element;
 
+  /* < private > */
+
   gint width, height;
   gint area;
   gint planes;

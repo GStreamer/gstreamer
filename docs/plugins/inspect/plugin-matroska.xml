@@ -3,10 +3,10 @@
   <description>Matroska stream handling</description>
   <filename>../../gst/matroska/.libs/libgstmatroska.so</filename>
   <basename>libgstmatroska.so</basename>
-  <version>0.10.15</version>
+  <version>0.10.15.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins git/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -26,7 +26,7 @@
           <name>subtitle_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>text/plain; application/x-ssa; application/x-ass; application/x-usf; video/x-dvd-subpicture; application/x-subtitle-unknown</details>
+          <details>text/plain; application/x-ssa; application/x-ass; application/x-usf; video/x-dvd-subpicture; subpicture/x-pgs; application/x-subtitle-unknown</details>
         </caps>
         <caps>
           <name>audio_%02d</name>

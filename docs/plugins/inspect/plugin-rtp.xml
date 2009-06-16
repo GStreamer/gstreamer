@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.10.15</version>
+  <version>0.10.15.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins git/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -132,6 +132,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)AMR, encoding-params=(string)1, octet-align=(string)1, crc=(string)0, robust-sorting=(string)0, interleaving=(string)0, mode-set=(int)[ 0, 7 ], mode-change-period=(int)[ 1, 2147483647 ], mode-change-neighbor=(string){ 0, 1 }, maxptime=(int)[ 20, 2147483647 ], ptime=(int)[ 20, 2147483647 ]; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)AMR-WB, encoding-params=(string)1, octet-align=(string)1, crc=(string)0, robust-sorting=(string)0, interleaving=(string)0, mode-set=(int)[ 0, 7 ], mode-change-period=(int)[ 1, 2147483647 ], mode-change-neighbor=(string){ 0, 1 }, maxptime=(int)[ 20, 2147483647 ], ptime=(int)[ 20, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpceltdepay</name>
+      <longname>RTP CELT depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts CELT audio from RTP packets</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 32000, 48000 ], encoding-name=(string)CELT</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-celt</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpceltpay</name>
+      <longname>RTP CELT payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload-encodes CELT audio into a RTP packet</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 32000, 48000 ], encoding-name=(string)CELT</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-celt, rate=(int)[ 32000, 64000 ], channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>
@@ -978,7 +1020,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)SIREN, dct-length=(int)320</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)SIREN, bitrate=(string)16000, dct-length=(int)320</details>
         </caps>
         <caps>
           <name>sink</name>

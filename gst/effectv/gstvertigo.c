@@ -21,6 +21,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-vertigotv
+ *
+ * VertigoTV is a loopback alpha blending effector with rotating and scaling.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v videotestsrc ! vertigotv ! ffmpegcolorspace ! autovideosink
+ * ]| This pipeline shows the effect of vertigotv on a test stream.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

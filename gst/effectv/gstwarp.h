@@ -48,6 +48,8 @@ struct _GstWarpTV
 {
   GstVideoFilter videofilter;
 
+  /* < private > */
+
   gint width, height;
   gint *offstable;
   gint32 *disttable;

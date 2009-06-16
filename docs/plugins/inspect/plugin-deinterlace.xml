@@ -3,10 +3,10 @@
   <description>Deinterlacer</description>
   <filename>../../gst/deinterlace/.libs/libgstdeinterlace.so</filename>
   <basename>libgstdeinterlace.so</basename>
-  <version>0.10.15</version>
+  <version>0.10.15.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins git/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>Deinterlacer</longname>
       <class>Filter/Video</class>
       <description>Deinterlace Methods ported from DScaler/TvTime</description>
-      <author>Martin Eikermann &lt;meiker@upb.de&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Martin Eikermann &lt;meiker@upb.de&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

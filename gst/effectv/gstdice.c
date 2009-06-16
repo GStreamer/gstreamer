@@ -26,6 +26,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-dicetv
+ *
+ * DiceTV 'dices' the screen up into many small squares, each defaulting
+ * to a size of 16 pixels by 16 pixels.. Each square is rotated randomly
+ * in one of four directions: up (no change), down (180 degrees, or
+ * upside down), right (90 degrees clockwise), or left (90 degrees
+ * counterclockwise). The direction of each square normally remains
+ * consistent between each frame.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v videotestsrc ! dicetv ! ffmpegcolorspace ! autovideosink
+ * ]| This pipeline shows the effect of dicetv on a test stream.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

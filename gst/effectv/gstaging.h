@@ -60,6 +60,8 @@ struct _GstAgingTV
 {
   GstVideoFilter videofilter;
 
+  /* < private > */
+
   gint width, height;
 
   gboolean color_aging;

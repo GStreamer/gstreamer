@@ -3,18 +3,18 @@
   <description>elements for Video 4 Linux</description>
   <filename>../../sys/v4l2/.libs/libgstvideo4linux2.so</filename>
   <basename>libgstvideo4linux2.so</basename>
-  <version>0.10.15</version>
+  <version>0.10.15.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins git/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>v4l2src</name>
-      <longname>Video (video4linux2/raw) Source</longname>
+      <longname>Video (video4linux2) Source</longname>
       <class>Source/Video</class>
-      <description>Reads raw frames from a video4linux2 (BT8x8) device</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+      <description>Reads frames from a video4linux2 (BT8x8) device</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>

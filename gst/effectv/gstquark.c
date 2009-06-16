@@ -24,6 +24,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-quarktv
+ *
+ * QuarkTV disolves moving objects. It picks up pixels from
+ * the last frames randomly.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v videotestsrc ! quarktv ! ffmpegcolorspace ! autovideosink
+ * ]| This pipeline shows the effect of quarktv on a test stream.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
