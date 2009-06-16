@@ -56,7 +56,12 @@ udpsink_render (GstBaseSink * sink, GstBufferList * list)
     GstBuffer *buf;
     /* Loop through all buffers in the current group */
     while ((buf = gst_buffer_list_iterator_next (it))) {
-      render_list_bytes_received += GST_BUFFER_SIZE (buf);
+      guint size;
+
+      size = GST_BUFFER_SIZE (buf);
+      GST_DEBUG ("rendered %u bytes", size);
+
+      render_list_bytes_received += size;
     }
   }
 
@@ -152,6 +157,9 @@ udpsink_test (gboolean use_buffer_lists)
   srcpad = gst_check_setup_src_pad_by_name (udpsink, &srctemplate, "sink");
 
   gst_element_set_state (udpsink, GST_STATE_PLAYING);
+
+  gst_pad_push_event (srcpad, gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
+          GST_FORMAT_TIME, 0, -1, 0));
 
   gst_pad_push_list (srcpad, list);
 
