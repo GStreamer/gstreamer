@@ -83,8 +83,8 @@ GST_START_TEST (test_decode)
       break;
     if (first_sample == 0)
       first_sample = buffer_get_first_sample (buffer);
-    g_print ("buffer: %d\n", buffer->size);
-    g_print ("buffer: %04x\n", buffer_get_first_sample (buffer));
+    GST_DEBUG ("buffer: %d\n", buffer->size);
+    GST_DEBUG ("buffer: %04x\n", buffer_get_first_sample (buffer));
     size += buffer->size;
 
     gst_buffer_unref (buffer);
