@@ -36,20 +36,6 @@ typedef struct
 } GstFrei0rFilterClassData;
 
 static gboolean
-gst_frei0r_filter_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
-{
-  GstVideoFormat fmt;
-  gint width, height;
-
-  if (!gst_video_format_parse_caps (caps, &fmt, &width, &height))
-    return FALSE;
-
-  *size = gst_video_format_get_size (fmt, width, height);
-  return TRUE;
-}
-
-static gboolean
 gst_frei0r_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
@@ -199,8 +185,6 @@ gst_frei0r_filter_class_init (GstFrei0rFilterClass * klass,
   templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
   gst_element_class_add_pad_template (gstelement_class, templ);
 
-  gsttrans_class->get_unit_size =
-      GST_DEBUG_FUNCPTR (gst_frei0r_filter_get_unit_size);
   gsttrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_frei0r_filter_set_caps);
   gsttrans_class->stop = GST_DEBUG_FUNCPTR (gst_frei0r_filter_stop);
   gsttrans_class->transform = GST_DEBUG_FUNCPTR (gst_frei0r_filter_transform);
