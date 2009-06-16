@@ -3060,7 +3060,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
       res = write_bytes (watch->writefd.fd, watch->write_data,
           &watch->write_off, watch->write_size);
       if (res == GST_RTSP_EINTR)
-        break;
+        goto write_blocked;
       else if (G_LIKELY (res == GST_RTSP_OK)) {
         if (watch->funcs.message_sent)
           watch->funcs.message_sent (watch, watch->write_id, watch->user_data);
@@ -3072,17 +3072,19 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
           goto error;
       }
 
-    done:
-      if (g_async_queue_length (watch->messages) == 0 && watch->write_added) {
-        g_source_remove_poll ((GSource *) watch, &watch->writefd);
-        watch->write_added = FALSE;
-        watch->writefd.revents = 0;
-      }
       g_free (watch->write_data);
       watch->write_data = NULL;
-    } while (FALSE);
+    } while (TRUE);
+
+  done:
+    if (watch->write_added) {
+      g_source_remove_poll ((GSource *) watch, &watch->writefd);
+      watch->write_added = FALSE;
+      watch->writefd.revents = 0;
+    }
   }
 
+write_blocked:
   return TRUE;
 
   /* ERRORS */
