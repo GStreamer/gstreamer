@@ -119,28 +119,6 @@ gst_vertigotv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   return ret;
 }
 
-static gboolean
-gst_vertigotv_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    guint * size)
-{
-  GstVertigoTV *filter = GST_VERTIGOTV (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
-  gint width, height;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (gst_structure_get_int (structure, "width", &width) &&
-      gst_structure_get_int (structure, "height", &height)) {
-    *size = width * height * 32 / 8;
-    ret = TRUE;
-    GST_DEBUG_OBJECT (filter, "our frame size is %d bytes (%dx%d)", *size,
-        width, height);
-  }
-
-  return ret;
-}
-
 static void
 gst_vertigotv_set_parms (GstVertigoTV * filter)
 {
@@ -334,7 +312,6 @@ gst_vertigotv_class_init (GstVertigoTVClass * klass)
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_vertigotv_start);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_vertigotv_set_caps);
-  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_vertigotv_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_vertigotv_transform);
 }
 

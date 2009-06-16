@@ -115,28 +115,6 @@ gst_dicetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   return ret;
 }
 
-static gboolean
-gst_dicetv_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    guint * size)
-{
-  GstDiceTV *filter = GST_DICETV (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
-  gint width, height;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (gst_structure_get_int (structure, "width", &width) &&
-      gst_structure_get_int (structure, "height", &height)) {
-    *size = width * height * 32 / 8;
-    ret = TRUE;
-    GST_DEBUG_OBJECT (filter, "our frame size is %d bytes (%dx%d)", *size,
-        width, height);
-  }
-
-  return ret;
-}
-
 static inline guint
 fastrand (void)
 {
@@ -329,7 +307,6 @@ gst_dicetv_class_init (GstDiceTVClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_dicetv_set_caps);
-  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_dicetv_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_dicetv_transform);
 }
 

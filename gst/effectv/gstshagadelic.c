@@ -118,28 +118,6 @@ gst_shagadelictv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   return ret;
 }
 
-static gboolean
-gst_shagadelictv_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    guint * size)
-{
-  GstShagadelicTV *filter = GST_SHAGADELICTV (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
-  gint width, height;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (gst_structure_get_int (structure, "width", &width) &&
-      gst_structure_get_int (structure, "height", &height)) {
-    *size = width * height * 32 / 8;
-    ret = TRUE;
-    GST_DEBUG_OBJECT (filter, "our frame size is %d bytes (%dx%d)", *size,
-        width, height);
-  }
-
-  return ret;
-}
-
 static inline guint
 fastrand (void)
 {
@@ -300,8 +278,6 @@ gst_shagadelictv_class_init (GstShagadelicTVClass * klass)
   gobject_class->finalize = gst_shagadelictv_finalize;
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_shagadelictv_set_caps);
-  trans_class->get_unit_size =
-      GST_DEBUG_FUNCPTR (gst_shagadelictv_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_shagadelictv_transform);
 }
 

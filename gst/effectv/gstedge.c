@@ -108,28 +108,6 @@ gst_edgetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   return ret;
 }
 
-static gboolean
-gst_edgetv_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    guint * size)
-{
-  GstEdgeTV *filter = GST_EDGETV (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
-  gint width, height;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (gst_structure_get_int (structure, "width", &width) &&
-      gst_structure_get_int (structure, "height", &height)) {
-    *size = width * height * 32 / 8;
-    ret = TRUE;
-    GST_DEBUG_OBJECT (filter, "our frame size is %d bytes (%dx%d)", *size,
-        width, height);
-  }
-
-  return ret;
-}
-
 static GstFlowReturn
 gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 {
@@ -269,7 +247,6 @@ gst_edgetv_class_init (GstEdgeTVClass * klass)
   gobject_class->finalize = gst_edgetv_finalize;
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_edgetv_set_caps);
-  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_edgetv_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_edgetv_transform);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_edgetv_start);
 }
