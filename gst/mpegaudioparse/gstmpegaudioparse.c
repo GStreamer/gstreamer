@@ -1162,6 +1162,46 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
   }
 }
 
+static void
+gst_mp3parse_check_seekability (GstMPEGAudioParse * mp3parse)
+{
+  GstQuery *query;
+  gboolean seekable = FALSE;
+  gint64 start = -1, stop = -1;
+
+  query = gst_query_new_seeking (GST_FORMAT_BYTES);
+  if (!gst_pad_peer_query (mp3parse->sinkpad, query)) {
+    GST_DEBUG_OBJECT (mp3parse, "seeking query failed");
+    goto done;
+  }
+
+  gst_query_parse_seeking (query, NULL, &seekable, &start, &stop);
+
+  /* try harder to query upstream size if we didn't get it the first time */
+  if (seekable && stop == -1) {
+    GstFormat fmt = GST_FORMAT_BYTES;
+
+    GST_DEBUG_OBJECT (mp3parse, "doing duration query to fix up unset stop");
+    gst_pad_query_peer_duration (mp3parse->sinkpad, &fmt, &stop);
+  }
+
+  /* if upstream doesn't know the size, it's likely that it's not seekable in
+   * practice even if it technically may be seekable */
+  if (seekable && (start != 0 || stop <= start)) {
+    GST_DEBUG_OBJECT (mp3parse, "seekable but unknown start/stop -> disable");
+    seekable = FALSE;
+  }
+
+done:
+
+  GST_INFO_OBJECT (mp3parse, "seekable: %d (%" G_GUINT64_FORMAT " - %"
+      G_GUINT64_FORMAT ")", seekable, start, stop);
+
+  mp3parse->seekable = seekable;
+
+  gst_query_unref (query);
+}
+
 static GstFlowReturn
 gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -1335,24 +1375,12 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 
       /* Check the first frame for a Xing header to get our total length */
       if (mp3parse->frame_count == 0) {
-        GstQuery *query;
         /* For the first frame in the file, look for a Xing frame after 
          * the header, and output a codec tag */
         gst_mp3parse_handle_first_frame (mp3parse);
 
         /* Check if we're seekable */
-        query = gst_query_new_seeking (GST_FORMAT_BYTES);
-        if (!gst_pad_peer_query (mp3parse->sinkpad, query)) {
-          mp3parse->seekable = FALSE;
-        } else {
-          gboolean seekable;
-          GstFormat format;
-
-          gst_query_parse_seeking (query, &format, &seekable, NULL, NULL);
-          mp3parse->seekable = seekable;
-        }
-        gst_query_unref (query);
-
+        gst_mp3parse_check_seekability (mp3parse);
       }
 
       /* Update VBR stats */
