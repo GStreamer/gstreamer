@@ -39,6 +39,8 @@
 
 #include "gstvideofilter.h"
 
+#include <gst/video/video.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_video_filter_debug);
 #define GST_CAT_DEFAULT gst_video_filter_debug
 
@@ -71,6 +73,26 @@ gst_video_filter_get_type (void)
   return video_filter_type;
 }
 
+static gboolean
+gst_video_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
+    guint * size)
+{
+  GstVideoFormat fmt;
+  gint width, height;
+
+  if (!gst_video_format_parse_caps (caps, &fmt, &width, &height)) {
+    GST_WARNING_OBJECT (btrans, "Failed to parse caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  *size = gst_video_format_get_size (fmt, width, height);
+
+  GST_DEBUG_OBJECT (btrans, "Returning size %u bytes for caps %"
+      GST_PTR_FORMAT, *size, caps);
+
+  return TRUE;
+}
+
 static void
 gst_video_filter_class_init (gpointer g_class, gpointer class_data)
 {
@@ -83,6 +105,9 @@ gst_video_filter_class_init (gpointer g_class, gpointer class_data)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
+
+  trans_class->get_unit_size =
+      GST_DEBUG_FUNCPTR (gst_video_filter_get_unit_size);
 
   parent_class = g_type_class_peek_parent (klass);
 
