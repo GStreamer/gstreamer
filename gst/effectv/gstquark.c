@@ -28,46 +28,16 @@
 #include "config.h"
 #endif
 
-#include <gst/video/gstvideofilter.h>
-
 #include <math.h>
 #include <string.h>
 
-#include <gst/video/video.h>
+#include "gstquark.h"
 
-#define GST_TYPE_QUARKTV \
-  (gst_quarktv_get_type())
-#define GST_QUARKTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_QUARKTV,GstQuarkTV))
-#define GST_QUARKTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_QUARKTV,GstQuarkTVClass))
-#define GST_IS_QUARKTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QUARKTV))
-#define GST_IS_QUARKTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QUARKTV))
+#include <gst/video/video.h>
 
 /* number of frames of time-buffer. It should be as a configurable paramater */
 /* This number also must be 2^n just for the speed. */
 #define PLANES 16
-
-typedef struct _GstQuarkTV GstQuarkTV;
-typedef struct _GstQuarkTVClass GstQuarkTVClass;
-
-struct _GstQuarkTV
-{
-  GstVideoFilter element;
-
-  gint width, height;
-  gint area;
-  gint planes;
-  gint current_plane;
-  GstBuffer **planetable;
-};
-
-struct _GstQuarkTVClass
-{
-  GstVideoFilterClass parent_class;
-};
 
 enum
 {

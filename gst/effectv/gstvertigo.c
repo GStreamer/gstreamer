@@ -21,7 +21,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -29,43 +28,9 @@
 #include <math.h>
 #include <string.h>
 
-#include <gst/gst.h>
+#include "gstvertigo.h"
 
 #include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
-
-#define GST_TYPE_VERTIGOTV \
-  (gst_vertigotv_get_type())
-#define GST_VERTIGOTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VERTIGOTV,GstVertigoTV))
-#define GST_VERTIGOTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VERTIGOTV,GstVertigoTVClass))
-#define GST_IS_VERTIGOTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VERTIGOTV))
-#define GST_IS_VERTIGOTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VERTIGOTV))
-
-typedef struct _GstVertigoTV GstVertigoTV;
-typedef struct _GstVertigoTVClass GstVertigoTVClass;
-
-struct _GstVertigoTV
-{
-  GstVideoFilter videofilter;
-
-  gint width, height;
-  guint32 *buffer;
-  guint32 *current_buffer, *alt_buffer;
-  gint dx, dy;
-  gint sx, sy;
-  gdouble phase;
-  gdouble phase_increment;
-  gdouble zoomrate;
-};
-
-struct _GstVertigoTVClass
-{
-  GstVideoFilterClass parent_class;
-};
 
 GST_BOILERPLATE (GstVertigoTV, gst_vertigotv, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);

@@ -30,39 +30,9 @@
 
 #include <string.h>
 
-#include <gst/gst.h>
+#include "gstedge.h"
 
 #include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
-
-#define GST_TYPE_EDGETV \
-  (gst_edgetv_get_type())
-#define GST_EDGETV(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_EDGETV,GstEdgeTV))
-#define GST_EDGETV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_EDGETV,GstEdgeTVClass))
-#define GST_IS_EDGETV(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EDGETV))
-#define GST_IS_EDGETV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EDGETV))
-
-typedef struct _GstEdgeTV GstEdgeTV;
-typedef struct _GstEdgeTVClass GstEdgeTVClass;
-
-struct _GstEdgeTV
-{
-  GstVideoFilter videofilter;
-
-  gint width, height;
-  gint map_width, map_height;
-  guint32 *map;
-  gint video_width_margin;
-};
-
-struct _GstEdgeTVClass
-{
-  GstVideoFilterClass parent_class;
-};
 
 GST_BOILERPLATE (GstEdgeTV, gst_edgetv, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 

@@ -26,6 +26,14 @@
 #endif
 
 #include "gsteffectv.h"
+#include "gstaging.h"
+#include "gstdice.h"
+#include "gstedge.h"
+#include "gstquark.h"
+#include "gstrev.h"
+#include "gstshagadelic.h"
+#include "gstvertigo.h"
+#include "gstwarp.h"
 
 struct _elements_entry
 {

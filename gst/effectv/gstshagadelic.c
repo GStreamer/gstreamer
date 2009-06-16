@@ -29,48 +29,13 @@
 #include <math.h>
 #include <string.h>
 
-#include <gst/gst.h>
+#include "gstshagadelic.h"
 
 #include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
 
 #ifndef M_PI
 #define M_PI  3.14159265358979323846
 #endif
-
-#define GST_TYPE_SHAGADELICTV \
-  (gst_shagadelictv_get_type())
-#define GST_SHAGADELICTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SHAGADELICTV,GstShagadelicTV))
-#define GST_SHAGADELICTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SHAGADELICTV,GstShagadelicTVClass))
-#define GST_IS_SHAGADELICTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SHAGADELICTV))
-#define GST_IS_SHAGADELICTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SHAGADELICTV))
-
-typedef struct _GstShagadelicTV GstShagadelicTV;
-typedef struct _GstShagadelicTVClass GstShagadelicTVClass;
-
-struct _GstShagadelicTV
-{
-  GstVideoFilter videofilter;
-
-  gint width, height;
-  gint stat;
-  guint8 *ripple;
-  guint8 *spiral;
-  guint8 phase;
-  gint rx, ry;
-  gint bx, by;
-  gint rvx, rvy;
-  gint bvx, bvy;
-};
-
-struct _GstShagadelicTVClass
-{
-  GstVideoFilterClass parent_class;
-};
 
 GST_BOILERPLATE (GstShagadelicTV, gst_shagadelictv, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);

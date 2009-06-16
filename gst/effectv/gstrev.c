@@ -47,42 +47,11 @@
 #include <math.h>
 #include <string.h>
 
-#include <gst/gst.h>
+#include "gstrev.h"
 
 #include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
-
-#define GST_TYPE_REVTV \
-  (gst_revtv_get_type())
-#define GST_REVTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_REVTV,GstRevTV))
-#define GST_REVTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_REVTV,GstRevTVClass))
-#define GST_IS_REVTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_REVTV))
-#define GST_IS_REVTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_REVTV))
 
 #define THE_COLOR 0xffffffff
-
-typedef struct _GstRevTV GstRevTV;
-typedef struct _GstRevTVClass GstRevTVClass;
-
-struct _GstRevTV
-{
-  GstVideoFilter videofilter;
-
-  gint width, height;
-  gint vgrabtime;
-  gint vgrab;
-  gint linespace;
-  gint vscale;
-};
-
-struct _GstRevTVClass
-{
-  GstVideoFilterClass parent_class;
-};
 
 enum
 {

@@ -9,6 +9,21 @@
  * I suppose this looks similar to PuzzleTV, but it's not. The screen is
  * divided into small squares, each of which is rotated either 0, 90, 180 or
  * 270 degrees.  The amount of rotation for each square is chosen at random.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -16,26 +31,11 @@
 #endif
 
 #include <string.h>
-#include <gst/gst.h>
+
+#include "gstdice.h"
 
 #include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
-
 #include <gst/controller/gstcontroller.h>
-
-#define GST_TYPE_DICETV \
-  (gst_dicetv_get_type())
-#define GST_DICETV(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DICETV,GstDiceTV))
-#define GST_DICETV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DICETV,GstDiceTVClass))
-#define GST_IS_DICETV(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DICETV))
-#define GST_IS_DICETV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DICETV))
-
-typedef struct _GstDiceTV GstDiceTV;
-typedef struct _GstDiceTVClass GstDiceTVClass;
 
 #define DEFAULT_CUBE_BITS   4
 #define MAX_CUBE_BITS       5
@@ -47,26 +47,7 @@ typedef enum _dice_dir
   DICE_RIGHT = 1,
   DICE_DOWN = 2,
   DICE_LEFT = 3
-}
-DiceDir;
-
-struct _GstDiceTV
-{
-  GstVideoFilter videofilter;
-
-  gint width, height;
-  guint8 *dicemap;
-
-  gint g_cube_bits;
-  gint g_cube_size;
-  gint g_map_height;
-  gint g_map_width;
-};
-
-struct _GstDiceTVClass
-{
-  GstVideoFilterClass parent_class;
-};
+} DiceDir;
 
 GST_BOILERPLATE (GstDiceTV, gst_dicetv, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
@@ -90,8 +71,8 @@ static GstStaticPadTemplate gst_dicetv_sink_template =
 
 enum
 {
-  ARG_0,
-  ARG_CUBE_BITS
+  PROP_0,
+  PROP_CUBE_BITS
 };
 
 static gboolean
@@ -238,7 +219,7 @@ gst_dicetv_set_property (GObject * object, guint prop_id, const GValue * value,
   GstDiceTV *filter = GST_DICETV (object);
 
   switch (prop_id) {
-    case ARG_CUBE_BITS:
+    case PROP_CUBE_BITS:
       filter->g_cube_bits = g_value_get_int (value);
       gst_dicetv_create_map (filter);
       break;
@@ -255,7 +236,7 @@ gst_dicetv_get_property (GObject * object, guint prop_id, GValue * value,
   GstDiceTV *filter = GST_DICETV (object);
 
   switch (prop_id) {
-    case ARG_CUBE_BITS:
+    case PROP_CUBE_BITS:
       g_value_set_int (value, filter->g_cube_bits);
       break;
     default:
@@ -301,7 +282,7 @@ gst_dicetv_class_init (GstDiceTVClass * klass)
   gobject_class->get_property = gst_dicetv_get_property;
   gobject_class->finalize = gst_dicetv_finalize;
 
-  g_object_class_install_property (gobject_class, ARG_CUBE_BITS,
+  g_object_class_install_property (gobject_class, PROP_CUBE_BITS,
       g_param_spec_int ("square-bits", "Square Bits", "The size of the Squares",
           MIN_CUBE_BITS, MAX_CUBE_BITS, DEFAULT_CUBE_BITS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));

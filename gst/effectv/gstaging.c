@@ -31,32 +31,10 @@
 #include <string.h>
 #include <math.h>
 
-#include <gst/gst.h>
+#include "gstaging.h"
 
 #include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
-
 #include <gst/controller/gstcontroller.h>
-
-#define GST_TYPE_AGINGTV \
-  (gst_agingtv_get_type())
-#define GST_AGINGTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AGINGTV,GstAgingTV))
-#define GST_AGINGTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AGINGTV,GstAgingTVClass))
-#define GST_IS_AGINGTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AGINGTV))
-#define GST_IS_AGINGTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AGINGTV))
-
-#define SCRATCH_MAX 20
-typedef struct _scratch
-{
-  gint life;
-  gint x;
-  gint dx;
-  gint init;
-} scratch;
 
 static const gint dx[8] = { 1, 1, 0, -1, -1, -1, 0, 1 };
 static const gint dy[8] = { 0, -1, -1, -1, 0, 1, 1, 1 };
@@ -74,34 +52,6 @@ enum
 #define DEFAULT_COLOR_AGING TRUE
 #define DEFAULT_PITS TRUE
 #define DEFAULT_DUSTS TRUE
-
-typedef struct _GstAgingTV GstAgingTV;
-typedef struct _GstAgingTVClass GstAgingTVClass;
-
-struct _GstAgingTV
-{
-  GstVideoFilter videofilter;
-
-  gint width, height;
-
-  gboolean color_aging;
-  gboolean pits;
-  gboolean dusts;
-
-  gint coloraging_state;
-
-  scratch scratches[SCRATCH_MAX];
-  gint scratch_lines;
-
-  gint dust_interval;
-  gint pits_interval;
-
-};
-
-struct _GstAgingTVClass
-{
-  GstVideoFilterClass parent_class;
-};
 
 static GstStaticPadTemplate gst_agingtv_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",

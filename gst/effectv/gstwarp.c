@@ -40,45 +40,13 @@
 #include <string.h>
 #include <math.h>
 
-#include <gst/gst.h>
+#include "gstwarp.h"
 
 #include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
 
 #ifndef M_PI
 #define M_PI    3.14159265358979323846
 #endif
-
-#define GST_TYPE_WARPTV \
-  (gst_warptv_get_type())
-#define GST_WARPTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WARPTV,GstWarpTV))
-#define GST_WARPTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_WARPTV,GstWarpTVClass))
-#define GST_IS_WARPTV(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WARPTV))
-#define GST_IS_WARPTV_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WARPTV))
-
-typedef struct _GstWarpTV GstWarpTV;
-typedef struct _GstWarpTVClass GstWarpTVClass;
-
-struct _GstWarpTV
-{
-  GstVideoFilter videofilter;
-
-  gint width, height;
-  gint *offstable;
-  gint32 *disttable;
-  gint32 ctable[1024];
-  gint32 sintable[1024 + 256];
-  gint tval;
-};
-
-struct _GstWarpTVClass
-{
-  GstVideoFilterClass parent_class;
-};
 
 GST_BOILERPLATE (GstWarpTV, gst_warptv, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
