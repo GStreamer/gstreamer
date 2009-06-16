@@ -140,15 +140,24 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
 
   value_type = G_PARAM_SPEC_VALUE_TYPE (pspec);
 
-  GST_DEBUG ("pspec->flags is %d, pspec->value_type is %d",
-      pspec->flags, (gint) value_type);
+  GST_DEBUG ("pspec->flags is %d, pspec->value_type is %s",
+      pspec->flags, g_type_name (value_type));
 
   if (!(pspec->flags & G_PARAM_WRITABLE))
     return;
 
   g_value_init (&v, value_type);
+
+  /* special case for element <-> xml (de)serialisation */
+  if (GST_VALUE_HOLDS_STRUCTURE (&v) && strcmp (value, "NULL") == 0) {
+    g_value_set_boxed (&v, NULL);
+    goto done;
+  }
+
   if (!gst_value_deserialize (&v, value))
     return;
+
+done:
 
   g_object_set_property (object, pspec->name, &v);
   g_value_unset (&v);

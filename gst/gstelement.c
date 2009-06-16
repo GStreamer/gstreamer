@@ -89,6 +89,7 @@
 #include "gstevent.h"
 #include "gstutils.h"
 #include "gstinfo.h"
+#include "gstvalue.h"
 #include "gst-i18n-lib.h"
 
 /* Element signals and args */
@@ -2958,7 +2959,13 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
       else if (G_IS_PARAM_SPEC_INT64 (spec))
         contents = g_strdup_printf ("%" G_GINT64_FORMAT,
             g_value_get_int64 (&value));
-      else
+      else if (GST_VALUE_HOLDS_STRUCTURE (&value)) {
+        if (g_value_get_boxed (&value) != NULL) {
+          contents = g_strdup_value_contents (&value);
+        } else {
+          contents = g_strdup ("NULL");
+        }
+      } else
         contents = g_strdup_value_contents (&value);
 
       xmlNewChild (param, NULL, (xmlChar *) "value", (xmlChar *) contents);
