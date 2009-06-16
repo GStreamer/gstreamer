@@ -518,7 +518,7 @@ static GstPad *gst_play_bin_get_video_pad (GstPlayBin * playbin, gint stream);
 static GstPad *gst_play_bin_get_audio_pad (GstPlayBin * playbin, gint stream);
 static GstPad *gst_play_bin_get_text_pad (GstPlayBin * playbin, gint stream);
 
-static gboolean setup_next_source (GstPlayBin * playbin);
+static gboolean setup_next_source (GstPlayBin * playbin, GstState target);
 
 static GstElementClass *parent_class;
 
@@ -2306,7 +2306,7 @@ drained_cb (GstElement * decodebin, GstSourceGroup * group)
 
   /* now activate the next group. If the app did not set a uri, this will
    * fail and we can do EOS */
-  setup_next_source (playbin);
+  setup_next_source (playbin, GST_STATE_PAUSED);
 }
 
 /* Called when we must provide a list of factories to plug to @pad with @caps.
@@ -2487,7 +2487,7 @@ if (id) {                                \
 
 /* must be called with PLAY_BIN_LOCK */
 static gboolean
-activate_group (GstPlayBin * playbin, GstSourceGroup * group)
+activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
 {
   GstElement *uridecodebin;
   GstElement *suburidecodebin = NULL;
@@ -2602,11 +2602,10 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
 
   if (suburidecodebin) {
     if (gst_element_set_state (suburidecodebin,
-            GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE)
+            target) == GST_STATE_CHANGE_FAILURE)
       goto suburidecodebin_failure;
   }
-  if (gst_element_set_state (uridecodebin,
-          GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE)
+  if (gst_element_set_state (uridecodebin, target) == GST_STATE_CHANGE_FAILURE)
     goto uridecodebin_failure;
 
   GST_SOURCE_GROUP_LOCK (group);
@@ -2695,7 +2694,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
  * configured. It swaps out the current_group and activates the valid 
  * next_group. */
 static gboolean
-setup_next_source (GstPlayBin * playbin)
+setup_next_source (GstPlayBin * playbin, GstState target)
 {
   GstSourceGroup *new_group, *old_group;
 
@@ -2716,7 +2715,7 @@ setup_next_source (GstPlayBin * playbin)
   }
 
   /* activate the new group */
-  if (!activate_group (playbin, new_group))
+  if (!activate_group (playbin, new_group, target))
     goto activate_failed;
 
   /* swap old and new */
@@ -2798,7 +2797,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOG_OBJECT (playbin, "clearing shutdown flag");
       g_atomic_int_set (&playbin->shutdown, 0);
-      if (!setup_next_source (playbin))
+      if (!setup_next_source (playbin, GST_STATE_READY))
         goto source_failed;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
