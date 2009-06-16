@@ -111,6 +111,7 @@ check_PROGRAMS = \
 	elements/rgvolume \
 	elements/rtp-payloading \
 	elements/spectrum \
+	elements/udpsink \
 	elements/videocrop \
 	elements/videofilter \
 	elements/y4menc \

@@ -117,6 +117,8 @@ static void gst_multiudpsink_finalize (GObject * object);
 
 static GstFlowReturn gst_multiudpsink_render (GstBaseSink * sink,
     GstBuffer * buffer);
+static GstFlowReturn gst_multiudpsink_render_list (GstBaseSink * bsink,
+    GstBufferList * list);
 static GstStateChangeReturn gst_multiudpsink_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -318,6 +320,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
   gstbasesink_class->render = gst_multiudpsink_render;
+  gstbasesink_class->render_list = gst_multiudpsink_render_list;
   klass->add = gst_multiudpsink_add;
   klass->remove = gst_multiudpsink_remove;
   klass->clear = gst_multiudpsink_clear;
@@ -425,6 +428,93 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
       no_clients);
 
   return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_multiudpsink_render_list (GstBaseSink * bsink, GstBufferList * list)
+{
+  GstMultiUDPSink *sink;
+  GList *clients;
+  gint ret, size = 0, num = 0, no_clients = 0;
+  struct iovec *iov;
+  struct msghdr msg = { 0 };
+
+  GstBufferListIterator *it;
+  guint gsize;
+  GstBuffer *buf;
+
+  sink = GST_MULTIUDPSINK (bsink);
+
+  g_return_val_if_fail (list != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail ((it = gst_buffer_list_iterate (list)) != NULL,
+      GST_FLOW_ERROR);
+
+  while (gst_buffer_list_iterator_next_group (it)) {
+    msg.msg_iovlen = 0;
+    size = 0;
+
+    if ((gsize = gst_buffer_list_iterator_n_buffers (it)) == 0) {
+      goto invalid_list;
+    }
+
+    iov = (struct iovec *) g_malloc (gsize * sizeof (struct iovec));
+    msg.msg_iov = iov;
+
+    while ((buf = gst_buffer_list_iterator_next (it))) {
+      msg.msg_iov[msg.msg_iovlen].iov_len = GST_BUFFER_SIZE (buf);
+      msg.msg_iov[msg.msg_iovlen].iov_base = GST_BUFFER_DATA (buf);
+      msg.msg_iovlen++;
+      size += GST_BUFFER_SIZE (buf);
+    }
+
+    sink->bytes_to_serve += size;
+
+    /* grab lock while iterating and sending to clients, this should be
+     * fast as UDP never blocks */
+    g_mutex_lock (sink->client_lock);
+    GST_LOG_OBJECT (bsink, "about to send %d bytes", size);
+
+    for (clients = sink->clients; clients; clients = g_list_next (clients)) {
+      GstUDPClient *client;
+
+      client = (GstUDPClient *) clients->data;
+      no_clients++;
+      GST_LOG_OBJECT (sink, "sending %d bytes to client %p", size, client);
+
+      while (TRUE) {
+        msg.msg_name = (void *) &client->theiraddr;
+        msg.msg_namelen = sizeof (client->theiraddr);
+        ret = sendmsg (*client->sock, &msg, 0);
+
+        if (ret < 0) {
+          if (errno != EINTR && errno != EAGAIN) {
+            break;
+          }
+        } else {
+          num++;
+          client->bytes_sent += ret;
+          client->packets_sent++;
+          sink->bytes_served += ret;
+          break;
+        }
+      }
+    }
+    g_mutex_unlock (sink->client_lock);
+
+    g_free (iov);
+    msg.msg_iov = NULL;
+
+    GST_LOG_OBJECT (sink, "sent %d bytes to %d (of %d) clients", size, num,
+        no_clients);
+  }
+
+  gst_buffer_list_iterator_free (it);
+
+  return GST_FLOW_OK;
+
+invalid_list:
+  gst_buffer_list_iterator_free (it);
+  return GST_FLOW_ERROR;
 }
 
 static void
