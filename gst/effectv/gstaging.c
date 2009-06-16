@@ -32,6 +32,7 @@
 #include <math.h>
 
 #include "gstaging.h"
+#include "gsteffectv.h"
 
 #include <gst/video/video.h>
 #include <gst/controller/gstcontroller.h>
@@ -87,15 +88,6 @@ gst_agingtv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   return ret;
 }
-
-static inline guint
-fastrand (void)
-{
-  static guint fastrand_val;
-
-  return (fastrand_val = fastrand_val * 1103515245 + 12345);
-}
-
 
 static void
 coloraging (guint32 * src, guint32 * dest, gint video_area, gint * c)

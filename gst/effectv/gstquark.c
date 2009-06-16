@@ -32,6 +32,7 @@
 #include <string.h>
 
 #include "gstquark.h"
+#include "gsteffectv.h"
 
 #include <gst/video/video.h>
 
@@ -82,14 +83,6 @@ gst_quarktv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   }
 
   return ret;
-}
-
-static inline guint
-fastrand (void)
-{
-  static guint fastrand_val;
-
-  return (fastrand_val = fastrand_val * 1103515245 + 12345);
 }
 
 static GstFlowReturn
