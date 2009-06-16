@@ -121,6 +121,8 @@ struct _GstBaseSink {
  * @preroll: Called to present the preroll buffer if desired
  * @render: Called when a buffer should be presented or output, at the
  *     correct moment if the #GstBaseSink has been set to sync to the clock.
+ * @render_list: Same as @render but used whith buffer lists instead of
+ *     buffers
  * @async_play: Subclasses should override this when they need to perform
  *     special processing when changing to the PLAYING state asynchronously.
  *     Called with the OBJECT_LOCK held.
@@ -180,10 +182,13 @@ struct _GstBaseSinkClass {
   /* Clear a previously indicated unlock request not that unlocking is 
    * complete. Sub-classes should clear any command queue or indicator they
    * set during unlock */
-  gboolean      (*unlock_stop)       (GstBaseSink *sink);
+  gboolean      (*unlock_stop)  (GstBaseSink *sink);
+
+  /* Render a BufferList */
+  GstFlowReturn (*render_list)  (GstBaseSink *sink, GstBufferList *buffer_list);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-4];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-5];
 };
 
 GType gst_base_sink_get_type(void);
