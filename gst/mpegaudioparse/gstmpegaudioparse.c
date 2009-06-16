@@ -589,16 +589,29 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-static MPEGAudioSeekEntry *
-mp3parse_seek_table_last_entry (GstMPEGAudioParse * mp3parse)
+static void
+gst_mp3parse_add_index_entry (GstMPEGAudioParse * mp3parse, guint64 offset,
+    GstClockTime ts)
 {
-  MPEGAudioSeekEntry *ret = NULL;
+  MPEGAudioSeekEntry *entry, *last;
 
-  if (mp3parse->seek_table) {
-    ret = mp3parse->seek_table->data;
+  if (G_LIKELY (mp3parse->seek_table != NULL)) {
+    last = mp3parse->seek_table->data;
+
+    if (last->byte >= offset)
+      return;
+
+    if (GST_CLOCK_DIFF (last->timestamp, ts) < mp3parse->idx_interval)
+      return;
   }
 
-  return ret;
+  entry = mpeg_audio_seek_entry_new ();
+  entry->byte = offset;
+  entry->timestamp = ts;
+  mp3parse->seek_table = g_list_prepend (mp3parse->seek_table, entry);
+
+  GST_LOG_OBJECT (mp3parse, "Adding index entry %" GST_TIME_FORMAT " @ offset "
+      "0x%08" G_GINT64_MODIFIER "x", GST_TIME_ARGS (ts), offset);
 }
 
 /* Prepare a buffer of the indicated size, timestamp it and output */
@@ -664,18 +677,9 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
 
   if (mp3parse->seekable &&
       mp3parse->exact_position && GST_BUFFER_TIMESTAMP_IS_VALID (outbuf) &&
-      mp3parse->cur_offset != GST_BUFFER_OFFSET_NONE &&
-      (!mp3parse->seek_table ||
-          (mp3parse_seek_table_last_entry (mp3parse))->byte <
-          GST_BUFFER_OFFSET (outbuf))) {
-    MPEGAudioSeekEntry *entry = mpeg_audio_seek_entry_new ();
-
-    entry->byte = mp3parse->cur_offset;
-    entry->timestamp = GST_BUFFER_TIMESTAMP (outbuf);
-    mp3parse->seek_table = g_list_prepend (mp3parse->seek_table, entry);
-    GST_DEBUG_OBJECT (mp3parse, "Adding index entry %" GST_TIME_FORMAT
-        " @ offset 0x%08" G_GINT64_MODIFIER "x",
-        GST_TIME_ARGS (entry->timestamp), entry->byte);
+      mp3parse->cur_offset != GST_BUFFER_OFFSET_NONE) {
+    gst_mp3parse_add_index_entry (mp3parse, mp3parse->cur_offset,
+        GST_BUFFER_TIMESTAMP (outbuf));
   }
 
   /* Update our byte offset tracking */
@@ -1168,6 +1172,7 @@ gst_mp3parse_check_seekability (GstMPEGAudioParse * mp3parse)
   GstQuery *query;
   gboolean seekable = FALSE;
   gint64 start = -1, stop = -1;
+  guint idx_interval = 0;
 
   query = gst_query_new_seeking (GST_FORMAT_BYTES);
   if (!gst_pad_peer_query (mp3parse->sinkpad, query)) {
@@ -1192,12 +1197,24 @@ gst_mp3parse_check_seekability (GstMPEGAudioParse * mp3parse)
     seekable = FALSE;
   }
 
+  /* let's not put every single frame into our index */
+  if (seekable) {
+    if (stop < 10 * 1024 * 1024)
+      idx_interval = 100;
+    else if (stop < 100 * 1024 * 1024)
+      idx_interval = 500;
+    else
+      idx_interval = 1000;
+  }
+
 done:
 
   GST_INFO_OBJECT (mp3parse, "seekable: %d (%" G_GUINT64_FORMAT " - %"
       G_GUINT64_FORMAT ")", seekable, start, stop);
-
   mp3parse->seekable = seekable;
+
+  GST_INFO_OBJECT (mp3parse, "idx_interval: %ums", idx_interval);
+  mp3parse->idx_interval = idx_interval * GST_MSECOND;
 
   gst_query_unref (query);
 }

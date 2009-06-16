@@ -126,6 +126,9 @@ struct _GstMPEGAudioParse {
    * seekable. */
   gboolean seekable;
 
+  /* minimum distance between two index entries */
+  GstClockTimeDiff idx_interval;
+
   /* pending segment */
   GstEvent *pending_segment;
   /* pending events */
