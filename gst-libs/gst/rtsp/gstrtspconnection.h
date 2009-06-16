@@ -148,6 +148,8 @@ typedef struct _GstRTSPWatch GstRTSPWatch;
  * @tunnel_complete: a client finished a tunneled connection. In this callback
  *   you usually pair the tunnelid of this connection with the saved one using
  *   gst_rtsp_connection_do_tunnel().
+ * @error_full: callback when an error occured with more information than
+ *   the @error callback
  *
  * Callback functions from a #GstRTSPWatch.
  *
@@ -163,9 +165,12 @@ typedef struct {
                                          gpointer user_data);
   GstRTSPStatusCode (*tunnel_start)     (GstRTSPWatch *watch, gpointer user_data);
   GstRTSPResult     (*tunnel_complete)  (GstRTSPWatch *watch, gpointer user_data);
+  GstRTSPResult     (*error_full)       (GstRTSPWatch *watch, GstRTSPResult result,
+                                         GstRTSPMessage *message, guint id,
+                                         gpointer user_data);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 } GstRTSPWatchFuncs;
 
 GstRTSPWatch *     gst_rtsp_watch_new                (GstRTSPConnection *conn,

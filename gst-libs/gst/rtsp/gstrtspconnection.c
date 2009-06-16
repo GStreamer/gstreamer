@@ -3025,8 +3025,13 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
         if (watch->funcs.message_received)
           watch->funcs.message_received (watch, &watch->message,
               watch->user_data);
-      } else
-        goto error;
+      } else {
+        if (watch->funcs.error_full)
+          GST_RTSP_CHECK (watch->funcs.error_full (watch, res, &watch->message,
+                  0, watch->user_data), error);
+        else
+          goto error;
+      }
 
     read_done:
       gst_rtsp_message_unset (&watch->message);
@@ -3056,11 +3061,16 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
           &watch->write_off, watch->write_size);
       if (res == GST_RTSP_EINTR)
         break;
-      if (G_UNLIKELY (res != GST_RTSP_OK))
-        goto error;
-
-      if (watch->funcs.message_sent)
-        watch->funcs.message_sent (watch, watch->write_id, watch->user_data);
+      else if (G_LIKELY (res == GST_RTSP_OK)) {
+        if (watch->funcs.message_sent)
+          watch->funcs.message_sent (watch, watch->write_id, watch->user_data);
+      } else {
+        if (watch->funcs.error_full)
+          GST_RTSP_CHECK (watch->funcs.error_full (watch, res, NULL,
+                  watch->write_id, watch->user_data), error);
+        else
+          goto error;
+      }
 
     done:
       if (g_async_queue_length (watch->messages) == 0 && watch->write_added) {
