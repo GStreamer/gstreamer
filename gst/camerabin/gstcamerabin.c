@@ -1528,9 +1528,9 @@ img_capture_prepared (gpointer data, GstCaps * caps)
   g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
       "active-pad", camera->pad_src_img, NULL);
 
-  if (!GST_CAMERABIN_IMAGE (camera->imgbin)->elements_created) {
-    gst_element_set_state (camera->imgbin, GST_STATE_READY);
-  }
+  /* We need to set image bin to PAUSED or buffer-allocs will fail */
+  GST_DEBUG_OBJECT (camera, "setting image bin to PAUSED");
+  gst_element_set_state (camera->imgbin, GST_STATE_PAUSED);
 }
 
 /*
