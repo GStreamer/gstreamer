@@ -1134,6 +1134,8 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   GstIterator *it;
   gboolean is_sink, othersink, found;
   GstMessage *clock_message = NULL;
+  GstClock **provided_clock_p;
+  GstElement **clock_provider_p;
   GList *walk, *next;
   gboolean other_async, this_async, have_no_preroll;
   GstStateChangeReturn ret;
@@ -1209,6 +1211,10 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   if (bin->clock_provider == element) {
     GST_DEBUG_OBJECT (bin, "element \"%s\" provided the clock", elem_name);
     bin->clock_dirty = TRUE;
+    provided_clock_p = &bin->provided_clock;
+    clock_provider_p = &bin->clock_provider;
+    gst_object_replace ((GstObject **) provided_clock_p, NULL);
+    gst_object_replace ((GstObject **) clock_provider_p, NULL);
     clock_message =
         gst_message_new_clock_lost (GST_OBJECT_CAST (bin), bin->provided_clock);
   }
