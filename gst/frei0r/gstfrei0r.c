@@ -424,6 +424,7 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
   GModule *module;
   gboolean ret = FALSE;
   GstFrei0rFuncTable ftable = { NULL, };
+  gint i;
   f0r_plugin_info_t info = { NULL, };
 
   GST_DEBUG ("Registering plugin '%s'", filename);
@@ -476,6 +477,17 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
     return FALSE;
   }
 
+  for (i = 0; i < info.num_params; i++) {
+    f0r_param_info_t pinfo = { NULL, };
+
+    ftable.get_param_info (&pinfo, i);
+    if (pinfo.type > F0R_PARAM_STRING) {
+      GST_WARNING ("Unsupported parameter type %d", pinfo.type);
+      g_module_close (module);
+      return FALSE;
+    }
+  }
+
   switch (info.plugin_type) {
     case F0R_PLUGIN_TYPE_FILTER:
       ret = gst_frei0r_filter_register (plugin, &info, &ftable);
@@ -490,6 +502,9 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
     default:
       break;
   }
+
+  if (!ret)
+    goto invalid_frei0r_plugin;
 
   return ret;
 
