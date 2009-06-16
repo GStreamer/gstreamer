@@ -812,6 +812,8 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     src->sock.fd = ret;
     src->externalfd = FALSE;
 
+    GST_DEBUG_OBJECT (src, "got socket %d", src->sock.fd);
+
     reuse = 1;
     if ((ret =
             setsockopt (src->sock.fd, SOL_SOCKET, SO_REUSEADDR, &reuse,
