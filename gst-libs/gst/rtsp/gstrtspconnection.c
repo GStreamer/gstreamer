@@ -1706,6 +1706,25 @@ parse_error:
   }
 }
 
+/* convert all consecutive whitespace to a single space */
+static void
+normalize_line (guint8 * buffer)
+{
+  while (*buffer) {
+    if (g_ascii_isspace (*buffer)) {
+      guint8 *tmp;
+
+      *buffer++ = ' ';
+      for (tmp = buffer; g_ascii_isspace (*tmp); tmp++) {
+      }
+      if (buffer != tmp)
+        memmove (buffer, tmp, strlen ((gchar *) tmp) + 1);
+    } else {
+      buffer++;
+    }
+  }
+}
+
 /* returns:
  *  GST_RTSP_OK when a complete message was read.
  *  GST_RTSP_EEOF: when the socket is closed
@@ -1803,6 +1822,7 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
         }
 
         /* we have a line */
+        normalize_line (builder->buffer);
         if (builder->line == 0) {
           /* first line, check for response status */
           if (memcmp (builder->buffer, "RTSP", 4) == 0 ||
