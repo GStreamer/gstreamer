@@ -1401,12 +1401,12 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
   guint64 cur_offset = qtdemux->offset;
 
   ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, 16, &buf);
-  if (ret != GST_FLOW_OK)
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
   extract_initial_length_and_fourcc (GST_BUFFER_DATA (buf), &length, &fourcc);
   gst_buffer_unref (buf);
 
-  if (length == 0) {
+  if (G_UNLIKELY (length == 0)) {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
         (_("This file is invalid and cannot be played.")),
         ("Header atom '%" GST_FOURCC_FORMAT "' has empty length",
@@ -1695,7 +1695,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* get the segment */
   segment = &stream->segments[seg_idx];
 
-  if (offset < segment->time) {
+  if (G_UNLIKELY (offset < segment->time)) {
     GST_WARNING_OBJECT (qtdemux, "offset < segment->time %" G_GUINT64_FORMAT,
         segment->time);
     return FALSE;
@@ -1707,7 +1707,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   GST_LOG_OBJECT (qtdemux, "seg_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (seg_time));
 
-  if (seg_time > segment->duration) {
+  if (G_UNLIKELY (seg_time > segment->duration)) {
     GST_LOG_OBJECT (qtdemux, "seg_time > segment->duration %" GST_TIME_FORMAT,
         GST_TIME_ARGS (segment->duration));
     return FALSE;
@@ -1824,11 +1824,11 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   g_return_val_if_fail (stream != NULL, FALSE);
 
   time_position = stream->time_position;
-  if (time_position == -1)
+  if (G_UNLIKELY (time_position == -1))
     goto eos;
 
   seg_idx = stream->segment_index;
-  if (seg_idx == -1) {
+  if (G_UNLIKELY (seg_idx == -1)) {
     /* find segment corresponding to time_position if we are looking
      * for a segment. */
     seg_idx = gst_qtdemux_find_segment (qtdemux, stream, time_position);
@@ -1839,7 +1839,7 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   }
 
   /* different segment, activate it, sample_index will be set. */
-  if (stream->segment_index != seg_idx)
+  if (G_UNLIKELY (stream->segment_index != seg_idx))
     gst_qtdemux_activate_segment (qtdemux, stream, seg_idx, time_position);
 
   GST_LOG_OBJECT (qtdemux, "segment active, index = %u of %u",
@@ -1849,7 +1849,7 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   while (stream->buffers) {
     GstBuffer *buffer = (GstBuffer *) stream->buffers->data;
 
-    if (stream->discont) {
+    if (G_UNLIKELY (stream->discont)) {
       GST_LOG_OBJECT (qtdemux, "marking discont buffer");
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
       stream->discont = FALSE;
@@ -1861,7 +1861,7 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
     stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
   }
 
-  if (stream->sample_index >= stream->n_samples)
+  if (G_UNLIKELY (stream->sample_index >= stream->n_samples))
     goto eos;
 
   /* now get the info for the sample we're at */
@@ -1899,7 +1899,7 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
   QtDemuxSample *sample;
   QtDemuxSegment *segment;
 
-  if (stream->sample_index >= stream->to_sample) {
+  if (G_UNLIKELY (stream->sample_index >= stream->to_sample)) {
     /* Mark the stream as EOS */
     GST_DEBUG_OBJECT (qtdemux, "reached max allowed sample %u, mark EOS",
         stream->to_sample);
@@ -1914,14 +1914,14 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
   segment = &stream->segments[stream->segment_index];
 
   /* reached the last sample, we need the next segment */
-  if (stream->sample_index >= stream->n_samples)
+  if (G_UNLIKELY (stream->sample_index >= stream->n_samples))
     goto next_segment;
 
   /* get next sample */
   sample = &stream->samples[stream->sample_index];
 
   /* see if we are past the segment */
-  if (sample->timestamp >= segment->media_stop)
+  if (G_UNLIKELY (sample->timestamp >= segment->media_stop))
     goto next_segment;
 
   if (sample->timestamp >= segment->media_start) {
@@ -2030,13 +2030,14 @@ gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
     ret = ostream->last_ret;
 
     /* no unexpected or unlinked, return */
-    if (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_NOT_LINKED)
+    if (G_LIKELY (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_NOT_LINKED))
       goto done;
 
     /* we check to see if we have at least 1 unexpected or all unlinked */
     unexpected |= (ret == GST_FLOW_UNEXPECTED);
     not_linked &= (ret == GST_FLOW_NOT_LINKED);
   }
+
   /* when we get here, we all have unlinked or unexpected */
   if (not_linked)
     ret = GST_FLOW_NOT_LINKED;
@@ -2080,10 +2081,10 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   /* we can only clip if we have a valid timestamp */
   timestamp = GST_BUFFER_TIMESTAMP (buf);
-  if (!GST_CLOCK_TIME_IS_VALID (timestamp))
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (timestamp)))
     goto no_timestamp;
 
-  if (GST_BUFFER_DURATION_IS_VALID (buf)) {
+  if (G_LIKELY (GST_BUFFER_DURATION_IS_VALID (buf))) {
     duration = GST_BUFFER_DURATION (buf);
   } else {
     duration =
@@ -2093,8 +2094,8 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   start = timestamp;
   stop = start + duration;
 
-  if (!gst_segment_clip (&stream->segment, GST_FORMAT_TIME,
-          start, stop, &cstart, &cstop))
+  if (G_UNLIKELY (!gst_segment_clip (&stream->segment, GST_FORMAT_TIME,
+              start, stop, &cstart, &cstop)))
     goto clipped;
 
   /* see if some clipping happened */
@@ -2191,13 +2192,14 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     }
   }
   /* all are EOS */
-  if (index == -1) {
+  if (G_UNLIKELY (index == -1)) {
     GST_DEBUG_OBJECT (qtdemux, "all streams are EOS");
     goto eos;
   }
 
   /* check for segment end */
-  if (qtdemux->segment.stop != -1 && qtdemux->segment.stop < min_time) {
+  if (G_UNLIKELY (qtdemux->segment.stop != -1
+          && qtdemux->segment.stop < min_time)) {
     GST_DEBUG_OBJECT (qtdemux, "we reached the end of our segment.");
     goto eos;
   }
@@ -2205,8 +2207,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   stream = qtdemux->streams[index];
 
   /* fetch info for the current sample of this stream */
-  if (!gst_qtdemux_prepare_current_sample (qtdemux, stream, &offset, &size,
-          &timestamp, &duration, &keyframe))
+  if (G_UNLIKELY (!gst_qtdemux_prepare_current_sample (qtdemux, stream, &offset,
+              &size, &timestamp, &duration, &keyframe)))
     goto eos_stream;
 
   GST_LOG_OBJECT (qtdemux,
@@ -2219,17 +2221,17 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     goto next;
 
   /* last pushed sample was out of boundary, goto next sample */
-  if (stream->last_ret == GST_FLOW_UNEXPECTED)
+  if (G_UNLIKELY (stream->last_ret == GST_FLOW_UNEXPECTED))
     goto next;
 
   GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %" G_GUINT64_FORMAT, size,
       offset);
 
   ret = gst_pad_pull_range (qtdemux->sinkpad, offset, size, &buf);
-  if (ret != GST_FLOW_OK)
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
 
-  if (stream->fourcc == FOURCC_rtsp) {
+  if (G_UNLIKELY (stream->fourcc == FOURCC_rtsp)) {
     GstMessage *m;
     gchar *url;
 
@@ -2249,7 +2251,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     gst_segment_set_last_stop (&qtdemux->segment, GST_FORMAT_TIME, min_time);
     gst_qtdemux_sync_streams (qtdemux);
   }
-  if (stream->pad) {
+  if (G_LIKELY (stream->pad)) {
     /* we're going to modify the metadata */
     buf = gst_buffer_make_metadata_writable (buf);
 
@@ -2654,7 +2656,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         /* first buffer? */
         /* initial newsegment sent here after having added pads,
          * possible others in sink_event */
-        if (demux->last_ts == GST_CLOCK_TIME_NONE) {
+        if (G_UNLIKELY (demux->last_ts == GST_CLOCK_TIME_NONE)) {
           gst_qtdemux_push_event (demux,
               gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
                   0, GST_CLOCK_TIME_NONE, 0));
