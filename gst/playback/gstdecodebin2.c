@@ -732,6 +732,7 @@ restart:
         break;
     }
   }
+  gst_iterator_free (it);
 }
 
 static void
