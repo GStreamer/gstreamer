@@ -58,12 +58,19 @@ GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
  * we need pulse-0.9.12 to use sink volume properties
  */
 
+#define DEFAULT_SERVER          NULL
+#define DEFAULT_DEVICE          NULL
+#define DEFAULT_DEVICE_NAME     NULL
+#define DEFAULT_VOLUME          1.0
+
 enum
 {
-  PROP_SERVER = 1,
+  PROP_0,
+  PROP_SERVER,
   PROP_DEVICE,
   PROP_DEVICE_NAME,
-  PROP_VOLUME
+  PROP_VOLUME,
+  PROP_LAST
 };
 
 #define GST_TYPE_PULSERING_BUFFER        \
@@ -1350,22 +1357,25 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_SERVER,
       g_param_spec_string ("server", "Server",
-          "The PulseAudio server to connect to", NULL,
+          "The PulseAudio server to connect to", DEFAULT_SERVER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_DEVICE,
-      g_param_spec_string ("device", "Sink",
-          "The PulseAudio sink device to connect to", NULL,
+      g_param_spec_string ("device", "Device",
+          "The PulseAudio sink device to connect to", DEFAULT_DEVICE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class,
       PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", NULL,
+          "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
 #if HAVE_PULSE_0_9_12
   g_object_class_install_property (gobject_class,
       PROP_VOLUME,
       g_param_spec_double ("volume", "Volume",
-          "Volume of this stream", 0.0, 1000.0, 1.0,
+          "Volume of this stream", 0.0, 1000.0, DEFAULT_VOLUME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 }
@@ -1452,6 +1462,7 @@ gst_pulsesink_finalize (GObject * object)
 
   g_free (pulsesink->server);
   g_free (pulsesink->device);
+  g_free (pulsesink->device_description);
 
   pa_threaded_mainloop_free (pulsesink->mainloop);
 
@@ -1697,12 +1708,9 @@ gst_pulsesink_get_property (GObject * object,
     case PROP_DEVICE:
       g_value_set_string (value, pulsesink->device);
       break;
-    case PROP_DEVICE_NAME:{
-      char *t = gst_pulsesink_device_description (pulsesink);
-      g_value_set_string (value, t);
-      g_free (t);
+    case PROP_DEVICE_NAME:
+      g_value_take_string (value, gst_pulsesink_device_description (pulsesink));
       break;
-    }
 #if HAVE_PULSE_0_9_12
     case PROP_VOLUME:
       g_value_set_double (value, gst_pulsesink_get_volume (pulsesink));
