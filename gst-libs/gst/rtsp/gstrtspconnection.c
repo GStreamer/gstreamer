@@ -114,12 +114,6 @@ typedef struct
   guint coutl;
 } DecodeCtx;
 
-static GstRTSPResult read_line (GstRTSPConnection * conn, guint8 * buffer,
-    guint * idx, guint size);
-static GstRTSPResult parse_key_value (guint8 * buffer, gchar * key,
-    guint keysize, gchar ** value);
-static GstRTSPResult parse_string (gchar * dest, gint size, gchar ** src);
-
 #ifdef G_OS_WIN32
 #define READ_SOCKET(fd, buf, len) recv (fd, (char *)buf, len, 0)
 #define WRITE_SOCKET(fd, buf, len) send (fd, (const char *)buf, len, 0)
@@ -1441,21 +1435,6 @@ parse_string (gchar * dest, gint size, gchar ** src)
   return res;
 }
 
-static void
-parse_key (gchar * dest, gint size, gchar ** src)
-{
-  gint idx;
-
-  idx = 0;
-  while (**src != ':' && **src != '\0') {
-    if (idx < size - 1)
-      dest[idx++] = **src;
-    (*src)++;
-  }
-  if (size > 0)
-    dest[idx] = '\0';
-}
-
 static GstRTSPResult
 parse_protocol_version (gchar * protocol, GstRTSPMsgType * type,
     GstRTSPVersion * version)
@@ -1593,56 +1572,78 @@ parse_request_line (guint8 * buffer, GstRTSPMessage * msg)
   return res;
 }
 
-static GstRTSPResult
-parse_key_value (guint8 * buffer, gchar * key, guint keysize, gchar ** value)
-{
-  gchar *bptr;
-
-  bptr = (gchar *) buffer;
-
-  /* read key */
-  parse_key (key, keysize, &bptr);
-  if (G_UNLIKELY (*bptr != ':'))
-    goto no_column;
-
-  bptr++;
-  while (g_ascii_isspace (*bptr))
-    bptr++;
-
-  *value = bptr;
-
-  return GST_RTSP_OK;
-
-  /* ERRORS */
-no_column:
-  {
-    return GST_RTSP_EPARSE;
-  }
-}
-
 /* parsing lines means reading a Key: Value pair */
 static GstRTSPResult
 parse_line (guint8 * buffer, GstRTSPMessage * msg)
 {
-  GstRTSPResult res;
-  gchar key[32];
-  gchar *value;
   GstRTSPHeaderField field;
+  gchar *line = (gchar *) buffer;
+  gchar *value;
 
-  res = parse_key_value (buffer, key, sizeof (key), &value);
-  if (G_UNLIKELY (res != GST_RTSP_OK))
+  if ((value = strchr (line, ':')) == NULL || value == line)
     goto parse_error;
 
-  field = gst_rtsp_find_header_field (key);
-  if (field != GST_RTSP_HDR_INVALID)
-    gst_rtsp_message_add_header (msg, field, value);
+  /* trim space before the colon */
+  if (value[-1] == ' ')
+    value[-1] = '\0';
 
+  /* replace the colon with a NUL */
+  *value++ = '\0';
+
+  /* find the header */
+  field = gst_rtsp_find_header_field (line);
+  if (field == GST_RTSP_HDR_INVALID)
+    goto done;
+
+  /* split up the value in multiple key:value pairs if it contains comma(s) */
+  while (*value != '\0') {
+    gchar *next_value;
+    gboolean quoted = FALSE;
+    guint comment = 0;
+
+    /* trim leading space */
+    if (*value == ' ')
+      value++;
+
+    /* find the next value, taking special care of quotes and comments */
+    next_value = value;
+    while (*next_value != '\0') {
+      if ((quoted || comment != 0) && *next_value == '\\' &&
+          next_value[1] != '\0')
+        next_value++;
+      else if (comment == 0 && *next_value == '"')
+        quoted = !quoted;
+      else if (!quoted && *next_value == '(')
+        comment++;
+      else if (comment != 0 && *next_value == ')')
+        comment--;
+      else if (!quoted && comment == 0 && *next_value == ',')
+        break;
+
+      next_value++;
+    }
+
+    /* trim space */
+    if (value != next_value && next_value[-1] == ' ')
+      next_value[-1] = '\0';
+
+    if (*next_value != '\0')
+      *next_value++ = '\0';
+
+    /* add the key:value pair */
+    if (*value != '\0')
+      gst_rtsp_message_add_header (msg, field, value);
+
+    value = next_value;
+  }
+
+done:
   return GST_RTSP_OK;
 
   /* ERRORS */
 parse_error:
   {
-    return res;
+    return GST_RTSP_EPARSE;
   }
 }
 
