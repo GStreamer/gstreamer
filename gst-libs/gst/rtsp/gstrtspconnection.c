@@ -99,9 +99,7 @@ typedef struct
 {
   gint state;
   guint save;
-  gchar in[4];
-  guint cin;
-  gchar out[3];
+  guchar out[3];                /* the size must be evenly divisible by 3 */
   guint cout;
   guint coutl;
 } DecodeCtx;
@@ -1026,36 +1024,33 @@ fill_bytes (gint fd, guint8 * buffer, guint size, DecodeCtx * ctx)
   gint out = 0;
 
   if (ctx) {
-    gint r;
-
     while (size > 0) {
+      guint8 in[sizeof (ctx->out) * 4 / 3];
+      gint r;
+
       while (size > 0 && ctx->cout < ctx->coutl) {
         /* we have some leftover bytes */
-        *buffer++ = ctx->out[ctx->cout];
-        ctx->cout++;
+        *buffer++ = ctx->out[ctx->cout++];
         size--;
         out++;
       }
-      /* nothing in the buffer */
+
+      /* got what we needed? */
       if (size == 0)
         break;
 
       /* try to read more bytes */
-      r = READ_SOCKET (fd, &ctx->in[ctx->cin], 4 - ctx->cin);
+      r = READ_SOCKET (fd, in, sizeof (in));
       if (r <= 0) {
         if (out == 0)
           out = r;
         break;
       }
 
-      ctx->cin += r;
-      if (ctx->cin == 4) {
-        r = g_base64_decode_step ((const gchar *) ctx->in, 4,
-            (guchar *) ctx->out, &ctx->state, &ctx->save);
-        ctx->cout = 0;
-        ctx->coutl = r;
-        ctx->cin = 0;
-      }
+      ctx->cout = 0;
+      ctx->coutl =
+          g_base64_decode_step ((gchar *) in, r, ctx->out, &ctx->state,
+          &ctx->save);
     }
   } else {
     out = READ_SOCKET (fd, buffer, size);
@@ -2619,9 +2614,9 @@ gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
 
   /* we need base64 decoding for the readfd */
   conn->ctx.state = 0;
-  conn->ctx.cin = 0;
-  conn->ctx.cout = 3;
   conn->ctx.save = 0;
+  conn->ctx.cout = 0;
+  conn->ctx.coutl = 0;
   conn->ctxp = &conn->ctx;
 
   return GST_RTSP_OK;
