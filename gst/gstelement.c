@@ -2578,14 +2578,6 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
       /* we can commit the state now which will proceeed to
        * the next state */
       ret = gst_element_continue_state (element, ret);
-      /* In null state release the reference to the clock */
-      if (GST_STATE (element) == GST_STATE_NULL) {
-        GstClock **clock_p;
-        GST_OBJECT_LOCK (element);
-        clock_p = &element->clock;
-        gst_object_replace ((GstObject **) clock_p, NULL);
-        GST_OBJECT_UNLOCK (element);
-      }
       break;
     case GST_STATE_CHANGE_NO_PREROLL:
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
@@ -2758,6 +2750,7 @@ gst_element_change_state_func (GstElement * element, GstStateChange transition)
 {
   GstState state, next;
   GstStateChangeReturn result = GST_STATE_CHANGE_SUCCESS;
+  GstClock **clock_p;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
 
@@ -2794,6 +2787,12 @@ gst_element_change_state_func (GstElement * element, GstStateChange transition)
       } else {
         gst_element_set_base_time (element, 0);
       }
+
+      /* In null state release the reference to the clock */
+      GST_OBJECT_LOCK (element);
+      clock_p = &element->clock;
+      gst_object_replace ((GstObject **) clock_p, NULL);
+      GST_OBJECT_UNLOCK (element);
       break;
     default:
       /* this will catch real but unhandled state changes;
