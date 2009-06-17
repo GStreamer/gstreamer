@@ -2809,6 +2809,7 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
         gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, text,
             NULL);
         gst_element_found_tags (GST_ELEMENT (ebml), taglist);
+        g_free (text);
         break;
       }
 
