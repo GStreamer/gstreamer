@@ -173,6 +173,8 @@ struct _GstRTSPConnection
   GstPollFD *readfd;
   GstPollFD *writefd;
 
+  gboolean manual_http;
+
   gchar tunnelid[TUNNELID_LEN];
   gboolean tunneled;
   GstRTSPTunnelState tstate;
@@ -2154,29 +2156,34 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
     if (G_UNLIKELY (res == GST_RTSP_EEOF))
       goto eof;
     else if (G_LIKELY (res == GST_RTSP_OK)) {
-      if (message->type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
-        if (conn->tstate == TUNNEL_STATE_NONE &&
-            message->type_data.request.method == GST_RTSP_GET) {
-          GstRTSPMessage *response;
+      if (!conn->manual_http) {
+        if (message->type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
+          if (conn->tstate == TUNNEL_STATE_NONE &&
+              message->type_data.request.method == GST_RTSP_GET) {
+            GstRTSPMessage *response;
 
-          conn->tstate = TUNNEL_STATE_GET;
+            conn->tstate = TUNNEL_STATE_GET;
 
-          /* tunnel GET request, we can reply now */
-          response = gen_tunnel_reply (conn, GST_RTSP_STS_OK, message);
-          res = gst_rtsp_connection_send (conn, response, timeout);
-          gst_rtsp_message_free (response);
-          if (res == GST_RTSP_OK)
-            res = GST_RTSP_ETGET;
-          goto cleanup;
-        } else if (conn->tstate == TUNNEL_STATE_NONE &&
-            message->type_data.request.method == GST_RTSP_POST) {
-          conn->tstate = TUNNEL_STATE_POST;
+            /* tunnel GET request, we can reply now */
+            response = gen_tunnel_reply (conn, GST_RTSP_STS_OK, message);
+            res = gst_rtsp_connection_send (conn, response, timeout);
+            gst_rtsp_message_free (response);
+            if (res == GST_RTSP_OK)
+              res = GST_RTSP_ETGET;
+            goto cleanup;
+          } else if (conn->tstate == TUNNEL_STATE_NONE &&
+              message->type_data.request.method == GST_RTSP_POST) {
+            conn->tstate = TUNNEL_STATE_POST;
 
-          /* tunnel POST request, the caller now has to link the two
-           * connections. */
-          res = GST_RTSP_ETPOST;
-          goto cleanup;
-        } else {
+            /* tunnel POST request, the caller now has to link the two
+             * connections. */
+            res = GST_RTSP_ETPOST;
+            goto cleanup;
+          } else {
+            res = GST_RTSP_EPARSE;
+            goto cleanup;
+          }
+        } else if (message->type == GST_RTSP_MESSAGE_HTTP_RESPONSE) {
           res = GST_RTSP_EPARSE;
           goto cleanup;
         }
@@ -2795,6 +2802,24 @@ gst_rtsp_connection_get_writefd (const GstRTSPConnection * conn)
   return conn->writefd->fd;
 }
 
+/**
+ * gst_rtsp_connection_set_http_mode:
+ * @conn: a #GstRTSPConnection
+ * @enable: %TRUE to enable manual HTTP mode
+ *
+ * By setting the HTTP mode to %TRUE the message parsing will support HTTP
+ * messages in addition to the RTSP messages. It will also disable the
+ * automatic handling of setting up an HTTP tunnel.
+ *
+ * Since: 0.10.25
+ */
+void
+gst_rtsp_connection_set_http_mode (GstRTSPConnection * conn, gboolean enable)
+{
+  g_return_if_fail (conn != NULL);
+
+  conn->manual_http = enable;
+}
 
 /**
  * gst_rtsp_connection_set_tunneled:
@@ -2993,7 +3018,8 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
       else if (G_UNLIKELY (res == GST_RTSP_EEOF))
         goto eof;
       else if (G_LIKELY (res == GST_RTSP_OK)) {
-        if (watch->message.type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
+        if (!watch->conn->manual_http &&
+            watch->message.type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
           if (watch->conn->tstate == TUNNEL_STATE_NONE &&
               watch->message.type_data.request.method == GST_RTSP_GET) {
             GstRTSPMessage *response;
@@ -3020,10 +3046,26 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
             if (watch->funcs.tunnel_complete)
               watch->funcs.tunnel_complete (watch, watch->user_data);
             goto read_done;
-          } else {
-            res = GST_RTSP_ERROR;
           }
         }
+      }
+
+      if (!watch->conn->manual_http) {
+        /* if manual HTTP support is not enabled, then restore the message to
+         * what it would have looked like without the support for parsing HTTP
+         * messages being present */
+        if (watch->message.type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
+          watch->message.type = GST_RTSP_MESSAGE_REQUEST;
+          watch->message.type_data.request.method = GST_RTSP_INVALID;
+          if (watch->message.type_data.request.version != GST_RTSP_VERSION_1_0)
+            watch->message.type_data.request.version = GST_RTSP_VERSION_INVALID;
+        } else if (watch->message.type == GST_RTSP_MESSAGE_HTTP_RESPONSE) {
+          watch->message.type = GST_RTSP_MESSAGE_RESPONSE;
+          if (watch->message.type_data.response.version != GST_RTSP_VERSION_1_0)
+            watch->message.type_data.response.version =
+                GST_RTSP_VERSION_INVALID;
+        }
+        res = GST_RTSP_EPARSE;
       }
 
       if (G_LIKELY (res == GST_RTSP_OK)) {

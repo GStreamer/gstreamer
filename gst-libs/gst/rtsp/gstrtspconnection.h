@@ -120,6 +120,9 @@ void               gst_rtsp_connection_set_ip        (GstRTSPConnection *conn, c
 gint               gst_rtsp_connection_get_readfd    (const GstRTSPConnection *conn);
 gint               gst_rtsp_connection_get_writefd   (const GstRTSPConnection *conn);
 
+void               gst_rtsp_connection_set_http_mode (GstRTSPConnection *conn,
+                                                      gboolean enable);
+
 /* tunneling */
 void               gst_rtsp_connection_set_tunneled  (GstRTSPConnection *conn, gboolean tunneled);
 gboolean           gst_rtsp_connection_is_tunneled   (const GstRTSPConnection *conn);
