@@ -305,7 +305,6 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
 {
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) element;
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
-  GstFFMpegMuxClass *oclass = (GstFFMpegMuxClass *) klass;
   GstFFMpegMuxPad *collect_pad;
   gchar *padname;
   GstPad *pad;
@@ -358,7 +357,7 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
 
   /* we love debug output (c) (tm) (r) */
   GST_DEBUG ("Created %s pad for ffmux_%s element",
-      padname, oclass->in_plugin->name);
+      padname, ((GstFFMpegMuxClass *) klass)->in_plugin->name);
   g_free (padname);
 
   return pad;
