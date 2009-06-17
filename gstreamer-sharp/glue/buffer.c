@@ -12,7 +12,7 @@ gstsharp_gst_buffer_set_data (GstBuffer * buffer, guint8 * new_data, guint size)
 
   buffer->malloc_data = buffer->data = new_data;
   buffer->size = size;
-  buffer->free_func = NULL;
+  buffer->free_func = g_free;
 }
 
 guint
