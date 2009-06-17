@@ -635,6 +635,7 @@
 
   <attr path="/api/namespace/callback[@name='PadBufferAllocFunction']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
   <attr path="/api/namespace/callback[@name='PadChainFunction']/parameters/parameter[@name='buffer']" name="owned">true</attr>
+  <attr path="/api/namespace/callback[@name='PadGetCapsFunction']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_BLOCKED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
