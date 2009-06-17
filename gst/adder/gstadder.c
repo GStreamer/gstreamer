@@ -577,6 +577,7 @@ forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
     g_value_set_boolean (ret, FALSE);
     GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
         event, GST_EVENT_TYPE_NAME (event));
+    gst_pad_send_event (pad, gst_event_new_flush_stop ());
   } else {
     GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
         event, GST_EVENT_TYPE_NAME (event));
@@ -649,13 +650,16 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       GstSeekFlags flags;
       GstSeekType curtype;
       gint64 cur;
+      gboolean flush;
 
       /* parse the seek parameters */
       gst_event_parse_seek (event, &adder->segment_rate, NULL, &flags, &curtype,
           &cur, NULL, NULL);
 
+      flush = (flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH;
+
       /* check if we are flushing */
-      if (flags & GST_SEEK_FLAG_FLUSH) {
+      if (flush) {
         /* make sure we accept nothing anymore and return WRONG_STATE */
         gst_collect_pads_set_flushing (adder->collect, TRUE);
 
@@ -664,29 +668,35 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
         gst_pad_push_event (adder->srcpad, gst_event_new_flush_start ());
       }
       GST_DEBUG_OBJECT (adder, "handling seek event: %" GST_PTR_FORMAT, event);
+
       /* now wait for the collected to be finished and mark a new
-       * segment */
+       * segment. After we have the lock, no collect function is running and no
+       * new collect function will be called for as long as we're flushing. */
       GST_OBJECT_LOCK (adder->collect);
       if (curtype == GST_SEEK_TYPE_SET)
         adder->segment_position = cur;
       else
         adder->segment_position = 0;
-      adder->segment_pending = TRUE;
+      /* we flushed out the downstream segment, make sure we push a new one */
+      if (flush)
+        adder->segment_pending = TRUE;
+      /* we might have a pending flush_stop event now. This event will either be
+       * sent by an upstream element when it completes the seek or we will push
+       * one in the collected callback ourself */
+      adder->flush_stop_pending = flush;
       GST_OBJECT_UNLOCK (adder->collect);
       GST_DEBUG_OBJECT (adder, "forwarding seek event: %" GST_PTR_FORMAT,
           event);
 
       result = forward_event (adder, event);
       if (!result) {
-        /* seek failed. maybe source is a live source. send a flush_stop
-         * FIXME: ideally we just forward flush event, but live sources don't
-         * send anything and we need a flush events to unlock the collect
-         * function
-         */
-        GST_DEBUG_OBJECT (adder, "seeking failed, mark pending flush_stop");
-        adder->flush_stop_pending =
-            ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
+        /* seek failed. maybe source is a live source. */
+        GST_DEBUG_OBJECT (adder, "seeking failed");
       }
+      /* FIXME: ideally we would like to send a flush-stop event from here but
+       * collectpads does not have a method that allows us to do that. Instead
+       * we forward all flush-stop events we receive on the sinkpads. We might
+       * be sending too many flush-stop events. */
       break;
     }
     case GST_EVENT_QOS:
@@ -722,14 +732,17 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      /* mark a pending new segment. This event is synchronized
-       * with the streaming thread so we can safely update the
-       * variable without races. It's somewhat weird because we
-       * assume the collectpads forwarded the FLUSH_STOP past us
-       * and downstream (using our source pad, the bastard!).
+      /* we received a flush-stop. The collect_event function will push the
+       * event past our element. We simply forward all flush-stop events, even
+       * when no flush-stop was pendingk, this is required because collectpads
+       * does not provide an API to handle-but-not-forward the flush-stop.
+       * We unset the pending flush-stop flag so that we don't send anymore
+       * flush-stop from the collect function later.
        */
+      GST_OBJECT_LOCK (adder->collect);
       adder->segment_pending = TRUE;
       adder->flush_stop_pending = FALSE;
+      GST_OBJECT_UNLOCK (adder->collect);
       break;
     default:
       break;
