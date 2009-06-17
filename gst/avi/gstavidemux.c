@@ -4029,6 +4029,25 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       GST_DEBUG ("Found index tag, stream done");
       avi->have_eos = TRUE;
       return GST_FLOW_UNEXPECTED;
+    } else if (tag == GST_RIFF_TAG_LIST) {
+      /* movi chunks might be grouped in rec list */
+      if (gst_adapter_available (avi->adapter) >= 12) {
+        GST_DEBUG ("Found LIST tag, skipping LIST header");
+        gst_adapter_flush (avi->adapter, 12);
+        continue;
+      }
+      return GST_FLOW_OK;
+    } else if (tag == GST_RIFF_TAG_JUNK) {
+      /* rec list might contain JUNK chunks */
+      GST_DEBUG ("Found JUNK tag");
+      if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
+        if ((size > 0) && (size != -1)) {
+          GST_DEBUG ("  skipping %d bytes for now", size);
+          gst_adapter_flush (avi->adapter, 8 + size);
+          continue;
+        }
+      }
+      return GST_FLOW_OK;
     } else {
       GST_DEBUG ("No more stream chunks, send EOS");
       avi->have_eos = TRUE;
