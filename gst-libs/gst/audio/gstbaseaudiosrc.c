@@ -726,7 +726,7 @@ gst_base_audio_src_get_offset (GstBaseAudioSrc * src)
   if (diff >= segtotal) {
     GST_DEBUG_OBJECT (src, "dropped, align to segment %d", segdone);
     /* sample would be dropped, position to next playable position */
-    sample = ((guint64) (segdone - segtotal + 1)) * sps;
+    sample = ((guint64) (segdone)) * sps;
   }
 
   return sample;
