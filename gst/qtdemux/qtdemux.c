@@ -3824,10 +3824,12 @@ done:
       stream->segments = g_new (QtDemuxSegment, 1);
 
     /* samples know best */
-    if (stream->n_samples > 0)
+    if (stream->n_samples > 0) {
       stream_duration =
           stream->samples[stream->n_samples - 1].timestamp +
-          stream->samples[stream->n_samples - 1].pts_offset;
+          stream->samples[stream->n_samples - 1].pts_offset +
+          stream->samples[stream->n_samples - 1].duration;
+    }
 
     stream->segments[0].time = 0;
     stream->segments[0].stop_time = stream_duration;
