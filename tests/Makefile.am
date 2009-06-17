@@ -8,7 +8,7 @@ $(ASSEMBLY): $(ASSEMBLY_CSFILES)
 	$(CSC) $(MCS_FLAGS) -out:$@ -target:library -r:$(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll $(ASSEMBLY_CSFILES) $(GLIBSHARP_LIBS)
 
 run-test: $(ASSEMBLY)
-	MONO_PATH="../gstreamer-sharp/" $(MONO) $(NUNIT_TESTER) $(ASSEMBLY)
+	MONO_PATH="../gstreamer-sharp/" $(MONO) $(NUNIT_TESTER) -labels $(ASSEMBLY)
 
 CLEANFILES = $(ASSEMBLY) *.mdb *.pdb TestResult.xml
 DISTCLEANFILES = Makefile.in
