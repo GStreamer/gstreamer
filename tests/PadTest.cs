@@ -43,7 +43,6 @@ public class PadTest
 	}
 
 	[Test]
-	[Ignore("This test causes a crash")]
 	public void TestFuncAssigning()
 	{
 		Pad src = new Pad("src", PadDirection.Src);

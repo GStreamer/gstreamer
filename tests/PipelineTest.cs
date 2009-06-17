@@ -100,7 +100,6 @@ public class PipelineTest
   }
 
   [Test]
-	[Ignore("This test causes a crash")]
   public void TestBusAddWatch() 
   {
     TestBusCallback(true);
