@@ -624,16 +624,17 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
 {
   gint i;
   GstRTSPResult res;
-  gchar *str;
-  guint idx, line;
-  gint retval;
-  GstClockTime to;
-  gchar *ip, *url_port_str;
+  gchar *ip;
+  gchar *uri;
+  gchar *value;
   guint16 port, url_port;
-  gchar codestr[4], *resultstr;
-  gint code;
   GstRTSPUrl *url;
   gchar *hostparam;
+  GstRTSPMessage *msg;
+  GstRTSPMessage response;
+
+  memset (&response, 0, sizeof (response));
+  gst_rtsp_message_init (&response);
 
   /* create a random sessionid */
   for (i = 0; i < TUNNELID_LEN; i++)
@@ -645,126 +646,71 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
   gst_rtsp_url_get_port (url, &url_port);
 
   if (conn->proxy_host) {
-    hostparam = g_strdup_printf ("Host: %s:%d\r\n", url->host, url_port);
-    url_port_str = g_strdup_printf (":%d", url_port);
+    uri = g_strdup_printf ("http://%s:%d%s%s%s", url->host, url_port,
+        url->abspath, url->query ? "?" : "", url->query ? url->query : "");
+    hostparam = g_strdup_printf ("%s:%d", url->host, url_port);
     ip = conn->proxy_host;
     port = conn->proxy_port;
   } else {
+    uri = g_strdup_printf ("%s%s%s", url->abspath, url->query ? "?" : "",
+        url->query ? url->query : "");
     hostparam = NULL;
-    url_port_str = NULL;
     ip = conn->ip;
     port = url_port;
   }
 
-  /* */
-  str = g_strdup_printf ("GET %s%s%s%s%s%s HTTP/1.0\r\n"
-      "%s"
-      "x-sessioncookie: %s\r\n"
-      "Accept: application/x-rtsp-tunnelled\r\n"
-      "Pragma: no-cache\r\n"
-      "Cache-Control: no-cache\r\n" "\r\n",
-      conn->proxy_host ? "http://" : "",
-      conn->proxy_host ? url->host : "",
-      conn->proxy_host ? url_port_str : "",
-      url->abspath, url->query ? "?" : "", url->query ? url->query : "",
-      hostparam ? hostparam : "", conn->tunnelid);
+  /* create the GET request for the read connection */
+  GST_RTSP_CHECK (gst_rtsp_message_new_request (&msg, GST_RTSP_GET, uri),
+      no_message);
+  msg->type = GST_RTSP_MESSAGE_HTTP_REQUEST;
+
+  if (hostparam != NULL)
+    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_HOST, hostparam);
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_X_SESSIONCOOKIE,
+      conn->tunnelid);
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_ACCEPT,
+      "application/x-rtsp-tunnelled");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CACHE_CONTROL, "no-cache");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_PRAGMA, "no-cache");
 
   /* we start by writing to this fd */
   conn->writefd = &conn->fd0;
 
-  res = gst_rtsp_connection_write (conn, (guint8 *) str, strlen (str), timeout);
-  g_free (str);
-  if (res != GST_RTSP_OK)
-    goto write_failed;
+  /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
+   * request from being base64 encoded */
+  conn->tunneled = FALSE;
+  GST_RTSP_CHECK (gst_rtsp_connection_send (conn, msg, timeout), write_failed);
+  gst_rtsp_message_free (msg);
+  conn->tunneled = TRUE;
 
-  gst_poll_fd_ctl_write (conn->fdset, &conn->fd0, FALSE);
-  gst_poll_fd_ctl_read (conn->fdset, &conn->fd0, TRUE);
+  /* receive the response to the GET request */
+  /* we need to temporarily set manual_http to TRUE since
+   * gst_rtsp_connection_receive() will treat the HTTP response as a parsing
+   * failure otherwise */
+  conn->manual_http = TRUE;
+  GST_RTSP_CHECK (gst_rtsp_connection_receive (conn, &response, timeout),
+      read_failed);
+  conn->manual_http = FALSE;
 
-  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : GST_CLOCK_TIME_NONE;
+  if (response.type != GST_RTSP_MESSAGE_HTTP_RESPONSE ||
+      response.type_data.response.code != GST_RTSP_STS_OK)
+    goto wrong_result;
 
-  line = 0;
-  while (TRUE) {
-    guint8 buffer[4096];
-
-    idx = 0;
-    while (TRUE) {
-      res = read_line (conn, buffer, &idx, sizeof (buffer));
-      if (res == GST_RTSP_EEOF)
-        goto eof;
-      if (res == GST_RTSP_OK)
-        break;
-      if (res != GST_RTSP_EINTR)
-        goto read_error;
-
-      do {
-        retval = gst_poll_wait (conn->fdset, to);
-      } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
-
-      /* check for timeout */
-      if (retval == 0)
-        goto timeout;
-
-      if (retval == -1) {
-        if (errno == EBUSY)
-          goto stopped;
-        else
-          goto select_error;
-      }
-    }
-
-    /* check for last line */
-    if (buffer[0] == '\r')
-      buffer[0] = '\0';
-    if (buffer[0] == '\0')
-      break;
-
-    if (line == 0) {
-      /* first line, parse response */
-      gchar versionstr[20];
-      gchar *bptr;
-
-      bptr = (gchar *) buffer;
-
-      parse_string (versionstr, sizeof (versionstr), &bptr);
-      parse_string (codestr, sizeof (codestr), &bptr);
-      code = atoi (codestr);
-
-      while (g_ascii_isspace (*bptr))
-        bptr++;
-
-      resultstr = bptr;
-
-      if (code != GST_RTSP_STS_OK)
-        goto wrong_result;
+  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_X_SERVER_IP_ADDRESS,
+          &value, 0) != GST_RTSP_OK) {
+    if (conn->proxy_host) {
+      /* if we use a proxy we need to change the destination url */
+      g_free (url->host);
+      url->host = g_strdup (value);
+      g_free (hostparam);
+      hostparam = g_strdup_printf ("%s:%d", url->host, url_port);
     } else {
-      gchar key[32];
-      gchar *value;
-
-      /* other lines, parse key/value */
-      res = parse_key_value (buffer, key, sizeof (key), &value);
-      if (res == GST_RTSP_OK) {
-        /* we got a new ip address */
-        if (g_ascii_strcasecmp (key, "x-server-ip-address") == 0) {
-          if (conn->proxy_host) {
-            /* if we use a proxy we need to change the destination url */
-            g_free (url->host);
-            url->host = g_strdup (value);
-            g_free (hostparam);
-            g_free (url_port_str);
-            hostparam =
-                g_strdup_printf ("Host: %s:%d\r\n", url->host, url_port);
-            url_port_str = g_strdup_printf (":%d", url_port);
-          } else {
-            /* and resolve the new ip address */
-            if (!(ip = do_resolve (conn->ip)))
-              goto not_resolved;
-            g_free (conn->ip);
-            conn->ip = ip;
-          }
-        }
-      }
+      /* and resolve the new ip address */
+      if (!(ip = do_resolve (conn->ip)))
+        goto not_resolved;
+      g_free (conn->ip);
+      conn->ip = ip;
     }
-    line++;
   }
 
   /* connect to the host/port */
@@ -775,66 +721,60 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
   /* this is now our writing socket */
   conn->writefd = &conn->fd1;
 
-  /* */
-  str = g_strdup_printf ("POST %s%s%s%s%s%s HTTP/1.0\r\n"
-      "%s"
-      "x-sessioncookie: %s\r\n"
-      "Content-Type: application/x-rtsp-tunnelled\r\n"
-      "Pragma: no-cache\r\n"
-      "Cache-Control: no-cache\r\n"
-      "Content-Length: 32767\r\n"
-      "Expires: Sun, 9 Jan 1972 00:00:00 GMT\r\n"
-      "\r\n",
-      conn->proxy_host ? "http://" : "",
-      conn->proxy_host ? url->host : "",
-      conn->proxy_host ? url_port_str : "",
-      url->abspath, url->query ? "?" : "", url->query ? url->query : "",
-      hostparam ? hostparam : "", conn->tunnelid);
+  /* create the POST request for the write connection */
+  GST_RTSP_CHECK (gst_rtsp_message_new_request (&msg, GST_RTSP_POST, uri),
+      no_message);
+  msg->type = GST_RTSP_MESSAGE_HTTP_REQUEST;
 
-  res = gst_rtsp_connection_write (conn, (guint8 *) str, strlen (str), timeout);
-  g_free (str);
-  if (res != GST_RTSP_OK)
-    goto write_failed;
+  if (hostparam != NULL)
+    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_HOST, hostparam);
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_X_SESSIONCOOKIE,
+      conn->tunnelid);
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_ACCEPT,
+      "application/x-rtsp-tunnelled");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CACHE_CONTROL, "no-cache");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_PRAGMA, "no-cache");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_EXPIRES,
+      "Sun, 9 Jan 1972 00:00:00 GMT");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CONTENT_LENGTH, "32767");
+
+  /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
+   * request from being base64 encoded */
+  conn->tunneled = FALSE;
+  GST_RTSP_CHECK (gst_rtsp_connection_send (conn, msg, timeout), write_failed);
+  gst_rtsp_message_free (msg);
+  conn->tunneled = TRUE;
 
 exit:
+  gst_rtsp_message_unset (&response);
   g_free (hostparam);
-  g_free (url_port_str);
+  g_free (uri);
 
   return res;
 
   /* ERRORS */
+no_message:
+  {
+    GST_ERROR ("failed to create request (%d)", res);
+    goto exit;
+  }
 write_failed:
   {
     GST_ERROR ("write failed (%d)", res);
+    gst_rtsp_message_free (msg);
+    conn->tunneled = TRUE;
     goto exit;
   }
-eof:
+read_failed:
   {
-    res = GST_RTSP_EEOF;
-    goto exit;
-  }
-read_error:
-  {
-    goto exit;
-  }
-timeout:
-  {
-    res = GST_RTSP_ETIMEOUT;
-    goto exit;
-  }
-select_error:
-  {
-    res = GST_RTSP_ESYS;
-    goto exit;
-  }
-stopped:
-  {
-    res = GST_RTSP_EINTR;
+    GST_ERROR ("read failed (%d)", res);
+    conn->manual_http = FALSE;
     goto exit;
   }
 wrong_result:
   {
-    GST_ERROR ("got failure response %d %s", code, resultstr);
+    GST_ERROR ("got failure response %d %s", response.type_data.response.code,
+        response.type_data.response.reason);
     res = GST_RTSP_ERROR;
     goto exit;
   }
