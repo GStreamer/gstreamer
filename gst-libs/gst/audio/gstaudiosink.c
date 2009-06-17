@@ -229,11 +229,11 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
 
     /* buffer must be started */
     if (gst_ring_buffer_prepare_read (buf, &readseg, &readptr, &len)) {
-      gint written = 0;
+      gint written;
 
       left = len;
       do {
-        written = writefunc (sink, readptr + written, left);
+        written = writefunc (sink, readptr, left);
         GST_LOG_OBJECT (sink, "transfered %d bytes of %d from segment %d",
             written, left, readseg);
         if (written < 0 || written > left) {
@@ -245,6 +245,7 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
           break;
         }
         left -= written;
+        readptr += written;
       } while (left > 0);
 
       /* clear written samples */
