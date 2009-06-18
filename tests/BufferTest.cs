@@ -19,6 +19,25 @@ public class BufferTest
 	}	
 
 	[Test]
+	public void TestCaps() 
+	{
+		Gst.Buffer buffer = new Gst.Buffer(4);
+		Caps caps = Caps.FromString("audio/x-raw-int");
+
+		Assert.IsNull(buffer.Caps, "buffer.Caps should be null");
+		buffer.Caps = caps;
+		Assert.IsNotNull(buffer.Caps, "buffer.Caps is null");
+
+		Caps caps2 = Caps.FromString("audio/x-raw-float");
+		buffer.Caps = caps2;
+		Assert.AreNotEqual(buffer.Caps, caps);
+		Assert.AreEqual(buffer.Caps, caps2);
+
+		buffer.Caps = null;
+		Assert.IsNull(buffer.Caps, "buffer.Caps should be null");
+	}
+
+	[Test]
 	public void TestSubbuffer() 
 	{
 		Gst.Buffer buffer = new Gst.Buffer(4);

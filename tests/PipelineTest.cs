@@ -21,6 +21,15 @@ public class PipelineTest
     Application.Init();
   }
 
+	[Test]
+	public void TestPipeline()
+	{
+		Pipeline pipeline = new Pipeline(String.Empty);
+		Assert.IsNotNull(pipeline, "Could not create pipeline");
+		Assert.IsNotNull(pipeline.Bus, "Bus on pipeline is null");
+		Assert.IsNotNull(pipeline.Clock, "Clock on pipeline is null");
+	}
+
   [Test]
   public void TestAsyncStateChangeEmpty()
   {

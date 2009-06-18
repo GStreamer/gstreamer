@@ -39,6 +39,32 @@ public class BinTest
 	}
 
 	[Test]
+	public void TestAddRemove()
+	{
+		Bin bin = ElementFactory.Make("bin") as Bin;
+		Assert.IsNotNull(bin, "Could not create bin");
+
+		Element e1 = new FakeSrc("fakesrc");
+		Element e2 = new Identity("identity");
+		Element e3 = new FakeSink("fakesink");
+
+		Assert.IsNotNull(e1, "Could not create fakesrc");
+		Assert.IsNotNull(e2, "Could not create identity");
+		Assert.IsNotNull(e3, "Could not create fakesink");
+
+		bin.Add(e1, e2, e3);
+		Element.Link(e1, e2, e3);
+
+		Assert.AreEqual(bin.ChildrenCount, 3);
+		bin.Remove(e2, e3);
+		Assert.AreEqual(bin.ChildrenCount, 1);
+		bin.Add(e2);
+		Assert.AreEqual(bin.ChildrenCount, 2);
+		bin.Remove(e1, e2);
+		Assert.AreEqual(bin.ChildrenCount, 0);
+	}
+
+	[Test]
 	public void TestGetByName()
 	{
 		Bin bin = new Bin("test-bin");
@@ -52,15 +78,15 @@ public class BinTest
 	}
 
 	[Test]
-	public void TestChildren()
+	public void TestGetChildByIndex()
 	{
 		Bin bin = new Bin("test-bin");
 
 		Element [] elements = new Element [] {
 			ElementFactory.Make("fakesrc", "fakesrc"),
-				ElementFactory.Make("audioconvert", "audioconvert"),
-				ElementFactory.Make("wavenc", "wavenc"),
-				ElementFactory.Make("fakesink", "fakesink")
+			ElementFactory.Make("audioconvert", "audioconvert"),
+			ElementFactory.Make("wavenc", "wavenc"),
+			ElementFactory.Make("fakesink", "fakesink")
 		};
 
 		foreach(Element element in elements) {
@@ -72,17 +98,5 @@ public class BinTest
 		for(uint i = 0; i < elements.Length; i++) {
 			Assert.AreEqual(elements[elements.Length - i - 1], bin.GetChildByIndex(i));
 		}
-	}
-
-	[Test]
-	public void TestInterface()
-	{
-		Bin bin = new Bin(String.Empty);
-		Assert.IsNotNull(bin, "Could not create bin");
-
-		Element filesrc = ElementFactory.Make("filesrc");
-		Assert.IsNotNull(filesrc, "Could not create filesrc");
-
-		bin.Add(filesrc);
 	}
 }
