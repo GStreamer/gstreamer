@@ -664,8 +664,12 @@ gst_aacparse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
     }
   }
 
-  GST_BUFFER_DURATION (buffer) = AAC_FRAME_DURATION (aacparse);
-  GST_BUFFER_TIMESTAMP (buffer) = aacparse->ts;
+  /* ADIF: only send an initial 0 timestamp downstream,
+   * then admit we have no idea and let downstream (decoder) handle it */
+  if (aacparse->header_type != DSPAAC_HEADER_ADIF || !aacparse->ts) {
+    GST_BUFFER_DURATION (buffer) = AAC_FRAME_DURATION (aacparse);
+    GST_BUFFER_TIMESTAMP (buffer) = aacparse->ts;
+  }
 
   if (GST_CLOCK_TIME_IS_VALID (aacparse->ts))
     aacparse->ts += GST_BUFFER_DURATION (buffer);
