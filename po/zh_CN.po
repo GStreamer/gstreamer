@@ -2,14 +2,14 @@
 # Copyright (C) 2007 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-ugly package.
 # Wenzheng Hu <db_lobster@163.com>, 2007.
-# LI Daobing <lidaobing@gmail.com>, 2008.
+# LI Daobing <lidaobing@gmail.com>, 2008, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2009-06-18 08:03+0100\n"
-"PO-Revision-Date: 2008-08-14 21:17+0800\n"
+"PO-Revision-Date: 2009-06-12 23:12+0800\n"
 "Last-Translator: LI Daobing <lidaobing@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
 "sourceforge.net>\n"
@@ -65,9 +65,8 @@ msgid ""
 "bitrate was changed to %d kbit/s."
 msgstr "不允许的比特率 %d kbit/s 于 '%s'. 比特率已改变成 %d kbit/s."
 
-#, fuzzy
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "设置 LAME 编码器失败. 请检查你的编码参数."
+msgstr "设置 TwoLAME 编码器失败. 请检查你的编码参数."
 
 msgid "This stream contains no data."
 msgstr "这个串流中没有包含数据."

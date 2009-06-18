@@ -1,14 +1,13 @@
 # Italian translation for gst-plugins-ugly package of GStreamer project.
-# Copyright (C) 2004-2008 GStreamer core team
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Luca Ferretti <elle.uca@infinito.it>, 2007-2008
-#
+# Luca Ferretti <elle.uca@infinito.it>, 2007, 2008, 2009.Luca Ferretti <elle.uca@infinito.it>, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2009-06-18 08:03+0100\n"
-"PO-Revision-Date: 2008-11-13 09:28+0100\n"
+"PO-Revision-Date: 2009-06-14 12:31+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -71,11 +70,10 @@ msgstr ""
 "Il bitrate richiesto (%d kbit/s) per la proprietà \"%s\" non è consentito. "
 "Il bitrate è stato cambiato a %d kbit/s."
 
-#, fuzzy
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
-"Configurazione dell'encoder LAME non riuscita. Verificare i propri parametri "
-"di codifica."
+"Configurazione dell'encoder TwoLAME non riuscita. Verificare i propri "
+"parametri di codifica."
 
 # NEW
 msgid "This stream contains no data."
