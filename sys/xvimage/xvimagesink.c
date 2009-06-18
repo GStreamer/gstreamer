@@ -914,6 +914,8 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
 {
   GstXWindow *xwindow = NULL;
   XGCValues values;
+  XTextProperty xproperty;
+  const gchar *title;
 
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
 
@@ -933,6 +935,11 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
   /* We have to do that to prevent X from redrawing the background on
    * ConfigureNotify. This takes away flickering of video when resizing. */
   XSetWindowBackgroundPixmap (xvimagesink->xcontext->disp, xwindow->win, None);
+
+  /* set application name as a title */
+  title = g_get_application_name ();
+  if ((XStringListToTextProperty (((char **) &title), 1, &xproperty)) != 0)
+    XSetWMName (xvimagesink->xcontext->disp, xwindow->win, &xproperty);
 
   if (xvimagesink->handle_events) {
     Atom wm_delete;
