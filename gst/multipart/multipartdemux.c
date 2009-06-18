@@ -558,12 +558,16 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
 
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (srcpad->pad));
       if (created) {
-        GstEvent *event;
+        GstTagList *tags;
 
         /* Push new segment, first buffer has 0 timestamp */
-        event =
-            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
-        gst_pad_push_event (srcpad->pad, event);
+        gst_pad_push_event (srcpad->pad,
+            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
+
+        tags =
+            gst_tag_list_new_full (GST_TAG_CONTAINER_FORMAT, "Multipart", NULL);
+        gst_pad_push_event (srcpad->pad, gst_event_new_tag (tags));
+
         GST_BUFFER_TIMESTAMP (outbuf) = 0;
       } else {
         GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
