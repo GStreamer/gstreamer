@@ -938,8 +938,10 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
 
   /* set application name as a title */
   title = g_get_application_name ();
-  if ((XStringListToTextProperty (((char **) &title), 1, &xproperty)) != 0)
-    XSetWMName (xvimagesink->xcontext->disp, xwindow->win, &xproperty);
+  if (title) {
+    if ((XStringListToTextProperty (((char **) &title), 1, &xproperty)) != 0)
+      XSetWMName (xvimagesink->xcontext->disp, xwindow->win, &xproperty);
+  }
 
   if (xvimagesink->handle_events) {
     Atom wm_delete;
