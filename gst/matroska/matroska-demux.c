@@ -3090,11 +3090,10 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux)
 
   DEBUG_ELEMENT_STOP (demux, ebml, "Tags", ret);
 
-  if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
-    gst_element_found_tags (GST_ELEMENT (ebml), taglist);
-  } else {
-    gst_tag_list_free (taglist);
-  }
+  /* FIXME: tags must be pushed *after* the initial newsegment event */
+  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_CONTAINER_FORMAT,
+      "Matroska", NULL);
+  gst_element_found_tags (GST_ELEMENT (ebml), taglist);
 
   return ret;
 }
