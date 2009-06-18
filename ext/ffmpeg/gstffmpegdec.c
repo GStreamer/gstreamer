@@ -61,7 +61,7 @@ struct _GstTSHandler
   /* ts list indexes */
   gint buf_head;
   gint buf_tail;
-  guint64 buf_count;
+  guint buf_count;
 
   /* incomming buffer timestamp tracking */
   GstTSMap buffers[TS_MAP_COUNT + 1];
@@ -2820,7 +2820,7 @@ gst_ts_handler_append (GstFFMpegDec * ffmpegdec, GstBuffer * buffer)
   gint size = GST_BUFFER_SIZE (buffer);
   gint ind = ts_handler->buf_head;
 
-  if ((ts != -1) || (!ts && !ts_handler->buf_count)) {
+  if ((ts != -1) || (ts == -1 && !ts_handler->buf_count)) {
     /* null timestamps are only valid for the first entry */
     TS_MAP_INC (ind);
     /** debugging trace
@@ -2828,12 +2828,19 @@ gst_ts_handler_append (GstFFMpegDec * ffmpegdec, GstBuffer * buffer)
         ind, ts_handler->buf_count,
         ts != -1 ? (double) ts / GST_SECOND : -1.0, size);
     **/
+    GST_LOG_OBJECT (ffmpegdec, "store timestamp @ index [%02X] buf_count: %d"
+        " ts: %" GST_TIME_FORMAT " size: %d",
+        ind, ts_handler->buf_count, GST_TIME_ARGS (ts), size);
     ts_handler->buffers[ind].ts = ts;
     ts_handler->buffers[ind].size = size;
     ts_handler->buf_head = ind;
     ts_handler->buf_count++;
   } else {
     /* append size to existing entry */
+    GST_LOG_OBJECT (ffmpegdec, "Extending index [%02X] buf_count: %d"
+        " ts: %" GST_TIME_FORMAT " new size: %d",
+        ind, ts_handler->buf_count,
+        ts_handler->buffers[ind].ts, ts_handler->buffers[ind].size);
     ts_handler->buffers[ind].size += size;
   }
 }
@@ -2846,12 +2853,16 @@ gst_ts_handler_consume (GstFFMpegDec * ffmpegdec, gint size)
   gint buf = ts_handler->buf_tail;
 
   /* eat some bytes from the buffer map */
-  while (size > 0) {
+  while (size > 0 && ts_handler->buf_count > 0) {
+    GST_LOG_OBJECT (ffmpegdec, "Stepping over %d bytes @ index %d has %d bytes",
+        size, buf, ts_handler->buffers[buf].size);
     if (size >= ts_handler->buffers[buf].size) {
       size -= ts_handler->buffers[buf].size;
       /* reset this entry */
       memset (ts_handler->buffers + buf, -1, sizeof (GstTSMap));
       TS_MAP_INC (buf);
+      /* Decrement the active buffer count */
+      ts_handler->buf_count--;
       /* update the buffer tail */
       ts_handler->buf_tail = buf;
     } else {
@@ -2859,9 +2870,13 @@ gst_ts_handler_consume (GstFFMpegDec * ffmpegdec, gint size)
       size = 0;
     }
   }
-  if (size == -1) {
+  if (size == -1 && ts_handler->buf_count > 0) {
+    GST_LOG_OBJECT (ffmpegdec, "Stepping over %d bytes @ index %d has %d bytes",
+        size, buf, ts_handler->buffers[buf].size);
     /* just consume the one buffer regardless */
     memset (ts_handler->buffers + buf, -1, sizeof (GstTSMap));
+    /* Decrement the active buffer count */
+    ts_handler->buf_count--;
     TS_MAP_INC (buf);
     /* update the buffer tail */
     ts_handler->buf_tail = buf;
@@ -2875,6 +2890,8 @@ gst_ts_handler_get_ts (GstFFMpegDec * ffmpegdec)
 {
   GstTSHandler *ts_handler = &ffmpegdec->ts_handler;
   guint64 ts = ts_handler->buffers[ts_handler->buf_tail].ts;
+  GST_LOG_OBJECT (ffmpegdec, "Index %d yielded ts %" GST_TIME_FORMAT,
+      ts_handler->buf_tail, GST_TIME_ARGS (ts));
   ts_handler->buffers[ts_handler->buf_tail].ts = -1;
   return ts;
 }
