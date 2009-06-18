@@ -130,7 +130,7 @@ if test "x$NUNIT_TESTER" = "xno" ; then
 fi
 AC_SUBST(NUNIT_TESTER)
 
-PKG_CHECK_MODULES(MONO_NUNIT, mono-nunit >= 2.0, do_tests="yes", do_tests="no")
+PKG_CHECK_MODULES(MONO_NUNIT, mono-nunit >= 2.4, do_tests="yes", do_tests="no")
 AC_SUBST(MONO_NUNIT_LIBS)
 AM_CONDITIONAL(ENABLE_TESTS, test "x$do_tests" = "xyes")
 if test "x$do_tests" = "xno"; then

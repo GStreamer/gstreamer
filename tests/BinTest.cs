@@ -99,4 +99,46 @@ public class BinTest
 			Assert.AreEqual(elements[elements.Length - i - 1], bin.GetChildByIndex(i));
 		}
 	}
+
+	[Test]
+	public void TestElements()
+	{
+		Bin bin = new Bin("test-bin");
+
+		Element [] elements = new Element [] {
+			new CapsFilter(),
+			new MultiQueue(),
+			new Queue(),
+			new Tee(),
+			new TypeFindElement()
+		};
+
+		bin.Add(elements);
+		CollectionAssert.AreEquivalent(elements, bin.Elements);
+		CollectionAssert.AreEquivalent(elements, bin.ElementsRecurse);
+		CollectionAssert.AreEquivalent(elements, bin.ElementsSorted);
+	}
+
+	[Test]
+	public void TestGhostPad()
+	{
+		Bin bin = new Bin(String.Empty);
+		Element filesrc = ElementFactory.Make("filesrc");
+		bin.Add(filesrc);
+		CollectionAssert.IsEmpty(bin.Pads);
+
+		GhostPad pad1 = new GhostPad("ghost-sink", PadDirection.Sink);
+		GhostPad pad2 = new GhostPad("ghost-src", new PadTemplate("src-template", PadDirection.Src, PadPresence.Request, Caps.NewAny()));
+
+		Assert.IsFalse(pad1.SetTarget(filesrc.GetStaticPad("src")));
+		Assert.IsTrue(pad2.SetTarget(filesrc.GetStaticPad("src")));
+
+		bin.AddPad(pad1);
+		bin.AddPad(pad2);
+
+		CollectionAssert.Contains(bin.Pads, pad1);
+		CollectionAssert.Contains(bin.Pads, pad2);
+		CollectionAssert.Contains(bin.SinkPads, pad1);
+		CollectionAssert.Contains(bin.SrcPads, pad2);
+	}
 }
