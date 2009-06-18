@@ -988,12 +988,14 @@ gst_collect_pads_check_pads (GstCollectPads * pads)
       /* update the stats */
       pads->numpads++;
       data = collected->data;
-      if (G_LIKELY (!GST_PAD_IS_FLUSHING (data->pad))) {
-        if (data->buffer)
-          pads->queuedpads++;
-        if (data->abidata.ABI.eos)
-          pads->eospads++;
-      }
+
+      if (G_UNLIKELY (data->abidata.ABI.flushing))
+        continue;
+
+      if (data->buffer)
+        pads->queuedpads++;
+      if (data->abidata.ABI.eos)
+        pads->eospads++;
 
       /* add to the list of pads to collect */
       ref_data (data);
