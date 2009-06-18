@@ -822,7 +822,7 @@ invalid_list:
 
 /**
  * gst_rtp_buffer_list_get_ssrc:
- * @list: the list
+ * @list: the buffer list
  *
  * Get the SSRC of the first RTP packet in @list.
  * All RTP packets within @list have the same SSRC.
@@ -1017,7 +1017,7 @@ gst_rtp_buffer_get_payload_type (GstBuffer * buffer)
 
 /**
  * gst_rtp_buffer_list_get_payload_type:
- * @list: the list
+ * @list: the buffer list
  *
  * Get the payload type of the first RTP packet in @list.
  * All packets in @list should have the same payload type.
@@ -1116,6 +1116,29 @@ gst_rtp_buffer_list_set_seq (GstBufferList * list, guint16 seq)
 }
 
 /**
+ * gst_rtp_buffer_list_get_seq:
+ * @list: the buffer list
+ *
+ * Get the sequence number of the first RTP packet in @list.
+ * All packets within @list have the same sequence number.
+ *
+ * Returns: The seq number
+ *
+ * Since: 0.10.24
+ */
+guint16
+gst_rtp_buffer_list_get_seq (GstBufferList * list)
+{
+  guint8 *data;
+
+  data = gst_rtp_buffer_list_get_data (list);
+  g_return_val_if_fail (data != NULL, 0);
+
+  return g_ntohl (GST_RTP_HEADER_SEQ (data));
+}
+
+
+/**
  * gst_rtp_buffer_get_timestamp:
  * @buffer: the buffer
  *
@@ -1131,7 +1154,7 @@ gst_rtp_buffer_get_timestamp (GstBuffer * buffer)
 
 /**
  * gst_rtp_buffer_list_get_timestamp:
- * @list: the list
+ * @list: the buffer list
  *
  * Get the timestamp of the first RTP packet in @list.
  * All packets within @list have the same timestamp.
@@ -1265,7 +1288,7 @@ gst_rtp_buffer_get_payload_len (GstBuffer * buffer)
 
 /**
  * gst_rtp_buffer_list_get_payload_len:
- * @buffer: the buffer
+ * @list: the buffer list
  *
  * Get the length of the payload of the RTP packet in @list.
  *
