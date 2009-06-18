@@ -4019,7 +4019,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
         if ((size > 0) && (size != -1)) {
           GST_DEBUG ("  skipping %d bytes for now", size);
-          gst_adapter_flush (avi->adapter, 8 + size);
+          gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
         }
       }
       return GST_FLOW_OK;
@@ -4043,7 +4043,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
         if ((size > 0) && (size != -1)) {
           GST_DEBUG ("  skipping %d bytes for now", size);
-          gst_adapter_flush (avi->adapter, 8 + size);
+          gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
           continue;
         }
       }
