@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.8.2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-06-18 08:03+0100\n"
 "PO-Revision-Date: 2008-08-12 23:49+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -17,70 +17,67 @@ msgstr ""
 "X-Generator: LoKalize 0.2\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-#: ext/cdio/gstcdiocddasrc.c:205
 msgid "Could not read from CD."
 msgstr "Kan niet van de CD lezen."
 
-#: ext/cdio/gstcdiocddasrc.c:280
 msgid "Could not open CD device for reading."
 msgstr "Kan het CD-apparaat niet openen voor lezen."
 
-#: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
 msgstr "De schrijf is geen audio-CD"
 
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
-#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "Kan DVD niet openen"
 
-#: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
 msgstr "Ongeldige titelinformatie op de DVD."
 
-#: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
 msgstr "Kan de titelinformatie van de DVD niet lezen."
 
-#: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Kan het DVD-apparaat '%s' niet openen."
 
-#: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
 msgstr "Kan op PGC gebaseerd zoeken niet instellen."
 
-#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
-#: ext/dvdread/dvdreadsrc.c:601
 #, c-format
 msgid "Could not open DVD title %d"
 msgstr "Kan DVD-titel %d niet openen"
 
-#: ext/dvdread/dvdreadsrc.c:248
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr "Kan niet naar hoofdstuk %d van DVD-titel %d gaan"
 
-#: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Kan de DVD-titel %d niet openen. Interactieve titels worden door dit element niet ondersteund"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Kan de DVD-titel %d niet openen. Interactieve titels worden door dit element "
+"niet ondersteund"
 
-#: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Kan de LAME-encoder niet configureren. Controleer uw encodingparameters."
+msgstr ""
+"Kan de LAME-encoder niet configureren. Controleer uw encodingparameters."
 
-#: ext/lame/gstlame.c:718
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "De gevraagde bitsnelheid %d kbits/s voor eigenschap '%s' is niet toegestaan. De bitsnelheid is gewijzigd in %d kbits/s."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"De gevraagde bitsnelheid %d kbits/s voor eigenschap '%s' is niet toegestaan. "
+"De bitsnelheid is gewijzigd in %d kbits/s."
 
-#: gst/asfdemux/gstasfdemux.c:325
+#, fuzzy
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+"Kan de LAME-encoder niet configureren. Controleer uw encodingparameters."
+
 msgid "This stream contains no data."
 msgstr "Deze stroom bevat geen gegevens."
 
-#: gst/asfdemux/gstasfdemux.c:1371
 msgid "Internal data stream error."
 msgstr "Fout met interne gegevensstroom."
 
