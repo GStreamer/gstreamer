@@ -1,9 +1,1289 @@
-=== release 0.10.11 ===
+=== release 0.10.12 ===
 
-2009-03-21  Jan Schmidt <jan.schmidt@sun.com>
+2009-06-18  Jan Schmidt <jan.schmidt@sun.com>
 
 	* configure.ac:
-	  releasing 0.10.11, "Their swords and their knives"
+	  releasing 0.10.12, "Moving Along The Highway"
+
+2009-06-18 08:04:40 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
+
+2009-06-05 22:10:02 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* win32/common/config.h:
+	  0.10.11.2 pre-release
+
+2009-06-05 22:07:31 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* win32/common/config.h.in:
+	  win32: Remove #undef inline from the win32 config.h
+
+2009-06-05 20:53:57 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* ext/mad/Makefile.am:
+	* ext/mad/gstid3tag.c:
+	* ext/mad/gstmad.c:
+	* ext/mad/gstmad.h:
+	  mad, id3mux: (re)move broken, unmaintained and unloved id3mux element
+	  It will be reborn with a shiny new code base under its hood in -bad.
+	  See #581756 and #565764.
+
+2009-06-05 19:48:28 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/pipelines/.gitignore:
+	  gitignore: Ignore some built files in the test area
+
+2009-06-05 19:46:17 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-synaesthesia.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	  docs: Update plugin inspect files
+
+2009-06-05 19:25:54 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* ext/Makefile.am:
+	* gst-plugins-ugly.spec.in:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	  Moved 'x264enc' from -bad to -ugly
+
+2009-05-25 11:18:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  [MOVED FROM BAD 28/28] x264enc: add multipass-cache-file property
+	  Fixes #583627
+
+2009-05-09 23:47:39 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* ext/x264/GstX264Enc.prs:
+	  [MOVED FROM BAD 27/28] Remove wrong stuff from preset file
+
+2009-05-09 12:42:25 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* ext/x264/GstX264Enc.prs:
+	  [MOVED FROM BAD 26/28] Add a more representative example preset file for x264
+
+2009-05-07 17:53:42 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  [MOVED FROM BAD 25/28] Add ranks to various muxers and encoders in -bad
+
+2009-04-30 00:06:36 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/x264/GstX264Enc.prs:
+	* ext/x264/Makefile.am:
+	* ext/x264/gstx264enc.c:
+	  [MOVED FROM BAD 24/28] x264enc: add preset support
+	  Add preset iface and a (dummy) preset file as a starting point.
+
+2009-04-29 16:57:36 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  [MOVED FROM BAD 23/28] x264enc: add some documentation on profile
+
+2009-04-09 23:53:39 +0200  Janin Kolenc <janin.kolenc at marand.si>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  [MOVED FROM BAD 22/28] x264enc: add force keyframe event handling
+	  Use the GstForceKeyUnit event to force a keyframe.
+	  Fixes #578112.
+
+2009-01-05 10:28:58 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 21/28] ext/x264/gstx264enc.c: Use hyphen in property name, perform safety buffer size check prior to mem access, and some mo...
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_class_init),
+	  (gst_x264_enc_header_buf), (gst_x264_enc_encode_frame):
+	  Use hyphen in property name, perform safety buffer size check
+	  prior to mem access, and some more parentheses in macro.
+
+2009-01-02 01:44:11 +0000  Alessandro Decina <alessandro.d@gmail.com>
+
+	  [MOVED FROM BAD 20/28] ext/apexsink/Makefile.am: Link against -lgcrpyto for RSA_new and RSA_free.
+	  Original commit message from CVS:
+	  * ext/apexsink/Makefile.am:
+	  Link against -lgcrpyto for RSA_new and RSA_free.
+	  * ext/faac/gstfaac.c:
+	  * ext/x264/gstx264enc.c:
+	  Fix compiler warnings.
+
+2008-11-14 19:52:24 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 19/28] ext/x264/gstx264enc.c: Construct source caps in more conventional (and correct) manner.
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_set_src_caps):
+	  Construct source caps in more conventional (and correct) manner.
+
+2008-11-04 12:42:30 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD 18/28] Don't install static libs for plugins. Fixes #550851 for -bad.
+	  Original commit message from CVS:
+	  * ext/alsaspdif/Makefile.am:
+	  * ext/amrwb/Makefile.am:
+	  * ext/apexsink/Makefile.am:
+	  * ext/arts/Makefile.am:
+	  * ext/artsd/Makefile.am:
+	  * ext/audiofile/Makefile.am:
+	  * ext/audioresample/Makefile.am:
+	  * ext/bz2/Makefile.am:
+	  * ext/cdaudio/Makefile.am:
+	  * ext/celt/Makefile.am:
+	  * ext/dc1394/Makefile.am:
+	  * ext/dirac/Makefile.am:
+	  * ext/directfb/Makefile.am:
+	  * ext/divx/Makefile.am:
+	  * ext/dts/Makefile.am:
+	  * ext/faac/Makefile.am:
+	  * ext/faad/Makefile.am:
+	  * ext/gsm/Makefile.am:
+	  * ext/hermes/Makefile.am:
+	  * ext/ivorbis/Makefile.am:
+	  * ext/jack/Makefile.am:
+	  * ext/jp2k/Makefile.am:
+	  * ext/ladspa/Makefile.am:
+	  * ext/lcs/Makefile.am:
+	  * ext/libfame/Makefile.am:
+	  * ext/libmms/Makefile.am:
+	  * ext/metadata/Makefile.am:
+	  * ext/mpeg2enc/Makefile.am:
+	  * ext/mplex/Makefile.am:
+	  * ext/musepack/Makefile.am:
+	  * ext/musicbrainz/Makefile.am:
+	  * ext/mythtv/Makefile.am:
+	  * ext/nas/Makefile.am:
+	  * ext/neon/Makefile.am:
+	  * ext/ofa/Makefile.am:
+	  * ext/polyp/Makefile.am:
+	  * ext/resindvd/Makefile.am:
+	  * ext/sdl/Makefile.am:
+	  * ext/shout/Makefile.am:
+	  * ext/snapshot/Makefile.am:
+	  * ext/sndfile/Makefile.am:
+	  * ext/soundtouch/Makefile.am:
+	  * ext/spc/Makefile.am:
+	  * ext/swfdec/Makefile.am:
+	  * ext/tarkin/Makefile.am:
+	  * ext/theora/Makefile.am:
+	  * ext/timidity/Makefile.am:
+	  * ext/twolame/Makefile.am:
+	  * ext/x264/Makefile.am:
+	  * ext/xine/Makefile.am:
+	  * ext/xvid/Makefile.am:
+	  * gst-libs/gst/app/Makefile.am:
+	  * gst-libs/gst/dshow/Makefile.am:
+	  * gst/aiffparse/Makefile.am:
+	  * gst/app/Makefile.am:
+	  * gst/audiobuffer/Makefile.am:
+	  * gst/bayer/Makefile.am:
+	  * gst/cdxaparse/Makefile.am:
+	  * gst/chart/Makefile.am:
+	  * gst/colorspace/Makefile.am:
+	  * gst/dccp/Makefile.am:
+	  * gst/deinterlace/Makefile.am:
+	  * gst/deinterlace2/Makefile.am:
+	  * gst/dvdspu/Makefile.am:
+	  * gst/festival/Makefile.am:
+	  * gst/filter/Makefile.am:
+	  * gst/flacparse/Makefile.am:
+	  * gst/flv/Makefile.am:
+	  * gst/games/Makefile.am:
+	  * gst/h264parse/Makefile.am:
+	  * gst/librfb/Makefile.am:
+	  * gst/mixmatrix/Makefile.am:
+	  * gst/modplug/Makefile.am:
+	  * gst/mpeg1sys/Makefile.am:
+	  * gst/mpeg4videoparse/Makefile.am:
+	  * gst/mpegdemux/Makefile.am:
+	  * gst/mpegtsmux/Makefile.am:
+	  * gst/mpegvideoparse/Makefile.am:
+	  * gst/mve/Makefile.am:
+	  * gst/nsf/Makefile.am:
+	  * gst/nuvdemux/Makefile.am:
+	  * gst/overlay/Makefile.am:
+	  * gst/passthrough/Makefile.am:
+	  * gst/pcapparse/Makefile.am:
+	  * gst/playondemand/Makefile.am:
+	  * gst/rawparse/Makefile.am:
+	  * gst/real/Makefile.am:
+	  * gst/rtjpeg/Makefile.am:
+	  * gst/rtpmanager/Makefile.am:
+	  * gst/scaletempo/Makefile.am:
+	  * gst/sdp/Makefile.am:
+	  * gst/selector/Makefile.am:
+	  * gst/smooth/Makefile.am:
+	  * gst/smoothwave/Makefile.am:
+	  * gst/speed/Makefile.am:
+	  * gst/speexresample/Makefile.am:
+	  * gst/stereo/Makefile.am:
+	  * gst/subenc/Makefile.am:
+	  * gst/tta/Makefile.am:
+	  * gst/vbidec/Makefile.am:
+	  * gst/videodrop/Makefile.am:
+	  * gst/videosignal/Makefile.am:
+	  * gst/virtualdub/Makefile.am:
+	  * gst/vmnc/Makefile.am:
+	  * gst/y4m/Makefile.am:
+	  * sys/acmenc/Makefile.am:
+	  * sys/cdrom/Makefile.am:
+	  * sys/dshowdecwrapper/Makefile.am:
+	  * sys/dshowsrcwrapper/Makefile.am:
+	  * sys/dvb/Makefile.am:
+	  * sys/dxr3/Makefile.am:
+	  * sys/fbdev/Makefile.am:
+	  * sys/oss4/Makefile.am:
+	  * sys/qcam/Makefile.am:
+	  * sys/qtwrapper/Makefile.am:
+	  * sys/vcd/Makefile.am:
+	  * sys/wininet/Makefile.am:
+	  * win32/common/config.h:
+	  Don't install static libs for plugins. Fixes #550851 for -bad.
+
+2008-10-27 17:01:22 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 17/28] ext/x264/gstx264enc.c: Adapt to slightly modified x264 API.  Fixes #555238.
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_init_encoder):
+	  Adapt to slightly modified x264 API.  Fixes #555238.
+
+2008-08-12 16:13:15 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 16/28] ext/x264/gstx264enc.*: Do not deal with duplicated input (timestamps).  If needed, a generic element can do so.
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_reset),
+	  (gst_x264_enc_chain), (gst_x264_enc_encode_frame):
+	  * ext/x264/gstx264enc.h:
+	  Do not deal with duplicated input (timestamps).  If needed,
+	  a generic element can do so.
+	  Do not manipulate input timestamps on the way out,
+	  since that shifts the timeline and A/V sync.
+
+2008-08-12 15:41:48 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 15/28] docs/plugins/gst-plugins-bad-plugins.args: Integrate new properties into documentation.
+	  Original commit message from CVS:
+	  * docs/plugins/gst-plugins-bad-plugins.args:
+	  Integrate new properties into documentation.
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_class_init),
+	  (gst_x264_enc_init), (gst_x264_enc_init_encoder),
+	  (gst_x264_enc_set_property), (gst_x264_enc_get_property):
+	  Fix up API prior to eventual plugin move.
+	  API: GstX264Enc:pass (provides more options, and changed to enum)
+
+2008-08-12 13:08:39 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 14/28] Add documentation and unit test for x264enc.
+	  Original commit message from CVS:
+	  * docs/plugins/Makefile.am:
+	  * docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	  * docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	  * ext/x264/gstx264enc.c:
+	  * tests/check/Makefile.am:
+	  * tests/check/elements/x264enc.c: (setup_x264enc),
+	  (cleanup_x264enc), (GST_START_TEST), (x264enc_suite), (main):
+	  Add documentation and unit test for x264enc.
+
+2008-08-11 17:24:58 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 13/28] ext/x264/gstx264enc.c: Allocate some buffers in more adaptive and economical fashion.
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_init),
+	  (gst_x264_enc_header_buf), (gst_x264_enc_encode_frame):
+	  Allocate some buffers in more adaptive and economical fashion.
+
+2008-08-11 15:16:14 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 12/28] configure.ac: Check for sufficiently up-to-date x264 API.
+	  Original commit message from CVS:
+	  * configure.ac:
+	  Check for sufficiently up-to-date x264 API.
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_pass_get_type),
+	  (gst_x264_enc_base_init), (gst_x264_enc_class_init),
+	  (gst_x264_enc_init), (gst_x264_enc_init_encoder),
+	  (gst_x264_enc_set_property), (gst_x264_enc_get_property):
+	  * ext/x264/gstx264enc.h:
+	  Expose some more parameters of the x264 encoder as properties.
+
+2008-08-08 15:07:12 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 11/28] ext/x264/gstx264enc.c: Coding style and layout; re-order some functions in more typical and natural flow.
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_log_callback),
+	  (gst_x264_enc_finalize), (gst_x264_enc_header_buf),
+	  (gst_x264_enc_set_src_caps), (gst_x264_enc_sink_set_caps),
+	  (gst_x264_enc_flush_frames):
+	  Coding style and layout; re-order some functions in more
+	  typical and natural flow.
+
+2008-08-08 14:19:16 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 10/28] ext/x264/: Use GQueue in stead of custom queue code.
+	  Original commit message from CVS:
+	  * ext/x264/Makefile.am:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_set_src_caps),
+	  (gst_x264_enc_sink_set_caps), (gst_x264_enc_init),
+	  (gst_x264_enc_reset), (gst_x264_enc_finalize),
+	  (gst_x264_enc_flush_frames), (gst_x264_enc_sink_event),
+	  (gst_x264_enc_chain), (gst_x264_enc_encode_frame),
+	  (gst_x264_enc_change_state), (gst_x264_enc_set_property):
+	  * ext/x264/gstx264enc.h:
+	  Use GQueue in stead of custom queue code.
+	  Factorize flushing out encoder delayed frames.
+	  Factorize initialization and state change reset.
+
+2008-08-08 10:56:02 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 09/28] Use configure-generated _stdint.h.
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.h:
+	  * sys/fbdev/gstfbdevsink.c:
+	  Use configure-generated _stdint.h.
+
+2008-08-08 10:13:36 +0000  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  [MOVED FROM BAD 08/28] ext/x264/: Use video format library and GST_WRITE_*_BE macros where applicable.
+	  Original commit message from CVS:
+	  * ext/x264/Makefile.am:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_header_buf),
+	  (gst_x264_enc_sink_set_caps), (gst_x264_enc_base_init),
+	  (gst_x264_enc_class_init), (gst_x264_enc_log_callback),
+	  (gst_x264_enc_init), (gst_x264_enc_init_encoder),
+	  (gst_x264_enc_finalize), (gst_x264_enc_chain),
+	  (gst_x264_enc_encode_frame), (plugin_init):
+	  * ext/x264/gstx264enc.h:
+	  Use video format library and GST_WRITE_*_BE macros where applicable.
+	  Use finalize in stead of dispose.
+	  Set up debug category and log callback.
+
+2008-06-04 11:33:21 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	  [MOVED FROM BAD 07/28] ext/x264/gstx264enc.c: Try harder not to crash when we get an EOS event but haven't set up the encoder yet (as may ha...
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_header_buf),
+	  (gst_x264_enc_sink_event), (gst_x264_enc_chain),
+	  (gst_x264_enc_encode_frame):
+	  Try harder not to crash when we get an EOS event but haven't set
+	  up the encoder yet (as may happen when upstream errors out with
+	  not-negotiated, for example). Also, always push the EOS event
+	  downstream.
+
+2007-12-11 16:26:07 +0000  Wim Taymans <wim.taymans@gmail.com>
+
+	  [MOVED FROM BAD 06/28] ext/x264/gstx264enc.c: Fix caps memleak.
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_set_src_caps):
+	  Fix caps memleak.
+
+2007-10-26 17:18:41 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	  [MOVED FROM BAD 05/28] ext/x264/gstx264enc.c: Fix build against the libx264 version that ships with debian stable.
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.c:
+	  Fix build against the libx264 version that ships with debian stable.
+
+2007-09-24 10:53:37 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD 04/28] Massive leak fixing, plus code cleanups.
+	  Original commit message from CVS:
+	  * ext/audioresample/gstaudioresample.c:
+	  * ext/x264/gstx264enc.c:
+	  * gst/dvdspu/gstdvdspu.c:
+	  * gst/dvdspu/gstdvdspu.h:
+	  * gst/festival/gstfestival.c:
+	  * gst/h264parse/gsth264parse.c:
+	  * gst/mpegtsparse/mpegtspacketizer.c:
+	  * gst/mpegtsparse/mpegtsparse.c:
+	  * gst/multifile/gstmultifilesink.c:
+	  * gst/multifile/gstmultifilesrc.c:
+	  * gst/nuvdemux/gstnuvdemux.c:
+	  * sys/dshowsrcwrapper/gstdshowaudiosrc.c:
+	  * sys/dshowsrcwrapper/gstdshowvideosrc.c:
+	  * sys/vcd/vcdsrc.c:
+	  Massive leak fixing, plus code cleanups.
+
+2007-07-18 07:35:32 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD 03/28] Add stdlib include (free, atoi, exit).
+	  Original commit message from CVS:
+	  * examples/app/appsrc_ex.c:
+	  * examples/switch/switcher.c:
+	  * ext/neon/gstneonhttpsrc.c:
+	  * ext/timidity/gstwildmidi.c:
+	  * ext/x264/gstx264enc.c:
+	  * gst/mve/mveaudioenc.c: (mve_compress_audio):
+	  * gst/rtpmanager/gstrtpclient.c:
+	  * gst/rtpmanager/gstrtpjitterbuffer.c:
+	  * gst/spectrum/demo-audiotest.c:
+	  * gst/spectrum/demo-osssrc.c:
+	  * sys/dvb/gstdvbsrc.c:
+	  Add stdlib include (free, atoi, exit).
+
+2007-05-15 21:23:53 +0000  Stefan Kost <ensonic@users.sourceforge.net>
+
+	  [MOVED FROM BAD 02/28] ext/x264/gstx264enc.c (gst_x264_enc_init_encoder): This needs a version check.
+	  Original commit message from CVS:
+	  * ext/x264/gstx264enc.c (gst_x264_enc_init_encoder):
+	  This needs a version check.
+	  * gst/bayer/Makefile.am:
+	  Fix the build.
+
+2007-03-25 13:06:26 +0000  Michal Benes <michal.benes@itonis.tv>
+
+	  [MOVED FROM BAD 01/28] Add libx264-based h264 encoder plugin (#421110). Probably doesn't handle 'odd' widths and heights correctly yet.
+	  Original commit message from CVS:
+	  Patch by: Michal Benes <michal.benes at itonis tv>
+	  Patch by: Josef Zlomek <josef.zlomek at itonis tv>
+	  * configure.ac:
+	  * ext/Makefile.am:
+	  * ext/x264/Makefile.am:
+	  * ext/x264/gstx264enc.c: (gst_x264_enc_me_get_type),
+	  (gst_x264_enc_analyse_get_type),
+	  (gst_x264_enc_timestamp_queue_init),
+	  (gst_x264_enc_timestamp_queue_free),
+	  (gst_x264_enc_timestamp_queue_put),
+	  (gst_x264_enc_timestamp_queue_get), (gst_x264_enc_header_buf),
+	  (gst_x264_enc_set_src_caps), (gst_x264_enc_sink_set_caps),
+	  (gst_x264_enc_base_init), (gst_x264_enc_class_init),
+	  (gst_x264_enc_init), (gst_x264_enc_init_encoder),
+	  (gst_x264_enc_close_encoder), (gst_x264_enc_dispose),
+	  (gst_x264_enc_sink_event), (gst_x264_enc_chain),
+	  (gst_x264_enc_encode_frame), (gst_x264_enc_change_state),
+	  (gst_x264_enc_set_property), (gst_x264_enc_get_property),
+	  (plugin_init):
+	  * ext/x264/gstx264enc.h:
+	  Add libx264-based h264 encoder plugin (#421110). Probably doesn't
+	  handle 'odd' widths and heights correctly yet.
+
+2009-06-05 01:51:20 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: nicer metadata extraction of genre tags in some cases
+	  Handle pseudo-strings like "(5)" and map them to the ID3v1 genre
+	  that they presumably stand for.
+
+2009-06-05 01:32:07 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: parse WM/Picture tags to extract cover art
+	  Fixes #583112.
+
+2009-05-31 20:20:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* REQUIREMENTS:
+	  docs: fix http links for amr libs in REQUIREMENTS
+
+2009-05-29 20:07:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix bogus flow return handling in eos handler
+	  Don't overwrite the origin flow return by whatever flow we get
+	  when trying to push the remaining internally queued payloads.
+	  We want to do our eos logic, ie. send an EOS event or segment-done
+	  message in any case. Makes things EOS properly when an EOS event
+	  is forced upon the pipeline so that the source returns
+	  FLOW_UNEXPECTED to a pulling asfdemux. Should fix #582056.
+
+2009-05-29 19:52:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* win32/common/config.h:
+	  win32: update config.h
+
+2009-05-22 19:27:35 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: bump core/base requirements to released versions
+
+2009-05-22 19:26:27 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* autogen.sh:
+	* configure.ac:
+	  autogen: move the -Wno-portability for automake into configure.ac
+
+2009-05-27 00:16:30 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/dvdlpcmdec/Makefile.am:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	  dvdlpcmdec: Add multichannel channel maps, and send some tags
+	  Add a multichannel map to the output caps, and send at least a CODEC and
+	  BITRATE tag. I'm not too sure about the 5.1 and 7.1 channel maps. I have
+	  no samples and can't find info about the channel ordering, but this is
+	  better than nothing.
+
+2009-05-26 17:19:54 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 888e0a2 to c572721
+
+2009-05-22 10:20:46 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6ab11d1 to 888e0a2
+
+2009-05-21 15:18:06 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: Remove some dead code
+	  Remove some redundant memset - gobject memory is already initalised to 0.
+	  Remove a commented out line leftover from the previous commit
+
+2009-05-21 14:20:22 +0100  Kapil Agrawal <kapil@mediamagictechnologies.com>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/dvdsub/gstdvdsubdec.h:
+	  dvdsubdec: Support ARGB output
+	  Negotiate to and render into ARGB buffers directly if the peer supports it.
+	  Fixes: #580869
+
+2009-05-19 00:51:49 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Reconcile code with dtsdec
+	  Perform some cleanups based on the dtsdec code such as using the boilerplate
+	  macro and static pad template functions.
+	  Add some documentation. Don't register a change in flags until we synch on
+	  another frame successfully.
+
+2009-05-14 12:32:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: Improve debugging a bit
+
+2009-05-13 19:32:16 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Revert ranking switch with ffdec_mpeg2video. Fixes #574461
+
+2009-05-13 01:55:16 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/Makevars:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: avoid conflicts of local *.po files with files in git
+	  Make it so that filenames and line numbers are only stored in the *.pot file
+	  (which is not in git), but not in the individual *.po files. This information
+	  is hardly useful for translators in our case, and it should avoid the constant
+	  conflicts of local *.po files with the ones in git which are caused by the
+	  source files changing and the line numbers being updated. This commit might
+	  cause one last merge conflict for you, which you can work around with
+	  "git checkout po/*.po" before merging or pulling. After that there should
+	  (hopefully) not be any more local modifications of these files (unless
+	  someone committed additions or changes to translated strings and the
+	  *.po files haven't been updated yet, that is).
+
+2009-05-12 19:22:07 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: add Since tag to gtk-doc chunk
+
+2009-05-13 01:46:00 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/mpeg2dec.c:
+	  checks: fix mpeg2dec unit test again after interlace addition to caps
+
+2009-05-12 20:34:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: work around old mpeg2dec versions
+	  The repeat first field flag was introduced in 0.5.0 so conditionally disable its
+	  detection and just assume no rff is used. This fixes the compilation.
+	  Fixes #582375
+
+2009-05-12 20:24:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/Makefile.am:
+	  mpeg2dec: link to gstvideo
+	  Fix compilation by adding the right include directories and linking to the video
+	  library.
+
+2009-05-12 11:57:04 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: Downgrade simple statements from WARNING to DEBUG
+
+2009-05-11 12:37:46 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/asfheaders.c:
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/asfpacket.h:
+	  asf: Detect more payload extensions.
+	  These should help fix interlaced/PAR issues with more files.
+
+2009-05-12 11:44:13 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  mpeg2dec: Implement interlaced support.
+	  Expand the debugging statements to show more picture information.
+
+2009-05-12 11:19:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Lower rank to MARGINAL to make ffdec_mpeg2video the default
+	  ffdec_mpeg2video is much faster, fixes bug #574461.
+
+2009-05-10 16:53:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: Don't write a Xing header
+
+2009-05-10 11:17:25 +0200  Marc-Andre Lureau <marcandre.lureau@gmail.com>
+
+	* autogen.sh:
+	  Run libtoolize before aclocal
+	  This unbreaks the build in some cases. Fixes bug #582021
+
+2009-05-09 15:28:18 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: use 64bit safe scaling functions.
+	  Got this to fail when seeking in a 14GB file (the value in bytes is
+	  bigger than 2**32).
+
+2009-05-09 10:57:34 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mpegaudioparse: remove some pointless g_return_if_fail()s
+
+2009-05-08 14:24:47 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* ext/twolame/gsttwolame.c:
+	  Switch twolame to primary rank
+
+2009-05-07 17:59:52 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/twolame/gsttwolame.c:
+	  Add ranks to mp3 encoders
+
+2009-05-07 17:57:17 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* gst-plugins-ugly.spec.in:
+	  Add twolame plugin to spec file
+
+2009-05-02 18:11:06 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: use upstream segment and timestamps for some interpolation
+	  This should particularly help in case of upstream live src, e.g. rtspsrc,
+	  and especially so if it has to perform fallback to TCP.
+
+2009-05-07 11:09:59 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  rtpasfdepay: Add support for fragmented packet (L == 0).
+	  This happens with rtp-over-udp.
+
+2009-05-07 10:10:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: Fixup the bitrate only for CBR
+	  Additionally clarify some property descriptions.
+
+2009-05-06 21:47:17 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lame: fix format string in debug statement
+
+2009-05-06 15:37:44 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mp3parse: Don't reject valid Xing tables of contents
+	  Some Xing headers apparently start the TOC at byte 1 instead of 0. Don't
+	  reject them because of it, just subtract the initial offset when reading
+	  the table.
+
+2009-05-06 15:27:01 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mp3parse: Allow more bits to change in headers during resynch
+	  Be more lenient about what we accept as changing bits in a header - basically,
+	  only require that the mp3 sync marker is present, for the mpeg version,
+	  layer and samplerate.
+	  Fixes: #581464
+
+2009-05-06 13:17:35 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/mad/gstmad.c:
+	  mad: Add duration of incoming/outgoing buffers in debug statements
+
+2009-05-06 13:15:30 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mpegaudioparse: Remove useless checks for valid buffer duration.
+	  The buffer duration is set to a valid value at the very top of
+	  emit_frame(), we therefore don't need to check it later on.
+
+2009-05-06 13:13:35 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mpegaudioparse: Fix stop condition for outputting buffers.
+	  Some mp3 streams have an offset in timestamps, requiring us to push the
+	  frame *AFTER* segment.stop in order for the decoder to be able to push
+	  all data up to the segment.stop position.
+
+2009-05-02 16:51:11 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: 0-base timestamps consistently (whether or not streaming)
+	  This also makes timestamps (more) consistent before and after a possible
+	  seek, and moreover makes for reasonable position reporting in live stream
+	  (whose payload timestamps should not be taken for granted).
+
+2009-05-02 13:45:22 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: report initial latency due to internal preroll queue
+
+2009-05-02 13:44:48 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: enhance debug statement and refactor some initialization
+
+2009-05-02 13:44:11 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: handle FIXME; activate pads after internal preroll also when streaming
+
+2009-05-02 11:12:51 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: handle FIXME; normalize preroll
+
+2009-05-02 16:08:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: fixes for streaming mode
+	  * Improve newsegment handling, e.g. upstream might live in TIME.
+	  * Only send newsegment if we have needed info.
+	  * Avoid reading past end of data section.
+
+2009-05-01 18:08:15 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fixes/enhancements for streaming mode
+	  * Do not rock the boat by reacting to FLUSH_START.
+	  * Try to handle TIME seeking by seeking upstream in BYTES.
+	  * Handle SEEKING query.
+
+2009-05-05 16:38:19 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* ext/lame/gstlamemp3enc.c:
+	  lame: fix compilation with LAME versions < 3.98
+	  lame_set_VBR_quality(), which takes a floating point value for the
+	  quality, has been added only in v3.98. Use lame_set_VBR_q(), which
+	  takes quality as an integer, for older LAME versions.
+	  Fixes #581341.
+
+2009-05-04 20:39:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* win32/common/config.h:
+	  win32: update config.h to git
+	  Until someone ports the new win32 config.h logic from the
+	  other modules to -ugly.
+
+2009-05-04 12:53:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	  Update docs
+
+2009-05-04 12:51:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: Add a note to the encoding-engine-quality property
+	  that says, that this does not affect the bitrate at all.
+
+2009-05-04 12:48:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlamemp3enc.c:
+	  lame: Implement preset interface
+
+2009-05-04 12:47:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/twolame/gsttwolame.c:
+	  twolame: Implement preset interface
+
+2009-04-30 10:21:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/lame/gstlamemp3enc.h:
+	  lamemp3enc: Remove fast-vbr property and rename vbr-quality to quality
+
+2009-04-30 10:16:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlamemp3enc.c:
+	  lame/lamemp3enc: Fix memory leak on FLUSH_STOP
+
+2009-04-30 10:14:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	  lame: Deprecate the lame element
+
+2009-04-30 10:13:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-synaesthesia.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	  Update docs
+
+2009-04-30 10:10:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lame: Update example pipelines with the new properties
+
+2009-04-29 19:01:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/Makefile.am:
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/lame/gstlamemp3enc.h:
+	* ext/lame/plugin.c:
+	  lame: Add lamemp3enc element with much simplified interface
+	  This deprecates the lame element and fixes bug #494528.
+
+2009-04-23 09:04:41 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfpacket: Fix pull-mode timestamping handling.
+	  The problem that happens is the following:
+	  * A packet with multiple payloads comes in
+	  * Those payloads get handled one by one
+	  * The first payload contains the first audio payload with timestamp A
+	  * The second payload contains the first video (key)frame with timestamp V (where V < A)
+	  With the previous code, the following would happen:
+	  * the first payload gets processed, then passed to queue_for_stream
+	  * queue_for_stream detects it's the first valid timestamp received and stores
+	  first_ts = A
+	  * the second payload gets processed, then pass to queue_for_stream
+	  * queue_for_stream detects the timestamp is lower than first_ts... and
+	  discards it... resulting in losing the first keyframe of the video stream
+	  We've been having this issue for *ages*... it's just that nobody noticed it
+	  that much with playbin. But with playbin2's aggresive multiqueue handling, this
+	  will result in multiqueue not being able to preroll (because the video decoder will
+	  be dropping a ton of buffers before (maybe) receiving the next keyframe).
+	  Tested with over 200 asf files, and they all play the first frame correctly now,
+	  even the most braindead ones.
+
+2009-04-21 14:12:06 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	  mp3parse: don't build seek table if we can't seek.
+	  Fixes #573720 - unbounded memory usage increase when listening to mp3
+	  stream for a long time.
+
+2009-04-21 22:13:32 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From b3941ea to 6ab11d1
+
+2009-04-21 20:17:57 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstxingmux.c:
+	  mpegaudioparse: Remove dead assignment and duplicate code
+
+2009-04-21 20:21:11 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Actually return the return value for the seek handling.
+
+2009-04-21 20:20:02 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/mpegstream/gstmpegdemux.c:
+	* gst/mpegstream/gstmpegparse.c:
+	  mpegstream: Remove dead assignments.
+	  The duplicate assignment of update_time was weird... but it seems normal
+	  that it's indeed the second statement which is the valid one.
+
+2009-04-21 20:17:19 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/amrnb/amrnbparse.c:
+	  armnb: Remove unused variable, adapt debug message accordingly.
+
+2009-04-21 20:15:56 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/mpegstream/gstdvddemux.c:
+	* gst/mpegstream/gstmpegclock.c:
+	  dvdsub/mpegstream: _class_init: Remove unused class variables
+
+2009-04-19 14:03:58 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Initialize flow for a corner case.
+	  This might be caused by entering the if() line 1214 and then not having
+	  any activated_streams.. resulting in reaching line 1267 without having
+	  any valid flow value.
+
+2009-04-19 14:03:38 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/twolame/gsttwolame.c:
+	  twolame: Remove unneeded variable, value assigned was never read.
+
+2009-04-19 14:03:19 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Remove dead assignment. Value overwritten later on.
+
+2009-04-19 14:02:44 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/mad/gstmad.c:
+	  mad: Remove dead assignment and variables given values which are never read.
+
+2009-04-19 14:02:03 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/lame/gstlame.c:
+	  lame: Remove unneeded variable, it's assigned a value never read.
+
+2009-04-19 13:59:24 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Remove dead assignment, value is being overwritten before being read.
+
+2009-04-19 13:58:31 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Remove unused accurate flag.
+	  I couldn't see any reason why this was there in the first place.
+
+2009-04-19 13:57:59 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/realmedia/asmrules.c:
+	* gst/realmedia/rdtdepay.c:
+	  realmedia: Remove dead assignments. The results are never read.
+
+2009-04-19 13:57:10 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/realmedia/gstrdtbuffer.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rmdemux.c:
+	  realmedia: Remove useless variables, only being used once (or not).
+
+2009-04-19 13:55:24 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* gst/asfdemux/gstrtspwms.c:
+	* gst/realmedia/pnmsrc.c:
+	* gst/realmedia/rdtdepay.c:
+	* gst/realmedia/rtspreal.c:
+	  remove empty method implementations.
+
+2009-04-18 08:12:08 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/asfdemux/gstrtspwms.c:
+	  rtspwms: fix condition to detect extension commands for WMS
+	  Reply with OK to the extension commands for WMS.
+
+2009-04-15 11:09:56 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/realmedia/rtspreal.c:
+	  realmedia: add special Real header to DESCRIBE message only for Real
+	  servers
+	  Add headers that are specific to real only if a real server had been
+	  detected by the OPTIONS message.
+
+2009-04-14 19:16:46 +0200  David Hoyt <dhoyt at llnl.gov>
+
+	* gst/synaesthesia/synaescope.c:
+	  synaesthesia: fix compilation on windows
+	  Fix compilation under MSVC due to references to headers
+	  that are not available with the MS SDKs.
+	  Fixes #578524
+
+2009-04-14 10:54:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstrtspwms.c:
+	  rtspwms: reply to extension commands
+	  Reply with OK to the extension commands for WMS.
+
+2009-04-14 10:53:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  asfdepay: fix a comment
+
+2009-04-14 10:53:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: add some more debugging
+
+2009-04-14 10:51:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: require git -base
+	  We require 0.10.22.1 of -base for the new Match-If and ETag headers in RTSP.
+
+2009-04-09 20:21:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rtspreal.c:
+	  realmedia: add special Real header to SETUP message only for Real servers
+	  Fixes playback of Windows Media RTSP streams and other non-Real RTSP
+	  streams where the server errors out because it can't handle the
+	  Real-specific 'Required: com.real.retain-entity-for-setup' header
+	  we've been adding unconditionally in the recent past.
+	  For reference:
+	  rtsp://66.111.34.191:601/broadcast/alnour.rm
+	  rtsp://195.134.224.231/snowboard_100.wmv
+
+2009-04-08 11:44:53 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* configure.ac:
+	* gst/asfdemux/Makefile.am:
+	  asfdemux: link to all required libraries including indirectly used ones.
+	  On win32, we're required to link to all the libraries used - including
+	  ones only indirectly used by other libs. So, add gstaudio, gsttag, and
+	  (for windows only) winsock.
+
+2009-04-04 21:19:23 +0300  Felipe Contreras <felipe.contreras@gmail.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d0ea89e to b3941ea
+
+2009-04-04 14:54:41 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From f8b3d91 to d0ea89e
+
+2009-03-26 20:23:14 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	  dvdlpcmdec: Fix factory klass, It's a 'Decoder', not a 'Demuxer'.
+
+2009-03-25 16:39:06 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rtspreal.c:
+	* gst/realmedia/rtspreal.h:
+	  realrtsp: add more headers
+	  Parse the ETag from the describe method and pass the sessionid as the value for
+	  the If-Match header is subsequent setup calls.
+	  Fixes support for more RealMedia RTSP streams.
+
+2009-03-22 13:08:48 -0700  David Schleef <ds@schleef.org>
+
+	* configure.ac:
+	  twolame: bump requirement to 0.3.10
+	  0.3.10 is the first version with the float32 encoder functions.
+	  Fixes #576305.
+
+2009-03-22 20:15:24 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  back to development -> 0.10.11.1
+
+=== release 0.10.11 ===
+
+2009-03-21 01:05:22 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* gst-plugins-ugly.doap:
+	* po/cs.po:
+	* win32/common/config.h:
+	  Release 0.10.11
+
+2009-03-21 00:28:29 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2009-03-13 16:45:08 +0000  Jan Schmidt <thaytan@noraisin.net>
 

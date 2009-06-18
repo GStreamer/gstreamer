@@ -4,9 +4,9 @@ GstCddaBaseSrc GstURIHandler
 GstCdioCddaSrc GstURIHandler
 GstDvdReadSrc GstURIHandler
 GstPNMSrc GstURIHandler
-GstID3Tag GstTagSetter
 GstTwoLame GstPreset
+GstX264Enc GstPreset
 GstLameMP3Enc GstPreset
-GstLame GstTagSetter GstPreset
+GstLame GstPreset GstTagSetter
 GstRTSPReal GstRTSPExtension
 GstRTSPWMS GstRTSPExtension

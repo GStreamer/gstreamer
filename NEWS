@@ -1,4 +1,33 @@
-This is GStreamer Ugly Plug-ins 0.10.11 "The swords and their knives"
+This is GStreamer Ugly Plug-ins 0.10.12 "Moving Along The Highway"
+
+Changes since 0.10.11:
+    
+      * Real and WMS RTSP improvements
+      * Other cleanups and bug fixes
+      * Improve ASF file handling
+      * Large MPEG video file support
+      * Interlacing support for MPEG video
+      * New 'lamemp3dec' mp3 encoder element
+      * x264enc moved from -bad
+      * Remove id3mux in favour of the new id3tag element in -bad
+
+Bugs fixed since 0.10.11:
+     
+      * 401173 : [asfdemux] Stream doesn't play, stuck on first frame
+      * 494528 : Simplifications of the LAME plugin
+      * 574461 : [mpeg2dec] Lower rank and make ffdec_mpeg2video PRIMARY
+      * 576305 : twolame plugin does not detet proper version
+      * 579058 : [asfdemux] proper handling of RTSP input
+      * 580803 : [PLUGIN-MOVE] Move x264enc to -ugly
+      * 580869 : dvdsubdec ARGB support
+      * 581341 : [lamemp3enc] doesn't build with LAME 3.97: implicit decla...
+      * 581756 : [id3mux] replace with something more reliable
+      * 582056 : [asfdemux] forcing an EOS on the pipeline doesn't work wi...
+      * 582375 : mpeg2dec not building in gst-plugins-ugly
+      * 583112 : [asfdemux] extract coverart (WM/Picture tag)
+      * 573720 : [mp3parse] Memory leak when playing shoutcast streams
+      * 581464 : xing data is being ignored
+      * 578524 : synaesthesia MSVC compatibility
 
 Changes since 0.10.10:
     
