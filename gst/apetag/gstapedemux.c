@@ -48,6 +48,7 @@
 
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
+#include <gst/pbutils/pbutils.h>
 
 #include "gstapedemux.h"
 
@@ -350,6 +351,7 @@ gst_ape_demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
   const guint8 *footer;
   gboolean have_header;
   gboolean end_tag = !start_tag;
+  GstCaps *sink_caps;
   guint version, footer_size;
 
   GST_LOG_OBJECT (demux, "Parsing buffer of size %u", GST_BUFFER_SIZE (buffer));
@@ -408,6 +410,11 @@ gst_ape_demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
   }
 
   *tags = ape_demux_parse_tags (data, *tag_size - footer_size);
+
+  sink_caps = gst_static_pad_template_get_caps (&sink_factory);
+  gst_pb_utils_add_codec_description_to_tag_list (*tags,
+      GST_TAG_CONTAINER_FORMAT, sink_caps);
+  gst_caps_unref (sink_caps);
 
   return GST_TAG_DEMUX_RESULT_OK;
 }
