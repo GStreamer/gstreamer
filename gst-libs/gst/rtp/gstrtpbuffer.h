@@ -51,6 +51,7 @@ guint           gst_rtp_buffer_calc_payload_len      (guint packet_len, guint8 p
 
 gboolean        gst_rtp_buffer_validate_data         (guint8 *data, guint len);
 gboolean        gst_rtp_buffer_validate              (GstBuffer *buffer);
+gboolean        gst_rtp_buffer_list_validate         (GstBufferList *list);
 
 void            gst_rtp_buffer_set_packet_len        (GstBuffer *buffer, guint len);
 guint           gst_rtp_buffer_get_packet_len        (GstBuffer *buffer);
@@ -71,7 +72,9 @@ gboolean        gst_rtp_buffer_get_extension_data    (GstBuffer *buffer, guint16
 gboolean        gst_rtp_buffer_set_extension_data    (GstBuffer *buffer, guint16 bits, guint16 length);
 
 guint32         gst_rtp_buffer_get_ssrc              (GstBuffer *buffer);
+guint32         gst_rtp_buffer_list_get_ssrc         (GstBufferList *list);
 void            gst_rtp_buffer_set_ssrc              (GstBuffer *buffer, guint32 ssrc);
+void            gst_rtp_buffer_list_set_ssrc         (GstBufferList *list, guint32 ssrc);
 
 guint8          gst_rtp_buffer_get_csrc_count        (GstBuffer *buffer);
 guint32         gst_rtp_buffer_get_csrc              (GstBuffer *buffer, guint8 idx);
@@ -81,18 +84,25 @@ gboolean        gst_rtp_buffer_get_marker            (GstBuffer *buffer);
 void            gst_rtp_buffer_set_marker            (GstBuffer *buffer, gboolean marker);
 
 guint8          gst_rtp_buffer_get_payload_type      (GstBuffer *buffer);
+guint8          gst_rtp_buffer_list_get_payload_type (GstBufferList *list);
 void            gst_rtp_buffer_set_payload_type      (GstBuffer *buffer, guint8 payload_type);
+void            gst_rtp_buffer_list_set_payload_type (GstBufferList *list, guint8 payload_type);
 
 guint16         gst_rtp_buffer_get_seq               (GstBuffer *buffer);
+guint16         gst_rtp_buffer_list_get_seq          (GstBufferList *list);
 void            gst_rtp_buffer_set_seq               (GstBuffer *buffer, guint16 seq);
+guint16         gst_rtp_buffer_list_set_seq          (GstBufferList *list, guint16 seq);
 
 guint32         gst_rtp_buffer_get_timestamp         (GstBuffer *buffer);
+guint32         gst_rtp_buffer_list_get_timestamp    (GstBufferList *list);
 void            gst_rtp_buffer_set_timestamp         (GstBuffer *buffer, guint32 timestamp);
+void            gst_rtp_buffer_list_set_timestamp    (GstBufferList *list, guint32 timestamp);
 
 GstBuffer* 	gst_rtp_buffer_get_payload_buffer    (GstBuffer *buffer);
 GstBuffer* 	gst_rtp_buffer_get_payload_subbuffer (GstBuffer *buffer, guint offset, guint len);
 
 guint           gst_rtp_buffer_get_payload_len       (GstBuffer *buffer);
+guint           gst_rtp_buffer_list_get_payload_len  (GstBufferList *list);
 gpointer        gst_rtp_buffer_get_payload           (GstBuffer *buffer);
 
 /* some helpers */
