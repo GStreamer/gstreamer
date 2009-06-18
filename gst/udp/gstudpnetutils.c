@@ -107,8 +107,8 @@ gst_udp_get_addr (const char *hostname, int port, struct sockaddr_storage *addr)
     ret = EAI_ADDRFAMILY;
   }
 
-beach:
   freeaddrinfo (res);
+beach:
   return ret;
 }
 
