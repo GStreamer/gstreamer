@@ -1235,30 +1235,10 @@ gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
     GstBuffer *outbuf;
     gint frequency, channels;
 
-    outbuf = gst_buffer_new_and_alloc (num_samples *
-        sizeof (gint16) * dvdemux->channels);
-
-    a_ptr = (gint16 *) GST_BUFFER_DATA (outbuf);
-
-    for (i = 0; i < num_samples; i++) {
-      for (j = 0; j < dvdemux->channels; j++) {
-        *(a_ptr++) = dvdemux->audio_buffers[j][i];
-      }
-    }
-
-    GST_DEBUG ("pushing audio %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (dvdemux->time_segment.last_stop));
-
-    GST_BUFFER_TIMESTAMP (outbuf) = dvdemux->time_segment.last_stop;
-    GST_BUFFER_DURATION (outbuf) = duration;
-    GST_BUFFER_OFFSET (outbuf) = dvdemux->audio_offset;
-    dvdemux->audio_offset += num_samples;
-    GST_BUFFER_OFFSET_END (outbuf) = dvdemux->audio_offset;
-
     if (!dvdemux->audiosrcpad)
       gst_dvdemux_add_audio_pad (dvdemux);
 
-    /* check if format changed */
+    /* get initial format or check if format changed */
     frequency = dv_get_frequency (dvdemux->decoder);
     channels = dv_get_num_channels (dvdemux->decoder);
 
@@ -1279,6 +1259,26 @@ gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
       gst_pad_set_caps (dvdemux->audiosrcpad, caps);
       gst_caps_unref (caps);
     }
+
+    outbuf = gst_buffer_new_and_alloc (num_samples *
+        sizeof (gint16) * dvdemux->channels);
+
+    a_ptr = (gint16 *) GST_BUFFER_DATA (outbuf);
+
+    for (i = 0; i < num_samples; i++) {
+      for (j = 0; j < dvdemux->channels; j++) {
+        *(a_ptr++) = dvdemux->audio_buffers[j][i];
+      }
+    }
+
+    GST_DEBUG ("pushing audio %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (dvdemux->time_segment.last_stop));
+
+    GST_BUFFER_TIMESTAMP (outbuf) = dvdemux->time_segment.last_stop;
+    GST_BUFFER_DURATION (outbuf) = duration;
+    GST_BUFFER_OFFSET (outbuf) = dvdemux->audio_offset;
+    dvdemux->audio_offset += num_samples;
+    GST_BUFFER_OFFSET_END (outbuf) = dvdemux->audio_offset;
 
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (dvdemux->audiosrcpad));
 
