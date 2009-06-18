@@ -260,7 +260,7 @@ gst_avi_demux_reset (GstAviDemux * avi)
     gst_tag_list_free (avi->globaltags);
   avi->globaltags = NULL;
 
-  avi->got_tags = FALSE;
+  avi->got_tags = TRUE;         /* we always want to push global tags */
   avi->have_eos = FALSE;
 
   gst_adapter_clear (avi->adapter);
@@ -4167,16 +4167,23 @@ push_tag_lists (GstAviDemux * avi)
 
   for (i = 0; i < avi->num_streams; i++)
     if (avi->stream[i].pad && avi->stream[i].taglist) {
+      GST_DEBUG_OBJECT (avi->stream[i].pad, "Tags: %" GST_PTR_FORMAT,
+          avi->stream[i].taglist);
       gst_element_found_tags_for_pad (GST_ELEMENT (avi), avi->stream[i].pad,
           avi->stream[i].taglist);
       avi->stream[i].taglist = NULL;
     }
-  if (avi->globaltags) {
-    gst_element_found_tags (GST_ELEMENT (avi), avi->globaltags);
-    avi->globaltags = NULL;
-  }
+
+  if (avi->globaltags == NULL)
+    avi->globaltags = gst_tag_list_new ();
+
+  gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE,
+      GST_TAG_CONTAINER_FORMAT, "AVI", NULL);
+
+  GST_DEBUG_OBJECT (avi, "Global tags: %" GST_PTR_FORMAT, avi->globaltags);
+  gst_element_found_tags (GST_ELEMENT (avi), avi->globaltags);
+  avi->globaltags = NULL;
   avi->got_tags = FALSE;
-  GST_DEBUG_OBJECT (avi, "Pushed tag lists");
 }
 
 static void
