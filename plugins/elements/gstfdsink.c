@@ -349,9 +349,8 @@ gst_fd_sink_check_fd (GstFdSink * fdsink, int fd)
 
 invalid:
   {
-    GST_ELEMENT_ERROR (fdsink, RESOURCE, WRITE,
-        (_("File descriptor \"%d\" is not valid."), fd),
-        ("%s", g_strerror (errno)));
+    GST_ELEMENT_ERROR (fdsink, RESOURCE, WRITE, (NULL),
+        ("File descriptor %d is not valid: %s", fd, g_strerror (errno)));
     return FALSE;
   }
 not_seekable:
