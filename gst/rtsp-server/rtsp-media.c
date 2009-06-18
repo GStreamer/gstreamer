@@ -1401,8 +1401,10 @@ gst_rtsp_media_unprepare (GstRTSPMedia *media)
 }
 
 static gboolean
-default_unprepare (GstRTSPMedia *media) {
+default_unprepare (GstRTSPMedia *media)
+{
   gst_element_set_state (media->pipeline, GST_STATE_NULL);
+
   return TRUE;
 }
 
