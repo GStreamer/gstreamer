@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plug-ins 0.10.12 "More than I can handle"
+Release notes for GStreamer Bad Plug-ins 0.10.13 "Supersonic Rocket"
         
 
 
@@ -60,62 +60,31 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * Presets support in several elements
-      * Support ITV MPEG-TS streams
-      * New element: flvmux
-      * New element: osxvideosrc
-      * Fixes in RTP elements
-      * camerabin fixes
-      * Improved QT/mp4 muxing
-      * xdgmime based content type guessing
-      * deinterlace2 moved to the Good plugins (replacing deinterlace)
-      * Support for MXF muxing, and improved MXF demuxing
-      * Greatly improved DVD playback
-      * DirectDraw element moved back from Good plugins
-      * Many other bug fixes and improvements
+      * New shapewipe video transition plugin
+      * qtmux improvements
+      * camerabin improvements
+      * HDV MPEG-TS private streams support
+      * Output interlacing information in mpegvideoparse
+      * MS-ADPCM decoder
+      * RTP fixes and enhancements
+      * DTS decoder improvements
+      * New ID3 tagging plugin that supports v1, v2.3 and v2.4
+      * Support for PGS (BluRay) subtitles
+      * Many other bug fixes and enhancements
 
 Bugs fixed in this release
      
-      * 573852 : Update celt to 0.5.x
-      * 574401 : metadatamux fails^WIS failure
-      * 580091 : soundtouch plugin fails to load
-      * 153684 : [osxvideosrc] Mac users needs an osxvideosrc
-      * 537700 : [scaletempo] Scale audio tempo in sync with playback rate
-      * 569437 : mpegtsparse: flow error or crashes while dynamicly changi...
-      * 569673 : [Mpegtsparse] PAT changes not always signaled
-      * 569781 : [Mpegtsparse] drop of valid TS packets
-      * 573595 : plugins-bad mingw ports
-      * 573846 : Check for soundtouch-1.4 too
-      * 573847 : Use SDL static-libs for conftest and libs for gstsdl*
-      * 573848 : Use native CPU number detection in mpeg2enc
-      * 573849 : modplug's sndfile.h conflicts with libsndfile's sndfile.h
-      * 575388 : [aacparse] deadlocks in busy loop when seeking
-      * 575736 : mpeg2enc's bitrate parameter does not work properly
-      * 576408 : [playbin2] Deadlock when using resindvd as source
-      * 577690 : rtpdtmfmux: missing pad unref
-      * 577864 : [residvd] dvdnav version requirements should be higher
-      * 578112 : x264enc: I-frame request
-      * 578562 : dshowdecwrapper missing check for GST_DISABLE_GST_DEBUG
-      * 578563 : win32 export files are not disted
-      * 580133 : Regression in baseparse since last release
-      * 580144 : emit notify::internal-ssrc when there is a ssrc collision
-      * 580786 : [flvmux] " uninitialized variable " compiler warning
-      * 580901 : Uninitialized variable may be used in fpsdisplaysink.c
-      * 581375 : rtpssrcdemux crashes on SR-less rtcp packets
-      * 582013 : uninitialized var in mxfmux.c prevents gst-plugins-bad bu...
-      * 582074 : [faad] Fails to build with faad 2.6 (misdetected as 2.7)
-      * 582208 : [PATCH] fix for soundtouch-1.4
-      * 582483 : y4menc doesn't pass timestamps on
-      * 582656 : [mxfdemux] Fix deadlock when querying from the pad-added ...
-      * 582702 : qtmux: crash in atom_moov_add_blob_tag
-      * 583337 : [mxfmux] Wrong layout for non-interlaced formats
-      * 580585 : rtpmux memleak
-      * 577843 : input-selector causes problems with DVD menus in playbin2
-      * 581593 : gppmux doesn't support MPEG4 part 2 in sink caps
-      * 575284 : add auto-connect-forced mode to jackaudiosrc and jackaudi...
-      * 576021 : On Windows qtmux can't write files longer than 2-4 GiB, u...
-      * 576712 : Output-selector keeps reference to latest buffer when cha...
-      * 581427 : [mpeg4videoparse] config buffer is leaked
+      * 584945 : camerabin unit tests failing
+      * 511097 : Support self-signed certificates in neonhttpsrc
+      * 561752 : GstRtpBin implement Release pad functions
+      * 584164 : gstspu-pgs.c warnings for format string args and uninitia...
+      * 584165 : rtpbin sdes message broken
+      * 584360 : gppmux ftyp
+      * 585015 : debugutils can't find libgstinterfaces
+      * 585660 : segfault in scaletempo plugin
+      * 584114 : gppmux and h263
+      * 583188 : Problem with sdp: bind failed or video disappear after fe...
+      * 583627 : statistic file name needs to be standardized
 
 Download
 
@@ -144,38 +113,18 @@ Applications
   
 Contributors to this release
     
-      * Alan Falloon
-      * Alessandro Decina
-      * Andy Wingo
-      * Arnout Vandecappelle
+      * Ali Sabil
       * Christian Schaller
-      * David Schleef
       * Edward Hervey
-      * Felipe Contreras
-      * Haakon Sporsheim
       * Jan Schmidt
-      * Janin Kolenc
-      * Julien Moutte
       * Lasse Laukkanen
-      * Laurent Glayal
-      * Marc-Andre Lureau
       * Mark Nauwelaerts
+      * Mathias Hasselmann
       * Michael Smith
-      * Ole André Vadla Ravnås
       * Olivier Crête
-      * René Stadler
-      * Rov Juvano
       * Sebastian Dröge
-      * Sergey Scobich
       * Stefan Kost
-      * Sébastien Moutte
-      * Thiago Santos
-      * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Tristan Matthews
-      * Vincent Genieux
-      * Vincent Torri
       * Wim Taymans
-      * Zaheer Abbas Merali
-      * Руслан Ижбулатов
  

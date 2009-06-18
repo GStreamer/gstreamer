@@ -3,7 +3,7 @@
   <description>HDV private stream parser</description>
   <filename>../../gst/hdvparse/.libs/libgsthdvparse.so</filename>
   <basename>libgsthdvparse.so</basename>
-  <version>0.10.12.1</version>
+  <version>0.10.13</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>
@@ -20,13 +20,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>private/hdv-a1</details>
+          <details>hdv/aux-v; hdv/aux-a</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>private/hdv-a1, parsed=(boolean)true</details>
+          <details>hdv/aux-v, parsed=(boolean)true; hdv/aux-a, parsed=(boolean)true</details>
         </caps>
       </pads>
     </element>
