@@ -51,6 +51,7 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 #include <gst/tag/tag.h>
+#include <gst/pbutils/pbutils.h>
 #include <string.h>
 
 #include "gstid3demux.h"
@@ -164,6 +165,17 @@ no_marker:
   }
 }
 
+static void
+gst_id3demux_add_container_format (GstTagList * tags)
+{
+  GstCaps *sink_caps;
+
+  sink_caps = gst_static_pad_template_get_caps (&sink_factory);
+  gst_pb_utils_add_codec_description_to_tag_list (tags,
+      GST_TAG_CONTAINER_FORMAT, sink_caps);
+  gst_caps_unref (sink_caps);
+}
+
 static GstTagDemuxResult
 gst_id3demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
     gboolean start_tag, guint * tag_size, GstTagList ** tags)
@@ -173,16 +185,19 @@ gst_id3demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
 
     res = id3demux_read_id3v2_tag (buffer, tag_size, tags);
 
-    if (G_LIKELY (res == ID3TAGS_READ_TAG))
+    if (G_LIKELY (res == ID3TAGS_READ_TAG)) {
+      gst_id3demux_add_container_format (*tags);
       return GST_TAG_DEMUX_RESULT_OK;
-    else
+    } else {
       return GST_TAG_DEMUX_RESULT_BROKEN_TAG;
+    }
   } else {
     *tags = gst_tag_list_new_from_id3v1 (GST_BUFFER_DATA (buffer));
 
     if (G_UNLIKELY (*tags == NULL))
       return GST_TAG_DEMUX_RESULT_BROKEN_TAG;
 
+    gst_id3demux_add_container_format (*tags);
     *tag_size = ID3V1_TAG_SIZE;
     return GST_TAG_DEMUX_RESULT_OK;
   }
