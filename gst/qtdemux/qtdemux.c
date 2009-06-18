@@ -5229,6 +5229,32 @@ qtdemux_parse_redirects (GstQTDemux * qtdemux)
   return TRUE;
 }
 
+static GstTagList *
+qtdemux_add_container_format (GstQTDemux * qtdemux, GstTagList * tags)
+{
+  const gchar *fmt;
+
+  if (tags == NULL)
+    tags = gst_tag_list_new ();
+
+  if (qtdemux->major_brand == FOURCC_mjp2)
+    fmt = "Motion JPEG 2000";
+  else if ((qtdemux->major_brand & 0xffff) == GST_MAKE_FOURCC ('3', 'g', 0, 0))
+    fmt = "3GP";
+  else if (qtdemux->major_brand == FOURCC_qt__)
+    fmt = "Quicktime";
+  else
+    fmt = "ISO MP4/M4A";
+
+  GST_LOG_OBJECT (qtdemux, "mapped %" GST_FOURCC_FORMAT " to '%s'",
+      GST_FOURCC_ARGS (qtdemux->major_brand), fmt);
+
+  gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_CONTAINER_FORMAT,
+      fmt, NULL);
+
+  return tags;
+}
+
 /* we have read th complete moov node now.
  * This function parses all of the relevant info, creates the traks and
  * prepares all data structures for playback
@@ -5271,17 +5297,16 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   udta = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_udta);
   if (udta) {
     qtdemux_parse_udta (qtdemux, udta);
-
-    if (qtdemux->tag_list) {
-      GST_DEBUG_OBJECT (qtdemux,
-          "calling gst_element_found_tags with %" GST_PTR_FORMAT,
-          qtdemux->tag_list);
-      gst_element_found_tags (GST_ELEMENT_CAST (qtdemux), qtdemux->tag_list);
-      qtdemux->tag_list = NULL;
-    }
   } else {
     GST_LOG_OBJECT (qtdemux, "No udta node found.");
   }
+
+  /* FIXME: tags must be pushed after the initial newsegment event */
+  qtdemux->tag_list = qtdemux_add_container_format (qtdemux, qtdemux->tag_list);
+  GST_INFO_OBJECT (qtdemux, "global tags: %" GST_PTR_FORMAT, qtdemux->tag_list);
+  gst_element_found_tags (GST_ELEMENT_CAST (qtdemux), qtdemux->tag_list);
+  qtdemux->tag_list = NULL;
+
   return TRUE;
 }
 
