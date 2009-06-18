@@ -42,4 +42,24 @@ public class BufferTest
 		Assert.IsFalse(sub1.IsSpanFast(buffer), "a parent buffer can not be SpanFasted");
 		Assert.IsTrue(sub1.IsSpanFast(sub2), "two subbuffers next to each other should be SpanFast");
 	}
+
+	private void ArrayIsEqual (byte[] a, byte[] b)
+	{
+		Assert.IsTrue (a.Length == b.Length);
+		for (int i = 0; i < a.Length; i++)
+			Assert.IsTrue (a[i] == b[i]);
+	}
+
+	[Test]
+	public void TestBufferData()
+	{
+		byte[] data = new byte[] {0, 1, 2, 3, 4, 5};
+
+		Gst.Buffer buffer = new Gst.Buffer (data);
+
+		ArrayIsEqual (data, buffer.Data);
+		for (uint i = 0; i < buffer.Size; i++)
+			Assert.IsTrue (buffer[i] == data[i]);
+
+	}
 }
