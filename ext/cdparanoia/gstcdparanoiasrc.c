@@ -161,9 +161,16 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
           "Force minimum overlap search during verification to n sectors", -1,
           75, DEFAULT_SEARCH_OVERLAP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstCdParanoiaSrc:cache-size
+   *
+   * Set CD cache size to n sectors (-1 = auto)
+   *
+   * Since: 0.10.24
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CACHE_SIZE,
       g_param_spec_int ("cache-size", "Cache size",
-          "Set CD cache size to n sectors", -1,
+          "Set CD cache size to n sectors (-1 = auto)", -1,
           G_MAXINT, DEFAULT_CACHE_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -201,7 +208,7 @@ static gboolean
 gst_cd_paranoia_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
 {
   GstCdParanoiaSrc *src = GST_CD_PARANOIA_SRC (cddabasesrc);
-  gint i;
+  gint i, cache_size;
 
   GST_DEBUG_OBJECT (src, "trying to open device %s (generic-device=%s) ...",
       device, GST_STR_NULL (src->generic_device));
@@ -250,11 +257,23 @@ gst_cd_paranoia_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
     goto init_failed;
 
   paranoia_modeset (src->p, src->paranoia_mode);
+  GST_INFO_OBJECT (src, "set paranoia mode to 0x%02x", src->paranoia_mode);
 
-  if (src->search_overlap != -1)
+  if (src->search_overlap != -1) {
     paranoia_overlapset (src->p, src->search_overlap);
-  if (src->cache_size != -1)
-    paranoia_cachemodel_size (src->p, src->cache_size);
+    GST_INFO_OBJECT (src, "search overlap set to %u", src->search_overlap);
+  }
+
+  cache_size = src->cache_size;
+  if (cache_size == -1) {
+    /* if paranoia mode is low (the default), assume we're doing playback */
+    if (src->paranoia_mode <= PARANOIA_MODE_FRAGMENT)
+      cache_size = 150;
+    else
+      cache_size = paranoia_cachemodel_size (src->p, -1);
+  }
+  paranoia_cachemodel_size (src->p, cache_size);
+  GST_INFO_OBJECT (src, "set cachemodel size to %u", cache_size);
 
   src->next_sector = -1;
 
