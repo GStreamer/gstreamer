@@ -83,15 +83,6 @@ typedef struct _GstRTPHeader
     ((i) * sizeof(guint32))
 #define GST_RTP_HEADER_CSRC_SIZE(data)   (GST_RTP_HEADER_CSRC_COUNT(data) * sizeof (guint32))
 
-typedef enum
-{
-  PAYLOAD_TYPE,
-  SEQ,
-  TIMESTAMP,
-  SSRC,
-  NO_MORE
-} rtp_header_data_type;
-
 /**
  * gst_rtp_buffer_allocate_data:
  * @buffer: a #GstBuffer
@@ -794,32 +785,6 @@ gst_rtp_buffer_get_ssrc (GstBuffer * buffer)
   return g_ntohl (GST_RTP_HEADER_SSRC (GST_BUFFER_DATA (buffer)));
 }
 
-/* Returns ponter to the RTP header of the first packet within the list */
-static guint8 *
-gst_rtp_buffer_list_get_data (GstBufferList * list)
-{
-  GstBufferListIterator *it;
-  GstBuffer *rtpbuf;
-
-  it = gst_buffer_list_iterate (list);
-  if (!gst_buffer_list_iterator_next_group (it))
-    goto invalid_list;
-
-  rtpbuf = gst_buffer_list_iterator_next (it);
-  if (!rtpbuf)
-    goto invalid_list;
-
-  gst_buffer_list_iterator_free (it);
-
-  return GST_BUFFER_DATA (rtpbuf);
-
-invalid_list:
-  {
-    gst_buffer_list_iterator_free (it);
-    return NULL;
-  }
-}
-
 /**
  * gst_rtp_buffer_list_get_ssrc:
  * @list: the buffer list
@@ -834,12 +799,12 @@ invalid_list:
 guint32
 gst_rtp_buffer_list_get_ssrc (GstBufferList * list)
 {
-  guint8 *data;
+  GstBuffer *buffer;
 
-  data = gst_rtp_buffer_list_get_data (list);
-  g_return_val_if_fail (data != NULL, 0);
+  buffer = gst_buffer_list_get (list, 0, 0);
+  g_return_val_if_fail (buffer != NULL, 0);
 
-  return g_ntohl (GST_RTP_HEADER_SSRC (data));
+  return g_ntohl (GST_RTP_HEADER_SSRC (GST_BUFFER_DATA (buffer)));
 }
 
 /**
@@ -855,53 +820,11 @@ gst_rtp_buffer_set_ssrc (GstBuffer * buffer, guint32 ssrc)
   GST_RTP_HEADER_SSRC (GST_BUFFER_DATA (buffer)) = g_htonl (ssrc);
 }
 
-/* Sets the field specified by @type to @data.
- * When setting SEQ number, this function will also increase
- * @data by one. */
-static void
-gst_rtp_buffer_list_set_data (guint8 * rtp_header,
-    gpointer data, rtp_header_data_type type)
+static GstBufferListItem
+set_ssrc_header (GstBuffer ** buffer, guint group, guint idx, guint32 * ssrc)
 {
-  switch (type) {
-    case PAYLOAD_TYPE:
-      GST_RTP_HEADER_PAYLOAD_TYPE (rtp_header) = *(guint8 *) data;
-      break;
-    case SEQ:
-      GST_RTP_HEADER_SEQ (rtp_header) = g_htons (*(guint16 *) data);
-      (*(guint16 *) data)++;
-      break;
-    case SSRC:
-      GST_RTP_HEADER_SSRC (rtp_header) = g_htonl (*(guint32 *) data);
-      break;
-    case TIMESTAMP:
-      GST_RTP_HEADER_TIMESTAMP (rtp_header) = g_htonl (*(guint32 *) data);
-      break;
-    default:
-      g_warning ("Unknown data type");
-      break;
-  }
-}
-
-/* Sets the field specified by @type to @data.
- * This function updates all RTP headers within @list. */
-static void
-gst_rtp_buffer_list_set_rtp_headers (GstBufferList * list,
-    gpointer data, rtp_header_data_type type)
-{
-  GstBufferListIterator *it;
-
-  it = gst_buffer_list_iterate (list);
-
-  while (gst_buffer_list_iterator_next_group (it)) {
-    GstBuffer *rtpbuf;
-    guint8 *rtp_header;
-
-    rtpbuf = gst_buffer_list_iterator_next (it);
-    rtp_header = GST_BUFFER_DATA (rtpbuf);
-
-    gst_rtp_buffer_list_set_data (rtp_header, data, type);
-  }
-  gst_buffer_list_iterator_free (it);
+  GST_RTP_HEADER_SSRC (GST_BUFFER_DATA (*buffer)) = g_htonl (*ssrc);
+  return GST_BUFFER_LIST_SKIP_GROUP;
 }
 
 /**
@@ -916,7 +839,7 @@ gst_rtp_buffer_list_set_rtp_headers (GstBufferList * list,
 void
 gst_rtp_buffer_list_set_ssrc (GstBufferList * list, guint32 ssrc)
 {
-  gst_rtp_buffer_list_set_rtp_headers (list, &ssrc, SSRC);
+  gst_buffer_list_foreach (list, (GstBufferListFunc) set_ssrc_header, &ssrc);
 }
 
 /**
@@ -1029,12 +952,12 @@ gst_rtp_buffer_get_payload_type (GstBuffer * buffer)
 guint8
 gst_rtp_buffer_list_get_payload_type (GstBufferList * list)
 {
-  guint8 *data;
+  GstBuffer *buffer;
 
-  data = gst_rtp_buffer_list_get_data (list);
-  g_return_val_if_fail (data != NULL, 0);
+  buffer = gst_buffer_list_get (list, 0, 0);
+  g_return_val_if_fail (buffer != NULL, 0);
 
-  return GST_RTP_HEADER_PAYLOAD_TYPE (data);
+  return GST_RTP_HEADER_PAYLOAD_TYPE (GST_BUFFER_DATA (buffer));
 }
 
 /**
@@ -1052,6 +975,13 @@ gst_rtp_buffer_set_payload_type (GstBuffer * buffer, guint8 payload_type)
   GST_RTP_HEADER_PAYLOAD_TYPE (GST_BUFFER_DATA (buffer)) = payload_type;
 }
 
+static GstBufferListItem
+set_pt_header (GstBuffer ** buffer, guint group, guint idx, guint8 * pt)
+{
+  GST_RTP_HEADER_PAYLOAD_TYPE (GST_BUFFER_DATA (*buffer)) = *pt;
+  return GST_BUFFER_LIST_SKIP_GROUP;
+}
+
 /**
  * gst_rtp_buffer_list_set_payload_type:
  * @list: the buffer list
@@ -1066,7 +996,8 @@ gst_rtp_buffer_list_set_payload_type (GstBufferList * list, guint8 payload_type)
 {
   g_return_if_fail (payload_type < 0x80);
 
-  gst_rtp_buffer_list_set_rtp_headers (list, &payload_type, PAYLOAD_TYPE);
+  gst_buffer_list_foreach (list, (GstBufferListFunc) set_pt_header,
+      &payload_type);
 }
 
 /**
@@ -1096,6 +1027,14 @@ gst_rtp_buffer_set_seq (GstBuffer * buffer, guint16 seq)
   GST_RTP_HEADER_SEQ (GST_BUFFER_DATA (buffer)) = g_htons (seq);
 }
 
+static GstBufferListItem
+set_seq_header (GstBuffer ** buffer, guint group, guint idx, guint16 * seq)
+{
+  GST_RTP_HEADER_SEQ (GST_BUFFER_DATA (*buffer)) = g_htons (*seq);
+  (*seq)++;
+  return GST_BUFFER_LIST_SKIP_GROUP;
+}
+
 /**
  * gst_rtp_buffer_list_set_seq:
  * @list: the buffer list
@@ -1110,8 +1049,7 @@ gst_rtp_buffer_set_seq (GstBuffer * buffer, guint16 seq)
 guint16
 gst_rtp_buffer_list_set_seq (GstBufferList * list, guint16 seq)
 {
-  gst_rtp_buffer_list_set_rtp_headers (list, &seq, SEQ);
-
+  gst_buffer_list_foreach (list, (GstBufferListFunc) set_seq_header, &seq);
   return seq;
 }
 
@@ -1129,12 +1067,12 @@ gst_rtp_buffer_list_set_seq (GstBufferList * list, guint16 seq)
 guint16
 gst_rtp_buffer_list_get_seq (GstBufferList * list)
 {
-  guint8 *data;
+  GstBuffer *buffer;
 
-  data = gst_rtp_buffer_list_get_data (list);
-  g_return_val_if_fail (data != NULL, 0);
+  buffer = gst_buffer_list_get (list, 0, 0);
+  g_return_val_if_fail (buffer != NULL, 0);
 
-  return g_ntohl (GST_RTP_HEADER_SEQ (data));
+  return g_ntohl (GST_RTP_HEADER_SEQ (GST_BUFFER_DATA (buffer)));
 }
 
 
@@ -1166,12 +1104,12 @@ gst_rtp_buffer_get_timestamp (GstBuffer * buffer)
 guint32
 gst_rtp_buffer_list_get_timestamp (GstBufferList * list)
 {
-  guint8 *data;
+  GstBuffer *buffer;
 
-  data = gst_rtp_buffer_list_get_data (list);
-  g_return_val_if_fail (data != NULL, 0);
+  buffer = gst_buffer_list_get (list, 0, 0);
+  g_return_val_if_fail (buffer != NULL, 0);
 
-  return g_ntohl (GST_RTP_HEADER_TIMESTAMP (data));
+  return g_ntohl (GST_RTP_HEADER_TIMESTAMP (GST_BUFFER_DATA (buffer)));
 }
 
 /**
@@ -1187,6 +1125,15 @@ gst_rtp_buffer_set_timestamp (GstBuffer * buffer, guint32 timestamp)
   GST_RTP_HEADER_TIMESTAMP (GST_BUFFER_DATA (buffer)) = g_htonl (timestamp);
 }
 
+
+static GstBufferListItem
+set_timestamp_header (GstBuffer ** buffer, guint group, guint idx,
+    guint32 * timestamp)
+{
+  GST_RTP_HEADER_TIMESTAMP (GST_BUFFER_DATA (*buffer)) = g_htonl (*timestamp);
+  return GST_BUFFER_LIST_SKIP_GROUP;
+}
+
 /**
  * gst_rtp_buffer_list_set_timestamp:
  * @list: the buffer list
@@ -1199,7 +1146,8 @@ gst_rtp_buffer_set_timestamp (GstBuffer * buffer, guint32 timestamp)
 void
 gst_rtp_buffer_list_set_timestamp (GstBufferList * list, guint32 timestamp)
 {
-  gst_rtp_buffer_list_set_rtp_headers (list, &timestamp, TIMESTAMP);
+  gst_buffer_list_foreach (list, (GstBufferListFunc) set_timestamp_header,
+      &timestamp);
 }
 
 /**
