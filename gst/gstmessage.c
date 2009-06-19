@@ -480,11 +480,11 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * Create a new tag message. The message will take ownership of the tag list.
  * The message is posted by elements that discovered a new taglist.
  *
+ * MT safe.
+ *
  * Returns: The new tag message.
  *
  * Since: 0.10.24
- *
- * MT safe.
  */
 GstMessage *
 gst_message_new_tag_full (GstObject * src, GstPad * pad, GstTagList * tag_list)
@@ -1012,9 +1012,9 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
  * Extracts the tag list from the GstMessage. The tag list returned in the
  * output argument is a copy; the caller must free it when done.
  *
- * Since: 0.10.24
- *
  * MT safe.
+ *
+ * Since: 0.10.24
  */
 void
 gst_message_parse_tag_full (GstMessage * message, GstPad ** pad,
@@ -1769,8 +1769,6 @@ gst_message_new_step_start (GstObject * src, gboolean active, GstFormat format,
  * @rate: result location for the rate
  * @flush: result location for the flush flag
  * @intermediate: result location for the intermediate flag
- * @duration: result location for the duration
- * @eos: result location for the EOS flag
  *
  * Extract the values from step_start message.
  *

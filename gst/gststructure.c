@@ -2373,7 +2373,7 @@ G_STMT_START {                                                                \
  * gst_structure_get_valist:
  * @structure: a #GstStructure
  * @first_fieldname: the name of the first field to read
- * @valist: variable arguments
+ * @args: variable arguments
  *
  * Parses the variable arguments and reads fields from @structure accordingly.
  * valist-variant of gst_structure_get(). Look at the documentation of
@@ -2442,7 +2442,7 @@ wrong_type:
  * gst_structure_id_get_valist:
  * @structure: a #GstStructure
  * @first_field_id: the quark of the first field to read
- * @valist: variable arguments
+ * @args: variable arguments
  *
  * Parses the variable arguments and reads fields from @structure accordingly.
  * valist-variant of gst_structure_id_get(). Look at the documentation of
