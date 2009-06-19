@@ -176,10 +176,10 @@ gst_audio_amplify_transform_##type##_wrap_negative (GstAudioAmplify * filter, \
   while (num_samples--) {                                                     \
     glong val = *d * filter->amplification;                                   \
     if (val > MAX_##type)                                                     \
-      val = MIN_##type + (val - MIN_##type) % ((glong) MAX_##type -           \
+      val = MIN_##type + (val - MIN_##type) % ((glong) MAX_##type + 1 -       \
           MIN_##type);                                                        \
     else if (val < MIN_##type)                                                \
-      val = MAX_##type - (MAX_##type - val) % ((glong) MAX_##type -           \
+      val = MAX_##type - (MAX_##type - val) % ((glong) MAX_##type + 1 -       \
           MIN_##type);                                                        \
     *d++ = val;                                                               \
   }                                                                           \
