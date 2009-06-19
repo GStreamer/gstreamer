@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-20 21:09+0100\n"
+"POT-Creation-Date: 2009-06-19 14:43+0100\n"
 "PO-Revision-Date: 2009-05-13 09:21+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -174,6 +174,25 @@ msgstr "Impossibile aprire il dispositivo audio per la registrazione."
 
 msgid "Gain"
 msgstr "Guadagno"
+
+#, fuzzy
+msgid "Built-in Speaker"
+msgstr "Altoparl"
+
+msgid "Headphone"
+msgstr ""
+
+msgid "Line Out"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."

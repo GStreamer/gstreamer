@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-20 21:09+0100\n"
+"POT-Creation-Date: 2009-06-19 14:43+0100\n"
 "PO-Revision-Date: 2008-11-04 09:23+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -173,6 +173,25 @@ msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime záznamu."
 
 msgid "Gain"
 msgstr "Zisk"
+
+#, fuzzy
+msgid "Built-in Speaker"
+msgstr "Reproduktor"
+
+msgid "Headphone"
+msgstr ""
+
+msgid "Line Out"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."

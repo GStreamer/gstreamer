@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-20 21:09+0100\n"
+"POT-Creation-Date: 2009-06-19 14:43+0100\n"
 "PO-Revision-Date: 2005-12-04 21:54+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -163,6 +163,24 @@ msgid "Could not open audio device for recording."
 msgstr ""
 
 msgid "Gain"
+msgstr ""
+
+msgid "Built-in Speaker"
+msgstr ""
+
+msgid "Headphone"
+msgstr ""
+
+msgid "Line Out"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
 msgstr ""
 
 #, c-format

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-20 21:09+0100\n"
+"POT-Creation-Date: 2009-06-19 14:43+0100\n"
 "PO-Revision-Date: 2009-05-14 22:01+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -172,6 +172,25 @@ msgstr "Tak dapat membuka divais audio untuk merekam."
 
 msgid "Gain"
 msgstr "Gain"
+
+#, fuzzy
+msgid "Built-in Speaker"
+msgstr "Pengeras Suara"
+
+msgid "Headphone"
+msgstr ""
+
+msgid "Line Out"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."

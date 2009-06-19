@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-20 21:09+0100\n"
+"POT-Creation-Date: 2009-06-19 14:43+0100\n"
 "PO-Revision-Date: 2007-07-05 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -166,6 +166,25 @@ msgstr "Не вдається відкрити пристрій компакт-�
 
 msgid "Gain"
 msgstr "Підсилення"
+
+#, fuzzy
+msgid "Built-in Speaker"
+msgstr "Динамік"
+
+msgid "Headphone"
+msgstr ""
+
+msgid "Line Out"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-20 21:09+0100\n"
+"POT-Creation-Date: 2009-06-19 14:43+0100\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -164,6 +164,25 @@ msgid "Could not open audio device for recording."
 msgstr "I pamundur hapja e dispozitivit CD për lexim."
 
 msgid "Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Built-in Speaker"
+msgstr "Zë folës"
+
+msgid "Headphone"
+msgstr ""
+
+msgid "Line Out"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
 msgstr ""
 
 #, fuzzy, c-format
@@ -381,10 +400,6 @@ msgstr ""
 
 #~ msgid "Your OSS device could not be probed correctly"
 #~ msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
-
-#, fuzzy
-#~ msgid "PC Speaker"
-#~ msgstr "Zë folës"
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "E pamundur hapja e file vfs \"%s\" për lexim."

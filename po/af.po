@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-20 21:09+0100\n"
+"POT-Creation-Date: 2009-06-19 14:43+0100\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -165,6 +165,25 @@ msgid "Could not open audio device for recording."
 msgstr "Kon nie CD-toestel oopmaak om te lees nie."
 
 msgid "Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Built-in Speaker"
+msgstr "Luidspreker"
+
+msgid "Headphone"
+msgstr ""
+
+msgid "Line Out"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
 msgstr ""
 
 #, fuzzy, c-format
@@ -377,10 +396,6 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading."
 #~ msgstr "Kon nie toestel \"%s\" oopmaak vir lees nie."
-
-#, fuzzy
-#~ msgid "PC Speaker"
-#~ msgstr "Luidspreker"
 
 #~ msgid "Could not open vfs file \"%s\" for reading."
 #~ msgstr "Kon nie vfs-lêer \"%s\" oopmaak vir lees nie."
