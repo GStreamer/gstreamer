@@ -1017,9 +1017,7 @@ gst_mythtv_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 }
 
 void
-size_header_handler (void *userdata, const char *value)
+size_header_handler (void *src, const char *value)
 {
-  GstMythtvSrc *src = GST_MYTHTV_SRC (userdata);
-
   GST_DEBUG_OBJECT (src, "content size = %lld bytes", src->content_size);
 }

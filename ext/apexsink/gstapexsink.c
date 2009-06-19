@@ -523,9 +523,7 @@ gst_apexsink_write (GstAudioSink * asink, gpointer data, guint length)
 static gboolean
 gst_apexsink_unprepare (GstAudioSink * asink)
 {
-  GstApExSink *apexsink = (GstApExSink *) asink;
-
-  GST_INFO_OBJECT (apexsink, "UNPREPARE");
+  GST_INFO_OBJECT (asink, "UNPREPARE");
 
   return TRUE;
 }
@@ -534,9 +532,7 @@ gst_apexsink_unprepare (GstAudioSink * asink)
 static guint
 gst_apexsink_delay (GstAudioSink * asink)
 {
-  GstApExSink *apexsink = (GstApExSink *) asink;
-
-  GST_INFO_OBJECT (apexsink, "DELAY");
+  GST_LOG_OBJECT (asink, "DELAY");
 
   return 0;
 }

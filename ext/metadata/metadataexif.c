@@ -739,6 +739,7 @@ metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
 
 done:
   {
+#ifndef GST_DISABLE_GST_DEBUG
     char buf[2048];
     GST_LOG ("\n    Entry %p: %s (%s)\n"
         "      Size, Comps: %d, %d\n"
@@ -752,6 +753,7 @@ done:
         (int) (entry->components),
         exif_entry_get_value (entry, buf, sizeof (buf)),
         exif_tag_get_title (entry->tag), exif_tag_get_description (entry->tag));
+#endif
   }
   return;
 

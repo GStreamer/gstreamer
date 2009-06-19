@@ -1069,9 +1069,8 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       break;
     }
     case DVDNAV_HIGHLIGHT:{
-      dvdnav_highlight_event_t *event = (dvdnav_highlight_event_t *) data;
       GST_DEBUG_OBJECT (src, "highlight change event, button %d",
-          event->buttonN);
+          ((dvdnav_highlight_event_t *) data)->buttonN);
       rsn_dvdsrc_update_highlight (src);
       break;
     }

@@ -1349,9 +1349,8 @@ no_clock:
 
 pause:
   {
-    const gchar *reason = gst_flow_get_name (result);
-
-    GST_DEBUG_OBJECT (adder, "pausing task, reason %s", reason);
+    GST_DEBUG_OBJECT (adder, "pausing task, reason %s",
+        gst_flow_get_name (result));
 
     GST_OBJECT_LOCK (adder);
 

@@ -523,6 +523,8 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
   return best;
 }
 
+#define COLLECT_DATA_PAD(collect_data) ((GstCollectData *)(collect_data))->pad)
+
 static GstFlowReturn
 mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
 {
@@ -540,10 +542,8 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
 
     if (mux->pcr_stream == NULL) {
       if (best) {
-        GstCollectData *c_data = (GstCollectData *) best;
         /* Take the first data stream for the PCR */
-        GST_DEBUG_OBJECT (mux, "Use stream from pad %" GST_PTR_FORMAT " as PCR",
-            c_data->pad);
+        GST_DEBUG_OBJECT (COLLECT_DATA_PAD (best), "Use stream as PCR");
         mux->pcr_stream = best->stream;
       }
     }
@@ -564,14 +564,12 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
 
   if (best != NULL) {
     GstBuffer *buf = best->queued_buf;
-    GstCollectData *c_data = (GstCollectData *) best;
     gint64 pts = -1;
 
     g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
-    GST_DEBUG_OBJECT (mux,
-        "Chose stream from pad %" GST_PTR_FORMAT " for output (PID: 0x%04x)",
-        c_data->pad, best->pid);
+    GST_DEBUG_OBJECT (COLLECT_DATA_PAD (best),
+        "Chose stream for output (PID: 0x%04x)", best->pid);
 
     if (GST_CLOCK_TIME_IS_VALID (best->cur_ts)) {
       pts = GSTTIME_TO_MPEGTIME (best->cur_ts);

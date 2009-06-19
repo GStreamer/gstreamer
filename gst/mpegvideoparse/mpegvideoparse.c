@@ -278,6 +278,7 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
   return TRUE;
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
 static const gchar *
 picture_start_code_name (guint8 psc)
 {
@@ -333,6 +334,7 @@ picture_type_name (guint8 pct)
 
   return "Reserved/Unknown";
 }
+#endif /* GST_DISABLE_GST_DEBUG */
 
 static gboolean
 mpegvideoparse_handle_picture (MpegVideoParse * mpegvideoparse, GstBuffer * buf)

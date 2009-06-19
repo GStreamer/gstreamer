@@ -716,12 +716,11 @@ gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force)
 static void
 gst_dvd_spu_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
 {
-  const GstStructure *structure = gst_event_get_structure (event);
-  const gchar *event_type = gst_structure_get_string (structure, "event");
   gboolean hl_change = FALSE;
 
   GST_INFO_OBJECT (dvdspu, "DVD event of type %s on subp pad OOB=%d",
-      event_type, (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM_OOB));
+      gst_structure_get_string (event->structure, "event"),
+      (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM_OOB));
 
   switch (dvdspu->spu_input_type) {
     case SPU_INPUT_TYPE_VOBSUB:
