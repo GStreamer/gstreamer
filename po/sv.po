@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2009-04-19 10:57+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -695,7 +695,7 @@ msgstr "Internt klockfel."
 msgid "Internal data flow error."
 msgstr "Internt fel i dataflöde."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -713,14 +713,6 @@ msgid ""
 msgstr ""
 "Begränsa de möjliga tillåtna förmågorna (NULL betyder ANY). Inställning av "
 "egenskapen tar en referens till det angivna GstCaps-objektet."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Fel vid skrivning till filbeskrivaren \"%d\"."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "Filbeskrivaren \"%d\" är ogiltig."
 
 msgid "No file name specified for writing."
 msgstr "Inget filnamn angivet för skrivning."
@@ -1029,6 +1021,16 @@ msgstr "Ställer in rörledningen till NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Frigör rörledning ...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Fel vid skrivning till filbeskrivaren \"%d\"."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Fel vid sökning i filen \"%s\"."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Filbeskrivaren \"%d\" är ogiltig."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Internt GStreamer-fel: tillståndsändring misslyckades."

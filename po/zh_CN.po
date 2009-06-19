@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2009-05-01 11:53中国标准时间\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
@@ -665,7 +665,7 @@ msgstr "内部时钟错误。"
 msgid "Internal data flow error."
 msgstr "内部数据流错误。"
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -683,14 +683,6 @@ msgid ""
 msgstr ""
 "限制所允许的功能 (NULL 表示无限制)。此属性可以为所提供的 GstCaps 对象设置一个"
 "关联应用。"
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "写入文件描述符“%d”时出错。"
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "文件描述符“%d”无效。"
 
 msgid "No file name specified for writing."
 msgstr "未指定写入的文件名。"
@@ -990,6 +982,16 @@ msgstr "设置 NULL 管道 ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "释放管道资源 ...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "写入文件描述符“%d”时出错。"
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "在文件“%s”搜寻时出错。"
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "文件描述符“%d”无效。"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "GStreamer 内部错误：状态更改失败。"

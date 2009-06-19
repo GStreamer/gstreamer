@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2009-04-17 23:54+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -684,7 +684,7 @@ msgstr "Belső órahiba."
 msgid "Internal data flow error."
 msgstr "Belső adatfolyam-hiba."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -702,14 +702,6 @@ msgid ""
 msgstr ""
 "Az engedélyezhető képességek korlátozása (a NULL, ANY-t jelent). Ezen "
 "tulajdonság beállítása a biztosított GstCaps objektumra hivatkozik."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Hiba a következő fájlleíróba íráskor: „%d”."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "A következő fájlleíró érvénytelen: „%d”."
 
 msgid "No file name specified for writing."
 msgstr "Nincs fájlnév megadva az íráshoz."
@@ -1012,6 +1004,16 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Hiba a következő fájlleíróba íráskor: „%d”."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Hiba a következő fájlban való tekerés közben: „%s”."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "A következő fájlleíró érvénytelen: „%d”."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Belső GStreamer hiba: az állapotváltás meghiúsult."

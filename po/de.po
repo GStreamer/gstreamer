@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2004-06-05 09:32+0100\n"
 "Last-Translator: Roland Illig <roland.illig@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
@@ -729,7 +729,7 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr ""
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -744,14 +744,6 @@ msgstr ""
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Fehler beim Schreiben der Daten »%s«."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
 msgstr ""
 
 msgid "No file name specified for writing."
@@ -1061,6 +1053,14 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "FÜHRE Leitung AUS ...\n"
+
+#, fuzzy
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Fehler beim Schreiben der Daten »%s«."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Fehler beim Schreiben der Daten »%s«."
 
 #, fuzzy
 #~ msgid "Internal GStreamer error: state change failed."

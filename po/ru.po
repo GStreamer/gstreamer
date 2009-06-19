@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2009-02-12 14:17+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -687,7 +687,7 @@ msgstr "Внутренняя ошибка синхронизации."
 msgid "Internal data flow error."
 msgstr "Внутренняя ошибка передачи данных."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -705,14 +705,6 @@ msgid ""
 msgstr ""
 "Ограничить разрешённые возможности (NULL равносильно ANY). Установка этого "
 "свойства увеличивает количество ссылок для предоставленного объекта GstCaps."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Ошибка записи в дескриптор файла «%d»."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "Дескриптор файла «%d» недействителен."
 
 msgid "No file name specified for writing."
 msgstr "Не указано имя файла для записи."
@@ -1022,6 +1014,16 @@ msgstr "Установка конвейера в состояние NULL...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Установка конвейера в состояние NULL...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Ошибка записи в дескриптор файла «%d»."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Ошибка позиционирования в файле «%s»."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Дескриптор файла «%d» недействителен."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Внутренняя ошибка GStreamer: не удалось сменить состояние."

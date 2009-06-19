@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -691,7 +691,7 @@ msgstr "S'ha produït un error intern de flux de dades."
 msgid "Internal data flow error."
 msgstr "S'ha produït un error intern de flux de dades."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -707,14 +707,6 @@ msgstr ""
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "S'ha produït un error en escriure al fitxer «%s»."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
 msgstr ""
 
 msgid "No file name specified for writing."
@@ -1025,6 +1017,14 @@ msgstr "S'està establint el conducte a NUL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "S'està establint el conducte a NUL ...\n"
+
+#, fuzzy
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "S'ha produït un error en escriure al fitxer «%s»."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "S'ha produït un error en escriure al fitxer «%s»."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr ""

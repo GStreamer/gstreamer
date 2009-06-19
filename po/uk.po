@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2007-09-07 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -679,7 +679,7 @@ msgstr "Помилка внутрішнього потоку даних."
 msgid "Internal data flow error."
 msgstr "Помилка внутрішнього потоку даних."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -697,14 +697,6 @@ msgid ""
 msgstr ""
 "Обмежити допустимі можливості (NULL означає ANY). Встановлення цієї "
 "властивості призводить до посилання на поставлений об'єкт GstCaps."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Помилка при записуванні у дескриптор файлу \"%d\"."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "Дескриптор файлу \"%d\" некоректний."
 
 msgid "No file name specified for writing."
 msgstr "Не вказана назва файлу для запису."
@@ -1016,6 +1008,16 @@ msgstr "Канал переводиться у стан NULL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Канал переводиться у стан NULL ...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Помилка при записуванні у дескриптор файлу \"%d\"."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Помилка при встановленні позиції у файлі \"%s\"."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Дескриптор файлу \"%d\" некоректний."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Внутрішня помилка GStreamer: помилка зміни стану."

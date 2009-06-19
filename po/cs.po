@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2008-10-12 12:12+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -680,7 +680,7 @@ msgstr "Interní chyba hodin."
 msgid "Internal data flow error."
 msgstr "Interní chyba toku dat."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -698,14 +698,6 @@ msgid ""
 msgstr ""
 "Omezit povolené schopnosti (NULL znamená VŠECHNY). Nastavení této vlastnosti "
 "bere odkaz na zadaný objekt GstCaps."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Chyba při zápisu do deksriptoru souboru \"%d\"."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "Deskriptor souboru \"%d\" není platný."
 
 msgid "No file name specified for writing."
 msgstr "Nezadán název souboru pro zápis."
@@ -1021,6 +1013,16 @@ msgstr "Nastavuji rouru na NULL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Nastavuji rouru na NULL ...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Chyba při zápisu do deksriptoru souboru \"%d\"."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Chyba při posunu v souboru \"%s\"."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Deskriptor souboru \"%d\" není platný."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Interní chyba GStreameru: změna stavu selhala."

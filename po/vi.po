@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2009-01-26 22:21+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -686,7 +686,7 @@ msgstr "Lỗi đồng hồ nội bộ."
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -705,14 +705,6 @@ msgstr ""
 "Hạn chế các khả năng có thể cho phép (NULL [vô giá trị] cho phép tất cả). "
 "Đặt thuộc tính này thì chấp nhận tham chiếu đến đối tượng GstCaps đã cung "
 "cấp."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Gặp lỗi khi ghi vào mô tả tập tin « %d »."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "Mô tả tập tin « %d » không hợp lệ."
 
 msgid "No file name specified for writing."
 msgstr "Chưa ghi rõ tên tập tin để ghi vào."
@@ -1017,6 +1009,16 @@ msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Gặp lỗi khi ghi vào mô tả tập tin « %d »."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Gặp lỗi khi tìm trong tập tin « %s »."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Mô tả tập tin « %d » không hợp lệ."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Lỗi nội bộ GStreamer: việc thay đổi trạng thái bị lỗi."

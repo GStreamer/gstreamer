@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2009-05-04 13:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -687,7 +687,7 @@ msgstr "Interne fout met de klok."
 msgid "Internal data flow error."
 msgstr "Interne fout met gegevensdoorvoer."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -706,14 +706,6 @@ msgstr ""
 "Beperk het aantal toegestane mogelijkheden (NUL betekent alle). Het "
 "instellen  van deze eigenschap vereist een referentie naar het gegeven "
 "GstCaps-object."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Fout bij het schrijven naar bestandsaanduiding \"%d\"."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "Bestandsaanduiding \"%d\" is niet geldig."
 
 msgid "No file name specified for writing."
 msgstr "Geen bestandsnaam gegeven om te schrijven."
@@ -1020,6 +1012,16 @@ msgstr "Pijplijn gezet op NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Pijplijn wordt vrijgemaakt ...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Fout bij het schrijven naar bestandsaanduiding \"%d\"."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Fout bij een seek in bestand \"%s\"."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Bestandsaanduiding \"%d\" is niet geldig."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Interne GStreamer-fout: toestandsverandering mislukt."

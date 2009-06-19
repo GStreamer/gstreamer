@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.19.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2008-07-21 11:08+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -681,7 +681,7 @@ msgstr "Вътрешна грешка на часовника."
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка на потока от данни."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -699,14 +699,6 @@ msgid ""
 msgstr ""
 "Ограничаване на позволените възможности („NULL“ означава всякакви). "
 "Задаването на това свойство поема указател към подадения обект GstCaps."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Грешка при запис във файловия дескриптор „%d“."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "Файловият дескриптор „%d“ е неправилен."
 
 msgid "No file name specified for writing."
 msgstr "Не е указано име на файл за запис."
@@ -1018,6 +1010,16 @@ msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Конвейерът се ЗАНУЛЯВА…\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Грешка при запис във файловия дескриптор „%d“."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Грешка при позициониране във файл „%s“."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Файловият дескриптор „%d“ е неправилен."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Вътрешна грешка на GStreamer: неуспех при промяната на състоянието."

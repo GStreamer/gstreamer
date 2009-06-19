@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.12\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2007-03-28 00:09+0200\n"
 "Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -684,7 +684,7 @@ msgstr "Intern datastrømsfejl."
 msgid "Internal data flow error."
 msgstr "Intern datastrømsfejl."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -701,14 +701,6 @@ msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr "Begræns den mulige tilladte kapabilitet (NUL betyder ALT)"
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Fejl under skrivning til filbeskriver \"%d\"."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "Filbeskriver \"%d\" er ugyldig."
 
 msgid "No file name specified for writing."
 msgstr "Intet filnavn specificeret for skrivning."
@@ -1016,6 +1008,16 @@ msgstr "Rørledning sættes til NUL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Rørledning sættes til NUL ...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Fejl under skrivning til filbeskriver \"%d\"."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Fejl under søgning i filen \"%s\"."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Filbeskriver \"%d\" er ugyldig."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Intern GStreamer fejl: tilstandsændring mislykkedes."

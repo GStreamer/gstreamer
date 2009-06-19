@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2008-09-21 19:05+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -689,7 +689,7 @@ msgstr "Erreur d'horloge interne."
 msgid "Internal data flow error."
 msgstr "Erreur interne de flux de données."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -708,14 +708,6 @@ msgstr ""
 "Restreint les capacités possibles autorisées (NULL signifie ANY). La "
 "définition de cette propriété nécessite une référence à l'objet GSTCaps "
 "fourni."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Erreur lors de l'écriture vers le descripteur de fichier « %d »."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "Le descripteur de fichier « %d » n'est pas valide."
 
 msgid "No file name specified for writing."
 msgstr "Aucun nom de fichier indiqué pour l'écriture."
@@ -1029,6 +1021,16 @@ msgstr "Définition du pipeline à NULL...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Définition du pipeline à NULL...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Erreur lors de l'écriture vers le descripteur de fichier « %d »."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Erreur de positionnement dans le fichier « %s »."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Le descripteur de fichier « %d » n'est pas valide."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Erreur interne de GStreamer : le changement d'état a échoué."

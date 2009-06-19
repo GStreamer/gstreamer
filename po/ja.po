@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2008-10-16 19:57+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -662,7 +662,7 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "内部データフローエラー"
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -678,14 +678,6 @@ msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "ファイルディスクリプタ \"%d\" への書き込み中にエラーが発生しました"
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "ファイルディスクリプタ \"%d\" が正しくありません"
 
 msgid "No file name specified for writing."
 msgstr "書き込み用のファイル名が指定されていません"
@@ -992,6 +984,16 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "パイプラインを解放 (FREEING) しています...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "ファイルディスクリプタ \"%d\" への書き込み中にエラーが発生しました"
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "ファイル \"%s\" のシーク中にエラーが発生しました"
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "ファイルディスクリプタ \"%d\" が正しくありません"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "GStreamer 内部エラー: 状態変更に失敗しました"

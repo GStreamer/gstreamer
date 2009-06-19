@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2009-04-04 13:33+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -692,7 +692,7 @@ msgstr "Error en el reloj interno."
 msgid "Internal data flow error."
 msgstr "Error en el flujo de datos interno."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -711,14 +711,6 @@ msgstr ""
 "Restringir las posibles capacidades permitidas (NULL significa CUALQUIERA). "
 "Al establecer esta propiedad se obtiene una referencia del objeto GstCaps "
 "proporcionado."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Error al escribir el descriptor del archivo «%d»."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "El descriptor del archivo «%d» no es válido."
 
 msgid "No file name specified for writing."
 msgstr "No se especificó un nombre de archivo para escritura."
@@ -1033,6 +1025,16 @@ msgstr "Estableciendo el conducto a NULL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Estableciendo el conducto a NULL ...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Error al escribir el descriptor del archivo «%d»."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Error al buscar en el archivo «%s»."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "El descriptor del archivo «%d» no es válido."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Error interno de GStreamer: falló el cambio de estado."

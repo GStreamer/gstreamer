@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-04 00:57+0100\n"
+"POT-Creation-Date: 2009-06-19 13:51+0100\n"
 "PO-Revision-Date: 2009-04-19 21:15+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -690,7 +690,7 @@ msgstr "Sisäinen kellovirhe."
 msgid "Internal data flow error."
 msgstr "Sisäinen tiedon virtausvirhe."
 
-msgid "A lot of buffers are dropped."
+msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
@@ -708,14 +708,6 @@ msgid ""
 msgstr ""
 "Rajoita mahdollisia sallittuja kykyjä (NULL tarkoittaa mitä tahansa). Tämän "
 "ominaisuuden asettaminen ottaa kahvan annettuun GstCaps-olioon."
-
-#, c-format
-msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Virhe kirjoitettaessa tiedostokahvaan \"%d\"."
-
-#, c-format
-msgid "File descriptor \"%d\" is not valid."
-msgstr "Tiedostokahva \"%d\" on virheellinen."
 
 msgid "No file name specified for writing."
 msgstr "Kirjoitusta varten ei määritetty tiedostonimeä."
@@ -1021,6 +1013,16 @@ msgstr "Asetetaan liukuhihna tilaan TYHJÄ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Vapautetaan liukuhihna...\n"
+
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Virhe kirjoitettaessa tiedostokahvaan \"%d\"."
+
+#, fuzzy
+#~ msgid "Error while seeking in file \"%d\"."
+#~ msgstr "Virhe kelattaessa tiedostoa \"%s\"."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Tiedostokahva \"%d\" on virheellinen."
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Sisäinen GStreamer-virhe: tilasiirtymä epäonnistui."
