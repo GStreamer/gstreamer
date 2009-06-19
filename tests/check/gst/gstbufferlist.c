@@ -424,15 +424,6 @@ GST_END_TEST;
 static gpointer do_data_func_data;
 static gboolean notified;
 
-static void
-data_notify (gpointer data)
-{
-  fail_unless (data != NULL);
-  fail_unless (data == do_data_func_data);
-  fail_if (notified);
-  notified = TRUE;
-}
-
 static GstBuffer *
 do_data_func (GstBuffer * buffer, gpointer data)
 {
@@ -458,16 +449,12 @@ GST_START_TEST (test_do)
   gchar *data;
 
   /* error handling */
-  ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do (NULL, NULL)));
+  ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do (NULL, NULL, NULL)));
   fail_unless (buf == NULL);
-  ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do_data (NULL, NULL, NULL,
-              NULL)));
   fail_unless (buf == NULL);
   it = gst_buffer_list_iterate (list);
-  ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do (it, NULL)));
+  ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do (it, NULL, NULL)));
   fail_unless (buf == NULL);
-  ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do_data (it, NULL, NULL,
-              NULL)));
   fail_unless (buf == NULL);
 
   /* add buffers to the list */
@@ -481,28 +468,32 @@ GST_START_TEST (test_do)
   /* call do-function */
   it = gst_buffer_list_iterate (list);
   fail_unless (gst_buffer_list_iterator_next_group (it));
-  ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do (it, gst_buffer_ref)));
+  ASSERT_CRITICAL ((buf =
+          gst_buffer_list_iterator_do (it,
+              (GstBufferListDoFunction) gst_buffer_ref, NULL)));
   fail_unless (buf == NULL);
   data = "data";
-  ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do_data (it, do_data_func,
-              data, data_notify)));
+  ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do (it, do_data_func,
+              data)));
   fail_unless (buf == NULL);
   fail_unless (do_data_func_data != data);
   buf = gst_buffer_list_iterator_next (it);
   fail_unless (buf == buf1);
   ASSERT_BUFFER_REFCOUNT (buf1, "buf1", 2);
-  buf = gst_buffer_list_iterator_do (it, gst_buffer_ref);
+  buf =
+      gst_buffer_list_iterator_do (it, (GstBufferListDoFunction) gst_buffer_ref,
+      NULL);
   fail_unless (buf == buf1);
   ASSERT_BUFFER_REFCOUNT (buf1, "buf1", 3);
   gst_buffer_unref (buf);
-  buf = gst_buffer_list_iterator_do_data (it, do_data_func, data, data_notify);
+  buf = gst_buffer_list_iterator_do (it, do_data_func, data);
   fail_unless (buf == buf1);
   fail_unless (do_data_func_data == data);
 
   /* do-function that return a new buffer replaces the buffer in the list */
   ASSERT_BUFFER_REFCOUNT (buf1, "buf1", 2);
   buf = gst_buffer_list_iterator_do (it,
-      (GstBufferListDoFunction) gst_mini_object_make_writable);
+      (GstBufferListDoFunction) gst_mini_object_make_writable, NULL);
   fail_unless (buf != buf1);
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
   ASSERT_BUFFER_REFCOUNT (buf, "buf1", 1);
@@ -510,9 +501,12 @@ GST_START_TEST (test_do)
 
   /* do-function that return NULL removes the buffer from the list */
   ASSERT_BUFFER_REFCOUNT (buf1, "buf1", 2);
-  fail_unless (gst_buffer_list_iterator_do (it, do_func_null) == NULL);
+  fail_unless (gst_buffer_list_iterator_do (it,
+          (GstBufferListDoFunction) do_func_null, NULL) == NULL);
   ASSERT_BUFFER_REFCOUNT (buf1, "buf1", 1);
-  ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do (it, gst_buffer_ref)));
+  ASSERT_CRITICAL ((buf =
+          gst_buffer_list_iterator_do (it,
+              (GstBufferListDoFunction) gst_buffer_ref, NULL)));
   fail_unless (buf == NULL);
   fail_unless (gst_buffer_list_iterator_next (it) == NULL);
   gst_buffer_list_iterator_free (it);
@@ -645,6 +639,134 @@ GST_START_TEST (test_merge)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GstBuffer *buf[3][3];
+  guint iter;
+} ForeachData;
+
+static GstBufferListItem
+foreach_func1 (GstBuffer ** buffer, guint group, guint idx, ForeachData * data)
+{
+  fail_unless (buffer != NULL);
+  fail_unless (*buffer == data->buf[group][idx]);
+
+  data->iter++;
+
+  return GST_BUFFER_LIST_CONTINUE;
+}
+
+static GstBufferListItem
+foreach_func2 (GstBuffer ** buffer, guint group, guint idx, ForeachData * data)
+{
+  fail_unless (idx == 0);
+  fail_unless (buffer != NULL);
+  fail_unless (*buffer == data->buf[group][idx]);
+
+  data->iter++;
+
+  return GST_BUFFER_LIST_SKIP_GROUP;
+}
+
+static GstBufferListItem
+foreach_func3 (GstBuffer ** buffer, guint group, guint idx, ForeachData * data)
+{
+  fail_unless (group == 0);
+  fail_unless (idx == 0);
+  fail_unless (buffer != NULL);
+  fail_unless (*buffer == data->buf[group][idx]);
+
+  data->iter++;
+
+  return GST_BUFFER_LIST_END;
+}
+
+static GstBufferListItem
+foreach_func4 (GstBuffer ** buffer, guint group, guint idx, ForeachData * data)
+{
+  fail_unless (idx == 0);
+  fail_unless (buffer != NULL);
+  fail_unless (*buffer == data->buf[group][idx]);
+
+  *buffer = NULL;
+  data->iter++;
+
+  return GST_BUFFER_LIST_SKIP_GROUP;
+}
+
+static GstBufferListItem
+foreach_func5 (GstBuffer ** buffer, guint group, guint idx, ForeachData * data)
+{
+  fail_unless (buffer != NULL);
+
+  data->iter++;
+
+  return GST_BUFFER_LIST_CONTINUE;
+}
+
+GST_START_TEST (test_foreach)
+{
+  GstBufferListIterator *it;
+  ForeachData data;
+
+  /* add buffers to the list */
+  it = gst_buffer_list_iterate (list);
+  gst_buffer_list_iterator_add_group (it);
+  data.buf[0][0] = gst_buffer_new ();
+  gst_buffer_list_iterator_add (it, data.buf[0][0]);
+  gst_buffer_list_iterator_add_group (it);
+  data.buf[1][0] = gst_buffer_new ();
+  gst_buffer_list_iterator_add (it, data.buf[1][0]);
+  data.buf[1][1] = gst_buffer_new ();
+  gst_buffer_list_iterator_add (it, data.buf[1][1]);
+  gst_buffer_list_iterator_free (it);
+  gst_buffer_list_iterator_add_group (it);
+
+  fail_unless (gst_buffer_list_get (list, 0, 0) == data.buf[0][0]);
+  fail_unless (gst_buffer_list_get (list, 0, 1) == NULL);
+  fail_unless (gst_buffer_list_get (list, 1, 0) == data.buf[1][0]);
+  fail_unless (gst_buffer_list_get (list, 1, 1) == data.buf[1][1]);
+  fail_unless (gst_buffer_list_get (list, 1, 2) == NULL);
+  fail_unless (gst_buffer_list_get (list, 2, 0) == NULL);
+  fail_unless (gst_buffer_list_get (list, 2, 1) == NULL);
+  fail_unless (gst_buffer_list_get (list, 3, 3) == NULL);
+
+  /* iterate everything */
+  data.iter = 0;
+  gst_buffer_list_foreach (list, (GstBufferListFunc) foreach_func1, &data);
+  fail_unless (data.iter == 3);
+
+  /* iterate only the first buffer of groups */
+  data.iter = 0;
+  gst_buffer_list_foreach (list, (GstBufferListFunc) foreach_func2, &data);
+  fail_unless (data.iter == 2);
+
+  /* iterate only the first buffer */
+  data.iter = 0;
+  gst_buffer_list_foreach (list, (GstBufferListFunc) foreach_func3, &data);
+  fail_unless (data.iter == 1);
+
+  /* remove the first buffer of each group */
+  data.iter = 0;
+  gst_buffer_list_foreach (list, (GstBufferListFunc) foreach_func4, &data);
+  fail_unless (data.iter == 2);
+
+  fail_unless (gst_buffer_list_get (list, 0, 0) == NULL);
+  fail_unless (gst_buffer_list_get (list, 0, 1) == NULL);
+  fail_unless (gst_buffer_list_get (list, 1, 0) == data.buf[1][1]);
+  fail_unless (gst_buffer_list_get (list, 1, 1) == NULL);
+  fail_unless (gst_buffer_list_get (list, 1, 2) == NULL);
+  fail_unless (gst_buffer_list_get (list, 2, 0) == NULL);
+
+  /* iterate everything, just one more buffer now */
+  data.iter = 0;
+  gst_buffer_list_foreach (list, (GstBufferListFunc) foreach_func5, &data);
+  fail_unless (data.iter == 1);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_buffer_list_suite (void)
 {
@@ -660,6 +782,7 @@ gst_buffer_list_suite (void)
   tcase_add_test (tc_chain, test_take);
   tcase_add_test (tc_chain, test_do);
   tcase_add_test (tc_chain, test_merge);
+  tcase_add_test (tc_chain, test_foreach);
 
   return s;
 }

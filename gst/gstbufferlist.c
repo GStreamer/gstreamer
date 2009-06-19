@@ -289,6 +289,127 @@ gst_buffer_list_n_groups (GstBufferList * list)
   return n;
 }
 
+/**
+ * gst_buffer_list_foreach:
+ * @list: a #GstBufferList
+ * @func: a #GstBufferListFunc to call
+ * @user_data: user data passed to @func
+ *
+ * Call @func with @data for each buffer in @list.
+ *
+ * @func can modify the passed buffer pointer or its contents. The return value
+ * of @func define if this function returns or if the remaining buffers in a
+ * group should be skipped.
+ */
+void
+gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
+    gpointer user_data)
+{
+  GList *tmp, *next;
+  guint group, idx;
+  GstBufferListItem res;
+
+  g_return_if_fail (list != NULL);
+  g_return_if_fail (func != NULL);
+
+  next = list->buffers;
+  group = idx = 0;
+  while (next) {
+    GstBuffer *buffer;
+
+    tmp = next;
+    next = g_list_next (tmp);
+
+    buffer = tmp->data;
+
+    if (buffer == GROUP_START) {
+      group++;
+      idx = 0;
+      continue;
+    } else if (buffer == STOLEN)
+      continue;
+    else
+      idx++;
+
+    /* need to decrement the indices */
+    res = func (&buffer, group - 1, idx - 1, user_data);
+
+    if (G_UNLIKELY (buffer != tmp->data)) {
+      /* the function changed the buffer */
+      if (buffer == NULL) {
+        /* we were asked to remove the item */
+        list->buffers = g_list_delete_link (list->buffers, tmp);
+        idx--;
+      } else {
+        /* change the buffer */
+        tmp->data = buffer;
+      }
+    }
+
+    switch (res) {
+      case GST_BUFFER_LIST_CONTINUE:
+        break;
+      case GST_BUFFER_LIST_SKIP_GROUP:
+        while (next && next->data != GROUP_START)
+          next = g_list_next (next);
+        break;
+      case GST_BUFFER_LIST_END:
+        return;
+    }
+  }
+}
+
+/**
+ * gst_buffer_list_get:
+ * @list: a #GstBufferList
+ * @group: the group
+ * @idx: the index in @group
+ *
+ * Get the buffer at @idx in @group.
+ *
+ * Note that this function is not efficient for iterating over the entire list.
+ * Use and iterator or gst_buffer_list_foreach() instead.
+ *
+ * Returns: the buffer at @idx in @group or NULL when there is no buffer. The
+ * buffer remaing valid as long as @list is valid.
+ */
+GstBuffer *
+gst_buffer_list_get (GstBufferList * list, guint group, guint idx)
+{
+  GList *tmp;
+  guint cgroup, cidx;
+
+  g_return_val_if_fail (list != NULL, NULL);
+
+  tmp = list->buffers;
+  cgroup = 0;
+  while (tmp) {
+    if (tmp->data == GROUP_START) {
+      if (cgroup == group) {
+        /* we found the group */
+        tmp = g_list_next (tmp);
+        cidx = 0;
+        while (tmp && tmp->data != GROUP_START) {
+          if (tmp->data != STOLEN) {
+            if (cidx == idx)
+              return GST_BUFFER_CAST (tmp->data);
+            else
+              cidx++;
+          }
+          tmp = g_list_next (tmp);
+        }
+        break;
+      } else {
+        cgroup++;
+        if (cgroup > group)
+          break;
+      }
+    }
+    tmp = g_list_next (tmp);
+  }
+  return NULL;
+}
+
 GType
 gst_buffer_list_get_type (void)
 {
@@ -474,9 +595,10 @@ gst_buffer_list_iterator_next (GstBufferListIterator * it)
   return buffer;
 
 no_buffer:
-  it->last_returned = NULL;
-
-  return NULL;
+  {
+    it->last_returned = NULL;
+    return NULL;
+  }
 }
 
 /**
@@ -590,11 +712,10 @@ gst_buffer_list_iterator_steal (GstBufferListIterator * it)
 }
 
 /**
- * gst_buffer_list_iterator_do_data:
+ * gst_buffer_list_iterator_do:
  * @it: a #GstBufferListIterator
  * @do_func: the function to be called
- * @data: the gpointer to optional user data.
- * @data_notify: function to be called when @data is no longer used
+ * @user_data: the gpointer to optional user data.
  *
  * Calls the given function for the last buffer returned by
  * gst_buffer_list_iterator_next(). gst_buffer_list_iterator_next() must have
@@ -604,15 +725,11 @@ gst_buffer_list_iterator_steal (GstBufferListIterator * it)
  *
  * See #GstBufferListDoFunction for more details.
  *
- * The @data_notify function is called after @do_func has returned, before this
- * function returns, usually used to free @data.
- *
  * Returns: the return value from @do_func
  */
 GstBuffer *
-gst_buffer_list_iterator_do_data (GstBufferListIterator * it,
-    GstBufferListDoDataFunction do_func, gpointer data,
-    GDestroyNotify data_notify)
+gst_buffer_list_iterator_do (GstBufferListIterator * it,
+    GstBufferListDoFunction do_func, gpointer user_data)
 {
   GstBuffer *buffer;
 
@@ -624,54 +741,14 @@ gst_buffer_list_iterator_do_data (GstBufferListIterator * it,
   g_assert (it->last_returned->data != GROUP_START);
 
   buffer = gst_buffer_list_iterator_steal (it);
-  buffer = do_func (buffer, data);
+  buffer = do_func (buffer, user_data);
   if (buffer == NULL) {
     gst_buffer_list_iterator_remove (it);
   } else {
     gst_buffer_list_iterator_take (it, buffer);
   }
 
-  if (data_notify != NULL) {
-    data_notify (data);
-  }
-
   return buffer;
-}
-
-static GstBuffer *
-do_func_no_data (GstBuffer * buffer, GstBufferListDoFunction do_func)
-{
-  return do_func (buffer);
-}
-
-/**
- * gst_buffer_list_iterator_do:
- * @it: a #GstBufferListIterator
- * @do_func: the function to be called
- *
- * Calls the given function for the last buffer returned by
- * gst_buffer_list_iterator_next(). gst_buffer_list_iterator_next() must have
- * been called on @it before this function is called.
- * gst_buffer_list_iterator_remove() or gst_buffer_list_iterator_steal() must
- * not have been called since the last call to gst_buffer_list_iterator_next().
- *
- * See #GstBufferListDoFunction for more details.
- *
- * Returns: the return value from @do_func
- */
-GstBuffer *
-gst_buffer_list_iterator_do (GstBufferListIterator * it,
-    GstBufferListDoFunction do_func)
-{
-  g_return_val_if_fail (it != NULL, NULL);
-  g_return_val_if_fail (it->last_returned != NULL, NULL);
-  g_return_val_if_fail (it->last_returned->data != STOLEN, NULL);
-  g_return_val_if_fail (do_func != NULL, NULL);
-  g_return_val_if_fail (gst_buffer_list_is_writable (it->list), NULL);
-  g_assert (it->last_returned->data != GROUP_START);
-
-  return gst_buffer_list_iterator_do_data (it,
-      (GstBufferListDoDataFunction) do_func_no_data, do_func, NULL);
 }
 
 /**

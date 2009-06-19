@@ -42,6 +42,7 @@ typedef struct _GstBufferListIterator GstBufferListIterator;
 /**
  * GstBufferListDoFunction:
  * @buffer: the #GstBuffer
+ * @user_data: user data
  *
  * A function for accessing the last buffer returned by
  * gst_buffer_list_iterator_next(). The function can leave @buffer in the list,
@@ -58,29 +59,49 @@ typedef struct _GstBufferListIterator GstBufferListIterator;
  * Returns: the buffer to replace @buffer in the list, or NULL to remove @buffer
  * from the list
  */
-typedef GstBuffer* (*GstBufferListDoFunction) (GstBuffer * buffer);
+typedef GstBuffer* (*GstBufferListDoFunction) (GstBuffer * buffer, gpointer user_data);
 
 /**
- * GstBufferListDoDataFunction:
- * @buffer: the #GstBuffer
- * @data: the gpointer to optional user data.
+ * GstBufferListItem:
+ * @GST_BUFFER_LIST_CONTINUE:   Retrieve next buffer
+ * @GST_BUFFER_LIST_SKIP_GROUP: Skip to next group
+ * @GST_BUFFER_LIST_REMOVE:     Remove the current buffer
+ * @GST_BUFFER_LIST_END:        End iteration
  *
- * A function for accessing the last buffer returned by
- * gst_buffer_list_iterator_next(). The function can leave @buffer in the list,
- * replace @buffer in the list or remove @buffer from the list, depending on
- * the return value. If the function returns NULL, @buffer will be removed from
- * the list, otherwise @buffer will be replaced with the returned buffer.
- *
- * The last buffer returned by gst_buffer_list_iterator_next() will be replaced
- * with the buffer returned from the function. The function takes ownership of
- * @buffer and if a different value than @buffer is returned, @buffer must be
- * unreffed. If NULL is returned, the buffer will be removed from the list. The
- * list must be writable.
- *
- * Returns: the buffer to replace @buffer in the list, or NULL to remove @buffer
- * from the list
+ * The result of the #GstBufferListFunc.
  */
-typedef GstBuffer* (*GstBufferListDoDataFunction) (GstBuffer * buffer, gpointer data);
+typedef enum {
+  GST_BUFFER_LIST_CONTINUE,
+  GST_BUFFER_LIST_SKIP_GROUP,
+  GST_BUFFER_LIST_END
+} GstBufferListItem;
+
+/**
+ * GstBufferListFunc:
+ * @buffer: pointer the buffer
+ * @group: the group index of @buffer
+ * @idx: the index in @group of @buffer
+ * @user_data: user data passed to gst_buffer_list_foreach()
+ *
+ * A function that will be called from gst_buffer_list_foreach(). The @buffer
+ * field will point to a the reference of the buffer at @idx in @group.
+ *
+ * When this function returns #GST_BUFFER_LIST_CONTINUE, the next buffer will be
+ * returned. When #GST_BUFFER_LIST_SKIP_GROUP is returned, all remaining buffers
+ * in the current group will be skipped and the first buffer of the next group
+ * is returned (if any). When GST_BUFFER_LIST_END is returned,
+ * gst_buffer_list_foreach() will return.
+ *
+ * When @buffer is set to NULL, the item will be removed from the bufferlist.
+ * When @buffer has been made writable, the new buffer reference can be assigned
+ * to @buffer. This function is responsible for unreffing the old buffer when
+ * removing or modifying.
+ *
+ * Returns: a #GstBufferListItem
+ */
+typedef GstBufferListItem (*GstBufferListFunc)   (GstBuffer **buffer, guint group, guint idx,
+                                                  gpointer user_data);
+
 
 GType gst_buffer_list_get_type (void);
 
@@ -170,6 +191,11 @@ gst_buffer_list_copy (const GstBufferList * list)
 
 guint                    gst_buffer_list_n_groups              (GstBufferList *list);
 
+void                     gst_buffer_list_foreach               (GstBufferList *list,
+                                                                GstBufferListFunc func,
+								gpointer user_data);
+GstBuffer *              gst_buffer_list_get                   (GstBufferList *list, guint group, guint idx);
+
 /* iterator */
 GstBufferListIterator *  gst_buffer_list_iterate               (GstBufferList *list);
 void                     gst_buffer_list_iterator_free         (GstBufferListIterator *it);
@@ -184,9 +210,8 @@ void                     gst_buffer_list_iterator_remove       (GstBufferListIte
 GstBuffer *              gst_buffer_list_iterator_steal        (GstBufferListIterator *it);
 void                     gst_buffer_list_iterator_take         (GstBufferListIterator *it, GstBuffer *buffer);
 
-GstBuffer *              gst_buffer_list_iterator_do           (GstBufferListIterator *it, GstBufferListDoFunction do_func);
-GstBuffer *              gst_buffer_list_iterator_do_data      (GstBufferListIterator *it, GstBufferListDoDataFunction do_func,
-                                                                gpointer data, GDestroyNotify data_notify);
+GstBuffer *              gst_buffer_list_iterator_do           (GstBufferListIterator *it, GstBufferListDoFunction do_func,
+                                                                gpointer user_data);
 
 /* conversion */
 GstBuffer *              gst_buffer_list_iterator_merge_group  (const GstBufferListIterator *it);
