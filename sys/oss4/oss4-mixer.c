@@ -103,7 +103,7 @@ static void gst_oss4_mixer_close (GstOss4Mixer * mixer);
 static gboolean gst_oss4_mixer_enum_control_update_enum_list (GstOss4Mixer * m,
     GstOss4MixerControl * mc);
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
 static const gchar *mixer_ext_type_get_name (gint type);
 static const gchar *mixer_ext_flags_get_string (gint flags);
 #endif
@@ -874,7 +874,7 @@ gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
   return g_quark_to_string (g_quark_from_string (name));        /* eek */
 }
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
 static const gchar *
 mixer_ext_type_get_name (gint type)
 {
@@ -924,9 +924,9 @@ mixer_ext_type_get_name (gint type)
   }
   return "unknown";
 }
-#endif /* GST_DISABLE_DEBUG */
+#endif /* GST_DISABLE_GST_DEBUG */
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
 static const gchar *
 mixer_ext_flags_get_string (gint flags)
 {
@@ -987,9 +987,9 @@ mixer_ext_flags_get_string (gint flags)
 
   return g_quark_to_string (q);
 }
-#endif /* GST_DISABLE_DEBUG */
+#endif /* GST_DISABLE_GST_DEBUG */
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
 static void
 gst_oss4_mixer_control_dump_tree (GstOss4MixerControl * mc, gint depth)
 {
@@ -1010,7 +1010,7 @@ gst_oss4_mixer_control_dump_tree (GstOss4MixerControl * mc, gint depth)
     gst_oss4_mixer_control_dump_tree (child_mc, depth + 2);
   }
 }
-#endif /* GST_DISABLE_DEBUG */
+#endif /* GST_DISABLE_GST_DEBUG */
 
 static GList *
 gst_oss4_mixer_get_controls (GstOss4Mixer * mixer)
@@ -1103,7 +1103,7 @@ gst_oss4_mixer_get_controls (GstOss4Mixer * mixer)
     controls = g_list_prepend (controls, mc);
   }
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
   gst_oss4_mixer_control_dump_tree (root_mc, 0);
 #endif
 
