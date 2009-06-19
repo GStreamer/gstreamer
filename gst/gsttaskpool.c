@@ -144,9 +144,7 @@ gst_task_pool_init (GstTaskPool * pool)
 static void
 gst_task_pool_finalize (GObject * object)
 {
-  GstTaskPool *pool = GST_TASK_POOL (object);
-
-  GST_DEBUG ("taskpool %p finalize", pool);
+  GST_DEBUG ("taskpool %p finalize", object);
 
   G_OBJECT_CLASS (gst_task_pool_parent_class)->finalize (object);
 }
