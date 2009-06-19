@@ -958,7 +958,7 @@ rtp_session_get_sdes_string (RTPSession * sess, GstRTCPSDESType type)
 }
 
 static GstFlowReturn
-source_push_rtp (RTPSource * source, GstBuffer * buffer, RTPSession * session)
+source_push_rtp (RTPSource * source, gpointer data, RTPSession * session)
 {
   GstFlowReturn result = GST_FLOW_OK;
 
@@ -969,21 +969,21 @@ source_push_rtp (RTPSource * source, GstBuffer * buffer, RTPSession * session)
 
     if (session->callbacks.send_rtp)
       result =
-          session->callbacks.send_rtp (session, source, buffer,
+          session->callbacks.send_rtp (session, source, data,
           session->send_rtp_user_data);
-    else
-      gst_buffer_unref (buffer);
-
+    else {
+      gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    }
   } else {
     GST_LOG ("source %08x pushed receiver RTP packet", source->ssrc);
     RTP_SESSION_UNLOCK (session);
 
     if (session->callbacks.process_rtp)
       result =
-          session->callbacks.process_rtp (session, source, buffer,
-          session->process_rtp_user_data);
+          session->callbacks.process_rtp (session, source,
+          GST_BUFFER_CAST (data), session->process_rtp_user_data);
     else
-      gst_buffer_unref (buffer);
+      gst_buffer_unref (GST_BUFFER_CAST (data));
   }
   RTP_SESSION_LOCK (session);
 
@@ -1962,7 +1962,7 @@ ignore:
 /**
  * rtp_session_send_rtp:
  * @sess: an #RTPSession
- * @buffer: an RTP buffer
+ * @data: pointer to either an RTP buffer or a list of RTP buffers
  * @current_time: the current system time
  * @ntpnstime: the NTP time in nanoseconds of when this buffer was captured.
  * This is the buffer timestamp converted to NTP time.
@@ -1973,20 +1973,27 @@ ignore:
  * Returns: a #GstFlowReturn.
  */
 GstFlowReturn
-rtp_session_send_rtp (RTPSession * sess, GstBuffer * buffer,
+rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
     GstClockTime current_time, guint64 ntpnstime)
 {
   GstFlowReturn result;
   RTPSource *source;
   gboolean prevsender;
+  gboolean valid_packet;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
+  g_return_val_if_fail (is_list || GST_IS_BUFFER (data), GST_FLOW_ERROR);
 
-  if (!gst_rtp_buffer_validate (buffer))
+  if (is_list) {
+    valid_packet = gst_rtp_buffer_list_validate (GST_BUFFER_LIST_CAST (data));
+  } else {
+    valid_packet = gst_rtp_buffer_validate (GST_BUFFER_CAST (data));
+  }
+
+  if (!valid_packet)
     goto invalid_packet;
 
-  GST_LOG ("received RTP packet for sending");
+  GST_LOG ("received RTP %s for sending", is_list ? "list" : "packet");
 
   RTP_SESSION_LOCK (sess);
   source = sess->source;
@@ -1997,7 +2004,7 @@ rtp_session_send_rtp (RTPSession * sess, GstBuffer * buffer,
   prevsender = RTP_SOURCE_IS_SENDER (source);
 
   /* we use our own source to send */
-  result = rtp_source_send_rtp (source, buffer, ntpnstime);
+  result = rtp_source_send_rtp (source, data, is_list, ntpnstime);
 
   if (RTP_SOURCE_IS_SENDER (source) && !prevsender)
     sess->stats.sender_sources++;
@@ -2008,7 +2015,7 @@ rtp_session_send_rtp (RTPSession * sess, GstBuffer * buffer,
   /* ERRORS */
 invalid_packet:
   {
-    gst_buffer_unref (buffer);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     GST_DEBUG ("invalid RTP packet received");
     return GST_FLOW_OK;
   }

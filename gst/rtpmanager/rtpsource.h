@@ -194,7 +194,7 @@ void            rtp_source_set_rtcp_from       (RTPSource *src, GstNetAddress *a
 /* handling RTP */
 GstFlowReturn   rtp_source_process_rtp         (RTPSource *src, GstBuffer *buffer, RTPArrivalStats *arrival);
 
-GstFlowReturn   rtp_source_send_rtp            (RTPSource *src, GstBuffer *buffer, guint64 ntpnstime);
+GstFlowReturn   rtp_source_send_rtp            (RTPSource *src, gpointer data, gboolean is_list, guint64 ntpnstime);
 
 /* RTCP messages */
 void            rtp_source_process_bye         (RTPSource *src, const gchar *reason);

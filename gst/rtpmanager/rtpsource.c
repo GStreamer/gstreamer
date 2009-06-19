@@ -26,7 +26,7 @@
 GST_DEBUG_CATEGORY_STATIC (rtp_source_debug);
 #define GST_CAT_DEFAULT rtp_source_debug
 
-#define RTP_MAX_PROBATION_LEN	32
+#define RTP_MAX_PROBATION_LEN  32
 
 /* signals and args */
 enum
@@ -1091,41 +1091,73 @@ rtp_source_process_bye (RTPSource * src, const gchar * reason)
   src->received_bye = TRUE;
 }
 
+static GstBufferListItem
+set_ssrc (GstBuffer ** buffer, guint group, guint idx, RTPSource * src)
+{
+  *buffer = gst_buffer_make_writable (*buffer);
+  gst_rtp_buffer_set_ssrc (*buffer, src->ssrc);
+  return GST_BUFFER_LIST_SKIP_GROUP;
+}
+
 /**
  * rtp_source_send_rtp:
  * @src: an #RTPSource
- * @buffer: an RTP buffer
+ * @data: an RTP buffer or a list of RTP buffers
+ * @is_list: if @data is a buffer or list
  * @ntpnstime: the NTP time when this buffer was captured in nanoseconds. This
  * is the buffer timestamp converted to NTP time.
  *
- * Send an RTP @buffer originating from @src. This will make @src a sender.
- * This function takes ownership of @buffer and modifies the SSRC in the RTP
- * packet to that of @src when needed.
+ * Send @data (an RTP buffer or list of buffers) originating from @src.
+ * This will make @src a sender. This function takes ownership of @data and
+ * modifies the SSRC in the RTP packet to that of @src when needed.
  *
  * Returns: a #GstFlowReturn.
  */
 GstFlowReturn
-rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer, guint64 ntpnstime)
+rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
+    guint64 ntpnstime)
 {
-  GstFlowReturn result = GST_FLOW_OK;
+  GstFlowReturn result;
   guint len;
   guint32 rtptime;
   guint64 ext_rtptime;
   guint64 ntp_diff, rtp_diff;
   guint64 elapsed;
+  GstBufferList *list = NULL;
+  GstBuffer *buffer = NULL;
+  guint packets;
+  guint32 ssrc;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
+  g_return_val_if_fail (is_list || GST_IS_BUFFER (data), GST_FLOW_ERROR);
 
-  len = gst_rtp_buffer_get_payload_len (buffer);
+  if (is_list) {
+    list = GST_BUFFER_LIST_CAST (data);
 
+    /* We can grab the caps from the first group, since all
+     * groups of a buffer list have same caps. */
+    buffer = gst_buffer_list_get (list, 0, 0);
+    if (!buffer)
+      goto no_buffer;
+  } else {
+    buffer = GST_BUFFER_CAST (data);
+  }
   rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer));
 
   /* we are a sender now */
   src->is_sender = TRUE;
 
+  if (is_list) {
+    /* Each group makes up a network packet. */
+    packets = gst_buffer_list_n_groups (list);
+    len = gst_rtp_buffer_list_get_payload_len (list);
+  } else {
+    packets = 1;
+    len = gst_rtp_buffer_get_payload_len (buffer);
+  }
+
   /* update stats for the SR */
-  src->stats.packets_sent++;
+  src->stats.packets_sent += packets;
   src->stats.octets_sent += len;
   src->bytes_sent += len;
 
@@ -1156,7 +1188,11 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer, guint64 ntpnstime)
     src->bitrate = 0;
   }
 
-  rtptime = gst_rtp_buffer_get_timestamp (buffer);
+  if (is_list) {
+    rtptime = gst_rtp_buffer_list_get_timestamp (list);
+  } else {
+    rtptime = gst_rtp_buffer_get_timestamp (buffer);
+  }
   ext_rtptime = src->last_rtptime;
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
 
@@ -1180,31 +1216,53 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer, guint64 ntpnstime)
   src->last_ntpnstime = ntpnstime;
 
   /* push packet */
-  if (src->callbacks.push_rtp) {
-    guint32 ssrc;
+  if (!src->callbacks.push_rtp)
+    goto no_callback;
 
-    ssrc = gst_rtp_buffer_get_ssrc (buffer);
-    if (ssrc != src->ssrc) {
-      /* the SSRC of the packet is not correct, make a writable buffer and
-       * update the SSRC. This could involve a complete copy of the packet when
-       * it is not writable. Usually the payloader will use caps negotiation to
-       * get the correct SSRC from the session manager before pushing anything. */
-      buffer = gst_buffer_make_writable (buffer);
-
-      /* FIXME, we don't want to warn yet because we can't inform any payloader
-       * of the changes SSRC yet because we don't implement pad-alloc. */
-      GST_LOG ("updating SSRC from %08x to %08x, fix the payloader", ssrc,
-          src->ssrc);
-      gst_rtp_buffer_set_ssrc (buffer, src->ssrc);
-    }
-    GST_LOG ("pushing RTP packet %" G_GUINT64_FORMAT, src->stats.packets_sent);
-    result = src->callbacks.push_rtp (src, buffer, src->user_data);
+  if (is_list) {
+    ssrc = gst_rtp_buffer_list_get_ssrc (list);
   } else {
-    GST_WARNING ("no callback installed, dropping packet");
-    gst_buffer_unref (buffer);
+    ssrc = gst_rtp_buffer_get_ssrc (buffer);
   }
 
+  if (ssrc != src->ssrc) {
+    /* the SSRC of the packet is not correct, make a writable buffer and
+     * update the SSRC. This could involve a complete copy of the packet when
+     * it is not writable. Usually the payloader will use caps negotiation to
+     * get the correct SSRC from the session manager before pushing anything. */
+
+    /* FIXME, we don't want to warn yet because we can't inform any payloader
+     * of the changes SSRC yet because we don't implement pad-alloc. */
+    GST_LOG ("updating SSRC from %08x to %08x, fix the payloader", ssrc,
+        src->ssrc);
+
+    if (is_list) {
+      list = gst_buffer_list_make_writable (list);
+      gst_buffer_list_foreach (list, (GstBufferListFunc) set_ssrc, src);
+    } else {
+      set_ssrc (&buffer, 0, 0, src);
+    }
+  }
+  GST_LOG ("pushing RTP %s %" G_GUINT64_FORMAT, is_list ? "list" : "packet",
+      src->stats.packets_sent);
+
+  result = src->callbacks.push_rtp (src, data, src->user_data);
+
   return result;
+
+  /* ERRORS */
+no_buffer:
+  {
+    GST_WARNING ("no buffers in buffer list");
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    return GST_FLOW_OK;
+  }
+no_callback:
+  {
+    GST_WARNING ("no callback installed, dropping packet");
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    return GST_FLOW_OK;
+  }
 }
 
 /**
