@@ -257,6 +257,40 @@ print_interfaces (GType type)
   }
 }
 
+static gchar *
+flags_to_string (GFlagsValue * vals, guint flags)
+{
+  GString *s = NULL;
+  guint flags_left, i;
+
+  /* first look for an exact match and count the number of values */
+  for (i = 0; vals[i].value_name != NULL; ++i) {
+    if (vals[i].value == flags)
+      return g_strdup (vals[i].value_nick);
+  }
+
+  s = g_string_new (NULL);
+
+  /* we assume the values are sorted from lowest to highest value */
+  flags_left = flags;
+  while (i > 0) {
+    --i;
+    if (vals[i].value != 0 && (flags_left & vals[i].value) == vals[i].value) {
+      if (s->len > 0)
+        g_string_append (s, " | ");
+      g_string_append (s, vals[i].value_nick);
+      flags_left -= vals[i].value;
+      if (flags_left == 0)
+        break;
+    }
+  }
+
+  if (s->len == 0)
+    g_string_assign (s, "(none)");
+
+  return g_string_free (s, FALSE);
+}
+
 static void
 print_element_properties_info (GstElement * element)
 {
@@ -473,54 +507,30 @@ print_element_properties_info (GstElement * element)
           /* g_type_class_unref (ec); */
         } else if (G_IS_PARAM_SPEC_FLAGS (param)) {
           GParamSpecFlags *pflags = G_PARAM_SPEC_FLAGS (param);
-          GFlagsValue *values;
-          guint j = 0;
-          gint flags_value;
-          GString *cur_flags = NULL, *def_flags = NULL;
+          GFlagsValue *vals;
+          gchar *cur, *def;
 
-          values = G_FLAGS_CLASS (g_type_class_ref (param->value_type))->values;
-          flags_value = g_value_get_flags (&value);
+          vals = pflags->flags_class->values;
 
-          while (values[j].value_name) {
-            if (values[j].value & flags_value) {
-              if (cur_flags) {
-                g_string_append_printf (cur_flags, " | %s",
-                    values[j].value_nick);
-              } else {
-                cur_flags = g_string_new (values[j].value_nick);
-              }
-            }
-            if (values[j].value & pflags->default_value) {
-              if (def_flags) {
-                g_string_append_printf (def_flags, " | %s",
-                    values[j].value_nick);
-              } else {
-                def_flags = g_string_new (values[j].value_nick);
-              }
-            }
-            j++;
-          }
+          cur = flags_to_string (vals, g_value_get_flags (&value));
+          def = flags_to_string (vals, pflags->default_value);
 
           n_print
               ("%-23.23s Flags \"%s\" Default: 0x%08x, \"%s\" Current: 0x%08x, \"%s\"",
               "", g_type_name (G_VALUE_TYPE (&value)), pflags->default_value,
-              (def_flags ? def_flags->str : "(none)"), flags_value,
-              (cur_flags ? cur_flags->str : "(none)"));
+              def, g_value_get_flags (&value), cur);
 
-          j = 0;
-          while (values[j].value_name) {
+          while (vals[0].value_name) {
             g_print ("\n");
             if (_name)
               g_print ("%s", _name);
             g_print ("%-23.23s    (0x%08x): %-16s - %s", "",
-                values[j].value, values[j].value_nick, values[j].value_name);
-            j++;
+                vals[0].value, vals[0].value_nick, vals[0].value_name);
+            ++vals;
           }
 
-          if (cur_flags)
-            g_string_free (cur_flags, TRUE);
-          if (def_flags)
-            g_string_free (def_flags, TRUE);
+          g_free (cur);
+          g_free (def);
         } else if (G_IS_PARAM_SPEC_OBJECT (param)) {
           n_print ("%-23.23s Object of type \"%s\"", "",
               g_type_name (param->value_type));
