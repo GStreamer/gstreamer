@@ -400,6 +400,7 @@ void
 gst_x264_enc_log_callback (gpointer private, gint level, const char *format,
     va_list args)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstDebugLevel gst_level;
   GObject *object = (GObject *) private;
 
@@ -424,6 +425,7 @@ gst_x264_enc_log_callback (gpointer private, gint level, const char *format,
 
   gst_debug_log_valist (x264_enc_debug, gst_level, "", "", 0, object, format,
       args);
+#endif /* GST_DISABLE_GST_DEBUG */
 }
 
 /* initialize the new element
@@ -488,7 +490,7 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   x264_param_default (&encoder->x264param);
 
   /* log callback setup; part of parameters */
-  encoder->x264param.pf_log = GST_DEBUG_FUNCPTR (gst_x264_enc_log_callback);
+  encoder->x264param.pf_log = gst_x264_enc_log_callback;
   encoder->x264param.p_log_private = encoder;
   encoder->x264param.i_log_level = X264_LOG_DEBUG;
 
