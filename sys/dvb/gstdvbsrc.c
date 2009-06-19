@@ -1326,13 +1326,15 @@ gst_dvbsrc_tune (GstDvbSrc * object)
 #endif
       g_warning ("Error tuning channel: %s", strerror (errno));
     }
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < 50; i++) {
       usleep (100000);
       if (ioctl (object->fd_frontend, FE_READ_STATUS, &status) == -1) {
         perror ("FE_READ_STATUS");
         break;
       }
       GST_LOG_OBJECT (object, "status == 0x%02x", status);
+      if (status & FE_HAS_LOCK)
+        break;
     }
     if (status & FE_HAS_LOCK)
       break;
