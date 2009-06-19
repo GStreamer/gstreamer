@@ -120,6 +120,55 @@
 #endif
 #include <glib/gprintf.h>       /* g_sprintf */
 
+#endif /* !GST_DISABLE_GST_DEBUG */
+
+/* we want these symbols exported even if debug is disabled, to maintain
+ * ABI compatibility. Unless GST_REMOVE_DISABLED is defined. */
+#if !defined(GST_DISABLE_GST_DEBUG) || !defined(GST_REMOVE_DISABLED)
+
+/* disabled by default, as soon as some threshold is set > NONE,
+ * it becomes enabled. */
+gboolean __gst_debug_enabled = FALSE;
+GstDebugLevel __gst_debug_min = GST_LEVEL_NONE;
+
+GstDebugCategory *GST_CAT_DEFAULT = NULL;
+
+GstDebugCategory *GST_CAT_GST_INIT = NULL;
+GstDebugCategory *GST_CAT_AUTOPLUG = NULL;
+GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT = NULL;
+GstDebugCategory *GST_CAT_PARENTAGE = NULL;
+GstDebugCategory *GST_CAT_STATES = NULL;
+GstDebugCategory *GST_CAT_SCHEDULING = NULL;
+
+GstDebugCategory *GST_CAT_BUFFER = NULL;
+GstDebugCategory *GST_CAT_BUFFER_LIST = NULL;
+GstDebugCategory *GST_CAT_BUS = NULL;
+GstDebugCategory *GST_CAT_CAPS = NULL;
+GstDebugCategory *GST_CAT_CLOCK = NULL;
+GstDebugCategory *GST_CAT_ELEMENT_PADS = NULL;
+GstDebugCategory *GST_CAT_PADS = NULL;
+GstDebugCategory *GST_CAT_PIPELINE = NULL;
+GstDebugCategory *GST_CAT_PLUGIN_LOADING = NULL;
+GstDebugCategory *GST_CAT_PLUGIN_INFO = NULL;
+GstDebugCategory *GST_CAT_PROPERTIES = NULL;
+GstDebugCategory *GST_CAT_TYPES = NULL;
+GstDebugCategory *GST_CAT_XML = NULL;
+GstDebugCategory *GST_CAT_NEGOTIATION = NULL;
+GstDebugCategory *GST_CAT_REFCOUNTING = NULL;
+GstDebugCategory *GST_CAT_ERROR_SYSTEM = NULL;
+GstDebugCategory *GST_CAT_EVENT = NULL;
+GstDebugCategory *GST_CAT_MESSAGE = NULL;
+GstDebugCategory *GST_CAT_PARAMS = NULL;
+GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
+GstDebugCategory *GST_CAT_SIGNAL = NULL;
+GstDebugCategory *GST_CAT_PROBE = NULL;
+GstDebugCategory *GST_CAT_REGISTRY = NULL;
+GstDebugCategory *GST_CAT_QOS = NULL;
+
+#endif /* !defined(GST_DISABLE_GST_DEBUG) || !defined(GST_REMOVE_DISABLED) */
+
+#ifndef GST_DISABLE_GST_DEBUG
+
 /* underscore is to prevent conflict with GST_CAT_DEBUG define */
 GST_DEBUG_CATEGORY_STATIC (_GST_CAT_DEBUG);
 
@@ -211,45 +260,6 @@ static gboolean pretty_tags = PRETTY_TAGS_DEFAULT;
 
 static gint __default_level;
 static gint __use_color;
-
-/* disabled by default, as soon as some threshold is set > NONE,
- * it becomes enabled. */
-gboolean __gst_debug_enabled = FALSE;
-GstDebugLevel __gst_debug_min = GST_LEVEL_NONE;
-
-GstDebugCategory *GST_CAT_DEFAULT = NULL;
-
-GstDebugCategory *GST_CAT_GST_INIT = NULL;
-GstDebugCategory *GST_CAT_AUTOPLUG = NULL;
-GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT = NULL;
-GstDebugCategory *GST_CAT_PARENTAGE = NULL;
-GstDebugCategory *GST_CAT_STATES = NULL;
-GstDebugCategory *GST_CAT_SCHEDULING = NULL;
-
-GstDebugCategory *GST_CAT_BUFFER = NULL;
-GstDebugCategory *GST_CAT_BUFFER_LIST = NULL;
-GstDebugCategory *GST_CAT_BUS = NULL;
-GstDebugCategory *GST_CAT_CAPS = NULL;
-GstDebugCategory *GST_CAT_CLOCK = NULL;
-GstDebugCategory *GST_CAT_ELEMENT_PADS = NULL;
-GstDebugCategory *GST_CAT_PADS = NULL;
-GstDebugCategory *GST_CAT_PIPELINE = NULL;
-GstDebugCategory *GST_CAT_PLUGIN_LOADING = NULL;
-GstDebugCategory *GST_CAT_PLUGIN_INFO = NULL;
-GstDebugCategory *GST_CAT_PROPERTIES = NULL;
-GstDebugCategory *GST_CAT_TYPES = NULL;
-GstDebugCategory *GST_CAT_XML = NULL;
-GstDebugCategory *GST_CAT_NEGOTIATION = NULL;
-GstDebugCategory *GST_CAT_REFCOUNTING = NULL;
-GstDebugCategory *GST_CAT_ERROR_SYSTEM = NULL;
-GstDebugCategory *GST_CAT_EVENT = NULL;
-GstDebugCategory *GST_CAT_MESSAGE = NULL;
-GstDebugCategory *GST_CAT_PARAMS = NULL;
-GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
-GstDebugCategory *GST_CAT_SIGNAL = NULL;
-GstDebugCategory *GST_CAT_PROBE = NULL;
-GstDebugCategory *GST_CAT_REGISTRY = NULL;
-GstDebugCategory *GST_CAT_QOS = NULL;
 
 /* FIXME: export this? */
 gboolean
@@ -1639,42 +1649,6 @@ _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
 
 #else /* !GST_DISABLE_GST_DEBUG */
 #ifndef GST_REMOVE_DISABLED
-
-gboolean __gst_debug_enabled = FALSE;
-GstDebugLevel __gst_debug_min = GST_LEVEL_NONE;
-
-GstDebugCategory *GST_CAT_DEFAULT = NULL;
-
-GstDebugCategory *GST_CAT_GST_INIT = NULL;
-GstDebugCategory *GST_CAT_AUTOPLUG = NULL;
-GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT = NULL;
-GstDebugCategory *GST_CAT_PARENTAGE = NULL;
-GstDebugCategory *GST_CAT_STATES = NULL;
-GstDebugCategory *GST_CAT_SCHEDULING = NULL;
-
-GstDebugCategory *GST_CAT_BUFFER = NULL;
-GstDebugCategory *GST_CAT_BUS = NULL;
-GstDebugCategory *GST_CAT_CAPS = NULL;
-GstDebugCategory *GST_CAT_CLOCK = NULL;
-GstDebugCategory *GST_CAT_ELEMENT_PADS = NULL;
-GstDebugCategory *GST_CAT_PADS = NULL;
-GstDebugCategory *GST_CAT_PIPELINE = NULL;
-GstDebugCategory *GST_CAT_PLUGIN_LOADING = NULL;
-GstDebugCategory *GST_CAT_PLUGIN_INFO = NULL;
-GstDebugCategory *GST_CAT_PROPERTIES = NULL;
-GstDebugCategory *GST_CAT_TYPES = NULL;
-GstDebugCategory *GST_CAT_XML = NULL;
-GstDebugCategory *GST_CAT_NEGOTIATION = NULL;
-GstDebugCategory *GST_CAT_REFCOUNTING = NULL;
-GstDebugCategory *GST_CAT_ERROR_SYSTEM = NULL;
-GstDebugCategory *GST_CAT_EVENT = NULL;
-GstDebugCategory *GST_CAT_MESSAGE = NULL;
-GstDebugCategory *GST_CAT_PARAMS = NULL;
-GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
-GstDebugCategory *GST_CAT_SIGNAL = NULL;
-GstDebugCategory *GST_CAT_PROBE = NULL;
-GstDebugCategory *GST_CAT_REGISTRY = NULL;
-GstDebugCategory *GST_CAT_QOS = NULL;
 
 GstDebugCategory *
 _gst_debug_category_new (const gchar * name, guint color,
