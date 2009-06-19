@@ -1097,6 +1097,8 @@ G_CONST_RETURN gchar *
 #  pragma GCC poison _gst_debug_category_new
 #endif
 
+#define __gst_debug_min GST_LEVEL_NONE
+
 #define _gst_debug_init()				/* NOP */
 
 #define gst_debug_set_default_threshold(level)		/* NOP */
@@ -1169,7 +1171,7 @@ guint gst_debug_remove_log_function_by_data (gpointer data);
 #define GST_LOG(...)					/* NOP */
 #define GST_FIXME(...)					/* NOP */
 
-#else
+#else /* !G_HAVE_ISO_VARARGS */
 #ifdef G_HAVE_GNUC_VARARGS
 
 #define GST_CAT_LEVEL_LOG(cat,level,args...)		/* NOP */
@@ -1202,7 +1204,7 @@ guint gst_debug_remove_log_function_by_data (gpointer data);
 #define GST_LOG(args...)				/* NOP */
 #define GST_FIXME(args...)				/* NOP */
 
-#else
+#else /* !G_HAVE_GNUC_VARARGS */
 static inline void
 GST_CAT_LEVEL_LOG_valist (GstDebugCategory * cat,
     GstDebugLevel level, gpointer object, const char *format, va_list varargs)
@@ -1335,8 +1337,8 @@ GST_FIXME (const char *format, ...)
 {
 }
 
-#endif
-#endif
+#endif /* G_HAVE_GNUC_VARARGS */
+#endif /* G_HAVE_ISO_VARARGS */
 
 #define GST_DEBUG_FUNCPTR(ptr) (ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) (g_strdup_printf ("%p", ptr))
