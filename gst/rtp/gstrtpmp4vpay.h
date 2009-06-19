@@ -54,6 +54,8 @@ struct _GstRtpMP4VPay
   gboolean      send_config;
   gboolean      need_config;
 
+  gboolean      buffer_list;
+
   GstPadEventFunction old_event_func;
 };
 
