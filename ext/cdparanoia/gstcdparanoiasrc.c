@@ -43,13 +43,15 @@ enum
   PROP_READ_SPEED,
   PROP_PARANOIA_MODE,
   PROP_SEARCH_OVERLAP,
-  PROP_GENERIC_DEVICE
+  PROP_GENERIC_DEVICE,
+  PROP_CACHE_SIZE
 };
 
 #define DEFAULT_READ_SPEED              -1
 #define DEFAULT_SEARCH_OVERLAP          -1
 #define DEFAULT_PARANOIA_MODE            PARANOIA_MODE_FRAGMENT
 #define DEFAULT_GENERIC_DEVICE           NULL
+#define DEFAULT_CACHE_SIZE              -1
 
 GST_DEBUG_CATEGORY_STATIC (gst_cd_paranoia_src_debug);
 #define GST_CAT_DEFAULT gst_cd_paranoia_src_debug
@@ -125,6 +127,7 @@ gst_cd_paranoia_src_init (GstCdParanoiaSrc * src, GstCdParanoiaSrcClass * klass)
   src->paranoia_mode = DEFAULT_PARANOIA_MODE;
   src->read_speed = DEFAULT_READ_SPEED;
   src->generic_device = g_strdup (DEFAULT_GENERIC_DEVICE);
+  src->cache_size = DEFAULT_CACHE_SIZE;
 }
 
 static void
@@ -157,6 +160,11 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
       g_param_spec_int ("search-overlap", "Search overlap",
           "Force minimum overlap search during verification to n sectors", -1,
           75, DEFAULT_SEARCH_OVERLAP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CACHE_SIZE,
+      g_param_spec_int ("cache-size", "Cache size",
+          "Set CD cache size to n sectors", -1,
+          G_MAXINT, DEFAULT_CACHE_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* FIXME: we don't really want signals for this, but messages on the bus,
@@ -245,6 +253,8 @@ gst_cd_paranoia_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
 
   if (src->search_overlap != -1)
     paranoia_overlapset (src->p, src->search_overlap);
+  if (src->cache_size != -1)
+    paranoia_cachemodel_size (src->p, src->cache_size);
 
   src->next_sector = -1;
 
@@ -442,6 +452,10 @@ gst_cd_paranoia_src_set_property (GObject * object, guint prop_id,
       src->search_overlap = g_value_get_int (value);
       break;
     }
+    case PROP_CACHE_SIZE:{
+      src->cache_size = g_value_get_int (value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -470,6 +484,9 @@ gst_cd_paranoia_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SEARCH_OVERLAP:
       g_value_set_int (value, src->search_overlap);
+      break;
+    case PROP_CACHE_SIZE:
+      g_value_set_int (value, src->cache_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

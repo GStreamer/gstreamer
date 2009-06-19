@@ -480,6 +480,14 @@ AG_GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
     AC_DEFINE_UNQUOTED(CDPARANOIA_HEADERS_IN_DIR, ,
                        defined if cdda headers are in a cdda/ directory)
   fi
+  if test "x$FOUND_CDPARANOIA" = "xyes";
+  then
+    AC_CHECK_LIB(cdda_paranoia,
+                 paranoia_cachemodel_size,
+                 : ,
+                 HAVE_CDPARANOIA=no)
+  fi
+
   AC_SUBST(CDPARANOIA_LIBS)
 ])
 dnl FIXME : add second check somehow if that is necessary

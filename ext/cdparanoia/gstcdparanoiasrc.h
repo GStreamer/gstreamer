@@ -63,6 +63,7 @@ struct _GstCdParanoiaSrc {
   gint             paranoia_mode;
   gint             read_speed;
   gint             search_overlap;
+  gint             cache_size;
 
   gchar           *generic_device;
 };
