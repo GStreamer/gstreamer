@@ -61,6 +61,8 @@ struct _GstRtpH264Pay
   gchar *sprop_parameter_sets;
   gboolean update_caps;
   GstH264ScanMode scan_mode;
+
+  gboolean buffer_list;
 };
 
 struct _GstRtpH264PayClass

@@ -90,6 +90,7 @@ gst_h264_scan_mode_get_type (void)
 #define DEFAULT_PROFILE_LEVEL_ID        NULL
 #define DEFAULT_SPROP_PARAMETER_SETS    NULL
 #define DEFAULT_SCAN_MODE               GST_H264_SCAN_MODE_MULTI_NAL
+#define DEFAULT_BUFFER_LIST             FALSE
 
 enum
 {
@@ -97,6 +98,7 @@ enum
   PROP_PROFILE_LEVEL_ID,
   PROP_SPROP_PARAMETER_SETS,
   PROP_SCAN_MODE,
+  PROP_BUFFER_LIST,
   PROP_LAST
 };
 
@@ -165,6 +167,11 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
           GST_TYPE_H264_SCAN_MODE, DEFAULT_SCAN_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_LIST,
+      g_param_spec_boolean ("buffer-list", "Buffer List",
+          "Use Buffer Lists",
+          DEFAULT_BUFFER_LIST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = gst_rtp_h264_pay_finalize;
 
   gstbasertppayload_class->set_caps = gst_rtp_h264_pay_setcaps;
@@ -181,6 +188,7 @@ gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay, GstRtpH264PayClass * klass)
   rtph264pay->sps = NULL;
   rtph264pay->pps = NULL;
   rtph264pay->scan_mode = GST_H264_SCAN_MODE_MULTI_NAL;
+  rtph264pay->buffer_list = DEFAULT_BUFFER_LIST;
 }
 
 static void
@@ -550,7 +558,7 @@ gst_rtp_h264_pay_parse_sps_pps (GstBaseRTPPayload * basepayload,
 
 static GstFlowReturn
 gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
-    guint size, GstClockTime timestamp)
+    guint size, GstClockTime timestamp, GstBuffer * buffer_orig)
 {
   GstRtpH264Pay *rtph264pay;
   GstFlowReturn ret;
@@ -558,6 +566,8 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
   guint packet_len, payload_len, mtu;
   GstBuffer *outbuf;
   guint8 *payload;
+  GstBufferList *list = NULL;
+  GstBufferListIterator *it = NULL;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
   mtu = GST_BASE_RTP_PAYLOAD_MTU (rtph264pay);
@@ -571,30 +581,63 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
     GST_DEBUG_OBJECT (basepayload,
         "NAL Unit fit in one packet datasize=%d mtu=%d", size, mtu);
     /* will fit in one packet */
-    outbuf = gst_rtp_buffer_new_allocate (size, 0, 0);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+    if (rtph264pay->buffer_list) {
+      /* use buffer lists
+       * first create buffer without payload containing only the RTP header
+       * and then another buffer containing the payload. both buffers will
+       * be then added to the list */
+      outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+    } else {
+      /* use the old-fashioned way with a single buffer and memcpy */
+      outbuf = gst_rtp_buffer_new_allocate (size, 0, 0);
+    }
+
     /* only set the marker bit on packets containing access units */
     if (IS_ACCESS_UNIT (nalType)) {
       gst_rtp_buffer_set_marker (outbuf, 1);
     }
 
-    payload = gst_rtp_buffer_get_payload (outbuf);
-    GST_DEBUG_OBJECT (basepayload, "Copying %d bytes to outbuf", size);
-    memcpy (payload, data, size);
+    /* timestamp the outbuffer */
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    ret = gst_basertppayload_push (basepayload, outbuf);
+    if (rtph264pay->buffer_list) {
+      GstBuffer *paybuf;
+
+      /* create another buffer with the payload. */
+      paybuf = gst_buffer_create_sub (buffer_orig, data -
+          GST_BUFFER_DATA (buffer_orig), size);
+
+      list = gst_buffer_list_new ();
+      it = gst_buffer_list_iterate (list);
+
+      /* add both buffers to the buffer list */
+      gst_buffer_list_iterator_add_group (it);
+      gst_buffer_list_iterator_add (it, outbuf);
+      gst_buffer_list_iterator_add (it, paybuf);
+
+      gst_buffer_list_iterator_free (it);
+
+      /* push the list to the next element in the pipe */
+      ret = gst_basertppayload_push_list (basepayload, list);
+    } else {
+      payload = gst_rtp_buffer_get_payload (outbuf);
+      GST_DEBUG_OBJECT (basepayload, "Copying %d bytes to outbuf", size);
+      memcpy (payload, data, size);
+
+      ret = gst_basertppayload_push (basepayload, outbuf);
+    }
   } else {
-    /* Fragmentation Units FU-A */
+    /* fragmentation Units FU-A */
     guint8 nalHeader;
     guint limitedSize;
-    int ii = 0, start = 1, end = 0, first = 0;
+    int ii = 0, start = 1, end = 0, pos = 0;
 
     GST_DEBUG_OBJECT (basepayload,
         "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", size, mtu);
 
     nalHeader = *data;
-    data++;
+    pos++;
     size--;
 
     ret = GST_FLOW_OK;
@@ -605,13 +648,29 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
     /* We keep 2 bytes for FU indicator and FU Header */
     payload_len = gst_rtp_buffer_calc_payload_len (mtu - 2, 0, 0);
 
+    if (rtph264pay->buffer_list) {
+      list = gst_buffer_list_new ();
+      it = gst_buffer_list_iterate (list);
+    }
+
     while (end == 0) {
       limitedSize = size < payload_len ? size : payload_len;
       GST_DEBUG_OBJECT (basepayload,
           "Inside  FU-A fragmentation limitedSize=%d iteration=%d", limitedSize,
           ii);
 
-      outbuf = gst_rtp_buffer_new_allocate (limitedSize + 2, 0, 0);
+      if (rtph264pay->buffer_list) {
+        /* use buffer lists
+         * first create buffer without payload containing only the RTP header
+         * and then another buffer containing the payload. both buffers will
+         * be then added to the list */
+        outbuf = gst_rtp_buffer_new_allocate (2, 0, 0);
+      } else {
+        /* use the old-fashioned way with a single buffer and memcpy
+         * first create buffer to hold the payload */
+        outbuf = gst_rtp_buffer_new_allocate (limitedSize + 2, 0, 0);
+      }
+
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
       payload = gst_rtp_buffer_get_payload (outbuf);
 
@@ -629,19 +688,41 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
       /* FU Header */
       payload[1] = (start << 7) | (end << 6) | (nalHeader & 0x1f);
 
-      memcpy (&payload[2], data + first, limitedSize);
-      GST_DEBUG_OBJECT (basepayload,
-          "recorded %d payload bytes into packet iteration=%d", limitedSize + 2,
-          ii);
+      if (rtph264pay->buffer_list) {
+        GstBuffer *paybuf;
 
-      ret = gst_basertppayload_push (basepayload, outbuf);
-      if (ret != GST_FLOW_OK)
-        break;
+        /* create another buffer to hold the payload */
+        paybuf = gst_buffer_create_sub (buffer_orig, data -
+            GST_BUFFER_DATA (buffer_orig) + pos, limitedSize);
+
+        /* create a new group to hold the header and the payload */
+        gst_buffer_list_iterator_add_group (it);
+
+        /* add both buffers to the buffer list */
+        gst_buffer_list_iterator_add (it, outbuf);
+        gst_buffer_list_iterator_add (it, paybuf);
+
+      } else {
+        memcpy (&payload[2], data + pos, limitedSize);
+        GST_DEBUG_OBJECT (basepayload,
+            "recorded %d payload bytes into packet iteration=%d",
+            limitedSize + 2, ii);
+
+        ret = gst_basertppayload_push (basepayload, outbuf);
+        if (ret != GST_FLOW_OK)
+          break;
+      }
 
       size -= limitedSize;
-      first += limitedSize;
+      pos += limitedSize;
       ii++;
       start = 0;
+    }
+
+    if (rtph264pay->buffer_list) {
+      /* free iterator and push the whole buffer list at once */
+      gst_buffer_list_iterator_free (it);
+      ret = gst_basertppayload_push_list (basepayload, list);
     }
   }
   return ret;
@@ -697,7 +778,8 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       }
 
       ret =
-          gst_rtp_h264_pay_payload_nal (basepayload, data, nal_len, timestamp);
+          gst_rtp_h264_pay_payload_nal (basepayload, data, nal_len, timestamp,
+          buffer);
       if (ret != GST_FLOW_OK)
         break;
 
@@ -765,7 +847,8 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
       /* put the data in one or more RTP packets */
       ret =
-          gst_rtp_h264_pay_payload_nal (basepayload, data, nal_len, timestamp);
+          gst_rtp_h264_pay_payload_nal (basepayload, data, nal_len, timestamp,
+          buffer);
       if (ret != GST_FLOW_OK)
         break;
 
@@ -801,6 +884,9 @@ gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
     case PROP_SCAN_MODE:
       rtph264pay->scan_mode = g_value_get_enum (value);
       break;
+    case PROP_BUFFER_LIST:
+      rtph264pay->buffer_list = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -824,6 +910,9 @@ gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SCAN_MODE:
       g_value_set_enum (value, rtph264pay->scan_mode);
+      break;
+    case PROP_BUFFER_LIST:
+      g_value_set_boolean (value, rtph264pay->buffer_list);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
