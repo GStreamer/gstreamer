@@ -13,6 +13,7 @@ EXPORTS
 	gst_basertppayload_get_type
 	gst_basertppayload_is_filled
 	gst_basertppayload_push
+	gst_basertppayload_push_list
 	gst_basertppayload_set_options
 	gst_basertppayload_set_outcaps
 	gst_rtcp_buffer_add_packet

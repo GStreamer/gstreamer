@@ -990,6 +990,7 @@ GST_BASE_RTP_PAYLOAD_SRCPAD
 
 gst_basertppayload_is_filled
 gst_basertppayload_push
+gst_basertppayload_push_list
 gst_basertppayload_set_options
 gst_basertppayload_set_outcaps
 <SUBSECTION Standard>

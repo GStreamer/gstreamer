@@ -613,6 +613,150 @@ gst_basertppayload_is_filled (GstBaseRTPPayload * payload,
   return FALSE;
 }
 
+typedef struct
+{
+  GstBaseRTPPayload *payload;
+  guint32 ssrc;
+  guint16 seqnum;
+  guint8 pt;
+  GstCaps *caps;
+  GstClockTime timestamp;
+  guint32 rtptime;
+} HeaderData;
+
+static GstBufferListItem
+find_timestamp (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
+{
+  data->timestamp = GST_BUFFER_TIMESTAMP (*buffer);
+
+  /* stop when we find a timestamp */
+  if (data->timestamp != -1)
+    return GST_BUFFER_LIST_END;
+  else
+    return GST_BUFFER_LIST_CONTINUE;
+}
+
+static GstBufferListItem
+set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
+{
+  gst_rtp_buffer_set_ssrc (*buffer, data->ssrc);
+  gst_rtp_buffer_set_payload_type (*buffer, data->pt);
+  gst_rtp_buffer_set_seq (*buffer, data->seqnum);
+  gst_rtp_buffer_set_timestamp (*buffer, data->rtptime);
+  gst_buffer_set_caps (*buffer, data->caps);
+  data->seqnum++;
+
+  return GST_BUFFER_LIST_SKIP_GROUP;
+}
+
+/* Updates the SSRC, payload type, seqnum and timestamp of the RTP buffer
+ * before the buffer is pushed. */
+static GstFlowReturn
+gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
+    gpointer obj, gboolean is_list)
+{
+  GstBaseRTPPayloadPrivate *priv;
+  HeaderData data;
+
+  if (payload->clock_rate == 0)
+    goto no_rate;
+
+  priv = payload->priv;
+
+  /* update first, so that the property is set to the last
+   * seqnum pushed */
+  payload->seqnum = priv->next_seqnum;
+
+  /* fill in the fields we want to set on all headers */
+  data.payload = payload;
+  data.seqnum = payload->seqnum;
+  data.ssrc = payload->current_ssrc;
+  data.pt = payload->pt;
+  data.caps = GST_PAD_CAPS (payload->srcpad);
+  data.timestamp = -1;
+
+  /* find the first buffer with a timestamp */
+  if (is_list) {
+    gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj),
+        (GstBufferListFunc) find_timestamp, &data);
+  } else {
+    data.timestamp = GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (obj));
+  }
+
+  /* convert to RTP time */
+  if (GST_CLOCK_TIME_IS_VALID (data.timestamp)) {
+    gint64 rtime;
+
+    rtime = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
+        data.timestamp);
+
+    rtime = gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
+
+    /* add running_time in clock-rate units to the base timestamp */
+    data.rtptime = payload->ts_base + rtime;
+  } else {
+    /* no timestamp to convert, take previous timestamp */
+    data.rtptime = payload->timestamp;
+  }
+
+  /* set ssrc, payload type, seq number, caps and rtptime */
+  if (is_list) {
+    gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj),
+        (GstBufferListFunc) set_headers, &data);
+  } else {
+    GstBuffer *buf = GST_BUFFER_CAST (obj);
+    set_headers (&buf, 0, 0, &data);
+  }
+
+  priv->next_seqnum = data.seqnum;
+  payload->timestamp = data.rtptime;
+
+  GST_LOG_OBJECT (payload,
+      "Preparing to push packet with size %d, seq=%d, rtptime=%u, timestamp %"
+      GST_TIME_FORMAT, (is_list) ? -1 :
+      GST_BUFFER_SIZE (GST_BUFFER (obj)), payload->seqnum, data.rtptime,
+      GST_TIME_ARGS (data.timestamp));
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+no_rate:
+  {
+    GST_ELEMENT_ERROR (payload, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("subclass did not specify clock-rate"));
+    return GST_FLOW_ERROR;
+  }
+}
+
+/**
+ * gst_basertppayload_push_list:
+ * @payload: a #GstBaseRTPPayload
+ * @list: a #GstBufferList
+ *
+ * Push @list to the peer element of the payloader. The SSRC, payload type,
+ * seqnum and timestamp of the RTP buffer will be updated first.
+ *
+ * This function takes ownership of @list.
+ *
+ * Returns: a #GstFlowReturn.
+ *
+ * Since: 0.10.24
+ */
+GstFlowReturn
+gst_basertppayload_push_list (GstBaseRTPPayload * payload, GstBufferList * list)
+{
+  GstFlowReturn res;
+
+  res = gst_basertppayload_prepare_push (payload, list, TRUE);
+
+  if (G_LIKELY (res == GST_FLOW_OK))
+    res = gst_pad_push_list (payload->srcpad, list);
+  else
+    gst_buffer_list_unref (list);
+
+  return res;
+}
+
 /**
  * gst_basertppayload_push:
  * @payload: a #GstBaseRTPPayload
@@ -629,69 +773,15 @@ GstFlowReturn
 gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 {
   GstFlowReturn res;
-  GstClockTime timestamp;
-  guint32 rtptime;
-  GstBaseRTPPayloadPrivate *priv;
 
-  if (payload->clock_rate == 0)
-    goto no_rate;
+  res = gst_basertppayload_prepare_push (payload, buffer, FALSE);
 
-  priv = payload->priv;
-
-  gst_rtp_buffer_set_ssrc (buffer, payload->current_ssrc);
-
-  gst_rtp_buffer_set_payload_type (buffer, payload->pt);
-
-  /* update first, so that the property is set to the last
-   * seqnum pushed */
-  payload->seqnum = priv->next_seqnum;
-  gst_rtp_buffer_set_seq (buffer, payload->seqnum);
-
-  /* can wrap around, which is perfectly fine */
-  priv->next_seqnum++;
-
-  /* add our random offset to the timestamp */
-  rtptime = payload->ts_base;
-
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    gint64 rtime;
-
-    rtime = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
-        timestamp);
-
-    rtime = gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
-
-    /* add running_time in clock-rate units to the base timestamp */
-    rtptime += rtime;
-  } else {
-    /* no timestamp to convert, take previous timestamp */
-    rtptime = payload->timestamp;
-  }
-  gst_rtp_buffer_set_timestamp (buffer, rtptime);
-
-  payload->timestamp = rtptime;
-
-  /* set caps */
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (payload->srcpad));
-
-  GST_LOG_OBJECT (payload,
-      "Pushing packet size %d, seq=%d, rtptime=%u, timestamp %" GST_TIME_FORMAT,
-      GST_BUFFER_SIZE (buffer), payload->seqnum, rtptime,
-      GST_TIME_ARGS (timestamp));
-
-  res = gst_pad_push (payload->srcpad, buffer);
+  if (G_LIKELY (res == GST_FLOW_OK))
+    res = gst_pad_push (payload->srcpad, buffer);
+  else
+    gst_buffer_unref (buffer);
 
   return res;
-
-  /* ERRORS */
-no_rate:
-  {
-    GST_ELEMENT_ERROR (payload, STREAM, NOT_IMPLEMENTED, (NULL),
-        ("subclass did not specify clock-rate"));
-    gst_buffer_unref (buffer);
-    return GST_FLOW_ERROR;
-  }
 }
 
 static void

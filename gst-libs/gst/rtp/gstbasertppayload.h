@@ -144,6 +144,9 @@ gboolean        gst_basertppayload_is_filled            (GstBaseRTPPayload *payl
 GstFlowReturn   gst_basertppayload_push                 (GstBaseRTPPayload *payload, 
                                                          GstBuffer *buffer);
 
+GstFlowReturn   gst_basertppayload_push_list            (GstBaseRTPPayload *payload,
+                                                         GstBufferList *list);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_RTP_PAYLOAD_H__ */
