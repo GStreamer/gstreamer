@@ -65,7 +65,6 @@ typedef GstBuffer* (*GstBufferListDoFunction) (GstBuffer * buffer, gpointer user
  * GstBufferListItem:
  * @GST_BUFFER_LIST_CONTINUE:   Retrieve next buffer
  * @GST_BUFFER_LIST_SKIP_GROUP: Skip to next group
- * @GST_BUFFER_LIST_REMOVE:     Remove the current buffer
  * @GST_BUFFER_LIST_END:        End iteration
  *
  * The result of the #GstBufferListFunc.
