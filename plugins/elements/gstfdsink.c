@@ -309,9 +309,9 @@ write_error:
         GST_ELEMENT_ERROR (fdsink, RESOURCE, NO_SPACE_LEFT, (NULL), (NULL));
         break;
       default:{
-        GST_ELEMENT_ERROR (fdsink, RESOURCE, WRITE,
-            (_("Error while writing to file descriptor \"%d\"."), fdsink->fd),
-            ("%s", g_strerror (errno)));
+        GST_ELEMENT_ERROR (fdsink, RESOURCE, WRITE, (NULL),
+            ("Error while writing to file descriptor %d: %s",
+                fdsink->fd, g_strerror (errno)));
       }
     }
     return GST_FLOW_ERROR;
@@ -343,7 +343,7 @@ gst_fd_sink_check_fd (GstFdSink * fdsink, int fd)
         goto not_seekable;
     }
   } else
-    GST_DEBUG_OBJECT (fdsink, "File descriptor \"%d\" is seekable", fd);
+    GST_DEBUG_OBJECT (fdsink, "File descriptor %d is seekable", fd);
 
   return TRUE;
 
@@ -355,7 +355,7 @@ invalid:
   }
 not_seekable:
   {
-    GST_DEBUG_OBJECT (fdsink, "File descriptor \"%d\" is a pipe", fd);
+    GST_DEBUG_OBJECT (fdsink, "File descriptor %d is a pipe", fd);
     return TRUE;
   }
 }
@@ -519,17 +519,16 @@ gst_fd_sink_do_seek (GstFdSink * fdsink, guint64 new_offset)
 
   fdsink->current_pos = new_offset;
 
-  GST_DEBUG_OBJECT (fdsink, "File desciptor \"%d\" to seek to position %lld",
-      fdsink->fd, fdsink->current_pos);
+  GST_DEBUG_OBJECT (fdsink, "File desciptor %d to seek to position "
+      "%" G_GUINT64_FORMAT, fdsink->fd, fdsink->current_pos);
 
   return TRUE;
 
   /* ERRORS */
 seek_failed:
   {
-    GST_DEBUG_OBJECT (fdsink,
-        "File desciptor \"%d\" failed to seek to position %lld", fdsink->fd,
-        new_offset);
+    GST_DEBUG_OBJECT (fdsink, "File desciptor %d failed to seek to position "
+        "%" G_GUINT64_FORMAT, fdsink->fd, new_offset);
     return FALSE;
   }
 }
@@ -578,9 +577,9 @@ gst_fd_sink_event (GstBaseSink * sink, GstEvent * event)
 
 seek_failed:
   {
-    GST_ELEMENT_ERROR (fdsink, RESOURCE, SEEK,
-        (_("Error while seeking in file \"%d\"."), fdsink->fd),
-        GST_ERROR_SYSTEM);
+    GST_ELEMENT_ERROR (fdsink, RESOURCE, SEEK, (NULL),
+        ("Error while seeking on file descriptor %d: %s",
+            fdsink->fd, g_strerror (errno)));
     return FALSE;
   }
 
