@@ -76,6 +76,12 @@ GST_DEBUG_CATEGORY_STATIC (rtpjpegpay_debug);
  */
 #define QUANT_PREFIX_LEN     3
 
+/*
+ * DEFAULT_BUFFER_LIST:
+ *
+ */
+#define DEFAULT_BUFFER_LIST            FALSE
+
 typedef enum _RtpJpegMarker RtpJpegMarker;
 
 /*
@@ -114,7 +120,9 @@ enum
 {
   PROP_0,
   PROP_JPEG_QUALITY,
-  PROP_JPEG_TYPE
+  PROP_JPEG_TYPE,
+  PROP_BUFFER_LIST,
+  PROP_LAST
 };
 
 enum
@@ -243,6 +251,11 @@ gst_rtp_jpeg_pay_class_init (GstRtpJPEGPayClass * klass)
           "Default JPEG Type, overwritten by SOF when present", 0, 255,
           DEFAULT_JPEG_TYPE, G_PARAM_READWRITE));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_LIST,
+      g_param_spec_boolean ("buffer-list", "Buffer List",
+          "Use Buffer Lists",
+          DEFAULT_BUFFER_LIST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_CATEGORY_INIT (rtpjpegpay_debug, "rtpjpegpay", 0,
       "Motion JPEG RTP Payloader");
 }
@@ -253,6 +266,7 @@ gst_rtp_jpeg_pay_init (GstRtpJPEGPay * pay, GstRtpJPEGPayClass * klass)
   pay->quality = DEFAULT_JPEG_QUALITY;
   pay->quant = DEFAULT_JPEG_QUANT;
   pay->type = DEFAULT_JPEG_TYPE;
+  pay->buffer_list = DEFAULT_BUFFER_LIST;
 }
 
 static gboolean
@@ -478,6 +492,8 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   gboolean frame_done;
   gboolean sos_found, sof_found, dqt_found;
   gint i;
+  GstBufferList *list = NULL;
+  GstBufferListIterator *it = NULL;
 
   pay = GST_RTP_JPEG_PAY (basepayload);
   mtu = GST_BASE_RTP_PAYLOAD_MTU (pay);
@@ -578,6 +594,11 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   GST_LOG_OBJECT (pay, "quant_data size %u", quant_data_size);
 
+  if (pay->buffer_list) {
+    list = gst_buffer_list_new ();
+    it = gst_buffer_list_iterate (list);
+  }
+
   bytes_left = sizeof (jpeg_header) + quant_data_size + size;
 
   frame_done = FALSE;
@@ -586,7 +607,12 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     guint8 *payload;
     guint payload_size = (bytes_left < mtu ? bytes_left : mtu);
 
-    outbuf = gst_rtp_buffer_new_allocate (payload_size, 0, 0);
+    if (pay->buffer_list) {
+      outbuf = gst_rtp_buffer_new_allocate (sizeof (jpeg_header) +
+          quant_data_size, 0, 0);
+    } else {
+      outbuf = gst_rtp_buffer_new_allocate (payload_size, 0, 0);
+    }
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
     if (payload_size == bytes_left) {
@@ -633,17 +659,35 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     }
     GST_LOG_OBJECT (pay, "sending payload size %d", payload_size);
 
-    memcpy (payload, data, payload_size);
+    if (pay->buffer_list) {
+      GstBuffer *paybuf;
 
-    ret = gst_basertppayload_push (basepayload, outbuf);
-    if (ret != GST_FLOW_OK)
-      break;
+      /* create a new buf to hold the payload */
+      paybuf = gst_buffer_create_sub (buffer, jpeg_header_size + offset,
+          payload_size);
+
+      /* create a new group to hold the rtp header and the payload */
+      gst_buffer_list_iterator_add_group (it);
+      gst_buffer_list_iterator_add (it, outbuf);
+      gst_buffer_list_iterator_add (it, paybuf);
+    } else {
+      memcpy (payload, data, payload_size);
+      ret = gst_basertppayload_push (basepayload, outbuf);
+      if (ret != GST_FLOW_OK)
+        break;
+    }
 
     bytes_left -= payload_size;
     offset += payload_size;
     data += payload_size;
   }
   while (!frame_done);
+
+  if (pay->buffer_list) {
+    gst_buffer_list_iterator_free (it);
+    /* push the whole buffer list at once */
+    ret = gst_basertppayload_push_list (basepayload, list);
+  }
 
   gst_buffer_unref (buffer);
 
@@ -693,6 +737,10 @@ gst_rtp_jpeg_pay_set_property (GObject * object, guint prop_id,
       rtpjpegpay->type = g_value_get_int (value);
       GST_DEBUG_OBJECT (object, "type = %d", rtpjpegpay->type);
       break;
+    case PROP_BUFFER_LIST:
+      rtpjpegpay->buffer_list = g_value_get_boolean (value);
+      GST_DEBUG_OBJECT (object, "buffer_list = %d", rtpjpegpay->buffer_list);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -713,6 +761,9 @@ gst_rtp_jpeg_pay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_JPEG_TYPE:
       g_value_set_int (value, rtpjpegpay->type);
+      break;
+    case PROP_BUFFER_LIST:
+      g_value_set_boolean (value, rtpjpegpay->buffer_list);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

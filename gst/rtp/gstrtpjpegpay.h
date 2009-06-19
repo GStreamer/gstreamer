@@ -47,6 +47,8 @@ struct _GstRtpJPEGPay
   gint height;
   gint width;
 
+  gboolean buffer_list;
+
   guint8 quant;
 };
 
