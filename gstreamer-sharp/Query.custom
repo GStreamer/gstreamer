@@ -25,7 +25,7 @@ public Gst.Structure Structure {
   cached_structure = null;
 }
 
-public string TypeName {
+public new string TypeName {
   get {
     return GetTypeName (Type);
   }
