@@ -116,6 +116,7 @@ static void gst_tee_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_tee_chain_list (GstPad * pad, GstBufferList * list);
 static GstFlowReturn gst_tee_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
 static gboolean gst_tee_sink_activate_push (GstPad * pad, gboolean active);
@@ -223,6 +224,8 @@ gst_tee_init (GstTee * tee, GstTeeClass * g_class)
   gst_pad_set_activatepush_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_sink_activate_push));
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
+  gst_pad_set_chain_list_function (tee->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_tee_chain_list));
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
 
   tee->last_message = NULL;
@@ -524,17 +527,23 @@ gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 }
 
 static GstFlowReturn
-gst_tee_do_push (GstTee * tee, GstPad * pad, GstBuffer * buffer)
+gst_tee_do_push (GstTee * tee, GstPad * pad, gpointer data, gboolean is_list)
 {
   GstFlowReturn res;
 
   if (G_UNLIKELY (!tee->silent)) {
     GST_OBJECT_LOCK (tee);
     g_free (tee->last_message);
-    tee->last_message =
-        g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
-        G_GUINT64_FORMAT ") %p", GST_DEBUG_PAD_NAME (pad),
-        GST_BUFFER_SIZE (buffer), GST_BUFFER_TIMESTAMP (buffer), buffer);
+    if (is_list) {
+      tee->last_message =
+          g_strdup_printf ("chain-list   ******* (%s:%s)t %p",
+          GST_DEBUG_PAD_NAME (pad), data);
+    } else {
+      tee->last_message =
+          g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
+          G_GUINT64_FORMAT ") %p", GST_DEBUG_PAD_NAME (pad),
+          GST_BUFFER_SIZE (data), GST_BUFFER_TIMESTAMP (data), data);
+    }
     GST_OBJECT_UNLOCK (tee);
     g_object_notify (G_OBJECT (tee), "last_message");
   }
@@ -543,8 +552,12 @@ gst_tee_do_push (GstTee * tee, GstPad * pad, GstBuffer * buffer)
   if (pad == tee->pull_pad) {
     /* don't push on the pad we're pulling from */
     res = GST_FLOW_OK;
+  } else if (is_list) {
+    res =
+        gst_pad_push_list (pad,
+        gst_buffer_list_ref (GST_BUFFER_LIST_CAST (data)));
   } else {
-    res = gst_pad_push (pad, gst_buffer_ref (buffer));
+    res = gst_pad_push (pad, gst_buffer_ref (GST_BUFFER_CAST (data)));
   }
   return res;
 }
@@ -564,13 +577,15 @@ clear_pads (GstPad * pad, GstTee * tee)
 }
 
 static GstFlowReturn
-gst_tee_handle_buffer (GstTee * tee, GstBuffer * buffer)
+gst_tee_handle_data (GstTee * tee, gpointer data, gboolean is_list)
 {
   GList *pads;
   guint32 cookie;
   GstFlowReturn ret, cret;
 
-  tee->offset += GST_BUFFER_SIZE (buffer);
+  if (!is_list) {
+    tee->offset += GST_BUFFER_SIZE (data);
+  }
 
   GST_OBJECT_LOCK (tee);
   /* mark all pads as 'not pushed on yet' */
@@ -583,38 +598,38 @@ restart:
 
   while (pads) {
     GstPad *pad;
-    PushData *data;
+    PushData *pdata;
 
     pad = GST_PAD_CAST (pads->data);
 
     /* get the private data, something is really wrong with the internal state
      * when it is not there */
-    data = g_object_get_qdata (G_OBJECT (pad), push_data);
+    pdata = g_object_get_qdata (G_OBJECT (pad), push_data);
+    g_assert (pdata != NULL);
 
-    g_assert (data != NULL);
-
-    if (!data->pushed) {
+    if (!pdata->pushed) {
       /* not yet pushed, release lock and start pushing */
       gst_object_ref (pad);
       GST_OBJECT_UNLOCK (tee);
 
-      GST_LOG_OBJECT (tee, "Starting to push buffer %p", buffer);
+      GST_LOG_OBJECT (tee, "Starting to push %s %p",
+          is_list ? "list" : "buffer", data);
 
-      ret = gst_tee_do_push (tee, pad, buffer);
+      ret = gst_tee_do_push (tee, pad, data, is_list);
 
-      GST_LOG_OBJECT (tee, "Pushing buffer %p yielded result %s", buffer,
+      GST_LOG_OBJECT (tee, "Pushing item %p yielded result %s", data,
           gst_flow_get_name (ret));
 
       GST_OBJECT_LOCK (tee);
       /* keep track of which pad we pushed and the result value. We need to do
        * this before we release the refcount on the pad, the PushData is
        * destroyed when the last ref of the pad goes away. */
-      data->pushed = TRUE;
-      data->result = ret;
+      pdata->pushed = TRUE;
+      pdata->result = ret;
       gst_object_unref (pad);
     } else {
       /* already pushed, use previous return value */
-      ret = data->result;
+      ret = pdata->result;
       GST_LOG_OBJECT (tee, "pad already pushed with %s",
           gst_flow_get_name (ret));
     }
@@ -643,7 +658,7 @@ restart:
   }
   GST_OBJECT_UNLOCK (tee);
 
-  gst_buffer_unref (buffer);
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
 
   /* no need to unset gvalue */
   return cret;
@@ -652,7 +667,7 @@ restart:
 error:
   {
     GST_DEBUG_OBJECT (tee, "received error %s", gst_flow_get_name (ret));
-    gst_buffer_unref (buffer);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     GST_OBJECT_UNLOCK (tee);
     return ret;
   }
@@ -668,9 +683,28 @@ gst_tee_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (tee, "received buffer %p", buffer);
 
-  res = gst_tee_handle_buffer (tee, buffer);
+  res = gst_tee_handle_data (tee, buffer, FALSE);
 
   GST_DEBUG_OBJECT (tee, "handled buffer %s", gst_flow_get_name (res));
+
+  gst_object_unref (tee);
+
+  return res;
+}
+
+static GstFlowReturn
+gst_tee_chain_list (GstPad * pad, GstBufferList * list)
+{
+  GstFlowReturn res;
+  GstTee *tee;
+
+  tee = GST_TEE (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (tee, "received list %p", list);
+
+  res = gst_tee_handle_data (tee, list, TRUE);
+
+  GST_DEBUG_OBJECT (tee, "handled list %s", gst_flow_get_name (res));
 
   gst_object_unref (tee);
 
@@ -848,7 +882,7 @@ gst_tee_src_get_range (GstPad * pad, guint64 offset, guint length,
   ret = gst_pad_pull_range (tee->sinkpad, offset, length, buf);
 
   if (ret == GST_FLOW_OK)
-    ret = gst_tee_handle_buffer (tee, gst_buffer_ref (*buf));
+    ret = gst_tee_handle_data (tee, gst_buffer_ref (*buf), FALSE);
   else if (ret == GST_FLOW_UNEXPECTED)
     gst_tee_pull_eos (tee);
 
