@@ -37,7 +37,7 @@ G_BEGIN_DECLS
 typedef struct _GstAudioAmplify GstAudioAmplify;
 typedef struct _GstAudioAmplifyClass GstAudioAmplifyClass;
 
-typedef void (*GstAudioAmplifyProcessFunc) (GstAudioAmplify *, guint8 *, guint);
+typedef void (*GstAudioAmplifyProcessFunc) (GstAudioAmplify *, void *, guint);
 
 struct _GstAudioAmplify
 {
@@ -48,7 +48,8 @@ struct _GstAudioAmplify
   /* < private > */
   GstAudioAmplifyProcessFunc process;
   gint clipping_method;
-  gint format_index;
+  gint format;
+  gint width;
 };
 
 struct _GstAudioAmplifyClass
