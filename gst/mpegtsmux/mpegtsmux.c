@@ -523,7 +523,7 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
   return best;
 }
 
-#define COLLECT_DATA_PAD(collect_data) ((GstCollectData *)(collect_data))->pad)
+#define COLLECT_DATA_PAD(collect_data) (((GstCollectData *)(collect_data))->pad)
 
 static GstFlowReturn
 mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
