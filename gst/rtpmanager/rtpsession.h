@@ -65,7 +65,7 @@ typedef GstFlowReturn (*RTPSessionProcessRTP) (RTPSession *sess, RTPSource *src,
  *
  * Returns: a #GstFlowReturn.
  */
-typedef GstFlowReturn (*RTPSessionSendRTP) (RTPSession *sess, RTPSource *src, GstBuffer *buffer, gpointer user_data);
+typedef GstFlowReturn (*RTPSessionSendRTP) (RTPSession *sess, RTPSource *src, gpointer data, gpointer user_data);
 
 /**
  * RTPSessionSendRTCP:
@@ -288,7 +288,7 @@ GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer 
                                                     GstClockTime current_time);
 
 /* processing packets for sending */
-GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, GstBuffer *buffer,
+GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, gpointer data, gboolean is_list,
                                                     GstClockTime current_time, guint64 ntpnstime);
 
 /* stopping the session */

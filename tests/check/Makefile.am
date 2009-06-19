@@ -84,6 +84,7 @@ check_PROGRAMS = \
 	elements/legacyresample \
 	elements/qtmux \
 	elements/rtpbin \
+	elements/rtpbin_buffer_list \
 	elements/selector \
 	elements/shapewipe \
 	elements/mxfdemux \
@@ -107,6 +108,13 @@ elements_camerabin_LDADD = \
         $(GST_LIBS) $(GST_BASE_LIBS) $(GST_CHECK_LIBS) \
          -lgstinterfaces-@GST_MAJORMINOR@
 elements_camerabin_SOURCES = elements/camerabin.c
+
+elements_rtpbin_buffer_list_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
+	$(ERROR_CFLAGS) $(GST_CHECK_CFLAGS)
+elements_rtpbin_buffer_list_LDADD = $(GST_PLUGINS_BASE_LIBS) \
+             -lgstnetbuffer-@GST_MAJORMINOR@ -lgstrtp-@GST_MAJORMINOR@ \
+             $(GST_BASE_LIBS) $(GST_LIBS_LIBS) $(GST_CHECK_LIBS)
+elements_rtpbin_buffer_list_SOURCES = elements/rtpbin_buffer_list.c
 
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)

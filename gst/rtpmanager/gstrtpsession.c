@@ -259,7 +259,7 @@ struct _GstRtpSessionPrivate
 static GstFlowReturn gst_rtp_session_process_rtp (RTPSession * sess,
     RTPSource * src, GstBuffer * buffer, gpointer user_data);
 static GstFlowReturn gst_rtp_session_send_rtp (RTPSession * sess,
-    RTPSource * src, GstBuffer * buffer, gpointer user_data);
+    RTPSource * src, gpointer data, gpointer user_data);
 static GstFlowReturn gst_rtp_session_send_rtcp (RTPSession * sess,
     RTPSource * src, GstBuffer * buffer, gboolean eos, gpointer user_data);
 static GstFlowReturn gst_rtp_session_sync_rtcp (RTPSession * sess,
@@ -1032,8 +1032,8 @@ gst_rtp_session_clear_pt_map (GstRtpSession * rtpsession)
   g_hash_table_foreach_remove (rtpsession->priv->ptmap, return_true, NULL);
 }
 
-/* called when the session manager has an RTP packet ready for further
- * processing */
+/* called when the session manager has an RTP packet or a list of packets
+ * ready for further processing */
 static GstFlowReturn
 gst_rtp_session_process_rtp (RTPSession * sess, RTPSource * src,
     GstBuffer * buffer, gpointer user_data)
@@ -1060,7 +1060,7 @@ gst_rtp_session_process_rtp (RTPSession * sess, RTPSource * src,
  * sending */
 static GstFlowReturn
 gst_rtp_session_send_rtp (RTPSession * sess, RTPSource * src,
-    GstBuffer * buffer, gpointer user_data)
+    gpointer data, gpointer user_data)
 {
   GstFlowReturn result;
   GstRtpSession *rtpsession;
@@ -1069,12 +1069,17 @@ gst_rtp_session_send_rtp (RTPSession * sess, RTPSource * src,
   rtpsession = GST_RTP_SESSION (user_data);
   priv = rtpsession->priv;
 
-  GST_LOG_OBJECT (rtpsession, "sending RTP packet");
-
   if (rtpsession->send_rtp_src) {
-    result = gst_pad_push (rtpsession->send_rtp_src, buffer);
+    if (GST_IS_BUFFER (data)) {
+      GST_LOG_OBJECT (rtpsession, "sending RTP packet");
+      result = gst_pad_push (rtpsession->send_rtp_src, GST_BUFFER_CAST (data));
+    } else {
+      GST_LOG_OBJECT (rtpsession, "sending RTP list");
+      result = gst_pad_push_list (rtpsession->send_rtp_src,
+          GST_BUFFER_LIST_CAST (data));
+    }
   } else {
-    gst_buffer_unref (buffer);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     result = GST_FLOW_OK;
   }
   return result;
@@ -1642,11 +1647,12 @@ gst_rtp_session_setcaps_send_rtp (GstPad * pad, GstCaps * caps)
   return TRUE;
 }
 
-/* Recieve an RTP packet to be send to the receivers, send to RTP session
- * manager and forward to send_rtp_src.
+/* Recieve an RTP packet or a list of packets to be send to the receivers,
+ * send to RTP session manager and forward to send_rtp_src.
  */
 static GstFlowReturn
-gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
+gst_rtp_session_chain_send_rtp_common (GstPad * pad, gpointer data,
+    gboolean is_list)
 {
   GstRtpSession *rtpsession;
   GstRtpSessionPrivate *priv;
@@ -1658,10 +1664,22 @@ gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
   priv = rtpsession->priv;
 
-  GST_LOG_OBJECT (rtpsession, "received RTP packet");
+  GST_LOG_OBJECT (rtpsession, "received RTP %s", is_list ? "list" : "packet");
 
   /* get NTP time when this packet was captured, this depends on the timestamp. */
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  if (is_list) {
+    GstBuffer *buffer = NULL;
+
+    /* All groups in an list have the same timestamp.
+     * So, just take it from the first group. */
+    buffer = gst_buffer_list_get (GST_BUFFER_LIST_CAST (data), 0, 0);
+    if (buffer)
+      timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    else
+      timestamp = -1;
+  } else {
+    timestamp = GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (data));
+  }
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     /* convert to running time using the segment start value. */
     ntpnstime =
@@ -1676,7 +1694,9 @@ gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
   }
 
   current_time = gst_clock_get_time (priv->sysclock);
-  ret = rtp_session_send_rtp (priv->session, buffer, current_time, ntpnstime);
+  ret =
+      rtp_session_send_rtp (priv->session, data, is_list, current_time,
+      ntpnstime);
   if (ret != GST_FLOW_OK)
     goto push_error;
 
@@ -1692,6 +1712,18 @@ push_error:
         gst_flow_get_name (ret));
     goto done;
   }
+}
+
+static GstFlowReturn
+gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
+{
+  return gst_rtp_session_chain_send_rtp_common (pad, buffer, FALSE);
+}
+
+static GstFlowReturn
+gst_rtp_session_chain_send_rtp_list (GstPad * pad, GstBufferList * list)
+{
+  return gst_rtp_session_chain_send_rtp_common (pad, list, TRUE);
 }
 
 /* Create sinkpad to receive RTP packets from senders. This will also create a
@@ -1817,6 +1849,8 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
       "send_rtp_sink");
   gst_pad_set_chain_function (rtpsession->send_rtp_sink,
       gst_rtp_session_chain_send_rtp);
+  gst_pad_set_chain_list_function (rtpsession->send_rtp_sink,
+      gst_rtp_session_chain_send_rtp_list);
   gst_pad_set_getcaps_function (rtpsession->send_rtp_sink,
       gst_rtp_session_getcaps_send_rtp);
   gst_pad_set_setcaps_function (rtpsession->send_rtp_sink,
