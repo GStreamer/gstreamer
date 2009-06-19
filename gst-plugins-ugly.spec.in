@@ -36,7 +36,7 @@ BuildRequires:  gcc-c++
 @USE_DVDREAD_TRUE@Provides:       gstreamer-dvdread = %{version}-%{release}
 @USE_MPEG2DEC_TRUE@Provides:       gstreamer-mpeg2dec = %{version}-%{release}
 
-@USE_X264_TRUE@Requires: x264
+@USE_X264_TRUE@Requires: x264-libs
 
 %description
 GStreamer is a streaming media framework, based on graphs of elements which
