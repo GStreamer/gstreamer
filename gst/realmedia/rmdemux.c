@@ -2461,12 +2461,16 @@ gst_rmdemux_parse_audio_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     }
     ret = gst_pad_push (stream->pad, buffer);
   }
+
+  gst_buffer_unref (in);
+
   return ret;
 
   /* ERRORS */
 alloc_failed:
   {
     GST_DEBUG_OBJECT (rmdemux, "pad alloc returned %d", ret);
+    gst_buffer_unref (in);
     return cret;
   }
 }
