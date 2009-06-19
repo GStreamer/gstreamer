@@ -122,6 +122,8 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
       status =
           device->vdp_video_surface_get_bits_ycbcr (surface,
           VDP_YCBCR_FORMAT_YV12, (void *) data, stride);
+      GST_LOG_OBJECT (video_yuv,
+          "Got status %d from vdp_video_surface_get_bits_ycbcr", status);
       if (G_UNLIKELY (status != VDP_STATUS_OK)) {
         GST_ELEMENT_ERROR (video_yuv, RESOURCE, READ,
             ("Couldn't get data from vdpau"),
@@ -169,6 +171,8 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
       status =
           device->vdp_video_surface_get_bits_ycbcr (surface,
           VDP_YCBCR_FORMAT_YV12, (void *) data, stride);
+      GST_LOG_OBJECT (video_yuv,
+          "Got status %d from vdp_video_surface_get_bits_ycbcr", status);
       if (G_UNLIKELY (status != VDP_STATUS_OK)) {
         GST_ELEMENT_ERROR (video_yuv, RESOURCE, READ,
             ("Couldn't get data from vdpau"),
@@ -188,6 +192,7 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
       size =
           video_yuv->width * video_yuv->height +
           video_yuv->width * video_yuv->height / 2;
+      GST_LOG_OBJECT (video_yuv, "Entering buffer_alloc");
       result =
           gst_pad_alloc_buffer_and_set_caps (video_yuv->src,
           GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (video_yuv->src), &outbuf);
@@ -202,9 +207,12 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
       stride[0] = video_yuv->width;
       stride[1] = video_yuv->width;
 
+      GST_LOG_OBJECT (video_yuv, "Entering vdp_video_surface_get_bits_ycbcr");
       status =
           device->vdp_video_surface_get_bits_ycbcr (surface,
           VDP_YCBCR_FORMAT_NV12, (void *) data, stride);
+      GST_LOG_OBJECT (video_yuv,
+          "Got status %d from vdp_video_surface_get_bits_ycbcr", status);
       if (G_UNLIKELY (status != VDP_STATUS_OK)) {
         GST_ELEMENT_ERROR (video_yuv, RESOURCE, READ,
             ("Couldn't get data from vdpau"),
@@ -221,6 +229,8 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
   gst_buffer_unref (buffer);
 
   gst_buffer_copy_metadata (outbuf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
+  GST_LOG_OBJECT (video_yuv, "Pushing buffer with ts %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
   return gst_pad_push (video_yuv->src, outbuf);
 
 done:

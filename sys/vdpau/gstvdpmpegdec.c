@@ -194,6 +194,9 @@ gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
       "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
       "interlaced", G_TYPE_BOOLEAN, interlaced, NULL);
 
+  GST_DEBUG_OBJECT (mpeg_dec, "Setting source caps to %" GST_PTR_FORMAT,
+      src_caps);
+
   res = gst_pad_set_caps (mpeg_dec->src, src_caps);
   gst_caps_unref (src_caps);
   if (!res)
@@ -968,6 +971,11 @@ gst_vdp_mpeg_dec_sink_event (GstPad * pad, GstEvent * event)
       }
       g_mutex_unlock (mpeg_dec->mutex);
 
+      GST_DEBUG_OBJECT (mpeg_dec,
+          "Pushing new segment update %d format %d start %"
+          GST_TIME_FORMAT " stop %" GST_TIME_FORMAT " position %"
+          GST_TIME_FORMAT, update, format, GST_TIME_ARGS (start),
+          GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
     convert_error:
       res = gst_pad_push_event (mpeg_dec->src, event);
 
