@@ -1,16 +1,4 @@
 [DllImport("libgstreamer-0.10.dll") ]
-static extern bool gst_bus_post (IntPtr raw, IntPtr message);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_mini_object_copy (IntPtr raw);
-
-public bool Post (Gst.Message message) {
-  bool raw_ret = gst_bus_post (Handle, message == null ? IntPtr.Zero : gst_mini_object_copy (message.Handle));
-  bool ret = raw_ret;
-  return ret;
-}
-
-
-[DllImport("libgstreamer-0.10.dll") ]
 static extern int gst_bus_sync_signal_handler (IntPtr raw, IntPtr message, IntPtr data);
 
 public Gst.BusSyncReply SyncSignalHandler (Gst.Message message) {

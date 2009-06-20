@@ -87,7 +87,7 @@
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_MEDIA3']" name="value">MiniObjectFlags.Last &lt;&lt; 7</attr>
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
 
-  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_post']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_post']/parameters/parameter[@name='message']" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_peek']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_pop']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_pop_filtered']/return-type" name="owned">true</attr>
