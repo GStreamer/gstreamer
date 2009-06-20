@@ -391,26 +391,6 @@ namespace Gst {
       return Handle.GetHashCode ();
     }
 
-    Hashtable data;
-    public Hashtable Data {
-      get {
-        if (data == null)
-          data = new Hashtable ();
-
-        return data;
-      }
-    }
-
-    Hashtable persistent_data;
-    protected Hashtable PersistentData {
-      get {
-        if (persistent_data == null)
-          persistent_data = new Hashtable ();
-
-        return persistent_data;
-      }
-    }
-
     [DllImport ("libgobject-2.0-0.dll") ]
     static extern bool g_type_check_instance_is_a (IntPtr obj, IntPtr gtype);
 
