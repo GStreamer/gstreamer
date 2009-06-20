@@ -1503,10 +1503,9 @@ GST_END_TEST;
 GST_START_TEST (test_decode_garbage)
 {
   GstElement *mpeg2dec;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstBus *bus;
   int i, num_buffers;
-  GstCaps *out_caps;
   guint32 *tmpbuf;
 
   mpeg2dec = setup_mpeg2dec ();
