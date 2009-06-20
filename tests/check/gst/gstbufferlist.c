@@ -688,6 +688,7 @@ foreach_func4 (GstBuffer ** buffer, guint group, guint idx, ForeachData * data)
   fail_unless (buffer != NULL);
   fail_unless (*buffer == data->buf[group][idx]);
 
+  gst_buffer_unref (*buffer);
   *buffer = NULL;
   data->iter++;
 
@@ -720,7 +721,6 @@ GST_START_TEST (test_foreach)
   data.buf[1][1] = gst_buffer_new ();
   gst_buffer_list_iterator_add (it, data.buf[1][1]);
   gst_buffer_list_iterator_free (it);
-  gst_buffer_list_iterator_add_group (it);
 
   fail_unless (gst_buffer_list_get (list, 0, 0) == data.buf[0][0]);
   fail_unless (gst_buffer_list_get (list, 0, 1) == NULL);
