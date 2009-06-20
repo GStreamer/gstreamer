@@ -24,7 +24,7 @@ public class PipelineTest
 	[Test]
 	public void TestPipeline()
 	{
-		Pipeline pipeline = new Pipeline(String.Empty);
+		Pipeline pipeline = new Pipeline();
 		Assert.IsNotNull(pipeline, "Could not create pipeline");
 		Assert.IsNotNull(pipeline.Bus, "Bus on pipeline is null");
 		Assert.IsNotNull(pipeline.Clock, "Clock on pipeline is null");
@@ -33,7 +33,7 @@ public class PipelineTest
   [Test]
   public void TestAsyncStateChangeEmpty()
   {
-    Pipeline pipeline = new Pipeline(String.Empty);
+    Pipeline pipeline = new Pipeline();
     Assert.IsNotNull(pipeline, "Could not create pipeline");
 
     Assert.AreEqual(((Element)pipeline).SetState(State.Playing), StateChangeReturn.Success);
@@ -42,7 +42,7 @@ public class PipelineTest
   [Test]
   public void TestAsyncStateChangeFakeReady()
   {
-    Pipeline pipeline = new Pipeline(String.Empty);
+    Pipeline pipeline = new Pipeline();
     Element src = ElementFactory.Make("fakesrc");
     Element sink = ElementFactory.Make("fakesink");
 
@@ -57,7 +57,7 @@ public class PipelineTest
   public void TestAsyncStateChangeFake()
   {
     bool done = false;
-    Pipeline pipeline = new Pipeline(String.Empty);
+    Pipeline pipeline = new Pipeline();
     Assert.IsNotNull(pipeline, "Could not create pipeline");
 
     Element src = ElementFactory.Make("fakesrc");
@@ -122,7 +122,7 @@ public class PipelineTest
 
   public void TestBusCallback(bool use_AddWatch) 
   {
-    pipeline = new Pipeline(String.Empty);
+    pipeline = new Pipeline();
     Assert.IsNotNull(pipeline, "Could not create pipeline");
 
     Element src = ElementFactory.Make("fakesrc");

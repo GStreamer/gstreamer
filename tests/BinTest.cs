@@ -122,7 +122,7 @@ public class BinTest
 	[Test]
 	public void TestGhostPad()
 	{
-		Bin bin = new Bin(String.Empty);
+		Bin bin = new Bin();
 		Element filesrc = ElementFactory.Make("filesrc");
 		bin.Add(filesrc);
 		CollectionAssert.IsEmpty(bin.Pads);
