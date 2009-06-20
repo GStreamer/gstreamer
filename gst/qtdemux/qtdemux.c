@@ -64,12 +64,6 @@
 
 GST_DEBUG_CATEGORY (qtdemux_debug);
 
-#if 0
-#define qtdemux_dump_mem(a,b)  gst_util_dump_mem(a,b)
-#else
-#define qtdemux_dump_mem(a,b)   /* */
-#endif
-
 typedef struct _QtNode QtNode;
 typedef struct _QtDemuxSegment QtDemuxSegment;
 typedef struct _QtDemuxSample QtDemuxSample;
@@ -3098,7 +3092,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
           buf += 31;
           buf += 4;             /* and 4 bytes reserved */
 
-          qtdemux_dump_mem (buf, end - buf);
+          GST_MEMDUMP_OBJECT (qtdemux, "mp4v", buf, end - buf);
 
           qtdemux_parse_container (qtdemux, node, buf, end);
         }
@@ -5345,7 +5339,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
   char *codec_name = NULL;
   GstCaps *caps = NULL;
 
-  qtdemux_dump_mem (ptr, len);
+  GST_MEMDUMP_OBJECT (qtdemux, "esds", ptr, len);
   ptr += 8;
   GST_DEBUG_OBJECT (qtdemux, "version/flags = %08x", QT_UINT32 (ptr));
   ptr += 4;
@@ -5372,8 +5366,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         ptr += 13;
         break;
       case 0x05:
-        GST_DEBUG_OBJECT (qtdemux, "data:");
-        qtdemux_dump_mem (ptr, len);
+        GST_MEMDUMP_OBJECT (qtdemux, "data", ptr, len);
         data_ptr = ptr;
         data_len = len;
         ptr += len;
@@ -5384,6 +5377,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         break;
       default:
         GST_ERROR_OBJECT (qtdemux, "parse error");
+        break;
     }
   }
 
@@ -5494,9 +5488,9 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     buffer = gst_buffer_new_and_alloc (data_len);
     memcpy (GST_BUFFER_DATA (buffer), data_ptr, data_len);
-    qtdemux_dump_mem (GST_BUFFER_DATA (buffer), data_len);
 
     GST_DEBUG_OBJECT (qtdemux, "setting codec_data from esds");
+    GST_MEMDUMP_OBJECT (qtdemux, "codec_data from esds", data_ptr, data_len);
 
     gst_caps_set_simple (stream->caps, "codec_data", GST_TYPE_BUFFER,
         buffer, NULL);

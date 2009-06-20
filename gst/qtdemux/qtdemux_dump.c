@@ -20,12 +20,6 @@
 #include "qtdemux_types.h"
 #include "qtdemux_dump.h"
 
-#if 0
-#define qtdemux_dump_mem(a,b)  gst_util_dump_mem(a,b)
-#else
-#define qtdemux_dump_mem(a,b)   /* */
-#endif
-
 void
 qtdemux_dump_mvhd (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
@@ -400,8 +394,7 @@ qtdemux_dump_unknown (GstQTDemux * qtdemux, guint8 * buffer, int depth)
   GST_LOG ("%*s  length: %d", depth, "", QT_UINT32 (buffer + 0));
 
   len = QT_UINT32 (buffer + 0);
-  qtdemux_dump_mem (buffer, len);
-
+  GST_MEMDUMP_OBJECT (qtdemux, "unknown atom data", buffer, len);
 }
 
 static gboolean
