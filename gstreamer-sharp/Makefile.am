@@ -82,6 +82,7 @@ customs = 			\
 	AppSink.custom		\
 	AppSrc.custom		\
 	Bin.custom		\
+	Pipeline.custom		\
 	Buffer.custom           \
 	Bus.custom		\
 	Caps.custom		\
