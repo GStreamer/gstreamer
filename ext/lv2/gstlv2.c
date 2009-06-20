@@ -24,6 +24,7 @@
 #endif
 #include <string.h>
 #include <math.h>
+#include <glib.h>
 #include <gst/audio/audio.h>
 #include <gst/controller/gstcontroller.h>
 
@@ -59,6 +60,13 @@ static GstPlugin *gst_lv2_plugin;
 GST_DEBUG_CATEGORY_STATIC (lv2_debug);
 #define GST_CAT_DEFAULT lv2_debug
 
+static gint
+gst_lv2_value_cmp (gconstpointer a, gconstpointer b)
+{
+  if (slv2_value_equals ((SLV2Value) a, (SLV2Value) b))
+    return 0;
+  return 1;
+}
 
 static void
 gst_lv2_base_init (gpointer g_class)
@@ -68,7 +76,8 @@ gst_lv2_base_init (gpointer g_class)
   GstSignalProcessorClass *gsp_class = GST_SIGNAL_PROCESSOR_CLASS (g_class);
   GstElementDetails *details;
   SLV2Plugin lv2plugin;
-  SLV2Value val;
+  SLV2Value val, pred;
+  SLV2Values values;
   guint j, audio_in_count, audio_out_count, control_in_count, control_out_count;
   gchar *klass_tags;
 
@@ -149,39 +158,64 @@ gst_lv2_base_init (gpointer g_class)
   g_free (details->author);
   g_free (details);
 
-  klass->audio_in_portnums = g_new0 (gint, gsp_class->num_audio_in);
-  klass->audio_out_portnums = g_new0 (gint, gsp_class->num_audio_out);
-  klass->control_in_portnums = g_new0 (gint, gsp_class->num_control_in);
-  klass->control_out_portnums = g_new0 (gint, gsp_class->num_control_out);
+  klass->groups = NULL;
+
+  klass->audio_in_ports = g_new0 (struct _GstLV2Port, gsp_class->num_audio_in);
+  klass->audio_out_ports =
+      g_new0 (struct _GstLV2Port, gsp_class->num_audio_out);
+  klass->control_in_ports =
+      g_new0 (struct _GstLV2Port, gsp_class->num_control_in);
+  klass->control_out_ports =
+      g_new0 (struct _GstLV2Port, gsp_class->num_control_out);
 
   audio_in_count = audio_out_count = control_in_count = control_out_count = 0;
+
+  pred = slv2_value_new_uri (world,
+      "http://lv2plug.in/ns/dev/port-groups#inGroup");
 
   for (j = 0; j < slv2_plugin_get_num_ports (lv2plugin); j++) {
     SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, j);
     gboolean is_input = slv2_port_is_a (lv2plugin, port, input_class);
+    struct _GstLV2Port *desc = NULL;
     if (slv2_port_is_a (lv2plugin, port, audio_class)) {
       if (is_input)
-        klass->audio_in_portnums[audio_in_count++] = j;
+        desc = &klass->audio_in_ports[audio_in_count++];
       else
-        klass->audio_out_portnums[audio_out_count++] = j;
+        desc = &klass->audio_out_ports[audio_out_count++];
     } else if (slv2_port_is_a (lv2plugin, port, control_class)) {
       if (is_input)
-        klass->control_in_portnums[control_in_count++] = j;
+        desc = &klass->control_in_ports[control_in_count++];
       else
-        klass->control_out_portnums[control_out_count++] = j;
+        desc = &klass->control_out_ports[control_out_count++];
+    } else {
+      /* unknown port type */
+      continue;
     }
+    desc->index = j;
+    values = slv2_port_get_value (lv2plugin, port, pred);
+    if (slv2_values_size (values) > 0) {
+      SLV2Value v = slv2_values_get_at (values, 0);
+      desc->group = v;
+      if (!g_slist_find_custom (klass->groups, v, gst_lv2_value_cmp)) {
+        klass->groups =
+            g_slist_prepend (klass->groups, slv2_value_duplicate (v));
+      }
+    }
+    slv2_values_free (values);
   }
+
+  slv2_value_free (pred);
 
   g_assert (audio_in_count == gsp_class->num_audio_in);
   g_assert (audio_out_count == gsp_class->num_audio_out);
   g_assert (control_in_count == gsp_class->num_control_in);
   g_assert (control_out_count == gsp_class->num_control_out);
 
-  val = slv2_value_new_uri (world,
+  pred = slv2_value_new_uri (world,
       "http://lv2plug.in/ns/lv2core#inPlaceBroken");
-  if (!slv2_plugin_has_feature (lv2plugin, val))
+  if (!slv2_plugin_has_feature (lv2plugin, pred))
     GST_SIGNAL_PROCESSOR_CLASS_SET_CAN_PROCESS_IN_PLACE (klass);
-  slv2_value_free (val);
+  slv2_value_free (pred);
 
   klass->plugin = lv2plugin;
 }
@@ -277,7 +311,7 @@ gst_lv2_class_init (GstLV2Class * klass, SLV2Plugin lv2plugin)
   for (i = 0; i < gsp_class->num_control_in; i++) {
     GParamSpec *p;
 
-    p = gst_lv2_class_get_param_spec (klass, klass->control_in_portnums[i]);
+    p = gst_lv2_class_get_param_spec (klass, klass->control_in_ports[i].index);
 
     /* properties have an offset of 1 */
     g_object_class_install_property (G_OBJECT_CLASS (klass), i + 1, p);
@@ -286,7 +320,7 @@ gst_lv2_class_init (GstLV2Class * klass, SLV2Plugin lv2plugin)
   for (i = 0; i < gsp_class->num_control_out; i++) {
     GParamSpec *p;
 
-    p = gst_lv2_class_get_param_spec (klass, klass->control_out_portnums[i]);
+    p = gst_lv2_class_get_param_spec (klass, klass->control_out_ports[i].index);
 
     /* properties have an offset of 1, and we already added num_control_in */
     g_object_class_install_property (G_OBJECT_CLASS (klass),
@@ -396,10 +430,10 @@ gst_lv2_setup (GstSignalProcessor * gsp, guint sample_rate)
   /* connect the control ports */
   for (i = 0; i < gsp_class->num_control_in; i++)
     slv2_instance_connect_port (lv2->instance,
-        oclass->control_in_portnums[i], &(gsp->control_in[i]));
+        oclass->control_in_ports[i].index, &(gsp->control_in[i]));
   for (i = 0; i < gsp_class->num_control_out; i++)
     slv2_instance_connect_port (lv2->instance,
-        oclass->control_out_portnums[i], &(gsp->control_out[i]));
+        oclass->control_out_ports[i].index, &(gsp->control_out[i]));
 
   return TRUE;
 }
@@ -465,10 +499,10 @@ gst_lv2_process (GstSignalProcessor * gsp, guint nframes)
 
   for (i = 0; i < gsp_class->num_audio_in; i++)
     slv2_instance_connect_port (lv2->instance,
-        oclass->audio_in_portnums[i], gsp->audio_in[i]);
+        oclass->audio_in_ports[i].index, gsp->audio_in[i]);
   for (i = 0; i < gsp_class->num_audio_out; i++)
     slv2_instance_connect_port (lv2->instance,
-        oclass->audio_out_portnums[i], gsp->audio_out[i]);
+        oclass->audio_out_ports[i].index, gsp->audio_out[i]);
 
   slv2_instance_run (lv2->instance, nframes);
 }

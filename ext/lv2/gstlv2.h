@@ -57,15 +57,22 @@ struct _GstLV2 {
   gboolean activated;
 };
 
+struct _GstLV2Port {
+  gint      index;
+  SLV2Value group;
+};
+
 struct _GstLV2Class {
   GstSignalProcessorClass parent_class;
 
   SLV2Plugin plugin;
 
-  gint *audio_in_portnums;
-  gint *audio_out_portnums;
-  gint *control_in_portnums;
-  gint *control_out_portnums;
+  GSList *groups;
+
+  struct _GstLV2Port *audio_in_ports;
+  struct _GstLV2Port *audio_out_ports;
+  struct _GstLV2Port *control_in_ports;
+  struct _GstLV2Port *control_out_ports;
 };
 
 
