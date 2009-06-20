@@ -1452,7 +1452,7 @@ paint_setup_NV12 (paintinfo * p, unsigned char *dest)
   p->vp = p->up + 1;
   p->ustride = p->ystride;
   p->vstride = p->ystride;
-  p->endptr = p->up + (p->ystride * p->height) / 2;
+  p->endptr = p->up + (p->ystride * GST_ROUND_UP_2 (p->height)) / 2;
 }
 
 static void
@@ -1464,7 +1464,7 @@ paint_setup_NV21 (paintinfo * p, unsigned char *dest)
   p->up = p->vp + 1;
   p->ustride = p->ystride;
   p->vstride = p->ystride;
-  p->endptr = p->vp + (p->ustride * p->height) / 2;
+  p->endptr = p->vp + (p->ystride * GST_ROUND_UP_2 (p->height)) / 2;
 }
 
 static void
@@ -1483,11 +1483,11 @@ paint_hline_I420 (paintinfo * p, int x, int y, int w)
 static void
 paint_hline_NV12_NV21 (paintinfo * p, int x, int y, int w)
 {
-  int x1 = GST_ROUND_UP_2 (x) / 2;
-  int x2 = GST_ROUND_UP_2 (x + w) / 2;
+  int x1 = x / 2;
+  int x2 = (x + w) / 2;
   int offset = y * p->ystride;
-  int offsetuv = GST_ROUND_UP_2 ((y / 2) * p->ustride + x);
-  int uvlength = x2 - x1;
+  int offsetuv = (y / 2) * p->ustride + (x & ~0x01);
+  int uvlength = x2 - x1 + 1;
 
   oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
   if (uvlength) {
