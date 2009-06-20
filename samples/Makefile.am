@@ -1,7 +1,7 @@
 if USE_MONO_COMPILER
 MCS_TARGETS = gtk-video-player.exe
 endif
-TARGETS = playbin-player.exe decodebin-transcoder.exe helloworld.exe typefind.exe metadata.exe $(MCS_TARGETS)
+TARGETS = playbin-player.exe decodebin-transcoder.exe helloworld.exe typefind.exe metadata.exe appsrc.exe $(MCS_TARGETS)
 DEBUGS = $(addsuffix .mdb, $(TARGETS))
 
 all: $(TARGETS) link
@@ -29,6 +29,9 @@ metadata.exe: $(srcdir)/MetaData.cs $(assemblies)
 
 mp3launchparse.exe: $(srcdir)/MP3LaunchParse.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MP3LaunchParse.cs
+
+appsrc.exe: $(srcdir)/AppSrc.cs $(assemblies)
+	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) -r:Mono.Cairo.dll $(srcdir)/AppSrc.cs
 
 gtk-video-player.exe: $(srcdir)/GtkVideoPlayer.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) -pkg:gtk-sharp-2.0 $(srcdir)/GtkVideoPlayer.cs
