@@ -45,7 +45,6 @@ sources = \
 	Value.cs \
 	PropertyInfo.cs \
 	EnumInfo.cs \
-	Iterator.cs \
 	MiniObject.cs \
 	Marshaller.cs \
 	GstSharp.PadQueryTypeFunctionNative.cs \
@@ -103,6 +102,7 @@ customs = 			\
 	IndexEntry.custom       \
 	Index.custom       \
 	IndexFactory.custom       \
+	Iterator.custom       \
 	Registry.custom         \
 	Query.custom 	        \
 	Structure.custom        \

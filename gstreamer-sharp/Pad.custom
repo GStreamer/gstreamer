@@ -361,16 +361,3 @@ public void StreamUnlock (uint depth) {
 public bool StreamTryLock () {
   return g_static_rec_mutex_trylock (StreamLockPtr);
 }
-
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_pad_iterate_internal_links (IntPtr pad);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_pad_iterate_internal_links_default (IntPtr pad);
-
-
-public IEnumerable InternalLinks {
-  get {
-    return new Enumerable (gst_pad_iterate_internal_links (Handle));
-  }
-}
-

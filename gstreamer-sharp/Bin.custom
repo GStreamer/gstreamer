@@ -53,53 +53,6 @@ public Gst.Element GetByInterface (System.Type type) {
   return GetByInterface (t);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_bin_iterate_elements (IntPtr bin);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_bin_iterate_recurse (IntPtr bin);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_bin_iterate_sinks (IntPtr bin);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_bin_iterate_sorted (IntPtr bin);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_bin_iterate_sources (IntPtr bin);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_bin_iterate_all_by_interface (IntPtr bin, IntPtr gtype);
-
-public IEnumerable Elements {
-  get {
-    return new Enumerable (gst_bin_iterate_elements (Handle));
-  }
-}
-
-public IEnumerable ElementsRecurse {
-  get {
-    return new Enumerable (gst_bin_iterate_recurse (Handle));
-  }
-}
-
-public IEnumerable ElementsSorted {
-  get {
-    return new Enumerable (gst_bin_iterate_sorted (Handle));
-  }
-}
-
-public IEnumerable SinkElements {
-  get {
-    return new Enumerable (gst_bin_iterate_sinks (Handle));
-  }
-}
-
-public IEnumerable SourceElements {
-  get {
-    return new Enumerable (gst_bin_iterate_sources (Handle));
-  }
-}
-
-public IEnumerable GetAllByInterface (GLib.GType type) {
-  return new Enumerable (gst_bin_iterate_all_by_interface (Handle, type.Val));
-}
-
 public IEnumerable GetAllByInterface (System.Type type) {
   if (!type.IsSubclassOf (typeof (GLib.GInterfaceAdapter)))
     return null;

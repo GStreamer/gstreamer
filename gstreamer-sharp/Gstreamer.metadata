@@ -45,6 +45,12 @@
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_get_by_name_recurse_up']/return-type" name="owned">true</attr> 
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_get_by_interface']/return-type" name="owned">true</attr> 
   <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_find_unlinked_pad']/return-type" name="owned">true</attr> 
+  <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_iterate_elements']" name="name">GetElements</attr> 
+  <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_iterate_sinks']" name="name">GetSinkElements</attr> 
+  <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_iterate_sources']" name="name">GetSourceElements</attr> 
+  <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_iterate_sorted']" name="name">GetElementsSorted</attr> 
+  <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_iterate_recurse']" name="name">GetElementsRecurse</attr> 
+  <attr path="/api/namespace/object[@name='Bin']/method[@cname='gst_bin_iterate_all_by_interface']" name="name">GetAllByInterface</attr> 
   <add-node path="/api/namespace/object[@name='Bin']">
     <implements>
       <interface cname="GstChildProxy" />
@@ -305,6 +311,9 @@
   <remove-attr path="/api/namespace/object[@name='Element']/field[@name='CurrentState']" name="hidden"/>
   <move-node path="/api/namespace/object[@name='Element']/method[@cname='gst_element_make_from_uri']">/api/namespace/object[@name='ElementFactory']</move-node>
   <move-node path="/api/namespace/object[@name='Element']/method[@cname='gst_element_register']">/api/namespace/object[@name='ElementFactory']</move-node>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_iterate_pads']" name="name">GetPads</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_iterate_src_pads']" name="name">GetSrcPads</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_iterate_sink_pads']" name="name">GetSinkPads</attr>
   
   <attr path="/api/namespace/struct[@name='ElementDetails']" name="internal">1</attr>
 
@@ -472,6 +481,11 @@
   <attr path="/api/namespace/callback[@name='IndexResolver']/parameters/parameter[@name='writer_string']" name="pass_as">out</attr>
 
   <attr path="/api/namespace/class[@name='Iterator']" name="hidden">1</attr>
+  <add-node path="/api/namespace[@name='Gst']">
+		<struct name="Iterator" cname="GstIterator" opaque="true">
+			<implements><interface name="IEnumerable" /></implements>
+		</struct>
+  </add-node>
 
   <remove-node path="/api/namespace/class[@name='Init']" />
 
@@ -587,9 +601,9 @@
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_query_type_function']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_query_types']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_query_types_default']" name="hidden">1</attr>
-  <!-- FIXME: GstIterator* binding missing -->
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_iterate_internal_links_function']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_iterate_internal_links']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_iterate_internal_links_default']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_iterate_internal_links']" name="name">GetInternalLinks</attr>
   <add-node path="/api/namespace[@name='Gst']">
     <callback name="PadQueryTypeFunction" cname="GstPadQueryTypeFunction" hidden="1">
       <return-type type="const-GstQueryType*" />

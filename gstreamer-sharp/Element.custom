@@ -25,31 +25,6 @@ public static void Unlink (params Element [] elements) {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_element_iterate_pads (IntPtr element);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_element_iterate_src_pads (IntPtr element);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_element_iterate_sink_pads (IntPtr element);
-
-public IEnumerable Pads {
-  get {
-    return new Enumerable (gst_element_iterate_pads (Handle));
-  }
-}
-
-public IEnumerable SinkPads {
-  get {
-    return new Enumerable (gst_element_iterate_sink_pads (Handle));
-  }
-}
-
-public IEnumerable SrcPads {
-  get {
-    return new Enumerable (gst_element_iterate_src_pads (Handle));
-  }
-}
-
 public Gst.StateChangeReturn GetState (out Gst.State state, ulong timeout) {
   Gst.State pending;
   return GetState (out state, out pending, timeout);
