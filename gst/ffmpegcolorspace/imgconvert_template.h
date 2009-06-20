@@ -123,6 +123,7 @@ static void glue(nv12_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
     int w, y, cb, cr, r_add, g_add, b_add;
     uint8_t *cm = cropTbl + MAX_NEG_CROP;
     unsigned int r, g, b;
+    int c_wrap = src->linesize[1] - ((width+1) & ~0x01);
 
     d = dst->data[0];
     y1_ptr = src->data[0];
@@ -169,7 +170,7 @@ static void glue(nv12_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
         }
         d += 2 * dst->linesize[0];
         y1_ptr += 2 * src->linesize[0] - width;
-        c_ptr += src->linesize[1] - width;
+        c_ptr += c_wrap;
     }
     /* handle odd height */
     if (height) {
@@ -210,6 +211,7 @@ static void glue(nv21_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
     int w, y, cb, cr, r_add, g_add, b_add;
     uint8_t *cm = cropTbl + MAX_NEG_CROP;
     unsigned int r, g, b;
+    int c_wrap = src->linesize[1] - ((width+1) & ~0x01);
 
     d = dst->data[0];
     y1_ptr = src->data[0];
@@ -256,7 +258,7 @@ static void glue(nv21_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
         }
         d += 2 * dst->linesize[0];
         y1_ptr += 2 * src->linesize[0] - width;
-        c_ptr += src->linesize[1] - width;
+        c_ptr += c_wrap;
     }
     /* handle odd height */
     if (height) {

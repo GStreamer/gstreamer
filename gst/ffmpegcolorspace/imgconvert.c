@@ -1329,10 +1329,13 @@ nv12_to_nv21 (AVPicture * dst, const AVPicture * src, int width, int height)
 {
   const uint8_t *s_c_ptr;
   uint8_t *d_c_ptr;
-  int w;
+  int w, c_wrap;
+
+  memcpy (dst->data[0], src->data[0], src->linesize[0] * height);
 
   s_c_ptr = src->data[1];
   d_c_ptr = dst->data[1];
+  c_wrap = src->linesize[1] - ((width + 1) & ~0x01);
 
   for (; height >= 2; height -= 2) {
     for (w = width; w >= 2; w -= 2) {
@@ -1349,9 +1352,10 @@ nv12_to_nv21 (AVPicture * dst, const AVPicture * src, int width, int height)
       s_c_ptr += 2;
       d_c_ptr += 2;
     }
-    s_c_ptr += src->linesize[1] - width;
-    d_c_ptr += src->linesize[1] - width;
+    s_c_ptr += c_wrap;
+    d_c_ptr += c_wrap;
   }
+
   /* handle odd height */
   if (height) {
     for (w = width; w >= 2; w -= 2) {
@@ -1371,7 +1375,174 @@ nv12_to_nv21 (AVPicture * dst, const AVPicture * src, int width, int height)
   }
 }
 
+static void
+nv12_to_yuv444p (AVPicture * dst, const AVPicture * src, int width, int height)
+{
+  int w, h;
+  uint8_t *dst_lum1, *dst_lum2, *dst_line = dst->data[0];
+  uint8_t *dst_cb1, *dst_cb2, *dst_cb_line = dst->data[1];
+  uint8_t *dst_cr1, *dst_cr2, *dst_cr_line = dst->data[2];
+  uint8_t *lum1, *lum2, *src_lum_line = src->data[0];
+  uint8_t *src_c1, *src_c_line = src->data[1];
+  uint8_t cb, cr;
+
+  for (h = height / 2; h--;) {
+    dst_lum1 = dst_line;
+    dst_lum2 = dst_line + dst->linesize[0];
+
+    dst_cb1 = dst_cb_line;
+    dst_cb2 = dst_cb_line + dst->linesize[1];
+    dst_cr1 = dst_cr_line;
+    dst_cr2 = dst_cr_line + dst->linesize[2];
+
+    lum1 = src_lum_line;
+    lum2 = src_lum_line + src->linesize[0];
+
+    src_c1 = src_c_line;
+
+    for (w = width / 2; w--;) {
+      cb = *src_c1++;
+      cr = *src_c1++;
+      *dst_lum1++ = *lum1++;
+      *dst_lum2++ = *lum2++;
+      *dst_cb1++ = *dst_cb2++ = cb;
+      *dst_cr1++ = *dst_cr2++ = cr;
+      *dst_lum1++ = *lum1++;
+      *dst_lum2++ = *lum2++;
+      *dst_cb1++ = *dst_cb2++ = cb;
+      *dst_cr1++ = *dst_cr2++ = cr;
+    }
+    /* odd width */
+    if (width % 2 != 0) {
+      cb = *src_c1++;
+      cr = *src_c1++;
+      *dst_lum1++ = *lum1++;
+      *dst_lum2++ = *lum2++;
+      *dst_cb1++ = *dst_cb2++ = *src_c1++;
+      *dst_cr1++ = *dst_cr2++ = *src_c1++;
+    }
+
+    dst_line += dst->linesize[0] * 2;
+    dst_cb_line += dst->linesize[1] * 2;
+    dst_cr_line += dst->linesize[2] * 2;
+    src_lum_line += src->linesize[0] * 2;
+    src_c_line += src->linesize[1];
+  }
+
+  /* odd height */
+  if (height % 2 != 0) {
+    dst_lum1 = dst_line;
+    lum1 = src_lum_line;
+    src_c1 = src_c_line;
+    dst_cb1 = dst_cb_line;
+    dst_cr1 = dst_cr_line;
+
+    for (w = width / 2; w--;) {
+      cb = *src_c1++;
+      cr = *src_c1++;
+      *dst_lum1++ = *lum1++;
+      *dst_cb1++ = cb;
+      *dst_cr1++ = cr;
+      *dst_lum1++ = *lum1++;
+      *dst_cb1++ = cb;
+      *dst_cr1++ = cr;
+    }
+    /* odd width */
+    if (width % 2 != 0) {
+      cb = *src_c1++;
+      cr = *src_c1++;
+      *dst_lum1++ = *lum1++;
+      *dst_cb1++ = cb;
+      *dst_cr1++ = cr;
+    }
+  }
+}
+
 #define nv21_to_nv12 nv12_to_nv21
+
+static void
+nv21_to_yuv444p (AVPicture * dst, const AVPicture * src, int width, int height)
+{
+  int w, h;
+  uint8_t *dst_lum1, *dst_lum2, *dst_line = dst->data[0];
+  uint8_t *dst_cb1, *dst_cb2, *dst_cb_line = dst->data[1];
+  uint8_t *dst_cr1, *dst_cr2, *dst_cr_line = dst->data[2];
+  uint8_t *lum1, *lum2, *src_lum_line = src->data[0];
+  uint8_t *src_c1, *src_c_line = src->data[1];
+  uint8_t cb, cr;
+
+  for (h = height / 2; h--;) {
+    dst_lum1 = dst_line;
+    dst_lum2 = dst_line + dst->linesize[0];
+
+    dst_cb1 = dst_cb_line;
+    dst_cb2 = dst_cb_line + dst->linesize[1];
+    dst_cr1 = dst_cr_line;
+    dst_cr2 = dst_cr_line + dst->linesize[2];
+
+    lum1 = src_lum_line;
+    lum2 = src_lum_line + src->linesize[0];
+
+    src_c1 = src_c_line;
+
+    for (w = width / 2; w--;) {
+      cr = *src_c1++;
+      cb = *src_c1++;
+      *dst_lum1++ = *lum1++;
+      *dst_lum2++ = *lum2++;
+      *dst_cb1++ = *dst_cb2++ = cb;
+      *dst_cr1++ = *dst_cr2++ = cr;
+      *dst_lum1++ = *lum1++;
+      *dst_lum2++ = *lum2++;
+      *dst_cb1++ = *dst_cb2++ = cb;
+      *dst_cr1++ = *dst_cr2++ = cr;
+    }
+    /* odd width */
+    if (width % 2 != 0) {
+      cr = *src_c1++;
+      cb = *src_c1++;
+      *dst_lum1++ = *lum1++;
+      *dst_lum2++ = *lum2++;
+      *dst_cb1++ = *dst_cb2++ = *src_c1++;
+      *dst_cr1++ = *dst_cr2++ = *src_c1++;
+    }
+
+    dst_line += dst->linesize[0] * 2;
+    dst_cb_line += dst->linesize[1] * 2;
+    dst_cr_line += dst->linesize[2] * 2;
+    src_lum_line += src->linesize[0] * 2;
+    src_c_line += src->linesize[1];
+  }
+
+  /* odd height */
+  if (height % 2 != 0) {
+    dst_lum1 = dst_line;
+    lum1 = src_lum_line;
+    src_c1 = src_c_line;
+
+    dst_cb1 = dst_cb_line;
+    dst_cr1 = dst_cr_line;
+
+    for (w = width / 2; w--;) {
+      cr = *src_c1++;
+      cb = *src_c1++;
+      *dst_lum1++ = *lum1++;
+      *dst_cb1++ = cb;
+      *dst_cr1++ = cr;
+      *dst_lum1++ = *lum1++;
+      *dst_cb1++ = cb;
+      *dst_cr1++ = cr;
+    }
+    /* odd width */
+    if (width % 2 != 0) {
+      cr = *src_c1++;
+      cb = *src_c1++;
+      *dst_lum1++ = *lum1++;
+      *dst_cb1++ = cb;
+      *dst_cr1++ = cr;
+    }
+  }
+}
 
 #define SCALEBITS 10
 #define ONE_HALF  (1 << (SCALEBITS - 1))
@@ -2467,7 +2638,8 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_NV12, PIX_FMT_BGRA32, nv12_to_bgra32},
   {PIX_FMT_NV12, PIX_FMT_ARGB32, nv12_to_argb32},
   {PIX_FMT_NV12, PIX_FMT_ABGR32, nv12_to_abgr32},
-  {PIX_FMT_NV12, PIX_FMT_ABGR32, nv12_to_nv21},
+  {PIX_FMT_NV12, PIX_FMT_NV21, nv12_to_nv21},
+  {PIX_FMT_NV12, PIX_FMT_YUV444P, nv12_to_yuv444p},
 
   {PIX_FMT_NV21, PIX_FMT_RGB555, nv21_to_rgb555},
   {PIX_FMT_NV21, PIX_FMT_RGB565, nv21_to_rgb565},
@@ -2481,7 +2653,8 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_NV21, PIX_FMT_BGRA32, nv21_to_bgra32},
   {PIX_FMT_NV21, PIX_FMT_ARGB32, nv21_to_argb32},
   {PIX_FMT_NV21, PIX_FMT_ABGR32, nv21_to_abgr32},
-  {PIX_FMT_NV12, PIX_FMT_ABGR32, nv21_to_nv12},
+  {PIX_FMT_NV21, PIX_FMT_YUV444P, nv21_to_yuv444p},
+  {PIX_FMT_NV21, PIX_FMT_NV12, nv21_to_nv12},
 
   {PIX_FMT_YUV422P, PIX_FMT_YUV422, yuv422p_to_yuv422},
   {PIX_FMT_YUV422P, PIX_FMT_UYVY422, yuv422p_to_uyvy422},
