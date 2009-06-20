@@ -289,7 +289,8 @@ parse_debug_list (const gchar * list)
 #endif
 
 #ifdef G_OS_WIN32
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
   if (fdwReason == DLL_PROCESS_ATTACH)
     gst_dll_handle = (HMODULE) hinstDLL;
@@ -742,8 +743,8 @@ scan_and_update_registry (GstRegistry * default_registry,
       char *base_dir;
       char *dir;
 
-      base_dir = g_win32_get_package_installation_directory_of_module (
-         gst_dll_handle);
+      base_dir =
+          g_win32_get_package_installation_directory_of_module (gst_dll_handle);
 
       dir = g_build_filename (base_dir, "lib", "gstreamer-0.10", NULL);
       GST_DEBUG ("scanning DLL dir %s", dir);
@@ -1019,6 +1020,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_bin_flags_get_type ());
   g_type_class_ref (gst_buffer_flag_get_type ());
   g_type_class_ref (gst_buffer_copy_flags_get_type ());
+  g_type_class_ref (gst_buffer_list_item_get_type ());
   g_type_class_ref (gst_bus_flags_get_type ());
   g_type_class_ref (gst_bus_sync_reply_get_type ());
   g_type_class_ref (gst_caps_flags_get_type ());
