@@ -18,7 +18,7 @@ public class AppSrcDemo
 {
 	static MainLoop loop;
 	static Gst.App.AppSrc appsrc;
-  static Pipeline pipeline;
+	static Pipeline pipeline;
 
 	public static void Main (string[] args)
 	{
@@ -39,16 +39,17 @@ public class AppSrcDemo
 		appsrc.Caps = Gst.Video.VideoUtil.FormatNewCaps(Gst.Video.VideoFormat.BGRA, 640, 480, 4, 1, 1, 1);
 
 		// Connect the handlers
-		GLib.Signal.Lookup(appsrc, "need-data").AddDelegate(new EventHandler(PushAppData));
+		appsrc.NeedData += PushAppData;
 		pipeline.Bus.AddSignalWatch();
 		pipeline.Bus.Message += MessageHandler;
 
 		// Run, loop, run!
 		pipeline.SetState(State.Playing);
 		loop.Run();
+		pipeline.SetState(State.Null);
 	}
 
-	static void PushAppData(object o, EventArgs e)
+	static void PushAppData(object o, Gst.App.NeedDataArgs args)
 	{
 		ulong mseconds = 0;
 		if (appsrc.Clock != null)
