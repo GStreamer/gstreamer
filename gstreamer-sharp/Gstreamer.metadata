@@ -1011,6 +1011,7 @@
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='get_caps']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='query']" name="name">SrcQuery</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/method[@name='IsLive']" name="name">GetLive</attr>
 
   <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='transform_caps']/return-type" name="owned">true</attr>
