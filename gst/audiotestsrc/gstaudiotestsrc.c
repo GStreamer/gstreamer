@@ -135,7 +135,7 @@ gst_audiostestsrc_wave_get_type (void)
     {GST_AUDIO_TEST_SRC_WAVE_SINE_TAB, "Sine table", "sine-table"},
     {GST_AUDIO_TEST_SRC_WAVE_TICKS, "Periodic Ticks", "ticks"},
     {GST_AUDIO_TEST_SRC_WAVE_GAUSSIAN_WHITE_NOISE, "White Gaussian noise",
-        "gaussian"},
+        "gaussian-noise"},
     {0, NULL, NULL},
   };
 
@@ -438,7 +438,7 @@ DEFINE_SINE (int32, 2147483647.0);
 DEFINE_SINE (float, 1.0);
 DEFINE_SINE (double, 1.0);
 
-static ProcessFunc sine_funcs[] = {
+static const ProcessFunc sine_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_sine_int16,
   (ProcessFunc) gst_audio_test_src_create_sine_int32,
   (ProcessFunc) gst_audio_test_src_create_sine_float,
@@ -472,7 +472,7 @@ DEFINE_SQUARE (int32, 2147483647.0);
 DEFINE_SQUARE (float, 1.0);
 DEFINE_SQUARE (double, 1.0);
 
-static ProcessFunc square_funcs[] = {
+static const ProcessFunc square_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_square_int16,
   (ProcessFunc) gst_audio_test_src_create_square_int32,
   (ProcessFunc) gst_audio_test_src_create_square_float,
@@ -510,7 +510,7 @@ DEFINE_SAW (int32, 2147483647.0);
 DEFINE_SAW (float, 1.0);
 DEFINE_SAW (double, 1.0);
 
-static ProcessFunc saw_funcs[] = {
+static const ProcessFunc saw_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_saw_int16,
   (ProcessFunc) gst_audio_test_src_create_saw_int32,
   (ProcessFunc) gst_audio_test_src_create_saw_float,
@@ -551,7 +551,7 @@ DEFINE_TRIANGLE (int32, 2147483647.0);
 DEFINE_TRIANGLE (float, 1.0);
 DEFINE_TRIANGLE (double, 1.0);
 
-static ProcessFunc triangle_funcs[] = {
+static const ProcessFunc triangle_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_triangle_int16,
   (ProcessFunc) gst_audio_test_src_create_triangle_int32,
   (ProcessFunc) gst_audio_test_src_create_triangle_float,
@@ -570,7 +570,7 @@ DEFINE_SILENCE (int32);
 DEFINE_SILENCE (float);
 DEFINE_SILENCE (double);
 
-static ProcessFunc silence_funcs[] = {
+static const ProcessFunc silence_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_silence_int16,
   (ProcessFunc) gst_audio_test_src_create_silence_int32,
   (ProcessFunc) gst_audio_test_src_create_silence_float,
@@ -596,7 +596,7 @@ DEFINE_WHITE_NOISE (int32, 2147483647.0);
 DEFINE_WHITE_NOISE (float, 1.0);
 DEFINE_WHITE_NOISE (double, 1.0);
 
-static ProcessFunc white_noise_funcs[] = {
+static const ProcessFunc white_noise_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_white_noise_int16,
   (ProcessFunc) gst_audio_test_src_create_white_noise_int32,
   (ProcessFunc) gst_audio_test_src_create_white_noise_float,
@@ -691,7 +691,7 @@ DEFINE_PINK (int32, 2147483647.0);
 DEFINE_PINK (float, 1.0);
 DEFINE_PINK (double, 1.0);
 
-static ProcessFunc pink_noise_funcs[] = {
+static const ProcessFunc pink_noise_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_pink_noise_int16,
   (ProcessFunc) gst_audio_test_src_create_pink_noise_int32,
   (ProcessFunc) gst_audio_test_src_create_pink_noise_float,
@@ -738,7 +738,7 @@ DEFINE_SINE_TABLE (int32, 2147483647.0);
 DEFINE_SINE_TABLE (float, 1.0);
 DEFINE_SINE_TABLE (double, 1.0);
 
-static ProcessFunc sine_table_funcs[] = {
+static const ProcessFunc sine_table_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_sine_table_int16,
   (ProcessFunc) gst_audio_test_src_create_sine_table_int32,
   (ProcessFunc) gst_audio_test_src_create_sine_table_float,
@@ -775,7 +775,7 @@ DEFINE_TICKS (int32, 2147483647.0);
 DEFINE_TICKS (float, 1.0);
 DEFINE_TICKS (double, 1.0);
 
-static ProcessFunc tick_funcs[] = {
+static const ProcessFunc tick_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_tick_int16,
   (ProcessFunc) gst_audio_test_src_create_tick_int32,
   (ProcessFunc) gst_audio_test_src_create_tick_float,
@@ -813,7 +813,7 @@ DEFINE_GAUSSIAN_WHITE_NOISE (int32, 2147483647.0);
 DEFINE_GAUSSIAN_WHITE_NOISE (float, 1.0);
 DEFINE_GAUSSIAN_WHITE_NOISE (double, 1.0);
 
-static ProcessFunc gaussian_white_noise_funcs[] = {
+static const ProcessFunc gaussian_white_noise_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_gaussian_white_noise_int16,
   (ProcessFunc) gst_audio_test_src_create_gaussian_white_noise_int32,
   (ProcessFunc) gst_audio_test_src_create_gaussian_white_noise_float,
