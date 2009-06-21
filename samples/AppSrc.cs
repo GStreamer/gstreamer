@@ -74,7 +74,10 @@ public class AppSrcDemo
 			context.Color = new Color(0, 0, 1.0);
 			context.Stroke();
 		}
-		return img.Data;
+
+		byte[] data = img.Data;
+		img.Destroy();
+		return data;
 	}
 
 	static void MessageHandler(object sender, MessageArgs args)
