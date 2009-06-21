@@ -155,7 +155,7 @@ static GstFlowReturn gst_audio_amplify_transform_ip (GstBaseTransform * base,
 #define MIN_gint32 G_MININT32
 #define MAX_gint32 G_MAXINT32
 
-#define MAKE_INT_FUNCS(type)                                                  \
+#define MAKE_INT_FUNCS(type,largetype)                                        \
 static void                                                                   \
 gst_audio_amplify_transform_##type##_clip (GstAudioAmplify * filter,          \
     void * data, guint num_samples)                                           \
@@ -163,7 +163,7 @@ gst_audio_amplify_transform_##type##_clip (GstAudioAmplify * filter,          \
   type *d = data;                                                             \
                                                                               \
   while (num_samples--) {                                                     \
-    glong val = *d * filter->amplification;                                   \
+    largetype val = *d * filter->amplification;                               \
     *d++ =  CLAMP (val, MIN_##type, MAX_##type);                              \
   }                                                                           \
 }                                                                             \
@@ -174,12 +174,12 @@ gst_audio_amplify_transform_##type##_wrap_negative (GstAudioAmplify * filter, \
   type *d = data;                                                             \
                                                                               \
   while (num_samples--) {                                                     \
-    glong val = *d * filter->amplification;                                   \
+    largetype val = *d * filter->amplification;                               \
     if (val > MAX_##type)                                                     \
-      val = MIN_##type + (val - MIN_##type) % ((glong) MAX_##type + 1 -       \
+      val = MIN_##type + (val - MIN_##type) % ((largetype) MAX_##type + 1 -   \
           MIN_##type);                                                        \
     else if (val < MIN_##type)                                                \
-      val = MAX_##type - (MAX_##type - val) % ((glong) MAX_##type + 1 -       \
+      val = MAX_##type - (MAX_##type - val) % ((largetype) MAX_##type + 1 -   \
           MIN_##type);                                                        \
     *d++ = val;                                                               \
   }                                                                           \
@@ -191,7 +191,7 @@ gst_audio_amplify_transform_##type##_wrap_positive (GstAudioAmplify * filter, \
   type *d = data;                                                             \
                                                                               \
   while (num_samples--) {                                                     \
-    glong val = *d * filter->amplification;                                   \
+    largetype val = *d * filter->amplification;                               \
     do {                                                                      \
       if (val > MAX_##type)                                                   \
         val = MAX_##type - (val - MAX_##type);                                \
@@ -274,9 +274,9 @@ gst_audio_amplify_transform_##type##_noclip (GstAudioAmplify * filter,        \
 }
 
 /* *INDENT-OFF* */
-MAKE_INT_FUNCS (gint8)
-MAKE_INT_FUNCS (gint16)
-MAKE_INT_FUNCS (gint32)
+MAKE_INT_FUNCS (gint8,gint)
+MAKE_INT_FUNCS (gint16,gint)
+MAKE_INT_FUNCS (gint32,gint64)
 MAKE_FLOAT_FUNCS (gfloat)
 MAKE_FLOAT_FUNCS (gdouble)
 /* *INDENT-ON* */
