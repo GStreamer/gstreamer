@@ -130,10 +130,12 @@ gst_audiostestsrc_wave_get_type (void)
     {GST_AUDIO_TEST_SRC_WAVE_SAW, "Saw", "saw"},
     {GST_AUDIO_TEST_SRC_WAVE_TRIANGLE, "Triangle", "triangle"},
     {GST_AUDIO_TEST_SRC_WAVE_SILENCE, "Silence", "silence"},
-    {GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE, "White noise", "white-noise"},
+    {GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE, "White uniform noise", "white-noise"},
     {GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE, "Pink noise", "pink-noise"},
     {GST_AUDIO_TEST_SRC_WAVE_SINE_TAB, "Sine table", "sine-table"},
     {GST_AUDIO_TEST_SRC_WAVE_TICKS, "Periodic Ticks", "ticks"},
+    {GST_AUDIO_TEST_SRC_WAVE_GAUSSIAN_WHITE_NOISE, "White Gaussian noise",
+        "gaussian"},
     {0, NULL, NULL},
   };
 
@@ -780,6 +782,44 @@ static ProcessFunc tick_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_tick_double
 };
 
+/* Gaussian white noise using Box-Muller algorithm.  unit variance
+ * normally-distributed random numbers are generated in pairs as the real
+ * and imaginary parts of a compex random variable with
+ * uniformly-distributed argument and \chi^{2}-distributed modulus.
+ */
+
+#define DEFINE_GAUSSIAN_WHITE_NOISE(type,scale) \
+static void \
+gst_audio_test_src_create_gaussian_white_noise_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i, c; \
+  gdouble amp = (src->volume * scale); \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer * src->channels; ) { \
+    for (c = 0; c < src->channels; ++c) { \
+      gdouble mag = sqrt (-2 * log (1.0 - g_random_double ())); \
+      gdouble phs = g_random_double_range (0.0, M_PI_M2); \
+      \
+      samples[i++] = (g##type) (amp * mag * cos (phs)); \
+      if (++c >= src->channels) \
+        break; \
+      samples[i++] = (g##type) (amp * mag * sin (phs)); \
+    } \
+  } \
+}
+
+DEFINE_GAUSSIAN_WHITE_NOISE (int16, 32767.0);
+DEFINE_GAUSSIAN_WHITE_NOISE (int32, 2147483647.0);
+DEFINE_GAUSSIAN_WHITE_NOISE (float, 1.0);
+DEFINE_GAUSSIAN_WHITE_NOISE (double, 1.0);
+
+static ProcessFunc gaussian_white_noise_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_gaussian_white_noise_int16,
+  (ProcessFunc) gst_audio_test_src_create_gaussian_white_noise_int32,
+  (ProcessFunc) gst_audio_test_src_create_gaussian_white_noise_float,
+  (ProcessFunc) gst_audio_test_src_create_gaussian_white_noise_double
+};
+
 /*
  * gst_audio_test_src_change_wave:
  * Assign function pointer of wave genrator.
@@ -822,6 +862,9 @@ gst_audio_test_src_change_wave (GstAudioTestSrc * src)
     case GST_AUDIO_TEST_SRC_WAVE_TICKS:
       gst_audio_test_src_init_sine_table (src);
       src->process = tick_funcs[src->format];
+      break;
+    case GST_AUDIO_TEST_SRC_WAVE_GAUSSIAN_WHITE_NOISE:
+      src->process = gaussian_white_noise_funcs[src->format];
       break;
     default:
       GST_ERROR ("invalid wave-form");

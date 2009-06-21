@@ -45,10 +45,11 @@ G_BEGIN_DECLS
  * @GST_AUDIO_TEST_SRC_WAVE_SAW: a saw wave
  * @GST_AUDIO_TEST_SRC_WAVE_TRIANGLE: a tringle wave
  * @GST_AUDIO_TEST_SRC_WAVE_SILENCE: silence
- * @GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE: white noise
+ * @GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE: white uniform noise
  * @GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE: pink noise
  * @GST_AUDIO_TEST_SRC_WAVE_SINE_TAB: sine wave using a table
  * @GST_AUDIO_TEST_SRC_WAVE_TICKS: periodic ticks
+ * @GST_AUDIO_TEST_SRC_WAVE_GAUSSIAN_WHITE_NOISE: white (zero mean) Gaussian noise;  volume sets the standard deviation of the noise in units of the range of values of the sample type, e.g. volume=0.1 produces noise with a standard deviation of 0.1*32767=3277 with 16-bit integer samples, or 0.1*1.0=0.1 with floating-point samples.
  *
  * Different types of supported sound waves.
  */
@@ -61,7 +62,8 @@ typedef enum {
   GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE,
   GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE,
   GST_AUDIO_TEST_SRC_WAVE_SINE_TAB,
-  GST_AUDIO_TEST_SRC_WAVE_TICKS
+  GST_AUDIO_TEST_SRC_WAVE_TICKS,
+  GST_AUDIO_TEST_SRC_WAVE_GAUSSIAN_WHITE_NOISE
 } GstAudioTestSrcWave; 
 
 #define PINK_MAX_RANDOM_ROWS   (30)
