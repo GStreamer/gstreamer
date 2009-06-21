@@ -92,7 +92,7 @@ if grep "^AM_CONFIG_HEADER" configure.ac >/dev/null; then
   autoheader || { echo "**Error**: autoheader failed."; exit 1; }
 fi
 
-echo "Running automake --add-missing --foreign $am_opt ..."
+echo "Running automake --add-missing --foreign -Wno-portability $am_opt ..."
 automake --add-missing --foreign $am_opt ||
   { echo "**Error**: automake failed."; exit 1; }
 echo "Running autoconf ..."

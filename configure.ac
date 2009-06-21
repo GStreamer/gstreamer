@@ -1,7 +1,10 @@
-AC_INIT(README)
+AC_INIT(gstreamer-sharp, 0.9.0,
+    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=gst-sharp,
+    gstreamer-sharp)
 AC_CANONICAL_SYSTEM
+AC_CONFIG_SRCDIR([README])
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(gstreamer-sharp, 0.9.0)
+AM_INIT_AUTOMAKE([-Wno-portability])
 AM_MAINTAINER_MODE
 
 AC_PROG_CC
