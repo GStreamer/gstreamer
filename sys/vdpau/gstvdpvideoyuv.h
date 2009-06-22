@@ -22,6 +22,7 @@
 #define __GST_VDP_VIDEO_YUV_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 
 #include "gstvdpdevice.h"
 
@@ -38,19 +39,14 @@ typedef struct _GstVdpVideoYUV      GstVdpVideoYUV;
 typedef struct _GstVdpVideoYUVClass GstVdpVideoYUVClass;
 
 struct _GstVdpVideoYUV {
-  GstElement element;
-
-  GstPad *src, *sink;
-  GstCaps *src_caps;
+  GstBaseTransform transform;
   
   gint width, height;
-  gint framerate_numerator, framerate_denominator;
-  gint par_numerator, par_denominator;
   guint format;
 };
 
 struct _GstVdpVideoYUVClass {
-  GstElementClass parent_class;
+  GstBaseTransformClass transform_class;
 };
 
 GType gst_vdp_video_yuv_get_type (void);

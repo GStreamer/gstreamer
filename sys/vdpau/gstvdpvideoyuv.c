@@ -43,12 +43,14 @@ enum
   PROP_0
 };
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate sink_template =
+GST_STATIC_PAD_TEMPLATE (GST_BASE_TRANSFORM_SINK_NAME,
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VDP_VIDEO_CAPS));
 
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate src_template =
+GST_STATIC_PAD_TEMPLATE (GST_BASE_TRANSFORM_SRC_NAME,
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
@@ -58,49 +60,103 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define DEBUG_INIT(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_vdp_video_yuv_debug, "vdpauvideoyuv", 0, "VDPAU VdpSurface to YUV");
 
-GST_BOILERPLATE_FULL (GstVdpVideoYUV, gst_vdp_video_yuv, GstElement,
-    GST_TYPE_ELEMENT, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstVdpVideoYUV, gst_vdp_video_yuv, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
-static void gst_vdp_video_yuv_finalize (GObject * object);
-static void gst_vdp_video_yuv_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_vdp_video_yuv_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
+static GstCaps *
+gst_vdp_video_yuv_get_src_caps (GstVdpVideoYUV * video_yuv, GstCaps * caps)
+{
+  GstStructure *structure;
+  const GValue *value;
+  GstVdpDevice *device;
+  gint chroma_type;
+  gint width, height;
+  gboolean got_fps;
+  gint fps_n, fps_d;
+  gboolean got_par;
+  gint par_n, par_d;
+  GstCaps *src_caps;
+  gint i;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  value = gst_structure_get_value (structure, "device");
+  device = g_value_get_object (value);
+
+  gst_structure_get_int (structure, "chroma-type", &chroma_type);
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_int (structure, "height", &height);
+
+  got_fps = gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d);
+
+  got_par = gst_structure_get_fraction (structure, "pixel-aspect-ratio",
+      &par_n, &par_d);
+
+  src_caps = gst_caps_new_empty ();
+
+  for (i = 0; i < N_FORMATS; i++) {
+    VdpStatus status;
+    VdpBool is_supported;
+
+    if (formats[i].chroma_type != chroma_type)
+      continue;
+
+    status =
+        device->vdp_video_surface_query_ycbcr_capabilities (device->device,
+        chroma_type, formats[i].format, &is_supported);
+    if (status != VDP_STATUS_OK && status != VDP_STATUS_INVALID_Y_CB_CR_FORMAT) {
+      GST_ELEMENT_ERROR (video_yuv, RESOURCE, READ,
+          ("Could not query VDPAU YCbCr capabilites"),
+          ("Error returned from vdpau was: %s",
+              device->vdp_get_error_string (status)));
+
+      goto done;
+    }
+    if (is_supported) {
+      GstCaps *format_caps;
+
+      format_caps = gst_caps_new_simple ("video/x-raw-yuv",
+          "format", GST_TYPE_FOURCC, formats[i].fourcc,
+          "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+
+      if (got_fps)
+        gst_caps_set_simple (format_caps,
+            "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+
+      if (got_par)
+        gst_caps_set_simple (format_caps,
+            "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+
+      gst_caps_append (src_caps, format_caps);
+    }
+  }
+
+done:
+  if (gst_caps_is_empty (src_caps)) {
+    gst_caps_unref (src_caps);
+    return NULL;
+  }
+
+  return src_caps;
+}
 
 GstFlowReturn
-gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
+gst_vdp_video_yuv_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
-  GstVdpVideoYUV *video_yuv;
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (trans);
   GstVdpDevice *device;
   VdpVideoSurface surface;
-  GstBuffer *outbuf = NULL;
-  GstFlowReturn result = GST_FLOW_ERROR;
 
-  video_yuv = GST_VDP_VIDEO_YUV (GST_OBJECT_PARENT (pad));
-  device = GST_VDP_VIDEO_BUFFER (buffer)->device;
-  surface = GST_VDP_VIDEO_BUFFER (buffer)->surface;
-
-  GST_LOG_OBJECT (video_yuv, "Received buffer format %" GST_FOURCC_FORMAT,
-      GST_FOURCC_ARGS (video_yuv->format));
+  device = GST_VDP_VIDEO_BUFFER (inbuf)->device;
+  surface = GST_VDP_VIDEO_BUFFER (inbuf)->surface;
 
   switch (video_yuv->format) {
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
     {
-      gint size;
       VdpStatus status;
       guint8 *data[3];
       guint32 stride[3];
-
-      size =
-          gst_video_format_get_size (GST_VIDEO_FORMAT_YV12, video_yuv->width,
-          video_yuv->height);
-      result =
-          gst_pad_alloc_buffer_and_set_caps (video_yuv->src,
-          GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (video_yuv->src), &outbuf);
-      if (G_UNLIKELY (result != GST_FLOW_OK)) {
-        GST_DEBUG_OBJECT (video_yuv, "Pad alloc_buffer returned %d", result);
-        goto done;
-      }
 
       data[0] = GST_BUFFER_DATA (outbuf) +
           gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
@@ -129,27 +185,15 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        goto done;
+        return GST_FLOW_ERROR;
       }
       break;
     }
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
     {
-      gint size;
       VdpStatus status;
       guint8 *data[3];
       guint32 stride[3];
-
-      size =
-          gst_video_format_get_size (GST_VIDEO_FORMAT_YV12, video_yuv->width,
-          video_yuv->height);
-      result =
-          gst_pad_alloc_buffer_and_set_caps (video_yuv->src,
-          GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (video_yuv->src), &outbuf);
-      if (G_UNLIKELY (result != GST_FLOW_OK)) {
-        GST_DEBUG_OBJECT (video_yuv, "Pad alloc_buffer returned %d", result);
-        goto done;
-      }
 
       data[0] = GST_BUFFER_DATA (outbuf) +
           gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
@@ -178,28 +222,17 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        goto done;
+        return GST_FLOW_ERROR;
       }
       break;
     }
     case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
     {
-      gint size;
       VdpStatus status;
       guint8 *data[2];
       guint32 stride[2];
 
-      size =
-          video_yuv->width * video_yuv->height +
-          video_yuv->width * video_yuv->height / 2;
       GST_LOG_OBJECT (video_yuv, "Entering buffer_alloc");
-      result =
-          gst_pad_alloc_buffer_and_set_caps (video_yuv->src,
-          GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (video_yuv->src), &outbuf);
-      if (G_UNLIKELY (result != GST_FLOW_OK)) {
-        GST_DEBUG_OBJECT (video_yuv, "Pad alloc_buffer returned %d", result);
-        goto done;
-      }
 
       data[0] = GST_BUFFER_DATA (outbuf);
       data[1] = GST_BUFFER_DATA (outbuf) + video_yuv->width * video_yuv->height;
@@ -218,162 +251,98 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        goto done;
+        return GST_FLOW_ERROR;
       }
       break;
     }
     default:
+      GST_WARNING ("WTF!!!");
       break;
   }
 
-  gst_buffer_unref (buffer);
-
-  gst_buffer_copy_metadata (outbuf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
+  gst_buffer_copy_metadata (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
   GST_LOG_OBJECT (video_yuv, "Pushing buffer with ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
-  return gst_pad_push (video_yuv->src, outbuf);
 
-done:
-  if (outbuf)
-    gst_buffer_unref (outbuf);
-  gst_buffer_unref (buffer);
-  return result;
+  return GST_FLOW_OK;
 }
 
-static GstCaps *
-gst_vdp_video_yuv_get_caps (GstVdpVideoYUV * video_yuv,
-    GstVdpDevice * device, gint chroma_type, gint width, gint height,
-    gint framerate_numerator, gint framerate_denominator, gint par_numerator,
-    gint par_denominator)
+gboolean
+gst_vdp_video_transform_size (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, guint size,
+    GstCaps * othercaps, guint * othersize)
 {
-  GstCaps *caps;
-  gint i;
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (trans);
 
-  caps = gst_caps_new_empty ();
-
-  for (i = 0; i < N_FORMATS; i++) {
-    VdpStatus status;
-    VdpBool is_supported;
-
-    if (formats[i].chroma_type != chroma_type)
-      continue;
-
-    status =
-        device->vdp_video_surface_query_ycbcr_capabilities (device->device,
-        chroma_type, formats[i].format, &is_supported);
-    if (status != VDP_STATUS_OK && status != VDP_STATUS_INVALID_Y_CB_CR_FORMAT) {
-      GST_ELEMENT_ERROR (video_yuv, RESOURCE, READ,
-          ("Could not query VDPAU YCbCr capabilites"),
-          ("Error returned from vdpau was: %s",
-              device->vdp_get_error_string (status)));
-
-      return NULL;
+  if (direction == GST_PAD_SINK) {
+    switch (video_yuv->format) {
+      case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+      {
+        *othersize =
+            gst_video_format_get_size (GST_VIDEO_FORMAT_YV12, video_yuv->width,
+            video_yuv->height);
+        break;
+      }
+      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+      {
+        *othersize =
+            gst_video_format_get_size (GST_VIDEO_FORMAT_YV12, video_yuv->width,
+            video_yuv->height);
+        break;
+      }
+      case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
+      {
+        *othersize =
+            video_yuv->width * video_yuv->height +
+            video_yuv->width * video_yuv->height / 2;
+        break;
+      }
+      default:
+        return FALSE;
     }
-    if (is_supported) {
-      GstCaps *format_caps;
-
-      format_caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, formats[i].fourcc,
-          "width", G_TYPE_INT, width,
-          "height", G_TYPE_INT, height,
-          "framerate", GST_TYPE_FRACTION, framerate_numerator,
-          framerate_denominator, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          par_numerator, par_denominator, NULL);
-      gst_caps_append (caps, format_caps);
-    }
-  }
-
-  if (gst_caps_is_empty (caps)) {
-    gst_caps_unref (caps);
-    return NULL;
-  }
-
-  return caps;
-}
-
-static gboolean
-gst_vdp_video_yuv_sink_set_caps (GstPad * pad, GstCaps * caps)
-{
-  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (GST_OBJECT_PARENT (pad));
-
-  GstCaps *src_caps, *new_caps;
-  GstStructure *structure;
-  const GValue *value;
-  GstVdpDevice *device;
-  gint chroma_type;
-  gint width, height;
-  gint framerate_numerator, framerate_denominator;
-  gint par_numerator, par_denominator;
-  guint32 fourcc_format;
-  gboolean res;
-
-  structure = gst_caps_get_structure (caps, 0);
-  value = gst_structure_get_value (structure, "device");
-  device = g_value_get_object (value);
-
-  gst_structure_get_int (structure, "chroma-type", &chroma_type);
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "height", &height);
-  gst_structure_get_fraction (structure, "framerate",
-      &framerate_numerator, &framerate_denominator);
-  gst_structure_get_fraction (structure, "pixel-aspect-ratio",
-      &par_numerator, &par_denominator);
-
-  src_caps =
-      gst_vdp_video_yuv_get_caps (video_yuv, device, chroma_type, width,
-      height, framerate_numerator, framerate_denominator, par_numerator,
-      par_denominator);
-  if (G_UNLIKELY (!src_caps))
-    return FALSE;
-
-  video_yuv->src_caps = src_caps;
-
-  src_caps = gst_pad_get_allowed_caps (video_yuv->src);
-  if (G_UNLIKELY (!src_caps || !gst_caps_get_size (src_caps)))
-    return FALSE;
-
-  GST_DEBUG_OBJECT (video_yuv,
-      "Selecting first caps from set: %" GST_PTR_FORMAT, src_caps);
-
-  new_caps = gst_caps_copy_nth (src_caps, 0);
-  gst_caps_unref (src_caps);
-  if (G_UNLIKELY (!new_caps))
-    return FALSE;
-
-  structure = gst_caps_get_structure (new_caps, 0);
-  gst_structure_get_fourcc (structure, "format", &fourcc_format);
-
-  gst_pad_fixate_caps (video_yuv->src, new_caps);
-  res = gst_pad_set_caps (video_yuv->src, new_caps);
-
-  gst_caps_unref (new_caps);
-
-  if (G_UNLIKELY (!res))
-    return FALSE;
-
-  video_yuv->width = width;
-  video_yuv->height = height;
-  video_yuv->framerate_numerator = framerate_numerator;
-  video_yuv->framerate_denominator = framerate_denominator;
-  video_yuv->format = fourcc_format;
+  } else
+    *othersize = size;
 
   return TRUE;
 }
 
-static GstCaps *
-gst_vdp_video_yuv_src_getcaps (GstPad * pad)
+gboolean
+gst_vdp_video_yuv_set_caps (GstBaseTransform * trans, GstCaps * incaps,
+    GstCaps * outcaps)
 {
-  GstVdpVideoYUV *video_yuv;
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (trans);
+  GstStructure *structure;
 
-  video_yuv = GST_VDP_VIDEO_YUV (GST_OBJECT_PARENT (pad));
+  structure = gst_caps_get_structure (incaps, 0);
 
-  if (video_yuv->src_caps)
-    return gst_caps_copy (video_yuv->src_caps);
+  if (!gst_structure_get_int (structure, "width", &video_yuv->width))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "height", &video_yuv->height))
+    return FALSE;
 
-  if (GST_PAD_CAPS (video_yuv->src))
-    return gst_caps_copy (GST_PAD_CAPS (video_yuv->src));
+  structure = gst_caps_get_structure (outcaps, 0);
+  if (!gst_structure_get_fourcc (structure, "format", &video_yuv->format))
+    return FALSE;
 
-  return gst_caps_copy (gst_pad_get_pad_template_caps (video_yuv->src));
+  return TRUE;
+}
+
+GstCaps *
+gst_vdp_video_yuv_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps)
+{
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (trans);
+  GstCaps *new_caps = NULL;
+
+  if (direction == GST_PAD_SINK) {
+    new_caps = gst_vdp_video_yuv_get_src_caps (video_yuv, caps);
+
+  } else if (direction == GST_PAD_SRC) {
+    /* FIXME: upstream negotiation */
+    new_caps = gst_static_pad_template_get_caps (&sink_template);
+  }
+
+  return new_caps;
 }
 
 /* GObject vmethod implementations */
@@ -399,67 +368,18 @@ static void
 gst_vdp_video_yuv_class_init (GstVdpVideoYUVClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstBaseTransformClass *transform_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  transform_class = (GstBaseTransformClass *) klass;
 
-  gobject_class->finalize = gst_vdp_video_yuv_finalize;
-  gobject_class->set_property = gst_vdp_video_yuv_set_property;
-  gobject_class->get_property = gst_vdp_video_yuv_get_property;
+  transform_class->transform_caps = gst_vdp_video_yuv_transform_caps;
+  transform_class->transform_size = gst_vdp_video_transform_size;
+  transform_class->transform = gst_vdp_video_yuv_transform;
+  transform_class->set_caps = gst_vdp_video_yuv_set_caps;
 }
 
 static void
 gst_vdp_video_yuv_init (GstVdpVideoYUV * video_yuv, GstVdpVideoYUVClass * klass)
 {
-  video_yuv->src_caps = NULL;
-
-  video_yuv->height = 0;
-  video_yuv->width = 0;
-  video_yuv->framerate_numerator = 0;
-  video_yuv->framerate_denominator = 0;
-  video_yuv->par_numerator = 1;
-  video_yuv->par_denominator = 1;
-
-  video_yuv->src = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_set_getcaps_function (video_yuv->src, gst_vdp_video_yuv_src_getcaps);
-  gst_element_add_pad (GST_ELEMENT (video_yuv), video_yuv->src);
-
-  video_yuv->sink = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_setcaps_function (video_yuv->sink,
-      gst_vdp_video_yuv_sink_set_caps);
-  gst_pad_set_chain_function (video_yuv->sink, gst_vdp_video_yuv_chain);
-  gst_element_add_pad (GST_ELEMENT (video_yuv), video_yuv->sink);
-  gst_pad_set_active (video_yuv->sink, TRUE);
-}
-
-static void
-gst_vdp_video_yuv_finalize (GObject * object)
-{
-  GstVdpVideoYUV *video_yuv = (GstVdpVideoYUV *) object;
-
-  if (video_yuv->src_caps)
-    gst_caps_unref (video_yuv->src_caps);
-}
-
-static void
-gst_vdp_video_yuv_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_vdp_video_yuv_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
