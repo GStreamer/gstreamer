@@ -464,6 +464,16 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
       for (i = 0; i < h264parse->nal_length_size; i++)
         nalu_size = (nalu_size << 8) | data[i];
 
+      GST_LOG_OBJECT (h264parse, "got NALU size %u", nalu_size);
+
+      /* check for invalid NALU sizes, assume the size if the available bytes
+       * when something is fishy */
+      if (nalu_size <= 1 || nalu_size + h264parse->nal_length_size > avail) {
+        nalu_size = avail - h264parse->nal_length_size;
+        GST_DEBUG_OBJECT (h264parse, "fixing invalid NALU size to %u",
+            nalu_size);
+      }
+
       /* Packetized format, see if we have to split it, usually splitting is not
        * a good idea as decoders have no way of handling it. */
       if (h264parse->split_packetized) {
