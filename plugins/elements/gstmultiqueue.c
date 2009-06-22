@@ -169,6 +169,7 @@ static void gst_single_queue_free (GstSingleQueue * squeue);
 
 static void wake_up_next_non_linked (GstMultiQueue * mq);
 static void compute_high_id (GstMultiQueue * mq);
+static void single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_PAD_SINK,
@@ -1090,6 +1091,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
   switch (type) {
     case GST_EVENT_EOS:
       sq->is_eos = TRUE;
+      single_queue_overrun_cb (sq->queue, sq);
       break;
     case GST_EVENT_NEWSEGMENT:
       apply_segment (mq, sq, sref, &sq->sink_segment);
@@ -1312,7 +1314,8 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
         ssize.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
 
     /* if this queue is filled completely we must signal overrun */
-    if (IS_FILLED (bytes, ssize.bytes) || IS_FILLED (time, sq->cur_time)) {
+    if (sq->is_eos || IS_FILLED (bytes, ssize.bytes) ||
+        IS_FILLED (time, sq->cur_time)) {
       GST_LOG_OBJECT (mq, "Queue %d is filled", ssq->id);
       filled = TRUE;
     }
