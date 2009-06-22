@@ -155,13 +155,26 @@ typedef struct _tag_SchemaMap
 #define XMP_SCHEMA_NODE 0x80000000UL
 
 /* *INDENT-OFF* */
-/* When changing this table, update 'metadata_mapping.htm' file too. */
+/* When changing these tables, update 'metadata_mapping.htm' file too. */
 static const SchemaTagMap schema_map_dublin_tags_map[] = {
+  {"creator",     GST_TAG_ARTIST      },
   {"description", GST_TAG_DESCRIPTION },
-  {"title",       GST_TAG_TITLE       },
-  {"rights",      GST_TAG_COPYRIGHT   },
-  {"type",        GST_TAG_CODEC       },
   {"format",      GST_TAG_VIDEO_CODEC },
+  {"rights",      GST_TAG_COPYRIGHT   },
+  {"subject",     GST_TAG_KEYWORDS    },
+  {"title",       GST_TAG_TITLE       },
+  {"type",        GST_TAG_CODEC       },
+  {NULL, NULL}
+};
+
+static const SchemaTagMap schema_map_photoshop_tags_map[] = {
+  {"country",     GST_TAG_XMP_GEO_LOCATION_COUNTRY },
+  {"city",        GST_TAG_XMP_GEO_LOCATION_CITY   },
+  {NULL, NULL}
+};
+
+static const SchemaTagMap schema_map_iptc4xmpcore_tags_map[] = {
+  {"location",    GST_TAG_XMP_GEO_LOCATION_SUBLOCATION },
   {NULL, NULL}
 };
 /* *INDENT-ON* */
@@ -173,9 +186,26 @@ static const SchemaMap schema_map_dublin = {
   schema_map_dublin_tags_map
 };
 
-/* When changing this table, update 'metadata_mapping.htm' file too. */
+/* http://www.adobe.com/devnet/xmp/pdfs/xmp_specification.pdf */
+static const SchemaMap schema_map_photoshop = {
+  "http://ns.adobe.com/photoshop/1.0/",
+  "photoshop:",
+  10,
+  schema_map_photoshop_tags_map
+};
+
+/* http://www.iptc.org/std/Iptc4xmpCore/1.0/specification/Iptc4xmpCore_1.0-spec-XMPSchema_8.pdf */
+static const SchemaMap schema_map_iptc4xmpcore = {
+  "http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/",
+  "Iptc4xmpCore:",
+  13,
+  schema_map_iptc4xmpcore_tags_map
+};
+
 static const SchemaMap *schemas_map[] = {
   &schema_map_dublin,
+  &schema_map_photoshop,
+  &schema_map_iptc4xmpcore,
   NULL
 };
 
@@ -474,7 +504,6 @@ metadatamux_xmp_get_tagsmap_from_gsttag (const SchemaMap * schema_map,
   if (NULL == schema_map)
     goto done;
 
-
   for (i = 0; schema_map->tags_map[i].gst_tag; i++) {
     if (0 == strcmp (schema_map->tags_map[i].gst_tag, tag)) {
       tags_map = (SchemaTagMap *) & schema_map->tags_map[i];
@@ -567,10 +596,14 @@ void
 metadataparse_xmp_iter_node_schema (GstTagList * taglist, GstTagMergeMode mode,
     XmpPtr xmp, const char *schema, const char *path)
 {
-  SchemaMap *schema_map = NULL;
+  const SchemaMap *schema_map = NULL;
+  gint i;
 
-  if (0 == strcmp (schema, "http://purl.org/dc/elements/1.1/")) {
-    schema_map = (SchemaMap *) & schema_map_dublin;
+  for (i = 0; schemas_map[i]; i++) {
+    if (0 == strcmp (schema, schemas_map[i]->schema)) {
+      schema_map = schemas_map[i];
+      break;
+    }
   }
 
   metadataparse_xmp_iter_array (taglist, mode, xmp, schema, path, schema_map);
@@ -805,6 +838,8 @@ metadatamux_xmp_for_each_tag_in_list (const GstTagList * list,
   XmpPtr xmp = (XmpPtr) user_data;
   int i;
 
+  GST_DEBUG ("trying to map tag '%s' to xmp", tag);
+
   for (i = 0; schemas_map[i]; i++) {
 
     /* FIXME: should try to get all of values (index) for the tag */
@@ -814,9 +849,7 @@ metadatamux_xmp_for_each_tag_in_list (const GstTagList * list,
         metadatamux_xmp_get_tagsmap_from_gsttag (smap, tag);
 
     if (stagmap) {
-
       gchar *value = NULL;
-
       GType type = gst_tag_get_type (tag);
 
       switch (type) {
@@ -827,8 +860,10 @@ metadatamux_xmp_for_each_tag_in_list (const GstTagList * list,
           break;
       }
 
-      if (value) {
+      GST_DEBUG ("found mapping for tag '%s' in schema %s", tag,
+          schemas_map[i]->prefix);
 
+      if (value) {
         uint32_t options = 0;
 
 #ifdef XMP_1_99_5
@@ -857,13 +892,12 @@ metadatamux_xmp_for_each_tag_in_list (const GstTagList * list,
         }
 
         g_free (value);
-
       }
-
+    } else {
+      GST_DEBUG ("no xmp mapping for tag '%s' in schema %s found", tag,
+          schemas_map[i]->prefix);
     }
-
   }
-
 }
 
 #endif /* else (ifndef HAVE_XMP) */
