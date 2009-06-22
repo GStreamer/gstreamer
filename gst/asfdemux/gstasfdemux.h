@@ -83,18 +83,10 @@ typedef struct
 
   GstPad     *pad;
   guint16     id;
-  guint32     frag_offset;
-  guint32     sequence;
-  guint64     delay;
-  guint64     first_pts;
-  guint64     last_pts; /* FIXME: remove, not actually evaluated */
-  GstBuffer  *payload;
 
   /* video-only */
-  guint64     last_buffer_timestamp;  /* timestamp of last buffer sent out */
   gboolean    is_video;
   gboolean    fps_known;
-  GstBuffer  *cache;
 
   GstCaps    *caps;
 

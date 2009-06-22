@@ -144,8 +144,6 @@ gst_asf_demux_class_init (GstASFDemuxClass * klass)
 static void
 gst_asf_demux_free_stream (GstASFDemux * demux, AsfStream * stream)
 {
-  gst_buffer_replace (&stream->cache, NULL);
-  gst_buffer_replace (&stream->payload, NULL);
   gst_caps_replace (&stream->caps, NULL);
   if (stream->pending_tags) {
     gst_tag_list_free (stream->pending_tags);
@@ -417,12 +415,6 @@ gst_asf_demux_reset_stream_state_after_discont (GstASFDemux * demux)
   GST_DEBUG_OBJECT (demux, "reset stream state");
 
   for (n = 0; n < demux->num_streams; n++) {
-    gst_buffer_replace (&demux->stream[n].payload, NULL);
-    gst_buffer_replace (&demux->stream[n].cache, NULL);
-    demux->stream[n].frag_offset = 0;
-    demux->stream[n].last_pts = GST_CLOCK_TIME_NONE;
-    demux->stream[n].last_buffer_timestamp = GST_CLOCK_TIME_NONE;
-    demux->stream[n].sequence = 0;
     demux->stream[n].discont = TRUE;
     demux->stream[n].last_flow = GST_FLOW_OK;
 
@@ -1759,12 +1751,6 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
   stream->caps = caps;
   stream->pad = src_pad;
   stream->id = id;
-  stream->frag_offset = 0;
-  stream->sequence = 0;
-  stream->delay = 0;
-  stream->first_pts = GST_CLOCK_TIME_NONE;
-  stream->last_pts = GST_CLOCK_TIME_NONE;
-  stream->last_buffer_timestamp = GST_CLOCK_TIME_NONE;
   stream->fps_known = !is_video;        /* bit hacky for audio */
   stream->is_video = is_video;
   stream->pending_tags = tags;
