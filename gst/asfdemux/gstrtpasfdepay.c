@@ -324,7 +324,6 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       GstBuffer *sub;
 
       /* Fragmented packet handling */
-
       outbuf = NULL;
 
       if (len_offs == 0 && (available = gst_adapter_available (depay->adapter))) {
@@ -352,7 +351,8 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
               available, len_offs);
           sub = gst_adapter_take_buffer (depay->adapter, len_offs);
           gst_adapter_clear (depay->adapter);
-          gst_adapter_push (depay->adapter, sub);
+          if (sub)
+            gst_adapter_push (depay->adapter, sub);
         }
       }
       sub = gst_rtp_buffer_get_payload_subbuffer (buf, offset, packet_len);
