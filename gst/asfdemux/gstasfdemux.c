@@ -412,8 +412,9 @@ gst_asf_demux_reset_stream_state_after_discont (GstASFDemux * demux)
 {
   guint n;
 
-  demux->pts = 0;               //why?
   gst_adapter_clear (demux->adapter);
+
+  GST_DEBUG_OBJECT (demux, "reset stream state");
 
   for (n = 0; n < demux->num_streams; n++) {
     gst_buffer_replace (&demux->stream[n].payload, NULL);
@@ -435,6 +436,17 @@ gst_asf_demux_reset_stream_state_after_discont (GstASFDemux * demux)
       g_array_remove_index (demux->stream[n].payloads, last);
     }
   }
+}
+
+static void
+gst_asf_demux_mark_discont (GstASFDemux * demux)
+{
+  guint n;
+
+  GST_DEBUG_OBJECT (demux, "Mark stream discont");
+
+  for (n = 0; n < demux->num_streams; n++)
+    demux->stream[n].discont = TRUE;
 }
 
 /* do a seek in push based mode */
@@ -1252,6 +1264,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
     }
 
     if (stream->discont) {
+      GST_DEBUG_OBJECT (stream->pad, "marking DISCONT on stream");
       GST_BUFFER_FLAG_SET (payload->buf, GST_BUFFER_FLAG_DISCONT);
       stream->discont = FALSE;
     }
@@ -1420,8 +1433,10 @@ gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
       GST_TIME_FORMAT, GST_BUFFER_SIZE (buf), GST_BUFFER_OFFSET (buf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
-  if (GST_BUFFER_IS_DISCONT (buf))
-    gst_asf_demux_reset_stream_state_after_discont (demux);
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    GST_DEBUG_OBJECT (demux, "received DISCONT");
+    gst_asf_demux_mark_discont (demux);
+  }
 
   if (!GST_CLOCK_TIME_IS_VALID (demux->in_gap) &&
       GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {

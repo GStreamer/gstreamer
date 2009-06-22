@@ -161,7 +161,6 @@ struct _GstASFDemux {
   guint64              play_time;
 
   guint64              preroll;
-  guint64              pts;
 
   gboolean             seekable;
   gboolean             broadcast;
