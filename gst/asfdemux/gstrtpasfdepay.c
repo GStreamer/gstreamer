@@ -224,6 +224,7 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   /* flush remaining data on discont */
   if (GST_BUFFER_IS_DISCONT (buf)) {
+    GST_LOG_OBJECT (depay, "got DISCONT");
     gst_adapter_clear (depay->adapter);
     depay->wait_start = TRUE;
     depay->discont = TRUE;
@@ -373,10 +374,11 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
-    if (S)
+    if (!S)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
     if (depay->discont) {
+      GST_LOG_OBJECT (depay, "setting DISCONT");
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
       depay->discont = FALSE;
     }
