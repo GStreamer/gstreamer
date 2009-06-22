@@ -268,6 +268,8 @@ GST_START_TEST (test_play_twice)
   res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
   fail_unless (res == TRUE, NULL);
 
+  GST_INFO ("seeked");
+
   /* run pipeline */
   res = gst_element_set_state (bin, GST_STATE_PLAYING);
   fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
@@ -281,6 +283,119 @@ GST_START_TEST (test_play_twice)
 
   /* cleanup */
   g_main_loop_unref (main_loop);
+  gst_object_unref (G_OBJECT (bus));
+  gst_object_unref (G_OBJECT (bin));
+}
+
+GST_END_TEST;
+
+static void
+test_live_seeking_eos_message_received (GstBus * bus, GstMessage * message,
+    GstPipeline * bin)
+{
+  GST_INFO ("bus message from \"%" GST_PTR_FORMAT "\": %" GST_PTR_FORMAT,
+      GST_MESSAGE_SRC (message), message);
+
+  switch (message->type) {
+    case GST_MESSAGE_EOS:
+      g_main_loop_quit (main_loop);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+
+
+/* test failing seeks on live-sources */
+GST_START_TEST (test_live_seeking)
+{
+  GstElement *bin, *src1, *src2, *adder, *sink;
+  GstBus *bus;
+  gboolean res;
+  gint i;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  /* normal audiosources behave differently */
+#if 0
+  src1 = gst_element_factory_make ("audiotestsrc", "src1");
+  g_object_set (src1, "wave", 4, "is-live", TRUE, NULL);        /* silence */
+#else
+  src1 = gst_element_factory_make ("alsasrc", "src1");
+  /* live sources ignore seeks, force eos after 2 sec (4 buffers half second
+   * each) */
+  g_object_set (src1, "num-buffers", 4, "blocksize", 44100, NULL);
+#endif
+  src2 = gst_element_factory_make ("audiotestsrc", "src2");
+  g_object_set (src2, "wave", 4, NULL); /* silence */
+  adder = gst_element_factory_make ("adder", "adder");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (bin), src1, src2, adder, sink, NULL);
+
+  res = gst_element_link (src1, adder);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (src2, adder);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (adder, sink);
+  fail_unless (res == TRUE, NULL);
+
+  play_seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH,
+      GST_SEEK_TYPE_SET, (GstClockTime) 0,
+      GST_SEEK_TYPE_SET, (GstClockTime) 2 * GST_SECOND);
+
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::warning", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::eos",
+      (GCallback) test_live_seeking_eos_message_received, bin);
+
+  GST_INFO ("starting test");
+
+  /* run it twice */
+  for (i = 0; i < 2; i++) {
+
+    /* prepare playing */
+    res = gst_element_set_state (bin, GST_STATE_PAUSED);
+    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+    /* wait for completion */
+    res =
+        gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+        GST_CLOCK_TIME_NONE);
+    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+    res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
+#if 0
+    fail_unless (res == TRUE, NULL);
+#else
+    /* adder is picky, if a single seek fails it totaly fails */
+    fail_unless (res == FALSE, NULL);
+#endif
+
+    GST_INFO ("seeked");
+
+    /* run pipeline */
+    res = gst_element_set_state (bin, GST_STATE_PLAYING);
+    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+    GST_INFO ("playing");
+
+    g_main_loop_run (main_loop);
+
+    res = gst_element_set_state (bin, GST_STATE_NULL);
+    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  }
+
+  /* cleanup */
+  g_main_loop_unref (main_loop);
+  gst_event_unref (play_seek_event);
   gst_object_unref (G_OBJECT (bus));
   gst_object_unref (G_OBJECT (bin));
 }
@@ -450,6 +565,7 @@ adder_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_event);
   tcase_add_test (tc_chain, test_play_twice);
+  tcase_add_test (tc_chain, test_live_seeking);
   tcase_add_test (tc_chain, test_add_pad);
   tcase_add_test (tc_chain, test_remove_pad);
 
