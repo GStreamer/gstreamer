@@ -3549,15 +3549,15 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query)
           GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
       GST_OBJECT_LOCK (demux);
-      if (min != 1)
+      if (min != -1)
         min += demux->latency;
-      if (max != 1)
+      if (max != -1)
         max += demux->latency;
       GST_OBJECT_UNLOCK (demux);
+
       gst_query_set_latency (query, live, min, max);
       break;
     }
-
     default:
       res = gst_pad_query_default (pad, query);
       break;
