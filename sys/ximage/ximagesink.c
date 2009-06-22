@@ -801,6 +801,46 @@ gst_ximagesink_xwindow_decorate (GstXImageSink * ximagesink,
   return TRUE;
 }
 
+static void
+gst_ximagesink_xwindow_set_title (GstXImageSink * ximagesink,
+    const gchar * media_title)
+{
+  if (media_title) {
+    g_free (ximagesink->media_title);
+    ximagesink->media_title = g_strdup (media_title);
+  }
+  if (ximagesink->xwindow) {
+    /* we have a window */
+    if (ximagesink->xwindow->internal) {
+      XTextProperty xproperty;
+      const gchar *app_name;
+      const gchar *title = NULL;
+      gchar *title_mem = NULL;
+
+      /* set application name as a title */
+      app_name = g_get_application_name ();
+
+      if (app_name && ximagesink->media_title) {
+        title = title_mem = g_strconcat (ximagesink->media_title, " : ",
+            app_name, NULL);
+      } else if (app_name) {
+        title = app_name;
+      } else if (ximagesink->media_title) {
+        title = ximagesink->media_title;
+      }
+
+      if (title) {
+        if ((XStringListToTextProperty (((char **) &title), 1,
+                    &xproperty)) != 0)
+          XSetWMName (ximagesink->xcontext->disp, ximagesink->xwindow->win,
+              &xproperty);
+
+        g_free (title_mem);
+      }
+    }
+  }
+}
+
 /* This function handles a GstXWindow creation */
 static GstXWindow *
 gst_ximagesink_xwindow_new (GstXImageSink * ximagesink, gint width, gint height)
@@ -825,6 +865,9 @@ gst_ximagesink_xwindow_new (GstXImageSink * ximagesink, gint width, gint height)
   /* We have to do that to prevent X from redrawing the background on 
      ConfigureNotify. This takes away flickering of video when resizing. */
   XSetWindowBackgroundPixmap (ximagesink->xcontext->disp, xwindow->win, None);
+
+  /* set application name as a title */
+  gst_ximagesink_xwindow_set_title (ximagesink, NULL);
 
   if (ximagesink->handle_events) {
     Atom wm_delete;
@@ -1638,6 +1681,38 @@ no_window:
   }
 }
 
+
+static gboolean
+gst_ximagesink_event (GstBaseSink * sink, GstEvent * event)
+{
+  GstXImageSink *ximagesink = GST_XIMAGESINK (sink);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:{
+      GstTagList *l;
+      gchar *title = NULL;
+
+      gst_event_parse_tag (event, &l);
+      gst_tag_list_get_string (l, GST_TAG_TITLE, &title);
+
+      if (title) {
+        GST_DEBUG_OBJECT (ximagesink, "got tags, title='%s'", title);
+        gst_ximagesink_xwindow_set_title (ximagesink, title);
+
+        g_free (title);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  if (GST_BASE_SINK_CLASS (parent_class)->event)
+    return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
+  else
+    return TRUE;
+}
+
+
 /* Buffer management
  *
  * The buffer_alloc function must either return a buffer with given size and
@@ -2167,6 +2242,8 @@ gst_ximagesink_finalize (GObject * object)
     ximagesink->pool_lock = NULL;
   }
 
+  g_free (ximagesink->media_title);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -2262,6 +2339,7 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_ximagesink_get_times);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_ximagesink_show_frame);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_ximagesink_show_frame);
+  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_ximagesink_event);
 }
 
 /* ============================================================= */

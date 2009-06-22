@@ -215,6 +215,9 @@ struct _GstXImageSink {
   gboolean handle_events;
   gboolean handle_expose;
   gboolean draw_border;
+  
+  /* stream metadata */
+  gchar *media_title;
 };
 
 struct _GstXImageSinkClass {

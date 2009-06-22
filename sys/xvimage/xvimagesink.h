@@ -283,6 +283,9 @@ struct _GstXvImageSink {
   gboolean have_autopaint_colorkey;
   gboolean have_colorkey;
   gboolean have_double_buffer;
+  
+  /* stream metadata */
+  gchar *media_title;
 };
 
 struct _GstXvImageSinkClass {
