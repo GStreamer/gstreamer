@@ -28,7 +28,7 @@
 
 #include <gst/gst.h>
 
-#include "../../gst-libs/gst/signalprocessor/gstsignalprocessor.h"
+#include <gst/signalprocessor/gstsignalprocessor.h>
 
 
 G_BEGIN_DECLS
