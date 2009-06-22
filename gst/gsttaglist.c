@@ -259,7 +259,7 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_GEO_LOCATION_NAME, GST_TAG_FLAG_META, G_TYPE_STRING,
       _("geo location name"),
       _
-      ("human readable descriptive location or where the media has been recorded or produced"),
+      ("human readable descriptive location of where the media has been recorded or produced"),
       NULL);
   gst_tag_register (GST_TAG_GEO_LOCATION_LATITUDE, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("geo location latitude"),
