@@ -238,6 +238,10 @@ GST_BOILERPLATE_FULL (GstV4l2Src, gst_v4l2src, GstPushSrc, GST_TYPE_PUSH_SRC,
 static void gst_v4l2src_dispose (GObject * object);
 static void gst_v4l2src_finalize (GstV4l2Src * v4l2src);
 
+/* element methods */
+static GstStateChangeReturn gst_v4l2src_change_state (GstElement * element,
+    GstStateChange transition);
+
 /* basesrc methods */
 static gboolean gst_v4l2src_start (GstBaseSrc * src);
 static gboolean gst_v4l2src_unlock (GstBaseSrc * src);
@@ -279,10 +283,12 @@ static void
 gst_v4l2src_class_init (GstV4l2SrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstBaseSrcClass *basesrc_class;
   GstPushSrcClass *pushsrc_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
   basesrc_class = GST_BASE_SRC_CLASS (klass);
   pushsrc_class = GST_PUSH_SRC_CLASS (klass);
 
@@ -290,6 +296,8 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   gobject_class->finalize = (GObjectFinalizeFunc) gst_v4l2src_finalize;
   gobject_class->set_property = gst_v4l2src_set_property;
   gobject_class->get_property = gst_v4l2src_get_property;
+
+  element_class->change_state = gst_v4l2src_change_state;
 
   gst_v4l2_object_install_properties_helper (gobject_class);
   g_object_class_install_property (gobject_class, PROP_QUEUE_SIZE,
@@ -1145,10 +1153,6 @@ gst_v4l2src_start (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
 
-  /* open the device */
-  if (!gst_v4l2_object_start (v4l2src->v4l2object))
-    return FALSE;
-
   v4l2src->offset = 0;
 
   return TRUE;
@@ -1176,7 +1180,6 @@ gst_v4l2src_unlock_stop (GstBaseSrc * src)
   return TRUE;
 }
 
-
 static gboolean
 gst_v4l2src_stop (GstBaseSrc * src)
 {
@@ -1191,14 +1194,41 @@ gst_v4l2src_stop (GstBaseSrc * src)
       return FALSE;
   }
 
-  /* close the device */
-  if (!gst_v4l2_object_stop (v4l2src->v4l2object))
-    return FALSE;
-
   v4l2src->fps_d = 0;
   v4l2src->fps_n = 0;
 
   return TRUE;
+}
+
+static GstStateChangeReturn
+gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstV4l2Src *v4l2src = GST_V4L2SRC (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      /* open the device */
+      if (!gst_v4l2_object_start (v4l2src->v4l2object))
+        return GST_STATE_CHANGE_FAILURE;
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      /* close the device */
+      if (!gst_v4l2_object_stop (v4l2src->v4l2object))
+        return GST_STATE_CHANGE_FAILURE;
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
