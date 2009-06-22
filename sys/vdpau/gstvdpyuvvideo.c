@@ -26,6 +26,7 @@
 #include <gst/video/video.h>
 
 #include "gstvdpvideobuffer.h"
+#include "gstvdputils.h"
 #include "gstvdpyuvvideo.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdp_yuv_video_debug);
@@ -62,76 +63,6 @@ GST_STATIC_PAD_TEMPLATE (GST_BASE_TRANSFORM_SRC_NAME,
 
 GST_BOILERPLATE_FULL (GstVdpYUVVideo, gst_vdp_yuv_video, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
-
-static GstCaps *
-gst_vdp_yuv_video_get_sink_caps (GstVdpYUVVideo * yuv_video)
-{
-  GstVdpDevice *device;
-  GstCaps *caps;
-  gint i;
-
-  device = yuv_video->device;
-
-  caps = gst_caps_new_empty ();
-  for (i = 0; i < N_CHROMA_TYPES; i++) {
-    VdpStatus status;
-    VdpBool is_supported;
-    guint32 max_w, max_h;
-
-    status =
-        device->vdp_video_surface_query_capabilities (device->device,
-        chroma_types[i], &is_supported, &max_w, &max_h);
-
-    if (status != VDP_STATUS_OK && status != VDP_STATUS_INVALID_CHROMA_TYPE) {
-      GST_ELEMENT_ERROR (yuv_video, RESOURCE, READ,
-          ("Could not get query VDPAU video surface capabilites"),
-          ("Error returned from vdpau was: %s",
-              device->vdp_get_error_string (status)));
-
-      goto error;
-    }
-    if (is_supported) {
-      gint j;
-
-      for (j = 0; j < N_FORMATS; j++) {
-        if (formats[j].chroma_type != chroma_types[i])
-          continue;
-
-        status =
-            device->vdp_video_surface_query_ycbcr_capabilities (device->device,
-            formats[j].chroma_type, formats[j].format, &is_supported);
-        if (status != VDP_STATUS_OK
-            && status != VDP_STATUS_INVALID_Y_CB_CR_FORMAT) {
-          GST_ELEMENT_ERROR (yuv_video, RESOURCE, READ,
-              ("Could not query VDPAU YCbCr capabilites"),
-              ("Error returned from vdpau was: %s",
-                  device->vdp_get_error_string (status)));
-
-          goto error;
-        }
-
-        if (is_supported) {
-          GstCaps *format_caps;
-
-          format_caps = gst_caps_new_simple ("video/x-raw-yuv",
-              "format", GST_TYPE_FOURCC, formats[j].fourcc,
-              "width", GST_TYPE_INT_RANGE, 1, max_w,
-              "height", GST_TYPE_INT_RANGE, 1, max_h,
-              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-          gst_caps_append (caps, format_caps);
-        }
-      }
-    }
-  }
-
-error:
-  if (gst_caps_is_empty (caps)) {
-    gst_caps_unref (caps);
-    return NULL;
-  }
-
-  return caps;
-}
 
 static GstFlowReturn
 gst_vdp_yuv_video_prepare_output_buffer (GstBaseTransform * trans,
@@ -353,7 +284,7 @@ gst_vdp_yuv_video_start (GstBaseTransform * trans)
   yuv_video->device = gst_vdp_get_device (yuv_video->display);
   if (!yuv_video->device)
     return FALSE;
-  yuv_video->sink_caps = gst_vdp_yuv_video_get_sink_caps (yuv_video);
+  yuv_video->sink_caps = gst_vdp_get_video_caps (yuv_video->device, -1);
 
   return TRUE;
 }
