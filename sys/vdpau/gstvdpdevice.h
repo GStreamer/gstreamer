@@ -86,6 +86,16 @@ static const VdpChromaType chroma_types[N_CHROMA_TYPES] =
 static const VdpauFormats formats[N_FORMATS] = {
   {
         VDP_CHROMA_TYPE_420,
+        VDP_YCBCR_FORMAT_YV12,
+        GST_MAKE_FOURCC ('I', '4', '2', '0')
+      },
+  {
+        VDP_CHROMA_TYPE_420,
+        VDP_YCBCR_FORMAT_YV12,
+        GST_MAKE_FOURCC ('Y', 'V', '1', '2')
+      },
+  {
+        VDP_CHROMA_TYPE_420,
         VDP_YCBCR_FORMAT_NV12,
         GST_MAKE_FOURCC ('N', 'V', '1', '2')
       },
@@ -108,16 +118,6 @@ static const VdpauFormats formats[N_FORMATS] = {
         VDP_CHROMA_TYPE_422,
         VDP_YCBCR_FORMAT_YUYV,
         GST_MAKE_FOURCC ('Y', 'U', 'Y', 'V')
-      },
-  {
-        VDP_CHROMA_TYPE_420,
-        VDP_YCBCR_FORMAT_YV12,
-        GST_MAKE_FOURCC ('Y', 'V', '1', '2')
-      },
-  {
-        VDP_CHROMA_TYPE_420,
-        VDP_YCBCR_FORMAT_YV12,
-        GST_MAKE_FOURCC ('I', '4', '2', '0')
       }
 };
 

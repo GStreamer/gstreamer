@@ -332,6 +332,9 @@ gst_vdp_video_yuv_sink_set_caps (GstPad * pad, GstCaps * caps)
   if (G_UNLIKELY (!src_caps || !gst_caps_get_size (src_caps)))
     return FALSE;
 
+  GST_DEBUG_OBJECT (video_yuv,
+      "Selecting first caps from set: %" GST_PTR_FORMAT, src_caps);
+
   new_caps = gst_caps_copy_nth (src_caps, 0);
   gst_caps_unref (src_caps);
   if (G_UNLIKELY (!new_caps))
