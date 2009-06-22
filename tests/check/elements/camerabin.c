@@ -109,7 +109,7 @@ capture_done (GstElement * elem, const gchar * filename, gpointer user_data)
 
   g_idle_add ((GSourceFunc) handle_image_captured_cb, loop);
 
-  GST_DEBUG ("image saved");
+  GST_INFO ("image saved");
 
   return FALSE;
 }
@@ -187,7 +187,7 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
     default:
       st = gst_message_get_structure (message);
       if (st && gst_structure_has_name (st, "image-captured")) {
-        GST_INFO ("image-captured");
+        GST_INFO ("image captured");
       }
       break;
   }
