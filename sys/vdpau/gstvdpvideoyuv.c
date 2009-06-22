@@ -175,6 +175,7 @@ gst_vdp_video_yuv_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       stride[2] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_YV12,
           1, video_yuv->width);
 
+      GST_LOG_OBJECT (video_yuv, "Entering vdp_video_surface_get_bits_ycbcr");
       status =
           device->vdp_video_surface_get_bits_ycbcr (surface,
           VDP_YCBCR_FORMAT_YV12, (void *) data, stride);
@@ -212,6 +213,7 @@ gst_vdp_video_yuv_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       stride[2] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420,
           1, video_yuv->width);
 
+      GST_LOG_OBJECT (video_yuv, "Entering vdp_video_surface_get_bits_ycbcr");
       status =
           device->vdp_video_surface_get_bits_ycbcr (surface,
           VDP_YCBCR_FORMAT_YV12, (void *) data, stride);
@@ -231,8 +233,6 @@ gst_vdp_video_yuv_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       VdpStatus status;
       guint8 *data[2];
       guint32 stride[2];
-
-      GST_LOG_OBJECT (video_yuv, "Entering buffer_alloc");
 
       data[0] = GST_BUFFER_DATA (outbuf);
       data[1] = GST_BUFFER_DATA (outbuf) + video_yuv->width * video_yuv->height;
@@ -256,7 +256,6 @@ gst_vdp_video_yuv_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       break;
     }
     default:
-      GST_WARNING ("WTF!!!");
       break;
   }
 
