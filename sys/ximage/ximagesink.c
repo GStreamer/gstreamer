@@ -803,15 +803,15 @@ gst_ximagesink_xwindow_decorate (GstXImageSink * ximagesink,
 
 static void
 gst_ximagesink_xwindow_set_title (GstXImageSink * ximagesink,
-    const gchar * media_title)
+    GstXWindow * xwindow, const gchar * media_title)
 {
   if (media_title) {
     g_free (ximagesink->media_title);
     ximagesink->media_title = g_strdup (media_title);
   }
-  if (ximagesink->xwindow) {
+  if (xwindow) {
     /* we have a window */
-    if (ximagesink->xwindow->internal) {
+    if (xwindow->internal) {
       XTextProperty xproperty;
       const gchar *app_name;
       const gchar *title = NULL;
@@ -832,8 +832,7 @@ gst_ximagesink_xwindow_set_title (GstXImageSink * ximagesink,
       if (title) {
         if ((XStringListToTextProperty (((char **) &title), 1,
                     &xproperty)) != 0)
-          XSetWMName (ximagesink->xcontext->disp, ximagesink->xwindow->win,
-              &xproperty);
+          XSetWMName (ximagesink->xcontext->disp, xwindow->win, &xproperty);
 
         g_free (title_mem);
       }
@@ -867,7 +866,7 @@ gst_ximagesink_xwindow_new (GstXImageSink * ximagesink, gint width, gint height)
   XSetWindowBackgroundPixmap (ximagesink->xcontext->disp, xwindow->win, None);
 
   /* set application name as a title */
-  gst_ximagesink_xwindow_set_title (ximagesink, NULL);
+  gst_ximagesink_xwindow_set_title (ximagesink, xwindow, NULL);
 
   if (ximagesink->handle_events) {
     Atom wm_delete;
@@ -1697,7 +1696,8 @@ gst_ximagesink_event (GstBaseSink * sink, GstEvent * event)
 
       if (title) {
         GST_DEBUG_OBJECT (ximagesink, "got tags, title='%s'", title);
-        gst_ximagesink_xwindow_set_title (ximagesink, title);
+        gst_ximagesink_xwindow_set_title (ximagesink, ximagesink->xwindow,
+            title);
 
         g_free (title);
       }
