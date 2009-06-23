@@ -44,6 +44,7 @@ EXPORTS
 	_gst_elementclass_factory DATA
 	_gst_plugin_register_static
 	_gst_trace_add_entry
+	_gst_trace_mutex DATA
 	_gst_trace_on DATA
 	gst_activate_mode_get_type
 	gst_alloc_trace_available

@@ -65,6 +65,8 @@
 
 #include "gsttrace.h"
 
+GStaticMutex _gst_trace_mutex = G_STATIC_MUTEX_INIT;
+
 static
 #ifdef __inline__
   __inline__

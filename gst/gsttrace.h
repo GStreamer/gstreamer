@@ -88,8 +88,6 @@ struct _GstTraceEntry {
   gchar message[112];
 };
 
-
-
 GstTrace*	gst_trace_new			(gchar *filename, gint size);
 
 void 		gst_trace_destroy		(GstTrace *trace);
@@ -124,6 +122,8 @@ void 		_gst_trace_add_entry		(GstTrace *trace, guint32 seq,
 void 		gst_trace_read_tsc		(gint64 *dst);
 
 
+extern GStaticMutex     _gst_trace_mutex;
+
 gboolean		gst_alloc_trace_available	(void);
 G_CONST_RETURN GList*	gst_alloc_trace_list		(void);
 GstAllocTrace*		_gst_alloc_trace_register	(const gchar *name);
@@ -156,11 +156,15 @@ void			gst_alloc_trace_set_flags	(GstAllocTrace *trace, GstAllocTraceFlags flags
  */
 #define	gst_alloc_trace_new(trace, mem) 		\
 G_STMT_START {						\
-  if ((trace)->flags & GST_ALLOC_TRACE_LIVE) 		\
-    (trace)->live++;					\
-  if ((trace)->flags & GST_ALLOC_TRACE_MEM_LIVE) 	\
-    (trace)->mem_live = 				\
-      g_slist_prepend ((trace)->mem_live, mem);		\
+  if (G_UNLIKELY ((trace)->flags)) {                    \
+    g_static_mutex_lock (&_gst_trace_mutex);            \
+    if ((trace)->flags & GST_ALLOC_TRACE_LIVE) 		\
+      (trace)->live++;					\
+    if ((trace)->flags & GST_ALLOC_TRACE_MEM_LIVE) 	\
+      (trace)->mem_live = 				\
+        g_slist_prepend ((trace)->mem_live, mem);	\
+    g_static_mutex_unlock (&_gst_trace_mutex);          \
+  }                                                     \
 } G_STMT_END
 
 /**
@@ -172,11 +176,15 @@ G_STMT_START {						\
  */
 #define	gst_alloc_trace_free(trace, mem) 		\
 G_STMT_START {						\
-  if ((trace)->flags & GST_ALLOC_TRACE_LIVE) 		\
-    (trace)->live--;					\
-  if ((trace)->flags & GST_ALLOC_TRACE_MEM_LIVE) 	\
-    (trace)->mem_live = 				\
-      g_slist_remove ((trace)->mem_live, mem); 		\
+  if (G_UNLIKELY ((trace)->flags)) {                    \
+    g_static_mutex_lock (&_gst_trace_mutex);            \
+    if ((trace)->flags & GST_ALLOC_TRACE_LIVE) 		\
+      (trace)->live--;					\
+    if ((trace)->flags & GST_ALLOC_TRACE_MEM_LIVE) 	\
+      (trace)->mem_live = 				\
+        g_slist_remove ((trace)->mem_live, mem); 	\
+    g_static_mutex_unlock (&_gst_trace_mutex);          \
+  }                                                     \
 } G_STMT_END
 
 #else
