@@ -184,6 +184,8 @@ gst_camerabin_video_init (GstCameraBinVideo * vid,
 
   vid->pending_eos = NULL;
 
+  vid->mute = ARG_DEFAULT_MUTE;
+
   /* Create src and sink ghost pads */
   vid->sinkpad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (vid), vid->sinkpad);
@@ -629,6 +631,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
     GST_WARNING_OBJECT (vid, "unable to add volume element");
     /* gst_camerabin_try_add_element() destroyed the element */
     vid->volume = NULL;
+  } else {
+    g_object_set (vid->volume, "mute", vid->mute, NULL);
   }
 
   /* Add user set or default audio encoder element */
@@ -732,8 +736,11 @@ gst_camerabin_video_destroy_elements (GstCameraBinVideo * vid)
 void
 gst_camerabin_video_set_mute (GstCameraBinVideo * vid, gboolean mute)
 {
-  if (vid && vid->volume) {
-    GST_DEBUG_OBJECT (vid, "setting mute %s", mute ? "on" : "off");
+  g_return_if_fail (vid != NULL);
+
+  GST_DEBUG_OBJECT (vid, "setting mute %s", mute ? "on" : "off");
+  vid->mute = mute;
+  if (vid->volume) {
     g_object_set (vid->volume, "mute", mute, NULL);
   }
 }
@@ -800,12 +807,13 @@ gst_camerabin_video_set_audio_src (GstCameraBinVideo * vid,
 gboolean
 gst_camerabin_video_get_mute (GstCameraBinVideo * vid)
 {
-  gboolean mute = ARG_DEFAULT_MUTE;
+  g_return_val_if_fail (vid != NULL, FALSE);
 
-  if (vid && vid->volume) {
-    g_object_get (vid->volume, "mute", &mute, NULL);
+  if (vid->volume) {
+    g_object_get (vid->volume, "mute", &vid->mute, NULL);
   }
-  return mute;
+
+  return vid->mute;
 }
 
 GstElement *
