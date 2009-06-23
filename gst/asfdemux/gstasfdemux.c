@@ -33,6 +33,7 @@
 #endif
 
 #include <gst/gstutils.h>
+#include <gst/base/gstbytereader.h>
 #include <gst/riff/riff-media.h>
 #include <gst/tag/tag.h>
 #include <gst/gst-i18n-plugin.h>
@@ -2141,38 +2142,25 @@ static void
 asf_demux_parse_picture_tag (GstTagList * tags, const guint8 * tag_data,
     guint tag_data_len)
 {
-  const guint8 *data = tag_data;
-  guint pic_type, img_data_len;
-  guint len = tag_data_len;
+  GstByteReader r;
+  const guint8 *img_data;
+  guint32 img_data_len;
+  guint8 pic_type;
 
-  if (len < (1 + 4 + 2 + 2 + 1))
+  gst_byte_reader_init (&r, tag_data, tag_data_len);
+
+  /* skip mime type string (we don't trust it and do our own typefinding),
+   * and also skip the description string, since we don't use it */
+  if (!gst_byte_reader_get_uint8 (&r, &pic_type) ||
+      !gst_byte_reader_get_uint32_le (&r, &img_data_len) ||
+      !gst_byte_reader_skip_string_utf16 (&r) ||
+      !gst_byte_reader_skip_string_utf16 (&r) ||
+      !gst_byte_reader_get_data (&r, img_data_len, &img_data)) {
     goto not_enough_data;
-
-  pic_type = GST_READ_UINT8 (data);
-  data += 1, len -= 1;
-  img_data_len = GST_READ_UINT32_LE (data);
-  data += 4, len -= 4;
-
-  /* skip mime type string (we don't trust it and do our own typefinding) */
-  while (len >= 2 && GST_READ_UINT16_LE (data) != 0) {
-    data += 2, len -= 2;
   }
-  if (len < 2)
-    goto not_enough_data;
-  data += 2, len -= 2;
 
-  /* skip description string */
-  while (len >= 2 && GST_READ_UINT16_LE (data) != 0) {
-    data += 2, len -= 2;
-  }
-  if (len < 2)
-    goto not_enough_data;
-  data += 2, len -= 2;
 
-  if (len < img_data_len)
-    goto not_enough_data;
-
-  if (!gst_tag_list_add_id3_image (tags, data, img_data_len, pic_type))
+  if (!gst_tag_list_add_id3_image (tags, img_data, img_data_len, pic_type))
     GST_DEBUG ("failed to add image extracted from WM/Picture tag to taglist");
 
   return;
