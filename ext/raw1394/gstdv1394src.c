@@ -392,7 +392,7 @@ gst_dv1394src_iec61883_receive (unsigned char *data, int len,
 {
   GstDV1394Src *dv1394src = GST_DV1394SRC (cbdata);
 
-  if (!GST_PAD_CAPS (GST_BASE_SRC_PAD (dv1394src))) {
+  if (G_UNLIKELY (!GST_PAD_CAPS (GST_BASE_SRC_PAD (dv1394src)))) {
     GstCaps *caps;
     unsigned char *p = data;
 
@@ -418,9 +418,10 @@ gst_dv1394src_iec61883_receive (unsigned char *data, int len,
     gst_pad_set_caps (GST_BASE_SRC_PAD (dv1394src), caps);
     gst_caps_unref (caps);
   }
+
   dv1394src->frame = NULL;
-  if ((dv1394src->frame_sequence + 1) % (dv1394src->skip +
-          dv1394src->consecutive) < dv1394src->consecutive) {
+  if (G_LIKELY ((dv1394src->frame_sequence + 1) % (dv1394src->skip +
+              dv1394src->consecutive) < dv1394src->consecutive)) {
     if (complete && len == dv1394src->frame_size) {
       gint64 i64;
       guint8 *bufdata;
@@ -651,12 +652,13 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
   while (TRUE) {
     int res = poll (pollfds, 2, -1);
 
-    if (res < 0) {
+    if (G_UNLIKELY (res < 0)) {
       if (errno == EAGAIN || errno == EINTR)
         continue;
       else
         goto error_while_polling;
     }
+
     if (G_UNLIKELY (pollfds[1].revents)) {
       char command;
 
