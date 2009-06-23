@@ -3778,6 +3778,7 @@ error_response:
       case GST_RTSP_STS_MOVE_TEMPORARILY:
       {
         gchar *new_location;
+        GstRTSPLowerTrans transports;
 
         GST_DEBUG_OBJECT (src, "got redirection");
         /* if we don't have a Location Header, we must error */
@@ -3790,7 +3791,17 @@ error_response:
          * a new setup when it detects this state change. */
         GST_DEBUG_OBJECT (src, "redirection to %s", new_location);
 
+        /* save current transports */
+        if (src->url)
+          transports = src->url->transports;
+        else
+          transports = GST_RTSP_LOWER_TRANS_UNKNOWN;
+
         gst_rtspsrc_uri_set_uri (GST_URI_HANDLER (src), new_location);
+
+        /* set old transports */
+        if (src->url && transports != GST_RTSP_LOWER_TRANS_UNKNOWN)
+          src->url->transports = transports;
 
         src->need_redirect = TRUE;
         src->state = GST_RTSP_STATE_INIT;
