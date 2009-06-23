@@ -51,12 +51,11 @@ GST_STATIC_PAD_TEMPLATE (GST_BASE_TRANSFORM_SINK_NAME,
     GST_STATIC_CAPS (GST_VDP_VIDEO_CAPS));
 
 static GstStaticPadTemplate src_template =
-GST_STATIC_PAD_TEMPLATE (GST_BASE_TRANSFORM_SRC_NAME,
+    GST_STATIC_PAD_TEMPLATE (GST_BASE_TRANSFORM_SRC_NAME,
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]"));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("NV12")));
 
 #define DEBUG_INIT(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_vdp_video_yuv_debug, "vdpauvideoyuv", 0, "VDPAU VdpSurface to YUV");
@@ -254,67 +253,15 @@ GstCaps *
 gst_vdp_video_yuv_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstCaps *result = NULL;
+  GstCaps *result;
 
-  if (direction == GST_PAD_SINK) {
-    GstCaps *new_caps, *allowed_caps = NULL;
-    gint i;
-    GstStructure *structure;
-    gint chroma_type;
-    const GValue *value;
-    GstVdpDevice *device = NULL;
+  if (direction == GST_PAD_SINK)
+    result = gst_vdp_video_to_yuv_caps (caps);
 
-    new_caps = gst_caps_new_empty ();
+  else if (direction == GST_PAD_SRC)
+    result = gst_vdp_yuv_to_video_caps (caps, NULL);
 
-    for (i = 0; i < gst_caps_get_size (caps); i++) {
-      GSList *fourcc = NULL, *iter;
-
-      structure = gst_caps_get_structure (caps, i);
-      gst_structure_get_int (structure, "chroma-type", &chroma_type);
-      /* calculate fourcc from chroma_type */
-      for (i = 0; i < N_FORMATS; i++) {
-        if (formats[i].chroma_type == chroma_type) {
-          fourcc = g_slist_append (fourcc, GINT_TO_POINTER (formats[i].fourcc));
-        }
-      }
-
-      for (iter = fourcc; iter; iter = iter->next) {
-        GstStructure *new_struct = gst_structure_copy (structure);
-
-        gst_structure_set_name (new_struct, "video/x-raw-yuv");
-        gst_structure_remove_field (new_struct, "chroma-type");
-        gst_structure_remove_field (new_struct, "device");
-        gst_structure_set (new_struct, "format", GST_TYPE_FOURCC,
-            GPOINTER_TO_INT (iter->data), NULL);
-
-        gst_caps_append_structure (new_caps, new_struct);
-      }
-
-      g_slist_free (fourcc);
-    }
-    structure = gst_caps_get_structure (caps, 0);
-
-    gst_structure_get_int (structure, "chroma-type", &chroma_type);
-    value = gst_structure_get_value (structure, "device");
-    if (value)
-      device = g_value_get_object (value);
-
-    if (device)
-      allowed_caps = gst_vdp_get_video_caps (device, chroma_type);
-    else
-      allowed_caps = gst_static_pad_template_get_caps (&src_template);
-
-    result = gst_caps_intersect (new_caps, allowed_caps);
-    gst_caps_unref (new_caps);
-    gst_caps_unref (allowed_caps);
-
-    GST_LOG ("transformed %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT, caps,
-        result);
-
-  } else if (direction == GST_PAD_SRC) {
-    /* FIXME: upstream negotiation */
-    result = gst_static_pad_template_get_caps (&sink_template);
-  }
+  GST_LOG ("transformed %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT, caps, result);
 
   return result;
 }

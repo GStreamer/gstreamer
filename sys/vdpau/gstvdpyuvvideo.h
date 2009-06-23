@@ -41,8 +41,6 @@ typedef struct _GstVdpYUVVideoClass GstVdpYUVVideoClass;
 struct _GstVdpYUVVideo {
   GstBaseTransform trans;
 
-  GstCaps *sink_caps;
-
   gchar *display;
   GstVdpDevice *device;
 

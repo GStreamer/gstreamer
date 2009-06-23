@@ -235,43 +235,15 @@ gst_vdp_yuv_video_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
   GstVdpYUVVideo *yuv_video = GST_VDP_YUV_VIDEO (trans);
-  GstCaps *result = NULL;
+  GstCaps *result;
 
   if (direction == GST_PAD_SINK) {
-    gint i;
-
-    /* Intersect with the allowed caps */
-    if (yuv_video->sink_caps)
-      result = gst_caps_intersect (caps, yuv_video->sink_caps);
-    else
-      result = gst_caps_copy (caps);
-
-    for (i = 0; i < gst_caps_get_size (result); i++) {
-      GstStructure *structure = gst_caps_get_structure (result, i);
-      guint32 fourcc;
-      gint chroma_type;
-
-      gst_structure_get_fourcc (structure, "format", &fourcc);
-      /* calculate chroma type from fourcc */
-      for (i = 0; i < N_FORMATS; i++) {
-        if (formats[i].fourcc == fourcc) {
-          chroma_type = formats[i].chroma_type;
-          break;
-        }
-      }
-
-      gst_structure_set_name (structure, "video/x-vdpau-video");
-      gst_structure_remove_field (structure, "format");
-      gst_structure_set (structure, "chroma-type", G_TYPE_INT, chroma_type,
-          "device", G_TYPE_OBJECT, yuv_video->device, NULL);
-    }
-    gst_caps_do_simplify (result);
-    GST_LOG ("transformed %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT, caps,
-        result);
+    result = gst_vdp_yuv_to_video_caps (caps, yuv_video->device);
   } else if (direction == GST_PAD_SRC) {
-    /* FIXME: upstream negotiation */
-    result = gst_static_pad_template_get_caps (&sink_template);
+    result = gst_vdp_video_to_yuv_caps (caps);
   }
+
+  GST_LOG ("transformed %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT, caps, result);
 
   return result;
 }
@@ -284,7 +256,6 @@ gst_vdp_yuv_video_start (GstBaseTransform * trans)
   yuv_video->device = gst_vdp_get_device (yuv_video->display);
   if (!yuv_video->device)
     return FALSE;
-  yuv_video->sink_caps = gst_vdp_get_video_caps (yuv_video->device, -1);
 
   return TRUE;
 }
@@ -295,8 +266,6 @@ gst_vdp_yuv_video_stop (GstBaseTransform * trans)
   GstVdpYUVVideo *yuv_video = GST_VDP_YUV_VIDEO (trans);
 
   g_object_unref (yuv_video->device);
-  gst_caps_unref (yuv_video->sink_caps);
-  yuv_video->sink_caps = NULL;
 
   return TRUE;
 }
@@ -390,7 +359,5 @@ gst_vdp_yuv_video_class_init (GstVdpYUVVideoClass * klass)
 static void
 gst_vdp_yuv_video_init (GstVdpYUVVideo * yuv_video, GstVdpYUVVideoClass * klass)
 {
-  yuv_video->sink_caps = NULL;
-
   yuv_video->display = NULL;
 }
