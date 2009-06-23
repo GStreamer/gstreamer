@@ -26,12 +26,12 @@
 #include <stdio.h>
 #include <memory.h>
 
+#include "gstudpnetutils.h"
+
 /* EAI_ADDRFAMILY was obsoleted in BSD at some point */
 #ifndef EAI_ADDRFAMILY
 #define EAI_ADDRFAMILY 1
 #endif
-
-#include "gstudpnetutils.h"
 
 #ifdef G_OS_WIN32
 
