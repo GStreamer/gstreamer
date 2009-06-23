@@ -4821,6 +4821,7 @@ qtdemux_tag_add_covr (GstQTDemux * qtdemux, const char *tag1, const char *dummy,
         GST_DEBUG_OBJECT (qtdemux, "adding tag size %d", len - 16);
         gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
             tag1, buf, NULL);
+        gst_buffer_unref (buf);
       }
     }
   }
