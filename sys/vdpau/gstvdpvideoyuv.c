@@ -41,7 +41,8 @@ enum
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_DISPLAY
 };
 
 static GstStaticPadTemplate sink_template =
@@ -320,17 +321,80 @@ GstCaps *
 gst_vdp_video_yuv_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (trans);
   GstCaps *result;
 
   if (direction == GST_PAD_SINK)
     result = gst_vdp_video_to_yuv_caps (caps);
 
   else if (direction == GST_PAD_SRC)
-    result = gst_vdp_yuv_to_video_caps (caps, NULL);
+    result = gst_vdp_yuv_to_video_caps (caps, video_yuv->device);
 
   GST_LOG ("transformed %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT, caps, result);
 
   return result;
+}
+
+static gboolean
+gst_vdp_video_yuv_start (GstBaseTransform * trans)
+{
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (trans);
+
+  video_yuv->device = gst_vdp_get_device (video_yuv->display);
+  if (!video_yuv->device)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_vdp_video_yuv_stop (GstBaseTransform * trans)
+{
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (trans);
+
+  g_object_unref (video_yuv->device);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_vdp_video_yuv_buffer_alloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf)
+{
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (gst_pad_get_parent (pad));
+  GstFlowReturn ret = GST_FLOW_ERROR;
+  GstStructure *structure;
+  gint width, height;
+  gint chroma_type;
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (!structure)
+    goto error;
+
+  if (!gst_structure_get_int (structure, "width", &width))
+    goto error;
+  if (!gst_structure_get_int (structure, "height", &height))
+    goto error;
+
+  if (!gst_structure_get_int (structure, "chroma-type", &chroma_type))
+    goto error;
+
+  *buf = GST_BUFFER (gst_vdp_video_buffer_new (video_yuv->device,
+          chroma_type, width, height));
+
+  if (*buf == NULL)
+    goto error;
+
+  GST_BUFFER_SIZE (*buf) = size;
+  GST_BUFFER_OFFSET (*buf) = offset;
+
+  gst_buffer_set_caps (*buf, caps);
+
+  ret = GST_FLOW_OK;
+
+error:
+  gst_object_unref (video_yuv);
+  return ret;
 }
 
 /* GObject vmethod implementations */
@@ -353,21 +417,76 @@ gst_vdp_video_yuv_base_init (gpointer klass)
 }
 
 static void
+gst_vdp_video_yuv_finalize (GObject * object)
+{
+  GstVdpVideoYUV *video_yuv = (GstVdpVideoYUV *) object;
+
+  g_free (video_yuv->display);
+}
+
+static void
+gst_vdp_video_yuv_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (object);
+
+  switch (prop_id) {
+    case PROP_DISPLAY:
+      g_free (video_yuv->display);
+      video_yuv->display = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_vdp_video_yuv_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (object);
+
+  switch (prop_id) {
+    case PROP_DISPLAY:
+      g_value_set_string (value, video_yuv->display);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_vdp_video_yuv_class_init (GstVdpVideoYUVClass * klass)
 {
   GObjectClass *gobject_class;
-  GstBaseTransformClass *transform_class;
+  GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;
-  transform_class = (GstBaseTransformClass *) klass;
+  trans_class = (GstBaseTransformClass *) klass;
 
-  transform_class->transform_caps = gst_vdp_video_yuv_transform_caps;
-  transform_class->transform_size = gst_vdp_video_transform_size;
-  transform_class->transform = gst_vdp_video_yuv_transform;
-  transform_class->set_caps = gst_vdp_video_yuv_set_caps;
+  gobject_class->finalize = gst_vdp_video_yuv_finalize;
+  gobject_class->set_property = gst_vdp_video_yuv_set_property;
+  gobject_class->get_property = gst_vdp_video_yuv_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_DISPLAY,
+      g_param_spec_string ("display", "Display", "X Display name",
+          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  trans_class->start = gst_vdp_video_yuv_start;
+  trans_class->stop = gst_vdp_video_yuv_stop;
+  trans_class->transform_caps = gst_vdp_video_yuv_transform_caps;
+  trans_class->transform_size = gst_vdp_video_transform_size;
+  trans_class->transform = gst_vdp_video_yuv_transform;
+  trans_class->set_caps = gst_vdp_video_yuv_set_caps;
 }
 
 static void
 gst_vdp_video_yuv_init (GstVdpVideoYUV * video_yuv, GstVdpVideoYUVClass * klass)
 {
+  video_yuv->display = NULL;
+
+  gst_pad_set_bufferalloc_function (GST_BASE_TRANSFORM_SINK_PAD (video_yuv),
+      gst_vdp_video_yuv_buffer_alloc);
 }

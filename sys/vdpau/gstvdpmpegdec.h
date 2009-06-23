@@ -52,8 +52,8 @@ struct _GstVdpMpegDec
   GstPad *src;
   GstPad *sink;
 
-  gchar *display_name;
   GstVdpDevice *device;
+  VdpDecoderProfile profile;
   VdpDecoder decoder;
   
   /* stream info */
