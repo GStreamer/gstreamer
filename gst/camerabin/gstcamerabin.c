@@ -907,28 +907,21 @@ camerabin_dispose_elements (GstCameraBin * camera)
 /*
  * gst_camerabin_image_capture_continue:
  * @camera: camerabin object
+ * @filename: filename of the finished image
  *
  * Notify application that image has been saved with a signal.
  *
  * Returns TRUE if another image should be captured, FALSE otherwise.
  */
 static gboolean
-gst_camerabin_image_capture_continue (GstCameraBin * camera)
+gst_camerabin_image_capture_continue (GstCameraBin * camera,
+    const gchar * filename)
 {
-  gchar *filename = NULL;
   gboolean cont = FALSE;
-
-  /* Check the filename of the written image */
-  g_object_get (G_OBJECT (camera->imgbin), "filename", &filename, NULL);
 
   GST_DEBUG_OBJECT (camera, "emitting img_done signal, filename: %s", filename);
   g_signal_emit (G_OBJECT (camera), camerabin_signals[IMG_DONE_SIGNAL], 0,
       filename, &cont);
-
-  g_free (filename);
-
-  GST_DEBUG_OBJECT (camera, "emitted img_done, new filename: %s, continue: %d",
-      camera->filename->str, cont);
 
   /* If the app wants to continue make sure new filename has been set */
   if (cont && g_str_equal (camera->filename->str, "")) {
@@ -965,11 +958,7 @@ gst_camerabin_change_mode (GstCameraBin * camera, gint mode)
       GstStateChangeReturn state_ret;
 
       camera->active_bin = camera->imgbin;
-      /* we can't go to playing as filesink would error out if it does not have
-       * a filename yet, we set the filename async with the buffer flow */
-      state_ret = gst_element_set_state (camera->active_bin, GST_STATE_READY);
-      GST_DEBUG_OBJECT (camera, "setting imagebin to ready: %s",
-          gst_element_state_change_return_get_name (state_ret));
+      state_ret = gst_element_set_state (camera->active_bin, GST_STATE_PAUSED);
 
       if (state_ret == GST_STATE_CHANGE_FAILURE) {
         GST_WARNING_OBJECT (camera, "state change failed");
@@ -1527,10 +1516,6 @@ img_capture_prepared (gpointer data, GstCaps * caps)
   }
   g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
       "active-pad", camera->pad_src_img, NULL);
-
-  /* We need to set image bin to PAUSED or buffer-allocs will fail */
-  GST_DEBUG_OBJECT (camera, "setting image bin to PAUSED");
-  gst_element_set_state (camera->imgbin, GST_STATE_PAUSED);
 }
 
 /*
@@ -1542,7 +1527,6 @@ img_capture_prepared (gpointer data, GstCaps * caps)
 static void
 gst_camerabin_start_image_capture (GstCameraBin * camera)
 {
-  GstStateChangeReturn state_ret;
   gboolean wait_for_prepare = FALSE, ret = FALSE;
 
   GST_INFO_OBJECT (camera, "starting image capture");
@@ -1576,23 +1560,12 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
   }
 
   if (!wait_for_prepare) {
-    /* Image queue's srcpad data probe will set imagebin to PLAYING */
-    state_ret = gst_element_set_state (camera->imgbin, GST_STATE_PAUSED);
-    GST_DEBUG_OBJECT (camera, "setting imagebin to paused: %s",
-        gst_element_state_change_return_get_name (state_ret));
-
-    if (state_ret != GST_STATE_CHANGE_FAILURE) {
-      GST_INFO_OBJECT (camera, "imagebin is PAUSED");
-      g_mutex_lock (camera->capture_mutex);
-      g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", TRUE,
-          "active-pad", camera->pad_src_img, NULL);
-      camera->capturing = TRUE;
-      ret = TRUE;
-      g_mutex_unlock (camera->capture_mutex);
-    } else {
-      GST_WARNING_OBJECT (camera, "imagebin state change failed");
-      gst_element_set_state (camera->imgbin, GST_STATE_NULL);
-    }
+    g_mutex_lock (camera->capture_mutex);
+    g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", TRUE,
+        "active-pad", camera->pad_src_img, NULL);
+    camera->capturing = TRUE;
+    ret = TRUE;
+    g_mutex_unlock (camera->capture_mutex);
   }
 
   if (!ret) {
@@ -1672,7 +1645,6 @@ gst_camerabin_send_video_eos (GstCameraBin * camera)
  * @blocked: TRUE to block, FALSE to unblock
  * @u_data: camera bin object
  *
- * Sends eos event to image bin if blocking pad leading to image bin.
  * The pad will be unblocked when image bin posts eos message.
  */
 static void
@@ -1945,6 +1917,12 @@ gst_camerabin_reset_to_view_finder (GstCameraBin * camera)
   GstStateChangeReturn state_ret;
   GST_DEBUG_OBJECT (camera, "resetting");
 
+  if (camera->src_out_sel) {
+    /* Set selector to forward data to view finder */
+    g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
+        "active-pad", camera->pad_src_view, NULL);
+  }
+
   /* Set video bin to READY state */
   if (camera->active_bin == camera->vidbin) {
     state_ret = gst_element_set_state (camera->active_bin, GST_STATE_READY);
@@ -1958,12 +1936,6 @@ gst_camerabin_reset_to_view_finder (GstCameraBin * camera)
   /* Reset counters and flags */
   camera->stop_requested = FALSE;
   camera->paused = FALSE;
-
-  if (camera->src_out_sel) {
-    /* Set selector to forward data to view finder */
-    g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
-        "active-pad", camera->pad_src_view, NULL);
-  }
 
   /* Enable view finder mode in v4l2camsrc */
   if (camera->src_vid_src &&
@@ -3064,6 +3036,10 @@ static gboolean
 gst_camerabin_imgbin_finished (gpointer u_data)
 {
   GstCameraBin *camera = GST_CAMERABIN (u_data);
+  gchar *filename = NULL;
+
+  /* Get the filename of the finished image */
+  g_object_get (G_OBJECT (camera->imgbin), "filename", &filename, NULL);
 
   GST_DEBUG_OBJECT (camera, "Image encoding finished");
 
@@ -3072,7 +3048,11 @@ gst_camerabin_imgbin_finished (gpointer u_data)
   GST_DEBUG_OBJECT (camera, "Image pipeline set to READY");
 
   /* Send img-done signal */
-  gst_camerabin_image_capture_continue (camera);
+  gst_camerabin_image_capture_continue (camera, filename);
+  g_free (filename);
+
+  /* Set image bin back to PAUSED so that buffer-allocs don't fail */
+  gst_element_set_state (camera->imgbin, GST_STATE_PAUSED);
 
   /* Unblock image queue pad to process next buffer */
   gst_pad_set_blocked_async (camera->pad_src_queue, FALSE,
@@ -3143,6 +3123,10 @@ gst_camerabin_user_start (GstCameraBin * camera)
   if (!camera->active_bin) {
     GST_INFO_OBJECT (camera, "mode not explicitly set by application");
     gst_camerabin_change_mode (camera, camera->mode);
+    if (!camera->active_bin) {
+      GST_ELEMENT_ERROR (camera, CORE, FAILED,
+          ("starting capture failed"), (NULL));
+    }
   }
 
   if (g_str_equal (camera->filename->str, "")) {
