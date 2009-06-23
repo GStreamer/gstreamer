@@ -2141,7 +2141,8 @@ gst_asf_demux_add_global_tags (GstASFDemux * demux, GstTagList * taglist)
   }
 
   t = gst_tag_list_merge (demux->taglist, taglist, GST_TAG_MERGE_APPEND);
-  gst_tag_list_free (demux->taglist);
+  if (demux->taglist)
+    gst_tag_list_free (demux->taglist);
   gst_tag_list_free (taglist);
   demux->taglist = t;
   GST_LOG_OBJECT (demux, "global tags now: %" GST_PTR_FORMAT, demux->taglist);
