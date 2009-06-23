@@ -31,17 +31,25 @@ public class ElementTest
 		Assert.IsFalse(Element.Link(src, sink));
 	}
 
+	public class PadAddElement : Gst.Element {
+		public PadAddElement () : base () {
+			Pad pad = new Pad("source", PadDirection.Src);
+			CollectionAssert.IsEmpty(Pads);
+
+			AddPad(pad);
+			Assert.AreEqual(pad, GetStaticPad("source"));
+			CollectionAssert.Contains(Pads, pad);
+
+			RemovePad(pad);
+			Assert.IsNull(GetStaticPad("source"));
+			CollectionAssert.IsEmpty(Pads);
+		}
+	}
+
 	[Test]
 	public void TestAddRemovePad()
 	{
-		Element e = ElementFactory.Make("fakesrc", "source");
-		Pad pad = new Pad("source", PadDirection.Src);
-
-		e.AddPad(pad);
-		Assert.AreEqual(pad, e.GetStaticPad("source"));
-
-		e.RemovePad(pad);
-		Assert.IsNull(e.GetStaticPad("source"));
+		new PadAddElement ();
 	}
 
 	[Test]

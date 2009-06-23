@@ -119,26 +119,31 @@ public class BinTest
 		CollectionAssert.AreEquivalent(elements, bin.ElementsSorted);
 	}
 
+	public class MyBin : Gst.Bin {
+		public MyBin () : base () {
+			Element filesrc = ElementFactory.Make("filesrc");
+			Add(filesrc);
+			CollectionAssert.IsEmpty(Pads);
+
+			GhostPad pad1 = new GhostPad("ghost-sink", PadDirection.Sink);
+			GhostPad pad2 = new GhostPad("ghost-src", new PadTemplate("src-template", PadDirection.Src, PadPresence.Request, Caps.NewAny()));
+
+			Assert.IsFalse(pad1.SetTarget(filesrc.GetStaticPad("src")));
+			Assert.IsTrue(pad2.SetTarget(filesrc.GetStaticPad("src")));
+
+			AddPad(pad1);
+			AddPad(pad2);
+
+			CollectionAssert.Contains(Pads, pad1);
+			CollectionAssert.Contains(Pads, pad2);
+			CollectionAssert.Contains(SinkPads, pad1);
+			CollectionAssert.Contains(SrcPads, pad2);
+		}
+	}
+
 	[Test]
 	public void TestGhostPad()
 	{
-		Bin bin = new Bin();
-		Element filesrc = ElementFactory.Make("filesrc");
-		bin.Add(filesrc);
-		CollectionAssert.IsEmpty(bin.Pads);
-
-		GhostPad pad1 = new GhostPad("ghost-sink", PadDirection.Sink);
-		GhostPad pad2 = new GhostPad("ghost-src", new PadTemplate("src-template", PadDirection.Src, PadPresence.Request, Caps.NewAny()));
-
-		Assert.IsFalse(pad1.SetTarget(filesrc.GetStaticPad("src")));
-		Assert.IsTrue(pad2.SetTarget(filesrc.GetStaticPad("src")));
-
-		bin.AddPad(pad1);
-		bin.AddPad(pad2);
-
-		CollectionAssert.Contains(bin.Pads, pad1);
-		CollectionAssert.Contains(bin.Pads, pad2);
-		CollectionAssert.Contains(bin.SinkPads, pad1);
-		CollectionAssert.Contains(bin.SrcPads, pad2);
+		new MyBin ();
 	}
 }
