@@ -279,7 +279,8 @@ deinterlace_frame_di_greedyh (GstDeinterlaceMethod * d_method,
         Pitch;
 
     // copy first even line
-    oil_memcpy (Dest, GST_BUFFER_DATA (object->field_history[0].buf),
+    oil_memcpy (Dest,
+        GST_BUFFER_DATA (object->field_history[object->history_count - 2].buf),
         object->row_stride);
     Dest += object->row_stride;
     // then first odd line
