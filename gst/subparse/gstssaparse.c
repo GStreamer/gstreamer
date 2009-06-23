@@ -318,9 +318,8 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
 
   /* make double-sure it's 0-terminated and all */
   txt = g_strndup ((gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-
   if (txt == NULL)
-    return GST_FLOW_UNEXPECTED;
+    goto empty_text;
 
   ts = GST_BUFFER_TIMESTAMP (buf);
   ret = gst_ssa_parse_push_line (parse, txt, ts, GST_BUFFER_DURATION (buf));
@@ -332,6 +331,7 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
     ret = GST_FLOW_OK;
   }
 
+  gst_buffer_unref (buf);
   g_free (txt);
 
   return ret;
@@ -341,7 +341,15 @@ not_framed:
   {
     GST_ELEMENT_ERROR (parse, STREAM, FORMAT, (NULL),
         ("Only SSA subtitles embedded in containers are supported"));
+    gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+empty_text:
+  {
+    GST_ELEMENT_WARNING (parse, STREAM, FORMAT, (NULL),
+        ("Received empty subtitle"));
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
   }
 }
 
