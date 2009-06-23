@@ -56,7 +56,7 @@ static GstStaticPadTemplate src_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") ";"
         GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("NV12") ";"
-        GST_VIDEO_CAPS_YUV ("UYVY")));
+        GST_VIDEO_CAPS_YUV ("UYVY") ";" GST_VIDEO_CAPS_YUV ("YUY2")));
 
 #define DEBUG_INIT(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_vdp_video_yuv_debug, "vdpauvideoyuv", 0, "VDPAU VdpSurface to YUV");
@@ -205,6 +205,32 @@ gst_vdp_video_yuv_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       }
       break;
     }
+    case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+    {
+      VdpStatus status;
+      guint8 *data[1];
+      guint32 stride[1];
+
+      data[0] = GST_BUFFER_DATA (outbuf);
+
+      stride[0] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_YUY2,
+          0, video_yuv->width);
+
+      GST_LOG_OBJECT (video_yuv, "Entering vdp_video_surface_get_bits_ycbcr");
+      status =
+          device->vdp_video_surface_get_bits_ycbcr (surface,
+          VDP_YCBCR_FORMAT_YUYV, (void *) data, stride);
+      GST_LOG_OBJECT (video_yuv,
+          "Got status %d from vdp_video_surface_get_bits_ycbcr", status);
+      if (G_UNLIKELY (status != VDP_STATUS_OK)) {
+        GST_ELEMENT_ERROR (video_yuv, RESOURCE, READ,
+            ("Couldn't get data from vdpau"),
+            ("Error returned from vdpau was: %s",
+                device->vdp_get_error_string (status)));
+        return GST_FLOW_ERROR;
+      }
+      break;
+    }
     default:
       break;
   }
@@ -250,6 +276,13 @@ gst_vdp_video_transform_size (GstBaseTransform * trans,
       {
         *othersize =
             gst_video_format_get_size (GST_VIDEO_FORMAT_UYVY, video_yuv->width,
+            video_yuv->height);
+        break;
+      }
+      case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+      {
+        *othersize =
+            gst_video_format_get_size (GST_VIDEO_FORMAT_YUY2, video_yuv->width,
             video_yuv->height);
         break;
       }

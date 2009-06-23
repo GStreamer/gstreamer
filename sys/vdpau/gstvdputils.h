@@ -68,12 +68,12 @@ static const VdpauFormats formats[N_FORMATS] = {
         VDP_CHROMA_TYPE_444,
         VDP_YCBCR_FORMAT_Y8U8V8A8,
         GST_MAKE_FOURCC ('A', 'V', 'U', 'Y')
-      },
+  },
   {
         VDP_CHROMA_TYPE_422,
         VDP_YCBCR_FORMAT_YUYV,
-        GST_MAKE_FOURCC ('Y', 'U', 'Y', 'V')
-      }
+        GST_MAKE_FOURCC ('Y', 'U', 'Y', '2')
+      },
 };
 
 GstCaps *gst_vdp_video_to_yuv_caps (GstCaps *caps);
