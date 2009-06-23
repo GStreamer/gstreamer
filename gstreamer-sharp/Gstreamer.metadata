@@ -194,6 +194,8 @@
   <attr path="/api/namespace/object[@name='Clock']/field[@name='ClockID']" name="type">GstClockEntry*</attr>
   <attr path="/api/namespace/object[@name='Clock']/method[@cname='gst_clock_id_get_time']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Clock']/method[@cname='gst_clock_id_compare_func']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Clock']/method[@cname='gst_clock_adjust_unlocked']" name="accessibility">protected</attr>
+  <attr path="/api/namespace/object[@name='Clock']/method[@cname='gst_clock_unadjust_unlocked']" name="accessibility">protected</attr>
   <move-node path="/api/namespace/object[@name='Clock']/method[@cname='gst_clock_id_ref']">/api/namespace/struct[@name='ClockEntry']</move-node>
   <move-node path="/api/namespace/object[@name='Clock']/method[@cname='gst_clock_id_unref']">/api/namespace/struct[@name='ClockEntry']</move-node>
   <move-node path="/api/namespace/object[@name='Clock']/method[@cname='gst_clock_id_unschedule']">/api/namespace/struct[@name='ClockEntry']</move-node>
