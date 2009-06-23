@@ -1226,6 +1226,17 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
             GST_FORMAT_TIME, demux->segment.start, demux->segment.stop,
             demux->segment.start));
 
+    /* now post any global tags we may have found */
+    if (demux->taglist == NULL)
+      demux->taglist = gst_tag_list_new ();
+
+    gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_CONTAINER_FORMAT, "ASF", NULL);
+
+    GST_DEBUG_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, demux->taglist);
+    gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
+    demux->taglist = NULL;
+
     demux->need_newsegment = FALSE;
     demux->segment_running = TRUE;
   }
@@ -2113,25 +2124,27 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf16le,
   return NULL;
 }
 
-/* gst_asf_demux_commit_taglist() takes ownership of taglist! */
+/* gst_asf_demux_add_global_tags() takes ownership of taglist! */
 static void
-gst_asf_demux_commit_taglist (GstASFDemux * demux, GstTagList * taglist)
+gst_asf_demux_add_global_tags (GstASFDemux * demux, GstTagList * taglist)
 {
-  GST_DEBUG ("Committing tags: %" GST_PTR_FORMAT, taglist);
+  GstTagList *t;
 
-  gst_element_found_tags (GST_ELEMENT (demux), gst_tag_list_copy (taglist));
+  GST_DEBUG_OBJECT (demux, "adding global tags: %" GST_PTR_FORMAT, taglist);
 
-  /* save internally */
-  if (!demux->taglist)
-    demux->taglist = taglist;
-  else {
-    GstTagList *t;
+  if (taglist == NULL)
+    return;
 
-    t = gst_tag_list_merge (demux->taglist, taglist, GST_TAG_MERGE_APPEND);
-    gst_tag_list_free (demux->taglist);
+  if (gst_tag_list_is_empty (taglist)) {
     gst_tag_list_free (taglist);
-    demux->taglist = t;
+    return;
   }
+
+  t = gst_tag_list_merge (demux->taglist, taglist, GST_TAG_MERGE_APPEND);
+  gst_tag_list_free (demux->taglist);
+  gst_tag_list_free (taglist);
+  demux->taglist = t;
+  GST_LOG_OBJECT (demux, "global tags now: %" GST_PTR_FORMAT, demux->taglist);
 }
 
 #define ASF_DEMUX_DATA_TYPE_UTF16LE_STRING  0
@@ -2336,11 +2349,7 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
     g_free (value);
   }
 
-  if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
-    gst_asf_demux_commit_taglist (demux, taglist);
-  } else {
-    gst_tag_list_free (taglist);
-  }
+  gst_asf_demux_add_global_tags (demux, taglist);
 
   return GST_FLOW_OK;
 
@@ -2637,11 +2646,7 @@ gst_asf_demux_process_comment (GstASFDemux * demux, guint8 * data, guint64 size)
   }
   g_value_unset (&value);
 
-  if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
-    gst_asf_demux_commit_taglist (demux, taglist);
-  } else {
-    gst_tag_list_free (taglist);
-  }
+  gst_asf_demux_add_global_tags (demux, taglist);
 
   for (i = 0; i < G_N_ELEMENTS (tags); ++i)
     g_free (tags[i].val_utf8);
