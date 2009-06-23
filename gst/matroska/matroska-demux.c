@@ -873,6 +873,8 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
 
   g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
 
+  GST_DEBUG ("decoding buffer %p", buf);
+
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
@@ -890,6 +892,7 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
 
     return buf;
   } else {
+    GST_DEBUG ("decode data failed");
     gst_buffer_unref (buf);
     return NULL;
   }
@@ -4010,6 +4013,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         guint64 num;
         guint8 *data;
 
+        if (buf) {
+          gst_buffer_unref (buf);
+          buf = NULL;
+        }
         if ((ret = gst_ebml_read_buffer (ebml, &id, &buf)) != GST_FLOW_OK)
           break;
 
@@ -4272,6 +4279,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       sub = gst_buffer_create_sub (buf,
           GST_BUFFER_SIZE (buf) - size, lace_size[n]);
+      GST_WARNING_OBJECT (demux, "created subbuffer %p", sub);
 
       if (stream->encodings != NULL && stream->encodings->len > 0)
         sub = gst_matroska_decode_buffer (stream, sub);
@@ -4301,7 +4309,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       gst_matroska_demux_sync_streams (demux);
 
-
       if (duration) {
         GST_BUFFER_DURATION (sub) = duration / laces;
         stream->pos += GST_BUFFER_DURATION (sub);
@@ -4326,6 +4333,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         /* When doing seeks or such, we need to restart on key frames or
          * decoders might choke. */
         GST_DEBUG_OBJECT (demux, "skipping delta unit");
+        gst_buffer_unref (sub);
         goto done;
       }
 
@@ -4361,6 +4369,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       /* Postprocess the buffers depending on the codec used */
       if (stream->postprocess_frame) {
+        GST_LOG_OBJECT (demux, "running post process");
         ret = stream->postprocess_frame (GST_ELEMENT (demux), stream, &sub);
       }
 
@@ -4378,7 +4387,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
   }
 
 done:
-  if (readblock)
+  if (buf)
     gst_buffer_unref (buf);
   g_free (lace_size);
 
