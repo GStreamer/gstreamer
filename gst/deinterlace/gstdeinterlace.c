@@ -1511,6 +1511,14 @@ gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps)
     othercaps = gst_caps_ref (caps);
   }
 
+  if (otherpad == self->srcpad && self->mode != GST_DEINTERLACE_MODE_DISABLED) {
+    GstStructure *s;
+
+    othercaps = gst_caps_make_writable (othercaps);
+    s = gst_caps_get_structure (othercaps, 0);
+    gst_structure_remove_field (s, "interlaced");
+  }
+
   if (!gst_pad_set_caps (otherpad, othercaps))
     goto caps_not_accepted;
 
