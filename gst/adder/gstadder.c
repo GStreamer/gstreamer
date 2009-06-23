@@ -568,21 +568,33 @@ gst_adder_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
-static gboolean
-forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
+typedef struct
 {
+  GstEvent *event;
+  gboolean flush;
+} EventData;
+
+static gboolean
+forward_event_func (GstPad * pad, GValue * ret, EventData * data)
+{
+  GstEvent *event = data->event;
+
   gst_event_ref (event);
   GST_LOG_OBJECT (pad, "About to send event %s", GST_EVENT_TYPE_NAME (event));
   if (!gst_pad_push_event (pad, event)) {
     g_value_set_boolean (ret, FALSE);
     GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
         event, GST_EVENT_TYPE_NAME (event));
-    gst_pad_send_event (pad, gst_event_new_flush_stop ());
+    /* quick hack to unflush the pads, ideally we need a way to just unflush
+     * this single collect pad */
+    if (data->flush)
+      gst_pad_send_event (pad, gst_event_new_flush_stop ());
   } else {
     GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
         event, GST_EVENT_TYPE_NAME (event));
   }
   gst_object_unref (pad);
+
   /* continue on other pads, even if one failed */
   return TRUE;
 }
@@ -594,24 +606,27 @@ forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
  * sinkpads.
  */
 static gboolean
-forward_event (GstAdder * adder, GstEvent * event)
+forward_event (GstAdder * adder, GstEvent * event, gboolean flush)
 {
   gboolean ret;
   GstIterator *it;
   GstIteratorResult ires;
   GValue vret = { 0 };
+  EventData data;
 
   GST_LOG_OBJECT (adder, "Forwarding event %p (%s)", event,
       GST_EVENT_TYPE_NAME (event));
 
   ret = TRUE;
+  data.event = event;
+  data.flush = flush;
 
   g_value_init (&vret, G_TYPE_BOOLEAN);
   g_value_set_boolean (&vret, TRUE);
   it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (adder));
   while (TRUE) {
     ires = gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func,
-        &vret, event);
+        &vret, &data);
     switch (ires) {
       case GST_ITERATOR_RESYNC:
         GST_WARNING ("resync");
@@ -688,7 +703,7 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (adder, "forwarding seek event: %" GST_PTR_FORMAT,
           event);
 
-      result = forward_event (adder, event);
+      result = forward_event (adder, event, flush);
       if (!result) {
         /* seek failed. maybe source is a live source. */
         GST_DEBUG_OBJECT (adder, "seeking failed");
@@ -711,7 +726,7 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       /* just forward the rest for now */
       GST_DEBUG_OBJECT (adder, "forward unhandled event: %s",
           GST_EVENT_TYPE_NAME (event));
-      result = forward_event (adder, event);
+      result = forward_event (adder, event, FALSE);
       break;
   }
   gst_object_unref (adder);
