@@ -1901,6 +1901,12 @@ gst_uri_decode_bin_change_state (GstElement * element,
       remove_source (decoder);
       do_async_done (decoder);
       break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_DEBUG ("ready to null");
+      remove_decoders (decoder);
+      remove_pads (decoder);
+      remove_source (decoder);
+      break;
     default:
       break;
   }
