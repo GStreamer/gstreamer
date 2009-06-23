@@ -60,6 +60,11 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-xvid, "
         "width = (int) [ 0, MAX ], "
+        "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0/1, MAX ]; "
+        "video/mpeg, "
+        "mpegversion = (int) 4, "
+        "systemstream = (boolean) FALSE, "
+        "width = (int) [ 0, MAX ], "
         "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0/1, MAX ]")
     );
 
@@ -731,31 +736,37 @@ gst_xvidenc_setcaps (GstPad * pad, GstCaps * vscaps)
   xvidenc->xframe_cache = NULL;
 
   if (gst_xvidenc_setup (xvidenc)) {
-    GstPadLinkReturn ret;
-    GstCaps *new_caps;
-    GstPad *peer;
+    gboolean ret = FALSE;
+    GstCaps *new_caps = NULL, *allowed_caps;
 
-    new_caps = gst_caps_new_simple ("video/x-xvid",
+    /* please downstream with preferred caps */
+    allowed_caps = gst_pad_get_allowed_caps (xvidenc->srcpad);
+    GST_DEBUG_OBJECT (xvidenc, "allowed caps: %" GST_PTR_FORMAT, allowed_caps);
+
+    if (allowed_caps && !gst_caps_is_empty (allowed_caps)) {
+      new_caps = gst_caps_copy_nth (allowed_caps, 0);
+    } else {
+      new_caps = gst_caps_new_simple ("video/x-xvid", NULL);
+    }
+    if (allowed_caps)
+      gst_caps_unref (allowed_caps);
+
+    gst_caps_set_simple (new_caps,
         "width", G_TYPE_INT, w, "height", G_TYPE_INT, h,
         "framerate", GST_TYPE_FRACTION, xvidenc->fbase, xvidenc->fincr,
         "pixel-aspect-ratio", GST_TYPE_FRACTION,
         xvidenc->par_width, xvidenc->par_height, NULL);
+    /* just to be sure */
+    gst_pad_fixate_caps (xvidenc->srcpad, new_caps);
+
     /* src pad should accept anyway */
     ret = gst_pad_set_caps (xvidenc->srcpad, new_caps);
-    if (!ret)
-      goto exit;
-    /* will peer accept */
-    peer = gst_pad_get_peer (xvidenc->srcpad);
-    if (peer)
-      ret &= gst_pad_accept_caps (peer, new_caps);
-    gst_object_unref (peer);
+    gst_caps_unref (new_caps);
 
-  exit:
     if (!ret && xvidenc->handle) {
       xvid_encore (xvidenc->handle, XVID_ENC_DESTROY, NULL, NULL);
       xvidenc->handle = NULL;
     }
-    gst_caps_unref (new_caps);
     return ret;
 
   } else                        /* setup did not work out */
