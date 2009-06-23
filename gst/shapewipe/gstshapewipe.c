@@ -334,7 +334,10 @@ gst_shape_wipe_video_sink_setcaps (GstPad * pad, GstCaps * caps)
     g_mutex_unlock (self->mask_mutex);
   }
 
-  self->frame_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
+  if (fps_n != 0)
+    self->frame_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
+  else
+    self->frame_duration = 0;
 
   ret = gst_pad_set_caps (self->srcpad, caps);
 
