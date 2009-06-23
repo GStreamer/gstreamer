@@ -3,7 +3,7 @@ static extern IntPtr g_object_ref (IntPtr raw);
 [DllImport("libgstreamer-0.10.dll") ]
 static extern bool gst_element_add_pad (IntPtr raw, IntPtr pad);
 
-public bool AddPad (Pad p) {
+protected bool AddPad (Pad p) {
   bool ret = gst_element_add_pad (this.Handle, p == null ? IntPtr.Zero : p.Handle);
   if (ret)
     g_object_ref (p.Handle);
@@ -35,14 +35,14 @@ static extern void gst_element_found_tags (IntPtr raw, IntPtr list);
 [DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_tag_list_copy (IntPtr raw);
 
-public void FoundTags (Gst.TagList list) {
+protected void FoundTags (Gst.TagList list) {
   gst_element_found_tags (Handle, list == null ? IntPtr.Zero : gst_tag_list_copy (list.Handle));
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_element_found_tags_for_pad (IntPtr raw, IntPtr pad, IntPtr list);
 
-public void FoundTagsForPad (Gst.Pad pad, Gst.TagList list) {
+protected void FoundTagsForPad (Gst.Pad pad, Gst.TagList list) {
   gst_element_found_tags_for_pad (Handle, pad == null ? IntPtr.Zero : pad.Handle, list == null ? IntPtr.Zero : gst_tag_list_copy (list.Handle));
 }
 

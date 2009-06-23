@@ -291,6 +291,7 @@
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_found_tags_for_pad']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_message_full']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_post_message']/parameters/parameter[@name='message']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_post_message']" name="accessibility">protected</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_send_event']/parameters/parameter[@name='event']" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_seek_simple']" name="name">Seek</attr>
   <remove-attr path="/api/namespace/object[@name='Element']/field[@name='CurrentState']" name="hidden"/>
@@ -299,6 +300,9 @@
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_iterate_pads']" name="name">GetPads</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_iterate_src_pads']" name="name">GetSrcPads</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_iterate_sink_pads']" name="name">GetSinkPads</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_create_all_pads']" name="accessibility">protected</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_no_more_pads']" name="accessibility">protected</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_remove_pad']" name="accessibility">protected</attr>
   
   <attr path="/api/namespace/struct[@name='ElementDetails']" name="internal">1</attr>
 
