@@ -73,6 +73,10 @@ EXPORTS
 	gst_bit_reader_set_pos
 	gst_bit_reader_skip
 	gst_bit_reader_skip_to_byte
+	gst_byte_reader_dup_data
+	gst_byte_reader_dup_string_utf16
+	gst_byte_reader_dup_string_utf32
+	gst_byte_reader_dup_string_utf8
 	gst_byte_reader_free
 	gst_byte_reader_get_data
 	gst_byte_reader_get_float32_be
@@ -90,6 +94,7 @@ EXPORTS
 	gst_byte_reader_get_int8
 	gst_byte_reader_get_pos
 	gst_byte_reader_get_remaining
+	gst_byte_reader_get_string_utf8
 	gst_byte_reader_get_uint16_be
 	gst_byte_reader_get_uint16_le
 	gst_byte_reader_get_uint24_be
@@ -118,6 +123,7 @@ EXPORTS
 	gst_byte_reader_peek_int64_be
 	gst_byte_reader_peek_int64_le
 	gst_byte_reader_peek_int8
+	gst_byte_reader_peek_string_utf8
 	gst_byte_reader_peek_uint16_be
 	gst_byte_reader_peek_uint16_le
 	gst_byte_reader_peek_uint24_be
@@ -129,6 +135,9 @@ EXPORTS
 	gst_byte_reader_peek_uint8
 	gst_byte_reader_set_pos
 	gst_byte_reader_skip
+	gst_byte_reader_skip_string_utf16
+	gst_byte_reader_skip_string_utf32
+	gst_byte_reader_skip_string_utf8
 	gst_collect_pads_add_pad
 	gst_collect_pads_add_pad_full
 	gst_collect_pads_available
