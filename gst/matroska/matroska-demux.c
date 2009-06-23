@@ -1704,7 +1704,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   if (context->encodings && context->encodings->len > 0 && context->codec_priv
       && context->codec_priv_size > 0) {
     if (!gst_matroska_decode_data (context->encodings,
-            (guint8 **) & context->codec_priv, &context->codec_priv_size,
+            &context->codec_priv, &context->codec_priv_size,
             GST_MATROSKA_TRACK_ENCODING_SCOPE_CODEC_DATA, TRUE)) {
       GST_WARNING_OBJECT (demux, "Decoding codec private data failed");
       ret = GST_FLOW_ERROR;
@@ -3652,10 +3652,10 @@ gst_matroska_demux_push_dvd_clut_change_event (GstMatroskaDemux * demux,
    * elsewhere, but for now, only interested in a small part */
 
   /* make sure we have terminating 0 */
-  buf = g_strndup (stream->codec_priv, stream->codec_priv_size);
+  buf = g_strndup ((gchar *) stream->codec_priv, stream->codec_priv_size);
 
   /* just locate and parse palette part */
-  start = strstr (stream->codec_priv, "palette:");
+  start = strstr ((gchar *) stream->codec_priv, "palette:");
   if (start) {
     gint i;
     guint32 clut[16];
@@ -4203,7 +4203,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         if (stream->encodings && stream->encodings->len > 0
             && stream->codec_state && stream->codec_state_size > 0) {
           if (!gst_matroska_decode_data (stream->encodings,
-                  (guint8 **) & stream->codec_state, &stream->codec_state_size,
+                  &stream->codec_state, &stream->codec_state_size,
                   GST_MATROSKA_TRACK_ENCODING_SCOPE_CODEC_DATA, TRUE)) {
             GST_WARNING_OBJECT (demux, "Decoding codec state failed");
           }
