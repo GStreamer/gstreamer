@@ -37,6 +37,7 @@ add_library (gstopengl SHARED
   gltestsrc.c
   gstgltestsrc.c
   gstgloverlay.c
+  gstgldeinterlace.c
   gstgldifferencematte.c
   gstglbumper.c
   gstgleffects.c

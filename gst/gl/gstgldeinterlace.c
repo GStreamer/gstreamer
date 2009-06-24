@@ -151,12 +151,12 @@ static const gchar *greedyh_fragment_source =
     ""
     ""   //STEP 3
     "    vec3 mov;\n"
-    "    mov.r = 256.0 * min(max(abs(L2.r - LP2.r) - motion_threshold, 0.0) * motion_sense, 1.0);\n" //no equivalent to 256 so we put 1.0 * 256.0
-    "    last.r = (last.r * (256.0 - mov.r) + avg_sc.r * mov.r) / 256.0;\n"
-    "    mov.g = 256.0 * min(max(abs(L2.g - LP2.g) - motion_threshold, 0.0) * motion_sense, 1.0);\n"
-    "    last.g = (last.g * (256.0 - mov.g) + avg_sc.g * mov.g) / 256.0;\n"
-    "    mov.b = 256.0 * min(max(abs(L2.b - LP2.b) - motion_threshold, 0.0) * motion_sense, 1.0);\n"
-    "    last.b = (last.b * (256.0 - mov.b) + avg_sc.b * mov.b) / 256.0;\n"
+    "    mov.r = min(max(abs(L2.r - LP2.r) - motion_threshold, 0.0) * motion_sense, 1.0);\n"
+    "    last.r = (last.r * (1.0 - mov.r) + avg_sc.r * mov.r);\n"
+    "    mov.g = min(max(abs(L2.g - LP2.g) - motion_threshold, 0.0) * motion_sense, 1.0);\n"
+    "    last.g = (last.g * (1.0 - mov.g) + avg_sc.g * mov.g);\n"
+    "    mov.b = min(max(abs(L2.b - LP2.b) - motion_threshold, 0.0) * motion_sense, 1.0);\n"
+    "    last.b = last.b * (1.0 - mov.b) + avg_sc.b * mov.b;\n"
     ""
     "    gl_FragColor = vec4(last, 1.0);\n"
     "  }\n"
@@ -289,9 +289,9 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "tex", 0);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
-  gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "max_comb", 5.0/255.0);
-  gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "motion_threshold", 25.0/255.0);
-  gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "motion_sense", 30.0/255.0);
+  gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "max_comb", 5.0f/255.0f);
+  gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "motion_threshold", 25.0f/255.0f);
+  gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "motion_sense", 30.0f/255.0f);
 
   gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "width", filter->width);
   gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "height", filter->height);

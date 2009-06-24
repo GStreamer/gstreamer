@@ -26,6 +26,8 @@ libgstopengl_la_SOURCES = \
 	gstglfilterapp.h \
 	gstglcolorscale.c \
 	gstglcolorscale.h \
+  gstgldeinterlace.c \
+  gstgldeinterlace.h \
 	gstgldifferencematte.c \
 	gstgloverlay.c \
 	gltestsrc.c \

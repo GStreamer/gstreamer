@@ -57,14 +57,15 @@ GType gst_gl_filter_cube_get_type (void);
 #include "gstglfilterglass.h"
 #include "gstglfilterapp.h"
 #include "gstglcolorscale.h"
+#include "gstgldeinterlace.h"
 #include "gstgleffects.h"
 #include "gstglbumper.h"
 
 GType gst_gl_effects_get_type (void);
+GType gst_gl_deinterlace_get_type (void);
 GType gst_gl_filter_app_get_type (void);
 GType gst_gl_filterblur_get_type (void);
 GType gst_gl_filtersobel_get_type (void);
-GType gst_gl_filter_edge_get_type (void);
 GType gst_gl_filter_laplacian_get_type (void);
 GType gst_gl_filter_glass_get_type (void);
 GType gst_gl_overlay_get_type (void);
@@ -147,6 +148,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glfilterapp",
           GST_RANK_NONE, GST_TYPE_GL_FILTER_APP)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "gldeinterlace",
+          GST_RANK_NONE, GST_TYPE_GL_DEINTERLACE)) {
     return FALSE;
   }
 
