@@ -423,16 +423,17 @@ gst_avi_demux_src_convert (GstPad * pad,
       ", dest_format:%s", gst_format_get_name (src_format), src_value,
       gst_format_get_name (*dest_format));
 
-  if (src_format == *dest_format) {
+  if (G_UNLIKELY (src_format == *dest_format)) {
     *dest_value = src_value;
     goto done;
   }
-  if (!stream->strh || !stream->strf.data) {
+  if (G_UNLIKELY (!stream->strh || !stream->strf.data)) {
     res = FALSE;
     goto done;
   }
-  if (stream->strh->type == GST_RIFF_FCC_vids &&
-      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES)) {
+  if (G_UNLIKELY (stream->strh->type == GST_RIFF_FCC_vids &&
+          (src_format == GST_FORMAT_BYTES
+              || *dest_format == GST_FORMAT_BYTES))) {
     res = FALSE;
     goto done;
   }
@@ -2366,19 +2367,19 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
     gint64 tmpts, tmpnextts;
 
     res = gst_avi_demux_next_data_buffer (avi, &pos, &tag, &size);
-    if (res != GST_FLOW_OK)
+    if (G_UNLIKELY (res != GST_FLOW_OK))
       break;
 
     /* check valid stream */
     stream_nr = CHUNKID_TO_STREAMNR (tag);
-    if (stream_nr >= avi->num_streams) {
+    if (G_UNLIKELY (stream_nr >= avi->num_streams)) {
       GST_WARNING_OBJECT (avi,
           "Index entry has invalid stream nr %d", stream_nr);
       goto next;
     }
 
     stream = &avi->stream[stream_nr];
-    if (stream->pad == NULL) {
+    if (G_UNLIKELY (stream->pad == NULL)) {
       GST_WARNING_OBJECT (avi,
           "Stream %d does not have an output pad, can't create new index",
           stream_nr);
@@ -2386,7 +2387,7 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
     }
 
     /* pre-allocate */
-    if (index_size % 1024 == 0) {
+    if (G_UNLIKELY (index_size % 1024 == 0)) {
       entries = g_new (gst_avi_index_entry, 1024);
       *alloc_list = g_list_prepend (*alloc_list, entries);
     }
@@ -2433,7 +2434,7 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
   next:
     /* update position */
     pos += GST_ROUND_UP_2 (size);
-    if (pos > length) {
+    if (G_UNLIKELY (pos > length)) {
       GST_WARNING_OBJECT (avi,
           "Stopping index lookup since we are further than EOF");
       break;
@@ -3726,7 +3727,7 @@ gst_avi_demux_combine_flows (GstAviDemux * avi, avi_stream_context * stream,
   stream->last_flow = ret;
 
   /* any other error that is not-linked can be returned right away */
-  if (ret != GST_FLOW_NOT_LINKED)
+  if (G_UNLIKELY (ret != GST_FLOW_NOT_LINKED))
     goto done;
 
   /* only return NOT_LINKED if all other pads returned NOT_LINKED */
@@ -3736,7 +3737,7 @@ gst_avi_demux_combine_flows (GstAviDemux * avi, avi_stream_context * stream,
     ret = ostream->last_flow;
     /* some other return value (must be SUCCESS but we can return
      * other values as well) */
-    if (ret != GST_FLOW_NOT_LINKED)
+    if (G_UNLIKELY (ret != GST_FLOW_NOT_LINKED))
       goto done;
   }
   /* if we get here, all other pads were unlinked and we return
@@ -3988,10 +3989,10 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
 
   /* if we have a avi->index_entries[], we don't want to read
    * the stream linearly, but seek to the next ts/index_entry. */
-  if (avi->index_entries != NULL)
+  if (G_LIKELY (avi->index_entries != NULL))
     return gst_avi_demux_process_next_entry (avi);
 
-  if (avi->have_eos) {
+  if (G_UNLIKELY (avi->have_eos)) {
     /* Clean adapter, we're done */
     gst_adapter_clear (avi->adapter);
     return res;
@@ -4004,15 +4005,15 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
 
   /* Iterate until need more data, so adapter won't grow too much */
   while (1) {
-    if (!gst_avi_demux_peek_chunk_info (avi, &tag, &size)) {
+    if (G_UNLIKELY (!gst_avi_demux_peek_chunk_info (avi, &tag, &size))) {
       return GST_FLOW_OK;
     }
 
     GST_DEBUG ("Trying chunk (%" GST_FOURCC_FORMAT "), size %d",
         GST_FOURCC_ARGS (tag), size);
 
-    if ((tag & 0xff) >= '0' && (tag & 0xff) <= '9' &&
-        ((tag >> 8) & 0xff) >= '0' && ((tag >> 8) & 0xff) <= '9') {
+    if (G_LIKELY ((tag & 0xff) >= '0' && (tag & 0xff) <= '9' &&
+            ((tag >> 8) & 0xff) >= '0' && ((tag >> 8) & 0xff) <= '9')) {
       GST_LOG ("Chunk ok");
     } else if ((tag & 0xffff) == (('x' << 8) | 'i')) {
       GST_DEBUG ("Found sub-index tag");
@@ -4054,7 +4055,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       return GST_FLOW_UNEXPECTED;
     }
 
-    if (!gst_avi_demux_peek_chunk (avi, &tag, &size)) {
+    if (G_UNLIKELY (!gst_avi_demux_peek_chunk (avi, &tag, &size))) {
       if ((size == 0) || (size == -1))
         gst_adapter_flush (avi->adapter, 8);
       return GST_FLOW_OK;
@@ -4064,7 +4065,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
 
     stream_nr = CHUNKID_TO_STREAMNR (tag);
 
-    if (stream_nr < 0 || stream_nr >= avi->num_streams) {
+    if (G_UNLIKELY (stream_nr < 0 || stream_nr >= avi->num_streams)) {
       /* recoverable */
       GST_WARNING ("Invalid stream ID %d (%" GST_FOURCC_FORMAT ")",
           stream_nr, GST_FOURCC_ARGS (tag));
@@ -4086,7 +4087,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       /* get time of this buffer */
       stream = &avi->stream[stream_nr];
       gst_pad_query_position (stream->pad, &format, (gint64 *) & next_ts);
-      if (format != GST_FORMAT_TIME)
+      if (G_UNLIKELY (format != GST_FORMAT_TIME))
         goto wrong_format;
 
       /* set delay (if any)
@@ -4098,7 +4099,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       stream->current_frame++;
       stream->current_byte += size;
 
-      if (!stream->pad) {
+      if (G_UNLIKELY (!stream->pad)) {
         GST_WARNING ("No pad.");
         gst_buffer_unref (buf);
       } else {
@@ -4108,7 +4109,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         buf = gst_avi_demux_invert (stream, buf);
 
         gst_pad_query_position (stream->pad, &format, (gint64 *) & dur_ts);
-        if (format != GST_FORMAT_TIME)
+        if (G_UNLIKELY (format != GST_FORMAT_TIME))
           goto wrong_format;
 
         GST_BUFFER_TIMESTAMP (buf) = next_ts;
@@ -4123,7 +4124,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, next_ts);
 
         /* mark discont when pending */
-        if (stream->discont) {
+        if (G_UNLIKELY (stream->discont)) {
           GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
           stream->discont = FALSE;
         }
@@ -4131,7 +4132,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
 
         /* combine flows */
         res = gst_avi_demux_combine_flows (avi, stream, res);
-        if (res != GST_FLOW_OK) {
+        if (G_UNLIKELY (res != GST_FLOW_OK)) {
           GST_DEBUG ("Push failed; %s", gst_flow_get_name (res));
           return res;
         }
@@ -4194,14 +4195,16 @@ gst_avi_demux_loop (GstPad * pad)
 
   switch (avi->state) {
     case GST_AVI_DEMUX_START:
-      if ((res = gst_avi_demux_stream_init_pull (avi)) != GST_FLOW_OK) {
+      if (G_UNLIKELY ((res =
+                  gst_avi_demux_stream_init_pull (avi)) != GST_FLOW_OK)) {
         GST_WARNING ("stream_init flow: %s", gst_flow_get_name (res));
         goto pause;
       }
       avi->state = GST_AVI_DEMUX_HEADER;
       /* fall-through */
     case GST_AVI_DEMUX_HEADER:
-      if ((res = gst_avi_demux_stream_header_pull (avi)) != GST_FLOW_OK) {
+      if (G_UNLIKELY ((res =
+                  gst_avi_demux_stream_header_pull (avi)) != GST_FLOW_OK)) {
         GST_WARNING ("stream_header flow: %s", gst_flow_get_name (res));
         goto pause;
       }
@@ -4219,7 +4222,7 @@ gst_avi_demux_loop (GstPad * pad)
       res = gst_avi_demux_stream_data (avi);
 
       /* pause when error */
-      if (res != GST_FLOW_OK) {
+      if (G_UNLIKELY (res != GST_FLOW_OK)) {
         GST_INFO ("stream_movi flow: %s", gst_flow_get_name (res));
         goto pause;
       }
