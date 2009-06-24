@@ -128,7 +128,7 @@ static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 static void gst_soup_http_src_init (GstSoupHTTPSrc * src,
     GstSoupHTTPSrcClass * g_class);
-static void gst_soup_http_src_dispose (GObject * gobject);
+static void gst_soup_http_src_finalize (GObject * gobject);
 
 static void gst_soup_http_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -219,7 +219,7 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
 
   gobject_class->set_property = gst_soup_http_src_set_property;
   gobject_class->get_property = gst_soup_http_src_get_property;
-  gobject_class->dispose = gst_soup_http_src_dispose;
+  gobject_class->finalize = gst_soup_http_src_finalize;
 
   g_object_class_install_property (gobject_class,
       PROP_LOCATION,
@@ -362,30 +362,24 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src, GstSoupHTTPSrcClass * g_class)
 }
 
 static void
-gst_soup_http_src_dispose (GObject * gobject)
+gst_soup_http_src_finalize (GObject * gobject)
 {
   GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (gobject);
 
-  GST_DEBUG_OBJECT (src, "dispose");
+  GST_DEBUG_OBJECT (src, "finalize");
+
   g_free (src->location);
-  src->location = NULL;
   g_free (src->user_agent);
-  src->user_agent = NULL;
   if (src->proxy != NULL) {
     soup_uri_free (src->proxy);
-    src->proxy = NULL;
   }
   g_free (src->user_id);
-  src->user_id = NULL;
   g_free (src->user_pw);
-  src->user_pw = NULL;
   g_free (src->proxy_id);
-  src->proxy_id = NULL;
   g_free (src->proxy_pw);
-  src->proxy_pw = NULL;
   g_strfreev (src->cookies);
 
-  G_OBJECT_CLASS (parent_class)->dispose (gobject);
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
 static void
