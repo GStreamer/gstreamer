@@ -517,6 +517,8 @@ gst_collect_pads_set_flushing_unlocked (GstCollectPads * pads,
 {
   GSList *walk = NULL;
 
+  GST_DEBUG ("Setting flushing (%d)", flushing);
+
   /* Update the pads flushing flag */
   for (walk = pads->data; walk; walk = g_slist_next (walk)) {
     GstCollectData *cdata = walk->data;
@@ -532,6 +534,10 @@ gst_collect_pads_set_flushing_unlocked (GstCollectPads * pads,
       GST_OBJECT_UNLOCK (cdata->pad);
     }
   }
+  /* Setting the pads to flushing means that we changed the values which
+   * are 'protected' by the cookie. We therefore update it to force a 
+   * recalculation of the current pad status. */
+  pads->abidata.ABI.pad_cookie++;
 }
 
 /**
@@ -969,6 +975,8 @@ gst_collect_pads_check_pads (GstCollectPads * pads)
 {
   /* the master list and cookie are protected with the PAD_LOCK */
   GST_COLLECT_PADS_PAD_LOCK (pads);
+  GST_DEBUG ("stored cookie : %d, used_cookie:%d",
+      pads->abidata.ABI.pad_cookie, pads->cookie);
   if (G_UNLIKELY (pads->abidata.ABI.pad_cookie != pads->cookie)) {
     GSList *collected;
 
