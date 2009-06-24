@@ -7,7 +7,7 @@ GST_DOC_SCANOBJ = $(top_srcdir)/common/gstdoc-scangobj
 MODULE=gst-ffmpeg
 DOC_MODULE=$(MODULE)-plugins
 
-# for upload.mak
+# for upload-doc.mak
 DOC=$(MODULE)-plugins
 FORMATS=html
 html: html-build.stamp
