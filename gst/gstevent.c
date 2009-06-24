@@ -231,7 +231,7 @@ gst_event_finalize (GstEvent * event)
     gst_structure_free (event->structure);
   }
 
-  GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (event));
+/*   GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (event)); */
 }
 
 static GstEvent *

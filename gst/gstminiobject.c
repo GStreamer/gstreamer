@@ -159,6 +159,14 @@ static void
 gst_mini_object_finalize (GstMiniObject * obj)
 {
   /* do nothing */
+
+  /* WARNING: if anything is ever put in this method, make sure that the
+   * following sub-classes' finalize method chains up to this one:
+   * gstbuffer
+   * gstevent
+   * gstmessage
+   * gstquery
+   */
 }
 
 /**

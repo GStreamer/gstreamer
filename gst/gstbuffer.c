@@ -165,8 +165,8 @@ gst_buffer_finalize (GstBuffer * buffer)
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
 
-  ((GstMiniObjectClass *)
-      gst_buffer_parent_class)->finalize (GST_MINI_OBJECT_CAST (buffer));
+/*   ((GstMiniObjectClass *) */
+/*       gst_buffer_parent_class)->finalize (GST_MINI_OBJECT_CAST (buffer)); */
 }
 
 /**

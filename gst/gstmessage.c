@@ -207,7 +207,7 @@ gst_message_finalize (GstMessage * message)
     gst_structure_free (message->structure);
   }
 
-  GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (message));
+/*   GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (message)); */
 }
 
 static GstMessage *

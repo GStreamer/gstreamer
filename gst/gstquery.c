@@ -191,7 +191,7 @@ gst_query_finalize (GstQuery * query)
     gst_structure_free (query->structure);
   }
 
-  GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (query));
+/*   GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (query)); */
 }
 
 static GstQuery *
