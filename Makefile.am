@@ -117,6 +117,21 @@ check-enum-gettypes: $(top_builddir)/gst/gstenumtypes.h
 	    echo "  g_type_class_ref ($$f ());";                                                                 \
 	  done;                                                                                                  \
 	  exit 1;                                                                                                \
+	fi;                                                                                                      \
+	echo 'Checking if all enum and flag _get_type() funcs are deinited in gst_deinit()';                     \
+	MISSING_FUNCS='';                                                                                        \
+	for f in $$FUNCS; do                                                                                     \
+	  INIT_LINE=`grep $$f $(top_srcdir)/gst/*.c | grep g_type_class_unref`;                                  \
+	  if test "x$$INIT_LINE" = "x"; then                                                                     \
+	    MISSING_FUNCS="$$MISSING_FUNCS $$f";                                                                 \
+	  fi;                                                                                                    \
+	done;                                                                                                    \
+	if test "x$$MISSING_FUNCS" != "x"; then                                                                  \
+	  echo "FIXME: please add to the following to gst/gst.c gst_deinit():";                                  \
+	  for f in $$MISSING_FUNCS; do                                                                           \
+	    echo "  g_type_class_unref (g_type_class_peek ($$f ()));";                                           \
+	  done;                                                                                                  \
+	  exit 1;                                                                                                \
 	fi
 
 include $(top_srcdir)/common/coverage/lcov.mak

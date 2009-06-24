@@ -1379,9 +1379,11 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_bin_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_buffer_flag_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_buffer_copy_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_buffer_list_item_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_bus_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_bus_sync_reply_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_caps_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_clock_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_clock_return_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_clock_entry_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_clock_flags_get_type ()));
@@ -1392,8 +1394,15 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_element_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_core_error_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_library_error_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_plugin_dependency_flags_get_type
+          ()));
+  g_type_class_unref (g_type_class_peek (gst_parse_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_resource_error_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_search_mode_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_stream_error_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_stream_status_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_structure_change_type_get_type
+          ()));
   g_type_class_unref (g_type_class_peek (gst_event_type_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_event_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_seek_type_get_type ()));
