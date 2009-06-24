@@ -600,25 +600,19 @@ gst_vdp_mpeg_dec_flush (GstVdpMpegDec * mpeg_dec)
   if (mpeg_dec->vdp_info.backward_reference != VDP_INVALID_HANDLE)
     gst_buffer_unref (mpeg_dec->b_buffer);
 
-  gst_vdp_mpeg_dec_init_info (&mpeg_dec->vdp_info);
-
   gst_adapter_clear (mpeg_dec->adapter);
 
+  gst_vdp_mpeg_dec_init_info (&mpeg_dec->vdp_info);
   mpeg_dec->next_timestamp = GST_CLOCK_TIME_NONE;
 }
 
 static void
-gst_vdp_mpeg_dec_reset (GstVdpMpegDec * mpeg_dec)
+gst_vdp_mpeg_dec_start (GstVdpMpegDec * mpeg_dec)
 {
-  gst_vdp_mpeg_dec_flush (mpeg_dec);
+  gst_vdp_mpeg_dec_init_info (&mpeg_dec->vdp_info);
 
-  if (mpeg_dec->device) {
-    if (mpeg_dec->decoder != VDP_INVALID_HANDLE)
-      mpeg_dec->device->vdp_decoder_destroy (mpeg_dec->decoder);
-    mpeg_dec->decoder = VDP_INVALID_HANDLE;
-
-    g_object_unref (mpeg_dec->device);
-  }
+  mpeg_dec->device = NULL;
+  mpeg_dec->decoder = VDP_INVALID_HANDLE;
 
   mpeg_dec->state = GST_VDP_MPEG_DEC_NEED_SEQUENCE;
 
@@ -627,6 +621,24 @@ gst_vdp_mpeg_dec_reset (GstVdpMpegDec * mpeg_dec)
 
   mpeg_dec->accumulated_size = 0;
   mpeg_dec->accumulated_duration = 0;
+}
+
+static void
+gst_vdp_mpeg_dec_stop (GstVdpMpegDec * mpeg_dec)
+{
+  if (mpeg_dec->device) {
+    if (mpeg_dec->decoder != VDP_INVALID_HANDLE)
+      mpeg_dec->device->vdp_decoder_destroy (mpeg_dec->decoder);
+
+    g_object_unref (mpeg_dec->device);
+  }
+
+  if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
+    mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
+  if (mpeg_dec->vdp_info.backward_reference != VDP_INVALID_HANDLE)
+    mpeg_dec->vdp_info.backward_reference = VDP_INVALID_HANDLE;
+
+  gst_adapter_clear (mpeg_dec->adapter);
 }
 
 static GstFlowReturn
@@ -1010,11 +1022,19 @@ gst_vdp_mpeg_dec_change_state (GstElement * element, GstStateChange transition)
 
   mpeg_dec = GST_VDP_MPEG_DEC (element);
 
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_vdp_mpeg_dec_start (mpeg_dec);
+      break;
+    default:
+      break;
+  }
+
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_vdp_mpeg_dec_reset (mpeg_dec);
+      gst_vdp_mpeg_dec_stop (mpeg_dec);
       break;
     default:
       break;
@@ -1097,14 +1117,6 @@ gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec, GstVdpMpegDecClass * gclass)
   gst_element_add_pad (GST_ELEMENT (mpeg_dec), mpeg_dec->sink);
 
   mpeg_dec->adapter = gst_adapter_new ();
-
-  mpeg_dec->device = NULL;
-  mpeg_dec->decoder = VDP_INVALID_HANDLE;
-  mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
-  mpeg_dec->vdp_info.backward_reference = VDP_INVALID_HANDLE;
-
-  gst_vdp_mpeg_dec_reset (mpeg_dec);
-
   mpeg_dec->mutex = g_mutex_new ();
 }
 

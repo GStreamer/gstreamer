@@ -461,7 +461,6 @@ static void
 gst_vdp_video_yuv_class_init (GstVdpVideoYUVClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *element_class;
   GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;
