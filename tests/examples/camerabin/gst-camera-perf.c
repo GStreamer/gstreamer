@@ -39,6 +39,7 @@
  * ./gst-camera-perf --src-colorspace=UYVY --image-width=640 --image-height=480 --view-framerate-num=2999 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux
  * ./gst-camera-perf --src-colorspace=UYVY --image-width=2592 --image-height=1968 --view-framerate-num=399 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux
  * ./gst-camera-perf --src-colorspace=UYVY --image-width=2592 --image-height=1968 --view-framerate-num=325 --view-framerate-den=25 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux --image-enc=dspjpegenc
+ * ./gst-camera-perf --src-colorspace=UYVY --image-width=640 --image-height=480 --view-framerate-num=1491 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux --target-times=1000,0,1500,0,0,0,0,1000,0
  */
 
 /*
@@ -113,16 +114,17 @@ static GstClockTime t_final[CONT_SHOTS] = { G_GUINT64_CONSTANT (0), };
 static GstClockTimeDiff diff;
 static ResultType result;
 
-static const GstClockTime target[TEST_CASES] = {
+/* these can be overridden with commandline args --target-times */
+static GstClockTime target[TEST_CASES] = {
   1000 * GST_MSECOND,
-  0,                            /* 1500 * GST_MSECOND, not tested */
+  1500 * GST_MSECOND,
   1500 * GST_MSECOND,
   2000 * GST_MSECOND,           /* this should be shorter, as we can take next picture before preview is ready */
   500 * GST_MSECOND,
-  0,                            /* 2000 * GST_MSECOND, not tested */
+  2000 * GST_MSECOND,
   3500 * GST_MSECOND,
   1000 * GST_MSECOND,
-  0                             /* 1000 * GST_MSECOND, not tested */
+  1000 * GST_MSECOND
 };
 
 static const gchar *test_names[TEST_CASES] = {
@@ -604,7 +606,8 @@ static test_case test_cases[TEST_CASES] = {
   test_05,
   NULL,
   test_07,
-  test_08
+  test_08,
+  NULL
 };
 
 static void
@@ -627,14 +630,19 @@ run_test (gpointer user_data)
 
   printf ("|  %02d  ", test_ix + 1);
   if (test_cases[test_ix]) {
-    memset (&result, 0, sizeof (ResultType));
-    ret = test_cases[test_ix] ();
+    if (target[test_ix]) {
+      memset (&result, 0, sizeof (ResultType));
+      ret = test_cases[test_ix] ();
 
-    //while (g_main_context_pending (NULL)) g_main_context_iteration (NULL,FALSE);
-    if (ret) {
-      print_result ();
+      //while (g_main_context_pending (NULL)) g_main_context_iteration (NULL,FALSE);
+      if (ret) {
+        print_result ();
+      }
+    } else {
+      printf ("|                      test skipped                        ");
+      printf ("| %-19s |\n", test_names[test_ix]);
+      test_ix++;
     }
-
   } else {
     printf ("|                  test not implemented                    ");
     printf ("| %-19s |\n", test_names[test_ix]);
@@ -654,6 +662,7 @@ run_test (gpointer user_data)
 int
 main (int argc, char *argv[])
 {
+  gchar *target_times = NULL;
   GOptionEntry options[] = {
     {"audio-src", '\0', 0, G_OPTION_ARG_STRING, &audiosrc_name,
         "audio source used in video recording", NULL},
@@ -677,6 +686,9 @@ main (int argc, char *argv[])
         "framerate denominator for viewfinder", NULL},
     {"src-colorspace", '\0', 0, G_OPTION_ARG_STRING, &src_csp,
         "colorspace format for videosource (e.g. YUY2, UYVY)", NULL},
+    {"target-times", '\0', 0, G_OPTION_ARG_STRING, &target_times,
+          "target test times in ms as comma separated values (0 to skip test)",
+        NULL},
     {NULL}
   };
   GOptionContext *ctx;
@@ -697,6 +709,17 @@ main (int argc, char *argv[])
   /* init */
   filename = g_string_new_len ("", 16);
   loop = g_main_loop_new (NULL, FALSE);
+
+  if (target_times) {
+    gchar **numbers;
+    gint i;
+
+    numbers = g_strsplit (target_times, ",", TEST_CASES);
+    for (i = 0; (numbers[i] && i < TEST_CASES); i++) {
+      target[i] = GST_MSECOND * atoi (numbers[i]);
+    }
+    g_strfreev (numbers);
+  }
 
   /* run */
   puts ("");
@@ -721,6 +744,7 @@ main (int argc, char *argv[])
   g_free (imageenc_name);
   g_free (videomux_name);
   g_free (src_csp);
+  g_free (target_times);
 
   return 0;
 }
