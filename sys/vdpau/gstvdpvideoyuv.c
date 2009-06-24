@@ -325,7 +325,7 @@ gst_vdp_video_yuv_transform_caps (GstBaseTransform * trans,
   GstCaps *result;
 
   if (direction == GST_PAD_SINK)
-    result = gst_vdp_video_to_yuv_caps (caps);
+    result = gst_vdp_video_to_yuv_caps (caps, video_yuv->device);
 
   else if (direction == GST_PAD_SRC)
     result = gst_vdp_yuv_to_video_caps (caps, video_yuv->device);
@@ -461,6 +461,7 @@ static void
 gst_vdp_video_yuv_class_init (GstVdpVideoYUVClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;

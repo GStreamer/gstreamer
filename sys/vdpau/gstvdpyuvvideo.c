@@ -83,6 +83,9 @@ gst_vdp_yuv_video_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   VdpVideoSurface surface;
 
   device = GST_VDP_VIDEO_BUFFER (outbuf)->device;
+  if (!yuv_video->device)
+    yuv_video->device = g_object_ref (device);
+
   surface = GST_VDP_VIDEO_BUFFER (outbuf)->surface;
 
   switch (yuv_video->format) {
@@ -258,17 +261,39 @@ static GstCaps *
 gst_vdp_yuv_video_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
+  GstVdpYUVVideo *yuv_video = GST_VDP_YUV_VIDEO (trans);
   GstCaps *result;
 
   if (direction == GST_PAD_SINK) {
-    result = gst_vdp_yuv_to_video_caps (caps, NULL);
+    result = gst_vdp_yuv_to_video_caps (caps, yuv_video->device);
   } else if (direction == GST_PAD_SRC) {
-    result = gst_vdp_video_to_yuv_caps (caps);
+    result = gst_vdp_video_to_yuv_caps (caps, yuv_video->device);
   }
 
   GST_LOG ("transformed %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT, caps, result);
 
   return result;
+}
+
+static gboolean
+gst_vdp_yuv_video_start (GstBaseTransform * trans)
+{
+  GstVdpYUVVideo *yuv_video = GST_VDP_YUV_VIDEO (trans);
+
+  yuv_video->device = NULL;
+
+  return TRUE;
+}
+
+static gboolean
+gst_vdp_yuv_video_stop (GstBaseTransform * trans)
+{
+  GstVdpYUVVideo *yuv_video = GST_VDP_YUV_VIDEO (trans);
+
+  if (yuv_video->device)
+    g_object_unref (yuv_video->device);
+
+  return TRUE;
 }
 
 /* GObject vmethod implementations */
@@ -299,6 +324,8 @@ gst_vdp_yuv_video_class_init (GstVdpYUVVideoClass * klass)
   gobject_class = (GObjectClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
 
+  trans_class->start = gst_vdp_yuv_video_start;
+  trans_class->stop = gst_vdp_yuv_video_stop;
   trans_class->transform_caps = gst_vdp_yuv_video_transform_caps;
   trans_class->transform_size = gst_vdp_yuv_video_transform_size;
   trans_class->set_caps = gst_vdp_yuv_video_set_caps;

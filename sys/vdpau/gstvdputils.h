@@ -76,7 +76,7 @@ static const VdpauFormats formats[N_FORMATS] = {
       },
 };
 
-GstCaps *gst_vdp_video_to_yuv_caps (GstCaps *caps);
-GstCaps *gst_vdp_yuv_to_video_caps (GstCaps *caps, GstVdpDevice *device);
+GstCaps  *gst_vdp_video_to_yuv_caps  (GstCaps *caps, GstVdpDevice *device);
+GstCaps  *gst_vdp_yuv_to_video_caps  (GstCaps *caps, GstVdpDevice *device);
 
 #endif /* _GST_VDP_UTILS_H_ */

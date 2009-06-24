@@ -81,13 +81,11 @@ error:
 }
 
 GstCaps *
-gst_vdp_video_to_yuv_caps (GstCaps * caps)
+gst_vdp_video_to_yuv_caps (GstCaps * caps, GstVdpDevice * device)
 {
   GstCaps *new_caps, *allowed_caps, *result;
   gint i;
   GstStructure *structure;
-  const GValue *value;
-  GstVdpDevice *device = NULL;
 
   new_caps = gst_caps_new_empty ();
 
@@ -115,7 +113,6 @@ gst_vdp_video_to_yuv_caps (GstCaps * caps)
 
       gst_structure_set_name (new_struct, "video/x-raw-yuv");
       gst_structure_remove_field (new_struct, "chroma-type");
-      gst_structure_remove_field (new_struct, "device");
       gst_structure_set (new_struct, "format", GST_TYPE_FOURCC,
           GPOINTER_TO_INT (iter->data), NULL);
 
@@ -125,10 +122,6 @@ gst_vdp_video_to_yuv_caps (GstCaps * caps)
     g_slist_free (fourcc);
   }
   structure = gst_caps_get_structure (caps, 0);
-
-  value = gst_structure_get_value (structure, "device");
-  if (value)
-    device = g_value_get_object (value);
 
   if (device) {
     allowed_caps = gst_vdp_get_allowed_yuv_caps (device);
@@ -211,8 +204,6 @@ gst_vdp_yuv_to_video_caps (GstCaps * caps, GstVdpDevice * device)
           NULL);
 
     gst_structure_set_name (structure, "video/x-vdpau-video");
-    if (device)
-      gst_structure_set (structure, "device", G_TYPE_OBJECT, device, NULL);
   }
 
   if (device) {

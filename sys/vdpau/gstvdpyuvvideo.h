@@ -41,6 +41,8 @@ typedef struct _GstVdpYUVVideoClass GstVdpYUVVideoClass;
 struct _GstVdpYUVVideo {
   GstBaseTransform trans;
 
+  GstVdpDevice *device;
+  
   guint32 format;
   gint width, height;
 };

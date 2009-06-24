@@ -41,6 +41,7 @@
 #include <string.h>
 
 #include "mpegutil.h"
+#include "gstvdputils.h"
 #include "gstvdpmpegdec.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdp_mpeg_dec_debug);
@@ -55,8 +56,7 @@ enum
 
 enum
 {
-  PROP_0,
-  PROP_DISPLAY
+  PROP_0
 };
 
 /* the capabilities of the inputs and outputs.
@@ -315,6 +315,38 @@ gst_vdp_mpeg_dec_push_video_buffer (GstVdpMpegDec * mpeg_dec,
 }
 
 static GstFlowReturn
+gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec, GstBuffer ** outbuf)
+{
+  GstFlowReturn ret;
+
+  ret = gst_pad_alloc_buffer_and_set_caps (mpeg_dec->src, 0, 0,
+      GST_PAD_CAPS (mpeg_dec->src), outbuf);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  if (!mpeg_dec->device) {
+    GstVdpDevice *device;
+    VdpStatus status;
+
+    GST_WARNING ("ASDASD");
+    device = mpeg_dec->device =
+        g_object_ref (GST_VDP_VIDEO_BUFFER (*outbuf)->device);
+
+    status = device->vdp_decoder_create (device->device, mpeg_dec->profile,
+        mpeg_dec->width, mpeg_dec->height, 2, &mpeg_dec->decoder);
+    if (status != VDP_STATUS_OK) {
+      GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, READ,
+          ("Could not create vdpau decoder"),
+          ("Error returned from vdpau was: %s",
+              device->vdp_get_error_string (status)));
+      ret = GST_FLOW_ERROR;
+    }
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
 gst_vdp_mpeg_dec_decode (GstVdpMpegDec * mpeg_dec,
     GstClockTime timestamp, gint64 size)
 {
@@ -346,26 +378,12 @@ gst_vdp_mpeg_dec_decode (GstVdpMpegDec * mpeg_dec,
     info->backward_reference = VDP_INVALID_HANDLE;
   }
 
-  if (gst_pad_alloc_buffer_and_set_caps (mpeg_dec->src, 0, 0,
-          GST_PAD_CAPS (mpeg_dec->src), &outbuf) != GST_FLOW_OK) {
+  if (gst_vdp_mpeg_dec_alloc_buffer (mpeg_dec, &outbuf) != GST_FLOW_OK) {
     gst_adapter_clear (mpeg_dec->adapter);
     return GST_FLOW_ERROR;
   }
 
   device = GST_VDP_VIDEO_BUFFER (outbuf)->device;
-  if (mpeg_dec->decoder == VDP_INVALID_HANDLE) {
-    status = device->vdp_decoder_create (device->device, mpeg_dec->profile,
-        mpeg_dec->width, mpeg_dec->height, 2, &mpeg_dec->decoder);
-    if (status != VDP_STATUS_OK) {
-      GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, READ,
-          ("Could not create vdpau decoder"),
-          ("Error returned from vdpau was: %s",
-              device->vdp_get_error_string (status)));
-      gst_buffer_unref (outbuf);
-      return GST_FLOW_ERROR;
-    }
-    mpeg_dec->device = g_object_ref (device);
-  }
 
   if (info->forward_reference != VDP_INVALID_HANDLE &&
       info->picture_coding_type != I_FRAME)
@@ -1035,10 +1053,6 @@ gst_vdp_mpeg_dec_class_init (GstVdpMpegDecClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = gst_vdp_mpeg_dec_finalize;
-
-  g_object_class_install_property (gobject_class, PROP_DISPLAY,
-      g_param_spec_string ("display", "Display", "X Display name",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->change_state = gst_vdp_mpeg_dec_change_state;
 }
