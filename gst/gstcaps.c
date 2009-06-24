@@ -1379,7 +1379,8 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
      You can only remove everything or nothing and that is done above.
      Note: there's a test that checks this behaviour. */
   g_return_val_if_fail (!gst_caps_is_any (minuend), NULL);
-  g_assert ((sublen = subtrahend->structs->len) > 0);
+  sublen = subtrahend->structs->len;
+  g_assert (sublen > 0);
 
   src = gst_caps_copy (minuend);
   for (i = 0; i < sublen; i++) {
