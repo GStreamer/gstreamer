@@ -1866,7 +1866,6 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
     avi_stream_context *stream;
     guint stream_nr;
     gst_avi_index_entry *target;
-    GstFormat format;
 
     _entry = &((gst_riff_index_entry *) data)[i];
     entry.id = GST_READ_UINT32_LE (&_entry->id);
@@ -1909,7 +1908,6 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
       GST_DEBUG ("index_offset = %" G_GUINT64_FORMAT, avi->index_offset);
     }
 
-    format = GST_FORMAT_TIME;
     if (stream->strh->type == GST_RIFF_FCC_auds) {
       /* all audio frames are keyframes */
       target->flags |= GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME;
