@@ -541,6 +541,7 @@ bad_packet:
   {
     GST_ELEMENT_WARNING (rtpdec, STREAM, DECODE, (NULL),
         ("RTP packet did not validate, dropping"));
+    gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 }
@@ -695,9 +696,11 @@ gst_rtp_dec_chain_rtcp (GstPad * pad, GstBuffer * buffer)
 bad_packet:
   {
     GST_WARNING_OBJECT (src, "got invalid RTCP packet");
+    gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 #else
+  gst_buffer_unref (buffer);
   return GST_FLOW_OK;
 #endif
 }
