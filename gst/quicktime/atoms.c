@@ -3004,13 +3004,10 @@ build_esds_extension (AtomTRAK * trak, guint8 object_type, guint8 stream_type,
 AtomInfo *
 build_mov_aac_extension (AtomTRAK * trak, const GstBuffer * codec_data)
 {
-  guint32 track_id;
   AtomWAVE *wave;
   AtomFRMA *frma;
   Atom *ext_atom;
   GstBuffer *buf;
-
-  track_id = trak->tkhd.track_ID;
 
   /* Add WAVE atom to the MP4A sample table entry */
   wave = atom_wave_new ();
