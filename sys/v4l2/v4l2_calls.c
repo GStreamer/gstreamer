@@ -603,7 +603,7 @@ gboolean
 gst_v4l2_get_frequency (GstV4l2Object * v4l2object,
     gint tunernum, gulong * frequency)
 {
-  struct v4l2_frequency freq;
+  struct v4l2_frequency freq = { 0, };
 
   GstTunerChannel *channel;
 
@@ -642,7 +642,7 @@ gboolean
 gst_v4l2_set_frequency (GstV4l2Object * v4l2object,
     gint tunernum, gulong frequency)
 {
-  struct v4l2_frequency freq;
+  struct v4l2_frequency freq = { 0, };
 
   GstTunerChannel *channel;
 
@@ -683,7 +683,7 @@ gboolean
 gst_v4l2_signal_strength (GstV4l2Object * v4l2object,
     gint tunernum, gulong * signal_strength)
 {
-  struct v4l2_tuner tuner;
+  struct v4l2_tuner tuner = { 0, };
 
   GST_DEBUG_OBJECT (v4l2object->element, "trying to get signal strength");
 
@@ -717,7 +717,7 @@ gboolean
 gst_v4l2_get_attribute (GstV4l2Object * v4l2object,
     int attribute_num, int *value)
 {
-  struct v4l2_control control;
+  struct v4l2_control control = { 0, };
 
   GST_DEBUG_OBJECT (v4l2object->element, "getting value of attribute %d",
       attribute_num);
@@ -754,7 +754,7 @@ gboolean
 gst_v4l2_set_attribute (GstV4l2Object * v4l2object,
     int attribute_num, const int value)
 {
-  struct v4l2_control control;
+  struct v4l2_control control = { 0, };
 
   GST_DEBUG_OBJECT (v4l2object->element, "setting value of attribute %d to %d",
       attribute_num, value);
