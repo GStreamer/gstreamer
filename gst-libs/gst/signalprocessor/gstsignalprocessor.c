@@ -50,10 +50,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_signal_processor_debug);
 #define GST_CAT_DEFAULT gst_signal_processor_debug
 
-/* FIXME: this is mono only */
-static GstStaticCaps template_caps =
-GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS);
-
 #define GST_TYPE_SIGNAL_PROCESSOR_PAD_TEMPLATE \
     (gst_signal_processor_pad_template_get_type ())
 #define GST_SIGNAL_PROCESSOR_PAD_TEMPLATE(obj) \
@@ -100,14 +96,15 @@ gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
 {
   GstPadTemplate *new;
   GstCaps *caps;
+  guint channels = 1;
 
   g_return_if_fail (GST_IS_SIGNAL_PROCESSOR_CLASS (klass));
   g_return_if_fail (name != NULL);
   g_return_if_fail (direction == GST_PAD_SRC || direction == GST_PAD_SINK);
 
-  /* FIXME: would be nice to have the template as a parameter, right now this can
-   * only create mono pads */
-  caps = gst_caps_copy (gst_static_caps_get (&template_caps));
+  caps = gst_caps_new_simple ("audio/x-raw-float",
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+      "width", G_TYPE_INT, 32, "channels", G_TYPE_INT, channels, NULL);
 
   new = g_object_new (gst_signal_processor_pad_template_get_type (),
       "name", name, "name-template", name,
