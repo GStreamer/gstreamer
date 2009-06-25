@@ -3916,14 +3916,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     guint64 tdur1, tdur2;
 
     /* don't overflow */
-    tdur1 = stream->timescale * (guint64) qtdemux->duration;
-    tdur2 = qtdemux->timescale * (guint64) stream->duration;
+    tdur1 = stream->timescale * (guint64) stream->duration;
+    tdur2 = qtdemux->timescale * (guint64) qtdemux->duration;
 
     /* HACK:
      * some of those trailers, nowadays, have prologue images that are
      * themselves vide tracks as well. I haven't really found a way to
      * identify those yet, except for just looking at their duration. */
-    if (tdur1 != 0 && (tdur2 * 10 / tdur1) < 2) {
+    if (tdur2 != 0 && (tdur1 * 10 / tdur2) < 2) {
       GST_WARNING_OBJECT (qtdemux,
           "Track shorter than 20%% (%" G_GUINT64_FORMAT "/%" G_GUINT32_FORMAT
           " vs. %" G_GUINT32_FORMAT "/%" G_GUINT32_FORMAT ") of the stream "
