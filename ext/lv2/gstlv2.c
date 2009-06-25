@@ -413,7 +413,7 @@ gst_lv2_setup (GstSignalProcessor * gsp, guint sample_rate)
   GstLV2 *lv2;
   GstLV2Class *oclass;
   GstSignalProcessorClass *gsp_class;
-  int i;
+  gint i;
 
   gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (gsp);
   lv2 = (GstLV2 *) gsp;
@@ -512,7 +512,7 @@ gst_lv2_process (GstSignalProcessor * gsp, guint nframes)
 static gboolean
 lv2_plugin_discover (void)
 {
-  unsigned i;
+  guint i;
   SLV2Plugins plugins = slv2_world_get_all_plugins (world);
   for (i = 0; i < slv2_plugins_size (plugins); ++i) {
     SLV2Plugin lv2plugin = slv2_plugins_get_at (plugins, i);
