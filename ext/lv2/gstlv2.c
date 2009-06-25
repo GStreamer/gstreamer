@@ -52,6 +52,7 @@ SLV2Value input_class;
 SLV2Value output_class;
 SLV2Value integer_prop;
 SLV2Value toggled_prop;
+SLV2Value in_place_broken_pred;
 
 static GstSignalProcessorClass *parent_class;
 
@@ -211,11 +212,8 @@ gst_lv2_base_init (gpointer g_class)
   g_free (details->author);
   g_free (details);
 
-  pred = slv2_value_new_uri (world,
-      "http://lv2plug.in/ns/lv2core#inPlaceBroken");
-  if (!slv2_plugin_has_feature (lv2plugin, pred))
+  if (!slv2_plugin_has_feature (lv2plugin, in_place_broken_pred))
     GST_SIGNAL_PROCESSOR_CLASS_SET_CAN_PROCESS_IN_PLACE (klass);
-  slv2_value_free (pred);
 
   klass->plugin = lv2plugin;
 }
@@ -574,6 +572,8 @@ plugin_init (GstPlugin * plugin)
       slv2_value_new_uri (world, "http://lv2plug.in/ns/lv2core#integer");
   toggled_prop =
       slv2_value_new_uri (world, "http://lv2plug.in/ns/lv2core#toggled");
+  in_place_broken_pred = slv2_value_new_uri (world,
+      "http://lv2plug.in/ns/lv2core#inPlaceBroken");
 
   parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
