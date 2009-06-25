@@ -529,7 +529,8 @@ gst_qt_mux_add_3gp_date (GstQTMux * qtmux, const GstTagList * list,
     return;
   }
 
-  GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %d", year);
+  GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %d",
+      GST_FOURCC_ARGS (fourcc), year);
   atom_moov_add_3gp_uint_tag (qtmux->moov, fourcc, year);
 }
 
