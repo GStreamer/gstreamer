@@ -2165,11 +2165,11 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   GstBuffer *buf = NULL;
   QtDemuxStream *stream;
   guint64 min_time;
-  guint64 offset;
-  guint64 timestamp;
-  guint64 duration;
-  gboolean keyframe;
-  guint size;
+  guint64 offset = 0;
+  guint64 timestamp = GST_CLOCK_TIME_NONE;
+  guint64 duration = 0;
+  gboolean keyframe = FALSE;
+  guint size = 0;
   gint index;
   gint i;
 
