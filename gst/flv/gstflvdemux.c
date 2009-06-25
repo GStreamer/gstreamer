@@ -468,19 +468,17 @@ gst_flv_demux_create_index (GstFLVDemux * demux)
   size_t tag_size;
   guint64 old_offset;
   GstBuffer *buffer;
-  GstFlowReturn ret;
 
-  if (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &size) ||
-      fmt != GST_FORMAT_BYTES)
+  if (G_UNLIKELY (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &size) ||
+          fmt != GST_FORMAT_BYTES))
     return;
 
   old_offset = demux->offset;
 
-  while ((ret =
-          gst_flv_demux_pull_range (demux, demux->sinkpad, demux->offset, 12,
-              &buffer)) == GST_FLOW_OK) {
-    if (gst_flv_parse_tag_timestamp (demux, buffer,
-            &tag_size) == GST_CLOCK_TIME_NONE) {
+  while (gst_flv_demux_pull_range (demux, demux->sinkpad, demux->offset, 12,
+          &buffer) == GST_FLOW_OK) {
+    if (G_UNLIKELY (gst_flv_parse_tag_timestamp (demux, buffer,
+                &tag_size) == GST_CLOCK_TIME_NONE)) {
       gst_buffer_unref (buffer);
       break;
     }
@@ -671,6 +669,7 @@ gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
     goto wrong_format;
 
   flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  /* FIXME : the keyframe flag is never used ! */
   keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   /* Work on a copy until we are sure the seek succeeded. */
@@ -755,6 +754,7 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
     goto wrong_format;
 
   flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  /* FIXME : the keyframe flag is never used */
   keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
