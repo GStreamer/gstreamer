@@ -129,14 +129,14 @@ static GstClockTime target[TEST_CASES] = {
 
 static const gchar *test_names[TEST_CASES] = {
   "Camera OFF to VF on",
-  "(3A latency)",
+  "(3A latency)",               /* time to get AF? */
   "Shot to snapshot",
   "Shot to shot",
   "Serial shooting",
   "(Shutter lag)",
   "Image saved",
   "Mode change",
-  "(Video recording)"
+  "(Video recording)"           /* time to get videobin to PLAYING? or first buffer reaching filesink? */
 };
 
 /*
@@ -276,6 +276,25 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       g_main_loop_quit (loop);
       break;
     }
+    case GST_MESSAGE_STATE_CHANGED:
+      if (GST_MESSAGE_SRC (message) == GST_OBJECT (camera_bin)) {
+        GstState oldstate, newstate;
+
+        gst_message_parse_state_changed (message, &oldstate, &newstate, NULL);
+        GST_INFO ("state-changed: %s -> %s",
+            gst_element_state_get_name (oldstate),
+            gst_element_state_get_name (newstate));
+        if (GST_STATE_TRANSITION (oldstate,
+                newstate) == GST_STATE_CHANGE_PAUSED_TO_PLAYING) {
+          GET_TIME (t_final[0]);
+          DIFF_TIME (t_final[0], t_initial, diff);
+
+          result.avg = result.min = result.max = diff;
+          print_result ();
+          g_idle_add ((GSourceFunc) run_test, NULL);
+        }
+      }
+      break;
     case GST_MESSAGE_EOS:
       /* end-of-stream */
       g_main_loop_quit (loop);
@@ -466,19 +485,25 @@ error:
 static gboolean
 test_01 (void)
 {
+  gboolean res;
+
   GET_TIME (t_initial);
   if (setup_pipeline ()) {
     /* MAKE SURE THE PIPELINE IS IN PLAYING STATE BEFORE START TAKING PICTURES
        AND SO ON (otherwise it will deadlock) */
-    gst_element_get_state (camera_bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+    //gst_element_get_state (camera_bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+    /* the actual results are fetched in bus_callback::state-changed */
+    res = FALSE;
+  } else {
+    GET_TIME (t_final[0]);
+    DIFF_TIME (t_final[0], t_initial, diff);
+
+    result.avg = result.min = result.max = diff;
+    res = TRUE;
   }
-
-  GET_TIME (t_final[0]);
-  DIFF_TIME (t_final[0], t_initial, diff);
-
-  result.avg = result.min = result.max = diff;
   result.times = 1;
-  return TRUE;
+  return res;
 }
 
 
