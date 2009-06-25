@@ -226,13 +226,13 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, gint portnum)
     upper = slv2_value_as_float (lv2max);
 
   if (def < lower) {
-    fprintf (stderr, "ERROR: %s BAD LOWER %f > %f\n",
+    GST_WARNING ("%s has lower bound %f > default %f\n",
         slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)), lower, def);
     lower = def;
   }
 
   if (def > upper) {
-    fprintf (stderr, "ERROR: %s BAD UPPER %f < %f\n",
+    GST_WARNING ("%s has upper bound %f < default %f\n",
         slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)), upper, def);
     upper = def;
   }
