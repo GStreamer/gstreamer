@@ -1015,9 +1015,9 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
           fb = table[b];
           fx = (b - a) / (fb - fa) * (i - fa) + a;
           mp3parse->xing_seek_table_inverse[i] = (guint16) (fx * 100);
-        } else if (percent == 98 && table[percent + 1] <= i) {
+        } else if (percent == 99) {
           gdouble fa, fb, fx;
-          gint a = percent + 1, b = 100;
+          gint a = percent, b = 100;
 
           fa = table[a];
           fb = 256.0;
