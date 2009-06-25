@@ -88,13 +88,72 @@ gst_lv2_base_init (gpointer g_class)
 
   g_assert (lv2plugin);
 
-  /* pad templates */
-  gsp_class->num_audio_in = 0;
-  gsp_class->num_audio_out = 0;
-  /* properties */
-  gsp_class->num_control_in = 0;
-  gsp_class->num_control_out = 0;
+  /* audio ports (pads) */
+  gsp_class->num_audio_in = slv2_plugin_get_num_ports_of_class (lv2plugin,
+      audio_class, input_class, NULL);
+  gsp_class->num_audio_out = slv2_plugin_get_num_ports_of_class (lv2plugin,
+      audio_class, output_class, NULL);
 
+  /* control ports (properties) */
+  gsp_class->num_control_in = slv2_plugin_get_num_ports_of_class (lv2plugin,
+      control_class, input_class, NULL);
+  gsp_class->num_control_out = slv2_plugin_get_num_ports_of_class (lv2plugin,
+      control_class, output_class, NULL);
+
+  klass->audio_in_ports = g_new0 (struct _GstLV2Port, gsp_class->num_audio_in);
+  klass->audio_out_ports =
+      g_new0 (struct _GstLV2Port, gsp_class->num_audio_out);
+  klass->control_in_ports =
+      g_new0 (struct _GstLV2Port, gsp_class->num_control_in);
+  klass->control_out_ports =
+      g_new0 (struct _GstLV2Port, gsp_class->num_control_out);
+
+  klass->groups = NULL;
+  pred = slv2_value_new_uri (world,
+      "http://lv2plug.in/ns/dev/port-groups#inGroup");
+
+  /* find port groups */
+  audio_in_count = audio_out_count = control_in_count = control_out_count = 0;
+  for (j = 0; j < slv2_plugin_get_num_ports (lv2plugin); j++) {
+    SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, j);
+    gboolean is_input = slv2_port_is_a (lv2plugin, port, input_class);
+    struct _GstLV2Port *desc = NULL;
+    if (slv2_port_is_a (lv2plugin, port, audio_class)) {
+      if (is_input)
+        desc = &klass->audio_in_ports[audio_in_count++];
+      else
+        desc = &klass->audio_out_ports[audio_out_count++];
+    } else if (slv2_port_is_a (lv2plugin, port, control_class)) {
+      if (is_input)
+        desc = &klass->control_in_ports[control_in_count++];
+      else
+        desc = &klass->control_out_ports[control_out_count++];
+    } else {
+      /* unknown port type */
+      continue;
+    }
+    desc->index = j;
+    values = slv2_port_get_value (lv2plugin, port, pred);
+    if (slv2_values_size (values) > 0) {
+      SLV2Value v = slv2_values_get_at (values, 0);
+      desc->group = v;
+      if (!g_slist_find_custom (klass->groups, v, gst_lv2_value_cmp)) {
+        klass->groups =
+            g_slist_prepend (klass->groups, slv2_value_duplicate (v));
+      }
+      g_assert (g_slist_find_custom (klass->groups, v, gst_lv2_value_cmp));
+    }
+    slv2_values_free (values);
+  }
+  g_assert (audio_in_count == gsp_class->num_audio_in);
+  g_assert (audio_out_count == gsp_class->num_audio_out);
+  g_assert (control_in_count == gsp_class->num_control_in);
+  g_assert (control_out_count == gsp_class->num_control_out);
+
+  slv2_value_free (pred);
+
+  /* add pad templates */
+  audio_in_count = audio_out_count = 0;
   for (j = 0; j < slv2_plugin_get_num_ports (lv2plugin); j++) {
     SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, j);
     if (slv2_port_is_a (lv2plugin, port, audio_class)) {
@@ -106,22 +165,16 @@ gst_lv2_base_init (gpointer g_class)
 
       if (slv2_port_is_a (lv2plugin, port, input_class))
         gst_signal_processor_class_add_pad_template (gsp_class, name,
-            GST_PAD_SINK, gsp_class->num_audio_in++);
+            GST_PAD_SINK, audio_in_count++);
       else if (slv2_port_is_a (lv2plugin, port, output_class))
         gst_signal_processor_class_add_pad_template (gsp_class, name,
-            GST_PAD_SRC, gsp_class->num_audio_out++);
-      /* TODO: else ignore plugin */
+            GST_PAD_SRC, audio_out_count++);
 
       g_free (name);
-    } else if (slv2_port_is_a (lv2plugin, port, control_class)) {
-      if (slv2_port_is_a (lv2plugin, port, input_class))
-        gsp_class->num_control_in++;
-      else if (slv2_port_is_a (lv2plugin, port, output_class))
-        gsp_class->num_control_out++;
-      /* TODO: else ignore plugin */
     }
-    /* TODO: else ignore plugin */
   }
+  g_assert (audio_in_count == gsp_class->num_audio_in);
+  g_assert (audio_out_count == gsp_class->num_audio_out);
 
   /* construct the element details struct */
   details = g_new0 (GstElementDetails, 1);
@@ -157,59 +210,6 @@ gst_lv2_base_init (gpointer g_class)
   g_free (details->longname);
   g_free (details->author);
   g_free (details);
-
-  klass->groups = NULL;
-
-  klass->audio_in_ports = g_new0 (struct _GstLV2Port, gsp_class->num_audio_in);
-  klass->audio_out_ports =
-      g_new0 (struct _GstLV2Port, gsp_class->num_audio_out);
-  klass->control_in_ports =
-      g_new0 (struct _GstLV2Port, gsp_class->num_control_in);
-  klass->control_out_ports =
-      g_new0 (struct _GstLV2Port, gsp_class->num_control_out);
-
-  audio_in_count = audio_out_count = control_in_count = control_out_count = 0;
-
-  pred = slv2_value_new_uri (world,
-      "http://lv2plug.in/ns/dev/port-groups#inGroup");
-
-  for (j = 0; j < slv2_plugin_get_num_ports (lv2plugin); j++) {
-    SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, j);
-    gboolean is_input = slv2_port_is_a (lv2plugin, port, input_class);
-    struct _GstLV2Port *desc = NULL;
-    if (slv2_port_is_a (lv2plugin, port, audio_class)) {
-      if (is_input)
-        desc = &klass->audio_in_ports[audio_in_count++];
-      else
-        desc = &klass->audio_out_ports[audio_out_count++];
-    } else if (slv2_port_is_a (lv2plugin, port, control_class)) {
-      if (is_input)
-        desc = &klass->control_in_ports[control_in_count++];
-      else
-        desc = &klass->control_out_ports[control_out_count++];
-    } else {
-      /* unknown port type */
-      continue;
-    }
-    desc->index = j;
-    values = slv2_port_get_value (lv2plugin, port, pred);
-    if (slv2_values_size (values) > 0) {
-      SLV2Value v = slv2_values_get_at (values, 0);
-      desc->group = v;
-      if (!g_slist_find_custom (klass->groups, v, gst_lv2_value_cmp)) {
-        klass->groups =
-            g_slist_prepend (klass->groups, slv2_value_duplicate (v));
-      }
-    }
-    slv2_values_free (values);
-  }
-
-  slv2_value_free (pred);
-
-  g_assert (audio_in_count == gsp_class->num_audio_in);
-  g_assert (audio_out_count == gsp_class->num_audio_out);
-  g_assert (control_in_count == gsp_class->num_control_in);
-  g_assert (control_out_count == gsp_class->num_control_out);
 
   pred = slv2_value_new_uri (world,
       "http://lv2plug.in/ns/lv2core#inPlaceBroken");
