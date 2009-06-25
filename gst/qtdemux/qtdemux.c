@@ -534,7 +534,7 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
           /* we might be able with help from upstream */
           seekable = FALSE;
           q = gst_query_new_seeking (GST_FORMAT_BYTES);
-          if ((res = gst_pad_peer_query (qtdemux->sinkpad, q))) {
+          if (gst_pad_peer_query (qtdemux->sinkpad, q)) {
             gst_query_parse_seeking (q, &fmt, &seekable, NULL, NULL);
             GST_LOG_OBJECT (qtdemux, "upstream BYTE seekable %d", seekable);
           }
@@ -966,7 +966,6 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
   gboolean flush;
-  gboolean res;
   gboolean update;
   GstSegment seeksegment;
   int i;
@@ -1017,7 +1016,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   }
 
   /* now do the seek, this actually never returns FALSE */
-  res = gst_qtdemux_perform_seek (qtdemux, &seeksegment);
+  gst_qtdemux_perform_seek (qtdemux, &seeksegment);
 
   /* prepare for streaming again */
   if (flush) {
@@ -1425,7 +1424,6 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       GST_LOG_OBJECT (qtdemux,
           "skipping atom '%" GST_FOURCC_FORMAT "' at %" G_GUINT64_FORMAT,
           GST_FOURCC_ARGS (fourcc), cur_offset);
-      cur_offset += length;
       qtdemux->offset += length;
       break;
     }
@@ -1473,7 +1471,6 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
         ret = GST_FLOW_ERROR;
         goto beach;
       }
-      cur_offset += length;
       qtdemux->offset += length;
 
       qtdemux_parse_moov (qtdemux, GST_BUFFER_DATA (moov), length);
@@ -1496,7 +1493,6 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length, &ftyp);
       if (ret != GST_FLOW_OK)
         goto beach;
-      cur_offset += length;
       qtdemux->offset += length;
       /* only consider at least a sufficiently complete ftyp atom */
       if (length >= 20) {
@@ -1521,7 +1517,6 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       GST_MEMDUMP ("Unknown tag", GST_BUFFER_DATA (unknown),
           GST_BUFFER_SIZE (unknown));
       gst_buffer_unref (unknown);
-      cur_offset += length;
       qtdemux->offset += length;
       break;
     }
@@ -4257,6 +4252,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       default:
         break;
     }
+
     if (version == 0x00010000) {
       switch (fourcc) {
         case FOURCC_twos:
@@ -4289,7 +4285,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           break;
         }
       }
-      offset = 68;
     } else if (version == 0x00020000) {
       union
       {
@@ -4307,7 +4302,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GST_LOG_OBJECT (qtdemux, "sample rate:      %g", stream->rate);
       GST_LOG_OBJECT (qtdemux, "n_channels:       %d", stream->n_channels);
 
-      offset = 68;
     } else {
       GST_WARNING_OBJECT (qtdemux, "unknown version %08x", version);
     }
