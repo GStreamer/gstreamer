@@ -1743,8 +1743,7 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
 
       if ((stat_slice > 4 || (stat_dpa > 4 && stat_dpb > 4 && stat_dpc > 4)) &&
           stat_idr >= 1 && stat_sps >= 1 && stat_pps >= 1) {
-        gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN,
-            H264_VIDEO_CAPS);
+        gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, H264_VIDEO_CAPS);
         return;
       }
 
