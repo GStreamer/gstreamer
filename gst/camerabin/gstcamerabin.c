@@ -805,22 +805,27 @@ camerabin_destroy_elements (GstCameraBin * camera)
   /* Release request pads */
   if (camera->pad_view_vid) {
     gst_element_release_request_pad (camera->view_in_sel, camera->pad_view_vid);
+    gst_object_unref (camera->pad_view_vid);
     camera->pad_view_vid = NULL;
   }
   if (camera->pad_src_vid) {
     gst_element_release_request_pad (camera->src_out_sel, camera->pad_src_vid);
+    gst_object_unref (camera->pad_src_vid);
     camera->pad_src_vid = NULL;
   }
   if (camera->pad_src_img) {
     gst_element_release_request_pad (camera->src_out_sel, camera->pad_src_img);
+    gst_object_unref (camera->pad_src_img);
     camera->pad_src_img = NULL;
   }
   if (camera->pad_view_src) {
     gst_element_release_request_pad (camera->view_in_sel, camera->pad_view_src);
+    /* don't unref, we have not requested it */
     camera->pad_view_src = NULL;
   }
   if (camera->pad_src_view) {
     gst_element_release_request_pad (camera->src_out_sel, camera->pad_src_view);
+    gst_object_unref (camera->pad_src_view);
     camera->pad_src_view = NULL;
   }
 

@@ -549,6 +549,7 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
     vid_sinkpad = gst_element_get_static_pad (vid->tee, "sink");
   }
   gst_ghost_pad_set_target (GST_GHOST_PAD (vid->sinkpad), vid_sinkpad);
+  gst_object_unref (vid_sinkpad);
 
 
   /* Add queue element for video */
@@ -668,6 +669,7 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   /* Never let video bin eos events reach view finder */
   gst_pad_add_event_probe (vid_srcpad,
       G_CALLBACK (gst_camerabin_drop_eos_probe), vid);
+  gst_object_unref (vid_srcpad);
 
   pad = gst_element_get_static_pad (vid->aud_src, "src");
   gst_pad_add_buffer_probe (pad,
@@ -702,10 +704,12 @@ gst_camerabin_video_destroy_elements (GstCameraBinVideo * vid)
   /* Release tee request pads */
   if (vid->tee_video_srcpad) {
     gst_element_release_request_pad (vid->tee, vid->tee_video_srcpad);
+    gst_object_unref (vid->tee_video_srcpad);
     vid->tee_video_srcpad = NULL;
   }
   if (vid->tee_vf_srcpad) {
     gst_element_release_request_pad (vid->tee, vid->tee_vf_srcpad);
+    gst_object_unref (vid->tee_vf_srcpad);
     vid->tee_vf_srcpad = NULL;
   }
 
