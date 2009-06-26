@@ -381,7 +381,7 @@ gst_asf_demux_seek_index_lookup (GstASFDemux * demux, guint * packet,
   if (demux->sidx_num_entries == 0 || demux->sidx_interval == 0)
     return FALSE;
 
-  idx = (guint) (seek_time / demux->sidx_interval);
+  idx = (guint) ((seek_time + demux->preroll) / demux->sidx_interval);
 
   /* FIXME: seek beyond end of file should result in immediate EOS from
    * streaming thread instead of a failed seek */
