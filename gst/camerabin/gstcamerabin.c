@@ -1692,6 +1692,7 @@ gst_camerabin_send_preview (GstCameraBin * camera, GstBuffer * buffer)
   if (prev) {
     s = gst_structure_new (PREVIEW_MESSAGE_NAME,
         "buffer", GST_TYPE_BUFFER, prev, NULL);
+    gst_buffer_unref (prev);
 
     msg = gst_message_new_element (GST_OBJECT (camera), s);
 
