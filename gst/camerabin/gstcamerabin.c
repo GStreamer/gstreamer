@@ -531,7 +531,9 @@ camerabin_setup_src_elements (GstCameraBin * camera)
   g_object_set (camera->src_zoom_scale, "method",
       CAMERABIN_DEFAULT_ZOOM_METHOD, NULL);
 
+  /* we create new caps in any way and they take ownership of the structure st */
   gst_caps_replace (&camera->view_finder_caps, new_caps);
+  gst_caps_unref (new_caps);
 
   /* Set caps for view finder mode */
   gst_camerabin_set_capsfilter_caps (camera, camera->view_finder_caps);
