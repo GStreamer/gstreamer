@@ -92,6 +92,7 @@ gst_base_video_codec_init (GstBaseVideoCodec * base_video_codec,
   g_return_if_fail (pad_template != NULL);
 
   base_video_codec->srcpad = gst_pad_new_from_template (pad_template, "src");
+  gst_pad_use_fixed_caps (base_video_codec->srcpad);
   gst_element_add_pad (GST_ELEMENT (base_video_codec),
       base_video_codec->srcpad);
 
