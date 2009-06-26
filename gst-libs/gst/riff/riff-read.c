@@ -728,8 +728,11 @@ gst_riff_parse_info (GstElement * element,
       }
     }
 
-    if (tsize & 1)
+    if (tsize & 1) {
       tsize++;
+      if (tsize > size)
+        tsize = size;
+    }
 
     data += tsize;
     size -= tsize;
