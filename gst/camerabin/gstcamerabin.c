@@ -2261,13 +2261,14 @@ gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps)
         G_TYPE_INT, target_h, NULL);
   } else {
     GST_DEBUG_OBJECT (camera, "no scaling");
-    ar_caps = gst_caps_ref (new_caps);
+    ar_caps = new_caps;
   }
 
   GST_DEBUG_OBJECT (camera, "aspect ratio filter caps %" GST_PTR_FORMAT,
       ar_caps);
   g_object_set (G_OBJECT (camera->aspect_filter), "caps", ar_caps, NULL);
-  gst_caps_unref (ar_caps);
+  if (ar_caps != new_caps)
+    gst_caps_unref (ar_caps);
 #endif
 }
 
