@@ -400,6 +400,8 @@ gst_asf_demux_seek_index_lookup (GstASFDemux * demux, guint * packet,
    */
 
   idx_time = demux->sidx_interval * idx;
+  if (G_LIKELY (idx_time >= demux->preroll))
+    idx_time -= demux->preroll;
 
   GST_DEBUG_OBJECT (demux, "%" GST_TIME_FORMAT " => packet %u at %"
       GST_TIME_FORMAT, GST_TIME_ARGS (seek_time), *packet,
