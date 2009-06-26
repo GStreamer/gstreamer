@@ -2373,11 +2373,14 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
           break;
         }
         case ASF_DEMUX_DATA_TYPE_BYTE_ARRAY:{
-          if (!g_str_equal (gst_tag_name, GST_TAG_IMAGE)) {
-            GST_FIXME ("Unhandled byte array tag %s", gst_tag_name);
-            break;
-          } else {
-            asf_demux_parse_picture_tag (taglist, (guint8 *) value, value_len);
+          if (gst_tag_name) {
+            if (!g_str_equal (gst_tag_name, GST_TAG_IMAGE)) {
+              GST_FIXME ("Unhandled byte array tag %s", gst_tag_name);
+              break;
+            } else {
+              asf_demux_parse_picture_tag (taglist, (guint8 *) value,
+                  value_len);
+            }
           }
           break;
         }
