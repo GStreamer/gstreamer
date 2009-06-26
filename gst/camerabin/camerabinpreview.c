@@ -183,7 +183,7 @@ gst_camerabin_preview_convert (GstCameraBin * camera, GstBuffer * buf)
 
   if (!src || !sink) {
     GST_WARNING ("pipeline doesn't have src / sink elements");
-    goto no_pipeline;
+    goto missing_elements;
   }
 
   g_object_set (src, "size", (gint64) GST_BUFFER_SIZE (buf),
@@ -234,6 +234,7 @@ gst_camerabin_preview_convert (GstCameraBin * camera, GstBuffer * buf)
         g_return_val_if_reached (NULL);
       }
     }
+    gst_message_unref (msg);
   } else {
     g_warning ("Could not make preview image: %s", "timeout during conversion");
     result = NULL;
@@ -245,9 +246,21 @@ gst_camerabin_preview_convert (GstCameraBin * camera, GstBuffer * buf)
 
   GST_BUFFER_FLAGS (buf) = bflags;
 
+done:
+  if (src)
+    gst_object_unref (src);
+  if (sink)
+    gst_object_unref (sink);
+
   return result;
 
   /* ERRORS */
+missing_elements:
+  {
+    g_warning ("Could not make preview image: %s",
+        "missing elements in pipeline (unknown error)");
+    goto done;
+  }
 no_pipeline:
   {
     g_warning ("Could not make preview image: %s",
