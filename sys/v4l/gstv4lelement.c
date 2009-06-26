@@ -54,15 +54,15 @@ static void gst_v4lelement_init_interfaces (GType type);
 GST_BOILERPLATE_FULL (GstV4lElement, gst_v4lelement, GstPushSrc,
     GST_TYPE_PUSH_SRC, gst_v4lelement_init_interfaces);
 
-
 static void gst_v4lelement_dispose (GObject * object);
 static void gst_v4lelement_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_v4lelement_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static gboolean gst_v4lelement_start (GstBaseSrc * src);
-static gboolean gst_v4lelement_stop (GstBaseSrc * src);
 
+/* element methods */
+static GstStateChangeReturn gst_v4lelement_change_state (GstElement * element,
+    GstStateChange transition);
 
 static gboolean
 gst_v4l_iface_supported (GstImplementsInterface * iface, GType iface_type)
@@ -325,13 +325,16 @@ static void
 gst_v4lelement_class_init (GstV4lElementClass * klass)
 {
   GObjectClass *gobject_class;
-  GstBaseSrcClass *basesrc_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
-  basesrc_class = (GstBaseSrcClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->set_property = gst_v4lelement_set_property;
   gobject_class->get_property = gst_v4lelement_get_property;
+  gobject_class->dispose = gst_v4lelement_dispose;
+
+  element_class->change_state = gst_v4lelement_change_state;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEVICE,
       g_param_spec_string ("device", "Device", "Device location",
@@ -344,10 +347,6 @@ gst_v4lelement_class_init (GstV4lElementClass * klass)
           GST_TYPE_V4L_DEVICE_FLAGS, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  basesrc_class->start = gst_v4lelement_start;
-  basesrc_class->stop = gst_v4lelement_stop;
-
-  gobject_class->dispose = gst_v4lelement_dispose;
 }
 
 
@@ -440,32 +439,39 @@ gst_v4lelement_get_property (GObject * object,
   }
 }
 
-static gboolean
-gst_v4lelement_start (GstBaseSrc * src)
+static GstStateChangeReturn
+gst_v4lelement_change_state (GstElement * element, GstStateChange transition)
 {
-  GstV4lElement *v4lelement = GST_V4LELEMENT (src);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstV4lElement *v4lelement = GST_V4LELEMENT (element);
 
-  if (!gst_v4l_open (v4lelement))
-    return FALSE;
-
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      /* open the device */
+      if (!gst_v4l_open (v4lelement))
+        return GST_STATE_CHANGE_FAILURE;
 #ifdef HAVE_XVIDEO
-  gst_v4l_xoverlay_start (v4lelement);
+      gst_v4l_xoverlay_start (v4lelement);
 #endif
+      break;
+    default:
+      break;
+  }
 
-  return TRUE;
-}
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-static gboolean
-gst_v4lelement_stop (GstBaseSrc * src)
-{
-  GstV4lElement *v4lelement = GST_V4LELEMENT (src);
-
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      /* close the device */
 #ifdef HAVE_XVIDEO
-  gst_v4l_xoverlay_stop (v4lelement);
+      gst_v4l_xoverlay_stop (v4lelement);
 #endif
+      if (!gst_v4l_close (v4lelement))
+        return GST_STATE_CHANGE_FAILURE;
+      break;
+    default:
+      break;
+  }
 
-  if (!gst_v4l_close (v4lelement))
-    return FALSE;
-
-  return TRUE;
+  return ret;
 }

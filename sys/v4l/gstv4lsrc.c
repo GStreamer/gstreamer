@@ -676,9 +676,6 @@ gst_v4lsrc_start (GstBaseSrc * src)
 {
   GstV4lSrc *v4lsrc = GST_V4LSRC (src);
 
-  if (!GST_BASE_SRC_CLASS (parent_class)->start (src))
-    return FALSE;
-
   v4lsrc->offset = 0;
 
   return TRUE;
@@ -696,9 +693,6 @@ gst_v4lsrc_stop (GstBaseSrc * src)
     if (!gst_v4lsrc_capture_deinit (v4lsrc))
       return FALSE;
   }
-
-  if (!GST_BASE_SRC_CLASS (parent_class)->stop (src))
-    return FALSE;
 
   g_list_free (v4lsrc->colorspaces);
   v4lsrc->colorspaces = NULL;
