@@ -398,6 +398,7 @@ camerabin_video_pad_tee_src0_have_buffer (GstPad * pad, GstBuffer * buffer,
     GstEvent *event;
     GstObject *tee;
     GstPad *sinkpad;
+
     vid->adjust_ts_video = GST_BUFFER_TIMESTAMP (buffer) - vid->last_ts_video;
     vid->calculate_adjust_ts_video = FALSE;
     event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
@@ -416,7 +417,6 @@ camerabin_video_pad_tee_src0_have_buffer (GstPad * pad, GstBuffer * buffer,
   vid->last_ts_video = GST_BUFFER_TIMESTAMP (buffer);
   if (GST_BUFFER_DURATION_IS_VALID (buffer))
     vid->last_ts_video += GST_BUFFER_DURATION (buffer);
-
 
   GST_LOG ("buffer out with size %d ts %" GST_TIME_FORMAT,
       GST_BUFFER_SIZE (buffer), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
@@ -442,6 +442,7 @@ camerabin_video_pad_aud_src_have_buffer (GstPad * pad, GstBuffer * buffer,
   if (vid->calculate_adjust_ts_aud) {
     GstEvent *event;
     GstPad *peerpad = NULL;
+
     vid->adjust_ts_aud = GST_BUFFER_TIMESTAMP (buffer) - vid->last_ts_aud;
     vid->calculate_adjust_ts_aud = FALSE;
     event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
@@ -459,6 +460,7 @@ camerabin_video_pad_aud_src_have_buffer (GstPad * pad, GstBuffer * buffer,
   vid->last_ts_aud = GST_BUFFER_TIMESTAMP (buffer);
   if (GST_BUFFER_DURATION_IS_VALID (buffer))
     vid->last_ts_aud += GST_BUFFER_DURATION (buffer);
+
   GST_LOG ("buffer out with size %d ts %" GST_TIME_FORMAT,
       GST_BUFFER_SIZE (buffer), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
   return TRUE;
