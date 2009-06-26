@@ -98,6 +98,11 @@ typedef struct
   GstFlowReturn   last_flow; /* last flow return */
   GArray         *payloads;  /* pending payloads */
 
+  /* Video stream PAR & interlacing */
+  guint8	par_x;
+  guint8	par_y;
+  gboolean      interlaced;
+
   /* extended stream properties (optional) */
   AsfStreamExtProps  ext_props;
 

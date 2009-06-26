@@ -1278,6 +1278,26 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
       stream->discont = FALSE;
     }
 
+    if (G_UNLIKELY (stream->is_video && payload->par_x && payload->par_y &&
+            (payload->par_x != stream->par_x) &&
+            (payload->par_y != stream->par_y))) {
+      GST_DEBUG ("Updating PAR (%d/%d => %d/%d)",
+          stream->par_x, stream->par_y, payload->par_x, payload->par_y);
+      stream->par_x = payload->par_x;
+      stream->par_y = payload->par_y;
+      gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
+          GST_TYPE_FRACTION, stream->par_x, stream->par_y, NULL);
+      gst_pad_set_caps (stream->pad, stream->caps);
+    }
+
+    if (G_UNLIKELY (stream->interlaced != payload->interlaced)) {
+      GST_DEBUG ("Updating interlaced status (%d => %d)", stream->interlaced,
+          payload->interlaced);
+      stream->interlaced = payload->interlaced;
+      gst_caps_set_simple (stream->caps, "interlaced", G_TYPE_BOOLEAN,
+          stream->interlaced, NULL);
+    }
+
     gst_buffer_set_caps (payload->buf, stream->caps);
 
     /* (sort of) interpolate timestamps using upstream "frame of reference",
@@ -1772,6 +1792,17 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
   stream->is_video = is_video;
   stream->pending_tags = tags;
   stream->discont = TRUE;
+  if (is_video) {
+    GstStructure *st;
+    gint par_x, par_y;
+    st = gst_caps_get_structure (caps, 0);
+    if (gst_structure_get_fraction (st, "pixel-aspect-ratio", &par_x, &par_y) &&
+        par_x > 0 && par_y > 0) {
+      GST_DEBUG ("PAR %d/%d", par_x, par_y);
+      stream->par_x = par_x;
+      stream->par_y = par_y;
+    }
+  }
 
   stream->payloads = g_array_new (FALSE, FALSE, sizeof (AsfPayload));
 
@@ -1901,7 +1932,6 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
               ax, ay, NULL);
       }
     }
-    /* remove the framerate we will guess and add it later */
     s = gst_caps_get_structure (caps, 0);
     gst_structure_remove_field (s, "framerate");
   }
