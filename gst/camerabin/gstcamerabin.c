@@ -2871,7 +2871,9 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       if (camera->view_finder_caps) {
         gst_caps_unref (camera->view_finder_caps);
       }
-      camera->view_finder_caps = gst_caps_copy (gst_value_get_caps (value));
+      /* just ref, we don't modify it inplace */
+      camera->view_finder_caps =
+          gst_caps_ref ((GstCaps *) gst_value_get_caps (value));
       GST_OBJECT_UNLOCK (camera);
       if (GST_STATE (camera) != GST_STATE_NULL) {
         gst_camerabin_set_capsfilter_caps (camera, camera->view_finder_caps);
