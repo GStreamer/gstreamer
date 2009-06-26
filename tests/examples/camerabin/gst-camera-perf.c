@@ -105,7 +105,9 @@ static guint test_ix = 0;
 static gboolean signal_sink = FALSE;
 static gboolean signal_shot = FALSE;
 static gboolean signal_cont = FALSE;
-//static gboolean signal_save = FALSE;
+
+static gboolean have_img_captured = FALSE;
+static gboolean have_img_done = FALSE;
 
 /* time samples and test results */
 static GstClockTime t_initial = G_GUINT64_CONSTANT (0);
@@ -199,7 +201,14 @@ img_capture_done (GstElement * camera, GString * fname, gpointer user_data)
       GST_INFO ("%2d cont new filename '%s'", test_ix, filename->str);
       g_object_set (camera_bin, "filename", filename->str, NULL);
       // FIXME: is burst capture broken? new filename and return TRUE should be enough
-      g_signal_emit_by_name (camera_bin, "user-start", NULL);
+      // as a workaround we will kick next image from here
+      // but this needs sync so that we have received "image-captured" message already
+      if (have_img_captured) {
+        have_img_captured = FALSE;
+        g_signal_emit_by_name (camera_bin, "user-start", NULL);
+      } else {
+        have_img_done = TRUE;
+      }
       ret = TRUE;
     } else {
       GstClockTime max = 0;
@@ -310,6 +319,15 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
               DIFF_TIME (t_final[num_pics_cont], t_initial, diff);
               result.avg = result.min = result.max = diff;
               break;
+            case 4:
+              // we need to have this received before we can take next one
+              if (have_img_done) {
+                have_img_done = FALSE;
+                g_signal_emit_by_name (camera_bin, "user-start", NULL);
+              } else {
+                have_img_captured = TRUE;
+              }
+              break;
           }
         } else if (gst_structure_has_name (st, "preview-image")) {
           GST_INFO ("%2d preview-image", test_ix);
@@ -337,8 +355,8 @@ static void
 cleanup_pipeline (void)
 {
   if (camera_bin) {
+    GST_INFO_OBJECT (camera_bin, "stopping and destroying");
     gst_element_set_state (camera_bin, GST_STATE_NULL);
-    gst_element_get_state (camera_bin, NULL, NULL, GST_CLOCK_TIME_NONE);
     gst_object_unref (camera_bin);
     camera_bin = NULL;
   }
@@ -465,6 +483,7 @@ setup_pipeline (void)
     g_warning ("can't set camerabin to playing\n");
     goto error;
   }
+  GST_INFO_OBJECT (camera_bin, "created and started");
   return TRUE;
 error:
   cleanup_pipeline ();
@@ -553,6 +572,7 @@ static gboolean
 test_05 (void)
 {
   signal_cont = TRUE;
+  have_img_captured = have_img_done = FALSE;
   GET_TIME (t_initial);
   g_signal_emit_by_name (camera_bin, "user-start", 0);
 
@@ -570,7 +590,6 @@ test_05 (void)
 static gboolean
 test_07 (void)
 {
-  //  signal_save = TRUE;
   signal_shot = TRUE;
 
   GET_TIME (t_initial);
