@@ -75,12 +75,12 @@
 #include <gst/gst.h>
 
 #ifdef G_OS_WIN32
-#include <winsock2.h>
-/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
- * minwg32 headers check WINVER before allowing the use of these */
 #ifndef WINVER
 #define WINVER 0x0501
 #endif
+#include <winsock2.h>
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ * minwg32 headers check WINVER before allowing the use of these */
 #include <ws2tcpip.h>
 #define EINPROGRESS WSAEINPROGRESS
 #else
