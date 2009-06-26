@@ -327,6 +327,10 @@ gst_element_default_error (GObject * object, GstObject * source, GError * error,
  * Makes the element free the previously requested pad as obtained
  * with gst_element_get_request_pad().
  *
+ * This does not unref the pad. If the pad was created by using 
+ * gst_element_get_request_pad(), gst_element_release_request_pad() needs to be
+ * followed by gst_object_unref() to free the @pad.
+ *
  * MT safe.
  */
 void
