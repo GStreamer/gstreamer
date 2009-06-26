@@ -187,6 +187,11 @@ gst_asf_demux_reset (GstASFDemux * demux)
     gst_caps_unref (demux->metadata);
     demux->metadata = NULL;
   }
+  if (demux->global_metadata) {
+    gst_structure_free (demux->global_metadata);
+    demux->global_metadata = NULL;
+  }
+
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
   g_free (demux->objpath);
   demux->objpath = NULL;
@@ -1878,11 +1883,22 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
 
     s = gst_asf_demux_get_metadata_for_stream (demux, id);
     if (gst_structure_get_int (s, "AspectRatioX", &ax) &&
-        gst_structure_get_int (s, "AspectRatioY", &ay)) {
-      /* only copy sane values */
-      if (ax > 0 && ay > 0) {
-        gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-            ax, ay, NULL);
+        gst_structure_get_int (s, "AspectRatioY", &ay) && (ax > 0 && ay > 0)) {
+      gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+          ax, ay, NULL);
+
+    } else {
+      guint ax, ay;
+      /* retry with the global metadata */
+      GST_DEBUG ("Retrying with global metadata %" GST_PTR_FORMAT,
+          demux->global_metadata);
+      s = demux->global_metadata;
+      if (gst_structure_get_uint (s, "AspectRatioX", &ax) &&
+          gst_structure_get_uint (s, "AspectRatioY", &ay)) {
+        GST_DEBUG ("ax:%d, ay:%d", ax, ay);
+        if (ax > 0 && ay > 0)
+          gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              ax, ay, NULL);
       }
     }
     /* remove the framerate we will guess and add it later */
@@ -2081,8 +2097,7 @@ not_enough_data:
 }
 
 static const gchar *
-gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf16le,
-    gsize name_len)
+gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf8)
 {
   const struct
   {
@@ -2098,13 +2113,8 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf16le,
     "WM/Year", GST_TAG_DATE}
     /* { "WM/Composer", GST_TAG_COMPOSER } */
   };
-  gchar *name_utf8;
-  gsize in, out;
+  gsize out = strlen (name_utf8);
   guint i;
-
-  /* convert name to UTF-8 */
-  name_utf8 = g_convert (name_utf16le, name_len, "UTF-8", "UTF-16LE", &in,
-      &out, NULL);
 
   if (name_utf8 == NULL) {
     GST_WARNING ("Failed to convert name to UTF8, skipping");
@@ -2114,13 +2124,10 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf16le,
   for (i = 0; i < G_N_ELEMENTS (tags); ++i) {
     if (strncmp (tags[i].asf_name, name_utf8, out) == 0) {
       GST_LOG ("map tagname '%s' -> '%s'", name_utf8, tags[i].gst_name);
-      g_free (name_utf8);
       return tags[i].gst_name;
     }
   }
 
-  GST_LOG ("unhandled tagname '%s'", name_utf8);
-  g_free (name_utf8);
   return NULL;
 }
 
@@ -2237,6 +2244,7 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
     GValue tag_value = { 0, };
     gsize in, out;
     gchar *name;
+    gchar *name_utf8 = NULL;
     gchar *value;
 
     /* Descriptor */
@@ -2256,8 +2264,16 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
       goto not_enough_data;
     }
 
-    gst_tag_name = gst_asf_demux_get_gst_tag_from_tag_name (name, name_len);
-    if (gst_tag_name != NULL) {
+    name_utf8 =
+        g_convert (name, name_len, "UTF-8", "UTF-16LE", &in, &out, NULL);
+
+    GST_DEBUG ("Found tag/metadata %s", name_utf8);
+
+    gst_tag_name = gst_asf_demux_get_gst_tag_from_tag_name (name_utf8);
+
+    GST_DEBUG ("gst_tag_name %s", gst_tag_name);
+
+    if (name_utf8 != NULL) {
       switch (datatype) {
         case ASF_DEMUX_DATA_TYPE_UTF16LE_STRING:{
           gchar *value_utf8;
@@ -2265,49 +2281,58 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
           value_utf8 = g_convert (value, value_len, "UTF-8", "UTF-16LE",
               &in, &out, NULL);
 
+          GST_DEBUG ("string value %s", value_utf8);
+
           /* get rid of tags with empty value */
           if (value_utf8 != NULL && *value_utf8 != '\0') {
             value_utf8[out] = '\0';
 
-            if (strcmp (gst_tag_name, GST_TAG_DATE) == 0) {
-              guint year = atoi (value_utf8);
+            if (gst_tag_name != NULL) {
+              if (strcmp (gst_tag_name, GST_TAG_DATE) == 0) {
+                guint year = atoi (value_utf8);
 
-              if (year > 0) {
-                GDate *date = g_date_new_dmy (1, 1, year);
+                if (year > 0) {
+                  GDate *date = g_date_new_dmy (1, 1, year);
 
-                g_value_init (&tag_value, GST_TYPE_DATE);
-                gst_value_set_date (&tag_value, date);
-                g_date_free (date);
-              }
-            } else if (strcmp (gst_tag_name, GST_TAG_GENRE) == 0) {
-              guint id3v1_genre_id;
-              const gchar *genre_str;
+                  g_value_init (&tag_value, GST_TYPE_DATE);
+                  gst_value_set_date (&tag_value, date);
+                  g_date_free (date);
+                }
+              } else if (strcmp (gst_tag_name, GST_TAG_GENRE) == 0) {
+                guint id3v1_genre_id;
+                const gchar *genre_str;
 
-              if (sscanf (value_utf8, "(%u)", &id3v1_genre_id) == 1 &&
-                  ((genre_str = gst_tag_id3_genre_get (id3v1_genre_id)))) {
-                GST_DEBUG ("Genre: %s -> %s", value_utf8, genre_str);
-                g_free (value_utf8);
-                value_utf8 = g_strdup (genre_str);
+                if (sscanf (value_utf8, "(%u)", &id3v1_genre_id) == 1 &&
+                    ((genre_str = gst_tag_id3_genre_get (id3v1_genre_id)))) {
+                  GST_DEBUG ("Genre: %s -> %s", value_utf8, genre_str);
+                  g_free (value_utf8);
+                  value_utf8 = g_strdup (genre_str);
+                }
+              } else {
+                GType tag_type;
+
+                /* convert tag from string to other type if required */
+                tag_type = gst_tag_get_type (gst_tag_name);
+                g_value_init (&tag_value, tag_type);
+                if (!gst_value_deserialize (&tag_value, value_utf8)) {
+                  GValue from_val = { 0, };
+
+                  g_value_init (&from_val, G_TYPE_STRING);
+                  g_value_set_string (&from_val, value_utf8);
+                  if (!g_value_transform (&from_val, &tag_value)) {
+                    GST_WARNING_OBJECT (demux,
+                        "Could not transform string tag to " "%s tag type %s",
+                        gst_tag_name, g_type_name (tag_type));
+                    g_value_unset (&tag_value);
+                  }
+                  g_value_unset (&from_val);
+                }
               }
             } else {
-              GType tag_type;
-
-              /* convert tag from string to other type if required */
-              tag_type = gst_tag_get_type (gst_tag_name);
-              g_value_init (&tag_value, tag_type);
-              if (!gst_value_deserialize (&tag_value, value_utf8)) {
-                GValue from_val = { 0, };
-
-                g_value_init (&from_val, G_TYPE_STRING);
-                g_value_set_string (&from_val, value_utf8);
-                if (!g_value_transform (&from_val, &tag_value)) {
-                  GST_WARNING_OBJECT (demux,
-                      "Could not transform string tag to " "%s tag type %s",
-                      gst_tag_name, g_type_name (tag_type));
-                  g_value_unset (&tag_value);
-                }
-                g_value_unset (&from_val);
-              }
+              /* metadata ! */
+              GST_DEBUG ("Setting metadata");
+              g_value_init (&tag_value, G_TYPE_STRING);
+              g_value_set_string (&tag_value, value_utf8);
             }
           } else if (value_utf8 == NULL) {
             GST_WARNING ("Failed to convert string value to UTF8, skipping");
@@ -2339,10 +2364,16 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
       }
 
       if (G_IS_VALUE (&tag_value)) {
-        gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
-            gst_tag_name, &tag_value, NULL);
+        if (gst_tag_name) {
+          gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
+              gst_tag_name, &tag_value, NULL);
 
-        g_value_unset (&tag_value);
+          g_value_unset (&tag_value);
+        } else {
+          GST_DEBUG ("Setting global metadata %s", name_utf8);
+          gst_structure_set_value (demux->global_metadata, name_utf8,
+              &tag_value);
+        }
       }
     }
 
@@ -3575,6 +3606,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       demux->segment_running = FALSE;
       demux->adapter = gst_adapter_new ();
       demux->metadata = gst_caps_new_empty ();
+      demux->global_metadata = gst_structure_empty_new ("metadata");
       demux->data_size = 0;
       demux->data_offset = 0;
       demux->index_offset = 0;

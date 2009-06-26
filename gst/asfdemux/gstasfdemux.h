@@ -136,7 +136,7 @@ struct _GstASFDemux {
 
   GstCaps             *metadata;         /* metadata, for delayed parsing; one
                                           * structure ('stream-N') per stream */
-
+  GstStructure	      *global_metadata;  /* metadata which isn't specific to one stream */
   GSList              *ext_stream_props; /* for delayed processing (buffers) */
   GSList              *mut_ex_streams;   /* mutually exclusive streams */
 
