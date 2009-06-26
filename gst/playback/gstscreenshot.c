@@ -177,6 +177,7 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
         g_return_val_if_reached (NULL);
       }
     }
+    gst_message_unref (msg);
   } else {
     g_warning ("Could not take screenshot: %s", "timeout during conversion");
     result = NULL;
