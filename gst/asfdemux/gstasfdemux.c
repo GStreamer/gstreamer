@@ -744,13 +744,14 @@ gst_asf_demux_chain_headers (GstASFDemux * demux)
   GstFlowReturn flow;
   AsfObject obj;
   guint8 *header_data, *data = NULL;
+  const guint8 *cdata = NULL;
   guint64 header_size;
 
-  data = (guint8 *) gst_adapter_peek (demux->adapter, ASF_OBJECT_HEADER_SIZE);
-  if (data == NULL)
+  cdata = (guint8 *) gst_adapter_peek (demux->adapter, ASF_OBJECT_HEADER_SIZE);
+  if (cdata == NULL)
     goto need_more_data;
 
-  asf_demux_peek_object (demux, data, ASF_OBJECT_HEADER_SIZE, &obj);
+  asf_demux_peek_object (demux, cdata, ASF_OBJECT_HEADER_SIZE, &obj);
   if (obj.id != ASF_OBJ_HEADER)
     goto wrong_type;
 
