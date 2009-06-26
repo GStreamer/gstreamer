@@ -2210,30 +2210,32 @@ gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps)
   if (sink_pad) {
     sink_caps = gst_pad_get_caps (sink_pad);
     gst_object_unref (sink_pad);
-    if (sink_caps && !gst_caps_is_any (sink_caps)) {
-      GST_DEBUG_OBJECT (camera, "sink element caps %" GST_PTR_FORMAT,
-          sink_caps);
-      /* Get maximum resolution that view finder sink accepts */
-      st = gst_caps_get_structure (sink_caps, 0);
-      if (gst_structure_has_field_typed (st, "width", GST_TYPE_INT_RANGE)) {
-        range = gst_structure_get_value (st, "width");
-        sink_w = gst_value_get_int_range_max (range);
-      }
-      if (gst_structure_has_field_typed (st, "height", GST_TYPE_INT_RANGE)) {
-        range = gst_structure_get_value (st, "height");
-        sink_h = gst_value_get_int_range_max (range);
+    if (sink_caps) {
+      if (!gst_caps_is_any (sink_caps)) {
+        GST_DEBUG_OBJECT (camera, "sink element caps %" GST_PTR_FORMAT,
+            sink_caps);
+        /* Get maximum resolution that view finder sink accepts */
+        st = gst_caps_get_structure (sink_caps, 0);
+        if (gst_structure_has_field_typed (st, "width", GST_TYPE_INT_RANGE)) {
+          range = gst_structure_get_value (st, "width");
+          sink_w = gst_value_get_int_range_max (range);
+        }
+        if (gst_structure_has_field_typed (st, "height", GST_TYPE_INT_RANGE)) {
+          range = gst_structure_get_value (st, "height");
+          sink_h = gst_value_get_int_range_max (range);
+        }
+        GST_DEBUG_OBJECT (camera, "sink element accepts max %dx%d", sink_w,
+            sink_h);
+
+        /* Get incoming frames' resolution */
+        if (sink_h && sink_w) {
+          st = gst_caps_get_structure (new_caps, 0);
+          gst_structure_get_int (st, "width", &in_w);
+          gst_structure_get_int (st, "height", &in_h);
+          GST_DEBUG_OBJECT (camera, "new caps with %dx%d", in_w, in_h);
+        }
       }
       gst_caps_unref (sink_caps);
-      GST_DEBUG_OBJECT (camera, "sink element accepts max %dx%d", sink_w,
-          sink_h);
-
-      /* Get incoming frames' resolution */
-      if (sink_h && sink_w) {
-        st = gst_caps_get_structure (new_caps, 0);
-        gst_structure_get_int (st, "width", &in_w);
-        gst_structure_get_int (st, "height", &in_h);
-        GST_DEBUG_OBJECT (camera, "new caps with %dx%d", in_w, in_h);
-      }
     }
   }
 
