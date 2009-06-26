@@ -500,8 +500,7 @@ camerabin_setup_src_elements (GstCameraBin * camera)
 
   if (camera->fps_n > 0 && camera->fps_d > 0) {
     if (camera->night_mode) {
-      GST_WARNING_OBJECT (camera,
-          "night mode, lowest allowed fps will be forced");
+      GST_INFO_OBJECT (camera, "night mode, lowest allowed fps will be forced");
       camera->pre_night_fps_n = camera->fps_n;
       camera->pre_night_fps_d = camera->fps_d;
       detect_framerate = TRUE;
@@ -863,6 +862,8 @@ camerabin_destroy_elements (GstCameraBin * camera)
 static void
 camerabin_dispose_elements (GstCameraBin * camera)
 {
+  GST_INFO ("cleaning");
+
   if (camera->capture_mutex) {
     g_mutex_free (camera->capture_mutex);
     camera->capture_mutex = NULL;
@@ -885,24 +886,18 @@ camerabin_dispose_elements (GstCameraBin * camera)
     camera->user_vid_src = NULL;
   }
 
+  /* Free caps */
   if (camera->image_capture_caps) {
-    gst_caps_unref (camera->image_capture_caps);
-    camera->image_capture_caps = NULL;
+    gst_caps_replace (&camera->image_capture_caps, NULL);
   }
-
   if (camera->view_finder_caps) {
-    gst_caps_unref (camera->view_finder_caps);
-    camera->view_finder_caps = NULL;
+    gst_caps_replace (&camera->view_finder_caps, NULL);
   }
-
   if (camera->allowed_caps) {
-    gst_caps_unref (camera->allowed_caps);
-    camera->allowed_caps = NULL;
+    gst_caps_replace (&camera->allowed_caps, NULL);
   }
-
   if (camera->preview_caps) {
-    gst_caps_unref (camera->preview_caps);
-    camera->preview_caps = NULL;
+    gst_caps_replace (&camera->preview_caps, NULL);
   }
 
   if (camera->event_tags) {
@@ -2753,7 +2748,6 @@ gst_camerabin_dispose (GObject * object)
   gst_camerabin_preview_destroy_pipeline (camera);
 
   camerabin_destroy_elements (camera);
-
   camerabin_dispose_elements (camera);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -3152,6 +3146,8 @@ gst_camerabin_user_start (GstCameraBin * camera)
   if (camera->capturing) {
     GST_WARNING_OBJECT (camera, "capturing \"%s\" ongoing, set new filename",
         camera->filename->str);
+    /* FIXME: we need to send something more to the app, so that it does not for
+     * for img-done */
     g_mutex_unlock (camera->capture_mutex);
     return;
   }
