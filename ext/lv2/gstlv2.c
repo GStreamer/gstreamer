@@ -53,6 +53,7 @@ SLV2Value output_class;
 SLV2Value integer_prop;
 SLV2Value toggled_prop;
 SLV2Value in_place_broken_pred;
+SLV2Value in_group_pred;
 
 static GstSignalProcessorClass *parent_class;
 
@@ -77,7 +78,7 @@ gst_lv2_base_init (gpointer g_class)
   GstSignalProcessorClass *gsp_class = GST_SIGNAL_PROCESSOR_CLASS (g_class);
   GstElementDetails *details;
   SLV2Plugin lv2plugin;
-  SLV2Value val, pred;
+  SLV2Value val;
   SLV2Values values;
   guint j, audio_in_count, audio_out_count, control_in_count, control_out_count;
   gchar *klass_tags;
@@ -110,8 +111,6 @@ gst_lv2_base_init (gpointer g_class)
       g_new0 (struct _GstLV2Port, gsp_class->num_control_out);
 
   klass->groups = NULL;
-  pred = slv2_value_new_uri (world,
-      "http://lv2plug.in/ns/dev/port-groups#inGroup");
 
   /* find port groups */
   audio_in_count = audio_out_count = control_in_count = control_out_count = 0;
@@ -134,7 +133,7 @@ gst_lv2_base_init (gpointer g_class)
       continue;
     }
     desc->index = j;
-    values = slv2_port_get_value (lv2plugin, port, pred);
+    values = slv2_port_get_value (lv2plugin, port, in_group_pred);
     if (slv2_values_size (values) > 0) {
       SLV2Value v = slv2_values_get_at (values, 0);
       desc->group = v;
@@ -150,8 +149,6 @@ gst_lv2_base_init (gpointer g_class)
   g_assert (audio_out_count == gsp_class->num_audio_out);
   g_assert (control_in_count == gsp_class->num_control_in);
   g_assert (control_out_count == gsp_class->num_control_out);
-
-  slv2_value_free (pred);
 
   /* add pad templates */
   audio_in_count = audio_out_count = 0;
@@ -574,6 +571,9 @@ plugin_init (GstPlugin * plugin)
       slv2_value_new_uri (world, "http://lv2plug.in/ns/lv2core#toggled");
   in_place_broken_pred = slv2_value_new_uri (world,
       "http://lv2plug.in/ns/lv2core#inPlaceBroken");
+  in_group_pred =
+      slv2_value_new_uri (world,
+      "http://lv2plug.in/ns/dev/port-groups#inGroup");
 
   parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
