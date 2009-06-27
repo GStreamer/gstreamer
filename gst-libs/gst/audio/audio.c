@@ -16,6 +16,12 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstaudio
+ * @short_description: Support library for audio elements
+ *
+ * This library contains some helper functions for audio elements.
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -25,13 +31,6 @@
 #include "audio-enumtypes.h"
 
 #include <gst/gststructure.h>
-
-/**
- * SECTION:gstaudio
- * @short_description: Support library for audio elements
- *
- * This library contains some helper functions for audio elements.
- */
 
 /**
  * gst_audio_frame_byte_size:
