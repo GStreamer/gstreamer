@@ -265,7 +265,7 @@ gst_structure_new_valist (const gchar * name,
  * the MT Refcounting section of the design documents.
  */
 void
-gst_structure_set_parent_refcount (GstStructure * structure, int *refcount)
+gst_structure_set_parent_refcount (GstStructure * structure, gint * refcount)
 {
   g_return_if_fail (structure != NULL);
 
