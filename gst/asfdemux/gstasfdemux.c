@@ -1190,11 +1190,8 @@ gst_asf_demux_find_stream_with_complete_payload (GstASFDemux * demux)
           continue;
         }
       }
-    }
 
-    /* Now see if there's a complete payload queued for this stream */
-    if (stream->payloads->len > 0) {
-      AsfPayload *payload;
+      /* Now see if there's a complete payload queued for this stream */
 
       payload = &g_array_index (stream->payloads, AsfPayload, 0);
       if (!gst_asf_payload_is_complete (payload))
