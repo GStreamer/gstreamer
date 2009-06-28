@@ -1219,52 +1219,61 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
     /* streams are now activated */
   }
 
-  /* do we need to send a newsegment event */
-  if (demux->need_newsegment) {
-
-    /* wait until we had a chance to "lock on" some payload's timestamp */
-    if (!GST_CLOCK_TIME_IS_VALID (demux->segment_ts))
-      return GST_FLOW_OK;
-    else {
-      /* safe default if insufficient upstream info */
-      if (!GST_CLOCK_TIME_IS_VALID (demux->in_gap))
-        demux->in_gap = 0;
-    }
-
-    if (demux->segment.stop == GST_CLOCK_TIME_NONE &&
-        demux->segment.duration > 0) {
-      /* slight HACK; prevent clipping of last bit */
-      demux->segment.stop = demux->segment.duration + demux->in_gap;
-    }
-
-    GST_DEBUG_OBJECT (demux, "sending new-segment event %" GST_SEGMENT_FORMAT,
-        &demux->segment);
-
-    /* note: we fix up all timestamps to start from 0, so this should be ok */
-    gst_asf_demux_send_event_unlocked (demux,
-        gst_event_new_new_segment (FALSE, demux->segment.rate,
-            GST_FORMAT_TIME, demux->segment.start, demux->segment.stop,
-            demux->segment.start));
-
-    /* now post any global tags we may have found */
-    if (demux->taglist == NULL)
-      demux->taglist = gst_tag_list_new ();
-
-    gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_CONTAINER_FORMAT, "ASF", NULL);
-
-    GST_DEBUG_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, demux->taglist);
-    gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
-    demux->taglist = NULL;
-
-    demux->need_newsegment = FALSE;
-    demux->segment_running = TRUE;
-  }
+  /* wait until we had a chance to "lock on" some payload's timestamp */
+  if (G_UNLIKELY (demux->need_newsegment
+          && !GST_CLOCK_TIME_IS_VALID (demux->segment_ts)))
+    return GST_FLOW_OK;
 
   while ((stream = gst_asf_demux_find_stream_with_complete_payload (demux))) {
     AsfPayload *payload;
 
     payload = &g_array_index (stream->payloads, AsfPayload, 0);
+
+    /* do we need to send a newsegment event */
+    if ((G_UNLIKELY (demux->need_newsegment))) {
+
+      /* safe default if insufficient upstream info */
+      if (!GST_CLOCK_TIME_IS_VALID (demux->in_gap))
+        demux->in_gap = 0;
+
+      if (demux->segment.stop == GST_CLOCK_TIME_NONE &&
+          demux->segment.duration > 0) {
+        /* slight HACK; prevent clipping of last bit */
+        demux->segment.stop = demux->segment.duration + demux->in_gap;
+      }
+
+      /* FIXME : only if ACCURATE ! */
+      if (G_LIKELY (!demux->accurate
+              && (GST_CLOCK_TIME_IS_VALID (payload->ts)))) {
+        GST_DEBUG ("Adjusting newsegment start to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (payload->ts));
+        demux->segment.start = payload->ts;
+        demux->segment.time = payload->ts;
+      }
+
+      GST_DEBUG_OBJECT (demux, "sending new-segment event %" GST_SEGMENT_FORMAT,
+          &demux->segment);
+
+      /* note: we fix up all timestamps to start from 0, so this should be ok */
+      gst_asf_demux_send_event_unlocked (demux,
+          gst_event_new_new_segment (FALSE, demux->segment.rate,
+              GST_FORMAT_TIME, demux->segment.start, demux->segment.stop,
+              demux->segment.start));
+
+      /* now post any global tags we may have found */
+      if (demux->taglist == NULL)
+        demux->taglist = gst_tag_list_new ();
+
+      gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_CONTAINER_FORMAT, "ASF", NULL);
+
+      GST_DEBUG_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, demux->taglist);
+      gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
+      demux->taglist = NULL;
+
+      demux->need_newsegment = FALSE;
+      demux->segment_running = TRUE;
+    }
 
     /* Do we have tags pending for this stream? */
     if (stream->pending_tags) {
