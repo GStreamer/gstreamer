@@ -169,6 +169,7 @@ struct _GstASFDemux {
   gboolean             broadcast;
 
   GstSegment           segment;          /* configured play segment                 */
+  gboolean             accurate;
 
   gboolean             need_newsegment;  /* do we need to send a new-segment event? */
   GstClockTime         segment_ts;       /* streaming; timestamp for segment start */

@@ -541,7 +541,8 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   }
 
   flush = ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
-  accurate = ((flags & GST_SEEK_FLAG_ACCURATE) == GST_SEEK_FLAG_ACCURATE);
+  demux->accurate =
+      ((flags & GST_SEEK_FLAG_ACCURATE) == GST_SEEK_FLAG_ACCURATE);
   keyunit_sync = ((flags & GST_SEEK_FLAG_KEY_UNIT) == GST_SEEK_FLAG_KEY_UNIT);
 
   if (demux->streaming) {
@@ -3670,6 +3671,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       gst_segment_init (&demux->segment, GST_FORMAT_TIME);
       demux->need_newsegment = TRUE;
       demux->segment_running = FALSE;
+      demux->accurate = FALSE;
       demux->adapter = gst_adapter_new ();
       demux->metadata = gst_caps_new_empty ();
       demux->global_metadata = gst_structure_empty_new ("metadata");
