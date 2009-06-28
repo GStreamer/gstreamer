@@ -1174,13 +1174,21 @@ gst_asf_demux_find_stream_with_complete_payload (GstASFDemux * demux)
 
       last_idx = stream->payloads->len - 1;
       payload = &g_array_index (stream->payloads, AsfPayload, last_idx);
-      if (GST_CLOCK_TIME_IS_VALID (payload->ts) &&
-          payload->ts < demux->segment.start) {
-        GST_DEBUG_OBJECT (stream->pad, "Last queued payload has timestamp %"
-            GST_TIME_FORMAT " which is before our segment start %"
-            GST_TIME_FORMAT ", not pushing yet", GST_TIME_ARGS (payload->ts),
-            GST_TIME_ARGS (demux->segment.start));
-        continue;
+      if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (payload->ts) &&
+              (payload->ts < demux->segment.start))) {
+        if (G_UNLIKELY ((!demux->accurate) && payload->keyframe)) {
+          GST_DEBUG_OBJECT (stream->pad,
+              "Found keyframe, updating segment start to %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (payload->ts));
+          demux->segment.start = payload->ts;
+          demux->segment.time = payload->ts;
+        } else {
+          GST_DEBUG_OBJECT (stream->pad, "Last queued payload has timestamp %"
+              GST_TIME_FORMAT " which is before our segment start %"
+              GST_TIME_FORMAT ", not pushing yet", GST_TIME_ARGS (payload->ts),
+              GST_TIME_ARGS (demux->segment.start));
+          continue;
+        }
       }
     }
 
