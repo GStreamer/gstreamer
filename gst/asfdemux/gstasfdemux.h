@@ -46,6 +46,11 @@ typedef struct _GstASFDemux GstASFDemux;
 typedef struct _GstASFDemuxClass GstASFDemuxClass;
 
 typedef struct {
+  guint32	packet;
+  guint16	count;
+} AsfSimpleIndexEntry;
+
+typedef struct {
   AsfPayloadExtensionID   id : 16;  /* extension ID; the :16 makes sure the
                                      * struct gets packed into 4 bytes       */
   guint16                 len;      /* save this so we can skip unknown IDs  */
@@ -132,6 +137,7 @@ struct _GstASFDemux {
   guint64            data_size;    /* total size of packet data in bytes, or 0 */
   guint64            num_packets;  /* total number of data packets, or 0       */
   gint64             packet;       /* current packet                           */
+  guint              speed_packets; /* Known number of packets to get in one go*/
 
   /* bitrates are unused at the moment */
   guint32              bitrate[GST_ASF_DEMUX_NUM_STREAM_IDS];
@@ -184,7 +190,7 @@ struct _GstASFDemux {
   /* simple index, if available */
   GstClockTime         sidx_interval;    /* interval between entries in ns */
   guint                sidx_num_entries; /* number of index entries        */
-  guint32             *sidx_entries;     /* packet number for each entry   */
+  AsfSimpleIndexEntry *sidx_entries;     /* packet number for each entry   */
 };
 
 struct _GstASFDemuxClass {

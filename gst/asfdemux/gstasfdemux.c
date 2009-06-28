@@ -222,6 +222,8 @@ gst_asf_demux_reset (GstASFDemux * demux)
   demux->sidx_num_entries = 0;
   g_free (demux->sidx_entries);
   demux->sidx_entries = NULL;
+
+  demux->speed_packets = 1;
 }
 
 static void
@@ -373,7 +375,7 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
 
 static gboolean
 gst_asf_demux_seek_index_lookup (GstASFDemux * demux, guint * packet,
-    GstClockTime seek_time, GstClockTime * p_idx_time)
+    GstClockTime seek_time, GstClockTime * p_idx_time, guint * speed)
 {
   GstClockTime idx_time;
   guint idx;
@@ -388,7 +390,9 @@ gst_asf_demux_seek_index_lookup (GstASFDemux * demux, guint * packet,
   if (idx >= demux->sidx_num_entries)
     return FALSE;
 
-  *packet = demux->sidx_entries[idx];
+  *packet = demux->sidx_entries[idx].packet;
+  if (speed)
+    *speed = demux->sidx_entries[idx].count;
 
   /* so we get closer to the actual time of the packet ... actually, let's not
    * do this, since we throw away superfluous payloads before the seek position
@@ -470,7 +474,7 @@ gst_asf_demux_handle_seek_push (GstASFDemux * demux, GstEvent * event)
   GST_DEBUG_OBJECT (demux, "seeking to %" GST_TIME_FORMAT, GST_TIME_ARGS (cur));
 
   /* determine packet, by index or by estimation */
-  if (!gst_asf_demux_seek_index_lookup (demux, &packet, cur, NULL)) {
+  if (!gst_asf_demux_seek_index_lookup (demux, &packet, cur, NULL, NULL)) {
     packet = (guint) gst_util_uint64_scale (demux->num_packets,
         cur, demux->play_time);
   }
@@ -510,7 +514,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   gdouble rate;
   gint64 cur, stop;
   gint64 seek_time;
-  guint packet;
+  guint packet, speed_count = 1;
 
   if (demux->seekable == FALSE || demux->packet_size == 0 ||
       demux->num_packets == 0 || demux->play_time == 0) {
@@ -602,7 +606,8 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 
   /* FIXME: should check the KEY_UNIT flag; need to adjust last_stop to
    * real start of data and segment_start to indexed time for key unit seek*/
-  if (!gst_asf_demux_seek_index_lookup (demux, &packet, seek_time, &idx_time)) {
+  if (G_UNLIKELY (!gst_asf_demux_seek_index_lookup (demux, &packet, seek_time,
+              &idx_time, &speed_count))) {
     /* First try to query our source to see if it can convert for us. This is
        the case when our source is an mms stream, notice that in this case
        gstmms will do a time based seek to get the byte offset, this is not a
@@ -643,12 +648,13 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
     }
   }
 
-  GST_DEBUG_OBJECT (demux, "seeking to packet %u", packet);
+  GST_DEBUG_OBJECT (demux, "seeking to packet %u (%d)", packet, speed_count);
 
   GST_OBJECT_LOCK (demux);
   demux->segment = segment;
   demux->packet = packet;
   demux->need_newsegment = TRUE;
+  demux->speed_packets = speed_count;
   gst_asf_demux_reset_stream_state_after_discont (demux);
   GST_OBJECT_UNLOCK (demux);
 
@@ -1332,6 +1338,7 @@ gst_asf_demux_loop (GstASFDemux * demux)
   GstFlowReturn flow = GST_FLOW_OK;
   GstBuffer *buf = NULL;
   guint64 off;
+  guint n;
 
   if (demux->state == GST_ASF_DEMUX_STATE_HEADER) {
     if (!gst_asf_demux_pull_headers (demux)) {
@@ -1352,7 +1359,8 @@ gst_asf_demux_loop (GstASFDemux * demux)
 
   off = demux->data_offset + (demux->packet * demux->packet_size);
 
-  if (!gst_asf_demux_pull_data (demux, off, demux->packet_size, &buf, &flow)) {
+  if (G_UNLIKELY (!gst_asf_demux_pull_data (demux, off,
+              demux->packet_size * demux->speed_packets, &buf, &flow))) {
     GST_DEBUG_OBJECT (demux, "got flow %s", gst_flow_get_name (flow));
     if (flow == GST_FLOW_UNEXPECTED)
       goto eos;
@@ -1363,16 +1371,31 @@ gst_asf_demux_loop (GstASFDemux * demux)
       goto read_failed;
   }
 
-  /* FIXME: maybe we should just skip broken packets and error out only
-   * after a few broken packets in a row? */
-  if (!gst_asf_demux_parse_packet (demux, buf))
-    goto parse_error;
+  for (n = 0; n < demux->speed_packets; n++) {
+    GstBuffer *tmp = NULL, *sub = buf;
+
+    if (G_UNLIKELY (n != 0))
+      tmp = sub =
+          gst_buffer_create_sub (buf, n * demux->packet_size,
+          demux->packet_size);
+    /* FIXME: maybe we should just skip broken packets and error out only
+     * after a few broken packets in a row? */
+    if (G_UNLIKELY (!gst_asf_demux_parse_packet (demux, sub)))
+      goto parse_error;
+    if (G_UNLIKELY (n != 0))
+      gst_buffer_unref (tmp);
+
+    flow = gst_asf_demux_push_complete_payloads (demux, FALSE);
+
+    ++demux->packet;
+
+  }
+
+  /* reset speed pull */
+  if (G_UNLIKELY (demux->speed_packets != 1))
+    demux->speed_packets = 1;
 
   gst_buffer_unref (buf);
-
-  flow = gst_asf_demux_push_complete_payloads (demux, FALSE);
-
-  ++demux->packet;
 
   if (demux->num_packets > 0 && demux->packet >= demux->num_packets) {
     GST_LOG_OBJECT (demux, "reached EOS");
@@ -2883,13 +2906,16 @@ gst_asf_demux_process_simple_index (GstASFDemux * demux, guint8 * data,
     demux->sidx_interval = interval;
     demux->sidx_num_entries = count;
     g_free (demux->sidx_entries);
-    demux->sidx_entries = g_new0 (guint32, count);
+    demux->sidx_entries = g_new0 (AsfSimpleIndexEntry, count);
 
-    for (i = 0; i < count && size > (4 + 2); ++i) {
-      demux->sidx_entries[i] = gst_asf_demux_get_uint32 (&data, &size);
-      x = (guint32) gst_asf_demux_get_uint16 (&data, &size);
-      GST_LOG_OBJECT (demux, "%" GST_TIME_FORMAT " = packet %4u",
-          GST_TIME_ARGS (i * interval), demux->sidx_entries[i]);
+    for (i = 0; i < count; ++i) {
+      if (G_UNLIKELY (size <= 6))
+        break;
+      demux->sidx_entries[i].packet = gst_asf_demux_get_uint32 (&data, &size);
+      demux->sidx_entries[i].count = gst_asf_demux_get_uint16 (&data, &size);
+      GST_LOG_OBJECT (demux, "%" GST_TIME_FORMAT " = packet %4u  count : %2d",
+          GST_TIME_ARGS (i * interval), demux->sidx_entries[i].packet,
+          demux->sidx_entries[i].count);
     }
   } else {
     GST_DEBUG_OBJECT (demux, "simple index object with 0 entries");
