@@ -11,4 +11,4 @@ DIRECTFB_DIR=
 endif
 
 SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) shapewipe switch
-DIST_SUBDIRS= directfb mxf scaletempo shapewipe switch
+DIST_SUBDIRS= camerabin directfb mxf scaletempo shapewipe switch
