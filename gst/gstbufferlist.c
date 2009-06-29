@@ -368,10 +368,10 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
  * Get the buffer at @idx in @group.
  *
  * Note that this function is not efficient for iterating over the entire list.
- * Use and iterator or gst_buffer_list_foreach() instead.
+ * Use an iterator or gst_buffer_list_foreach() instead.
  *
  * Returns: the buffer at @idx in @group or NULL when there is no buffer. The
- * buffer remaing valid as long as @list is valid.
+ * buffer remains valid as long as @list is valid.
  */
 GstBuffer *
 gst_buffer_list_get (GstBufferList * list, guint group, guint idx)
