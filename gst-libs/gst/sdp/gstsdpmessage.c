@@ -69,13 +69,13 @@
 #include <gst/gstinfo.h>        /* For GST_STR_NULL */
 
 #ifdef G_OS_WIN32
-#ifdef _MSC_VER
-#include <Winsock2.h>
-#endif
 /* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
  * minwg32 headers check WINVER before allowing the use of these */
 #ifndef WINVER
 #define WINVER 0x0501
+#endif
+#ifdef _MSC_VER
+#include <Winsock2.h>
 #endif
 #include <ws2tcpip.h>
 #else
