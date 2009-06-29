@@ -2660,14 +2660,7 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
      * If buffer list, use the first group buffer within the list
      * for syncing
      */
-    GstBufferListIterator *it;
-    gboolean got_group;
-
-    it = gst_buffer_list_iterate (GST_BUFFER_LIST_CAST (obj));
-    got_group = gst_buffer_list_iterator_next_group (it);
-    g_assert (got_group);
-    sync_obj = gst_buffer_list_iterator_next (it);
-    gst_buffer_list_iterator_free (it);
+    sync_obj = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0, 0);
     g_assert (NULL != sync_obj);
   } else {
     sync_obj = obj;
@@ -2850,14 +2843,7 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, gboolean is_list,
     GstClockTime timestamp;
 
     if (is_list) {
-      GstBufferListIterator *it;
-      gboolean got_group;
-
-      it = gst_buffer_list_iterate (GST_BUFFER_LIST_CAST (obj));
-      got_group = gst_buffer_list_iterator_next_group (it);
-      g_assert (got_group);
-      buf = gst_buffer_list_iterator_next (it);
-      gst_buffer_list_iterator_free (it);
+      buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0, 0);
       g_assert (NULL != buf);
     } else {
       buf = GST_BUFFER_CAST (obj);
@@ -3277,14 +3263,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     goto was_eos;
 
   if (is_list) {
-    GstBufferListIterator *it;
-    gboolean got_group;
-
-    it = gst_buffer_list_iterate (GST_BUFFER_LIST_CAST (obj));
-    got_group = gst_buffer_list_iterator_next_group (it);
-    g_assert (got_group);
-    time_buf = gst_buffer_list_iterator_next (it);
-    gst_buffer_list_iterator_free (it);
+    time_buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0, 0);
     g_assert (NULL != time_buf);
   } else {
     time_buf = GST_BUFFER_CAST (obj);

@@ -3987,18 +3987,12 @@ gst_pad_data_get_caps (gboolean is_buffer, void *data)
   if (G_LIKELY (is_buffer)) {
     caps = GST_BUFFER_CAPS (data);
   } else {
-    GstBufferListIterator *it;
     GstBuffer *buf;
 
-    caps = NULL;
-    it = gst_buffer_list_iterate (GST_BUFFER_LIST_CAST (data));
-    if (gst_buffer_list_iterator_next_group (it)) {
-      buf = gst_buffer_list_iterator_next (it);
-      if (buf != NULL) {
-        caps = GST_BUFFER_CAPS (buf);
-      }
-    }
-    gst_buffer_list_iterator_free (it);
+    if ((buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (data), 0, 0)))
+      caps = GST_BUFFER_CAPS (buf);
+    else
+      caps = NULL;
   }
   return caps;
 }
