@@ -195,6 +195,8 @@ gst_frei0r_filter_init (GstFrei0rFilter * self, GstFrei0rFilterClass * klass)
 {
   self->property_cache =
       gst_frei0r_property_cache_init (klass->properties, klass->n_properties);
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (self));
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (self));
 }
 
 gboolean
