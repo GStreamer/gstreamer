@@ -1766,7 +1766,7 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 
   /* if we have caps on both pads we can check the intersection. If one
    * of the caps is NULL, we return TRUE. */
-  if (srccaps == NULL || sinkcaps == NULL) {
+  if (G_UNLIKELY (srccaps == NULL || sinkcaps == NULL)) {
     if (srccaps)
       gst_caps_unref (srccaps);
     if (sinkcaps)

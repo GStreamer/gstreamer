@@ -155,7 +155,7 @@ gst_structure_validate_name (const gchar * name)
   g_return_val_if_fail (name != NULL, FALSE);
 
   /* FIXME 0.11: use g_ascii_isalpha() */
-  if (!g_ascii_isalnum (*name)) {
+  if (G_UNLIKELY (!g_ascii_isalnum (*name))) {
     GST_WARNING ("Invalid character '%c' at offset 0 in structure name: %s",
         *name, name);
     return FALSE;
@@ -166,7 +166,7 @@ gst_structure_validate_name (const gchar * name)
   s = &name[1];
   while (*s && (g_ascii_isalnum (*s) || strchr ("/-_.:+ ", *s) != NULL))
     s++;
-  if (*s != '\0') {
+  if (G_UNLIKELY (*s != '\0')) {
     GST_WARNING ("Invalid character '%c' at offset %lu in structure name: %s",
         *s, ((gulong) s - (gulong) name), name);
     return FALSE;
@@ -519,14 +519,14 @@ gst_structure_set_valist (GstStructure * structure,
 
     type = va_arg (varargs, GType);
 
-    if (type == G_TYPE_DATE) {
+    if (G_UNLIKELY (type == G_TYPE_DATE)) {
       g_warning ("Don't use G_TYPE_DATE, use GST_TYPE_DATE instead\n");
       type = GST_TYPE_DATE;
     }
 
     g_value_init (&field.value, type);
     G_VALUE_COLLECT (&field.value, varargs, 0, &err);
-    if (err) {
+    if (G_UNLIKELY (err)) {
       g_critical ("%s", err);
       return;
     }
@@ -589,14 +589,14 @@ gst_structure_id_set_valist (GstStructure * structure,
 
     type = va_arg (varargs, GType);
 
-    if (type == G_TYPE_DATE) {
+    if (G_UNLIKELY (type == G_TYPE_DATE)) {
       g_warning ("Don't use G_TYPE_DATE, use GST_TYPE_DATE instead\n");
       type = GST_TYPE_DATE;
     }
 
     g_value_init (&field.value, type);
     G_VALUE_COLLECT (&field.value, varargs, 0, &err);
-    if (err) {
+    if (G_UNLIKELY (err)) {
       g_critical ("%s", err);
       return;
     }
@@ -682,7 +682,7 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
   for (i = 0; i < len; i++) {
     f = GST_STRUCTURE_FIELD (structure, i);
 
-    if (f->name == field->name) {
+    if (G_UNLIKELY (f->name == field->name)) {
       g_value_unset (&f->value);
       memcpy (f, field, sizeof (GstStructureField));
       return;
@@ -706,7 +706,7 @@ gst_structure_id_get_field (const GstStructure * structure, GQuark field_id)
   for (i = 0; i < len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
 
-    if (field->name == field_id)
+    if (G_UNLIKELY (field->name == field_id))
       return field;
   }
 
@@ -979,7 +979,7 @@ gst_structure_foreach (const GstStructure * structure,
     field = GST_STRUCTURE_FIELD (structure, i);
 
     ret = func (field->name, &field->value, user_data);
-    if (!ret)
+    if (G_UNLIKELY (!ret))
       return FALSE;
   }
 
@@ -1830,7 +1830,7 @@ gst_structure_parse_simple_string (gchar * str, gchar ** end)
 {
   char *s = str;
 
-  while (GST_ASCII_IS_STRING (*s)) {
+  while (G_LIKELY (GST_ASCII_IS_STRING (*s))) {
     s++;
   }
 
@@ -1853,14 +1853,14 @@ gst_structure_parse_field (gchar * str,
   while (g_ascii_isspace (*s) || (s[0] == '\\' && g_ascii_isspace (s[1])))
     s++;
   name = s;
-  if (!gst_structure_parse_simple_string (s, &name_end))
+  if (G_UNLIKELY (!gst_structure_parse_simple_string (s, &name_end)))
     return FALSE;
 
   s = name_end;
   while (g_ascii_isspace (*s) || (s[0] == '\\' && g_ascii_isspace (s[1])))
     s++;
 
-  if (*s != '=')
+  if (G_UNLIKELY (*s != '='))
     return FALSE;
   s++;
 
@@ -1869,7 +1869,8 @@ gst_structure_parse_field (gchar * str,
   field->name = g_quark_from_string (name);
   *name_end = c;
 
-  if (!gst_structure_parse_value (s, &s, &field->value, G_TYPE_INVALID))
+  if (G_UNLIKELY (!gst_structure_parse_value (s, &s, &field->value,
+              G_TYPE_INVALID)))
     return FALSE;
 
   *after = s;
@@ -1900,12 +1901,12 @@ gst_structure_parse_value (gchar * str,
     while (g_ascii_isspace (*s))
       s++;
     type_name = s;
-    if (!gst_structure_parse_simple_string (s, &type_end))
+    if (G_UNLIKELY (!gst_structure_parse_simple_string (s, &type_end)))
       return FALSE;
     s = type_end;
     while (g_ascii_isspace (*s))
       s++;
-    if (*s != ')')
+    if (G_UNLIKELY (*s != ')'))
       return FALSE;
     s++;
     while (g_ascii_isspace (*s))
@@ -1998,7 +1999,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
     r++;
 
   name = r;
-  if (!gst_structure_parse_string (r, &w, &r)) {
+  if (G_UNLIKELY (!gst_structure_parse_string (r, &w, &r))) {
     GST_WARNING ("Failed to parse structure string");
     goto error;
   }
@@ -2024,7 +2025,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
       /* accept \0 as end delimiter */
       break;
     }
-    if (*r != ',') {
+    if (G_UNLIKELY (*r != ',')) {
       GST_WARNING ("Failed to find delimiter, r=%s", r);
       goto error;
     }
@@ -2034,7 +2035,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
       r++;
 
     memset (&field, 0, sizeof (field));
-    if (!gst_structure_parse_field (r, &r, &field))
+    if (G_UNLIKELY (!gst_structure_parse_field (r, &r, &field)))
       goto error;
     gst_structure_set_field (structure, &field);
   } while (TRUE);

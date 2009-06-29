@@ -380,7 +380,7 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
     GList *next = g_list_next (f);
     GstPluginFeature *feature = f->data;
 
-    if (feature && !strcmp (feature->plugin_name, name)) {
+    if (G_UNLIKELY (feature && !strcmp (feature->plugin_name, name))) {
       GST_DEBUG_OBJECT (registry, "removing feature %p (%s) for plugin %s",
           feature, gst_plugin_feature_get_name (feature), name);
 
@@ -755,7 +755,8 @@ gst_registry_lookup_locked (GstRegistry * registry, const char *filename)
   /* FIXME: use GTree speed up lookups */
   for (g = registry->plugins; g; g = g_list_next (g)) {
     plugin = GST_PLUGIN_CAST (g->data);
-    if (plugin->basename && strcmp (basename, plugin->basename) == 0) {
+    if (G_UNLIKELY (plugin->basename
+            && strcmp (basename, plugin->basename) == 0)) {
       g_free (basename);
       return plugin;
     }

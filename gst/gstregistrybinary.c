@@ -76,12 +76,12 @@ _strnlen (const gchar * str, gint maxlen)
 {
   gint len = 0;
 
-  if (len == maxlen)
+  if (G_UNLIKELY (len == maxlen))
     return -1;
 
   while (*str++ != '\0') {
     len++;
-    if (len == maxlen)
+    if (G_UNLIKELY (len == maxlen))
       return -1;
   }
   return len;
@@ -913,26 +913,26 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
   /* unpack plugin feature strings */
   unpack_string (*in, type_name, end, fail);
 
-  if (!type_name) {
+  if (G_UNLIKELY (!type_name)) {
     GST_ERROR ("No feature type name");
     return FALSE;
   }
 
   GST_DEBUG ("Plugin '%s' feature typename : '%s'", plugin_name, type_name);
 
-  if (!(type = g_type_from_name (type_name))) {
+  if (G_UNLIKELY (!(type = g_type_from_name (type_name)))) {
     GST_ERROR ("Unknown type from typename '%s' for plugin '%s'", type_name,
         plugin_name);
     g_free (type_name);
     return FALSE;
   }
-  if ((feature = g_object_new (type, NULL)) == NULL) {
+  if (G_UNLIKELY ((feature = g_object_new (type, NULL)) == NULL)) {
     GST_ERROR ("Can't create feature from type");
     g_free (type_name);
     return FALSE;
   }
 
-  if (!GST_IS_PLUGIN_FEATURE (feature)) {
+  if (G_UNLIKELY (!GST_IS_PLUGIN_FEATURE (feature))) {
     GST_ERROR ("typename : '%s' is not a plugin feature", type_name);
     goto fail;
   }
@@ -1178,7 +1178,7 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in,
 
   /* Load external plugin dependencies */
   for (i = 0; i < pe->n_deps; ++i) {
-    if (!gst_registry_binary_load_plugin_dep (plugin, in, end)) {
+    if (G_UNLIKELY (!gst_registry_binary_load_plugin_dep (plugin, in, end))) {
       GST_ERROR_OBJECT (plugin, "Could not read external plugin dependency");
       gst_registry_remove_plugin (registry, plugin);
       goto fail;
@@ -1228,7 +1228,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
 #endif
 
   mapped = g_mapped_file_new (location, FALSE, &err);
-  if (err != NULL) {
+  if (G_UNLIKELY (err != NULL)) {
     GST_INFO ("Unable to mmap file %s : %s", location, err->message);
     g_error_free (err);
     err = NULL;
@@ -1243,7 +1243,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
       return FALSE;
     }
   } else {
-    if ((contents = g_mapped_file_get_contents (mapped)) == NULL) {
+    if (G_UNLIKELY ((contents = g_mapped_file_get_contents (mapped)) == NULL)) {
       GST_ERROR ("Can't load file %s : %s", location, g_strerror (errno));
       goto Error;
     }
@@ -1254,13 +1254,14 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   /* in is a cursor pointer, we initialize it with the begin of registry and is updated on each read */
   in = contents;
   GST_DEBUG ("File data at address %p", in);
-  if (size < sizeof (GstBinaryRegistryMagic)) {
+  if (G_UNLIKELY (size < sizeof (GstBinaryRegistryMagic))) {
     GST_ERROR ("No or broken registry header");
     goto Error;
   }
 
   /* check if header is valid */
-  if ((check_magic_result = gst_registry_binary_check_magic (&in, size)) < 0) {
+  if (G_UNLIKELY ((check_magic_result =
+              gst_registry_binary_check_magic (&in, size)) < 0)) {
 
     if (check_magic_result == -1)
       GST_ERROR
@@ -1270,8 +1271,8 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   }
 
   /* check if there are plugins in the file */
-  if (!(((gsize) in + sizeof (GstBinaryPluginElement)) <
-          (gsize) contents + size)) {
+  if (G_UNLIKELY (!(((gsize) in + sizeof (GstBinaryPluginElement)) <
+              (gsize) contents + size))) {
     GST_INFO ("No binary plugins structure to read");
     /* empty file, this is not an error */
   } else {

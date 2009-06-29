@@ -509,7 +509,7 @@ gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
   GstStructure *struct1 = (GstStructure *) data;
   const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
 
-  if (val1 == NULL)
+  if (G_UNLIKELY (val1 == NULL))
     return FALSE;
   if (gst_value_compare (val1, val2) == GST_VALUE_EQUAL) {
     return TRUE;
@@ -601,7 +601,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
 #ifdef USE_POISONING
   CAPS_POISON (caps2);
 #endif
-  if (gst_caps_is_any (caps1) || gst_caps_is_any (caps2)) {
+  if (G_UNLIKELY (gst_caps_is_any (caps1) || gst_caps_is_any (caps2))) {
     /* FIXME: this leaks */
     caps1->flags |= GST_CAPS_FLAGS_ANY;
     for (i = caps2->structs->len - 1; i >= 0; i--) {
@@ -643,12 +643,12 @@ gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
 #ifdef USE_POISONING
   CAPS_POISON (caps2);
 #endif
-  if (gst_caps_is_any (caps1)) {
+  if (G_UNLIKELY (gst_caps_is_any (caps1))) {
     for (i = caps2->structs->len - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps2, i);
       gst_structure_free (structure);
     }
-  } else if (gst_caps_is_any (caps2)) {
+  } else if (G_UNLIKELY (gst_caps_is_any (caps2))) {
     caps1->flags |= GST_CAPS_FLAGS_ANY;
     for (i = caps1->structs->len - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps1, i);
@@ -831,7 +831,7 @@ gst_caps_copy_nth (const GstCaps * caps, guint nth)
   newcaps = gst_caps_new_empty ();
   newcaps->flags = caps->flags;
 
-  if (caps->structs->len > nth) {
+  if (G_LIKELY (caps->structs->len > nth)) {
     structure = gst_caps_get_structure_unchecked (caps, nth);
     gst_caps_append_structure (newcaps, gst_structure_copy (structure));
   }
@@ -1083,15 +1083,15 @@ gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
    * So there should be an assertion that caps1 and caps2 != NULL */
 
   /* NULL <-> NULL is allowed here */
-  if (caps1 == caps2)
+  if (G_UNLIKELY (caps1 == caps2))
     return TRUE;
 
   /* one of them NULL => they are different (can't be both NULL because
    * we checked that above) */
-  if (caps1 == NULL || caps2 == NULL)
+  if (G_UNLIKELY (caps1 == NULL || caps2 == NULL))
     return FALSE;
 
-  if (gst_caps_is_fixed (caps1) && gst_caps_is_fixed (caps2))
+  if (G_UNLIKELY (gst_caps_is_fixed (caps1) && gst_caps_is_fixed (caps2)))
     return gst_caps_is_equal_fixed (caps1, caps2);
 
   return gst_caps_is_subset (caps1, caps2) && gst_caps_is_subset (caps2, caps1);
@@ -1113,7 +1113,7 @@ gst_caps_structure_intersect_field (GQuark id, const GValue * val1,
   GValue dest_value = { 0 };
   const GValue *val2 = gst_structure_id_get_value (idata->intersect, id);
 
-  if (val2 == NULL) {
+  if (G_UNLIKELY (val2 == NULL)) {
     gst_structure_id_set_value (idata->dest, id, val1);
   } else if (idata->first_run) {
     if (gst_value_intersect (&dest_value, val1, val2)) {
@@ -1136,20 +1136,20 @@ gst_caps_structure_intersect (const GstStructure * struct1,
   g_return_val_if_fail (struct1 != NULL, NULL);
   g_return_val_if_fail (struct2 != NULL, NULL);
 
-  if (struct1->name != struct2->name)
+  if (G_UNLIKELY (struct1->name != struct2->name))
     return NULL;
 
   data.dest = gst_structure_id_empty_new (struct1->name);
   data.intersect = struct2;
   data.first_run = TRUE;
-  if (!gst_structure_foreach ((GstStructure *) struct1,
-          gst_caps_structure_intersect_field, &data))
+  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
+              gst_caps_structure_intersect_field, &data)))
     goto error;
 
   data.intersect = struct1;
   data.first_run = FALSE;
-  if (!gst_structure_foreach ((GstStructure *) struct2,
-          gst_caps_structure_intersect_field, &data))
+  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct2,
+              gst_caps_structure_intersect_field, &data)))
     goto error;
 
   return data.dest;
@@ -1226,17 +1226,17 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
   g_return_val_if_fail (GST_IS_CAPS (caps2), NULL);
 
   /* caps are exactly the same pointers, just copy one caps */
-  if (caps1 == caps2)
+  if (G_UNLIKELY (caps1 == caps2))
     return gst_caps_copy (caps1);
 
   /* empty caps on either side, return empty */
-  if (gst_caps_is_empty (caps1) || gst_caps_is_empty (caps2))
+  if (G_UNLIKELY (gst_caps_is_empty (caps1) || gst_caps_is_empty (caps2)))
     return gst_caps_new_empty ();
 
   /* one of the caps is any, just copy the other caps */
-  if (gst_caps_is_any (caps1))
+  if (G_UNLIKELY (gst_caps_is_any (caps1)))
     return gst_caps_copy (caps2);
-  if (gst_caps_is_any (caps2))
+  if (G_UNLIKELY (gst_caps_is_any (caps2)))
     return gst_caps_copy (caps1);
 
   dest = gst_caps_new_empty ();
@@ -1277,7 +1277,7 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
       gst_caps_append_structure (dest, istruct);
       /* move down left */
       k++;
-      if (j == 0)
+      if (G_UNLIKELY (j == 0))
         break;                  /* so we don't roll back to G_MAXUINT */
       j--;
     }
