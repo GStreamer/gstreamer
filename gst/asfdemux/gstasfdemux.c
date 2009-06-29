@@ -509,7 +509,6 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   GstFormat format;
   gboolean only_need_update;
   gboolean keyunit_sync;
-  gboolean accurate;
   gboolean flush;
   gdouble rate;
   gint64 cur, stop;
@@ -626,7 +625,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
     } else {
       /* Hackety hack, this sucks. We just seek to an earlier position
        *  and let the sinks throw away the stuff before the segment start */
-      if (flush && (accurate || keyunit_sync)) {
+      if (flush && (demux->accurate || keyunit_sync)) {
         seek_time -= 5 * GST_SECOND;
         if (seek_time < 0)
           seek_time = 0;
