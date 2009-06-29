@@ -3094,7 +3094,6 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * msg)
           GST_MESSAGE_SRC (msg));
       g_mutex_lock (camera->capture_mutex);
       if (camera->capturing) {
-        gst_camerabin_finish_image_capture (camera);
         camera->capturing = FALSE;
         g_cond_signal (camera->cond);
       }
