@@ -18,9 +18,10 @@
  */
 /**
  * SECTION:gstmultichannel
- * @short_description: Support library for multichannel audio elements
+ * @short_description: Support for multichannel audio elements
  *
- * This library contains some helper functions to work with multichannel audio.
+ * This module contains some helper functions and a enum to work with
+ * multichannel audio.
  */
 
 #ifdef HAVE_CONFIG_H
