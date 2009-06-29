@@ -42,7 +42,7 @@ exec guile -s $0 "$@"
   (format #t "; running test: ~a\n" n-identities)
   (let lp ((in (read-lines
                 (open-input-pipe
-                 (format #f "./mass_elements ~A"
+                 (format #f "./mass-elements ~A"
                          (number->string n-identities)))))
            (out '()))
     (if (null? in)
