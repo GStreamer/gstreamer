@@ -1872,7 +1872,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad), NULL);
   }
 
-  if (need_subp) {
+  if (need_subp && playsink->videochain) {
     GST_DEBUG_OBJECT (playsink, "adding subpicture");
     if (!playsink->subpchain) {
       GST_DEBUG_OBJECT (playsink, "creating subpicture chain");
