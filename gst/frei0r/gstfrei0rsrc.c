@@ -146,6 +146,11 @@ gst_frei0r_src_stop (GstBaseSrc * basesrc)
     self->f0r_instance = NULL;
   }
 
+  self->fmt = GST_VIDEO_FORMAT_UNKNOWN;
+  self->width = self->height = 0;
+  self->fps_n = self->fps_d = 0;
+  self->n_frames = 0;
+
   return TRUE;
 }
 

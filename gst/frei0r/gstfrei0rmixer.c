@@ -45,8 +45,16 @@ gst_frei0r_mixer_reset (GstFrei0rMixer * self)
     self->f0r_instance = NULL;
   }
 
+  if (self->property_cache)
+    gst_frei0r_property_cache_free (klass->properties, self->property_cache,
+        klass->n_properties);
+  self->property_cache = NULL;
+
   gst_caps_replace (&self->caps, NULL);
   gst_event_replace (&self->newseg_event, NULL);
+
+  self->fmt = GST_VIDEO_FORMAT_UNKNOWN;
+  self->width = self->height = 0;
 }
 
 static void

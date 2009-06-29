@@ -59,6 +59,8 @@ gst_frei0r_filter_stop (GstBaseTransform * trans)
     self->f0r_instance = NULL;
   }
 
+  self->width = self->height = 0;
+
   return TRUE;
 }
 
