@@ -195,7 +195,6 @@ static gboolean
 gst_frei0r_mixer_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstFrei0rMixer *self = GST_FREI0R_MIXER (gst_pad_get_parent (pad));
-  GstFrei0rMixerClass *klass = GST_FREI0R_MIXER_GET_CLASS (self);
   gboolean ret = TRUE;
 
   gst_caps_replace (&self->caps, caps);
@@ -215,16 +214,6 @@ gst_frei0r_mixer_set_caps (GstPad * pad, GstCaps * caps)
       ret = FALSE;
       goto out;
     }
-
-    if (self->f0r_instance) {
-      klass->ftable->destruct (self->f0r_instance);
-      self->f0r_instance = NULL;
-    }
-
-    self->f0r_instance =
-        gst_frei0r_instance_construct (klass->ftable, klass->properties,
-        klass->n_properties, self->property_cache, self->width, self->height);
-
   }
 out:
 
@@ -543,8 +532,16 @@ gst_frei0r_mixer_collected (GstCollectPads * pads, GstFrei0rMixer * self)
   GstFrei0rMixerClass *klass = GST_FREI0R_MIXER_GET_CLASS (self);
   gdouble time;
 
-  if (G_UNLIKELY (!self->f0r_instance))
+  if (G_UNLIKELY (self->width <= 0 || self->height <= 0))
     return GST_FLOW_NOT_NEGOTIATED;
+
+  if (G_UNLIKELY (!self->f0r_instance)) {
+    self->f0r_instance =
+        gst_frei0r_instance_construct (klass->ftable, klass->properties,
+        klass->n_properties, self->property_cache, self->width, self->height);
+    if (G_UNLIKELY (!self->f0r_instance))
+      return GST_FLOW_ERROR;
+  }
 
   if (self->newseg_event) {
     gst_pad_push_event (self->src, self->newseg_event);
