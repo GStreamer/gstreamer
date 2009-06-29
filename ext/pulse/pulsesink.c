@@ -132,6 +132,7 @@ static gboolean gst_pulseringbuffer_release (GstRingBuffer * buf);
 static gboolean gst_pulseringbuffer_start (GstRingBuffer * buf);
 static gboolean gst_pulseringbuffer_pause (GstRingBuffer * buf);
 static gboolean gst_pulseringbuffer_stop (GstRingBuffer * buf);
+static void gst_pulseringbuffer_clear (GstRingBuffer * buf);
 static guint gst_pulseringbuffer_commit (GstRingBuffer * buf,
     guint64 * sample, guchar * data, gint in_samples, gint out_samples,
     gint * accum);
@@ -188,6 +189,8 @@ gst_pulseringbuffer_class_init (GstPulseRingBufferClass * klass)
   gstringbuffer_class->pause = GST_DEBUG_FUNCPTR (gst_pulseringbuffer_pause);
   gstringbuffer_class->resume = GST_DEBUG_FUNCPTR (gst_pulseringbuffer_start);
   gstringbuffer_class->stop = GST_DEBUG_FUNCPTR (gst_pulseringbuffer_stop);
+  gstringbuffer_class->clear_all =
+      GST_DEBUG_FUNCPTR (gst_pulseringbuffer_clear);
 
   gstringbuffer_class->commit = GST_DEBUG_FUNCPTR (gst_pulseringbuffer_commit);
 
@@ -796,6 +799,26 @@ cork_failed:
             pa_strerror (pa_context_errno (pbuf->context))), (NULL));
     goto cleanup;
   }
+}
+
+static void
+gst_pulseringbuffer_clear (GstRingBuffer * buf)
+{
+  GstPulseSink *psink;
+  GstPulseRingBuffer *pbuf;
+  pa_operation *o = NULL;
+
+  pbuf = GST_PULSERING_BUFFER_CAST (buf);
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+
+  pa_threaded_mainloop_lock (psink->mainloop);
+  GST_DEBUG_OBJECT (psink, "clearing");
+  if (pbuf->stream) {
+    /* don't wait for the flush to complete */
+    if ((o = pa_stream_flush (pbuf->stream, NULL, pbuf)))
+      pa_operation_unref (o);
+  }
+  pa_threaded_mainloop_unlock (psink->mainloop);
 }
 
 /* start/resume playback ASAP, we don't uncork here but in the commit method */
