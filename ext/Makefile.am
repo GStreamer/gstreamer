@@ -405,6 +405,7 @@ DIST_SUBDIRS = \
 	jack \
 	jp2k \
 	libmms \
+	lv2 \
 	dts \
 	divx \
 	modplug \
