@@ -53,7 +53,7 @@ struct _GstRtpBin {
   GSList         *clients;
 
   /* the default SDES items for sessions */
-  gchar          *sdes[9];
+  GstStructure   *sdes;
 
   /*< private >*/
   GstRtpBinPrivate *priv;
