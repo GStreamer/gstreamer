@@ -187,6 +187,9 @@ gboolean        rtp_source_get_sdes            (RTPSource *src, GstRTCPSDESType 
                                                 guint8 **data, guint *len);
 gchar*          rtp_source_get_sdes_string     (RTPSource *src, GstRTCPSDESType type);
 
+GstStructure *  rtp_source_get_sdes_struct     (RTPSource * src);
+void            rtp_source_set_sdes_struct     (RTPSource * src, const GstStructure *sdes);
+
 /* handling network address */
 void            rtp_source_set_rtp_from        (RTPSource *src, GstNetAddress *address);
 void            rtp_source_set_rtcp_from       (RTPSource *src, GstNetAddress *address);

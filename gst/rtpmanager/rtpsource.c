@@ -316,8 +316,16 @@ rtp_source_create_stats (RTPSource * src)
   return s;
 }
 
-static GstStructure *
-rtp_source_create_sdes (RTPSource * src)
+/**
+ * rtp_source_get_sdes_struct:
+ * @src: an #RTSPSource
+ *
+ * Get the SDES data as a GstStructure
+ *
+ * Returns: a GstStructure with SDES items for @src.
+ */
+GstStructure *
+rtp_source_get_sdes_struct (RTPSource * src)
 {
   GstStructure *s;
   gchar *str;
@@ -354,6 +362,44 @@ rtp_source_create_sdes (RTPSource * src)
     g_free (str);
   }
   return s;
+}
+
+/**
+ * rtp_source_set_sdes_struct:
+ * @src: an #RTSPSource
+ * @sdes: a #GstStructure with SDES info
+ *
+ * Set the SDES items from @sdes.
+ */
+void
+rtp_source_set_sdes_struct (RTPSource * src, const GstStructure * sdes)
+{
+  const gchar *str;
+
+  if (!gst_structure_has_name (sdes, "application/x-rtp-source-sdes"))
+    return;
+
+  if ((str = gst_structure_get_string (sdes, "cname"))) {
+    rtp_source_set_sdes_string (src, GST_RTCP_SDES_CNAME, str);
+  }
+  if ((str = gst_structure_get_string (sdes, "name"))) {
+    rtp_source_set_sdes_string (src, GST_RTCP_SDES_NAME, str);
+  }
+  if ((str = gst_structure_get_string (sdes, "email"))) {
+    rtp_source_set_sdes_string (src, GST_RTCP_SDES_EMAIL, str);
+  }
+  if ((str = gst_structure_get_string (sdes, "phone"))) {
+    rtp_source_set_sdes_string (src, GST_RTCP_SDES_PHONE, str);
+  }
+  if ((str = gst_structure_get_string (sdes, "location"))) {
+    rtp_source_set_sdes_string (src, GST_RTCP_SDES_LOC, str);
+  }
+  if ((str = gst_structure_get_string (sdes, "tool"))) {
+    rtp_source_set_sdes_string (src, GST_RTCP_SDES_TOOL, str);
+  }
+  if ((str = gst_structure_get_string (sdes, "note"))) {
+    rtp_source_set_sdes_string (src, GST_RTCP_SDES_NOTE, str);
+  }
 }
 
 static void
@@ -396,7 +442,7 @@ rtp_source_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, rtp_source_is_sender (src));
       break;
     case PROP_SDES:
-      g_value_take_boxed (value, rtp_source_create_sdes (src));
+      g_value_take_boxed (value, rtp_source_get_sdes_struct (src));
       break;
     case PROP_STATS:
       g_value_take_boxed (value, rtp_source_create_stats (src));

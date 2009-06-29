@@ -267,6 +267,9 @@ gboolean        rtp_session_set_sdes_string        (RTPSession *sess, GstRTCPSDE
                                                     const gchar *cname);
 gchar*          rtp_session_get_sdes_string        (RTPSession *sess, GstRTCPSDESType type);
 
+GstStructure *  rtp_session_get_sdes_struct        (RTPSession *sess);
+void            rtp_session_set_sdes_struct        (RTPSession *sess, const GstStructure *sdes);
+
 /* handling sources */
 RTPSource*      rtp_session_get_internal_source    (RTPSession *sess);
 
