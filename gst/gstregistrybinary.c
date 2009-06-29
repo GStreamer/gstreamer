@@ -942,6 +942,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
 
   if (GST_IS_ELEMENT_FACTORY (feature)) {
     GstBinaryElementFactory *ef;
+    guint n;
     GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (feature);
 
     align (*in);
@@ -954,38 +955,43 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
     unpack_string (*in, factory->details.klass, end, fail);
     unpack_string (*in, factory->details.description, end, fail);
     unpack_string (*in, factory->details.author, end, fail);
+    n = ef->npadtemplates;
     GST_DEBUG ("Element factory : '%s' with npadtemplates=%d",
-        factory->details.longname, ef->npadtemplates);
+        factory->details.longname, n);
 
     /* load pad templates */
-    for (i = 0; i < ef->npadtemplates; i++) {
-      if (!gst_registry_binary_load_pad_template (factory, in, end)) {
+    for (i = 0; i < n; i++) {
+      if (G_UNLIKELY (!gst_registry_binary_load_pad_template (factory, in,
+                  end))) {
         GST_ERROR ("Error while loading binary pad template");
         goto fail;
       }
     }
 
     /* load uritypes */
-    if (ef->nuriprotocols) {
-      GST_DEBUG ("Reading %d UriTypes at address %p", ef->nuriprotocols, *in);
+    if (G_UNLIKELY ((n = ef->nuriprotocols))) {
+      GST_DEBUG ("Reading %d UriTypes at address %p", n, *in);
 
       align (*in);
       factory->uri_type = *((guint *) * in);
       *in += sizeof (factory->uri_type);
       /*unpack_element(*in, &factory->uri_type, factory->uri_type, end, fail); */
 
-      factory->uri_protocols = g_new0 (gchar *, ef->nuriprotocols + 1);
-      for (i = 0; i < ef->nuriprotocols; i++) {
+      factory->uri_protocols = g_new0 (gchar *, n + 1);
+      for (i = 0; i < n; i++) {
         unpack_string (*in, str, end, fail);
         factory->uri_protocols[i] = str;
       }
     }
+
     /* load interfaces */
-    GST_DEBUG ("Reading %d Interfaces at address %p", ef->ninterfaces, *in);
-    for (i = 0; i < ef->ninterfaces; i++) {
-      unpack_string (*in, str, end, fail);
-      __gst_element_factory_add_interface (factory, str);
-      g_free (str);
+    if (G_UNLIKELY ((n = ef->ninterfaces))) {
+      GST_DEBUG ("Reading %d Interfaces at address %p", n, *in);
+      for (i = 0; i < n; i++) {
+        unpack_string (*in, str, end, fail);
+        __gst_element_factory_add_interface (factory, str);
+        g_free (str);
+      }
     }
   } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
     GstBinaryTypeFindFactory *tff;
