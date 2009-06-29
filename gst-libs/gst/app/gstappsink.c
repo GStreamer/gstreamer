@@ -119,10 +119,12 @@ enum
   SIGNAL_EOS,
   SIGNAL_NEW_PREROLL,
   SIGNAL_NEW_BUFFER,
+  SIGNAL_NEW_BUFFER_LIST,
 
   /* actions */
   SIGNAL_PULL_PREROLL,
   SIGNAL_PULL_BUFFER,
+  SIGNAL_PULL_BUFFER_LIST,
 
   LAST_SIGNAL
 };
@@ -331,6 +333,26 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
       g_signal_new ("new-buffer", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstAppSinkClass, new_buffer),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+  /**
+   * GstAppSink::new-buffer-list:
+   * @appsink: the appsink element that emited the signal
+   *
+   * Signal that a new bufferlist is available.
+   *
+   * This signal is emited from the steaming thread and only when the
+   * "emit-signals" property is %TRUE. 
+   *
+   * The new buffer can be retrieved with the "pull-buffer-list" action
+   * signal or gst_app_sink_pull_buffe_listr() either from this signal callback
+   * or from any other thread.
+   *
+   * Note that this signal is only emited when the "emit-signals" property is
+   * set to %TRUE, which it is not by default for performance reasons.
+   */
+  gst_app_sink_signals[SIGNAL_NEW_BUFFER_LIST] =
+      g_signal_new ("new-buffer-list", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstAppSinkClass, new_buffer_list),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstAppSink::pull-preroll:
@@ -386,6 +408,32 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSinkClass,
           pull_buffer), NULL, NULL, gst_app_marshal_BUFFER__VOID,
       GST_TYPE_BUFFER, 0, G_TYPE_NONE);
+  /**
+   * GstAppSink::pull-buffer-list:
+   * @appsink: the appsink element to emit this signal on
+   *
+   * This function blocks until a buffer list or EOS becomes available or the appsink
+   * element is set to the READY/NULL state. 
+   *
+   * This function will only return bufferlists when the appsink is in the PLAYING
+   * state. All rendered bufferlists will be put in a queue so that the application
+   * can pull bufferlists at its own rate. 
+   *
+   * Note that when the application does not pull bufferlists fast enough, the
+   * queued bufferlists could consume a lot of memory, especially when dealing with
+   * raw video frames. It's possible to control the behaviour of the queue with
+   * the "drop" and "max-buffers" properties.
+   *
+   * If an EOS event was received before any buffers, this function returns
+   * %NULL. Use gst_app_sink_is_eos () to check for the EOS condition. 
+   *
+   * Returns: a #GstBufferList or NULL when the appsink is stopped or EOS.
+   */
+  gst_app_sink_signals[SIGNAL_PULL_BUFFER_LIST] =
+      g_signal_new ("pull-buffer-list", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSinkClass,
+          pull_buffer_list), NULL, NULL, gst_app_marshal_BUFFER__VOID,
+      GST_TYPE_BUFFER_LIST, 0, G_TYPE_NONE);
 
   basesink_class->unlock = gst_app_sink_unlock_start;
   basesink_class->unlock_stop = gst_app_sink_unlock_stop;

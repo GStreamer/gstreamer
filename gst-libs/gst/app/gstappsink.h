@@ -57,6 +57,11 @@ typedef struct _GstAppSinkPrivate GstAppSinkPrivate;
  *       The new buffer can be retrieved with
  *       gst_app_sink_pull_buffer() either from this callback
  *       or from any other thread.
+ * @new_buffer_list: Called when a new bufferlist is available. 
+ *       This callback is called from the steaming thread.
+ *       The new bufferlist can be retrieved with
+ *       gst_app_sink_pull_buffer_list() either from this callback
+ *       or from any other thread.
  *
  * A set of callbacks that can be installed on the appsink with
  * gst_app_sink_set_callbacks().
@@ -96,10 +101,13 @@ struct _GstAppSinkClass
   /* actions */
   GstBuffer     * (*pull_preroll)      (GstAppSink *sink);
   GstBuffer     * (*pull_buffer)       (GstAppSink *sink);
+
+  /* ABI added */
+  GstBufferList * (*new_buffer_list)   (GstAppSink *sink);
   GstBufferList * (*pull_buffer_list)  (GstAppSink *sink);
 
   /*< private >*/
-  gpointer     _gst_reserved[GST_PADDING - 1];
+  gpointer     _gst_reserved[GST_PADDING - 2];
 };
 
 GType gst_app_sink_get_type(void);
