@@ -42,7 +42,6 @@
     <xi:include href="xml/element-festival.xml" />
     <xi:include href="xml/element-fpsdisplaysink.xml" />
     <xi:include href="xml/element-gstrtpbin.xml" />
-    <xi:include href="xml/element-gstrtpclient.xml" />
     <xi:include href="xml/element-gstrtpjitterbuffer.xml" />
     <xi:include href="xml/element-gstrtpptdemux.xml" />
     <xi:include href="xml/element-gstrtpsession.xml" />
