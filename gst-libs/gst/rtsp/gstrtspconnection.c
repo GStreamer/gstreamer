@@ -69,7 +69,6 @@
 #include <unistd.h>
 #endif
 
-
 /* we include this here to get the G_OS_* defines */
 #include <glib.h>
 #include <gst/gst.h>
@@ -88,6 +87,7 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <fcntl.h>
+#include <netinet/in.h>
 #endif
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
