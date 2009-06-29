@@ -125,16 +125,17 @@ gst_value_serialize_any_list (const GValue * value, const gchar * begin,
   GString *s;
   GValue *v;
   gchar *s_val;
+  guint alen = array->len;
 
   /* estimate minimum string length to minimise re-allocs in GString */
-  s = g_string_sized_new (2 + (6 * array->len) + 2);
+  s = g_string_sized_new (2 + (6 * alen) + 2);
   g_string_append (s, begin);
-  for (i = 0; i < array->len; i++) {
+  for (i = 0; i < alen; i++) {
     v = &g_array_index (array, GValue, i);
     s_val = gst_value_serialize (v);
     g_string_append (s, s_val);
     g_free (s_val);
-    if (i < array->len - 1) {
+    if (i < alen - 1) {
       g_string_append_len (s, ", ", 2);
     }
   }
@@ -151,13 +152,15 @@ gst_value_transform_any_list_string (const GValue * src_value,
   GString *s;
   guint i;
   gchar *list_s;
+  guint alen;
 
   array = src_value->data[0].v_pointer;
+  alen = array->len;
 
   /* estimate minimum string length to minimise re-allocs in GString */
-  s = g_string_sized_new (2 + (10 * array->len) + 2);
+  s = g_string_sized_new (2 + (10 * alen) + 2);
   g_string_append (s, begin);
-  for (i = 0; i < array->len; i++) {
+  for (i = 0; i < alen; i++) {
     list_value = &g_array_index (array, GValue, i);
 
     if (i != 0) {
@@ -213,11 +216,12 @@ static GArray *
 copy_garray_of_gstvalue (const GArray * src)
 {
   GArray *dest;
-  guint i;
+  guint i, len;
 
-  dest = g_array_sized_new (FALSE, TRUE, sizeof (GValue), src->len);
-  g_array_set_size (dest, src->len);
-  for (i = 0; i < src->len; i++) {
+  len = src->len;
+  dest = g_array_sized_new (FALSE, TRUE, sizeof (GValue), len);
+  g_array_set_size (dest, len);
+  for (i = 0; i < len; i++) {
     gst_value_init_and_copy (&g_array_index (dest, GValue, i),
         &g_array_index (src, GValue, i));
   }
@@ -235,11 +239,12 @@ gst_value_copy_list_or_array (const GValue * src_value, GValue * dest_value)
 static void
 gst_value_free_list_or_array (GValue * value)
 {
-  guint i;
+  guint i, len;
   GArray *src = (GArray *) value->data[0].v_pointer;
+  len = src->len;
 
   if ((value->data[1].v_uint & G_VALUE_NOCOPY_CONTENTS) == 0) {
-    for (i = 0; i < src->len; i++) {
+    for (i = 0; i < len; i++) {
       g_value_unset (&g_array_index (src, GValue, i));
     }
     g_array_free (src, TRUE);
@@ -554,13 +559,14 @@ gst_value_compare_array (const GValue * value1, const GValue * value2)
   guint i;
   GArray *array1 = value1->data[0].v_pointer;
   GArray *array2 = value2->data[0].v_pointer;
+  guint len = array1->len;
   GValue *v1;
   GValue *v2;
 
-  if (array1->len != array2->len)
+  if (len != array2->len)
     return GST_VALUE_UNORDERED;
 
-  for (i = 0; i < array1->len; i++) {
+  for (i = 0; i < len; i++) {
     v1 = &g_array_index (array1, GValue, i);
     v2 = &g_array_index (array2, GValue, i);
     if (gst_value_compare (v1, v2) != GST_VALUE_EQUAL)
@@ -2839,8 +2845,10 @@ gst_value_get_compare_func (const GValue * value1)
 
   /* slower checks */
   if (G_UNLIKELY (!best || !best->compare)) {
+    guint len = gst_value_table->len;
+
     best = NULL;
-    for (i = 0; i < gst_value_table->len; i++) {
+    for (i = 0; i < len; i++) {
       table = &g_array_index (gst_value_table, GstValueTable, i);
       if (table->compare && g_type_is_a (type1, table->type)) {
         if (!best || g_type_is_a (table->type, best->type))
@@ -2949,9 +2957,11 @@ gboolean
 gst_value_can_union (const GValue * value1, const GValue * value2)
 {
   GstValueUnionInfo *union_info;
-  guint i;
+  guint i, len;
 
-  for (i = 0; i < gst_value_union_funcs->len; i++) {
+  len = gst_value_union_funcs->len;
+
+  for (i = 0; i < len; i++) {
     union_info = &g_array_index (gst_value_union_funcs, GstValueUnionInfo, i);
     if (union_info->type1 == G_VALUE_TYPE (value1) &&
         union_info->type2 == G_VALUE_TYPE (value2))
@@ -2979,9 +2989,11 @@ gboolean
 gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
 {
   GstValueUnionInfo *union_info;
-  guint i;
+  guint i, len;
 
-  for (i = 0; i < gst_value_union_funcs->len; i++) {
+  len = gst_value_union_funcs->len;
+
+  for (i = 0; i < len; i++) {
     union_info = &g_array_index (gst_value_union_funcs, GstValueUnionInfo, i);
     if (union_info->type1 == G_VALUE_TYPE (value1) &&
         union_info->type2 == G_VALUE_TYPE (value2)) {
@@ -3044,7 +3056,7 @@ gboolean
 gst_value_can_intersect (const GValue * value1, const GValue * value2)
 {
   GstValueIntersectInfo *intersect_info;
-  guint i;
+  guint i, len;
   GType ltype, type1, type2;
 
   ltype = gst_value_list_get_type ();
@@ -3056,7 +3068,8 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
   type1 = G_VALUE_TYPE (value1);
   type2 = G_VALUE_TYPE (value2);
 
-  for (i = 0; i < gst_value_intersect_funcs->len; i++) {
+  len = gst_value_intersect_funcs->len;
+  for (i = 0; i < len; i++) {
     intersect_info = &g_array_index (gst_value_intersect_funcs,
         GstValueIntersectInfo, i);
     if (intersect_info->type1 == intersect_info->type2 &&
@@ -3086,7 +3099,7 @@ gst_value_intersect (GValue * dest, const GValue * value1,
     const GValue * value2)
 {
   GstValueIntersectInfo *intersect_info;
-  guint i;
+  guint i, len;
   GType ltype, type1, type2;
 
   ltype = gst_value_list_get_type ();
@@ -3105,7 +3118,8 @@ gst_value_intersect (GValue * dest, const GValue * value1,
   type1 = G_VALUE_TYPE (value1);
   type2 = G_VALUE_TYPE (value2);
 
-  for (i = 0; i < gst_value_intersect_funcs->len; i++) {
+  len = gst_value_intersect_funcs->len;
+  for (i = 0; i < len; i++) {
     intersect_info = &g_array_index (gst_value_intersect_funcs,
         GstValueIntersectInfo, i);
     if (intersect_info->type1 == type1 && intersect_info->type2 == type2) {
@@ -3164,7 +3178,7 @@ gst_value_subtract (GValue * dest, const GValue * minuend,
     const GValue * subtrahend)
 {
   GstValueSubtractInfo *info;
-  guint i;
+  guint i, len;
   GType ltype, mtype, stype;
 
   ltype = gst_value_list_get_type ();
@@ -3178,7 +3192,8 @@ gst_value_subtract (GValue * dest, const GValue * minuend,
   mtype = G_VALUE_TYPE (minuend);
   stype = G_VALUE_TYPE (subtrahend);
 
-  for (i = 0; i < gst_value_subtract_funcs->len; i++) {
+  len = gst_value_subtract_funcs->len;
+  for (i = 0; i < len; i++) {
     info = &g_array_index (gst_value_subtract_funcs, GstValueSubtractInfo, i);
     if (info->minuend == mtype && info->subtrahend == stype) {
       return info->func (dest, minuend, subtrahend);
@@ -3220,7 +3235,7 @@ gboolean
 gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
 {
   GstValueSubtractInfo *info;
-  guint i;
+  guint i, len;
   GType ltype, mtype, stype;
 
   ltype = gst_value_list_get_type ();
@@ -3232,7 +3247,8 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
   mtype = G_VALUE_TYPE (minuend);
   stype = G_VALUE_TYPE (subtrahend);
 
-  for (i = 0; i < gst_value_subtract_funcs->len; i++) {
+  len = gst_value_subtract_funcs->len;
+  for (i = 0; i < len; i++) {
     info = &g_array_index (gst_value_subtract_funcs, GstValueSubtractInfo, i);
     if (info->minuend == mtype && info->subtrahend == stype)
       return TRUE;
@@ -3321,7 +3337,7 @@ gst_value_init_and_copy (GValue * dest, const GValue * src)
 gchar *
 gst_value_serialize (const GValue * value)
 {
-  guint i;
+  guint i, len;
   GValue s_val = { 0 };
   GstValueTable *table, *best;
   char *s;
@@ -3334,8 +3350,9 @@ gst_value_serialize (const GValue * value)
   best = gst_value_hash_lookup_type (type);
 
   if (G_UNLIKELY (!best || !best->serialize)) {
+    len = gst_value_table->len;
     best = NULL;
-    for (i = 0; i < gst_value_table->len; i++) {
+    for (i = 0; i < len; i++) {
       table = &g_array_index (gst_value_table, GstValueTable, i);
       if (table->serialize && g_type_is_a (type, table->type)) {
         if (!best || g_type_is_a (table->type, best->type))
@@ -3371,7 +3388,7 @@ gboolean
 gst_value_deserialize (GValue * dest, const gchar * src)
 {
   GstValueTable *table, *best;
-  guint i;
+  guint i, len;
   GType type;
 
   g_return_val_if_fail (src != NULL, FALSE);
@@ -3381,8 +3398,9 @@ gst_value_deserialize (GValue * dest, const gchar * src)
 
   best = gst_value_hash_lookup_type (type);
   if (G_UNLIKELY (!best || !best->deserialize)) {
+    len = gst_value_table->len;
     best = NULL;
-    for (i = 0; i < gst_value_table->len; i++) {
+    for (i = 0; i < len; i++) {
       table = &g_array_index (gst_value_table, GstValueTable, i);
       if (table->deserialize && g_type_is_a (type, table->type)) {
         if (!best || g_type_is_a (table->type, best->type))

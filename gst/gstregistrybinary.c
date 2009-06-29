@@ -1120,7 +1120,7 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in,
   GstBinaryPluginElement *pe;
   GstPlugin *plugin = NULL;
   gchar *cache_str = NULL;
-  guint i;
+  guint i, n;
 
   align (*in);
   GST_LOG ("Reading/casting for GstBinaryPluginElement at address %p", *in);
@@ -1162,13 +1162,14 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in,
 
   /* Takes ownership of plugin */
   gst_registry_add_plugin (registry, plugin);
+  n = pe->nfeatures;
   GST_DEBUG ("Added plugin '%s' plugin with %d features from binary registry",
-      plugin->desc.name, pe->nfeatures);
+      plugin->desc.name, n);
 
   /* Load plugin features */
-  for (i = 0; i < pe->nfeatures; i++) {
-    if (!gst_registry_binary_load_feature (registry, in, end,
-            plugin->desc.name)) {
+  for (i = 0; i < n; i++) {
+    if (G_UNLIKELY (!gst_registry_binary_load_feature (registry, in, end,
+                plugin->desc.name))) {
       GST_ERROR ("Error while loading binary feature");
       gst_registry_remove_plugin (registry, plugin);
       goto fail;

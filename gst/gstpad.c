@@ -146,9 +146,7 @@ static GstFlowQuarks flow_quarks[] = {
   {GST_FLOW_NOT_NEGOTIATED, "not-negotiated", 0},
   {GST_FLOW_ERROR, "error", 0},
   {GST_FLOW_NOT_SUPPORTED, "not-supported", 0},
-  {GST_FLOW_CUSTOM_ERROR, "custom-error", 0},
-
-  {0, NULL, 0}
+  {GST_FLOW_CUSTOM_ERROR, "custom-error", 0}
 };
 
 /**
@@ -166,7 +164,7 @@ gst_flow_get_name (GstFlowReturn ret)
 
   ret = CLAMP (ret, GST_FLOW_CUSTOM_ERROR, GST_FLOW_CUSTOM_SUCCESS);
 
-  for (i = 0; flow_quarks[i].name; i++) {
+  for (i = 0; i < G_N_ELEMENTS (flow_quarks); i++) {
     if (ret == flow_quarks[i].ret)
       return flow_quarks[i].name;
   }
@@ -189,7 +187,7 @@ gst_flow_to_quark (GstFlowReturn ret)
 
   ret = CLAMP (ret, GST_FLOW_CUSTOM_ERROR, GST_FLOW_CUSTOM_SUCCESS);
 
-  for (i = 0; flow_quarks[i].name; i++) {
+  for (i = 0; i < G_N_ELEMENTS (flow_quarks); i++) {
     if (ret == flow_quarks[i].ret)
       return flow_quarks[i].quark;
   }
@@ -203,7 +201,7 @@ gst_flow_to_quark (GstFlowReturn ret)
   buffer_quark = g_quark_from_static_string ("buffer"); \
   event_quark = g_quark_from_static_string ("event"); \
   \
-  for (i = 0; flow_quarks[i].name; i++) { \
+  for (i = 0; i < G_N_ELEMENTS (flow_quarks); i++) {			\
     flow_quarks[i].quark = g_quark_from_static_string (flow_quarks[i].name); \
   } \
   \
@@ -2293,10 +2291,11 @@ fixate_value (GValue * dest, const GValue * src)
     g_value_unset (&temp);
   } else if (G_VALUE_TYPE (src) == GST_TYPE_ARRAY) {
     gboolean res = FALSE;
-    guint n;
+    guint n, len;
 
+    len = gst_value_array_get_size (src);
     g_value_init (dest, GST_TYPE_ARRAY);
-    for (n = 0; n < gst_value_array_get_size (src); n++) {
+    for (n = 0; n < len; n++) {
       GValue kid = { 0 };
       const GValue *orig_kid = gst_value_array_get_value (src, n);
 
@@ -2345,7 +2344,7 @@ void
 gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 {
   GstPadFixateCapsFunction fixatefunc;
-  guint n;
+  guint n, len;
 
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (caps != NULL);
@@ -2359,7 +2358,8 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
   }
 
   /* default fixation */
-  for (n = 0; n < gst_caps_get_size (caps); n++) {
+  len = gst_caps_get_size (caps);
+  for (n = 0; n < len; n++) {
     GstStructure *s = gst_caps_get_structure (caps, n);
 
     gst_structure_foreach (s, gst_pad_default_fixate, s);
