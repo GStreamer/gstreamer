@@ -305,7 +305,7 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   gint in_width, in_height;
   gboolean ret = FALSE;
   const GValue *framerate;
-  GST_INFO_OBJECT (pad, "setcaps:\n%" GST_PTR_FORMAT, vscaps);
+  GST_INFO_OBJECT (pad, "%" GST_PTR_FORMAT, vscaps);
 
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
   mixpad = GST_VIDEO_MIXER_PAD (pad);
@@ -351,13 +351,13 @@ gst_videomixer_pad_sink_acceptcaps (GstPad * pad, GstCaps * vscaps)
   GstVideoMixer *mix;
   GstCaps *acceptedCaps;
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
-  GST_DEBUG_OBJECT (pad, "TRACE: \n%" GST_PTR_FORMAT, vscaps);
+  GST_DEBUG_OBJECT (pad, "%" GST_PTR_FORMAT, vscaps);
   GST_VIDEO_MIXER_STATE_LOCK (mix);
 
   if (mix->master) {
     acceptedCaps = gst_pad_get_fixed_caps_func (GST_PAD (mix->master));
     acceptedCaps = gst_caps_make_writable (acceptedCaps);
-    GST_LOG ("\nmaster's caps\n%" GST_PTR_FORMAT "\n", acceptedCaps);
+    GST_LOG ("master's caps %" GST_PTR_FORMAT, acceptedCaps);
     if (GST_CAPS_IS_SIMPLE (acceptedCaps)) {
       int templCapsSize =
           gst_caps_get_size (gst_pad_get_pad_template_caps (pad));
@@ -379,8 +379,8 @@ gst_videomixer_pad_sink_acceptcaps (GstPad * pad, GstCaps * vscaps)
   } else {
     acceptedCaps = gst_pad_get_fixed_caps_func (pad);
   }
-  GST_INFO ("\n\n%" GST_PTR_FORMAT "\n\n", vscaps);
-  GST_INFO ("\n\n*********\n%" GST_PTR_FORMAT "\n\n", acceptedCaps);
+  GST_INFO ("vscaps: %" GST_PTR_FORMAT, vscaps);
+  GST_INFO ("acceptedCaps: %" GST_PTR_FORMAT, acceptedCaps);
 
   ret = gst_caps_is_always_compatible (vscaps, acceptedCaps);
   gst_caps_unref (acceptedCaps);
@@ -885,7 +885,6 @@ gst_videomixer_getcaps (GstPad * pad)
   GstCaps *caps;
   GstStructure *structure;
   int numCaps;
-  GST_LOG_OBJECT (pad, "TRACE");
 
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
 
@@ -924,7 +923,7 @@ gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
   GstVideoFormat fmt;
   gboolean ret = FALSE;
 
-  GST_INFO_OBJECT (mixer, "set src caps: \n%" GST_PTR_FORMAT, caps);
+  GST_INFO_OBJECT (mixer, "set src caps: %" GST_PTR_FORMAT, caps);
 
   mixer->blend = NULL;
   mixer->fill_checker = NULL;
@@ -983,8 +982,8 @@ gst_videomixer_request_new_pad (GstElement * element,
 
   g_return_val_if_fail (templ != NULL, NULL);
 
-  if (templ->direction != GST_PAD_SINK) {
-    g_warning ("videomixer: request pad that is not a SINK pad\n");
+  if (G_UNLIKELY (templ->direction != GST_PAD_SINK)) {
+    g_warning ("videomixer: request pad that is not a SINK pad");
     return NULL;
   }
 
@@ -1039,7 +1038,7 @@ gst_videomixer_request_new_pad (GstElement * element,
     mix->numpads++;
     GST_VIDEO_MIXER_STATE_UNLOCK (mix);
   } else {
-    g_warning ("videomixer: this is not our template!\n");
+    g_warning ("videomixer: this is not our template!");
     return NULL;
   }
 
@@ -1258,7 +1257,8 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
     } else {
       interval = GST_SECOND * mix->fps_d / mix->fps_n;
     }
-    GST_LOG_OBJECT (mix, "set interval to %" G_GUINT64_FORMAT, interval);
+    GST_LOG_OBJECT (mix, "set interval to %" G_GUINT64_FORMAT " nanoseconds",
+        interval);
   }
 
   walk = mix->sinkpads;
