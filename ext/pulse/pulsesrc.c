@@ -30,7 +30,7 @@
  * <title>Example pipelines</title>
  * |[
  * gst-launch -v pulsesrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=alsasrc.ogg
- * ]| Record from a sound card using ALSA and encode to Ogg/Vorbis.
+ * ]| Record from a sound card using pulseaudio and encode to Ogg/Vorbis.
  * </refsect2>
  */
 
@@ -51,11 +51,17 @@
 GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
 #define GST_CAT_DEFAULT pulse_debug
 
+#define DEFAULT_SERVER            NULL
+#define DEFAULT_DEVICE            NULL
+#define DEFAULT_DEVICE_NAME       NULL
+
 enum
 {
-  PROP_SERVER = 1,
+  PROP_0,
+  PROP_SERVER,
   PROP_DEVICE,
-  PROP_DEVICE_NAME
+  PROP_DEVICE_NAME,
+  PROP_LAST
 };
 
 static void gst_pulsesrc_destroy_stream (GstPulseSrc * pulsesrc);
@@ -226,17 +232,18 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_SERVER,
       g_param_spec_string ("server", "Server",
-          "The PulseAudio server to connect to", NULL,
+          "The PulseAudio server to connect to", DEFAULT_SERVER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_DEVICE,
-      g_param_spec_string ("device", "Source",
-          "The PulseAudio source device to connect to", NULL,
+      g_param_spec_string ("device", "Device",
+          "The PulseAudio source device to connect to", DEFAULT_DEVICE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", NULL,
+          "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -245,7 +252,9 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
 {
   int e;
 
-  pulsesrc->server = pulsesrc->device = pulsesrc->device_description = NULL;
+  pulsesrc->server = NULL;
+  pulsesrc->device = NULL;
+  pulsesrc->device_description = NULL;
 
   pulsesrc->context = NULL;
   pulsesrc->stream = NULL;
@@ -360,17 +369,13 @@ gst_pulsesrc_set_property (GObject * object,
     case PROP_SERVER:
       g_free (pulsesrc->server);
       pulsesrc->server = g_value_dup_string (value);
-
       if (pulsesrc->probe)
         gst_pulseprobe_set_server (pulsesrc->probe, pulsesrc->server);
-
       break;
-
     case PROP_DEVICE:
       g_free (pulsesrc->device);
       pulsesrc->device = g_value_dup_string (value);
       break;
-
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -447,18 +452,12 @@ gst_pulsesrc_get_property (GObject * object,
     case PROP_SERVER:
       g_value_set_string (value, pulsesrc->server);
       break;
-
     case PROP_DEVICE:
       g_value_set_string (value, pulsesrc->device);
       break;
-
-    case PROP_DEVICE_NAME:{
-      char *t = gst_pulsesrc_device_description (pulsesrc);
-      g_value_set_string (value, t);
-      g_free (t);
+    case PROP_DEVICE_NAME:
+      g_value_take_string (value, gst_pulsesrc_device_description (pulsesrc));
       break;
-    }
-
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
