@@ -40,21 +40,10 @@ gst_frei0r_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstFrei0rFilter *self = GST_FREI0R_FILTER (trans);
-  GstFrei0rFilterClass *klass = GST_FREI0R_FILTER_GET_CLASS (trans);
   GstVideoFormat fmt;
-  gint width, height;
 
-  if (!gst_video_format_parse_caps (incaps, &fmt, &width, &height))
+  if (!gst_video_format_parse_caps (incaps, &fmt, &self->width, &self->height))
     return FALSE;
-
-  if (self->f0r_instance) {
-    klass->ftable->destruct (self->f0r_instance);
-    self->f0r_instance = NULL;
-  }
-
-  self->f0r_instance =
-      gst_frei0r_instance_construct (klass->ftable, klass->properties,
-      klass->n_properties, self->property_cache, width, height);
 
   return TRUE;
 }
@@ -81,8 +70,16 @@ gst_frei0r_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   GstFrei0rFilterClass *klass = GST_FREI0R_FILTER_GET_CLASS (trans);
   gdouble time;
 
-  if (!self->f0r_instance)
+  if (G_UNLIKELY (self->width <= 0 || self->height <= 0))
     return GST_FLOW_NOT_NEGOTIATED;
+
+  if (G_UNLIKELY (!self->f0r_instance)) {
+    self->f0r_instance =
+        gst_frei0r_instance_construct (klass->ftable, klass->properties,
+        klass->n_properties, self->property_cache, self->width, self->height);
+    if (G_UNLIKELY (!self->f0r_instance))
+      return GST_FLOW_ERROR;
+  }
 
   time = ((gdouble) GST_BUFFER_TIMESTAMP (inbuf)) / GST_SECOND;
 

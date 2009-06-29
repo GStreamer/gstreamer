@@ -42,6 +42,8 @@ typedef struct _GstFrei0rFilterClass GstFrei0rFilterClass;
 struct _GstFrei0rFilter {
   GstVideoFilter parent;
 
+  gint width, height;
+
   f0r_instance_t *f0r_instance;
   GstFrei0rPropertyValue *property_cache;
 };
