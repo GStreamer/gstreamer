@@ -1357,7 +1357,6 @@ gst_asf_demux_loop (GstASFDemux * demux)
   GstFlowReturn flow = GST_FLOW_OK;
   GstBuffer *buf = NULL;
   guint64 off;
-  guint n;
 
   if (G_UNLIKELY (demux->state == GST_ASF_DEMUX_STATE_HEADER)) {
     if (!gst_asf_demux_pull_headers (demux)) {
@@ -1391,29 +1390,40 @@ gst_asf_demux_loop (GstASFDemux * demux)
       goto read_failed;
   }
 
-  for (n = 0; n < demux->speed_packets; n++) {
-    GstBuffer *tmp = NULL, *sub = buf;
-
-    if (G_UNLIKELY (n != 0))
-      tmp = sub =
-          gst_buffer_create_sub (buf, n * demux->packet_size,
-          demux->packet_size);
+  if (G_LIKELY (demux->speed_packets == 1)) {
     /* FIXME: maybe we should just skip broken packets and error out only
      * after a few broken packets in a row? */
-    if (G_UNLIKELY (!gst_asf_demux_parse_packet (demux, sub)))
+    if (G_UNLIKELY (!gst_asf_demux_parse_packet (demux, buf)))
       goto parse_error;
-    if (G_UNLIKELY (n != 0))
-      gst_buffer_unref (tmp);
 
     flow = gst_asf_demux_push_complete_payloads (demux, FALSE);
 
     ++demux->packet;
 
-  }
+  } else {
+    guint n;
+    for (n = 0; n < demux->speed_packets; n++) {
+      GstBuffer *sub;
 
-  /* reset speed pull */
-  if (G_UNLIKELY (demux->speed_packets != 1))
+      sub =
+          gst_buffer_create_sub (buf, n * demux->packet_size,
+          demux->packet_size);
+      /* FIXME: maybe we should just skip broken packets and error out only
+       * after a few broken packets in a row? */
+      if (G_UNLIKELY (!gst_asf_demux_parse_packet (demux, sub)))
+        goto parse_error;
+
+      gst_buffer_unref (sub);
+
+      flow = gst_asf_demux_push_complete_payloads (demux, FALSE);
+
+      ++demux->packet;
+
+    }
+
+    /* reset speed pull */
     demux->speed_packets = 1;
+  }
 
   gst_buffer_unref (buf);
 
