@@ -62,6 +62,9 @@
 # include <zlib.h>
 #endif
 
+/* max. size considered 'sane' for non-mdat atoms */
+#define QTDEMUX_MAX_ATOM_SIZE (25*1024*1024)
+
 GST_DEBUG_CATEGORY (qtdemux_debug);
 
 typedef struct _QtNode QtNode;
@@ -402,6 +405,37 @@ gst_qtdemux_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static GstFlowReturn
+gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
+    GstBuffer ** buf)
+{
+  GstFlowReturn flow;
+
+  /* Sanity check: catch bogus sizes (fuzzed/broken files) */
+  if (G_UNLIKELY (size > QTDEMUX_MAX_ATOM_SIZE)) {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file is invalid and cannot be played.")),
+        ("atom has bogus size %" G_GUINT64_FORMAT, size));
+    return GST_FLOW_ERROR;
+  }
+
+  flow = gst_pad_pull_range (qtdemux->sinkpad, offset, size, buf);
+
+  if (G_UNLIKELY (flow != GST_FLOW_OK))
+    return flow;
+
+  /* Catch short reads - we don't want any partial atoms */
+  if (G_UNLIKELY (GST_BUFFER_SIZE (*buf) < size)) {
+    GST_WARNING_OBJECT (qtdemux, "short read: %u < %" G_GUINT64_FORMAT,
+        GST_BUFFER_SIZE (*buf), size);
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    return GST_FLOW_UNEXPECTED;
+  }
+
+  return flow;
 }
 
 #if 0
@@ -1393,7 +1427,7 @@ extract_initial_length_and_fourcc (guint8 * data, guint64 * plength,
 static GstFlowReturn
 gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
 {
-  guint64 length;
+  guint64 length = 0;
   guint32 fourcc;
   GstBuffer *buf = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1402,7 +1436,8 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
   ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, 16, &buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
-  extract_initial_length_and_fourcc (GST_BUFFER_DATA (buf), &length, &fourcc);
+  if (G_LIKELY (GST_BUFFER_SIZE (buf) == 16))
+    extract_initial_length_and_fourcc (GST_BUFFER_DATA (buf), &length, &fourcc);
   gst_buffer_unref (buf);
 
   if (G_UNLIKELY (length == 0)) {
@@ -1490,7 +1525,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       GstBuffer *ftyp;
 
       /* extract major brand; might come in handy for ISO vs QT issues */
-      ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length, &ftyp);
+      ret = gst_qtdemux_pull_atom (qtdemux, cur_offset, length, &ftyp);
       if (ret != GST_FLOW_OK)
         goto beach;
       qtdemux->offset += length;
@@ -1511,7 +1546,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
           "unknown %08x '%" GST_FOURCC_FORMAT "' of size %" G_GUINT64_FORMAT
           " at %" G_GUINT64_FORMAT, fourcc, GST_FOURCC_ARGS (fourcc), length,
           cur_offset);
-      ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length, &unknown);
+      ret = gst_qtdemux_pull_atom (qtdemux, cur_offset, length, &unknown);
       if (ret != GST_FLOW_OK)
         goto beach;
       GST_MEMDUMP ("Unknown tag", GST_BUFFER_DATA (unknown),
@@ -2222,7 +2257,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %" G_GUINT64_FORMAT, size,
       offset);
 
-  ret = gst_pad_pull_range (qtdemux->sinkpad, offset, size, &buf);
+  ret = gst_qtdemux_pull_atom (qtdemux, offset, size, &buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
 
@@ -2521,9 +2556,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 
         /* get fourcc/length, set neededbytes */
         extract_initial_length_and_fourcc ((guint8 *) data, &size, &fourcc);
-        GST_DEBUG_OBJECT (demux,
-            "Peeking found [%" GST_FOURCC_FORMAT "] size: %u",
-            GST_FOURCC_ARGS (fourcc), (guint) size);
+        GST_DEBUG_OBJECT (demux, "Peeking found [%" GST_FOURCC_FORMAT "] "
+            "size: %" G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc), size);
         if (size == 0) {
           GST_ELEMENT_ERROR (demux, STREAM, DECODE,
               (_("This file is invalid and cannot be played.")),
@@ -2544,6 +2578,13 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             demux->neededbytes = size;
             demux->mdatoffset = demux->offset;
           }
+        } else if (G_UNLIKELY (size > QTDEMUX_MAX_ATOM_SIZE)) {
+          GST_ELEMENT_ERROR (demux, STREAM, DECODE,
+              (_("This file is invalid and cannot be played.")),
+              ("atom %" GST_FOURCC_FORMAT " has bogus size %" G_GUINT64_FORMAT,
+                  GST_FOURCC_ARGS (fourcc), size));
+          ret = GST_FLOW_ERROR;
+          break;
         } else {
           demux->neededbytes = size;
           demux->state = QTDEMUX_STATE_HEADER;
