@@ -506,6 +506,27 @@ gst_collect_pads_collect_range (GstCollectPads * pads, guint64 offset,
   return GST_FLOW_NOT_SUPPORTED;
 }
 
+static gboolean
+gst_collect_pads_is_flushing (GstCollectPads * pads)
+{
+  GSList *walk = pads->data;
+  gboolean res = TRUE;
+
+  GST_COLLECT_PADS_PAD_LOCK (pads);
+  while (walk) {
+    GstCollectData *cdata = walk->data;
+
+    if (cdata->abidata.ABI.flushing)
+      goto done;
+    walk = g_slist_next (walk);
+  }
+
+  res = FALSE;
+done:
+  GST_COLLECT_PADS_PAD_UNLOCK (pads);
+  return res;
+}
+
 /* FIXME, I think this function is used to work around bad behaviour
  * of elements that add pads to themselves without activating them.
  *
@@ -1123,8 +1144,11 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
       }
       GST_OBJECT_UNLOCK (pads);
 
-      /* forward event */
-      goto forward;
+      if (!gst_collect_pads_is_flushing (pads))
+        /* forward event if all pads are no longer flushing */
+        goto forward;
+      gst_event_unref (event);
+      goto done;
     }
     case GST_EVENT_EOS:
     {
