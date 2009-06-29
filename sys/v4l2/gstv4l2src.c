@@ -63,6 +63,7 @@ GST_DEBUG_CATEGORY (v4l2src_debug);
 
 #define PROP_DEF_QUEUE_SIZE         2
 #define PROP_DEF_ALWAYS_COPY        TRUE
+#define PROP_DEF_DECIMATE           1
 
 #define DEFAULT_PROP_DEVICE   "/dev/video0"
 
@@ -71,7 +72,8 @@ enum
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
   PROP_QUEUE_SIZE,
-  PROP_ALWAYS_COPY
+  PROP_ALWAYS_COPY,
+  PROP_DECIMATE
 };
 
 GST_IMPLEMENT_V4L2_PROBE_METHODS (GstV4l2SrcClass, gst_v4l2src);
@@ -264,6 +266,10 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
       g_param_spec_boolean ("always-copy", "Always Copy",
           "If the buffer will or not be used directly from mmap",
           PROP_DEF_ALWAYS_COPY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DECIMATE,
+      g_param_spec_int ("decimate", "Decimate",
+          "Only use every nth frame", 1, G_MAXINT,
+          PROP_DEF_DECIMATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_get_caps);
   basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_set_caps);
@@ -290,6 +296,7 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
   v4l2src->num_buffers = PROP_DEF_QUEUE_SIZE;
 
   v4l2src->always_copy = PROP_DEF_ALWAYS_COPY;
+  v4l2src->decimate = PROP_DEF_DECIMATE;
 
   v4l2src->is_capturing = FALSE;
 
@@ -338,6 +345,9 @@ gst_v4l2src_set_property (GObject * object,
       case PROP_ALWAYS_COPY:
         v4l2src->always_copy = g_value_get_boolean (value);
         break;
+      case PROP_DECIMATE:
+        v4l2src->decimate = g_value_get_int (value);
+        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -360,6 +370,9 @@ gst_v4l2src_get_property (GObject * object,
         break;
       case PROP_ALWAYS_COPY:
         g_value_set_boolean (value, v4l2src->always_copy);
+        break;
+      case PROP_DECIMATE:
+        g_value_set_int (value, v4l2src->decimate);
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -910,9 +923,19 @@ static GstFlowReturn
 gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
+  int i;
   GstFlowReturn ret;
 
+  for (i = 0; i < v4l2src->decimate - 1; i++) {
+    ret = v4l2src->get_frame (v4l2src, buf);
+    if (ret != GST_FLOW_OK) {
+      return ret;
+    }
+    gst_buffer_unref (*buf);
+  }
+
   ret = v4l2src->get_frame (v4l2src, buf);
+
   /* set buffer metadata */
   if (G_LIKELY (ret == GST_FLOW_OK && *buf)) {
     GstClock *clock;

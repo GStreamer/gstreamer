@@ -73,6 +73,8 @@ struct _GstV4l2Src
   /* if the buffer will be or not used from directly mmap */
   gboolean always_copy;
 
+  int decimate;
+
   /* True if we want to stop */
   gboolean quit;
   gboolean is_capturing;
