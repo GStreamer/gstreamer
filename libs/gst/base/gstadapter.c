@@ -108,7 +108,7 @@
  * Last reviewed on 2009-05-13 (0.10.24).
  */
 
-
+#include <gst/gst_private.h>
 #include "gstadapter.h"
 #include <string.h>
 
@@ -421,6 +421,7 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
   }
   adapter->assembled_len = size;
 
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy data from adapter");
   copy_into_unchecked (adapter, adapter->assembled_data, skip, size);
 
   return adapter->assembled_data;

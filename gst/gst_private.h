@@ -122,8 +122,8 @@ gboolean 		gst_registry_binary_write_cache	(GstRegistry * registry, const char *
 #ifndef GST_REMOVE_GST_DEBUG
 
 GST_EXPORT GstDebugCategory *GST_CAT_GST_INIT;
-GST_EXPORT GstDebugCategory *GST_CAT_AUTOPLUG;
-GST_EXPORT GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT;
+GST_EXPORT GstDebugCategory *GST_CAT_AUTOPLUG; /* FIXME 0.11: remove? */
+GST_EXPORT GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT; /* FIXME 0.11: remove? */
 GST_EXPORT GstDebugCategory *GST_CAT_PARENTAGE;
 GST_EXPORT GstDebugCategory *GST_CAT_STATES;
 GST_EXPORT GstDebugCategory *GST_CAT_SCHEDULING;
@@ -134,6 +134,7 @@ GST_EXPORT GstDebugCategory *GST_CAT_CAPS;
 GST_EXPORT GstDebugCategory *GST_CAT_CLOCK;
 GST_EXPORT GstDebugCategory *GST_CAT_ELEMENT_PADS;
 GST_EXPORT GstDebugCategory *GST_CAT_PADS;
+GST_EXPORT GstDebugCategory *GST_CAT_PERFORMANCE;
 GST_EXPORT GstDebugCategory *GST_CAT_PIPELINE;
 GST_EXPORT GstDebugCategory *GST_CAT_PLUGIN_LOADING;
 GST_EXPORT GstDebugCategory *GST_CAT_PLUGIN_INFO;
@@ -168,6 +169,7 @@ GST_EXPORT GstDebugCategory *GST_CAT_TYPES; /* FIXME 0.11: remove? */
 #define GST_CAT_CLOCK            NULL
 #define GST_CAT_ELEMENT_PADS     NULL
 #define GST_CAT_PADS             NULL
+#define GST_CAT_PERFORMANCE      NULL
 #define GST_CAT_PIPELINE         NULL
 #define GST_CAT_PLUGIN_LOADING   NULL
 #define GST_CAT_PLUGIN_INFO      NULL

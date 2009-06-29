@@ -275,6 +275,7 @@ gst_mini_object_make_writable (GstMiniObject * mini_object)
   if (gst_mini_object_is_writable (mini_object)) {
     ret = (GstMiniObject *) mini_object;
   } else {
+    GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy miniobject");
     ret = gst_mini_object_copy (mini_object);
     gst_mini_object_unref ((GstMiniObject *) mini_object);
   }

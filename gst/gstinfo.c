@@ -147,6 +147,7 @@ GstDebugCategory *GST_CAT_CAPS = NULL;
 GstDebugCategory *GST_CAT_CLOCK = NULL;
 GstDebugCategory *GST_CAT_ELEMENT_PADS = NULL;
 GstDebugCategory *GST_CAT_PADS = NULL;
+GstDebugCategory *GST_CAT_PERFORMANCE = NULL;
 GstDebugCategory *GST_CAT_PIPELINE = NULL;
 GstDebugCategory *GST_CAT_PLUGIN_LOADING = NULL;
 GstDebugCategory *GST_CAT_PLUGIN_INFO = NULL;
@@ -358,6 +359,8 @@ _gst_debug_init (void)
   GST_CAT_ELEMENT_PADS = _gst_debug_category_new ("GST_ELEMENT_PADS",
       GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
   GST_CAT_PADS = _gst_debug_category_new ("GST_PADS",
+      GST_DEBUG_BOLD | GST_DEBUG_FG_RED | GST_DEBUG_BG_RED, NULL);
+  GST_CAT_PERFORMANCE = _gst_debug_category_new ("GST_PERFORMANCE",
       GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
   GST_CAT_PIPELINE = _gst_debug_category_new ("GST_PIPELINE",
       GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, NULL);
