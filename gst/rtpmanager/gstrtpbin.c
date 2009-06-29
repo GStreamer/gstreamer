@@ -288,10 +288,9 @@ struct _GstRtpBinStream
   /* the PT demuxer of the SSRC */
   GstElement *demux;
   gulong demux_newpad_sig;
+  gulong demux_padremoved_sig;
   gulong demux_ptreq_sig;
   gulong demux_pt_change_sig;
-  /* ghostpads from the ptdemuxer */
-  GSList *pads;
 
   /* if we have calculated a valid unix_delta for this stream */
   gboolean have_sync;
@@ -1152,7 +1151,6 @@ static void
 free_stream (GstRtpBinStream * stream)
 {
   GstRtpBinSession *session;
-  GSList *walk;
 
   session = stream->session;
 
@@ -1165,16 +1163,12 @@ free_stream (GstRtpBinStream * stream)
   gst_element_set_state (stream->demux, GST_STATE_NULL);
   gst_element_set_state (stream->buffer, GST_STATE_NULL);
 
+  /* now remove this signal, we need this while going to NULL because it to 
+   * do some cleanups */
+  g_signal_handler_disconnect (stream->demux, stream->demux_padremoved_sig);
+
   gst_bin_remove (GST_BIN_CAST (session->bin), stream->buffer);
   gst_bin_remove (GST_BIN_CAST (session->bin), stream->demux);
-
-  for (walk = stream->pads; walk; walk = g_slist_next (walk)) {
-    GstPad *gpad = GST_PAD_CAST (walk->data);
-
-    gst_pad_set_active (gpad, FALSE);
-    gst_element_remove_pad (GST_ELEMENT_CAST (session->bin), gpad);
-  }
-  g_slist_free (stream->pads);
 
   g_free (stream);
 }
@@ -1744,13 +1738,11 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
       stream->session->id, stream->ssrc, pt);
   gpad = gst_ghost_pad_new_from_template (padname, pad, templ);
   g_free (padname);
+  g_object_set_data (G_OBJECT (pad), "GstRTPBin.ghostpad", gpad);
 
   gst_pad_set_caps (gpad, GST_PAD_CAPS (pad));
   gst_pad_set_active (gpad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
-
-  stream->pads = g_slist_prepend (stream->pads, gpad);
-
   GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
 
   return;
@@ -1760,6 +1752,27 @@ shutdown:
     GST_DEBUG ("ignoring, we are shutting down");
     return;
   }
+}
+
+static void
+payload_pad_removed (GstElement * element, GstPad * pad,
+    GstRtpBinStream * stream)
+{
+  GstRtpBin *rtpbin;
+  GstPad *gpad;
+
+  rtpbin = stream->bin;
+
+  GST_DEBUG ("payload pad removed");
+
+  GST_RTP_BIN_DYN_LOCK (rtpbin);
+  if ((gpad = g_object_get_data (G_OBJECT (pad), "GstRTPBin.ghostpad"))) {
+    g_object_set_data (G_OBJECT (pad), "GstRTPBin.ghostpad", NULL);
+
+    gst_pad_set_active (gpad, FALSE);
+    gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin), gpad);
+  }
+  GST_RTP_BIN_DYN_UNLOCK (rtpbin);
 }
 
 static GstCaps *
@@ -1869,6 +1882,9 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
    * new pad by ghosting it. */
   stream->demux_newpad_sig = g_signal_connect (stream->demux,
       "new-payload-type", (GCallback) new_payload_found, stream);
+  stream->demux_padremoved_sig = g_signal_connect (stream->demux,
+      "pad-removed", (GCallback) payload_pad_removed, stream);
+
   /* connect to the request-pt-map signal. This signal will be emited by the
    * demuxer so that it can apply a proper caps on the buffers for the
    * depayloaders. */

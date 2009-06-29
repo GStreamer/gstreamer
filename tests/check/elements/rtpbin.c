@@ -306,6 +306,89 @@ GST_START_TEST (test_cleanup_recv)
 
 GST_END_TEST;
 
+GST_START_TEST (test_cleanup_recv2)
+{
+  GstElement *rtpbin;
+  GstPad *rtp_sink;
+  CleanupData data;
+  GstStateChangeReturn ret;
+  GstFlowReturn res;
+  GstBuffer *buffer;
+  gint count = 2;
+
+  init_data (&data);
+
+  rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
+
+  g_signal_connect (rtpbin, "pad-added", (GCallback) pad_added_cb, &data);
+  g_signal_connect (rtpbin, "pad-removed", (GCallback) pad_removed_cb, &data);
+
+  ret = gst_element_set_state (rtpbin, GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+  /* request session 0 */
+  rtp_sink = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_0");
+  fail_unless (rtp_sink != NULL);
+  ASSERT_OBJECT_REFCOUNT (rtp_sink, "rtp_sink", 2);
+
+  while (count--) {
+    /* no sourcepads are created yet */
+    fail_unless (rtpbin->numsinkpads == 1);
+    fail_unless (rtpbin->numsrcpads == 0);
+
+    buffer = make_rtp_packet (&data);
+    res = gst_pad_chain (rtp_sink, buffer);
+    GST_DEBUG ("res %d, %s\n", res, gst_flow_get_name (res));
+    fail_unless (res == GST_FLOW_OK);
+
+    buffer = make_rtp_packet (&data);
+    res = gst_pad_chain (rtp_sink, buffer);
+    GST_DEBUG ("res %d, %s\n", res, gst_flow_get_name (res));
+    fail_unless (res == GST_FLOW_OK);
+
+    /* we wait for the new pad to appear now */
+    g_mutex_lock (data.lock);
+    while (!data.pad_added)
+      g_cond_wait (data.cond, data.lock);
+    g_mutex_unlock (data.lock);
+
+    /* sourcepad created now */
+    fail_unless (rtpbin->numsinkpads == 1);
+    fail_unless (rtpbin->numsrcpads == 1);
+
+    /* change state */
+    ret = gst_element_set_state (rtpbin, GST_STATE_NULL);
+    fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+    /* pad should be gone now */
+    g_mutex_lock (data.lock);
+    while (data.pad_added)
+      g_cond_wait (data.cond, data.lock);
+    g_mutex_unlock (data.lock);
+
+    /* back to playing for the next round */
+    ret = gst_element_set_state (rtpbin, GST_STATE_PLAYING);
+    fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+  }
+
+  /* remove the session */
+  gst_element_release_request_pad (rtpbin, rtp_sink);
+  gst_object_unref (rtp_sink);
+
+  /* nothing left anymore now */
+  fail_unless (rtpbin->numsinkpads == 0);
+  fail_unless (rtpbin->numsrcpads == 0);
+
+  ret = gst_element_set_state (rtpbin, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (rtpbin);
+
+  clean_data (&data);
+}
+
+GST_END_TEST;
+
 Suite *
 gstrtpbin_suite (void)
 {
@@ -315,6 +398,7 @@ gstrtpbin_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_cleanup_send);
   tcase_add_test (tc_chain, test_cleanup_recv);
+  tcase_add_test (tc_chain, test_cleanup_recv2);
 
   return s;
 }
