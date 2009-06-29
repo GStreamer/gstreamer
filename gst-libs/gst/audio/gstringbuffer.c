@@ -52,6 +52,7 @@ static void gst_ring_buffer_dispose (GObject * object);
 static void gst_ring_buffer_finalize (GObject * object);
 
 static gboolean gst_ring_buffer_pause_unlocked (GstRingBuffer * buf);
+static void default_clear_all (GstRingBuffer * buf);
 static guint default_commit (GstRingBuffer * buf, guint64 * sample,
     guchar * data, gint in_samples, gint out_samples, gint * accum);
 
@@ -102,6 +103,7 @@ gst_ring_buffer_class_init (GstRingBufferClass * klass)
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ring_buffer_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ring_buffer_finalize);
 
+  gstringbuffer_class->clear_all = GST_DEBUG_FUNCPTR (default_clear_all);
   gstringbuffer_class->commit = GST_DEBUG_FUNCPTR (default_commit);
 }
 
@@ -1014,9 +1016,10 @@ gst_ring_buffer_set_flushing (GstRingBuffer * buf, gboolean flushing)
   GST_OBJECT_LOCK (buf);
   buf->abidata.ABI.flushing = flushing;
 
-  gst_ring_buffer_clear_all (buf);
   if (flushing) {
     gst_ring_buffer_pause_unlocked (buf);
+  } else {
+    gst_ring_buffer_clear_all (buf);
   }
   GST_OBJECT_UNLOCK (buf);
 }
@@ -1357,6 +1360,22 @@ gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
       buf->segbase);
 }
 
+static void
+default_clear_all (GstRingBuffer * buf)
+{
+  gint i;
+
+  /* not fatal, we just are not negotiated yet */
+  if (G_UNLIKELY (buf->spec.segtotal <= 0))
+    return;
+
+  GST_DEBUG_OBJECT (buf, "clear all segments");
+
+  for (i = 0; i < buf->spec.segtotal; i++) {
+    gst_ring_buffer_clear (buf, i);
+  }
+}
+
 /**
  * gst_ring_buffer_clear_all:
  * @buf: the #GstRingBuffer to clear
@@ -1368,19 +1387,14 @@ gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
 void
 gst_ring_buffer_clear_all (GstRingBuffer * buf)
 {
-  gint i;
+  GstRingBufferClass *rclass;
 
   g_return_if_fail (GST_IS_RING_BUFFER (buf));
 
-  /* not fatal, we just are not negotiated yet */
-  if (G_UNLIKELY (buf->spec.segtotal <= 0))
-    return;
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
 
-  GST_DEBUG_OBJECT (buf, "clear all segments");
-
-  for (i = 0; i < buf->spec.segtotal; i++) {
-    gst_ring_buffer_clear (buf, i);
-  }
+  if (G_LIKELY (rclass->clear_all))
+    rclass->clear_all (buf);
 }
 
 
