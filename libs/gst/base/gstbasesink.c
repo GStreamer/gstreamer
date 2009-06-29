@@ -2849,9 +2849,6 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, gboolean is_list,
     GstBuffer *buf;
     GstClockTime timestamp;
 
-    buf = GST_BUFFER_CAST (obj);
-    timestamp = GST_BUFFER_TIMESTAMP (buf);
-
     if (is_list) {
       GstBufferListIterator *it;
       gboolean got_group;
@@ -2865,6 +2862,8 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, gboolean is_list,
     } else {
       buf = GST_BUFFER_CAST (obj);
     }
+
+    timestamp = GST_BUFFER_TIMESTAMP (buf);
 
     GST_DEBUG_OBJECT (basesink, "preroll buffer %" GST_TIME_FORMAT,
         GST_TIME_ARGS (timestamp));
