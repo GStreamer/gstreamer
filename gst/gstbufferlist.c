@@ -111,7 +111,7 @@
  *      buf = gst_buffer_list_iterator_next (it);
  *      if (buf != NULL) {
  *        buf = gst_buffer_list_iterator_do (it,
- *            (GstBufferListDoFunction) gst_mini_object_make_writable);
+ *            (GstBufferListDoFunction) gst_mini_object_make_writable, NULL);
  *        modify_data (GST_BUFFER_DATA (buf));
  *      }
  *    }
