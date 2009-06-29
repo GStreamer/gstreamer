@@ -39,21 +39,11 @@ static gboolean
 gst_frei0r_src_set_caps (GstBaseSrc * src, GstCaps * caps)
 {
   GstFrei0rSrc *self = GST_FREI0R_SRC (src);
-  GstFrei0rSrcClass *klass = GST_FREI0R_SRC_GET_CLASS (src);
 
   if (!gst_video_format_parse_caps (caps, &self->fmt, &self->width,
           &self->height)
       || !gst_video_parse_caps_framerate (caps, &self->fps_n, &self->fps_d))
     return FALSE;
-
-  if (self->f0r_instance) {
-    klass->ftable->destruct (self->f0r_instance);
-    self->f0r_instance = NULL;
-  }
-
-  self->f0r_instance =
-      gst_frei0r_instance_construct (klass->ftable, klass->properties,
-      klass->n_properties, self->property_cache, self->width, self->height);
 
   return TRUE;
 }
@@ -80,8 +70,17 @@ gst_frei0r_src_create (GstPushSrc * src, GstBuffer ** buf)
 
   *buf = NULL;
 
-  if (G_UNLIKELY (!self->f0r_instance))
+  if (G_UNLIKELY (self->width <= 0 || self->height <= 0))
     return GST_FLOW_NOT_NEGOTIATED;
+
+  if (G_UNLIKELY (!self->f0r_instance)) {
+    self->f0r_instance =
+        gst_frei0r_instance_construct (klass->ftable, klass->properties,
+        klass->n_properties, self->property_cache, self->width, self->height);
+
+    if (G_UNLIKELY (!self->f0r_instance))
+      return GST_FLOW_ERROR;
+  }
 
   newsize = gst_video_format_get_size (self->fmt, self->width, self->height);
 
