@@ -62,6 +62,7 @@ GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
 #define DEFAULT_DEVICE          NULL
 #define DEFAULT_DEVICE_NAME     NULL
 #define DEFAULT_VOLUME          1.0
+#define MAX_VOLUME              10.0
 
 enum
 {
@@ -1398,7 +1399,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_VOLUME,
       g_param_spec_double ("volume", "Volume",
-          "Volume of this stream", 0.0, 1000.0, DEFAULT_VOLUME,
+          "Volume of this stream, 1.0=100%", 0.0, MAX_VOLUME, DEFAULT_VOLUME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 }
@@ -1598,6 +1599,11 @@ unlock:
 
   v = psink->volume;
   pa_threaded_mainloop_unlock (psink->mainloop);
+
+  if (v > MAX_VOLUME) {
+    GST_WARNING_OBJECT (psink, "Clipped volume from %f to %f", v, MAX_VOLUME);
+    v = MAX_VOLUME;
+  }
 
   return v;
 
