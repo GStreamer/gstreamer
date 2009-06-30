@@ -1470,6 +1470,21 @@ gst_debug_get_all_categories (void)
   return ret;
 }
 
+GstDebugCategory *
+_gst_debug_get_category (const gchar * name)
+{
+  GstDebugCategory *ret = NULL;
+  GSList *node;
+
+  for (node = __categories; node; node = g_slist_next (node)) {
+    ret = (GstDebugCategory *) node->data;
+    if (!strcmp (name, ret->name)) {
+      return ret;
+    }
+  }
+  return NULL;
+}
+
 /*** FUNCTION POINTERS ********************************************************/
 
 static GHashTable *__gst_function_pointers;     /* NULL */

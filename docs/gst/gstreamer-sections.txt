@@ -970,6 +970,7 @@ GST_DEBUG_CATEGORY
 GST_DEBUG_CATEGORY_EXTERN
 GST_DEBUG_CATEGORY_STATIC
 GST_DEBUG_CATEGORY_INIT
+GST_DEBUG_CATEGORY_GET
 gst_debug_category_free
 gst_debug_category_set_threshold
 gst_debug_category_reset_threshold

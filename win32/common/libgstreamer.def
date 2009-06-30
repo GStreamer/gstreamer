@@ -39,6 +39,7 @@ EXPORTS
 	_gst_debug_bin_to_dot_file_with_ts
 	_gst_debug_category_new
 	_gst_debug_dump_mem
+	_gst_debug_get_category
 	_gst_debug_nameof_funcptr
 	_gst_debug_register_funcptr
 	_gst_element_error_printf

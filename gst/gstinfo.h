@@ -350,7 +350,8 @@ void            gst_debug_unset_threshold_for_name  (const gchar * name);
  * This macro expands to nothing if debugging is disabled.
  */
 #define GST_DEBUG_CATEGORY_STATIC(cat) static GstDebugCategory *cat = NULL
-/* do not use this function, use the macros below */
+
+/* do not use this function, use the GST_DEBUG_CATEGORY_INIT macro below */
 GstDebugCategory *_gst_debug_category_new (const gchar * name,
                                            guint         color,
                                            const gchar * description);
@@ -407,6 +408,41 @@ G_CONST_RETURN gchar *
 	gst_debug_category_get_description (GstDebugCategory *	category);
 GSList *
         gst_debug_get_all_categories	(void);
+
+/* do not use this function, use the GST_DEBUG_CATEGORY_GET macro below */
+GstDebugCategory *_gst_debug_get_category (const gchar *name);
+
+/**
+ * GST_DEBUG_CATEGORY_GET:
+ * @cat: the category to initialize.
+ * @name: log category name
+ *
+ * Lookup an exiting #GstDebugCategory by its @name and sets @cat. If category
+ * is not found, but %GST_CAT_DEFAULT is defined, that is assigned to @cat.
+ * Otherwise cat will be NULL.
+ *
+ * |[
+ * GST_DEBUG_CATEGORY_STATIC (gst_myplugin_debug);
+ * #define GST_CAT_DEFAULT gst_myplugin_debug
+ * GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+ * ...
+ * GST_DEBUG_CATEGORY_INIT (gst_myplugin_debug, "myplugin", 0, "nice element");
+ * GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "performance);
+ * ]|
+ */
+#ifdef GST_CAT_DEFAULT
+#define GST_DEBUG_CATEGORY_GET(cat,name)  G_STMT_START{\
+  cat = _gst_debug_get_category (name);			\
+  if (!cat) {						\
+    cat = GST_CAT_DEFAULT;				\
+  }							\
+}G_STMT_END
+#else
+#define GST_DEBUG_CATEGORY_GET(cat,name)  G_STMT_START{\
+  cat = _gst_debug_get_category (name);			\
+}G_STMT_END
+#endif
+
 
 gchar * gst_debug_construct_term_color	(guint colorinfo);
 gint    gst_debug_construct_win_color (guint colorinfo);
@@ -1126,6 +1162,7 @@ guint gst_debug_remove_log_function_by_data (gpointer data);
 #define GST_DEBUG_CATEGORY_STATIC(var)			/* NOP */
 #endif
 #define GST_DEBUG_CATEGORY_INIT(var,name,color,desc)	/* NOP */
+#define GST_DEBUG_CATEGORY_GET(var,name)		/* NOP */
 #define gst_debug_category_free(category)		/* NOP */
 #define gst_debug_category_set_threshold(category,level) /* NOP */
 #define gst_debug_category_reset_threshold(category)	/* NOP */
