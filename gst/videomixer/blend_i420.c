@@ -190,6 +190,24 @@ gst_i420_do_blend (guint8 * src, guint8 * dest,
     gint dest_width, gdouble src_alpha)
 {
   int i, j;
+
+  /* If it's completely transparent... we just return */
+  if (G_UNLIKELY (src_alpha == 0.0)) {
+    GST_INFO ("Fast copy (alpha == 0.0)");
+    return;
+  }
+
+  /* If it's completely opaque, we do a fast copy */
+  if (G_UNLIKELY (src_alpha == 1.0)) {
+    GST_INFO ("Fast copy (alpha == 1.0)");
+    for (i = 0; i < src_height; i++) {
+      memcpy (dest, src, src_width);
+      src += src_stride;
+      dest += dest_stride;
+    }
+    return;
+  }
+
   for (i = 0; i < src_height; i++) {
     for (j = 0; j < src_width; j++) {
       *dest = src_alpha * (*src) + (1. - src_alpha) * (*dest);
