@@ -192,7 +192,7 @@ gst_i420_do_blend (guint8 * src, guint8 * dest,
   int i, j;
   for (i = 0; i < src_height; i++) {
     for (j = 0; j < src_width; j++) {
-      *dest = src_alpha * (*dest) + (1. - src_alpha) * (*src);
+      *dest = src_alpha * (*src) + (1. - src_alpha) * (*dest);
       dest++;
       src++;
     }
