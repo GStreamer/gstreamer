@@ -144,7 +144,7 @@ gst_vdp_video_buffer_get_allowed_yuv_caps (GstVdpDevice * device)
   gint i;
 
   caps = gst_caps_new_empty ();
-  for (i = 0; i < N_CHROMA_TYPES; i++) {
+  for (i = 0; i < G_N_ELEMENTS (chroma_types); i++) {
     VdpStatus status;
     VdpBool is_supported;
     guint32 max_w, max_h;
@@ -164,7 +164,7 @@ gst_vdp_video_buffer_get_allowed_yuv_caps (GstVdpDevice * device)
     if (is_supported) {
       gint j;
 
-      for (j = 0; j < N_FORMATS; j++) {
+      for (j = 0; j < G_N_ELEMENTS (formats); j++) {
         if (formats[j].chroma_type != chroma_types[i])
           continue;
 
@@ -204,7 +204,7 @@ gst_vdp_video_buffer_get_allowed_video_caps (GstVdpDevice * device)
   gint i;
 
   caps = gst_caps_new_empty ();
-  for (i = 0; i < N_CHROMA_TYPES; i++) {
+  for (i = 0; i < G_N_ELEMENTS (chroma_types); i++) {
     VdpStatus status;
     VdpBool is_supported;
     guint32 max_w, max_h;

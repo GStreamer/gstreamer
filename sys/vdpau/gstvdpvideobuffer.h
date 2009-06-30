@@ -51,13 +51,10 @@ typedef struct
   guint32 fourcc;
 } GstVdpVideoBufferFormats;
 
-#define N_CHROMA_TYPES 3
-#define N_FORMATS 7
-
-static const VdpChromaType chroma_types[N_CHROMA_TYPES] =
+static const VdpChromaType chroma_types[] =
     { VDP_CHROMA_TYPE_420, VDP_CHROMA_TYPE_422, VDP_CHROMA_TYPE_444 };
 
-static const GstVdpVideoBufferFormats formats[N_FORMATS] = {
+static const GstVdpVideoBufferFormats formats[] = {
   {
         VDP_CHROMA_TYPE_420,
         VDP_YCBCR_FORMAT_YV12,

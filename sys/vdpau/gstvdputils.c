@@ -39,13 +39,13 @@ gst_vdp_video_to_yuv_caps (GstCaps * caps, GstVdpDevice * device)
 
     if (gst_structure_get_int (structure, "chroma-type", &chroma_type)) {
       /* calculate fourcc from chroma_type */
-      for (i = 0; i < N_FORMATS; i++) {
+      for (i = 0; i < G_N_ELEMENTS (formats); i++) {
         if (formats[i].chroma_type == chroma_type) {
           fourcc = g_slist_append (fourcc, GINT_TO_POINTER (formats[i].fourcc));
         }
       }
     } else {
-      for (i = 0; i < N_FORMATS; i++) {
+      for (i = 0; i < G_N_ELEMENTS (formats); i++) {
         fourcc = g_slist_append (fourcc, GINT_TO_POINTER (formats[i].fourcc));
       }
     }
@@ -92,7 +92,7 @@ gst_vdp_yuv_to_video_caps (GstCaps * caps, GstVdpDevice * device)
       gint chroma_type = -1;
 
       /* calculate chroma type from fourcc */
-      for (i = 0; i < N_FORMATS; i++) {
+      for (i = 0; i < G_N_ELEMENTS (formats); i++) {
         if (formats[i].fourcc == fourcc) {
           chroma_type = formats[i].chroma_type;
           break;
