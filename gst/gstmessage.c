@@ -1711,6 +1711,7 @@ gst_message_parse_step_done (GstMessage * message, GstFormat * format,
       GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
       GST_QUARK (FLUSH), G_TYPE_BOOLEAN, flush,
       GST_QUARK (INTERMEDIATE), G_TYPE_BOOLEAN, intermediate,
+      GST_QUARK (DURATION), G_TYPE_UINT64, duration,
       GST_QUARK (EOS), G_TYPE_BOOLEAN, eos, NULL);
 }
 
