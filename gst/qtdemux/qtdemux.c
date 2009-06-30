@@ -246,6 +246,8 @@ enum QtDemuxState
 };
 
 static GNode *qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc);
+static GNode *qtdemux_tree_get_child_by_type_full (GNode * node,
+    guint32 fourcc, QtAtomParser * parser);
 static GNode *qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc);
 
 static const GstElementDetails gst_qtdemux_details =
@@ -3254,6 +3256,32 @@ qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc)
 }
 
 static GNode *
+qtdemux_tree_get_child_by_type_full (GNode * node, guint32 fourcc,
+    QtAtomParser * parser)
+{
+  GNode *child;
+  guint8 *buffer;
+  guint32 child_fourcc, child_len;
+
+  for (child = g_node_first_child (node); child;
+      child = g_node_next_sibling (child)) {
+    buffer = (guint8 *) child->data;
+
+    child_len = QT_UINT32 (buffer);
+    child_fourcc = QT_FOURCC (buffer + 4);
+
+    if (G_UNLIKELY (child_fourcc == fourcc)) {
+      if (G_UNLIKELY (child_len < (4 + 4)))
+        return NULL;
+      /* FIXME: must verify if atom length < parent atom length */
+      qt_atom_parser_init (parser, buffer + (4 + 4), child_len - (4 + 4));
+      return child;
+    }
+  }
+  return NULL;
+}
+
+static GNode *
 qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc)
 {
   GNode *child;
@@ -3469,19 +3497,19 @@ static gboolean
 qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GNode * stbl)
 {
-  GNode *stsc;
-  GNode *stsz;
+  QtAtomParser stsz;
+  QtAtomParser stsc;
   GNode *stco;
   GNode *co64;
   GNode *stts;
   GNode *stss;
   GNode *stps;
   GNode *ctts;
-  const guint8 *stsc_data, *stsz_data, *stco_data, *co64_data, *stts_data;
-  int sample_size;
+  const guint8 *stco_data, *co64_data, *stts_data;
+  guint32 sample_size;
+  guint32 n_samples;
+  guint32 n_samples_per_chunk;
   int sample_index;
-  int n_samples;
-  int n_samples_per_chunk;
   int n_sample_times;
   QtDemuxSample *samples;
   gint i, j, k;
@@ -3489,14 +3517,12 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   guint64 timestamp, time;
 
   /* sample to chunk */
-  if (!(stsc = qtdemux_tree_get_child_by_type (stbl, FOURCC_stsc)))
+  if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stsc, &stsc))
     goto corrupt_file;
-  stsc_data = (const guint8 *) stsc->data;
 
   /* sample size */
-  if (!(stsz = qtdemux_tree_get_child_by_type (stbl, FOURCC_stsz)))
+  if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stsz, &stsz))
     goto corrupt_file;
-  stsz_data = (const guint8 *) stsz->data;
 
   /* chunk offsets */
   stco = qtdemux_tree_get_child_by_type (stbl, FOURCC_stco);
@@ -3515,16 +3541,18 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     goto corrupt_file;
   stts_data = (const guint8 *) stts->data;
 
-  sample_size = QT_UINT32 (stsz_data + 12);
+  if (!qt_atom_parser_skip (&stsz, 1 + 3) ||
+      !qt_atom_parser_get_uint32 (&stsz, &sample_size))
+    goto corrupt_file;
+
   if (sample_size == 0 || stream->sampled) {
-    n_samples = QT_UINT32 (stsz_data + 16);
+    if (!qt_atom_parser_get_uint32 (&stsz, &n_samples))
+      goto corrupt_file;
 
     if (n_samples == 0)
       goto no_samples;
-    else if (n_samples < 0)
-      goto corrupt_file;
 
-    GST_DEBUG_OBJECT (qtdemux, "stsz sample_size 0, allocating n_samples %d",
+    GST_DEBUG_OBJECT (qtdemux, "stsz sample_size 0, allocating n_samples %u",
         n_samples);
 
     samples = g_try_new0 (QtDemuxSample, n_samples);
@@ -3536,34 +3564,56 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     /* set the sample sizes */
     if (sample_size == 0) {
-      const guint8 *stsz_p = stsz_data + 20;
       /* different sizes for each sample */
+      if (qt_atom_parser_get_remaining (&stsz) < 4 * (n_samples))
+        goto corrupt_file;
+
       for (i = 0; i < n_samples; i++) {
-        samples[i].size = QT_UINT32 (stsz_p);
-        GST_LOG_OBJECT (qtdemux, "sample %d has size %d", i, samples[i].size);
-        stsz_p += 4;
+        samples[i].size = qt_atom_parser_get_uint32_unchecked (&stsz);
+        GST_LOG_OBJECT (qtdemux, "sample %d has size %u", i, samples[i].size);
       }
     } else {
       /* samples have the same size */
-      GST_LOG_OBJECT (qtdemux, "all samples have size %d", sample_size);
+      GST_LOG_OBJECT (qtdemux, "all samples have size %u", sample_size);
       for (i = 0; i < n_samples; i++)
         samples[i].size = sample_size;
     }
 
     /* set the sample offsets in the file */
-    n_samples_per_chunk = QT_UINT32 (stsc_data + 12);
+    if (!qt_atom_parser_skip (&stsc, 1 + 3) ||
+        !qt_atom_parser_get_uint32 (&stsc, &n_samples_per_chunk))
+      goto corrupt_file;
+
+    if (qt_atom_parser_get_remaining (&stsc) < 12 * n_samples_per_chunk)
+      goto corrupt_file;
+
     index = 0;
     for (i = 0; i < n_samples_per_chunk; i++) {
       guint32 first_chunk, last_chunk;
       guint32 samples_per_chunk;
 
-      first_chunk = QT_UINT32 (stsc_data + 16 + i * 12 + 0) - 1;
+      first_chunk = qt_atom_parser_get_uint32_unchecked (&stsc);
+      samples_per_chunk = qt_atom_parser_get_uint32_unchecked (&stsc);
+      qt_atom_parser_skip_unchecked (&stsc, 4);
+
+      /* chunk numbers are counted from 1 it seems */
+      if (G_UNLIKELY (first_chunk == 0))
+        goto corrupt_file;
+      else
+        --first_chunk;
+
+      /* the last chunk of each entry is calculated by taking the first chunk
+       * of the next entry; except if there is no next, where we fake it with
+       * INT_MAX */
       if (G_UNLIKELY (i == n_samples_per_chunk - 1)) {
         last_chunk = G_MAXUINT32;
       } else {
-        last_chunk = QT_UINT32 (stsc_data + 16 + i * 12 + 12) - 1;
+        last_chunk = qt_atom_parser_peek_uint32_unchecked (&stsc);
+        if (G_UNLIKELY (last_chunk == 0))
+          goto corrupt_file;
+        else
+          --last_chunk;
       }
-      samples_per_chunk = QT_UINT32 (stsc_data + 16 + i * 12 + 4);
 
       for (j = first_chunk; j < last_chunk; j++) {
         guint64 chunk_offset;
@@ -3694,8 +3744,6 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     if (n_samples == 0)
       goto no_samples;
-    else if (n_samples < 0)
-      goto corrupt_file;
 
     GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %d", n_samples);
 
@@ -3706,24 +3754,43 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     stream->n_samples = n_samples;
     stream->samples = samples;
 
-    n_samples_per_chunk = QT_UINT32 (stsc_data + 12);
-    GST_DEBUG_OBJECT (qtdemux, "n_samples_per_chunk %d", n_samples_per_chunk);
+    if (!qt_atom_parser_skip (&stsc, 1 + 3) ||
+        !qt_atom_parser_get_uint32 (&stsc, &n_samples_per_chunk))
+      goto corrupt_file;
+
+    GST_DEBUG_OBJECT (qtdemux, "n_samples_per_chunk %u", n_samples_per_chunk);
     sample_index = 0;
     timestamp = 0;
+
+    if (qt_atom_parser_get_remaining (&stsc) < 12 * n_samples_per_chunk)
+      goto corrupt_file;
+
     for (i = 0; i < n_samples_per_chunk; i++) {
       guint32 first_chunk, last_chunk;
       guint32 samples_per_chunk;
 
-      first_chunk = QT_UINT32 (stsc_data + 16 + i * 12 + 0) - 1;
+      first_chunk = qt_atom_parser_get_uint32_unchecked (&stsc);
+      samples_per_chunk = qt_atom_parser_get_uint32_unchecked (&stsc);
+      qt_atom_parser_skip_unchecked (&stsc, 4);
+
+      /* chunk numbers are counted from 1 it seems */
+      if (G_UNLIKELY (first_chunk == 0))
+        goto corrupt_file;
+      else
+        --first_chunk;
+
       /* the last chunk of each entry is calculated by taking the first chunk
        * of the next entry; except if there is no next, where we fake it with
        * INT_MAX */
-      if (i == n_samples_per_chunk - 1) {
+      if (G_UNLIKELY (i == (n_samples_per_chunk - 1))) {
         last_chunk = G_MAXUINT32;
       } else {
-        last_chunk = QT_UINT32 (stsc_data + 16 + i * 12 + 12) - 1;
+        last_chunk = qt_atom_parser_peek_uint32_unchecked (&stsc);
+        if (G_UNLIKELY (last_chunk == 0))
+          goto corrupt_file;
+        else
+          --last_chunk;
       }
-      samples_per_chunk = QT_UINT32 (stsc_data + 16 + i * 12 + 4);
 
       GST_LOG_OBJECT (qtdemux,
           "entry %d has first_chunk %d, last_chunk %d, samples_per_chunk %d", i,
