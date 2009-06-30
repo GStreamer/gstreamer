@@ -301,51 +301,61 @@ gst_alaw_enc_getcaps (GstPad * pad)
 {
   GstALawEnc *alawenc;
   GstPad *otherpad;
-  GstCaps *base_caps, *othercaps;
+  GstCaps *othercaps, *result;
+  const GstCaps *templ;
+  gchar *name;
+  gint i;
 
   alawenc = GST_ALAW_ENC (GST_PAD_PARENT (pad));
 
-  /* we can do what our template says */
-  base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-
+  /* figure out the name of the caps we are going to return */
   if (pad == alawenc->srcpad) {
+    name = "audio/x-alaw";
     otherpad = alawenc->sinkpad;
   } else {
+    name = "audio/x-raw-int";
     otherpad = alawenc->srcpad;
   }
+  /* get caps from the peer, this can return NULL when there is no peer */
   othercaps = gst_pad_peer_get_caps (otherpad);
+
+  /* get the template caps to make sure we return something acceptable */
+  templ = gst_pad_get_pad_template_caps (pad);
+
   if (othercaps) {
-    GstStructure *structure;
-    const GValue *orate, *ochans;
-    const GValue *rate, *chans;
-    GValue irate = { 0 };
-    GValue ichans = { 0 };
+    /* there was a peer */
+    othercaps = gst_caps_make_writable (othercaps);
 
-    if (gst_caps_is_empty (othercaps) || gst_caps_is_any (othercaps))
-      goto done;
+    /* go through the caps and remove the fields we don't want */
+    for (i = 0; i < gst_caps_get_size (othercaps); i++) {
+      GstStructure *structure;
 
-    structure = gst_caps_get_structure (othercaps, 0);
-    orate = gst_structure_get_value (structure, "rate");
-    ochans = gst_structure_get_value (structure, "channels");
+      structure = gst_caps_get_structure (othercaps, i);
 
-    structure = gst_caps_get_structure (base_caps, 0);
-    rate = gst_structure_get_value (structure, "rate");
-    chans = gst_structure_get_value (structure, "channels");
+      /* adjust the name */
+      gst_structure_set_name (structure, name);
 
-    if (orate) {
-      gst_value_intersect (&irate, orate, rate);
-      gst_structure_set_value (structure, "rate", &irate);
+      if (pad == alawenc->srcpad) {
+        /* remove the fields we don't want */
+        gst_structure_remove_fields (structure, "width", "depth", "endianness",
+            "signed", NULL);
+      } else {
+        /* add fixed fields */
+        gst_structure_set (structure, "width", G_TYPE_INT, 16,
+            "depth", G_TYPE_INT, 16,
+            "endianness", G_TYPE_INT, G_BYTE_ORDER,
+            "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      }
     }
-
-    if (ochans) {
-      gst_value_intersect (&ichans, ochans, chans);
-      gst_structure_set_value (structure, "channels", &ichans);
-    }
-
-  done:
+    /* filter against the allowed caps of the pad to return our result */
+    result = gst_caps_intersect (othercaps, templ);
     gst_caps_unref (othercaps);
+  } else {
+    /* there was no peer, return the template caps */
+    result = gst_caps_copy (templ);
   }
-  return base_caps;
+
+  return result;
 }
 
 static gboolean

@@ -30,7 +30,7 @@ GstStaticPadTemplate alaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 8000, 192000 ], "
         "channels = (int) [ 1, 2 ], "
         "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "width = (int) 16, " "signed = (boolean) True")
+        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) True")
     );
 
 GstStaticPadTemplate alaw_dec_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -47,7 +47,7 @@ GstStaticPadTemplate alaw_enc_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "rate = (int) [ 8000, 192000 ], "
         "channels = (int) [ 1, 2 ], "
         "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "width = (int) 16, " "signed = (boolean) True")
+        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) True")
     );
 
 GstStaticPadTemplate alaw_enc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
