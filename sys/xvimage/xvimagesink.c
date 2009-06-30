@@ -127,6 +127,7 @@
 #include <gst/gstinfo.h>
 GST_DEBUG_CATEGORY_STATIC (gst_debug_xvimagesink);
 #define GST_CAT_DEFAULT gst_debug_xvimagesink
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 typedef struct
 {
@@ -2324,7 +2325,8 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
             GST_XVIMAGE_BUFFER_CAST (buf)))
       goto no_window;
   } else {
-    GST_LOG_OBJECT (xvimagesink, "slow copy into bufferpool buffer %p", buf);
+    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, xvimagesink,
+        "slow copy into bufferpool buffer %p", buf);
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
     if (!xvimagesink->xvimage) {
@@ -3578,6 +3580,7 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_xvimagesink, "xvimagesink", 0,
       "xvimagesink element");
+  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   return TRUE;
 }
