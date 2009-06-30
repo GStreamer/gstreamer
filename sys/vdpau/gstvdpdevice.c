@@ -117,8 +117,7 @@ gst_vdp_device_constructed (GObject * object)
     {VDP_FUNC_ID_PRESENTATION_QUEUE_BLOCK_UNTIL_SURFACE_IDLE,
         &device->vdp_presentation_queue_block_until_surface_idle},
     {VDP_FUNC_ID_PRESENTATION_QUEUE_SET_BACKGROUND_COLOR,
-        &device->vdp_presentation_queue_set_background_color},
-    {0, NULL}
+        &device->vdp_presentation_queue_set_background_color}
   };
 
   device->display = XOpenDisplay (device->display_name);
@@ -148,7 +147,7 @@ gst_vdp_device_constructed (GObject * object)
     goto error;
   }
 
-  for (i = 0; vdp_function[i].func != NULL; i++) {
+  for (i = 0; i < G_N_ELEMENTS (vdp_function); i++) {
     status = device->vdp_get_proc_address (device->device,
         vdp_function[i].id, vdp_function[i].func);
 
