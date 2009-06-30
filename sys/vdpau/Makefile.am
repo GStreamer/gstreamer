@@ -8,11 +8,14 @@ libgstvdpau_la_SOURCES = \
 	gstvdpvideobuffer.c \
 	gstvdp.c \
 	gstvdpyuvvideo.c \
-  gstvdputils.c
+	gstvdputils.c \
+	gstvdpvideopostprocess.c \
+	gstvdpoutputbuffer.c \
+	gstvdpsink.c
 
 libgstvdpau_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X11_CFLAGS) $(VDPAU_CFLAGS)
 libgstvdpau_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) $(X11_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) $(X11_LIBS) -lgstvideo-$(GST_MAJORMINOR) -lgstinterfaces-$(GST_MAJORMINOR) \
 	$(VDPAU_LIBS)
 libgstvdpau_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvdpau_la_LIBTOOLFLAGS = --tag=disable-static
@@ -24,6 +27,9 @@ noinst_HEADERS = \
 	gstvdpvideoyuv.h \
 	gstvdpvideobuffer.h \
 	gstvdpyuvvideo.h \
-	gstvdputils.h
+	gstvdputils.h \
+	gstvdpvideopostprocess.h \
+	gstvdpoutputbuffer.h \
+	gstvdpsink.c
 	
 

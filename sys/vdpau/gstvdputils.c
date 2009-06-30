@@ -18,67 +18,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gstvdpvideobuffer.h"
+
 #include "gstvdputils.h"
-
-static GstCaps *
-gst_vdp_get_allowed_yuv_caps (GstVdpDevice * device)
-{
-  GstCaps *caps;
-  gint i;
-
-  caps = gst_caps_new_empty ();
-  for (i = 0; i < N_CHROMA_TYPES; i++) {
-    VdpStatus status;
-    VdpBool is_supported;
-    guint32 max_w, max_h;
-
-    status =
-        device->vdp_video_surface_query_capabilities (device->device,
-        chroma_types[i], &is_supported, &max_w, &max_h);
-
-    if (status != VDP_STATUS_OK && status != VDP_STATUS_INVALID_CHROMA_TYPE) {
-      GST_ERROR_OBJECT (device,
-          "Could not get query VDPAU video surface capabilites, "
-          "Error returned from vdpau was: %s",
-          device->vdp_get_error_string (status));
-
-      goto error;
-    }
-    if (is_supported) {
-      gint j;
-
-      for (j = 0; j < N_FORMATS; j++) {
-        if (formats[j].chroma_type != chroma_types[i])
-          continue;
-
-        status =
-            device->vdp_video_surface_query_ycbcr_capabilities (device->device,
-            formats[j].chroma_type, formats[j].format, &is_supported);
-        if (status != VDP_STATUS_OK
-            && status != VDP_STATUS_INVALID_Y_CB_CR_FORMAT) {
-          GST_ERROR_OBJECT (device, "Could not query VDPAU YCbCr capabilites, "
-              "Error returned from vdpau was: %s",
-              device->vdp_get_error_string (status));
-
-          goto error;
-        }
-
-        if (is_supported) {
-          GstCaps *format_caps;
-
-          format_caps = gst_caps_new_simple ("video/x-raw-yuv",
-              "format", GST_TYPE_FOURCC, formats[j].fourcc,
-              "width", GST_TYPE_INT_RANGE, 1, max_w,
-              "height", GST_TYPE_INT_RANGE, 1, max_h, NULL);
-          gst_caps_append (caps, format_caps);
-        }
-      }
-    }
-  }
-
-error:
-  return caps;
-}
 
 GstCaps *
 gst_vdp_video_to_yuv_caps (GstCaps * caps, GstVdpDevice * device)
@@ -124,7 +66,7 @@ gst_vdp_video_to_yuv_caps (GstCaps * caps, GstVdpDevice * device)
   structure = gst_caps_get_structure (caps, 0);
 
   if (device) {
-    allowed_caps = gst_vdp_get_allowed_yuv_caps (device);
+    allowed_caps = gst_vdp_video_buffer_get_allowed_yuv_caps (device);
     result = gst_caps_intersect (new_caps, allowed_caps);
 
     gst_caps_unref (new_caps);
@@ -133,46 +75,6 @@ gst_vdp_video_to_yuv_caps (GstCaps * caps, GstVdpDevice * device)
     result = new_caps;
 
   return result;
-}
-
-static GstCaps *
-gst_vdp_get_allowed_video_caps (GstVdpDevice * device)
-{
-  GstCaps *caps;
-  gint i;
-
-  caps = gst_caps_new_empty ();
-  for (i = 0; i < N_CHROMA_TYPES; i++) {
-    VdpStatus status;
-    VdpBool is_supported;
-    guint32 max_w, max_h;
-
-    status =
-        device->vdp_video_surface_query_capabilities (device->device,
-        chroma_types[i], &is_supported, &max_w, &max_h);
-
-    if (status != VDP_STATUS_OK && status != VDP_STATUS_INVALID_CHROMA_TYPE) {
-      GST_ERROR_OBJECT (device,
-          "Could not get query VDPAU video surface capabilites, "
-          "Error returned from vdpau was: %s",
-          device->vdp_get_error_string (status));
-
-      goto error;
-    }
-
-    if (is_supported) {
-      GstCaps *format_caps;
-
-      format_caps = gst_caps_new_simple ("video/x-vdpau-video",
-          "chroma-type", G_TYPE_INT, chroma_types[i],
-          "width", GST_TYPE_INT_RANGE, 1, max_w,
-          "height", GST_TYPE_INT_RANGE, 1, max_h, NULL);
-      gst_caps_append (caps, format_caps);
-    }
-  }
-
-error:
-  return caps;
 }
 
 GstCaps *
@@ -209,13 +111,30 @@ gst_vdp_yuv_to_video_caps (GstCaps * caps, GstVdpDevice * device)
   if (device) {
     GstCaps *allowed_caps;
 
-    allowed_caps = gst_vdp_get_allowed_video_caps (device);
+    allowed_caps = gst_vdp_video_buffer_get_allowed_video_caps (device);
     result = gst_caps_intersect (new_caps, allowed_caps);
 
     gst_caps_unref (new_caps);
     gst_caps_unref (allowed_caps);
   } else
     result = new_caps;
+
+  return result;
+}
+
+GstCaps *
+gst_vdp_video_to_output_caps (GstCaps * caps)
+{
+  GstCaps *result;
+  gint i;
+
+  result = gst_caps_copy (caps);
+  for (i = 0; i < gst_caps_get_size (result); i++) {
+    GstStructure *structure = gst_caps_get_structure (result, i);
+
+    gst_structure_set_name (structure, "video/x-vdpau-output");
+    gst_structure_remove_field (structure, "chroma-type");
+  }
 
   return result;
 }

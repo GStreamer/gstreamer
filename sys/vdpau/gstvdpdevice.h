@@ -23,6 +23,7 @@
 
 #include <X11/Xlib.h>
 #include <vdpau/vdpau.h>
+#include <vdpau/vdpau_x11.h>
 
 #include <glib-object.h>
 
@@ -68,6 +69,21 @@ struct _GstVdpDevice
   VdpDecoderRender                                *vdp_decoder_render;
   VdpDecoderQueryCapabilities                     *vdp_decoder_query_capabilities;
   VdpDecoderGetParameters                         *vdp_decoder_get_parameters;
+
+  VdpVideoMixerCreate                             *vdp_video_mixer_create;
+  VdpVideoMixerDestroy                            *vdp_video_mixer_destroy;
+  VdpVideoMixerRender                             *vdp_video_mixer_render;
+
+  VdpOutputSurfaceCreate                          *vdp_output_surface_create;
+  VdpOutputSurfaceDestroy                         *vdp_output_surface_destroy;
+  VdpOutputSurfaceQueryCapabilities               *vdp_output_surface_query_capabilities;
+
+  VdpPresentationQueueTargetCreateX11             *vdp_presentation_queue_target_create_x11;  
+  VdpPresentationQueueCreate                      *vdp_presentation_queue_create;
+  VdpPresentationQueueDestroy                     *vdp_presentation_queue_destroy;
+  VdpPresentationQueueDisplay                     *vdp_presentation_queue_display;
+  VdpPresentationQueueBlockUntilSurfaceIdle       *vdp_presentation_queue_block_until_surface_idle;
+  VdpPresentationQueueSetBackgroundColor          *vdp_presentation_queue_set_background_color;
 };
 
 GType gst_vdp_device_get_type (void) G_GNUC_CONST;

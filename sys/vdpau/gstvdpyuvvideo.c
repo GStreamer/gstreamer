@@ -233,7 +233,8 @@ gst_vdp_yuv_video_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       break;
   }
 
-  gst_buffer_copy_metadata (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
+  gst_buffer_copy_metadata (outbuf, inbuf,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
 
   return GST_FLOW_OK;
 }
@@ -262,7 +263,7 @@ gst_vdp_yuv_video_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
   GstVdpYUVVideo *yuv_video = GST_VDP_YUV_VIDEO (trans);
-  GstCaps *result;
+  GstCaps *result = NULL;
 
   if (direction == GST_PAD_SINK) {
     result = gst_vdp_yuv_to_video_caps (caps, yuv_video->device);
@@ -305,7 +306,7 @@ gst_vdp_yuv_video_base_init (gpointer klass)
 
   gst_element_class_set_details_simple (element_class,
       "VdpauYUVVideo",
-      "Coyuv_video/Decoder/Video",
+      "Filter/Converter/Decoder/Video",
       "VDPAU video surface to YUV",
       "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
 

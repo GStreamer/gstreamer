@@ -8,6 +8,8 @@
 #include "gstvdpmpegdec.h"
 #include "gstvdpvideoyuv.h"
 #include "gstvdpyuvvideo.h"
+#include "gstvdpvideopostprocess.h"
+#include "gstvdpsink.h"
 
 static gboolean
 vdpau_init (GstPlugin * vdpau_plugin)

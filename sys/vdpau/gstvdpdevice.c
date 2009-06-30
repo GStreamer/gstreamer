@@ -18,7 +18,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <vdpau/vdpau_x11.h>
 #include <gst/gst.h>
 
 #include "gstvdpdevice.h"
@@ -100,6 +99,25 @@ gst_vdp_device_constructed (GObject * object)
         &device->vdp_decoder_query_capabilities},
     {VDP_FUNC_ID_DECODER_GET_PARAMETERS,
         &device->vdp_decoder_get_parameters},
+    {VDP_FUNC_ID_VIDEO_MIXER_CREATE, &device->vdp_video_mixer_create},
+    {VDP_FUNC_ID_VIDEO_MIXER_DESTROY, &device->vdp_video_mixer_destroy},
+    {VDP_FUNC_ID_VIDEO_MIXER_RENDER, &device->vdp_video_mixer_render},
+    {VDP_FUNC_ID_OUTPUT_SURFACE_CREATE, &device->vdp_output_surface_create},
+    {VDP_FUNC_ID_OUTPUT_SURFACE_DESTROY, &device->vdp_output_surface_destroy},
+    {VDP_FUNC_ID_OUTPUT_SURFACE_QUERY_CAPABILITIES,
+        &device->vdp_output_surface_query_capabilities},
+    {VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11,
+        &device->vdp_presentation_queue_target_create_x11},
+    {VDP_FUNC_ID_PRESENTATION_QUEUE_CREATE,
+        &device->vdp_presentation_queue_create},
+    {VDP_FUNC_ID_PRESENTATION_QUEUE_DESTROY,
+        &device->vdp_presentation_queue_destroy},
+    {VDP_FUNC_ID_PRESENTATION_QUEUE_DISPLAY,
+        &device->vdp_presentation_queue_display},
+    {VDP_FUNC_ID_PRESENTATION_QUEUE_BLOCK_UNTIL_SURFACE_IDLE,
+        &device->vdp_presentation_queue_block_until_surface_idle},
+    {VDP_FUNC_ID_PRESENTATION_QUEUE_SET_BACKGROUND_COLOR,
+        &device->vdp_presentation_queue_set_background_color},
     {0, NULL}
   };
 

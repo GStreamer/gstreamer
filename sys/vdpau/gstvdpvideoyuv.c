@@ -236,7 +236,9 @@ gst_vdp_video_yuv_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       break;
   }
 
-  gst_buffer_copy_metadata (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
+  gst_buffer_copy_metadata (outbuf, inbuf,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
+
   GST_LOG_OBJECT (video_yuv, "Pushing buffer with ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
 
@@ -322,7 +324,7 @@ gst_vdp_video_yuv_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
   GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (trans);
-  GstCaps *result;
+  GstCaps *result = NULL;
 
   if (direction == GST_PAD_SINK)
     result = gst_vdp_video_to_yuv_caps (caps, video_yuv->device);
@@ -406,7 +408,7 @@ gst_vdp_video_yuv_base_init (gpointer klass)
 
   gst_element_class_set_details_simple (element_class,
       "VdpauVideoYUV",
-      "Covideo_yuv/Decoder/Video",
+      "Filter/Converter/Decoder/Video",
       "VDPAU video surface to YUV",
       "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
 
