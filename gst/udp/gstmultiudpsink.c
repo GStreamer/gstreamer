@@ -117,8 +117,10 @@ static void gst_multiudpsink_finalize (GObject * object);
 
 static GstFlowReturn gst_multiudpsink_render (GstBaseSink * sink,
     GstBuffer * buffer);
+#ifndef G_OS_WIN32 /*sendmsg() is not available on Windows*/
 static GstFlowReturn gst_multiudpsink_render_list (GstBaseSink * bsink,
     GstBufferList * list);
+#endif
 static GstStateChangeReturn gst_multiudpsink_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -320,7 +322,9 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
   gstbasesink_class->render = gst_multiudpsink_render;
+#ifndef G_OS_WIN32
   gstbasesink_class->render_list = gst_multiudpsink_render_list;
+#endif
   klass->add = gst_multiudpsink_add;
   klass->remove = gst_multiudpsink_remove;
   klass->clear = gst_multiudpsink_clear;
@@ -430,6 +434,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
+#ifndef G_OS_WIN32
 static GstFlowReturn
 gst_multiudpsink_render_list (GstBaseSink * bsink, GstBufferList * list)
 {
@@ -516,6 +521,7 @@ invalid_list:
   gst_buffer_list_iterator_free (it);
   return GST_FLOW_ERROR;
 }
+#endif
 
 static void
 gst_multiudpsink_set_clients_string (GstMultiUDPSink * sink,
