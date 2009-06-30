@@ -176,12 +176,6 @@ struct _GstPlaySinkClass
 enum
 {
   PROP_0,
-  PROP_AUDIO_SINK,
-  PROP_VIDEO_SINK,
-  PROP_VIS_PLUGIN,
-  PROP_VOLUME,
-  PROP_FRAME,
-  PROP_FONT_DESC,
   PROP_LAST
 };
 
