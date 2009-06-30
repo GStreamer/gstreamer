@@ -1904,7 +1904,9 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
     gst_structure_set (s, t, G_TYPE_INT, (int) a->audio_format, NULL);
     g_free (t);
 
-    if (a->lang_type) {
+    /* Check that the language code is flagged and at least somewhat valid
+     * before putting it in the output structure */
+    if (a->lang_type && a->lang_code > 0x100) {
       t = g_strdup_printf ("audio-%d-language", i);
       lang_code[0] = (a->lang_code >> 8) & 0xff;
       lang_code[1] = a->lang_code & 0xff;
@@ -1913,7 +1915,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
 
       GST_DEBUG_OBJECT (src, "Audio stream %d is language %s", i, lang_code);
     } else
-      GST_DEBUG_OBJECT (src, "Audio stream %d - no language %s", i, lang_code);
+      GST_DEBUG_OBJECT (src, "Audio stream %d - no language", i);
   }
 
   if (have_audio == FALSE) {
@@ -1947,7 +1949,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
     g_free (t);
 
     t = g_strdup_printf ("subpicture-%d-language", i);
-    if (u->type) {
+    if (u->type && u->lang_code > 0x100) {
       lang_code[0] = (u->lang_code >> 8) & 0xff;
       lang_code[1] = u->lang_code & 0xff;
       gst_structure_set (s, t, G_TYPE_STRING, lang_code, NULL);
