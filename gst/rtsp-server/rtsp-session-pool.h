@@ -81,6 +81,45 @@ struct _GstRTSPSessionPoolClass {
  */
 typedef gboolean (*GstRTSPSessionPoolFunc)  (GstRTSPSessionPool *pool, gpointer user_data);
 
+/**
+ * GstRTSPFilterResult:
+ * @GST_RTSP_FILTER_REMOVE: Remove session
+ * @GST_RTSP_FILTER_KEEP: Keep session in the pool
+ * @GST_RTSP_FILTER_REF: Ref session in the result list
+ *
+ * Possible return values for gst_rtsp_session_pool_filter().
+ */
+typedef enum
+{
+  GST_RTSP_FILTER_REMOVE,
+  GST_RTSP_FILTER_KEEP,
+  GST_RTSP_FILTER_REF,
+} GstRTSPFilterResult;
+
+/**
+ * GstRTSPSessionFilterFunc:
+ * @pool: a #GstRTSPSessionPool object
+ * @session: a #GstRTSPSession in @pool
+ * @user_data: user data that has been given to gst_rtsp_session_pool_filter()
+ *
+ * This function will be called by the gst_rtsp_session_pool_filter(). An
+ * implementation should return a value of #GstRTSPFilterResult.
+ *
+ * When this function returns #GST_RTSP_FILTER_REMOVE, @session will be removed
+ * from @pool.
+ *
+ * A return value of #GST_RTSP_FILTER_KEEP will leave @session untouched in
+ * @pool.
+ *
+ * A value of GST_RTSP_FILTER_REF will add @session to the result #GList of
+ * gst_rtsp_session_pool_filter().
+ *
+ * Returns: a #GstRTSPFilterResult.
+ */
+typedef GstRTSPFilterResult (*GstRTSPSessionFilterFunc)  (GstRTSPSessionPool *pool, 
+                                                          GstRTSPSession *session,
+                                                          gpointer user_data);
+
 
 GType                 gst_rtsp_session_pool_get_type          (void);
 
@@ -101,6 +140,9 @@ gboolean              gst_rtsp_session_pool_remove            (GstRTSPSessionPoo
                                                                GstRTSPSession *sess);
 
 /* perform session maintenance */
+GList *               gst_rtsp_session_pool_filter            (GstRTSPSessionPool *pool,
+                                                               GstRTSPSessionFilterFunc func,
+							       gpointer user_data);
 guint                 gst_rtsp_session_pool_cleanup           (GstRTSPSessionPool *pool);
 GSource *             gst_rtsp_session_pool_create_watch      (GstRTSPSessionPool *pool);
 

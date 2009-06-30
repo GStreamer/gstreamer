@@ -382,6 +382,74 @@ gst_rtsp_session_pool_cleanup (GstRTSPSessionPool *pool)
 
 typedef struct
 {
+  GstRTSPSessionPool *pool;
+  GstRTSPSessionFilterFunc func;
+  gpointer user_data;
+  GList *list;
+} FilterData;
+
+static gboolean
+filter_func (gchar *sessionid, GstRTSPSession *sess, FilterData *data)
+{
+  switch (data->func (data->pool, sess, data->user_data)) {
+    case GST_RTSP_FILTER_REMOVE:
+      return TRUE;
+    case GST_RTSP_FILTER_REF:
+      /* keep ref */
+      data->list = g_list_prepend (data->list, g_object_ref (sess));
+      /* fallthrough */
+    default:
+    case GST_RTSP_FILTER_KEEP:
+      return FALSE;
+  }
+}
+
+/**
+ * gst_rtsp_session_pool_filter:
+ * @pool: a #GstRTSPSessionPool
+ * @func: a callback
+ * @user_data: user data passed to @func
+ *
+ * Call @func for each session in @pool. The result value of @func determines
+ * what happens to the session. @func will be called with the session pool
+ * locked so no further actions on @pool can be performed from @func.
+ *
+ * If @func returns #GST_RTSP_FILTER_REMOVE, the session will be removed from
+ * @pool.
+ *
+ * If @func returns #GST_RTSP_FILTER_KEEP, the session will remain in @pool.
+ *
+ * If @func returns #GST_RTSP_FILTER_REF, the session will remain in @pool but
+ * will also be added with an additional ref to the result GList of this
+ * function..
+ *
+ * Returns: a GList with all sessions for which @func returned
+ * #GST_RTSP_FILTER_REF. After usage, each element in the GList should be unreffed
+ * before the list is freed.
+ */
+GList *
+gst_rtsp_session_pool_filter (GstRTSPSessionPool *pool,
+    GstRTSPSessionFilterFunc func, gpointer user_data)
+{
+  FilterData data;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION_POOL (pool), NULL);
+  g_return_val_if_fail (func != NULL, NULL);
+
+  data.pool = pool;
+  data.func = func;
+  data.user_data = user_data;
+  data.list = NULL;
+
+  g_mutex_lock (pool->lock);
+  g_hash_table_foreach_remove (pool->sessions, (GHRFunc) filter_func, &data);
+  g_mutex_unlock (pool->lock);
+
+  return data.list;
+}
+
+typedef struct
+{
   GSource source;
   GstRTSPSessionPool *pool;
   gint timeout;
