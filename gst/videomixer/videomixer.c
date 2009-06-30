@@ -388,26 +388,11 @@ gst_videomixer_pad_sink_acceptcaps (GstPad * pad, GstCaps * vscaps)
   return ret;
 }
 
-static void
-gst_videomixer_pad_link (GstPad * pad, GstPad * peer, gpointer data)
-{
-  GST_DEBUG_OBJECT (pad, "connected");
-}
 
-static void
-gst_videomixer_pad_unlink (GstPad * pad, GstPad * peer, gpointer data)
-{
-  GST_DEBUG_OBJECT (pad, "unlinked");
-}
 
 static void
 gst_videomixer_pad_init (GstVideoMixerPad * mixerpad)
 {
-  g_signal_connect (mixerpad, "linked",
-      G_CALLBACK (gst_videomixer_pad_link), mixerpad);
-  g_signal_connect (mixerpad, "unlinked",
-      G_CALLBACK (gst_videomixer_pad_unlink), mixerpad);
-
   /* setup some pad functions */
   gst_pad_set_setcaps_function (GST_PAD (mixerpad),
       gst_videomixer_pad_sink_setcaps);
