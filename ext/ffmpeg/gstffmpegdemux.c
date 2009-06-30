@@ -1162,13 +1162,6 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
 
   gst_element_no_more_pads (GST_ELEMENT (demux));
 
-  /* grab the tags */
-  tags = gst_ffmpegdemux_read_tags (demux);
-  if (tags) {
-    gst_element_post_message (GST_ELEMENT (demux),
-        gst_message_new_tag (GST_OBJECT (demux), tags));
-  }
-
   /* transform some useful info to GstClockTime and remember */
   demux->start_time = gst_util_uint64_scale_int (demux->context->start_time,
       GST_SECOND, AV_TIME_BASE);
@@ -1200,6 +1193,13 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
         gst_event_new_new_segment (FALSE,
             demux->segment.rate, demux->segment.format,
             demux->segment.start, demux->segment.stop, demux->segment.time));
+  }
+
+  /* grab the tags */
+  tags = gst_ffmpegdemux_read_tags (demux);
+  if (tags) {
+    gst_element_post_message (GST_ELEMENT (demux),
+        gst_message_new_tag (GST_OBJECT (demux), tags));
   }
 
   return TRUE;
