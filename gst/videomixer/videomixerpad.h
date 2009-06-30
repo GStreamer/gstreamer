@@ -21,6 +21,7 @@
 #define __GST_VIDEO_MIXER_PAD_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstcollectpads.h>
 
 G_BEGIN_DECLS
 

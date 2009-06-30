@@ -71,8 +71,7 @@
 
 #include "videomixer.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_videomixer_debug);
-#define GST_CAT_DEFAULT gst_videomixer_debug
+GST_DEBUG_CATEGORY (gst_videomixer_debug);
 
 #define GST_VIDEO_MIXER_GET_STATE_LOCK(mix) \
   (GST_VIDEO_MIXER(mix)->state_lock)

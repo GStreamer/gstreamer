@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <string.h>
+#include "videomixer.h"
 
 #define BLEND_NORMAL(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)     \
         Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;           \

@@ -23,6 +23,10 @@
 #include <gst/gst.h>
 #include "videomixerpad.h"
 
+GST_DEBUG_CATEGORY_EXTERN (gst_videomixer_debug);
+#define GST_CAT_DEFAULT gst_videomixer_debug
+
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_VIDEO_MIXER (gst_videomixer_get_type())
