@@ -3481,11 +3481,17 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     if (n_samples == 0)
       goto no_samples;
+    else if (n_samples < 0)
+      goto corrupt_file;
 
     GST_DEBUG_OBJECT (qtdemux, "stsz sample_size 0, allocating n_samples %d",
         n_samples);
+
+    samples = g_try_new0 (QtDemuxSample, n_samples);
+    if (samples == NULL)
+      goto out_of_memory;
+
     stream->n_samples = n_samples;
-    samples = g_new0 (QtDemuxSample, n_samples);
     stream->samples = samples;
 
     /* set the sample sizes */
@@ -3648,10 +3654,16 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     if (n_samples == 0)
       goto no_samples;
+    else if (n_samples < 0)
+      goto corrupt_file;
+
+    GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %d", n_samples);
+
+    samples = g_try_new0 (QtDemuxSample, n_samples);
+    if (samples == NULL)
+      goto out_of_memory;
 
     stream->n_samples = n_samples;
-    GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %d", n_samples);
-    samples = g_new0 (QtDemuxSample, n_samples);
     stream->samples = samples;
 
     n_samples_per_chunk = QT_UINT32 (stsc_data + 12);
@@ -3729,6 +3741,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     /* Fill in the pts_offsets */
     index = 0;
     ctts_p = ctts_data + 16;
+    /* FIXME: make sure we don't read beyond the atom size/boundary */
     for (i = 0; i < n_entries; i++) {
       count = QT_UINT32 (ctts_p);
       ctts_p += 4;
@@ -3756,6 +3769,11 @@ corrupt_file:
 no_samples:
   {
     GST_WARNING_OBJECT (qtdemux, "stream has no samples");
+    return FALSE;
+  }
+out_of_memory:
+  {
+    GST_WARNING_OBJECT (qtdemux, "failed to allocate %d samples", n_samples);
     return FALSE;
   }
 }
