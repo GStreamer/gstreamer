@@ -728,7 +728,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_VOLUME,
-      g_param_spec_double ("volume", "Volume", "The audio volume",
+      g_param_spec_double ("volume", "Volume", "The audio volume, 1.0=100%",
           0.0, VOLUME_MAX_DOUBLE, 1.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_MUTE,

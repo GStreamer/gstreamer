@@ -428,7 +428,7 @@ gst_volume_class_init (GstVolumeClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_VOLUME,
-      g_param_spec_double ("volume", "Volume", "volume factor",
+      g_param_spec_double ("volume", "Volume", "volume factor, 1.0=100%",
           0.0, VOLUME_MAX_DOUBLE, DEFAULT_PROP_VOLUME,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
