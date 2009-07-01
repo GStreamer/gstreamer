@@ -2316,7 +2316,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     gst_ffmpegdec_drain (ffmpegdec);
     gst_ffmpegdec_flush_pcache (ffmpegdec);
     avcodec_flush_buffers (ffmpegdec->context);
-    ffmpegdec->waiting_for_key = TRUE;
     ffmpegdec->discont = TRUE;
     ffmpegdec->last_out = GST_CLOCK_TIME_NONE;
     ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
@@ -2333,6 +2332,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   /* do early keyframe check pretty bad to rely on the keyframe flag in the
    * source for this as it might not even be parsed (UDP/file/..).  */
   if (G_UNLIKELY (ffmpegdec->waiting_for_key)) {
+    GST_DEBUG_OBJECT (ffmpegdec, "waiting for keyframe");
     if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DELTA_UNIT) &&
         oclass->in_plugin->type != CODEC_TYPE_AUDIO)
       goto skip_keyframe;
