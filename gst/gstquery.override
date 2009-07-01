@@ -242,3 +242,83 @@ _wrap_gst_query_parse_latency (PyGstMiniObject * self)
 			  PyBool_FromLong(islive),
 			  minlat, maxlat);
 }
+%%
+override gst_query_parse_buffering_percent noargs
+static PyObject *
+_wrap_gst_query_parse_buffering_percent (PyGstMiniObject * self)
+{
+	gboolean busy;
+	gint percent;
+
+     if (GST_QUERY_TYPE (self->obj) != GST_QUERY_BUFFERING) {
+	  PyErr_SetString(PyExc_TypeError, "Query is not a 'buffering' query");
+	  return NULL;
+     }
+     
+     gst_query_parse_buffering_percent (GST_QUERY (self->obj), &busy, &percent);
+     
+     return Py_BuildValue("(Od)", PyBool_FromLong(busy), percent);
+}
+%%
+override gst_query_parse_buffering_stats noargs
+static PyObject *
+_wrap_gst_query_parse_buffering_stats (PyGstMiniObject * self)
+{
+	GstBufferingMode mode;
+	gint avg_in, avg_out;
+	gint64 buffering_left;
+	
+     if (GST_QUERY_TYPE (self->obj) != GST_QUERY_BUFFERING) {
+	  PyErr_SetString(PyExc_TypeError, "Query is not a 'buffering' query");
+	  return NULL;
+     }
+     
+     gst_query_parse_buffering_stats (GST_QUERY (self->obj), &mode,
+				      &avg_in, &avg_out,
+				      &buffering_left);
+     return Py_BuildValue("OiiL",
+			  pyg_enum_from_gtype (GST_TYPE_BUFFERING_MODE, mode),
+			  avg_in, avg_out, buffering_left);
+}
+%%
+override gst_query_parse_buffering_range noargs
+static PyObject *
+_wrap_gst_query_parse_buffering_range (PyGstMiniObject * self)
+{
+	GstFormat format;
+	gint64 start, stop, estimated_total;
+	
+     if (GST_QUERY_TYPE (self->obj) != GST_QUERY_BUFFERING) {
+	  PyErr_SetString(PyExc_TypeError, "Query is not a 'buffering' query");
+	  return NULL;
+     }
+     
+     gst_query_parse_buffering_range (GST_QUERY (self->obj), &format,
+				      &start, &stop, &estimated_total);
+     return Py_BuildValue("OLLL",
+			  pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			  start, stop, estimated_total);
+}
+%%
+override gst_query_parse_uri noargs
+static PyObject *
+_wrap_gst_query_parse_uri (PyGstMiniObject * self)
+{
+	gchar *uri = NULL;
+	PyObject *ret;
+	
+     if (GST_QUERY_TYPE (self->obj) != GST_QUERY_URI) {
+	  PyErr_SetString(PyExc_TypeError, "Query is not a 'uri' query");
+	  return NULL;
+     }
+     
+     gst_query_parse_uri (GST_QUERY (self->obj), &uri);
+     if (uri) {
+	     ret = PyString_FromStringAndSize(uri, strlen (uri));
+	     g_free(uri);
+     } else {
+	     Py_INCREF(Py_None);
+	     ret = Py_None;
+     }
+     return ret;
+}
