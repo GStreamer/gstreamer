@@ -370,7 +370,8 @@ gst_flac_dec_update_metadata (GstFlacDec * flacdec,
 
     if (gst_tag_parse_extended_comment (vc, &name, NULL, &value, TRUE)) {
       GST_DEBUG_OBJECT (flacdec, "%s : %s", name, value);
-      gst_vorbis_tag_add (list, name, value);
+      if (value && strlen (value))
+        gst_vorbis_tag_add (list, name, value);
       g_free (name);
       g_free (value);
     }
