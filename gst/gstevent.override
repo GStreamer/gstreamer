@@ -60,7 +60,7 @@ _wrap_gst_event_parse_new_segment (PyGstMiniObject *self)
      gint64	start_value, stop_value, base;
 
      if (GST_EVENT_TYPE(self->obj) != GST_EVENT_NEWSEGMENT) {
-	  PyErr_SetString(PyExc_TypeError, "Even is not a 'NewSegment' event");
+	  PyErr_SetString(PyExc_TypeError, "Event is not a 'NewSegment' event");
 	  return NULL;
      }
      
@@ -296,7 +296,7 @@ _wrap_gst_event_parse_new_segment_full (PyGstMiniObject *self)
      gint64	start_value, stop_value, base;
 
      if (GST_EVENT_TYPE(self->obj) != GST_EVENT_NEWSEGMENT) {
-	  PyErr_SetString(PyExc_TypeError, "Even is not a 'NewSegment' event");
+	  PyErr_SetString(PyExc_TypeError, "Event is not a 'NewSegment' event");
 	  return NULL;
      }
      
