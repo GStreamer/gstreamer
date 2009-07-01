@@ -103,13 +103,15 @@ void            gst_netaddress_set_ip6_address   (GstNetAddress *naddr, guint8 a
 gint            gst_netaddress_set_address_bytes (GstNetAddress *naddr, GstNetType type,
                                                   guint8 address[16], guint16 port);
 
-GstNetType      gst_netaddress_get_net_type      (GstNetAddress *naddr);
-gboolean        gst_netaddress_get_ip4_address   (GstNetAddress *naddr, guint32 *address, guint16 *port);
-gboolean        gst_netaddress_get_ip6_address   (GstNetAddress *naddr, guint8 address[16], guint16 *port);
-gint            gst_netaddress_get_address_bytes (GstNetAddress *naddr, guint8 address[16], guint16 *port);
+GstNetType      gst_netaddress_get_net_type      (const GstNetAddress *naddr);
+gboolean        gst_netaddress_get_ip4_address   (const GstNetAddress *naddr, guint32 *address, guint16 *port);
+gboolean        gst_netaddress_get_ip6_address   (const GstNetAddress *naddr, guint8 address[16], guint16 *port);
+gint            gst_netaddress_get_address_bytes (const GstNetAddress *naddr, guint8 address[16], guint16 *port);
 
 gboolean        gst_netaddress_equal             (const GstNetAddress *naddr1,
                                                   const GstNetAddress *naddr2);
+
+gint            gst_netaddress_to_string         (const GstNetAddress *naddr, gchar *dest, gulong len);
 
 G_END_DECLS
 
