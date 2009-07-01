@@ -83,74 +83,53 @@ GST_BOILERPLATE_FULL (GstVdpMpegDec, gst_vdp_mpeg_dec,
 static void gst_vdp_mpeg_dec_init_info (VdpPictureInfoMPEG1Or2 * vdp_info);
 static void gst_vdp_mpeg_dec_finalize (GObject * object);
 
-guint8 *
-mpeg_util_find_start_code (guint32 * sync_word, guint8 * cur, guint8 * end)
-{
-  guint32 code;
-
-  if (G_UNLIKELY (cur == NULL))
-    return NULL;
-
-  code = *sync_word;
-
-  while (cur < end) {
-    code <<= 8;
-
-    if (code == 0x00000100) {
-      /* Reset the sync word accumulator */
-      *sync_word = 0xffffffff;
-      return cur;
-    }
-
-    /* Add the next available byte to the collected sync word */
-    code |= *cur++;
-  }
-
-  *sync_word = code;
-  return NULL;
-}
-
 typedef struct
 {
+  GstByteReader reader;
   GstBuffer *buffer;
-  guint8 *cur;
-  guint8 *end;
+  guint start;
 } GstVdpMpegPacketizer;
 
 static GstBuffer *
 gst_vdp_mpeg_packetizer_get_next_packet (GstVdpMpegPacketizer * packetizer)
 {
-  guint32 sync_word = 0xffffff;
-  guint8 *packet_start;
-  guint8 *packet_end;
+  guint offset, size;
+  GstBuffer *buf;
 
-  if (!packetizer->cur)
+  if (packetizer->start == -1)
     return NULL;
 
-  packet_start = packetizer->cur - 3;
-  packetizer->cur = packet_end = mpeg_util_find_start_code (&sync_word,
-      packetizer->cur, packetizer->end);
+  if (!gst_byte_reader_set_pos (&packetizer->reader, packetizer->start + 3))
+    return NULL;
 
-  if (packet_end)
-    packet_end -= 3;
+  offset = gst_byte_reader_masked_scan_uint32 (&packetizer->reader, 0xffffff00,
+      0x00000100, 0, gst_byte_reader_get_remaining (&packetizer->reader));
+
+  if (offset != -1)
+    size = offset - packetizer->start;
   else
-    packet_end = packetizer->end;
+    size = gst_byte_reader_get_remaining (&packetizer->reader) + 3;
 
-  return gst_buffer_create_sub (packetizer->buffer,
-      packet_start - GST_BUFFER_DATA (packetizer->buffer),
-      packet_end - packet_start);
+  buf = gst_buffer_create_sub (packetizer->buffer, packetizer->start, size);
+
+  packetizer->start = offset;
+
+  return buf;
 }
 
 static void
 gst_vdp_mpeg_packetizer_init (GstVdpMpegPacketizer * packetizer,
     GstBuffer * buffer)
 {
-  guint32 sync_word = 0xffffffff;
+  guint offset;
 
+  gst_byte_reader_init_from_buffer (&packetizer->reader, buffer);
   packetizer->buffer = buffer;
-  packetizer->end = GST_BUFFER_DATA (buffer) + GST_BUFFER_SIZE (buffer);
-  packetizer->cur = mpeg_util_find_start_code (&sync_word,
-      GST_BUFFER_DATA (buffer), packetizer->end);
+
+  offset = gst_byte_reader_masked_scan_uint32 (&packetizer->reader, 0xffffff00,
+      0x00000100, 0, gst_byte_reader_get_remaining (&packetizer->reader));
+
+  packetizer->start = offset;
 }
 
 static gboolean
@@ -328,7 +307,6 @@ gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec, GstBuffer ** outbuf)
     GstVdpDevice *device;
     VdpStatus status;
 
-    GST_WARNING ("ASDASD");
     device = mpeg_dec->device =
         g_object_ref (GST_VDP_VIDEO_BUFFER (*outbuf)->device);
 
