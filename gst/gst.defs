@@ -2351,6 +2351,7 @@
 (define-function event_new_step
   (c-name "gst_event_new_step")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
   (parameters
     '("GstFormat" "format")
     '("guint64" "amount")
@@ -3267,6 +3268,7 @@
 (define-function message_new_buffering
   (c-name "gst_message_new_buffering")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("gint" "percent")
@@ -3297,6 +3299,7 @@
 (define-function message_new_step_done
   (c-name "gst_message_new_step_done")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstFormat" "format")
@@ -3462,6 +3465,7 @@
 (define-function message_new_stream_status
   (c-name "gst_message_new_stream_status")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstStreamStatusType" "type")
@@ -3516,6 +3520,7 @@
 (define-function message_new_step_start
   (c-name "gst_message_new_step_start")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("gboolean" "active")
@@ -3585,6 +3590,7 @@
 (define-function message_new_tag_full
   (c-name "gst_message_new_tag_full")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstPad*" "pad")
