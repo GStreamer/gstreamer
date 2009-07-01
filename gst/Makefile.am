@@ -34,6 +34,7 @@ versioned_overrides = \
 	gst-0.10.21.ignore 	\
 	gst-0.10.22.ignore 	\
 	gst-0.10.23.ignore 	\
+	gst-0.10.24.ignore 	\
 	gst-pb-0.10.14.ignore	\
 	gst-pb-0.10.16.ignore	\
 	gst-pb-0.10.18.ignore	\

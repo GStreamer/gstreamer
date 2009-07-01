@@ -123,6 +123,13 @@
   (gtype-id "GST_TYPE_TASK")
 )
 
+(define-object TaskPool
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstTaskPool")
+  (gtype-id "GST_TYPE_TASK_POOL")
+)
+
 (define-object TypeFindFactory
   (in-module "Gst")
   (parent "GstPluginFeature")
@@ -169,6 +176,13 @@
    '("guint64" "offset_end")
    '("GstCaps*" "caps")
   )
+)
+
+(define-miniobject BufferList
+  (in-module "Gst")
+  (parent "GstMiniObject")
+  (c-name "GstBufferList")
+  (gtype-id "GST_TYPE_BUFFER_LIST")
 )
 
 (define-miniobject Event
@@ -364,6 +378,17 @@
     '("flags" "GST_BUFFER_COPY_FLAGS")
     '("timestamps" "GST_BUFFER_COPY_TIMESTAMPS")
     '("caps" "GST_BUFFER_COPY_CAPS")
+  )
+)
+
+(define-enum BufferListItem
+  (in-module "Gst")
+  (c-name "GstBufferListItem")
+  (gtype-id "GST_TYPE_BUFFER_LIST_ITEM")
+  (values
+    '("continue" "GST_BUFFER_LIST_CONTINUE")
+    '("skip-group" "GST_BUFFER_LIST_SKIP_GROUP")
+    '("end" "GST_BUFFER_LIST_END")
   )
 )
 
@@ -585,6 +610,7 @@
     '("seek" "GST_EVENT_SEEK")
     '("navigation" "GST_EVENT_NAVIGATION")
     '("latency" "GST_EVENT_LATENCY")
+    '("gst-event-step" "GST_EVENT_STEP")
     '("custom-upstream" "GST_EVENT_CUSTOM_UPSTREAM")
     '("custom-downstream" "GST_EVENT_CUSTOM_DOWNSTREAM")
     '("custom-downstream-oob" "GST_EVENT_CUSTOM_DOWNSTREAM_OOB")
@@ -796,6 +822,7 @@
     '("async-start" "GST_MESSAGE_ASYNC_START")
     '("async-done" "GST_MESSAGE_ASYNC_DONE")
     '("request-state" "GST_MESSAGE_REQUEST_STATE")
+    '("step-start" "GST_MESSAGE_STEP_START")
     '("any" "GST_MESSAGE_ANY")
   )
 )
@@ -807,6 +834,21 @@
   (values
     '("link" "GST_STRUCTURE_CHANGE_TYPE_PAD_LINK")
     '("unlink" "GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK")
+  )
+)
+
+(define-enum StreamStatusType
+  (in-module "Gst")
+  (c-name "GstStreamStatusType")
+  (gtype-id "GST_TYPE_STREAM_STATUS_TYPE")
+  (values
+    '("create" "GST_STREAM_STATUS_TYPE_CREATE")
+    '("enter" "GST_STREAM_STATUS_TYPE_ENTER")
+    '("leave" "GST_STREAM_STATUS_TYPE_LEAVE")
+    '("destroy" "GST_STREAM_STATUS_TYPE_DESTROY")
+    '("start" "GST_STREAM_STATUS_TYPE_START")
+    '("pause" "GST_STREAM_STATUS_TYPE_PAUSE")
+    '("stop" "GST_STREAM_STATUS_TYPE_STOP")
   )
 )
 

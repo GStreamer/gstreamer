@@ -342,6 +342,123 @@
 
 
 
+;; From gstbufferlist.h
+
+(define-function gst_buffer_list_get_type
+  (c-name "gst_buffer_list_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_buffer_list_new
+  (c-name "gst_buffer_list_new")
+  (is-constructor-of "GstBufferList")
+  (return-type "GstBufferList*")
+)
+
+(define-method foreach
+  (of-object "GstBufferList")
+  (c-name "gst_buffer_list_foreach")
+  (return-type "none")
+  (parameters
+    '("GstBufferListFunc" "func")
+    '("gpointer" "user_data")
+  )
+)
+
+(define-method get
+  (of-object "GstBufferList")
+  (c-name "gst_buffer_list_get")
+  (return-type "GstBuffer*")
+  (parameters
+    '("guint" "group")
+    '("guint" "idx")
+  )
+)
+
+(define-method iterate
+  (of-object "GstBufferList")
+  (c-name "gst_buffer_list_iterate")
+  (return-type "GstBufferListIterator*")
+)
+
+(define-method free
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_free")
+  (return-type "none")
+)
+
+(define-method n_buffers
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_n_buffers")
+  (return-type "guint")
+)
+
+(define-method next
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_next")
+  (return-type "GstBuffer*")
+)
+
+(define-method next_group
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_next_group")
+  (return-type "gboolean")
+)
+
+(define-method add
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_add")
+  (return-type "none")
+  (parameters
+    '("GstBuffer*" "buffer")
+  )
+)
+
+(define-method add_group
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_add_group")
+  (return-type "none")
+)
+
+(define-method remove
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_remove")
+  (return-type "none")
+)
+
+(define-method steal
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_steal")
+  (return-type "GstBuffer*")
+)
+
+(define-method take
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_take")
+  (return-type "none")
+  (parameters
+    '("GstBuffer*" "buffer")
+  )
+)
+
+(define-method do
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_do")
+  (return-type "GstBuffer*")
+  (parameters
+    '("GstBufferListDoFunction" "do_func")
+    '("gpointer" "user_data")
+  )
+)
+
+(define-method merge_group
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_merge_group")
+  (return-type "GstBuffer*")
+)
+
+
+
 ;; From ../gstreamer/gst/gstbus.h
 
 (define-function bus_get_type
@@ -1172,6 +1289,21 @@
   (return-type "GstClockTime")
 )
 
+(define-method set_start_time
+  (of-object "GstElement")
+  (c-name "gst_element_set_start_time")
+  (return-type "none")
+  (parameters
+    '("GstClockTime" "time")
+  )
+)
+
+(define-method get_start_time
+  (of-object "GstElement")
+  (c-name "gst_element_get_start_time")
+  (return-type "GstClockTime")
+)
+
 (define-method is_indexable
   (of-object "GstElement")
   (c-name "gst_element_is_indexable")
@@ -1431,6 +1563,15 @@
   (of-object "GstElement")
   (c-name "gst_element_lost_state")
   (return-type "none")
+)
+
+(define-method lost_state_full
+  (of-object "GstElement")
+  (c-name "gst_element_lost_state_full")
+  (return-type "none")
+  (parameters
+    '("gboolean" "new_base_time")
+  )
 )
 
 (define-method get_factory
@@ -2204,6 +2345,31 @@
   (return-type "none")
   (parameters
     '("GstClockTime*" "latency")
+  )
+)
+
+(define-function event_new_step
+  (c-name "gst_event_new_step")
+  (return-type "GstEvent*")
+  (parameters
+    '("GstFormat" "format")
+    '("guint64" "amount")
+    '("gdouble" "rate")
+    '("gboolean" "flush")
+    '("gboolean" "intermediate")
+  )
+)
+
+(define-method parse_step
+  (of-object "GstEvent")
+  (c-name "gst_event_parse_step")
+  (return-type "none")
+  (parameters
+    '("GstFormat*" "format")
+    '("guint64*" "amount")
+    '("gdouble*" "rate")
+    '("gboolean*" "flush")
+    '("gboolean*" "intermediate")
   )
 )
 
@@ -3128,6 +3294,36 @@
   )
 )
 
+(define-function message_new_step_done
+  (c-name "gst_message_new_step_done")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstFormat" "format")
+    '("guint64" "amount")
+    '("gdouble" "rate")
+    '("gboolean" "flush")
+    '("gboolean" "intermediate")
+    '("guint64" "duration")
+    '("gboolean" "eos")
+  )
+)
+
+(define-method parse_step_done
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_step_done")
+  (return-type "none")
+  (parameters
+    '("GstFormat*" "format")
+    '("guint64*" "amount")
+    '("gdouble*" "rate")
+    '("gboolean*" "flush")
+    '("gboolean*" "intermediate")
+    '("guint64*" "duration")
+    '("gboolean*" "eos")
+  )
+)
+
 (define-function message_new_clock_provide
   (c-name "gst_message_new_clock_provide")
   (return-type "GstMessage*")
@@ -3263,6 +3459,41 @@
   )
 )
 
+(define-function message_new_stream_status
+  (c-name "gst_message_new_stream_status")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstStreamStatusType" "type")
+    '("GstElement*" "owner")
+  )
+)
+
+(define-method parse_stream_status
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_stream_status")
+  (return-type "none")
+  (parameters
+    '("GstStreamStatusType*" "type")
+    '("GstElement**" "owner")
+  )
+)
+
+(define-method set_stream_status_object
+  (of-object "GstMessage")
+  (c-name "gst_message_set_stream_status_object")
+  (return-type "none")
+  (parameters
+    '("const-GValue*" "object")
+  )
+)
+
+(define-method get_stream_status_object
+  (of-object "GstMessage")
+  (c-name "gst_message_get_stream_status_object")
+  (return-type "const-GValue*")
+)
+
 (define-function message_new_request_state
   (c-name "gst_message_new_request_state")
   (return-type "GstMessage*")
@@ -3279,6 +3510,34 @@
   (return-type "none")
   (parameters
     '("GstState*" "state")
+  )
+)
+
+(define-function message_new_step_start
+  (c-name "gst_message_new_step_start")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("gboolean" "active")
+    '("GstFormat" "format")
+    '("guint64" "amount")
+    '("gdouble" "rate")
+    '("gboolean" "flush")
+    '("gboolean" "intermediate")
+  )
+)
+
+(define-method parse_step_start
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_step_start")
+  (return-type "none")
+  (parameters
+    '("gboolean*" "active")
+    '("GstFormat*" "format")
+    '("guint64*" "amount")
+    '("gdouble*" "rate")
+    '("gboolean*" "flush")
+    '("gboolean*" "intermediate")
   )
 )
 
@@ -3323,11 +3582,31 @@
   )
 )
 
+(define-function message_new_tag_full
+  (c-name "gst_message_new_tag_full")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstPad*" "pad")
+    '("GstTagList*" "tag_list" (keep-refcount))
+  )
+)
+
 (define-method parse_tag
   (of-object "GstMessage")
   (c-name "gst_message_parse_tag")
   (return-type "none")
   (parameters
+    '("GstTagList**" "tag_list")
+  )
+)
+
+(define-method parse_tag_full
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_tag_full")
+  (return-type "none")
+  (parameters
+    '("GstPad**" "pad")
     '("GstTagList**" "tag_list")
   )
 )
@@ -3964,6 +4243,15 @@
   )
 )
 
+(define-method set_chain_list_function
+  (of-object "GstPad")
+  (c-name "gst_pad_set_chain_list_function")
+  (return-type "none")
+  (parameters
+    '("GstPadChainListFunction" "chainlist")
+  )
+)
+
 (define-method set_getrange_function
   (of-object "GstPad")
   (c-name "gst_pad_set_getrange_function")
@@ -4155,6 +4443,15 @@
   )
 )
 
+(define-method push_list
+  (of-object "GstPad")
+  (c-name "gst_pad_push_list")
+  (return-type "GstFlowReturn")
+  (parameters
+    '("GstBufferList*" "list" (keep-refcount))
+  )
+)
+
 (define-method check_pull_range
   (of-object "GstPad")
   (c-name "gst_pad_check_pull_range")
@@ -4196,6 +4493,15 @@
   (return-type "GstFlowReturn")
   (parameters
     '("GstBuffer*" "buffer" (keep-refcount))
+  )
+)
+
+(define-method chain_list
+  (of-object "GstPad")
+  (c-name "gst_pad_chain_list")
+  (return-type "GstFlowReturn")
+  (parameters
+    '("GstBufferList*" "list" (keep-refcount))
   )
 )
 
@@ -4747,6 +5053,21 @@
   (of-object "GstPlugin")
   (c-name "gst_plugin_get_origin")
   (return-type "const-gchar*")
+)
+
+(define-method get_cache_data
+  (of-object "GstPlugin")
+  (c-name "gst_plugin_get_cache_data")
+  (return-type "const-GstStructure*")
+)
+
+(define-method set_cache_data
+  (of-object "GstPlugin")
+  (c-name "gst_plugin_set_cache_data")
+  (return-type "none")
+  (parameters
+    '("GstStructure*" "cache_data")
+  )
 )
 
 (define-method get_module
@@ -5819,6 +6140,16 @@
   )
 )
 
+(define-method to_position
+  (of-object "GstSegment")
+  (c-name "gst_segment_to_position")
+  (return-type "gint64")
+  (parameters
+    '("GstFormat" "format")
+    '("gint64" "running_time")
+  )
+)
+
 (define-method clip
   (of-object "GstSegment")
   (c-name "gst_segment_clip")
@@ -5829,6 +6160,16 @@
     '("gint64" "stop")
     '("gint64*" "clip_start")
     '("gint64*" "clip_stop")
+  )
+)
+
+(define-method set_running_time
+  (of-object "GstSegment")
+  (c-name "gst_segment_set_running_time")
+  (return-type "gboolean")
+  (parameters
+    '("GstFormat" "format")
+    '("gint64" "running_time")
   )
 )
 
@@ -5879,6 +6220,17 @@
     '("const-gchar*" "firstfield")
     '("va_list" "varargs")
   )
+)
+
+(define-function gst_structure_id_new
+  (c-name "gst_structure_id_new")
+  (is-constructor-of "GstStructureId")
+  (return-type "GstStructure*")
+  (parameters
+    '("GQuark" "name_quark")
+    '("GQuark" "field_quark")
+  )
+  (varargs #t)
 )
 
 (define-method copy
@@ -5971,6 +6323,66 @@
     '("const-gchar*" "fieldname")
     '("va_list" "varargs")
   )
+)
+
+(define-method id_set
+  (of-object "GstStructure")
+  (c-name "gst_structure_id_set")
+  (return-type "none")
+  (parameters
+    '("GQuark" "fieldname")
+  )
+  (varargs #t)
+)
+
+(define-method id_set_valist
+  (of-object "GstStructure")
+  (c-name "gst_structure_id_set_valist")
+  (return-type "none")
+  (parameters
+    '("GQuark" "fieldname")
+    '("va_list" "varargs")
+  )
+)
+
+(define-method get_valist
+  (of-object "GstStructure")
+  (c-name "gst_structure_get_valist")
+  (return-type "gboolean")
+  (parameters
+    '("const-char*" "first_fieldname")
+    '("va_list" "args")
+  )
+)
+
+(define-method get
+  (of-object "GstStructure")
+  (c-name "gst_structure_get")
+  (return-type "gboolean")
+  (parameters
+    '("const-char*" "first_fieldname")
+  )
+  (varargs #t)
+)
+
+(define-method id_get_valist
+  (of-object "GstStructure")
+  (c-name "gst_structure_id_get_valist")
+  (return-type "gboolean")
+  (parameters
+    '("GQuark" "first_field_id")
+    '("va_list" "args")
+  )
+)
+
+(define-method id_get
+  (of-object "GstStructure")
+  (c-name "gst_structure_id_get")
+  (return-type "gboolean")
+  (parameters
+    '("GQuark" "first_field_id")
+  )
+  (varargs #t)
 )
 
 (define-method id_get_value
@@ -6464,6 +6876,17 @@
   )
 )
 
+(define-method add_value
+  (of-object "GstTagList")
+  (c-name "gst_tag_list_add_value")
+  (return-type "none")
+  (parameters
+    '("GstTagMergeMode" "mode")
+    '("const-gchar*" "tag")
+    '("const-GValue*" "value")
+  )
+)
+
 (define-method remove_tag
   (of-object "GstTagList")
   (c-name "gst_tag_list_remove_tag")
@@ -6885,6 +7308,17 @@
   )
 )
 
+(define-method add_tag_value
+  (of-object "GstTagSetter")
+  (c-name "gst_tag_setter_add_tag_value")
+  (return-type "none")
+  (parameters
+    '("GstTagMergeMode" "mode")
+    '("const-gchar*" "tag")
+    '("const-GValue*" "value")
+  )
+)
+
 (define-method get_tag_list
   (of-object "GstTagSetter")
   (c-name "gst_tag_setter_get_tag_list")
@@ -6933,10 +7367,54 @@
   )
 )
 
+(define-method set_priority
+  (of-object "GstTask")
+  (c-name "gst_task_set_priority")
+  (return-type "none")
+  (parameters
+    '("GThreadPriority" "priority")
+  )
+)
+
+(define-method get_pool
+  (of-object "GstTask")
+  (c-name "gst_task_get_pool")
+  (return-type "GstTaskPool*")
+)
+
+(define-method set_pool
+  (of-object "GstTask")
+  (c-name "gst_task_set_pool")
+  (return-type "none")
+  (parameters
+    '("GstTaskPool*" "pool")
+  )
+)
+
+(define-method set_thread_callbacks
+  (of-object "GstTask")
+  (c-name "gst_task_set_thread_callbacks")
+  (return-type "none")
+  (parameters
+    '("GstTaskThreadCallbacks*" "callbacks")
+    '("gpointer" "user_data")
+    '("GDestroyNotify" "notify")
+  )
+)
+
 (define-method get_state
   (of-object "GstTask")
   (c-name "gst_task_get_state")
   (return-type "GstTaskState")
+)
+
+(define-method set_state
+  (of-object "GstTask")
+  (c-name "gst_task_set_state")
+  (return-type "gboolean")
+  (parameters
+    '("GstTaskState" "state")
+  )
 )
 
 (define-method start
@@ -6955,6 +7433,54 @@
   (of-object "GstTask")
   (c-name "gst_task_pause")
   (return-type "gboolean")
+)
+
+;; From gsttaskpool.h
+
+(define-function gst_task_pool_get_type
+  (c-name "gst_task_pool_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_task_pool_new
+  (c-name "gst_task_pool_new")
+  (is-constructor-of "GstTaskPool")
+  (return-type "GstTaskPool*")
+)
+
+(define-method prepare
+  (of-object "GstTaskPool")
+  (c-name "gst_task_pool_prepare")
+  (return-type "none")
+  (parameters
+    '("GError**" "error")
+  )
+)
+
+(define-method push
+  (of-object "GstTaskPool")
+  (c-name "gst_task_pool_push")
+  (return-type "gpointer")
+  (parameters
+    '("GstTaskPoolFunction" "func")
+    '("gpointer" "user_data")
+    '("GError**" "error")
+  )
+)
+
+(define-method join
+  (of-object "GstTaskPool")
+  (c-name "gst_task_pool_join")
+  (return-type "none")
+  (parameters
+    '("gpointer" "id")
+  )
+)
+
+(define-method cleanup
+  (of-object "GstTaskPool")
+  (c-name "gst_task_pool_cleanup")
+  (return-type "none")
 )
 
 ;; From ../gstreamer/gst/gsttrace.h
