@@ -264,6 +264,12 @@ endif
 POLYP_DIR=
 # endif
 
+if USE_SCHRO
+SCHRO_DIR=schroedinger
+else
+SCHRO_DIR=
+endif
+
 if USE_SDL
 SDL_DIR=sdl
 else
@@ -373,6 +379,7 @@ SUBDIRS=\
 	$(NEON_DIR) \
 	$(OFA_DIR) \
 	$(POLYP_DIR) \
+	$(SCHRO_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
 	$(SMOOTHWAVE_DIR) \
@@ -420,6 +427,7 @@ DIST_SUBDIRS = \
 	neon \
 	ofa \
 	resindvd \
+	schroedinger \
 	sdl \
 	sndfile \
 	soundtouch \

@@ -1,0 +1,24 @@
+
+lib_LTLIBRARIES = libgstbasevideo-@GST_MAJORMINOR@.la
+
+CLEANFILES = $(BUILT_SOURCES)
+
+libgstbasevideo_@GST_MAJORMINOR@_la_SOURCES = \
+	gstbasevideoutils.c \
+	gstbasevideocodec.c \
+	gstbasevideodecoder.c \
+	gstbasevideoencoder.c \
+	gstbasevideoparse.c
+
+libgstbasevideo_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
+libgstbasevideo_@GST_MAJORMINOR@include_HEADERS = \
+	gstbasevideoutils.h \
+	gstbasevideocodec.h \
+	gstbasevideodecoder.h \
+	gstbasevideoencoder.h \
+	gstbasevideoparse.h
+
+libgstbasevideo_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstbasevideo_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
+libgstbasevideo_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+

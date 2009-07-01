@@ -1468,6 +1468,12 @@ AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
   fi
 ])
 
+dnl *** schroedinger ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SCHRO, true)
+AG_GST_CHECK_FEATURE(SCHRO, [Schroedinger video codec], schro, [
+  AG_GST_PKG_CHECK_MODULES(SCHRO, schroedinger-1.0 >= 1.0.7)
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -1645,6 +1651,7 @@ gst-libs/gst/Makefile
 gst-libs/gst/dshow/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/signalprocessor/Makefile
+gst-libs/gst/video/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
@@ -1707,6 +1714,7 @@ ext/nas/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile
 ext/resindvd/Makefile
+ext/schroedinger/Makefile
 ext/sdl/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
