@@ -3585,7 +3585,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
       }
     }
     /* fill up empty timestamps with the last timestamp, this can happen when
-     * the last samples do not decoder and so we don't have timestamps for them.
+     * the last samples do not decode and so we don't have timestamps for them.
      * We however look at the last timestamp to estimate the track length so we
      * need something in here. */
     for (; index < n_samples; index++) {
@@ -3970,6 +3970,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       stream->timescale);
   GST_LOG_OBJECT (qtdemux, "track duration: %" G_GUINT64_FORMAT,
       stream->duration);
+
+  if (G_UNLIKELY (stream->timescale == 0 || qtdemux->timescale == 0))
+    goto corrupt_file;
 
   if (qtdemux->duration != G_MAXINT32 && stream->duration != G_MAXINT32) {
     guint64 tdur1, tdur2;
