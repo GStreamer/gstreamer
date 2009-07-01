@@ -166,5 +166,37 @@ class TestCreateMessages(TestCase):
             self.assertEquals(dur, 54)
             self.assertEquals(eos, True)
 
+    def testStructureChangeMessage(self):
+        if hasattr(gst, 'message_new_structure_change'):
+            p = gst.Pad("blah", gst.PAD_SRC)
+            m = gst.message_new_structure_change(p,
+                                                 gst.STRUCTURE_CHANGE_TYPE_PAD_LINK,
+                                                 self.element, True)
+
+            self.assertEquals(m.type, gst.MESSAGE_STRUCTURE_CHANGE)
+            sct, owner, busy = m.parse_structure_change()
+            self.assertEquals(sct, gst.STRUCTURE_CHANGE_TYPE_PAD_LINK)
+            self.assertEquals(owner, self.element)
+            self.assertEquals(busy, True)
+
+    def testRequestStateMessage(self):
+        if hasattr(gst, 'message_new_request_state'):
+            m = gst.message_new_request_state(self.element, gst.STATE_NULL)
+            self.assertEquals(m.type, gst.MESSAGE_REQUEST_STATE)
+            self.assertEquals(m.parse_request_state(), gst.STATE_NULL)
+
+    def testBufferingStatsMessage(self):
+        if hasattr(gst.Message, 'set_buffering_stats'):
+            gst.debug("Creating buffering message")
+            m = gst.message_new_buffering(self.element, 50)
+            gst.debug("Setting stats")
+            m.set_buffering_stats(gst.BUFFERING_LIVE, 30, 1024, 123456)
+            self.assertEquals(m.type, gst.MESSAGE_BUFFERING)
+            mode, ain, aout, left = m.parse_buffering_stats()
+            self.assertEquals(mode, gst.BUFFERING_LIVE)
+            self.assertEquals(ain, 30)
+            self.assertEquals(aout, 1024)
+            self.assertEquals(left, 123456)
+
 if __name__ == "__main__":
     unittest.main()

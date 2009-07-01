@@ -418,3 +418,62 @@ _wrap_gst_message_parse_stream_status (PyGstMiniObject *self)
 			     pyg_enum_from_gtype (GST_TYPE_STREAM_STATUS_TYPE, type),
 			     pygobject_new((GObject*) owner));
 }
+%%
+override gst_message_parse_structure_change noargs
+static PyObject *
+_wrap_gst_message_parse_structure_change (PyGstMiniObject *self)
+{
+	GstStructureChangeType type;
+	GstElement *owner;
+	gboolean busy;
+	
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_STRUCTURE_CHANGE) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an 'structure_change' message");
+		return NULL;
+	}
+
+	gst_message_parse_structure_change (GST_MESSAGE (self->obj), &type, &owner, &busy);
+
+	return Py_BuildValue("OOO",
+			     pyg_enum_from_gtype (GST_TYPE_STRUCTURE_CHANGE_TYPE, type),
+			     pygobject_new((GObject*) owner),
+			     PyBool_FromLong(busy));
+}
+%%
+override gst_message_parse_request_state noargs
+static PyObject *
+_wrap_gst_message_parse_request_state (PyGstMiniObject *self)
+{
+	GstState state;
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_REQUEST_STATE) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an 'request_state' message");
+		return NULL;
+	}
+
+	gst_message_parse_request_state (GST_MESSAGE (self->obj), &state);
+
+	return pyg_enum_from_gtype(GST_TYPE_STATE, state);
+}
+%%
+override gst_message_parse_buffering_stats noargs
+static PyObject *
+_wrap_gst_message_parse_buffering_stats (PyGstMiniObject *self)
+{
+	GstBufferingMode mode;
+	gint avg_in, avg_out;
+	gint64 buffering_left;
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_BUFFERING) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an 'buffering' message");
+		return NULL;
+	}
+
+	gst_message_parse_buffering_stats (GST_MESSAGE (self->obj), &mode, &avg_in, &avg_out,
+					   &buffering_left);
+
+	return Py_BuildValue("OiiL",
+			     pyg_enum_from_gtype (GST_TYPE_BUFFERING_MODE, mode),
+			     avg_in, avg_out, buffering_left);
+}
