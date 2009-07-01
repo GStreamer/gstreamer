@@ -10,6 +10,7 @@ libgstqtdemux_la_SOURCES = quicktime.c gstrtpxqtdepay.c qtdemux.c qtdemux_types.
 libgstqtdemux_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
+	qtatomparser.h   \
 	qtdemux.h        \
 	qtdemux_types.h  \
 	qtdemux_dump.h   \

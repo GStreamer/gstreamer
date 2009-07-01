@@ -49,6 +49,7 @@
 
 #include <gst/tag/tag.h>
 
+#include "qtatomparser.h"
 #include "qtdemux_types.h"
 #include "qtdemux_dump.h"
 #include "qtdemux_fourcc.h"
