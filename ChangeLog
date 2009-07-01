@@ -1,9 +1,466 @@
-=== release 0.10.7 ===
+=== release 0.10.8 ===
 
-2009-03-21  Jan Schmidt <jan.schmidt@sun.com>
+2009-06-29  Jan Schmidt <jan.schmidt@sun.com>
 
 	* configure.ac:
-	  releasing 0.10.7, "Some high ground is not worth taking"
+	  releasing 0.10.8, "Brilliant in the morning"
+
+2009-06-29 13:53:50 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Fix debug arguments. Fixes #587297
+
+2009-06-26 13:43:34 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f810030 to 5845b63
+
+2009-06-25 15:53:52 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  0.10.7.3 pre-release
+
+2009-06-24 15:24:25 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* docs/plugins/Makefile.am:
+	  docs: Fix a comment in the plugin docs Makefile
+
+2009-06-18 01:11:25 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpeg: Don't enter infinite loops in the timestamp tracking
+	  Avoid an infinite loop consuming buffer timestamp info when
+	  the video frames contain only GST_CLOCK_TIME_NONE timestamps.
+	  Add some debug logging in the timestamp tracking paths.
+	  Fixes: #585845
+
+2009-06-24 15:15:53 +0100  Jan Schmidt <jan.schmidt@sun.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From c572721 to f810030
+
+2009-06-17 09:22:14 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  debug: fix unused variable when building with debug disabled
+
+2009-06-06 15:14:45 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* autogen.sh:
+	* ffmpegrev:
+	* gst-libs/ext/Makefile.am:
+	  build: Fix the dist - libswscale isn't an external on the 0.5 branch
+	  The 0.5 ffmpeg branch includes libswscale directly, not as an external,
+	  breaking the dist (and warning in autogen.sh) about not being able to
+	  update its revision.
+	  Add some code to not update the svn external if the
+	  FFMPEG_EXTERNALS_REVISION variable is empty.
+	  Also, in autogen.sh check that the current FFmpeg checkout is from the
+	  right branch according to ffmpegrev, and check it out again if
+	  it's not.
+
+2009-06-05 22:12:24 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  0.10.7.2 pre-release
+
+2009-06-05 13:47:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: don't do QoS on invalid timestamps
+	  When we convert the timestamp to running_time, don't try to do QoS on invalid
+	  times.
+	  Fixes #580810
+
+2009-06-05 13:19:03 +0200  Jordi Mas <jordimash at gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpeg: make elements reusable after registry rescan
+	  If the same instance of the plugin is asked to be initialised more that once,
+	  instances after the first one do not register the elements properly and the
+	  elements become not usable.
+	  For example, if you call gst_update_registry (), is not possible to create
+	  elements after the call since the plugin is asked to be initialised again and
+	  does not register the elements.
+	  Fixes #584291
+
+2009-06-05 13:17:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/generic/plugin-test.c:
+	  check: add registry rescan test
+
+2009-06-05 12:32:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpeg: properly integrate timestamp handling
+	  The patch from Bug #580796 hacked around existing infrastructure to handle
+	  timestamps as DTS (as in all AVI files) causing the logic to be disabled.
+	  Properly hook the timestamp handling into the existing infrastructure to handle
+	  these cases too, partially reverting a26b94d92c2e9e9f6dac0cdb5fb44ba06ee089c8
+	  and moving some stuff around.
+	  Refixes #580796.
+
+2009-06-01 17:24:53 +0200  LRN <lrn1986 at gmail.com>
+
+	* configure.ac:
+	  ffmpeg: change library inclusion order
+	  Fixes #584399
+
+2009-05-29 13:51:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ffmpegrev:
+	  Switch back to the ffmpeg 0.5 branch to allow us to release in the next weeks
+
+2009-05-26 17:20:14 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 888e0a2 to c572721
+
+2009-05-25 12:36:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcfg.c:
+	  enc: use standard multipass-cache-file
+	  Deprecate the old statsfile property and add a the new standard
+	  mulitpass-cache-file property to match other encoders.
+	  Fixes #583627
+
+2009-05-22 10:21:02 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6ab11d1 to 888e0a2
+
+2009-05-15 15:48:35 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpeg: Don't add sink pad template to the muxers when not needed.
+	  If the set of caps for either audio or video is completely empty, skip
+	  adding that pad template to the class. Some muxers only support audio-only
+	  or video-only and otherwise end up with EMPTY caps in the pad template.
+
+2009-05-13 23:18:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffenc: avoid malloc more for audio encoders
+	  Use _adapter_peek() to retrieve data so that we can reuse previously
+	  allocated memory.
+
+2009-05-13 19:35:32 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: demote mpeg2 video decoding back to MARGINAL. Fixes #574461
+
+2009-05-13 16:21:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  Add mapping for VQF caps
+
+2009-05-13 16:19:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ffmpegrev:
+	  Update ffmpeg revision to latest trunk
+
+2009-05-13 13:47:58 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Don't forget to copy over the reordered_opaque in our buffers.
+	  This is to be on-par with the default get_buffer() implementation (which is
+	  detailed in libavcodec/utils.c).
+
+2009-05-13 12:37:42 +0200  Vanista <vanista@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Handle out-of-order frames. Fixes #580796
+
+2009-05-13 11:21:13 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffenc: make the output buffer big enough
+	  The ffmpeg docs say that the output buffer should at least be
+	  FF_MIN_BUFFER_SIZE (which is overly large, but anyways).
+
+2009-05-13 01:04:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegenc.h:
+	  ffmpeg: rewrite audio encoders.
+	  Rewrite the audio encoders to use the right API functions of ffmpeg. Also get
+	  rid of the handrolled cache and use adapter instead for formats that require
+	  fixed frame_size as input.
+
+2009-05-12 22:20:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: revert bogus commit.
+	  We don't need to set a default frame_size, ffmpeg has set this value to 0 to
+	  inform us that there is a fixed relation between the amount of input samples
+	  and output samples. Now we only need to implement handling that fact.
+
+2009-05-12 18:13:16 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcfg.c:
+	  ffmpegcfg: Expose two more CODEC_FLAG.
+
+2009-05-12 15:30:10 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: No, really, we don't want the VDPAU decoders.
+	  They've changed the names, keeping the old ones til we switch upstream
+	  revision.
+
+2009-05-12 11:20:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Update rank of ffdec_mpeg2video to SECONDARY to make it the default
+	  ffdec_mpeg2video is much faster, fixes bug #574461.
+
+2009-05-12 11:16:43 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Implement interlaced support.
+	  ffmpeg only tells us on a per-decoded-buffer basis if the stream is
+	  interlaced or not. When we see a change, we force negotiation.
+	  We can't detect that in our get_buffer() (when doing downstream allocation),
+	  because at that point the interlaced flags aren't set on the outgoing
+	  buffer.
+
+2009-05-10 11:17:16 +0200  Marc-Andre Lureau <marcandre.lureau@gmail.com>
+
+	* autogen.sh:
+	  Run libtoolize before aclocal
+	  This unbreaks the build in some cases. Fixes bug #582021
+
+2009-05-09 10:57:55 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	  win32: Fix non-portable printf format.
+
+2009-05-07 12:57:10 +0200  David Hoyt <dhoyt@llnl.gov>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  Use av_{i,o}format_next instead of the private next field
+	  This fixes compilation with MSVC where the initializer variables
+	  are aliased to different names. Fixes bug #576126.
+
+2009-05-05 17:32:07 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* gst-ffmpeg.spec.in:
+	  Add videoscaler to spec file
+
+2009-05-05 17:27:27 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* gst-ffmpeg.spec.in:
+	  removing make flags in spec file to make things flow easy with
+	  GCC 4.4.0
+
+2009-05-04 13:00:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffenc: Implement preset interface
+
+2009-04-23 14:35:10 -0300  Thiago Santos <thiagoss@embedded.ufcg.edu.br>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffenc: Send error upstream when gst_pad_push return is different from GST_FLOW_OK
+
+2009-04-21 22:13:51 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From b3941ea to 6ab11d1
+
+2009-04-21 18:38:03 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  gstffmpegenc: Don't change properties once opened. Fixes #570815
+	  Based on a patch by Tristan Matthews <le businessman at gmail dot com>
+
+2009-04-21 18:34:22 +0200  Janin Kolenc <janin.kolenc@marand.si>
+
+	* ext/ffmpeg/gstffmpegcfg.c:
+	  gstffmpegcfg: Add H263 to the list of mpeg property-compatible codecs.
+
+2009-03-08 11:31:35 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegutils.c:
+	* ext/ffmpeg/gstffmpegutils.h:
+	  Make sure we provide ffmpeg with 128bit-aligned data.
+	  Add a new function new_aligned_buffer() which creates a GstBuffer of
+	  the requested size/caps, with the memory being allocated/freed by ffmpeg's
+	  av_malloc/av_free which guarantees properly aligned memory.
+	  Added a can_allocate_aligned internal property which we use to figure out
+	  whether downstream can provide us with 128bit aligned buffers.
+
+2009-04-19 14:07:58 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpeg.c:
+	  Reverting Jan's fix-the-buildbot commit
+	  This reverts commit 5465d40b8dcb7650c024bf8c6b6329d26df5a610.
+
+2009-04-19 02:39:30 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/ffmpeg/gstffmpeg.c:
+	  build: Deliberately break the build, temporarily.
+	  This is to force the buildbots to run autogen.sh one time. I can't
+	  figure out a more elegant way.
+
+2009-04-19 02:34:50 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* autogen.sh:
+	* configure.ac:
+	  build: Fix maintainer-mode and embedded FFmpeg configuration parameters
+	  Don't use AC_CONFIG_SUBDIRS to call the FFmpeg configure script, as it
+	  complains about all the unknown parameters autoconf gives it, and fiddling
+	  with ac_configure_args makes maintainer-mode call our real configure script
+	  with a bunch of bogus arguments.
+	  Instead, use AC_CONFIG_COMMANDS to call the FFmpeg configure script
+	  ourselves.
+	  Remove autogen.sh code that modifies the FFmpeg configure script, as it's
+	  not needed now that we only pass it arguments it understands, and move
+	  the detection of flags like --disable-ffmpeg into the configure script,
+	  otherwise they never get passed to FFmpeg if we call configure ourselves,
+	  such as from a tarball.
+
+2009-04-18 09:08:39 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Really fix the arguments this time.
+	  I blame compilers who can't figure out there's the wrong number of arguments
+	  for the given print format :)
+
+2009-04-18 08:50:12 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Fix build on macosx.
+	  The arguments were in the wrong order (and therefore the types were wrong).
+
+2009-04-17 19:07:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: resize padding buffer when it's small
+	  Only resize the padding buffer when the size is too small, when it's just right,
+	  we don't need to call realloc.
+
+2009-04-17 16:25:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpeg: add default frame_size for g726
+	  Without a frame_size configured in the context, the ffmpeg encoders do nothing.
+	  Since the G726 does not configure a size itself, we set ourselves a frame_size
+	  that corresponds to 20ms of audio, which is a reasonable default.
+
+2009-04-17 13:46:39 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/Makefile.am:
+	* tests/check/generic/.gitignore:
+	* tests/check/generic/plugin-test.c:
+	  check: Add a simple test that the FFmpeg plugin loads
+	  Check that the ffmpeg plugin actually exists after building.
+
+2009-04-16 11:00:46 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegutils.c:
+	* ext/ffmpeg/gstffmpegutils.h:
+	  gstffmpegutils: Add the files :)
+
+2009-04-15 22:33:16 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  Move all non-codecmap-related methods to a new file.
+	  We were starting to get too much unrelated code in there. This makes it
+	  a bit easier to maintain.
+
+2009-04-15 22:14:09 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpeg.c:
+	  gstffmpeg.c: Fix the description of the plugin.
+
+2009-04-15 22:11:33 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpeg.c:
+	  gstffmpeg.c: Point to the new ffmpeg website (ffmpeg.org).
+
+2009-04-15 22:11:10 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  The proper spelling is 'FFmpeg'.
+
+2009-04-15 22:04:02 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  gstffmpegmux: Use the AVFormat long_name in our descriptions.
+	  This is the same behaviour we use in the demuxers.
+
+2009-04-15 21:56:00 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	  Disable more fake codecs (raw audio).
+
+2009-04-10 00:19:50 +0200  LRN <lrn1986 at gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: copy input offsets to output buffers
+	  Copy the incomming offsets to the outgoing buffers.
+	  Fixes 578278.
+
+2009-04-04 21:19:34 +0300  Felipe Contreras <felipe.contreras@gmail.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From d0ea89e to b3941ea
+
+2009-04-04 14:54:55 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From f8b3d91 to d0ea89e
+
+2009-04-04 08:53:54 +0200  Branko Čibej <brane@xbc.nu>
+
+	* configure.ac:
+	  ffmpeg: Fix handling of --with-ffmpeg-extra-configure
+	  Fixes bug #577879.
+
+2009-03-25 12:51:55 +0100  Janin Kolenc <janin dot kolenc at marand dot si>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffenc: Add support for I-frame request.
+	  Add request for I-frame request using GstForceKeyUnit event.
+	  Fixes #575709.
+
+2009-03-15 10:19:53 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmux: Actually set caps on the srcpad instead of working with NULL caps
+
+2009-03-22 20:16:24 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  back to development -> 0.10.7.1
+
+=== release 0.10.7 ===
 
 2009-03-21 01:02:05 +0000  Jan Schmidt <thaytan@noraisin.net>
 

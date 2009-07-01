@@ -2847,7 +2847,8 @@ gst_ts_handler_append (GstFFMpegDec * ffmpegdec, GstBuffer * buffer)
     GST_LOG_OBJECT (ffmpegdec, "Extending index [%02X] buf_count: %d"
         " ts: %" GST_TIME_FORMAT " new size: %d",
         ind, ts_handler->buf_count,
-        ts_handler->buffers[ind].ts, ts_handler->buffers[ind].size);
+        GST_TIME_ARGS (ts_handler->buffers[ind].ts),
+        ts_handler->buffers[ind].size);
     ts_handler->buffers[ind].size += size;
   }
 }

@@ -1,4 +1,29 @@
-This is GStreamer FFmpeg Plug-ins 0.10.7, "Some high ground is not worth taking"
+This is GStreamer FFmpeg Plug-ins 0.10.8, "Brilliant in the morning"
+
+Changes since 0.10.7:
+    
+      * Ability to force key-frames in video encoders
+      * Better timestamp handling in decoders
+      * Improved muxer wrapping
+      * Code cleanups and refactoring
+
+Bugs fixed since 0.10.7:
+     
+      * 570815 : ffmenc_mpeg4 allows its bitrate property to be changed wi...
+      * 574728 : Use new interlaced support from -base
+      * 575678 : [ffmux] Set caps on the srcpad / output buffers
+      * 575715 : [ffenc_h263] Properties
+      * 576126 : av_iformat_next and av_oformat_next compile errors using ...
+      * 577879 : Bad check in configure.ac
+      * 578278 : gst-ffmpeg: assign offsets (from upstream) to outgoing bu...
+      * 580796 : [ffmpegdec] out-of-order timestamps
+      * 580810 : Stuttering and crash with some H.264 files
+      * 581009 : gst-ffmpeg needs presets support
+      * 585845 : 0.10.7.2 breaks swfdec
+      * 587297 : build failure on macosx
+      * 575709 : Request a key frame
+      * 584291 : Cannot create elements after calling  gst_update_registry
+      * 584399 : FFmpeg libraries are included in incorrect order when ext...
 
 Changes since 0.10.6:
 

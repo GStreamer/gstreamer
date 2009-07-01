@@ -35,6 +35,17 @@ colorspace conversion elements.
 
  <release>
   <Version>
+   <revision>0.10.8</revision>
+   <branch>0.10</branch>
+   <name>Brilliant in the morning</name>
+   <created>2009-06-29</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-ffmpeg/gst-ffmpeg-0.10.8.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-ffmpeg/gst-ffmpeg-0.10.8.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.7</revision>
    <branch>0.10</branch>
    <name>Some high ground is not worth taking</name>
