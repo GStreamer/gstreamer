@@ -225,5 +225,20 @@ class TestDelayedEventProbe(TestCase):
         # now let the buffer through
         return True
 
+class TestEventCreationParsing(TestCase):
+
+    def testEventStep(self):
+        if hasattr(gst.Event, "parse_step"):
+            e = gst.event_new_step(gst.FORMAT_TIME, 42, 1.0, True, True)
+
+            self.assertEquals(e.type, gst.EVENT_STEP)
+
+            fmt, amount, rate, flush, intermediate = e.parse_step()
+            self.assertEquals(fmt, gst.FORMAT_TIME)
+            self.assertEquals(amount, 42)
+            self.assertEquals(rate, 1.0)
+            self.assertEquals(flush, True)
+            self.assertEquals(intermediate, True)
+
 if __name__ == "__main__":
     unittest.main()

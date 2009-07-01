@@ -261,3 +261,27 @@ _wrap_gst_event_new_tag(PyObject *self, PyObject *args, PyObject *kwargs)
        gst_mini_object_unref((GstMiniObject *)ret);
     return py_ret;
 }
+%%
+override gst_event_parse_step noargs
+static PyObject *
+_wrap_gst_event_parse_step (PyGstMiniObject * self)
+{
+     GstFormat format;
+     guint64 amount;
+     gdouble rate;
+     gboolean flush, intermediate;
+
+     if (GST_EVENT_TYPE (self->obj) != GST_EVENT_STEP) {
+	  PyErr_SetString(PyExc_TypeError, "Event is not a 'step' event");
+	  return NULL;
+     }
+     
+     gst_event_parse_step (GST_EVENT (self->obj), &format, &amount, &rate,
+			   &flush, &intermediate);
+
+     return Py_BuildValue("OKdOO",
+			  pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			  amount, rate,
+			  PyBool_FromLong(flush),
+			  PyBool_FromLong(intermediate));
+}
