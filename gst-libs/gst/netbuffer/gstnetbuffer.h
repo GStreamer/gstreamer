@@ -50,6 +50,16 @@ typedef enum {
 } GstNetType;
 
 /**
+ * GST_NETADDRESS_MAX_LEN:
+ *
+ * The maximum length of a string representation of a GstNetAddress as produced
+ * by gst_netaddress_to_string().
+ *
+ * Since: 0.10.24
+ */
+#define GST_NETADDRESS_MAX_LEN	64
+
+/**
  * GstNetAddress:
  *
  * An opaque network address as used in #GstNetBuffer.

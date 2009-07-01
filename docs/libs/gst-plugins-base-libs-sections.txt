@@ -695,6 +695,7 @@ gst_x_overlay_get_type
 <INCLUDE>gst/netbuffer/gstnetbuffer.h</INCLUDE>
 GstNetBuffer
 GstNetType
+GST_NETADDRESS_MAX_LEN
 GstNetAddress
 
 gst_netbuffer_new
