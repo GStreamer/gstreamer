@@ -105,6 +105,66 @@ class TestCreateMessages(TestCase):
         self.assertEquals(t2['something'], "else")
         self.assertEquals(t2['another'], 42)
 
+    def testTagFullMessage(self):
+        if hasattr(gst.Message, 'parse_tag_full'):
+            p = gst.Pad("blahblah", gst.PAD_SRC)
+            # Create a taglist
+            t = gst.TagList()
+            t['something'] = "else"
+            t['another'] = 42
+
+            # Create two messages using that same taglist
+            m1 = gst.message_new_tag_full(self.element, p, t)
+            assert m1
+            m2 = gst.message_new_tag_full(self.element, p, t)
+            assert m2
+
+            # make sure the two messages have the same taglist
+            p1, t1 = m1.parse_tag_full()
+            assert t1
+            keys = t1.keys()
+            keys.sort()
+            self.assertEquals(p1, p)
+            self.assertEquals(keys, ['another', 'something'])
+            self.assertEquals(t1['something'], "else")
+            self.assertEquals(t1['another'], 42)
+            p2, t2 = m2.parse_tag_full()
+            assert t2
+            keys = t2.keys()
+            keys.sort()
+            self.assertEquals(p2, p)
+            self.assertEquals(keys, ['another', 'something'])
+            self.assertEquals(t2['something'], "else")
+            self.assertEquals(t2['another'], 42)
+
+    def testStepStartMessage(self):
+        if hasattr(gst, 'message_new_step_start'):
+            m = gst.message_new_step_start(self.element, True,
+                                           gst.FORMAT_TIME, 42, 1.0,
+                                           True, True)
+            self.assertEquals(m.type, gst.MESSAGE_STEP_START)
+            active, format, amount, rate, flush, intermediate = m.parse_step_start()
+            self.assertEquals(active, True)
+            self.assertEquals(format, gst.FORMAT_TIME)
+            self.assertEquals(amount, 42)
+            self.assertEquals(rate, 1.0)
+            self.assertEquals(flush, True)
+            self.assertEquals(intermediate, True)
+
+    def testStepDoneMessage(self):
+        if hasattr(gst, 'message_new_step_done'):
+            m = gst.message_new_step_done(self.element, gst.FORMAT_TIME, 42,
+                                          1.0, True, True, 54, True)
+            self.assertEquals(m.type, gst.MESSAGE_STEP_DONE)
+
+            fmt, am, rat, flu, inter, dur, eos = m.parse_step_done()
+            self.assertEquals(fmt, gst.FORMAT_TIME)
+            self.assertEquals(am, 42)
+            self.assertEquals(rat, 1.0)
+            self.assertEquals(flu, True)
+            self.assertEquals(inter, True)
+            self.assertEquals(dur, 54)
+            self.assertEquals(eos, True)
 
 if __name__ == "__main__":
     unittest.main()

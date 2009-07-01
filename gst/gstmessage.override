@@ -323,3 +323,98 @@ _wrap_gst_message_parse_buffering (PyGstMiniObject *self)
 
 	return Py_BuildValue("i", percent);
 }
+%%
+override gst_message_parse_tag_full noargs
+static PyObject *
+_wrap_gst_message_parse_tag_full (PyGstMiniObject *self)
+{
+	GstPad *pad;
+	GstTagList *taglist;
+	PyObject *ptlist;
+
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_TAG) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an Tag message");
+		return NULL;
+	}
+
+	gst_message_parse_tag_full (GST_MESSAGE (self->obj), &pad, &taglist);
+	ptlist = pyg_boxed_new (GST_TYPE_TAG_LIST, taglist, TRUE, TRUE);
+	gst_tag_list_free (taglist);
+
+	return Py_BuildValue("(OO)",
+			     pygobject_new((GObject*) pad),
+			     ptlist);
+}
+%%
+override gst_message_parse_step_done noargs
+static PyObject *
+_wrap_gst_message_parse_step_done (PyGstMiniObject *self)
+{
+	GstFormat format;
+	guint64 amount, duration;
+	gdouble rate;
+	gboolean flush, intermediate, eos;
+	
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_STEP_DONE) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an 'step-done' message");
+		return NULL;
+	}
+
+	gst_message_parse_step_done (GST_MESSAGE (self->obj), &format, &amount, &rate,
+				     &flush, &intermediate, &duration, &eos);
+
+	return Py_BuildValue("OKdOOKO",
+			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			     amount, rate,
+			     PyBool_FromLong(flush),
+			     PyBool_FromLong(intermediate),
+			     duration,
+			     PyBool_FromLong(eos));
+}
+%%
+override gst_message_parse_step_start noargs
+static PyObject *
+_wrap_gst_message_parse_step_start (PyGstMiniObject *self)
+{
+	GstFormat format;
+	guint64 amount;
+	gdouble rate;
+	gboolean active, flush, intermediate;
+	
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_STEP_START) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an 'step-start' message");
+		return NULL;
+	}
+
+	gst_message_parse_step_start (GST_MESSAGE (self->obj), &active, &format,
+				      &amount, &rate, &flush, &intermediate);
+
+	return Py_BuildValue("OOKdOO",
+			     PyBool_FromLong(active),
+			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			     amount, rate,
+			     PyBool_FromLong(flush),
+			     PyBool_FromLong(intermediate));
+}
+%%
+override gst_message_parse_stream_status noargs
+static PyObject *
+_wrap_gst_message_parse_stream_status (PyGstMiniObject *self)
+{
+	GstStreamStatusType type;
+	GstElement *owner;
+	
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_STREAM_STATUS) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an 'stream-status' message");
+		return NULL;
+	}
+
+	gst_message_parse_stream_status (GST_MESSAGE (self->obj), &type, &owner);
+
+	return Py_BuildValue("OO",
+			     pyg_enum_from_gtype (GST_TYPE_STREAM_STATUS_TYPE, type),
+			     pygobject_new((GObject*) owner));
+}
