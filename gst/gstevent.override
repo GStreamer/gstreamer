@@ -285,3 +285,27 @@ _wrap_gst_event_parse_step (PyGstMiniObject * self)
 			  PyBool_FromLong(flush),
 			  PyBool_FromLong(intermediate));
 }
+%%
+override gst_event_parse_new_segment_full noargs
+static PyObject *
+_wrap_gst_event_parse_new_segment_full (PyGstMiniObject *self)
+{
+     gboolean   update;
+     gdouble	rate, applied_rate;
+     GstFormat	format;
+     gint64	start_value, stop_value, base;
+
+     if (GST_EVENT_TYPE(self->obj) != GST_EVENT_NEWSEGMENT) {
+	  PyErr_SetString(PyExc_TypeError, "Even is not a 'NewSegment' event");
+	  return NULL;
+     }
+     
+     gst_event_parse_new_segment_full (GST_EVENT(self->obj), &update, &rate,
+				       &applied_rate, &format,
+				       &start_value, &stop_value, &base);
+
+     return Py_BuildValue("(OddOLLL)",
+			  PyBool_FromLong(update),
+			  rate, applied_rate, pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			  start_value, stop_value, base);
+}
