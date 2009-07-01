@@ -645,18 +645,23 @@ class BoxedArg(ArgType):
             info.arglist.append(pname)
         info.add_parselist('O', ['&py_' + pname], [pname])
     ret_tmpl = '    /* pyg_boxed_new handles NULL checking */\n' \
-               '    return pyg_boxed_new(%(typecode)s, %(ret)s, %(copy)s, TRUE);'
+               '    return pyg_boxed_new(%(typecode)s, (%(saferet)s) %(ret)s, %(copy)s, TRUE);'
     def write_return(self, ptype, ownsreturn, info):
+        if ptype[:6] == 'const-':
+            ptype = "const " + ptype[6:]
         if ptype[-1] == '*':
-            info.varlist.add(self.typename, '*ret')
+            info.varlist.add(ptype[:-1], '*ret')
             ret = 'ret'
+            stype = self.typename + '*'
         else:
-            info.varlist.add(self.typename, 'ret')
+            info.varlist.add(ptype, 'ret')
             ret = '&ret'
             ownsreturn = 0 # of course it can't own a ref to a local var ...
+            stype = self.typename
         info.codeafter.append(self.ret_tmpl %
                               { 'typecode': self.typecode,
                                 'ret': ret,
+                                'saferet' : stype,
                                 'copy': ownsreturn and 'FALSE' or 'TRUE'})
 
 class CustomBoxedArg(ArgType):
