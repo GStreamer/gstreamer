@@ -1264,17 +1264,16 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
     service_id = GST_READ_UINT16_BE (data);
     data += 2;
 
-    /* reserved */
+    EIT_schedule = ((*data & 0x02) == 2);
+    EIT_present_following = (*data & 0x01) == 1;
+
     data += 1;
-
     tmp = GST_READ_UINT16_BE (data);
-    data += 2;
 
-    EIT_schedule = (tmp >> 15);
-    EIT_present_following = (tmp >> 14) & 0x01;
-    running_status = (tmp >> 5) & 0x03;
-    scrambled = (tmp >> 4) & 0x01;
+    running_status = (*data >> 5) & 0x07;
+    scrambled = (*data >> 4) & 0x01;
     descriptors_loop_length = tmp & 0x0FFF;
+    data += 2;
 
     /* TODO send tag event down relevant pad for channel name and provider */
     service_name = g_strdup_printf ("service-%d", service_id);
@@ -1307,7 +1306,26 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
             (gchar *) DESC_DVB_SERVICE_name_text (service_descriptor);
         if (servicename_length + serviceprovider_name_length + 2 <=
             DESC_LENGTH (service_descriptor)) {
-
+          gchar *running_status_tmp;
+          switch (running_status) {
+            case 0:
+              running_status_tmp = "undefined";
+              break;
+            case 1:
+              running_status_tmp = "not running";
+              break;
+            case 2:
+              running_status_tmp = "starts in a few seconds";
+              break;
+            case 3:
+              running_status_tmp = "pausing";
+              break;
+            case 4:
+              running_status_tmp = "running";
+              break;
+            default:
+              running_status_tmp = "reserved";
+          }
           servicename_tmp =
               get_encoding_and_convert (servicename, servicename_length);
           serviceprovider_name_tmp =
@@ -1317,7 +1335,8 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
           gst_structure_set (service,
               "name", G_TYPE_STRING, servicename_tmp,
               "provider-name", G_TYPE_STRING, serviceprovider_name_tmp,
-              "scrambled", G_TYPE_BOOLEAN, scrambled, NULL);
+              "scrambled", G_TYPE_BOOLEAN, scrambled,
+              "running-status", G_TYPE_STRING, running_status_tmp, NULL);
 
           g_free (servicename_tmp);
           g_free (serviceprovider_name_tmp);
