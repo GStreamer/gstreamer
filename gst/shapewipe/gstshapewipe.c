@@ -93,10 +93,10 @@ enum
 };
 
 static GstStaticPadTemplate video_sink_pad_template =
-GST_STATIC_PAD_TEMPLATE ("video_sink",
+    GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") " ; " GST_VIDEO_CAPS_ARGB));
 
 static GstStaticPadTemplate mask_sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("mask_sink",
@@ -112,8 +112,8 @@ static GstStaticPadTemplate mask_sink_pad_template =
         "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = 0/1"));
 
 static GstStaticPadTemplate src_pad_template =
-GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")));
+    GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") " ; " GST_VIDEO_CAPS_ARGB));
 
 GST_DEBUG_CATEGORY_STATIC (gst_shape_wipe_debug);
 #define GST_CAT_DEFAULT gst_shape_wipe_debug
@@ -273,6 +273,7 @@ gst_shape_wipe_reset (GstShapeWipe * self)
 
   g_cond_signal (self->mask_cond);
 
+  self->fmt = GST_VIDEO_FORMAT_UNKNOWN;
   self->width = self->height = 0;
   self->mask_position = 0.0;
   self->mask_border = 0.0;
@@ -309,6 +310,7 @@ gst_shape_wipe_video_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
   gboolean ret = TRUE;
   GstStructure *s;
+  GstVideoFormat fmt;
   gint width, height;
   gint fps_n, fps_d;
 
@@ -316,13 +318,13 @@ gst_shape_wipe_video_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   s = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (s, "width", &width) ||
-      !gst_structure_get_int (s, "height", &height) ||
+  if (!gst_video_format_parse_caps (caps, &fmt, &width, &height) ||
       !gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
     ret = FALSE;
     goto done;
   }
 
+  self->fmt = fmt;
   if (self->width != width || self->height != height) {
     g_mutex_lock (self->mask_mutex);
     self->width = width;
@@ -402,13 +404,20 @@ gst_shape_wipe_video_sink_getcaps (GstPad * pad)
 
     n = gst_caps_get_size (tmp);
 
+    tmp2 = gst_caps_new_empty ();
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (tmp, i);
+      GstStructure *c;
 
-      gst_structure_remove_fields (s, "bpp", "depth", "endianness", "framerate",
+      gst_structure_remove_fields (s, "format", "bpp", "depth", "endianness",
+          "framerate", "red_mask", "green_mask", "blue_mask", "alpha_mask",
           NULL);
       gst_structure_set_name (s, "video/x-raw-yuv");
+      c = gst_structure_copy (s);
+      gst_structure_set_name (c, "video/x-raw-rgb");
+      gst_caps_append_structure (tmp2, c);
     }
+    gst_caps_append (tmp, tmp2);
 
     intersection = gst_caps_intersect (tmp, ret);
     gst_caps_unref (tmp);
@@ -498,7 +507,9 @@ gst_shape_wipe_mask_sink_getcaps (GstPad * pad)
     GstStructure *t;
 
     gst_structure_set_name (s, "video/x-raw-gray");
-    gst_structure_remove_fields (s, "format", "framerate", NULL);
+    gst_structure_remove_fields (s, "format", "framerate", "bpp", "depth",
+        "endianness", "framerate", "red_mask", "green_mask", "blue_mask",
+        "alpha_mask", NULL);
 
     if (self->width && self->height)
       gst_structure_set (s, "width", G_TYPE_INT, self->width, "height",
@@ -514,7 +525,7 @@ gst_shape_wipe_mask_sink_getcaps (GstPad * pad)
 
     gst_caps_append_structure (tmp, t);
   }
-  gst_caps_merge (ret, tmp);
+  gst_caps_append (ret, tmp);
 
   tmp = gst_pad_peer_get_caps (pad);
   if (tmp) {
@@ -591,13 +602,20 @@ gst_shape_wipe_src_getcaps (GstPad * pad)
     tmp = intersection;
     n = gst_caps_get_size (tmp);
 
+    tmp2 = gst_caps_new_empty ();
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (tmp, i);
+      GstStructure *c;
 
-      gst_structure_remove_fields (s, "bpp", "depth", "endianness", "framerate",
+      gst_structure_remove_fields (s, "format", "bpp", "depth", "endianness",
+          "framerate", "red_mask", "green_mask", "blue_mask", "alpha_mask",
           NULL);
       gst_structure_set_name (s, "video/x-raw-yuv");
+      c = gst_structure_copy (s);
+
+      gst_caps_append_structure (tmp2, c);
     }
+    gst_caps_append (tmp, tmp2);
 
     intersection = gst_caps_intersect (tmp, ret);
     gst_caps_unref (tmp);
@@ -729,117 +747,127 @@ gst_shape_wipe_do_qos (GstShapeWipe * self, GstClockTime timestamp)
   return TRUE;
 }
 
-static GstFlowReturn
-gst_shape_wipe_blend_16 (GstShapeWipe * self, GstBuffer * inbuf,
-    GstBuffer * maskbuf, GstBuffer * outbuf)
-{
-  const guint16 *mask = (const guint16 *) GST_BUFFER_DATA (maskbuf);
-  const guint8 *input = (const guint8 *) GST_BUFFER_DATA (inbuf);
-  guint8 *output = (guint8 *) GST_BUFFER_DATA (outbuf);
-  guint i, j;
-  guint mask_increment = GST_ROUND_UP_2 (self->width) - self->width;
-  gfloat position = self->mask_position;
-  gfloat low = position - (self->mask_border / 2.0f);
-  gfloat high = position + (self->mask_border / 2.0f);
-
-  if (low < 0.0f) {
-    high = 0.0f;
-    low = 0.0f;
-  }
-
-  if (high > 1.0f) {
-    low = 1.0f;
-    high = 1.0f;
-  }
-
-  for (i = 0; i < self->height; i++) {
-    for (j = 0; j < self->width; j++) {
-      gfloat in = *mask / 65536.0f;
-
-      if (in < low) {
-        output[0] = 0x00;       /* A */
-        output[1] = 0x00;       /* Y */
-        output[2] = 0x80;       /* U */
-        output[3] = 0x80;       /* V */
-      } else if (in >= high) {
-        output[0] = 0xff;       /* A */
-        output[1] = input[1];   /* Y */
-        output[2] = input[2];   /* U */
-        output[3] = input[3];   /* V */
-      } else {
-        gfloat val = 255.0f * ((in - low) / (high - low));
-
-        output[0] = CLAMP (val, 0, 255);        /* A */
-        output[1] = input[1];   /* Y */
-        output[2] = input[2];   /* U */
-        output[3] = input[3];   /* V */
-      }
-
-      mask++;
-      input += 4;
-      output += 4;
-    }
-    mask += mask_increment;
-  }
-
-  return GST_FLOW_OK;
+#define CREATE_AYUV_FUNCTIONS(depth, scale) \
+static GstFlowReturn \
+gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
+    GstBuffer * maskbuf, GstBuffer * outbuf) \
+{ \
+  const guint##depth *mask = (const guint##depth *) GST_BUFFER_DATA (maskbuf); \
+  const guint8 *input = (const guint8 *) GST_BUFFER_DATA (inbuf); \
+  guint8 *output = (guint8 *) GST_BUFFER_DATA (outbuf); \
+  guint i, j; \
+  guint mask_increment = ((depth == 16) ? GST_ROUND_UP_2 (self->width) : \
+                           GST_ROUND_UP_4 (self->width)) - self->width; \
+  gfloat position = self->mask_position; \
+  gfloat low = position - (self->mask_border / 2.0f); \
+  gfloat high = position + (self->mask_border / 2.0f); \
+  \
+  if (low < 0.0f) { \
+    high = 0.0f; \
+    low = 0.0f; \
+  } \
+  \
+  if (high > 1.0f) { \
+    low = 1.0f; \
+    high = 1.0f; \
+  } \
+  \
+  for (i = 0; i < self->height; i++) { \
+    for (j = 0; j < self->width; j++) { \
+      gfloat in = *mask / scale; \
+      \
+      if (in < low) { \
+        output[0] = 0x00;       /* A */ \
+        output[1] = 0x00;       /* Y */ \
+        output[2] = 0x80;       /* U */ \
+        output[3] = 0x80;       /* V */ \
+      } else if (in >= high) { \
+        output[0] = 0xff;       /* A */ \
+        output[1] = input[1];   /* Y */ \
+        output[2] = input[2];   /* U */ \
+        output[3] = input[3];   /* V */ \
+      } else { \
+        gfloat val = 255.0f * ((in - low) / (high - low)); \
+        \
+        output[0] = CLAMP (val, 0, 255);        /* A */ \
+        output[1] = input[1];   /* Y */ \
+        output[2] = input[2];   /* U */ \
+        output[3] = input[3];   /* V */ \
+      } \
+      \
+      mask++; \
+      input += 4; \
+      output += 4; \
+    } \
+    mask += mask_increment; \
+  } \
+  \
+  return GST_FLOW_OK; \
 }
 
-static GstFlowReturn
-gst_shape_wipe_blend_8 (GstShapeWipe * self, GstBuffer * inbuf,
-    GstBuffer * maskbuf, GstBuffer * outbuf)
-{
-  const guint8 *mask = (const guint8 *) GST_BUFFER_DATA (maskbuf);
-  const guint8 *input = (const guint8 *) GST_BUFFER_DATA (inbuf);
-  guint8 *output = (guint8 *) GST_BUFFER_DATA (outbuf);
-  guint i, j;
-  guint mask_increment = GST_ROUND_UP_4 (self->width) - self->width;
-  gfloat position = self->mask_position;
-  gfloat low = position - (self->mask_border / 2.0f);
-  gfloat high = position + (self->mask_border / 2.0f);
+CREATE_AYUV_FUNCTIONS (16, 65536.0f);
+CREATE_AYUV_FUNCTIONS (8, 256.0f);
 
-  if (low < 0.0f) {
-    high = 0.0f;
-    low = 0.0f;
-  }
-
-  if (high > 1.0f) {
-    low = 1.0f;
-    high = 1.0f;
-  }
-
-  for (i = 0; i < self->height; i++) {
-    for (j = 0; j < self->width; j++) {
-      gfloat in = *mask / 256.0f;
-
-      if (in < low) {
-        output[0] = 0x00;       /* A */
-        output[1] = 0x00;       /* Y */
-        output[2] = 0x80;       /* U */
-        output[3] = 0x80;       /* V */
-      } else if (in >= high) {
-        output[0] = 0xff;       /* A */
-        output[1] = input[1];   /* Y */
-        output[2] = input[2];   /* U */
-        output[3] = input[3];   /* V */
-      } else {
-        gfloat val = 255.0f * ((in - low) / (high - low));
-
-        output[0] = CLAMP (val, 0, 255);        /* A */
-        output[1] = input[1];   /* Y */
-        output[2] = input[2];   /* U */
-        output[3] = input[3];   /* V */
-      }
-
-      mask++;
-      input += 4;
-      output += 4;
-    }
-    mask += mask_increment;
-  }
-
-  return GST_FLOW_OK;
+#define CREATE_ARGB_FUNCTIONS(depth, scale) \
+static GstFlowReturn \
+gst_shape_wipe_blend_argb_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
+    GstBuffer * maskbuf, GstBuffer * outbuf) \
+{ \
+  const guint##depth *mask = (const guint##depth *) GST_BUFFER_DATA (maskbuf); \
+  const guint8 *input = (const guint8 *) GST_BUFFER_DATA (inbuf); \
+  guint8 *output = (guint8 *) GST_BUFFER_DATA (outbuf); \
+  guint i, j; \
+  guint mask_increment = ((depth == 16) ? GST_ROUND_UP_2 (self->width) : \
+                           GST_ROUND_UP_4 (self->width)) - self->width; \
+  gfloat position = self->mask_position; \
+  gfloat low = position - (self->mask_border / 2.0f); \
+  gfloat high = position + (self->mask_border / 2.0f); \
+  \
+  if (low < 0.0f) { \
+    high = 0.0f; \
+    low = 0.0f; \
+  } \
+  \
+  if (high > 1.0f) { \
+    low = 1.0f; \
+    high = 1.0f; \
+  } \
+  \
+  for (i = 0; i < self->height; i++) { \
+    for (j = 0; j < self->width; j++) { \
+      gfloat in = *mask / scale; \
+      \
+      if (in < low) { \
+        output[0] = 0x00;       /* A */ \
+        output[1] = 0x00;       /* R */ \
+        output[2] = 0x00;       /* G */ \
+        output[3] = 0x00;       /* B */ \
+      } else if (in >= high) { \
+        output[0] = 0xff;       /* A */ \
+        output[1] = input[1];   /* R */ \
+        output[2] = input[2];   /* G */ \
+        output[3] = input[3];   /* B */ \
+      } else { \
+        gfloat val = 255.0f * ((in - low) / (high - low)); \
+        \
+        output[0] = CLAMP (val, 0, 255);        /* A */ \
+        output[1] = input[1];   /* R */ \
+        output[2] = input[2];   /* G */ \
+        output[3] = input[3];   /* B */ \
+      } \
+      \
+      mask++; \
+      input += 4; \
+      output += 4; \
+    } \
+    mask += mask_increment; \
+  } \
+  \
+  return GST_FLOW_OK; \
 }
+
+CREATE_ARGB_FUNCTIONS (16, 65536.0f);
+CREATE_ARGB_FUNCTIONS (8, 256.0f);
 
 static GstFlowReturn
 gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
@@ -849,6 +877,9 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *mask = NULL, *outbuf = NULL;
   GstClockTime timestamp;
   gboolean new_outbuf = FALSE;
+
+  if (G_UNLIKELY (self->fmt == GST_VIDEO_FORMAT_UNKNOWN))
+    return GST_FLOW_NOT_NEGOTIATED;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   timestamp =
@@ -898,10 +929,16 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
     outbuf = buffer;
   }
 
-  if (self->mask_bpp == 16)
-    ret = gst_shape_wipe_blend_16 (self, buffer, mask, outbuf);
+  if (self->fmt == GST_VIDEO_FORMAT_AYUV && self->mask_bpp == 16)
+    ret = gst_shape_wipe_blend_ayuv_16 (self, buffer, mask, outbuf);
+  else if (self->fmt == GST_VIDEO_FORMAT_AYUV)
+    ret = gst_shape_wipe_blend_ayuv_8 (self, buffer, mask, outbuf);
+  else if (self->fmt == GST_VIDEO_FORMAT_ARGB && self->mask_bpp == 16)
+    ret = gst_shape_wipe_blend_argb_16 (self, buffer, mask, outbuf);
+  else if (self->fmt == GST_VIDEO_FORMAT_ARGB)
+    ret = gst_shape_wipe_blend_argb_8 (self, buffer, mask, outbuf);
   else
-    ret = gst_shape_wipe_blend_8 (self, buffer, mask, outbuf);
+    g_assert_not_reached ();
 
   gst_buffer_unref (mask);
   if (new_outbuf)
