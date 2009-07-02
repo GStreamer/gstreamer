@@ -89,7 +89,7 @@ GST_BOILERPLATE_FULL (GstVdpVideoPostProcess, gst_vdp_vpp,
 static void gst_vdp_vpp_finalize (GObject * object);
 
 static gboolean
-gst_vdp_vpp_set_caps (GstPad * pad, GstCaps * caps)
+gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVdpVideoPostProcess *vpp =
       GST_VDP_VIDEO_POST_PROCESS (gst_pad_get_parent (pad));
@@ -498,7 +498,7 @@ gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
   gst_element_add_pad (GST_ELEMENT (vpp), vpp->sinkpad);
 
   gst_pad_set_getcaps_function (vpp->sinkpad, gst_vdp_vpp_sink_getcaps);
-  gst_pad_set_setcaps_function (vpp->sinkpad, gst_vdp_vpp_set_caps);
+  gst_pad_set_setcaps_function (vpp->sinkpad, gst_vdp_vpp_sink_setcaps);
   gst_pad_set_chain_function (vpp->sinkpad,
       GST_DEBUG_FUNCPTR (gst_vdp_vpp_chain));
   gst_pad_set_event_function (vpp->sinkpad,
