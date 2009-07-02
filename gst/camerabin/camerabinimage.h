@@ -50,7 +50,7 @@ struct _GstCameraBinImage
 
   GstElement *post;
   GstElement *enc;
-  GstElement *user_enc;
+  GstElement *app_enc;
   GstElement *meta_mux;
   GstElement *sink;
 
@@ -81,4 +81,4 @@ GstElement *gst_camerabin_image_get_encoder (GstCameraBinImage * img);
 GstElement *gst_camerabin_image_get_postproc (GstCameraBinImage * img);
 
 G_END_DECLS
-#endif                          /* #ifndef __CAMERABIN_IMAGE_H__ */
+#endif /* #ifndef __CAMERABIN_IMAGE_H__ */

@@ -175,11 +175,11 @@
 enum
 {
   /* action signals */
-  USER_START_SIGNAL,
-  USER_STOP_SIGNAL,
-  USER_PAUSE_SIGNAL,
-  USER_RES_FPS_SIGNAL,
-  USER_IMAGE_RES_SIGNAL,
+  CAPTURE_START_SIGNAL,
+  CAPTURE_STOP_SIGNAL,
+  CAPTURE_PAUSE_SIGNAL,
+  SET_VIDEO_RESOLUTION_FPS_SIGNAL,
+  SET_IMAGE_RESOLUTION_SIGNAL,
   /* emit signals */
   IMG_DONE_SIGNAL,
   LAST_SIGNAL
@@ -339,22 +339,23 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * message);
  * Action signal function declarations
  */
 
-static void gst_camerabin_user_start (GstCameraBin * camera);
+static void gst_camerabin_capture_start (GstCameraBin * camera);
 
-static void gst_camerabin_user_stop (GstCameraBin * camera);
+static void gst_camerabin_capture_stop (GstCameraBin * camera);
 
-static void gst_camerabin_user_pause (GstCameraBin * camera);
+static void gst_camerabin_capture_pause (GstCameraBin * camera);
 
 static void
 gst_camerabin_set_image_capture_caps (GstCameraBin * camera, gint width,
     gint height);
 
 static void
-gst_camerabin_user_res_fps (GstCameraBin * camera, gint width, gint height,
-    gint fps_n, gint fps_d);
+gst_camerabin_set_video_resolution_fps (GstCameraBin * camera, gint width,
+    gint height, gint fps_n, gint fps_d);
 
 static void
-gst_camerabin_user_image_res (GstCameraBin * camera, gint width, gint height);
+gst_camerabin_set_image_resolution (GstCameraBin * camera, gint width,
+    gint height);
 
 
 /*
@@ -556,9 +557,9 @@ camerabin_create_src_elements (GstCameraBin * camera)
   GstBin *cbin = GST_BIN (camera);
   gchar *driver_name = NULL;
 
-  /* Add user set or default video src element */
+  /* Add application set or default video src element */
   if (!(camera->src_vid_src = gst_camerabin_setup_default_element (cbin,
-              camera->user_vid_src, "autovideosrc", DEFAULT_VIDEOSRC))) {
+              camera->app_vid_src, "autovideosrc", DEFAULT_VIDEOSRC))) {
     camera->src_vid_src = NULL;
     goto done;
   } else {
@@ -683,9 +684,9 @@ camerabin_create_view_elements (GstCameraBin * camera)
       goto error;
     }
   }
-  /* Add user set or default video sink element */
+  /* Add application set or default video sink element */
   if (!(camera->view_sink = gst_camerabin_setup_default_element (cbin,
-              camera->user_vf_sink, "autovideosink", DEFAULT_VIDEOSINK))) {
+              camera->app_vf_sink, "autovideosink", DEFAULT_VIDEOSINK))) {
     camera->view_sink = NULL;
     goto error;
   } else {
@@ -878,14 +879,14 @@ camerabin_dispose_elements (GstCameraBin * camera)
     g_string_free (camera->filename, TRUE);
     camera->filename = NULL;
   }
-  /* Unref user set elements */
-  if (camera->user_vf_sink) {
-    gst_object_unref (camera->user_vf_sink);
-    camera->user_vf_sink = NULL;
+  /* Unref application set elements */
+  if (camera->app_vf_sink) {
+    gst_object_unref (camera->app_vf_sink);
+    camera->app_vf_sink = NULL;
   }
-  if (camera->user_vid_src) {
-    gst_object_unref (camera->user_vid_src);
-    camera->user_vid_src = NULL;
+  if (camera->app_vid_src) {
+    gst_object_unref (camera->app_vid_src);
+    camera->app_vid_src = NULL;
   }
 
   if (camera->app_video_filter) {
@@ -1126,7 +1127,7 @@ gst_camerabin_get_allowed_input_caps (GstCameraBin * camera)
 
   g_return_val_if_fail (camera != NULL, NULL);
 
-  videosrc = camera->src_vid_src ? camera->src_vid_src : camera->user_vid_src;
+  videosrc = camera->src_vid_src ? camera->src_vid_src : camera->app_vid_src;
 
   if (!videosrc) {
     GST_WARNING_OBJECT (camera, "no videosrc, can't get allowed caps");
@@ -2658,11 +2659,11 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    * Resumes video recording if it has been paused.
    */
 
-  camerabin_signals[USER_START_SIGNAL] =
+  camerabin_signals[CAPTURE_START_SIGNAL] =
       g_signal_new ("capture-start",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstCameraBinClass, user_start),
+      G_STRUCT_OFFSET (GstCameraBinClass, capture_start),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /**
@@ -2673,11 +2674,11 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    * recording and returns to the view finder mode.
    */
 
-  camerabin_signals[USER_STOP_SIGNAL] =
+  camerabin_signals[CAPTURE_STOP_SIGNAL] =
       g_signal_new ("capture-stop",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstCameraBinClass, user_stop),
+      G_STRUCT_OFFSET (GstCameraBinClass, capture_stop),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /**
@@ -2688,11 +2689,11 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    * If in image mode or not recording, does nothing.
    */
 
-  camerabin_signals[USER_PAUSE_SIGNAL] =
+  camerabin_signals[CAPTURE_PAUSE_SIGNAL] =
       g_signal_new ("capture-pause",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstCameraBinClass, user_pause),
+      G_STRUCT_OFFSET (GstCameraBinClass, capture_pause),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /**
@@ -2711,11 +2712,11 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    * given resolution, unless in night mode when minimum is configured.
    */
 
-  camerabin_signals[USER_RES_FPS_SIGNAL] =
+  camerabin_signals[SET_VIDEO_RESOLUTION_FPS_SIGNAL] =
       g_signal_new ("set-video-resolution-fps",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstCameraBinClass, user_res_fps),
+      G_STRUCT_OFFSET (GstCameraBinClass, set_video_resolution_fps),
       NULL, NULL, __gst_camerabin_marshal_VOID__INT_INT_INT_INT, G_TYPE_NONE, 4,
       G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 
@@ -2729,11 +2730,11 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    * Does not affect view finder mode and video recording.
    */
 
-  camerabin_signals[USER_IMAGE_RES_SIGNAL] =
+  camerabin_signals[SET_IMAGE_RESOLUTION_SIGNAL] =
       g_signal_new ("set-image-resolution",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstCameraBinClass, user_image_res),
+      G_STRUCT_OFFSET (GstCameraBinClass, set_image_resolution),
       NULL, NULL, __gst_camerabin_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
       G_TYPE_INT, G_TYPE_INT);
 
@@ -2757,11 +2758,11 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
 
   gst_camerabin_override_photo_properties (gobject_class);
 
-  klass->user_start = gst_camerabin_user_start;
-  klass->user_stop = gst_camerabin_user_stop;
-  klass->user_pause = gst_camerabin_user_pause;
-  klass->user_res_fps = gst_camerabin_user_res_fps;
-  klass->user_image_res = gst_camerabin_user_image_res;
+  klass->capture_start = gst_camerabin_capture_start;
+  klass->capture_stop = gst_camerabin_capture_stop;
+  klass->capture_pause = gst_camerabin_capture_pause;
+  klass->set_video_resolution_fps = gst_camerabin_set_video_resolution_fps;
+  klass->set_image_resolution = gst_camerabin_set_image_resolution;
 
   klass->img_done = gst_camerabin_default_signal_img_done;
 
@@ -2842,7 +2843,7 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->aspect_filter = NULL;
   camera->view_sink = NULL;
 
-  camera->user_vf_sink = NULL;
+  camera->app_vf_sink = NULL;
 
   /* source elements */
   camera->src_vid_src = NULL;
@@ -2853,7 +2854,6 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->src_out_sel = NULL;
 
   camera->app_video_filter = NULL;
-  camera->user_vid_src = NULL;
 
   camera->active_bin = NULL;
 
@@ -3009,10 +3009,10 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
             ("camerabin must be in NULL state when setting the view finder element"),
             (NULL));
       } else {
-        if (camera->user_vf_sink)
-          gst_object_unref (camera->user_vf_sink);
-        camera->user_vf_sink = g_value_get_object (value);
-        gst_object_ref (camera->user_vf_sink);
+        if (camera->app_vf_sink)
+          gst_object_unref (camera->app_vf_sink);
+        camera->app_vf_sink = g_value_get_object (value);
+        gst_object_ref (camera->app_vf_sink);
       }
       break;
     case ARG_VIDEO_SRC:
@@ -3021,10 +3021,10 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
             ("camerabin must be in NULL state when setting the video source element"),
             (NULL));
       } else {
-        if (camera->user_vid_src)
-          gst_object_unref (camera->user_vid_src);
-        camera->user_vid_src = g_value_get_object (value);
-        gst_object_ref (camera->user_vid_src);
+        if (camera->app_vid_src)
+          gst_object_unref (camera->app_vid_src);
+        camera->app_vid_src = g_value_get_object (value);
+        gst_object_ref (camera->app_vid_src);
       }
       break;
     case ARG_AUDIO_SRC:
@@ -3151,13 +3151,13 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
       if (camera->view_sink)
         g_value_set_object (value, camera->view_sink);
       else
-        g_value_set_object (value, camera->user_vf_sink);
+        g_value_set_object (value, camera->app_vf_sink);
       break;
     case ARG_VIDEO_SRC:
       if (camera->src_vid_src)
         g_value_set_object (value, camera->src_vid_src);
       else
-        g_value_set_object (value, camera->user_vid_src);
+        g_value_set_object (value, camera->app_vid_src);
       break;
     case ARG_AUDIO_SRC:
       g_value_set_object (value,
@@ -3349,12 +3349,12 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * msg)
  */
 
 static void
-gst_camerabin_user_start (GstCameraBin * camera)
+gst_camerabin_capture_start (GstCameraBin * camera)
 {
 
   GST_INFO_OBJECT (camera, "starting capture");
   if (camera->paused) {
-    gst_camerabin_user_pause (camera);
+    gst_camerabin_capture_pause (camera);
     return;
   }
 
@@ -3399,7 +3399,7 @@ gst_camerabin_user_start (GstCameraBin * camera)
 }
 
 static void
-gst_camerabin_user_stop (GstCameraBin * camera)
+gst_camerabin_capture_stop (GstCameraBin * camera)
 {
   if (camera->active_bin == camera->vidbin) {
     GST_INFO_OBJECT (camera, "stopping video capture");
@@ -3411,7 +3411,7 @@ gst_camerabin_user_stop (GstCameraBin * camera)
 }
 
 static void
-gst_camerabin_user_pause (GstCameraBin * camera)
+gst_camerabin_capture_pause (GstCameraBin * camera)
 {
   if (camera->active_bin == camera->vidbin) {
     if (!camera->paused) {
@@ -3454,8 +3454,8 @@ gst_camerabin_user_pause (GstCameraBin * camera)
 }
 
 static void
-gst_camerabin_user_res_fps (GstCameraBin * camera, gint width, gint height,
-    gint fps_n, gint fps_d)
+gst_camerabin_set_video_resolution_fps (GstCameraBin * camera, gint width,
+    gint height, gint fps_n, gint fps_d)
 {
   GstState state, pending;
   GstPad *activepad = NULL;
@@ -3523,7 +3523,8 @@ gst_camerabin_set_image_capture_caps (GstCameraBin * camera, gint width,
 }
 
 static void
-gst_camerabin_user_image_res (GstCameraBin * camera, gint width, gint height)
+gst_camerabin_set_image_resolution (GstCameraBin * camera, gint width,
+    gint height)
 {
   /* Set the caps now already, if possible */
   gst_camerabin_set_image_capture_caps (camera, width, height);

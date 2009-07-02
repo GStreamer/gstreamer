@@ -64,12 +64,12 @@ struct _GstCameraBinVideo
   GstPad *tee_video_srcpad;
   GstPad *tee_vf_srcpad;
 
-  /* User set elements */
-  GstElement *user_post;        /* Video post processing */
-  GstElement *user_vid_enc;
-  GstElement *user_aud_enc;
-  GstElement *user_aud_src;
-  GstElement *user_mux;
+  /* Application set elements */
+  GstElement *app_post;         /* Video post processing */
+  GstElement *app_vid_enc;
+  GstElement *app_aud_enc;
+  GstElement *app_aud_src;
+  GstElement *app_mux;
 
   /* Other elements */
   GstElement *aud_src;          /* Audio source */

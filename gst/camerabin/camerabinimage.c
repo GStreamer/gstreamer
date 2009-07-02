@@ -147,7 +147,7 @@ gst_camerabin_image_init (GstCameraBinImage * img,
 
   img->post = NULL;
   img->enc = NULL;
-  img->user_enc = NULL;
+  img->app_enc = NULL;
   img->meta_mux = NULL;
   img->sink = NULL;
 
@@ -167,9 +167,9 @@ gst_camerabin_image_dispose (GstCameraBinImage * img)
   g_string_free (img->filename, TRUE);
   img->filename = NULL;
 
-  if (img->user_enc) {
-    gst_object_unref (img->user_enc);
-    img->user_enc = NULL;
+  if (img->app_enc) {
+    gst_object_unref (img->app_enc);
+    img->app_enc = NULL;
   }
 
   if (img->post) {
@@ -435,9 +435,8 @@ gst_camerabin_image_create_elements (GstCameraBinImage * img)
     img_sinkpad = gst_element_get_static_pad (csp, "sink");
   }
 
-  /* Create image encoder */
-  if (img->user_enc) {
-    img->enc = img->user_enc;
+  if (img->app_enc) {
+    img->enc = img->app_enc;
     if (!gst_camerabin_add_element (imgbin, img->enc)) {
       goto done;
     }
@@ -518,12 +517,12 @@ void
 gst_camerabin_image_set_encoder (GstCameraBinImage * img, GstElement * encoder)
 {
   GST_DEBUG ("setting image encoder %" GST_PTR_FORMAT, encoder);
-  if (img->user_enc)
-    gst_object_unref (img->user_enc);
+  if (img->app_enc)
+    gst_object_unref (img->app_enc);
   if (encoder)
     gst_object_ref (encoder);
 
-  img->user_enc = encoder;
+  img->app_enc = encoder;
 }
 
 void
@@ -551,8 +550,8 @@ gst_camerabin_image_get_encoder (GstCameraBinImage * img)
 {
   GstElement *enc;
 
-  if (img->user_enc) {
-    enc = img->user_enc;
+  if (img->app_enc) {
+    enc = img->app_enc;
   } else {
     enc = img->enc;
   }

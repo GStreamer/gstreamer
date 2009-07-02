@@ -134,9 +134,9 @@ struct _GstCameraBin
   GstElement *view_scale;
   GstElement *view_sink;
 
-  /* User configurable elements */
-  GstElement *user_vid_src;
-  GstElement *user_vf_sink;
+  /* Application configurable elements */
+  GstElement *app_vid_src;
+  GstElement *app_vf_sink;
   GstElement *app_video_filter;
 
   /* Night mode handling */
@@ -169,12 +169,12 @@ struct _GstCameraBinClass
 
   /* action signals */
 
-  void (*user_start) (GstCameraBin * camera);
-  void (*user_stop) (GstCameraBin * camera);
-  void (*user_pause) (GstCameraBin * camera);
-  void (*user_res_fps) (GstCameraBin * camera, gint width, gint height,
-      gint fps_n, gint fps_d);
-  void (*user_image_res) (GstCameraBin * camera, gint width, gint height);
+  void (*capture_start) (GstCameraBin * camera);
+  void (*capture_stop) (GstCameraBin * camera);
+  void (*capture_pause) (GstCameraBin * camera);
+  void (*set_video_resolution_fps) (GstCameraBin * camera, gint width,
+      gint height, gint fps_n, gint fps_d);
+  void (*set_image_resolution) (GstCameraBin * camera, gint width, gint height);
 
   /* signals (callback) */
 
