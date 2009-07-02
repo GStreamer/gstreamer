@@ -428,7 +428,8 @@ GST_START_TEST (test_string)
   gchar *try[] = {
     "Dude",
     "Hi, I'm a string",
-    "tüüüt!"
+    "tüüüt!",
+    "\"\""                      /* Empty string */
   };
   gchar *tmp;
   GValue v = { 0, };
@@ -465,7 +466,8 @@ GST_START_TEST (test_deserialize_string)
     {
     "", ""},                    /* empty strings */
     {
-    "\"\"", ""},                /* FAILURES */
+    "\"\"", ""},                /* quoted empty string -> empty string */
+        /* Expected FAILURES: */
     {
     "\"", NULL},                /* missing second quote */
     {
@@ -538,6 +540,12 @@ GST_START_TEST (test_value_compare)
   fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_LESS_THAN);
   fail_unless (gst_value_compare (&value2, &value1) == GST_VALUE_GREATER_THAN);
   fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  /* Test some NULL string comparisons */
+  g_value_set_string (&value2, NULL);
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_UNORDERED);
+  fail_unless (gst_value_compare (&value2, &value1) == GST_VALUE_UNORDERED);
+  fail_unless (gst_value_compare (&value2, &value2) == GST_VALUE_EQUAL);
+
   g_value_unset (&value1);
   g_value_unset (&value2);
 

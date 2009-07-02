@@ -657,18 +657,19 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
     s = g_value_get_string (&field->value);
     /* only check for NULL strings in taglists, as they are allowed in message
      * structs, e.g. error message debug strings */
-    if (G_UNLIKELY (s == NULL && IS_TAGLIST (structure))) {
-      g_warning ("Trying to set NULL string on field '%s' on taglist. "
-          "Please file a bug.", g_quark_to_string (field->name));
-      g_value_unset (&field->value);
-      return;
-    } else if (G_UNLIKELY (s != NULL && *s == '\0')) {
-      /* empty strings never make sense */
-      g_warning ("Trying to set empty string on %s field '%s'. Please file a "
-          "bug.", IS_TAGLIST (structure) ? "taglist" : "structure",
-          g_quark_to_string (field->name));
-      g_value_unset (&field->value);
-      return;
+    if (G_UNLIKELY (IS_TAGLIST (structure) && (s == NULL || *s == '\0'))) {
+      if (s == NULL) {
+        g_warning ("Trying to set NULL string on field '%s' on taglist. "
+            "Please file a bug.", g_quark_to_string (field->name));
+        g_value_unset (&field->value);
+        return;
+      } else {
+        /* empty strings never make sense */
+        g_warning ("Trying to set empty string on taglist field '%s'. "
+            "Please file a bug.", g_quark_to_string (field->name));
+        g_value_unset (&field->value);
+        return;
+      }
     } else if (G_UNLIKELY (s != NULL && !g_utf8_validate (s, -1, NULL))) {
       g_warning ("Trying to set string on %s field '%s', but string is not "
           "valid UTF-8. Please file a bug.",
@@ -1602,7 +1603,7 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
     g_string_append_len (s, "=(", 2);
     g_string_append (s, gst_structure_to_abbr (type));
     g_string_append_c (s, ')');
-    g_string_append (s, GST_STR_NULL (t));
+    g_string_append (s, t == NULL ? "NULL" : t);
     g_free (t);
   }
 
@@ -1653,7 +1654,8 @@ gst_structure_to_string (const GstStructure * structure)
  * THIS FUNCTION MODIFIES THE STRING AND DETECTS INSIDE A NONTERMINATED STRING
  */
 static gboolean
-gst_structure_parse_string (gchar * s, gchar ** end, gchar ** next)
+gst_structure_parse_string (gchar * s, gchar ** end, gchar ** next,
+    gboolean unescape)
 {
   gchar *w;
 
@@ -1669,21 +1671,32 @@ gst_structure_parse_string (gchar * s, gchar ** end, gchar ** next)
     return ret;
   }
 
-  w = s;
-  s++;
-  while (*s != '"') {
-    if (*s == 0)
-      return FALSE;
-
-    if (*s == '\\') {
+  if (unescape) {
+    w = s;
+    s++;
+    while (*s != '"') {
+      if (G_UNLIKELY (*s == 0))
+        return FALSE;
+      if (G_UNLIKELY (*s == '\\'))
+        s++;
+      *w = *s;
+      w++;
       s++;
     }
-
-    *w = *s;
-    w++;
     s++;
+  } else {
+    /* Find the closing quotes */
+    s++;
+    while (*s != '"') {
+      if (G_UNLIKELY (*s == 0))
+        return FALSE;
+      if (G_UNLIKELY (*s == '\\'))
+        s++;
+      s++;
+    }
+    s++;
+    w = s;
   }
-  s++;
 
   *end = w;
   *next = s;
@@ -1931,17 +1944,19 @@ gst_structure_parse_value (gchar * str,
     ret = gst_structure_parse_array (s, &s, value, type);
   } else {
     value_s = s;
-    if (G_UNLIKELY (!gst_structure_parse_string (s, &value_end, &s)))
-      return FALSE;
 
-    c = *value_end;
-    *value_end = '\0';
     if (G_UNLIKELY (type == G_TYPE_INVALID)) {
       GType try_types[] =
           { G_TYPE_INT, G_TYPE_DOUBLE, GST_TYPE_FRACTION, G_TYPE_BOOLEAN,
         G_TYPE_STRING
       };
       int i;
+
+      if (G_UNLIKELY (!gst_structure_parse_string (s, &value_end, &s, TRUE)))
+        return FALSE;
+      /* Set NULL terminator for deserialization */
+      c = *value_end;
+      *value_end = '\0';
 
       for (i = 0; i < G_N_ELEMENTS (try_types); i++) {
         g_value_init (value, try_types[i]);
@@ -1952,6 +1967,13 @@ gst_structure_parse_value (gchar * str,
       }
     } else {
       g_value_init (value, type);
+
+      if (G_UNLIKELY (!gst_structure_parse_string (s, &value_end, &s,
+                  (type != G_TYPE_STRING))))
+        return FALSE;
+      /* Set NULL terminator for deserialization */
+      c = *value_end;
+      *value_end = '\0';
 
       ret = gst_value_deserialize (value, value_s);
       if (G_UNLIKELY (!ret))
@@ -1999,7 +2021,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
     r++;
 
   name = r;
-  if (G_UNLIKELY (!gst_structure_parse_string (r, &w, &r))) {
+  if (G_UNLIKELY (!gst_structure_parse_string (r, &w, &r, TRUE))) {
     GST_WARNING ("Failed to parse structure string");
     goto error;
   }

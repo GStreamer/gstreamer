@@ -1803,8 +1803,10 @@ gst_value_deserialize_float (GValue * dest, const gchar * s)
 static gint
 gst_value_compare_string (const GValue * value1, const GValue * value2)
 {
-  if (!value1->data[0].v_pointer || !value2->data[0].v_pointer) {
-    return GST_VALUE_UNORDERED;
+  if (G_UNLIKELY (!value1->data[0].v_pointer || !value2->data[0].v_pointer)) {
+    /* if only one is NULL, no match - otherwise both NULL == EQUAL */
+    if (value1->data[0].v_pointer != value2->data[0].v_pointer)
+      return GST_VALUE_UNORDERED;
   } else {
     int x = strcmp (value1->data[0].v_pointer, value2->data[0].v_pointer);
 
@@ -1812,8 +1814,9 @@ gst_value_compare_string (const GValue * value1, const GValue * value2)
       return GST_VALUE_LESS_THAN;
     if (x > 0)
       return GST_VALUE_GREATER_THAN;
-    return GST_VALUE_EQUAL;
   }
+
+  return GST_VALUE_EQUAL;
 }
 
 static int
@@ -1822,8 +1825,12 @@ gst_string_measure_wrapping (const gchar * s)
   int len;
   gboolean wrap = FALSE;
 
-  if (s == NULL)
+  if (G_UNLIKELY (s == NULL))
     return -1;
+
+  /* Special case: the actual string NULL needs wrapping */
+  if (G_UNLIKELY (strcmp (s, "NULL") == 0))
+    return 4;
 
   len = 0;
   while (*s) {
@@ -1839,7 +1846,9 @@ gst_string_measure_wrapping (const gchar * s)
     s++;
   }
 
-  return wrap ? len : -1;
+  /* Wrap the string if we found something that needs
+   * wrapping, or the empty string (len == 0) */
+  return (wrap || len == 0) ? len : -1;
 }
 
 static gchar *
@@ -1866,6 +1875,7 @@ gst_string_wrap_inner (const gchar * s, int len)
   *e++ = '\"';
   *e = 0;
 
+  g_assert (e - d <= len + 3);
   return d;
 }
 
@@ -1875,7 +1885,7 @@ gst_string_wrap (const gchar * s)
 {
   int len = gst_string_measure_wrapping (s);
 
-  if (len < 0)
+  if (G_LIKELY (len < 0))
     return g_strdup (s);
 
   return gst_string_wrap_inner (s, len);
@@ -1888,7 +1898,7 @@ gst_string_take_and_wrap (gchar * s)
   gchar *out;
   int len = gst_string_measure_wrapping (s);
 
-  if (len < 0)
+  if (G_LIKELY (len < 0))
     return s;
 
   out = gst_string_wrap_inner (s, len);
@@ -1991,14 +2001,16 @@ gst_value_serialize_string (const GValue * value)
 static gboolean
 gst_value_deserialize_string (GValue * dest, const gchar * s)
 {
-  if (*s != '"') {
+  if (G_UNLIKELY (strcmp (s, "NULL") == 0)) {
+    g_value_set_string (dest, NULL);
+    return TRUE;
+  } else if (G_LIKELY (*s != '"')) {
     if (!g_utf8_validate (s, -1, NULL))
       return FALSE;
     g_value_set_string (dest, s);
     return TRUE;
   } else {
     gchar *str = gst_string_unwrap (s);
-
     if (G_UNLIKELY (!str))
       return FALSE;
     g_value_take_string (dest, str);

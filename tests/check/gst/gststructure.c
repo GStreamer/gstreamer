@@ -213,6 +213,40 @@ GST_START_TEST (test_complete_structure)
 
 GST_END_TEST;
 
+GST_START_TEST (test_string_properties)
+{
+  GstCaps *caps1, *caps2;
+  GstStructure *st1, *st2;
+  gchar *str, *res1, *res2;
+
+  /* test escaping/unescaping */
+  st1 = gst_structure_new ("RandomStructure", "prop1", G_TYPE_STRING, "foo",
+      "prop2", G_TYPE_STRING, "", "prop3", G_TYPE_STRING, NULL,
+      "prop4", G_TYPE_STRING, "NULL", NULL);
+  str = gst_structure_to_string (st1);
+  st2 = gst_structure_from_string (str, NULL);
+  g_free (str);
+
+  fail_unless (st2 != NULL);
+
+  /* need to put stuctures into caps to compare */
+  caps1 = gst_caps_new_empty ();
+  gst_caps_append_structure (caps1, st1);
+  caps2 = gst_caps_new_empty ();
+  gst_caps_append_structure (caps2, st2);
+  res1 = gst_caps_to_string (caps1);
+  res2 = gst_caps_to_string (caps2);
+  fail_unless (gst_caps_is_equal (caps1, caps2),
+      "Structures did not match:\n\tStructure 1: %s\n\tStructure 2: %s\n",
+      res1, res2);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+  g_free (res1);
+  g_free (res2);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_structure_new)
 {
   GstStructure *s;
@@ -421,18 +455,6 @@ GST_START_TEST (test_structure_nested_from_and_to_string)
 
 GST_END_TEST;
 
-GST_START_TEST (test_empty_string_fields)
-{
-  GstStructure *s;
-
-  s = gst_structure_empty_new ("con/struct");
-  ASSERT_WARNING (gst_structure_set (s, "layout", G_TYPE_STRING, "", NULL));
-  gst_structure_set (s, "debug-string", G_TYPE_STRING, NULL, NULL);
-  gst_structure_free (s);
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_vararg_getters)
 {
   GstStructure *s;
@@ -546,13 +568,13 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_from_string);
   tcase_add_test (tc_chain, test_to_string);
   tcase_add_test (tc_chain, test_to_from_string);
+  tcase_add_test (tc_chain, test_string_properties);
   tcase_add_test (tc_chain, test_complete_structure);
   tcase_add_test (tc_chain, test_structure_new);
   tcase_add_test (tc_chain, test_fixate);
   tcase_add_test (tc_chain, test_fixate_frac_list);
   tcase_add_test (tc_chain, test_structure_nested);
   tcase_add_test (tc_chain, test_structure_nested_from_and_to_string);
-  tcase_add_test (tc_chain, test_empty_string_fields);
   tcase_add_test (tc_chain, test_vararg_getters);
   return s;
 }
