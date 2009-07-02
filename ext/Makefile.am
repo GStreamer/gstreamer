@@ -71,6 +71,5 @@ DIST_SUBDIRS = \
   libvisual \
   ogg \
   pango \
-  schroedinger \
   theora \
   vorbis
