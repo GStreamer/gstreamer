@@ -508,6 +508,29 @@ return 0;
   fi
 ])
 
+# Optional gudev for device probing
+AC_ARG_WITH([gudev],
+  AC_HELP_STRING([--with-gudev],
+    [device detection with gudev]),
+  [],
+  [with_gudev=check])
+if test x$HAVE_GST_V4L2 = xyes; then
+  if test x$with_gudev != xno; then
+      PKG_CHECK_MODULES(GUDEV, [ gudev-1.0 >= 143 ],
+          [ have_gudev=yes
+            AC_DEFINE(HAVE_GUDEV, 1,
+               [Whether gudev is available for device detection])
+            AC_DEFINE([G_UDEV_API_IS_SUBJECT_TO_CHANGE], 1, [I know the API is subject to change.])
+          ], [
+          have_gudev=no
+          ])
+  else
+    have_gudev=no
+  fi
+fi
+AC_SUBST(GUDEV_CFLAGS)
+AC_SUBST(GUDEV_LIBS)
+
 # Make libv4l2 non-automagic
 AC_ARG_WITH([libv4l2],
   AC_HELP_STRING([--with-libv4l2],
