@@ -20,6 +20,11 @@
 #ifndef _GST_BASE_VIDEO_UTILS_H_
 #define _GST_BASE_VIDEO_UTILS_H_
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The base video utils API is unstable and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/base/gstadapter.h>
