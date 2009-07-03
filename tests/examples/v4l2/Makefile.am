@@ -1,0 +1,6 @@
+noinst_PROGRAMS = probe
+
+probe_SOURCES = probe.c
+probe_CFLAGS  = $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
+probe_LDFLAGS = $(GST_BASE_LIBS) $(GST_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-0.10
+

@@ -1112,6 +1112,7 @@ tests/examples/equalizer/Makefile
 tests/examples/level/Makefile
 tests/examples/rtp/Makefile
 tests/examples/spectrum/Makefile
+tests/examples/v4l2/Makefile
 tests/files/Makefile
 tests/icles/Makefile
 gconf/Makefile
