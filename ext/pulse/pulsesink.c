@@ -918,6 +918,26 @@ gst_pulseringbuffer_pause (GstRingBuffer * buf)
   return res;
 }
 
+static void
+mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
+{
+  GstPulseSink *pulsesink = GST_PULSESINK (userdata);
+  GstMessage *message;
+  GValue val = { 0 };
+
+  g_value_init (&val, G_TYPE_POINTER);
+  g_value_set_pointer (&val, g_thread_self ());
+
+  GST_DEBUG_OBJECT (pulsesink, "posting LEAVE stream status");
+  message = gst_message_new_stream_status (GST_OBJECT (pulsesink),
+      GST_STREAM_STATUS_TYPE_LEAVE, GST_ELEMENT (pulsesink));
+  gst_message_set_stream_status_object (message, &val);
+  gst_element_post_message (GST_ELEMENT (pulsesink), message);
+
+  pulsesink->pa_defer_ran = TRUE;
+  pa_threaded_mainloop_signal (pulsesink->mainloop, 0);
+}
+
 /* stop playback, we flush everything. */
 static gboolean
 gst_pulseringbuffer_stop (GstRingBuffer * buf)
@@ -959,6 +979,16 @@ cleanup:
     pa_operation_cancel (o);
     pa_operation_unref (o);
   }
+
+  GST_DEBUG_OBJECT (psink, "scheduling stream status");
+  psink->pa_defer_ran = FALSE;
+  pa_mainloop_api_once (pa_threaded_mainloop_get_api (psink->mainloop),
+      mainloop_leave_defer_cb, psink);
+
+  GST_DEBUG_OBJECT (psink, "waiting for stream status");
+  while (psink->pa_defer_ran == FALSE)
+    pa_threaded_mainloop_wait (psink->mainloop);
+
   pa_threaded_mainloop_unlock (psink->mainloop);
 
   return res;
