@@ -22,10 +22,12 @@ libgstvideo4linux_la_SOURCES = \
 #	gstv4lmjpegsink.c v4lmjpegsink_calls.c
 
 libgstvideo4linux_la_CFLAGS = \
-	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS)
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS) \
+	$(GUDEV_CFLAGS)
 libgstvideo4linux_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la \
-	$(GST_BASE_LIBS) $(GST_LIBS) $(xv_libs)
+	$(GST_BASE_LIBS) $(GST_LIBS) $(xv_libs) \
+	$(GUDEV_LIBS)
 libgstvideo4linux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideo4linux_la_LIBTOOLFLAGS = --tag=disable-static
 

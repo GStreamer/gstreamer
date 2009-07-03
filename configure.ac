@@ -436,6 +436,29 @@ AG_GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], video4linux, [
   fi
 ])
 
+# Optional gudev for device probing
+AC_ARG_WITH([gudev],
+  AC_HELP_STRING([--with-gudev],
+    [device detection with gudev]),
+  [],
+  [with_gudev=check])
+if test x$HAVE_GST_V4L = xyes; then
+  if test x$with_gudev != xno; then
+      PKG_CHECK_MODULES(GUDEV, [ gudev-1.0 >= 143 ],
+          [ have_gudev=yes
+            AC_DEFINE(HAVE_GUDEV, 1,
+               [Whether gudev is available for device detection])
+            AC_DEFINE([G_UDEV_API_IS_SUBJECT_TO_CHANGE], 1, [I know the API is subject to change.])
+          ], [
+          have_gudev=no
+          ])
+  else
+    have_gudev=no
+  fi
+fi
+AC_SUBST(GUDEV_CFLAGS)
+AC_SUBST(GUDEV_LIBS)
+
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
 

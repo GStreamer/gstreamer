@@ -32,6 +32,10 @@
 
 #include <gst/interfaces/propertyprobe.h>
 
+#ifdef HAVE_GUDEV
+#include <gudev/gudev.h>
+#endif
+
 #include "v4l_calls.h"
 #include "gstv4ltuner.h"
 #ifdef HAVE_XVIDEO
@@ -48,6 +52,8 @@ enum
   PROP_FLAGS
 };
 
+GST_DEBUG_CATEGORY (v4lelement_debug);
+#define GST_CAT_DEFAULT v4lelement_debug
 
 static void gst_v4lelement_init_interfaces (GType type);
 
@@ -108,20 +114,76 @@ gst_v4l_probe_get_properties (GstPropertyProbe * probe)
   return list;
 }
 
+static gboolean init = FALSE;
+static GList *devices = NULL;
+
+#ifdef HAVE_GUDEV
+static gboolean
+gst_v4l_class_probe_devices_with_udev (GstV4lElementClass * klass,
+    gboolean check)
+{
+  GUdevClient *client;
+  GList *item;
+
+  if (!check) {
+    while (devices) {
+      gchar *device = devices->data;
+      devices = g_list_remove (devices, device);
+      g_free (device);
+    }
+
+    GST_INFO ("Enumerating video4linux devices from udev");
+    client = g_udev_client_new (NULL);
+    if (!client) {
+      GST_WARNING ("Failed to initialize gudev client");
+      goto finish;
+    }
+
+    item = g_udev_client_query_by_subsystem (client, "video4linux");
+    while (item) {
+      GUdevDevice *device = item->data;
+      gchar *devnode = g_strdup (g_udev_device_get_device_file (device));
+      gint api = g_udev_device_get_property_as_int (device, "ID_V4L_VERSION");
+      GST_INFO ("Found new device: %s, API: %d", devnode, api);
+      /* Append v4l1 devices only. If api is 0 probably v4l_id has
+         been stripped out of the current udev installation, append
+         anyway */
+      if (api == 0) {
+        GST_WARNING
+            ("Couldn't retrieve ID_V4L_VERSION, silly udev installation?");
+      }
+      if ((api == 1 || api == 0)) {
+        devices = g_list_append (devices, devnode);
+      } else {
+        g_free (devnode);
+      }
+      g_object_unref (device);
+      item = item->next;
+    }
+    g_list_free (item);
+    init = TRUE;
+  }
+
+finish:
+  if (client) {
+    g_object_unref (client);
+  }
+
+  klass->devices = devices;
+
+  return init;
+}
+#endif /* HAVE_GUDEV */
+
 static gboolean
 gst_v4l_class_probe_devices (GstV4lElementClass * klass, gboolean check)
 {
-  static gboolean init = FALSE;
-  static GList *devices = NULL;
-
   if (!check) {
     gchar *dev_base[] = { "/dev/video", "/dev/v4l/video", NULL };
     gint base, n, fd;
 
     while (devices) {
-      GList *item = devices;
-      gchar *device = item->data;
-
+      gchar *device = devices->data;
       devices = g_list_remove (devices, device);
       g_free (device);
     }
@@ -163,7 +225,12 @@ gst_v4l_probe_probe_property (GstPropertyProbe * probe,
 
   switch (prop_id) {
     case PROP_DEVICE:
+#ifdef HAVE_GUDEV
+      if (!gst_v4l_class_probe_devices_with_udev (klass, FALSE))
+        gst_v4l_class_probe_devices (klass, FALSE);
+#else /* !HAVE_GUDEV */
       gst_v4l_class_probe_devices (klass, FALSE);
+#endif /* HAVE_GUDEV */
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
@@ -180,6 +247,11 @@ gst_v4l_probe_needs_probe (GstPropertyProbe * probe,
 
   switch (prop_id) {
     case PROP_DEVICE:
+#ifdef HAVE_GUDEV
+      ret = !gst_v4l_class_probe_devices_with_udev (klass, FALSE);
+#else /* !HAVE_GUDEV */
+      ret = !gst_v4l_class_probe_devices (klass, TRUE);
+#endif /* HAVE_GUDEV */
       ret = !gst_v4l_class_probe_devices (klass, TRUE);
       break;
     default:
@@ -319,6 +391,9 @@ gst_v4lelement_base_init (gpointer g_class)
   GstV4lElementClass *klass = GST_V4LELEMENT_CLASS (g_class);
 
   klass->devices = NULL;
+
+  GST_DEBUG_CATEGORY_INIT (v4lelement_debug, "v4lelement", 0,
+      "V4L Base Class debug");
 }
 
 static void
