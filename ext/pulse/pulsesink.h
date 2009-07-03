@@ -64,6 +64,8 @@ struct _GstPulseSink
   gint notify;
   
   const gchar *pa_version;
+
+  gboolean pa_defer_ran;
 };
 
 struct _GstPulseSinkClass

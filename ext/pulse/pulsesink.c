@@ -843,6 +843,27 @@ gst_pulseringbuffer_clear (GstRingBuffer * buf)
   pa_threaded_mainloop_unlock (psink->mainloop);
 }
 
+static void
+mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
+{
+  GstPulseSink *pulsesink = GST_PULSESINK (userdata);
+  GstMessage *message;
+  GValue val = { 0 };
+
+  g_value_init (&val, G_TYPE_POINTER);
+  g_value_set_pointer (&val, g_thread_self ());
+
+  GST_DEBUG_OBJECT (pulsesink, "posting ENTER stream status");
+  message = gst_message_new_stream_status (GST_OBJECT (pulsesink),
+      GST_STREAM_STATUS_TYPE_ENTER, GST_ELEMENT (pulsesink));
+  gst_message_set_stream_status_object (message, &val);
+  gst_element_post_message (GST_ELEMENT (pulsesink), message);
+
+  /* signal the waiter */
+  pulsesink->pa_defer_ran = TRUE;
+  pa_threaded_mainloop_signal (pulsesink->mainloop, 0);
+}
+
 /* start/resume playback ASAP, we don't uncork here but in the commit method */
 static gboolean
 gst_pulseringbuffer_start (GstRingBuffer * buf)
@@ -854,6 +875,15 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
   pa_threaded_mainloop_lock (psink->mainloop);
+
+  GST_DEBUG_OBJECT (psink, "scheduling stream status");
+  psink->pa_defer_ran = FALSE;
+  pa_mainloop_api_once (pa_threaded_mainloop_get_api (psink->mainloop),
+      mainloop_enter_defer_cb, psink);
+
+  while (psink->pa_defer_ran == FALSE)
+    pa_threaded_mainloop_wait (psink->mainloop);
+
   GST_DEBUG_OBJECT (psink, "starting");
   pbuf->paused = FALSE;
   gst_pulsering_set_corked (pbuf, FALSE, FALSE);
