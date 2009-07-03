@@ -207,6 +207,8 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
   GstAudioSinkClass *csink;
   GstAudioRingBuffer *abuf = GST_AUDIORING_BUFFER_CAST (buf);
   WriteFunc writefunc;
+  GstMessage *message;
+  GValue val = { 0 };
 
   sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
@@ -221,6 +223,14 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
   writefunc = csink->write;
   if (writefunc == NULL)
     goto no_function;
+
+  g_value_init (&val, G_TYPE_POINTER);
+  g_value_set_pointer (&val, sink->thread);
+  message = gst_message_new_stream_status (GST_OBJECT_CAST (buf),
+      GST_STREAM_STATUS_TYPE_ENTER, GST_ELEMENT_CAST (sink));
+  gst_message_set_stream_status_object (message, &val);
+  GST_DEBUG_OBJECT (sink, "posting ENTER stream status");
+  gst_element_post_message (GST_ELEMENT_CAST (sink), message);
 
   while (TRUE) {
     gint left, len;
@@ -270,6 +280,7 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
   }
 
   /* Will never be reached */
+  g_assert_not_reached ();
   return;
 
   /* ERROR */
@@ -282,6 +293,11 @@ stop_running:
   {
     GST_OBJECT_UNLOCK (abuf);
     GST_DEBUG_OBJECT (sink, "stop running, exit thread");
+    message = gst_message_new_stream_status (GST_OBJECT_CAST (buf),
+        GST_STREAM_STATUS_TYPE_LEAVE, GST_ELEMENT_CAST (sink));
+    gst_message_set_stream_status_object (message, &val);
+    GST_DEBUG_OBJECT (sink, "posting LEAVE stream status");
+    gst_element_post_message (GST_ELEMENT_CAST (sink), message);
     return;
   }
 }
