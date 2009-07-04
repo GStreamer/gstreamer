@@ -74,6 +74,7 @@ struct _GstVdpDevice
   VdpVideoMixerDestroy                            *vdp_video_mixer_destroy;
   VdpVideoMixerRender                             *vdp_video_mixer_render;
   VdpVideoMixerSetFeatureEnables                  *vdp_video_mixer_set_feature_enables;
+  VdpVideoMixerSetAttributeValues                 *vdp_video_mixer_set_attribute_values;
 
   VdpOutputSurfaceCreate                          *vdp_output_surface_create;
   VdpOutputSurfaceDestroy                         *vdp_output_surface_destroy;

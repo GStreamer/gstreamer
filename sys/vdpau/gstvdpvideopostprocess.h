@@ -81,6 +81,9 @@ struct _GstVdpVideoPostProcess
   gboolean force_aspect_ratio;
   GstVdpDeinterlaceModes mode;
   GstVdpDeinterlaceMethods method;
+
+  gboolean noise_reduction;
+  gfloat noise_reduction_level;
 };
 
 struct _GstVdpVideoPostProcessClass 

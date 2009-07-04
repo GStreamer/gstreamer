@@ -104,6 +104,8 @@ gst_vdp_device_constructed (GObject * object)
     {VDP_FUNC_ID_VIDEO_MIXER_RENDER, &device->vdp_video_mixer_render},
     {VDP_FUNC_ID_VIDEO_MIXER_SET_FEATURE_ENABLES,
         &device->vdp_video_mixer_set_feature_enables},
+    {VDP_FUNC_ID_VIDEO_MIXER_SET_ATTRIBUTE_VALUES,
+        &device->vdp_video_mixer_set_attribute_values},
     {VDP_FUNC_ID_OUTPUT_SURFACE_CREATE, &device->vdp_output_surface_create},
     {VDP_FUNC_ID_OUTPUT_SURFACE_DESTROY, &device->vdp_output_surface_destroy},
     {VDP_FUNC_ID_OUTPUT_SURFACE_QUERY_CAPABILITIES,

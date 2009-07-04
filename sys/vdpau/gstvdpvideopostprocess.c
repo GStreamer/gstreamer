@@ -66,7 +66,9 @@ enum
   PROP_0,
   PROP_FORCE_ASPECT_RATIO,
   PROP_DEINTERLACE_MODE,
-  PROP_DEINTERLACE_METHOD
+  PROP_DEINTERLACE_METHOD,
+  PROP_NOISE_REDUCTION,
+  PROP_NOISE_REDUCTION_LEVEL
 };
 
 /* the capabilities of the inputs and outputs.
@@ -134,6 +136,30 @@ gst_vdp_deinterlace_modes_get_type (void)
   return deinterlace_modes_type;
 }
 
+static void
+gst_vdp_vpp_activate_feature (GstVdpVideoPostProcess * vpp,
+    VdpVideoMixerFeature feature, gboolean activate)
+{
+  VdpVideoMixerFeature features[1];
+  VdpBool enable[1];
+  VdpStatus status;
+
+  features[0] = feature;
+  if (activate)
+    enable[0] = VDP_TRUE;
+  else
+    enable[0] = VDP_FALSE;
+
+  status =
+      vpp->device->vdp_video_mixer_set_feature_enables (vpp->mixer, 1,
+      features, enable);
+  if (status != VDP_STATUS_OK) {
+    GST_WARNING_OBJECT (vpp, "Couldn't set deinterlace method on mixer, "
+        "error returned from vdpau was: %s",
+        vpp->device->vdp_get_error_string (status));
+  }
+}
+
 static VdpVideoMixerFeature
 gst_vdp_feature_from_deinterlace_method (GstVdpDeinterlaceMethods method)
 {
@@ -161,6 +187,14 @@ gst_vdp_feature_from_deinterlace_method (GstVdpDeinterlaceMethods method)
   }
 
   return feature;
+}
+
+static void
+gst_vdp_vpp_activate_deinterlace_method (GstVdpVideoPostProcess * vpp,
+    GstVdpDeinterlaceMethods method, gboolean activate)
+{
+  gst_vdp_vpp_activate_feature (vpp,
+      gst_vdp_feature_from_deinterlace_method (method), activate);
 }
 
 static void
@@ -302,6 +336,98 @@ gst_vdp_vpp_add_buffer (GstVdpVideoPostProcess * vpp, GstVdpVideoBuffer * buf)
     vpp->future_pictures[vpp->n_future_pictures++] = pic1;
     gst_buffer_unref (GST_BUFFER (pic2.buf));
   }
+}
+
+static GstFlowReturn
+gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp, GstVdpDevice * device)
+{
+#define VDP_NUM_MIXER_PARAMETER 3
+#define MAX_NUM_FEATURES 5
+
+  GstStructure *structure;
+  gint chroma_type;
+  gint width, height;
+
+  VdpStatus status;
+
+  VdpVideoMixerFeature features[5];
+  guint n_features = 0;
+  VdpVideoMixerParameter parameters[VDP_NUM_MIXER_PARAMETER] = {
+    VDP_VIDEO_MIXER_PARAMETER_VIDEO_SURFACE_WIDTH,
+    VDP_VIDEO_MIXER_PARAMETER_VIDEO_SURFACE_HEIGHT,
+    VDP_VIDEO_MIXER_PARAMETER_CHROMA_TYPE
+  };
+  const void *parameter_values[VDP_NUM_MIXER_PARAMETER];
+
+  structure = gst_caps_get_structure (GST_PAD_CAPS (vpp->sinkpad), 0);
+  if (!gst_structure_get_int (structure, "chroma-type", &chroma_type) ||
+      !gst_structure_get_int (structure, "width", &width) ||
+      !gst_structure_get_int (structure, "height", &height))
+    return GST_FLOW_ERROR;
+
+  parameter_values[0] = &width;
+  parameter_values[1] = &height;
+  parameter_values[2] = &chroma_type;
+
+  if (gst_vdp_vpp_is_interlaced (vpp)
+      && vpp->method != GST_VDP_DEINTERLACE_METHOD_BOB) {
+    features[n_features++] =
+        gst_vdp_feature_from_deinterlace_method (vpp->method);
+  }
+  if (vpp->noise_reduction)
+    features[n_features++] = VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION;
+
+  status =
+      device->vdp_video_mixer_create (device->device, n_features, features,
+      VDP_NUM_MIXER_PARAMETER, parameters, parameter_values, &vpp->mixer);
+  if (status != VDP_STATUS_OK) {
+    GST_ELEMENT_ERROR (vpp, RESOURCE, READ,
+        ("Could not create vdpau video mixer"),
+        ("Error returned from vdpau was: %s",
+            device->vdp_get_error_string (status)));
+    return GST_FLOW_ERROR;
+  }
+
+  vpp->device = g_object_ref (device);
+
+  if (vpp->noise_reduction) {
+    VdpVideoMixerAttribute attributes[1];
+    const void *attribute_values[1];
+
+    attributes[0] = VDP_VIDEO_MIXER_ATTRIBUTE_NOISE_REDUCTION_LEVEL;
+    attribute_values[0] = &vpp->noise_reduction;
+
+    status =
+        vpp->device->vdp_video_mixer_set_attribute_values (vpp->mixer, 1,
+        attributes, attribute_values);
+    if (status != VDP_STATUS_OK) {
+      GST_WARNING_OBJECT (vpp, "Couldn't set noise reduction level on mixer, "
+          "error returned from vdpau was: %s",
+          vpp->device->vdp_get_error_string (status));
+    }
+  }
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_vdp_vpp_alloc_output_buffer (GstVdpVideoPostProcess * vpp, GstCaps * caps,
+    GstVdpOutputBuffer ** outbuf)
+{
+  GstFlowReturn ret;
+
+  ret = gst_pad_alloc_buffer_and_set_caps (vpp->srcpad, 0, 0,
+      caps, (GstBuffer **) outbuf);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  if (!vpp->device) {
+    ret = gst_vdp_vpp_create_mixer (vpp, (*outbuf)->device);
+  }
+
+  if (ret != GST_FLOW_OK)
+    gst_buffer_unref (GST_BUFFER (*outbuf));
+  return ret;
 }
 
 static gint
@@ -446,74 +572,6 @@ gst_vdp_vpp_stop (GstVdpVideoPostProcess * vpp)
     g_object_unref (vpp->device);
 
   gst_vdp_vpp_flush (vpp);
-}
-
-static GstFlowReturn
-gst_vdp_vpp_alloc_output_buffer (GstVdpVideoPostProcess * vpp, GstCaps * caps,
-    GstVdpOutputBuffer ** outbuf)
-{
-  GstFlowReturn ret;
-
-  ret = gst_pad_alloc_buffer_and_set_caps (vpp->srcpad, 0, 0,
-      caps, (GstBuffer **) outbuf);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  if (!vpp->device) {
-#define VDP_NUM_MIXER_PARAMETER 3
-#define MAX_NUM_FEATURES 5
-
-    GstStructure *structure;
-    gint chroma_type;
-    gint width, height;
-
-    VdpStatus status;
-    GstVdpDevice *device;
-
-    VdpVideoMixerFeature features[5];
-    guint n_features = 0;
-    VdpVideoMixerParameter parameters[VDP_NUM_MIXER_PARAMETER] = {
-      VDP_VIDEO_MIXER_PARAMETER_VIDEO_SURFACE_WIDTH,
-      VDP_VIDEO_MIXER_PARAMETER_VIDEO_SURFACE_HEIGHT,
-      VDP_VIDEO_MIXER_PARAMETER_CHROMA_TYPE
-    };
-    const void *parameter_values[VDP_NUM_MIXER_PARAMETER];
-
-    structure = gst_caps_get_structure (GST_PAD_CAPS (vpp->sinkpad), 0);
-    if (!gst_structure_get_int (structure, "chroma-type", &chroma_type) ||
-        !gst_structure_get_int (structure, "width", &width) ||
-        !gst_structure_get_int (structure, "height", &height))
-      goto error;
-
-    parameter_values[0] = &width;
-    parameter_values[1] = &height;
-    parameter_values[2] = &chroma_type;
-
-    if (gst_vdp_vpp_is_interlaced (vpp)
-        && vpp->method != GST_VDP_DEINTERLACE_METHOD_BOB) {
-      features[n_features++] =
-          gst_vdp_feature_from_deinterlace_method (vpp->method);
-    }
-
-    device = vpp->device = g_object_ref ((*outbuf)->device);
-
-    status =
-        device->vdp_video_mixer_create (device->device, n_features, features,
-        VDP_NUM_MIXER_PARAMETER, parameters, parameter_values, &vpp->mixer);
-    if (status != VDP_STATUS_OK) {
-      GST_ELEMENT_ERROR (vpp, RESOURCE, READ,
-          ("Could not create vdpau video mixer"),
-          ("Error returned from vdpau was: %s",
-              device->vdp_get_error_string (status)));
-      goto error;
-    }
-  }
-
-  return ret;
-
-error:
-  gst_buffer_unref (GST_BUFFER (*outbuf));
-  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
@@ -775,6 +833,12 @@ gst_vdp_vpp_get_property (GObject * object, guint property_id, GValue * value,
     case PROP_DEINTERLACE_METHOD:
       g_value_set_enum (value, vpp->method);
       break;
+    case PROP_NOISE_REDUCTION:
+      g_value_set_boolean (value, vpp->noise_reduction);
+      break;
+    case PROP_NOISE_REDUCTION_LEVEL:
+      g_value_set_float (value, vpp->noise_reduction_level);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -796,25 +860,63 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
       vpp->mode = g_value_get_enum (value);
       break;
     case PROP_DEINTERLACE_METHOD:
+    {
+      GstVdpDeinterlaceMethods oldvalue;
+
+      oldvalue = vpp->method;
       vpp->method = g_value_get_enum (value);
-      if (vpp->method != GST_VDP_DEINTERLACE_METHOD_BOB && vpp->device) {
-        VdpVideoMixerFeature features[1];
-        VdpBool enable[1];
+      if (oldvalue == vpp->method)
+        break;
+
+      if (vpp->device) {
+        if (oldvalue != GST_VDP_DEINTERLACE_METHOD_BOB)
+          gst_vdp_vpp_activate_deinterlace_method (vpp, oldvalue, FALSE);
+
+        if (vpp->method != GST_VDP_DEINTERLACE_METHOD_BOB && vpp->device)
+          gst_vdp_vpp_activate_deinterlace_method (vpp, oldvalue, TRUE);
+      }
+      break;
+    }
+    case PROP_NOISE_REDUCTION:
+    {
+      gboolean old_value;
+
+      old_value = vpp->noise_reduction;
+      vpp->noise_reduction = g_value_get_boolean (value);
+      if (!vpp->noise_reduction == !old_value)
+        break;
+
+      if (vpp->device)
+        gst_vdp_vpp_activate_feature (vpp,
+            VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION, vpp->noise_reduction);
+      break;
+    }
+    case PROP_NOISE_REDUCTION_LEVEL:
+    {
+      gfloat noise_reduction;
+
+      noise_reduction = g_value_get_float (value);
+
+      if (vpp->device) {
+        VdpVideoMixerAttribute attributes[1];
+        const void *attribute_values[1];
         VdpStatus status;
 
-        features[0] = gst_vdp_feature_from_deinterlace_method (vpp->method);
-        enable[0] = TRUE;
+        attributes[0] = VDP_VIDEO_MIXER_ATTRIBUTE_NOISE_REDUCTION_LEVEL;
+        attribute_values[0] = &noise_reduction;
 
         status =
-            vpp->device->vdp_video_mixer_set_feature_enables (vpp->mixer, 1,
-            features, enable);
+            vpp->device->vdp_video_mixer_set_attribute_values (vpp->mixer, 1,
+            attributes, attribute_values);
         if (status != VDP_STATUS_OK) {
-          GST_WARNING_OBJECT (vpp, "Couldn't set deinterlace method on mixer, "
+          GST_WARNING_OBJECT (vpp,
+              "Couldn't set noise reduction level on mixer, "
               "error returned from vdpau was: %s",
               vpp->device->vdp_get_error_string (status));
         }
       }
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -872,6 +974,16 @@ gst_vdp_vpp_class_init (GstVdpVideoPostProcessClass * klass)
           GST_TYPE_VDP_DEINTERLACE_METHODS, GST_VDP_DEINTERLACE_METHOD_BOB,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_NOISE_REDUCTION,
+      g_param_spec_boolean ("noise-reduction", "Noise reduction",
+          "Specifies whether noise reduction should be performed on the video",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_NOISE_REDUCTION_LEVEL,
+      g_param_spec_float ("noise-reduction-level", "Noise reduction level",
+          "The amount of noise reduction that should be done", 0.0, 1.0, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_vdp_vpp_change_state;
 }
 
@@ -884,6 +996,9 @@ gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
   vpp->force_aspect_ratio = FALSE;
   vpp->mode = GST_VDP_DEINTERLACE_MODE_AUTO;
   vpp->method = GST_VDP_DEINTERLACE_METHOD_BOB;
+
+  vpp->noise_reduction = FALSE;
+  vpp->noise_reduction_level = 0.0;
 
   /* SRC PAD */
   vpp->srcpad = gst_pad_new_from_static_template (&src_template, "src");
