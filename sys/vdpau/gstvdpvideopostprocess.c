@@ -67,8 +67,7 @@ enum
   PROP_FORCE_ASPECT_RATIO,
   PROP_DEINTERLACE_MODE,
   PROP_DEINTERLACE_METHOD,
-  PROP_NOISE_REDUCTION,
-  PROP_NOISE_REDUCTION_LEVEL
+  PROP_NOISE_REDUCTION
 };
 
 /* the capabilities of the inputs and outputs.
@@ -374,7 +373,7 @@ gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp, GstVdpDevice * device)
     features[n_features++] =
         gst_vdp_feature_from_deinterlace_method (vpp->method);
   }
-  if (vpp->noise_reduction)
+  if (vpp->noise_reduction > 0.0)
     features[n_features++] = VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION;
 
   status =
@@ -390,7 +389,7 @@ gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp, GstVdpDevice * device)
 
   vpp->device = g_object_ref (device);
 
-  if (vpp->noise_reduction) {
+  if (vpp->noise_reduction > 0.0) {
     VdpVideoMixerAttribute attributes[1];
     const void *attribute_values[1];
 
@@ -836,9 +835,6 @@ gst_vdp_vpp_get_property (GObject * object, guint property_id, GValue * value,
     case PROP_NOISE_REDUCTION:
       g_value_set_boolean (value, vpp->noise_reduction);
       break;
-    case PROP_NOISE_REDUCTION_LEVEL:
-      g_value_set_float (value, vpp->noise_reduction_level);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -879,31 +875,28 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
     }
     case PROP_NOISE_REDUCTION:
     {
-      gboolean old_value;
+      gfloat old_value;
 
       old_value = vpp->noise_reduction;
-      vpp->noise_reduction = g_value_get_boolean (value);
-      if (!vpp->noise_reduction == !old_value)
+      vpp->noise_reduction = g_value_get_float (value);
+      if (vpp->noise_reduction == old_value)
         break;
-
-      if (vpp->device)
-        gst_vdp_vpp_activate_feature (vpp,
-            VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION, vpp->noise_reduction);
-      break;
-    }
-    case PROP_NOISE_REDUCTION_LEVEL:
-    {
-      gfloat noise_reduction;
-
-      noise_reduction = g_value_get_float (value);
 
       if (vpp->device) {
         VdpVideoMixerAttribute attributes[1];
         const void *attribute_values[1];
         VdpStatus status;
 
+        if (vpp->noise_reduction == 0.0)
+          gst_vdp_vpp_activate_feature (vpp,
+              VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION, FALSE);
+
+        if (old_value == 0.0)
+          gst_vdp_vpp_activate_feature (vpp,
+              VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION, TRUE);
+
         attributes[0] = VDP_VIDEO_MIXER_ATTRIBUTE_NOISE_REDUCTION_LEVEL;
-        attribute_values[0] = &noise_reduction;
+        attribute_values[0] = &vpp->noise_reduction;
 
         status =
             vpp->device->vdp_video_mixer_set_attribute_values (vpp->mixer, 1,
@@ -975,12 +968,7 @@ gst_vdp_vpp_class_init (GstVdpVideoPostProcessClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NOISE_REDUCTION,
-      g_param_spec_boolean ("noise-reduction", "Noise reduction",
-          "Specifies whether noise reduction should be performed on the video",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_NOISE_REDUCTION_LEVEL,
-      g_param_spec_float ("noise-reduction-level", "Noise reduction level",
+      g_param_spec_float ("noise-reduction", "Noise reduction",
           "The amount of noise reduction that should be done", 0.0, 1.0, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -997,8 +985,7 @@ gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
   vpp->mode = GST_VDP_DEINTERLACE_MODE_AUTO;
   vpp->method = GST_VDP_DEINTERLACE_METHOD_BOB;
 
-  vpp->noise_reduction = FALSE;
-  vpp->noise_reduction_level = 0.0;
+  vpp->noise_reduction = 0.0;
 
   /* SRC PAD */
   vpp->srcpad = gst_pad_new_from_static_template (&src_template, "src");
