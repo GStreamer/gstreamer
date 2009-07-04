@@ -62,9 +62,17 @@ typedef enum
 #define GST_SIGNAL_PROCESSOR_IS_RUNNING(obj) \
   (GST_SIGNAL_PROCESSOR (obj)->state == GST_SIGNAL_PROCESSOR_STATE_RUNNING)
 
+typedef struct _GstSignalProcessorGroup GstSignalProcessorGroup;
 typedef struct _GstSignalProcessor GstSignalProcessor;
 typedef struct _GstSignalProcessorClass GstSignalProcessorClass;
 
+
+struct _GstSignalProcessorGroup {
+  guint channels; /**< Number of channels in buffers */
+  guint nframes; /**< Number of frames currently allocated per channel */
+  gfloat *interleaved_buffer; /**< Interleaved buffer (c1c2c1c2...)*/
+  gfloat *buffer; /**< De-interleaved buffer (c1c1...c2c2...) */
+};
 
 struct _GstSignalProcessor {
   GstElement     element;
@@ -81,23 +89,32 @@ struct _GstSignalProcessor {
 
   /* pending inputs before processing can take place */
   guint pending_in;
-  /* panding outputs to be filled */
+  /* pending outputs to be filled */
   guint pending_out;
 
-  gfloat *control_in;
+  /* multi-channel signal pads */
+  GstSignalProcessorGroup *group_in;
+  GstSignalProcessorGroup *group_out;
+
+  /* single channel signal pads */
   gfloat **audio_in;
-  gfloat *control_out;
   gfloat **audio_out;
+
+  /* controls */
+  gfloat *control_in;
+  gfloat *control_out;
 };
 
 struct _GstSignalProcessorClass {
   GstElementClass parent_class;
 
   /*< public >*/
-  guint num_control_in;
+  guint num_group_in;
+  guint num_group_out;
   guint num_audio_in;
-  guint num_control_out;
   guint num_audio_out;
+  guint num_control_in;
+  guint num_control_out;
 
   guint flags;
 
@@ -114,7 +131,7 @@ struct _GstSignalProcessorClass {
 
 GType gst_signal_processor_get_type (void);
 void gst_signal_processor_class_add_pad_template (GstSignalProcessorClass *klass,
-    const gchar *name, GstPadDirection direction, guint index);
+    const gchar *name, GstPadDirection direction, guint index, guint channels);
 
 
 

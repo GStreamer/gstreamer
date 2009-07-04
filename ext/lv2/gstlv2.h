@@ -46,6 +46,8 @@ typedef struct _lv2_control_info {
 
 typedef struct _GstLV2 GstLV2;
 typedef struct _GstLV2Class GstLV2Class;
+typedef struct _GstLV2Group GstLV2Group;
+typedef struct _GstLV2Port GstLV2Port;
 
 
 struct _GstLV2 {
@@ -57,9 +59,16 @@ struct _GstLV2 {
   gboolean activated;
 };
 
+struct _GstLV2Group {
+  SLV2Value uri; /**< RDF resource (URI or blank node) */
+  guint pad; /**< Gst pad index */
+  SLV2Value symbol; /**< Gst pad name / LV2 group symbol */
+  GArray *ports; /**< Array of GstLV2Port */
+};
+
 struct _GstLV2Port {
-  gint      index;
-  SLV2Value group;
+  gint index; /**< LV2 port index (on LV2 plugin) */
+  gint pad; /**< Gst pad index (iff not part of a group) */
 };
 
 struct _GstLV2Class {
@@ -67,12 +76,13 @@ struct _GstLV2Class {
 
   SLV2Plugin plugin;
 
-  GSList *groups;
+  GArray *in_groups; /**< Array of GstLV2Group */
+  GArray *out_groups; /**< Array of GstLV2Group */
+  GArray *audio_in_ports; /**< Array of GstLV2Port */
+  GArray *audio_out_ports; /**< Array of GstLV2Port */
+  GArray *control_in_ports; /**< Array of GstLV2Port */
+  GArray *control_out_ports; /**< Array of GstLV2Port */
 
-  struct _GstLV2Port *audio_in_ports;
-  struct _GstLV2Port *audio_out_ports;
-  struct _GstLV2Port *control_in_ports;
-  struct _GstLV2Port *control_out_ports;
 };
 
 

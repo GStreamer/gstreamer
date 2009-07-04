@@ -31,13 +31,14 @@
  * 1. store each received buffer on the pad and decrement pending_in
  * 2. when pending_in==0, process as much as we can and push outputs
  *
- * In pull mode (gst_signal_processor_getrange) is operates as follows:
+ * In pull mode (gst_signal_processor_getrange) it operates as follows:
  * 1. if there is an output ready, deliver
  * 2. otherwise pull from each sink-pad, process requested frames and deliver
  *    the buffer
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -63,6 +64,7 @@ struct _GstSignalProcessorPadTemplate
   GstPadTemplate parent;
 
   guint index;
+  guint channels;
 };
 
 static GType
@@ -92,11 +94,10 @@ gst_signal_processor_pad_template_get_type (void)
  */
 void
 gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
-    const gchar * name, GstPadDirection direction, guint index)
+    const gchar * name, GstPadDirection direction, guint index, guint channels)
 {
   GstPadTemplate *new;
   GstCaps *caps;
-  guint channels = 1;
 
   g_return_if_fail (GST_IS_SIGNAL_PROCESSOR_CLASS (klass));
   g_return_if_fail (name != NULL);
@@ -111,6 +112,7 @@ gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
       "direction", direction, "presence", GST_PAD_ALWAYS, "caps", caps, NULL);
 
   GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (new)->index = index;
+  GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (new)->channels = channels;
 
   gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass), new);
 }
@@ -131,6 +133,9 @@ struct _GstSignalProcessorPad
 
   /* index for the pad per direction (starting from 0) */
   guint index;
+
+  /* number of channels for the pad */
+  guint channels;
 
   /* these are only used for sink pads */
   guint samples_avail;          /* available mono sample frames */
@@ -208,6 +213,8 @@ gst_signal_processor_add_pad_from_template (GstSignalProcessor * self,
       "template", templ, NULL);
   GST_SIGNAL_PROCESSOR_PAD (new)->index =
       GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (templ)->index;
+  GST_SIGNAL_PROCESSOR_PAD (new)->channels =
+      GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (templ)->channels;
 
   gst_pad_set_setcaps_function (new,
       GST_DEBUG_FUNCPTR (gst_signal_processor_setcaps));
@@ -244,20 +251,21 @@ gst_signal_processor_init (GstSignalProcessor * self,
 
   while (templates) {
     GstPadTemplate *templ = GST_PAD_TEMPLATE (templates->data);
-
     gst_signal_processor_add_pad_from_template (self, templ);
     templates = templates->next;
   }
 
   self->state = GST_SIGNAL_PROCESSOR_STATE_NULL;
 
+  self->group_in = g_new0 (GstSignalProcessorGroup, klass->num_group_in);
+  self->group_out = g_new0 (GstSignalProcessorGroup, klass->num_group_out);
   self->audio_in = g_new0 (gfloat *, klass->num_audio_in);
-  self->control_in = g_new0 (gfloat, klass->num_control_in);
   self->audio_out = g_new0 (gfloat *, klass->num_audio_out);
+  self->control_in = g_new0 (gfloat, klass->num_control_in);
   self->control_out = g_new0 (gfloat, klass->num_control_out);
 
   /* init */
-  self->pending_in = klass->num_audio_in;
+  self->pending_in = klass->num_group_in + klass->num_audio_in;
   self->pending_out = 0;
 
   self->sample_rate = 0;
@@ -268,12 +276,16 @@ gst_signal_processor_finalize (GObject * object)
 {
   GstSignalProcessor *self = GST_SIGNAL_PROCESSOR (object);
 
+  g_free (self->group_in);
+  self->group_in = NULL;
+  g_free (self->group_out);
+  self->group_out = NULL;
   g_free (self->audio_in);
   self->audio_in = NULL;
-  g_free (self->control_in);
-  self->control_in = NULL;
   g_free (self->audio_out);
   self->audio_out = NULL;
+  g_free (self->control_in);
+  self->control_in = NULL;
   g_free (self->control_out);
   self->control_out = NULL;
 
@@ -369,6 +381,7 @@ static void
 gst_signal_processor_cleanup (GstSignalProcessor * self)
 {
   GstSignalProcessorClass *klass;
+  gint i;
 
   klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
@@ -378,6 +391,16 @@ gst_signal_processor_cleanup (GstSignalProcessor * self)
 
   if (klass->cleanup)
     klass->cleanup (self);
+
+  for (i = 0; i < klass->num_group_in; ++i) {
+    g_free (self->group_in[i].buffer);
+    memset (&self->group_in[i], '\0', sizeof (GstSignalProcessorGroup));
+  }
+
+  for (i = 0; i < klass->num_group_out; ++i) {
+    g_free (self->group_out[i].buffer);
+    memset (&self->group_in[i], '\0', sizeof (GstSignalProcessorGroup));
+  }
 
   self->state = GST_SIGNAL_PROCESSOR_STATE_NULL;
 }
@@ -503,6 +526,36 @@ impossible:
   }
 }
 
+/** De-interleave a pad (gstreamer => plugin) */
+static void
+gst_signal_processor_deinterleave_group (GstSignalProcessorGroup * group,
+    guint nframes)
+{
+  guint i, j;
+  g_assert (group->nframes == nframes);
+  g_assert (group->interleaved_buffer);
+  g_assert (group->buffer);
+  for (i = 0; i < nframes; ++i)
+    for (j = 0; j < group->channels; ++j)
+      group->buffer[(j * nframes) + i]
+          = group->interleaved_buffer[(i * group->channels) + j];
+}
+
+/** Interleave a pad (plugin => gstreamer) */
+static void
+gst_signal_processor_interleave_group (GstSignalProcessorGroup * group,
+    guint nframes)
+{
+  guint i, j;
+  g_assert (group->nframes == nframes);
+  g_assert (group->interleaved_buffer);
+  g_assert (group->buffer);
+  for (i = 0; i < nframes; ++i)
+    for (j = 0; j < group->channels; ++j)
+      group->interleaved_buffer[(i * group->channels) + j]
+          = group->buffer[(j * nframes) + i];
+}
+
 static gboolean
 gst_signal_processor_event (GstPad * pad, GstEvent * event)
 {
@@ -543,18 +596,38 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
   GstSignalProcessorClass *klass;
   GList *sinks, *srcs;
   guint samples_avail = nframes;
+  guint i, in_group_index = 0, out_group_index = 0;
 
   klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
   /* first, assign audio_in pointers, and determine the number of samples that
    * we can process */
-  for (sinks = elem->sinkpads; sinks; sinks = sinks->next) {
+  i = 0;
+  for (sinks = elem->sinkpads; sinks; sinks = sinks->next, ++i) {
     GstSignalProcessorPad *sinkpad;
 
     sinkpad = (GstSignalProcessorPad *) sinks->data;
     g_assert (sinkpad->samples_avail > 0);
     samples_avail = MIN (samples_avail, sinkpad->samples_avail);
-    self->audio_in[sinkpad->index] = sinkpad->data;
+    if (sinkpad->channels > 1) {
+      GstSignalProcessorGroup *group = &self->group_in[in_group_index++];
+      group->interleaved_buffer = sinkpad->data;
+      /* allocate buffer for de-interleaving */
+      if (!group->buffer || group->channels < sinkpad->channels
+          || group->nframes < samples_avail) {
+        group->buffer =
+            (gfloat *) g_realloc (group->buffer,
+            samples_avail * sinkpad->channels * sizeof (gfloat));
+        memset (group->buffer, '\0',
+            samples_avail * sinkpad->channels * sizeof (gfloat));
+      }
+      g_assert (group->buffer);
+      group->channels = sinkpad->channels;
+      group->nframes = samples_avail;
+      gst_signal_processor_deinterleave_group (group, samples_avail);
+    } else {
+      self->audio_in[sinkpad->index] = sinkpad->data;
+    }
   }
 
   /* FIXME: return if samples_avail==0 ? */
@@ -571,7 +644,9 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
       sinkpad = (GstSignalProcessorPad *) sinks->data;
       srcpad = (GstSignalProcessorPad *) srcs->data;
 
-      if (GST_BUFFER_SIZE (sinkpad->pen) == samples_avail * sizeof (gfloat)) {
+      if (sinkpad->channels == 1 && sinkpad->channels == srcpad->channels
+          && GST_BUFFER_SIZE (sinkpad->pen) ==
+          samples_avail * sizeof (gfloat)) {
         /* reusable, yay */
         g_assert (sinkpad->samples_avail == samples_avail);
         srcpad->pen = sinkpad->pen;
@@ -597,11 +672,24 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
 
     ret =
         gst_pad_alloc_buffer_and_set_caps (GST_PAD (srcpad), -1,
-        samples_avail * sizeof (gfloat), self->caps, &srcpad->pen);
+        samples_avail * srcpad->channels * sizeof (gfloat), self->caps,
+        &srcpad->pen);
 
     if (ret != GST_FLOW_OK) {
       self->flow_state = ret;
       return 0;
+    } else if (srcpad->channels > 1) {
+      GstSignalProcessorGroup *group = &self->group_out[out_group_index++];
+      group->interleaved_buffer = (gfloat *) GST_BUFFER_DATA (srcpad->pen);
+      if (!group->buffer || group->channels < srcpad->channels
+          || group->nframes < samples_avail)
+        group->buffer =
+            (gfloat *) g_realloc (group->buffer,
+            samples_avail * srcpad->channels * sizeof (gfloat));
+      g_assert (group->buffer);
+      group->channels = srcpad->channels;
+      group->nframes = samples_avail;
+      self->pending_out++;
     } else {
       self->audio_out[srcpad->index] = (gfloat *) GST_BUFFER_DATA (srcpad->pen);
       self->pending_out++;
@@ -640,9 +728,19 @@ gst_signal_processor_update_inputs (GstSignalProcessor * self, guint nprocessed)
       /* advance ->data pointers and decrement ->samples_avail, unreffing buffer
          if no samples are left */
       sinkpad->samples_avail -= nprocessed;
-      sinkpad->data += nprocessed;      /* gfloat* arithmetic */
+      sinkpad->data += nprocessed * sinkpad->channels;  /* gfloat* arithmetic */
     }
   }
+}
+
+static void
+gst_signal_processor_update_outputs (GstSignalProcessor * self,
+    guint nprocessed)
+{
+  GstSignalProcessorClass *klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
+  guint i;
+  for (i = 0; i < klass->num_group_out; ++i)
+    gst_signal_processor_interleave_group (&self->group_out[i], nprocessed);
 }
 
 static void
@@ -669,6 +767,7 @@ gst_signal_processor_process (GstSignalProcessor * self, guint nframes)
   klass->process (self, nframes);
 
   gst_signal_processor_update_inputs (self, nframes);
+  gst_signal_processor_update_outputs (self, nframes);
 
   return;
 
@@ -692,7 +791,8 @@ gst_signal_processor_pen_buffer (GstSignalProcessor * self, GstPad * pad,
   /* keep the reference */
   spad->pen = buffer;
   spad->data = (gfloat *) GST_BUFFER_DATA (buffer);
-  spad->samples_avail = GST_BUFFER_SIZE (buffer) / sizeof (float);
+  spad->samples_avail =
+      GST_BUFFER_SIZE (buffer) / sizeof (float) / spad->channels;
 
   g_assert (self->pending_in != 0);
 
