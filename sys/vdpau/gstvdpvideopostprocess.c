@@ -33,7 +33,7 @@
 
 /*
  * TODO:
- *  + add support for postprocessing eg. deinterlace
+ *  + add support for more postprocessing options
  *  + mixing videos. (This should perhaps be done in a separate element based on
  *  VdpOutputSurface)
  */
@@ -64,7 +64,9 @@ enum
 enum
 {
   PROP_0,
-  PROP_FORCE_ASPECT_RATIO
+  PROP_FORCE_ASPECT_RATIO,
+  PROP_DEINTERLACE_MODE,
+  PROP_DEINTERLACE_METHOD
 };
 
 /* the capabilities of the inputs and outputs.
@@ -88,13 +90,276 @@ GST_BOILERPLATE_FULL (GstVdpVideoPostProcess, gst_vdp_vpp,
 
 static void gst_vdp_vpp_finalize (GObject * object);
 
+#define GST_TYPE_VDP_DEINTERLACE_METHODS (gst_vdp_deinterlace_methods_get_type ())
+static GType
+gst_vdp_deinterlace_methods_get_type (void)
+{
+  static GType deinterlace_methods_type = 0;
+
+  static const GEnumValue methods_types[] = {
+    {GST_VDP_DEINTERLACE_METHOD_BOB,
+          "Vertically scale a single field to the size of a single frame.",
+        "bob"},
+    {GST_VDP_DEINTERLACE_METHOD_TEMPORAL, "Motion Adaptive: Simple Detection",
+        "temporal"},
+    {GST_VDP_DEINTERLACE_METHOD_TEMPORAL_SPATIAL,
+        "Motion Adaptive: Advanced Detection", "temporal-spatial"},
+    {0, NULL, NULL},
+  };
+
+  if (!deinterlace_methods_type) {
+    deinterlace_methods_type =
+        g_enum_register_static ("GstVdpDeinterlaceMethods", methods_types);
+  }
+  return deinterlace_methods_type;
+}
+
+#define GST_TYPE_VDP_DEINTERLACE_MODES (gst_vdp_deinterlace_modes_get_type ())
+static GType
+gst_vdp_deinterlace_modes_get_type (void)
+{
+  static GType deinterlace_modes_type = 0;
+
+  static const GEnumValue modes_types[] = {
+    {GST_VDP_DEINTERLACE_MODE_AUTO, "Auto detection", "auto"},
+    {GST_VDP_DEINTERLACE_MODE_INTERLACED, "Enfore deinterlacing", "interlaced"},
+    {GST_VDP_DEINTERLACE_MODE_DISABLED, "Run in passthrough mode", "disabled"},
+    {0, NULL, NULL},
+  };
+
+  if (!deinterlace_modes_type) {
+    deinterlace_modes_type =
+        g_enum_register_static ("GstVdpDeinterlaceModes", modes_types);
+  }
+  return deinterlace_modes_type;
+}
+
+static VdpVideoMixerFeature
+gst_vdp_feature_from_deinterlace_method (GstVdpDeinterlaceMethods method)
+{
+  gint i;
+  VdpVideoMixerFeature feature;
+
+  typedef struct
+  {
+    GstVdpDeinterlaceMethods method;
+    VdpVideoMixerFeature feature;
+  } VdpDeinterlaceMethod;
+
+  VdpDeinterlaceMethod deinterlace_methods[2] = {
+    {GST_VDP_DEINTERLACE_METHOD_TEMPORAL,
+        VDP_VIDEO_MIXER_FEATURE_DEINTERLACE_TEMPORAL},
+    {GST_VDP_DEINTERLACE_METHOD_TEMPORAL_SPATIAL,
+        VDP_VIDEO_MIXER_FEATURE_DEINTERLACE_TEMPORAL_SPATIAL}
+  };
+
+  for (i = 0; i < G_N_ELEMENTS (deinterlace_methods); i++) {
+    if (deinterlace_methods[i].method == method) {
+      feature = deinterlace_methods[i].feature;
+      break;
+    }
+  }
+
+  return feature;
+}
+
+static void
+gst_vdp_picture_clear (GstVdpPicture pic)
+{
+  if (pic.buf) {
+    gst_buffer_unref (GST_BUFFER (pic.buf));
+    pic.buf = NULL;
+  }
+}
+
+static gboolean
+gst_vdp_vpp_is_interlaced (GstVdpVideoPostProcess * vpp)
+{
+  if (vpp->mode == GST_VDP_DEINTERLACE_MODE_INTERLACED)
+    return TRUE;
+
+  if (vpp->mode == GST_VDP_DEINTERLACE_MODE_AUTO && vpp->interlaced)
+    return TRUE;
+
+  return FALSE;
+}
+
+static guint
+gst_vdp_vpp_get_required_pictures (GstVdpVideoPostProcess * vpp)
+{
+  guint ret = 1;
+
+  if (!gst_vdp_vpp_is_interlaced (vpp))
+    return 1;
+
+  switch (vpp->method) {
+    case GST_VDP_DEINTERLACE_METHOD_BOB:
+      ret = 1;
+      break;
+    case GST_VDP_DEINTERLACE_METHOD_TEMPORAL:
+    case GST_VDP_DEINTERLACE_METHOD_TEMPORAL_SPATIAL:
+      ret = 3;
+      break;
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_vdp_vpp_get_next_picture (GstVdpVideoPostProcess * vpp,
+    GstVdpPicture * current_pic,
+    guint32 * video_surfaces_past_count, VdpVideoSurface * video_surfaces_past,
+    guint32 * video_surfaces_future_count,
+    VdpVideoSurface * video_surfaces_future)
+{
+  gint i;
+  gint required_pictures;
+
+  required_pictures = gst_vdp_vpp_get_required_pictures (vpp);
+
+  if (vpp->n_future_pictures < required_pictures)
+    return FALSE;
+
+  *current_pic = vpp->future_pictures[0];
+  for (i = 0; i < vpp->n_future_pictures - 1; i++) {
+    vpp->future_pictures[i] = vpp->future_pictures[i + 1];
+  }
+
+  vpp->future_pictures[vpp->n_future_pictures - 1].buf = NULL;
+  vpp->n_future_pictures--;
+
+  *video_surfaces_future_count = vpp->n_future_pictures;
+  for (i = 0; i < vpp->n_future_pictures; i++)
+    video_surfaces_future[i] = vpp->future_pictures[i].buf->surface;
+
+  *video_surfaces_past_count = vpp->n_past_pictures;
+  for (i = 0; i < vpp->n_past_pictures; i++)
+    video_surfaces_past[i] = vpp->past_pictures[i].buf->surface;
+
+  if (vpp->n_past_pictures == MAX_PICTURES) {
+    gst_vdp_picture_clear (vpp->past_pictures[MAX_PICTURES - 1]);
+    vpp->n_past_pictures--;
+  }
+
+  /* move every picture upwards one step in the array */
+  for (i = vpp->n_past_pictures; i > 0; i--) {
+    vpp->past_pictures[i] = vpp->past_pictures[i - 1];
+  }
+
+  /* add the picture to the past surfaces */
+  vpp->past_pictures[0] = *current_pic;
+  vpp->n_past_pictures++;
+
+  return TRUE;
+}
+
+static void
+gst_vdp_vpp_add_buffer (GstVdpVideoPostProcess * vpp, GstVdpVideoBuffer * buf)
+{
+  gboolean repeated;
+  gboolean tff;
+  gboolean onefield;
+  GstVdpPicture pic1, pic2;
+
+  if (!gst_vdp_vpp_is_interlaced (vpp)) {
+    pic1.buf = buf;
+    pic1.structure = VDP_VIDEO_MIXER_PICTURE_STRUCTURE_FRAME;
+    pic1.timestamp = GST_BUFFER_TIMESTAMP (buf);
+    vpp->future_pictures[vpp->n_future_pictures++] = pic1;
+    return;
+  }
+
+  repeated = GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_RFF);
+  tff = GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_TFF);
+  onefield = GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_ONEFIELD);
+
+  pic1.buf = buf;
+  pic2.buf = (GstVdpVideoBuffer *) gst_buffer_ref (GST_BUFFER (buf));
+  if (tff) {
+    pic1.structure = VDP_VIDEO_MIXER_PICTURE_STRUCTURE_TOP_FIELD;
+    pic2.structure = VDP_VIDEO_MIXER_PICTURE_STRUCTURE_BOTTOM_FIELD;
+  } else {
+    pic1.structure = VDP_VIDEO_MIXER_PICTURE_STRUCTURE_BOTTOM_FIELD;
+    pic1.structure = VDP_VIDEO_MIXER_PICTURE_STRUCTURE_TOP_FIELD;
+  }
+
+  pic1.timestamp = GST_BUFFER_TIMESTAMP (buf);
+  pic2.timestamp = pic1.timestamp + vpp->field_duration;
+
+  if (repeated) {
+    vpp->future_pictures[vpp->n_future_pictures++] = pic1;
+
+    pic1.timestamp = pic2.timestamp;
+    vpp->future_pictures[vpp->n_future_pictures++] = pic1;
+    gst_buffer_ref (GST_BUFFER (pic1.buf));
+
+    pic2.timestamp += vpp->field_duration;
+    vpp->future_pictures[vpp->n_future_pictures++] = pic2;
+  } else if (!onefield) {
+    vpp->future_pictures[vpp->n_future_pictures++] = pic1;
+    vpp->future_pictures[vpp->n_future_pictures++] = pic2;
+  } else {
+    vpp->future_pictures[vpp->n_future_pictures++] = pic1;
+    gst_buffer_unref (GST_BUFFER (pic2.buf));
+  }
+}
+
+static gint
+gst_greatest_common_divisor (gint a, gint b)
+{
+  while (b != 0) {
+    int temp = a;
+
+    a = b;
+    b = temp % b;
+  }
+
+  return ABS (a);
+}
+
+static gboolean
+gst_fraction_double (gint * n_out, gint * d_out)
+{
+  gint n, d, gcd;
+
+  n = *n_out;
+  d = *d_out;
+
+  if (d == 0)
+    return FALSE;
+
+  if (n == 0 || (n == G_MAXINT && d == 1))
+    return TRUE;
+
+  gcd = gst_greatest_common_divisor (n, d);
+  n /= gcd;
+  d /= gcd;
+
+  if (G_MAXINT / 2 >= ABS (n)) {
+    n *= 2;
+  } else if (d >= 2) {
+    d /= 2;
+  } else
+    return FALSE;
+
+  *n_out = n;
+  *d_out = d;
+
+  return TRUE;
+}
+
 static gboolean
 gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVdpVideoPostProcess *vpp =
       GST_VDP_VIDEO_POST_PROCESS (gst_pad_get_parent (pad));
+  GstStructure *structure;
   GstCaps *output_caps, *allowed_caps, *src_caps;
   gboolean res;
+
+  /* extract interlaced flag */
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_boolean (structure, "interlaced", &vpp->interlaced);
 
   output_caps = gst_vdp_video_to_output_caps (caps);
   allowed_caps = gst_pad_get_allowed_caps (vpp->srcpad);
@@ -107,23 +372,69 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_caps_unref (output_caps);
   gst_caps_unref (allowed_caps);
 
+  if (gst_vdp_vpp_is_interlaced (vpp)) {
+    gint fps_n, fps_d;
+
+    structure = gst_caps_get_structure (src_caps, 0);
+
+    if (!gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+      gst_caps_unref (src_caps);
+      goto invalid_caps;
+    }
+
+    gst_fraction_double (&fps_n, &fps_d);
+    gst_structure_set (structure, "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+        NULL);
+    gst_structure_remove_field (structure, "interlaced");
+
+    vpp->field_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
+  }
+
   res = gst_pad_set_caps (vpp->srcpad, src_caps);
 
+done:
   gst_object_unref (vpp);
   return res;
+
+invalid_caps:
+  GST_ERROR_OBJECT (vpp, "invalid caps: %" GST_PTR_FORMAT, caps);
+  res = FALSE;
+  goto done;
 }
 
 static void
 gst_vdp_vpp_flush (GstVdpVideoPostProcess * vpp)
 {
-  /* TODO: Write this */
+  gint i;
+
+  for (i = 0; i < vpp->n_future_pictures; i++) {
+    gst_vdp_picture_clear (vpp->future_pictures[i]);
+  }
+  vpp->n_future_pictures = 0;
+
+  for (i = 0; i < vpp->n_past_pictures; i++) {
+    gst_vdp_picture_clear (vpp->past_pictures[i]);
+  }
+  vpp->n_past_pictures = 0;
 }
 
 static void
 gst_vdp_vpp_start (GstVdpVideoPostProcess * vpp)
 {
+  gint i;
+
+  vpp->interlaced = FALSE;
+  vpp->field_duration = GST_CLOCK_TIME_NONE;
+
   vpp->mixer = VDP_INVALID_HANDLE;
   vpp->device = NULL;
+
+  for (i = 0; i < MAX_PICTURES; i++) {
+    vpp->future_pictures[i].buf = NULL;
+    vpp->past_pictures[i].buf = NULL;
+  }
+  vpp->n_future_pictures = 0;
+  vpp->n_past_pictures = 0;
 }
 
 static void
@@ -133,6 +444,8 @@ gst_vdp_vpp_stop (GstVdpVideoPostProcess * vpp)
     vpp->device->vdp_video_mixer_destroy (vpp->mixer);
   if (!vpp->device)
     g_object_unref (vpp->device);
+
+  gst_vdp_vpp_flush (vpp);
 }
 
 static GstFlowReturn
@@ -176,8 +489,13 @@ gst_vdp_vpp_alloc_output_buffer (GstVdpVideoPostProcess * vpp, GstCaps * caps,
     parameter_values[1] = &height;
     parameter_values[2] = &chroma_type;
 
-    device = vpp->device = g_object_ref ((*outbuf)->device);
+    if (gst_vdp_vpp_is_interlaced (vpp)
+        && vpp->method != GST_VDP_DEINTERLACE_METHOD_BOB) {
+      features[n_features++] =
+          gst_vdp_feature_from_deinterlace_method (vpp->method);
+    }
 
+    device = vpp->device = g_object_ref ((*outbuf)->device);
 
     status =
         device->vdp_video_mixer_create (device->device, n_features, features,
@@ -203,81 +521,114 @@ gst_vdp_vpp_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstVdpVideoPostProcess *vpp =
       GST_VDP_VIDEO_POST_PROCESS (gst_pad_get_parent (pad));
-  GstFlowReturn ret;
-  GstVdpOutputBuffer *outbuf;
 
-  GstStructure *structure;
-  GstVideoRectangle src_r, dest_r;
-  VdpRect rect;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  GstVdpDevice *device;
-  VdpStatus status;
+  GstVdpPicture current_pic;
+
+  guint32 video_surfaces_past_count;
+  VdpVideoSurface video_surfaces_past[MAX_PICTURES];
+
+  guint32 video_surfaces_future_count;
+  VdpVideoSurface video_surfaces_future[MAX_PICTURES];
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (vpp, "Received discont buffer");
     gst_vdp_vpp_flush (vpp);
   }
 
-  ret =
-      gst_vdp_vpp_alloc_output_buffer (vpp, GST_PAD_CAPS (vpp->srcpad),
-      &outbuf);
-  if (ret != GST_FLOW_OK)
-    goto done;
+  gst_vdp_vpp_add_buffer (vpp, GST_VDP_VIDEO_BUFFER (buffer));
 
-  structure = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0);
-  if (!gst_structure_get_int (structure, "width", &src_r.w) ||
-      !gst_structure_get_int (structure, "height", &src_r.h))
-    goto invalid_caps;
+  while (gst_vdp_vpp_get_next_picture (vpp,
+          &current_pic,
+          &video_surfaces_past_count, video_surfaces_past,
+          &video_surfaces_future_count, video_surfaces_future)) {
+    GstVdpOutputBuffer *outbuf;
 
-  structure = gst_caps_get_structure (GST_BUFFER_CAPS (outbuf), 0);
-  if (!gst_structure_get_int (structure, "width", &dest_r.w) ||
-      !gst_structure_get_int (structure, "height", &dest_r.h))
-    goto invalid_caps;
+    GstStructure *structure;
+    GstVideoRectangle src_r, dest_r;
+    VdpRect rect;
 
-  if (vpp->force_aspect_ratio) {
-    GstVideoRectangle res_r;
+    GstVdpDevice *device;
+    VdpStatus status;
 
-    gst_video_sink_center_rect (src_r, dest_r, &res_r, TRUE);
-    rect.x0 = res_r.x;
-    rect.x1 = res_r.w + res_r.x;
-    rect.y0 = res_r.y;
-    rect.y1 = res_r.h + res_r.y;
-  } else {
-    rect.x0 = 0;
-    rect.x1 = dest_r.w;
-    rect.y0 = 0;
-    rect.y1 = dest_r.h;
-  }
+    ret =
+        gst_vdp_vpp_alloc_output_buffer (vpp, GST_PAD_CAPS (vpp->srcpad),
+        &outbuf);
+    if (ret != GST_FLOW_OK)
+      break;
 
-  device = vpp->device;
-  status = device->vdp_video_mixer_render (vpp->mixer, VDP_INVALID_HANDLE, NULL,
-      VDP_VIDEO_MIXER_PICTURE_STRUCTURE_FRAME, 0, NULL,
-      GST_VDP_VIDEO_BUFFER (buffer)->surface, 0, NULL, NULL, outbuf->surface,
-      NULL, &rect, 0, NULL);
-  if (status != VDP_STATUS_OK) {
-    GST_ELEMENT_ERROR (vpp, RESOURCE, READ,
-        ("Could not post process frame"),
-        ("Error returned from vdpau was: %s",
-            device->vdp_get_error_string (status)));
+    structure = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0);
+    if (!gst_structure_get_int (structure, "width", &src_r.w) ||
+        !gst_structure_get_int (structure, "height", &src_r.h))
+      goto invalid_caps;
+
+    structure = gst_caps_get_structure (GST_BUFFER_CAPS (outbuf), 0);
+    if (!gst_structure_get_int (structure, "width", &dest_r.w) ||
+        !gst_structure_get_int (structure, "height", &dest_r.h))
+      goto invalid_caps;
+
+    if (vpp->force_aspect_ratio) {
+      GstVideoRectangle res_r;
+
+      gst_video_sink_center_rect (src_r, dest_r, &res_r, TRUE);
+      rect.x0 = res_r.x;
+      rect.x1 = res_r.w + res_r.x;
+      rect.y0 = res_r.y;
+      rect.y1 = res_r.h + res_r.y;
+    } else {
+      rect.x0 = 0;
+      rect.x1 = dest_r.w;
+      rect.y0 = 0;
+      rect.y1 = dest_r.h;
+    }
+
+    device = vpp->device;
+    status =
+        device->vdp_video_mixer_render (vpp->mixer, VDP_INVALID_HANDLE, NULL,
+        current_pic.structure, video_surfaces_past_count, video_surfaces_past,
+        current_pic.buf->surface, video_surfaces_future_count,
+        video_surfaces_future, NULL, outbuf->surface, NULL, &rect, 0, NULL);
+    if (status != VDP_STATUS_OK) {
+      GST_ELEMENT_ERROR (vpp, RESOURCE, READ,
+          ("Could not post process frame"),
+          ("Error returned from vdpau was: %s",
+              device->vdp_get_error_string (status)));
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+
+    GST_BUFFER_TIMESTAMP (outbuf) = current_pic.timestamp;
+    if (gst_vdp_vpp_is_interlaced (vpp))
+      GST_BUFFER_DURATION (outbuf) = vpp->field_duration;
+    else
+      GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (current_pic.buf);
+
+    if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_DISCONT))
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+
+    if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_PREROLL))
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_PREROLL);
+
+    if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_GAP))
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
+
+    ret = gst_pad_push (vpp->srcpad, GST_BUFFER (outbuf));
+    if (ret != GST_FLOW_OK)
+      break;
+
+    continue;
+
+  invalid_caps:
+    gst_buffer_unref (GST_BUFFER (outbuf));
     ret = GST_FLOW_ERROR;
-    goto done;
+    break;
   }
-
-  gst_buffer_copy_metadata (GST_BUFFER (outbuf), buffer,
-      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
-
-  ret = gst_pad_push (vpp->srcpad, GST_BUFFER (outbuf));
 
 done:
-  gst_buffer_unref (buffer);
   gst_object_unref (vpp);
 
   return ret;
-
-invalid_caps:
-  gst_buffer_unref (GST_BUFFER (outbuf));
-  ret = GST_FLOW_ERROR;
-  goto done;
 }
 
 static GstCaps *
@@ -418,6 +769,12 @@ gst_vdp_vpp_get_property (GObject * object, guint property_id, GValue * value,
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, vpp->force_aspect_ratio);
       break;
+    case PROP_DEINTERLACE_MODE:
+      g_value_set_enum (value, vpp->mode);
+      break;
+    case PROP_DEINTERLACE_METHOD:
+      g_value_set_enum (value, vpp->method);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -434,6 +791,29 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_FORCE_ASPECT_RATIO:
       vpp->force_aspect_ratio = g_value_get_boolean (value);
+      break;
+    case PROP_DEINTERLACE_MODE:
+      vpp->mode = g_value_get_enum (value);
+      break;
+    case PROP_DEINTERLACE_METHOD:
+      vpp->method = g_value_get_enum (value);
+      if (vpp->method != GST_VDP_DEINTERLACE_METHOD_BOB && vpp->device) {
+        VdpVideoMixerFeature features[1];
+        VdpBool enable[1];
+        VdpStatus status;
+
+        features[0] = gst_vdp_feature_from_deinterlace_method (vpp->method);
+        enable[0] = TRUE;
+
+        status =
+            vpp->device->vdp_video_mixer_set_feature_enables (vpp->mixer, 1,
+            features, enable);
+        if (status != VDP_STATUS_OK) {
+          GST_WARNING_OBJECT (vpp, "Couldn't set deinterlace method on mixer, "
+              "error returned from vdpau was: %s",
+              vpp->device->vdp_get_error_string (status));
+        }
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -480,6 +860,18 @@ gst_vdp_vpp_class_init (GstVdpVideoPostProcessClass * klass)
           "maximum size where the aspect ratio can be preserved", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_DEINTERLACE_MODE,
+      g_param_spec_enum ("mode", "Deinterlace mode",
+          "Specifies if the element should deinterlace or not",
+          GST_TYPE_VDP_DEINTERLACE_MODES, GST_VDP_DEINTERLACE_MODE_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DEINTERLACE_METHOD,
+      g_param_spec_enum ("method", "Deinterlace method",
+          "Specifies which deinterlace method to use",
+          GST_TYPE_VDP_DEINTERLACE_METHODS, GST_VDP_DEINTERLACE_METHOD_BOB,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_vdp_vpp_change_state;
 }
 
@@ -487,7 +879,11 @@ static void
 gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
     GstVdpVideoPostProcessClass * gclass)
 {
+  vpp->device = NULL;
+
   vpp->force_aspect_ratio = FALSE;
+  vpp->mode = GST_VDP_DEINTERLACE_MODE_AUTO;
+  vpp->method = GST_VDP_DEINTERLACE_METHOD_BOB;
 
   /* SRC PAD */
   vpp->srcpad = gst_pad_new_from_static_template (&src_template, "src");

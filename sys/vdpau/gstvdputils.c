@@ -134,6 +134,7 @@ gst_vdp_video_to_output_caps (GstCaps * caps)
 
     gst_structure_set_name (structure, "video/x-vdpau-output");
     gst_structure_remove_field (structure, "chroma-type");
+    gst_structure_remove_field (structure, "interlaced");
   }
 
   return result;

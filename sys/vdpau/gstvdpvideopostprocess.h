@@ -27,6 +27,30 @@
 
 G_BEGIN_DECLS
 
+#define MAX_PICTURES 6
+
+typedef struct _GstVdpPicture GstVdpPicture;
+
+struct _GstVdpPicture
+{
+  GstVdpVideoBuffer *buf;
+  VdpVideoMixerPictureStructure structure;
+  GstClockTime timestamp;
+};
+
+typedef enum
+{
+  GST_VDP_DEINTERLACE_MODE_AUTO,
+  GST_VDP_DEINTERLACE_MODE_INTERLACED,
+  GST_VDP_DEINTERLACE_MODE_DISABLED
+} GstVdpDeinterlaceModes;
+typedef enum
+{
+  GST_VDP_DEINTERLACE_METHOD_BOB,
+  GST_VDP_DEINTERLACE_METHOD_TEMPORAL,
+  GST_VDP_DEINTERLACE_METHOD_TEMPORAL_SPATIAL
+} GstVdpDeinterlaceMethods;
+
 #define GST_TYPE_VDP_VIDEO_POST_PROCESS            (gst_vdp_vpp_get_type())
 #define GST_VDP_VIDEO_POST_PROCESS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDP_VIDEO_POST_PROCESS,GstVdpVideoPostProcess))
 #define GST_VDP_VIDEO_POST_PROCESS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDP_VIDEO_POST_PROCESS,GstVdpVideoPostProcessClass))
@@ -42,10 +66,21 @@ struct _GstVdpVideoPostProcess
 
   GstPad *sinkpad, *srcpad;
 
+  gboolean interlaced;
+  GstClockTime field_duration;
+  
   GstVdpDevice *device;
   VdpVideoMixer mixer;
 
+  GstVdpPicture future_pictures[MAX_PICTURES];
+  guint n_future_pictures;
+  
+  GstVdpPicture past_pictures[MAX_PICTURES];
+  guint n_past_pictures;
+  
   gboolean force_aspect_ratio;
+  GstVdpDeinterlaceModes mode;
+  GstVdpDeinterlaceMethods method;
 };
 
 struct _GstVdpVideoPostProcessClass 
