@@ -693,8 +693,12 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       else
         adder->segment_position = 0;
       /* we flushed out the downstream segment, make sure we push a new one */
-      if (flush)
+      if (flush) {
         adder->segment_pending = TRUE;
+        /* Yes, we need to call _set_flushing again *WHEN* the streaming threads
+         * have stopped so that the cookie gets properly updated. */
+        gst_collect_pads_set_flushing (adder->collect, TRUE);
+      }
       /* we might have a pending flush_stop event now. This event will either be
        * sent by an upstream element when it completes the seek or we will push
        * one in the collected callback ourself */
