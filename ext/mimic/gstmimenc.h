@@ -56,6 +56,7 @@ struct _GstMimEnc
   guint16 height, width;
 
   gboolean paused_mode;
+  GstSegment segment;
 };
 
 struct _GstMimEncClass
