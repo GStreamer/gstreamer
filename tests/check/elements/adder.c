@@ -310,7 +310,7 @@ test_live_seeking_eos_message_received (GstBus * bus, GstMessage * message,
 /* test failing seeks on live-sources */
 GST_START_TEST (test_live_seeking)
 {
-  GstElement *bin, *src1, *src2, *adder, *sink;
+  GstElement *bin, *src1, *src2, *ac1, *ac2, *adder, *sink;
   GstBus *bus;
   gboolean res;
   gint i;
@@ -332,15 +332,21 @@ GST_START_TEST (test_live_seeking)
    * each) */
   g_object_set (src1, "num-buffers", 4, "blocksize", 44100, NULL);
 #endif
+  ac1 = gst_element_factory_make ("audioconvert", "ac1");
   src2 = gst_element_factory_make ("audiotestsrc", "src2");
   g_object_set (src2, "wave", 4, NULL); /* silence */
+  ac2 = gst_element_factory_make ("audioconvert", "ac2");
   adder = gst_element_factory_make ("adder", "adder");
   sink = gst_element_factory_make ("fakesink", "sink");
-  gst_bin_add_many (GST_BIN (bin), src1, src2, adder, sink, NULL);
+  gst_bin_add_many (GST_BIN (bin), src1, ac1, src2, ac2, adder, sink, NULL);
 
-  res = gst_element_link (src1, adder);
+  res = gst_element_link (src1, ac1);
   fail_unless (res == TRUE, NULL);
-  res = gst_element_link (src2, adder);
+  res = gst_element_link (ac1, adder);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (src2, ac2);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (ac2, adder);
   fail_unless (res == TRUE, NULL);
   res = gst_element_link (adder, sink);
   fail_unless (res == TRUE, NULL);
