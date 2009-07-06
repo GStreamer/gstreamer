@@ -1841,7 +1841,7 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
   GList *entries_list = NULL;
   guint i, num, n;
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
   gulong _nr_keyframes = 0;
 #endif
 
@@ -1912,7 +1912,7 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
       /* all audio frames are keyframes */
       target->flags |= GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME;
     }
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
     if (target->flags & GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME)
       _nr_keyframes++;
 #endif
@@ -2548,7 +2548,7 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
       list ? g_list_length (list) : 0);
 
   if (list) {
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
     guint num_added_total = 0;
     guint num_per_stream[GST_AVI_DEMUX_MAX_STREAMS] = { 0, };
 #endif
@@ -2632,13 +2632,13 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
               entry2->frames_before++;
             }
           }
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
           num_added_total += num_added;
 #endif
         }
       }
     }
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
     if (num_added_total)
       GST_LOG ("added %u new index entries", num_added_total);
 #endif
@@ -2666,7 +2666,7 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
       entry->index_nr = i;
       entry->ts -= delay;
       memcpy (&avi->index_entries[i], entry, sizeof (gst_avi_index_entry));
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
       num_per_stream[entry->stream_nr]++;
 #endif
 
@@ -2682,7 +2682,7 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
         stream->idx_duration -= delay;
       }
     }
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
     {
       gchar str[GST_AVI_DEMUX_MAX_STREAMS * (1 + 6 + 2)];
       gchar *pad_name;
