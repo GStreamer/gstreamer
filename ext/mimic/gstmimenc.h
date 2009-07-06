@@ -54,6 +54,8 @@ struct _GstMimEnc
   gint buffer_size;
   guint32 frames;
   guint16 height, width;
+
+  gboolean paused_mode;
 };
 
 struct _GstMimEncClass

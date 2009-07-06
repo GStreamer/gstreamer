@@ -42,6 +42,15 @@ GST_DEBUG_CATEGORY (mimenc_debug);
 
 #define MAX_INTERFRAMES 15
 
+
+enum
+{
+  PROP_0,
+  PROP_PAUSED_MODE,
+  PROP_LAST
+};
+
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -80,6 +89,10 @@ static GstBuffer *gst_mimenc_create_tcp_header (GstMimEnc * mimenc,
 static GstStateChangeReturn
 gst_mimenc_change_state (GstElement * element, GstStateChange transition);
 
+static void gst_mimenc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_mimenc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 GST_BOILERPLATE (GstMimEnc, gst_mimenc, GstElement, GST_TYPE_ELEMENT);
 
@@ -93,6 +106,16 @@ gst_mimenc_base_init (gpointer klass)
     "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->set_property = gst_mimenc_set_property;
+  gobject_class->get_property = gst_mimenc_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_PAUSED_MODE,
+      g_param_spec_boolean ("paused-mode", "Paused mode",
+          "If enabled, empty frames will be generated every 4 seconds"
+          " when no data is received",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -137,6 +160,42 @@ gst_mimenc_init (GstMimEnc * mimenc, GstMimEncClass * klass)
   mimenc->width = 0;
   mimenc->height = 0;
   mimenc->frames = 0;
+}
+
+static void
+gst_mimenc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMimEnc *mimenc = GST_MIMENC (object);
+
+  switch (prop_id) {
+    case PROP_PAUSED_MODE:
+      GST_OBJECT_LOCK (mimenc);
+      mimenc->paused_mode = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (mimenc);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mimenc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMimEnc *mimenc = GST_MIMENC (object);
+
+  switch (prop_id) {
+    case PROP_PAUSED_MODE:
+      GST_OBJECT_LOCK (mimenc);
+      g_value_set_boolean (value, mimenc->paused_mode);
+      GST_OBJECT_UNLOCK (mimenc);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static gboolean
