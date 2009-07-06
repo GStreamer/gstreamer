@@ -275,7 +275,8 @@ gst_mini_object_make_writable (GstMiniObject * mini_object)
   if (gst_mini_object_is_writable (mini_object)) {
     ret = (GstMiniObject *) mini_object;
   } else {
-    GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy miniobject");
+    GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy %s miniobject",
+        g_type_name (G_TYPE_FROM_INSTANCE (mini_object)));
     ret = gst_mini_object_copy (mini_object);
     gst_mini_object_unref ((GstMiniObject *) mini_object);
   }
@@ -423,8 +424,8 @@ gst_value_mini_object_copy (const GValue * src_value, GValue * dest_value)
 {
   if (src_value->data[0].v_pointer) {
     dest_value->data[0].v_pointer =
-        gst_mini_object_ref (GST_MINI_OBJECT_CAST (src_value->data[0].
-            v_pointer));
+        gst_mini_object_ref (GST_MINI_OBJECT_CAST (src_value->
+            data[0].v_pointer));
   } else {
     dest_value->data[0].v_pointer = NULL;
   }
