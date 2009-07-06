@@ -2562,7 +2562,8 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
 
   /* if the jitter bigger than duration and lateness we are too late */
   if ((late = start + jitter > max_lateness)) {
-    GST_DEBUG_OBJECT (basesink, "buffer is too late %" GST_TIME_FORMAT
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, basesink,
+        "buffer is too late %" GST_TIME_FORMAT
         " > %" GST_TIME_FORMAT, GST_TIME_ARGS (start + jitter),
         GST_TIME_ARGS (max_lateness));
     /* !!emergency!!, if we did not receive anything valid for more than a 
@@ -2572,7 +2573,7 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
       GST_ELEMENT_WARNING (basesink, CORE, CLOCK,
           (_("A lot of buffers are being dropped.")),
           ("There may be a timestamping problem, or this computer is too slow."));
-      GST_DEBUG_OBJECT (basesink,
+      GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, basesink,
           "**emergency** last buffer at %" GST_TIME_FORMAT " > GST_SECOND",
           GST_TIME_ARGS (priv->last_in_time));
     }
