@@ -692,9 +692,10 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
         adder->segment_position = cur;
       else
         adder->segment_position = 0;
-      /* we flushed out the downstream segment, make sure we push a new one */
+      /* make sure we push a new segment, to inform about new basetime
+       * see FIXME in gst_adder_collected() */
+      adder->segment_pending = TRUE;
       if (flush) {
-        adder->segment_pending = TRUE;
         /* Yes, we need to call _set_flushing again *WHEN* the streaming threads
          * have stopped so that the cookie gets properly updated. */
         gst_collect_pads_set_flushing (adder->collect, TRUE);
