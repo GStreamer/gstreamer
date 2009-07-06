@@ -21,8 +21,39 @@
 #define RGB_OUT(d, r, g, b) RGBA_OUT(d, r, g, b, 0xffU)
 #endif
 
-static void glue (yuv420p_to_, RGB_NAME) (AVPicture * dst,
-    const AVPicture * src, int width, int height)
+static void glue (uyvy422_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
+                                        int width, int height)
+{
+    uint8_t *s, *d, *d1, *s1;
+    int w, y, cb, cr, r_add, g_add, b_add;
+    uint8_t *cm = cropTbl + MAX_NEG_CROP;
+    unsigned int r, g, b;
+
+    d = dst->data[0];
+    s = src->data[0];
+    for(;height > 0; height --) {
+        d1 = d;
+        s1 = s;
+        for(w = width; w >= 2; w -= 2) {
+            YUV_TO_RGB1_CCIR(s1[0], s1[2]);
+
+            YUV_TO_RGB2_CCIR(r, g, b, s1[1]);
+            RGB_OUT(d1, r, g, b);
+            d1 += BPP;
+
+            YUV_TO_RGB2_CCIR(r, g, b, s1[3]);
+            RGB_OUT(d1, r, g, b);
+            d1 += BPP;
+
+            s1 += 4;
+        }
+        d += dst->linesize[0];
+        s += src->linesize[0];
+    }
+}
+
+static void glue (yuv420p_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
+                                        int width, int height)
 {
   const uint8_t *y1_ptr, *y2_ptr, *cb_ptr, *cr_ptr;
   uint8_t *d, *d1, *d2;
