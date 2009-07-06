@@ -492,7 +492,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
         GST_LOG_OBJECT (trans, "  merged[%d]: %" GST_PTR_FORMAT, i, ret);
       }
       GST_LOG_OBJECT (trans, "merged: (%d)", gst_caps_get_size (ret));
-      /* we can't do much simplification here because we don't really want to
+      /* FIXME: we can't do much simplification here because we don't really want to
        * change the caps order
        gst_caps_do_simplify (ret);
        GST_DEBUG_OBJECT (trans, "simplified: (%d)", gst_caps_get_size (ret));
