@@ -57,6 +57,8 @@ struct _GstMimEnc
 
   gboolean paused_mode;
   GstSegment segment;
+  gboolean need_newsegment;
+  GstClockTime last_buffer;
 };
 
 struct _GstMimEncClass

@@ -259,6 +259,7 @@ gst_mimenc_chain (GstPad * pad, GstBuffer * in)
   gint buffer_size;
   GstBuffer *header = NULL;
   GstFlowReturn res = GST_FLOW_OK;
+  GstEvent *event = NULL;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   mimenc = GST_MIMENC (gst_pad_get_parent (pad));
@@ -304,7 +305,10 @@ gst_mimenc_chain (GstPad * pad, GstBuffer * in)
   data = GST_BUFFER_DATA (buf);
 
   out_buf = gst_buffer_new_and_alloc (mimenc->buffer_size);
-  GST_BUFFER_TIMESTAMP (out_buf) = GST_BUFFER_TIMESTAMP (buf);
+  GST_BUFFER_TIMESTAMP (out_buf) =
+      gst_segment_to_running_time (&mimenc->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buf));
+  mimenc->last_buffer = GST_BUFFER_TIMESTAMP (out_buf);
   buffer_size = mimenc->buffer_size;
   if (!mimic_encode_frame (mimenc->enc, data, GST_BUFFER_DATA (out_buf),
           &buffer_size,
@@ -325,20 +329,37 @@ gst_mimenc_chain (GstPad * pad, GstBuffer * in)
   header = gst_mimenc_create_tcp_header (mimenc, buffer_size,
       GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
 
+  if (!header) {
+    gst_buffer_unref (out_buf);
+    GST_DEBUG_OBJECT (mimenc, "header not created succesfully");
+    res = GST_FLOW_ERROR;
+    goto out_unlock;
+  }
+
+  if (mimenc->need_newsegment) {
+    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+    mimenc->need_newsegment = FALSE;
+  }
+
   GST_OBJECT_UNLOCK (mimenc);
 
-  if (header) {
-    res = gst_pad_push (mimenc->srcpad, header);
-    if (res != GST_FLOW_OK) {
+  if (event) {
+    if (!gst_pad_push_event (mimenc->srcpad, event)) {
+      res = GST_FLOW_ERROR;
+      GST_ERROR_OBJECT (mimenc, "Failed to push NEWSEGMENT event");
+      gst_buffer_unref (header);
       gst_buffer_unref (out_buf);
       goto out;
     }
-
-    res = gst_pad_push (mimenc->srcpad, out_buf);
-  } else {
-    GST_DEBUG_OBJECT (mimenc, "header not created succesfully");
-    res = GST_FLOW_ERROR;
   }
+
+  res = gst_pad_push (mimenc->srcpad, header);
+  if (res != GST_FLOW_OK) {
+    gst_buffer_unref (out_buf);
+    goto out;
+  }
+
+  res = gst_pad_push (mimenc->srcpad, out_buf);
 
 out:
   if (buf)
@@ -380,6 +401,8 @@ gst_mimenc_event (GstPad * pad, GstEvent * event)
 {
   GstMimEnc *mimenc = GST_MIMENC (gst_pad_get_parent (pad));
   gboolean ret = TRUE;
+  gboolean forward = TRUE;
+
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
@@ -408,6 +431,7 @@ gst_mimenc_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&mimenc->segment, update,
           rate, arate, format, start, stop, time);
       GST_OBJECT_UNLOCK (mimenc);
+      forward = FALSE;
       break;
 
     }
@@ -415,13 +439,17 @@ gst_mimenc_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       GST_OBJECT_LOCK (mimenc);
       gst_segment_init (&mimenc->segment, GST_FORMAT_UNDEFINED);
+      mimenc->need_newsegment = TRUE;
       GST_OBJECT_UNLOCK (mimenc);
       break;
     default:
       break;
   }
 
-  ret = gst_pad_push_event (mimenc->srcpad, event);
+  if (forward)
+    ret = gst_pad_push_event (mimenc->srcpad, event);
+  else
+    gst_event_unref (event);
 
 done:
   gst_object_unref (mimenc);
@@ -440,11 +468,10 @@ newseg_wrong_format:
 static GstStateChangeReturn
 gst_mimenc_change_state (GstElement * element, GstStateChange transition)
 {
-  GstMimEnc *mimenc;
+  GstMimEnc *mimenc = GST_MIMENC (element);;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      mimenc = GST_MIMENC (element);
       GST_OBJECT_LOCK (element);
       if (mimenc->enc != NULL) {
         mimic_close (mimenc->enc);
@@ -458,6 +485,7 @@ gst_mimenc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_OBJECT_LOCK (mimenc);
       gst_segment_init (&mimenc->segment, GST_FORMAT_UNDEFINED);
+      mimenc->last_buffer = GST_CLOCK_TIME_NONE;
       GST_OBJECT_UNLOCK (mimenc);
       break;
     default:
