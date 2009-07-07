@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007-2009 Sebastian Dröge <slomo@circular-chaos.org>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -48,19 +48,22 @@ struct _GstGioBaseSink
 {
   GstBaseSink sink;
 
+  /* < protected > */
   GCancellable *cancel;
   guint64 position;
+
+  /* < private > */
   GOutputStream *stream;
 };
 
 struct _GstGioBaseSinkClass 
 {
   GstBaseSinkClass parent_class;
+
+  GOutputStream * (*get_stream) (GstGioBaseSink *bsink);
 };
 
 GType gst_gio_base_sink_get_type (void);
-
-void gst_gio_base_sink_set_stream (GstGioBaseSink *sink, GOutputStream *stream);
 
 G_END_DECLS
 

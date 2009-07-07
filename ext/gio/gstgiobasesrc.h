@@ -48,10 +48,12 @@ struct _GstGioBaseSrc
 {
   GstBaseSrc src;
   
+  /* < protected > */
   GCancellable *cancel;
   guint64 position;
-  GInputStream *stream;
 
+  /* < private > */
+  GInputStream *stream;
   GstBuffer *cache;
 };
 

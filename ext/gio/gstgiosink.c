@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
- * Copyright (C) 2007 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2007-2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -83,7 +83,7 @@ static void gst_gio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static gboolean gst_gio_sink_start (GstBaseSink * base_sink);
+static GOutputStream *gst_gio_sink_get_stream (GstGioBaseSink * base_sink);
 
 static void
 gst_gio_sink_base_init (gpointer gclass)
@@ -103,7 +103,7 @@ static void
 gst_gio_sink_class_init (GstGioSinkClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBaseSinkClass *gstbasesink_class = (GstBaseSinkClass *) klass;
+  GstGioBaseSinkClass *gstgiobasesink_class = (GstGioBaseSinkClass *) klass;
 
   gobject_class->finalize = gst_gio_sink_finalize;
   gobject_class->set_property = gst_gio_sink_set_property;
@@ -124,7 +124,8 @@ gst_gio_sink_class_init (GstGioSinkClass * klass)
       g_param_spec_object ("file", "File", "GFile to write to",
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_gio_sink_start);
+  gstgiobasesink_class->get_stream =
+      GST_DEBUG_FUNCPTR (gst_gio_sink_get_stream);
 }
 
 static void
@@ -234,10 +235,10 @@ gst_gio_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
-gst_gio_sink_start (GstBaseSink * base_sink)
+static GOutputStream *
+gst_gio_sink_get_stream (GstGioBaseSink * bsink)
 {
-  GstGioSink *sink = GST_GIO_SINK (base_sink);
+  GstGioSink *sink = GST_GIO_SINK (bsink);
   GOutputStream *stream;
   GCancellable *cancel = GST_GIO_BASE_SINK (sink)->cancel;
   GError *err = NULL;
@@ -246,7 +247,7 @@ gst_gio_sink_start (GstBaseSink * base_sink)
   if (sink->file == NULL) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
         ("No location or GFile given"));
-    return FALSE;
+    return NULL;
   }
 
   uri = g_file_get_uri (sink->file);
@@ -272,14 +273,12 @@ gst_gio_sink_start (GstBaseSink * base_sink)
       g_clear_error (&err);
     }
     g_free (uri);
-    return FALSE;
+    return NULL;
   }
 
   GST_DEBUG_OBJECT (sink, "opened location %s", uri);
 
   g_free (uri);
 
-  gst_gio_base_sink_set_stream (GST_GIO_BASE_SINK (sink), stream);
-
-  return GST_BASE_SINK_CLASS (parent_class)->start (base_sink);
+  return stream;
 }

@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
- * Copyright (C) 2007 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2007-2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -109,16 +109,19 @@ static gboolean
 gst_gio_base_sink_start (GstBaseSink * base_sink)
 {
   GstGioBaseSink *sink = GST_GIO_BASE_SINK (base_sink);
-
-  if (!G_IS_OUTPUT_STREAM (sink->stream)) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
-        ("No stream given yet"));
-    return FALSE;
-  }
+  GstGioBaseSinkClass *gbsink_class = GST_GIO_BASE_SINK_GET_CLASS (sink);
 
   sink->position = 0;
 
-  GST_DEBUG_OBJECT (sink, "started stream");
+  /* FIXME: This will likely block */
+  sink->stream = gbsink_class->get_stream (sink);
+  if (G_UNLIKELY (!G_IS_OUTPUT_STREAM (sink->stream))) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
+        ("No output stream provided by subclass"));
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (sink, "started sink");
 
   return TRUE;
 }
