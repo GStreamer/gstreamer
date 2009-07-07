@@ -84,7 +84,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static gboolean gst_mimenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_mimenc_chain (GstPad * pad, GstBuffer * in);
 static GstBuffer *gst_mimenc_create_tcp_header (GstMimEnc * mimenc,
-    guint32 payload_size, GstClockTime timestamp);
+    guint32 payload_size, GstClockTime timestamp, gboolean keyframe,
+    gboolean paused);
 static gboolean gst_mimenc_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn
@@ -260,6 +261,7 @@ gst_mimenc_chain (GstPad * pad, GstBuffer * in)
   GstBuffer *header = NULL;
   GstFlowReturn res = GST_FLOW_OK;
   GstEvent *event = NULL;
+  gboolean keyframe;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   mimenc = GST_MIMENC (gst_pad_get_parent (pad));
@@ -310,9 +312,9 @@ gst_mimenc_chain (GstPad * pad, GstBuffer * in)
       GST_BUFFER_TIMESTAMP (buf));
   mimenc->last_buffer = GST_BUFFER_TIMESTAMP (out_buf);
   buffer_size = mimenc->buffer_size;
+  keyframe = (mimenc->frames % MAX_INTERFRAMES) == 0 ? TRUE : FALSE;
   if (!mimic_encode_frame (mimenc->enc, data, GST_BUFFER_DATA (out_buf),
-          &buffer_size,
-          ((mimenc->frames % MAX_INTERFRAMES) == 0 ? TRUE : FALSE))) {
+          &buffer_size, keyframe)) {
     GST_WARNING_OBJECT (mimenc, "mimic_encode_frame error\n");
     gst_buffer_unref (out_buf);
     gst_buffer_unref (buf);
@@ -327,7 +329,7 @@ gst_mimenc_chain (GstPad * pad, GstBuffer * in)
 
   // now let's create that tcp header
   header = gst_mimenc_create_tcp_header (mimenc, buffer_size,
-      GST_BUFFER_TIMESTAMP (out_buf));
+      GST_BUFFER_TIMESTAMP (out_buf), keyframe, FALSE);
 
   if (!header) {
     gst_buffer_unref (out_buf);
@@ -376,7 +378,7 @@ out_unlock:
 
 static GstBuffer *
 gst_mimenc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
-    GstClockTime timestamp)
+    GstClockTime timestamp, gboolean keyframe, gboolean paused)
 {
   // 24 bytes
   GstBuffer *buf_header = gst_buffer_new_and_alloc (24);
@@ -385,10 +387,10 @@ gst_mimenc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
   GST_BUFFER_TIMESTAMP (buf_header) = timestamp;
 
   p[0] = 24;
-  *((guchar *) (p + 1)) = 0;
+  *((guchar *) (p + 1)) = paused ? 1 : 0;
   *((guint16 *) (p + 2)) = GUINT16_TO_LE (mimenc->width);
   *((guint16 *) (p + 4)) = GUINT16_TO_LE (mimenc->height);
-  *((guint16 *) (p + 6)) = 0;
+  *((guint16 *) (p + 6)) = keyframe ? 1 : 0;
   *((guint32 *) (p + 8)) = GUINT32_TO_LE (payload_size);
   *((guint32 *) (p + 12)) =
       GUINT32_TO_LE (GST_MAKE_FOURCC ('M', 'L', '2', '0'));
