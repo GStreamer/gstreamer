@@ -172,7 +172,7 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
       (mimdec->have_header ? mimdec->payload_size : 24)) {
     if (!mimdec->have_header) {
       header = (guchar *) gst_adapter_peek (mimdec->adapter, 24);
-      header_size = GUINT16_FROM_LE (*(guint16 *) (header + 0));
+      header_size = header[0];
       if (header_size != 24) {
         GST_WARNING_OBJECT (mimdec,
             "invalid frame: header size %d incorrect", header_size);
@@ -199,6 +199,12 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
       gst_adapter_flush (mimdec->adapter, 24);
 
       mimdec->have_header = TRUE;
+    }
+
+    /* Check if its paused frame, drop it */
+    if (mimdec->payload_size == 0) {
+      mimdec->have_header = FALSE;
+      continue;
     }
 
     if (gst_adapter_available (mimdec->adapter) < mimdec->payload_size) {
