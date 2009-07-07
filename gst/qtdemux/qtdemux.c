@@ -296,10 +296,10 @@ static void gst_qtdemux_loop (GstPad * pad);
 static GstFlowReturn gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf);
 static gboolean gst_qtdemux_handle_sink_event (GstPad * pad, GstEvent * event);
 
-static gboolean qtdemux_parse_moov (GstQTDemux * qtdemux, guint8 * buffer,
+static gboolean qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer,
     int length);
 static gboolean qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node,
-    guint8 * buffer, int length);
+    const guint8 * buffer, int length);
 static gboolean qtdemux_parse_tree (GstQTDemux * qtdemux);
 
 static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
@@ -1398,7 +1398,7 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
-extract_initial_length_and_fourcc (guint8 * data, guint64 * plength,
+extract_initial_length_and_fourcc (const guint8 * data, guint64 * plength,
     guint32 * pfourcc)
 {
   guint64 length;
@@ -2605,12 +2605,12 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         break;
       }
       case QTDEMUX_STATE_HEADER:{
-        guint8 *data;
+        const guint8 *data;
         guint32 fourcc;
 
         GST_DEBUG_OBJECT (demux, "In header");
 
-        data = (guint8 *) gst_adapter_peek (demux->adapter, demux->neededbytes);
+        data = gst_adapter_peek (demux->adapter, demux->neededbytes);
 
         /* parse the header */
         extract_initial_length_and_fourcc (data, NULL, &fourcc);
@@ -2905,11 +2905,11 @@ qtdemux_inflate (void *z_buffer, int z_length, int length)
 #endif /* HAVE_ZLIB */
 
 static gboolean
-qtdemux_parse_moov (GstQTDemux * qtdemux, guint8 * buffer, int length)
+qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer, int length)
 {
   GNode *cmov;
 
-  qtdemux->moov_node = g_node_new (buffer);
+  qtdemux->moov_node = g_node_new ((guint8 *) buffer);
 
   GST_DEBUG_OBJECT (qtdemux, "parsing 'moov' atom");
   qtdemux_parse_node (qtdemux, qtdemux->moov_node, buffer, length);
@@ -2966,8 +2966,8 @@ invalid_compression:
 }
 
 static gboolean
-qtdemux_parse_container (GstQTDemux * qtdemux, GNode * node, guint8 * buf,
-    guint8 * end)
+qtdemux_parse_container (GstQTDemux * qtdemux, GNode * node, const guint8 * buf,
+    const guint8 * end)
 {
   while (G_UNLIKELY (buf < end)) {
     GNode *child;
@@ -2991,7 +2991,7 @@ qtdemux_parse_container (GstQTDemux * qtdemux, GNode * node, guint8 * buf,
       break;
     }
 
-    child = g_node_new (buf);
+    child = g_node_new ((guint8 *) buf);
     g_node_append (node, child);
     qtdemux_parse_node (qtdemux, child, buf, len);
 
@@ -3062,13 +3062,13 @@ qtdemux_parse_theora_extension (GstQTDemux * qtdemux, QtDemuxStream * stream,
 }
 
 static gboolean
-qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
+qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
     int length)
 {
   guint32 fourcc;
   guint32 node_length;
   const QtNodeType *type;
-  guint8 *end;
+  const guint8 *end;
 
   GST_LOG_OBJECT (qtdemux, "qtdemux_parse buffer %p length %d", buffer, length);
 
@@ -3139,7 +3139,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
       }
       case FOURCC_mp4v:
       {
-        guint8 *buf;
+        const guint8 *buf;
         guint32 version;
         int tlen;
 
