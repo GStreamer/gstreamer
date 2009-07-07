@@ -51,6 +51,9 @@ typedef struct _GstGioStreamSrcClass GstGioStreamSrcClass;
 struct _GstGioStreamSrc
 {
   GstGioBaseSrc src;
+
+  /* < private > */
+  GInputStream *stream;
 };
 
 struct _GstGioStreamSrcClass 

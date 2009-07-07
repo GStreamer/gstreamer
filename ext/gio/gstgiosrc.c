@@ -81,7 +81,7 @@ static void gst_gio_src_set_property (GObject * object, guint prop_id,
 static void gst_gio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gio_src_start (GstBaseSrc * base_src);
+static GInputStream *gst_gio_src_get_stream (GstGioBaseSrc * bsrc);
 
 static gboolean gst_gio_src_check_get_range (GstBaseSrc * base_src);
 
@@ -103,14 +103,12 @@ static void
 gst_gio_src_class_init (GstGioSrcClass * klass)
 {
   GObjectClass *gobject_class;
-
-  GstElementClass *gstelement_class;
-
   GstBaseSrcClass *gstbasesrc_class;
+  GstGioBaseSrcClass *gstgiobasesrc_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
+  gstgiobasesrc_class = (GstGioBaseSrcClass *) klass;
 
   gobject_class->finalize = gst_gio_src_finalize;
   gobject_class->set_property = gst_gio_src_set_property;
@@ -131,9 +129,10 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
       g_param_spec_object ("file", "File", "GFile to read from",
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_gio_src_start);
   gstbasesrc_class->check_get_range =
       GST_DEBUG_FUNCPTR (gst_gio_src_check_get_range);
+
+  gstgiobasesrc_class->get_stream = GST_DEBUG_FUNCPTR (gst_gio_src_get_stream);
 }
 
 static void
@@ -279,23 +278,19 @@ done:
 }
 
 
-static gboolean
-gst_gio_src_start (GstBaseSrc * base_src)
+static GInputStream *
+gst_gio_src_get_stream (GstGioBaseSrc * bsrc)
 {
-  GstGioSrc *src = GST_GIO_SRC (base_src);
-
+  GstGioSrc *src = GST_GIO_SRC (bsrc);
   GError *err = NULL;
-
   GInputStream *stream;
-
-  GCancellable *cancel = GST_GIO_BASE_SRC (src)->cancel;
-
+  GCancellable *cancel = bsrc->cancel;
   gchar *uri = NULL;
 
   if (src->file == NULL) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
         ("No location or GFile given"));
-    return FALSE;
+    return NULL;
   }
 
   uri = g_file_get_uri (src->file);
@@ -315,16 +310,14 @@ gst_gio_src_start (GstBaseSrc * base_src)
 
     g_free (uri);
     g_clear_error (&err);
-    return FALSE;
+    return NULL;
   } else if (stream == NULL) {
     g_free (uri);
-    return FALSE;
+    return NULL;
   }
-
-  gst_gio_base_src_set_stream (GST_GIO_BASE_SRC (src), stream);
 
   GST_DEBUG_OBJECT (src, "opened location %s", uri);
   g_free (uri);
 
-  return GST_BASE_SRC_CLASS (parent_class)->start (base_src);
+  return stream;
 }

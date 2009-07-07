@@ -73,8 +73,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_gio_stream_src_debug);
 
 enum
 {
-  ARG_0,
-  ARG_STREAM
+  PROP_0,
+  PROP_STREAM
 };
 
 GST_BOILERPLATE (GstGioStreamSrc, gst_gio_stream_src, GstGioBaseSrc,
@@ -85,6 +85,7 @@ static void gst_gio_stream_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gio_stream_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static GInputStream *gst_gio_stream_src_get_stream (GstGioBaseSrc * bsrc);
 
 static void
 gst_gio_stream_src_base_init (gpointer gclass)
@@ -107,20 +108,21 @@ static void
 gst_gio_stream_src_class_init (GstGioStreamSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSrcClass *gstbasesrc_class;
+  GstGioBaseSrcClass *gstgiobasesrc_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesrc_class = (GstBaseSrcClass *) klass;
+  gstgiobasesrc_class = (GstGioBaseSrcClass *) klass;
 
   gobject_class->finalize = gst_gio_stream_src_finalize;
   gobject_class->set_property = gst_gio_stream_src_set_property;
   gobject_class->get_property = gst_gio_stream_src_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_STREAM,
+  g_object_class_install_property (gobject_class, PROP_STREAM,
       g_param_spec_object ("stream", "Stream", "Stream to read from",
           G_TYPE_INPUT_STREAM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gstgiobasesrc_class->get_stream =
+      GST_DEBUG_FUNCPTR (gst_gio_stream_src_get_stream);
 }
 
 static void
@@ -131,6 +133,13 @@ gst_gio_stream_src_init (GstGioStreamSrc * src, GstGioStreamSrcClass * gclass)
 static void
 gst_gio_stream_src_finalize (GObject * object)
 {
+  GstGioStreamSrc *src = GST_GIO_STREAM_SRC (object);
+
+  if (src->stream) {
+    g_object_unref (src->stream);
+    src->stream = NULL;
+  }
+
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
@@ -141,18 +150,20 @@ gst_gio_stream_src_set_property (GObject * object, guint prop_id,
   GstGioStreamSrc *src = GST_GIO_STREAM_SRC (object);
 
   switch (prop_id) {
-    case ARG_STREAM:{
+    case PROP_STREAM:{
       GObject *stream;
 
       if (GST_STATE (src) == GST_STATE_PLAYING ||
-          GST_STATE (src) == GST_STATE_PAUSED)
+          GST_STATE (src) == GST_STATE_PAUSED) {
+        GST_WARNING
+            ("Setting a new stream not supported in PLAYING or PAUSED state");
         break;
+      }
 
       stream = g_value_dup_object (value);
-      if (G_IS_INPUT_STREAM (stream))
-        gst_gio_base_src_set_stream (GST_GIO_BASE_SRC (src),
-            G_INPUT_STREAM (stream));
-
+      if (src->stream)
+        g_object_unref (src->stream);
+      src->stream = G_INPUT_STREAM (stream);
       break;
     }
     default:
@@ -168,11 +179,19 @@ gst_gio_stream_src_get_property (GObject * object, guint prop_id,
   GstGioStreamSrc *src = GST_GIO_STREAM_SRC (object);
 
   switch (prop_id) {
-    case ARG_STREAM:
-      g_value_set_object (value, GST_GIO_BASE_SRC (src)->stream);
+    case PROP_STREAM:
+      g_value_set_object (value, src->stream);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GInputStream *
+gst_gio_stream_src_get_stream (GstGioBaseSrc * bsrc)
+{
+  GstGioStreamSrc *src = GST_GIO_STREAM_SRC (bsrc);
+
+  return (src->stream) ? g_object_ref (src->stream) : NULL;
 }

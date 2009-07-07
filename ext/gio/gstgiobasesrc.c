@@ -25,6 +25,8 @@
 
 #include "gstgiobasesrc.h"
 
+#include <gst/base/gsttypefindhelper.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_gio_base_src_debug);
 #define GST_CAT_DEFAULT gst_gio_base_src_debug
 
@@ -67,9 +69,7 @@ static void
 gst_gio_base_src_class_init (GstGioBaseSrcClass * klass)
 {
   GObjectClass *gobject_class;
-
   GstElementClass *gstelement_class;
-
   GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -125,16 +125,19 @@ static gboolean
 gst_gio_base_src_start (GstBaseSrc * base_src)
 {
   GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
-
-  if (!G_IS_INPUT_STREAM (src->stream)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-        ("No stream given yet"));
-    return FALSE;
-  }
+  GstGioBaseSrcClass *gbsrc_class = GST_GIO_BASE_SRC_GET_CLASS (src);
 
   src->position = 0;
 
-  GST_DEBUG_OBJECT (src, "started stream");
+  /* FIXME: This will likely block */
+  src->stream = gbsrc_class->get_stream (src);
+  if (G_UNLIKELY (!G_IS_INPUT_STREAM (src->stream))) {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("No input stream provided by subclass"));
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (src, "started source");
 
   return TRUE;
 }
@@ -143,9 +146,7 @@ static gboolean
 gst_gio_base_src_stop (GstBaseSrc * base_src)
 {
   GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
-
   gboolean success;
-
   GError *err = NULL;
 
   if (G_IS_INPUT_STREAM (src->stream)) {
@@ -180,7 +181,6 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
 
   if (G_IS_FILE_INPUT_STREAM (src->stream)) {
     GFileInfo *info;
-
     GError *err = NULL;
 
     info = g_file_input_stream_query_info (G_FILE_INPUT_STREAM (src->stream),
@@ -207,13 +207,9 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
 
   if (GST_GIO_STREAM_IS_SEEKABLE (src->stream)) {
     goffset old;
-
     goffset stream_size;
-
     gboolean ret;
-
     GSeekable *seekable = G_SEEKABLE (src->stream);
-
     GError *err = NULL;
 
     old = g_seekable_tell (seekable);
@@ -231,7 +227,6 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
       } else {
         GST_WARNING_OBJECT (src, "Seeking to end of stream failed");
       }
-
       return FALSE;
     }
 
@@ -249,7 +244,6 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
       } else {
         GST_ERROR_OBJECT (src, "Seeking to the old position faile");
       }
-
       return FALSE;
     }
 
@@ -266,7 +260,6 @@ static gboolean
 gst_gio_base_src_is_seekable (GstBaseSrc * base_src)
 {
   GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
-
   gboolean seekable;
 
   seekable = GST_GIO_STREAM_IS_SEEKABLE (src->stream);
@@ -303,8 +296,6 @@ gst_gio_base_src_unlock_stop (GstBaseSrc * base_src)
 static gboolean
 gst_gio_base_src_check_get_range (GstBaseSrc * base_src)
 {
-  /* FIXME: Implement dry-run variant using guesswork like gnomevfssrc? */
-
   return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS,
       check_get_range, (base_src), FALSE);
 }
@@ -327,7 +318,6 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
    * over DBus if our backend is GVfs and this is painfully slow. */
   if (src->cache && offset >= GST_BUFFER_OFFSET (src->cache) &&
       offset + size <= GST_BUFFER_OFFSET_END (src->cache)) {
-
     GST_DEBUG_OBJECT (src, "Creating subbuffer from cached buffer: offset %"
         G_GUINT64_FORMAT " length %u", offset, size);
 
@@ -339,11 +329,8 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
     GST_BUFFER_SIZE (buf) = size;
   } else {
     guint cachesize = MAX (4096, size);
-
     gssize read, res;
-
     gboolean success, eos;
-
     GError *err = NULL;
 
     if (src->cache) {
@@ -451,40 +438,4 @@ gst_gio_base_src_query (GstBaseSrc * base_src, GstQuery * query)
     ret = GST_BASE_SRC_CLASS (parent_class)->query (base_src, query);
 
   return ret;
-}
-
-void
-gst_gio_base_src_set_stream (GstGioBaseSrc * src, GInputStream * stream)
-{
-  gboolean success;
-
-  GError *err = NULL;
-
-  g_return_if_fail (G_IS_INPUT_STREAM (stream));
-  g_return_if_fail ((GST_STATE (src) != GST_STATE_PLAYING &&
-          GST_STATE (src) != GST_STATE_PAUSED));
-
-  if (G_IS_INPUT_STREAM (src->stream)) {
-    GST_DEBUG_OBJECT (src, "closing old stream");
-
-    /* FIXME: can block but unfortunately we can't use async operations
-     * here because they require a running main loop */
-    success = g_input_stream_close (src->stream, src->cancel, &err);
-
-    if (!success && !gst_gio_error (src, "g_input_stream_close", &err, NULL)) {
-      GST_ELEMENT_WARNING (src, RESOURCE, CLOSE, (NULL),
-          ("g_input_stream_close failed: %s", err->message));
-      g_clear_error (&err);
-    } else if (!success) {
-      GST_ELEMENT_WARNING (src, RESOURCE, CLOSE, (NULL),
-          ("g_input_stream_close failed"));
-    } else {
-      GST_DEBUG_OBJECT (src, "g_input_stream_close succeeded");
-    }
-
-    g_object_unref (src->stream);
-    src->stream = NULL;
-  }
-
-  src->stream = stream;
 }

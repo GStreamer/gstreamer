@@ -32,6 +32,8 @@ G_BEGIN_DECLS
   (gst_gio_base_src_get_type())
 #define GST_GIO_BASE_SRC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GIO_BASE_SRC,GstGioBaseSrc))
+#define GST_GIO_BASE_SRC_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_GIO_BASE_SRC, GstGioBaseSrcClass))
 #define GST_GIO_BASE_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GIO_BASE_SRC,GstGioBaseSrcClass))
 #define GST_IS_GIO_BASE_SRC(obj) \
@@ -56,11 +58,11 @@ struct _GstGioBaseSrc
 struct _GstGioBaseSrcClass 
 {
   GstBaseSrcClass parent_class;
+
+  GInputStream * (*get_stream) (GstGioBaseSrc *bsrc);
 };
 
 GType gst_gio_base_src_get_type (void);
-
-void gst_gio_base_src_set_stream (GstGioBaseSrc *src, GInputStream *stream);
 
 G_END_DECLS
 
