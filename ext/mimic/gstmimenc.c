@@ -469,10 +469,96 @@ newseg_wrong_format:
   }
 }
 
+static void
+paused_mode_task (gpointer data)
+{
+  GstMimEnc *mimenc = GST_MIMENC (data);
+  GstClockTime now;
+  GstClockTimeDiff diff;
+  GstFlowReturn ret;
+
+  if (!GST_ELEMENT_CLOCK (mimenc)) {
+    GST_ERROR_OBJECT (mimenc, "Element has no clock");
+    gst_pad_pause_task (mimenc->srcpad);
+    return;
+  }
+
+  GST_OBJECT_LOCK (mimenc);
+
+  if (mimenc->stop_paused_mode) {
+    GST_OBJECT_UNLOCK (mimenc);
+    goto stop_task;
+  }
+
+  now = gst_clock_get_time (GST_ELEMENT_CLOCK (mimenc));
+
+  diff = now - GST_ELEMENT_CAST (mimenc)->base_time - mimenc->last_buffer;
+  if (diff < 0)
+    diff = 0;
+
+  if (diff > 3.95 * GST_SECOND) {
+    GstBuffer *buffer = gst_mimenc_create_tcp_header (mimenc, 0,
+        mimenc->last_buffer + 4 * GST_SECOND, FALSE, TRUE);
+    GstEvent *event = NULL;
+
+    mimenc->last_buffer += 4 * GST_SECOND;
+
+    if (mimenc->need_newsegment) {
+      event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+      mimenc->need_newsegment = FALSE;
+    }
+
+    GST_OBJECT_UNLOCK (mimenc);
+    GST_LOG_OBJECT (mimenc, "Haven't had an incoming buffer in 4 seconds,"
+        " sending out a pause frame");
+
+    if (event) {
+      if (!gst_pad_push_event (mimenc->srcpad, event)) {
+        GST_ERROR_OBJECT (mimenc, "Failed to push NEWSEGMENT event");
+        gst_buffer_unref (buffer);
+        goto stop_task;
+      }
+    }
+    ret = gst_pad_push (mimenc->srcpad, buffer);
+    if (ret < 0) {
+      GST_WARNING_OBJECT (mimenc, "Error pushing paused header: %s",
+          gst_flow_get_name (ret));
+      goto stop_task;
+    }
+  } else {
+    GstClockTime next_stop;
+    GstClockID id;
+
+    next_stop = now + (4 * GST_SECOND - MIN (diff, 4 * GST_SECOND));
+
+    id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (mimenc), next_stop);
+
+    if (mimenc->stop_paused_mode) {
+      GST_OBJECT_UNLOCK (mimenc);
+      goto stop_task;
+    }
+
+    mimenc->clock_id = id;
+    GST_OBJECT_UNLOCK (mimenc);
+
+    gst_clock_id_wait (id, NULL);
+
+    GST_OBJECT_LOCK (mimenc);
+    mimenc->clock_id = NULL;
+    GST_OBJECT_UNLOCK (mimenc);
+  }
+  return;
+
+stop_task:
+
+  gst_pad_pause_task (mimenc->srcpad);
+}
+
 static GstStateChangeReturn
 gst_mimenc_change_state (GstElement * element, GstStateChange transition)
 {
-  GstMimEnc *mimenc = GST_MIMENC (element);;
+  GstMimEnc *mimenc = GST_MIMENC (element);
+  GstStateChangeReturn ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -490,11 +576,44 @@ gst_mimenc_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_LOCK (mimenc);
       gst_segment_init (&mimenc->segment, GST_FORMAT_UNDEFINED);
       mimenc->last_buffer = GST_CLOCK_TIME_NONE;
+      mimenc->need_newsegment = TRUE;
       GST_OBJECT_UNLOCK (mimenc);
+      break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      GST_OBJECT_LOCK (mimenc);
+      if (mimenc->clock_id)
+        gst_clock_id_unschedule (mimenc->clock_id);
+      mimenc->stop_paused_mode = TRUE;
+      GST_OBJECT_UNLOCK (mimenc);
+
+      gst_pad_pause_task (mimenc->srcpad);
+
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      GST_OBJECT_LOCK (mimenc);
+      mimenc->stop_paused_mode = FALSE;
+      if (mimenc->last_buffer == GST_CLOCK_TIME_NONE)
+        mimenc->last_buffer = gst_clock_get_time (GST_ELEMENT_CLOCK (mimenc))
+            - GST_ELEMENT_CAST (mimenc)->base_time;
+      GST_OBJECT_UNLOCK (mimenc);
+      if (!gst_pad_start_task (mimenc->srcpad, paused_mode_task, mimenc)) {
+        ret = GST_STATE_CHANGE_FAILURE;
+        GST_ERROR_OBJECT (mimenc, "Can not start task");
+      }
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
