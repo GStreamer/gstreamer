@@ -302,6 +302,19 @@
 #define DESC_DVB_CABLE_DELIVERY_SYSTEM_symbol_rate(desc)	(desc + 9)
 #define DESC_DVB_CABLE_DELIVERY_SYSTEM_fec_inner(desc)		(desc[12] & 0x0F)
 
+/* DVB Data Broadcast Descriptor */
+#define DESC_DVB_DATA_BROADCAST_data_broadcast_id(desc)		(GST_READ_UINT16_BE((desc) + 2))
+#define DESC_DVB_DATA_BROADCAST_component_tag(desc)		(desc[4])
+#define DESC_DVB_DATA_BROADCAST_selector_length(desc)		(desc[5])
+#define DESC_DVB_DATA_BROADCAST_selector(desc)			(desc + 6)
+#define DESC_DVB_DATA_BROADCAST_iso639_language_code(desc)	(desc + 6 + DESC_DVB_DATA_BROADCAST_selector_length(desc))
+#define DESC_DVB_DATA_BROADCAST_text_length(desc)		(desc + 9 + DESC_DVB_DATA_BROADCAST_selector_length(desc))
+#define DESC_DVB_DATA_BROADCAST_text(desc)			(desc + 10 + DESC_DVB_DATA_BROADCAST_selector_length(desc))
+
+/* DVB Data Broadcast Id Descriptor */
+#define DESC_DVB_DATA_BROADCAST_ID_data_broadcast_id(desc)	(GST_READ_UINT16_BE((desc) + 2))
+#define DESC_DVB_DATA_BROADCAST_ID_id_selector_byte(desc)	(desc + 4)
+
 typedef struct {
   guint    n_desc;
   guint8   data_length;

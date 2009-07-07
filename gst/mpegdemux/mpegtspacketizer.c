@@ -507,10 +507,34 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer * packetizer,
       GstMPEGDescriptor *desc =
           gst_mpeg_descriptor_parse (data, stream_info_length);
       if (desc != NULL) {
+        guint8 *desc_data;
         if (gst_mpeg_descriptor_find (desc, DESC_DVB_AC3)) {
           gst_structure_set (stream_info, "has-ac3", G_TYPE_BOOLEAN, TRUE,
               NULL);
         }
+        desc_data = gst_mpeg_descriptor_find (desc, DESC_DVB_DATA_BROADCAST_ID);
+        if (desc_data) {
+          guint16 data_broadcast_id;
+          data_broadcast_id =
+              DESC_DVB_DATA_BROADCAST_ID_data_broadcast_id (desc_data);
+          gst_structure_set (stream_info, "data-broadcast-id", G_TYPE_UINT,
+              data_broadcast_id, NULL);
+        }
+        desc_data = gst_mpeg_descriptor_find (desc, DESC_DVB_DATA_BROADCAST);
+        if (desc_data) {
+          GstStructure *databroadcast_info;
+          guint16 data_broadcast_id;
+          guint8 component_tag;
+          data_broadcast_id =
+              DESC_DVB_DATA_BROADCAST_data_broadcast_id (desc_data);
+          component_tag = DESC_DVB_DATA_BROADCAST_component_tag (desc_data);
+          databroadcast_info = gst_structure_new ("data-broadcast", "id",
+              G_TYPE_UINT, data_broadcast_id, "component-tag", component_tag,
+              NULL);
+          gst_structure_set (stream_info, "data-broadcast", GST_TYPE_STRUCTURE,
+              databroadcast_info, NULL);
+        }
+
         gst_mpeg_descriptor_free (desc);
       }
 
