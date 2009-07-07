@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007-2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -96,7 +96,7 @@ gst_gio_src_base_init (gpointer gclass)
       "Source/File",
       "Read from any GIO-supported location",
       "Ren\xc3\xa9 Stadler <mail@renestadler.de>, "
-      "Sebastian Dröge <slomo@circular-chaos.org>");
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
 static void

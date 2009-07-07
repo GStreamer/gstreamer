@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

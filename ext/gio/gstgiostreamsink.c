@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -99,7 +99,7 @@ gst_gio_stream_sink_base_init (gpointer gclass)
     "GIO stream sink",
     "Sink",
     "Write to any GIO stream",
-    "Sebastian Dröge <slomo@circular-chaos.org>"
+    "Sebastian Dröge <sebastian.droege@collabora.co.uk>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
