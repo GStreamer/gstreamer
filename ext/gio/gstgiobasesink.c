@@ -62,13 +62,8 @@ gst_gio_base_sink_base_init (gpointer gclass)
 static void
 gst_gio_base_sink_class_init (GstGioBaseSinkClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSinkClass *gstbasesink_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesink_class = (GstBaseSinkClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseSinkClass *gstbasesink_class = (GstBaseSinkClass *) klass;
 
   gobject_class->finalize = gst_gio_base_sink_finalize;
 
@@ -144,7 +139,7 @@ gst_gio_base_sink_stop (GstBaseSink * base_sink)
 
     if (!success && !gst_gio_error (sink, "g_output_stream_close", &err, NULL)) {
       GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
-          ("g_ooutput_stream_close failed: %s", err->message));
+          ("gio_output_stream_close failed: %s", err->message));
       g_clear_error (&err);
     } else if (!success) {
       GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),

@@ -68,13 +68,8 @@ gst_gio_base_src_base_init (gpointer gclass)
 static void
 gst_gio_base_src_class_init (GstGioBaseSrcClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSrcClass *gstbasesrc_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesrc_class = (GstBaseSrcClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
 
   gobject_class->finalize = gst_gio_base_src_finalize;
 

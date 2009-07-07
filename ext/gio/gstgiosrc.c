@@ -66,9 +66,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_gio_src_debug);
 
 enum
 {
-  ARG_0,
-  ARG_LOCATION,
-  ARG_FILE
+  PROP_0,
+  PROP_LOCATION,
+  PROP_FILE
 };
 
 GST_BOILERPLATE_FULL (GstGioSrc, gst_gio_src, GstGioBaseSrc,
@@ -102,19 +102,15 @@ gst_gio_src_base_init (gpointer gclass)
 static void
 gst_gio_src_class_init (GstGioSrcClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstBaseSrcClass *gstbasesrc_class;
-  GstGioBaseSrcClass *gstgiobasesrc_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstbasesrc_class = (GstBaseSrcClass *) klass;
-  gstgiobasesrc_class = (GstGioBaseSrcClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
+  GstGioBaseSrcClass *gstgiobasesrc_class = (GstGioBaseSrcClass *) klass;
 
   gobject_class->finalize = gst_gio_src_finalize;
   gobject_class->set_property = gst_gio_src_set_property;
   gobject_class->get_property = gst_gio_src_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_LOCATION,
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "Location", "URI location to read from",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -125,7 +121,7 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
    * 
    * Since: 0.10.20
    **/
-  g_object_class_install_property (gobject_class, ARG_FILE,
+  g_object_class_install_property (gobject_class, PROP_FILE,
       g_param_spec_object ("file", "File", "GFile to read from",
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -160,7 +156,7 @@ gst_gio_src_set_property (GObject * object, guint prop_id,
   GstGioSrc *src = GST_GIO_SRC (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:{
+    case PROP_LOCATION:{
       const gchar *uri = NULL;
 
       if (GST_STATE (src) == GST_STATE_PLAYING ||
@@ -188,7 +184,7 @@ gst_gio_src_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (GST_OBJECT (src));
       break;
     }
-    case ARG_FILE:
+    case PROP_FILE:
       if (GST_STATE (src) == GST_STATE_PLAYING ||
           GST_STATE (src) == GST_STATE_PAUSED) {
         GST_WARNING
@@ -217,7 +213,7 @@ gst_gio_src_get_property (GObject * object, guint prop_id,
   GstGioSrc *src = GST_GIO_SRC (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:{
+    case PROP_LOCATION:{
       gchar *uri;
 
       GST_OBJECT_LOCK (GST_OBJECT (src));
@@ -231,7 +227,7 @@ gst_gio_src_get_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (GST_OBJECT (src));
       break;
     }
-    case ARG_FILE:
+    case PROP_FILE:
       GST_OBJECT_LOCK (GST_OBJECT (src));
       g_value_set_object (value, src->file);
       GST_OBJECT_UNLOCK (GST_OBJECT (src));
@@ -246,7 +242,6 @@ static gboolean
 gst_gio_src_check_get_range (GstBaseSrc * base_src)
 {
   GstGioSrc *src = GST_GIO_SRC (base_src);
-
   gchar *scheme;
 
   if (src->file == NULL)

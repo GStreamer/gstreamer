@@ -90,28 +90,22 @@ static GInputStream *gst_gio_stream_src_get_stream (GstGioBaseSrc * bsrc);
 static void
 gst_gio_stream_src_base_init (gpointer gclass)
 {
-  static GstElementDetails element_details = {
-    "GIO stream source",
-    "Source",
-    "Read from any GIO stream",
-    "Sebastian Dröge <sebastian.droege@collabora.co.uk>"
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   GST_DEBUG_CATEGORY_INIT (gst_gio_stream_src_debug, "gio_stream_src", 0,
       "GIO source");
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "GIO stream source",
+      "Source",
+      "Read from any GIO stream",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
 static void
 gst_gio_stream_src_class_init (GstGioStreamSrcClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstGioBaseSrcClass *gstgiobasesrc_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstgiobasesrc_class = (GstGioBaseSrcClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstGioBaseSrcClass *gstgiobasesrc_class = (GstGioBaseSrcClass *) klass;
 
   gobject_class->finalize = gst_gio_stream_src_finalize;
   gobject_class->set_property = gst_gio_stream_src_set_property;

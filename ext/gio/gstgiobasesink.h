@@ -32,6 +32,8 @@ G_BEGIN_DECLS
   (gst_gio_base_sink_get_type())
 #define GST_GIO_BASE_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GIO_BASE_SINK,GstGioBaseSink))
+#define GST_GIO_BASE_SINK_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_GIO_BASE_SINK, GstGioBaseSinkClass))
 #define GST_GIO_BASE_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GIO_BASE_SINK,GstGioBaseSinkClass))
 #define GST_IS_GIO_BASE_SINK(obj) \

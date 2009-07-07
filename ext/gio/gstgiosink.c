@@ -70,9 +70,9 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_LOCATION,
-  ARG_FILE
+  PROP_0,
+  PROP_LOCATION,
+  PROP_FILE
 };
 
 GST_BOILERPLATE_FULL (GstGioSink, gst_gio_sink, GstGioBaseSink,
@@ -102,19 +102,14 @@ gst_gio_sink_base_init (gpointer gclass)
 static void
 gst_gio_sink_class_init (GstGioSinkClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSinkClass *gstbasesink_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesink_class = (GstBaseSinkClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseSinkClass *gstbasesink_class = (GstBaseSinkClass *) klass;
 
   gobject_class->finalize = gst_gio_sink_finalize;
   gobject_class->set_property = gst_gio_sink_set_property;
   gobject_class->get_property = gst_gio_sink_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_LOCATION,
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "Location", "URI location to write to",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -125,7 +120,7 @@ gst_gio_sink_class_init (GstGioSinkClass * klass)
    * 
    * Since: 0.10.20
    **/
-  g_object_class_install_property (gobject_class, ARG_FILE,
+  g_object_class_install_property (gobject_class, PROP_FILE,
       g_param_spec_object ("file", "File", "GFile to write to",
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -157,7 +152,7 @@ gst_gio_sink_set_property (GObject * object, guint prop_id,
   GstGioSink *sink = GST_GIO_SINK (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:{
+    case PROP_LOCATION:{
       const gchar *uri = NULL;
 
       if (GST_STATE (sink) == GST_STATE_PLAYING ||
@@ -185,7 +180,7 @@ gst_gio_sink_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (GST_OBJECT (sink));
       break;
     }
-    case ARG_FILE:
+    case PROP_FILE:
       if (GST_STATE (sink) == GST_STATE_PLAYING ||
           GST_STATE (sink) == GST_STATE_PAUSED) {
         GST_WARNING
@@ -214,7 +209,7 @@ gst_gio_sink_get_property (GObject * object, guint prop_id,
   GstGioSink *sink = GST_GIO_SINK (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:{
+    case PROP_LOCATION:{
       gchar *uri;
 
       GST_OBJECT_LOCK (GST_OBJECT (sink));
@@ -228,7 +223,7 @@ gst_gio_sink_get_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (GST_OBJECT (sink));
       break;
     }
-    case ARG_FILE:
+    case PROP_FILE:
       GST_OBJECT_LOCK (GST_OBJECT (sink));
       g_value_set_object (value, sink->file);
       GST_OBJECT_UNLOCK (GST_OBJECT (sink));
