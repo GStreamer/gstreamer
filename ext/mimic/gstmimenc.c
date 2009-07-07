@@ -84,7 +84,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static gboolean gst_mimenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_mimenc_chain (GstPad * pad, GstBuffer * in);
 static GstBuffer *gst_mimenc_create_tcp_header (GstMimEnc * mimenc,
-    guint32 payload_size, guint32 timestamp);
+    guint32 payload_size, GstClockTime timestamp);
 static gboolean gst_mimenc_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn
@@ -327,7 +327,7 @@ gst_mimenc_chain (GstPad * pad, GstBuffer * in)
 
   // now let's create that tcp header
   header = gst_mimenc_create_tcp_header (mimenc, buffer_size,
-      GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
+      GST_BUFFER_TIMESTAMP (out_buf));
 
   if (!header) {
     gst_buffer_unref (out_buf);
@@ -376,11 +376,13 @@ out_unlock:
 
 static GstBuffer *
 gst_mimenc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
-    guint32 timestamp)
+    GstClockTime timestamp)
 {
   // 24 bytes
   GstBuffer *buf_header = gst_buffer_new_and_alloc (24);
   guchar *p = (guchar *) GST_BUFFER_DATA (buf_header);
+
+  GST_BUFFER_TIMESTAMP (buf_header) = timestamp;
 
   p[0] = 24;
   *((guchar *) (p + 1)) = 0;
@@ -391,7 +393,7 @@ gst_mimenc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
   *((guint32 *) (p + 12)) =
       GUINT32_TO_LE (GST_MAKE_FOURCC ('M', 'L', '2', '0'));
   *((guint32 *) (p + 16)) = 0;
-  *((guint32 *) (p + 20)) = timestamp;
+  *((guint32 *) (p + 20)) = timestamp / GST_MSECOND;
 
   return buf_header;
 }
