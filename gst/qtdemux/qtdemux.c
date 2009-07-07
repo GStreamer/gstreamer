@@ -2571,12 +2571,21 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             demux->state = QTDEMUX_STATE_MOVIE;
             demux->neededbytes = next_entry_size (demux);
           } else {
+            guint bs;
+
+          buffer_data:
+            /* there may be multiple mdat (or alike) buffers */
             /* sanity check */
-            if (size > 10 * (1 << 20))
+            if (demux->mdatbuffer)
+              bs = GST_BUFFER_SIZE (demux->mdatbuffer);
+            else
+              bs = 0;
+            if (size + bs > 10 * (1 << 20))
               goto no_moov;
             demux->state = QTDEMUX_STATE_BUFFER_MDAT;
             demux->neededbytes = size;
-            demux->mdatoffset = demux->offset;
+            if (!demux->mdatbuffer)
+              demux->mdatoffset = demux->offset;
           }
         } else if (G_UNLIKELY (size > QTDEMUX_MAX_ATOM_SIZE)) {
           GST_ELEMENT_ERROR (demux, STREAM, DECODE,
@@ -2586,6 +2595,10 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           ret = GST_FLOW_ERROR;
           break;
         } else {
+          /* this means we already started buffering and still no moov header,
+           * let's continue buffering everything till we get moov */
+          if (demux->mdatbuffer && (fourcc != FOURCC_moov))
+            goto buffer_data;
           demux->neededbytes = size;
           demux->state = QTDEMUX_STATE_HEADER;
         }
@@ -2597,7 +2610,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 
         GST_DEBUG_OBJECT (demux, "In header");
 
-        data = gst_adapter_take (demux->adapter, demux->neededbytes);
+        data = (guint8 *) gst_adapter_peek (demux->adapter, demux->neededbytes);
 
         /* parse the header */
         extract_initial_length_and_fourcc (data, NULL, &fourcc);
@@ -2610,29 +2623,35 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 
           g_node_destroy (demux->moov_node);
           demux->moov_node = NULL;
+          GST_DEBUG_OBJECT (demux, "Finished parsing the header");
         } else {
           GST_WARNING_OBJECT (demux,
               "Unknown fourcc while parsing header : %" GST_FOURCC_FORMAT,
               GST_FOURCC_ARGS (fourcc));
           /* Let's jump that one and go back to initial state */
         }
-        g_free (data);
 
-        GST_DEBUG_OBJECT (demux, "Finished parsing the header");
         if (demux->mdatbuffer && demux->n_streams) {
+          GstBuffer *buf;
+
           /* the mdat was before the header */
           GST_DEBUG_OBJECT (demux, "We have n_streams:%d and mdatbuffer:%p",
               demux->n_streams, demux->mdatbuffer);
+          /* restore our adapter/offset view of things with upstream;
+           * put preceding buffered data ahead of current moov data.
+           * This should also handle evil mdat, moov, mdat cases and alike */
+          buf = gst_adapter_take_buffer (demux->adapter,
+              gst_adapter_available (demux->adapter));
           gst_adapter_clear (demux->adapter);
-          GST_DEBUG_OBJECT (demux, "mdatbuffer starts with %" GST_FOURCC_FORMAT,
-              GST_FOURCC_ARGS (QT_UINT32 (demux->mdatbuffer)));
           gst_adapter_push (demux->adapter, demux->mdatbuffer);
+          gst_adapter_push (demux->adapter, buf);
           demux->mdatbuffer = NULL;
           demux->offset = demux->mdatoffset;
           demux->neededbytes = next_entry_size (demux);
           demux->state = QTDEMUX_STATE_MOVIE;
         } else {
           GST_DEBUG_OBJECT (demux, "Carrying on normally");
+          gst_adapter_flush (demux->adapter, demux->neededbytes);
           demux->offset += demux->neededbytes;
           demux->neededbytes = 16;
           demux->state = QTDEMUX_STATE_INITIAL;
@@ -2641,14 +2660,17 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         break;
       }
       case QTDEMUX_STATE_BUFFER_MDAT:{
+        GstBuffer *buf;
+
         GST_DEBUG_OBJECT (demux, "Got our buffer at offset %lld",
-            demux->mdatoffset);
-        if (demux->mdatbuffer)
-          gst_buffer_unref (demux->mdatbuffer);
-        demux->mdatbuffer = gst_adapter_take_buffer (demux->adapter,
-            demux->neededbytes);
+            demux->offset);
+        buf = gst_adapter_take_buffer (demux->adapter, demux->neededbytes);
         GST_DEBUG_OBJECT (demux, "mdatbuffer starts with %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (QT_UINT32 (demux->mdatbuffer)));
+            GST_FOURCC_ARGS (QT_FOURCC (GST_BUFFER_DATA (buf) + 4)));
+        if (demux->mdatbuffer)
+          demux->mdatbuffer = gst_buffer_join (demux->mdatbuffer, buf);
+        else
+          demux->mdatbuffer = buf;
         demux->offset += demux->neededbytes;
         demux->neededbytes = 16;
         demux->state = QTDEMUX_STATE_INITIAL;
@@ -2686,7 +2708,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             break;
         }
 
-        if (stream == NULL)
+        if (G_UNLIKELY (stream == NULL || i == demux->n_streams))
           goto unknown_stream;
 
         /* first buffer? */
