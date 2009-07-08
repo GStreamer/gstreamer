@@ -78,6 +78,7 @@
 #define DESC_DIRAC_TC_PRIVATE			0xAC
 
 /* DVB tags */
+#define DESC_DVB_CAROUSEL_IDENTIFIER	0x13
 #define DESC_DVB_NETWORK_NAME   0x40
 #define DESC_DVB_SERVICE_LIST   0x41
 #define DESC_DVB_STUFFING       0x42
@@ -314,6 +315,9 @@
 /* DVB Data Broadcast Id Descriptor */
 #define DESC_DVB_DATA_BROADCAST_ID_data_broadcast_id(desc)	(GST_READ_UINT16_BE((desc) + 2))
 #define DESC_DVB_DATA_BROADCAST_ID_id_selector_byte(desc)	(desc + 4)
+
+/* DVB Carousel Identifier Descriptor */
+#define DESC_DVB_CAROUSEL_IDENTIFIER_carousel_id(desc)		(GST_READ_UINT32_BE((desc) + 2))
 
 typedef struct {
   guint    n_desc;

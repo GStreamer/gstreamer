@@ -534,6 +534,14 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer * packetizer,
           gst_structure_set (stream_info, "data-broadcast", GST_TYPE_STRUCTURE,
               databroadcast_info, NULL);
         }
+        desc_data =
+            gst_mpeg_descriptor_find (desc, DESC_DVB_CAROUSEL_IDENTIFIER);
+        if (desc_data) {
+          guint32 carousel_id;
+          carousel_id = DESC_DVB_CAROUSEL_IDENTIFIER_carousel_id (desc_data);
+          gst_structure_set (stream_info, "carousel-id", G_TYPE_UINT,
+              carousel_id, NULL);
+        }
 
         gst_mpeg_descriptor_free (desc);
       }
