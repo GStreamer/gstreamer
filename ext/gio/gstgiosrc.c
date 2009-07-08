@@ -298,6 +298,14 @@ gst_gio_src_get_stream (GstGioBaseSrc * bsrc)
     if (GST_GIO_ERROR_MATCHES (err, NOT_FOUND)) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
           ("Could not open location %s for reading: %s", uri, err->message));
+    } else if (GST_GIO_ERROR_MATCHES (err, NOT_MOUNTED)) {
+      gst_element_post_message (GST_ELEMENT_CAST (src),
+          gst_message_new_element (GST_OBJECT_CAST (src),
+              gst_structure_new ("not-mounted", "file", G_TYPE_FILE, src->file,
+                  "uri", G_TYPE_STRING, uri, NULL)));
+
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
+          ("Location %s not mounted: %s", uri, err->message));
     } else {
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
           ("Could not open location %s for reading: %s", uri, err->message));
