@@ -542,7 +542,13 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer * packetizer,
           gst_structure_set (stream_info, "carousel-id", G_TYPE_UINT,
               carousel_id, NULL);
         }
-
+        desc_data = gst_mpeg_descriptor_find (desc, DESC_DVB_STREAM_IDENTIFIER);
+        if (desc_data) {
+          guint8 component_tag;
+          component_tag = DESC_DVB_STREAM_IDENTIFIER_component_tag (desc_data);
+          gst_structure_set (stream_info, "component-tag", G_TYPE_UINT,
+              component_tag, NULL);
+        }
         gst_mpeg_descriptor_free (desc);
       }
 
