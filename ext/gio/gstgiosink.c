@@ -267,7 +267,7 @@ gst_gio_sink_get_stream (GstGioBaseSink * bsink)
         GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, (NULL),
             ("Could not open location %s for writing: %s", uri, err->message));
       else
-        GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ, (NULL),
+        GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
             ("Could not open location %s for writing: %s", uri, err->message));
 
       g_clear_error (&err);
