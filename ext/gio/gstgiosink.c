@@ -263,12 +263,21 @@ gst_gio_sink_get_stream (GstGioBaseSink * bsink)
       /*if (GST_GIO_ERROR_MATCHES (err, EXISTS)) */
       /* FIXME: Retry with replace if overwrite == TRUE! */
 
-      if (GST_GIO_ERROR_MATCHES (err, NOT_FOUND))
+      if (GST_GIO_ERROR_MATCHES (err, NOT_FOUND)) {
         GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, (NULL),
             ("Could not open location %s for writing: %s", uri, err->message));
-      else
+      } else if (GST_GIO_ERROR_MATCHES (err, EXISTS)) {
+        gst_element_post_message (GST_ELEMENT_CAST (sink),
+            gst_message_new_element (GST_OBJECT_CAST (sink),
+                gst_structure_new ("file-exists", "file", G_TYPE_FILE,
+                    sink->file, "uri", G_TYPE_STRING, uri, NULL)));
+
+        GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
+            ("Location %s already exists: %s", uri, err->message));
+      } else {
         GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
             ("Could not open location %s for writing: %s", uri, err->message));
+      }
 
       g_clear_error (&err);
     }
