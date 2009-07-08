@@ -130,6 +130,10 @@ gst_gio_base_src_start (GstBaseSrc * base_src)
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
         ("No input stream provided by subclass"));
     return FALSE;
+  } else if (G_UNLIKELY (g_input_stream_is_closed (src->stream))) {
+    GST_ELEMENT_ERROR (src, LIBRARY, FAILED, (NULL),
+        ("Input stream is already closed"));
+    return FALSE;
   }
 
   GST_DEBUG_OBJECT (src, "started source");

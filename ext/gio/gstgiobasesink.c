@@ -119,6 +119,10 @@ gst_gio_base_sink_start (GstBaseSink * base_sink)
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
         ("No output stream provided by subclass"));
     return FALSE;
+  } else if (G_UNLIKELY (g_output_stream_is_closed (sink->stream))) {
+    GST_ELEMENT_ERROR (sink, LIBRARY, FAILED, (NULL),
+        ("Output stream is already closed"));
+    return FALSE;
   }
 
   GST_DEBUG_OBJECT (sink, "started sink");
