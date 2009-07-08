@@ -1912,9 +1912,6 @@ mpegts_packetizer_remove_stream (MpegTSPacketizer * packetizer, gint16 pid)
     GST_INFO ("Removing stream for PID %d", pid);
 
     g_hash_table_remove (packetizer->streams, GINT_TO_POINTER ((gint) pid));
-
-    g_object_unref (stream->section_adapter);
-    g_free (stream);
   }
 }
 
