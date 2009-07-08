@@ -109,6 +109,27 @@ GST_START_TEST (test_memory_stream)
   gst_object_unref (bus);
 
   gst_element_set_state (bin, GST_STATE_PAUSED);
+  gst_element_get_state (bin, NULL, NULL, -1);
+
+  fail_unless (gst_element_query_duration (bin, &fmt, &duration));
+  fail_unless_equals_int (duration, 512);
+
+  gst_element_set_state (bin, GST_STATE_PLAYING);
+
+  g_main_loop_run (loop);
+
+  gst_element_set_state (bin, GST_STATE_NULL);
+
+  fail_unless (got_eos);
+  got_eos = FALSE;
+
+  out_data = g_memory_output_stream_get_data (G_MEMORY_OUTPUT_STREAM (output));
+
+  for (i = 0; i < 512; i++)
+    fail_unless_equals_int (in_data[i], out_data[i]);
+
+  gst_element_set_state (bin, GST_STATE_PAUSED);
+  gst_element_get_state (bin, NULL, NULL, -1);
 
   fail_unless (gst_element_query_duration (bin, &fmt, &duration));
   fail_unless_equals_int (duration, 512);
@@ -121,11 +142,6 @@ GST_START_TEST (test_memory_stream)
   gst_object_unref (bin);
 
   fail_unless (got_eos);
-
-  out_data = g_memory_output_stream_get_data (G_MEMORY_OUTPUT_STREAM (output));
-
-  for (i = 0; i < 512; i++)
-    fail_unless_equals_int (in_data[i], out_data[i]);
 
   g_object_unref (input);
   g_object_unref (output);
