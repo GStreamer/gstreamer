@@ -79,7 +79,7 @@ gst_udp_get_sockaddr_length (struct sockaddr_storage *addr)
 int
 gst_udp_get_addr (const char *hostname, int port, struct sockaddr_storage *addr)
 {
-  struct addrinfo hints, *res, *nres;
+  struct addrinfo hints, *res = NULL, *nres;
   char service[NI_MAXSERV];
   int ret;
 
