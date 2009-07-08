@@ -812,7 +812,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
   while ((dirent = g_dir_read_name (dir))) {
     struct stat file_status;
 
-    filename = g_strjoin ("/", path, dirent, NULL);
+    filename = g_build_filename (path, dirent, NULL);
     if (g_stat (filename, &file_status) < 0) {
       /* Plugin will be removed from cache after the scan completes if it
        * is still marked 'cached' */
