@@ -129,6 +129,7 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_gio_src_check_get_range);
 
   gstgiobasesrc_class->get_stream = GST_DEBUG_FUNCPTR (gst_gio_src_get_stream);
+  gstgiobasesrc_class->close_on_stop = TRUE;
 }
 
 static void

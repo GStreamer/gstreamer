@@ -62,6 +62,7 @@ struct _GstGioBaseSrcClass
   GstBaseSrcClass parent_class;
 
   GInputStream * (*get_stream) (GstGioBaseSrc *bsrc);
+  gboolean close_on_stop;
 };
 
 GType gst_gio_base_src_get_type (void);

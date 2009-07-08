@@ -145,10 +145,11 @@ static gboolean
 gst_gio_base_src_stop (GstBaseSrc * base_src)
 {
   GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
+  GstGioBaseSrcClass *klass = GST_GIO_BASE_SRC_GET_CLASS (src);
   gboolean success;
   GError *err = NULL;
 
-  if (G_IS_INPUT_STREAM (src->stream)) {
+  if (klass->close_on_stop && G_IS_INPUT_STREAM (src->stream)) {
     GST_DEBUG_OBJECT (src, "closing stream");
 
     /* FIXME: can block but unfortunately we can't use async operations
@@ -166,6 +167,9 @@ gst_gio_base_src_stop (GstBaseSrc * base_src)
       GST_DEBUG_OBJECT (src, "g_input_stream_close succeeded");
     }
 
+    g_object_unref (src->stream);
+    src->stream = NULL;
+  } else {
     g_object_unref (src->stream);
     src->stream = NULL;
   }

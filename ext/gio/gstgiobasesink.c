@@ -134,10 +134,11 @@ static gboolean
 gst_gio_base_sink_stop (GstBaseSink * base_sink)
 {
   GstGioBaseSink *sink = GST_GIO_BASE_SINK (base_sink);
+  GstGioBaseSinkClass *klass = GST_GIO_BASE_SINK_GET_CLASS (sink);
   gboolean success;
   GError *err = NULL;
 
-  if (G_IS_OUTPUT_STREAM (sink->stream)) {
+  if (klass->close_on_stop && G_IS_OUTPUT_STREAM (sink->stream)) {
     GST_DEBUG_OBJECT (sink, "closing stream");
 
     /* FIXME: can block but unfortunately we can't use async operations
@@ -155,6 +156,9 @@ gst_gio_base_sink_stop (GstBaseSink * base_sink)
       GST_DEBUG_OBJECT (sink, "g_outut_stream_close succeeded");
     }
 
+    g_object_unref (sink->stream);
+    sink->stream = NULL;
+  } else {
     g_object_unref (sink->stream);
     sink->stream = NULL;
   }
