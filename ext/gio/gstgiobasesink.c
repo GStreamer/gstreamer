@@ -159,6 +159,19 @@ gst_gio_base_sink_stop (GstBaseSink * base_sink)
     g_object_unref (sink->stream);
     sink->stream = NULL;
   } else {
+    success = g_output_stream_flush (sink->stream, sink->cancel, &err);
+
+    if (!success && !gst_gio_error (sink, "g_output_stream_flush", &err, NULL)) {
+      GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
+          ("gio_output_stream_flush failed: %s", err->message));
+      g_clear_error (&err);
+    } else if (!success) {
+      GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
+          ("g_output_stream_flush failed"));
+    } else {
+      GST_DEBUG_OBJECT (sink, "g_outut_stream_flush succeeded");
+    }
+
     g_object_unref (sink->stream);
     sink->stream = NULL;
   }
