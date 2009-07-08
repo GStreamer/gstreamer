@@ -20,12 +20,12 @@
 /**
  * SECTION:element-videomixer
  *
- * Videomixer can accept AYUV and BGRA video streams. For each of the requested
+ * Videomixer can accept AYUV, ARGB and BGRA video streams. For each of the requested
  * sink pads it will compare the incoming geometry and framerate to define the
  * output parameters. Indeed output video frames will have the geometry of the
  * biggest incoming video stream and the framerate of the fastest incoming one.
  *
- * All sink pads must be either AYUV or BGRA, but a mixture of them is not 
+ * All sink pads must be either AYUV, ARGB or BGRA, but a mixture of them is not 
  * supported. The src pad will have the same colorspace as the sinks. 
  * No colorspace conversion is done. 
  * 
@@ -105,12 +105,18 @@ void gst_videomixer_fill_ayuv_checker (guint8 * dest, gint width, gint height);
 void gst_videomixer_fill_ayuv_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV);
 size_t gst_videomixer_calculate_frame_size_ayuv (gint width, gint height);
-/*BGRA function definitions see file: blend_ayuv*/
+/*BGRA/ARGB function definitions see file: blend_bgra*/
 void gst_videomixer_blend_bgra_bgra (guint8 * src, gint xpos, gint ypos,
     gint src_width, gint src_height, gdouble src_alpha,
     guint8 * dest, gint dest_width, gint dest_height);
 void gst_videomixer_fill_bgra_checker (guint8 * dest, gint width, gint height);
 void gst_videomixer_fill_bgra_color (guint8 * dest, gint width, gint height,
+    gint colY, gint colU, gint colV);
+void gst_videomixer_blend_argb_argb (guint8 * src, gint xpos, gint ypos,
+    gint src_width, gint src_height, gdouble src_alpha,
+    guint8 * dest, gint dest_width, gint dest_height);
+void gst_videomixer_fill_argb_checker (guint8 * dest, gint width, gint height);
+void gst_videomixer_fill_argb_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV);
 size_t gst_videomixer_calculate_frame_size_bgra (gint width, gint height);
 /*I420 function definitions see file: blend_i420.c*/
@@ -462,14 +468,14 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_YUV ("I420"))
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_YUV ("I420"))
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_YUV ("I420"))
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_YUV ("I420"))
     );
 
 static void gst_videomixer_finalize (GObject * object);
@@ -914,56 +920,57 @@ gst_videomixer_getcaps (GstPad * pad)
 static gboolean
 gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstElement *element;
-  GstVideoMixer *mixer;
-  GstStructure *str;
-  element = gst_pad_get_parent_element (pad);
-  g_assert (element);
-  mixer = GST_VIDEO_MIXER (element);
-  g_assert (mixer);
+  GstVideoMixer *mixer = GST_VIDEO_MIXER (gst_pad_get_parent_element (pad));
+  GstVideoFormat fmt;
+  gboolean ret = FALSE;
+
   GST_INFO_OBJECT (mixer, "set src caps: \n%" GST_PTR_FORMAT, caps);
 
-  str = gst_caps_get_structure (caps, 0);
+  mixer->blend = NULL;
+  mixer->fill_checker = NULL;
+  mixer->fill_color = NULL;
+  mixer->calculate_frame_size = NULL;
 
-  if (gst_structure_has_name (str, "video/x-raw-yuv")) {
-    guint32 format;
-    int ret;
-    ret = gst_structure_get_fourcc (str, "format", &format);
-    if (!ret) {
-      mixer->blend = NULL;
-      mixer->fill_checker = NULL;
-      mixer->fill_color = NULL;
-      mixer->calculate_frame_size = NULL;
-    } else if (format == GST_STR_FOURCC ("AYUV")) {
+  if (!gst_video_format_parse_caps (caps, &fmt, NULL, NULL))
+    goto done;
+
+  switch (fmt) {
+    case GST_VIDEO_FORMAT_AYUV:
       mixer->blend = gst_videomixer_blend_ayuv_ayuv;
       mixer->fill_checker = gst_videomixer_fill_ayuv_checker;
       mixer->fill_color = gst_videomixer_fill_ayuv_color;
       mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_ayuv;
-    } else if (format == GST_STR_FOURCC ("I420")) {
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_I420:
       mixer->blend = gst_videomixer_blend_i420_i420;
       mixer->fill_checker = gst_videomixer_fill_i420_checker;
       mixer->fill_color = gst_videomixer_fill_i420_color;
       mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_i420;
-    } else {
-      mixer->blend = NULL;
-      mixer->fill_checker = NULL;
-      mixer->fill_color = NULL;
-      mixer->calculate_frame_size = NULL;
-    }
-  } else if (gst_structure_has_name (str, "video/x-raw-rgb")) {
-    mixer->blend = gst_videomixer_blend_bgra_bgra;
-    mixer->fill_checker = gst_videomixer_fill_bgra_checker;
-    mixer->fill_color = gst_videomixer_fill_bgra_color;
-    mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_bgra;
-  } else {
-    mixer->blend = NULL;
-    mixer->fill_checker = NULL;
-    mixer->fill_color = NULL;
-    mixer->calculate_frame_size = NULL;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      mixer->blend = gst_videomixer_blend_bgra_bgra;
+      mixer->fill_checker = gst_videomixer_fill_bgra_checker;
+      mixer->fill_color = gst_videomixer_fill_bgra_color;
+      mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_bgra;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_ARGB:
+      mixer->blend = gst_videomixer_blend_argb_argb;
+      mixer->fill_checker = gst_videomixer_fill_argb_checker;
+      mixer->fill_color = gst_videomixer_fill_argb_color;
+      mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_bgra;
+      ret = TRUE;
+      break;
+    default:
+      break;
   }
-  gst_object_unref (element);
 
-  return TRUE;
+done:
+  gst_object_unref (mixer);
+
+  return ret;
 }
 
 static GstPad *
