@@ -1403,6 +1403,7 @@ main (int argc, char *argv[])
   gboolean plugin_name = FALSE;
   gboolean print_aii = FALSE;
   gboolean uri_handlers = FALSE;
+#ifndef GST_DISABLE_OPTION_PARSING
   GOptionEntry options[] = {
     {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
         N_("Print all elements"), NULL},
@@ -1422,6 +1423,7 @@ main (int argc, char *argv[])
   };
   GOptionContext *ctx;
   GError *err = NULL;
+#endif
 
 #ifdef ENABLE_NLS
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -1432,6 +1434,7 @@ main (int argc, char *argv[])
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
+#ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("[ELEMENT-NAME | PLUGIN-NAME]");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
@@ -1440,6 +1443,9 @@ main (int argc, char *argv[])
     exit (1);
   }
   g_option_context_free (ctx);
+#else
+  gst_init (&argc, &argv);
+#endif
 
   gst_tools_print_version ("gst-inspect");
 

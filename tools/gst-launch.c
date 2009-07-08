@@ -666,6 +666,7 @@ main (int argc, char *argv[])
   gboolean eos_on_shutdown = FALSE;
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
+#ifndef GST_DISABLE_OPTION_PARSING
   GOptionEntry options[] = {
     {"tags", 't', 0, G_OPTION_ARG_NONE, &tags,
         N_("Output tags (also known as metadata)"), NULL},
@@ -692,6 +693,7 @@ main (int argc, char *argv[])
   };
   GOptionContext *ctx;
   GError *err = NULL;
+#endif
   gchar **argvn;
   GError *error = NULL;
   gint res = 0;
@@ -709,6 +711,7 @@ main (int argc, char *argv[])
 
   gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
 
+#ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("PIPELINE-DESCRIPTION");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
@@ -720,6 +723,9 @@ main (int argc, char *argv[])
     exit (1);
   }
   g_option_context_free (ctx);
+#else
+  gst_init (&argc, &argv);
+#endif
 
   gst_tools_print_version ("gst-launch");
 
