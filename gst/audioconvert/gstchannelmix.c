@@ -596,7 +596,6 @@ void
 gst_channel_mix_setup_matrix (AudioConvertCtx * this)
 {
   gint i, j;
-  GString *s;
 
   /* don't lose memory */
   gst_channel_mix_unset_matrix (this);
@@ -619,25 +618,30 @@ gst_channel_mix_setup_matrix (AudioConvertCtx * this)
   /* setup the matrix' internal values */
   gst_channel_mix_fill_matrix (this);
 
+#ifndef GST_DISABLE_GST_DEBUG
   /* debug */
-  s = g_string_new ("Matrix for");
-  g_string_append_printf (s, " %d -> %d: ",
-      this->in.channels, this->out.channels);
-  g_string_append (s, "{");
-  for (i = 0; i < this->in.channels; i++) {
-    if (i != 0)
-      g_string_append (s, ",");
-    g_string_append (s, " {");
-    for (j = 0; j < this->out.channels; j++) {
-      if (j != 0)
+  {
+    GString *s;
+    s = g_string_new ("Matrix for");
+    g_string_append_printf (s, " %d -> %d: ",
+        this->in.channels, this->out.channels);
+    g_string_append (s, "{");
+    for (i = 0; i < this->in.channels; i++) {
+      if (i != 0)
         g_string_append (s, ",");
-      g_string_append_printf (s, " %f", this->matrix[i][j]);
+      g_string_append (s, " {");
+      for (j = 0; j < this->out.channels; j++) {
+        if (j != 0)
+          g_string_append (s, ",");
+        g_string_append_printf (s, " %f", this->matrix[i][j]);
+      }
+      g_string_append (s, " }");
     }
     g_string_append (s, " }");
+    GST_DEBUG (s->str);
+    g_string_free (s, TRUE);
   }
-  g_string_append (s, " }");
-  GST_DEBUG (s->str);
-  g_string_free (s, TRUE);
+#endif
 }
 
 gboolean
