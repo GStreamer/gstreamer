@@ -282,7 +282,7 @@ gst_videomixer_fill_i420_checker (guint8 * dest, gint width, gint height)
 {
   int size;
   gint i, j;
-  static int tab[] = { 80, 160, 80, 160 };
+  static const int tab[] = { 80, 160, 80, 160 };
   guint8 *p = dest;
 
   for (i = 0; i < height; i++) {

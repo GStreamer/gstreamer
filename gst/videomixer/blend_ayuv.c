@@ -237,7 +237,7 @@ void
 gst_videomixer_fill_ayuv_checker (guint8 * dest, gint width, gint height)
 {
   gint i, j;
-  static int tab[] = { 80, 160, 80, 160 };
+  static const int tab[] = { 80, 160, 80, 160 };
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
