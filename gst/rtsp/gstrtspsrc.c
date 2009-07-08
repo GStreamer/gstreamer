@@ -5169,10 +5169,10 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
 
         /* we only act on the first udp timeout message, others are irrelevant
          * and can be ignored. */
-        if (ignore_timeout)
-          gst_message_unref (message);
-        else
+        if (!ignore_timeout)
           gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_RECONNECT, TRUE);
+        /* eat and free */
+        gst_message_unref (message);
         return;
       }
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
