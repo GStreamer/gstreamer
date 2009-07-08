@@ -304,7 +304,7 @@ gst_gio_src_get_stream (GstGioBaseSrc * bsrc)
               gst_structure_new ("not-mounted", "file", G_TYPE_FILE, src->file,
                   "uri", G_TYPE_STRING, uri, NULL)));
 
-      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
           ("Location %s not mounted: %s", uri, err->message));
     } else {
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
