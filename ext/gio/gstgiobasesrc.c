@@ -136,6 +136,9 @@ gst_gio_base_src_start (GstBaseSrc * base_src)
     return FALSE;
   }
 
+  if (G_IS_SEEKABLE (src->stream))
+    src->position = g_seekable_tell (G_SEEKABLE (src->stream));
+
   GST_DEBUG_OBJECT (src, "started source");
 
   return TRUE;
