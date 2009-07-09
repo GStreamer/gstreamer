@@ -74,6 +74,8 @@ static void gst_avi_demux_reset (GstAviDemux * avi);
 static const GstEventMask *gst_avi_demux_get_event_mask (GstPad * pad);
 #endif
 static gboolean gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_avi_demux_handle_sink_event (GstPad * pad,
+    GstEvent * event);
 
 #if 0
 static const GstFormat *gst_avi_demux_get_src_formats (GstPad * pad);
@@ -188,6 +190,7 @@ gst_avi_demux_init (GstAviDemux * avi)
       gst_avi_demux_sink_activate_pull);
   gst_pad_set_activatepush_function (avi->sinkpad, gst_avi_demux_activate_push);
   gst_pad_set_chain_function (avi->sinkpad, gst_avi_demux_chain);
+  gst_pad_set_event_function (avi->sinkpad, gst_avi_demux_handle_sink_event);
   gst_element_add_pad (GST_ELEMENT (avi), avi->sinkpad);
 
   avi->adapter = gst_adapter_new ();
@@ -674,6 +677,30 @@ gst_avi_demux_get_event_mask (GstPad * pad)
   return masks;
 }
 #endif
+
+static gboolean
+gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res = TRUE;
+  GstAviDemux *avi = GST_AVI_DEMUX (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (avi,
+      "have event type %s: %p on sink pad", GST_EVENT_TYPE_NAME (event), event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      /* Drop NEWSEGMENT events, new ones are generated later */
+      gst_event_unref (event);
+      break;
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (avi);
+
+  return res;
+}
 
 static gboolean
 gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
