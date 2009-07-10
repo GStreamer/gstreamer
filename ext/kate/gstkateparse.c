@@ -79,14 +79,14 @@ static GstStaticPadTemplate gst_kate_parse_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_KATE_MIME_TYPE)
+    GST_STATIC_CAPS (GST_KATE_MEDIA_TYPE)
     );
 
 static GstStaticPadTemplate gst_kate_parse_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_KATE_MIME_TYPE)
+    GST_STATIC_CAPS (GST_KATE_MEDIA_TYPE)
     );
 
 GST_BOILERPLATE (GstKateParse, gst_kate_parse, GstElement, GST_TYPE_ELEMENT);

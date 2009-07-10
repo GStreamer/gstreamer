@@ -115,7 +115,7 @@ static GstStaticPadTemplate kate_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("kate_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_KATE_MIME_TYPE)
+    GST_STATIC_CAPS (GST_KATE_MEDIA_TYPE)
     );
 
 static GstStaticPadTemplate video_sink_factory =

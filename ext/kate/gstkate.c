@@ -69,7 +69,7 @@ GST_DEBUG_CATEGORY (gst_katetiger_debug);
 #endif
 
 
-static GstStaticCaps kate_caps = GST_STATIC_CAPS (GST_KATE_MIME_TYPE);
+static GstStaticCaps kate_caps = GST_STATIC_CAPS (GST_KATE_MEDIA_TYPE);
 
 #define KATE_CAPS (gst_static_caps_get(&kate_caps))
 static void
@@ -95,8 +95,8 @@ plugin_init (GstPlugin * plugin)
 {
   GstCaps *caps;
 
-  caps = gst_caps_new_simple (GST_KATE_MIME_TYPE, NULL);
-  if (!gst_type_find_register (plugin, GST_KATE_MIME_TYPE, GST_RANK_PRIMARY,
+  caps = gst_caps_new_simple (GST_KATE_MEDIA_TYPE, NULL);
+  if (!gst_type_find_register (plugin, GST_KATE_MEDIA_TYPE, GST_RANK_PRIMARY,
           gst_kate_type_find, NULL, caps, NULL, NULL)) {
     GST_WARNING ("kate: failed to register typefind");
     gst_caps_unref (caps);

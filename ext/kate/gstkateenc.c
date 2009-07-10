@@ -133,7 +133,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_KATE_MIME_TYPE)
+    GST_STATIC_CAPS (GST_KATE_MEDIA_TYPE)
     );
 
 static void gst_kate_enc_set_property (GObject * object, guint prop_id,

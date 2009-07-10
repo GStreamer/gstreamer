@@ -48,7 +48,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_KATE_MIME_TYPE "application/x-kate"
+#define GST_KATE_MEDIA_TYPE "subtitle/x-kate"
 
 G_END_DECLS
 
