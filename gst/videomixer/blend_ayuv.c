@@ -264,9 +264,3 @@ gst_videomixer_fill_ayuv_color (guint8 * dest, gint width, gint height,
     }
   }
 }
-
-size_t
-gst_videomixer_calculate_frame_size_ayuv (gint width, gint height)
-{
-  return GST_ROUND_UP_4 (width) * height * 4;
-}

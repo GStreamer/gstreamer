@@ -334,10 +334,3 @@ gst_videomixer_fill_i420_color (guint8 * dest, gint width, gint height,
   memset (dest + VIDEO_V_OFFSET (width, height), colV, size);
 
 }
-
-size_t
-gst_videomixer_calculate_frame_size_i420 (gint width, gint height)
-{
-  return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) +
-      2 * (GST_ROUND_UP_8 (width) / 2) * (GST_ROUND_UP_2 (height) / 2);
-}

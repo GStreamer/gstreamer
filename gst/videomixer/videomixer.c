@@ -103,7 +103,6 @@ void gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
 void gst_videomixer_fill_ayuv_checker (guint8 * dest, gint width, gint height);
 void gst_videomixer_fill_ayuv_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV);
-size_t gst_videomixer_calculate_frame_size_ayuv (gint width, gint height);
 /*BGRA/ARGB function definitions see file: blend_bgra*/
 void gst_videomixer_blend_bgra_bgra (guint8 * src, gint xpos, gint ypos,
     gint src_width, gint src_height, gdouble src_alpha,
@@ -117,7 +116,6 @@ void gst_videomixer_blend_argb_argb (guint8 * src, gint xpos, gint ypos,
 void gst_videomixer_fill_argb_checker (guint8 * dest, gint width, gint height);
 void gst_videomixer_fill_argb_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV);
-size_t gst_videomixer_calculate_frame_size_bgra (gint width, gint height);
 /*I420 function definitions see file: blend_i420.c*/
 void gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
     gint src_width, gint src_height, gdouble src_alpha,
@@ -125,7 +123,6 @@ void gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
 void gst_videomixer_fill_i420_checker (guint8 * dest, gint width, gint height);
 void gst_videomixer_fill_i420_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV);
-size_t gst_videomixer_calculate_frame_size_i420 (gint width, gint height);
 
 #define DEFAULT_PAD_ZORDER 0
 #define DEFAULT_PAD_XPOS   0
@@ -904,7 +901,6 @@ static gboolean
 gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVideoMixer *mixer = GST_VIDEO_MIXER (gst_pad_get_parent_element (pad));
-  GstVideoFormat fmt;
   gboolean ret = FALSE;
 
   GST_INFO_OBJECT (mixer, "set src caps: %" GST_PTR_FORMAT, caps);
@@ -912,38 +908,33 @@ gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
   mixer->blend = NULL;
   mixer->fill_checker = NULL;
   mixer->fill_color = NULL;
-  mixer->calculate_frame_size = NULL;
 
-  if (!gst_video_format_parse_caps (caps, &fmt, NULL, NULL))
+  if (!gst_video_format_parse_caps (caps, &mixer->fmt, NULL, NULL))
     goto done;
 
-  switch (fmt) {
+  switch (mixer->fmt) {
     case GST_VIDEO_FORMAT_AYUV:
       mixer->blend = gst_videomixer_blend_ayuv_ayuv;
       mixer->fill_checker = gst_videomixer_fill_ayuv_checker;
       mixer->fill_color = gst_videomixer_fill_ayuv_color;
-      mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_ayuv;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_I420:
       mixer->blend = gst_videomixer_blend_i420_i420;
       mixer->fill_checker = gst_videomixer_fill_i420_checker;
       mixer->fill_color = gst_videomixer_fill_i420_color;
-      mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_i420;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_BGRA:
       mixer->blend = gst_videomixer_blend_bgra_bgra;
       mixer->fill_checker = gst_videomixer_fill_bgra_checker;
       mixer->fill_color = gst_videomixer_fill_bgra_color;
-      mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_bgra;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_ARGB:
       mixer->blend = gst_videomixer_blend_argb_argb;
       mixer->fill_checker = gst_videomixer_fill_argb_checker;
       mixer->fill_color = gst_videomixer_fill_argb_color;
-      mixer->calculate_frame_size = gst_videomixer_calculate_frame_size_bgra;
       ret = TRUE;
       break;
     default:
@@ -1304,14 +1295,16 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
 
     /* Calculating out buffer size from input size */
     gst_pad_set_caps (mix->srcpad, newcaps);
-    outsize = mix->calculate_frame_size (mix->out_width, mix->out_height);
+    outsize =
+        gst_video_format_get_size (mix->fmt, mix->out_width, mix->out_height);
     ret =
         gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
         outsize, newcaps, &outbuf);
     gst_caps_unref (newcaps);
   } else {                      /* Otherwise we just allocate a buffer from current caps */
     /* Calculating out buffer size from input size */
-    outsize = mix->calculate_frame_size (mix->out_width, mix->out_height);
+    outsize =
+        gst_video_format_get_size (mix->fmt, mix->out_width, mix->out_height);
     ret =
         gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
         outsize, GST_PAD_CAPS (mix->srcpad), &outbuf);

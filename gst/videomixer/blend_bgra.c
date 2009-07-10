@@ -131,10 +131,4 @@ gst_videomixer_fill_##name##_color (guint8 * dest, gint width, gint height, \
 CREATE_FUNCTIONS (argb, 0, 1, 2, 3);
 CREATE_FUNCTIONS (bgra, 3, 2, 1, 0);
 
-size_t
-gst_videomixer_calculate_frame_size_bgra (gint width, gint height)
-{
-  return GST_ROUND_UP_4 (width) * height * 4;
-}
-
 #undef BLEND_MODE

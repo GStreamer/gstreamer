@@ -21,6 +21,7 @@
 #define __GST_VIDEO_MIXER_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include "videomixerpad.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_videomixer_debug);
@@ -84,6 +85,8 @@ struct _GstVideoMixer
   /* the master pad */
   GstVideoMixerPad *master;
 
+  GstVideoFormat fmt;
+
   gint in_width, in_height;
   gint out_width, out_height;
   gboolean setcaps;
@@ -107,7 +110,6 @@ struct _GstVideoMixer
   void (*fill_checker) (guint8 * dest, gint width, gint height);
 
   void (*fill_color) (guint8 * dest, gint width, gint height, gint colY, gint colU, gint colV);
-  size_t (*calculate_frame_size) (gint width, gint height);
 };
 
 struct _GstVideoMixerClass
