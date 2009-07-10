@@ -39,6 +39,11 @@
  * gst_bus_set_flushing(bus, TRUE) after the "file-exists" message was
  * received and gst_bus_set_flushing(bus, FALSE) after the problem is
  * resolved.
+ *
+ * Similar to the "file-exist" message a "not-mounted" message is posted
+ * on the bus if the target location is not mounted yet and needs to be
+ * mounted. This message can be used by application to mount the location
+ * and retry after the location was mounted successfully.
  * 
  * <refsect2>
  * <title>Example pipelines</title>
@@ -287,6 +292,14 @@ gst_gio_sink_get_stream (GstGioBaseSink * bsink)
 
         GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
             ("Location %s already exists: %s", uri, err->message));
+      } else if (GST_GIO_ERROR_MATCHES (err, NOT_MOUNTED)) {
+        gst_element_post_message (GST_ELEMENT_CAST (sink),
+            gst_message_new_element (GST_OBJECT_CAST (sink),
+                gst_structure_new ("not-mounted", "file", G_TYPE_FILE,
+                    sink->file, "uri", G_TYPE_STRING, uri, NULL)));
+
+        GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
+            ("Location %s not mounted: %s", uri, err->message));
       } else {
         GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
             ("Could not open location %s for writing: %s", uri, err->message));
