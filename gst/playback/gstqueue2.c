@@ -1089,11 +1089,24 @@ gst_queue_close_temp_location_file (GstQueue * queue)
 }
 
 static void
+gst_queue_flush_temp_file (GstQueue * queue)
+{
+  if (queue->temp_file == NULL)
+    return;
+
+  GST_DEBUG_OBJECT (queue, "flushing temp file");
+
+  queue->temp_file = g_freopen (queue->temp_location, "wb+", queue->temp_file);
+
+  queue->writing_pos = 0;
+  queue->reading_pos = 0;
+}
+
+static void
 gst_queue_locked_flush (GstQueue * queue)
 {
   if (QUEUE_IS_USING_TEMP_FILE (queue)) {
-    gst_queue_close_temp_location_file (queue);
-    gst_queue_open_temp_location_file (queue);
+    gst_queue_flush_temp_file (queue);
   } else {
     while (!g_queue_is_empty (queue->queue)) {
       GstMiniObject *data = g_queue_pop_head (queue->queue);
