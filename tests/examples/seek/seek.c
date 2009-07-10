@@ -1168,20 +1168,6 @@ update_fill (gpointer data)
         gint percent;
 
         gst_query_parse_buffering_percent (query, &busy, &percent);
-
-        if (buffering && !busy) {
-          /* if we were buffering but not anymore, start playing */
-          if (state == GST_STATE_PLAYING && !is_live) {
-            fprintf (stderr, "setting pipeline to PLAYING ...\n");
-            gst_element_set_state (pipeline, GST_STATE_PLAYING);
-            gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
-            gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id,
-                "Playing");
-          }
-          state = GST_STATE_PAUSED;
-          buffering = FALSE;
-        }
-
         gst_query_parse_buffering_range (query, &format, &start, &stop, NULL);
 
         GST_DEBUG ("start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT,
@@ -2352,6 +2338,8 @@ do_download_buffering (gint percent)
     if (state == GST_STATE_PLAYING && !is_live) {
       fprintf (stderr, "Downloading, setting pipeline to PAUSED ...\n");
       gst_element_set_state (pipeline, GST_STATE_PAUSED);
+      /* user has to manually start the playback */
+      state = GST_STATE_PAUSED;
     }
   }
 }
