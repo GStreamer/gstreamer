@@ -82,7 +82,6 @@ GST_DEBUG_CATEGORY (gst_videomixer_debug);
 
 static GType gst_videomixer_get_type (void);
 
-
 static void gst_videomixer_pad_class_init (GstVideoMixerPadClass * klass);
 static void gst_videomixer_pad_init (GstVideoMixerPad * mixerpad);
 
@@ -167,64 +166,39 @@ void gst_videomixer_fill_i420_color (guint8 * dest, gint width, gint height,
 #define DEFAULT_PAD_ALPHA  1.0
 enum
 {
-  ARG_PAD_0,
-  ARG_PAD_ZORDER,
-  ARG_PAD_XPOS,
-  ARG_PAD_YPOS,
-  ARG_PAD_ALPHA
+  PROP_PAD_0,
+  PROP_PAD_ZORDER,
+  PROP_PAD_XPOS,
+  PROP_PAD_YPOS,
+  PROP_PAD_ALPHA
 };
 
-static GType
-gst_videomixer_pad_get_type (void)
-{
-  static GType videomixer_pad_type = 0;
-
-  if (!videomixer_pad_type) {
-    static const GTypeInfo videomixer_pad_info = {
-      sizeof (GstVideoMixerPadClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_videomixer_pad_class_init,
-      NULL,
-      NULL,
-      sizeof (GstVideoMixerPad),
-      0,
-      (GInstanceInitFunc) gst_videomixer_pad_init,
-    };
-
-    videomixer_pad_type = g_type_register_static (GST_TYPE_PAD,
-        "GstVideoMixerPad", &videomixer_pad_info, 0);
-  }
-  return videomixer_pad_type;
-}
+G_DEFINE_TYPE (GstVideoMixerPad, gst_videomixer_pad, GST_TYPE_PAD);
 
 static void
 gst_videomixer_pad_class_init (GstVideoMixerPadClass * klass)
 {
-  GObjectClass *gobject_class;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class = (GObjectClass *) klass;
+  gobject_class->set_property = gst_videomixer_pad_set_property;
+  gobject_class->get_property = gst_videomixer_pad_get_property;
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_videomixer_pad_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_videomixer_pad_get_property);
-
-  g_object_class_install_property (gobject_class, ARG_PAD_ZORDER,
+  g_object_class_install_property (gobject_class, PROP_PAD_ZORDER,
       g_param_spec_uint ("zorder", "Z-Order", "Z Order of the picture",
           0, 10000, DEFAULT_PAD_ZORDER,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (gobject_class, ARG_PAD_XPOS,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAD_XPOS,
       g_param_spec_int ("xpos", "X Position", "X Position of the picture",
           G_MININT, G_MAXINT, DEFAULT_PAD_XPOS,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (gobject_class, ARG_PAD_YPOS,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAD_YPOS,
       g_param_spec_int ("ypos", "Y Position", "Y Position of the picture",
           G_MININT, G_MAXINT, DEFAULT_PAD_YPOS,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (gobject_class, ARG_PAD_ALPHA,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAD_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
-          DEFAULT_PAD_ALPHA, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          DEFAULT_PAD_ALPHA,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -234,16 +208,16 @@ gst_videomixer_pad_get_property (GObject * object, guint prop_id,
   GstVideoMixerPad *pad = GST_VIDEO_MIXER_PAD (object);
 
   switch (prop_id) {
-    case ARG_PAD_ZORDER:
+    case PROP_PAD_ZORDER:
       g_value_set_uint (value, pad->zorder);
       break;
-    case ARG_PAD_XPOS:
+    case PROP_PAD_XPOS:
       g_value_set_int (value, pad->xpos);
       break;
-    case ARG_PAD_YPOS:
+    case PROP_PAD_YPOS:
       g_value_set_int (value, pad->ypos);
       break;
-    case ARG_PAD_ALPHA:
+    case PROP_PAD_ALPHA:
       g_value_set_double (value, pad->alpha);
       break;
     default:
@@ -256,26 +230,23 @@ static void
 gst_videomixer_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideoMixerPad *pad;
-  GstVideoMixer *mix;
-
-  pad = GST_VIDEO_MIXER_PAD (object);
-  mix = GST_VIDEO_MIXER (gst_pad_get_parent (GST_PAD (pad)));
+  GstVideoMixerPad *pad = GST_VIDEO_MIXER_PAD (object);
+  GstVideoMixer *mix = GST_VIDEO_MIXER (gst_pad_get_parent (GST_PAD (pad)));
 
   switch (prop_id) {
-    case ARG_PAD_ZORDER:
+    case PROP_PAD_ZORDER:
       GST_VIDEO_MIXER_STATE_LOCK (mix);
       pad->zorder = g_value_get_uint (value);
       gst_videomixer_sort_pads (mix);
       GST_VIDEO_MIXER_STATE_UNLOCK (mix);
       break;
-    case ARG_PAD_XPOS:
+    case PROP_PAD_XPOS:
       pad->xpos = g_value_get_int (value);
       break;
-    case ARG_PAD_YPOS:
+    case PROP_PAD_YPOS:
       pad->ypos = g_value_get_int (value);
       break;
-    case ARG_PAD_ALPHA:
+    case PROP_PAD_ALPHA:
       pad->alpha = g_value_get_double (value);
       break;
     default:
@@ -440,14 +411,6 @@ gst_videomixer_pad_init (GstVideoMixerPad * mixerpad)
   mixerpad->alpha = DEFAULT_PAD_ALPHA;
 }
 
-
-/* elementfactory information */
-static const GstElementDetails gst_videomixer_details =
-GST_ELEMENT_DETAILS ("Video mixer",
-    "Filter/Editor/Video",
-    "Mix multiple video streams",
-    "Wim Taymans <wim@fluendo.com>");
-
 /* VideoMixer signals and args */
 enum
 {
@@ -458,8 +421,8 @@ enum
 #define DEFAULT_BACKGROUND VIDEO_MIXER_BACKGROUND_CHECKER
 enum
 {
-  ARG_0,
-  ARG_BACKGROUND
+  PROP_0,
+  PROP_BACKGROUND
 };
 
 #define GST_TYPE_VIDEO_MIXER_BACKGROUND (gst_video_mixer_background_get_type())
@@ -534,11 +497,12 @@ GST_BOILERPLATE_FULL (GstVideoMixer, gst_videomixer, GstElement,
 static void
 _do_init (GType object_type)
 {
-  const GInterfaceInfo child_proxy_info = {
+  static const GInterfaceInfo child_proxy_info = {
     (GInterfaceInitFunc) gst_videomixer_child_proxy_init,
     NULL,
     NULL
   };
+
   g_type_add_interface_static (object_type, GST_TYPE_CHILD_PROXY,
       &child_proxy_info);
   GST_INFO ("GstChildProxy interface registered");
@@ -591,29 +555,26 @@ gst_videomixer_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &gst_videomixer_details);
+  gst_element_class_set_details_simple (element_class, "Video mixer",
+      "Filter/Editor/Video",
+      "Mix multiple video streams", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void
 gst_videomixer_class_init (GstVideoMixerClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_videomixer_finalize);
 
   gobject_class->get_property = gst_videomixer_get_property;
   gobject_class->set_property = gst_videomixer_set_property;
 
-  g_object_class_install_property (gobject_class, ARG_BACKGROUND,
+  g_object_class_install_property (gobject_class, PROP_BACKGROUND,
       g_param_spec_enum ("background", "Background", "Background type",
           GST_TYPE_VIDEO_MIXER_BACKGROUND,
-          DEFAULT_BACKGROUND, G_PARAM_READWRITE));
+          DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_videomixer_request_new_pad);
@@ -624,6 +585,8 @@ gst_videomixer_class_init (GstVideoMixerClass * klass)
 
   /* Register the pad class */
   (void) (GST_TYPE_VIDEO_MIXER_PAD);
+  /* Register the background enum */
+  (void) (GST_TYPE_VIDEO_MIXER_BACKGROUND);
 }
 
 static void
@@ -908,12 +871,10 @@ gst_videomixer_query (GstPad * pad, GstQuery * query)
 static GstCaps *
 gst_videomixer_getcaps (GstPad * pad)
 {
-  GstVideoMixer *mix;
+  GstVideoMixer *mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
   GstCaps *caps;
   GstStructure *structure;
   int numCaps;
-
-  mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
 
   if (mix->master) {
     caps =
@@ -1481,10 +1442,8 @@ forward_event (GstVideoMixer * mix, GstEvent * event)
 static gboolean
 gst_videomixer_src_event (GstPad * pad, GstEvent * event)
 {
-  GstVideoMixer *mix;
+  GstVideoMixer *mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
   gboolean result;
-
-  mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:
@@ -1494,9 +1453,7 @@ gst_videomixer_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:
     {
       GstSeekFlags flags;
-
       GstSeekType curtype;
-
       gint64 cur;
 
       /* parse the seek parameters */
@@ -1543,10 +1500,8 @@ gst_videomixer_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_videomixer_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstVideoMixer *videomixer;
+  GstVideoMixer *videomixer = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
   gboolean ret;
-
-  videomixer = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (pad, "Got %s event on pad %s:%s",
       GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (pad));
@@ -1583,7 +1538,7 @@ gst_videomixer_get_property (GObject * object,
   GstVideoMixer *mix = GST_VIDEO_MIXER (object);
 
   switch (prop_id) {
-    case ARG_BACKGROUND:
+    case PROP_BACKGROUND:
       g_value_set_enum (value, mix->background);
       break;
     default:
@@ -1599,7 +1554,7 @@ gst_videomixer_set_property (GObject * object,
   GstVideoMixer *mix = GST_VIDEO_MIXER (object);
 
   switch (prop_id) {
-    case ARG_BACKGROUND:
+    case PROP_BACKGROUND:
       mix->background = g_value_get_enum (value);
       break;
     default:
