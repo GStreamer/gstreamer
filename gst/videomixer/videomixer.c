@@ -896,8 +896,8 @@ gst_videomixer_query (GstPad * pad, GstQuery * query)
       break;
     default:
       /* FIXME, needs a custom query handler because we have multiple
-       * sinkpads */
-      res = gst_pad_query_default (pad, query);
+       * sinkpads, send to the master pad until then */
+      res = gst_pad_query (GST_PAD_CAST (mix->master), query);
       break;
   }
 
