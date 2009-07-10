@@ -89,6 +89,9 @@ struct _GstAdder {
   gdouble         segment_rate;
   /* src event handling */
   gboolean        flush_stop_pending;
+  
+  /* target caps */
+  GstCaps *filter_caps;
 };
 
 struct _GstAdderClass {

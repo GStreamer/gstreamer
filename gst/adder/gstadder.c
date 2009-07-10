@@ -63,6 +63,12 @@
 #define MIN_UINT_16 ((guint16)(0x0000))
 #define MIN_UINT_8  ((guint8) (0x00))
 
+enum
+{
+  PROP_0,
+  PROP_FILTER_CAPS
+};
+
 #define GST_CAT_DEFAULT gst_adder_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -112,7 +118,11 @@ GST_STATIC_PAD_TEMPLATE ("sink%d",
 
 static void gst_adder_class_init (GstAdderClass * klass);
 static void gst_adder_init (GstAdder * adder);
-static void gst_adder_finalize (GObject * object);
+static void gst_adder_dispose (GObject * object);
+static void gst_adder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_adder_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_adder_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_adder_query (GstPad * pad, GstQuery * query);
@@ -213,7 +223,9 @@ MAKE_FUNC_NC (add_float64, gdouble)
 MAKE_FUNC_NC (add_float32, gfloat)
 /* *INDENT-ON* */
 
-/* we can only accept caps that we and downstream can handle. */
+/* we can only accept caps that we and downstream can handle.
+ * if we have filtercaps set, use those to constrain the target caps.
+ */
 static GstCaps *
 gst_adder_sink_getcaps (GstPad * pad)
 {
@@ -225,10 +237,17 @@ gst_adder_sink_getcaps (GstPad * pad)
   GST_OBJECT_LOCK (adder);
   /* get the downstream possible caps */
   peercaps = gst_pad_peer_get_caps (adder->srcpad);
+
   /* get the allowed caps on this sinkpad, we use the fixed caps function so
    * that it does not call recursively in this function. */
   sinkcaps = gst_pad_get_fixed_caps_func (pad);
   if (peercaps) {
+    /* restrict with filter-caps if any */
+    if (adder->filter_caps) {
+      result = gst_caps_intersect (peercaps, adder->filter_caps);
+      gst_caps_unref (peercaps);
+      peercaps = result;
+    }
     /* if the peer has caps, intersect */
     GST_DEBUG_OBJECT (adder, "intersecting peer and template caps");
     result = gst_caps_intersect (peercaps, sinkcaps);
@@ -250,7 +269,7 @@ gst_adder_sink_getcaps (GstPad * pad)
 
 /* the first caps we receive on any of the sinkpads will define the caps for all
  * the other sinkpads because we can only mix streams with the same caps.
- * */
+ */
 static gboolean
 gst_adder_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -781,7 +800,9 @@ gst_adder_class_init (GstAdderClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_adder_finalize);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_adder_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_adder_get_property);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_adder_dispose);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_adder_src_template));
@@ -793,6 +814,13 @@ gst_adder_class_init (GstAdderClass * klass)
       "Thomas Vander Stichele <thomas at apestaart dot org>");
 
   parent_class = g_type_class_peek_parent (klass);
+
+  g_object_class_install_property (gobject_class, PROP_FILTER_CAPS,
+      g_param_spec_boxed ("caps", "Filter caps",
+          "Restrict the possible allowed capabilities (NULL means ANY). "
+          "Setting this property takes a reference to the supplied GstCaps "
+          "object.", GST_TYPE_CAPS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_adder_request_new_pad);
@@ -823,6 +851,8 @@ gst_adder_init (GstAdder * adder)
   adder->padcount = 0;
   adder->func = NULL;
 
+  adder->filter_caps = gst_caps_new_any ();
+
   /* keep track of the sinkpads requested */
   adder->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (adder->collect,
@@ -830,15 +860,72 @@ gst_adder_init (GstAdder * adder)
 }
 
 static void
-gst_adder_finalize (GObject * object)
+gst_adder_dispose (GObject * object)
 {
   GstAdder *adder = GST_ADDER (object);
 
-  gst_object_unref (adder->collect);
-  adder->collect = NULL;
+  if (adder->collect) {
+    gst_object_unref (adder->collect);
+    adder->collect = NULL;
+  }
+  gst_caps_replace (&adder->filter_caps, NULL);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
+
+static void
+gst_adder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAdder *adder = GST_ADDER (object);
+
+  switch (prop_id) {
+    case PROP_FILTER_CAPS:{
+      GstCaps *new_caps;
+      GstCaps *old_caps;
+      const GstCaps *new_caps_val = gst_value_get_caps (value);
+
+      if (new_caps_val == NULL) {
+        new_caps = gst_caps_new_any ();
+      } else {
+        new_caps = (GstCaps *) new_caps_val;
+        gst_caps_ref (new_caps);
+      }
+
+      GST_OBJECT_LOCK (adder);
+      old_caps = adder->filter_caps;
+      adder->filter_caps = new_caps;
+      GST_OBJECT_UNLOCK (adder);
+
+      gst_caps_unref (old_caps);
+
+      GST_DEBUG_OBJECT (adder, "set new caps %" GST_PTR_FORMAT, new_caps);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_adder_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstAdder *adder = GST_ADDER (object);
+
+  switch (prop_id) {
+    case PROP_FILTER_CAPS:
+      GST_OBJECT_LOCK (adder);
+      gst_value_set_caps (value, adder->filter_caps);
+      GST_OBJECT_UNLOCK (adder);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 
 static GstPad *
 gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
