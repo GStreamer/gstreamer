@@ -2821,8 +2821,22 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
+      GstSourceGroup *curr_group;
+
+      curr_group = playbin->curr_group;
+      if (curr_group && curr_group->valid) {
+        /* unlink our pads with the sink */
+        deactivate_group (playbin, curr_group);
+      }
+
+      /* Swap current and next group back */
+      playbin->curr_group = playbin->next_group;
+      playbin->next_group = curr_group;
+    }
     return ret;
+  }
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
