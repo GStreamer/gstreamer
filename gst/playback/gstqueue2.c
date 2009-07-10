@@ -41,11 +41,17 @@
  * The default queue size limits are 100 buffers, 2MB of data, or
  * two seconds worth of data, whichever is reached first.
  *
- * If you set temp-location, the element will buffer data on the file
- * specified by it. By using this, it will buffer the entire 
- * stream data on the file independently of the queue size limits, they
- * will only be used for buffering statistics.
+ * If you set temp-tmpl to a value such as /tmp/gstreamer-XXXXXX, the element
+ * will allocate a random free filename and buffer data in the file.
+ * By using this, it will buffer the entire stream data on the file independently
+ * of the queue size limits, they will only be used for buffering statistics.
  *
+ * Since 0.10.24, setting the temp-location property with a filename is deprecated
+ * because it's impossible to securely open a temporary file in this way. The
+ * property will still be used to notify the application of the allocated
+ * filename, though.
+ *
+ * Last reviewed on 2009-07-10 (0.10.24)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -63,6 +69,8 @@
 #define lseek _lseeki64
 #undef off_t
 #define off_t guint64
+#else
+#include <unistd.h>
 #endif
 
 static const GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
@@ -101,7 +109,7 @@ enum
 
 /* other defines */
 #define DEFAULT_BUFFER_SIZE 4096
-#define QUEUE_IS_USING_TEMP_FILE(queue) (queue->temp_location != NULL)
+#define QUEUE_IS_USING_TEMP_FILE(queue) ((queue)->temp_location_set || (queue)->temp_template != NULL)
 
 enum
 {
@@ -116,6 +124,7 @@ enum
   PROP_USE_RATE_ESTIMATE,
   PROP_LOW_PERCENT,
   PROP_HIGH_PERCENT,
+  PROP_TEMP_TEMPLATE,
   PROP_TEMP_LOCATION
 };
 
@@ -204,6 +213,8 @@ struct _GstQueue
   GCond *item_del;              /* signals space now available for writing */
 
   /* temp location stuff */
+  gchar *temp_template;
+  gboolean temp_location_set;
   gchar *temp_location;
   FILE *temp_file;
   guint64 writing_pos;
@@ -415,9 +426,16 @@ gst_queue_class_init (GstQueueClass * klass)
           "High threshold for buffering to finish", 0, 100,
           DEFAULT_HIGH_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_TEMP_TEMPLATE,
+      g_param_spec_string ("temp-template", "Temporary File Template",
+          "File template to store temporary files in, should contain directory "
+          "and XXXXXX. (NULL == disabled)",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_TEMP_LOCATION,
       g_param_spec_string ("temp-location", "Temporary File Location",
-          "Location of a temporary file to store data in",
+          "Location to store temporary files in (Deprecated: Only read this "
+          "property, use temp-tmpl to configure the name template)",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -495,8 +513,9 @@ gst_queue_init (GstQueue * queue, GstQueueClass * g_class)
   queue->queue = g_queue_new ();
 
   /* tempfile related */
+  queue->temp_template = NULL;
   queue->temp_location = NULL;
-  queue->temp_file = NULL;
+  queue->temp_location_set = FALSE;
 
   GST_DEBUG_OBJECT (queue,
       "initialized queue's not_empty & not_full conditions");
@@ -524,8 +543,8 @@ gst_queue_finalize (GObject * object)
   g_timer_destroy (queue->out_timer);
 
   /* temp_file path cleanup  */
-  if (queue->temp_location != NULL)
-    g_free (queue->temp_location);
+  g_free (queue->temp_template);
+  g_free (queue->temp_location);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -981,17 +1000,45 @@ gst_queue_read_item_from_file (GstQueue * queue)
 static gboolean
 gst_queue_open_temp_location_file (GstQueue * queue)
 {
-  /* nothing to do */
-  if (queue->temp_location == NULL)
-    goto no_filename;
+  gint fd = -1;
+  gchar *name = NULL;
 
-  GST_DEBUG_OBJECT (queue, "opening temp file %s", queue->temp_location);
+  GST_DEBUG_OBJECT (queue, "opening temp file %s", queue->temp_template);
 
-  /* open the file for update/writing */
-  queue->temp_file = g_fopen (queue->temp_location, "wb+");
-  /* error creating file */
-  if (queue->temp_file == NULL)
-    goto open_failed;
+  /* we have two cases:
+   * - temp_location was set to something !NULL (Deprecated). in this case we
+   *   open the specified filename.
+   * - temp_template was set, allocate a filename and open that filename
+   */
+  if (!queue->temp_location_set) {
+    /* nothing to do */
+    if (queue->temp_template == NULL)
+      goto no_directory;
+
+    /* make copy of the template, we don't want to change this */
+    name = g_strdup (queue->temp_template);
+    fd = g_mkstemp (name);
+    if (fd == -1)
+      goto mkstemp_failed;
+
+    /* open the file for update/writing */
+    queue->temp_file = fdopen (fd, "wb+");
+    /* error creating file */
+    if (queue->temp_file == NULL)
+      goto open_failed;
+
+    g_free (queue->temp_location);
+    queue->temp_location = name;
+
+    g_object_notify (G_OBJECT (queue), "temp-location");
+  } else {
+    /* open the file for update/writing, this is deprecated but we still need to
+     * support it for API/ABI compatibility */
+    queue->temp_file = g_fopen (queue->temp_location, "wb+");
+    /* error creating file */
+    if (queue->temp_file == NULL)
+      goto open_failed;
+  }
 
   queue->writing_pos = 0;
   queue->reading_pos = 0;
@@ -999,17 +1046,27 @@ gst_queue_open_temp_location_file (GstQueue * queue)
   return TRUE;
 
   /* ERRORS */
-no_filename:
+no_directory:
   {
     GST_ELEMENT_ERROR (queue, RESOURCE, NOT_FOUND,
-        (_("No file name specified.")), (NULL));
+        (_("No Temp directory specified.")), (NULL));
+    return FALSE;
+  }
+mkstemp_failed:
+  {
+    GST_ELEMENT_ERROR (queue, RESOURCE, OPEN_READ,
+        (_("Could not create temp file \"%s\"."), queue->temp_template),
+        GST_ERROR_SYSTEM);
+    g_free (name);
     return FALSE;
   }
 open_failed:
   {
     GST_ELEMENT_ERROR (queue, RESOURCE, OPEN_READ,
-        (_("Could not open file \"%s\" for reading."), queue->temp_location),
-        GST_ERROR_SYSTEM);
+        (_("Could not open file \"%s\" for reading."), name), GST_ERROR_SYSTEM);
+    g_free (name);
+    if (fd != -1)
+      close (fd);
     return FALSE;
   }
 }
@@ -1942,7 +1999,7 @@ gst_queue_change_state (GstElement * element, GstStateChange transition)
   g_cond_signal (queue->item_add);
 
 static void
-gst_queue_set_temp_location (GstQueue * queue, const gchar * location)
+gst_queue_set_temp_template (GstQueue * queue, const gchar * template)
 {
   GstState state;
 
@@ -1954,15 +2011,15 @@ gst_queue_set_temp_location (GstQueue * queue, const gchar * location)
   GST_OBJECT_UNLOCK (queue);
 
   /* set new location */
-  g_free (queue->temp_location);
-  queue->temp_location = g_strdup (location);
+  g_free (queue->temp_template);
+  queue->temp_template = g_strdup (template);
 
   return;
 
 /* ERROR */
 wrong_state:
   {
-    GST_WARNING_OBJECT (queue, "setting temp-location in wrong state");
+    GST_WARNING_OBJECT (queue, "setting temp-template property in wrong state");
     GST_OBJECT_UNLOCK (queue);
   }
 }
@@ -2005,8 +2062,15 @@ gst_queue_set_property (GObject * object,
     case PROP_HIGH_PERCENT:
       queue->high_percent = g_value_get_int (value);
       break;
+    case PROP_TEMP_TEMPLATE:
+      gst_queue_set_temp_template (queue, g_value_get_string (value));
+      break;
     case PROP_TEMP_LOCATION:
-      gst_queue_set_temp_location (queue, g_value_get_string (value));
+      g_free (queue->temp_location);
+      queue->temp_location = g_value_dup_string (value);
+      /* you can set the property back to NULL to make it use the temp-tmpl
+       * property. */
+      queue->temp_location_set = queue->temp_location != NULL;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2054,6 +2118,9 @@ gst_queue_get_property (GObject * object,
       break;
     case PROP_HIGH_PERCENT:
       g_value_set_int (value, queue->high_percent);
+      break;
+    case PROP_TEMP_TEMPLATE:
+      g_value_set_string (value, queue->temp_template);
       break;
     case PROP_TEMP_LOCATION:
       g_value_set_string (value, queue->temp_location);
