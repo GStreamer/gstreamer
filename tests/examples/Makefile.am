@@ -4,6 +4,10 @@ else
 FT2_SUBDIRS =
 endif
 
-SUBDIRS = app $(FT2_SUBDIRS) volume dynamic
+if USE_GIO
+GIO_SUBDIRS = gio
+endif
 
-DIST_SUBDIRS = app seek volume dynamic snapshot
+SUBDIRS = app $(FT2_SUBDIRS) $(GIO_SUBDIRS) volume dynamic
+
+DIST_SUBDIRS = app seek volume dynamic snapshot gio
