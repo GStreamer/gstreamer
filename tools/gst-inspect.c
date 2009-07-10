@@ -1123,7 +1123,7 @@ print_plugin_features (GstPlugin * plugin)
   GList *features;
   gint num_features = 0;
   gint num_elements = 0;
-  gint num_types = 0;
+  gint num_typefinders = 0;
   gint num_indexes = 0;
   gint num_other = 0;
 
@@ -1167,7 +1167,7 @@ print_plugin_features (GstPlugin * plugin)
         g_print ("%s: %s: no extensions\n", plugin->desc.name,
             gst_plugin_feature_get_name (feature));
 
-      num_types++;
+      num_typefinders++;
     } else {
       n_print ("  %s (%s)\n", gst_object_get_name (GST_OBJECT (feature)),
           g_type_name (G_OBJECT_TYPE (feature)));
@@ -1180,8 +1180,8 @@ print_plugin_features (GstPlugin * plugin)
   n_print ("  %d features:\n", num_features);
   if (num_elements > 0)
     n_print ("  +-- %d elements\n", num_elements);
-  if (num_types > 0)
-    n_print ("  +-- %d types\n", num_types);
+  if (num_typefinders > 0)
+    n_print ("  +-- %d typefinders\n", num_typefinders);
   if (num_indexes > 0)
     n_print ("  +-- %d indexes\n", num_indexes);
   if (num_other > 0)
