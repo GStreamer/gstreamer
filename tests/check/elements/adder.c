@@ -44,7 +44,16 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
     case GST_MESSAGE_EOS:
       g_main_loop_quit (main_loop);
       break;
-    case GST_MESSAGE_WARNING:
+    case GST_MESSAGE_WARNING:{
+      GError *gerror;
+      gchar *debug;
+
+      gst_message_parse_warning (message, &gerror, &debug);
+      gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+      g_error_free (gerror);
+      g_free (debug);
+      break;
+    }
     case GST_MESSAGE_ERROR:{
       GError *gerror;
       gchar *debug;
@@ -54,6 +63,7 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
       g_error_free (gerror);
       g_free (debug);
       g_main_loop_quit (main_loop);
+      break;
     }
     default:
       break;
@@ -192,11 +202,9 @@ test_play_twice_message_received (GstBus * bus, GstMessage * message,
             GST_CLOCK_TIME_NONE);
         fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
 
-        res = gst_element_send_event (GST_ELEMENT (bin), play_seek_event);
+        res = gst_element_send_event (GST_ELEMENT (bin),
+            gst_event_ref (play_seek_event));
         fail_unless (res == TRUE, NULL);
-
-        /* event is now gone */
-        play_seek_event = NULL;
 
         res = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
         fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
@@ -283,11 +291,109 @@ GST_START_TEST (test_play_twice)
 
   /* cleanup */
   g_main_loop_unref (main_loop);
+  gst_event_ref (play_seek_event);
   gst_object_unref (G_OBJECT (bus));
   gst_object_unref (G_OBJECT (bin));
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_play_twice_then_add_and_play_again)
+{
+  GstElement *bin, *src1, *src2, *src3, *adder, *sink;
+  GstBus *bus;
+  gboolean res;
+  gint i;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  src1 = gst_element_factory_make ("audiotestsrc", "src1");
+  g_object_set (src1, "wave", 4, NULL); /* silence */
+  src2 = gst_element_factory_make ("audiotestsrc", "src2");
+  g_object_set (src2, "wave", 4, NULL); /* silence */
+  adder = gst_element_factory_make ("adder", "adder");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (bin), src1, src2, adder, sink, NULL);
+
+  res = gst_element_link (src1, adder);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (src2, adder);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (adder, sink);
+  fail_unless (res == TRUE, NULL);
+
+  play_seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_FLUSH,
+      GST_SEEK_TYPE_SET, (GstClockTime) 0,
+      GST_SEEK_TYPE_SET, (GstClockTime) 2 * GST_SECOND);
+
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (bus, "message::segment-done",
+      (GCallback) test_play_twice_message_received, bin);
+  g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::warning", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::eos", (GCallback) message_received, bin);
+
+  /* run it twice */
+  for (i = 0; i < 2; i++) {
+    play_count = 0;
+
+    GST_INFO ("starting test-loop %d", i);
+
+    /* prepare playing */
+    res = gst_element_set_state (bin, GST_STATE_PAUSED);
+    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+    /* wait for completion */
+    res =
+        gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+        GST_CLOCK_TIME_NONE);
+    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+    res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
+    fail_unless (res == TRUE, NULL);
+
+    GST_INFO ("seeked");
+
+    /* run pipeline */
+    res = gst_element_set_state (bin, GST_STATE_PLAYING);
+    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+    g_main_loop_run (main_loop);
+
+    res = gst_element_set_state (bin, GST_STATE_READY);
+    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+    fail_unless (play_count == 2, NULL);
+
+    /* plug another source */
+    if (i == 0) {
+      src3 = gst_element_factory_make ("audiotestsrc", "src3");
+      g_object_set (src3, "wave", 4, NULL);     /* silence */
+      gst_bin_add (GST_BIN (bin), src3);
+
+      res = gst_element_link (src3, adder);
+      fail_unless (res == TRUE, NULL);
+    }
+  }
+
+  res = gst_element_set_state (bin, GST_STATE_NULL);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* cleanup */
+  g_main_loop_unref (main_loop);
+  gst_event_ref (play_seek_event);
+  gst_object_unref (G_OBJECT (bus));
+  gst_object_unref (G_OBJECT (bin));
+}
+
+GST_END_TEST;
+
 
 static void
 test_live_seeking_eos_message_received (GstBus * bus, GstMessage * message,
@@ -322,14 +428,17 @@ GST_START_TEST (test_live_seeking)
   bus = gst_element_get_bus (bin);
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
-  /* normal audiosources behave differently */
+  /* normal audiosources behave differently than audiotestsrc */
 #if 0
   src1 = gst_element_factory_make ("audiotestsrc", "src1");
   g_object_set (src1, "wave", 4, "is-live", TRUE, NULL);        /* silence */
 #else
   src1 = gst_element_factory_make ("alsasrc", "src1");
+  if (!src1) {
+    GST_INFO ("no audiosrc, skipping");
+  }
   /* live sources ignore seeks, force eos after 2 sec (4 buffers half second
-   * each) */
+   * each) - don't use autoaudiosrc, as then we can't set anything here */
   g_object_set (src1, "num-buffers", 4, "blocksize", 44100, NULL);
 #endif
   ac1 = gst_element_factory_make ("audioconvert", "ac1");
@@ -362,10 +471,10 @@ GST_START_TEST (test_live_seeking)
   g_signal_connect (bus, "message::eos",
       (GCallback) test_live_seeking_eos_message_received, bin);
 
-  GST_INFO ("starting test");
-
   /* run it twice */
   for (i = 0; i < 2; i++) {
+
+    GST_INFO ("starting test-loop %d", i);
 
     /* prepare playing */
     res = gst_element_set_state (bin, GST_STATE_PAUSED);
@@ -571,6 +680,7 @@ adder_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_event);
   tcase_add_test (tc_chain, test_play_twice);
+  tcase_add_test (tc_chain, test_play_twice_then_add_and_play_again);
   tcase_add_test (tc_chain, test_live_seeking);
   tcase_add_test (tc_chain, test_add_pad);
   tcase_add_test (tc_chain, test_remove_pad);
