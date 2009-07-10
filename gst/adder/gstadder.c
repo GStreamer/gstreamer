@@ -815,9 +815,14 @@ gst_adder_class_init (GstAdderClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  /**
+   * GstAdder:caps:
+   *
+   * Since: 0.10.24
+   */
   g_object_class_install_property (gobject_class, PROP_FILTER_CAPS,
-      g_param_spec_boxed ("caps", "Filter caps",
-          "Restrict the possible allowed capabilities (NULL means ANY). "
+      g_param_spec_boxed ("caps", "Target caps",
+          "Set target format for mixing (NULL means ANY). "
           "Setting this property takes a reference to the supplied GstCaps "
           "object.", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
