@@ -1247,16 +1247,26 @@ type_found (GstElement * typefind, guint probability,
       decoder->download);
 
   if (IS_DOWNLOAD_MEDIA (media_type) && decoder->download) {
-    gchar *temp_template;
+    gchar *temp_template, *filename;
+    const gchar *tmp_dir, *prgname;
+
+    tmp_dir = g_get_tmp_dir ();
+    prgname = g_get_prgname ();
+    if (prgname == NULL)
+      prgname = "GStreamer";
+
+    filename = g_strdup_printf ("%s-XXXXXX", prgname);
 
     /* build our filename */
-    temp_template =
-        g_build_filename (g_get_tmp_dir (), g_get_prgname (), "-XXXXXX", NULL);
+    temp_template = g_build_filename (tmp_dir, filename, NULL);
 
-    GST_DEBUG_OBJECT (decoder, "enable download buffering in %s",
-        temp_template);
+    GST_DEBUG_OBJECT (decoder, "enable download buffering in %s (%s, %s, %s)",
+        temp_template, tmp_dir, prgname, filename);
+
     /* configure progressive download for selected media types */
     g_object_set (G_OBJECT (queue), "temp-template", temp_template, NULL);
+
+    g_free (filename);
     g_free (temp_template);
   }
 
