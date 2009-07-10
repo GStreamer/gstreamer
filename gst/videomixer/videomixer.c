@@ -606,6 +606,8 @@ gst_videomixer_reset (GstVideoMixer * mix)
   mix->segment_position = 0;
   mix->segment_rate = 1.0;
 
+  mix->fmt = GST_VIDEO_FORMAT_UNKNOWN;
+
   mix->last_ts = 0;
 
   /* clean up collect data */
@@ -1190,13 +1192,9 @@ gst_videomixer_blend_buffers (GstVideoMixer * mix, GstBuffer * outbuf)
       if (GST_CLOCK_TIME_IS_VALID (stream_time))
         gst_object_sync_values (G_OBJECT (pad), stream_time);
 
-      if (G_UNLIKELY (mix->blend == NULL)) {
-        GST_ERROR_OBJECT (mix, "blend function not set");
-      } else {
-        (mix->blend) (GST_BUFFER_DATA (mixcol->buffer),
-            pad->xpos, pad->ypos, pad->in_width, pad->in_height, pad->alpha,
-            GST_BUFFER_DATA (outbuf), mix->out_width, mix->out_height);
-      }
+      mix->blend (GST_BUFFER_DATA (mixcol->buffer),
+          pad->xpos, pad->ypos, pad->in_width, pad->in_height, pad->alpha,
+          GST_BUFFER_DATA (outbuf), mix->out_width, mix->out_height);
 
       if (pad == mix->master) {
         gint64 running_time;
@@ -1265,6 +1263,10 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
 
   g_return_val_if_fail (GST_IS_VIDEO_MIXER (mix), GST_FLOW_ERROR);
 
+  /* This must be set, otherwise we have no caps */
+  if (G_UNLIKELY (mix->in_width == 0))
+    return GST_FLOW_NOT_NEGOTIATED;
+
   GST_LOG ("all pads are collected");
   GST_VIDEO_MIXER_STATE_LOCK (mix);
 
@@ -1310,35 +1312,25 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
         outsize, GST_PAD_CAPS (mix->srcpad), &outbuf);
   }
 
+  /* This must be set at this point, otherwise we have no src caps */
+  g_assert (mix->blend != NULL);
+
   if (ret != GST_FLOW_OK) {
     goto error;
   }
 
   switch (mix->background) {
     case VIDEO_MIXER_BACKGROUND_CHECKER:
-      if (G_UNLIKELY (mix->fill_checker == NULL)) {
-        goto error;
-      } else {
-        mix->fill_checker (GST_BUFFER_DATA (outbuf), mix->out_width,
-            mix->out_height);
-      }
+      mix->fill_checker (GST_BUFFER_DATA (outbuf), mix->out_width,
+          mix->out_height);
       break;
     case VIDEO_MIXER_BACKGROUND_BLACK:
-      if (G_UNLIKELY (mix->fill_color == NULL)) {
-        goto error;
-      } else {
-        mix->fill_color (GST_BUFFER_DATA (outbuf), mix->out_width,
-            mix->out_height, 16, 128, 128);
-      }
+      mix->fill_color (GST_BUFFER_DATA (outbuf), mix->out_width,
+          mix->out_height, 16, 128, 128);
       break;
     case VIDEO_MIXER_BACKGROUND_WHITE:
-
-      if (G_UNLIKELY (mix->fill_color == NULL)) {
-        goto error;
-      } else {
-        mix->fill_color (GST_BUFFER_DATA (outbuf), mix->out_width,
-            mix->out_height, 240, 128, 128);
-      }
+      mix->fill_color (GST_BUFFER_DATA (outbuf), mix->out_width,
+          mix->out_height, 240, 128, 128);
       break;
   }
 
@@ -1355,6 +1347,9 @@ beach:
   /* ERRORS */
 error:
   {
+    if (outbuf)
+      gst_buffer_unref (outbuf);
+
     GST_VIDEO_MIXER_STATE_UNLOCK (mix);
     goto beach;
   }
