@@ -511,7 +511,6 @@ AG_GST_CHECK_FEATURE(GNOME_VFS, [GNOME VFS], gnomevfs, [
 ])
 
 dnl *** libgio ***
-USE_GIO=$BUILD_EXPERIMENTAL
 translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
 AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
   PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.15.2, [
