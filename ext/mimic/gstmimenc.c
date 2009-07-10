@@ -559,6 +559,7 @@ gst_mimenc_change_state (GstElement * element, GstStateChange transition)
 {
   GstMimEnc *mimenc = GST_MIMENC (element);
   GstStateChangeReturn ret;
+  gboolean paused_mode;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -605,10 +606,13 @@ gst_mimenc_change_state (GstElement * element, GstStateChange transition)
       if (mimenc->last_buffer == GST_CLOCK_TIME_NONE)
         mimenc->last_buffer = gst_clock_get_time (GST_ELEMENT_CLOCK (mimenc))
             - GST_ELEMENT_CAST (mimenc)->base_time;
+      paused_mode = mimenc->paused_mode;
       GST_OBJECT_UNLOCK (mimenc);
-      if (!gst_pad_start_task (mimenc->srcpad, paused_mode_task, mimenc)) {
-        ret = GST_STATE_CHANGE_FAILURE;
-        GST_ERROR_OBJECT (mimenc, "Can not start task");
+      if (paused_mode) {
+        if (!gst_pad_start_task (mimenc->srcpad, paused_mode_task, mimenc)) {
+          ret = GST_STATE_CHANGE_FAILURE;
+          GST_ERROR_OBJECT (mimenc, "Can not start task");
+        }
       }
       break;
     default:
