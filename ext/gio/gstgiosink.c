@@ -27,6 +27,18 @@
  * by an URI. This location can be specified using any protocol supported by
  * the GIO library or it's VFS backends. Common protocols are 'file', 'ftp',
  * or 'smb'.
+ *
+ * If the URI or #GFile already exists giosink will post a message of
+ * type %GST_MESSAGE_ELEMENT with name "file-exists" on the bus. The message
+ * also contains the #GFile and the corresponding URI.
+ * Applications can use the "file-exists" message to notify the user about
+ * the problem and to set a different target location or to remove the
+ * existing file. Note that right after the "file-exists" message a normal
+ * error message is posted on the bus which should be ignored if "file-exists"
+ * is handled by the application, for example by calling
+ * gst_bus_set_flushing(bus, TRUE) after the "file-exists" message was
+ * received and gst_bus_set_flushing(bus, FALSE) after the problem is
+ * resolved.
  * 
  * <refsect2>
  * <title>Example pipelines</title>

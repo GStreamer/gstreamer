@@ -28,6 +28,18 @@
  * the GIO library or it's VFS backends. Common protocols are 'file', 'http',
  * 'ftp', or 'smb'.
  *
+ * If an URI or #GFile is not mounted giosrc will post a message of type
+ * %GST_MESSAGE_ELEMENT with name "not-mounted" on the bus. The message
+ * also contains the #GFile and the corresponding URI.
+ * Applications can use the "not-mounted" message to mount the #GFile
+ * by calling g_file_mount_enclosing_volume() and then restart the
+ * pipeline after the mounting has succeeded. Note that right after the
+ * "not-mounted" message a normal error message is posted on the bus which
+ * should be ignored if "not-mounted" is handled by the application, for
+ * example by calling gst_bus_set_flushing(bus, TRUE) after the "not-mounted"
+ * message was received and gst_bus_set_flushing(bus, FALSE) after the
+ * mounting was successful.
+ *
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
