@@ -77,6 +77,7 @@ struct _GstURIDecodeBin
   gboolean need_queue;
   guint64 buffer_duration;      /* When streaming, buffer duration (ns) */
   guint buffer_size;            /* When streaming, buffer size (bytes) */
+  gboolean download;
 
   GstElement *source;
   GstElement *typefind;
@@ -147,6 +148,7 @@ enum
 #define DEFAULT_SUBTITLE_ENCODING   NULL
 #define DEFAULT_BUFFER_DURATION     -1
 #define DEFAULT_BUFFER_SIZE         -1
+#define DEFAULT_DOWNLOAD            FALSE
 
 enum
 {
@@ -158,6 +160,7 @@ enum
   PROP_SUBTITLE_ENCODING,
   PROP_BUFFER_SIZE,
   PROP_BUFFER_DURATION,
+  PROP_DOWNLOAD,
   PROP_LAST
 };
 
@@ -308,6 +311,11 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           -1, G_MAXINT64, DEFAULT_BUFFER_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_DOWNLOAD,
+      g_param_spec_boolean ("download", "Download",
+          "Attempt download buffering when buffering network streams",
+          DEFAULT_DOWNLOAD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstURIDecodeBin::unknown-type:
    * @bin: The uridecodebin
@@ -443,6 +451,7 @@ gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
 
   dec->buffer_duration = DEFAULT_BUFFER_DURATION;
   dec->buffer_size = DEFAULT_BUFFER_SIZE;
+  dec->download = DEFAULT_DOWNLOAD;
 }
 
 static void
@@ -517,6 +526,9 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_BUFFER_DURATION:
       dec->buffer_duration = g_value_get_int64 (value);
       break;
+    case PROP_DOWNLOAD:
+      dec->download = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -564,6 +576,9 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (dec);
       g_value_set_int64 (value, dec->buffer_duration);
       GST_OBJECT_UNLOCK (dec);
+      break;
+    case PROP_DOWNLOAD:
+      g_value_set_boolean (value, dec->download);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -778,11 +793,17 @@ static const gchar *raw_media[] = {
   "video/x-dvd-subpicture", "subpicture/x-", NULL
 };
 
+/* media types we can download */
+static const gchar *download_media[] = {
+  "video/quicktime", "video/x-flv", NULL
+};
+
 #define IS_STREAM_URI(uri)          (array_has_value (stream_uris, uri))
 #define IS_QUEUE_URI(uri)           (array_has_value (queue_uris, uri))
 #define IS_BLACKLISTED_URI(uri)     (array_has_value (blacklisted_uris, uri))
 #define IS_NO_MEDIA_MIME(mime)      (array_has_value (no_media_mimes, mime))
 #define IS_RAW_MEDIA(media)         (array_has_value (raw_media, media))
+#define IS_DOWNLOAD_MEDIA(media)    (array_has_value (download_media, media))
 
 /*
  * Generate and configure a source element.
@@ -1204,6 +1225,8 @@ type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstURIDecodeBin * decoder)
 {
   GstElement *dec_elem, *queue;
+  GstStructure *s;
+  const gchar *media_type;
 
   GST_DEBUG_OBJECT (decoder, "typefind found caps %" GST_PTR_FORMAT, caps);
 
@@ -1216,7 +1239,26 @@ type_found (GstElement * typefind, guint probability,
     goto no_queue2;
 
   g_object_set (G_OBJECT (queue), "use-buffering", TRUE, NULL);
-  /* g_object_set (G_OBJECT (queue), "temp-location", "temp", NULL); */
+
+  s = gst_caps_get_structure (caps, 0);
+  media_type = gst_structure_get_name (s);
+
+  GST_DEBUG_OBJECT (decoder, "check media-type %s, %d", media_type,
+      decoder->download);
+
+  if (IS_DOWNLOAD_MEDIA (media_type) && decoder->download) {
+    gchar *temp_template;
+
+    /* build our filename */
+    temp_template =
+        g_build_filename (g_get_tmp_dir (), g_get_prgname (), "-XXXXXX", NULL);
+
+    GST_DEBUG_OBJECT (decoder, "enable download buffering in %s",
+        temp_template);
+    /* configure progressive download for selected media types */
+    g_object_set (G_OBJECT (queue), "temp-template", temp_template, NULL);
+    g_free (temp_template);
+  }
 
   /* Disable max-size-buffers */
   g_object_set (G_OBJECT (queue), "max-size-buffers", 0, NULL);
@@ -1234,6 +1276,9 @@ type_found (GstElement * typefind, guint probability,
   if (!gst_element_link_pads (typefind, "src", queue, "sink"))
     goto could_not_link;
 
+  /* to force caps on the decodebin element and avoid reparsing stuff by
+   * typefind. It also avoids a deadlock in the way typefind activates pads in
+   * the state change */
   g_object_set (G_OBJECT (dec_elem), "sink-caps", caps, NULL);
 
   if (!gst_element_link_pads (queue, "src", dec_elem, "sink"))
