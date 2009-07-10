@@ -34,14 +34,8 @@ mount_cb (GObject * obj, GAsyncResult * res, gpointer user_data)
   ret = g_file_mount_enclosing_volume_finish (G_FILE (obj), res, &err);
 
   if (ret) {
-    const gchar *uri;
-
     g_print ("mounted successfully\n");
     gst_bus_set_flushing ((GstBus *) user_data, FALSE);
-
-    /* FIXME: This works around bug #588078 */
-    g_object_get (G_OBJECT (pipeline), "uri", &uri, NULL);
-    g_object_set (G_OBJECT (pipeline), "uri", uri, NULL);
 
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
   } else {
