@@ -3080,12 +3080,16 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
   type1 = G_VALUE_TYPE (value1);
   type2 = G_VALUE_TYPE (value2);
 
+  if (type1 == type2)
+    return TRUE;
+
+  /* check registered intersect functions */
   len = gst_value_intersect_funcs->len;
   for (i = 0; i < len; i++) {
     intersect_info = &g_array_index (gst_value_intersect_funcs,
         GstValueIntersectInfo, i);
-    if (intersect_info->type1 == intersect_info->type2 &&
-        intersect_info->type1 == type1 && intersect_info->type2 == type2)
+    if ((intersect_info->type1 == type1 && intersect_info->type2 == type2) ||
+        (intersect_info->type1 == type2 && intersect_info->type2 == type1))
       return TRUE;
   }
 
