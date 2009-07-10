@@ -1,8 +1,6 @@
 Frame step
 ----------
 
-This document is a draft that lists some ideas and purely informational.
-
 This document outlines the details of the frame stepping functionality in
 GStreamer.
 
