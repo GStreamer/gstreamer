@@ -651,23 +651,26 @@ channel_count_error:
 static GstFlowReturn
 vorbis_handle_comment_packet (GstIVorbisDec * vd, ogg_packet * packet)
 {
-#if 0
   guint bitrate = 0;
   gchar *encoder = NULL;
-  GstTagList *list;
+  GstTagList *list, *old_list;
   GstBuffer *buf;
 
   GST_DEBUG_OBJECT (vd, "parsing comment packet");
 
-  buf = gst_buffer_new_and_alloc (packet->bytes);
-  GST_BUFFER_DATA (buf) = packet->packet;
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = packet->packet->buffer->data;
+  GST_BUFFER_SIZE (buf) = packet->packet->buffer->size;
 
   list =
       gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,
       &encoder);
 
+  old_list = vd->taglist;
   vd->taglist = gst_tag_list_merge (vd->taglist, list, GST_TAG_MERGE_REPLACE);
 
+  if (old_list)
+    gst_tag_list_free (old_list);
   gst_tag_list_free (list);
   gst_buffer_unref (buf);
 
@@ -683,18 +686,18 @@ vorbis_handle_comment_packet (GstIVorbisDec * vd, ogg_packet * packet)
   gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
       GST_TAG_ENCODER_VERSION, vd->vi.version,
       GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
-  if (vd->vi.bitrate_nominal > 0) {
+  if (vd->vi.bitrate_nominal > 0 && vd->vi.bitrate_nominal <= 0x7FFFFFFF) {
     gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
     bitrate = vd->vi.bitrate_nominal;
   }
-  if (vd->vi.bitrate_upper > 0) {
+  if (vd->vi.bitrate_upper > 0 && vd->vi.bitrate_upper <= 0x7FFFFFFF) {
     gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
     if (!bitrate)
       bitrate = vd->vi.bitrate_upper;
   }
-  if (vd->vi.bitrate_lower > 0) {
+  if (vd->vi.bitrate_lower > 0 && vd->vi.bitrate_lower <= 0x7FFFFFFF) {
     gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
     if (!bitrate)
@@ -715,7 +718,7 @@ vorbis_handle_comment_packet (GstIVorbisDec * vd, ogg_packet * packet)
     gst_element_post_message (GST_ELEMENT_CAST (vd),
         gst_message_new_tag (GST_OBJECT (vd), gst_tag_list_copy (vd->taglist)));
   }
-#endif
+
   return GST_FLOW_OK;
 }
 
