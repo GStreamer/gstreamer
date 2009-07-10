@@ -53,6 +53,8 @@ GType gst_autoplug_select_result_get_type (void);
  *   configuration of audioconvert and audioresample.
  * @GST_PLAY_FLAG_NATIVE_VIDEO: only allow native video formats, this omits
  *   configuration of ffmpegcolorspace and videoscale.
+ * @GST_PLAY_FLAG_DOWNLOAD: enable progressice download buffering for selected
+ *   formats.
  *
  * Extra flags to configure the behaviour of the sinks.
  */
@@ -63,7 +65,8 @@ typedef enum {
   GST_PLAY_FLAG_VIS           = (1 << 3),
   GST_PLAY_FLAG_SOFT_VOLUME   = (1 << 4),
   GST_PLAY_FLAG_NATIVE_AUDIO  = (1 << 5),
-  GST_PLAY_FLAG_NATIVE_VIDEO  = (1 << 6)
+  GST_PLAY_FLAG_NATIVE_VIDEO  = (1 << 6),
+  GST_PLAY_FLAG_DOWNLOAD      = (1 << 7)
 } GstPlayFlags;
 
 #define GST_TYPE_PLAY_FLAGS (gst_play_flags_get_type())

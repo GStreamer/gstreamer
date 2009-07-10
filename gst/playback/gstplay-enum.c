@@ -28,7 +28,7 @@ register_gst_autoplug_select_result (GType * id)
   static const GEnumValue values[] = {
     {C_ENUM (GST_AUTOPLUG_SELECT_TRY), "GST_AUTOPLUG_SELECT_TRY", "try"},
     {C_ENUM (GST_AUTOPLUG_SELECT_EXPOSE), "GST_AUTOPLUG_SELECT_EXPOSE",
-          "expose"},
+        "expose"},
     {C_ENUM (GST_AUTOPLUG_SELECT_SKIP), "GST_AUTOPLUG_SELECT_SKIP", "skip"},
     {0, NULL, NULL}
   };
@@ -53,12 +53,14 @@ register_gst_play_flags (GType * id)
     {C_FLAGS (GST_PLAY_FLAG_AUDIO), "Render the audio stream", "audio"},
     {C_FLAGS (GST_PLAY_FLAG_TEXT), "Render subtitles", "text"},
     {C_FLAGS (GST_PLAY_FLAG_VIS),
-          "Render visualisation when no video is present", "vis"},
+        "Render visualisation when no video is present", "vis"},
     {C_FLAGS (GST_PLAY_FLAG_SOFT_VOLUME), "Use software volume", "soft-volume"},
     {C_FLAGS (GST_PLAY_FLAG_NATIVE_AUDIO), "Only use native audio formats",
-          "native-audio"},
+        "native-audio"},
     {C_FLAGS (GST_PLAY_FLAG_NATIVE_VIDEO), "Only use native video formats",
-          "native-video"},
+        "native-video"},
+    {C_FLAGS (GST_PLAY_FLAG_DOWNLOAD), "Attempt progressive download buffering",
+        "download"},
     {0, NULL, NULL}
   };
   *id = g_flags_register_static ("GstPlayFlags", values);

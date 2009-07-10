@@ -1173,6 +1173,23 @@ gst_play_bin_set_suburi (GstPlayBin * playbin, const gchar * suburi)
   GST_PLAY_BIN_UNLOCK (playbin);
 }
 
+static void
+gst_play_bin_set_flags (GstPlayBin * playbin, GstPlayFlags flags)
+{
+  gst_play_sink_set_flags (playbin->playsink, flags);
+  gst_play_sink_reconfigure (playbin->playsink);
+}
+
+static GstPlayFlags
+gst_play_bin_get_flags (GstPlayBin * playbin)
+{
+  GstPlayFlags flags;
+
+  flags = gst_play_sink_get_flags (playbin->playsink);
+
+  return flags;
+}
+
 /* get the currently playing group or if nothing is playing, the next
  * group. Must be called with the PLAY_BIN_LOCK. */
 static GstSourceGroup *
@@ -1527,8 +1544,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       gst_play_bin_set_suburi (playbin, g_value_get_string (value));
       break;
     case PROP_FLAGS:
-      gst_play_sink_set_flags (playbin->playsink, g_value_get_flags (value));
-      gst_play_sink_reconfigure (playbin->playsink);
+      gst_play_bin_set_flags (playbin, g_value_get_flags (value));
       break;
     case PROP_CURRENT_VIDEO:
       gst_play_bin_set_current_video_stream (playbin, g_value_get_int (value));
@@ -1644,7 +1660,7 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     }
     case PROP_FLAGS:
-      g_value_set_flags (value, gst_play_sink_get_flags (playbin->playsink));
+      g_value_set_flags (value, gst_play_bin_get_flags (playbin));
       break;
     case PROP_N_VIDEO:
     {
@@ -2521,6 +2537,10 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   /* configure connection speed */
   g_object_set (uridecodebin, "connection-speed",
       playbin->connection_speed / 1000, NULL);
+  if (gst_play_sink_get_flags (playbin->playsink) & GST_PLAY_FLAG_DOWNLOAD)
+    g_object_set (uridecodebin, "download", TRUE, NULL);
+  else
+    g_object_set (uridecodebin, "download", FALSE, NULL);
   /* configure subtitle encoding */
   g_object_set (uridecodebin, "subtitle-encoding", playbin->encoding, NULL);
   /* configure uri */
