@@ -196,6 +196,8 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
 static void
 mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
 {
+  guint i;
+
   mux->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&mpegtsmux_src_factory), "src");
@@ -208,7 +210,11 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
 
   mux->tsmux = tsmux_new ();
   tsmux_set_write_func (mux->tsmux, new_packet_cb, mux);
-  mux->program = tsmux_program_new (mux->tsmux);
+
+  mux->programs = g_array_sized_new (FALSE, TRUE, sizeof (TsMuxProgram *),
+      MAX_PROG_NUMBER);
+  for (i = 0; i < MAX_PROG_NUMBER; i++)
+    g_array_index (mux->programs, TsMuxProgram *, i) = NULL;
 
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
@@ -241,6 +247,10 @@ mpegtsmux_dispose (GObject * object)
   if (mux->prog_map) {
     gst_structure_free (mux->prog_map);
     mux->prog_map = NULL;
+  }
+  if (mux->programs) {
+    g_array_free (mux->programs, TRUE);
+    mux->programs = NULL;
   }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
