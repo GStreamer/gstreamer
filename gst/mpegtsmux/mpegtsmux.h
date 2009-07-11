@@ -110,6 +110,7 @@ struct MpegTsMux {
 
   TsMux *tsmux;
   TsMuxProgram *program;
+  GstStructure *prog_map;
 
   gboolean first;
   TsMuxStream *pcr_stream;

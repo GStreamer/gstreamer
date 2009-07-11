@@ -96,6 +96,7 @@ GST_DEBUG_CATEGORY (mpegtsmux_debug);
 enum
 {
   ARG_0,
+  ARG_PROG_MAP,
   ARG_M2TS_MODE
 };
 
@@ -180,6 +181,11 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
   gstelement_class->release_pad = mpegtsmux_release_pad;
   gstelement_class->change_state = mpegtsmux_change_state;
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROG_MAP,
+      g_param_spec_boxed ("prog-map", "Program map",
+          "A GstStructure specifies the mapping from elementary streams to programs",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_M2TS_MODE,
       g_param_spec_boolean ("m2ts_mode", "M2TS(192 bytes) Mode",
           "Defines what packet size to use, normal TS format ie .ts(188 bytes) "
@@ -210,6 +216,8 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
   mux->m2ts_mode = FALSE;
   mux->first_pcr = TRUE;
   mux->last_ts = 0;
+
+  mux->prog_map = NULL;
 }
 
 static void
@@ -230,6 +238,10 @@ mpegtsmux_dispose (GObject * object)
     tsmux_free (mux->tsmux);
     mux->tsmux = NULL;
   }
+  if (mux->prog_map) {
+    gst_structure_free (mux->prog_map);
+    mux->prog_map = NULL;
+  }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
@@ -245,6 +257,18 @@ gst_mpegtsmux_set_property (GObject * object, guint prop_id,
       /*set incase if the output stream need to be of 192 bytes */
       mux->m2ts_mode = g_value_get_boolean (value);
       break;
+    case ARG_PROG_MAP:
+    {
+      const GstStructure *s = gst_value_get_structure (value);
+      if (mux->prog_map) {
+        gst_structure_free (mux->prog_map);
+      }
+      if (s)
+        mux->prog_map = gst_structure_copy (s);
+      else
+        mux->prog_map = NULL;
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -260,6 +284,9 @@ gst_mpegtsmux_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_M2TS_MODE:
       g_value_set_boolean (value, mux->m2ts_mode);
+      break;
+    case ARG_PROG_MAP:
+      gst_value_set_structure (value, mux->prog_map);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
