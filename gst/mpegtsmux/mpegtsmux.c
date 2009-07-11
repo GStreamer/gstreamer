@@ -441,7 +441,7 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data, GstPad * pad)
     gst_structure_get_int (s, "bitrate", &ts_data->stream->audio_bitrate);
 
     tsmux_stream_set_buffer_release_func (ts_data->stream, release_buffer_cb);
-    tsmux_program_add_stream (mux->program, ts_data->stream);
+    tsmux_program_add_stream (ts_data->prog, ts_data->stream);
 
     ret = GST_FLOW_OK;
   }
@@ -460,8 +460,37 @@ mpegtsmux_create_streams (MpegTsMux * mux)
   while (walk) {
     GstCollectData *c_data = (GstCollectData *) walk->data;
     MpegTsPadData *ts_data = (MpegTsPadData *) walk->data;
+    gchar *name = NULL;
 
     walk = g_slist_next (walk);
+
+    if (ts_data->prog_id == -1) {
+      name = GST_PAD_NAME (c_data->pad);
+      if (mux->prog_map != NULL && gst_structure_has_field (mux->prog_map,
+              name)) {
+        guint idx =
+            g_value_get_int (gst_structure_get_value (mux->prog_map, name));
+        if (idx < 0 || idx >= MAX_PROG_NUMBER) {
+          GST_DEBUG_OBJECT (mux, "Program number %d associate with pad %s out "
+              "of range (max = %d); DEFAULT_PROGRAM = %d is used instead",
+              idx, name, MAX_PROG_NUMBER, DEFAULT_PROG_ID);
+          idx = DEFAULT_PROG_ID;
+        }
+        ts_data->prog_id = idx;
+      } else {
+        ts_data->prog_id = DEFAULT_PROG_ID;
+      }
+    }
+
+    ts_data->prog = g_array_index (mux->programs, TsMuxProgram *,
+        ts_data->prog_id);
+    if (ts_data->prog == NULL) {
+      ts_data->prog = tsmux_program_new (mux->tsmux);
+      if (ts_data->prog == NULL)
+        goto no_program;
+      g_array_index (mux->programs, TsMuxProgram *, ts_data->prog_id)
+          = ts_data->prog;
+    }
 
     if (ts_data->stream == NULL) {
       ret = mpegtsmux_create_stream (mux, ts_data, c_data->pad);
@@ -471,6 +500,10 @@ mpegtsmux_create_streams (MpegTsMux * mux)
   }
 
   return GST_FLOW_OK;
+no_program:
+  GST_ELEMENT_ERROR (mux, STREAM, MUX, ("tsmux_new_program error"),
+      ("Could not create new program"));
+  return GST_FLOW_ERROR;
 no_stream:
   GST_ELEMENT_ERROR (mux, STREAM, MUX,
       ("Could not create handler for stream"), (NULL));
