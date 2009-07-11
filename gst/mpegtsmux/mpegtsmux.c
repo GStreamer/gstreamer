@@ -610,18 +610,6 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
 
     best = mpegtsmux_choose_best_stream (mux);
 
-    if (mux->pcr_stream == NULL) {
-      if (best) {
-        /* Take the first data stream for the PCR */
-        GST_DEBUG_OBJECT (COLLECT_DATA_PAD (best), "Use stream as PCR");
-        mux->pcr_stream = best->stream;
-      }
-    }
-
-    /* Set the chosen PCR stream */
-    g_return_val_if_fail (mux->pcr_stream != NULL, GST_FLOW_ERROR);
-    tsmux_program_set_pcr_stream (mux->program, mux->pcr_stream);
-
     if (!mpegtsdemux_prepare_srcpad (mux)) {
       GST_DEBUG_OBJECT (mux, "Failed to send new segment");
       goto new_seg_fail;
@@ -633,8 +621,28 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
   }
 
   if (best != NULL) {
+    TsMuxProgram *prog = best->prog;
     GstBuffer *buf = best->queued_buf;
     gint64 pts = -1;
+
+    if (prog == NULL) {
+      GST_ELEMENT_ERROR (mux, STREAM, MUX, ("Stream is not associated with "
+              "any program"), (NULL));
+      return GST_FLOW_ERROR;
+    }
+
+    if (G_UNLIKELY (prog->pcr_stream == NULL)) {
+      if (best) {
+        MpegTsPadData *ts_data = (MpegTsPadData *) best;
+        /* Take the first data stream for the PCR */
+        GST_DEBUG_OBJECT (COLLECT_DATA_PAD (best),
+            "Use stream (pid=%d) from pad as PCR for program (prog_id = %d)",
+            ts_data->pid, ts_data->prog_id);
+
+        /* Set the chosen PCR stream */
+        tsmux_program_set_pcr_stream (prog, best->stream);
+      }
+    }
 
     g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
@@ -657,8 +665,9 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
         goto write_fail;
       }
     }
-    if (mux->pcr_stream == best->stream) {
-      mux->last_ts = best->last_ts;
+    if (prog->pcr_stream == best->stream) {
+      /* FIXME: is this correct? */
+      mux->last_ts = best->last_ts;     // how?
     }
   } else {
     /* FIXME: Drain all remaining streams */

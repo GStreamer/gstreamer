@@ -113,7 +113,6 @@ struct MpegTsMux {
   GstStructure *prog_map;
 
   gboolean first;
-  TsMuxStream *pcr_stream;
   GstFlowReturn last_flow_ret;
   GstAdapter *adapter;
   gint64 previous_pcr;
