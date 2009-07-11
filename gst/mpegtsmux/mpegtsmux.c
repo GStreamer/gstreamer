@@ -671,6 +671,8 @@ mpegtsmux_request_new_pad (GstElement * element,
   pad_data->last_ts = GST_CLOCK_TIME_NONE;
   pad_data->codec_data = NULL;
   pad_data->prepare_func = NULL;
+  pad_data->prog_id = -1;
+  pad_data->prog = NULL;
 
   if (G_UNLIKELY (!gst_element_add_pad (element, pad)))
     goto could_not_add;
