@@ -34,6 +34,7 @@
 #include "gstshagadelic.h"
 #include "gstvertigo.h"
 #include "gstwarp.h"
+#include "gstop.h"
 
 struct _elements_entry
 {
@@ -50,6 +51,7 @@ static const struct _elements_entry _elements[] = {
   {"vertigotv", gst_vertigotv_get_type},
   {"revtv", gst_revtv_get_type},
   {"quarktv", gst_quarktv_get_type},
+  {"optv", gst_optv_get_type},
   {NULL, 0},
 };
 
