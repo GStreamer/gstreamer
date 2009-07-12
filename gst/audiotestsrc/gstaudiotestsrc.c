@@ -1000,15 +1000,14 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   /* example for tagging generated data */
   if (!src->tags_pushed) {
     GstTagList *taglist;
-    GstEvent *event;
 
     taglist = gst_tag_list_new ();
 
     gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
         GST_TAG_DESCRIPTION, "audiotest wave", NULL);
 
-    event = gst_event_new_tag (taglist);
-    gst_pad_push_event (basesrc->srcpad, event);
+    gst_element_send_event ((GstElement *) basesrc,
+        gst_event_new_tag (taglist));
     src->tags_pushed = TRUE;
   }
 
