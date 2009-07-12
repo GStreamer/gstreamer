@@ -232,6 +232,9 @@ struct _GstBaseSrcPrivate
 
   /* stream sequence number */
   guint32 seqnum;
+
+  /* pending tags to be pushed in the data stream */
+  GList *pending_tags;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -437,6 +440,11 @@ gst_base_src_finalize (GObject * object)
 
   event_p = &basesrc->data.ABI.pending_seek;
   gst_event_replace (event_p, NULL);
+
+  if (basesrc->priv->pending_tags) {
+    g_list_foreach (basesrc->priv->pending_tags, (GFunc) gst_event_unref, NULL);
+    g_list_free (basesrc->priv->pending_tags);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1444,7 +1452,10 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       /* sending random NEWSEGMENT downstream can break sync. */
       break;
     case GST_EVENT_TAG:
-      /* sending tags could be useful, FIXME insert in dataflow */
+      /* Insert tag in the dataflow */
+      src->priv->pending_tags =
+          g_list_append (src->priv->pending_tags, gst_event_ref (event));
+      result = TRUE;
       break;
     case GST_EVENT_BUFFERSIZE:
       /* does not seem to make much sense currently */
@@ -2213,6 +2224,20 @@ gst_base_src_loop (GstPad * pad)
   if (G_UNLIKELY (src->priv->start_segment)) {
     gst_pad_push_event (pad, src->priv->start_segment);
     src->priv->start_segment = NULL;
+  }
+
+  /* Push out pending tags if any */
+  if (G_UNLIKELY (src->priv->pending_tags)) {
+    GList *tmp = src->priv->pending_tags;
+
+    while (tmp) {
+      GstEvent *ev = (GstEvent *) tmp->data;
+      gst_pad_push_event (pad, ev);
+      tmp = g_list_next (tmp);
+    }
+
+    g_list_free (src->priv->pending_tags);
+    src->priv->pending_tags = NULL;
   }
 
   /* figure out the new position */
