@@ -79,17 +79,25 @@ enum
 GST_BOILERPLATE (GstRevTV, gst_revtv, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
 static GstStaticPadTemplate gst_revtv_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_RGBx)
+#else
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_xRGB)
+#endif
     );
 
 static GstStaticPadTemplate gst_revtv_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_RGBx)
+#else
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_xRGB)
+#endif
     );
 
 static gboolean
