@@ -31,6 +31,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstconsistencychecker.h>
 
 static GMainLoop *main_loop;
 
@@ -100,6 +101,8 @@ GST_START_TEST (test_event)
   GstBus *bus;
   GstEvent *seek_event;
   gboolean res;
+  GstPad *srcpad;
+  GstStreamConsistency *consist;
 
   GST_INFO ("preparing test");
 
@@ -125,6 +128,10 @@ GST_START_TEST (test_event)
   fail_unless (res == TRUE, NULL);
   res = gst_element_link (adder, sink);
   fail_unless (res == TRUE, NULL);
+
+  srcpad = gst_element_get_static_pad (adder, "src");
+  consist = gst_consistency_checker_new (srcpad);
+  gst_object_unref (srcpad);
 
   seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
       GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_FLUSH,
@@ -167,6 +174,7 @@ GST_START_TEST (test_event)
 
   /* cleanup */
   g_main_loop_unref (main_loop);
+  gst_consistency_checker_free (consist);
   gst_object_unref (G_OBJECT (bus));
   gst_object_unref (G_OBJECT (bin));
 }
@@ -224,6 +232,8 @@ GST_START_TEST (test_play_twice)
   GstElement *bin, *src1, *src2, *adder, *sink;
   GstBus *bus;
   gboolean res;
+  GstPad *srcpad;
+  GstStreamConsistency *consist;
 
   GST_INFO ("preparing test");
 
@@ -246,6 +256,10 @@ GST_START_TEST (test_play_twice)
   fail_unless (res == TRUE, NULL);
   res = gst_element_link (adder, sink);
   fail_unless (res == TRUE, NULL);
+
+  srcpad = gst_element_get_static_pad (adder, "src");
+  consist = gst_consistency_checker_new (srcpad);
+  gst_object_unref (srcpad);
 
   play_seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
       GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_FLUSH,
@@ -291,6 +305,7 @@ GST_START_TEST (test_play_twice)
 
   /* cleanup */
   g_main_loop_unref (main_loop);
+  gst_consistency_checker_free (consist);
   gst_event_ref (play_seek_event);
   gst_object_unref (G_OBJECT (bus));
   gst_object_unref (G_OBJECT (bin));
@@ -304,6 +319,8 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
   GstBus *bus;
   gboolean res;
   gint i;
+  GstPad *srcpad;
+  GstStreamConsistency *consist;
 
   GST_INFO ("preparing test");
 
@@ -319,6 +336,10 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
   adder = gst_element_factory_make ("adder", "adder");
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src1, src2, adder, sink, NULL);
+
+  srcpad = gst_element_get_static_pad (adder, "src");
+  consist = gst_consistency_checker_new (srcpad);
+  gst_object_unref (srcpad);
 
   res = gst_element_link (src1, adder);
   fail_unless (res == TRUE, NULL);
@@ -380,6 +401,8 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
       res = gst_element_link (src3, adder);
       fail_unless (res == TRUE, NULL);
     }
+
+    gst_consistency_checker_reset (consist);
   }
 
   res = gst_element_set_state (bin, GST_STATE_NULL);
@@ -388,6 +411,7 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
   /* cleanup */
   g_main_loop_unref (main_loop);
   gst_event_ref (play_seek_event);
+  gst_consistency_checker_free (consist);
   gst_object_unref (G_OBJECT (bus));
   gst_object_unref (G_OBJECT (bin));
 }
@@ -419,7 +443,9 @@ GST_START_TEST (test_live_seeking)
   GstElement *bin, *src1, *src2, *ac1, *ac2, *adder, *sink;
   GstBus *bus;
   gboolean res;
+  GstPad *srcpad;
   gint i;
+  GstStreamConsistency *consist;
 
   GST_INFO ("preparing test");
   main_loop = NULL;
@@ -483,6 +509,12 @@ GST_START_TEST (test_live_seeking)
   g_signal_connect (bus, "message::eos",
       (GCallback) test_live_seeking_eos_message_received, bin);
 
+  srcpad = gst_element_get_static_pad (adder, "src");
+  consist = gst_consistency_checker_new (srcpad);
+  gst_object_unref (srcpad);
+
+  GST_INFO ("starting test");
+
   /* run it twice */
   for (i = 0; i < 2; i++) {
 
@@ -518,6 +550,8 @@ GST_START_TEST (test_live_seeking)
 
     res = gst_element_set_state (bin, GST_STATE_NULL);
     fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+    gst_consistency_checker_reset (consist);
   }
 
   /* cleanup */
@@ -538,6 +572,8 @@ GST_START_TEST (test_add_pad)
 {
   GstElement *bin, *src1, *src2, *adder, *sink;
   GstBus *bus;
+  GstPad *srcpad;
+  GstStreamConsistency *consist;
   gboolean res;
 
   GST_INFO ("preparing test");
@@ -562,6 +598,10 @@ GST_START_TEST (test_add_pad)
   fail_unless (res == TRUE, NULL);
   res = gst_element_link (adder, sink);
   fail_unless (res == TRUE, NULL);
+
+  srcpad = gst_element_get_static_pad (adder, "src");
+  consist = gst_consistency_checker_new (srcpad);
+  gst_object_unref (srcpad);
 
   main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bus, "message::segment-done", (GCallback) message_received,
@@ -614,8 +654,9 @@ GST_START_TEST (test_remove_pad)
 {
   GstElement *bin, *src, *adder, *sink;
   GstBus *bus;
-  GstPad *pad;
+  GstPad *pad, *srcpad;
   gboolean res;
+  GstStreamConsistency *consist;
 
   GST_INFO ("preparing test");
 
@@ -639,6 +680,10 @@ GST_START_TEST (test_remove_pad)
   /* create an unconnected sinkpad in adder */
   pad = gst_element_get_request_pad (adder, "sink%d");
   fail_if (pad == NULL, NULL);
+
+  srcpad = gst_element_get_static_pad (adder, "src");
+  consist = gst_consistency_checker_new (srcpad);
+  gst_object_unref (srcpad);
 
   main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bus, "message::segment-done", (GCallback) message_received,
