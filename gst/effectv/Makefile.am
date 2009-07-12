@@ -2,7 +2,8 @@ plugin_LTLIBRARIES = libgsteffectv.la
 
 libgsteffectv_la_SOURCES = \
 	gsteffectv.c gstedge.c gstaging.c gstdice.c gstwarp.c \
-	gstshagadelic.c gstvertigo.c gstrev.c gstquark.c gstop.c
+	gstshagadelic.c gstvertigo.c gstrev.c gstquark.c gstop.c \
+	gstradioac.c
 libgsteffectv_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CONTROLLER_CFLAGS) \
@@ -19,4 +20,5 @@ libgsteffectv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgsteffectv_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gsteffectv.h gstaging.h gstdice.h gstedge.h \
-        gstquark.h gstrev.h gstshagadelic.h gstvertigo.h gstwarp.h gstop.h
+        gstquark.h gstrev.h gstshagadelic.h gstvertigo.h gstwarp.h gstop.h \
+	gstradioac.h
