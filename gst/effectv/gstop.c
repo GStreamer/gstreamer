@@ -327,7 +327,7 @@ gst_optv_set_property (GObject * object, guint prop_id, const GValue * value,
       filter->speed = g_value_get_int (value);
       break;
     case PROP_THRESHOLD:
-      filter->threshold = g_value_get_int (value);
+      filter->threshold = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -349,7 +349,7 @@ gst_optv_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, filter->speed);
       break;
     case PROP_THRESHOLD:
-      g_value_set_int (value, filter->threshold);
+      g_value_set_uint (value, filter->threshold);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -396,8 +396,8 @@ gst_optv_class_init (GstOpTVClass * klass)
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD,
-      g_param_spec_int ("threshold", "Threshold",
-          "Luma threshold", G_MININT, G_MAXINT, DEFAULT_THRESHOLD,
+      g_param_spec_uint ("threshold", "Threshold",
+          "Luma threshold", 0, G_MAXINT, DEFAULT_THRESHOLD,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_optv_set_caps);

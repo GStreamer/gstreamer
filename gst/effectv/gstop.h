@@ -56,7 +56,7 @@ struct _GstOpTV
 
   gint mode;
   gint speed;
-  gint threshold;
+  guint threshold;
 
   gint8 *opmap[4];
   guint8 *diff;
