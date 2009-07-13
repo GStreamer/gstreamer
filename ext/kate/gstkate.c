@@ -68,42 +68,9 @@ GST_DEBUG_CATEGORY (gst_katetag_debug);
 GST_DEBUG_CATEGORY (gst_katetiger_debug);
 #endif
 
-
-static GstStaticCaps kate_caps = GST_STATIC_CAPS (GST_KATE_MEDIA_TYPE);
-
-#define KATE_CAPS (gst_static_caps_get(&kate_caps))
-static void
-gst_kate_type_find (GstTypeFind * tf, gpointer private)
-{
-  guint8 *data = gst_type_find_peek (tf, 0, 8);
-
-  if (data) {
-    if (memcmp (data, "\200kate\0\0\0", 8) != 0)
-      return;
-
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, KATE_CAPS);
-  }
-}
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and pad templates
- * register the features
- */
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstCaps *caps;
-
-  caps = gst_caps_new_simple (GST_KATE_MEDIA_TYPE, NULL);
-  if (!gst_type_find_register (plugin, GST_KATE_MEDIA_TYPE, GST_RANK_PRIMARY,
-          gst_kate_type_find, NULL, caps, NULL, NULL)) {
-    GST_WARNING ("kate: failed to register typefind");
-    gst_caps_unref (caps);
-    return FALSE;
-  }
-  gst_caps_unref (caps);
-
   GST_DEBUG_CATEGORY_INIT (gst_katedec_debug, "katedec", 0, "Kate decoder");
   GST_DEBUG_CATEGORY_INIT (gst_kateenc_debug, "kateenc", 0, "Kate encoder");
   GST_DEBUG_CATEGORY_INIT (gst_kateparse_debug, "kateparse", 0, "Kate parser");
