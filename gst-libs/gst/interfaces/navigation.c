@@ -23,17 +23,13 @@
 /**
  * SECTION:gstnavigation
  * @short_description: Interface for creating, sending and parsing navigation
- * events. Navigation events are used for conveying mouse movement, button clicks,
- * key presses and specific commands such as DVD menu navigation.
+ * events.
  *
- * <refsect2>
- * <para>
  * The Navigation interface is used for creating and injecting navigation related
  * events such as mouse button presses, cursor motion and key presses. The associated
  * library also provides methods for parsing received events, and for sending and
- * receiving navigation related bus events.
- * </para>
- * <para>
+ * receiving navigation related bus events. One main usecase is DVD menu navigation.
+ *
  * The main parts of the API are:
  * <itemizedlist>
  * <listitem>
@@ -61,8 +57,6 @@
  * </para>
  * </listitem>
  * </itemizedlist>
- * </para>
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
