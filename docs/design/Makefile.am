@@ -1,6 +1,5 @@
 
 EXTRA_DIST = \
-	draft-framestep.txt \
 	draft-klass.txt \
 	draft-push-pull.txt \
 	draft-tagreading.txt \
@@ -16,6 +15,7 @@ EXTRA_DIST = \
 	part-element-source.txt \
 	part-element-transform.txt \
 	part-events.txt \
+	part-framestep.txt \
 	part-gstbin.txt \
 	part-gstbus.txt \
 	part-gstelement.txt \
