@@ -2672,6 +2672,32 @@ theora_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
+/*** kate ***/
+static void
+kate_type_find (GstTypeFind * tf, gpointer private)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 64);
+  gchar category[16] = { 0, };
+
+  if (G_UNLIKELY (data == NULL))
+    return;
+
+  /* see: http://wiki.xiph.org/index.php/OggKate#Format_specification */
+  if (G_LIKELY (memcmp (data, "\200kate\0\0\0", 8) != 0))
+    return;
+
+  /* make sure we always have a NUL-terminated string */
+  memcpy (category, data + 48, 15);
+  GST_LOG ("kate category: %s", category);
+  if (strstr (category, "subtitle") != NULL) {
+    gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
+        "subtitle/x-kate", NULL);
+  } else {
+    gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
+        "application/x-kate", NULL);
+  }
+}
+
 /*** application/x-ogm-video or audio***/
 
 static GstStaticCaps ogmvideo_caps =
@@ -3416,8 +3442,8 @@ plugin_init (GstPlugin * plugin)
       zip_exts, "PK\003\004", 4, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-compress",
       GST_RANK_SECONDARY, compress_exts, "\037\235", 2, GST_TYPE_FIND_LIKELY);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-kate",
-      GST_RANK_MARGINAL, NULL, "\200kate\0\0\0", 8, GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER (plugin, "subtitle/x-kate", GST_RANK_MARGINAL,
+      kate_type_find, NULL, NULL, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-flac", GST_RANK_PRIMARY,
       flac_type_find, flac_exts, FLAC_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-vorbis", GST_RANK_PRIMARY,
