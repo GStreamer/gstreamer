@@ -1,7 +1,8 @@
 /* GStreamer Navigation
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2007-2009 Jan Schmidt <thaytan@noraisin.net>
  *
- * navigation.c: navigation design virtual class function wrappers
+ * navigation.c: navigation event virtual class function wrappers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,6 +18,51 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+
+/**
+ * SECTION:gstnavigation
+ * @short_description: Interface for creating, sending and parsing navigation
+ * events. Navigation events are used for conveying mouse movement, button clicks,
+ * key presses and specific commands such as DVD menu navigation.
+ *
+ * <refsect2>
+ * <para>
+ * The Navigation interface is used for creating and injecting navigation related
+ * events such as mouse button presses, cursor motion and key presses. The associated
+ * library also provides methods for parsing received events, and for sending and
+ * receiving navigation related bus events.
+ * </para>
+ * <para>
+ * The main parts of the API are:
+ * <itemizedlist>
+ * <listitem>
+ * <para>
+ * The GstNavigation interface, implemented by elements which provide an application
+ * with the ability to create and inject navigation events into the pipeline.
+ * </para>
+ * </listitem>
+ * <listitem>
+ * <para>
+ * GstNavigation event handling API. GstNavigation events are created in response to
+ * calls on a GstNavigation interface implementation, and sent in the pipeline. Upstream
+ * elements can use the navigation event API functions to parse the contents of received
+ * messages.
+ * </para>
+ * </listitem>
+ * <listitem>
+ * <para>
+ * GstNavigation message handling API. GstNavigation messages may be sent on the message
+ * bus to inform applications of navigation related changes in the pipeline, such as the
+ * mouse moving over a clickable region, or the set of available angles changing.
+ * </para><para>
+ * The GstNavigation message functions provide functions for creating and parsing
+ * custom bus messages for signalling GstNavigation changes.
+ * </para>
+ * </listitem>
+ * </itemizedlist>
+ * </para>
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
