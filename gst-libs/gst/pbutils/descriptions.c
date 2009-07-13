@@ -123,6 +123,7 @@ static const FormatInfo formats[] = {
   {"audio/x-shorten", "Shorten Lossless", 0},
   {"audio/x-sid", "Sid", 0},
   {"audio/x-sipro", "Sipro/ACELP.NET Voice", 0},
+  {"audio/x-siren", "Siren", 0},
   {"audio/x-spc", "SNES-SPC700 Sound File Data", 0},
   {"audio/x-speex", "Speex", 0},
   {"audio/x-svx", "Amiga IFF / SVX8 / SV16", 0},
@@ -218,8 +219,8 @@ static const FormatInfo formats[] = {
   /* add variant field to typefinder? { "application/x-subtitle", N_("subtitle"), 0}, */
 
   /* non-audio/video/container formats */
-  {"hdv/aux-v", N_("HDV AUX-V"), 0},
-  {"hdv/aux-a", N_("HDV AUX-A"), 0},
+  {"hdv/aux-v", "HDV AUX-V", 0},
+  {"hdv/aux-a", "HDV AUX-A", 0},
 
   /* formats with dynamic descriptions */
   {"audio/mpeg", NULL, 0},
