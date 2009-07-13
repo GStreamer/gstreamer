@@ -1328,6 +1328,13 @@ gst_riff_create_audio_caps (guint16 codec_id,
         *codec_name = g_strdup ("Sony ATRAC3");
       break;
 
+    case GST_RIFF_WAVE_FORMAT_SIREN:
+      caps = gst_caps_new_simple ("audio/x-siren", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Siren7");
+      rate_chan = FALSE;
+      break;
+
     case GST_RIFF_WAVE_FORMAT_ADPCM_IMA_DK4:
       rate_min = 8000;
       rate_max = 96000;
@@ -1763,6 +1770,7 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_ADPCM_IMA_WAV,
     GST_RIFF_WAVE_FORMAT_AMR_NB,
     GST_RIFF_WAVE_FORMAT_AMR_WB,
+    GST_RIFF_WAVE_FORMAT_SIREN,
     /* FILL ME */
   };
   guint i;
