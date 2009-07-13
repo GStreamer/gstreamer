@@ -41,6 +41,14 @@
 				<parameter name="user_data" type="gpointer"/>
 			</parameters>
 		</callback>
+		<callback name="GstRTSPSessionFilterFunc">
+			<return-type type="GstRTSPFilterResult"/>
+			<parameters>
+				<parameter name="pool" type="GstRTSPSessionPool*"/>
+				<parameter name="session" type="GstRTSPSession*"/>
+				<parameter name="user_data" type="gpointer"/>
+			</parameters>
+		</callback>
 		<callback name="GstRTSPSessionPoolFunc">
 			<return-type type="gboolean"/>
 			<parameters>
@@ -147,6 +155,11 @@
 			<field name="trans" type="GstRTSPMediaTrans"/>
 			<field name="media_stream" type="GstRTSPMediaStream*"/>
 		</struct>
+		<enum name="GstRTSPFilterResult">
+			<member name="GST_RTSP_FILTER_REMOVE" value="0"/>
+			<member name="GST_RTSP_FILTER_KEEP" value="1"/>
+			<member name="GST_RTSP_FILTER_REF" value="2"/>
+		</enum>
 		<object name="GstRTSPClient" parent="GObject" type-name="GstRTSPClient" get-type="gst_rtsp_client_get_type">
 			<method name="accept" symbol="gst_rtsp_client_accept">
 				<return-type type="gboolean"/>
@@ -637,6 +650,14 @@
 				<return-type type="GSource*"/>
 				<parameters>
 					<parameter name="pool" type="GstRTSPSessionPool*"/>
+				</parameters>
+			</method>
+			<method name="filter" symbol="gst_rtsp_session_pool_filter">
+				<return-type type="GList*"/>
+				<parameters>
+					<parameter name="pool" type="GstRTSPSessionPool*"/>
+					<parameter name="func" type="GstRTSPSessionFilterFunc"/>
+					<parameter name="user_data" type="gpointer"/>
 				</parameters>
 			</method>
 			<method name="find" symbol="gst_rtsp_session_pool_find">

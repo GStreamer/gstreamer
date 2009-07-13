@@ -209,6 +209,7 @@ namespace Gst {
 		[NoWrapper]
 		public virtual string create_session_id ();
 		public GLib.TimeoutSource create_watch ();
+		public GLib.List<Gst.RTSPSession> filter (Gst.RTSPSessionFilterFunc func);
 		public Gst.RTSPSession? find (string sessionid);
 		public uint get_max_sessions ();
 		public uint get_n_sessions ();
@@ -227,10 +228,18 @@ namespace Gst {
 		public void set_keepalive (Gst.RTSPKeepAliveFunc keep_alive, GLib.DestroyNotify notify);
 		public Gst.RTSPTransport set_transport (Gst.RTSPTransport ct);
 	}
+	[CCode (cprefix = "GST_RTSP_FILTER_", has_type_id = "0", cheader_filename = "gst/gst.h")]
+	public enum RTSPFilterResult {
+		REMOVE,
+		KEEP,
+		REF
+	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media.h")]
 	public delegate void RTSPKeepAliveFunc ();
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media.h")]
 	public delegate bool RTSPSendFunc (Gst.Buffer buffer, uchar channel);
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session-pool.h")]
+	public delegate Gst.RTSPFilterResult RTSPSessionFilterFunc (Gst.RTSPSessionPool pool, Gst.RTSPSession session);
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session-pool.h")]
 	public delegate bool RTSPSessionPoolFunc (Gst.RTSPSessionPool pool);
 	[CCode (cheader_filename = "gst/gst.h")]
