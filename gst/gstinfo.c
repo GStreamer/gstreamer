@@ -1826,6 +1826,12 @@ gst_debug_get_all_categories (void)
   return NULL;
 }
 
+GstDebugCategory *
+_gst_debug_get_category (const gchar * name)
+{
+  return NULL;
+}
+
 gchar *
 gst_debug_construct_term_color (guint colorinfo)
 {
