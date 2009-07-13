@@ -531,6 +531,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
 {
   GLenum err = 0;
 
+  gst_gl_display_lock (display);
   display->gl_window =
       gst_gl_window_new (display->upload_width, display->upload_height,
       display->external_gl_context);
@@ -539,6 +540,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
     display->isAlive = FALSE;
     GST_ERROR_OBJECT (display, "Failed to create gl window");
     g_cond_signal (display->cond_create_context);
+    gst_gl_display_unlock (display);
     return NULL;
   }
 
@@ -601,6 +603,8 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
       GST_GL_WINDOW_CB (gst_gl_display_on_close), display);
 
   g_cond_signal (display->cond_create_context);
+
+  gst_gl_display_unlock (display);
 
   gst_gl_window_run_loop (display->gl_window);
 
