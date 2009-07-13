@@ -821,6 +821,7 @@ tests/examples/seek/Makefile
 tests/examples/volume/Makefile
 tests/examples/snapshot/Makefile
 tests/examples/gio/Makefile
+tests/examples/v4l/Makefile
 tests/icles/Makefile
 docs/Makefile
 docs/design/Makefile
