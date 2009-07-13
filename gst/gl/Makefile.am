@@ -11,7 +11,7 @@ libgstopengl_la_SOURCES = \
 	gstglupload.c \
 	gstglupload.h \
 	gstglbumper.c \
-	gstglbumber.h \
+	gstglbumper.h \
 	gstgldownload.c \
 	gstgldownload.h \
 	gstglfilterblur.c \
