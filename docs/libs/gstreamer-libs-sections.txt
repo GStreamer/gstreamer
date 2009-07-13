@@ -707,3 +707,13 @@ gst_buffer_straw_start_pipeline
 gst_buffer_straw_get_buffer
 gst_buffer_straw_stop_pipeline
 </SECTION>
+
+<SECTION>
+<FILE>gstcheckconsistencychecker</FILE>
+<TITLE>GstStreamConsistency</TITLE>
+<INCLUDE>gst/check/gstconsistencychecker.h</INCLUDE>
+gst_consistency_checker_new
+gst_consistency_checker_reset
+gst_consistency_checker_free
+</SECTION>
+
