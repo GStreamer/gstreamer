@@ -26,8 +26,8 @@ libgstopengl_la_SOURCES = \
 	gstglfilterapp.h \
 	gstglcolorscale.c \
 	gstglcolorscale.h \
-  gstgldeinterlace.c \
-  gstgldeinterlace.h \
+	gstgldeinterlace.c \
+	gstgldeinterlace.h \
 	gstgldifferencematte.c \
 	gstgloverlay.c \
 	gltestsrc.c \
@@ -68,7 +68,8 @@ libgstopengl_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) -lgstinterfaces-$(GST_MAJORMINOR) \
 	$(GL_LIBS) \
-	$(LIBPNG_LIBS)
+	$(LIBPNG_LIBS) \
+	$(LIBM)
 
 libgstopengl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
