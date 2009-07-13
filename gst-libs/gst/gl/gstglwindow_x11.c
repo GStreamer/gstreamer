@@ -102,45 +102,42 @@ gst_gl_window_finalize (GObject * object)
   g_mutex_lock (priv->x_lock);
 
   priv->parent = 0;
+  if (priv->device) {
+    XUnmapWindow (priv->device, priv->internal_win_id);
 
-  XUnmapWindow (priv->device, priv->internal_win_id);
+    ret = glXMakeCurrent (priv->device, None, NULL);
+    if (!ret)
+      g_debug ("failed to release opengl context\n");
 
-  ret = glXMakeCurrent (priv->device, None, NULL);
-  if (!ret)
-    g_debug ("failed to release opengl context\n");
+    glXDestroyContext (priv->device, priv->gl_context);
 
-  glXDestroyContext (priv->device, priv->gl_context);
+    XFree (priv->visual_info);
 
-  XFree (priv->visual_info);
+    XReparentWindow (priv->device, priv->internal_win_id, priv->root, 0, 0);
+    XDestroyWindow (priv->device, priv->internal_win_id);
+    XSync (priv->device, FALSE);
 
-  XReparentWindow (priv->device, priv->internal_win_id, priv->root, 0, 0);
+    while (XPending (priv->device))
+      XNextEvent (priv->device, &event);
 
-  XDestroyWindow (priv->device, priv->internal_win_id);
+    XSetCloseDownMode (priv->device, DestroyAll);
 
-  XSync (priv->device, FALSE);
+    /*XAddToSaveSet (display, w)
+       Display *display;
+       Window w; */
 
-  while (XPending (priv->device))
-    XNextEvent (priv->device, &event);
+    //FIXME: it seems it causes destroy all created windows, even by other display connection:
+    //This is case in: gst-launch-0.10 videotestsrc ! tee name=t t. ! queue ! glimagesink t. ! queue ! glimagesink
+    //When the first window is closed and so its display is closed by the following line, then the other Window managed by the
+    //other glimagesink, is not useable and so each opengl call causes a segmentation fault.
+    //Maybe the solution is to use: XAddToSaveSet
+    //The following line is commented to avoid the disagreement explained before.
+    //XCloseDisplay (priv->device);
 
-  XSetCloseDownMode (priv->device, DestroyAll);
-
-  /*XAddToSaveSet (display, w)
-     Display *display;
-     Window w; */
-
-  //FIXME: it seems it causes destroy all created windows, even by other display connection:
-  //This is case in: gst-launch-0.10 videotestsrc ! tee name=t t. ! queue ! glimagesink t. ! queue ! glimagesink
-  //When the first window is closed and so its display is closed by the following line, then the other Window managed by the
-  //other glimagesink, is not useable and so each opengl call causes a segmentation fault.
-  //Maybe the solution is to use: XAddToSaveSet
-  //The following line is commented to avoid the disagreement explained before.
-  //XCloseDisplay (priv->device);
-
-  g_debug ("display receiver closed\n");
-
-  XCloseDisplay (priv->disp_send);
-
-  g_debug ("display sender closed\n");
+    g_debug ("display receiver closed\n");
+    XCloseDisplay (priv->disp_send);
+    g_debug ("display sender closed\n");
+  }
 
   if (priv->cond_send_message) {
     g_cond_free (priv->cond_send_message);
@@ -280,6 +277,8 @@ gst_gl_window_new (gint width, gint height, gulong external_gl_context)
   g_mutex_lock (priv->x_lock);
 
   priv->device = XOpenDisplay (priv->display_name);
+  if (priv->device == NULL)
+    goto no_display;
 
   XSynchronize (priv->device, FALSE);
 
@@ -410,6 +409,10 @@ gst_gl_window_new (gint width, gint height, gulong external_gl_context)
   g_mutex_unlock (priv->x_lock);
 
   return window;
+no_display:
+  g_mutex_unlock (priv->x_lock);
+  g_object_unref (window);
+  return NULL;
 }
 
 GQuark
