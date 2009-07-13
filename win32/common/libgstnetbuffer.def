@@ -7,5 +7,6 @@ EXPORTS
 	gst_netaddress_set_address_bytes
 	gst_netaddress_set_ip4_address
 	gst_netaddress_set_ip6_address
+	gst_netaddress_to_string
 	gst_netbuffer_get_type
 	gst_netbuffer_new
