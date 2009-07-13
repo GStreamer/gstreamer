@@ -762,7 +762,7 @@ static gboolean
 gst_adder_sink_event (GstPad * pad, GstEvent * event)
 {
   GstAdder *adder;
-  gboolean ret;
+  gboolean ret = TRUE;
 
   adder = GST_ADDER (gst_pad_get_parent (pad));
 
@@ -783,6 +783,12 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
       adder->flush_stop_pending = FALSE;
       GST_OBJECT_UNLOCK (adder->collect);
       break;
+    case GST_EVENT_TAG:
+      GST_OBJECT_LOCK (adder->collect);
+      /* collectpads is a pile of horse manure. */
+      adder->pending_events = g_list_append (adder->pending_events, event);
+      GST_OBJECT_UNLOCK (adder->collect);
+      goto beach;
     default:
       break;
   }
@@ -790,6 +796,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
   /* now GstCollectPads can take care of the rest, e.g. EOS */
   ret = adder->collect_event (pad, event);
 
+beach:
   gst_object_unref (adder);
   return ret;
 }
@@ -1146,6 +1153,19 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
           "start:%" G_GINT64_FORMAT "  pos:%" G_GINT64_FORMAT " failed",
           adder->timestamp, adder->segment_position);
     }
+  }
+
+  if (G_UNLIKELY (adder->pending_events)) {
+    GList *tmp = adder->pending_events;
+
+    while (tmp) {
+      GstEvent *ev = (GstEvent *) tmp->data;
+
+      gst_pad_push_event (adder->srcpad, ev);
+      tmp = g_list_next (tmp);
+    }
+    g_list_free (adder->pending_events);
+    adder->pending_events = NULL;
   }
 
   /* set timestamps on the output buffer */

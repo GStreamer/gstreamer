@@ -92,6 +92,9 @@ struct _GstAdder {
   
   /* target caps */
   GstCaps *filter_caps;
+
+  /* Pending inline events */
+  GList *pending_events;
 };
 
 struct _GstAdderClass {
