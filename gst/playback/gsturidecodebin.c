@@ -767,6 +767,18 @@ array_has_value (const gchar * values[], const gchar * value)
   return FALSE;
 }
 
+static gboolean
+array_has_uri_value (const gchar * values[], const gchar * value)
+{
+  gint i;
+
+  for (i = 0; values[i]; i++) {
+    if (!g_ascii_strncasecmp (value, values[i], strlen (values[i])))
+      return TRUE;
+  }
+  return FALSE;
+}
+
 /* list of URIs that we consider to be streams and that need buffering.
  * We have no mechanism yet to figure this out with a query. */
 static const gchar *stream_uris[] = { "http://", "mms://", "mmsh://",
@@ -798,9 +810,9 @@ static const gchar *download_media[] = {
   "video/quicktime", "video/x-flv", NULL
 };
 
-#define IS_STREAM_URI(uri)          (array_has_value (stream_uris, uri))
-#define IS_QUEUE_URI(uri)           (array_has_value (queue_uris, uri))
-#define IS_BLACKLISTED_URI(uri)     (array_has_value (blacklisted_uris, uri))
+#define IS_STREAM_URI(uri)          (array_has_uri_value (stream_uris, uri))
+#define IS_QUEUE_URI(uri)           (array_has_uri_value (queue_uris, uri))
+#define IS_BLACKLISTED_URI(uri)     (array_has_uri_value (blacklisted_uris, uri))
 #define IS_NO_MEDIA_MIME(mime)      (array_has_value (no_media_mimes, mime))
 #define IS_RAW_MEDIA(media)         (array_has_value (raw_media, media))
 #define IS_DOWNLOAD_MEDIA(media)    (array_has_value (download_media, media))
