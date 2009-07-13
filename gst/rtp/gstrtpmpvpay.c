@@ -55,8 +55,7 @@ static gboolean gst_rtp_mpv_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_mpv_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
-static GstFlowReturn gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay,
-    GstClockTime timestamp, GstClockTime duration);
+static GstFlowReturn gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay);
 static void gst_rtp_mpv_pay_finalize (GObject * object);
 
 GST_BOILERPLATE (GstRTPMPVPay, gst_rtp_mpv_pay, GstBaseRTPPayload,
@@ -119,62 +118,59 @@ gst_rtp_mpv_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay, GstClockTime timestamp,
-    GstClockTime duration)
+gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
 {
   GstBuffer *outbuf;
   GstFlowReturn ret;
   guint avail;
+
   guint8 *payload;
-  gint packet_size;
-  gint payload_size;
 
   avail = gst_adapter_available (rtpmpvpay->adapter);
-  packet_size = gst_rtp_buffer_calc_packet_len (4 + avail, 0, 0);
 
-  /* check for the maximum size of the rtp buffer */
-  if (packet_size > GST_BASE_RTP_PAYLOAD_MTU (rtpmpvpay)) {
-    payload_size =
-        GST_BASE_RTP_PAYLOAD_MTU (rtpmpvpay) -
-        gst_rtp_buffer_calc_packet_len (4, 0, 0);
-  } else {
-    payload_size = avail;
+  ret = GST_FLOW_OK;
+
+  while (avail > 0) {
+    guint towrite;
+    guint packet_len;
+    guint payload_len;
+
+    packet_len = gst_rtp_buffer_calc_packet_len (avail, 4, 0);
+
+    towrite = MIN (packet_len, GST_BASE_RTP_PAYLOAD_MTU (rtpmpvpay));
+
+    payload_len = gst_rtp_buffer_calc_payload_len (towrite, 4, 0);
+
+    outbuf = gst_rtp_buffer_new_allocate (payload_len, 4, 0);
+
+    payload = gst_rtp_buffer_get_payload (outbuf);
+    /* enable MPEG Video-specific header
+     *
+     *  0                   1                   2                   3
+     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * |    MBZ  |T|         TR        | |N|S|B|E|  P  | | BFC | | FFC |
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *                                  AN              FBV     FFV
+     */
+
+    /* fill in the MPEG Video-specific header 
+     * data is set to 0x0 here
+     */
+    memset (payload, 0x0, 4);
+
+    gst_adapter_copy (rtpmpvpay->adapter, payload + 4, 0, payload_len);
+    gst_adapter_flush (rtpmpvpay->adapter, payload_len);
+
+    avail -= payload_len;
+
+    gst_rtp_buffer_set_marker (outbuf, avail == 0);
+
+    GST_BUFFER_TIMESTAMP (outbuf) = rtpmpvpay->first_ts;
+
+    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmpvpay), outbuf);
   }
-  outbuf = gst_rtp_buffer_new_allocate (4 + payload_size, 0, 0);
-  /* enable MPEG Video-specific header
-   *
-   *  0                   1                   2                   3
-   *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   * |    MBZ  |T|         TR        | |N|S|B|E|  P  | | BFC | | FFC |
-   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   *                                  AN              FBV     FFV
-   */
-  payload = gst_rtp_buffer_get_payload (outbuf);
-  /* fill in the MPEG Video-specific header */
-  memset (payload, 0x0, 4);
-  /* copy stuff from adapter to payload */
-  gst_adapter_copy (rtpmpvpay->adapter, payload + 4, 0, payload_size);
-  GST_BUFFER_TIMESTAMP (outbuf) = rtpmpvpay->first_ts;
-  GST_BUFFER_DURATION (outbuf) = rtpmpvpay->duration;
 
-  GST_DEBUG_OBJECT (rtpmpvpay, "pushing buffer of size %d",
-      GST_BUFFER_SIZE (outbuf));
-  ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmpvpay), outbuf);
-  gst_adapter_flush (rtpmpvpay->adapter, payload_size);
-
-  /* update the timestamp and duration */
-  rtpmpvpay->first_ts = timestamp;
-  rtpmpvpay->duration = duration;
-
-  /* check if there is enough data for another rtp buffer */
-  avail = gst_adapter_available (rtpmpvpay->adapter);
-  packet_size = gst_rtp_buffer_calc_packet_len (4 + avail, 0, 0);
-
-  if (packet_size >= GST_BASE_RTP_PAYLOAD_MTU (rtpmpvpay) && ret == GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (rtpmpvpay, "Have enough data for another rtp packet");
-    ret = gst_rtp_mpv_pay_flush (rtpmpvpay, timestamp, duration);
-  }
   return ret;
 }
 
@@ -185,15 +181,17 @@ gst_rtp_mpv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstRTPMPVPay *rtpmpvpay;
   guint avail, packet_len;
   GstClockTime timestamp, duration;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   rtpmpvpay = GST_RTP_MPV_PAY (basepayload);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
-  gst_adapter_push (rtpmpvpay->adapter, buffer);
   avail = gst_adapter_available (rtpmpvpay->adapter);
+
+  if (duration == -1)
+    duration = 0;
 
   /* Initialize new RTP payload */
   if (avail == 0) {
@@ -203,16 +201,19 @@ gst_rtp_mpv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* get packet length of previous data and this new data,
    * payload length includes a 4 byte MPEG video-specific header */
-  packet_len = gst_rtp_buffer_calc_packet_len (4 + avail, 0, 0);
+  packet_len = gst_rtp_buffer_calc_packet_len (avail, 4, 0);
 
   if (gst_basertppayload_is_filled (basepayload,
           packet_len, rtpmpvpay->duration + duration)) {
-    ret = gst_rtp_mpv_pay_flush (rtpmpvpay, timestamp, duration);
-  } else {
-    if (GST_CLOCK_TIME_IS_VALID (duration))
-      rtpmpvpay->duration += duration;
-    ret = GST_FLOW_OK;
+    ret = gst_rtp_mpv_pay_flush (rtpmpvpay);
+    rtpmpvpay->first_ts = timestamp;
+    rtpmpvpay->duration = 0;
   }
+
+  gst_adapter_push (rtpmpvpay->adapter, buffer);
+
+  rtpmpvpay->duration += duration;
+
   return ret;
 }
 
