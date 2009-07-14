@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -608,7 +608,7 @@ msgid "geo location name"
 msgstr "pozicioni"
 
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 
@@ -856,9 +856,9 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "KUJDES: elementi me emrin '%s' nuk u gjet.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "GABIM: nga elementi %s: %s\n"
+msgstr ""
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
@@ -1022,19 +1022,6 @@ msgstr ""
 msgid "Freeing pipeline ...\n"
 msgstr "DUKE ZBATUAR pipeline ...\n"
 
-#, fuzzy
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Gabim gjatë shkrimit tek file \"%s\"."
-
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "Gabim gjatë shkrimit tek file \"%s\"."
-
-#, fuzzy
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr ""
-#~ "Gabim i brendshëm i GStreamer: ndryshimi i gjendjes dështoi.  Raporto bug."
-
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"
 
@@ -1052,6 +1039,10 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Planifikuesi që duhet përdorur (i prezgjedhuri është '%s')"
+
+#~ msgid "Internal GStreamer error: state change failed.  File a bug."
+#~ msgstr ""
+#~ "Gabim i brendshëm i GStreamer: ndryshimi i gjendjes dështoi.  Raporto bug."
 
 #~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
 #~ msgstr "Gabim i brendshëm i GStreamer: problem planifikimi.  Raporto bug."

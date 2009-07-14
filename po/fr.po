@@ -1,16 +1,16 @@
 # Translation of GStreamer to French
-# Copyright (C) 2003-2008 GStreamer core team
+# Copyright (C) 2003-2009 GStreamer core team
 # This file is distributed under the same license as the gstreamer package.
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
-# Claude Paroz <claude@2xlibre.net>, 2008.
+# Claude Paroz <claude@2xlibre.net>, 2008-2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.20.3\n"
+"Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
-"PO-Revision-Date: 2008-09-21 19:05+0200\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
+"PO-Revision-Date: 2009-05-21 11:00+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "MIME-Version: 1.0\n"
@@ -366,12 +366,11 @@ msgstr ""
 "Origine du média sous forme d'URI (emplacement de l'hébergement d'origine du "
 "fichier ou du flux)"
 
-#, fuzzy
 msgid "homepage"
-msgstr "image"
+msgstr "site Web"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
+msgstr "Site Web de ce média (par ex. site de l'artiste ou du film)"
 
 msgid "description"
 msgstr "description"
@@ -460,13 +459,11 @@ msgstr "codec audio"
 msgid "codec the audio data is stored in"
 msgstr "codec de stockage des données audio"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "codec vidéo"
+msgstr "codec des sous-titres"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "codec de stockage des données vidéo"
+msgstr "codec de stockage des sous-titres"
 
 #, fuzzy
 msgid "container format"
@@ -587,8 +584,9 @@ msgstr "mots-clés décrivant le contenu, séparés par des virgules"
 msgid "geo location name"
 msgstr "nom d'emplacement géographique"
 
+#, fuzzy
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 "description intelligible de l'endroit où le média a été enregistré ou produit"
@@ -812,10 +810,12 @@ msgstr ""
 "d'installation automatique de greffons externes"
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Énumère le contenu du greffon"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
+"Affiche les types d'URI pris en charge, avec les éléments qui les "
+"implémentent"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -838,11 +838,9 @@ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr ""
 "ERREUR : pas d'élément pipeline de premier niveau dans le fichier « %s ».\n"
 
-#, fuzzy
 msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr ""
-"AVERTISSEMENT : actuellement, un seul élément pipeline de premier niveau est "
-"géré."
+"AVERTISSEMENT : actuellement, un seul élément de premier niveau est géré.\n"
 
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
@@ -856,19 +854,19 @@ msgstr "AVERTISSEMENT : l'élément nommé « %s » est introuvable.\n"
 
 #, fuzzy, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Message reçu de l'élément « %s » (%s) : "
+msgstr "EOS reçu de l'élément « %s ».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Message reçu de l'élément « %s » (%s) : "
+msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Message reçu de l'élément « %s » (%s) : "
+msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Message reçu de l'élément « %s » (%s) : "
+msgstr ""
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -904,9 +902,8 @@ msgstr "AVERTISSEMENT : de l'élément %s : %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Préparation terminée, attente de la fin de remplissage du tampon...\n"
 
-#, fuzzy
 msgid "buffering..."
-msgstr "mise en mémoire tampon... %d  \n"
+msgstr "mise en mémoire tampon..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Mémoire tampon pleine, définition du pipeline à PLAYING...\n"
@@ -915,11 +912,11 @@ msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Remplissage du tampon, définition du pipeline à PAUSED...\n"
 
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Redistribution de latence...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "Définition de l'état à %s comme demandé par %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interruption : arrêt du pipeline...\n"
@@ -930,9 +927,8 @@ msgstr "Affiche les balises (aussi connues sous le nom de métadonnées)"
 msgid "Output status information and property notifications"
 msgstr "Affiche des informations d'état et des notifications de propriétés"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "N'affiche pas d'informations d'état de TYPE"
+msgstr "N'affiche pas d'informations de progression"
 
 msgid "Output messages"
 msgstr "Affiche des messages"
@@ -956,7 +952,7 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Affiche les traces d'allocations (si activées lors de la compilation)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "Force l'EOS sur les sources avant de fermer le pipeline"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -997,17 +993,16 @@ msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERREUR : le pipeline refuse de passer en mode actif.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
+msgstr "EOS à la fermeture est activé -- EOS forcé sur le pipeline\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "Attente d'EOS...\n"
 
-#, fuzzy
 msgid "EOS received - stopping pipeline...\n"
-msgstr "Interruption : arrêt du pipeline...\n"
+msgstr "EOS reçu - arrêt du pipeline...\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Une erreur s'est produite lors de l'attente de l'EOS\n"
 
 msgid "Execution ended after %"
 msgstr "L'exécution s'est terminée après %"
@@ -1018,22 +1013,14 @@ msgstr "Définition du pipeline à READY (prêt)...\n"
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Définition du pipeline à NULL...\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "Définition du pipeline à NULL...\n"
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Erreur lors de l'écriture vers le descripteur de fichier « %d »."
-
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "Erreur de positionnement dans le fichier « %s »."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Le descripteur de fichier « %d » n'est pas valide."
+msgstr "Libération du pipeline...\n"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Erreur interne de GStreamer : le changement d'état a échoué."
 
-#~ msgid "FREEING pipeline ...\n"
-#~ msgstr "Libération du pipeline (FREE)...\n"
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Erreur lors de l'écriture vers le descripteur de fichier « %d »."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Le descripteur de fichier « %d » n'est pas valide."

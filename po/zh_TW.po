@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -596,7 +596,7 @@ msgid "geo location name"
 msgstr "位置"
 
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 
@@ -840,9 +840,9 @@ msgstr "錯誤：無法解析指令的第 %d 個參數：%s。\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "錯誤：來自 %s 元件：%s\n"
+msgstr ""
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
@@ -1006,18 +1006,6 @@ msgstr ""
 msgid "Freeing pipeline ...\n"
 msgstr "執行管線 ...\n"
 
-#, fuzzy
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
-
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
-
-#, fuzzy
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "GStreamer 內部錯誤：無法更改狀態。請匯報錯誤。"
-
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "關閉 CPU 優化功能"
 
@@ -1032,6 +1020,9 @@ msgstr "執行管線 ...\n"
 
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "準備使用的排程器 (預設為 ‘%s’)"
+
+#~ msgid "Internal GStreamer error: state change failed.  File a bug."
+#~ msgstr "GStreamer 內部錯誤：無法更改狀態。請匯報錯誤。"
 
 #~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
 #~ msgstr "GStreamer 內部錯誤：排程器發生問題。請匯報錯誤。"

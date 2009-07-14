@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
 "PO-Revision-Date: 2005-01-27 16:58+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -617,7 +617,7 @@ msgid "geo location name"
 msgstr "положај"
 
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 
@@ -868,9 +868,9 @@ msgstr "ГРЕШКА: не могу да рашчланим %d. аргумент
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "УПОЗОРЕЊЕ: елемент са именом „%s“ није нађен.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "ГРЕШКА: из елемента %s: %s\n"
+msgstr ""
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
@@ -1034,19 +1034,6 @@ msgstr ""
 msgid "Freeing pipeline ...\n"
 msgstr "Покрећем цевовод...\n"
 
-#, fuzzy
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Грешка при упису у датотеку „%s“."
-
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "Грешка при упису у датотеку „%s“."
-
-#, fuzzy
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr ""
-#~ "Унутрашња грешка у ГСтримеру: неуспешна промена стања.  Пријавите грешку."
-
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Искључи убрзане инструкције процесора"
 
@@ -1064,6 +1051,10 @@ msgstr "Покрећем цевовод...\n"
 
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Користи распоређивач (подразумева се '%s')"
+
+#~ msgid "Internal GStreamer error: state change failed.  File a bug."
+#~ msgstr ""
+#~ "Унутрашња грешка у ГСтримеру: неуспешна промена стања.  Пријавите грешку."
 
 #~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
 #~ msgstr ""

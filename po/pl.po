@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
 "PO-Revision-Date: 2009-04-16 21:46+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -581,8 +581,9 @@ msgstr "oddzielone przecinkami słowa kluczowe opisujące treść"
 msgid "geo location name"
 msgstr "nazwa położenia geograficznego"
 
+#, fuzzy
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 "czytelny dla człowieka opis miejsca, gdzie utwór został nagrany lub "
@@ -1009,15 +1010,11 @@ msgstr "Ustawianie potoku na NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Błąd wewnętrzny GStreamera: zmiana stanu nie powiodła się."
+
 #~ msgid "Error while writing to file descriptor \"%d\"."
 #~ msgstr "Błąd podczas zapisu do deskryptora pliku \"%d\"."
 
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "Błąd podczas przemieszczania w pliku \"%s\"."
-
 #~ msgid "File descriptor \"%d\" is not valid."
 #~ msgstr "Deskryptor pliku \"%d\" nie jest poprawny."
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Błąd wewnętrzny GStreamera: zmiana stanu nie powiodła się."

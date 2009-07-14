@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
 "PO-Revision-Date: 2009-01-13 11:10+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -709,8 +709,9 @@ msgstr "le parole chiave separate da virgole che descrivono il contesto"
 msgid "geo location name"
 msgstr "nome geog. località"
 
+#, fuzzy
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 "la descrizione comprensibile della località in cui il contenuto multimediale "
@@ -1176,18 +1177,14 @@ msgstr "Impostazione della pipeline a NULL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Impostazione della pipeline a NULL ...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Errore interno di GStreamer: cambio di stato fallito."
+
 #~ msgid "Error while writing to file descriptor \"%d\"."
 #~ msgstr "Errore durante la scrittura sul descrittore di file «%d»."
 
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "Errore durante il posizionamento sul file «%s»."
-
 #~ msgid "File descriptor \"%d\" is not valid."
 #~ msgstr "Il descrittore di file «%d» non è valido."
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Errore interno di GStreamer: cambio di stato fallito."
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "Esecuzione FREE su pipeline ...\n"

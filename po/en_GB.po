@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -602,7 +602,7 @@ msgid "geo location name"
 msgstr "location"
 
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 
@@ -850,9 +850,9 @@ msgstr "ERROR: could not parse command line argument %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WARNING: element named '%s' not found.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "ERROR: from element %s: %s\n"
+msgstr ""
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
@@ -1016,18 +1016,6 @@ msgstr ""
 msgid "Freeing pipeline ...\n"
 msgstr "RUNNING pipeline ...\n"
 
-#, fuzzy
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Error while writing to file \"%s\"."
-
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "Error while writing to file \"%s\"."
-
-#, fuzzy
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Internal GStreamer error: state change failed.  File a bug."
-
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Disable accelerated CPU instructions"
 
@@ -1045,6 +1033,9 @@ msgstr "RUNNING pipeline ...\n"
 
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Scheduler to use (default is '%s')"
+
+#~ msgid "Internal GStreamer error: state change failed.  File a bug."
+#~ msgstr "Internal GStreamer error: state change failed.  File a bug."
 
 #~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
 #~ msgstr "Internal GStreamer error: scheduler problem.  File a bug."

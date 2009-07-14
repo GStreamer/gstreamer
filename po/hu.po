@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
 "PO-Revision-Date: 2009-04-17 23:54+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -581,8 +581,9 @@ msgstr "a tartalmat leíró, vesszővel elválasztott kulcsszavak"
 msgid "geo location name"
 msgstr "földrajzi hely neve"
 
+#, fuzzy
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 "emberek által olvasható leíró jellegű hely, vagy ahol a média felvételre "
@@ -1005,15 +1006,11 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Belső GStreamer hiba: az állapotváltás meghiúsult."
+
 #~ msgid "Error while writing to file descriptor \"%d\"."
 #~ msgstr "Hiba a következő fájlleíróba íráskor: „%d”."
 
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "Hiba a következő fájlban való tekerés közben: „%s”."
-
 #~ msgid "File descriptor \"%d\" is not valid."
 #~ msgstr "A következő fájlleíró érvénytelen: „%d”."
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Belső GStreamer hiba: az állapotváltás meghiúsult."

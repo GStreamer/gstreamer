@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
 "PO-Revision-Date: 2009-02-12 14:17+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -583,8 +583,9 @@ msgstr "разделяемые запятыми ключевые слова, о�
 msgid "geo location name"
 msgstr "геогр. местоположение"
 
+#, fuzzy
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 "описательное название местности, в которой производилась запись или "
@@ -1015,18 +1016,14 @@ msgstr "Установка конвейера в состояние NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Установка конвейера в состояние NULL...\n"
 
+#~ msgid "Internal GStreamer error: state change failed."
+#~ msgstr "Внутренняя ошибка GStreamer: не удалось сменить состояние."
+
 #~ msgid "Error while writing to file descriptor \"%d\"."
 #~ msgstr "Ошибка записи в дескриптор файла «%d»."
 
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "Ошибка позиционирования в файле «%s»."
-
 #~ msgid "File descriptor \"%d\" is not valid."
 #~ msgstr "Дескриптор файла «%d» недействителен."
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Внутренняя ошибка GStreamer: не удалось сменить состояние."
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "Освобождение конвейера...\n"

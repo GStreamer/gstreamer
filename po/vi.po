@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.21.3\n"
+"Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
-"PO-Revision-Date: 2009-01-26 22:21+1030\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
+"PO-Revision-Date: 2009-05-13 23:16+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -68,7 +68,7 @@ msgstr ""
 "vào danh sách được cất giữ trong biến môi trường GST_PLUGIN_PATH"
 
 msgid "PLUGINS"
-msgstr "BỔ SUNG"
+msgstr "PHẦN BỔ SUNG"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Tắt chức năng bắt lỗi phân đoạn trong khi nạp phần bổ sung"
@@ -357,12 +357,11 @@ msgstr ""
 "Nguồn của nhạc/phim dưới dạng một địa chỉ URI (địa chỉ gốc của tập tin hay "
 "luồng)"
 
-#, fuzzy
 msgid "homepage"
-msgstr "ảnh"
+msgstr "trang chủ"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
+msgstr "Trang chủ của nghệ sĩ hay phim "
 
 msgid "description"
 msgstr "mô tả"
@@ -453,13 +452,11 @@ msgstr "codec âm thanh"
 msgid "codec the audio data is stored in"
 msgstr "cách mã hóa/giải mã dữ liệu âm thanh này"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "codec ảnh động"
+msgstr "codec phụ đề"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "cách mã hóa/giải mã dữ liệu ảnh động này"
+msgstr "codec theo đó dữ liệu phụ đề được mã hoá"
 
 #, fuzzy
 msgid "container format"
@@ -581,8 +578,9 @@ msgstr "các từ khoá định giới bằng dấu phẩy, diễn tả nội du
 msgid "geo location name"
 msgstr "tên định vị địa lý"
 
+#, fuzzy
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 "vị trí miêu tả cho người đọc được hay nơi nhạc/phím đã được thu hay tạo"
@@ -831,9 +829,8 @@ msgstr "LỖI: lỗi phân tách tập tin xml « %s ».\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "LỖI: không có yếu tố đường ống cấp đầu trong tập tin « %s ».\n"
 
-#, fuzzy
 msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "CẢNH BÁO : hiện thời hỗ trợ chỉ một yếu tố cấp đầu."
+msgstr "CẢNH BÁO : hiện thời hỗ trợ chỉ một yếu tố cấp đầu.\n"
 
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
@@ -907,7 +904,7 @@ msgstr "Phân phối lại sự âm ỷ...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "Đang đặt tình trạng thành %s như yêu cầu bởi %s....\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Ngắt: đang ngừng chạy đường ống ...\n"
@@ -918,9 +915,8 @@ msgstr "Thể xuất (cũng được biết là siêu dữ liệu)"
 msgid "Output status information and property notifications"
 msgstr "Xuất thông tin trạng thái và thông báo tài sản"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "Không xuất thông tin trạng thái KIỂU"
+msgstr "Không in ra thông tin nào về tiến hành"
 
 msgid "Output messages"
 msgstr "Thông điệp xuất"
@@ -944,7 +940,7 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "In ra vết cấp phát (nếu được bật khi biên dich)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "Ép buộc kết thúc luồng trên các nguồn trước khi đóng đường ống"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -986,16 +982,17 @@ msgstr "LỖI: đường ống không phát được.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr ""
+"Kết thúc luồng khi tắt phần mềm vẫn còn hoạt động thì đang ép buộc kết thúc "
+"luồng trên đường ống\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "Đang đợi kết thúc luồng...\n"
 
-#, fuzzy
 msgid "EOS received - stopping pipeline...\n"
-msgstr "Ngắt: đang ngừng chạy đường ống ...\n"
+msgstr "Nhận được tín hiệu kết thúc luồng: đang ngừng chạy đường ống ...\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Gặp lỗi trong khi đợi kết thúc luồng\n"
 
 msgid "Execution ended after %"
 msgstr "Thực hiện xong sau %"
@@ -1006,22 +1003,14 @@ msgstr "Đang lập đường ống thành SẴN SÀNG ...\n"
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Gặp lỗi khi ghi vào mô tả tập tin « %d »."
-
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "Gặp lỗi khi tìm trong tập tin « %s »."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Mô tả tập tin « %d » không hợp lệ."
+msgstr "Đang giải phóng đường ống...\n"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Lỗi nội bộ GStreamer: việc thay đổi trạng thái bị lỗi."
 
-#~ msgid "FREEING pipeline ...\n"
-#~ msgstr "ĐANG GIẢI PHÓNG đường ống ...\n"
+#~ msgid "Error while writing to file descriptor \"%d\"."
+#~ msgstr "Gặp lỗi khi ghi vào mô tả tập tin « %d »."
+
+#~ msgid "File descriptor \"%d\" is not valid."
+#~ msgstr "Mô tả tập tin « %d » không hợp lệ."

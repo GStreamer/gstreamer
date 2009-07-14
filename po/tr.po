@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 13:51+0100\n"
+"POT-Creation-Date: 2009-07-14 16:33+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -608,7 +608,7 @@ msgid "geo location name"
 msgstr "konum"
 
 msgid ""
-"human readable descriptive location or where the media has been recorded or "
+"human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
 
@@ -856,9 +856,9 @@ msgstr "HATA: komut satırı argümanı %d ayrıştırılamadı: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "UYARI: '%s' isimli öğe bulunamadı.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "HATA: %s öğesinden: %s\n"
+msgstr ""
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
@@ -1022,20 +1022,6 @@ msgstr ""
 msgid "Freeing pipeline ...\n"
 msgstr "BORUHATTI çalıştırılıyor ...\n"
 
-#, fuzzy
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "\"%s\" dosyası yazılırken hata."
-
-#, fuzzy
-#~ msgid "Error while seeking in file \"%d\"."
-#~ msgstr "\"%s\" dosyası yazılırken hata."
-
-#, fuzzy
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr ""
-#~ "Dahili GStreamer hatası: durum değiştirilemedi.  Hata bildiriminde "
-#~ "bulunun."
-
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Hızlandırılmış CPU işlemlerini kapat"
 
@@ -1059,6 +1045,11 @@ msgstr "BORUHATTI çalıştırılıyor ...\n"
 
 #~ msgid "REGISTRY"
 #~ msgstr "KAYIT"
+
+#~ msgid "Internal GStreamer error: state change failed.  File a bug."
+#~ msgstr ""
+#~ "Dahili GStreamer hatası: durum değiştirilemedi.  Hata bildiriminde "
+#~ "bulunun."
 
 #~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
 #~ msgstr ""
