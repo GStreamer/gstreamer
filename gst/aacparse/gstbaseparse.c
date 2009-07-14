@@ -735,7 +735,6 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
     GstBaseParseClass * klass, GstBuffer * buffer)
 {
   GstFlowReturn ret;
-  GstClockTime last_stop = GST_CLOCK_TIME_NONE;
 
   if (parse->priv->discont) {
     GST_DEBUG_OBJECT (parse, "marking DISCONT");
@@ -748,6 +747,46 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
   /* FIXME: Check the output buffer for any missing metadata,
    *        keep track of timestamp and calculate everything possible
    *        if not set already */
+
+  /* First buffers are dropped, this means that the subclass needs more
+   * frames to decide on the format and queues them internally */
+  if (ret == GST_BASE_PARSE_FLOW_DROPPED && !GST_PAD_CAPS (parse->srcpad)) {
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
+
+  /* convert internal flow to OK and mark discont for the next buffer. */
+  if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
+    parse->priv->discont = TRUE;
+    ret = GST_FLOW_OK;
+
+    gst_buffer_unref (buffer);
+
+    return ret;
+  } else if (ret != GST_FLOW_OK) {
+    return ret;
+  }
+
+  return gst_base_parse_push_buffer (parse, buffer);
+}
+
+/**
+ * gst_base_parse_push_buffer:
+ * @parse: #GstBaseParse.
+ * @buffer: #GstBuffer.
+ *
+ * Pushes the buffer downstream, sends any pending events and
+ * does some timestamp and segment handling.
+ *
+ * This must be called with srcpad STREAM_LOCK held.
+ *
+ * Returns: #GstFlowReturn
+ */
+GstFlowReturn
+gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime last_stop = GST_CLOCK_TIME_NONE;
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     last_stop = GST_BUFFER_TIMESTAMP (buffer);
@@ -792,39 +831,30 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
 
   /* TODO: Add to seek table */
 
-  if (ret == GST_FLOW_OK) {
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
-        GST_CLOCK_TIME_IS_VALID (parse->segment.stop) &&
-        GST_BUFFER_TIMESTAMP (buffer) > parse->segment.stop) {
-      GST_LOG_OBJECT (parse, "Dropped frame, after segment");
-      gst_buffer_unref (buffer);
-    } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
-        GST_BUFFER_DURATION_IS_VALID (buffer) &&
-        GST_CLOCK_TIME_IS_VALID (parse->segment.start) &&
-        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer)
-        < parse->segment.start) {
-      /* FIXME: subclass needs way to override the start as downstream might
-       * need frames before for proper decoding */
-      GST_LOG_OBJECT (parse, "Dropped frame, before segment");
-      gst_buffer_unref (buffer);
-    } else {
-      ret = gst_pad_push (parse->srcpad, buffer);
-      GST_LOG_OBJECT (parse, "frame (%d bytes) pushed: %d",
-          GST_BUFFER_SIZE (buffer), ret);
-    }
-  } else {
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
+      GST_CLOCK_TIME_IS_VALID (parse->segment.stop) &&
+      GST_BUFFER_TIMESTAMP (buffer) > parse->segment.stop) {
+    GST_LOG_OBJECT (parse, "Dropped frame, after segment");
     gst_buffer_unref (buffer);
+  } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
+      GST_BUFFER_DURATION_IS_VALID (buffer) &&
+      GST_CLOCK_TIME_IS_VALID (parse->segment.start) &&
+      GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer)
+      < parse->segment.start) {
+    /* FIXME: subclass needs way to override the start as downstream might
+     * need frames before for proper decoding */
+    GST_LOG_OBJECT (parse, "Dropped frame, before segment");
+    gst_buffer_unref (buffer);
+  } else {
+    ret = gst_pad_push (parse->srcpad, buffer);
+    GST_LOG_OBJECT (parse, "frame (%d bytes) pushed: %d",
+        GST_BUFFER_SIZE (buffer), ret);
   }
 
   /* Update current running segment position */
   if (ret == GST_FLOW_OK && last_stop != GST_CLOCK_TIME_NONE)
     gst_segment_set_last_stop (&parse->segment, GST_FORMAT_TIME, last_stop);
 
-  /* convert internal flow to OK and mark discont for the next buffer. */
-  if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
-    parse->priv->discont = TRUE;
-    ret = GST_FLOW_OK;
-  }
   return ret;
 }
 
