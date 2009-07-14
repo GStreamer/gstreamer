@@ -422,6 +422,8 @@ GST_START_TEST (test_live_seeking)
   gint i;
 
   GST_INFO ("preparing test");
+  main_loop = NULL;
+  play_seek_event = NULL;
 
   /* build pipeline */
   bin = gst_pipeline_new ("pipeline");
@@ -436,7 +438,16 @@ GST_START_TEST (test_live_seeking)
   src1 = gst_element_factory_make ("alsasrc", "src1");
   if (!src1) {
     GST_INFO ("no audiosrc, skipping");
+    goto cleanup;
   }
+  /* Test that the audio source can get to paused, else skip */
+  res = gst_element_set_state (src1, GST_STATE_PAUSED);
+  (void) gst_element_set_state (src1, GST_STATE_NULL);
+  if (res == GST_STATE_CHANGE_FAILURE) {
+    gst_object_unref (src1);
+    goto cleanup;
+  }
+
   /* live sources ignore seeks, force eos after 2 sec (4 buffers half second
    * each) - don't use autoaudiosrc, as then we can't set anything here */
   g_object_set (src1, "num-buffers", 4, "blocksize", 44100, NULL);
@@ -478,7 +489,7 @@ GST_START_TEST (test_live_seeking)
 
     /* prepare playing */
     res = gst_element_set_state (bin, GST_STATE_PAUSED);
-    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+    fail_unless (res != GST_STATE_CHANGE_FAILURE);
 
     /* wait for completion */
     res =
@@ -509,8 +520,11 @@ GST_START_TEST (test_live_seeking)
   }
 
   /* cleanup */
-  g_main_loop_unref (main_loop);
-  gst_event_unref (play_seek_event);
+cleanup:
+  if (main_loop)
+    g_main_loop_unref (main_loop);
+  if (play_seek_event)
+    gst_event_unref (play_seek_event);
   gst_object_unref (G_OBJECT (bus));
   gst_object_unref (G_OBJECT (bin));
 }
