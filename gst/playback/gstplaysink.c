@@ -837,7 +837,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
   GstPlayVideoChain *chain;
   GstBin *bin;
   GstPad *pad;
-  GstElement *head, *prev, *elem;
+  GstElement *head, *prev, *elem = NULL;
 
   chain = g_new0 (GstPlayVideoChain, 1);
   chain->chain.playsink = playsink;
@@ -848,17 +848,21 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
   if (playsink->video_sink) {
     GST_DEBUG_OBJECT (playsink, "trying configured videosink");
     chain->sink = try_element (playsink, playsink->video_sink, FALSE);
-  }
-  if (chain->sink == NULL) {
-    GST_DEBUG_OBJECT (playsink, "trying autovideosink");
-    elem = gst_element_factory_make ("autovideosink", "videosink");
-    chain->sink = try_element (playsink, elem, TRUE);
-  }
-  /* FIXME: if DEFAULT_VIDEOSINK != "autovideosink" try this now */
-  if (chain->sink == NULL) {
-    GST_DEBUG_OBJECT (playsink, "trying xvimagesink");
-    elem = gst_element_factory_make ("xvimagesink", "videosink");
-    chain->sink = try_element (playsink, elem, TRUE);
+  } else {
+    /* only try fallback if no specific sink was chosen */
+    if (chain->sink == NULL) {
+      GST_DEBUG_OBJECT (playsink, "trying autovideosink");
+      elem = gst_element_factory_make ("autovideosink", "videosink");
+      chain->sink = try_element (playsink, elem, TRUE);
+    }
+    if (chain->sink == NULL) {
+      /* if default sink from config.h is different then try it too */
+      if (strcmp (DEFAULT_VIDEOSINK, "autovideosink")) {
+        GST_DEBUG_OBJECT (playsink, "trying " DEFAULT_VIDEOSINK);
+        elem = gst_element_factory_make (DEFAULT_VIDEOSINK, "videosink");
+        chain->sink = try_element (playsink, elem, TRUE);
+      }
+    }
   }
   if (chain->sink == NULL)
     goto no_sinks;
@@ -956,13 +960,24 @@ no_sinks:
   {
     if (!elem) {
       post_missing_element_message (playsink, "autovideosink");
-      GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
-          (_("Both autovideosink and xvimagesink elements are missing.")),
-          (NULL));
+      if (strcmp (DEFAULT_VIDEOSINK, "autovideosink")) {
+        post_missing_element_message (playsink, DEFAULT_VIDEOSINK);
+        GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+            (_("Both autovideosink and %s elements are missing."),
+                DEFAULT_VIDEOSINK), (NULL));
+      } else {
+        GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+            (_("The autovideosink element is missing.")), (NULL));
+      }
     } else {
-      GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
-          (_("Both autovideosink and xvimagesink elements are not working.")),
-          (NULL));
+      if (strcmp (DEFAULT_VIDEOSINK, "autovideosink")) {
+        GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
+            (_("Both autovideosink and %s elements are not working."),
+                DEFAULT_VIDEOSINK), (NULL));
+      } else {
+        GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+            (_("The autovideosink element is not working.")), (NULL));
+      }
     }
     free_chain ((GstPlayChain *) chain);
     return NULL;
@@ -1323,7 +1338,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   GstBin *bin;
   gboolean have_volume;
   GstPad *pad;
-  GstElement *head, *prev, *elem;
+  GstElement *head, *prev, *elem = NULL;
 
   chain = g_new0 (GstPlayAudioChain, 1);
   chain->chain.playsink = playsink;
@@ -1335,17 +1350,21 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     GST_DEBUG_OBJECT (playsink, "trying configured audiosink %" GST_PTR_FORMAT,
         playsink->audio_sink);
     chain->sink = try_element (playsink, playsink->audio_sink, FALSE);
-  }
-  if (chain->sink == NULL) {
-    GST_DEBUG_OBJECT (playsink, "trying autoaudiosink");
-    elem = gst_element_factory_make ("autoaudiosink", "audiosink");
-    chain->sink = try_element (playsink, elem, TRUE);
-  }
-  /* FIXME: if DEFAULT_AUDIOSINK != "autoaudiosink" try this now */
-  if (chain->sink == NULL) {
-    GST_DEBUG_OBJECT (playsink, "trying alsasink");
-    elem = gst_element_factory_make ("alsasink", "audiosink");
-    chain->sink = try_element (playsink, elem, TRUE);
+  } else {
+    /* only try fallback if no specific sink was chosen */
+    if (chain->sink == NULL) {
+      GST_DEBUG_OBJECT (playsink, "trying autoaudiosink");
+      elem = gst_element_factory_make ("autoaudiosink", "audiosink");
+      chain->sink = try_element (playsink, elem, TRUE);
+    }
+    if (chain->sink == NULL) {
+      /* if default sink from config.h is different then try it too */
+      if (strcmp (DEFAULT_AUDIOSINK, "autoaudiosink")) {
+        GST_DEBUG_OBJECT (playsink, "trying " DEFAULT_AUDIOSINK);
+        elem = gst_element_factory_make (DEFAULT_AUDIOSINK, "audiosink");
+        chain->sink = try_element (playsink, elem, TRUE);
+      }
+    }
   }
   if (chain->sink == NULL)
     goto no_sinks;
@@ -1500,12 +1519,24 @@ no_sinks:
   {
     if (!elem) {
       post_missing_element_message (playsink, "autoaudiosink");
-      GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
-          (_("Both autoaudiosink and alsasink elements are missing.")), (NULL));
+      if (strcmp (DEFAULT_AUDIOSINK, "autoaudiosink")) {
+        post_missing_element_message (playsink, DEFAULT_AUDIOSINK);
+        GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+            (_("Both autoaudiosink and %s elements are missing."),
+                DEFAULT_AUDIOSINK), (NULL));
+      } else {
+        GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+            (_("The autoaudiosink element is missing.")), (NULL));
+      }
     } else {
-      GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
-          (_("Both autoaudiosink and alsasink elements are not working.")),
-          (NULL));
+      if (strcmp (DEFAULT_AUDIOSINK, "autoaudiosink")) {
+        GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
+            (_("Both autoaudiosink and %s elements are not working."),
+                DEFAULT_AUDIOSINK), (NULL));
+      } else {
+        GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+            (_("The autoaudiosink element is not working.")), (NULL));
+      }
     }
     free_chain ((GstPlayChain *) chain);
     return NULL;
