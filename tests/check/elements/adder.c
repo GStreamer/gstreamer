@@ -443,6 +443,7 @@ GST_START_TEST (test_live_seeking)
   /* Test that the audio source can get to paused, else skip */
   res = gst_element_set_state (src1, GST_STATE_PAUSED);
   (void) gst_element_set_state (src1, GST_STATE_NULL);
+  (void) gst_element_get_state (src1, NULL, NULL, GST_CLOCK_TIME_NONE);
   if (res == GST_STATE_CHANGE_FAILURE) {
     gst_object_unref (src1);
     goto cleanup;
@@ -521,6 +522,7 @@ GST_START_TEST (test_live_seeking)
 
   /* cleanup */
 cleanup:
+  GST_INFO ("cleaning up");
   if (main_loop)
     g_main_loop_unref (main_loop);
   if (play_seek_event)
