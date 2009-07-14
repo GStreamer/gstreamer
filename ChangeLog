@@ -1,9 +1,153 @@
-=== release 0.10.15 ===
+2009-07-13 12:24:35 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
 
-2009-05-11  Jan Schmidt <jan.schmidt@sun.com>
+	* common:
+	  Automatic update of common submodule
+	  From 5845b63 to fedaaee
+
+2009-07-01 16:01:53 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstquery.override:
+	  gstquery.override: Wrap remainig gst_query_parse*() methods.
+
+2009-07-01 16:01:41 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstevent.override:
+	  gstevent.override: Fix typos.
+
+2009-07-01 13:54:57 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstmessage.override:
+	* testsuite/test_message.py:
+	  gst.Message: Wrap remaining parse_*() methods.
+
+2009-07-01 13:54:40 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstevent.override:
+	  gst.Event: wrap parse_new_segment_full()
+
+2009-07-01 13:53:54 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gst.defs:
+	  gst.defs: Properly mark functions returning new objects
+
+2009-07-01 12:29:22 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstmessage.override:
+	* testsuite/test_message.py:
+	  gst.Message: Add overrides for new 0.10.24 messages
+
+2009-07-01 12:28:52 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstevent.override:
+	* testsuite/test_event.py:
+	  gst.Event: Add override for step event
+
+2009-07-01 10:58:42 +0200  Edward Hervey <bilboed@bilboed.com>
 
 	* configure.ac:
-	  releasing 0.10.15, "We built a wall"
+	* gst/Makefile.am:
+	* gst/gst-0.10.24.ignore:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gstversion.override.in:
+	  Update .defs for core API additions
+
+2009-07-01 10:57:29 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* codegen/argtypes.py:
+	  codegen: Fix const GBoxed return wrapping.
+
+2009-06-26 13:43:51 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f810030 to 5845b63
+
+2009-06-24 15:16:20 +0100  Jan Schmidt <jan.schmidt@sun.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From c572721 to f810030
+
+2009-06-05 23:26:11 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/pygstvalue.c:
+	  values: Fix segfault in the testsuite
+	  It seems pygst_value_from_pyobject should not unref the passed
+	  in object. Wrap the original pygst_value_from_pyobject in a function
+	  that converts unicode python objects and then unrefs the temporary
+	  object after extraction into a GValue.
+
+2009-06-01 22:02:47 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	* gst/gsttaglist.override:
+	* gst/tag.override:
+	* testsuite/common.py:
+	* testsuite/test_pipeline.py:
+	* testsuite/test_taglist.py:
+	  wrap gst_tag_to_vorbis_comment; fix uint tag setting
+	  Setting gst.TAG_TRACK_NUMBER was failing because GStreamer
+	  expects a uint while Python object -> GValue conversion was
+	  giving an int.  gst_tag_to_vorbis_comment was wrapped so
+	  this conversion could be tested and failed on properly.
+
+2009-06-01 19:08:47 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	* gst/pygstvalue.c:
+	* testsuite/test_struct.py:
+	* testsuite/test_taglist.py:
+	  Convert unicode objects to utf-8 encoded G_STRINGs
+
+2009-06-01 12:46:03 +0200  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	* gst/gst.override:
+	  fix some grammar, add some debug
+
+2009-05-26 21:01:35 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gst.defs:
+	  gst.defs: Replace gchar** by GStrv to wrap more methods. Fixes #580992
+
+2009-05-26 17:20:32 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 888e0a2 to c572721
+
+2009-05-22 12:05:28 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* plugin/gstpythonplugin.c:
+	  gstpythonplugin: Don't use pyg_gil_* in pure python. Fixes #583378
+	  At this point, pygobject wasn't loaded yet ... cause pyg_gil_state_ensured
+	  to not be initialized to the proper method.
+
+2009-05-22 10:21:17 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6ab11d1 to 888e0a2
+
+2009-05-12 11:52:11 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gst-pb-0.10.23.ignore:
+	  gst-pb-0.10.23.ignore: Remove stray empty line.
+	  This caused some issues on some systems.
+
+2009-05-11 21:22:35 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  Back to development -> 0.10.15.1
+
+=== release 0.10.15 ===
+
+2009-05-11 00:11:58 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 0.10.15
 
 2009-05-07 14:57:57 +0200  Edward Hervey <bilboed@bilboed.com>
 
