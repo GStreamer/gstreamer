@@ -149,6 +149,31 @@ gst_schro_enc_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &schro_enc_details);
 }
 
+static GType
+register_enum_list (const SchroEncoderSetting * setting)
+{
+  GType type;
+  static GEnumValue *enumtypes;
+  int n;
+  char *typename;
+  int i;
+
+  n = setting->max + 1;
+
+  enumtypes = g_malloc0 ((n + 1) * sizeof (GEnumValue));
+  for (i = 0; i < n; i++) {
+    enumtypes[i].value = i;
+    enumtypes[i].value_name = setting->enum_list[i];
+    enumtypes[i].value_nick = setting->enum_list[i];
+  }
+
+  typename = g_strdup_printf ("SchroEncoderSettingEnum_%s", setting->name);
+  type = g_enum_register_static (typename, enumtypes);
+  g_free (typename);
+
+  return type;
+}
+
 static void
 gst_schro_enc_class_init (GstSchroEncClass * klass)
 {
@@ -183,8 +208,8 @@ gst_schro_enc_class_init (GstSchroEncClass * klass)
         break;
       case SCHRO_ENCODER_SETTING_TYPE_ENUM:
         g_object_class_install_property (gobject_class, i + 1,
-            g_param_spec_int (setting->name, setting->name, setting->name,
-                setting->min, setting->max, setting->default_value,
+            g_param_spec_enum (setting->name, setting->name, setting->name,
+                register_enum_list (setting), setting->default_value,
                 G_PARAM_READWRITE));
         break;
       case SCHRO_ENCODER_SETTING_TYPE_DOUBLE:
@@ -308,6 +333,10 @@ gst_schro_enc_set_property (GObject * object, guint prop_id,
         schro_encoder_setting_set_double (src->encoder, setting->name,
             g_value_get_boolean (value));
         break;
+      default:
+        schro_encoder_setting_set_double (src->encoder, setting->name,
+            g_value_get_enum (value));
+        break;
     }
   }
 }
@@ -335,6 +364,11 @@ gst_schro_enc_get_property (GObject * object, guint prop_id, GValue * value,
         break;
       case G_TYPE_BOOLEAN:
         g_value_set_boolean (value,
+            schro_encoder_setting_get_double (src->encoder, setting->name));
+        break;
+      default:
+        /* it's an enum */
+        g_value_set_enum (value,
             schro_encoder_setting_get_double (src->encoder, setting->name));
         break;
     }
