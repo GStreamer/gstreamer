@@ -316,7 +316,7 @@ metadata_tags_exif_register (void)
 
   gst_tag_register (GST_TAG_CAPTURE_ORIENTATION, GST_TAG_FLAG_META,
       G_TYPE_UINT, GST_TAG_CAPTURE_ORIENTATION,
-      "The kind of light source.", NULL);
+      "The orientation of the camera.", NULL);
 
   /*
      from -100 to 100
