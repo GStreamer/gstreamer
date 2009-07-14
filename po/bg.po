@@ -1,14 +1,14 @@
 # Bulgarian translation of gst-plugins-base.
-# Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+# Copyright (C) 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Alexander Shopov <ash@contact.bg>, 2005, 2006, 2007, 2008.
+# Alexander Shopov <ash@contact.bg>, 2005, 2006, 2007, 2008, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.19.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
-"PO-Revision-Date: 2008-07-21 11:18+0300\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
+"PO-Revision-Date: 2009-05-15 22:41+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "MIME-Version: 1.0\n"
@@ -179,30 +179,31 @@ msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 "Едновременно липсват елементите-приемници „autoaudiosink“ и „alsasink“."
 
-#, fuzzy
 msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr ""
-"Едновременно липсват елементите-приемници „autovideosink“ и „xvimagesink“."
+msgstr "И двата елемента-приемници „autovideosink“ и „xvimagesink“ не работят."
 
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "Потребителският елемент-приемник за текст е неизползваем."
 
 msgid "No volume control found"
-msgstr ""
+msgstr "Липсва управление на силата на звука"
 
-#, fuzzy
 msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr ""
-"Едновременно липсват елементите-приемници „autoaudiosink“ и „alsasink“."
+msgstr "И двата елемента-приемници „autoaudiosink“ и „alsasink“ не работят."
 
 msgid "Can't play a text file without video."
-msgstr ""
+msgstr "Не може да се изпълни текстов файл без видео."
 
 msgid "Can't play a text subtitles and subpictures."
-msgstr ""
+msgstr "Не може да се изпълнят текстови субтитри и подизображения."
 
-msgid "No file name specified."
-msgstr "Не е указано име на файл."
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Не е указано устройство."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Файлът „%s“ от виртуалната файлова система не може да се затвори."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -248,7 +249,7 @@ msgid "Can't record audio fast enough"
 msgstr "Звукът не може да бъде записан достатъчно бързо"
 
 msgid "Failed to read tag: not enough data"
-msgstr ""
+msgstr "Неуспех при прочитаното на етикет: липсват достатъчно данни"
 
 msgid "track ID"
 msgstr "идентификатор на песен"
@@ -325,9 +326,8 @@ msgstr "Субтитри, формат Sami"
 msgid "TMPlayer subtitle format"
 msgstr "Субтитри, формат TMPlayer"
 
-#, fuzzy
 msgid "Kate subtitle format"
-msgstr "Субтитри, формат Sami"
+msgstr "Субтитри, формат Kate"
 
 msgid "Uncompressed planar YUV 4:2:0"
 msgstr "Некомпресирано видео по равнини YUV 4:2:0"
@@ -476,3 +476,6 @@ msgstr "Устройството „%s“ вече се използва."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Устройството „%s“ не може да се отвори за четене и запис."
+
+#~ msgid "No file name specified."
+#~ msgstr "Не е указано име на файл."

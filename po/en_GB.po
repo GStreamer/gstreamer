@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -193,8 +193,12 @@ msgid "Can't play a text subtitles and subpictures."
 msgstr ""
 
 #, fuzzy
-msgid "No file name specified."
-msgstr "No filename specified."
+msgid "No Temp directory specified."
+msgstr "No device specified."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Could not write to file \"%s\"."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -484,6 +488,9 @@ msgstr "Could not open device \"%s\" for reading and writing."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Could not open file \"%s\" for writing."
+
+#~ msgid "No filename specified."
+#~ msgstr "No filename specified."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "No or invalid input audio, AVI stream will be corrupt."

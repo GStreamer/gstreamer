@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
-"PO-Revision-Date: 2009-04-19 10:59+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
+"PO-Revision-Date: 2009-05-28 09:07+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -177,7 +177,7 @@ msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Både autoaudiosink- och alsasink-elementen saknas."
 
 msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr "Både autovideosink- och xvimagesink-elementen fungerar inte."
+msgstr "Varken autovideosink- och xvimagesink-elementen fungerar."
 
 msgid "Custom text sink element is not usable."
 msgstr "Anpassat text sink-element är inte användbart."
@@ -186,7 +186,7 @@ msgid "No volume control found"
 msgstr "Ingen volymkontroll hittades"
 
 msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr "Både autoaudiosink- och alsasink-elementen fungerar inte."
+msgstr "Varken autoaudiosink- och alsasink-elementen fungerar."
 
 msgid "Can't play a text file without video."
 msgstr "Kan inte spela upp en textfil utan video."
@@ -194,8 +194,13 @@ msgstr "Kan inte spela upp en textfil utan video."
 msgid "Can't play a text subtitles and subpictures."
 msgstr "Kan inte spela upp en undertext och underbilder."
 
-msgid "No file name specified."
-msgstr "Inget filnamn angivet."
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Ingen enheten angiven."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Kunde inte skriva till filen \"%s\"."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -469,6 +474,9 @@ msgstr "Enheten \"%s\" används redan."
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 
+#~ msgid "No file name specified."
+#~ msgstr "Inget filnamn angivet."
+
 #~ msgid "artist sortname"
 #~ msgstr "artistsorteringsnamn"
 
@@ -492,9 +500,6 @@ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Kunde inte öppna filen \"%s\" för skrivning."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Kunde inte skriva till filen \"%s\"."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."

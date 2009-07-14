@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.12\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
 "PO-Revision-Date: 2007-03-22 16:38+0100\n"
 "Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -197,8 +197,12 @@ msgid "Can't play a text subtitles and subpictures."
 msgstr ""
 
 #, fuzzy
-msgid "No file name specified."
+msgid "No Temp directory specified."
 msgstr "Ingen enhed angivet."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Kunne ikke lukke vfs-filen \"%s\"."
 
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading."

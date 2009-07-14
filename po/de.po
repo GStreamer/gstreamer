@@ -1,38 +1,41 @@
 # German messages for gst-plugins-base.
-# Copyright � 2006 Karl Eichwalder
+# Copyright © 2006 Karl Eichwalder
 # This file is distributed under the same license as the gst-plugins-base package.
 # Karl Eichwalder <ke@suse.de>, 2006.
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.5\n"
+"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
-"PO-Revision-Date: 2007-02-06 08:59+0100\n"
-"Last-Translator: Karl Eichwalder <ke@suse.de>\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
+"PO-Revision-Date: 2009-06-21 23:55+0200\n"
+"Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Master"
-msgstr ""
+msgstr "Maste"
 
 msgid "Bass"
-msgstr ""
+msgstr "Bass"
 
 msgid "Treble"
-msgstr ""
+msgstr "Höhen"
 
 msgid "PCM"
-msgstr ""
+msgstr "PCM"
 
+#, fuzzy
 msgid "Synth"
-msgstr ""
+msgstr "Synth"
 
+#, fuzzy
 msgid "Line-in"
-msgstr ""
+msgstr "Line-in"
 
 msgid "CD"
 msgstr "CD"
@@ -47,215 +50,232 @@ msgid "Playback"
 msgstr "Wiedergabe"
 
 msgid "Capture"
-msgstr ""
+msgstr "Aufnahme"
 
 msgid "Could not open device for playback in mono mode."
-msgstr ""
+msgstr "Gerät konnte nicht zur Wiedergabe in Mono geöffnet werden."
 
 msgid "Could not open device for playback in stereo mode."
-msgstr ""
+msgstr "Gerät konnte nicht zur Wiedergabe in Stereo geöffnet werden."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr ""
+msgstr "Gerät konnte nicht zur Wiedergabe im %d-Kanalmodus geöffnet werden."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
+"Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Es wird durch eine "
+"andere Anwendung verwendet."
 
 msgid "Could not open audio device for playback."
-msgstr ""
+msgstr "Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden."
 
 msgid "Could not open device for recording in mono mode."
-msgstr ""
+msgstr "Gerät konnte nicht zur Aufnahme in Mono geöffnet werden."
 
 msgid "Could not open device for recording in stereo mode."
-msgstr ""
+msgstr "Gerät konnte nicht zur Aufnahme in Stereo geöffnet werden."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr ""
+msgstr "Gerät konnte nicht zur Aufnahme im %d-Kanalmodus geöffnet werden."
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
 msgstr ""
+"Audio-Gerät konnte nicht zur Aufnahme geöffnet werden. Es wird durch eine "
+"andere Anwendung verwendet."
 
 msgid "Could not open audio device for recording."
-msgstr ""
+msgstr "Audio-Gerät konnte nicht zur Aufnahme geöffnet werden."
 
 msgid "Could not open CD device for reading."
-msgstr ""
+msgstr "Das CD-Laufwerk konnte nicht zum Lesen geöffnet werden."
 
+#, fuzzy
 msgid "Could not seek CD."
-msgstr ""
+msgstr "Suchvorgang auf der CD ist fehlgeschlagen."
 
 msgid "Could not read CD."
-msgstr ""
+msgstr "CD konnte nicht gelesen werden."
 
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr ""
+msgstr "VFS-Datei »%s« konnte nicht zum Schreiben geöffnet werden: %s."
 
 msgid "No filename given"
-msgstr ""
+msgstr "Kein Dateiname angegeben"
 
 #, c-format
 msgid "Could not close vfs file \"%s\"."
-msgstr ""
+msgstr "VFS-Datei »%s« konnte nicht geschlossen werden."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr ""
+msgstr "Fehler beim Schreiben in die Datei »%s«."
 
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Interner Fehler im Datenstrom."
 
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
+"Ein Plugin »%s« wird zum Abspielen dieses Datenstroms benötigt, ist aber "
+"nicht installiert."
 
-#, fuzzy
 msgid "This appears to be a text file"
-msgstr "Dies ist keine Mediendatei"
+msgstr "Dies scheint eine Textdatei zu sein"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
+msgstr "Ungültige Untertitel-URI »%s«, Untertitel werden deaktiviert."
 
 msgid "No URI specified to play from."
-msgstr ""
+msgstr "Kein Ort (URI) zum Abspielen angegeben."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr ""
+msgstr "Ungültiger Ort (URI) »%s«."
 
 msgid "RTSP streams cannot be played yet."
-msgstr ""
+msgstr "RTSP-Datenströme können noch nicht abgespielt werden."
 
 msgid "Could not create \"decodebin\" element."
-msgstr ""
+msgstr "Das Element »decodebin« konnte nicht erstellt werden."
 
 msgid "Source element is invalid."
-msgstr ""
+msgstr "Das Quellelement ist ungültig."
 
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
+"Es wurde nur ein Datenstrom mit Untertiteln erkannt. Entweder laden Sie eine "
+"Datei mit Untertiteln, eine andere Art Textdatei oder die Mediendatei wurde "
+"nicht erkannt."
 
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
+"Sie haben keinen Decoder für den Umgang mit diese Datei installiert. Sie "
+"sollten die erforderlichen Plugins installieren."
 
 msgid "This is not a media file"
 msgstr "Dies ist keine Mediendatei"
 
 msgid "A subtitle stream was detected, but no video stream."
-msgstr ""
+msgstr "Ein Datenstrom mit Untertitel wurde erkannt, aber kein Videostrom."
 
 msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr ""
+msgstr "Beide Elemente »autovideosink« und »xvimagesink« fehlen."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
+"Das Element »%s« fehlt - überprüfen Sie Ihren Installation von GStreamer."
 
 msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr ""
+msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
 
 msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr ""
+msgstr "Beide Elemente »autovideosink« und »xvimagesink« funktionieren nicht."
 
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "Das eigene Element des Textziels ist nicht verwendbar."
 
 msgid "No volume control found"
-msgstr ""
+msgstr "Keine Lautstärkeregelung gefunden"
 
 msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr ""
+msgstr "Beide Elemente »autoaudiosink« und »alsasink« funktionieren nicht."
 
 msgid "Can't play a text file without video."
-msgstr ""
+msgstr "Es kann keine Textdatei ohne Video abgespielt werden."
 
 msgid "Can't play a text subtitles and subpictures."
-msgstr ""
+msgstr "Es können keine Untertiteltexte und Kleinbilder abgespielt werden."
 
-msgid "No file name specified."
-msgstr ""
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Kein Gerät angegeben."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "VFS-Datei »%s« konnte nicht geschlossen werden."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr ""
+msgstr "Die Datei »%s« konnte zum Lesen nicht geöffnet werden."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr ""
+msgstr "Für den Typ »%s« ist kein Decoder vorhanden."
 
 msgid "This stream type cannot be played yet."
-msgstr ""
+msgstr "Dieser Datenstrom kann noch nicht abgespielt werden."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr ""
+msgstr "Es ist kein URI-Handler für »%s« implementiert."
 
 msgid "Could not create \"decodebin2\" element."
-msgstr ""
+msgstr "Das Element »decodebin2« konnte nicht erstellt werden."
 
 msgid "Could not create \"queue2\" element."
-msgstr ""
+msgstr "Das Element »queue2« konnte nicht erstellt werden."
 
 msgid "Could not create \"typefind\" element."
-msgstr ""
+msgstr "Das Element »typefind« konnte nicht erstellt werden."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr ""
+msgstr "Fehler beim Senden der Daten nach »%s:%d«."
 
 #, c-format
 msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr ""
+msgstr "Fehler beim Senden der GDP-Kopfdaten nach »%s:%d«."
 
 #, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr ""
+msgstr "Fehler beim Senden der GDP-Nutzdaten nach »%s:%d«."
 
 #, c-format
 msgid "Connection to %s:%d refused."
-msgstr ""
+msgstr "Verbindung nach %s:%d wurde verweigert."
 
 msgid "Can't record audio fast enough"
-msgstr ""
+msgstr "Der Ton kann nicht schnell genug aufgezeichnet werden"
 
 msgid "Failed to read tag: not enough data"
-msgstr ""
+msgstr "Lesen der Kennzeichnung schlug fehl: Nicht genug Daten"
 
 msgid "track ID"
-msgstr ""
+msgstr "Titelkennung"
 
 msgid "MusicBrainz track ID"
-msgstr ""
+msgstr "Titelkennung von MusicBrainz"
 
 msgid "artist ID"
-msgstr ""
+msgstr "Interpretenkennung"
 
 msgid "MusicBrainz artist ID"
-msgstr ""
+msgstr "Interpretenkennung von MusicBrainz"
 
 msgid "album ID"
-msgstr ""
+msgstr "Albenkennung"
 
 msgid "MusicBrainz album ID"
-msgstr ""
+msgstr "Albenkennung von MusicBrainz"
 
 msgid "album artist ID"
-msgstr ""
+msgstr "Kennung des Albeninterpreten"
 
 msgid "MusicBrainz album artist ID"
-msgstr ""
+msgstr "Kennung des Albeninterpreten von MusicBrainz"
 
 msgid "track TRM ID"
 msgstr ""
@@ -264,85 +284,85 @@ msgid "MusicBrainz TRM ID"
 msgstr ""
 
 msgid "This CD has no audio tracks"
-msgstr "Auf dieser CD sind keine Audio-Tracks"
+msgstr "Auf dieser CD befinden sich keine Audio-Tracks"
 
 msgid "ID3 tag"
-msgstr ""
+msgstr "ID3-Kennzeichnung"
 
 msgid "APE tag"
-msgstr ""
+msgstr "APE-Kennzeichnung"
 
 msgid "ICY internet radio"
-msgstr ""
+msgstr "ICY Internet-Radio"
 
 msgid "Apple Lossless Audio (ALAC)"
-msgstr ""
+msgstr "Apple Lossless Audio (ALAC)"
 
 msgid "Free Lossless Audio Codec (FLAC)"
-msgstr ""
+msgstr "Free Lossless Audio Codec (FLAC)"
 
 msgid "Lossless True Audio (TTA)"
-msgstr ""
+msgstr "Lossless True Audio (TTA)"
 
 msgid "Windows Media Speech"
-msgstr ""
+msgstr "Windows Media Speech"
 
 msgid "CYUV Lossless"
-msgstr ""
+msgstr "CYUV verlustlos"
 
 msgid "FFMpeg v1"
-msgstr ""
+msgstr "FFMpeg v1"
 
 msgid "Lossless MSZH"
-msgstr ""
+msgstr "verlustloses MSZH"
 
 msgid "Uncompressed Gray Image"
-msgstr ""
+msgstr "Unkomprimiertes Graubild"
 
 msgid "Run-length encoding"
-msgstr ""
+msgstr "RLE-Codierung"
 
 msgid "Sami subtitle format"
-msgstr ""
+msgstr "Untertitel-Format Sami"
 
 msgid "TMPlayer subtitle format"
-msgstr ""
+msgstr "Untertitel-Format TMPlayer"
 
 msgid "Kate subtitle format"
-msgstr ""
+msgstr "Untertitel-Format Kate"
 
 msgid "Uncompressed planar YUV 4:2:0"
-msgstr ""
+msgstr "Unkomprimiertes ebenes YUV 4:2:0"
 
 msgid "Uncompressed planar YVU 4:2:0"
-msgstr ""
+msgstr "Unkomprimiertes ebenes YVU 4:2:0"
 
 msgid "Uncompressed packed YUV 4:2:2"
-msgstr ""
+msgstr "Unkomprimiertes gepacktes YUV 4:2:2"
 
 msgid "Uncompressed packed YUV 4:1:0"
-msgstr ""
+msgstr "Unkomprimiertes gepacktes YUV 4:1:0"
 
 msgid "Uncompressed packed YVU 4:1:0"
-msgstr ""
+msgstr "Unkomprimiertes gepacktes YVU 4:1:0"
 
 msgid "Uncompressed packed YUV 4:1:1"
-msgstr ""
+msgstr "Unkomprimiertes gepacktes YUV 4:1:1"
 
 msgid "Uncompressed packed YUV 4:4:4"
-msgstr ""
+msgstr "Unkomprimiertes gepacktes  YUV 4:4:4"
 
 msgid "Uncompressed planar YUV 4:2:2"
-msgstr ""
+msgstr "Unkomprimiertes ebenes YUV 4:2:2"
 
 msgid "Uncompressed planar YUV 4:1:1"
-msgstr ""
+msgstr "Unkomprimiertes ebenes YUV 4:1:1"
 
 msgid "Uncompressed black and white Y-plane"
 msgstr ""
 
 msgid "Uncompressed YUV"
-msgstr ""
+msgstr "Unkomprimiertes YUV"
 
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
@@ -350,37 +370,37 @@ msgstr ""
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
-msgstr ""
+msgstr "DivX MPEG-4 Version %d"
 
 #, c-format
 msgid "Raw %d-bit PCM audio"
-msgstr ""
+msgstr "Rohes %d-bit PCM-Audio"
 
 msgid "Raw PCM audio"
-msgstr ""
+msgstr "Rohes PCM-Audio"
 
 #, c-format
 msgid "Raw %d-bit floating-point audio"
-msgstr ""
+msgstr "Rohes %d-Bit Gleitkomma-Audio"
 
 msgid "Raw floating-point audio"
-msgstr ""
+msgstr "Rohes Gleitkomma-Audio"
 
 msgid "Audio CD source"
-msgstr ""
+msgstr "Musik-CD-Quelle"
 
 msgid "DVD source"
-msgstr ""
+msgstr "DVD-Quelle"
 
 msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr ""
+msgstr "Real Time Streaming Protocol (RTSP)-Quelle"
 
 msgid "Microsoft Media Server (MMS) protocol source"
-msgstr ""
+msgstr "Microsoft Media Server (MMS) Protokollquelle"
 
 #, c-format
 msgid "%s protocol source"
-msgstr ""
+msgstr "%s Protokollquelle"
 
 #, c-format
 msgid "%s video RTP depayloader"
@@ -396,11 +416,11 @@ msgstr ""
 
 #, c-format
 msgid "%s demuxer"
-msgstr ""
+msgstr "%s-Demuxer"
 
 #, c-format
 msgid "%s decoder"
-msgstr ""
+msgstr "%s-Decoder"
 
 #, c-format
 msgid "%s video RTP payloader"
@@ -416,45 +436,48 @@ msgstr ""
 
 #, c-format
 msgid "%s muxer"
-msgstr ""
+msgstr "%s-Muxer"
 
 #, c-format
 msgid "%s encoder"
-msgstr ""
+msgstr "%s-Encoder"
 
 #, c-format
 msgid "GStreamer element %s"
-msgstr ""
+msgstr "GStreamer Element %s"
 
 msgid "Unknown source element"
-msgstr ""
+msgstr "Unbekanntes Quellelement"
 
 msgid "Unknown sink element"
-msgstr ""
+msgstr "Unbekanntes Zielelement"
 
 msgid "Unknown element"
-msgstr ""
+msgstr "Unbekanntes Element"
 
 msgid "Unknown decoder element"
-msgstr ""
+msgstr "Unbekanntes Decoder-Element"
 
 msgid "Unknown encoder element"
-msgstr ""
+msgstr "Unbekanntes Encoder-Element"
 
 msgid "Plugin or element of unknown type"
-msgstr ""
+msgstr "Plugin oder Element unbekannten Typs"
 
 msgid "No device specified."
-msgstr ""
+msgstr "Kein Gerät angegeben."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr ""
+msgstr "Das Gerät »%s« existiert nicht."
 
 #, c-format
 msgid "Device \"%s\" is already being used."
-msgstr ""
+msgstr "Das Gerät »%s« wird bereits verwendet."
 
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
-msgstr ""
+msgstr "Das Gerät »%s« konnte nicht zum Lesen und Schreiben geöffnet werden."
+
+#~ msgid "No file name specified."
+#~ msgstr "Kein Dateiname angegeben."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
 "PO-Revision-Date: 2007-09-07 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -193,8 +193,13 @@ msgstr ""
 msgid "Can't play a text subtitles and subpictures."
 msgstr ""
 
-msgid "No file name specified."
-msgstr "Не вказано назву файлу."
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Пристрій не вказано."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Не вдається закрити файл віртуальної файлової системи \"%s\"."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -469,6 +474,9 @@ msgstr "Пристрій \"%s\" вже використовується іншо
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не вдається відкрити пристрій \"%s\" для читання чи запису."
+
+#~ msgid "No file name specified."
+#~ msgstr "Не вказано назву файлу."
 
 #~ msgid "artist sortname"
 #~ msgstr "категорія виконавця"

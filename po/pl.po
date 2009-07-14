@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
 "PO-Revision-Date: 2009-04-16 21:39+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -199,8 +199,13 @@ msgstr "Nie można odtwarzać pliku tekstowego bez obrazu."
 msgid "Can't play a text subtitles and subpictures."
 msgstr "Nie można odtwarzać podpisów tekstowych i podobrazów."
 
-msgid "No file name specified."
-msgstr "Nie podano nazwy pliku."
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Nie określono urządzenia."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Nie udało się zamknąć pliku vfs \"%s\"."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -473,3 +478,6 @@ msgstr "Urządzenie \"%s\" jest już używane."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nie udało się otworzyć urządzenia \"%s\" do odczytu i zapisu."
+
+#~ msgid "No file name specified."
+#~ msgstr "Nie podano nazwy pliku."

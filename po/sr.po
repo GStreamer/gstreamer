@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -196,8 +196,12 @@ msgid "Can't play a text subtitles and subpictures."
 msgstr ""
 
 #, fuzzy
-msgid "No file name specified."
-msgstr "Име датотеке није задато."
+msgid "No Temp directory specified."
+msgstr "Уређај није наведен."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Не могу да пишем у датотеку „%s“."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -488,6 +492,9 @@ msgstr "Не могу да отворим уређај „%s“ ради чит�
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Не могу да отворим датотеку „%s“ ради уписа."
+
+#~ msgid "No filename specified."
+#~ msgstr "Име датотеке није задато."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."

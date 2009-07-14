@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.21.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
-"PO-Revision-Date: 2009-01-26 22:10+1030\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
+"PO-Revision-Date: 2009-05-13 00:01+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -171,29 +171,31 @@ msgstr "Thiếu phần tử « %s » — hãy kiểm tra lại cài đặt GStre
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử alsasink."
 
-#, fuzzy
 msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr "Thiếu phần tử autovideosink, cũng thiếu phần tử xvimagesink."
+msgstr "Cả hai yếu tố autovideosink và xvimagesink không hoạt động."
 
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "Không thể sử dụng yếu tố ổ chìm văn bản riêng."
 
 msgid "No volume control found"
 msgstr "Không tìm thấy điều khiển âm lượng"
 
-#, fuzzy
 msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử alsasink."
+msgstr "Cả hai yếu tố autoaudiosink và alsasink không hoạt động."
 
 msgid "Can't play a text file without video."
 msgstr "Không thể phát tập tin văn bản mà không có ảnh động."
 
-#, fuzzy
 msgid "Can't play a text subtitles and subpictures."
-msgstr "Không thể phát tập tin văn bản mà không có ảnh động."
+msgstr "Không thể hiển thị đồng thời phụ đề và ảnh phụ."
 
-msgid "No file name specified."
-msgstr "Chưa ghi rõ tên tập tin."
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Chưa ghi rõ thiết bị nào"
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Không thể đóng tập tin VFS « %s »."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -471,3 +473,6 @@ msgstr "Thiết bị « %s » đang được dùng."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
+
+#~ msgid "No file name specified."
+#~ msgstr "Chưa ghi rõ tên tập tin."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
 "PO-Revision-Date: 2009-02-12 14:45+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -195,8 +195,13 @@ msgstr "Воспроизведение текстового файла без в
 msgid "Can't play a text subtitles and subpictures."
 msgstr "Воспроизведение текстового файла без видео невозможно."
 
-msgid "No file name specified."
-msgstr "Не указано имя файла."
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Не указано устройство."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Не удалось закрыть vfs-файл «%s»."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -469,3 +474,6 @@ msgstr "Устройство «%s» уже используется."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не удалось открыть устройство «%s» для чтения и записи."
+
+#~ msgid "No file name specified."
+#~ msgstr "Не указано имя файла."

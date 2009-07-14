@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
 "PO-Revision-Date: 2008-03-07 23:43+0200\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -195,8 +195,13 @@ msgstr ""
 msgid "Can't play a text subtitles and subpictures."
 msgstr ""
 
-msgid "No file name specified."
-msgstr "Nenurodytas failo vardas."
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Nenurodytas įrenginys."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Nepavyko užverti vfs failo „%s“."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -471,3 +476,6 @@ msgstr "Įrenginys „%s“ jau naudojamas."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nepavyko atverti įrenginio „%s“ skaitymui ir rašymui."
+
+#~ msgid "No file name specified."
+#~ msgstr "Nenurodytas failo vardas."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -193,8 +193,12 @@ msgid "Can't play a text subtitles and subpictures."
 msgstr ""
 
 #, fuzzy
-msgid "No file name specified."
-msgstr "Nuk është përcaktuar emri i file."
+msgid "No Temp directory specified."
+msgstr "Nuk është përcaktuar asnjë dispozitiv."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "I pamundur shkrimi tek file \"%s\"."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -484,6 +488,9 @@ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "E pamundur hapja e file \"%s\" në shkrim."
+
+#~ msgid "No filename specified."
+#~ msgstr "Nuk është përcaktuar emri i file."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Input audio i gabuar ose mungon, stream AVI mund të jetë i dëmtuar."

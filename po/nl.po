@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
 "PO-Revision-Date: 2009-05-04 12:58+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -194,8 +194,13 @@ msgstr "Kan geen tekstbestand afspelen zonder video."
 msgid "Can't play a text subtitles and subpictures."
 msgstr "Kan geen tekst-ondertitels en onder-afbeeldingen en afspelen."
 
-msgid "No file name specified."
-msgstr "Geen bestandsnaam opgegeven."
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Geen apparaat opgegeven."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Kan het VFS-bestand \"%s\" niet sluiten."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -468,3 +473,6 @@ msgstr "Apparaat \"%s\" is al in gebruik."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kan apparaat \"%s\" niet openen voor lezen en schrijven."
+
+#~ msgid "No file name specified."
+#~ msgstr "Geen bestandsnaam opgegeven."

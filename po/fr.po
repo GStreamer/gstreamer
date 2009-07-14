@@ -1,16 +1,16 @@
 # Translation of gst-plugins-base to French
-# Copyright (C) 2003-2008 GStreamer core team
+# Copyright (C) 2003-2009 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Nicolas Velin <nicolas@velin.fr>, 2008.
-# Claude Paroz <claude@2xlibre.net>, 2008.
+# Claude Paroz <claude@2xlibre.net>, 2008-2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.20.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
-"PO-Revision-Date: 2008-09-21 18:04+0200\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
+"PO-Revision-Date: 2009-05-21 11:10+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "MIME-Version: 1.0\n"
@@ -182,28 +182,31 @@ msgstr "Élément « %s » manquant, contrôlez votre installation de GStreame
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Les éléments autoaudiosink et alsasink sont tous deux manquants."
 
-#, fuzzy
 msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr "Les éléments autovideosink et xvimagesink sont tous deux manquants."
+msgstr "Les éléments autovideosink et xvimagesink ne fonctionnent pas."
 
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "L'élément sink text personnalisé n'est pas utilisable."
 
 msgid "No volume control found"
 msgstr "Aucun contrôle de volume trouvé"
 
-#, fuzzy
 msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr "Les éléments autoaudiosink et alsasink sont tous deux manquants."
+msgstr "Les éléments autoaudiosink et alsasink ne fonctionnent pas."
 
 msgid "Can't play a text file without video."
-msgstr ""
+msgstr "Impossible de lire un fichier texte sans vidéo."
 
 msgid "Can't play a text subtitles and subpictures."
-msgstr ""
+msgstr "Impossible de lire des sous-titres et sous-images texte."
 
-msgid "No file name specified."
-msgstr "Aucun nom de fichier indiqué."
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Aucun périphérique indiqué."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Impossible de fermer le fichier vfs « %s »."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -477,3 +480,6 @@ msgstr "Le périphérique « %s » est déjà en cours d'utilisation."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Impossible d'ouvrir le périphérique « %s » en lecture et écriture."
+
+#~ msgid "No file name specified."
+#~ msgstr "Aucun nom de fichier indiqué."

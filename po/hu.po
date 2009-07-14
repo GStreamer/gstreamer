@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-05-13 01:32+0100\n"
+"POT-Creation-Date: 2009-07-14 16:58+0100\n"
 "PO-Revision-Date: 2009-04-20 01:44+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -195,8 +195,13 @@ msgstr "A szövegfájl nem játszható le videó nélkül."
 msgid "Can't play a text subtitles and subpictures."
 msgstr "Nem játszható le szöveges felirat és részképek."
 
-msgid "No file name specified."
-msgstr "Nincs megadva fájlnév."
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Nincs megadva eszköz."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Nem lehet bezárni a(z) „%s” vfs-fájlt."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -469,3 +474,6 @@ msgstr "Az eszköz („%s”) már használatban van."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nem lehet olvasásra és írásra megnyitni az eszközt („%s”)."
+
+#~ msgid "No file name specified."
+#~ msgstr "Nincs megadva fájlnév."
