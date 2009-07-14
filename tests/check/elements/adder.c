@@ -443,11 +443,11 @@ GST_START_TEST (test_live_seeking)
   /* Test that the audio source can get to paused, else skip */
   res = gst_element_set_state (src1, GST_STATE_PAUSED);
   (void) gst_element_set_state (src1, GST_STATE_NULL);
-  (void) gst_element_get_state (src1, NULL, NULL, GST_CLOCK_TIME_NONE);
-  if (res == GST_STATE_CHANGE_FAILURE) {
-    gst_object_unref (src1);
+  gst_object_unref (src1);
+
+  if (res == GST_STATE_CHANGE_FAILURE)
     goto cleanup;
-  }
+  src1 = gst_element_factory_make ("alsasrc", "src1");
 
   /* live sources ignore seeks, force eos after 2 sec (4 buffers half second
    * each) - don't use autoaudiosrc, as then we can't set anything here */
