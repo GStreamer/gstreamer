@@ -528,6 +528,26 @@ gst_pulsering_stream_overflow_cb (pa_stream * s, void *userdata)
   GST_WARNING_OBJECT (psink, "Got overflow");
 }
 
+static void
+gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
+{
+  GstPulseSink *psink;
+  GstPulseRingBuffer *pbuf;
+  const pa_timing_info *info;
+
+  info = pa_stream_get_timing_info (s);
+
+  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+
+  GST_LOG_OBJECT (psink,
+      "latency_update, %" G_GUINT64_FORMAT ", %d:%" G_GINT64_FORMAT ", %d:%"
+      G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT "\n",
+      GST_TIMEVAL_TO_TIME (info->timestamp), info->write_index_corrupt,
+      info->write_index, info->read_index_corrupt, info->read_index,
+      info->sink_usec, info->configured_sink_usec);
+}
+
 /* This method should create a new stream of the given @spec. No playback should
  * start yet so we start in the corked state. */
 static gboolean
@@ -591,6 +611,8 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       gst_pulsering_stream_underflow_cb, pbuf);
   pa_stream_set_overflow_callback (pbuf->stream,
       gst_pulsering_stream_overflow_cb, pbuf);
+  pa_stream_set_latency_update_callback (pbuf->stream,
+      gst_pulsering_stream_latency_cb, pbuf);
 
   /* buffering requirements. When setting prebuf to 0, the stream will not pause
    * when we cause an underrun, which causes time to continue. */
