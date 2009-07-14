@@ -516,7 +516,6 @@ gst_pulsering_stream_underflow_cb (pa_stream * s, void *userdata)
   GST_WARNING_OBJECT (psink, "Got underflow");
 }
 
-
 static void
 gst_pulsering_stream_overflow_cb (pa_stream * s, void *userdata)
 {
@@ -1320,8 +1319,22 @@ gst_pulsesink_base_init (gpointer g_class)
           "signed = (boolean) TRUE, "
           "width = (int) 32, "
           "depth = (int) 32, "
+          "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 32 ];"
+#if HAVE_PULSE_0_9_15
+          "audio/x-raw-int, "
+          "endianness = (int) { " ENDIANNESS " }, "
+          "signed = (boolean) TRUE, "
+          "width = (int) 24, "
+          "depth = (int) 24, "
           "rate = (int) [ 1, MAX ], "
           "channels = (int) [ 1, 32 ];"
+          "audio/x-raw-int, "
+          "endianness = (int) { " ENDIANNESS " }, "
+          "signed = (boolean) TRUE, "
+          "width = (int) 32, "
+          "depth = (int) 24, "
+          "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 32 ];"
+#endif
           "audio/x-raw-int, "
           "signed = (boolean) FALSE, "
           "width = (int) 8, "
