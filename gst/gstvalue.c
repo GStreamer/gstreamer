@@ -3080,6 +3080,8 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
   type1 = G_VALUE_TYPE (value1);
   type2 = G_VALUE_TYPE (value2);
 
+  /* practically all GstValue types have a compare function (_can_compare=TRUE)
+   * GstStructure and GstCaps have npot, but are intersectable */
   if (type1 == type2)
     return TRUE;
 
