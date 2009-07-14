@@ -1575,12 +1575,13 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
    * it directly or fail. For TIME, try upstream, but do it ourselves if
    * it fails upstream */
   if (format != GST_FORMAT_TIME) {
-    gst_event_ref (event);
     return gst_pad_push_event (parse->sinkpad, event);
   } else {
     gst_event_ref (event);
-    if (gst_pad_push_event (parse->sinkpad, event))
+    if (gst_pad_push_event (parse->sinkpad, event)) {
+      gst_event_unref (event);
       return TRUE;
+    }
   }
 
   /* get flush flag */
