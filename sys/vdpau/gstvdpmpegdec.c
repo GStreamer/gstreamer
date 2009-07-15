@@ -105,9 +105,10 @@ gst_vdp_mpeg_packetizer_get_next_packet (GstVdpMpegPacketizer * packetizer)
   offset = gst_byte_reader_masked_scan_uint32 (&packetizer->reader, 0xffffff00,
       0x00000100, 0, gst_byte_reader_get_remaining (&packetizer->reader));
 
-  if (offset != -1)
+  if (offset != -1) {
+    offset = gst_byte_reader_get_pos (&packetizer->reader) + offset;
     size = offset - packetizer->start;
-  else
+  } else
     size = gst_byte_reader_get_remaining (&packetizer->reader) + 3;
 
   buf = gst_buffer_create_sub (packetizer->buffer, packetizer->start, size);
