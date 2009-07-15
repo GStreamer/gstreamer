@@ -425,14 +425,10 @@ gst_avdtp_sink_conf_recv_stream_fd (GstAvdtpSink * self)
 static gboolean
 server_callback (GIOChannel * chan, GIOCondition cond, gpointer data)
 {
-  GstAvdtpSink *sink;
-
   if (cond & G_IO_HUP || cond & G_IO_NVAL)
     return FALSE;
-  else if (cond & G_IO_ERR) {
-    sink = GST_AVDTP_SINK (data);
-    GST_WARNING_OBJECT (sink, "Untreated callback G_IO_ERR");
-  }
+  else if (cond & G_IO_ERR)
+    GST_WARNING_OBJECT (GST_AVDTP_SINK (data), "Untreated callback G_IO_ERR");
 
   return TRUE;
 }
