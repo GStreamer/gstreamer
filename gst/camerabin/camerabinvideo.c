@@ -600,8 +600,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
           gst_camerabin_create_and_add_element (vidbin, DEFAULT_SINK))) {
     goto error;
   }
-  g_object_set (G_OBJECT (vid->sink), "location", vid->filename->str, NULL);
-
+  g_object_set (G_OBJECT (vid->sink), "location", vid->filename->str, "buffer-mode", 2, /* non buffered io */
+      NULL);
 
   /* Add user set or default audio source element */
   if (vid->user_aud_src) {

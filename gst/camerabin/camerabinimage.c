@@ -463,15 +463,13 @@ gst_camerabin_image_create_elements (GstCameraBinImage * img)
     g_object_set (G_OBJECT (img->meta_mux), "exif-byte-order", 1, NULL);
   }
 
-  /* Create file sink element */
+  /* Add sink element for storing the image */
   if (!(img->sink =
           gst_camerabin_create_and_add_element (imgbin, DEFAULT_SINK))) {
     goto done;
   }
-
-  /* Set properties */
-  g_object_set (G_OBJECT (img->sink), "location", img->filename->str, NULL);
-  g_object_set (G_OBJECT (img->sink), "async", FALSE, NULL);
+  g_object_set (G_OBJECT (img->sink), "location", img->filename->str, "async", FALSE, "buffer-mode", 2, /* non buffered io */
+      NULL);
 
   ret = TRUE;
 
