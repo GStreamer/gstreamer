@@ -954,7 +954,7 @@ gst_camerabin_change_mode (GstCameraBin * camera, gint mode)
     camera->mode = mode;
     if (camera->active_bin) {
       GST_DEBUG_OBJECT (camera, "stopping active bin");
-      gst_element_set_state (camera->active_bin, GST_STATE_NULL);
+      gst_element_set_state (camera->active_bin, GST_STATE_READY);
     }
     if (camera->mode == MODE_IMAGE) {
       GstStateChangeReturn state_ret;
