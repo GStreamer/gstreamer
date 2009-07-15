@@ -1,0 +1,31 @@
+= Cleanups =
+* often two g_object_set for same object one after the other
+* use GST_*_OBJECT () more often
+* there are two gst_element_set_state() one after each other
+
+= Renaming =
+* internal use of img->image, vid->video
+
+= Refactorisation =
+* gstcamerabin:gst_camerabin_rewrite_tags
+  - sounds fishy, should use normal tagsetter method
+  - gst_camerabin_rewrite_tags_to_bin(9 why don't we just send a tag-event?
+
+* file-name property
+  - supplying an already opened filedeskriptor would be more safe
+  - need to check what filesink does if the file exists and cannot be overwritten
+
+* imagbin
+  - we want async operation here (especialy for burst mode capture)
+  - right now, its a bit fragile as we muck with locked_state
+  - main problem is that the location for filesink can only be set in NULL/READY
+    and we need to do that sync'ed with the dataflow. we can't use multifilesink
+    as it does a file per pad_push
+  - one problem of the current approach is that we can't have an image in e.g,
+    postprocessing while anotherone is beeing saved
+  - we could use a pool of imagebins:
+    - configure one (set filename)
+    - push_buffer
+    - on eos, put it back to the pool
+    - for this we need to check that we can have multiple instances of e.g.
+      dsp jpeg encoders
