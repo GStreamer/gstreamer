@@ -694,14 +694,17 @@ metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
 
           /* DDD - degrees */
           value = (gdouble) rt->numerator / (gdouble) rt->denominator;
-          GST_DEBUG ("deg: %lu / %lu", rt->numerator, rt->denominator);
+          GST_DEBUG ("deg: %lu / %lu", (gulong) rt->numerator,
+              (gulong) rt->denominator);
           rt++;
 
           /* MM - minutes and SS - seconds */
-          GST_DEBUG ("min: %lu / %lu", rt->numerator, rt->denominator);
+          GST_DEBUG ("min: %lu / %lu", (gulong) rt->numerator,
+              (gulong) rt->denominator);
           value += (gdouble) rt->numerator / ((gdouble) rt->denominator * 60.0);
           rt++;
-          GST_DEBUG ("sec: %lu / %lu", rt->numerator, rt->denominator);
+          GST_DEBUG ("sec: %lu / %lu", (gulong) rt->numerator,
+              (gulong) rt->denominator);
           value +=
               (gdouble) rt->numerator / ((gdouble) rt->denominator * 3600.0);
 
@@ -1052,21 +1055,24 @@ metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
           /* DDD - degrees */
           rt->numerator = (gulong) v;
           rt->denominator = 1;
-          GST_DEBUG ("deg: %lf : %lu / %lu", v, rt->numerator, rt->denominator);
+          GST_DEBUG ("deg: %lf : %lu / %lu", v, (gulong) rt->numerator,
+              (gulong) rt->denominator);
           v -= rt->numerator;
           rt++;
 
           /* MM - minutes */
           rt->numerator = (gulong) (v * 60.0);
           rt->denominator = 1;
-          GST_DEBUG ("min: %lf : %lu / %lu", v, rt->numerator, rt->denominator);
+          GST_DEBUG ("min: %lf : %lu / %lu", v, (gulong) rt->numerator,
+              (gulong) rt->denominator);
           v -= ((gdouble) rt->numerator / 60.0);
           rt++;
 
           /* SS - seconds */
           rt->numerator = (gulong) (0.5 + v * 3600.0);
           rt->denominator = 1;
-          GST_DEBUG ("sec: %lf : %lu / %lu", v, rt->numerator, rt->denominator);
+          GST_DEBUG ("sec: %lf : %lu / %lu", v, (gulong) rt->numerator,
+              (gulong) rt->denominator);
 
           if (entry->tag == EXIF_TAG_GPS_LONGITUDE) {
             GST_DEBUG ("longitude : %lf", value);
