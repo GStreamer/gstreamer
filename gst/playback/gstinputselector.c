@@ -36,7 +36,7 @@
 #include <string.h>
 
 #include "gstinputselector.h"
-#include "gstselector-marshal.h"
+#include "gstplay-marshal.h"
 
 GST_DEBUG_CATEGORY_STATIC (input_selector_debug);
 #define GST_CAT_DEFAULT input_selector_debug
@@ -154,7 +154,7 @@ static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
 static GstFlowReturn gst_selector_pad_bufferalloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 
-static GType
+GType
 gst_selector_pad_get_type (void)
 {
   static GType selector_pad_type = 0;
@@ -173,7 +173,7 @@ gst_selector_pad_get_type (void)
     };
 
     selector_pad_type =
-        g_type_register_static (GST_TYPE_PAD, "GstSelectorPad",
+        g_type_register_static (GST_TYPE_PAD, "GstPlaybin2SelectorPad",
         &selector_pad_info, 0);
   }
   return selector_pad_type;
@@ -711,9 +711,9 @@ gst_input_selector_get_type (void)
     };
     input_selector_type =
         g_type_register_static (GST_TYPE_ELEMENT,
-        "GstInputSelector", &input_selector_info, 0);
+        "GstPlaybin2InputSelector", &input_selector_info, 0);
     GST_DEBUG_CATEGORY_INIT (input_selector_debug,
-        "input-selector", 0, "An input stream selector element");
+        "playbin2-input-selector", 0, "Playbin2 input stream selector element");
   }
 
   return input_selector_type;
@@ -770,7 +770,7 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
       g_signal_new ("block", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstInputSelectorClass, block), NULL, NULL,
-      gst_selector_marshal_INT64__VOID, G_TYPE_INT64, 0);
+      gst_play_marshal_INT64__VOID, G_TYPE_INT64, 0);
   /**
    * GstInputSelector::switch:
    * @inputselector: the #GstInputSelector
@@ -820,7 +820,7 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
   gst_input_selector_signals[SIGNAL_SWITCH] =
       g_signal_new ("switch", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstInputSelectorClass, switch_),
-      NULL, NULL, gst_selector_marshal_VOID__OBJECT_INT64_INT64,
+      NULL, NULL, gst_play_marshal_VOID__OBJECT_INT64_INT64,
       G_TYPE_NONE, 3, GST_TYPE_PAD, G_TYPE_INT64, G_TYPE_INT64);
 
   gstelement_class->request_new_pad = gst_input_selector_request_new_pad;

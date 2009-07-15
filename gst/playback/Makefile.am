@@ -17,6 +17,7 @@ libgstplaybin_la_SOURCES = \
 	gstplaybasebin.c \
 	gstplay-enum.c \
 	gstfactorylists.c \
+	gstinputselector.c \
 	gstscreenshot.c \
 	gststreaminfo.c \
 	gststreamselector.c
@@ -59,6 +60,7 @@ noinst_HEADERS = \
 	gstplaysink.h \
 	gststreaminfo.h \
 	gstfactorylists.h \
+	gstinputselector.h \
 	gstplay-enum.h \
 	gstscreenshot.h \
 	gststreamselector.h
