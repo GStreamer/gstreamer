@@ -172,7 +172,8 @@ gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
   gboolean res;
 
   const GValue *value;
-  VdpDecoderProfile profile;
+  /* Default to MPEG1 until we find otherwise */
+  VdpDecoderProfile profile = VDP_DECODER_PROFILE_MPEG1;
   GstVdpDevice *device;
   VdpStatus status;
 
@@ -210,8 +211,6 @@ gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
 
   /* parse caps to setup decoder */
   gst_structure_get_int (structure, "mpegversion", &mpeg_dec->version);
-  if (mpeg_dec->version == 1)
-    profile = VDP_DECODER_PROFILE_MPEG1;
 
   value = gst_structure_get_value (structure, "codec_data");
   if (value) {
