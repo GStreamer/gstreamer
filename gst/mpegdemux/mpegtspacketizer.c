@@ -1787,7 +1787,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
                   break;
               }
               component = gst_structure_new ("audio", "type", G_TYPE_STRING,
-                  comptype, NULL);
+                  comptype, "tag", G_TYPE_INT,
+                  DESC_DVB_COMPONENT_tag (comp_descriptor), NULL);
               break;
             case 0x03:         /* subtitles/teletext/vbi */
               comptype = "reserved";
@@ -1827,7 +1828,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
                   break;
               }
               component = gst_structure_new ("teletext", "type", G_TYPE_STRING,
-                  comptype, NULL);
+                  comptype, "tag", G_TYPE_INT,
+                  DESC_DVB_COMPONENT_tag (comp_descriptor), NULL);
               break;
           }
           if (component) {
