@@ -37,6 +37,7 @@
 #include "gstop.h"
 #include "gstradioac.h"
 #include "gststreak.h"
+#include "gstripple.h"
 
 struct _elements_entry
 {
@@ -56,6 +57,7 @@ static const struct _elements_entry _elements[] = {
   {"optv", gst_optv_get_type},
   {"radioactv", gst_radioactv_get_type},
   {"streaktv", gst_streaktv_get_type},
+  {"rippletv", gst_rippletv_get_type},
   {NULL, 0},
 };
 
