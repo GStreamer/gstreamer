@@ -172,7 +172,7 @@ gstspu_vobsub_draw_rle_run (SpuState * state, gint16 x, gint16 end,
       x++;
     }
     /* Update the compositing buffer so we know how much to blend later */
-    *(state->vobsub.comp_last_x_ptr) = end;
+    *(state->vobsub.comp_last_x_ptr) = end - 1; /* end is the start of the *next* run */
   }
 }
 
@@ -194,7 +194,7 @@ static void
 gstspu_vobsub_render_line (SpuState * state, guint8 * planes[3],
     guint16 * rle_offset)
 {
-  gint16 x, next_x, end, rle_code;
+  gint16 x, next_x, end, rle_code, next_draw_x;
   SpuColour *colour;
 
   /* Check for special case of chg_col info to use (either highlight or
@@ -226,8 +226,11 @@ gstspu_vobsub_render_line (SpuState * state, guint8 * planes[3],
     rle_code = gstspu_vobsub_get_rle_code (state, rle_offset);
     colour = &state->vobsub.main_pal[rle_code & 3];
     next_x = rle_end_x (rle_code, x, end);
+    next_draw_x = next_x;
+    if (next_draw_x > state->vobsub.clip_rect.right)
+      next_draw_x = state->vobsub.clip_rect.right;      /* ensure no overflow */
     /* Now draw the run between [x,next_x) */
-    gstspu_vobsub_draw_rle_run (state, x, next_x, colour);
+    gstspu_vobsub_draw_rle_run (state, x, next_draw_x, colour);
     x = next_x;
   }
 }
@@ -265,7 +268,7 @@ gstspu_vobsub_render_line_with_chgcol (SpuState * state, guint8 * planes[3],
 {
   SpuVobsubLineCtrlI *chg_col = state->vobsub.cur_chg_col;
 
-  gint16 x, next_x, disp_end, rle_code, run_end;
+  gint16 x, next_x, disp_end, rle_code, run_end, run_draw_end;
   SpuColour *colour;
   SpuVobsubPixCtrlI *cur_pix_ctrl;
   SpuVobsubPixCtrlI *next_pix_ctrl;
@@ -313,9 +316,13 @@ gstspu_vobsub_render_line_with_chgcol (SpuState * state, guint8 * planes[3],
     while (x < next_x) {
       run_end = MIN (next_x, cur_reg_end);
 
+      run_draw_end = run_end;
+      if (run_draw_end > state->vobsub.clip_rect.right)
+        run_draw_end = state->vobsub.clip_rect.right;   /* ensure no overflow */
+
       if (G_LIKELY (x < run_end)) {
         colour = &cur_pix_ctrl->pal_cache[rle_code & 3];
-        gstspu_vobsub_draw_rle_run (state, x, run_end, colour);
+        gstspu_vobsub_draw_rle_run (state, x, run_draw_end, colour);
         x = run_end;
       }
 
@@ -340,14 +347,17 @@ gstspu_vobsub_blend_comp_buffers (SpuState * state, guint8 * planes[3])
   state->comp_right =
       MAX (state->vobsub.comp_last_x[0], state->vobsub.comp_last_x[1]);
 
+  state->comp_left = MAX (state->comp_left, state->vobsub.clip_rect.left);
+  state->comp_right = MIN (state->comp_right, state->vobsub.clip_rect.right);
+
   gstspu_blend_comp_buffers (state, planes);
 }
 
 static void
 gstspu_vobsub_clear_comp_buffers (SpuState * state)
 {
-  state->comp_left = state->vobsub.disp_rect.left;
-  state->comp_right = state->vobsub.disp_rect.right;
+  state->comp_left = state->vobsub.clip_rect.left;
+  state->comp_right = state->vobsub.clip_rect.right;
 
   gstspu_clear_comp_buffers (state);
 
@@ -375,13 +385,15 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
   g_return_if_fail (planes[2] + (state->UV_height * state->UV_stride) <=
       GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf));
 
-  GST_DEBUG ("Rendering SPU. disp_rect %d,%d to %d,%d. hl_rect %d,%d to %d,%d",
+  GST_DEBUG_OBJECT (dvdspu,
+      "Rendering SPU. disp_rect %d,%d to %d,%d. hl_rect %d,%d to %d,%d",
       state->vobsub.disp_rect.left, state->vobsub.disp_rect.top,
       state->vobsub.disp_rect.right, state->vobsub.disp_rect.bottom,
       state->vobsub.hl_rect.left, state->vobsub.hl_rect.top,
       state->vobsub.hl_rect.right, state->vobsub.hl_rect.bottom);
 
-  GST_DEBUG ("vid_disp %d,%d", state->vid_width, state->vid_height);
+  GST_DEBUG_OBJECT (dvdspu, "video size %d,%d", state->vid_width,
+      state->vid_height);
 
   /* When reading RLE data, we track the offset in nibbles... */
   state->vobsub.cur_offsets[0] = state->vobsub.pix_data[0] * 2;
@@ -402,6 +414,74 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
   } else
     state->vobsub.cur_chg_col = NULL;
 
+  state->vobsub.clip_rect.left = state->vobsub.disp_rect.left;
+  state->vobsub.clip_rect.right = state->vobsub.disp_rect.right;
+
+  /* center the image when display rectangle exceeds the video width */
+  if (state->vid_width <= state->vobsub.disp_rect.right) {
+    gint left, disp_width;
+
+    disp_width = state->vobsub.disp_rect.right - state->vobsub.disp_rect.left
+        + 1;
+    left = (state->vid_width - disp_width) / 2;
+    state->vobsub.disp_rect.left = left;
+    state->vobsub.disp_rect.right = left + disp_width - 1;
+
+    /* if it clips to the right, shift it left, but only till zero */
+    if (state->vobsub.disp_rect.right >= state->vid_width) {
+      gint shift = state->vobsub.disp_rect.right - state->vid_width - 1;
+      if (shift > state->vobsub.disp_rect.left)
+        shift = state->vobsub.disp_rect.left;
+      state->vobsub.disp_rect.left -= shift;
+      state->vobsub.disp_rect.right -= shift;
+    }
+
+    /* init clip to disp */
+    state->vobsub.clip_rect.left = state->vobsub.disp_rect.left;
+    state->vobsub.clip_rect.right = state->vobsub.disp_rect.right;
+
+    /* clip right after the shift */
+    if (state->vobsub.clip_rect.right >= state->vid_width)
+      state->vobsub.clip_rect.right = state->vid_width - 1;
+
+    GST_DEBUG_OBJECT (dvdspu,
+        "clipping width to %d,%d", state->vobsub.clip_rect.left,
+        state->vobsub.clip_rect.right);
+  }
+
+  /* for the height, bring it up till it fits as well as it can. We
+   * assume the picture is in the lower part. We should better check where it
+   * is and do something more clever. */
+  state->vobsub.clip_rect.top = state->vobsub.disp_rect.top;
+  state->vobsub.clip_rect.bottom = state->vobsub.disp_rect.bottom;
+  if (state->vid_height <= state->vobsub.disp_rect.bottom) {
+
+    /* shift it up, but only till zero */
+    gint shift = state->vobsub.disp_rect.bottom - state->vid_height - 1;
+    if (shift > state->vobsub.disp_rect.top)
+      shift = state->vobsub.disp_rect.top;
+    state->vobsub.disp_rect.top -= shift;
+    state->vobsub.disp_rect.bottom -= shift;
+
+    /* start on even line */
+    if (state->vobsub.disp_rect.top & 1) {
+      state->vobsub.disp_rect.top--;
+      state->vobsub.disp_rect.bottom--;
+    }
+
+    /* init clip to disp */
+    state->vobsub.clip_rect.top = state->vobsub.disp_rect.top;
+    state->vobsub.clip_rect.bottom = state->vobsub.disp_rect.bottom;
+
+    /* clip right after the shift */
+    if (state->vobsub.clip_rect.bottom >= state->vid_height)
+      state->vobsub.clip_rect.bottom = state->vid_height - 1;
+
+    GST_DEBUG_OBJECT (dvdspu,
+        "clipping height to %d,%d", state->vobsub.clip_rect.top,
+        state->vobsub.clip_rect.bottom);
+  }
+
   /* We start rendering from the first line of the display rect */
   y = state->vobsub.disp_rect.top;
   /* start_y is always an even number and we render lines in pairs from there,
@@ -409,40 +489,10 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
    * single line at the end if the display rect ends on an even line too. */
   last_y = (state->vobsub.disp_rect.bottom - 1) & ~(0x01);
 
-  /* center the image when display rectangle exceeds the video width */
-  if (state->vid_width < state->vobsub.disp_rect.right) {
-    gint diff, disp_width;
-
-    disp_width = state->vobsub.disp_rect.left - state->vobsub.disp_rect.right;
-    diff = (disp_width - state->vid_width) / 2;
-
-    /* fixme, this is not used yet */
-    state->vobsub.clip_rect.left = state->vobsub.disp_rect.left + diff;
-    state->vobsub.clip_rect.right = state->vobsub.disp_rect.right - diff;
-
-    GST_DEBUG ("clipping width to %d,%d", state->vobsub.clip_rect.left,
-        state->vobsub.clip_rect.right);
-  } else {
-    state->vobsub.clip_rect.left = state->vobsub.disp_rect.left;
-    state->vobsub.clip_rect.right = state->vobsub.disp_rect.right;
-  }
-
-  /* for the height, chop off the bottom bits of the diplay rectangle because we
-   * assume the picture is in the lower part. We should better check where it
-   * is and do something more clever. */
-  state->vobsub.clip_rect.bottom = state->vobsub.disp_rect.bottom;
-  if (state->vid_height < state->vobsub.disp_rect.bottom) {
-    state->vobsub.clip_rect.top =
-        state->vobsub.disp_rect.bottom - state->vid_height;
-    GST_DEBUG ("clipping height to %d,%d", state->vobsub.clip_rect.top,
-        state->vobsub.clip_rect.bottom);
-  } else {
-    state->vobsub.clip_rect.top = state->vobsub.disp_rect.top;
-    /* Update our plane references to the first line of the disp_rect */
-    planes[0] += state->Y_stride * y;
-    planes[1] += state->UV_stride * (y / 2);
-    planes[2] += state->UV_stride * (y / 2);
-  }
+  /* Update our plane references to the first line of the disp_rect */
+  planes[0] += state->Y_stride * y;
+  planes[1] += state->UV_stride * (y / 2);
+  planes[2] += state->UV_stride * (y / 2);
 
   for (state->vobsub.cur_Y = y; state->vobsub.cur_Y <= last_y;
       state->vobsub.cur_Y++) {
@@ -476,14 +526,21 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstBuffer * buf)
     }
   }
   if (state->vobsub.cur_Y == state->vobsub.disp_rect.bottom) {
+    gboolean clip;
+
+    clip = (state->vobsub.cur_Y < state->vobsub.clip_rect.top
+        || state->vobsub.cur_Y > state->vobsub.clip_rect.bottom);
+
     g_assert ((state->vobsub.disp_rect.bottom & 0x01) == 0);
 
-    /* Render a remaining lone last even line. y already has the correct value
-     * after the above loop exited. */
-    gstspu_vobsub_clear_comp_buffers (state);
-    state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x;
-    gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[0]);
-    gstspu_vobsub_blend_comp_buffers (state, planes);
+    if (!clip) {
+      /* Render a remaining lone last even line. y already has the correct value
+       * after the above loop exited. */
+      gstspu_vobsub_clear_comp_buffers (state);
+      state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x;
+      gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[0]);
+      gstspu_vobsub_blend_comp_buffers (state, planes);
+    }
   }
 
   /* for debugging purposes, draw a faint rectangle at the edges of the disp_rect */
