@@ -387,6 +387,10 @@ GST_START_TEST (test_empty_tags)
 {
   GstTagList *tags;
 
+  /* only get g_warnings() with git */
+  if (GST_VERSION_NANO != 1)
+    return;
+
   tags = gst_tag_list_new ();
   ASSERT_WARNING (gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
           GST_TAG_ARTIST, NULL, NULL));

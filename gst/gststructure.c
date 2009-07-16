@@ -641,6 +641,12 @@ gst_structure_id_new (GQuark name_quark, GQuark field_quark, ...)
   return s;
 }
 
+#if GST_VERSION_NANO == 1
+#define GIT_G_WARNING g_warning
+#else
+#define GIT_G_WARNING GST_WARNING
+#endif
+
 /* If the structure currently contains a field with the same name, it is
  * replaced with the provided field. Otherwise, the field is added to the
  * structure. The field's value is not deeply copied.
@@ -659,13 +665,13 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
      * structs, e.g. error message debug strings */
     if (G_UNLIKELY (IS_TAGLIST (structure) && (s == NULL || *s == '\0'))) {
       if (s == NULL) {
-        g_warning ("Trying to set NULL string on field '%s' on taglist. "
+        GIT_G_WARNING ("Trying to set NULL string on field '%s' on taglist. "
             "Please file a bug.", g_quark_to_string (field->name));
         g_value_unset (&field->value);
         return;
       } else {
         /* empty strings never make sense */
-        g_warning ("Trying to set empty string on taglist field '%s'. "
+        GIT_G_WARNING ("Trying to set empty string on taglist field '%s'. "
             "Please file a bug.", g_quark_to_string (field->name));
         g_value_unset (&field->value);
         return;
