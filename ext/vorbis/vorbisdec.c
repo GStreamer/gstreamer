@@ -726,8 +726,9 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
     vd->taglist = gst_tag_list_new ();
   }
   if (encoder) {
-    gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_ENCODER, encoder, NULL);
+    if (encoder[0])
+      gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_ENCODER, encoder, NULL);
     g_free (encoder);
   }
   gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
