@@ -116,6 +116,7 @@ check_PROGRAMS = \
 	elements/videofilter \
 	elements/y4menc \
 	pipelines/simple-launch-lines \
+	pipelines/effectv \
 	$(check_flac) \
 	$(check_gdkpixbuf) \
 	$(check_soup) \
