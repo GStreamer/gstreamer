@@ -181,10 +181,10 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
         goto out;
       }
 
-      fourcc = GST_MAKE_FOURCC ('M', 'L', '2', '0');
-      if (GUINT32_FROM_LE (*((guint32 *) (header + 12))) != fourcc) {
-        GST_WARNING_OBJECT (mimdec, "invalid frame: unknown FOURCC code %d",
-            fourcc);
+      fourcc = GUINT32_FROM_LE (*((guint32 *) (header + 12)));
+      if (GST_MAKE_FOURCC ('M', 'L', '2', '0') != fourcc) {
+        GST_WARNING_OBJECT (mimdec, "invalid frame: unknown FOURCC code"
+            " %X (%" GST_FOURCC_FORMAT ")", fourcc, GST_FOURCC_ARGS (fourcc));
         gst_adapter_flush (mimdec->adapter, 24);
         res = GST_FLOW_ERROR;
         goto out;
