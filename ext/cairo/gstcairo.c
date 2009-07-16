@@ -24,6 +24,7 @@
 
 #include <gsttimeoverlay.h>
 #include <gsttextoverlay.h>
+#include <gstcairorender.h>
 #include <string.h>
 #include <math.h>
 
@@ -36,6 +37,8 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_CAIRO_TEXT_OVERLAY);
   gst_element_register (plugin, "cairotimeoverlay", GST_RANK_NONE,
       GST_TYPE_CAIRO_TIME_OVERLAY);
+  gst_element_register (plugin, "cairorender", GST_RANK_SECONDARY,
+      GST_TYPE_CAIRO_RENDER);
 
   GST_DEBUG_CATEGORY_INIT (cairo_debug, "cairo", 0, "Cairo elements");
 
@@ -43,5 +46,5 @@ plugin_init (GstPlugin * plugin)
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "cairo",
-    "Cairo-based overlaying", plugin_init, VERSION,
+    "Cairo-based elements", plugin_init, VERSION,
     GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
