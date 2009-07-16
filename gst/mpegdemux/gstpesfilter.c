@@ -151,6 +151,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
    * to set the allow_unbounded flag if they want */
   if (filter->length == 0 &&
       ((filter->start_code & 0xFFFFFFF0) == PACKET_VIDEO_START_CODE ||
+          filter->start_code == ID_EXTENDED_STREAM_ID ||
           filter->allow_unbounded)) {
     GST_DEBUG ("id 0x%02x, unbounded length", filter->id);
     filter->unbounded_packet = TRUE;
@@ -389,9 +390,53 @@ gst_pes_filter_parse (GstPESFilter * filter)
     }
     /* PES_extension_flag  */
     if ((flags & 0x01)) {
-      GST_DEBUG ("%x PES_extension", filter->id);
+      flags = *data++;
+      header_data_length -= 1;
+      datalen -= 1;
+      GST_DEBUG ("%x PES_extension, flags 0x%02x", filter->id, flags);
+      /* PES_private_data_flag */
+      if ((flags & 0x80)) {
+        GST_DEBUG ("%x PES_private_data_flag", filter->id);
+        data += 16;
+        header_data_length -= 16;
+        datalen -= 16;
+      }
+      /* pack_header_field_flag */
+      if ((flags & 0x40)) {
+        guint8 pack_field_length = *data;
+        GST_DEBUG ("%x pack_header_field_flag, pack_field_length %d",
+            filter->id, pack_field_length);
+        data += pack_field_length + 1;
+        header_data_length -= pack_field_length + 1;
+        datalen -= pack_field_length + 1;
+      }
+      /* program_packet_sequence_counter_flag */
+      if ((flags & 0x20)) {
+        GST_DEBUG ("%x program_packet_sequence_counter_flag", filter->id);
+        data += 2;
+        header_data_length -= 2;
+        datalen -= 2;
+      }
+      /* P-STD_buffer_flag */
+      if ((flags & 0x10)) {
+        GST_DEBUG ("%x P-STD_buffer_flag", filter->id);
+        data += 2;
+        header_data_length -= 2;
+        datalen -= 2;
+      }
+      /* PES_extension_flag_2 */
+      if ((flags & 0x01)) {
+        guint8 PES_extension_field_length = *data++;
+        GST_DEBUG ("%x PES_extension_flag_2, len %d",
+            filter->id, PES_extension_field_length & 0x7f);
+        if (PES_extension_field_length == 0x81) {
+          GST_DEBUG ("%x substream id 0x%02x", filter->id, *data);
+        }
+        data += PES_extension_field_length & 0x7f;
+        header_data_length -= (PES_extension_field_length & 0x7f) + 1;
+        datalen -= (PES_extension_field_length & 0x7f) + 1;
+      }
     }
-
     /* calculate the amount of real data in this PES packet */
     data += header_data_length;
     datalen -= header_data_length;
