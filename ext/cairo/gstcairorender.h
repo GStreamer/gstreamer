@@ -22,6 +22,7 @@
 #define __GST_CAIRO_RENDER_H__
 
 #include <gst/gst.h>
+#include <cairo.h>
 
 G_BEGIN_DECLS
 
@@ -31,6 +32,29 @@ G_BEGIN_DECLS
 
 typedef struct _GstCairoRender      GstCairoRender;
 typedef struct _GstCairoRenderClass GstCairoRenderClass;
+
+struct _GstCairoRender
+{
+  GstElement parent;
+
+  GstPad *snk, *src;
+
+  /* < private > */
+
+  /* Source */
+  cairo_surface_t *surface;
+  gint width, height;
+
+  /* Sink */
+  gint64 offset, duration;
+  gboolean png;
+  cairo_format_t format;
+};
+
+struct _GstCairoRenderClass
+{
+  GstElementClass parent_class;
+};
 
 GType gst_cairo_render_get_type (void) G_GNUC_CONST;
 

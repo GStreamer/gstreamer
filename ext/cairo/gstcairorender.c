@@ -35,27 +35,6 @@
 
 #include <string.h>
 
-struct _GstCairoRender
-{
-  GstElement parent;
-
-  GstPad *snk, *src;
-
-  /* Source */
-  cairo_surface_t *surface;
-  guint width, height;
-
-  /* Sink */
-  gint64 offset, duration;
-  gboolean png;
-  cairo_format_t format;
-};
-
-struct _GstCairoRenderClass
-{
-  GstElementClass parent_class;
-};
-
 GST_DEBUG_CATEGORY_STATIC (cairo_render_debug);
 #define GST_CAT_DEFAULT cairo_render_debug
 
