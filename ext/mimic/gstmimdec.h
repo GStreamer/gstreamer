@@ -57,8 +57,6 @@ struct _GstMimDec
   gboolean have_header;
   guint32 payload_size;
   guint32 current_ts;
-
-  gboolean need_newsegment;
 };
 
 struct _GstMimDecClass
