@@ -418,9 +418,12 @@ gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
   guint8 *buf = NULL;
   guint32 size = 0;
 
+  GST_DEBUG_OBJECT (base, "Creating chunks from tags..");
+
   if (taglist) {
 
     if (gst_base_metadata_get_option_flag (base) & META_OPT_EXIF) {
+      GST_DEBUG_OBJECT (base, "Using EXIF");
       metadatamux_exif_create_chunk_from_tag_list (&buf, &size, taglist,
           &filter->exif_options);
       gst_base_metadata_update_inject_segment_with_new_data (base, &buf, &size,
@@ -428,17 +431,23 @@ gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
     }
 
     if (gst_base_metadata_get_option_flag (base) & META_OPT_IPTC) {
+      GST_DEBUG_OBJECT (base, "Using IPTC");
       metadatamux_iptc_create_chunk_from_tag_list (&buf, &size, taglist);
       gst_base_metadata_update_inject_segment_with_new_data (base, &buf, &size,
           MD_CHUNK_IPTC);
     }
 
     if (gst_base_metadata_get_option_flag (base) & META_OPT_XMP) {
+      GST_DEBUG_OBJECT (base, "Using XMP");
       metadatamux_xmp_create_chunk_from_tag_list (&buf, &size, taglist);
       gst_base_metadata_update_inject_segment_with_new_data (base, &buf, &size,
           MD_CHUNK_XMP);
     }
 
+  }
+
+  else {
+    GST_DEBUG_OBJECT (base, "Empty taglist");
   }
 
   if (buf) {
