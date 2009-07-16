@@ -1239,15 +1239,17 @@ gst_byte_reader_dup_data (GstByteReader * reader, guint size, guint8 ** val)
  * @reader: a #GstByteReader
  * @mask: mask to apply to data before matching against @pattern
  * @pattern: pattern to match (after mask is applied)
- * @offset: offset into the adapter data from which to start scanning
+ * @offset: offset from which to start scanning, relative to the current
+ *     position
  * @size: number of bytes to scan from offset
  *
- * Scan for pattern @pattern with applied mask @mask in the adapter data,
- * starting from offset @offset.
+ * Scan for pattern @pattern with applied mask @mask in the byte reader data,
+ * starting from offset @offset relative to the current position.
  *
  * The bytes in @pattern and @mask are interpreted left-to-right, regardless
  * of endianness.  All four bytes of the pattern must be present in the
- * adapter for it to match, even if the first or last bytes are masked out.
+ * byte reader data for it to match, even if the first or last bytes are masked
+ * out.
  *
  * It is an error to call this function without making sure that there is
  * enough data (offset+size bytes) in the byte reader.
@@ -1258,19 +1260,19 @@ gst_byte_reader_dup_data (GstByteReader * reader, guint size, guint8 ** val)
  * <programlisting>
  * // Assume the reader contains 0x00 0x01 0x02 ... 0xfe 0xff
  *
- * gst_byte_reader_masked_scan_uint32 (reader, 0x00010203, 0xffffffff, 0, 256);
+ * gst_byte_reader_masked_scan_uint32 (reader, 0xffffffff, 0x00010203, 0, 256);
  * // -> returns 0
- * gst_byte_reader_masked_scan_uint32 (reader, 0x00010203, 0xffffffff, 1, 255);
+ * gst_byte_reader_masked_scan_uint32 (reader, 0xffffffff, 0x00010203, 1, 255);
  * // -> returns -1
- * gst_byte_reader_masked_scan_uint32 (reader, 0x01020304, 0xffffffff, 1, 255);
+ * gst_byte_reader_masked_scan_uint32 (reader, 0xffffffff, 0x01020304, 1, 255);
  * // -> returns 1
- * gst_byte_reader_masked_scan_uint32 (reader, 0x0001, 0xffff, 0, 256);
+ * gst_byte_reader_masked_scan_uint32 (reader, 0xffff, 0x0001, 0, 256);
  * // -> returns -1
- * gst_byte_reader_masked_scan_uint32 (reader, 0x0203, 0xffff, 0, 256);
+ * gst_byte_reader_masked_scan_uint32 (reader, 0xffff, 0x0203, 0, 256);
  * // -> returns 0
- * gst_byte_reader_masked_scan_uint32 (reader, 0x02030000, 0xffff0000, 0, 256);
+ * gst_byte_reader_masked_scan_uint32 (reader, 0xffff0000, 0x02030000, 0, 256);
  * // -> returns 2
- * gst_byte_reader_masked_scan_uint32 (reader, 0x02030000, 0xffff0000, 0, 4);
+ * gst_byte_reader_masked_scan_uint32 (reader, 0xffff0000, 0x02030000, 0, 4);
  * // -> returns -1
  * </programlisting>
  *
