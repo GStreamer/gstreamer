@@ -171,6 +171,7 @@ gst_cairo_render_setcaps_sink (GstPad * pad, GstCaps * caps)
   GstStructure *s = gst_caps_get_structure (caps, 0);
   const gchar *mime = gst_structure_get_name (s);
   gint fps_n = 0, fps_d = 1;
+  gint w, h;
 
   GST_DEBUG_OBJECT (c, "Got caps (%s).", mime);
   if ((c->png = !strcmp (mime, "image/png")))
@@ -204,10 +205,41 @@ gst_cairo_render_setcaps_sink (GstPad * pad, GstCaps * caps)
   caps = gst_caps_make_writable (caps);
   gst_caps_truncate (caps);
   s = gst_caps_get_structure (caps, 0);
+  mime = gst_structure_get_name (s);
   gst_structure_set (s, "height", G_TYPE_INT, c->height, "width", G_TYPE_INT,
       c->width, "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+
+  if (c->surface) {
+    cairo_surface_destroy (c->surface);
+    c->surface = NULL;
+  }
+
+  w = c->width;
+  h = c->height;
+
   GST_DEBUG_OBJECT (c, "Setting src caps %" GST_PTR_FORMAT, caps);
   gst_pad_set_caps (c->src, caps);
+
+#if CAIRO_HAS_PS_SURFACE
+  if (!strcmp (mime, "application/postscript")) {
+    c->surface = cairo_ps_surface_create_for_stream (write_func, c, w, h);
+  } else
+#endif
+#if CAIRO_HAS_PDF_SURFACE
+  if (!strcmp (mime, "application/x-pdf")) {
+    c->surface = cairo_pdf_surface_create_for_stream (write_func, c, w, h);
+  } else
+#endif
+#if CAIRO_HAS_SVG_SURFACE
+  if (!strcmp (mime, "image/svg")) {
+    c->surface = cairo_svg_surface_create_for_stream (write_func, c, w, h);
+  } else
+#endif
+  {
+    gst_caps_unref (caps);
+    return FALSE;
+  }
+
   gst_caps_unref (caps);
 
   return TRUE;
@@ -242,57 +274,6 @@ gst_cairo_render_activatepull_sink (GstPad * pad, gboolean active)
     return gst_pad_start_task (pad, gst_cairo_render_loop, c);
   } else
     return gst_pad_stop_task (pad);
-}
-
-static gboolean
-gst_cairo_render_setcaps_src (GstPad * pad, GstCaps * caps)
-{
-  GstCairoRender *c = GST_CAIRO_RENDER (GST_PAD_PARENT (pad));
-  const GValue *value;
-  GstStructure *s = gst_caps_get_structure (caps, 0);
-  const gchar *mime = gst_structure_get_name (s);
-  gdouble w = 256, h = 256;
-
-  if (c->surface) {
-    cairo_surface_destroy (c->surface);
-    c->surface = NULL;
-  }
-#if CAIRO_HAS_PNG_FUNCTIONS
-  if (!strcmp (mime, "image/png"))
-    return TRUE;
-#endif
-  value = gst_structure_get_value (s, "width");
-  if (!value || !G_VALUE_HOLDS_INT (value)) {
-    GST_DEBUG_OBJECT (c, "Width is missing.");
-    return FALSE;
-  }
-  w = g_value_get_int (value);
-  value = gst_structure_get_value (s, "height");
-  if (!value || !G_VALUE_HOLDS_INT (value)) {
-    GST_DEBUG_OBJECT (c, "Height is missing.");
-    return FALSE;
-  }
-  h = g_value_get_int (value);
-
-#if CAIRO_HAS_PS_SURFACE
-  if (!strcmp (mime, "application/postscript")) {
-    c->surface = cairo_ps_surface_create_for_stream (write_func, c, w, h);
-    return TRUE;
-  }
-#endif
-#if CAIRO_HAS_PDF_SURFACE
-  if (!strcmp (mime, "application/x-pdf")) {
-    c->surface = cairo_pdf_surface_create_for_stream (write_func, c, w, h);
-    return TRUE;
-  }
-#endif
-#if CAIRO_HAS_SVG_SURFACE
-  if (!strcmp (mime, "image/svg")) {
-    c->surface = cairo_svg_surface_create_for_stream (write_func, c, w, h);
-    return TRUE;
-  }
-#endif
-  return FALSE;
 }
 
 static GstElementDetails cairo_render_details =
@@ -355,12 +336,11 @@ gst_cairo_render_init (GstCairoRender * c, GstCairoRenderClass * klass)
   /* The source */
   c->src =
       gst_pad_new_from_template (gst_static_pad_template_get (&t_src), "src");
-  gst_pad_set_setcaps_function (c->src, gst_cairo_render_setcaps_src);
   gst_pad_use_fixed_caps (c->src);
   gst_element_add_pad (GST_ELEMENT (c), c->src);
 
-  c->width = 256;
-  c->height = 256;
+  c->width = 0;
+  c->height = 0;
 }
 
 static void
