@@ -141,7 +141,8 @@ enum
   PROP_EXHAUSTIVE_MODEL_SEARCH,
   PROP_MIN_RESIDUAL_PARTITION_ORDER,
   PROP_MAX_RESIDUAL_PARTITION_ORDER,
-  PROP_RICE_PARAMETER_SEARCH_DIST
+  PROP_RICE_PARAMETER_SEARCH_DIST,
+  PROP_PADDING
 };
 
 GST_DEBUG_CATEGORY_STATIC (flacenc_debug);
@@ -226,6 +227,7 @@ static const GstFlacEncParams flacenc_params[] = {
 };
 
 #define DEFAULT_QUALITY 5
+#define DEFAULT_PADDING 0
 
 #define GST_TYPE_FLAC_ENC_QUALITY (gst_flac_enc_quality_get_type ())
 GType
@@ -365,6 +367,20 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
           flacenc_params[DEFAULT_QUALITY].rice_parameter_search_dist,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  /**
+   * GstFlacEnc:padding
+   *
+   * Write a PADDING block with this length in bytes
+   *
+   * Since: 0.10.16
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_PADDING,
+      g_param_spec_uint ("padding",
+          "Padding",
+          "Write a PADDING block with this length in bytes", 0, G_MAXUINT,
+          DEFAULT_PADDING, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = gst_flac_enc_change_state;
 }
 
@@ -443,14 +459,19 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc)
   }
   copy = gst_tag_list_merge (user_tags, flacenc->tags,
       gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (flacenc)));
-  flacenc->meta = g_malloc (sizeof (FLAC__StreamMetadata **));
+  flacenc->meta = g_new0 (FLAC__StreamMetadata *, 2);
 
   flacenc->meta[0] =
       FLAC__metadata_object_new (FLAC__METADATA_TYPE_VORBIS_COMMENT);
   gst_tag_list_foreach (copy, add_one_tag, flacenc);
 
+  if (flacenc->padding > 0) {
+    flacenc->meta[1] = FLAC__metadata_object_new (FLAC__METADATA_TYPE_PADDING);
+    flacenc->meta[1]->length = flacenc->padding;
+  }
+
   if (FLAC__stream_encoder_set_metadata (flacenc->encoder,
-          flacenc->meta, 1) != true)
+          flacenc->meta, (flacenc->padding > 0) ? 2 : 1) != true)
 
     g_warning ("Dude, i'm already initialized!");
   gst_tag_list_free (copy);
@@ -1206,6 +1227,9 @@ gst_flac_enc_set_property (GObject * object, guint prop_id,
       FLAC__stream_encoder_set_rice_parameter_search_dist (this->encoder,
           g_value_get_uint (value));
       break;
+    case PROP_PADDING:
+      this->padding = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1276,6 +1300,9 @@ gst_flac_enc_get_property (GObject * object, guint prop_id,
       g_value_set_uint (value,
           FLAC__stream_encoder_get_rice_parameter_search_dist (this->encoder));
       break;
+    case PROP_PADDING:
+      g_value_set_uint (value, this->padding);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1321,6 +1348,10 @@ gst_flac_enc_change_state (GstElement * element, GstStateChange transition)
       flacenc->sample_rate = 0;
       if (flacenc->meta) {
         FLAC__metadata_object_delete (flacenc->meta[0]);
+
+        if (flacenc->meta[1])
+          FLAC__metadata_object_delete (flacenc->meta[1]);
+
         g_free (flacenc->meta);
         flacenc->meta = NULL;
       }
