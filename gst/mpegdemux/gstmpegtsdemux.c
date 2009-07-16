@@ -1697,7 +1697,8 @@ gst_mpegts_demux_parse_adaptation_field (GstMpegTSStream * stream,
           memset (pmts_checked, 0, sizeof (gboolean) * (MPEGTS_MAX_PID + 1));
 
           for (j = 0; j < MPEGTS_MAX_PID + 1; j++) {
-            if (demux->streams[j] && demux->streams[j]->PMT_pid) {
+            if (demux->streams[j]
+                && demux->streams[j]->PMT_pid <= MPEGTS_MAX_PID) {
               if (!pmts_checked[demux->streams[j]->PMT_pid]) {
                 /* check if this is correct pcr for pmt */
                 if (demux->streams[demux->streams[j]->PMT_pid] &&
