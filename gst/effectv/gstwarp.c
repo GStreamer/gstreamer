@@ -244,6 +244,8 @@ gst_warptv_finalize (GObject * object)
   warptv->offstable = NULL;
   g_free (warptv->disttable);
   warptv->disttable = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
