@@ -181,6 +181,12 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
         goto out;
       }
 
+      if (header[1] == 1) {
+        /* This is a a paused frame, skip it */
+        gst_adapter_flush (mimdec->adapter, 24);
+        continue;
+      }
+
       fourcc = GUINT32_FROM_LE (*((guint32 *) (header + 12)));
       if (GST_MAKE_FOURCC ('M', 'L', '2', '0') != fourcc) {
         GST_WARNING_OBJECT (mimdec, "invalid frame: unknown FOURCC code"
@@ -199,12 +205,6 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
       gst_adapter_flush (mimdec->adapter, 24);
 
       mimdec->have_header = TRUE;
-    }
-
-    /* Check if its paused frame, drop it */
-    if (mimdec->payload_size == 0) {
-      mimdec->have_header = FALSE;
-      continue;
     }
 
     if (gst_adapter_available (mimdec->adapter) < mimdec->payload_size) {
