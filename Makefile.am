@@ -29,12 +29,15 @@ include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
 	gstreamer.spec gstreamer.spec.in \
+	check-checks.m4 \
 	gst-element-check.m4.in \
 	configure.ac autogen.sh depcomp \
 	MAINTAINERS ABOUT-NLS RELEASE gstreamer.doap \
 	$(win32)
 
 CLEANFILES = gst-element-check-@GST_MAJORMINOR@.m4
+
+DISTCLEANFILES = _stdint.h
 
 include $(top_srcdir)/common/release.mak
 include $(top_srcdir)/common/po.mak

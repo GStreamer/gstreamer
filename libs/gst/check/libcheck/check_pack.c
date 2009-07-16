@@ -28,9 +28,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
+#include "_stdint.h"
 
 #include "check.h"
 #include "check_error.h"
