@@ -703,9 +703,11 @@ gst_soup_http_src_authenticate_cb (SoupSession * session, SoupMessage * msg,
   if (!retrying) {
     /* First time authentication only, if we fail and are called again with retry true fall through */
     if (msg->status_code == SOUP_STATUS_UNAUTHORIZED) {
-      soup_auth_authenticate (auth, src->user_id, src->user_pw);
+      if (src->user_id && src->user_pw)
+        soup_auth_authenticate (auth, src->user_id, src->user_pw);
     } else if (msg->status_code == SOUP_STATUS_PROXY_AUTHENTICATION_REQUIRED) {
-      soup_auth_authenticate (auth, src->proxy_id, src->proxy_pw);
+      if (src->proxy_id && src->proxy_pw)
+        soup_auth_authenticate (auth, src->proxy_id, src->proxy_pw);
     }
   }
 }
