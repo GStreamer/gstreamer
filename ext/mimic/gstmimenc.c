@@ -392,7 +392,7 @@ gst_mimenc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
   *((guint16 *) (p + 4)) = GUINT16_TO_LE (mimenc->height);
   *((guint16 *) (p + 6)) = keyframe ? 1 : 0;
   *((guint32 *) (p + 8)) = GUINT32_TO_LE (payload_size);
-  *((guint32 *) (p + 12)) =
+  *((guint32 *) (p + 12)) = paused ? 0 :
       GUINT32_TO_LE (GST_MAKE_FOURCC ('M', 'L', '2', '0'));
   *((guint32 *) (p + 16)) = 0;
   *((guint32 *) (p + 20)) = timestamp / GST_MSECOND;
