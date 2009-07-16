@@ -499,7 +499,7 @@ gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer)
       mux->last_ts = GST_BUFFER_TIMESTAMP (buffer);
   }
 
-  caps = gst_pad_get_negotiated_caps (mux->srcpad);
+  caps = gst_static_pad_template_get_caps (&src_factory);
   gst_buffer_set_caps (buffer, caps);
   gst_caps_unref (caps);
 
@@ -1169,8 +1169,8 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 static GstFlowReturn
 gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   gboolean delta_unit;
-  GstFlowReturn ret;
   gint64 granulepos = 0;
   GstClockTime timestamp, gp_time;
 
@@ -1450,7 +1450,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
     }
   }
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 /* all_pads_eos:
