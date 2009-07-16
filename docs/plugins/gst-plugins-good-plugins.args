@@ -649,6 +649,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::rtp-blocksize</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 65536</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>RTP Blocksize</NICK>
+<BLURB>RTP package size to suggest to server (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -2019,6 +2029,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpMP4VPay::buffer-list</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Array</NICK>
+<BLURB>Use Buffer Arrays.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDepay::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -2595,7 +2615,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Clipping method</NICK>
 <BLURB>Selects how to handle values higher than the maximum.</BLURB>
-<DEFAULT>Normal Clipping (default)</DEFAULT>
+<DEFAULT>Normal clipping (default)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3376,6 +3396,16 @@
 <NICK>Scan Mode</NICK>
 <BLURB>How to scan the input buffers for NAL units. Performance can be increased when certain assumptions are made about the input buffers.</BLURB>
 <DEFAULT>Buffers contain multiple complete NALUs</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpH264Pay::buffer-list</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer List</NICK>
+<BLURB>Use Buffer Lists.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19403,7 +19433,7 @@
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Sink</NICK>
+<NICK>Device</NICK>
 <BLURB>The PulseAudio sink device to connect to.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
@@ -19431,10 +19461,10 @@
 <ARG>
 <NAME>GstPulseSink::volume</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,1000]</RANGE>
+<RANGE>[0,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Volume</NICK>
-<BLURB>Volume of this stream.</BLURB>
+<BLURB>Volume of this stream, 1.0=100%.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -19443,7 +19473,7 @@
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Source</NICK>
+<NICK>Device</NICK>
 <BLURB>The PulseAudio source device to connect to.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
@@ -19473,7 +19503,7 @@
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Sink/Source</NICK>
+<NICK>Device</NICK>
 <BLURB>The PulseAudio sink or source to control.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
@@ -19739,6 +19769,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpJPEGPay::buffer-list</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer List</NICK>
+<BLURB>Use Buffer Lists.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioFIRFilter::kernel</NAME>
 <TYPE>GValueArray*</TYPE>
 <RANGE></RANGE>
@@ -19996,5 +20036,105 @@
 <NICK>Scratch Lines</NICK>
 <BLURB>Number of scratch lines.</BLURB>
 <DEFAULT>7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpTV::mode</NAME>
+<TYPE>GstOpTVMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Mode.</BLURB>
+<DEFAULT>Maelstrom</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpTV::speed</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Speed</NICK>
+<BLURB>Effect speed.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpTV::threshold</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= G_MAXINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>Luma threshold.</BLURB>
+<DEFAULT>60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRadioacTV::color</NAME>
+<TYPE>GstRadioacTVColor</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color</NICK>
+<BLURB>Color.</BLURB>
+<DEFAULT>White</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRadioacTV::interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= G_MAXINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interval</NICK>
+<BLURB>Snapshot interval (in strobe mode).</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRadioacTV::mode</NAME>
+<TYPE>GstRadioacTVMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Mode.</BLURB>
+<DEFAULT>Normal</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRadioacTV::trigger</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Trigger</NICK>
+<BLURB>Trigger (in trigger mode).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstStreakTV::feedback</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Feedback</NICK>
+<BLURB>Feedback.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRippleTV::mode</NAME>
+<TYPE>GstRippleTVMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Mode.</BLURB>
+<DEFAULT>Motion Detection</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRippleTV::reset</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Reset</NICK>
+<BLURB>Reset all current ripples.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

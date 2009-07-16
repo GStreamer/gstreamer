@@ -44,6 +44,10 @@ GObject
           GstVertigoTV
           GstRevTV
           GstQuarkTV
+          GstOpTV
+          GstRadioacTV
+          GstStreakTV
+          GstRippleTV
         GstBreakMyData
         GstNavSeek
         GstProgressReport
@@ -233,6 +237,8 @@ GObject
     GstPlugin
     GstRegistry
     GstRingBuffer
+      GstAudioSrcRingBuffer
+      GstAudioSinkRingBuffer
   GstSignalObject
   GstCmmlTagStream
   GstCmmlTagHead

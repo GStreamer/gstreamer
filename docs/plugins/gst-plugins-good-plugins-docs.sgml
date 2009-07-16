@@ -96,6 +96,7 @@
     <xi:include href="xml/element-multipartdemux.xml" />
     <xi:include href="xml/element-multipartmux.xml" />
     <xi:include href="xml/element-multiudpsink.xml" />
+    <xi:include href="xml/element-optv.xml" />
     <xi:include href="xml/element-ossmixer.xml" />
     <xi:include href="xml/element-osssink.xml" />
     <xi:include href="xml/element-osssrc.xml" />
@@ -110,10 +111,12 @@
     <xi:include href="xml/element-pulsemixer.xml" />
     <xi:include href="xml/element-quarktv.xml" />
     <xi:include href="xml/element-qtdemux.xml" />
+    <xi:include href="xml/element-radioactv.xml" />
     <xi:include href="xml/element-revtv.xml" />
     <xi:include href="xml/element-rganalysis.xml" />
     <xi:include href="xml/element-rglimiter.xml" />
     <xi:include href="xml/element-rgvolume.xml" />
+    <xi:include href="xml/element-rippletv.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
     <xi:include href="xml/element-rtpjpegpay.xml" />
     <xi:include href="xml/element-rtspsrc.xml" />
@@ -126,6 +129,7 @@
     <xi:include href="xml/element-spectrum.xml" />
     <xi:include href="xml/element-speexenc.xml" />
     <xi:include href="xml/element-speexdec.xml" />
+    <xi:include href="xml/element-streaktv.xml" />
     <xi:include href="xml/element-taginject.xml" />
     <xi:include href="xml/element-udpsrc.xml" />
     <xi:include href="xml/element-udpsink.xml" />

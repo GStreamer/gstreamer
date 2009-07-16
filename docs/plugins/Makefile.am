@@ -146,6 +146,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/effectv/gstshagadelic.h \
 	$(top_srcdir)/gst/effectv/gstvertigo.h \
 	$(top_srcdir)/gst/effectv/gstwarp.h \
+	$(top_srcdir)/gst/effectv/gststreak.h \
+	$(top_srcdir)/gst/effectv/gstripple.h \
+	$(top_srcdir)/gst/effectv/gstop.h \
+	$(top_srcdir)/gst/effectv/gstradioac.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer3bands.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer10bands.h \

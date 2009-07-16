@@ -1902,3 +1902,73 @@ GST_TYPE_WARPTV
 gst_warptv_get_type
 </SECTION>
 
+<SECTION>
+<FILE>element-warptv</FILE>
+<TITLE>warptv</TITLE>
+GstWarpTV
+<SUBSECTION Standard>
+GstWarpTVClass
+GST_WARPTV
+GST_WARPTV_CLASS
+GST_IS_WARPTV
+GST_IS_WARPTV_CLASS
+GST_TYPE_WARPTV
+gst_warptv_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rippletv</FILE>
+<TITLE>rippletv</TITLE>
+GstRippleTV
+<SUBSECTION Standard>
+GstRippleTVClass
+GST_RIPPLETV
+GST_RIPPLETV_CLASS
+GST_IS_RIPPLETV
+GST_IS_RIPPLETV_CLASS
+GST_TYPE_RIPPLETV
+gst_rippletv_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-streaktv</FILE>
+<TITLE>streaktv</TITLE>
+GstStreakTV
+<SUBSECTION Standard>
+GstStreakTVClass
+GST_STREAKTV
+GST_STREAKTV_CLASS
+GST_IS_STREAKTV
+GST_IS_STREAKTV_CLASS
+GST_TYPE_STREAKTV
+gst_streaktv_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-optv</FILE>
+<TITLE>optv</TITLE>
+GstOpTV
+<SUBSECTION Standard>
+GstOpTVClass
+GST_OPTV
+GST_OPTV_CLASS
+GST_IS_OPTV
+GST_IS_OPTV_CLASS
+GST_TYPE_OPTV
+gst_optv_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-radioactv</FILE>
+<TITLE>radioactv</TITLE>
+GstRadioacTV
+<SUBSECTION Standard>
+GstRadioacTVClass
+GST_RADIOACTV
+GST_RADIOACTV_CLASS
+GST_IS_RADIOACTV
+GST_IS_RADIOACTV_CLASS
+GST_TYPE_RADIOACTV
+gst_radioactv_get_type
+</SECTION>
+
