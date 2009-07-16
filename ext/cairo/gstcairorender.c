@@ -168,50 +168,48 @@ static gboolean
 gst_cairo_render_setcaps_sink (GstPad * pad, GstCaps * caps)
 {
   GstCairoRender *c = GST_CAIRO_RENDER (GST_PAD_PARENT (pad));
-  const GValue *value;
   GstStructure *s = gst_caps_get_structure (caps, 0);
   const gchar *mime = gst_structure_get_name (s);
+  gint fps_n = 0, fps_d = 1;
 
   GST_DEBUG_OBJECT (c, "Got caps (%s).", mime);
   if ((c->png = !strcmp (mime, "image/png")))
     return TRUE;
 
   /* Width and height */
-  value = gst_structure_get_value (s, "width");
-  if (!value || !G_VALUE_HOLDS_INT (value)) {
-    GST_DEBUG_OBJECT (c, "Width is missing.");
+  if (!gst_structure_get_int (s, "width", &c->width) ||
+      !gst_structure_get_int (s, "height", &c->height)) {
+    GST_ERROR_OBJECT (c, "Invalid caps");
     return FALSE;
   }
-  c->width = g_value_get_int (value);
-  value = gst_structure_get_value (s, "height");
-  if (!value || !G_VALUE_HOLDS_INT (value)) {
-    GST_DEBUG_OBJECT (c, "Height is missing.");
-    return FALSE;
-  }
-  c->height = g_value_get_int (value);
 
   /* Colorspace
    * FIXME: I couldn't figure out the right caps. The solution below
    * results in a black and white result which is better than nothing.
    * If you know how to fix this, please do it. */
-  if (!strcmp (mime, "video/x-raw-yuv"))
+  if (!strcmp (mime, "video/x-raw-yuv")) {
     c->format = CAIRO_FORMAT_A8;
-  else if (!strcmp (mime, "video/x-raw-rgb"))
+  } else if (!strcmp (mime, "video/x-raw-rgb")) {
     c->format = CAIRO_FORMAT_RGB24;
-  else {
+  } else {
     GST_DEBUG_OBJECT (c, "Unknown mime type '%s'.", mime);
     return FALSE;
   }
 
   /* Framerate */
-  value = gst_structure_get_value (s, "framerate");
-  if (value && GST_VALUE_HOLDS_FRACTION (value)) {
-    caps = gst_pad_get_allowed_caps (c->src);
-    s = gst_caps_get_structure (caps, 0);
-    gst_structure_set_value (s, "framerate", value);
-    gst_pad_set_caps (c->src, caps);
-    gst_caps_unref (caps);
-  }
+  gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
+
+  /* Create output caps */
+  caps = gst_pad_get_allowed_caps (c->src);
+  caps = gst_caps_make_writable (caps);
+  gst_caps_truncate (caps);
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_set (s, "height", G_TYPE_INT, c->height, "width", G_TYPE_INT,
+      c->width, "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+  GST_DEBUG_OBJECT (c, "Setting src caps %" GST_PTR_FORMAT, caps);
+  gst_pad_set_caps (c->src, caps);
+  gst_caps_unref (caps);
+
   return TRUE;
 }
 
