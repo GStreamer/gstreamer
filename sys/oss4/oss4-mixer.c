@@ -924,14 +924,13 @@ gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
   return g_quark_to_string (g_quark_from_string (scratch));     /* eek */
 }
 
-const gchar *
-gst_oss4_mixer_control_get_translated_option (gchar * name)
+static const gchar *
+gst_oss4_mixer_control_get_translated_option (const gchar * name)
 {
   int i;
   for (i = 0; i < G_N_ELEMENTS (labels); ++i) {
     if (g_strcasecmp (name, labels[i].oss_name) == 0) {
-      name = _(labels[i].label);
-      return (name);
+      return _(labels[i].label);
     }
   }
   return (name);
