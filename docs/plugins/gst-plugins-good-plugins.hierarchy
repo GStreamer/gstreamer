@@ -78,6 +78,7 @@ GObject
         GstRgAnalysis
         GstRgLimiter
         GstVideoCrop
+      GstCairoRender
       GstBaseSrc
         GstPushSrc
           GstSoupHTTPSrc

@@ -421,6 +421,20 @@ gst_cairo_time_overlay_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-cairorender</FILE>
+<TITLE>cairorender</TITLE>
+GstCairoRender
+<SUBSECTION Standard>
+GstCairoRenderClass
+GST_TYPE_CAIRO_RENDER
+GST_CAIRO_RENDER
+GST_CAIRO_RENDER_CLASS
+GST_IS_CAIRO_RENDER
+GST_IS_CAIRO_RENDER_CLASS
+gst_cairo_render_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-cmmldec</FILE>
 <TITLE>cmmldec</TITLE>
 GstCmmlDec

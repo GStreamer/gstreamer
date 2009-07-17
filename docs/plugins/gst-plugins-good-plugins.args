@@ -1669,6 +1669,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstFlacEnc::padding</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Padding</NICK>
+<BLURB>Write a PADDING block with this length in bytes.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstOssSink::device</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>

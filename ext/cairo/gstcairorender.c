@@ -17,6 +17,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
+/**
+ * SECTION:element-cairorender
+ *
+ * cairorender encodes a video stream into PDF, SVG, PNG or Postscript
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch videotestsrc num-buffers=3 ! cairorender ! "application/pdf" ! filesink location=test.pdf
+ * ]|
+ * </refsect2>
+ */
+
 #include "gstcairorender.h"
 
 #include <cairo.h>
