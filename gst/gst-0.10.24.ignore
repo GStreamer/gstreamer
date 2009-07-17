@@ -2,6 +2,7 @@
 ignore
 	gst_element_set_start_time
 	gst_element_get_start_time
+	gst_element_lost_state_full
 	gst_event_new_step
 	gst_event_parse_step
 	gst_message_new_tag_full
@@ -32,6 +33,8 @@ ignore
 	gst_task_set_pool
 	gst_task_set_thread_callbacks
 	gst_task_set_state
+	gst_adapter_prev_timestamp
+	gst_adapter_masked_scan_uint32
 %%
 ignore-type
 	GstBufferList

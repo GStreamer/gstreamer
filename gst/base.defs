@@ -147,6 +147,27 @@
   (return-type "guint")
 )
 
+(define-method prev_timestamp
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_prev_timestamp")
+  (return-type "GstClockTime")
+  (parameters
+    '("guint64*" "distance")
+  )
+)
+
+(define-method masked_scan_uint32
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_masked_scan_uint32")
+  (return-type "guint")
+  (parameters
+    '("guint32" "mask")
+    '("guint32" "pattern")
+    '("guint" "offset")
+    '("guint" "size")
+  )
+)
+
 (define-function gst_adapter_get_type
   (c-name "gst_adapter_get_type")
   (return-type "GType")
