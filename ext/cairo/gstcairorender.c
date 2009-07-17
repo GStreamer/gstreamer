@@ -190,13 +190,12 @@ gst_cairo_render_setcaps_sink (GstPad * pad, GstCaps * caps)
   } else
 #endif
 #if CAIRO_HAS_PDF_SURFACE
-  if (!strcmp (mime, "application/x-pdf")) {
+  if (!strcmp (mime, "application/pdf")) {
     c->surface = cairo_pdf_surface_create_for_stream (write_func, c, w, h);
   } else
 #endif
 #if CAIRO_HAS_SVG_SURFACE
-//TODO: SVG mimetype + typefinder !!
-  if (!strcmp (mime, "image/svg")) {
+  if (!strcmp (mime, "image/svg+xml")) {
     c->surface = cairo_svg_surface_create_for_stream (write_func, c, w, h);
   } else
 #endif
@@ -213,7 +212,7 @@ gst_cairo_render_setcaps_sink (GstPad * pad, GstCaps * caps)
 static GstStaticPadTemplate t_src = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS (
 #if CAIRO_HAS_PDF_SURFACE
-        "application/x-pdf, "
+        "application/pdf, "
         "width = (int) [ 1, MAX], " "height = (int) [ 1, MAX] "
 #endif
 #if CAIRO_HAS_PDF_SURFACE && (CAIRO_HAS_PS_SURFACE || CAIRO_HAS_SVG_SURFACE || CAIRO_HAS_PNG_FUNCTIONS)
@@ -227,7 +226,7 @@ static GstStaticPadTemplate t_src = GST_STATIC_PAD_TEMPLATE ("src",
         ";"
 #endif
 #if CAIRO_HAS_SVG_SURFACE
-        "application/svg, "
+        "image/svg+xml, "
         "width = (int) [ 1, MAX], " "height = (int) [ 1, MAX] "
 #endif
 #if (CAIRO_HAS_PDF_SURFACE || CAIRO_HAS_PS_SURFACE || CAIRO_HAS_SVG_SURFACE) && CAIRO_HAS_PNG_FUNCTIONS
