@@ -43,7 +43,7 @@ struct _GstCairoRender
 
   /* Source */
   cairo_surface_t *surface;
-  gint width, height;
+  gint width, height, stride;
 
   /* Sink */
   gint64 offset, duration;

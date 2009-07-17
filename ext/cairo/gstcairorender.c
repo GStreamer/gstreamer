@@ -122,7 +122,7 @@ gst_cairo_render_chain (GstPad * pad, GstBuffer * buf)
     s = cairo_image_surface_create_from_png_stream (read_buffer, buf);
   } else
     s = cairo_image_surface_create_for_data (GST_BUFFER_DATA (buf),
-        c->format, c->width, c->height, c->width);
+        c->format, c->width, c->height, c->stride);
   success = gst_cairo_render_push_surface (c, s);
   gst_buffer_unref (buf);
   return success ? GST_FLOW_OK : GST_FLOW_ERROR;
@@ -148,14 +148,13 @@ gst_cairo_render_setcaps_sink (GstPad * pad, GstCaps * caps)
     return FALSE;
   }
 
-  /* Colorspace
-   * FIXME: I couldn't figure out the right caps. The solution below
-   * results in a black and white result which is better than nothing.
-   * If you know how to fix this, please do it. */
-  if (!strcmp (mime, "video/x-raw-yuv")) {
+  /* Colorspace */
+  if (!strcmp (mime, "video/x-raw-yuv") || !strcmp (mime, "video/x-raw-grey")) {
     c->format = CAIRO_FORMAT_A8;
+    c->stride = GST_ROUND_UP_4 (c->width);
   } else if (!strcmp (mime, "video/x-raw-rgb")) {
     c->format = CAIRO_FORMAT_RGB24;
+    c->stride = 4 * c->width;
   } else {
     GST_DEBUG_OBJECT (c, "Unknown mime type '%s'.", mime);
     return FALSE;
@@ -233,13 +232,26 @@ static GstStaticPadTemplate t_src = GST_STATIC_PAD_TEMPLATE ("src",
         ";"
 #endif
 #if CAIRO_HAS_PNG_FUNCTIONS
-        "image/png"
+        "image/png, " "width = (int) [ 1, MAX], " "height = (int) [ 1, MAX] "
 #endif
     ));
 static GstStaticPadTemplate t_snk = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")
+    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS (
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+        GST_VIDEO_CAPS_BGRx " ; "
+#else
+        GST_VIDEO_CAPS_xRGB " ; "
+#endif
+        GST_VIDEO_CAPS_YUV ("Y800") " ; "
+        "video/x-raw-gray, "
+        "bpp = 8, "
+        "depth = 8, "
+        "width = " GST_VIDEO_SIZE_RANGE ", "
+        "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE
+        " ; "
 #if CAIRO_HAS_PNG_FUNCTIONS
-        ";image/png"
+        "image/png, "
+        "width = " GST_VIDEO_SIZE_RANGE ", " "height = " GST_VIDEO_SIZE_RANGE
 #endif
     ));
 
