@@ -220,7 +220,10 @@ gst_vdp_vpp_is_interlaced (GstVdpVideoPostProcess * vpp)
 static guint
 gst_vdp_vpp_get_required_pictures (GstVdpVideoPostProcess * vpp)
 {
-  guint ret = 1;
+  guint ret;
+
+  if (vpp->noise_reduction != 0.0)
+    return 2;
 
   if (!gst_vdp_vpp_is_interlaced (vpp))
     return 1;
@@ -231,7 +234,7 @@ gst_vdp_vpp_get_required_pictures (GstVdpVideoPostProcess * vpp)
       break;
     case GST_VDP_DEINTERLACE_METHOD_TEMPORAL:
     case GST_VDP_DEINTERLACE_METHOD_TEMPORAL_SPATIAL:
-      ret = 3;
+      ret = 2;
       break;
   }
 
