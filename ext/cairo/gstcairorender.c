@@ -117,6 +117,9 @@ gst_cairo_render_chain (GstPad * pad, GstBuffer * buf)
   cairo_surface_t *s;
   gboolean success;
 
+  if (G_UNLIKELY (c->width <= 0 || c->height <= 0 || c->stride <= 0))
+    return GST_FLOW_NOT_NEGOTIATED;
+
   if (c->png) {
     GST_BUFFER_OFFSET (buf) = 0;
     s = cairo_image_surface_create_from_png_stream (read_buffer, buf);
@@ -278,6 +281,7 @@ gst_cairo_render_init (GstCairoRender * c, GstCairoRenderClass * klass)
 
   c->width = 0;
   c->height = 0;
+  c->stride = 0;
 }
 
 static void
