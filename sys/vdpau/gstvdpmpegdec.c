@@ -184,8 +184,8 @@ gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "mpegversion", &mpeg_dec->version);
 
   /* Default to MPEG1 until we find otherwise */
-  mpeg_dec->profile = VDP_DECODER_PROFILE_MPEG1;  
-  
+  mpeg_dec->profile = VDP_DECODER_PROFILE_MPEG1;
+
   value = gst_structure_get_value (structure, "codec_data");
   if (value) {
     GstBuffer *codec_data, *buf;
