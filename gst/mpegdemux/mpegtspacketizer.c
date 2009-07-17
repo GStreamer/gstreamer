@@ -1749,7 +1749,9 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
                   break;
               }
               component = gst_structure_new ("video", "high-definition",
-                  G_TYPE_BOOLEAN, TRUE, "frequency", G_TYPE_INT, freq, NULL);
+                  G_TYPE_BOOLEAN, TRUE, "frequency", G_TYPE_INT, freq,
+                  "tag", G_TYPE_INT, DESC_DVB_COMPONENT_tag (comp_descriptor),
+                  NULL);
               if (widescreen == 0) {
                 gst_structure_set (component, "aspect-ratio",
                     G_TYPE_STRING, "4:3", NULL);
