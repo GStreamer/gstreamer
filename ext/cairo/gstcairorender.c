@@ -73,20 +73,6 @@ write_func (void *closure, const unsigned char *data, unsigned int length)
 }
 
 static cairo_status_t
-read_func (void *closure, unsigned char *data, unsigned int length)
-{
-  GstCairoRender *c = GST_CAIRO_RENDER (closure);
-  GstBuffer *buf;
-
-  if (gst_pad_pull_range (c->snk, c->offset, length, &buf) != GST_FLOW_OK)
-    return CAIRO_STATUS_READ_ERROR;
-  c->offset += GST_BUFFER_SIZE (buf);
-  memcpy (data, GST_BUFFER_DATA (buf), length);
-  gst_buffer_unref (buf);
-  return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
 read_buffer (void *closure, unsigned char *data, unsigned int length)
 {
   GstBuffer *buf = GST_BUFFER (closure);
@@ -140,28 +126,6 @@ gst_cairo_render_chain (GstPad * pad, GstBuffer * buf)
   success = gst_cairo_render_push_surface (c, s);
   gst_buffer_unref (buf);
   return success ? GST_FLOW_OK : GST_FLOW_ERROR;
-}
-
-static gboolean
-gst_cairo_render_activate_sink (GstPad * pad)
-{
-  GstCairoRender *c = GST_CAIRO_RENDER (GST_PAD_PARENT (pad));
-  GstFormat format = GST_FORMAT_BYTES;
-
-  if (c->png) {
-    if (!gst_pad_check_pull_range (pad)) {
-      GST_DEBUG_OBJECT (c, "We do not have random access. "
-          "Let's hope each buffer we receive contains a whole png image.");
-      return gst_pad_activate_push (pad, TRUE);
-    }
-    if (!gst_pad_query_peer_duration (c->snk, &format, &c->duration)) {
-      GST_DEBUG_OBJECT (c, "Could not query duration. "
-          "Let's hope each buffer we receive contains a whole png image.");
-      return gst_pad_activate_push (pad, TRUE);
-    }
-    return gst_pad_activate_pull (pad, TRUE);
-  }
-  return gst_pad_activate_push (pad, TRUE);
 }
 
 static gboolean
@@ -231,6 +195,7 @@ gst_cairo_render_setcaps_sink (GstPad * pad, GstCaps * caps)
   } else
 #endif
 #if CAIRO_HAS_SVG_SURFACE
+//TODO: SVG mimetype + typefinder !!
   if (!strcmp (mime, "image/svg")) {
     c->surface = cairo_svg_surface_create_for_stream (write_func, c, w, h);
   } else
@@ -244,42 +209,6 @@ gst_cairo_render_setcaps_sink (GstPad * pad, GstCaps * caps)
 
   return TRUE;
 }
-
-static void
-gst_cairo_render_loop (gpointer data)
-{
-  GstCairoRender *c = GST_CAIRO_RENDER (data);
-
-  if (c->offset >= c->duration) {
-    gst_pad_pause_task (c->snk);
-    gst_pad_send_event (c->snk, gst_event_new_eos ());
-    return;
-  }
-
-  if (!gst_cairo_render_push_surface (c,
-          cairo_image_surface_create_from_png_stream (read_func, c))) {
-    GST_DEBUG_OBJECT (c, "Could not push image.");
-    gst_pad_pause_task (c->snk);
-    gst_pad_send_event (c->snk, gst_event_new_eos ());
-  }
-}
-
-static gboolean
-gst_cairo_render_activatepull_sink (GstPad * pad, gboolean active)
-{
-  GstCairoRender *c = GST_CAIRO_RENDER (GST_PAD_PARENT (pad));
-
-  if (active) {
-    c->offset = 0;
-    return gst_pad_start_task (pad, gst_cairo_render_loop, c);
-  } else
-    return gst_pad_stop_task (pad);
-}
-
-static GstElementDetails cairo_render_details =
-GST_ELEMENT_DETAILS ("CAIRO encoder",
-    "Codec/Encoder", "Encodes streams using CAIRO",
-    "Lutz Mueller <lutz@topfrose.de>");
 
 static GstStaticPadTemplate t_src = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS (
@@ -326,9 +255,6 @@ gst_cairo_render_init (GstCairoRender * c, GstCairoRenderClass * klass)
       gst_pad_new_from_template (gst_static_pad_template_get (&t_snk), "sink");
   gst_pad_set_event_function (c->snk, gst_cairo_render_event);
   gst_pad_set_chain_function (c->snk, gst_cairo_render_chain);
-  gst_pad_set_activate_function (c->snk, gst_cairo_render_activate_sink);
-  gst_pad_set_activatepull_function (c->snk,
-      gst_cairo_render_activatepull_sink);
   gst_pad_set_setcaps_function (c->snk, gst_cairo_render_setcaps_sink);
   gst_pad_use_fixed_caps (c->snk);
   gst_element_add_pad (GST_ELEMENT (c), c->snk);
@@ -348,7 +274,9 @@ gst_cairo_render_base_init (gpointer g_class)
 {
   GstElementClass *ec = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (ec, &cairo_render_details);
+  gst_element_class_set_details_simple (ec, "Cairo encoder",
+      "Codec/Encoder", "Encodes streams using Cairo",
+      "Lutz Mueller <lutz@topfrose.de>");
   gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&t_snk));
   gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&t_src));
 }
@@ -374,5 +302,5 @@ gst_cairo_render_class_init (GstCairoRenderClass * klass)
   gobject_class->finalize = gst_cairo_render_finalize;
 
   GST_DEBUG_CATEGORY_INIT (cairo_render_debug, "cairo_render", 0,
-      "CAIRO encoder");
+      "Cairo encoder");
 }
