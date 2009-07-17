@@ -72,6 +72,7 @@ struct _GstV4l2Object {
   /* the video-device's file descriptor */
   gint video_fd;
   GstPoll * poll;
+  gboolean can_poll_device;
 
   /* the video buffer (mmap()'ed) */
   guint8 **buffer;

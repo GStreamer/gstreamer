@@ -999,12 +999,20 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
   buffer.memory = V4L2_MEMORY_MMAP;
 
   for (;;) {
-    ret = gst_poll_wait (v4l2src->v4l2object->poll, GST_CLOCK_TIME_NONE);
-    if (G_UNLIKELY (ret < 0)) {
-      if (errno == EBUSY)
-        goto stopped;
-      if (errno != EAGAIN && errno != EINTR)
-        goto select_error;
+    if (v4l2src->v4l2object->can_poll_device) {
+      ret = gst_poll_wait (v4l2src->v4l2object->poll, GST_CLOCK_TIME_NONE);
+      if (G_UNLIKELY (ret < 0)) {
+        if (errno == EBUSY)
+          goto stopped;
+        if (errno == ENXIO) {
+          GST_DEBUG_OBJECT (v4l2src,
+              "v4l2 device doesn't support polling. Disabling");
+          v4l2src->v4l2object->can_poll_device = FALSE;
+        } else {
+          if (errno != EAGAIN && errno != EINTR)
+            goto select_error;
+        }
+      }
     }
 
     if (v4l2_ioctl (v4l2src->v4l2object->video_fd, VIDIOC_DQBUF, &buffer) >= 0)

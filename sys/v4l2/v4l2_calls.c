@@ -442,6 +442,8 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
   if (libv4l2_fd != -1)
     v4l2object->video_fd = libv4l2_fd;
 
+  v4l2object->can_poll_device = TRUE;
+
   /* get capabilities, error will be posted */
   if (!gst_v4l2_get_capabilities (v4l2object))
     goto error;

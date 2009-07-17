@@ -1248,8 +1248,14 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
     if (G_UNLIKELY (ret < 0)) {
       if (errno == EBUSY)
         goto stopped;
-      if (errno != EAGAIN && errno != EINTR)
-        goto select_error;
+      if (errno == ENXIO) {
+        GST_DEBUG_OBJECT (v4l2src,
+            "v4l2 device doesn't support polling. Disabling");
+        v4l2src->v4l2object->can_poll_device = FALSE;
+      } else {
+        if (errno != EAGAIN && errno != EINTR)
+          goto select_error;
+      }
     }
     amount =
         v4l2_read (v4l2src->v4l2object->video_fd, GST_BUFFER_DATA (*buf),
