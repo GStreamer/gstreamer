@@ -35,6 +35,7 @@ rtp-payloading
 souphttpsrc
 spectrum
 sunaudio
+udpsink
 videocrop
 videofilter
 wavpackdec
