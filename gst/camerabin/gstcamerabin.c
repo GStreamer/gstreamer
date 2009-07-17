@@ -2862,12 +2862,8 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       break;
     case ARG_FILTER_CAPS:
       GST_OBJECT_LOCK (camera);
-      if (camera->view_finder_caps) {
-        gst_caps_unref (camera->view_finder_caps);
-      }
-      /* just ref, we don't modify it inplace */
-      camera->view_finder_caps =
-          gst_caps_ref ((GstCaps *) gst_value_get_caps (value));
+      gst_caps_replace (&camera->view_finder_caps,
+          (GstCaps *) gst_value_get_caps (value));
       GST_OBJECT_UNLOCK (camera);
       if (GST_STATE (camera) != GST_STATE_NULL) {
         gst_camerabin_set_capsfilter_caps (camera, camera->view_finder_caps);
@@ -2875,10 +2871,8 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       break;
     case ARG_PREVIEW_CAPS:
       GST_OBJECT_LOCK (camera);
-      if (camera->preview_caps) {
-        gst_caps_unref (camera->preview_caps);
-      }
-      camera->preview_caps = gst_caps_copy (gst_value_get_caps (value));
+      gst_caps_replace (&camera->preview_caps,
+          (GstCaps *) gst_value_get_caps (value));
       GST_OBJECT_UNLOCK (camera);
       gst_camerabin_preview_create_pipeline (camera);
       break;
