@@ -55,13 +55,20 @@
 #include <time.h>
 
 /*
+ * debug logging
+ */
+GST_DEBUG_CATEGORY_STATIC (camera_perf);
+#define GST_CAT_DEFAULT camera_perf
+
+
+/*
  * enums, typedefs and defines
  */
 
 #define GET_TIME(t)                                     \
 do {                                                    \
   t = gst_util_get_timestamp ();                        \
-  GST_INFO("%2d ----------------------------------------", test_ix); \
+  GST_DEBUG("%2d ----------------------------------------", test_ix); \
 } while(0)
 
 #define DIFF_TIME(e,s,d) d=GST_CLOCK_DIFF(s,e)
@@ -102,9 +109,15 @@ static guint32 num_pics = 0;
 static guint32 num_pics_cont = 0;
 //static guint32 num_vids = 0;
 static guint test_ix = 0;
-static gboolean signal_sink = FALSE;
+static gboolean signal_vf_sink = FALSE;
+static gboolean signal_vid_sink = FALSE;
+static gboolean signal_img_enc = FALSE;
 static gboolean signal_shot = FALSE;
 static gboolean signal_cont = FALSE;
+
+static gboolean need_pad_probe = FALSE;
+static gboolean need_ienc_pad_probe = FALSE;
+static gboolean need_vmux_pad_probe = FALSE;
 
 static gboolean have_img_captured = FALSE;
 static gboolean have_img_done = FALSE;
@@ -113,6 +126,7 @@ static gboolean have_img_done = FALSE;
 static GstClockTime t_initial = G_GUINT64_CONSTANT (0);
 static GstClockTime t_final[CONT_SHOTS] = { G_GUINT64_CONSTANT (0), };
 
+static GstClockTime test_06_taget, test_09_taget;
 static GstClockTimeDiff diff;
 static ResultType result;
 
@@ -135,10 +149,10 @@ static const gchar *test_names[TEST_CASES] = {
   "Shot to snapshot",
   "Shot to shot",
   "Serial shooting",
-  "(Shutter lag)",
+  "Shutter lag",
   "Image saved",
   "Mode change",
-  "(Video recording)"           /* time to get videobin to PLAYING? or first buffer reaching filesink? */
+  "Video recording"
 };
 
 /*
@@ -147,19 +161,79 @@ static const gchar *test_names[TEST_CASES] = {
 
 static void print_result (void);
 static gboolean run_test (gpointer user_data);
+static gboolean setup_add_pad_probe (GstElement * elem, const gchar * pad_name,
+    GCallback handler, gpointer data);
+
 
 /*
  * Callbacks
  */
 
 static gboolean
-img_sink_has_buffer (GstPad * pad, GstBuffer * buf, gpointer user_data)
+pad_has_buffer (GstPad * pad, GstBuffer * buf, gpointer user_data)
 {
-  if (signal_sink) {
-    signal_sink = FALSE;
+  gboolean *signal_sink = (gboolean *) user_data;
+  gboolean print_and_restart = FALSE;
+
+  if (*signal_sink) {
+    *signal_sink = FALSE;
     GET_TIME (t_final[0]);
+    GST_DEBUG_OBJECT (pad, "%2d pad has buffer", test_ix);
+    switch (test_ix) {
+      case 5:
+        DIFF_TIME (t_final[num_pics_cont], t_initial, diff);
+        result.avg = result.min = result.max = diff;
+        print_and_restart = TRUE;
+        break;
+      case 8:
+        DIFF_TIME (t_final[num_pics_cont], t_initial, diff);
+        result.avg = result.min = result.max = diff;
+        g_signal_emit_by_name (camera_bin, "user-stop", 0);
+        print_and_restart = TRUE;
+        break;
+      default:
+        GST_WARNING_OBJECT (pad, "%2d pad has buffer, not handled", test_ix);
+        break;
+    }
+  }
+  if (print_and_restart) {
+    print_result ();
+    g_idle_add ((GSourceFunc) run_test, NULL);
+    return FALSE;
   }
   return TRUE;
+}
+
+static void
+element_added (GstBin * bin, GstElement * element, gpointer user_data)
+{
+  GstElement *elem;
+
+  if (GST_IS_BIN (element)) {
+    g_signal_connect (element, "element-added", (GCallback) element_added,
+        NULL);
+  }
+
+  if (need_vmux_pad_probe) {
+    g_object_get (camera_bin, "videomux", &elem, NULL);
+    if (elem) {
+      setup_add_pad_probe (elem, "src", (GCallback) pad_has_buffer,
+          &signal_vid_sink);
+      need_vmux_pad_probe = FALSE;
+      target[8] = test_09_taget;
+      GST_INFO_OBJECT (elem, "got default video muxer");
+    }
+  }
+  if (need_ienc_pad_probe) {
+    g_object_get (camera_bin, "imageenc", &elem, NULL);
+    if (elem) {
+      setup_add_pad_probe (elem, "src", (GCallback) pad_has_buffer,
+          &signal_img_enc);
+      need_ienc_pad_probe = FALSE;
+      target[5] = test_06_taget;
+      GST_INFO_OBJECT (elem, "got default image encoder");
+    }
+  }
 }
 
 static gboolean
@@ -168,7 +242,7 @@ img_capture_done (GstElement * camera, GString * fname, gpointer user_data)
   gboolean ret = FALSE;
   gboolean print_and_restart = FALSE;
 
-  GST_INFO ("shot %d, cont %d, num %d", signal_shot, signal_cont,
+  GST_DEBUG ("shot %d, cont %d, num %d", signal_shot, signal_cont,
       num_pics_cont);
 
   if (signal_shot) {
@@ -181,7 +255,7 @@ img_capture_done (GstElement * camera, GString * fname, gpointer user_data)
         print_and_restart = TRUE;
         break;
     }
-    GST_INFO ("%2d shot done", test_ix);
+    GST_DEBUG ("%2d shot done", test_ix);
   }
 
   if (signal_cont) {
@@ -198,7 +272,7 @@ img_capture_done (GstElement * camera, GString * fname, gpointer user_data)
       }
       snprintf (tmp, 6, "_%04d", num_pics_cont);
       memcpy (filename->str + i, tmp, 5);
-      GST_INFO ("%2d cont new filename '%s'", test_ix, filename->str);
+      GST_DEBUG ("%2d cont new filename '%s'", test_ix, filename->str);
       g_object_set (camera_bin, "filename", filename->str, NULL);
       // FIXME: is burst capture broken? new filename and return TRUE should be enough
       // as a workaround we will kick next image from here
@@ -244,7 +318,7 @@ img_capture_done (GstElement * camera, GString * fname, gpointer user_data)
       result.min = min;
       result.max = max;
       print_and_restart = TRUE;
-      GST_INFO ("%2d cont done", test_ix);
+      GST_DEBUG ("%2d cont done", test_ix);
     }
   }
 
@@ -286,33 +360,36 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       break;
     }
     case GST_MESSAGE_STATE_CHANGED:
-      if (GST_MESSAGE_SRC (message) == GST_OBJECT (camera_bin)) {
+      if (GST_IS_BIN (GST_MESSAGE_SRC (message))) {
         GstState oldstate, newstate;
 
         gst_message_parse_state_changed (message, &oldstate, &newstate, NULL);
-        GST_INFO ("state-changed: %s -> %s",
+        GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message), "state-changed: %s -> %s",
             gst_element_state_get_name (oldstate),
             gst_element_state_get_name (newstate));
-        if (GST_STATE_TRANSITION (oldstate,
-                newstate) == GST_STATE_CHANGE_PAUSED_TO_PLAYING) {
-          GET_TIME (t_final[0]);
-          DIFF_TIME (t_final[0], t_initial, diff);
+        if (GST_MESSAGE_SRC (message) == GST_OBJECT (camera_bin)) {
+          if (GST_STATE_TRANSITION (oldstate,
+                  newstate) == GST_STATE_CHANGE_PAUSED_TO_PLAYING) {
+            GET_TIME (t_final[0]);
+            DIFF_TIME (t_final[0], t_initial, diff);
 
-          result.avg = result.min = result.max = diff;
-          print_result ();
-          g_idle_add ((GSourceFunc) run_test, NULL);
+            result.avg = result.min = result.max = diff;
+            print_result ();
+            g_idle_add ((GSourceFunc) run_test, NULL);
+          }
         }
       }
       break;
     case GST_MESSAGE_EOS:
       /* end-of-stream */
+      GST_INFO ("got eos() - should not happen");
       g_main_loop_quit (loop);
       break;
     default:
       st = gst_message_get_structure (message);
       if (st) {
         if (gst_structure_has_name (st, "image-captured")) {
-          GST_INFO ("%2d image-captured", test_ix);
+          GST_DEBUG ("%2d image-captured", test_ix);
           switch (test_ix) {
             case 3:
               GET_TIME (t_final[num_pics_cont]);
@@ -330,12 +407,14 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
               break;
           }
         } else if (gst_structure_has_name (st, "preview-image")) {
-          GST_INFO ("%2d preview-image", test_ix);
+          GST_DEBUG ("%2d preview-image", test_ix);
           switch (test_ix) {
             case 2:
               GET_TIME (t_final[num_pics_cont]);
               DIFF_TIME (t_final[num_pics_cont], t_initial, diff);
               result.avg = result.min = result.max = diff;
+              /* turn off preview image generation again */
+              g_object_set (camera_bin, "preview-caps", NULL, NULL);
               break;
           }
         }
@@ -363,52 +442,43 @@ cleanup_pipeline (void)
 }
 
 static gboolean
-setup_pipeline_video_sink (void)
+setup_add_pad_probe (GstElement * elem, const gchar * pad_name,
+    GCallback handler, gpointer data)
 {
-  GstElement *sink = NULL;
   GstPad *pad = NULL;
 
-  sink = gst_element_factory_make ("fakesink", NULL);
-  if (NULL == sink) {
-    g_warning ("failed to create sink\n");
-    goto error;
+  if (!(pad = gst_element_get_static_pad (elem, pad_name))) {
+    GST_WARNING ("sink has no pad named '%s'", pad_name);
+    return FALSE;
   }
 
-  pad = gst_element_get_static_pad (sink, "sink");
-  if (NULL == pad) {
-    g_warning ("sink has no pad named 'sink'\n");
-    goto error;
-  }
-
-  g_object_set (sink, "sync", TRUE, NULL);
-  gst_pad_add_buffer_probe (pad, (GCallback) img_sink_has_buffer, NULL);
+  gst_pad_add_buffer_probe (pad, (GCallback) handler, data);
   gst_object_unref (pad);
 
-  g_object_set (camera_bin, "vfsink", sink, NULL);
-
   return TRUE;
-error:
-  if (sink)
-    gst_object_unref (sink);
-  return FALSE;
 }
 
 static gboolean
-setup_pipeline_element (const gchar * property_name, const gchar * element_name)
+setup_pipeline_element (const gchar * property_name, const gchar * element_name,
+    GstElement ** res_elem)
 {
   gboolean res = TRUE;
+  GstElement *elem = NULL;
 
-  GstElement *elem;
   if (element_name) {
     elem = gst_element_factory_make (element_name, NULL);
     if (elem) {
       g_object_set (camera_bin, property_name, elem, NULL);
     } else {
-      g_warning ("can't create element '%s' for property '%s'", element_name,
+      GST_WARNING ("can't create element '%s' for property '%s'", element_name,
           property_name);
       res = FALSE;
     }
+  } else {
+    GST_DEBUG ("no element for property '%s' given", property_name);
   }
+  if (res_elem)
+    *res_elem = elem;
   return res;
 }
 
@@ -417,6 +487,7 @@ setup_pipeline (void)
 {
   GstBus *bus;
   gboolean res = TRUE;
+  GstElement *vmux, *ienc, *sink;
 
   g_string_printf (filename, "test_%04u.jpg", num_pics);
 
@@ -432,11 +503,24 @@ setup_pipeline (void)
   gst_bus_add_watch (bus, bus_callback, NULL);
   gst_object_unref (bus);
 
-  if (!setup_pipeline_video_sink ()) {
+  GST_INFO_OBJECT (camera_bin, "camerabin created");
+
+  /* configure used elements */
+  res &= setup_pipeline_element ("vfsink", "fakesink", &sink);
+  res &= setup_pipeline_element ("audiosrc", audiosrc_name, NULL);
+  res &= setup_pipeline_element ("videosrc", videosrc_name, NULL);
+  res &= setup_pipeline_element ("audioenc", audioenc_name, NULL);
+  res &= setup_pipeline_element ("videoenc", videoenc_name, NULL);
+  res &= setup_pipeline_element ("imageenc", imageenc_name, &ienc);
+  res &= setup_pipeline_element ("videomux", videomux_name, &vmux);
+  if (!res) {
     goto error;
   }
 
+  GST_INFO_OBJECT (camera_bin, "elements created");
+
   /* set properties */
+  g_object_set (camera_bin, "filename", filename->str, NULL);
 
   if (src_csp && strlen (src_csp) == 4) {
     GstCaps *filter_caps;
@@ -446,8 +530,7 @@ setup_pipeline (void)
         "format", GST_TYPE_FOURCC,
         GST_MAKE_FOURCC (src_csp[0], src_csp[1], src_csp[2], src_csp[3]), NULL);
     if (filter_caps) {
-      g_object_set (camera_bin, "filename", filename->str,
-          "filter-caps", filter_caps, NULL);
+      g_object_set (camera_bin, "filter-caps", filter_caps, NULL);
       gst_caps_unref (filter_caps);
     } else {
       g_warning ("can't make filter-caps with format=%s\n", src_csp);
@@ -455,16 +538,49 @@ setup_pipeline (void)
     }
   }
 
-  /* configure used elements */
-  res &= setup_pipeline_element ("audiosrc", audiosrc_name);
-  res &= setup_pipeline_element ("videosrc", videosrc_name);
-  res &= setup_pipeline_element ("audioenc", audioenc_name);
-  res &= setup_pipeline_element ("videoenc", videoenc_name);
-  res &= setup_pipeline_element ("imageenc", imageenc_name);
-  res &= setup_pipeline_element ("videomux", videomux_name);
-  if (!res) {
+  g_object_set (sink, "sync", TRUE, NULL);
+
+  GST_INFO_OBJECT (camera_bin, "elements configured");
+
+  /* connect signal handlers */
+  g_assert (sink);
+  if (!setup_add_pad_probe (sink, "sink", (GCallback) pad_has_buffer,
+          &signal_vf_sink)) {
     goto error;
   }
+  if (!vmux) {
+    g_object_get (camera_bin, "videomux", &vmux, NULL);
+    if (!vmux) {
+      need_pad_probe = need_vmux_pad_probe = TRUE;
+      test_09_taget = target[8];
+      target[8] = G_GUINT64_CONSTANT (0);
+    }
+  }
+  if (vmux) {
+    if (!setup_add_pad_probe (vmux, "src", (GCallback) pad_has_buffer,
+            &signal_vid_sink)) {
+      goto error;
+    }
+  }
+  if (!ienc) {
+    g_object_get (camera_bin, "imageenc", &ienc, NULL);
+    if (!ienc) {
+      need_pad_probe = need_ienc_pad_probe = TRUE;
+      test_06_taget = target[5];
+      target[5] = G_GUINT64_CONSTANT (0);
+    }
+  }
+  if (ienc) {
+    if (!setup_add_pad_probe (ienc, "src", (GCallback) pad_has_buffer,
+            &signal_img_enc)) {
+      goto error;
+    }
+  }
+  if (need_pad_probe) {
+    g_signal_connect (camera_bin, "element-added", (GCallback) element_added,
+        NULL);
+  }
+  GST_INFO_OBJECT (camera_bin, "probe signals connected");
 
   /* configure a resolution and framerate */
   if (image_width && image_height && view_framerate_num && view_framerate_den) {
@@ -477,13 +593,14 @@ setup_pipeline (void)
     g_warning ("can't set camerabin to ready\n");
     goto error;
   }
+  GST_INFO_OBJECT (camera_bin, "camera ready");
 
   if (GST_STATE_CHANGE_FAILURE ==
       gst_element_set_state (camera_bin, GST_STATE_PLAYING)) {
     g_warning ("can't set camerabin to playing\n");
     goto error;
   }
-  GST_INFO_OBJECT (camera_bin, "created and started");
+  GST_INFO_OBJECT (camera_bin, "camera started");
   return TRUE;
 error:
   cleanup_pipeline ();
@@ -541,6 +658,9 @@ test_03 (void)
   g_object_set (camera_bin, "preview-caps", snap_caps, NULL);
   gst_caps_unref (snap_caps);
 
+  /* switch to image mode */
+  g_object_set (camera_bin, "mode", 0, NULL);
+  g_object_set (camera_bin, "filename", filename->str, NULL);
   GET_TIME (t_initial);
   g_signal_emit_by_name (camera_bin, "user-start", 0);
 
@@ -556,6 +676,8 @@ test_03 (void)
 static gboolean
 test_04 (void)
 {
+  /* switch to image mode */
+  g_object_set (camera_bin, "mode", 0, NULL);
   GET_TIME (t_initial);
   g_signal_emit_by_name (camera_bin, "user-start", 0);
 
@@ -563,6 +685,7 @@ test_04 (void)
   result.times = 1;
   return FALSE;
 }
+
 
 /* 05) Serial shooting
  *
@@ -573,11 +696,34 @@ test_05 (void)
 {
   signal_cont = TRUE;
   have_img_captured = have_img_done = FALSE;
+  /* switch to image mode */
+  g_object_set (camera_bin, "mode", 0, NULL);
   GET_TIME (t_initial);
   g_signal_emit_by_name (camera_bin, "user-start", 0);
 
   /* the actual results are fetched in img_capture_done */
   result.times = CONT_SHOTS;
+  return FALSE;
+}
+
+
+/* 06) Shutter lag
+ * 
+ * It tests the time from user-start signal to buffer reaching img-enc
+ */
+static gboolean
+test_06 (void)
+{
+  signal_img_enc = TRUE;
+
+  /* switch to image mode */
+  g_object_set (camera_bin, "mode", 0, NULL);
+  g_object_set (camera_bin, "filename", filename->str, NULL);
+  GET_TIME (t_initial);
+  g_signal_emit_by_name (camera_bin, "user-start", 0);
+
+  /* the actual results are fetched in pad_has_buffer */
+  result.times = 1;
   return FALSE;
 }
 
@@ -592,10 +738,11 @@ test_07 (void)
 {
   signal_shot = TRUE;
 
+  /* switch to image mode */
+  g_object_set (camera_bin, "mode", 0, NULL);
+  g_object_set (camera_bin, "filename", filename->str, NULL);
   GET_TIME (t_initial);
   g_signal_emit_by_name (camera_bin, "user-start", 0);
-  /* call "user-stop" just to go back to initial state (view-finder) again */
-  g_signal_emit_by_name (camera_bin, "user-stop", 0);
   /* the actual results are fetched in img_capture_done */
   result.times = 1;
   return FALSE;
@@ -615,6 +762,10 @@ test_08 (void)
   GstClockTime min = -1;
   const gint count = 6;
   gint i;
+
+  /* switch to image mode */
+  g_object_set (camera_bin, "mode", 0, NULL);
+  g_object_set (camera_bin, "filename", filename->str, NULL);
 
   for (i = 0; i < count; ++i) {
     GET_TIME (t_final[i]);
@@ -641,6 +792,29 @@ test_08 (void)
   return TRUE;
 }
 
+
+/* 09) Video recording
+ * 
+ * It tests the time it takes to start video recording.
+ * FIXME: shouldn't we wait for the buffer arriving on the venc instead of sink?
+ */
+static gboolean
+test_09 (void)
+{
+  signal_vid_sink = TRUE;
+
+  /* switch to video mode */
+  g_object_set (camera_bin, "mode", 1, NULL);
+  g_object_set (camera_bin, "filename", filename->str, NULL);
+  GET_TIME (t_initial);
+  g_signal_emit_by_name (camera_bin, "user-start", 0);
+
+  /* the actual results are fetched in pad_has_buffer */
+  result.times = 1;
+  return FALSE;
+}
+
+
 typedef gboolean (*test_case) (void);
 static test_case test_cases[TEST_CASES] = {
   test_01,
@@ -648,10 +822,10 @@ static test_case test_cases[TEST_CASES] = {
   test_03,
   test_04,
   test_05,
-  NULL,
+  test_06,
   test_07,
   test_08,
-  NULL
+  test_09
 };
 
 static void
@@ -671,6 +845,13 @@ static gboolean
 run_test (gpointer user_data)
 {
   gboolean ret = TRUE;
+  guint old_test_ix = test_ix;
+
+  if (test_ix == TEST_CASES) {
+    GST_INFO ("done");
+    g_main_loop_quit (loop);
+    return FALSE;
+  }
 
   printf ("|  %02d  ", test_ix + 1);
   if (test_cases[test_ix]) {
@@ -693,14 +874,23 @@ run_test (gpointer user_data)
     test_ix++;
   }
 
-  if (!camera_bin || test_ix == TEST_CASES) {
+  if (old_test_ix == 0 && ret == TRUE && !camera_bin) {
+    GST_INFO ("done (camerabin creation failed)");
+    g_main_loop_quit (loop);
+    return FALSE;
+  }
+  if (old_test_ix > 0 && !camera_bin) {
+    GST_INFO ("done (camerabin was destroyed)");
+    g_main_loop_quit (loop);
+    return FALSE;
+  }
+  if (test_ix == TEST_CASES) {
     GST_INFO ("done");
     g_main_loop_quit (loop);
     return FALSE;
-  } else {
-    GST_INFO ("%2d result: %d", test_ix, ret);
-    return ret;
   }
+  GST_INFO ("%2d result: %d", test_ix, ret);
+  return ret;
 }
 
 int
@@ -749,6 +939,9 @@ main (int argc, char *argv[])
     exit (1);
   }
   g_option_context_free (ctx);
+
+  GST_DEBUG_CATEGORY_INIT (camera_perf, "camera-perf", 0,
+      "camera performcance test");
 
   /* init */
   filename = g_string_new_len ("", 16);
