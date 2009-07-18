@@ -110,6 +110,16 @@ struct _GstFFMpegDec
   gboolean ts_is_dts;
   gboolean has_b_frames;
 
+  /* Incremented by 1 each time ffmpeg consumes an encoded frame but does not
+   * give a decoded frame back. Gradually reduced to 0 while draining.
+   */
+  gint64 delay_offset;
+
+  /* Last valid offset received from upstream. Used with delay_offset to
+   * calculate offsets while draining.
+   */
+  gint64 last_offset;
+
   /* parsing */
   AVCodecParserContext *pctx;
   GstBuffer *pcache;
@@ -405,6 +415,8 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->do_padding = DEFAULT_DO_PADDING;
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
   ffmpegdec->crop = DEFAULT_CROP;
+  ffmpegdec->delay_offset = 0;
+  ffmpegdec->last_offset = GST_BUFFER_OFFSET_NONE;
 
   gst_ts_handler_init (ffmpegdec);
 
@@ -1371,8 +1383,16 @@ clip_video_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
   res =
       gst_segment_clip (&dec->segment, GST_FORMAT_TIME, in_ts, stop, &cstart,
       &cstop);
-  if (G_UNLIKELY (!res))
+  if (G_UNLIKELY (!res && in_ts != dec->segment.stop))
     goto beach;
+
+  /* Special case: last buffer has zero duration */
+  if (G_UNLIKELY (in_ts == dec->segment.stop))
+  {
+    res = TRUE;
+    cstart = in_ts - 1;
+    stop = cstop = in_ts;
+  }
 
   /* we're pretty sure the duration of this buffer is not till the end of this
    * segment (which _clip will assume when the stop is -1) */
@@ -1511,7 +1531,7 @@ flush_queued (GstFFMpegDec * ffmpegdec)
     GstBuffer *buf = GST_BUFFER_CAST (ffmpegdec->queued->data);
 
     GST_LOG_OBJECT (ffmpegdec, "pushing buffer %p, offset %"
-        G_GINT64_FORMAT ", timestamp %"
+        G_GUINT64_FORMAT ", timestamp %"
         GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT, buf,
         GST_BUFFER_OFFSET (buf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
@@ -1598,6 +1618,9 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
       ffmpegdec->picture, &have_data, data, size);
 
   gst_ts_handler_consume (ffmpegdec, len);
+
+  if (len < 0 || have_data <= 0)
+    ffmpegdec->delay_offset++;
 
   /* restore previous state */
   if (!decode)
@@ -1725,13 +1748,25 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
    * Offset:
    *
    *  1) Use input offset if valid
+   *  2) Use value converted from timestamp if valid
    */
-  if (in_offset == GST_BUFFER_OFFSET_NONE) {
+  if (in_offset != GST_BUFFER_OFFSET_NONE) {
+    GST_LOG_OBJECT (ffmpegdec, "using in_offset %" G_GINT64_FORMAT, in_offset -
+         ffmpegdec->delay_offset);
+    out_offset = in_offset - ffmpegdec->delay_offset;
+    ffmpegdec->last_offset = in_offset;
+  } else if (ffmpegdec->last_offset != GST_BUFFER_OFFSET_NONE) {
+    GST_LOG_OBJECT (ffmpegdec, "using last_offset %" G_GINT64_FORMAT, ffmpegdec->last_offset -
+         ffmpegdec->delay_offset);
+    out_offset = ffmpegdec->last_offset - ffmpegdec->delay_offset;
+  } else if (out_timestamp >= 0) {
+    GstFormat out_fmt = GST_FORMAT_DEFAULT;
+    GST_LOG_OBJECT (ffmpegdec, "Using offset converted from timestamp");
+    gst_pad_query_peer_convert (ffmpegdec->sinkpad,
+        GST_FORMAT_TIME, out_timestamp, &out_fmt, &out_offset);
+  } else {
     GST_LOG_OBJECT (ffmpegdec, "no valid offset found");
     out_offset = GST_BUFFER_OFFSET_NONE;
-  } else {
-    GST_LOG_OBJECT (ffmpegdec, "using in_offset %" G_GINT64_FORMAT, in_offset);
-    out_offset = in_offset;
   }
   GST_BUFFER_OFFSET (*outbuf) = out_offset;
 
@@ -2133,6 +2168,9 @@ gst_ffmpegdec_drain (GstFFMpegDec * ffmpegdec)
     do {
       GstFlowReturn ret;
 
+      if (ffmpegdec->delay_offset > 0)
+        ffmpegdec->delay_offset--;
+
       len = gst_ffmpegdec_frame (ffmpegdec, NULL, 0, &have_data,
           GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, -1, &ret);
       if (len < 0 || have_data == 0)
@@ -2143,6 +2181,8 @@ gst_ffmpegdec_drain (GstFFMpegDec * ffmpegdec)
     /* if we have some queued frames for reverse playback, flush them now */
     flush_queued (ffmpegdec);
   }
+  ffmpegdec->delay_offset = 0;
+  ffmpegdec->last_offset = GST_BUFFER_OFFSET_NONE;
 }
 
 static void
