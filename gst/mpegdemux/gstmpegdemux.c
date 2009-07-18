@@ -2540,7 +2540,7 @@ gst_flups_demux_loop (GstPad * pad)
 {
   GstFluPSDemux *demux;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint offset = 0;
+  guint64 offset = 0;
 
   demux = GST_FLUPS_DEMUX (gst_pad_get_parent (pad));
 
@@ -2579,7 +2579,7 @@ gst_flups_demux_loop (GstPad * pad)
       goto pause;
     }
   } else {                      /* Reverse playback */
-    guint size = MIN (offset, BLOCK_SZ);
+    guint64 size = MIN (offset, BLOCK_SZ);
 
     /* pull in data */
     ret = gst_flups_demux_pull_block (pad, demux, offset - size, size);
