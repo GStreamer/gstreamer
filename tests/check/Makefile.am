@@ -71,6 +71,7 @@ endif
 
 
 VALGRIND_TO_FIX = \
+	elements/kate \
 	elements/mpeg2enc \
 	elements/mplex
 

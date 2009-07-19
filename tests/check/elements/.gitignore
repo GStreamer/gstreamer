@@ -6,6 +6,7 @@ deinterleave
 gdpdepay
 gdppay
 interleave
+kate
 legacyresample
 mpeg2enc
 mplex
@@ -19,6 +20,7 @@ rganalysis
 rglimiter
 rgvolume
 rtpbin
+rtpbin_buffer_list
 selector
 shapewipe
 spectrum
