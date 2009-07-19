@@ -133,7 +133,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_KATE_MEDIA_TYPE)
+    GST_STATIC_CAPS ("subtitle/x-kate; application/x-kate")
     );
 
 static void gst_kate_enc_set_property (GObject * object, guint prop_id,
@@ -554,9 +554,13 @@ gst_kate_enc_send_headers (GstKateEnc * ke)
   }
 
   if (rflow == GST_FLOW_OK) {
-    caps =
-        gst_kate_util_set_header_on_caps (&ke->element,
-        gst_pad_get_caps (ke->srcpad), headers);
+    if (ke->category != NULL && strstr (ke->category, "subtitle")) {
+      caps = gst_kate_util_set_header_on_caps (&ke->element,
+          gst_caps_from_string ("subtitle/x-kate"), headers);
+    } else {
+      caps = gst_kate_util_set_header_on_caps (&ke->element,
+          gst_caps_from_string ("application/x-kate"), headers);
+    }
     if (caps) {
       GST_DEBUG_OBJECT (ke, "here are the caps: %" GST_PTR_FORMAT, caps);
       gst_pad_set_caps (ke->srcpad, caps);

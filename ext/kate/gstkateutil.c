@@ -33,6 +33,8 @@ gst_kate_util_set_header_on_caps (GstElement * element, GstCaps * caps,
   GstStructure *structure;
   GValue array = { 0 };
 
+  GST_LOG_OBJECT (element, "caps: %" GST_PTR_FORMAT, caps);
+
   if (G_UNLIKELY (!caps))
     return NULL;
   if (G_UNLIKELY (!headers))

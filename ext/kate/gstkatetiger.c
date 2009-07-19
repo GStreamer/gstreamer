@@ -108,14 +108,14 @@ enum
   ARG_DEFAULT_BACKGROUND_RED,
   ARG_DEFAULT_BACKGROUND_GREEN,
   ARG_DEFAULT_BACKGROUND_BLUE,
-  ARG_DEFAULT_BACKGROUND_ALPHA,
+  ARG_DEFAULT_BACKGROUND_ALPHA
 };
 
 static GstStaticPadTemplate kate_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("kate_sink",
+    GST_STATIC_PAD_TEMPLATE ("kate_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_KATE_MEDIA_TYPE)
+    GST_STATIC_CAPS ("subtitle/x-kate; application/x-kate")
     );
 
 static GstStaticPadTemplate video_sink_factory =
@@ -294,10 +294,8 @@ gst_kate_tiger_init (GstKateTiger * tiger, GstKateTigerClass * gclass)
       GST_DEBUG_FUNCPTR (gst_kate_tiger_kate_chain));
   gst_pad_set_query_function (tiger->katesinkpad,
       GST_DEBUG_FUNCPTR (gst_kate_tiger_kate_sink_query));
-  gst_pad_use_fixed_caps (tiger->katesinkpad);
-  gst_pad_set_caps (tiger->katesinkpad,
-      gst_static_pad_template_get_caps (&kate_sink_factory));
-  gst_pad_set_event_function (tiger->katesinkpad, gst_kate_tiger_kate_event);
+  gst_pad_set_event_function (tiger->katesinkpad,
+      GST_DEBUG_FUNCPTR (gst_kate_tiger_kate_event));
   gst_element_add_pad (GST_ELEMENT (tiger), tiger->katesinkpad);
 
   tiger->videosinkpad =

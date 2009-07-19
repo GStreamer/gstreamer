@@ -76,17 +76,17 @@ GST_ELEMENT_DETAILS ("Kate stream parser",
     "Vincent Penquerc'h <ogg.k.ogg.k at googlemail dot com>");
 
 static GstStaticPadTemplate gst_kate_parse_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_KATE_MEDIA_TYPE)
+    GST_STATIC_CAPS ("subtitle/x-kate; application/x-kate")
     );
 
 static GstStaticPadTemplate gst_kate_parse_src_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_KATE_MEDIA_TYPE)
+    GST_STATIC_CAPS ("subtitle/x-kate; application/x-kate")
     );
 
 GST_BOILERPLATE (GstKateParse, gst_kate_parse, GstElement, GST_TYPE_ELEMENT);
@@ -169,7 +169,8 @@ gst_kate_parse_push_headers (GstKateParse * parse)
   /* get the headers into the caps, passing them to kate as we go */
   caps =
       gst_kate_util_set_header_on_caps (&parse->element,
-      gst_pad_get_caps (parse->srcpad), parse->streamheader);
+      gst_pad_get_negotiated_caps (parse->sinkpad), parse->streamheader);
+
   if (G_UNLIKELY (!caps)) {
     GST_ERROR_OBJECT (parse, "Failed to set headers on caps");
     return GST_FLOW_ERROR;
@@ -388,6 +389,9 @@ gst_kate_parse_chain (GstPad * pad, GstBuffer * buffer)
   klass = GST_KATE_PARSE_CLASS (G_OBJECT_GET_CLASS (parse));
 
   g_assert (klass->parse_packet != NULL);
+
+  if (G_UNLIKELY (GST_PAD_CAPS (pad) == NULL))
+    return GST_FLOW_NOT_NEGOTIATED;
 
   return klass->parse_packet (parse, buffer);
 }

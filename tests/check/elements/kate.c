@@ -40,20 +40,25 @@ static const guint8 kate_header_0x81[53] = {
   0x72, 0x29, 0x01, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0x54, 0x49, 0x54, 0x4c, 0x45, 0x3d,       /* r)........TITLE= */
   0x54, 0x69, 0x67, 0x65, 0x72, /* Tiger            */
 };
+
 static const guint8 kate_header_0x8x[10] = {
   0x80, 0x6b, 0x61, 0x74, 0x65, 0x00, 0x00, 0x00, 0x00
 };
+
 static const guint8 kate_header_0x88[11] = {
   0x88, 0x6b, 0x61, 0x74, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
 static const guint8 kate_header_0x00[45] = {
   0x00, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xd0, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00,       /* ................ */
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x70, 0x6c, 0x61,       /* .............pla */
   0x69, 0x6e, 0x20, 0x6f, 0x6c, 0x64, 0x20, 0x74, 0x65, 0x78, 0x74, 0x08, 0x00  /* in old text..    */
 };
+
 static const guint8 kate_header_0x01[1] = {
   0x01
 };
+
 static const guint8 kate_header_0x7f[1] = {
   0x7f
 };
@@ -600,16 +605,21 @@ static void
 test_kate_send_headers (GstPad * pad)
 {
   GstBuffer *inbuffer;
+  GstCaps *caps;
   int i;
+
+  caps = gst_caps_new_simple ("subtitle/x-kate", NULL);
 
   /* push headers */
   inbuffer = gst_buffer_new ();
+  gst_buffer_set_caps (inbuffer, caps);
   GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x80;
   GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x80);
   GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
   fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
 
   inbuffer = gst_buffer_new ();
+  gst_buffer_set_caps (inbuffer, caps);
   GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x81;
   GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x81);
   GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
@@ -617,6 +627,7 @@ test_kate_send_headers (GstPad * pad)
 
   for (i = 2; i < 8; ++i) {
     inbuffer = gst_buffer_new_and_alloc (sizeof (kate_header_0x8x));
+    gst_buffer_set_caps (inbuffer, caps);
     memcpy (GST_BUFFER_DATA (inbuffer), (guint8 *) kate_header_0x8x,
         sizeof (kate_header_0x8x));
     GST_BUFFER_DATA (inbuffer)[0] = 0x80 | i;
@@ -625,10 +636,13 @@ test_kate_send_headers (GstPad * pad)
   }
 
   inbuffer = gst_buffer_new ();
+  gst_buffer_set_caps (inbuffer, caps);
   GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x88;
   GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x88);
   GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
   fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
+
+  gst_caps_unref (caps);
 }
 
 GST_START_TEST (test_kate_parse)
