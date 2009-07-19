@@ -4,6 +4,7 @@ SYMBOLS_FILE = exports.sym
 
 libgstcheck_@GST_MAJORMINOR@_la_DEPENDENCIES = \
 	$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la \
+	internal-check.h \
 	$(SYMBOLS_FILE)
 libgstcheck_@GST_MAJORMINOR@_la_SOURCES =	\
 	gstbufferstraw.c			\
@@ -17,7 +18,7 @@ libgstcheck_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS) \
 	$(top_builddir)/libs/gst/check/libcheck/libcheckinternal.la \
 	$(LIBM)
 libgstcheck_@GST_MAJORMINOR@_la_LDFLAGS = \
-	-exports $(SYMBOLS_FILE) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+	-export-symbols $(SYMBOLS_FILE) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 libgstcheck_@GST_MAJORMINOR@includedir =		\
 	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/check
@@ -40,13 +41,22 @@ gcov: $(libgstcheck_@GST_MAJORMINOR@_la_SOURCES:=.gcov)
 
 SUBDIRS = libcheck
 
-LIBGSTCHECK_EXPORTED_SYMBOLS = \
-	_gst_check_debug \
-	_gst_check_expecting_log \
+LIBGSTCHECK_EXPORTED_VARS = \
+	_gst_check_threads_running \
 	_gst_check_raised_critical \
 	_gst_check_raised_warning \
+	_gst_check_expecting_log \
+	buffers \
+	check_cond \
+	check_debug \
+	check_mutex \
+	mutex \
+	start_cond \
+	sync_cond \
+	thread_list
+
+LIBGSTCHECK_EXPORTED_FUNCS = \
 	_gst_check_run_test_func \
-	_gst_check_threads_running \
 	gst_buffer_straw_get_buffer \
 	gst_buffer_straw_start_pipeline \
 	gst_buffer_straw_stop_pipeline \
@@ -67,7 +77,20 @@ LIBGSTCHECK_EXPORTED_SYMBOLS = \
 	gst_check_teardown_element \
 	gst_check_teardown_pad_by_name \
 	gst_check_teardown_sink_pad \
-	gst_check_teardown_src_pad
+	gst_check_teardown_src_pad \
+	gst_consistency_checker_new \
+	gst_consistency_checker_reset \
+	gst_consistency_checker_free
+
+LIBGSTCHECK_EXPORTED_SYMBOLS = \
+	$(LIBGSTCHECK_EXPORTED_VARS) \
+	$(LIBGSTCHECK_EXPORTED_FUNCS)
+
+print-check-symbols:
+	CHECK_SYMS=`sed -n -e 's/^..*CK_EXPORT[[:space:]][[:space:]]*\([[:alnum:]_][[:alnum:]_]*\)..*$$/\1/p' @top_srcdir@/libs/gst/check/libcheck/check.h.in` ; \
+	for s in $$CHECK_SYMS; do \
+	  echo $$s; \
+	done;
 
 $(SYMBOLS_FILE):
 	CHECK_SYMS=`sed -n -e 's/^..*CK_EXPORT[[:space:]][[:space:]]*\([[:alnum:]_][[:alnum:]_]*\)..*$$/\1/p' @top_srcdir@/libs/gst/check/libcheck/check.h.in` ; \

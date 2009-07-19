@@ -40,3 +40,4 @@ gst-element-check.m4
 .deps
 .libs
 *~
+_stdint.h
