@@ -262,12 +262,20 @@ open_library (GstRealAudioDec * dec, gint version, GstRADecLibrary * lib)
 
       GST_LOG_OBJECT (dec, "opening module %s", codec);
 
-      lib->module = g_module_open (codec, G_MODULE_BIND_LAZY);
+      /* This is racy, but it doesn't matter here; would be nice if GModule
+       * gave us a GError instead of an error string, but it doesn't, so.. */
+      if (g_file_test (codec, G_FILE_TEST_EXISTS)) {
+        lib->module = g_module_open (codec, G_MODULE_BIND_LAZY);
+        if (lib->module == NULL) {
+          GST_ERROR_OBJECT (dec, "Could not open codec library '%s': %s",
+              codec, g_module_error ());
+        }
+      } else {
+        GST_DEBUG_OBJECT (dec, "%s does not exist", codec);
+      }
       g_free (codec);
       if (lib->module)
         goto codec_search_done;
-
-      GST_LOG_OBJECT (dec, "failure, try next one...");
     }
   }
 

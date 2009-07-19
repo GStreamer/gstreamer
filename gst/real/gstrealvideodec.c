@@ -480,7 +480,17 @@ open_library (GstRealVideoDec * dec, GstRealVideoDecVersion version,
       gchar *codec = g_strconcat (split_path[i], "/", split_names[j], NULL);
 
       GST_DEBUG_OBJECT (dec, "trying %s", codec);
-      module = g_module_open (codec, G_MODULE_BIND_LAZY);
+      /* This is racy, but it doesn't matter here; would be nice if GModule
+       * gave us a GError instead of an error string, but it doesn't, so.. */
+      if (g_file_test (codec, G_FILE_TEST_EXISTS)) {
+        module = g_module_open (codec, G_MODULE_BIND_LAZY);
+        if (module == NULL) {
+          GST_ERROR_OBJECT (dec, "Could not open codec library '%s': %s",
+              codec, g_module_error ());
+        }
+      } else {
+        GST_LOG_OBJECT (dec, "%s does not exist", codec);
+      }
       g_free (codec);
       if (module)
         goto codec_search_done;
@@ -492,7 +502,7 @@ codec_search_done:
   g_strfreev (split_names);
 
   if (module == NULL)
-    goto could_not_open;
+    return FALSE;
 
   GST_DEBUG_OBJECT (dec, "module opened, finding symbols");
 
@@ -525,12 +535,6 @@ codec_search_done:
 unknown_version:
   {
     GST_ERROR_OBJECT (dec, "Cannot handle version %i.", version);
-    return FALSE;
-  }
-could_not_open:
-  {
-    GST_ERROR_OBJECT (dec, "Could not open library '%s' in '%s': %s", names,
-        path, g_module_error ());
     return FALSE;
   }
 could_not_load:
