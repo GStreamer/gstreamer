@@ -58,6 +58,8 @@
  *
  */
 
+/* FIXME: post appropriate GST_ELEMENT_ERROR when returning FLOW_ERROR */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

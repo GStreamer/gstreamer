@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* FIXME: post appropriate GST_ELEMENT_ERROR when returning FLOW_ERROR */
+/* FIXME: shouldn't all this GstKateDecoderBase stuff really be a base class? */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -24,8 +27,6 @@
 #include <gst/tag/tag.h>
 #include "gstkate.h"
 #include "gstkateutil.h"
-
-/* FIXME: shouldn't all this GstKateDecoderBase stuff really be a base class? */
 
 GstCaps *
 gst_kate_util_set_header_on_caps (GstElement * element, GstCaps * caps,
