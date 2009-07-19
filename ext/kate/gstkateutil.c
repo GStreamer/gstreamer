@@ -25,6 +25,7 @@
 #include "gstkate.h"
 #include "gstkateutil.h"
 
+/* FIXME: shouldn't all this GstKateDecoderBase stuff really be a base class? */
 
 GstCaps *
 gst_kate_util_set_header_on_caps (GstElement * element, GstCaps * caps,
@@ -104,6 +105,22 @@ gst_kate_util_decode_base_init (GstKateDecoderBase * decoder)
   decoder->original_canvas_width = 0;
   decoder->original_canvas_height = 0;
   decoder->tags = NULL;
+  decoder->initialized = FALSE;
+}
+
+static void
+gst_kate_util_decode_base_reset (GstKateDecoderBase * decoder)
+{
+  g_free (decoder->language);
+  decoder->language = NULL;
+  g_free (decoder->category);
+  decoder->category = NULL;
+  if (decoder->tags) {
+    gst_tag_list_free (decoder->tags);
+    decoder->tags = NULL;
+  }
+  decoder->original_canvas_width = 0;
+  decoder->original_canvas_height = 0;
   decoder->initialized = FALSE;
 }
 
@@ -274,8 +291,10 @@ gst_kate_decoder_base_change_state (GstKateDecoderBase * decoder,
         kate_high_decode_clear (&decoder->k);
         decoder->initialized = FALSE;
       }
+      gst_kate_util_decode_base_reset (decoder);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_kate_util_decode_base_reset (decoder);
       break;
     default:
       break;

@@ -193,6 +193,7 @@ gst_kate_parse_push_headers (GstKateParse * parse)
     if (G_UNLIKELY (ret < 0)) {
       GST_WARNING_OBJECT (parse, "kate_decode_headerin returned %d", ret);
     }
+    /* takes ownership of outbuf, which was previously in parse->streamheader */
     outbuf_list = g_list_append (outbuf_list, outbuf);
     headers = headers->next;
   }
@@ -210,6 +211,8 @@ gst_kate_parse_push_headers (GstKateParse * parse)
   }
 
   g_list_free (outbuf_list);
+  g_list_free (parse->streamheader);
+  parse->streamheader = NULL;
 
   parse->streamheader_sent = TRUE;
 
@@ -575,6 +578,16 @@ error:
 #endif
 }
 
+static void
+gst_kate_parse_free_stream_headers (GstKateParse * parse)
+{
+  while (parse->streamheader != NULL) {
+    gst_buffer_unref (GST_BUFFER (parse->streamheader->data));
+    parse->streamheader = g_list_delete_link (parse->streamheader,
+        parse->streamheader);
+  }
+}
+
 static GstStateChangeReturn
 gst_kate_parse_change_state (GstElement * element, GstStateChange transition)
 {
@@ -607,6 +620,7 @@ gst_kate_parse_change_state (GstElement * element, GstStateChange transition)
       parse->buffer_queue = NULL;
       g_queue_free (parse->event_queue);
       parse->event_queue = NULL;
+      gst_kate_parse_free_stream_headers (parse);
       break;
 
     default:
