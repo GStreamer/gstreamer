@@ -556,11 +556,13 @@ metadataparse_exif_content_foreach_entry_func (ExifEntry * entry,
   MEUserData *meudata = (MEUserData *) user_data;
   GType type = G_TYPE_NONE;
   ExifByteOrder byte_order;
-  const gchar *tag = metadataparse_exif_get_tag_from_exif (entry->tag, &type);
+  const gchar *tag;
 
   /* We need the byte order */
   if (!entry || !entry->parent || !entry->parent->parent)
     return;
+
+  tag = metadataparse_exif_get_tag_from_exif (entry->tag, &type);
   byte_order = exif_data_get_byte_order (entry->parent->parent);
 
   if (metadataparse_handle_unit_tags (entry, meudata, byte_order))
