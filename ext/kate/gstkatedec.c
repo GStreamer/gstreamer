@@ -2,7 +2,7 @@
  * GStreamer
  * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
- * Copyright 2008 Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>
+ * Copyright 2008, 2009 Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -85,6 +85,7 @@
 #include <gst/gst.h>
 
 #include "gstkate.h"
+#include "gstkatespu.h"
 #include "gstkatedec.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_katedec_debug);
@@ -111,7 +112,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/plain; text/x-pango-markup")
+    GST_STATIC_CAPS ("text/plain; text/x-pango-markup; " GST_KATE_SPU_MIME_TYPE)
     );
 
 GST_BOILERPLATE (GstKateDec, gst_kate_dec, GstElement, GST_TYPE_ELEMENT);
@@ -250,6 +251,7 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
     gchar *escaped;
     GstBuffer *buffer;
     size_t len;
+    gboolean plain = TRUE;
 
     if (kd->remove_markup && ev->text_markup_type != kate_markup_none) {
       size_t len0 = ev->len + 1;
@@ -257,26 +259,64 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
       if (escaped) {
         kate_text_remove_markup (ev->text_encoding, escaped, &len0);
       }
+      plain = TRUE;
     } else if (ev->text_markup_type == kate_markup_none) {
       /* no pango markup yet, escape text */
       /* TODO: actually do the pango thing */
       escaped = g_markup_printf_escaped ("%s", ev->text);
+      plain = TRUE;
     } else {
       escaped = g_strdup (ev->text);
+      plain = FALSE;
     }
 
     if (G_LIKELY (escaped)) {
       len = strlen (escaped);
-      GST_DEBUG_OBJECT (kd, "kate event: %s, escaped %s", ev->text, escaped);
-      buffer = gst_buffer_new_and_alloc (len + 1);
-      if (G_LIKELY (buffer)) {
-        /* allocate and copy the NULs, but don't include them in passed size */
-        memcpy (GST_BUFFER_DATA (buffer), escaped, len + 1);
-        GST_BUFFER_SIZE (buffer) = len;
+      if (len > 0) {
+        GST_DEBUG_OBJECT (kd, "kate event: %s, escaped %s", ev->text, escaped);
+        buffer = gst_buffer_new_and_alloc (len + 1);
+        if (G_LIKELY (buffer)) {
+          const char *mime = plain ? "text/plain" : "text/x-pango-markup";
+          GstCaps *caps = gst_caps_new_simple (mime, NULL);
+          gst_buffer_set_caps (buffer, caps);
+          gst_caps_unref (caps);
+          /* allocate and copy the NULs, but don't include them in passed size */
+          memcpy (GST_BUFFER_DATA (buffer), escaped, len + 1);
+          GST_BUFFER_SIZE (buffer) = len;
+          GST_BUFFER_TIMESTAMP (buffer) = ev->start_time * GST_SECOND;
+          GST_BUFFER_DURATION (buffer) =
+              (ev->end_time - ev->start_time) * GST_SECOND;
+          rflow = gst_pad_push (kd->srcpad, buffer);
+          if (rflow == GST_FLOW_NOT_LINKED) {
+            GST_DEBUG_OBJECT (kd, "source pad not linked, ignored");
+          } else if (rflow != GST_FLOW_OK) {
+            GST_WARNING_OBJECT (kd, "failed to push buffer: %s",
+                gst_flow_get_name (rflow));
+          }
+        } else {
+          GST_WARNING_OBJECT (kd, "failed to create buffer");
+          rflow = GST_FLOW_ERROR;
+        }
+      } else {
+        GST_WARNING_OBJECT (kd, "Empty string, nothing to do");
+        rflow = GST_FLOW_OK;
+      }
+      g_free (escaped);
+    } else {
+      GST_WARNING_OBJECT (kd, "failed to allocate string");
+      rflow = GST_FLOW_ERROR;
+    }
+
+    // if there's a background paletted bitmap, construct a DVD SPU for it
+    if (ev->bitmap && ev->palette) {
+      GstBuffer *buffer = gst_kate_spu_encode_spu (kd, ev);
+      if (buffer) {
+        GstCaps *caps = gst_caps_new_simple (GST_KATE_SPU_MIME_TYPE, NULL);
+        gst_buffer_set_caps (buffer, caps);
+        gst_caps_unref (caps);
         GST_BUFFER_TIMESTAMP (buffer) = ev->start_time * GST_SECOND;
         GST_BUFFER_DURATION (buffer) =
             (ev->end_time - ev->start_time) * GST_SECOND;
-        gst_buffer_set_caps (buffer, GST_PAD_CAPS (kd->srcpad));
         rflow = gst_pad_push (kd->srcpad, buffer);
         if (rflow == GST_FLOW_NOT_LINKED) {
           GST_DEBUG_OBJECT (kd, "source pad not linked, ignored");
@@ -285,13 +325,9 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
               gst_flow_get_name (rflow));
         }
       } else {
-        GST_WARNING_OBJECT (kd, "failed to create buffer");
+        GST_WARNING_OBJECT (kd, "failed to create SPU from paletted bitmap");
         rflow = GST_FLOW_ERROR;
       }
-      g_free (escaped);
-    } else {
-      GST_WARNING_OBJECT (kd, "failed to allocate string");
-      rflow = GST_FLOW_ERROR;
     }
   }
 

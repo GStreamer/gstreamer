@@ -9,7 +9,7 @@ http://libtiger.googlecode.com/
 
 The Kate plugin contains various elements to manipulate Kate streams:
 
- - katedec: decodes Kate streams to text
+ - katedec: decodes Kate streams to text and SPU images
  - kateenc: encodes Kate streams from text and SPU images
  - kateparse: parses Kate streams
  - katetag: allows changing metadata in Kate streams

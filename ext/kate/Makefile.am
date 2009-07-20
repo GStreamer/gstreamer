@@ -3,7 +3,7 @@
 plugin_LTLIBRARIES = libgstkate.la
 
 # sources used to compile this plug-in
-libgstkate_la_SOURCES = gstkate.c gstkatedec.c gstkateenc.c gstkateparse.c gstkatetag.c gstkateutil.c
+libgstkate_la_SOURCES = gstkate.c gstkatedec.c gstkateenc.c gstkateparse.c gstkatetag.c gstkateutil.c gstkatespu.c
 if USE_TIGER
 libgstkate_la_SOURCES += gstkatetiger.c
 endif
@@ -15,6 +15,6 @@ libgstkate_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstkate_la_LIBTOOLFLAGS = --tag=disable-static
 
 # headers we need but don't want installed
-noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h gstkateutil.h gstkatetiger.h
+noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h gstkateutil.h gstkatespu.h gstkatetiger.h
 
 EXTRA_DIST=README
