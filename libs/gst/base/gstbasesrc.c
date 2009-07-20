@@ -1453,8 +1453,10 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       break;
     case GST_EVENT_TAG:
       /* Insert tag in the dataflow */
-      src->priv->pending_tags =
-          g_list_append (src->priv->pending_tags, gst_event_ref (event));
+      GST_OBJECT_LOCK (src);
+      src->priv->pending_tags = g_list_append (src->priv->pending_tags, event);
+      GST_OBJECT_UNLOCK (src);
+      event = NULL;
       result = TRUE;
       break;
     case GST_EVENT_BUFFERSIZE:
@@ -2171,6 +2173,7 @@ gst_base_src_loop (GstPad * pad)
   gint64 position;
   gboolean eos;
   gulong blocksize;
+  GList *tags, *tmp;
 
   eos = FALSE;
 
@@ -2226,18 +2229,19 @@ gst_base_src_loop (GstPad * pad)
     src->priv->start_segment = NULL;
   }
 
-  /* Push out pending tags if any */
-  if (G_UNLIKELY (src->priv->pending_tags)) {
-    GList *tmp = src->priv->pending_tags;
+  GST_OBJECT_LOCK (src);
+  /* take the tags */
+  tags = src->priv->pending_tags;
+  src->priv->pending_tags = NULL;
+  GST_OBJECT_UNLOCK (src);
 
-    while (tmp) {
+  /* Push out pending tags if any */
+  if (G_UNLIKELY (tags != NULL)) {
+    for (tmp = tags; tmp; tmp = g_list_next (tmp)) {
       GstEvent *ev = (GstEvent *) tmp->data;
       gst_pad_push_event (pad, ev);
-      tmp = g_list_next (tmp);
     }
-
-    g_list_free (src->priv->pending_tags);
-    src->priv->pending_tags = NULL;
+    g_list_free (tags);
   }
 
   /* figure out the new position */
