@@ -356,7 +356,7 @@ GST_START_TEST (test_kate_identification_header)
           GST_TAG_LANGUAGE_CODE), 1);
   fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_LANGUAGE_CODE,
           &language));
-  fail_unless_equals_string (language, "en_GB");
+  fail_unless_equals_string (language, "en");
   g_free (language);
   fail_unless_equals_int (gst_tag_list_get_tag_size (tag_list, "title"), 1);
   fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_TITLE, &title));

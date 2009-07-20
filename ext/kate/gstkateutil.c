@@ -187,9 +187,15 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
         if (decoder->k.ki->language && *decoder->k.ki->language) {
           GstTagList *old = decoder->tags, *tags = gst_tag_list_new ();
           if (tags) {
+            gchar *lang_code;
+
+            /* en_GB -> en */
+            lang_code = g_ascii_strdown (decoder->k.ki->language, -1);
+            g_strdelimit (lang_code, NULL, '\0');
             gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LANGUAGE_CODE,
-                decoder->k.ki->language, NULL);
-            // TODO: category - where should it go ?
+                lang_code, NULL);
+            g_free (lang_code);
+            /* TODO: category - where should it go ? */
             decoder->tags =
                 gst_tag_list_merge (decoder->tags, tags, GST_TAG_MERGE_REPLACE);
             gst_tag_list_free (tags);
