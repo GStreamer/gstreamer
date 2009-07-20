@@ -525,6 +525,24 @@ gst_kate_enc_set_metadata (GstKateEnc * ke)
   }
 }
 
+static gboolean
+gst_kate_enc_is_simple_subtitle_category (GstKateEnc * ke, const char *category)
+{
+  static const char *const simple[] = {
+    "subtitles",
+    "SUB",
+  };
+  int n;
+
+  if (!category)
+    return FALSE;
+  for (n = 0; n < G_N_ELEMENTS (simple); ++n) {
+    if (!strcmp (category, simple[n]))
+      return TRUE;
+  }
+  return FALSE;
+}
+
 static GstFlowReturn
 gst_kate_enc_send_headers (GstKateEnc * ke)
 {
@@ -559,7 +577,7 @@ gst_kate_enc_send_headers (GstKateEnc * ke)
   }
 
   if (rflow == GST_FLOW_OK) {
-    if (ke->category != NULL && strstr (ke->category, "subtitle")) {
+    if (gst_kate_enc_is_simple_subtitle_category (ke, ke->category)) {
       caps = gst_kate_util_set_header_on_caps (&ke->element,
           gst_caps_from_string ("subtitle/x-kate"), headers);
     } else {
