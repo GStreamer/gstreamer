@@ -103,6 +103,10 @@ enum
   ARG_REMOVE_MARKUP = DECODER_BASE_ARG_COUNT
 };
 
+/* We don't accept application/x-kate here on purpose for now, since we're
+ * only really interested in subtitle-like things for playback purposes, not
+ * cracktastic complex overlays or presentation images etc. - those should be
+ * fed into a tiger overlay plugin directly */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
