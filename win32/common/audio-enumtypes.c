@@ -10,8 +10,8 @@
 GType
 gst_audio_channel_position_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_AUDIO_CHANNEL_POSITION_INVALID, "GST_AUDIO_CHANNEL_POSITION_INVALID",
           "invalid"},
@@ -45,17 +45,19 @@ gst_audio_channel_position_get_type (void)
       {GST_AUDIO_CHANNEL_POSITION_NUM, "GST_AUDIO_CHANNEL_POSITION_NUM", "num"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstAudioChannelPosition", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstAudioChannelPosition", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 /* enumerations from "gstringbuffer.h" */
 GType
 gst_ring_buffer_state_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_RING_BUFFER_STATE_STOPPED, "GST_RING_BUFFER_STATE_STOPPED",
           "stopped"},
@@ -64,16 +66,18 @@ gst_ring_buffer_state_get_type (void)
           "started"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstRingBufferState", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstRingBufferState", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_ring_buffer_seg_state_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_SEGSTATE_INVALID, "GST_SEGSTATE_INVALID", "invalid"},
       {GST_SEGSTATE_EMPTY, "GST_SEGSTATE_EMPTY", "empty"},
@@ -81,16 +85,18 @@ gst_ring_buffer_seg_state_get_type (void)
       {GST_SEGSTATE_PARTIAL, "GST_SEGSTATE_PARTIAL", "partial"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstRingBufferSegState", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstRingBufferSegState", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_buffer_format_type_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_BUFTYPE_LINEAR, "GST_BUFTYPE_LINEAR", "linear"},
       {GST_BUFTYPE_FLOAT, "GST_BUFTYPE_FLOAT", "float"},
@@ -105,16 +111,18 @@ gst_buffer_format_type_get_type (void)
       {GST_BUFTYPE_DTS, "GST_BUFTYPE_DTS", "dts"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstBufferFormatType", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstBufferFormatType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_buffer_format_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_UNKNOWN, "GST_UNKNOWN", "unknown"},
       {GST_S8, "GST_S8", "s8"},
@@ -158,9 +166,10 @@ gst_buffer_format_get_type (void)
       {GST_DTS, "GST_DTS", "dts"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstBufferFormat", values);
+    GType g_define_type_id = g_enum_register_static ("GstBufferFormat", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 /* Generated data ends here */

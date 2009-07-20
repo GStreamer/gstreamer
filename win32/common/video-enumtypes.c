@@ -9,8 +9,8 @@
 GType
 gst_video_format_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_VIDEO_FORMAT_UNKNOWN, "GST_VIDEO_FORMAT_UNKNOWN", "unknown"},
       {GST_VIDEO_FORMAT_I420, "GST_VIDEO_FORMAT_I420", "i420"},
@@ -36,9 +36,10 @@ gst_video_format_get_type (void)
       {GST_VIDEO_FORMAT_v216, "GST_VIDEO_FORMAT_v216", "v216"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstVideoFormat", values);
+    GType g_define_type_id = g_enum_register_static ("GstVideoFormat", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 /* Generated data ends here */

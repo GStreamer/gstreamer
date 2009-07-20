@@ -20,39 +20,42 @@
 GType
 gst_color_balance_type_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_COLOR_BALANCE_HARDWARE, "GST_COLOR_BALANCE_HARDWARE", "hardware"},
       {GST_COLOR_BALANCE_SOFTWARE, "GST_COLOR_BALANCE_SOFTWARE", "software"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstColorBalanceType", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstColorBalanceType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 /* enumerations from "mixer.h" */
 GType
 gst_mixer_type_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_MIXER_HARDWARE, "GST_MIXER_HARDWARE", "hardware"},
       {GST_MIXER_SOFTWARE, "GST_MIXER_SOFTWARE", "software"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstMixerType", values);
+    GType g_define_type_id = g_enum_register_static ("GstMixerType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_mixer_message_type_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_MIXER_MESSAGE_INVALID, "GST_MIXER_MESSAGE_INVALID", "invalid"},
       {GST_MIXER_MESSAGE_MUTE_TOGGLED, "GST_MIXER_MESSAGE_MUTE_TOGGLED",
@@ -69,16 +72,18 @@ gst_mixer_message_type_get_type (void)
           "mixer-changed"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstMixerMessageType", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstMixerMessageType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_mixer_flags_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GFlagsValue values[] = {
       {GST_MIXER_FLAG_NONE, "GST_MIXER_FLAG_NONE", "none"},
       {GST_MIXER_FLAG_AUTO_NOTIFICATIONS, "GST_MIXER_FLAG_AUTO_NOTIFICATIONS",
@@ -88,17 +93,18 @@ gst_mixer_flags_get_type (void)
       {GST_MIXER_FLAG_GROUPING, "GST_MIXER_FLAG_GROUPING", "grouping"},
       {0, NULL, NULL}
     };
-    etype = g_flags_register_static ("GstMixerFlags", values);
+    GType g_define_type_id = g_flags_register_static ("GstMixerFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 /* enumerations from "mixertrack.h" */
 GType
 gst_mixer_track_flags_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GFlagsValue values[] = {
       {GST_MIXER_TRACK_INPUT, "GST_MIXER_TRACK_INPUT", "input"},
       {GST_MIXER_TRACK_OUTPUT, "GST_MIXER_TRACK_OUTPUT", "output"},
@@ -111,17 +117,19 @@ gst_mixer_track_flags_get_type (void)
       {GST_MIXER_TRACK_WHITELIST, "GST_MIXER_TRACK_WHITELIST", "whitelist"},
       {0, NULL, NULL}
     };
-    etype = g_flags_register_static ("GstMixerTrackFlags", values);
+    GType g_define_type_id =
+        g_flags_register_static ("GstMixerTrackFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 /* enumerations from "navigation.h" */
 GType
 gst_navigation_command_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_NAVIGATION_COMMAND_INVALID, "GST_NAVIGATION_COMMAND_INVALID",
           "invalid"},
@@ -144,16 +152,18 @@ gst_navigation_command_get_type (void)
           "next-angle"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstNavigationCommand", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstNavigationCommand", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_navigation_query_type_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_NAVIGATION_QUERY_INVALID, "GST_NAVIGATION_QUERY_INVALID", "invalid"},
       {GST_NAVIGATION_QUERY_COMMANDS, "GST_NAVIGATION_QUERY_COMMANDS",
@@ -161,16 +171,18 @@ gst_navigation_query_type_get_type (void)
       {GST_NAVIGATION_QUERY_ANGLES, "GST_NAVIGATION_QUERY_ANGLES", "angles"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstNavigationQueryType", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstNavigationQueryType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_navigation_message_type_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_NAVIGATION_MESSAGE_INVALID, "GST_NAVIGATION_MESSAGE_INVALID",
           "invalid"},
@@ -182,16 +194,18 @@ gst_navigation_message_type_get_type (void)
           "GST_NAVIGATION_MESSAGE_ANGLES_CHANGED", "angles-changed"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstNavigationMessageType", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstNavigationMessageType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_navigation_event_type_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_NAVIGATION_EVENT_INVALID, "GST_NAVIGATION_EVENT_INVALID", "invalid"},
       {GST_NAVIGATION_EVENT_KEY_PRESS, "GST_NAVIGATION_EVENT_KEY_PRESS",
@@ -208,17 +222,19 @@ gst_navigation_event_type_get_type (void)
       {GST_NAVIGATION_EVENT_COMMAND, "GST_NAVIGATION_EVENT_COMMAND", "command"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstNavigationEventType", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstNavigationEventType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 /* enumerations from "tunerchannel.h" */
 GType
 gst_tuner_channel_flags_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GFlagsValue values[] = {
       {GST_TUNER_CHANNEL_INPUT, "GST_TUNER_CHANNEL_INPUT", "input"},
       {GST_TUNER_CHANNEL_OUTPUT, "GST_TUNER_CHANNEL_OUTPUT", "output"},
@@ -226,9 +242,11 @@ gst_tuner_channel_flags_get_type (void)
       {GST_TUNER_CHANNEL_AUDIO, "GST_TUNER_CHANNEL_AUDIO", "audio"},
       {0, NULL, NULL}
     };
-    etype = g_flags_register_static ("GstTunerChannelFlags", values);
+    GType g_define_type_id =
+        g_flags_register_static ("GstTunerChannelFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 /* Generated data ends here */

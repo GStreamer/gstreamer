@@ -71,6 +71,9 @@
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
+/* I know the API is subject to change. */
+#undef G_UDEV_API_IS_SUBJECT_TO_CHANGE
+
 /* Define to enable ALSA (used by alsa). */
 #undef HAVE_ALSA
 
@@ -170,6 +173,9 @@
 /* Define to enable Video 4 Linux (used by video4linux). */
 #undef HAVE_GST_V4L
 
+/* Whether gudev is available for device detection */
+#undef HAVE_GUDEV
+
 /* Define if you have the iconv() function and it works. */
 #undef HAVE_ICONV
 
@@ -223,9 +229,6 @@
 
 /* Define to 1 if you have the <regex.h> header file. */
 #undef HAVE_REGEX_H
-
-/* Define to enable Schroedinger video codec (used by schro). */
-#undef HAVE_SCHRO
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -307,13 +310,13 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.23.1"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.23.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.23.1"
+#define PACKAGE_VERSION "0.10.23.3"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -341,7 +344,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.23.1"
+#define VERSION "0.10.23.3"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

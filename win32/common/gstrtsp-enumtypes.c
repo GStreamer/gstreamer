@@ -9,8 +9,8 @@
 GType
 gst_rtsp_result_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_RTSP_OK, "GST_RTSP_OK", "ok"},
       {GST_RTSP_ERROR, "GST_RTSP_ERROR", "error"},
@@ -32,47 +32,50 @@ gst_rtsp_result_get_type (void)
       {GST_RTSP_ELAST, "GST_RTSP_ELAST", "elast"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstRTSPResult", values);
+    GType g_define_type_id = g_enum_register_static ("GstRTSPResult", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_rtsp_event_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GFlagsValue values[] = {
       {GST_RTSP_EV_READ, "GST_RTSP_EV_READ", "read"},
       {GST_RTSP_EV_WRITE, "GST_RTSP_EV_WRITE", "write"},
       {0, NULL, NULL}
     };
-    etype = g_flags_register_static ("GstRTSPEvent", values);
+    GType g_define_type_id = g_flags_register_static ("GstRTSPEvent", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_rtsp_family_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_RTSP_FAM_NONE, "GST_RTSP_FAM_NONE", "none"},
       {GST_RTSP_FAM_INET, "GST_RTSP_FAM_INET", "inet"},
       {GST_RTSP_FAM_INET6, "GST_RTSP_FAM_INET6", "inet6"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstRTSPFamily", values);
+    GType g_define_type_id = g_enum_register_static ("GstRTSPFamily", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_rtsp_state_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_RTSP_STATE_INVALID, "GST_RTSP_STATE_INVALID", "invalid"},
       {GST_RTSP_STATE_INIT, "GST_RTSP_STATE_INIT", "init"},
@@ -82,31 +85,33 @@ gst_rtsp_state_get_type (void)
       {GST_RTSP_STATE_RECORDING, "GST_RTSP_STATE_RECORDING", "recording"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstRTSPState", values);
+    GType g_define_type_id = g_enum_register_static ("GstRTSPState", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_rtsp_version_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_RTSP_VERSION_INVALID, "GST_RTSP_VERSION_INVALID", "invalid"},
       {GST_RTSP_VERSION_1_0, "GST_RTSP_VERSION_1_0", "1-0"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstRTSPVersion", values);
+    GType g_define_type_id = g_enum_register_static ("GstRTSPVersion", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_rtsp_method_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GFlagsValue values[] = {
       {GST_RTSP_INVALID, "GST_RTSP_INVALID", "invalid"},
       {GST_RTSP_DESCRIBE, "GST_RTSP_DESCRIBE", "describe"},
@@ -122,32 +127,35 @@ gst_rtsp_method_get_type (void)
       {GST_RTSP_TEARDOWN, "GST_RTSP_TEARDOWN", "teardown"},
       {0, NULL, NULL}
     };
-    etype = g_flags_register_static ("GstRTSPMethod", values);
+    GType g_define_type_id = g_flags_register_static ("GstRTSPMethod", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_rtsp_auth_method_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_RTSP_AUTH_NONE, "GST_RTSP_AUTH_NONE", "none"},
       {GST_RTSP_AUTH_BASIC, "GST_RTSP_AUTH_BASIC", "basic"},
       {GST_RTSP_AUTH_DIGEST, "GST_RTSP_AUTH_DIGEST", "digest"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstRTSPAuthMethod", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstRTSPAuthMethod", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_rtsp_header_field_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_RTSP_HDR_INVALID, "GST_RTSP_HDR_INVALID", "invalid"},
       {GST_RTSP_HDR_ACCEPT, "GST_RTSP_HDR_ACCEPT", "accept"},
@@ -259,18 +267,21 @@ gst_rtsp_header_field_get_type (void)
       {GST_RTSP_HDR_X_RTP_INFO, "GST_RTSP_HDR_X_RTP_INFO", "x-rtp-info"},
       {GST_RTSP_HDR_X_STARTUPPROFILE, "GST_RTSP_HDR_X_STARTUPPROFILE",
           "x-startupprofile"},
+      {GST_RTSP_HDR_TIMESTAMP, "GST_RTSP_HDR_TIMESTAMP", "timestamp"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstRTSPHeaderField", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstRTSPHeaderField", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 GType
 gst_rtsp_status_code_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_RTSP_STS_INVALID, "GST_RTSP_STS_INVALID", "invalid"},
       {GST_RTSP_STS_CONTINUE, "GST_RTSP_STS_CONTINUE", "continue"},
@@ -358,9 +369,11 @@ gst_rtsp_status_code_get_type (void)
           "option-not-supported"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstRTSPStatusCode", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstRTSPStatusCode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 /* Generated data ends here */
