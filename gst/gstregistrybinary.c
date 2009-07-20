@@ -97,19 +97,19 @@ _strnlen (const gchar * str, gint maxlen)
 }G_STMT_END
 
 #define unpack_const_string(inptr, outptr, endptr, error_label) G_STMT_START{\
-  gint _len = _strnlen (inptr, (endptr-inptr)) + 1; \
+  gint _len = _strnlen (inptr, (endptr-inptr)); \
   if (_len == -1) \
     goto error_label; \
   outptr = g_intern_string ((const gchar *)inptr); \
-  inptr += _len; \
+  inptr += _len + 1; \
 }G_STMT_END
 
 #define unpack_string(inptr, outptr, endptr, error_label)  G_STMT_START{\
-  gint _len = _strnlen (inptr, (endptr-inptr)) + 1; \
+  gint _len = _strnlen (inptr, (endptr-inptr)); \
   if (_len == -1) \
     goto error_label; \
-  outptr = g_memdup ((gconstpointer)inptr, _len); \
-  inptr += _len; \
+  outptr = g_memdup ((gconstpointer)inptr, _len + 1); \
+  inptr += _len + 1; \
 }G_STMT_END
 
 #define ALIGNMENT            (sizeof (void *))
@@ -868,7 +868,7 @@ gst_registry_binary_load_pad_template (GstElementFactory * factory, gchar ** in,
     gchar * end)
 {
   GstBinaryPadTemplate *pt;
-  GstStaticPadTemplate *template;
+  GstStaticPadTemplate *template = NULL;
 
   align (*in);
   GST_DEBUG ("Reading/casting for GstBinaryPadTemplate at address %p", *in);
@@ -889,6 +889,7 @@ gst_registry_binary_load_pad_template (GstElementFactory * factory, gchar ** in,
 
 fail:
   GST_INFO ("Reading pad template failed");
+  g_free (template);
   return FALSE;
 }
 
