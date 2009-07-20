@@ -206,7 +206,10 @@ display_current_fps (gpointer data)
   GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (data);
   gint64 current_ts;
 
-  gst_element_query (self->video_sink, self->query);
+  /* if query failed try again on next timer tick */
+  if (!gst_element_query (self->video_sink, self->query))
+    return TRUE;
+
   gst_query_parse_position (self->query, NULL, &current_ts);
 
   if (GST_CLOCK_TIME_IS_VALID (self->last_ts)) {
