@@ -39,7 +39,8 @@
  * ./gst-camera-perf --src-colorspace=UYVY --image-width=640 --image-height=480 --view-framerate-num=2999 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux
  * ./gst-camera-perf --src-colorspace=UYVY --image-width=2592 --image-height=1968 --view-framerate-num=399 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux
  * ./gst-camera-perf --src-colorspace=UYVY --image-width=2592 --image-height=1968 --view-framerate-num=325 --view-framerate-den=25 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux --image-enc=dspjpegenc
- * ./gst-camera-perf --src-colorspace=UYVY --image-width=640 --image-height=480 --view-framerate-num=1491 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux --target-times=1000,0,1500,0,0,0,0,1000,0
+ * ./gst-camera-perf --src-colorspace=UYVY --image-width=640 --image-height=480 --view-framerate-num=1491 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=dspmpeg4enc --video-mux=hantromp4mux --image-enc=dspjpegenc --target-times=1000,1500,1500,2000,500,2000,3500,1000,1000
+ * ./gst-camera-perf --src-colorspace=UYVY --image-width=2576 --image-height=1936 --view-framerate-num=1491 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux
  */
 
 /*
@@ -217,21 +218,25 @@ element_added (GstBin * bin, GstElement * element, gpointer user_data)
   if (need_vmux_pad_probe) {
     g_object_get (camera_bin, "videomux", &elem, NULL);
     if (elem) {
-      setup_add_pad_probe (elem, "src", (GCallback) pad_has_buffer,
-          &signal_vid_sink);
       need_vmux_pad_probe = FALSE;
-      target[8] = test_09_taget;
       GST_INFO_OBJECT (elem, "got default video muxer");
+      if (setup_add_pad_probe (elem, "src", (GCallback) pad_has_buffer,
+              &signal_vid_sink)) {
+        /* enable test */
+        target[8] = test_09_taget;
+      }
     }
   }
   if (need_ienc_pad_probe) {
     g_object_get (camera_bin, "imageenc", &elem, NULL);
     if (elem) {
-      setup_add_pad_probe (elem, "src", (GCallback) pad_has_buffer,
-          &signal_img_enc);
       need_ienc_pad_probe = FALSE;
-      target[5] = test_06_taget;
       GST_INFO_OBJECT (elem, "got default image encoder");
+      if (setup_add_pad_probe (elem, "src", (GCallback) pad_has_buffer,
+              &signal_img_enc)) {
+        /* enable test */
+        target[5] = test_06_taget;
+      }
     }
   }
 }
@@ -552,6 +557,7 @@ setup_pipeline (void)
     g_object_get (camera_bin, "videomux", &vmux, NULL);
     if (!vmux) {
       need_pad_probe = need_vmux_pad_probe = TRUE;
+      /* only run the test if we later get the element */
       test_09_taget = target[8];
       target[8] = G_GUINT64_CONSTANT (0);
     }
@@ -566,6 +572,7 @@ setup_pipeline (void)
     g_object_get (camera_bin, "imageenc", &ienc, NULL);
     if (!ienc) {
       need_pad_probe = need_ienc_pad_probe = TRUE;
+      /* only run the test if we later get the element */
       test_06_taget = target[5];
       target[5] = G_GUINT64_CONSTANT (0);
     }
@@ -847,7 +854,7 @@ run_test (gpointer user_data)
   gboolean ret = TRUE;
   guint old_test_ix = test_ix;
 
-  if (test_ix == TEST_CASES) {
+  if (test_ix >= TEST_CASES) {
     GST_INFO ("done");
     g_main_loop_quit (loop);
     return FALSE;
@@ -884,7 +891,7 @@ run_test (gpointer user_data)
     g_main_loop_quit (loop);
     return FALSE;
   }
-  if (test_ix == TEST_CASES) {
+  if (test_ix >= TEST_CASES) {
     GST_INFO ("done");
     g_main_loop_quit (loop);
     return FALSE;
