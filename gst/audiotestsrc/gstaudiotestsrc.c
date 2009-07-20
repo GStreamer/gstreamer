@@ -994,6 +994,7 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   GstClockTime next_time;
   gint64 next_sample, next_byte;
   guint bytes, samples;
+  GstElementClass *eclass;
 
   src = GST_AUDIO_TEST_SRC (basesrc);
 
@@ -1006,8 +1007,10 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
         GST_TAG_DESCRIPTION, "audiotest wave", NULL);
 
-    gst_element_send_event ((GstElement *) basesrc,
-        gst_event_new_tag (taglist));
+    eclass = GST_ELEMENT_CLASS (parent_class);
+    if (eclass->send_event)
+      eclass->send_event (GST_ELEMENT_CAST (basesrc),
+          gst_event_new_tag (taglist));
     src->tags_pushed = TRUE;
   }
 
