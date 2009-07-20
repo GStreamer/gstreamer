@@ -106,6 +106,7 @@ struct _GstPulseRingBuffer
 
   pa_sample_spec sample_spec;
   gint64 offset;
+  gint64 write_offset;
 
   gboolean corked;
   gboolean in_commit;
@@ -542,7 +543,7 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
 
   GST_LOG_OBJECT (psink,
       "latency_update, %" G_GUINT64_FORMAT ", %d:%" G_GINT64_FORMAT ", %d:%"
-      G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT "\n",
+      G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT,
       GST_TIMEVAL_TO_TIME (info->timestamp), info->write_index_corrupt,
       info->write_index, info->read_index_corrupt, info->read_index,
       info->sink_usec, info->configured_sink_usec);
@@ -669,6 +670,7 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   else
     pbuf->offset = -gst_util_uint64_scale_int (-time_offset,
         pbuf->sample_spec.rate, GST_SECOND);
+  pbuf->write_offset = 0;
   GST_LOG_OBJECT (psink, "sample offset %" G_GINT64_FORMAT, pbuf->offset);
 
   for (;;) {
@@ -1085,7 +1087,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
   gboolean reverse;
   gint *toprocess;
   gint inr, outr, bps;
-  gint64 offset;
+  gint64 offset, diff;
   guint bufsize;
 
   pbuf = GST_PULSERING_BUFFER_CAST (buf);
@@ -1151,6 +1153,9 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
   /* offset is in bytes */
   offset *= bps;
 
+  diff = offset - pbuf->write_offset;
+  pbuf->write_offset = offset;
+
   while (*toprocess > 0) {
     size_t avail;
     guint towrite;
@@ -1198,11 +1203,13 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
     if (G_LIKELY (inr == outr && !reverse)) {
       /* no rate conversion, simply write out the samples */
-      if (pa_stream_write (pbuf->stream, data, towrite, NULL, offset,
-              PA_SEEK_ABSOLUTE) < 0)
+      if (pa_stream_write (pbuf->stream, data, towrite, NULL, diff,
+              PA_SEEK_RELATIVE) < 0)
         goto write_failed;
 
       data += towrite;
+      diff = 0;
+      pbuf->write_offset += towrite;
       in_samples -= avail;
       out_samples -= avail;
     } else {
@@ -1555,6 +1562,9 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
 
   /* needed for conditional execution */
   pulsesink->pa_version = pa_get_library_version ();
+
+  GST_DEBUG_OBJECT (pulsesink, "using pulseaudio version %s",
+      pulsesink->pa_version);
 
   g_assert ((pulsesink->mainloop = pa_threaded_mainloop_new ()));
   g_assert (pa_threaded_mainloop_start (pulsesink->mainloop) == 0);
