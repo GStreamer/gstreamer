@@ -137,9 +137,41 @@ gst_cairo_render_chain (GstPad * pad, GstBuffer * buf)
   if (c->png) {
     GST_BUFFER_OFFSET (buf) = 0;
     s = cairo_image_surface_create_from_png_stream (read_buffer, buf);
-  } else
+  } else {
+    if (c->format == CAIRO_FORMAT_ARGB32) {
+      guint i, j;
+      guint8 *data = GST_BUFFER_DATA (buf);
+
+      buf = gst_buffer_make_writable (buf);
+
+      /* Cairo ARGB is pre-multiplied with the alpha
+       * value, i.e. 0x80008000 is half transparent
+       * green
+       */
+      for (i = 0; i < c->height; i++) {
+        for (j = 0; j < c->width; j++) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+          guint8 alpha = data[3];
+
+          data[0] = (data[0] * alpha) >> 8;
+          data[1] = (data[1] * alpha) >> 8;
+          data[2] = (data[2] * alpha) >> 8;
+#else
+          guint8 alpha = data[0];
+
+          data[1] = (data[1] * alpha) >> 8;
+          data[2] = (data[2] * alpha) >> 8;
+          data[3] = (data[3] * alpha) >> 8;
+#endif
+          data += 4;
+        }
+      }
+    }
+
     s = cairo_image_surface_create_for_data (GST_BUFFER_DATA (buf),
         c->format, c->width, c->height, c->stride);
+  }
+
   success = gst_cairo_render_push_surface (c, s);
   gst_buffer_unref (buf);
   return success ? GST_FLOW_OK : GST_FLOW_ERROR;
@@ -170,7 +202,14 @@ gst_cairo_render_setcaps_sink (GstPad * pad, GstCaps * caps)
     c->format = CAIRO_FORMAT_A8;
     c->stride = GST_ROUND_UP_4 (c->width);
   } else if (!strcmp (mime, "video/x-raw-rgb")) {
-    c->format = CAIRO_FORMAT_RGB24;
+    gint bpp;
+
+    if (!gst_structure_get_int (s, "bpp", &bpp)) {
+      GST_ERROR_OBJECT (c, "Invalid caps");
+      return FALSE;
+    }
+
+    c->format = (bpp == 32) ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
     c->stride = 4 * c->width;
   } else {
     GST_DEBUG_OBJECT (c, "Unknown mime type '%s'.", mime);
@@ -255,9 +294,9 @@ static GstStaticPadTemplate t_src = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate t_snk = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS (
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-        GST_VIDEO_CAPS_BGRx " ; "
+        GST_VIDEO_CAPS_BGRx " ; " GST_VIDEO_CAPS_BGRA " ; "
 #else
-        GST_VIDEO_CAPS_xRGB " ; "
+        GST_VIDEO_CAPS_xRGB " ; " GST_VIDEO_CAPS_ARGB " ; "
 #endif
         GST_VIDEO_CAPS_YUV ("Y800") " ; "
         "video/x-raw-gray, "
