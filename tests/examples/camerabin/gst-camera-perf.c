@@ -32,7 +32,7 @@
  * gcc `pkg-config --cflags --libs gstreamer-0.10` gst-camera-perf.c -ogst-camera-perf
  *
  * plain linux:
- * ./gst-camera-perf --src-colorspace=YUY2 --image-width=320 --image-height=240 --view-framerate-num=15 --view-framerate-den=1
+ * ./gst-camera-perf --src-colorspace=YUY2 --image-width=640 --image-height=480 --view-framerate-num=15 --view-framerate-den=1
  *
  * maemo:
  * ./gst-camera-perf --src-colorspace=UYVY --image-width=640 --image-height=480 --view-framerate-num=1491 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux
@@ -50,11 +50,18 @@
 #  include "config.h"
 #endif
 
+/* save the snapshot images
+ * gcc `pkg-config --cflags --libs gstreamer-0.10 gdk-pixbuf-2.0` gst-camera-perf.c -ogst-camera-perf
+ *
+#define SAVE_SNAPSHOT 1
+ **/
 #include <gst/gst.h>
+#ifdef SAVE_SNAPSHOT
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#endif
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
-
 /*
  * debug logging
  */
@@ -422,6 +429,29 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
               g_object_set (camera_bin, "preview-caps", NULL, NULL);
               break;
           }
+#ifdef SAVE_SNAPSHOT
+          {
+            const GValue *value = gst_structure_get_value (st, "buffer");
+            GstBuffer *buf = gst_value_get_buffer (value);
+            GstCaps *caps = GST_BUFFER_CAPS (buf);
+            GstStructure *buf_st = gst_caps_get_structure (caps, 0);
+            guchar *data = GST_BUFFER_DATA (buf);
+            gint width, height, rowstride;
+            GdkPixbuf *pixbuf;
+
+            GST_INFO ("preview : buf=%p, size=%d, format=%" GST_PTR_FORMAT,
+                buf, GST_BUFFER_SIZE (buf), caps);
+            gst_structure_get_int (buf_st, "width", &width);
+            gst_structure_get_int (buf_st, "height", &height);
+            rowstride = GST_ROUND_UP_4 (width * 3);
+            //GST_INFO ("rowstride : %d, %d", rowstride, width*3);
+            pixbuf = gdk_pixbuf_new_from_data (data, GDK_COLORSPACE_RGB, FALSE,
+                8, width, height, rowstride, NULL, NULL);
+            gdk_pixbuf_save (pixbuf, "/tmp/gst-camerabin-preview.png", "png",
+                NULL, NULL);
+            gdk_pixbuf_unref (pixbuf);
+          }
+#endif
         }
       }
       /* unhandled message */
@@ -632,10 +662,6 @@ test_01 (void)
 
   GET_TIME (t_initial);
   if (setup_pipeline ()) {
-    /* MAKE SURE THE PIPELINE IS IN PLAYING STATE BEFORE START TAKING PICTURES
-       AND SO ON (otherwise it will deadlock) */
-
-    //gst_element_get_state (camera_bin, NULL, NULL, GST_CLOCK_TIME_NONE);
     /* the actual results are fetched in bus_callback::state-changed */
     res = FALSE;
   } else {
