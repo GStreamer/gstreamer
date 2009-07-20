@@ -2428,7 +2428,9 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
       CODEC_ID_NONE
     };
     static enum CodecID mpeg_audio_list[] = { CODEC_ID_MP2,
-      CODEC_ID_MP3,
+      CODEC_ID_AC3,
+      CODEC_ID_DTS,
+      CODEC_ID_PCM_S16BE,
       CODEC_ID_NONE
     };
 
