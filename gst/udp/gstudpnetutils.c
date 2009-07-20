@@ -178,6 +178,7 @@ gst_udp_join_group (int sockfd, struct sockaddr_storage *addr, gchar * iface)
       struct ip_mreq mreq4;
 #endif
 
+      memset (&mreq4, 0, sizeof (mreq4));
       mreq4.imr_multiaddr.s_addr =
           ((struct sockaddr_in *) addr)->sin_addr.s_addr;
 #ifdef HAVE_IP_MREQN
@@ -200,6 +201,7 @@ gst_udp_join_group (int sockfd, struct sockaddr_storage *addr, gchar * iface)
     {
       struct ipv6_mreq mreq6;
 
+      memset (&mreq6, 0, sizeof (mreq6));
       memcpy (&mreq6.ipv6mr_multiaddr,
           &(((struct sockaddr_in6 *) addr)->sin6_addr),
           sizeof (struct in6_addr));
@@ -236,6 +238,7 @@ gst_udp_leave_group (int sockfd, struct sockaddr_storage *addr)
     {
       struct ip_mreq mreq4;
 
+      memset (&mreq4, 0, sizeof (mreq4));
       mreq4.imr_multiaddr.s_addr =
           ((struct sockaddr_in *) addr)->sin_addr.s_addr;
       mreq4.imr_interface.s_addr = INADDR_ANY;
@@ -251,6 +254,7 @@ gst_udp_leave_group (int sockfd, struct sockaddr_storage *addr)
     {
       struct ipv6_mreq mreq6;
 
+      memset (&mreq6, 0, sizeof (mreq6));
       memcpy (&mreq6.ipv6mr_multiaddr,
           &(((struct sockaddr_in6 *) addr)->sin6_addr),
           sizeof (struct in6_addr));
