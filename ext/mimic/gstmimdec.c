@@ -154,6 +154,7 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
   gint width, height;
   GstCaps *caps;
   GstFlowReturn res = GST_FLOW_OK;
+  GstClockTime in_time = GST_BUFFER_TIMESTAMP (in);
 
   GST_DEBUG ("in gst_mimdec_chain");
 
@@ -289,7 +290,10 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
       goto out;
     }
 
-    GST_BUFFER_TIMESTAMP (out_buf) = mimdec->current_ts * GST_MSECOND;
+    if (GST_CLOCK_TIME_IS_VALID (in_time))
+      GST_BUFFER_TIMESTAMP (out_buf) = in_time;
+    else
+      GST_BUFFER_TIMESTAMP (out_buf) = mimdec->current_ts * GST_MSECOND;
 
     mimic_get_property (mimdec->dec, "width", &width);
     mimic_get_property (mimdec->dec, "height", &height);
