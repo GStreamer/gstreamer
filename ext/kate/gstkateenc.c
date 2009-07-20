@@ -283,6 +283,9 @@ gst_kate_enc_init (GstKateEnc * ke, GstKateEncClass * gclass)
   memcpy (ke->spu_clut, gst_kate_enc_default_clut,
       sizeof (gst_kate_enc_default_clut));
   ke->delayed_spu = FALSE;
+  ke->delayed_bitmap = NULL;
+  ke->delayed_palette = NULL;
+  ke->delayed_region = NULL;
 }
 
 static void
@@ -1237,6 +1240,16 @@ gst_kate_enc_flush_waiting (GstKateEnc * ke, GstClockTime now)
     /* forget it even if we couldn't flush it */
     ke->delayed_spu = FALSE;
 
+    /* free the delayed data */
+    g_free (ke->delayed_bitmap->pixels);
+    g_free (ke->delayed_bitmap);
+    ke->delayed_bitmap = NULL;
+    g_free (ke->delayed_palette->colors);
+    g_free (ke->delayed_palette);
+    ke->delayed_palette = NULL;
+    g_free (ke->delayed_region);
+    ke->delayed_region = NULL;
+
     /* now that we've flushed the packet, we want to insert keepalives as requested */
     if (ke->keepalive_min_time > 0.0f && t1 > t0) {
       GST_INFO_OBJECT (ke, "generating keepalives at %f from %f to %f",
@@ -1256,13 +1269,28 @@ static GstFlowReturn
 gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
 {
   kate_packet kp;
-  kate_region kregion;
-  kate_bitmap kbitmap;
-  kate_palette kpalette;
+  kate_region *kregion;
+  kate_bitmap *kbitmap;
+  kate_palette *kpalette;
   GstFlowReturn rflow;
   int ret = 0;
 
-  rflow = gst_kate_enc_decode_spu (ke, buf, &kregion, &kbitmap, &kpalette);
+  /* allocate region, bitmap, and palette, in case we have to delay encoding them */
+  kregion = (kate_region *) g_malloc (sizeof (kate_region));
+  kbitmap = (kate_bitmap *) g_malloc (sizeof (kate_bitmap));
+  kpalette = (kate_palette *) g_malloc (sizeof (kate_palette));
+  if (!kregion || !kpalette || !kbitmap) {
+    if (kregion)
+      g_free (kregion);
+    if (kbitmap)
+      g_free (kbitmap);
+    if (kpalette)
+      g_free (kpalette);
+    GST_ERROR_OBJECT (ke, "Out of memory");
+    return GST_FLOW_ERROR;
+  }
+
+  rflow = gst_kate_enc_decode_spu (ke, buf, kregion, kbitmap, kpalette);
   if (G_UNLIKELY (rflow != GST_FLOW_OK)) {
     GST_ERROR_OBJECT (ke, "Failed to decode incoming SPU");
 #if 0
@@ -1279,7 +1307,7 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
       }
     }
 #endif
-  } else if (G_UNLIKELY (kbitmap.width == 0 || kbitmap.height == 0)) {
+  } else if (G_UNLIKELY (kbitmap->width == 0 || kbitmap->height == 0)) {
     /* there are some DVDs (well, at least one) where some dimwits put in a wholly transparent full screen 720x576 SPU !!!!?! */
     GST_WARNING_OBJECT (ke, "SPU is totally invisible - dimwits");
     rflow = GST_FLOW_OK;
@@ -1310,18 +1338,18 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
     }
 #endif
     GST_DEBUG_OBJECT (ke, "Encoding %dx%d SPU: (%u bytes) from %f to %f",
-        kbitmap.width, kbitmap.height, GST_BUFFER_SIZE (buf), t0, t1);
-    ret = kate_encode_set_region (&ke->k, &kregion);
+        kbitmap->width, kbitmap->height, GST_BUFFER_SIZE (buf), t0, t1);
+    ret = kate_encode_set_region (&ke->k, kregion);
     if (G_UNLIKELY (ret < 0)) {
       GST_WARNING_OBJECT (ke, "Failed to set event region (%d)", ret);
       rflow = GST_FLOW_ERROR;
     } else {
-      ret = kate_encode_set_palette (&ke->k, &kpalette);
+      ret = kate_encode_set_palette (&ke->k, kpalette);
       if (G_UNLIKELY (ret < 0)) {
         GST_WARNING_OBJECT (ke, "Failed to set event palette (%d)", ret);
         rflow = GST_FLOW_ERROR;
       } else {
-        ret = kate_encode_set_bitmap (&ke->k, &kbitmap);
+        ret = kate_encode_set_bitmap (&ke->k, kbitmap);
         if (G_UNLIKELY (ret < 0)) {
           GST_WARNING_OBJECT (ke, "Failed to set event bitmap (%d)", ret);
           rflow = GST_FLOW_ERROR;
@@ -1337,6 +1365,9 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
                 t0);
             ke->delayed_spu = TRUE;
             ke->delayed_start = start;
+            ke->delayed_bitmap = kbitmap;
+            ke->delayed_palette = kpalette;
+            ke->delayed_region = kregion;
             rflow = GST_FLOW_OK;
           } else {
             ret = kate_encode_text (&ke->k, t0, t1, "", 0, &kp);
@@ -1353,8 +1384,14 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
         }
       }
     }
-    g_free (kpalette.colors);
-    g_free (kbitmap.pixels);
+
+    if (!ke->delayed_spu) {
+      g_free (kpalette->colors);
+      g_free (kpalette);
+      g_free (kbitmap->pixels);
+      g_free (kbitmap);
+      g_free (kregion);
+    }
   }
 
   return rflow;

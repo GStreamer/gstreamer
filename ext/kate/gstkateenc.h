@@ -83,6 +83,9 @@ struct _GstKateEnc
   gboolean initialized;
   gboolean delayed_spu;
   GstClockTime delayed_start;
+  kate_bitmap *delayed_bitmap;
+  kate_palette *delayed_palette;
+  kate_region *delayed_region;
   gchar *language;
   gchar *category;
 
