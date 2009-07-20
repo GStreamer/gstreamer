@@ -781,6 +781,12 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (adder->collect);
       adder->segment_pending = TRUE;
       adder->flush_stop_pending = FALSE;
+      /* Clear pending tags */
+      if (adder->pending_events) {
+        g_list_foreach (adder->pending_events, (GFunc) gst_event_unref, NULL);
+        g_list_free (adder->pending_events);
+        adder->pending_events = NULL;
+      }
       GST_OBJECT_UNLOCK (adder->collect);
       break;
     case GST_EVENT_TAG:
@@ -881,6 +887,11 @@ gst_adder_dispose (GObject * object)
     adder->collect = NULL;
   }
   gst_caps_replace (&adder->filter_caps, NULL);
+  if (adder->pending_events) {
+    g_list_foreach (adder->pending_events, (GFunc) gst_event_unref, NULL);
+    g_list_free (adder->pending_events);
+    adder->pending_events = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
