@@ -619,9 +619,9 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
    * when we cause an underrun, which causes time to continue. */
   memset (&buf_attr, 0, sizeof (buf_attr));
   buf_attr.tlength = spec->segtotal * spec->segsize;
-  buf_attr.maxlength = buf_attr.tlength * 2;
+  buf_attr.maxlength = -1;
   buf_attr.prebuf = 0;
-  buf_attr.minreq = spec->segsize;
+  buf_attr.minreq = -1;
 
   GST_INFO_OBJECT (psink, "tlength:   %d", buf_attr.tlength);
   GST_INFO_OBJECT (psink, "maxlength: %d", buf_attr.maxlength);
