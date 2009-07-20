@@ -185,7 +185,7 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
         gst_pad_set_caps (srcpad, caps);
         gst_caps_unref (caps);
         if (decoder->k.ki->language && *decoder->k.ki->language) {
-          GstTagList *tags = gst_tag_list_new ();
+          GstTagList *old = decoder->tags, *tags = gst_tag_list_new ();
           if (tags) {
             gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LANGUAGE_CODE,
                 decoder->k.ki->language, NULL);
@@ -193,6 +193,8 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
             decoder->tags =
                 gst_tag_list_merge (decoder->tags, tags, GST_TAG_MERGE_REPLACE);
             gst_tag_list_free (tags);
+            if (old)
+              gst_tag_list_free (old);
           }
         }
 
@@ -212,7 +214,8 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
         GST_INFO_OBJECT (element, "Parsed comments header");
         {
           gchar *encoder = NULL;
-          GstTagList *list = gst_tag_list_from_vorbiscomment_buffer (buf,
+          GstTagList *old = decoder->tags, *list =
+              gst_tag_list_from_vorbiscomment_buffer (buf,
               (const guint8 *) "\201kate\0\0\0\0", 9, &encoder);
           if (list) {
             decoder->tags =
@@ -234,6 +237,9 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
           gst_tag_list_add (decoder->tags, GST_TAG_MERGE_REPLACE,
               GST_TAG_ENCODER_VERSION, decoder->k.ki->bitstream_version_major,
               NULL);
+
+          if (old)
+            gst_tag_list_free (old);
 
           if (decoder->initialized) {
             gst_element_found_tags_for_pad (element, srcpad, decoder->tags);

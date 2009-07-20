@@ -294,7 +294,10 @@ gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
 
   /* rewrite the language and category */
   if (GST_BUFFER_SIZE (buffer) >= 64 && GST_BUFFER_DATA (buffer)[0] == 0x80) {
-    buffer = gst_buffer_copy (buffer);
+    GstBuffer *new_buffer = gst_buffer_copy (buffer);
+
+    gst_buffer_unref (buffer);
+    buffer = new_buffer;
 
     /* language is at offset 32, 16 bytes, zero terminated */
     if (kt->language) {

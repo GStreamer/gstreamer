@@ -413,7 +413,6 @@ GST_START_TEST (test_kate_encode_empty)
       1 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  gst_buffer_ref (inbuffer);
 
   caps = gst_caps_from_string ("text/plain");
   fail_unless (caps != NULL);
