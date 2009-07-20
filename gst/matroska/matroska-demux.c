@@ -1855,6 +1855,7 @@ gst_matroska_demux_get_src_query_types (GstPad * pad)
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
+    GST_QUERY_SEEKING,
     0
   };
 
@@ -1926,6 +1927,21 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
       break;
     }
 
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      res = TRUE;
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+
+      if (fmt != GST_FORMAT_TIME || !demux->index) {
+        gst_query_set_seeking (query, GST_FORMAT_TIME, FALSE, -1, -1);
+      } else {
+        gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0,
+            demux->duration);
+      }
+
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, query);
       break;
