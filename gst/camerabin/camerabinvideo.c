@@ -553,7 +553,6 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   gst_ghost_pad_set_target (GST_GHOST_PAD (vid->sinkpad), vid_sinkpad);
   gst_object_unref (vid_sinkpad);
 
-
   /* Add queue element for video */
   vid->tee_video_srcpad = gst_element_get_request_pad (vid->tee, "src%d");
   if (!(vid->video_queue =
@@ -564,7 +563,6 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   /* Add probe for rewriting video timestamps */
   gst_pad_add_buffer_probe (vid->tee_video_srcpad,
       G_CALLBACK (camerabin_video_pad_tee_src0_have_buffer), vid);
-
 
 #ifdef USE_TIMEOVERLAY
   /* Add timeoverlay element to visualize elapsed time for debugging */
@@ -615,10 +613,9 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   }
 
   /* Add queue element for audio */
-  if (!(queue = gst_camerabin_create_and_add_element (vidbin, "queue"))) {
+  if (!(gst_camerabin_create_and_add_element (vidbin, "queue"))) {
     goto error;
   }
-  queue = NULL;
 
   /* Add optional audio conversion and volume elements and
      raise no errors if adding them fails */
