@@ -68,6 +68,8 @@ GST_START_TEST (test_join)
   ret = gst_task_join (t);
   fail_unless (ret == TRUE);
 
+  gst_task_cleanup_all ();
+
   gst_object_unref (t);
 }
 
@@ -111,6 +113,8 @@ GST_START_TEST (test_lock_start)
   GST_DEBUG ("joining");
   ret = gst_task_join (t);
   fail_unless (ret == TRUE);
+
+  gst_task_cleanup_all ();
 
   gst_object_unref (t);
 }
