@@ -95,6 +95,8 @@ gst_camerabin_preview_create_pipeline (GstCameraBin * camera)
   gst_bin_add_many (GST_BIN (camera->preview_pipeline),
       src, csp, filter, vscale, sink, NULL);
 
+  GST_DEBUG ("preview format is: %" GST_PTR_FORMAT, camera->preview_caps);
+
   g_object_set (filter, "caps", camera->preview_caps, NULL);
   g_object_set (sink, "preroll-queue-len", 1, "signal-handoffs", TRUE, NULL);
   g_object_set (vscale, "method", 0, NULL);
@@ -195,7 +197,8 @@ gst_camerabin_preview_convert (GstCameraBin * camera, GstBuffer * buf)
   bflags = GST_BUFFER_FLAGS (buf);
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
 
-  GST_DEBUG ("running conversion pipeline");
+  GST_DEBUG ("running conversion pipeline, source is: %" GST_PTR_FORMAT,
+      GST_BUFFER_CAPS (buf));
   gst_element_set_state (camera->preview_pipeline, GST_STATE_PLAYING);
 
   g_signal_emit_by_name (src, "push-buffer", buf, &fret);
