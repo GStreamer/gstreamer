@@ -749,16 +749,15 @@ gst_task_join (GstTask * task)
   /* clean the thread */
   task->abidata.ABI.thread = NULL;
   /* get the id and pool to join */
-  if ((id = priv->id)) {
-    if ((pool = priv->pool_id))
-      gst_object_ref (pool);
-    priv->pool_id = NULL;
-    priv->id = NULL;
-  }
+  pool = priv->pool_id;
+  id = priv->id;
+  priv->pool_id = NULL;
+  priv->id = NULL;
   GST_OBJECT_UNLOCK (task);
 
   if (pool) {
-    gst_task_pool_join (pool, id);
+    if (id)
+      gst_task_pool_join (pool, id);
     gst_object_unref (pool);
   }
 
