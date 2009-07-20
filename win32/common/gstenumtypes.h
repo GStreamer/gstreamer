@@ -22,6 +22,10 @@ GType gst_buffer_flag_get_type (void);
 GType gst_buffer_copy_flags_get_type (void);
 #define GST_TYPE_BUFFER_COPY_FLAGS (gst_buffer_copy_flags_get_type())
 
+/* enumerations from "gstbufferlist.h" */
+GType gst_buffer_list_item_get_type (void);
+#define GST_TYPE_BUFFER_LIST_ITEM (gst_buffer_list_item_get_type())
+
 /* enumerations from "gstbus.h" */
 GType gst_bus_flags_get_type (void);
 #define GST_TYPE_BUS_FLAGS (gst_bus_flags_get_type())

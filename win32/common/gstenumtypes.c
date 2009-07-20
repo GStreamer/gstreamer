@@ -94,6 +94,27 @@ gst_buffer_copy_flags_get_type (void)
   return (GType) id;
 }
 
+/* enumerations from "gstbufferlist.h" */
+GType
+gst_buffer_list_item_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_BUFFER_LIST_CONTINUE), "GST_BUFFER_LIST_CONTINUE", "continue"},
+    {C_ENUM (GST_BUFFER_LIST_SKIP_GROUP), "GST_BUFFER_LIST_SKIP_GROUP",
+        "skip-group"},
+    {C_ENUM (GST_BUFFER_LIST_END), "GST_BUFFER_LIST_END", "end"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstBufferListItem", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 /* enumerations from "gstbus.h" */
 GType
 gst_bus_flags_get_type (void)
@@ -864,6 +885,7 @@ gst_message_type_get_type (void)
     {C_FLAGS (GST_MESSAGE_ASYNC_DONE), "GST_MESSAGE_ASYNC_DONE", "async-done"},
     {C_FLAGS (GST_MESSAGE_REQUEST_STATE), "GST_MESSAGE_REQUEST_STATE",
         "request-state"},
+    {C_FLAGS (GST_MESSAGE_STEP_START), "GST_MESSAGE_STEP_START", "step-start"},
     {C_FLAGS (GST_MESSAGE_ANY), "GST_MESSAGE_ANY", "any"},
     {0, NULL, NULL}
   };

@@ -187,6 +187,9 @@
 /* Define to 1 if you have the `pselect' function. */
 #undef HAVE_PSELECT
 
+/* Define to 1 if you have the <pthread.h> header file. */
+#undef HAVE_PTHREAD_H
+
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
 
@@ -283,13 +286,13 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.10.23.1"
+#define PACKAGE_STRING "GStreamer 0.10.23.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.23.1"
+#define PACKAGE_VERSION "0.10.23.3"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -305,7 +308,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.23.1"
+#define VERSION "0.10.23.3"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
