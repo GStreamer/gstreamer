@@ -74,6 +74,8 @@ struct _GstFlacDec {
   GstEvent      *start_segment;
   GstTagList    *tags;
 
+  GstFlowReturn  pull_flow;   /* last flow from pull_range */ /* STREAM_LOCK */
+
   GstFlowReturn  last_flow;   /* the last flow return received from either
                                * gst_pad_push or gst_pad_buffer_alloc */
 

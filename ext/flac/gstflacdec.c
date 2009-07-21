@@ -773,15 +773,25 @@ static FLAC__StreamDecoderReadStatus
 gst_flac_dec_read_seekable (const FLAC__StreamDecoder * decoder,
     FLAC__byte buffer[], size_t * bytes, void *client_data)
 {
+  GstFlowReturn flow;
   GstFlacDec *flacdec;
-
   GstBuffer *buf;
 
   flacdec = GST_FLAC_DEC (client_data);
 
-  if (gst_pad_pull_range (flacdec->sinkpad, flacdec->offset, *bytes,
-          &buf) != GST_FLOW_OK)
-    return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
+  flow = gst_pad_pull_range (flacdec->sinkpad, flacdec->offset, *bytes, &buf);
+
+  GST_PAD_STREAM_LOCK (flacdec->sinkpad);
+  flacdec->pull_flow = flow;
+  GST_PAD_STREAM_UNLOCK (flacdec->sinkpad);
+
+  if (G_UNLIKELY (flow != GST_FLOW_OK)) {
+    GST_INFO_OBJECT (flacdec, "pull_range flow: %s", gst_flow_get_name (flow));
+    if (flow == GST_FLOW_UNEXPECTED)
+      return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
+    else
+      return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
+  }
 
   GST_DEBUG_OBJECT (flacdec, "Read %d bytes at %" G_GUINT64_FORMAT,
       GST_BUFFER_SIZE (buf), flacdec->offset);
@@ -1152,9 +1162,23 @@ analyze_state:
       goto eos_and_pause;
     }
 
+      /* gst_flac_dec_read_seekable() returned ABORTED */
+    case FLAC__STREAM_DECODER_ABORTED:
+    {
+      GST_INFO_OBJECT (flacdec, "read aborted: last pull_range flow = %s",
+          gst_flow_get_name (flacdec->pull_flow));
+      if (!GST_FLOW_IS_FATAL (flacdec->pull_flow)) {
+        /* it seems we need to flush the decoder here to reset the decoder
+         * state after the abort for FLAC__stream_decoder_seek_absolute()
+         * to work properly */
+        GST_DEBUG_OBJECT (flacdec, "flushing decoder to reset decoder state");
+        FLAC__stream_decoder_flush (flacdec->seekable_decoder);
+        goto pause;
+      }
+      /* fall through */
+    }
     case FLAC__STREAM_DECODER_OGG_ERROR:
     case FLAC__STREAM_DECODER_SEEK_ERROR:
-    case FLAC__STREAM_DECODER_ABORTED:
     case FLAC__STREAM_DECODER_MEMORY_ALLOCATION_ERROR:
     case FLAC__STREAM_DECODER_UNINITIALIZED:
     default:{
@@ -1782,8 +1806,10 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
    * callbacks that need to behave differently when seeking */
   flacdec->seeking = TRUE;
 
+  GST_LOG_OBJECT (flacdec, "calling seek_absolute");
   seek_ok = FLAC__stream_decoder_seek_absolute (flacdec->seekable_decoder,
       flacdec->segment.last_stop);
+  GST_LOG_OBJECT (flacdec, "done with seek_absolute, seek_ok=%d", seek_ok);
 
   flacdec->seeking = FALSE;
 
