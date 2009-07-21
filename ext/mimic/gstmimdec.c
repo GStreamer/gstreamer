@@ -113,16 +113,12 @@ gst_mimdec_class_init (GstMimDecClass * klass)
 static void
 gst_mimdec_init (GstMimDec * mimdec, GstMimDecClass * klass)
 {
-  mimdec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_factory),
-      "sink");
+  mimdec->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->sinkpad);
   gst_pad_set_chain_function (mimdec->sinkpad, gst_mimdec_chain);
   gst_pad_set_event_function (mimdec->sinkpad, gst_mimdec_sink_event);
 
-  mimdec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_factory),
-      "src");
+  mimdec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->srcpad);
 
   mimdec->adapter = gst_adapter_new ();
@@ -141,6 +137,8 @@ gst_mimdec_finalize (GObject * object)
 
   gst_adapter_clear (mimdec->adapter);
   g_object_unref (mimdec->adapter);
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
 static GstFlowReturn
