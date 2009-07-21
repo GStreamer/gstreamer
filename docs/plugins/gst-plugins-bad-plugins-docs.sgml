@@ -68,6 +68,7 @@
     <xi:include href="xml/element-mxfmux.xml" />
     <xi:include href="xml/element-nuvdemux.xml" />
     <xi:include href="xml/element-output-selector.xml" />
+    <xi:include href="xml/element-pcapparse.xml" />
     <xi:include href="xml/element-rtpdtmfdepay.xml" />
     <xi:include href="xml/element-rtpdtmfsrc.xml" />
     <xi:include href="xml/element-rtpdtmfmux.xml" />
@@ -145,6 +146,7 @@
     <xi:include href="xml/plugin-neon.xml" />
     <xi:include href="xml/plugin-nsfdec.xml" />
     <xi:include href="xml/plugin-nuvdemux.xml" />
+    <xi:include href="xml/plugin-pcapparse.xml" />
     <xi:include href="xml/plugin-rawparse.xml" />
     <xi:include href="xml/plugin-real.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />

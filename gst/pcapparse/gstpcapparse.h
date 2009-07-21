@@ -45,10 +45,17 @@ typedef enum
   PCAP_PARSE_STATE_PARSING,
 } GstPcapParseState;
 
+/**
+ * GstPcapParse:
+ *
+ * GstPcapParse element.
+ */
+
 struct _GstPcapParse
 {
   GstElement element;
 
+  /*< private >*/
   GstPad * sink_pad;
   GstPad * src_pad;
 

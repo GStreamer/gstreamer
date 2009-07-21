@@ -720,6 +720,21 @@ gst_output_selector_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-pcapparse</FILE>
+<TITLE>pcapparse</TITLE>
+GstPcapParse
+<SUBSECTION Standard>
+GstPcapParseClass
+GST_PCAP_PARSE
+GST_PCAP_PARSE_CLASS
+GST_IS_PCAP_PARSE
+GST_IS_PCAP_PARSE_CLASS
+GST_TYPE_PCAP_PARSE
+GstPcapParseState
+gst_pcap_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rtpdtmfdepay</FILE>
 <TITLE>rtpdtmfdepay</TITLE>
 GstRtpDTMFDepay
