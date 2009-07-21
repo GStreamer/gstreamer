@@ -22,11 +22,13 @@
 #ifndef __GST_DSHOWVIDEOSRC_H__
 #define __GST_DSHOWVIDEOSRC_H__
 
+#include <glib.h>
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 #include <gst/interfaces/propertyprobe.h>
 
-#include "gstdshowsrcwrapper.h"
+#include "gstdshow.h"
+#include "gstdshowinterface.h"
 
 // 30323449-0000-0010-8000-00AA00389B71            MEDIASUBTYPE_I420
 DEFINE_GUID(MEDIASUBTYPE_I420, 0x30323449, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);

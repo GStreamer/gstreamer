@@ -27,7 +27,8 @@
 #include <gst/audio/gstaudiosrc.h>
 #include <gst/interfaces/propertyprobe.h>
 
-#include "gstdshowsrcwrapper.h"
+#include "gstdshow.h"
+#include "gstdshowinterface.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_DSHOWAUDIOSRC              (gst_dshowaudiosrc_get_type())

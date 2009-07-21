@@ -22,17 +22,15 @@
 #ifndef _GSTDSHOW_
 #define _GSTDSHOW_
 
+#ifdef __cplusplus
+#include <streams.h>
+#endif
 #include <windows.h>
+#include <objbase.h>
+#include <dshow.h>
+#include <Rpc.h>
 
 #include <glib.h>
-
-#ifdef LIBDSHOW_EXPORTS
-#include <streams.h>
-#include <atlbase.h>
-#define DSHOW_API __declspec(dllexport)
-#else
-#define DSHOW_API __declspec(dllimport)
-#endif
 
 typedef struct _GstCapturePinMediaType
 {
@@ -45,7 +43,7 @@ extern "C" {
 #endif
 
 /* register fake filters as COM object and as Direct Show filters in the registry */
-BOOL gst_dshow_register_fakefilters ();
+HRESULT gst_dshow_register_fakefilters ();
 
 /* free memory of the input pin mediatype */
 void gst_dshow_free_pin_mediatype (gpointer pt);
@@ -66,11 +64,10 @@ gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
 
 /* get the dshow device path from device friendly name. 
 If friendly name is not set, it will return the first available device */
-gchar *gst_dshow_getdevice_from_devicename (GUID *device_category, gchar **device_name);
+gchar *gst_dshow_getdevice_from_devicename (const GUID *device_category, gchar **device_name);
 
 /* show the capture filter property page (generally used to setup the device). the page is modal*/
 gboolean gst_dshow_show_propertypage (IBaseFilter *base_filter);
-
 
 #ifdef  __cplusplus
 }

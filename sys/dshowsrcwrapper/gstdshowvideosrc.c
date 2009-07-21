@@ -19,11 +19,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gstdshowvideosrc.h"
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include "gstdshowvideosrc.h"
 
 static const GstElementDetails gst_dshowvideosrc_details =
 GST_ELEMENT_DETAILS ("DirectShow video capture source",
@@ -520,7 +520,7 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
               &cbReturned);
 
           /* we only want capture pins */
-          if (UuidCompare (&pin_category, &PIN_CATEGORY_CAPTURE,
+          if (UuidCompare (&pin_category, (UUID *) &PIN_CATEGORY_CAPTURE,
                   &rpcstatus) == 0) {
             IAMStreamConfig *streamcaps = NULL;
 
@@ -625,7 +625,7 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
       &IID_IBaseFilter, (LPVOID *) & src->dshow_fakesink);
   if (hres != S_OK || !src->dshow_fakesink) {
     GST_CAT_ERROR (dshowvideosrc_debug,
-        "Can't create an instance of our dshow fakesink filter (error=%d)",
+        "Can't create an instance of our dshow fakesink filter (error=0x%x)",
         hres);
     goto error;
   }
@@ -898,10 +898,10 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
         caps = gst_caps_new_empty ();
 
       /* I420 */
-      if ((UuidCompare (&pin_mediatype->mediatype->subtype, &MEDIASUBTYPE_I420,
+      if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_I420,
                   &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
           && (UuidCompare (&pin_mediatype->mediatype->formattype,
-                  &FORMAT_VideoInfo, &rpcstatus) == 0
+                  (UUID *) &FORMAT_VideoInfo, &rpcstatus) == 0
               && rpcstatus == RPC_S_OK)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
@@ -923,10 +923,10 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
       }
 
       /* RGB24 */
-      if ((UuidCompare (&pin_mediatype->mediatype->subtype, &MEDIASUBTYPE_RGB24,
+      if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_RGB24,
                   &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
           && (UuidCompare (&pin_mediatype->mediatype->formattype,
-                  &FORMAT_VideoInfo, &rpcstatus) == 0
+                  (UUID *) &FORMAT_VideoInfo, &rpcstatus) == 0
               && rpcstatus == RPC_S_OK)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
@@ -952,10 +952,10 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
       }
 
       /* DVSD */
-      if ((UuidCompare (&pin_mediatype->mediatype->subtype, &MEDIASUBTYPE_dvsd,
+      if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_dvsd,
                   &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
           && (UuidCompare (&pin_mediatype->mediatype->formattype,
-                  &FORMAT_VideoInfo, &rpcstatus) == 0
+                  (UUID *) &FORMAT_VideoInfo, &rpcstatus) == 0
               && rpcstatus == RPC_S_OK)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
@@ -978,10 +978,10 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
       }
 
       /* DV stream */
-      if ((UuidCompare (&pin_mediatype->mediatype->subtype, &MEDIASUBTYPE_dvsd,
+      if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_dvsd,
                   &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
           && (UuidCompare (&pin_mediatype->mediatype->formattype,
-                  &FORMAT_DvInfo, &rpcstatus) == 0 && rpcstatus == RPC_S_OK)) {
+                  (UUID *) &FORMAT_DvInfo, &rpcstatus) == 0 && rpcstatus == RPC_S_OK)) {
 
         mediacaps = gst_caps_new_simple ("video/x-dv",
             "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);

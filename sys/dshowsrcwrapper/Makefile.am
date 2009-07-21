@@ -1,10 +1,14 @@
-plugin_LTLIBRARIES = libgstdshowsrcwrapper.la
+# This plugin isn't buildable with autotools at this point in time, so just
+# ensure everything's listed in EXTRA_DIST
 
-libgstdshowsrcwrapper_la_SOURCES = gstdshowaudiosrc.c gstdshowsrcwrapper.c gstdshowvideosrc.c
-
-libgstdshowsrcwrapper_la_CFLAGS = $(GST_CFLAGS)
-libgstdshowsrcwrapper_la_LIBADD = $(GST_LIBS)
-libgstdshowsrcwrapper_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdshowsrcwrapper_la_LIBTOOLFLAGS = --tag=disable-static
-
-noinst_HEADERS = gstdshowaudiosrc.h gstdshowsrcwrapper.h gstdshowvideosrc.h
+EXTRA_DIST = \
+  gstdshowaudiosrc.c \
+  gstdshowaudiosrc.h \
+  gstdshow.cpp \
+  gstdshowfakesink.cpp \
+  gstdshowfakesink.h \
+  gstdshow.h \
+  gstdshowinterface.h \
+  gstdshowsrcwrapper.cpp \
+  gstdshowvideosrc.c \
+  gstdshowvideosrc.h

@@ -19,11 +19,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gstdshowaudiosrc.h"
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include "gstdshowaudiosrc.h"
 
 static const GstElementDetails gst_dshowaudiosrc_details =
 GST_ELEMENT_DETAILS ("Directshow audio capture source",
@@ -451,7 +451,7 @@ gst_dshowaudiosrc_get_caps (GstBaseSrc * basesrc)
               &cbReturned);
 
           /* we only want capture pins */
-          if (UuidCompare (&pin_category, &PIN_CATEGORY_CAPTURE,
+          if (UuidCompare (&pin_category, (UUID *) &PIN_CATEGORY_CAPTURE,
                   &rpcstatus) == 0) {
             IAMStreamConfig *streamcaps = NULL;
 
@@ -825,10 +825,10 @@ gst_dshowaudiosrc_getcaps_from_streamcaps (GstDshowAudioSrc * src, IPin * pin,
       if (!caps)
         caps = gst_caps_new_empty ();
 
-      if ((UuidCompare (&pin_mediatype->mediatype->subtype, &MEDIASUBTYPE_PCM,
+      if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_PCM,
                   &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
           && (UuidCompare (&pin_mediatype->mediatype->formattype,
-                  &FORMAT_WaveFormatEx, &rpcstatus) == 0
+                  (UUID *) &FORMAT_WaveFormatEx, &rpcstatus) == 0
               && rpcstatus == RPC_S_OK)) {
         WAVEFORMATEX *wavformat =
             (WAVEFORMATEX *) pin_mediatype->mediatype->pbFormat;

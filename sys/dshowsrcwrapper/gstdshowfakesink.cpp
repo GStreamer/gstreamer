@@ -37,6 +37,7 @@ CDshowFakeSink::~CDshowFakeSink()
 CUnknown* WINAPI CDshowFakeSink::CreateInstance(LPUNKNOWN pUnk, HRESULT *pHr) 
 {
 	CDshowFakeSink *pNewObject = new CDshowFakeSink();
+  g_print ("CDshowFakeSink::CreateInstance\n");
   if (pNewObject == NULL) {
     *pHr = E_OUTOFMEMORY;
   }

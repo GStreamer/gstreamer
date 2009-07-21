@@ -24,9 +24,9 @@
 
 #include "gstdshow.h"
 
-#ifdef LIBDSHOW_EXPORTS
+#ifdef  __cplusplus
 typedef bool (*push_buffer_func) (byte *buffer, long size, byte *src_object, UINT64 start, UINT64 stop);
-#endif /* LIBDSHOW_EXPORTS */
+#endif
 
 /* verify that the <rpcndr.h> version is high enough to compile this file*/
 #ifndef __REQUIRED_RPCNDR_H_VERSION__
@@ -45,17 +45,15 @@ typedef bool (*push_buffer_func) (byte *buffer, long size, byte *src_object, UIN
 #include "ole2.h"
 #endif /*COM_NO_WINDOWS_H*/
 
-#ifdef __cplusplus
-extern "C"{
-#endif 
+//{6A780808-9725-4d0b-8695-A4DD8D210773}
+static const GUID CLSID_DshowFakeSink
+  = { 0x6a780808, 0x9725, 0x4d0b, { 0x86, 0x95,  0xa4,  0xdd,  0x8d,  0x21,  0x7,  0x73 } };
 
-
-extern DSHOW_API const GUID CLSID_DshowFakeSink; 
-extern DSHOW_API const GUID CLSID_DshowFakeSrc; 
-extern DSHOW_API const GUID IID_IGstDshowInterface;
+// {FC36764C-6CD4-4C73-900F-3F40BF3F191A}
+static const GUID IID_IGstDshowInterface = 
+  { 0xfc36764c, 0x6cd4, 0x4c73, { 0x90, 0xf, 0x3f, 0x40, 0xbf, 0x3f, 0x19, 0x1a } };
 
 #define CLSID_DSHOWFAKESINK_STRING "{6A780808-9725-4d0b-8695-A4DD8D210773}"
-#define CLSID_DSHOWFAKESRC_STRING "{1E38DAED-8A6E-4DEA-A482-A878761D11CB}"
 
 typedef interface IGstDshowInterface IGstDshowInterface;
 
@@ -161,9 +159,5 @@ void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 #endif 	/* C style interface */
 
 #endif 	/* __IGstDshowInterface_INTERFACE_DEFINED__ */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __GST_DSHOW_INTERFACE_H__ */

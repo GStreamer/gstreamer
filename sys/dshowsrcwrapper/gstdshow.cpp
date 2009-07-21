@@ -21,7 +21,6 @@
 
 #include "gstdshow.h"
 #include "gstdshowfakesink.h"
-#include "gstdshowfakesrc.h"
 
 CFactoryTemplate g_Templates[]=
 {
@@ -31,15 +30,7 @@ CFactoryTemplate g_Templates[]=
     , CDshowFakeSink::CreateInstance
     , NULL
     , NULL
-  },
-  { 
-    L"DSHOW fake src filter"
-    , &CLSID_DshowFakeSrc
-    , CDshowFakeSrc::CreateInstance
-    , NULL
-    , NULL
-  },
-
+  }
 };
 
 int g_cTemplates = sizeof(g_Templates)/sizeof(g_Templates[0]);
@@ -64,9 +55,9 @@ STDAPI DllUnregisterServer()
   return AMovieDllRegisterServer2 (FALSE);
 }
 
-BOOL gst_dshow_register_fakefilters ()
+HRESULT gst_dshow_register_fakefilters ()
 {
-  return (DllRegisterServer() == S_OK) ? TRUE : FALSE;
+  return DllRegisterServer();
 }
 
 void 
@@ -169,7 +160,7 @@ gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
   /* create a private copy of prefered filter substring in upper case */
   if (prefered_filter_name) {
     prefered_filter_upper = g_strdup (prefered_filter_name);
-    strupr (prefered_filter_upper);
+    _strupr (prefered_filter_upper);
   }
 
   hres = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC, 
@@ -206,7 +197,7 @@ gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
          friendly_name = g_utf16_to_utf8((const gunichar2*)varFriendlyName.bstrVal, 
             wcslen(varFriendlyName.bstrVal), NULL, NULL, NULL);        
          if (friendly_name)
-           strupr (friendly_name);
+           _strupr (friendly_name);
         SysFreeString (varFriendlyName.bstrVal);
       }
       property_bag->Release ();
@@ -254,7 +245,7 @@ clean:
 
 
 gchar *
-gst_dshow_getdevice_from_devicename  (GUID *device_category, gchar **device_name)
+gst_dshow_getdevice_from_devicename  (const GUID *device_category, gchar **device_name)
 {
   gchar *ret = NULL;
   ICreateDevEnum *devices_enum = NULL;

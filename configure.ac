@@ -1673,7 +1673,6 @@ gst/vmnc/Makefile
 gst/xdgmime/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
-gst-libs/gst/dshow/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/signalprocessor/Makefile
 gst-libs/gst/video/Makefile
