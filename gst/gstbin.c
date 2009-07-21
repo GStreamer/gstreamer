@@ -824,9 +824,6 @@ bin_replace_message (GstBin * bin, GstMessage * message, GstMessageType types)
   GList *previous;
   GstObject *src;
   gboolean res = TRUE;
-  const gchar *name;
-
-  name = GST_MESSAGE_TYPE_NAME (message);
 
   if ((src = GST_MESSAGE_SRC (message))) {
     /* first find the previous message posted by this element */
@@ -838,7 +835,8 @@ bin_replace_message (GstBin * bin, GstMessage * message, GstMessageType types)
       previous->data = message;
 
       GST_DEBUG_OBJECT (bin, "replace old message %s from %s with %s message",
-          GST_MESSAGE_TYPE_NAME (previous_msg), GST_ELEMENT_NAME (src), name);
+          GST_MESSAGE_TYPE_NAME (previous_msg), GST_ELEMENT_NAME (src),
+          GST_MESSAGE_TYPE_NAME (message));
 
       gst_message_unref (previous_msg);
     } else {
@@ -846,10 +844,11 @@ bin_replace_message (GstBin * bin, GstMessage * message, GstMessageType types)
       bin->messages = g_list_prepend (bin->messages, message);
 
       GST_DEBUG_OBJECT (bin, "got new message %p, %s from %s",
-          message, name, GST_ELEMENT_NAME (src));
+          message, GST_MESSAGE_TYPE_NAME (message), GST_ELEMENT_NAME (src));
     }
   } else {
-    GST_DEBUG_OBJECT (bin, "got message %s from (NULL), not processing", name);
+    GST_DEBUG_OBJECT (bin, "got message %s from (NULL), not processing",
+        GST_MESSAGE_TYPE_NAME (message));
     res = FALSE;
     gst_message_unref (message);
   }
