@@ -333,6 +333,7 @@ gst_mimdec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_OBJECT_LOCK (element);
       if (mimdec->dec != NULL) {
         mimic_close (mimdec->dec);
         mimdec->dec = NULL;
@@ -340,8 +341,8 @@ gst_mimdec_change_state (GstElement * element, GstStateChange transition)
         mimdec->have_header = FALSE;
         mimdec->payload_size = -1;
         mimdec->current_ts = -1;
-        GST_OBJECT_UNLOCK (element);
       }
+      GST_OBJECT_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_OBJECT_LOCK (element);
