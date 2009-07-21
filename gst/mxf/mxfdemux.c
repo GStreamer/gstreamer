@@ -3453,6 +3453,7 @@ gst_mxf_demux_src_query_type (GstPad * pad)
   static const GstQueryType types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
+    GST_QUERY_SEEKING,
     0
   };
 
@@ -3543,6 +3544,33 @@ gst_mxf_demux_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_set_duration (query, format, duration);
       ret = TRUE;
+      break;
+    }
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      ret = TRUE;
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      if (fmt != GST_FORMAT_TIME) {
+        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+        goto done;
+      }
+
+      if (demux->random_access) {
+        gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, -1);
+      } else {
+        GstQuery *peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
+        gboolean seekable;
+
+        seekable = gst_pad_peer_query (demux->sinkpad, peerquery);
+        if (seekable)
+          gst_query_parse_seeking (peerquery, NULL, &seekable, NULL, NULL);
+        if (seekable)
+          gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, -1);
+        else
+          gst_query_set_seeking (query, GST_FORMAT_TIME, FALSE, -1, -1);
+      }
+
       break;
     }
     default:
@@ -3804,6 +3832,33 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
 
       gst_query_set_duration (query, format, duration);
       ret = TRUE;
+      break;
+    }
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      ret = TRUE;
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      if (fmt != GST_FORMAT_TIME) {
+        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+        goto done;
+      }
+
+      if (demux->random_access) {
+        gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, -1);
+      } else {
+        GstQuery *peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
+        gboolean seekable;
+
+        seekable = gst_pad_peer_query (demux->sinkpad, peerquery);
+        if (seekable)
+          gst_query_parse_seeking (peerquery, NULL, &seekable, NULL, NULL);
+        if (seekable)
+          gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, -1);
+        else
+          gst_query_set_seeking (query, GST_FORMAT_TIME, FALSE, -1, -1);
+      }
+
       break;
     }
     default:
