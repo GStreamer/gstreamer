@@ -348,6 +348,7 @@ gst_caps_make_writable (GstCaps * caps)
     return caps;
 
   /* else copy */
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy caps");
   copy = gst_caps_copy (caps);
   gst_caps_unref (caps);
 
