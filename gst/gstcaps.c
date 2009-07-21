@@ -1109,21 +1109,20 @@ typedef struct
 {
   GstStructure *dest;
   const GstStructure *intersect;
-  gboolean first_run;
 }
 IntersectData;
 
 static gboolean
-gst_caps_structure_intersect_field (GQuark id, const GValue * val1,
+gst_caps_structure_intersect_field1 (GQuark id, const GValue * val1,
     gpointer data)
 {
   IntersectData *idata = (IntersectData *) data;
-  GValue dest_value = { 0 };
   const GValue *val2 = gst_structure_id_get_value (idata->intersect, id);
 
   if (G_UNLIKELY (val2 == NULL)) {
     gst_structure_id_set_value (idata->dest, id, val1);
-  } else if (idata->first_run) {
+  } else {
+    GValue dest_value = { 0 };
     if (gst_value_intersect (&dest_value, val1, val2)) {
       gst_structure_id_set_value (idata->dest, id, &dest_value);
       g_value_unset (&dest_value);
@@ -1131,7 +1130,19 @@ gst_caps_structure_intersect_field (GQuark id, const GValue * val1,
       return FALSE;
     }
   }
+  return TRUE;
+}
 
+static gboolean
+gst_caps_structure_intersect_field2 (GQuark id, const GValue * val1,
+    gpointer data)
+{
+  IntersectData *idata = (IntersectData *) data;
+  const GValue *val2 = gst_structure_id_get_value (idata->intersect, id);
+
+  if (G_UNLIKELY (val2 == NULL)) {
+    gst_structure_id_set_value (idata->dest, id, val1);
+  }
   return TRUE;
 }
 
@@ -1147,17 +1158,18 @@ gst_caps_structure_intersect (const GstStructure * struct1,
   if (G_UNLIKELY (struct1->name != struct2->name))
     return NULL;
 
+  /* copy fields from struct1 which we have not in struct2 to target
+   * intersect if we have the field in both */
   data.dest = gst_structure_id_empty_new (struct1->name);
   data.intersect = struct2;
-  data.first_run = TRUE;
   if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
-              gst_caps_structure_intersect_field, &data)))
+              gst_caps_structure_intersect_field1, &data)))
     goto error;
 
+  /* copy fields from struct2 which we have not in struct1 to target */
   data.intersect = struct1;
-  data.first_run = FALSE;
   if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct2,
-              gst_caps_structure_intersect_field, &data)))
+              gst_caps_structure_intersect_field2, &data)))
     goto error;
 
   return data.dest;
