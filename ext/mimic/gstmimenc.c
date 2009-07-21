@@ -142,17 +142,13 @@ gst_mimenc_class_init (GstMimEncClass * klass)
 static void
 gst_mimenc_init (GstMimEnc * mimenc, GstMimEncClass * klass)
 {
-  mimenc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_factory),
-      "sink");
+  mimenc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (mimenc), mimenc->sinkpad);
   gst_pad_set_setcaps_function (mimenc->sinkpad, gst_mimenc_setcaps);
   gst_pad_set_chain_function (mimenc->sinkpad, gst_mimenc_chain);
   gst_pad_set_event_function (mimenc->sinkpad, gst_mimenc_event);
 
-  mimenc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_factory),
-      "src");
+  mimenc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (mimenc), mimenc->srcpad);
 
   mimenc->enc = NULL;
