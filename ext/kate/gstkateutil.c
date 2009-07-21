@@ -238,8 +238,8 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
                 GST_TAG_ENCODER, encoder, NULL);
             g_free (encoder);
           }
-          gst_tag_list_add (decoder->tags, GST_TAG_MERGE_REPLACE, GST_TAG_CODEC,
-              "kate", NULL);
+          gst_tag_list_add (decoder->tags, GST_TAG_MERGE_REPLACE,
+              GST_TAG_SUBTITLE_CODEC, "Kate", NULL);
           gst_tag_list_add (decoder->tags, GST_TAG_MERGE_REPLACE,
               GST_TAG_ENCODER_VERSION, decoder->k.ki->bitstream_version_major,
               NULL);
