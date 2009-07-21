@@ -1383,11 +1383,66 @@ gst_flups_demux_src_query (GstPad * pad, GstQuery * query)
       res = TRUE;
       break;
     }
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+
+      res = TRUE;
+      if (demux->random_access) {
+        /* In pull mode we can seek in TIME format if we have the SCR */
+        if (fmt != GST_FORMAT_TIME || demux->scr_rate_n == G_MAXUINT64
+            || demux->scr_rate_d == G_MAXUINT64)
+          gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+        else
+          gst_query_set_seeking (query, fmt, TRUE, 0, -1);
+      } else {
+        if (fmt == GST_FORMAT_BYTES) {
+          /* Seeking in BYTES format not supported at all */
+          gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+        } else {
+          GstQuery *peerquery;
+          gboolean seekable;
+
+          /* Then ask upstream */
+          res = gst_pad_peer_query (demux->sinkpad, query);
+          if (res) {
+            /* If upstream can handle seeks we're done, if it
+             * can't we still have our TIME->BYTES conversion seek
+             */
+            gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+            if (seekable || fmt != GST_FORMAT_TIME)
+              goto beach;
+          }
+
+          /* We can seek if upstream supports BYTES seeks and we
+           * have the SCR
+           */
+          peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
+          res = gst_pad_peer_query (demux->sinkpad, query);
+          if (!res || demux->scr_rate_n == G_MAXUINT64
+              || demux->scr_rate_d == G_MAXUINT64) {
+            gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+          } else {
+            gst_query_parse_seeking (peerquery, NULL, &seekable, NULL, NULL);
+            if (seekable)
+              gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, -1);
+            else
+              gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+          }
+
+          gst_query_unref (peerquery);
+          res = TRUE;
+        }
+      }
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, query);
       break;
   }
 
+beach:
   gst_object_unref (demux);
 
   return res;
