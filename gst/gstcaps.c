@@ -143,6 +143,11 @@ gst_caps_new_empty (void)
   caps->refcount = 1;
   caps->flags = 0;
   caps->structs = g_ptr_array_new ();
+  /* the 32 has been determined by logging caps sizes in _gst_caps_free
+   * but g_ptr_array uses 16 anyway if it expands once, so this does not help
+   * in practise
+   * caps->structs = g_ptr_array_sized_new (32);
+   */
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_LOG (GST_CAT_CAPS, "created caps %p", caps);
@@ -295,6 +300,8 @@ _gst_caps_free (GstCaps * caps)
   /* The refcount must be 0, but since we're only called by gst_caps_unref,
    * don't bother testing. */
   len = caps->structs->len;
+  /* This can be used to get statistics about caps sizes */
+  /*GST_CAT_INFO (GST_CAT_CAPS, "caps size: %d", len); */
   for (i = 0; i < len; i++) {
     structure = (GstStructure *) gst_caps_get_structure_unchecked (caps, i);
     gst_structure_set_parent_refcount (structure, NULL);
