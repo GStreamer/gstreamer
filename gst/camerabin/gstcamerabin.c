@@ -1031,6 +1031,10 @@ gst_camerabin_set_element_zoom (GstCameraBin * camera, gint zoom)
     if (zoom != ZOOM_1X) {
       w2_crop = (camera->width - (camera->width * ZOOM_1X / zoom)) / 2;
       h2_crop = (camera->height - (camera->height * ZOOM_1X / zoom)) / 2;
+
+      /* force number of pixels cropped from left to be even, to avoid slow code
+       * path on videoscale */
+      w2_crop &= 0xFFFE;
     }
 
     pad_zoom_sink = gst_element_get_static_pad (camera->src_zoom_crop, "sink");
