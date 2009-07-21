@@ -30,7 +30,7 @@
 #define GST_KATE_UINT16_BE(ptr) ( ( ((guint16)((ptr)[0])) <<8) | ((ptr)[1]) )
 
 /* taken off the DVD SPU decoder - now is time for today's WTF ???? */
-#define GST_KATE_STM_TO_GST(stm) ((1024 * (stm)) / 90000)
+#define GST_KATE_STM_TO_GST(stm) ((GST_MSECOND * 1024 * (stm)) / 90)
 #define GST_KATE_GST_TO_STM(gst) ((int)(((gst) * 90000 ) / 1024))
 
 #define GST_KATE_SPU_MIME_TYPE "video/x-dvd-subpicture"
