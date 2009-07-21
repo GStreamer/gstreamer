@@ -553,6 +553,35 @@ mpegts_parse_program_remove_stream (MpegTSParse * parse,
   g_hash_table_remove (program->streams, GINT_TO_POINTER ((gint) pid));
 }
 
+static void
+mpegts_parse_deactivate_pmt (MpegTSParse * parse, MpegTSParseProgram * program)
+{
+  gint i;
+  guint pid;
+  guint stream_type;
+  GstStructure *stream;
+  const GValue *streams;
+  const GValue *value;
+
+  if (program->pmt_info) {
+    streams = gst_structure_get_value (program->pmt_info, "streams");
+
+    for (i = 0; i < gst_value_list_get_size (streams); ++i) {
+      value = gst_value_list_get_value (streams, i);
+      stream = g_value_get_boxed (value);
+      gst_structure_get_uint (stream, "pid", &pid);
+      gst_structure_get_uint (stream, "stream-type", &stream_type);
+      mpegts_parse_program_remove_stream (parse, program, (guint16) pid);
+      g_hash_table_remove (parse->pes_pids, GINT_TO_POINTER ((gint) pid));
+    }
+
+    /* remove pcr stream */
+    mpegts_parse_program_remove_stream (parse, program, program->pcr_pid);
+    g_hash_table_remove (parse->pes_pids,
+        GINT_TO_POINTER ((gint) program->pcr_pid));
+  }
+}
+
 static MpegTSParsePad *
 mpegts_parse_create_tspad (MpegTSParse * parse, const gchar * pad_name)
 {
@@ -940,6 +969,7 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GstStructure * pat_info)
         parse->pads_to_remove = g_list_append (parse->pads_to_remove,
             mpegts_parse_deactivate_program (parse, program));
 
+      mpegts_parse_deactivate_pmt (parse, program);
       mpegts_parse_remove_program (parse, program_number);
       g_hash_table_remove (parse->psi_pids, GINT_TO_POINTER ((gint) pid));
       mpegts_packetizer_remove_stream (parse->packetizer, pid);
@@ -964,7 +994,6 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   guint stream_type;
   GstStructure *stream;
   gint i;
-  const GValue *old_streams;
   const GValue *new_streams;
   const GValue *value;
 
@@ -975,27 +1004,8 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   GST_OBJECT_LOCK (parse);
   program = mpegts_parse_get_program (parse, program_number);
   if (program) {
-    if (program->pmt_info) {
-      /* deactivate old pmt */
-      old_streams = gst_structure_get_value (program->pmt_info, "streams");
-
-      for (i = 0; i < gst_value_list_get_size (old_streams); ++i) {
-        value = gst_value_list_get_value (old_streams, i);
-        stream = g_value_get_boxed (value);
-        gst_structure_get_uint (stream, "pid", &pid);
-        gst_structure_get_uint (stream, "stream-type", &stream_type);
-        mpegts_parse_program_remove_stream (parse, program, (guint16) pid);
-        g_hash_table_remove (parse->pes_pids, GINT_TO_POINTER ((gint) pid));
-      }
-
-      /* remove pcr stream */
-      mpegts_parse_program_remove_stream (parse, program, program->pcr_pid);
-      g_hash_table_remove (parse->pes_pids,
-          GINT_TO_POINTER ((gint) program->pcr_pid));
-
-      gst_structure_free (program->pmt_info);
-      program->pmt_info = NULL;
-    }
+    /* deactivate old pmt */
+    mpegts_parse_deactivate_pmt (parse, program);
   } else {
     /* no PAT?? */
     g_hash_table_insert (parse->psi_pids,
