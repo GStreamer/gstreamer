@@ -841,14 +841,14 @@ gst_interleave_sink_setcaps (GstPad * pad, GstCaps * caps)
 
 cannot_change_caps:
   {
-    GST_DEBUG_OBJECT (self, "caps of %" GST_PTR_FORMAT " already set, can't "
+    GST_WARNING_OBJECT (self, "caps of %" GST_PTR_FORMAT " already set, can't "
         "change", self->sinkcaps);
     gst_object_unref (self);
     return FALSE;
   }
 src_did_not_accept:
   {
-    GST_DEBUG_OBJECT (self, "src did not accept setcaps()");
+    GST_WARNING_OBJECT (self, "src did not accept setcaps()");
     gst_object_unref (self);
     return FALSE;
   }
@@ -1226,19 +1226,12 @@ static GstFlowReturn
 gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
 {
   guint size;
-
   GstBuffer *outbuf;
-
   GstFlowReturn ret = GST_FLOW_OK;
-
   GSList *collected;
-
   guint nsamples;
-
   guint ncollected = 0;
-
   gboolean empty = TRUE;
-
   gint width = self->width / 8;
 
   g_return_val_if_fail (self->func != NULL, GST_FLOW_NOT_NEGOTIATED);
