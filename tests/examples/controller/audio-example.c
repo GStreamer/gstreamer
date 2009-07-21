@@ -104,6 +104,7 @@ main (gint argc, gchar ** argv)
 
   /* cleanup */
   g_object_unref (G_OBJECT (ctrl));
+  gst_clock_id_unref (clock_id);
   gst_object_unref (G_OBJECT (clock));
   gst_object_unref (G_OBJECT (bin));
   res = 0;
