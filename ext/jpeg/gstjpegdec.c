@@ -60,23 +60,8 @@ enum
   PROP_IDCT_METHOD
 };
 
+extern GType gst_idct_method_get_type (void);
 #define GST_TYPE_IDCT_METHOD (gst_idct_method_get_type())
-static GType
-gst_idct_method_get_type (void)
-{
-  static GType idct_method_type = 0;
-  static const GEnumValue idct_method[] = {
-    {JDCT_ISLOW, "Slow but accurate integer algorithm", "islow"},
-    {JDCT_IFAST, "Faster, less accurate integer method", "ifast"},
-    {JDCT_FLOAT, "Floating-point: accurate, fast on fast HW", "float"},
-    {0, NULL, NULL},
-  };
-
-  if (!idct_method_type) {
-    idct_method_type = g_enum_register_static ("GstIDCTMethod", idct_method);
-  }
-  return idct_method_type;
-}
 
 static GstStaticPadTemplate gst_jpeg_dec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",

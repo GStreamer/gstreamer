@@ -38,6 +38,12 @@
 #include "gstjpegenc.h"
 #include <gst/video/video.h>
 
+/* experimental */
+/* setting smoothig seems to have no effect in libjepeg
+#define ENABLE_SMOOTHING 1
+*/
+/*#define ENABLE_COLORSPACE_RGB 1 */
+
 /* elementfactory information */
 static const GstElementDetails gst_jpegenc_details =
 GST_ELEMENT_DETAILS ("JPEG image encoder",
@@ -48,7 +54,9 @@ GST_ELEMENT_DETAILS ("JPEG image encoder",
 GST_DEBUG_CATEGORY_STATIC (jpegenc_debug);
 #define GST_CAT_DEFAULT jpegenc_debug
 
-#define JPEG_DEFAULT_QUALITY 85
+#define DEFAULT_QUALITY 85
+#define DEFAULT_SMOOTHING 0
+#define DEFAULT_IDCT_METHOD	JDCT_FASTEST
 
 /* These macros are adapted from videotestsrc.c 
  *  and/or gst-plugins/gst/games/gstvideoimage.c */
@@ -74,11 +82,14 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_QUALITY,
-  ARG_SMOOTHING
-      /* FILL ME */
+  PROP_0,
+  PROP_QUALITY,
+  PROP_SMOOTHING,
+  PROP_IDCT_METHOD
 };
+
+extern GType gst_idct_method_get_type (void);
+#define GST_TYPE_IDCT_METHOD (gst_idct_method_get_type())
 
 static void gst_jpegenc_base_init (gpointer g_class);
 static void gst_jpegenc_class_init (GstJpegEnc * klass);
@@ -174,15 +185,21 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
   gobject_class->get_property = gst_jpegenc_get_property;
 
 
-  g_object_class_install_property (gobject_class, ARG_QUALITY,
+  g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_int ("quality", "Quality", "Quality of encoding",
-          0, 100, JPEG_DEFAULT_QUALITY, G_PARAM_READWRITE));
-#if 0
+          0, 100, DEFAULT_QUALITY, G_PARAM_READWRITE));
+
+#if ENABLE_SMOOTHING
   /* disabled, since it doesn't seem to work */
-  g_object_class_install_property (gobject_class, ARG_SMOOTHING,
+  g_object_class_install_property (gobject_class, PROP_SMOOTHING,
       g_param_spec_int ("smoothing", "Smoothing", "Smoothing factor",
-          0, 100, 0, G_PARAM_READWRITE));
+          0, 100, DEFAULT_SMOOTHING, G_PARAM_READWRITE));
 #endif
+
+  g_object_class_install_property (gobject_class, PROP_IDCT_METHOD,
+      g_param_spec_enum ("idct-method", "IDCT Method",
+          "The IDCT algorithm to use", GST_TYPE_IDCT_METHOD,
+          DEFAULT_IDCT_METHOD, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_jpegenc_change_state;
 
@@ -248,14 +265,15 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
   jpegenc->jdest.term_destination = gst_jpegenc_term_destination;
   jpegenc->cinfo.dest = &jpegenc->jdest;
 
-  jpegenc->quality = JPEG_DEFAULT_QUALITY;
-  jpegenc->smoothing = 0;
+  /* init properties */
+  jpegenc->quality = DEFAULT_QUALITY;
+  jpegenc->smoothing = DEFAULT_SMOOTHING;
+  jpegenc->idct_method = DEFAULT_IDCT_METHOD;
 }
 
 static void
 gst_jpegenc_finalize (GObject * object)
 {
-
   GstJpegEnc *filter = GST_JPEGENC (object);
 
   jpeg_destroy_compress (&filter->cinfo);
@@ -360,8 +378,7 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
 
   GST_DEBUG_OBJECT (jpegenc, "width %d, height %d", width, height);
 
-
-#if 0
+#if ENABLE_COLORSPACE_RGB
   switch (jpegenc->format) {
     case GST_COLORSPACE_RGB24:
       jpegenc->bufsize = jpegenc->width * jpegenc->height * 3;
@@ -377,12 +394,13 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
       jpegenc->cinfo.in_color_space = JCS_YCbCr;
 
       jpeg_set_defaults (&jpegenc->cinfo);
-      jpeg_set_quality (&jpegenc->cinfo, jpegenc->quality, TRUE);
+      /* thsese are set in _chain()
+         jpeg_set_quality (&jpegenc->cinfo, jpegenc->quality, TRUE);
+         jpegenc->cinfo.smoothing_factor = jpegenc->smoothing;
+         jpegenc->cinfo.dct_method = jpegenc->idct_method;
+       */
 
       jpegenc->cinfo.raw_data_in = TRUE;
-      jpegenc->cinfo.dct_method = JDCT_FASTEST;
-      /*jpegenc->cinfo.dct_method = JDCT_DEFAULT; */
-      /*jpegenc->cinfo.smoothing_factor = jpegenc->smoothing; */
 
       if (height != -1) {
         jpegenc->line[0] =
@@ -394,7 +412,7 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
       }
 
       GST_DEBUG_OBJECT (jpegenc, "setting format done");
-#if 0
+#if ENABLE_COLORSPACE_RGB
       break;
     default:
       printf ("gst_jpegenc_resync: unsupported colorspace, using RGB\n");
@@ -405,7 +423,6 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
 #endif
 
   jpeg_suppress_tables (&jpegenc->cinfo, TRUE);
-  //jpeg_suppress_tables(&jpegenc->cinfo, FALSE);
 
   GST_DEBUG_OBJECT (jpegenc, "resync done");
 }
@@ -430,7 +447,7 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  GST_DEBUG_OBJECT (jpegenc, "got buffer of %lu bytes", size);
+  GST_LOG_OBJECT (jpegenc, "got buffer of %lu bytes", size);
 
   ret =
       gst_pad_alloc_buffer_and_set_caps (jpegenc->srcpad,
@@ -457,10 +474,11 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   jpegenc->jdest.free_in_buffer = GST_BUFFER_SIZE (outbuf);
 
   jpegenc->cinfo.smoothing_factor = jpegenc->smoothing;
+  jpegenc->cinfo.dct_method = jpegenc->idct_method;
   jpeg_set_quality (&jpegenc->cinfo, jpegenc->quality, TRUE);
   jpeg_start_compress (&jpegenc->cinfo, TRUE);
 
-  GST_DEBUG_OBJECT (jpegenc, "compressing");
+  GST_LOG_OBJECT (jpegenc, "compressing");
 
   for (i = 0; i < height; i += 2 * DCTSIZE) {
     /*g_print ("next scanline: %d\n", jpegenc->cinfo.next_scanline); */
@@ -482,7 +500,7 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   }
 
   jpeg_finish_compress (&jpegenc->cinfo);
-  GST_DEBUG_OBJECT (jpegenc, "compressing done");
+  GST_LOG_OBJECT (jpegenc, "compressing done");
 
   GST_BUFFER_SIZE (outbuf) =
       GST_ROUND_UP_4 (jpegenc->bufsize - jpegenc->jdest.free_in_buffer);
@@ -514,11 +532,16 @@ gst_jpegenc_set_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (jpegenc);
 
   switch (prop_id) {
-    case ARG_QUALITY:
+    case PROP_QUALITY:
       jpegenc->quality = g_value_get_int (value);
       break;
-    case ARG_SMOOTHING:
+#if ENABLE_SMOOTHING
+    case PROP_SMOOTHING:
       jpegenc->smoothing = g_value_get_int (value);
+      break;
+#endif
+    case PROP_IDCT_METHOD:
+      jpegenc->idct_method = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -537,11 +560,16 @@ gst_jpegenc_get_property (GObject * object, guint prop_id, GValue * value,
   GST_OBJECT_LOCK (jpegenc);
 
   switch (prop_id) {
-    case ARG_QUALITY:
+    case PROP_QUALITY:
       g_value_set_int (value, jpegenc->quality);
       break;
-    case ARG_SMOOTHING:
+#if ENABLE_SMOOTHING
+    case PROP_SMOOTHING:
       g_value_set_int (value, jpegenc->smoothing);
+      break;
+#endif
+    case PROP_IDCT_METHOD:
+      g_value_set_enum (value, jpegenc->idct_method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
