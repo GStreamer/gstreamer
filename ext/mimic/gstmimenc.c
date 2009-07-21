@@ -538,6 +538,8 @@ paused_mode_task (gpointer data)
     GST_OBJECT_LOCK (mimenc);
     mimenc->clock_id = NULL;
     GST_OBJECT_UNLOCK (mimenc);
+
+    gst_clock_id_unref (id);
   }
   return;
 
