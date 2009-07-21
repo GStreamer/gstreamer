@@ -1934,7 +1934,7 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
 
       if (fmt != GST_FORMAT_TIME || !demux->index) {
-        gst_query_set_seeking (query, GST_FORMAT_TIME, FALSE, -1, -1);
+        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
       } else {
         gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0,
             demux->duration);
