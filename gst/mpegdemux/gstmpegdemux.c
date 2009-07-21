@@ -845,6 +845,7 @@ gst_flups_demux_close_segment (GstFluPSDemux * demux)
 {
   gint id;
   GstEvent *event = NULL;
+  guint64 base_time;
 
 #if POST_10_10
   GST_INFO_OBJECT (demux, "closing running segment %" GST_SEGMENT_FORMAT,
@@ -855,14 +856,17 @@ gst_flups_demux_close_segment (GstFluPSDemux * demux)
    * last_seg_start != clock_time_none, as that indicates a sparse-stream
    * event was sent there */
 
+  if ((base_time = demux->base_time) == (guint64) - 1)
+    base_time = 0;
+
+
   /* Close the current segment for a linear playback */
   if (demux->src_segment.rate >= 0) {
     /* for forward playback, we played from start to last_stop */
     event = gst_event_new_new_segment (TRUE,
         demux->src_segment.rate, demux->src_segment.format,
-        demux->src_segment.start + demux->base_time,
-        demux->src_segment.last_stop + demux->base_time,
-        demux->src_segment.time);
+        demux->src_segment.start + base_time,
+        demux->src_segment.last_stop + base_time, demux->src_segment.time);
   } else {
     gint64 stop;
 
@@ -872,8 +876,8 @@ gst_flups_demux_close_segment (GstFluPSDemux * demux)
     /* for reverse playback, we played from stop to last_stop. */
     event = gst_event_new_new_segment (TRUE,
         demux->src_segment.rate, demux->src_segment.format,
-        demux->src_segment.last_stop + demux->base_time,
-        stop + demux->base_time, demux->src_segment.last_stop);
+        demux->src_segment.last_stop + base_time,
+        stop + base_time, demux->src_segment.last_stop);
   }
 
   if (event) {
