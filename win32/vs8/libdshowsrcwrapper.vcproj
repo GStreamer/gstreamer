@@ -78,7 +78,7 @@
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="C:\msys\1.0\local\lib;&quot;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib&quot;;&quot;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Samples\Multimedia\DirectShow\BaseClasses\XP32_RETAIL&quot;"
-				ModuleDefinitionFile="..\..\sys\libgstdshow.def"
+				ModuleDefinitionFile="..\..\sys\dshowsrcwrapper\libgstdshow.def"
 				ProgramDatabaseFile=".\Release/libgstdshowsrcwrapper.pdb"
 				ImportLibrary=".\Release/libgstdshowsrcwrapper.lib"
 				TargetMachine="1"
@@ -177,7 +177,7 @@
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="C:\msys\1.0\local\lib;&quot;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib&quot;;&quot;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Samples\Multimedia\DirectShow\BaseClasses\XP32_DEBUG&quot;"
-				ModuleDefinitionFile="..\..\sys\libgstdshow.def"
+				ModuleDefinitionFile="..\..\sys\dshowsrcwrapper\libgstdshow.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/libgstdshowsrcwrapper.pdb"
 				ImportLibrary=".\Debug/libgstdshowsrcwrapper.lib"
@@ -240,7 +240,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\sys\libgstdshow.def"
+				RelativePath="..\..\sys\dshowsrcwrapper\libgstdshow.def"
 				>
 			</File>
 		</Filter>
