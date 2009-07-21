@@ -3713,7 +3713,7 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
     goto cleanup;
 
   targetpad = gst_element_get_static_pad (target, split[1]);
-  if (!pad)
+  if (!targetpad)
     targetpad = gst_element_get_request_pad (target, split[1]);
 
   if (targetpad == NULL)
