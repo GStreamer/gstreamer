@@ -1006,6 +1006,9 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   if (program) {
     /* deactivate old pmt */
     mpegts_parse_deactivate_pmt (parse, program);
+    if (program->pmt_info)
+      gst_structure_free (program->pmt_info);
+    program->pmt_info = NULL;
   } else {
     /* no PAT?? */
     g_hash_table_insert (parse->psi_pids,
