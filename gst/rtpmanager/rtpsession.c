@@ -369,6 +369,9 @@ rtp_session_finalize (GObject * object)
   for (i = 0; i < 32; i++)
     g_hash_table_destroy (sess->ssrcs[i]);
 
+  g_list_foreach (sess->conflicting_addresses, (GFunc) g_free, NULL);
+  g_list_free (sess->conflicting_addresses);
+
   g_free (sess->bye_reason);
 
   g_hash_table_destroy (sess->cnames);
