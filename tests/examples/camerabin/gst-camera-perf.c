@@ -435,16 +435,18 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             GstBuffer *buf = gst_value_get_buffer (value);
             GstCaps *caps = GST_BUFFER_CAPS (buf);
             GstStructure *buf_st = gst_caps_get_structure (caps, 0);
-            guchar *data = GST_BUFFER_DATA (buf);
             gint width, height, rowstride;
             GdkPixbuf *pixbuf;
+            guchar *data;
 
             GST_INFO ("preview : buf=%p, size=%d, format=%" GST_PTR_FORMAT,
                 buf, GST_BUFFER_SIZE (buf), caps);
+
+            data = g_memdup (GST_BUFFER_DATA (buff), GST_BUFFER_SIZE (buff));
             gst_structure_get_int (buf_st, "width", &width);
             gst_structure_get_int (buf_st, "height", &height);
             rowstride = GST_ROUND_UP_4 (width * 3);
-            //GST_INFO ("rowstride : %d, %d", rowstride, width*3);
+
             pixbuf = gdk_pixbuf_new_from_data (data, GDK_COLORSPACE_RGB, FALSE,
                 8, width, height, rowstride, NULL, NULL);
             gdk_pixbuf_save (pixbuf, "/tmp/gst-camerabin-preview.png", "png",
