@@ -136,7 +136,8 @@ rm -rf $RPM_BUILD_ROOT
 @USE_LIBVISUAL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibvisual.so
 @USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpango.so
 @USE_CDPARANOIA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so
-@USE_SCHRO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstschro.so                                                                     
+@USE_GIO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgio.so
+# @USE_SCHRO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstschro.so                                                                     
 %package devel
 Summary: 	GStreamer Plugin Library Headers
 Group: 		Development/Libraries
@@ -214,11 +215,6 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audio-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideocodec.h
-%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideodecoder.h
-%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoencoder.h
-%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoparse.h
-%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoutils.h
 
 %{_libdir}/libgstfft-%{majorminor}.so
 %{_libdir}/libgstrtsp-%{majorminor}.so
