@@ -346,13 +346,8 @@ gst_mimenc_chain (GstPad * pad, GstBuffer * in)
   GST_OBJECT_UNLOCK (mimenc);
 
   if (event) {
-    if (!gst_pad_push_event (mimenc->srcpad, event)) {
-      res = GST_FLOW_ERROR;
-      GST_ERROR_OBJECT (mimenc, "Failed to push NEWSEGMENT event");
-      gst_buffer_unref (header);
-      gst_buffer_unref (out_buf);
-      goto out;
-    }
+    if (!gst_pad_push_event (mimenc->srcpad, event))
+      GST_WARNING_OBJECT (mimenc, "Failed to push NEWSEGMENT event");
   }
 
   res = gst_pad_push (mimenc->srcpad, header);
@@ -513,11 +508,8 @@ paused_mode_task (gpointer data)
         " sending out a pause frame");
 
     if (event) {
-      if (!gst_pad_push_event (mimenc->srcpad, event)) {
-        GST_ERROR_OBJECT (mimenc, "Failed to push NEWSEGMENT event");
-        gst_buffer_unref (buffer);
-        goto stop_task;
-      }
+      if (!gst_pad_push_event (mimenc->srcpad, event))
+        GST_WARNING_OBJECT (mimenc, "Failed to push NEWSEGMENT event");
     }
     ret = gst_pad_push (mimenc->srcpad, buffer);
     if (ret < 0) {
