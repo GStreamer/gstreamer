@@ -467,8 +467,13 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       name = GST_PAD_NAME (c_data->pad);
       if (mux->prog_map != NULL && gst_structure_has_field (mux->prog_map,
               name)) {
-        guint idx =
-            g_value_get_int (gst_structure_get_value (mux->prog_map, name));
+        gint idx;
+        gboolean ret = gst_structure_get_int (mux->prog_map, name, &idx);
+        if (!ret) {
+          GST_ELEMENT_ERROR (mux, STREAM, MUX,
+              ("Reading program map failed. Assuming default"), (NULL));
+          idx = DEFAULT_PROG_ID;
+        }
         if (idx < 0 || idx >= MAX_PROG_NUMBER) {
           GST_DEBUG_OBJECT (mux, "Program number %d associate with pad %s out "
               "of range (max = %d); DEFAULT_PROGRAM = %d is used instead",
@@ -481,8 +486,8 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       }
     }
 
-    ts_data->prog = g_array_index (mux->programs, TsMuxProgram *,
-        ts_data->prog_id);
+    ts_data->prog =
+        (TsMuxProgram *) g_ptr_array_index (mux->programs, ts_data->prog_id);
     if (ts_data->prog == NULL) {
       ts_data->prog = tsmux_program_new (mux->tsmux);
       if (ts_data->prog == NULL)
@@ -499,8 +504,8 @@ mpegtsmux_create_streams (MpegTsMux * mux)
 
   return GST_FLOW_OK;
 no_program:
-  GST_ELEMENT_ERROR (mux, STREAM, MUX, ("tsmux_new_program error"),
-      ("Could not create new program"));
+  GST_ELEMENT_ERROR (mux, STREAM, MUX,
+      ("Could not create new program"), (NULL));
   return GST_FLOW_ERROR;
 no_stream:
   GST_ELEMENT_ERROR (mux, STREAM, MUX,
@@ -664,8 +669,7 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
       }
     }
     if (prog->pcr_stream == best->stream) {
-      /* FIXME: is this correct? */
-      mux->last_ts = best->last_ts;     // how?
+      mux->last_ts = best->last_ts;
     }
   } else {
     /* FIXME: Drain all remaining streams */
