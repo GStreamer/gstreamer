@@ -772,6 +772,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
   GstPad *otherpad, *otherpeer;
   GstCaps *othercaps;
   gboolean peer_checked = FALSE;
+  gboolean is_fixed;
 
   /* caps must be fixed here, this is a programming error if it's not */
   g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
@@ -811,7 +812,8 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
    * is by attempting passthrough if the othercaps are a superset of caps. */
   /* FIXME. maybe the caps is not fixed because it has multiple structures of
    * fixed caps */
-  if (!gst_caps_is_fixed (othercaps)) {
+  is_fixed = gst_caps_is_fixed (othercaps);
+  if (!is_fixed) {
     GstCaps *temp;
 
     GST_DEBUG_OBJECT (trans,
@@ -832,6 +834,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
              * caps and work with the passthrough caps */
             gst_caps_unref (othercaps);
             othercaps = gst_caps_ref (caps);
+            is_fixed = TRUE;
             /* mark that we checked othercaps with the peer, this
              * makes sure we don't call accept_caps again with these same
              * caps */
@@ -844,6 +847,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
           GST_DEBUG_OBJECT (trans, "no peer, doing passthrough");
           gst_caps_unref (othercaps);
           othercaps = gst_caps_ref (caps);
+          is_fixed = TRUE;
         }
       }
       gst_caps_unref (temp);
@@ -852,7 +856,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
 
   /* second attempt at fixation is done by intersecting with
    * the peer caps */
-  if (!gst_caps_is_fixed (othercaps) && otherpeer) {
+  if (!is_fixed && otherpeer) {
     /* intersect against what the peer can do */
     GstCaps *peercaps;
     GstCaps *intersect;
@@ -866,6 +870,8 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
     othercaps = intersect;
     peer_checked = FALSE;
 
+    is_fixed = gst_caps_is_fixed (othercaps);
+
     GST_DEBUG_OBJECT (trans,
         "filtering against peer yields %" GST_PTR_FORMAT, othercaps);
   }
@@ -875,7 +881,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
 
   /* third attempt at fixation, call the fixate vmethod and
    * ultimately call the pad fixate function. */
-  if (!gst_caps_is_fixed (othercaps)) {
+  if (!is_fixed) {
     GstCaps *temp;
 
     GST_DEBUG_OBJECT (trans,
@@ -898,17 +904,20 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
           " on pad %s:%s using fixate_caps vmethod", othercaps, caps,
           GST_DEBUG_PAD_NAME (otherpad));
       klass->fixate_caps (trans, GST_PAD_DIRECTION (pad), caps, othercaps);
+      is_fixed = gst_caps_is_fixed (othercaps);
     }
     /* if still not fixed, no other option but to let the default pad fixate
      * function do its job */
-    if (!gst_caps_is_fixed (othercaps)) {
+    if (!is_fixed) {
       GST_DEBUG_OBJECT (trans, "trying to fixate %" GST_PTR_FORMAT
           " on pad %s:%s using gst_pad_fixate_caps", othercaps,
           GST_DEBUG_PAD_NAME (otherpad));
       gst_pad_fixate_caps (otherpad, othercaps);
+      is_fixed = gst_caps_is_fixed (othercaps);
     }
     GST_DEBUG_OBJECT (trans, "after fixating %" GST_PTR_FORMAT, othercaps);
   } else {
+    GST_DEBUG ("caps are fixed");
     /* else caps are fixed but the subclass may want to add fields */
     if (klass->fixate_caps) {
       othercaps = gst_caps_make_writable (othercaps);
@@ -919,11 +928,12 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
           GST_DEBUG_PAD_NAME (otherpad));
 
       klass->fixate_caps (trans, GST_PAD_DIRECTION (pad), caps, othercaps);
+      is_fixed = gst_caps_is_fixed (othercaps);
     }
   }
 
   /* caps should be fixed now, if not we have to fail. */
-  if (!gst_caps_is_fixed (othercaps))
+  if (!is_fixed)
     goto could_not_fixate;
 
   /* and peer should accept, don't check again if we already checked the
