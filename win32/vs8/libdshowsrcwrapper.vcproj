@@ -236,7 +236,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\sys\dshowsrcwrapper\gstdshowvideosrc.c"
+				RelativePath="..\..\sys\dshowsrcwrapper\gstdshowvideosrc.cpp"
 				>
 			</File>
 			<File

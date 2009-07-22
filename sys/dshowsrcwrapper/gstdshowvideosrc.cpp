@@ -181,12 +181,14 @@ gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
-          "Directshow device path (@..classID/name)", NULL, G_PARAM_READWRITE));
+          "Directshow device path (@..classID/name)", NULL, 
+          static_cast<GParamFlags>(G_PARAM_READWRITE)));
 
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", NULL, G_PARAM_READWRITE));
+          "Human-readable name of the sound device", NULL, 
+          static_cast<GParamFlags>(G_PARAM_READWRITE)));
 
   GST_DEBUG_CATEGORY_INIT (dshowvideosrc_debug, "dshowvideosrc", 0,
       "Directshow video source");
@@ -243,7 +245,7 @@ gst_dshowvideosrc_dispose (GObject * gobject)
 
   /* clean dshow */
   if (src->video_cap_filter) {
-    IBaseFilter_Release (src->video_cap_filter);
+    src->video_cap_filter->Release();
     src->video_cap_filter = NULL;
   }
 
@@ -327,8 +329,8 @@ gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
 
   g_value_init (&value, G_TYPE_STRING);
 
-  hres = CoCreateInstance (&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
-      &IID_ICreateDevEnum, (void **) &devices_enum);
+  hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
+      IID_ICreateDevEnum, (LPVOID *) &devices_enum);
   if (hres != S_OK) {
     GST_CAT_ERROR (dshowvideosrc_debug,
         "Can't create an instance of the system device enumerator (error=%d)",
@@ -337,9 +339,8 @@ gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
     goto clean;
   }
 
-  hres =
-      ICreateDevEnum_CreateClassEnumerator (devices_enum,
-      &CLSID_VideoInputDeviceCategory, &moniker_enum, 0);
+  hres = devices_enum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, 
+    &moniker_enum, 0);
   if (hres != S_OK || !moniker_enum) {
     GST_CAT_ERROR (dshowvideosrc_debug,
         "Can't get enumeration of video devices (error=%d)", hres);
@@ -347,22 +348,20 @@ gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
     goto clean;
   }
 
-  IEnumMoniker_Reset (moniker_enum);
+  moniker_enum->Reset();
 
-  while (hres = IEnumMoniker_Next (moniker_enum, 1, &moniker, &fetched),
+  while (hres = moniker_enum->Next(1, &moniker, &fetched),
       hres == S_OK) {
     IPropertyBag *property_bag = NULL;
 
     hres =
-        IMoniker_BindToStorage (moniker, NULL, NULL, &IID_IPropertyBag,
-        (void **) &property_bag);
+      moniker->BindToStorage(NULL, NULL, IID_IPropertyBag,
+        (LPVOID *) &property_bag);
     if (SUCCEEDED (hres) && property_bag) {
       VARIANT varFriendlyName;
 
       VariantInit (&varFriendlyName);
-      hres =
-          IPropertyBag_Read (property_bag, L"FriendlyName", &varFriendlyName,
-          NULL);
+      hres = property_bag->Read(L"FriendlyName", &varFriendlyName, NULL);
       if (hres == S_OK && varFriendlyName.bstrVal) {
         gchar *friendly_name =
             g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
@@ -374,19 +373,17 @@ gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
         g_free (friendly_name);
         SysFreeString (varFriendlyName.bstrVal);
       }
-      IPropertyBag_Release (property_bag);
+      property_bag->Release();
     }
-    IMoniker_Release (moniker);
+    moniker->Release();
   }
 
 clean:
-  if (moniker_enum) {
-    IEnumMoniker_Release (moniker_enum);
-  }
+  if (moniker_enum)
+    moniker_enum->Release();
 
-  if (devices_enum) {
-    ICreateDevEnum_Release (devices_enum);
-  }
+  if (devices_enum)
+    devices_enum->Release();
 
   return array;
 }
@@ -480,14 +477,13 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
   if (!src->video_cap_filter) {
     hres = CreateBindCtx (0, &lpbc);
     if (SUCCEEDED (hres)) {
-      hres = MkParseDisplayName (lpbc, unidevice, &dwEaten, &videom);
+      hres = MkParseDisplayName (lpbc, (LPCOLESTR) unidevice, &dwEaten, &videom);
       if (SUCCEEDED (hres)) {
-        hres =
-            IMoniker_BindToObject (videom, lpbc, NULL, &IID_IBaseFilter,
-            &src->video_cap_filter);
-        IMoniker_Release (videom);
+        hres = videom->BindToObject(lpbc, NULL, IID_IBaseFilter, 
+          (LPVOID *) &src->video_cap_filter);
+        videom->Release();
       }
-      IBindCtx_Release (lpbc);
+      lpbc->Release();
     }
   }
 
@@ -501,21 +497,18 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
     IEnumPins *enumpins = NULL;
     HRESULT hres;
 
-    hres = IBaseFilter_EnumPins (src->video_cap_filter, &enumpins);
+    hres = src->video_cap_filter->EnumPins(&enumpins);
     if (SUCCEEDED (hres)) {
-      while (IEnumPins_Next (enumpins, 1, &capture_pin, NULL) == S_OK) {
+      while (enumpins->Next(1, &capture_pin, NULL) == S_OK) {
         IKsPropertySet *pKs = NULL;
-
-        hres =
-            IPin_QueryInterface (capture_pin, &IID_IKsPropertySet,
-            (void **) &pKs);
+        hres = capture_pin->QueryInterface(IID_IKsPropertySet, (LPVOID *) &pKs);
         if (SUCCEEDED (hres) && pKs) {
           DWORD cbReturned;
           GUID pin_category;
           RPC_STATUS rpcstatus;
 
           hres =
-              IKsPropertySet_Get (pKs, &AMPROPSETID_Pin,
+              pKs->Get(AMPROPSETID_Pin,
               AMPROPERTY_PIN_CATEGORY, NULL, 0, &pin_category, sizeof (GUID),
               &cbReturned);
 
@@ -524,8 +517,8 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
                   &rpcstatus) == 0) {
             IAMStreamConfig *streamcaps = NULL;
 
-            if (SUCCEEDED (IPin_QueryInterface (capture_pin,
-                        &IID_IAMStreamConfig, (void **) &streamcaps))) {
+            if (SUCCEEDED (capture_pin->QueryInterface(
+                        IID_IAMStreamConfig, (LPVOID *) &streamcaps))) {
               GstCaps *caps =
                   gst_dshowvideosrc_getcaps_from_streamcaps (src, capture_pin,
                   streamcaps);
@@ -533,16 +526,16 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
               if (caps) {
                 gst_caps_append (src->caps, caps);
               }
-              IAMStreamConfig_Release (streamcaps);
+              streamcaps->Release();
             }
           }
 
-          IKsPropertySet_Release (pKs);
+          pKs->Release();
         }
 
-        IPin_Release (capture_pin);
+        capture_pin->Release();
       }
-      IEnumPins_Release (enumpins);
+      enumpins->Release();
     }
   }
 
@@ -573,7 +566,7 @@ gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       if (src->media_filter)
-        hres = IMediaFilter_Run (src->media_filter, 0);
+        hres = src->media_filter->Run(0);
       if (hres != S_OK) {
         GST_CAT_ERROR (dshowvideosrc_debug,
             "Can't RUN the directshow capture graph (error=%d)", hres);
@@ -582,7 +575,7 @@ gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       if (src->media_filter)
-        hres = IMediaFilter_Stop (src->media_filter);
+        hres = src->media_filter->Stop();
       if (hres != S_OK) {
         GST_CAT_ERROR (dshowvideosrc_debug,
             "Can't STOP the directshow capture graph (error=%d)", hres);
@@ -604,16 +597,16 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
   HRESULT hres = S_FALSE;
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
 
-  hres = CoCreateInstance (&CLSID_FilterGraph, NULL, CLSCTX_INPROC,
-      &IID_IFilterGraph, (LPVOID *) & src->filter_graph);
+  hres = CoCreateInstance (CLSID_FilterGraph, NULL, CLSCTX_INPROC,
+      IID_IFilterGraph, (LPVOID *) & src->filter_graph);
   if (hres != S_OK || !src->filter_graph) {
     GST_CAT_ERROR (dshowvideosrc_debug,
         "Can't create an instance of the dshow graph manager (error=%d)", hres);
     goto error;
   }
 
-  hres = IFilterGraph_QueryInterface (src->filter_graph, &IID_IMediaFilter,
-      (void **) &src->media_filter);
+  hres = src->filter_graph->QueryInterface(IID_IMediaFilter, 
+    (LPVOID *) &src->media_filter);
   if (hres != S_OK || !src->media_filter) {
     GST_CAT_ERROR (dshowvideosrc_debug,
         "Can't get IMediacontrol interface from the graph manager (error=%d)",
@@ -621,8 +614,8 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
     goto error;
   }
 
-  hres = CoCreateInstance (&CLSID_DshowFakeSink, NULL, CLSCTX_INPROC,
-      &IID_IBaseFilter, (LPVOID *) & src->dshow_fakesink);
+  hres = CoCreateInstance (CLSID_DshowFakeSink, NULL, CLSCTX_INPROC,
+      IID_IBaseFilter, (LPVOID *) & src->dshow_fakesink);
   if (hres != S_OK || !src->dshow_fakesink) {
     GST_CAT_ERROR (dshowvideosrc_debug,
         "Can't create an instance of our dshow fakesink filter (error=0x%x)",
@@ -630,17 +623,14 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
     goto error;
   }
 
-  hres =
-      IFilterGraph_AddFilter (src->filter_graph, src->video_cap_filter,
-      L"capture");
+  hres = src->filter_graph->AddFilter(src->video_cap_filter, L"capture");
   if (hres != S_OK) {
     GST_CAT_ERROR (dshowvideosrc_debug,
         "Can't add video capture filter to the graph (error=%d)", hres);
     goto error;
   }
 
-  hres =
-      IFilterGraph_AddFilter (src->filter_graph, src->dshow_fakesink, L"sink");
+  hres = src->filter_graph->AddFilter(src->dshow_fakesink, L"sink");
   if (hres != S_OK) {
     GST_CAT_ERROR (dshowvideosrc_debug,
         "Can't add our fakesink filter to the graph (error=%d)", hres);
@@ -651,16 +641,16 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
 
 error:
   if (src->dshow_fakesink) {
-    IBaseFilter_Release (src->dshow_fakesink);
+    src->dshow_fakesink->Release();
     src->dshow_fakesink = NULL;
   }
 
   if (src->media_filter) {
-    IMediaFilter_Release (src->media_filter);
+    src->media_filter->Release();
     src->media_filter = NULL;
   }
   if (src->filter_graph) {
-    IFilterGraph_Release (src->filter_graph);
+    src->filter_graph->Release();
     src->filter_graph = NULL;
   }
 
@@ -699,9 +689,8 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
       if (type) {
         pin_mediatype = (GstCapturePinMediaType *) type->data;
 
-        hres =
-            IBaseFilter_QueryInterface (src->dshow_fakesink,
-            &IID_IGstDshowInterface, (void **) &srcinterface);
+        hres = src->dshow_fakesink->QueryInterface(
+            IID_IGstDshowInterface, (LPVOID *) &srcinterface);
 
         if (hres != S_OK || !srcinterface) {
           GST_CAT_ERROR (dshowvideosrc_debug,
@@ -710,14 +699,12 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           goto error;
         }
 
-        IGstDshowInterface_gst_set_media_type (srcinterface,
-            pin_mediatype->mediatype);
-        IGstDshowInterface_gst_set_buffer_callback (srcinterface,
-            (byte *) gst_dshowvideosrc_push_buffer, (byte *) src);
+        srcinterface->gst_set_media_type(pin_mediatype->mediatype);
+        srcinterface->gst_set_buffer_callback(
+          (push_buffer_func) gst_dshowvideosrc_push_buffer, (byte *) src);
 
-        if (srcinterface) {
-          IGstDshowInterface_Release (srcinterface);
-        }
+        if (srcinterface)
+          srcinterface->Release();
 
         gst_dshow_get_pin_from_filter (src->dshow_fakesink, PINDIR_INPUT,
             &input_pin);
@@ -727,10 +714,9 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           goto error;
         }
 
-        hres =
-            IFilterGraph_ConnectDirect (src->filter_graph,
-            pin_mediatype->capture_pin, input_pin, NULL);
-        IPin_Release (input_pin);
+        hres = src->filter_graph->ConnectDirect(pin_mediatype->capture_pin, 
+          input_pin, NULL);
+        input_pin->Release();
 
         if (hres != S_OK) {
           GST_CAT_ERROR (dshowvideosrc_debug,
@@ -760,9 +746,8 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   return TRUE;
 
 error:
-  if (srcinterface) {
-    IGstDshowInterface_Release (srcinterface);
-  }
+  if (srcinterface)
+    srcinterface->Release();
 
   return FALSE;
 }
@@ -781,30 +766,30 @@ gst_dshowvideosrc_stop (GstBaseSrc * bsrc)
   gst_dshow_get_pin_from_filter (src->video_cap_filter, PINDIR_OUTPUT,
       &output_pin);
   if (output_pin) {
-    hres = IFilterGraph_Disconnect (src->filter_graph, output_pin);
-    IPin_Release (output_pin);
+    hres = src->filter_graph->Disconnect(output_pin);
+    output_pin->Release();
   }
 
   gst_dshow_get_pin_from_filter (src->dshow_fakesink, PINDIR_INPUT, &input_pin);
   if (input_pin) {
-    hres = IFilterGraph_Disconnect (src->filter_graph, input_pin);
-    IPin_Release (input_pin);
+    hres = src->filter_graph->Disconnect(input_pin);
+    input_pin->Release();
   }
 
   /*remove filters from the graph */
-  IFilterGraph_RemoveFilter (src->filter_graph, src->video_cap_filter);
-  IFilterGraph_RemoveFilter (src->filter_graph, src->dshow_fakesink);
+  src->filter_graph->RemoveFilter(src->video_cap_filter);
+  src->filter_graph->RemoveFilter(src->dshow_fakesink);
 
   /*release our gstreamer dshow sink */
-  IBaseFilter_Release (src->dshow_fakesink);
+  src->dshow_fakesink->Release();
   src->dshow_fakesink = NULL;
 
   /*release media filter interface */
-  IMediaFilter_Release (src->media_filter);
+  src->media_filter->Release();
   src->media_filter = NULL;
 
   /*release the filter graph manager */
-  IFilterGraph_Release (src->filter_graph);
+  src->filter_graph->Release();
   src->filter_graph = NULL;
 
   return TRUE;
@@ -876,7 +861,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
   if (!streamcaps)
     return NULL;
 
-  IAMStreamConfig_GetNumberOfCapabilities (streamcaps, &icount, &isize);
+  streamcaps->GetNumberOfCapabilities(&icount, &isize);
 
   if (isize != sizeof (vscc))
     return NULL;
@@ -884,12 +869,10 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
   for (; i < icount; i++) {
     GstCapturePinMediaType *pin_mediatype = g_new0 (GstCapturePinMediaType, 1);
 
-    IPin_AddRef (pin);
+    pin->AddRef();
     pin_mediatype->capture_pin = pin;
 
-    hres =
-        IAMStreamConfig_GetStreamCaps (streamcaps, i, &pin_mediatype->mediatype,
-        (BYTE *) & vscc);
+    hres = streamcaps->GetStreamCaps(i, &pin_mediatype->mediatype, (BYTE *) & vscc);
     if (hres == S_OK && pin_mediatype->mediatype) {
       VIDEOINFOHEADER *video_info;
       GstCaps *mediacaps = NULL;
