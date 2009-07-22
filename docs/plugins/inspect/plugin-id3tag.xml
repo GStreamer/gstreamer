@@ -3,11 +3,11 @@
   <description>ID3 v1 and v2 muxing plugin</description>
   <filename>../../gst/id3tag/.libs/libgstid3tag.so</filename>
   <basename>libgstid3tag.so</basename>
-  <version>0.10.13</version>
+  <version>0.10.13.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
-  <origin>Unknown package origin</origin>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>id3mux</name>

@@ -3,11 +3,11 @@
   <description>CELT plugin library</description>
   <filename>../../ext/celt/.libs/libgstcelt.so</filename>
   <basename>libgstcelt.so</basename>
-  <version>0.10.13</version>
+  <version>0.10.13.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
-  <origin>Unknown package origin</origin>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>celtdec</name>

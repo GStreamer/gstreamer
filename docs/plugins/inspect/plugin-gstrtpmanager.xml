@@ -3,11 +3,11 @@
   <description>RTP session management plugin library</description>
   <filename>../../gst/rtpmanager/.libs/libgstrtpmanager.so</filename>
   <basename>libgstrtpmanager.so</basename>
-  <version>0.10.13</version>
+  <version>0.10.13.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
-  <origin>Unknown package origin</origin>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>gstrtpbin</name>
@@ -48,33 +48,6 @@
         </caps>
         <caps>
           <name>recv_rtp_sink_%d</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>application/x-rtp</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>gstrtpclient</name>
-      <longname>RTP Client</longname>
-      <class>Filter/Network/RTP</class>
-      <description>Implement an RTP client</description>
-      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
-      <pads>
-        <caps>
-          <name>rtp_src_%d_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
-          <name>sync_sink_%d</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>application/x-rtcp</details>
-        </caps>
-        <caps>
-          <name>rtp_sink_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>application/x-rtp</details>

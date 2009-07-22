@@ -105,6 +105,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/kate/gstkateparse.h \
 	$(top_srcdir)/ext/kate/gstkatetag.h \
 	$(top_srcdir)/ext/kate/gstkatetiger.h \
+        	$(top_srcdir)/ext/ladspa/gstladspa.h \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
 	$(top_srcdir)/ext/metadata/gstbasemetadata.h \
 	$(top_srcdir)/ext/metadata/gstmetadatademux.h \

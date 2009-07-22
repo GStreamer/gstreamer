@@ -18,7 +18,16 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:element-ladspa
+ * @short_description: bridge for ladspa (Linux Audio Developer's Simple Plugin API)
+ * 
+ * The ladspa (Linux Audio Developer's Simple Plugin API) element is a bridge
+ * for plugins using the <ulink url="http://www.ladspa.org/">ladspa</ulink> API.
+ * It scans all installed ladspa plugins and registeres them as gstreamer
+ * elements. If available it can also parse lrdf files and use the metadata for
+ * element classification.
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

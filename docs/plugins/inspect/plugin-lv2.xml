@@ -1,0 +1,352 @@
+<plugin>
+  <name>lv2</name>
+  <description>All LV2 plugins</description>
+  <filename>../../ext/lv2/.libs/libgstlv2.so</filename>
+  <basename>libgstlv2.so</basename>
+  <version>0.10.13.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
+  <elements>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-Compressor</name>
+      <longname>Calf Compressor</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Calf Compressor</description>
+      <author>Thor Harald Johansen</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_r</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_l</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-Filter</name>
+      <longname>Calf Filter</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Calf Filter</description>
+      <author>Krzysztof Foltman</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_r</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_l</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-Filterclavier</name>
+      <longname>Calf Filterclavier</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Calf Filterclavier</description>
+      <author>Krzysztof Foltman / Hans Baier</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_r</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_l</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-Flanger</name>
+      <longname>Calf Flanger</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Calf Flanger</description>
+      <author>Krzysztof Foltman</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_r</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_l</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-Monosynth</name>
+      <longname>Calf Monosynth</longname>
+      <class>Source/Audio/LV2</class>
+      <description>Calf Monosynth</description>
+      <author>Krzysztof Foltman</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-MultiChorus</name>
+      <longname>Calf MultiChorus</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Calf MultiChorus</description>
+      <author>Krzysztof Foltman</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_r</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_l</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-Organ</name>
+      <longname>Calf Organ</longname>
+      <class>Source/Audio/LV2</class>
+      <description>Calf Organ</description>
+      <author>Krzysztof Foltman</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-Phaser</name>
+      <longname>Calf Phaser</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Calf Phaser</description>
+      <author>Krzysztof Foltman</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_r</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_l</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-Reverb</name>
+      <longname>Calf Reverb</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Calf Reverb</description>
+      <author>Krzysztof Foltman</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_r</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_l</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-RotarySpeaker</name>
+      <longname>Calf Rotary Speaker</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Calf Rotary Speaker</description>
+      <author>Krzysztof Foltman</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_r</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_l</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---calf-sourceforge-net-plugins-VintageDelay</name>
+      <longname>Calf Vintage Delay</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Calf Vintage Delay</description>
+      <author>Krzysztof Foltman</author>
+      <pads>
+        <caps>
+          <name>out_r</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>out_l</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_r</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>in_l</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

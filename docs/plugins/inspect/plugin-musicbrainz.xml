@@ -3,11 +3,11 @@
   <description>A TRM signature producer based on libmusicbrainz</description>
   <filename>../../ext/musicbrainz/.libs/libgsttrm.so</filename>
   <basename>libgsttrm.so</basename>
-  <version>0.10.13</version>
+  <version>0.10.13.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
-  <origin>Unknown package origin</origin>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>trm</name>
