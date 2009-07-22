@@ -1369,8 +1369,9 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   }
   gst_buffer_set_caps (*out_buf, GST_PAD_CAPS (trans->srcpad));
 
-  /* clear the GAP flag when the subclass does not understand it */
-  if (!trans->priv->gap_aware)
+  /* clear the GAP flag when the subclass does not understand it
+   * and passthrough mode is not used */
+  if (!trans->priv->gap_aware && !trans->passthrough)
     GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
 
   return ret;
