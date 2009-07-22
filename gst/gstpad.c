@@ -1756,7 +1756,7 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 {
   GstCaps *srccaps;
   GstCaps *sinkcaps;
-  GstCaps *icaps;
+  gboolean compatible = FALSE;
 
   srccaps = gst_pad_get_caps_unlocked (src);
   sinkcaps = gst_pad_get_caps_unlocked (sink);
@@ -1774,36 +1774,15 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
     goto done;
   }
 
-  icaps = gst_caps_intersect (srccaps, sinkcaps);
+  compatible = gst_caps_can_intersect (srccaps, sinkcaps);
   gst_caps_unref (srccaps);
   gst_caps_unref (sinkcaps);
 
-  if (icaps == NULL)
-    goto was_null;
-
-  GST_CAT_DEBUG (GST_CAT_CAPS,
-      "intersection caps %p %" GST_PTR_FORMAT, icaps, icaps);
-
-  if (gst_caps_is_empty (icaps))
-    goto was_empty;
-
-  gst_caps_unref (icaps);
-
 done:
-  return TRUE;
+  GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible",
+      (compatible ? "" : "not"));
 
-  /* incompatible cases */
-was_null:
-  {
-    GST_CAT_DEBUG (GST_CAT_CAPS, "intersection gave NULL");
-    return FALSE;
-  }
-was_empty:
-  {
-    GST_CAT_DEBUG (GST_CAT_CAPS, "intersection is EMPTY");
-    gst_caps_unref (icaps);
-    return FALSE;
-  }
+  return compatible;
 }
 
 /* check if the grandparents of both pads are the same.
@@ -2371,9 +2350,7 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 static gboolean
 gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
 {
-  /* get the caps and see if it intersects to something
-   * not empty */
-  GstCaps *intersect;
+  /* get the caps and see if it intersects to something not empty */
   GstCaps *allowed;
   gboolean result = FALSE;
 
@@ -2385,14 +2362,9 @@ gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (pad, "allowed caps %" GST_PTR_FORMAT, allowed);
 
-  intersect = gst_caps_intersect (allowed, caps);
-
-  GST_DEBUG_OBJECT (pad, "intersection %" GST_PTR_FORMAT, intersect);
-
-  result = !gst_caps_is_empty (intersect);
+  result = gst_caps_can_intersect (allowed, caps);
 
   gst_caps_unref (allowed);
-  gst_caps_unref (intersect);
 
   return result;
 
