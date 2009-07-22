@@ -765,7 +765,9 @@ gst_dshowaudiosrc_reset (GstAudioSrc * asrc)
   GstDshowAudioSrc *src = GST_DSHOWAUDIOSRC (asrc);
 
   g_mutex_lock (src->gbarray_lock);
-  g_byte_array_remove_range (src->gbarray, 0, src->gbarray->len);
+  GST_DEBUG ("byte array size= %d", src->gbarray->len);
+  if (src->gbarray->len > 0)
+    g_byte_array_remove_range (src->gbarray, 0, src->gbarray->len);
   g_mutex_unlock (src->gbarray_lock);
 }
 
