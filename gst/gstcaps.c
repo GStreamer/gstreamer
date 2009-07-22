@@ -1179,6 +1179,132 @@ error:
   return NULL;
 }
 
+static gboolean
+gst_caps_structure_can_intersect_field (GQuark id, const GValue * val1,
+    gpointer data)
+{
+  GstStructure *other = (GstStructure *) data;
+  const GValue *val2 = gst_structure_id_get_value (other, id);
+
+  if (G_LIKELY (val2)) {
+    if (!gst_value_can_intersect (val1, val2)) {
+      return FALSE;
+    } else {
+      gint eq = gst_value_compare (val1, val2);
+
+      if (eq == GST_VALUE_UNORDERED) {
+        /* we need to try interseting */
+        GValue dest_value = { 0 };
+        if (gst_value_intersect (&dest_value, val1, val2)) {
+          g_value_unset (&dest_value);
+        } else {
+          return FALSE;
+        }
+      } else if (eq != GST_VALUE_EQUAL) {
+        return FALSE;
+      }
+    }
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_caps_structure_can_intersect (const GstStructure * struct1,
+    const GstStructure * struct2)
+{
+  g_return_val_if_fail (struct1 != NULL, FALSE);
+  g_return_val_if_fail (struct2 != NULL, FALSE);
+
+  if (G_UNLIKELY (struct1->name != struct2->name))
+    return FALSE;
+
+  /* tries to intersect if we have the field in both */
+  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
+              gst_caps_structure_can_intersect_field, (gpointer) struct2)))
+    return FALSE;
+
+  return TRUE;
+}
+
+/**
+ * gst_caps_can_intersect:
+ * @caps1: a #GstCaps to intersect
+ * @caps2: a #GstCaps to intersect
+ *
+ * Tries intersecting @caps1 and @caps2 and reports wheter the result would not
+ * be empty
+ *
+ * Returns: %TRUE if intersection would be not empty
+ *
+ * Since: 0.10.24
+ */
+gboolean
+gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
+{
+  guint64 i;                    /* index can be up to 2 * G_MAX_UINT */
+  guint j, k, len1, len2;
+  GstStructure *struct1;
+  GstStructure *struct2;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps1), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps2), FALSE);
+
+  /* caps are exactly the same pointers */
+  if (G_UNLIKELY (caps1 == caps2))
+    return TRUE;
+
+  /* empty caps on either side, return empty */
+  if (G_UNLIKELY (gst_caps_is_empty (caps1) || gst_caps_is_empty (caps2)))
+    return FALSE;
+
+  /* one of the caps is any */
+  if (G_UNLIKELY (gst_caps_is_any (caps1) || gst_caps_is_any (caps2)))
+    return TRUE;
+
+  /* run zigzag on top line then right line, this preserves the caps order
+   * much better than a simple loop.
+   *
+   * This algorithm zigzags over the caps structures as demonstrated in
+   * the folowing matrix:
+   *
+   *          caps1
+   *       +-------------
+   *       | 1  2  4  7
+   * caps2 | 3  5  8 10
+   *       | 6  9 11 12
+   *
+   * First we iterate over the caps1 structures (top line) intersecting
+   * the structures diagonally down, then we iterate over the caps2
+   * structures.
+   */
+  len1 = caps1->structs->len;
+  len2 = caps2->structs->len;
+  for (i = 0; i < len1 + len2 - 1; i++) {
+    /* superset index goes from 0 to sgst_caps_structure_intersectuperset->structs->len-1 */
+    j = MIN (i, len1 - 1);
+    /* subset index stays 0 until i reaches superset->structs->len, then it
+     * counts up from 1 to subset->structs->len - 1 */
+    k = MAX (0, i - j);
+
+    /* now run the diagonal line, end condition is the left or bottom
+     * border */
+    while (k < len2) {
+      struct1 = gst_caps_get_structure_unchecked (caps1, j);
+      struct2 = gst_caps_get_structure_unchecked (caps2, k);
+
+      if (gst_caps_structure_can_intersect (struct1, struct2)) {
+        return TRUE;
+      }
+      /* move down left */
+      k++;
+      if (G_UNLIKELY (j == 0))
+        break;                  /* so we don't roll back to G_MAXUINT */
+      j--;
+    }
+  }
+  return FALSE;
+}
+
 #if 0
 static GstStructure *
 gst_caps_structure_union (const GstStructure * struct1,

@@ -225,6 +225,8 @@ gboolean          gst_caps_is_equal		   (const GstCaps *caps1,
 						    const GstCaps *caps2);
 gboolean          gst_caps_is_equal_fixed          (const GstCaps *caps1,
 						    const GstCaps *caps2);
+gboolean          gst_caps_can_intersect           (const GstCaps * caps1,
+						    const GstCaps * caps2);
 
 
 /* operations */

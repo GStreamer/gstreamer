@@ -298,6 +298,7 @@ gst_caps_is_equal
 gst_caps_is_equal_fixed
 gst_caps_is_always_compatible
 gst_caps_is_subset
+gst_caps_can_intersect
 gst_caps_intersect
 gst_caps_union
 gst_caps_normalize
