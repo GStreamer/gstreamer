@@ -211,10 +211,9 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
   mux->tsmux = tsmux_new ();
   tsmux_set_write_func (mux->tsmux, new_packet_cb, mux);
 
-  mux->programs = g_array_sized_new (FALSE, TRUE, sizeof (TsMuxProgram *),
-      MAX_PROG_NUMBER);
+  mux->programs = g_ptr_array_new ();
   for (i = 0; i < MAX_PROG_NUMBER; i++)
-    g_array_index (mux->programs, TsMuxProgram *, i) = NULL;
+    g_ptr_array_add (mux->programs, NULL);
 
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
@@ -249,7 +248,7 @@ mpegtsmux_dispose (GObject * object)
     mux->prog_map = NULL;
   }
   if (mux->programs) {
-    g_array_free (mux->programs, TRUE);
+    g_ptr_array_free (mux->programs, TRUE);
     mux->programs = NULL;
   }
 
@@ -488,8 +487,7 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       ts_data->prog = tsmux_program_new (mux->tsmux);
       if (ts_data->prog == NULL)
         goto no_program;
-      g_array_index (mux->programs, TsMuxProgram *, ts_data->prog_id)
-          = ts_data->prog;
+      g_ptr_array_index (mux->programs, ts_data->prog_id) = ts_data->prog;
     }
 
     if (ts_data->stream == NULL) {
