@@ -32,15 +32,12 @@
  * gcc `pkg-config --cflags --libs gstreamer-0.10` gst-camera-perf.c -ogst-camera-perf
  *
  * plain linux:
- * ./gst-camera-perf --src-colorspace=YUY2 --image-width=640 --image-height=480 --view-framerate-num=15 --view-framerate-den=1
+ * ./gst-camera-perf --src-colorspace=YUY2 --image-width=640 --image-height=480 --video-width=640 --video-height=480 --view-framerate-num=15 --view-framerate-den=1
  *
  * maemo:
- * ./gst-camera-perf --src-colorspace=UYVY --image-width=640 --image-height=480 --view-framerate-num=1491 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux
- * ./gst-camera-perf --src-colorspace=UYVY --image-width=640 --image-height=480 --view-framerate-num=2999 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux
- * ./gst-camera-perf --src-colorspace=UYVY --image-width=2592 --image-height=1968 --view-framerate-num=399 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux
- * ./gst-camera-perf --src-colorspace=UYVY --image-width=2592 --image-height=1968 --view-framerate-num=325 --view-framerate-den=25 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux --image-enc=dspjpegenc
- * ./gst-camera-perf --src-colorspace=UYVY --image-width=640 --image-height=480 --view-framerate-num=1491 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=dspmpeg4enc --video-mux=hantromp4mux --image-enc=dspjpegenc --target-times=1000,1500,1500,2000,500,2000,3500,1000,1000
- * ./gst-camera-perf --src-colorspace=UYVY --image-width=2576 --image-height=1936 --view-framerate-num=1491 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=omx_mpeg4enc --video-mux=hantromp4mux
+ * ./gst-camera-perf --src-colorspace=UYVY --image-width=640 --image-height=480 --video-width=640 --video-height=480 --view-framerate-num=1491 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=dspmpeg4enc --video-mux=hantromp4mux --image-enc=dspjpegenc --target-times=1000,1500,1500,2000,500,2000,3500,1000,1000
+ * ./gst-camera-perf --src-colorspace=UYVY --image-width=2576 --image-height=1936 --video-width=640 --video-height=480 --view-framerate-num=2999 --view-framerate-den=100 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=dspmpeg4enc --video-mux=hantromp4mux
+ * ./gst-camera-perf --src-colorspace=UYVY --image-width=2576 --image-height=1936 --video-width=640 --video-height=480 --view-framerate-num=126 --view-framerate-den=5 --video-src=v4l2camsrc --audio-enc=nokiaaacenc --video-enc=dspmpeg4enc --video-mux=hantromp4mux --image-enc=dspjpegenc
  */
 
 /*
@@ -108,6 +105,8 @@ static gchar *videomux_name = NULL;
 static gchar *src_csp = NULL;
 static gint image_width = 0;
 static gint image_height = 0;
+static gint video_width = 0;
+static gint video_height = 0;
 static gint view_framerate_num = 0;
 static gint view_framerate_den = 0;
 
@@ -188,15 +187,15 @@ pad_has_buffer (GstPad * pad, GstBuffer * buf, gpointer user_data)
     GET_TIME (t_final[0]);
     GST_DEBUG_OBJECT (pad, "%2d pad has buffer", test_ix);
     switch (test_ix) {
-      case 5:
+      case 5:                  // shutter lag
         DIFF_TIME (t_final[num_pics_cont], t_initial, diff);
         result.avg = result.min = result.max = diff;
         print_and_restart = TRUE;
         break;
-      case 8:
+      case 8:                  // video recording start
         DIFF_TIME (t_final[num_pics_cont], t_initial, diff);
         result.avg = result.min = result.max = diff;
-        g_signal_emit_by_name (camera_bin, "user-stop", 0);
+        //g_signal_emit_by_name (camera_bin, "user-stop", 0);
         print_and_restart = TRUE;
         break;
       default:
@@ -207,7 +206,6 @@ pad_has_buffer (GstPad * pad, GstBuffer * buf, gpointer user_data)
   if (print_and_restart) {
     print_result ();
     g_idle_add ((GSourceFunc) run_test, NULL);
-    return FALSE;
   }
   return TRUE;
 }
@@ -382,12 +380,16 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
         if (GST_MESSAGE_SRC (message) == GST_OBJECT (camera_bin)) {
           if (GST_STATE_TRANSITION (oldstate,
                   newstate) == GST_STATE_CHANGE_PAUSED_TO_PLAYING) {
-            GET_TIME (t_final[0]);
-            DIFF_TIME (t_final[0], t_initial, diff);
+            switch (test_ix) {
+              case 0:          // camera on
+                GET_TIME (t_final[0]);
+                DIFF_TIME (t_final[0], t_initial, diff);
 
-            result.avg = result.min = result.max = diff;
-            print_result ();
-            g_idle_add ((GSourceFunc) run_test, NULL);
+                result.avg = result.min = result.max = diff;
+                print_result ();
+                g_idle_add ((GSourceFunc) run_test, NULL);
+                break;
+            }
           }
         }
       }
@@ -442,7 +444,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             GST_INFO ("preview : buf=%p, size=%d, format=%" GST_PTR_FORMAT,
                 buf, GST_BUFFER_SIZE (buf), caps);
 
-            data = g_memdup (GST_BUFFER_DATA (buff), GST_BUFFER_SIZE (buff));
+            data = GST_BUFFER_DATA (buff);
             gst_structure_get_int (buf_st, "width", &width);
             gst_structure_get_int (buf_st, "height", &height);
             rowstride = GST_ROUND_UP_4 (width * 3);
@@ -621,10 +623,15 @@ setup_pipeline (void)
   }
   GST_INFO_OBJECT (camera_bin, "probe signals connected");
 
-  /* configure a resolution and framerate */
-  if (image_width && image_height && view_framerate_num && view_framerate_den) {
-    g_signal_emit_by_name (camera_bin, "user-res-fps", image_width,
-        image_height, view_framerate_num, view_framerate_den, NULL);
+  /* configure a resolution and framerate for video and viewfinder */
+  if (image_width && image_height) {
+    g_signal_emit_by_name (camera_bin, "user-image-res", image_width,
+        image_height, NULL);
+  }
+  /* configure a resolution and framerate for video and viewfinder */
+  if (video_width && video_height && view_framerate_num && view_framerate_den) {
+    g_signal_emit_by_name (camera_bin, "user-res-fps", video_width,
+        video_height, view_framerate_num, view_framerate_den, NULL);
   }
 
   if (GST_STATE_CHANGE_FAILURE ==
@@ -866,7 +873,11 @@ static test_case test_cases[TEST_CASES] = {
 static void
 print_result (void)
 {
-  printf ("| %6.02f%% ", 100.0f * (float) result.max / (float) target[test_ix]);
+  if (test_ix >= TEST_CASES) {
+    GST_WARNING ("text case index overrun");
+    return;
+  }
+  printf ("| %6.02f%% ", 100.0f * (float) result.avg / (float) target[test_ix]);
   printf ("|%5u ms ", (guint) GST_TIME_AS_MSECONDS (target[test_ix]));
   printf ("|%5u ms ", (guint) GST_TIME_AS_MSECONDS (result.avg));
   printf ("|%5u ms ", (guint) GST_TIME_AS_MSECONDS (result.min));
@@ -889,6 +900,7 @@ run_test (gpointer user_data)
   }
 
   printf ("|  %02d  ", test_ix + 1);
+  fflush (stdout);
   if (test_cases[test_ix]) {
     if (target[test_ix]) {
       memset (&result, 0, sizeof (ResultType));
@@ -908,6 +920,7 @@ run_test (gpointer user_data)
     printf ("| %-19s |\n", test_names[test_ix]);
     test_ix++;
   }
+  fflush (stdout);
 
   if (old_test_ix == 0 && ret == TRUE && !camera_bin) {
     GST_INFO ("done (camerabin creation failed)");
@@ -948,6 +961,10 @@ main (int argc, char *argv[])
     {"image-width", '\0', 0, G_OPTION_ARG_INT, &image_width,
         "width for image capture", NULL},
     {"image-height", '\0', 0, G_OPTION_ARG_INT, &image_height,
+        "height for image capture", NULL},
+    {"video-width", '\0', 0, G_OPTION_ARG_INT, &video_width,
+        "width for image capture", NULL},
+    {"video-height", '\0', 0, G_OPTION_ARG_INT, &video_height,
         "height for image capture", NULL},
     {"view-framerate-num", '\0', 0, G_OPTION_ARG_INT, &view_framerate_num,
         "framerate numerator for viewfinder", NULL},
