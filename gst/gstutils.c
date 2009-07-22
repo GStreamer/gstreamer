@@ -635,6 +635,7 @@ gst_element_get_compatible_pad_template (GstElement * element,
   GstPadTemplate *newtempl = NULL;
   GList *padlist;
   GstElementClass *class;
+  gboolean compatible;
 
   g_return_val_if_fail (element != NULL, NULL);
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
@@ -650,7 +651,6 @@ gst_element_get_compatible_pad_template (GstElement * element,
 
   while (padlist) {
     GstPadTemplate *padtempl = (GstPadTemplate *) padlist->data;
-    GstCaps *intersection;
 
     /* Ignore name
      * Ignore presence
@@ -670,17 +670,16 @@ gst_element_get_compatible_pad_template (GstElement * element,
       GST_CAT_DEBUG (GST_CAT_CAPS,
           "..and %" GST_PTR_FORMAT, GST_PAD_TEMPLATE_CAPS (padtempl));
 
-      intersection = gst_caps_intersect (GST_PAD_TEMPLATE_CAPS (compattempl),
+      compatible = gst_caps_can_intersect (GST_PAD_TEMPLATE_CAPS (compattempl),
           GST_PAD_TEMPLATE_CAPS (padtempl));
 
-      GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible %" GST_PTR_FORMAT,
-          (intersection ? "" : "not "), intersection);
+      GST_CAT_DEBUG (GST_CAT_CAPS, "caps are %scompatible",
+          (compatible ? "" : "not "));
 
-      if (!gst_caps_is_empty (intersection))
+      if (compatible) {
         newtempl = padtempl;
-      gst_caps_unref (intersection);
-      if (newtempl)
         break;
+      }
     }
 
     padlist = g_list_next (padlist);
@@ -894,7 +893,8 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
         peer = gst_pad_get_peer (current);
 
         if (peer == NULL && gst_pad_check_link (pad, current)) {
-          GstCaps *temp, *temp2, *intersection;
+          GstCaps *temp, *intersection;
+          gboolean compatible;
 
           /* Now check if the two pads' caps are compatible */
           temp = gst_pad_get_caps (pad);
@@ -906,15 +906,11 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
           }
 
           temp = gst_pad_get_caps (current);
-          temp2 = gst_caps_intersect (temp, intersection);
+          compatible = gst_caps_can_intersect (temp, intersection);
           gst_caps_unref (temp);
           gst_caps_unref (intersection);
 
-          intersection = temp2;
-
-          if (!gst_caps_is_empty (intersection)) {
-            gst_caps_unref (intersection);
-
+          if (compatible) {
             GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
                 "found existing unlinked compatible pad %s:%s",
                 GST_DEBUG_PAD_NAME (current));
@@ -924,7 +920,6 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
           } else {
             GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "incompatible pads");
           }
-          gst_caps_unref (intersection);
         } else {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
               "already linked or cannot be linked (peer = %p)", peer);
