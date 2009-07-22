@@ -2,7 +2,7 @@
 # ensure everything's listed in EXTRA_DIST
 
 EXTRA_DIST = \
-  gstdshowaudiosrc.c \
+  gstdshowaudiosrc.cpp \
   gstdshowaudiosrc.h \
   gstdshow.cpp \
   gstdshowfakesink.cpp \
@@ -10,5 +10,5 @@ EXTRA_DIST = \
   gstdshow.h \
   gstdshowinterface.h \
   gstdshowsrcwrapper.cpp \
-  gstdshowvideosrc.c \
+  gstdshowvideosrc.cpp \
   gstdshowvideosrc.h
