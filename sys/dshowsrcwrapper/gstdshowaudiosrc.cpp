@@ -166,13 +166,14 @@ gst_dshowaudiosrc_class_init (GstDshowAudioSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
-          "Directshow device reference (classID/name)",
-          NULL, G_PARAM_READWRITE));
+          "Directshow device reference (classID/name)", NULL,
+          static_cast<GParamFlags>(G_PARAM_READWRITE)));
 
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", NULL, G_PARAM_READWRITE));
+          "Human-readable name of the sound device", NULL, 
+          static_cast<GParamFlags>(G_PARAM_READWRITE)));
 
   GST_DEBUG_CATEGORY_INIT (dshowaudiosrc_debug, "dshowaudiosrc", 0,
       "Directshow audio source");
@@ -234,9 +235,8 @@ gst_dshowaudiosrc_dispose (GObject * gobject)
   }
 
   /* clean dshow */
-  if (src->audio_cap_filter) {
-    IBaseFilter_Release (src->audio_cap_filter);
-  }
+  if (src->audio_cap_filter)
+    src->audio_cap_filter->Release();
 
   CoUninitialize ();
 
@@ -273,8 +273,8 @@ gst_dshowaudiosrc_get_device_name_values (GstDshowAudioSrc * src)
 
   g_value_init (&value, G_TYPE_STRING);
 
-  hres = CoCreateInstance (&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
-      &IID_ICreateDevEnum, (void **) &devices_enum);
+  hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
+      IID_ICreateDevEnum, (LPVOID *) &devices_enum);
   if (hres != S_OK) {
     GST_CAT_ERROR (dshowaudiosrc_debug,
         "Can't create an instance of the system device enumerator (error=%d)",
@@ -283,9 +283,8 @@ gst_dshowaudiosrc_get_device_name_values (GstDshowAudioSrc * src)
     goto clean;
   }
 
-  hres =
-      ICreateDevEnum_CreateClassEnumerator (devices_enum,
-      &CLSID_AudioInputDeviceCategory, &moniker_enum, 0);
+  hres = devices_enum->CreateClassEnumerator(CLSID_AudioInputDeviceCategory, 
+    &moniker_enum, 0);
   if (hres != S_OK || !moniker_enum) {
     GST_CAT_ERROR (dshowaudiosrc_debug,
         "Can't get enumeration of audio devices (error=%d)", hres);
@@ -293,22 +292,19 @@ gst_dshowaudiosrc_get_device_name_values (GstDshowAudioSrc * src)
     goto clean;
   }
 
-  IEnumMoniker_Reset (moniker_enum);
+  moniker_enum->Reset();
 
-  while (hres = IEnumMoniker_Next (moniker_enum, 1, &moniker, &fetched),
+  while (hres = moniker_enum->Next(1, &moniker, &fetched),
       hres == S_OK) {
     IPropertyBag *property_bag = NULL;
 
-    hres =
-        IMoniker_BindToStorage (moniker, NULL, NULL, &IID_IPropertyBag,
-        (void **) &property_bag);
+    hres = moniker->BindToStorage(NULL, NULL, IID_IPropertyBag, 
+      (LPVOID *) &property_bag);
     if (SUCCEEDED (hres) && property_bag) {
       VARIANT varFriendlyName;
 
       VariantInit (&varFriendlyName);
-      hres =
-          IPropertyBag_Read (property_bag, L"FriendlyName", &varFriendlyName,
-          NULL);
+      hres = property_bag->Read(L"FriendlyName", &varFriendlyName, NULL);
       if (hres == S_OK && varFriendlyName.bstrVal) {
         gchar *friendly_name =
             g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
@@ -320,19 +316,17 @@ gst_dshowaudiosrc_get_device_name_values (GstDshowAudioSrc * src)
         g_free (friendly_name);
         SysFreeString (varFriendlyName.bstrVal);
       }
-      IPropertyBag_Release (property_bag);
+      property_bag->Release();
     }
-    IMoniker_Release (moniker);
+    moniker->Release();
   }
 
 clean:
-  if (moniker_enum) {
-    IEnumMoniker_Release (moniker_enum);
-  }
+  if (moniker_enum)
+    moniker_enum->Release();
 
-  if (devices_enum) {
-    ICreateDevEnum_Release (devices_enum);
-  }
+  if (devices_enum)
+    devices_enum->Release();
 
   return array;
 }
@@ -415,14 +409,13 @@ gst_dshowaudiosrc_get_caps (GstBaseSrc * basesrc)
   if (!src->audio_cap_filter) {
     hres = CreateBindCtx (0, &lpbc);
     if (SUCCEEDED (hres)) {
-      hres = MkParseDisplayName (lpbc, unidevice, &dwEaten, &audiom);
+      hres = MkParseDisplayName (lpbc, (LPCOLESTR) unidevice, &dwEaten, &audiom);
       if (SUCCEEDED (hres)) {
-        hres =
-            IMoniker_BindToObject (audiom, lpbc, NULL, &IID_IBaseFilter,
-            &src->audio_cap_filter);
-        IMoniker_Release (audiom);
+        hres = audiom->BindToObject(lpbc, NULL, IID_IBaseFilter, 
+          (LPVOID *) &src->audio_cap_filter);
+        audiom->Release();
       }
-      IBindCtx_Release (lpbc);
+      lpbc->Release();
     }
   }
 
@@ -432,21 +425,19 @@ gst_dshowaudiosrc_get_caps (GstBaseSrc * basesrc)
     IEnumPins *enumpins = NULL;
     HRESULT hres;
 
-    hres = IBaseFilter_EnumPins (src->audio_cap_filter, &enumpins);
+    hres = src->audio_cap_filter->EnumPins(&enumpins);
     if (SUCCEEDED (hres)) {
-      while (IEnumPins_Next (enumpins, 1, &capture_pin, NULL) == S_OK) {
+      while (enumpins->Next(1, &capture_pin, NULL) == S_OK) {
         IKsPropertySet *pKs = NULL;
 
-        hres =
-            IPin_QueryInterface (capture_pin, &IID_IKsPropertySet,
-            (void **) &pKs);
+        hres = capture_pin->QueryInterface(IID_IKsPropertySet, (LPVOID *) &pKs);
         if (SUCCEEDED (hres) && pKs) {
           DWORD cbReturned;
           GUID pin_category;
           RPC_STATUS rpcstatus;
 
           hres =
-              IKsPropertySet_Get (pKs, &AMPROPSETID_Pin,
+              pKs->Get(AMPROPSETID_Pin,
               AMPROPERTY_PIN_CATEGORY, NULL, 0, &pin_category, sizeof (GUID),
               &cbReturned);
 
@@ -455,19 +446,18 @@ gst_dshowaudiosrc_get_caps (GstBaseSrc * basesrc)
                   &rpcstatus) == 0) {
             IAMStreamConfig *streamcaps = NULL;
 
-            if (SUCCEEDED (IPin_QueryInterface (capture_pin,
-                        &IID_IAMStreamConfig, (void **) &streamcaps))) {
+            if (SUCCEEDED (capture_pin->QueryInterface(IID_IAMStreamConfig, (LPVOID *) &streamcaps))) {
               src->caps =
                   gst_dshowaudiosrc_getcaps_from_streamcaps (src, capture_pin,
                   streamcaps);
-              IAMStreamConfig_Release (streamcaps);
+              streamcaps->Release();
             }
           }
-          IKsPropertySet_Release (pKs);
+          pKs->Release();
         }
-        IPin_Release (capture_pin);
+        capture_pin->Release();
       }
-      IEnumPins_Release (enumpins);
+      enumpins->Release();
     }
   }
 
@@ -495,7 +485,7 @@ gst_dshowaudiosrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       if (src->media_filter)
-        hres = IMediaFilter_Run (src->media_filter, 0);
+        hres = src->media_filter->Run(0);
       if (hres != S_OK) {
         GST_CAT_ERROR (dshowaudiosrc_debug,
             "Can't RUN the directshow capture graph (error=%d)", hres);
@@ -507,7 +497,7 @@ gst_dshowaudiosrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       if (src->media_filter)
-        hres = IMediaFilter_Stop (src->media_filter);
+        hres = src->media_filter->Stop();
       if (hres != S_OK) {
         GST_CAT_ERROR (dshowaudiosrc_debug,
             "Can't STOP the directshow capture graph (error=%d)", hres);
@@ -533,8 +523,8 @@ gst_dshowaudiosrc_open (GstAudioSrc * asrc)
   HRESULT hres = S_FALSE;
   GstDshowAudioSrc *src = GST_DSHOWAUDIOSRC (asrc);
 
-  hres = CoCreateInstance (&CLSID_FilterGraph, NULL, CLSCTX_INPROC,
-      &IID_IFilterGraph, (LPVOID *) & src->filter_graph);
+  hres = CoCreateInstance (CLSID_FilterGraph, NULL, CLSCTX_INPROC,
+      IID_IFilterGraph, (LPVOID *) & src->filter_graph);
   if (hres != S_OK || !src->filter_graph) {
     GST_CAT_ERROR (dshowaudiosrc_debug,
         "Can't create an instance of the directshow graph manager (error=%d)",
@@ -542,8 +532,7 @@ gst_dshowaudiosrc_open (GstAudioSrc * asrc)
     goto error;
   }
 
-  hres = IFilterGraph_QueryInterface (src->filter_graph, &IID_IMediaFilter,
-      (void **) &src->media_filter);
+  hres = src->filter_graph->QueryInterface(IID_IMediaFilter, (LPVOID *) &src->media_filter);
   if (hres != S_OK || !src->media_filter) {
     GST_CAT_ERROR (dshowaudiosrc_debug,
         "Can't get IMediacontrol interface from the graph manager (error=%d)",
@@ -551,17 +540,15 @@ gst_dshowaudiosrc_open (GstAudioSrc * asrc)
     goto error;
   }
 
-  hres = CoCreateInstance (&CLSID_DshowFakeSink, NULL, CLSCTX_INPROC,
-      &IID_IBaseFilter, (LPVOID *) & src->dshow_fakesink);
+  hres = CoCreateInstance (CLSID_DshowFakeSink, NULL, CLSCTX_INPROC,
+      IID_IBaseFilter, (LPVOID *) & src->dshow_fakesink);
   if (hres != S_OK || !src->dshow_fakesink) {
     GST_CAT_ERROR (dshowaudiosrc_debug,
         "Can't create an instance of the directshow fakesink (error=%d)", hres);
     goto error;
   }
 
-  hres =
-      IFilterGraph_AddFilter (src->filter_graph, src->audio_cap_filter,
-      L"capture");
+  hres = src->filter_graph->AddFilter(src->audio_cap_filter, L"capture");
   if (hres != S_OK) {
     GST_CAT_ERROR (dshowaudiosrc_debug,
         "Can't add the directshow capture filter to the graph (error=%d)",
@@ -569,9 +556,7 @@ gst_dshowaudiosrc_open (GstAudioSrc * asrc)
     goto error;
   }
 
-  hres =
-      IFilterGraph_AddFilter (src->filter_graph, src->dshow_fakesink,
-      L"fakesink");
+  hres = src->filter_graph->AddFilter(src->dshow_fakesink, L"fakesink");
   if (hres != S_OK) {
     GST_CAT_ERROR (dshowaudiosrc_debug,
         "Can't add our fakesink filter to the graph (error=%d)", hres);
@@ -582,16 +567,16 @@ gst_dshowaudiosrc_open (GstAudioSrc * asrc)
 
 error:
   if (src->dshow_fakesink) {
-    IBaseFilter_Release (src->dshow_fakesink);
+    src->dshow_fakesink->Release();
     src->dshow_fakesink = NULL;
   }
 
   if (src->media_filter) {
-    IMediaFilter_Release (src->media_filter);
+    src->media_filter->Release();
     src->media_filter = NULL;
   }
   if (src->filter_graph) {
-    IFilterGraph_Release (src->filter_graph);
+    src->filter_graph->Release();
     src->filter_graph = NULL;
   }
 
@@ -628,9 +613,7 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
       if (type) {
         pin_mediatype = (GstCapturePinMediaType *) type->data;
 
-        hres =
-            IBaseFilter_QueryInterface (src->dshow_fakesink,
-            &IID_IGstDshowInterface, (void **) &srcinterface);
+        hres = src->dshow_fakesink->QueryInterface(IID_IGstDshowInterface, (LPVOID *) &srcinterface);
         if (hres != S_OK || !srcinterface) {
           GST_CAT_ERROR (dshowaudiosrc_debug,
               "Can't get IGstDshowInterface interface from our dshow fakesink filter (error=%d)",
@@ -638,14 +621,12 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
           goto error;
         }
 
-        IGstDshowInterface_gst_set_media_type (srcinterface,
-            pin_mediatype->mediatype);
-        IGstDshowInterface_gst_set_buffer_callback (srcinterface,
-            (byte *) gst_dshowaudiosrc_push_buffer, (byte *) src);
+        srcinterface->gst_set_media_type(pin_mediatype->mediatype);
+        srcinterface->gst_set_buffer_callback(
+          (push_buffer_func) gst_dshowaudiosrc_push_buffer, (byte *) src);
 
-        if (srcinterface) {
-          IGstDshowInterface_Release (srcinterface);
-        }
+        if (srcinterface)
+          srcinterface->Release();
 
         gst_dshow_get_pin_from_filter (src->dshow_fakesink, PINDIR_INPUT,
             &input_pin);
@@ -655,10 +636,9 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
           goto error;
         }
 
-        hres =
-            IFilterGraph_ConnectDirect (src->filter_graph,
-            pin_mediatype->capture_pin, input_pin, NULL);
-        IPin_Release (input_pin);
+        hres = src->filter_graph->ConnectDirect(pin_mediatype->capture_pin, 
+          input_pin, NULL);
+        input_pin->Release();
 
         if (hres != S_OK) {
           GST_CAT_ERROR (dshowaudiosrc_debug,
@@ -676,9 +656,8 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   return TRUE;
 
 error:
-  if (srcinterface) {
-    IGstDshowInterface_Release (srcinterface);
-  }
+  if (srcinterface)
+    srcinterface->Release();
 
   return FALSE;
 }
@@ -694,14 +673,14 @@ gst_dshowaudiosrc_unprepare (GstAudioSrc * asrc)
   gst_dshow_get_pin_from_filter (src->audio_cap_filter, PINDIR_OUTPUT,
       &output_pin);
   if (output_pin) {
-    hres = IFilterGraph_Disconnect (src->filter_graph, output_pin);
-    IPin_Release (output_pin);
+    hres = src->filter_graph->Disconnect(output_pin);
+    output_pin->Release();
   }
 
   gst_dshow_get_pin_from_filter (src->dshow_fakesink, PINDIR_INPUT, &input_pin);
   if (input_pin) {
-    hres = IFilterGraph_Disconnect (src->filter_graph, input_pin);
-    IPin_Release (input_pin);
+    hres = src->filter_graph->Disconnect(input_pin);
+    input_pin->Release();
   }
 
   return TRUE;
@@ -716,19 +695,19 @@ gst_dshowaudiosrc_close (GstAudioSrc * asrc)
     return TRUE;
 
   /*remove filters from the graph */
-  IFilterGraph_RemoveFilter (src->filter_graph, src->audio_cap_filter);
-  IFilterGraph_RemoveFilter (src->filter_graph, src->dshow_fakesink);
+  src->filter_graph->RemoveFilter(src->audio_cap_filter);
+  src->filter_graph->RemoveFilter(src->dshow_fakesink);
 
   /*release our gstreamer dshow sink */
-  IBaseFilter_Release (src->dshow_fakesink);
+  src->dshow_fakesink->Release();
   src->dshow_fakesink = NULL;
 
   /*release media filter interface */
-  IMediaFilter_Release (src->media_filter);
+  src->media_filter->Release();
   src->media_filter = NULL;
 
   /*release the filter graph manager */
-  IFilterGraph_Release (src->filter_graph);
+  src->filter_graph->Release();
   src->filter_graph = NULL;
 
   return TRUE;
@@ -805,7 +784,7 @@ gst_dshowaudiosrc_getcaps_from_streamcaps (GstDshowAudioSrc * src, IPin * pin,
   if (!streamcaps)
     return NULL;
 
-  IAMStreamConfig_GetNumberOfCapabilities (streamcaps, &icount, &isize);
+  streamcaps->GetNumberOfCapabilities(&icount, &isize);
 
   if (isize != sizeof (ascc))
     return NULL;
@@ -813,11 +792,10 @@ gst_dshowaudiosrc_getcaps_from_streamcaps (GstDshowAudioSrc * src, IPin * pin,
   for (; i < icount; i++) {
     GstCapturePinMediaType *pin_mediatype = g_new0 (GstCapturePinMediaType, 1);
 
-    IPin_AddRef (pin);
+    pin->AddRef();
     pin_mediatype->capture_pin = pin;
 
-    hres =
-        IAMStreamConfig_GetStreamCaps (streamcaps, i, &pin_mediatype->mediatype,
+    hres = streamcaps->GetStreamCaps(i, &pin_mediatype->mediatype,
         (BYTE *) & ascc);
     if (hres == S_OK && pin_mediatype->mediatype) {
       GstCaps *mediacaps = NULL;

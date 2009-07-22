@@ -224,7 +224,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\sys\dshowsrcwrapper\gstdshowaudiosrc.c"
+				RelativePath="..\..\sys\dshowsrcwrapper\gstdshowaudiosrc.cpp"
 				>
 			</File>
 			<File
