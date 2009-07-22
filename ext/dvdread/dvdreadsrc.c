@@ -607,7 +607,7 @@ commands_only_pgc:
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("Could not open DVD title %d. Interactive titles are not supported "
                 "by this element"), title_set_nr),
-        ("Commands-only PGC, not supported, use dvdnavsrc"));
+        ("Commands-only PGC, not supported, use rsndvdbin"));
     return FALSE;
   }
 }

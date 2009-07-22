@@ -19,9 +19,7 @@ The plugins which use a GPL library are as follows:
 
 a52dec           liba52           (http://liba52.sourceforge.net/)
 aasink           aalib            (http://sourceforge.net/projects/aa-project/)
-cdparanoia       libcdparanoia    (http://www.xiph.org/paranoia/)
 dtsdec           libdts           (http://www.videolan.org/dtsdec.html)
-dvdnavsrc        libdvdnav        (http://dvd.sourceforge.net/)
 dxr3                              (http://dxr3.sourceforge.net/)
 icecastsend      libshout         (http://www.icecast.org)
 mad              libmad           (http://www.mars.org/home/rob/proj/mpeg/)

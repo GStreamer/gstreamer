@@ -254,42 +254,6 @@ AG_GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
   AC_SUBST(DVDREAD_LIBS)
 ])
 
-dnl *** dvdnav ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_DVDNAV, true)
-AG_GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnav, [
-  translit(dnm, m, l) AC_SUBST(DVDNAV_LIBS)
-  translit(dnm, m, l) AC_SUBST(DVDNAV_CFLAGS)
-  AG_GST_CHECK_CONFIGPROG(DVDNAV, dvdnav-config)
-  if test x"$HAVE_DVDNAV" = x"yes"; then
-    dnl check version
-    DVDNAV_VERSION=`dvdnav-config --version|head -n 1|sed 's/^.*) //'|sed 's/ (.*)//'`
-    DVDNAV_MAJOR=`echo $DVDNAV_VERSION | cut -d. -f1 | sed s/[a-zA-Z\-].*//g`
-    DVDNAV_MINOR=`echo $DVDNAV_VERSION | cut -d. -f2 | sed s/[a-zA-Z\-].*//g`
-    DVDNAV_MICRO=`echo $DVDNAV_VERSION | cut -d. -f3 | sed s/[a-zA-Z\-].*//g`
-    if [[ "$DVDNAV_MAJOR" -eq "0" ]] && \
-       [[ "$DVDNAV_MINOR" -lt "1" ]]; then
-      AC_MSG_WARN([libdvdnav >= 0.1.7 is required, you have $DVDNAV_VERSION])
-      HAVE_DVDNAV="no"
-    elif [[ "$DVDNAV_MAJOR" -eq "0" ]] && \
-         [[ "$DVDNAV_MINOR" -eq "1" ]] && \
-         [[ "$DVDNAV_MICRO" -lt "7" ]]; then
-      AC_MSG_WARN([libdvdnav >= 0.1.7 is required, you have $DVDNAV_VERSION])
-      HAVE_DVDNAV="no"
-    fi
-  fi
-  dnl now check for dvdread/nav_print.h - see #133002
-  AC_CHECK_HEADER(dvdread/nav_print.h, , [
-      AC_MSG_WARN([header dvdread/nav_print.h from dvdread missing])
-      HAVE_DVDNAV="no"
-  ])
-  AS_SCRUB_INCLUDE(DVDNAV_CFLAGS)
-
-  dnl disabled until plugin is fully functional
-  HAVE_DVDNAV=no
-], disabled, , [
-  AC_MSG_NOTICE([dvdnavsrc not stable yet, not building])
-])
-
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
 AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
@@ -409,7 +373,6 @@ AM_CONDITIONAL(USE_A52DEC, false)
 AM_CONDITIONAL(USE_AMRNB, false)
 AM_CONDITIONAL(USE_CDIO, false)
 AM_CONDITIONAL(USE_DVDREAD, false)
-AM_CONDITIONAL(USE_DVDNAV, false)
 AM_CONDITIONAL(USE_LAME, false)
 AM_CONDITIONAL(USE_ID3TAG, false)
 AM_CONDITIONAL(USE_MAD, false)
@@ -496,7 +459,6 @@ ext/Makefile
 ext/a52dec/Makefile
 ext/amrnb/Makefile
 ext/cdio/Makefile
-ext/dvdnav/Makefile
 ext/dvdread/Makefile
 ext/lame/Makefile
 ext/mad/Makefile

@@ -22,12 +22,6 @@ else
  DVDREAD_DIR =
 endif
 
-if USE_DVDNAV
- DVDNAV_DIR = dvdnav
-else
- DVDNAV_DIR =
-endif
-
 if USE_LAME
 LAME_DIR = lame
 else
@@ -69,7 +63,6 @@ SUBDIRS = \
 	$(AMRNB_DIR) \
 	$(CDIO_DIR) \
 	$(DVDREAD_DIR) \
-	$(DVDNAV_DIR) \
 	$(LAME_DIR) \
 	$(MAD_DIR) \
 	$(MPEG2DEC_DIR) \
@@ -81,7 +74,6 @@ DIST_SUBDIRS = \
 	a52dec \
 	amrnb \
 	cdio \
-	dvdnav \
 	dvdread \
 	lame \
 	mad \

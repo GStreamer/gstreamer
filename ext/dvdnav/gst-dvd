@@ -1,9 +1,0 @@
-#!/bin/sh
-
-AUDIOSINK=`gconftool-2 -g /system/gstreamer/0.10/default/audiosink`
-VIDEOSINK=`gconftool-2 -g /system/gstreamer/0.10/default/videosink`
-gst-launch dvdnavsrc ! dvddemux name=demux multiqueue name=mq \
-demux.current_video ! mq.sink0 mq.src0 ! mpeg2dec ! dvdspu name=sub ! \
-navseek ! ffmpegcolorspace ! videoscale ! $VIDEOSINK \
-demux.current_subpicture ! mq.sink1 mq.src1 ! sub.subpicture \
-demux.current_audio ! mq.sink2 mq.src2 ! a52dec ! audioconvert ! audioresample ! $AUDIOSINK $@

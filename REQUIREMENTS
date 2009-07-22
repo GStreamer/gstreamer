@@ -66,10 +66,6 @@ raw1394/linux1394	(for the dv plugin)
 libdvdread	(for the dvdsrc)
 			http://www.dtek.chalmers.se/groups/dvd/
 			(optional: libcss for encrypted DVDs)
-libdvdnav	(for the dvdnavsrc)
-			http://dvd.sourceforge.net/
-			(optional: libcss for encrypted DVDs)
-		>= 0.1.9
 libesound	(for the esd sink 
 			ftp.gnome.org/pub/GNOME/stable/sources/esound)
 gnome-vfs	(for the gnome-vfs src)
