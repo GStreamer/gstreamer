@@ -1716,7 +1716,7 @@ no_buffer:
 info_failed:
   {
     GST_ELEMENT_ERROR (psink, RESOURCE, FAILED,
-        ("pa_stream_get_sink_input_info() failed: %s",
+        ("pa_context_get_sink_input_info() failed: %s",
             pa_strerror (pa_context_errno (pbuf->context))), (NULL));
     goto unlock;
   }
@@ -1789,7 +1789,7 @@ no_buffer:
 info_failed:
   {
     GST_ELEMENT_ERROR (psink, RESOURCE, FAILED,
-        ("pa_stream_get_sink_info() failed: %s",
+        ("pa_context_get_sink_info_by_index() failed: %s",
             pa_strerror (pa_context_errno (pbuf->context))), (NULL));
     goto unlock;
   }
