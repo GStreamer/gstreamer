@@ -95,6 +95,7 @@ typedef struct _ADPCMDec
   gboolean is_setup;
 
   GstClockTime timestamp;
+  GstClockTime base_timestamp;
 
   guint64 out_samples;
 
@@ -120,11 +121,11 @@ adpcmdec_setup (ADPCMDec * dec)
 
   dec->is_setup = TRUE;
   dec->timestamp = GST_CLOCK_TIME_NONE;
+  dec->base_timestamp = GST_CLOCK_TIME_NONE;
   dec->adapter = gst_adapter_new ();
   dec->out_samples = 0;
 
-  return gst_pad_push_event (dec->srcpad, gst_event_new_new_segment (FALSE,
-          1.0, GST_FORMAT_TIME, 0, -1, 0));
+  return TRUE;
 }
 
 static void
@@ -301,10 +302,8 @@ adpcmdec_decode_ms_block (ADPCMDec * dec, int n_samples, guint8 * data,
   return TRUE;
 }
 
-static int ima_indx_adjust[16] = { -1, -1, -1, -1,      /* +0 - +3, decrease the step size */
-  2, 4, 6, 8,                   /* +4 - +7, increase the step size */
-  -1, -1, -1, -1,               /* -0 - -3, decrease the step size */
-  2, 4, 6, 8,                   /* -4 - -7, increase the step size */
+static int ima_indx_adjust[16] = {
+  -1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8,
 };
 
 static int ima_step_size[89] = {
@@ -328,8 +327,14 @@ adpcmdec_decode_ima_block (ADPCMDec * dec, int n_samples, guint8 * data,
 {
   gint16 stepindex[2];
   int channel;
-  int idx;                      /* Current byte offset in 'data' */
-  int i;                        /* Current sample */
+  int idx;
+  int i, j;
+  int sample;
+
+  if ((n_samples - dec->channels) % 8 != 0) {
+    GST_WARNING_OBJECT (dec, "Input not correct size");
+    return FALSE;
+  }
 
   for (channel = 0; channel < dec->channels; channel++) {
     samples[channel] = read_sample (data + channel * 4);
@@ -344,45 +349,34 @@ adpcmdec_decode_ima_block (ADPCMDec * dec, int n_samples, guint8 * data,
   i = dec->channels;
   idx = 4 * dec->channels;
 
-  GST_DEBUG ("Decoding %d samples", n_samples);
-  for (; i < n_samples; i++) {
-    int chan = i % dec->channels;
-    int bytecode;
-    int step;
-    int val;
-    int difference;
+  while (i < n_samples) {
+    for (channel = 0; channel < dec->channels; channel++) {
+      sample = i + channel;
+      for (j = 0; j < 8; j++) {
+        int bytecode;
+        int step;
+        int diff;
 
-#if 1
-    if (i % 2 == 0) {
-      bytecode = (data[idx] >> 4) & 0x0F;
-    } else {
-      bytecode = data[idx] & 0x0F;
-      idx++;
+        if (j % 2 == 0) {
+          bytecode = data[idx] & 0x0F;
+        } else {
+          bytecode = (data[idx] >> 4) & 0x0F;
+          idx++;
+        }
+        step = ima_step_size[stepindex[channel]];
+        diff = (2 * (bytecode & 0x7) * step + step) / 8;
+        if (bytecode & 8)
+          diff = -diff;
+
+        samples[sample] =
+            CLAMP (samples[sample - dec->channels] + diff, G_MININT16,
+            G_MAXINT16);
+        stepindex[channel] =
+            CLAMP (stepindex[channel] + ima_indx_adjust[bytecode], 0, 88);
+        sample += dec->channels;
+      }
     }
-#endif
-    step = ima_step_size[stepindex[chan]];
-#if 1
-
-    difference = (2 * (bytecode & 0x7) * step + step) / 8;
-    if (bytecode & 8)
-      difference = -difference;
-#else
-    val = step >> 3;
-    if (bytecode & 4)
-      val += step;
-    if (bytecode & 2)
-      val += step >> 1;
-    if (bytecode & 1)
-      val += step >> 2;
-    if (bytecode & 8)
-      val = -val;
-    difference = val;
-#endif
-
-    val = (int) samples[i - dec->channels] + difference;
-    samples[i] = CLAMP (val, G_MININT16, G_MAXINT16);
-    stepindex[channel] = CLAMP (stepindex[channel] + ima_indx_adjust[bytecode],
-        0, 88);
+    i += 8 * dec->channels;
   }
   return TRUE;
 }
@@ -402,8 +396,12 @@ adpcmdec_chain (GstPad * pad, GstBuffer * buf)
   if (!dec->is_setup)
     adpcmdec_setup (dec);
 
-  if (dec->timestamp == GST_CLOCK_TIME_NONE)
-    dec->timestamp = GST_BUFFER_TIMESTAMP (buf);
+  if (dec->base_timestamp == GST_CLOCK_TIME_NONE) {
+    dec->base_timestamp = GST_BUFFER_TIMESTAMP (buf);
+    if (dec->base_timestamp == GST_CLOCK_TIME_NONE)
+      dec->base_timestamp = 0;
+    dec->timestamp = dec->base_timestamp;
+  }
 
   gst_adapter_push (dec->adapter, buf);
 
@@ -449,7 +447,7 @@ adpcmdec_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_set_caps (outbuf, dec->output_caps);
     GST_BUFFER_TIMESTAMP (outbuf) = dec->timestamp;
     dec->out_samples += samples / dec->channels;
-    dec->timestamp =
+    dec->timestamp = dec->base_timestamp +
         gst_util_uint64_scale_int (dec->out_samples, GST_SECOND, dec->rate);
     GST_BUFFER_DURATION (outbuf) =
         dec->timestamp - GST_BUFFER_TIMESTAMP (outbuf);
@@ -472,6 +470,9 @@ adpcmdec_sink_event (GstPad * pad, GstEvent * event)
   gboolean res;
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
+      dec->out_samples = 0;
+      dec->timestamp = GST_CLOCK_TIME_NONE;
+      dec->base_timestamp = GST_CLOCK_TIME_NONE;
       gst_adapter_clear (dec->adapter);
       /* Fall through */
     default:
