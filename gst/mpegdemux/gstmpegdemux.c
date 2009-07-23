@@ -211,6 +211,7 @@ static void gst_flups_demux_loop (GstPad * pad);
 
 static gboolean gst_flups_demux_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_flups_demux_src_query (GstPad * pad, GstQuery * query);
+static const GstQueryType *gst_flups_demux_src_query_type (GstPad * pad);
 
 static GstStateChangeReturn gst_flups_demux_change_state (GstElement * element,
     GstStateChange transition);
@@ -454,6 +455,8 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
       GST_DEBUG_FUNCPTR (gst_flups_demux_src_event));
   gst_pad_set_query_function (stream->pad,
       GST_DEBUG_FUNCPTR (gst_flups_demux_src_query));
+  gst_pad_set_query_type_function (stream->pad,
+      GST_DEBUG_FUNCPTR (gst_flups_demux_src_query_type));
   gst_pad_use_fixed_caps (stream->pad);
   gst_pad_set_caps (stream->pad, caps);
   gst_caps_unref (caps);
@@ -1281,6 +1284,19 @@ gst_flups_demux_src_event (GstPad * pad, GstEvent * event)
   gst_object_unref (demux);
 
   return res;
+}
+
+static const GstQueryType *
+gst_flups_demux_src_query_type (GstPad * pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_SEEKING,
+    0
+  };
+
+  return types;
 }
 
 static gboolean

@@ -212,6 +212,7 @@ static gboolean gst_mpegts_demux_sink_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstClock *gst_mpegts_demux_provide_clock (GstElement * element);
 static gboolean gst_mpegts_demux_src_pad_query (GstPad * pad, GstQuery * query);
+static const GstQueryType *gst_mpegts_demux_src_pad_query_type (GstPad * pad);
 
 static GstStateChangeReturn gst_mpegts_demux_change_state (GstElement * element,
     GstStateChange transition);
@@ -713,6 +714,8 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
   gst_caps_unref (caps);
   gst_pad_set_query_function (stream->pad,
       GST_DEBUG_FUNCPTR (gst_mpegts_demux_src_pad_query));
+  gst_pad_set_query_type_function (stream->pad,
+      GST_DEBUG_FUNCPTR (gst_mpegts_demux_src_pad_query_type));
   gst_pad_set_event_function (stream->pad,
       GST_DEBUG_FUNCPTR (gst_mpegts_demux_src_event));
   g_free (name);
@@ -2699,6 +2702,19 @@ gst_mpegts_demux_provide_clock (GstElement * element)
   }
 
   return NULL;
+}
+
+static const GstQueryType *
+gst_mpegts_demux_src_pad_query_type (GstPad * pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_LATENCY,
+    GST_QUERY_DURATION,
+    GST_QUERY_SEEKING,
+    0
+  };
+
+  return types;
 }
 
 static gboolean
