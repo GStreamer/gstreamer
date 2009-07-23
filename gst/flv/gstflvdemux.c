@@ -1077,6 +1077,32 @@ gst_flv_demux_query (GstPad * pad, GstQuery * query)
       break;
     }
 
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      res = TRUE;
+      if (fmt != GST_FORMAT_TIME || !demux->index) {
+        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+      } else if (demux->random_access) {
+        gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0,
+            demux->duration);
+      } else {
+        GstQuery *peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
+        gboolean seekable = gst_pad_peer_query (demux->sinkpad, peerquery);
+
+        if (seekable)
+          gst_query_parse_seeking (peerquery, NULL, &seekable, NULL, NULL);
+        gst_query_unref (peerquery);
+
+        if (seekable)
+          gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0,
+              demux->duration);
+        else
+          gst_query_set_seeking (query, GST_FORMAT_TIME, FALSE, -1, -1);
+      }
+      break;
+    }
     case GST_QUERY_LATENCY:
     default:
     {

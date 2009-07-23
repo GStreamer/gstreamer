@@ -65,6 +65,8 @@ gst_flv_demux_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
     GST_QUERY_DURATION,
+    GST_QUERY_POSITION,
+    GST_QUERY_SEEKING,
     0
   };
 
