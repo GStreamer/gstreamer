@@ -1574,6 +1574,7 @@ gst_flac_dec_get_src_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
     GST_QUERY_CONVERT,
+    GST_QUERY_SEEKING,
     0,
   };
 
@@ -1593,7 +1594,6 @@ gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
       GstFormat fmt;
-
       gint64 pos;
 
       gst_query_parse_position (query, &fmt, NULL);
@@ -1625,7 +1625,6 @@ gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
 
     case GST_QUERY_DURATION:{
       GstFormat fmt;
-
       gint64 len;
 
       gst_query_parse_duration (query, &fmt, NULL);
@@ -1669,7 +1668,6 @@ gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
 
     case GST_QUERY_CONVERT:{
       GstFormat src_fmt, dest_fmt;
-
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, NULL);
@@ -1681,6 +1679,27 @@ gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
         gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       }
 
+      break;
+    }
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+      gboolean seekable = FALSE;
+
+      res = TRUE;
+      /* If upstream can handle the query we're done */
+      seekable = gst_pad_peer_query (flacdec->sinkpad, query);
+      if (seekable)
+        gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+      if (seekable)
+        goto done;
+
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      if ((fmt != GST_FORMAT_TIME && fmt != GST_FORMAT_DEFAULT) ||
+          !flacdec->seekable_decoder) {
+        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+      } else {
+        gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0, -1);
+      }
       break;
     }
 
