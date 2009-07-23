@@ -77,42 +77,6 @@ typedef enum
 GST_DEBUG_CATEGORY_STATIC (gstflupsdemux_debug);
 #define GST_CAT_DEFAULT (gstflupsdemux_debug)
 
-#ifndef GST_CHECK_VERSION
-#define GST_CHECK_VERSION(major,minor,micro)  \
-    (GST_VERSION_MAJOR > (major) || \
-     (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR > (minor)) || \
-     (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR == (minor) && \
-      GST_VERSION_MICRO >= (micro)))
-#endif
-
-#if !GST_CHECK_VERSION(0,10,9)
-#define GST_BUFFER_IS_DISCONT(buffer) \
-    (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
-#endif
-
-#if GST_CHECK_VERSION(0,10,6)
-#define HAVE_NEWSEG_FULL
-#else
-static GstBuffer *
-gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
-{
-  GstBuffer *buf = NULL;
-
-  if (G_UNLIKELY (nbytes > adapter->size))
-    return NULL;
-
-  buf = gst_buffer_new_and_alloc (nbytes);
-
-  if (G_UNLIKELY (!buf))
-    return NULL;
-
-  /* Slow... */
-  memcpy (GST_BUFFER_DATA (buf), gst_adapter_peek (adapter, nbytes), nbytes);
-
-  return buf;
-}
-#endif
-
 /* elementfactory information */
 static GstElementDetails flups_demux_details = {
   "The Fluendo MPEG Program Stream Demuxer",
@@ -548,7 +512,6 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
     else
       time = 0;
 
-#ifdef HAVE_NEWSEG_FULL
     GST_INFO_OBJECT (demux, "sending new segment: rate %g applied_rate %g "
         "start: %" GST_TIME_FORMAT ", stop: %" GST_TIME_FORMAT
         ", time: %" GST_TIME_FORMAT " to pad %" GST_PTR_FORMAT,
@@ -559,16 +522,6 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
     newsegment = gst_event_new_new_segment_full (FALSE,
         demux->sink_segment.rate, demux->sink_segment.applied_rate,
         GST_FORMAT_TIME, start, stop, time);
-#else
-    GST_INFO_OBJECT (demux, "sending new segment: rate %g "
-        "start: %" GST_TIME_FORMAT ", stop: %" GST_TIME_FORMAT
-        ", time: %" GST_TIME_FORMAT " to pad %" GST_PTR_FORMAT,
-        demux->sink_segment.rate, GST_TIME_ARGS (start),
-        GST_TIME_ARGS (stop), GST_TIME_ARGS (time), stream->pad);
-
-    newsegment = gst_event_new_new_segment (FALSE,
-        demux->sink_segment.rate, GST_FORMAT_TIME, start, stop, time);
-#endif
 
     gst_pad_push_event (stream->pad, newsegment);
 
@@ -850,10 +803,8 @@ gst_flups_demux_close_segment (GstFluPSDemux * demux)
   GstEvent *event = NULL;
   guint64 base_time;
 
-#if POST_10_10
   GST_INFO_OBJECT (demux, "closing running segment %" GST_SEGMENT_FORMAT,
       &demux->src_segment);
-#endif
 
   /* FIXME: Need to send a different segment-close to each pad where the
    * last_seg_start != clock_time_none, as that indicates a sparse-stream
@@ -945,7 +896,6 @@ gst_flups_demux_sink_event (GstPad * pad, GstEvent * event)
       /* Close current segment */
       gst_flups_demux_close_segment (demux);
 
-#ifdef HAVE_NEWSEG_FULL
       {
         gdouble arate;
 
@@ -963,19 +913,6 @@ gst_flups_demux_sink_event (GstPad * pad, GstEvent * event)
         }
 
       }
-#else
-      gst_event_parse_new_segment (event, &update, &rate, &format,
-          &start, &stop, &time);
-      gst_segment_set_newsegment (&demux->sink_segment, update, rate,
-          format, start, stop, time);
-      if (format == GST_FORMAT_BYTES && demux->scr_rate_n != G_MAXUINT64
-          && demux->scr_rate_d != G_MAXUINT64) {
-
-        gst_segment_set_newsegment (&demux->src_segment, update, rate,
-            GST_FORMAT_TIME, BYTES_TO_GSTTIME (start), BYTES_TO_GSTTIME (stop),
-            BYTES_TO_GSTTIME (time));
-      }
-#endif
 
       GST_INFO_OBJECT (demux, "received new segment: rate %g "
           "format %d, start: %" G_GINT64_FORMAT ", stop: %" G_GINT64_FORMAT
@@ -1099,10 +1036,8 @@ gst_flups_demux_do_seek (GstFluPSDemux * demux, GstSegment * seeksegment)
   scr = MAX (demux->first_scr, scr);
   fscr = scr;
 
-#if POST_10_10
   GST_INFO_OBJECT (demux, "sink segment configured %" GST_SEGMENT_FORMAT
       ", trying to go at SCR: %" G_GUINT64_FORMAT, &demux->sink_segment, scr);
-#endif
 
   offset = MIN (gst_util_uint64_scale (scr, scr_rate_n, scr_rate_d),
       demux->sink_segment.stop);
@@ -1177,19 +1112,15 @@ gst_flups_demux_handle_seek_pull (GstFluPSDemux * demux, GstEvent * event)
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, &demux->src_segment, sizeof (GstSegment));
 
-#if POST_10_10
   GST_DEBUG_OBJECT (demux, "segment before configure %" GST_SEGMENT_FORMAT,
       &demux->src_segment);
-#endif
 
   /* Apply the seek to our segment */
   gst_segment_set_seek (&seeksegment, rate, format, flags,
       start_type, start, stop_type, stop, &update);
 
-#if POST_10_10
   GST_DEBUG_OBJECT (demux, "seek segment configured %" GST_SEGMENT_FORMAT,
       &seeksegment);
-#endif
 
   if (flush || seeksegment.last_stop != demux->src_segment.last_stop) {
     /* Do the actual seeking */
@@ -1207,10 +1138,8 @@ gst_flups_demux_handle_seek_pull (GstFluPSDemux * demux, GstEvent * event)
   /* update the rate in our src segment */
   demux->sink_segment.rate = rate;
 
-#if POST_10_10
   GST_DEBUG_OBJECT (demux, "seek segment adjusted %" GST_SEGMENT_FORMAT,
       &seeksegment);
-#endif
 
   if (flush) {
     /* Stop flushing, the sinks are at time 0 now */
@@ -2572,12 +2501,10 @@ gst_flups_sink_get_duration (GstFluPSDemux * demux)
     gst_segment_set_last_stop (&demux->src_segment, GST_FORMAT_TIME,
         demux->src_segment.start);
   }
-#if POST_10_10
   GST_INFO_OBJECT (demux, "sink segment configured %" GST_SEGMENT_FORMAT,
       &demux->sink_segment);
   GST_INFO_OBJECT (demux, "src segment configured %" GST_SEGMENT_FORMAT,
       &demux->src_segment);
-#endif
 
   res = TRUE;
 

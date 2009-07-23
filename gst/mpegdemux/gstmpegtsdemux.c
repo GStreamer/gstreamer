@@ -48,37 +48,17 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef USE_LIBOIL
 #include <liboil/liboil.h>
-#endif
 
 #include "gstmpegdefs.h"
 #include "gstmpegtsdemux.h"
 #include "flutspatinfo.h"
 #include "flutspmtinfo.h"
 
-#ifndef GST_CHECK_VERSION
-#define GST_CHECK_VERSION(major,minor,micro)  \
-    (GST_VERSION_MAJOR > (major) || \
-     (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR > (minor)) || \
-     (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR == (minor) && \
-      GST_VERSION_MICRO >= (micro)))
-#endif
-
-#ifndef GST_BUFFER_IS_DISCONT
-#define GST_BUFFER_IS_DISCONT(buffer) \
-    (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (gstmpegtsdemux_debug);
 #define GST_CAT_DEFAULT (gstmpegtsdemux_debug)
 
 /* elementfactory information */
-#ifdef USE_LIBOIL
-#define LONGNAME "The Fluendo MPEG Transport stream demuxer (liboil build)"
-#else
-#define LONGNAME "The Fluendo MPEG Transport stream demuxer"
-#endif
 
 #ifndef __always_inline
 #if (__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1)
@@ -95,7 +75,7 @@ GST_DEBUG_CATEGORY_STATIC (gstmpegtsdemux_debug);
 #endif
 
 static GstElementDetails mpegts_demux_details = {
-  LONGNAME,
+  "The Fluendo MPEG Transport stream demuxer",
   "Codec/Demuxer",
   "Demultiplexes MPEG2 Transport Streams",
   "Wim Taymans <wim@fluendo.com>"
@@ -356,9 +336,7 @@ gst_mpegts_demux_init (GstMpegTSDemux * demux)
   demux->pcr[1] = -1;
   demux->cache_duration = GST_CLOCK_TIME_NONE;
   demux->base_pts = GST_CLOCK_TIME_NONE;
-#ifdef USE_LIBOIL
   oil_init ();
-#endif
 }
 
 static void
@@ -857,10 +835,6 @@ gst_mpegts_demux_send_tags_for_stream (GstMpegTSDemux * demux,
     gst_element_found_tags_for_pad (GST_ELEMENT (demux), stream->pad, list);
   }
 }
-
-#ifndef GST_FLOW_IS_SUCCESS
-#define GST_FLOW_IS_SUCCESS(ret) ((ret) >= GST_FLOW_OK)
-#endif
 
 static GstFlowReturn
 gst_mpegts_demux_combine_flows (GstMpegTSDemux * demux,
@@ -1540,11 +1514,7 @@ gst_mpegts_stream_parse_private_section (GstMpegTSStream * stream,
   /* just dump this down the pad */
   if (gst_pad_alloc_buffer (stream->pad, 0, datalen, NULL, &buffer) ==
       GST_FLOW_OK) {
-#ifdef USE_LIBOIL
     oil_memcpy (buffer->data, data, datalen);
-#else
-    memcpy (buffer->data, data, datalen);
-#endif
     gst_pad_push (stream->pad, buffer);
   }
 
@@ -2107,11 +2077,7 @@ gst_mpegts_stream_pes_buffer_push (GstMpegTSStream * stream,
     stream->pes_buffer_used = 0;
   }
   out_data = GST_BUFFER_DATA (stream->pes_buffer) + stream->pes_buffer_used;
-#ifdef USE_LIBOIL
   oil_memcpy (out_data, in_data, in_size);
-#else
-  memcpy (out_data, in_data, in_size);
-#endif
   stream->pes_buffer_used += in_size;
 done:
   return ret;
@@ -2139,11 +2105,7 @@ gst_mpegts_demux_push_fragment (GstMpegTSStream * stream,
 {
   GstFlowReturn ret;
   GstBuffer *es_buf = gst_buffer_new_and_alloc (in_size);
-#ifdef USE_LIBOIL
   oil_memcpy (GST_BUFFER_DATA (es_buf), in_data, in_size);
-#else
-  memcpy (GST_BUFFER_DATA (es_buf), in_data, in_size);
-#endif
   ret = gst_pes_filter_push (&stream->filter, es_buf);
 
   /* If PES filter return ok then PES fragment buffering 
@@ -2283,11 +2245,7 @@ gst_mpegts_demux_parse_stream (GstMpegTSDemux * demux, GstMpegTSStream * stream,
         /* FIXME: try to use data directly instead of creating a buffer and
            pushing in into adapter at section filter */
         sec_buf = gst_buffer_new_and_alloc (datalen);
-#ifdef USE_LIBOIL
         oil_memcpy (GST_BUFFER_DATA (sec_buf), data, datalen);
-#else
-        memcpy (GST_BUFFER_DATA (sec_buf), data, datalen);
-#endif
         if (gst_section_filter_push (&stream->section_filter,
                 payload_unit_start_indicator, continuity_counter, sec_buf)) {
           GST_DEBUG_OBJECT (demux, "section finished");
