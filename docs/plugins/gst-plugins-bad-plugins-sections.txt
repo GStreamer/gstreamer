@@ -542,14 +542,6 @@ gst_kate_tiger_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-ladspa</FILE>
-<TITLE>ladspa</TITLE>
-GstLADSPA
-<SUBSECTION Standard>
-GstLADSPAClass
-</SECTION>
-
-<SECTION>
 <FILE>gstbasemetadata</FILE>
 <TITLE>GstBaseMetadata</TITLE>
 GstBaseMetadata
