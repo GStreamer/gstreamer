@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* Based on MS-ADPCM decoder in libsndfile, 
+/* Based on ADPCM decoders in libsndfile, 
    Copyright (C) 1999-2002 Erik de Castro Lopo <erikd@zip.com.au
  */
 
@@ -40,19 +40,19 @@
 GST_DEBUG_CATEGORY_STATIC (adpcmdec_debug);
 
 static const GstElementDetails adpcmdec_details =
-GST_ELEMENT_DETAILS ("MS-ADPCM decoder",
+GST_ELEMENT_DETAILS ("ADPCM decoder",
     "Codec/Decoder/Audio",
-    "Decode MS AD-PCM audio",
+    "Decode MS and IMA ADPCM audio",
     "Pioneers of the Inevitable <songbird@songbirdnest.com");
 
 static GstStaticPadTemplate adpcmdec_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-adpcm, "
-        "layout=(string)microsoft, "
-        "block_align = (int) [64, 8096], "
-        "rate = (int)[ 1, MAX ], " "channels = (int)[1,2]")
+        " layout=(string){microsoft, dvi}, "
+        " block_align = (int) [64, 8096], "
+        " rate = (int)[ 1, MAX ], " "channels = (int)[1,2];")
     );
 
 static GstStaticPadTemplate adpcmdec_src_template =
@@ -66,6 +66,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "signed = (boolean)TRUE, "
         "channels = (int) [1,2], " "rate = (int)[1, MAX]")
     );
+
+enum adpcm_layout
+{
+  LAYOUT_ADPCM_MICROSOFT,
+  LAYOUT_ADPCM_DVI
+};
 
 typedef struct _ADPCMDecClass
 {
@@ -81,6 +87,7 @@ typedef struct _ADPCMDec
 
   GstCaps *output_caps;
 
+  enum adpcm_layout layout;
   int rate;
   int channels;
   int blocksize;
@@ -139,6 +146,18 @@ adpcmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   ADPCMDec *dec = (ADPCMDec *) gst_pad_get_parent (pad);
   GstStructure *structure = gst_caps_get_structure (caps, 0);
+  const gchar *layout;
+
+  layout = gst_structure_get_string (structure, "layout");
+  if (!layout)
+    return FALSE;
+
+  if (g_str_equal (layout, "microsoft"))
+    dec->layout = LAYOUT_ADPCM_MICROSOFT;
+  else if (g_str_equal (layout, "dvi"))
+    dec->layout = LAYOUT_ADPCM_DVI;
+  else
+    return FALSE;
 
   if (!gst_structure_get_int (structure, "block_align", &dec->blocksize))
     return FALSE;
@@ -282,6 +301,92 @@ adpcmdec_decode_ms_block (ADPCMDec * dec, int n_samples, guint8 * data,
   return TRUE;
 }
 
+static int ima_indx_adjust[16] = { -1, -1, -1, -1,      /* +0 - +3, decrease the step size */
+  2, 4, 6, 8,                   /* +4 - +7, increase the step size */
+  -1, -1, -1, -1,               /* -0 - -3, decrease the step size */
+  2, 4, 6, 8,                   /* -4 - -7, increase the step size */
+};
+
+static int ima_step_size[89] = {
+  7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
+  50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230,
+  253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963,
+  1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024, 3327,
+  3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442,
+  11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794,
+  32767
+};
+
+/* Decode a single block of data from 'data', storing 'n_samples' decoded 16 bit
+   samples in 'samples'.
+
+   All buffer lengths have been verified by the caller 
+ */
+static gboolean
+adpcmdec_decode_ima_block (ADPCMDec * dec, int n_samples, guint8 * data,
+    gint16 * samples)
+{
+  gint16 stepindex[2];
+  int channel;
+  int idx;                      /* Current byte offset in 'data' */
+  int i;                        /* Current sample */
+
+  for (channel = 0; channel < dec->channels; channel++) {
+    samples[channel] = read_sample (data + channel * 4);
+    stepindex[channel] = CLAMP (data[channel * 4 + 2], 0, 88);
+
+    if (data[channel * 4 + 3] != 0) {
+      GST_WARNING_OBJECT (dec, "Synchronisation error");
+      return FALSE;
+    }
+  }
+
+  i = dec->channels;
+  idx = 4 * dec->channels;
+
+  GST_DEBUG ("Decoding %d samples", n_samples);
+  for (; i < n_samples; i++) {
+    int chan = i % dec->channels;
+    int bytecode;
+    int step;
+    int val;
+    int difference;
+
+#if 1
+    if (i % 2 == 0) {
+      bytecode = (data[idx] >> 4) & 0x0F;
+    } else {
+      bytecode = data[idx] & 0x0F;
+      idx++;
+    }
+#endif
+    step = ima_step_size[stepindex[chan]];
+#if 1
+
+    difference = (2 * (bytecode & 0x7) * step + step) / 8;
+    if (bytecode & 8)
+      difference = -difference;
+#else
+    val = step >> 3;
+    if (bytecode & 4)
+      val += step;
+    if (bytecode & 2)
+      val += step >> 1;
+    if (bytecode & 1)
+      val += step >> 2;
+    if (bytecode & 8)
+      val = -val;
+    difference = val;
+#endif
+
+    val = (int) samples[i - dec->channels] + difference;
+    samples[i] = CLAMP (val, G_MININT16, G_MAXINT16);
+    stepindex[channel] = CLAMP (stepindex[channel] + ima_indx_adjust[bytecode],
+        0, 88);
+  }
+  return TRUE;
+}
+
 static GstFlowReturn
 adpcmdec_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -306,15 +411,30 @@ adpcmdec_chain (GstPad * pad, GstBuffer * buf)
     databuf = gst_adapter_take_buffer (dec->adapter, dec->blocksize);
     data = GST_BUFFER_DATA (databuf);
 
-    /* Each block has a 3 byte header per channel, plus 4 bytes per channel to
-       give two initial sample values per channel. Then the remainder gives
-       two samples per byte */
-    samples = (dec->blocksize - 7 * dec->channels) * 2 + 2 * dec->channels;
-    outsize = 2 * samples;
-    outbuf = gst_buffer_new_and_alloc (outsize);
+    if (dec->layout == LAYOUT_ADPCM_MICROSOFT) {
+      /* Each block has a 3 byte header per channel, plus 4 bytes per channel to
+         give two initial sample values per channel. Then the remainder gives
+         two samples per byte */
+      samples = (dec->blocksize - 7 * dec->channels) * 2 + 2 * dec->channels;
+      outsize = 2 * samples;
+      outbuf = gst_buffer_new_and_alloc (outsize);
 
-    res = adpcmdec_decode_ms_block (dec, samples, data,
-        (gint16 *) (GST_BUFFER_DATA (outbuf)));
+      res = adpcmdec_decode_ms_block (dec, samples, data,
+          (gint16 *) (GST_BUFFER_DATA (outbuf)));
+    } else if (dec->layout == LAYOUT_ADPCM_DVI) {
+      /* Each block has a 4 byte header per channel, include an initial sample.
+         Then the remainder gives two samples per byte */
+      samples = (dec->blocksize - 4 * dec->channels) * 2 + dec->channels;
+      outsize = 2 * samples;
+      outbuf = gst_buffer_new_and_alloc (outsize);
+
+      res = adpcmdec_decode_ima_block (dec, samples, data,
+          (gint16 *) (GST_BUFFER_DATA (outbuf)));
+    } else {
+      GST_WARNING_OBJECT (dec, "Unknown layout");
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
 
     /* Done with input data, free it */
     gst_buffer_unref (databuf);
@@ -440,7 +560,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (adpcmdec_debug, "adpcmdec", 0, "ADPCM Decoders");
-  if (!gst_element_register (plugin, "msadpcmdec", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "adpcmdec", GST_RANK_PRIMARY,
           GST_TYPE_ADPCM_DEC)) {
     return FALSE;
   }
