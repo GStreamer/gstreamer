@@ -42,7 +42,10 @@
     backing: (NSBackingStoreType) bufferingType
     defer: (BOOL) flag screen: (NSScreen *) aScreen
     gstWin: (GstGLWindowPrivate *) priv;
+- (void) setClosed;
 - (BOOL) isClosed;
+- (BOOL) canBecomeMainWindow;
+- (BOOL) canBecomeKeyWindow;
 @end
 
 /* =============================================================*/
@@ -83,6 +86,7 @@
 - (void) sendToApp;
 - (void) setWindow;
 - (void) stopApp;
+- (void) closeWindow;
 @end
 
 /* =============================================================*/
@@ -218,7 +222,7 @@ gst_gl_window_new (gint width, gint height, gulong external_gl_context)
 
   priv->internal_win_id =[[GstGLNSWindow alloc] initWithContentRect:rect styleMask: 
     (NSTitledWindowMask | NSClosableWindowMask |
-    NSResizableWindowMask |NSMiniaturizableWindowMask)
+    NSResizableWindowMask | NSMiniaturizableWindowMask)
     backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: priv];
 
   if (priv->internal_win_id) {
@@ -323,6 +327,13 @@ gst_gl_window_draw (GstGLWindow * window)
     AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] initWithPrivate:priv];
     [app_thread_performer performSelector:@selector(updateWindow) 
       onThread:priv->thread withObject:nil waitUntilDone:YES];
+    
+    if (!priv->parent && !priv->visible) {
+      g_debug ("make the window available");
+      [priv->internal_win_id makeMainWindow];
+      [priv->internal_win_id orderFront:priv->internal_win_id];
+      priv->visible = TRUE;
+    }   
 
     [pool release];
 
@@ -364,19 +375,10 @@ gst_gl_window_run_loop (GstGLWindow * window)
   if (priv->internal_win_id != nil) {
     while(priv->running) {
      
-      if (!priv->parent) {
+      [run_loop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
       
-        [run_loop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
-        
-        if (!priv->visible) {
-          g_debug ("make the window available");
-          [priv->internal_win_id orderFront:priv->internal_win_id];
-          priv->visible = TRUE;
-        }    
-        
+      if (!priv->parent)
         g_idle_add (gst_gl_window_nsapp_iteration, priv->internal_win_id);
-      }
-
     }
     
     [priv->internal_win_id release];
@@ -518,25 +520,40 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   [self setTitle:@"OpenGL renderer"];
   
   [self setBackgroundColor:[NSColor clearColor]];
+  
+  [self orderOut:m_priv->internal_win_id];
 
   return self;
+}
+
+- (void) setClosed {
+  m_isClosed = YES;
 }
 
 - (BOOL) isClosed {
   return m_isClosed;
 }
 
+- (BOOL) canBecomeMainWindow {
+  return YES;
+}
+
+- (BOOL) canBecomeKeyWindow {
+  return YES;
+}
+
+/* Called in the main thread which is never the gl thread */
 - (BOOL) windowShouldClose:(id)sender {
-  g_debug ("user clicked the close button");
-  m_isClosed = YES;
-  if (m_priv->close_cb)
-    m_priv->close_cb (m_priv->close_data);
-  m_priv->draw_cb = NULL;
-  m_priv->draw_data = NULL;
-  m_priv->resize_cb = NULL;
-  m_priv->resize_data = NULL;
-  m_priv->close_cb = NULL;
-  m_priv->close_data = NULL;
+    
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] 
+    initWithPrivate:m_priv];
+  
+  [app_thread_performer performSelector:@selector(closeWindow) onThread:m_priv->thread
+    withObject:nil waitUntilDone:YES];
+  
+  [pool release];
+  
   return YES;
 }
 
@@ -584,10 +601,10 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
       initWithSize:m_priv->resize_cb userData:m_priv->resize_data 
       toSize:bounds.size private:m_priv];
       
-      [app_thread_performer performSelector:@selector(resizeWindow) onThread:m_priv->thread 
-        withObject:nil waitUntilDone:NO];
+    [app_thread_performer performSelector:@selector(resizeWindow) onThread:m_priv->thread 
+      withObject:nil waitUntilDone:NO];
 
-      [pool release];
+    [pool release];
   }
 }
 
@@ -663,12 +680,13 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 }
 
 - (void) resizeWindow {
-  if (m_priv->running)
+  if (m_priv->running && ![m_priv->internal_win_id isClosed]) {
     m_callback2 (m_data, m_width, m_height);
+  }
 }
 
 - (void) sendToApp {
-  if (m_priv->running)
+  if (m_priv->running && ![m_priv->internal_win_id isClosed])
     m_callback (m_data);
 }
 
@@ -676,15 +694,29 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   NSWindow *window = m_priv->parent;
   
-  [window setContentView: [m_priv->internal_win_id contentView]];
-  
   [m_priv->internal_win_id orderOut:m_priv->internal_win_id];
   
+  [window setContentView: [m_priv->internal_win_id contentView]];
+
   [pool release];
 }
 
 - (void) stopApp {
   m_priv->running = FALSE;
+  m_callback (m_data);
+}
+
+- (void) closeWindow {
+  [m_priv->internal_win_id setClosed];
+  if (m_priv->close_cb) {
+    m_priv->close_cb (m_priv->close_data);
+  }
+  m_priv->draw_cb = NULL;
+  m_priv->draw_data = NULL;
+  m_priv->resize_cb = NULL;
+  m_priv->resize_data = NULL;
+  m_priv->close_cb = NULL;
+  m_priv->close_data = NULL;
 }
 
 @end
