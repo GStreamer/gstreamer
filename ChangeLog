@@ -1,3 +1,222 @@
+2009-07-24 13:39:55 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  0.10.23.4 pre-release
+
+2009-07-24 13:46:15 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/examples/v4l/.gitignore:
+	  ignores: Ignore v4l probing example binary
+
+2009-07-24 09:35:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: recognise Kate spu subtitles as well
+	  Recognise spu-subtitles, SUB and K-SPU as valid categories for
+	  Kate subtitles as well.
+
+2009-07-24 00:42:16 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From fedaaee to 94f95e3
+
+2009-07-22 14:21:43 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* gst-plugins-base.spec.in:
+	  Update spec file with latest changes
+
+2009-07-20 17:28:20 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* win32/common/_stdint.h:
+	* win32/common/audio-enumtypes.c:
+	* win32/common/config.h:
+	* win32/common/gstrtsp-enumtypes.c:
+	* win32/common/interfaces-enumtypes.c:
+	* win32/common/video-enumtypes.c:
+	  0.10.23.3 pre-release
+
+2009-07-20 12:51:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	  audiotestsrc: call send_event directly
+	  We can't call gst_element_send_event() from a streaming thread as it gets the
+	  state lock. Instead call the send_event method directly until we have a nice API
+	  for this in basesrc.
+	  Fixes #588746
+
+2009-07-03 04:42:24 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiosink.c:
+	  audiosink: Add stream-status messages
+	  Fixes #587695
+
+2009-07-03 04:41:05 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiosrc.c:
+	  audiosrc: Add stream-status messages
+	  See #587695
+
+2009-07-20 10:53:11 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/adder/gstadder.c:
+	  gstadder: Don't forget to free pending events on flush/dispose.
+	  Fixes #588747
+
+2009-07-12 10:08:12 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/check/elements/adder.c:
+	  tests/adder: Add stream consistency checking. Fixes #588748
+
+2009-07-12 10:07:34 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	  audiotestsrc: Make sure tags are properly serialized. Fixes #588746
+	  We do this by letting the basesrc base class handle the tags.
+
+2009-07-13 09:28:54 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/adder/gstadder.c:
+	* gst/adder/gstadder.h:
+	  adder: Collect incoming tag events and send them after newsegment. Fixes #588747
+
+2009-07-16 09:32:46 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/vorbis/vorbisdec.c:
+	  vorbisdec: Check for empty tag strings. Fixes #588724
+
+2009-07-14 17:03:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstqueue2.c:
+	  queue2: fix leak and improve buffering
+	  Keep track of the max requested position and compare this to the write position
+	  in the temp file to get the current amount of buffered data.
+	  Fix memleak of all incomming buffers.
+	  Fixes #588551
+
+2009-07-15 17:40:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/playback/Makefile.am:
+	* gst/playback/gstinputselector.c:
+	* gst/playback/gstinputselector.h:
+	* gst/playback/gstplay-marshal.list:
+	* gst/playback/gstplaybin2.c:
+	  playbin2: use private copy of input-selector
+	  We shouldn't really depend on elements from -bad for stream
+	  selection in playbin2, so use a private copy of input-selector
+	  until the selector plugin is ready to be moved to -base or -good.
+	  Fixes #586356.
+
+2009-07-15 17:26:32 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/playback/gstinputselector.c:
+	* gst/playback/gstinputselector.h:
+	  playback: add private copy of the input-selector from gst-plugins-bad
+	  Not hooked up yet though. See #586356.
+
+2009-07-14 19:00:36 +0200  Filippo Argiolas <filippo.argiolas@gmail.com>
+
+	* tests/examples/v4l/Makefile.am:
+	  examples: fix v4l probe example build
+	  Fixes bug #588550.
+
+2009-07-14 19:00:10 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  0.10.23.2 pre-release
+
 2009-07-14 16:24:10 +0100  Jan Schmidt <thaytan@noraisin.net>
 
 	* po/LINGUAS:

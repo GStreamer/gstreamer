@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.9.7\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-07-19 21:15+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-12-01 17:53+0100\n"
 "PO-Revision-Date: 2005-12-04 22:00+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -15,470 +15,112 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: ext/alsa/gstalsamixertrack.c:83
 msgid "Master"
 msgstr "Mestre"
 
+#: ext/alsa/gstalsamixertrack.c:84
 msgid "Bass"
 msgstr "Baixos"
 
+#: ext/alsa/gstalsamixertrack.c:85
 msgid "Treble"
 msgstr "Treble"
 
+#: ext/alsa/gstalsamixertrack.c:86
 msgid "PCM"
 msgstr "PCM"
 
+#: ext/alsa/gstalsamixertrack.c:87
 msgid "Synth"
 msgstr "Sintetitzador"
 
+#: ext/alsa/gstalsamixertrack.c:88
 msgid "Line-in"
 msgstr "Línia d'entrada"
 
+#: ext/alsa/gstalsamixertrack.c:89
 msgid "CD"
 msgstr "CD"
 
+#: ext/alsa/gstalsamixertrack.c:90
 msgid "Microphone"
 msgstr "Micròfon"
 
+#: ext/alsa/gstalsamixertrack.c:91
 msgid "PC Speaker"
 msgstr "Altaveu PC"
 
+#: ext/alsa/gstalsamixertrack.c:92
 msgid "Playback"
 msgstr "Reproducció"
 
+#: ext/alsa/gstalsamixertrack.c:93
 msgid "Capture"
 msgstr "Captura"
 
-#, fuzzy
-msgid "Could not open device for playback in mono mode."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+#: ext/cdparanoia/gstcdparanoia.c:279
+msgid "discid"
+msgstr "id del disc"
 
-#, fuzzy
-msgid "Could not open device for playback in stereo mode."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+#: ext/cdparanoia/gstcdparanoia.c:279
+msgid "CDDA discid for metadata retrieval"
+msgstr "id del disc de CDDA per a l'obtenció de les metadades"
 
-#, fuzzy, c-format
-msgid "Could not open device for playback in %d-channel mode."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
-
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-
-#, fuzzy
-msgid "Could not open audio device for playback."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
-
-#, fuzzy
-msgid "Could not open device for recording in mono mode."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
-
-#, fuzzy
-msgid "Could not open device for recording in stereo mode."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
-
-#, fuzzy, c-format
-msgid "Could not open device for recording in %d-channel mode"
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
-
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
-msgstr ""
-
-#, fuzzy
-msgid "Could not open audio device for recording."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
-
+#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
 msgid "Could not open CD device for reading."
 msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
 
-#, fuzzy
-msgid "Could not seek CD."
-msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
-
-msgid "Could not read CD."
-msgstr ""
-
+#: ext/gnomevfs/gstgnomevfssink.c:431
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a escriptura: %s."
 
+#: ext/gnomevfs/gstgnomevfssink.c:438
 msgid "No filename given"
 msgstr "No s'ha donat cap nom de fitxer"
 
+#: ext/gnomevfs/gstgnomevfssink.c:466
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
 
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr ""
-
+#: ext/ogg/gstoggdemux.c:2472
 msgid "Internal data stream error."
 msgstr "S'ha produït un error intern de flux de dades."
 
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
-
-msgid "This appears to be a text file"
-msgstr ""
-
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
-
+#: gst/playback/gstplaybasebin.c:1333
 msgid "No URI specified to play from."
 msgstr "No s'ha especificat cap URL des d'on reproduir."
 
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr "L'URI «%s» és invàlid."
-
-msgid "RTSP streams cannot be played yet."
-msgstr ""
-
-msgid "Could not create \"decodebin\" element."
-msgstr "No s'ha pogut crear l'element «decodebin»."
-
-msgid "Source element is invalid."
-msgstr ""
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-
-#, fuzzy
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"No teniu un decodificador instal·lat per a gestionar «%s». És possible que "
-"necessiteu instal·lar el connector corresponent."
-
-#, fuzzy
-msgid "This is not a media file"
-msgstr "«%s» no és un fitxer de medi"
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr ""
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Manca tant l'element autovideosink com el xvimagesink."
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Manca tant l'element autoaudiosink com el alsasink."
-
-#, fuzzy
-msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr "Manca tant l'element autovideosink com el xvimagesink."
-
-msgid "Custom text sink element is not usable."
-msgstr ""
-
-msgid "No volume control found"
-msgstr ""
-
-#, fuzzy
-msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr "Manca tant l'element autoaudiosink com el alsasink."
-
-msgid "Can't play a text file without video."
-msgstr ""
-
-msgid "Can't play a text subtitles and subpictures."
-msgstr ""
-
-msgid "No Temp directory specified."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
-
-#, fuzzy, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a escriptura: %s."
-
-#, c-format
-msgid "No decoder available for type '%s'."
-msgstr ""
-
-msgid "This stream type cannot be played yet."
-msgstr ""
-
+#: gst/playback/gstplaybasebin.c:1339
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "No hi ha cap gestor d'URI implementat per a «%s»."
 
-#, fuzzy
-msgid "Could not create \"decodebin2\" element."
+#: gst/playback/gstplaybasebin.c:1343
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "L'URI «%s» és invàlid."
+
+#: gst/playback/gstplaybasebin.c:1350
+msgid "Could not create \"decodebin\" element."
 msgstr "No s'ha pogut crear l'element «decodebin»."
 
-#, fuzzy
-msgid "Could not create \"queue2\" element."
-msgstr "No s'ha pogut crear l'element «decodebin»."
-
-#, fuzzy
-msgid "Could not create \"typefind\" element."
-msgstr "No s'ha pogut crear l'element «decodebin»."
-
+#: gst/playback/gstplaybasebin.c:1416
 #, c-format
-msgid "Error while sending data to \"%s:%d\"."
-msgstr ""
+msgid "You do not have a decoder installed to handle \"%s\".  You might need to install the necessary plugins."
+msgstr "No teniu un decodificador instal·lat per a gestionar «%s». És possible que necessiteu instal·lar el connector corresponent."
 
+#: gst/playback/gstplaybasebin.c:1419
 #, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr ""
-
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr ""
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr ""
-
-msgid "Can't record audio fast enough"
-msgstr ""
-
-msgid "Failed to read tag: not enough data"
-msgstr ""
-
-msgid "track ID"
-msgstr ""
-
-msgid "MusicBrainz track ID"
-msgstr ""
-
-msgid "artist ID"
-msgstr ""
-
-msgid "MusicBrainz artist ID"
-msgstr ""
-
-msgid "album ID"
-msgstr ""
-
-msgid "MusicBrainz album ID"
-msgstr ""
-
-msgid "album artist ID"
-msgstr ""
-
-msgid "MusicBrainz album artist ID"
-msgstr ""
-
-msgid "track TRM ID"
-msgstr ""
-
-msgid "MusicBrainz TRM ID"
-msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr ""
-
-msgid "ID3 tag"
-msgstr ""
-
-msgid "APE tag"
-msgstr ""
-
-msgid "ICY internet radio"
-msgstr ""
-
-msgid "Apple Lossless Audio (ALAC)"
-msgstr ""
-
-msgid "Free Lossless Audio Codec (FLAC)"
-msgstr ""
-
-msgid "Lossless True Audio (TTA)"
-msgstr ""
-
-msgid "Windows Media Speech"
-msgstr ""
-
-msgid "CYUV Lossless"
-msgstr ""
-
-msgid "FFMpeg v1"
-msgstr ""
-
-msgid "Lossless MSZH"
-msgstr ""
-
-msgid "Uncompressed Gray Image"
-msgstr ""
-
-msgid "Run-length encoding"
-msgstr ""
-
-msgid "Sami subtitle format"
-msgstr ""
-
-msgid "TMPlayer subtitle format"
-msgstr ""
-
-msgid "Kate subtitle format"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr ""
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr ""
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr ""
-
-msgid "Uncompressed black and white Y-plane"
-msgstr ""
-
-msgid "Uncompressed YUV"
-msgstr ""
-
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
-msgstr ""
-
-#, c-format
-msgid "DivX MPEG-4 Version %d"
-msgstr ""
-
-#, c-format
-msgid "Raw %d-bit PCM audio"
-msgstr ""
-
-msgid "Raw PCM audio"
-msgstr ""
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr ""
-
-msgid "Raw floating-point audio"
-msgstr ""
-
-msgid "Audio CD source"
-msgstr ""
-
-msgid "DVD source"
-msgstr ""
-
-msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr ""
-
-msgid "Microsoft Media Server (MMS) protocol source"
-msgstr ""
-
-#, c-format
-msgid "%s protocol source"
-msgstr ""
-
-#, c-format
-msgid "%s video RTP depayloader"
-msgstr ""
-
-#, c-format
-msgid "%s audio RTP depayloader"
-msgstr ""
-
-#, c-format
-msgid "%s RTP depayloader"
-msgstr ""
-
-#, c-format
-msgid "%s demuxer"
-msgstr ""
-
-#, c-format
-msgid "%s decoder"
-msgstr ""
-
-#, c-format
-msgid "%s video RTP payloader"
-msgstr ""
-
-#, c-format
-msgid "%s audio RTP payloader"
-msgstr ""
-
-#, c-format
-msgid "%s RTP payloader"
-msgstr ""
-
-#, c-format
-msgid "%s muxer"
-msgstr ""
-
-#, c-format
-msgid "%s encoder"
-msgstr ""
-
-#, c-format
-msgid "GStreamer element %s"
-msgstr ""
-
-msgid "Unknown source element"
-msgstr ""
-
-msgid "Unknown sink element"
-msgstr ""
-
-msgid "Unknown element"
-msgstr ""
-
-msgid "Unknown decoder element"
-msgstr ""
-
-msgid "Unknown encoder element"
-msgstr ""
-
-msgid "Plugin or element of unknown type"
-msgstr ""
-
-msgid "No device specified."
-msgstr ""
-
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr ""
-
-#, c-format
-msgid "Device \"%s\" is already being used."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
-
-#~ msgid "discid"
-#~ msgstr "id del disc"
-
-#~ msgid "CDDA discid for metadata retrieval"
-#~ msgstr "id del disc de CDDA per a l'obtenció de les metadades"
+msgid "\"%s\" is not a media file"
+msgstr "«%s» no és un fitxer de medi"
+
+#: gst/playback/gstplaybin.c:411
+msgid "Both autovideosink and xvimagesink elements are missing."
+msgstr "Manca tant l'element autovideosink com el xvimagesink."
+
+#: gst/playback/gstplaybin.c:541
+msgid "Both autoaudiosink and alsasink elements are missing."
+msgstr "Manca tant l'element autoaudiosink com el alsasink."

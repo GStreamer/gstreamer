@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-07-19 21:15+0100\n"
+"POT-Creation-Date: 2009-04-15 23:00+0100\n"
 "PO-Revision-Date: 2009-06-20 19:33+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -13,460 +13,583 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: ext/alsa/gstalsamixertrack.c:144
 msgid "Master"
 msgstr "Ana"
 
+#: ext/alsa/gstalsamixertrack.c:145
 msgid "Bass"
 msgstr "Bas"
 
+#: ext/alsa/gstalsamixertrack.c:146
 msgid "Treble"
 msgstr "Tiz"
 
+#: ext/alsa/gstalsamixertrack.c:147
 msgid "PCM"
 msgstr "PCM"
 
+#: ext/alsa/gstalsamixertrack.c:148
 msgid "Synth"
 msgstr "Synthizer"
 
+#: ext/alsa/gstalsamixertrack.c:149
 msgid "Line-in"
 msgstr "Hat-girişi"
 
+#: ext/alsa/gstalsamixertrack.c:150
 msgid "CD"
 msgstr "CD"
 
+#: ext/alsa/gstalsamixertrack.c:151
 msgid "Microphone"
 msgstr "Mikrofon"
 
+#: ext/alsa/gstalsamixertrack.c:152
 msgid "PC Speaker"
 msgstr "PC Hoparlörü"
 
+#: ext/alsa/gstalsamixertrack.c:153
 msgid "Playback"
 msgstr "Çalma"
 
+#: ext/alsa/gstalsamixertrack.c:154 ext/alsa/gstalsamixertrack.c:220
+#: ext/alsa/gstalsamixertrack.c:223
 msgid "Capture"
 msgstr "Yakala"
 
+#: ext/alsa/gstalsasink.c:479
 msgid "Could not open device for playback in mono mode."
 msgstr "Mono kipte çalmak için aygıt açılamıyor."
 
+#: ext/alsa/gstalsasink.c:481
 msgid "Could not open device for playback in stereo mode."
 msgstr "Stereo kipte çalmak için aygıt açılamıyor."
 
+#: ext/alsa/gstalsasink.c:485
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Aygıtı %d- kanal kipinde çalmak için açamıyor."
 
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Aygıtı çalmak için için açamıyor. Aygıt başka bir uygulama tarafından "
-"kullanılmakta."
+#: ext/alsa/gstalsasink.c:687
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Aygıtı çalmak için için açamıyor. Aygıt başka bir uygulama tarafından kullanılmakta."
 
+#: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
 msgstr "Aygıtı çalma için açamıyor."
 
+#: ext/alsa/gstalsasrc.c:417
 msgid "Could not open device for recording in mono mode."
 msgstr "Mono kipte kaydetmek için aygıtı açamıyor."
 
+#: ext/alsa/gstalsasrc.c:419
 msgid "Could not open device for recording in stereo mode."
 msgstr "Stereo kipte kaydetmek için aygıtı açamıyor."
 
+#: ext/alsa/gstalsasrc.c:423
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Aygıtı %d- kanal kipinde kaydetmek için açamıyor"
 
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
-msgstr ""
-"Aygıtı kaydetmek için açamıyor. Aygıt başka bir uygulama tarafından "
-"kullanılmakta."
+#: ext/alsa/gstalsasrc.c:628
+msgid "Could not open audio device for recording. Device is being used by another application."
+msgstr "Aygıtı kaydetmek için açamıyor. Aygıt başka bir uygulama tarafından kullanılmakta."
 
+#: ext/alsa/gstalsasrc.c:633
 msgid "Could not open audio device for recording."
 msgstr "Kayıt için ses aygıtı açılamıyor."
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:257 ext/cdparanoia/gstcdparanoiasrc.c:263
 msgid "Could not open CD device for reading."
 msgstr "Okumak için CD aygıtı açılamıyor."
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:389
 msgid "Could not seek CD."
 msgstr "CD bulunamıyor."
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:397
 msgid "Could not read CD."
 msgstr "CD okunamıyor."
 
+#: ext/gnomevfs/gstgnomevfssink.c:379
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Vfs dosyası \"%s\" yazmak için açılamıyor: %s."
 
+#: ext/gnomevfs/gstgnomevfssink.c:386
 msgid "No filename given"
 msgstr "Dosya adı verilmedi"
 
+#: ext/gnomevfs/gstgnomevfssink.c:412
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Vfs dosyası kapatılamıyor \"%s\"."
 
+#: ext/gnomevfs/gstgnomevfssink.c:570
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Dosyaya yazmada hata \"%s\"."
 
+#: ext/ogg/gstoggdemux.c:3160
 msgid "Internal data stream error."
 msgstr "İç veri akışı hatası."
 
+#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1075
+#: gst/playback/gstplaybasebin.c:1554 gst/playback/gstplaybasebin.c:1690
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Bir %s eklenti bu akışı çalmak için gerekli, fakat kurulu değil."
 
+#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1460
 msgid "This appears to be a text file"
 msgstr "Bu bir metin dosyasına benziyor"
 
+#: gst/playback/gstplaybasebin.c:1537
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Geçersiz altyazı adresi \"%s\", altyazılar kaldırıldı."
 
+#: gst/playback/gstplaybasebin.c:1660 gst/playback/gsturidecodebin.c:840
 msgid "No URI specified to play from."
 msgstr "Çalmak için bir ağ adresi belirtilmedi."
 
+#: gst/playback/gstplaybasebin.c:1666 gst/playback/gsturidecodebin.c:846
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Geçersiz URI \"%s\"."
 
+#: gst/playback/gstplaybasebin.c:1672
 msgid "RTSP streams cannot be played yet."
 msgstr "RTSP akışları henüz çalınamıyor."
 
+#: gst/playback/gstplaybasebin.c:2025
 msgid "Could not create \"decodebin\" element."
 msgstr "\"decodebin\" öğesi oluşturulamıyor."
 
+#: gst/playback/gstplaybasebin.c:2244 gst/playback/gsturidecodebin.c:1446
 msgid "Source element is invalid."
 msgstr "Kaynak öğesi geçersiz."
 
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Bir altyazı dosyası algılandı. Siz ya bir altyazı veya başka bir metin "
-"dosyası yüklemek üzeresiniz, veya çokluortam dosyası tanınamadı."
+#: gst/playback/gstplaybasebin.c:2321
+msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
+msgstr "Bir altyazı dosyası algılandı. Siz ya bir altyazı veya başka bir metin dosyası yüklemek üzeresiniz, veya çokluortam dosyası tanınamadı."
 
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Bu yüklü dosyası çözümleyecek bir kod çözücüye sahip değilsiniz. Gerekli "
-"eklentileri kurmak zorundasınız."
+#: gst/playback/gstplaybasebin.c:2326
+msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
+msgstr "Bu yüklü dosyası çözümleyecek bir kod çözücüye sahip değilsiniz. Gerekli eklentileri kurmak zorundasınız."
 
+#: gst/playback/gstplaybasebin.c:2330
 msgid "This is not a media file"
 msgstr "Bu bir çokluortam dosyası değil."
 
+#: gst/playback/gstplaybasebin.c:2335
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Bir altyazı akışı algılanda, ancak vidyo akışı bulunamadı."
 
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:958
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Autovideosink ve xvimagesink öğelerininin ikisi de kayıp."
 
+#: gst/playback/gstplaybin.c:890 gst/playback/gstplaybin.c:900
+#: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
+#: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
+#: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
+#: gst/playback/gstplaysink.c:906 gst/playback/gstplaysink.c:924
+#: gst/playback/gstplaysink.c:1091 gst/playback/gstplaysink.c:1103
+#: gst/playback/gstplaysink.c:1258 gst/playback/gstplaysink.c:1271
+#: gst/playback/gstplaysink.c:1396 gst/playback/gstplaysink.c:1414
+#: gst/playback/gstplaysink.c:1433 gst/playback/gstplaysink.c:1639
+#: gst/playback/gstplaysink.c:1648 gst/playback/gstplaysink.c:1657
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Kayıp öğe '%s' - GStreamer kurulumunu denetleyin."
 
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1487
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Autoaudiosink ve alsasink öğelerinin ikisi de kayıp."
 
+#: gst/playback/gstplaysink.c:962
 msgid "Both autovideosink and xvimagesink elements are not working."
 msgstr "Autoaudiosink ve xvimagesink öğelerinin ikisi de çalışmıyor."
 
+#: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
 msgid "Custom text sink element is not usable."
 msgstr "Varsayılan metin gömme öğesi kullanılamaz durumda."
 
+#: gst/playback/gstplaysink.c:1469
 msgid "No volume control found"
 msgstr "Ses denetimi bulunamadı"
 
+#: gst/playback/gstplaysink.c:1490
 msgid "Both autoaudiosink and alsasink elements are not working."
 msgstr "Autoaudiosink ve alsasink öğelerinin ikisi de çalışmıyor."
 
+#: gst/playback/gstplaysink.c:1985
 msgid "Can't play a text file without video."
 msgstr "Vidyo olmadan metin dosyasını oynatamaz."
 
+#: gst/playback/gstplaysink.c:1993
 msgid "Can't play a text subtitles and subpictures."
 msgstr "Metin altyazılarını altgörüntülerini oynatamaz."
 
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "Aygıt belirtilmedi."
+#: gst/playback/gstqueue2.c:1005
+msgid "No file name specified."
+msgstr "Dosya adı belirtilmedi."
 
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Vfs dosyası kapatılamıyor \"%s\"."
-
+#: gst/playback/gstqueue2.c:1011
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Dosyayı \"%s\" okumak için açamıyor."
 
+#: gst/playback/gsturidecodebin.c:609
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Şu tür '%s' için kod çözücü bulunamadı."
 
+#: gst/playback/gsturidecodebin.c:852
 msgid "This stream type cannot be played yet."
 msgstr "Bu akış türü henüz çalınamıyor."
 
+#: gst/playback/gsturidecodebin.c:863
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Hiç bir URI bağlantısı sağlanmadı \"%s\"."
 
+#: gst/playback/gsturidecodebin.c:1164
 msgid "Could not create \"decodebin2\" element."
 msgstr "Bir \"decodebin2\" öğesi oluşturamıyor."
 
+#: gst/playback/gsturidecodebin.c:1231
 msgid "Could not create \"queue2\" element."
 msgstr "Bir \"queue2\" öğesi oluşturamıyor."
 
+#: gst/playback/gsturidecodebin.c:1270
 msgid "Could not create \"typefind\" element."
 msgstr "Bir \"typefind\" öğesi oluşturamıyor."
 
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:287
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Dosyayı şuraya gönderirken hata \"%s:%d\"."
 
+#: gst/tcp/gsttcp.c:555
 #, c-format
 msgid "Error while sending gdp header data to \"%s:%d\"."
 msgstr "Bir gdp başlık verisini şuraya gönderirken hata \"%s:%d\"."
 
+#: gst/tcp/gsttcp.c:564
 #, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr "Bir gdp verisini şuraya gönderirken hata \"%s:%d\"."
 
+#: gst/tcp/gsttcpclientsink.c:399 gst/tcp/gsttcpclientsrc.c:382
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "Şuraya bağlantı %s:%d reddedildi."
 
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:804
 msgid "Can't record audio fast enough"
 msgstr "Sesi yeterince hızlı kaydedemiyor"
 
+#: gst-libs/gst/tag/gsttagdemux.c:1055
 msgid "Failed to read tag: not enough data"
 msgstr "Etiketi okunamadı: yetersiz veri"
 
+#: gst-libs/gst/tag/tags.c:59
 msgid "track ID"
 msgstr "iz BAŞLIĞI"
 
+#: gst-libs/gst/tag/tags.c:59
 msgid "MusicBrainz track ID"
 msgstr "MusicBrainz iz BAŞLIĞI ID"
 
+#: gst-libs/gst/tag/tags.c:61
 msgid "artist ID"
 msgstr "sanatçı BAŞLIĞI"
 
+#: gst-libs/gst/tag/tags.c:61
 msgid "MusicBrainz artist ID"
 msgstr "MusicBrainz sanatçı BAŞLIĞI ID"
 
+#: gst-libs/gst/tag/tags.c:63
 msgid "album ID"
 msgstr "albüm BAŞLIĞI"
 
+#: gst-libs/gst/tag/tags.c:63
 msgid "MusicBrainz album ID"
 msgstr "MusicBrainz albümü BAŞLIĞI"
 
+#: gst-libs/gst/tag/tags.c:66
 msgid "album artist ID"
 msgstr "albüm sanatçısı BAŞLIĞI"
 
+#: gst-libs/gst/tag/tags.c:66
 msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz albüm sanatçısı BAŞLIĞI"
 
+#: gst-libs/gst/tag/tags.c:68
 msgid "track TRM ID"
 msgstr "iz TRM BAŞLIĞI"
 
+#: gst-libs/gst/tag/tags.c:68
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM BAŞLIĞI"
 
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1397
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1430
 msgid "This CD has no audio tracks"
 msgstr "Bu CD hiç ses izi içermiyor"
 
+#: gst-libs/gst/pbutils/descriptions.c:66
 msgid "ID3 tag"
 msgstr "ID3 etiketi"
 
+#: gst-libs/gst/pbutils/descriptions.c:67
 msgid "APE tag"
 msgstr "APE etiketi"
 
+#: gst-libs/gst/pbutils/descriptions.c:68
 msgid "ICY internet radio"
 msgstr "ICY internet radyosu"
 
+#: gst-libs/gst/pbutils/descriptions.c:91
 msgid "Apple Lossless Audio (ALAC)"
 msgstr "Apple Lossless Audio (ALAC)"
 
+#: gst-libs/gst/pbutils/descriptions.c:100
 msgid "Free Lossless Audio Codec (FLAC)"
 msgstr "Free Lossless Audio Codec (FLAC)"
 
+#: gst-libs/gst/pbutils/descriptions.c:125
+#: gst-libs/gst/pbutils/descriptions.c:126
 msgid "Lossless True Audio (TTA)"
 msgstr "Lossless True Audio (TTA)"
 
+#: gst-libs/gst/pbutils/descriptions.c:134
 msgid "Windows Media Speech"
 msgstr "Windows Media Hecelemesi"
 
+#: gst-libs/gst/pbutils/descriptions.c:148
 msgid "CYUV Lossless"
 msgstr "CYUV Kayıpsız"
 
+#: gst-libs/gst/pbutils/descriptions.c:151
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
+#: gst-libs/gst/pbutils/descriptions.c:163
 msgid "Lossless MSZH"
 msgstr "Kayıpsız MSZH"
 
+#: gst-libs/gst/pbutils/descriptions.c:169
 msgid "Uncompressed Gray Image"
 msgstr "Sıkıştırılmamış Gri Resim"
 
+#: gst-libs/gst/pbutils/descriptions.c:174
 msgid "Run-length encoding"
 msgstr "Çalıştırma-uzunluğu kodlaması"
 
+#: gst-libs/gst/pbutils/descriptions.c:208
 msgid "Sami subtitle format"
 msgstr "Sami altyazı kipi"
 
+#: gst-libs/gst/pbutils/descriptions.c:209
 msgid "TMPlayer subtitle format"
 msgstr "TMPlayer altyazı kipi"
 
+#: gst-libs/gst/pbutils/descriptions.c:210
 msgid "Kate subtitle format"
 msgstr "Kate altyazı kipi"
 
+#: gst-libs/gst/pbutils/descriptions.c:269
 msgid "Uncompressed planar YUV 4:2:0"
 msgstr "Sıkıştırılmamış planar YUV 4:2:0"
 
+#: gst-libs/gst/pbutils/descriptions.c:272
 msgid "Uncompressed planar YVU 4:2:0"
 msgstr "Sıkıştırılmamış planar YVU 4:2:0"
 
+#: gst-libs/gst/pbutils/descriptions.c:275
+#: gst-libs/gst/pbutils/descriptions.c:285
 msgid "Uncompressed packed YUV 4:2:2"
 msgstr "Sıkıştırılmamış paket YUV 4:2:2"
 
+#: gst-libs/gst/pbutils/descriptions.c:278
 msgid "Uncompressed packed YUV 4:1:0"
 msgstr "Sıkıştırılmamış paket YUV 4:1:0"
 
+#: gst-libs/gst/pbutils/descriptions.c:281
 msgid "Uncompressed packed YVU 4:1:0"
 msgstr "Sıkıştırılmamış paket YVU 4:1:0"
 
+#: gst-libs/gst/pbutils/descriptions.c:288
 msgid "Uncompressed packed YUV 4:1:1"
 msgstr "Sıkıştırılmamış paket YUV 4:1:1"
 
+#: gst-libs/gst/pbutils/descriptions.c:291
 msgid "Uncompressed packed YUV 4:4:4"
 msgstr "Sıkıştırılmamış paket YUV 4:4:4"
 
+#: gst-libs/gst/pbutils/descriptions.c:294
 msgid "Uncompressed planar YUV 4:2:2"
 msgstr "Sıkıştırılmamış planar YUV 4:2:2"
 
+#: gst-libs/gst/pbutils/descriptions.c:297
 msgid "Uncompressed planar YUV 4:1:1"
 msgstr "Sıkıştırılmamış planar YUV 4:1:1"
 
+#: gst-libs/gst/pbutils/descriptions.c:300
 msgid "Uncompressed black and white Y-plane"
 msgstr "Sıkıştırılmamış siyah ve beyaz Y"
 
+#: gst-libs/gst/pbutils/descriptions.c:303
 msgid "Uncompressed YUV"
 msgstr "Sıkıştırılmamış YUV"
 
+#: gst-libs/gst/pbutils/descriptions.c:314
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Şıkıştırılmamış seviyesi şuna düşürülmüş %d-bit %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:366
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versiyonu %d"
 
+#: gst-libs/gst/pbutils/descriptions.c:584
 #, c-format
 msgid "Raw %d-bit PCM audio"
 msgstr "Ham %d-bit PCM ses"
 
+#: gst-libs/gst/pbutils/descriptions.c:586
 msgid "Raw PCM audio"
 msgstr "Ham PCM ses"
 
+#: gst-libs/gst/pbutils/descriptions.c:592
 #, c-format
 msgid "Raw %d-bit floating-point audio"
 msgstr "Ham %d-bit yüzer-noktalı ses"
 
+#: gst-libs/gst/pbutils/descriptions.c:594
 msgid "Raw floating-point audio"
 msgstr "Ham yüzer-noktalı ses"
 
+#: gst-libs/gst/pbutils/descriptions.c:681
 msgid "Audio CD source"
 msgstr "Ses CD'si kaynağı"
 
+#: gst-libs/gst/pbutils/descriptions.c:684
 msgid "DVD source"
 msgstr "DVD kaynağı"
 
+#: gst-libs/gst/pbutils/descriptions.c:687
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Gerçek Zamanlı Akış Protokolu (RTSP) kaynağı"
 
+#: gst-libs/gst/pbutils/descriptions.c:691
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Microsoft Medya Sunucusu (MMS) protokol kaynağı"
 
+#: gst-libs/gst/pbutils/descriptions.c:699
 #, c-format
 msgid "%s protocol source"
 msgstr "%s protokol kaynağı"
 
+#: gst-libs/gst/pbutils/descriptions.c:767
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "%s video RTP depayloader"
 
+#: gst-libs/gst/pbutils/descriptions.c:769
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "%s audio RTP depayloader"
 
+#: gst-libs/gst/pbutils/descriptions.c:771
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "%s RTP depayloader"
 
+#: gst-libs/gst/pbutils/descriptions.c:778
 #, c-format
 msgid "%s demuxer"
 msgstr "%s demuxer"
 
+#: gst-libs/gst/pbutils/descriptions.c:780
 #, c-format
 msgid "%s decoder"
 msgstr "%s kod çözücü"
 
+#: gst-libs/gst/pbutils/descriptions.c:815
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "%s video RTP payloader"
 
+#: gst-libs/gst/pbutils/descriptions.c:817
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "%s audio RTP payloader"
 
+#: gst-libs/gst/pbutils/descriptions.c:819
 #, c-format
 msgid "%s RTP payloader"
 msgstr "%s RTP payloader"
 
+#: gst-libs/gst/pbutils/descriptions.c:826
 #, c-format
 msgid "%s muxer"
 msgstr "%s muxer"
 
+#: gst-libs/gst/pbutils/descriptions.c:828
 #, c-format
 msgid "%s encoder"
 msgstr "%s kodlayıcı"
 
+#: gst-libs/gst/pbutils/descriptions.c:859
 #, c-format
 msgid "GStreamer element %s"
 msgstr "GStreamer öğesi %s"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:554
 msgid "Unknown source element"
 msgstr "Bilinmeyen kaynak öğesi"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:557
 msgid "Unknown sink element"
 msgstr "Bilinmeyen gömme öğesi"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:560
 msgid "Unknown element"
 msgstr "Bilinmeyen öğe"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:563
 msgid "Unknown decoder element"
 msgstr "Bilinmeyen kod çözücü öğesi"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:566
 msgid "Unknown encoder element"
 msgstr "Bilinmeyen kodlama öğesi"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:571
 msgid "Plugin or element of unknown type"
 msgstr "Bilinmeyen türde eklenti veya öğe"
 
+#: sys/v4l/v4l_calls.c:159
 msgid "No device specified."
 msgstr "Aygıt belirtilmedi."
 
+#: sys/v4l/v4l_calls.c:168
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Aygıt \"%s\" bulunamadı."
 
+#: sys/v4l/v4l_calls.c:173
 #, c-format
 msgid "Device \"%s\" is already being used."
 msgstr "Aygıt \"%s\" zaten kullanımda."
 
+#: sys/v4l/v4l_calls.c:178
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Şu aygıtı\"%s\" for okuma veya yazma için açamıyor."
-
-#~ msgid "No file name specified."
-#~ msgstr "Dosya adı belirtilmedi."

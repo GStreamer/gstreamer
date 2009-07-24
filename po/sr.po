@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-07-19 21:15+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-11-23 16:23+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,465 +16,128 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+#: ext/alsa/gstalsamixertrack.c:83
 msgid "Master"
 msgstr ""
 
+#: ext/alsa/gstalsamixertrack.c:84
 msgid "Bass"
 msgstr "Бас"
 
+#: ext/alsa/gstalsamixertrack.c:85
 msgid "Treble"
 msgstr "Шум"
 
+#: ext/alsa/gstalsamixertrack.c:86
 msgid "PCM"
 msgstr "ПЦМ"
 
+#: ext/alsa/gstalsamixertrack.c:87
 msgid "Synth"
 msgstr "Синт."
 
+#: ext/alsa/gstalsamixertrack.c:88
 msgid "Line-in"
 msgstr "Ул.лин."
 
+#: ext/alsa/gstalsamixertrack.c:89
 msgid "CD"
 msgstr "ЦД"
 
+#: ext/alsa/gstalsamixertrack.c:90
 msgid "Microphone"
 msgstr "Микрофон"
 
+#: ext/alsa/gstalsamixertrack.c:91
 #, fuzzy
 msgid "PC Speaker"
 msgstr "Звучник"
 
+#: ext/alsa/gstalsamixertrack.c:92
 msgid "Playback"
 msgstr ""
 
+#: ext/alsa/gstalsamixertrack.c:93
 msgid "Capture"
 msgstr ""
 
-#, fuzzy
-msgid "Could not open device for playback in mono mode."
-msgstr "Не могу да отворим ЦД уређај ради читања."
-
-#, fuzzy
-msgid "Could not open device for playback in stereo mode."
-msgstr "Не могу да отворим ЦД уређај ради читања."
-
-#, fuzzy, c-format
-msgid "Could not open device for playback in %d-channel mode."
-msgstr "Не могу да отворим ЦД уређај ради читања."
-
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
+#: ext/cdparanoia/gstcdparanoia.c:279
+msgid "discid"
 msgstr ""
 
-#, fuzzy
-msgid "Could not open audio device for playback."
-msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
+#: ext/cdparanoia/gstcdparanoia.c:279
+msgid "CDDA discid for metadata retrieval"
+msgstr ""
 
-#, fuzzy
-msgid "Could not open device for recording in mono mode."
-msgstr "Не могу да отворим ЦД уређај ради читања."
-
-#, fuzzy
-msgid "Could not open device for recording in stereo mode."
-msgstr "Не могу да отворим ЦД уређај ради читања."
-
-#, fuzzy, c-format
-msgid "Could not open device for recording in %d-channel mode"
-msgstr "Не могу да отворим ЦД уређај ради читања."
-
-#, fuzzy
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
-msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
-
-#, fuzzy
-msgid "Could not open audio device for recording."
-msgstr "Не могу да отворим ЦД уређај ради читања."
-
+#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
 msgid "Could not open CD device for reading."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
-#, fuzzy
-msgid "Could not seek CD."
-msgstr "Не могу да затворим ВСД датотеку „%s“."
-
-#, fuzzy
-msgid "Could not read CD."
-msgstr "Не могу да пишем на видео уређај „%s“."
-
+#: ext/gnomevfs/gstgnomevfssink.c:431
 #, fuzzy, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Не могу да отворим ВСД датотеку „%s“ ради уписа."
 
+#: ext/gnomevfs/gstgnomevfssink.c:438
 #, fuzzy
 msgid "No filename given"
 msgstr "Име датотеке није задато."
 
+#: ext/gnomevfs/gstgnomevfssink.c:466
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не могу да затворим ВСД датотеку „%s“."
 
-#, fuzzy, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Грешка при затварању датотеке „%s“."
-
+#: ext/ogg/gstoggdemux.c:2454
 msgid "Internal data stream error."
 msgstr ""
 
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
-
-msgid "This appears to be a text file"
-msgstr ""
-
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
-
+#: gst/playback/gstplaybasebin.c:1331
 msgid "No URI specified to play from."
 msgstr ""
 
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr ""
-
-msgid "RTSP streams cannot be played yet."
-msgstr ""
-
-msgid "Could not create \"decodebin\" element."
-msgstr ""
-
-msgid "Source element is invalid."
-msgstr ""
-
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-
-#, fuzzy
-msgid "This is not a media file"
-msgstr "Уређај „%s“ не представља уређај за снимање."
-
-msgid "A subtitle stream was detected, but no video stream."
-msgstr ""
-
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr ""
-
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr ""
-
-msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr ""
-
-msgid "Custom text sink element is not usable."
-msgstr ""
-
-msgid "No volume control found"
-msgstr ""
-
-msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr ""
-
-msgid "Can't play a text file without video."
-msgstr ""
-
-msgid "Can't play a text subtitles and subpictures."
-msgstr ""
-
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "Уређај није наведен."
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Не могу да пишем у датотеку „%s“."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Не могу да отворим датотеку „%s“ ради читања."
-
-#, c-format
-msgid "No decoder available for type '%s'."
-msgstr ""
-
-msgid "This stream type cannot be played yet."
-msgstr ""
-
+#: gst/playback/gstplaybasebin.c:1337
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-msgid "Could not create \"decodebin2\" element."
+#: gst/playback/gstplaybasebin.c:1341
+#, c-format
+msgid "Invalid URI \"%s\"."
 msgstr ""
 
-msgid "Could not create \"queue2\" element."
+#: gst/playback/gstplaybasebin.c:1348
+msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#, fuzzy
-msgid "Could not create \"typefind\" element."
-msgstr "Не могу да пишем у датотеку „%s“."
+#: gst/playback/gstplaybasebin.c:1414
+#, c-format
+msgid ""
+"You do not have a decoder installed to handle \"%s\".  You might need to "
+"install the necessary plugins."
+msgstr ""
 
+#: gst/playback/gstplaybasebin.c:1417
 #, fuzzy, c-format
-msgid "Error while sending data to \"%s:%d\"."
-msgstr "Грешка при затварању датотеке „%s“."
+msgid "\"%s\" is not a media file"
+msgstr "Уређај „%s“ не представља уређај за снимање."
 
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
+#: gst/playback/gstplaybin.c:411
+msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
+#: gst/playback/gstplaybin.c:541
+msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr ""
-
-msgid "Can't record audio fast enough"
-msgstr ""
-
-msgid "Failed to read tag: not enough data"
-msgstr ""
-
-msgid "track ID"
-msgstr ""
-
-msgid "MusicBrainz track ID"
-msgstr ""
-
-msgid "artist ID"
-msgstr ""
-
-msgid "MusicBrainz artist ID"
-msgstr ""
-
-msgid "album ID"
-msgstr ""
-
-msgid "MusicBrainz album ID"
-msgstr ""
-
-msgid "album artist ID"
-msgstr ""
-
-msgid "MusicBrainz album artist ID"
-msgstr ""
-
-msgid "track TRM ID"
-msgstr ""
-
-msgid "MusicBrainz TRM ID"
-msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr ""
-
-msgid "ID3 tag"
-msgstr ""
-
-msgid "APE tag"
-msgstr ""
-
-msgid "ICY internet radio"
-msgstr ""
-
-msgid "Apple Lossless Audio (ALAC)"
-msgstr ""
-
-msgid "Free Lossless Audio Codec (FLAC)"
-msgstr ""
-
-msgid "Lossless True Audio (TTA)"
-msgstr ""
-
-msgid "Windows Media Speech"
-msgstr ""
-
-msgid "CYUV Lossless"
-msgstr ""
-
-msgid "FFMpeg v1"
-msgstr ""
-
-msgid "Lossless MSZH"
-msgstr ""
-
-msgid "Uncompressed Gray Image"
-msgstr ""
-
-msgid "Run-length encoding"
-msgstr ""
-
-msgid "Sami subtitle format"
-msgstr ""
-
-msgid "TMPlayer subtitle format"
-msgstr ""
-
-msgid "Kate subtitle format"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr ""
-
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr ""
-
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr ""
-
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr ""
-
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr ""
-
-msgid "Uncompressed black and white Y-plane"
-msgstr ""
-
-msgid "Uncompressed YUV"
-msgstr ""
-
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
-msgstr ""
-
-#, c-format
-msgid "DivX MPEG-4 Version %d"
-msgstr ""
-
-#, c-format
-msgid "Raw %d-bit PCM audio"
-msgstr ""
-
-msgid "Raw PCM audio"
-msgstr ""
-
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr ""
-
-msgid "Raw floating-point audio"
-msgstr ""
-
-msgid "Audio CD source"
-msgstr ""
-
-msgid "DVD source"
-msgstr ""
-
-msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr ""
-
-msgid "Microsoft Media Server (MMS) protocol source"
-msgstr ""
-
-#, c-format
-msgid "%s protocol source"
-msgstr ""
-
-#, c-format
-msgid "%s video RTP depayloader"
-msgstr ""
-
-#, c-format
-msgid "%s audio RTP depayloader"
-msgstr ""
-
-#, c-format
-msgid "%s RTP depayloader"
-msgstr ""
-
-#, c-format
-msgid "%s demuxer"
-msgstr ""
-
-#, c-format
-msgid "%s decoder"
-msgstr ""
-
-#, c-format
-msgid "%s video RTP payloader"
-msgstr ""
-
-#, c-format
-msgid "%s audio RTP payloader"
-msgstr ""
-
-#, c-format
-msgid "%s RTP payloader"
-msgstr ""
-
-#, c-format
-msgid "%s muxer"
-msgstr ""
-
-#, c-format
-msgid "%s encoder"
-msgstr ""
-
-#, c-format
-msgid "GStreamer element %s"
-msgstr ""
-
-msgid "Unknown source element"
-msgstr ""
-
-msgid "Unknown sink element"
-msgstr ""
-
-msgid "Unknown element"
-msgstr ""
-
-msgid "Unknown decoder element"
-msgstr ""
-
-msgid "Unknown encoder element"
-msgstr ""
-
-msgid "Plugin or element of unknown type"
-msgstr ""
-
-msgid "No device specified."
-msgstr "Уређај није наведен."
-
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Не постоји уређај „%s“."
+#~ msgid "No device specified."
+#~ msgstr "Уређај није наведен."
 
-#, fuzzy, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "OSS уређај „%s“ већ користи неки програм."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Не постоји уређај „%s“."
 
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
 
 #~ msgid "Device is not open."
 #~ msgstr "Уређај није отворен."
@@ -493,11 +156,23 @@ msgstr "Не могу да отворим уређај „%s“ ради чит�
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Не могу да отворим датотеку „%s“ ради уписа."
 
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Грешка при затварању датотеке „%s“."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Не могу да отворим датотеку „%s“ ради читања."
+
 #~ msgid "No filename specified."
 #~ msgstr "Име датотеке није задато."
 
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Не могу да пишем у датотеку „%s“."
+
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
+
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
 
 #~ msgid "Could not open control device \"%s\" for writing."
 #~ msgstr "Не могу да отворим управљачки уређај „%s“ ради уписа."
@@ -519,6 +194,12 @@ msgstr "Не могу да отворим уређај „%s“ ради чит�
 
 #~ msgid "Could not close video device \"%s\"."
 #~ msgstr "Не могу да затворим видео уређај „%s“."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "Не могу да пишем на видео уређај „%s“."
+
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr "OSS уређај „%s“ већ користи неки програм."
 
 #~ msgid "Could not access device \"%s\", check its permissions."
 #~ msgstr "Не могу да приступим уређају „%s“, проверите његова овлашћења."
