@@ -383,6 +383,44 @@ _wrap_gst_buffer__get_data(PyObject *self, void *closure)
 }
 
 %%
+override-attr GstBuffer.size
+static PyObject *
+_wrap_gst_buffer__get_size(PyObject *self, void *closure)
+{
+    return PyLong_FromUnsignedLongLong((guint) GST_BUFFER_SIZE(GST_BUFFER(pygstminiobject_get(self))));
+}
+static int
+_wrap_gst_buffer__set_size(PyGstMiniObject *self, PyObject *value, void *closure)
+{
+    guint val;
+    GstBuffer *buf;
+    void* ptr;
+
+    if (PyInt_CheckExact(value))
+      val = PyInt_AsUnsignedLongLongMask(value);
+    else
+      val = PyLong_AsUnsignedLongLong(value);
+    if (PyErr_Occurred())
+        return -1;
+
+    g_assert (self);
+    buf = GST_BUFFER(pygstminiobject_get(self));
+    g_assert (buf);
+
+    ptr = realloc( GST_BUFFER_DATA(buf), val );
+    if (ptr)
+    {
+	GST_BUFFER_DATA(buf) = ptr;
+        GST_BUFFER_SIZE(buf) = val;
+    }
+    else
+    {
+        /* Raise an error */
+        PyErr_SetString( PyExc_RuntimeError, "Unable to realloc Buffer" );
+    }
+    return 0;
+}
+%%
 override-attr GstBuffer.timestamp
 static PyObject *
 _wrap_gst_buffer__get_timestamp(PyObject *self, void *closure)
