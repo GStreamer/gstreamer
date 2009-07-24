@@ -310,4 +310,7 @@ gst_dicetv_init (GstDiceTV * filter, GstDiceTVClass * klass)
   filter->g_cube_size = 0;
   filter->g_map_height = 0;
   filter->g_map_width = 0;
+
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (filter));
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (filter));
 }

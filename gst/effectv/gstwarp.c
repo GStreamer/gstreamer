@@ -282,4 +282,6 @@ gst_warptv_class_init (GstWarpTVClass * klass)
 static void
 gst_warptv_init (GstWarpTV * warptv, GstWarpTVClass * klass)
 {
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (warptv));
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (warptv));
 }

@@ -418,4 +418,7 @@ gst_agingtv_init (GstAgingTV * agingtv, GstAgingTVClass * klass)
   agingtv->color_aging = DEFAULT_COLOR_AGING;
   agingtv->pits = DEFAULT_PITS;
   agingtv->dusts = DEFAULT_DUSTS;
+
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (agingtv));
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (agingtv));
 }

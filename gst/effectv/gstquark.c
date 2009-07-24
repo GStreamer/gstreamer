@@ -286,4 +286,7 @@ gst_quarktv_init (GstQuarkTV * filter, GstQuarkTVClass * klass)
 {
   filter->planes = PLANES;
   filter->current_plane = filter->planes - 1;
+
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (filter));
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (filter));
 }

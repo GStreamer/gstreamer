@@ -612,4 +612,7 @@ gst_radioactv_init (GstRadioacTV * filter, GstRadioacTVClass * klass)
   filter->color = DEFAULT_COLOR;
   filter->interval = DEFAULT_INTERVAL;
   filter->trigger = DEFAULT_TRIGGER;
+
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (filter));
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (filter));
 }

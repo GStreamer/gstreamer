@@ -308,4 +308,7 @@ gst_vertigotv_init (GstVertigoTV * filter, GstVertigoTVClass * klass)
   filter->phase = 0.0;
   filter->phase_increment = 0.02;
   filter->zoomrate = 1.01;
+
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (filter));
+  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (filter));
 }
