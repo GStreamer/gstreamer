@@ -2689,7 +2689,10 @@ kate_type_find (GstTypeFind * tf, gpointer private)
   /* make sure we always have a NUL-terminated string */
   memcpy (category, data + 48, 15);
   GST_LOG ("kate category: %s", category);
-  if (strstr (category, "subtitle") != NULL) {
+  /* canonical categories for subtitles: subtitles, spu-subtitles, SUB, K-SPU */
+  if (strcmp (category, "subtitles") == 0 || strcmp (category, "SUB") == 0 ||
+      strcmp (category, "spu-subtitles") == 0 ||
+      strcmp (category, "K-SPU") == 0) {
     gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
         "subtitle/x-kate", NULL);
   } else {
