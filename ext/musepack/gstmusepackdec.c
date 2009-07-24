@@ -300,6 +300,7 @@ gst_musepackdec_get_src_query_types (GstPad * pad)
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
+    GST_QUERY_SEEKING,
     (GstQueryType) 0
   };
 
@@ -356,6 +357,18 @@ gst_musepackdec_src_query (GstPad * pad, GstQuery * query)
         gst_query_set_duration (query, GST_FORMAT_DEFAULT, len_off);
         res = TRUE;
       }
+      break;
+    }
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      res = TRUE;
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      if (fmt == GST_FORMAT_TIME || fmt == GST_FORMAT_DEFAULT)
+        gst_query_set_seeking (query, fmt, TRUE, 0, -1);
+      else
+        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+
       break;
     }
     default:
