@@ -143,7 +143,7 @@ gst_selector_pad_get_type (void)
     };
 
     selector_pad_type =
-        g_type_register_static (GST_TYPE_PAD, "GstSelectorPad",
+        g_type_register_static (GST_TYPE_PAD, "GstPlaybinSelectorPad",
         &selector_pad_info, 0);
   }
   return selector_pad_type;
