@@ -254,6 +254,7 @@ AG_GST_CHECK_PLUGIN(aacparse)
 AG_GST_CHECK_PLUGIN(adpcmdec)
 AG_GST_CHECK_PLUGIN(aiffparse)
 AG_GST_CHECK_PLUGIN(amrparse)
+AG_GST_CHECK_PLUGIN(asfmux)
 AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(camerabin)
 AG_GST_CHECK_PLUGIN(legacyresample)
@@ -1626,6 +1627,7 @@ gst/aacparse/Makefile
 gst/adpcmdec/Makefile
 gst/aiffparse/Makefile
 gst/amrparse/Makefile
+gst/asfmux/Makefile
 gst/autoconvert/Makefile
 gst/bayer/Makefile
 gst/camerabin/Makefile
