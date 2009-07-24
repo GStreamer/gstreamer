@@ -856,10 +856,14 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       if (format == src->segment.format) {
         gst_query_set_seeking (query, src->segment.format,
             gst_base_src_seekable (src), 0, src->segment.duration);
+        res = TRUE;
       } else {
-        gst_query_set_seeking (query, format, FALSE, 0, -1);
+        /* FIXME 0.11: return TRUE + seekable=FALSE for SEEKING query here */
+        /* Don't reply to the query to make up for demuxers which don't
+         * handle the SEEKING query yet. Players like Totem will fall back
+         * to the duration when the SEEKING query isn't answered. */
+        res = FALSE;
       }
-      res = TRUE;
       break;
     }
     case GST_QUERY_SEGMENT:
