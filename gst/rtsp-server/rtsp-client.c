@@ -1359,6 +1359,8 @@ tunnel_start (GstRTSPWatch * watch, gpointer user_data)
 
   /* store client in the pending tunnels */
   tunnelid = gst_rtsp_connection_get_tunnelid (client->connection);
+  if (tunnelid == NULL)
+    goto no_tunnelid;
 
   g_message ("client %p: inserting %s", client, tunnelid);
 
@@ -1373,6 +1375,11 @@ tunnel_start (GstRTSPWatch * watch, gpointer user_data)
   return GST_RTSP_STS_OK;
 
   /* ERRORS */
+no_tunnelid:
+  {
+    g_message ("client %p: no tunnelid provided", client);
+    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
+  }
 tunnel_existed:
   {
     g_mutex_unlock (tunnels_lock);
@@ -1392,6 +1399,8 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
 
   /* find previous tunnel */
   tunnelid = gst_rtsp_connection_get_tunnelid (client->connection);
+  if (tunnelid == NULL)
+    goto no_tunnelid;
 
   g_mutex_lock (tunnels_lock);
   if (!(oclient = g_hash_table_lookup (tunnels, tunnelid)))
@@ -1417,11 +1426,16 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   return GST_RTSP_OK;
 
   /* ERRORS */
+no_tunnelid:
+  {
+    g_message ("client %p: no tunnelid provided", client);
+    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
+  }
 no_tunnel:
   {
     g_mutex_unlock (tunnels_lock);
     g_message ("client %p: tunnel session %s not found", client, tunnelid);
-    return GST_RTSP_OK;
+    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
   }
 }
 
