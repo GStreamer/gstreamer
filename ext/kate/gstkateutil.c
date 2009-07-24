@@ -17,7 +17,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* FIXME: post appropriate GST_ELEMENT_ERROR when returning FLOW_ERROR */
 /* FIXME: shouldn't all this GstKateDecoderBase stuff really be a base class? */
 
 #ifdef HAVE_CONFIG_H
@@ -165,7 +164,8 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
   kate_packet_wrap (&kp, GST_BUFFER_SIZE (buf), GST_BUFFER_DATA (buf));
   ret = kate_high_decode_packetin (&decoder->k, &kp, ev);
   if (G_UNLIKELY (ret < 0)) {
-    GST_WARNING_OBJECT (element, "kate_high_decode_packetin failed (%d)", ret);
+    GST_ELEMENT_ERROR (element, STREAM, DECODE, (NULL),
+        ("Failed to decode Kate packet: %d", ret));
     return GST_FLOW_ERROR;
   } else if (G_UNLIKELY (ret > 0)) {
     GST_DEBUG_OBJECT (element,

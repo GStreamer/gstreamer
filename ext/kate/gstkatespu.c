@@ -253,7 +253,8 @@ gst_kate_spu_crop_bitmap (GstKateEnc * ke, kate_bitmap * kb, guint16 * dx,
   kb->height = h;
 }
 
-#define CHECK(x) do { guint16 _ = (x); if (G_UNLIKELY((_) > sz)) { GST_WARNING_OBJECT (ke, "SPU overflow"); return GST_FLOW_ERROR; } } while (0)
+/* FIXME: fix macros */
+#define CHECK(x) do { guint16 _ = (x); if (G_UNLIKELY((_) > sz)) { GST_ELEMENT_ERROR (ke, STREAM, ENCODE, ("Attempt to read outide buffer"), (NULL)); return GST_FLOW_ERROR; } } while (0)
 #define ADVANCE(x) do { guint16 _ = (x); ptr += (_); sz -= (_); } while (0)
 #define IGNORE(x) do { guint16 __ = (x); CHECK (__); ADVANCE (__); } while (0)
 
@@ -267,8 +268,9 @@ gst_kate_spu_decode_command_sequence (GstKateEnc * ke, GstBuffer * buf,
   guint16 sz;
 
   if (command_sequence_offset >= GST_BUFFER_SIZE (buf)) {
-    GST_WARNING_OBJECT (ke, "Command sequence offset %u is out of range %u",
-        command_sequence_offset, GST_BUFFER_SIZE (buf));
+    GST_ELEMENT_ERROR (ke, STREAM, DECODE, (NULL),
+        ("Command sequence offset %u is out of range %u",
+            command_sequence_offset, GST_BUFFER_SIZE (buf)));
     return GST_FLOW_ERROR;
   }
 
@@ -348,10 +350,12 @@ gst_kate_spu_decode_command_sequence (GstKateEnc * ke, GstBuffer * buf,
         }
         break;
       default:
-        GST_WARNING_OBJECT (ke, "invalid SPU command: %u", cmd);
+        GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
+            ("Invalid SPU command: %u", cmd));
         return GST_FLOW_ERROR;
     }
   }
+  GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL), ("Error parsing SPU"));
   return GST_FLOW_ERROR;
 }
 
@@ -395,9 +399,10 @@ gst_kate_spu_create_spu_palette (GstKateEnc * ke, kate_palette * kp)
   kate_palette_init (kp);
   kp->ncolors = 4;
   kp->colors = (kate_color *) g_malloc (kp->ncolors * sizeof (kate_color));
-  if (G_UNLIKELY (!kp->colors))
+  if (G_UNLIKELY (!kp->colors)) {
+    GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL), ("Out of memory"));
     return GST_FLOW_ERROR;
-
+  }
 #if 1
   for (n = 0; n < kp->ncolors; ++n) {
     int idx = ke->spu_colormap[n];
@@ -478,7 +483,8 @@ gst_kate_spu_decode_spu (GstKateEnc * ke, GstBuffer * buf, kate_region * kr,
   if (G_UNLIKELY (ke->spu_right - ke->spu_left < 0
           || ke->spu_bottom - ke->spu_top < 0 || ke->spu_pix_data[0] == 0
           || ke->spu_pix_data[1] == 0)) {
-    GST_WARNING_OBJECT (ke, "SPU area is empty, nothing to encode");
+    GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
+        ("SPU area is empty, nothing to encode"));
     return GST_FLOW_ERROR;
   }
 
@@ -495,7 +501,8 @@ gst_kate_spu_decode_spu (GstKateEnc * ke, GstBuffer * buf, kate_region * kr,
   kb->type = kate_bitmap_type_paletted;
   kb->pixels = (unsigned char *) g_malloc (kb->width * kb->height);
   if (G_UNLIKELY (!kb->pixels)) {
-    GST_WARNING_OBJECT (ke, "Failed to allocate memory for pixel data");
+    GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
+        ("Failed to allocate memory for pixel data"));
     return GST_FLOW_ERROR;
   }
 

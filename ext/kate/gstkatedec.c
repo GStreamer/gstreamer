@@ -74,8 +74,6 @@
  * </refsect2>
  */
 
-/* FIXME: post appropriate GST_ELEMENT_ERROR when returning FLOW_ERROR */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -298,7 +296,8 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
                 gst_flow_get_name (rflow));
           }
         } else {
-          GST_WARNING_OBJECT (kd, "failed to create buffer");
+          GST_ELEMENT_ERROR (kd, STREAM, DECODE, (NULL),
+              ("Failed to create buffer"));
           rflow = GST_FLOW_ERROR;
         }
       } else {
@@ -307,7 +306,8 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
       }
       g_free (escaped);
     } else {
-      GST_WARNING_OBJECT (kd, "failed to allocate string");
+      GST_ELEMENT_ERROR (kd, STREAM, DECODE, (NULL),
+          ("Failed to allocate string"));
       rflow = GST_FLOW_ERROR;
     }
 
@@ -329,7 +329,8 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
               gst_flow_get_name (rflow));
         }
       } else {
-        GST_WARNING_OBJECT (kd, "failed to create SPU from paletted bitmap");
+        GST_ELEMENT_ERROR (kd, STREAM, DECODE, (NULL),
+            ("failed to create SPU from paletted bitmap"));
         rflow = GST_FLOW_ERROR;
       }
     }

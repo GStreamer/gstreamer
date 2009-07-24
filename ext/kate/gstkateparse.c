@@ -58,8 +58,6 @@
  *
  */
 
-/* FIXME: post appropriate GST_ELEMENT_ERROR when returning FLOW_ERROR */
-
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -174,7 +172,8 @@ gst_kate_parse_push_headers (GstKateParse * parse)
       gst_pad_get_negotiated_caps (parse->sinkpad), parse->streamheader);
 
   if (G_UNLIKELY (!caps)) {
-    GST_ERROR_OBJECT (parse, "Failed to set headers on caps");
+    GST_ELEMENT_ERROR (parse, STREAM, DECODE, (NULL),
+        ("Failed to set headers on caps"));
     return GST_FLOW_ERROR;
   }
 
@@ -182,8 +181,8 @@ gst_kate_parse_push_headers (GstKateParse * parse)
   res = gst_pad_set_caps (parse->srcpad, caps);
   gst_caps_unref (caps);
   if (G_UNLIKELY (!res)) {
-    GST_WARNING_OBJECT (parse, "Failed to set pad caps");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (parse->srcpad, "Failed to set caps on source pad");
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 
   headers = parse->streamheader;
@@ -343,7 +342,8 @@ gst_kate_parse_queue_buffer (GstKateParse * parse, GstBuffer * buf)
   if (granpos >= 0) {
     ret = gst_kate_parse_drain_queue (parse, granpos);
   } else {
-    GST_WARNING_OBJECT (parse, "granulepos < 0 (%lld)", granpos);
+    GST_ELEMENT_ERROR (parse, STREAM, DECODE, (NULL),
+        ("Bad granulepos %" G_GINT64_FORMAT, granpos));
     ret = GST_FLOW_ERROR;
   }
 #endif
