@@ -473,6 +473,10 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   jpegenc->jdest.next_output_byte = GST_BUFFER_DATA (outbuf);
   jpegenc->jdest.free_in_buffer = GST_BUFFER_SIZE (outbuf);
 
+  /* prepare for raw input */
+#if JPEG_LIB_VERSION >= 70
+  jpegenc->cinfo.do_fancy_downsampling = FALSE;
+#endif
   jpegenc->cinfo.smoothing_factor = jpegenc->smoothing;
   jpegenc->cinfo.dct_method = jpegenc->idct_method;
   jpeg_set_quality (&jpegenc->cinfo, jpegenc->quality, TRUE);
