@@ -63,7 +63,7 @@
 
 GST_BOILERPLATE (GstWarpTV, gst_warptv, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
-static void initSinTable (GstWarpTV * filter);
+static void initSinTable ();
 static void initOffsTable (GstWarpTV * filter);
 static void initDistTable (GstWarpTV * filter);
 
@@ -102,7 +102,6 @@ gst_warptv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     filter->disttable =
         g_malloc (filter->width * filter->height * sizeof (guint32));
 
-    initSinTable (filter);
     initOffsTable (filter);
     initDistTable (filter);
     ret = TRUE;
@@ -111,13 +110,15 @@ gst_warptv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   return ret;
 }
 
+static gint32 sintable[1024 + 256];
+
 static void
-initSinTable (GstWarpTV * filter)
+initSinTable ()
 {
   gint32 *tptr, *tsinptr;
   double i;
 
-  tsinptr = tptr = filter->sintable;
+  tsinptr = tptr = sintable;
 
   for (i = 0; i < 1024; i++)
     *tptr++ = (int) (sin (i * M_PI / 512) * 32767);
@@ -174,7 +175,7 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   gint xw, yw, cw;
   gint32 c, i, x, y, dx, dy, maxx, maxy;
   gint32 skip, *ctptr, *distptr;
-  gint32 *sintable, *ctable;
+  gint32 *ctable;
   GstFlowReturn ret = GST_FLOW_OK;
 
   xw = (gint) (sin ((warptv->tval + 100) * M_PI / 128) * 30);
@@ -185,7 +186,6 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 
   ctptr = warptv->ctable;
   distptr = warptv->disttable;
-  sintable = warptv->sintable;
   ctable = warptv->ctable;
 
   skip = 0;                     /* video_width*sizeof(RGB32)/4 - video_width;; */
@@ -275,6 +275,8 @@ gst_warptv_class_init (GstWarpTVClass * klass)
   trans_class->start = GST_DEBUG_FUNCPTR (gst_warptv_start);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_warptv_set_caps);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_warptv_transform);
+
+  initSinTable ();
 }
 
 static void

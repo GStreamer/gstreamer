@@ -54,7 +54,6 @@ struct _GstWarpTV
   gint *offstable;
   gint32 *disttable;
   gint32 ctable[1024];
-  gint32 sintable[1024 + 256];
   gint tval;
 };
 
