@@ -22,7 +22,7 @@ if (WIN32)
   include_directories(AFTER ../../win32/common)
 endif (WIN32)
 
-add_library (gstopengl SHARED
+add_library (gstopengl MODULE
   gstopengl.c
   gstglimagesink.c
   gstglupload.c
