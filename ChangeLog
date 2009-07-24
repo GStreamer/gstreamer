@@ -1,3 +1,179 @@
+2009-07-24 09:50:19 +0100  Robin Stocker <robin@nibor.org>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: don't handle SEEKING queries for formats that don't match the one the source operates in
+	  Return FALSE in basesrc's default query handler when we get a SEEKING query for
+	  a format that's not the one the source operates in. Previously (ie. before, in
+	  the git version) we would return TRUE in that case and seekable=FALSE, which
+	  is more correct, but causes backwards compatibility problems. (Before that
+	  we would change the format of the query when answering, which was completely
+	  broken since callers don't expect that or check for it). Since the SEEKING
+	  query is a fairly recent addition, not all demuxers, parsers and decoders
+	  implement it yet, in which case any SEEKING query by an application will
+	  just be passed upstream where it will then be handled by basesrc. Now, if
+	  e.g. totem does a SEEKING query for TIME format and we have a demuxer that
+	  doesn't implement the query, basesrc would answer it with seekable=FALSE in
+	  most cases, and totem can only take that as authoritative answer, not knowing
+	  that the demuxer doesn't implement the SEEKING query. To avoid this, we make
+	  basesrc return FALSE to SEEKING queries in unhandled formats. That way
+	  applications like totem can fall back on assuming seekability depending on
+	  whether a duration is available, or somesuch. Downstream elements doing
+	  such queries are likely to equate an unhandled query with a non-seekable
+	  response as well, so this should be an acceptable fix for the time being.
+	  See #584838, #588944, #589423 and #589424.
+
+2009-07-24 00:41:55 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From fedaaee to 94f95e3
+
+2009-07-20 16:11:02 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/gstregistrybinary.c:
+	  gstregistrybinary: add +1 after error checking
+	  The current code made the error checking pointless by changing -1 to 0 in error
+	  cases. Also don't leak a pad template on error.
+
+2009-07-20 15:51:20 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstenumtypes.h:
+	* win32/common/gstversion.h:
+	  0.10.23.3 pre-release
+
+2009-07-20 18:03:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/gsttask.c:
+	  tests: make sure the tasks are joined
+	  Call _clean_all() on the task to make sure everything is joined and stopped.
+	  See #589127
+
+2009-07-20 15:44:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gsttask.c:
+	  task: fix taskpool leak
+	  GstTaks does not always unref the taskpool it was created from because it
+	  depends on when the pool provided an ID for joining the task.
+	  Rework some code so that we always unref the pool and optionally join when the
+	  pool provided an id.
+	  Fixes #589127
+
+2009-07-20 13:26:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: make tag queuing threadsafe
+	  See #588745
+
+2009-07-13 09:22:06 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/check/Makefile.am:
+	* libs/gst/check/gstconsistencychecker.c:
+	* libs/gst/check/gstconsistencychecker.h:
+	  gstcheck: Add a stream consistency checking helper routine. Fixes #588744
+
+2009-07-20 11:04:05 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/gstregistrybinary.c:
+	  binaryregistry: don't unref NULL if we have an early read error
+
+2009-07-12 10:04:01 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Serialize tags into the dataflow. Fixes #588745
+
+2009-07-16 14:17:03 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/base/gstadapter.c:
+	* libs/gst/base/gstbytereader.c:
+	  docs: fix API docs for gst_{adapter|byte_reader}_masked_scan_uint32
+	  Clarify byte reader docs a bit: offset is relative to the current
+	  position of the reader, not to the start of the data. Also, the
+	  examples in both the adapter docs and the byte reader docs have
+	  the mask and pattern arguments swapped (see #587561). Spotted
+	  by Carl-Anton Ingmarsson.
+
+2009-07-16 13:59:07 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gststructure.c:
+	* tests/check/gst/gsttag.c:
+	  tags: only emit a g_warning() for empty tag strings for git versions
+	  For now, don't show a g_warning() for empty tag strings and NULL
+	  tags with non-git versions; we should wait for the fixes in our
+	  plugin modules to make it into a release before we enable this
+	  unconditionally.
+
+2009-07-14 18:59:13 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  0.10.23.2 pre-release
+
 2009-07-14 12:15:05 +0300  Stefan Kost <ensonic@users.sf.net>
 
 	* gst/gstvalue.c:
