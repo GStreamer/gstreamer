@@ -5,7 +5,6 @@ win32/vs6/gst_plugins_bad.dsw
 win32/vs6/libgstdirectdraw.dsp
 win32/vs6/libgstdshow.dsp
 win32/vs6/libgstdshowdecwrapper.dsp
-win32/vs6/libdshowsrcwrapper.dsp
 win32/vs6/libgstflv.dsp
 win32/vs6/libgstmpegvideoparse.dsp
 win32/vs6/libgstneon.dsp
@@ -13,4 +12,4 @@ win32/vs7/gst-plugins-bad.sln
 win32/vs7/libgstdirectdraw.vcproj
 win32/vs8/gst-plugins-bad.sln
 win32/vs8/libgstdirectdraw.vcproj
-win32/common/libgstdshow.def
+win32/vs8/libdshowsrcwrapper.vcproj
