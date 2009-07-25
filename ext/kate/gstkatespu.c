@@ -253,10 +253,21 @@ gst_kate_spu_crop_bitmap (GstKateEnc * ke, kate_bitmap * kb, guint16 * dx,
   kb->height = h;
 }
 
-/* FIXME: fix macros */
-#define CHECK(x) do { guint16 _ = (x); if (G_UNLIKELY((_) > sz)) { GST_ELEMENT_ERROR (ke, STREAM, ENCODE, ("Attempt to read outide buffer"), (NULL)); return GST_FLOW_ERROR; } } while (0)
-#define ADVANCE(x) do { guint16 _ = (x); ptr += (_); sz -= (_); } while (0)
-#define IGNORE(x) do { guint16 __ = (x); CHECK (__); ADVANCE (__); } while (0)
+#define CHECK(x) G_STMT_START { \
+      guint16 _ = (x); \
+      if (G_UNLIKELY((_) > sz)) { \
+        GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL), ("Read outside buffer")); \
+        return GST_FLOW_ERROR; \
+      } \
+    } G_STMT_END
+#define ADVANCE(x) G_STMT_START { \
+      guint16 _ = (x); ptr += (_); sz -= (_); \
+    } G_STMT_END
+#define IGNORE(x) G_STMT_START { \
+      guint16 __ = (x); \
+      CHECK (__); \
+      ADVANCE (__); \
+    } G_STMT_END
 
 static GstFlowReturn
 gst_kate_spu_decode_command_sequence (GstKateEnc * ke, GstBuffer * buf,
