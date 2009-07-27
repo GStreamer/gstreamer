@@ -741,6 +741,7 @@ gst_alsasrc_close (GstAudioSrc * asrc)
   GstAlsaSrc *alsa = GST_ALSA_SRC (asrc);
 
   snd_pcm_close (alsa->handle);
+  alsa->handle = NULL;
 
   if (alsa->mixer) {
     gst_alsa_mixer_free (alsa->mixer);
