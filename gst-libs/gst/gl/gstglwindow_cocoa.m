@@ -122,6 +122,7 @@ struct _GstGLWindowPrivate
   NSWindow *parent;
   NSThread *thread;
   gboolean running;
+  guint source_id;
 };
 
 G_DEFINE_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
@@ -148,22 +149,59 @@ gst_gl_window_log_handler (const gchar * domain, GLogLevelFlags flags,
 }
 
 gboolean
-gst_gl_window_nsapp_init (gpointer data)
+gst_gl_window_nsapp_init (GCond *nsapp_init_cond)
 {
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
   [NSApplication sharedApplication];
+  
   [pool release];
+  
+  g_cond_signal (nsapp_init_cond);
   
   return FALSE;    
 }
+
+gboolean
+gst_gl_window_nsapp_iteration (gpointer data)
+{
+  NSEvent *event = nil;
+  
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  
+  if ([NSThread isMainThread]) {
+    
+    while ((event = ([NSApp nextEventMatchingMask:NSAnyEventMask 
+      untilDate:[NSDate dateWithTimeIntervalSinceNow:0.5] 
+      inMode:NSDefaultRunLoopMode dequeue:YES])) != nil)
+    
+    [NSApp sendEvent:event];
+    
+    [pool release];
+    
+  }
+  
+  return TRUE;
+}
+
 
 static void
 gst_gl_window_class_init (GstGLWindowClass * klass)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
   
-  g_idle_add (gst_gl_window_nsapp_init, NULL);
-
+  GMutex *nsapp_init_mutex = g_mutex_new ();
+  GCond *nsapp_init_cond = g_cond_new ();
+  
+  g_mutex_lock (nsapp_init_mutex);
+  
+  g_idle_add ((GSourceFunc) gst_gl_window_nsapp_init, nsapp_init_cond);
+  
+  g_cond_wait (nsapp_init_cond, nsapp_init_mutex);
+  g_mutex_unlock (nsapp_init_mutex);
+  
+  g_mutex_free (nsapp_init_mutex);
+  g_cond_free (nsapp_init_cond);
+  
   g_type_class_add_private (klass, sizeof (GstGLWindowPrivate));
 
   obj_class->finalize = gst_gl_window_finalize;
@@ -245,6 +283,8 @@ gst_gl_window_new (gint width, gint height, gulong external_gl_context)
   [NSApp setDelegate: priv->internal_win_id];
 
   [pool release];
+  
+  priv->source_id = g_timeout_add_seconds (1, gst_gl_window_nsapp_iteration, priv->internal_win_id);
 
   return window;
 }
@@ -259,6 +299,8 @@ void
 gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
 {
   GstGLWindowPrivate *priv = window->priv;
+  
+  g_source_remove (priv->source_id);
 
   if (GSRegisterCurrentThread()) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -343,26 +385,6 @@ gst_gl_window_draw (GstGLWindow * window)
     g_debug ("failed to register current thread, cannot draw");
 }
 
-gboolean
-gst_gl_window_nsapp_iteration (gpointer data)
-{
-  NSEvent *event = nil;
-  
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  
-  if ([NSThread isMainThread]) {
-  
-    while ((event = ([NSApp nextEventMatchingMask:NSAnyEventMask 
-      untilDate:[NSDate dateWithTimeIntervalSinceNow:0.5] 
-      inMode:NSDefaultRunLoopMode dequeue:YES])) != nil)
-        [NSApp sendEvent:event];
-
-    [pool release];
-  }
-  
-  return FALSE; 
-}
-
 void
 gst_gl_window_run_loop (GstGLWindow * window)
 {
@@ -371,15 +393,10 @@ gst_gl_window_run_loop (GstGLWindow * window)
   NSRunLoop *run_loop = [NSRunLoop currentRunLoop];
  
   g_debug ("begin loop: %lud\n", (gulong) run_loop);
-
+  
   if (priv->internal_win_id != nil) {
-    while(priv->running) {
-     
+    while(priv->running)
       [run_loop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
-      
-      if (!priv->parent)
-        g_idle_add (gst_gl_window_nsapp_iteration, priv->internal_win_id);
-    }
     
     [priv->internal_win_id release];
     priv->internal_win_id = nil;
