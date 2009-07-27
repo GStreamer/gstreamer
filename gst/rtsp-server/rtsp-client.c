@@ -797,6 +797,14 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
   if (media == NULL)
     goto not_found;
 
+  /* fix the transports */
+  if (ct->lower_transport & GST_RTSP_LOWER_TRANS_TCP) {
+    /* check if the client selected channels for TCP */
+    if (ct->interleaved.min == -1 || ct->interleaved.max == -1) {
+      gst_rtsp_session_media_alloc_channels (media, &ct->interleaved);
+    }
+  }
+
   /* get a handle to the stream in the media */
   if (!(stream = gst_rtsp_session_media_get_stream (media, streamid)))
     goto no_stream;
@@ -1307,9 +1315,11 @@ message_received (GstRTSPWatch * watch, GstRTSPMessage * message,
 static GstRTSPResult
 message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
 {
-  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+  GstRTSPClient *client;
+  
+  client = GST_RTSP_CLIENT (user_data);
 
-  g_message ("client %p: sent a message with cseq %d", client, cseq);
+  /* g_message ("client %p: sent a message with cseq %d", client, cseq); */
 
   return GST_RTSP_OK;
 }

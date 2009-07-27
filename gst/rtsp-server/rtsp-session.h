@@ -75,6 +75,9 @@ struct _GstRTSPSessionMedia
   /* the server state */
   GstRTSPState  state;
 
+  /* counter for channels */
+  guint         counter;
+
   /* configuration for the different streams */
   GArray       *streams;
 };
@@ -137,6 +140,9 @@ gboolean               gst_rtsp_session_media_set_state      (GstRTSPSessionMedi
 /* get stream config */
 GstRTSPSessionStream * gst_rtsp_session_media_get_stream     (GstRTSPSessionMedia *media,
                                                               guint idx);
+
+gboolean               gst_rtsp_session_media_alloc_channels (GstRTSPSessionMedia *media,
+                                                              GstRTSPRange *range);
 
 /* configure transport */
 GstRTSPTransport *     gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,

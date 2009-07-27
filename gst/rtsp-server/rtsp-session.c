@@ -323,6 +323,15 @@ no_media:
   }
 }
 
+gboolean
+gst_rtsp_session_media_alloc_channels (GstRTSPSessionMedia *media, GstRTSPRange *range)
+{
+  range->min = media->counter++;
+  range->max = media->counter++;
+
+  return TRUE;
+}
+
 /**
  * gst_rtsp_session_new:
  *
@@ -481,8 +490,7 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
   st->lower_transport = ct->lower_transport;
   st->client_port = ct->client_port;
   st->interleaved = ct->interleaved;
-  st->server_port.min = stream->media_stream->server_port.min;
-  st->server_port.max = stream->media_stream->server_port.max;
+  st->server_port = stream->media_stream->server_port;
 
   /* keep track of the transports in the stream. */
   if (stream->trans.transport)
