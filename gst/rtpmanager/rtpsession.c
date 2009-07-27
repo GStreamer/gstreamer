@@ -1711,6 +1711,7 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
 {
   guint count, i;
   gchar *reason;
+  gboolean reconsider = FALSE;
 
   reason = gst_rtcp_packet_bye_get_reason (packet);
   GST_DEBUG ("got BYE packet (reason: %s)", GST_STR_NULL (reason));
@@ -1769,11 +1770,9 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
 
         sess->next_rtcp_check_time += arrival->time;
 
-        RTP_SESSION_UNLOCK (sess);
-        /* notify app of reconsideration */
-        if (sess->callbacks.reconsider)
-          sess->callbacks.reconsider (sess, sess->reconsider_user_data);
-        RTP_SESSION_LOCK (sess);
+        /* mark pending reconsider. We only want to signal the reconsideration
+         * once after we handled all the source in the bye packet */
+        reconsider = TRUE;
       }
     }
 
@@ -1783,6 +1782,13 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
     on_bye_ssrc (sess, source);
 
     g_object_unref (source);
+  }
+  if (reconsider) {
+    RTP_SESSION_UNLOCK (sess);
+    /* notify app of reconsideration */
+    if (sess->callbacks.reconsider)
+      sess->callbacks.reconsider (sess, sess->reconsider_user_data);
+    RTP_SESSION_LOCK (sess);
   }
   g_free (reason);
 }
