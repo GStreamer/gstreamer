@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 /* register fake filters as COM object and as Direct Show filters in the registry */
-HRESULT gst_dshow_register_fakefilters ();
+//HRESULT gst_dshow_register_fakefilters ();
 
 /* free memory of the input pin mediatype */
 void gst_dshow_free_pin_mediatype (gpointer pt);

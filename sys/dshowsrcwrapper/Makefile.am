@@ -8,7 +8,6 @@ EXTRA_DIST = \
   gstdshowfakesink.cpp \
   gstdshowfakesink.h \
   gstdshow.h \
-  gstdshowinterface.h \
   gstdshowsrcwrapper.cpp \
   gstdshowvideosrc.cpp \
   gstdshowvideosrc.h

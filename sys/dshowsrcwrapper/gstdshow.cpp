@@ -22,44 +22,6 @@
 #include "gstdshow.h"
 #include "gstdshowfakesink.h"
 
-CFactoryTemplate g_Templates[]=
-{
-  { 
-    L"DSHOW fake sink filter"
-    , &CLSID_DshowFakeSink
-    , CDshowFakeSink::CreateInstance
-    , NULL
-    , NULL
-  }
-};
-
-int g_cTemplates = sizeof(g_Templates)/sizeof(g_Templates[0]);
-static HINSTANCE g_hModule = NULL;
-
-extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
-BOOL APIENTRY DllMain(HANDLE hModule, DWORD dwReason, LPVOID lpReserved)
-{
-  if (!g_hModule)
-    g_hModule = (HINSTANCE)hModule;
-
-  return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
-}
-
-STDAPI DllRegisterServer()
-{
-  return AMovieDllRegisterServer2 (TRUE);
-}
-
-STDAPI DllUnregisterServer()
-{
-  return AMovieDllRegisterServer2 (FALSE);
-}
-
-HRESULT gst_dshow_register_fakefilters ()
-{
-  return DllRegisterServer();
-}
-
 void 
 gst_dshow_free_mediatype (AM_MEDIA_TYPE *pmt)
 {

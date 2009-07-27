@@ -49,7 +49,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="C:\msys\1.0\local\include;C:\msys\1.0\local\include\libxml2;&quot;C:\msys\1.0\local\include\glib-2.0&quot;;&quot;C:\msys\1.0\local\lib\glib-2.0\include&quot;;&quot;C:\msys\1.0\local\include\gstreamer-0.10&quot;;..\common;&quot;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Samples\Multimedia\DirectShow\BaseClasses&quot;"
-				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_USRDLL;DSHOWSRCWRAPPER_EXPORTS;HAVE_CONFIG_H;COBJMACROS;_WIN32_DCOM;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_USRDLL;DSHOWSRCWRAPPER_EXPORTS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -78,7 +78,7 @@
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="C:\msys\1.0\local\lib;&quot;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib&quot;;&quot;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Samples\Multimedia\DirectShow\BaseClasses\XP32_RETAIL&quot;"
-				ModuleDefinitionFile="..\..\sys\dshowsrcwrapper\libgstdshow.def"
+				ModuleDefinitionFile=""
 				ProgramDatabaseFile=".\Release/libgstdshowsrcwrapper.pdb"
 				ImportLibrary=".\Release/libgstdshowsrcwrapper.lib"
 				TargetMachine="1"
@@ -146,7 +146,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="C:\msys\1.0\local\include;C:\msys\1.0\local\include\libxml2;&quot;C:\msys\1.0\local\include\glib-2.0&quot;;&quot;C:\msys\1.0\local\lib\glib-2.0\include&quot;;&quot;C:\msys\1.0\local\include\gstreamer-0.10&quot;;..\common;&quot;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Samples\Multimedia\DirectShow\BaseClasses&quot;"
-				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_USRDLL;DSHOWSRCWRAPPER_EXPORTS;HAVE_CONFIG_H;COBJMACROS;_WIN32_DCOM;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_USRDLL;DSHOWSRCWRAPPER_EXPORTS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -177,7 +177,7 @@
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="C:\msys\1.0\local\lib;&quot;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib&quot;;&quot;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Samples\Multimedia\DirectShow\BaseClasses\XP32_DEBUG&quot;"
-				ModuleDefinitionFile="..\..\sys\dshowsrcwrapper\libgstdshow.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/libgstdshowsrcwrapper.pdb"
 				ImportLibrary=".\Debug/libgstdshowsrcwrapper.lib"
@@ -239,10 +239,6 @@
 				RelativePath="..\..\sys\dshowsrcwrapper\gstdshowvideosrc.cpp"
 				>
 			</File>
-			<File
-				RelativePath="..\..\sys\dshowsrcwrapper\libgstdshow.def"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -258,10 +254,6 @@
 			</File>
 			<File
 				RelativePath="..\..\sys\dshowsrcwrapper\gstdshowfakesink.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\sys\dshowsrcwrapper\gstdshowinterface.h"
 				>
 			</File>
 			<File

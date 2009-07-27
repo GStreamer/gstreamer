@@ -28,7 +28,7 @@
 #include <gst/interfaces/propertyprobe.h>
 
 #include "gstdshow.h"
-#include "gstdshowinterface.h"
+#include "gstdshowfakesink.h"
 
 // 30323449-0000-0010-8000-00AA00389B71            MEDIASUBTYPE_I420
 DEFINE_GUID(MEDIASUBTYPE_I420, 0x30323449, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
@@ -62,7 +62,7 @@ struct _GstDshowVideoSrc
   IBaseFilter *video_cap_filter;
 
   /* dshow sink filter */
-  IBaseFilter *dshow_fakesink;
+  CDshowFakeSink *dshow_fakesink;
 
   /* graph manager interfaces */
   IMediaFilter *media_filter;

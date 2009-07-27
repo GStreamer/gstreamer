@@ -111,7 +111,7 @@ static GstFlowReturn gst_dshowvideosrc_create (GstPushSrc * psrc,
 static GstCaps *gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc *
     src, IPin * pin, IAMStreamConfig * streamcaps);
 static gboolean gst_dshowvideosrc_push_buffer (byte * buffer, long size,
-    byte * src_object, UINT64 start, UINT64 stop);
+    gpointer src_object, UINT64 start, UINT64 stop);
 
 static void
 gst_dshowvideosrc_init_interfaces (GType type)
@@ -614,14 +614,8 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
     goto error;
   }
 
-  hres = CoCreateInstance (CLSID_DshowFakeSink, NULL, CLSCTX_INPROC,
-      IID_IBaseFilter, (LPVOID *) & src->dshow_fakesink);
-  if (hres != S_OK || !src->dshow_fakesink) {
-    GST_CAT_ERROR (dshowvideosrc_debug,
-        "Can't create an instance of our dshow fakesink filter (error=0x%x)",
-        hres);
-    goto error;
-  }
+  src->dshow_fakesink = new CDshowFakeSink;
+  src->dshow_fakesink->AddRef();
 
   hres = src->filter_graph->AddFilter(src->video_cap_filter, L"capture");
   if (hres != S_OK) {
@@ -661,7 +655,6 @@ static gboolean
 gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   HRESULT hres;
-  IGstDshowInterface *srcinterface = NULL;
   IPin *input_pin = NULL;
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
   GstStructure *s = gst_caps_get_structure (caps, 0);
@@ -689,22 +682,9 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
       if (type) {
         pin_mediatype = (GstCapturePinMediaType *) type->data;
 
-        hres = src->dshow_fakesink->QueryInterface(
-            IID_IGstDshowInterface, (LPVOID *) &srcinterface);
-
-        if (hres != S_OK || !srcinterface) {
-          GST_CAT_ERROR (dshowvideosrc_debug,
-              "Can't get IGstDshowInterface interface from our dshow fakesink filter (error=%d)",
-              hres);
-          goto error;
-        }
-
-        srcinterface->gst_set_media_type(pin_mediatype->mediatype);
-        srcinterface->gst_set_buffer_callback(
-          (push_buffer_func) gst_dshowvideosrc_push_buffer, (byte *) src);
-
-        if (srcinterface)
-          srcinterface->Release();
+        src->dshow_fakesink->gst_set_media_type (pin_mediatype->mediatype);
+        src->dshow_fakesink->gst_set_buffer_callback(
+          (push_buffer_func) gst_dshowvideosrc_push_buffer, src);
 
         gst_dshow_get_pin_from_filter (src->dshow_fakesink, PINDIR_INPUT,
             &input_pin);
@@ -746,9 +726,6 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   return TRUE;
 
 error:
-  if (srcinterface)
-    srcinterface->Release();
-
   return FALSE;
 }
 
@@ -992,7 +969,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
 }
 
 static gboolean
-gst_dshowvideosrc_push_buffer (byte * buffer, long size, byte * src_object,
+gst_dshowvideosrc_push_buffer (byte * buffer, long size, gpointer src_object,
     UINT64 start, UINT64 stop)
 {
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (src_object);

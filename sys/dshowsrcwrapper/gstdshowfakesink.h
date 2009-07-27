@@ -19,32 +19,34 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gstdshowinterface.h"
+#ifndef __GST_DHOW_FAKESINK_H__
+#define __GST_DHOW_FAKESINK_H__
 
-class CDshowFakeSink :  public CBaseRenderer,
-                        public IGstDshowInterface
+#include "gstdshow.h"
+
+//{6A780808-9725-4d0b-8695-A4DD8D210773}
+static const GUID CLSID_DshowFakeSink =
+  { 0x6a780808, 0x9725, 0x4d0b, { 0x86, 0x95,  0xa4,  0xdd,  0x8d,  0x21,  0x7,  0x73 } };
+
+typedef bool (*push_buffer_func) (byte *buffer, long size, gpointer src_object, UINT64 start, UINT64 stop);
+
+class CDshowFakeSink :  public CBaseRenderer
 {
 public:
   CDshowFakeSink ();
-  virtual ~CDshowFakeSink ();
-
-  static CUnknown * WINAPI CreateInstance (LPUNKNOWN pUnk, HRESULT *pHr);
+  virtual ~CDshowFakeSink () {}
 
   virtual HRESULT CheckMediaType (const CMediaType *pmt);
   virtual HRESULT DoRenderSample (IMediaSample *pMediaSample);
   
-  STDMETHOD (QueryInterface)(REFIID riid, void **ppvObject);
-  ULONG STDMETHODCALLTYPE AddRef();
-  ULONG STDMETHODCALLTYPE Release();
   STDMETHOD (gst_set_media_type) (AM_MEDIA_TYPE *pmt);
-  STDMETHOD (gst_set_buffer_callback) (push_buffer_func push, byte *data);
-  STDMETHOD (gst_push_buffer) (byte *buffer, __int64 start, __int64 stop, unsigned int size, bool discount);
-  STDMETHOD (gst_flush) ();
-  STDMETHOD (gst_set_sample_size) (unsigned int size);
+  STDMETHOD (gst_set_buffer_callback) (push_buffer_func push, gpointer data);
 
 protected:
   HRESULT m_hres;
   CMediaType m_MediaType;
   push_buffer_func m_callback;
-  byte *m_data;
+  gpointer m_data;
 };
+
+#endif /* __GST_DSHOW_FAKESINK_H__ */

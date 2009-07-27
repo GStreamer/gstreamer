@@ -26,28 +26,11 @@
 #include "gstdshowaudiosrc.h"
 #include "gstdshowvideosrc.h"
 
-const GUID CLSID_GstreamerSrcFilter
-    =
-    { 0x6a780808, 0x9725, 0x4d0b, {0x86, 0x95, 0xa4, 0xdd, 0x8d, 0x21, 0x7,
-        0x73} };
-
-const GUID IID_IGstSrcInterface =
-    { 0x542c0a24, 0x8bd1, 0x46cb, {0xaa, 0x57, 0x3e, 0x46, 0xd0, 0x6, 0xd2,
-        0xf3} };
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* register fake filters */
-  HRESULT hr = gst_dshow_register_fakefilters ();
-  if (FAILED (hr)) {
-    g_warning ("failed to register directshow fakesink filter: 0x%x\n", hr);
-    return FALSE;
-  }
-
   if (!gst_element_register (plugin, "dshowaudiosrc",
-          GST_RANK_NONE,
-          GST_TYPE_DSHOWAUDIOSRC) ||
+          GST_RANK_NONE, GST_TYPE_DSHOWAUDIOSRC) ||
       !gst_element_register (plugin, "dshowvideosrc",
           GST_RANK_NONE, GST_TYPE_DSHOWVIDEOSRC))
     return FALSE;
