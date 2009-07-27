@@ -116,8 +116,21 @@ static gboolean gst_amrwbenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_amrwbenc_state_change (GstElement * element,
     GstStateChange transition);
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_amrwbenc_debug, "amrwbenc", 0, "AMR-WB audio encoder");
+static void
+_do_init (GType object_type)
+{
+  const GInterfaceInfo preset_interface_info = {
+    NULL,                       /* interface init */
+    NULL,                       /* interface finalize */
+    NULL                        /* interface_data */
+  };
+
+  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
+      &preset_interface_info);
+
+  GST_DEBUG_CATEGORY_INIT (gst_amrnbenc_debug, "amrwbenc", 0,
+      "AMR-WB audio encoder");
+}
 
 GST_BOILERPLATE_FULL (GstAmrwbEnc, gst_amrwbenc, GstElement, GST_TYPE_ELEMENT,
     _do_init);

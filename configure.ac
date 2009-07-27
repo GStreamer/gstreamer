@@ -450,12 +450,12 @@ AG_GST_CHECK_FEATURE(ASSRENDER, [ASS/SSA renderer], assrender, [
 AC_SUBST(ASSRENDER_CFLAGS)
 AC_SUBST(ASSRENDER_LIBS)
 
-dnl *** amrwb ***
+dnl *** amrwb-enc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
-AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwb, [
+AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwbenc, [
   AG_GST_CHECK_LIBHEADER(AMRWB, amrwb,
-                        GP3D_IF_decode, ,
-                        amrwb/dec.h,
+                        GP3E_IF_encode, ,
+                        amrwb/enc.h,
                         AMRWB_LIBS="-lamrwb"
                         AC_SUBST(AMRWB_LIBS))
 ])
@@ -1707,7 +1707,7 @@ tests/examples/shapewipe/Makefile
 tests/examples/switch/Makefile
 tests/icles/Makefile
 ext/alsaspdif/Makefile
-ext/amrwb/Makefile
+ext/amrwbenc/Makefile
 ext/assrender/Makefile
 ext/apexsink/Makefile
 ext/bz2/Makefile

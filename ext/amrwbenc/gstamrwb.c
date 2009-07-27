@@ -1,4 +1,4 @@
-/* GStreamer Adaptive Multi-Rate Wide-Band (AMR-WB) plugin
+/* GStreamer Adaptive Multi-Rate Wide-Band (AMR-WB) Encoder plugin
  * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
@@ -21,25 +21,19 @@
 #include "config.h"
 #endif
 
-#include "gstamrwbdec.h"
 #include "gstamrwbenc.h"
-#include "gstamrwbparse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "amrwbdec",
-      GST_RANK_PRIMARY, GST_TYPE_AMRWBDEC) &&
-      gst_element_register (plugin, "amrwbparse",
-      GST_RANK_PRIMARY, GST_TYPE_AMRWBPARSE) &&
-      gst_element_register (plugin, "amrwbenc",
+  return gst_element_register (plugin, "amrwbenc",
       GST_RANK_NONE, GST_TYPE_AMRWBENC);
 }
 
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "amrwb",
-    "Adaptive Multi-Rate Wide-Band",
+    "amrwbenc",
+    "Adaptive Multi-Rate Wide-Band Encoder",
     plugin_init, VERSION, GST_LICENSE_UNKNOWN, GST_PACKAGE_NAME,
     GST_PACKAGE_ORIGIN);

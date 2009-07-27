@@ -1,7 +1,7 @@
-Compiling AMRWB codec:
-======================
+Compiling AMRWB encoder:
+========================
 
-To compile the amrwb codec, you need to download the source code from 
+To compile the amrwb encoder, you need to download the source code from 
 "http://www.3gpp.org/ftp/Specs/html-info/26204.htm" and uncompress the 
 files inside an amrwb-code directory;
 

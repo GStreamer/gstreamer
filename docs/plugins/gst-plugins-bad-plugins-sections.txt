@@ -27,20 +27,6 @@ gst_amrparse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-amrwbdec</FILE>
-<TITLE>amrwbdec</TITLE>
-GstAmrwbDec
-<SUBSECTION Standard>
-GstAmrwbDecClass
-GST_AMRWBDEC
-GST_AMRWBDEC_CLASS
-GST_IS_AMRWBDEC
-GST_IS_AMRWBDEC_CLASS
-GST_TYPE_AMRWBDEC
-gst_amrwbdec_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-amrwbenc</FILE>
 <TITLE>amrwbenc</TITLE>
 GstAmrwbEnc
@@ -52,20 +38,6 @@ GST_IS_AMRWBENC
 GST_IS_AMRWBENC_CLASS
 GST_TYPE_AMRWBENC
 gst_amrwbenc_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-amrwbparse</FILE>
-<TITLE>amrwbparse</TITLE>
-GstAmrwbParse
-<SUBSECTION Standard>
-GstAmrwbParseClass
-GST_AMRWBPARSE
-GST_AMRWBPARSE_CLASS
-GST_IS_AMRWBPARSE
-GST_IS_AMRWBPARSE_CLASS
-GST_TYPE_AMRWBPARSE
-gst_amrwbparse_get_type
 </SECTION>
 
 <SECTION>

@@ -11,7 +11,7 @@ ASSRENDER_DIR =
 endif
 
 if USE_AMRWB
-AMRWB_DIR = amrwb
+AMRWB_DIR = amrwbenc
 else
 AMRWB_DIR =
 endif
@@ -402,7 +402,7 @@ SUBDIRS=\
 
 DIST_SUBDIRS = \
 	alsaspdif \
-	amrwb \
+	amrwbenc \
 	assrender \
 	apexsink \
 	bz2 \
