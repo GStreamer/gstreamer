@@ -128,7 +128,7 @@ _do_init (GType object_type)
   g_type_add_interface_static (object_type, GST_TYPE_PRESET,
       &preset_interface_info);
 
-  GST_DEBUG_CATEGORY_INIT (gst_amrnbenc_debug, "amrwbenc", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_amrwbenc_debug, "amrwbenc", 0,
       "AMR-WB audio encoder");
 }
 
