@@ -1869,6 +1869,8 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
         break;
       case GST_RTCP_TYPE_BYE:
         is_bye = TRUE;
+        /* don't try to attempt lip-sync anymore for streams with a BYE */
+        do_sync = FALSE;
         rtp_session_process_bye (sess, &packet, &arrival);
         break;
       case GST_RTCP_TYPE_APP:
