@@ -1,5 +1,5 @@
-/* GStreamer Adaptive Multi-Rate Narrow-Band (AMR-NB) plugin
- * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
+/* GStreamer Adaptive Multi-Rate Wide-Band (AMR-WB) Decoder plugin
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,22 +21,19 @@
 #include "config.h"
 #endif
 
-#include "amrnbdec.h"
-#include "amrnbenc.h"
+#include "amrwbdec.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "amrnbdec",
-      GST_RANK_PRIMARY, GST_TYPE_AMRNBDEC) &&
-      gst_element_register (plugin, "amrnbenc",
-      GST_RANK_NONE, GST_TYPE_AMRNBENC);
+  return gst_element_register (plugin, "amrwbdec",
+      GST_RANK_NONE, GST_TYPE_AMRWBDEC);
 }
 
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "amrnb",
-    "Adaptive Multi-Rate Narrow-Band",
+    "amrwbdec",
+    "Adaptive Multi-Rate Wide-Band Decoder",
     plugin_init, VERSION, GST_LICENSE_UNKNOWN, GST_PACKAGE_NAME,
     GST_PACKAGE_ORIGIN);

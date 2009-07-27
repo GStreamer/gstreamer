@@ -1,5 +1,5 @@
-/* GStreamer Adaptive Multi-Rate Narrow-Band (AMR-NB) plugin
- * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
+/* GStreamer Adaptive Multi-Rate Wide-Band (AMR-WB) plugin
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,43 +17,43 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AMRNBDEC_H__
-#define __GST_AMRNBDEC_H__
+#ifndef __GST_AMRWBDEC_H__
+#define __GST_AMRWBDEC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include <opencore-amrnb/interf_dec.h>
+#include <opencore-amrwb/dec_if.h>
+#include <opencore-amrwb/if_rom.h>
+
+#define L_FRAME16k      320   /* Frame size at 16kHz  */
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AMRNBDEC \
-  (gst_amrnbdec_get_type())
-#define GST_AMRNBDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AMRNBDEC, GstAmrnbDec))
-#define GST_AMRNBDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMRNBDEC, GstAmrnbDecClass))
-#define GST_IS_AMRNBDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AMRNBDEC))
-#define GST_IS_AMRNBDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AMRNBDEC))
+#define GST_TYPE_AMRWBDEC			\
+  (gst_amrwbdec_get_type())
+#define GST_AMRWBDEC(obj)						\
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AMRWBDEC, GstAmrwbDec))
+#define GST_AMRWBDEC_CLASS(klass)					\
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMRWBDEC, GstAmrwbDecClass))
+#define GST_IS_AMRWBDEC(obj)					\
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AMRWBDEC))
+#define GST_IS_AMRWBDEC_CLASS(klass)			\
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AMRWBDEC))
 
-typedef struct _GstAmrnbDec GstAmrnbDec;
-typedef struct _GstAmrnbDecClass GstAmrnbDecClass;
+typedef struct _GstAmrwbDec GstAmrwbDec;
+typedef struct _GstAmrwbDecClass GstAmrwbDecClass;
 
-typedef enum
-{
-  GST_AMRNB_VARIANT_IF1,
-  GST_AMRNB_VARIANT_IF2
-} GstAmrnbVariant;
-
-struct _GstAmrnbDec {
+/**
+ * GstAmrwbDec:
+ *
+ * Opaque data structure.
+ */
+struct _GstAmrwbDec {
   GstElement element;
 
   /* pads */
   GstPad *sinkpad, *srcpad;
   guint64 ts;
-
-  GstAmrnbVariant variant;
 
   GstAdapter *adapter;
 
@@ -68,12 +68,12 @@ struct _GstAmrnbDec {
   gboolean          discont;
 };
 
-struct _GstAmrnbDecClass {
+struct _GstAmrwbDecClass {
   GstElementClass parent_class;
 };
 
-GType gst_amrnbdec_get_type (void);
+GType gst_amrwbdec_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_AMRNBDEC_H__ */
+#endif /* __GST_AMRWBDEC_H__ */

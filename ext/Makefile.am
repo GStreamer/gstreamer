@@ -10,6 +10,12 @@ else
  AMRNB_DIR =
 endif
 
+if USE_AMRWB
+ AMRWB_DIR = amrwbdec
+else
+ AMRWB_DIR =
+endif
+
 if USE_CDIO
 CDIO_DIR = cdio
 else
@@ -61,6 +67,7 @@ endif
 SUBDIRS = \
 	$(A52DEC_DIR) \
 	$(AMRNB_DIR) \
+	$(AMRWB_DIR) \
 	$(CDIO_DIR) \
 	$(DVDREAD_DIR) \
 	$(LAME_DIR) \
@@ -73,6 +80,7 @@ SUBDIRS = \
 DIST_SUBDIRS = \
 	a52dec \
 	amrnb \
+	amrwbdec \
 	cdio \
 	dvdread \
 	lame \

@@ -231,14 +231,24 @@ AG_GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
   AC_CHECK_A52DEC(HAVE_A52DEC=yes, HAVE_A52DEC=no)
 ])
 
-dnl *** AMR-NB ***
+dnl *** amr-nb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
-AG_GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnb, [
-  AG_GST_CHECK_LIBHEADER(AMRNB, amrnb,
+AG_GST_CHECK_FEATURE(AMRNB, [amrnb library], amrnb, [
+  AG_GST_CHECK_LIBHEADER(AMRNB, opencore-amrnb,
 		      Decoder_Interface_init, -lm,
-		      amrnb/interf_dec.h,
-		      AMRNB_LIBS="-lamrnb -lm"
+		      opencore-amrnb/interf_dec.h,
+		      AMRNB_LIBS="-lopencore-amrnb -lm"
 		      AC_SUBST(AMRNB_LIBS))
+])
+
+dnl *** amr-wb dec ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
+AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwbdec, [
+  AG_GST_CHECK_LIBHEADER(AMRWB, opencore-amrwb,
+			D_IF_decode, ,
+			opencore-amrwb/dec_if.h,
+			AMRWB_LIBS="-lopencore-amrwb"
+			AC_SUBST(AMRWB_LIBS))
 ])
 
 dnl *** cdio ***
@@ -371,6 +381,7 @@ dnl but we still need to set the conditionals
 
 AM_CONDITIONAL(USE_A52DEC, false)
 AM_CONDITIONAL(USE_AMRNB, false)
+AM_CONDITIONAL(USE_AMRWB, false)
 AM_CONDITIONAL(USE_CDIO, false)
 AM_CONDITIONAL(USE_DVDREAD, false)
 AM_CONDITIONAL(USE_LAME, false)
@@ -458,6 +469,7 @@ gst/synaesthesia/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/amrnb/Makefile
+ext/amrwbdec/Makefile
 ext/cdio/Makefile
 ext/dvdread/Makefile
 ext/lame/Makefile

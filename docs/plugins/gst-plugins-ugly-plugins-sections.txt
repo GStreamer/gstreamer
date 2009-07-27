@@ -41,17 +41,17 @@ gst_amrnbenc_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-amrnbparse</FILE>
-<TITLE>amrnbparse</TITLE>
-GstAmrnbParse
+<FILE>element-amrwbdec</FILE>
+<TITLE>amrwbdec</TITLE>
+GstAmrwbDec
 <SUBSECTION Standard>
-GstAmrnbParseClass
-GST_AMRNBPARSE
-GST_AMRNBPARSE_CLASS
-GST_IS_AMRNBPARSE
-GST_IS_AMRNBPARSE_CLASS
-GST_TYPE_AMRNBPARSE
-gst_amrnbparse_get_type
+GstAmrwbDecClass
+GST_AMRWBDEC
+GST_AMRWBDEC_CLASS
+GST_IS_AMRWBDEC
+GST_IS_AMRWBDEC_CLASS
+GST_TYPE_AMRWBDEC
+gst_amrwbdec_get_type
 </SECTION>
 
 <SECTION>

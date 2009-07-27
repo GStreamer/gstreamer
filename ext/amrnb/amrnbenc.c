@@ -22,7 +22,7 @@
  * @see_also: #GstAmrnbDec, #GstAmrnbParse
  *
  * AMR narrowband encoder based on the 
- * <ulink url="http://www.penguin.cz/~utx/amr">reference codec implementation</ulink>.
+ * <ulink url="http://sourceforge.net/projects/opencore-amr">opencore codec implementation</ulink>.
  * 
  * <refsect2>
  * <title>Example launch line</title>
@@ -99,8 +99,21 @@ static gboolean gst_amrnbenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_amrnbenc_state_change (GstElement * element,
     GstStateChange transition);
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_amrnbenc_debug, "amrnbenc", 0, "AMR-NB audio encoder");
+static void
+_do_init (GType object_type)
+{
+  const GInterfaceInfo preset_interface_info = {
+    NULL,                       /* interface init */
+    NULL,                       /* interface finalize */
+    NULL                        /* interface_data */
+  };
+
+  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
+      &preset_interface_info);
+
+  GST_DEBUG_CATEGORY_INIT (gst_amrnbenc_debug, "amrnbenc", 0,
+      "AMR-NB audio encoder");
+}
 
 GST_BOILERPLATE_FULL (GstAmrnbEnc, gst_amrnbenc, GstElement, GST_TYPE_ELEMENT,
     _do_init);

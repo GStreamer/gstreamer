@@ -3,10 +3,10 @@
   <description>Adaptive Multi-Rate Narrow-Band</description>
   <filename>../../ext/amrnb/.libs/libgstamrnb.so</filename>
   <basename>libgstamrnb.so</basename>
-  <version>0.10.11.1</version>
+  <version>0.10.12.1</version>
   <license>unknown</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <package>GStreamer Ugly Plug-ins git/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -48,27 +48,6 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean)true, endianness=(int)1234, rate=(int)8000, channels=(int)1</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>amrnbparse</name>
-      <longname>AMR-NB audio stream parser</longname>
-      <class>Codec/Parser/Audio</class>
-      <description>Adaptive Multi-Rate Narrow-Band audio parser</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
-      <pads>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/AMR, rate=(int)8000, channels=(int)1</details>
-        </caps>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-amr-nb-sh</details>
         </caps>
       </pads>
     </element>

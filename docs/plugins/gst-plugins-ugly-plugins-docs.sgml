@@ -20,7 +20,7 @@
     <xi:include href="xml/element-a52dec.xml" />
     <xi:include href="xml/element-amrnbdec.xml" />
     <xi:include href="xml/element-amrnbenc.xml" />
-    <xi:include href="xml/element-amrnbparse.xml" />
+    <xi:include href="xml/element-amrwbdec.xml" />
     <xi:include href="xml/element-cdiocddasrc.xml" />
     <xi:include href="xml/element-lame.xml" />
     <xi:include href="xml/element-lamemp3enc.xml" />
@@ -40,6 +40,7 @@
     <title>gst-plugins-ugly Plugins</title>
     <xi:include href="xml/plugin-a52dec.xml" />
     <xi:include href="xml/plugin-amrnb.xml" />
+    <xi:include href="xml/plugin-amrwbdec.xml" />
     <xi:include href="xml/plugin-asf.xml" />
     <xi:include href="xml/plugin-cdio.xml" />
     <xi:include href="xml/plugin-dvdlpcmdec.xml" />
