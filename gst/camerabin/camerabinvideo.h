@@ -82,6 +82,12 @@ struct _GstCameraBinVideo
 
   GstEvent *pending_eos;
 
+  /* Probe IDs */
+  gulong aud_src_probe_id;
+  gulong vid_src_probe_id;
+  gulong vid_tee_probe_id;
+  gulong vid_sink_probe_id;
+
   gboolean mute;
 };
 

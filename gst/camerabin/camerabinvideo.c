@@ -186,6 +186,11 @@ gst_camerabin_video_init (GstCameraBinVideo * vid,
 
   vid->mute = ARG_DEFAULT_MUTE;
 
+  vid->aud_src_probe_id = 0;
+  vid->vid_src_probe_id = 0;
+  vid->vid_tee_probe_id = 0;
+  vid->vid_sink_probe_id = 0;
+
   /* Create src and sink ghost pads */
   vid->sinkpad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (vid), vid->sinkpad);
@@ -194,7 +199,7 @@ gst_camerabin_video_init (GstCameraBinVideo * vid,
   gst_element_add_pad (GST_ELEMENT (vid), vid->srcpad);
 
   /* Add probe for handling eos when stopping recording */
-  gst_pad_add_event_probe (vid->sinkpad,
+  vid->vid_sink_probe_id = gst_pad_add_event_probe (vid->sinkpad,
       G_CALLBACK (camerabin_video_sink_have_event), vid);
 }
 
@@ -205,6 +210,11 @@ gst_camerabin_video_dispose (GstCameraBinVideo * vid)
 
   g_string_free (vid->filename, TRUE);
   vid->filename = NULL;
+
+  if (vid->vid_sink_probe_id) {
+    gst_pad_remove_event_probe (vid->sinkpad, vid->vid_sink_probe_id);
+    vid->vid_sink_probe_id = 0;
+  }
 
   if (vid->user_post) {
     gst_object_unref (vid->user_post);
@@ -439,6 +449,10 @@ camerabin_video_pad_aud_src_have_buffer (GstPad * pad, GstBuffer * buffer,
 {
   GstCameraBinVideo *vid = (GstCameraBinVideo *) u_data;
 
+  GST_LOG ("buffer in with size %d duration %" G_GINT64_FORMAT " ts %"
+      GST_TIME_FORMAT, GST_BUFFER_SIZE (buffer), GST_BUFFER_DURATION (buffer),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+
   if (vid->calculate_adjust_ts_aud) {
     GstEvent *event;
     GstPad *peerpad = NULL;
@@ -561,7 +575,7 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   }
 
   /* Add probe for rewriting video timestamps */
-  gst_pad_add_buffer_probe (vid->tee_video_srcpad,
+  vid->vid_tee_probe_id = gst_pad_add_buffer_probe (vid->tee_video_srcpad,
       G_CALLBACK (camerabin_video_pad_tee_src0_have_buffer), vid);
 
 #ifdef USE_TIMEOVERLAY
@@ -666,12 +680,12 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   vid_srcpad = gst_element_get_static_pad (queue, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD (vid->srcpad), vid_srcpad);
   /* Never let video bin eos events reach view finder */
-  gst_pad_add_event_probe (vid_srcpad,
+  vid->vid_src_probe_id = gst_pad_add_event_probe (vid_srcpad,
       G_CALLBACK (gst_camerabin_drop_eos_probe), vid);
   gst_object_unref (vid_srcpad);
 
   pad = gst_element_get_static_pad (vid->aud_src, "src");
-  gst_pad_add_buffer_probe (pad,
+  vid->aud_src_probe_id = gst_pad_add_buffer_probe (pad,
       G_CALLBACK (camerabin_video_pad_aud_src_have_buffer), vid);
   gst_object_unref (pad);
 
@@ -699,6 +713,32 @@ static void
 gst_camerabin_video_destroy_elements (GstCameraBinVideo * vid)
 {
   GST_DEBUG ("destroying video elements");
+
+  /* Remove buffer probe from audio src pad */
+  if (vid->aud_src_probe_id) {
+    GstPad *pad = gst_element_get_static_pad (vid->aud_src, "src");
+    if (pad) {
+      gst_pad_remove_buffer_probe (pad, vid->aud_src_probe_id);
+      gst_object_unref (pad);
+    }
+    vid->aud_src_probe_id = 0;
+  }
+
+  /* Remove EOS event probe from videobin srcpad (queue's srcpad) */
+  if (vid->vid_src_probe_id) {
+    GstPad *pad = gst_ghost_pad_get_target (GST_GHOST_PAD (vid->srcpad));
+    if (pad) {
+      gst_pad_remove_event_probe (pad, vid->vid_src_probe_id);
+      gst_object_unref (pad);
+    }
+    vid->vid_src_probe_id = 0;
+  }
+
+  /* Remove buffer probe from video tee srcpad */
+  if (vid->vid_tee_probe_id) {
+    gst_pad_remove_buffer_probe (vid->tee_video_srcpad, vid->vid_tee_probe_id);
+    vid->vid_tee_probe_id = 0;
+  }
 
   /* Release tee request pads */
   if (vid->tee_video_srcpad) {

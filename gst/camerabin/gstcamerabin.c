@@ -1597,13 +1597,11 @@ gst_camerabin_start_video_recording (GstCameraBin * camera)
   gst_camerabin_rewrite_tags (camera);
 
   /* Pause the pipeline in order to distribute new clock in paused_to_playing */
-  /* audio src timestamps will be 0 without state change to READY. ??? */
-  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_READY);
-  gst_element_set_locked_state (camera->vidbin, FALSE);
   state_ret = gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PAUSED);
 
   if (state_ret != GST_STATE_CHANGE_FAILURE) {
     g_mutex_lock (camera->capture_mutex);
+    gst_element_set_locked_state (camera->vidbin, FALSE);
     g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
         "active-pad", camera->pad_src_vid, NULL);
 
