@@ -1577,7 +1577,7 @@ rtp_session_process_rb (RTPSession * sess, RTPSource * source,
  */
 static void
 rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
-    RTPArrivalStats * arrival)
+    RTPArrivalStats * arrival, gboolean * do_sync)
 {
   guint32 senderssrc, rtptime, packet_count, octet_count;
   guint64 ntptime;
@@ -1593,6 +1593,12 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
   source = obtain_source (sess, senderssrc, &created, arrival, FALSE);
   if (!source)
     return;
+
+  /* don't try to do lip-sync for sources that sent a BYE */
+  if (rtp_source_received_bye (source))
+    *do_sync = FALSE;
+  else
+    *do_sync = TRUE;
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
 
@@ -1816,7 +1822,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
     GstClockTime current_time)
 {
   GstRTCPPacket packet;
-  gboolean more, is_bye = FALSE, is_sr = FALSE;
+  gboolean more, is_bye = FALSE, do_sync = FALSE;
   RTPArrivalStats arrival;
   GstFlowReturn result = GST_FLOW_OK;
 
@@ -1853,8 +1859,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
     switch (type) {
       case GST_RTCP_TYPE_SR:
-        rtp_session_process_sr (sess, &packet, &arrival);
-        is_sr = TRUE;
+        rtp_session_process_sr (sess, &packet, &arrival, &do_sync);
         break;
       case GST_RTCP_TYPE_RR:
         rtp_session_process_rr (sess, &packet, &arrival);
@@ -1891,7 +1896,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   RTP_SESSION_UNLOCK (sess);
 
   /* notify caller of sr packets in the callback */
-  if (is_sr && sess->callbacks.sync_rtcp)
+  if (do_sync && sess->callbacks.sync_rtcp)
     result = sess->callbacks.sync_rtcp (sess, sess->source, buffer,
         sess->sync_rtcp_user_data);
   else
