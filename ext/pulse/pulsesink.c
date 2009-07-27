@@ -1605,6 +1605,7 @@ gst_pulsesink_set_volume (GstPulseSink * psink, gdouble volume)
   pa_cvolume v;
   pa_operation *o = NULL;
   GstPulseRingBuffer *pbuf;
+  uint32_t idx;
 
   pa_threaded_mainloop_lock (psink->mainloop);
 
@@ -1615,12 +1616,15 @@ gst_pulsesink_set_volume (GstPulseSink * psink, gdouble volume)
 
   pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
   if (pbuf == NULL || pbuf->stream == NULL)
-    goto unlock;
+    goto no_buffer;
+
+  if ((idx = pa_stream_get_index (pbuf->stream)) == PA_INVALID_INDEX)
+    goto no_index;
 
   gst_pulse_cvolume_from_linear (&v, pbuf->sample_spec.channels, volume);
 
-  if (!(o = pa_context_set_sink_input_volume (pbuf->context,
-              pa_stream_get_index (pbuf->stream), &v, NULL, NULL)))
+  if (!(o = pa_context_set_sink_input_volume (pbuf->context, idx,
+              &v, NULL, NULL)))
     goto volume_failed;
 
   /* We don't really care about the result of this call */
@@ -1634,6 +1638,16 @@ unlock:
   return;
 
   /* ERRORS */
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
+    goto unlock;
+  }
+no_index:
+  {
+    GST_DEBUG_OBJECT (psink, "we don't have a stream index");
+    goto unlock;
+  }
 volume_failed:
   {
     GST_ELEMENT_ERROR (psink, RESOURCE, FAILED,
@@ -1675,6 +1689,7 @@ gst_pulsesink_get_volume (GstPulseSink * psink)
   GstPulseRingBuffer *pbuf;
   pa_operation *o = NULL;
   gdouble v;
+  uint32_t idx;
 
   pa_threaded_mainloop_lock (psink->mainloop);
 
@@ -1682,8 +1697,10 @@ gst_pulsesink_get_volume (GstPulseSink * psink)
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
 
-  if (!(o = pa_context_get_sink_input_info (pbuf->context,
-              pa_stream_get_index (pbuf->stream),
+  if ((idx = pa_stream_get_index (pbuf->stream)) == PA_INVALID_INDEX)
+    goto no_index;
+
+  if (!(o = pa_context_get_sink_input_info (pbuf->context, idx,
               gst_pulsesink_sink_input_info_cb, pbuf)))
     goto info_failed;
 
@@ -1711,6 +1728,11 @@ unlock:
 no_buffer:
   {
     GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
+    goto unlock;
+  }
+no_index:
+  {
+    GST_DEBUG_OBJECT (psink, "we don't have a stream index");
     goto unlock;
   }
 info_failed:
