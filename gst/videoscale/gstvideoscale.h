@@ -78,6 +78,7 @@ struct _GstVideoScale {
   gint to_height;
   gint from_width;
   gint from_height;
+  gboolean interlaced;
   
   /*< private >*/
   guint8 *tmp_buf;
