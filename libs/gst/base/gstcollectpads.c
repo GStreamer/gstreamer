@@ -88,6 +88,7 @@ static void gst_collect_pads_init (GstCollectPads * pads,
     GstCollectPadsClass * g_class);
 static void ref_data (GstCollectData * data);
 static void unref_data (GstCollectData * data);
+static void gst_collect_pads_check_pads_unlocked (GstCollectPads * pads);
 
 static void
 gst_collect_pads_base_init (gpointer g_class)
@@ -992,10 +993,8 @@ gst_collect_pads_flush (GstCollectPads * pads, GstCollectData * data,
  * Must be called with LOCK.
  */
 static void
-gst_collect_pads_check_pads (GstCollectPads * pads)
+gst_collect_pads_check_pads_unlocked (GstCollectPads * pads)
 {
-  /* the master list and cookie are protected with the PAD_LOCK */
-  GST_COLLECT_PADS_PAD_LOCK (pads);
   GST_DEBUG ("stored cookie : %d, used_cookie:%d",
       pads->abidata.ABI.pad_cookie, pads->cookie);
   if (G_UNLIKELY (pads->abidata.ABI.pad_cookie != pads->cookie)) {
@@ -1032,6 +1031,14 @@ gst_collect_pads_check_pads (GstCollectPads * pads)
     /* and update the cookie */
     pads->cookie = pads->abidata.ABI.pad_cookie;
   }
+}
+
+static inline void
+gst_collect_pads_check_pads (GstCollectPads * pads)
+{
+  /* the master list and cookie are protected with the PAD_LOCK */
+  GST_COLLECT_PADS_PAD_LOCK (pads);
+  gst_collect_pads_check_pads_unlocked (pads);
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
 }
 
