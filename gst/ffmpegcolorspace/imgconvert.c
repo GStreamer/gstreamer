@@ -565,7 +565,7 @@ avpicture_get_size (int pix_fmt, int width, int height)
   AVPicture dummy_pict;
 
   return gst_ffmpegcsp_avpicture_fill (&dummy_pict, NULL, pix_fmt, width,
-      height);
+      height, FALSE);
 }
 
 /**
@@ -2908,7 +2908,8 @@ get_convert_table_entry (int src_pix_fmt, int dst_pix_fmt)
 }
 
 static int
-avpicture_alloc (AVPicture * picture, int pix_fmt, int width, int height)
+avpicture_alloc (AVPicture * picture, int pix_fmt, int width, int height,
+    int interlaced)
 {
   unsigned int size;
   void *ptr;
@@ -2917,7 +2918,8 @@ avpicture_alloc (AVPicture * picture, int pix_fmt, int width, int height)
   ptr = av_malloc (size);
   if (!ptr)
     goto fail;
-  gst_ffmpegcsp_avpicture_fill (picture, ptr, pix_fmt, width, height);
+  gst_ffmpegcsp_avpicture_fill (picture, ptr, pix_fmt, width, height,
+      interlaced);
   return 0;
 fail:
   memset (picture, 0, sizeof (AVPicture));
@@ -3159,7 +3161,8 @@ no_chroma_filter:
     else
       int_pix_fmt = PIX_FMT_RGB24;
   }
-  if (avpicture_alloc (tmp, int_pix_fmt, dst_width, dst_height) < 0)
+  if (avpicture_alloc (tmp, int_pix_fmt, dst_width, dst_height,
+          dst->interlaced) < 0)
     return -1;
   ret = -1;
   if (img_convert (tmp, int_pix_fmt,

@@ -51,7 +51,8 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
                               uint8_t *   ptr,
                               enum PixelFormat pix_fmt,
                               int         width,
-                              int         height);
+                              int         height,
+			      int         interlaced);
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */
 

@@ -190,6 +190,7 @@ typedef struct AVCodecContext {
 typedef struct AVPicture {
     uint8_t *data[4];
     int linesize[4];       ///< number of bytes per line
+    int interlaced;
 } AVPicture;
 
 /**

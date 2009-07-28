@@ -46,6 +46,7 @@ struct _GstFFMpegCsp {
   GstBaseTransform element;
 
   gint width, height;
+  gboolean interlaced;
   gfloat fps;
   enum PixelFormat from_pixfmt, to_pixfmt;
   AVPicture from_frame, to_frame;

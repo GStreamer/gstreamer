@@ -801,13 +801,16 @@ gst_ffmpegcsp_caps_with_codectype (enum CodecType type,
  */
 int
 gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
-    uint8_t * ptr, enum PixelFormat pix_fmt, int width, int height)
+    uint8_t * ptr, enum PixelFormat pix_fmt, int width, int height,
+    int interlaced)
 {
   int size, w2, h2, size2;
   int stride, stride2;
   PixFmtInfo *pinfo;
 
   pinfo = get_pix_fmt_info (pix_fmt);
+
+  picture->interlaced = interlaced;
 
   switch (pix_fmt) {
     case PIX_FMT_YUV420P:
