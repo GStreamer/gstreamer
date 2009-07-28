@@ -180,7 +180,10 @@ static GstStaticPadTemplate audio_sink_factory =
         "audio/x-alaw, "
         "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]; "
         "audio/x-mulaw, "
-        "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]; ")
+        "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]; "
+        "audio/x-wma, "
+        "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ], "
+        "wmaversion = (int) [ 1, 2 ] ")
     );
 
 static void gst_avi_mux_base_init (gpointer g_class);
@@ -752,6 +755,32 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
       avipad->auds.size = 8;
       avipad->auds.blockalign = avipad->auds.channels;
       avipad->auds.av_bps = avipad->auds.blockalign * avipad->auds.rate;
+    } else if (!strcmp (mimetype, "audio/x-wma")) {
+      gint version;
+      gint bitrate;
+      gint block_align;
+
+      if (gst_structure_get_int (structure, "wmaversion", &version)) {
+        switch (version) {
+          case 1:
+            avipad->auds.format = GST_RIFF_WAVE_FORMAT_WMAV1;
+            break;
+          case 2:
+            avipad->auds.format = GST_RIFF_WAVE_FORMAT_WMAV2;
+            break;
+          default:
+            break;
+        }
+      }
+
+      if (avipad->auds.format != 0) {
+        if (gst_structure_get_int (structure, "block_align", &block_align)) {
+          avipad->auds.blockalign = block_align;
+        }
+        if (gst_structure_get_int (structure, "bitrate", &bitrate)) {
+          avipad->auds.av_bps = bitrate / 8;
+        }
+      }
     }
   }
 
