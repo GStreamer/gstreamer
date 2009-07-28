@@ -70,7 +70,8 @@ REGISTRY_CHECKS =				\
 	libs/basesrc				\
 	libs/controller				\
 	libs/typefindhelper			\
-	pipelines/stress
+	pipelines/stress			\
+	pipelines/queue-error
 endif
 
 check_PROGRAMS =				\
