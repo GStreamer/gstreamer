@@ -32,6 +32,15 @@
 
 #include "gstconsistencychecker.h"
 
+struct _GstStreamConsistency
+{
+  gboolean flushing;
+  gboolean newsegment;
+  gboolean eos;
+  gulong probeid;
+  GstPad *pad;
+};
+
 static gboolean
 source_pad_data_cb (GstPad * pad, GstMiniObject * data,
     GstStreamConsistency * consist)

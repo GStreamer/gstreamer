@@ -25,21 +25,23 @@
 
 #include <gst/check/gstcheck.h>
 
-typedef struct _GstStreamConsistency
-{
-  gboolean flushing;
-  gboolean newsegment;
-  gboolean eos;
-  gulong probeid;
-  GstPad *pad;
-} GstStreamConsistency;
-
 G_BEGIN_DECLS
 
-GstStreamConsistency *
-gst_consistency_checker_new (GstPad *pad);
-void gst_consistency_checker_reset (GstStreamConsistency *consist);
-void gst_consistency_checker_free (GstStreamConsistency *consist);
+/**
+ * GstStreamConsistency:
+ *
+ * Opaque consistency checker handle.
+ *
+ * Since: 0.10.24
+ */
+typedef struct _GstStreamConsistency GstStreamConsistency;
+
+
+GstStreamConsistency * gst_consistency_checker_new   (GstPad * pad);
+
+void                   gst_consistency_checker_reset (GstStreamConsistency * consist);
+
+void                   gst_consistency_checker_free  (GstStreamConsistency * consist);
 
 G_END_DECLS
 
