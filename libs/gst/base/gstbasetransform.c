@@ -1000,8 +1000,12 @@ gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
 
     /* get all the formats we can handle on this pad */
     allowed = gst_pad_get_caps (pad);
-    if (!allowed)
+    if (!allowed) {
+      GST_DEBUG_OBJECT (pad, "gst_pad_get_caps() failed");
       goto no_transform_possible;
+    }
+
+    GST_DEBUG_OBJECT (pad, "allowed caps %" GST_PTR_FORMAT, allowed);
 
     /* intersect with the requested format */
     intersect = gst_caps_intersect (allowed, caps);
