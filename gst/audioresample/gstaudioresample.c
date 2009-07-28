@@ -845,12 +845,18 @@ gst_audio_resample_push_drain (GstAudioResample * resample)
       out_processed * resample->channels * (resample->width / 8);
 
   if (GST_CLOCK_TIME_IS_VALID (resample->next_ts)) {
+    GST_BUFFER_TIMESTAMP (buf) = resample->next_ts;
+    resample->next_ts += GST_BUFFER_DURATION (buf);
+  }
+
+  if (resample->next_offset != -1) {
     GST_BUFFER_OFFSET (buf) = resample->next_offset;
     GST_BUFFER_OFFSET_END (buf) = resample->next_offset + out_processed;
-    GST_BUFFER_TIMESTAMP (buf) = resample->next_ts;
-
-    resample->next_ts += GST_BUFFER_DURATION (buf);
     resample->next_offset += out_processed;
+  } else {
+    /* should be impossible, but just incase */
+    GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
   }
 
   GST_LOG_OBJECT (resample,
@@ -1009,11 +1015,17 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
 
     if (GST_CLOCK_TIME_IS_VALID (resample->next_ts)) {
       GST_BUFFER_TIMESTAMP (outbuf) = resample->next_ts;
+      resample->next_ts += GST_BUFFER_DURATION (outbuf);
+    }
+
+    if (resample->next_offset != -1) {
       GST_BUFFER_OFFSET (outbuf) = resample->next_offset;
       GST_BUFFER_OFFSET_END (outbuf) = resample->next_offset + out_processed;
-
-      resample->next_ts += GST_BUFFER_DURATION (outbuf);
       resample->next_offset += out_processed;
+    } else {
+      /* should be impossible, but just incase */
+      GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
     }
 
     GST_LOG_OBJECT (resample,
@@ -1083,8 +1095,19 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
   if (GST_CLOCK_TIME_IS_VALID (timestamp)
       && !GST_CLOCK_TIME_IS_VALID (resample->next_ts)) {
     resample->next_ts = timestamp;
-    resample->next_offset =
-        GST_CLOCK_TIME_TO_FRAMES (timestamp, resample->outrate);
+  }
+
+  if (resample->next_offset == -1) {
+    if (GST_BUFFER_OFFSET_IS_VALID (inbuf)) {
+      resample->next_offset =
+          gst_util_uint64_scale_int (GST_BUFFER_OFFSET (inbuf),
+          resample->outrate, resample->inrate);
+    } else if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      resample->next_offset =
+          GST_CLOCK_TIME_TO_FRAMES (timestamp, resample->outrate);
+    } else {
+      resample->next_offset = 0;
+    }
   }
 
   if (G_UNLIKELY (resample->need_discont)) {
