@@ -433,6 +433,10 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
       /* at the very least we expect 0xff 0xNN, thus end-1 */
       while (*data != 0xff && data < end - 1)
         ++data;
+      if (G_UNLIKELY (*data != 0xff)) {
+        GST_DEBUG ("at end of input and no next marker found, need more data");
+        return 0;
+      }
     }
     /* Skip over extra 0xff */
     while (*data == 0xff && data < end)
