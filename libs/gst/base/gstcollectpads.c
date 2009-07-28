@@ -510,16 +510,25 @@ gst_collect_pads_collect_range (GstCollectPads * pads, guint64 offset,
 static gboolean
 gst_collect_pads_is_flushing (GstCollectPads * pads)
 {
-  GSList *walk = pads->data;
+  GSList *walk = NULL;
   gboolean res = TRUE;
 
   GST_COLLECT_PADS_PAD_LOCK (pads);
-  while (walk) {
+
+  /* Ensure pads->data state */
+  gst_collect_pads_check_pads_unlocked (pads);
+
+  GST_DEBUG ("Getting flushing state (pads:%p, pads->data:%p)",
+      pads, pads->data);
+
+  for (walk = pads->data; walk; walk = g_slist_next (walk)) {
     GstCollectData *cdata = walk->data;
 
-    if (cdata->abidata.ABI.flushing)
+    GST_DEBUG_OBJECT (cdata->pad, "flushing:%d", cdata->abidata.ABI.flushing);
+
+    if (cdata->abidata.ABI.flushing) {
       goto done;
-    walk = g_slist_next (walk);
+    }
   }
 
   res = FALSE;
@@ -582,6 +591,8 @@ gst_collect_pads_set_flushing (GstCollectPads * pads, gboolean flushing)
   g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_COLLECT_PADS_PAD_LOCK (pads);
+  /* Ensure pads->data state */
+  gst_collect_pads_check_pads_unlocked (pads);
   gst_collect_pads_set_flushing_unlocked (pads, flushing);
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
 }
