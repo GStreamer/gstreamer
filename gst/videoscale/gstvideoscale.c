@@ -546,7 +546,8 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   if (videoscale->tmp_buf)
     g_free (videoscale->tmp_buf);
 
-  videoscale->tmp_buf = g_malloc (videoscale->dest.stride * 4);
+  videoscale->tmp_buf =
+      g_malloc (videoscale->dest.stride * 4 * (videoscale->interlaced ? 2 : 1));
 
   /* FIXME: par */
   GST_DEBUG_OBJECT (videoscale, "from=%dx%d, size %d -> to=%dx%d, size %d",
@@ -789,6 +790,13 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
         dest.height += 1;
       }
     } else if (step == 1 && interlaced) {
+      if (videoscale->from_height % 2 == 1) {
+        src.height -= 1;
+      }
+
+      if (videoscale->to_height % 2 == 1) {
+        dest.height -= 1;
+      }
       src.pixels += (src.stride / 2);
       dest.pixels += (dest.stride / 2);
     }
