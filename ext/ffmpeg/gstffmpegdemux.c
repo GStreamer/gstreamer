@@ -56,6 +56,8 @@ struct _GstFFStream
   gboolean discont;
   gboolean eos;
   GstFlowReturn last_flow;
+
+  GstTagList *tags;             /* stream tags */
 };
 
 struct _GstFFMpegDemux
@@ -89,6 +91,9 @@ struct _GstFFMpegDemux
 
   /* cached seek in READY */
   GstEvent *seek_event;
+
+  /* cached upstream events */
+  GList *cached_events;
 
   /* push mode data */
   GstFFMpegPipe ffpipe;
@@ -325,8 +330,11 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
     GstFFStream *stream;
 
     stream = demux->streams[n];
-    if (stream && stream->pad) {
-      gst_element_remove_pad (GST_ELEMENT (demux), stream->pad);
+    if (stream) {
+      if (stream->pad)
+        gst_element_remove_pad (GST_ELEMENT (demux), stream->pad);
+      if (stream->tags)
+        gst_tag_list_free (stream->tags);
       g_free (stream);
     }
     demux->streams[n] = NULL;
@@ -958,6 +966,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   stream->avstream = avstream;
   stream->last_ts = GST_CLOCK_TIME_NONE;
   stream->last_flow = GST_FLOW_OK;
+  stream->tags = NULL;
 
   switch (ctx->codec_type) {
     case CODEC_TYPE_VIDEO:
@@ -1019,12 +1028,11 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 
   /* metadata */
   if ((codec = gst_ffmpeg_get_codecid_longname (ctx->codec_id))) {
-    GstTagList *list = gst_tag_list_new ();
+    stream->tags = gst_tag_list_new ();
 
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (stream->tags, GST_TAG_MERGE_REPLACE,
         (ctx->codec_type == CODEC_TYPE_VIDEO) ?
         GST_TAG_VIDEO_CODEC : GST_TAG_AUDIO_CODEC, codec, NULL);
-    gst_element_found_tags_for_pad (GST_ELEMENT (demux), pad, list);
   }
 
   return stream;
@@ -1124,9 +1132,10 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   GstFFMpegDemuxClass *oclass =
       (GstFFMpegDemuxClass *) G_OBJECT_GET_CLASS (demux);
   gchar *location;
-  gint res, n_streams;
+  gint res, n_streams, i;
   GstTagList *tags;
   GstEvent *event;
+  GList *cached_events;
 
   /* to be sure... */
   gst_ffmpegdemux_close (demux);
@@ -1156,8 +1165,8 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
 
   /* open_input_file() automatically reads the header. We can now map each
    * created AVStream to a GstPad to make GStreamer handle it. */
-  for (res = 0; res < n_streams; res++) {
-    gst_ffmpegdemux_get_stream (demux, demux->context->streams[res]);
+  for (i = 0; i < n_streams; i++) {
+    gst_ffmpegdemux_get_stream (demux, demux->context->streams[i]);
   }
 
   gst_element_no_more_pads (GST_ELEMENT (demux));
@@ -1183,6 +1192,8 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   demux->opened = TRUE;
   event = demux->seek_event;
   demux->seek_event = NULL;
+  cached_events = demux->cached_events;
+  demux->cached_events = NULL;
   GST_OBJECT_UNLOCK (demux);
 
   if (event) {
@@ -1195,11 +1206,33 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
             demux->segment.start, demux->segment.stop, demux->segment.time));
   }
 
-  /* grab the tags */
+  while (cached_events) {
+    event = cached_events->data;
+    GST_INFO_OBJECT (demux, "pushing cached %s event: %" GST_PTR_FORMAT,
+        GST_EVENT_TYPE_NAME (event), event->structure);
+    gst_ffmpegdemux_push_event (demux, event);
+    cached_events = g_list_delete_link (cached_events, cached_events);
+  }
+
+  /* grab the global tags */
   tags = gst_ffmpegdemux_read_tags (demux);
   if (tags) {
+    GST_INFO_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, tags);
     gst_element_post_message (GST_ELEMENT (demux),
         gst_message_new_tag (GST_OBJECT (demux), tags));
+  }
+
+  /* now handle the stream tags */
+  for (i = 0; i < n_streams; i++) {
+    GstFFStream *stream;
+
+    stream = gst_ffmpegdemux_get_stream (demux, demux->context->streams[i]);
+    if (stream->tags != NULL && stream->pad != NULL) {
+      GST_INFO_OBJECT (stream->pad, "stream tags: %" GST_PTR_FORMAT,
+          stream->tags);
+      gst_element_found_tags_for_pad (GST_ELEMENT (demux), stream->pad,
+          gst_tag_list_copy (stream->tags));
+    }
   }
 
   return TRUE;
@@ -1517,7 +1550,8 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
   demux = (GstFFMpegDemux *) (GST_PAD_PARENT (sinkpad));
   ffpipe = &(demux->ffpipe);
 
-  GST_DEBUG_OBJECT (demux, "event %s", GST_EVENT_TYPE_NAME (event));
+  GST_LOG_OBJECT (demux, "%s event: %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event->structure);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -1539,6 +1573,11 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
       /* forward event */
       gst_pad_event_default (sinkpad, event);
 
+      GST_OBJECT_LOCK (demux);
+      g_list_foreach (demux->cached_events, (GFunc) gst_mini_object_unref,
+          NULL);
+      g_list_free (demux->cached_events);
+      GST_OBJECT_UNLOCK (demux);
       GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
       gst_adapter_clear (ffpipe->adapter);
       ffpipe->srcresult = GST_FLOW_OK;
@@ -1565,11 +1604,19 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
        *
        * If the demuxer isn't opened, push straight away, since we'll
        * be waiting against a cond that will never be signalled. */
-      if (GST_EVENT_IS_SERIALIZED (event) && demux->opened) {
-        GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
-        while (!ffpipe->needed)
-          GST_FFMPEG_PIPE_WAIT (ffpipe);
-        GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+      if (GST_EVENT_IS_SERIALIZED (event)) {
+        if (demux->opened) {
+          GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
+          while (!ffpipe->needed)
+            GST_FFMPEG_PIPE_WAIT (ffpipe);
+          GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+        } else {
+          /* queue events and send them later (esp. tag events) */
+          GST_OBJECT_LOCK (demux);
+          demux->cached_events = g_list_append (demux->cached_events, event);
+          GST_OBJECT_UNLOCK (demux);
+          goto done;
+        }
       }
       break;
   }
@@ -1760,6 +1807,10 @@ gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ffmpegdemux_close (demux);
       gst_adapter_clear (demux->ffpipe.adapter);
+      g_list_foreach (demux->cached_events, (GFunc) gst_mini_object_unref,
+          NULL);
+      g_list_free (demux->cached_events);
+      demux->cached_events = NULL;
       break;
     default:
       break;

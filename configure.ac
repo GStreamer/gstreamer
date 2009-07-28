@@ -407,6 +407,7 @@ docs/Makefile
 docs/version.entities
 tests/Makefile
 tests/check/Makefile
+tests/files/Makefile
 )
 AC_OUTPUT
 
