@@ -628,7 +628,7 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
   gint ival;
 
   /* nothing changed, return */
-  if (src->caps == caps)
+  if (caps == NULL || src->caps == caps)
     return;
 
   s = gst_caps_get_structure (caps, 0);
@@ -981,8 +981,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
 
   seqnr = gst_rtp_buffer_get_seq (buffer);
 
-  if (GST_BUFFER_CAPS (buffer))
-    rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer));
+  rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer));
 
   if (stats->cycles == -1) {
     GST_DEBUG ("received first buffer");
