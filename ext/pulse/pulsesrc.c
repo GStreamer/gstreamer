@@ -930,7 +930,7 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
-  buf_attr.maxlength = spec->segtotal * spec->segsize * 2;
+  buf_attr.maxlength = -1;
   buf_attr.tlength = -1;
   buf_attr.prebuf = 0;
   buf_attr.minreq = -1;
