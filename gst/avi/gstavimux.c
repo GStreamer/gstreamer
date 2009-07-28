@@ -146,7 +146,11 @@ static GstStaticPadTemplate video_sink_factory =
         "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0, MAX ];"
         "video/x-dirac, "
         "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0, MAX ]")
+        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0, MAX ];"
+        "video/x-wmv, "
+        "width = (int) [ 16, 4096 ], "
+        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0, MAX ], "
+        "wmvversion = (int) [ 1, 3]")
     );
 
 static GstStaticPadTemplate audio_sink_factory =
@@ -581,6 +585,23 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
       }
     } else if (!strcmp (mimetype, "video/x-dirac")) {
       avipad->vids.compression = GST_MAKE_FOURCC ('d', 'r', 'a', 'c');
+    } else if (!strcmp (mimetype, "video/x-wmv")) {
+      gint wmvversion;
+
+      if (gst_structure_get_int (structure, "wmvversion", &wmvversion)) {
+        switch (wmvversion) {
+          case 1:
+            avipad->vids.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '1');
+            break;
+          case 2:
+            avipad->vids.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '2');
+            break;
+          case 3:
+            avipad->vids.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '3');
+          default:
+            break;
+        }
+      }
     }
 
     if (!avipad->vids.compression)
