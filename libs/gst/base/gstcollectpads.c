@@ -1159,12 +1159,15 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
         pads->eospads--;
         data->abidata.ABI.eos = FALSE;
       }
-      GST_OBJECT_UNLOCK (pads);
 
-      if (!gst_collect_pads_is_flushing (pads))
+      if (!gst_collect_pads_is_flushing (pads)) {
         /* forward event if all pads are no longer flushing */
+        GST_DEBUG ("No more pads are flushing, forwarding FLUSH_STOP");
+        GST_OBJECT_UNLOCK (pads);
         goto forward;
+      }
       gst_event_unref (event);
+      GST_OBJECT_UNLOCK (pads);
       goto done;
     }
     case GST_EVENT_EOS:
