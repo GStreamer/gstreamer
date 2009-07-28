@@ -70,8 +70,10 @@ struct _GstPulseSrc
   GstPulseMixerCtrl *mixer;
   GstPulseProbe *probe;
 
+  gboolean corked;
   gboolean operation_success;
-  gboolean did_reset, in_read;
+  gboolean paused;
+  gboolean in_read;
 };
 
 struct _GstPulseSrcClass
