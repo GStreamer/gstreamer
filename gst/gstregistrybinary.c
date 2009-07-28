@@ -1264,7 +1264,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   in = contents;
   GST_DEBUG ("File data at address %p", in);
   if (G_UNLIKELY (size < sizeof (GstBinaryRegistryMagic))) {
-    GST_ERROR ("No or broken registry header");
+    GST_ERROR ("No or broken registry header for file at %s", location);
     goto Error;
   }
 
