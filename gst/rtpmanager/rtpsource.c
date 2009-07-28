@@ -981,7 +981,8 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
 
   seqnr = gst_rtp_buffer_get_seq (buffer);
 
-  rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer));
+  if (GST_BUFFER_CAPS (buffer))
+    rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer));
 
   if (stats->cycles == -1) {
     GST_DEBUG ("received first buffer");
