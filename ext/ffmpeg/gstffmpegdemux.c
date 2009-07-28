@@ -1218,8 +1218,7 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   tags = gst_ffmpegdemux_read_tags (demux);
   if (tags) {
     GST_INFO_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, tags);
-    gst_element_post_message (GST_ELEMENT (demux),
-        gst_message_new_tag (GST_OBJECT (demux), tags));
+    gst_element_found_tags (GST_ELEMENT (demux), tags);
   }
 
   /* now handle the stream tags */
