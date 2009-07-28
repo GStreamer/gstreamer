@@ -111,7 +111,7 @@ static gboolean
 gst_pulsesrc_interface_supported (GstImplementsInterface *
     iface, GType interface_type)
 {
-  GstPulseSrc *this = GST_PULSESRC (iface);
+  GstPulseSrc *this = GST_PULSESRC_CAST (iface);
 
   if (interface_type == GST_TYPE_MIXER && this->mixer)
     return TRUE;
@@ -314,7 +314,7 @@ gst_pulsesrc_destroy_context (GstPulseSrc * pulsesrc)
 static void
 gst_pulsesrc_finalize (GObject * object)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (object);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (object);
 
   pa_threaded_mainloop_stop (pulsesrc->mainloop);
 
@@ -363,7 +363,7 @@ gst_pulsesrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
 
-  GstPulseSrc *pulsesrc = GST_PULSESRC (object);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (object);
 
   switch (prop_id) {
     case PROP_SERVER:
@@ -386,7 +386,7 @@ static void
 gst_pulsesrc_source_info_cb (pa_context * c, const pa_source_info * i, int eol,
     void *userdata)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (userdata);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
   if (!i)
     return;
@@ -446,7 +446,7 @@ gst_pulsesrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
 
-  GstPulseSrc *pulsesrc = GST_PULSESRC (object);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (object);
 
   switch (prop_id) {
     case PROP_SERVER:
@@ -467,7 +467,7 @@ gst_pulsesrc_get_property (GObject * object,
 static void
 gst_pulsesrc_context_state_cb (pa_context * c, void *userdata)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (userdata);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
   switch (pa_context_get_state (c)) {
     case PA_CONTEXT_READY:
@@ -487,7 +487,7 @@ gst_pulsesrc_context_state_cb (pa_context * c, void *userdata)
 static void
 gst_pulsesrc_stream_state_cb (pa_stream * s, void *userdata)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (userdata);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
   switch (pa_stream_get_state (s)) {
 
@@ -506,7 +506,9 @@ gst_pulsesrc_stream_state_cb (pa_stream * s, void *userdata)
 static void
 gst_pulsesrc_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (userdata);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
+
+  GST_LOG_OBJECT (pulsesrc, "got request for length %" G_GSIZE_FORMAT, length);
 
   pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
 }
@@ -514,15 +516,41 @@ gst_pulsesrc_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 static void
 gst_pulsesrc_stream_latency_update_cb (pa_stream * s, void *userdata)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (userdata);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
+  const pa_timing_info *info;
+
+  info = pa_stream_get_timing_info (s);
+
+  GST_LOG_OBJECT (pulsesrc,
+      "latency_update, %" G_GUINT64_FORMAT ", %d:%" G_GINT64_FORMAT ", %d:%"
+      G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT,
+      GST_TIMEVAL_TO_TIME (info->timestamp), info->write_index_corrupt,
+      info->write_index, info->read_index_corrupt, info->read_index,
+      info->source_usec, info->configured_source_usec);
 
   pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
+}
+
+static void
+gst_pulsesrc_stream_underflow_cb (pa_stream * s, void *userdata)
+{
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
+
+  GST_WARNING_OBJECT (pulsesrc, "Got underflow");
+}
+
+static void
+gst_pulsesrc_stream_overflow_cb (pa_stream * s, void *userdata)
+{
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
+
+  GST_WARNING_OBJECT (pulsesrc, "Got overflow");
 }
 
 static gboolean
 gst_pulsesrc_open (GstAudioSrc * asrc)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
   gchar *name = gst_pulse_client_name ();
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
@@ -583,7 +611,7 @@ unlock_and_fail:
 static gboolean
 gst_pulsesrc_close (GstAudioSrc * asrc)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
   gst_pulsesrc_destroy_context (pulsesrc);
@@ -595,7 +623,7 @@ gst_pulsesrc_close (GstAudioSrc * asrc)
 static gboolean
 gst_pulsesrc_unprepare (GstAudioSrc * asrc)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
   gst_pulsesrc_destroy_stream (pulsesrc);
@@ -611,7 +639,7 @@ gst_pulsesrc_unprepare (GstAudioSrc * asrc)
 static guint
 gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
   size_t sum = 0;
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
@@ -621,8 +649,9 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
   while (length > 0) {
     size_t l;
 
-    if (!pulsesrc->read_buffer) {
+    GST_LOG_OBJECT (pulsesrc, "reading %u bytes", length);
 
+    if (!pulsesrc->read_buffer) {
       for (;;) {
         if (gst_pulsesrc_is_dead (pulsesrc))
           goto unlock_and_fail;
@@ -634,13 +663,17 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
                   pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
           goto unlock_and_fail;
         }
+        GST_LOG_OBJECT (pulsesrc, "have data of %" G_GSIZE_FORMAT " bytes",
+            pulsesrc->read_buffer_length);
 
+        /* if we have data, process if */
         if (pulsesrc->read_buffer)
           break;
 
         if (pulsesrc->did_reset)
           goto unlock_and_fail;
 
+        GST_LOG_OBJECT (pulsesrc, "waiting for data");
         pa_threaded_mainloop_wait (pulsesrc->mainloop);
       }
     }
@@ -661,7 +694,6 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
     sum += l;
 
     if (pulsesrc->read_buffer_length <= 0) {
-
       if (pa_stream_drop (pulsesrc->stream) < 0) {
         GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
             ("pa_stream_drop() failed: %s",
@@ -680,19 +712,21 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
   return sum;
 
+  /* ERRORS */
 unlock_and_fail:
+  {
+    pulsesrc->did_reset = FALSE;
+    pulsesrc->in_read = FALSE;
 
-  pulsesrc->did_reset = FALSE;
-  pulsesrc->in_read = FALSE;
-
-  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
-  return (guint) - 1;
+    pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+    return (guint) - 1;
+  }
 }
 
 static guint
 gst_pulsesrc_delay (GstAudioSrc * asrc)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
 
   pa_usec_t t;
 
@@ -795,6 +829,10 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
       pulsesrc);
   pa_stream_set_read_callback (pulsesrc->stream, gst_pulsesrc_stream_request_cb,
       pulsesrc);
+  pa_stream_set_underflow_callback (pulsesrc->stream,
+      gst_pulsesrc_stream_underflow_cb, pulsesrc);
+  pa_stream_set_overflow_callback (pulsesrc->stream,
+      gst_pulsesrc_stream_overflow_cb, pulsesrc);
   pa_stream_set_latency_update_callback (pulsesrc->stream,
       gst_pulsesrc_stream_latency_update_cb, pulsesrc);
 
@@ -864,7 +902,7 @@ gst_pulsesrc_negotiate (GstBaseSrc * basesrc)
         result = TRUE;
       } else if (gst_caps_is_fixed (caps)) {
         /* yay, fixed caps, use those then */
-        result = gst_pulsesrc_create_stream (GST_PULSESRC (basesrc), caps);
+        result = gst_pulsesrc_create_stream (GST_PULSESRC_CAST (basesrc), caps);
         if (result)
           gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
         result = TRUE;
@@ -887,13 +925,22 @@ static gboolean
 gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 {
   pa_buffer_attr buf_attr;
-  GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
+  const pa_buffer_attr *buf_attr_ptr;
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
-  memset (&buf_attr, 0, sizeof (buf_attr));
   buf_attr.maxlength = spec->segtotal * spec->segsize * 2;
+  buf_attr.tlength = -1;
+  buf_attr.prebuf = 0;
+  buf_attr.minreq = -1;
   buf_attr.fragsize = spec->segsize;
+
+  GST_INFO_OBJECT (pulsesrc, "maxlength: %d", buf_attr.maxlength);
+  GST_INFO_OBJECT (pulsesrc, "tlength:   %d", buf_attr.tlength);
+  GST_INFO_OBJECT (pulsesrc, "prebuf:    %d", buf_attr.prebuf);
+  GST_INFO_OBJECT (pulsesrc, "minreq:    %d", buf_attr.minreq);
+  GST_INFO_OBJECT (pulsesrc, "fragsize:  %d", buf_attr.fragsize);
 
   if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &buf_attr,
           PA_STREAM_INTERPOLATE_TIMING |
@@ -927,6 +974,22 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
     pa_threaded_mainloop_wait (pulsesrc->mainloop);
   }
 
+  /* get the actual buffering properties now */
+  buf_attr_ptr = pa_stream_get_buffer_attr (pulsesrc->stream);
+
+  GST_INFO_OBJECT (pulsesrc, "maxlength: %d", buf_attr_ptr->maxlength);
+  GST_INFO_OBJECT (pulsesrc, "tlength:   %d (wanted: %d)",
+      buf_attr_ptr->tlength, buf_attr.tlength);
+  GST_INFO_OBJECT (pulsesrc, "prebuf:    %d", buf_attr_ptr->prebuf);
+  GST_INFO_OBJECT (pulsesrc, "minreq:    %d (wanted %d)", buf_attr_ptr->minreq,
+      buf_attr.minreq);
+  GST_INFO_OBJECT (pulsesrc, "fragsize:  %d (wanted %d)",
+      buf_attr_ptr->fragsize, buf_attr.fragsize);
+
+  /* adjust latency again */
+  spec->segsize = buf_attr_ptr->fragsize;
+  spec->segtotal = buf_attr_ptr->maxlength / spec->segsize;
+
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
   return TRUE;
@@ -942,7 +1005,7 @@ unlock_and_fail:
 static void
 gst_pulsesrc_success_cb (pa_stream * s, int success, void *userdata)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (userdata);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
   pulsesrc->operation_success = !!success;
   pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
@@ -951,7 +1014,7 @@ gst_pulsesrc_success_cb (pa_stream * s, int success, void *userdata)
 static void
 gst_pulsesrc_reset (GstAudioSrc * asrc)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
   pa_operation *o = NULL;
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
@@ -1036,7 +1099,7 @@ unlock:
 static GstStateChangeReturn
 gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
 {
-  GstPulseSrc *this = GST_PULSESRC (element);
+  GstPulseSrc *this = GST_PULSESRC_CAST (element);
 
   switch (transition) {
 
