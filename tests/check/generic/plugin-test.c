@@ -81,11 +81,9 @@ GST_START_TEST (test_ffmpeg_update_reg)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 plugin_test_suite (void)
 {
-  gint timeout = 0;
-
   Suite *s = suite_create ("Plugin");
   TCase *tc_chain = tcase_create ("existence");
 
