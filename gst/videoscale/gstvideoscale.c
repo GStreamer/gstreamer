@@ -709,25 +709,28 @@ gst_video_scale_prepare_image (gint format, GstBuffer * buf,
 {
   gboolean res = TRUE;
 
-  img->pixels = GST_BUFFER_DATA (buf);
-
   switch (format) {
     case GST_VIDEO_SCALE_I420:
     case GST_VIDEO_SCALE_YV12:
-      img_u->pixels = img->pixels + GST_ROUND_UP_2 (img->height) * img->stride;
+      img_u->pixels =
+          GST_BUFFER_DATA (buf) + GST_ROUND_UP_2 (img->height) * img->stride;
       img_u->height = GST_ROUND_UP_2 (img->height) / 2;
-      if (interlaced) {
-        img_u->height = (img_u->height / 2) + ((step == 0
-                && img_u->height % 2 == 1) ? 1 : 0);
-        img_u->stride *= 2;
-      }
       img_u->width = GST_ROUND_UP_2 (img->width) / 2;
       img_u->stride = GST_ROUND_UP_4 (img_u->width);
+      if (interlaced) {
+      }
       memcpy (img_v, img_u, sizeof (*img_v));
       img_v->pixels = img_u->pixels + img_u->height * img_u->stride;
       if (interlaced && step == 1) {
-        img_v->pixels += (img_v->stride / 2);
-        img_u->pixels += (img_u->stride / 2);
+        img_v->pixels += img_v->stride;
+        img_u->pixels += img_u->stride;
+
+        img_u->height = (img_u->height / 2) + ((step == 0
+                && img_u->height % 2 == 1) ? 1 : 0);
+        img_u->stride *= 2;
+        img_v->height = (img_v->height / 2) + ((step == 0
+                && img_v->height % 2 == 1) ? 1 : 0);
+        img_v->stride *= 2;
       }
       break;
     default:
@@ -756,23 +759,26 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   method = videoscale->method;
   GST_OBJECT_UNLOCK (videoscale);
 
-  if (src.height < 4 && method == GST_VIDEO_SCALE_4TAP)
-    method = GST_VIDEO_SCALE_BILINEAR;
+  src.pixels = GST_BUFFER_DATA (in);
+  dest.pixels = GST_BUFFER_DATA (out);
 
   /* For interlaced content we have to run two times with half height
    * and doubled stride */
-  if (videoscale->interlaced) {
+  if (interlaced) {
     dest.height /= 2;
     src.height /= 2;
     dest.stride *= 2;
     src.stride *= 2;
   }
 
+  if (src.height < 4 && method == GST_VIDEO_SCALE_4TAP)
+    method = GST_VIDEO_SCALE_BILINEAR;
+
   for (step = 0; step < (interlaced ? 2 : 1); step++) {
-    gst_video_scale_prepare_image (videoscale->format, in, &src, &src_u, &src_v,
-        step, interlaced);
-    gst_video_scale_prepare_image (videoscale->format, out, &dest, &dest_u,
-        &dest_v, step, interlaced);
+    gst_video_scale_prepare_image (videoscale->format, in, &videoscale->src,
+        &src_u, &src_v, step, interlaced);
+    gst_video_scale_prepare_image (videoscale->format, out, &videoscale->dest,
+        &dest_u, &dest_v, step, interlaced);
 
     if (step == 0 && interlaced) {
       if (videoscale->from_height % 2 == 1) {
