@@ -3114,7 +3114,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         }
         version = QT_UINT32 (buffer + 16);
 
-        GST_WARNING_OBJECT (qtdemux, "mp4a version 0x%08x", version);
+        GST_DEBUG_OBJECT (qtdemux, "mp4a version 0x%08x", version);
 
         /* parse any esds descriptors */
         switch (version) {
