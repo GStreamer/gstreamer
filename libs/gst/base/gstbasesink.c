@@ -4231,7 +4231,7 @@ gst_base_sink_get_position_last (GstBaseSink * basesink, GstFormat format,
  * value will be -1. With LOCK. */
 static gboolean
 gst_base_sink_get_position_paused (GstBaseSink * basesink, GstFormat format,
-    gint64 * cur)
+    gint64 * cur, gboolean * convert_failed)
 {
   gboolean res;
   gint64 time;
@@ -4285,8 +4285,10 @@ gst_base_sink_get_position_paused (GstBaseSink * basesink, GstFormat format,
     GST_OBJECT_UNLOCK (basesink);
     res =
         gst_pad_query_convert (basesink->sinkpad, oformat, *cur, &format, cur);
-    if (!res)
+    if (!res) {
       *cur = -1;
+      *convert_failed = TRUE;
+    }
     GST_OBJECT_LOCK (basesink);
   }
 
@@ -4425,9 +4427,13 @@ in_eos:
   }
 in_pause:
   {
+    gboolean format_conversion_failed = FALSE;
     GST_DEBUG_OBJECT (basesink, "position in PAUSED");
-    res = gst_base_sink_get_position_paused (basesink, format, cur);
+    res = gst_base_sink_get_position_paused (basesink, format, cur,
+        &format_conversion_failed);
     GST_OBJECT_UNLOCK (basesink);
+    if (format_conversion_failed)
+      goto convert_failed;
     goto done;
   }
 wrong_state:
