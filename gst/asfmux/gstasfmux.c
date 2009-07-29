@@ -25,7 +25,11 @@
 /**
  * SECTION:element-asfmux
  *
- * Muxes window media content into an ASF file/stream.
+ * Muxes media into an ASF file/stream.
+ *
+ * Pad names are either video_xx or audio_xx, where 'xx' is the
+ * stream number of the stream that goes through that pad. Stream numbers
+ * are assigned sequentially, starting from 1.
  *
  * <refsect2>
  * <title>Example launch lines</title>
@@ -2079,7 +2083,7 @@ refuse_caps:
 
 static GstPad *
 gst_asf_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+    GstPadTemplate * templ, const gchar * req_name)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
   GstAsfMux *asfmux = GST_ASF_MUX_CAST (element);
@@ -2087,8 +2091,9 @@ gst_asf_mux_request_new_pad (GstElement * element,
   GstAsfPad *collect_pad;
   gboolean is_audio;
   guint collect_size = 0;
+  gchar *name;
 
-  GST_DEBUG_OBJECT (asfmux, "Requested pad: %s", GST_STR_NULL (name));
+  GST_DEBUG_OBJECT (asfmux, "Requested pad: %s", GST_STR_NULL (req_name));
 
   if (asfmux->state != GST_ASF_MUX_STATE_NONE) {
     GST_WARNING_OBJECT (asfmux, "Not providing request pad after element is at "
@@ -2097,13 +2102,19 @@ gst_asf_mux_request_new_pad (GstElement * element,
   }
 
   if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
-    is_audio = TRUE;
+    name = g_strdup_printf ("audio_%02d", asfmux->stream_number + 1);
+    GST_DEBUG_OBJECT (asfmux, "Adding new pad %s", name);
     newpad = gst_pad_new_from_template (templ, name);
+    g_free (name);
+    is_audio = TRUE;
     gst_pad_set_setcaps_function (newpad,
         GST_DEBUG_FUNCPTR (gst_asf_mux_audio_set_caps));
   } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
-    is_audio = FALSE;
+    name = g_strdup_printf ("video_%02d", asfmux->stream_number + 1);
+    GST_DEBUG_OBJECT (asfmux, "Adding new pad %s", name);
     newpad = gst_pad_new_from_template (templ, name);
+    g_free (name);
+    is_audio = FALSE;
     gst_pad_set_setcaps_function (newpad,
         GST_DEBUG_FUNCPTR (gst_asf_mux_video_set_caps));
   } else {
