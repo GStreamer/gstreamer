@@ -521,15 +521,22 @@ gst_pulsesrc_stream_latency_update_cb (pa_stream * s, void *userdata)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
   const pa_timing_info *info;
+  pa_usec_t source_usec;
 
   info = pa_stream_get_timing_info (s);
+
+#if HAVE_PULSE_0_9_11
+  source_usec = info->configured_source_usec;
+#else
+  source_usec = 0;
+#endif
 
   GST_LOG_OBJECT (pulsesrc,
       "latency_update, %" G_GUINT64_FORMAT ", %d:%" G_GINT64_FORMAT ", %d:%"
       G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT,
       GST_TIMEVAL_TO_TIME (info->timestamp), info->write_index_corrupt,
       info->write_index, info->read_index_corrupt, info->read_index,
-      info->source_usec, info->configured_source_usec);
+      info->source_usec, source_usec);
 }
 
 static void

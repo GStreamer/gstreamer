@@ -535,18 +535,25 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
   const pa_timing_info *info;
+  pa_usec_t sink_usec;
 
   info = pa_stream_get_timing_info (s);
 
   pbuf = GST_PULSERING_BUFFER_CAST (userdata);
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
+#if HAVE_PULSE_0_9_11
+  sink_usec = info->configured_sink_usec;
+#else
+  sink_usec = 0;
+#endif
+
   GST_LOG_OBJECT (psink,
       "latency_update, %" G_GUINT64_FORMAT ", %d:%" G_GINT64_FORMAT ", %d:%"
       G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT,
       GST_TIMEVAL_TO_TIME (info->timestamp), info->write_index_corrupt,
       info->write_index, info->read_index_corrupt, info->read_index,
-      info->sink_usec, info->configured_sink_usec);
+      info->sink_usec, sink_usec);
 }
 
 /* This method should create a new stream of the given @spec. No playback should
