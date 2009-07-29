@@ -38,37 +38,8 @@
 
 #include <stdlib.h>
 #include <png.h>
-#include <gstglfilter.h>
+#include "gstgloverlay.h"
 #include <gstgleffectssources.h>
-
-#define GST_TYPE_GL_OVERLAY            (gst_gl_overlay_get_type())
-#define GST_GL_OVERLAY(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_OVERLAY,GstGLOverlay))
-#define GST_IS_GL_OVERLAY(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_GL_OVERLAY))
-#define GST_GL_OVERLAY_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) , GST_TYPE_GL_OVERLAY,GstGLOverlayClass))
-#define GST_IS_GL_OVERLAY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) , GST_TYPE_GL_OVERLAY))
-#define GST_GL_OVERLAY_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) , GST_TYPE_GL_OVERLAY,GstGLOverlayClass))
-
-struct _GstGLOverlay
-{
-  GstGLFilter filter;
-
-  gchar *location;
-  gboolean pbuf_has_changed;
-
-  guchar *pixbuf;
-  gint width, height;
-  GLuint pbuftexture;
-
-//  gboolean stretch;
-};
-
-struct _GstGLOverlayClass
-{
-  GstGLFilterClass filter_class;
-};
-
-typedef struct _GstGLOverlay GstGLOverlay;
-typedef struct _GstGLOverlayClass GstGLOverlayClass;
 
 #define GST_CAT_DEFAULT gst_gl_overlay_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);

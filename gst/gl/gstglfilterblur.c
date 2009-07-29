@@ -36,33 +36,7 @@
 #include "config.h"
 #endif
 
-#include <gstglfilter.h>
-
-#define GST_TYPE_GL_FILTERBLUR            (gst_gl_filterblur_get_type())
-#define GST_GL_FILTERBLUR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_FILTERBLUR,GstGLFilterBlur))
-#define GST_IS_GL_FILTERBLUR(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_FILTERBLUR))
-#define GST_GL_FILTERBLUR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_GL_FILTERBLUR,GstGLFilterBlurClass))
-#define GST_IS_GL_FILTERBLUR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_FILTERBLUR))
-#define GST_GL_FILTERBLUR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_FILTERBLUR,GstGLFilterBlurClass))
-
-typedef struct _GstGLFilterBlur GstGLFilterBlur;
-typedef struct _GstGLFilterBlurClass GstGLFilterBlurClass;
-
-struct _GstGLFilterBlur
-{
-  GstGLFilter filter;
-  GstGLShader *shader0;
-  GstGLShader *shader1;
-
-  GLuint midtexture;
-};
-
-struct _GstGLFilterBlurClass
-{
-  GstGLFilterClass filter_class;
-};
-
-GType gst_gl_glfilterblur_get_type (void);
+#include "gstglfilterblur.h"
 
 /* horizontal convolution */
 static const gchar *hconv9_fragment_source =

@@ -15,7 +15,9 @@ libgstopengl_la_SOURCES = \
 	gstgldownload.c \
 	gstgldownload.h \
 	gstglfilterblur.c \
+	gstglfilterblur.h \
 	gstglfiltersobel.c \
+	gstglfiltersobel.h \
 	gstglfiltercube.c \
 	gstglfiltercube.h \
 	gstglfilterlaplacian.c \
@@ -29,6 +31,7 @@ libgstopengl_la_SOURCES = \
 	gstgldeinterlace.c \
 	gstgldeinterlace.h \
 	gstgldifferencematte.c \
+	gstgldifferencematte.h \
 	gstgloverlay.c \
 	gltestsrc.c \
 	gltestsrc.h \

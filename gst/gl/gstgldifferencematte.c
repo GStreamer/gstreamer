@@ -38,39 +38,8 @@
 
 #include <stdlib.h>
 #include <png.h>
-#include <gstglfilter.h>
+#include "gstgldifferencematte.h"
 #include <gstgleffectssources.h>
-
-#define GST_TYPE_GL_DIFFERENCEMATTE            (gst_gl_differencematte_get_type())
-#define GST_GL_DIFFERENCEMATTE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_DIFFERENCEMATTE,GstGLDifferenceMatte))
-#define GST_IS_GL_DIFFERENCEMATTE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_GL_DIFFERENCEMATTE))
-#define GST_GL_DIFFERENCEMATTE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) , GST_TYPE_GL_DIFFERENCEMATTE,GstGLDifferenceMatteClass))
-#define GST_IS_GL_DIFFERENCEMATTE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) , GST_TYPE_GL_DIFFERENCEMATTE))
-#define GST_GL_DIFFERENCEMATTE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) , GST_TYPE_GL_DIFFERENCEMATTE,GstGLDifferenceMatteClass))
-
-struct _GstGLDifferenceMatte
-{
-  GstGLFilter filter;
-
-  GstGLShader *shader[4];
-
-  gchar *location;
-  gboolean bg_has_changed;
-
-  guchar *pixbuf;
-  GLuint savedbgtexture;
-  GLuint newbgtexture;
-  GLuint midtexture[4];
-  GLuint intexture;
-};
-
-struct _GstGLDifferenceMatteClass
-{
-  GstGLFilterClass filter_class;
-};
-
-typedef struct _GstGLDifferenceMatte GstGLDifferenceMatte;
-typedef struct _GstGLDifferenceMatteClass GstGLDifferenceMatteClass;
 
 #define GST_CAT_DEFAULT gst_gl_differencematte_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);

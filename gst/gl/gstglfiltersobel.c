@@ -36,41 +36,14 @@
 #include "config.h"
 #endif
 
-#include <gstglfilter.h>
+#include "gstglfiltersobel.h"
 #include <gstgleffectssources.h>
-
-#define GST_TYPE_GL_FILTERSOBEL            (gst_gl_filtersobel_get_type())
-#define GST_GL_FILTERSOBEL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_FILTERSOBEL,GstGLFilterSobel))
-#define GST_IS_GL_FILTERSOBEL(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_FILTERSOBEL))
-#define GST_GL_FILTERSOBEL_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_GL_FILTERSOBEL,GstGLFilterSobelClass))
-#define GST_IS_GL_FILTERSOBEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_FILTERSOBEL))
-#define GST_GL_FILTERSOBEL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_FILTERSOBEL,GstGLFilterSobelClass))
-
-typedef struct _GstGLFilterSobel GstGLFilterSobel;
-typedef struct _GstGLFilterSobelClass GstGLFilterSobelClass;
-
-struct _GstGLFilterSobel
-{
-  GstGLFilter filter;
-  GstGLShader *shader0;
-
-  gboolean invert;
-
-  GLuint midtexture;
-};
-
-struct _GstGLFilterSobelClass
-{
-  GstGLFilterClass filter_class;
-};
 
 enum
 {
   PROP_0,
-  PROP_INVERT,
+  PROP_INVERT
 };
-
-GType gst_gl_glfiltersobel_get_type (void);
 
 #define GST_CAT_DEFAULT gst_gl_filtersobel_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
