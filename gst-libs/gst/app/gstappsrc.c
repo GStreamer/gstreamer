@@ -40,13 +40,14 @@
  * GStreamer pipeline. Unlike most GStreamer elements, Appsrc provides
  * external API functions.
  *
- * appsrc can be used by linking to the gstappsrc.h header file to access the
- * methods or by using the appsrc action signals. For the API
- * documentation, see the documentation for libgstapp in the
- * GStreamer Base Plugins Library reference...
+ * appsrc can be used by linking with the libgstapp library to access the
+ * methods directly or by using the appsrc action signals.
  *
  * Before operating appsrc, the caps property must be set to a fixed caps
- * describing the format of the data that will be pushed with appsrc.
+ * describing the format of the data that will be pushed with appsrc. An
+ * exception to this is when pushing buffers with unknown caps, in which case no
+ * caps should be set. This is typically true of file-like sources that push raw
+ * byte buffers.
  *
  * The main way of handing data to the appsrc element is by calling the
  * gst_app_src_push_buffer() method or by emiting the push-buffer action signal.
