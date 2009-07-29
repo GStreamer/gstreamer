@@ -2747,8 +2747,10 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     /* MPEG1VIDEO : the mpeg2video decoder is preferred */
     /* MP1 : Use MP3 for decoding */
     /* MP2 : Use MP3 for decoding */
+    /* Theora: Use libtheora based theoradec */
     if (!strcmp (in_plugin->name, "gif") ||
         !strcmp (in_plugin->name, "vorbis") ||
+        !strcmp (in_plugin->name, "theora") ||
         !strcmp (in_plugin->name, "mpeg1video") ||
         !strcmp (in_plugin->name, "wavpack") ||
         !strcmp (in_plugin->name, "mp1") ||
