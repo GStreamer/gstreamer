@@ -343,12 +343,12 @@ sdp_check_header (GstTypeFind * tf)
   if (memcmp (data, "v=0", 3))
     return FALSE;
 
-  if (data[3] == '\r' && data[4] != '\n')
-    return FALSE;
-  if (data[3] != '\n')
-    return FALSE;
+  if (data[3] == '\r' && data[4] == '\n')
+    return TRUE;
+  if (data[3] == '\n')
+    return TRUE;
 
-  return TRUE;
+  return FALSE;
 }
 
 static void
