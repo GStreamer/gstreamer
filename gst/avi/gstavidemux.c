@@ -467,16 +467,19 @@ gst_avi_demux_src_convert (GstPad * pad,
           break;
         case GST_FORMAT_DEFAULT:
         {
+          gdouble error;
+
           *dest_value = gst_util_uint64_scale (src_value, stream->strh->rate,
               stream->strh->scale * GST_SECOND);
+
           /* Attempt to round to nearest integer: if the difference is more
            * than 0.5 (less than -0.5), it means that gst_util_uint64_scale()
            * just truncated an integer, while it had to be rounded
            */
-
-          *dest_value = *dest_value * GST_SECOND - 
-              src_value * stream->strh->rate / stream->strh->scale <= 
-              -0.5 ? *dest_value + 1: *dest_value;
+          error = *dest_value * GST_SECOND -
+              src_value * stream->strh->rate / stream->strh->scale;
+          if (error <= -0.5)
+            *dest_value += 1;
           break;
         }
         default:
@@ -624,9 +627,10 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
           GST_DEBUG_OBJECT (query, "total frames is %" G_GUINT32_FORMAT,
               stream->total_frames);
 
-          if (total_frames >= 0)
+          if (stream->total_frames >= 0)
             gst_query_set_duration (query, fmt, stream->total_frames);
-          else if (gst_pad_query_convert (pad, GST_FORMAT_TIME, stream->duration, &fmt, &dur))
+          else if (gst_pad_query_convert (pad, GST_FORMAT_TIME,
+                  stream->duration, &fmt, &dur))
             gst_query_set_duration (query, fmt, dur);
           break;
         }
@@ -3925,23 +3929,20 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
 
     GST_BUFFER_TIMESTAMP (buf) = entry->ts;
     GST_BUFFER_DURATION (buf) = entry->dur;
-    if (stream->strh->type == GST_RIFF_FCC_vids)
-    {
+    if (stream->strh->type == GST_RIFF_FCC_vids) {
       if (stream->current_frame >= 0)
         GST_BUFFER_OFFSET (buf) = stream->current_frame;
-      else
-      {
+      else {
         gint64 framenum;
         GstFormat fmt = GST_FORMAT_DEFAULT;
 
         if (gst_pad_query_convert (stream->pad, GST_FORMAT_TIME, entry->ts,
-            &fmt, &framenum))
+                &fmt, &framenum))
           GST_BUFFER_OFFSET (buf) = framenum;
         else
           GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
       }
-    }
-    else
+    } else
       GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
     gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
@@ -4196,7 +4197,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
         GST_DEBUG_OBJECT (avi,
             "Pushing buffer with time=%" GST_TIME_FORMAT
-            ", offset %" G_GUINT64_FORMAT" and size %d over pad %s",
+            ", offset %" G_GUINT64_FORMAT " and size %d over pad %s",
             GST_TIME_ARGS (next_ts), GST_BUFFER_OFFSET (buf), size,
             GST_PAD_NAME (stream->pad));
 
