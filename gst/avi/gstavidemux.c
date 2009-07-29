@@ -1502,8 +1502,25 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           GST_WARNING_OBJECT (avi, "Failed to parse strh chunk");
           goto fail;
         }
-        /* determine duration as indicated by header */
         strh = stream->strh;
+        /* sanity check; stream header frame rate matches global header
+         * frame duration */
+        if (stream->strh->type == GST_RIFF_FCC_vids) {
+          GstClockTime s_dur;
+          GstClockTime h_dur = avi->avih->us_frame * GST_USECOND;
+
+          s_dur = gst_util_uint64_scale (GST_SECOND, strh->scale, strh->rate);
+          GST_DEBUG_OBJECT (avi, "verifying stream framerate %d/%d, "
+              "frame duration = %d ms", strh->rate, strh->scale,
+              s_dur / GST_MSECOND);
+          if (h_dur > (10 * GST_MSECOND) && (s_dur > 10 * h_dur)) {
+            strh->rate = GST_SECOND / GST_USECOND;
+            strh->scale = h_dur / GST_USECOND;
+            GST_DEBUG_OBJECT (avi, "correcting stream framerate to %d/%d",
+                strh->rate, strh->scale);
+          }
+        }
+        /* determine duration as indicated by header */
         stream->hdr_duration = gst_util_uint64_scale ((guint64) strh->length *
             strh->scale, GST_SECOND, (guint64) strh->rate);
         GST_INFO ("Stream duration according to header: %" GST_TIME_FORMAT,
