@@ -2052,20 +2052,26 @@ gst_asf_mux_video_set_caps (GstPad * pad, GstCaps * caps)
   }
 
   if (strcmp (caps_name, "video/x-wmv") == 0) {
-    gint version;
+    guint32 fourcc;
 
-    if (!gst_structure_get_int (structure, "wmvversion", &version))
-      goto refuse_caps;
-
-    videopad->vidinfo.bit_cnt = 24;
-    if (version == 2) {
-      videopad->vidinfo.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '2');
-    } else if (version == 1) {
-      videopad->vidinfo.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '1');
-    } else if (version == 3) {
-      videopad->vidinfo.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '3');
+    /* in case we have a fourcc, we use it */
+    if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
+      videopad->vidinfo.compression = fourcc;
     } else {
-      goto refuse_caps;
+      gint version;
+      if (!gst_structure_get_int (structure, "wmvversion", &version))
+        goto refuse_caps;
+
+      videopad->vidinfo.bit_cnt = 24;
+      if (version == 2) {
+        videopad->vidinfo.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '2');
+      } else if (version == 1) {
+        videopad->vidinfo.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '1');
+      } else if (version == 3) {
+        videopad->vidinfo.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '3');
+      } else {
+        goto refuse_caps;
+      }
     }
   } else {
     goto refuse_caps;
