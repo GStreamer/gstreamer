@@ -4192,7 +4192,7 @@ gst_base_sink_peer_query (GstBaseSink * sink, GstQuery * query)
  * have not reached yet. With LOCK. */
 static gboolean
 gst_base_sink_get_position_last (GstBaseSink * basesink, GstFormat format,
-    gint64 * cur)
+    gint64 * cur, gboolean * upstream)
 {
   GstFormat oformat;
   GstSegment *segment;
@@ -4215,8 +4215,10 @@ gst_base_sink_get_position_last (GstBaseSink * basesink, GstFormat format,
     /* convert to the target format if we need to, release lock first */
     ret =
         gst_pad_query_convert (basesink->sinkpad, oformat, *cur, &format, cur);
-    if (!ret)
+    if (!ret) {
       *cur = -1;
+      *upstream = TRUE;
+    }
     GST_OBJECT_LOCK (basesink);
   }
 
@@ -4231,7 +4233,7 @@ gst_base_sink_get_position_last (GstBaseSink * basesink, GstFormat format,
  * value will be -1. With LOCK. */
 static gboolean
 gst_base_sink_get_position_paused (GstBaseSink * basesink, GstFormat format,
-    gint64 * cur, gboolean * convert_failed)
+    gint64 * cur, gboolean * upstream)
 {
   gboolean res;
   gint64 time;
@@ -4287,7 +4289,7 @@ gst_base_sink_get_position_paused (GstBaseSink * basesink, GstFormat format,
         gst_pad_query_convert (basesink->sinkpad, oformat, *cur, &format, cur);
     if (!res) {
       *cur = -1;
-      *convert_failed = TRUE;
+      *upstream = TRUE;
     }
     GST_OBJECT_LOCK (basesink);
   }
@@ -4355,7 +4357,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   gst_object_ref (clock);
 
   /* this function might release the LOCK */
-  gst_base_sink_get_position_last (basesink, format, &last);
+  gst_base_sink_get_position_last (basesink, format, &last, upstream);
 
   /* need to release the object lock before we can get the time, 
    * a clock might take the LOCK of the provider, which could be
@@ -4421,19 +4423,15 @@ done:
 in_eos:
   {
     GST_DEBUG_OBJECT (basesink, "position in EOS");
-    res = gst_base_sink_get_position_last (basesink, format, cur);
+    res = gst_base_sink_get_position_last (basesink, format, cur, upstream);
     GST_OBJECT_UNLOCK (basesink);
     goto done;
   }
 in_pause:
   {
-    gboolean format_conversion_failed = FALSE;
     GST_DEBUG_OBJECT (basesink, "position in PAUSED");
-    res = gst_base_sink_get_position_paused (basesink, format, cur,
-        &format_conversion_failed);
+    res = gst_base_sink_get_position_paused (basesink, format, cur, upstream);
     GST_OBJECT_UNLOCK (basesink);
-    if (format_conversion_failed)
-      goto convert_failed;
     goto done;
   }
 wrong_state:
