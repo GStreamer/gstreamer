@@ -354,6 +354,20 @@ fi
 
 dnl *** sys plug-ins ***
 
+dnl DirectSound
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTSOUND, true)
+GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], [directsound], [
+    AC_CHECK_HEADER(dsound.h, HAVE_DIRECTSOUND="yes", HAVE_DIRECTSOUND="no")
+])
+
+AC_CHECK_LIB( dsound, DXGetErrorString9, [
+	echo "Errorstrings in DirectSoundSink - enabled"
+	AM_CONDITIONAL( DSOUND9, true )
+], [
+	echo "Errorstrings in DirectSoundSink - disabled"
+	AM_CONDITIONAL( DSOUND9, false )
+] )
+
 dnl DirectDraw
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTDRAW, true)
 AG_GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
@@ -1516,6 +1530,7 @@ AM_CONDITIONAL(USE_CELT, false)
 AM_CONDITIONAL(USE_DC1394, false)
 AM_CONDITIONAL(USE_DIRECTFB, false)
 AM_CONDITIONAL(USE_DIRECTDRAW, false)
+AM_CONDITIONAL(USE_DIRECTSOUND, false)
 AM_CONDITIONAL(USE_DTS, false)
 AM_CONDITIONAL(USE_DIRAC, false)
 AM_CONDITIONAL(USE_DIVX, false)
@@ -1683,6 +1698,7 @@ sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
 sys/acmmp3dec/Makefile
 sys/directdraw/Makefile
+sys/directsound/Makefile
 sys/dshowsrcwrapper/Makefile
 sys/dshowvideosink/Makefile
 sys/dvb/Makefile
