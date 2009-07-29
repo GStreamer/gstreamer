@@ -88,6 +88,7 @@ check_PROGRAMS = \
 	$(check_kate)  \
 	elements/aacparse \
 	elements/amrparse \
+	elements/asfmux \
 	elements/camerabin \
 	elements/legacyresample \
 	elements/qtmux \
