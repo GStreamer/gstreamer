@@ -165,8 +165,6 @@ gst_audio_filter_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   GstAudioFilter *filter;
   gboolean ret = TRUE;
 
-  g_assert (gst_caps_is_equal (incaps, outcaps));
-
   filter = GST_AUDIO_FILTER (btrans);
 
   GST_LOG_OBJECT (filter, "caps: %" GST_PTR_FORMAT, incaps);
