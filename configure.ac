@@ -356,7 +356,7 @@ dnl *** sys plug-ins ***
 
 dnl DirectSound
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTSOUND, true)
-GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], [directsound], [
+AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], [directsound], [
     AC_CHECK_HEADER(dsound.h, HAVE_DIRECTSOUND="yes", HAVE_DIRECTSOUND="no")
 ])
 
