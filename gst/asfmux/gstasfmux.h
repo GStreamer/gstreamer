@@ -50,7 +50,6 @@ typedef enum _GstAsfMuxState GstAsfMuxState;
 enum _GstAsfMuxState
 {
   GST_ASF_MUX_STATE_NONE,
-  GST_ASF_MUX_STATE_STARTED,
   GST_ASF_MUX_STATE_HEADERS,
   GST_ASF_MUX_STATE_DATA,
   GST_ASF_MUX_STATE_EOS

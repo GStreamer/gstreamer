@@ -355,7 +355,7 @@ gst_asf_mux_sink_event (GstPad * pad, GstEvent * event)
        * writing the headers, because tags are to be in
        * the headers
        */
-      if (asfmux->state == GST_ASF_MUX_STATE_STARTED) {
+      if (asfmux->state == GST_ASF_MUX_STATE_NONE) {
         GstTagList *list = NULL;
         gst_event_parse_tag (event, &list);
         if (asfmux->merge_stream_tags) {
@@ -1793,7 +1793,7 @@ gst_asf_mux_collected (GstCollectPads * collect, gpointer data)
   GstBuffer *buf = NULL;
   GSList *walk;
 
-  if (G_UNLIKELY (asfmux->state == GST_ASF_MUX_STATE_STARTED)) {
+  if (G_UNLIKELY (asfmux->state == GST_ASF_MUX_STATE_NONE)) {
     ret = gst_asf_mux_start_file (asfmux);
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (asfmux, "Failed to send headers");
@@ -2237,7 +2237,6 @@ gst_asf_mux_change_state (GstElement * element, GstStateChange transition)
       asfmux->preroll = asfmux->prop_preroll;
       asfmux->merge_stream_tags = asfmux->prop_merge_stream_tags;
       gst_collect_pads_start (asfmux->collect);
-      asfmux->state = GST_ASF_MUX_STATE_STARTED;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
