@@ -83,8 +83,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
-static void gst_rtp_mux_finalize (GObject * object);
-
 static GstPad *gst_rtp_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_rtp_mux_release_pad (GstElement * element, GstPad * pad);
@@ -125,7 +123,6 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = gst_rtp_mux_finalize;
   gobject_class->get_property = gst_rtp_mux_get_property;
   gobject_class->set_property = gst_rtp_mux_set_property;
 
@@ -209,16 +206,6 @@ gst_rtp_mux_init (GstRTPMux * object, GstRTPMuxClass * g_class)
   object->ssrc = DEFAULT_SSRC;
   object->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   object->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
-}
-
-static void
-gst_rtp_mux_finalize (GObject * object)
-{
-  GstRTPMux *rtp_mux;
-
-  rtp_mux = GST_RTP_MUX (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstPad *
