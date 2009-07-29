@@ -152,6 +152,19 @@ gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   rtpsv3vdepay->nextseq = seq + 1;
 
   {
+    static struct
+    {
+      guint width, height;
+    } resolutions[7] = {
+      {
+      160, 128}, {
+      128, 96}, {
+      176, 144}, {
+      352, 288}, {
+      704, 576}, {
+      240, 180}, {
+      320, 240}
+    };
     gint payload_len;
     guint8 *payload;
     gboolean M;
@@ -188,19 +201,24 @@ gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       GstCaps *caps;
       GstBuffer *codec_data;
       GValue value = { 0 };
+      guint8 res;
 
       /* if we already have caps, we don't need to do anything. FIXME, check if
        * something changed. */
       if (GST_PAD_CAPS (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload)))
         return NULL;
 
-      /* No idea... These are the two examples I found.. */
-      if (payload[2] == 0x1d) {
-        rtpsv3vdepay->width = 160;
-        rtpsv3vdepay->height = 128;
-      } else if (payload[2] == 0xdd) {
-        rtpsv3vdepay->width = 320;
-        rtpsv3vdepay->height = 240;
+      res = payload[2] >> 5;
+
+      /* width and height, according to http://wiki.multimedia.cx/index.php?title=Sorenson_Video_1#Stream_Format_And_Header */
+      if (res < 7) {
+        rtpsv3vdepay->width = resolutions[res].width;
+        rtpsv3vdepay->height = resolutions[res].height;
+      } else {
+        /* extended width/height, they're contained in the following 24bit */
+        rtpsv3vdepay->width = ((payload[2] & 0x1f) << 7) | (payload[3] >> 1);
+        rtpsv3vdepay->height =
+            (payload[3] & 0x1) << 11 | payload[4] << 3 | (payload[5] >> 5);
       }
 
       /* we need a dummy empty codec data */
@@ -279,5 +297,5 @@ gboolean
 gst_rtp_sv3v_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpsv3vdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_SV3V_DEPAY);
+      GST_RANK_MARGINAL, GST_TYPE_RTP_SV3V_DEPAY);
 }
