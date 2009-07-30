@@ -52,7 +52,7 @@ GST_ELEMENT_DETAILS ("JPEG image decoder",
 #define MIN_HEIGHT 8
 #define MAX_HEIGHT 65535
 
-#define DEFAULT_IDCT_METHOD	JDCT_FASTEST
+#define JPEG_DEFAULT_IDCT_METHOD	JDCT_FASTEST
 
 enum
 {
@@ -185,7 +185,7 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
   g_object_class_install_property (gobject_class, PROP_IDCT_METHOD,
       g_param_spec_enum ("idct-method", "IDCT Method",
           "The IDCT algorithm to use", GST_TYPE_IDCT_METHOD,
-          DEFAULT_IDCT_METHOD, G_PARAM_READWRITE));
+          JPEG_DEFAULT_IDCT_METHOD, G_PARAM_READWRITE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_change_state);
@@ -310,7 +310,7 @@ gst_jpeg_dec_init (GstJpegDec * dec)
   dec->jsrc.dec = dec;
 
   /* init properties */
-  dec->idct_method = DEFAULT_IDCT_METHOD;
+  dec->idct_method = JPEG_DEFAULT_IDCT_METHOD;
 }
 
 static inline gboolean

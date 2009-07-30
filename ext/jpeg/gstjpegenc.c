@@ -54,9 +54,9 @@ GST_ELEMENT_DETAILS ("JPEG image encoder",
 GST_DEBUG_CATEGORY_STATIC (jpegenc_debug);
 #define GST_CAT_DEFAULT jpegenc_debug
 
-#define DEFAULT_QUALITY 85
-#define DEFAULT_SMOOTHING 0
-#define DEFAULT_IDCT_METHOD	JDCT_FASTEST
+#define JPEG_DEFAULT_QUALITY 85
+#define JPEG_DEFAULT_SMOOTHING 0
+#define JPEG_DEFAULT_IDCT_METHOD	JDCT_FASTEST
 
 /* These macros are adapted from videotestsrc.c 
  *  and/or gst-plugins/gst/games/gstvideoimage.c */
@@ -187,19 +187,19 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
 
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_int ("quality", "Quality", "Quality of encoding",
-          0, 100, DEFAULT_QUALITY, G_PARAM_READWRITE));
+          0, 100, JPEG_DEFAULT_QUALITY, G_PARAM_READWRITE));
 
 #if ENABLE_SMOOTHING
   /* disabled, since it doesn't seem to work */
   g_object_class_install_property (gobject_class, PROP_SMOOTHING,
       g_param_spec_int ("smoothing", "Smoothing", "Smoothing factor",
-          0, 100, DEFAULT_SMOOTHING, G_PARAM_READWRITE));
+          0, 100, JPEG_DEFAULT_SMOOTHING, G_PARAM_READWRITE));
 #endif
 
   g_object_class_install_property (gobject_class, PROP_IDCT_METHOD,
       g_param_spec_enum ("idct-method", "IDCT Method",
           "The IDCT algorithm to use", GST_TYPE_IDCT_METHOD,
-          DEFAULT_IDCT_METHOD, G_PARAM_READWRITE));
+          JPEG_DEFAULT_IDCT_METHOD, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_jpegenc_change_state;
 
@@ -266,9 +266,9 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
   jpegenc->cinfo.dest = &jpegenc->jdest;
 
   /* init properties */
-  jpegenc->quality = DEFAULT_QUALITY;
-  jpegenc->smoothing = DEFAULT_SMOOTHING;
-  jpegenc->idct_method = DEFAULT_IDCT_METHOD;
+  jpegenc->quality = JPEG_DEFAULT_QUALITY;
+  jpegenc->smoothing = JPEG_DEFAULT_SMOOTHING;
+  jpegenc->idct_method = JPEG_DEFAULT_IDCT_METHOD;
 }
 
 static void
