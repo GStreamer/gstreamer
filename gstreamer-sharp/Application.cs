@@ -57,7 +57,7 @@ namespace Gst {
       gst_deinit();
     }
 
-    private static System.Type GstTypeResolver (GLib.GType gtype, string gtype_name) {
+    private static System.Type GstResolveType (GLib.GType gtype, string gtype_name) {
       Assembly[] assemblies = (Assembly[]) AppDomain.CurrentDomain.GetAssemblies ().Clone ();
 
       foreach (Assembly asm in assemblies) {
@@ -102,7 +102,7 @@ namespace Gst {
     }
 
     private static void RegisterManagedTypes() {
-      GLib.GType.TypeResolver += GstTypeResolver;
+      GLib.GType.ResolveType += GstResolveType;
 
       GLib.GType.Register (Fraction.GType, typeof (Fraction));
       GLib.GType.Register (IntRange.GType, typeof (IntRange));
