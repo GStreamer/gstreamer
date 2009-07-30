@@ -786,8 +786,8 @@ gst_asf_mux_write_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
         videopad->vidinfo.height * videopad->vidinfo.bit_cnt);
     GST_WRITE_UINT32_LE (*buf + 35, videopad->vidinfo.xpels_meter);
     GST_WRITE_UINT32_LE (*buf + 39, videopad->vidinfo.ypels_meter);
-    GST_WRITE_UINT32_LE (*buf + 41, videopad->vidinfo.num_colors);
-    GST_WRITE_UINT32_LE (*buf + 45, videopad->vidinfo.num_colors);
+    GST_WRITE_UINT32_LE (*buf + 43, videopad->vidinfo.num_colors);
+    GST_WRITE_UINT32_LE (*buf + 47, videopad->vidinfo.imp_colors);
 
     *buf += ASF_VIDEO_SPECIFIC_DATA_SIZE;
   }
@@ -2054,6 +2054,8 @@ gst_asf_mux_video_set_caps (GstPad * pad, GstCaps * caps)
   if (strcmp (caps_name, "video/x-wmv") == 0) {
     guint32 fourcc;
 
+    videopad->vidinfo.bit_cnt = 24;
+
     /* in case we have a fourcc, we use it */
     if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
       videopad->vidinfo.compression = fourcc;
@@ -2061,8 +2063,6 @@ gst_asf_mux_video_set_caps (GstPad * pad, GstCaps * caps)
       gint version;
       if (!gst_structure_get_int (structure, "wmvversion", &version))
         goto refuse_caps;
-
-      videopad->vidinfo.bit_cnt = 24;
       if (version == 2) {
         videopad->vidinfo.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '2');
       } else if (version == 1) {
