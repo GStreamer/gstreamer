@@ -1648,47 +1648,152 @@ mpeg_ts_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+#define GST_MPEGVID_TYPEFIND_TRY_PICTURES 6
+#define GST_MPEGVID_TYPEFIND_TRY_SYNC (100 * 1024)      /* 100 kB */
+
+/**
+ * Scan ahead a maximum of max_extra_offset bytes until the next IS_MPEG_HEADER
+ * offset.  After the call, offset will be after the 0x000001, i.e. at the 4th
+ * byte of the MPEG header.  Returns TRUE if a header was found, FALSE if not.
+ */
+static gboolean
+mpeg_find_next_header (GstTypeFind * tf, DataScanCtx * c,
+    guint64 max_extra_offset)
+{
+  guint64 extra_offset;
+
+  for (extra_offset = 0; extra_offset <= max_extra_offset; ++extra_offset) {
+    if (!data_scan_ctx_ensure_data (tf, c, 4))
+      return FALSE;
+    if (IS_MPEG_HEADER (c->data)) {
+      data_scan_ctx_advance (tf, c, 3);
+      return TRUE;
+    }
+    data_scan_ctx_advance (tf, c, 1);
+  }
+  return FALSE;
+}
+
 /*** video/mpeg MPEG-4 elementary video stream ***/
 
-static GstStaticCaps mpeg4_video_caps = GST_STATIC_CAPS ("video/mpeg, "
-    "systemstream = (boolean) false, mpegversion = 4");
-#define MPEG4_VIDEO_CAPS gst_static_caps_get(&mpeg4_video_caps)
+/*
+ * This typefind is based on the elementary video header defined in
+ * http://xhelmboyx.tripod.com/formats/mpeg-layout.txt
+ * In addition, it allows the visual object sequence header to be
+ * absent, and even the VOS header to be absent.  In the latter case,
+ * a number of VOPs have to be present.
+ */
 static void
 mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
 {
-  /* Header consists of: a series of start codes (00 00 01 xx), some with 
-   * associated data.
-   * Optionally, we start with a visual_object_sequence_start_code, followed by
-   * (optionally) visual_object_start_code), then the mandatory 
-   * video_object_start_code and video_object_layer_start_code)
-   */
-  guint8 *data = NULL;
-  int offset = 0;
+  DataScanCtx c = { 0, NULL, 0 };
+  gboolean seen_vios_at_0 = FALSE;
+  gboolean seen_vios = FALSE;
   gboolean seen_vos = FALSE;
+  gboolean seen_vol = FALSE;
+  guint num_vop_headers = 0;
+  guint8 sc;
 
-  while (TRUE) {
-    data = gst_type_find_peek (tf, offset, 4);
-    if (data && IS_MPEG_HEADER (data)) {
-      int sc = data[3];
+  while (c.offset < GST_MPEGVID_TYPEFIND_TRY_SYNC) {
+    if (num_vop_headers >= GST_MPEGVID_TYPEFIND_TRY_PICTURES)
+      break;
 
-      if (sc == 0xB0)           /* visual_object_sequence_start_code */
-        offset += 5;
-      else if (sc == 0xB5)      /* visual_object_start_code */
-        offset += 5;
-      else if (sc >= 0x00 && sc <= 0x1F) {      /* video_object_start_code */
-        offset += 4;
-        seen_vos = TRUE;
-      } else if (sc >= 0x20 && sc <= 0x2F) {    /* video_object_layer_start_code */
-        if (seen_vos) {
-          gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN,
-              MPEG4_VIDEO_CAPS);
-          return;
-        } else
-          return;
-      } else
-        return;
-    } else
-      return;
+    if (!mpeg_find_next_header (tf, &c,
+            GST_MPEGVID_TYPEFIND_TRY_SYNC - c.offset))
+      break;
+
+    sc = c.data[0];
+
+    /* visual_object_sequence_start_code */
+    if (sc == 0xB0) {
+      if (seen_vios)
+        break;                  /* Terminate at second vios */
+      if (c.offset == 0)
+        seen_vios_at_0 = TRUE;
+      seen_vios = TRUE;
+      data_scan_ctx_advance (tf, &c, 2);
+      if (!mpeg_find_next_header (tf, &c, 0))
+        break;
+
+      sc = c.data[0];
+
+      /* Optional metadata */
+      if (sc == 0xB2)
+        if (!mpeg_find_next_header (tf, &c, 24))
+          break;
+    }
+
+    /* visual_object_start_code (consider it optional) */
+    if (sc == 0xB5) {
+      data_scan_ctx_advance (tf, &c, 2);
+      /* may contain ID marker and YUV clamping */
+      if (!mpeg_find_next_header (tf, &c, 7))
+        break;
+
+      sc = c.data[0];
+    }
+
+    /* video_object_start_code */
+    if (sc <= 0x1F) {
+      if (seen_vos)
+        break;                  /* Terminate at second vos */
+      seen_vos = TRUE;
+      data_scan_ctx_advance (tf, &c, 2);
+      continue;
+    }
+
+    /* video_object_layer_start_code */
+    if (sc >= 0x20 && sc <= 0x2F) {
+      seen_vol = TRUE;
+      data_scan_ctx_advance (tf, &c, 5);
+      continue;
+    }
+
+    /* video_object_plane_start_code */
+    if (sc == 0xB6) {
+      num_vop_headers++;
+      data_scan_ctx_advance (tf, &c, 2);
+      continue;
+    }
+
+    /* Unknown start code. */
+  }
+
+  if (num_vop_headers > 0 || seen_vol) {
+    GstTypeFindProbability probability = 0;
+
+    GST_LOG ("Found %d pictures, vios: %d, vos:%d, vol:%d", num_vop_headers,
+        seen_vios, seen_vos, seen_vol);
+
+    if (num_vop_headers >= GST_MPEGVID_TYPEFIND_TRY_PICTURES && seen_vios_at_0
+        && seen_vos && seen_vol)
+      probability = GST_TYPE_FIND_MAXIMUM - 1;
+    else if (num_vop_headers >= GST_MPEGVID_TYPEFIND_TRY_PICTURES && seen_vios
+        && seen_vos && seen_vol)
+      probability = GST_TYPE_FIND_NEARLY_CERTAIN - 1;
+    else if (seen_vios_at_0 && seen_vos && seen_vol)
+      probability = GST_TYPE_FIND_NEARLY_CERTAIN - 6;
+    else if (num_vop_headers >= GST_MPEGVID_TYPEFIND_TRY_PICTURES && seen_vos
+        && seen_vol)
+      probability = GST_TYPE_FIND_NEARLY_CERTAIN - 6;
+    else if (num_vop_headers >= GST_MPEGVID_TYPEFIND_TRY_PICTURES && seen_vol)
+      probability = GST_TYPE_FIND_NEARLY_CERTAIN - 9;
+    else if (num_vop_headers >= GST_MPEGVID_TYPEFIND_TRY_PICTURES)
+      probability = GST_TYPE_FIND_LIKELY - 1;
+    else if (num_vop_headers > 2 && seen_vios && seen_vos && seen_vol)
+      probability = GST_TYPE_FIND_LIKELY - 9;
+    else if (seen_vios && seen_vos && seen_vol)
+      probability = GST_TYPE_FIND_LIKELY - 20;
+    else if (num_vop_headers > 0 && seen_vos && seen_vol)
+      probability = GST_TYPE_FIND_POSSIBLE;
+    else if (num_vop_headers > 0)
+      probability = GST_TYPE_FIND_POSSIBLE - 10;
+    else if (seen_vos && seen_vol)
+      probability = GST_TYPE_FIND_POSSIBLE - 20;
+
+    gst_type_find_suggest_simple (tf, probability, "video/mpeg",
+        "systemstream", G_TYPE_BOOLEAN, FALSE,
+        "mpegversion", G_TYPE_INT, 4, NULL);
   }
 }
 
@@ -1771,9 +1876,6 @@ static GstStaticCaps mpeg_video_caps = GST_STATIC_CAPS ("video/mpeg, "
  *
  * I'm sure someone will do a chance calculation here too.
  */
-
-#define GST_MPEGVID_TYPEFIND_TRY_PICTURES 6
-#define GST_MPEGVID_TYPEFIND_TRY_SYNC (100 * 1024)      /* 100 kB */
 
 static void
 mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
