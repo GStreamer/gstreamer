@@ -127,8 +127,11 @@ static gboolean
 gst_directdraw_sink_interface_supported (GstImplementsInterface * iface,
     GType type)
 {
-  g_assert (type == GST_TYPE_X_OVERLAY);
-  return TRUE;
+  if (type == GST_TYPE_X_OVERLAY)
+    return TRUE;
+  else if (type == GST_TYPE_NAVIGATION)
+    return TRUE;
+  return FALSE;
 }
 
 static void
@@ -189,6 +192,71 @@ gst_directdraw_sink_xoverlay_interface_init (GstXOverlayClass * iface)
 }
 
 static void
+gst_directdraw_sink_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure)
+{
+  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (navigation);
+  GstEvent *event;
+  GstVideoRectangle src, dst, result;
+  double x, y, old_x, old_y;
+  GstPad *pad = NULL;
+
+  src.w = GST_VIDEO_SINK_WIDTH (ddrawsink);
+  src.h = GST_VIDEO_SINK_HEIGHT (ddrawsink);
+  dst.w = ddrawsink->out_width;
+  dst.h = ddrawsink->out_height;
+  gst_video_sink_center_rect (src, dst, &result, FALSE);
+
+  event = gst_event_new_navigation (structure);
+
+  /* Our coordinates can be wrong here if we centered the video */
+
+  /* Converting pointer coordinates to the non scaled geometry */
+  if (gst_structure_get_double (structure, "pointer_x", &old_x)) {
+    x = old_x;
+
+    if (x >= result.x && x <= (result.x + result.w)) {
+      x -= result.x;
+      x *= ddrawsink->video_width;
+      x /= result.w;
+    } else {
+      x = 0;
+    }
+    GST_DEBUG_OBJECT (ddrawsink, "translated navigation event x "
+        "coordinate from %f to %f", old_x, x);
+    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+  }
+  if (gst_structure_get_double (structure, "pointer_y", &old_y)) {
+    y = old_y;
+
+    if (y >= result.y && y <= (result.y + result.h)) {
+      y -= result.y;
+      y *= ddrawsink->video_height;
+      y /= result.h;
+    } else {
+      y = 0;
+    }
+    GST_DEBUG_OBJECT (ddrawsink, "translated navigation event y "
+        "coordinate from %f to %f", old_y, y);
+    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+  }
+
+  pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (ddrawsink));
+
+  if (GST_IS_PAD (pad) && GST_IS_EVENT (event)) {
+    gst_pad_send_event (pad, event);
+
+    gst_object_unref (pad);
+  }
+}
+
+static void
+gst_directdraw_sink_navigation_interface_init (GstNavigationInterface * iface)
+{
+  iface->send_event = gst_directdraw_sink_navigation_send_event;
+}
+
+static void
 gst_directdraw_sink_init_interfaces (GType type)
 {
   static const GInterfaceInfo iface_info = {
@@ -203,9 +271,16 @@ gst_directdraw_sink_init_interfaces (GType type)
     NULL,
   };
 
+  static const GInterfaceInfo navigation_info = {
+    (GInterfaceInitFunc) gst_directdraw_sink_navigation_interface_init,
+    NULL,
+    NULL,
+  };
+
   g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
       &iface_info);
   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xoverlay_info);
+  g_type_add_interface_static (type, GST_TYPE_NAVIGATION, &navigation_info);
 }
 
 /* Subclass of GstBuffer which manages buffer_pool surfaces lifetime    */
@@ -484,6 +559,8 @@ gst_directdraw_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
         ("Failed to get caps properties from caps"), (NULL));
     return FALSE;
   }
+  GST_VIDEO_SINK_WIDTH (ddrawsink) = ddrawsink->video_width;
+  GST_VIDEO_SINK_HEIGHT (ddrawsink) = ddrawsink->video_height;
 
   ddrawsink->fps_n = gst_value_get_fraction_numerator (fps);
   ddrawsink->fps_d = gst_value_get_fraction_denominator (fps);
@@ -1277,7 +1354,6 @@ gst_directdraw_sink_setup_ddraw (GstDirectDrawSink * ddrawsink)
 {
   gboolean bRet = TRUE;
   HRESULT hRes;
-
   /* create an instance of the ddraw object use DDCREATE_EMULATIONONLY as first
    * parameter to force Directdraw to use the hardware emulation layer */
   hRes = DirectDrawCreateEx ( /*DDCREATE_EMULATIONONLY */ 0,
@@ -1320,6 +1396,121 @@ long FAR PASCAL
 WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message) {
+    case WM_CREATE: {
+      LPCREATESTRUCT crs = (LPCREATESTRUCT) lParam;
+      /* Nail pointer to the video sink down to this window */
+      SetWindowLongPtr (hWnd, GWLP_USERDATA, (LONG_PTR) crs->lpCreateParams);
+      break;
+    }
+    case WM_SIZE:
+    case WM_CHAR:
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    case WM_LBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_LBUTTONUP: 
+    case WM_RBUTTONUP: 
+    case WM_MBUTTONUP:
+    case WM_MOUSEMOVE: {
+      GstDirectDrawSink *ddrawsink;
+      ddrawsink = (GstDirectDrawSink *) GetWindowLongPtr (hWnd, GWLP_USERDATA);
+
+      if (G_UNLIKELY (!ddrawsink))
+        break;
+
+      switch (message) {
+        case WM_SIZE: {
+          GST_OBJECT_LOCK (ddrawsink);
+          ddrawsink->out_width = LOWORD (lParam);
+          ddrawsink->out_height = HIWORD (lParam);
+          GST_OBJECT_UNLOCK (ddrawsink);
+          GST_DEBUG_OBJECT (ddrawsink, "Window size is %dx%d", LOWORD (wParam), HIWORD (wParam));
+          break;
+        }
+        case WM_CHAR:
+        case WM_KEYDOWN:
+        case WM_KEYUP: {
+          gunichar2 wcrep[128];
+          if (GetKeyNameTextW (lParam, wcrep, 128))
+          {
+            gchar *utfrep = g_utf16_to_utf8 (wcrep, 128, NULL, NULL, NULL);
+            if (utfrep)
+            {
+              if (message == WM_CHAR || message == WM_KEYDOWN)
+              gst_navigation_send_key_event (GST_NAVIGATION (ddrawsink),
+                  "key-press", utfrep);
+              if (message == WM_CHAR || message == WM_KEYUP)
+                gst_navigation_send_key_event (GST_NAVIGATION (ddrawsink),
+                    "key-release", utfrep);
+              g_free (utfrep);
+            }
+          }
+          break;
+        }
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:
+        case WM_MOUSEMOVE: {
+          gint x, y, button;
+          gchar *action;
+
+          switch (message) {
+            case WM_MOUSEMOVE:
+              button = 0;
+              action = "mouse-move";
+              break;
+            case WM_LBUTTONDOWN:
+              button = 1;
+              action = "mouse-button-press";
+              break;
+            case WM_LBUTTONUP:
+              button = 1;
+              action = "mouse-button-release";
+              break;
+            case WM_RBUTTONDOWN:
+              button = 2;
+              action = "mouse-button-press";
+              break;
+            case WM_RBUTTONUP:
+              button = 2;
+              action = "mouse-button-release";
+              break;
+            case WM_MBUTTONDOWN:
+              button = 3;
+              action = "mouse-button-press";
+              break;
+            case WM_MBUTTONUP:
+              button = 3;
+              action = "mouse-button-release";
+              break;
+            default:
+              button = 4;
+          }
+
+          x = LOWORD (lParam);
+          y = HIWORD (lParam);
+
+          if (button == 0)
+          {
+            GST_DEBUG_OBJECT (ddrawsink, "Mouse moved to %dx%d", x, y);
+          }
+          else
+            GST_DEBUG_OBJECT (ddrawsink, "Mouse button %d pressed at %dx%d",
+                button, x, y);
+
+          if (button < 4)
+            gst_navigation_send_mouse_event (GST_NAVIGATION (ddrawsink),
+                action, button, x, y);
+          
+          break;
+        }
+      }      
+      break;
+    }
     case WM_ERASEBKGND:
       return TRUE;
     case WM_CLOSE:
@@ -1352,7 +1543,7 @@ gst_directdraw_sink_window_thread (GstDirectDrawSink * ddrawsink)
   ddrawsink->video_window = CreateWindowEx (0, "GStreamer-DirectDraw",
       "GStreamer-DirectDraw sink default window",
       WS_OVERLAPPEDWINDOW | WS_SIZEBOX, 0, 0, 640, 480, NULL, NULL,
-      WndClass.hInstance, NULL);
+      WndClass.hInstance, (LPVOID) ddrawsink);
   if (ddrawsink->video_window == NULL)
     return NULL;
 

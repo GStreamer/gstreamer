@@ -30,6 +30,7 @@
 #include <gst/gst.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/navigation.h>
 
 #include <windows.h>
 #include <ddraw.h>
