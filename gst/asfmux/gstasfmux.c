@@ -727,7 +727,7 @@ gst_asf_mux_write_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
     gst_asf_put_guid (*buf + 24, guids[ASF_VIDEO_MEDIA_INDEX]);
   /* error correction */
   if (asfpad->is_audio) {
-    gst_asf_put_guid (*buf + 40, guids[ASF_NO_ERROR_CORRECTION_INDEX]); /* TODO - use audio spread */
+    gst_asf_put_guid (*buf + 40, guids[ASF_NO_ERROR_CORRECTION_INDEX]);
   } else {
     gst_asf_put_guid (*buf + 40, guids[ASF_NO_ERROR_CORRECTION_INDEX]);
   }
@@ -796,7 +796,6 @@ gst_asf_mux_write_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
     memcpy (*buf, GST_BUFFER_DATA (asfpad->codec_data), codec_data_length);
 
   *buf += codec_data_length;
-  /* TODO - error correction for audio */
 }
 
 /**
