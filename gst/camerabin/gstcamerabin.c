@@ -1095,7 +1095,6 @@ gst_camerabin_get_allowed_input_caps (GstCameraBin * camera)
   GstCaps *caps = NULL;
   GstPad *pad = NULL, *peer_pad = NULL;
   GstState state;
-  gboolean temp_videosrc_pause = FALSE;
   GstElement *videosrc;
 
   g_return_val_if_fail (camera != NULL, NULL);
@@ -1121,27 +1120,25 @@ gst_camerabin_get_allowed_input_caps (GstCameraBin * camera)
 
   state = GST_STATE (videosrc);
 
-  /* Make this function work also in READY and NULL state */
-  if (state == GST_STATE_READY || state == GST_STATE_NULL) {
-    GST_DEBUG_OBJECT (camera, "setting videosrc to paused temporarily");
-    temp_videosrc_pause = TRUE;
+  /* Make this function work also in NULL state */
+  if (state == GST_STATE_NULL) {
+    GST_DEBUG_OBJECT (camera, "setting videosrc to ready temporarily");
     peer_pad = gst_pad_get_peer (pad);
     if (peer_pad) {
       gst_pad_unlink (pad, peer_pad);
     }
-    /* Set videosrc to PAUSED to open video device */
+    /* Set videosrc to READY to open video device */
     gst_element_set_locked_state (videosrc, TRUE);
-    gst_element_set_state (videosrc, GST_STATE_PAUSED);
+    gst_element_set_state (videosrc, GST_STATE_READY);
   }
 
   camera->allowed_caps = gst_pad_get_caps (pad);
 
   /* Restore state and re-link if necessary */
-  if (temp_videosrc_pause) {
+  if (state == GST_STATE_NULL) {
     GST_DEBUG_OBJECT (camera, "restoring videosrc state %d", state);
     /* Reset videosrc to NULL state, some drivers seem to need this */
     gst_element_set_state (videosrc, GST_STATE_NULL);
-    gst_element_set_state (videosrc, state);
     if (peer_pad) {
       gst_pad_link (pad, peer_pad);
       gst_object_unref (peer_pad);
