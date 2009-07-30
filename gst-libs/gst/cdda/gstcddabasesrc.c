@@ -288,6 +288,33 @@ gst_cdda_base_src_finalize (GObject * obj)
 }
 
 static void
+gst_cdda_base_src_set_device (GstCddaBaseSrc * src, const gchar * device)
+{
+  /* skip multiple slashes */
+  while (*device == '/' && *(device + 1) == '/')
+    device++;
+
+#ifdef __sun
+  /*
+   * On Solaris, /dev/rdsk is used for accessing the CD device, but some
+   * applications pass in /dev/dsk, so correct.
+   */
+  if (strncmp (device, "/dev/dsk", 8) == 0) {
+    gchar *rdsk_value;
+    rdsk_value = g_strdup_printf ("/dev/rdsk%s", device + 8);
+    src->device = g_strdup (rdsk_value);
+    g_free (rdsk_value);
+  } else {
+#endif
+    src->device = g_strdup (device);
+#ifdef __sun
+  }
+#endif
+
+  src->uri_track = 1;
+}
+
+static void
 gst_cdda_base_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -305,7 +332,7 @@ gst_cdda_base_src_set_property (GObject * object, guint prop_id,
 
       g_free (src->device);
       if (dev && *dev) {
-        src->device = g_strdup (dev);
+        gst_cdda_base_src_set_device (src, dev);
       } else {
         src->device = NULL;
       }
@@ -907,7 +934,7 @@ gst_cdda_base_src_uri_get_uri (GstURIHandler * handler)
   g_free (src->uri);
 
   if (GST_OBJECT_FLAG_IS_SET (GST_BASE_SRC (src), GST_BASE_SRC_STARTED)) {
-    src->uri = g_strdup_printf ("cdda://%d", src->uri_track);
+    src->uri = g_strdup_printf ("cdda://%s#%d", src->device, src->uri_track);
   } else {
     src->uri = g_strdup ("cdda://1");
   }
@@ -920,29 +947,44 @@ gst_cdda_base_src_uri_get_uri (GstURIHandler * handler)
 /* Note: gst_element_make_from_uri() might call us with just 'cdda://' as
  * URI and expects us to return TRUE then (and this might be in any state) */
 
+/* We accept URIs of the format cdda://(device#track)|(track) */
+
 static gboolean
 gst_cdda_base_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (handler);
-  gchar *protocol, *location;
+  gchar *protocol;
+  const gchar *location;
+  gchar *track_number;
 
   GST_OBJECT_LOCK (src);
 
   protocol = gst_uri_get_protocol (uri);
-  if (!protocol || strcmp (protocol, "cdda") != 0) {
+  if (!protocol || g_ascii_strcasecmp (protocol, "cdda") != 0) {
     g_free (protocol);
     goto failed;
   }
   g_free (protocol);
 
-  location = gst_uri_get_location (uri);
-  if (location == NULL || *location == '\0') {
-    g_free (location);
-    location = g_strdup ("1");
-  }
+  location = uri + 7;
+  track_number = g_strrstr (location, "#");
+  src->uri_track = 0;
+  if (track_number) {
+    gchar *device, *nuri = g_strdup (uri);
 
-  src->uri_track = strtol (location, NULL, 10);
-  g_free (location);
+    track_number = nuri + (track_number - uri);
+    *track_number = '\0';
+    device = gst_uri_get_location (nuri);
+    gst_cdda_base_src_set_device (src, device);
+    g_free (device);
+    src->uri_track = strtol (track_number + 1, NULL, 10);
+    g_free (nuri);
+  } else {
+    if (*location == '\0')
+      src->uri_track = 1;
+    else
+      src->uri_track = strtol (location, NULL, 10);
+  }
 
   if (src->uri_track == 0)
     goto failed;
