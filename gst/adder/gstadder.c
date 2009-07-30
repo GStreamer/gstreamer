@@ -1235,6 +1235,7 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       adder->timestamp = 0;
       adder->offset = 0;
+      adder->flush_stop_pending = FALSE;
       adder->segment_pending = TRUE;
       adder->segment_position = 0;
       adder->segment_rate = 1.0;
