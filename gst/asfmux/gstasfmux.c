@@ -846,7 +846,13 @@ gst_asf_mux_write_extended_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
   GST_WRITE_UINT32_LE (*buf + 64, 0);   /* maximum object size */
 
   /* flags */
-  GST_WRITE_UINT32_LE (*buf + 68, 0x0); /* TODO check if seekable */
+  if (asfpad->is_audio) {
+    /* TODO check if audio is seekable */
+    GST_WRITE_UINT32_LE (*buf + 68, 0x0);
+  } else {
+    /* video has indexes, so it is seekable */
+    GST_WRITE_UINT32_LE (*buf + 68, 0x2);
+  }
 
   GST_WRITE_UINT16_LE (*buf + 72, asfpad->stream_number);
   GST_WRITE_UINT16_LE (*buf + 74, 0);   /* language index */
