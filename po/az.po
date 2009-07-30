@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-23 16:23+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-07-30 14:52+0100\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -16,128 +16,465 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.0.2\n"
 
-#: ext/alsa/gstalsamixertrack.c:83
 msgid "Master"
 msgstr ""
 
-#: ext/alsa/gstalsamixertrack.c:84
 msgid "Bass"
 msgstr "Bas"
 
-#: ext/alsa/gstalsamixertrack.c:85
 msgid "Treble"
 msgstr "İncə"
 
-#: ext/alsa/gstalsamixertrack.c:86
 msgid "PCM"
 msgstr "PCM"
 
-#: ext/alsa/gstalsamixertrack.c:87
 msgid "Synth"
 msgstr "Sint"
 
-#: ext/alsa/gstalsamixertrack.c:88
 msgid "Line-in"
 msgstr "Xətd-giriş"
 
-#: ext/alsa/gstalsamixertrack.c:89
 msgid "CD"
 msgstr "CD"
 
-#: ext/alsa/gstalsamixertrack.c:90
 msgid "Microphone"
 msgstr "Mikrofon"
 
-#: ext/alsa/gstalsamixertrack.c:91
 #, fuzzy
 msgid "PC Speaker"
 msgstr "Spiker"
 
-#: ext/alsa/gstalsamixertrack.c:92
 msgid "Playback"
 msgstr ""
 
-#: ext/alsa/gstalsamixertrack.c:93
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:279
-msgid "discid"
+#, fuzzy
+msgid "Could not open device for playback in mono mode."
+msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
+
+#, fuzzy
+msgid "Could not open device for playback in stereo mode."
+msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
+
+#, fuzzy, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:279
-msgid "CDDA discid for metadata retrieval"
-msgstr ""
+#, fuzzy
+msgid "Could not open audio device for playback."
+msgstr "\"%s\" audio avadanlığı yazma üçün açıla bilmədi."
 
-#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
+#, fuzzy
+msgid "Could not open device for recording in mono mode."
+msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
+
+#, fuzzy
+msgid "Could not open device for recording in stereo mode."
+msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
+
+#, fuzzy, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
+
+#, fuzzy
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
+
+#, fuzzy
+msgid "Could not open audio device for recording."
+msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
+
 msgid "Could not open CD device for reading."
 msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
 
-#: ext/gnomevfs/gstgnomevfssink.c:431
+#, fuzzy
+msgid "Could not seek CD."
+msgstr "\"%s\" vfs faylı bağlana bilmədi."
+
+#, fuzzy
+msgid "Could not read CD."
+msgstr "\"%s\" avadanlığına yazıla bilmədi."
+
 #, fuzzy, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "\"%s\" vfs faylı yazma üçün açıla bilmədi."
 
-#: ext/gnomevfs/gstgnomevfssink.c:438
 #, fuzzy
 msgid "No filename given"
 msgstr "Fayl adı verilməyib."
 
-#: ext/gnomevfs/gstgnomevfssink.c:466
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "\"%s\" vfs faylı bağlana bilmədi."
 
-#: ext/ogg/gstoggdemux.c:2454
+#, fuzzy, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "\"%s\" faylı bağlana bilmədi."
+
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1331
+#, c-format
+msgid "A %s plugin is required to play this stream, but not installed."
+msgstr ""
+
+msgid "This appears to be a text file"
+msgstr ""
+
+#, c-format
+msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+msgstr ""
+
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1337
-#, c-format
-msgid "No URI handler implemented for \"%s\"."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:1341
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1348
+msgid "RTSP streams cannot be played yet."
+msgstr ""
+
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1414
-#, c-format
+msgid "Source element is invalid."
+msgstr ""
+
 msgid ""
-"You do not have a decoder installed to handle \"%s\".  You might need to "
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1417
-#, fuzzy, c-format
-msgid "\"%s\" is not a media file"
+#, fuzzy
+msgid "This is not a media file"
 msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
 
-#: gst/playback/gstplaybin.c:411
+msgid "A subtitle stream was detected, but no video stream."
+msgstr ""
+
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:541
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
-#~ msgid "No device specified."
-#~ msgstr "Avadanlıq bildirilməyib."
+msgid "Both autovideosink and xvimagesink elements are not working."
+msgstr ""
 
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "\"%s\" avadanlığı mövcud deyil."
+msgid "Custom text sink element is not usable."
+msgstr ""
 
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
+msgid "No volume control found"
+msgstr ""
+
+msgid "Both autoaudiosink and alsasink elements are not working."
+msgstr ""
+
+msgid "Can't play a text file without video."
+msgstr ""
+
+msgid "Can't play a text subtitles and subpictures."
+msgstr ""
+
+#, fuzzy
+msgid "No Temp directory specified."
+msgstr "Avadanlıq bildirilməyib."
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "\"%s\" faylına yazıla bilmədi."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
+
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr ""
+
+msgid "This stream type cannot be played yet."
+msgstr ""
+
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+msgid "Could not create \"decodebin2\" element."
+msgstr ""
+
+msgid "Could not create \"queue2\" element."
+msgstr ""
+
+#, fuzzy
+msgid "Could not create \"typefind\" element."
+msgstr "\"%s\" faylına yazıla bilmədi."
+
+#, fuzzy, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "\"%s\" faylı bağlana bilmədi."
+
+#, c-format
+msgid "Error while sending gdp header data to \"%s:%d\"."
+msgstr ""
+
+#, c-format
+msgid "Error while sending gdp payload data to \"%s:%d\"."
+msgstr ""
+
+#, c-format
+msgid "Connection to %s:%d refused."
+msgstr ""
+
+msgid "Can't record audio fast enough"
+msgstr ""
+
+msgid "Failed to read tag: not enough data"
+msgstr ""
+
+msgid "track ID"
+msgstr ""
+
+msgid "MusicBrainz track ID"
+msgstr ""
+
+msgid "artist ID"
+msgstr ""
+
+msgid "MusicBrainz artist ID"
+msgstr ""
+
+msgid "album ID"
+msgstr ""
+
+msgid "MusicBrainz album ID"
+msgstr ""
+
+msgid "album artist ID"
+msgstr ""
+
+msgid "MusicBrainz album artist ID"
+msgstr ""
+
+msgid "track TRM ID"
+msgstr ""
+
+msgid "MusicBrainz TRM ID"
+msgstr ""
+
+msgid "This CD has no audio tracks"
+msgstr ""
+
+msgid "ID3 tag"
+msgstr ""
+
+msgid "APE tag"
+msgstr ""
+
+msgid "ICY internet radio"
+msgstr ""
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr ""
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr ""
+
+msgid "Lossless True Audio (TTA)"
+msgstr ""
+
+msgid "Windows Media Speech"
+msgstr ""
+
+msgid "CYUV Lossless"
+msgstr ""
+
+msgid "FFMpeg v1"
+msgstr ""
+
+msgid "Lossless MSZH"
+msgstr ""
+
+msgid "Uncompressed Gray Image"
+msgstr ""
+
+msgid "Run-length encoding"
+msgstr ""
+
+msgid "Sami subtitle format"
+msgstr ""
+
+msgid "TMPlayer subtitle format"
+msgstr ""
+
+msgid "Kate subtitle format"
+msgstr ""
+
+msgid "Uncompressed planar YUV 4:2:0"
+msgstr ""
+
+msgid "Uncompressed planar YVU 4:2:0"
+msgstr ""
+
+msgid "Uncompressed packed YUV 4:2:2"
+msgstr ""
+
+msgid "Uncompressed packed YUV 4:1:0"
+msgstr ""
+
+msgid "Uncompressed packed YVU 4:1:0"
+msgstr ""
+
+msgid "Uncompressed packed YUV 4:1:1"
+msgstr ""
+
+msgid "Uncompressed packed YUV 4:4:4"
+msgstr ""
+
+msgid "Uncompressed planar YUV 4:2:2"
+msgstr ""
+
+msgid "Uncompressed planar YUV 4:1:1"
+msgstr ""
+
+msgid "Uncompressed black and white Y-plane"
+msgstr ""
+
+msgid "Uncompressed YUV"
+msgstr ""
+
+#, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr ""
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr ""
+
+#, c-format
+msgid "Raw %d-bit PCM audio"
+msgstr ""
+
+msgid "Raw PCM audio"
+msgstr ""
+
+#, c-format
+msgid "Raw %d-bit floating-point audio"
+msgstr ""
+
+msgid "Raw floating-point audio"
+msgstr ""
+
+msgid "Audio CD source"
+msgstr ""
+
+msgid "DVD source"
+msgstr ""
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr ""
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr ""
+
+#, c-format
+msgid "%s protocol source"
+msgstr ""
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s demuxer"
+msgstr ""
+
+#, c-format
+msgid "%s decoder"
+msgstr ""
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s muxer"
+msgstr ""
+
+#, c-format
+msgid "%s encoder"
+msgstr ""
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr ""
+
+msgid "Unknown source element"
+msgstr ""
+
+msgid "Unknown sink element"
+msgstr ""
+
+msgid "Unknown element"
+msgstr ""
+
+msgid "Unknown decoder element"
+msgstr ""
+
+msgid "Unknown encoder element"
+msgstr ""
+
+msgid "Plugin or element of unknown type"
+msgstr ""
+
+msgid "No device specified."
+msgstr "Avadanlıq bildirilməyib."
+
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "\"%s\" avadanlığı mövcud deyil."
+
+#, fuzzy, c-format
+msgid "Device \"%s\" is already being used."
+msgstr "\"%s\" OSS avadanlığı başqa bir proqram tərəfindən istifadədədir."
+
+#, c-format
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
 
 #~ msgid "Device is not open."
 #~ msgstr "Avadanlıq açıq deyil."
@@ -155,23 +492,11 @@ msgstr ""
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "\"%s\" faylı yazma üçün açıla bilmədi."
 
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "\"%s\" faylı bağlana bilmədi."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
-
 #~ msgid "No filename specified."
 #~ msgstr "Fayl adı verilməyib."
 
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "\"%s\" faylına yazıla bilmədi."
-
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Səhv ya da olmayan audio girişi, AVI yayımı pozulacaqdır."
-
-#~ msgid "Could not open audio device \"%s\" for writing."
-#~ msgstr "\"%s\" audio avadanlığı yazma üçün açıla bilmədi."
 
 #~ msgid "Could not open control device \"%s\" for writing."
 #~ msgstr "\"%s\" idarə avadanlığı yazma üçün açıla bilmədi."
@@ -193,12 +518,6 @@ msgstr ""
 
 #~ msgid "Could not close video device \"%s\"."
 #~ msgstr "\"%s\" video avadanlığı bağlana bilmədi."
-
-#~ msgid "Could not write to device \"%s\"."
-#~ msgstr "\"%s\" avadanlığına yazıla bilmədi."
-
-#~ msgid "OSS device \"%s\" is already in use by another program."
-#~ msgstr "\"%s\" OSS avadanlığı başqa bir proqram tərəfindən istifadədədir."
 
 #~ msgid "Could not access device \"%s\", check its permissions."
 #~ msgstr "\"%s\" avadanlığına yetişə bilmədi, səlahiyyətlərini yoxlayın."

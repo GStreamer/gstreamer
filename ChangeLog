@@ -1,3 +1,44 @@
+2009-07-30 14:40:50 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* po/LINGUAS:
+	* po/lv.po:
+	  0.10.24.5 pre-release
+
+2009-07-29 14:15:53 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiofilter.c:
+	  audiofilter: Don't assert on slightly different caps
+	  Plugins should not assert on incompatible caps, caps negotiation will
+	  fail anyway.
+
+2009-07-30 13:42:21 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/adder/gstadder.c:
+	  adder: reset pending flush-stop flag in state_changed. (mostly) Fixes #590146.
+
+2009-07-30 09:28:20 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: bump Gtk+ requirement of GUI examples from 2.12 to 2.14
+	  The gio mount example needs GtkMountOperation, which is new in 2.14.
+
+2009-07-27 10:29:27 +0100  Balachandran C <balachandran_c@rediffmail.com>
+
+	* ext/alsa/gstalsasrc.c:
+	  alsasrc: set alsasrc->handle back to NULL when closing device
+	  Fixes crashes in gst_alsa_find_device_name() when probing or
+	  reading the device-name property (e.g. when doing a dot-file
+	  dump). Fixes #589797.
+
+2009-07-24 19:26:40 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/playback/gststreamselector.c:
+	  playbin: rename GType of stream selector pad to avoid clash with input-selector from -bad
+	  Rename the GType of the pads of playbin's internal stream selector
+	  element so they don't use the same type name as input-selector's
+	  pads. Fixes #589622.
+
 2009-07-24 13:39:55 +0100  Jan Schmidt <thaytan@noraisin.net>
 
 	* ChangeLog:
