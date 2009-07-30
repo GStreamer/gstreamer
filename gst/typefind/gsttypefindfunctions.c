@@ -1676,6 +1676,10 @@ mpeg_find_next_header (GstTypeFind * tf, DataScanCtx * c,
 
 /*** video/mpeg MPEG-4 elementary video stream ***/
 
+static GstStaticCaps mpeg4_video_caps = GST_STATIC_CAPS ("video/mpeg, "
+    "systemstream = (boolean) false, mpegversion = 4");
+#define MPEG4_VIDEO_CAPS gst_static_caps_get(&mpeg4_video_caps)
+
 /*
  * This typefind is based on the elementary video header defined in
  * http://xhelmboyx.tripod.com/formats/mpeg-layout.txt
@@ -1791,9 +1795,7 @@ mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
     else if (seen_vos && seen_vol)
       probability = GST_TYPE_FIND_POSSIBLE - 20;
 
-    gst_type_find_suggest_simple (tf, probability, "video/mpeg",
-        "systemstream", G_TYPE_BOOLEAN, FALSE,
-        "mpegversion", G_TYPE_INT, 4, NULL);
+    gst_type_find_suggest (tf, probability, MPEG4_VIDEO_CAPS);
   }
 }
 
