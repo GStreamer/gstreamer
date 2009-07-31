@@ -1396,7 +1396,7 @@ long FAR PASCAL
 WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message) {
-    case WM_CREATE: {
+    case WM_CREATE:{
       LPCREATESTRUCT crs = (LPCREATESTRUCT) lParam;
       /* Nail pointer to the video sink down to this window */
       SetWindowLongPtr (hWnd, GWLP_USERDATA, (LONG_PTR) crs->lpCreateParams);
@@ -1409,10 +1409,10 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_LBUTTONDOWN:
     case WM_RBUTTONDOWN:
     case WM_MBUTTONDOWN:
-    case WM_LBUTTONUP: 
-    case WM_RBUTTONUP: 
+    case WM_LBUTTONUP:
+    case WM_RBUTTONUP:
     case WM_MBUTTONUP:
-    case WM_MOUSEMOVE: {
+    case WM_MOUSEMOVE:{
       GstDirectDrawSink *ddrawsink;
       ddrawsink = (GstDirectDrawSink *) GetWindowLongPtr (hWnd, GWLP_USERDATA);
 
@@ -1420,26 +1420,25 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
       switch (message) {
-        case WM_SIZE: {
+        case WM_SIZE:{
           GST_OBJECT_LOCK (ddrawsink);
           ddrawsink->out_width = LOWORD (lParam);
           ddrawsink->out_height = HIWORD (lParam);
           GST_OBJECT_UNLOCK (ddrawsink);
-          GST_DEBUG_OBJECT (ddrawsink, "Window size is %dx%d", LOWORD (wParam), HIWORD (wParam));
+          GST_DEBUG_OBJECT (ddrawsink, "Window size is %dx%d", LOWORD (wParam),
+              HIWORD (wParam));
           break;
         }
         case WM_CHAR:
         case WM_KEYDOWN:
-        case WM_KEYUP: {
+        case WM_KEYUP:{
           gunichar2 wcrep[128];
-          if (GetKeyNameTextW (lParam, wcrep, 128))
-          {
+          if (GetKeyNameTextW (lParam, wcrep, 128)) {
             gchar *utfrep = g_utf16_to_utf8 (wcrep, 128, NULL, NULL, NULL);
-            if (utfrep)
-            {
+            if (utfrep) {
               if (message == WM_CHAR || message == WM_KEYDOWN)
-              gst_navigation_send_key_event (GST_NAVIGATION (ddrawsink),
-                  "key-press", utfrep);
+                gst_navigation_send_key_event (GST_NAVIGATION (ddrawsink),
+                    "key-press", utfrep);
               if (message == WM_CHAR || message == WM_KEYUP)
                 gst_navigation_send_key_event (GST_NAVIGATION (ddrawsink),
                     "key-release", utfrep);
@@ -1454,7 +1453,7 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_RBUTTONUP:
         case WM_MBUTTONDOWN:
         case WM_MBUTTONUP:
-        case WM_MOUSEMOVE: {
+        case WM_MOUSEMOVE:{
           gint x, y, button;
           gchar *action;
 
@@ -1494,21 +1493,19 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           x = LOWORD (lParam);
           y = HIWORD (lParam);
 
-          if (button == 0)
-          {
+          if (button == 0) {
             GST_DEBUG_OBJECT (ddrawsink, "Mouse moved to %dx%d", x, y);
-          }
-          else
+          } else
             GST_DEBUG_OBJECT (ddrawsink, "Mouse button %d pressed at %dx%d",
                 button, x, y);
 
           if (button < 4)
             gst_navigation_send_mouse_event (GST_NAVIGATION (ddrawsink),
                 action, button, x, y);
-          
+
           break;
         }
-      }      
+      }
       break;
     }
     case WM_ERASEBKGND:
