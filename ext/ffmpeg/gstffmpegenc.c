@@ -334,11 +334,32 @@ gst_ffmpegenc_getcaps (GstPad * pad)
     /* override looping all pixfmt if codec declares pixfmts;
      * these may not properly check and report supported pixfmt during _init */
     if (oclass->in_plugin->pix_fmts) {
-      if ((pixfmt = oclass->in_plugin->pix_fmts[i++]) == PIX_FMT_NONE)
+      if ((pixfmt = oclass->in_plugin->pix_fmts[i++]) == PIX_FMT_NONE) {
+        GST_DEBUG_OBJECT (ffmpegenc,
+            "At the end of official pixfmt for this codec, breaking out");
         break;
+      }
+      GST_DEBUG_OBJECT (ffmpegenc,
+          "Got an official pixfmt [%d], attempting to get caps", pixfmt);
+      tmpcaps =
+          gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type, NULL,
+          oclass->in_plugin->id, TRUE);
+      if (tmpcaps) {
+        GST_DEBUG_OBJECT (ffmpegenc, "Got caps, breaking out");
+        if (!caps)
+          caps = gst_caps_new_empty ();
+        gst_caps_append (caps, tmpcaps);
+        break;
+      }
+      GST_DEBUG_OBJECT (ffmpegenc,
+          "Couldn't figure out caps without context, trying again with a context");
     }
-    if (pixfmt >= PIX_FMT_NB)
+
+    GST_DEBUG_OBJECT (ffmpegenc, "pixfmt :%d", pixfmt);
+    if (pixfmt >= PIX_FMT_NB) {
+      GST_WARNING ("Invalid pixfmt, breaking out");
       break;
+    }
 
     /* need to start with a fresh codec_context each time around, since
      * codec_close may have released stuff causing the next pass to segfault */
@@ -359,6 +380,8 @@ gst_ffmpegenc_getcaps (GstPad * pad)
     ctx->strict_std_compliance = -1;
 
     ctx->pix_fmt = pixfmt;
+
+    GST_DEBUG ("Attempting to open codec");
     if (gst_ffmpeg_avcodec_open (ctx, oclass->in_plugin) >= 0 &&
         ctx->pix_fmt == pixfmt) {
       ctx->width = -1;
@@ -373,6 +396,9 @@ gst_ffmpegenc_getcaps (GstPad * pad)
             "Couldn't get caps for oclass->in_plugin->name:%s",
             oclass->in_plugin->name);
       gst_ffmpeg_avcodec_close (ctx);
+    } else {
+      GST_DEBUG_OBJECT (ffmpegenc, "Opening codec failed with pixfmt : %d",
+          pixfmt);
     }
     if (ctx->priv_data)
       gst_ffmpeg_avcodec_close (ctx);
