@@ -154,7 +154,30 @@ gst_rtp_asf_pay_handle_packet (GstRtpAsfPay * rtpasfpay, GstBuffer * buffer)
       ", padding: %" G_GUINT32_FORMAT, packetinfo->packet_size,
       packetinfo->padding);
 
-  /* FIXME - should update the padding field to 0 */
+  /* update padding field to 0 */
+  if (packetinfo->padding > 0) {
+    GstAsfPacketInfo info;
+    /* find padding field offset */
+    guint offset = packetinfo->err_cor_len + 2 +
+        gst_asf_get_var_size_field_len (packetinfo->packet_field_type) +
+        gst_asf_get_var_size_field_len (packetinfo->seq_field_type);
+    buffer = gst_buffer_make_writable (buffer);
+    switch (packetinfo->padd_field_type) {
+      case ASF_FIELD_TYPE_DWORD:
+        GST_WRITE_UINT32_LE (&(GST_BUFFER_DATA (buffer)[offset]), 0);
+        break;
+      case ASF_FIELD_TYPE_WORD:
+        GST_WRITE_UINT16_LE (&(GST_BUFFER_DATA (buffer)[offset]), 0);
+        break;
+      case ASF_FIELD_TYPE_BYTE:
+        GST_BUFFER_DATA (buffer)[offset] = 0;
+        break;
+      case ASF_FIELD_TYPE_NONE:
+      default:
+        break;
+    }
+    gst_asf_parse_packet (buffer, &info, FALSE);
+  }
 
   packet_util_size = packetinfo->packet_size - packetinfo->padding;
   packet_offset = 0;

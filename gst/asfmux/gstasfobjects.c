@@ -521,6 +521,7 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
   GstByteReader *reader;
   gboolean ret = TRUE;
   guint8 first;
+  guint8 err_length = 0;        /* length of the error fields */
   guint8 aux;
   guint8 packet_len_type;
   guint8 padding_len_type;
@@ -543,6 +544,7 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
 
   if (first & 0x80) {           /* error correction present */
     guint8 err_cor_len;
+    err_length += 1;
     GST_DEBUG ("Packet contains error correction");
     if (first & 0x60) {
       GST_ERROR ("Error correction data length should be "
@@ -550,9 +552,12 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
       return FALSE;
     }
     err_cor_len = (first & 0x0F);
+    err_length += err_cor_len;
     GST_DEBUG ("Error correction data length: %d", (gint) err_cor_len);
     if (!gst_byte_reader_skip (reader, err_cor_len))
       goto error;
+
+    /* put payload parsing info first byte in aux var */
     if (!gst_byte_reader_get_uint8 (reader, &aux))
       goto error;
   } else {
@@ -631,6 +636,11 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
   packet->send_time = send_time;
   packet->duration = duration;
   packet->has_keyframe = has_keyframe;
+  packet->multiple_payloads = mult_payloads ? TRUE : FALSE;
+  packet->padd_field_type = padding_len_type;
+  packet->packet_field_type = packet_len_type;
+  packet->seq_field_type = seq_len_type;
+  packet->err_cor_len = err_length;
 
   gst_byte_reader_free (reader);
   return ret;

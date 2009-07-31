@@ -46,6 +46,12 @@ typedef struct _GstAsfFileInfo
 
 typedef struct _GstAsfPacketInfo
 {
+  guint8 err_cor_len;
+  gboolean multiple_payloads;
+  guint8 padd_field_type;
+  guint8 packet_field_type;  
+  guint8 seq_field_type;
+
   guint32 packet_size;
   guint32 padding;
   guint32 send_time;
