@@ -238,7 +238,8 @@ gst_output_selector_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_ACTIVE_PAD:
       GST_OBJECT_LOCK (object);
-      g_value_set_object (value, sel->active_srcpad);
+      g_value_set_object (value,
+          sel->pending_srcpad ? sel->pending_srcpad : sel->active_srcpad);
       GST_OBJECT_UNLOCK (object);
       break;
     case PROP_RESEND_LATEST:{
