@@ -148,6 +148,21 @@ window_closed (GtkWidget * widget, GdkEvent * event, gpointer user_data)
   gtk_main_quit ();
 }
 
+static gboolean
+start_pipeline (gpointer user_data)
+{
+  GstElement *pipeline = GST_ELEMENT (user_data);
+  GstStateChangeReturn sret;
+
+  sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (sret == GST_STATE_CHANGE_FAILURE) {
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_object_unref (pipeline);
+    gtk_main_quit ();
+  }
+  return FALSE;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -233,13 +248,9 @@ main (int argc, char **argv)
   /* show the gui and play */
 
   gtk_widget_show_all (window);
-  sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  if (sret == GST_STATE_CHANGE_FAILURE) {
-    gst_element_set_state (pipeline, GST_STATE_NULL);
-    gst_object_unref (pipeline);
-    return -1;
-  }
+  g_idle_add (start_pipeline, pipeline);
   gtk_main ();
+
   gst_object_unref (pipeline);
 
   return 0;
