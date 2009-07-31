@@ -103,31 +103,22 @@ static void gst_flac_dec_loop (GstPad * pad);
 static GstStateChangeReturn gst_flac_dec_change_state (GstElement * element,
     GstStateChange transition);
 static const GstQueryType *gst_flac_dec_get_src_query_types (GstPad * pad);
-
 static const GstQueryType *gst_flac_dec_get_sink_query_types (GstPad * pad);
-
 static gboolean gst_flac_dec_sink_query (GstPad * pad, GstQuery * query);
-
 static gboolean gst_flac_dec_src_query (GstPad * pad, GstQuery * query);
-
 static gboolean gst_flac_dec_convert_src (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 static gboolean gst_flac_dec_src_event (GstPad * pad, GstEvent * event);
-
 static gboolean gst_flac_dec_sink_activate (GstPad * sinkpad);
-
 static gboolean gst_flac_dec_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
 static gboolean gst_flac_dec_sink_activate_push (GstPad * sinkpad,
     gboolean active);
 static gboolean gst_flac_dec_sink_event (GstPad * pad, GstEvent * event);
-
 static GstFlowReturn gst_flac_dec_chain (GstPad * pad, GstBuffer * buf);
 
 static void gst_flac_dec_reset_decoders (GstFlacDec * flacdec);
-
 static void gst_flac_dec_setup_seekable_decoder (GstFlacDec * flacdec);
-
 static void gst_flac_dec_setup_stream_decoder (GstFlacDec * flacdec);
 
 static FLAC__StreamDecoderReadStatus
@@ -208,7 +199,6 @@ static void
 gst_flac_dec_class_init (GstFlacDecClass * klass)
 {
   GstElementClass *gstelement_class;
-
   GObjectClass *gobject_class;
 
   gstelement_class = (GstElementClass *) klass;
@@ -1242,11 +1232,8 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_NEWSEGMENT:{
       GstFormat fmt;
-
       gboolean update;
-
       gdouble rate, applied_rate;
-
       gint64 cur, stop, time;
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
@@ -1926,8 +1913,9 @@ static gboolean
 gst_flac_dec_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
+  GstFlacDec *flacdec;
 
-  GstFlacDec *flacdec = GST_FLAC_DEC (gst_pad_get_parent (pad));
+  flacdec = GST_FLAC_DEC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
@@ -1999,7 +1987,6 @@ static GstStateChangeReturn
 gst_flac_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-
   GstFlacDec *flacdec = GST_FLAC_DEC (element);
 
   switch (transition) {
