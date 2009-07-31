@@ -36,7 +36,7 @@
  * Depends on the driver, OpenGL handles hardware accelerated
  * scaling of video frames. This means that the element will just accept
  * incoming video frames no matter their geometry and will then put them to the
- * drawable scaling them on the fly. Using the #GstXvImageSink:force-aspect-ratio
+ * drawable scaling them on the fly. Using the #GstGLImageSink:force-aspect-ratio
  * property it is possible to enforce scaling with a constant aspect ratio,
  * which means drawing black borders around the video frame.
  * </para>
@@ -142,9 +142,8 @@ static GstStaticPadTemplate gst_glimage_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        GST_GL_VIDEO_CAPS ";"
-        GST_VIDEO_CAPS_RGB  ";" 
+    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS ";"
+        GST_VIDEO_CAPS_RGB ";"
         GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_RGBA ";"
         GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
@@ -559,7 +558,6 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     gst_gl_display_set_window_id (glimage_sink->display,
         glimage_sink->window_id);
   }
-
   //the buffer is cleared when an other comes in
   if (glimage_sink->stored_buffer) {
     gst_buffer_unref (GST_BUFFER_CAST (glimage_sink->stored_buffer));
@@ -571,7 +569,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   //redisplay opengl scene
   if (gl_buffer->texture &&
       gst_gl_display_redisplay (glimage_sink->display,
-          gl_buffer->texture, gl_buffer->width, gl_buffer->height, 
+          gl_buffer->texture, gl_buffer->width, gl_buffer->height,
           glimage_sink->keep_aspect_ratio))
     return GST_FLOW_OK;
   else
@@ -607,15 +605,15 @@ gst_glimage_sink_expose (GstXOverlay * overlay)
 
   //redisplay opengl scene
   if (glimage_sink->display && glimage_sink->window_id) {
-    
+
     if (glimage_sink->window_id != glimage_sink->new_window_id) {
       glimage_sink->window_id = glimage_sink->new_window_id;
       gst_gl_display_set_window_id (glimage_sink->display,
           glimage_sink->window_id);
     }
 
-    gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0, 
-      glimage_sink->keep_aspect_ratio);
+    gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0,
+        glimage_sink->keep_aspect_ratio);
   }
 }
 
