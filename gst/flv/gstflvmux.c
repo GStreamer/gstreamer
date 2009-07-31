@@ -600,8 +600,8 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
   data = GST_BUFFER_DATA (tmp);
   data[0] = 2;                  /* string */
   data[1] = 0;
-  data[2] = 0x0a;               /* length 10 */
-  memcpy (&data[3], "onMetaData", sizeof ("onMetaData"));
+  data[2] = 10;                 /* length 10 */
+  memcpy (&data[3], "onMetaData", 10);
 
   script_tag = gst_buffer_join (script_tag, tmp);
 
@@ -682,7 +682,7 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
     data = GST_BUFFER_DATA (tmp);
     data[0] = 0;                /* 8 bytes name */
     data[1] = 8;
-    memcpy (&data[2], "duration", sizeof ("duration"));
+    memcpy (&data[2], "duration", 8);
     data[10] = 0;               /* double */
     GST_WRITE_DOUBLE_BE (data + 11, d);
     script_tag = gst_buffer_join (script_tag, tmp);
@@ -713,7 +713,7 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
         data = GST_BUFFER_DATA (tmp);
         data[0] = 0;            /* 12 bytes name */
         data[1] = 12;
-        memcpy (&data[2], "AspectRatioX", sizeof ("AspectRatioX"));
+        memcpy (&data[2], "AspectRatioX", 12);
         data[14] = 0;           /* double */
         GST_WRITE_DOUBLE_BE (data + 15, d);
         script_tag = gst_buffer_join (script_tag, tmp);
@@ -724,7 +724,7 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
         data = GST_BUFFER_DATA (tmp);
         data[0] = 0;            /* 12 bytes name */
         data[1] = 12;
-        memcpy (&data[2], "AspectRatioY", sizeof ("AspectRatioY"));
+        memcpy (&data[2], "AspectRatioY", 12);
         data[14] = 0;           /* double */
         GST_WRITE_DOUBLE_BE (data + 15, d);
         script_tag = gst_buffer_join (script_tag, tmp);
@@ -740,7 +740,7 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
     data = GST_BUFFER_DATA (tmp);
     data[0] = 0;                /* 15 bytes name */
     data[1] = 15;
-    memcpy (&data[2], "metadatacreator", sizeof ("metadatacreator"));
+    memcpy (&data[2], "metadatacreator", 15);
     data[17] = 2;               /* string */
     data[18] = (strlen (s) >> 8) & 0xff;
     data[19] = (strlen (s)) & 0xff;
@@ -775,7 +775,7 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
     data = GST_BUFFER_DATA (tmp);
     data[0] = 0;                /* 12 bytes name */
     data[1] = 12;
-    memcpy (&data[2], "creationdate", sizeof ("creationdate"));
+    memcpy (&data[2], "creationdate", 12);
     data[14] = 2;               /* string */
     data[15] = (strlen (s) >> 8) & 0xff;
     data[16] = (strlen (s)) & 0xff;
@@ -1019,7 +1019,7 @@ gst_flv_mux_write_index (GstFlvMux * mux)
   data[0] = 2;                  /* string */
   data[1] = 0;
   data[2] = 0x0a;               /* length 10 */
-  memcpy (&data[3], "onMetaData", sizeof ("onMetaData"));
+  memcpy (&data[3], "onMetaData", 10);
 
   script_tag = gst_buffer_join (script_tag, tmp);
 
