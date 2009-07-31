@@ -24,7 +24,7 @@ if test "x$has_mono" = "xtrue"; then
 	GACUTIL_FLAGS='/package $(PACKAGE_VERSION) /gacdir $(libdir) /root $(DESTDIR)/$(libdir)'
 	GENERATED_SOURCES=generated/*.cs
 	AC_PATH_PROG(RUNTIME, mono, no)
-	AC_PATH_PROG(CSC, mcs, no)
+	AC_PATH_PROG(CSC, gmcs, no)
 	if test `uname -s` = "Darwin"; then
         	LIB_PREFIX=
 	        LIB_SUFFIX=.dylib
