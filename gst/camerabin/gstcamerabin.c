@@ -3219,12 +3219,15 @@ gst_camerabin_user_res_fps (GstCameraBin * camera, gint width, gint height,
     gint fps_n, gint fps_d)
 {
   GstState state, pending;
+  GstPad *activepad;
 
   GST_INFO_OBJECT (camera, "switching resolution to %dx%d and fps to %d/%d",
       width, height, fps_n, fps_d);
 
   /* Interrupt ongoing capture */
   gst_camerabin_do_stop (camera);
+
+  g_object_get (G_OBJECT (camera->src_out_sel), "active-pad", &activepad, NULL);
 
   gst_element_get_state (GST_ELEMENT (camera), &state, &pending, 0);
   if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING) {
@@ -3241,6 +3244,16 @@ gst_camerabin_user_res_fps (GstCameraBin * camera, gint width, gint height,
         gst_element_state_get_name (pending));
     state = pending;
   }
+
+  /* Re-set the active pad since switching camerabin to READY state clears this
+   * setting in output-selector */
+  if (activepad) {
+    GST_INFO_OBJECT (camera, "re-setting active pad in output-selector");
+
+    g_object_set (G_OBJECT (camera->src_out_sel), "active-pad", activepad,
+        NULL);
+  }
+
   gst_element_set_state (GST_ELEMENT (camera), state);
 }
 
