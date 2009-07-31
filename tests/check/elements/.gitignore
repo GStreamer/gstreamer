@@ -21,6 +21,7 @@ cmmlenc
 deinterleave
 equalizer
 gdkpixbufsink
+flvdemux
 icydemux
 id3demux
 id3v2mux

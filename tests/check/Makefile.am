@@ -100,6 +100,7 @@ check_PROGRAMS = \
 	elements/avisubtitle \
 	elements/deinterleave \
 	elements/equalizer \
+	elements/flvdemux \
 	elements/icydemux \
 	elements/id3demux \
 	elements/interleave \
