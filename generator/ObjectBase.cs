@@ -154,7 +154,12 @@ namespace GtkSharp.Generation {
 				return base.IsNodeNameHandled (name);
 			}
 		}
-					
+
+		public virtual string CallByName (string var, bool owned)
+		{
+			return String.Format ("{0} == null ? IntPtr.Zero : ({0} as GLib.Object).{1}", var, owned ? "OwnedHandle" : "Handle");
+		}
+
 		public override string FromNative (string var, bool owned)
 		{
 			return "GLib.Object.GetObject(" + var + (owned ? ", true" : "") + ") as " + QualifiedName;

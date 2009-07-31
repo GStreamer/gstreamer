@@ -25,6 +25,7 @@ namespace GtkSharp.Generation {
 	using System.Collections;
 	using System.IO;
 	using System.Xml;
+	using System.Text.RegularExpressions;
 
 	public class EnumGen : GenBase {
 		
@@ -38,21 +39,21 @@ namespace GtkSharp.Generation {
 					continue;
 
 				string result = "\t\t" + member.GetAttribute("name");
-				if (member.HasAttribute("value")) {
-					string value = member.GetAttribute("value");
-					if (value.EndsWith("U")) {
-						enum_type = " : uint";
-						value = value.TrimEnd('U');
-					} else if (value.EndsWith("L")) {
-						enum_type = " : long";
-						value = value.TrimEnd('L');
+				if (member.HasAttribute ("value")) {
+					string value = member.GetAttribute ("value").Trim ();
+					foreach (Match match in Regex.Matches (value, "[0-9]+([UL]{1,2})", RegexOptions.IgnoreCase)) {
+						switch (match.Groups[1].Value.ToUpper ()) {
+							case "U": enum_type = " : uint"; break;
+							case "L": enum_type = " : long"; break;
+							case "UL": enum_type = " : ulong"; break;
+						}
 					}
 					result += " = " + value;
 				}
 				members.Add (result + ",");
 			}
 			if (elem.HasAttribute ("enum_type"))
-				enum_type = ": " + elem.GetAttribute ("enum_type");
+				enum_type = " : " + elem.GetAttribute ("enum_type");
 		}
 
 		public override bool Validate ()

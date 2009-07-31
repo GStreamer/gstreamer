@@ -252,15 +252,7 @@ namespace GtkSharp.Generation {
 
 			sw.WriteLine ("#endregion");
 
-			string custom = Path.Combine (gen_info.CustomDir, Name + "Adapter.custom");
-			if (File.Exists (custom)) {
-				sw.WriteLine ("#region Customized extensions");
-				sw.WriteLine ("#line 1 \"" + Name + "Adapter.custom\"");
-				using (StreamReader sr = new StreamReader(new FileStream (custom, FileMode.Open, FileAccess.Read)))
-					sw.WriteLine (sr.ReadToEnd ());
-				
-				sw.WriteLine ("#endregion");
-			}
+			AppendCustom (sw, gen_info.CustomDir, Name + "Adapter");
 
 			sw.WriteLine ("\t}");
 			sw.WriteLine ("}");
@@ -268,8 +260,9 @@ namespace GtkSharp.Generation {
 			gen_info.Writer = null;
 		}
 
-		void GenerateImplementorIface (StreamWriter sw)
+		void GenerateImplementorIface (GenerationInfo gen_info)
 		{
+			StreamWriter sw = gen_info.Writer;
 			if (IsConsumeOnly)
 				return;
 
@@ -305,6 +298,9 @@ namespace GtkSharp.Generation {
 					vm_table.Remove (vm.Name);
 				}
 			}
+
+			AppendCustom (sw, gen_info.CustomDir, Name + "Implementor");
+
 			sw.WriteLine ("\t}");
 		}
 
@@ -339,7 +335,7 @@ namespace GtkSharp.Generation {
 			AppendCustom (sw, gen_info.CustomDir);
 
 			sw.WriteLine ("\t}");
-			GenerateImplementorIface (sw);
+			GenerateImplementorIface (gen_info);
 			sw.WriteLine ("#endregion");
 			sw.WriteLine ("}");
 			sw.Close ();

@@ -411,11 +411,6 @@ namespace GtkSharp.Generation {
 			sw.WriteLine ("}");
 			sw.Close ();
 		}
-
-		public string CallByName (string name, bool owned)
-		{
-			return name + " == null ? IntPtr.Zero : " + name + (owned ? ".OwnedHandle" : ".Handle");
-		}
 	}
 }
 
