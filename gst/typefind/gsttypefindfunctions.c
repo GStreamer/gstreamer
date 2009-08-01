@@ -554,14 +554,18 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
 {
   DataScanCtx c = { 0, NULL, 0 };
 
-  if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 6)))
+  if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 4)))
     return;
 
-  /* standard flac */
+  /* standard flac (also old/broken flac-in-ogg with an initial 4-byte marker
+   * packet and without the usual packet framing) */
   if (memcmp (c.data, "fLaC", 4) == 0) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, FLAC_CAPS);
     return;
   }
+
+  if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 6)))
+    return;
 
   /* flac-in-ogg, see http://flac.sourceforge.net/ogg_mapping.html */
   if (memcmp (c.data, "\177FLAC\001", 6) == 0) {

@@ -80,6 +80,34 @@ GST_START_TEST (test_quicktime_mpeg4video)
 
 GST_END_TEST;
 
+GST_START_TEST (test_broken_flac_in_ogg)
+{
+  const guint8 flac_id_packet[4] = { 'f', 'L', 'a', 'C' };
+  GstTypeFindProbability prob;
+  const gchar *type;
+  GstBuffer *buf;
+  GstCaps *caps = NULL;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = (guint8 *) flac_id_packet;
+  GST_BUFFER_SIZE (buf) = sizeof (flac_id_packet);
+  GST_BUFFER_OFFSET (buf) = 0;
+
+  caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
+  fail_unless (caps != NULL);
+  GST_LOG ("Found type: %" GST_PTR_FORMAT, caps);
+
+  type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  fail_unless_equals_string (type, "audio/x-flac");
+  fail_unless (prob > GST_TYPE_FIND_MINIMUM && prob <= GST_TYPE_FIND_MAXIMUM);
+
+  gst_buffer_unref (buf);
+  gst_caps_unref (caps);
+
+}
+
+GST_END_TEST;
+
 static Suite *
 typefindfunctions_suite (void)
 {
@@ -89,6 +117,7 @@ typefindfunctions_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_quicktime_mpeg4video);
+  tcase_add_test (tc_chain, test_broken_flac_in_ogg);
 
   return s;
 }
