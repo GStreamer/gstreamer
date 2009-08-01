@@ -1247,6 +1247,13 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (dec, "newsegment event in %s format => not framed",
             gst_format_get_name (fmt));
         dec->framed = FALSE;
+
+        /* prepare generic newsegment event, for some reason our metadata
+         * callback where we usually set this up is not being called in
+         * push mode */
+        dec->start_segment = gst_event_new_new_segment (FALSE, 1.0,
+            GST_FORMAT_TIME, 0, -1, 0);
+
         gst_event_unref (event);
         res = TRUE;
       }
