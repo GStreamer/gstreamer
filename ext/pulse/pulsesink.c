@@ -1553,6 +1553,8 @@ server_dead:
 static void
 gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
 {
+  guint res;
+
   pulsesink->server = NULL;
   pulsesink->device = NULL;
   pulsesink->device_description = NULL;
@@ -1568,8 +1570,10 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
   GST_DEBUG_OBJECT (pulsesink, "using pulseaudio version %s",
       pulsesink->pa_version);
 
-  g_assert ((pulsesink->mainloop = pa_threaded_mainloop_new ()));
-  g_assert (pa_threaded_mainloop_start (pulsesink->mainloop) == 0);
+  pulsesink->mainloop = pa_threaded_mainloop_new ();
+  g_assert (pulsesink->mainloop != NULL);
+  res = pa_threaded_mainloop_start (pulsesink->mainloop);
+  g_assert (res == 0);
 
   /* TRUE for sinks, FALSE for sources */
   pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink),
