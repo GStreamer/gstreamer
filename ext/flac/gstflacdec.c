@@ -39,6 +39,8 @@
  */
 
 /* TODO: add seeking when operating chain-based with unframed input */
+/* FIXME: merge dec->seekable_decoder and dec->stream_decoder now that they're
+ * the same type */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -142,9 +144,9 @@ static FLAC__StreamDecoderWriteStatus
 gst_flac_dec_write_stream (const FLAC__StreamDecoder * decoder,
     const FLAC__Frame * frame,
     const FLAC__int32 * const buffer[], void *client_data);
-static void gst_flac_dec_metadata_callback_stream (const FLAC__StreamDecoder *
+static void gst_flac_dec_metadata_cb (const FLAC__StreamDecoder *
     decoder, const FLAC__StreamMetadata * metadata, void *client_data);
-static void gst_flac_dec_error_callback_stream (const FLAC__StreamDecoder *
+static void gst_flac_dec_error_cb (const FLAC__StreamDecoder *
     decoder, FLAC__StreamDecoderErrorStatus status, void *client_data);
 
 GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT);
@@ -152,12 +154,6 @@ GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT);
 /* FIXME 0.11: Use width=32 for all depths and let audioconvert
  * handle the conversions instead of doing it ourself.
  */
-static const GstElementDetails vorbis_dec_details =
-GST_ELEMENT_DETAILS ("Vorbis audio decoder",
-    "Codec/Decoder/Audio",
-    "decode raw vorbis streams to float audio",
-    "Benjamin Otte <in7y118@public.uni-hamburg.de>");
-
 #define GST_FLAC_DEC_SRC_CAPS                             \
     "audio/x-raw-int, "                                   \
     "endianness = (int) BYTE_ORDER, "                     \
@@ -576,9 +572,13 @@ gst_flac_extract_picture_buffer (GstFlacDec * dec,
 }
 
 static void
-gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
-    const FLAC__StreamMetadata * metadata)
+gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
+    const FLAC__StreamMetadata * metadata, void *client_data)
 {
+  GstFlacDec *flacdec = GST_FLAC_DEC (client_data);
+
+  GST_LOG_OBJECT (flacdec, "metadata type: %d", metadata->type);
+
   switch (metadata->type) {
     case FLAC__METADATA_TYPE_STREAMINFO:{
       gint64 samples;
@@ -634,19 +634,13 @@ gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
 }
 
 static void
-gst_flac_dec_metadata_callback_stream (const FLAC__StreamDecoder * decoder,
-    const FLAC__StreamMetadata * metadata, void *client_data)
-{
-  GstFlacDec *dec = GST_FLAC_DEC (client_data);
-
-  gst_flac_dec_metadata_callback (dec, metadata);
-}
-
-static void
-gst_flac_dec_error_callback (GstFlacDec * dec,
-    FLAC__StreamDecoderErrorStatus status)
+gst_flac_dec_error_cb (const FLAC__StreamDecoder * d,
+    FLAC__StreamDecoderErrorStatus status, void *client_data)
 {
   const gchar *error;
+  GstFlacDec *dec;
+
+  dec = GST_FLAC_DEC (client_data);
 
   switch (status) {
     case FLAC__STREAM_DECODER_ERROR_STATUS_LOST_SYNC:
@@ -665,13 +659,6 @@ gst_flac_dec_error_callback (GstFlacDec * dec,
 
   GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), ("%s (%d)", error, status));
   dec->last_flow = GST_FLOW_ERROR;
-}
-
-static void
-gst_flac_dec_error_callback_stream (const FLAC__StreamDecoder * d,
-    FLAC__StreamDecoderErrorStatus status, void *client_data)
-{
-  gst_flac_dec_error_callback (GST_FLAC_DEC (client_data), status);
 }
 
 static FLAC__StreamDecoderSeekStatus
@@ -1079,8 +1066,7 @@ gst_flac_dec_loop (GstPad * sinkpad)
     is = FLAC__stream_decoder_init_stream (flacdec->seekable_decoder,
         gst_flac_dec_read_seekable, gst_flac_dec_seek, gst_flac_dec_tell,
         gst_flac_dec_length, gst_flac_dec_eof, gst_flac_dec_write_stream,
-        gst_flac_dec_metadata_callback_stream,
-        gst_flac_dec_error_callback_stream, flacdec);
+        gst_flac_dec_metadata_cb, gst_flac_dec_error_cb, flacdec);
     if (is != FLAC__STREAM_DECODER_INIT_STATUS_OK)
       goto analyze_state;
 
@@ -1307,8 +1293,8 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
     GST_DEBUG_OBJECT (dec, "initializing decoder");
     s = FLAC__stream_decoder_init_stream (dec->stream_decoder,
         gst_flac_dec_read_stream, NULL, NULL, NULL, NULL,
-        gst_flac_dec_write_stream, gst_flac_dec_metadata_callback_stream,
-        gst_flac_dec_error_callback_stream, dec);
+        gst_flac_dec_write_stream, gst_flac_dec_metadata_cb,
+        gst_flac_dec_error_cb, dec);
     if (s != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), LIBRARY, INIT, (NULL), (NULL));
       return GST_FLOW_ERROR;
