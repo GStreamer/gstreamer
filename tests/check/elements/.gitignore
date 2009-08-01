@@ -22,6 +22,7 @@ deinterleave
 equalizer
 gdkpixbufsink
 flvdemux
+flvmux
 icydemux
 id3demux
 id3v2mux

@@ -126,6 +126,7 @@ check_PROGRAMS = \
 	$(check_wavpack)
 
 VALGRIND_TO_FIX = \
+	elements/flvmux \
 	elements/rtp-payloading
 
 TESTS = $(check_PROGRAMS)
@@ -133,6 +134,7 @@ TESTS = $(check_PROGRAMS)
 # these tests don't even pass
 # autodetect: temporarily disabled because of broken videosinks in -bad
 noinst_PROGRAMS = \
+	elements/flvmux \
 	elements/autodetect
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS) \
