@@ -117,7 +117,7 @@ static void gst_multiudpsink_finalize (GObject * object);
 
 static GstFlowReturn gst_multiudpsink_render (GstBaseSink * sink,
     GstBuffer * buffer);
-#ifndef G_OS_WIN32 /*sendmsg() is not available on Windows*/
+#ifndef G_OS_WIN32              /* sendmsg() is not available on Windows */
 static GstFlowReturn gst_multiudpsink_render_list (GstBaseSink * bsink,
     GstBufferList * list);
 #endif
@@ -451,8 +451,9 @@ gst_multiudpsink_render_list (GstBaseSink * bsink, GstBufferList * list)
   sink = GST_MULTIUDPSINK (bsink);
 
   g_return_val_if_fail (list != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail ((it = gst_buffer_list_iterate (list)) != NULL,
-      GST_FLOW_ERROR);
+
+  it = gst_buffer_list_iterate (list);
+  g_return_val_if_fail (it != NULL, GST_FLOW_ERROR);
 
   while (gst_buffer_list_iterator_next_group (it)) {
     msg.msg_iovlen = 0;
