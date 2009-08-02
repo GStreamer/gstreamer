@@ -50,6 +50,7 @@ libgstrtp_la_SOURCES = \
 	gstrtpmp4gpay.c \
 	gstrtpmp4adepay.c \
 	gstrtpmp4apay.c \
+	gstrtpqdmdepay.c \
 	gstrtpsirenpay.c \
 	gstrtpsirendepay.c \
 	gstrtpspeexdepay.c \
@@ -127,6 +128,7 @@ noinst_HEADERS =			\
 		 gstrtpmp4apay.h        \
 		 gstrtpdepay.h		\
 		 gstasteriskh263.h	\
+		 gstrtpqdmdepay.h	\
 		 gstrtpsirenpay.h 	\
 		 gstrtpsirendepay.h 	\
 		 gstrtpspeexdepay.h	\
