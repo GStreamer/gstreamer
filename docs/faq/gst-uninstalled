@@ -121,7 +121,9 @@ ${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
 export GST_PLUGIN_SYSTEM_PATH=
 # set our registry somewhere else so we don't mess up the registry generated
 # by an installed copy
-export GST_REGISTRY=$GST/gstreamer/registry.xml
+rm -f $GST/gstreamer/registry.xml 2>/dev/null
+export GST_REGISTRY=$GST/gstreamer/registry.dat
+
 # once MANPATH is set, it needs at least an "empty"component to keep pulling
 # in the system-configured man paths from man.config
 # this still doesn't make it work for the uninstalled case, since man goes
