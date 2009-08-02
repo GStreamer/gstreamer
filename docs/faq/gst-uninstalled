@@ -97,15 +97,23 @@ $GST/prefix/lib/pkgconfig\
 ${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 
 export GST_PLUGIN_PATH="\
-$GST/gstreamer\
-:$GST/gst-plugins-base\
-:$GST/gst-plugins-good\
-:$GST/gst-plugins-ugly\
-:$GST/gst-plugins-bad\
-:$GST/gst-ffmpeg\
-:$GST/gnonlin\
+$GST/gstreamer/plugins\
+:$GST/gst-plugins-base/ext\
+:$GST/gst-plugins-base/gst\
+:$GST/gst-plugins-base/sys\
+:$GST/gst-plugins-good/ext\
+:$GST/gst-plugins-good/gst\
+:$GST/gst-plugins-good/sys\
+:$GST/gst-plugins-ugly/ext\
+:$GST/gst-plugins-ugly/gst\
+:$GST/gst-plugins-ugly/sys\
+:$GST/gst-plugins-bad/ext\
+:$GST/gst-plugins-bad/gst\
+:$GST/gst-plugins-bad/sys\
+:$GST/gst-ffmpeg/ext\
+:$GST/gnonlin/gnl\
 :$GST/gst-openmax\
-:$GST/gst-plugins-gl\
+:$GST/gst-plugins-gl/gst\
 :$GST/plugins\
 ${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
 
