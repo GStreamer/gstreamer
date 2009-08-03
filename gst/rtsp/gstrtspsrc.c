@@ -217,6 +217,10 @@ static void gst_rtspsrc_get_property (GObject * object, guint prop_id,
 
 static void gst_rtspsrc_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
+
+static void gst_rtspsrc_sdp_attributes_to_caps (GArray * attributes,
+    GstCaps * caps);
+
 static GstCaps *gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media);
 
 static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
@@ -786,6 +790,11 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
     /* convert caps */
     stream->caps = gst_rtspsrc_media_to_caps (stream->pt, media);
 
+    GST_DEBUG ("mapping sdp session level attributes to caps");
+    gst_rtspsrc_sdp_attributes_to_caps (sdp->attributes, stream->caps);
+    GST_DEBUG ("mapping sdp media level attributes to caps");
+    gst_rtspsrc_sdp_attributes_to_caps (media->attributes, stream->caps);
+
     if (stream->pt >= 96) {
       /* If we have a dynamic payload type, see if we have a stream with the
        * same payload number. If there is one, they are part of the same
@@ -999,6 +1008,50 @@ gst_rtspsrc_parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
   *params = t;
 
   return TRUE;
+}
+
+/*
+ * Mapping SDP attributes to caps
+ *
+ * prepend 'a-' to IANA registered sdp attributes names
+ * (ie: not prefixed with 'x-') in order to avoid
+ * collision with gstreamer standard caps properties names
+ */
+static void
+gst_rtspsrc_sdp_attributes_to_caps (GArray * attributes, GstCaps * caps)
+{
+  if (attributes->len > 0) {
+    GstStructure *s;
+    guint i;
+
+    s = gst_caps_get_structure (caps, 0);
+
+    for (i = 0; i < attributes->len; i++) {
+      GstSDPAttribute *attr = &g_array_index (attributes, GstSDPAttribute, i);
+      gchar *tofree, *key;
+
+      key = attr->key;
+
+      /* skip some of the attribute we already handle */
+      if (!strcmp (key, "fmtp"))
+        continue;
+      if (!strcmp (key, "rtpmap"))
+        continue;
+      if (!strcmp (key, "control"))
+        continue;
+      if (!strcmp (key, "range"))
+        continue;
+
+      if (!g_str_has_prefix (key, "x-"))
+        tofree = key = g_strdup_printf ("a-%s", key);
+      else
+        tofree = NULL;
+
+      GST_DEBUG ("adding caps: %s=%s", key, attr->value);
+      gst_structure_set (s, key, G_TYPE_STRING, attr->value, NULL);
+      g_free (tofree);
+    }
+  }
 }
 
 /*
