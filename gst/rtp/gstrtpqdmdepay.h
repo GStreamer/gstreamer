@@ -53,6 +53,7 @@ struct _GstRtpQDM2Depay
 
   GstAdapter *adapter;
 
+  guint16 nextseq;
   gboolean configured;
 
   GstClockTime timestamp; /* Timestamp of current incoming data */

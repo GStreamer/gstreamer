@@ -239,6 +239,7 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpQDM2Depay *rtpqdm2depay;
   GstBuffer *outbuf;
+  guint16 seq;
 
   rtpqdm2depay = GST_RTP_QDM2_DEPAY (depayload);
 
@@ -253,8 +254,20 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       goto bad_packet;
 
     payload = gst_rtp_buffer_get_payload (buf);
+    seq = gst_rtp_buffer_get_seq (buf);
+    if (G_UNLIKELY (seq != rtpqdm2depay->nextseq)) {
+      GST_DEBUG ("GAP in sequence number, Resetting data !");
+      /* Flush previous data */
+      flush_data (rtpqdm2depay);
+      /* And store new timestamp */
+      rtpqdm2depay->ptimestamp = rtpqdm2depay->timestamp;
+      rtpqdm2depay->timestamp = GST_BUFFER_TIMESTAMP (buf);
+      /* And that previous data will be pushed at the bottom */
+    }
+    rtpqdm2depay->nextseq = seq + 1;
 
-    GST_DEBUG ("Payload size %d 0x%x", payload_len, payload_len);
+    GST_DEBUG ("Payload size %d 0x%x sequence:%d", payload_len, payload_len,
+        seq);
 
     GST_MEMDUMP ("Incoming payload", payload, payload_len);
 
@@ -348,8 +361,11 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     avail = gst_adapter_available (rtpqdm2depay->adapter);
     if (G_UNLIKELY (avail)) {
+      GST_DEBUG ("Pushing out %d bytes of collected data");
       outbuf = gst_adapter_take_buffer (rtpqdm2depay->adapter, avail);
       GST_BUFFER_TIMESTAMP (outbuf) = rtpqdm2depay->ptimestamp;
+      GST_DEBUG ("Outgoing buffer timestamp %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (rtpqdm2depay->ptimestamp));
       return outbuf;
     }
   }
