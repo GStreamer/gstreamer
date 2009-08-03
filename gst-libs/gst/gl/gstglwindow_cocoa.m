@@ -56,10 +56,10 @@
 
 @interface GstGLNSOpenGLView: NSOpenGLView {
   GstGLWindowPrivate *m_priv;
+  gint m_resizeCount;
 }
 - (id) initWithFrame:(NSRect)contentRect pixelFormat:(NSOpenGLPixelFormat *)fmt 
   private: (GstGLWindowPrivate *) priv;
-- (void) reshape;
 @end
 
 
@@ -170,11 +170,11 @@ gst_gl_window_nsapp_iteration (gpointer data)
   
   if ([NSThread isMainThread]) {
     
-    while ((event = ([NSApp nextEventMatchingMask:NSAnyEventMask 
-      untilDate:[NSDate dateWithTimeIntervalSinceNow:0.5] 
+    while ((event = ([NSApp nextEventMatchingMask:NSAnyEventMask
+      untilDate:[NSDate dateWithTimeIntervalSinceNow:0.5]
       inMode:NSDefaultRunLoopMode dequeue:YES])) != nil)
-    
-    [NSApp sendEvent:event];
+
+      [NSApp sendEvent:event];
     
     [pool release];
     
@@ -375,7 +375,7 @@ gst_gl_window_draw (GstGLWindow * window)
       [priv->internal_win_id makeMainWindow];
       [priv->internal_win_id orderFront:priv->internal_win_id];
       priv->visible = TRUE;
-    }   
+    }
 
     [pool release];
 
@@ -396,7 +396,7 @@ gst_gl_window_run_loop (GstGLWindow * window)
   
   if (priv->internal_win_id != nil) {
     while(priv->running)
-      [run_loop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
+      [run_loop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
     
     [priv->internal_win_id release];
     priv->internal_win_id = nil;
@@ -604,25 +604,37 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   self = [super initWithFrame: contentRect pixelFormat: fmt];
   
   m_priv = priv;
+  m_resizeCount = 0;
+  
+  [self setWantsLayer:NO];
   
   return self;    
 }
 
 
 - (void)reshape {
-  if (m_priv->resize_cb) {
+  
+  
+  if (m_resizeCount % 5 == 0) {
+    m_resizeCount = 0;
+    if (m_priv->resize_cb) {
       
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    NSRect bounds = [self bounds];
-    AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc]
-      initWithSize:m_priv->resize_cb userData:m_priv->resize_data 
-      toSize:bounds.size private:m_priv];
-      
-    [app_thread_performer performSelector:@selector(resizeWindow) onThread:m_priv->thread 
-      withObject:nil waitUntilDone:NO];
+      NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+      NSRect bounds = [self bounds];
+      AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc]
+        initWithSize:m_priv->resize_cb userData:m_priv->resize_data 
+        toSize:bounds.size private:m_priv];
+    
+      [app_thread_performer performSelector:@selector(resizeWindow) onThread:m_priv->thread 
+        withObject:nil waitUntilDone:YES];
 
-    [pool release];
+      [pool release];
+    }
   }
+  m_resizeCount++;
+}
+
+- (void) update {
 }
 
 @end
@@ -683,13 +695,10 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
     if (![m_priv->internal_win_id isClosed]) {
       NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-      if ([[m_priv->internal_win_id contentView] lockFocusIfCanDraw]) {
-        /* draw opengl scene in the back buffer */
-        m_priv->draw_cb (m_priv->draw_data);
-        /* Copy the back buffer to the front buffer */
-        [[[m_priv->internal_win_id contentView] openGLContext] flushBuffer];
-        [[m_priv->internal_win_id contentView] unlockFocus];
-      }
+      /* draw opengl scene in the back buffer */
+      m_priv->draw_cb (m_priv->draw_data);
+      /* Copy the back buffer to the front buffer */
+      [[[m_priv->internal_win_id contentView] openGLContext] flushBuffer];
 
       [pool release];
     }
@@ -699,6 +708,9 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 - (void) resizeWindow {
   if (m_priv->running && ![m_priv->internal_win_id isClosed]) {
     m_callback2 (m_data, m_width, m_height);
+    [[[m_priv->internal_win_id contentView] openGLContext] update];
+    m_priv->draw_cb (m_priv->draw_data);
+    [[[m_priv->internal_win_id contentView] openGLContext] flushBuffer];
   }
 }
 
