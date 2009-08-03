@@ -696,7 +696,7 @@ gst_byte_reader_get_uint##bits##_le (GstByteReader *reader, guint##bits *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_UINT##bits##_LE (&reader->data[reader->byte]); \
@@ -710,7 +710,7 @@ gst_byte_reader_get_uint##bits##_be (GstByteReader *reader, guint##bits *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_UINT##bits##_BE (&reader->data[reader->byte]); \
@@ -724,7 +724,7 @@ gst_byte_reader_get_int##bits##_le (GstByteReader *reader, gint##bits *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_UINT##bits##_LE (&reader->data[reader->byte]); \
@@ -738,7 +738,7 @@ gst_byte_reader_get_int##bits##_be (GstByteReader *reader, gint##bits *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_UINT##bits##_BE (&reader->data[reader->byte]); \
@@ -751,7 +751,7 @@ gst_byte_reader_peek_uint##bits##_le (GstByteReader *reader, guint##bits *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_UINT##bits##_LE (&reader->data[reader->byte]); \
@@ -764,7 +764,7 @@ gst_byte_reader_peek_uint##bits##_be (GstByteReader *reader, guint##bits *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_UINT##bits##_BE (&reader->data[reader->byte]); \
@@ -777,7 +777,7 @@ gst_byte_reader_peek_int##bits##_le (GstByteReader *reader, gint##bits *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_UINT##bits##_LE (&reader->data[reader->byte]); \
@@ -790,7 +790,7 @@ gst_byte_reader_peek_int##bits##_be (GstByteReader *reader, gint##bits *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_UINT##bits##_BE (&reader->data[reader->byte]); \
@@ -808,7 +808,7 @@ gst_byte_reader_get_uint8 (GstByteReader * reader, guint8 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 1 > reader->size)
+  if (reader->byte >= reader->size)
     return FALSE;
 
   *val = GST_READ_UINT8 (&reader->data[reader->byte]);
@@ -822,7 +822,7 @@ gst_byte_reader_get_int8 (GstByteReader * reader, gint8 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 1 > reader->size)
+  if (reader->byte >= reader->size)
     return FALSE;
 
   *val = GST_READ_UINT8 (&reader->data[reader->byte]);
@@ -836,7 +836,7 @@ gst_byte_reader_peek_uint8 (GstByteReader * reader, guint8 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 1 > reader->size)
+  if (reader->byte >= reader->size)
     return FALSE;
 
   *val = GST_READ_UINT8 (&reader->data[reader->byte]);
@@ -849,7 +849,7 @@ gst_byte_reader_peek_int8 (GstByteReader * reader, gint8 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 1 > reader->size)
+  if (reader->byte >= reader->size)
     return FALSE;
 
   *val = GST_READ_UINT8 (&reader->data[reader->byte]);
@@ -862,7 +862,7 @@ gst_byte_reader_get_uint24_le (GstByteReader * reader, guint32 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 3 > reader->size)
+  if (gst_byte_reader_get_remaining (reader) < 3)
     return FALSE;
 
   *val = GST_READ_UINT24_LE (&reader->data[reader->byte]);
@@ -876,7 +876,7 @@ gst_byte_reader_get_uint24_be (GstByteReader * reader, guint32 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 3 > reader->size)
+  if (gst_byte_reader_get_remaining (reader) < 3)
     return FALSE;
 
   *val = GST_READ_UINT24_BE (&reader->data[reader->byte]);
@@ -892,7 +892,7 @@ gst_byte_reader_get_int24_le (GstByteReader * reader, gint32 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 3 > reader->size)
+  if (gst_byte_reader_get_remaining (reader) < 3)
     return FALSE;
 
   ret = GST_READ_UINT24_LE (&reader->data[reader->byte]);
@@ -913,7 +913,7 @@ gst_byte_reader_get_int24_be (GstByteReader * reader, gint32 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 3 > reader->size)
+  if (gst_byte_reader_get_remaining (reader) < 3)
     return FALSE;
 
   ret = GST_READ_UINT24_BE (&reader->data[reader->byte]);
@@ -932,7 +932,7 @@ gst_byte_reader_peek_uint24_le (GstByteReader * reader, guint32 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 3 > reader->size)
+  if (gst_byte_reader_get_remaining (reader) < 3)
     return FALSE;
 
   *val = GST_READ_UINT24_LE (&reader->data[reader->byte]);
@@ -945,7 +945,7 @@ gst_byte_reader_peek_uint24_be (GstByteReader * reader, guint32 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 3 > reader->size)
+  if (gst_byte_reader_get_remaining (reader) < 3)
     return FALSE;
 
   *val = GST_READ_UINT24_BE (&reader->data[reader->byte]);
@@ -960,7 +960,7 @@ gst_byte_reader_peek_int24_le (GstByteReader * reader, gint32 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 3 > reader->size)
+  if (gst_byte_reader_get_remaining (reader) < 3)
     return FALSE;
 
   ret = GST_READ_UINT24_LE (&reader->data[reader->byte]);
@@ -979,7 +979,7 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + 3 > reader->size)
+  if (gst_byte_reader_get_remaining (reader) < 3)
     return FALSE;
 
   ret = GST_READ_UINT24_BE (&reader->data[reader->byte]);
@@ -1101,7 +1101,7 @@ gst_byte_reader_get_float##bits##_le (GstByteReader *reader, g##type *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_##TYPE##_LE (&reader->data[reader->byte]); \
@@ -1114,7 +1114,7 @@ gst_byte_reader_get_float##bits##_be (GstByteReader *reader, g##type *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_##TYPE##_BE (&reader->data[reader->byte]); \
@@ -1127,7 +1127,7 @@ gst_byte_reader_peek_float##bits##_le (GstByteReader *reader, g##type *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_##TYPE##_LE (&reader->data[reader->byte]); \
@@ -1139,7 +1139,7 @@ gst_byte_reader_peek_float##bits##_be (GstByteReader *reader, g##type *val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (reader->byte + bits / 8 > reader->size) \
+  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
     return FALSE; \
   \
   *val = GST_READ_##TYPE##_BE (&reader->data[reader->byte]); \
@@ -1171,7 +1171,7 @@ gst_byte_reader_get_data (GstByteReader * reader, guint size,
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + size > reader->size)
+  if (gst_byte_reader_get_remaining (reader) < size)
     return FALSE;
 
   *val = reader->data + reader->byte;
@@ -1201,7 +1201,7 @@ gst_byte_reader_peek_data (GstByteReader * reader, guint size,
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (reader->byte + size > reader->size)
+  if (gst_byte_reader_get_remaining (reader) < size)
     return FALSE;
 
   *val = reader->data + reader->byte;
@@ -1287,7 +1287,8 @@ gst_byte_reader_masked_scan_uint32 (GstByteReader * reader, guint32 mask,
   guint i;
 
   g_return_val_if_fail (size > 0, -1);
-  g_return_val_if_fail (offset + size <= reader->size, -1);
+  g_return_val_if_fail ((guint64) offset + size <= reader->size - reader->byte,
+      -1);
 
   /* we can't find the pattern with less than 4 bytes */
   if (G_UNLIKELY (size < 4))
