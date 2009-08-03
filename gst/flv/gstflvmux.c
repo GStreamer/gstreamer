@@ -1032,7 +1032,8 @@ gst_flv_mux_write_index (GstFlvMux * mux)
   /* We write at most 128 elements */
   index_skip = (index_len > 128) ? 1 + index_len / 128 : 1;
   index_len =
-      (index_len <= 128) ? 1 : (index_len + index_skip - 1) / index_skip;
+      (index_len <=
+      128) ? index_len : (index_len + index_skip - 1) / index_skip;
 
   tmp = gst_buffer_new_and_alloc (2 + 5 + 1 + 4 + index_len * (1 + 8));
   data = GST_BUFFER_DATA (tmp);
