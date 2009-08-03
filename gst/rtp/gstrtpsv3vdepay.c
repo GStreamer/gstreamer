@@ -26,6 +26,9 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtpsv3vdepay.h"
 
+GST_DEBUG_CATEGORY (rtpsv3vdepay_debug);
+#define GST_CAT_DEFAULT rtpsv3vdepay_debug
+
 /* elementfactory information */
 static const GstElementDetails gst_rtp_sv3vdepay_details =
 GST_ELEMENT_DETAILS ("RTP SVQ3 depayloader",
@@ -319,6 +322,9 @@ gst_rtp_sv3v_depay_change_state (GstElement * element,
 gboolean
 gst_rtp_sv3v_depay_plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (rtpsv3vdepay_debug, "rtpsv3vdepay", 0,
+      "RTP SV3V depayloader");
+
   return gst_element_register (plugin, "rtpsv3vdepay",
       GST_RANK_MARGINAL, GST_TYPE_RTP_SV3V_DEPAY);
 }

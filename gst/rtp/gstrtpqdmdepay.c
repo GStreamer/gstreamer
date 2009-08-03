@@ -26,6 +26,9 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtpqdmdepay.h"
 
+GST_DEBUG_CATEGORY (rtpqdm2depay_debug);
+#define GST_CAT_DEFAULT rtpqdm2depay_debug
+
 /* elementfactory information */
 static const GstElementDetails gst_rtp_qdm2depay_details =
 GST_ELEMENT_DETAILS ("RTP QDM2 depayloader",
@@ -413,6 +416,9 @@ gst_rtp_qdm2_depay_change_state (GstElement * element,
 gboolean
 gst_rtp_qdm2_depay_plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (rtpqdm2depay_debug, "rtpqdm2depay", 0,
+      "RTP QDM2 depayloader");
+
   return gst_element_register (plugin, "rtpqdm2depay",
       GST_RANK_MARGINAL, GST_TYPE_RTP_QDM2_DEPAY);
 }
