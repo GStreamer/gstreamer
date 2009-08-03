@@ -56,7 +56,7 @@ struct _GstRtpH264Pay
 
   gboolean packetized;
   guint nal_length_size;
-  GQueue *queue;
+  GArray *queue;
 
   gchar *profile_level_id;
   gchar *sprop_parameter_sets;

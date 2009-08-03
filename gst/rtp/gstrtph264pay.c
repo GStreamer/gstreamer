@@ -184,7 +184,7 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
 static void
 gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay, GstRtpH264PayClass * klass)
 {
-  rtph264pay->queue = g_queue_new ();
+  rtph264pay->queue = g_array_new (FALSE, FALSE, sizeof (guint));
   rtph264pay->profile = 0;
   rtph264pay->sps = NULL;
   rtph264pay->pps = NULL;
@@ -199,7 +199,7 @@ gst_rtp_h264_pay_finalize (GObject * object)
 
   rtph264pay = GST_RTP_H264_PAY (object);
 
-  g_queue_free (rtph264pay->queue);
+  g_array_free (rtph264pay->queue, TRUE);
 
   g_free (rtph264pay->sps);
   g_free (rtph264pay->pps);
@@ -732,10 +732,10 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 {
   GstRtpH264Pay *rtph264pay;
   GstFlowReturn ret;
-  guint size, nal_len;
+  guint size, nal_len, i;
   guint8 *data, *nal_data;
   GstClockTime timestamp;
-  GQueue *nal_queue;
+  GArray *nal_queue;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
 
@@ -799,6 +799,9 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     nal_data = data;
     nal_queue = rtph264pay->queue;
 
+    /* array must be empty when we get here */
+    g_assert (nal_queue->len == 0);
+
     GST_DEBUG_OBJECT (basepayload, "found first start at %u, bytes left %u",
         next, size);
 
@@ -849,12 +852,11 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         update = gst_rtp_h264_pay_decode_nal (rtph264pay, data, nal_len) ||
             update;
       }
-
       /* move to next NAL packet */
       data += nal_len;
       size -= nal_len;
 
-      g_queue_push_tail (nal_queue, GUINT_TO_POINTER (nal_len));
+      g_array_append_val (nal_queue, nal_len);
     }
 
     /* if has new SPS & PPS, update the output caps */
@@ -863,7 +865,8 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     /* second pass to payload and push */
     data = nal_data;
-    while ((nal_len = GPOINTER_TO_UINT (g_queue_pop_head (nal_queue))) > 0) {
+    for (i = 0; i < nal_queue->len; i++) {
+      nal_len = g_array_index (nal_queue, guint, i);
       /* skip start code */
       data += 4;
 
@@ -872,7 +875,6 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
           gst_rtp_h264_pay_payload_nal (basepayload, data, nal_len, timestamp,
           buffer);
       if (ret != GST_FLOW_OK) {
-        g_queue_clear (nal_queue);
         break;
       }
 
@@ -880,6 +882,7 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       data += nal_len;
       size -= nal_len;
     }
+    g_array_set_size (nal_queue, 0);
   }
 
   gst_buffer_unref (buffer);
