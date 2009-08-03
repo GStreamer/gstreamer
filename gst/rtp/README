@@ -98,6 +98,12 @@ The following fields can or must (*) be specified in the structure:
    a=rtpmap:96 AMR/8000/1
    a=fmtp:96 octet-align=1;crc=0;robust-sorting=0;interleaving=0
 
+ Attributes are converted as follows:
+
+  IANA registered attribute names are prepended with 'a-' before putting them in
+  the caps. Unregistered keys (starting with 'x-') are copied directly into the
+  caps.
+
  in RTSP, the SSRC is also sent.
 
  The optional parameters in the SDP fields are case insensitive. In the caps we
