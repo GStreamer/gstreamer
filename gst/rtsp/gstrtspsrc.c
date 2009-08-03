@@ -1042,6 +1042,10 @@ gst_rtspsrc_sdp_attributes_to_caps (GArray * attributes, GstCaps * caps)
       if (!strcmp (key, "range"))
         continue;
 
+      /* string must be valid UTF8 */
+      if (!g_utf8_validate (attr->value, -1, NULL))
+        continue;
+
       if (!g_str_has_prefix (key, "x-"))
         tofree = key = g_strdup_printf ("a-%s", key);
       else
