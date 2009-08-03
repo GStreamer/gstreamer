@@ -183,12 +183,7 @@ gst_flv_mux_reset (GstElement * element)
   while ((sl = mux->collect->data) != NULL) {
     GstFlvPad *cpad = (GstFlvPad *) sl->data;
 
-    if (cpad->audio_codec_data)
-      gst_buffer_unref (cpad->audio_codec_data);
-    if (cpad->video_codec_data)
-      gst_buffer_unref (cpad->video_codec_data);
-
-    gst_collect_pads_remove_pad (mux->collect, cpad->collect.pad);
+    gst_element_release_request_pad (element, cpad->collect.pad);
   }
 
   if (mux->tags)
@@ -199,6 +194,8 @@ gst_flv_mux_reset (GstElement * element)
   g_list_free (mux->index);
   mux->index = NULL;
   mux->byte_count = 0;
+
+  mux->have_audio = mux->have_video = FALSE;
 
   mux->state = GST_FLV_MUX_STATE_HEADER;
 }
