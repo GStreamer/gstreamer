@@ -152,51 +152,41 @@ flush_data (GstRtpQDM2Depay * depay)
 
   for (i = 0; depay->packets[i]; i++) {
     QDM2Packet *pack = depay->packets[i];
-    guint32 crc;
-    int i;
+    guint32 crc = 0;
+    int i = 0;
     GstBuffer *buf;
     guint8 *data;
 
-    /* CRC is the sum of everything (including first bytes)
-     * minus the 2 bytes reserved for the checksum */
-
-    GST_DEBUG ("Packet #%d size:%d", i, pack->offs);
+    /* CRC is the sum of everything (including first bytes) */
 
     data = pack->data;
 
     if (G_UNLIKELY (data == NULL))
       continue;
 
-    /* type 2 */
+    /* If the packet size is bigger than 0xff, we need 2 bytes to store the size */
     if (depay->packetsize > 0xff) {
-      crc = data[0] = 0x82;
-      crc -= 3;
+      /* Expanded size 0x02 | 0x80 */
+      data[0] = 0x82;
       GST_WRITE_UINT16_BE (data + 1, depay->packetsize - 3);
-      i = 5;
     } else {
-      crc = data[0] = 0x2;
+      data[0] = 0x2;
       data[1] = depay->packetsize - 2;
-      i = 4;
-      crc -= 2;
     }
-    crc += depay->packetsize;
 
     /* Calculate CRC */
     for (; i < depay->packetsize; i++)
       crc += data[i];
 
-    /* FIXME : Figure out why there's a difference of 0x1fe (0xff << 1) */
-    if (depay->packetsize > 0xff)
-      crc -= 510;
+    GST_DEBUG ("CRC is 0x%x", crc);
 
+    /* Write CRC */
     if (depay->packetsize > 0xff)
       GST_WRITE_UINT16_BE (data + 3, crc);
     else
       GST_WRITE_UINT16_BE (data + 2, crc);
 
-    GST_DEBUG ("CRC is 0x%x", crc);
-
-/*     gst_util_dump_mem (data, depay->packetsize); */
+    GST_MEMDUMP ("Extracted packet", data, depay->packetsize);
 
     buf = gst_buffer_new ();
     GST_BUFFER_DATA (buf) = data;
@@ -266,7 +256,7 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     GST_DEBUG ("Payload size %d 0x%x", payload_len, payload_len);
 
-/*     gst_util_dump_mem (payload, payload_len); */
+    GST_MEMDUMP ("Incoming payload", payload, payload_len);
 
     while (pos < payload_len) {
       switch (payload[pos]) {
@@ -289,7 +279,7 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
             GstCaps *caps;
 
             /* First bytes are unknown */
-/* 	    gst_util_dump_mem (payload + pos, 32); */
+            GST_MEMDUMP ("Header", payload + pos, 32);
             ourdata = payload + pos + 10;
             pos += 10;
             rtpqdm2depay->channs = GST_READ_UINT32_BE (payload + pos + 4);
@@ -305,8 +295,8 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
                 rtpqdm2depay->channs, rtpqdm2depay->samplerate,
                 rtpqdm2depay->bitrate, rtpqdm2depay->blocksize,
                 rtpqdm2depay->framesize, rtpqdm2depay->packetsize);
-            /* FIXME : SET CAPS ! */
-            /* audio/x-qdm2, codec_data, samplesize=(int)16, rate=(int), channels=(int) */
+
+            /* Caps */
             codecdata = gst_buffer_new_and_alloc (48);
             memcpy (GST_BUFFER_DATA (codecdata), headheader, 20);
             memcpy (GST_BUFFER_DATA (codecdata) + 20, ourdata, 28);
@@ -344,7 +334,7 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
                 packetid, packettype, packlen);
           }
 
-          if (packettype > 0x17) {
+          if (packettype > 0x7f) {
             GST_ERROR ("HOUSTON WE HAVE A PROBLEM !!!!");
           }
           add_packet (rtpqdm2depay, packetid, packlen + hsize,
