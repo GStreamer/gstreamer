@@ -46,6 +46,8 @@ struct _GstRtpSV3VDepay
 
   GstAdapter *adapter;
 
+  gboolean configured;
+  
   guint16 nextseq;
   guint width;
   guint height;

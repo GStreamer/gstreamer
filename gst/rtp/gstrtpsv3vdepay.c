@@ -197,6 +197,10 @@ gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     S = (payload[0] & 0x20) == 0x20;
     E = (payload[0] & 0x10) == 0x10;
 
+    GST_DEBUG ("M:%d, C:%d, S:%d, E:%d", M, C, S, E);
+
+    GST_MEMDUMP ("incoming buffer", payload, payload_len);
+
     if (C) {
       GstCaps *caps;
       GstBuffer *codec_data;
@@ -235,21 +239,25 @@ gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       gst_caps_unref (caps);
       g_value_unset (&value);
 
+      rtpsv3vdepay->configured = TRUE;
+
       return NULL;
     }
 
-    /* store data in adapter, stip off 2 bytes header */
-    outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 2, -1);
-    gst_adapter_push (rtpsv3vdepay->adapter, outbuf);
+    if (G_LIKELY (rtpsv3vdepay->configured)) {
+      /* store data in adapter, stip off 2 bytes header */
+      outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 2, -1);
+      gst_adapter_push (rtpsv3vdepay->adapter, outbuf);
 
-    if (M) {
-      /* frame is completed: push contents of adapter */
-      guint avail;
+      if (M) {
+        /* frame is completed: push contents of adapter */
+        guint avail;
 
-      avail = gst_adapter_available (rtpsv3vdepay->adapter);
-      outbuf = gst_adapter_take_buffer (rtpsv3vdepay->adapter, avail);
+        avail = gst_adapter_available (rtpsv3vdepay->adapter);
+        outbuf = gst_adapter_take_buffer (rtpsv3vdepay->adapter, avail);
 
-      return outbuf;
+        return outbuf;
+      }
     }
   }
   return NULL;
