@@ -27,6 +27,14 @@
 #include <gst/video/gstvideosink.h>
 #include "gstgldisplay.h"
 
+#ifndef GLEW_VERSION_MAJOR
+#define GLEW_VERSION_MAJOR 4
+#endif
+
+#ifndef GLEW_VERSION_MINOR
+#define GLEW_VERSION_MINOR 0
+#endif
+
 /*
  * gst-launch-0.10 --gst-debug=gldisplay:N pipeline
  * N=1: errors
