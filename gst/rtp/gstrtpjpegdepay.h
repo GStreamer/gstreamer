@@ -48,7 +48,10 @@ struct _GstRtpJPEGDepay
 
   /* cached quant tables */
   guint8 * qtables[255];
-
+  gint frate_num;
+  gint frate_denom;
+  gint media_width;
+  gint media_height;
   gint width, height;
 };
 

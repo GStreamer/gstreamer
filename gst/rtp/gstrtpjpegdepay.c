@@ -50,11 +50,24 @@ static GstStaticPadTemplate gst_rtp_jpeg_depay_sink_template =
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"JPEG\";"
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"JPEG\"; "
+        /* optional SDP attributes */
+        /*
+         * "a-framerate = (string) 0.00, "
+         * "x-framerate = (string) 0.00, "
+         * "x-dimensions = (string) \"1234,1234\", "
+         */
         "application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_JPEG_STRING ", "
-        "clock-rate = (int) 90000")
+        "clock-rate = (int) 90000"
+        /* optional SDP attributes */
+        /*
+         * "a-framerate = (string) 0.00, "
+         * "x-framerate = (string) 0.00, "
+         * "x-dimensions = (string) \"1234,1234\""
+         */
+    )
     );
 
 GST_BOILERPLATE (GstRtpJPEGDepay, gst_rtp_jpeg_depay, GstBaseRTPDepayload,
@@ -383,17 +396,53 @@ gst_rtp_jpeg_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstRtpJPEGDepay *rtpjpegdepay;
   GstStructure *structure;
   gint clock_rate;
+  const gchar *media_attr;
 
   rtpjpegdepay = GST_RTP_JPEG_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
+  GST_DEBUG_OBJECT (rtpjpegdepay, "Caps set: %" GST_PTR_FORMAT, caps);
 
   if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
     clock_rate = 90000;
   depayload->clock_rate = clock_rate;
 
+  /* reset defaults */
   rtpjpegdepay->width = 0;
   rtpjpegdepay->height = 0;
+  rtpjpegdepay->media_width = 0;
+  rtpjpegdepay->media_height = 0;
+  rtpjpegdepay->frate_num = 0;
+  rtpjpegdepay->frate_denom = 1;
+
+  /* check for optional SDP attributes */
+  if ((media_attr = gst_structure_get_string (structure, "x-dimensions"))) {
+    gint w, h;
+
+    if (sscanf (media_attr, "%d,%d", &w, &h) == 2) {
+      rtpjpegdepay->media_width = w;
+      rtpjpegdepay->media_height = h;
+    }
+  }
+
+  /* try to get a framerate */
+  media_attr = gst_structure_get_string (structure, "a-framerate");
+  if (!media_attr)
+    media_attr = gst_structure_get_string (structure, "x-framerate");
+
+  if (media_attr) {
+    GValue src = { 0 };
+    GValue dest = { 0 };
+
+    /* convert the float to a fraction */
+    g_value_init (&src, G_TYPE_DOUBLE);
+    g_value_set_double (&src, atof (media_attr));
+    g_value_init (&dest, GST_TYPE_FRACTION);
+    g_value_transform (&src, &dest);
+
+    rtpjpegdepay->frate_num = gst_value_get_fraction_numerator (&dest);
+    rtpjpegdepay->frate_denom = gst_value_get_fraction_denominator (&dest);
+  }
 
   return TRUE;
 }
@@ -438,6 +487,14 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   Q = payload[5];
   width = payload[6] * 8;
   height = payload[7] * 8;
+
+  /* allow frame dimensions > 2040, passed in SDP session or media attributes
+   * from gstrtspsrc.c (gst_rtspsrc_sdp_attributes_to_caps), or in caps */
+  if (!width)
+    width = rtpjpegdepay->media_width;
+
+  if (!height)
+    height = rtpjpegdepay->media_height;
 
   if (width == 0 || height == 0)
     goto invalid_dimension;
@@ -519,8 +576,9 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       GstCaps *outcaps;
 
       outcaps =
-          gst_caps_new_simple ("image/jpeg", "framerate", GST_TYPE_FRACTION, 0,
-          1, "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+          gst_caps_new_simple ("image/jpeg", "framerate", GST_TYPE_FRACTION,
+          rtpjpegdepay->frate_num, rtpjpegdepay->frate_denom, "width",
+          G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
       gst_pad_set_caps (depayload->srcpad, outcaps);
       gst_caps_unref (outcaps);
 
