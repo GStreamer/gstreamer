@@ -1271,6 +1271,29 @@ postscript_type_find (GstTypeFind * tf, gpointer unused)
 
 }
 
+/*** image/svg+xml ***/
+static GstStaticCaps svg_caps = GST_STATIC_CAPS ("image/svg+xml");
+
+#define SVG_CAPS (gst_static_caps_get(&svg_caps))
+
+static void
+svg_type_find (GstTypeFind * tf, gpointer unused)
+{
+  static const gchar svg_doctype[] = "!DOCTYPE svg";
+  DataScanCtx c = { 0, NULL, 0 };
+
+  while (c.offset <= 1024) {
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 12)))
+      break;
+
+    if (memcmp (svg_doctype, c.data, 12) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SVG_CAPS);
+      return;
+    }
+    data_scan_ctx_advance (tf, &c, 1);
+  }
+}
+
 /*** multipart/x-mixed-replace mimestream ***/
 
 static GstStaticCaps multipart_caps =
@@ -3402,6 +3425,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *imelody_exts[] = { "imy", "ime", "imelody", NULL };
   static gchar *pdf_exts[] = { "pdf", NULL };
   static gchar *ps_exts[] = { "ps", NULL };
+  static gchar *svg_exts[] = { "svg", NULL };
   static gchar *mxf_exts[] = { "mxf", NULL };
   static gchar *msword_exts[] = { "doc", NULL };
   static gchar *dsstore_exts[] = { "DS_Store", NULL };
@@ -3609,6 +3633,8 @@ plugin_init (GstPlugin * plugin)
       NULL);
   TYPE_FIND_REGISTER (plugin, "application/postscript", GST_RANK_SECONDARY,
       postscript_type_find, ps_exts, POSTSCRIPT_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/svg+xml", GST_RANK_SECONDARY,
+      svg_type_find, svg_exts, SVG_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-rar",
       GST_RANK_SECONDARY, rar_exts, "Rar!", 4, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER (plugin, "application/x-tar", GST_RANK_SECONDARY,
