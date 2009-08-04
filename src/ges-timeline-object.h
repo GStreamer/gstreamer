@@ -41,13 +41,16 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_OBJECT_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
 
-typedef struct {
-  GObject parent;
-} GESTimelineObject;
+typedef struct _GESTimelineObject GESTimelineObject;
+typedef struct _GESTimelineObjectClass GESTimelineObjectClass;
 
-typedef struct {
+struct _GESTimelineObject {
+  GObject parent;
+};
+
+struct _GESTimelineObjectClass {
   GObjectClass parent_class;
-} GESTimelineObjectClass;
+};
 
 GType ges_timeline_object_get_type (void);
 

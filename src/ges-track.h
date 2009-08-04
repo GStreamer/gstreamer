@@ -21,6 +21,8 @@
 #define _GES_TRACK
 
 #include <glib-object.h>
+#include <gst/gst.h>
+#include <ges-track-object.h>
 
 G_BEGIN_DECLS
 
@@ -41,13 +43,16 @@ G_BEGIN_DECLS
 #define GES_TRACK_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK, GESTrackClass))
 
-typedef struct {
-  GstBin parent;
-} GESTrack;
+typedef struct _GESTrack GESTrack;
+typedef struct _GESTrackClass GESTrackClass;
 
-typedef struct {
+struct _GESTrack {
+  GstBin parent;
+};
+
+struct _GESTrackClass {
   GstBinClass parent_class;
-} GESTrackClass;
+};
 
 GType ges_track_get_type (void);
 

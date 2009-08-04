@@ -56,12 +56,6 @@ AS_AUTOTOOLS_ALTERNATE
 dnl Add parameters for aclocal
 AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 
-dnl set up gettext
-dnl the version check needs to stay here because autopoint greps for it
-AM_GNU_GETTEXT_VERSION([0.17])
-AM_GNU_GETTEXT([external])
-AG_GST_GETTEXT([gst-editing-services-$GST_MAJORMINOR])
-
 dnl *** check for arguments to configure ***
 
 AG_GST_ARG_DEBUG
@@ -220,8 +214,8 @@ dnl FIXME: do we want to rename to GST_ALL_* ?
 dnl prefer internal headers to already installed ones
 dnl also add builddir include for enumtypes and marshal
 dnl add GST_OPTION_CFLAGS, but overridable
-GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS \$(GST_OPTION_CFLAGS)"
-GST_CXXFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CXXFLAGS \$(GST_OPTION_CXXFLAGS)"
+GST_CFLAGS="$GST_CFLAGS \$(GST_OPTION_CFLAGS)"
+GST_CXXFLAGS="$GST_CXXFLAGS \$(GST_OPTION_CXXFLAGS)"
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_CXXFLAGS)
 AC_SUBST(GST_LIBS)
@@ -243,12 +237,8 @@ common/Makefile
 common/shave
 common/shave-libtool
 common/m4/Makefile
-gst-plugins-bad.spec
-#po/Makefile.in
-#docs/Makefile
-#docs/plugins/Makefile
-#docs/plugins/figures/Makefile
-#docs/version.entities
+gst-editing-services.spec
 m4/Makefile
+src/Makefile
 )
 AC_OUTPUT

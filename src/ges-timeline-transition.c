@@ -19,51 +19,51 @@
 
 #include "ges-timeline-transition.h"
 
-G_DEFINE_TYPE (GESTimelineTransition, ges_timeline_transition, GES_TIMELINE_OBJECT)
-
+G_DEFINE_TYPE (GESTimelineTransition, ges_timeline_transition,
+    GES_TYPE_TIMELINE_OBJECT)
 #define GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_TRANSITION, GESTimelineTransitionPrivate))
+     typedef struct _GESTimelineTransitionPrivate GESTimelineTransitionPrivate;
 
-typedef struct _GESTimelineTransitionPrivate GESTimelineTransitionPrivate;
+     struct _GESTimelineTransitionPrivate
+     {
+       int dummy;
+     };
 
-struct _GESTimelineTransitionPrivate {
-    int dummy;
-};
-
-static void
-ges_timeline_transition_get_property (GObject *object, guint property_id,
-                              GValue *value, GParamSpec *pspec)
+     static void
+         ges_timeline_transition_get_property (GObject * object,
+    guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_transition_set_property (GObject *object, guint property_id,
-                              const GValue *value, GParamSpec *pspec)
+ges_timeline_transition_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_transition_dispose (GObject *object)
+ges_timeline_transition_dispose (GObject * object)
 {
   G_OBJECT_CLASS (ges_timeline_transition_parent_class)->dispose (object);
 }
 
 static void
-ges_timeline_transition_finalize (GObject *object)
+ges_timeline_transition_finalize (GObject * object)
 {
   G_OBJECT_CLASS (ges_timeline_transition_parent_class)->finalize (object);
 }
 
 static void
-ges_timeline_transition_class_init (GESTimelineTransitionClass *klass)
+ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
@@ -76,13 +76,12 @@ ges_timeline_transition_class_init (GESTimelineTransitionClass *klass)
 }
 
 static void
-ges_timeline_transition_init (GESTimelineTransition *self)
+ges_timeline_transition_init (GESTimelineTransition * self)
 {
 }
 
-GESTimelineTransition*
+GESTimelineTransition *
 ges_timeline_transition_new (void)
 {
   return g_object_new (GES_TYPE_TIMELINE_TRANSITION, NULL);
 }
-

@@ -17,21 +17,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "ges-timeline-object.h"
-#include "ges-timeline-source.h"
+#include "ges-track-object.h"
 
-G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source, GES_TYPE_TIMELINE_OBJECT)
+G_DEFINE_TYPE (GESTrackObject, ges_track_object, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_SOURCE, GESTimelineSourcePrivate))
-     typedef struct _GESTimelineSourcePrivate GESTimelineSourcePrivate;
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TRACK_OBJECT, GESTrackObjectPrivate))
+     typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
 
-     struct _GESTimelineSourcePrivate
+     struct _GESTrackObjectPrivate
      {
        int dummy;
      };
 
      static void
-         ges_timeline_source_get_property (GObject * object, guint property_id,
+         ges_track_object_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -41,7 +40,7 @@ G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source, GES_TYPE_TIMELINE_OBJECT)
 }
 
 static void
-ges_timeline_source_set_property (GObject * object, guint property_id,
+ges_track_object_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -51,37 +50,37 @@ ges_timeline_source_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_timeline_source_dispose (GObject * object)
+ges_track_object_dispose (GObject * object)
 {
-  G_OBJECT_CLASS (ges_timeline_source_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_track_object_parent_class)->dispose (object);
 }
 
 static void
-ges_timeline_source_finalize (GObject * object)
+ges_track_object_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_timeline_source_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_track_object_parent_class)->finalize (object);
 }
 
 static void
-ges_timeline_source_class_init (GESTimelineSourceClass * klass)
+ges_track_object_class_init (GESTrackObjectClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTimelineSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESTrackObjectPrivate));
 
-  object_class->get_property = ges_timeline_source_get_property;
-  object_class->set_property = ges_timeline_source_set_property;
-  object_class->dispose = ges_timeline_source_dispose;
-  object_class->finalize = ges_timeline_source_finalize;
+  object_class->get_property = ges_track_object_get_property;
+  object_class->set_property = ges_track_object_set_property;
+  object_class->dispose = ges_track_object_dispose;
+  object_class->finalize = ges_track_object_finalize;
 }
 
 static void
-ges_timeline_source_init (GESTimelineSource * self)
+ges_track_object_init (GESTrackObject * self)
 {
 }
 
-GESTimelineSource *
-ges_timeline_source_new (void)
+GESTrackObject *
+ges_track_object_new (void)
 {
-  return g_object_new (GES_TYPE_TIMELINE_SOURCE, NULL);
+  return g_object_new (GES_TYPE_TRACK_OBJECT, NULL);
 }

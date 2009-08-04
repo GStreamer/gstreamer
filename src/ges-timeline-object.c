@@ -29,50 +29,49 @@
 
 
 G_DEFINE_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT)
-
 #define GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectPrivate))
+     typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
 
-typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
+     struct _GESTimelineObjectPrivate
+     {
+       int dummy;
+     };
 
-struct _GESTimelineObjectPrivate {
-    int dummy;
-};
-
-static void
-ges_timeline_object_get_property (GObject *object, guint property_id,
-                              GValue *value, GParamSpec *pspec)
+     static void
+         ges_timeline_object_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_object_set_property (GObject *object, guint property_id,
-                              const GValue *value, GParamSpec *pspec)
+ges_timeline_object_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_object_dispose (GObject *object)
+ges_timeline_object_dispose (GObject * object)
 {
   G_OBJECT_CLASS (ges_timeline_object_parent_class)->dispose (object);
 }
 
 static void
-ges_timeline_object_finalize (GObject *object)
+ges_timeline_object_finalize (GObject * object)
 {
   G_OBJECT_CLASS (ges_timeline_object_parent_class)->finalize (object);
 }
 
 static void
-ges_timeline_object_class_init (GESTimelineObjectClass *klass)
+ges_timeline_object_class_init (GESTimelineObjectClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
@@ -85,13 +84,12 @@ ges_timeline_object_class_init (GESTimelineObjectClass *klass)
 }
 
 static void
-ges_timeline_object_init (GESTimelineObject *self)
+ges_timeline_object_init (GESTimelineObject * self)
 {
 }
 
-GESTimelineObject*
+GESTimelineObject *
 ges_timeline_object_new (void)
 {
   return g_object_new (GES_TYPE_TIMELINE_OBJECT, NULL);
 }
-

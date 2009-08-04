@@ -26,50 +26,49 @@
  */
 
 G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_OBJECT)
-
 #define GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_LAYER, GESTimelineLayerPrivate))
+     typedef struct _GESTimelineLayerPrivate GESTimelineLayerPrivate;
 
-typedef struct _GESTimelineLayerPrivate GESTimelineLayerPrivate;
+     struct _GESTimelineLayerPrivate
+     {
+       int dummy;
+     };
 
-struct _GESTimelineLayerPrivate {
-    int dummy;
-};
-
-static void
-ges_timeline_layer_get_property (GObject *object, guint property_id,
-                              GValue *value, GParamSpec *pspec)
+     static void
+         ges_timeline_layer_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_layer_set_property (GObject *object, guint property_id,
-                              const GValue *value, GParamSpec *pspec)
+ges_timeline_layer_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_layer_dispose (GObject *object)
+ges_timeline_layer_dispose (GObject * object)
 {
   G_OBJECT_CLASS (ges_timeline_layer_parent_class)->dispose (object);
 }
 
 static void
-ges_timeline_layer_finalize (GObject *object)
+ges_timeline_layer_finalize (GObject * object)
 {
   G_OBJECT_CLASS (ges_timeline_layer_parent_class)->finalize (object);
 }
 
 static void
-ges_timeline_layer_class_init (GESTimelineLayerClass *klass)
+ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
@@ -82,13 +81,12 @@ ges_timeline_layer_class_init (GESTimelineLayerClass *klass)
 }
 
 static void
-ges_timeline_layer_init (GESTimelineLayer *self)
+ges_timeline_layer_init (GESTimelineLayer * self)
 {
 }
 
-GESTimelineLayer*
+GESTimelineLayer *
 ges_timeline_layer_new (void)
 {
   return g_object_new (GES_TYPE_TIMELINE_LAYER, NULL);
 }
-

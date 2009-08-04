@@ -28,50 +28,49 @@
  */
 
 G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN)
-
 #define GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TRACK, GESTrackPrivate))
+     typedef struct _GESTrackPrivate GESTrackPrivate;
 
-typedef struct _GESTrackPrivate GESTrackPrivate;
+     struct _GESTrackPrivate
+     {
+       int dummy;
+     };
 
-struct _GESTrackPrivate {
-    int dummy;
-};
-
-static void
-ges_track_get_property (GObject *object, guint property_id,
-                              GValue *value, GParamSpec *pspec)
+     static void
+         ges_track_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_track_set_property (GObject *object, guint property_id,
-                              const GValue *value, GParamSpec *pspec)
+ges_track_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_track_dispose (GObject *object)
+ges_track_dispose (GObject * object)
 {
   G_OBJECT_CLASS (ges_track_parent_class)->dispose (object);
 }
 
 static void
-ges_track_finalize (GObject *object)
+ges_track_finalize (GObject * object)
 {
   G_OBJECT_CLASS (ges_track_parent_class)->finalize (object);
 }
 
 static void
-ges_track_class_init (GESTrackClass *klass)
+ges_track_class_init (GESTrackClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
@@ -84,13 +83,12 @@ ges_track_class_init (GESTrackClass *klass)
 }
 
 static void
-ges_track_init (GESTrack *self)
+ges_track_init (GESTrack * self)
 {
 }
 
-GESTrack*
+GESTrack *
 ges_track_new (void)
 {
   return g_object_new (GES_TYPE_TRACK, NULL);
 }
-

@@ -21,6 +21,7 @@
 #define _GES_TIMELINE_TRANSITION
 
 #include <glib-object.h>
+#include <ges-timeline-object.h>
 
 G_BEGIN_DECLS
 
@@ -41,13 +42,16 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_TRANSITION_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_TRANSITION, GESTimelineTransitionClass))
 
-typedef struct {
-  GESTimelineObject parent;
-} GESTimelineTransition;
+typedef struct _GESTimelineTransition GESTimelineTransition;
+typedef struct _GESTimelineTransitionClass GESTimelineTransitionClass;
 
-typedef struct {
+struct _GESTimelineTransition {
+  GESTimelineObject parent;
+};
+
+struct _GESTimelineTransitionClass {
   GESTimelineObjectClass parent_class;
-} GESTimelineTransitionClass;
+};
 
 GType ges_timeline_transition_get_type (void);
 

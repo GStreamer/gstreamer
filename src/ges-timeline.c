@@ -30,50 +30,49 @@
  */
 
 G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN)
-
 #define GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE, GESTimelinePrivate))
+     typedef struct _GESTimelinePrivate GESTimelinePrivate;
 
-typedef struct _GESTimelinePrivate GESTimelinePrivate;
+     struct _GESTimelinePrivate
+     {
+       GList *tracks;           /* TimelineTracks */
+     };
 
-struct _GESTimelinePrivate {
-  GList *tracks;	/* TimelineTracks */
-};
-
-static void
-ges_timeline_get_property (GObject *object, guint property_id,
-                              GValue *value, GParamSpec *pspec)
+     static void
+         ges_timeline_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_set_property (GObject *object, guint property_id,
-                              const GValue *value, GParamSpec *pspec)
+ges_timeline_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_dispose (GObject *object)
+ges_timeline_dispose (GObject * object)
 {
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
 }
 
 static void
-ges_timeline_finalize (GObject *object)
+ges_timeline_finalize (GObject * object)
 {
   G_OBJECT_CLASS (ges_timeline_parent_class)->finalize (object);
 }
 
 static void
-ges_timeline_class_init (GESTimelineClass *klass)
+ges_timeline_class_init (GESTimelineClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
@@ -86,34 +85,34 @@ ges_timeline_class_init (GESTimelineClass *klass)
 }
 
 static void
-ges_timeline_init (GESTimeline *self)
+ges_timeline_init (GESTimeline * self)
 {
   self->layers = NULL;
   self->tracks = NULL;
 }
 
-GESTimeline*
+GESTimeline *
 ges_timeline_new (void)
 {
   return g_object_new (GES_TYPE_TIMELINE, NULL);
 }
 
-GESTimeline*
-ges_timeline_load_from_uri (gchar *uri)
+GESTimeline *
+ges_timeline_load_from_uri (gchar * uri)
 {
   /* FIXME : IMPLEMENT */
   return NULL;
 }
 
 gboolean
-ges_timeline_save (GESTimeline *timeline, gchar *uri)
+ges_timeline_save (GESTimeline * timeline, gchar * uri)
 {
   /* FIXME : IMPLEMENT */
   return FALSE;
 }
 
 gboolean
-ges_timeline_add_layer (GESTimeline *timeline, GESTimelineLayer *layer)
+ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
   /* FIXME : IMPLEMENT */
 
@@ -125,7 +124,7 @@ ges_timeline_add_layer (GESTimeline *timeline, GESTimelineLayer *layer)
 }
 
 gboolean
-ges_timeline_remove_layer (GESTimeline *timeline, GESTimelineLayer *layer)
+ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
   /* FIXME : IMPLEMENT */
 
@@ -134,7 +133,7 @@ ges_timeline_remove_layer (GESTimeline *timeline, GESTimelineLayer *layer)
 }
 
 gboolean
-ges_timeline_add_track (GESTimeline *timeline, GESTrack *track)
+ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
   /* FIXME : IMPLEMENT */
 
@@ -143,12 +142,14 @@ ges_timeline_add_track (GESTimeline *timeline, GESTrack *track)
 
   return FALSE;
 }
+
 gboolean
-ges_timeline_remove_track (GESTimeline *timeline, GESTrack *track)
+ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 {
   /* FIXME : IMPLEMENT */
 
   /* Signal track removal to all layers/objects */
 
   /* */
+  return FALSE;
 }

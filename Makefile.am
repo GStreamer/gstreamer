@@ -1,21 +1,16 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-SUBDIRS = \
-	gst-libs gst sys ext \
-	m4 common docs tests po
+SUBDIRS = src
 
-DIST_SUBDIRS = \
-	gst gst-libs sys ext \
-	m4 common docs tests po
+DIST_SUBDIRS = src
 
 # include before EXTRA_DIST for win32 assignment
 include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
-	gst-plugins-bad.spec depcomp \
-	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	ChangeLog gst-plugins-bad.doap autogen.sh \
-	$(win32)
+	gst-editing-services.spec depcomp \
+	AUTHORS COPYING NEWS README RELEASE \
+	ChangeLog gst-editing-services.doap autogen.sh
 
 DISTCLEANFILES = _stdint.h
 
@@ -35,5 +30,4 @@ check-torture:
 	true
 endif
 
-include $(top_srcdir)/common/coverage/lcov.mak
 

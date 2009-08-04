@@ -24,50 +24,49 @@
  */
 
 G_DEFINE_TYPE (GESTimelinePipeline, ges_timeline_pipeline, GST_TYPE_PIPELINE)
-
 #define GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GEST_TYPE_TIMELINE_PIPELINE, GESTimelinePipelinePrivate))
+     typedef struct _GESTimelinePipelinePrivate GESTimelinePipelinePrivate;
 
-typedef struct _GESTimelinePipelinePrivate GESTimelinePipelinePrivate;
+     struct _GESTimelinePipelinePrivate
+     {
+       int dummy;
+     };
 
-struct _GESTimelinePipelinePrivate {
-    int dummy;
-};
-
-static void
-ges_timeline_pipeline_get_property (GObject *object, guint property_id,
-                              GValue *value, GParamSpec *pspec)
+     static void
+         ges_timeline_pipeline_get_property (GObject * object,
+    guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_pipeline_set_property (GObject *object, guint property_id,
-                              const GValue *value, GParamSpec *pspec)
+ges_timeline_pipeline_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
 }
 
 static void
-ges_timeline_pipeline_dispose (GObject *object)
+ges_timeline_pipeline_dispose (GObject * object)
 {
   G_OBJECT_CLASS (ges_timeline_pipeline_parent_class)->dispose (object);
 }
 
 static void
-ges_timeline_pipeline_finalize (GObject *object)
+ges_timeline_pipeline_finalize (GObject * object)
 {
   G_OBJECT_CLASS (ges_timeline_pipeline_parent_class)->finalize (object);
 }
 
 static void
-ges_timeline_pipeline_class_init (GESTimelinePipelineClass *klass)
+ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
@@ -80,13 +79,12 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass *klass)
 }
 
 static void
-ges_timeline_pipeline_init (GESTimelinePipeline *self)
+ges_timeline_pipeline_init (GESTimelinePipeline * self)
 {
 }
 
-GESTimelinePipeline*
+GESTimelinePipeline *
 ges_timeline_pipeline_new (void)
 {
   return g_object_new (GEST_TYPE_TIMELINE_PIPELINE, NULL);
 }
-

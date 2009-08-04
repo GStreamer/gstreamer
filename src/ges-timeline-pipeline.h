@@ -21,6 +21,7 @@
 #define _GES_TIMELINE_PIPELINE
 
 #include <glib-object.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
@@ -41,13 +42,16 @@ G_BEGIN_DECLS
 #define GEST_TIMELINE_PIPELINE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GEST_TYPE_TIMELINE_PIPELINE, GESTimelinePipelineClass))
 
-typedef struct {
-  GstPipeline parent;
-} GESTimelinePipeline;
+typedef struct _GESTimelinePipeline GESTimelinePipeline;
+typedef struct _GESTimelinePipelineClass GESTimelinePipelineClass;
 
-typedef struct {
+struct _GESTimelinePipeline {
+  GstPipeline parent;
+};
+
+struct _GESTimelinePipelineClass {
   GstPipelineClass parent_class;
-} GESTimelinePipelineClass;
+};
 
 GType ges_timeline_pipeline_get_type (void);
 

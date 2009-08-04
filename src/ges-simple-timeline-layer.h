@@ -42,13 +42,16 @@ G_BEGIN_DECLS
 #define GES_SIMPLE_TIMELINE_LAYER_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_SIMPLE_TIMELINE_LAYER, GESSimpleTimelineLayerClass))
 
-typedef struct {
-  GESTimelineLayer parent;
-} GESSimpleTimelineLayer;
+typedef struct _GESSimpleTimelineLayer GESSimpleTimelineLayer;
+typedef struct _GESSimpleTimelineLayerClass GESSimpleTimelineLayerClass;
 
-typedef struct {
+struct _GESSimpleTimelineLayer {
+  GESTimelineLayer parent;
+};
+
+struct _GESSimpleTimelineLayerClass {
   GESTimelineLayerClass parent_class;
-} GESSimpleTimelineLayerClass;
+};
 
 GType ges_simple_timeline_layer_get_type (void);
 
