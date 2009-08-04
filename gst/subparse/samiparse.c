@@ -342,6 +342,7 @@ static xmlSAXHandler samiSAXHandlerStruct = {
   NULL,                         /* endElementNsSAX2Func */
   NULL                          /* xmlStructuredErrorFunc */
 };
+
 static xmlSAXHandlerPtr samiSAXHandler = &samiSAXHandlerStruct;
 
 void

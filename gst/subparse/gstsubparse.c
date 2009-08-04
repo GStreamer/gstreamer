@@ -86,6 +86,7 @@ static void gst_sub_parse_class_init (GstSubParseClass * klass);
 static void gst_sub_parse_init (GstSubParse * subparse);
 
 static gboolean gst_sub_parse_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_sub_parse_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_sub_parse_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_sub_parse_change_state (GstElement * element,
@@ -201,6 +202,8 @@ gst_sub_parse_init (GstSubParse * subparse)
   subparse->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
   gst_pad_set_event_function (subparse->srcpad,
       GST_DEBUG_FUNCPTR (gst_sub_parse_src_event));
+  gst_pad_set_query_function (subparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_sub_parse_src_query));
   gst_element_add_pad (GST_ELEMENT (subparse), subparse->srcpad);
 
   subparse->textbuf = g_string_new (NULL);
@@ -216,6 +219,46 @@ gst_sub_parse_init (GstSubParse * subparse)
 /*
  * Source pad functions.
  */
+
+static gboolean
+gst_sub_parse_src_query (GstPad * pad, GstQuery * query)
+{
+  GstSubParse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
+  gboolean ret = FALSE;
+
+  GST_DEBUG ("Handling %s query", GST_QUERY_TYPE_NAME (query));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SEEKING:
+    {
+      GstFormat fmt;
+      gboolean seekable = FALSE;
+
+      ret = TRUE;
+
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      if (fmt == GST_FORMAT_TIME) {
+        GstQuery *peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
+
+        seekable = gst_pad_peer_query (self->sinkpad, peerquery);
+        if (seekable)
+          gst_query_parse_seeking (peerquery, NULL, &seekable, NULL, NULL);
+        gst_query_unref (peerquery);
+      }
+
+      gst_query_set_seeking (query, fmt, seekable, seekable ? 0 : -1, -1);
+
+      break;
+    }
+    default:
+      ret = gst_pad_peer_query (self->sinkpad, query);
+      break;
+  }
+
+  gst_object_unref (self);
+
+  return ret;
+}
 
 static gboolean
 gst_sub_parse_src_event (GstPad * pad, GstEvent * event)
