@@ -1,4 +1,90 @@
-This is GStreamer Base Plug-ins 0.10.23, "Emergency de-stress signal"
+This is GStreamer Base Plug-ins 0.10.24, "Counting the days"
+
+Changes since 0.10.23:
+
+      * Recognise Kate subpicture subtitles
+      * Support progressive download in playbin2
+      * GIO improvements
+      * Add buffer-list support in appsink
+      * Add gaussian-noise mode to audiotestsrc
+      * bump cdparanoia req to 0.10.2 and improve caching
+      * Improve audio source base class
+      * Add frame-by-frame stepping and examples
+      * Extend stream-probing in decodebin2
+      * Many RTSP improvements
+      * support for PGS subpictures
+      * adder improvements
+      * Add Y444, v210, v216 formats
+      * implement preset interface in vorbisenc, theoraenc, oggmux
+      * Improve libvisual visualisation timestamp tracking
+      * playbin2 enhancements: custom audiosink, subpictures, cdda
+      * Improvements in textrender
+      * Support raw YUV 4:2:2 and SIREN in RIFF
+      * Add 4:2:2 and 4:4:4 support to theoradec
+      * Many other bug-fixes and improvements
+
+Bugs fixed since 0.10.23:
+     
+      * 510417 : [gio] make non-experimental
+      * 513373 : [PATCH] [gstvorbistag] Preserve cover art in Ogg/Vorbis tags
+      * 529300 : [giosink] [PATCH] Allow overwrite
+      * 531035 : [cdparanoia] Should depend on LGPL'd version of the libra...
+      * 567997 : [patch] add allow-pull-scheduling property to audio sinks
+      * 576552 : [subparse] post GST_TAG_SUBTITLE_CODEC tags
+      * 577637 : [playbin2] expose temp-location property
+      * 579692 : mp3_type_find is over-optimistic
+      * 580318 : [tagdemux] drops tag events from upstream
+      * 581460 : [baseaudiosrc] Reusing audio source leads to null timesta...
+      * 581571 : ARGB and alignment added to textrender
+      * 582021 : autogen: libtoolize must be called before aclocal
+      * 582749 : uridecodebin caps property not implemented yet
+      * 582819 : multifdsink: add num-fds property
+      * 583867 : gdpdepay + identity cause failed assertions
+      * 584020 : [playbin2] inadvertently resets configured audio/video sinks
+      * 584686 : [playbin2] Need {audio,video,text}-tags-changed signals
+      * 585197 : [subparse] fails to detect subrip subtitles with fewer th...
+      * 585758 : Remove deprecated GTK+ symbols
+      * 585970 : gst_audioringbuffer_get_type is not thread safe
+      * 585994 : gst-rtsp-message doesn't support " Timestamp " filed
+      * 586331 : [cdparanoia] expose cd cache size parameter
+      * 586356 : [playbin2] use private copy of input-selector as long as ...
+      * 586519 : white Gaussian noise would be useful in audiotestsrc
+      * 587080 : rtsp fails to compile - doesn't see some ws2tcpip functions
+      * 587278 : Support for GstBufferList in appsink
+      * 587676 : Call tzset() before localtime_r(), in e.g. gst-plugins-ba...
+      * 587695 : Patches to add stream-status messages audio elements
+      * 587896 :  " No stream given yet " error from giostreamsrc
+      * 587980 : gstchannelmix.c: protect debug code with GST_DISABLE_GST_...
+      * 588078 : [playbin2] Fails to go to READY again after an error
+      * 588205 : Pipeline with giostreamsrc will not enter playing state
+      * 588550 : build failure in git, missing gstinterfaces-0.10
+      * 588551 : queue2: download buffering fixes
+      * 588724 : [vorbisdec] empty encoder string causes GStreamer
+      * 588746 : [audiotestsrc] Make sure tags are properly serialized in ...
+      * 588747 : [adder] Serialize incoming in-band events (tags) in the d...
+      * 588748 : [adder] Check dataflow consistency in unit tests
+      * 589075 : [playbin2] changing volume doesn't work after stream rest...
+      * 589581 : typefinder: recognise more Kate subtitle categories
+      * 589622 : Cannot use both playbin and input-selector
+      * 589663 : gstreamer asserts in gstaudiofilter
+      * 589797 : alsasrc does not set GstAlsaSrc- > handle to NULL after snd...
+      * 590470 : [typefinding] certain flac-in-ogg files not detected any ...
+      * 536313 : [cdda] Remove sha1 copy once we depend on glib-2.16
+      * 579642 : [oggdemux] handle broken ogg/vorbis files better
+      * 582528 : playbin2 Audio CD playback broken since
+      * 583318 : Assertion from within playbin2
+      * 585079 : undefined references to gst_adapter_* functions in schro
+      * 585708 : [adder] Wrong handling of flushing seeks
+      * 588218 : Siren in .wav support
+      * 586920 : rtsp: needs < netinet/in.h > on FreeBSD
+
+API added since 0.10.23:
+     
+      * GstNetAddress::gst_netaddress_to_string()
+      * Add gst_rtsp_watch_queue_data()
+      * playbin2: Add {audio,video,text}-tags-changed signals
+      * Add gst_color_balance_get_balance_type()
+      * Add gst_mixer_get_mixer_type()
 
 Changes since 0.10.22:
     

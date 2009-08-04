@@ -3,7 +3,7 @@
   <description>GIO elements</description>
   <filename>../../ext/gio/.libs/libgstgio.so</filename>
   <basename>libgstgio.so</basename>
-  <version>0.10.23</version>
+  <version>0.10.24</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -14,7 +14,7 @@
       <longname>GIO sink</longname>
       <class>Sink/File</class>
       <description>Write to any GIO-supported location</description>
-      <author>René Stadler &lt;mail@renestadler.de&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>René Stadler &lt;mail@renestadler.de&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -29,7 +29,7 @@
       <longname>GIO source</longname>
       <class>Source/File</class>
       <description>Read from any GIO-supported location</description>
-      <author>René Stadler &lt;mail@renestadler.de&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>René Stadler &lt;mail@renestadler.de&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>src</name>
@@ -44,7 +44,7 @@
       <longname>GIO stream sink</longname>
       <class>Sink</class>
       <description>Write to any GIO stream</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -59,7 +59,7 @@
       <longname>GIO stream source</longname>
       <class>Source</class>
       <description>Read from any GIO stream</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>src</name>

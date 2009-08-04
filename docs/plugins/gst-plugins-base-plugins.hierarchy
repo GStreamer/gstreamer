@@ -1,6 +1,7 @@
 GObject
   GstObject
     GstPad
+      GstPlaybin2SelectorPad
     GstPadTemplate
     GstPluginFeature
       GstElementFactory
@@ -90,61 +91,40 @@ GObject
       GstSsaParse
       GstAdder
       GstStreamSelector
+      GstPlaybin2InputSelector
       GstQueue2
       GstAudioRate
       GstVideoRate
     GstBus
     GstTask
+    GstTaskPool
     GstClock
       GstSystemClock
         GstAudioClock
     GstPlugin
     GstRegistry
     GstRingBuffer
+      GstAudioSrcRingBuffer
+      GstAudioSinkRingBuffer
   GstSignalObject
-  GFileMonitor
-    GLocalDirectoryMonitor
-      GInotifyDirectoryMonitor
-    GLocalFileMonitor
-      GInotifyFileMonitor
-  GVolumeMonitor
-    GNativeVolumeMonitor
-      GProxyVolumeMonitor
-        GProxyVolumeMonitorGPhoto2
-        GProxyVolumeMonitorHal
-      GUnixVolumeMonitor
-  GVfs
-    GLocalVfs
-  GTypeModule
-    GIOModule
-  GAppLookupGConf
-  GProxyDrive
-  GProxyMount
-  GProxyShadowMount
-  GProxyVolume
-  GOutputStream
-  GInputStream
-  GConfClient
+  GstMixerTrack
+    GstMixerOptions
+  GstStreamInfo
+  GstColorBalanceChannel
+  GstTunerNorm
+  GstTunerChannel
   PangoFontMap
     PangoFcFontMap
       PangoFT2FontMap
   PangoContext
-  GstMixerTrack
-    GstMixerOptions
-  GstTunerNorm
-  GstTunerChannel
-  GstColorBalanceChannel
-  GstStreamInfo
+  GOutputStream
+  GInputStream
 GInterface
   GTypePlugin
   GstChildProxy
   GstURIHandler
-  GFile
-  GDesktopAppInfoLookup
-  GDrive
-  GMount
-  GVolume
   GstTagSetter
+  GstPreset
   GstImplementsInterface
   GstMixer
   GstPropertyProbe
@@ -152,3 +132,4 @@ GInterface
   GstXOverlay
   GstColorBalance
   GstNavigation
+  GFile

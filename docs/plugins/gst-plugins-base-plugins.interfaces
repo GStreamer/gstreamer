@@ -20,14 +20,9 @@ GstV4lElement GstImplementsInterface GstPropertyProbe GstTuner GstXOverlay GstCo
 GstV4lSrc GstImplementsInterface GstPropertyProbe GstTuner GstXOverlay GstColorBalance
 GstGnomeVFSSrc GstURIHandler
 GstAppSrc GstURIHandler
-GstVorbisEnc GstTagSetter
+GstVorbisEnc GstTagSetter GstPreset
 GstVorbisTag GstTagSetter
+GstOggMux GstPreset
+GstTheoraEnc GstPreset
 GstAlsaMixerElement GstImplementsInterface GstMixer GstPropertyProbe
 GstVolume GstImplementsInterface GstMixer
-GTypeModule GTypePlugin
-GIOModule GTypePlugin
-GAppLookupGConf GDesktopAppInfoLookup
-GProxyDrive GDrive
-GProxyMount GMount
-GProxyShadowMount GMount
-GProxyVolume GVolume

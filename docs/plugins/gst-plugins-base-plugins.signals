@@ -346,6 +346,30 @@ gint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstPlayBin2::audio-tags-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin2 *gstplaybin2
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::text-tags-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin2 *gstplaybin2
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin2::video-tags-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin2 *gstplaybin2
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstAppSink::eos</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
@@ -376,6 +400,20 @@ GstAppSink *gstappsink
 <SIGNAL>
 <NAME>GstAppSink::pull-preroll</NAME>
 <RETURNS>GstBuffer*</RETURNS>
+<FLAGS>la</FLAGS>
+GstAppSink *gstappsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAppSink::new-buffer-list</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstAppSink *gstappsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAppSink::pull-buffer-list</NAME>
+<RETURNS>GstBufferList*</RETURNS>
 <FLAGS>la</FLAGS>
 GstAppSink *gstappsink
 </SIGNAL>

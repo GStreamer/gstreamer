@@ -1,8 +1,91 @@
-2009-07-30 14:40:50 +0100  Jan Schmidt <thaytan@noraisin.net>
+=== release 0.10.24 ===
+
+2009-08-05  Jan Schmidt <jan.schmidt@sun.com>
 
 	* configure.ac:
-	* po/LINGUAS:
+	  releasing 0.10.24, "Counting the days"
+
+2009-08-05 00:38:40 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
 	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
+
+2009-08-01 17:26:23 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	* tests/check/gst/typefindfunctions.c:
+	  typefinding: fix detection of fLaC id packet in broken flac-in-ogg
+	  There are flac-in-ogg files without the usual flac packet framing
+	  and these files just have a 4-byte fLaC ID packet as first packet.
+	  We need to recognise the type just from these four bytes if we
+	  want oggdemux to recognise these streams correctly.
+
+2009-07-30 14:40:50 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* po/LINGUAS:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
 	  0.10.24.5 pre-release
 
 2009-07-29 14:15:53 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
