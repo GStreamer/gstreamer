@@ -541,9 +541,10 @@ spc_setup (GstSpcDec * spc)
 
     return FALSE;
   }
-
+#ifdef HAVE_LIBGME_ACCURACY
   /* TODO: Is it worth it to make this optional? */
   gme_enable_accuracy (spc->player, 1);
+#endif
   gme_start_track (spc->player, 0);
 
   gst_pad_push_event (spc->srcpad, gst_event_new_new_segment (FALSE, 1.0,

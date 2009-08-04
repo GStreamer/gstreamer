@@ -1383,6 +1383,12 @@ AG_GST_CHECK_FEATURE(SPC, [spc decoder], spc, [
   ], [
     HAVE_SPC=no
   ])
+
+  if test "x$HAVE_SPC" = "xyes"; then
+    AC_CHECK_LIB(gme, gme_enable_accuracy, [
+      AC_DEFINE(HAVE_LIBGME_ACCURACY, 1, [Define if gme 0.5.6 or newer is available])
+      ])
+  fi
 ])
 
 dnl *** swfdec ***
