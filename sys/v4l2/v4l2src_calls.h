@@ -41,10 +41,5 @@ GstFlowReturn gst_v4l2src_grab_frame     (GstV4l2Src * v4l2src, GstBuffer **buf)
 gboolean   gst_v4l2src_capture_stop      (GstV4l2Src * v4l2src);
 gboolean   gst_v4l2src_capture_deinit    (GstV4l2Src * v4l2src);
 
-gboolean   gst_v4l2src_fill_format_list  (GstV4l2Src * v4l2src);
-gboolean   gst_v4l2src_clear_format_list (GstV4l2Src * v4l2src);
-
-GstCaps*   gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
-                                          const GstStructure *template);
 
 #endif /* __V4L2SRC_CALLS_H__ */

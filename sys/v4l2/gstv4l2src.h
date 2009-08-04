@@ -25,15 +25,9 @@
 #define __GST_V4L2SRC_H__
 
 #include <gstv4l2object.h>
+#include <gstv4l2bufferpool.h>
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
-
-/* size of v4l2 buffer pool in streaming case */
-#define GST_V4L2_MAX_BUFFERS 16
-#define GST_V4L2_MIN_BUFFERS 1
-
-/* max frame width/height */
-#define GST_V4L2_MAX_SIZE (1<<15) /* 2^15 == 32768 */
 
 G_BEGIN_DECLS
 
@@ -48,34 +42,10 @@ G_BEGIN_DECLS
 #define GST_IS_V4L2SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4L2SRC))
 
-typedef struct _GstV4l2BufferPool GstV4l2BufferPool;
-typedef struct _GstV4l2Buffer GstV4l2Buffer;
 typedef struct _GstV4l2Src GstV4l2Src;
 typedef struct _GstV4l2SrcClass GstV4l2SrcClass;
 
 
-/* global info */
-struct _GstV4l2BufferPool
-{
-  GstMiniObject parent;
-
-  GMutex *lock;
-  gboolean running; /* with lock */
-  gint num_live_buffers; /* with lock */
-  gint video_fd; /* a dup(2) of the v4l2object's video_fd */
-  guint buffer_count;
-  GstV4l2Buffer **buffers; /* with lock; buffers[n] is NULL that buffer has been
-                            * dequeued and pushed out */
-};
-
-struct _GstV4l2Buffer {
-  GstBuffer   buffer;
-
-  struct v4l2_buffer vbuffer;
-
-  /* FIXME: have GstV4l2Src* instead, as this has GstV4l2BufferPool* */
-  GstV4l2BufferPool *pool;
-};
 
 /**
  * GstV4l2Src:
@@ -92,9 +62,6 @@ struct _GstV4l2Src
 
   /* pads */
   GstCaps *probed_caps;
-
-  /* internal lists */
-  GSList *formats;              /* list of available capture formats */
 
   /* buffer handling */
   GstV4l2BufferPool *pool;

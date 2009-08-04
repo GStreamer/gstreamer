@@ -51,6 +51,16 @@
 
 #include <gst/interfaces/propertyprobe.h>
 
+
+/* size of v4l2 buffer pool in streaming case */
+#define GST_V4L2_MAX_BUFFERS 16
+#define GST_V4L2_MIN_BUFFERS 1
+
+/* max frame width/height */
+#define GST_V4L2_MAX_SIZE (1<<15) /* 2^15 == 32768 */
+
+
+
 G_BEGIN_DECLS
 
 #define GST_V4L2_OBJECT(obj) (GstV4l2Object *)(obj)
@@ -77,6 +87,8 @@ struct _GstV4l2Object {
   /* the video buffer (mmap()'ed) */
   guint8 **buffer;
 
+  enum v4l2_buf_type type;   /* V4L2_BUF_TYPE_VIDEO_CAPTURE, V4L2_BUF_TYPE_VIDEO_OUTPUT */
+
   /* the video device's capabilities */
   struct v4l2_capability vcap;
 
@@ -87,6 +99,8 @@ struct _GstV4l2Object {
   struct v4l2_input vinput;
 
   /* lists... */
+  GSList *formats;              /* list of available capture formats */
+
   GList *colors;
   GList *norms;
   GList *channels;
@@ -121,13 +135,16 @@ GType gst_v4l2_object_get_type (void);
 
 /* create/destroy */
 GstV4l2Object *	gst_v4l2_object_new 		 (GstElement * element,
+                            enum v4l2_buf_type  type,
+                            char *default_device,
                    				  GstV4l2GetInOutFunction get_in_out_func,
                    				  GstV4l2SetInOutFunction set_in_out_func,
 		   				  GstV4l2UpdateFpsFunction   update_fps_func);
 void 	        gst_v4l2_object_destroy 	 (GstV4l2Object * v4l2object);
 
 /* properties */
-void 	  gst_v4l2_object_install_properties_helper (GObjectClass *gobject_class);
+
+void 	  gst_v4l2_object_install_properties_helper (GObjectClass *gobject_class, const char *default_device);
 
 gboolean  gst_v4l2_object_set_property_helper       (GstV4l2Object *v4l2object,
 				                     guint prop_id, const GValue * value,
@@ -151,6 +168,26 @@ gboolean     gst_v4l2_probe_needs_probe     (GstPropertyProbe * probe, guint pro
 GValueArray* gst_v4l2_probe_get_values      (GstPropertyProbe * probe, guint prop_id,
                                              const GParamSpec * pspec,
                                              GList ** klass_devices);
+
+GstCaps*      gst_v4l2_object_probe_caps_for_format (GstV4l2Object *v4l2object, guint32 pixelformat,
+                                             const GstStructure * template);
+
+gboolean      gst_v4l2_object_get_caps_info (GstV4l2Object *v4l2object, GstCaps *caps,
+                                             struct v4l2_fmtdesc **format, gint *w, gint *h,
+                                             guint *fps_n, guint *fps_d, guint *size);
+
+
+GSList*       gst_v4l2_object_get_format_list  (GstV4l2Object *v4l2object);
+
+GstCaps*      gst_v4l2_object_get_all_caps (void);
+
+GstStructure* gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
+
+gboolean      gst_v4l2_object_set_format (GstV4l2Object *v4l2object, guint32 pixelformat, guint32 width, guint32 height);
+
+gboolean      gst_v4l2_object_start_streaming (GstV4l2Object *v4l2object);
+gboolean      gst_v4l2_object_stop_streaming (GstV4l2Object *v4l2object);
+
 
 #define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \
                                                                                             \

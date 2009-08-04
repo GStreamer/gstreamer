@@ -46,6 +46,9 @@
 #include "gstv4l2colorbalance.h"
 
 #include "gstv4l2src.h"
+#include "gstv4l2sink.h"
+
+#include "gst/gst-i18n-plugin.h"
 
 /* Those are ioctl calls */
 #ifndef V4L2_CID_HCENTER
@@ -449,9 +452,13 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
     goto error;
 
   /* do we need to be a capture device? */
-  if (GST_IS_V4L2SRC (v4l2object) &&
+  if (GST_IS_V4L2SRC (v4l2object->element) &&
       !(v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE))
     goto not_capture;
+
+  if (GST_IS_V4L2SINK (v4l2object->element) &&
+      !(v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT))
+    goto not_output;
 
   /* create enumerations, posts errors. */
   if (!gst_v4l2_fill_lists (v4l2object))
@@ -493,6 +500,14 @@ not_capture:
   {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
         (_("Device '%s' is not a capture device."),
+            v4l2object->videodev),
+        ("Capabilities: 0x%x", v4l2object->vcap.capabilities));
+    goto error;
+  }
+not_output:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
+        (_("Device '%s' is not a output device."),
             v4l2object->videodev),
         ("Capabilities: 0x%x", v4l2object->vcap.capabilities));
     goto error;

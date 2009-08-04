@@ -12,7 +12,9 @@ plugin_LTLIBRARIES = libgstvideo4linux2.la
 libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				gstv4l2colorbalance.c \
 				gstv4l2object.c \
+				gstv4l2bufferpool.c \
 				gstv4l2src.c \
+				gstv4l2sink.c \
 				gstv4l2tuner.c \
 				gstv4l2vidorient.c \
 				v4l2_calls.c \
@@ -31,6 +33,7 @@ libgstvideo4linux2_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 				 $(GST_BASE_LIBS) \
+				 $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 				 -lgstinterfaces-$(GST_MAJORMINOR) \
 				 $(GST_LIBS) \
 				 $(xv_libs) \

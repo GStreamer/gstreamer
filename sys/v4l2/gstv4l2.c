@@ -31,6 +31,7 @@
 
 #include "gstv4l2object.h"
 #include "gstv4l2src.h"
+#include "gstv4l2sink.h"
 /* #include "gstv4l2jpegsrc.h" */
 /* #include "gstv4l2mjpegsrc.h" */
 /* #include "gstv4l2mjpegsink.h" */
@@ -44,13 +45,16 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (v4l2_debug, "v4l2", 0, "V4L2 API calls");
 
   if (!gst_element_register (plugin, "v4l2src", GST_RANK_PRIMARY,
-          GST_TYPE_V4L2SRC))
-    /*       !gst_element_register (plugin, "v4l2jpegsrc", */
-    /*           GST_RANK_NONE, GST_TYPE_V4L2JPEGSRC) || */
-    /*       !gst_element_register (plugin, "v4l2mjpegsrc", */
-    /*           GST_RANK_NONE, GST_TYPE_V4L2MJPEGSRC) || */
-    /*       !gst_element_register (plugin, "v4l2mjpegsink", */
-    /*           GST_RANK_NONE, GST_TYPE_V4L2MJPEGSINK)) */
+          GST_TYPE_V4L2SRC) ||
+      !gst_element_register (plugin, "v4l2sink", GST_RANK_PRIMARY,
+          GST_TYPE_V4L2SINK) ||
+      /*       !gst_element_register (plugin, "v4l2jpegsrc", */
+      /*           GST_RANK_NONE, GST_TYPE_V4L2JPEGSRC) || */
+      /*       !gst_element_register (plugin, "v4l2mjpegsrc", */
+      /*           GST_RANK_NONE, GST_TYPE_V4L2MJPEGSRC) || */
+      /*       !gst_element_register (plugin, "v4l2mjpegsink", */
+      /*           GST_RANK_NONE, GST_TYPE_V4L2MJPEGSINK)) */
+      FALSE)
     return FALSE;
 
 #ifdef ENABLE_NLS
