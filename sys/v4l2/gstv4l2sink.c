@@ -624,14 +624,7 @@ gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
                   V4L2_BUF_TYPE_VIDEO_OUTPUT))) {
         return GST_FLOW_ERROR;
       }
-#ifdef OMAPZOOM
-      if (!gst_v4l2_object_start_streaming (v4l2sink->v4l2object)) {
-        return GST_FLOW_ERROR;
-      }
-      v4l2sink->state = STATE_STREAMING;
-#else
       v4l2sink->state = STATE_PENDING_STREAMON;
-#endif
 
       GST_INFO_OBJECT (v4l2sink, "outputting buffers via mmap()");
 
@@ -693,14 +686,12 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   if (!gst_v4l2_buffer_pool_qbuf (v4l2sink->pool, GST_V4L2_BUFFER (buf))) {
     return GST_FLOW_ERROR;
   }
-#ifndef OMAPZOOM
   if (v4l2sink->state == STATE_PENDING_STREAMON) {
     if (!gst_v4l2_object_start_streaming (v4l2sink->v4l2object)) {
       return GST_FLOW_ERROR;
     }
     v4l2sink->state = STATE_STREAMING;
   }
-#endif
 
   if (!newbuf) {
     gst_buffer_ref (buf);
