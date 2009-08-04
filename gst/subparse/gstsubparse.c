@@ -229,6 +229,18 @@ gst_sub_parse_src_query (GstPad * pad, GstQuery * query)
   GST_DEBUG ("Handling %s query", GST_QUERY_TYPE_NAME (query));
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:{
+      GstFormat fmt;
+
+      gst_query_parse_position (query, &fmt, NULL);
+      if (fmt != GST_FORMAT_TIME) {
+        ret = gst_pad_peer_query (self->sinkpad, query);
+      } else {
+        ret = TRUE;
+        gst_query_set_position (query, GST_FORMAT_TIME,
+            self->segment.last_stop);
+      }
+    }
     case GST_QUERY_SEEKING:
     {
       GstFormat fmt;
