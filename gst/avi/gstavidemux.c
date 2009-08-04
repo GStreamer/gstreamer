@@ -3270,7 +3270,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
           case GST_RIFF_LIST_strl:
             if (!(gst_avi_demux_parse_stream (avi, sub))) {
               GST_ELEMENT_WARNING (avi, STREAM, DEMUX, (NULL),
-                  ("faile to parse stream, ignoring"));
+                  ("failed to parse stream, ignoring"));
               sub = NULL;
             }
             sub = NULL;
