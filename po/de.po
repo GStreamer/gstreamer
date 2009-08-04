@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-07-30 14:48+0100\n"
-"PO-Revision-Date: 2009-06-21 23:38+0200\n"
+"POT-Creation-Date: 2009-08-04 23:00+0100\n"
+"PO-Revision-Date: 2009-07-31 21:58+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -277,10 +277,9 @@ msgstr "Keine Fehlermeldung für den Bereich %s."
 msgid "No standard error message for domain %s and code %d."
 msgstr "Keine Standardfehlermeldung für den Bereich %s und Fehlercode %d."
 
-#, fuzzy
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
-"Die ausgewählte Zeitvorgabe kann nicht in der Pipeline verwendet werden."
+"Der ausgewählte Referenztakt kann nicht in der Pipeline verwendet werden."
 
 msgid "title"
 msgstr "Titel"
@@ -440,12 +439,11 @@ msgid "performer"
 msgstr "Darsteller"
 
 msgid "person(s) performing"
-msgstr "Die Person, die das Stück aufführt"
+msgstr "Die das Stück aufführende Person(en)"
 
 msgid "composer"
-msgstr ""
+msgstr "Komponist"
 
-#, fuzzy
 msgid "person(s) who composed the recording"
 msgstr "Für die Aufnahme verantwortliche Person(en)"
 
@@ -792,7 +790,7 @@ msgid "writable"
 msgstr "schreibbar"
 
 msgid "controllable"
-msgstr "kontrollierbar"
+msgstr "regelbar"
 
 msgid "Total count: "
 msgstr "Gesamtzahl: "
@@ -874,13 +872,13 @@ msgstr "FEHLER: EOS von Element »%s« erhalten.\n"
 
 #, fuzzy, c-format
 msgid "Got message #%u (%s): "
-msgstr "Nachricht »#%« wurde empfangen"
+msgstr "Nachricht »#%« wurde erhalten"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "FEHLER: EOS von Element »%s« erhalten.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Element »%s« .\n"
 
@@ -908,22 +906,21 @@ msgid "WARNING: from element %s: %s\n"
 msgstr "WARNUNG: Von Element %s: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr ""
+msgstr "Vorgelaufen, auf Ende des Zwischenspeicherns warten …\n"
 
 msgid "buffering..."
-msgstr "Zwischenspeichern läuft..."
+msgstr "Zwischenspeichern läuft …"
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr ""
-"Zwischenspeichern abgeschlossen, Leitung wird auf »PLAYING« gesetzt ...\n"
+msgstr "Zwischenspeichern abgeschlossen, Leitung wird auf »PLAYING« gesetzt …\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
-"Zwischenspeichern, Leitung wird auf PAUSIERT gesetzt ...\n"
+"Zwischenspeichern, Leitung wird auf PAUSIERT gesetzt …\n"
 "\n"
 
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Verzögerung neu verteilen …\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
@@ -964,7 +961,7 @@ msgstr ""
 "Speicherzuordnungsverfolgung ausgeben (falls zur Kompilierzeit aktiviert)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "EOS auf Quelle vor dem Beenden der Leitung erzwingen"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -978,7 +975,7 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WARNUNG: Fehlerhafte Leitung: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "FEHLER: Das »pipeline«-Element wurde nicht gefunden.\n"
+msgstr "FEHLER: Das Element »Leitung« wurde nicht gefunden.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Leitung wird auf PAUSIERT gesetzt ...\n"
@@ -987,38 +984,38 @@ msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FEHLER: Leitung möchte nicht pausiert werden.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr ""
+msgstr "Leitung ist aktiv und erfordert keinen VORLAUF …\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
+msgstr "Leitung läuft vor …\n"
 
-#, fuzzy
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "FEHLER: Leitung möchte nicht abgespielt werden.\n"
+msgstr "FEHLER: Leitung läuft nicht vor.\n"
 
 msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
+msgstr "Leitung ist vorgelaufen …\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Leitung wird auf ABSPIELEN gesetzt ...\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "FEHLER: Leitung möchte nicht abgespielt werden.\n"
+msgstr "FEHLER: Leitung spielt nicht ab.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr ""
+"EOS bei Beenden ist eingeschaltet -- EOS wird auf die Leitung erzwungen\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "Auf EOS wird gewartet …\n"
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr ""
+msgstr "EOS erhalten - Leitung wird angehalten …\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Ein Fehler ist beim Warten auf EOS aufgetreten\n"
 
 msgid "Execution ended after %"
-msgstr "Ausführung nach %"
+msgstr "Ausführung beendet nach %"
 
 msgid "Setting pipeline to READY ...\n"
 msgstr "Leitung wird auf BEREIT gesetzt ...\n"
