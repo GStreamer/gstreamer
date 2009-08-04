@@ -4242,11 +4242,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       GST_BUFFER_SIZE (buf) = size;
       avi->offset += 8 + ((size + 1) & ~1);
 
-      /* get time of this buffer */
       stream = &avi->stream[stream_nr];
-      gst_pad_query_position (stream->pad, &format, (gint64 *) & next_ts);
-      if (G_UNLIKELY (format != GST_FORMAT_TIME))
-        goto wrong_format;
 
       /* set delay (if any)
          if (stream->strh->init_frames == stream->current_frame &&
@@ -4257,11 +4253,18 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       stream->current_frame++;
       stream->current_byte += size;
 
+      /* parsing of corresponding header may have failed */
       if (G_UNLIKELY (!stream->pad)) {
-        GST_WARNING ("No pad.");
+        GST_WARNING_OBJECT (avi, "no pad for stream ID %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (tag));
         gst_buffer_unref (buf);
       } else {
         GstClockTime dur_ts = 0;
+
+        /* get time of this buffer */
+        gst_pad_query_position (stream->pad, &format, (gint64 *) & next_ts);
+        if (G_UNLIKELY (format != GST_FORMAT_TIME))
+          goto wrong_format;
 
         /* invert the picture if needed */
         buf = gst_avi_demux_invert (stream, buf);
