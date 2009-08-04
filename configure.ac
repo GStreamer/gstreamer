@@ -288,25 +288,6 @@ AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
   ])
 ])
 
-dnl *** id3tag from the MAD project ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ID3TAG, true)
-AG_GST_CHECK_FEATURE(ID3TAG, [id3tag reading and writing from the MAD project],
-  id3tag, [
-  dnl check with pkg-config first
-  AG_GST_PKG_CHECK_MODULES(ID3TAG, id3tag >= 0.15)
-  if test "x$HAVE_ID3TAG" = "xno"; then
-    dnl fall back to oldskool detection
-    AC_CHECK_HEADER(id3tag.h, [
-      save_LIBS=$LIBS
-      LIBS="-lz"
-      AC_CHECK_LIB(id3tag, id3_tag_options,
-        HAVE_ID3TAG="yes" ID3TAG_LIBS="-lid3tag -lz")
-      LIBS=$save_LIBS
-      AC_SUBST(ID3TAG_LIBS)
-    ])
-  fi
-])
-
 dnl *** mad ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
 AG_GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
@@ -401,7 +382,6 @@ AM_CONDITIONAL(USE_AMRWB, false)
 AM_CONDITIONAL(USE_CDIO, false)
 AM_CONDITIONAL(USE_DVDREAD, false)
 AM_CONDITIONAL(USE_LAME, false)
-AM_CONDITIONAL(USE_ID3TAG, false)
 AM_CONDITIONAL(USE_MAD, false)
 AM_CONDITIONAL(USE_MPEG2DEC, false)
 AM_CONDITIONAL(USE_SIDPLAY, false)
