@@ -413,6 +413,22 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_ALBUM_SORTNAME         "album-sortname"
 /**
+ * GST_TAG_ALBUM_ARTIST
+ *
+ * The artist of the entire album, as it should be displayed.
+ *
+ * Since: 0.10.25
+ */
+#define GST_TAG_ALBUM_ARTIST           "album-artist"
+/**
+ * GST_TAG_ALBUM_ARTIST_SORTNAME
+ *
+ * The artist of the entire album, as it should be sorted.
+ *
+ * Since: 0.10.25
+ */
+#define GST_TAG_ALBUM_ARTIST_SORTNAME  "album-artist-sortname"
+/**
  * GST_TAG_COMPOSER:
  *
  * person(s) who composed the recording (string)
