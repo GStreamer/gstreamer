@@ -2,6 +2,7 @@
 #define __GST_TEXT_OVERLAY_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <pango/pangocairo.h>
 
 G_BEGIN_DECLS
@@ -109,7 +110,7 @@ struct _GstTextOverlay {
     gint                     height;
     gint                     fps_n;
     gint                     fps_d;
-    guint32                  format;
+    GstVideoFormat           format;
 
     GstTextOverlayVAlign     valign;
     GstTextOverlayHAlign     halign;
