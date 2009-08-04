@@ -60,20 +60,18 @@ enum
   PROP_LAST
 };
 
-static const GstElementDetails clock_overlay_details =
-GST_ELEMENT_DETAILS ("Clock overlay",
-    "Filter/Editor/Video",
-    "Overlays the current clock time on a video stream",
-    "Tim-Philipp Müller <tim@centricular.net>");
-
 GST_BOILERPLATE (GstClockOverlay, gst_clock_overlay, GstTextOverlay,
-    GST_TYPE_TEXT_OVERLAY)
+    GST_TYPE_TEXT_OVERLAY);
 
-     static void gst_clock_overlay_base_init (gpointer g_class)
+static void
+gst_clock_overlay_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &clock_overlay_details);
+  gst_element_class_set_details_simple (element_class, "Clock overlay",
+      "Filter/Editor/Video",
+      "Overlays the current clock time on a video stream",
+      "Tim-Philipp Müller <tim@centricular.net>");
 }
 
 

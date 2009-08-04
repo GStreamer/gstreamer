@@ -54,13 +54,6 @@ GST_DEBUG_CATEGORY_EXTERN (pango_debug);
 
 #define MINIMUM_OUTLINE_OFFSET 1.0
 
-static const GstElementDetails text_render_details =
-GST_ELEMENT_DETAILS ("Text renderer",
-    "Filter/Editor/Video",
-    "Renders a text string to an image bitmap",
-    "David Schleef <ds@schleef.org>, "
-    "Ronald S. Bultje <rbultje@ronald.bitfreak.net>");
-
 #define DEFAULT_PROP_VALIGNMENT GST_TEXT_RENDER_VALIGN_BASELINE
 #define DEFAULT_PROP_HALIGNMENT GST_TEXT_RENDER_HALIGN_CENTER
 #define DEFAULT_PROP_LINE_ALIGNMENT GST_TEXT_RENDER_LINE_ALIGN_CENTER
@@ -175,7 +168,11 @@ gst_text_render_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template_factory));
 
-  gst_element_class_set_details (element_class, &text_render_details);
+  gst_element_class_set_details_simple (element_class, "Text renderer",
+      "Filter/Editor/Video",
+      "Renders a text string to an image bitmap",
+      "David Schleef <ds@schleef.org>, "
+      "Ronald S. Bultje <rbultje@ronald.bitfreak.net>");
 }
 
 static void

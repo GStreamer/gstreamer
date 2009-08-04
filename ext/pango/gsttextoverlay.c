@@ -93,13 +93,6 @@
 GST_DEBUG_CATEGORY (pango_debug);
 #define GST_CAT_DEFAULT pango_debug
 
-static const GstElementDetails text_overlay_details =
-GST_ELEMENT_DETAILS ("Text overlay",
-    "Filter/Editor/Video",
-    "Adds text strings on top of a video buffer",
-    "David Schleef <ds@schleef.org>, " "Zeeshan Ali <zeeshan.ali@nokia.com>");
-
-
 #define DEFAULT_PROP_TEXT 	""
 #define DEFAULT_PROP_SHADING	FALSE
 #define DEFAULT_PROP_VALIGNMENT	GST_TEXT_OVERLAY_VALIGN_BASELINE
@@ -307,9 +300,11 @@ static void gst_text_overlay_get_property (GObject * object, guint prop_id,
 static void gst_text_overlay_adjust_values_with_fontdesc (GstTextOverlay *
     overlay, PangoFontDescription * desc);
 
-GST_BOILERPLATE (GstTextOverlay, gst_text_overlay, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstTextOverlay, gst_text_overlay, GstElement,
+    GST_TYPE_ELEMENT);
 
-     static void gst_text_overlay_base_init (gpointer g_class)
+static void
+gst_text_overlay_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -325,7 +320,10 @@ GST_BOILERPLATE (GstTextOverlay, gst_text_overlay, GstElement, GST_TYPE_ELEMENT)
         gst_static_pad_template_get (&text_sink_template_factory));
   }
 
-  gst_element_class_set_details (element_class, &text_overlay_details);
+  gst_element_class_set_details_simple (element_class, "Text overlay",
+      "Filter/Editor/Video",
+      "Adds text strings on top of a video buffer",
+      "David Schleef <ds@schleef.org>, " "Zeeshan Ali <zeeshan.ali@nokia.com>");
 }
 
 static gchar *
@@ -450,11 +448,12 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_AUTO_ADJUST_SIZE, g_param_spec_boolean ("auto-resize", "auto resize",
           "Automatically adjust font size to screen-size.",
-          DEFAULT_PROP_AUTO_ADJUST_SIZE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_VERTICAL_RENDER, g_param_spec_boolean ("vertical-render",
-          "vertical render", "Vertical Render.", DEFAULT_PROP_VERTICAL_RENDER,
-          G_PARAM_READWRITE));
+          DEFAULT_PROP_AUTO_ADJUST_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VERTICAL_RENDER,
+      g_param_spec_boolean ("vertical-render", "vertical render",
+          "Vertical Render.", DEFAULT_PROP_VERTICAL_RENDER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 }
 
