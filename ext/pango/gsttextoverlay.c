@@ -140,6 +140,18 @@ GST_DEBUG_CATEGORY (pango_debug);
 	ret = (v0 * alpha + v1 * (255 - alpha)) / 255; \
 }
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+# define CAIRO_ARGB_A 3
+# define CAIRO_ARGB_R 2
+# define CAIRO_ARGB_G 1
+# define CAIRO_ARGB_B 0
+#else
+# define CAIRO_ARGB_A 0
+# define CAIRO_ARGB_R 1
+# define CAIRO_ARGB_G 2
+# define CAIRO_ARGB_B 3
+#endif
+
 enum
 {
   PROP_0,
@@ -1012,10 +1024,11 @@ gst_text_overlay_blit_1 (GstTextOverlay * overlay, guchar * dest, gint xpos,
     pimage = text_image + 4 * (i * overlay->image_width);
     py = dest + i * dest_stride + xpos;
     for (j = 0; j < width; j++) {
-      b = *pimage++;
-      g = *pimage++;
-      r = *pimage++;
-      a = *pimage++;
+      b = pimage[CAIRO_ARGB_B];
+      g = pimage[CAIRO_ARGB_G];
+      r = pimage[CAIRO_ARGB_R];
+      a = pimage[CAIRO_ARGB_A];
+      pimage += 4;
       if (a == 0) {
         py++;
         continue;
@@ -1061,26 +1074,30 @@ gst_text_overlay_blit_sub2x2cbcr (GstTextOverlay * overlay,
     pcb = destcb + (i / 2) * destcb_stride + xpos / 2;
     pcr = destcr + (i / 2) * destcr_stride + xpos / 2;
     for (j = 0; j < width; j += 2) {
-      b = *pimage1++;
-      g = *pimage1++;
-      r = *pimage1++;
-      a = *pimage1++;
+      b = pimage1[CAIRO_ARGB_B];
+      g = pimage1[CAIRO_ARGB_G];
+      r = pimage1[CAIRO_ARGB_R];
+      a = pimage1[CAIRO_ARGB_A];
+      pimage1 += 4;
 
-      b += *pimage1++;
-      g += *pimage1++;
-      r += *pimage1++;
-      a += *pimage1++;
+      b += pimage1[CAIRO_ARGB_B];
+      g += pimage1[CAIRO_ARGB_G];
+      r += pimage1[CAIRO_ARGB_R];
+      a += pimage1[CAIRO_ARGB_A];
+      pimage1 += 4;
 
-      b += *pimage2++;
-      g += *pimage2++;
-      r += *pimage2++;
-      a += *pimage2++;
+      b += pimage2[CAIRO_ARGB_B];
+      g += pimage2[CAIRO_ARGB_G];
+      r += pimage2[CAIRO_ARGB_R];
+      a += pimage2[CAIRO_ARGB_A];
+      pimage2 += 4;
 
-      /* for rounding */
-      b += *pimage2++ + 2;
-      g += *pimage2++ + 2;
-      r += *pimage2++ + 2;
-      a += *pimage2++ + 2;
+      /* + 2 for rounding */
+      b += pimage2[CAIRO_ARGB_B] + 2;
+      g += pimage2[CAIRO_ARGB_G] + 2;
+      r += pimage2[CAIRO_ARGB_R] + 2;
+      a += pimage2[CAIRO_ARGB_A] + 2;
+      pimage2 += 4;
 
       b /= 4;
       g /= 4;
@@ -1093,9 +1110,9 @@ gst_text_overlay_blit_sub2x2cbcr (GstTextOverlay * overlay,
         continue;
       }
       COMP_U (cb, r, g, b);
-      COMP_V (cr, r, g, b)
+      COMP_V (cr, r, g, b);
 
-          x = *pcb;
+      x = *pcb;
       BLEND (*pcb++, a, cb, x);
       x = *pcr;
       BLEND (*pcr++, a, cr, x);
@@ -1248,8 +1265,6 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   overlay->baseline_y = ink_rect.y;
 }
 
-
-
 #define BOX_XPAD         6
 #define BOX_YPAD         6
 
@@ -1366,15 +1381,17 @@ gst_text_overlay_blit_UYVY (GstTextOverlay * overlay,
     pimage = overlay->text_image + i * overlay->image_width * 4;
     dest = yuv_pixels + (i + ypos) * overlay->width * 2 + xpos * 2;
     for (j = 0; j < w; j += 2) {
-      b0 = *pimage++;
-      g0 = *pimage++;
-      r0 = *pimage++;
-      a0 = *pimage++;
+      b0 = pimage[CAIRO_ARGB_B];
+      g0 = pimage[CAIRO_ARGB_G];
+      r0 = pimage[CAIRO_ARGB_R];
+      a0 = pimage[CAIRO_ARGB_A];
+      pimage += 4;
 
-      b1 = *pimage++;
-      g1 = *pimage++;
-      r1 = *pimage++;
-      a1 = *pimage++;
+      b1 = pimage[CAIRO_ARGB_B];
+      g1 = pimage[CAIRO_ARGB_G];
+      r1 = pimage[CAIRO_ARGB_R];
+      a1 = pimage[CAIRO_ARGB_A];
+      pimage += 4;
 
       a0 += a1 + 2;
       a0 /= 2;
@@ -1453,7 +1470,6 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
 
   width = overlay->image_width;
   height = overlay->image_height;
-
 
   if (overlay->use_vertical_render)
     halign = GST_TEXT_OVERLAY_HALIGN_RIGHT;
