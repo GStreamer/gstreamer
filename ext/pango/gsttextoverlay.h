@@ -2,7 +2,7 @@
 #define __GST_TEXT_OVERLAY_H__
 
 #include <gst/gst.h>
-#include <pango/pangoft2.h>
+#include <pango/pangocairo.h>
 
 G_BEGIN_DECLS
 
@@ -126,15 +126,20 @@ struct _GstTextOverlay {
     gboolean                 wait_text;
 
     PangoLayout             *layout;
-    FT_Bitmap                bitmap;
-    gint                     bitmap_buffer_size;
+    gdouble                  shadow_offset;
+    gdouble                  outline_offset;
+    guchar                  *text_image;
+    gint                     image_width;
+    gint                     image_height;
     gint                     baseline_y;
 
+    gboolean                 auto_adjust_size;
     gboolean                 need_render;
 
     gint                     shading_value;  /* for timeoverlay subclass */
 
     gboolean                 have_pango_markup;
+    gboolean                 use_vertical_render;
 };
 
 struct _GstTextOverlayClass {

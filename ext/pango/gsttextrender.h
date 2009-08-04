@@ -2,7 +2,7 @@
 #define __GST_TEXT_RENDER_H__
 
 #include <gst/gst.h>
-#include <pango/pangoft2.h>
+#include <pango/pangocairo.h>
 
 G_BEGIN_DECLS
 
@@ -75,8 +75,11 @@ struct _GstTextRender {
     gint                  width;
     gint                  height;
     PangoLayout          *layout;
-    FT_Bitmap             bitmap;
-    gint                  bitmap_buffer_size;
+    gdouble               shadow_offset;
+    gdouble               outline_offset;
+    guchar               *text_image;
+    gint                  image_width;
+    gint                  image_height;
     gint                  baseline_y;
     gboolean              use_ARGB;
 
