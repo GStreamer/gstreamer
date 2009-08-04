@@ -1464,7 +1464,7 @@ too_small:
 static gboolean
 gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
 {
-  avi_stream_context *stream = &avi->stream[avi->num_streams];
+  avi_stream_context *stream;
   GstElementClass *klass;
   GstPadTemplate *templ;
   GstBuffer *sub = NULL;
@@ -1481,6 +1481,17 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   element = GST_ELEMENT_CAST (avi);
 
   GST_DEBUG_OBJECT (avi, "Parsing stream");
+
+  if (avi->num_streams >= GST_AVI_DEMUX_MAX_STREAMS) {
+    GST_WARNING_OBJECT (avi,
+        "maximum no of streams (%d) exceeded, ignoring stream",
+        GST_AVI_DEMUX_MAX_STREAMS);
+    gst_buffer_unref (buf);
+    /* not a fatal error, let's say */
+    return TRUE;
+  }
+
+  stream = &avi->stream[avi->num_streams];
 
   /* initial settings */
   stream->idx_duration = GST_CLOCK_TIME_NONE;
