@@ -68,7 +68,7 @@ gst_v4l2src_buffer_pool_activate (GstV4l2BufferPool * pool,
 {
   GstV4l2Buffer *buf;
 
-  while ((buf = gst_v4l2_buffer_pool_get (pool, FALSE)) != NULL)
+  while ((buf = gst_v4l2_buffer_pool_get (pool)) != NULL)
     if (!gst_v4l2_buffer_pool_qbuf (pool, buf))
       goto queue_failed;
 

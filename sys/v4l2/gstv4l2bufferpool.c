@@ -61,13 +61,6 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
   GST_LOG_OBJECT (pool->v4l2elem, "finalizing buffer %p %d", buffer, index);
 
   GST_V4L2_BUFFER_POOL_LOCK (pool);
-  if (GST_BUFFER_SIZE (buffer) != 0) {
-    /* BUFFER_SIZE is only set if the frame was dequeued */
-    pool->num_live_buffers--;
-    GST_DEBUG_OBJECT (pool->v4l2elem, "num_live_buffers--: %d",
-        pool->num_live_buffers);
-  }
-
   if (pool->running) {
     if (pool->requeuebuf) {
       if (!gst_v4l2_buffer_pool_qbuf (pool, buffer)) {
@@ -368,6 +361,7 @@ gst_v4l2_buffer_pool_new (GstElement * v4l2elem, gint fd, gint num_buffers,
     pool->buffers[n] = gst_v4l2_buffer_new (pool, n, caps);
     if (!pool->buffers[n])
       goto buffer_new_failed;
+    pool->num_live_buffers++;
     g_async_queue_push (pool->avail_buffers, pool->buffers[n]);
   }
 
@@ -452,45 +446,16 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
  * Get an available buffer in the pool
  *
  * @pool   the "this" object
- * @blocking   if <code>TRUE</code>, then suspend until a buffer is available
  */
 GstV4l2Buffer *
-gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool, gboolean blocking)
+gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool)
 {
-  GstV4l2Buffer *buf = NULL;
+  GstV4l2Buffer *buf = g_async_queue_try_pop (pool->avail_buffers);
 
-  do {
-    buf = g_async_queue_try_pop (pool->avail_buffers);
-
-    /* if there isn't a buffer avail, let's try to dequeue one:
-     */
-    if (blocking && !buf) {
-      GST_DEBUG_OBJECT (pool->v4l2elem, "No buffers available.. need to dqbuf");
-      buf = gst_v4l2_buffer_pool_dqbuf (pool);
-
-      /* note: if we get a buf, we don't want to use it directly (because
-       * someone else could still hold a ref).. but instead we release our
-       * reference to it, and if no one else holds a ref it will be returned
-       * to the pool of available buffers..  and if not, we keep looping.
-       */
-      if (buf) {
-        gst_buffer_unref (GST_BUFFER (buf));
-        buf = NULL;
-      }
-    } else {
-      break;
-    }
-  } while (1);
-
-  if (buf) {
-    pool->num_live_buffers++;
-    GST_DEBUG_OBJECT (pool->v4l2elem, "num_live_buffers++: %d",
-        pool->num_live_buffers);
+  if (buf)
     GST_BUFFER_SIZE (buf) = buf->vbuffer.length;
-  }
 
   pool->running = TRUE;
-
 
   return buf;
 }
@@ -623,6 +588,11 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool)
   return NULL;
 }
 
+/**
+ * gst_v4l2_buffer_pool_available_buffers:
+ * Returns the number of buffers available to the driver, ie. buffers that
+ * have been QBUF'd but not yet DQBUF'd.
+ */
 gint
 gst_v4l2_buffer_pool_available_buffers (GstV4l2BufferPool * pool)
 {

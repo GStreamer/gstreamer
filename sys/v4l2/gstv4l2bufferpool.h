@@ -59,7 +59,7 @@ struct _GstV4l2BufferPool
 
   GMutex *lock;
   gboolean running;          /* with lock */
-  gint num_live_buffers;     /* number of buffers not with driver (capture) or not in avail buffer pool (display) */
+  gint num_live_buffers;     /* number of buffers not with driver */
   GAsyncQueue* avail_buffers;/* pool of available buffers, not with the driver and which aren't held outside the bufferpool */
   gint video_fd;             /* a dup(2) of the v4l2object's video_fd */
   guint buffer_count;
@@ -84,7 +84,7 @@ void gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
 GstV4l2BufferPool *gst_v4l2_buffer_pool_new (GstElement *v4l2elem, gint fd, gint num_buffers, GstCaps * caps, gboolean requeuebuf, enum v4l2_buf_type type);
 
 
-GstV4l2Buffer *gst_v4l2_buffer_pool_get (GstV4l2BufferPool *pool, gboolean blocking);
+GstV4l2Buffer *gst_v4l2_buffer_pool_get (GstV4l2BufferPool *pool);
 gboolean gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool *pool, GstV4l2Buffer *buf);
 GstV4l2Buffer *gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool *pool);
 

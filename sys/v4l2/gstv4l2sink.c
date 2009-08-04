@@ -641,17 +641,16 @@ gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       }
     }
 
-    v4l2buf = gst_v4l2_buffer_pool_get (v4l2sink->pool, TRUE);
+    v4l2buf = gst_v4l2_buffer_pool_get (v4l2sink->pool);
 
-    GST_DEBUG_OBJECT (v4l2sink, "allocated buffer: %p\n", v4l2buf);
-
-    if (G_UNLIKELY (!v4l2buf)) {
+    if (G_LIKELY (v4l2buf)) {
+      GST_DEBUG_OBJECT (v4l2sink, "allocated buffer: %p", v4l2buf);
+      *buf = GST_BUFFER (v4l2buf);
+      return GST_FLOW_OK;
+    } else {
+      GST_DEBUG_OBJECT (v4l2sink, "failed to allocate buffer");
       return GST_FLOW_ERROR;
     }
-
-    *buf = GST_BUFFER (v4l2buf);
-
-    return GST_FLOW_OK;
 
   } else {
     GST_ERROR_OBJECT (v4l2sink, "only supporting streaming mode for now...");
@@ -666,7 +665,7 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   GstBuffer *newbuf = NULL;
 
-  GST_DEBUG_OBJECT (v4l2sink, "render buffer: %p\n", buf);
+  GST_DEBUG_OBJECT (v4l2sink, "render buffer: %p", buf);
 
   if (!GST_IS_V4L2_BUFFER (buf)) {
     GstFlowReturn ret;
@@ -686,7 +685,7 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
         GST_BUFFER_DATA (buf),
         MIN (GST_BUFFER_SIZE (newbuf), GST_BUFFER_SIZE (buf)));
 
-    GST_DEBUG_OBJECT (v4l2sink, "render copied buffer: %p\n", newbuf);
+    GST_DEBUG_OBJECT (v4l2sink, "render copied buffer: %p", newbuf);
 
     buf = newbuf;
   }
@@ -705,6 +704,23 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   if (!newbuf) {
     gst_buffer_ref (buf);
+  }
+
+  /* if the driver has more than one buffer, ie. more than just the one we
+   * just queued, then dequeue one immediately to make it available via
+   * _buffer_alloc():
+   */
+  if (gst_v4l2_buffer_pool_available_buffers (v4l2sink->pool) > 1) {
+    GstV4l2Buffer *v4l2buf = gst_v4l2_buffer_pool_dqbuf (v4l2sink->pool);
+
+    /* note: if we get a buf, we don't want to use it directly (because
+     * someone else could still hold a ref).. but instead we release our
+     * reference to it, and if no one else holds a ref it will be returned
+     * to the pool of available buffers..  and if not, we keep looping.
+     */
+    if (v4l2buf) {
+      gst_buffer_unref (GST_BUFFER (v4l2buf));
+    }
   }
 
   return GST_FLOW_OK;
