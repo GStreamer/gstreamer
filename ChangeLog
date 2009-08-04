@@ -1,5 +1,53 @@
+=== release 0.10.24 ===
+
+2009-08-04  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.24, "It matters"
+
+2009-08-04 23:05:27 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
+
+2009-08-03 15:31:22 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstbytereader.c:
+	  bytereader: avoid wrap-around in buffer size checks.  Fixes #590622.
+
 2009-07-30 14:41:30 +0100  Jan Schmidt <thaytan@noraisin.net>
 
+	* ChangeLog:
 	* configure.ac:
 	* po/af.po:
 	* po/az.po:
@@ -22,6 +70,7 @@
 	* po/pl.po:
 	* po/pt_BR.po:
 	* po/ru.po:
+	* po/rw.po:
 	* po/sk.po:
 	* po/sq.po:
 	* po/sr.po:

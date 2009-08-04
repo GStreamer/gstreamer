@@ -27,6 +27,7 @@ GObject
       GstMultiQueue
     GstBus
     GstTask
+    GstTaskPool
     GstClock
     GstPlugin
     GstRegistry

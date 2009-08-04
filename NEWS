@@ -1,4 +1,110 @@
-This is GStreamer 0.10.23 "Alaboo Alaboo"
+This is GStreamer 0.10.24 "It matters"
+
+Changes since 0.10.23:
+    
+      * Fully support nested structures in caps
+      * Support frame-by-frame stepping in sinks
+      * Add support for buffer-lists to pass around groups of buffers
+      * Use TaskPools for managing worker threads
+      * New stream-status API for finer thread control
+      * Code optimisations
+      * Many other bug-fixes and enhancements
+
+Bugs fixed since 0.10.23:
+     
+      * 580579 : crash in Volume Control: aucunes idées désolé.
+      * 527488 : [GstXML] can't load elements with request pads from XML
+      * 570233 : allow plugins caching data in the registry
+      * 584389 : don't recreate plugin feature and element factories on fi...
+      * 534208 : [API] add gst_structure_get()
+      * 545787 : [API] add gst_plugin_register_static_full() for bindings
+      * 554460 : thumbnailer crash in gst_fake_sink_event() on FLUSH_START...
+      * 559643 : Don't allow empty or NULL strings in taglists
+      * 560345 : gst_tag_list_get_string() may return NULL or empty string
+      * 560442 : GNOME Goal: Remove deprecated GLib symbols
+      * 572285 : Buffer Lists
+      * 577926 : Remove old xml registry
+      * 578908 : [fdsink] implement seeking on seekable fds
+      * 580177 : glibc 2.10 deprecates register_printf_function
+      * 580716 : race condition in gst_element_lost_state
+      * 581198 : [tags] Add gst_tag_setter_add_tag_value() and gst_tag_lis...
+      * 581281 : [GstURIHandler] Doesn't use get_type_full() at all
+      * 582010 : audiotestsrc is-live=1 ! pulsesink unreliable
+      * 582564 : [controller] Use ordered GSequence instead of GList in th...
+      * 582588 : [API] Add a way to get the pad corresponding to a taglist
+      * 582878 : [GstClock] ABI breakage in GIT on x86
+      * 583187 : [API] add gst_adapter_masked_scan_uint32() and gst_adapte...
+      * 583419 : Bad translatable string in gst-launch.c
+      * 583456 : framestep functionality
+      * 583554 : Slow down or lock if date time is changed to the past
+      * 584835 : MSVC compiler fails with 'static inline' function
+      * 584838 : basesrc: confusing QUERY_SEEKING handling
+      * 585039 : rtpool-test can't find pthreads
+      * 585075 : Compilation with MSVC fails for files including config.h ...
+      * 585137 : gst_xml_write_file() fails serialising GstStructure property
+      * 585592 : [API] add gst_byte_reader_masked_scan_uint32()
+      * 585733 : Wrong #include order in gstsegment.c
+      * 585748 : [API] add gst_tag_list_new_full() to create taglist with ...
+      * 586566 : Add GAP Flag support to gstcapsfilter
+      * 586568 : [bytereader] add misc. string functions and gst_byte_read...
+      * 587973 : use G_DIR_SEPARATOR_S instead of " /' " 
+      * 587976 : Fix for gst-inspect and gst-launch when option parsing is...
+      * 588744 : [check] Stream consistency checker utility
+      * 588745 : [basesrc] Serialize tags in the dataflow
+      * 589127 : gsttask leaks the pool
+      * 590056 : [collectpads] race resulting in double flush-stop being o...
+      * 590622 : [bytereader] buffer size checks subject to wrap-around ov...
+      * 579177 : GstInfo: maintain ABI compatibility
+      * 581321 : typefind element leaks force-caps property
+      * 584118 : [gstadapter][doc] Improve documentation of gst_adapter_ma...
+      * 585433 : [queue] Can lock down if min-threshold conflicts with max...
+      * 585569 : rtsp/rtp streaming fails when skipping explicit PAUSED st...
+      * 585834 : Support for GstBufferList in ghostpads
+      * 585960 : Support for GstBufferList in gstbasesink
+      * 587052 : [filesink.c] Support for files > 4GB on windows makes file...
+
+API added since 0.10.23:
+     
+      * GST_DEBUG_CATEGORY_GET() macro
+      * gst_byte_reader_dup_data
+      * gst_byte_reader_dup_string
+      * gst_byte_reader_dup_string_utf8
+      * gst_byte_reader_dup_string_utf16
+      * gst_byte_reader_dup_string_utf32
+      * gst_byte_reader_skip_string
+      * gst_byte_reader_skip_string_utf8
+      * gst_byte_reader_skip_string_utf16
+      * gst_byte_reader_skip_string_utf32
+      * gst_byte_reader_peek_string
+      * gst_byte_reader_peek_string_utf8
+      * gst_byte_reader_get_string
+      * gst_byte_reader_get_string_utf8
+      * add gst_tag_list_new_full()
+      * add gst_tag_list_new_full_valist()
+      * add gst_byte_reader_masked_scan_uint32()
+      * add gst_plugin_get_cache_data, gst_plugin_set_cache_data
+      * gst_structure_get()
+      * gst_structure_id_get()
+      * gst_structure_get_valist()
+      * gst_structure_id_get_valist()
+      * GstSegment::gst_segment_set_running_time()
+      * Add GST_MESSAGE_SRC_NAME() macro
+      * GstSegment::gst_segment_to_position()
+      * GstEvent::gst_event_new_step()
+      * GstEvent::gst_event_parse_step()
+      * GstMessage::gst_message_new_step_done()
+      * GstMessage::gst_message_parse_step_done()
+      * gst_structure_id_new()
+      * Add gst_message_{new,parse}_tag_full() to get/set the source pad
+      * GstAdapter::gst_adapter_masked_scan_uint32()
+      * GstElement::gst_element_lost_state_full()
+      * GstAdapter::gst_adapter_prev_timestamp()
+      * gst_plugin_register_static_full()
+      * gst_tag_list_add_value()
+      * gst_tag_setter_add_tag_value()
+      * add GST_TAG_CONTAINER_FORMAT tag
+      * GstTask::gst_task_set_state()
+      * GstObject::gst_object_ref_sink()
 
 Changes since 0.10.22:
       * Support files > 4GB on Windows
