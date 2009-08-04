@@ -1496,6 +1496,24 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
   }
   ypos += overlay->deltay;
 
+  /* shaded background box */
+  if (overlay->want_shading) {
+    switch (overlay->format) {
+      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+        gst_text_overlay_shade_I420_y (overlay,
+            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+            ypos, ypos + overlay->image_height);
+        break;
+      case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
+        gst_text_overlay_shade_UYVY_y (overlay,
+            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
+            ypos, ypos + overlay->image_height);
+        break;
+      default:
+        g_assert_not_reached ();
+    }
+  }
+
   if (ypos < 0)
     ypos = 0;
 
