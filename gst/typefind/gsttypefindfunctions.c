@@ -1251,6 +1251,26 @@ wavpack_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** application/postscrip ***/
+static GstStaticCaps postscript_caps =
+GST_STATIC_CAPS ("application/postscript");
+
+#define POSTSCRIPT_CAPS (gst_static_caps_get(&postscript_caps))
+
+static void
+postscript_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 3);
+  if (!data)
+    return;
+
+  if (data[0] == 0x04)
+    data++;
+  if (data[0] == '%' && data[1] == '!')
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, POSTSCRIPT_CAPS);
+
+}
+
 /*** multipart/x-mixed-replace mimestream ***/
 
 static GstStaticCaps multipart_caps =
@@ -3381,6 +3401,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *mxmf_exts[] = { "mxmf", NULL };
   static gchar *imelody_exts[] = { "imy", "ime", "imelody", NULL };
   static gchar *pdf_exts[] = { "pdf", NULL };
+  static gchar *ps_exts[] = { "ps", NULL };
   static gchar *mxf_exts[] = { "mxf", NULL };
   static gchar *msword_exts[] = { "doc", NULL };
   static gchar *dsstore_exts[] = { "DS_Store", NULL };
@@ -3586,6 +3607,8 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "audio/x-wavpack-correction", GST_RANK_SECONDARY,
       wavpack_type_find, wavpack_correction_exts, WAVPACK_CORRECTION_CAPS, NULL,
       NULL);
+  TYPE_FIND_REGISTER (plugin, "application/postscript", GST_RANK_SECONDARY,
+      postscript_type_find, ps_exts, POSTSCRIPT_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-rar",
       GST_RANK_SECONDARY, rar_exts, "Rar!", 4, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER (plugin, "application/x-tar", GST_RANK_SECONDARY,
