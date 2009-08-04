@@ -140,14 +140,6 @@ gboolean	gst_v4l2_set_attribute		(GstV4l2Object *v4l2object,
 gboolean        gst_v4l2_get_capabilities       (GstV4l2Object * v4l2object);
 
 
-#define LOG_CAPS(obj, caps)    G_STMT_START {                   \
-    if (caps) {                                                 \
-      gchar *capstr = gst_caps_to_string (caps);                \
-      GST_DEBUG_OBJECT (obj, "%s: %s", #caps, capstr);          \
-      g_free (capstr);                                          \
-    } else {                                                    \
-      GST_DEBUG_OBJECT (obj, "null");                           \
-    }                                                           \
-  } G_STMT_END
+#define LOG_CAPS(obj, caps) GST_DEBUG_OBJECT (obj, "%s: %" GST_PTR_FORMAT, #caps, caps)
 
 #endif /* __V4L2_CALLS_H__ */
