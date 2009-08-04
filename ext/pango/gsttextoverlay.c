@@ -292,6 +292,7 @@ static GstCaps *gst_text_overlay_getcaps (GstPad * pad);
 static gboolean gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_text_overlay_setcaps_txt (GstPad * pad, GstCaps * caps);
 static gboolean gst_text_overlay_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_text_overlay_src_query (GstPad * pad, GstQuery * query);
 
 static gboolean gst_text_overlay_video_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_text_overlay_video_chain (GstPad * pad,
@@ -554,6 +555,8 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
       GST_DEBUG_FUNCPTR (gst_text_overlay_getcaps));
   gst_pad_set_event_function (overlay->srcpad,
       GST_DEBUG_FUNCPTR (gst_text_overlay_src_event));
+  gst_pad_set_query_function (overlay->srcpad,
+      GST_DEBUG_FUNCPTR (gst_text_overlay_src_query));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
   overlay->line_align = DEFAULT_PROP_LINE_ALIGNMENT;
@@ -885,6 +888,21 @@ gst_text_overlay_get_property (GObject * object, guint prop_id,
 
   overlay->need_render = TRUE;
   GST_OBJECT_UNLOCK (overlay);
+}
+
+static gboolean
+gst_text_overlay_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean ret = FALSE;
+  GstTextOverlay *overlay = NULL;
+
+  overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+
+  ret = gst_pad_peer_query (overlay->video_sinkpad, query);
+
+  gst_object_unref (overlay);
+
+  return ret;
 }
 
 static gboolean
