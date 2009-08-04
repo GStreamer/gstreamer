@@ -1482,10 +1482,18 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (avi, "Parsing stream");
 
+  /* initial settings */
+  stream->idx_duration = GST_CLOCK_TIME_NONE;
+  stream->hdr_duration = GST_CLOCK_TIME_NONE;
+  stream->duration = GST_CLOCK_TIME_NONE;
+
   while (gst_riff_parse_chunk (element, buf, &offset, &tag, &sub)) {
     /* sub can be NULL if the chunk is empty */
     switch (tag) {
       case GST_RIFF_TAG_strh:
+      {
+        gst_riff_strh *strh;
+
         if (got_strh) {
           GST_WARNING_OBJECT (avi, "Ignoring additional strh chunk");
           break;
@@ -1494,8 +1502,18 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           GST_WARNING_OBJECT (avi, "Failed to parse strh chunk");
           goto fail;
         }
+        /* determine duration as indicated by header */
+        strh = stream->strh;
+        stream->hdr_duration = gst_util_uint64_scale ((guint64) strh->length *
+            strh->scale, GST_SECOND, (guint64) strh->rate);
+        GST_INFO ("Stream duration according to header: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (stream->hdr_duration));
+        if (stream->hdr_duration == 0)
+          stream->hdr_duration = GST_CLOCK_TIME_NONE;
+
         got_strh = TRUE;
         break;
+      }
       case GST_RIFF_TAG_strf:
       {
         gboolean res = FALSE;
@@ -1716,9 +1734,6 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   pad = stream->pad = gst_pad_new_from_template (templ, padname);
   stream->last_flow = GST_FLOW_OK;
   stream->discont = TRUE;
-  stream->idx_duration = GST_CLOCK_TIME_NONE;
-  stream->hdr_duration = GST_CLOCK_TIME_NONE;
-  stream->duration = GST_CLOCK_TIME_NONE;
   g_free (padname);
 
   gst_pad_use_fixed_caps (pad);
@@ -2355,7 +2370,7 @@ gst_avi_demux_next_data_buffer (GstAviDemux * avi, guint64 * offset,
     res = gst_avi_demux_peek_tag (avi, off, tag, &_size);
     if (res != GST_FLOW_OK)
       break;
-    if (*tag == GST_RIFF_TAG_LIST)
+    if (*tag == GST_RIFF_TAG_LIST || *tag == GST_RIFF_TAG_RIFF)
       off += 8 + 4;             /* skip tag + size + subtag */
     else {
       *offset = off + 8;
@@ -2775,7 +2790,6 @@ out_of_mem:
 static void
 gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
 {
-  gst_avi_index_entry *entry;
   gint stream;
   GstClockTime total;
 
@@ -2789,26 +2803,12 @@ gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
 
     if (!strh)
       continue;
-    /* get header duration */
-    hduration = gst_util_uint64_scale ((guint64) strh->length *
-        strh->scale, GST_SECOND, (guint64) strh->rate);
 
-    GST_INFO ("Stream %d duration according to header: %" GST_TIME_FORMAT,
-        stream, GST_TIME_ARGS (hduration));
+    /* get header duration for the stream */
+    hduration = streamc->hdr_duration;
 
-    if (hduration == 0)
-      hduration = GST_CLOCK_TIME_NONE;
-
-    /* set duration for the stream */
-    streamc->hdr_duration = hduration;
-
-    /* get last index entry to get duration */
-    if ((entry = gst_avi_demux_index_last (avi, stream)))
-      duration = entry->ts + entry->dur;
-    else
-      duration = GST_CLOCK_TIME_NONE;
-
-    streamc->idx_duration = duration;
+    /* index duration calculated during parsing, invariant under massage */
+    duration = streamc->idx_duration;
 
     /* now pick a good duration */
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
