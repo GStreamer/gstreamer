@@ -3438,8 +3438,6 @@ invalid_avih:
   {
     GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
         ("Invalid AVI header (cannot parse avih at start)"));
-    if (sub)
-      gst_buffer_unref (sub);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
