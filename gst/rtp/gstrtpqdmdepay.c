@@ -364,7 +364,7 @@ gst_rtp_qdm2_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     avail = gst_adapter_available (rtpqdm2depay->adapter);
     if (G_UNLIKELY (avail)) {
-      GST_DEBUG ("Pushing out %d bytes of collected data");
+      GST_DEBUG ("Pushing out %d bytes of collected data", avail);
       outbuf = gst_adapter_take_buffer (rtpqdm2depay->adapter, avail);
       GST_BUFFER_TIMESTAMP (outbuf) = rtpqdm2depay->ptimestamp;
       GST_DEBUG ("Outgoing buffer timestamp %" GST_TIME_FORMAT,
