@@ -512,8 +512,13 @@ AC_ARG_ENABLE(check,
       no)  BUILD_CHECK=no ;;
       *)   AC_MSG_ERROR(bad value ${enableval} for --disable-check) ;;
     esac
-  ],
-[BUILD_CHECK=yes]) dnl Default value
+  ], [
+    dnl Default value
+    case $host_os in
+      mingw* | msvc* | mks*) BUILD_CHECK=no ;;
+      *) BUILD_CHECK=yes ;;
+    esac
+])
 dnl bit of a misnomer, but keep the conditional named like this so we don't
 dnl have to change too much elsewhere
 AM_CONDITIONAL(HAVE_CHECK, test "x$BUILD_CHECK" = "xyes")
