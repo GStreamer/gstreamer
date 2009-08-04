@@ -3019,13 +3019,19 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
             case GST_RIFF_LIST_INFO:
               GST_DEBUG ("Found INFO chunk");
               if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
+                GST_DEBUG ("got size %d", size);
                 avi->offset += 12;
                 gst_adapter_flush (avi->adapter, 12);
-                buf = gst_adapter_take_buffer (avi->adapter, size - 4);
-                gst_riff_parse_info (GST_ELEMENT (avi), buf, &avi->globaltags);
-                gst_buffer_unref (buf);
+                if (size > 4) {
+                  buf = gst_adapter_take_buffer (avi->adapter, size - 4);
+                  gst_riff_parse_info (GST_ELEMENT (avi), buf,
+                      &avi->globaltags);
+                  gst_buffer_unref (buf);
 
-                avi->offset += ((size + 1) & ~1) - 4;
+                  avi->offset += ((size + 1) & ~1) - 4;
+                } else {
+                  GST_DEBUG ("skipping INFO LIST prefix");
+                }
               } else {
                 /* Need more data */
                 return GST_FLOW_OK;
@@ -3319,6 +3325,12 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
               goto pull_range_failed;
             }
             GST_DEBUG ("got size %u", GST_BUFFER_SIZE (buf));
+            if (size < 4) {
+              GST_DEBUG ("skipping INFO LIST prefix");
+              avi->offset += (4 - GST_ROUND_UP_2 (size));
+              gst_buffer_unref (buf);
+              continue;
+            }
 
             sub = gst_buffer_create_sub (buf, 4, GST_BUFFER_SIZE (buf) - 4);
             gst_riff_parse_info (element, sub, &avi->globaltags);
