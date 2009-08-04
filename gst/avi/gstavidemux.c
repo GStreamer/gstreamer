@@ -186,12 +186,16 @@ static void
 gst_avi_demux_init (GstAviDemux * avi)
 {
   avi->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
-  gst_pad_set_activate_function (avi->sinkpad, gst_avi_demux_sink_activate);
+  gst_pad_set_activate_function (avi->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_avi_demux_sink_activate));
   gst_pad_set_activatepull_function (avi->sinkpad,
-      gst_avi_demux_sink_activate_pull);
-  gst_pad_set_activatepush_function (avi->sinkpad, gst_avi_demux_activate_push);
-  gst_pad_set_chain_function (avi->sinkpad, gst_avi_demux_chain);
-  gst_pad_set_event_function (avi->sinkpad, gst_avi_demux_handle_sink_event);
+      GST_DEBUG_FUNCPTR (gst_avi_demux_sink_activate_pull));
+  gst_pad_set_activatepush_function (avi->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_avi_demux_activate_push));
+  gst_pad_set_chain_function (avi->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_avi_demux_chain));
+  gst_pad_set_event_function (avi->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_avi_demux_handle_sink_event));
   gst_element_add_pad (GST_ELEMENT (avi), avi->sinkpad);
 
   avi->adapter = gst_adapter_new ();
