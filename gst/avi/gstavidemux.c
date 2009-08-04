@@ -76,6 +76,7 @@ static const GstEventMask *gst_avi_demux_get_event_mask (GstPad * pad);
 static gboolean gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_avi_demux_handle_sink_event (GstPad * pad,
     GstEvent * event);
+static gboolean gst_avi_demux_push_event (GstAviDemux * avi, GstEvent * event);
 
 #if 0
 static const GstFormat *gst_avi_demux_get_src_formats (GstPad * pad);
@@ -713,6 +714,18 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
       /* Drop NEWSEGMENT events, new ones are generated later */
       gst_event_unref (event);
       break;
+    case GST_EVENT_EOS:
+    {
+      if (avi->state != GST_AVI_DEMUX_MOVI) {
+        gst_event_unref (event);
+        GST_ELEMENT_ERROR (avi, STREAM, DEMUX,
+            (NULL), ("got eos and didn't receive a complete header object"));
+      } else if (!gst_avi_demux_push_event (avi, event)) {
+        GST_ELEMENT_ERROR (avi, STREAM, DEMUX,
+            (NULL), ("got eos but no streams (yet)"));
+      }
+      break;
+    }
     default:
       res = gst_pad_event_default (pad, event);
       break;
@@ -2897,6 +2910,8 @@ gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
   gst_segment_set_duration (&avi->segment, GST_FORMAT_TIME, total);
 }
 
+/* returns FALSE if there are no pads to deliver event to,
+ * otherwise TRUE (whatever the outcome of event sending) */
 static gboolean
 gst_avi_demux_push_event (GstAviDemux * avi, GstEvent * event)
 {
@@ -2911,8 +2926,8 @@ gst_avi_demux_push_event (GstAviDemux * avi, GstEvent * event)
       avi_stream_context *stream = &avi->stream[i];
 
       if (stream->pad) {
-        if (gst_pad_push_event (stream->pad, gst_event_ref (event)))
-          result = TRUE;
+        result = TRUE;
+        gst_pad_push_event (stream->pad, gst_event_ref (event));
       }
     }
   }
@@ -4415,7 +4430,11 @@ pause:
     }
     if (push_eos) {
       GST_INFO_OBJECT (avi, "sending eos");
-      gst_avi_demux_push_event (avi, gst_event_new_eos ());
+      if (!gst_avi_demux_push_event (avi, gst_event_new_eos ()) &&
+          (res == GST_FLOW_UNEXPECTED)) {
+        GST_ELEMENT_ERROR (avi, STREAM, DEMUX,
+            (NULL), ("got eos but no streams (yet)"));
+      }
     }
   }
 }
