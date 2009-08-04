@@ -1500,6 +1500,11 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
 
   while (gst_riff_parse_chunk (element, buf, &offset, &tag, &sub)) {
     /* sub can be NULL if the chunk is empty */
+    if (sub == NULL) {
+      GST_DEBUG_OBJECT (avi, "ignoring empty chunk %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (tag));
+      continue;
+    }
     switch (tag) {
       case GST_RIFF_TAG_strh:
       {
@@ -1510,9 +1515,12 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           break;
         }
         if (!gst_riff_parse_strh (element, sub, &stream->strh)) {
+          /* ownership given away */
+          sub = NULL;
           GST_WARNING_OBJECT (avi, "Failed to parse strh chunk");
           goto fail;
         }
+        sub = NULL;
         strh = stream->strh;
         /* sanity check; stream header frame rate matches global header
          * frame duration */
@@ -1559,6 +1567,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
             stream->is_vbr = TRUE;
             res = gst_riff_parse_strf_vids (element, sub,
                 &stream->strf.vids, &stream->extradata);
+            sub = NULL;
             GST_DEBUG_OBJECT (element, "marking video as VBR, res %d", res);
             break;
           case GST_RIFF_FCC_auds:
@@ -1567,6 +1576,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
             res =
                 gst_riff_parse_strf_auds (element, sub, &stream->strf.auds,
                 &stream->extradata);
+            sub = NULL;
             GST_DEBUG_OBJECT (element, "marking audio as VBR:%d, res %d",
                 stream->is_vbr, res);
             break;
@@ -1574,6 +1584,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
             stream->is_vbr = TRUE;
             res = gst_riff_parse_strf_iavs (element, sub,
                 &stream->strf.iavs, &stream->extradata);
+            sub = NULL;
             GST_DEBUG_OBJECT (element, "marking iavs as VBR, res %d", res);
             break;
           case GST_RIFF_FCC_txts:
@@ -1587,6 +1598,10 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
                 "Don´t know how to handle stream type %" GST_FOURCC_FORMAT,
                 GST_FOURCC_ARGS (stream->strh->type));
             break;
+        }
+        if (sub) {
+          gst_buffer_unref (sub);
+          sub = NULL;
         }
         if (!res)
           goto fail;
@@ -1615,12 +1630,14 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           vprp = NULL;
         } else
           got_vprp = TRUE;
+        sub = NULL;
         break;
       }
       case GST_RIFF_TAG_strd:
         if (stream->initdata)
           gst_buffer_unref (stream->initdata);
         stream->initdata = sub;
+        sub = NULL;
         break;
       case GST_RIFF_TAG_strn:
         g_free (stream->name);
@@ -1642,6 +1659,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           g_free (stream->indexes);
           gst_avi_demux_parse_superindex (avi, sub, &stream->indexes);
           stream->superindex = TRUE;
+          sub = NULL;
           break;
         }
         GST_WARNING_OBJECT (avi,
@@ -1649,11 +1667,11 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
             GST_FOURCC_ARGS (tag));
         /* fall-through */
       case GST_RIFF_TAG_JUNK:
-        if (sub != NULL) {
-          gst_buffer_unref (sub);
-          sub = NULL;
-        }
         break;
+    }
+    if (sub != NULL) {
+      gst_buffer_unref (sub);
+      sub = NULL;
     }
   }
 
@@ -1808,6 +1826,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
         codec_name, NULL);
     g_free (codec_name);
   }
+
+  gst_buffer_unref (buf);
 
   return TRUE;
 
@@ -2961,13 +2981,16 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
               switch (GST_READ_UINT32_LE (GST_BUFFER_DATA (sub))) {
                 case GST_RIFF_LIST_strl:
                   if (!(gst_avi_demux_parse_stream (avi, sub))) {
+                    sub = NULL;
                     GST_ELEMENT_WARNING (avi, STREAM, DEMUX, (NULL),
                         ("failed to parse stream, ignoring"));
                     goto next;
                   }
+                  sub = NULL;
                   goto next;
                 case GST_RIFF_LIST_odml:
                   gst_avi_demux_parse_odml (avi, sub);
+                  sub = NULL;
                   break;
                 default:
                   GST_WARNING_OBJECT (avi,
@@ -2987,7 +3010,8 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
             case GST_RIFF_TAG_JUNK:
             next:
               /* move to next chunk */
-              gst_buffer_unref (sub);
+              if (sub)
+                gst_buffer_unref (sub);
               sub = NULL;
               break;
           }
@@ -3249,9 +3273,11 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
                   ("faile to parse stream, ignoring"));
               sub = NULL;
             }
+            sub = NULL;
             goto next;
           case GST_RIFF_LIST_odml:
             gst_avi_demux_parse_odml (avi, sub);
+            sub = NULL;
             break;
           default:
             GST_WARNING_OBJECT (avi,
