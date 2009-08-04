@@ -1,4 +1,4 @@
-/* Copyright (C) 2004-2005 Michael Pyne <michael dot pyne at kdemail net>
+/* Copyright (C) 2004-2005, 2009 Michael Pyne <michael dot pyne at kdemail net>
  * Copyright (C) 2004-2006 Chris Lee <clee at kde org>
  * Copyright (C) 2007 Brian Koropoff <bkoropoff at gmail com>
  *
@@ -23,8 +23,7 @@
 
 #include <gst/gst.h>
 
-#include <openspc.h>
-
+#include <gme/gme.h>
 #include "tag.h"
 
 G_BEGIN_DECLS
@@ -51,13 +50,12 @@ struct _GstSpcDec
   GstPad     *srcpad;
 
   GstBuffer  *buf;
+  Music_Emu  *player;
   gboolean    initialized;
   gboolean    seeking;
-  guint32     seekpoint;
-  
+  int         seekpoint;
+
   spc_tag_info tag_info;
-  
-  guint32 byte_pos;
 };
 
 struct _GstSpcDecClass

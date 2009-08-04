@@ -1372,9 +1372,9 @@ AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
 dnl *** spc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SPC, true)
 AG_GST_CHECK_FEATURE(SPC, [spc decoder], spc, [
-  AC_CHECK_HEADER(openspc.h, [
-    AC_CHECK_LIB(openspc, OSPC_Init, [
-      SPC_LIBS="-lopenspc"
+  AC_CHECK_HEADER(gme/gme.h, [
+    AC_CHECK_LIB(gme, gme_new_emu, [
+      SPC_LIBS="-lgme"
       AC_SUBST(SPC_LIBS)
       HAVE_SPC=yes
     ], [
