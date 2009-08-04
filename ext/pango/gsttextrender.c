@@ -65,13 +65,13 @@ GST_DEBUG_CATEGORY_EXTERN (pango_debug);
 
 enum
 {
-  ARG_0,
+  PROP_0,
   PROP_HALIGNMENT,
   PROP_VALIGNMENT,
   PROP_LINE_ALIGNMENT,
   PROP_XPAD,
   PROP_YPAD,
-  ARG_FONT_DESC
+  PROP_FONT_DESC
 };
 
 
@@ -194,7 +194,7 @@ gst_text_render_class_init (GstTextRenderClass * klass)
   fontmap = pango_cairo_font_map_get_default ();
   klass->pango_context =
       pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FONT_DESC,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FONT_DESC,
       g_param_spec_string ("font-desc", "font description",
           "Pango font description of font "
           "to be used for rendering. "
@@ -624,7 +624,7 @@ gst_text_render_set_property (GObject * object, guint prop_id,
     case PROP_YPAD:
       render->ypad = g_value_get_int (value);
       break;
-    case ARG_FONT_DESC:
+    case PROP_FONT_DESC:
     {
       PangoFontDescription *desc;
 
