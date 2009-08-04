@@ -450,11 +450,13 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
           "Automatically adjust font size to screen-size.",
           DEFAULT_PROP_AUTO_ADJUST_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+#ifdef HAVE_PANGO_VERTICAL_WRITING
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VERTICAL_RENDER,
       g_param_spec_boolean ("vertical-render", "vertical render",
           "Vertical Render.", DEFAULT_PROP_VERTICAL_RENDER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+#endif
 }
 
 static void
@@ -793,14 +795,13 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       overlay->auto_adjust_size = g_value_get_boolean (value);
       overlay->need_render = TRUE;
     }
-#ifdef HAVE_PANGO_VERTICAL_WRITING
     case PROP_VERTICAL_RENDER:
-    {
+#ifdef HAVE_PANGO_VERTICAL_WRITING
       overlay->use_vertical_render = g_value_get_boolean (value);
       gst_text_overlay_update_render_mode (overlay);
       overlay->need_render = TRUE;
-    }
 #endif
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
