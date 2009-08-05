@@ -1,4 +1,16 @@
-This is GStreamer Python Bindings 0.10.15, "We built a wall"
+This is GStreamer Python Bindings 0.10.16, "Distorted memory"
+
+Changes since 0.10.15:
+    
+      * Update bindings for GStreamer 0.10.24
+      * Fixes for the python plugin loader
+
+Bugs fixed since 0.10.15:
+     
+      * 580992 : gst_preset_get_preset_names not wrapped in gst-python
+      * 583378 : libgstpython.so causes a segfault
+      * 583607 : Error when building from tarball
+      * 584445 : gst.TagList getters and setters should convert unicode ob...
 
 Changes since 0.10.14:
     

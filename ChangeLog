@@ -1,3 +1,33 @@
+=== release 0.10.16 ===
+
+2009-08-05  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.16, "Distorted memory"
+
+2009-07-24 00:43:35 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From fedaaee to 94f95e3
+
+2009-07-20 17:52:10 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  0.10.15.3 pre-release
+
+2009-07-17 11:34:50 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/base.defs:
+	* gst/gst-0.10.24.ignore:
+	  gst: More API additions to gstreamer core. Fixes #587432
+
+2009-07-14 19:00:28 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	  0.10.15.2 pre-release
+
 2009-07-13 12:24:35 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
 
 	* common:
