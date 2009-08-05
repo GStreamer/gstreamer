@@ -1099,14 +1099,12 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
     outcaps = caps;
   }
 
-#if 0
   /* if we have the same caps, we can optimize and reuse the input caps */
   if (gst_caps_is_equal (incaps, outcaps)) {
     GST_INFO_OBJECT (trans, "reuse caps");
-    gst_caps_unref (outcaps);
-    outcaps = gst_caps_ref (incaps);
+    gst_caps_unref (othercaps);
+    outcaps = othercaps = gst_caps_ref (incaps);
   }
-#endif
 
   /* call configure now */
   if (!(ret = gst_base_transform_configure_caps (trans, incaps, outcaps)))
