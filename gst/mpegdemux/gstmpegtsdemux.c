@@ -2778,7 +2778,7 @@ gst_mpegts_demux_src_pad_query (GstPad * pad, GstQuery * query)
          * have a bitrate
          */
         peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
-        res = gst_pad_peer_query (demux->sinkpad, query);
+        res = gst_pad_peer_query (demux->sinkpad, peerquery);
         if (!res || demux->bitrate == -1) {
           gst_query_set_seeking (query, fmt, FALSE, -1, -1);
         } else {

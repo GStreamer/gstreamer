@@ -1368,7 +1368,7 @@ gst_flups_demux_src_query (GstPad * pad, GstQuery * query)
            * have the SCR
            */
           peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
-          res = gst_pad_peer_query (demux->sinkpad, query);
+          res = gst_pad_peer_query (demux->sinkpad, peerquery);
           if (!res || demux->scr_rate_n == G_MAXUINT64
               || demux->scr_rate_d == G_MAXUINT64) {
             gst_query_set_seeking (query, fmt, FALSE, -1, -1);
