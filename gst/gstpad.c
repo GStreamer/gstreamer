@@ -2550,7 +2550,8 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
   }
 
   gst_caps_replace (&GST_PAD_CAPS (pad), caps);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "caps %" GST_PTR_FORMAT, caps);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "caps %p %" GST_PTR_FORMAT, caps,
+      caps);
   GST_OBJECT_UNLOCK (pad);
 
   g_object_notify (G_OBJECT (pad), "caps");
@@ -2566,7 +2567,8 @@ setting_same_caps:
   {
     gst_caps_replace (&GST_PAD_CAPS (pad), caps);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-        "caps %" GST_PTR_FORMAT " same as existing, updating ptr only", caps);
+        "caps %p %" GST_PTR_FORMAT " same as existing, updating ptr only", caps,
+        caps);
     GST_OBJECT_UNLOCK (pad);
     return TRUE;
   }
