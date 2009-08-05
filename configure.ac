@@ -491,8 +491,8 @@ dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 AC_SUBST(GLIB_PREFIX)
 
-dnl libxml 2 is optional in some cases
-if test "x$GST_DISABLE_LOADSAVE" = "xyes" -a "x$GST_DISABLE_REGISTRY" = "xyes"
+dnl libxml2 is only needed for xml loading/saving of pipelines these days
+if test "x$GST_DISABLE_LOADSAVE" = "xyes"
 then
   AC_MSG_NOTICE([XML registry and load/save are disabled, not checking for libxml2])
   GST_DISABLE_XML_DEFINE="#define GST_DISABLE_XML 1"
