@@ -1168,8 +1168,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   GstBaseTransformPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
   guint outsize, newsize, expsize;
-  gboolean discard;
-  GstCaps *incaps, *oldcaps, *newcaps;
+  gboolean discard, setcaps, copymeta;
+  GstCaps *incaps, *oldcaps, *newcaps, *outcaps;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
@@ -1340,7 +1340,10 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     }
   }
 
-  /* try to make a final output buffer, make sure the metadata is writable */
+  /* these are the final output caps */
+  outcaps = GST_PAD_CAPS (trans->srcpad);
+
+  copymeta = FALSE;
   if (*out_buf == NULL) {
     if (!discard) {
       GST_DEBUG_OBJECT (trans, "make default output buffer of size %d",
@@ -1351,12 +1354,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
           GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
     } else {
       GST_DEBUG_OBJECT (trans, "reuse input buffer");
-      /* we can reuse the input buffer if it's writable else we take a
-       * subbuffer. Note that we can't unref in_buf. */
-      if (gst_buffer_is_metadata_writable (in_buf))
-        *out_buf = in_buf;
-      else
-        *out_buf = gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
+      *out_buf = in_buf;
     }
   } else {
     if (trans->passthrough && in_buf != *out_buf) {
@@ -1369,35 +1367,59 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     if (discard) {
       GST_DEBUG_OBJECT (trans, "discard buffer, reuse input buffer");
       gst_buffer_unref (*out_buf);
-      /* we can reuse the input buffer if it's writable else we take a
-       * subbuffer. Note that we can't unref in_buf. */
-      if (gst_buffer_is_metadata_writable (in_buf))
-        *out_buf = in_buf;
-      else
-        *out_buf = gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
+      *out_buf = in_buf;
     } else {
       GST_DEBUG_OBJECT (trans, "using allocated buffer in %p, out %p", in_buf,
           *out_buf);
-      /* we need a metadata writable output buffer. Note that we can't unref
-       * in_buf. */
-      if (!gst_buffer_is_metadata_writable (*out_buf)) {
-        if (in_buf == *out_buf)
-          *out_buf =
-              gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
-        else
-          *out_buf = gst_buffer_make_metadata_writable (*out_buf);
+      /* if we have different buffers, check if the metadata is ok */
+      if (*out_buf != in_buf) {
+        guint mask;
+
+        mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
+            GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
+            GST_BUFFER_FLAG_GAP | GST_BUFFER_FLAG_MEDIA1 |
+            GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3;
+        /* see if the flags and timestamps match */
+        copymeta =
+            (GST_MINI_OBJECT_FLAGS (*out_buf) & mask) ==
+            (GST_MINI_OBJECT_FLAGS (in_buf) & mask);
+        copymeta |=
+            GST_BUFFER_TIMESTAMP (*out_buf) != GST_BUFFER_TIMESTAMP (in_buf) ||
+            GST_BUFFER_DURATION (*out_buf) != GST_BUFFER_DURATION (in_buf) ||
+            GST_BUFFER_OFFSET (*out_buf) != GST_BUFFER_OFFSET (in_buf) ||
+            GST_BUFFER_OFFSET_END (*out_buf) != GST_BUFFER_OFFSET_END (in_buf);
       }
-      gst_buffer_copy_metadata (*out_buf, in_buf,
-          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
     }
   }
-  /* when we get here, the metadata should be writable */
-  gst_buffer_set_caps (*out_buf, GST_PAD_CAPS (trans->srcpad));
 
-  /* clear the GAP flag when the subclass does not understand it
-   * and passthrough mode is not used */
-  if (!trans->priv->gap_aware && !trans->passthrough)
-    GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
+  /* check if we need to make things writable. We need this when we need to
+   * update the caps or the metadata on the output buffer. */
+  newcaps = GST_BUFFER_CAPS (*out_buf);
+  setcaps = (newcaps != outcaps) && (!gst_caps_is_equal (newcaps, outcaps));
+  /* we need to modify the metadata when the element is not gap aware,
+   * passthrough is not used and the gap flag is set */
+  copymeta |= !trans->priv->gap_aware && !trans->passthrough
+      && (GST_MINI_OBJECT_FLAGS (*out_buf) & GST_BUFFER_FLAG_GAP);
+
+  if (setcaps || copymeta) {
+    GST_DEBUG_OBJECT (trans, "setcaps %d, copymeta %d", setcaps, copymeta);
+    if (!gst_buffer_is_metadata_writable (*out_buf)) {
+      GST_DEBUG_OBJECT (trans, "buffer metadata %p not writable", *out_buf);
+      if (in_buf == *out_buf)
+        *out_buf = gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
+      else
+        *out_buf = gst_buffer_make_metadata_writable (*out_buf);
+    }
+    /* when we get here, the metadata should be writable */
+    if (setcaps)
+      gst_buffer_set_caps (*out_buf, outcaps);
+    if (copymeta)
+      gst_buffer_copy_metadata (*out_buf, in_buf,
+          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
+    /* clear the GAP flag when the subclass does not understand it */
+    if (!trans->priv->gap_aware)
+      GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
+  }
 
   return ret;
 
