@@ -306,9 +306,15 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
     /* FIXME : Move this behaviour to basetransform. The given caps are the ones
      * of the source pad, therefore our outgoing buffers should always have
      * those caps. */
-    gst_buffer_set_caps (input, caps);
-    gst_buffer_ref (input);
-    *buf = input;
+    if (gst_buffer_is_metadata_writable (input)) {
+      *buf = input;
+      gst_buffer_set_caps (*buf, caps);
+      gst_buffer_ref (input);
+    } else {
+      GST_DEBUG_OBJECT (trans, "Creating sub-buffer and setting caps");
+      *buf = gst_buffer_create_sub (input, 0, GST_BUFFER_SIZE (input));
+      gst_buffer_set_caps (*buf, caps);
+    }
   } else {
     /* Buffer has no caps. See if the output pad only supports fixed caps */
     GstCaps *out_caps;
