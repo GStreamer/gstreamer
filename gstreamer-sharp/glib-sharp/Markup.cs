@@ -23,7 +23,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace GLib {
+namespace Gst.GLib {
 
 
 	public class Markup {

@@ -22,7 +22,7 @@
 
 //
 
-namespace GLib {
+namespace Gst.GLib {
 
 	using System;
 	using System.Collections;

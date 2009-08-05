@@ -20,7 +20,7 @@
 // Boston, MA 02111-1307, USA.
 
 
-namespace GLib {
+namespace Gst.GLib {
 
 	using System;
 	using System.Runtime.InteropServices;

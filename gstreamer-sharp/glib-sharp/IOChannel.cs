@@ -19,7 +19,7 @@
 // Boston, MA 02111-1307, USA.
 
 
-namespace GLibSharp {
+namespace Gst.GLibSharp {
 
 	using System;
 	using System.Runtime.InteropServices;
@@ -51,7 +51,7 @@ namespace GLibSharp {
 	}
 }
 
-namespace GLib {
+namespace Gst.GLib {
 
 	using System;
 	using System.Runtime.InteropServices;

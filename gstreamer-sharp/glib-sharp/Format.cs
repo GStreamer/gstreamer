@@ -23,7 +23,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace GLib {
+namespace Gst.GLib {
 #if GTK_SHARP_2_14
 	public class Format {
 		[DllImport("libglib-2.0-0.dll")]

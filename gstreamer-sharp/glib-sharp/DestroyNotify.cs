@@ -18,7 +18,7 @@
 // Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 // Boston, MA 02111-1307, USA.
 
-namespace GLib {
+namespace Gst.GLib {
 
 	using System;
 	using System.Runtime.InteropServices;

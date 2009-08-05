@@ -20,7 +20,7 @@
 
 #if GTK_SHARP_2_10
 
-namespace GLib {
+namespace Gst.GLib {
 
 	using System;
 	using System.Collections;
