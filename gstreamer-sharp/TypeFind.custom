@@ -30,5 +30,5 @@ public TypeFind (TypeFindPeekFunction peek, TypeFindSuggestFunction suggest, Typ
 }
 
 protected override void Free (IntPtr raw) {
-  GLib.Marshaller.Free (raw);
+  Gst.GLib.Marshaller.Free (raw);
 }

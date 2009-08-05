@@ -56,13 +56,13 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -71,52 +71,7 @@
       </Docs>
     </Member>
     <Member MemberName="InPlace">
-      <MemberSignature Language="C#" Value="public bool InPlace { set; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IsInPlace">
-      <MemberSignature Language="C#" Value="public bool IsInPlace { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IsPassthrough">
-      <MemberSignature Language="C#" Value="public bool IsPassthrough { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IsQosEnabled">
-      <MemberSignature Language="C#" Value="public bool IsQosEnabled { get; }" />
+      <MemberSignature Language="C#" Value="public bool InPlace { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -138,7 +93,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideBeforeTransform", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideBeforeTransform", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -161,7 +116,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideEvent", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideEvent", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -185,7 +140,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideFixateCaps", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideFixateCaps", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -212,7 +167,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetUnitSize", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetUnitSize", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -238,7 +193,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverridePrepareOutputBuffer", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverridePrepareOutputBuffer", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -268,7 +223,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetCaps", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetCaps", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -294,7 +249,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideSrcEvent", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSrcEvent", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -318,7 +273,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideStart", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideStart", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -339,7 +294,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideStop", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideStop", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -360,7 +315,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideTransform", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideTransform", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -386,7 +341,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideTransformCaps", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideTransformCaps", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -412,7 +367,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideTransformIp", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideTransformIp", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -436,7 +391,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideTransformSize", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideTransformSize", Type=typeof(Gst.Base.BaseTransform))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -461,7 +416,7 @@
       </Docs>
     </Member>
     <Member MemberName="Passthrough">
-      <MemberSignature Language="C#" Value="public bool Passthrough { set; }" />
+      <MemberSignature Language="C#" Value="public bool Passthrough { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -483,24 +438,9 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("qos")</AttributeName>
+          <AttributeName>Gst.GLib.Property("qos")</AttributeName>
         </Attribute>
       </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="QosEnabled">
-      <MemberSignature Language="C#" Value="public bool QosEnabled { set; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>

@@ -108,24 +108,24 @@ namespace GtkSharp.Generation {
 			AddType (new ConstStringGen ("const-xmlChar"));
 			AddType (new ConstStringGen ("const-char"));
 			AddType (new ConstFilenameGen ("const-gfilename"));
-			AddType (new MarshalGen ("gfilename", "string", "IntPtr", "GLib.Marshaller.StringToFilenamePtr({0})", "GLib.Marshaller.FilenamePtrToStringGFree({0})"));
-			AddType (new MarshalGen ("gchar", "string", "IntPtr", "GLib.Marshaller.StringToPtrGStrdup({0})", "GLib.Marshaller.PtrToStringGFree({0})"));
-			AddType (new MarshalGen ("char", "string", "IntPtr", "GLib.Marshaller.StringToPtrGStrdup({0})", "GLib.Marshaller.PtrToStringGFree({0})"));
+			AddType (new MarshalGen ("gfilename", "string", "IntPtr", "Gst.GLib.Marshaller.StringToFilenamePtr({0})", "Gst.GLib.Marshaller.FilenamePtrToStringGFree({0})"));
+			AddType (new MarshalGen ("gchar", "string", "IntPtr", "Gst.GLib.Marshaller.StringToPtrGStrdup({0})", "Gst.GLib.Marshaller.PtrToStringGFree({0})"));
+			AddType (new MarshalGen ("char", "string", "IntPtr", "Gst.GLib.Marshaller.StringToPtrGStrdup({0})", "Gst.GLib.Marshaller.PtrToStringGFree({0})"));
 			AddType (new SimpleGen ("GStrv", "string[]", "null"));
 
 			// manually wrapped types requiring more complex marshaling
-			AddType (new ManualGen ("GInitiallyUnowned", "GLib.InitiallyUnowned", "GLib.Object.GetObject ({0})"));
-			AddType (new ManualGen ("GObject", "GLib.Object", "GLib.Object.GetObject ({0})"));
+			AddType (new ManualGen ("GInitiallyUnowned", "Gst.GLib.InitiallyUnowned", "Gst.GLib.Object.GetObject ({0})"));
+			AddType (new ManualGen ("GObject", "Gst.GLib.Object", "Gst.GLib.Object.GetObject ({0})"));
 			AddType (new ManualGen ("GstMiniObject", "Gst.MiniObject", "Gst.MiniObject.GetObject ({0})"));
-			AddType (new ManualGen ("GList", "GLib.List"));
-			AddType (new ManualGen ("GPtrArray", "GLib.PtrArray"));
-			AddType (new ManualGen ("GSList", "GLib.SList"));
-			AddType (new MarshalGen ("gunichar", "char", "uint", "GLib.Marshaller.CharToGUnichar ({0})", "GLib.Marshaller.GUnicharToChar ({0})"));
-			AddType (new MarshalGen ("time_t", "System.DateTime", "IntPtr", "GLib.Marshaller.DateTimeTotime_t ({0})", "GLib.Marshaller.time_tToDateTime ({0})"));
-			AddType (new MarshalGen ("GString", "string", "IntPtr", "new GLib.GString ({0}).Handle", "GLib.GString.PtrToString ({0})"));
-			AddType (new MarshalGen ("GType", "GLib.GType", "IntPtr", "{0}.Val", "new GLib.GType({0})", "GLib.GType.None"));
-			AddType (new ByRefGen ("GValue", "GLib.Value"));
-			AddType (new SimpleGen ("GDestroyNotify", "GLib.DestroyNotify", "null"));
+			AddType (new ManualGen ("GList", "Gst.GLib.List"));
+			AddType (new ManualGen ("GPtrArray", "Gst.GLib.PtrArray"));
+			AddType (new ManualGen ("GSList", "Gst.GLib.SList"));
+			AddType (new MarshalGen ("gunichar", "char", "uint", "Gst.GLib.Marshaller.CharToGUnichar ({0})", "Gst.GLib.Marshaller.GUnicharToChar ({0})"));
+			AddType (new MarshalGen ("time_t", "System.DateTime", "IntPtr", "Gst.GLib.Marshaller.DateTimeTotime_t ({0})", "Gst.GLib.Marshaller.time_tToDateTime ({0})"));
+			AddType (new MarshalGen ("GString", "string", "IntPtr", "new Gst.GLib.GString ({0}).Handle", "Gst.GLib.GString.PtrToString ({0})"));
+			AddType (new MarshalGen ("GType", "Gst.GLib.GType", "IntPtr", "{0}.Val", "new Gst.GLib.GType({0})", "Gst.GLib.GType.None"));
+			AddType (new ByRefGen ("GValue", "Gst.GLib.Value"));
+			AddType (new SimpleGen ("GDestroyNotify", "Gst.GLib.DestroyNotify", "null"));
 
 			// FIXME: These ought to be handled properly.
 			AddType (new SimpleGen ("GC", "IntPtr", "IntPtr.Zero"));
@@ -137,7 +137,7 @@ namespace GtkSharp.Generation {
 			AddType (new SimpleGen ("GByteArray", "IntPtr", "IntPtr.Zero"));
 			AddType (new SimpleGen ("GData", "IntPtr", "IntPtr.Zero"));
 			AddType (new SimpleGen ("GIOChannel", "IntPtr", "IntPtr.Zero"));
-			AddType (new SimpleGen ("GTypeModule", "GLib.Object", "null"));
+			AddType (new SimpleGen ("GTypeModule", "Gst.GLib.Object", "null"));
 			AddType (new SimpleGen ("GHashTable", "System.IntPtr", "IntPtr.Zero"));
 			AddType (new SimpleGen ("va_list", "IntPtr", "IntPtr.Zero"));
 			AddType (new SimpleGen ("GParamSpec", "IntPtr", "IntPtr.Zero"));

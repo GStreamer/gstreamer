@@ -40,16 +40,16 @@ namespace GtkSharp.Generation {
 
 			StreamWriter sw = gen_info.Writer = gen_info.OpenStream (Name);
 			base.Generate (gen_info);
-			sw.WriteLine ("\t\tpublic static explicit operator GLib.Value (" + QualifiedName + " boxed)");
+			sw.WriteLine ("\t\tpublic static explicit operator Gst.GLib.Value (" + QualifiedName + " boxed)");
 			sw.WriteLine ("\t\t{");
 
-			sw.WriteLine ("\t\t\tGLib.Value val = GLib.Value.Empty;");
+			sw.WriteLine ("\t\t\tGst.GLib.Value val = Gst.GLib.Value.Empty;");
 			sw.WriteLine ("\t\t\tval.Init (" + QualifiedName + ".GType);");
 			sw.WriteLine ("\t\t\tval.Val = boxed;");
 			sw.WriteLine ("\t\t\treturn val;");
 			sw.WriteLine ("\t\t}");
 			sw.WriteLine ();
-			sw.WriteLine ("\t\tpublic static explicit operator " + QualifiedName + " (GLib.Value val)");
+			sw.WriteLine ("\t\tpublic static explicit operator " + QualifiedName + " (Gst.GLib.Value val)");
 			sw.WriteLine ("\t\t{");
 
 			sw.WriteLine ("\t\t\treturn (" + QualifiedName + ") val.Val;");

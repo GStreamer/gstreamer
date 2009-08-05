@@ -68,7 +68,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("can-activate-pull")</AttributeName>
+          <AttributeName>Gst.GLib.Property("can-activate-pull")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -88,31 +88,11 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("can-activate-push")</AttributeName>
+          <AttributeName>Gst.GLib.Property("can-activate-push")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Data">
-      <MemberSignature Language="C#" Value="public Gst.CorePlugins.FakeSrc.DataTypeType Data { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("data")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>Gst.CorePlugins.FakeSrc+DataTypeType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -128,11 +108,31 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("datarate")</AttributeName>
+          <AttributeName>Gst.GLib.Property("datarate")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Datatype">
+      <MemberSignature Language="C#" Value="public Gst.CorePlugins.FakeSrc.DataTypeType Datatype { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>Gst.GLib.Property("data")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.CorePlugins.FakeSrc+DataTypeType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -148,7 +148,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("dump")</AttributeName>
+          <AttributeName>Gst.GLib.Property("dump")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -168,7 +168,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("filltype")</AttributeName>
+          <AttributeName>Gst.GLib.Property("filltype")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -188,7 +188,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("format")</AttributeName>
+          <AttributeName>Gst.GLib.Property("format")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -222,7 +222,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("is-live")</AttributeName>
+          <AttributeName>Gst.GLib.Property("is-live")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -242,7 +242,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("last-message")</AttributeName>
+          <AttributeName>Gst.GLib.Property("last-message")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -297,7 +297,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("parentsize")</AttributeName>
+          <AttributeName>Gst.GLib.Property("parentsize")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -317,7 +317,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("pattern")</AttributeName>
+          <AttributeName>Gst.GLib.Property("pattern")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -337,7 +337,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("signal-handoffs")</AttributeName>
+          <AttributeName>Gst.GLib.Property("signal-handoffs")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -357,7 +357,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("silent")</AttributeName>
+          <AttributeName>Gst.GLib.Property("silent")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -377,7 +377,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("sizemax")</AttributeName>
+          <AttributeName>Gst.GLib.Property("sizemax")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -397,7 +397,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("sizemin")</AttributeName>
+          <AttributeName>Gst.GLib.Property("sizemin")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -417,7 +417,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("sizetype")</AttributeName>
+          <AttributeName>Gst.GLib.Property("sizetype")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -437,7 +437,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("sync")</AttributeName>
+          <AttributeName>Gst.GLib.Property("sync")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

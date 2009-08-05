@@ -27,7 +27,7 @@ class FinalizerInfo {
   if (!Owned || !FreeNative)
     return;
   FinalizerInfo info = new FinalizerInfo (Handle);
-  GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
+  Gst.GLib.Timeout.Add (50, new Gst.GLib.TimeoutHandler (info.Handler));
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
@@ -39,31 +39,31 @@ static extern void gst_structure_set_name (IntPtr raw, IntPtr name);
 public string Name {
   get  {
     IntPtr raw_ret = gst_structure_get_name (Handle);
-    string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+    string ret = Gst.GLib.Marshaller.Utf8PtrToString (raw_ret);
     return ret;
   }
   set  {
     if (!IsMutable)
       throw new ApplicationException ();
 
-    IntPtr native_value = GLib.Marshaller.StringToPtrGStrdup (value);
+    IntPtr native_value = Gst.GLib.Marshaller.StringToPtrGStrdup (value);
     gst_structure_set_name (Handle, native_value);
-    GLib.Marshaller.Free (native_value);
+    Gst.GLib.Marshaller.Free (native_value);
   }
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_structure_set_value (IntPtr raw, IntPtr fieldname, IntPtr value);
 
-public void SetValue (string fieldname, GLib.Value value) {
+public void SetValue (string fieldname, Gst.GLib.Value value) {
   if (!IsMutable)
     throw new ApplicationException ();
 
-  IntPtr native_fieldname = GLib.Marshaller.StringToPtrGStrdup (fieldname);
-  IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+  IntPtr native_fieldname = Gst.GLib.Marshaller.StringToPtrGStrdup (fieldname);
+  IntPtr native_value = Gst.GLib.Marshaller.StructureToPtrAlloc (value);
   gst_structure_set_value (Handle, native_fieldname, native_value);
-  GLib.Marshaller.Free (native_fieldname);
-  value = (GLib.Value) Marshal.PtrToStructure (native_value, typeof (GLib.Value));
+  Gst.GLib.Marshaller.Free (native_fieldname);
+  value = (Gst.GLib.Value) Marshal.PtrToStructure (native_value, typeof (Gst.GLib.Value));
   Marshal.FreeHGlobal (native_value);
 }
 
@@ -74,10 +74,10 @@ public bool FixateFieldBoolean (string field_name, bool target) {
   if (!IsMutable)
     throw new ApplicationException ();
 
-  IntPtr native_field_name = GLib.Marshaller.StringToPtrGStrdup (field_name);
+  IntPtr native_field_name = Gst.GLib.Marshaller.StringToPtrGStrdup (field_name);
   bool raw_ret = gst_structure_fixate_field_boolean (Handle, native_field_name, target);
   bool ret = raw_ret;
-  GLib.Marshaller.Free (native_field_name);
+  Gst.GLib.Marshaller.Free (native_field_name);
   return ret;
 }
 
@@ -98,9 +98,9 @@ public void RemoveField (string fieldname) {
   if (!IsMutable)
     throw new ApplicationException ();
 
-  IntPtr native_fieldname = GLib.Marshaller.StringToPtrGStrdup (fieldname);
+  IntPtr native_fieldname = Gst.GLib.Marshaller.StringToPtrGStrdup (fieldname);
   gst_structure_remove_field (Handle, native_fieldname);
-  GLib.Marshaller.Free (native_fieldname);
+  Gst.GLib.Marshaller.Free (native_fieldname);
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
@@ -110,10 +110,10 @@ public bool FixateFieldNearestDouble (string field_name, double target) {
   if (!IsMutable)
     throw new ApplicationException ();
 
-  IntPtr native_field_name = GLib.Marshaller.StringToPtrGStrdup (field_name);
+  IntPtr native_field_name = Gst.GLib.Marshaller.StringToPtrGStrdup (field_name);
   bool raw_ret = gst_structure_fixate_field_nearest_double (Handle, native_field_name, target);
   bool ret = raw_ret;
-  GLib.Marshaller.Free (native_field_name);
+  Gst.GLib.Marshaller.Free (native_field_name);
   return ret;
 }
 
@@ -124,10 +124,10 @@ public bool FixateFieldNearestInt (string field_name, int target) {
   if (!IsMutable)
     throw new ApplicationException ();
 
-  IntPtr native_field_name = GLib.Marshaller.StringToPtrGStrdup (field_name);
+  IntPtr native_field_name = Gst.GLib.Marshaller.StringToPtrGStrdup (field_name);
   bool raw_ret = gst_structure_fixate_field_nearest_int (Handle, native_field_name, target);
   bool ret = raw_ret;
-  GLib.Marshaller.Free (native_field_name);
+  Gst.GLib.Marshaller.Free (native_field_name);
   return ret;
 }
 
@@ -138,10 +138,10 @@ public bool FixateFieldNearestFraction (string field_name, int target_numerator,
   if (!IsMutable)
     throw new ApplicationException ();
 
-  IntPtr native_field_name = GLib.Marshaller.StringToPtrGStrdup (field_name);
+  IntPtr native_field_name = Gst.GLib.Marshaller.StringToPtrGStrdup (field_name);
   bool raw_ret = gst_structure_fixate_field_nearest_fraction (Handle, native_field_name, target_numerator, target_denominator);
   bool ret = raw_ret;
-  GLib.Marshaller.Free (native_field_name);
+  Gst.GLib.Marshaller.Free (native_field_name);
   return ret;
 }
 
@@ -151,14 +151,14 @@ public Structure (string name, params object[] fields) : this (name) {
 }
 
 public object Get (string field) {
-  GLib.Value v;
+  Gst.GLib.Value v;
 
   v = GetValue (field);
   return v.Val;
 }
 
 public void Set (string field, object value) {
-  GLib.Value v = new GLib.Value (value);
+  Gst.GLib.Value v = new Gst.GLib.Value (value);
   SetValue (field, v);
   v.Dispose ();
 }
@@ -173,7 +173,7 @@ public void Set (params object[] fields) {
     if (fields[i].GetType () != typeof (string))
       throw new ArgumentException ();
 
-    GLib.Value v = new GLib.Value (fields[i+1]);
+    Gst.GLib.Value v = new Gst.GLib.Value (fields[i+1]);
     SetValue (fields[i] as string, v);
     v.Dispose ();
   }
@@ -205,10 +205,10 @@ public string[] Fields {
 }
 
 public static Structure FromString (string structure) {
-  IntPtr raw_string = GLib.Marshaller.StringToPtrGStrdup (structure);
+  IntPtr raw_string = Gst.GLib.Marshaller.StringToPtrGStrdup (structure);
   IntPtr raw_ret = gst_structure_from_string (raw_string, IntPtr.Zero);
-  GLib.Marshaller.Free (raw_string);
-  Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
+  Gst.GLib.Marshaller.Free (raw_string);
+  Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) Gst.GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
   return ret;
 }
 

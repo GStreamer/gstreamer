@@ -1,5 +1,5 @@
 <Type Name="ImplementsInterface" FullName="Gst.ImplementsInterface">
-  <TypeSignature Language="C#" Value="public interface ImplementsInterface : GLib.IWrapper" />
+  <TypeSignature Language="C#" Value="public interface ImplementsInterface : Gst.GLib.IWrapper" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -7,7 +7,7 @@
   </AssemblyInfo>
   <Interfaces>
     <Interface>
-      <InterfaceName>GLib.IWrapper</InterfaceName>
+      <InterfaceName>Gst.GLib.IWrapper</InterfaceName>
     </Interface>
   </Interfaces>
   <Docs>
@@ -19,7 +19,6 @@
       <MemberSignature Language="C#" Value="public bool Supported (GLib.GType iface_type);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -27,6 +26,25 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="iface_type" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="iface_type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Supported">
+      <MemberSignature Language="C#" Value="public bool Supported (Gst.GLib.GType iface_type);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="iface_type" Type="Gst.GLib.GType" />
       </Parameters>
       <Docs>
         <param name="iface_type">To be added.</param>

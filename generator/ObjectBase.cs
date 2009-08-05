@@ -164,7 +164,7 @@ namespace GtkSharp.Generation {
 
 		public override string FromNative (string var, bool owned)
 		{
-			return "GLib.Object.GetObject(" + var + (owned ? ", true" : "") + ") as " + QualifiedName;
+			return "Gst.GLib.Object.GetObject(" + var + (owned ? ", true" : "") + ") as " + QualifiedName;
 		}
 
 		public string ClassStructName {

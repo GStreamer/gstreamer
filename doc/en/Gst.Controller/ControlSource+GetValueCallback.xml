@@ -9,7 +9,7 @@
   </Base>
   <Parameters>
     <Parameter Name="timestamp" Type="System.UInt64" />
-    <Parameter Name="value" Type="GLib.Value&amp;" RefType="ref" />
+    <Parameter Name="value" Type="Gst.GLib.Value&amp;" RefType="ref" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Boolean</ReturnType>

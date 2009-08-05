@@ -10,7 +10,7 @@
   </Base>
   <Attributes>
     <Attribute>
-      <AttributeName>GLib.GType(typeof(Gst.TagMergeModeGType))</AttributeName>
+      <AttributeName>Gst.GLib.GType(typeof(Gst.TagMergeModeGType))</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>

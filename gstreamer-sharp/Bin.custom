@@ -45,19 +45,19 @@ public bool Remove (params Element[] elements) {
 }
 
 public Gst.Element GetByInterface (System.Type type) {
-  if (!type.IsSubclassOf (typeof (GLib.GInterfaceAdapter)))
+  if (!type.IsSubclassOf (typeof (Gst.GLib.GInterfaceAdapter)))
     return null;
 
-  GLib.GType t = (GLib.GType) type;
+  Gst.GLib.GType t = (Gst.GLib.GType) type;
 
   return GetByInterface (t);
 }
 
 public IEnumerable GetAllByInterface (System.Type type) {
-  if (!type.IsSubclassOf (typeof (GLib.GInterfaceAdapter)))
+  if (!type.IsSubclassOf (typeof (Gst.GLib.GInterfaceAdapter)))
     return null;
 
-  GLib.GType t = (GLib.GType) type;
+  Gst.GLib.GType t = (Gst.GLib.GType) type;
 
   return GetAllByInterface (t);
 }

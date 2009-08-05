@@ -37,7 +37,7 @@
       </Docs>
     </Member>
     <Member MemberName="Connect">
-      <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, Gst.SignalHandler handler);" />
+      <MemberSignature Language="C#" Value="public static void Connect (Gst.GLib.Object o, string name, Gst.SignalHandler handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -46,7 +46,7 @@
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
       <Parameters>
-        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="o" Type="Gst.GLib.Object" />
         <Parameter Name="name" Type="System.String" />
         <Parameter Name="handler" Type="Gst.SignalHandler" />
       </Parameters>
@@ -59,7 +59,7 @@
       </Docs>
     </Member>
     <Member MemberName="Connect">
-      <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, Delegate handler);" />
+      <MemberSignature Language="C#" Value="public static void Connect (Gst.GLib.Object o, string name, Delegate handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -68,7 +68,7 @@
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
       <Parameters>
-        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="o" Type="Gst.GLib.Object" />
         <Parameter Name="name" Type="System.String" />
         <Parameter Name="handler" Type="System.Delegate" />
       </Parameters>
@@ -105,7 +105,7 @@
       </Docs>
     </Member>
     <Member MemberName="Connect">
-      <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, bool after, Gst.SignalHandler handler);" />
+      <MemberSignature Language="C#" Value="public static void Connect (Gst.GLib.Object o, string name, bool after, Gst.SignalHandler handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -114,7 +114,7 @@
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
       <Parameters>
-        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="o" Type="Gst.GLib.Object" />
         <Parameter Name="name" Type="System.String" />
         <Parameter Name="after" Type="System.Boolean" />
         <Parameter Name="handler" Type="Gst.SignalHandler" />
@@ -129,7 +129,7 @@
       </Docs>
     </Member>
     <Member MemberName="Connect">
-      <MemberSignature Language="C#" Value="public static void Connect (GLib.Object o, string name, bool after, Delegate handler);" />
+      <MemberSignature Language="C#" Value="public static void Connect (Gst.GLib.Object o, string name, bool after, Delegate handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -138,7 +138,7 @@
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
       <Parameters>
-        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="o" Type="Gst.GLib.Object" />
         <Parameter Name="name" Type="System.String" />
         <Parameter Name="after" Type="System.Boolean" />
         <Parameter Name="handler" Type="System.Delegate" />
@@ -175,7 +175,7 @@
       </Docs>
     </Member>
     <Member MemberName="Disconnect">
-      <MemberSignature Language="C#" Value="public static void Disconnect (GLib.Object o, string name, Delegate handler);" />
+      <MemberSignature Language="C#" Value="public static void Disconnect (Gst.GLib.Object o, string name, Delegate handler);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -184,7 +184,7 @@
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
       <Parameters>
-        <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="o" Type="Gst.GLib.Object" />
         <Parameter Name="name" Type="System.String" />
         <Parameter Name="handler" Type="System.Delegate" />
       </Parameters>
@@ -200,7 +200,6 @@
       <MemberSignature Language="C#" Value="public static object Emit (GLib.Object o, string name, object[] parameters);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -208,6 +207,35 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="o" Type="GLib.Object" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="parameters" Type="System.Object[]">
+          <Attributes>
+            <Attribute>
+              <AttributeName>System.ParamArray</AttributeName>
+            </Attribute>
+          </Attributes>
+        </Parameter>
+      </Parameters>
+      <Docs>
+        <param name="o">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="parameters">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Emit">
+      <MemberSignature Language="C#" Value="public static object Emit (Gst.GLib.Object o, string name, object[] parameters);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Object</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="o" Type="Gst.GLib.Object" />
         <Parameter Name="name" Type="System.String" />
         <Parameter Name="parameters" Type="System.Object[]">
           <Attributes>

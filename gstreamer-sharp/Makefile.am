@@ -57,7 +57,8 @@ sources = \
 	NavigationQuery.cs \
 	coreplugins/generated/*.cs \
 	baseplugins/generated/*.cs \
-	coreplugins/*.cs
+	coreplugins/*.cs \
+	glib-sharp/*.cs
 
 overrides = \
 	override/URIHandlerAdapter.cs \

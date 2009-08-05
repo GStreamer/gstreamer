@@ -60,7 +60,7 @@
       </Docs>
     </Member>
     <Member MemberName="AddPad">
-      <MemberSignature Language="C#" Value="public bool AddPad (Gst.Pad p);" />
+      <MemberSignature Language="C#" Value="protected bool AddPad (Gst.Pad p);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -83,7 +83,6 @@
       <MemberSignature Language="C#" Value="protected static void AddPadTemplate (GLib.GType gtype, Gst.PadTemplate templ);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -91,6 +90,26 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="gtype" Type="GLib.GType" />
+        <Parameter Name="templ" Type="Gst.PadTemplate" />
+      </Parameters>
+      <Docs>
+        <param name="gtype">To be added.</param>
+        <param name="templ">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AddPadTemplate">
+      <MemberSignature Language="C#" Value="protected static void AddPadTemplate (Gst.GLib.GType gtype, Gst.PadTemplate templ);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="gtype" Type="Gst.GLib.GType" />
         <Parameter Name="templ" Type="Gst.PadTemplate" />
       </Parameters>
       <Docs>
@@ -189,7 +208,7 @@
       </Docs>
     </Member>
     <Member MemberName="CreateAllPads">
-      <MemberSignature Language="C#" Value="public void CreateAllPads ();" />
+      <MemberSignature Language="C#" Value="protected void CreateAllPads ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -237,7 +256,7 @@
       </Docs>
     </Member>
     <Member MemberName="FoundTags">
-      <MemberSignature Language="C#" Value="public void FoundTags (Gst.TagList list);" />
+      <MemberSignature Language="C#" Value="protected void FoundTags (Gst.TagList list);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -256,7 +275,7 @@
       </Docs>
     </Member>
     <Member MemberName="FoundTagsForPad">
-      <MemberSignature Language="C#" Value="public void FoundTagsForPad (Gst.Pad pad, Gst.TagList list);" />
+      <MemberSignature Language="C#" Value="protected void FoundTagsForPad (Gst.Pad pad, Gst.TagList list);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -442,14 +461,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -466,7 +485,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("no-more-pads")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("no-more-pads")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -481,7 +500,6 @@
       <MemberSignature Language="C#" Value="public bool ImplementsInterface (GLib.GType iface_type);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -489,6 +507,25 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="iface_type" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="iface_type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ImplementsInterface">
+      <MemberSignature Language="C#" Value="public bool ImplementsInterface (Gst.GLib.GType iface_type);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="iface_type" Type="Gst.GLib.GType" />
       </Parameters>
       <Docs>
         <param name="iface_type">To be added.</param>
@@ -704,7 +741,7 @@
       </Docs>
     </Member>
     <Member MemberName="NoMorePads">
-      <MemberSignature Language="C#" Value="public void NoMorePads ();" />
+      <MemberSignature Language="C#" Value="protected void NoMorePads ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -728,7 +765,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideChangeState", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideChangeState", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -753,7 +790,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetIndex", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetIndex", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -775,7 +812,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetQueryTypes", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetQueryTypes", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -797,7 +834,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetState", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetState", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -826,7 +863,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideHasNoMorePads", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideHasNoMorePads", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -847,7 +884,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverridePadAdded", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverridePadAdded", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -871,7 +908,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverridePadRemoved", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverridePadRemoved", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -895,7 +932,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideProvideClock", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideProvideClock", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -917,7 +954,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideQuery", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideQuery", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -942,7 +979,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideReleasePad", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideReleasePad", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -966,7 +1003,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideRequestNewPad", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideRequestNewPad", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -993,7 +1030,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideSendEvent", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSendEvent", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1018,7 +1055,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetBus", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetBus", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1042,7 +1079,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetClock", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetClock", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1067,7 +1104,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetIndex", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetIndex", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1091,7 +1128,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetState", Type=typeof(Gst.Element))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetState", Type=typeof(Gst.Element))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1116,7 +1153,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("pad-added")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("pad-added")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1136,7 +1173,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("pad-removed")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("pad-removed")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1148,14 +1185,14 @@
       </Docs>
     </Member>
     <Member MemberName="Pads">
-      <MemberSignature Language="C#" Value="public System.Collections.IEnumerable Pads { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Iterator Pads { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Collections.IEnumerable</ReturnType>
+        <ReturnType>Gst.Iterator</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -1180,7 +1217,7 @@
       </Docs>
     </Member>
     <Member MemberName="PostMessage">
-      <MemberSignature Language="C#" Value="public bool PostMessage (Gst.Message message);" />
+      <MemberSignature Language="C#" Value="protected bool PostMessage (Gst.Message message);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -1342,7 +1379,7 @@
       </Docs>
     </Member>
     <Member MemberName="RemovePad">
-      <MemberSignature Language="C#" Value="public bool RemovePad (Gst.Pad pad);" />
+      <MemberSignature Language="C#" Value="protected bool RemovePad (Gst.Pad pad);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -1477,7 +1514,6 @@
       <MemberSignature Language="C#" Value="protected static void SetDetails (GLib.GType gtype, string longname, string klass, string description, string author);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1485,6 +1521,32 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="gtype" Type="GLib.GType" />
+        <Parameter Name="longname" Type="System.String" />
+        <Parameter Name="klass" Type="System.String" />
+        <Parameter Name="description" Type="System.String" />
+        <Parameter Name="author" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="gtype">To be added.</param>
+        <param name="longname">To be added.</param>
+        <param name="klass">To be added.</param>
+        <param name="description">To be added.</param>
+        <param name="author">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetDetails">
+      <MemberSignature Language="C#" Value="protected static void SetDetails (Gst.GLib.GType gtype, string longname, string klass, string description, string author);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="gtype" Type="Gst.GLib.GType" />
         <Parameter Name="longname" Type="System.String" />
         <Parameter Name="klass" Type="System.String" />
         <Parameter Name="description" Type="System.String" />
@@ -1541,14 +1603,14 @@
       </Docs>
     </Member>
     <Member MemberName="SinkPads">
-      <MemberSignature Language="C#" Value="public System.Collections.IEnumerable SinkPads { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Iterator SinkPads { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Collections.IEnumerable</ReturnType>
+        <ReturnType>Gst.Iterator</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -1557,14 +1619,14 @@
       </Docs>
     </Member>
     <Member MemberName="SrcPads">
-      <MemberSignature Language="C#" Value="public System.Collections.IEnumerable SrcPads { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Iterator SrcPads { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Collections.IEnumerable</ReturnType>
+        <ReturnType>Gst.Iterator</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>

@@ -64,7 +64,7 @@ namespace GtkSharp.Generation {
 		}
 
 		protected virtual string PropertyAttribute (string qpname) {
-			return "[GLib.Property (" + qpname + ")]";
+			return "[Gst.GLib.Property (" + qpname + ")]";
 		}
 
 		protected virtual string RawGetter (string qpname) {
@@ -117,9 +117,9 @@ namespace GtkSharp.Generation {
 
 			string v_type = "";
 			if (table.IsInterface (CType)) {
-				v_type = "(GLib.Object)";
+				v_type = "(Gst.GLib.Object)";
 			} else if (table.IsOpaque (CType)) {
-				v_type = "(GLib.Opaque)";
+				v_type = "(Gst.GLib.Opaque)";
 			} else if (table.IsEnum (CType)) {
 				v_type = "(Enum)";
 			}
@@ -140,12 +140,12 @@ namespace GtkSharp.Generation {
 				sw.WriteLine();
 			} else if (Readable) {
 				sw.WriteLine(indent + "get {");
-				sw.WriteLine(indent + "\tGLib.Value val = " + RawGetter (qpname) + ";");
+				sw.WriteLine(indent + "\tGst.GLib.Value val = " + RawGetter (qpname) + ";");
 				if (table.IsOpaque (CType) || table.IsBoxed (CType)) {
 					sw.WriteLine(indent + "\t" + CSType + " ret = (" + CSType + ") val;");
 				} else if (table.IsInterface (CType)) {
-					// Do we have to dispose the GLib.Object from the GLib.Value?
-					sw.WriteLine (indent + "\t{0} ret = {0}Adapter.GetObject ((GLib.Object) val);", CSType);
+					// Do we have to dispose the Gst.GLib.Object from the Gst.GLib.Value?
+					sw.WriteLine (indent + "\t{0} ret = {0}Adapter.GetObject ((Gst.GLib.Object) val);", CSType);
 				} else {
 					sw.Write(indent + "\t" + CSType + " ret = ");
 					sw.Write ("(" + CSType + ") ");
@@ -166,13 +166,13 @@ namespace GtkSharp.Generation {
 				sw.WriteLine();
 			} else if (Writable) {
 				sw.WriteLine(indent + "set {");
-				sw.Write(indent + "\tGLib.Value val = ");
+				sw.Write(indent + "\tGst.GLib.Value val = ");
 				if (table.IsBoxed (CType)) {
-					sw.WriteLine("(GLib.Value) value;");
+					sw.WriteLine("(Gst.GLib.Value) value;");
 				} else if (table.IsOpaque (CType)) {
-					sw.WriteLine("new GLib.Value(value, \"{0}\");", CType);
+					sw.WriteLine("new Gst.GLib.Value(value, \"{0}\");", CType);
 				} else {
-					sw.Write("new GLib.Value(");
+					sw.Write("new Gst.GLib.Value(");
 					if (v_type != "" && !(table.IsObject (CType) || table.IsInterface (CType) || table.IsOpaque (CType))) {
 						sw.Write(v_type + " ");
 					}

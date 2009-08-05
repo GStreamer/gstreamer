@@ -1,12 +1,12 @@
 <Type Name="DoLatencyArgs" FullName="Gst.DoLatencyArgs">
-  <TypeSignature Language="C#" Value="public class DoLatencyArgs : GLib.SignalArgs" />
+  <TypeSignature Language="C#" Value="public class DoLatencyArgs : Gst.GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.SignalArgs</BaseTypeName>
+    <BaseTypeName>Gst.GLib.SignalArgs</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>

@@ -1,4 +1,4 @@
-public Query (GLib.Value val) : base (val) { }
+public Query (Gst.GLib.Value val) : base (val) { }
 
 private Gst.Structure cached_structure = null;
 
@@ -11,7 +11,7 @@ public Gst.Structure Structure {
       return cached_structure;
 
     IntPtr raw_ret = gst_query_get_structure (Handle);
-    Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
+    Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) Gst.GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
     if (ret != null)
       ret.FreeNative = false;
     cached_structure = ret;
@@ -359,9 +359,9 @@ public void SetUri (string uri) {
   if (!IsWritable)
     throw new ApplicationException ();
 
-  IntPtr raw_string = GLib.Marshaller.StringToPtrGStrdup (uri);
+  IntPtr raw_string = Gst.GLib.Marshaller.StringToPtrGStrdup (uri);
   gst_query_set_uri (Handle, raw_string);
-  GLib.Marshaller.Free (raw_string);
+  Gst.GLib.Marshaller.Free (raw_string);
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
@@ -374,6 +374,6 @@ public void ParseUri (out string uri) {
   IntPtr raw_string;
   gst_query_parse_uri (Handle, out raw_string);
 
-  uri = GLib.Marshaller.Utf8PtrToString (raw_string);
+  uri = Gst.GLib.Marshaller.Utf8PtrToString (raw_string);
 }
 

@@ -1,12 +1,12 @@
 <Type Name="PluginAddedArgs" FullName="Gst.PluginAddedArgs">
-  <TypeSignature Language="C#" Value="public class PluginAddedArgs : GLib.SignalArgs" />
+  <TypeSignature Language="C#" Value="public class PluginAddedArgs : Gst.GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.SignalArgs</BaseTypeName>
+    <BaseTypeName>Gst.GLib.SignalArgs</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>

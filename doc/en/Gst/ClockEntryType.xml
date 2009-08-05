@@ -10,7 +10,7 @@
   </Base>
   <Attributes>
     <Attribute>
-      <AttributeName>GLib.GType(typeof(Gst.ClockEntryTypeGType))</AttributeName>
+      <AttributeName>Gst.GLib.GType(typeof(Gst.ClockEntryTypeGType))</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>

@@ -86,7 +86,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("audio-sink")</AttributeName>
+          <AttributeName>Gst.GLib.Property("audio-sink")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -127,7 +127,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("connection-speed")</AttributeName>
+          <AttributeName>Gst.GLib.Property("connection-speed")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -148,7 +148,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("current-audio")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-audio")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -169,7 +169,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("current-text")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-text")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -190,7 +190,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("current-video")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-video")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -231,7 +231,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("frame")</AttributeName>
+          <AttributeName>Gst.GLib.Property("frame")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -402,7 +402,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("nstreams")</AttributeName>
+          <AttributeName>Gst.GLib.Property("nstreams")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -423,7 +423,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("queue-min-threshold")</AttributeName>
+          <AttributeName>Gst.GLib.Property("queue-min-threshold")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -444,7 +444,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("queue-size")</AttributeName>
+          <AttributeName>Gst.GLib.Property("queue-size")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -465,7 +465,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("queue-threshold")</AttributeName>
+          <AttributeName>Gst.GLib.Property("queue-threshold")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -486,7 +486,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("source")</AttributeName>
+          <AttributeName>Gst.GLib.Property("source")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -506,7 +506,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("stream-info-value-array")</AttributeName>
+          <AttributeName>Gst.GLib.Property("stream-info-value-array")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -527,7 +527,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("subtitle-encoding")</AttributeName>
+          <AttributeName>Gst.GLib.Property("subtitle-encoding")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -548,7 +548,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("subtitle-font-desc")</AttributeName>
+          <AttributeName>Gst.GLib.Property("subtitle-font-desc")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -569,7 +569,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("suburi")</AttributeName>
+          <AttributeName>Gst.GLib.Property("suburi")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -590,7 +590,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("uri")</AttributeName>
+          <AttributeName>Gst.GLib.Property("uri")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -611,7 +611,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("video-sink")</AttributeName>
+          <AttributeName>Gst.GLib.Property("video-sink")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -632,7 +632,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("vis-plugin")</AttributeName>
+          <AttributeName>Gst.GLib.Property("vis-plugin")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -653,7 +653,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("volume")</AttributeName>
+          <AttributeName>Gst.GLib.Property("volume")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

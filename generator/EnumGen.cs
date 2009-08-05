@@ -98,7 +98,7 @@ namespace GtkSharp.Generation {
 			if (Elem.GetAttribute("type") == "flags")
 				sw.WriteLine ("\t[Flags]");
 			if (Elem.HasAttribute("gtype"))
-				sw.WriteLine ("\t[GLib.GType (typeof (" + NS + "." + Name + "GType))]");
+				sw.WriteLine ("\t[Gst.GLib.GType (typeof (" + NS + "." + Name + "GType))]");
 
 			string access = IsInternal ? "internal" : "public";
 			sw.WriteLine ("\t" + access + " enum " + Name + enum_type + " {");
@@ -115,9 +115,9 @@ namespace GtkSharp.Generation {
 				sw.WriteLine ("\t\t[DllImport (\"" + LibraryName + "\")]");
 				sw.WriteLine ("\t\tstatic extern IntPtr " + Elem.GetAttribute ("gtype") + " ();");
 				sw.WriteLine ();
-				sw.WriteLine ("\t\tpublic static GLib.GType GType {");
+				sw.WriteLine ("\t\tpublic static Gst.GLib.GType GType {");
 				sw.WriteLine ("\t\t\tget {");
-				sw.WriteLine ("\t\t\t\treturn new GLib.GType (" + Elem.GetAttribute ("gtype") + " ());");
+				sw.WriteLine ("\t\t\t\treturn new Gst.GLib.GType (" + Elem.GetAttribute ("gtype") + " ());");
 				sw.WriteLine ("\t\t\t}");
 				sw.WriteLine ("\t\t}");
 				sw.WriteLine ("\t}");

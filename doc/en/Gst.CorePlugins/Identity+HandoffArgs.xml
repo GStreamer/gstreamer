@@ -1,11 +1,11 @@
 <Type Name="Identity+HandoffArgs" FullName="Gst.CorePlugins.Identity+HandoffArgs">
-  <TypeSignature Language="C#" Value="public class Identity.HandoffArgs : GLib.SignalArgs" />
+  <TypeSignature Language="C#" Value="public class Identity.HandoffArgs : Gst.GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.SignalArgs</BaseTypeName>
+    <BaseTypeName>Gst.GLib.SignalArgs</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>

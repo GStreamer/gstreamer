@@ -1,0 +1,16 @@
+<Type Name="ListBase+FilenameString" FullName="Gst.GLib.ListBase+FilenameString">
+  <TypeSignature Language="C#" Value="public class ListBase.FilenameString" />
+  <AssemblyInfo>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Object</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+  <Members />
+</Type>

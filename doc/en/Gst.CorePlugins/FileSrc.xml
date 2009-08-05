@@ -72,7 +72,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("fd")</AttributeName>
+          <AttributeName>Gst.GLib.Property("fd")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -156,7 +156,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("location")</AttributeName>
+          <AttributeName>Gst.GLib.Property("location")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -211,7 +211,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("mmapsize")</AttributeName>
+          <AttributeName>Gst.GLib.Property("mmapsize")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -231,7 +231,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("sequential")</AttributeName>
+          <AttributeName>Gst.GLib.Property("sequential")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -251,7 +251,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("touch")</AttributeName>
+          <AttributeName>Gst.GLib.Property("touch")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -271,7 +271,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("use-mmap")</AttributeName>
+          <AttributeName>Gst.GLib.Property("use-mmap")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

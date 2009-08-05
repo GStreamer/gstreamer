@@ -3,7 +3,7 @@ namespace Gst.Interfaces {
   using System;
   using System.Runtime.InteropServices;
   using System.Reflection;
-  using GLib;
+  using Gst.GLib;
   using Gst;
   using Gst.Interfaces;
 
@@ -24,7 +24,7 @@ namespace Gst.Interfaces {
       IntPtr raw_key;
       bool ret = gst_navigation_event_parse_key_event (evnt.Handle, out raw_key);
 
-      key = GLib.Marshaller.Utf8PtrToString (raw_key);
+      key = Gst.GLib.Marshaller.Utf8PtrToString (raw_key);
 
       return ret;
     }

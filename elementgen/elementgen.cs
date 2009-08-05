@@ -209,7 +209,7 @@ public class ElementGen {
   public static string CTypeToManagedType (string ctype, XmlDocument api_doc) {
         switch (ctype) {
 	 case "GObject":
-	  return "GLib.Object";
+	  return "Gst.GLib.Object";
 	 case "gchararray":
 	  return "string";
 	 case "gboolean":
@@ -229,7 +229,7 @@ public class ElementGen {
 	 case "gdouble":
 	   return "double";
 	 case "GValueArray":
-	   return "GLib.ValueArray";
+	   return "Gst.GLib.ValueArray";
 	}
 	
 	XPathNavigator api_nav = api_doc.CreateNavigator ();
@@ -276,11 +276,11 @@ public class ElementGen {
     writer.WriteLine ("\t\tstatic extern IntPtr gst_element_factory_make (IntPtr element, IntPtr name);\n");
 
     writer.WriteLine ("\t\tpublic " + class_name + " (string name) : base (IntPtr.Zero) {");
-    writer.WriteLine ("\t\t\tIntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);");
-    writer.WriteLine ("\t\t\tIntPtr native_element = GLib.Marshaller.StringToPtrGStrdup (\"" + ei.name + "\");");
+    writer.WriteLine ("\t\t\tIntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);");
+    writer.WriteLine ("\t\t\tIntPtr native_element = Gst.GLib.Marshaller.StringToPtrGStrdup (\"" + ei.name + "\");");
     writer.WriteLine ("\t\t\tRaw = gst_element_factory_make (native_element, native_name);");
-    writer.WriteLine ("\t\t\tGLib.Marshaller.Free (native_name);");
-    writer.WriteLine ("\t\t\tGLib.Marshaller.Free (native_element);");
+    writer.WriteLine ("\t\t\tGst.GLib.Marshaller.Free (native_name);");
+    writer.WriteLine ("\t\t\tGst.GLib.Marshaller.Free (native_element);");
     writer.WriteLine ("\t\t\tif (Raw == IntPtr.Zero)");
     writer.WriteLine ("\t\t\t\tthrow new Exception (\"Failed to instantiate element \\\"" + ei.name + "\\\"\");");
     writer.WriteLine ("\t\t}\n");
@@ -306,11 +306,11 @@ public class ElementGen {
 	managed_type += "Type";
       }
 
-      writer.WriteLine ("\t\t[GLib.Property (\"" + pinfo.name + "\")]");
+      writer.WriteLine ("\t\t[Gst.GLib.Property (\"" + pinfo.name + "\")]");
       writer.WriteLine ("\t\tpublic " + managed_type + " " + managed_name + " {");
       if (pinfo.readable) {
         writer.WriteLine ("\t\t\tget {");
-	writer.WriteLine ("\t\t\t\tGLib.Value val = GetProperty (\"" + pinfo.name + "\");");
+	writer.WriteLine ("\t\t\t\tGst.GLib.Value val = GetProperty (\"" + pinfo.name + "\");");
 	writer.WriteLine ("\t\t\t\t" + managed_type + " ret = (" + managed_type + ") val.Val;");
 	writer.WriteLine ("\t\t\t\tval.Dispose ();");
 	writer.WriteLine ("\t\t\t\treturn ret;");
@@ -319,7 +319,7 @@ public class ElementGen {
 
       if (pinfo.writeable) {
         writer.WriteLine ("\t\t\tset {");
-	writer.WriteLine ("\t\t\t\tGLib.Value val = new GLib.Value (this, \"" + pinfo.name + "\");");
+	writer.WriteLine ("\t\t\t\tGst.GLib.Value val = new Gst.GLib.Value (this, \"" + pinfo.name + "\");");
 	writer.WriteLine ("\t\t\t\tval.Val = value;");
 	writer.WriteLine ("\t\t\t\tSetProperty (\"" + pinfo.name + "\", val);");
 	writer.WriteLine ("\t\t\t\tval.Dispose ();");
@@ -337,7 +337,7 @@ public class ElementGen {
 	if (si.parameters.Count > 0) {
 	  writer.WriteLine ("\t\tpublic delegate void " + managed_name + "Handler (object o, " + managed_name + "Args args);\n");
 	
-	  writer.WriteLine ("\t\tpublic class " + managed_name + "Args : GLib.SignalArgs {");
+	  writer.WriteLine ("\t\tpublic class " + managed_name + "Args : Gst.GLib.SignalArgs {");
 	  for (int i = 0; i < si.parameters.Count; i++) {
 	    SignalParameter param = (SignalParameter) si.parameters[i];
             string managed_type = CTypeToManagedType (param.type, api_doc);
@@ -536,7 +536,7 @@ public class ElementGen {
     writer.WriteLine ("using System;");
     writer.WriteLine ("using System.Collections;");
     writer.WriteLine ("using System.Runtime.InteropServices;");
-    writer.WriteLine ("using GLib;");
+    writer.WriteLine ("using Gst.GLib;");
     writer.WriteLine ("using Gst;");
     writer.WriteLine ("using Gst.Interfaces;");
     writer.WriteLine ();

@@ -61,13 +61,13 @@
       </Docs>
     </Member>
     <Member MemberName="AboutToFinish">
-      <MemberSignature Language="C#" Value="public event Gst.BasePlugins.PlayBin2.AboutToFinishHandler AboutToFinish;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler AboutToFinish;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.BasePlugins.PlayBin2+AboutToFinishHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -75,13 +75,13 @@
       </Docs>
     </Member>
     <Member MemberName="AudioChanged">
-      <MemberSignature Language="C#" Value="public event Gst.BasePlugins.PlayBin2.AudioChangedHandler AudioChanged;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler AudioChanged;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.BasePlugins.PlayBin2+AudioChangedHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -96,7 +96,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("audio-sink")</AttributeName>
+          <AttributeName>Gst.GLib.Property("audio-sink")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -116,7 +116,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("buffer-duration")</AttributeName>
+          <AttributeName>Gst.GLib.Property("buffer-duration")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -136,7 +136,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("buffer-size")</AttributeName>
+          <AttributeName>Gst.GLib.Property("buffer-size")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -156,7 +156,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("connection-speed")</AttributeName>
+          <AttributeName>Gst.GLib.Property("connection-speed")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -195,7 +195,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("current-audio")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-audio")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -215,7 +215,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("current-text")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-text")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -235,31 +235,11 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("current-video")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-video")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Flags">
-      <MemberSignature Language="C#" Value="public Gst.BasePlugins.PlayBin2.PlayFlagsType Flags { set; get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property("flags")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>Gst.BasePlugins.PlayBin2+PlayFlagsType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -275,7 +255,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("frame")</AttributeName>
+          <AttributeName>Gst.GLib.Property("frame")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -533,7 +513,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("mute")</AttributeName>
+          <AttributeName>Gst.GLib.Property("mute")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -553,7 +533,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("n-audio")</AttributeName>
+          <AttributeName>Gst.GLib.Property("n-audio")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -573,7 +553,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("n-text")</AttributeName>
+          <AttributeName>Gst.GLib.Property("n-text")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -593,11 +573,31 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("n-video")</AttributeName>
+          <AttributeName>Gst.GLib.Property("n-video")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PlayFlags">
+      <MemberSignature Language="C#" Value="public Gst.BasePlugins.PlayBin2.PlayFlagsType PlayFlags { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>Gst.GLib.Property("flags")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>Gst.BasePlugins.PlayBin2+PlayFlagsType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -613,7 +613,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("source")</AttributeName>
+          <AttributeName>Gst.GLib.Property("source")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -633,7 +633,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("subpic-sink")</AttributeName>
+          <AttributeName>Gst.GLib.Property("subpic-sink")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -653,7 +653,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("subtitle-encoding")</AttributeName>
+          <AttributeName>Gst.GLib.Property("subtitle-encoding")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -673,7 +673,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("subtitle-font-desc")</AttributeName>
+          <AttributeName>Gst.GLib.Property("subtitle-font-desc")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -693,7 +693,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("suburi")</AttributeName>
+          <AttributeName>Gst.GLib.Property("suburi")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -706,13 +706,13 @@
       </Docs>
     </Member>
     <Member MemberName="TextChanged">
-      <MemberSignature Language="C#" Value="public event Gst.BasePlugins.PlayBin2.TextChangedHandler TextChanged;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler TextChanged;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.BasePlugins.PlayBin2+TextChangedHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -727,7 +727,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("text-sink")</AttributeName>
+          <AttributeName>Gst.GLib.Property("text-sink")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -747,7 +747,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("uri")</AttributeName>
+          <AttributeName>Gst.GLib.Property("uri")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -760,13 +760,13 @@
       </Docs>
     </Member>
     <Member MemberName="VideoChanged">
-      <MemberSignature Language="C#" Value="public event Gst.BasePlugins.PlayBin2.VideoChangedHandler VideoChanged;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler VideoChanged;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.BasePlugins.PlayBin2+VideoChangedHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -781,7 +781,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("video-sink")</AttributeName>
+          <AttributeName>Gst.GLib.Property("video-sink")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -801,7 +801,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("vis-plugin")</AttributeName>
+          <AttributeName>Gst.GLib.Property("vis-plugin")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -821,7 +821,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("volume")</AttributeName>
+          <AttributeName>Gst.GLib.Property("volume")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

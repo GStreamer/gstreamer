@@ -19,6 +19,18 @@
   </Docs>
   <Members>
     <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Bin ();" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Bin (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
@@ -105,7 +117,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("async-handling")</AttributeName>
+          <AttributeName>Gst.GLib.Property("async-handling")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -126,7 +138,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("child-added")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("child-added")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -146,7 +158,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("child-removed")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("child-removed")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -182,7 +194,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("do-latency")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("do-latency")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -202,7 +214,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("element-added")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("element-added")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -222,7 +234,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("element-removed")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("element-removed")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -234,14 +246,14 @@
       </Docs>
     </Member>
     <Member MemberName="Elements">
-      <MemberSignature Language="C#" Value="public System.Collections.IEnumerable Elements { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Iterator Elements { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Collections.IEnumerable</ReturnType>
+        <ReturnType>Gst.Iterator</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -250,14 +262,14 @@
       </Docs>
     </Member>
     <Member MemberName="ElementsRecurse">
-      <MemberSignature Language="C#" Value="public System.Collections.IEnumerable ElementsRecurse { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Iterator ElementsRecurse { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Collections.IEnumerable</ReturnType>
+        <ReturnType>Gst.Iterator</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -266,14 +278,14 @@
       </Docs>
     </Member>
     <Member MemberName="ElementsSorted">
-      <MemberSignature Language="C#" Value="public System.Collections.IEnumerable ElementsSorted { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Iterator ElementsSorted { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Collections.IEnumerable</ReturnType>
+        <ReturnType>Gst.Iterator</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -343,7 +355,6 @@
       <MemberSignature Language="C#" Value="public System.Collections.IEnumerable GetAllByInterface (GLib.GType type);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -354,6 +365,25 @@
       </Parameters>
       <Docs>
         <param name="type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetAllByInterface">
+      <MemberSignature Language="C#" Value="public Gst.Iterator GetAllByInterface (Gst.GLib.GType iface);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Iterator</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="iface" Type="Gst.GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="iface">To be added.</param>
         <summary>To be added.</summary>
         <returns>To be added.</returns>
         <remarks>To be added.</remarks>
@@ -383,7 +413,6 @@
       <MemberSignature Language="C#" Value="public Gst.Element GetByInterface (GLib.GType iface);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -391,6 +420,25 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="iface" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="iface">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetByInterface">
+      <MemberSignature Language="C#" Value="public Gst.Element GetByInterface (Gst.GLib.GType iface);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Element</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="iface" Type="Gst.GLib.GType" />
       </Parameters>
       <Docs>
         <param name="iface">To be added.</param>
@@ -500,14 +548,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -524,7 +572,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideAddElement", Type=typeof(Gst.Bin))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideAddElement", Type=typeof(Gst.Bin))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -549,7 +597,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideChildAdded", Type=typeof(Gst.Bin))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideChildAdded", Type=typeof(Gst.Bin))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -573,7 +621,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideChildRemoved", Type=typeof(Gst.Bin))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideChildRemoved", Type=typeof(Gst.Bin))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -597,7 +645,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideDoLatency", Type=typeof(Gst.Bin))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideDoLatency", Type=typeof(Gst.Bin))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -619,7 +667,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideElementAdded", Type=typeof(Gst.Bin))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideElementAdded", Type=typeof(Gst.Bin))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -643,7 +691,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideElementRemoved", Type=typeof(Gst.Bin))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideElementRemoved", Type=typeof(Gst.Bin))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -667,7 +715,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideHandleMessage", Type=typeof(Gst.Bin))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideHandleMessage", Type=typeof(Gst.Bin))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -691,7 +739,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideRemoveElement", Type=typeof(Gst.Bin))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideRemoveElement", Type=typeof(Gst.Bin))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -771,14 +819,14 @@
       </Docs>
     </Member>
     <Member MemberName="SinkElements">
-      <MemberSignature Language="C#" Value="public System.Collections.IEnumerable SinkElements { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Iterator SinkElements { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Collections.IEnumerable</ReturnType>
+        <ReturnType>Gst.Iterator</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -787,14 +835,14 @@
       </Docs>
     </Member>
     <Member MemberName="SourceElements">
-      <MemberSignature Language="C#" Value="public System.Collections.IEnumerable SourceElements { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Iterator SourceElements { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Collections.IEnumerable</ReturnType>
+        <ReturnType>Gst.Iterator</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>

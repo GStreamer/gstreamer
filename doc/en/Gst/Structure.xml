@@ -1,12 +1,12 @@
 <Type Name="Structure" FullName="Gst.Structure">
-  <TypeSignature Language="C#" Value="public class Structure : GLib.Opaque" />
+  <TypeSignature Language="C#" Value="public class Structure : Gst.GLib.Opaque" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.Opaque</BaseTypeName>
+    <BaseTypeName>Gst.GLib.Opaque</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
@@ -310,7 +310,6 @@
       <MemberSignature Language="C#" Value="public GLib.Value GetValue (string fieldname);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -326,15 +325,34 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="GetValue">
+      <MemberSignature Language="C#" Value="public Gst.GLib.Value GetValue (string fieldname);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.GLib.Value</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="fieldname" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="fieldname">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -366,7 +384,6 @@
       <MemberSignature Language="C#" Value="public bool HasFieldTyped (string fieldname, GLib.GType type);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -375,6 +392,27 @@
       <Parameters>
         <Parameter Name="fieldname" Type="System.String" />
         <Parameter Name="type" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="fieldname">To be added.</param>
+        <param name="type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="HasFieldTyped">
+      <MemberSignature Language="C#" Value="public bool HasFieldTyped (string fieldname, Gst.GLib.GType type);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="fieldname" Type="System.String" />
+        <Parameter Name="type" Type="Gst.GLib.GType" />
       </Parameters>
       <Docs>
         <param name="fieldname">To be added.</param>
@@ -521,7 +559,6 @@
       <MemberSignature Language="C#" Value="public void SetValue (string fieldname, GLib.Value value);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -530,6 +567,26 @@
       <Parameters>
         <Parameter Name="fieldname" Type="System.String" />
         <Parameter Name="value" Type="GLib.Value" />
+      </Parameters>
+      <Docs>
+        <param name="fieldname">To be added.</param>
+        <param name="value">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetValue">
+      <MemberSignature Language="C#" Value="public void SetValue (string fieldname, Gst.GLib.Value value);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="fieldname" Type="System.String" />
+        <Parameter Name="value" Type="Gst.GLib.Value" />
       </Parameters>
       <Docs>
         <param name="fieldname">To be added.</param>

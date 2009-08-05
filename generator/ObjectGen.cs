@@ -256,14 +256,14 @@ namespace GtkSharp.Generation {
 
 			if (!DisableGTypeCtor) {
 				gen_info.Writer.WriteLine("\t\t[Obsolete]");
-				gen_info.Writer.WriteLine("\t\tprotected " + Name + "(GLib.GType gtype) : base(gtype) {}");
+				gen_info.Writer.WriteLine("\t\tprotected " + Name + "(Gst.GLib.GType gtype) : base(gtype) {}");
 			}
 			gen_info.Writer.WriteLine("\t\tpublic " + Name + "(IntPtr raw) : base(raw) {}");
 			if (ctors.Count == 0 && !DisableVoidCtor) {
 				gen_info.Writer.WriteLine();
 				gen_info.Writer.WriteLine("\t\tprotected " + Name + "() : base(IntPtr.Zero)");
 				gen_info.Writer.WriteLine("\t\t{");
-				gen_info.Writer.WriteLine("\t\t\tCreateNativeObject (new string [0], new GLib.Value [0]);");
+				gen_info.Writer.WriteLine("\t\t\tCreateNativeObject (new string [0], new Gst.GLib.Value [0]);");
 				gen_info.Writer.WriteLine("\t\t}");
 			}
 			gen_info.Writer.WriteLine();
@@ -312,10 +312,10 @@ namespace GtkSharp.Generation {
 			if (cs_parent == "")
 				sw.WriteLine ("\t\tstatic uint class_offset = 0;");
 			else
-				sw.WriteLine ("\t\tstatic uint class_offset = ((GLib.GType) typeof ({0})).ClassSize;", cs_parent);
+				sw.WriteLine ("\t\tstatic uint class_offset = ((Gst.GLib.GType) typeof ({0})).ClassSize;", cs_parent);
 			sw.WriteLine ("\t\tstatic Hashtable class_structs;");
 			sw.WriteLine ();
-			sw.WriteLine ("\t\tstatic {0} GetClassStruct (GLib.GType gtype, bool use_cache)", class_struct_name);
+			sw.WriteLine ("\t\tstatic {0} GetClassStruct (Gst.GLib.GType gtype, bool use_cache)", class_struct_name);
 			sw.WriteLine ("\t\t{");
 			sw.WriteLine ("\t\t\tif (class_structs == null)");
 			sw.WriteLine ("\t\t\t\tclass_structs = new Hashtable ();");
@@ -331,7 +331,7 @@ namespace GtkSharp.Generation {
 			sw.WriteLine ("\t\t\t}");
 			sw.WriteLine ("\t\t}");
 			sw.WriteLine ();
-			sw.WriteLine ("\t\tstatic void OverrideClassStruct (GLib.GType gtype, {0} class_struct)", class_struct_name);
+			sw.WriteLine ("\t\tstatic void OverrideClassStruct (Gst.GLib.GType gtype, {0} class_struct)", class_struct_name);
 			sw.WriteLine ("\t\t{");
 			sw.WriteLine ("\t\t\tIntPtr class_ptr = new IntPtr (gtype.ClassPtr.ToInt64 () + class_offset);");
 			sw.WriteLine ("\t\t\tMarshal.StructureToPtr (class_struct, class_ptr, false);");
@@ -345,7 +345,7 @@ namespace GtkSharp.Generation {
 			for (int i = 1; i < cname.Length; i++) {
 				if (Char.IsUpper (cname[i])) {
 					if (i == 1 && cname[0] == 'G')
-						return "GLib." + cname.Substring (1);
+						return "Gst.GLib." + cname.Substring (1);
 					else
 						return cname.Substring (0, i) + "." + cname.Substring (i);
 				}
@@ -408,7 +408,7 @@ namespace GtkSharp.Generation {
 	
 			foreach (string key in dir_info.objects.Keys) {
 				if (GetExpected(key) != ((string) dir_info.objects[key]))
-					sw.WriteLine ("\t\t\tGLib.GType.Register ({0}.GType, typeof ({0}));", dir_info.objects [key]);
+					sw.WriteLine ("\t\t\tGst.GLib.GType.Register ({0}.GType, typeof ({0}));", dir_info.objects [key]);
 			}
 					
 			sw.WriteLine ("\t\t}");

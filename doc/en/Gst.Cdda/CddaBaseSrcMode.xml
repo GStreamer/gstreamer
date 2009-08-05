@@ -9,7 +9,7 @@
   </Base>
   <Attributes>
     <Attribute>
-      <AttributeName>GLib.GType(typeof(Gst.Cdda.CddaBaseSrcModeGType))</AttributeName>
+      <AttributeName>Gst.GLib.GType(typeof(Gst.Cdda.CddaBaseSrcModeGType))</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>

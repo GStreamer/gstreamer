@@ -6,7 +6,7 @@ static extern IntPtr gst_caps_copy (IntPtr raw);
 public Gst.Caps PadTemplateCaps {
   get {
     IntPtr raw_ret = gst_pad_get_pad_template_caps (Handle);
-    Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (gst_caps_copy (raw_ret), typeof (Gst.Caps), false);
+    Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) Gst.GLib.Opaque.GetOpaque (gst_caps_copy (raw_ret), typeof (Gst.Caps), false);
     return ret;
   }
 }

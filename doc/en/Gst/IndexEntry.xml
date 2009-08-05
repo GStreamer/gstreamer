@@ -1,12 +1,12 @@
 <Type Name="IndexEntry" FullName="Gst.IndexEntry">
-  <TypeSignature Language="C#" Value="public class IndexEntry : GLib.Opaque" />
+  <TypeSignature Language="C#" Value="public class IndexEntry : Gst.GLib.Opaque" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.Opaque</BaseTypeName>
+    <BaseTypeName>Gst.GLib.Opaque</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
@@ -121,11 +121,29 @@
       <MemberSignature Language="C#" Value="protected override GLib.Opaque Copy (IntPtr raw);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>GLib.Opaque</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="raw" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="raw">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Copy">
+      <MemberSignature Language="C#" Value="protected override Gst.GLib.Opaque Copy (IntPtr raw);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.GLib.Opaque</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="raw" Type="System.IntPtr" />
@@ -205,14 +223,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -253,14 +271,14 @@
       </Docs>
     </Member>
     <Member MemberName="ObjectGType">
-      <MemberSignature Language="C#" Value="public GLib.GType ObjectGType { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.GLib.GType ObjectGType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>

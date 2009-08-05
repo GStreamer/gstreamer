@@ -3,7 +3,7 @@ namespace Gst.Interfaces {
   using System;
   using System.Runtime.InteropServices;
   using System.Reflection;
-  using GLib;
+  using Gst.GLib;
   using Gst;
   using Gst.Interfaces;
 
@@ -25,7 +25,7 @@ namespace Gst.Interfaces {
 
       gst_mixer_message_parse_mute_toggled (message == null ? IntPtr.Zero : message.Handle, out native_ptr, out mute);
 
-      track = (MixerTrack) GLib.Object.GetObject (native_ptr, false);
+      track = (MixerTrack) Gst.GLib.Object.GetObject (native_ptr, false);
     }
 
     [DllImport("libgstinterfaces-0.10.dll") ]
@@ -37,8 +37,8 @@ namespace Gst.Interfaces {
 
       gst_mixer_message_parse_option_changed (message == null ? IntPtr.Zero : message.Handle, out native_options, out native_value);
 
-      options = (MixerOptions) GLib.Object.GetObject (native_options, false);
-      value = GLib.Marshaller.Utf8PtrToString (native_value);
+      options = (MixerOptions) Gst.GLib.Object.GetObject (native_options, false);
+      value = Gst.GLib.Marshaller.Utf8PtrToString (native_value);
     }
 
     [DllImport("libgstinterfaces-0.10.dll") ]
@@ -48,7 +48,7 @@ namespace Gst.Interfaces {
       IntPtr native_ptr;
 
       gst_mixer_message_parse_record_toggled (message == null ? IntPtr.Zero : message.Handle, out native_ptr, out record);
-      track = (MixerTrack) GLib.Object.GetObject (native_ptr, false);
+      track = (MixerTrack) Gst.GLib.Object.GetObject (native_ptr, false);
     }
 
     [DllImport("libgstinterfaces-0.10.dll") ]
@@ -61,11 +61,11 @@ namespace Gst.Interfaces {
 
       gst_mixer_message_parse_volume_changed (message == null ? IntPtr.Zero : message.Handle, out native_track, out native_volumes, out n_native_volumes);
 
-      track = (MixerTrack) GLib.Object.GetObject (native_track, false);
+      track = (MixerTrack) Gst.GLib.Object.GetObject (native_track, false);
       volumes = new int[n_native_volumes];
       for (int i = 0; i < n_native_volumes; i++)
         volumes[i] = Marshal.ReadInt32 (native_volumes, i * 4);
-      GLib.Marshaller.Free (native_volumes);
+      Gst.GLib.Marshaller.Free (native_volumes);
     }
 
     [DllImport("libgstinterfaces-0.10.dll") ]
@@ -75,7 +75,7 @@ namespace Gst.Interfaces {
       IntPtr native_options;
 
       gst_mixer_message_parse_options_list_changed (message == null ? IntPtr.Zero : message.Handle, out native_options);
-      options = (MixerOptions) GLib.Object.GetObject (native_options, false);
+      options = (MixerOptions) Gst.GLib.Object.GetObject (native_options, false);
     }
   }
 }

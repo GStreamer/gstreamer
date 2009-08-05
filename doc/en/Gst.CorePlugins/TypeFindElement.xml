@@ -66,7 +66,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("caps")</AttributeName>
+          <AttributeName>Gst.GLib.Property("caps")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -87,7 +87,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("force-caps")</AttributeName>
+          <AttributeName>Gst.GLib.Property("force-caps")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -159,7 +159,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("maximum")</AttributeName>
+          <AttributeName>Gst.GLib.Property("maximum")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -180,7 +180,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("minimum")</AttributeName>
+          <AttributeName>Gst.GLib.Property("minimum")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

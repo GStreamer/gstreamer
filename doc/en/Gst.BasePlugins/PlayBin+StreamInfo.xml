@@ -1,11 +1,11 @@
 <Type Name="PlayBin+StreamInfo" FullName="Gst.BasePlugins.PlayBin+StreamInfo">
-  <TypeSignature Language="C#" Value="public class PlayBin.StreamInfo : GLib.Object" />
+  <TypeSignature Language="C#" Value="public class PlayBin.StreamInfo : Gst.GLib.Object" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.Object</BaseTypeName>
+    <BaseTypeName>Gst.GLib.Object</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
@@ -33,7 +33,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("caps")</AttributeName>
+          <AttributeName>Gst.GLib.Property("caps")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -53,7 +53,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("codec")</AttributeName>
+          <AttributeName>Gst.GLib.Property("codec")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -73,7 +73,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("decoder")</AttributeName>
+          <AttributeName>Gst.GLib.Property("decoder")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -93,7 +93,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("language-code")</AttributeName>
+          <AttributeName>Gst.GLib.Property("language-code")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -113,7 +113,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("mute")</AttributeName>
+          <AttributeName>Gst.GLib.Property("mute")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -147,7 +147,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("object")</AttributeName>
+          <AttributeName>Gst.GLib.Property("object")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -167,7 +167,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("type")</AttributeName>
+          <AttributeName>Gst.GLib.Property("type")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

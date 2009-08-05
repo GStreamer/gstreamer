@@ -107,7 +107,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("autopaint-colorkey")</AttributeName>
+          <AttributeName>Gst.GLib.Property("autopaint-colorkey")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -148,7 +148,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("brightness")</AttributeName>
+          <AttributeName>Gst.GLib.Property("brightness")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -169,7 +169,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("colorkey")</AttributeName>
+          <AttributeName>Gst.GLib.Property("colorkey")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -190,7 +190,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("contrast")</AttributeName>
+          <AttributeName>Gst.GLib.Property("contrast")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -211,7 +211,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("device")</AttributeName>
+          <AttributeName>Gst.GLib.Property("device")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -232,7 +232,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("device-name")</AttributeName>
+          <AttributeName>Gst.GLib.Property("device-name")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -253,7 +253,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("display")</AttributeName>
+          <AttributeName>Gst.GLib.Property("display")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -274,7 +274,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("double-buffer")</AttributeName>
+          <AttributeName>Gst.GLib.Property("double-buffer")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -295,7 +295,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("draw-borders")</AttributeName>
+          <AttributeName>Gst.GLib.Property("draw-borders")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -316,7 +316,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("force-aspect-ratio")</AttributeName>
+          <AttributeName>Gst.GLib.Property("force-aspect-ratio")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -332,7 +332,6 @@
       <MemberSignature Language="C#" Value="bool ImplementsInterface.Supported (GLib.GType iface_type);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -340,6 +339,25 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="iface_type" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="iface_type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Gst.ImplementsInterface.Supported">
+      <MemberSignature Language="C#" Value="bool ImplementsInterface.Supported (Gst.GLib.GType iface_type);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="iface_type" Type="Gst.GLib.GType" />
       </Parameters>
       <Docs>
         <param name="iface_type">To be added.</param>
@@ -717,7 +735,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("handle-events")</AttributeName>
+          <AttributeName>Gst.GLib.Property("handle-events")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -738,7 +756,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("handle-expose")</AttributeName>
+          <AttributeName>Gst.GLib.Property("handle-expose")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -759,7 +777,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("hue")</AttributeName>
+          <AttributeName>Gst.GLib.Property("hue")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -876,7 +894,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("pixel-aspect-ratio")</AttributeName>
+          <AttributeName>Gst.GLib.Property("pixel-aspect-ratio")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -957,7 +975,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("saturation")</AttributeName>
+          <AttributeName>Gst.GLib.Property("saturation")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -998,7 +1016,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("synchronous")</AttributeName>
+          <AttributeName>Gst.GLib.Property("synchronous")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

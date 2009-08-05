@@ -41,18 +41,18 @@
       </Docs>
     </Member>
     <Member MemberName="Amplitude">
-      <MemberSignature Language="C#" Value="public GLib.Value Amplitude { set; get; }" />
+      <MemberSignature Language="C#" Value="public Gst.GLib.Value Amplitude { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("amplitude")</AttributeName>
+          <AttributeName>Gst.GLib.Property("amplitude")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
-        <ReturnType>GLib.Value</ReturnType>
+        <ReturnType>Gst.GLib.Value</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -68,7 +68,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("frequency")</AttributeName>
+          <AttributeName>Gst.GLib.Property("frequency")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -81,13 +81,13 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -96,18 +96,18 @@
       </Docs>
     </Member>
     <Member MemberName="Offset">
-      <MemberSignature Language="C#" Value="public GLib.Value Offset { set; get; }" />
+      <MemberSignature Language="C#" Value="public Gst.GLib.Value Offset { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("offset")</AttributeName>
+          <AttributeName>Gst.GLib.Property("offset")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
-        <ReturnType>GLib.Value</ReturnType>
+        <ReturnType>Gst.GLib.Value</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -123,7 +123,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("timeshift")</AttributeName>
+          <AttributeName>Gst.GLib.Property("timeshift")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

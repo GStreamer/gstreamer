@@ -1,25 +1,25 @@
 public static System.Type GetType (string tag) {
-  GLib.GType gt = GetGType (tag);
+  Gst.GLib.GType gt = GetGType (tag);
   return (Type) gt;
 }
 
 public static void Register (string name, Gst.TagFlags flag, System.Type type, string nick, string blurb, Gst.TagMergeFunc func) {
-  GLib.GType gt = (GLib.GType) (type);
+  Gst.GLib.GType gt = (Gst.GLib.GType) (type);
 
   Register (name, flag, gt, nick, blurb, func);
 }
 
 [DllImport ("libgstreamer-0.10.dll") ]
-static extern void gst_tag_merge_strings_with_comma (out GLib.Value dest, ref GLib.Value src);
+static extern void gst_tag_merge_strings_with_comma (out Gst.GLib.Value dest, ref Gst.GLib.Value src);
 
-public static void MergeStringsWithComma (out GLib.Value dest, ref GLib.Value src) {
+public static void MergeStringsWithComma (out Gst.GLib.Value dest, ref Gst.GLib.Value src) {
   gst_tag_merge_strings_with_comma (out dest, ref src);
 }
 
 [DllImport ("libgstreamer-0.10.dll") ]
-static extern void gst_tag_merge_use_first (out GLib.Value dest, ref GLib.Value src);
+static extern void gst_tag_merge_use_first (out Gst.GLib.Value dest, ref Gst.GLib.Value src);
 
-public static void MergeUseFirst (out GLib.Value dest, ref GLib.Value src) {
+public static void MergeUseFirst (out Gst.GLib.Value dest, ref Gst.GLib.Value src) {
   gst_tag_merge_use_first (out dest, ref src);
 }
 

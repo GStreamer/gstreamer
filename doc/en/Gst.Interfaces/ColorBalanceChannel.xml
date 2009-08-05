@@ -1,12 +1,12 @@
 <Type Name="ColorBalanceChannel" FullName="Gst.Interfaces.ColorBalanceChannel">
-  <TypeSignature Language="C#" Value="public class ColorBalanceChannel : GLib.Object" />
+  <TypeSignature Language="C#" Value="public class ColorBalanceChannel : Gst.GLib.Object" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.Object</BaseTypeName>
+    <BaseTypeName>Gst.GLib.Object</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
@@ -64,14 +64,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -136,7 +136,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideValueChanged", Type=typeof(Gst.Interfaces.ColorBalanceChannel))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideValueChanged", Type=typeof(Gst.Interfaces.ColorBalanceChannel))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -160,7 +160,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("value-changed")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("value-changed")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

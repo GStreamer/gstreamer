@@ -48,7 +48,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("blocksize")</AttributeName>
+          <AttributeName>Gst.GLib.Property("blocksize")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -68,7 +68,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("do-timestamp")</AttributeName>
+          <AttributeName>Gst.GLib.Property("do-timestamp")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -96,28 +96,13 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IsLive">
-      <MemberSignature Language="C#" Value="public bool IsLive { get; }" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -126,7 +111,7 @@
       </Docs>
     </Member>
     <Member MemberName="Live">
-      <MemberSignature Language="C#" Value="public bool Live { set; }" />
+      <MemberSignature Language="C#" Value="public bool Live { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -148,7 +133,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("num-buffers")</AttributeName>
+          <AttributeName>Gst.GLib.Property("num-buffers")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -168,7 +153,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideCheckGetRange", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideCheckGetRange", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -189,7 +174,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideCreate", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideCreate", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -217,7 +202,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideDoSeek", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideDoSeek", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -241,7 +226,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideEvent", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideEvent", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -265,7 +250,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideFixate", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideFixate", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -288,7 +273,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetCaps", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetCaps", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -309,7 +294,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetSize", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetSize", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -333,7 +318,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetTimes", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetTimes", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -360,7 +345,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideIsSeekable", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideIsSeekable", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -381,7 +366,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideNegotiate", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideNegotiate", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -402,7 +387,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideNewsegment", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideNewsegment", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -423,7 +408,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverridePrepareSeekSegment", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverridePrepareSeekSegment", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -441,30 +426,6 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="OnQuery">
-      <MemberSignature Language="C#" Value="protected virtual bool OnQuery (Gst.Query query);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideQuery", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="query" Type="Gst.Query" />
-      </Parameters>
-      <Docs>
-        <param name="query">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
     <Member MemberName="OnSetCaps">
       <MemberSignature Language="C#" Value="protected virtual bool OnSetCaps (Gst.Caps caps);" />
       <MemberType>Method</MemberType>
@@ -473,7 +434,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetCaps", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSetCaps", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -489,6 +450,30 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="OnSrcQuery">
+      <MemberSignature Language="C#" Value="protected virtual bool OnSrcQuery (Gst.Query query);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSrcQuery", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="query" Type="Gst.Query" />
+      </Parameters>
+      <Docs>
+        <param name="query">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="OnStart">
       <MemberSignature Language="C#" Value="protected virtual bool OnStart ();" />
       <MemberType>Method</MemberType>
@@ -497,7 +482,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideStart", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideStart", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -518,7 +503,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideStop", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideStop", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -539,7 +524,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideUnlock", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideUnlock", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -560,7 +545,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideUnlockStop", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideUnlockStop", Type=typeof(Gst.Base.BaseSrc))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -604,7 +589,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("typefind")</AttributeName>
+          <AttributeName>Gst.GLib.Property("typefind")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

@@ -240,10 +240,10 @@ class FinalizerInfo {
   RemoveStructureReferences ();
 
   FinalizerInfo info = new FinalizerInfo (Handle);
-  GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
+  Gst.GLib.Timeout.Add (50, new Gst.GLib.TimeoutHandler (info.Handler));
 }
 
-protected override GLib.Opaque Copy (IntPtr raw) {
-  return GLib.Opaque.GetOpaque (gst_caps_ref (raw), typeof (Caps), true);
+protected override Gst.GLib.Opaque Copy (IntPtr raw) {
+  return Gst.GLib.Opaque.GetOpaque (gst_caps_ref (raw), typeof (Caps), true);
 }
 

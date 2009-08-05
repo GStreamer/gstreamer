@@ -1,11 +1,11 @@
 <Type Name="DecodeBin2+AutoplugContinueArgs" FullName="Gst.BasePlugins.DecodeBin2+AutoplugContinueArgs">
-  <TypeSignature Language="C#" Value="public class DecodeBin2.AutoplugContinueArgs : GLib.SignalArgs" />
+  <TypeSignature Language="C#" Value="public class DecodeBin2.AutoplugContinueArgs : Gst.GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.SignalArgs</BaseTypeName>
+    <BaseTypeName>Gst.GLib.SignalArgs</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>

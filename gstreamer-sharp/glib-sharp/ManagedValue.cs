@@ -76,7 +76,7 @@ namespace Gst.GLib {
 					copy = new CopyFunc (Copy);
 					free = new FreeFunc (Free);
 				
-					IntPtr name = Marshaller.StringToPtrGStrdup ("GtkSharpValue");
+					IntPtr name = Marshaller.StringToPtrGStrdup ("GstGLibSharpValue");
 					boxed_type = new GLib.GType (g_boxed_type_register_static (name, copy, free));
 					Marshaller.Free (name);
 				}

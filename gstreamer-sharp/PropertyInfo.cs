@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using GLib;
+using Gst.GLib;
 
 namespace Gst {
   public struct PropertyInfo {
@@ -53,8 +53,8 @@ namespace Gst {
       }
     }
 
-    internal GLib.GType gtype;
-    public GLib.GType GType {
+    internal Gst.GLib.GType gtype;
+    public Gst.GLib.GType GType {
       get {
         return gtype;
       }
@@ -91,10 +91,10 @@ namespace Gst {
     static extern IntPtr g_param_spec_get_blurb (IntPtr pspec);
 
     [DllImport ("libgobject-2.0-0.dll") ]
-    static extern void g_param_value_set_default (IntPtr pspec, ref GLib.Value val);
+    static extern void g_param_value_set_default (IntPtr pspec, ref Gst.GLib.Value val);
 
     [DllImport ("gstreamersharpglue-0.10.dll") ]
-    static extern bool gstsharp_g_param_spec_get_range (IntPtr pspec, ref GLib.Value min, ref GLib.Value max);
+    static extern bool gstsharp_g_param_spec_get_range (IntPtr pspec, ref Gst.GLib.Value min, ref Gst.GLib.Value max);
 
 
     [StructLayout (LayoutKind.Sequential) ]
@@ -117,22 +117,22 @@ namespace Gst {
       IntPtr nick = g_param_spec_get_nick (pspec_ptr);
       IntPtr blurb = g_param_spec_get_blurb (pspec_ptr);
 
-      this.name = GLib.Marshaller.Utf8PtrToString (name);
-      this.nick = GLib.Marshaller.Utf8PtrToString (nick);
-      this.blurb = GLib.Marshaller.Utf8PtrToString (blurb);
+      this.name = Gst.GLib.Marshaller.Utf8PtrToString (name);
+      this.nick = Gst.GLib.Marshaller.Utf8PtrToString (nick);
+      this.blurb = Gst.GLib.Marshaller.Utf8PtrToString (blurb);
 
       this.readable = ( (pspec.Flags & (1 << 0)) != 0);
       this.writeable = ( (pspec.Flags & (1 << 1)) != 0);
       this.controllable = ( (pspec.Flags & (1 << 9)) != 0);
       /* TODO: Add more flags later, like the mutable flags */
 
-      this.gtype = new GLib.GType (pspec.ValueType);
+      this.gtype = new Gst.GLib.GType (pspec.ValueType);
       this.type = (System.Type) this.gtype;
 
       this.dflt = this.min = this.max = null;
 
       try {
-        GLib.Value v = new GLib.Value (new GLib.GType (pspec.ValueType));
+        Gst.GLib.Value v = new Gst.GLib.Value (new Gst.GLib.GType (pspec.ValueType));
         g_param_value_set_default (pspec_ptr, ref v);
         this.dflt = v.Val;
         v.Dispose ();
@@ -142,8 +142,8 @@ namespace Gst {
           this.min = ei.Min;
           this.max = ei.Max;
         } else {
-          GLib.Value min = new GLib.Value (new GLib.GType (pspec.ValueType));
-          GLib.Value max = new GLib.Value (new GLib.GType (pspec.ValueType));
+          Gst.GLib.Value min = new Gst.GLib.Value (new Gst.GLib.GType (pspec.ValueType));
+          Gst.GLib.Value max = new Gst.GLib.Value (new Gst.GLib.GType (pspec.ValueType));
           if (gstsharp_g_param_spec_get_range (pspec_ptr, ref min, ref max)) {
             this.min = (object) min.Val;
             this.max = (object) max.Val;

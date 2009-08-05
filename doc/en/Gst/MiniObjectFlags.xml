@@ -10,7 +10,7 @@
   </Base>
   <Attributes>
     <Attribute>
-      <AttributeName>GLib.GType(typeof(Gst.MiniObjectFlagsGType))</AttributeName>
+      <AttributeName>Gst.GLib.GType(typeof(Gst.MiniObjectFlagsGType))</AttributeName>
     </Attribute>
     <Attribute>
       <AttributeName>System.Flags</AttributeName>

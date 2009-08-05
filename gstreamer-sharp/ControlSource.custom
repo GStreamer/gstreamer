@@ -18,23 +18,23 @@ struct GstControlSourceCallbacks {
   public GetValueArrayCallbackNative get_value_array;
 }
 
-delegate bool GetValueCallbackNative (IntPtr raw, ulong timestamp, ref GLib.Value val);
+delegate bool GetValueCallbackNative (IntPtr raw, ulong timestamp, ref Gst.GLib.Value val);
 delegate bool GetValueArrayCallbackNative (IntPtr raw, ulong timestamp, ref GstValueArray va);
 
-public delegate bool GetValueCallback (ulong timestamp, ref GLib.Value value);
+public delegate bool GetValueCallback (ulong timestamp, ref Gst.GLib.Value value);
 public delegate System.Array GetValueArrayCallback (ulong timestamp, int nsamples, ulong interval);
 
 private GetValueCallbackWrapper GetValue_cb_wrapper;
 private GetValueArrayCallbackWrapper GetValueArray_cb_wrapper;
 
 private class GetValueCallbackWrapper {
-  public bool NativeCallback (IntPtr raw, ulong timestamp, ref GLib.Value val) {
+  public bool NativeCallback (IntPtr raw, ulong timestamp, ref Gst.GLib.Value val) {
     try {
       bool __ret = managed (timestamp, ref val);
 
       return __ret;
     } catch (Exception e) {
-      GLib.ExceptionManager.RaiseUnhandledException (e, true);
+      Gst.GLib.ExceptionManager.RaiseUnhandledException (e, true);
       // NOTREACHED: Above call does not return.
       throw e;
     }
@@ -71,7 +71,7 @@ private class GetValueArrayCallbackWrapper {
         string[] ret = (string[]) values;
 
         for (int i = 0; i < va.nbsamples; i++) {
-          Marshal.WriteIntPtr (va.values, i * IntPtr.Size, GLib.Marshaller.StringToPtrGStrdup (ret[i]));
+          Marshal.WriteIntPtr (va.values, i * IntPtr.Size, Gst.GLib.Marshaller.StringToPtrGStrdup (ret[i]));
         }
       } else if (t == typeof (short[])) {
         short[] ret = (short[]) values;
@@ -125,7 +125,7 @@ private class GetValueArrayCallbackWrapper {
 
       return true;
     } catch (Exception e) {
-      GLib.ExceptionManager.RaiseUnhandledException (e, true);
+      Gst.GLib.ExceptionManager.RaiseUnhandledException (e, true);
       // NOTREACHED: Above call does not return.
       throw e;
     }
@@ -173,7 +173,7 @@ static extern bool gst__controllersharp_gst__controller_controlsource_base_bind 
 [DllImport ("gstreamersharpglue-0.10.dll") ]
 static extern void gst__controllersharp_gst__controller_controlsource_override_bind (IntPtr gtype, BindNativeDelegate cb);
 
-[GLib.CDeclCallback]
+[Gst.GLib.CDeclCallback]
 delegate bool BindNativeDelegate (IntPtr handler, IntPtr pspec);
 
 static BindNativeDelegate Bind_cb_delegate;
@@ -186,21 +186,21 @@ static BindNativeDelegate BindVMCallback {
   }
 }
 
-static void OverrideBind (GLib.GType gtype) {
+static void OverrideBind (Gst.GLib.GType gtype) {
   OverrideBind (gtype, BindVMCallback);
 }
 
-static void OverrideBind (GLib.GType gtype, BindNativeDelegate callback) {
+static void OverrideBind (Gst.GLib.GType gtype, BindNativeDelegate callback) {
   gst__controllersharp_gst__controller_controlsource_override_bind (gtype.Val, callback);
 }
 
 static bool Bind_cb (IntPtr inst, IntPtr pspec) {
   try {
-    ControlSource __obj = GLib.Object.GetObject (inst, false) as ControlSource;
+    ControlSource __obj = Gst.GLib.Object.GetObject (inst, false) as ControlSource;
     Gst.PropertyInfo pinfo = new Gst.PropertyInfo (pspec);
     return __obj.OnBind (pinfo);
   } catch (Exception e) {
-    GLib.ExceptionManager.RaiseUnhandledException (e, false);
+    Gst.GLib.ExceptionManager.RaiseUnhandledException (e, false);
     return false;
   }
 }
@@ -208,12 +208,12 @@ static bool Bind_cb (IntPtr inst, IntPtr pspec) {
 [DllImport ("libgobject-2.0-0.dll") ]
 static extern IntPtr g_object_class_find_property (IntPtr klass, IntPtr property);
 
-[GLib.DefaultSignalHandler (Type=typeof (Gst.Controller.ControlSource), ConnectionMethod="OverrideBind") ]
+[Gst.GLib.DefaultSignalHandler (Type=typeof (Gst.Controller.ControlSource), ConnectionMethod="OverrideBind") ]
 protected virtual bool OnBind (Gst.PropertyInfo pinfo) {
   IntPtr klass = Marshal.ReadIntPtr (Handle);
-  IntPtr native_property = GLib.Marshaller.StringToPtrGStrdup (pinfo.Name);
+  IntPtr native_property = Gst.GLib.Marshaller.StringToPtrGStrdup (pinfo.Name);
   IntPtr pspec = g_object_class_find_property (klass, native_property);
-  GLib.Marshaller.Free (native_property);
+  Gst.GLib.Marshaller.Free (native_property);
 
   if (pspec == IntPtr.Zero)
     return false;
@@ -242,7 +242,7 @@ static readonly Type[] supported_types = new Type[] {
 
 public System.Array GetValueArray (ulong timestamp, int nsamples, ulong interval) {
   GstValueArray va = new GstValueArray ();
-  GLib.Value v = GLib.Value.Empty;
+  Gst.GLib.Value v = Gst.GLib.Value.Empty;
 
   if (!GetValue (0, ref v))
     return null;
@@ -268,7 +268,7 @@ public System.Array GetValueArray (ulong timestamp, int nsamples, ulong interval
   bool raw_ret = gst_control_source_get_value_array (Handle, timestamp, ref va);
 
   if (!raw_ret) {
-    GLib.Marshaller.Free (va.values);
+    Gst.GLib.Marshaller.Free (va.values);
     return null;
   }
 
@@ -279,7 +279,7 @@ public System.Array GetValueArray (ulong timestamp, int nsamples, ulong interval
 
     for (int i = 0; i < nsamples; i++) {
       IntPtr str = Marshal.ReadIntPtr (va.values, i * IntPtr.Size);
-      ret[i] = GLib.Marshaller.PtrToStringGFree (str);
+      ret[i] = Gst.GLib.Marshaller.PtrToStringGFree (str);
     }
   } else if (t == typeof (short)) {
     short[] ret = (short[]) values;
@@ -331,7 +331,7 @@ public System.Array GetValueArray (ulong timestamp, int nsamples, ulong interval
     }
   }
 
-  GLib.Marshaller.Free (va.values);
+  Gst.GLib.Marshaller.Free (va.values);
 
   return values;
 }

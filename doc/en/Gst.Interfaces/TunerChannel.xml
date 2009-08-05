@@ -1,12 +1,12 @@
 <Type Name="TunerChannel" FullName="Gst.Interfaces.TunerChannel">
-  <TypeSignature Language="C#" Value="public class TunerChannel : GLib.Object" />
+  <TypeSignature Language="C#" Value="public class TunerChannel : Gst.GLib.Object" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.Object</BaseTypeName>
+    <BaseTypeName>Gst.GLib.Object</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
@@ -112,7 +112,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("frequency-changed")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("frequency-changed")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -124,14 +124,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -228,7 +228,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideFrequencyChanged", Type=typeof(Gst.Interfaces.TunerChannel))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideFrequencyChanged", Type=typeof(Gst.Interfaces.TunerChannel))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -252,7 +252,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideSignalChanged", Type=typeof(Gst.Interfaces.TunerChannel))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSignalChanged", Type=typeof(Gst.Interfaces.TunerChannel))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -276,7 +276,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("signal-changed")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("signal-changed")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

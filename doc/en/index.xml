@@ -1,10 +1,18 @@
 <Overview>
   <Assemblies>
-    <Assembly Name="gstreamer-sharp" Version="0.9.0.0" />
+    <Assembly Name="gstreamer-sharp" Version="0.9.0.0">
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Runtime.CompilerServices.RuntimeCompatibility(WrapNonExceptionThrows=true)</AttributeName>
+        </Attribute>
+      </Attributes>
+    </Assembly>
   </Assemblies>
   <Remarks>To be added.</Remarks>
   <Copyright>To be added.</Copyright>
   <Types>
+    <Namespace Name="GLib">
+    </Namespace>
     <Namespace Name="Gst">
       <Type Name="ActivateMode" Kind="Enumeration" />
       <Type Name="Application" Kind="Class" />
@@ -87,6 +95,7 @@
       <Type Name="IndexResolver" Kind="Delegate" />
       <Type Name="IndexResolverMethod" Kind="Enumeration" />
       <Type Name="IntRange" Kind="Structure" />
+      <Type Name="Iterator" Kind="Class" />
       <Type Name="LibraryError" Kind="Enumeration" />
       <Type Name="LinkedArgs" Kind="Class" />
       <Type Name="LinkedHandler" Kind="Delegate" />
@@ -123,6 +132,7 @@
       <Type Name="PadFlags" Kind="Enumeration" />
       <Type Name="PadGetCapsFunction" Kind="Delegate" />
       <Type Name="PadGetRangeFunction" Kind="Delegate" />
+      <Type Name="PadIterIntLinkFunction" Kind="Delegate" />
       <Type Name="PadLinkFunction" Kind="Delegate" />
       <Type Name="PadLinkReturn" Kind="Enumeration" />
       <Type Name="PadPresence" Kind="Enumeration" />
@@ -242,8 +252,6 @@
       <Type Name="DecodeBin2+AutoplugSelectHandler" Kind="Delegate" />
       <Type Name="DecodeBin2+AutoplugSortArgs" Kind="Class" />
       <Type Name="DecodeBin2+AutoplugSortHandler" Kind="Delegate" />
-      <Type Name="DecodeBin2+DrainedArgs" Kind="Class" />
-      <Type Name="DecodeBin2+DrainedHandler" Kind="Delegate" />
       <Type Name="DecodeBin2+NewDecodedPadArgs" Kind="Class" />
       <Type Name="DecodeBin2+NewDecodedPadHandler" Kind="Delegate" />
       <Type Name="DecodeBin2+RemovedDecodedPadArgs" Kind="Class" />
@@ -256,15 +264,7 @@
       <Type Name="PlayBin+StreamInfo+MutedHandler" Kind="Delegate" />
       <Type Name="PlayBin+StreamInfo+StreamType" Kind="Enumeration" />
       <Type Name="PlayBin2" Kind="Class" />
-      <Type Name="PlayBin2+AboutToFinishArgs" Kind="Class" />
-      <Type Name="PlayBin2+AboutToFinishHandler" Kind="Delegate" />
-      <Type Name="PlayBin2+AudioChangedArgs" Kind="Class" />
-      <Type Name="PlayBin2+AudioChangedHandler" Kind="Delegate" />
       <Type Name="PlayBin2+PlayFlagsType" Kind="Enumeration" />
-      <Type Name="PlayBin2+TextChangedArgs" Kind="Class" />
-      <Type Name="PlayBin2+TextChangedHandler" Kind="Delegate" />
-      <Type Name="PlayBin2+VideoChangedArgs" Kind="Class" />
-      <Type Name="PlayBin2+VideoChangedHandler" Kind="Delegate" />
       <Type Name="XvImageSink" Kind="Class" />
     </Namespace>
     <Namespace Name="Gst.Cdda">
@@ -307,25 +307,96 @@
       <Type Name="Identity+HandoffHandler" Kind="Delegate" />
       <Type Name="MemIndex" Kind="Class" />
       <Type Name="MultiQueue" Kind="Class" />
-      <Type Name="MultiQueue+OverrunArgs" Kind="Class" />
-      <Type Name="MultiQueue+OverrunHandler" Kind="Delegate" />
-      <Type Name="MultiQueue+UnderrunArgs" Kind="Class" />
-      <Type Name="MultiQueue+UnderrunHandler" Kind="Delegate" />
       <Type Name="Queue" Kind="Class" />
       <Type Name="Queue+LeakyType" Kind="Enumeration" />
-      <Type Name="Queue+OverrunArgs" Kind="Class" />
-      <Type Name="Queue+OverrunHandler" Kind="Delegate" />
-      <Type Name="Queue+PushingArgs" Kind="Class" />
-      <Type Name="Queue+PushingHandler" Kind="Delegate" />
-      <Type Name="Queue+RunningArgs" Kind="Class" />
-      <Type Name="Queue+RunningHandler" Kind="Delegate" />
-      <Type Name="Queue+UnderrunArgs" Kind="Class" />
-      <Type Name="Queue+UnderrunHandler" Kind="Delegate" />
       <Type Name="Tee" Kind="Class" />
       <Type Name="Tee+PullModeType" Kind="Enumeration" />
       <Type Name="TypeFindElement" Kind="Class" />
       <Type Name="TypeFindElement+HaveTypeArgs" Kind="Class" />
       <Type Name="TypeFindElement+HaveTypeHandler" Kind="Delegate" />
+    </Namespace>
+    <Namespace Name="Gst.GLib">
+      <Type Name="Argv" Kind="Class" />
+      <Type Name="Boxed" Kind="Class" />
+      <Type Name="CDeclCallbackAttribute" Kind="Class" />
+      <Type Name="ClassInitializerAttribute" Kind="Class" />
+      <Type Name="ConnectBeforeAttribute" Kind="Class" />
+      <Type Name="ConnectFlags" Kind="Enumeration" />
+      <Type Name="DefaultSignalHandlerAttribute" Kind="Class" />
+      <Type Name="DelegateWrapper" Kind="Class" />
+      <Type Name="DestroyHelper" Kind="Class" />
+      <Type Name="DestroyNotify" Kind="Delegate" />
+      <Type Name="EnumWrapper" Kind="Class" />
+      <Type Name="ExceptionManager" Kind="Class" />
+      <Type Name="FileUtils" Kind="Class" />
+      <Type Name="GException" Kind="Class" />
+      <Type Name="GInterfaceAdapter" Kind="Class" />
+      <Type Name="GInterfaceAttribute" Kind="Class" />
+      <Type Name="GInterfaceInitHandler" Kind="Delegate" />
+      <Type Name="Global" Kind="Class" />
+      <Type Name="GSourceFunc" Kind="Delegate" />
+      <Type Name="GString" Kind="Class" />
+      <Type Name="GType" Kind="Structure" />
+      <Type Name="GTypeAttribute" Kind="Class" />
+      <Type Name="Idle" Kind="Class" />
+      <Type Name="IdleHandler" Kind="Delegate" />
+      <Type Name="IgnoreClassInitializersAttribute" Kind="Class" />
+      <Type Name="IOChannel" Kind="Class" />
+      <Type Name="IOChannelError" Kind="Enumeration" />
+      <Type Name="IOCondition" Kind="Enumeration" />
+      <Type Name="IOFlags" Kind="Enumeration" />
+      <Type Name="IOFunc" Kind="Delegate" />
+      <Type Name="IOStatus" Kind="Enumeration" />
+      <Type Name="IWrapper" Kind="Interface" />
+      <Type Name="List" Kind="Class" />
+      <Type Name="ListBase" Kind="Class" />
+      <Type Name="ListBase+FilenameString" Kind="Class" />
+      <Type Name="Log" Kind="Class" />
+      <Type Name="LogFunc" Kind="Delegate" />
+      <Type Name="LogLevelFlags" Kind="Enumeration" />
+      <Type Name="MainContext" Kind="Class" />
+      <Type Name="MainLoop" Kind="Class" />
+      <Type Name="Markup" Kind="Class" />
+      <Type Name="Marshaller" Kind="Class" />
+      <Type Name="MissingIntPtrCtorException" Kind="Class" />
+      <Type Name="NotifyArgs" Kind="Class" />
+      <Type Name="NotifyHandler" Kind="Delegate" />
+      <Type Name="Object" Kind="Class" />
+      <Type Name="ObjectManager" Kind="Class" />
+      <Type Name="Opaque" Kind="Class" />
+      <Type Name="ParamSpec" Kind="Class" />
+      <Type Name="PrintFunc" Kind="Delegate" />
+      <Type Name="Priority" Kind="Enumeration" />
+      <Type Name="Process" Kind="Class" />
+      <Type Name="PropertyAttribute" Kind="Class" />
+      <Type Name="PtrArray" Kind="Class" />
+      <Type Name="SeekType" Kind="Enumeration" />
+      <Type Name="Signal" Kind="Class" />
+      <Type Name="Signal+EmissionHook" Kind="Delegate" />
+      <Type Name="Signal+EmissionHookMarshaler" Kind="Class" />
+      <Type Name="Signal+EmissionHookNative" Kind="Delegate" />
+      <Type Name="Signal+Flags" Kind="Enumeration" />
+      <Type Name="Signal+InvocationHint" Kind="Structure" />
+      <Type Name="SignalArgs" Kind="Class" />
+      <Type Name="SignalAttribute" Kind="Class" />
+      <Type Name="SignalCallback" Kind="Class" />
+      <Type Name="SList" Kind="Class" />
+      <Type Name="Source" Kind="Class" />
+      <Type Name="SpawnChildSetupFunc" Kind="Delegate" />
+      <Type Name="SpawnError" Kind="Enumeration" />
+      <Type Name="SpawnFlags" Kind="Enumeration" />
+      <Type Name="Thread" Kind="Class" />
+      <Type Name="Timeout" Kind="Class" />
+      <Type Name="TimeoutHandler" Kind="Delegate" />
+      <Type Name="TypeConverter" Kind="Class" />
+      <Type Name="TypeFundamentals" Kind="Enumeration" />
+      <Type Name="TypeInitializerAttribute" Kind="Class" />
+      <Type Name="TypeResolutionHandler" Kind="Delegate" />
+      <Type Name="UnhandledExceptionArgs" Kind="Class" />
+      <Type Name="UnhandledExceptionHandler" Kind="Delegate" />
+      <Type Name="UnwrappedObject" Kind="Class" />
+      <Type Name="Value" Kind="Structure" />
+      <Type Name="ValueArray" Kind="Class" />
     </Namespace>
     <Namespace Name="Gst.Interfaces">
       <Type Name="ChannelChangedArgs" Kind="Class" />

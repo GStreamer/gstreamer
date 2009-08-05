@@ -72,7 +72,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("fd")</AttributeName>
+          <AttributeName>Gst.GLib.Property("fd")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

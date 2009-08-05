@@ -1,11 +1,11 @@
 <Type Name="Controller" FullName="Gst.Controller.Controller">
-  <TypeSignature Language="C#" Value="public class Controller : GLib.Object" />
+  <TypeSignature Language="C#" Value="public class Controller : Gst.GLib.Object" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.Object</BaseTypeName>
+    <BaseTypeName>Gst.GLib.Object</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
@@ -41,13 +41,13 @@
       </Docs>
     </Member>
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Controller (GLib.Object objekt, string property);" />
+      <MemberSignature Language="C#" Value="public Controller (Gst.GLib.Object objekt, string property);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
-        <Parameter Name="objekt" Type="GLib.Object" />
+        <Parameter Name="objekt" Type="Gst.GLib.Object" />
         <Parameter Name="property" Type="System.String" />
       </Parameters>
       <Docs>
@@ -58,13 +58,13 @@
       </Docs>
     </Member>
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Controller (GLib.Object objekt, string[] properties);" />
+      <MemberSignature Language="C#" Value="public Controller (Gst.GLib.Object objekt, string[] properties);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
-        <Parameter Name="objekt" Type="GLib.Object" />
+        <Parameter Name="objekt" Type="Gst.GLib.Object" />
         <Parameter Name="properties" Type="System.String[]" />
       </Parameters>
       <Docs>
@@ -90,13 +90,13 @@
       </Docs>
     </Member>
     <Member MemberName="Get">
-      <MemberSignature Language="C#" Value="public GLib.Value Get (string property_name, ulong timestamp);" />
+      <MemberSignature Language="C#" Value="public Gst.GLib.Value Get (string property_name, ulong timestamp);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.Value</ReturnType>
+        <ReturnType>Gst.GLib.Value</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="property_name" Type="System.String" />
@@ -155,13 +155,13 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -170,13 +170,13 @@
       </Docs>
     </Member>
     <Member MemberName="Object">
-      <MemberSignature Language="C#" Value="public GLib.Object Object { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.GLib.Object Object { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.Object</ReturnType>
+        <ReturnType>Gst.GLib.Object</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>

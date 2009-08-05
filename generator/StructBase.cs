@@ -92,7 +92,7 @@ namespace GtkSharp.Generation {
 		
 		public string AllocNative (string var)
 		{
-			return "GLib.Marshaller.StructureToPtrAlloc (" + var + ")";
+			return "Gst.GLib.Marshaller.StructureToPtrAlloc (" + var + ")";
 		}
 
 		public string ReleaseNative (string var)

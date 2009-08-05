@@ -1,5 +1,5 @@
 <Type Name="Date" FullName="Gst.Date">
-  <TypeSignature Language="C#" Value="public class Date : GLib.IWrapper" />
+  <TypeSignature Language="C#" Value="public class Date : Gst.GLib.IWrapper" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -10,7 +10,7 @@
   </Base>
   <Interfaces>
     <Interface>
-      <InterfaceName>GLib.IWrapper</InterfaceName>
+      <InterfaceName>Gst.GLib.IWrapper</InterfaceName>
     </Interface>
   </Interfaces>
   <Docs>
@@ -22,11 +22,25 @@
       <MemberSignature Language="C#" Value="public Date (GLib.Value val);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="GLib.Value" />
+      </Parameters>
+      <Docs>
+        <param name="val">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Date (Gst.GLib.Value val);" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="val" Type="Gst.GLib.Value" />
       </Parameters>
       <Docs>
         <param name="val">To be added.</param>
@@ -87,14 +101,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -142,7 +156,6 @@
       <MemberSignature Language="C#" Value="public static GLib.Value op_Explicit (Gst.Date date);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -158,11 +171,29 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="op_Explicit">
+      <MemberSignature Language="C#" Value="public static Gst.GLib.Value op_Explicit (Gst.Date date);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.GLib.Value</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="date" Type="Gst.Date" />
+      </Parameters>
+      <Docs>
+        <param name="date">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="SetGValue">
       <MemberSignature Language="C#" Value="public void SetGValue (ref GLib.Value val);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -170,6 +201,24 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="val" Type="GLib.Value&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="val">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetGValue">
+      <MemberSignature Language="C#" Value="public void SetGValue (ref Gst.GLib.Value val);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="val" Type="Gst.GLib.Value&amp;" RefType="ref" />
       </Parameters>
       <Docs>
         <param name="val">To be added.</param>

@@ -68,7 +68,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("extra-size-buffers")</AttributeName>
+          <AttributeName>Gst.GLib.Property("extra-size-buffers")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -88,7 +88,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("extra-size-bytes")</AttributeName>
+          <AttributeName>Gst.GLib.Property("extra-size-bytes")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -108,7 +108,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("extra-size-time")</AttributeName>
+          <AttributeName>Gst.GLib.Property("extra-size-time")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -163,7 +163,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("max-size-buffers")</AttributeName>
+          <AttributeName>Gst.GLib.Property("max-size-buffers")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -183,7 +183,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("max-size-bytes")</AttributeName>
+          <AttributeName>Gst.GLib.Property("max-size-bytes")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -203,7 +203,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("max-size-time")</AttributeName>
+          <AttributeName>Gst.GLib.Property("max-size-time")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -216,13 +216,13 @@
       </Docs>
     </Member>
     <Member MemberName="Overrun">
-      <MemberSignature Language="C#" Value="public event Gst.CorePlugins.MultiQueue.OverrunHandler Overrun;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler Overrun;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.CorePlugins.MultiQueue+OverrunHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -230,13 +230,13 @@
       </Docs>
     </Member>
     <Member MemberName="Underrun">
-      <MemberSignature Language="C#" Value="public event Gst.CorePlugins.MultiQueue.UnderrunHandler Underrun;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler Underrun;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.CorePlugins.MultiQueue+UnderrunHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>

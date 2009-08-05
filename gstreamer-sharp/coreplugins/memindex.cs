@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Runtime.InteropServices;
-using GLib;
+using Gst.GLib;
 using Gst;
 
 namespace Gst.CorePlugins {
@@ -13,9 +13,9 @@ namespace Gst.CorePlugins {
 		static extern IntPtr gst_index_factory_make (IntPtr index);
 
 		public MemIndex () : base (IntPtr.Zero) {
-			IntPtr native_index = GLib.Marshaller.StringToPtrGStrdup ("memindex");
+			IntPtr native_index = Gst.GLib.Marshaller.StringToPtrGStrdup ("memindex");
 			Raw = gst_index_factory_make (native_index);
-			GLib.Marshaller.Free (native_index);
+			Gst.GLib.Marshaller.Free (native_index);
 			if (Raw == IntPtr.Zero)
 				throw new Exception ("Failed to instantiate index \"memindex\"");
 		}

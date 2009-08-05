@@ -1,4 +1,4 @@
-public Message (GLib.Value val) : base (val) { }
+public Message (Gst.GLib.Value val) : base (val) { }
 
 [DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_message_get_timestamp_offset ();
@@ -36,7 +36,7 @@ public Gst.Object Src {
   get {
     unsafe {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + src_offset);
-      return GLib.Object.GetObject ( (*raw_ptr)) as Gst.Object;
+      return Gst.GLib.Object.GetObject ( (*raw_ptr)) as Gst.Object;
     }
   }
   set {
@@ -85,7 +85,7 @@ public Gst.Structure Structure {
       return cached_structure;
 
     IntPtr raw_ret = gst_message_get_structure (Handle);
-    Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
+    Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) Gst.GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
     if (ret != null)
       ret.FreeNative = false;
     cached_structure = ret;
@@ -116,7 +116,7 @@ static string GetMessage (uint domain, int code) {
   if (raw_ret == IntPtr.Zero)
     return null;
 
-  return GLib.Marshaller.PtrToStringGFree (raw_ret);
+  return Gst.GLib.Marshaller.PtrToStringGFree (raw_ret);
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
@@ -137,11 +137,11 @@ public static Message NewError (Gst.Object src, Gst.CoreError error, string mess
   err.Domain = gst_core_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_error (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -159,11 +159,11 @@ public static Message NewError (Gst.Object src, Gst.StreamError error, string me
   err.Domain = gst_stream_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_error (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -181,11 +181,11 @@ public static Message NewError (Gst.Object src, Gst.LibraryError error, string m
   err.Domain = gst_library_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_error (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -202,11 +202,11 @@ public static Message NewError (Gst.Object src, Gst.ResourceError error, string 
   err.Domain = gst_resource_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_error (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -231,7 +231,7 @@ public void ParseError (out Enum error, out string message, out string debug) {
   gst_message_parse_error (Handle, out err, out dbg);
 
   if (dbg != IntPtr.Zero)
-    debug = GLib.Marshaller.Utf8PtrToString (dbg);
+    debug = Gst.GLib.Marshaller.Utf8PtrToString (dbg);
   else
     debug = null;
 
@@ -275,11 +275,11 @@ public static Message NewWarning (Gst.Object src, Gst.CoreError error, string me
   err.Domain = gst_core_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_warning (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -297,11 +297,11 @@ public static Message NewWarning (Gst.Object src, Gst.StreamError error, string 
   err.Domain = gst_stream_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_warning (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -319,11 +319,11 @@ public static Message NewWarning (Gst.Object src, Gst.LibraryError error, string
   err.Domain = gst_library_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_warning (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -341,11 +341,11 @@ public static Message NewWarning (Gst.Object src, Gst.ResourceError error, strin
   err.Domain = gst_resource_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_warning (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -370,7 +370,7 @@ public void ParseWarning (out Enum error, out string message, out string debug) 
   gst_message_parse_warning (Handle, out err, out dbg);
 
   if (dbg != IntPtr.Zero)
-    debug = GLib.Marshaller.Utf8PtrToString (dbg);
+    debug = Gst.GLib.Marshaller.Utf8PtrToString (dbg);
   else
     debug = null;
 
@@ -414,11 +414,11 @@ public static Message NewInfo (Gst.Object src, Gst.CoreError error, string messa
   err.Domain = gst_core_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_info (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -436,11 +436,11 @@ public static Message NewInfo (Gst.Object src, Gst.StreamError error, string mes
   err.Domain = gst_stream_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_info (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -458,11 +458,11 @@ public static Message NewInfo (Gst.Object src, Gst.LibraryError error, string me
   err.Domain = gst_library_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_info (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -480,11 +480,11 @@ public static Message NewInfo (Gst.Object src, Gst.ResourceError error, string m
   err.Domain = gst_resource_error_quark ();
   err.Message = (message != null) ? message : GetMessage (err.Domain, err.Code);
 
-  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : GLib.Marshaller.StringToPtrGStrdup (debug);
+  IntPtr raw_ptr = (debug == null) ? IntPtr.Zero : Gst.GLib.Marshaller.StringToPtrGStrdup (debug);
 
   Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_info (src.Handle, ref err, raw_ptr), true);
 
-  GLib.Marshaller.Free (raw_ptr);
+  Gst.GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
 }
@@ -509,7 +509,7 @@ public void ParseInfo (out Enum error, out string message, out string debug) {
   gst_message_parse_info (Handle, out err, out dbg);
 
   if (dbg != IntPtr.Zero)
-    debug = GLib.Marshaller.Utf8PtrToString (dbg);
+    debug = Gst.GLib.Marshaller.Utf8PtrToString (dbg);
   else
     debug = null;
 
@@ -569,7 +569,7 @@ public void ParseTag (out TagList tags) {
   if (raw_ptr == IntPtr.Zero)
     tags = null;
   else
-    tags = (TagList) GLib.Opaque.GetOpaque (raw_ptr, typeof (TagList), true);
+    tags = (TagList) Gst.GLib.Opaque.GetOpaque (raw_ptr, typeof (TagList), true);
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
@@ -660,7 +660,7 @@ public void ParseClockProvide (out Gst.Clock clock, out bool ready) {
 
   gst_message_parse_clock_provide (Handle, out raw, out ready);
 
-  clock = GLib.Object.GetObject (raw, false) as Gst.Clock;
+  clock = Gst.GLib.Object.GetObject (raw, false) as Gst.Clock;
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
@@ -683,7 +683,7 @@ public void ParseClockLost (out Gst.Clock clock) {
 
   gst_message_parse_clock_lost (Handle, out raw);
 
-  clock = GLib.Object.GetObject (raw, true) as Gst.Clock;
+  clock = Gst.GLib.Object.GetObject (raw, true) as Gst.Clock;
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
@@ -706,7 +706,7 @@ public void ParseNewClock (out Gst.Clock clock) {
 
   gst_message_parse_new_clock (Handle, out raw);
 
-  clock = GLib.Object.GetObject (raw, true) as Gst.Clock;
+  clock = Gst.GLib.Object.GetObject (raw, true) as Gst.Clock;
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
@@ -855,9 +855,9 @@ public void ParseStructureChange (out StructureChangeType type, out Gst.Element 
   IntPtr raw_ptr;
 
   gst_message_parse_structure_change (Handle, out type, out raw_ptr, out busy);
-  owner = GLib.Object.GetObject (raw_ptr, false) as Gst.Element;
+  owner = Gst.GLib.Object.GetObject (raw_ptr, false) as Gst.Element;
 }
 
 static Message () {
-  GLib.GType.Register (Message.GType, typeof (Message));
+  Gst.GLib.GType.Register (Message.GType, typeof (Message));
 }

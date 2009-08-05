@@ -189,14 +189,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -230,7 +230,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("message")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("message")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -250,7 +250,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideMessage", Type=typeof(Gst.Bus))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideMessage", Type=typeof(Gst.Bus))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -274,7 +274,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideSyncMessage", Type=typeof(Gst.Bus))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideSyncMessage", Type=typeof(Gst.Bus))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -468,7 +468,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("sync-message")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("sync-message")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

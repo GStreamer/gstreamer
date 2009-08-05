@@ -1,5 +1,5 @@
 <Type Name="URIHandlerImplementor" FullName="Gst.URIHandlerImplementor">
-  <TypeSignature Language="C#" Value="public interface URIHandlerImplementor : GLib.IWrapper" />
+  <TypeSignature Language="C#" Value="public interface URIHandlerImplementor : Gst.GLib.IWrapper" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -7,12 +7,12 @@
   </AssemblyInfo>
   <Interfaces>
     <Interface>
-      <InterfaceName>GLib.IWrapper</InterfaceName>
+      <InterfaceName>Gst.GLib.IWrapper</InterfaceName>
     </Interface>
   </Interfaces>
   <Attributes>
     <Attribute>
-      <AttributeName>GLib.GInterface(typeof(Gst.URIHandlerAdapter))</AttributeName>
+      <AttributeName>Gst.GLib.GInterface(typeof(Gst.URIHandlerAdapter))</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>

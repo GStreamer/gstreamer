@@ -53,7 +53,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("location")</AttributeName>
+          <AttributeName>Gst.GLib.Property("location")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

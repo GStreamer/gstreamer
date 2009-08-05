@@ -1,11 +1,11 @@
 <Type Name="FakeSink+PrerollHandoffArgs" FullName="Gst.CorePlugins.FakeSink+PrerollHandoffArgs">
-  <TypeSignature Language="C#" Value="public class FakeSink.PrerollHandoffArgs : GLib.SignalArgs" />
+  <TypeSignature Language="C#" Value="public class FakeSink.PrerollHandoffArgs : Gst.GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.SignalArgs</BaseTypeName>
+    <BaseTypeName>Gst.GLib.SignalArgs</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>

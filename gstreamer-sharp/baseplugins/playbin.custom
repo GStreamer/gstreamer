@@ -1,8 +1,8 @@
-[GLib.Property ("stream-info-value-array") ]
+[Gst.GLib.Property ("stream-info-value-array") ]
 public StreamInfo[] StreamInfos {
   get {
-    GLib.Value val = GetProperty ("stream-info-value-array");
-    GLib.ValueArray va = (GLib.ValueArray) val;
+    Gst.GLib.Value val = GetProperty ("stream-info-value-array");
+    Gst.GLib.ValueArray va = (Gst.GLib.ValueArray) val;
     StreamInfo[] ret = new StreamInfo[va.Count];
     for (int i = 0; i < va.Count; i++)
       ret[i] = (StreamInfo) va[i];
@@ -13,48 +13,48 @@ public StreamInfo[] StreamInfos {
   }
 }
 
-public class StreamInfo : GLib.Object {
+public class StreamInfo : Gst.GLib.Object {
 
-  [GLib.Property ("object") ]
+  [Gst.GLib.Property ("object") ]
   public Gst.Object Object {
     get {
-      GLib.Value val = GetProperty ("object");
+      Gst.GLib.Value val = GetProperty ("object");
       Gst.Object ret = (Gst.Object) val;
       val.Dispose ();
       return ret;
     }
   }
 
-  [GLib.Property ("type") ]
+  [Gst.GLib.Property ("type") ]
   public StreamType Type {
     get {
-      GLib.Value val = GetProperty ("type");
+      Gst.GLib.Value val = GetProperty ("type");
       StreamType ret = (StreamType) val;
       val.Dispose ();
       return ret;
     }
   }
 
-  [GLib.Property ("decoder") ]
+  [Gst.GLib.Property ("decoder") ]
   public string Decoder {
     get {
-      GLib.Value val = GetProperty ("decoder");
+      Gst.GLib.Value val = GetProperty ("decoder");
       string ret = (string) val;
       val.Dispose ();
       return ret;
     }
   }
 
-  [GLib.Property ("mute") ]
+  [Gst.GLib.Property ("mute") ]
   public bool Mute {
     get {
-      GLib.Value val = GetProperty ("mute");
+      Gst.GLib.Value val = GetProperty ("mute");
       bool ret = (bool) val;
       val.Dispose ();
       return ret;
     }
     set {
-      GLib.Value val = new GLib.Value (this, "mute");
+      Gst.GLib.Value val = new Gst.GLib.Value (this, "mute");
       val.Val = value;
       SetProperty ("mute", val);
       val.Dispose ();
@@ -62,30 +62,30 @@ public class StreamInfo : GLib.Object {
   }
 
 
-  [GLib.Property ("caps") ]
+  [Gst.GLib.Property ("caps") ]
   public Gst.Caps Caps {
     get {
-      GLib.Value val = GetProperty ("caps");
+      Gst.GLib.Value val = GetProperty ("caps");
       Gst.Caps ret = (Gst.Caps) val;
       val.Dispose ();
       return ret;
     }
   }
 
-  [GLib.Property ("language-code") ]
+  [Gst.GLib.Property ("language-code") ]
   public string LanguageCode {
     get {
-      GLib.Value val = GetProperty ("language-code");
+      Gst.GLib.Value val = GetProperty ("language-code");
       string ret = (string) val;
       val.Dispose ();
       return ret;
     }
   }
 
-  [GLib.Property ("codec") ]
+  [Gst.GLib.Property ("codec") ]
   public string Codec {
     get {
-      GLib.Value val = GetProperty ("codec");
+      Gst.GLib.Value val = GetProperty ("codec");
       string ret = (string) val;
       val.Dispose ();
       return ret;
@@ -94,7 +94,7 @@ public class StreamInfo : GLib.Object {
 
   public delegate void MutedHandler (object o, MutedArgs args);
 
-  public class MutedArgs : GLib.SignalArgs {
+  public class MutedArgs : Gst.GLib.SignalArgs {
     public bool Mute {
       get {
         return (bool) Args[0];

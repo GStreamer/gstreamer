@@ -1,11 +1,11 @@
 <Type Name="DecodeBin2+AutoplugSortArgs" FullName="Gst.BasePlugins.DecodeBin2+AutoplugSortArgs">
-  <TypeSignature Language="C#" Value="public class DecodeBin2.AutoplugSortArgs : GLib.SignalArgs" />
+  <TypeSignature Language="C#" Value="public class DecodeBin2.AutoplugSortArgs : Gst.GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.SignalArgs</BaseTypeName>
+    <BaseTypeName>Gst.GLib.SignalArgs</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
@@ -56,13 +56,13 @@
       </Docs>
     </Member>
     <Member MemberName="Values">
-      <MemberSignature Language="C#" Value="public GLib.ValueArray Values { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.GLib.ValueArray Values { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.ValueArray</ReturnType>
+        <ReturnType>Gst.GLib.ValueArray</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>

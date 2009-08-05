@@ -87,7 +87,7 @@ public class HelloWorld
         return true;
     }
 
-    private void OnHandoff(object o, SignalArgs args) 
+    private void OnHandoff(object o, Gst.GLib.SignalArgs args) 
     {
         Gst.Buffer buffer = args.Args[0] as Gst.Buffer;
         Console.WriteLine(buffer.Duration + "\t" + buffer.Timestamp);

@@ -1,12 +1,12 @@
 <Type Name="LinkedArgs" FullName="Gst.LinkedArgs">
-  <TypeSignature Language="C#" Value="public class LinkedArgs : GLib.SignalArgs" />
+  <TypeSignature Language="C#" Value="public class LinkedArgs : Gst.GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.SignalArgs</BaseTypeName>
+    <BaseTypeName>Gst.GLib.SignalArgs</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>

@@ -1,17 +1,14 @@
 <Type Name="PropertyProbeAdapter" FullName="Gst.Interfaces.PropertyProbeAdapter">
-  <TypeSignature Language="C#" Value="public class PropertyProbeAdapter : GLib.GInterfaceAdapter, GLib.IWrapper, Gst.Interfaces.PropertyProbe" />
+  <TypeSignature Language="C#" Value="public class PropertyProbeAdapter : Gst.GLib.GInterfaceAdapter, Gst.Interfaces.PropertyProbe" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.GInterfaceAdapter</BaseTypeName>
+    <BaseTypeName>Gst.GLib.GInterfaceAdapter</BaseTypeName>
   </Base>
   <Interfaces>
-    <Interface>
-      <InterfaceName>GLib.IWrapper</InterfaceName>
-    </Interface>
     <Interface>
       <InterfaceName>Gst.Interfaces.PropertyProbe</InterfaceName>
     </Interface>
@@ -70,7 +67,6 @@
       <MemberSignature Language="C#" Value="public static Gst.Interfaces.PropertyProbe GetObject (GLib.Object obj);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -78,6 +74,25 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="obj" Type="GLib.Object" />
+      </Parameters>
+      <Docs>
+        <param name="obj">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetObject">
+      <MemberSignature Language="C#" Value="public static Gst.Interfaces.PropertyProbe GetObject (Gst.GLib.Object obj);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Interfaces.PropertyProbe</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="obj" Type="Gst.GLib.Object" />
       </Parameters>
       <Docs>
         <param name="obj">To be added.</param>
@@ -129,14 +144,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public override GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public override Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -244,7 +259,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("probe-needed")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("probe-needed")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

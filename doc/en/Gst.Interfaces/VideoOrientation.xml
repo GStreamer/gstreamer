@@ -1,5 +1,5 @@
 <Type Name="VideoOrientation" FullName="Gst.Interfaces.VideoOrientation">
-  <TypeSignature Language="C#" Value="public interface VideoOrientation : GLib.IWrapper" />
+  <TypeSignature Language="C#" Value="public interface VideoOrientation : Gst.GLib.IWrapper" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -7,7 +7,7 @@
   </AssemblyInfo>
   <Interfaces>
     <Interface>
-      <InterfaceName>GLib.IWrapper</InterfaceName>
+      <InterfaceName>Gst.GLib.IWrapper</InterfaceName>
     </Interface>
   </Interfaces>
   <Docs>

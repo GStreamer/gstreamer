@@ -526,11 +526,29 @@
       <MemberSignature Language="C#" Value="public static GLib.GType GetGType (string tag);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>GLib.GType</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="tag" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="tag">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetGType">
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GetGType (string tag);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="tag" Type="System.String" />
@@ -741,7 +759,46 @@
       <MemberSignature Language="C#" Value="public static void MergeStringsWithComma (out GLib.Value dest, ref GLib.Value src);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dest" Type="GLib.Value&amp;" RefType="out" />
+        <Parameter Name="src" Type="GLib.Value&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="dest">To be added.</param>
+        <param name="src">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MergeStringsWithComma">
+      <MemberSignature Language="C#" Value="public static void MergeStringsWithComma (out Gst.GLib.Value dest, ref Gst.GLib.Value src);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dest" Type="Gst.GLib.Value&amp;" RefType="out" />
+        <Parameter Name="src" Type="Gst.GLib.Value&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="dest">To be added.</param>
+        <param name="src">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MergeUseFirst">
+      <MemberSignature Language="C#" Value="public static void MergeUseFirst (out GLib.Value dest, ref GLib.Value src);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -759,18 +816,17 @@
       </Docs>
     </Member>
     <Member MemberName="MergeUseFirst">
-      <MemberSignature Language="C#" Value="public static void MergeUseFirst (out GLib.Value dest, ref GLib.Value src);" />
+      <MemberSignature Language="C#" Value="public static void MergeUseFirst (out Gst.GLib.Value dest, ref Gst.GLib.Value src);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
       <Parameters>
-        <Parameter Name="dest" Type="GLib.Value&amp;" RefType="out" />
-        <Parameter Name="src" Type="GLib.Value&amp;" RefType="ref" />
+        <Parameter Name="dest" Type="Gst.GLib.Value&amp;" RefType="out" />
+        <Parameter Name="src" Type="Gst.GLib.Value&amp;" RefType="ref" />
       </Parameters>
       <Docs>
         <param name="dest">To be added.</param>
@@ -873,7 +929,6 @@
       <MemberSignature Language="C#" Value="public static void Register (string name, Gst.TagFlags flag, GLib.GType type, string nick, string blurb, Gst.TagMergeFunc func);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -883,6 +938,34 @@
         <Parameter Name="name" Type="System.String" />
         <Parameter Name="flag" Type="Gst.TagFlags" />
         <Parameter Name="type" Type="GLib.GType" />
+        <Parameter Name="nick" Type="System.String" />
+        <Parameter Name="blurb" Type="System.String" />
+        <Parameter Name="func" Type="Gst.TagMergeFunc" />
+      </Parameters>
+      <Docs>
+        <param name="name">To be added.</param>
+        <param name="flag">To be added.</param>
+        <param name="type">To be added.</param>
+        <param name="nick">To be added.</param>
+        <param name="blurb">To be added.</param>
+        <param name="func">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Register">
+      <MemberSignature Language="C#" Value="public static void Register (string name, Gst.TagFlags flag, Gst.GLib.GType type, string nick, string blurb, Gst.TagMergeFunc func);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="flag" Type="Gst.TagFlags" />
+        <Parameter Name="type" Type="Gst.GLib.GType" />
         <Parameter Name="nick" Type="System.String" />
         <Parameter Name="blurb" Type="System.String" />
         <Parameter Name="func" Type="Gst.TagMergeFunc" />

@@ -71,7 +71,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("caps")</AttributeName>
+          <AttributeName>Gst.GLib.Property("caps")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

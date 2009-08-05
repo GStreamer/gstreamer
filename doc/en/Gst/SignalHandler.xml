@@ -9,7 +9,7 @@
   </Base>
   <Parameters>
     <Parameter Name="o" Type="System.Object" />
-    <Parameter Name="args" Type="GLib.SignalArgs" />
+    <Parameter Name="args" Type="Gst.GLib.SignalArgs" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>

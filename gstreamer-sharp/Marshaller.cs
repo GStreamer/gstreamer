@@ -1,7 +1,7 @@
 
 using System;
 using System.Runtime.InteropServices;
-using GLib;
+using Gst.GLib;
 
 namespace Gst {
 	internal static class Marshaller {
@@ -11,10 +11,10 @@ namespace Gst {
 			if (strs == null)
 				return IntPtr.Zero;
 
-			IntPtr result = GLib.Marshaller.Malloc ((ulong) ((strs.Length + 1) * IntPtr.Size));
+			IntPtr result = Gst.GLib.Marshaller.Malloc ((ulong) ((strs.Length + 1) * IntPtr.Size));
 
 			for (int i = 0; i < strs.Length; i++)
-				Marshal.WriteIntPtr (result, i * IntPtr.Size, GLib.Marshaller.StringToPtrGStrdup (strs [i]));
+				Marshal.WriteIntPtr (result, i * IntPtr.Size, Gst.GLib.Marshaller.StringToPtrGStrdup (strs [i]));
 
 			Marshal.WriteIntPtr (result, strs.Length * IntPtr.Size, IntPtr.Zero);
 
@@ -33,7 +33,7 @@ namespace Gst {
 			System.Collections.ArrayList result = new System.Collections.ArrayList ();
 			IntPtr s = Marshal.ReadIntPtr (null_term_array, count++ * IntPtr.Size);
 			while (s != IntPtr.Zero) {
-				result.Add (GLib.Marshaller.Utf8PtrToString (s));
+				result.Add (Gst.GLib.Marshaller.Utf8PtrToString (s));
 				s = Marshal.ReadIntPtr (null_term_array, count++ * IntPtr.Size);
 			}
 

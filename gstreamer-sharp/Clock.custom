@@ -99,7 +99,7 @@ static extern bool gst_clock_set_master (IntPtr raw, IntPtr master);
 public Gst.Clock Master {
   get  {
     IntPtr raw_ret = gst_clock_get_master (Handle);
-    Gst.Clock ret = GLib.Object.GetObject (raw_ret, true) as Gst.Clock;
+    Gst.Clock ret = Gst.GLib.Object.GetObject (raw_ret, true) as Gst.Clock;
     return ret;
   }
   set {
@@ -123,7 +123,7 @@ private IntPtr EntriesPtr {
 
 protected Gst.ClockEntry[] Entries {
   get {
-    return (Gst.ClockEntry[]) GLib.Marshaller.ListPtrToArray (EntriesPtr, typeof (GLib.List), false, false, typeof (Gst.ClockEntry));
+    return (Gst.ClockEntry[]) Gst.GLib.Marshaller.ListPtrToArray (EntriesPtr, typeof (Gst.GLib.List), false, false, typeof (Gst.ClockEntry));
   }
 }
 

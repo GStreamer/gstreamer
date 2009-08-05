@@ -117,7 +117,6 @@
       <MemberSignature Language="C#" Value="public Gst.IndexEntry AddObject (int id, string key, GLib.GType type, GLib.Object objekt);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -128,6 +127,31 @@
         <Parameter Name="key" Type="System.String" />
         <Parameter Name="type" Type="GLib.GType" />
         <Parameter Name="objekt" Type="GLib.Object" />
+      </Parameters>
+      <Docs>
+        <param name="id">To be added.</param>
+        <param name="key">To be added.</param>
+        <param name="type">To be added.</param>
+        <param name="objekt">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AddObject">
+      <MemberSignature Language="C#" Value="public Gst.IndexEntry AddObject (int id, string key, Gst.GLib.GType type, Gst.GLib.Object objekt);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.IndexEntry</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="id" Type="System.Int32" />
+        <Parameter Name="key" Type="System.String" />
+        <Parameter Name="type" Type="Gst.GLib.GType" />
+        <Parameter Name="objekt" Type="Gst.GLib.Object" />
       </Parameters>
       <Docs>
         <param name="id">To be added.</param>
@@ -183,7 +207,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("entry-added")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("entry-added")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -277,14 +301,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -333,7 +357,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("resolver")</AttributeName>
+          <AttributeName>Gst.GLib.Property("resolver")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -371,7 +395,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideAddEntry", Type=typeof(Gst.Index))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideAddEntry", Type=typeof(Gst.Index))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -395,7 +419,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideCommit", Type=typeof(Gst.Index))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideCommit", Type=typeof(Gst.Index))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -419,7 +443,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideEntryAdded", Type=typeof(Gst.Index))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideEntryAdded", Type=typeof(Gst.Index))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -442,7 +466,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetAssocEntry", Type=typeof(Gst.Index))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetAssocEntry", Type=typeof(Gst.Index))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -511,7 +535,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetWriterId", Type=typeof(Gst.Index))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetWriterId", Type=typeof(Gst.Index))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

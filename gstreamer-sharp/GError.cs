@@ -37,17 +37,17 @@ namespace Gst {
       get {
         if (message == IntPtr.Zero)
           return null;
-        return GLib.Marshaller.Utf8PtrToString (message);
+        return Gst.GLib.Marshaller.Utf8PtrToString (message);
       }
       set {
         if (message != IntPtr.Zero)
-          GLib.Marshaller.Free (message);
-        message = GLib.Marshaller.StringToPtrGStrdup (value);
+          Gst.GLib.Marshaller.Free (message);
+        message = Gst.GLib.Marshaller.StringToPtrGStrdup (value);
       }
     }
 
     public void Unset () {
-      GLib.Marshaller.Free (message);
+      Gst.GLib.Marshaller.Free (message);
       message = IntPtr.Zero;
       code = 0;
       domain_quark = 0;

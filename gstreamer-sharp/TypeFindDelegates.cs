@@ -10,14 +10,14 @@ namespace Gst {
 
 namespace GstSharp {
 
-  [GLib.CDeclCallback]
+  [Gst.GLib.CDeclCallback]
   internal delegate IntPtr TypeFindPeekFunctionNative (IntPtr data, long offset, uint size);
 
   internal class TypeFindPeekFunctionInvoker {
 
     TypeFindPeekFunctionNative native_cb;
     IntPtr __data;
-    GLib.DestroyNotify __notify;
+    Gst.GLib.DestroyNotify __notify;
 
     ~TypeFindPeekFunctionInvoker () {
       if (__notify == null)
@@ -29,7 +29,7 @@ namespace GstSharp {
 
     internal TypeFindPeekFunctionInvoker (TypeFindPeekFunctionNative native_cb, IntPtr data) : this (native_cb, data, null) {}
 
-    internal TypeFindPeekFunctionInvoker (TypeFindPeekFunctionNative native_cb, IntPtr data, GLib.DestroyNotify notify) {
+    internal TypeFindPeekFunctionInvoker (TypeFindPeekFunctionNative native_cb, IntPtr data, Gst.GLib.DestroyNotify notify) {
       this.native_cb = native_cb;
       __data = data;
       __notify = notify;
@@ -70,7 +70,7 @@ namespace GstSharp {
         data_cache.Add (raw_ret);
         return raw_ret;
       } catch (Exception e) {
-        GLib.ExceptionManager.RaiseUnhandledException (e, true);
+        Gst.GLib.ExceptionManager.RaiseUnhandledException (e, true);
         // NOTREACHED: Above call does not return.
         throw e;
       }
@@ -109,14 +109,14 @@ namespace GstSharp {
     }
   }
 
-  [GLib.CDeclCallback]
+  [Gst.GLib.CDeclCallback]
   internal delegate void TypeFindSuggestFunctionNative (IntPtr data, uint propability, IntPtr caps);
 
   internal class TypeFindSuggestFunctionInvoker {
 
     TypeFindSuggestFunctionNative native_cb;
     IntPtr __data;
-    GLib.DestroyNotify __notify;
+    Gst.GLib.DestroyNotify __notify;
 
     ~TypeFindSuggestFunctionInvoker () {
       if (__notify == null)
@@ -128,7 +128,7 @@ namespace GstSharp {
 
     internal TypeFindSuggestFunctionInvoker (TypeFindSuggestFunctionNative native_cb, IntPtr data) : this (native_cb, data, null) {}
 
-    internal TypeFindSuggestFunctionInvoker (TypeFindSuggestFunctionNative native_cb, IntPtr data, GLib.DestroyNotify notify) {
+    internal TypeFindSuggestFunctionInvoker (TypeFindSuggestFunctionNative native_cb, IntPtr data, Gst.GLib.DestroyNotify notify) {
       this.native_cb = native_cb;
       __data = data;
       __notify = notify;
@@ -148,11 +148,11 @@ namespace GstSharp {
   internal class TypeFindSuggestFunctionWrapper {
     public void NativeCallback (IntPtr data, uint propability, IntPtr caps) {
       try {
-        managed (propability, (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false));
+        managed (propability, (Gst.Caps) Gst.GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false));
         if (release_on_call)
           gch.Free ();
       } catch (Exception e) {
-        GLib.ExceptionManager.RaiseUnhandledException (e, true);
+        Gst.GLib.ExceptionManager.RaiseUnhandledException (e, true);
         // NOTREACHED: Above call does not return.
         throw e;
       }
@@ -185,14 +185,14 @@ namespace GstSharp {
     }
   }
 
-  [GLib.CDeclCallback]
+  [Gst.GLib.CDeclCallback]
   internal delegate ulong TypeFindGetLengthFunctionNative (IntPtr data);
 
   internal class TypeFindGetLengthFunctionInvoker {
 
     TypeFindGetLengthFunctionNative native_cb;
     IntPtr __data;
-    GLib.DestroyNotify __notify;
+    Gst.GLib.DestroyNotify __notify;
 
     ~TypeFindGetLengthFunctionInvoker () {
       if (__notify == null)
@@ -204,7 +204,7 @@ namespace GstSharp {
 
     internal TypeFindGetLengthFunctionInvoker (TypeFindGetLengthFunctionNative native_cb, IntPtr data) : this (native_cb, data, null) {}
 
-    internal TypeFindGetLengthFunctionInvoker (TypeFindGetLengthFunctionNative native_cb, IntPtr data, GLib.DestroyNotify notify) {
+    internal TypeFindGetLengthFunctionInvoker (TypeFindGetLengthFunctionNative native_cb, IntPtr data, Gst.GLib.DestroyNotify notify) {
       this.native_cb = native_cb;
       __data = data;
       __notify = notify;
@@ -230,7 +230,7 @@ namespace GstSharp {
           gch.Free ();
         return ret;
       } catch (Exception e) {
-        GLib.ExceptionManager.RaiseUnhandledException (e, true);
+        Gst.GLib.ExceptionManager.RaiseUnhandledException (e, true);
         // NOTREACHED: Above call does not return.
         throw e;
       }

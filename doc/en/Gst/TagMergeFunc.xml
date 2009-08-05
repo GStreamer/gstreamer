@@ -9,8 +9,8 @@
     <BaseTypeName>System.Delegate</BaseTypeName>
   </Base>
   <Parameters>
-    <Parameter Name="dest" Type="GLib.Value&amp;" RefType="out" />
-    <Parameter Name="src" Type="GLib.Value&amp;" RefType="ref" />
+    <Parameter Name="dest" Type="Gst.GLib.Value&amp;" RefType="out" />
+    <Parameter Name="src" Type="Gst.GLib.Value&amp;" RefType="ref" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>

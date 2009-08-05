@@ -1,4 +1,4 @@
-using GLib;
+using Gst.GLib;
 using Gst;
 using System;
 using System.Runtime.InteropServices;
@@ -112,11 +112,11 @@ namespace Gst {
       }
     }
 
-    public static bool IsEnumType (GLib.GType gtype) {
+    public static bool IsEnumType (Gst.GLib.GType gtype) {
       return (g_type_is_a (gtype.Val, GType.Enum.Val));
     }
 
-    public EnumInfo (GLib.GType gtype) {
+    public EnumInfo (Gst.GLib.GType gtype) {
       if (!IsEnumType (gtype))
         throw new ArgumentException ();
 
@@ -133,8 +133,8 @@ namespace Gst {
       for (int i = 0; i < klass.n_values; i++) {
         GEnumValue gv = (GEnumValue) Marshal.PtrToStructure (new IntPtr (klass.values.ToInt64() + i * unmanaged_struct_size), typeof (GEnumValue));
         values[i].value = gv.value;
-        values[i].value_name = GLib.Marshaller.Utf8PtrToString (gv.value_name);
-        values[i].value_nick = GLib.Marshaller.Utf8PtrToString (gv.value_nick);
+        values[i].value_name = Gst.GLib.Marshaller.Utf8PtrToString (gv.value_name);
+        values[i].value_nick = Gst.GLib.Marshaller.Utf8PtrToString (gv.value_nick);
       }
 
       g_type_class_unref (class_ptr);
@@ -183,7 +183,7 @@ namespace Gst {
       }
     }
 
-    public static bool IsFlagsType (GLib.GType gtype) {
+    public static bool IsFlagsType (Gst.GLib.GType gtype) {
       return (g_type_is_a (gtype.Val, GType.Flags.Val));
     }
 
@@ -202,7 +202,7 @@ namespace Gst {
       }
     }
 
-    public FlagsInfo (GLib.GType gtype) {
+    public FlagsInfo (Gst.GLib.GType gtype) {
       if (!IsFlagsType (gtype))
         throw new ArgumentException ();
 
@@ -218,8 +218,8 @@ namespace Gst {
       for (int i = 0; i < klass.n_values; i++) {
         GFlagsValue gv = (GFlagsValue) Marshal.PtrToStructure (new IntPtr (klass.values.ToInt64() + i * unmanaged_struct_size), typeof (GFlagsValue));
         values[i].value = gv.value;
-        values[i].value_name = GLib.Marshaller.Utf8PtrToString (gv.value_name);
-        values[i].value_nick = GLib.Marshaller.Utf8PtrToString (gv.value_nick);
+        values[i].value_name = Gst.GLib.Marshaller.Utf8PtrToString (gv.value_name);
+        values[i].value_nick = Gst.GLib.Marshaller.Utf8PtrToString (gv.value_nick);
       }
 
       g_type_class_unref (class_ptr);

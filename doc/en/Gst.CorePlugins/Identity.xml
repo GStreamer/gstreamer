@@ -68,7 +68,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("check-imperfect-offset")</AttributeName>
+          <AttributeName>Gst.GLib.Property("check-imperfect-offset")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -88,7 +88,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("check-imperfect-timestamp")</AttributeName>
+          <AttributeName>Gst.GLib.Property("check-imperfect-timestamp")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -108,7 +108,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("check-perfect")</AttributeName>
+          <AttributeName>Gst.GLib.Property("check-perfect")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -128,7 +128,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("datarate")</AttributeName>
+          <AttributeName>Gst.GLib.Property("datarate")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -148,7 +148,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("drop-probability")</AttributeName>
+          <AttributeName>Gst.GLib.Property("drop-probability")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -168,7 +168,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("dump")</AttributeName>
+          <AttributeName>Gst.GLib.Property("dump")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -188,7 +188,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("error-after")</AttributeName>
+          <AttributeName>Gst.GLib.Property("error-after")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -222,7 +222,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("last-message")</AttributeName>
+          <AttributeName>Gst.GLib.Property("last-message")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -277,7 +277,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("signal-handoffs")</AttributeName>
+          <AttributeName>Gst.GLib.Property("signal-handoffs")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -297,7 +297,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("silent")</AttributeName>
+          <AttributeName>Gst.GLib.Property("silent")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -317,7 +317,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("single-segment")</AttributeName>
+          <AttributeName>Gst.GLib.Property("single-segment")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -337,7 +337,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("sleep-time")</AttributeName>
+          <AttributeName>Gst.GLib.Property("sleep-time")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -357,7 +357,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("sync")</AttributeName>
+          <AttributeName>Gst.GLib.Property("sync")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

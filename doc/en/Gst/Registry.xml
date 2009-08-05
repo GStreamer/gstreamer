@@ -127,7 +127,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("feature-added")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("feature-added")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -164,7 +164,6 @@
       <MemberSignature Language="C#" Value="public Gst.PluginFeature FindFeature (string name, GLib.GType type);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -173,6 +172,27 @@
       <Parameters>
         <Parameter Name="name" Type="System.String" />
         <Parameter Name="type" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="name">To be added.</param>
+        <param name="type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FindFeature">
+      <MemberSignature Language="C#" Value="public Gst.PluginFeature FindFeature (string name, Gst.GLib.GType type);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.PluginFeature</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="type" Type="Gst.GLib.GType" />
       </Parameters>
       <Docs>
         <param name="name">To be added.</param>
@@ -206,7 +226,6 @@
       <MemberSignature Language="C#" Value="public Gst.PluginFeature[] GetFeatureList (GLib.GType type);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -214,6 +233,25 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="type" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetFeatureList">
+      <MemberSignature Language="C#" Value="public Gst.PluginFeature[] GetFeatureList (Gst.GLib.GType type);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.PluginFeature[]</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="type" Type="Gst.GLib.GType" />
       </Parameters>
       <Docs>
         <param name="type">To be added.</param>
@@ -243,14 +281,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -307,7 +345,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideFeatureAdded", Type=typeof(Gst.Registry))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideFeatureAdded", Type=typeof(Gst.Registry))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -331,7 +369,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverridePluginAdded", Type=typeof(Gst.Registry))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverridePluginAdded", Type=typeof(Gst.Registry))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -371,7 +409,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("plugin-added")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("plugin-added")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

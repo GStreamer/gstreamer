@@ -140,7 +140,7 @@ namespace GtkSharp.Generation {
 			sw.WriteLine ();
 			sw.WriteLine ("\t\t" + Name + "Native native_cb;");
 			sw.WriteLine ("\t\tIntPtr __data;");
-			sw.WriteLine ("\t\tGLib.DestroyNotify __notify;");
+			sw.WriteLine ("\t\tGst.GLib.DestroyNotify __notify;");
 			sw.WriteLine ();
 			sw.WriteLine ("\t\t~" + Name + "Invoker ()");
 			sw.WriteLine ("\t\t{");
@@ -153,7 +153,7 @@ namespace GtkSharp.Generation {
 			sw.WriteLine ();
 			sw.WriteLine ("\t\tinternal " + Name + "Invoker (" + Name + "Native native_cb, IntPtr data) : this (native_cb, data, null) {}");
 			sw.WriteLine ();
-			sw.WriteLine ("\t\tinternal " + Name + "Invoker (" + Name + "Native native_cb, IntPtr data, GLib.DestroyNotify notify)");
+			sw.WriteLine ("\t\tinternal " + Name + "Invoker (" + Name + "Native native_cb, IntPtr data, Gst.GLib.DestroyNotify notify)");
 			sw.WriteLine ("\t\t{");
 			sw.WriteLine ("\t\t\tthis.native_cb = native_cb;");
 			sw.WriteLine ("\t\t\t__data = data;");
@@ -233,7 +233,7 @@ namespace GtkSharp.Generation {
 			*/
 			bool fatal = (retval.MarshalType != "void" && retval.MarshalType != "bool") || call.HasOutParam;
 			sw.WriteLine ("\t\t\t} catch (Exception e) {");
-			sw.WriteLine ("\t\t\t\tGLib.ExceptionManager.RaiseUnhandledException (e, " + (fatal ? "true" : "false") + ");");
+			sw.WriteLine ("\t\t\t\tGst.GLib.ExceptionManager.RaiseUnhandledException (e, " + (fatal ? "true" : "false") + ");");
 			if (fatal) {
 				sw.WriteLine ("\t\t\t\t// NOTREACHED: Above call does not return.");
 				sw.WriteLine ("\t\t\t\tthrow e;");

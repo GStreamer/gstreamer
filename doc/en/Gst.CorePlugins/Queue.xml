@@ -68,7 +68,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("current-level-buffers")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-level-buffers")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -88,7 +88,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("current-level-bytes")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-level-bytes")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -108,7 +108,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("current-level-time")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-level-time")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -128,7 +128,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("leaky")</AttributeName>
+          <AttributeName>Gst.GLib.Property("leaky")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -183,7 +183,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("max-size-buffers")</AttributeName>
+          <AttributeName>Gst.GLib.Property("max-size-buffers")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -203,7 +203,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("max-size-bytes")</AttributeName>
+          <AttributeName>Gst.GLib.Property("max-size-bytes")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -223,7 +223,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("max-size-time")</AttributeName>
+          <AttributeName>Gst.GLib.Property("max-size-time")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -243,7 +243,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("min-threshold-buffers")</AttributeName>
+          <AttributeName>Gst.GLib.Property("min-threshold-buffers")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -263,7 +263,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("min-threshold-bytes")</AttributeName>
+          <AttributeName>Gst.GLib.Property("min-threshold-bytes")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -283,7 +283,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("min-threshold-time")</AttributeName>
+          <AttributeName>Gst.GLib.Property("min-threshold-time")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -296,13 +296,13 @@
       </Docs>
     </Member>
     <Member MemberName="Overrun">
-      <MemberSignature Language="C#" Value="public event Gst.CorePlugins.Queue.OverrunHandler Overrun;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler Overrun;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.CorePlugins.Queue+OverrunHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -310,13 +310,13 @@
       </Docs>
     </Member>
     <Member MemberName="Pushing">
-      <MemberSignature Language="C#" Value="public event Gst.CorePlugins.Queue.PushingHandler Pushing;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler Pushing;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.CorePlugins.Queue+PushingHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -324,13 +324,13 @@
       </Docs>
     </Member>
     <Member MemberName="Running">
-      <MemberSignature Language="C#" Value="public event Gst.CorePlugins.Queue.RunningHandler Running;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler Running;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.CorePlugins.Queue+RunningHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -338,13 +338,13 @@
       </Docs>
     </Member>
     <Member MemberName="Underrun">
-      <MemberSignature Language="C#" Value="public event Gst.CorePlugins.Queue.UnderrunHandler Underrun;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler Underrun;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.CorePlugins.Queue+UnderrunHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>

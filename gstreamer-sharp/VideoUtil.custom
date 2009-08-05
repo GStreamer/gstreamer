@@ -6,7 +6,7 @@ public static Gst.Fraction GetFrameRate (Gst.Pad pad) {
   if (raw_ret == IntPtr.Zero)
     return new Gst.Fraction ();
 
-  GLib.Value ret = (GLib.Value) Marshal.PtrToStructure (raw_ret, typeof (GLib.Value));
+  Gst.GLib.Value ret = (Gst.GLib.Value) Marshal.PtrToStructure (raw_ret, typeof (Gst.GLib.Value));
   return (Gst.Fraction) ret.Val;
 }
 

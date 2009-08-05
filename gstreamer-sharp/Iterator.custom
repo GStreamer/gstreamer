@@ -32,7 +32,7 @@ private class Enumerator : IEnumerator {
 						break;
 					}
 					seen.Add (raw_ret, null);
-					current = GLib.Object.GetObject (raw_ret, true);
+					current = Gst.GLib.Object.GetObject (raw_ret, true);
 					return true;
 				case 2:
 					gst_iterator_resync (iterator.Handle);

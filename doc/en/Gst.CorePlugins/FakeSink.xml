@@ -68,7 +68,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("can-activate-pull")</AttributeName>
+          <AttributeName>Gst.GLib.Property("can-activate-pull")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -88,7 +88,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("can-activate-push")</AttributeName>
+          <AttributeName>Gst.GLib.Property("can-activate-push")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -108,7 +108,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("dump")</AttributeName>
+          <AttributeName>Gst.GLib.Property("dump")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -142,7 +142,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("last-message")</AttributeName>
+          <AttributeName>Gst.GLib.Property("last-message")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -197,7 +197,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("num-buffers")</AttributeName>
+          <AttributeName>Gst.GLib.Property("num-buffers")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -231,7 +231,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("signal-handoffs")</AttributeName>
+          <AttributeName>Gst.GLib.Property("signal-handoffs")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -251,7 +251,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("silent")</AttributeName>
+          <AttributeName>Gst.GLib.Property("silent")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -271,7 +271,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("state-error")</AttributeName>
+          <AttributeName>Gst.GLib.Property("state-error")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

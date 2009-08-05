@@ -68,7 +68,7 @@
       </Docs>
     </Member>
     <Member MemberName="AdjustUnlocked">
-      <MemberSignature Language="C#" Value="public ulong AdjustUnlocked (ulong _internal);" />
+      <MemberSignature Language="C#" Value="protected ulong AdjustUnlocked (ulong _internal);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -193,14 +193,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -355,7 +355,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideChangeResolution", Type=typeof(Gst.Clock))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideChangeResolution", Type=typeof(Gst.Clock))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -382,7 +382,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetInternalTime", Type=typeof(Gst.Clock))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetInternalTime", Type=typeof(Gst.Clock))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -404,7 +404,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetResolution", Type=typeof(Gst.Clock))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideGetResolution", Type=typeof(Gst.Clock))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -426,7 +426,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideUnschedule", Type=typeof(Gst.Clock))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideUnschedule", Type=typeof(Gst.Clock))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -450,7 +450,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideWaitAsync", Type=typeof(Gst.Clock))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideWaitAsync", Type=typeof(Gst.Clock))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -475,7 +475,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideWaitJitter", Type=typeof(Gst.Clock))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideWaitJitter", Type=typeof(Gst.Clock))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -643,7 +643,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("stats")</AttributeName>
+          <AttributeName>Gst.GLib.Property("stats")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -732,7 +732,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("timeout")</AttributeName>
+          <AttributeName>Gst.GLib.Property("timeout")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -778,7 +778,7 @@
       </Docs>
     </Member>
     <Member MemberName="UnadjustUnlocked">
-      <MemberSignature Language="C#" Value="public ulong UnadjustUnlocked (ulong external);" />
+      <MemberSignature Language="C#" Value="protected ulong UnadjustUnlocked (ulong external);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -878,7 +878,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("window-size")</AttributeName>
+          <AttributeName>Gst.GLib.Property("window-size")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -899,7 +899,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("window-threshold")</AttributeName>
+          <AttributeName>Gst.GLib.Property("window-threshold")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

@@ -1,6 +1,6 @@
-protected override GLib.Opaque Copy (IntPtr raw)
+protected override Gst.GLib.Opaque Copy (IntPtr raw)
 {
-  return GLib.Opaque.GetOpaque (raw, typeof (Gst.IndexEntry), true);
+  return Gst.GLib.Opaque.GetOpaque (raw, typeof (Gst.IndexEntry), true);
 }
 
 [DllImport ("gstreamersharpglue-0.10.dll") ]
@@ -14,7 +14,7 @@ public string IdDescription {
 
     unsafe {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + id_description_offset);
-      return GLib.Marshaller.Utf8PtrToString (*raw_ptr);
+      return Gst.GLib.Marshaller.Utf8PtrToString (*raw_ptr);
     }
   }
 }
@@ -86,7 +86,7 @@ public string ObjectKey {
 
     unsafe {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + object_key_offset);
-      return GLib.Marshaller.Utf8PtrToString (*raw_ptr);
+      return Gst.GLib.Marshaller.Utf8PtrToString (*raw_ptr);
     }
   }
 }
@@ -95,14 +95,14 @@ public string ObjectKey {
 extern static uint gstsharp_gst_index_entry_get_object_type_offset ();
 
 static uint object_type_offset = gstsharp_gst_index_entry_get_object_type_offset ();
-public GLib.GType ObjectGType {
+public Gst.GLib.GType ObjectGType {
   get {
     if (Type != Gst.IndexEntryType.Object)
       throw new Exception ();
 
     unsafe {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + object_type_offset);
-      return new GLib.GType (*raw_ptr);
+      return new Gst.GLib.GType (*raw_ptr);
     }
   }
 }
@@ -118,7 +118,7 @@ public object ObjectObject {
 
     unsafe {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + object_object_offset);
-      return GLib.Object.GetObject (*raw_ptr, false);
+      return Gst.GLib.Object.GetObject (*raw_ptr, false);
     }
   }
 }
@@ -150,7 +150,7 @@ public string FormatKey {
 
     unsafe {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + format_key_offset);
-      return GLib.Marshaller.Utf8PtrToString (*raw_ptr);
+      return Gst.GLib.Marshaller.Utf8PtrToString (*raw_ptr);
     }
   }
 }

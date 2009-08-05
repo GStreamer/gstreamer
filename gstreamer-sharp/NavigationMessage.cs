@@ -3,7 +3,7 @@ namespace Gst.Interfaces {
   using System;
   using System.Runtime.InteropServices;
   using System.Reflection;
-  using GLib;
+  using Gst.GLib;
   using Gst;
   using Gst.Interfaces;
 

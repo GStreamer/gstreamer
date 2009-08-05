@@ -18,7 +18,6 @@
       <MemberSignature Language="C#" Value="public FlagsInfo (GLib.GType gtype);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
@@ -30,11 +29,25 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public FlagsInfo (Gst.GLib.GType gtype);" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="gtype" Type="Gst.GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="gtype">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="IsFlagsType">
       <MemberSignature Language="C#" Value="public static bool IsFlagsType (GLib.GType gtype);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -42,6 +55,25 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="gtype" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="gtype">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsFlagsType">
+      <MemberSignature Language="C#" Value="public static bool IsFlagsType (Gst.GLib.GType gtype);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="gtype" Type="Gst.GLib.GType" />
       </Parameters>
       <Docs>
         <param name="gtype">To be added.</param>

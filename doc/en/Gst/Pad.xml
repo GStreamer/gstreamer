@@ -363,7 +363,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("caps")</AttributeName>
+          <AttributeName>Gst.GLib.Property("caps")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -453,7 +453,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("direction")</AttributeName>
+          <AttributeName>Gst.GLib.Property("direction")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -633,14 +633,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -657,7 +657,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("have-data")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("have-data")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -669,14 +669,14 @@
       </Docs>
     </Member>
     <Member MemberName="InternalLinks">
-      <MemberSignature Language="C#" Value="public System.Collections.IEnumerable InternalLinks { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Iterator InternalLinks { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Collections.IEnumerable</ReturnType>
+        <ReturnType>Gst.Iterator</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -777,7 +777,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("linked")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("linked")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -845,7 +845,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideHaveData", Type=typeof(Gst.Pad))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideHaveData", Type=typeof(Gst.Pad))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -870,7 +870,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideLinked", Type=typeof(Gst.Pad))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideLinked", Type=typeof(Gst.Pad))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -894,7 +894,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideRequestLink", Type=typeof(Gst.Pad))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideRequestLink", Type=typeof(Gst.Pad))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -915,7 +915,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverrideUnlinked", Type=typeof(Gst.Pad))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverrideUnlinked", Type=typeof(Gst.Pad))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -966,7 +966,6 @@
       <MemberSignature Language="C#" Value="public Gst.Element ParentElement { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -1468,7 +1467,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("request-link")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("request-link")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1730,7 +1729,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("template")</AttributeName>
+          <AttributeName>Gst.GLib.Property("template")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1771,7 +1770,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("unlinked")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("unlinked")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

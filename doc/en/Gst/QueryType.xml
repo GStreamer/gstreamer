@@ -10,7 +10,7 @@
   </Base>
   <Attributes>
     <Attribute>
-      <AttributeName>GLib.GType(typeof(Gst.QueryTypeGType))</AttributeName>
+      <AttributeName>Gst.GLib.GType(typeof(Gst.QueryTypeGType))</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>

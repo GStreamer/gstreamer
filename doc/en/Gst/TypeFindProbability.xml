@@ -10,7 +10,7 @@
   </Base>
   <Attributes>
     <Attribute>
-      <AttributeName>GLib.GType(typeof(Gst.TypeFindProbabilityGType))</AttributeName>
+      <AttributeName>Gst.GLib.GType(typeof(Gst.TypeFindProbabilityGType))</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>

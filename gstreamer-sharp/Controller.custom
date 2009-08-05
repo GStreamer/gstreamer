@@ -1,22 +1,22 @@
 [DllImport ("libgstcontroller-0.10.dll") ]
 static extern IntPtr gst_controller_new_list (IntPtr objekt, IntPtr list);
 
-public Controller (GLib.Object objekt, string[] properties) : base (IntPtr.Zero) {
+public Controller (Gst.GLib.Object objekt, string[] properties) : base (IntPtr.Zero) {
   if (GetType () != typeof (Controller)) {
     throw new InvalidOperationException ("Can't override this constructor.");
   }
-  GLib.List list = new GLib.List (properties, typeof (string), true, true);
+  Gst.GLib.List list = new Gst.GLib.List (properties, typeof (string), true, true);
 
   Raw = gst_controller_new_list (objekt == null ? IntPtr.Zero : objekt.Handle, list == null ? IntPtr.Zero : list.Handle);
 }
 
-public Controller (GLib.Object objekt, string property) : this (objekt, new string[] {property}) { }
+public Controller (Gst.GLib.Object objekt, string property) : this (objekt, new string[] {property}) { }
 
 [DllImport ("libgstcontroller-0.10.dll") ]
 static extern bool gst_controller_remove_properties_list (IntPtr raw, IntPtr list);
 
 public bool RemoveProperties (string[] properties) {
-  GLib.List list = new GLib.List (properties, typeof (string), true, true);
+  Gst.GLib.List list = new Gst.GLib.List (properties, typeof (string), true, true);
 
   bool raw_ret = gst_controller_remove_properties_list (Handle, list == null ? IntPtr.Zero : list.Handle);
   bool ret = raw_ret;
@@ -34,11 +34,11 @@ extern static uint gst__controllersharp_gst__controller_controller_get_propertie
 static uint properties_offset = gst__controllersharp_gst__controller_controller_get_properties_offset ();
 public string[] Properties {
   get {
-    GLib.List properties_list;
+    Gst.GLib.List properties_list;
 
     unsafe {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + properties_offset);
-      properties_list = new GLib.List ( (*raw_ptr), typeof (string));
+      properties_list = new Gst.GLib.List ( (*raw_ptr), typeof (string));
     }
 
     string[] properties = new string[properties_list.Count];
@@ -53,11 +53,11 @@ public string[] Properties {
 extern static uint gst__controllersharp_gst__controller_controller_get_object_offset ();
 
 static uint object_offset = gst__controllersharp_gst__controller_controller_get_object_offset ();
-public GLib.Object Object {
+public Gst.GLib.Object Object {
   get {
     unsafe {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + object_offset);
-      return GLib.Object.GetObject ( (*raw_ptr));
+      return Gst.GLib.Object.GetObject ( (*raw_ptr));
     }
   }
 }
@@ -108,15 +108,15 @@ public System.Array GetValueArray (string property, ulong timestamp, int nsample
   if (va.values == IntPtr.Zero)
     throw new OutOfMemoryException ();
 
-  va.property_name = GLib.Marshaller.StringToPtrGStrdup (property);
+  va.property_name = Gst.GLib.Marshaller.StringToPtrGStrdup (property);
   va.nbsamples = nsamples;
   va.sample_interval = interval;
 
   bool raw_ret = gst_controller_get_value_array (Handle, timestamp, ref va);
 
   if (!raw_ret) {
-    GLib.Marshaller.Free (va.property_name);
-    GLib.Marshaller.Free (va.values);
+    Gst.GLib.Marshaller.Free (va.property_name);
+    Gst.GLib.Marshaller.Free (va.values);
     return null;
   }
 
@@ -127,7 +127,7 @@ public System.Array GetValueArray (string property, ulong timestamp, int nsample
 
     for (int i = 0; i < nsamples; i++) {
       IntPtr str = Marshal.ReadIntPtr (va.values, i * IntPtr.Size);
-      ret[i] = GLib.Marshaller.PtrToStringGFree (str);
+      ret[i] = Gst.GLib.Marshaller.PtrToStringGFree (str);
     }
   } else if (t == typeof (short)) {
     short[] ret = (short[]) values;
@@ -179,8 +179,8 @@ public System.Array GetValueArray (string property, ulong timestamp, int nsample
     }
   }
 
-  GLib.Marshaller.Free (va.property_name);
-  GLib.Marshaller.Free (va.values);
+  Gst.GLib.Marshaller.Free (va.property_name);
+  Gst.GLib.Marshaller.Free (va.values);
 
   return values;
 }

@@ -46,7 +46,7 @@ namespace GtkSharp.Generation {
 
 		public string AllocNative (string var_name)
 		{
-			return "GLib.Marshaller.StructureToPtrAlloc (" + var_name + ")";
+			return "Gst.GLib.Marshaller.StructureToPtrAlloc (" + var_name + ")";
 		}
 
 		public override string FromNative (string var_name)

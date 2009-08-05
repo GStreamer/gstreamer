@@ -1,5 +1,5 @@
 <Type Name="TagSetter" FullName="Gst.TagSetter">
-  <TypeSignature Language="C#" Value="public interface TagSetter : GLib.IWrapper" />
+  <TypeSignature Language="C#" Value="public interface TagSetter : Gst.GLib.IWrapper" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -7,7 +7,7 @@
   </AssemblyInfo>
   <Interfaces>
     <Interface>
-      <InterfaceName>GLib.IWrapper</InterfaceName>
+      <InterfaceName>Gst.GLib.IWrapper</InterfaceName>
     </Interface>
   </Interfaces>
   <Docs>

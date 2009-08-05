@@ -61,7 +61,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("caps")</AttributeName>
+          <AttributeName>Gst.GLib.Property("caps")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -82,7 +82,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("direction")</AttributeName>
+          <AttributeName>Gst.GLib.Property("direction")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -114,14 +114,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -138,7 +138,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("name-template")</AttributeName>
+          <AttributeName>Gst.GLib.Property("name-template")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -159,7 +159,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.DefaultSignalHandler(ConnectionMethod="OverridePadCreated", Type=typeof(Gst.PadTemplate))</AttributeName>
+          <AttributeName>Gst.GLib.DefaultSignalHandler(ConnectionMethod="OverridePadCreated", Type=typeof(Gst.PadTemplate))</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -183,7 +183,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Signal("pad-created")</AttributeName>
+          <AttributeName>Gst.GLib.Signal("pad-created")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -203,7 +203,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("presence")</AttributeName>
+          <AttributeName>Gst.GLib.Property("presence")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

@@ -1,17 +1,14 @@
 <Type Name="ImplementsInterfaceAdapter" FullName="Gst.ImplementsInterfaceAdapter">
-  <TypeSignature Language="C#" Value="public class ImplementsInterfaceAdapter : GLib.GInterfaceAdapter, GLib.IWrapper, Gst.ImplementsInterface" />
+  <TypeSignature Language="C#" Value="public class ImplementsInterfaceAdapter : Gst.GLib.GInterfaceAdapter, Gst.ImplementsInterface" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.GInterfaceAdapter</BaseTypeName>
+    <BaseTypeName>Gst.GLib.GInterfaceAdapter</BaseTypeName>
   </Base>
   <Interfaces>
-    <Interface>
-      <InterfaceName>GLib.IWrapper</InterfaceName>
-    </Interface>
     <Interface>
       <InterfaceName>Gst.ImplementsInterface</InterfaceName>
     </Interface>
@@ -70,7 +67,6 @@
       <MemberSignature Language="C#" Value="public static Gst.ImplementsInterface GetObject (GLib.Object obj);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -78,6 +74,25 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="obj" Type="GLib.Object" />
+      </Parameters>
+      <Docs>
+        <param name="obj">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetObject">
+      <MemberSignature Language="C#" Value="public static Gst.ImplementsInterface GetObject (Gst.GLib.Object obj);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.ImplementsInterface</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="obj" Type="Gst.GLib.Object" />
       </Parameters>
       <Docs>
         <param name="obj">To be added.</param>
@@ -109,14 +124,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public override GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public override Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -156,11 +171,25 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="OwnedHandle">
+      <MemberSignature Language="C#" Value="public IntPtr OwnedHandle { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.IntPtr</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Supported">
       <MemberSignature Language="C#" Value="public bool Supported (GLib.GType iface_type);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -168,6 +197,25 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="iface_type" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="iface_type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Supported">
+      <MemberSignature Language="C#" Value="public bool Supported (Gst.GLib.GType iface_type);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="iface_type" Type="Gst.GLib.GType" />
       </Parameters>
       <Docs>
         <param name="iface_type">To be added.</param>

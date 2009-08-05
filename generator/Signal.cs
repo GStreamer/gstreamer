@@ -202,7 +202,7 @@ namespace GtkSharp.Generation {
 			}
 			sw.WriteLine("\t\t\t} catch (Exception) {");
 			sw.WriteLine ("\t\t\t\tException ex = new Exception (\"args.RetVal or 'out' property unset or set to incorrect type in " + EventHandlerQualifiedName + " callback\");");
-			sw.WriteLine("\t\t\t\tGLib.ExceptionManager.RaiseUnhandledException (ex, true);");
+			sw.WriteLine("\t\t\t\tGst.GLib.ExceptionManager.RaiseUnhandledException (ex, true);");
 			
 			sw.WriteLine ("\t\t\t\t// NOTREACHED: above call doesn't return.");
 			sw.WriteLine ("\t\t\t\tthrow ex;");
@@ -226,15 +226,15 @@ namespace GtkSharp.Generation {
 			sw.WriteLine("\t\t{");
 			sw.WriteLine("\t\t\t{0} args = new {0} ();", EventArgsQualifiedName);
 			sw.WriteLine("\t\t\ttry {");
-			sw.WriteLine("\t\t\t\tGLib.Signal sig = ((GCHandle) gch).Target as GLib.Signal;");
+			sw.WriteLine("\t\t\t\tGst.GLib.Signal sig = ((GCHandle) gch).Target as Gst.GLib.Signal;");
 			sw.WriteLine("\t\t\t\tif (sig == null)");
 			sw.WriteLine("\t\t\t\t\tthrow new Exception(\"Unknown signal GC handle received \" + gch);");
 			sw.WriteLine();
 			string finish = GenArgsInitialization (sw);
 			sw.WriteLine("\t\t\t\t{0} handler = ({0}) sig.Handler;", EventHandlerQualifiedName);
-			sw.WriteLine("\t\t\t\thandler (GLib.Object.GetObject (inst), args);");
+			sw.WriteLine("\t\t\t\thandler (Gst.GLib.Object.GetObject (inst), args);");
 			sw.WriteLine("\t\t\t} catch (Exception e) {");
-			sw.WriteLine("\t\t\t\tGLib.ExceptionManager.RaiseUnhandledException (e, false);");
+			sw.WriteLine("\t\t\t\tGst.GLib.ExceptionManager.RaiseUnhandledException (e, false);");
 			sw.WriteLine("\t\t\t}");
 			GenArgsCleanup (sw, finish);
 			sw.WriteLine("\t\t}");
@@ -264,7 +264,7 @@ namespace GtkSharp.Generation {
 			sw.WriteLine ();
 			sw.WriteLine ("\tpublic delegate void " + EventHandlerName + "(object o, " + EventArgsName + " args);");
 			sw.WriteLine ();
-			sw.WriteLine ("\tpublic class " + EventArgsName + " : GLib.SignalArgs {");
+			sw.WriteLine ("\tpublic class " + EventArgsName + " : Gst.GLib.SignalArgs {");
 			for (int i = 0; i < parms.Count; i++) {
 				sw.WriteLine ("\t\tpublic " + parms[i].CSType + " " + parms[i].StudlyName + "{");
 				if (parms[i].PassAs != "out") {
@@ -294,17 +294,17 @@ namespace GtkSharp.Generation {
 				args_type = ", new " + DelegateName + "(" + CallbackName + ")";
 			}
 
-			sw.WriteLine("\t\t[GLib.Signal("+ CName + ")]");
+			sw.WriteLine("\t\t[Gst.GLib.Signal("+ CName + ")]");
 			sw.Write("\t\tpublic ");
 			if (NeedNew (implementor))
 				sw.Write("new ");
 			sw.WriteLine("event " + EventHandlerQualifiedName + " " + Name + " {");
 			sw.WriteLine("\t\t\tadd {");
-			sw.WriteLine("\t\t\t\tGLib.Signal sig = GLib.Signal.Lookup (" + target + ", " + CName + args_type + ");");
+			sw.WriteLine("\t\t\t\tGst.GLib.Signal sig = Gst.GLib.Signal.Lookup (" + target + ", " + CName + args_type + ");");
 			sw.WriteLine("\t\t\t\tsig.AddDelegate (value);");
 			sw.WriteLine("\t\t\t}");
 			sw.WriteLine("\t\t\tremove {");
-			sw.WriteLine("\t\t\t\tGLib.Signal sig = GLib.Signal.Lookup (" + target + ", " + CName + args_type + ");");
+			sw.WriteLine("\t\t\t\tGst.GLib.Signal sig = Gst.GLib.Signal.Lookup (" + target + ", " + CName + args_type + ");");
 			sw.WriteLine("\t\t\t\tsig.RemoveDelegate (value);");
 			sw.WriteLine("\t\t\t}");
 			sw.WriteLine("\t\t}");

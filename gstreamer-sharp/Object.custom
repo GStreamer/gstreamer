@@ -1,12 +1,12 @@
 public object this[string property] {
   get {
-    GLib.Value v = GetProperty (property);
+    Gst.GLib.Value v = GetProperty (property);
     object o = v.Val;
     v.Dispose ();
     return o;
   }
   set {
-    GLib.Value v = new GLib.Value (this, property);
+    Gst.GLib.Value v = new Gst.GLib.Value (this, property);
     v.Val = value;
     SetProperty (property, v);
     v.Dispose ();
@@ -22,9 +22,9 @@ static extern IntPtr g_object_class_find_property (IntPtr gclass, IntPtr name);
 public PropertyInfo GetPropertyInfo (string property) {
   IntPtr klass = Marshal.ReadIntPtr (Handle);
 
-  IntPtr native_property = GLib.Marshaller.StringToPtrGStrdup (property);
+  IntPtr native_property = Gst.GLib.Marshaller.StringToPtrGStrdup (property);
   IntPtr pspec = g_object_class_find_property (klass, native_property);
-  GLib.Marshaller.Free (native_property);
+  Gst.GLib.Marshaller.Free (native_property);
 
   if (pspec == IntPtr.Zero)
     throw new ArgumentException ("Unknown property");
@@ -43,7 +43,7 @@ public PropertyInfo[] Properties {
       IntPtr pspec_ptr = Marshal.ReadIntPtr (properties, i * IntPtr.Size);
       ret[i] = new PropertyInfo (pspec_ptr);
     }
-    GLib.Marshaller.Free (properties);
+    Gst.GLib.Marshaller.Free (properties);
 
     return ret;
   }
@@ -101,7 +101,7 @@ public Gst.Object Parent {
   }
   get {
     IntPtr raw_ret = gst_object_get_parent (Handle);
-    Gst.Object ret = GLib.Object.GetObject (raw_ret, true) as Gst.Object;
+    Gst.Object ret = Gst.GLib.Object.GetObject (raw_ret, true) as Gst.Object;
     return ret;
   }
 }
@@ -142,10 +142,10 @@ public bool TryLock () {
 static extern bool gst_object_check_uniqueness (IntPtr list, IntPtr name);
 
 public static bool CheckUniqueness (Gst.Object[] objects, string name) {
-  GLib.List list = new GLib.List (objects, typeof (Gst.Object), false, false);
-  IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+  Gst.GLib.List list = new Gst.GLib.List (objects, typeof (Gst.Object), false, false);
+  IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
   bool raw_ret = gst_object_check_uniqueness (list.Handle, native_name);
   bool ret = raw_ret;
-  GLib.Marshaller.Free (native_name);
+  Gst.GLib.Marshaller.Free (native_name);
   return ret;
 }

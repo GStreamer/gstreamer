@@ -1,12 +1,12 @@
 <Type Name="TagList" FullName="Gst.TagList">
-  <TypeSignature Language="C#" Value="public class TagList : GLib.Opaque" />
+  <TypeSignature Language="C#" Value="public class TagList : Gst.GLib.Opaque" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.Opaque</BaseTypeName>
+    <BaseTypeName>Gst.GLib.Opaque</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
@@ -186,14 +186,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>

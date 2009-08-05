@@ -68,7 +68,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("alloc-pad")</AttributeName>
+          <AttributeName>Gst.GLib.Property("alloc-pad")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -88,7 +88,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("has-chain")</AttributeName>
+          <AttributeName>Gst.GLib.Property("has-chain")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -108,7 +108,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("has-sink-loop")</AttributeName>
+          <AttributeName>Gst.GLib.Property("has-sink-loop")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -128,7 +128,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("last-message")</AttributeName>
+          <AttributeName>Gst.GLib.Property("last-message")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -183,7 +183,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("num-src-pads")</AttributeName>
+          <AttributeName>Gst.GLib.Property("num-src-pads")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -203,7 +203,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("pull-mode")</AttributeName>
+          <AttributeName>Gst.GLib.Property("pull-mode")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -223,7 +223,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("silent")</AttributeName>
+          <AttributeName>Gst.GLib.Property("silent")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

@@ -136,14 +136,14 @@
       </Docs>
     </Member>
     <Member MemberName="ElementType">
-      <MemberSignature Language="C#" Value="public GLib.GType ElementType { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.GLib.GType ElementType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -172,14 +172,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -324,7 +324,6 @@
       <MemberSignature Language="C#" Value="public static bool Register (Gst.Plugin plugin, string name, uint rank, GLib.GType type);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -335,6 +334,31 @@
         <Parameter Name="name" Type="System.String" />
         <Parameter Name="rank" Type="System.UInt32" />
         <Parameter Name="type" Type="GLib.GType" />
+      </Parameters>
+      <Docs>
+        <param name="plugin">To be added.</param>
+        <param name="name">To be added.</param>
+        <param name="rank">To be added.</param>
+        <param name="type">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Register">
+      <MemberSignature Language="C#" Value="public static bool Register (Gst.Plugin plugin, string name, uint rank, Gst.GLib.GType type);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="plugin" Type="Gst.Plugin" />
+        <Parameter Name="name" Type="System.String" />
+        <Parameter Name="rank" Type="System.UInt32" />
+        <Parameter Name="type" Type="Gst.GLib.GType" />
       </Parameters>
       <Docs>
         <param name="plugin">To be added.</param>

@@ -1,7 +1,7 @@
 public TunerChannel (string label, TunerChannelFlags flags, float freq_multiplicator, ulong min_frequency, ulong max_frequency, int min_signal, int max_signal) {
   unsafe {
     IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + label_offset);
-    *raw_ptr = GLib.Marshaller.StringToPtrGStrdup (label);
+    *raw_ptr = Gst.GLib.Marshaller.StringToPtrGStrdup (label);
 
   }
   unsafe {

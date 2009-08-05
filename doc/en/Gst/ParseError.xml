@@ -10,7 +10,7 @@
   </Base>
   <Attributes>
     <Attribute>
-      <AttributeName>GLib.GType(typeof(Gst.ParseErrorGType))</AttributeName>
+      <AttributeName>Gst.GLib.GType(typeof(Gst.ParseErrorGType))</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>

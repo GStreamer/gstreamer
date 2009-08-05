@@ -111,7 +111,7 @@ namespace GtkSharp.Generation {
 						sw.WriteLine (indent + "\t\t\t\t{0} = null;", parameters [i + 2].Name);
 						sw.WriteLine (indent + "\t\t\t} else {");
 						sw.WriteLine (indent + "\t\t\t\t{0} = (IntPtr) GCHandle.Alloc ({1}_wrapper);", parameters [i + 1].Name, name);
-						sw.WriteLine (indent + "\t\t\t\t{0} = GLib.DestroyHelper.NotifyHandler;", parameters [i + 2].Name, parameters [i + 2].CSType);
+						sw.WriteLine (indent + "\t\t\t\t{0} = Gst.GLib.DestroyHelper.NotifyHandler;", parameters [i + 2].Name, parameters [i + 2].CSType);
 						sw.WriteLine (indent + "\t\t\t}");
 						break;
 
@@ -154,7 +154,7 @@ namespace GtkSharp.Generation {
 		{
 			if (!ThrowsException)
 				return;
-			sw.WriteLine (indent + "\t\t\tif (error != IntPtr.Zero) throw new GLib.GException (error);");
+			sw.WriteLine (indent + "\t\t\tif (error != IntPtr.Zero) throw new Gst.GLib.GException (error);");
 		}
 		
 		public bool ThrowsException {

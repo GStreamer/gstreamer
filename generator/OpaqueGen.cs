@@ -32,7 +32,7 @@ namespace GtkSharp.Generation {
 	
 		public override string FromNative(string var, bool owned)
 		{
-			return var + " == IntPtr.Zero ? null : (" + QualifiedName + ") GLib.Opaque.GetOpaque (" + var + ", typeof (" + QualifiedName + "), " + (owned ? "true" : "false") + ")";
+			return var + " == IntPtr.Zero ? null : (" + QualifiedName + ") Gst.GLib.Opaque.GetOpaque (" + var + ", typeof (" + QualifiedName + "), " + (owned ? "true" : "false") + ")";
 		}
 
 		private bool DisableRawCtor {
@@ -68,7 +68,7 @@ namespace GtkSharp.Generation {
 			if (cs_parent != "")
 				sw.Write (" : " + cs_parent);
 			else
-				sw.Write (" : GLib.Opaque");
+				sw.Write (" : Gst.GLib.Opaque");
 
 			foreach (string iface in managed_interfaces) {
 				if (Parent != null && Parent.Implements (iface))
@@ -165,7 +165,7 @@ namespace GtkSharp.Generation {
 				sw.WriteLine ("\t\t\tif (!Owned)");
 				sw.WriteLine ("\t\t\t\treturn;");
 				sw.WriteLine ("\t\t\tFinalizerInfo info = new FinalizerInfo (Handle);");
-				sw.WriteLine ("\t\t\tGLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));");
+				sw.WriteLine ("\t\t\tGst.GLib.Timeout.Add (50, new Gst.GLib.TimeoutHandler (info.Handler));");
 				sw.WriteLine ("\t\t}");
 				sw.WriteLine ();
 			}
@@ -173,9 +173,9 @@ namespace GtkSharp.Generation {
 #if false
 			Method copy = Methods ["Copy"] as Method;
 			if (copy != null && copy.Parameters.Count == 0) {
-				sw.WriteLine ("\t\tprotected override GLib.Opaque Copy (IntPtr raw)");
+				sw.WriteLine ("\t\tprotected override Gst.GLib.Opaque Copy (IntPtr raw)");
 				sw.WriteLine ("\t\t{");
-				sw.WriteLine ("\t\t\tGLib.Opaque result = new " + QualifiedName + " (" + copy.CName + " (raw));");
+				sw.WriteLine ("\t\t\tGst.GLib.Opaque result = new " + QualifiedName + " (" + copy.CName + " (raw));");
 				sw.WriteLine ("\t\t\tresult.Owned = true;");
 				sw.WriteLine ("\t\t\treturn result;");
 				sw.WriteLine ("\t\t}");

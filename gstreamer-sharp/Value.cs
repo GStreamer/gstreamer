@@ -1,10 +1,10 @@
-// Wrapper for GLib.Value to add support for GstFraction, GstFourcc, Gst*Range, ...
+// Wrapper for Gst.GLib.Value to add support for GstFraction, GstFourcc, Gst*Range, ...
 
 using System;
 using System.Text;
 using System.Collections;
 using System.Runtime.InteropServices;
-using GLib;
+using Gst.GLib;
 
 /* TODO: intersect, compare, substract, .... */
 namespace Gst {
@@ -37,7 +37,7 @@ namespace Gst {
     private int numerator;
     private int denominator;
 
-    public static GLib.GType GType {
+    public static Gst.GLib.GType GType {
       get {
         return new GType (gst_fraction_get_type ());
       }
@@ -74,12 +74,12 @@ namespace Gst {
       Reduce ();
     }
 
-    public Fraction (GLib.Value val) : this () {
+    public Fraction (Gst.GLib.Value val) : this () {
       this.numerator = gst_value_get_fraction_numerator (ref val);
       this.denominator = gst_value_get_fraction_denominator (ref val);
     }
 
-    public void SetGValue (ref GLib.Value val) {
+    public void SetGValue (ref Gst.GLib.Value val) {
       gst_value_set_fraction (ref val, Numerator, Denominator);
     }
 
@@ -87,8 +87,8 @@ namespace Gst {
       return String.Format ("{0}/{1}", numerator, denominator);
     }
 
-    public static explicit operator GLib.Value (Fraction fraction) {
-      GLib.Value val = new GLib.Value (Fraction.GType);
+    public static explicit operator Gst.GLib.Value (Fraction fraction) {
+      Gst.GLib.Value val = new Gst.GLib.Value (Fraction.GType);
       gst_value_set_fraction (ref val, fraction.Numerator, fraction.Denominator);
 
       return val;
@@ -115,11 +115,11 @@ namespace Gst {
     }
 
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern void gst_value_set_fraction (ref GLib.Value v, int numerator, int denominator);
+    private static extern void gst_value_set_fraction (ref Gst.GLib.Value v, int numerator, int denominator);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern int gst_value_get_fraction_numerator (ref GLib.Value v);
+    private static extern int gst_value_get_fraction_numerator (ref Gst.GLib.Value v);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern int gst_value_get_fraction_denominator (ref GLib.Value v);
+    private static extern int gst_value_get_fraction_denominator (ref Gst.GLib.Value v);
     [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_fraction_get_type ();
   }
@@ -128,7 +128,7 @@ namespace Gst {
     public double Min;
     public double Max;
 
-    public static GLib.GType GType {
+    public static Gst.GLib.GType GType {
       get {
         return new GType (gst_double_range_get_type ());
       }
@@ -142,7 +142,7 @@ namespace Gst {
       this.Max = max;
     }
 
-    public DoubleRange (GLib.Value val) : this () {
+    public DoubleRange (Gst.GLib.Value val) : this () {
       this.Min = gst_value_get_double_range_min (ref val);
       this.Max = gst_value_get_double_range_max (ref val);
     }
@@ -151,12 +151,12 @@ namespace Gst {
       return String.Format ("[{0}, {1}]", Min, Max);
     }
 
-    public void SetGValue (ref GLib.Value val) {
+    public void SetGValue (ref Gst.GLib.Value val) {
       gst_value_set_double_range (ref val, Min, Max);
     }
 
-    public static explicit operator GLib.Value (DoubleRange range) {
-      GLib.Value val = new GLib.Value (DoubleRange.GType);
+    public static explicit operator Gst.GLib.Value (DoubleRange range) {
+      Gst.GLib.Value val = new Gst.GLib.Value (DoubleRange.GType);
 
       gst_value_set_double_range (ref val, range.Min, range.Max);
       return val;
@@ -165,18 +165,18 @@ namespace Gst {
     [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_double_range_get_type ();
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern void gst_value_set_double_range (ref GLib.Value v, double min, double max);
+    private static extern void gst_value_set_double_range (ref Gst.GLib.Value v, double min, double max);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern double gst_value_get_double_range_min (ref GLib.Value v);
+    private static extern double gst_value_get_double_range_min (ref Gst.GLib.Value v);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern double gst_value_get_double_range_max (ref GLib.Value v);
+    private static extern double gst_value_get_double_range_max (ref Gst.GLib.Value v);
   }
 
   public struct IntRange {
     public int Min;
     public int Max;
 
-    public static GLib.GType GType {
+    public static Gst.GLib.GType GType {
       get {
         return new GType (gst_int_range_get_type ());
       }
@@ -190,12 +190,12 @@ namespace Gst {
       this.Max = max;
     }
 
-    public IntRange (GLib.Value val) : this () {
+    public IntRange (Gst.GLib.Value val) : this () {
       this.Min = gst_value_get_int_range_min (ref val);
       this.Max = gst_value_get_int_range_max (ref val);
     }
 
-    public void SetGValue (ref GLib.Value val) {
+    public void SetGValue (ref Gst.GLib.Value val) {
       gst_value_set_int_range (ref val, Min, Max);
     }
 
@@ -203,8 +203,8 @@ namespace Gst {
       return String.Format ("[{0}, {1}]", Min, Max);
     }
 
-    public static explicit operator GLib.Value (IntRange range) {
-      GLib.Value val = new GLib.Value (IntRange.GType);
+    public static explicit operator Gst.GLib.Value (IntRange range) {
+      Gst.GLib.Value val = new Gst.GLib.Value (IntRange.GType);
 
       gst_value_set_int_range (ref val, range.Min, range.Max);
       return val;
@@ -213,18 +213,18 @@ namespace Gst {
     [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_int_range_get_type ();
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern void gst_value_set_int_range (ref GLib.Value v, int min, int max);
+    private static extern void gst_value_set_int_range (ref Gst.GLib.Value v, int min, int max);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern int gst_value_get_int_range_min (ref GLib.Value v);
+    private static extern int gst_value_get_int_range_min (ref Gst.GLib.Value v);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern int gst_value_get_int_range_max (ref GLib.Value v);
+    private static extern int gst_value_get_int_range_max (ref Gst.GLib.Value v);
   }
 
   public struct FractionRange {
     public Fraction Min;
     public Fraction Max;
 
-    public static GLib.GType GType {
+    public static Gst.GLib.GType GType {
       get {
         return new GType (gst_fraction_range_get_type ());
       }
@@ -240,22 +240,22 @@ namespace Gst {
       this.Max = max;
     }
 
-    public FractionRange (GLib.Value val) : this () {
+    public FractionRange (Gst.GLib.Value val) : this () {
       IntPtr min_ptr, max_ptr;
-      GLib.Value min, max;
+      Gst.GLib.Value min, max;
 
       min_ptr = gst_value_get_fraction_range_min (ref val);
       max_ptr = gst_value_get_fraction_range_max (ref val);
 
-      min = (GLib.Value) Marshal.PtrToStructure (min_ptr, typeof (GLib.Value));
-      max = (GLib.Value) Marshal.PtrToStructure (max_ptr, typeof (GLib.Value));
+      min = (Gst.GLib.Value) Marshal.PtrToStructure (min_ptr, typeof (Gst.GLib.Value));
+      max = (Gst.GLib.Value) Marshal.PtrToStructure (max_ptr, typeof (Gst.GLib.Value));
       this.Min = (Fraction) min.Val;
       this.Max = (Fraction) max.Val;
     }
 
-    public void SetGValue (ref GLib.Value val) {
-      GLib.Value min = new GLib.Value (Min);
-      GLib.Value max = new GLib.Value (Max);
+    public void SetGValue (ref Gst.GLib.Value val) {
+      Gst.GLib.Value min = new Gst.GLib.Value (Min);
+      Gst.GLib.Value max = new Gst.GLib.Value (Max);
       gst_value_set_fraction_range (ref val, ref min, ref max);
       min.Dispose ();
       max.Dispose ();
@@ -265,11 +265,11 @@ namespace Gst {
       return String.Format ("[{0}, {1}]", Min, Max);
     }
 
-    public static explicit operator GLib.Value (FractionRange range) {
-      GLib.Value val = new GLib.Value (FractionRange.GType);
+    public static explicit operator Gst.GLib.Value (FractionRange range) {
+      Gst.GLib.Value val = new Gst.GLib.Value (FractionRange.GType);
 
-      GLib.Value min = new GLib.Value (range.Min);
-      GLib.Value max = new GLib.Value (range.Max);
+      Gst.GLib.Value min = new Gst.GLib.Value (range.Min);
+      Gst.GLib.Value max = new Gst.GLib.Value (range.Max);
       gst_value_set_fraction_range (ref val, ref min, ref max);
       min.Dispose ();
       max.Dispose ();
@@ -279,17 +279,17 @@ namespace Gst {
     [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_fraction_range_get_type ();
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern void gst_value_set_fraction_range (ref GLib.Value v, ref GLib.Value min, ref GLib.Value max);
+    private static extern void gst_value_set_fraction_range (ref Gst.GLib.Value v, ref Gst.GLib.Value min, ref Gst.GLib.Value max);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern IntPtr gst_value_get_fraction_range_min (ref GLib.Value v);
+    private static extern IntPtr gst_value_get_fraction_range_min (ref Gst.GLib.Value v);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern IntPtr gst_value_get_fraction_range_max (ref GLib.Value v);
+    private static extern IntPtr gst_value_get_fraction_range_max (ref Gst.GLib.Value v);
   }
 
   public struct Fourcc {
     public uint Val;
 
-    public static GLib.GType GType {
+    public static Gst.GLib.GType GType {
       get {
         return new GType (gst_fourcc_get_type ());
       }
@@ -319,10 +319,10 @@ namespace Gst {
                           ( ( (byte) fourcc[3]) << 0));
     }
 
-    public Fourcc (GLib.Value val) : this (gst_value_get_fourcc (ref val)) {
+    public Fourcc (Gst.GLib.Value val) : this (gst_value_get_fourcc (ref val)) {
     }
 
-    public void SetGValue (ref GLib.Value val) {
+    public void SetGValue (ref Gst.GLib.Value val) {
       gst_value_set_fourcc (ref val, Val);
     }
 
@@ -333,8 +333,8 @@ namespace Gst {
                             (char) ( (Val >> 0) & 0xff));
     }
 
-    public static explicit operator GLib.Value (Fourcc fourcc) {
-      GLib.Value val = new GLib.Value (Fourcc.GType);
+    public static explicit operator Gst.GLib.Value (Fourcc fourcc) {
+      Gst.GLib.Value val = new Gst.GLib.Value (Fourcc.GType);
 
       gst_value_set_fourcc (ref val, fourcc.Val);
       return val;
@@ -355,9 +355,9 @@ namespace Gst {
     [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_fourcc_get_type ();
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern void gst_value_set_fourcc (ref GLib.Value v, uint fourcc);
+    private static extern void gst_value_set_fourcc (ref Gst.GLib.Value v, uint fourcc);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern uint gst_value_get_fourcc (ref GLib.Value v);
+    private static extern uint gst_value_get_fourcc (ref Gst.GLib.Value v);
 
   }
 
@@ -371,7 +371,7 @@ namespace Gst {
       }
     }
 
-    public static GLib.GType GType {
+    public static Gst.GLib.GType GType {
       get {
         return new GType (gst_date_get_type ());
       }
@@ -391,7 +391,7 @@ namespace Gst {
       handle = g_date_new_dmy ( (byte) Val.Day, (int) Val.Month, (ushort) Val.Year);
     }
 
-    public Date (GLib.Value val) {
+    public Date (Gst.GLib.Value val) {
       IntPtr date = gst_value_get_date (ref val);
 
       this.Val = new DateTime (g_date_get_year (date), g_date_get_month (date), g_date_get_day (date));
@@ -402,20 +402,20 @@ namespace Gst {
       return new Date (g_date_get_day (date), g_date_get_month (date), g_date_get_year (date));
     }
 
-    public void SetGValue (ref GLib.Value val) {
+    public void SetGValue (ref Gst.GLib.Value val) {
       IntPtr date_ptr = g_date_new_dmy ( (byte) Val.Day, (int) Val.Month, (ushort) Val.Year);
 
       gst_value_set_date (ref val, date_ptr);
 
-      GLib.Marshaller.Free (date_ptr);
+      Gst.GLib.Marshaller.Free (date_ptr);
     }
 
     public override string ToString () {
       return String.Format ("{0}-{1}-{2}", Val.Year, Val.Month, Val.Day);
     }
 
-    public static explicit operator GLib.Value (Date date) {
-      GLib.Value val = new GLib.Value (Date.GType);
+    public static explicit operator Gst.GLib.Value (Date date) {
+      Gst.GLib.Value val = new Gst.GLib.Value (Date.GType);
 
       date.SetGValue (ref val);
 
@@ -436,15 +436,15 @@ namespace Gst {
     [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_date_get_type ();
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern IntPtr gst_value_get_date (ref GLib.Value val);
+    private static extern IntPtr gst_value_get_date (ref Gst.GLib.Value val);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern void gst_value_set_date (ref GLib.Value val, IntPtr date);
+    private static extern void gst_value_set_date (ref Gst.GLib.Value val, IntPtr date);
   }
 
   public struct List : IEnumerable {
     private IList content;
 
-    public static GLib.GType GType {
+    public static Gst.GLib.GType GType {
       get {
         return new GType (gst_value_list_get_type ());
       }
@@ -454,20 +454,20 @@ namespace Gst {
       this.content = content;
     }
 
-    public List (GLib.Value val) {
+    public List (Gst.GLib.Value val) {
       this.content = new ArrayList ();
 
       uint n = gst_value_list_get_size (ref val);
       for (uint i = 0; i < n; i++) {
         IntPtr v_ptr = gst_value_list_get_value (ref val, i);
-        GLib.Value v = (GLib.Value) Marshal.PtrToStructure (v_ptr, typeof (GLib.Value));
+        Gst.GLib.Value v = (Gst.GLib.Value) Marshal.PtrToStructure (v_ptr, typeof (Gst.GLib.Value));
         this.content.Add (v.Val);
       }
     }
 
-    public void SetGValue (ref GLib.Value val) {
+    public void SetGValue (ref Gst.GLib.Value val) {
       foreach (object o in content) {
-        GLib.Value v = new GLib.Value (o);
+        Gst.GLib.Value v = new Gst.GLib.Value (o);
         gst_value_list_append_value (ref val, ref v);
         v.Dispose ();
       }
@@ -487,11 +487,11 @@ namespace Gst {
       return sb.ToString ();
     }
 
-    public static explicit operator GLib.Value (List l) {
-      GLib.Value val = new GLib.Value (List.GType);
+    public static explicit operator Gst.GLib.Value (List l) {
+      Gst.GLib.Value val = new Gst.GLib.Value (List.GType);
 
       foreach (object o in l.content) {
-        GLib.Value v = new GLib.Value (o);
+        Gst.GLib.Value v = new Gst.GLib.Value (o);
         gst_value_list_append_value (ref val, ref v);
         v.Dispose ();
       }
@@ -515,17 +515,17 @@ namespace Gst {
     [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_list_get_type ();
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern uint gst_value_list_get_size (ref GLib.Value val);
+    private static extern uint gst_value_list_get_size (ref Gst.GLib.Value val);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern IntPtr gst_value_list_get_value (ref GLib.Value val, uint index);
+    private static extern IntPtr gst_value_list_get_value (ref Gst.GLib.Value val, uint index);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern void gst_value_list_append_value (ref GLib.Value val, ref GLib.Value el);
+    private static extern void gst_value_list_append_value (ref Gst.GLib.Value val, ref Gst.GLib.Value el);
   }
 
   public struct Array : IEnumerable {
     private IList content;
 
-    public static GLib.GType GType {
+    public static Gst.GLib.GType GType {
       get {
         return new GType (gst_value_array_get_type ());
       }
@@ -535,30 +535,30 @@ namespace Gst {
       this.content = content;
     }
 
-    public Array (GLib.Value val) {
+    public Array (Gst.GLib.Value val) {
       this.content = new ArrayList ();
 
       uint n = gst_value_array_get_size (ref val);
       for (uint i = 0; i < n; i++) {
         IntPtr v_ptr = gst_value_array_get_value (ref val, i);
-        GLib.Value v = (GLib.Value) Marshal.PtrToStructure (v_ptr, typeof (GLib.Value));
+        Gst.GLib.Value v = (Gst.GLib.Value) Marshal.PtrToStructure (v_ptr, typeof (Gst.GLib.Value));
         this.content.Add (v.Val);
       }
     }
 
-    public void SetGValue (ref GLib.Value val) {
+    public void SetGValue (ref Gst.GLib.Value val) {
       foreach (object o in content) {
-        GLib.Value v = new GLib.Value (o);
+        Gst.GLib.Value v = new Gst.GLib.Value (o);
         gst_value_array_append_value (ref val, ref v);
         v.Dispose ();
       }
     }
 
-    public static explicit operator GLib.Value (Array a) {
-      GLib.Value val = new GLib.Value (Gst.Array.GType);
+    public static explicit operator Gst.GLib.Value (Array a) {
+      Gst.GLib.Value val = new Gst.GLib.Value (Gst.Array.GType);
 
       foreach (object o in a.content) {
-        GLib.Value v = new GLib.Value (o);
+        Gst.GLib.Value v = new Gst.GLib.Value (o);
         gst_value_array_append_value (ref val, ref v);
         v.Dispose ();
       }
@@ -596,10 +596,10 @@ namespace Gst {
     [DllImport("libgstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_array_get_type ();
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern uint gst_value_array_get_size (ref GLib.Value val);
+    private static extern uint gst_value_array_get_size (ref Gst.GLib.Value val);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern IntPtr gst_value_array_get_value (ref GLib.Value val, uint index);
+    private static extern IntPtr gst_value_array_get_value (ref Gst.GLib.Value val, uint index);
     [DllImport("libgstreamer-0.10.dll") ]
-    private static extern void gst_value_array_append_value (ref GLib.Value val, ref GLib.Value el);
+    private static extern void gst_value_array_append_value (ref Gst.GLib.Value val, ref Gst.GLib.Value el);
   }
 }

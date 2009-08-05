@@ -92,7 +92,7 @@ namespace GtkSharp.Generation {
 				else
 					type = this.container_type.Name;
 
-				sw.WriteLine ("\t\t\t\t{0} __obj = GLib.Object.GetObject (inst, false) as {0};", type);
+				sw.WriteLine ("\t\t\t\t{0} __obj = Gst.GLib.Object.GetObject (inst, false) as {0};", type);
 			}
 
 			sw.Write (call.Setup ("\t\t\t\t"));
@@ -108,7 +108,7 @@ namespace GtkSharp.Generation {
 
 			bool fatal = parms.HasOutParam || !retval.IsVoid;
 			sw.WriteLine ("\t\t\t} catch (Exception e) {");
-			sw.WriteLine ("\t\t\t\tGLib.ExceptionManager.RaiseUnhandledException (e, " + (fatal ? "true" : "false") + ");");
+			sw.WriteLine ("\t\t\t\tGst.GLib.ExceptionManager.RaiseUnhandledException (e, " + (fatal ? "true" : "false") + ");");
 			if (fatal) {
 				sw.WriteLine ("\t\t\t\t// NOTREACHED: above call does not return.");
 				sw.WriteLine ("\t\t\t\tthrow e;");

@@ -1,12 +1,12 @@
 <Type Name="TypeFindElement+HaveTypeArgs" FullName="Gst.CorePlugins.TypeFindElement+HaveTypeArgs">
-  <TypeSignature Language="C#" Value="public class TypeFindElement.HaveTypeArgs : GLib.SignalArgs" />
+  <TypeSignature Language="C#" Value="public class TypeFindElement.HaveTypeArgs : Gst.GLib.SignalArgs" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.SignalArgs</BaseTypeName>
+    <BaseTypeName>Gst.GLib.SignalArgs</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>

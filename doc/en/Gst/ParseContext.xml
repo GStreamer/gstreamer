@@ -1,12 +1,12 @@
 <Type Name="ParseContext" FullName="Gst.ParseContext">
-  <TypeSignature Language="C#" Value="public class ParseContext : GLib.Opaque" />
+  <TypeSignature Language="C#" Value="public class ParseContext : Gst.GLib.Opaque" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.Opaque</BaseTypeName>
+    <BaseTypeName>Gst.GLib.Opaque</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>

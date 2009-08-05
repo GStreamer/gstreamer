@@ -6,7 +6,7 @@ public Gst.Fraction Framerate {
   get {
     unsafe {
       IntPtr raw_ptr = (IntPtr) ( ( (byte*) Handle) + framerate_offset);
-      GLib.Value v = (GLib.Value) Marshal.PtrToStructure (raw_ptr, typeof (GLib.Value));
+      Gst.GLib.Value v = (Gst.GLib.Value) Marshal.PtrToStructure (raw_ptr, typeof (Gst.GLib.Value));
       return (Gst.Fraction) v.Val;
     }
   }
@@ -18,7 +18,7 @@ private static extern void gst_value_set_fraction (IntPtr v, int numerator, int 
 public TunerNorm (string label, Gst.Fraction framerate) {
   unsafe {
     IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + label_offset);
-    *raw_ptr = GLib.Marshaller.StringToPtrGStrdup (label);
+    *raw_ptr = Gst.GLib.Marshaller.StringToPtrGStrdup (label);
 
   }
   unsafe {

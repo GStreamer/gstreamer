@@ -1,12 +1,12 @@
 <Type Name="Caps" FullName="Gst.Caps">
-  <TypeSignature Language="C#" Value="public class Caps : GLib.Opaque, System.Collections.IEnumerable" />
+  <TypeSignature Language="C#" Value="public class Caps : Gst.GLib.Opaque, System.Collections.IEnumerable" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.Opaque</BaseTypeName>
+    <BaseTypeName>Gst.GLib.Opaque</BaseTypeName>
   </Base>
   <Interfaces>
     <Interface>
@@ -79,6 +79,29 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Caps (string mediaType, object[] fields);" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="mediaType" Type="System.String" />
+        <Parameter Name="fields" Type="System.Object[]">
+          <Attributes>
+            <Attribute>
+              <AttributeName>System.ParamArray</AttributeName>
+            </Attribute>
+          </Attributes>
+        </Parameter>
+      </Parameters>
+      <Docs>
+        <param name="mediaType">To be added.</param>
+        <param name="fields">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Append">
       <MemberSignature Language="C#" Value="public void Append (Gst.Caps caps);" />
       <MemberType>Method</MemberType>
@@ -135,13 +158,13 @@
       </Docs>
     </Member>
     <Member MemberName="Copy">
-      <MemberSignature Language="C#" Value="protected override GLib.Opaque Copy (IntPtr raw);" />
+      <MemberSignature Language="C#" Value="protected override Gst.GLib.Opaque Copy (IntPtr raw);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.Opaque</ReturnType>
+        <ReturnType>Gst.GLib.Opaque</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="raw" Type="System.IntPtr" />
@@ -244,14 +267,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>

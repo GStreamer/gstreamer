@@ -72,7 +72,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("buffer-mode")</AttributeName>
+          <AttributeName>Gst.GLib.Property("buffer-mode")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -92,7 +92,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("buffer-size")</AttributeName>
+          <AttributeName>Gst.GLib.Property("buffer-size")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -176,7 +176,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("location")</AttributeName>
+          <AttributeName>Gst.GLib.Property("location")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

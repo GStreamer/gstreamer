@@ -10,7 +10,7 @@
   </Base>
   <Attributes>
     <Attribute>
-      <AttributeName>GLib.GType(typeof(Gst.ActivateModeGType))</AttributeName>
+      <AttributeName>Gst.GLib.GType(typeof(Gst.ActivateModeGType))</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>

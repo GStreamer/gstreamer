@@ -7,7 +7,7 @@ DEBUGS = $(addsuffix .mdb, $(TARGETS))
 all: $(TARGETS) link
 
 assemblies=$(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll
-references=$(addprefix -r:, $(assemblies))
+references=$(addprefix -r:, $(assemblies)) -pkg:glib-sharp-2.0
 
 playbin-player.exe: $(srcdir)/PlayBinPlayer.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/PlayBinPlayer.cs

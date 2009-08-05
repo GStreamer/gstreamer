@@ -1,12 +1,12 @@
 <Type Name="MixerTrack" FullName="Gst.Interfaces.MixerTrack">
-  <TypeSignature Language="C#" Value="public class MixerTrack : GLib.Object" />
+  <TypeSignature Language="C#" Value="public class MixerTrack : Gst.GLib.Object" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>GLib.Object</BaseTypeName>
+    <BaseTypeName>Gst.GLib.Object</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
@@ -80,7 +80,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("flags")</AttributeName>
+          <AttributeName>Gst.GLib.Property("flags")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -93,14 +93,14 @@
       </Docs>
     </Member>
     <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberSignature Language="C#" Value="public static Gst.GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
+        <ReturnType>Gst.GLib.GType</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -117,7 +117,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("index")</AttributeName>
+          <AttributeName>Gst.GLib.Property("index")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -138,7 +138,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("label")</AttributeName>
+          <AttributeName>Gst.GLib.Property("label")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -159,7 +159,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("max-volume")</AttributeName>
+          <AttributeName>Gst.GLib.Property("max-volume")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -180,7 +180,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("min-volume")</AttributeName>
+          <AttributeName>Gst.GLib.Property("min-volume")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -201,7 +201,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("num-channels")</AttributeName>
+          <AttributeName>Gst.GLib.Property("num-channels")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -222,7 +222,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("untranslated-label")</AttributeName>
+          <AttributeName>Gst.GLib.Property("untranslated-label")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

@@ -124,7 +124,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("caps")</AttributeName>
+          <AttributeName>Gst.GLib.Property("caps")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -137,13 +137,13 @@
       </Docs>
     </Member>
     <Member MemberName="Drained">
-      <MemberSignature Language="C#" Value="public event Gst.BasePlugins.DecodeBin2.DrainedHandler Drained;" />
+      <MemberSignature Language="C#" Value="public event Gst.SignalHandler Drained;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.BasePlugins.DecodeBin2+DrainedHandler</ReturnType>
+        <ReturnType>Gst.SignalHandler</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
@@ -310,7 +310,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("sink-caps")</AttributeName>
+          <AttributeName>Gst.GLib.Property("sink-caps")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -330,7 +330,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>GLib.Property("subtitle-encoding")</AttributeName>
+          <AttributeName>Gst.GLib.Property("subtitle-encoding")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
