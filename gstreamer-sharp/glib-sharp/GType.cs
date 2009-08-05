@@ -93,10 +93,12 @@ namespace GLib {
 
 		public static void Register (GType native_type, System.Type type)
 		{
-			if (native_type != GType.Pointer && native_type != GType.Boxed && native_type != ManagedValue.GType)
-				types[native_type.Val] = type;
-			if (type != null)
-				gtypes[type] = native_type;
+			lock (types) {
+				if (native_type != GType.Pointer && native_type != GType.Boxed && native_type != ManagedValue.GType)
+					types[native_type.Val] = type;
+				if (type != null)
+					gtypes[type] = native_type;
+			}
 		}
 
 		static GType ()
@@ -128,8 +130,10 @@ namespace GLib {
 		{
 			GType gtype;
 
-			if (gtypes.Contains (type))
-				return (GType)gtypes[type];
+			lock (types) {
+				if (gtypes.Contains (type))
+					return (GType)gtypes[type];
+			}
 
 			if (type.IsSubclassOf (typeof (GLib.Object))) {
 				gtype = GLib.Object.LookupGType (type);
@@ -181,8 +185,10 @@ namespace GLib {
 
 		public static Type LookupType (IntPtr typeid)
 		{
-			if (types.Contains (typeid))
-				return (Type)types[typeid];
+			lock (types) {
+				if (types.Contains (typeid))
+					return (Type)types[typeid];
+			}
 
 			string native_name = Marshaller.Utf8PtrToString (g_type_name (typeid));
 
@@ -365,8 +371,10 @@ namespace GLib {
 
 		internal static GType LookupGObjectType (System.Type t)
 		{
-			if (gtypes.Contains (t))
-				return (GType) gtypes [t];
+			lock (types) {
+				if (gtypes.Contains (t))
+					return (GType) gtypes [t];
+			}
 			
 			PropertyInfo pi = t.GetProperty ("GType", BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public);
 			if (pi != null)
