@@ -155,10 +155,12 @@ namespace GtkSharp.Generation {
 			}
 		}
 
-		public virtual string CallByName (string var, bool owned)
+		public override string CallByName (string var)
 		{
-			return String.Format ("{0} == null ? IntPtr.Zero : ({0} as GLib.Object).{1}", var, owned ? "OwnedHandle" : "Handle");
+			return CallByName (var, false);
 		}
+
+		public abstract string CallByName (string var, bool owned);
 
 		public override string FromNative (string var, bool owned)
 		{

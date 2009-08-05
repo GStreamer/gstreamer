@@ -262,10 +262,8 @@ namespace GtkSharp.Generation {
 					call_parm += CallName;
 				} else if (gen is IManualMarshaler)
 					call_parm = "native_" + CallName;
-				else if (gen is MiniObjectGen)
-					call_parm = ((MiniObjectGen) gen).CallByName(CallName, Owned);
-				else if (gen is ObjectGen)
-					call_parm = ((ObjectGen) gen).CallByName(CallName, Owned);
+				else if (gen is ObjectBase)
+					call_parm = (gen as ObjectBase).CallByName(CallName, Owned);
 				else
 					call_parm = gen.CallByName(CallName);
 			
@@ -285,7 +283,7 @@ namespace GtkSharp.Generation {
 						result [i] = (gen as IManualMarshaler).ReleaseNative ("native_" + CallName) + ";";
 					return result;
 				} else if (PassAs != String.Empty && MarshalType != CSType)
-					if (gen is HandleBase)
+					if (gen is HandleBase) 
 						return new string [] { CallName + " = " + (gen as HandleBase).FromNative ("native_" + CallName, Owned) + ";" };
 					else
 						return new string [] { CallName + " = " + gen.FromNative ("native_" + CallName) + ";" };

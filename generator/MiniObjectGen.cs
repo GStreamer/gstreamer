@@ -59,6 +59,11 @@ namespace GtkSharp.Generation {
 			}
 		}
 
+		public override string CallByName (string var, bool owned)
+		{
+			return String.Format ("{0} == null ? IntPtr.Zero : {0}.{1}", var, owned ? "OwnedHandle" : "Handle");
+		}
+
 		public override bool Validate ()
 		{
 			ArrayList invalids = new ArrayList ();
@@ -310,11 +315,6 @@ namespace GtkSharp.Generation {
 			sw.WriteLine ("\t}");
 			sw.WriteLine ("}");
 			sw.Close ();
-		}
-
-		public string CallByName (string name, bool owned)
-		{
-			return name + " == null ? IntPtr.Zero : " + name + (owned ? ".OwnedHandle" : ".Handle");
 		}
 
 		public override string FromNative (string var, bool owned)

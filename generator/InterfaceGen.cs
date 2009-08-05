@@ -58,6 +58,11 @@ namespace GtkSharp.Generation {
 			}
 		}
 
+		public override string CallByName (string var, bool owned)
+		{
+			return String.Format ("{0} == null ? IntPtr.Zero : (({0} is GLib.Object) ? ({0} as GLib.Object).{1} : ({0} as {2}Adapter).{1})", var, owned ? "OwnedHandle" : "Handle", QualifiedName);
+		}
+
 		public override string FromNative (string var, bool owned)
 		{
 			return QualifiedName + "Adapter.GetObject (" + var + ", " + (owned ? "true" : "false") + ")";
@@ -121,19 +126,23 @@ namespace GtkSharp.Generation {
 
 		void GenerateCtors (StreamWriter sw)
 		{
+			// Native GObjects do not implement the *Implementor interfaces
+			sw.WriteLine ("\t\tGLib.Object implementor;", Name);
+			sw.WriteLine ();
+
 			if (!IsConsumeOnly) {
 				sw.WriteLine ("\t\tpublic " + Name + "Adapter ()");
 				sw.WriteLine ("\t\t{");
 				sw.WriteLine ("\t\t\tInitHandler = new GLib.GInterfaceInitHandler (Initialize);");
 				sw.WriteLine ("\t\t}");
 				sw.WriteLine ();
-				sw.WriteLine ("\t\t{0}Implementor implementor;", Name);
-				sw.WriteLine ();
 				sw.WriteLine ("\t\tpublic {0}Adapter ({0}Implementor implementor)", Name);
 				sw.WriteLine ("\t\t{");
 				sw.WriteLine ("\t\t\tif (implementor == null)");
 				sw.WriteLine ("\t\t\t\tthrow new ArgumentNullException (\"implementor\");");
-				sw.WriteLine ("\t\t\tthis.implementor = implementor;");
+				sw.WriteLine ("\t\t\telse if (!(implementor is GLib.Object))");
+				sw.WriteLine ("\t\t\t\tthrow new ArgumentException (\"implementor must be a subclass of GLib.Object\");");
+				sw.WriteLine ("\t\t\tthis.implementor = implementor as GLib.Object;");
 				sw.WriteLine ("\t\t}");
 				sw.WriteLine ();
 			}
@@ -142,7 +151,7 @@ namespace GtkSharp.Generation {
 			sw.WriteLine ("\t\t{");
 			sw.WriteLine ("\t\t\tif (!_gtype.IsInstance (handle))");
 			sw.WriteLine ("\t\t\t\tthrow new ArgumentException (\"The gobject doesn't implement the GInterface of this adapter\", \"handle\");");
-			sw.WriteLine ("\t\t\tthis.handle = handle;");
+			sw.WriteLine ("\t\t\timplementor = GLib.Object.GetObject (handle);");
 			sw.WriteLine ("\t\t}");
 			sw.WriteLine ();
 		}
@@ -163,16 +172,15 @@ namespace GtkSharp.Generation {
 
 		void GenerateHandleProp (StreamWriter sw)
 		{
-			sw.WriteLine ("\t\tIntPtr handle;");
 			sw.WriteLine ("\t\tpublic override IntPtr Handle {");
 			sw.WriteLine ("\t\t\tget {");
-			if (IsConsumeOnly) {
-				sw.WriteLine ("\t\t\t\treturn handle;");
-			} else {
-				sw.WriteLine ("\t\t\t\tif (handle != IntPtr.Zero)");
-				sw.WriteLine ("\t\t\t\t\treturn handle;");
-				sw.WriteLine ("\t\t\t\treturn implementor == null ? IntPtr.Zero : implementor.Handle;");
-			}
+			sw.WriteLine ("\t\t\t\treturn implementor.Handle;");
+			sw.WriteLine ("\t\t\t}");
+			sw.WriteLine ("\t\t}");
+			sw.WriteLine ();
+			sw.WriteLine ("\t\tpublic IntPtr OwnedHandle {");
+			sw.WriteLine ("\t\t\tget {");
+			sw.WriteLine ("\t\t\t\treturn implementor.OwnedHandle;");
 			sw.WriteLine ("\t\t\t}");
 			sw.WriteLine ("\t\t}");
 			sw.WriteLine ();
@@ -206,7 +214,7 @@ namespace GtkSharp.Generation {
 		{
 			sw.WriteLine ("\t\tpublic " + Name + "Implementor Implementor {");
 			sw.WriteLine ("\t\t\tget {");
-			sw.WriteLine ("\t\t\t\treturn implementor;");
+			sw.WriteLine ("\t\t\t\treturn implementor as {0}Implementor;", Name);
 			sw.WriteLine ("\t\t\t}");
 			sw.WriteLine ("\t\t}");
 			sw.WriteLine ();

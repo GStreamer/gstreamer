@@ -70,6 +70,11 @@ namespace GtkSharp.Generation {
 			}
 		}
 
+		public override string CallByName (string var, bool owned)
+		{
+			return String.Format ("{0} == null ? IntPtr.Zero : {0}.{1}", var, owned ? "OwnedHandle" : "Handle");
+		}
+
 		public override bool Validate ()
 		{
 			ArrayList invalids = new ArrayList ();
