@@ -1082,7 +1082,7 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   if (GST_PAD_IS_IN_SETCAPS (otherpad))
     goto done;
 
-  GST_DEBUG_OBJECT (pad, "have new caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (pad, "have new caps %p %" GST_PTR_FORMAT, caps, caps);
 
   /* find best possible caps for the other pad */
   othercaps = gst_base_transform_find_transform (trans, pad, caps);
@@ -1218,7 +1218,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
   if (bclass->prepare_output_buffer) {
     GST_DEBUG_OBJECT (trans,
-        "calling prepare buffer with caps %" GST_PTR_FORMAT, oldcaps);
+        "calling prepare buffer with caps %p %" GST_PTR_FORMAT, oldcaps,
+        oldcaps);
     ret =
         bclass->prepare_output_buffer (trans, in_buf, outsize, oldcaps,
         out_buf);
@@ -1341,17 +1342,23 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     }
   }
 
+  /* try to make a final output buffer, make sure the metadata is writable */
   if (*out_buf == NULL) {
     if (!discard) {
       GST_DEBUG_OBJECT (trans, "make default output buffer of size %d",
           outsize);
-      /* no valid buffer yet, make one */
+      /* no valid buffer yet, make one, metadata is writable */
       *out_buf = gst_buffer_new_and_alloc (outsize);
       gst_buffer_copy_metadata (*out_buf, in_buf,
           GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
     } else {
       GST_DEBUG_OBJECT (trans, "reuse input buffer");
-      *out_buf = in_buf;
+      /* we can reuse the input buffer if it's writable else we take a
+       * subbuffer. Note that we can't unref in_buf. */
+      if (gst_buffer_is_metadata_writable (in_buf))
+        *out_buf = in_buf;
+      else
+        *out_buf = gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
     }
   } else {
     if (trans->passthrough && in_buf != *out_buf) {
@@ -1364,13 +1371,29 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     if (discard) {
       GST_DEBUG_OBJECT (trans, "discard buffer, reuse input buffer");
       gst_buffer_unref (*out_buf);
-      *out_buf = in_buf;
+      /* we can reuse the input buffer if it's writable else we take a
+       * subbuffer. Note that we can't unref in_buf. */
+      if (gst_buffer_is_metadata_writable (in_buf))
+        *out_buf = in_buf;
+      else
+        *out_buf = gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
     } else {
-      GST_DEBUG_OBJECT (trans, "using allocated buffer");
+      GST_DEBUG_OBJECT (trans, "using allocated buffer in %p, out %p", in_buf,
+          *out_buf);
+      /* we need a metadata writable output buffer. Note that we can't unref
+       * in_buf. */
+      if (!gst_buffer_is_metadata_writable (*out_buf)) {
+        if (in_buf == *out_buf)
+          *out_buf =
+              gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
+        else
+          *out_buf = gst_buffer_make_metadata_writable (*out_buf);
+      }
       gst_buffer_copy_metadata (*out_buf, in_buf,
           GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
     }
   }
+  /* when we get here, the metadata should be writable */
   gst_buffer_set_caps (*out_buf, GST_PAD_CAPS (trans->srcpad));
 
   /* clear the GAP flag when the subclass does not understand it
@@ -1480,8 +1503,8 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   priv = trans->priv;
 
-  GST_DEBUG_OBJECT (pad, "alloc with caps %" GST_PTR_FORMAT ", size %u", caps,
-      size);
+  GST_DEBUG_OBJECT (pad, "alloc with caps %p %" GST_PTR_FORMAT ", size %u",
+      caps, caps, size);
 
   /* if the code below does not come up with a better buffer, we will return _OK
    * and an empty buffer. This will trigger the core to allocate a buffer with
@@ -1498,7 +1521,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
   if (same_caps) {
     /* we have seen this before, see below if we need to proxy */
-    GST_DEBUG_OBJECT (trans, "have old caps");
+    GST_DEBUG_OBJECT (trans, "have old caps %p, size %u", caps, size);
     sink_suggest = caps;
     size_suggest = size;
     suggest = FALSE;
@@ -1507,20 +1530,21 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     const GstCaps *templ;
     gboolean empty;
 
-    GST_DEBUG_OBJECT (trans, "new format %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (trans, "new format %p %" GST_PTR_FORMAT, caps, caps);
 
     /* if we have a suggestion, pretend we got these as input */
     GST_OBJECT_LOCK (pad);
     if ((priv->sink_suggest && !gst_caps_is_equal (caps, priv->sink_suggest))) {
       sink_suggest = gst_caps_ref (priv->sink_suggest);
       size_suggest = priv->size_suggest;
-      GST_DEBUG_OBJECT (trans, "have suggestion %" GST_PTR_FORMAT,
-          sink_suggest);
+      GST_DEBUG_OBJECT (trans, "have suggestion %p %" GST_PTR_FORMAT " size %u",
+          sink_suggest, sink_suggest, priv->size_suggest);
       /* suggest is TRUE when we have a custom suggestion pending that we need
        * to unref later. */
       suggest = TRUE;
     } else {
-      GST_DEBUG_OBJECT (trans, "using caps %" GST_PTR_FORMAT, caps);
+      GST_DEBUG_OBJECT (trans, "using caps %p %" GST_PTR_FORMAT " size %u",
+          caps, caps, size);
       sink_suggest = caps;
       size_suggest = size;
       suggest = FALSE;
@@ -1584,8 +1608,8 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   if (proxy && !suggest) {
     GstCaps *newcaps;
 
-    GST_DEBUG_OBJECT (trans, "proxy buffer-alloc with caps %" GST_PTR_FORMAT
-        ", size %u", caps, size);
+    GST_DEBUG_OBJECT (trans, "proxy buffer-alloc with caps %p %" GST_PTR_FORMAT
+        ", size %u", caps, caps, size);
 
     /* we always proxy the input caps, never the suggestion. The reason is that
      * We don't yet handle the caps of renegotiation in here. FIXME */
@@ -1625,8 +1649,8 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
      * it. Note that this format  */
     *buf = gst_buffer_new_and_alloc (size_suggest);
     GST_DEBUG_OBJECT (trans,
-        "doing suggestion of size %u, caps %" GST_PTR_FORMAT, size_suggest,
-        sink_suggest);
+        "doing suggestion of size %u, caps %p %" GST_PTR_FORMAT, size_suggest,
+        sink_suggest, sink_suggest);
     GST_BUFFER_CAPS (*buf) = sink_suggest;
   }
 
