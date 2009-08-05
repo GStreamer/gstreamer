@@ -1395,6 +1395,10 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   /* check if we need to make things writable. We need this when we need to
    * update the caps or the metadata on the output buffer. */
   newcaps = GST_BUFFER_CAPS (*out_buf);
+  /* we check the pointers as a quick check and then go to the more involved
+   * check. This is needed when we receive different pointers on the sinkpad
+   * that mean the same caps. What we then want to do is prefer those caps over
+   * the ones on the srcpad and set the srcpad caps to the buffer caps */
   setcaps = (newcaps != outcaps) && (!gst_caps_is_equal (newcaps, outcaps));
   /* we need to modify the metadata when the element is not gap aware,
    * passthrough is not used and the gap flag is set */
