@@ -1774,6 +1774,8 @@ gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
 
   oldcaps = *caps;
 
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "%p, %p -> %p", caps, oldcaps, newcaps);
+
   if (newcaps != oldcaps) {
     if (newcaps)
       gst_caps_ref (newcaps);
