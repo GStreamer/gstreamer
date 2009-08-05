@@ -225,10 +225,11 @@ gst_proxy_pad_do_getcaps (GstPad * pad)
   if (target) {
     /* if we have a real target, proxy the call */
     res = gst_pad_get_caps (target);
-    gst_object_unref (target);
 
     GST_DEBUG_OBJECT (pad, "get caps of target %s:%s : %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (target), res);
+
+    gst_object_unref (target);
 
     /* filter against the template */
     if (templ && res) {
@@ -688,6 +689,8 @@ on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 
   g_object_get (internal, "caps", &caps, NULL);
 
+  GST_DEBUG_OBJECT (pad, "notified %p %" GST_PTR_FORMAT, caps, caps);
+
   GST_OBJECT_LOCK (pad);
   changed = (GST_PAD_CAPS (pad) != caps);
   if (changed)
@@ -709,9 +712,12 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, GstGhostPad * pad)
 
   g_object_get (target, "caps", &caps, NULL);
 
+  GST_DEBUG_OBJECT (pad, "notified %p %" GST_PTR_FORMAT, caps, caps);
+
   GST_OBJECT_LOCK (pad);
   changed = (GST_PAD_CAPS (pad) != caps);
-  gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
+  if (changed)
+    gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
   GST_OBJECT_UNLOCK (pad);
 
   if (changed)
