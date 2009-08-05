@@ -1118,13 +1118,19 @@ unknown_type:
     if (src == dbin->typefind) {
       gchar *desc;
 
-      desc = gst_pb_utils_get_decoder_description (caps);
-      GST_ELEMENT_ERROR (dbin, STREAM, CODEC_NOT_FOUND,
-          (_("A %s plugin is required to play this stream, but not installed."),
-              desc),
-          ("No decoder to handle media type '%s'",
-              gst_structure_get_name (gst_caps_get_structure (caps, 0))));
-      g_free (desc);
+      if (caps && !gst_caps_is_empty (caps)) {
+        desc = gst_pb_utils_get_decoder_description (caps);
+        GST_ELEMENT_ERROR (dbin, STREAM, CODEC_NOT_FOUND,
+            (_("A %s plugin is required to play this stream, "
+                    "but not installed."), desc),
+            ("No decoder to handle media type '%s'",
+                gst_structure_get_name (gst_caps_get_structure (caps, 0))));
+        g_free (desc);
+      } else {
+        GST_ELEMENT_ERROR (dbin, STREAM, TYPE_NOT_FOUND,
+            (_("Could not determine type of stream")),
+            ("Stream caps %" GST_PTR_FORMAT, caps));
+      }
     }
 
     gst_element_post_message (GST_ELEMENT_CAST (dbin),
