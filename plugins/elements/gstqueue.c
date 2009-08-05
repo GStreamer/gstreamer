@@ -1021,7 +1021,6 @@ next:
     GstCaps *caps;
 
     buffer = GST_BUFFER_CAST (data);
-    caps = GST_BUFFER_CAPS (buffer);
 
     if (queue->head_needs_discont) {
       GstBuffer *subbuffer = gst_buffer_make_metadata_writable (buffer);
@@ -1034,6 +1033,8 @@ next:
       }
       queue->head_needs_discont = FALSE;
     }
+
+    caps = GST_BUFFER_CAPS (buffer);
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
     /* set the right caps on the pad now. We do this before pushing the buffer
