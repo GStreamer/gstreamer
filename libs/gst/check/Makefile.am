@@ -2,6 +2,8 @@ lib_LTLIBRARIES = libgstcheck-@GST_MAJORMINOR@.la
 
 SYMBOLS_FILE = exports.sym
 
+BUILT_SOURCES = internal-check.h
+
 libgstcheck_@GST_MAJORMINOR@_la_DEPENDENCIES = \
 	$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la \
 	internal-check.h \
