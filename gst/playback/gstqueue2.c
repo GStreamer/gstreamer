@@ -1658,10 +1658,23 @@ gst_queue_loop (GstPad * pad)
   /* ERRORS */
 out_flushing:
   {
+    gboolean eos = queue->is_eos;
+    GstFlowReturn ret = queue->srcresult;
+
     gst_pad_pause_task (queue->srcpad);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "pause task, reason:  %s", gst_flow_get_name (queue->srcresult));
     GST_QUEUE_MUTEX_UNLOCK (queue);
+    /* let app know about us giving up if upstream is not expected to do so */
+    /* UNEXPECTED is already taken care of elsewhere */
+    if (eos && (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) &&
+        (ret != GST_FLOW_UNEXPECTED)) {
+      GST_ELEMENT_ERROR (queue, STREAM, FAILED,
+          (_("Internal data flow error.")),
+          ("streaming task paused, reason %s (%d)",
+              gst_flow_get_name (ret), ret));
+      gst_pad_push_event (queue->srcpad, gst_event_new_eos ());
+    }
     return;
   }
 }
