@@ -37,9 +37,6 @@ static GQuark _priority_quark;
 G_DEFINE_TYPE_WITH_CODE (GESTrackObject, ges_track_object, G_TYPE_OBJECT,
     _do_init);
 
-#define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TRACK_OBJECT, GESTrackObjectPrivate));
-
 enum
 {
   PROP_0,
@@ -47,13 +44,6 @@ enum
   PROP_INPOINT,
   PROP_DURATION,
   PROP_PRIORITY,
-};
-
-typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
-
-struct _GESTrackObjectPrivate
-{
-  int dummy;
 };
 
 static gboolean
@@ -123,8 +113,6 @@ static void
 ges_track_object_class_init (GESTrackObjectClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESTrackObjectPrivate));
 
   object_class->get_property = ges_track_object_get_property;
   object_class->set_property = ges_track_object_set_property;

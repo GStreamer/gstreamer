@@ -30,16 +30,6 @@
 
 G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_OBJECT);
 
-#define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_LAYER, GESTimelineLayerPrivate));
-
-typedef struct _GESTimelineLayerPrivate GESTimelineLayerPrivate;
-
-struct _GESTimelineLayerPrivate
-{
-  int dummy;
-};
-
 enum
 {
   OBJECT_ADDED,
@@ -85,8 +75,6 @@ static void
 ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESTimelineLayerPrivate));
 
   object_class->get_property = ges_timeline_layer_get_property;
   object_class->set_property = ges_timeline_layer_set_property;

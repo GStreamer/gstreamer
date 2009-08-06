@@ -31,16 +31,6 @@
 
 G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN);
 
-#define GET_PRIVATE(o)							\
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TRACK, GESTrackPrivate));
-
-typedef struct _GESTrackPrivate GESTrackPrivate;
-
-struct _GESTrackPrivate
-{
-  int dummy;
-};
-
 static void
 ges_track_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -77,8 +67,6 @@ static void
 ges_track_class_init (GESTrackClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESTrackPrivate));
 
   object_class->get_property = ges_track_get_property;
   object_class->set_property = ges_track_set_property;

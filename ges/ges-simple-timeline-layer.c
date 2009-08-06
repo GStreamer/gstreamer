@@ -23,16 +23,6 @@
 G_DEFINE_TYPE (GESSimpleTimelineLayer, ges_simple_timeline_layer,
     GES_TYPE_TIMELINE_LAYER);
 
-#define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_SIMPLE_TIMELINE_LAYER, GESSimpleTimelineLayerPrivate));
-
-typedef struct _GESSimpleTimelineLayerPrivate GESSimpleTimelineLayerPrivate;
-
-struct _GESSimpleTimelineLayerPrivate
-{
-  int dummy;
-};
-
 static void
 ges_simple_timeline_layer_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
@@ -69,8 +59,6 @@ static void
 ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESSimpleTimelineLayerPrivate));
 
   object_class->get_property = ges_simple_timeline_layer_get_property;
   object_class->set_property = ges_simple_timeline_layer_set_property;

@@ -23,16 +23,6 @@
 G_DEFINE_TYPE (GESTimelineTransition, ges_timeline_transition,
     GES_TYPE_TIMELINE_OBJECT);
 
-#define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_TRANSITION, GESTimelineTransitionPrivate));
-
-typedef struct _GESTimelineTransitionPrivate GESTimelineTransitionPrivate;
-
-struct _GESTimelineTransitionPrivate
-{
-  int dummy;
-};
-
 static void
 ges_timeline_transition_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
@@ -69,8 +59,6 @@ static void
 ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESTimelineTransitionPrivate));
 
   object_class->get_property = ges_timeline_transition_get_property;
   object_class->set_property = ges_timeline_transition_set_property;

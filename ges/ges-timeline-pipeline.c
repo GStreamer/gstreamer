@@ -26,16 +26,6 @@
 
 G_DEFINE_TYPE (GESTimelinePipeline, ges_timeline_pipeline, GST_TYPE_PIPELINE);
 
-#define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GEST_TYPE_TIMELINE_PIPELINE, GESTimelinePipelinePrivate));
-
-typedef struct _GESTimelinePipelinePrivate GESTimelinePipelinePrivate;
-
-struct _GESTimelinePipelinePrivate
-{
-  int dummy;
-};
-
 static void
 ges_timeline_pipeline_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
@@ -72,8 +62,6 @@ static void
 ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESTimelinePipelinePrivate));
 
   object_class->get_property = ges_timeline_pipeline_get_property;
   object_class->set_property = ges_timeline_pipeline_set_property;
