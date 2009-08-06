@@ -52,6 +52,11 @@ struct _GESTimeline {
 
 struct _GESTimelineClass {
   GstBinClass parent_class;
+
+  void (*track_added)	(GESTimeline *timeline, GESTrack * track);
+  void (*track_removed)	(GESTimeline *timeline, GESTrack * track);
+  void (*layer_added)	(GESTimeline *timeline, GESTimelineLayer *layer);
+  void (*layer_removed)	(GESTimeline *timeline, GESTimelineLayer *layer);
 };
 
 GType ges_timeline_get_type (void);

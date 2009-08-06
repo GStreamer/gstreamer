@@ -20,19 +20,20 @@
 #include "ges-simple-timeline-layer.h"
 
 G_DEFINE_TYPE (GESSimpleTimelineLayer, ges_simple_timeline_layer,
-    GES_TYPE_TIMELINE_LAYER)
+    GES_TYPE_TIMELINE_LAYER);
+
 #define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_SIMPLE_TIMELINE_LAYER, GESSimpleTimelineLayerPrivate))
-     typedef struct _GESSimpleTimelineLayerPrivate
-         GESSimpleTimelineLayerPrivate;
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_SIMPLE_TIMELINE_LAYER, GESSimpleTimelineLayerPrivate));
 
-     struct _GESSimpleTimelineLayerPrivate
-     {
-       int dummy;
-     };
+typedef struct _GESSimpleTimelineLayerPrivate GESSimpleTimelineLayerPrivate;
 
-     static void
-         ges_simple_timeline_layer_get_property (GObject * object,
+struct _GESSimpleTimelineLayerPrivate
+{
+  int dummy;
+};
+
+static void
+ges_simple_timeline_layer_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {

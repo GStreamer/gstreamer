@@ -17,7 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gesmarshal.h"
 #include "ges-timeline-layer.h"
+#include "ges.h"
 
 /**
  * GESTimelineLayer
@@ -25,18 +27,29 @@
  * Responsible for the ordering of the various contained TimelineObject(s)
  */
 
-G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_OBJECT);
+
 #define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_LAYER, GESTimelineLayerPrivate))
-     typedef struct _GESTimelineLayerPrivate GESTimelineLayerPrivate;
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_LAYER, GESTimelineLayerPrivate));
 
-     struct _GESTimelineLayerPrivate
-     {
-       int dummy;
-     };
+typedef struct _GESTimelineLayerPrivate GESTimelineLayerPrivate;
 
-     static void
-         ges_timeline_layer_get_property (GObject * object, guint property_id,
+struct _GESTimelineLayerPrivate
+{
+  int dummy;
+};
+
+enum
+{
+  OBJECT_ADDED,
+  OBJECT_REMOVED,
+  LAST_SIGNAL
+};
+
+static guint ges_timeline_layer_signals[LAST_SIGNAL] = { 0 };
+
+static void
+ges_timeline_layer_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -78,6 +91,19 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
   object_class->set_property = ges_timeline_layer_set_property;
   object_class->dispose = ges_timeline_layer_dispose;
   object_class->finalize = ges_timeline_layer_finalize;
+
+  ges_timeline_layer_signals[OBJECT_ADDED] =
+      g_signal_new ("object-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineLayerClass, object_added),
+      NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+      GES_TYPE_TIMELINE_OBJECT);
+
+  ges_timeline_layer_signals[OBJECT_REMOVED] =
+      g_signal_new ("object-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineLayerClass,
+          object_removed), NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+      GES_TYPE_TIMELINE_OBJECT);
+
 }
 
 static void
@@ -89,4 +115,55 @@ GESTimelineLayer *
 ges_timeline_layer_new (void)
 {
   return g_object_new (GES_TYPE_TIMELINE_LAYER, NULL);
+}
+
+void
+ges_timeline_layer_set_timeline (GESTimelineLayer * layer,
+    GESTimeline * timeline)
+{
+  GST_DEBUG ("layer:%p, timeline:%p", layer, timeline);
+
+  layer->timeline = timeline;
+}
+
+static gint
+objects_start_compare (GESTimelineObject * a, GESTimelineObject * b)
+{
+  if (a->start == b->start) {
+    if (a->priority < b->priority)
+      return -1;
+    if (a->priority > b->priority)
+      return 1;
+    return 0;
+  }
+  if (a->start < b->start)
+    return -1;
+  if (a->start > b->start)
+    return 1;
+  return 0;
+}
+
+gboolean
+ges_timeline_layer_add_object (GESTimelineLayer * layer,
+    GESTimelineObject * object)
+{
+  GST_DEBUG ("layer:%p, object:%p", layer, object);
+
+  if (G_UNLIKELY (object->layer)) {
+    GST_WARNING ("TimelineObject %p already belongs to another layer");
+    return FALSE;
+  }
+
+  /* Take a reference to the object and store it stored by start/priority */
+  layer->objects_start =
+      g_slist_insert_sorted (layer->objects_start, g_object_ref (object),
+      (GCompareFunc) objects_start_compare);
+
+  /* Inform the object it's now in this layer */
+  ges_timeline_object_set_layer (object, layer);
+
+  /* emit 'object-added' */
+  g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, object);
+
+  return TRUE;
 }

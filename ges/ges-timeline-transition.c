@@ -20,18 +20,20 @@
 #include "ges-timeline-transition.h"
 
 G_DEFINE_TYPE (GESTimelineTransition, ges_timeline_transition,
-    GES_TYPE_TIMELINE_OBJECT)
+    GES_TYPE_TIMELINE_OBJECT);
+
 #define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_TRANSITION, GESTimelineTransitionPrivate))
-     typedef struct _GESTimelineTransitionPrivate GESTimelineTransitionPrivate;
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_TRANSITION, GESTimelineTransitionPrivate));
 
-     struct _GESTimelineTransitionPrivate
-     {
-       int dummy;
-     };
+typedef struct _GESTimelineTransitionPrivate GESTimelineTransitionPrivate;
 
-     static void
-         ges_timeline_transition_get_property (GObject * object,
+struct _GESTimelineTransitionPrivate
+{
+  int dummy;
+};
+
+static void
+ges_timeline_transition_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {

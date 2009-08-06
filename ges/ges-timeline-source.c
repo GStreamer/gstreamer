@@ -20,18 +20,21 @@
 #include "ges-timeline-object.h"
 #include "ges-timeline-source.h"
 
-G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source, GES_TYPE_TIMELINE_OBJECT)
+G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source,
+    GES_TYPE_TIMELINE_OBJECT);
+
 #define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_SOURCE, GESTimelineSourcePrivate))
-     typedef struct _GESTimelineSourcePrivate GESTimelineSourcePrivate;
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_SOURCE, GESTimelineSourcePrivate));
 
-     struct _GESTimelineSourcePrivate
-     {
-       int dummy;
-     };
+typedef struct _GESTimelineSourcePrivate GESTimelineSourcePrivate;
 
-     static void
-         ges_timeline_source_get_property (GObject * object, guint property_id,
+struct _GESTimelineSourcePrivate
+{
+  int dummy;
+};
+
+static void
+ges_timeline_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {

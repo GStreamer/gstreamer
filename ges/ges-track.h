@@ -46,6 +46,8 @@ G_BEGIN_DECLS
 struct _GESTrack {
   GstBin parent;
 
+  GESTimeline * timeline;
+
   GstElement * composition;	/* The composition associated with this track */
 };
 
@@ -57,7 +59,9 @@ GType ges_track_get_type (void);
 
 GESTrack* ges_track_new (void);
 
-gboolean ges_track_add_object (GESTrack *track, GESTrackObject * object);
+void ges_track_set_timeline (GESTrack * track, GESTimeline *timeline);
+
+gboolean ges_track_add_object (GESTrack * track, GESTrackObject * object);
 
 G_END_DECLS
 

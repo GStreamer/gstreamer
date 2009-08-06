@@ -17,7 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gesmarshal.h"
 #include "ges-timeline.h"
+#include "ges-track.h"
+#include "ges-timeline-layer.h"
+#include "ges.h"
 
 /**
  * GESTimelinePipeline
@@ -29,18 +33,31 @@
  *
  */
 
-G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN)
+G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN);
+
 #define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE, GESTimelinePrivate))
-     typedef struct _GESTimelinePrivate GESTimelinePrivate;
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE, GESTimelinePrivate));
 
-     struct _GESTimelinePrivate
-     {
-       GList *tracks;           /* TimelineTracks */
-     };
+typedef struct _GESTimelinePrivate GESTimelinePrivate;
 
-     static void
-         ges_timeline_get_property (GObject * object, guint property_id,
+struct _GESTimelinePrivate
+{
+
+};
+
+enum
+{
+  TRACK_ADDED,
+  TRACK_REMOVED,
+  LAYER_ADDED,
+  LAYER_REMOVED,
+  LAST_SIGNAL
+};
+
+static guint ges_timeline_signals[LAST_SIGNAL] = { 0 };
+
+static void
+ges_timeline_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -82,6 +99,34 @@ ges_timeline_class_init (GESTimelineClass * klass)
   object_class->set_property = ges_timeline_set_property;
   object_class->dispose = ges_timeline_dispose;
   object_class->finalize = ges_timeline_finalize;
+
+  /* Signals
+   * 'track-added'
+   * 'track-removed'
+   * 'layer-added'
+   * 'layer-removed'
+   */
+
+  ges_timeline_signals[TRACK_ADDED] =
+      g_signal_new ("track-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, track_added), NULL,
+      NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GES_TYPE_TRACK);
+
+  ges_timeline_signals[TRACK_REMOVED] =
+      g_signal_new ("track-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, track_removed),
+      NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GES_TYPE_TRACK);
+
+  ges_timeline_signals[LAYER_ADDED] =
+      g_signal_new ("layer-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_added), NULL,
+      NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GES_TYPE_TIMELINE_LAYER);
+
+  ges_timeline_signals[LAYER_REMOVED] =
+      g_signal_new ("layer-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_removed),
+      NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+      GES_TYPE_TIMELINE_LAYER);
 }
 
 static void
@@ -111,16 +156,78 @@ ges_timeline_save (GESTimeline * timeline, gchar * uri)
   return FALSE;
 }
 
+static void
+layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
+    GESTimeline * timeline)
+{
+  GList *tmp;
+
+  GST_DEBUG ("New TimelineObject %p added to layer %p", object, layer);
+
+  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
+    GESTrack *track = (GESTrack *) track;
+    GESTrackObject *trobj;
+
+    GST_LOG ("Trying with track %p", track);
+
+    if (G_UNLIKELY (!(trobj =
+                ges_timeline_object_create_track_object (object, track)))) {
+      GST_WARNING ("Couldn't create TrackObject for TimelineObject");
+      continue;
+    }
+
+    GST_LOG ("Got new TrackObject %p, adding it to track", trobj);
+    ges_track_add_object (track, trobj);
+  }
+
+  GST_DEBUG ("done");
+}
+
+
+static void
+layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
+    GESTimeline * timeline)
+{
+  /* FIXME : IMPLEMENT */
+}
+
+
 gboolean
 ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
-  /* FIXME : IMPLEMENT */
+  GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
+
+  /* We can only add a layer that doesn't already belong to another timeline */
+  if (G_UNLIKELY (layer->timeline)) {
+    GST_WARNING ("Layer belongs to another timeline, can't add it");
+    return FALSE;
+  }
 
   /* Add to the list of layers, make sure we don't already control it */
+  if (G_UNLIKELY (g_list_find (timeline->layers, (gconstpointer) layer))) {
+    GST_WARNING ("Layer is already controlled by this timeline");
+    return FALSE;
+  }
 
-  /* Assign Tracks to it */
+  /* Reference is taken */
+  timeline->layers = g_list_append (timeline->layers, g_object_ref (layer));
 
-  return FALSE;
+  /* Inform the layer that it belongs to a new timeline */
+  ges_timeline_layer_set_timeline (layer, timeline);
+
+  /* FIXME : GO OVER THE LIST OF EXISTING TIMELINE OBJECTS IN THAT LAYER
+   * AND ADD THEM !!! */
+
+  /* Connect to 'object-added'/'object-removed' signal from the new layer */
+  g_signal_connect (layer, "object-added", G_CALLBACK (layer_object_added_cb),
+      timeline);
+  g_signal_connect (layer, "object-removed",
+      G_CALLBACK (layer_object_removed_cb), timeline);
+
+  GST_DEBUG ("Done adding layer, emitting 'layer-added' signal");
+  g_signal_emit (timeline, ges_timeline_signals[LAYER_ADDED], 0, layer);
+
+  return TRUE;
 }
 
 gboolean
@@ -135,12 +242,33 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 gboolean
 ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
-  /* FIXME : IMPLEMENT */
+  GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
   /* Add to the list of tracks, make sure we don't already control it */
+  if (G_UNLIKELY (g_list_find (timeline->tracks, (gconstpointer) track))) {
+    GST_WARNING ("Track is already controlled by this timeline");
+    return FALSE;
+  }
 
+  /* Add the track to ourself (as a GstBin) 
+   * Reference is taken ! */
+  if (G_UNLIKELY (!gst_bin_add (GST_BIN (timeline), GST_ELEMENT (track)))) {
+    GST_WARNING ("Couldn't add track to ourself (GST)");
+    return FALSE;
+  }
 
-  return FALSE;
+  /* Add the track to the list of tracks we track */
+  timeline->tracks = g_list_append (timeline->tracks, track);
+
+  /* Inform the track that it's currently being used by ourself */
+  ges_track_set_timeline (track, timeline);
+
+  GST_DEBUG ("Done adding track, emitting 'track-added' signal");
+
+  /* emit 'track-added' */
+  g_signal_emit (timeline, ges_timeline_signals[TRACK_ADDED], 0, track);
+
+  return TRUE;
 }
 
 gboolean

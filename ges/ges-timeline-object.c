@@ -18,6 +18,7 @@
  */
 
 #include "ges-timeline-object.h"
+#include "ges.h"
 
 /**
  * GESTimelineObject
@@ -111,11 +112,58 @@ GESTrackObject *
 ges_timeline_object_create_track_object (GESTimelineObject * object,
     GESTrack * track)
 {
-  /* FIXME : IMPLEMENT */
+  GESTimelineObjectClass *class;
+  GESTrackObject *res;
 
-  /* implemented by subclasses */
+  class = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
-  /* Keep track of the created TrackObject(s) */
+  if (G_UNLIKELY (class->create_track_object == NULL)) {
+    GST_ERROR ("No 'create_track_object' implementation available");
+    return NULL;
+  }
 
-  return NULL;
+  res = class->create_track_object (object, track);
+
+  if (res) {
+    GST_DEBUG
+        ("Got a TrackObject : %p , setting the timeline object as its creator");
+    ges_track_object_set_timeline_object (res, object);
+  }
+
+  GST_DEBUG ("Returning res:%p", res);
+
+  return res;
+}
+
+void
+ges_timeline_object_set_layer (GESTimelineObject * object,
+    GESTimelineLayer * layer)
+{
+  GST_DEBUG ("object:%p, layer:%p", object, layer);
+
+  object->layer = layer;
+}
+
+gboolean
+ges_timeline_object_fill_track_object (GESTimelineObject * object,
+    GESTrackObject * trackobj, GstElement * gnlobj)
+{
+  GESTimelineObjectClass *class;
+  gboolean res;
+
+  GST_DEBUG ("object:%p, trackobject:%p, gnlobject:%p",
+      object, trackobj, gnlobj);
+
+  class = GES_TIMELINE_OBJECT_GET_CLASS (object);
+
+  if (G_UNLIKELY (class->fill_track_object == NULL)) {
+    GST_WARNING ("No 'fill_track_object' implementation available");
+    return FALSE;
+  }
+
+  res = class->fill_track_object (object, trackobj, gnlobj);
+
+  GST_DEBUG ("Returning res:%d", res);
+
+  return res;
 }

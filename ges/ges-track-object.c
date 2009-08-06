@@ -18,6 +18,7 @@
  */
 
 #include "ges-track-object.h"
+#include "ges-timeline-object.h"
 
 static GQuark _start_quark;
 static GQuark _inpoint_quark;
@@ -53,6 +54,9 @@ struct _GESTrackObjectPrivate
 {
   int dummy;
 };
+
+static gboolean
+ges_track_object_create_gnl_object_func (GESTrackObject * object);
 
 static void
 ges_track_object_get_property (GObject * object, guint property_id,
@@ -139,6 +143,8 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",
           "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
+
+  klass->create_gnl_object = ges_track_object_create_gnl_object_func;
 }
 
 static void
@@ -159,6 +165,8 @@ ges_track_object_new (GESTimelineObject * timelineobj, GESTrack * track)
 
   /* Create the associated GnlObject */
   ges_track_object_create_gnl_object (obj);
+
+  return obj;
 }
 
 gboolean
@@ -216,4 +224,71 @@ ges_track_object_set_priority_internal (GESTrackObject * object,
 
   g_object_set (object->gnlobject, "priority", priority, NULL);
   return TRUE;
+}
+
+/* default 'create_gnl_object' virtual method implementation */
+static gboolean
+ges_track_object_create_gnl_object_func (GESTrackObject * object)
+{
+
+  return FALSE;
+}
+
+static gboolean
+ensure_gnl_object (GESTrackObject * object)
+{
+  GESTrackObjectClass *class;
+  gboolean res;
+
+  if (object->gnlobject)
+    return TRUE;
+
+  class = GES_TRACK_OBJECT_GET_CLASS (object);
+
+  if (G_UNLIKELY (class->create_gnl_object == NULL)) {
+    GST_ERROR ("No 'create_gnl_object' implementation !");
+    return FALSE;
+  }
+
+  GST_DEBUG ("Calling virtual method");
+
+  /* call the create_gnl_object virtual method */
+  res = class->create_gnl_object (object);
+
+  if (G_UNLIKELY (res && (object->gnlobject == NULL))) {
+    GST_ERROR
+        ("'create_gnl_object' implementation returned TRUE but no GnlObject is available");
+    return FALSE;
+  }
+
+  if (res) {
+    GST_DEBUG ("Got a valid GnlObject, now filling it in");
+
+    res =
+        ges_timeline_object_fill_track_object (object->timelineobj, object,
+        object->gnlobject);
+  }
+
+  GST_DEBUG ("Returning res:%d", res);
+
+  return res;
+}
+
+void
+ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
+{
+  GST_DEBUG ("object:%p, track:%p", object, track);
+
+  object->track = track;
+
+  ensure_gnl_object (object);
+}
+
+void
+ges_track_object_set_timeline_object (GESTrackObject * object,
+    GESTimelineObject * tlobj)
+{
+  GST_DEBUG ("object:%p, timeline-object:%p", object, tlobj);
+
+  object->timelineobj = tlobj;
 }

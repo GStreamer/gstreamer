@@ -83,7 +83,7 @@ Methods
   ges_timeline_layer_add_object (GESTimelineLayer * layer, GESTimelineObject * object);
 
     * The TimelineLayer takes a reference on the TimelineObject and stores it
-    * The TimelineLayer tells the TmielineObject it now belongs to the given Layer
+    * The TimelineLayer tells the TimelineObject it now belongs to the given Layer
        => ges_timeline_object_set_layer (GESTimelineObject * object, GESTimelineLayer * layer);
           Just sets the layer field of the timeline object.
     * emits 'object-added'

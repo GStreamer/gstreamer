@@ -23,18 +23,20 @@
  *
  */
 
-G_DEFINE_TYPE (GESTimelinePipeline, ges_timeline_pipeline, GST_TYPE_PIPELINE)
+G_DEFINE_TYPE (GESTimelinePipeline, ges_timeline_pipeline, GST_TYPE_PIPELINE);
+
 #define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GEST_TYPE_TIMELINE_PIPELINE, GESTimelinePipelinePrivate))
-     typedef struct _GESTimelinePipelinePrivate GESTimelinePipelinePrivate;
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GEST_TYPE_TIMELINE_PIPELINE, GESTimelinePipelinePrivate));
 
-     struct _GESTimelinePipelinePrivate
-     {
-       int dummy;
-     };
+typedef struct _GESTimelinePipelinePrivate GESTimelinePipelinePrivate;
 
-     static void
-         ges_timeline_pipeline_get_property (GObject * object,
+struct _GESTimelinePipelinePrivate
+{
+  int dummy;
+};
+
+static void
+ges_timeline_pipeline_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {

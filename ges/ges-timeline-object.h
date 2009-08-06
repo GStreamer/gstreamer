@@ -21,6 +21,7 @@
 #define _GES_TIMELINE_OBJECT
 
 #include <glib-object.h>
+#include <gst/gst.h>
 #include <ges/ges-types.h>
 
 G_BEGIN_DECLS
@@ -45,6 +46,8 @@ G_BEGIN_DECLS
 struct _GESTimelineObject {
   GObject parent;
 
+  GESTimelineLayer * layer;	/* The layer where this object is being used */
+
   /* start, inpoint, duration and fullduration are in nanoseconds */
   guint64 start;	/* position (in time) of the object in the layer */
   guint64 inpoint;	/* in-point */
@@ -56,6 +59,12 @@ struct _GESTimelineObject {
 
 struct _GESTimelineObjectClass {
   GObjectClass parent_class;
+
+  GESTrackObject*	(*create_track_object)	(GESTimelineObject * object,
+						 GESTrack * track);
+  gboolean		(*fill_track_object)	(GESTimelineObject * object,
+						 GESTrackObject * trobject,
+						 GstElement * gnlobj);
 };
 
 GType ges_timeline_object_get_type (void);
@@ -63,9 +72,17 @@ GType ges_timeline_object_get_type (void);
 GESTimelineObject*
 ges_timeline_object_new (void);
 
+void ges_timeline_object_set_layer (GESTimelineObject * object,
+				    GESTimelineLayer * layer);
+
 GESTrackObject *
 ges_timeline_object_create_track_object (GESTimelineObject * object,
 					 GESTrack * track);
+
+gboolean
+ges_timeline_object_fill_track_object (GESTimelineObject * object,
+				       GESTrackObject * trackobj,
+				       GstElement * gnlobj);
 
 G_END_DECLS
 

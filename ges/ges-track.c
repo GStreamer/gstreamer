@@ -18,6 +18,7 @@
  */
 
 #include "ges-track.h"
+#include "ges-track-object.h"
 
 /**
  * GESTrack
@@ -27,18 +28,20 @@
  * Contains the compatible TrackObject(s)
  */
 
-G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN)
-#define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TRACK, GESTrackPrivate))
-     typedef struct _GESTrackPrivate GESTrackPrivate;
+G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN);
 
-     struct _GESTrackPrivate
-     {
-       int dummy;
-     };
+#define GET_PRIVATE(o)							\
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TRACK, GESTrackPrivate));
 
-     static void
-         ges_track_get_property (GObject * object, guint property_id,
+typedef struct _GESTrackPrivate GESTrackPrivate;
+
+struct _GESTrackPrivate
+{
+  int dummy;
+};
+
+static void
+ges_track_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -91,4 +94,41 @@ GESTrack *
 ges_track_new (void)
 {
   return g_object_new (GES_TYPE_TRACK, NULL);
+}
+
+void
+ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
+{
+  GST_DEBUG ("track:%p, timeline:%p", track, timeline);
+
+  track->timeline = timeline;
+}
+
+gboolean
+ges_track_add_object (GESTrack * track, GESTrackObject * object)
+{
+  GST_DEBUG ("track:%p, object:%p", track, object);
+
+  if (G_UNLIKELY (object->track != NULL)) {
+    GST_WARNING ("Object already belongs to another track");
+    return FALSE;
+  }
+
+  if (G_UNLIKELY (object->gnlobject != NULL)) {
+    GST_ERROR ("TrackObject doesn't have a gnlobject !");
+    return FALSE;
+  }
+
+  ges_track_object_set_track (object, track);
+
+  GST_DEBUG ("Adding object to ourself");
+
+  /* make sure the object has a valid gnlobject ! */
+  if (G_UNLIKELY (!gst_bin_add (GST_BIN (track->composition),
+              object->gnlobject))) {
+    GST_WARNING ("Couldn't add object to the GnlComposition");
+    return FALSE;
+  }
+
+  return TRUE;
 }

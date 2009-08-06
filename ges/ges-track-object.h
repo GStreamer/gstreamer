@@ -21,7 +21,8 @@
 #define _GES_TRACK_OBJECT
 
 #include <glib-object.h>
-#include <ges/ges.h>
+#include <gst/gst.h>
+#include <ges/ges-types.h>
 
 G_BEGIN_DECLS
 
@@ -72,6 +73,9 @@ GType ges_track_object_get_type (void);
 GESTrackObject* ges_track_object_new (GESTimelineObject *timelineobj, GESTrack *track);
 
 gboolean ges_track_object_create_gnl_object (GESTrackObject * object);
+
+void ges_track_object_set_track (GESTrackObject * object, GESTrack * track);
+void ges_track_object_set_timeline_object (GESTrackObject * object, GESTimelineObject * tlobject);
 
 /* Private methods for GESTimelineObject's usage only */
 gboolean ges_track_object_set_start_internal (GESTrackObject * object, guint64 start);
