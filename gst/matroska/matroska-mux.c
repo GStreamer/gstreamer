@@ -115,7 +115,8 @@ static GstStaticPadTemplate videosink_templ =
         COMMON_VIDEO_CAPS "; "
         "video/x-raw-yuv, "
         "format = (fourcc) { YUY2, I420, YV12, UYVY, AYUV }, "
-        COMMON_VIDEO_CAPS)
+        COMMON_VIDEO_CAPS "; "
+        "video/x-wmv, " "wmvversion = (int) [ 1, 3 ], " COMMON_VIDEO_CAPS)
     );
 
 #define COMMON_AUDIO_CAPS \
@@ -710,7 +711,8 @@ skip_details:
       || !strcmp (mimetype, "video/x-divx")
       || !strcmp (mimetype, "video/x-dv")
       || !strcmp (mimetype, "video/x-h263")
-      || !strcmp (mimetype, "video/x-msmpeg")) {
+      || !strcmp (mimetype, "video/x-msmpeg")
+      || !strcmp (mimetype, "video/x-wmv")) {
     BITMAPINFOHEADER *bih;
     gint size = sizeof (BITMAPINFOHEADER);
     guint32 fourcc = 0;
@@ -753,6 +755,22 @@ skip_details:
           goto msmpeg43;
           break;
       }
+    } else if (!strcmp (mimetype, "video/x-wmv")) {
+      gint wmvversion;
+      guint32 format;
+      GST_WARNING_OBJECT (mux, "WMV");
+      if (gst_structure_get_fourcc (structure, "format", &format)) {
+        fourcc = format;
+      } else if (gst_structure_get_int (structure, "wmvversion", &wmvversion)) {
+        if (wmvversion == 2) {
+          fourcc = GST_MAKE_FOURCC ('W', 'M', 'V', '2');
+        } else if (wmvversion == 1) {
+          fourcc = GST_MAKE_FOURCC ('W', 'M', 'V', '1');
+        } else if (wmvversion == 3) {
+          fourcc = GST_MAKE_FOURCC ('W', 'M', 'V', '3');
+        }
+      }
+      GST_WARNING_OBJECT (mux, "fourcc=%u", fourcc);
     }
 
     if (!fourcc)
