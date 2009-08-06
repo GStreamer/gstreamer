@@ -1561,6 +1561,8 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
   width = overlay->image_width;
   height = overlay->image_height;
 
+  video_frame = gst_buffer_make_writable (video_frame);
+
   if (overlay->use_vertical_render)
     halign = GST_TEXT_OVERLAY_HALIGN_RIGHT;
   else
