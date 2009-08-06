@@ -3,7 +3,7 @@
 
 DIE=0
 package=gst-editing-services
-srcfile=src/ges-timeline.c
+srcfile=ges/ges-timeline.c
 
 # Make sure we have common
 if test ! -f common/gst-autogen.sh;

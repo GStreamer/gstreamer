@@ -21,7 +21,7 @@
 #define _GES_TIMELINE_SOURCE
 
 #include <glib-object.h>
-#include <ges-timeline-object.h>
+#include <ges/ges.h>
 
 G_BEGIN_DECLS
 
@@ -41,9 +41,6 @@ G_BEGIN_DECLS
 
 #define GES_TIMELINE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_SOURCE, GESTimelineSourceClass))
-
-typedef struct _GESTimelineSource GESTimelineSource;
-typedef struct _GESTimelineSourceClass GESTimelineSourceClass;
 
 struct _GESTimelineSource {
   GESTimelineObject parent;

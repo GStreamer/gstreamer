@@ -1,8 +1,8 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-SUBDIRS = src
+SUBDIRS = ges
 
-DIST_SUBDIRS = src
+DIST_SUBDIRS = ges
 
 # include before EXTRA_DIST for win32 assignment
 include $(top_srcdir)/common/win32.mak

@@ -21,7 +21,8 @@
 #define _GES_SIMPLE_TIMELINE_LAYER
 
 #include <glib-object.h>
-#include "ges-timeline-layer.h"
+#include <ges/ges-types.h>
+#include <ges/ges-timeline-layer.h>
 
 G_BEGIN_DECLS
 
@@ -42,9 +43,6 @@ G_BEGIN_DECLS
 #define GES_SIMPLE_TIMELINE_LAYER_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_SIMPLE_TIMELINE_LAYER, GESSimpleTimelineLayerClass))
 
-typedef struct _GESSimpleTimelineLayer GESSimpleTimelineLayer;
-typedef struct _GESSimpleTimelineLayerClass GESSimpleTimelineLayerClass;
-
 struct _GESSimpleTimelineLayer {
   GESTimelineLayer parent;
 };
@@ -58,9 +56,16 @@ GType ges_simple_timeline_layer_get_type (void);
 GESSimpleTimelineLayer* ges_simple_timeline_layer_new (void);
 
 gboolean
-ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer *layer, GESTimelineObject *object, gint position);
-ges_simple_timeline_layer_remove_object (GESSimpleTimelineLayer *layer, GESTimelineObject *object);
-ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer *layer, GESTimelineObject, gint newposition);
+ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer *layer,
+				      GESTimelineObject *object, gint position);
+
+gboolean
+ges_simple_timeline_layer_remove_object (GESSimpleTimelineLayer *layer,
+					 GESTimelineObject *object);
+
+gboolean
+ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer *layer,
+				       GESTimelineObject, gint newposition);
 
 G_END_DECLS
 

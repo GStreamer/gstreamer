@@ -22,8 +22,7 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
-#include <ges/ges-timeline-layer.h>
-#include <ges/ges-track.h>
+#include <ges/ges-types.h>
 
 G_BEGIN_DECLS
 
@@ -43,9 +42,6 @@ G_BEGIN_DECLS
 
 #define GES_TIMELINE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE, GESTimelineClass))
-
-typedef struct _GESTimeline GESTimeline;
-typedef struct _GESTimelineClass GESTimelineClass;
 
 struct _GESTimeline {
   GstBin parent;

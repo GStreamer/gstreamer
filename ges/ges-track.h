@@ -22,7 +22,7 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
-#include <ges-track-object.h>
+#include <ges/ges-types.h>
 
 G_BEGIN_DECLS
 
@@ -43,13 +43,10 @@ G_BEGIN_DECLS
 #define GES_TRACK_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK, GESTrackClass))
 
-typedef struct _GESTrack GESTrack;
-typedef struct _GESTrackClass GESTrackClass;
-
 struct _GESTrack {
   GstBin parent;
 
-  GnlComposition * composition;	/* The composition associated with this track */
+  GstElement * composition;	/* The composition associated with this track */
 };
 
 struct _GESTrackClass {

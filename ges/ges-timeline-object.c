@@ -28,18 +28,20 @@
  */
 
 
-G_DEFINE_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT);
+
 #define GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectPrivate))
-     typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectPrivate));
 
-     struct _GESTimelineObjectPrivate
-     {
-       int dummy;
-     };
+typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
 
-     static void
-         ges_timeline_object_get_property (GObject * object, guint property_id,
+struct _GESTimelineObjectPrivate
+{
+  int dummy;
+};
+
+static void
+ges_timeline_object_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {

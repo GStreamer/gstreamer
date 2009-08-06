@@ -19,7 +19,7 @@ dnl check if this is a release version
 AS_NANO(GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
-AC_CONFIG_SRCDIR([src/ges-timeline.c])
+AC_CONFIG_SRCDIR([ges/ges-timeline.c])
 
 dnl define the output header for config
 AM_CONFIG_HEADER([config.h])
@@ -239,6 +239,6 @@ common/shave-libtool
 common/m4/Makefile
 gst-editing-services.spec
 m4/Makefile
-src/Makefile
+ges/Makefile
 )
 AC_OUTPUT

@@ -21,6 +21,7 @@
 #define _GES_TIMELINE_OBJECT
 
 #include <glib-object.h>
+#include <ges/ges-types.h>
 
 G_BEGIN_DECLS
 
@@ -41,9 +42,6 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_OBJECT_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
 
-typedef struct _GESTimelineObject GESTimelineObject;
-typedef struct _GESTimelineObjectClass GESTimelineObjectClass;
-
 struct _GESTimelineObject {
   GObject parent;
 
@@ -62,10 +60,12 @@ struct _GESTimelineObjectClass {
 
 GType ges_timeline_object_get_type (void);
 
-GESTimelineObject* ges_timeline_object_new (void);
+GESTimelineObject*
+ges_timeline_object_new (void);
 
-GESTrackObject * ges_timeline_object_create_track_object (GESTimelineObject * object,
-							  GESTrack * track);
+GESTrackObject *
+ges_timeline_object_create_track_object (GESTimelineObject * object,
+					 GESTrack * track);
 
 G_END_DECLS
 

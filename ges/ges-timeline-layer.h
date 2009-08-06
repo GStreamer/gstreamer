@@ -21,6 +21,7 @@
 #define _GES_TIMELINE_LAYER
 
 #include <glib-object.h>
+#include <ges/ges-types.h>
 
 G_BEGIN_DECLS
 
@@ -40,9 +41,6 @@ G_BEGIN_DECLS
 
 #define GES_TIMELINE_LAYER_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_LAYER, GESTimelineLayerClass))
-
-typedef struct _GESTimelineLayer GESTimelineLayer;
-typedef struct _GESTimelineLayerClass GESTimelineLayerClass;
 
 struct _GESTimelineLayer {
   GObject parent;
