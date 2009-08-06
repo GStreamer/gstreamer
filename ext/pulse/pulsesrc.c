@@ -519,7 +519,6 @@ gst_pulsesrc_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 static void
 gst_pulsesrc_stream_latency_update_cb (pa_stream * s, void *userdata)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
   const pa_timing_info *info;
   pa_usec_t source_usec;
 
@@ -531,7 +530,7 @@ gst_pulsesrc_stream_latency_update_cb (pa_stream * s, void *userdata)
   source_usec = 0;
 #endif
 
-  GST_LOG_OBJECT (pulsesrc,
+  GST_LOG_OBJECT (GST_PULSESRC_CAST (userdata),
       "latency_update, %" G_GUINT64_FORMAT ", %d:%" G_GINT64_FORMAT ", %d:%"
       G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT,
       GST_TIMEVAL_TO_TIME (info->timestamp), info->write_index_corrupt,
@@ -542,17 +541,13 @@ gst_pulsesrc_stream_latency_update_cb (pa_stream * s, void *userdata)
 static void
 gst_pulsesrc_stream_underflow_cb (pa_stream * s, void *userdata)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
-
-  GST_WARNING_OBJECT (pulsesrc, "Got underflow");
+  GST_WARNING_OBJECT (GST_PULSESRC_CAST (userdata), "Got underflow");
 }
 
 static void
 gst_pulsesrc_stream_overflow_cb (pa_stream * s, void *userdata)
 {
-  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
-
-  GST_WARNING_OBJECT (pulsesrc, "Got overflow");
+  GST_WARNING_OBJECT (GST_PULSESRC_CAST (userdata), "Got overflow");
 }
 
 static gboolean
