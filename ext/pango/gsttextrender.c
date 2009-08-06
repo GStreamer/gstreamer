@@ -267,13 +267,9 @@ gst_text_render_render_pangocairo (GstTextRender * render)
   cr_shadow = cairo_create (surface_shadow);
 
   /* clear shadow surface */
-  cairo_set_source_rgba (cr_shadow, 0.0, 0.0, 0.0, 0.0);
   cairo_set_operator (cr_shadow, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr_shadow);
   cairo_set_operator (cr_shadow, CAIRO_OPERATOR_OVER);
-
-  cairo_set_source_rgb (cr_shadow, 0.0, 0.0, 0.0);
-  pango_cairo_update_layout (cr_shadow, render->layout);
 
   /* draw shadow text */
   cairo_save (cr_shadow);
@@ -284,6 +280,7 @@ gst_text_render_render_pangocairo (GstTextRender * render)
 
   /* draw outline text */
   cairo_save (cr_shadow);
+  cairo_set_source_rgb (cr_shadow, 0.0, 0.0, 0.0);
   cairo_set_line_width (cr_shadow, render->outline_offset);
   pango_cairo_layout_path (cr_shadow, render->layout);
   cairo_stroke (cr_shadow);
@@ -292,18 +289,21 @@ gst_text_render_render_pangocairo (GstTextRender * render)
   cairo_destroy (cr_shadow);
 
   render->text_image = g_realloc (render->text_image, 4 * width * height);
-  memset (render->text_image, 0, 4 * width * height);
 
   surface = cairo_image_surface_create_for_data (render->text_image,
       CAIRO_FORMAT_ARGB32, width, height, width * 4);
   cr = cairo_create (surface);
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
   /* set default color */
   cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
 
+  cairo_save (cr);
   /* draw text */
-  pango_cairo_update_layout (cr, render->layout);
   pango_cairo_show_layout (cr, render->layout);
+  cairo_restore (cr);
 
   /* composite shadow with offset */
   cairo_set_operator (cr, CAIRO_OPERATOR_DEST_OVER);
@@ -404,7 +404,7 @@ gst_text_renderer_image_to_ayuv (GstTextRender * render, guchar * pixbuf,
 
   for (y = 0; y < height; y++) {
     int n;
-    p = pixbuf + ypos * stride + xpos;
+    p = pixbuf + (ypos + y) * stride + xpos * 4;
     for (n = 0; n < width; n++) {
       b = bitp[CAIRO_ARGB_B];
       g = bitp[CAIRO_ARGB_G];
@@ -436,12 +436,13 @@ gst_text_renderer_image_to_argb (GstTextRender * render, guchar * pixbuf,
   bitp = render->text_image;
 
   for (i = 0; i < height; i++) {
-    p = pixbuf + ypos * stride + xpos;
+    p = pixbuf + (ypos + i) * stride + xpos * 4;
     for (j = 0; j < width; j++) {
       p[0] = bitp[CAIRO_ARGB_A];
       p[1] = bitp[CAIRO_ARGB_R];
       p[2] = bitp[CAIRO_ARGB_G];
       p[3] = bitp[CAIRO_ARGB_B];
+
       bitp += 4;
       p += 4;
     }
