@@ -28,6 +28,44 @@ GST_START_TEST (test_ges_init)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ges_scenario)
+{
+  GESTimelinePipeline *pipeline;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrack *track;
+  GESTimelineSource *source;
+
+  /* This is the simplest scenario ever */
+
+  pipeline = ges_timeline_pipeline_new ();
+  fail_unless (pipeline != NULL);
+
+  timeline = ges_timeline_new ();
+  fail_unless (timeline != NULL);
+
+  layer = ges_timeline_layer_new ();
+  fail_unless (layer != NULL);
+
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+  fail_unless (layer->timeline == timeline);
+
+  track = ges_track_new ();
+  fail_unless (track != NULL);
+
+  fail_unless (ges_timeline_add_track (timeline, track));
+  fail_unless (track->timeline == timeline);
+
+  source = ges_timeline_source_new ();
+  fail_unless (source != NULL);
+
+  fail_unless (ges_timeline_layer_add_object (layer,
+          GES_TIMELINE_OBJECT (source)));
+  fail_unless (GES_TIMELINE_OBJECT (source)->layer == layer);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -37,6 +75,7 @@ ges_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_ges_init);
+  tcase_add_test (tc_chain, test_ges_scenario);
 
   return s;
 }
