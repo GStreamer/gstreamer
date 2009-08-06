@@ -274,6 +274,8 @@ gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
           &stop_type, &stop);
 
+      gst_event_unref (event);
+
       if (format != GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (spc, "seeking is only supported in TIME format");
         break;
@@ -333,10 +335,10 @@ gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
+      result = gst_pad_push_event (spc->sinkpad, event);
       break;
   }
 
-  gst_event_unref (event);
   gst_object_unref (spc);
 
   return result;
@@ -531,7 +533,7 @@ spc_setup (GstSpcDec * spc)
   gme_err =
       gme_open_data (GST_BUFFER_DATA (spc->buf), GST_BUFFER_SIZE (spc->buf),
       &spc->player, 32000);
-  if (gme_err || !spc->player || gme_type (spc->player) != gme_spc_type) {
+  if (gme_err || !spc->player) {
     if (spc->player) {
       gme_delete (spc->player);
       spc->player = NULL;
