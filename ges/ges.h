@@ -34,6 +34,7 @@
 #include <ges/ges-timeline-transition.h>
 #include <ges/ges-track.h>
 #include <ges/ges-track-object.h>
+#include <ges/ges-track-source.h>
 
 GST_DEBUG_CATEGORY_EXTERN (ges_debug);
 #define GST_CAT_DEFAULT ges_debug

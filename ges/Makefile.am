@@ -17,7 +17,8 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-timeline-source.c			\
 	ges-timeline-transition.c		\
 	ges-track.c				\
-	ges-track-object.c
+	ges-track-object.c			\
+	ges-track-source.c
 
 libges_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/ges/
 libges_@GST_MAJORMINOR@include_HEADERS = 	\
@@ -31,7 +32,8 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-timeline-source.h			\
 	ges-timeline-transition.h		\
 	ges-track.h				\
-	ges-track-object.h
+	ges-track-object.h			\
+	ges-track-source.h
 
 
 libges_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)

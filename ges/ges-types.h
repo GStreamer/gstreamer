@@ -47,5 +47,8 @@ typedef struct _GESTrackClass GESTrackClass;
 typedef struct _GESTrackObject GESTrackObject;
 typedef struct _GESTrackObjectClass GESTrackObjectClass;
 
+typedef struct _GESTrackSource GESTrackSource;
+typedef struct _GESTrackSourceClass GESTrackSourceClass;
+
 
 #endif /* __GES_TYPES_H__ */
