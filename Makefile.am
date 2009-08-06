@@ -5,7 +5,8 @@ all-local: gst-element-check-@GST_MAJORMINOR@.m4
 gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
 	cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
 
-ACLOCAL_AMFLAGS = -I common/m4
+# note: keep in sync with configure.ac
+ACLOCAL_AMFLAGS = -I common/m4 -I .
 
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4

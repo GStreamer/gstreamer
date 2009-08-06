@@ -7,5 +7,5 @@ Name: GStreamer check unit testing
 Description: Unit testing helper library for GStreamer modules
 Requires: gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
-Libs: -L${libdir} -lgstcheck-@GST_MAJORMINOR@ @CHECK_LIBS@ -lm
-Cflags: -I${includedir} @CHECK_CFLAGS@
+Libs: -L${libdir} -lgstcheck-@GST_MAJORMINOR@ -lm
+Cflags: -I${includedir}

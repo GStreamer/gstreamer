@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include <check.h>
+#include <gst/check/internal-check.h>
 
 #include <gst/gst.h>
 

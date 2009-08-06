@@ -1,6 +1,6 @@
 noinst_LTLIBRARIES	= libcheckinternal.la
 
-EXTRA_DIST		= check.h.in
+EXTRA_DIST = check.h.in
 
 CFILES =\
 	check.c		\
@@ -26,13 +26,6 @@ HFILES =\
 
 noinst_HEADERS = $(HFILES)
 
-EXPORT_SYM	= exported.sym
-$(EXPORT_SYM): check.h.in
-	sed -n -e 's/^..*CK_EXPORT[[:space:]][[:space:]]*\([[:alnum:]_][[:alnum:]_]*\)..*$$/\1/p' @top_srcdir@/src/check.h.in > $@
-
 libcheckinternal_la_SOURCES	= $(CFILES) $(HFILES)
 libcheckinternal_la_LIBADD	= 
-
-
-CLEANFILES	= $(EXPORT_SYM)
 

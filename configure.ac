@@ -58,8 +58,8 @@ dnl *** autotools stuff ****
 dnl allow for different autotools
 AS_AUTOTOOLS_ALTERNATE
 
-dnl Add parameters for aclocal
-AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4")
+dnl Add parameters for aclocal (keep in sync with Makefile.am)
+AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4 -I .")
 
 dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
@@ -503,22 +503,21 @@ else
 fi
 AC_SUBST(GST_DISABLE_XML_DEFINE)
 
-dnl check for "check", unit testing library/header
-if test "$cross_compiling" != yes; then
-  AM_PATH_CHECK(0.9.2,
-      HAVE_CHECK=yes,
-      HAVE_CHECK=no)
-else
-  HAVE_CHECK=no
-fi
-AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+dnl building of unit test libraries
+AC_ARG_ENABLE(check,
+  AC_HELP_STRING([--disable-check], [disable building unit test libraries]),
+  [
+    case "${enableval}" in
+      yes) BUILD_CHECK=yes ;;
+      no)  BUILD_CHECK=no ;;
+      *)   AC_MSG_ERROR(bad value ${enableval} for --disable-check) ;;
+    esac
+  ],
+[BUILD_CHECK=yes]) dnl Default value
+dnl bit of a misnomer, but keep the conditional named like this so we don't
+dnl have to change too much elsewhere
+AM_CONDITIONAL(HAVE_CHECK, test "x$BUILD_CHECK" = "xyes")
 
-dnl pkg-config check that for libcheck that works for cross-compiling
-dnl but not normal compilation on Fedora & Ubuntu:
-dnl PKG_CHECK_MODULES(CHECK, check >= 0.9.2,
-dnl   AM_CONDITIONAL(HAVE_CHECK, true),
-dnl   AM_CONDITIONAL(HAVE_CHECK, false)
-dnl )
 
 dnl *** set variables based on configure arguments
 
@@ -606,13 +605,6 @@ dnl linker flags shared by all libraries
 dnl LDFLAGS modifier defining exported symbols from built libraries
 GST_LIB_LDFLAGS="-export-symbols-regex \^[_]*\(gst_\|Gst\|GST_\).*"
 AC_SUBST(GST_LIB_LDFLAGS)
-dnl Version of the linker flags specifically for libgstcheck to support the boonky extra symbols it exports.
-GST_CHECK_LIB_LDFLAGS="-export-symbols-regex \^\([_]*\(gst_\|Gst\|GST_\).*\|check_\(debug\|mutex\|cond\)\|buffers\|mutex\|start_cond\|sync_cond\|thread_list\)$"
-dnl HACK: add non-portable --export-dynamic if we have GNU ld (needed on my debian stable, tpm)
-if test "x$ac_cv_prog_gnu_ld" = "xyes" -o "x$acl_cv_prog_gnu_ld" = "xyes" ; then
-  GST_CHECK_LIB_LDFLAGS="-Wl,--export-dynamic $GST_CHECK_LIB_LDFLAGS"
-fi
-AC_SUBST(GST_CHECK_LIB_LDFLAGS)
 
 dnl GST_OBJ_*
 dnl default vars for all internal objects built on libgstreamer
@@ -629,6 +621,11 @@ AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 SHAVE_INIT([common],[enable])
 
+dnl things for our internal libcheck
+if test "x$BUILD_CHECK" = "xyes"; then
+  AG_GST_CHECK_CHECKS()
+fi
+
 AC_CONFIG_FILES(
 Makefile
 common/shave
@@ -641,6 +638,8 @@ libs/Makefile
 libs/gst/Makefile
 libs/gst/base/Makefile
 libs/gst/check/Makefile
+libs/gst/check/libcheck/Makefile
+libs/gst/check/libcheck/check.h
 libs/gst/controller/Makefile
 libs/gst/dataprotocol/Makefile
 libs/gst/net/Makefile
@@ -767,6 +766,7 @@ Configuration
 	Plugin registry            : ${enable_registry}
 	Plugin support	           : ${enable_plugin}
 	Network support            : ${enable_net}
+	Unit testing support       : ${BUILD_CHECK}
 
 	Debug                      : ${USE_DEBUG}
 	Profiling                  : ${USE_PROFILING}
