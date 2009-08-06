@@ -1,6 +1,6 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-SUBDIRS = ges
+SUBDIRS = ges tests
 
 DIST_SUBDIRS = ges
 

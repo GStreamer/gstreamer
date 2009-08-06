@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "ges-internal.h"
 #include "ges-simple-timeline-layer.h"
 
 G_DEFINE_TYPE (GESSimpleTimelineLayer, ges_simple_timeline_layer,

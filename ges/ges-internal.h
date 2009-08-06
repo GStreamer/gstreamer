@@ -17,15 +17,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <ges/ges.h>
-#include "ges-internal.h"
+#ifndef __GES_INTERNAL_H__
+#define __GES_INTERNAL_H__
 
-GST_DEBUG_CATEGORY (ges_debug);
+#include <gst/gst.h>
 
-void
-ges_init (void)
-{
-  /* initialize debugging category */
-  GST_DEBUG_CATEGORY_INIT (ges_debug, "ges", GST_DEBUG_FG_YELLOW,
-      "GStreamer Editing Services");
-}
+GST_DEBUG_CATEGORY_EXTERN (ges_debug);
+#define GST_CAT_DEFAULT ges_debug
+
+#endif /* __GES_INTERNAL_H__ */

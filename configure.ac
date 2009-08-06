@@ -240,5 +240,7 @@ common/m4/Makefile
 gst-editing-services.spec
 m4/Makefile
 ges/Makefile
+tests/Makefile
+tests/check/Makefile
 )
 AC_OUTPUT

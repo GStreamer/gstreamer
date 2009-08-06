@@ -72,7 +72,7 @@ GType ges_track_object_get_type (void);
 
 GESTrackObject* ges_track_object_new (GESTimelineObject *timelineobj, GESTrack *track);
 
-gboolean ges_track_object_create_gnl_object (GESTrackObject * object);
+/* gboolean ges_track_object_create_gnl_object (GESTrackObject * object); */
 
 void ges_track_object_set_track (GESTrackObject * object, GESTrack * track);
 void ges_track_object_set_timeline_object (GESTrackObject * object, GESTimelineObject * tlobject);

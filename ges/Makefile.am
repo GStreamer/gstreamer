@@ -24,6 +24,7 @@ libges_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/ges
 libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-types.h				\
 	ges.h					\
+	ges-internal.h				\
 	ges-simple-timeline-layer.h		\
 	ges-timeline.h				\
 	ges-timeline-layer.h			\

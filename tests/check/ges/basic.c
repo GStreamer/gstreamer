@@ -18,14 +18,42 @@
  */
 
 #include <ges/ges.h>
-#include "ges-internal.h"
+#include <gst/check/gstcheck.h>
 
-GST_DEBUG_CATEGORY (ges_debug);
-
-void
-ges_init (void)
+GST_START_TEST (test_ges_init)
 {
-  /* initialize debugging category */
-  GST_DEBUG_CATEGORY_INIT (ges_debug, "ges", GST_DEBUG_FG_YELLOW,
-      "GStreamer Editing Services");
+  /* Yes, I know.. minimalistic... */
+  ges_init ();
+}
+
+GST_END_TEST;
+
+static Suite *
+ges_suite (void)
+{
+  Suite *s = suite_create ("ges");
+  TCase *tc_chain = tcase_create ("basic");
+
+  suite_add_tcase (s, tc_chain);
+
+  tcase_add_test (tc_chain, test_ges_init);
+
+  return s;
+}
+
+int
+main (int argc, char **argv)
+{
+  int nf;
+
+  Suite *s = ges_suite ();
+  SRunner *sr = srunner_create (s);
+
+  gst_check_init (&argc, &argv);
+
+  srunner_run_all (sr, CK_NORMAL);
+  nf = srunner_ntests_failed (sr);
+  srunner_free (sr);
+
+  return nf;
 }

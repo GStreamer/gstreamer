@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-timeline-object.h"
 
@@ -159,12 +160,12 @@ ges_track_object_new (GESTimelineObject * timelineobj, GESTrack * track)
 
   obj = g_object_new (GES_TYPE_TRACK_OBJECT, NULL);
 
+  /* FIXME : THIS IS TOTALLY BOGUS ! */
+
   /* Set the timeline object and track */
   obj->timelineobj = timelineobj;
   obj->track = track;
 
-  /* Create the associated GnlObject */
-  ges_track_object_create_gnl_object (obj);
 
   return obj;
 }

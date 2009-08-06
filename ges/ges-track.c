@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "ges-internal.h"
 #include "ges-track.h"
 #include "ges-track-object.h"
 

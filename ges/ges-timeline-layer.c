@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "ges-internal.h"
 #include "gesmarshal.h"
 #include "ges-timeline-layer.h"
 #include "ges.h"

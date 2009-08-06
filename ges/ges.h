@@ -36,9 +36,6 @@
 #include <ges/ges-track-object.h>
 #include <ges/ges-track-source.h>
 
-GST_DEBUG_CATEGORY_EXTERN (ges_debug);
-#define GST_CAT_DEFAULT ges_debug
-
 G_BEGIN_DECLS
 
 void ges_init (void);
