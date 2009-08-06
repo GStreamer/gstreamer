@@ -1101,7 +1101,7 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
 static gboolean
 gst_soup_http_src_build_message (GstSoupHTTPSrc * src)
 {
-  src->msg = soup_message_new ("GET", src->location);
+  src->msg = soup_message_new (SOUP_METHOD_GET, src->location);
   if (!src->msg) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (NULL), ("Error parsing URL \"%s\"", src->location));
