@@ -49,6 +49,18 @@
 #include "gsttextrender.h"
 #include <string.h>
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+# define CAIRO_ARGB_A 3
+# define CAIRO_ARGB_R 2
+# define CAIRO_ARGB_G 1
+# define CAIRO_ARGB_B 0
+#else
+# define CAIRO_ARGB_A 0
+# define CAIRO_ARGB_R 1
+# define CAIRO_ARGB_G 2
+# define CAIRO_ARGB_B 3
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (pango_debug);
 #define GST_CAT_DEFAULT pango_debug
 
@@ -394,10 +406,11 @@ gst_text_renderer_image_to_ayuv (GstTextRender * render, guchar * pixbuf,
     int n;
     p = pixbuf + ypos * stride + xpos;
     for (n = 0; n < width; n++) {
-      b = *bitp++;
-      g = *bitp++;
-      r = *bitp++;
-      a = *bitp++;
+      b = bitp[CAIRO_ARGB_B];
+      g = bitp[CAIRO_ARGB_G];
+      r = bitp[CAIRO_ARGB_R];
+      a = bitp[CAIRO_ARGB_A];
+      bitp += 4;
 
       *p++ = a;
       *p++ = CLAMP ((int) (((19595 * r) >> 16) + ((38470 * g) >> 16) +
@@ -414,7 +427,7 @@ static void
 gst_text_renderer_image_to_argb (GstTextRender * render, guchar * pixbuf,
     int xpos, int ypos, int stride)
 {
-  int i;
+  int i, j;
   guchar *p, *bitp;
   int width, height;
 
@@ -424,8 +437,14 @@ gst_text_renderer_image_to_argb (GstTextRender * render, guchar * pixbuf,
 
   for (i = 0; i < height; i++) {
     p = pixbuf + ypos * stride + xpos;
-    memcpy (p, bitp, width * 4);
-    bitp += width * 4;
+    for (j = 0; j < width; j++) {
+      p[0] = bitp[CAIRO_ARGB_A];
+      p[1] = bitp[CAIRO_ARGB_R];
+      p[2] = bitp[CAIRO_ARGB_G];
+      p[3] = bitp[CAIRO_ARGB_B];
+      bitp += 4;
+      p += 4;
+    }
   }
 }
 
@@ -486,10 +505,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   data = GST_BUFFER_DATA (outbuf);
 
   if (render->use_ARGB) {
-    for (n = 0; n < render->width * render->height; n++) {
-      data[n * 4] = 0;
-      data[n * 4 + 1] = data[n * 4 + 2] = data[n * 4 + 3] = 0;
-    }
+    memset (data, 0, render->width * render->height * 4);
   } else {
     for (n = 0; n < render->width * render->height; n++) {
       data[n * 4] = data[n * 4 + 1] = 0;
