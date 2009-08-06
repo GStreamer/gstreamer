@@ -57,6 +57,11 @@ GType ges_simple_timeline_layer_get_type (void);
 
 GESSimpleTimelineLayer* ges_simple_timeline_layer_new (void);
 
+gboolean
+ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer *layer, GESTimelineObject *object, gint position);
+ges_simple_timeline_layer_remove_object (GESSimpleTimelineLayer *layer, GESTimelineObject *object);
+ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer *layer, GESTimelineObject, gint newposition);
+
 G_END_DECLS
 
 #endif /* _GES_SIMPLE_TIMELINE_LAYER */

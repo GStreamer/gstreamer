@@ -46,15 +46,40 @@ typedef struct _GESTrackObjectClass GESTrackObjectClass;
 
 struct _GESTrackObject {
   GObject parent;
+
+  GESTimelineObject *timelineobj;	/* The associated timeline object */
+  GESTrack *track;			/* The associated Track */
+
+  /* Cached values of the gnlobject properties */
+  guint64 start;	/* position (in time) of the object in the layer */
+  guint64 inpoint;	/* in-point */
+  guint64 duration;	/* duration of the object used in the layer */
+  guint32 priority;	/* priority of the object in the layer (0:top priority) */
+
+  GstElement *gnlobject;	/* The associated GnlObject */
 };
 
 struct _GESTrackObjectClass {
   GObjectClass parent_class;
+
+  /* signal callbacks */
+  void	(*changed)	(GESTrackObject * object);
+
+  /* virtual methods */
+  gboolean (*create_gnl_object) (GESTrackObject * object);
 };
 
 GType ges_track_object_get_type (void);
 
-GESTrackObject* ges_track_object_new (void);
+GESTrackObject* ges_track_object_new (GESTimelineObject *timelineobj, GESTrack *track);
+
+gboolean ges_track_object_create_gnl_object (GESTrackObject * object);
+
+/* Private methods for GESTimelineObject's usage only */
+gboolean ges_track_object_set_start_internal (GESTrackObject * object, guint64 start);
+gboolean ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint);
+gboolean ges_track_object_set_duration_internal (GESTrackObject * object, guint64 duration);
+gboolean ges_track_object_set_priority_internal (GESTrackObject * object, guint32 priority);
 
 G_END_DECLS
 

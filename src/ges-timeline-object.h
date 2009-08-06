@@ -46,6 +46,14 @@ typedef struct _GESTimelineObjectClass GESTimelineObjectClass;
 
 struct _GESTimelineObject {
   GObject parent;
+
+  /* start, inpoint, duration and fullduration are in nanoseconds */
+  guint64 start;	/* position (in time) of the object in the layer */
+  guint64 inpoint;	/* in-point */
+  guint64 duration;	/* duration of the object used in the layer */
+  guint32 priority;	/* priority of the object in the layer (0:top priority) */
+
+  guint64 fullduration; /* Full usable duration of the object (-1: no duration) */
 };
 
 struct _GESTimelineObjectClass {
@@ -55,6 +63,9 @@ struct _GESTimelineObjectClass {
 GType ges_timeline_object_get_type (void);
 
 GESTimelineObject* ges_timeline_object_new (void);
+
+GESTrackObject * ges_timeline_object_create_track_object (GESTimelineObject * object,
+							  GESTrack * track);
 
 G_END_DECLS
 

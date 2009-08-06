@@ -3,7 +3,8 @@ lib_LTLIBRARIES = libges-@GST_MAJORMINOR@.la
 
 CLEANFILES = $(BUILT_SOURCES)
 
-libges_@GST_MAJORMINOR@_la_SOURCES = \
+libges_@GST_MAJORMINOR@_la_SOURCES = 		\
+	ges.c					\
 	ges-simple-timeline-layer.c		\
 	ges-timeline.c				\
 	ges-timeline-layer.c			\
@@ -14,8 +15,9 @@ libges_@GST_MAJORMINOR@_la_SOURCES = \
 	ges-track.c				\
 	ges-track-object.c
 
-libges_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/ges/
-libges_@GST_MAJORMINOR@include_HEADERS = \
+libges_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/ges/
+libges_@GST_MAJORMINOR@include_HEADERS = 	\
+	ges.h					\
 	ges-simple-timeline-layer.h		\
 	ges-timeline.h				\
 	ges-timeline-layer.h			\

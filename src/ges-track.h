@@ -48,6 +48,8 @@ typedef struct _GESTrackClass GESTrackClass;
 
 struct _GESTrack {
   GstBin parent;
+
+  GnlComposition * composition;	/* The composition associated with this track */
 };
 
 struct _GESTrackClass {

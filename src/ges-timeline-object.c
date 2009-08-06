@@ -93,3 +93,27 @@ ges_timeline_object_new (void)
 {
   return g_object_new (GES_TYPE_TIMELINE_OBJECT, NULL);
 }
+
+/**
+ * ges_timeline_object_create_track_object:
+ * @object: The origin #GESTimelineObject
+ * @track: The #GESTrack to create a #GESTrackObject for.
+ *
+ * Creates a #GESTrackObject for the provided @track.
+ *
+ * Returns: A #GESTrackObject. Returns NULL if the #GESTrackObject could not
+ * be created.
+ */
+
+GESTrackObject *
+ges_timeline_object_create_track_object (GESTimelineObject * object,
+    GESTrack * track)
+{
+  /* FIXME : IMPLEMENT */
+
+  /* implemented by subclasses */
+
+  /* Keep track of the created TrackObject(s) */
+
+  return NULL;
+}

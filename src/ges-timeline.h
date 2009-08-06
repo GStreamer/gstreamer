@@ -22,8 +22,8 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
-#include <ges-timeline-layer.h>
-#include <ges-track.h>
+#include <ges/ges-timeline-layer.h>
+#include <ges/ges-track.h>
 
 G_BEGIN_DECLS
 
