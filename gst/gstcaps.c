@@ -1236,7 +1236,7 @@ gst_caps_structure_can_intersect (const GstStructure * struct1,
  *
  * Returns: %TRUE if intersection would be not empty
  *
- * Since: 0.10.24
+ * Since: 0.10.25
  */
 gboolean
 gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
