@@ -283,6 +283,10 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
   pulsesrc->mixer = NULL;
 
   pulsesrc->probe = gst_pulseprobe_new (G_OBJECT (pulsesrc), G_OBJECT_GET_CLASS (pulsesrc), PROP_DEVICE, pulsesrc->server, FALSE, TRUE);        /* FALSE for sinks, TRUE for sources */
+
+  /* this should be the default but it isn't yet */
+  gst_base_audio_src_set_slave_method (GST_BASE_AUDIO_SRC (pulsesrc),
+      GST_BASE_AUDIO_SRC_SLAVE_SKEW);
 }
 
 static void
