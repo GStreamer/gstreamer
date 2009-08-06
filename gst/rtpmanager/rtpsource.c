@@ -1074,6 +1074,7 @@ done:
 bad_sequence:
   {
     GST_WARNING ("unacceptable seqnum received");
+    gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 }
