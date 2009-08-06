@@ -17,3 +17,30 @@
 #  You should have received a copy of the GNU General Public License along with
 #  this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""GStreamer Debug Viewer GUI module."""
+
+__author__ = u"René Stadler <mail@renestadler.de>"
+__version__ = "0.1"
+
+import pygtk
+pygtk.require ("2.0")
+del pygtk
+
+from GstDebugViewer.GUI.app import App
+
+def main (options):
+
+    args = options["args"]
+
+    app = App ()
+
+    # TODO: Once we support more than one window, open one window for each
+    # supplied filename.
+    window = app.windows[0]
+    if len (args) > 0:
+        window.set_log_file (args[0])
+
+    app.run ()
+
+if __name__ == "__main__":
+    main ()

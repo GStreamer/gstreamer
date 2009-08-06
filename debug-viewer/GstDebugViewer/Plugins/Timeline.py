@@ -21,7 +21,8 @@
 
 import logging
 
-from GstDebugViewer import Common, Data, GUI
+from GstDebugViewer import Common, Data
+from GstDebugViewer.GUI.colors import LevelColorThemeTango, ThreadColorThemeTango
 from GstDebugViewer.Plugins import *
 
 import gobject
@@ -264,7 +265,7 @@ class VerticalTimelineWidget (gtk.DrawingArea):
         self.logger = logging.getLogger ("ui.vtimeline")
 
         self.log_view = log_view
-        self.theme = GUI.ThreadColorThemeTango ()
+        self.theme = ThreadColorThemeTango ()
         self.params = None
         self.thread_colors = {}
         self.next_thread_color = 0
@@ -558,7 +559,7 @@ class TimelineWidget (gtk.DrawingArea):
             self.logger.debug ("level distribution sentinel has no data yet")
             return
 
-        colors = GUI.LevelColorThemeTango ().colors
+        colors = LevelColorThemeTango ().colors
         dist_data = self.process.dist_sentinel.data
 
         def cumulative_level_counts (*levels):

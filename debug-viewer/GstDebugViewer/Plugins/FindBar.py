@@ -36,7 +36,7 @@ class SearchOperation (object):
         self.search_forward = search_forward
         self.start_position = start_position
 
-        col_id = GUI.LogModelBase.COL_MESSAGE
+        col_id = GUI.models.LogModelBase.COL_MESSAGE
         len_search_text = len (search_text)
 
         def match_func (model_row):
