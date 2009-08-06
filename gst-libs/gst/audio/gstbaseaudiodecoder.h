@@ -43,6 +43,13 @@ G_BEGIN_DECLS
 #define GST_IS_BASE_AUDIO_DECODER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_AUDIO_DECODER))
 
+/**
+ * GST_BASE_AUDIO_DECODER_FLOW_NEED_DATA:
+ *
+ * Custom GstFlowReturn value indicating that more data is needed.
+ */
+#define GST_BASE_AUDIO_DECODER_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
+
 typedef struct _GstBaseAudioDecoder GstBaseAudioDecoder;
 typedef struct _GstBaseAudioDecoderClass GstBaseAudioDecoderClass;
 
@@ -51,12 +58,14 @@ struct _GstBaseAudioDecoder
   GstBaseAudioCodec base_audio_codec;
 
   /*< private >*/
+  guint64 offset;
 };
 
 struct _GstBaseAudioDecoderClass
 {
   GstBaseAudioCodecClass base_audio_codec_class;
 
+  GstFlowReturn (*parse_data) (GstBaseAudioDecoder *decoder);
 };
 
 GType gst_base_audio_decoder_get_type (void);
