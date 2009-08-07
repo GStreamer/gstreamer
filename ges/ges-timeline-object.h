@@ -43,10 +43,16 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_OBJECT_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
 
+typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
+					 GESTrackObject * trobject,
+					 GstElement * gnlobj);
+
 struct _GESTimelineObject {
   GObject parent;
 
   GESTimelineLayer * layer;	/* The layer where this object is being used */
+
+  GList *trackobjects;	/* A list of TrackObject controlled by this TimelineObject */
 
   /* start, inpoint, duration and fullduration are in nanoseconds */
   guint64 start;	/* position (in time) of the object in the layer */
@@ -62,9 +68,8 @@ struct _GESTimelineObjectClass {
 
   GESTrackObject*	(*create_track_object)	(GESTimelineObject * object,
 						 GESTrack * track);
-  gboolean		(*fill_track_object)	(GESTimelineObject * object,
-						 GESTrackObject * trobject,
-						 GstElement * gnlobj);
+  /* FIXME : might need a release_track_object */
+  FillTrackObjectFunc	fill_track_object;
 };
 
 GType ges_timeline_object_get_type (void);
@@ -78,6 +83,10 @@ void ges_timeline_object_set_layer (GESTimelineObject * object,
 GESTrackObject *
 ges_timeline_object_create_track_object (GESTimelineObject * object,
 					 GESTrack * track);
+
+gboolean
+ges_timeline_object_release_track_object (GESTimelineObject * object,
+					  GESTrackObject * trackobject);
 
 gboolean
 ges_timeline_object_fill_track_object (GESTimelineObject * object,

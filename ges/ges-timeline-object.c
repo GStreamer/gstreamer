@@ -17,9 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "ges-internal.h"
 #include "ges-timeline-object.h"
 #include "ges.h"
+#include "ges-internal.h"
 
 /**
  * GESTimelineObject
@@ -117,11 +117,34 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
     GST_DEBUG
         ("Got a TrackObject : %p , setting the timeline object as its creator");
     ges_track_object_set_timeline_object (res, object);
+
+    GST_DEBUG ("Adding TrackObject to the list of controlled track objects");
+    object->trackobjects = g_list_append (object->trackobjects, res);
   }
 
   GST_DEBUG ("Returning res:%p", res);
 
   return res;
+}
+
+gboolean
+ges_timeline_object_release_track_object (GESTimelineObject * object,
+    GESTrackObject * trobj)
+{
+  GST_DEBUG ("object:%p, trackobject:%p", object, trobj);
+
+  if (!(g_list_find (object->trackobjects, trobj))) {
+    GST_WARNING ("TrackObject isn't controlled by this object");
+    return FALSE;
+  }
+
+  /* FIXME : Do we need to tell the subclasses ? If so, add a new virtual-method */
+
+  object->trackobjects = g_list_remove (object->trackobjects, trobj);
+
+  ges_track_object_set_timeline_object (trobj, NULL);
+
+  return TRUE;
 }
 
 void
@@ -155,4 +178,13 @@ ges_timeline_object_fill_track_object (GESTimelineObject * object,
   GST_DEBUG ("Returning res:%d", res);
 
   return res;
+}
+
+gboolean
+ges_timeline_object_fill_track_object_func (GESTimelineObject * object,
+    GESTrackObject * trackobj, GstElement * gnlobj)
+{
+  GST_WARNING ("No 'fill_track_object' implementation !");
+
+  return FALSE;
 }
