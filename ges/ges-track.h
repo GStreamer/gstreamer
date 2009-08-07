@@ -62,6 +62,7 @@ GESTrack* ges_track_new (void);
 void ges_track_set_timeline (GESTrack * track, GESTimeline *timeline);
 
 gboolean ges_track_add_object (GESTrack * track, GESTrackObject * object);
+gboolean ges_track_remove_object (GESTrack * track, GESTrackObject * object);
 
 G_END_DECLS
 

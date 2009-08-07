@@ -54,6 +54,15 @@ ges_track_set_property (GObject * object, guint property_id,
 static void
 ges_track_dispose (GObject * object)
 {
+  GESTrack *track = (GESTrack *) object;
+
+  /* FIXME : Remove all TrackObjects ! */
+
+  if (track->composition) {
+    g_object_unref (track->composition);
+    track->composition = NULL;
+  }
+
   G_OBJECT_CLASS (ges_track_parent_class)->dispose (object);
 }
 
@@ -77,6 +86,7 @@ ges_track_class_init (GESTrackClass * klass)
 static void
 ges_track_init (GESTrack * self)
 {
+  self->composition = gst_element_factory_make ("gnlcomposition", NULL);
 }
 
 GESTrack *
@@ -108,7 +118,10 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
     return FALSE;
   }
 
-  ges_track_object_set_track (object, track);
+  if (G_UNLIKELY (!ges_track_object_set_track (object, track))) {
+    GST_ERROR ("Couldn't properly add the object to the Track");
+    return FALSE;
+  }
 
   GST_DEBUG ("Adding object to ourself");
 
@@ -118,6 +131,29 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
     GST_WARNING ("Couldn't add object to the GnlComposition");
     return FALSE;
   }
+
+  return TRUE;
+}
+
+gboolean
+ges_track_remove_object (GESTrack * track, GESTrackObject * object)
+{
+  GST_DEBUG ("track:%p, object:%p", track, object);
+
+  if (G_UNLIKELY (object->track != track)) {
+    GST_WARNING ("Object belongs to another track");
+    return FALSE;
+  }
+
+  if (G_LIKELY (object->gnlobject != NULL)) {
+    GST_DEBUG ("Removing GnlObject from composition");
+    if (!gst_bin_remove (GST_BIN (track->composition), object->gnlobject)) {
+      GST_WARNING ("Failed to remove gnlobject from composition");
+      return FALSE;
+    }
+  }
+
+  ges_track_object_set_track (object, NULL);
 
   return TRUE;
 }
