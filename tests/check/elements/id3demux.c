@@ -198,7 +198,7 @@ GST_START_TEST (test_wcop)
 GST_END_TEST;
 
 static void
-check_unsync (const GstTagList * tags, const gchar * file)
+check_unsync_v23 (const GstTagList * tags, const gchar * file)
 {
   gchar *album = NULL;
   gchar *title = NULL;
@@ -220,9 +220,54 @@ check_unsync (const GstTagList * tags, const gchar * file)
   g_free (artist);
 }
 
-GST_START_TEST (test_unsync)
+GST_START_TEST (test_unsync_v23)
 {
-  run_check_for_file ("id3-577468-unsynced-tag.tag", check_unsync);
+  run_check_for_file ("id3-577468-unsynced-tag.tag", check_unsync_v23);
+}
+
+GST_END_TEST;
+
+static void
+check_unsync_v24 (const GstTagList * tags, const gchar * file)
+{
+  const GValue *val;
+  GstBuffer *buf;
+  gchar *album = NULL;
+  gchar *title = NULL;
+  gchar *artist = NULL;
+
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_TITLE, &title));
+  fail_unless (title != NULL);
+  fail_unless_equals_string (title, "Starlight");
+  g_free (title);
+
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_ALBUM, &album));
+  fail_unless (album != NULL);
+  fail_unless_equals_string (album, "L'albumRockVol.4 CD1");
+  g_free (album);
+
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_ARTIST, &artist));
+  fail_unless (artist != NULL);
+  fail_unless_equals_string (artist, "Muse");
+  g_free (artist);
+
+  val = gst_tag_list_get_value_index (tags, GST_TAG_IMAGE, 0);
+  fail_unless (val != NULL);
+  fail_unless (GST_VALUE_HOLDS_BUFFER (val));
+  buf = gst_value_get_buffer (val);
+  fail_unless (buf != NULL);
+  fail_unless (GST_BUFFER_CAPS (buf) != NULL);
+  fail_unless_equals_int (GST_BUFFER_SIZE (buf), 38022);
+  /* check for jpeg start/end markers */
+  fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 0xff);
+  fail_unless_equals_int (GST_BUFFER_DATA (buf)[1], 0xd8);
+  fail_unless_equals_int (GST_BUFFER_DATA (buf)[38020], 0xff);
+  fail_unless_equals_int (GST_BUFFER_DATA (buf)[38021], 0xd9);
+}
+
+GST_START_TEST (test_unsync_v24)
+{
+  run_check_for_file ("id3-588148-unsynced-v24.tag", check_unsync_v24);
 }
 
 GST_END_TEST;
@@ -236,7 +281,8 @@ id3demux_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_tdat_tyer);
   tcase_add_test (tc_chain, test_wcop);
-  tcase_add_test (tc_chain, test_unsync);
+  tcase_add_test (tc_chain, test_unsync_v23);
+  tcase_add_test (tc_chain, test_unsync_v24);
 
   return s;
 }

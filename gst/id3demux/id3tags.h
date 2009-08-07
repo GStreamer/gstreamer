@@ -115,6 +115,8 @@ enum {
 /* From id3v2frames.c */
 gboolean id3demux_id3v2_parse_frame (ID3TagsWorking *work);
 
+guint8 * id3demux_ununsync_data (const guint8 * unsync_data, guint32 * size);
+
 G_END_DECLS
 
 #endif
