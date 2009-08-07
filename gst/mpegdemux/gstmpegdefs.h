@@ -147,39 +147,52 @@
  * 0x0F-0x7F ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved
  * 0x80-0xFF User Private
  */
-#define ST_RESERVED			0x00
-#define ST_VIDEO_MPEG1			0x01
-#define ST_VIDEO_MPEG2			0x02
-#define ST_AUDIO_MPEG1			0x03
-#define ST_AUDIO_MPEG2			0x04
-#define ST_PRIVATE_SECTIONS		0x05
-#define ST_PRIVATE_DATA			0x06
-#define ST_MHEG				0x07
-#define ST_DSMCC			0x08
-#define ST_H222_1			0x09
+#define ST_RESERVED                     0x00
+#define ST_VIDEO_MPEG1                  0x01
+#define ST_VIDEO_MPEG2                  0x02
+#define ST_AUDIO_MPEG1                  0x03
+#define ST_AUDIO_MPEG2                  0x04
+#define ST_PRIVATE_SECTIONS             0x05
+#define ST_PRIVATE_DATA                 0x06
+#define ST_MHEG                         0x07
+#define ST_DSMCC                        0x08
+#define ST_H222_1                       0x09
 
 /* later extensions */
-#define ST_AUDIO_AAC			0x0f
-#define ST_VIDEO_MPEG4			0x10
-#define ST_VIDEO_H264			0x1b
+#define ST_AUDIO_AAC                    0x0f
+#define ST_VIDEO_MPEG4                  0x10
+#define ST_VIDEO_H264                   0x1b
 
 /* Un-official Dirac extension */
-#define ST_VIDEO_DIRAC			0xd1
+#define ST_VIDEO_DIRAC                  0xd1
 
 /* private stream types */
-#define ST_PS_AUDIO_AC3			0x81
-#define ST_PS_AUDIO_DTS			0x8a
-#define ST_PS_AUDIO_LPCM		0x8b
+#define ST_PS_AUDIO_AC3                 0x81
+#define ST_PS_AUDIO_DTS                 0x8a
+#define ST_PS_AUDIO_LPCM                0x8b
 #define ST_PS_DVD_SUBPICTURE            0xff
-/* Blu-ray PGS subpictures */
+/* Blu-ray related */
+#define ST_BD_AUDIO_LPCM                0x80
+#define ST_BD_AUDIO_AC3                 0x81
+#define ST_BD_AUDIO_DTS                 0x82
+#define ST_BD_AUDIO_AC3_TRUE_HD         0x83
+#define ST_BD_AUDIO_AC3_PLUS            0x84
+#define ST_BD_AUDIO_DTS_HD              0x85
 #define ST_BD_PGS_SUBPICTURE            0x90
+#define ST_BD_IGS                       0x91
+#define ST_BD_SUBTITLE                  0x92
+#define ST_BD_SECONDARY_AC3_PLUS        0xa1
+#define ST_BD_SECONDARY_DTS_HD          0xa2
+
+/* VC1 extension */
+#define ST_VIDEO_VC1                    0xea
 
 /* HDV AUX stream mapping
  * 0xA0      ISO/IEC 61834-11
  * 0xA1      ISO/IEC 61834-11
  */
-#define ST_HDV_AUX_A			0xa0
-#define ST_HDV_AUX_V			0xa1
+#define ST_HDV_AUX_A                    0xa0
+#define ST_HDV_AUX_V                    0xa1
 
 /* Un-official time-code stream */
 #define ST_PS_TIMECODE                  0xd2
@@ -202,16 +215,16 @@
 /* sync:4 == 00xx ! pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
 #define READ_TS(data, target, lost_sync_label)          \
     if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
-    target  = ((guint64) (*data++ & 0x0E)) << 29;	\
-    target |= ((guint64) (*data++       )) << 22;	\
+    target  = ((guint64) (*data++ & 0x0E)) << 29;       \
+    target |= ((guint64) (*data++       )) << 22;       \
     if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
-    target |= ((guint64) (*data++ & 0xFE)) << 14;	\
-    target |= ((guint64) (*data++       )) << 7;	\
+    target |= ((guint64) (*data++ & 0xFE)) << 14;       \
+    target |= ((guint64) (*data++       )) << 7;        \
     if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
     target |= ((guint64) (*data++ & 0xFE)) >> 1;
 
 /* some extra GstFlowReturn values used internally */
-#define GST_FLOW_NEED_MORE_DATA		-100
-#define GST_FLOW_LOST_SYNC		-101
+#define GST_FLOW_NEED_MORE_DATA   -100
+#define GST_FLOW_LOST_SYNC        -101
 
 #endif /* __GST_MPEG_DEFS_H__ */

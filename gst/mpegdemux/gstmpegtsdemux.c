@@ -119,7 +119,10 @@ enum
       "mpegversion = (int) { 1, 2, 4 }, " \
       "systemstream = (boolean) FALSE; " \
     "video/x-h264;" \
-    "video/x-dirac" \
+    "video/x-dirac;" \
+    "video/x-wmv," \
+      "wmvversion = (int) 3, " \
+      "format = (fourcc) WVC1" \
   )
 
 #define AUDIO_CAPS \
@@ -133,8 +136,9 @@ enum
       "dynamic_range = (int) [ 0, 255 ], " \
       "emphasis = (boolean) { FALSE, TRUE }, " \
       "mute = (boolean) { FALSE, TRUE }; " \
-    "audio/x-ac3;" \
-    "audio/x-dts" \
+    "audio/x-ac3; audio/x-eac3;" \
+    "audio/x-dts;" \
+    "audio/x-private1-lpcm" \
   )
 
 /* Can also use the subpicture pads for text subtitles? */
@@ -556,6 +560,7 @@ gst_mpegts_stream_is_video (GstMpegTSStream * stream)
     case ST_VIDEO_MPEG2:
     case ST_VIDEO_MPEG4:
     case ST_VIDEO_H264:
+    case ST_VIDEO_VC1:
       return TRUE;
     case ST_VIDEO_DIRAC:
       return gst_mpegts_is_dirac_stream (stream);
@@ -652,10 +657,18 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
         caps = gst_caps_new_simple ("video/x-dirac", NULL);
       }
       break;
-    case ST_PS_AUDIO_AC3:
+    case ST_VIDEO_VC1:
+      template = klass->video_template;
+      name = g_strdup_printf ("video_%04x", stream->PID);
+      caps = gst_caps_new_simple ("video/x-wmv",
+          "wmvversion", G_TYPE_INT, 3,
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('W', 'V', 'C', '1'),
+          NULL);
+      break;
+    case ST_BD_AUDIO_AC3:
       template = klass->audio_template;
       name = g_strdup_printf ("audio_%04x", stream->PID);
-      caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+      caps = gst_caps_new_simple ("audio/x-eac3", NULL);
       break;
     case ST_PS_AUDIO_DTS:
       template = klass->audio_template;
@@ -666,6 +679,11 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
       template = klass->audio_template;
       name = g_strdup_printf ("audio_%04x", stream->PID);
       caps = gst_caps_new_simple ("audio/x-lpcm", NULL);
+      break;
+    case ST_BD_AUDIO_LPCM:
+      template = klass->audio_template;
+      name = g_strdup_printf ("audio_%04x", stream->PID);
+      caps = gst_caps_new_simple ("audio/x-private1-lpcm", NULL);
       break;
     case ST_PS_DVD_SUBPICTURE:
       template = klass->subpicture_template;
