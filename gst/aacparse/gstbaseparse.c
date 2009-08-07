@@ -950,6 +950,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
           GST_DEBUG_OBJECT (parse,
               "found valid frame but not enough data available (only %d bytes)",
               gst_adapter_available (parse->adapter));
+          gst_buffer_unref (tmpbuf);
           goto done;
         }
         break;
