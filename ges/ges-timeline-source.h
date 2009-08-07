@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
+#include <ges/ges-timeline-object.h>
 
 G_BEGIN_DECLS
 

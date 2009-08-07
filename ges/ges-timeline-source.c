@@ -20,9 +20,14 @@
 #include "ges-internal.h"
 #include "ges-timeline-object.h"
 #include "ges-timeline-source.h"
+#include "ges-track-source.h"
 
 G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source,
     GES_TYPE_TIMELINE_OBJECT);
+
+static GESTrackObject
+    * ges_timeline_source_create_track_object (GESTimelineObject * obj,
+    GESTrack * track);
 
 static void
 ges_timeline_source_get_property (GObject * object, guint property_id,
@@ -60,11 +65,14 @@ static void
 ges_timeline_source_class_init (GESTimelineSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
   object_class->get_property = ges_timeline_source_get_property;
   object_class->set_property = ges_timeline_source_set_property;
   object_class->dispose = ges_timeline_source_dispose;
   object_class->finalize = ges_timeline_source_finalize;
+
+  timobj_class->create_track_object = ges_timeline_source_create_track_object;
 }
 
 static void
@@ -76,4 +84,13 @@ GESTimelineSource *
 ges_timeline_source_new (void)
 {
   return g_object_new (GES_TYPE_TIMELINE_SOURCE, NULL);
+}
+
+static GESTrackObject *
+ges_timeline_source_create_track_object (GESTimelineObject * obj,
+    GESTrack * track)
+{
+  GST_DEBUG ("Creating a GESTrackSource");
+  /* FIXME : Implement properly ! */
+  return (GESTrackObject *) ges_track_source_new ();
 }
