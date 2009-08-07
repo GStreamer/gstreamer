@@ -28,15 +28,9 @@
 #include <glib/gprintf.h>
 #include <glib.h>
 
-static const GstElementDetails gst_spc_dec_details =
-GST_ELEMENT_DETAILS ("SNES SPC 700 decoder",
-    "Codec/Audio/Decoder",
-    "Uses Blargg's libgme to emulate an SPC processor",
-    "Chris Lee <clee@kde.org>, Brian Koropoff <bkoropoff@gmail.com>, Michael Pyne <mpyne@kde.org>");
-
 static GstStaticPadTemplate sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-spc"));
+    GST_STATIC_CAPS ("audio/x-gme"));
 
 static GstStaticPadTemplate src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -46,20 +40,20 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "width = (int) 16, "
         "depth = (int) 16, " "rate = (int) 32000, " "channels = (int) 2"));
 
-GST_BOILERPLATE (GstSpcDec, gst_spc_dec, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstGmeDec, gst_gme_dec, GstElement, GST_TYPE_ELEMENT);
 
-static GstFlowReturn gst_spc_dec_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_spc_dec_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_spc_dec_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_spc_dec_src_query (GstPad * pad, GstQuery * query);
-static GstStateChangeReturn gst_spc_dec_change_state (GstElement * element,
+static GstFlowReturn gst_gme_dec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_gme_dec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_gme_dec_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_gme_dec_src_query (GstPad * pad, GstQuery * query);
+static GstStateChangeReturn gst_gme_dec_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_spc_play (GstPad * pad);
-static void gst_spc_dec_dispose (GObject * object);
-static gboolean spc_setup (GstSpcDec * spc);
+static void gst_gme_play (GstPad * pad);
+static void gst_gme_dec_dispose (GObject * object);
+static gboolean gme_setup (GstGmeDec * gme);
 
 static gboolean
-spc_negotiate (GstSpcDec * spc)
+gme_negotiate (GstGmeDec * gme)
 {
   GstCaps *allowed, *caps;
   GstStructure *structure;
@@ -68,20 +62,20 @@ spc_negotiate (GstSpcDec * spc)
   int rate = 32000;
   int channels = 2;
 
-  allowed = gst_pad_get_allowed_caps (spc->srcpad);
+  allowed = gst_pad_get_allowed_caps (gme->srcpad);
   if (!allowed) {
-    GST_DEBUG_OBJECT (spc, "couldn't get allowed caps");
+    GST_DEBUG_OBJECT (gme, "couldn't get allowed caps");
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (spc, "allowed caps: %" GST_PTR_FORMAT, allowed);
+  GST_DEBUG_OBJECT (gme, "allowed caps: %" GST_PTR_FORMAT, allowed);
 
   structure = gst_caps_get_structure (allowed, 0);
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "depth", &depth);
 
   if (width && depth && width != depth) {
-    GST_DEBUG_OBJECT (spc, "width %d and depth %d are different", width, depth);
+    GST_DEBUG_OBJECT (gme, "width %d and depth %d are different", width, depth);
     gst_caps_unref (allowed);
     return FALSE;
   }
@@ -96,7 +90,7 @@ spc_negotiate (GstSpcDec * spc)
       "width", G_TYPE_INT, width,
       "depth", G_TYPE_INT, depth,
       "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
-  gst_pad_set_caps (spc->srcpad, caps);
+  gst_pad_set_caps (gme->srcpad, caps);
 
   gst_caps_unref (caps);
   gst_caps_unref (allowed);
@@ -105,11 +99,15 @@ spc_negotiate (GstSpcDec * spc)
 }
 
 static void
-gst_spc_dec_base_init (gpointer g_class)
+gst_gme_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_spc_dec_details);
+  gst_element_class_set_details_simple (element_class,
+      "Gaming console music file decoder", "Codec/Audio/Decoder",
+      "Uses libgme to emulate a gaming console sound processors",
+      "Chris Lee <clee@kde.org>, Brian Koropoff <bkoropoff@gmail.com>, "
+      "Michael Pyne <mpyne@kde.org>, Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
@@ -118,17 +116,17 @@ gst_spc_dec_base_init (gpointer g_class)
 }
 
 static void
-gst_spc_dec_class_init (GstSpcDecClass * klass)
+gst_gme_dec_class_init (GstGmeDecClass * klass)
 {
   GstElementClass *element_class = (GstElementClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_spc_dec_change_state);
-  gobject_class->dispose = gst_spc_dec_dispose;
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_gme_dec_change_state);
+  gobject_class->dispose = gst_gme_dec_dispose;
 }
 
 static const GstQueryType *
-gst_spc_dec_src_query_type (GstPad * pad)
+gst_gme_dec_src_query_type (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
     GST_QUERY_DURATION,
@@ -141,59 +139,59 @@ gst_spc_dec_src_query_type (GstPad * pad)
 
 
 static void
-gst_spc_dec_init (GstSpcDec * spc, GstSpcDecClass * klass)
+gst_gme_dec_init (GstGmeDec * gme, GstGmeDecClass * klass)
 {
-  spc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  /* gst_pad_set_query_function (spc->sinkpad, NULL); */
-  gst_pad_set_event_function (spc->sinkpad, gst_spc_dec_sink_event);
-  gst_pad_set_chain_function (spc->sinkpad, gst_spc_dec_chain);
-  gst_element_add_pad (GST_ELEMENT (spc), spc->sinkpad);
+  gme->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
+  /* gst_pad_set_query_function (gme->sinkpad, NULL); */
+  gst_pad_set_event_function (gme->sinkpad, gst_gme_dec_sink_event);
+  gst_pad_set_chain_function (gme->sinkpad, gst_gme_dec_chain);
+  gst_element_add_pad (GST_ELEMENT (gme), gme->sinkpad);
 
-  spc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_event_function (spc->srcpad, gst_spc_dec_src_event);
-  gst_pad_set_query_function (spc->srcpad, gst_spc_dec_src_query);
-  gst_pad_set_query_type_function (spc->srcpad, gst_spc_dec_src_query_type);
-  gst_pad_use_fixed_caps (spc->srcpad);
-  gst_element_add_pad (GST_ELEMENT (spc), spc->srcpad);
+  gme->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
+  gst_pad_set_event_function (gme->srcpad, gst_gme_dec_src_event);
+  gst_pad_set_query_function (gme->srcpad, gst_gme_dec_src_query);
+  gst_pad_set_query_type_function (gme->srcpad, gst_gme_dec_src_query_type);
+  gst_pad_use_fixed_caps (gme->srcpad);
+  gst_element_add_pad (GST_ELEMENT (gme), gme->srcpad);
 
-  spc->buf = NULL;
-  spc->player = NULL;
-  spc->total_duration = GST_CLOCK_TIME_NONE;
-  spc->initialized = FALSE;
+  gme->buf = NULL;
+  gme->player = NULL;
+  gme->total_duration = GST_CLOCK_TIME_NONE;
+  gme->initialized = FALSE;
 }
 
 static void
-gst_spc_dec_dispose (GObject * object)
+gst_gme_dec_dispose (GObject * object)
 {
-  GstSpcDec *spc = GST_SPC_DEC (object);
+  GstGmeDec *gme = GST_GME_DEC (object);
 
-  if (spc->buf) {
-    gst_buffer_unref (spc->buf);
-    spc->buf = NULL;
+  if (gme->buf) {
+    gst_buffer_unref (gme->buf);
+    gme->buf = NULL;
   }
 }
 
 static GstFlowReturn
-gst_spc_dec_chain (GstPad * pad, GstBuffer * buffer)
+gst_gme_dec_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
+  GstGmeDec *gme = GST_GME_DEC (gst_pad_get_parent (pad));
 
-  /* Accumulate SPC data until end-of-stream, then commence playback. */
-  if (spc->buf) {
-    spc->buf = gst_buffer_join (spc->buf, buffer);
+  /* Accumulate GME data until end-of-stream, then commence playback. */
+  if (gme->buf) {
+    gme->buf = gst_buffer_join (gme->buf, buffer);
   } else {
-    spc->buf = buffer;
+    gme->buf = buffer;
   }
 
-  gst_object_unref (spc);
+  gst_object_unref (gme);
 
   return GST_FLOW_OK;
 }
 
 static gboolean
-gst_spc_dec_sink_event (GstPad * pad, GstEvent * event)
+gst_gme_dec_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
+  GstGmeDec *gme = GST_GME_DEC (gst_pad_get_parent (pad));
   gboolean result = TRUE;
   gboolean forward = FALSE;
 
@@ -201,9 +199,9 @@ gst_spc_dec_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       /* we get EOS when we loaded the complete file, now try to initialize the
        * decoding */
-      if (!(result = spc_setup (spc))) {
+      if (!(result = gme_setup (gme))) {
         /* can't start, post an ERROR and push EOS downstream */
-        GST_ELEMENT_ERROR (spc, STREAM, DEMUX, (NULL),
+        GST_ELEMENT_ERROR (gme, STREAM, DEMUX, (NULL),
             ("can't start playback"));
         forward = TRUE;
       }
@@ -212,19 +210,19 @@ gst_spc_dec_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
   if (forward)
-    result = gst_pad_push_event (spc->srcpad, event);
+    result = gst_pad_push_event (gme->srcpad, event);
   else
     gst_event_unref (event);
 
-  gst_object_unref (spc);
+  gst_object_unref (gme);
 
   return result;
 }
 
 static gboolean
-gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
+gst_gme_dec_src_event (GstPad * pad, GstEvent * event)
 {
-  GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
+  GstGmeDec *gme = GST_GME_DEC (gst_pad_get_parent (pad));
   gboolean result = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -243,12 +241,12 @@ gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
 
       if (format != GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (spc, "seeking is only supported in TIME format");
+        GST_DEBUG_OBJECT (gme, "seeking is only supported in TIME format");
         break;
       }
 
       if (start_type != GST_SEEK_TYPE_SET || stop_type != GST_SEEK_TYPE_NONE) {
-        GST_DEBUG_OBJECT (spc, "unsupported seek type");
+        GST_DEBUG_OBJECT (gme, "unsupported seek type");
         break;
       }
 
@@ -256,11 +254,11 @@ gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
         stop = GST_CLOCK_TIME_NONE;
 
       if (start_type == GST_SEEK_TYPE_SET) {
-        guint64 cur = gme_tell (spc->player) * GST_MSECOND;
+        guint64 cur = gme_tell (gme->player) * GST_MSECOND;
         guint64 dest = (guint64) start;
 
-        if (spc->total_duration != GST_CLOCK_TIME_NONE)
-          dest = CLAMP (dest, 0, spc->total_duration);
+        if (gme->total_duration != GST_CLOCK_TIME_NONE)
+          dest = CLAMP (dest, 0, gme->total_duration);
         else
           dest = MAX (0, dest);
 
@@ -270,54 +268,54 @@ gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
         flush = (flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH;
 
         if (flush) {
-          gst_pad_push_event (spc->srcpad, gst_event_new_flush_start ());
+          gst_pad_push_event (gme->srcpad, gst_event_new_flush_start ());
         } else {
-          gst_pad_stop_task (spc->srcpad);
+          gst_pad_stop_task (gme->srcpad);
         }
 
-        GST_PAD_STREAM_LOCK (spc->srcpad);
+        GST_PAD_STREAM_LOCK (gme->srcpad);
 
         if (flags & GST_SEEK_FLAG_SEGMENT) {
-          gst_element_post_message (GST_ELEMENT (spc),
-              gst_message_new_segment_start (GST_OBJECT (spc), format, cur));
+          gst_element_post_message (GST_ELEMENT (gme),
+              gst_message_new_segment_start (GST_OBJECT (gme), format, cur));
         }
 
         if (flush) {
-          gst_pad_push_event (spc->srcpad, gst_event_new_flush_stop ());
+          gst_pad_push_event (gme->srcpad, gst_event_new_flush_stop ());
         }
 
         if (stop == GST_CLOCK_TIME_NONE
-            && spc->total_duration != GST_CLOCK_TIME_NONE)
-          stop = spc->total_duration;
+            && gme->total_duration != GST_CLOCK_TIME_NONE)
+          stop = gme->total_duration;
 
-        gst_pad_push_event (spc->srcpad, gst_event_new_new_segment (FALSE, rate,
+        gst_pad_push_event (gme->srcpad, gst_event_new_new_segment (FALSE, rate,
                 GST_FORMAT_TIME, dest, stop, dest));
 
-        spc->seekpoint = dest / GST_MSECOND;    /* nsecs to msecs */
-        spc->seeking = TRUE;
+        gme->seekpoint = dest / GST_MSECOND;    /* nsecs to msecs */
+        gme->seeking = TRUE;
 
-        gst_pad_start_task (spc->srcpad, (GstTaskFunction) gst_spc_play,
-            spc->srcpad);
+        gst_pad_start_task (gme->srcpad, (GstTaskFunction) gst_gme_play,
+            gme->srcpad);
 
-        GST_PAD_STREAM_UNLOCK (spc->srcpad);
+        GST_PAD_STREAM_UNLOCK (gme->srcpad);
         result = TRUE;
       }
       break;
     }
     default:
-      result = gst_pad_push_event (spc->sinkpad, event);
+      result = gst_pad_push_event (gme->sinkpad, event);
       break;
   }
 
-  gst_object_unref (spc);
+  gst_object_unref (gme);
 
   return result;
 }
 
 static gboolean
-gst_spc_dec_src_query (GstPad * pad, GstQuery * query)
+gst_gme_dec_src_query (GstPad * pad, GstQuery * query)
 {
-  GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
+  GstGmeDec *gme = GST_GME_DEC (gst_pad_get_parent (pad));
   gboolean result = TRUE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -326,12 +324,12 @@ gst_spc_dec_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
 
       gst_query_parse_duration (query, &format, NULL);
-      if (!spc->initialized || format != GST_FORMAT_TIME
-          || spc->total_duration == GST_CLOCK_TIME_NONE) {
+      if (!gme->initialized || format != GST_FORMAT_TIME
+          || gme->total_duration == GST_CLOCK_TIME_NONE) {
         result = FALSE;
         break;
       }
-      gst_query_set_duration (query, GST_FORMAT_TIME, spc->total_duration);
+      gst_query_set_duration (query, GST_FORMAT_TIME, gme->total_duration);
       break;
     }
     case GST_QUERY_POSITION:
@@ -339,12 +337,12 @@ gst_spc_dec_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
 
       gst_query_parse_position (query, &format, NULL);
-      if (!spc->initialized || format != GST_FORMAT_TIME) {
+      if (!gme->initialized || format != GST_FORMAT_TIME) {
         result = FALSE;
         break;
       }
       gst_query_set_position (query, GST_FORMAT_TIME,
-          (gint64) gme_tell (spc->player) * GST_MSECOND);
+          (gint64) gme_tell (gme->player) * GST_MSECOND);
       break;
     }
     default:
@@ -352,46 +350,46 @@ gst_spc_dec_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  gst_object_unref (spc);
+  gst_object_unref (gme);
 
   return result;
 }
 
 static void
-gst_spc_play (GstPad * pad)
+gst_gme_play (GstPad * pad)
 {
-  GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
+  GstGmeDec *gme = GST_GME_DEC (gst_pad_get_parent (pad));
   GstFlowReturn flow_return;
   GstBuffer *out;
-  gboolean seeking = spc->seeking;
+  gboolean seeking = gme->seeking;
   gme_err_t gme_err = NULL;
   const int NUM_SAMPLES = 1600; /* 4 bytes (stereo 16-bit) per sample */
 
   if (!seeking) {
     out = gst_buffer_new_and_alloc (NUM_SAMPLES * 4);
     gst_buffer_set_caps (out, GST_PAD_CAPS (pad));
-    GST_BUFFER_TIMESTAMP (out) = gme_tell (spc->player) * GST_MSECOND;
+    GST_BUFFER_TIMESTAMP (out) = gme_tell (gme->player) * GST_MSECOND;
 
     gme_err =
-        gme_play (spc->player, NUM_SAMPLES * 2,
+        gme_play (gme->player, NUM_SAMPLES * 2,
         (short *) GST_BUFFER_DATA (out));
     if (gme_err) {
-      GST_ELEMENT_ERROR (spc, STREAM, DEMUX, (NULL), (gme_err));
+      GST_ELEMENT_ERROR (gme, STREAM, DEMUX, (NULL), (gme_err));
       gst_pad_pause_task (pad);
       gst_pad_push_event (pad, gst_event_new_eos ());
-      gst_object_unref (spc);
+      gst_object_unref (gme);
       return;
     }
   } else {
-    gme_seek (spc->player, spc->seekpoint);
-    spc->seeking = FALSE;
+    gme_seek (gme->player, gme->seekpoint);
+    gme->seeking = FALSE;
 
     out = gst_buffer_new ();
     gst_buffer_set_caps (out, GST_PAD_CAPS (pad));
   }
 
-  if ((flow_return = gst_pad_push (spc->srcpad, out)) != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (spc, "pausing task, reason %s",
+  if ((flow_return = gst_pad_push (gme->srcpad, out)) != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (gme, "pausing task, reason %s",
         gst_flow_get_name (flow_return));
 
     gst_pad_pause_task (pad);
@@ -401,43 +399,43 @@ gst_spc_play (GstPad * pad)
     }
   }
 
-  if (gme_track_ended (spc->player)) {
+  if (gme_track_ended (gme->player)) {
     gst_pad_pause_task (pad);
     gst_pad_push_event (pad, gst_event_new_eos ());
   }
 
-  gst_object_unref (spc);
+  gst_object_unref (gme);
 
   return;
 }
 
 static gboolean
-spc_setup (GstSpcDec * spc)
+gme_setup (GstGmeDec * gme)
 {
   gme_info_t *info;
   gme_err_t gme_err = NULL;
   GstTagList *taglist;
   guint64 total_duration;
 
-  if (!spc->buf || !spc_negotiate (spc)) {
+  if (!gme->buf || !gme_negotiate (gme)) {
     return FALSE;
   }
 
   gme_err =
-      gme_open_data (GST_BUFFER_DATA (spc->buf), GST_BUFFER_SIZE (spc->buf),
-      &spc->player, 32000);
-  if (gme_err || !spc->player) {
-    if (spc->player) {
-      gme_delete (spc->player);
-      spc->player = NULL;
+      gme_open_data (GST_BUFFER_DATA (gme->buf), GST_BUFFER_SIZE (gme->buf),
+      &gme->player, 32000);
+  if (gme_err || !gme->player) {
+    if (gme->player) {
+      gme_delete (gme->player);
+      gme->player = NULL;
     }
 
-    GST_ELEMENT_ERROR (spc, STREAM, DEMUX, (NULL), (gme_err));
+    GST_ELEMENT_ERROR (gme, STREAM, DEMUX, (NULL), (gme_err));
 
     return FALSE;
   }
 
-  gme_err = gme_track_info (spc->player, &info, 0);
+  gme_err = gme_track_info (gme->player, &info, 0);
 
   taglist = gst_tag_list_new ();
 
@@ -467,45 +465,45 @@ spc_setup (GstSpcDec * spc)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
         info->system, NULL);
 
-  spc->total_duration = total_duration =
+  gme->total_duration = total_duration =
       gst_util_uint64_scale_int (info->play_length, GST_MSECOND, 1);
 
   gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
       GST_TAG_DURATION, total_duration, NULL);
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (spc), spc->srcpad, taglist);
+  gst_element_found_tags_for_pad (GST_ELEMENT (gme), gme->srcpad, taglist);
 
   g_free (info);
 
 #ifdef HAVE_LIBGME_ACCURACY
   /* TODO: Is it worth it to make this optional? */
-  gme_enable_accuracy (spc->player, 1);
+  gme_enable_accuracy (gme->player, 1);
 #endif
-  gme_start_track (spc->player, 0);
+  gme_start_track (gme->player, 0);
 
-  gst_pad_push_event (spc->srcpad, gst_event_new_new_segment (FALSE, 1.0,
+  gst_pad_push_event (gme->srcpad, gst_event_new_new_segment (FALSE, 1.0,
           GST_FORMAT_TIME, 0, -1, 0));
 
-  gst_pad_start_task (spc->srcpad, (GstTaskFunction) gst_spc_play, spc->srcpad);
+  gst_pad_start_task (gme->srcpad, (GstTaskFunction) gst_gme_play, gme->srcpad);
 
   /* We can't unreference this buffer because we might need to re-initialize
    * the emulator with the original data during a reverse seek
-   * gst_buffer_unref (spc->buf);
-   * spc->buf = NULL;
+   * gst_buffer_unref (gme->buf);
+   * gme->buf = NULL;
    */
-  spc->initialized = TRUE;
-  spc->seeking = FALSE;
-  spc->seekpoint = 0;
-  return spc->initialized;
+  gme->initialized = TRUE;
+  gme->seeking = FALSE;
+  gme->seekpoint = 0;
+  return gme->initialized;
 }
 
 static GstStateChangeReturn
-gst_spc_dec_change_state (GstElement * element, GstStateChange transition)
+gst_gme_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn result;
-  GstSpcDec *dec;
+  GstGmeDec *dec;
 
-  dec = GST_SPC_DEC (element);
+  dec = GST_GME_DEC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -536,12 +534,12 @@ gst_spc_dec_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "spcdec", GST_RANK_PRIMARY,
-      GST_TYPE_SPC_DEC);
+  return gst_element_register (plugin, "gmedec", GST_RANK_PRIMARY,
+      GST_TYPE_GME_DEC);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "spcdec",
-    "OpenSPC Audio Decoder",
+    "gmedec",
+    "GME Audio Decoder",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

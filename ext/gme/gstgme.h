@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_SPC_DEC_H__
-#define __GST_SPC_DEC_H__
+#ifndef __GST_GME_DEC_H__
+#define __GST_GME_DEC_H__
 
 #include <gst/gst.h>
 
@@ -27,21 +27,21 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SPC_DEC \
-  (gst_spc_dec_get_type())
-#define GST_SPC_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SPC_DEC,GstSpcDec))
-#define GST_SPC_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SPC_DEC,GstSpcDecClass))
-#define GST_IS_SPC_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPC_DEC))
-#define GST_IS_SPC_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPC_DEC))
+#define GST_TYPE_GME_DEC \
+  (gst_gme_dec_get_type())
+#define GST_GME_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GME_DEC,GstGmeDec))
+#define GST_GME_DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GME_DEC,GstGmeDecClass))
+#define GST_IS_GME_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GME_DEC))
+#define GST_IS_GME_DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GME_DEC))
 
-typedef struct _GstSpcDec GstSpcDec;
-typedef struct _GstSpcDecClass GstSpcDecClass;
+typedef struct _GstGmeDec GstGmeDec;
+typedef struct _GstGmeDecClass GstGmeDecClass;
 
-struct _GstSpcDec
+struct _GstGmeDec
 {
   GstElement  element;
 
@@ -57,11 +57,11 @@ struct _GstSpcDec
   GstClockTime total_duration;
 };
 
-struct _GstSpcDecClass
+struct _GstGmeDecClass
 {
   GstElementClass parent_class;
 };
 
 G_END_DECLS
 
-#endif /* __GST_SPC_DEC_H__ */
+#endif /* __GST_GME_DEC_H__ */
