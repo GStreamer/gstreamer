@@ -3420,6 +3420,12 @@ plugin_init (GstPlugin * plugin)
   static gchar *nuv_exts[] = { "nuv", NULL };
   static gchar *vivo_exts[] = { "viv", NULL };
   static gchar *nsf_exts[] = { "nsf", NULL };
+  static gchar *gym_exts[] = { "gym", NULL };
+  static gchar *ay_exts[] = { "ay", NULL };
+  static gchar *gbs_exts[] = { "gbs", NULL };
+  static gchar *kss_exts[] = { "kss", NULL };
+  static gchar *sap_exts[] = { "sap", NULL };
+  static gchar *vgm_exts[] = { "vgm", NULL };
   static gchar *mid_exts[] = { "mid", "midi", NULL };
   static gchar *mxmf_exts[] = { "mxmf", NULL };
   static gchar *imelody_exts[] = { "imy", "ime", "imelody", NULL };
@@ -3653,8 +3659,21 @@ plugin_init (GstPlugin * plugin)
       vivo_type_find, vivo_exts, VIVO_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-nsf",
       GST_RANK_SECONDARY, nsf_exts, "NESM\x1a", 5, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "application/pdf",
-      GST_RANK_SECONDARY, pdf_exts, "%PDF-", 5, GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-gym",
+      GST_RANK_SECONDARY, gym_exts, "GYMX", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-ay",
+      GST_RANK_SECONDARY, ay_exts, "ZXAYEMUL", 8, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-gbs",
+      GST_RANK_SECONDARY, gbs_exts, "GBS\x01", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-vgm",
+      GST_RANK_SECONDARY, vgm_exts, "Vgm\x20", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-sap",
+      GST_RANK_SECONDARY, sap_exts, "SAP\x0d\x0aAUTHOR\x20", 12,
+      GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-kss", GST_RANK_SECONDARY,
+      kss_exts, "KSSX\0", 5, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "application/pdf", GST_RANK_SECONDARY,
+      pdf_exts, "%PDF-", 5, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/msword",
       GST_RANK_SECONDARY, msword_exts, "\320\317\021\340\241\261\032\341", 8,
       GST_TYPE_FIND_LIKELY);
