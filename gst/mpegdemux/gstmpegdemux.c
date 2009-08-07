@@ -140,7 +140,7 @@ static GstStaticPadTemplate audio_template =
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/mpeg, "
-        "mpegversion = (int) 1;"
+        "mpegversion = (int) { 1, 4 };"
         "audio/x-private1-lpcm; "
         "audio/x-private1-ac3;" "audio/x-private1-dts;" "audio/ac3")
     );
@@ -374,7 +374,12 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
     case ST_PRIVATE_DATA:
     case ST_MHEG:
     case ST_DSMCC:
+      break;
     case ST_AUDIO_AAC:
+      template = klass->audio_template;
+      name = g_strdup_printf ("audio_%02x", id);
+      caps = gst_caps_new_simple ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, 4, NULL);
       break;
     case ST_VIDEO_H264:
       template = klass->video_template;
@@ -679,7 +684,7 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
           break;
         case 0x2:
         case 0x3:
-          /* MPEG audio without and with extension stream are 
+          /* MPEG audio without and with extension stream are
            * treated the same */
           stream_id = 0xC0 + i;
           temp = gst_flups_demux_get_stream (demux, stream_id, ST_AUDIO_MPEG1);
@@ -1296,7 +1301,7 @@ gst_flups_demux_src_query (GstPad * pad, GstQuery * query)
         break;
       }
 
-      /* Upstream didn't know, so we can only answer TIME queries from 
+      /* Upstream didn't know, so we can only answer TIME queries from
        * here on */
       if (format != GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (demux, "duration not supported for format %d",
@@ -1942,7 +1947,15 @@ gst_flups_demux_parse_psm (GstFluPSDemux * demux)
 
     GST_DEBUG_OBJECT (demux, "Stream type %02X with id %02X and %u bytes info",
         stream_type, stream_id, stream_info_length);
-    demux->psm[stream_id] = stream_type;
+    if (G_LIKELY (stream_id != 0xbd))
+      demux->psm[stream_id] = stream_type;
+    else {
+      /* Ignore stream type for private_stream_1 and discover it looking at
+       * the stream data.
+       * Fixes demuxing some clips with lpcm that was wrongly declared as
+       * mpeg audio */
+      GST_DEBUG_OBJECT (demux, "stream type for private_stream_1 ignored");
+    }
     es_map_base += stream_info_length;
   }
 
