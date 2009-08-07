@@ -483,7 +483,7 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
         flag_string (ID3V2_FRAME_FORMAT_COMPRESSION, "COMPRESSION"),
         flag_string (ID3V2_FRAME_FORMAT_ENCRYPTION, "ENCRYPTION"),
         flag_string (ID3V2_FRAME_FORMAT_UNSYNCHRONISATION, "UNSYNC"),
-        flag_string (ID3V2_FRAME_FORMAT_DATA_LENGTH_INDICATOR, "LENGHT_IND"));
+        flag_string (ID3V2_FRAME_FORMAT_DATA_LENGTH_INDICATOR, "LENGTH_IND"));
 #undef flag_str
 #endif
 
