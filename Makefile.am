@@ -1,11 +1,11 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-SUBDIRS = ges tests
+SUBDIRS = ges tests common m4
 
-DIST_SUBDIRS = ges
+DIST_SUBDIRS = ges tests common m4
 
 # include before EXTRA_DIST for win32 assignment
-include $(top_srcdir)/common/win32.mak
+#include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
 	gst-editing-services.spec depcomp \
