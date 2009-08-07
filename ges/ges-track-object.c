@@ -260,6 +260,10 @@ ensure_gnl_object (GESTrackObject * object)
     res =
         ges_timeline_object_fill_track_object (object->timelineobj, object,
         object->gnlobject);
+    if (res) {
+      /* Set some properties on the GnlObject */
+      g_object_set (object->gnlobject, "caps", object->track->caps, NULL);
+    }
   }
 
   object->valid = res;

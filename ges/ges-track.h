@@ -48,6 +48,8 @@ struct _GESTrack {
 
   GESTimeline * timeline;
 
+  GstCaps * caps;
+
   GstElement * composition;	/* The composition associated with this track */
 };
 
@@ -57,9 +59,10 @@ struct _GESTrackClass {
 
 GType ges_track_get_type (void);
 
-GESTrack* ges_track_new (void);
+GESTrack* ges_track_new (GstCaps * caps);
 
 void ges_track_set_timeline (GESTrack * track, GESTimeline *timeline);
+void ges_track_set_caps (GESTrack * track, const GstCaps * caps);
 
 gboolean ges_track_add_object (GESTrack * track, GESTrackObject * object);
 gboolean ges_track_remove_object (GESTrack * track, GESTrackObject * object);

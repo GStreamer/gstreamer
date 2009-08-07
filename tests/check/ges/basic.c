@@ -70,12 +70,14 @@ GST_START_TEST (test_ges_scenario)
 
   /* Give the Timeline a Track */
 
-  track = ges_track_new ();
+  track = ges_track_new (GST_CAPS_ANY);
   fail_unless (track != NULL);
 
   fail_unless (ges_timeline_add_track (timeline, track));
   fail_unless (track->timeline == timeline);
   fail_unless (g_list_find (timeline->tracks, track) != NULL);
+  fail_unless ((gpointer) gst_element_get_parent (track) ==
+      (gpointer) timeline);
 
   /* Create a source and add it to the Layer */
 
@@ -88,7 +90,6 @@ GST_START_TEST (test_ges_scenario)
 
   /* Make sure the associated TrackObject is in the Track */
   fail_unless (GES_TIMELINE_OBJECT (source)->trackobjects != NULL);
-
 
   /* Now remove the timelineobject */
   fail_unless (ges_timeline_layer_remove_object (layer,

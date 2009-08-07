@@ -31,11 +31,22 @@
 
 G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN);
 
+enum
+{
+  ARG_0,
+  ARG_CAPS
+};
+
 static void
 ges_track_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
+  GESTrack *track = GES_TRACK (object);
+
   switch (property_id) {
+    case ARG_CAPS:
+      gst_value_set_caps (value, track->caps);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -45,7 +56,12 @@ static void
 ges_track_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GESTrack *track = GES_TRACK (object);
+
   switch (property_id) {
+    case ARG_CAPS:
+      ges_track_set_caps (track, gst_value_get_caps (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -81,6 +97,11 @@ ges_track_class_init (GESTrackClass * klass)
   object_class->set_property = ges_track_set_property;
   object_class->dispose = ges_track_dispose;
   object_class->finalize = ges_track_finalize;
+
+  g_object_class_install_property (object_class, ARG_CAPS,
+      g_param_spec_boxed ("caps", "Caps",
+          "Caps used to filter/choose the output stream",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -93,9 +114,9 @@ ges_track_init (GESTrack * self)
 }
 
 GESTrack *
-ges_track_new (void)
+ges_track_new (GstCaps * caps)
 {
-  return g_object_new (GES_TYPE_TRACK, NULL);
+  return g_object_new (GES_TYPE_TRACK, "caps", caps, NULL);
 }
 
 void
@@ -104,6 +125,20 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
   GST_DEBUG ("track:%p, timeline:%p", track, timeline);
 
   track->timeline = timeline;
+}
+
+void
+ges_track_set_caps (GESTrack * track, const GstCaps * caps)
+{
+  GST_DEBUG ("track:%p, caps:%" GST_PTR_FORMAT, track, caps);
+
+  g_return_if_fail (GST_IS_CAPS (caps));
+
+  if (track->caps)
+    gst_caps_unref (track->caps);
+  track->caps = gst_caps_copy (caps);
+
+  /* FIXME : update all trackobjects ? */
 }
 
 gboolean
