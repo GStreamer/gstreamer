@@ -1026,6 +1026,12 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
       skip = -1;
       if (bclass->check_valid_frame (parse, tmpbuf, &fsize, &skip)) {
+        if (gst_adapter_available (parse->adapter) < fsize) {
+          GST_DEBUG_OBJECT (parse,
+              "found valid frame but not enough data available (only %d bytes)",
+              gst_adapter_available (parse->adapter));
+          goto done;
+        }
         break;
       }
       if (skip > 0) {
