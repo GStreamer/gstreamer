@@ -101,6 +101,7 @@ struct _GstFluPSDemux
 
   GstPad *sinkpad;
   gboolean random_access;       /* If we operate in pull mode */
+  gboolean flushing;
 
   GstAdapter *adapter;
   GstAdapter *rev_adapter;
@@ -136,6 +137,8 @@ struct _GstFluPSDemux
   guint64 next_pts;
   guint64 next_dts;
   GstFluPSStream **streams;
+  GstFluPSStream **streams_found;
+  gint found_count;
   gboolean need_no_more_pads;
 
   /* Indicates an MPEG-2 stream */
