@@ -385,7 +385,10 @@ gst_mpegts_demux_reset (GstMpegTSDemux * demux)
           gst_section_filter_uninit (&stream->section_filter);
           break;
       }
-
+      if (stream->pes_buffer) {
+        gst_buffer_unref (stream->pes_buffer);
+        stream->pes_buffer = NULL;
+      }
       g_free (stream);
       demux->streams[i] = NULL;
     }
