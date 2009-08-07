@@ -158,8 +158,8 @@ gst_spc_dec_init (GstSpcDec * spc, GstSpcDecClass * klass)
 
   spc->buf = NULL;
   spc->player = NULL;
+  spc->total_duration = GST_CLOCK_TIME_NONE;
   spc->initialized = FALSE;
-  spc_tag_clear (&spc->tag_info);
 }
 
 static void
@@ -171,8 +171,6 @@ gst_spc_dec_dispose (GObject * object)
     gst_buffer_unref (spc->buf);
     spc->buf = NULL;
   }
-
-  spc_tag_free (&spc->tag_info);
 }
 
 static GstFlowReturn
@@ -223,38 +221,6 @@ gst_spc_dec_sink_event (GstPad * pad, GstEvent * event)
   return result;
 }
 
-static gint64
-gst_spc_duration (GstSpcDec * spc)
-{
-  gint64 total_ticks =
-      spc->tag_info.time_intro +
-      spc->tag_info.time_loop * spc->tag_info.loop_count +
-      spc->tag_info.time_end;
-  if (total_ticks) {
-    return (gint64) gst_util_uint64_scale (total_ticks, GST_SECOND, 64000);
-  } else if (spc->tag_info.time_seconds) {
-    gint64 time = (gint64) spc->tag_info.time_seconds * GST_SECOND;
-
-    return time;
-  } else {
-    return (gint64) (3 * 60) * GST_SECOND;
-  }
-}
-
-static gint64
-gst_spc_fadeout (GstSpcDec * spc)
-{
-  if (spc->tag_info.time_fade) {
-    return (gint64) gst_util_uint64_scale ((guint64) spc->tag_info.time_fade,
-        GST_SECOND, 64000);
-  } else if (spc->tag_info.time_fade_milliseconds) {
-    return (gint64) (spc->tag_info.time_fade_milliseconds * GST_MSECOND);
-  } else {
-    return 10 * GST_SECOND;
-  }
-}
-
-
 static gboolean
 gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
 {
@@ -293,7 +259,10 @@ gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
         guint64 cur = gme_tell (spc->player) * GST_MSECOND;
         guint64 dest = (guint64) start;
 
-        dest = CLAMP (dest, 0, gst_spc_duration (spc) + gst_spc_fadeout (spc));
+        if (spc->total_duration != GST_CLOCK_TIME_NONE)
+          dest = CLAMP (dest, 0, spc->total_duration);
+        else
+          dest = MAX (0, dest);
 
         if (dest == cur)
           break;
@@ -317,8 +286,9 @@ gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
           gst_pad_push_event (spc->srcpad, gst_event_new_flush_stop ());
         }
 
-        if (stop == GST_CLOCK_TIME_NONE)
-          stop = (guint64) (gst_spc_duration (spc) + gst_spc_fadeout (spc));
+        if (stop == GST_CLOCK_TIME_NONE
+            && spc->total_duration != GST_CLOCK_TIME_NONE)
+          stop = spc->total_duration;
 
         gst_pad_push_event (spc->srcpad, gst_event_new_new_segment (FALSE, rate,
                 GST_FORMAT_TIME, dest, stop, dest));
@@ -356,12 +326,12 @@ gst_spc_dec_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
 
       gst_query_parse_duration (query, &format, NULL);
-      if (!spc->initialized || format != GST_FORMAT_TIME) {
+      if (!spc->initialized || format != GST_FORMAT_TIME
+          || spc->total_duration == GST_CLOCK_TIME_NONE) {
         result = FALSE;
         break;
       }
-      gst_query_set_duration (query, GST_FORMAT_TIME,
-          gst_spc_duration (spc) + gst_spc_fadeout (spc));
+      gst_query_set_duration (query, GST_FORMAT_TIME, spc->total_duration);
       break;
     }
     case GST_QUERY_POSITION:
@@ -395,7 +365,6 @@ gst_spc_play (GstPad * pad)
   GstBuffer *out;
   gboolean seeking = spc->seeking;
   gme_err_t gme_err = NULL;
-  gint64 duration, fade, end, position;
   const int NUM_SAMPLES = 1600; /* 4 bytes (stereo 16-bit) per sample */
 
   if (!seeking) {
@@ -421,24 +390,6 @@ gst_spc_play (GstPad * pad)
     gst_buffer_set_caps (out, GST_PAD_CAPS (pad));
   }
 
-  duration = gst_spc_duration (spc);
-  fade = gst_spc_fadeout (spc);
-  end = duration + fade;
-  position = gme_tell (spc->player) * GST_MSECOND;
-
-  if (position >= duration) {
-    gint16 *data = (gint16 *) GST_BUFFER_DATA (out);
-    guint32 size = GST_BUFFER_SIZE (out) / sizeof (gint16);
-    unsigned int i;
-
-    gint64 num = (fade - (position - duration));
-
-    for (i = 0; i < size; i++) {
-      /* Apply a parabolic volume envelope */
-      data[i] = (gint16) (data[i] * num / fade * num / fade);
-    }
-  }
-
   if ((flow_return = gst_pad_push (spc->srcpad, out)) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (spc, "pausing task, reason %s",
         gst_flow_get_name (flow_return));
@@ -450,7 +401,7 @@ gst_spc_play (GstPad * pad)
     }
   }
 
-  if (position >= end) {
+  if (gme_track_ended (spc->player)) {
     gst_pad_pause_task (pad);
     gst_pad_push_event (pad, gst_event_new_eos ());
   }
@@ -463,7 +414,7 @@ gst_spc_play (GstPad * pad)
 static gboolean
 spc_setup (GstSpcDec * spc)
 {
-  spc_tag_info *info;
+  gme_info_t *info;
   gme_err_t gme_err = NULL;
   GstTagList *taglist;
   guint64 total_duration;
@@ -471,64 +422,6 @@ spc_setup (GstSpcDec * spc)
   if (!spc->buf || !spc_negotiate (spc)) {
     return FALSE;
   }
-
-  info = &(spc->tag_info);
-
-  spc_tag_get_info (GST_BUFFER_DATA (spc->buf), GST_BUFFER_SIZE (spc->buf),
-      info);
-
-  taglist = gst_tag_list_new ();
-
-  if (info->title)
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
-        info->title, NULL);
-  if (info->artist)
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ARTIST,
-        info->artist, NULL);
-  /* Prefer the name of the official soundtrack over the name of the game (since this is
-   * how track numbers are derived)
-   */
-  if (info->album)
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ALBUM,
-        info->album, NULL);
-  else if (info->game)
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ALBUM, info->game,
-        NULL);
-  if (info->year) {
-    GDate *date = g_date_new_dmy (1, 1, info->year);
-
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, date, NULL);
-    g_date_free (date);
-  }
-  if (info->track) {
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER,
-        info->track, NULL);
-  }
-  if (info->comment)
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_COMMENT,
-        info->comment, NULL);
-  if (info->disc)
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_ALBUM_VOLUME_NUMBER, info->disc, NULL);
-  if (info->publisher)
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ORGANIZATION,
-        info->publisher, NULL);
-  if (info->dumper)
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_CONTACT,
-        info->dumper, NULL);
-  if (info->emulator)
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
-        info->emulator == EMU_ZSNES ? "ZSNES" : "Snes9x", NULL);
-
-  total_duration = (guint64) (gst_spc_duration (spc) + gst_spc_fadeout (spc));
-
-  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
-      GST_TAG_DURATION, total_duration,
-      GST_TAG_GENRE, "Game", GST_TAG_CODEC, "SPC700", NULL);
-
-  gst_element_found_tags_for_pad (GST_ELEMENT (spc), spc->srcpad, taglist);
-
-  /* spc_tag_info_free(&info); */
 
   gme_err =
       gme_open_data (GST_BUFFER_DATA (spc->buf), GST_BUFFER_SIZE (spc->buf),
@@ -543,6 +436,47 @@ spc_setup (GstSpcDec * spc)
 
     return FALSE;
   }
+
+  gme_err = gme_track_info (spc->player, &info, 0);
+
+  taglist = gst_tag_list_new ();
+
+  if (info->song)
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
+        info->song, NULL);
+  if (info->author)
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ARTIST,
+        info->author, NULL);
+  /* Prefer the name of the official soundtrack over the name of the game (since this is
+   * how track numbers are derived)
+   */
+  if (info->game)
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ALBUM, info->game,
+        NULL);
+
+  if (info->comment)
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_COMMENT,
+        info->comment, NULL);
+  if (info->dumper)
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_CONTACT,
+        info->dumper, NULL);
+  if (info->copyright)
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_COPYRIGHT,
+        info->copyright, NULL);
+  if (info->system)
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
+        info->system, NULL);
+
+  spc->total_duration = total_duration =
+      gst_util_uint64_scale_int (info->play_length, GST_MSECOND, 1);
+
+  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+      GST_TAG_DURATION, total_duration, NULL);
+
+  gst_element_found_tags_for_pad (GST_ELEMENT (spc), spc->srcpad, taglist);
+
+  g_free (info);
+
 #ifdef HAVE_LIBGME_ACCURACY
   /* TODO: Is it worth it to make this optional? */
   gme_enable_accuracy (spc->player, 1);
@@ -575,6 +509,7 @@ gst_spc_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      dec->total_duration = GST_CLOCK_TIME_NONE;
       break;
     default:
       break;

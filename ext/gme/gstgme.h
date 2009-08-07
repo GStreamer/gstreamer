@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 
 #include <gme/gme.h>
-#include "tag.h"
 
 G_BEGIN_DECLS
 
@@ -55,7 +54,7 @@ struct _GstSpcDec
   gboolean    seeking;
   int         seekpoint;
 
-  spc_tag_info tag_info;
+  GstClockTime total_duration;
 };
 
 struct _GstSpcDecClass
