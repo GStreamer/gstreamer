@@ -128,7 +128,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
           G_MAXUINT64, 0, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_DURATION,
       g_param_spec_uint64 ("duration", "Duration", "The duration to use",
-          0, G_MAXUINT64, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT64, GST_SECOND, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",
           "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
@@ -163,6 +163,9 @@ ges_track_object_set_start_internal (GESTrackObject * object, guint64 start)
 {
   g_return_val_if_fail (object->gnlobject, FALSE);
 
+  GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
+      object, GST_TIME_ARGS (start));
+
   if (G_UNLIKELY (start == object->start))
     return FALSE;
 
@@ -174,6 +177,9 @@ gboolean
 ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint)
 {
   guint64 dur;
+
+  GST_DEBUG ("object:%p, inpoint:%" GST_TIME_FORMAT,
+      object, GST_TIME_ARGS (inpoint));
 
   g_return_val_if_fail (object->gnlobject, FALSE);
 
@@ -192,6 +198,9 @@ gboolean
 ges_track_object_set_duration_internal (GESTrackObject * object,
     guint64 duration)
 {
+  GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
+      object, GST_TIME_ARGS (duration));
+
   g_return_val_if_fail (object->gnlobject, FALSE);
 
   if (G_UNLIKELY (duration == object->duration))
@@ -206,6 +215,8 @@ gboolean
 ges_track_object_set_priority_internal (GESTrackObject * object,
     guint32 priority)
 {
+  GST_DEBUG ("object:%p, priority:%d", object, priority);
+
   g_return_val_if_fail (object->gnlobject, FALSE);
 
   if (G_UNLIKELY (priority == object->priority))
