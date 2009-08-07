@@ -43,10 +43,17 @@ G_BEGIN_DECLS
 #define GES_CUSTOM_TIMELINE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_CUSTOM_TIMELINE_SOURCE, GESCustomTimelineSourceClass))
 
+typedef gboolean (*FillTrackObjectUserFunc) (GESTimelineObject * object,
+					     GESTrackObject * trobject,
+					     GstElement * gnlobj,
+					     gpointer user_data);
+
+
 struct _GESCustomTimelineSource {
   GESTimelineSource parent;
 
-  FillTrackObjectFunc filltrackobjectfunc;
+  FillTrackObjectUserFunc filltrackobjectfunc;
+  gpointer user_data;
 };
 
 struct _GESCustomTimelineSourceClass {
@@ -56,7 +63,8 @@ struct _GESCustomTimelineSourceClass {
 GType ges_cust_timeline_src_get_type (void);
 
 GESCustomTimelineSource*
-ges_custom_timeline_source_new (FillTrackObjectFunc);
+ges_custom_timeline_source_new (FillTrackObjectUserFunc,
+				gpointer user_data);
 
 G_END_DECLS
 

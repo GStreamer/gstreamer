@@ -30,7 +30,7 @@ GST_END_TEST;
 
 static gboolean
 my_fill_track_func (GESTimelineObject * object,
-    GESTrackObject * trobject, GstElement * gnlobj)
+    GESTrackObject * trobject, GstElement * gnlobj, gpointer user_data)
 {
   GstElement *src;
 
@@ -81,7 +81,7 @@ GST_START_TEST (test_ges_scenario)
 
   /* Create a source and add it to the Layer */
 
-  source = ges_custom_timeline_source_new (my_fill_track_func);
+  source = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (source != NULL);
 
   fail_unless (ges_timeline_layer_add_object (layer,

@@ -90,7 +90,7 @@ ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
 
   res =
       GES_CUSTOM_TIMELINE_SOURCE (object)->filltrackobjectfunc (object,
-      trobject, gnlobj);
+      trobject, gnlobj, GES_CUSTOM_TIMELINE_SOURCE (object)->user_data);
 
   GST_DEBUG ("Returning res:%d", res);
 
@@ -98,12 +98,14 @@ ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
 }
 
 GESCustomTimelineSource *
-ges_custom_timeline_source_new (FillTrackObjectFunc func)
+ges_custom_timeline_source_new (FillTrackObjectUserFunc func,
+    gpointer user_data)
 {
   GESCustomTimelineSource *src;
 
   src = g_object_new (GES_TYPE_CUSTOM_TIMELINE_SOURCE, NULL);
   src->filltrackobjectfunc = func;
+  src->user_data = user_data;
 
   return src;
 }
