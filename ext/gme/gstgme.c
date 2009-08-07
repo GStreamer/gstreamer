@@ -159,7 +159,7 @@ gst_gme_dec_init (GstGmeDec * gme, GstGmeDecClass * klass)
   gst_pad_use_fixed_caps (gme->srcpad);
   gst_element_add_pad (GST_ELEMENT (gme), gme->srcpad);
 
-  gme->buf = NULL;
+  gme->adapter = gst_adapter_new ();
   gme->player = NULL;
   gme->total_duration = GST_CLOCK_TIME_NONE;
   gme->initialized = FALSE;
@@ -170,9 +170,9 @@ gst_gme_dec_dispose (GObject * object)
 {
   GstGmeDec *gme = GST_GME_DEC (object);
 
-  if (gme->buf) {
-    gst_buffer_unref (gme->buf);
-    gme->buf = NULL;
+  if (gme->adapter) {
+    gst_object_unref (gme->adapter);
+    gme->adapter = NULL;
   }
 }
 
@@ -182,11 +182,7 @@ gst_gme_dec_chain (GstPad * pad, GstBuffer * buffer)
   GstGmeDec *gme = GST_GME_DEC (gst_pad_get_parent (pad));
 
   /* Accumulate GME data until end-of-stream, then commence playback. */
-  if (gme->buf) {
-    gme->buf = gst_buffer_join (gme->buf, buffer);
-  } else {
-    gme->buf = buffer;
-  }
+  gst_adapter_push (gme->adapter, buffer);
 
   gst_object_unref (gme);
 
@@ -421,14 +417,21 @@ gme_setup (GstGmeDec * gme)
   gme_err_t gme_err = NULL;
   GstTagList *taglist;
   guint64 total_duration;
+  GstBuffer *buffer;
 
-  if (!gme->buf || !gme_negotiate (gme)) {
+  if (!gst_adapter_available (gme->adapter) || !gme_negotiate (gme)) {
     return FALSE;
   }
 
+  buffer =
+      gst_adapter_take_buffer (gme->adapter,
+      gst_adapter_available (gme->adapter));
+
   gme_err =
-      gme_open_data (GST_BUFFER_DATA (gme->buf), GST_BUFFER_SIZE (gme->buf),
+      gme_open_data (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
       &gme->player, 32000);
+  gst_buffer_unref (buffer);
+
   if (gme_err || !gme->player) {
     if (gme->player) {
       gme_delete (gme->player);
@@ -491,11 +494,6 @@ gme_setup (GstGmeDec * gme)
 
   gst_pad_start_task (gme->srcpad, (GstTaskFunction) gst_gme_play, gme->srcpad);
 
-  /* We can't unreference this buffer because we might need to re-initialize
-   * the emulator with the original data during a reverse seek
-   * gst_buffer_unref (gme->buf);
-   * gme->buf = NULL;
-   */
   gme->initialized = TRUE;
   gme->seeking = FALSE;
   gme->seekpoint = 0;
@@ -524,10 +522,7 @@ gst_gme_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (dec->buf) {
-        gst_buffer_unref (dec->buf);
-        dec->buf = NULL;
-      }
+      gst_adapter_clear (dec->adapter);
       break;
     default:
       break;

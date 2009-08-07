@@ -22,6 +22,7 @@
 #define __GST_GME_DEC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #include <gme/gme.h>
 
@@ -48,7 +49,7 @@ struct _GstGmeDec
   GstPad     *sinkpad;
   GstPad     *srcpad;
 
-  GstBuffer  *buf;
+  GstAdapter *adapter;
   Music_Emu  *player;
   gboolean    initialized;
   gboolean    seeking;
