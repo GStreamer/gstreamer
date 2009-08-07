@@ -108,7 +108,11 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
           ID3V2_FRAME_FORMAT_DATA_LENGTH_INDICATOR)) {
     if (work->hdr.frame_data_size <= 4)
       return FALSE;
-    work->parse_size = read_synch_uint (frame_data, 4);
+    if (ID3V2_VER_MAJOR (work->hdr.version) == 3) {
+      work->parse_size = GST_READ_UINT32_BE (frame_data);
+    } else {
+      work->parse_size = read_synch_uint (frame_data, 4);
+    }
     frame_data += 4;
     frame_data_size -= 4;
     if (work->parse_size < frame_data_size) {
