@@ -156,3 +156,29 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
 
   return TRUE;
 }
+
+gboolean
+ges_timeline_layer_remove_object (GESTimelineLayer * layer,
+    GESTimelineObject * object)
+{
+  GST_DEBUG ("layer:%p, object:%p", layer, object);
+
+  if (G_UNLIKELY (object->layer != layer)) {
+    GST_WARNING ("TimelineObject doesn't belong to this layer");
+    return FALSE;
+  }
+
+  /* emit 'object-removed' */
+  g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, object);
+
+  /* inform the object it's no longer in a layer */
+  ges_timeline_object_set_layer (object, NULL);
+
+  /* Remove it from our list of controlled objects */
+  layer->objects_start = g_slist_remove (layer->objects_start, object);
+
+  /* Remove our reference to the object */
+  g_object_unref (object);
+
+  return TRUE;
+}

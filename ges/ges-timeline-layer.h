@@ -63,6 +63,7 @@ GESTimelineLayer* ges_timeline_layer_new (void);
 
 void ges_timeline_layer_set_timeline (GESTimelineLayer * layer, GESTimeline * timeline);
 gboolean ges_timeline_layer_add_object (GESTimelineLayer * layer, GESTimelineObject * object);
+gboolean ges_timeline_layer_remove_object (GESTimelineLayer * layer, GESTimelineObject * object);
 
 G_END_DECLS
 
