@@ -439,29 +439,29 @@ gme_setup (GstGmeDec * gme)
 
   taglist = gst_tag_list_new ();
 
-  if (info->song)
+  if (info->song && *info->song)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
         info->song, NULL);
-  if (info->author)
+  if (info->author && *info->author)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ARTIST,
         info->author, NULL);
   /* Prefer the name of the official soundtrack over the name of the game (since this is
    * how track numbers are derived)
    */
-  if (info->game)
+  if (info->game && *info->game)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ALBUM, info->game,
         NULL);
 
-  if (info->comment)
+  if (info->comment && *info->comment)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_COMMENT,
         info->comment, NULL);
-  if (info->dumper)
+  if (info->dumper && *info->dumper)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_CONTACT,
         info->dumper, NULL);
-  if (info->copyright)
+  if (info->copyright && *info->copyright)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_COPYRIGHT,
         info->copyright, NULL);
-  if (info->system)
+  if (info->system && *info->system)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
         info->system, NULL);
 
