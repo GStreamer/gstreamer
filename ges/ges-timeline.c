@@ -155,7 +155,7 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   GST_DEBUG ("New TimelineObject %p added to layer %p", object, layer);
 
   for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
-    GESTrack *track = (GESTrack *) track;
+    GESTrack *track = (GESTrack *) tmp->data;
     GESTrackObject *trobj;
 
     GST_LOG ("Trying with track %p", track);
@@ -178,7 +178,27 @@ static void
 layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GESTimeline * timeline)
 {
-  /* FIXME : IMPLEMENT */
+  GList *tmp;
+
+  GST_DEBUG ("TimelineObject %p removed from layer %p", object, layer);
+
+  /* Go over the object's track objects and figure out which one belongs to
+   * the list of tracks we control */
+
+  for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp)) {
+    GESTrackObject *trobj = (GESTrackObject *) tmp->data;
+
+    GST_DEBUG ("Trying to remove TrackObject %p", trobj);
+
+    if (G_LIKELY (g_list_find (timeline->tracks, trobj->track))) {
+      GST_DEBUG ("Belongs to one of the tracks we control");
+      ges_track_remove_object (trobj->track, trobj);
+
+      ges_timeline_object_release_track_object (object, trobj);
+    }
+  }
+
+  GST_DEBUG ("Done");
 }
 
 
@@ -205,8 +225,8 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   /* Inform the layer that it belongs to a new timeline */
   ges_timeline_layer_set_timeline (layer, timeline);
 
-  /* FIXME : GO OVER THE LIST OF EXISTING TIMELINE OBJECTS IN THAT LAYER
-   * AND ADD THEM !!! */
+  /* FIXME : GO OVER THE LIST OF ALREADY EXISTING TIMELINE OBJECTS IN THAT
+   * LAYER AND ADD THEM !!! */
 
   /* Connect to 'object-added'/'object-removed' signal from the new layer */
   g_signal_connect (layer, "object-added", G_CALLBACK (layer_object_added_cb),
@@ -223,10 +243,28 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 gboolean
 ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
-  /* FIXME : IMPLEMENT */
+  GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
-  /* Unassign tracks from the given layer */
-  return FALSE;
+  if (G_UNLIKELY (!g_list_find (timeline->layers, layer))) {
+    GST_WARNING ("Layer doesn't belong to this timeline");
+    return FALSE;
+  }
+
+  /* Disconnect signals */
+  GST_DEBUG ("Disconnecting signal callbacks");
+  g_signal_handlers_disconnect_by_func (layer, layer_object_added_cb, timeline);
+  g_signal_handlers_disconnect_by_func (layer, layer_object_removed_cb,
+      timeline);
+
+  timeline->layers = g_list_remove (timeline->layers, layer);
+
+  ges_timeline_layer_set_timeline (layer, NULL);
+
+  g_signal_emit (timeline, ges_timeline_signals[LAYER_REMOVED], 0, layer);
+
+  g_object_unref (layer);
+
+  return TRUE;
 }
 
 gboolean
@@ -234,7 +272,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
-  /* Add to the list of tracks, make sure we don't already control it */
+  /* make sure we don't already control it */
   if (G_UNLIKELY (g_list_find (timeline->tracks, (gconstpointer) track))) {
     GST_WARNING ("Track is already controlled by this timeline");
     return FALSE;
@@ -264,10 +302,25 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 gboolean
 ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 {
-  /* FIXME : IMPLEMENT */
+  GST_DEBUG ("timeline:%p, track:%p", timeline, track);
+
+  if (G_UNLIKELY (!g_list_find (timeline->tracks, track))) {
+    GST_WARNING ("Track doesn't belong to this timeline");
+    return FALSE;
+  }
+
+  timeline->tracks = g_list_remove (timeline->tracks, track);
+
+  ges_track_set_timeline (track, NULL);
+
+  /* remove track from our bin */
+  if (G_UNLIKELY (!gst_bin_remove (GST_BIN (timeline), GST_ELEMENT (track)))) {
+    GST_WARNING ("Couldn't remove track to ourself (GST)");
+    return FALSE;
+  }
 
   /* Signal track removal to all layers/objects */
+  g_signal_emit (timeline, ges_timeline_signals[TRACK_REMOVED], 0, track);
 
-  /* */
-  return FALSE;
+  return TRUE;
 }
