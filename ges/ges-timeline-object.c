@@ -32,11 +32,34 @@
 
 G_DEFINE_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT);
 
+enum
+{
+  PROP_0,
+  PROP_START,
+  PROP_INPOINT,
+  PROP_DURATION,
+  PROP_PRIORITY,
+};
+
 static void
 ges_timeline_object_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
+  GESTimelineObject *tobj = GES_TIMELINE_OBJECT (object);
+
   switch (property_id) {
+    case PROP_START:
+      g_value_set_uint64 (value, tobj->start);
+      break;
+    case PROP_INPOINT:
+      g_value_set_uint64 (value, tobj->inpoint);
+      break;
+    case PROP_DURATION:
+      g_value_set_uint64 (value, tobj->duration);
+      break;
+    case PROP_PRIORITY:
+      g_value_set_uint (value, tobj->priority);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -46,7 +69,21 @@ static void
 ges_timeline_object_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GESTimelineObject *tobj = GES_TIMELINE_OBJECT (object);
+
   switch (property_id) {
+    case PROP_START:
+      ges_timeline_object_set_start (tobj, g_value_get_uint64 (value));
+      break;
+    case PROP_INPOINT:
+      ges_timeline_object_set_inpoint (tobj, g_value_get_uint64 (value));
+      break;
+    case PROP_DURATION:
+      ges_timeline_object_set_duration (tobj, g_value_get_uint64 (value));
+      break;
+    case PROP_PRIORITY:
+      ges_timeline_object_set_priority (tobj, g_value_get_uint (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -73,6 +110,20 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   object_class->set_property = ges_timeline_object_set_property;
   object_class->dispose = ges_timeline_object_dispose;
   object_class->finalize = ges_timeline_object_finalize;
+
+  g_object_class_install_property (object_class, PROP_START,
+      g_param_spec_uint64 ("start", "Start",
+          "The position in the container", 0, G_MAXUINT64, 0,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_INPOINT,
+      g_param_spec_uint64 ("inpoint", "In-point", "The in-point", 0,
+          G_MAXUINT64, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_DURATION,
+      g_param_spec_uint64 ("duration", "Duration", "The duration to use",
+          0, G_MAXUINT64, GST_SECOND, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_PRIORITY,
+      g_param_spec_uint ("priority", "Priority",
+          "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
 }
 
 static void
@@ -120,6 +171,7 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
 
     GST_DEBUG ("Adding TrackObject to the list of controlled track objects");
     object->trackobjects = g_list_append (object->trackobjects, res);
+
   }
 
   GST_DEBUG ("Returning res:%p", res);
@@ -175,6 +227,16 @@ ges_timeline_object_fill_track_object (GESTimelineObject * object,
 
   res = class->fill_track_object (object, trackobj, gnlobj);
 
+  if (G_LIKELY (res)) {
+    GST_DEBUG ("Setting properties");
+
+    ges_track_object_set_start_internal (trackobj, object->start);
+    ges_track_object_set_inpoint_internal (trackobj, object->inpoint);
+    ges_track_object_set_duration_internal (trackobj, object->duration);
+    ges_track_object_set_priority_internal (trackobj, object->priority);
+
+  }
+
   GST_DEBUG ("Returning res:%d", res);
 
   return res;
@@ -187,4 +249,84 @@ ges_timeline_object_fill_track_object_func (GESTimelineObject * object,
   GST_WARNING ("No 'fill_track_object' implementation !");
 
   return FALSE;
+}
+
+void
+ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
+{
+  GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
+      object, GST_TIME_ARGS (start));
+
+  if (G_LIKELY (object->trackobjects)) {
+    GList *tmp;
+
+    for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
+      /* call set_start_internal on each trackobject */
+      ges_track_object_set_start_internal (GES_TRACK_OBJECT (tmp->data), start);
+
+  }
+
+  object->start = start;
+
+}
+
+void
+ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
+{
+  GST_DEBUG ("object:%p, inpoint:%" GST_TIME_FORMAT,
+      object, GST_TIME_ARGS (inpoint));
+
+  if (G_LIKELY (object->trackobjects)) {
+    GList *tmp;
+
+    for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
+      /* call set_inpoint_internal on each trackobject */
+      ges_track_object_set_inpoint_internal (GES_TRACK_OBJECT (tmp->data),
+          inpoint);
+
+  }
+
+  object->inpoint = inpoint;
+
+
+}
+
+void
+ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
+{
+  GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
+      object, GST_TIME_ARGS (duration));
+
+  if (G_LIKELY (object->trackobjects)) {
+    GList *tmp;
+
+    for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
+      /* call set_duration_internal on each trackobject */
+      ges_track_object_set_duration_internal (GES_TRACK_OBJECT (tmp->data),
+          duration);
+
+  }
+
+  object->duration = duration;
+
+
+}
+
+void
+ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
+{
+  GST_DEBUG ("object:%p, priority:%d", object, priority);
+
+  if (G_LIKELY (object->trackobjects)) {
+    GList *tmp;
+
+    for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
+      /* call set_priority_internal on each trackobject */
+      ges_track_object_set_priority_internal (GES_TRACK_OBJECT (tmp->data),
+          priority);
+
+  }
+
+  object->priority = priority;
+
 }

@@ -77,6 +77,11 @@ GType ges_timeline_object_get_type (void);
 GESTimelineObject*
 ges_timeline_object_new (void);
 
+void ges_timeline_object_set_start (GESTimelineObject * object, guint64 start);
+void ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint);
+void ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration);
+void ges_timeline_object_set_priority (GESTimelineObject * object, guint priority);
+
 void ges_timeline_object_set_layer (GESTimelineObject * object,
 				    GESTimelineLayer * layer);
 
