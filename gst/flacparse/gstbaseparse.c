@@ -895,6 +895,8 @@ gst_base_parse_drain (GstBaseParse * parse)
 {
   guint avail;
 
+  GST_DEBUG_OBJECT (parse, "draining");
+
   for (;;) {
     avail = gst_adapter_available (parse->priv->adapter);
     if (!avail)
@@ -903,6 +905,12 @@ gst_base_parse_drain (GstBaseParse * parse)
     gst_base_parse_set_min_frame_size (parse, avail);
     if (gst_base_parse_chain (parse->sinkpad, NULL) != GST_FLOW_OK) {
       break;
+    }
+
+    /* nothing changed, maybe due to truncated frame; break infinite loop */
+    if (avail == gst_adapter_available (parse->adapter)) {
+      GST_DEBUG_OBJECT (parse, "no change during draining; flushing");
+      gst_adapter_clear (parse->adapter);
     }
   }
 }
