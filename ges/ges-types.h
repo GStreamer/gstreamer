@@ -20,6 +20,9 @@
 #ifndef __GES_TYPES_H__
 #define __GES_TYPES_H__
 
+typedef struct _GESCustomTimelineSource GESCustomTimelineSource;
+typedef struct _GESCustomTimelineSourceClass GESCustomTimelineSourceClass;
+
 typedef struct _GESSimpleTimelineLayer GESSimpleTimelineLayer;
 typedef struct _GESSimpleTimelineLayerClass GESSimpleTimelineLayerClass;
 

@@ -36,6 +36,8 @@
 #include <ges/ges-track-object.h>
 #include <ges/ges-track-source.h>
 
+#include <ges/ges-custom-timeline-source.h>
+
 G_BEGIN_DECLS
 
 void ges_init (void);

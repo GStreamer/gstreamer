@@ -9,6 +9,7 @@ CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make)
 
 libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges.c					\
+	ges-custom-timeline-source.c		\
 	ges-simple-timeline-layer.c		\
 	ges-timeline.c				\
 	ges-timeline-layer.c			\
@@ -24,6 +25,7 @@ libges_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/ges
 libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-types.h				\
 	ges.h					\
+	ges-custom-timeline-source.h		\
 	ges-internal.h				\
 	ges-simple-timeline-layer.h		\
 	ges-timeline.h				\
