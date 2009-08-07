@@ -1,5 +1,7 @@
 if HAVE_GST_CHECK
-SUBDIRS = check
+CHECK_SUBDIRS= check
 else
-SUBDIRS =
+CHECK_SUBDIRS=
 endif
+
+SUBDIRS= $(CHECK_SUBDIRS) examples

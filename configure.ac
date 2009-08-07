@@ -242,5 +242,6 @@ m4/Makefile
 ges/Makefile
 tests/Makefile
 tests/check/Makefile
+tests/examples/Makefile
 )
 AC_OUTPUT
