@@ -59,7 +59,7 @@ ges_track_dispose (GObject * object)
   /* FIXME : Remove all TrackObjects ! */
 
   if (track->composition) {
-    g_object_unref (track->composition);
+    gst_bin_remove (GST_BIN (object), track->composition);
     track->composition = NULL;
   }
 
@@ -87,6 +87,9 @@ static void
 ges_track_init (GESTrack * self)
 {
   self->composition = gst_element_factory_make ("gnlcomposition", NULL);
+
+  if (!gst_bin_add (GST_BIN (self), self->composition))
+    GST_ERROR ("Couldn't add composition to bin !");
 }
 
 GESTrack *
