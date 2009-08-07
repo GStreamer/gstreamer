@@ -306,10 +306,10 @@ else
 SOUNDTOUCH_DIR=
 endif
 
-if USE_SPC
-SPC_DIR=spc
+if USE_GME
+GME_DIR=gme
 else
-SPC_DIR=
+GME_DIR=
 endif
 
 if USE_SWFDEC
@@ -392,7 +392,7 @@ SUBDIRS=\
 	$(SMOOTHWAVE_DIR) \
 	$(SNDFILE_DIR) \
 	$(SOUNDTOUCH_DIR) \
-	$(SPC_DIR) \
+	$(GME_DIR) \
 	$(SWFDEC_DIR) \
 	$(TARKIN_DIR) \
 	$(THEORA_DIR) \
@@ -439,7 +439,7 @@ DIST_SUBDIRS = \
 	sdl \
 	sndfile \
 	soundtouch \
-	spc \
+	gme \
 	swfdec \
 	theora \
 	timidity \
