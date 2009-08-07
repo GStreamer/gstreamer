@@ -49,6 +49,8 @@ struct _GESTrackObject {
   GESTimelineObject *timelineobj;	/* The associated timeline object */
   GESTrack *track;			/* The associated Track */
 
+  gboolean valid;	/* TRUE if the contents of gnlobject are valid/usable */
+
   /* Cached values of the gnlobject properties */
   guint64 start;	/* position (in time) of the object in the layer */
   guint64 inpoint;	/* in-point */
@@ -72,9 +74,7 @@ GType ges_track_object_get_type (void);
 
 GESTrackObject* ges_track_object_new (GESTimelineObject *timelineobj, GESTrack *track);
 
-/* gboolean ges_track_object_create_gnl_object (GESTrackObject * object); */
-
-void ges_track_object_set_track (GESTrackObject * object, GESTrack * track);
+gboolean ges_track_object_set_track (GESTrackObject * object, GESTrack * track);
 void ges_track_object_set_timeline_object (GESTrackObject * object, GESTimelineObject * tlobject);
 
 /* Private methods for GESTimelineObject's usage only */

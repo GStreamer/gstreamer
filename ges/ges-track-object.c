@@ -229,8 +229,11 @@ ensure_gnl_object (GESTrackObject * object)
   GESTrackObjectClass *class;
   gboolean res;
 
-  if (object->gnlobject)
+  if (object->gnlobject && object->valid)
     return TRUE;
+
+  /* 1. Create the GnlObject */
+  GST_DEBUG ("Creating GnlObject");
 
   class = GES_TRACK_OBJECT_GET_CLASS (object);
 
@@ -250,6 +253,7 @@ ensure_gnl_object (GESTrackObject * object)
     return FALSE;
   }
 
+  /* 2. Fill in the GnlObject */
   if (res) {
     GST_DEBUG ("Got a valid GnlObject, now filling it in");
 
@@ -258,19 +262,24 @@ ensure_gnl_object (GESTrackObject * object)
         object->gnlobject);
   }
 
+  object->valid = res;
+
   GST_DEBUG ("Returning res:%d", res);
 
   return res;
 }
 
-void
+gboolean
 ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
 {
   GST_DEBUG ("object:%p, track:%p", object, track);
 
   object->track = track;
 
-  ensure_gnl_object (object);
+  if (object->track)
+    return ensure_gnl_object (object);
+
+  return TRUE;
 }
 
 void
