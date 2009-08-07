@@ -119,6 +119,30 @@ ges_track_new (GstCaps * caps)
   return g_object_new (GES_TYPE_TRACK, "caps", caps, NULL);
 }
 
+GESTrack *
+ges_track_video_raw_new ()
+{
+  GESTrack *track;
+  GstCaps *caps = gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb");
+
+  track = ges_track_new (caps);
+  gst_caps_unref (caps);
+
+  return track;
+}
+
+GESTrack *
+ges_track_audio_raw_new ()
+{
+  GESTrack *track;
+  GstCaps *caps = gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
+
+  track = ges_track_new (caps);
+  gst_caps_unref (caps);
+
+  return track;
+}
+
 void
 ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
 {
