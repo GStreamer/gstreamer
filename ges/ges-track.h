@@ -51,6 +51,7 @@ struct _GESTrack {
   GstCaps * caps;
 
   GstElement * composition;	/* The composition associated with this track */
+  GstPad * srcpad;		/* The source GhostPad */
 };
 
 struct _GESTrackClass {

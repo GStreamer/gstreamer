@@ -37,6 +37,11 @@ enum
   ARG_CAPS
 };
 
+static void pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track);
+
+static void
+pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track);
+
 static void
 ges_track_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -108,6 +113,11 @@ static void
 ges_track_init (GESTrack * self)
 {
   self->composition = gst_element_factory_make ("gnlcomposition", NULL);
+
+  g_signal_connect (self->composition, "pad-added", (GCallback) pad_added_cb,
+      self);
+  g_signal_connect (self->composition, "pad-removed",
+      (GCallback) pad_removed_cb, self);
 
   if (!gst_bin_add (GST_BIN (self), self->composition))
     GST_ERROR ("Couldn't add composition to bin !");
@@ -218,4 +228,33 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
   ges_track_object_set_track (object, NULL);
 
   return TRUE;
+}
+
+static void
+pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track)
+{
+  GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
+
+  /* ghost the pad */
+  track->srcpad = gst_ghost_pad_new ("src", pad);
+
+  gst_pad_set_active (track->srcpad, TRUE);
+
+  gst_element_add_pad (GST_ELEMENT (track), track->srcpad);
+
+  GST_DEBUG ("done");
+}
+
+static void
+pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track)
+{
+  GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
+
+  if (G_LIKELY (track->srcpad)) {
+    gst_pad_set_active (track->srcpad, FALSE);
+    gst_element_remove_pad (GST_ELEMENT (track), track->srcpad);
+    track->srcpad = NULL;
+  }
+
+  GST_DEBUG ("done");
 }
