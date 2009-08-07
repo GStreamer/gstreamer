@@ -28,4 +28,6 @@ ges_init (void)
   /* initialize debugging category */
   GST_DEBUG_CATEGORY_INIT (ges_debug, "ges", GST_DEBUG_FG_YELLOW,
       "GStreamer Editing Services");
+
+  GST_DEBUG ("GStreamer Editing Services initialized");
 }
