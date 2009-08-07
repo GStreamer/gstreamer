@@ -73,6 +73,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
   guint frame_data_size = work->cur_frame_size;
   gchar *tag_str = NULL;
   GArray *tag_fields = NULL;
+  guint8 *uu_data = NULL;
 
 #ifdef HAVE_ZLIB
   guint8 *uncompressed_data = NULL;
@@ -86,15 +87,12 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     }
   }
 
-  /* Can't handle encrypted frames right now */
+  /* Can't handle encrypted frames right now (in case we ever do, we'll have
+   * to do the decryption after the un-unsynchronisation and decompression,
+   * not here) */
   if (work->frame_flags & ID3V2_FRAME_FORMAT_ENCRYPTION) {
     GST_WARNING ("Encrypted frames are not supported");
     return FALSE;
-  }
-
-  if (work->frame_flags & ID3V2_FRAME_FORMAT_UNSYNCHRONISATION) {
-    GST_WARNING ("ID3v2 frame with unsupported unsynchronisation applied. "
-        "May fail badly");
   }
 
   tag_name = gst_tag_from_id3_tag (work->frame_id);
@@ -120,6 +118,19 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     }
   }
 
+  /* in v2.3 the frame sizes are not syncsafe, so the entire tag had to be
+   * unsynced. In v2.4 the frame sizes are syncsafe so it's just the frame
+   * data that needs un-unsyncing, but not the frame headers. */
+  if (ID3V2_VER_MAJOR (work->hdr.version) == 4) {
+    if ((work->hdr.flags & ID3V2_HDR_FLAG_UNSYNC) != 0 ||
+        ((work->frame_flags & ID3V2_FRAME_FORMAT_UNSYNCHRONISATION) != 0)) {
+      GST_DEBUG ("Un-unsyncing frame %s", work->frame_id);
+      uu_data = id3demux_ununsync_data (frame_data, &frame_data_size);
+      frame_data = uu_data;
+      GST_MEMDUMP ("ID3v2 frame (un-unsyced)", frame_data, frame_data_size);
+    }
+  }
+
   work->parse_size = frame_data_size;
 
   if (work->frame_flags & ID3V2_FRAME_FORMAT_COMPRESSION) {
@@ -134,6 +145,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
 
     if (uncompress (dest, &destSize, src, frame_data_size) != Z_OK) {
       g_free (uncompressed_data);
+      g_free (uu_data);
       return FALSE;
     }
     if (destSize != work->parse_size) {
@@ -141,12 +153,14 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
           ("Decompressing ID3v2 frame %s did not produce expected size %d bytes (got %lu)",
           tag_name, work->parse_size, destSize);
       g_free (uncompressed_data);
+      g_free (uu_data);
       return FALSE;
     }
     work->parse_data = uncompressed_data;
 #else
     GST_WARNING ("Compressed ID3v2 tag frame could not be decompressed"
         " because gstid3demux was compiled without zlib support");
+    g_free (uu_data);
     return FALSE;
 #endif
   } else {
@@ -208,6 +222,8 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     }
     free_tag_strings (tag_fields);
   }
+
+  g_free (uu_data);
 
   return result;
 }
