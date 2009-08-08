@@ -1631,10 +1631,7 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
     GstStepInfo * current, gint64 * cstart, gint64 * cstop, gint64 * rstart,
     gint64 * rstop)
 {
-  GstBaseSinkPrivate *priv;
   gboolean step_end = FALSE;
-
-  priv = sink->priv;
 
   /* see if we need to skip this buffer because of stepping */
   switch (current->format) {
@@ -2670,7 +2667,6 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
 again:
   late = FALSE;
   step_end = FALSE;
-  ret = GST_FLOW_OK;
 
   /* synchronize this object, non syncable objects return OK
    * immediatly. */
@@ -3409,7 +3405,6 @@ gst_base_sink_chain_list (GstPad * pad, GstBufferList * list)
 
     it = gst_buffer_list_iterate (list);
 
-    result = GST_FLOW_OK;
     if (gst_buffer_list_iterator_next_group (it)) {
       do {
         group = gst_buffer_list_iterator_merge_group (it);
