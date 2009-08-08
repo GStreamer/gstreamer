@@ -55,9 +55,9 @@ struct _GstRawParse
   GstActivateMode mode;
   GstAdapter *adapter;
 
-  int framesize;
-  int fps_d;
-  int fps_n;
+  gint framesize;
+  gint fps_d;
+  gint fps_n;
 
   gboolean discont;
   guint64 n_frames;

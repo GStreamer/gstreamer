@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 2006 David A. Schleef <ds@schleef.org>
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007,2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * gstvideoparse.h:
  *
@@ -49,20 +49,12 @@ struct _GstVideoParse
   GstRawParse parent;
 
   /* properties */
-  int width;
-  int height;
-  guint32 format;
-  int par_n;
-  int par_d;
+  GstVideoFormat format;
+  gint width;
+  gint height;
+  gint par_n, par_d;
   gboolean interlaced;
   gboolean top_field_first;
-  int bpp;
-  int depth;
-  int endianness;
-  int red_mask;
-  int blue_mask;
-  int green_mask;
-  int alpha_mask;
 };
 
 struct _GstVideoParseClass
