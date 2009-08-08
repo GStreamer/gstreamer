@@ -426,7 +426,7 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
   return result;
 }
 
-static inline gboolean
+static gboolean
 gst_audioringbuffer_start (GstRingBuffer * buf)
 {
   GST_DEBUG ("start, sending signal");

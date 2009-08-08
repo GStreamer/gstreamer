@@ -664,7 +664,7 @@ gst_stream_selector_getcaps (GstPad * pad)
 }
 
 /* check if the pad is the active sinkpad */
-static inline gboolean
+static gboolean
 gst_stream_selector_is_active_sinkpad (GstStreamSelector * sel, GstPad * pad)
 {
   gboolean res;
