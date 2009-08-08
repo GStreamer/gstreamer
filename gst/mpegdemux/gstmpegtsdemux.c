@@ -2795,6 +2795,13 @@ gst_mpegts_demux_src_pad_query (GstPad * pad, GstQuery * query)
             goto beach;
         }
 
+        /* We can't say anything about seekability if we didn't
+         * have a second PCR yet because the bitrate is calculated
+         * from this
+         */
+        if (demux->bitrate == -1 && demux->pcr[1] == -1)
+          goto beach;
+
         /* We can seek if upstream supports BYTES seeks and we
          * have a bitrate
          */
