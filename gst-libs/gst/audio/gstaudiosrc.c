@@ -158,11 +158,9 @@ static void
 gst_audioringbuffer_class_init (GstAudioRingBufferClass * klass)
 {
   GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
   GstRingBufferClass *gstringbuffer_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
   gstringbuffer_class = (GstRingBufferClass *) klass;
 
   ring_parent_class = g_type_class_peek_parent (klass);
@@ -428,13 +426,9 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
   return result;
 }
 
-static gboolean
+static inline gboolean
 gst_audioringbuffer_start (GstRingBuffer * buf)
 {
-  GstAudioSrc *src;
-
-  src = GST_AUDIO_SRC (GST_OBJECT_PARENT (buf));
-
   GST_DEBUG ("start, sending signal");
   GST_AUDIORING_BUFFER_SIGNAL (buf);
 
@@ -509,16 +503,8 @@ gst_audio_src_base_init (gpointer g_class)
 static void
 gst_audio_src_class_init (GstAudioSrcClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSrcClass *gstbasesrc_class;
-  GstPushSrcClass *gstpushsrc_class;
   GstBaseAudioSrcClass *gstbaseaudiosrc_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesrc_class = (GstBaseSrcClass *) klass;
-  gstpushsrc_class = (GstPushSrcClass *) klass;
   gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
 
   gstbaseaudiosrc_class->create_ringbuffer =

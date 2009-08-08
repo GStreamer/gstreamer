@@ -1447,11 +1447,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
           GST_DEBUG ("FLOAT");
           if (strf != NULL) {
             gint ba = strf->blockalign;
-            gint ws = strf->size;
             gint wd = ba * 8 / strf->channels;
-
-            if (valid_bits_per_sample != 0)
-              ws = valid_bits_per_sample;
 
             caps = gst_caps_new_simple ("audio/x-raw-float",
                 "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,

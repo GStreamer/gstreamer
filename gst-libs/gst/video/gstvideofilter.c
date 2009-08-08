@@ -96,14 +96,10 @@ gst_video_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
 static void
 gst_video_filter_class_init (gpointer g_class, gpointer class_data)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseTransformClass *trans_class;
   GstVideoFilterClass *klass;
 
   klass = (GstVideoFilterClass *) g_class;
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
 
   trans_class->get_unit_size =

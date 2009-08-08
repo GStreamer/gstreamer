@@ -569,12 +569,9 @@ static gboolean
 gst_base_rtp_depayload_packet_lost (GstBaseRTPDepayload * filter,
     GstEvent * event)
 {
-  GstBaseRTPDepayloadPrivate *priv;
   GstClockTime timestamp, duration, position;
   GstEvent *sevent;
   const GstStructure *s;
-
-  priv = filter->priv;
 
   s = gst_event_get_structure (event);
 

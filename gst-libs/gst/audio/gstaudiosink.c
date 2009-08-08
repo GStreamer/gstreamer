@@ -163,11 +163,9 @@ static void
 gst_audioringbuffer_class_init (GstAudioRingBufferClass * klass)
 {
   GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
   GstRingBufferClass *gstringbuffer_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
   gstringbuffer_class = (GstRingBufferClass *) klass;
 
   ring_parent_class = g_type_class_peek_parent (klass);
@@ -464,12 +462,10 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
-  GstAudioRingBuffer *abuf;
   gboolean result = FALSE;
 
   sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
-  abuf = GST_AUDIORING_BUFFER_CAST (buf);
 
   /* free the buffer */
   gst_buffer_unref (buf->data);
@@ -529,11 +525,9 @@ gst_audioringbuffer_stop (GstRingBuffer * buf)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
-  GstAudioRingBuffer *abuf;
 
   sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
-  abuf = GST_AUDIORING_BUFFER_CAST (buf);
 
   /* unblock any pending writes to the audio device */
   if (csink->reset) {
@@ -597,14 +591,8 @@ gst_audio_sink_base_init (gpointer g_class)
 static void
 gst_audio_sink_class_init (GstAudioSinkClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSinkClass *gstbasesink_class;
   GstBaseAudioSinkClass *gstbaseaudiosink_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesink_class = (GstBaseSinkClass *) klass;
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
 
   gstbaseaudiosink_class->create_ringbuffer =

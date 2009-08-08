@@ -339,13 +339,9 @@ GValueArray *
 gst_property_probe_probe_and_get_values (GstPropertyProbe * probe,
     const GParamSpec * pspec)
 {
-  GstPropertyProbeInterface *iface;
-
   g_return_val_if_fail (probe != NULL, NULL);
   g_return_val_if_fail (GST_IS_PROPERTY_PROBE (probe), NULL);
   g_return_val_if_fail (pspec != NULL, NULL);
-
-  iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
 
   if (gst_property_probe_needs_probe (probe, pspec))
     gst_property_probe_probe_property (probe, pspec);
