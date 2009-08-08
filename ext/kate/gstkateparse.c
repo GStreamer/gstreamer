@@ -242,7 +242,7 @@ static GstFlowReturn
 gst_kate_parse_push_buffer (GstKateParse * parse, GstBuffer * buf,
     gint64 granulepos)
 {
-  GST_LOG_OBJECT (parse, "granulepos %16llx", granulepos);
+  GST_LOG_OBJECT (parse, "granulepos %16" G_GINT64_MODIFIER "x", granulepos);
   if (granulepos < 0) {
     /* packets coming not from Ogg won't have a granpos in the offset end,
        so we have to synthesize one here - only problem is we don't know
@@ -330,7 +330,7 @@ gst_kate_parse_queue_buffer (GstKateParse * parse, GstBuffer * buf)
 
   /* oggdemux stores the granule pos in the offset end */
   granpos = GST_BUFFER_OFFSET_END (buf);
-  GST_LOG_OBJECT (parse, "granpos %16llx", granpos);
+  GST_LOG_OBJECT (parse, "granpos %16" G_GINT64_MODIFIER "x", granpos);
   g_queue_push_tail (parse->buffer_queue, buf);
 
 #if 1

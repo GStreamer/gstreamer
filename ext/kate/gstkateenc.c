@@ -397,7 +397,7 @@ gst_kate_enc_create_buffer (GstKateEnc * ke, kate_packet * kp,
 {
   GstBuffer *buffer;
 
-  buffer = gst_buffer_new_and_alloc (kp->nbytes);
+  buffer = gst_buffer_try_new_and_alloc (kp->nbytes);
   if (G_UNLIKELY (!buffer)) {
     GST_WARNING_OBJECT (ke, "Failed to allocate buffer for %u bytes",
         kp->nbytes);
@@ -425,7 +425,7 @@ gst_kate_enc_create_buffer (GstKateEnc * ke, kate_packet * kp,
 static GstFlowReturn
 gst_kate_enc_push_buffer (GstKateEnc * ke, GstBuffer * buffer)
 {
-  GstFlowReturn rflow;
+  GstFlowReturn flow;
 
   ke->last_timestamp = GST_BUFFER_TIMESTAMP (buffer);
   if (GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer) >
@@ -437,12 +437,12 @@ gst_kate_enc_push_buffer (GstKateEnc * ke, GstBuffer * buffer)
   /* Hack to flush each packet on its own page - taken off the CMML encoder element */
   GST_BUFFER_DURATION (buffer) = G_MAXINT64;
 
-  rflow = gst_pad_push (ke->srcpad, buffer);
-  if (G_UNLIKELY (rflow != GST_FLOW_OK)) {
-    GST_ERROR_OBJECT (ke, "Failed to push buffer: %d", rflow);
+  flow = gst_pad_push (ke->srcpad, buffer);
+  if (G_UNLIKELY (flow != GST_FLOW_OK)) {
+    GST_WARNING_OBJECT (ke->srcpad, "push flow: %s", gst_flow_get_name (flow));
   }
 
-  return rflow;
+  return flow;
 }
 
 static GstFlowReturn
@@ -548,9 +548,12 @@ gst_kate_enc_send_headers (GstKateEnc * ke)
     kate_packet kp;
     int ret = kate_encode_headers (&ke->k, &ke->kc, &kp);
     if (ret == 0) {
-      GstBuffer *buffer =
-          gst_kate_enc_create_buffer (ke, &kp, 0ll, 0ll, 0ll, TRUE);
+      GstBuffer *buffer;
+
+      buffer = gst_kate_enc_create_buffer (ke, &kp, 0, 0, 0, TRUE);
       if (!buffer) {
+        GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
+            ("Failed to create buffer, %u bytes", kp.nbytes));
         rflow = GST_FLOW_ERROR;
         break;
       }
