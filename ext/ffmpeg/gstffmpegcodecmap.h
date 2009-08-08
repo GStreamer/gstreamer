@@ -101,6 +101,16 @@ gst_ffmpeg_caps_with_codectype (enum CodecType  type,
 GstCaps *
 gst_ffmpeg_formatid_to_caps (const gchar *format_name);
 
+/* Convert a FFMPEG Pixel Format and optional AVCodecContext
+ * to a GstCaps. If the context is ommitted, no fixed values
+ * for video/audio size will be included in the GstCaps
+ *
+ * See below for usefullness
+ */
+
+GstCaps *
+gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context, enum CodecID codec_id);
+
 /*
  * _formatid_get_codecids () can be used to get the codecIDs
  * (CODEC_ID_NONE-terminated list) that fit that specific

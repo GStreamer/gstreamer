@@ -341,9 +341,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
       }
       GST_DEBUG_OBJECT (ffmpegenc,
           "Got an official pixfmt [%d], attempting to get caps", pixfmt);
-      tmpcaps =
-          gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type, NULL,
-          oclass->in_plugin->id, TRUE);
+      tmpcaps = gst_ffmpeg_pixfmt_to_caps (pixfmt, NULL, oclass->in_plugin->id);
       if (tmpcaps) {
         GST_DEBUG_OBJECT (ffmpegenc, "Got caps, breaking out");
         if (!caps)

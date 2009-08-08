@@ -1471,7 +1471,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
  * See below for usefullness
  */
 
-static GstCaps *
+GstCaps *
 gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
     enum CodecID codec_id)
 {
