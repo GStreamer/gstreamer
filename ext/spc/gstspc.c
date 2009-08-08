@@ -584,7 +584,7 @@ gst_spc_dec_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "spcdec", GST_RANK_PRIMARY,
+  return gst_element_register (plugin, "spcdec", GST_RANK_SECONDARY,
       GST_TYPE_SPC_DEC);
 }
 
