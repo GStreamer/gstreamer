@@ -226,11 +226,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 {
   GObjectClass *gobject_klass;
   GstElementClass *gstelement_klass;
-  GstBinClass *gstbin_klass;
 
   gobject_klass = (GObjectClass *) klass;
   gstelement_klass = (GstElementClass *) klass;
-  gstbin_klass = (GstBinClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -1159,8 +1157,6 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
       gst_element_set_state (element, GST_STATE_NULL);
       gst_bin_remove (GST_BIN (decode_bin), element);
     } else {
-      guint sig;
-
       GST_DEBUG_OBJECT (decode_bin, "linked on pad %s:%s",
           GST_DEBUG_PAD_NAME (usedsrcpad));
 
@@ -1176,7 +1172,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
       /* The link worked, now figure out what it was that we connected */
 
       /* make sure we catch unlink signals */
-      sig = g_signal_connect (G_OBJECT (pad), "unlinked",
+      g_signal_connect (G_OBJECT (pad), "unlinked",
           G_CALLBACK (unlinked), decode_bin);
 
       /* now that we added the element we can try to continue autoplugging

@@ -397,11 +397,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 {
   GObjectClass *gobject_klass;
   GstElementClass *gstelement_klass;
-  GstBinClass *gstbin_klass;
 
   gobject_klass = (GObjectClass *) klass;
   gstelement_klass = (GstElementClass *) klass;
-  gstbin_klass = (GstBinClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -1668,7 +1666,7 @@ is_demuxer_element (GstElement * srcelement)
 {
   GstElementFactory *srcfactory;
   GstElementClass *elemclass;
-  GList *templates, *walk;
+  GList *walk;
   const gchar *klass;
   gint potential_src_pads = 0;
 
@@ -1683,7 +1681,7 @@ is_demuxer_element (GstElement * srcelement)
    * might produce */
   elemclass = GST_ELEMENT_GET_CLASS (srcelement);
 
-  walk = templates = gst_element_class_get_pad_template_list (elemclass);
+  walk = gst_element_class_get_pad_template_list (elemclass);
   while (walk != NULL) {
     GstPadTemplate *templ;
 

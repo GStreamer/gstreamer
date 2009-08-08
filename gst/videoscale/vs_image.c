@@ -43,7 +43,6 @@ vs_image_scale_nearest_RGBA (const VSImage * dest, const VSImage * src,
   int x_increment;
   int i;
   int j;
-  int x;
   int xacc;
 
   if (dest->height == 1)
@@ -60,7 +59,6 @@ vs_image_scale_nearest_RGBA (const VSImage * dest, const VSImage * src,
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     xacc = 0;
     vs_scanline_resample_nearest_RGBA (dest->pixels + i * dest->stride,
@@ -175,7 +173,6 @@ vs_image_scale_nearest_RGB (const VSImage * dest, const VSImage * src,
   int x_increment;
   int i;
   int j;
-  int x;
   int xacc;
 
   if (dest->height == 1)
@@ -191,7 +188,6 @@ vs_image_scale_nearest_RGB (const VSImage * dest, const VSImage * src,
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     xacc = 0;
     vs_scanline_resample_nearest_RGB (dest->pixels + i * dest->stride,
@@ -307,7 +303,6 @@ vs_image_scale_nearest_YUYV (const VSImage * dest, const VSImage * src,
   int x_increment;
   int i;
   int j;
-  int x;
   int xacc;
 
   if (dest->height == 1)
@@ -323,7 +318,6 @@ vs_image_scale_nearest_YUYV (const VSImage * dest, const VSImage * src,
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     xacc = 0;
     vs_scanline_resample_nearest_YUYV (dest->pixels + i * dest->stride,
@@ -439,7 +433,6 @@ vs_image_scale_nearest_UYVY (const VSImage * dest, const VSImage * src,
   int x_increment;
   int i;
   int j;
-  int x;
   int xacc;
 
   if (dest->height == 1)
@@ -455,7 +448,6 @@ vs_image_scale_nearest_UYVY (const VSImage * dest, const VSImage * src,
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     xacc = 0;
     vs_scanline_resample_nearest_UYVY (dest->pixels + i * dest->stride,
@@ -571,7 +563,6 @@ vs_image_scale_nearest_Y (const VSImage * dest, const VSImage * src,
   int x_increment;
   int i;
   int j;
-  int x;
   int xacc;
 
   if (dest->height == 1)
@@ -587,7 +578,6 @@ vs_image_scale_nearest_Y (const VSImage * dest, const VSImage * src,
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     xacc = 0;
     vs_scanline_resample_nearest_Y (dest->pixels + i * dest->stride,
@@ -701,7 +691,6 @@ vs_image_scale_nearest_Y16 (const VSImage * dest, const VSImage * src,
   int x_increment;
   int i;
   int j;
-  int x;
   int xacc;
 
   if (dest->height == 1)
@@ -717,7 +706,6 @@ vs_image_scale_nearest_Y16 (const VSImage * dest, const VSImage * src,
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     xacc = 0;
     vs_scanline_resample_nearest_Y16 (dest->pixels + i * dest->stride,
@@ -833,7 +821,6 @@ vs_image_scale_nearest_RGB565 (const VSImage * dest, const VSImage * src,
   int x_increment;
   int i;
   int j;
-  int x;
   int xacc;
 
   if (dest->height == 1)
@@ -849,7 +836,6 @@ vs_image_scale_nearest_RGB565 (const VSImage * dest, const VSImage * src,
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     xacc = 0;
     vs_scanline_resample_nearest_RGB565 (dest->pixels + i * dest->stride,
@@ -965,7 +951,6 @@ vs_image_scale_nearest_RGB555 (const VSImage * dest, const VSImage * src,
   int x_increment;
   int i;
   int j;
-  int x;
   int xacc;
 
   if (dest->height == 1)
@@ -981,7 +966,6 @@ vs_image_scale_nearest_RGB555 (const VSImage * dest, const VSImage * src,
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     xacc = 0;
     vs_scanline_resample_nearest_RGB555 (dest->pixels + i * dest->stride,

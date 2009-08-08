@@ -827,8 +827,6 @@ yuv422_to_yuv420p (AVPicture * dst, const AVPicture * src,
       lum[0] = p[0];
       cb[0] = p[1];
       cr[0] = p[3];
-      cb++;
-      cr++;
     }
     p1 += src->linesize[0];
     lum1 += dst->linesize[0];
@@ -910,8 +908,6 @@ uyvy422_to_yuv420p (AVPicture * dst, const AVPicture * src,
       lum[0] = p[1];
       cb[0] = p[0];
       cr[0] = p[2];
-      cb++;
-      cr++;
     }
     p1 += src->linesize[0];
     lum1 += dst->linesize[0];
@@ -1028,8 +1024,6 @@ yvyu422_to_yuv420p (AVPicture * dst, const AVPicture * src,
       lum[0] = p[0];
       cb[0] = p[3];
       cr[0] = p[1];
-      cb++;
-      cr++;
     }
     p1 += src->linesize[0];
     lum1 += dst->linesize[0];
@@ -3035,21 +3029,9 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
 
   /* YUV to YUV planar */
   if (is_yuv_planar (dst_pix) && is_yuv_planar (src_pix)) {
-    int x_shift, y_shift, w, h, xy_shift;
+    int x_shift, y_shift, xy_shift;
     void (*resize_func) (uint8_t * dst, int dst_wrap,
         const uint8_t * src, int src_wrap, int width, int height);
-
-    /* compute chroma size of the smallest dimensions */
-    w = dst_width;
-    h = dst_height;
-    if (dst_pix->x_chroma_shift >= src_pix->x_chroma_shift)
-      w >>= dst_pix->x_chroma_shift;
-    else
-      w >>= src_pix->x_chroma_shift;
-    if (dst_pix->y_chroma_shift >= src_pix->y_chroma_shift)
-      h >>= dst_pix->y_chroma_shift;
-    else
-      h >>= src_pix->y_chroma_shift;
 
     x_shift = (dst_pix->x_chroma_shift - src_pix->x_chroma_shift);
     y_shift = (dst_pix->y_chroma_shift - src_pix->y_chroma_shift);

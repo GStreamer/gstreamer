@@ -441,7 +441,7 @@ gst_tcp_client_sink_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!gst_tcp_client_sink_start (GST_TCP_CLIENT_SINK (element)))
+      if (!gst_tcp_client_sink_start (sink))
         goto start_failure;
       break;
     default:
@@ -451,7 +451,7 @@ gst_tcp_client_sink_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_tcp_client_sink_stop (GST_TCP_CLIENT_SINK (element));
+      gst_tcp_client_sink_stop (sink);
     default:
       break;
   }

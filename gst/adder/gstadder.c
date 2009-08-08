@@ -636,7 +636,6 @@ forward_event (GstAdder * adder, GstEvent * event, gboolean flush)
   GST_LOG_OBJECT (adder, "Forwarding event %p (%s)", event,
       GST_EVENT_TYPE_NAME (event));
 
-  ret = TRUE;
   data.event = event;
   data.flush = flush;
 

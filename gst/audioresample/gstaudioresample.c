@@ -521,7 +521,6 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
     guint * othersize)
 {
-  GstCaps *srccaps, *sinkcaps;
   gboolean ret = TRUE;
   guint32 ratio_den, ratio_num;
   gint inrate, outrate, gcd;
@@ -529,13 +528,6 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
 
   GST_LOG_OBJECT (base, "asked to transform size %d in direction %s",
       size, direction == GST_PAD_SINK ? "SINK" : "SRC");
-  if (direction == GST_PAD_SINK) {
-    sinkcaps = caps;
-    srccaps = othercaps;
-  } else {
-    sinkcaps = othercaps;
-    srccaps = caps;
-  }
 
   /* Get sample width -> bytes_per_samp, channels, inrate, outrate */
   ret =
@@ -1045,10 +1037,9 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
-  guint8 *data;
   gulong size;
   GstClockTime timestamp;
-  guint outsamples, insamples;
+  guint insamples;
   GstFlowReturn ret;
 
   if (resample->state == NULL) {
@@ -1062,7 +1053,6 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
         gst_audio_resample_get_funcs (resample->width, resample->fp);
   }
 
-  data = GST_BUFFER_DATA (inbuf);
   size = GST_BUFFER_SIZE (inbuf);
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
 
@@ -1088,9 +1078,6 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   insamples = GST_BUFFER_SIZE (inbuf) / resample->channels;
   insamples /= (resample->width / 8);
-
-  outsamples = GST_BUFFER_SIZE (outbuf) / resample->channels;
-  outsamples /= (resample->width / 8);
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp)
       && !GST_CLOCK_TIME_IS_VALID (resample->next_ts)) {

@@ -491,9 +491,6 @@ static GstCaps *
 gst_video_test_src_getcaps (GstBaseSrc * bsrc)
 {
   static GstCaps *capslist = NULL;
-  GstVideoTestSrc *videotestsrc;
-
-  videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
   if (!capslist) {
     GstCaps *caps;

@@ -1216,7 +1216,7 @@ gen_subp_chain (GstPlaySink * playsink)
   gst_object_ref (bin);
   gst_object_sink (bin);
 
-  videosinkpad = subpsinkpad = srcpad = NULL;
+  subpsinkpad = srcpad = NULL;
 
   /* first try to hook the text pad to the custom sink */
   if (playsink->subp_sink) {
@@ -2346,7 +2346,7 @@ gst_play_sink_handle_message (GstBin * bin, GstMessage * message)
       GstFormat format;
       guint64 amount;
       gdouble rate;
-      gboolean flush, intermediate, res, eos;
+      gboolean flush, intermediate, eos;
       guint64 duration;
 
       GST_INFO_OBJECT (playsink, "Handling step-done message");
@@ -2362,9 +2362,7 @@ gst_play_sink_handle_message (GstBin * bin, GstMessage * message)
               gst_event_new_step (GST_FORMAT_TIME, duration, rate, flush,
               intermediate);
 
-          if (!(res =
-                  gst_element_send_event (playsink->audiochain->chain.bin,
-                      event))) {
+          if (!gst_element_send_event (playsink->audiochain->chain.bin, event)) {
             GST_DEBUG_OBJECT (playsink, "Event failed when sent to audio sink");
           }
         }

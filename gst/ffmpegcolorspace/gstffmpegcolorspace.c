@@ -338,11 +338,9 @@ static void
 gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseTransformClass *gstbasetransform_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasetransform_class = (GstBaseTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);

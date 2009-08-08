@@ -437,7 +437,6 @@ ignore:
 }
 
 static void gst_stream_selector_dispose (GObject * object);
-static void gst_stream_selector_finalize (GObject * object);
 
 static void gst_stream_selector_init (GstStreamSelector * sel);
 static void gst_stream_selector_base_init (GstStreamSelectorClass * klass);
@@ -505,7 +504,6 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_stream_selector_dispose;
-  gobject_class->finalize = gst_stream_selector_finalize;
 
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (gst_stream_selector_set_property);
@@ -551,16 +549,6 @@ gst_stream_selector_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_stream_selector_finalize (GObject * object)
-{
-  GstStreamSelector *sel;
-
-  sel = GST_STREAM_SELECTOR (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -676,13 +664,10 @@ gst_stream_selector_getcaps (GstPad * pad)
 }
 
 /* check if the pad is the active sinkpad */
-static gboolean
+static inline gboolean
 gst_stream_selector_is_active_sinkpad (GstStreamSelector * sel, GstPad * pad)
 {
-  GstSelectorPad *selpad;
   gboolean res;
-
-  selpad = GST_SELECTOR_PAD_CAST (pad);
 
   GST_OBJECT_LOCK (sel);
   res = (pad == sel->active_sinkpad);

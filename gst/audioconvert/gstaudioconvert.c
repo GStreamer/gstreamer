@@ -1080,7 +1080,6 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstAudioConvert *this = GST_AUDIO_CONVERT (base);
-  gboolean res;
   gint insize, outsize;
   gint samples;
   gpointer src, dst;
@@ -1090,7 +1089,7 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   /* get in/output sizes, to see if the buffers we got are of correct
    * sizes */
-  if (!(res = audio_convert_get_sizes (&this->ctx, samples, &insize, &outsize)))
+  if (!audio_convert_get_sizes (&this->ctx, samples, &insize, &outsize))
     goto error;
 
   if (insize == 0 || outsize == 0)
@@ -1108,8 +1107,8 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   /* and convert the samples */
   if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
-    if (!(res = audio_convert_convert (&this->ctx, src, dst,
-                samples, gst_buffer_is_writable (inbuf))))
+    if (!audio_convert_convert (&this->ctx, src, dst,
+            samples, gst_buffer_is_writable (inbuf)))
       goto convert_error;
   } else {
     /* Create silence buffer */

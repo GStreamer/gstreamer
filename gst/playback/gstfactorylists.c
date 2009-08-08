@@ -159,8 +159,7 @@ gst_factory_list_get_elements (GstFactoryListType type)
   data.type = type;
 
   /* get the feature list using the filter */
-  list =
-      gst_default_registry_feature_filter ((GstPluginFeatureFilter)
+  list = gst_default_registry_feature_filter ((GstPluginFeatureFilter)
       element_filter, FALSE, &data);
 
   /* convert to an array */

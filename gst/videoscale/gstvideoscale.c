@@ -358,19 +358,11 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   GstVideoScale *videoscale;
   GstCaps *ret;
   GstStructure *structure;
-  const GValue *par;
-  gint method;
 
   /* this function is always called with a simple caps */
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
 
   videoscale = GST_VIDEO_SCALE (trans);
-
-  GST_OBJECT_LOCK (videoscale);
-  method = videoscale->method;
-  GST_OBJECT_UNLOCK (videoscale);
-
-  structure = gst_caps_get_structure (caps, 0);
 
   ret = gst_caps_copy (caps);
   structure = gst_structure_copy (gst_caps_get_structure (ret, 0));
@@ -382,7 +374,7 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   gst_caps_merge_structure (ret, gst_structure_copy (structure));
 
   /* if pixel aspect ratio, make a range of it */
-  if ((par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) {
+  if (gst_structure_get_value (structure, "pixel-aspect-ratio")) {
     gst_structure_set (structure,
         "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
