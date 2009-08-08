@@ -5554,21 +5554,25 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     caps = gst_caps_new_simple ("audio/x-speex", NULL);
     context->send_speex_headers = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_ACM)) {
-    gst_riff_strf_auds *auds = NULL;
+    gst_riff_strf_auds auds;
 
     if (data) {
-      auds = (gst_riff_strf_auds *) data;
+      GstBuffer *codec_data = gst_buffer_new ();
 
       /* little-endian -> byte-order */
-      auds->format = GUINT16_FROM_LE (auds->format);
-      auds->channels = GUINT16_FROM_LE (auds->channels);
-      auds->rate = GUINT32_FROM_LE (auds->rate);
-      auds->av_bps = GUINT32_FROM_LE (auds->av_bps);
-      auds->blockalign = GUINT16_FROM_LE (auds->blockalign);
-      auds->size = GUINT16_FROM_LE (auds->size);
+      auds.format = GST_READ_UINT16_LE (data);
+      auds.channels = GST_READ_UINT16_LE (data + 2);
+      auds.rate = GST_READ_UINT32_LE (data + 4);
+      auds.av_bps = GST_READ_UINT32_LE (data + 8);
+      auds.blockalign = GST_READ_UINT16_LE (data + 12);
+      auds.size = GST_READ_UINT16_LE (data + 16);
 
-      caps = gst_riff_create_audio_caps (auds->format, NULL, auds, NULL,
-          NULL, codec_name);
+      /* 18 is the waveformatex size */
+      gst_buffer_set_data (codec_data, data + 18, auds.size);
+
+      caps = gst_riff_create_audio_caps (auds.format, NULL, &auds, NULL,
+          codec_data, codec_name);
+      gst_buffer_unref (codec_data);
     }
   } else if (g_str_has_prefix (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AAC)) {
     GstBuffer *priv = NULL;

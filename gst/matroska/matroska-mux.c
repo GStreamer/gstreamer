@@ -48,6 +48,8 @@
 #include <math.h>
 #include <string.h>
 
+#include <gst/riff/riff-media.h>
+
 #include "matroska-mux.h"
 #include "matroska-ids.h"
 
@@ -176,7 +178,10 @@ static GstStaticPadTemplate audiosink_templ =
         "width = (int) { 8, 16, 24 }, "
         "channels = (int) { 1, 2 }, " "rate = (int) [ 8000, 96000 ]; "
         "audio/x-pn-realaudio, "
-        "raversion = (int) { 1, 2, 8 }, " COMMON_AUDIO_CAPS ";")
+        "raversion = (int) { 1, 2, 8 }, " COMMON_AUDIO_CAPS "; "
+        "audio/x-wma, " "wmaversion = (int) [ 1, 3 ], "
+        "block_align = (int) [ 0, 65535 ], bitrate = (int) [ 0, 524288 ], "
+        COMMON_AUDIO_CAPS)
     );
 
 static GstStaticPadTemplate subtitlesink_templ =
@@ -758,7 +763,6 @@ skip_details:
     } else if (!strcmp (mimetype, "video/x-wmv")) {
       gint wmvversion;
       guint32 format;
-      GST_WARNING_OBJECT (mux, "WMV");
       if (gst_structure_get_fourcc (structure, "format", &format)) {
         fourcc = format;
       } else if (gst_structure_get_int (structure, "wmvversion", &wmvversion)) {
@@ -770,7 +774,6 @@ skip_details:
           fourcc = GST_MAKE_FOURCC ('W', 'M', 'V', '3');
         }
       }
-      GST_WARNING_OBJECT (mux, "fourcc=%u", fourcc);
     }
 
     if (!fourcc)
@@ -1406,6 +1409,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   const gchar *mimetype;
   gint samplerate = 0, channels = 0;
   GstStructure *structure;
+  const GValue *codec_data = NULL;
+  const GstBuffer *buf = NULL;
 
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
 
@@ -1429,6 +1434,10 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   audiocontext->bitdepth = 0;
   context->default_duration = 0;
 
+  codec_data = gst_structure_get_value (structure, "codec_data");
+  if (codec_data)
+    buf = gst_value_get_buffer (codec_data);
+
   /* TODO: - check if we handle all codecs by the spec, i.e. codec private
    *         data and other settings
    *       - add new formats
@@ -1436,12 +1445,6 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   if (!strcmp (mimetype, "audio/mpeg")) {
     gint mpegversion = 0;
-    const GValue *codec_data;
-    const GstBuffer *buf = NULL;
-
-    codec_data = gst_structure_get_value (structure, "codec_data");
-    if (codec_data)
-      buf = gst_value_get_buffer (codec_data);
 
     gst_structure_get_int (structure, "mpegversion", &mpegversion);
     switch (mpegversion) {
@@ -1660,6 +1663,69 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       context->codec_priv_size = priv_data_size;
     }
 
+    return TRUE;
+  } else if (!strcmp (mimetype, "audio/x-wma")) {
+    guint8 *codec_priv;
+    guint codec_priv_size;
+    guint16 format;
+    gint block_align;
+    gint bitrate;
+    gint wmaversion;
+    gint depth;
+
+    if (!gst_structure_get_int (structure, "wmaversion", &wmaversion)
+        || !gst_structure_get_int (structure, "block_align", &block_align)
+        || !gst_structure_get_int (structure, "bitrate", &bitrate)
+        || samplerate == 0 || channels == 0) {
+      GST_WARNING_OBJECT (mux, "Missing wmaversion/block_align/bitrate/"
+          "channels/rate on WMA caps");
+      return FALSE;
+    }
+
+    switch (wmaversion) {
+      case 1:
+        format = GST_RIFF_WAVE_FORMAT_WMAV1;
+        break;
+      case 2:
+        format = GST_RIFF_WAVE_FORMAT_WMAV2;
+        break;
+      case 3:
+        format = GST_RIFF_WAVE_FORMAT_WMAV3;
+        break;
+      default:
+        GST_WARNING_OBJECT (mux, "Unexpected WMA version: %d", wmaversion);
+        return FALSE;
+    }
+
+    if (gst_structure_get_int (structure, "depth", &depth))
+      audiocontext->bitdepth = depth;
+
+    codec_priv_size = WAVEFORMATEX_SIZE;
+    if (buf)
+      codec_priv_size += GST_BUFFER_SIZE (buf);
+
+    /* serialize waveformatex structure */
+    codec_priv = g_malloc0 (codec_priv_size);
+    GST_WRITE_UINT16_LE (codec_priv, format);
+    GST_WRITE_UINT16_LE (codec_priv + 2, channels);
+    GST_WRITE_UINT32_LE (codec_priv + 4, samplerate);
+    GST_WRITE_UINT32_LE (codec_priv + 8, bitrate / 8);
+    GST_WRITE_UINT16_LE (codec_priv + 12, block_align);
+    GST_WRITE_UINT16_LE (codec_priv + 14, 0);
+    if (buf)
+      GST_WRITE_UINT16_LE (codec_priv + 16, GST_BUFFER_SIZE (buf));
+    else
+      GST_WRITE_UINT16_LE (codec_priv + 16, 0);
+
+    /* process codec private/initialization data, if any */
+    if (buf) {
+      memcpy ((guint8 *) codec_priv + WAVEFORMATEX_SIZE,
+          GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    }
+
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_ACM);
+    context->codec_priv = (gpointer) codec_priv;
+    context->codec_priv_size = codec_priv_size;
     return TRUE;
   }
 
