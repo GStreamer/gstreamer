@@ -821,10 +821,16 @@ gst_avi_demux_peek_chunk (GstAviDemux * avi, guint32 * tag, guint32 * size)
   if (!gst_avi_demux_peek_chunk_info (avi, tag, size)) {
     return FALSE;
   }
-  /* FIXME: shouldn't this check go to gst_avi_demux_peek_chunk_info() already */
-  if (!(*size) || (*size) == -1) {
-    GST_INFO ("Invalid chunk size %d for tag %" GST_FOURCC_FORMAT,
+
+  /* size 0 -> empty data buffer would surprise most callers,
+   * large size -> do not bother trying to squeeze that into adapter,
+   * so we throw poor man's exception, which can be caught if caller really
+   * wants to handle 0 size chunk */
+  if (!(*size) || (*size) >= (1 << 30)) {
+    GST_INFO ("Invalid/unexpected chunk size %d for tag %" GST_FOURCC_FORMAT,
         *size, GST_FOURCC_ARGS (*tag));
+    /* chain should give up */
+    avi->abort_buffering = TRUE;
     return FALSE;
   }
   peek_size = (*size + 1) & ~1;
@@ -4182,15 +4188,13 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       GST_LOG ("Chunk ok");
     } else if ((tag & 0xffff) == (('x' << 8) | 'i')) {
       GST_DEBUG ("Found sub-index tag");
-      if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
-        if ((size > 0) && (size != -1)) {
-          GST_DEBUG ("  skipping %d bytes for now", size);
-          gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
-        }
+      if (gst_avi_demux_peek_chunk (avi, &tag, &size) || size == 0) {
+        /* accept 0 size buffer here */
+        avi->abort_buffering = FALSE;
+        GST_DEBUG ("  skipping %d bytes for now", size);
+        gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
       }
       return GST_FLOW_OK;
-    } else if (tag == GST_RIFF_TAG_JUNK) {
-      GST_DEBUG ("JUNK chunk, skipping");
     } else if (tag == GST_RIFF_TAG_idx1) {
       GST_DEBUG ("Found index tag, stream done");
       avi->have_eos = TRUE;
@@ -4206,12 +4210,11 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
     } else if (tag == GST_RIFF_TAG_JUNK) {
       /* rec list might contain JUNK chunks */
       GST_DEBUG ("Found JUNK tag");
-      if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
-        if ((size > 0) && (size != -1)) {
-          GST_DEBUG ("  skipping %d bytes for now", size);
-          gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
-          continue;
-        }
+      if (gst_avi_demux_peek_chunk (avi, &tag, &size) || size == 0) {
+        /* accept 0 size buffer here */
+        avi->abort_buffering = FALSE;
+        GST_DEBUG ("  skipping %d bytes for now", size);
+        gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
       }
       return GST_FLOW_OK;
     } else {
@@ -4221,8 +4224,13 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
     }
 
     if (G_UNLIKELY (!gst_avi_demux_peek_chunk (avi, &tag, &size))) {
-      if ((size == 0) || (size == -1))
+      /* supposedly one hopes to catch a nicer chunk later on ... */
+      /* FIXME ?? give up here rather than possibly ending up going
+       * through the whole file */
+      if (avi->abort_buffering) {
+        avi->abort_buffering = FALSE;
         gst_adapter_flush (avi->adapter, 8);
+      }
       return GST_FLOW_OK;
     }
     GST_DEBUG ("chunk ID %" GST_FOURCC_FORMAT ", size %u",
@@ -4495,6 +4503,12 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (avi, "state: %d res:%s", avi->state,
       gst_flow_get_name (res));
+
+  if (G_UNLIKELY (avi->abort_buffering)) {
+    avi->abort_buffering = FALSE;
+    res = GST_FLOW_ERROR;
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, NULL, ("unhandled buffer size"));
+  }
 
   return res;
 }

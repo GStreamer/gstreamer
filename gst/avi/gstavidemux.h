@@ -132,6 +132,7 @@ typedef struct _GstAviDemux {
   GstAviDemuxState state;
   GstAviDemuxHeaderState header_state;
   guint64        offset;
+  gboolean       abort_buffering;
 
   /* index */
   gst_avi_index_entry *index_entries;
