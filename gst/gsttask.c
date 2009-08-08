@@ -548,7 +548,6 @@ static gboolean
 start_task (GstTask * task)
 {
   gboolean res = TRUE;
-  GstTaskClass *tclass;
   GError *error = NULL;
   GstTaskPrivate *priv;
 
@@ -560,8 +559,6 @@ start_task (GstTask * task)
   /* mark task as running so that a join will wait until we schedule
    * and exit the task function. */
   task->running = TRUE;
-
-  tclass = GST_TASK_GET_CLASS (task);
 
   /* push on the thread pool, we remember the original pool because the user
    * could change it later on and then we join to the wrong pool. */

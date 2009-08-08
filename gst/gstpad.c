@@ -4067,7 +4067,6 @@ chain_groups:
     list = GST_BUFFER_LIST_CAST (data);
     it = gst_buffer_list_iterate (list);
 
-    ret = GST_FLOW_OK;
     if (gst_buffer_list_iterator_next_group (it)) {
       do {
         group = gst_buffer_list_iterator_merge_group (it);
@@ -4275,7 +4274,6 @@ push_groups:
     list = GST_BUFFER_LIST_CAST (data);
     it = gst_buffer_list_iterate (list);
 
-    ret = GST_FLOW_OK;
     if (gst_buffer_list_iterator_next_group (it)) {
       do {
         group = gst_buffer_list_iterator_merge_group (it);

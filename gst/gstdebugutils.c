@@ -179,12 +179,11 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
   GstElement *target_element;
   GstPad *target_pad, *tmp_pad;
   GstPadDirection dir;
-  gchar *pad_name, *element_name;
+  gchar *element_name;
   gchar *target_element_name;
   gchar *color_name;
 
   dir = gst_pad_get_direction (pad);
-  pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
   element_name = debug_dump_make_object_name (GST_OBJECT (element));
   if (GST_IS_GHOST_PAD (pad)) {
     color_name =
