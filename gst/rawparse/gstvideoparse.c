@@ -76,27 +76,9 @@ gst_video_parse_base_init (gpointer g_class)
       "David Schleef <ds@schleef.org>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("I420") ";"
-      GST_VIDEO_CAPS_YUV ("YV12") ";"
-      GST_VIDEO_CAPS_YUV ("YUY2") ";"
-      GST_VIDEO_CAPS_YUV ("UYVY") ";"
-      GST_VIDEO_CAPS_YUV ("AYUV") ";"
-      GST_VIDEO_CAPS_RGBx ";"
-      GST_VIDEO_CAPS_BGRx ";"
-      GST_VIDEO_CAPS_xRGB ";"
-      GST_VIDEO_CAPS_xBGR ";"
-      GST_VIDEO_CAPS_RGBA ";"
-      GST_VIDEO_CAPS_BGRA ";"
-      GST_VIDEO_CAPS_ARGB ";"
-      GST_VIDEO_CAPS_ABGR ";"
-      GST_VIDEO_CAPS_RGB ";"
-      GST_VIDEO_CAPS_BGR ";"
-      GST_VIDEO_CAPS_YUV ("Y41B") ";"
-      GST_VIDEO_CAPS_YUV ("Y42B") ";"
-      GST_VIDEO_CAPS_YUV ("YVYU") ";"
-      GST_VIDEO_CAPS_YUV ("Y444") ";"
-      GST_VIDEO_CAPS_YUV ("Y210") ";" GST_VIDEO_CAPS_YUV ("Y216")
-      );
+  caps =
+      gst_caps_from_string
+      ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray; video/x-raw-bayer");
 
   gst_raw_parse_class_set_src_pad_template (rp_class, caps);
   gst_raw_parse_class_set_multiple_frames_per_buffer (rp_class, FALSE);
