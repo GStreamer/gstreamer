@@ -1369,6 +1369,22 @@ AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
   fi
 ])
 
+dnl *** spc ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SPC, true)
+AG_GST_CHECK_FEATURE(SPC, [spc decoder], spc, [
+  AC_CHECK_HEADER(openspc.h, [
+    AC_CHECK_LIB(openspc, OSPC_Init, [
+      SPC_LIBS="-lopenspc"
+      AC_SUBST(SPC_LIBS)
+      HAVE_SPC=yes
+    ], [
+      HAVE_SPC=no
+    ])
+  ], [
+    HAVE_SPC=no
+  ])
+])
+
 dnl *** gme ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GME, true)
 AG_GST_CHECK_FEATURE(GME, [gme decoder], gme, [
@@ -1567,6 +1583,7 @@ AM_CONDITIONAL(USE_SDL, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
 AM_CONDITIONAL(USE_GME, false)
+AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_SWFDEC, false)
 AM_CONDITIONAL(USE_THEORADEC, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
@@ -1768,6 +1785,7 @@ ext/sdl/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
 ext/gme/Makefile
+ext/spc/Makefile
 ext/swfdec/Makefile
 ext/theora/Makefile
 ext/timidity/Makefile
