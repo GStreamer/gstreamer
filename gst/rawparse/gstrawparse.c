@@ -100,8 +100,6 @@ gst_raw_parse_init (GstRawParse * rp, GstRawParseClass * g_class)
   rp->sinkpad =
       gst_pad_new_from_static_template (&gst_raw_parse_sink_pad_template,
       "sink");
-  gst_element_add_pad (GST_ELEMENT (rp), rp->sinkpad);
-
   gst_pad_set_chain_function (rp->sinkpad,
       GST_DEBUG_FUNCPTR (gst_raw_parse_chain));
   gst_pad_set_event_function (rp->sinkpad,
@@ -110,6 +108,7 @@ gst_raw_parse_init (GstRawParse * rp, GstRawParseClass * g_class)
       GST_DEBUG_FUNCPTR (gst_raw_parse_sink_activate));
   gst_pad_set_activatepull_function (rp->sinkpad,
       GST_DEBUG_FUNCPTR (gst_raw_parse_sink_activatepull));
+  gst_element_add_pad (GST_ELEMENT (rp), rp->sinkpad);
 
   src_pad_template = gst_element_class_get_pad_template (element_class, "src");
 
@@ -120,15 +119,13 @@ gst_raw_parse_init (GstRawParse * rp, GstRawParseClass * g_class)
     g_assert_not_reached ();
   }
 
-  gst_element_add_pad (GST_ELEMENT (rp), rp->srcpad);
-
   gst_pad_set_event_function (rp->srcpad,
       GST_DEBUG_FUNCPTR (gst_raw_parse_src_event));
-
   gst_pad_set_query_type_function (rp->srcpad,
       GST_DEBUG_FUNCPTR (gst_raw_parse_src_query_type));
   gst_pad_set_query_function (rp->srcpad,
       GST_DEBUG_FUNCPTR (gst_raw_parse_src_query));
+  gst_element_add_pad (GST_ELEMENT (rp), rp->srcpad);
 
   rp->adapter = gst_adapter_new ();
 
@@ -914,6 +911,7 @@ gst_raw_parse_src_query_type (GstPad * pad)
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
     GST_QUERY_CONVERT,
+    GST_QUERY_SEEKING,
     0
   };
 
@@ -990,6 +988,29 @@ gst_raw_parse_src_query (GstPad * pad, GstQuery * query)
       if (!ret)
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      ret = TRUE;
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      if (fmt != GST_FORMAT_TIME && fmt != GST_FORMAT_DEFAULT
+          && fmt != GST_FORMAT_BYTES) {
+        gst_query_set_seeking (query, fmt, FALSE, -1, -1);
+      } else if (rp->mode == GST_ACTIVATE_PUSH) {
+        GstQuery *peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
+        gboolean seekable;
+
+        seekable = gst_pad_peer_query (rp->sinkpad, peerquery);
+        if (seekable)
+          gst_query_parse_seeking (peerquery, NULL, &seekable, NULL, NULL);
+
+        gst_query_unref (peerquery);
+        gst_query_set_seeking (query, fmt, seekable, seekable ? 0 : -1, -1);
+      } else {
+        gst_query_set_seeking (query, fmt, TRUE, 0, -1);
+      }
       break;
     }
     default:

@@ -48,7 +48,7 @@ struct _GstRawParse
 {
   GstElement parent;
 
-  /* private */
+  /* <private> */
   GstPad *sinkpad;
   GstPad *srcpad;
 
