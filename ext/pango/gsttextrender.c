@@ -191,11 +191,9 @@ static void
 gst_text_render_class_init (GstTextRenderClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   PangoFontMap *fontmap;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 

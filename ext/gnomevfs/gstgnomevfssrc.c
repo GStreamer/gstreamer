@@ -194,11 +194,9 @@ static void
 gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);

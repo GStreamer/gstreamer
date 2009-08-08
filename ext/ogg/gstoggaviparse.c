@@ -243,7 +243,6 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (ogg, "header sizes: %u %u %u", sizes[0], sizes[1],
       sizes[2]);
 
-  data += 12;
   size -= 12;
 
   /* and we need at least enough data for all the headers */

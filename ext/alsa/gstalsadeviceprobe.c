@@ -52,7 +52,7 @@ static GList *
 gst_alsa_get_device_list (snd_pcm_stream_t stream)
 {
   snd_ctl_t *handle;
-  int card, err, dev;
+  int card, dev;
   snd_ctl_card_info_t *info;
   snd_pcm_info_t *pcminfo;
   gboolean mixer = (stream == -1);
@@ -75,10 +75,10 @@ gst_alsa_get_device_list (snd_pcm_stream_t stream)
     gchar name[32];
 
     g_snprintf (name, sizeof (name), "hw:%d", card);
-    if ((err = snd_ctl_open (&handle, name, 0)) < 0) {
+    if (snd_ctl_open (&handle, name, 0) < 0) {
       goto next_card;
     }
-    if ((err = snd_ctl_card_info (handle, info)) < 0) {
+    if (snd_ctl_card_info (handle, info) < 0) {
       snd_ctl_close (handle);
       goto next_card;
     }
@@ -97,7 +97,7 @@ gst_alsa_get_device_list (snd_pcm_stream_t stream)
         snd_pcm_info_set_device (pcminfo, dev);
         snd_pcm_info_set_subdevice (pcminfo, 0);
         snd_pcm_info_set_stream (pcminfo, stream);
-        if ((err = snd_ctl_pcm_info (handle, pcminfo)) < 0) {
+        if (snd_ctl_pcm_info (handle, pcminfo) < 0) {
           continue;
         }
 

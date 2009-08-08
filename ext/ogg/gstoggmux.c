@@ -839,14 +839,11 @@ static GList *
 gst_ogg_mux_get_headers (GstOggPad * pad)
 {
   GList *res = NULL;
-  GstOggMux *ogg_mux;
   GstStructure *structure;
   GstCaps *caps;
   GstPad *thepad;
 
   thepad = pad->collect.pad;
-
-  ogg_mux = GST_OGG_MUX (GST_PAD_PARENT (thepad));
 
   GST_LOG_OBJECT (thepad, "getting headers");
 

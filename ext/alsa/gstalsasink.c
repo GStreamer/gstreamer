@@ -181,15 +181,11 @@ static void
 gst_alsasink_class_init (GstAlsaSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
-  GstBaseAudioSinkClass *gstbaseaudiosink_class;
   GstAudioSinkClass *gstaudiosink_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
-  gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
@@ -882,8 +878,7 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
     err = snd_pcm_wait (alsa->handle, (4 * alsa->period_time / 1000));
     if (err < 0) {
       GST_DEBUG_OBJECT (asink, "wait error, %d", err);
-    }
-    else {
+    } else {
       err = snd_pcm_writei (alsa->handle, ptr, cptr);
     }
 

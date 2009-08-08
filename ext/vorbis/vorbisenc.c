@@ -600,9 +600,6 @@ static gboolean
 gst_vorbis_enc_sink_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstVorbisEnc *vorbisenc;
-
-  vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONVERT:

@@ -266,10 +266,8 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
   GstOggDemux *ogg;
-  GstOggPad *cur;
 
   ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
-  cur = GST_OGG_PAD (pad);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
@@ -368,10 +366,8 @@ gst_ogg_pad_event (GstPad * pad, GstEvent * event)
 {
   gboolean res;
   GstOggDemux *ogg;
-  GstOggPad *cur;
 
   ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
-  cur = GST_OGG_PAD (pad);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -643,11 +639,9 @@ static GstFlowReturn
 gst_ogg_pad_internal_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstOggPad *oggpad;
-  GstOggDemux *ogg;
   GstClockTime timestamp;
 
   oggpad = gst_pad_get_element_private (pad);
-  ogg = GST_OGG_DEMUX (oggpad->ogg);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   GST_DEBUG_OBJECT (oggpad, "received buffer from internal pad, TS=%"
