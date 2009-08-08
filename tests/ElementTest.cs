@@ -9,8 +9,8 @@
 
 using System;
 using NUnit.Framework;
-using GLib;
 using Gst;
+using Gst.GLib;
 
 [TestFixture]
 public class ElementTest 
