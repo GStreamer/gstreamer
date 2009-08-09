@@ -53,7 +53,6 @@ struct _GstAutoConvert
   GstPad *current_internal_srcpad;
   GstPad *current_internal_sinkpad;
 
-  GstSegment segment;
   GList *cached_events;
 };
 

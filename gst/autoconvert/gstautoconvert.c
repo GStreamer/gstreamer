@@ -87,6 +87,9 @@ static void gst_auto_convert_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_auto_convert_dispose (GObject * object);
 
+static GstStateChangeReturn gst_auto_convert_change_state (GstElement * element,
+    GstStateChange transition);
+
 static GstElement *gst_auto_convert_get_subelement (GstAutoConvert *
     autoconvert);
 static GstPad *gst_auto_convert_get_internal_sinkpad (GstAutoConvert *
@@ -170,6 +173,7 @@ static void
 gst_auto_convert_class_init (GstAutoConvertClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   gobject_class->dispose = gst_auto_convert_dispose;
 
@@ -183,6 +187,9 @@ gst_auto_convert_class_init (GstAutoConvertClass * klass)
           " ownership of the list (NULL means it will go through all possible"
           " elements), can only be set once",
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_auto_convert_change_state);
 }
 
 static void
@@ -233,6 +240,11 @@ gst_auto_convert_dispose (GObject * object)
     autoconvert->current_internal_sinkpad = NULL;
     autoconvert->current_internal_srcpad = NULL;
   }
+
+  g_list_foreach (autoconvert->cached_events, (GFunc) gst_mini_object_unref,
+      NULL);
+  g_list_free (autoconvert->cached_events);
+  autoconvert->cached_events = NULL;
   GST_OBJECT_UNLOCK (object);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -277,6 +289,35 @@ gst_auto_convert_get_property (GObject * object,
       GST_OBJECT_UNLOCK (autoconvert);
       break;
   }
+}
+
+static GstStateChangeReturn
+gst_auto_convert_change_state (GstElement * element, GstStateChange transition)
+{
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT (element);
+  GstStateChangeReturn ret;
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_list_foreach (autoconvert->cached_events, (GFunc) gst_mini_object_unref,
+          NULL);
+      g_list_free (autoconvert->cached_events);
+      autoconvert->cached_events = NULL;
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static GstElement *
@@ -890,6 +931,20 @@ gst_auto_convert_sink_chain (GstPad * pad, GstBuffer * buffer)
 
   internal_srcpad = gst_auto_convert_get_internal_srcpad (autoconvert);
   if (internal_srcpad) {
+    GST_OBJECT_LOCK (autoconvert);
+    if (autoconvert->cached_events) {
+      GList *l;
+
+      GST_DEBUG_OBJECT (autoconvert, "Sending cached events downstream");
+
+      autoconvert->cached_events = g_list_reverse (autoconvert->cached_events);
+
+      for (l = autoconvert->cached_events; l; l = l->next)
+        gst_pad_push_event (internal_srcpad, l->data);
+      g_list_free (autoconvert->cached_events);
+      autoconvert->cached_events = NULL;
+    }
+    GST_OBJECT_UNLOCK (autoconvert);
     ret = gst_pad_push (internal_srcpad, buffer);
     gst_object_unref (internal_srcpad);
   } else {
@@ -914,9 +969,26 @@ gst_auto_convert_sink_event (GstPad * pad, GstEvent * event)
     ret = gst_pad_push_event (internal_srcpad, event);
     gst_object_unref (internal_srcpad);
   } else {
-    GST_WARNING_OBJECT (autoconvert, "Got event while no element was selected,"
-        "letting through");
-    ret = gst_pad_push_event (autoconvert->srcpad, event);
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_FLUSH_STOP:
+        GST_OBJECT_LOCK (autoconvert);
+        g_list_foreach (autoconvert->cached_events,
+            (GFunc) gst_mini_object_unref, NULL);
+        g_list_free (autoconvert->cached_events);
+        autoconvert->cached_events = NULL;
+        GST_OBJECT_UNLOCK (autoconvert);
+        /* fall through */
+      case GST_EVENT_FLUSH_START:
+        ret = gst_pad_push_event (autoconvert->srcpad, event);
+        break;
+      default:
+        GST_OBJECT_LOCK (autoconvert);
+        autoconvert->cached_events =
+            g_list_prepend (autoconvert->cached_events, event);
+        ret = TRUE;
+        GST_OBJECT_UNLOCK (autoconvert);
+        break;
+    }
   }
 
   gst_object_unref (autoconvert);
@@ -943,7 +1015,7 @@ gst_auto_convert_sink_query (GstPad * pad, GstQuery * query)
   } else {
     GST_WARNING_OBJECT (autoconvert, "Got query while no element was selected,"
         "letting through");
-    ret = gst_pad_query_default (pad, query);
+    ret = gst_pad_peer_query (autoconvert->srcpad, query);
   }
 
   gst_object_unref (autoconvert);
@@ -1181,7 +1253,7 @@ gst_auto_convert_src_query (GstPad * pad, GstQuery * query)
   } else {
     GST_WARNING_OBJECT (autoconvert, "Got query while not element was selected,"
         "letting through");
-    ret = gst_pad_query_default (pad, query);
+    ret = gst_pad_peer_query (autoconvert->sinkpad, query);
   }
 
   gst_object_unref (autoconvert);
