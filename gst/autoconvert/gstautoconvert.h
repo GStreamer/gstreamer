@@ -52,6 +52,9 @@ struct _GstAutoConvert
   GstElement *current_subelement;
   GstPad *current_internal_srcpad;
   GstPad *current_internal_sinkpad;
+
+  GstSegment segment;
+  GList *cached_events;
 };
 
 struct _GstAutoConvertClass

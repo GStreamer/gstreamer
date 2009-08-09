@@ -46,13 +46,6 @@ GST_DEBUG_CATEGORY (autoconvert_debug);
 #define GST_CAT_DEFAULT (autoconvert_debug)
 
 /* elementfactory information */
-static const GstElementDetails gst_auto_convert_details =
-GST_ELEMENT_DETAILS ("Select convertor based on caps",
-    "Generic/Bin",
-    "Selects the right transform element based on the caps",
-    "Olivier Crete <olivier.crete@collabora.co.uk>");
-
-
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -62,7 +55,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
-
 
 static GstStaticPadTemplate sink_internal_template =
 GST_STATIC_PAD_TEMPLATE ("sink_internal",
@@ -86,9 +78,8 @@ enum
 enum
 {
   PROP_0,
-  PROP_FACTORIES,
+  PROP_FACTORIES
 };
-
 
 static void gst_auto_convert_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -118,7 +109,6 @@ static gboolean gst_auto_convert_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_auto_convert_src_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_auto_convert_src_query_type (GstPad * pad);
 
-
 static GstFlowReturn gst_auto_convert_internal_sink_chain (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_auto_convert_internal_sink_event (GstPad * pad,
@@ -140,18 +130,21 @@ static gboolean gst_auto_convert_internal_src_query (GstPad * pad,
 static const GstQueryType *gst_auto_convert_internal_src_query_type (GstPad *
     pad);
 
-
 static void gst_auto_convert_load_factories (GstAutoConvert * autoconvert);
 
-GQuark internal_srcpad_quark = 0;
-GQuark internal_sinkpad_quark = 0;
-GQuark parent_quark = 0;
+static GQuark internal_srcpad_quark = 0;
+static GQuark internal_sinkpad_quark = 0;
+static GQuark parent_quark = 0;
 
 static void
 gst_auto_convert_do_init (GType type)
 {
   GST_DEBUG_CATEGORY_INIT (autoconvert_debug, "autoconvert", 0,
       "Auto convert based on caps");
+
+  internal_srcpad_quark = g_quark_from_static_string ("internal_srcpad");
+  internal_sinkpad_quark = g_quark_from_static_string ("internal_sinkpad");
+  parent_quark = g_quark_from_static_string ("parent");
 }
 
 GST_BOILERPLATE_FULL (GstAutoConvert, gst_auto_convert, GstBin,
@@ -167,52 +160,38 @@ gst_auto_convert_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (element_class, &gst_auto_convert_details);
+  gst_element_class_set_details_simple (element_class,
+      "Select convertor based on caps", "Generic/Bin",
+      "Selects the right transform element based on the caps",
+      "Olivier Crete <olivier.crete@collabora.co.uk>");
 }
 
 static void
 gst_auto_convert_class_init (GstAutoConvertClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBinClass *gstbin_class;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbin_class = (GstBinClass *) klass;
+  gobject_class->dispose = gst_auto_convert_dispose;
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_auto_convert_dispose);
-
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_auto_convert_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_auto_convert_get_property);
+  gobject_class->set_property = gst_auto_convert_set_property;
+  gobject_class->get_property = gst_auto_convert_get_property;
 
   g_object_class_install_property (gobject_class, PROP_FACTORIES,
       g_param_spec_pointer ("factories",
           "GList of GstElementFactory",
           "GList of GstElementFactory objects to pick from (the element takes"
           " ownership of the list (NULL means it will go through all possible"
-          " elements), can only be set once", G_PARAM_READWRITE));
-
-  parent_class = g_type_class_peek_parent (klass);
-
-  internal_srcpad_quark = g_quark_from_static_string ("internal_srcpad");
-  internal_sinkpad_quark = g_quark_from_static_string ("internal_sinkpad");
-  parent_quark = g_quark_from_static_string ("parent");
+          " elements), can only be set once",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_auto_convert_init (GstAutoConvert * autoconvert,
     GstAutoConvertClass * klass)
 {
-
   autoconvert->sinkpad =
       gst_pad_new_from_static_template (&sinktemplate, "sink");
   autoconvert->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
-
-  gst_element_add_pad (GST_ELEMENT (autoconvert), autoconvert->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (autoconvert), autoconvert->srcpad);
 
   gst_pad_set_setcaps_function (autoconvert->sinkpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_sink_setcaps));
@@ -235,6 +214,9 @@ gst_auto_convert_init (GstAutoConvert * autoconvert,
       GST_DEBUG_FUNCPTR (gst_auto_convert_src_query));
   gst_pad_set_query_type_function (autoconvert->srcpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_src_query_type));
+
+  gst_element_add_pad (GST_ELEMENT (autoconvert), autoconvert->sinkpad);
+  gst_element_add_pad (GST_ELEMENT (autoconvert), autoconvert->srcpad);
 }
 
 static void
