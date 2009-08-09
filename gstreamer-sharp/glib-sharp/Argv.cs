@@ -1,4 +1,4 @@
-// GLib.Argv.cs : Argv marshaling class
+// Gst.GLib.Argv.cs : Argv marshaling class
 //
 // Author: Mike Kestner  <mkestner@novell.com>
 //

@@ -1,4 +1,4 @@
-// GLib.MainContext.cs - mainContext class implementation
+// Gst.GLib.MainContext.cs - mainContext class implementation
 //
 // Author: Radek Doulik <rodo@matfyz.cz>
 //

@@ -1,4 +1,4 @@
-// GLib.ManagedValue.cs : Managed types boxer
+// Gst.GLib.ManagedValue.cs : Managed types boxer
 //
 // Author: Rachel Hestilow <hestilow@ximian.com>
 //
@@ -77,7 +77,7 @@ namespace Gst.GLib {
 					free = new FreeFunc (Free);
 				
 					IntPtr name = Marshaller.StringToPtrGStrdup ("GstGLibSharpValue");
-					boxed_type = new GLib.GType (g_boxed_type_register_static (name, copy, free));
+					boxed_type = new Gst.GLib.GType (g_boxed_type_register_static (name, copy, free));
 					Marshaller.Free (name);
 				}
 

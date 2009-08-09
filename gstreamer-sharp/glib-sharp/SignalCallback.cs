@@ -1,4 +1,4 @@
-// GLib.SignalCallback.cs - Signal callback base class implementation
+// Gst.GLib.SignalCallback.cs - Signal callback base class implementation
 //
 // Authors: Mike Kestner <mkestner@ximian.com>
 //
@@ -25,7 +25,7 @@ namespace Gst.GLib {
 	using System.Collections;
 	using System.Runtime.InteropServices;
 
-	[Obsolete ("Replaced by GLib.Signal.")]
+	[Obsolete ("Replaced by Gst.GLib.Signal.")]
 	public abstract class SignalCallback : IDisposable {
 
 		// A counter used to produce unique keys for instances.
@@ -35,13 +35,13 @@ namespace Gst.GLib {
 		protected static Hashtable _Instances = new Hashtable ();
 
 		// protected instance members
-		protected GLib.Object _obj;
+		protected Gst.GLib.Object _obj;
 		protected Delegate _handler;
 		protected int _key;
 		protected System.Type _argstype;
 		protected uint _HandlerID;
 
-		protected SignalCallback (GLib.Object obj, Delegate eh, System.Type argstype)
+		protected SignalCallback (Gst.GLib.Object obj, Delegate eh, System.Type argstype)
 		{
 			_key = _NextKey++;
 			_obj = obj;

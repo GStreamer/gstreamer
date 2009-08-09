@@ -1,4 +1,4 @@
-// GLib.Global.cs - Global glib properties and methods.
+// Gst.GLib.Global.cs - Global glib properties and methods.
 //
 // Author: Andres G. Aragoneses <aaragoneses@novell.com>
 //
@@ -33,12 +33,12 @@ namespace Gst.GLib {
 
 		public static string ProgramName {
 			get {
-				return GLib.Marshaller.PtrToStringGFree(g_get_prgname());
+				return Gst.GLib.Marshaller.PtrToStringGFree(g_get_prgname());
 			}
 			set { 
-				IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (value);
+				IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (value);
 				g_set_prgname (native_name);
-				GLib.Marshaller.Free (native_name);
+				Gst.GLib.Marshaller.Free (native_name);
 			}
 		}
 
@@ -50,12 +50,12 @@ namespace Gst.GLib {
 
 		public static string ApplicationName {
 			get {
-				return GLib.Marshaller.PtrToStringGFree(g_get_application_name());	
+				return Gst.GLib.Marshaller.PtrToStringGFree(g_get_application_name());	
 			}
 			set {
-				IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (value);
+				IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (value);
 				g_set_application_name (native_name);
-				GLib.Marshaller.Free (native_name);				
+				Gst.GLib.Marshaller.Free (native_name);				
 			}
 		}
 

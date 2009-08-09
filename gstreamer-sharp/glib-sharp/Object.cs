@@ -118,7 +118,7 @@ namespace Gst.GLib {
 			if (!owned_ref)
 				g_object_ref (o);
 
-			obj = GLib.ObjectManager.CreateObject(o); 
+			obj = Gst.GLib.ObjectManager.CreateObject(o); 
 			if (obj == null) {
 				g_object_unref (o);
 				return null;
@@ -163,7 +163,7 @@ namespace Gst.GLib {
 					m.Invoke (null, parms);
 			}
 
-			for (Type curr = t; curr != typeof(GLib.Object); curr = curr.BaseType) {
+			for (Type curr = t; curr != typeof(Gst.GLib.Object); curr = curr.BaseType) {
  
 				if (curr.Assembly.IsDefined (typeof (IgnoreClassInitializersAttribute), false))
 					continue;
@@ -213,7 +213,7 @@ namespace Gst.GLib {
 
                 static Hashtable class_structs;
 
-                static GObjectClass GetClassStruct (GLib.GType gtype, bool use_cache)
+                static GObjectClass GetClassStruct (Gst.GLib.GType gtype, bool use_cache)
                 {
                         if (class_structs == null)
                                 class_structs = new Hashtable ();
@@ -229,7 +229,7 @@ namespace Gst.GLib {
                         }
                 }
 
-                static void OverrideClassStruct (GLib.GType gtype, GObjectClass class_struct)
+                static void OverrideClassStruct (Gst.GLib.GType gtype, GObjectClass class_struct)
                 {
                         IntPtr class_ptr = gtype.ClassPtr;
                         Marshal.StructureToPtr (class_struct, class_ptr, false);
@@ -266,7 +266,7 @@ namespace Gst.GLib {
 		
 		static IntPtr constructor_cb (IntPtr gtype, uint n_construct_properties, IntPtr construct_properties)
 		{
-			GType type = new GLib.GType (gtype);
+			GType type = new Gst.GLib.GType (gtype);
 			IntPtr instance = GetClassStruct (type.ThresholdType, false).constructor_cb (gtype, n_construct_properties, construct_properties);
 			for (int i = 0; i < n_construct_properties; i++) {
 				IntPtr p = new IntPtr ((long) construct_properties + i * Marshal.SizeOf (typeof (GObjectConstructParam)));
@@ -274,11 +274,11 @@ namespace Gst.GLib {
 				GObjectConstructParam cparam = (GObjectConstructParam) Marshal.PtrToStructure (p, typeof (GObjectConstructParam));
 
 				ParamSpec pspec = new ParamSpec (cparam.pspec);
-				GLib.Value val = (Value) Marshal.PtrToStructure (cparam.value, typeof (Value));
+				Gst.GLib.Value val = (Value) Marshal.PtrToStructure (cparam.value, typeof (Value));
 
 				if (pspec.Name == "gtk-sharp-managed-instance" && (IntPtr) val.Val != IntPtr.Zero) {
 					GCHandle gch = (GCHandle) (IntPtr) val.Val;
-					Object o = (GLib.Object) gch.Target;
+					Object o = (Gst.GLib.Object) gch.Target;
 					o.Raw = instance;
 				}
 			}
@@ -287,19 +287,19 @@ namespace Gst.GLib {
 		}
 
 		static ConstructedDelegate Constructed_cb = new ConstructedDelegate (constructed_cb);
-		[GLib.CDeclCallback]
+		[Gst.GLib.CDeclCallback]
 		delegate void ConstructedDelegate (IntPtr o);
 
 		static void constructed_cb (IntPtr o)
 		{
-			GLib.Object __obj = GLib.Object.GetObject (o, false) as GLib.Object;
+			Gst.GLib.Object __obj = Gst.GLib.Object.GetObject (o, false) as Gst.GLib.Object;
 			ConstructedDelegate unmanaged = GetClassStruct (__obj.LookupGType ().ThresholdType, true).constructed_cb;
 			if (unmanaged != null)
 				unmanaged (__obj.Handle);
 		}
 
 		static SetPropertyDelegate Set_prop_dummy_cb = new SetPropertyDelegate (set_prop_dummy_cb);
-		static void set_prop_dummy_cb (IntPtr GObject, uint property_id, ref GLib.Value value, IntPtr pspec) {}
+		static void set_prop_dummy_cb (IntPtr GObject, uint property_id, ref Gst.GLib.Value value, IntPtr pspec) {}
 
 		static void AddProperties (GType gtype, System.Type t)
 		{
@@ -322,7 +322,7 @@ namespace Gst.GLib {
 			foreach (PropertyInfo pinfo in t.GetProperties (BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)) {
 				foreach (object attr in pinfo.GetCustomAttributes (typeof (PropertyAttribute), false)) {
 					if(pinfo.GetIndexParameters().Length > 0)
-						throw(new InvalidOperationException(String.Format("GLib.RegisterPropertyAttribute cannot be applied to property {0} of type {1} because the property expects one or more indexed parameters", pinfo.Name, t.FullName)));
+						throw(new InvalidOperationException(String.Format("Gst.GLib.RegisterPropertyAttribute cannot be applied to property {0} of type {1} because the property expects one or more indexed parameters", pinfo.Name, t.FullName)));
 					
 					PropertyAttribute property_attr = attr as PropertyAttribute;
 					if (!handlers_overridden) {
@@ -335,21 +335,21 @@ namespace Gst.GLib {
 						Properties.Add (param_spec, pinfo);
 						idx++;
 					} catch (ArgumentException) {
-						throw new InvalidOperationException (String.Format ("GLib.PropertyAttribute cannot be applied to property {0} of type {1} because the return type of the property is not supported", pinfo.Name, t.FullName));
+						throw new InvalidOperationException (String.Format ("Gst.GLib.PropertyAttribute cannot be applied to property {0} of type {1} because the return type of the property is not supported", pinfo.Name, t.FullName));
 					}
 				}
 			}
 		}
 		
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void GetPropertyDelegate (IntPtr GObject, uint property_id, ref GLib.Value value, IntPtr pspec);
+		delegate void GetPropertyDelegate (IntPtr GObject, uint property_id, ref Gst.GLib.Value value, IntPtr pspec);
 
-		static void GetPropertyCallback (IntPtr handle, uint property_id, ref GLib.Value value, IntPtr param_spec)
+		static void GetPropertyCallback (IntPtr handle, uint property_id, ref Gst.GLib.Value value, IntPtr param_spec)
 		{
 			if (!Properties.Contains (param_spec))
 			  return;
 
-			GLib.Object obj = GLib.Object.GetObject (handle, false);
+			Gst.GLib.Object obj = Gst.GLib.Object.GetObject (handle, false);
 			value.Val = (Properties [param_spec] as PropertyInfo).GetValue (obj, new object [0]);
 		}
 
@@ -363,14 +363,14 @@ namespace Gst.GLib {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void SetPropertyDelegate (IntPtr GObject, uint property_id, ref GLib.Value value, IntPtr pspec);
+		delegate void SetPropertyDelegate (IntPtr GObject, uint property_id, ref Gst.GLib.Value value, IntPtr pspec);
 
-		static void SetPropertyCallback(IntPtr handle, uint property_id, ref GLib.Value value, IntPtr param_spec)
+		static void SetPropertyCallback(IntPtr handle, uint property_id, ref Gst.GLib.Value value, IntPtr param_spec)
 		{
 			if (!Properties.Contains (param_spec))
 			  return;
 
-			GLib.Object obj = GLib.Object.GetObject (handle, false);
+			Gst.GLib.Object obj = Gst.GLib.Object.GetObject (handle, false);
 			(Properties [param_spec] as PropertyInfo).SetValue (obj, value.Val, new object [0]);
 		}
 
@@ -416,7 +416,7 @@ namespace Gst.GLib {
 			if (Handle != IntPtr.Zero) {
 				GTypeInstance obj = (GTypeInstance) Marshal.PtrToStructure (Handle, typeof (GTypeInstance));
 				GTypeClass klass = (GTypeClass) Marshal.PtrToStructure (obj.g_class, typeof (GTypeClass));
-				return new GLib.GType (klass.gtype);
+				return new Gst.GLib.GType (klass.gtype);
 			} else {
 				return LookupGType (GetType ());
 			}
@@ -434,7 +434,7 @@ namespace Gst.GLib {
 
 		protected Object ()
 		{
-			CreateNativeObject (new string [0], new GLib.Value [0]);
+			CreateNativeObject (new string [0], new Gst.GLib.Value [0]);
 		}
 
 		[DllImport("libgobject-2.0-0.dll")]
@@ -448,28 +448,28 @@ namespace Gst.GLib {
 
 		struct GParameter {
 			public IntPtr name;
-			public GLib.Value val;
+			public Gst.GLib.Value val;
 		}
 
 		[DllImport("libgobject-2.0-0.dll")]
 		static extern IntPtr g_object_newv (IntPtr gtype, int n_params, GParameter[] parms);
 
-		protected virtual void CreateNativeObject (string[] names, GLib.Value[] vals)
+		protected virtual void CreateNativeObject (string[] names, Gst.GLib.Value[] vals)
 		{
-			GLib.GType gtype = LookupGType ();
+			Gst.GLib.GType gtype = LookupGType ();
 			bool managed_type = gtype.ToString().StartsWith ("__gtksharp_");
 
 			GParameter[] parms = new GParameter [names.Length + ((managed_type) ? 1 : 0)];
 
 			for (int i = 0; i < names.Length; i++) {
-				parms [i].name = GLib.Marshaller.StringToPtrGStrdup (names [i]);
+				parms [i].name = Gst.GLib.Marshaller.StringToPtrGStrdup (names [i]);
 				parms [i].val = vals [i];
 			}
 
 			if (managed_type) {
 				GCHandle gch = GCHandle.Alloc (this);
-				parms[names.Length].name = GLib.Marshaller.StringToPtrGStrdup ("gtk-sharp-managed-instance");
-				parms[names.Length].val = new GLib.Value ((IntPtr) gch);
+				parms[names.Length].name = Gst.GLib.Marshaller.StringToPtrGStrdup ("gtk-sharp-managed-instance");
+				parms[names.Length].val = new Gst.GLib.Value ((IntPtr) gch);
 
 				Raw = g_object_newv (gtype.Val, parms.Length, parms);
 
@@ -479,7 +479,7 @@ namespace Gst.GLib {
 			}
 
 			foreach (GParameter p in parms)
-				GLib.Marshaller.Free (p.name);
+				Gst.GLib.Marshaller.Free (p.name);
 		}
 
 		protected virtual IntPtr Raw {
@@ -505,7 +505,7 @@ namespace Gst.GLib {
 			}
 		}	
 
-		public static GLib.GType GType {
+		public static Gst.GLib.GType GType {
 			get {
 				return GType.Object;
 			}
@@ -517,7 +517,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		internal GLib.GType NativeType {
+		internal Gst.GLib.GType NativeType {
 			get {
 				return LookupGType ();
 			}
@@ -542,7 +542,7 @@ namespace Gst.GLib {
 		}
 
 		Hashtable before_signals;
-		[Obsolete ("Replaced by GLib.Signal marshaling mechanism.")]
+		[Obsolete ("Replaced by Gst.GLib.Signal marshaling mechanism.")]
 		protected internal Hashtable BeforeSignals {
 			get {
 				if (before_signals == null)
@@ -552,7 +552,7 @@ namespace Gst.GLib {
 		}
 
 		Hashtable after_signals;
-		[Obsolete ("Replaced by GLib.Signal marshaling mechanism.")]
+		[Obsolete ("Replaced by Gst.GLib.Signal marshaling mechanism.")]
 		protected internal Hashtable AfterSignals {
 			get {
 				if (after_signals == null)
@@ -562,7 +562,7 @@ namespace Gst.GLib {
 		}
 
 		EventHandlerList before_handlers;
-		[Obsolete ("Replaced by GLib.Signal marshaling mechanism.")]
+		[Obsolete ("Replaced by Gst.GLib.Signal marshaling mechanism.")]
 		protected EventHandlerList BeforeHandlers {
 			get {
 				if (before_handlers == null)
@@ -572,7 +572,7 @@ namespace Gst.GLib {
 		}
 
 		EventHandlerList after_handlers;
-		[Obsolete ("Replaced by GLib.Signal marshaling mechanism.")]
+		[Obsolete ("Replaced by Gst.GLib.Signal marshaling mechanism.")]
 		protected EventHandlerList AfterHandlers {
 			get {
 				if (after_handlers == null)
@@ -587,7 +587,7 @@ namespace Gst.GLib {
 		void NotifyCallback (IntPtr handle, IntPtr pspec, IntPtr gch)
 		{
 			try {
-				GLib.Signal sig = ((GCHandle) gch).Target as GLib.Signal;
+				Gst.GLib.Signal sig = ((GCHandle) gch).Target as Gst.GLib.Signal;
 				if (sig == null)
 					throw new Exception("Unknown signal GC handle received " + gch);
 
@@ -595,7 +595,7 @@ namespace Gst.GLib {
 				args.Args = new object[1];
 				args.Args[0] = pspec;
 				NotifyHandler handler = (NotifyHandler) sig.Handler;
-				handler (GLib.Object.GetObject (handle), args);
+				handler (Gst.GLib.Object.GetObject (handle), args);
 			} catch (Exception e) {
 				ExceptionManager.RaiseUnhandledException (e, false);
 			}
@@ -658,25 +658,25 @@ namespace Gst.GLib {
 		}
 
 		[DllImport("libgobject-2.0-0.dll")]
-		static extern void g_object_get_property (IntPtr obj, IntPtr name, ref GLib.Value val);
+		static extern void g_object_get_property (IntPtr obj, IntPtr name, ref Gst.GLib.Value val);
 
-		protected GLib.Value GetProperty (string name)
+		protected Gst.GLib.Value GetProperty (string name)
 		{
 			Value val = new Value (this, name);
-			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
 			g_object_get_property (Raw, native_name, ref val);
-			GLib.Marshaller.Free (native_name);
+			Gst.GLib.Marshaller.Free (native_name);
 			return val;
 		}
 
 		[DllImport("libgobject-2.0-0.dll")]
-		static extern void g_object_set_property (IntPtr obj, IntPtr name, ref GLib.Value val);
+		static extern void g_object_set_property (IntPtr obj, IntPtr name, ref Gst.GLib.Value val);
 
-		protected void SetProperty (string name, GLib.Value val)
+		protected void SetProperty (string name, Gst.GLib.Value val)
 		{
-			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
 			g_object_set_property (Raw, native_name, ref val);
-			GLib.Marshaller.Free (native_name);
+			Gst.GLib.Marshaller.Free (native_name);
 		}
 
 		[DllImport("libgobject-2.0-0.dll")]
@@ -684,9 +684,9 @@ namespace Gst.GLib {
 
 		protected void Notify (string property_name)
 		{
-			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (property_name);
+			IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (property_name);
 			g_object_notify (Handle, native_name);
-			GLib.Marshaller.Free (native_name);
+			Gst.GLib.Marshaller.Free (native_name);
 		}
 
 		protected static void OverrideVirtualMethod (GType gtype, string name, Delegate cb)
@@ -695,7 +695,7 @@ namespace Gst.GLib {
 		}
 
 		[DllImport("libgobject-2.0-0.dll")]
-		protected static extern void g_signal_chain_from_overridden (IntPtr args, ref GLib.Value retval);
+		protected static extern void g_signal_chain_from_overridden (IntPtr args, ref Gst.GLib.Value retval);
 
 		[DllImport("libgobject-2.0-0.dll")]
 		static extern bool g_type_check_instance_is_a (IntPtr obj, IntPtr gtype);
@@ -732,7 +732,7 @@ namespace Gst.GLib {
 		static Object ()
 		{
 			if (Environment.GetEnvironmentVariable ("GTK_SHARP_DEBUG") != null)
-				GLib.Log.SetLogHandler ("GLib-GObject", GLib.LogLevelFlags.All, new GLib.LogFunc (GLib.Log.PrintTraceLogFunction));
+				Gst.GLib.Log.SetLogHandler ("GLib-GObject", Gst.GLib.LogLevelFlags.All, new Gst.GLib.LogFunc (Gst.GLib.Log.PrintTraceLogFunction));
 		}
 	}
 }

@@ -1,4 +1,4 @@
-// GLib.ToggleRef.cs - GLib ToggleRef class implementation
+// Gst.GLib.ToggleRef.cs - GLib ToggleRef class implementation
 //
 // Author: Mike Kestner <mkestner@novell.com>
 //
@@ -33,7 +33,7 @@ namespace Gst.GLib {
 		GCHandle gch;
 		Hashtable signals;
 
-		public ToggleRef (GLib.Object target)
+		public ToggleRef (Gst.GLib.Object target)
 		{
 			handle = target.Handle;
 			gch = GCHandle.Alloc (this);
@@ -67,15 +67,15 @@ namespace Gst.GLib {
 			}
 		}
 
-		public GLib.Object Target {
+		public Gst.GLib.Object Target {
 			get {
 				if (reference == null)
 					return null;
-				else if (reference is GLib.Object)
-					return reference as GLib.Object;
+				else if (reference is Gst.GLib.Object)
+					return reference as Gst.GLib.Object;
 
 				WeakReference weak = reference as WeakReference;
-				return weak.Target as GLib.Object;
+				return weak.Target as Gst.GLib.Object;
 			}
 		}
 
@@ -111,7 +111,7 @@ namespace Gst.GLib {
 
 		void Toggle (bool is_last_ref)
 		{
-			if (is_last_ref && reference is GLib.Object)
+			if (is_last_ref && reference is Gst.GLib.Object)
 				reference = new WeakReference (reference);
 			else if (!is_last_ref && reference is WeakReference) {
 				WeakReference weak = reference as WeakReference;

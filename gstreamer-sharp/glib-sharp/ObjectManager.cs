@@ -1,4 +1,4 @@
-// GLib.ObjectManager.cs - GLib ObjectManager class implementation
+// Gst.GLib.ObjectManager.cs - GLib ObjectManager class implementation
 //
 // Author: Mike Kestner <mkestner@speakeasy.net>
 //
@@ -30,7 +30,7 @@ namespace Gst.GLib {
 
 		static BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.CreateInstance;
 
-		public static GLib.Object CreateObject (IntPtr raw)
+		public static Gst.GLib.Object CreateObject (IntPtr raw)
 		{
 			if (raw == IntPtr.Zero)
 				return null;
@@ -40,11 +40,11 @@ namespace Gst.GLib {
 			if (type == null)
 				return null;
 
-			GLib.Object obj;
+			Gst.GLib.Object obj;
 			try {
-				obj = Activator.CreateInstance (type, flags, null, new object[] {raw}, null) as GLib.Object;
+				obj = Activator.CreateInstance (type, flags, null, new object[] {raw}, null) as Gst.GLib.Object;
 			} catch (MissingMethodException) {
-				throw new GLib.MissingIntPtrCtorException ("GLib.Object subclass " + type + " must provide a protected or public IntPtr ctor to support wrapping of native object handles.");
+				throw new Gst.GLib.MissingIntPtrCtorException ("Gst.GLib.Object subclass " + type + " must provide a protected or public IntPtr ctor to support wrapping of native object handles.");
 			}
 			return obj;
 		}

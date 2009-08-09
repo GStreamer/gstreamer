@@ -26,7 +26,7 @@ namespace Gst.GLib {
 	using System.Collections;
 	using System.Runtime.InteropServices;
 
-	public abstract class ListBase : IDisposable, ICollection, GLib.IWrapper, ICloneable {
+	public abstract class ListBase : IDisposable, ICollection, Gst.GLib.IWrapper, ICloneable {
 
 		private IntPtr list_ptr = IntPtr.Zero;
 		private int length = -1;
@@ -159,10 +159,10 @@ namespace Gst.GLib {
 					ret = Marshaller.FilenamePtrToString (data);
 				else if (element_type == typeof (IntPtr))
 					ret = data;
-				else if (element_type.IsSubclassOf (typeof (GLib.Object)))
-					ret = GLib.Object.GetObject (data, false);
-				else if (element_type.IsSubclassOf (typeof (GLib.Opaque)))
-					ret = GLib.Opaque.GetOpaque (data, element_type, elements_owned);
+				else if (element_type.IsSubclassOf (typeof (Gst.GLib.Object)))
+					ret = Gst.GLib.Object.GetObject (data, false);
+				else if (element_type.IsSubclassOf (typeof (Gst.GLib.Opaque)))
+					ret = Gst.GLib.Opaque.GetOpaque (data, element_type, elements_owned);
 				else if (element_type == typeof (int))
 					ret = (int) data;
 				else if (element_type.IsValueType)
@@ -175,7 +175,7 @@ namespace Gst.GLib {
 					ret = Activator.CreateInstance (element_type, new object[] {data});
 
 			} else if (Object.IsObject (data))
-				ret = GLib.Object.GetObject (data, false);
+				ret = Gst.GLib.Object.GetObject (data, false);
 
 			return ret;
 		}
@@ -190,10 +190,10 @@ namespace Gst.GLib {
 		{
 			if (elements_owned)
 				for (uint i = 0; i < Count; i++)
-					if (typeof (GLib.Object).IsAssignableFrom (element_type))
+					if (typeof (Gst.GLib.Object).IsAssignableFrom (element_type))
 						g_object_unref (NthData (i));
-					else if (typeof (GLib.Opaque).IsAssignableFrom (element_type))
-						GLib.Opaque.GetOpaque (NthData (i), element_type, true).Dispose ();
+					else if (typeof (Gst.GLib.Opaque).IsAssignableFrom (element_type))
+						Gst.GLib.Opaque.GetOpaque (NthData (i), element_type, true).Dispose ();
 					else 
 						g_free (NthData (i));
 

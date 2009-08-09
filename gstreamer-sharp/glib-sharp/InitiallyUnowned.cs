@@ -34,7 +34,7 @@ namespace Gst.GLib {
 		[Obsolete]
 		protected InitiallyUnowned (GType gtype) : base (gtype) {}
 
-		public new static GLib.GType GType {
+		public new static Gst.GLib.GType GType {
 			get {
 				return GType.Object;
 			}

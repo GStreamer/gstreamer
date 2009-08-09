@@ -1,4 +1,4 @@
-// GLib.SignalArgs.cs - Signal argument class implementation
+// Gst.GLib.SignalArgs.cs - Signal argument class implementation
 //
 // Author: Mike Kestner <mkestner@speakeasy.net>
 //

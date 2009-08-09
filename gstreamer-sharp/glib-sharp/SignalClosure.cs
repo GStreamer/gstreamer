@@ -28,10 +28,10 @@ namespace Gst.GLib {
 	internal class ClosureInvokedArgs : EventArgs {
 
 		EventArgs args;
-		GLib.Object obj;
+		Gst.GLib.Object obj;
 		object result;
 
-		public ClosureInvokedArgs (GLib.Object obj, EventArgs args)
+		public ClosureInvokedArgs (Gst.GLib.Object obj, EventArgs args)
 		{
 			this.obj = obj;
 			this.args = args;
@@ -43,7 +43,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		public GLib.Object Target {
+		public Gst.GLib.Object Target {
 			get {
 				return obj;
 			}
@@ -97,9 +97,9 @@ namespace Gst.GLib {
 
 		public void Connect (bool is_after)
 		{
-			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
 			id = g_signal_connect_closure (handle, native_name, raw_closure, is_after);
-			GLib.Marshaller.Free (native_name);
+			Gst.GLib.Marshaller.Free (native_name);
 		}
 
 		public void Disconnect ()
@@ -147,7 +147,7 @@ namespace Gst.GLib {
 				SignalClosure closure = closures [raw_closure] as SignalClosure;
 				message = "Marshaling " + closure.name + " signal";
 				Value objval = (Value) Marshal.PtrToStructure (param_values, typeof (Value));
-				GLib.Object __obj = objval.Val as GLib.Object;
+				Gst.GLib.Object __obj = objval.Val as Gst.GLib.Object;
 				if (__obj == null)
 					return;
 
@@ -158,7 +158,7 @@ namespace Gst.GLib {
 
 				SignalArgs args = Activator.CreateInstance (closure.args_type, new object [0]) as SignalArgs;
 				args.Args = new object [n_param_vals - 1];
-				GLib.Value[] vals = new GLib.Value [n_param_vals - 1];
+				Gst.GLib.Value[] vals = new Gst.GLib.Value [n_param_vals - 1];
 				for (int i = 1; i < n_param_vals; i++) {
 					IntPtr ptr = new IntPtr (param_values.ToInt64 () + i * Marshal.SizeOf (typeof (Value)));
 					vals [i - 1] = (Value) Marshal.PtrToStructure (ptr, typeof (Value));

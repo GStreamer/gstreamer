@@ -1,4 +1,4 @@
-// GLib.Source.cs - Source class implementation
+// Gst.GLib.Source.cs - Source class implementation
 //
 // Author: Duncan Mak  <duncan@ximian.com>
 //

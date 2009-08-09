@@ -40,9 +40,9 @@ namespace Gst.GLib {
 			int flags = (int) pflags;
 			IntPtr ret;
 
-			IntPtr p_name = GLib.Marshaller.StringToPtrGStrdup (name);
-			IntPtr p_nick = GLib.Marshaller.StringToPtrGStrdup (nick);
-			IntPtr p_blurb = GLib.Marshaller.StringToPtrGStrdup (blurb);
+			IntPtr p_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr p_nick = Gst.GLib.Marshaller.StringToPtrGStrdup (nick);
+			IntPtr p_blurb = Gst.GLib.Marshaller.StringToPtrGStrdup (blurb);
 
 			if (type == GType.Char)
 				ret = g_param_spec_char (p_name, p_nick, p_blurb, SByte.MinValue, SByte.MaxValue, 0, flags);
@@ -85,9 +85,9 @@ namespace Gst.GLib {
 			else
 				throw new ArgumentException ("type");
 
-			GLib.Marshaller.Free (p_name);
-			GLib.Marshaller.Free (p_nick);
-			GLib.Marshaller.Free (p_blurb);
+			Gst.GLib.Marshaller.Free (p_name);
+			Gst.GLib.Marshaller.Free (p_nick);
+			Gst.GLib.Marshaller.Free (p_blurb);
 
 			return ret;
 		}
@@ -124,7 +124,7 @@ namespace Gst.GLib {
 		public string Name {
 			get {
 				GParamSpec spec = (GParamSpec) Marshal.PtrToStructure (Handle, typeof (GParamSpec));
-				return GLib.Marshaller.Utf8PtrToString (spec.name);
+				return Gst.GLib.Marshaller.Utf8PtrToString (spec.name);
 			}
 		}
 

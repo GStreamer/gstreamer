@@ -1,4 +1,4 @@
-// GLib.Idle.cs - Idle class implementation
+// Gst.GLib.Idle.cs - Idle class implementation
 //
 // Author(s):
 //	Mike Kestner <mkestner@speakeasy.net>

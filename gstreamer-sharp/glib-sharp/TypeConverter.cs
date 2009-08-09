@@ -1,4 +1,4 @@
-// GLib.TypeConverter.cs : Convert between fundamental and .NET types 
+// Gst.GLib.TypeConverter.cs : Convert between fundamental and .NET types 
 //
 // Author: Rachel Hestilow <hestilow@ximian.com>
 //
