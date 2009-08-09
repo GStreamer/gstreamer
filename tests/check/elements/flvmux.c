@@ -49,7 +49,7 @@ handoff_cb (GstElement * element, GstBuffer * buf, GstPad * pad,
 static void
 mux_pcm_audio (guint num_buffers, guint repeat)
 {
-  GstElement *src, *sink, *flvmux, *pipeline;
+  GstElement *src, *sink, *flvmux, *conv, *pipeline;
   gint counter;
 
   GST_LOG ("num_buffers = %u", num_buffers);
@@ -66,6 +66,9 @@ mux_pcm_audio (guint num_buffers, guint repeat)
 
   g_object_set (src, "num-buffers", num_buffers, NULL);
 
+  conv = gst_element_factory_make ("audioconvert", "audioconvert");
+  fail_unless (conv != NULL, "Failed to create 'audioconvert' element!");
+
   flvmux = gst_element_factory_make ("flvmux", "flvmux");
   fail_unless (flvmux != NULL, "Failed to create 'flvmux' element!");
 
@@ -75,8 +78,9 @@ mux_pcm_audio (guint num_buffers, guint repeat)
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "handoff", G_CALLBACK (handoff_cb), &counter);
 
-  gst_bin_add_many (GST_BIN (pipeline), src, flvmux, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, conv, flvmux, sink, NULL);
 
+  fail_unless (gst_element_link (src, conv));
   fail_unless (gst_element_link (flvmux, sink));
 
   do {
@@ -90,8 +94,8 @@ mux_pcm_audio (guint num_buffers, guint repeat)
     sinkpad = gst_element_get_request_pad (flvmux, "audio");
     fail_unless (sinkpad != NULL, "Could not get audio request pad");
 
-    srcpad = gst_element_get_static_pad (src, "src");
-    fail_unless (srcpad != NULL, "Could not get audiotestsrc's source pad");
+    srcpad = gst_element_get_static_pad (conv, "src");
+    fail_unless (srcpad != NULL, "Could not get audioconvert's source pad");
 
     fail_unless_equals_int (gst_pad_link (srcpad, sinkpad), GST_PAD_LINK_OK);
 
