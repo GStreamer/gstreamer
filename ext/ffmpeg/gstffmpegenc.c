@@ -347,7 +347,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
         if (!caps)
           caps = gst_caps_new_empty ();
         gst_caps_append (caps, tmpcaps);
-        break;
+        continue;
       }
       GST_DEBUG_OBJECT (ffmpegenc,
           "Couldn't figure out caps without context, trying again with a context");
