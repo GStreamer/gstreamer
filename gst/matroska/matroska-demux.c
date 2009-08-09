@@ -121,8 +121,7 @@ static GstStaticPadTemplate subtitle_src_templ =
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("text/plain; application/x-ssa; application/x-ass; "
         "application/x-usf; video/x-dvd-subpicture; "
-        "subpicture/x-pgs; subtitle/x-kate; "
-        "application/x-subtitle-unknown")
+        "subpicture/x-pgs; subtitle/x-kate; " "application/x-subtitle-unknown")
     );
 
 static GstFlowReturn gst_matroska_demux_parse_contents (GstMatroskaDemux *
@@ -706,7 +705,7 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
     bzstream.opaque = NULL;
     orig_size = size;
 
-    if ((result = BZ2_bzDecompressInit (&bzstream, 0, 0)) != BZ_OK) {
+    if (BZ2_bzDecompressInit (&bzstream, 0, 0) != BZ_OK) {
       GST_WARNING ("bzip2 initialization failed.");
       ret = FALSE;
       goto out;
