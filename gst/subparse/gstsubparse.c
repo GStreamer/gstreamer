@@ -831,11 +831,13 @@ parse_subrip_time (const gchar * ts_string, GstClockTime * t)
    * hh:mm:ss, 5  =  50ms
    * hh:mm:ss, 50 =  50ms
    * hh:mm:ss,5   = 500ms
-   * and sscanf() doesn't differentiate between '  5' and '5' so munge
+   * and the same with . instead of ,.
+   * sscanf() doesn't differentiate between '  5' and '5' so munge
    * the white spaces within the timestamp to '0' (I'm sure there's a
    * way to make sscanf() do this for us, but how?)
    */
   g_strdelimit (s, " ", '0');
+  g_strdelimit (s, ".", ',');
 
   /* make sure we have exactly three digits after he comma */
   p = strchr (s, ',');
@@ -1125,8 +1127,8 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
       break;
     case GST_SUB_PARSE_REGEX_SUBRIP:
       result = (gpointer) g_regex_new ("^([ 0-9]){0,3}[0-9]\\s*(\x0d)?\x0a"
-          "[ 0-9][0-9]:[ 0-9][0-9]:[ 0-9][0-9],[ 0-9]{0,2}[0-9]"
-          " +--> +([ 0-9])?[0-9]:[ 0-9][0-9]:[ 0-9][0-9],[ 0-9]{0,2}[0-9]",
+          "[ 0-9][0-9]:[ 0-9][0-9]:[ 0-9][0-9][,.][ 0-9]{0,2}[0-9]"
+          " +--> +([ 0-9])?[0-9]:[ 0-9][0-9]:[ 0-9][0-9][,.][ 0-9]{0,2}[0-9]",
           0, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of subrip regex failed: %s", gerr->message);
