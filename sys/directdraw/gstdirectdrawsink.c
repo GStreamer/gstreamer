@@ -961,10 +961,12 @@ gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
     /* Write each line respecting the destination surface pitch */
     data = surf_desc.lpSurface;
-    src_pitch = GST_BUFFER_SIZE (buf) / ddrawsink->video_height;
-    for (line = 0; line < surf_desc.dwHeight; line++) {
-      memcpy (data, GST_BUFFER_DATA (buf) + (line * src_pitch), src_pitch);
-      data += surf_desc.lPitch;
+    if (ddrawsink->video_height) {
+      src_pitch = GST_BUFFER_SIZE (buf) / ddrawsink->video_height;
+      for (line = 0; line < surf_desc.dwHeight; line++) {
+        memcpy (data, GST_BUFFER_DATA (buf) + (line * src_pitch), src_pitch);
+        data += surf_desc.lPitch;
+      }
     }
 
     /* Unlock the surface */
