@@ -1681,17 +1681,24 @@ default_frame_sizes:
 
     tmp = gst_structure_copy (template);
     if (fix_num) {
-      gst_structure_set (tmp,
-          "width", GST_TYPE_INT_RANGE, min_w, max_w,
-          "height", GST_TYPE_INT_RANGE, min_h, max_h,
-          "framerate", GST_TYPE_FRACTION, fix_num, fix_denom, NULL);
+      gst_structure_set (tmp, "framerate", GST_TYPE_FRACTION, fix_num,
+          fix_denom, NULL);
     } else {
       /* if norm can't be used, copy the template framerate */
-      gst_structure_set (tmp,
-          "width", GST_TYPE_INT_RANGE, min_w, max_w,
-          "height", GST_TYPE_INT_RANGE, min_h, max_h,
-          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
+      gst_structure_set (tmp, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+          100, 1, NULL);
     }
+
+    if (min_w == max_w)
+      gst_structure_set (tmp, "width", G_TYPE_INT, max_w, NULL);
+    else
+      gst_structure_set (tmp, "width", GST_TYPE_INT_RANGE, min_w, max_w, NULL);
+
+    if (min_h == max_h)
+      gst_structure_set (tmp, "height", G_TYPE_INT, max_h, NULL);
+    else
+      gst_structure_set (tmp, "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
+
     gst_caps_append_structure (ret, tmp);
 
     return ret;
