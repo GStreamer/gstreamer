@@ -125,13 +125,10 @@ gst_rtp_j2k_depay_finalize (GObject * object)
 static gboolean
 gst_rtp_j2k_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
-  GstRtpJ2KDepay *rtpj2kdepay;
   GstStructure *structure;
   gint clock_rate;
   GstCaps *outcaps;
   gboolean res;
-
-  rtpj2kdepay = GST_RTP_J2K_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -154,7 +151,6 @@ gst_rtp_j2k_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpJ2KDepay *rtpj2kdepay;
   GstBuffer *outbuf;
-  gint payload_len;
   guint8 *payload;
   guint frag_offset;
 
@@ -167,9 +163,7 @@ gst_rtp_j2k_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     rtpj2kdepay->need_header = TRUE;
   }
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
-
-  if (payload_len < 8)
+  if (gst_rtp_buffer_get_payload_len (buf) < 8)
     goto empty_packet;
 
   payload = gst_rtp_buffer_get_payload (buf);
@@ -193,9 +187,6 @@ gst_rtp_j2k_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     rtpj2kdepay->need_header = FALSE;
   }
-
-  payload += 8;
-  payload_len -= 8;
 
   /* take JPEG 2000 data, push in the adapter */
   outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 8, -1);

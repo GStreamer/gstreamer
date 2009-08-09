@@ -175,15 +175,13 @@ gst_rtp_ac3_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   rtpac3depay = GST_RTP_AC3_DEPAY (depayload);
 
   {
-    gint payload_len;
     guint8 *payload;
     guint16 FT, NF;
 
-    payload_len = gst_rtp_buffer_get_payload_len (buf);
-    payload = gst_rtp_buffer_get_payload (buf);
-
-    if (payload_len <= 2)
+    if (gst_rtp_buffer_get_payload_len (buf) < 2)
       goto empty_packet;
+
+    payload = gst_rtp_buffer_get_payload (buf);
 
     /* strip off header
      *
@@ -197,9 +195,6 @@ gst_rtp_ac3_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     NF = payload[1];
 
     GST_DEBUG_OBJECT (rtpac3depay, "FT: %d, NF: %d", FT, NF);
-
-    payload_len -= 2;
-    payload += 2;
 
     /* We don't bother with fragmented packets yet */
     outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 2, -1);
