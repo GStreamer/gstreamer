@@ -117,7 +117,7 @@ gst_navigation_send_event (GstNavigation * navigation, GstStructure * structure)
 }
 
 /**
- * gst_navigation_send_mouse_event:
+ * gst_navigation_send_key_event:
  * @navigation: The navigation interface instance
  * @event: The type of the key event. Recognised values are "key-press" and
  * "key-release"
