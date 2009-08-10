@@ -368,6 +368,17 @@ gst_dshowaudiosrc_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_DEVICE_NAME:
+    {
+      if (src->device_name) {
+        g_free (src->device_name);
+        src->device_name = NULL;
+      }
+      if (g_value_get_string (value)) {
+        src->device_name = g_strdup (g_value_get_string (value));
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
