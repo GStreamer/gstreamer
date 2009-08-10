@@ -353,14 +353,11 @@ static GValueArray *
 gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
 {
   GValueArray *array = g_value_array_new (0);
-  GValue value = { 0 };
   ICreateDevEnum *devices_enum = NULL;
   IEnumMoniker *moniker_enum = NULL;
   IMoniker *moniker = NULL;
   HRESULT hres = S_FALSE;
   ULONG fetched;
-
-  g_value_init (&value, G_TYPE_STRING);
 
   hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
       IID_ICreateDevEnum, (LPVOID *) &devices_enum);
@@ -400,6 +397,8 @@ gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
             g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
             wcslen (varFriendlyName.bstrVal), NULL, NULL, NULL);
 
+        GValue value = { 0 };
+        g_value_init (&value, G_TYPE_STRING);
         g_value_set_string (&value, friendly_name);
         g_value_array_append (array, &value);
         g_value_unset (&value);
