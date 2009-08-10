@@ -54,7 +54,6 @@
 #include <wavpack/wavpack.h>
 #include "gstwavpackenc.h"
 #include "gstwavpackcommon.h"
-#include "md5.h"
 
 static GstFlowReturn gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_wavpack_enc_sink_set_caps (GstPad * pad, GstCaps * caps);
@@ -305,7 +304,7 @@ gst_wavpack_enc_reset (GstWavpackEnc * enc)
   }
   enc->first_block_size = 0;
   if (enc->md5_context) {
-    g_free (enc->md5_context);
+    g_checksum_free (enc->md5_context);
     enc->md5_context = NULL;
   }
 
@@ -519,8 +518,7 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
   /* MD5, setup MD5 context */
   if ((enc->md5) && !(enc->md5_context)) {
     enc->wp_config->flags |= CONFIG_MD5_CHECKSUM;
-    enc->md5_context = g_new0 (MD5_CTX, 1);
-    MD5Init (enc->md5_context);
+    enc->md5_context = g_checksum_new (G_CHECKSUM_MD5);
   }
 
   /* Extra encode processing */
@@ -783,7 +781,8 @@ gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
   /* if we want to append the MD5 sum to the stream update it here
    * with the current raw samples */
   if (enc->md5) {
-    MD5Update (enc->md5_context, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    g_checksum_update (enc->md5_context, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
   }
 
   /* encode and handle return values from encoding */
@@ -867,10 +866,14 @@ gst_wavpack_enc_sink_event (GstPad * pad, GstEvent * event)
 
       /* write the MD5 sum if we have to write one */
       if ((enc->md5) && (enc->md5_context)) {
-        guchar md5_digest[16];
+        guint8 md5_digest[16];
+        gsize digest_len = sizeof (md5_digest);
 
-        MD5Final (md5_digest, enc->md5_context);
-        WavpackStoreMD5Sum (enc->wp_context, md5_digest);
+        g_checksum_get_digest (enc->md5_context, md5_digest, &digest_len);
+        if (digest_len == sizeof (md5_digest))
+          WavpackStoreMD5Sum (enc->wp_context, md5_digest);
+        else
+          GST_WARNING_OBJECT (enc, "Calculating MD5 digest failed");
       }
 
       /* Try to rewrite the first frame with the correct sample number */

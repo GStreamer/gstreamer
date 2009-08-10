@@ -25,7 +25,6 @@
 #include <gst/gst.h>
 
 #include <wavpack/wavpack.h>
-#include "md5.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_WAVPACK_ENC \
@@ -78,7 +77,7 @@ struct _GstWavpackEnc
   gdouble bps;
   guint correction_mode;
   gboolean md5;
-  MD5_CTX *md5_context;
+  GChecksum *md5_context;
   guint extra_processing;
   guint joint_stereo_mode;
 

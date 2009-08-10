@@ -6,8 +6,7 @@ libgstwavpack_la_SOURCES = \
 				gstwavpackparse.c \
 				gstwavpackdec.c \
 				gstwavpackenc.c \
-				gstwavpackstreamreader.c \
-				md5.c
+				gstwavpackstreamreader.c
 
 libgstwavpack_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(WAVPACK_CFLAGS)
 libgstwavpack_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(WAVPACK_LIBS)
@@ -19,6 +18,5 @@ noinst_HEADERS = \
 		gstwavpackdec.h \
 		gstwavpackenc.h \
 		gstwavpackcommon.h \
-		gstwavpackstreamreader.h \
-		md5.h
+		gstwavpackstreamreader.h
 
