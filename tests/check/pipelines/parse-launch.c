@@ -413,6 +413,8 @@ run_delayed_test (const gchar * pipe_str, const gchar * peer,
 
   gst_object_unref (src);
   gst_object_unref (sink);
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
   gst_object_unref (pipe);
 }
 
