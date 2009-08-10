@@ -307,7 +307,7 @@ SOUNDTOUCH_DIR=
 endif
 
 if USE_SPC
-SPC_DIR=gme
+SPC_DIR=spc
 else
 SPC_DIR=
 endif
