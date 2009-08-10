@@ -103,6 +103,11 @@ GST_START_TEST (test_multifdsink_gdp_tag)
   g_main_loop_run (loop);
 
   assert_equals_int (n_tags, 1);
+
+  gst_element_set_state (p1, GST_STATE_NULL);
+  gst_object_unref (p1);
+  gst_element_set_state (p2, GST_STATE_NULL);
+  gst_object_unref (p2);
 }
 
 GST_END_TEST;
@@ -202,6 +207,11 @@ GST_START_TEST (test_multifdsink_gdp_vorbisenc)
   g_main_loop_run (loop);
 
   assert_equals_int (n_in_caps, 3);
+
+  gst_element_set_state (p1, GST_STATE_NULL);
+  gst_object_unref (p1);
+  gst_element_set_state (p2, GST_STATE_NULL);
+  gst_object_unref (p2);
 }
 
 GST_END_TEST;
