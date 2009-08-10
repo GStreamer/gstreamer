@@ -96,7 +96,6 @@
 
 #include "gstrtspconnection.h"
 #include "gstrtspbase64.h"
-#include "md5.h"
 
 union gst_sockaddr
 {
@@ -885,33 +884,23 @@ tunneling_failed:
 }
 
 static void
-md5_digest_to_hex_string (unsigned char digest[16], char string[33])
-{
-  static const char hexdigits[] = "0123456789abcdef";
-  int i;
-
-  for (i = 0; i < 16; i++) {
-    string[i * 2] = hexdigits[(digest[i] >> 4) & 0x0f];
-    string[i * 2 + 1] = hexdigits[digest[i] & 0x0f];
-  }
-  string[32] = 0;
-}
-
-static void
 auth_digest_compute_hex_urp (const gchar * username,
     const gchar * realm, const gchar * password, gchar hex_urp[33])
 {
-  struct MD5Context md5_context;
-  unsigned char digest[16];
+  GChecksum *md5_context = g_checksum_new (G_CHECKSUM_MD5);
+  const gchar *digest_string;
 
-  MD5Init (&md5_context);
-  MD5Update (&md5_context, username, strlen (username));
-  MD5Update (&md5_context, ":", 1);
-  MD5Update (&md5_context, realm, strlen (realm));
-  MD5Update (&md5_context, ":", 1);
-  MD5Update (&md5_context, password, strlen (password));
-  MD5Final (digest, &md5_context);
-  md5_digest_to_hex_string (digest, hex_urp);
+  g_checksum_update (md5_context, (const guchar *) username, strlen (username));
+  g_checksum_update (md5_context, (const guchar *) ":", 1);
+  g_checksum_update (md5_context, (const guchar *) realm, strlen (realm));
+  g_checksum_update (md5_context, (const guchar *) ":", 1);
+  g_checksum_update (md5_context, (const guchar *) password, strlen (password));
+  digest_string = g_checksum_get_string (md5_context);
+
+  memset (hex_urp, 0, 33);
+  memcpy (hex_urp, digest_string, strlen (digest_string));
+
+  g_checksum_free (md5_context);
 }
 
 static void
@@ -919,28 +908,30 @@ auth_digest_compute_response (const gchar * method,
     const gchar * uri, const gchar * hex_a1, const gchar * nonce,
     gchar response[33])
 {
-  char hex_a2[33];
-  struct MD5Context md5_context;
-  unsigned char digest[16];
+  char hex_a2[33] = { 0, };
+  GChecksum *md5_context = g_checksum_new (G_CHECKSUM_MD5);
+  const gchar *digest_string;
 
   /* compute A2 */
-  MD5Init (&md5_context);
-  MD5Update (&md5_context, method, strlen (method));
-  MD5Update (&md5_context, ":", 1);
-  MD5Update (&md5_context, uri, strlen (uri));
-  MD5Final (digest, &md5_context);
-  md5_digest_to_hex_string (digest, hex_a2);
+  g_checksum_update (md5_context, (const guchar *) method, strlen (method));
+  g_checksum_update (md5_context, (const guchar *) ":", 1);
+  g_checksum_update (md5_context, (const guchar *) uri, strlen (uri));
+  digest_string = g_checksum_get_string (md5_context);
+  memcpy (hex_a2, digest_string, strlen (digest_string));
 
   /* compute KD */
-  MD5Init (&md5_context);
-  MD5Update (&md5_context, hex_a1, strlen (hex_a1));
-  MD5Update (&md5_context, ":", 1);
-  MD5Update (&md5_context, nonce, strlen (nonce));
-  MD5Update (&md5_context, ":", 1);
+  g_checksum_reset (md5_context);
+  g_checksum_update (md5_context, (const guchar *) hex_a1, strlen (hex_a1));
+  g_checksum_update (md5_context, (const guchar *) ":", 1);
+  g_checksum_update (md5_context, (const guchar *) nonce, strlen (nonce));
+  g_checksum_update (md5_context, (const guchar *) ":", 1);
 
-  MD5Update (&md5_context, hex_a2, 32);
-  MD5Final (digest, &md5_context);
-  md5_digest_to_hex_string (digest, response);
+  g_checksum_update (md5_context, (const guchar *) hex_a2, 32);
+  digest_string = g_checksum_get_string (md5_context);
+  memset (response, 0, sizeof (response));
+  memcpy (response, digest_string, strlen (digest_string));
+
+  g_checksum_free (md5_context);
 }
 
 static void
