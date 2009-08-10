@@ -71,6 +71,7 @@ struct _GstWavParse {
 
   /* WAVE decoding state */
   GstWavParseState state;
+  gboolean abort_buffering;
 
   /* format of audio, see defines below */
   gint format;
