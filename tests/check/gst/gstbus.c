@@ -557,6 +557,8 @@ GST_START_TEST (test_custom_main_context)
   GST_INFO ("running event loop, ctx=%p", ctx);
   g_main_loop_run (loop);
 
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
   /* clean up */
   if (ctx)
     g_main_context_unref (ctx);
