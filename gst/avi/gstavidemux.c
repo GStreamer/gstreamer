@@ -2971,6 +2971,10 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
         if (GST_READ_UINT32_LE (GST_BUFFER_DATA (buf)) != GST_RIFF_LIST_hdrl)
           goto header_no_hdrl;
 
+        /* mind padding */
+        if (size & 1)
+          gst_adapter_flush (avi->adapter, 1);
+
         GST_DEBUG ("'hdrl' LIST tag found. Parsing next chunk");
 
         /* the hdrl starts with a 'avih' header */
@@ -3078,6 +3082,9 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
                 gst_adapter_flush (avi->adapter, 12);
                 if (size > 4) {
                   buf = gst_adapter_take_buffer (avi->adapter, size - 4);
+                  /* mind padding */
+                  if (size & 1)
+                    gst_adapter_flush (avi->adapter, 1);
                   gst_riff_parse_info (GST_ELEMENT (avi), buf,
                       &avi->globaltags);
                   gst_buffer_unref (buf);
