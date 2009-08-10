@@ -54,6 +54,9 @@ void gst_dshow_free_mediatype (AM_MEDIA_TYPE *pmt);
 /* free the memory of all mediatypes of the input list if pin mediatype */
 void gst_dshow_free_pins_mediatypes (GList *mediatypes);
 
+/* allow to know what kind of media type we have */
+gboolean gst_dshow_check_mediatype (AM_MEDIA_TYPE *media_type, const GUID sub_type, const GUID format_type);
+
 /* get a pin from directshow filter */
 gboolean gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin **pin);
 

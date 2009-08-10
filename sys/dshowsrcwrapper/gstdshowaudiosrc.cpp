@@ -757,7 +757,6 @@ gst_dshowaudiosrc_getcaps_from_streamcaps (GstDshowAudioSrc * src, IPin * pin,
 {
   GstCaps *caps = NULL;
   HRESULT hres = S_OK;
-  RPC_STATUS rpcstatus;
   int icount = 0;
   int isize = 0;
   AUDIO_STREAM_CONFIG_CAPS ascc;
@@ -785,11 +784,7 @@ gst_dshowaudiosrc_getcaps_from_streamcaps (GstDshowAudioSrc * src, IPin * pin,
       if (!caps)
         caps = gst_caps_new_empty ();
 
-      if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_PCM,
-                  &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
-          && (UuidCompare (&pin_mediatype->mediatype->formattype,
-                  (UUID *) &FORMAT_WaveFormatEx, &rpcstatus) == 0
-              && rpcstatus == RPC_S_OK)) {
+      if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_PCM, FORMAT_WaveFormatEx)) {
         WAVEFORMATEX *wavformat =
             (WAVEFORMATEX *) pin_mediatype->mediatype->pbFormat;
         mediacaps =

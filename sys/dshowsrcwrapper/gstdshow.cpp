@@ -70,6 +70,21 @@ gst_dshow_free_pins_mediatypes (GList *pins_mediatypes)
   g_list_free (pins_mediatypes);
 }
 
+gboolean
+gst_dshow_check_mediatype (AM_MEDIA_TYPE *media_type, const GUID sub_type, 
+  const GUID format_type)
+{
+  RPC_STATUS rpcstatus;
+  
+  g_return_val_if_fail (media_type != NULL, FALSE);
+  
+  return 
+    UuidCompare (&media_type->subtype, (UUID *) &sub_type,
+    &rpcstatus) == 0 && rpcstatus == RPC_S_OK &&
+    UuidCompare (&media_type->formattype, (UUID *) &format_type,
+    &rpcstatus) == 0 && rpcstatus == RPC_S_OK;
+}
+
 gboolean 
 gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin **pin)
 {

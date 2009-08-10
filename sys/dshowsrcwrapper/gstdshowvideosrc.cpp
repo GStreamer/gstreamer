@@ -26,6 +26,8 @@
 
 #include "gstdshowvideosrc.h"
 
+#include <gst/video/video.h>
+
 static const GstElementDetails gst_dshowvideosrc_details =
 GST_ELEMENT_DETAILS ("DirectShow video capture source",
     "Source/Video",
@@ -43,12 +45,9 @@ const GUID MEDIASUBTYPE_I420
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb,"
-        "bpp = (int) 24,"
-        "depth = (int) 24,"
-        "width = (int) [ 1, MAX ],"
-        "height = (int) [ 1, MAX ],"
-        "framerate = (fraction) [ 0, MAX ];"
+    GST_STATIC_CAPS (
+        GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_YUV ("{ I420 }") ";"
         "video/x-dv,"
         "systemstream = (boolean) FALSE,"
         "width = (int) [ 1, MAX ],"
@@ -56,11 +55,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "framerate = (fraction) [ 0, MAX ],"
         "format = (fourcc) dvsd;"
         "video/x-dv,"
-        "systemstream = (boolean) TRUE;"
-        "video/x-raw-yuv,"
-        "width = (int) [ 1, MAX ],"
-        "height = (int) [ 1, MAX ],"
-        "framerate = (fraction) [ 0, MAX ]," "format = (fourcc) I420")
+        "systemstream = (boolean) TRUE")
     );
 
 static void gst_dshowvideosrc_init_interfaces (GType type);
@@ -904,7 +899,6 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
 {
   GstCaps *caps = NULL;
   HRESULT hres = S_OK;
-  RPC_STATUS rpcstatus;
   int icount = 0;
   int isize = 0;
   VIDEO_STREAM_CONFIG_CAPS vscc;
@@ -945,11 +939,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
       /* value that the filter supports" as it said in the VIDEO_STREAM_CONFIG_CAPS dshwo doc */
 
       /* I420 */
-      if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_I420,
-                  &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
-          && (UuidCompare (&pin_mediatype->mediatype->formattype,
-                  (UUID *) &FORMAT_VideoInfo, &rpcstatus) == 0
-              && rpcstatus == RPC_S_OK)) {
+      if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_I420, FORMAT_VideoInfo)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
         video_default->defaultWidth = video_info->bmiHeader.biWidth;
@@ -979,12 +969,8 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
         continue;
       }
 
-      /* RGB24 */
-      if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_RGB24,
-                  &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
-          && (UuidCompare (&pin_mediatype->mediatype->formattype,
-                  (UUID *) &FORMAT_VideoInfo, &rpcstatus) == 0
-              && rpcstatus == RPC_S_OK)) {
+      /* BGR */
+      if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_RGB24, FORMAT_VideoInfo)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
         video_default->defaultWidth = video_info->bmiHeader.biWidth;
@@ -1021,11 +1007,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
       }
 
       /* DVSD */
-      if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_dvsd,
-                  &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
-          && (UuidCompare (&pin_mediatype->mediatype->formattype,
-                  (UUID *) &FORMAT_VideoInfo, &rpcstatus) == 0
-              && rpcstatus == RPC_S_OK)) {
+      if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_VideoInfo)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
         video_default->defaultWidth = video_info->bmiHeader.biWidth;
@@ -1057,11 +1039,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
       }
 
       /* DV stream */
-      if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_dvsd,
-                  &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
-          && (UuidCompare (&pin_mediatype->mediatype->formattype,
-                  (UUID *) &FORMAT_DvInfo, &rpcstatus) == 0 && rpcstatus == RPC_S_OK)) {
-
+      if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_DvInfo)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
         //No video size in caps when stream ? I do know if the following fields exist
