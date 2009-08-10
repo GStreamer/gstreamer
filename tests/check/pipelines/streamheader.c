@@ -156,6 +156,8 @@ buffer_probe_cb (GstPad * pad, GstBuffer * buffer)
     }
     fail_unless (found, "Did not find incoming IN_CAPS buffer %p on caps",
         buffer);
+
+    gst_caps_unref (caps);
   }
 
   return TRUE;
