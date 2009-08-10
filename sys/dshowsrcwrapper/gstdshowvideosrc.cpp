@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C)  2007 Sebastien Moutte <sebastien@moutte.net>
+ * Copyright (C)  2009 Julien Isorce <julien.isorce@gmail.com>
  *
  * gstdshowvideosrc.c: 
  *
@@ -104,6 +105,7 @@ static gboolean gst_dshowvideosrc_unlock (GstBaseSrc * bsrc);
 static gboolean gst_dshowvideosrc_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps);
 static GstCaps *gst_dshowvideosrc_get_caps (GstBaseSrc * bsrc);
+static void gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 static GstFlowReturn gst_dshowvideosrc_create (GstPushSrc * psrc,
     GstBuffer ** buf);
 
@@ -170,6 +172,7 @@ gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_get_caps);
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_set_caps);
+  gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_src_fixate);
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_stop);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_dshowvideosrc_unlock);
@@ -205,6 +208,7 @@ gst_dshowvideosrc_init (GstDshowVideoSrc * src, GstDshowVideoSrcClass * klass)
   src->media_filter = NULL;
   src->filter_graph = NULL;
   src->caps = NULL;
+  src->video_defaults = NULL;
   src->pins_mediatypes = NULL;
   src->is_rgb = FALSE;
 
@@ -216,6 +220,36 @@ gst_dshowvideosrc_init (GstDshowVideoSrc * src, GstDshowVideoSrcClass * klass)
   CoInitializeEx (NULL, COINIT_MULTITHREADED);
 
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
+}
+
+static void
+gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
+{
+  /* If there is no desired video size, set default video size to device preffered video size */
+
+  GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  guint i = 0;
+  gint res = -1;
+
+  for (; i < gst_caps_get_size (src->caps) && res == -1; i++) {
+    GstCaps *capstmp = gst_caps_copy_nth (src->caps, i);
+
+    if (gst_caps_is_subset (caps, capstmp)) {
+      res = i;
+    }
+    gst_caps_unref (capstmp);
+  }
+
+  if (res != -1) {
+    GList *type_video_default = g_list_nth (src->video_defaults, res);
+    if (type_video_default) {
+      GstCaptureVideoDefault *video_default = (GstCaptureVideoDefault *) type_video_default->data;
+      gst_structure_fixate_field_nearest_int (structure, "width", video_default->defaultWidth);
+      gst_structure_fixate_field_nearest_int (structure, "height", video_default->defaultHeight);
+      gst_structure_fixate_field_nearest_fraction (structure, "framerate", video_default->defaultFPS, 1);
+    }
+  }
 }
 
 static void
@@ -236,6 +270,11 @@ gst_dshowvideosrc_dispose (GObject * gobject)
   if (src->caps) {
     gst_caps_unref (src->caps);
     src->caps = NULL;
+  }
+
+  if (src->video_defaults) {
+    g_list_free (src->video_defaults);
+    src->video_defaults = NULL;
   }
 
   if (src->pins_mediatypes) {
@@ -292,7 +331,6 @@ gst_dshowvideosrc_probe_probe_property (GstPropertyProbe * probe,
 
   switch (prop_id) {
     case PROP_DEVICE_NAME:
-      //gst_v4l_class_probe_devices (klass, FALSE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
@@ -556,7 +594,6 @@ static GstStateChangeReturn
 gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
 {
   HRESULT hres = S_FALSE;
-  IAMVfwCaptureDialogs *dialog = NULL;
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (element);
 
   switch (transition) {
@@ -675,12 +712,50 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 
     if (res != -1 && src->pins_mediatypes) {
       /* get the corresponding media type and build the dshow graph */
-      GstCapturePinMediaType *pin_mediatype = NULL;
-      gchar *caps_string = NULL;
       GList *type = g_list_nth (src->pins_mediatypes, res);
 
-      if (type) {
+      //will be removed when GST_TYPE_INT_RANGE_STEP exits
+      GList *type_video_default = g_list_nth (src->video_defaults, res);
+
+      if (type && type_video_default) {
+        //will be removed when GST_TYPE_INT_RANGE_STEP exits
+        GstCaptureVideoDefault *video_default = (GstCaptureVideoDefault *) type_video_default->data;
+        GstCapturePinMediaType *pin_mediatype = NULL;
+        gchar *caps_string = NULL;
+        gchar *src_caps_string = NULL;
+
+        /* retrieve the desired video size */
+        VIDEOINFOHEADER *video_info = NULL;
+        gint width = 0;
+        gint height = 0;
+        gint numerator = 0;
+        gint denominator = 0;
+        gst_structure_get_int (s, "width", &width);
+        gst_structure_get_int (s, "height", &height);
+        gst_structure_get_fraction (s, "framerate", &numerator, &denominator);
+
+        /* check if the desired video size is valid about granularity  */
+		    /* This check will be removed when GST_TYPE_INT_RANGE_STEP exits */
+        /* See remarks in gst_dshowvideosrc_getcaps_from_streamcaps function */
+        if (video_default->granularityWidth != 0 && width % video_default->granularityWidth != 0)
+          g_warning ("your desired video size is not valid : %d mod %d !=0\n", width, video_default->granularityWidth) ;
+        if (video_default->granularityHeight !=0 && height % video_default->granularityHeight != 0)
+          g_warning ("your desired video size is not valid : %d mod %d !=0\n", height, video_default->granularityHeight) ;
+
+        /* display all capabilities when using --gst-debug-level=3 */
+        src_caps_string = gst_caps_to_string (src->caps);
+        GST_CAT_LEVEL_LOG (dshowvideosrc_debug, GST_LEVEL_INFO, src, src_caps_string);
+        g_free (src_caps_string);
+
         pin_mediatype = (GstCapturePinMediaType *) type->data;
+
+        /* update mediatype */
+        video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
+        video_info->bmiHeader.biWidth = width;
+        video_info->bmiHeader.biHeight = height;
+        video_info->AvgTimePerFrame = (LONGLONG) (10000000 * denominator / (double)numerator);
+        video_info->bmiHeader.biSizeImage = DIBSIZE(video_info->bmiHeader);
+        pin_mediatype->mediatype->lSampleSize = DIBSIZE(video_info->bmiHeader);
 
         src->dshow_fakesink->gst_set_media_type (pin_mediatype->mediatype);
         src->dshow_fakesink->gst_set_buffer_callback(
@@ -695,7 +770,7 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
         }
 
         hres = src->filter_graph->ConnectDirect(pin_mediatype->capture_pin, 
-          input_pin, NULL);
+          input_pin, pin_mediatype->mediatype);
         input_pin->Release();
 
         if (hres != S_OK) {
@@ -845,6 +920,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
 
   for (; i < icount; i++) {
     GstCapturePinMediaType *pin_mediatype = g_new0 (GstCapturePinMediaType, 1);
+    GstCaptureVideoDefault *video_default = g_new0 (GstCaptureVideoDefault, 1);
 
     pin->AddRef();
     pin_mediatype->capture_pin = pin;
@@ -857,6 +933,17 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
       if (!caps)
         caps = gst_caps_new_empty ();
 
+      /* some remarks: */
+      /* Hope GST_TYPE_INT_RANGE_STEP will exits in future gstreamer releases  */
+      /* because we could use :  */
+      /* "width", GST_TYPE_INT_RANGE_STEP, video_default->minWidth, video_default->maxWidth,  video_default->granularityWidth */
+      /* instead of : */
+      /* "width", GST_TYPE_INT_RANGE, video_default->minWidth, video_default->maxWidth */
+
+      /* For framerate we do not need a step (granularity) because  */
+      /* "The IAMStreamConfig::SetFormat method will set the frame rate to the closest  */
+      /* value that the filter supports" as it said in the VIDEO_STREAM_CONFIG_CAPS dshwo doc */
+
       /* I420 */
       if ((UuidCompare (&pin_mediatype->mediatype->subtype, (UUID *) &MEDIASUBTYPE_I420,
                   &rpcstatus) == 0 && rpcstatus == RPC_S_OK)
@@ -865,19 +952,29 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
               && rpcstatus == RPC_S_OK)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
+        video_default->defaultWidth = video_info->bmiHeader.biWidth;
+        video_default->defaultHeight = video_info->bmiHeader.biHeight;
+        video_default->defaultFPS = (int) (10000000 / video_info->AvgTimePerFrame);
+        video_default->granularityWidth = vscc.OutputGranularityX;
+        video_default->granularityHeight = vscc.OutputGranularityY;
+
         mediacaps = gst_caps_new_simple ("video/x-raw-yuv",
-            "width", G_TYPE_INT, video_info->bmiHeader.biWidth,
-            "height", G_TYPE_INT, video_info->bmiHeader.biHeight,
-            "framerate", GST_TYPE_FRACTION,
-            (int) (10000000 / video_info->AvgTimePerFrame), 1, "format",
-            GST_TYPE_FOURCC, MAKEFOURCC ('I', '4', '2', '0'), NULL);
+          "width", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cx, vscc.MaxOutputSize.cx,
+          "height", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cy, vscc.MaxOutputSize.cy,
+          "framerate", GST_TYPE_FRACTION_RANGE,
+          (int) (10000000 / vscc.MaxFrameInterval), 1,
+          (int) (10000000 / vscc.MinFrameInterval), 1,
+          "format", GST_TYPE_FOURCC, MAKEFOURCC ('I', '4', '2', '0'), NULL);
 
         if (mediacaps) {
           src->pins_mediatypes =
               g_list_append (src->pins_mediatypes, pin_mediatype);
+          src->video_defaults =
+            g_list_append (src->video_defaults, video_default);
           gst_caps_append (caps, mediacaps);
         } else {
           gst_dshow_free_pin_mediatype (pin_mediatype);
+          g_free (video_default);
         }
         continue;
       }
@@ -890,23 +987,35 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
               && rpcstatus == RPC_S_OK)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
+        video_default->defaultWidth = video_info->bmiHeader.biWidth;
+        video_default->defaultHeight = video_info->bmiHeader.biHeight;
+        video_default->defaultFPS = (int) (10000000 / video_info->AvgTimePerFrame);
+        video_default->granularityWidth = vscc.OutputGranularityX;
+        video_default->granularityHeight = vscc.OutputGranularityY;
+
         /* ffmpegcolorspace handles RGB24 in BIG_ENDIAN */
         mediacaps = gst_caps_new_simple ("video/x-raw-rgb",
-            "bpp", G_TYPE_INT, 24,
-            "depth", G_TYPE_INT, 24,
-            "width", G_TYPE_INT, video_info->bmiHeader.biWidth,
-            "height", G_TYPE_INT, video_info->bmiHeader.biHeight,
-            "framerate", GST_TYPE_FRACTION,
-            (int) (10000000 / video_info->AvgTimePerFrame), 1, "endianness",
-            G_TYPE_INT, G_BIG_ENDIAN, "red_mask", G_TYPE_INT, 255, "green_mask",
-            G_TYPE_INT, 65280, "blue_mask", G_TYPE_INT, 16711680, NULL);
+          "bpp", G_TYPE_INT, 24,
+          "depth", G_TYPE_INT, 24,
+          "width", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cx, vscc.MaxOutputSize.cx,
+          "height", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cy, vscc.MaxOutputSize.cy,
+          "framerate", GST_TYPE_FRACTION_RANGE,
+          (int) (10000000 / vscc.MaxFrameInterval), 1,
+          (int) (10000000 / vscc.MinFrameInterval), 1,
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+          "red_mask", G_TYPE_INT, 255,
+          "green_mask", G_TYPE_INT, 65280,
+          "blue_mask", G_TYPE_INT, 16711680, NULL);
 
         if (mediacaps) {
           src->pins_mediatypes =
               g_list_append (src->pins_mediatypes, pin_mediatype);
+          src->video_defaults =
+            g_list_append (src->video_defaults, video_default);
           gst_caps_append (caps, mediacaps);
         } else {
           gst_dshow_free_pin_mediatype (pin_mediatype);
+          g_free (video_default);
         }
         continue;
       }
@@ -919,20 +1028,30 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
               && rpcstatus == RPC_S_OK)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
+        video_default->defaultWidth = video_info->bmiHeader.biWidth;
+        video_default->defaultHeight = video_info->bmiHeader.biHeight;
+        video_default->defaultFPS = (int) (10000000 / video_info->AvgTimePerFrame);
+        video_default->granularityWidth = vscc.OutputGranularityX;
+        video_default->granularityHeight = vscc.OutputGranularityY;
+
         mediacaps = gst_caps_new_simple ("video/x-dv",
-            "systemstream", G_TYPE_BOOLEAN, FALSE,
-            "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
-            "framerate", GST_TYPE_FRACTION,
-            (int) (10000000 / video_info->AvgTimePerFrame), 1, "width",
-            G_TYPE_INT, video_info->bmiHeader.biWidth, "height", G_TYPE_INT,
-            video_info->bmiHeader.biHeight, NULL);
+          "systemstream", G_TYPE_BOOLEAN, FALSE,
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
+          "framerate", GST_TYPE_FRACTION_RANGE,
+          (int) (10000000 / vscc.MaxFrameInterval), 1,
+          (int) (10000000 / vscc.MinFrameInterval), 1,
+          "width", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cx, vscc.MaxOutputSize.cx,
+          "height", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cy, vscc.MaxOutputSize.cy, NULL);
 
         if (mediacaps) {
           src->pins_mediatypes =
               g_list_append (src->pins_mediatypes, pin_mediatype);
+          src->video_defaults =
+            g_list_append (src->video_defaults, video_default);
           gst_caps_append (caps, mediacaps);
         } else {
           gst_dshow_free_pin_mediatype (pin_mediatype);
+          g_free (video_default);
         }
         continue;
       }
@@ -943,20 +1062,33 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
           && (UuidCompare (&pin_mediatype->mediatype->formattype,
                   (UUID *) &FORMAT_DvInfo, &rpcstatus) == 0 && rpcstatus == RPC_S_OK)) {
 
+        video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
+
+        //No video size in caps when stream ? I do know if the following fields exist
+        video_default->defaultWidth = video_info->bmiHeader.biWidth;
+        video_default->defaultHeight = video_info->bmiHeader.biHeight;
+        video_default->defaultFPS = (int) (10000000 / video_info->AvgTimePerFrame);
+        video_default->granularityWidth = vscc.OutputGranularityX;
+        video_default->granularityHeight = vscc.OutputGranularityY;
+
         mediacaps = gst_caps_new_simple ("video/x-dv",
             "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
 
         if (mediacaps) {
           src->pins_mediatypes =
               g_list_append (src->pins_mediatypes, pin_mediatype);
+          src->video_defaults =
+            g_list_append (src->video_defaults, video_default);
           gst_caps_append (caps, mediacaps);
         } else {
           gst_dshow_free_pin_mediatype (pin_mediatype);
+          g_free (video_default);
         }
         continue;
       }
     } else {
       gst_dshow_free_pin_mediatype (pin_mediatype);
+      g_free (video_default);
     }
   }
 

@@ -42,6 +42,18 @@ G_BEGIN_DECLS
 typedef struct _GstDshowVideoSrc GstDshowVideoSrc;
 typedef struct _GstDshowVideoSrcClass GstDshowVideoSrcClass;
 
+/* video default properties associated to a video format (YUY2, I420, RGB24 ...) */
+typedef struct _GstCaptureVideoDefault
+{
+  gint defaultWidth;
+  gint defaultHeight;
+  gint defaultFPS;
+
+  gint granularityWidth; //will be removed when GST_TYPE_INT_RANGE_STEP exits
+  gint granularityHeight; //will be removed when GST_TYPE_INT_RANGE_STEP exits
+
+} GstCaptureVideoDefault;
+
 struct _GstDshowVideoSrc
 {
   GstPushSrc src;
@@ -54,6 +66,9 @@ struct _GstDshowVideoSrc
 
   /* list of caps created from the list of supported media types of the dshow capture filter */
   GstCaps *caps;
+
+  /* list of dshow default video properties from filter's capture pins */
+  GList *video_defaults;
 
   /* list of dshow media types from the filter's capture pins */
   GList *pins_mediatypes;
