@@ -1183,7 +1183,8 @@ gst_ffmpegenc_register (GstPlugin * plugin)
 
     /* first make sure we've got a supported type */
     if (!(srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE))) {
-      GST_WARNING ("Couldn't get source caps for encoder %s", in_plugin->name);
+      GST_DEBUG ("Couldn't get source caps for encoder '%s', skipping codec",
+          in_plugin->name);
       goto next;
     }
 
@@ -1195,7 +1196,8 @@ gst_ffmpegenc_register (GstPlugin * plugin)
           in_plugin->id, TRUE, in_plugin);
     }
     if (!sinkcaps) {
-      GST_WARNING ("Couldn't get sink caps for encoder %s", in_plugin->name);
+      GST_DEBUG ("Couldn't get sink caps for encoder '%s', skipping codec",
+          in_plugin->name);
       goto next;
     }
     /* construct the type */

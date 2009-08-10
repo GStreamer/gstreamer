@@ -1962,7 +1962,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     /* Try to find the caps that belongs here */
     sinkcaps = gst_ffmpeg_formatid_to_caps (name);
     if (!sinkcaps) {
-      GST_WARNING ("Couldn't get sinkcaps for demuxer %s", in_plugin->name);
+      GST_DEBUG ("Couldn't get sinkcaps for demuxer '%s', skipping format",
+          in_plugin->name);
       goto next;
     }
     /* This is a bit ugly, but we just take all formats

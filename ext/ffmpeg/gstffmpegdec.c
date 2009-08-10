@@ -2816,7 +2816,8 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     /* first make sure we've got a supported type */
     sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
     if (!sinkcaps) {
-      GST_WARNING ("Couldn't get sink caps for decoder '%s'", in_plugin->name);
+      GST_DEBUG ("Couldn't get sink caps for decoder '%s', skipping codec",
+          in_plugin->name);
       goto next;
     }
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
@@ -2826,7 +2827,8 @@ gst_ffmpegdec_register (GstPlugin * plugin)
           in_plugin->id, FALSE, in_plugin);
     }
     if (!srccaps) {
-      GST_WARNING ("Couldn't get source caps for decoder %s", in_plugin->name);
+      GST_DEBUG ("Couldn't get source caps for decoder '%s', skipping codec",
+          in_plugin->name);
       goto next;
     }
 

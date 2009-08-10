@@ -809,14 +809,15 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     /* Try to find the caps that belongs here */
     srccaps = gst_ffmpeg_formatid_to_caps (in_plugin->name);
     if (!srccaps) {
-      GST_WARNING ("Couldn't get source caps for muxer %s", in_plugin->name);
+      GST_DEBUG ("Couldn't get source caps for muxer '%s', skipping format",
+          in_plugin->name);
       goto next;
     }
     if (!gst_ffmpeg_formatid_get_codecids (in_plugin->name,
             &video_ids, &audio_ids, in_plugin)) {
       gst_caps_unref (srccaps);
-      GST_WARNING
-          ("Couldn't get sink caps for muxer %s. Most likely because no input format mapping exists.",
+      GST_DEBUG
+          ("Couldn't get sink caps for muxer '%s'. Most likely because no input format mapping exists.",
           in_plugin->name);
       goto next;
     }
