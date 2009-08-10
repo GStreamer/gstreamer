@@ -470,8 +470,16 @@ gst_object_suite (void)
   tcase_add_test (tc_chain, test_fake_object_parentage_dispose);
   //tcase_add_checked_fixture (tc_chain, setup, teardown);
 
+  /* FIXME: GLib shouldn't crash here, but issue a warning and return a NULL
+   * object, or at least g_error() and then abort properly ... (tpm) */
+#ifdef HAVE_OSX
+  /* on OSX we get SIGBUS instead it seems */
+  tcase_add_test_raise_signal (tc_chain, test_fail_abstract_new, SIGBUS);
+#else
   /* SEGV tests go last so we can debug the others */
   tcase_add_test_raise_signal (tc_chain, test_fail_abstract_new, SIGSEGV);
+#endif
+
   return s;
 }
 

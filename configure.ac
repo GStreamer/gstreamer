@@ -204,6 +204,7 @@ case $host_os in
      darwin*)
 	AC_DEFINE_UNQUOTED(GST_EXTRA_MODULE_SUFFIX, [".dylib"], [Extra platform specific plugin suffix])
         AC_DEFINE_UNQUOTED(GST_HAVE_UNSAFE_FORK, 1, [Defined when registry scanning through fork is unsafe])
+        AC_DEFINE_UNQUOTED(HAVE_OSX, 1, [Defined if compiling for OSX])
 	;;
      cygwin*)
 	AC_DEFINE_UNQUOTED(GST_HAVE_UNSAFE_FORK, 1, [Defined when registry scanning through fork is unsafe])
