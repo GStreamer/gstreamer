@@ -447,6 +447,8 @@ GST_START_TEST (test_kate_encode_simple)
   GstCaps *caps;
 
   kateenc = setup_kateenc ();
+  g_object_set (kateenc, "category", "subtitles", NULL);
+
   fail_unless (gst_element_set_state (kateenc,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -498,6 +500,8 @@ GST_START_TEST (test_kate_encode_spu)
   GstCaps *caps;
 
   kateenc = setup_kateenc ();
+  g_object_set (kateenc, "category", "spu-subtitles", NULL);
+
   fail_unless (gst_element_set_state (kateenc,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -560,6 +564,8 @@ GST_START_TEST (test_kate_encode_keepalives)
 
   for (round = 0; round < 3; ++round) {
     kateenc = setup_kateenc ();
+    /* doesn't matter here, since we never send a packet */
+    g_object_set (kateenc, "category", "subtitles", NULL);
     fail_unless (gst_element_set_state (kateenc,
             GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
         "could not set to playing");

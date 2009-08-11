@@ -62,14 +62,18 @@
  * <para>
  * This encodes a DVD SPU track to a Kate stream:
  * <programlisting>
- * gst-launch dvdreadsrc ! dvddemux ! dvdsubparse ! kateenc ! oggmux ! filesink location=test.ogg
+ * gst-launch dvdreadsrc ! dvddemux ! dvdsubparse ! kateenc category=spu-subtitles ! oggmux ! filesink location=test.ogg
  * </programlisting>
  * </para>
  * </refsect2>
  */
 
-/* FIXME: should we automatically pick up the language code from the
- * upstream event tags if none was set via the property? */
+/* FIXME:
+ *  - should we automatically pick up the language code from the
+ *    upstream event tags if none was set via the property?
+ *  - turn category property into an enum (freestyle text property in
+ *    combination with supposedly strictly defined known values that
+ *    aren't even particularly human-readable is just not very nice)? */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -131,6 +135,7 @@ static void gst_kate_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_kate_enc_dispose (GObject * object);
 
+static gboolean gst_kate_enc_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_kate_enc_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_kate_enc_change_state (GstElement * element,
     GstStateChange transition);
@@ -246,6 +251,8 @@ gst_kate_enc_init (GstKateEnc * ke, GstKateEncClass * gclass)
       GST_DEBUG_FUNCPTR (gst_kate_enc_chain));
   gst_pad_set_event_function (ke->sinkpad,
       GST_DEBUG_FUNCPTR (gst_kate_enc_sink_event));
+  gst_pad_set_setcaps_function (ke->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_kate_enc_setcaps));
   gst_element_add_pad (GST_ELEMENT (ke), ke->sinkpad);
 
   ke->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
@@ -515,6 +522,47 @@ gst_kate_enc_set_metadata (GstKateEnc * ke)
 }
 
 static gboolean
+gst_kate_enc_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstKateEnc *ke;
+
+  ke = GST_KATE_ENC (GST_PAD_PARENT (pad));
+
+  GST_LOG_OBJECT (ke, "input caps: %" GST_PTR_FORMAT, caps);
+
+  /* One day we could try to automatically set the category based on the
+   * input format, assuming that the input is subtitles. Currently that
+   * doesn't work yet though, because we send the header packets already from
+   * the sink event handler when receiving the newsegment event, so before
+   * the first buffer (might be tricky to change too, given that there could
+   * be no data at the beginning for a long time). So for now we just try to
+   * make sure people didn't set the category to something obviously wrong. */
+  if (ke->category != NULL) {
+    GstStructure *s = gst_caps_get_structure (caps, 0);
+
+    if (gst_structure_has_name (s, "text/plain") ||
+        gst_structure_has_name (s, "text/x-pango-markup")) {
+      if (strcmp (ke->category, "K-SPU") == 0 ||
+          strcmp (ke->category, "spu-subtitles") == 0) {
+        GST_ELEMENT_WARNING (ke, LIBRARY, SETTINGS, (NULL),
+            ("Category set to '%s', but input is text-based.", ke->category));
+      }
+    } else if (gst_structure_has_name (s, "video/x-dvd-subpicture")) {
+      if (strcmp (ke->category, "SUB") == 0 ||
+          strcmp (ke->category, "subtitles") == 0) {
+        GST_ELEMENT_WARNING (ke, LIBRARY, SETTINGS, (NULL),
+            ("Category set to '%s', but input is subpictures.", ke->category));
+      }
+    } else {
+      GST_ERROR_OBJECT (ke, "unexpected input caps %" GST_PTR_FORMAT, caps);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_kate_enc_is_simple_subtitle_category (GstKateEnc * ke, const char *category)
 {
   static const char *const simple[] = {
@@ -540,6 +588,14 @@ gst_kate_enc_send_headers (GstKateEnc * ke)
   GstFlowReturn rflow = GST_FLOW_OK;
   GstCaps *caps;
   GList *headers = NULL, *item;
+
+  if (G_UNLIKELY (ke->category == NULL || *ke->category == '\0')) {
+    /* The error code is a bit of a lie, but seems most appropriate. */
+    GST_ELEMENT_ERROR (ke, LIBRARY, SETTINGS, (NULL),
+        ("The 'category' property must be set. For subtitles, set it to "
+            "either 'SUB' (text subtitles) or 'K-SPU' (dvd-style subtitles)"));
+    return GST_FLOW_ERROR;
+  }
 
   gst_kate_enc_set_metadata (ke);
 
