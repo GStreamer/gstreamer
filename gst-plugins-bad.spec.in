@@ -70,6 +70,8 @@ rm -rf $RPM_BUILD_ROOT
 %files -f gst-plugins-bad-%{majorminor}.lang
 %defattr(-, root, root)
 %doc AUTHORS COPYING README REQUIREMENTS gst-plugins-bad.doap
+%{_bindir}/gst-camera
+%{_bindir}/gst-camera-perf
 
 # non-core plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgsttta.so
@@ -125,12 +127,23 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgsthdvparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstshapewipe.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdebugutilsbad.so
+%{_libdir}/gstreamer-%{majorminor}/libgstasfmux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstofa.so
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideocodec.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideodecoder.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoencoder.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoparse.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoutils.h
+%{_datadir}/gstreamer-%{majorminor}/camera-apps/gst-camera.glade
+
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography.h
 %{_libdir}/libgstphotography-0.10.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcamerabin.so
 %{_libdir}/libgstphotography-%{majorminor}.so.0
 %{_libdir}/libgstphotography-%{majorminor}.so.0.0.0
+%{_libdir}/libgstbasevideo*
+%{_libdir}/libgstsignalprocessor*
 # %{_datadir}/gstreamer-%{majorminor}/presets/GstFAAC.prs
 # gstreamer-plugins with external dependencies but in the main package
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
@@ -158,6 +171,9 @@ rm -rf $RPM_BUILD_ROOT
 @USE_MPEG2ENC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
 @USE_MPLEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmplex.so
 @USE_KATE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstkate.so
+@USE_ASSRENDER_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstassrender.so
+@USE_PLUGIN_FREI0R_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
+@USE_SCHRO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstschro.so
 
 %changelog
 * Thu Mar 12 2009 Christian Schaller <chrisian.schaller at collabora dot co uk>
