@@ -24,7 +24,7 @@
  * 
  * The ladspa (Linux Audio Developer's Simple Plugin API) element is a bridge
  * for plugins using the <ulink url="http://www.ladspa.org/">ladspa</ulink> API.
- * It scans all installed ladspa plugins and registeres them as gstreamer
+ * It scans all installed ladspa plugins and registers them as gstreamer
  * elements. If available it can also parse lrdf files and use the metadata for
  * element classification.
  */
