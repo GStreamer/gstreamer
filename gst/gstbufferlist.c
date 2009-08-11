@@ -49,10 +49,9 @@
  * </informalexample>
  *
  * The gst_buffer_list_iterator_remove(), gst_buffer_list_iterator_steal(),
- * gst_buffer_list_iterator_take(), gst_buffer_list_iterator_do() and
- * gst_buffer_list_iterator_do_data() functions are not defined in terms of the
- * cursor position; they operate on the last element returned from
- * gst_buffer_list_iterator_next().
+ * gst_buffer_list_iterator_take() and gst_buffer_list_iterator_do() functions
+ * are not defined in terms of the cursor position; they operate on the last
+ * element returned from gst_buffer_list_iterator_next().
  *
  * The basic use pattern of creating a buffer list with an iterator is as
  * follows:
