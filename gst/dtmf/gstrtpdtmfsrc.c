@@ -302,6 +302,16 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
 }
 
 static void
+gst_rtp_dtmf_src_event_free (GstRTPDTMFSrcEvent * event)
+{
+  if (event) {
+    g_free (event->payload);
+    event->payload = NULL;
+    g_free (event);
+  }
+}
+
+static void
 gst_rtp_dtmf_src_init (GstRTPDTMFSrc * object, GstRTPDTMFSrcClass * g_class)
 {
   gst_base_src_set_format (GST_BASE_SRC (object), GST_FORMAT_TIME);
@@ -315,7 +325,8 @@ gst_rtp_dtmf_src_init (GstRTPDTMFSrc * object, GstRTPDTMFSrcClass * g_class)
   object->interval = DEFAULT_PACKET_INTERVAL;
   object->packet_redundancy = DEFAULT_PACKET_REDUNDANCY;
 
-  object->event_queue = g_async_queue_new ();
+  object->event_queue =
+      g_async_queue_new_full ((GDestroyNotify) gst_rtp_dtmf_src_event_free);
   object->payload = NULL;
 
   GST_DEBUG_OBJECT (object, "init done");
@@ -997,7 +1008,7 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
 
       /* Flushing the event queue */
       while ((event = g_async_queue_try_pop (dtmfsrc->event_queue)) != NULL)
-        g_free (event);
+        gst_rtp_dtmf_src_event_free (event);
 
       no_preroll = TRUE;
       break;
@@ -1018,7 +1029,7 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
 
       /* Flushing the event queue */
       while ((event = g_async_queue_try_pop (dtmfsrc->event_queue)) != NULL)
-        g_free (event);
+        gst_rtp_dtmf_src_event_free (event);
 
       /* Indicate that we don't do PRE_ROLL */
       break;
