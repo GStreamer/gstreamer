@@ -1149,6 +1149,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstJpegEnc::idct-method</NAME>
+<TYPE>GstIDCTMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IDCT Method</NICK>
+<BLURB>The IDCT algorithm to use.</BLURB>
+<DEFAULT>Faster, less accurate integer method</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSmokeEnc::keyframe</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[1,100000]</RANGE>
@@ -20146,5 +20156,235 @@
 <NICK>Reset</NICK>
 <BLURB>Reset all current ripples.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::do-lost</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Lost</NICK>
+<BLURB>Send an event downstream when a packet is lost.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::latency</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer latency in ms</NICK>
+<BLURB>Default amount of ms to buffer in the jitterbuffers.</BLURB>
+<DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::sdes</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES</NICK>
+<BLURB>The SDES items of this session.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::do-lost</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Lost</NICK>
+<BLURB>Send an event downstream when a packet is lost.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::drop-on-latency</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop buffers when maximum latency is reached</NICK>
+<BLURB>Tells the jitterbuffer to never exceed the given latency in size.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::latency</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer latency in ms</NICK>
+<BLURB>Amount of ms to buffer.</BLURB>
+<DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::ts-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp Offset</NICK>
+<BLURB>Adjust buffer timestamps with offset in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::bandwidth</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bandwidth</NICK>
+<BLURB>The bandwidth of the session.</BLURB>
+<DEFAULT>64000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::internal-session</NAME>
+<TYPE>RTPSession*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Internal Session</NICK>
+<BLURB>The internal RTPSession object.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::ntp-ns-base</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>NTP base time</NICK>
+<BLURB>The NTP base time corresponding to running_time 0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::num-active-sources</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num Active Sources</NICK>
+<BLURB>The number of active sources in the session.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::num-sources</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num Sources</NICK>
+<BLURB>The number of sources in the session.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::rtcp-fraction</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTCP Fraction</NICK>
+<BLURB>The fraction of the bandwidth used for RTCP.</BLURB>
+<DEFAULT>3000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::sdes</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES</NICK>
+<BLURB>The SDES items of this session.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>Device location.</BLURB>
+<DEFAULT>"/dev/video1"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::device-fd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>File descriptor</NICK>
+<BLURB>File descriptor of the device.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Name of the device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::flags</NAME>
+<TYPE>GstV4l2DeviceTypeFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Device type flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::overlay-height</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overlay height</NICK>
+<BLURB>The height of the video overlay; default is equal to negotiated image height.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::overlay-left</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overlay left</NICK>
+<BLURB>The leftmost (x) coordinate of the video overlay; top left corner of screen is 0,0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::overlay-top</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overlay top</NICK>
+<BLURB>The topmost (y) coordinate of the video overlay; top left corner of screen is 0,0.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::overlay-width</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overlay width</NICK>
+<BLURB>The width of the video overlay; default is equal to negotiated image width.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::queue-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Queue size</NICK>
+<BLURB>Number of buffers to be enqueud in the driver in streaming mode.</BLURB>
+<DEFAULT>8</DEFAULT>
 </ARG>
 

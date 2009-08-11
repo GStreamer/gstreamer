@@ -989,6 +989,27 @@
       </pads>
     </element>
     <element>
+      <name>rtpqdm2depay</name>
+      <longname>RTP QDM2 depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts QDM2 audio from RTP packets (no RFC)</description>
+      <author>Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], encoding-name=(string)X-QDM</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-qdm2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpsirendepay</name>
       <longname>RTP Siren packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
@@ -1083,7 +1104,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string){ X-SV3V-ES, X-SORENSON-VIDEO }</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string){ X-SV3V-ES, X-SORENSON-VIDEO, X-SORENSONVIDEO, X-SorensonVideo }</details>
         </caps>
         <caps>
           <name>src</name>
