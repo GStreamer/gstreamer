@@ -311,18 +311,22 @@ gst_util_div128_64 (guint64 c1, guint64 c0, guint64 denom, guint64 * remainder)
    */
 
   guint64 quotient = 0;
+  GstUInt64 _c1;
 
-  while (c1) {
-    guint64 a;
+  _c1.ll = c1;
+
+  while (_c1.ll) {
+    GstUInt64 _a;
+
     /* add c1 * (2^64 // d) to quotient, store 2^64 % d in a */
-    quotient += c1 * gst_util_two_to_the_64_over_d (denom, &a);
+    quotient += _c1.ll * gst_util_two_to_the_64_over_d (denom, &_a.ll);
     /* store the high and low words of c1 * (2^64 % d) in c1 and a
      * respectively */
-    gst_util_uint64_mul_uint64 ((GstUInt64 *) & c1, (GstUInt64 *) & a, c1, a);
+    gst_util_uint64_mul_uint64 (&_c1, &_a, _c1.ll, _a.ll);
     /* add a to c0, with a carry into c1 if the result rolls over */
-    if (G_MAXUINT64 - c0 < a)
-      c1++;
-    c0 += a;
+    if (G_MAXUINT64 - c0 < _a.ll)
+      _c1.ll++;
+    c0 += _a.ll;
   }
 
   /* c1 is 0.  use regular integer arithmetic with c0 to complete result */
@@ -361,17 +365,17 @@ static guint64
 gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
     guint64 denom, guint64 * remainder)
 {
-  guint64 c1, c0;
+  GstUInt64 c1, c0;
 
   /* compute 128-bit numerator product */
-  gst_util_uint64_mul_uint64 ((GstUInt64 *) & c1, (GstUInt64 *) & c0, val, num);
+  gst_util_uint64_mul_uint64 (&c1, &c0, val, num);
 
   /* high word as big as or bigger than denom --> overflow */
-  if (G_UNLIKELY (c1 >= denom))
+  if (G_UNLIKELY (c1.ll >= denom))
     return G_MAXUINT64;
 
   /* compute quotient, fits in 64 bits */
-  return gst_util_div128_64 (c1, c0, denom, remainder);
+  return gst_util_div128_64 (c1.ll, c0.ll, denom, remainder);
 }
 
 static inline guint64
