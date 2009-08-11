@@ -737,8 +737,11 @@ gst_segment_clip (GstSegment * segment, GstFormat format, gint64 start,
     return FALSE;
 
   /* if a stop position is given and is before the segment start,
-   * we're outside of the segment */
-  if (G_UNLIKELY (stop != -1 && stop <= segment->start))
+   * we're outside of the segment. Special case is were start
+   * and stop are equal to the segment start. In that case we
+   * are inside the segment. */
+  if (G_UNLIKELY (stop != -1 && (stop < segment->start || (start != stop
+                  && stop == segment->start))))
     return FALSE;
 
   if (clip_start) {
