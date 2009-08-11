@@ -583,7 +583,7 @@ static void
 gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc * dtmfsrc)
 {
 
-  GstRTPDTMFSrcEvent *event = g_malloc (sizeof (GstRTPDTMFSrcEvent));
+  GstRTPDTMFSrcEvent *event = g_new0 (GstRTPDTMFSrcEvent, 1);
   event->event_type = RTP_DTMF_EVENT_TYPE_STOP;
 
   g_async_queue_push (dtmfsrc->event_queue, event);
@@ -701,6 +701,7 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
 
           dtmfsrc->payload = event->payload;
+          event->payload = NULL;
           break;
 
         case RTP_DTMF_EVENT_TYPE_PAUSE_TASK:
@@ -717,7 +718,7 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           break;
       }
 
-      g_free (event);
+      gst_rtp_dtmf_src_event_free (event);
     } else if (!dtmfsrc->first_packet && !dtmfsrc->last_packet &&
         (dtmfsrc->timestamp - dtmfsrc->start_timestamp) / GST_MSECOND >=
         MIN_PULSE_DURATION) {
@@ -755,7 +756,7 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
             GST_OBJECT_UNLOCK (dtmfsrc);
             break;
         }
-        g_free (event);
+        gst_rtp_dtmf_src_event_free (event);
       }
     }
   } while (dtmfsrc->payload == NULL);
@@ -1068,7 +1069,7 @@ gst_rtp_dtmf_src_unlock (GstBaseSrc * src)
   GST_OBJECT_UNLOCK (dtmfsrc);
 
   GST_DEBUG_OBJECT (dtmfsrc, "Pushing the PAUSE_TASK event on unlock request");
-  event = g_malloc (sizeof (GstRTPDTMFSrcEvent));
+  event = g_new0 (GstRTPDTMFSrcEvent, 1);
   event->event_type = RTP_DTMF_EVENT_TYPE_PAUSE_TASK;
   g_async_queue_push (dtmfsrc->event_queue, event);
 
