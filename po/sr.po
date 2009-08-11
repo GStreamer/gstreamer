@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 14:43+0100\n"
+"POT-Creation-Date: 2009-08-11 17:17+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -35,10 +35,10 @@ msgstr "Не могу да затворим управљачки уређај �
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
 
-msgid "This file contains no playable streams."
+msgid "This file is invalid and cannot be played."
 msgstr ""
 
-msgid "This file is invalid and cannot be played."
+msgid "This file contains no playable streams."
 msgstr ""
 
 msgid "This file is incomplete and cannot be played."
@@ -238,6 +238,10 @@ msgid "Device '%s' is not a capture device."
 msgstr "Уређај „%s“ не представља уређај за снимање."
 
 #, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "Уређај „%s“ не представља уређај за снимање."
+
+#, fuzzy, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Не могу да примим бафере са уређаја „%s“."
 
@@ -273,35 +277,12 @@ msgstr "Не могу да отворим радио уређај '%s'"
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Не могу да примим бафере са уређаја „%s“."
 
-#, c-format
-msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
-
 #, fuzzy, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
 
 #, c-format
-msgid ""
-"The buffer type is not supported, or the index is out of bounds, or no "
-"buffers have been allocated yet, or the userptr or length are invalid. "
-"device %s"
-msgstr ""
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr ""
-
-#, c-format
-msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr ""
-
-#, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
-
-#, c-format
-msgid "No free buffers found in the pool at index %d."
 msgstr ""
 
 #, fuzzy, c-format
@@ -312,39 +293,11 @@ msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 
 #, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Уређај „%s“ не представља уређај за снимање."
-
-#, fuzzy, c-format
-msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Уређај „%s“ не представља уређај за снимање."
-
-#, c-format
-msgid "Device '%s' cannot capture in the specified format"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not get buffers from device '%s'."
-msgstr "Не могу да примим бафере са уређаја „%s“."
-
-#, fuzzy, c-format
-msgid "Could not get enough buffers from device '%s'."
-msgstr "Не могу да примим довољно бафера са уређаја „%s“."
-
-#, fuzzy, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Не могу да примим бафере са уређаја „%s“."
 
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
-msgstr ""
-
-#, c-format
-msgid "Error starting streaming capture from device '%s'."
-msgstr ""
-
-#, c-format
-msgid "Error stopping streaming capture from device '%s'."
 msgstr ""
 
 msgid "Changing resolution at runtime is not yet supported."

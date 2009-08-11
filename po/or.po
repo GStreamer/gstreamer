@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 14:43+0100\n"
+"POT-Creation-Date: 2009-08-11 17:17+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -35,10 +35,10 @@ msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କ�
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "ନିବେଶ ଧ୍ବନି ନାହିଁ ବା ଅବୈଧ ଅଛି. ଏ.ଭି.ଆଇ. ଧାରା ଭ୍ରଷ୍ଟ ହୋଇଯିବ."
 
-msgid "This file contains no playable streams."
+msgid "This file is invalid and cannot be played."
 msgstr ""
 
-msgid "This file is invalid and cannot be played."
+msgid "This file contains no playable streams."
 msgstr ""
 
 msgid "This file is incomplete and cannot be played."
@@ -240,6 +240,10 @@ msgid "Device '%s' is not a capture device."
 msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
 
 #, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
+
+#, fuzzy, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
 
@@ -275,35 +279,12 @@ msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବନ୍ଦ କରିହେ�
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
 
-#, c-format
-msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
-
 #, fuzzy, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
 
 #, c-format
-msgid ""
-"The buffer type is not supported, or the index is out of bounds, or no "
-"buffers have been allocated yet, or the userptr or length are invalid. "
-"device %s"
-msgstr ""
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr ""
-
-#, c-format
-msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr ""
-
-#, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
-
-#, c-format
-msgid "No free buffers found in the pool at index %d."
 msgstr ""
 
 #, fuzzy, c-format
@@ -314,26 +295,6 @@ msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 
 #, fuzzy, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
-
-#, fuzzy, c-format
-msgid "Device '%s' cannot capture at %dx%d"
-msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
-
-#, c-format
-msgid "Device '%s' cannot capture in the specified format"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not get buffers from device '%s'."
-msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
-
-#, fuzzy, c-format
-msgid "Could not get enough buffers from device '%s'."
-msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
-
-#, fuzzy, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
 
@@ -341,19 +302,27 @@ msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ �
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 
-#, c-format
-msgid "Error starting streaming capture from device '%s'."
-msgstr ""
-
-#, c-format
-msgid "Error stopping streaming capture from device '%s'."
-msgstr ""
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
+
+#, fuzzy
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
+
+#, fuzzy
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
+
+#, fuzzy
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
 
 #, fuzzy
 #~ msgid "Could not read from CD."

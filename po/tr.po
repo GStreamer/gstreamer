@@ -1,93 +1,92 @@
-# Indonesian translations for gst-plugins-good package.
+# translation of gst-plugins-good-0.10.14.2.po to Turkish
 # This file is put in the public domain.
-# Andhika Padmawan <andhika.padmawan@gmail.com>, 2008.
-#
+# Server Acim <serveracim@gmail.com>, 2009.
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2009-08-11 17:17+0100\n"
-"PO-Revision-Date: 2009-05-14 22:01+0700\n"
-"Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
-"Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
+"PO-Revision-Date: 2009-06-21 11:35+0200\n"
+"Last-Translator: Server Acim <serveracim@gmail.com>\n"
+"Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Could not establish connection to sound server"
-msgstr "Tak dapat membangun koneksi ke server suara"
+msgstr "Ses sunucusuyla bağlantı kurulumayor"
 
 msgid "Failed to query sound server capabilities"
-msgstr "Gagal untuk kueri kemampuan server suara"
+msgstr "Ses sunucusu olanakları sorgulanamadı"
 
 msgid "Internal data stream error."
-msgstr "Galat arus data internal."
+msgstr "İç veri akım hatası."
 
 msgid "Failed to decode JPEG image"
-msgstr "Gagal untuk mengawasandi citra JPEG"
+msgstr "JPEG görüntüsünü çözümlenemedi"
 
 msgid "Could not connect to server"
-msgstr "Tak dapat menghubungi server"
+msgstr "Sunucuya bağlanamıyor"
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Masukan audio tidak ada atau tidak sah, arus AVI akan rusak."
+msgstr "Geçerli bir ses girişi bulunamadı. AVI akışı kesilecek."
 
 msgid "This file is invalid and cannot be played."
-msgstr "Berkas ini tidak sah dan tak dapat diputar."
+msgstr "Bu dosya geçersiz ve oynatılamaz."
 
 msgid "This file contains no playable streams."
-msgstr "Berkas ini tidak berisi arus yang dapat diputar."
+msgstr "Dosya çalınabilir akışlar içermiyor."
 
 msgid "This file is incomplete and cannot be played."
-msgstr "Berkas ini tidak lengkap dan tak dapat diputar."
+msgstr "Dosya eksik ve oynatılamaz."
 
 msgid "The video in this file might not play correctly."
-msgstr "Video di berkas ini mungkin tak dapat diputar dengan benar."
+msgstr "Bu dosyadaki vidyo doğru oynatılamıyabilir."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr "Berkas ini berisi terlalu banyak arus. Hanya memutar %d pertama"
+msgstr "Bu dosya çok fazla akış içeriyor. Sadece ilki oynatılıyor %d"
 
 msgid "This file is corrupt and cannot be played."
-msgstr "Berkas ini rusak dan tak dapat diputar."
+msgstr "Bu dosya bozuk ve oynatılamaz."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
-"Tak ada arus didukung yang ditemukan. Anda mungkin perlu menginstal plugin "
-"ekstensi GStreamer RTSP untuk arus Real media."
+"Desteklenen bir akış bulunamadı. Real Media akışları için bir GStreamer RTSP "
+"uzantı eklentisi kurmalısınız."
 
 msgid ""
 "No supported stream was found. You might be missing the right GStreamer RTSP "
 "extension plugin."
 msgstr ""
-"Tak ada arus didukung yang ditemukan. Anda mungkin kehilangan plugin "
-"ekstensi GStreamer RTSP yang benar."
+"Desteklenen akış bulunamadı. Doğru GStreamer RTSP uzantı eklentisi kayıp "
+"olabilir."
 
 msgid "Internal data flow error."
-msgstr "Galat aliran data internal."
+msgstr "İç veri akış hatası."
 
 msgid "Volume"
-msgstr "Volume"
+msgstr "Ses Girişi"
 
 msgid "Bass"
 msgstr "Bas"
 
 msgid "Treble"
-msgstr "Treble"
+msgstr "Tiz"
 
 msgid "Synth"
-msgstr "Synth"
+msgstr "Synthisizer"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Speaker"
-msgstr "Pengeras Suara"
+msgstr "Hoparlör"
 
 msgid "Line-in"
-msgstr "Jalur masuk"
+msgstr "Hat girişi"
 
 msgid "Microphone"
 msgstr "Mikrofon"
@@ -96,86 +95,82 @@ msgid "CD"
 msgstr "CD"
 
 msgid "Mixer"
-msgstr "Mixer"
+msgstr "Karıştırıcı"
 
 msgid "PCM-2"
 msgstr "PCM-2"
 
 msgid "Record"
-msgstr "Rekam"
+msgstr "Kayıt"
 
 msgid "In-gain"
-msgstr "Masukan-gain"
+msgstr "Kazanç-girişi"
 
 msgid "Out-gain"
-msgstr "Keluaran-gain"
+msgstr "Kazanç-çıkışı"
 
 msgid "Line-1"
-msgstr "Jalur-1"
+msgstr "Hat-1"
 
 msgid "Line-2"
-msgstr "Jalur-2"
+msgstr "Hat-2"
 
 msgid "Line-3"
-msgstr "Jalur-3"
+msgstr "Hat-3"
 
 msgid "Digital-1"
-msgstr "Digital-1"
+msgstr "Sayısal-1"
 
 msgid "Digital-2"
-msgstr "Digital-2"
+msgstr "Sayısal-2"
 
 msgid "Digital-3"
-msgstr "Digital-3"
+msgstr "Sayısal-3"
 
 msgid "Phone-in"
-msgstr "Telepon-masuk"
+msgstr "Fono-giriş"
 
 msgid "Phone-out"
-msgstr "Telepon-keluar"
+msgstr "Fono-çıkış"
 
 msgid "Video"
-msgstr "Video"
+msgstr "Vidyo"
 
 msgid "Radio"
-msgstr "Radio"
+msgstr "Radyo"
 
 msgid "Monitor"
-msgstr "Monitor"
+msgstr "Hoparlör"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Tak dapat membuka divais audio untuk putar kembali. Divais sedang digunakan "
-"oleh aplikasi lain."
+"Çalmak için ses aygıtı açılamıyor. Aygıt başka bir uygulama tarafından "
+"kullanılıyor."
 
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
-msgstr ""
-"Tak dapat membuka divais audio untuk putar kembali. Anda tak memiliki hak "
-"akses untuk membuka divais."
+msgstr "Çalmak için ses aygıtı açılamıyor. Aygıtı açma izniniz bulunmuyor."
 
 msgid "Could not open audio device for playback."
-msgstr "Tak dapat membuka divais audio untuk putar kembali."
+msgstr "Çalmak için ses aygıtı açılamıyor."
 
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
-msgstr ""
-"Tak dapat membuka divais audio untuk merekam. Anda tak memiliki hak akses "
-"untuk membuka divais."
+msgstr "Kayıt için aygıtı açamıyor. Aygıtı açmak için yetkiniz yok."
 
 msgid "Could not open audio device for recording."
-msgstr "Tak dapat membuka divais audio untuk merekam."
+msgstr "Aygıtı kayıt için açamıyor."
 
 msgid "Gain"
-msgstr "Gain"
+msgstr "Kazanç"
 
 #, fuzzy
 msgid "Built-in Speaker"
-msgstr "Pengeras Suara"
+msgstr "Hoparlör"
 
 msgid "Headphone"
 msgstr ""
@@ -194,175 +189,169 @@ msgstr ""
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Galat membaca %d bita dari divais '%s'."
+msgstr "%d bayt bilgili '%s' aygıtından okumada hata."
 
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Mendapatkan ukuran bingkai %u ketimbang %u yang tak diharapkan."
+msgstr "Beklenmeyen bir çerçevece boyutu %u bunun yerine %u görüntülendi."
 
 #, c-format
 msgid "Error reading %d bytes on device '%s'."
-msgstr "Galat membaca %d bita pada divais '%s'."
+msgstr "%d baytı şu aygıtta '%s' okumada hata."
 
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Galat mendapatkan kemampuan untuk divais '%s': Itu bukan diver v4l2. Cek "
-"apakah itu merupakan driver v4l1."
+"Şu aygıtın '%s' özelliklerini almada hata: O bir v4l2 sürücüsü değil. Onun "
+"bir v4l1 sürücüsü olup olmadığını denetleyin."
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr "Gagal kueri atribut masukan %d di divais %s"
+msgstr "Giriş davranışları sorgusu %d şu aygıtta %s başarılamadı"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Gagal mendapatkan pengaturan tuner %d di divais '%s'."
+msgstr "Radyo istasyonu ayarlarını bulma %d şu aygıtta '%s' başarılamadı."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Gagal kueri standar di divais '%s'."
+msgstr "Şu aygıtta '%s' sorgu normuna erişilemedi."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Gagal mendapatkan kendali atribut di divais '%s'."
+msgstr "Denetim davranışları şu aygıtta '%s' bulunamadı."
 
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr "Tak dapat mengidentifikasi divais '%s'."
+msgstr "Aygıt tanımlanamıyor '%s'."
 
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr "Ini bukan divais '%s'."
+msgstr "Bu bir aygıt değil'%s'."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "Tak dapat membuka divais '%s' untuk dibaca dan ditulis."
+msgstr "Şu aygıtı '%s' okuma ve yazma için açamıyor."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Divais '%s' bukan divais penangkap."
+msgstr "Aygıt '%s' bir yakalama aygıtı değil."
 
 #, fuzzy, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Divais '%s' bukan divais penangkap."
+msgstr "Aygıt '%s' bir yakalama aygıtı değil."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Gagal mengatur standar untuk divais '%s'."
+msgstr "Aygıt için '%s' norm değerleri ayarlanamadı."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Gagal untuk mendapatkan frekuensi tuner terkini untuk divais '%s'."
+msgstr "Aygıt için '%s' radyo frekansları ayarlanamadı."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr "Gagal mengatur frekuensi tuner terkini untuk divais '%s' ke %lu Hz."
+msgstr "Aygıt için '%s' radyo frekansı %lu Hz için yapılamadı."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Gagal mendapatkan kekuatan sinyal untuk divais '%s'."
+msgstr "Aygıt için '%s' güçlü sinyal alımı gerçekleşemedi."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Gagal mendapatkan nilai untuk kendali %d di divais '%s'."
+msgstr "Denetim değeri şuna %d bu aygıtta '%s' ayarlanamadı."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr "Gagal mengatur nilai %d untuk kendali %d di divais '%s'."
+msgstr "Değer %d denetim için %d şu aygıtta '%s' ayarlanamadı."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Gagal mendapatkan masukan terkini di divais '%s'. Mungkin itu divais radio"
+"Şu aygıtta '%s' geçerli giriş elde edilemedi. O bir radyo aygıtı olabilir."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Gagal mengatur masukan %d di divais %s."
+msgstr "Giriş değeri olarak bu %d şu aygıtta %s ayarlanamadı."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
-msgstr "Tak dapat mengantrekan penyangga di divais '%s'."
+msgstr "Aygıtta '%s' arabellek kuyruğa sokulamıyor."
 
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
-msgstr "Gagal mencoba untuk mendapatkan bingkai video dari divais '%s'."
+msgstr "Aygıttan device '%s' vidyo çerçeveleri alınamadı."
 
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Gagal setelah %d percobaan. divais %s. galat sistem: %s"
+msgstr "Şu denemeden sonra %d başarılamadı. aygıt %s. sistem hatası: %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "Tak bisa mendapatkan parameter di divais '%s'"
+msgstr "Değiştirgeler aygıttan '%s' alınamıyor"
 
 msgid "Video input device did not accept new frame rate setting."
-msgstr "Divais masukan video tak menerima pengaturan rasio bingkai baru."
+msgstr "Vidyo giriş aygıtı yeni çerçeve oranı ayarlarını kabul etmedi."
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Tak dapat memetakan penyangga dari divais '%s'"
+msgstr "Aygıttan '%s' bellekler eşlenemiyor"
 
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
-"Driver dari divais '%s' tak mendukung metode penangkap apapun yang dikenal."
+"Bu aygıtın sürücüsü '%s' bilinen görüntü yakalama yöntemlerinden herhangi "
+"birisi desteklemiyor."
 
 msgid "Changing resolution at runtime is not yet supported."
-msgstr "Mengubah resolusi saat waktu berjalan belum didukung."
+msgstr "Çalışırken çözünürlüğü değiştirmek henüz desteklenmiyor."
 
 msgid "Cannot operate without a clock"
-msgstr "Tak dapat beroperasi tanpa jam"
+msgstr "Saat olmadan çalışamaz"
 
 #~ msgid "Failed to enumerate possible video formats device '%s' can work with"
 #~ msgstr ""
-#~ "Gagal menyebutkan kemungkinan format video yang dapat bekerja dengan "
-#~ "divais '%s'."
+#~ "Aygıtın '%s' birlikte çalışabileceği vidyo kiplerini sıralamada hata"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
 #~ "buffers have been allocated yet, or the userptr or length are invalid. "
 #~ "device %s"
 #~ msgstr ""
-#~ "Tipe penyangga tidak didukung, atau indeks di luar batas, atau tak ada "
-#~ "penyangga yang telah dialokasikan, atau userptr atau panjang tidak sah. "
-#~ "divais %s"
+#~ "Arabellek türü desteklenmiyor, veya içerik bir yere ait değil, veya "
+#~ "arabellekler henüz ayrılmamış, veya userptr veya uzunluk geçersiz. aygıt. "
+#~ "%s"
 
 #~ msgid ""
 #~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Gagal mencoba untuk mendapatkan bingkai video dari divais '%s'. Tak cukup "
-#~ "memori."
+#~ msgstr "Vidyo çervevesi aygıttan '%s' alınamadı. Yetersiz bellek."
 
 #~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 #~ msgstr ""
-#~ "kekurangan memori untuk mengantrekan penyangga penunjuk pengguna. divais %"
-#~ "s."
+#~ "kullanıcı arabelleğini kuyruğa sokmak için yetersiz bellek. aygıt %s."
 
 #~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Tak ada penyangga bebas ditemukan di lubuk pada indeks %d."
+#~ msgstr "Dizindeki %d havuzda boş bellek bulunamadı."
 
 #~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Divais '%s' tak mendukung penangkap video"
+#~ msgstr "Aygıt '%s' görüntü yakalamayı desteklemiyor"
 
 #~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Divais '%s' tak dapat menangkap di %dx%d"
+#~ msgstr "Aygıt '%s' görüntü yakalayamadı%dx%d"
 
 #~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Divais '%s' tak dapat menangkap dalam format yang ditentukan"
+#~ msgstr "Aygıt '%s' belirtilen kipte görüntü yakalayamadı"
 
 #~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Tak bisa mendapatkan penyangga dari divais '%s'."
+#~ msgstr "Arabellek aygıttan '%s' alınamıyor."
 
 #~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Tak bisa mendapatkan penyangga yang cukup dari divais '%s'."
+#~ msgstr "Yeterli bellek aygıttan '%s' alınamıyor."
 
 #~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Galat memulai penangkapan arus dari divais '%s'."
+#~ msgstr "Aygıttan '%s' akan görüntü başlatılamadı."
 
 #~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Galat menghentikan penangkapan arus dari divais '%s'."
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "Gagal mendapatkan kendali atribut di divais '%s.'"
+#~ msgstr "Aygıttan '%s' akan görüntü durdurulamadı."

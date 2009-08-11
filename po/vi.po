@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 14:43+0100\n"
+"POT-Creation-Date: 2009-08-11 17:17+0100\n"
 "PO-Revision-Date: 2009-05-12 21:30+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -37,11 +37,11 @@ msgstr ""
 "Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. Vì "
 "thế luồng AVI hư."
 
-msgid "This file contains no playable streams."
-msgstr "Tập tin này không chứa luồng có thể phát."
-
 msgid "This file is invalid and cannot be played."
 msgstr "Tập tin này không hợp lệ nên không thể phát được."
+
+msgid "This file contains no playable streams."
+msgstr "Tập tin này không chứa luồng có thể phát."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Tập tin này chưa hoàn thành nên không thể được phát."
@@ -248,6 +248,10 @@ msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
 msgid "Device '%s' is not a capture device."
 msgstr "Thiết bị « %s » không phải là thiết bị bắt gì."
 
+#, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "Thiết bị « %s » không phải là thiết bị bắt gì."
+
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Lỗi đặt chỉ tiêu cho thiết bị « %s »."
@@ -288,39 +292,12 @@ msgid "Could not enqueue buffers in device '%s'."
 msgstr "Không thể phụ thêm các bộ đệm vào hàng đợi trên thiết bị « %s »."
 
 #, c-format
-msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr "Lỗi liệt kê những định dạng ảnh động có thể chạy trên thiết bị « %s »"
-
-#, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Lỗi khi thử lấy các khung ảnh động từ thiết bị « %s »."
 
 #, c-format
-msgid ""
-"The buffer type is not supported, or the index is out of bounds, or no "
-"buffers have been allocated yet, or the userptr or length are invalid. "
-"device %s"
-msgstr ""
-"Không hỗ trợ kiểu bộ đệm, hoặc chỉ thị ở ngoại phạm vị, hoặc chưa cấp phát "
-"bộ đệm, hoặc con trở người dùng hay độ dài không hợp lệ. Thiết bị %s"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr "Lỗi khi thử lấy các khung ảnh động từ thiết bị « %s ». Không đủ bộ nhớ."
-
-#, c-format
-msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr ""
-"Không đủ bộ nhớ để phụ thêm con bộ đếm trỏ người dùng vào hàng đợi. Thiết bị "
-"%s."
-
-#, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Lỗi sau %d lần thử. Thiết bị %s. Lỗi hệ thống: %s"
-
-#, c-format
-msgid "No free buffers found in the pool at index %d."
-msgstr "Không tìm thấy bộ đệm còn rảnh trong vũng ở chỉ mục %d."
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -328,26 +305,6 @@ msgstr "Không thể lấy các tham số về thiết bị « %s »."
 
 msgid "Video input device did not accept new frame rate setting."
 msgstr "Thiết bị nhập ảnh động vào không chấp nhận thiết lập tốc độ khung mới."
-
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Thiết bị « %s » không hỗ trợ khả năng bắt ảnh động."
-
-#, c-format
-msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Thiết bị « %s » không thể bắt theo %d×%d"
-
-#, c-format
-msgid "Device '%s' cannot capture in the specified format"
-msgstr "Thiết bị « %s » không thể bắt theo định dạng đã ghi rõ."
-
-#, c-format
-msgid "Could not get buffers from device '%s'."
-msgstr "Không thể lấy các bộ đệm từ thiết bị « %s »."
-
-#, c-format
-msgid "Could not get enough buffers from device '%s'."
-msgstr "Không thể lấy đủ bộ đệm từ thiết bị « %s »."
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
@@ -358,16 +315,54 @@ msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 "Trình điều khiển của thiết bị « %s » không hỗ trợ phương pháp bắt đã biết nào."
 
-#, c-format
-msgid "Error starting streaming capture from device '%s'."
-msgstr "Lỗi bắt đầu việc bắt luồng từ thiết bị « %s »."
-
-#, c-format
-msgid "Error stopping streaming capture from device '%s'."
-msgstr "Lỗi kết thúc việc bắt luồng từ thiết bị « %s »."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi chạy."
 
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ."
+
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr ""
+#~ "Lỗi liệt kê những định dạng ảnh động có thể chạy trên thiết bị « %s »"
+
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "Không hỗ trợ kiểu bộ đệm, hoặc chỉ thị ở ngoại phạm vị, hoặc chưa cấp "
+#~ "phát bộ đệm, hoặc con trở người dùng hay độ dài không hợp lệ. Thiết bị %s"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Lỗi khi thử lấy các khung ảnh động từ thiết bị « %s ». Không đủ bộ nhớ."
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "Không đủ bộ nhớ để phụ thêm con bộ đếm trỏ người dùng vào hàng đợi. Thiết "
+#~ "bị %s."
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "Không tìm thấy bộ đệm còn rảnh trong vũng ở chỉ mục %d."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Thiết bị « %s » không hỗ trợ khả năng bắt ảnh động."
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "Thiết bị « %s » không thể bắt theo %d×%d"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "Thiết bị « %s » không thể bắt theo định dạng đã ghi rõ."
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Không thể lấy các bộ đệm từ thiết bị « %s »."
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "Không thể lấy đủ bộ đệm từ thiết bị « %s »."
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Lỗi bắt đầu việc bắt luồng từ thiết bị « %s »."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Lỗi kết thúc việc bắt luồng từ thiết bị « %s »."

@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 14:43+0100\n"
+"POT-Creation-Date: 2009-08-11 17:17+0100\n"
 "PO-Revision-Date: 2009-05-12 12:57+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -41,11 +41,11 @@ msgstr ""
 "Ääntä ei ole tai äänilähde on viallinen, AVI-virta tulee olemaan "
 "vaurioitunut."
 
-msgid "This file contains no playable streams."
-msgstr "Tiedosto ei sisällä soitettavia virtoja."
-
 msgid "This file is invalid and cannot be played."
 msgstr "Tiedosto on virheellinen eikä sitä voida esittää."
+
+msgid "This file contains no playable streams."
+msgstr "Tiedosto ei sisällä soitettavia virtoja."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Tiedosto on vajaa eikä sitä voida esittää."
@@ -253,6 +253,10 @@ msgstr "Laitetta \"%s\" ei voitu avata luettavaksi ja kirjoitettavaksi."
 msgid "Device '%s' is not a capture device."
 msgstr "Laitteelta \"%s\" ei voi kaapata."
 
+#, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "Laitteelta \"%s\" ei voi kaapata."
+
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Laitteen \"%s\" videostandardia ei voitu asettaa."
@@ -292,39 +296,12 @@ msgid "Could not enqueue buffers in device '%s'."
 msgstr "Puskureita ei voitu laittaa jonoon laitteella \"%s\"."
 
 #, c-format
-msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr "Laitteen \"%s\" osaamia videomuotoja ei voitu luetteloida"
-
-#, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Videoruutujen noutaminen laitteelta \"%s\" epäonnistui."
 
 #, c-format
-msgid ""
-"The buffer type is not supported, or the index is out of bounds, or no "
-"buffers have been allocated yet, or the userptr or length are invalid. "
-"device %s"
-msgstr ""
-"Puskurityyppi ei ole tuettu, indeksi on rajojen ulkopuolella, puskureita ei "
-"ole vielä varattu tai käyttäjän osoitin tai pituus ovat virheelliset. laite %"
-"s"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr ""
-"Videoruutujen nouto laitteelta \"%s\" epäonnistui. Muisti ei riittänyt."
-
-#, c-format
-msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr "muisti ei riitä käyttäjän osoitinpuskurin jonoon lisäämiseen. laite %s"
-
-#, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Epäonnistui %d yrityksen jälkeen: laite %s, järjestelmävirhe: %s"
-
-#, c-format
-msgid "No free buffers found in the pool at index %d."
-msgstr "Vapaita puskureita ei löytynyt indeksillä %d."
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -334,26 +311,6 @@ msgid "Video input device did not accept new frame rate setting."
 msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Laite \"%s\" ei tue videokuvan kaappausta"
-
-#, c-format
-msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Laitteelta \"%s\" ei voi kaapata tarkkuudella %dx%d"
-
-#, c-format
-msgid "Device '%s' cannot capture in the specified format"
-msgstr "Laitteelta \"%s\" ei voi kaapata annetussa muodossa"
-
-#, c-format
-msgid "Could not get buffers from device '%s'."
-msgstr "Laitteelta \"%s\" ei voitu hakea puskuritilaa."
-
-#, c-format
-msgid "Could not get enough buffers from device '%s'."
-msgstr "Laitteelta \"%s\" ei voitu hakea riittävästi puskuritilaa."
-
-#, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Puskereita laitteelta \"%s\" ei voitu kartoittaa"
 
@@ -361,19 +318,56 @@ msgstr "Puskereita laitteelta \"%s\" ei voitu kartoittaa"
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr "Laitteen \"%s\" ajuri ei tue mitään tunnettua kaappaustapaa."
 
-#, c-format
-msgid "Error starting streaming capture from device '%s'."
-msgstr "Virhe aloitettaessa virran kaappaus laitteelta \"%s\"."
-
-#, c-format
-msgid "Error stopping streaming capture from device '%s'."
-msgstr "Virhe keskeytettäessä virran kaappaus laitteelta \"%s\"."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Resoluution vaihto käytön aikana ei ole vielä mahdollista."
 
 msgid "Cannot operate without a clock"
 msgstr "Ei voitu toimia ilman kelloa"
+
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr "Laitteen \"%s\" osaamia videomuotoja ei voitu luetteloida"
+
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "Puskurityyppi ei ole tuettu, indeksi on rajojen ulkopuolella, puskureita "
+#~ "ei ole vielä varattu tai käyttäjän osoitin tai pituus ovat virheelliset. "
+#~ "laite %s"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Videoruutujen nouto laitteelta \"%s\" epäonnistui. Muisti ei riittänyt."
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "muisti ei riitä käyttäjän osoitinpuskurin jonoon lisäämiseen. laite %s"
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "Vapaita puskureita ei löytynyt indeksillä %d."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Laite \"%s\" ei tue videokuvan kaappausta"
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "Laitteelta \"%s\" ei voi kaapata tarkkuudella %dx%d"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "Laitteelta \"%s\" ei voi kaapata annetussa muodossa"
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Laitteelta \"%s\" ei voitu hakea puskuritilaa."
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "Laitteelta \"%s\" ei voitu hakea riittävästi puskuritilaa."
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Virhe aloitettaessa virran kaappaus laitteelta \"%s\"."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Virhe keskeytettäessä virran kaappaus laitteelta \"%s\"."
 
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr "Laitteen \"%s\" ohjainattribuutteja ei voitu lukea."

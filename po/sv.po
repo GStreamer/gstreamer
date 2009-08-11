@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 14:43+0100\n"
+"POT-Creation-Date: 2009-08-11 17:17+0100\n"
 "PO-Revision-Date: 2009-05-12 17:41+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -34,11 +34,11 @@ msgstr "Kunde inte ansluta till servern"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
 
-msgid "This file contains no playable streams."
-msgstr "Den här filen innehåller inga uppspelningsbara strömmar."
-
 msgid "This file is invalid and cannot be played."
 msgstr "Den här filen är ogiltig och kan inte spelas upp."
+
+msgid "This file contains no playable streams."
+msgstr "Den här filen innehåller inga uppspelningsbara strömmar."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Den här filen är inte fullständig och kan inte spelas upp."
@@ -250,6 +250,10 @@ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 msgid "Device '%s' is not a capture device."
 msgstr "Enheten \"%s\" är ingen fångstenhet."
 
+#, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "Enheten \"%s\" är ingen fångstenhet."
+
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Misslyckades med att ställa in norm för enheten \"%s\"."
@@ -293,41 +297,12 @@ msgid "Could not enqueue buffers in device '%s'."
 msgstr "Kunde inte kölägga buffertar i enheten \"%s\"."
 
 #, c-format
-msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
-"Misslyckades med att räkna upp möjliga videoformat som enheten \"%s\" kan "
-"arbeta med"
-
-#, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Misslyckades med att få videobildrutor från enheten \"%s\"."
 
 #, c-format
-msgid ""
-"The buffer type is not supported, or the index is out of bounds, or no "
-"buffers have been allocated yet, or the userptr or length are invalid. "
-"device %s"
-msgstr ""
-"Bufferttypen stöds inte, indexet är utanför intervallet, inga buffertar har "
-"allokerats än eller att userptr eller längden är ogiltig. enhet %s"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr ""
-"Misslyckades med att försöka få tag på videobildrutor från enheten \"%s\". "
-"Inte tillräckligt mycket minne."
-
-#, c-format
-msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr "Otillräckligt minne för att kölägga en användarpekarbuffert. enhet %s."
-
-#, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Misslyckades efter %d försök. enhet %s. systemfel: %s"
-
-#, c-format
-msgid "No free buffers found in the pool at index %d."
-msgstr "Inga lediga buffertar hittades i poolen på index %d."
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -337,26 +312,6 @@ msgid "Video input device did not accept new frame rate setting."
 msgstr "Videoingångsenheten accepterade inte ny inställning för bildfrekvens."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Enheten \"%s\" saknar stöd för videofångst"
-
-#, c-format
-msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Enheten \"%s\" kan inte fånga i %dx%d"
-
-#, c-format
-msgid "Device '%s' cannot capture in the specified format"
-msgstr "Enheten \"%s\" kan inte fånga i det angivna formatet"
-
-#, c-format
-msgid "Could not get buffers from device '%s'."
-msgstr "Kunde inte få tag i buffertar från enheten \"%s\"."
-
-#, c-format
-msgid "Could not get enough buffers from device '%s'."
-msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"."
-
-#, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Kunde inte mappa buffertar från enheten \"%s\"."
 
@@ -364,19 +319,59 @@ msgstr "Kunde inte mappa buffertar från enheten \"%s\"."
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr "Drivrutinen för enheten \"%s\" saknar stöd för någon känd fångstmetod."
 
-#, c-format
-msgid "Error starting streaming capture from device '%s'."
-msgstr "Fel vid start av strömfångst från enheten \"%s\"."
-
-#, c-format
-msgid "Error stopping streaming capture from device '%s'."
-msgstr "Fel vid stopp av strömfångst från enheten \"%s\"."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Ändring av upplösning vid körtid stöds inte än."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan inte fungera utan en klocka"
+
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr ""
+#~ "Misslyckades med att räkna upp möjliga videoformat som enheten \"%s\" kan "
+#~ "arbeta med"
+
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "Bufferttypen stöds inte, indexet är utanför intervallet, inga buffertar "
+#~ "har allokerats än eller att userptr eller längden är ogiltig. enhet %s"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Misslyckades med att försöka få tag på videobildrutor från enheten \"%s"
+#~ "\". Inte tillräckligt mycket minne."
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "Otillräckligt minne för att kölägga en användarpekarbuffert. enhet %s."
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "Inga lediga buffertar hittades i poolen på index %d."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Enheten \"%s\" saknar stöd för videofångst"
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "Enheten \"%s\" kan inte fånga i %dx%d"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "Enheten \"%s\" kan inte fånga i det angivna formatet"
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Kunde inte få tag i buffertar från enheten \"%s\"."
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr ""
+#~ "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"."
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Fel vid start av strömfångst från enheten \"%s\"."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Fel vid stopp av strömfångst från enheten \"%s\"."
 
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr ""

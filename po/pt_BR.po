@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 14:43+0100\n"
+"POT-Creation-Date: 2009-08-11 17:17+0100\n"
 "PO-Revision-Date: 2009-05-12 22:43-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -38,11 +38,11 @@ msgstr "Não foi possível conectar ao servidor"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Entrada de áudio nula ou inválida, o fluxo AVI pode estar corrompido."
 
-msgid "This file contains no playable streams."
-msgstr "Este arquivo não contêm fluxos reproduzíveis."
-
 msgid "This file is invalid and cannot be played."
 msgstr "Este arquivo é inválido e não pôde ser reproduzido."
+
+msgid "This file contains no playable streams."
+msgstr "Este arquivo não contêm fluxos reproduzíveis."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Este arquivo está incompleto e não pôde ser reproduzido."
@@ -250,6 +250,10 @@ msgstr "Não foi possível abrir o dispositivo \"%s\" para leitura e gravação.
 msgid "Device '%s' is not a capture device."
 msgstr "O dispositivo \"%s\" não é um dispositivo de captura."
 
+#, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "O dispositivo \"%s\" não é um dispositivo de captura."
+
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Falha ao definir as normas para o dispositivo \"%s\"."
@@ -291,44 +295,12 @@ msgid "Could not enqueue buffers in device '%s'."
 msgstr "Não possível adicionar buffers à fila no dispositivo \"%s\"."
 
 #, c-format
-msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
-"Falha ao especificar os formatos possíveis de vídeo que o dispositivo \"%s\" "
-"pode funcionar"
-
-#, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Falha ao tentar obter os quadros de vídeo do dispositivo \"%s\"."
 
 #, c-format
-msgid ""
-"The buffer type is not supported, or the index is out of bounds, or no "
-"buffers have been allocated yet, or the userptr or length are invalid. "
-"device %s"
-msgstr ""
-"Não há suporte ao tipo de buffer, ou o índice está fora dos limites, ou "
-"nenhum buffer foi definido ainda, ou o userptr ou tamanho são inválidos. "
-"Dispositivo %s"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr ""
-"Falha ao tentar obter os quadros de vídeo do dispositivo \"%s\". Memória "
-"insuficiente."
-
-#, c-format
-msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr ""
-"memória insuficiente para adicionar à fila um buffer de ponteiro do usuário. "
-"Dispositivo %s."
-
-#, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Falha após %d tentativas. Dispositivo %s. Erro do sistema: %s"
-
-#, c-format
-msgid "No free buffers found in the pool at index %d."
-msgstr "Nenhum buffer livre encontrado no reservatório, no índice %d."
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -340,26 +312,6 @@ msgstr ""
 "quadros."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "Não há suporte a captura de vídeo no dispositivo \"%s\""
-
-#, c-format
-msgid "Device '%s' cannot capture at %dx%d"
-msgstr "O dispositivo \"%s\" não captura à %dx%d"
-
-#, c-format
-msgid "Device '%s' cannot capture in the specified format"
-msgstr "O dispositivo \"%s\" não captura no formato especificado"
-
-#, c-format
-msgid "Could not get buffers from device '%s'."
-msgstr "Não foi possível obter buffers do dispositivo \"%s\"."
-
-#, c-format
-msgid "Could not get enough buffers from device '%s'."
-msgstr "Não foi possível obter buffers suficientes do dispositivo \"%s\"."
-
-#, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Não foi possível mapear buffers do dispositivo \"%s\""
 
@@ -369,19 +321,60 @@ msgstr ""
 "O driver do dispositivo \"%s\" não tem suporte a nenhum método conhecido de "
 "captura."
 
-#, c-format
-msgid "Error starting streaming capture from device '%s'."
-msgstr "Erro ao iniciar um fluxo contínuo de captura do dispositivo \"%s\"."
-
-#, c-format
-msgid "Error stopping streaming capture from device '%s'."
-msgstr "Erro ao parar um fluxo contínuo de captura do dispositivo \"%s\"."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Ainda não há suporte a mudança de resolução enquanto está executando."
 
 msgid "Cannot operate without a clock"
 msgstr "Não é possível operar sem um temporizador"
+
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr ""
+#~ "Falha ao especificar os formatos possíveis de vídeo que o dispositivo \"%s"
+#~ "\" pode funcionar"
+
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "Não há suporte ao tipo de buffer, ou o índice está fora dos limites, ou "
+#~ "nenhum buffer foi definido ainda, ou o userptr ou tamanho são inválidos. "
+#~ "Dispositivo %s"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Falha ao tentar obter os quadros de vídeo do dispositivo \"%s\". Memória "
+#~ "insuficiente."
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "memória insuficiente para adicionar à fila um buffer de ponteiro do "
+#~ "usuário. Dispositivo %s."
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "Nenhum buffer livre encontrado no reservatório, no índice %d."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Não há suporte a captura de vídeo no dispositivo \"%s\""
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "O dispositivo \"%s\" não captura à %dx%d"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "O dispositivo \"%s\" não captura no formato especificado"
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Não foi possível obter buffers do dispositivo \"%s\"."
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "Não foi possível obter buffers suficientes do dispositivo \"%s\"."
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Erro ao iniciar um fluxo contínuo de captura do dispositivo \"%s\"."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Erro ao parar um fluxo contínuo de captura do dispositivo \"%s\"."
 
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr "Falha ao obter atributos de controle no dispositivo \"%s\"."

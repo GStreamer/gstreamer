@@ -1,0 +1,490 @@
+# German translations for gst-plugins-bad
+# Copyright (C) 2007 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-good package.
+#
+# PCM = PCM
+# Line-in = Eingang
+# Line-out = Ausgang
+# Pipeline = Weiterleitung
+# Stream = Strom
+#
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2009.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-08-11 17:17+0100\n"
+"PO-Revision-Date: 2009-07-10 18:07+0200\n"
+"Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
+"Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: German\n"
+"X-Poedit-Country: GERMANY\n"
+
+msgid "Could not establish connection to sound server"
+msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden."
+
+msgid "Failed to query sound server capabilities"
+msgstr "Abfrage der Fähigkeiten des Audio-Servers sind fehlgeschlagen"
+
+msgid "Internal data stream error."
+msgstr "Interner Datenstromfehler."
+
+msgid "Failed to decode JPEG image"
+msgstr "Dekodieren des JPEG-Bildes schlug fehl"
+
+msgid "Could not connect to server"
+msgstr "Verbindung zum Server konnte nicht hergestellt werden"
+
+msgid "No or invalid input audio, AVI stream will be corrupt."
+msgstr "Kein oder ungültiger Eingabeton, der AVI-Strom wird fehlerhaft sein."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Diese Datei ist ungültig und kann nicht wiedergegeben werden."
+
+msgid "This file contains no playable streams."
+msgstr "Diese Datei enthält keine abspielbaren Ströme."
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Diese Datei ist unvollständig und kann nicht wiedergegeben werden."
+
+msgid "The video in this file might not play correctly."
+msgstr "Das Video in dieser Datei wird vielleicht nicht korrekt wiedergegeben."
+
+#, c-format
+msgid "This file contains too many streams. Only playing first %d"
+msgstr ""
+"Diese Datei enthält zu viele Ströme. Es werden nur die ersten %d "
+"wiedergegeben"
+
+msgid "This file is corrupt and cannot be played."
+msgstr "Diese Datei ist beschädigt und kann nicht wiedergegeben werden."
+
+msgid ""
+"No supported stream was found. You might need to install a GStreamer RTSP "
+"extension plugin for Real media streams."
+msgstr ""
+"Es wurde kein unterstützter Strom gefunden. Sie müssen vielleicht ein Plugin "
+"zur RTSP-Erweiterung von GStreamer für »Real«-Medienströme installieren."
+
+msgid ""
+"No supported stream was found. You might be missing the right GStreamer RTSP "
+"extension plugin."
+msgstr ""
+"Es wurde kein unterstützter Strom gefunden. Es fehlt vielleicht das richtige "
+"Plugin zur RTSP-Erweiterung."
+
+msgid "Internal data flow error."
+msgstr "Interner Datenstromfehler."
+
+msgid "Volume"
+msgstr "Lautstärke"
+
+msgid "Bass"
+msgstr "Bass"
+
+msgid "Treble"
+msgstr "Höhen"
+
+msgid "Synth"
+msgstr "Synth"
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Speaker"
+msgstr "Lautsprecher"
+
+msgid "Line-in"
+msgstr "Line-Eingang"
+
+msgid "Microphone"
+msgstr "Mikrofon"
+
+msgid "CD"
+msgstr "CD"
+
+msgid "Mixer"
+msgstr "Mischer"
+
+msgid "PCM-2"
+msgstr "PCM 2"
+
+msgid "Record"
+msgstr "Aufnahme"
+
+msgid "In-gain"
+msgstr "Eingangspegel"
+
+msgid "Out-gain"
+msgstr "Ausgangspegel"
+
+msgid "Line-1"
+msgstr "Eingang-1"
+
+msgid "Line-2"
+msgstr "Eingang-2"
+
+msgid "Line-3"
+msgstr "Eingang-3"
+
+msgid "Digital-1"
+msgstr "Digital-1"
+
+msgid "Digital-2"
+msgstr "Digital-2"
+
+msgid "Digital-3"
+msgstr "Digital-3"
+
+# Mikrofon? Zweifelhaft. Eher Kopfhörer oder Telefon.
+msgid "Phone-in"
+msgstr "Mikrofoneingang"
+
+# Ist hier Kopfhörer oder Telefon gemeint?
+msgid "Phone-out"
+msgstr ""
+
+msgid "Video"
+msgstr "Video"
+
+msgid "Radio"
+msgstr "Radio"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Das Gerät wird "
+"von einer anderen Anwendung verwendet."
+
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. Sie haben nicht "
+"die Berechtigungen zum Öffnen des Gerätes."
+
+msgid "Could not open audio device for playback."
+msgstr "Das Audio-Gerät konnte nicht zur Wiedergabe geöffnet werden. "
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Das Audio-Gerät konnte nicht zur Aufnahme geöffnet werden. Sie haben nicht "
+"die Berechtigungen zum Öffnen des Gerätes."
+
+msgid "Could not open audio device for recording."
+msgstr "Das Audio-Gerät konnte nicht zur Aufnahme geöffnet werden. "
+
+msgid "Gain"
+msgstr "Pegel"
+
+msgid "Built-in Speaker"
+msgstr "Eingebaute Lautsprecher"
+
+msgid "Headphone"
+msgstr "Kopfhörer"
+
+# Hier ist mir noch nichts Besseres eingefallen.
+msgid "Line Out"
+msgstr "Line-Ausgang"
+
+msgid "SPDIF Out"
+msgstr "SPDIF-Ausgang"
+
+msgid "AUX 1 Out"
+msgstr "AUX-Ausgang 1"
+
+msgid "AUX 2 Out"
+msgstr "AUX-Ausgang 2"
+
+#, c-format
+msgid "Error reading %d bytes from device '%s'."
+msgstr "Fehler beim Lesen von %d Bytes von Gerät »%s«."
+
+# »Frame« sollten wir im Zusammenhang mit Videos vielleicht besser so belassen. Habe ich in gnome-subtitles auch so gemacht.
+#, c-format
+msgid "Got unexpected frame size of %u instead of %u."
+msgstr "Unerwartete Frame-Größe von %u anstatt %u wurde erhalten."
+
+#, c-format
+msgid "Error reading %d bytes on device '%s'."
+msgstr "Fehler beim Lesen von %d Bytes auf Gerät »%s«."
+
+#, c-format
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+"Fehler beim Bestimmen der Fähigkeiten des Gerätes »%s«: Es ist kein »v4l2«-"
+"Treiber. Überprüfen Sie, ob es ein »v4l1«-Treiber ist."
+
+#, c-format
+msgid "Failed to query attributes of input %d in device %s"
+msgstr "Abfrage der Attribute der Eingabe »%d« im Gerät »%s« schlug fehl"
+
+#, c-format
+msgid "Failed to get setting of tuner %d on device '%s'."
+msgstr ""
+"Auslesen der Einstellungen der Senderwahl »%d« auf Gerät »%s« schlug fehl."
+
+#, c-format
+msgid "Failed to query norm on device '%s'."
+msgstr "Abfragen der Norm auf Gerät »%s« schlug fehl."
+
+#, c-format
+msgid "Failed getting controls attributes on device '%s'."
+msgstr "Abfrage der Kontrollattribute auf Gerät »%s« schlug fehl."
+
+#, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Gerät »%s« kann nicht identifiziert werden."
+
+#, c-format
+msgid "This isn't a device '%s'."
+msgstr "»%s« ist kein Gerät."
+
+#, c-format
+msgid "Could not open device '%s' for reading and writing."
+msgstr "Gerät »%s« konnte nicht zum Lesen oder Schreiben geöffnet werden."
+
+#, c-format
+msgid "Device '%s' is not a capture device."
+msgstr "»%s« ist kein Aufnahmegerät."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "»%s« ist kein Aufnahmegerät."
+
+#, c-format
+msgid "Failed to set norm for device '%s'."
+msgstr "Festlegen der Norm auf Gerät »%s« schlug fehl."
+
+#, c-format
+msgid "Failed to get current tuner frequency for device '%s'."
+msgstr "Auslesen der aktuellen Sendefrequenz des Geräts »%s« schlug fehl."
+
+#, c-format
+msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
+msgstr ""
+"Festlegen der aktuellen Sendefrequenz des Geräts »%s« auf %lu Hz schlug fehl."
+
+#, c-format
+msgid "Failed to get signal strength for device '%s'."
+msgstr "Auslesen der aktuellen Signalstärke des Geräts »%s« schlug fehl."
+
+#, c-format
+msgid "Failed to get value for control %d on device '%s'."
+msgstr "Auslesen des Wertes der Einstellung »%d« des Geräts »%s« schlug fehl."
+
+#, c-format
+msgid "Failed to set value %d for control %d on device '%s'."
+msgstr ""
+"Festlegen des Wertes »%d« der Einstellung »%d« des Geräts »%s« schlug fehl."
+
+# Sendegerät sicherlich nicht, eben eher ein Radio. Warum diese Fehlermeldung beie einem Radiogerät kommen könnte, weiß ich allerdings auch nicht.
+#, c-format
+msgid "Failed to get current input on device '%s'. May be it is a radio device"
+msgstr ""
+"Auslesen der aktuellen Eingabe auf dem Gerät »%s« schlug fehl. Vielleicht ist "
+"es ein Radiogerät."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Festlegen der Eingabe »%d« des Geräts »%s« schlug fehl."
+
+#, c-format
+msgid "Could not enqueue buffers in device '%s'."
+msgstr "Auf Gerät »%s« konnten keine Puffer eingereiht werden."
+
+#, c-format
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Der Versuch Videobilder von Gerät »%s« auszulesen schlug fehl."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "%d Versuche sind fehlgeschlagen. Gerät »%s«. Systemfehler: %s"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Parameter konnten nicht von Gerät »%s« ausgelesen werden"
+
+msgid "Video input device did not accept new frame rate setting."
+msgstr ""
+"Vom Video-Eingabegerät wurde die Einstellung zur Bildwiederholungsrate nicht "
+"akzeptiert."
+
+# »Geholt« ist auch noch nicht optimal, aber »abgebildet« geht auch nicht wirklich.
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Die Puffer des Gerätes »%s« konnten nicht geholt werden."
+
+#, c-format
+msgid "The driver of device '%s' does not support any known capture method."
+msgstr ""
+"Der Treiber von Gerät »%s« unterstützt keine der bekannten Aufnahmemethoden."
+
+msgid "Changing resolution at runtime is not yet supported."
+msgstr "Ein Wechsel der Auflösung zur Laufzeit wird noch nicht unterstützt."
+
+# Taktgeber klingt gut.
+msgid "Cannot operate without a clock"
+msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
+
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr ""
+#~ "Aufzählen möglicher Videoformate, mit denen Gerät »%s« arbeiten kann, "
+#~ "schlug fehl"
+
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "Der Puffertyp wird nicht unterstützt, der Index ist außerhalb seiner "
+#~ "Grenzwerte, es sind bisher noch keine Puffer angefordert worden oder "
+#~ "»userptr« oder die Länge sind ungültig. Gerät »%s«"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Der Versuch Videobilder von Gerät »%s« auszulesen schlug fehl. Nicht genug "
+#~ "Arbeitsspeicher."
+
+# Was ist ein Zeigerpuffer?
+#, fuzzy
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "Ungenügend Arbeitsspeicher, um einen Zeigerpuffer eines Benutzers "
+#~ "einzureihen. Gerät »%s«."
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "Es wurden keine freien Puffer im Vorrat bei Index %d gefunden."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Videoaufnahme wird nicht von Gerät »%s« unterstützt"
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "Das Gerät »%s« kann nicht bei %dx%d aufnehmen"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "Das angegebene Format kann nicht vom Gerät »%s« ausgelesen werden"
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Die Puffer konnten nicht von Gerät »%s« ausgelesen werden."
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "Es konnten nicht genug Puffer von Gerät »%s« ausgelesen werden."
+
+# »Stromaufnahme« klingt nach Energieverbrauch.
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Fehler beim Start der Aufzeichnung des Stroms von Gerät »%s«."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Fehler beim Stoppen der Aufzeichnung des Stroms von Gerät »%s«."
+
+#~ msgid "Describes the selected input element."
+#~ msgstr "Beschreibt das ausgewählte Eingabeelement."
+
+#~ msgid "Describes the selected output element for Audio/Video Conferencing."
+#~ msgstr ""
+#~ "Beschreibt das ausgewählte Ausgabeelement für Audio/Video-Konferenzen."
+
+#~ msgid "Describes the selected output element for Music and Movies."
+#~ msgstr "Beschreibt das ausgewählte Ausgabeelement für Musik und Videos."
+
+#~ msgid "Describes the selected output element."
+#~ msgstr "Beschreibt das ausgewählte Ausgabeelement."
+
+# »sink« hatte ich z.B. in Conduit auch mit Ziel übersetzt.
+#~ msgid "GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "Gstreamer-Audioziel für Audio/Video-Konferenzen."
+
+#~ msgid "GStreamer audiosink for Music and Movies"
+#~ msgstr "Gstreamer-Audioziel für Musik und Videos"
+
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
+#~ "a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Klänge mittels einer beliebigen Anzahl von "
+#~ "Ausgabeelementen wiedergeben. Einige mögliche Werte sind osssink, esdsink "
+#~ "und alsasink. Das Audioziel kann eine teilweise Weiterleitung anstelle "
+#~ "eines Elementes sein."
+
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Videos mittels einer beliebigen Anzahl von "
+#~ "Ausgabeelementen wiedergeben. Einige mögliche Werte sind xvimagesink, "
+#~ "ximagesink, sdlvideosink und aasink. Das Videoziel kann eine teilweise "
+#~ "Weiterleitung anstelle eines Elementes sein."
+
+#~ msgid ""
+#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
+#~ "stream in video frames. Default is goom but more visualization plugins "
+#~ "will be ported soon. The visualization plugin can be a partial pipeline "
+#~ "instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Visualisierungs-Plugins in eine Weiterleitung setzen, um "
+#~ "Audioströme in Videobilder umzuwandeln. Das Standard-Plugin ist »goom«. "
+#~ "Weitere Plugins werden demnächst portiert. Das Visualisierungs-Plugin "
+#~ "kann eine teilweise Weiterleitung anstelle eines Elementes sein."
+
+#~ msgid ""
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
+#~ "a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Klänge mittels einer beliebigen Anzahl von "
+#~ "Eingabeelementen aufzeichnen. Einige mögliche Werte sind osssrc, esdsrc "
+#~ "und alsasrc. Die Audioquelle kann eine teilweise Weiterleitung anstelle "
+#~ "eines Elementes sein."
+
+#~ msgid ""
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
+#~ "partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Videos mittels einer beliebigen Anzahl von "
+#~ "Eingabeelementen aufzeichnen. Einige mögliche Werte sind v4lsrc und "
+#~ "videotestsrc. Die Videoquelle kann eine teilweise Weiterleitung anstelle "
+#~ "eines Elementes sein."
+
+#~ msgid "default GStreamer audio source"
+#~ msgstr "Vorgegebene GStreamer-Audioquelle"
+
+#~ msgid "default GStreamer audiosink"
+#~ msgstr "Vorgegebenes GStreamer-Audioziel"
+
+#~ msgid "default GStreamer video source"
+#~ msgstr "Vorgegebene GStreamer-Videoquelle"
+
+#~ msgid "default GStreamer videosink"
+#~ msgstr "Vorgegebenes GStreamer-Videoziel"
+
+#~ msgid "default GStreamer visualization plugin"
+#~ msgstr "Vorgegebenes GStreamer-Visualisierungs-Plugin"
+
+#~ msgid "description for GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "Beschreibung der GStreamer-Audioquelle für Audio/Video-Konferenzen"
+
+#~ msgid "description for GStreamer audiosink for Music and Movies"
+#~ msgstr "Beschreibung der GStreamer-Audioquelle für Musik und Videos"
+
+#~ msgid "description for default GStreamer audiosink"
+#~ msgstr "Beschreibung des vorgegebenen GStreamer-Audioziels"
+
+#~ msgid "description for default GStreamer audiosrc"
+#~ msgstr "Beschreibung der vorgegebenen GStreamer-Audioquelle"

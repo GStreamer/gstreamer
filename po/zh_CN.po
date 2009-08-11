@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 14:43+0100\n"
+"POT-Creation-Date: 2009-08-11 17:17+0100\n"
 "PO-Revision-Date: 2009-02-09 15:35中国标准时间\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
@@ -34,11 +34,11 @@ msgstr "无法连接至服务器"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "没有或无效的输入音频，AVI 流将损坏。"
 
-msgid "This file contains no playable streams."
-msgstr "此文件不包含可播放的流。"
-
 msgid "This file is invalid and cannot be played."
 msgstr "此文件无效，无法播放。"
+
+msgid "This file contains no playable streams."
+msgstr "此文件不包含可播放的流。"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "此文件不完整且无法播放。"
@@ -235,6 +235,10 @@ msgid "Device '%s' is not a capture device."
 msgstr "‘%s’不是一个捕获设备。"
 
 #, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "‘%s’不是一个捕获设备。"
+
+#, fuzzy, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "设置设备‘%s’的基准时出错。"
 
@@ -271,37 +275,12 @@ msgid "Could not enqueue buffers in device '%s'."
 msgstr "无法对设备‘%s’中的缓冲区进行排序。"
 
 #, c-format
-msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr "枚举设备‘%s’可能支持的视频格式时出错"
-
-#, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "从设备‘%s’上获取视频的尝试失败了。"
 
 #, c-format
-msgid ""
-"The buffer type is not supported, or the index is out of bounds, or no "
-"buffers have been allocated yet, or the userptr or length are invalid. "
-"device %s"
-msgstr ""
-"不支持的缓冲区类型，或者索引超出范围了，或是还未分配缓冲区，或非法的用户指针"
-"或长度。设备 %s"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr "从设备‘%s’上获取视频的尝试失败了。没有足够的内存。"
-
-#, c-format
-msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr "内存不足无法对用户指针缓冲区进行排序。设备 %s。"
-
-#, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "在 %d 次尝试后失败。设备 %s。系统错误: %s"
-
-#, c-format
-msgid "No free buffers found in the pool at index %d."
-msgstr "在内存池中 %d 处没有可分配的缓冲区。"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -311,26 +290,6 @@ msgid "Video input device did not accept new frame rate setting."
 msgstr "视频输入设备不接受新的帧率设置。"
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "设备‘%s’不支持视频捕获"
-
-#, c-format
-msgid "Device '%s' cannot capture at %dx%d"
-msgstr "设备‘%s’不能在 %dx%d 处捕获"
-
-#, c-format
-msgid "Device '%s' cannot capture in the specified format"
-msgstr "设备‘%s’无法以指定格式捕获"
-
-#, c-format
-msgid "Could not get buffers from device '%s'."
-msgstr "无法从设备‘%s’中获取缓冲区。"
-
-#, c-format
-msgid "Could not get enough buffers from device '%s'."
-msgstr "无法从设备‘%s’中获取足够的缓冲区。"
-
-#, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "无法从设备‘%s’中映射出缓冲区"
 
@@ -338,19 +297,53 @@ msgstr "无法从设备‘%s’中映射出缓冲区"
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr "设备‘%s’的驱动不支持任何已知的捕获方式。"
 
-#, c-format
-msgid "Error starting streaming capture from device '%s'."
-msgstr "从设备‘%s’中启用流捕获时出错。"
-
-#, c-format
-msgid "Error stopping streaming capture from device '%s'."
-msgstr "从设备‘%s’中停止流捕获时出错。"
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "尚不支持在运行时更改分辨率。"
 
 msgid "Cannot operate without a clock"
 msgstr "没有时钟的话无法操作"
+
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr "枚举设备‘%s’可能支持的视频格式时出错"
+
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "不支持的缓冲区类型，或者索引超出范围了，或是还未分配缓冲区，或非法的用户指"
+#~ "针或长度。设备 %s"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr "从设备‘%s’上获取视频的尝试失败了。没有足够的内存。"
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr "内存不足无法对用户指针缓冲区进行排序。设备 %s。"
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "在内存池中 %d 处没有可分配的缓冲区。"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "设备‘%s’不支持视频捕获"
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "设备‘%s’不能在 %dx%d 处捕获"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "设备‘%s’无法以指定格式捕获"
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "无法从设备‘%s’中获取缓冲区。"
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "无法从设备‘%s’中获取足够的缓冲区。"
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "从设备‘%s’中启用流捕获时出错。"
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "从设备‘%s’中停止流捕获时出错。"
 
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr "获取设备‘%s’上的控制属性时出错。"

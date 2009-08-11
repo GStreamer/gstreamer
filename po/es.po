@@ -1,14 +1,14 @@
-# translation of gst-plugins-good-0.10.13.2.po to Español
+# translation of gst-plugins-good-0.10.14.2.po to Español
 # spanish translation for gst-plugins-good
 # This file is put in the public domain.
 #
-# Jorge González González <aloriel@gmail.com>, 2007, 20, 2009.
+# Jorge González González <aloriel@gmail.com>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 14:43+0100\n"
-"PO-Revision-Date: 2009-04-04 13:32+0200\n"
+"POT-Creation-Date: 2009-08-11 17:17+0100\n"
+"PO-Revision-Date: 2009-06-11 14:02+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -35,11 +35,11 @@ msgstr "No se pudo conectar con el servidor"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "El audio no existe o no es válido, el flujo AVI estará corrupto."
 
-msgid "This file contains no playable streams."
-msgstr "Este archivo no contiene flujos reproducibles."
-
 msgid "This file is invalid and cannot be played."
 msgstr "Este archivo no es válido y no se puede reproducir."
+
+msgid "This file contains no playable streams."
+msgstr "Este archivo no contiene flujos reproducibles."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Este archivo está incompleto y no se puede reproducir."
@@ -60,11 +60,15 @@ msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
+"No se encontró un flujo soportado. Puede que necesite instalar una extensión "
+"RTSP de GStreamer para los formatos de flujo Real."
 
 msgid ""
 "No supported stream was found. You might be missing the right GStreamer RTSP "
 "extension plugin."
 msgstr ""
+"No se encontró un flujo soportado. Puede que le falte la extensión correcta "
+"de RTSP de GStreamer."
 
 msgid "Internal data flow error."
 msgstr "Error en el flujo de datos interno."
@@ -246,6 +250,10 @@ msgstr "No se pudo abrir el dispositivo «%s» para lectura y escritura."
 msgid "Device '%s' is not a capture device."
 msgstr "El dispositivo «%s» no es un dispositivo de captura."
 
+#, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "El dispositivo «%s» no es un dispositivo de captura."
+
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Falló al establecer la norma para el dispositivo «%s»."
@@ -290,44 +298,12 @@ msgid "Could not enqueue buffers in device '%s'."
 msgstr "No se pueden encolar los búferes en el dispositivo «%s»."
 
 #, c-format
-msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
-"Falló al enumerar los posibles formatos de vídeo con los que el dispositivo «%"
-"s» puede trabajar"
-
-#, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Falló al intentar obtener cuadros de vídeo del dispositivo «%s»."
 
 #, c-format
-msgid ""
-"The buffer type is not supported, or the index is out of bounds, or no "
-"buffers have been allocated yet, or the userptr or length are invalid. "
-"device %s"
-msgstr ""
-"El tipo de búfer no está soportado o el índice está fuera de los límites o "
-"no se han registrado búferes todavía o la longitud o el userptr son "
-"inválidos. Dispositivo %s"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr ""
-"Falló al intentar obtener cuadros de vídeo del dispositivo «%s». No hay "
-"memoria suficiente."
-
-#, c-format
-msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr ""
-"Memoria insuficiente para encolar un búfer puntero de usuario. Dispositivo %"
-"s."
-
-#, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Falló después de %d intentos. Dispositivo %s. Error del sistema: %s"
-
-#, c-format
-msgid "No free buffers found in the pool at index %d."
-msgstr "No se encontraron búferes libres en el índice %d del «pool»."
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -339,26 +315,6 @@ msgstr ""
 "fotogramas."
 
 #, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "El dispositivo «%s» no soporta captura de vídeo"
-
-#, c-format
-msgid "Device '%s' cannot capture at %dx%d"
-msgstr "El dispositivo «%s» no puede capturar a %dx%d"
-
-#, c-format
-msgid "Device '%s' cannot capture in the specified format"
-msgstr "El dispositivo «%s» no puede capturar en el formato especificado"
-
-#, c-format
-msgid "Could not get buffers from device '%s'."
-msgstr "No se pudieron obtener búferes del dispositivo «%s»."
-
-#, c-format
-msgid "Could not get enough buffers from device '%s'."
-msgstr "No se pudieron obtener búferes suficientes del dispositivo «%s»."
-
-#, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "No se pudieron mapear los búferes del dispositivo «%s»"
 
@@ -368,19 +324,60 @@ msgstr ""
 "El controlador del dispositivo «%s» no soporta ningún método de captura "
 "conocido."
 
-#, c-format
-msgid "Error starting streaming capture from device '%s'."
-msgstr "Error al iniciar el flujo de captura del dispositivo «%s»."
-
-#, c-format
-msgid "Error stopping streaming capture from device '%s'."
-msgstr "Error al parar el flujo de captura del dispositivo «%s»."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "El cambio de resolución durante la reproducción aún no está soportado."
 
 msgid "Cannot operate without a clock"
 msgstr "No se puede operar sin reloj"
+
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr ""
+#~ "Falló al enumerar los posibles formatos de vídeo con los que el "
+#~ "dispositivo «%s» puede trabajar"
+
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "El tipo de búfer no está soportado o el índice está fuera de los límites "
+#~ "o no se han registrado búferes todavía o la longitud o el userptr son "
+#~ "inválidos. Dispositivo %s"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Falló al intentar obtener cuadros de vídeo del dispositivo «%s». No hay "
+#~ "memoria suficiente."
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "Memoria insuficiente para encolar un búfer puntero de usuario. "
+#~ "Dispositivo %s."
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "No se encontraron búferes libres en el índice %d del «pool»."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "El dispositivo «%s» no soporta captura de vídeo"
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "El dispositivo «%s» no puede capturar a %dx%d"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "El dispositivo «%s» no puede capturar en el formato especificado"
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "No se pudieron obtener búferes del dispositivo «%s»."
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "No se pudieron obtener búferes suficientes del dispositivo «%s»."
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Error al iniciar el flujo de captura del dispositivo «%s»."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Error al parar el flujo de captura del dispositivo «%s»."
 
 #~ msgid "Failed getting controls attributes on device '%s.'"
 #~ msgstr "Falló al obtener los atributos de control en el dispositivo «%s»."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-19 14:43+0100\n"
+"POT-Creation-Date: 2009-08-11 17:17+0100\n"
 "PO-Revision-Date: 2009-04-20 01:46+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -37,11 +37,11 @@ msgstr "Nem lehet csatlakozni a kiszolgálóhoz"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nincs vagy érvénytelen bemeneti hang, az AVI-folyam sérült lesz."
 
-msgid "This file contains no playable streams."
-msgstr "A fájl nem tartalmaz lejátszható adatfolyamokat."
-
 msgid "This file is invalid and cannot be played."
 msgstr "A fájl nem érvényes és nem játszható le."
+
+msgid "This file contains no playable streams."
+msgstr "A fájl nem tartalmaz lejátszható adatfolyamokat."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "A fájl nem teljes és nem játszható le."
@@ -246,6 +246,10 @@ msgstr "Nem lehet olvasásra és írásra megnyitni a(z) „%s” eszközt."
 msgid "Device '%s' is not a capture device."
 msgstr "A(z) „%s” eszköz nem rögzítőeszköz."
 
+#, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "A(z) „%s” eszköz nem rögzítőeszköz."
+
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "A norma beállítása meghiúsult a(z) „%s” eszközön."
@@ -289,42 +293,12 @@ msgid "Could not enqueue buffers in device '%s'."
 msgstr "Nem állíthatók sorba a pufferek a(z) „%s” eszközben."
 
 #, c-format
-msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
-"A(z) „%s” eszköz által kezelhető lehetséges videoformátumok felsorolása "
-"meghiúsult"
-
-#, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Nem sikerült videokockákat lekérni a(z) „%s” eszköztől."
 
 #, c-format
-msgid ""
-"The buffer type is not supported, or the index is out of bounds, or no "
-"buffers have been allocated yet, or the userptr or length are invalid. "
-"device %s"
-msgstr ""
-"A puffer típusa nem támogatott, az index kívül esik a határokon, még nem "
-"kerültek pufferek lefoglalásra, az userptr vagy a hossz érvénytelen. Eszköz: "
-"%s"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr ""
-"Nem sikerült videokockákat lekérni a(z) „%s” eszköztől. Nincs elég memória."
-
-#, c-format
-msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-msgstr ""
-"nincs elég memória felhasználói mutatópuffer sorba állításához. Eszköz: %s."
-
-#, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Hiba %d próbálkozás után. Eszköz: %s. Rendszerhiba: %s."
-
-#, c-format
-msgid "No free buffers found in the pool at index %d."
-msgstr "Nem találhatók szabad pufferek a tárolóban az adott indexnél (%d)."
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -333,26 +307,6 @@ msgstr "Nem kérhetők le a(z) „%s” eszköz paraméterei"
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 "A videobemeneti eszköz nem fogadta el az új képkockasebesség-beállítást."
-
-#, c-format
-msgid "Device '%s' does not support video capture"
-msgstr "A(z) „%s” eszköz nem támogatja a videofelvételt"
-
-#, c-format
-msgid "Device '%s' cannot capture at %dx%d"
-msgstr "A(z) „%s” eszköz nem képes felvenni a következő helyen: %dx%d"
-
-#, c-format
-msgid "Device '%s' cannot capture in the specified format"
-msgstr "A(z) „%s” eszköz nem képes felvenni a megadott formátumban"
-
-#, c-format
-msgid "Could not get buffers from device '%s'."
-msgstr "Nem sikerült puffereket szerezni a(z) „%s” eszköztől."
-
-#, c-format
-msgid "Could not get enough buffers from device '%s'."
-msgstr "Nem lehet elég puffert szerezni a(z) „%s” eszköztől."
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
@@ -364,16 +318,57 @@ msgstr ""
 "A(z) „%s” eszköz illesztőprogramja nem támogat egyetlen ismert felvételi "
 "módot sem."
 
-#, c-format
-msgid "Error starting streaming capture from device '%s'."
-msgstr "Hiba az adatfolyam felvételének indításakor a(z) „%s” eszközről."
-
-#, c-format
-msgid "Error stopping streaming capture from device '%s'."
-msgstr "Hiba az adatfolyam felvételének leállításakor a(z) „%s” eszközről."
-
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "A felbontás módosítása futás közben még nem támogatott."
 
 msgid "Cannot operate without a clock"
 msgstr "Óra nélkül lehetetlen a működés"
+
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr ""
+#~ "A(z) „%s” eszköz által kezelhető lehetséges videoformátumok felsorolása "
+#~ "meghiúsult"
+
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "A puffer típusa nem támogatott, az index kívül esik a határokon, még nem "
+#~ "kerültek pufferek lefoglalásra, az userptr vagy a hossz érvénytelen. "
+#~ "Eszköz: %s"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Nem sikerült videokockákat lekérni a(z) „%s” eszköztől. Nincs elég "
+#~ "memória."
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "nincs elég memória felhasználói mutatópuffer sorba állításához. Eszköz: %"
+#~ "s."
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "Nem találhatók szabad pufferek a tárolóban az adott indexnél (%d)."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "A(z) „%s” eszköz nem támogatja a videofelvételt"
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "A(z) „%s” eszköz nem képes felvenni a következő helyen: %dx%d"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "A(z) „%s” eszköz nem képes felvenni a megadott formátumban"
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Nem sikerült puffereket szerezni a(z) „%s” eszköztől."
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "Nem lehet elég puffert szerezni a(z) „%s” eszköztől."
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Hiba az adatfolyam felvételének indításakor a(z) „%s” eszközről."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Hiba az adatfolyam felvételének leállításakor a(z) „%s” eszközről."
