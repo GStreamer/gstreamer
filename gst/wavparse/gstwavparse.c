@@ -2197,8 +2197,14 @@ gst_wavparse_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:
-      /* stream leftover data in current segment */
-      gst_wavparse_flush_data (wav);
+      /* add pad if needed so EOS is seen downstream */
+      if (G_UNLIKELY (wav->first)) {
+        wav->first = FALSE;
+        gst_wavparse_add_src_pad (wav, NULL);
+      } else {
+        /* stream leftover data in current segment */
+        gst_wavparse_flush_data (wav);
+      }
       /* fall-through */
     case GST_EVENT_FLUSH_STOP:
       gst_adapter_clear (wav->adapter);
