@@ -168,6 +168,15 @@ gst_wavparse_reset (GstWavParse * wav)
   if (wav->tags)
     gst_tag_list_free (wav->tags);
   wav->tags = NULL;
+  if (wav->caps)
+    gst_caps_unref (wav->caps);
+  wav->caps = NULL;
+  if (wav->start_segment)
+    gst_event_unref (wav->start_segment);
+  wav->start_segment = NULL;
+  if (wav->close_segment)
+    gst_event_unref (wav->close_segment);
+  wav->close_segment = NULL;
 }
 
 static void
@@ -1154,12 +1163,12 @@ gst_waveparse_ignore_chunk (GstWavParse * wav, GstBuffer * buf, guint32 tag,
 static GstFlowReturn
 gst_wavparse_stream_headers (GstWavParse * wav)
 {
-  GstFlowReturn res;
+  GstFlowReturn res = GST_FLOW_OK;
   GstBuffer *buf;
   gst_riff_strf_auds *header = NULL;
   guint32 tag, size;
   gboolean gotdata = FALSE;
-  GstCaps *caps;
+  GstCaps *caps = NULL;
   gchar *codec_name = NULL;
   GstEvent **event_p;
   GstFormat bformat;
@@ -1172,7 +1181,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     /* The header starts with a 'fmt ' tag */
     if (wav->streaming) {
       if (!gst_wavparse_peek_chunk (wav, &tag, &size))
-        return GST_FLOW_OK;
+        return res;
 
       gst_adapter_flush (wav->adapter, 8);
       wav->offset += 8;
@@ -1314,7 +1323,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   while (!gotdata) {
     if (wav->streaming) {
       if (!gst_wavparse_peek_chunk_info (wav, &tag, &size))
-        return GST_FLOW_OK;
+        goto exit;
     } else {
       if ((res =
               gst_pad_pull_range (wav->sinkpad, wav->offset, 8,
@@ -1365,7 +1374,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           if (size < data_size) {
             if (!gst_waveparse_ignore_chunk (wav, buf, tag, size)) {
               /* need more data */
-              return GST_FLOW_OK;
+              goto exit;
             }
             GST_DEBUG_OBJECT (wav, "need %d, available %d; ignoring chunk",
                 data_size, size);
@@ -1376,7 +1385,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
             const guint8 *data = NULL;
 
             if (!gst_wavparse_peek_chunk (wav, &tag, &size)) {
-              return GST_FLOW_OK;
+              goto exit;
             }
             gst_adapter_flush (wav->adapter, 8);
             data = gst_adapter_peek (wav->adapter, data_size);
@@ -1397,7 +1406,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         } else {
           if (!gst_waveparse_ignore_chunk (wav, buf, tag, size)) {
             /* need more data */
-            return GST_FLOW_OK;
+            goto exit;
           }
         }
         break;
@@ -1410,7 +1419,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         if (size < data_size) {
           if (!gst_waveparse_ignore_chunk (wav, buf, tag, size)) {
             /* need more data */
-            return GST_FLOW_OK;
+            goto exit;
           }
           GST_DEBUG_OBJECT (wav, "need %d, available %d; ignoring chunk",
               data_size, size);
@@ -1418,7 +1427,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         }
         if (wav->streaming) {
           if (!gst_wavparse_peek_chunk (wav, &tag, &size)) {
-            return GST_FLOW_OK;
+            goto exit;
           }
           gst_adapter_flush (wav->adapter, 8);
           acid = (const gst_riff_acid *) gst_adapter_peek (wav->adapter,
@@ -1454,7 +1463,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           const guint8 *data = NULL;
 
           if (gst_adapter_available (wav->adapter) < 12) {
-            return GST_FLOW_OK;
+            goto exit;
           }
           data = gst_adapter_peek (wav->adapter, 12);
           ltag = GST_READ_UINT32_LE (data + 8);
@@ -1474,7 +1483,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
             GST_INFO_OBJECT (wav, "Have LIST chunk INFO size %u", data_size);
             if (wav->streaming) {
               if (!gst_wavparse_peek_chunk (wav, &tag, &size)) {
-                return GST_FLOW_OK;
+                goto exit;
               }
               gst_adapter_flush (wav->adapter, 12);
               wav->offset += 12;
@@ -1514,7 +1523,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
                 GST_FOURCC_ARGS (ltag));
             if (!gst_waveparse_ignore_chunk (wav, buf, tag, size))
               /* need more data */
-              return GST_FLOW_OK;
+              goto exit;
             break;
         }
         break;
@@ -1522,7 +1531,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       default:
         if (!gst_waveparse_ignore_chunk (wav, buf, tag, size))
           /* need more data */
-          return GST_FLOW_OK;
+          goto exit;
         break;
     }
 
@@ -1570,75 +1579,78 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   return GST_FLOW_OK;
 
   /* ERROR */
+exit:
+  {
+    if (codec_name)
+      g_free (codec_name);
+    if (header)
+      g_free (header);
+    if (caps)
+      gst_caps_unref (caps);
+    return res;
+  }
+fail:
+  {
+    res = GST_FLOW_ERROR;
+    goto exit;
+  }
 invalid_wav:
   {
     GST_ELEMENT_ERROR (wav, STREAM, TYPE_NOT_FOUND, (NULL),
         ("Invalid WAV header (no fmt at start): %"
             GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
-    g_free (codec_name);
-    return GST_FLOW_ERROR;
+    goto fail;
   }
 parse_header_error:
   {
     GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL),
         ("Couldn't parse audio header"));
-    g_free (codec_name);
-    return GST_FLOW_ERROR;
+    goto fail;
   }
 no_channels:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("Stream claims to contain no channels - invalid data"));
-    g_free (header);
-    g_free (codec_name);
-    return GST_FLOW_ERROR;
+    goto fail;
   }
 no_rate:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("Stream with sample_rate == 0 - invalid data"));
-    g_free (header);
-    g_free (codec_name);
-    return GST_FLOW_ERROR;
+    goto fail;
   }
 invalid_blockalign:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("Stream claims blockalign = %u, which is more than %u - invalid data",
             wav->blockalign, wav->channels * (guint) ceil (wav->depth / 8.0)));
-    g_free (codec_name);
-    return GST_FLOW_ERROR;
+    goto fail;
   }
 invalid_bps:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("Stream claims av_bsp = %u, which is more than %u - invalid data",
             wav->av_bps, wav->blockalign * wav->rate));
-    g_free (codec_name);
-    return GST_FLOW_ERROR;
+    goto fail;
   }
 no_bytes_per_sample:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("Could not caluclate bytes per sample - invalid data"));
-    g_free (codec_name);
-    return GST_FLOW_ERROR;
+    goto fail;
   }
 unknown_format:
   {
     GST_ELEMENT_ERROR (wav, STREAM, TYPE_NOT_FOUND, (NULL),
         ("No caps found for format 0x%x, %d channels, %d Hz",
             wav->format, wav->channels, wav->rate));
-    g_free (header);
-    g_free (codec_name);
-    return GST_FLOW_ERROR;
+    goto fail;
   }
 header_read_error:
   {
     GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL),
         ("Couldn't read in header %d (%s)", res, gst_flow_get_name (res)));
-    g_free (codec_name);
-    return GST_FLOW_ERROR;
+    goto fail;
   }
 }
 
