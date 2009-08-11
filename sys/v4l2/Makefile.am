@@ -40,7 +40,14 @@ libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 				 $(LIBV4L2_LIBS) \
 				 $(GUDEV_LIBS)
 
-noinst_HEADERS = gstv4l2object.h v4l2_calls.h \
-		 gstv4l2src.h v4l2src_calls.h \
-		 gstv4l2tuner.h gstv4l2xoverlay.h \
-		 gstv4l2colorbalance.h gstv4l2vidorient.h
+noinst_HEADERS = \
+	gstv4l2bufferpool.h \
+	gstv4l2colorbalance.h \
+	gstv4l2object.h \
+	gstv4l2sink.h \
+	gstv4l2src.h \
+	gstv4l2tuner.h \
+	gstv4l2vidorient.h \
+	gstv4l2xoverlay.h \
+	v4l2_calls.h \
+	v4l2src_calls.h
