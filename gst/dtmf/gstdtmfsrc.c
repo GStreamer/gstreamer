@@ -287,6 +287,12 @@ gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
   gstbasesrc_class->negotiate = GST_DEBUG_FUNCPTR (gst_dtmf_src_negotiate);
 }
 
+static void
+event_free (GstDTMFSrcEvent * event)
+{
+  if (event)
+    g_slice_free (GstDTMFSrcEvent, event);
+}
 
 static void
 gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, GstDTMFSrcClass * g_class)
@@ -297,7 +303,7 @@ gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, GstDTMFSrcClass * g_class)
 
   dtmfsrc->interval = DEFAULT_PACKET_INTERVAL;
 
-  dtmfsrc->event_queue = g_async_queue_new ();
+  dtmfsrc->event_queue = g_async_queue_new_full ((GDestroyNotify) event_free);
   dtmfsrc->last_event = NULL;
 
   dtmfsrc->sample_rate = DEFAULT_SAMPLE_RATE;
