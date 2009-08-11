@@ -302,6 +302,7 @@ AG_GST_CHECK_PLUGIN(multipart)
 AG_GST_CHECK_PLUGIN(qtdemux)
 AG_GST_CHECK_PLUGIN(replaygain)
 AG_GST_CHECK_PLUGIN(rtp)
+AG_GST_CHECK_PLUGIN(rtpmanager)
 AG_GST_CHECK_PLUGIN(rtsp)
 AG_GST_CHECK_PLUGIN(smpte)
 AG_GST_CHECK_PLUGIN(spectrum)
@@ -1065,6 +1066,7 @@ gst/multipart/Makefile
 gst/qtdemux/Makefile
 gst/replaygain/Makefile
 gst/rtp/Makefile
+gst/rtpmanager/Makefile
 gst/rtsp/Makefile
 gst/smpte/Makefile
 gst/spectrum/Makefile

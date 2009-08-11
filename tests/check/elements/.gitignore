@@ -34,6 +34,8 @@ rganalysis
 rglimiter
 rgvolume
 rtp-payloading
+rtpbin
+rtpbin_buffer_list
 souphttpsrc
 spectrum
 sunaudio

@@ -112,6 +112,8 @@ check_PROGRAMS = \
 	elements/rglimiter \
 	elements/rgvolume \
 	elements/rtp-payloading \
+	elements/rtpbin \
+	elements/rtpbin_buffer_list \
 	elements/spectrum \
 	elements/udpsink \
 	elements/videocrop \
@@ -168,6 +170,13 @@ elements_deinterleave_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_deinterleave_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
 elements_interleave_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_interleave_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
+
+elements_rtpbin_buffer_list_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
+	$(ERROR_CFLAGS) $(GST_CHECK_CFLAGS)
+elements_rtpbin_buffer_list_LDADD = $(GST_PLUGINS_BASE_LIBS) \
+             -lgstnetbuffer-@GST_MAJORMINOR@ -lgstrtp-@GST_MAJORMINOR@ \
+             $(GST_BASE_LIBS) $(GST_LIBS_LIBS) $(GST_CHECK_LIBS)
+elements_rtpbin_buffer_list_SOURCES = elements/rtpbin_buffer_list.c
 
 elements_souphttpsrc_CFLAGS = $(SOUP_CFLAGS) $(AM_CFLAGS)
 elements_souphttpsrc_LDADD = $(SOUP_LIBS) $(LDADD)

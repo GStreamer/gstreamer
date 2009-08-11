@@ -180,6 +180,11 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/replaygain/gstrglimiter.h \
 	$(top_srcdir)/gst/replaygain/gstrgvolume.h \
 	$(top_srcdir)/gst/rtp/gstrtpjpegpay.h \
+	$(top_srcdir)/gst/rtpmanager/gstrtpbin.h \
+	$(top_srcdir)/gst/rtpmanager/gstrtpjitterbuffer.h \
+	$(top_srcdir)/gst/rtpmanager/gstrtpptdemux.h \
+	$(top_srcdir)/gst/rtpmanager/gstrtpsession.h \
+	$(top_srcdir)/gst/rtpmanager/gstrtpssrcdemux.h \
 	$(top_srcdir)/gst/rtsp/gstrtpdec.h \
 	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
 	$(top_srcdir)/gst/smpte/gstsmpte.h \
