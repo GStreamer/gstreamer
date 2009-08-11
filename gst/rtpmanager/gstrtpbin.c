@@ -2331,13 +2331,15 @@ gst_rtp_bin_get_free_pad_name (GstElement * element, GstPadTemplate * templ)
     pad_name = g_strdup_printf (templ->name_template, session++);
     pad_it = gst_element_iterate_pads (GST_ELEMENT (element));
     name_found = TRUE;
-    while (gst_iterator_next (pad_it, (gpointer) & pad) == GST_ITERATOR_OK) {
+    while (name_found &&
+        gst_iterator_next (pad_it, (gpointer) & pad) == GST_ITERATOR_OK) {
       gchar *name;
 
       name = gst_pad_get_name (pad);
       if (strcmp (name, pad_name) == 0)
         name_found = FALSE;
       g_free (name);
+      gst_object_unref (pad);
     }
     gst_iterator_free (pad_it);
   }
