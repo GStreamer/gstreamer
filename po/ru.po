@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-17 21:54+0100\n"
+"POT-Creation-Date: 2009-08-11 17:42+0100\n"
 "PO-Revision-Date: 2009-02-12 15:00+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -71,8 +71,219 @@ msgstr ""
 "Не удалось открыть аудио-устройство для обработки параметров микшера. Данная "
 "версия Open Sound System не поддерживается этим элементом."
 
+msgid "Volume"
+msgstr ""
+
+#, fuzzy
+msgid "Master"
+msgstr "Скорость"
+
+msgid "Front"
+msgstr "Фронт"
+
+msgid "Rear"
+msgstr "Тыл"
+
+msgid "Headphones"
+msgstr "Наушники"
+
+#, fuzzy
+msgid "Center"
+msgstr "Центр / Сабвуфер"
+
+msgid "LFE"
+msgstr ""
+
+#, fuzzy
+msgid "Surround"
+msgstr "Объёмный звук"
+
+msgid "Side"
+msgstr "Боковые"
+
+msgid "Built-in Speaker"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "Bass"
+msgstr ""
+
+msgid "Treble"
+msgstr ""
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+#, fuzzy
+msgid "Telephone"
+msgstr "Наушники"
+
+msgid "Microphone"
+msgstr "Микрофон"
+
+msgid "Line Out"
+msgstr ""
+
+#, fuzzy
+msgid "Line In"
+msgstr "Линейный вход"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "Video In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Record Gain"
+msgstr ""
+
+msgid "Output Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "Микрофон"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr "Вход"
+
+msgid "Record Source"
+msgstr ""
+
+msgid "Monitor Source"
+msgstr ""
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr "Стерео"
+
+#, fuzzy
+msgid "Surround Sound"
+msgstr "Объёмный звук"
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "Микрофон"
+
+msgid "Speaker Source"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "Микрофон"
+
+msgid "Jack"
+msgstr ""
+
+msgid "Center / LFE"
+msgstr "Центр / Сабвуфер"
+
+#, fuzzy
+msgid "Stereo Mix"
+msgstr "Стерео"
+
+msgid "Mono Mix"
+msgstr ""
+
+#, fuzzy
+msgid "Input Mix"
+msgstr "Уровень входа"
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone 1"
+msgstr "Микрофон"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "Микрофон"
+
+msgid "Digital Out"
+msgstr ""
+
+msgid "Digital In"
+msgstr ""
+
+msgid "HDMI"
+msgstr ""
+
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr "Вкл"
+
+msgid "Off"
+msgstr "Выкл"
+
+msgid "Mute"
+msgstr ""
+
 msgid "Fast"
 msgstr "Скорость"
+
+msgid "Very Low"
+msgstr ""
 
 msgid "Low"
 msgstr "Низкое"
@@ -83,191 +294,126 @@ msgstr "Среднее"
 msgid "High"
 msgstr "Высокое"
 
-msgid "Very high"
+#, fuzzy
+msgid "Very High"
 msgstr "Очень высокое"
 
 msgid "Production"
 msgstr "Продукция"
 
-msgid "Off"
-msgstr "Выкл"
-
-msgid "On"
-msgstr "Вкл"
-
-msgid "Stereo"
-msgstr "Стерео"
-
-msgid "Surround sound"
-msgstr "Объёмный звук"
-
-msgid "Input mix"
-msgstr "Уровень входа"
-
-msgid "Front"
-msgstr "Фронт"
-
-msgid "Rear"
-msgstr "Тыл"
-
-msgid "Side"
-msgstr "Боковые"
-
-msgid "Center / LFE"
-msgstr "Центр / Сабвуфер"
-
-msgid "Microphone"
-msgstr "Микрофон"
-
-msgid "Front panel microphone"
+#, fuzzy
+msgid "Front Panel Microphone"
 msgstr "Фронтальный микрофон"
 
-msgid "Input"
-msgstr "Вход"
-
-msgid "Line-in"
-msgstr "Линейный вход"
-
-msgid "PCM 1"
-msgstr "PCM 1"
-
-msgid "PCM 2"
-msgstr "PCM 2"
-
-msgid "PCM 3"
-msgstr "PCM 3"
-
-msgid "PCM 4"
-msgstr "PCM 4"
-
-msgid "Green connector"
-msgstr "Зелёный разъём"
-
-msgid "Green front panel connector"
-msgstr "Фронтальный зелёный разъём"
-
-msgid "Pink connector"
-msgstr "Розовый разъём"
-
-msgid "Pink front panel connector"
-msgstr "Фронтальный розовый разъём"
-
-msgid "Blue connector"
-msgstr "Синий разъём"
-
-msgid "Blue front panel connector"
-msgstr "Фронтальный синий разъём"
-
-msgid "Orange connector"
-msgstr "Оранжевый разъём"
-
-msgid "Orange front panel connector"
-msgstr "Фронтальный оранжевый разъём"
-
-msgid "Black connector"
-msgstr "Чёрный разъём"
-
-msgid "Black front panel connector"
-msgstr "Фронтальный чёрный разъём"
-
-msgid "Gray connector"
-msgstr "Серый разъём"
-
-msgid "Gray front panel connector"
-msgstr "Фронтальный серый разъём"
-
-msgid "White connector"
-msgstr "Белый разъём"
-
-msgid "White front panel connector"
-msgstr "Фронтальный белый разъём"
-
-msgid "Red connector"
-msgstr "Красный разъём"
-
-msgid "Red front panel connector"
-msgstr "Фронтальный красный разъём"
-
-msgid "Yellow connector"
-msgstr "Жёлтый разъём"
-
-msgid "Yellow front panel connector"
-msgstr "Фронтальный жёлтый разъём"
-
-msgid "Green connector function"
-msgstr "Функция зелёного разъёма"
-
-msgid "Green front panel connector function"
-msgstr "Функция фронтального зелёного разъёма"
-
-msgid "Pink connector function"
-msgstr "Функция розового разъёма"
-
-msgid "Pink front panel connector function"
-msgstr "Функция фронтального розового разъёма"
-
-msgid "Blue connector function"
-msgstr "Функция синего разъёма"
-
-msgid "Blue front panel connector function"
-msgstr "Функция фронтального синего разъёма"
-
-msgid "Orange connector function"
-msgstr "Функция оранжевого разъёма"
-
-msgid "Orange front panel connector function"
-msgstr "Функция фронтального оранжевого разъёма"
-
-msgid "Black connector function"
-msgstr "Функция чёрного разъёма"
-
-msgid "Black front panel connector function"
-msgstr "Функция фронтального чёрного разъёма"
-
-msgid "Gray connector function"
-msgstr "Функция серого разъёма"
-
-msgid "Gray front panel connector function"
-msgstr "Функция фронтального серого разъёма"
-
-msgid "White connector function"
-msgstr "Функция белого разъёма"
-
-msgid "White front panel connector function"
-msgstr "Функция фронтального белого разъёма"
-
-msgid "Red connector function"
-msgstr "Функция красного разъёма"
-
-msgid "Red front panel connector function"
-msgstr "Функция фронтального красного разъёма"
-
-msgid "Yellow connector function"
-msgstr "Функция жёлтого разъёма"
-
-msgid "Yellow front panel connector function"
-msgstr "Функция фронтального жёлтого разъёма"
-
-msgid "Front panel line-in"
+#, fuzzy
+msgid "Front Panel Line In"
 msgstr "Фронтальный линейный вход"
 
-msgid "Headphones"
-msgstr "Наушники"
-
-msgid "Front panel headphones"
+#, fuzzy
+msgid "Front Panel Headphones"
 msgstr "Фронтальные наушники"
 
-msgid "PCM"
-msgstr "PCM"
+#, fuzzy
+msgid "Front Panel Line Out"
+msgstr "Фронтальный линейный вход"
 
-msgid "Virtual mixer input"
+#, fuzzy
+msgid "Green Connector"
+msgstr "Зелёный разъём"
+
+#, fuzzy
+msgid "Pink Connector"
+msgstr "Розовый разъём"
+
+#, fuzzy
+msgid "Blue Connector"
+msgstr "Синий разъём"
+
+#, fuzzy
+msgid "White Connector"
+msgstr "Белый разъём"
+
+#, fuzzy
+msgid "Black Connector"
+msgstr "Чёрный разъём"
+
+#, fuzzy
+msgid "Gray Connector"
+msgstr "Серый разъём"
+
+#, fuzzy
+msgid "Orange Connector"
+msgstr "Оранжевый разъём"
+
+#, fuzzy
+msgid "Red Connector"
+msgstr "Красный разъём"
+
+#, fuzzy
+msgid "Yellow Connector"
+msgstr "Жёлтый разъём"
+
+#, fuzzy
+msgid "Green Front Panel Connector"
+msgstr "Фронтальный зелёный разъём"
+
+#, fuzzy
+msgid "Pink Front Panel Connector"
+msgstr "Фронтальный розовый разъём"
+
+#, fuzzy
+msgid "Blue Front Panel Connector"
+msgstr "Фронтальный синий разъём"
+
+#, fuzzy
+msgid "White Front Panel Connector"
+msgstr "Фронтальный белый разъём"
+
+#, fuzzy
+msgid "Black Front Panel Connector"
+msgstr "Фронтальный чёрный разъём"
+
+#, fuzzy
+msgid "Gray Front Panel Connector"
+msgstr "Фронтальный серый разъём"
+
+#, fuzzy
+msgid "Orange Front Panel Connector"
+msgstr "Фронтальный оранжевый разъём"
+
+#, fuzzy
+msgid "Red Front Panel Connector"
+msgstr "Фронтальный красный разъём"
+
+#, fuzzy
+msgid "Yellow Front Panel Connector"
+msgstr "Фронтальный жёлтый разъём"
+
+msgid "Spread Output"
+msgstr ""
+
+msgid "Downmix"
+msgstr ""
+
+#, fuzzy
+msgid "Virtual Mixer Input"
 msgstr "Виртуальный вход микшера"
 
-msgid "Virtual mixer output"
+#, fuzzy
+msgid "Virtual Mixer Output"
 msgstr "Виртуальный выход микшера"
 
-msgid "Virtual mixer channel configuration"
-msgstr "Конфигурация виртуальных каналов микшера"
+#, fuzzy
+msgid "Virtual Mixer Channels"
+msgstr "Виртуальный вход микшера"
+
+#, c-format
+msgid "%s Function"
+msgstr ""
+
+#, c-format
+msgid "%s %d"
+msgstr ""
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -315,3 +461,72 @@ msgstr "Ошибка записи с аудио-устройства."
 #~ msgstr ""
 #~ "Запрашиваемый битрейт %d кбит/с недопустим для свойства «%s». Битрейт "
 #~ "изменён на %d кбит/с."
+
+#~ msgid "PCM 1"
+#~ msgstr "PCM 1"
+
+#~ msgid "PCM 2"
+#~ msgstr "PCM 2"
+
+#~ msgid "PCM 3"
+#~ msgstr "PCM 3"
+
+#~ msgid "PCM 4"
+#~ msgstr "PCM 4"
+
+#~ msgid "Green connector function"
+#~ msgstr "Функция зелёного разъёма"
+
+#~ msgid "Green front panel connector function"
+#~ msgstr "Функция фронтального зелёного разъёма"
+
+#~ msgid "Pink connector function"
+#~ msgstr "Функция розового разъёма"
+
+#~ msgid "Pink front panel connector function"
+#~ msgstr "Функция фронтального розового разъёма"
+
+#~ msgid "Blue connector function"
+#~ msgstr "Функция синего разъёма"
+
+#~ msgid "Blue front panel connector function"
+#~ msgstr "Функция фронтального синего разъёма"
+
+#~ msgid "Orange connector function"
+#~ msgstr "Функция оранжевого разъёма"
+
+#~ msgid "Orange front panel connector function"
+#~ msgstr "Функция фронтального оранжевого разъёма"
+
+#~ msgid "Black connector function"
+#~ msgstr "Функция чёрного разъёма"
+
+#~ msgid "Black front panel connector function"
+#~ msgstr "Функция фронтального чёрного разъёма"
+
+#~ msgid "Gray connector function"
+#~ msgstr "Функция серого разъёма"
+
+#~ msgid "Gray front panel connector function"
+#~ msgstr "Функция фронтального серого разъёма"
+
+#~ msgid "White connector function"
+#~ msgstr "Функция белого разъёма"
+
+#~ msgid "White front panel connector function"
+#~ msgstr "Функция фронтального белого разъёма"
+
+#~ msgid "Red connector function"
+#~ msgstr "Функция красного разъёма"
+
+#~ msgid "Red front panel connector function"
+#~ msgstr "Функция фронтального красного разъёма"
+
+#~ msgid "Yellow connector function"
+#~ msgstr "Функция жёлтого разъёма"
+
+#~ msgid "Yellow front panel connector function"
+#~ msgstr "Функция фронтального жёлтого разъёма"
+
+#~ msgid "Virtual mixer channel configuration"
+#~ msgstr "Конфигурация виртуальных каналов микшера"

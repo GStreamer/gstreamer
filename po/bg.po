@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.12.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-17 21:54+0100\n"
+"POT-Creation-Date: 2009-08-11 17:42+0100\n"
 "PO-Revision-Date: 2009-06-15 07:48+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -73,8 +73,219 @@ msgstr ""
 "Аудио устройството не може да бъде отворено за управление на смесването. "
 "Тази версия на Open Sound System не се поддържа от този елемент."
 
+msgid "Volume"
+msgstr ""
+
+#, fuzzy
+msgid "Master"
+msgstr "Бързо"
+
+msgid "Front"
+msgstr "Отпред"
+
+msgid "Rear"
+msgstr "Отзад"
+
+msgid "Headphones"
+msgstr "Слушалки"
+
+#, fuzzy
+msgid "Center"
+msgstr "Център/баси"
+
+msgid "LFE"
+msgstr ""
+
+#, fuzzy
+msgid "Surround"
+msgstr "Стерео и съраунд"
+
+msgid "Side"
+msgstr "Отстрани"
+
+msgid "Built-in Speaker"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "Bass"
+msgstr ""
+
+msgid "Treble"
+msgstr ""
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+#, fuzzy
+msgid "Telephone"
+msgstr "Слушалки"
+
+msgid "Microphone"
+msgstr "Микрофон"
+
+msgid "Line Out"
+msgstr ""
+
+#, fuzzy
+msgid "Line In"
+msgstr "Входящ канал"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "Video In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Record Gain"
+msgstr ""
+
+msgid "Output Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "Микрофон"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr "Вход"
+
+msgid "Record Source"
+msgstr ""
+
+msgid "Monitor Source"
+msgstr ""
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr "Стерео"
+
+#, fuzzy
+msgid "Surround Sound"
+msgstr "Стерео и съраунд"
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "Микрофон"
+
+msgid "Speaker Source"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "Микрофон"
+
+msgid "Jack"
+msgstr ""
+
+msgid "Center / LFE"
+msgstr "Център/баси"
+
+#, fuzzy
+msgid "Stereo Mix"
+msgstr "Стерео"
+
+msgid "Mono Mix"
+msgstr ""
+
+#, fuzzy
+msgid "Input Mix"
+msgstr "Входящ смесител"
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone 1"
+msgstr "Микрофон"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "Микрофон"
+
+msgid "Digital Out"
+msgstr ""
+
+msgid "Digital In"
+msgstr ""
+
+msgid "HDMI"
+msgstr ""
+
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr "Включено"
+
+msgid "Off"
+msgstr "Изключено"
+
+msgid "Mute"
+msgstr ""
+
 msgid "Fast"
 msgstr "Бързо"
+
+msgid "Very Low"
+msgstr ""
 
 msgid "Low"
 msgstr "Ниски"
@@ -85,191 +296,126 @@ msgstr "Средни"
 msgid "High"
 msgstr "Високи"
 
-msgid "Very high"
+#, fuzzy
+msgid "Very High"
 msgstr "Много високи"
 
 msgid "Production"
 msgstr "Производство"
 
-msgid "Off"
-msgstr "Изключено"
-
-msgid "On"
-msgstr "Включено"
-
-msgid "Stereo"
-msgstr "Стерео"
-
-msgid "Surround sound"
-msgstr "Стерео и съраунд"
-
-msgid "Input mix"
-msgstr "Входящ смесител"
-
-msgid "Front"
-msgstr "Отпред"
-
-msgid "Rear"
-msgstr "Отзад"
-
-msgid "Side"
-msgstr "Отстрани"
-
-msgid "Center / LFE"
-msgstr "Център/баси"
-
-msgid "Microphone"
-msgstr "Микрофон"
-
-msgid "Front panel microphone"
+#, fuzzy
+msgid "Front Panel Microphone"
 msgstr "Микрофон на предния панел"
 
-msgid "Input"
-msgstr "Вход"
-
-msgid "Line-in"
-msgstr "Входящ канал"
-
-msgid "PCM 1"
-msgstr "PCM 1"
-
-msgid "PCM 2"
-msgstr "PCM 2"
-
-msgid "PCM 3"
-msgstr "PCM 3"
-
-msgid "PCM 4"
-msgstr "PCM 4"
-
-msgid "Green connector"
-msgstr "Зелено гнездо"
-
-msgid "Green front panel connector"
-msgstr "Зелено гнездо на предния панел"
-
-msgid "Pink connector"
-msgstr "Розово гнездо"
-
-msgid "Pink front panel connector"
-msgstr "Розово гнездо на предния панел"
-
-msgid "Blue connector"
-msgstr "Синьо гнездо"
-
-msgid "Blue front panel connector"
-msgstr "Синьо гнездо на предния панел"
-
-msgid "Orange connector"
-msgstr "Оранжево гнездо"
-
-msgid "Orange front panel connector"
-msgstr "Оранжево гнездо на предни панел"
-
-msgid "Black connector"
-msgstr "Черно гнездо"
-
-msgid "Black front panel connector"
-msgstr "Черно гнездо на предния панел"
-
-msgid "Gray connector"
-msgstr "Сиво гнездо"
-
-msgid "Gray front panel connector"
-msgstr "Сиво гнездо на предния панел"
-
-msgid "White connector"
-msgstr "Бяло гнездо"
-
-msgid "White front panel connector"
-msgstr "Бяло гнездо на предния панел"
-
-msgid "Red connector"
-msgstr "Червено гнездо"
-
-msgid "Red front panel connector"
-msgstr "Червено гнездо на предния панел"
-
-msgid "Yellow connector"
-msgstr "Жълто гнездо"
-
-msgid "Yellow front panel connector"
-msgstr "Жълто гнездо на предния панел"
-
-msgid "Green connector function"
-msgstr "Функция на зеленото гнездо"
-
-msgid "Green front panel connector function"
-msgstr "Функция на зеленото гнездо на предния панел"
-
-msgid "Pink connector function"
-msgstr "Функция на розовото гнездо"
-
-msgid "Pink front panel connector function"
-msgstr "Функция на розовото гнездо на предния панел"
-
-msgid "Blue connector function"
-msgstr "Функция на синьото гнездо"
-
-msgid "Blue front panel connector function"
-msgstr "Функция на синьото гнездо на предния панел"
-
-msgid "Orange connector function"
-msgstr "Функция на оранжевото гнездо"
-
-msgid "Orange front panel connector function"
-msgstr "Функция на оранжевото гнездо на предния панел"
-
-msgid "Black connector function"
-msgstr "Функция на черното гнездо"
-
-msgid "Black front panel connector function"
-msgstr "Функция на черното гнездо на предния панел"
-
-msgid "Gray connector function"
-msgstr "Функция на сивото гнездо"
-
-msgid "Gray front panel connector function"
-msgstr "Функция на сивото гнездо на предния панел"
-
-msgid "White connector function"
-msgstr "Функция на бялото гнездо"
-
-msgid "White front panel connector function"
-msgstr "Функция на бялото гнездо на предния панел"
-
-msgid "Red connector function"
-msgstr "Функция на червеното гнездо"
-
-msgid "Red front panel connector function"
-msgstr "Функция на червеното гнездо на предния панел"
-
-msgid "Yellow connector function"
-msgstr "Функция на жълтото гнездо"
-
-msgid "Yellow front panel connector function"
-msgstr "Функция на жълтото гнездо на предния панел"
-
-msgid "Front panel line-in"
+#, fuzzy
+msgid "Front Panel Line In"
 msgstr "Входящ канал на предния панел"
 
-msgid "Headphones"
-msgstr "Слушалки"
-
-msgid "Front panel headphones"
+#, fuzzy
+msgid "Front Panel Headphones"
 msgstr "Слушалки на предния панел"
 
-msgid "PCM"
-msgstr "PCM"
+#, fuzzy
+msgid "Front Panel Line Out"
+msgstr "Входящ канал на предния панел"
 
-msgid "Virtual mixer input"
+#, fuzzy
+msgid "Green Connector"
+msgstr "Зелено гнездо"
+
+#, fuzzy
+msgid "Pink Connector"
+msgstr "Розово гнездо"
+
+#, fuzzy
+msgid "Blue Connector"
+msgstr "Синьо гнездо"
+
+#, fuzzy
+msgid "White Connector"
+msgstr "Бяло гнездо"
+
+#, fuzzy
+msgid "Black Connector"
+msgstr "Черно гнездо"
+
+#, fuzzy
+msgid "Gray Connector"
+msgstr "Сиво гнездо"
+
+#, fuzzy
+msgid "Orange Connector"
+msgstr "Оранжево гнездо"
+
+#, fuzzy
+msgid "Red Connector"
+msgstr "Червено гнездо"
+
+#, fuzzy
+msgid "Yellow Connector"
+msgstr "Жълто гнездо"
+
+#, fuzzy
+msgid "Green Front Panel Connector"
+msgstr "Зелено гнездо на предния панел"
+
+#, fuzzy
+msgid "Pink Front Panel Connector"
+msgstr "Розово гнездо на предния панел"
+
+#, fuzzy
+msgid "Blue Front Panel Connector"
+msgstr "Синьо гнездо на предния панел"
+
+#, fuzzy
+msgid "White Front Panel Connector"
+msgstr "Бяло гнездо на предния панел"
+
+#, fuzzy
+msgid "Black Front Panel Connector"
+msgstr "Черно гнездо на предния панел"
+
+#, fuzzy
+msgid "Gray Front Panel Connector"
+msgstr "Сиво гнездо на предния панел"
+
+#, fuzzy
+msgid "Orange Front Panel Connector"
+msgstr "Оранжево гнездо на предни панел"
+
+#, fuzzy
+msgid "Red Front Panel Connector"
+msgstr "Червено гнездо на предния панел"
+
+#, fuzzy
+msgid "Yellow Front Panel Connector"
+msgstr "Жълто гнездо на предния панел"
+
+msgid "Spread Output"
+msgstr ""
+
+msgid "Downmix"
+msgstr ""
+
+#, fuzzy
+msgid "Virtual Mixer Input"
 msgstr "Вход на виртуален смесител"
 
-msgid "Virtual mixer output"
+#, fuzzy
+msgid "Virtual Mixer Output"
 msgstr "Изход на виртуален смесител"
 
-msgid "Virtual mixer channel configuration"
-msgstr "Настройки на каналите на виртуален смесител"
+#, fuzzy
+msgid "Virtual Mixer Channels"
+msgstr "Вход на виртуален смесител"
+
+#, c-format
+msgid "%s Function"
+msgstr ""
+
+#, c-format
+msgid "%s %d"
+msgstr ""
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -306,3 +452,72 @@ msgstr "Това аудио устройство не поддържа запи�
 
 msgid "Error recording from audio device."
 msgstr "Грешка при записа от аудио устройството."
+
+#~ msgid "PCM 1"
+#~ msgstr "PCM 1"
+
+#~ msgid "PCM 2"
+#~ msgstr "PCM 2"
+
+#~ msgid "PCM 3"
+#~ msgstr "PCM 3"
+
+#~ msgid "PCM 4"
+#~ msgstr "PCM 4"
+
+#~ msgid "Green connector function"
+#~ msgstr "Функция на зеленото гнездо"
+
+#~ msgid "Green front panel connector function"
+#~ msgstr "Функция на зеленото гнездо на предния панел"
+
+#~ msgid "Pink connector function"
+#~ msgstr "Функция на розовото гнездо"
+
+#~ msgid "Pink front panel connector function"
+#~ msgstr "Функция на розовото гнездо на предния панел"
+
+#~ msgid "Blue connector function"
+#~ msgstr "Функция на синьото гнездо"
+
+#~ msgid "Blue front panel connector function"
+#~ msgstr "Функция на синьото гнездо на предния панел"
+
+#~ msgid "Orange connector function"
+#~ msgstr "Функция на оранжевото гнездо"
+
+#~ msgid "Orange front panel connector function"
+#~ msgstr "Функция на оранжевото гнездо на предния панел"
+
+#~ msgid "Black connector function"
+#~ msgstr "Функция на черното гнездо"
+
+#~ msgid "Black front panel connector function"
+#~ msgstr "Функция на черното гнездо на предния панел"
+
+#~ msgid "Gray connector function"
+#~ msgstr "Функция на сивото гнездо"
+
+#~ msgid "Gray front panel connector function"
+#~ msgstr "Функция на сивото гнездо на предния панел"
+
+#~ msgid "White connector function"
+#~ msgstr "Функция на бялото гнездо"
+
+#~ msgid "White front panel connector function"
+#~ msgstr "Функция на бялото гнездо на предния панел"
+
+#~ msgid "Red connector function"
+#~ msgstr "Функция на червеното гнездо"
+
+#~ msgid "Red front panel connector function"
+#~ msgstr "Функция на червеното гнездо на предния панел"
+
+#~ msgid "Yellow connector function"
+#~ msgstr "Функция на жълтото гнездо"
+
+#~ msgid "Yellow front panel connector function"
+#~ msgstr "Функция на жълтото гнездо на предния панел"
+
+#~ msgid "Virtual mixer channel configuration"
+#~ msgstr "Настройки на каналите на виртуален смесител"

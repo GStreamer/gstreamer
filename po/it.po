@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-17 21:54+0100\n"
+"POT-Creation-Date: 2009-08-11 17:42+0100\n"
 "PO-Revision-Date: 2009-05-13 09:14+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -74,9 +74,228 @@ msgstr ""
 "mixer. Questa versione di Open Sound System non è supportata da questo "
 "elemento."
 
+msgid "Volume"
+msgstr ""
+
+# NdT: questo e i successivi non ho controllato che sono....
+#, fuzzy
+msgid "Master"
+msgstr "Veloce"
+
+msgid "Front"
+msgstr "Fronte"
+
+msgid "Rear"
+msgstr "Dietro"
+
+msgid "Headphones"
+msgstr "Cuffie"
+
+# NdT: forse questo? --> http://en.wikipedia.org/wiki/Low-frequency_effect
+#
+# o forse Low Frequency Emitter 
+#, fuzzy
+msgid "Center"
+msgstr "Centro / LFE"
+
+msgid "LFE"
+msgstr ""
+
+#, fuzzy
+msgid "Surround"
+msgstr "Suono surround"
+
+msgid "Side"
+msgstr "Lato"
+
+msgid "Built-in Speaker"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "Bass"
+msgstr ""
+
+msgid "Treble"
+msgstr ""
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+#, fuzzy
+msgid "Telephone"
+msgstr "Cuffie"
+
+msgid "Microphone"
+msgstr "Microfono"
+
+msgid "Line Out"
+msgstr ""
+
+#, fuzzy
+msgid "Line In"
+msgstr "Linea in"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "Video In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+# http://it.wikipedia.org/wiki/Pulse-Code_Modulation
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Record Gain"
+msgstr ""
+
+msgid "Output Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "Microfono"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr "Input"
+
+msgid "Record Source"
+msgstr ""
+
+msgid "Monitor Source"
+msgstr ""
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr "Stereo"
+
+#, fuzzy
+msgid "Surround Sound"
+msgstr "Suono surround"
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "Microfono"
+
+msgid "Speaker Source"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "Microfono"
+
+msgid "Jack"
+msgstr ""
+
+# NdT: forse questo? --> http://en.wikipedia.org/wiki/Low-frequency_effect
+#
+# o forse Low Frequency Emitter 
+msgid "Center / LFE"
+msgstr "Centro / LFE"
+
+#, fuzzy
+msgid "Stereo Mix"
+msgstr "Stereo"
+
+msgid "Mono Mix"
+msgstr ""
+
+#, fuzzy
+msgid "Input Mix"
+msgstr "Mix ingresso"
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone 1"
+msgstr "Microfono"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "Microfono"
+
+msgid "Digital Out"
+msgstr ""
+
+msgid "Digital In"
+msgstr ""
+
+msgid "HDMI"
+msgstr ""
+
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr "Acceso"
+
+msgid "Off"
+msgstr "Spento"
+
+msgid "Mute"
+msgstr ""
+
 # NdT: questo e i successivi non ho controllato che sono....
 msgid "Fast"
 msgstr "Veloce"
+
+msgid "Very Low"
+msgstr ""
 
 msgid "Low"
 msgstr "Lento"
@@ -87,195 +306,126 @@ msgstr "Medio"
 msgid "High"
 msgstr "Alto"
 
-msgid "Very high"
+#, fuzzy
+msgid "Very High"
 msgstr "Molto alto"
 
 msgid "Production"
 msgstr "Produzione"
 
-msgid "Off"
-msgstr "Spento"
-
-msgid "On"
-msgstr "Acceso"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround sound"
-msgstr "Suono surround"
-
-msgid "Input mix"
-msgstr "Mix ingresso"
-
-msgid "Front"
-msgstr "Fronte"
-
-msgid "Rear"
-msgstr "Dietro"
-
-msgid "Side"
-msgstr "Lato"
-
-# NdT: forse questo? --> http://en.wikipedia.org/wiki/Low-frequency_effect
-#
-# o forse Low Frequency Emitter 
-msgid "Center / LFE"
-msgstr "Centro / LFE"
-
-msgid "Microphone"
-msgstr "Microfono"
-
-msgid "Front panel microphone"
+#, fuzzy
+msgid "Front Panel Microphone"
 msgstr "Microfono pannello frontale"
 
-msgid "Input"
-msgstr "Input"
-
-msgid "Line-in"
-msgstr "Linea in"
-
-msgid "PCM 1"
-msgstr "PCM 1"
-
-msgid "PCM 2"
-msgstr "PCM 2"
-
-msgid "PCM 3"
-msgstr "PCM 3"
-
-msgid "PCM 4"
-msgstr "PCM 4"
-
-msgid "Green connector"
-msgstr "Connettore verde"
-
-msgid "Green front panel connector"
-msgstr "Connettore verde pannello frontale"
-
-msgid "Pink connector"
-msgstr "Connettore rosa"
-
-msgid "Pink front panel connector"
-msgstr "Connettore rosa pannello frontale"
-
-msgid "Blue connector"
-msgstr "Connettore blu"
-
-msgid "Blue front panel connector"
-msgstr "Connettore blu pannello frontale"
-
-msgid "Orange connector"
-msgstr "Connettore arancione"
-
-msgid "Orange front panel connector"
-msgstr "Connettore arancione pannello frontale"
-
-msgid "Black connector"
-msgstr "Connettore nero"
-
-msgid "Black front panel connector"
-msgstr "Connettore nero pannello frontale"
-
-msgid "Gray connector"
-msgstr "Connettore grigio"
-
-msgid "Gray front panel connector"
-msgstr "Connettore grigio pannello frontale"
-
-msgid "White connector"
-msgstr "Connettore bianco"
-
-msgid "White front panel connector"
-msgstr "Connettore bianco pannello frontale"
-
-msgid "Red connector"
-msgstr "Connettore rosso"
-
-msgid "Red front panel connector"
-msgstr "Connettore rosso pannello frontale"
-
-msgid "Yellow connector"
-msgstr "Connettore giallo"
-
-msgid "Yellow front panel connector"
-msgstr "Connettore giallo pannello frontale"
-
-msgid "Green connector function"
-msgstr "Funzione connettore verde"
-
-msgid "Green front panel connector function"
-msgstr "Funzione connettore verde pannello frontale"
-
-msgid "Pink connector function"
-msgstr "Funzione connettore rosa"
-
-msgid "Pink front panel connector function"
-msgstr "Funzione connettore rosa pannello frontale"
-
-msgid "Blue connector function"
-msgstr "Funzione connettore blu"
-
-msgid "Blue front panel connector function"
-msgstr "Funzione connettore blu pannello frontale"
-
-msgid "Orange connector function"
-msgstr "Funzione connettore arancione"
-
-msgid "Orange front panel connector function"
-msgstr "Funzione connettore arancione pannello frontale"
-
-msgid "Black connector function"
-msgstr "Funzione connettore nero"
-
-msgid "Black front panel connector function"
-msgstr "Funzione connettore nero pannello frontale"
-
-msgid "Gray connector function"
-msgstr "Funzione connettore grigio"
-
-msgid "Gray front panel connector function"
-msgstr "Funzione connettore grigio pannello frontale"
-
-msgid "White connector function"
-msgstr "Funzione connettore bianco"
-
-msgid "White front panel connector function"
-msgstr "Funzione connettore bianco pannello frontale"
-
-msgid "Red connector function"
-msgstr "Funzione connettore rosso"
-
-msgid "Red front panel connector function"
-msgstr "Funzione connettore rosso pannello frontale"
-
-msgid "Yellow connector function"
-msgstr "Funzione connettore giallo"
-
-msgid "Yellow front panel connector function"
-msgstr "Funzione connettore giallo pannello frontale"
-
-msgid "Front panel line-in"
+#, fuzzy
+msgid "Front Panel Line In"
 msgstr "Canale ingresso pannello frontale"
 
-msgid "Headphones"
-msgstr "Cuffie"
-
-msgid "Front panel headphones"
+#, fuzzy
+msgid "Front Panel Headphones"
 msgstr "Cuffie pannello frontale"
 
-# http://it.wikipedia.org/wiki/Pulse-Code_Modulation
-msgid "PCM"
-msgstr "PCM"
+#, fuzzy
+msgid "Front Panel Line Out"
+msgstr "Canale ingresso pannello frontale"
 
-msgid "Virtual mixer input"
+#, fuzzy
+msgid "Green Connector"
+msgstr "Connettore verde"
+
+#, fuzzy
+msgid "Pink Connector"
+msgstr "Connettore rosa"
+
+#, fuzzy
+msgid "Blue Connector"
+msgstr "Connettore blu"
+
+#, fuzzy
+msgid "White Connector"
+msgstr "Connettore bianco"
+
+#, fuzzy
+msgid "Black Connector"
+msgstr "Connettore nero"
+
+#, fuzzy
+msgid "Gray Connector"
+msgstr "Connettore grigio"
+
+#, fuzzy
+msgid "Orange Connector"
+msgstr "Connettore arancione"
+
+#, fuzzy
+msgid "Red Connector"
+msgstr "Connettore rosso"
+
+#, fuzzy
+msgid "Yellow Connector"
+msgstr "Connettore giallo"
+
+#, fuzzy
+msgid "Green Front Panel Connector"
+msgstr "Connettore verde pannello frontale"
+
+#, fuzzy
+msgid "Pink Front Panel Connector"
+msgstr "Connettore rosa pannello frontale"
+
+#, fuzzy
+msgid "Blue Front Panel Connector"
+msgstr "Connettore blu pannello frontale"
+
+#, fuzzy
+msgid "White Front Panel Connector"
+msgstr "Connettore bianco pannello frontale"
+
+#, fuzzy
+msgid "Black Front Panel Connector"
+msgstr "Connettore nero pannello frontale"
+
+#, fuzzy
+msgid "Gray Front Panel Connector"
+msgstr "Connettore grigio pannello frontale"
+
+#, fuzzy
+msgid "Orange Front Panel Connector"
+msgstr "Connettore arancione pannello frontale"
+
+#, fuzzy
+msgid "Red Front Panel Connector"
+msgstr "Connettore rosso pannello frontale"
+
+#, fuzzy
+msgid "Yellow Front Panel Connector"
+msgstr "Connettore giallo pannello frontale"
+
+msgid "Spread Output"
+msgstr ""
+
+msgid "Downmix"
+msgstr ""
+
+#, fuzzy
+msgid "Virtual Mixer Input"
 msgstr "Ingresso mixer virtuale"
 
-msgid "Virtual mixer output"
+#, fuzzy
+msgid "Virtual Mixer Output"
 msgstr "Uscita mixer virtuale"
 
-msgid "Virtual mixer channel configuration"
-msgstr "Configurazione canale mixer virtuale"
+#, fuzzy
+msgid "Virtual Mixer Channels"
+msgstr "Ingresso mixer virtuale"
+
+#, c-format
+msgid "%s Function"
+msgstr ""
+
+#, c-format
+msgid "%s %d"
+msgstr ""
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -312,6 +462,75 @@ msgstr "Questo dispositivo audio non supporta la registrazione."
 
 msgid "Error recording from audio device."
 msgstr "Errore nel registrare dal dispositivo audio."
+
+#~ msgid "PCM 1"
+#~ msgstr "PCM 1"
+
+#~ msgid "PCM 2"
+#~ msgstr "PCM 2"
+
+#~ msgid "PCM 3"
+#~ msgstr "PCM 3"
+
+#~ msgid "PCM 4"
+#~ msgstr "PCM 4"
+
+#~ msgid "Green connector function"
+#~ msgstr "Funzione connettore verde"
+
+#~ msgid "Green front panel connector function"
+#~ msgstr "Funzione connettore verde pannello frontale"
+
+#~ msgid "Pink connector function"
+#~ msgstr "Funzione connettore rosa"
+
+#~ msgid "Pink front panel connector function"
+#~ msgstr "Funzione connettore rosa pannello frontale"
+
+#~ msgid "Blue connector function"
+#~ msgstr "Funzione connettore blu"
+
+#~ msgid "Blue front panel connector function"
+#~ msgstr "Funzione connettore blu pannello frontale"
+
+#~ msgid "Orange connector function"
+#~ msgstr "Funzione connettore arancione"
+
+#~ msgid "Orange front panel connector function"
+#~ msgstr "Funzione connettore arancione pannello frontale"
+
+#~ msgid "Black connector function"
+#~ msgstr "Funzione connettore nero"
+
+#~ msgid "Black front panel connector function"
+#~ msgstr "Funzione connettore nero pannello frontale"
+
+#~ msgid "Gray connector function"
+#~ msgstr "Funzione connettore grigio"
+
+#~ msgid "Gray front panel connector function"
+#~ msgstr "Funzione connettore grigio pannello frontale"
+
+#~ msgid "White connector function"
+#~ msgstr "Funzione connettore bianco"
+
+#~ msgid "White front panel connector function"
+#~ msgstr "Funzione connettore bianco pannello frontale"
+
+#~ msgid "Red connector function"
+#~ msgstr "Funzione connettore rosso"
+
+#~ msgid "Red front panel connector function"
+#~ msgstr "Funzione connettore rosso pannello frontale"
+
+#~ msgid "Yellow connector function"
+#~ msgstr "Funzione connettore giallo"
+
+#~ msgid "Yellow front panel connector function"
+#~ msgstr "Funzione connettore giallo pannello frontale"
+
+#~ msgid "Virtual mixer channel configuration"
+#~ msgstr "Configurazione canale mixer virtuale"
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 #~ msgstr ""

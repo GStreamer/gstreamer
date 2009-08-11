@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-17 21:54+0100\n"
+"POT-Creation-Date: 2009-08-11 17:42+0100\n"
 "PO-Revision-Date: 2009-03-11 08:01+0200\n"
 "Last-Translator: Server Acim <sacim@kde.org.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -71,8 +71,219 @@ msgstr ""
 "Karıştırıcı işlemi için ses aygıtı açılamıyor. Bu öğe tarafından Açık Ses "
 "Sistemi'nin bu sürümü desteklenmiyor."
 
+msgid "Volume"
+msgstr ""
+
+#, fuzzy
+msgid "Master"
+msgstr "Hızlı"
+
+msgid "Front"
+msgstr "Ön"
+
+msgid "Rear"
+msgstr "Arka"
+
+msgid "Headphones"
+msgstr "Kulaklıklar"
+
+#, fuzzy
+msgid "Center"
+msgstr "Merkez / LFE"
+
+msgid "LFE"
+msgstr ""
+
+#, fuzzy
+msgid "Surround"
+msgstr "Surround ses"
+
+msgid "Side"
+msgstr "Yan"
+
+msgid "Built-in Speaker"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "Bass"
+msgstr ""
+
+msgid "Treble"
+msgstr ""
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+#, fuzzy
+msgid "Telephone"
+msgstr "Kulaklıklar"
+
+msgid "Microphone"
+msgstr "Mikrofon"
+
+msgid "Line Out"
+msgstr ""
+
+#, fuzzy
+msgid "Line In"
+msgstr "Hat girişi"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "Video In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Record Gain"
+msgstr ""
+
+msgid "Output Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "Mikrofon"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr "Giriş"
+
+msgid "Record Source"
+msgstr ""
+
+msgid "Monitor Source"
+msgstr ""
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr "Stereo"
+
+#, fuzzy
+msgid "Surround Sound"
+msgstr "Surround ses"
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "Mikrofon"
+
+msgid "Speaker Source"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "Mikrofon"
+
+msgid "Jack"
+msgstr ""
+
+msgid "Center / LFE"
+msgstr "Merkez / LFE"
+
+#, fuzzy
+msgid "Stereo Mix"
+msgstr "Stereo"
+
+msgid "Mono Mix"
+msgstr ""
+
+#, fuzzy
+msgid "Input Mix"
+msgstr "Giriş karışımı"
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone 1"
+msgstr "Mikrofon"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "Mikrofon"
+
+msgid "Digital Out"
+msgstr ""
+
+msgid "Digital In"
+msgstr ""
+
+msgid "HDMI"
+msgstr ""
+
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr "Açık"
+
+msgid "Off"
+msgstr "Kapalı"
+
+msgid "Mute"
+msgstr ""
+
 msgid "Fast"
 msgstr "Hızlı"
+
+msgid "Very Low"
+msgstr ""
 
 msgid "Low"
 msgstr "Düşük"
@@ -83,191 +294,126 @@ msgstr "Orta"
 msgid "High"
 msgstr "Yüksek"
 
-msgid "Very high"
+#, fuzzy
+msgid "Very High"
 msgstr "Çok yüksek"
 
 msgid "Production"
 msgstr "Yapım"
 
-msgid "Off"
-msgstr "Kapalı"
-
-msgid "On"
-msgstr "Açık"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround sound"
-msgstr "Surround ses"
-
-msgid "Input mix"
-msgstr "Giriş karışımı"
-
-msgid "Front"
-msgstr "Ön"
-
-msgid "Rear"
-msgstr "Arka"
-
-msgid "Side"
-msgstr "Yan"
-
-msgid "Center / LFE"
-msgstr "Merkez / LFE"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "Front panel microphone"
+#, fuzzy
+msgid "Front Panel Microphone"
 msgstr "Ön panel mikrofonu"
 
-msgid "Input"
-msgstr "Giriş"
-
-msgid "Line-in"
-msgstr "Hat girişi"
-
-msgid "PCM 1"
-msgstr "PCM 1"
-
-msgid "PCM 2"
-msgstr "PCM 2"
-
-msgid "PCM 3"
-msgstr "PCM 3"
-
-msgid "PCM 4"
-msgstr "PCM 4"
-
-msgid "Green connector"
-msgstr "Yeşil konnektör"
-
-msgid "Green front panel connector"
-msgstr "Yeşil ön panel konnektörü"
-
-msgid "Pink connector"
-msgstr "Pembe konnektör"
-
-msgid "Pink front panel connector"
-msgstr "Pembe ön panel könnektörü"
-
-msgid "Blue connector"
-msgstr "Mavi konnektör"
-
-msgid "Blue front panel connector"
-msgstr "Mavi ön panel konnektörü"
-
-msgid "Orange connector"
-msgstr "Portakal konnektör"
-
-msgid "Orange front panel connector"
-msgstr "Portakal ön panel konnektörü"
-
-msgid "Black connector"
-msgstr "Siyah konnektör"
-
-msgid "Black front panel connector"
-msgstr "Siyah ön panel konnektörü"
-
-msgid "Gray connector"
-msgstr "Gri konnektör"
-
-msgid "Gray front panel connector"
-msgstr "Gri ön panel konnektörü"
-
-msgid "White connector"
-msgstr "Beyaz konnektör"
-
-msgid "White front panel connector"
-msgstr "Beyaz ön panel konnektörü"
-
-msgid "Red connector"
-msgstr "Kırmızı konnektör"
-
-msgid "Red front panel connector"
-msgstr "Kırmızı ön panel konnektörü"
-
-msgid "Yellow connector"
-msgstr "Sarı konnektör"
-
-msgid "Yellow front panel connector"
-msgstr "Sarı ön panel konnektörü"
-
-msgid "Green connector function"
-msgstr "Yeşil konnektör işlevi"
-
-msgid "Green front panel connector function"
-msgstr "Yeşil ön panel konnektör işlevi"
-
-msgid "Pink connector function"
-msgstr "Pembe konnektör işlevi"
-
-msgid "Pink front panel connector function"
-msgstr "Pembe ön panel konnektör işlevi"
-
-msgid "Blue connector function"
-msgstr "Mavi konnektör işlevi"
-
-msgid "Blue front panel connector function"
-msgstr "Mavi ön panel konnektör işlevi"
-
-msgid "Orange connector function"
-msgstr "Portakal konnektör işlevi"
-
-msgid "Orange front panel connector function"
-msgstr "Portakal ön panel konnektör işlevi"
-
-msgid "Black connector function"
-msgstr "Siyah konnektör işlevi"
-
-msgid "Black front panel connector function"
-msgstr "Siyah ön panel konnektör işlevi"
-
-msgid "Gray connector function"
-msgstr "Gri konnektör işlevi"
-
-msgid "Gray front panel connector function"
-msgstr "Gri ön panel konnektör işlevi"
-
-msgid "White connector function"
-msgstr "Beyaz konnektör işlevi"
-
-msgid "White front panel connector function"
-msgstr "Beyaz ön panel konnektör işlevi"
-
-msgid "Red connector function"
-msgstr "Kırmızı konnektör işlevi"
-
-msgid "Red front panel connector function"
-msgstr "Kırmızı ön panel konnektör işlevi"
-
-msgid "Yellow connector function"
-msgstr "Sarı konnektör işlevi"
-
-msgid "Yellow front panel connector function"
-msgstr "Sarı ön panel konnektör işlevi"
-
-msgid "Front panel line-in"
+#, fuzzy
+msgid "Front Panel Line In"
 msgstr "Ön panel hat girişi"
 
-msgid "Headphones"
-msgstr "Kulaklıklar"
-
-msgid "Front panel headphones"
+#, fuzzy
+msgid "Front Panel Headphones"
 msgstr "Ön panel kulaklıkları"
 
-msgid "PCM"
-msgstr "PCM"
+#, fuzzy
+msgid "Front Panel Line Out"
+msgstr "Ön panel hat girişi"
 
-msgid "Virtual mixer input"
+#, fuzzy
+msgid "Green Connector"
+msgstr "Yeşil konnektör"
+
+#, fuzzy
+msgid "Pink Connector"
+msgstr "Pembe konnektör"
+
+#, fuzzy
+msgid "Blue Connector"
+msgstr "Mavi konnektör"
+
+#, fuzzy
+msgid "White Connector"
+msgstr "Beyaz konnektör"
+
+#, fuzzy
+msgid "Black Connector"
+msgstr "Siyah konnektör"
+
+#, fuzzy
+msgid "Gray Connector"
+msgstr "Gri konnektör"
+
+#, fuzzy
+msgid "Orange Connector"
+msgstr "Portakal konnektör"
+
+#, fuzzy
+msgid "Red Connector"
+msgstr "Kırmızı konnektör"
+
+#, fuzzy
+msgid "Yellow Connector"
+msgstr "Sarı konnektör"
+
+#, fuzzy
+msgid "Green Front Panel Connector"
+msgstr "Yeşil ön panel konnektörü"
+
+#, fuzzy
+msgid "Pink Front Panel Connector"
+msgstr "Pembe ön panel könnektörü"
+
+#, fuzzy
+msgid "Blue Front Panel Connector"
+msgstr "Mavi ön panel konnektörü"
+
+#, fuzzy
+msgid "White Front Panel Connector"
+msgstr "Beyaz ön panel konnektörü"
+
+#, fuzzy
+msgid "Black Front Panel Connector"
+msgstr "Siyah ön panel konnektörü"
+
+#, fuzzy
+msgid "Gray Front Panel Connector"
+msgstr "Gri ön panel konnektörü"
+
+#, fuzzy
+msgid "Orange Front Panel Connector"
+msgstr "Portakal ön panel konnektörü"
+
+#, fuzzy
+msgid "Red Front Panel Connector"
+msgstr "Kırmızı ön panel konnektörü"
+
+#, fuzzy
+msgid "Yellow Front Panel Connector"
+msgstr "Sarı ön panel konnektörü"
+
+msgid "Spread Output"
+msgstr ""
+
+msgid "Downmix"
+msgstr ""
+
+#, fuzzy
+msgid "Virtual Mixer Input"
 msgstr "Sanal karıştırıcı girişi"
 
-msgid "Virtual mixer output"
+#, fuzzy
+msgid "Virtual Mixer Output"
 msgstr "Sanal karıştırıcı çıkışı"
 
-msgid "Virtual mixer channel configuration"
-msgstr "Sanal karıştırıcı kanal yapılandırması"
+#, fuzzy
+msgid "Virtual Mixer Channels"
+msgstr "Sanal karıştırıcı girişi"
+
+#, c-format
+msgid "%s Function"
+msgstr ""
+
+#, c-format
+msgid "%s %d"
+msgstr ""
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -302,3 +448,72 @@ msgstr "Bu ses aygıtı kayıt işlevini desteklemiyor."
 
 msgid "Error recording from audio device."
 msgstr "Ses aygıtı ile kayıtta hata."
+
+#~ msgid "PCM 1"
+#~ msgstr "PCM 1"
+
+#~ msgid "PCM 2"
+#~ msgstr "PCM 2"
+
+#~ msgid "PCM 3"
+#~ msgstr "PCM 3"
+
+#~ msgid "PCM 4"
+#~ msgstr "PCM 4"
+
+#~ msgid "Green connector function"
+#~ msgstr "Yeşil konnektör işlevi"
+
+#~ msgid "Green front panel connector function"
+#~ msgstr "Yeşil ön panel konnektör işlevi"
+
+#~ msgid "Pink connector function"
+#~ msgstr "Pembe konnektör işlevi"
+
+#~ msgid "Pink front panel connector function"
+#~ msgstr "Pembe ön panel konnektör işlevi"
+
+#~ msgid "Blue connector function"
+#~ msgstr "Mavi konnektör işlevi"
+
+#~ msgid "Blue front panel connector function"
+#~ msgstr "Mavi ön panel konnektör işlevi"
+
+#~ msgid "Orange connector function"
+#~ msgstr "Portakal konnektör işlevi"
+
+#~ msgid "Orange front panel connector function"
+#~ msgstr "Portakal ön panel konnektör işlevi"
+
+#~ msgid "Black connector function"
+#~ msgstr "Siyah konnektör işlevi"
+
+#~ msgid "Black front panel connector function"
+#~ msgstr "Siyah ön panel konnektör işlevi"
+
+#~ msgid "Gray connector function"
+#~ msgstr "Gri konnektör işlevi"
+
+#~ msgid "Gray front panel connector function"
+#~ msgstr "Gri ön panel konnektör işlevi"
+
+#~ msgid "White connector function"
+#~ msgstr "Beyaz konnektör işlevi"
+
+#~ msgid "White front panel connector function"
+#~ msgstr "Beyaz ön panel konnektör işlevi"
+
+#~ msgid "Red connector function"
+#~ msgstr "Kırmızı konnektör işlevi"
+
+#~ msgid "Red front panel connector function"
+#~ msgstr "Kırmızı ön panel konnektör işlevi"
+
+#~ msgid "Yellow connector function"
+#~ msgstr "Sarı konnektör işlevi"
+
+#~ msgid "Yellow front panel connector function"
+#~ msgstr "Sarı ön panel konnektör işlevi"
+
+#~ msgid "Virtual mixer channel configuration"
+#~ msgstr "Sanal karıştırıcı kanal yapılandırması"

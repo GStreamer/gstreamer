@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-17 21:54+0100\n"
+"POT-Creation-Date: 2009-08-11 17:42+0100\n"
 "PO-Revision-Date: 2004-08-05 15:48+0200\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -73,7 +73,219 @@ msgid ""
 "Open Sound System is not supported by this element."
 msgstr "No s'ha pogut el dispositiu d'àudio «%s» per a l'escriptura."
 
+msgid "Volume"
+msgstr "Volum"
+
+msgid "Master"
+msgstr ""
+
+msgid "Front"
+msgstr ""
+
+#, fuzzy
+msgid "Rear"
+msgstr "Enregistrament"
+
+msgid "Headphones"
+msgstr ""
+
+msgid "Center"
+msgstr ""
+
+msgid "LFE"
+msgstr ""
+
+msgid "Surround"
+msgstr ""
+
+#, fuzzy
+msgid "Side"
+msgstr "Vídeo"
+
+#, fuzzy
+msgid "Built-in Speaker"
+msgstr "Altaveu"
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "Bass"
+msgstr "Baixos"
+
+msgid "Treble"
+msgstr "Aguts"
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+msgid "Telephone"
+msgstr ""
+
+msgid "Microphone"
+msgstr "Micròfon"
+
+msgid "Line Out"
+msgstr ""
+
+#, fuzzy
+msgid "Line In"
+msgstr "Línia-entrada"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "Video In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Record Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Output Gain"
+msgstr "Ganància-sortida"
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "Micròfon"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr ""
+
+msgid "Record Source"
+msgstr ""
+
+#, fuzzy
+msgid "Monitor Source"
+msgstr "Monitor"
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr ""
+
+msgid "Surround Sound"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "Micròfon"
+
+#, fuzzy
+msgid "Speaker Source"
+msgstr "Altaveu"
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "Micròfon"
+
+msgid "Jack"
+msgstr ""
+
+msgid "Center / LFE"
+msgstr ""
+
+msgid "Stereo Mix"
+msgstr ""
+
+msgid "Mono Mix"
+msgstr ""
+
+msgid "Input Mix"
+msgstr ""
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone 1"
+msgstr "Micròfon"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "Micròfon"
+
+#, fuzzy
+msgid "Digital Out"
+msgstr "Digital-1"
+
+#, fuzzy
+msgid "Digital In"
+msgstr "Digital-1"
+
+msgid "HDMI"
+msgstr ""
+
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Mute"
+msgstr ""
+
 msgid "Fast"
+msgstr ""
+
+msgid "Very Low"
 msgstr ""
 
 msgid "Low"
@@ -85,196 +297,100 @@ msgstr ""
 msgid "High"
 msgstr ""
 
-msgid "Very high"
+msgid "Very High"
 msgstr ""
 
 msgid "Production"
 msgstr ""
 
-msgid "Off"
-msgstr ""
-
-msgid "On"
-msgstr ""
-
-msgid "Stereo"
-msgstr ""
-
-msgid "Surround sound"
-msgstr ""
-
-msgid "Input mix"
-msgstr ""
-
-msgid "Front"
-msgstr ""
-
 #, fuzzy
-msgid "Rear"
-msgstr "Enregistrament"
-
-#, fuzzy
-msgid "Side"
-msgstr "Vídeo"
-
-msgid "Center / LFE"
-msgstr ""
-
-msgid "Microphone"
+msgid "Front Panel Microphone"
 msgstr "Micròfon"
 
-msgid "Front panel microphone"
+msgid "Front Panel Line In"
 msgstr ""
 
-msgid "Input"
+msgid "Front Panel Headphones"
 msgstr ""
 
-msgid "Line-in"
-msgstr "Línia-entrada"
-
-#, fuzzy
-msgid "PCM 1"
-msgstr "PCM"
-
-#, fuzzy
-msgid "PCM 2"
-msgstr "PCM-2"
-
-#, fuzzy
-msgid "PCM 3"
-msgstr "PCM"
-
-#, fuzzy
-msgid "PCM 4"
-msgstr "PCM"
-
-msgid "Green connector"
+msgid "Front Panel Line Out"
 msgstr ""
 
-msgid "Green front panel connector"
+msgid "Green Connector"
 msgstr ""
 
-msgid "Pink connector"
+msgid "Pink Connector"
 msgstr ""
 
-msgid "Pink front panel connector"
+msgid "Blue Connector"
 msgstr ""
 
-msgid "Blue connector"
+msgid "White Connector"
 msgstr ""
 
-msgid "Blue front panel connector"
+msgid "Black Connector"
 msgstr ""
 
-msgid "Orange connector"
+msgid "Gray Connector"
 msgstr ""
 
-msgid "Orange front panel connector"
+msgid "Orange Connector"
 msgstr ""
 
-msgid "Black connector"
+msgid "Red Connector"
 msgstr ""
 
-msgid "Black front panel connector"
+msgid "Yellow Connector"
 msgstr ""
 
-msgid "Gray connector"
+msgid "Green Front Panel Connector"
 msgstr ""
 
-msgid "Gray front panel connector"
+msgid "Pink Front Panel Connector"
 msgstr ""
 
-msgid "White connector"
+msgid "Blue Front Panel Connector"
 msgstr ""
 
-msgid "White front panel connector"
+msgid "White Front Panel Connector"
 msgstr ""
 
-msgid "Red connector"
+msgid "Black Front Panel Connector"
 msgstr ""
 
-msgid "Red front panel connector"
+msgid "Gray Front Panel Connector"
 msgstr ""
 
-msgid "Yellow connector"
+msgid "Orange Front Panel Connector"
 msgstr ""
 
-msgid "Yellow front panel connector"
+msgid "Red Front Panel Connector"
 msgstr ""
 
-msgid "Green connector function"
+msgid "Yellow Front Panel Connector"
 msgstr ""
 
-msgid "Green front panel connector function"
+msgid "Spread Output"
 msgstr ""
 
-msgid "Pink connector function"
+msgid "Downmix"
 msgstr ""
 
-msgid "Pink front panel connector function"
+msgid "Virtual Mixer Input"
 msgstr ""
 
-msgid "Blue connector function"
+msgid "Virtual Mixer Output"
 msgstr ""
 
-msgid "Blue front panel connector function"
+msgid "Virtual Mixer Channels"
 msgstr ""
 
-msgid "Orange connector function"
+#, c-format
+msgid "%s Function"
 msgstr ""
 
-msgid "Orange front panel connector function"
-msgstr ""
-
-msgid "Black connector function"
-msgstr ""
-
-msgid "Black front panel connector function"
-msgstr ""
-
-msgid "Gray connector function"
-msgstr ""
-
-msgid "Gray front panel connector function"
-msgstr ""
-
-msgid "White connector function"
-msgstr ""
-
-msgid "White front panel connector function"
-msgstr ""
-
-msgid "Red connector function"
-msgstr ""
-
-msgid "Red front panel connector function"
-msgstr ""
-
-msgid "Yellow connector function"
-msgstr ""
-
-msgid "Yellow front panel connector function"
-msgstr ""
-
-msgid "Front panel line-in"
-msgstr ""
-
-msgid "Headphones"
-msgstr ""
-
-msgid "Front panel headphones"
-msgstr ""
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Virtual mixer input"
-msgstr ""
-
-msgid "Virtual mixer output"
-msgstr ""
-
-msgid "Virtual mixer channel configuration"
+#, c-format
+msgid "%s %d"
 msgstr ""
 
 msgid ""
@@ -308,6 +424,22 @@ msgstr ""
 
 msgid "Error recording from audio device."
 msgstr ""
+
+#, fuzzy
+#~ msgid "PCM 1"
+#~ msgstr "PCM"
+
+#, fuzzy
+#~ msgid "PCM 2"
+#~ msgstr "PCM-2"
+
+#, fuzzy
+#~ msgid "PCM 3"
+#~ msgstr "PCM"
+
+#, fuzzy
+#~ msgid "PCM 4"
+#~ msgstr "PCM"
 
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "S'ha produït un error en tancar el fitxer «%s»."
@@ -385,20 +517,8 @@ msgstr ""
 #~ msgid "Your OSS device could not be probed correctly"
 #~ msgstr "No s'ha pogut detectar el vostre dispositiu d'OSS correctament"
 
-#~ msgid "Volume"
-#~ msgstr "Volum"
-
-#~ msgid "Bass"
-#~ msgstr "Baixos"
-
-#~ msgid "Treble"
-#~ msgstr "Aguts"
-
 #~ msgid "Synth"
 #~ msgstr "Sintetitzador"
-
-#~ msgid "Speaker"
-#~ msgstr "Altaveu"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -409,9 +529,6 @@ msgstr ""
 #~ msgid "In-gain"
 #~ msgstr "Ganància-entrada"
 
-#~ msgid "Out-gain"
-#~ msgstr "Ganància-sortida"
-
 #~ msgid "Line-1"
 #~ msgstr "Línia-1"
 
@@ -420,9 +537,6 @@ msgstr ""
 
 #~ msgid "Line-3"
 #~ msgstr "Línia-3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Digital-1"
 
 #~ msgid "Digital-2"
 #~ msgstr "Digital-2"
@@ -438,9 +552,6 @@ msgstr ""
 
 #~ msgid "Radio"
 #~ msgstr "Ràdio"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
 
 #~ msgid "No device specified."
 #~ msgstr "No s'ha especificat cap dispositiu."

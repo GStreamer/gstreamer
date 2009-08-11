@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-17 21:54+0100\n"
+"POT-Creation-Date: 2009-08-11 17:42+0100\n"
 "PO-Revision-Date: 2009-01-23 18:06+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -74,8 +74,219 @@ msgstr ""
 "Kan het audio-apparaat niet openen voor de mixerbesturing. Deze versie van "
 "het Open Soundsysteem wordt niet ondersteund door dit element."
 
+msgid "Volume"
+msgstr ""
+
+#, fuzzy
+msgid "Master"
+msgstr "Snel"
+
+msgid "Front"
+msgstr "Voorzijde"
+
+msgid "Rear"
+msgstr "Achterzijde"
+
+msgid "Headphones"
+msgstr "Hoofdtelefoon"
+
+#, fuzzy
+msgid "Center"
+msgstr "Midden / LFE"
+
+msgid "LFE"
+msgstr ""
+
+#, fuzzy
+msgid "Surround"
+msgstr "Surround geluid"
+
+msgid "Side"
+msgstr "Zijkant"
+
+msgid "Built-in Speaker"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "Bass"
+msgstr ""
+
+msgid "Treble"
+msgstr ""
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+#, fuzzy
+msgid "Telephone"
+msgstr "Hoofdtelefoon"
+
+msgid "Microphone"
+msgstr "Microfoon"
+
+msgid "Line Out"
+msgstr ""
+
+#, fuzzy
+msgid "Line In"
+msgstr "Lijn-in"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "Video In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Record Gain"
+msgstr ""
+
+msgid "Output Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "Microfoon"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr "Invoer"
+
+msgid "Record Source"
+msgstr ""
+
+msgid "Monitor Source"
+msgstr ""
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr "Stereo"
+
+#, fuzzy
+msgid "Surround Sound"
+msgstr "Surround geluid"
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "Microfoon"
+
+msgid "Speaker Source"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "Microfoon"
+
+msgid "Jack"
+msgstr ""
+
+msgid "Center / LFE"
+msgstr "Midden / LFE"
+
+#, fuzzy
+msgid "Stereo Mix"
+msgstr "Stereo"
+
+msgid "Mono Mix"
+msgstr ""
+
+#, fuzzy
+msgid "Input Mix"
+msgstr "Invoermix"
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone 1"
+msgstr "Microfoon"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "Microfoon"
+
+msgid "Digital Out"
+msgstr ""
+
+msgid "Digital In"
+msgstr ""
+
+msgid "HDMI"
+msgstr ""
+
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr "Aan"
+
+msgid "Off"
+msgstr "Uit"
+
+msgid "Mute"
+msgstr ""
+
 msgid "Fast"
 msgstr "Snel"
+
+msgid "Very Low"
+msgstr ""
 
 msgid "Low"
 msgstr "Laag"
@@ -86,191 +297,126 @@ msgstr "Gemiddeld"
 msgid "High"
 msgstr "Hoog"
 
-msgid "Very high"
+#, fuzzy
+msgid "Very High"
 msgstr "Erg hoog"
 
 msgid "Production"
 msgstr "Productie"
 
-msgid "Off"
-msgstr "Uit"
-
-msgid "On"
-msgstr "Aan"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround sound"
-msgstr "Surround geluid"
-
-msgid "Input mix"
-msgstr "Invoermix"
-
-msgid "Front"
-msgstr "Voorzijde"
-
-msgid "Rear"
-msgstr "Achterzijde"
-
-msgid "Side"
-msgstr "Zijkant"
-
-msgid "Center / LFE"
-msgstr "Midden / LFE"
-
-msgid "Microphone"
-msgstr "Microfoon"
-
-msgid "Front panel microphone"
+#, fuzzy
+msgid "Front Panel Microphone"
 msgstr "Microfoon in frontpaneel"
 
-msgid "Input"
-msgstr "Invoer"
-
-msgid "Line-in"
-msgstr "Lijn-in"
-
-msgid "PCM 1"
-msgstr "PCM 1"
-
-msgid "PCM 2"
-msgstr "PCM 2"
-
-msgid "PCM 3"
-msgstr "PCM 3"
-
-msgid "PCM 4"
-msgstr "PCM 4"
-
-msgid "Green connector"
-msgstr "Groene connector"
-
-msgid "Green front panel connector"
-msgstr "Groene connector in frontpaneel"
-
-msgid "Pink connector"
-msgstr "Roze connector"
-
-msgid "Pink front panel connector"
-msgstr "Roze connector in frontpaneel"
-
-msgid "Blue connector"
-msgstr "Blauwe connector"
-
-msgid "Blue front panel connector"
-msgstr "Blauwe connector in frontpaneel"
-
-msgid "Orange connector"
-msgstr "Oranje connector"
-
-msgid "Orange front panel connector"
-msgstr "Oranje connector in frontpaneel"
-
-msgid "Black connector"
-msgstr "Zwarte connector"
-
-msgid "Black front panel connector"
-msgstr "Zwarte connector in frontpaneel"
-
-msgid "Gray connector"
-msgstr "Grijze connector"
-
-msgid "Gray front panel connector"
-msgstr "Grijze connector in frontpaneel"
-
-msgid "White connector"
-msgstr "Witte connector"
-
-msgid "White front panel connector"
-msgstr "Witte connector in frontpaneel"
-
-msgid "Red connector"
-msgstr "Rode connector"
-
-msgid "Red front panel connector"
-msgstr "Rode connector in frontpaneel"
-
-msgid "Yellow connector"
-msgstr "Gele connector"
-
-msgid "Yellow front panel connector"
-msgstr "Gele connector in frontpaneel"
-
-msgid "Green connector function"
-msgstr "Functie van groene connector"
-
-msgid "Green front panel connector function"
-msgstr "Functie van groene connector in frontpaneel"
-
-msgid "Pink connector function"
-msgstr "Functie van roze connector"
-
-msgid "Pink front panel connector function"
-msgstr "Functie van roze connector in frontpaneel"
-
-msgid "Blue connector function"
-msgstr "Functie van blauwe connector"
-
-msgid "Blue front panel connector function"
-msgstr "Functie van blauwe connector in frontpaneel"
-
-msgid "Orange connector function"
-msgstr "Functie van oranje connector"
-
-msgid "Orange front panel connector function"
-msgstr "Functie van oranje connector in frontpaneel"
-
-msgid "Black connector function"
-msgstr "Functie van zwarte connector"
-
-msgid "Black front panel connector function"
-msgstr "Functie van zwarte connector in frontpaneel"
-
-msgid "Gray connector function"
-msgstr "Functie van grijze connector"
-
-msgid "Gray front panel connector function"
-msgstr "Functie van grijze connector in frontpaneel"
-
-msgid "White connector function"
-msgstr "Functie van witte connector"
-
-msgid "White front panel connector function"
-msgstr "Functie van witte connector in frontpaneel"
-
-msgid "Red connector function"
-msgstr "Functie van rode connector"
-
-msgid "Red front panel connector function"
-msgstr "Functie van rode connector in frontpaneel"
-
-msgid "Yellow connector function"
-msgstr "Functie van gele connector"
-
-msgid "Yellow front panel connector function"
-msgstr "Functie van gele connector in frontpaneel"
-
-msgid "Front panel line-in"
+#, fuzzy
+msgid "Front Panel Line In"
 msgstr "Lijn-in in frontpaneel"
 
-msgid "Headphones"
-msgstr "Hoofdtelefoon"
-
-msgid "Front panel headphones"
+#, fuzzy
+msgid "Front Panel Headphones"
 msgstr "Hoofdtelefoon in frontpaneel"
 
-msgid "PCM"
-msgstr "PCM"
+#, fuzzy
+msgid "Front Panel Line Out"
+msgstr "Lijn-in in frontpaneel"
 
-msgid "Virtual mixer input"
+#, fuzzy
+msgid "Green Connector"
+msgstr "Groene connector"
+
+#, fuzzy
+msgid "Pink Connector"
+msgstr "Roze connector"
+
+#, fuzzy
+msgid "Blue Connector"
+msgstr "Blauwe connector"
+
+#, fuzzy
+msgid "White Connector"
+msgstr "Witte connector"
+
+#, fuzzy
+msgid "Black Connector"
+msgstr "Zwarte connector"
+
+#, fuzzy
+msgid "Gray Connector"
+msgstr "Grijze connector"
+
+#, fuzzy
+msgid "Orange Connector"
+msgstr "Oranje connector"
+
+#, fuzzy
+msgid "Red Connector"
+msgstr "Rode connector"
+
+#, fuzzy
+msgid "Yellow Connector"
+msgstr "Gele connector"
+
+#, fuzzy
+msgid "Green Front Panel Connector"
+msgstr "Groene connector in frontpaneel"
+
+#, fuzzy
+msgid "Pink Front Panel Connector"
+msgstr "Roze connector in frontpaneel"
+
+#, fuzzy
+msgid "Blue Front Panel Connector"
+msgstr "Blauwe connector in frontpaneel"
+
+#, fuzzy
+msgid "White Front Panel Connector"
+msgstr "Witte connector in frontpaneel"
+
+#, fuzzy
+msgid "Black Front Panel Connector"
+msgstr "Zwarte connector in frontpaneel"
+
+#, fuzzy
+msgid "Gray Front Panel Connector"
+msgstr "Grijze connector in frontpaneel"
+
+#, fuzzy
+msgid "Orange Front Panel Connector"
+msgstr "Oranje connector in frontpaneel"
+
+#, fuzzy
+msgid "Red Front Panel Connector"
+msgstr "Rode connector in frontpaneel"
+
+#, fuzzy
+msgid "Yellow Front Panel Connector"
+msgstr "Gele connector in frontpaneel"
+
+msgid "Spread Output"
+msgstr ""
+
+msgid "Downmix"
+msgstr ""
+
+#, fuzzy
+msgid "Virtual Mixer Input"
 msgstr "Virtuele mixer-invoer"
 
-msgid "Virtual mixer output"
+#, fuzzy
+msgid "Virtual Mixer Output"
 msgstr "Virtuele mixer-uitvoer"
 
-msgid "Virtual mixer channel configuration"
-msgstr "Kanaalconfiguratie van virtuele mixer "
+#, fuzzy
+msgid "Virtual Mixer Channels"
+msgstr "Virtuele mixer-invoer"
+
+#, c-format
+msgid "%s Function"
+msgstr ""
+
+#, c-format
+msgid "%s %d"
+msgstr ""
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -319,3 +465,72 @@ msgstr "Fout bij opnemen met dit audio-apparaat."
 #~ msgstr ""
 #~ "De gevraagde bitsnelheid %d kbits/s voor eigenschap '%s' is niet "
 #~ "toegestaan. De bitsnelheid is gewijzigd in %d kbits/s."
+
+#~ msgid "PCM 1"
+#~ msgstr "PCM 1"
+
+#~ msgid "PCM 2"
+#~ msgstr "PCM 2"
+
+#~ msgid "PCM 3"
+#~ msgstr "PCM 3"
+
+#~ msgid "PCM 4"
+#~ msgstr "PCM 4"
+
+#~ msgid "Green connector function"
+#~ msgstr "Functie van groene connector"
+
+#~ msgid "Green front panel connector function"
+#~ msgstr "Functie van groene connector in frontpaneel"
+
+#~ msgid "Pink connector function"
+#~ msgstr "Functie van roze connector"
+
+#~ msgid "Pink front panel connector function"
+#~ msgstr "Functie van roze connector in frontpaneel"
+
+#~ msgid "Blue connector function"
+#~ msgstr "Functie van blauwe connector"
+
+#~ msgid "Blue front panel connector function"
+#~ msgstr "Functie van blauwe connector in frontpaneel"
+
+#~ msgid "Orange connector function"
+#~ msgstr "Functie van oranje connector"
+
+#~ msgid "Orange front panel connector function"
+#~ msgstr "Functie van oranje connector in frontpaneel"
+
+#~ msgid "Black connector function"
+#~ msgstr "Functie van zwarte connector"
+
+#~ msgid "Black front panel connector function"
+#~ msgstr "Functie van zwarte connector in frontpaneel"
+
+#~ msgid "Gray connector function"
+#~ msgstr "Functie van grijze connector"
+
+#~ msgid "Gray front panel connector function"
+#~ msgstr "Functie van grijze connector in frontpaneel"
+
+#~ msgid "White connector function"
+#~ msgstr "Functie van witte connector"
+
+#~ msgid "White front panel connector function"
+#~ msgstr "Functie van witte connector in frontpaneel"
+
+#~ msgid "Red connector function"
+#~ msgstr "Functie van rode connector"
+
+#~ msgid "Red front panel connector function"
+#~ msgstr "Functie van rode connector in frontpaneel"
+
+#~ msgid "Yellow connector function"
+#~ msgstr "Functie van gele connector"
+
+#~ msgid "Yellow front panel connector function"
+#~ msgstr "Functie van gele connector in frontpaneel"
+
+#~ msgid "Virtual mixer channel configuration"
+#~ msgstr "Kanaalconfiguratie van virtuele mixer "

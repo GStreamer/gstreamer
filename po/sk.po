@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-17 21:54+0100\n"
+"POT-Creation-Date: 2009-08-11 17:42+0100\n"
 "PO-Revision-Date: 2008-11-04 09:39+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -76,8 +76,219 @@ msgstr ""
 "Nepodarilo sa otvoriť zvukové zariadenie pre obsluhu ovládania mixéra. Táto "
 "verzia Open Sound System nie je podporovaná týmto prvkom."
 
+msgid "Volume"
+msgstr ""
+
+#, fuzzy
+msgid "Master"
+msgstr "Rýchla"
+
+msgid "Front"
+msgstr "Predné"
+
+msgid "Rear"
+msgstr "Zadné"
+
+msgid "Headphones"
+msgstr "Slúchadlá"
+
+#, fuzzy
+msgid "Center"
+msgstr "Stredné / LFE"
+
+msgid "LFE"
+msgstr ""
+
+#, fuzzy
+msgid "Surround"
+msgstr "Surround"
+
+msgid "Side"
+msgstr "Postranné"
+
+msgid "Built-in Speaker"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "Bass"
+msgstr ""
+
+msgid "Treble"
+msgstr ""
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+#, fuzzy
+msgid "Telephone"
+msgstr "Slúchadlá"
+
+msgid "Microphone"
+msgstr "Mikrofón"
+
+msgid "Line Out"
+msgstr ""
+
+#, fuzzy
+msgid "Line In"
+msgstr "Linkový vstup"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "Video In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Record Gain"
+msgstr ""
+
+msgid "Output Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "Mikrofón"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr "Vstup"
+
+msgid "Record Source"
+msgstr ""
+
+msgid "Monitor Source"
+msgstr ""
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr "Stereo"
+
+#, fuzzy
+msgid "Surround Sound"
+msgstr "Surround"
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "Mikrofón"
+
+msgid "Speaker Source"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "Mikrofón"
+
+msgid "Jack"
+msgstr ""
+
+msgid "Center / LFE"
+msgstr "Stredné / LFE"
+
+#, fuzzy
+msgid "Stereo Mix"
+msgstr "Stereo"
+
+msgid "Mono Mix"
+msgstr ""
+
+#, fuzzy
+msgid "Input Mix"
+msgstr "Vstup mix"
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone 1"
+msgstr "Mikrofón"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "Mikrofón"
+
+msgid "Digital Out"
+msgstr ""
+
+msgid "Digital In"
+msgstr ""
+
+msgid "HDMI"
+msgstr ""
+
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr "Zap"
+
+msgid "Off"
+msgstr "Vyp"
+
+msgid "Mute"
+msgstr ""
+
 msgid "Fast"
 msgstr "Rýchla"
+
+msgid "Very Low"
+msgstr ""
 
 msgid "Low"
 msgstr "Nízka"
@@ -88,191 +299,126 @@ msgstr "Stredná"
 msgid "High"
 msgstr "Vysoká"
 
-msgid "Very high"
+#, fuzzy
+msgid "Very High"
 msgstr "Veľmi vysoká"
 
 msgid "Production"
 msgstr "Produkčná"
 
-msgid "Off"
-msgstr "Vyp"
-
-msgid "On"
-msgstr "Zap"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround sound"
-msgstr "Surround"
-
-msgid "Input mix"
-msgstr "Vstup mix"
-
-msgid "Front"
-msgstr "Predné"
-
-msgid "Rear"
-msgstr "Zadné"
-
-msgid "Side"
-msgstr "Postranné"
-
-msgid "Center / LFE"
-msgstr "Stredné / LFE"
-
-msgid "Microphone"
-msgstr "Mikrofón"
-
-msgid "Front panel microphone"
+#, fuzzy
+msgid "Front Panel Microphone"
 msgstr "Mikrofón predného panelu"
 
-msgid "Input"
-msgstr "Vstup"
-
-msgid "Line-in"
-msgstr "Linkový vstup"
-
-msgid "PCM 1"
-msgstr "PCM 1"
-
-msgid "PCM 2"
-msgstr "PCM 2"
-
-msgid "PCM 3"
-msgstr "PCM 3"
-
-msgid "PCM 4"
-msgstr "PCM 4"
-
-msgid "Green connector"
-msgstr "Zelený konektor"
-
-msgid "Green front panel connector"
-msgstr "Zelený konektor na prednom paneli"
-
-msgid "Pink connector"
-msgstr "Ružový konektor"
-
-msgid "Pink front panel connector"
-msgstr "Ružový konektor na prednom paneli"
-
-msgid "Blue connector"
-msgstr "Modrý konektor"
-
-msgid "Blue front panel connector"
-msgstr "Modrý konektor na prednom paneli"
-
-msgid "Orange connector"
-msgstr "Oranžový konektor"
-
-msgid "Orange front panel connector"
-msgstr "Oranžový konektor na prednom paneli"
-
-msgid "Black connector"
-msgstr "Čierny konektor"
-
-msgid "Black front panel connector"
-msgstr "Čierny konektor na prednom paneli"
-
-msgid "Gray connector"
-msgstr "Šedý konektor"
-
-msgid "Gray front panel connector"
-msgstr "Šedý konektor na prednom paneli"
-
-msgid "White connector"
-msgstr "Biely konektor"
-
-msgid "White front panel connector"
-msgstr "Biely konektor na prednom paneli"
-
-msgid "Red connector"
-msgstr "Červený konektor"
-
-msgid "Red front panel connector"
-msgstr "Červený konektor na prednom paneli"
-
-msgid "Yellow connector"
-msgstr "Žltý konektor"
-
-msgid "Yellow front panel connector"
-msgstr "Žltý konektor na prednom paneli"
-
-msgid "Green connector function"
-msgstr "Funkcia zeleného konektora"
-
-msgid "Green front panel connector function"
-msgstr "Funkcia zeleného konektora na prednom paneli"
-
-msgid "Pink connector function"
-msgstr "Funkcia ružového konektora"
-
-msgid "Pink front panel connector function"
-msgstr "Funkcia ružového konektora na prednom paneli"
-
-msgid "Blue connector function"
-msgstr "Funkcia modrého konektora"
-
-msgid "Blue front panel connector function"
-msgstr "Funkcia modrého konektora na prednom paneli"
-
-msgid "Orange connector function"
-msgstr "Funkcia oranžového konektora"
-
-msgid "Orange front panel connector function"
-msgstr "Funkcia oranžového konektora na prednom paneli"
-
-msgid "Black connector function"
-msgstr "Funkcia čierneho konektora"
-
-msgid "Black front panel connector function"
-msgstr "Funkcia čierneho konektora na prednom paneli"
-
-msgid "Gray connector function"
-msgstr "Funkcia šedého konektora"
-
-msgid "Gray front panel connector function"
-msgstr "Funkcia šedého konektora na prednom paneli"
-
-msgid "White connector function"
-msgstr "Funkcia bieleho konektora"
-
-msgid "White front panel connector function"
-msgstr "Funkcia bieleho konektora na prednom paneli"
-
-msgid "Red connector function"
-msgstr "Funkcia červeného konektora"
-
-msgid "Red front panel connector function"
-msgstr "Funkcia červeného konektora na prednom paneli"
-
-msgid "Yellow connector function"
-msgstr "Funkcia žltého konektora"
-
-msgid "Yellow front panel connector function"
-msgstr "Funkcia žltého konektora na prednom paneli"
-
-msgid "Front panel line-in"
+#, fuzzy
+msgid "Front Panel Line In"
 msgstr "Linkový vstup na prednom paneli"
 
-msgid "Headphones"
-msgstr "Slúchadlá"
-
-msgid "Front panel headphones"
+#, fuzzy
+msgid "Front Panel Headphones"
 msgstr "Slúchadlá na prednom paneli"
 
-msgid "PCM"
-msgstr "PCM"
+#, fuzzy
+msgid "Front Panel Line Out"
+msgstr "Linkový vstup na prednom paneli"
 
-msgid "Virtual mixer input"
+#, fuzzy
+msgid "Green Connector"
+msgstr "Zelený konektor"
+
+#, fuzzy
+msgid "Pink Connector"
+msgstr "Ružový konektor"
+
+#, fuzzy
+msgid "Blue Connector"
+msgstr "Modrý konektor"
+
+#, fuzzy
+msgid "White Connector"
+msgstr "Biely konektor"
+
+#, fuzzy
+msgid "Black Connector"
+msgstr "Čierny konektor"
+
+#, fuzzy
+msgid "Gray Connector"
+msgstr "Šedý konektor"
+
+#, fuzzy
+msgid "Orange Connector"
+msgstr "Oranžový konektor"
+
+#, fuzzy
+msgid "Red Connector"
+msgstr "Červený konektor"
+
+#, fuzzy
+msgid "Yellow Connector"
+msgstr "Žltý konektor"
+
+#, fuzzy
+msgid "Green Front Panel Connector"
+msgstr "Zelený konektor na prednom paneli"
+
+#, fuzzy
+msgid "Pink Front Panel Connector"
+msgstr "Ružový konektor na prednom paneli"
+
+#, fuzzy
+msgid "Blue Front Panel Connector"
+msgstr "Modrý konektor na prednom paneli"
+
+#, fuzzy
+msgid "White Front Panel Connector"
+msgstr "Biely konektor na prednom paneli"
+
+#, fuzzy
+msgid "Black Front Panel Connector"
+msgstr "Čierny konektor na prednom paneli"
+
+#, fuzzy
+msgid "Gray Front Panel Connector"
+msgstr "Šedý konektor na prednom paneli"
+
+#, fuzzy
+msgid "Orange Front Panel Connector"
+msgstr "Oranžový konektor na prednom paneli"
+
+#, fuzzy
+msgid "Red Front Panel Connector"
+msgstr "Červený konektor na prednom paneli"
+
+#, fuzzy
+msgid "Yellow Front Panel Connector"
+msgstr "Žltý konektor na prednom paneli"
+
+msgid "Spread Output"
+msgstr ""
+
+msgid "Downmix"
+msgstr ""
+
+#, fuzzy
+msgid "Virtual Mixer Input"
 msgstr "Vstup virtuálneho mixéra"
 
-msgid "Virtual mixer output"
+#, fuzzy
+msgid "Virtual Mixer Output"
 msgstr "Výstup virtuálneho mixéra"
 
-msgid "Virtual mixer channel configuration"
-msgstr "Konfigurácia kanálov virtuálneho mixéra"
+#, fuzzy
+msgid "Virtual Mixer Channels"
+msgstr "Vstup virtuálneho mixéra"
+
+#, c-format
+msgid "%s Function"
+msgstr ""
+
+#, c-format
+msgid "%s %d"
+msgstr ""
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -321,3 +467,72 @@ msgstr "Chyba pri zázname zo zvukového zariadenia."
 #~ msgstr ""
 #~ "Požadovaná bitová rýchlosť %d kbit/s pre vlastnosť '%s' nie je povolená. "
 #~ "Rýchlosť bola zmenená na %d kbit/s."
+
+#~ msgid "PCM 1"
+#~ msgstr "PCM 1"
+
+#~ msgid "PCM 2"
+#~ msgstr "PCM 2"
+
+#~ msgid "PCM 3"
+#~ msgstr "PCM 3"
+
+#~ msgid "PCM 4"
+#~ msgstr "PCM 4"
+
+#~ msgid "Green connector function"
+#~ msgstr "Funkcia zeleného konektora"
+
+#~ msgid "Green front panel connector function"
+#~ msgstr "Funkcia zeleného konektora na prednom paneli"
+
+#~ msgid "Pink connector function"
+#~ msgstr "Funkcia ružového konektora"
+
+#~ msgid "Pink front panel connector function"
+#~ msgstr "Funkcia ružového konektora na prednom paneli"
+
+#~ msgid "Blue connector function"
+#~ msgstr "Funkcia modrého konektora"
+
+#~ msgid "Blue front panel connector function"
+#~ msgstr "Funkcia modrého konektora na prednom paneli"
+
+#~ msgid "Orange connector function"
+#~ msgstr "Funkcia oranžového konektora"
+
+#~ msgid "Orange front panel connector function"
+#~ msgstr "Funkcia oranžového konektora na prednom paneli"
+
+#~ msgid "Black connector function"
+#~ msgstr "Funkcia čierneho konektora"
+
+#~ msgid "Black front panel connector function"
+#~ msgstr "Funkcia čierneho konektora na prednom paneli"
+
+#~ msgid "Gray connector function"
+#~ msgstr "Funkcia šedého konektora"
+
+#~ msgid "Gray front panel connector function"
+#~ msgstr "Funkcia šedého konektora na prednom paneli"
+
+#~ msgid "White connector function"
+#~ msgstr "Funkcia bieleho konektora"
+
+#~ msgid "White front panel connector function"
+#~ msgstr "Funkcia bieleho konektora na prednom paneli"
+
+#~ msgid "Red connector function"
+#~ msgstr "Funkcia červeného konektora"
+
+#~ msgid "Red front panel connector function"
+#~ msgstr "Funkcia červeného konektora na prednom paneli"
+
+#~ msgid "Yellow connector function"
+#~ msgstr "Funkcia žltého konektora"
+
+#~ msgid "Yellow front panel connector function"
+#~ msgstr "Funkcia žltého konektora na prednom paneli"
+
+#~ msgid "Virtual mixer channel configuration"
+#~ msgstr "Konfigurácia kanálov virtuálneho mixéra"

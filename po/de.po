@@ -6,11 +6,11 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.11.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.12.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-17 21:54+0100\n"
-"PO-Revision-Date: 2009-05-14 21:52+0200\n"
-"Last-Translator: Andre Klapper <ak-47@gmx.net>\n"
+"POT-Creation-Date: 2009-08-11 17:42+0100\n"
+"PO-Revision-Date: 2009-06-24 16:58+0200\n"
+"Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -25,7 +25,7 @@ msgid "Failed to open DVD device '%s'."
 msgstr "Öffnen des DVD-Geräts »%s« schlug fehl."
 
 msgid "Failed to set PGC based seeking."
-msgstr ""
+msgstr "PGC-basiertes Suchen schlug fehl."
 
 msgid "Internal clock error."
 msgstr "Interner Zeitfehler."
@@ -73,8 +73,219 @@ msgstr ""
 "Audio-Gerät konnte nicht zum Regeln geöffnet werden. Diese Version des Open "
 "Sound System (OSS) wird nicht von diesem Element unterstützt."
 
+msgid "Volume"
+msgstr ""
+
+#, fuzzy
+msgid "Master"
+msgstr "Schnell"
+
+msgid "Front"
+msgstr "Vorne"
+
+msgid "Rear"
+msgstr "Hinten"
+
+msgid "Headphones"
+msgstr "Kopfhörer"
+
+#, fuzzy
+msgid "Center"
+msgstr "Mitte / LFE"
+
+msgid "LFE"
+msgstr ""
+
+#, fuzzy
+msgid "Surround"
+msgstr "Surround-Ton"
+
+msgid "Side"
+msgstr "Seite"
+
+msgid "Built-in Speaker"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "Bass"
+msgstr ""
+
+msgid "Treble"
+msgstr ""
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+#, fuzzy
+msgid "Telephone"
+msgstr "Kopfhörer"
+
+msgid "Microphone"
+msgstr "Mikrofon"
+
+msgid "Line Out"
+msgstr ""
+
+#, fuzzy
+msgid "Line In"
+msgstr "Line-in"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "Video In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Record Gain"
+msgstr ""
+
+msgid "Output Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "Mikrofon"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr "Aufnahme"
+
+msgid "Record Source"
+msgstr ""
+
+msgid "Monitor Source"
+msgstr ""
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr "Stereo"
+
+#, fuzzy
+msgid "Surround Sound"
+msgstr "Surround-Ton"
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "Mikrofon"
+
+msgid "Speaker Source"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "Mikrofon"
+
+msgid "Jack"
+msgstr ""
+
+msgid "Center / LFE"
+msgstr "Mitte / LFE"
+
+#, fuzzy
+msgid "Stereo Mix"
+msgstr "Stereo"
+
+msgid "Mono Mix"
+msgstr ""
+
+#, fuzzy
+msgid "Input Mix"
+msgstr "Aufnahmemixer"
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone 1"
+msgstr "Mikrofon"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "Mikrofon"
+
+msgid "Digital Out"
+msgstr ""
+
+msgid "Digital In"
+msgstr ""
+
+msgid "HDMI"
+msgstr ""
+
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr "Ein"
+
+msgid "Off"
+msgstr "Aus"
+
+msgid "Mute"
+msgstr ""
+
 msgid "Fast"
 msgstr "Schnell"
+
+msgid "Very Low"
+msgstr ""
 
 msgid "Low"
 msgstr "Tief"
@@ -85,191 +296,126 @@ msgstr "Mittel"
 msgid "High"
 msgstr "Hoch"
 
-msgid "Very high"
+#, fuzzy
+msgid "Very High"
 msgstr "Sehr hoch"
 
 msgid "Production"
 msgstr "Produktion"
 
-msgid "Off"
-msgstr "Aus"
-
-msgid "On"
-msgstr "Ein"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround sound"
-msgstr "Surround-Ton"
-
-msgid "Input mix"
-msgstr "Aufnahmemixer"
-
-msgid "Front"
-msgstr "Vorne"
-
-msgid "Rear"
-msgstr "Hinten"
-
-msgid "Side"
-msgstr "Seite"
-
-msgid "Center / LFE"
-msgstr "Mitte / LFE"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "Front panel microphone"
+#, fuzzy
+msgid "Front Panel Microphone"
 msgstr "Mikrofon am Fronteingang"
 
-msgid "Input"
-msgstr "Aufnahme"
-
-msgid "Line-in"
-msgstr "Line-in"
-
-msgid "PCM 1"
-msgstr "PCM 1"
-
-msgid "PCM 2"
-msgstr "PCM 2"
-
-msgid "PCM 3"
-msgstr "PCM 3"
-
-msgid "PCM 4"
-msgstr "PCM 4"
-
-msgid "Green connector"
-msgstr "Grüner Stecker"
-
-msgid "Green front panel connector"
-msgstr "Grüner Frontstecker"
-
-msgid "Pink connector"
-msgstr "Rosa Stecker"
-
-msgid "Pink front panel connector"
-msgstr "Rosa Frontstecker"
-
-msgid "Blue connector"
-msgstr "Blauer Stecker"
-
-msgid "Blue front panel connector"
-msgstr "Blauer Frontstecker"
-
-msgid "Orange connector"
-msgstr "Oranger Stecker"
-
-msgid "Orange front panel connector"
-msgstr "Oranger Frontstecker"
-
-msgid "Black connector"
-msgstr "Schwarzer Stecker"
-
-msgid "Black front panel connector"
-msgstr "Schwarzer Frontstecker"
-
-msgid "Gray connector"
-msgstr "Grauer Stecker"
-
-msgid "Gray front panel connector"
-msgstr "Grauer Frontstecker"
-
-msgid "White connector"
-msgstr "Weißer Stecker"
-
-msgid "White front panel connector"
-msgstr "Weißer Frontstecker"
-
-msgid "Red connector"
-msgstr "Roter Stecker"
-
-msgid "Red front panel connector"
-msgstr "Roter Frontstecker"
-
-msgid "Yellow connector"
-msgstr "Gelber Stecker"
-
-msgid "Yellow front panel connector"
-msgstr "Gelber Frontstecker"
-
-msgid "Green connector function"
-msgstr "Funktion des grünen Steckers"
-
-msgid "Green front panel connector function"
-msgstr "Funktion des grünen Frontsteckers"
-
-msgid "Pink connector function"
-msgstr "Funktion des rosa Steckers"
-
-msgid "Pink front panel connector function"
-msgstr "Funktion des rosa Frontsteckers"
-
-msgid "Blue connector function"
-msgstr "Funktion des blauen Steckers"
-
-msgid "Blue front panel connector function"
-msgstr "Funktion des blauen Frontsteckers"
-
-msgid "Orange connector function"
-msgstr "Funktion des orangen Steckers"
-
-msgid "Orange front panel connector function"
-msgstr "Funktion des orangen Frontsteckers"
-
-msgid "Black connector function"
-msgstr "Funktion des schwarzen Steckers"
-
-msgid "Black front panel connector function"
-msgstr "Funktion des schwarzen Frontsteckers"
-
-msgid "Gray connector function"
-msgstr "Funktion des grauen Steckers"
-
-msgid "Gray front panel connector function"
-msgstr "Funktion des grauen Frontsteckers"
-
-msgid "White connector function"
-msgstr "Funktion des weißen Steckers"
-
-msgid "White front panel connector function"
-msgstr "Funktion des weißen Frontsteckers"
-
-msgid "Red connector function"
-msgstr "Funktion des roten Steckers"
-
-msgid "Red front panel connector function"
-msgstr "Funktion des roten Frontsteckers"
-
-msgid "Yellow connector function"
-msgstr "Funktion des gelben Steckers"
-
-msgid "Yellow front panel connector function"
-msgstr "Funktion des gelben Frontsteckers"
-
-msgid "Front panel line-in"
+#, fuzzy
+msgid "Front Panel Line In"
 msgstr "Front-Line-in"
 
-msgid "Headphones"
-msgstr "Kopfhörer"
-
-msgid "Front panel headphones"
+#, fuzzy
+msgid "Front Panel Headphones"
 msgstr "Front-Kopfhörer"
 
-msgid "PCM"
-msgstr "PCM"
+#, fuzzy
+msgid "Front Panel Line Out"
+msgstr "Front-Line-in"
 
-msgid "Virtual mixer input"
+#, fuzzy
+msgid "Green Connector"
+msgstr "Grüner Stecker"
+
+#, fuzzy
+msgid "Pink Connector"
+msgstr "Rosa Stecker"
+
+#, fuzzy
+msgid "Blue Connector"
+msgstr "Blauer Stecker"
+
+#, fuzzy
+msgid "White Connector"
+msgstr "Weißer Stecker"
+
+#, fuzzy
+msgid "Black Connector"
+msgstr "Schwarzer Stecker"
+
+#, fuzzy
+msgid "Gray Connector"
+msgstr "Grauer Stecker"
+
+#, fuzzy
+msgid "Orange Connector"
+msgstr "Oranger Stecker"
+
+#, fuzzy
+msgid "Red Connector"
+msgstr "Roter Stecker"
+
+#, fuzzy
+msgid "Yellow Connector"
+msgstr "Gelber Stecker"
+
+#, fuzzy
+msgid "Green Front Panel Connector"
+msgstr "Grüner Frontstecker"
+
+#, fuzzy
+msgid "Pink Front Panel Connector"
+msgstr "Rosa Frontstecker"
+
+#, fuzzy
+msgid "Blue Front Panel Connector"
+msgstr "Blauer Frontstecker"
+
+#, fuzzy
+msgid "White Front Panel Connector"
+msgstr "Weißer Frontstecker"
+
+#, fuzzy
+msgid "Black Front Panel Connector"
+msgstr "Schwarzer Frontstecker"
+
+#, fuzzy
+msgid "Gray Front Panel Connector"
+msgstr "Grauer Frontstecker"
+
+#, fuzzy
+msgid "Orange Front Panel Connector"
+msgstr "Oranger Frontstecker"
+
+#, fuzzy
+msgid "Red Front Panel Connector"
+msgstr "Roter Frontstecker"
+
+#, fuzzy
+msgid "Yellow Front Panel Connector"
+msgstr "Gelber Frontstecker"
+
+msgid "Spread Output"
+msgstr ""
+
+msgid "Downmix"
+msgstr ""
+
+#, fuzzy
+msgid "Virtual Mixer Input"
 msgstr "Eingang des virtuellen Mischers"
 
-msgid "Virtual mixer output"
+#, fuzzy
+msgid "Virtual Mixer Output"
 msgstr "Ausgang des virtuellen Mischers"
 
-msgid "Virtual mixer channel configuration"
-msgstr "Konfiguration des virtuellen Mischers"
+#, fuzzy
+msgid "Virtual Mixer Channels"
+msgstr "Eingang des virtuellen Mischers"
+
+#, c-format
+msgid "%s Function"
+msgstr ""
+
+#, c-format
+msgid "%s %d"
+msgstr ""
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -306,3 +452,72 @@ msgstr "Die Aufnahme wird nicht von diesem Audio-Gerät unterstützt."
 
 msgid "Error recording from audio device."
 msgstr "Fehler bei der Aufnahme vom Audio-Gerät."
+
+#~ msgid "PCM 1"
+#~ msgstr "PCM 1"
+
+#~ msgid "PCM 2"
+#~ msgstr "PCM 2"
+
+#~ msgid "PCM 3"
+#~ msgstr "PCM 3"
+
+#~ msgid "PCM 4"
+#~ msgstr "PCM 4"
+
+#~ msgid "Green connector function"
+#~ msgstr "Funktion des grünen Steckers"
+
+#~ msgid "Green front panel connector function"
+#~ msgstr "Funktion des grünen Frontsteckers"
+
+#~ msgid "Pink connector function"
+#~ msgstr "Funktion des rosa Steckers"
+
+#~ msgid "Pink front panel connector function"
+#~ msgstr "Funktion des rosa Frontsteckers"
+
+#~ msgid "Blue connector function"
+#~ msgstr "Funktion des blauen Steckers"
+
+#~ msgid "Blue front panel connector function"
+#~ msgstr "Funktion des blauen Frontsteckers"
+
+#~ msgid "Orange connector function"
+#~ msgstr "Funktion des orangen Steckers"
+
+#~ msgid "Orange front panel connector function"
+#~ msgstr "Funktion des orangen Frontsteckers"
+
+#~ msgid "Black connector function"
+#~ msgstr "Funktion des schwarzen Steckers"
+
+#~ msgid "Black front panel connector function"
+#~ msgstr "Funktion des schwarzen Frontsteckers"
+
+#~ msgid "Gray connector function"
+#~ msgstr "Funktion des grauen Steckers"
+
+#~ msgid "Gray front panel connector function"
+#~ msgstr "Funktion des grauen Frontsteckers"
+
+#~ msgid "White connector function"
+#~ msgstr "Funktion des weißen Steckers"
+
+#~ msgid "White front panel connector function"
+#~ msgstr "Funktion des weißen Frontsteckers"
+
+#~ msgid "Red connector function"
+#~ msgstr "Funktion des roten Steckers"
+
+#~ msgid "Red front panel connector function"
+#~ msgstr "Funktion des roten Frontsteckers"
+
+#~ msgid "Yellow connector function"
+#~ msgstr "Funktion des gelben Steckers"
+
+#~ msgid "Yellow front panel connector function"
+#~ msgstr "Funktion des gelben Frontsteckers"
+
+#~ msgid "Virtual mixer channel configuration"
+#~ msgstr "Konfiguration des virtuellen Mischers"
