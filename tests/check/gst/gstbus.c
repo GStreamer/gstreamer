@@ -563,6 +563,7 @@ GST_START_TEST (test_custom_main_context)
   if (ctx)
     g_main_context_unref (ctx);
   g_main_loop_unref (loop);
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
