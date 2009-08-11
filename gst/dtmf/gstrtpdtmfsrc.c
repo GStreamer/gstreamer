@@ -305,9 +305,9 @@ static void
 gst_rtp_dtmf_src_event_free (GstRTPDTMFSrcEvent * event)
 {
   if (event) {
-    g_free (event->payload);
-    event->payload = NULL;
-    g_free (event);
+    if (event->payload)
+      g_slice_free (GstRTPDTMFPayload, event->payload);
+    g_slice_free (GstRTPDTMFSrcEvent, event);
   }
 }
 
@@ -568,10 +568,10 @@ gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc * dtmfsrc, gint event_number,
     gint event_volume)
 {
 
-  GstRTPDTMFSrcEvent *event = g_malloc (sizeof (GstRTPDTMFSrcEvent));
+  GstRTPDTMFSrcEvent *event = g_slice_new0 (GstRTPDTMFSrcEvent);
   event->event_type = RTP_DTMF_EVENT_TYPE_START;
 
-  event->payload = g_new0 (GstRTPDTMFPayload, 1);
+  event->payload = g_slice_new0 (GstRTPDTMFPayload);
   event->payload->event = CLAMP (event_number, MIN_EVENT, MAX_EVENT);
   event->payload->volume = CLAMP (event_volume, MIN_VOLUME, MAX_VOLUME);
   event->payload->duration = dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
@@ -583,7 +583,7 @@ static void
 gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc * dtmfsrc)
 {
 
-  GstRTPDTMFSrcEvent *event = g_new0 (GstRTPDTMFSrcEvent, 1);
+  GstRTPDTMFSrcEvent *event = g_slice_new0 (GstRTPDTMFSrcEvent);
   event->event_type = RTP_DTMF_EVENT_TYPE_STOP;
 
   g_async_queue_push (dtmfsrc->event_queue, event);
@@ -816,7 +816,7 @@ send_last:
     /* Don't forget to release the stream lock */
     gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
 
-    g_free (dtmfsrc->payload);
+    g_slice_free (GstRTPDTMFPayload, dtmfsrc->payload);
     dtmfsrc->payload = NULL;
 
     dtmfsrc->last_packet = FALSE;
@@ -1069,7 +1069,7 @@ gst_rtp_dtmf_src_unlock (GstBaseSrc * src)
   GST_OBJECT_UNLOCK (dtmfsrc);
 
   GST_DEBUG_OBJECT (dtmfsrc, "Pushing the PAUSE_TASK event on unlock request");
-  event = g_new0 (GstRTPDTMFSrcEvent, 1);
+  event = g_slice_new0 (GstRTPDTMFSrcEvent);
   event->event_type = RTP_DTMF_EVENT_TYPE_PAUSE_TASK;
   g_async_queue_push (dtmfsrc->event_queue, event);
 
