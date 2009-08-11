@@ -16,7 +16,6 @@ GObject
         GstFPSDisplaySink
         GstAutoConvert
         GstSDPDemux
-        GstRtpBin
       GstSignalProcessor
         http---calf-sourceforge-net-plugins-Compressor
         http---calf-sourceforge-net-plugins-Filter
@@ -466,10 +465,6 @@ GObject
       GstSpeed
       GstInputSelector
       GstOutputSelector
-      GstRtpJitterBuffer
-      GstRtpPtDemux
-      GstRtpSession
-      GstRtpSsrcDemux
       GstRealVideoDec
       GstRealAudioDec
       GstRawParse

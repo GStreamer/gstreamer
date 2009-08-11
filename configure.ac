@@ -284,7 +284,6 @@ AG_GST_CHECK_PLUGIN(pcapparse)
 AG_GST_CHECK_PLUGIN(qtmux)
 AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(real)
-AG_GST_CHECK_PLUGIN(rtpmanager)
 AG_GST_CHECK_PLUGIN(rtpmux)
 AG_GST_CHECK_PLUGIN(scaletempo)
 AG_GST_CHECK_PLUGIN(sdp)
@@ -1696,7 +1695,6 @@ gst/pcapparse/Makefile
 gst/qtmux/Makefile
 gst/rawparse/Makefile
 gst/real/Makefile
-gst/rtpmanager/Makefile
 gst/rtpmux/Makefile
 gst/scaletempo/Makefile
 gst/sdp/Makefile

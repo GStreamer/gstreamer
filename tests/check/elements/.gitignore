@@ -20,8 +20,6 @@ souphttpsrc
 rganalysis
 rglimiter
 rgvolume
-rtpbin
-rtpbin_buffer_list
 selector
 shapewipe
 spectrum
