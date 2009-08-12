@@ -1659,10 +1659,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   out_timestamp = gst_ts_handler_get_ts (ffmpegdec, &out_offset);
   /* Never do this at home...
    * 1) We know that ffmpegdec->context->reordered_opaque is 64-bit, and thus
-   * is capable of holding virtually anything (unless we're on 128-bit platform...)
-   * 2) guintptr is either 32-bit or 64-pit and always matches gpointer in size
+   * is capable of holding virtually anything including pointers
+   * (unless we're on 128-bit platform...)
    */
-  *((guintptr *) & ffmpegdec->context->reordered_opaque) =
+  ffmpegdec->context->reordered_opaque = (gint64)
       GPOINTER_TO_SIZE (opaque_store (ffmpegdec, out_timestamp, out_offset));
 
   /* now decode the frame */
@@ -1689,10 +1689,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   /* recuperate the reordered timestamp */
   if (!opaque_find (ffmpegdec,
-          GSIZE_TO_POINTER (*((guintptr *) & ffmpegdec->
+          GSIZE_TO_POINTER (*((gsize *) & ffmpegdec->
                   picture->reordered_opaque)), &out_pts, &out_offset)) {
     GST_DEBUG_OBJECT (ffmpegdec, "Failed to find opaque %p",
-        *((guintptr *) & ffmpegdec->picture->reordered_opaque));
+        *((gsize *) & ffmpegdec->picture->reordered_opaque));
     out_pts = -1;
     out_offset = GST_BUFFER_OFFSET_NONE;
   } else {
