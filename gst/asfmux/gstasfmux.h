@@ -139,9 +139,6 @@ struct _GstAsfMux
   /* pads */
   GstPad *srcpad;
 
-  /* sinkpads, video first */
-  GSList *sinkpads;
-
   GstCollectPads *collect;
   GstPadEventFunction collect_event;
 };

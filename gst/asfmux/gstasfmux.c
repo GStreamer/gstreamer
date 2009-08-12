@@ -1604,7 +1604,7 @@ gst_asf_mux_write_indexes (GstAsfMux * asfmux)
 
   /* write simple indexes for video medias */
   ordered_pads =
-      g_slist_sort (asfmux->collect->data,
+      g_slist_sort (g_slist_copy (asfmux->collect->data),
       (GCompareFunc) stream_number_compare);
   for (walker = ordered_pads; walker; walker = g_slist_next (walker)) {
     GstAsfPad *pad = (GstAsfPad *) walker->data;
@@ -1613,10 +1613,12 @@ gst_asf_mux_write_indexes (GstAsfMux * asfmux)
       if (ret != GST_FLOW_OK) {
         GST_ERROR_OBJECT (asfmux, "Failed to write simple index for stream %"
             G_GUINT16_FORMAT, (guint16) pad->stream_number);
-        return ret;
+        goto cleanup_and_return;
       }
     }
   }
+cleanup_and_return:
+  g_slist_free (ordered_pads);
   return ret;
 }
 
