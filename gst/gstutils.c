@@ -247,91 +247,72 @@ gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
   c1->ll = (guint64) v.l.high * n.l.high + c1->l.high + a1.l.high + b0.l.high;
 }
 
-/* compute the quotient and remainder of 2^64 / d.  returns 0 if the
- * quotient overflows (meaning d = 1). */
+/* based on Hacker's Delight p152 */
 static guint64
-gst_util_two_to_the_64_over_d (guint64 d, guint64 * remainder)
+gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
 {
-  guint64 quotient = G_MAXUINT64 / d;
-  *remainder = G_MAXUINT64 % d + 1;
-  if (*remainder == d) {
-    quotient++;
-    *remainder = 0;
-  }
-  return quotient;
-}
+  GstUInt64 q1, q0, rhat;
+  GstUInt64 v, cmp1, cmp2;
+  guint s;
 
-/* divide a 128-bit unsigned int by a 64-bit unsigned int when we know the
- * quotient fits into 64 bits. */
-static guint64
-gst_util_div128_64 (guint64 c1, guint64 c0, guint64 denom, guint64 * remainder)
-{
-  /* we are trying to compute
-   *
-   * c1 * 2^64 + c0
-   * --------------
-   *       d
-   *
-   * this can be re-written as:
-   *
-   * c1 * 2^64 + c0        2^64   c0
-   * -------------- = c1 * ---- + --
-   *       d                d      d
-   *
-   *                       (            2^64 % d )   c0
-   *                = c1 * (2^64 // d + ---------) + --
-   *                       (                d    )    d
-   *
-   *                                     c1 * (2^64 % d) + c0
-   *                = c1 * (2^64 // d) + --------------------
-   *                                              d
-   *
-   * where "//" indicates the integer quotient and "%" indicates remainder.
-   * note that 2^64 // d != 0 because d fits in 64 bits, and therefore if
-   * c1 != 0 the first term on the right-hand-side is != 0 and therefore
-   * the numerator in the fraction on the right-hand-side must be less than
-   * the numerator in the fraction on the left-hand-side.
-   *
-   * this provides us with an algorithm to compute both the quotient and
-   * remainder iteratively --- essentially a base-2^64 version of long
-   * division.  initializing the quotient to 0, the first term on the
-   * right-hand side is computed and added to the quotient (this can't
-   * overflow because we know the final answer fits in 64 bits).  the
-   * numerator of the second term is then computed and the high and low
-   * words stored in c1 and c0 respectively.  this is repeated until c1 is
-   * 0, at which point the problem has been reduced to computing the
-   * quotient and remainder of a 64-bit unsigned integer (c0) divided by a
-   * 64-bit unsigned integer (denom) which can be completed using regular
-   * integer arithmetic operations.
-   *
-   * note that gst_util_two_to_the_64_over_d() returns 0 if that quotient
-   * overflows.  this can only happen if d = 1, but because we know that
-   * our quotient must fit into 64 bits c1 must be 0 when d = 1, so the
-   * algorithm produces the correct result.
-   */
+  v.ll = denom;
 
-  guint64 quotient = 0;
-  GstUInt64 _c1;
+  /* count number of leading zeroes, we know they must be in the high
+   * part of denom since denom > G_MAXUINT32. */
+  s = v.l.high | (v.l.high >> 1);
+  s |= (s >> 2);
+  s |= (s >> 4);
+  s |= (s >> 8);
+  s = ~(s | (s >> 16));
+  s = s - ((s >> 1) & 0x55555555);
+  s = (s & 0x33333333) + ((s >> 2) & 0x33333333);
+  s = (s + (s >> 4)) & 0x0f0f0f0f;
+  s += (s >> 8);
+  s = (s + (s >> 16)) & 0x3f;
 
-  _c1.ll = c1;
-
-  while (_c1.ll) {
-    GstUInt64 _a;
-
-    /* add c1 * (2^64 // d) to quotient, store 2^64 % d in a */
-    quotient += _c1.ll * gst_util_two_to_the_64_over_d (denom, &_a.ll);
-    /* store the high and low words of c1 * (2^64 % d) in c1 and a
-     * respectively */
-    gst_util_uint64_mul_uint64 (&_c1, &_a, _c1.ll, _a.ll);
-    /* add a to c0, with a carry into c1 if the result rolls over */
-    if (G_MAXUINT64 - c0 < _a.ll)
-      _c1.ll++;
-    c0 += _a.ll;
+  if (s > 0) {
+    /* normalize divisor and dividend */
+    v.ll <<= s;
+    c1.ll = (c1.ll << s) | (c0.l.high >> (32 - s));
+    c0.ll <<= s;
   }
 
-  /* c1 is 0.  use regular integer arithmetic with c0 to complete result */
-  *remainder = c0 % denom;
-  return quotient + c0 / denom;
+  q1.ll = c1.ll / v.l.high;
+  rhat.ll = c1.ll - q1.ll * v.l.high;
+
+  cmp1.l.high = rhat.l.low;
+  cmp1.l.low = c0.l.high;
+  cmp2.ll = q1.ll * v.l.low;
+
+  while (q1.l.high || cmp2.ll > cmp1.ll) {
+    q1.ll--;
+    rhat.ll += v.l.high;
+    if (rhat.l.high)
+      break;
+    cmp1.l.high = rhat.l.low;
+    cmp2.ll -= v.l.low;
+  }
+  c1.l.high = c1.l.low;
+  c1.l.low = c0.l.high;
+  c1.ll -= q1.ll * v.ll;
+  q0.ll = c1.ll / v.l.high;
+  rhat.ll = c1.ll - q0.ll * v.l.high;
+
+  cmp1.l.high = rhat.l.low;
+  cmp1.l.low = c0.l.low;
+  cmp2.ll = q0.ll * v.l.low;
+
+  while (q0.l.high || cmp2.ll > cmp1.ll) {
+    q0.ll--;
+    rhat.ll += v.l.high;
+    if (rhat.l.high)
+      break;
+    cmp1.l.high = rhat.l.low;
+    cmp2.ll -= v.l.low;
+  }
+  q0.l.high += q1.l.low;
+
+  return q0.ll;
 }
 
 /* multiply a 64-bit unsigned int by a 32-bit unsigned int into a 96-bit
@@ -354,16 +335,14 @@ gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
  * quotient fits into 64 bits.  the high 64 bits and low 32 bits of the
  * numerator are expected in c1 and c0 respectively. */
 static guint64
-gst_util_div96_32 (guint64 c1, guint64 c0, guint32 denom, guint32 * remainder)
+gst_util_div96_32 (guint64 c1, guint64 c0, guint32 denom)
 {
   c0 += (c1 % denom) << 32;
-  *remainder = c0 % denom;
   return ((c1 / denom) << 32) + (c0 / denom);
 }
 
 static guint64
-gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
-    guint64 denom, guint64 * remainder)
+gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num, guint64 denom)
 {
   GstUInt64 c1, c0;
 
@@ -375,12 +354,11 @@ gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
     return G_MAXUINT64;
 
   /* compute quotient, fits in 64 bits */
-  return gst_util_div128_64 (c1.ll, c0.ll, denom, remainder);
+  return gst_util_div128_64 (c1, c0, denom);
 }
 
 static inline guint64
-gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num,
-    guint32 denom, guint32 * remainder)
+gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num, guint32 denom)
 {
   GstUInt64 c1, c0;
 
@@ -392,7 +370,7 @@ gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num,
     return G_MAXUINT64;
 
   /* compute quotient, fits in 64 bits */
-  return gst_util_div96_32 (c1.ll, c0.ll, denom, remainder);
+  return gst_util_div96_32 (c1.ll, c0.ll, denom);
 }
 
 /**
@@ -413,7 +391,6 @@ gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num,
 guint64
 gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 {
-  guint64 remainder;
   g_return_val_if_fail (denom != 0, G_MAXUINT64);
 
   if (G_UNLIKELY (num == 0))
@@ -422,22 +399,21 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
   if (G_UNLIKELY (num == denom))
     return val;
 
-  /* deneom is low --> try to use 96 bit muldiv */
+  /* denom is low --> try to use 96 bit muldiv */
   if (G_LIKELY (denom <= G_MAXUINT32)) {
-    guint32 remainder;
     /* num is low --> use 96 bit muldiv */
     if (G_LIKELY (num <= G_MAXUINT32))
       return gst_util_uint64_scale_uint32_unchecked (val, (guint32) num,
-          (guint32) denom, &remainder);
+          (guint32) denom);
 
     /* num is high but val is low --> swap and use 96-bit muldiv */
     if (G_LIKELY (val <= G_MAXUINT32))
       return gst_util_uint64_scale_uint32_unchecked (num, (guint32) val,
-          (guint32) denom, &remainder);
+          (guint32) denom);
   }
 
   /* val is high and num is high --> use 128-bit muldiv */
-  return gst_util_uint64_scale_uint64_unchecked (val, num, denom, &remainder);
+  return gst_util_uint64_scale_uint64_unchecked (val, num, denom);
 }
 
 /**
@@ -456,7 +432,6 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 guint64
 gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 {
-  guint32 remainder;
   g_return_val_if_fail (denom > 0, G_MAXUINT64);
   g_return_val_if_fail (num >= 0, G_MAXUINT64);
 
@@ -475,7 +450,7 @@ gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 
   /* num and denom are not negative so casts are OK */
   return gst_util_uint64_scale_uint32_unchecked (val, (guint32) num,
-      (guint32) denom, &remainder);
+      (guint32) denom);
 }
 
 /**
