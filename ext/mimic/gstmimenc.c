@@ -593,10 +593,19 @@ gst_mimenc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_OBJECT_LOCK (mimenc);
       mimenc->stop_paused_mode = FALSE;
-      if (mimenc->last_buffer == GST_CLOCK_TIME_NONE)
-        mimenc->last_buffer = gst_clock_get_time (GST_ELEMENT_CLOCK (mimenc))
-            - GST_ELEMENT_CAST (mimenc)->base_time;
       paused_mode = mimenc->paused_mode;
+      if (paused_mode) {
+        if (!GST_ELEMENT_CLOCK (mimenc)) {
+          GST_OBJECT_UNLOCK (mimenc);
+          GST_ELEMENT_ERROR (mimenc, RESOURCE, FAILED,
+              ("Using paused-mode requires a clock, but no clock was provided"
+                  " to the element"), (NULL));
+          return GST_STATE_CHANGE_FAILURE;
+        }
+        if (mimenc->last_buffer == GST_CLOCK_TIME_NONE)
+          mimenc->last_buffer = gst_clock_get_time (GST_ELEMENT_CLOCK (mimenc))
+              - GST_ELEMENT_CAST (mimenc)->base_time;
+      }
       GST_OBJECT_UNLOCK (mimenc);
       if (paused_mode) {
         if (!gst_pad_start_task (mimenc->srcpad, paused_mode_task, mimenc)) {
