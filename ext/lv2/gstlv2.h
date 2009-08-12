@@ -64,11 +64,14 @@ struct _GstLV2Group {
   guint pad; /**< Gst pad index */
   SLV2Value symbol; /**< Gst pad name / LV2 group symbol */
   GArray *ports; /**< Array of GstLV2Port */
+  gboolean has_roles; /**< TRUE iff all ports have a known role */
 };
 
 struct _GstLV2Port {
   gint index; /**< LV2 port index (on LV2 plugin) */
   gint pad; /**< Gst pad index (iff not part of a group) */
+  SLV2Value role; /**< Channel position / port role */
+  GstAudioChannelPosition position; /**< Channel position */
 };
 
 struct _GstLV2Class {

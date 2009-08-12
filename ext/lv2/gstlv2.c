@@ -40,6 +40,7 @@
 #include <glib.h>
 #include <gst/audio/audio.h>
 #include <gst/controller/gstcontroller.h>
+#include <gst/audio/multichannel.h>
 
 #include "gstlv2.h"
 #include <slv2/slv2.h>
@@ -67,7 +68,20 @@ SLV2Value integer_prop;
 SLV2Value toggled_prop;
 SLV2Value in_place_broken_pred;
 SLV2Value in_group_pred;
+SLV2Value has_role_pred;
 SLV2Value lv2_symbol_pred;
+
+SLV2Value center_role;
+SLV2Value left_role;
+SLV2Value right_role;
+SLV2Value rear_center_role;
+SLV2Value rear_left_role;
+SLV2Value rear_right_role;
+SLV2Value lfe_role;
+SLV2Value center_left_role;
+SLV2Value center_right_role;
+SLV2Value side_left_role;
+SLV2Value side_right_role;
 
 static GstSignalProcessorClass *parent_class;
 
@@ -75,6 +89,51 @@ static GstPlugin *gst_lv2_plugin;
 
 GST_DEBUG_CATEGORY_STATIC (lv2_debug);
 #define GST_CAT_DEFAULT lv2_debug
+
+/** Convert an LV2 port role to a Gst channel positon */
+static GstAudioChannelPosition
+gst_lv2_role_to_position (SLV2Value role)
+{
+  /* Front.  Mono and left/right are mututally exclusive */
+  if (slv2_value_equals (role, center_role)) {
+    /** WARNING: If the group has only a single port, this must be changed to
+     * GST_AUDIO_CHANNEL_POSITION_FRONT_MONO.  This can't be done by this
+     * function because this information isn't known at the time it is used.
+     */
+    return GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+  } else if (slv2_value_equals (role, left_role)) {
+    return GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+  } else if (slv2_value_equals (role, right_role)) {
+    return GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+
+    /* Rear. Left/right and center are mututally exclusive */
+  } else if (slv2_value_equals (role, rear_center_role)) {
+    return GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+  } else if (slv2_value_equals (role, rear_left_role)) {
+    return GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+  } else if (slv2_value_equals (role, rear_right_role)) {
+    return GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+
+    /* Subwoofer/low-frequency-effects */
+  } else if (slv2_value_equals (role, lfe_role)) {
+    return GST_AUDIO_CHANNEL_POSITION_LFE;
+
+    /* Center front speakers. Center and left/right_of_center
+     * are mutually exclusive */
+  } else if (slv2_value_equals (role, center_left_role)) {
+    return GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER;
+  } else if (slv2_value_equals (role, center_right_role)) {
+    return GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER;
+
+    /* sides */
+  } else if (slv2_value_equals (role, side_left_role)) {
+    return GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
+  } else if (slv2_value_equals (role, side_right_role)) {
+    return GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
+  }
+
+  return GST_AUDIO_CHANNEL_POSITION_INVALID;
+}
 
 /** Find and return the group @a uri in @a groups, or NULL if not found */
 static GstLV2Group *
@@ -85,6 +144,23 @@ gst_lv2_class_find_group (GArray * groups, SLV2Value uri)
     if (slv2_value_equals (g_array_index (groups, GstLV2Group, i).uri, uri))
       return &g_array_index (groups, GstLV2Group, i);
   return NULL;
+}
+
+static GstAudioChannelPosition *
+gst_lv2_build_positions (GstLV2Group * group)
+{
+  int i;
+  GstAudioChannelPosition *positions = NULL;
+  if (group->has_roles) {
+    positions = malloc (group->ports->len * sizeof (GstAudioChannelPosition));
+    for (i = 0; i < group->ports->len; ++i)
+      positions[i] = g_array_index (group->ports, GstLV2Port, i).position;
+
+    // Fix up mono groups (see WARNING above)
+    if (group->ports->len == 1)
+      positions[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+  }
+  return positions;
 }
 
 static void
@@ -98,6 +174,9 @@ gst_lv2_base_init (gpointer g_class)
   SLV2Value val;
   SLV2Values values, sub_values;
   GstLV2Group *group = NULL;
+  GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_INVALID;
+  GstAudioChannelPosition mono_position = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+  GstAudioChannelPosition *positions = NULL;
   guint j, in_pad_index = 0, out_pad_index = 0;
   gchar *klass_tags;
 
@@ -139,6 +218,7 @@ gst_lv2_base_init (gpointer g_class)
         g.uri = slv2_value_duplicate (group_uri);
         g.pad = is_input ? in_pad_index++ : out_pad_index++;
         g.ports = g_array_new (FALSE, TRUE, sizeof (GstLV2Port));
+        g.has_roles = TRUE;
         sub_values = slv2_plugin_get_value_for_subject (lv2plugin, group_uri,
             lv2_symbol_pred);
         if (slv2_values_size (sub_values) > 0)
@@ -149,6 +229,19 @@ gst_lv2_base_init (gpointer g_class)
 
         g_array_append_val (groups, g);
         group = &g_array_index (groups, GstLV2Group, groups->len - 1);
+      }
+
+      position = GST_AUDIO_CHANNEL_POSITION_INVALID;
+      sub_values = slv2_port_get_value (lv2plugin, port, has_role_pred);
+      if (slv2_values_size (sub_values) > 0) {
+        SLV2Value role = slv2_values_get_at (sub_values, 0);
+        position = gst_lv2_role_to_position (role);
+        slv2_values_free (sub_values);
+      }
+      if (position != GST_AUDIO_CHANNEL_POSITION_INVALID) {
+        desc.position = position;
+      } else {
+        group->has_roles = FALSE;
       }
 
       g_array_append_val (group->ports, desc);
@@ -184,17 +277,35 @@ gst_lv2_base_init (gpointer g_class)
   /* add input group pad templates */
   for (j = 0; j < gsp_class->num_group_in; ++j) {
     group = &g_array_index (klass->in_groups, GstLV2Group, j);
+    if (group->has_roles) {
+      positions = gst_lv2_build_positions (group);
+    }
+
     gst_signal_processor_class_add_pad_template (gsp_class,
         slv2_value_as_string (group->symbol),
-        GST_PAD_SINK, j, group->ports->len);
+        GST_PAD_SINK, j, group->ports->len, positions);
+
+    if (group->has_roles) {
+      free (positions);
+      positions = NULL;
+    }
   }
 
   /* add output group pad templates */
   for (j = 0; j < gsp_class->num_group_out; ++j) {
     group = &g_array_index (klass->out_groups, GstLV2Group, j);
+    if (group->has_roles) {
+      positions = gst_lv2_build_positions (group);
+    }
+
     gst_signal_processor_class_add_pad_template (gsp_class,
         slv2_value_as_string (group->symbol),
-        GST_PAD_SRC, j, group->ports->len);
+        GST_PAD_SRC, j, group->ports->len, positions);
+
+    if (group->has_roles) {
+      free (positions);
+      positions = NULL;
+    }
   }
 
   /* add non-grouped input port pad templates */
@@ -205,7 +316,7 @@ gst_lv2_base_init (gpointer g_class)
     const gchar *name =
         slv2_value_as_string (slv2_port_get_symbol (lv2plugin, port));
     gst_signal_processor_class_add_pad_template (gsp_class, name, GST_PAD_SINK,
-        j, 1);
+        j, 1, &mono_position);
   }
 
   /* add non-grouped output port pad templates */
@@ -216,7 +327,7 @@ gst_lv2_base_init (gpointer g_class)
     const gchar *name =
         slv2_value_as_string (slv2_port_get_symbol (lv2plugin, port));
     gst_signal_processor_class_add_pad_template (gsp_class, name, GST_PAD_SINK,
-        j, 1);
+        j, 1, &mono_position);
   }
 
   /* construct the element details struct */
@@ -651,7 +762,20 @@ plugin_init (GstPlugin * plugin)
   toggled_prop = slv2_value_new_uri (world, NS_LV2 "toggled");
   in_place_broken_pred = slv2_value_new_uri (world, NS_LV2 "inPlaceBroken");
   in_group_pred = slv2_value_new_uri (world, NS_PG "inGroup");
+  has_role_pred = slv2_value_new_uri (world, NS_PG "role");
   lv2_symbol_pred = slv2_value_new_string (world, NS_LV2 "symbol");
+
+  center_role = slv2_value_new_uri (world, NS_PG "centerChannel");
+  left_role = slv2_value_new_uri (world, NS_PG "leftChannel");
+  right_role = slv2_value_new_uri (world, NS_PG "rightChannel");
+  rear_center_role = slv2_value_new_uri (world, NS_PG "rearCenterChannel");
+  rear_left_role = slv2_value_new_uri (world, NS_PG "rearLeftChannel");
+  rear_right_role = slv2_value_new_uri (world, NS_PG "rearRightChannel");
+  lfe_role = slv2_value_new_uri (world, NS_PG "lfeChannel");
+  center_left_role = slv2_value_new_uri (world, NS_PG "centerLeftChannel");
+  center_right_role = slv2_value_new_uri (world, NS_PG "centerRightChannel");
+  side_left_role = slv2_value_new_uri (world, NS_PG "sideLeftChannel");
+  side_right_role = slv2_value_new_uri (world, NS_PG "sideRightChannel");
 
   parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
