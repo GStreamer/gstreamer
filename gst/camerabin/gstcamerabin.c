@@ -731,12 +731,10 @@ camerabin_create_elements (GstCameraBin * camera)
   /* To avoid deadlock, we won't restrict the image queue size */
   /* FIXME: actually we would like to have some kind of restriction here (size),
      but deadlocks must be handled somehow... */
-  g_object_set (G_OBJECT (camera->img_queue), "max-size-time",
-      G_GUINT64_CONSTANT (0), NULL);
-  g_object_set (G_OBJECT (camera->img_queue), "max-size-bytes",
-      G_GUINT64_CONSTANT (0), NULL);
-  g_object_set (G_OBJECT (camera->img_queue), "max-size-buffers",
-      G_GUINT64_CONSTANT (0), NULL);
+  g_object_set (G_OBJECT (camera->img_queue),
+      "max-size-time", G_GUINT64_CONSTANT (0),
+      "max-size-bytes", G_GUINT64_CONSTANT (0),
+      "max-size-buffers", G_GUINT64_CONSTANT (0), NULL);
 
   camera->pad_src_queue = gst_element_get_static_pad (camera->img_queue, "src");
 
@@ -3219,7 +3217,7 @@ gst_camerabin_user_res_fps (GstCameraBin * camera, gint width, gint height,
     gint fps_n, gint fps_d)
 {
   GstState state, pending;
-  GstPad *activepad;
+  GstPad *activepad = NULL;
 
   GST_INFO_OBJECT (camera, "switching resolution to %dx%d and fps to %d/%d",
       width, height, fps_n, fps_d);
@@ -3227,12 +3225,12 @@ gst_camerabin_user_res_fps (GstCameraBin * camera, gint width, gint height,
   /* Interrupt ongoing capture */
   gst_camerabin_do_stop (camera);
 
-  g_object_get (G_OBJECT (camera->src_out_sel), "active-pad", &activepad, NULL);
-
   gst_element_get_state (GST_ELEMENT (camera), &state, &pending, 0);
   if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING) {
     GST_INFO_OBJECT (camera,
         "changing to READY to initialize videosrc with new format");
+    g_object_get (G_OBJECT (camera->src_out_sel), "active-pad", &activepad,
+        NULL);
     gst_element_set_state (GST_ELEMENT (camera), GST_STATE_READY);
   }
   camera->width = width;
