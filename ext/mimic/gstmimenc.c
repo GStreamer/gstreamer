@@ -378,15 +378,15 @@ gst_mimenc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
   GST_BUFFER_TIMESTAMP (buf_header) = timestamp;
 
   p[0] = 24;
-  *((guchar *) (p + 1)) = paused ? 1 : 0;
-  *((guint16 *) (p + 2)) = GUINT16_TO_LE (mimenc->width);
-  *((guint16 *) (p + 4)) = GUINT16_TO_LE (mimenc->height);
-  *((guint16 *) (p + 6)) = keyframe ? 1 : 0;
-  *((guint32 *) (p + 8)) = GUINT32_TO_LE (payload_size);
-  *((guint32 *) (p + 12)) = paused ? 0 :
-      GUINT32_TO_LE (GST_MAKE_FOURCC ('M', 'L', '2', '0'));
-  *((guint32 *) (p + 16)) = 0;
-  *((guint32 *) (p + 20)) = timestamp / GST_MSECOND;
+  p[1] = paused ? 1 : 0;
+  GST_WRITE_UINT16_LE (p + 2, mimenc->width);
+  GST_WRITE_UINT16_LE (p + 4, mimenc->height);
+  GST_WRITE_UINT16_LE (p + 6, keyframe ? 1 : 0);
+  GST_WRITE_UINT32_LE (p + 8, payload_size);
+  GST_WRITE_UINT16_LE (p + 12, paused ? 0 :
+      GST_MAKE_FOURCC ('M', 'L', '2', '0'));
+  GST_WRITE_UINT32_LE (p + 16, 0);
+  GST_WRITE_UINT32_LE (p + 20, timestamp / GST_MSECOND);
 
   return buf_header;
 }
