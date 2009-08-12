@@ -49,9 +49,16 @@ gst_vdp_device_finalize (GObject * object)
 {
   GstVdpDevice *device = (GstVdpDevice *) object;
 
-  device->vdp_device_destroy (device->device);
-  XCloseDisplay (device->display);
+  if (device->device != VDP_INVALID_HANDLE) {
+    device->vdp_device_destroy (device->device);
+    device->device = VDP_INVALID_HANDLE;
+  }
+  if (device->display) {
+    XCloseDisplay (device->display);
+    device->display = NULL;
+  }
   g_free (device->display_name);
+  device->display_name = NULL;
 
   G_OBJECT_CLASS (gst_vdp_device_parent_class)->finalize (object);
 }

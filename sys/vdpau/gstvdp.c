@@ -12,12 +12,14 @@
 static gboolean
 vdpau_init (GstPlugin * vdpau_plugin)
 {
+  /* Before giving these elements a rank again, make sure they pass at
+   * least the generic/states test when there's no device available */
   gst_element_register (vdpau_plugin, "vdpaumpegdec",
-      GST_RANK_PRIMARY - 1, GST_TYPE_VDP_MPEG_DEC);
+      GST_RANK_NONE, GST_TYPE_VDP_MPEG_DEC);
   gst_element_register (vdpau_plugin, "vdpauvideoyuv",
-      GST_RANK_PRIMARY, GST_TYPE_VDP_VIDEO_YUV);
+      GST_RANK_NONE, GST_TYPE_VDP_VIDEO_YUV);
   gst_element_register (vdpau_plugin, "vdpauyuvvideo",
-      GST_RANK_PRIMARY, GST_TYPE_VDP_YUV_VIDEO);
+      GST_RANK_NONE, GST_TYPE_VDP_YUV_VIDEO);
 
   return TRUE;
 }
