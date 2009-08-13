@@ -32,6 +32,8 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 
+#include <gst/pbutils/missing-plugins.h>
+
 #include "gstfactorylists.h"
 #include "gstplay-marshal.h"
 #include "gstplay-enum.h"
@@ -619,7 +621,11 @@ static void
 unknown_type_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     GstURIDecodeBin * decoder)
 {
+  GstMessage *msg;
   gchar *capsstr;
+
+  msg = gst_missing_decoder_message_new (GST_ELEMENT_CAST (decoder), caps);
+  gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
 
   capsstr = gst_caps_to_string (caps);
   GST_ELEMENT_WARNING (decoder, STREAM, WRONG_TYPE,
