@@ -227,6 +227,32 @@ GST_START_TEST (test_math_scale)
 
 } GST_END_TEST;
 
+GST_START_TEST (test_math_scale_round)
+{
+  fail_if (gst_util_uint64_scale_int_round (2, 1, 2) != 1);
+  fail_if (gst_util_uint64_scale_int_round (3, 1, 2) != 2);
+  fail_if (gst_util_uint64_scale_int_round (4, 1, 2) != 2);
+
+  fail_if (gst_util_uint64_scale_int_round (200, 100, 20000) != 1);
+  fail_if (gst_util_uint64_scale_int_round (299, 100, 20000) != 1);
+  fail_if (gst_util_uint64_scale_int_round (300, 100, 20000) != 2);
+  fail_if (gst_util_uint64_scale_int_round (301, 100, 20000) != 2);
+  fail_if (gst_util_uint64_scale_int_round (400, 100, 20000) != 2);
+} GST_END_TEST;
+
+GST_START_TEST (test_math_scale_ceil)
+{
+  fail_if (gst_util_uint64_scale_int_ceil (2, 1, 2) != 1);
+  fail_if (gst_util_uint64_scale_int_ceil (3, 1, 2) != 2);
+  fail_if (gst_util_uint64_scale_int_ceil (4, 1, 2) != 2);
+
+  fail_if (gst_util_uint64_scale_int_ceil (200, 100, 20000) != 1);
+  fail_if (gst_util_uint64_scale_int_ceil (299, 100, 20000) != 2);
+  fail_if (gst_util_uint64_scale_int_ceil (300, 100, 20000) != 2);
+  fail_if (gst_util_uint64_scale_int_ceil (301, 100, 20000) != 2);
+  fail_if (gst_util_uint64_scale_int_ceil (400, 100, 20000) != 2);
+} GST_END_TEST;
+
 GST_START_TEST (test_math_scale_uint64)
 {
   fail_if (gst_util_uint64_scale (1, 1, 1) != 1);
@@ -722,6 +748,8 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_buffer_probe_n_times);
   tcase_add_test (tc_chain, test_buffer_probe_once);
   tcase_add_test (tc_chain, test_math_scale);
+  tcase_add_test (tc_chain, test_math_scale_round);
+  tcase_add_test (tc_chain, test_math_scale_ceil);
   tcase_add_test (tc_chain, test_math_scale_uint64);
   tcase_add_test (tc_chain, test_math_scale_random);
   tcase_add_test (tc_chain, test_guint64_to_gdouble);
