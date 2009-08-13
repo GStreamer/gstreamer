@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-05 00:36+0100\n"
+"POT-Creation-Date: 2009-08-13 10:58+0100\n"
 "PO-Revision-Date: 2009-05-15 22:41+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -126,6 +126,10 @@ msgstr ""
 msgid "This appears to be a text file"
 msgstr "Това изглежда е текстов файл"
 
+#, fuzzy
+msgid "Could not determine type of stream"
+msgstr "Не може да се създаде елемент „typefind“."
+
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Грешен адрес за субтитри „%s“, субтитрите са изключени."
@@ -179,7 +183,22 @@ msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 "Едновременно липсват елементите-приемници „autoaudiosink“ и „alsasink“."
 
-msgid "Both autovideosink and xvimagesink elements are not working."
+#, fuzzy, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr ""
+"Едновременно липсват елементите-приемници „autovideosink“ и „xvimagesink“."
+
+#, fuzzy
+msgid "The autovideosink element is missing."
+msgstr ""
+"Едновременно липсват елементите-приемници „autovideosink“ и „xvimagesink“."
+
+#, fuzzy, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "И двата елемента-приемници „autovideosink“ и „xvimagesink“ не работят."
+
+#, fuzzy
+msgid "The autovideosink element is not working."
 msgstr "И двата елемента-приемници „autovideosink“ и „xvimagesink“ не работят."
 
 msgid "Custom text sink element is not usable."
@@ -188,13 +207,29 @@ msgstr "Потребителският елемент-приемник за те
 msgid "No volume control found"
 msgstr "Липсва управление на силата на звука"
 
-msgid "Both autoaudiosink and alsasink elements are not working."
+#, fuzzy, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr ""
+"Едновременно липсват елементите-приемници „autoaudiosink“ и „alsasink“."
+
+#, fuzzy
+msgid "The autoaudiosink element is missing."
+msgstr ""
+"Едновременно липсват елементите-приемници „autoaudiosink“ и „alsasink“."
+
+#, fuzzy, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "И двата елемента-приемници „autoaudiosink“ и „alsasink“ не работят."
+
+#, fuzzy
+msgid "The autoaudiosink element is not working."
 msgstr "И двата елемента-приемници „autoaudiosink“ и „alsasink“ не работят."
 
 msgid "Can't play a text file without video."
 msgstr "Не може да се изпълни текстов файл без видео."
 
-msgid "Can't play a text subtitles and subpictures."
+#, fuzzy
+msgid "Can't display both text subtitles and subpictures."
 msgstr "Не може да се изпълнят текстови субтитри и подизображения."
 
 #, fuzzy
@@ -208,6 +243,10 @@ msgstr "Файлът „%s“ от виртуалната файлова сис�
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Файлът „%s“ не може да се отвори за четене."
+
+#, fuzzy
+msgid "Internal data flow error."
+msgstr "Вътрешна грешка на потока от данни."
 
 #, c-format
 msgid "No decoder available for type '%s'."

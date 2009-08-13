@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-05 00:36+0100\n"
+"POT-Creation-Date: 2009-08-13 10:58+0100\n"
 "PO-Revision-Date: 2009-05-13 00:01+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -121,6 +121,10 @@ msgstr "Cần phần bổ sung %s để phát luồng này nhưng chưa cài đ�
 msgid "This appears to be a text file"
 msgstr "Hình như đây là tập tin văn bản"
 
+#, fuzzy
+msgid "Could not determine type of stream"
+msgstr "Không thể tạo phần tử « typefind »."
+
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "URI phụ đề không hợp lệ « %s » nên tắt khả năng phụ đề."
@@ -171,7 +175,20 @@ msgstr "Thiếu phần tử « %s » — hãy kiểm tra lại cài đặt GStre
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử alsasink."
 
-msgid "Both autovideosink and xvimagesink elements are not working."
+#, fuzzy, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr "Thiếu phần tử autovideosink, cũng thiếu phần tử xvimagesink."
+
+#, fuzzy
+msgid "The autovideosink element is missing."
+msgstr "Thiếu phần tử autovideosink, cũng thiếu phần tử xvimagesink."
+
+#, fuzzy, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "Cả hai yếu tố autovideosink và xvimagesink không hoạt động."
+
+#, fuzzy
+msgid "The autovideosink element is not working."
 msgstr "Cả hai yếu tố autovideosink và xvimagesink không hoạt động."
 
 msgid "Custom text sink element is not usable."
@@ -180,13 +197,27 @@ msgstr "Không thể sử dụng yếu tố ổ chìm văn bản riêng."
 msgid "No volume control found"
 msgstr "Không tìm thấy điều khiển âm lượng"
 
-msgid "Both autoaudiosink and alsasink elements are not working."
+#, fuzzy, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử alsasink."
+
+#, fuzzy
+msgid "The autoaudiosink element is missing."
+msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử alsasink."
+
+#, fuzzy, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "Cả hai yếu tố autoaudiosink và alsasink không hoạt động."
+
+#, fuzzy
+msgid "The autoaudiosink element is not working."
 msgstr "Cả hai yếu tố autoaudiosink và alsasink không hoạt động."
 
 msgid "Can't play a text file without video."
 msgstr "Không thể phát tập tin văn bản mà không có ảnh động."
 
-msgid "Can't play a text subtitles and subpictures."
+#, fuzzy
+msgid "Can't display both text subtitles and subpictures."
 msgstr "Không thể hiển thị đồng thời phụ đề và ảnh phụ."
 
 #, fuzzy
@@ -200,6 +231,10 @@ msgstr "Không thể đóng tập tin VFS « %s »."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không thể mở tập tin « %s » để đọc."
+
+#, fuzzy
+msgid "Internal data flow error."
+msgstr "Lỗi luồng dữ liệu nội bộ."
 
 #, c-format
 msgid "No decoder available for type '%s'."

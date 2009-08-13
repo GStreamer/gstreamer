@@ -1767,7 +1767,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     need_text = (playsink->text_pad != NULL);
     need_subp = (playsink->subp_pad != NULL);
 
-    /* we can't handle both of them yet */
+    /* we can't handle both of them yet (FIXME: wouldn't it be better to just
+     * pick one and ignore the other then instead of erroring out?) */
     if (need_text && need_subp)
       goto subs_and_text;
   } else if (flags & GST_PLAY_FLAG_VIDEO && playsink->video_pad) {
@@ -2061,7 +2062,7 @@ subs_but_no_video:
 subs_and_text:
   {
     GST_ELEMENT_ERROR (playsink, STREAM, FORMAT,
-        (_("Can't play a text subtitles and subpictures.")),
+        (_("Can't display both text subtitles and subpictures.")),
         ("Have text pad and subpicture pad"));
     GST_PLAY_SINK_UNLOCK (playsink);
     return FALSE;

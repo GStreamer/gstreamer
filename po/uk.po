@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-05 00:36+0100\n"
+"POT-Creation-Date: 2009-08-13 10:58+0100\n"
 "PO-Revision-Date: 2007-09-07 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -123,6 +123,10 @@ msgstr "Для відтворення потоку потрібен модуль
 msgid "This appears to be a text file"
 msgstr "Файл схожий на текстовий файл"
 
+#, fuzzy
+msgid "Could not determine type of stream"
+msgstr "Не вдається створити елемент \"decodebin\"."
+
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Неправильний URI субтитру \"%s\", субтитри вимкнено."
@@ -173,8 +177,20 @@ msgstr "Відсутній елемент '%s' - перевірте встано
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Відсутні елементи autoaudiosink та alsasink."
 
+#, fuzzy, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr "Відсутні елементи autovideosink та xvimagesink."
+
 #, fuzzy
-msgid "Both autovideosink and xvimagesink elements are not working."
+msgid "The autovideosink element is missing."
+msgstr "Відсутні елементи autovideosink та xvimagesink."
+
+#, fuzzy, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "Відсутні елементи autovideosink та xvimagesink."
+
+#, fuzzy
+msgid "The autovideosink element is not working."
 msgstr "Відсутні елементи autovideosink та xvimagesink."
 
 msgid "Custom text sink element is not usable."
@@ -183,14 +199,26 @@ msgstr ""
 msgid "No volume control found"
 msgstr ""
 
+#, fuzzy, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr "Відсутні елементи autoaudiosink та alsasink."
+
 #, fuzzy
-msgid "Both autoaudiosink and alsasink elements are not working."
+msgid "The autoaudiosink element is missing."
+msgstr "Відсутні елементи autoaudiosink та alsasink."
+
+#, fuzzy, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "Відсутні елементи autoaudiosink та alsasink."
+
+#, fuzzy
+msgid "The autoaudiosink element is not working."
 msgstr "Відсутні елементи autoaudiosink та alsasink."
 
 msgid "Can't play a text file without video."
 msgstr ""
 
-msgid "Can't play a text subtitles and subpictures."
+msgid "Can't display both text subtitles and subpictures."
 msgstr ""
 
 #, fuzzy
@@ -204,6 +232,10 @@ msgstr "Не вдається закрити файл віртуальної ф�
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не вдається відкрити файл \"%s\" для читання."
+
+#, fuzzy
+msgid "Internal data flow error."
+msgstr "Помилка внутрішнього потоку даних."
 
 #, c-format
 msgid "No decoder available for type '%s'."

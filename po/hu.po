@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-05 00:36+0100\n"
+"POT-Creation-Date: 2009-08-13 10:58+0100\n"
 "PO-Revision-Date: 2009-04-20 01:44+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -127,6 +127,10 @@ msgstr ""
 msgid "This appears to be a text file"
 msgstr "Ez egy szövegfájlnak tűnik"
 
+#, fuzzy
+msgid "Could not determine type of stream"
+msgstr "Nem hozható létre „typefind” elem."
+
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Érvénytelen felirat URI: „%s”, a feliratok letiltva."
@@ -177,7 +181,20 @@ msgstr "A(z) „%s” elem hiányzik - ellenőrizze a Gstreamer telepítését."
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Mind az autoaudiosink, mind az  alsasink elemek hiányoznak."
 
-msgid "Both autovideosink and xvimagesink elements are not working."
+#, fuzzy, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr "Mind az autovideosink, mind az xvimagesink elemek hiányoznak."
+
+#, fuzzy
+msgid "The autovideosink element is missing."
+msgstr "Mind az autovideosink, mind az xvimagesink elemek hiányoznak."
+
+#, fuzzy, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "Sem az autovideosink, sem az xvimagesink elem nem működik."
+
+#, fuzzy
+msgid "The autovideosink element is not working."
 msgstr "Sem az autovideosink, sem az xvimagesink elem nem működik."
 
 msgid "Custom text sink element is not usable."
@@ -186,13 +203,27 @@ msgstr "Az egyéni szövegnyelő elem nem használható."
 msgid "No volume control found"
 msgstr "Nem található hangerőszabályzó"
 
-msgid "Both autoaudiosink and alsasink elements are not working."
+#, fuzzy, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr "Mind az autoaudiosink, mind az  alsasink elemek hiányoznak."
+
+#, fuzzy
+msgid "The autoaudiosink element is missing."
+msgstr "Mind az autoaudiosink, mind az  alsasink elemek hiányoznak."
+
+#, fuzzy, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "Sem az autoaudiosink, sem az alsasink elem nem működik."
+
+#, fuzzy
+msgid "The autoaudiosink element is not working."
 msgstr "Sem az autoaudiosink, sem az alsasink elem nem működik."
 
 msgid "Can't play a text file without video."
 msgstr "A szövegfájl nem játszható le videó nélkül."
 
-msgid "Can't play a text subtitles and subpictures."
+#, fuzzy
+msgid "Can't display both text subtitles and subpictures."
 msgstr "Nem játszható le szöveges felirat és részképek."
 
 #, fuzzy
@@ -206,6 +237,10 @@ msgstr "Nem lehet bezárni a(z) „%s” vfs-fájlt."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "A(z) „%s” fájl nem nyitható meg olvasásra."
+
+#, fuzzy
+msgid "Internal data flow error."
+msgstr "Belső adatfolyam-hiba."
 
 #, c-format
 msgid "No decoder available for type '%s'."

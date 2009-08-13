@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-05 00:36+0100\n"
+"POT-Creation-Date: 2009-08-13 10:58+0100\n"
 "PO-Revision-Date: 2009-06-21 23:55+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -129,6 +129,10 @@ msgstr ""
 msgid "This appears to be a text file"
 msgstr "Dies scheint eine Textdatei zu sein"
 
+#, fuzzy
+msgid "Could not determine type of stream"
+msgstr "Das Element »typefind« konnte nicht erstellt werden."
+
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Ungültige Untertitel-URI »%s«, Untertitel werden deaktiviert."
@@ -181,7 +185,20 @@ msgstr ""
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
 
-msgid "Both autovideosink and xvimagesink elements are not working."
+#, fuzzy, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr "Beide Elemente »autovideosink« und »xvimagesink« fehlen."
+
+#, fuzzy
+msgid "The autovideosink element is missing."
+msgstr "Beide Elemente »autovideosink« und »xvimagesink« fehlen."
+
+#, fuzzy, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "Beide Elemente »autovideosink« und »xvimagesink« funktionieren nicht."
+
+#, fuzzy
+msgid "The autovideosink element is not working."
 msgstr "Beide Elemente »autovideosink« und »xvimagesink« funktionieren nicht."
 
 msgid "Custom text sink element is not usable."
@@ -190,13 +207,27 @@ msgstr "Das eigene Element des Textziels ist nicht verwendbar."
 msgid "No volume control found"
 msgstr "Keine Lautstärkeregelung gefunden"
 
-msgid "Both autoaudiosink and alsasink elements are not working."
+#, fuzzy, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
+
+#, fuzzy
+msgid "The autoaudiosink element is missing."
+msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
+
+#, fuzzy, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "Beide Elemente »autoaudiosink« und »alsasink« funktionieren nicht."
+
+#, fuzzy
+msgid "The autoaudiosink element is not working."
 msgstr "Beide Elemente »autoaudiosink« und »alsasink« funktionieren nicht."
 
 msgid "Can't play a text file without video."
 msgstr "Es kann keine Textdatei ohne Video abgespielt werden."
 
-msgid "Can't play a text subtitles and subpictures."
+#, fuzzy
+msgid "Can't display both text subtitles and subpictures."
 msgstr "Es können keine Untertiteltexte und Kleinbilder abgespielt werden."
 
 #, fuzzy
@@ -210,6 +241,10 @@ msgstr "VFS-Datei »%s« konnte nicht geschlossen werden."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Die Datei »%s« konnte zum Lesen nicht geöffnet werden."
+
+#, fuzzy
+msgid "Internal data flow error."
+msgstr "Interner Fehler im Datenstrom."
 
 #, c-format
 msgid "No decoder available for type '%s'."
