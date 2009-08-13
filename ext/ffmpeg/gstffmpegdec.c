@@ -1689,10 +1689,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   /* recuperate the reordered timestamp */
   if (!opaque_find (ffmpegdec,
-          GSIZE_TO_POINTER (*((gsize *) & ffmpegdec->
-                  picture->reordered_opaque)), &out_pts, &out_offset)) {
+          (gpointer) (gulong) ffmpegdec->picture->reordered_opaque, &out_pts,
+          &out_offset)) {
     GST_DEBUG_OBJECT (ffmpegdec, "Failed to find opaque %p",
-        *((gsize *) & ffmpegdec->picture->reordered_opaque));
+        (gpointer) (gulong) ffmpegdec->picture->reordered_opaque);
     out_pts = -1;
     out_offset = GST_BUFFER_OFFSET_NONE;
   } else {
