@@ -65,6 +65,7 @@ struct _GstQTDemux {
   gint     n_subp_streams;
 
   guint  major_brand;
+  GstBuffer *comp_brands;
   GNode *moov_node;
   GNode *moov_node_compressed;
 

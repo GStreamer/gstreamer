@@ -1363,6 +1363,9 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       if (qtdemux->mdatbuffer)
         gst_buffer_unref (qtdemux->mdatbuffer);
       qtdemux->mdatbuffer = NULL;
+      if (qtdemux->comp_brands)
+        gst_buffer_unref (qtdemux->comp_brands);
+      qtdemux->comp_brands = NULL;
       gst_adapter_clear (qtdemux->adapter);
       for (n = 0; n < qtdemux->n_streams; n++) {
         QtDemuxStream *stream = qtdemux->streams[n];
@@ -1395,6 +1398,21 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
   }
 
   return result;
+}
+
+static void
+qtdemux_parse_ftyp (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
+{
+  /* only consider at least a sufficiently complete ftyp atom */
+  if (length >= 20) {
+    GstBuffer *buf;
+
+    qtdemux->major_brand = QT_FOURCC (buffer + 8);
+    GST_DEBUG_OBJECT (qtdemux, "major brand: %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (qtdemux->major_brand));
+    buf = qtdemux->comp_brands = gst_buffer_new_and_alloc (length - 16);
+    memcpy (GST_BUFFER_DATA (buf), buffer + 16, GST_BUFFER_SIZE (buf));
+  }
 }
 
 static void
@@ -1529,12 +1547,8 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       if (ret != GST_FLOW_OK)
         goto beach;
       qtdemux->offset += length;
-      /* only consider at least a sufficiently complete ftyp atom */
-      if (length >= 20) {
-        qtdemux->major_brand = QT_FOURCC (GST_BUFFER_DATA (ftyp) + 8);
-        GST_DEBUG_OBJECT (qtdemux, "major brand: %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (qtdemux->major_brand));
-      }
+      qtdemux_parse_ftyp (qtdemux, GST_BUFFER_DATA (ftyp),
+          GST_BUFFER_SIZE (ftyp));
       gst_buffer_unref (ftyp);
       break;
     }
@@ -4609,16 +4623,33 @@ unknown_stream:
   }
 }
 
+/* check if major or compatible brand is 3GP */
 static inline gboolean
-qtdemux_is_string_3gp (GstQTDemux * qtdemux, guint32 fourcc)
+qtdemux_is_brand_3gp (GstQTDemux * qtdemux, gboolean major)
 {
-  /* Detect if the tag must be handled as 3gpp - i18n metadata. The first
-   * check is for catching all the possible brands, e.g. 3gp4,3gp5,3gg6,.. and
-   * handling properly the tags present in more than one brand.*/
-  return ((qtdemux->major_brand & GST_MAKE_FOURCC (255, 255, 0, 0)) ==
-      GST_MAKE_FOURCC ('3', 'g', 0, 0)
-      && (fourcc == FOURCC_cprt || fourcc == FOURCC_gnre
-          || fourcc == FOURCC_kywd)) || fourcc == FOURCC_titl
+  if (major) {
+    return ((qtdemux->major_brand & GST_MAKE_FOURCC (255, 255, 0, 0)) ==
+        GST_MAKE_FOURCC ('3', 'g', 0, 0));
+  } else {
+    guint8 *data = GST_BUFFER_DATA (qtdemux->comp_brands);
+    guint size = GST_BUFFER_SIZE (qtdemux->comp_brands);
+    gboolean res = FALSE;
+
+    while (size >= 4) {
+      res = res || ((QT_FOURCC (data) & GST_MAKE_FOURCC (255, 255, 0, 0)) ==
+          GST_MAKE_FOURCC ('3', 'g', 0, 0));
+      data += 4;
+      size -= 4;
+    }
+    return res;
+  }
+}
+
+/* check if tag is a spec'ed 3GP tag keyword storing a string */
+static inline gboolean
+qtdemux_is_string_tag_3gp (GstQTDemux * qtdemux, guint32 fourcc)
+{
+  return fourcc == FOURCC_cprt || fourcc == FOURCC_gnre || fourcc == FOURCC_titl
       || fourcc == FOURCC_dscp || fourcc == FOURCC_perf || fourcc == FOURCC_auth
       || fourcc == FOURCC_albm;
 }
@@ -4728,9 +4759,9 @@ qtdemux_tag_add_classification (GstQTDemux * qtdemux, const char *tag,
   g_free (tag_str);
 }
 
-static void
-qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, const char *dummy,
-    GNode * node)
+static gboolean
+qtdemux_tag_add_str_full (GstQTDemux * qtdemux, const char *tag,
+    const char *dummy, GNode * node)
 {
   const gchar *env_vars[] = { "GST_QT_TAG_ENCODING", "GST_TAG_ENCODING", NULL };
   GNode *data;
@@ -4738,6 +4769,7 @@ qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, const char *dummy,
   int len;
   guint32 type;
   int offset;
+  gboolean ret = TRUE;
 
   data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
   if (data) {
@@ -4763,14 +4795,26 @@ qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, const char *dummy,
        * the language code, which we ignore */
       offset = 12;
       GST_DEBUG_OBJECT (qtdemux, "found international text tag");
-    } else if (qtdemux_is_string_3gp (qtdemux,
+    } else if (len > 14 && qtdemux_is_string_tag_3gp (qtdemux,
             QT_FOURCC ((guint8 *) node->data + 4))) {
-      offset = 14;
-      /* 16-bit Language code is ignored here as well */
-      GST_DEBUG_OBJECT (qtdemux, "found 3gpp text tag");
+      guint32 type = QT_UINT32 ((guint8 *) node->data + 8);
+
+      /* we go for 3GP style encoding if major brands claims so,
+       * or if no hope for data be ok UTF-8, and compatible 3GP brand present */
+      if (qtdemux_is_brand_3gp (qtdemux, TRUE) ||
+          (qtdemux_is_brand_3gp (qtdemux, FALSE) &&
+              ((type & 0x00FFFFFF) == 0x0) && (type >> 24 <= 0xF))) {
+        offset = 14;
+        /* 16-bit Language code is ignored here as well */
+        GST_DEBUG_OBJECT (qtdemux, "found 3gpp text tag");
+      } else {
+        goto normal;
+      }
     } else {
+    normal:
       offset = 8;
       GST_DEBUG_OBJECT (qtdemux, "found normal text tag");
+      ret = FALSE;              /* may have to fallback */
     }
     s = gst_tag_freeform_string_to_utf8 ((char *) node->data + offset,
         len - offset, env_vars);
@@ -4778,10 +4822,19 @@ qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, const char *dummy,
       GST_DEBUG_OBJECT (qtdemux, "adding tag %s", GST_STR_NULL (s));
       gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag, s, NULL);
       g_free (s);
+      ret = TRUE;
     } else {
       GST_DEBUG_OBJECT (qtdemux, "failed to convert %s tag to UTF-8", tag);
     }
   }
+  return ret;
+}
+
+static void
+qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag,
+    const char *dummy, GNode * node)
+{
+  qtdemux_tag_add_str_full (qtdemux, tag, dummy, node);
 }
 
 static void
@@ -4795,9 +4848,17 @@ qtdemux_tag_add_keywords (GstQTDemux * qtdemux, const char *tag,
   int offset;
   int count;
 
-  /* re-route to normal string tag if not 3GP */
-  if (!qtdemux_is_string_3gp (qtdemux, FOURCC_kywd))
-    return qtdemux_tag_add_str (qtdemux, tag, dummy, node);
+  /* first try normal string tag if major brand not 3GP */
+  if (!qtdemux_is_brand_3gp (qtdemux, TRUE)) {
+    if (!qtdemux_tag_add_str_full (qtdemux, tag, dummy, node)) {
+      /* hm, that did not work, maybe 3gpp storage in non-3gpp major brand;
+       * let's try it 3gpp way after minor safety check */
+      data = node->data;
+      if (QT_UINT32 (data) < 15 || !qtdemux_is_brand_3gp (qtdemux, FALSE))
+        return;
+    } else
+      return;
+  }
 
   GST_DEBUG_OBJECT (qtdemux, "found 3gpp keyword tag");
 
@@ -5011,11 +5072,16 @@ qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, const char *dummy,
   int type;
   int n;
 
-  /* re-route to normal string tag if 3GP */
-  if (qtdemux_is_string_3gp (qtdemux, FOURCC_gnre))
-    return qtdemux_tag_add_str (qtdemux, tag, dummy, node);
-
   data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
+
+  /* re-route to normal string tag if major brand says so
+   * or no data atom and compatible brand suggests so */
+  if (qtdemux_is_brand_3gp (qtdemux, TRUE) ||
+      (qtdemux_is_brand_3gp (qtdemux, FALSE) && !data)) {
+    qtdemux_tag_add_str (qtdemux, tag, dummy, node);
+    return;
+  }
+
   if (data) {
     len = QT_UINT32 (data->data);
     type = QT_UINT32 ((guint8 *) data->data + 8);
