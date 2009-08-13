@@ -1351,9 +1351,14 @@ override gst_pad_set_blocked_async args
 static void
 pad_block_destroy_data (gpointer data)
 {
-	PyObject *py_data = (PyObject *) data;
+    PyGILState_STATE state;
+    PyObject *py_data = (PyObject *) data;
+    
+    state = pyg_gil_state_ensure();
+ 
+    Py_DECREF (py_data);
 
-	Py_DECREF (py_data);
+    pyg_gil_state_release(state);
 }
 #endif
 
