@@ -1055,7 +1055,11 @@ EXPORTS
 	gst_util_set_object_arg
 	gst_util_set_value_from_string
 	gst_util_uint64_scale
+	gst_util_uint64_scale_ceil
 	gst_util_uint64_scale_int
+	gst_util_uint64_scale_int_ceil
+	gst_util_uint64_scale_int_round
+	gst_util_uint64_scale_round
 	gst_value_array_append_value
 	gst_value_array_get_size
 	gst_value_array_get_type
