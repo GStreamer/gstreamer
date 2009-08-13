@@ -250,6 +250,12 @@ else
 OFA_DIR=
 endif
 
+if USE_RSVG
+RSVG_DIR=rsvg
+else
+RSVG_DIR=
+endif
+
 if USE_TIMIDITY
 TIMIDITY_DIR=timidity
 endif
@@ -391,6 +397,7 @@ SUBDIRS=\
 	$(NAS_DIR) \
 	$(NEON_DIR) \
 	$(OFA_DIR) \
+	$(RSVG_DIR) \
 	$(POLYP_DIR) \
 	$(SCHRO_DIR) \
 	$(SDL_DIR) \
@@ -441,6 +448,7 @@ DIST_SUBDIRS = \
 	nas \
 	neon \
 	ofa \
+	rsvg \
 	resindvd \
 	schroedinger \
 	sdl \

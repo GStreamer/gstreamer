@@ -1303,6 +1303,17 @@ AG_GST_CHECK_FEATURE(OFA, [ofa plugins], ofa, [
   AC_SUBST(OFA_LIBS)
 ])
 
+dnl *** rsvg ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_RSVG, true)
+AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
+  PKG_CHECK_MODULES(RSVG, librsvg-2.0 >= 2.14 cairo, HAVE_RSVG="yes", [
+    HAVE_RSVG="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(RSVG_CFLAGS)
+  AC_SUBST(RSVG_LIBS)
+])
+
 dnl *** timidity ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TIMIDITY, true)
 AG_GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
@@ -1805,6 +1816,7 @@ ext/mythtv/Makefile
 ext/nas/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile
+ext/rsvg/Makefile
 ext/resindvd/Makefile
 ext/schroedinger/Makefile
 ext/sdl/Makefile
