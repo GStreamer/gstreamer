@@ -736,7 +736,9 @@ _wrap_gst_pad_link(PyGObject *self, PyObject *args, PyObject *kwargs)
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:GstPad.link", kwlist,
                                      &PyGstPad_Type, &sinkpad))
         return NULL;
+    pyg_begin_allow_threads;
     ret = gst_pad_link(GST_PAD(self->obj), GST_PAD(sinkpad->obj));
+    pyg_end_allow_threads;
     if (ret) {
         PyObject *exc_val = pyg_enum_from_gtype(GST_TYPE_PAD_LINK_RETURN, ret);
         PyErr_SetObject(PyGstExc_LinkError, exc_val);
