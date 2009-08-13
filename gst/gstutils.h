@@ -64,8 +64,12 @@ gdouble         gst_util_guint64_to_gdouble     (guint64 value)  G_GNUC_PURE;
 #endif
 
 guint64		gst_util_uint64_scale		(guint64 val, guint64 num, guint64 denom) G_GNUC_PURE;
+guint64		gst_util_uint64_scale_round	(guint64 val, guint64 num, guint64 denom) G_GNUC_PURE;
+guint64		gst_util_uint64_scale_ceil	(guint64 val, guint64 num, guint64 denom) G_GNUC_PURE;
 
 guint64         gst_util_uint64_scale_int       (guint64 val, gint num, gint denom) G_GNUC_PURE;
+guint64         gst_util_uint64_scale_int_round (guint64 val, gint num, gint denom) G_GNUC_PURE;
+guint64         gst_util_uint64_scale_int_ceil  (guint64 val, gint num, gint denom) G_GNUC_PURE;
 
 guint32         gst_util_seqnum_next            (void);
 gint32          gst_util_seqnum_compare         (guint32 s1, guint32 s2);

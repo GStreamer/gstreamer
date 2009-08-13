@@ -204,6 +204,14 @@ typedef union
   } l;
 } GstUInt64;
 
+/* used internally by muldiv functions to control rounding mode */
+typedef enum
+{
+  GST_ROUND_TONEAREST,
+  GST_ROUND_UP,
+  GST_ROUND_DOWN,
+} GstRoundingMode;
+
 /* multiply two 64-bit unsigned ints into a 128-bit unsigned int.  the high
  * and low 64 bits of the product are placed in c1 and c0 respectively.
  * this operation cannot overflow. */
@@ -342,12 +350,42 @@ gst_util_div96_32 (guint64 c1, guint64 c0, guint32 denom)
 }
 
 static guint64
-gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num, guint64 denom)
+gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
+    guint64 denom, GstRoundingMode mode)
 {
   GstUInt64 c1, c0;
 
   /* compute 128-bit numerator product */
   gst_util_uint64_mul_uint64 (&c1, &c0, val, num);
+
+  /* condition numerator based on rounding mode */
+  switch (mode) {
+    case GST_ROUND_TONEAREST:
+      /* add 1/2 the denominator to the numerator with carry */
+      if (G_MAXUINT64 - c0.ll < denom / 2) {
+        if (G_UNLIKELY (c1.ll == G_MAXUINT64))
+          /* overflow */
+          return G_MAXUINT64;
+        c1.ll++;
+      }
+      c0.ll += denom / 2;
+      break;
+
+    case GST_ROUND_UP:
+      /* add denominator - 1 to the numerator with carry */
+      if (G_MAXUINT64 - c0.ll < denom - 1) {
+        if (G_UNLIKELY (c1.ll == G_MAXUINT64))
+          /* overflow */
+          return G_MAXUINT64;
+        c1.ll++;
+      }
+      c0.ll += denom - 1;
+      break;
+
+    case GST_ROUND_DOWN:
+      /* natural behaviour */
+      break;
+  }
 
   /* high word as big as or bigger than denom --> overflow */
   if (G_UNLIKELY (c1.ll >= denom))
@@ -358,12 +396,42 @@ gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num, guint64 denom)
 }
 
 static inline guint64
-gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num, guint32 denom)
+gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num,
+    guint32 denom, GstRoundingMode mode)
 {
   GstUInt64 c1, c0;
 
   /* compute 96-bit numerator product */
   gst_util_uint64_mul_uint32 (&c1, &c0, val, num);
+
+  /* condition numerator based on rounding mode */
+  switch (mode) {
+    case GST_ROUND_TONEAREST:
+      /* add 1/2 the denominator to the numerator with carry */
+      if (G_MAXUINT64 - c0.ll < denom / 2) {
+        if (G_UNLIKELY (c1.ll == G_MAXUINT64))
+          /* overflow */
+          return G_MAXUINT64;
+        c1.ll++;
+      }
+      c0.ll += denom / 2;
+      break;
+
+    case GST_ROUND_UP:
+      /* add denominator - 1 to the numerator with carry */
+      if (G_MAXUINT64 - c0.ll < denom - 1) {
+        if (G_UNLIKELY (c1.ll == G_MAXUINT64))
+          /* overflow */
+          return G_MAXUINT64;
+        c1.ll++;
+      }
+      c0.ll += denom - 1;
+      break;
+
+    case GST_ROUND_DOWN:
+      /* natural behaviour */
+      break;
+  }
 
   /* high 32 bits as big as or bigger than denom --> overflow */
   if (G_UNLIKELY (c1.l.high >= denom))
@@ -371,6 +439,36 @@ gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num, guint32 denom)
 
   /* compute quotient, fits in 64 bits */
   return gst_util_div96_32 (c1.ll, c0.ll, denom);
+}
+
+/* the guts of the gst_util_uint64_scale() variants */
+static guint64
+_gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom,
+    GstRoundingMode mode)
+{
+  g_return_val_if_fail (denom != 0, G_MAXUINT64);
+
+  if (G_UNLIKELY (num == 0))
+    return 0;
+
+  if (G_UNLIKELY (num == denom))
+    return val;
+
+  /* denom is low --> try to use 96 bit muldiv */
+  if (G_LIKELY (denom <= G_MAXUINT32)) {
+    /* num is low --> use 96 bit muldiv */
+    if (G_LIKELY (num <= G_MAXUINT32))
+      return gst_util_uint64_scale_uint32_unchecked (val, (guint32) num,
+          (guint32) denom, mode);
+
+    /* num is high but val is low --> swap and use 96-bit muldiv */
+    if (G_LIKELY (val <= G_MAXUINT32))
+      return gst_util_uint64_scale_uint32_unchecked (num, (guint32) val,
+          (guint32) denom, mode);
+  }
+
+  /* val is high and num is high --> use 128-bit muldiv */
+  return gst_util_uint64_scale_uint64_unchecked (val, num, denom, mode);
 }
 
 /**
@@ -386,12 +484,75 @@ gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num, guint32 denom)
  * greater than G_MAXUINT32.
  *
  * Returns: @val * @num / @denom.  In the case of an overflow, this
- * function returns G_MAXUINT64.
+ * function returns G_MAXUINT64.  If the result is not exactly
+ * representable as an integer it is truncated.  See also
+ * gst_util_uint64_scale_round(), gst_util_uint64_scale_ceil(),
+ * gst_util_uint64_scale_int(), gst_util_uint64_scale_int_round(),
+ * gst_util_uint64_scale_int_ceil().
  */
 guint64
 gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 {
-  g_return_val_if_fail (denom != 0, G_MAXUINT64);
+  return _gst_util_uint64_scale (val, num, denom, GST_ROUND_DOWN);
+}
+
+/**
+ * gst_util_uint64_scale_round:
+ * @val: the number to scale
+ * @num: the numerator of the scale ratio
+ * @denom: the denominator of the scale ratio
+ *
+ * Scale @val by the rational number @num / @denom, avoiding overflows and
+ * underflows and without loss of precision.
+ *
+ * This function can potentially be very slow if val and num are both
+ * greater than G_MAXUINT32.
+ *
+ * Returns: @val * @num / @denom.  In the case of an overflow, this
+ * function returns G_MAXUINT64.  If the result is not exactly
+ * representable as an integer, it is rounded to the nearest integer
+ * (half-way cases are rounded up).  See also gst_util_uint64_scale(),
+ * gst_util_uint64_scale_ceil(), gst_util_uint64_scale_int(),
+ * gst_util_uint64_scale_int_round(), gst_util_uint64_scale_int_ceil().
+ */
+guint64
+gst_util_uint64_scale_round (guint64 val, guint64 num, guint64 denom)
+{
+  return _gst_util_uint64_scale (val, num, denom, GST_ROUND_TONEAREST);
+}
+
+/**
+ * gst_util_uint64_scale_ceil:
+ * @val: the number to scale
+ * @num: the numerator of the scale ratio
+ * @denom: the denominator of the scale ratio
+ *
+ * Scale @val by the rational number @num / @denom, avoiding overflows and
+ * underflows and without loss of precision.
+ *
+ * This function can potentially be very slow if val and num are both
+ * greater than G_MAXUINT32.
+ *
+ * Returns: @val * @num / @denom.  In the case of an overflow, this
+ * function returns G_MAXUINT64.  If the result is not exactly
+ * representable as an integer, it is rounded up.  See also
+ * gst_util_uint64_scale(), gst_util_uint64_scale_round(),
+ * gst_util_uint64_scale_int(), gst_util_uint64_scale_int_round(),
+ * gst_util_uint64_scale_int_ceil().
+ */
+guint64
+gst_util_uint64_scale_ceil (guint64 val, guint64 num, guint64 denom)
+{
+  return _gst_util_uint64_scale (val, num, denom, GST_ROUND_UP);
+}
+
+/* the guts of the gst_util_uint64_scale_int() variants */
+static guint64
+_gst_util_uint64_scale_int (guint64 val, gint num, gint denom,
+    GstRoundingMode mode)
+{
+  g_return_val_if_fail (denom > 0, G_MAXUINT64);
+  g_return_val_if_fail (num >= 0, G_MAXUINT64);
 
   if (G_UNLIKELY (num == 0))
     return 0;
@@ -399,21 +560,33 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
   if (G_UNLIKELY (num == denom))
     return val;
 
-  /* denom is low --> try to use 96 bit muldiv */
-  if (G_LIKELY (denom <= G_MAXUINT32)) {
-    /* num is low --> use 96 bit muldiv */
-    if (G_LIKELY (num <= G_MAXUINT32))
-      return gst_util_uint64_scale_uint32_unchecked (val, (guint32) num,
-          (guint32) denom);
+  if (val <= G_MAXUINT32) {
+    /* simple case.  num and denom are not negative so casts are OK.  when
+     * not truncating, the additions to the numerator cannot overflow
+     * because val*num <= G_MAXUINT32 * G_MAXINT32 < G_MAXUINT64 -
+     * G_MAXINT32, so there's room to add another gint32. */
+    val *= (guint64) num;
+    switch (mode) {
+      case GST_ROUND_TONEAREST:
+        /* add 1/2 the denominator to the numerator. */
+        val += denom / 2;
+        break;
 
-    /* num is high but val is low --> swap and use 96-bit muldiv */
-    if (G_LIKELY (val <= G_MAXUINT32))
-      return gst_util_uint64_scale_uint32_unchecked (num, (guint32) val,
-          (guint32) denom);
+      case GST_ROUND_UP:
+        /* add denominator - 1 to the numerator. */
+        val += denom - 1;
+        break;
+
+      case GST_ROUND_DOWN:
+        /* natural behaviour */
+        break;
+    }
+    return val / (guint64) denom;
   }
 
-  /* val is high and num is high --> use 128-bit muldiv */
-  return gst_util_uint64_scale_uint64_unchecked (val, num, denom);
+  /* num and denom are not negative so casts are OK */
+  return gst_util_uint64_scale_uint32_unchecked (val, (guint32) num,
+      (guint32) denom, mode);
 }
 
 /**
@@ -427,30 +600,62 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
  * @denom must be positive.
  *
  * Returns: @val * @num / @denom.  In the case of an overflow, this
- * function returns G_MAXUINT64.
+ * function returns G_MAXUINT64.  If the result is not exactly
+ * representable as an integer, it is truncated.  See also
+ * gst_util_uint64_scale_int_round(), gst_util_uint64_scale_int_ceil(),
+ * gst_util_uint64_scale(), gst_util_uint64_scale_round(),
+ * gst_util_uint64_scale_ceil().
  */
 guint64
 gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 {
-  g_return_val_if_fail (denom > 0, G_MAXUINT64);
-  g_return_val_if_fail (num >= 0, G_MAXUINT64);
+  return _gst_util_uint64_scale_int (val, num, denom, GST_ROUND_DOWN);
+}
 
-  if (G_UNLIKELY (num == 0))
-    return 0;
+/**
+ * gst_util_uint64_scale_int_round:
+ * @val: guint64 (such as a #GstClockTime) to scale.
+ * @num: numerator of the scale factor.
+ * @denom: denominator of the scale factor.
+ *
+ * Scale @val by the rational number @num / @denom, avoiding overflows and
+ * underflows and without loss of precision.  @num must be non-negative and
+ * @denom must be positive.
+ *
+ * Returns: @val * @num / @denom.  In the case of an overflow, this
+ * function returns G_MAXUINT64.  If the result is not exactly
+ * representable as an integer, it is rounded to the nearest integer
+ * (half-way cases are rounded up).  See also gst_util_uint64_scale_int(),
+ * gst_util_uint64_scale_int_ceil(), gst_util_uint64_scale(),
+ * gst_util_uint64_scale_round(), gst_util_uint64_scale_ceil().
+ */
+guint64
+gst_util_uint64_scale_int_round (guint64 val, gint num, gint denom)
+{
+  return _gst_util_uint64_scale_int (val, num, denom, GST_ROUND_TONEAREST);
+}
 
-  if (G_UNLIKELY (num == denom))
-    return val;
-
-  if (val <= G_MAXUINT32) {
-    /* simple case, use two statements to prevent optimizer from screwing
-     * up result.  num and denom are not negative so casts are OK */
-    val *= (guint64) num;
-    return val / (guint64) denom;
-  }
-
-  /* num and denom are not negative so casts are OK */
-  return gst_util_uint64_scale_uint32_unchecked (val, (guint32) num,
-      (guint32) denom);
+/**
+ * gst_util_uint64_scale_int_ceil:
+ * @val: guint64 (such as a #GstClockTime) to scale.
+ * @num: numerator of the scale factor.
+ * @denom: denominator of the scale factor.
+ *
+ * Scale @val by the rational number @num / @denom, avoiding overflows and
+ * underflows and without loss of precision.  @num must be non-negative and
+ * @denom must be positive.
+ *
+ * Returns: @val * @num / @denom.  In the case of an overflow, this
+ * function returns G_MAXUINT64.  If the result is not exactly
+ * representable as an integer, it is rounded up.  See also
+ * gst_util_uint64_scale_int(), gst_util_uint64_scale_int_round(),
+ * gst_util_uint64_scale(), gst_util_uint64_scale_round(),
+ * gst_util_uint64_scale_ceil().
+ */
+guint64
+gst_util_uint64_scale_int_ceil (guint64 val, gint num, gint denom)
+{
+  return _gst_util_uint64_scale_int (val, num, denom, GST_ROUND_UP);
 }
 
 /**
