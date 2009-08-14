@@ -60,28 +60,28 @@ static void gst_lv2_cleanup (GstSignalProcessor * sigproc);
 static void gst_lv2_process (GstSignalProcessor * sigproc, guint nframes);
 
 static SLV2World world;
-SLV2Value audio_class;
-SLV2Value control_class;
-SLV2Value input_class;
-SLV2Value output_class;
-SLV2Value integer_prop;
-SLV2Value toggled_prop;
-SLV2Value in_place_broken_pred;
-SLV2Value in_group_pred;
-SLV2Value has_role_pred;
-SLV2Value lv2_symbol_pred;
+static SLV2Value audio_class;
+static SLV2Value control_class;
+static SLV2Value input_class;
+static SLV2Value output_class;
+static SLV2Value integer_prop;
+static SLV2Value toggled_prop;
+static SLV2Value in_place_broken_pred;
+static SLV2Value in_group_pred;
+static SLV2Value has_role_pred;
+static SLV2Value lv2_symbol_pred;
 
-SLV2Value center_role;
-SLV2Value left_role;
-SLV2Value right_role;
-SLV2Value rear_center_role;
-SLV2Value rear_left_role;
-SLV2Value rear_right_role;
-SLV2Value lfe_role;
-SLV2Value center_left_role;
-SLV2Value center_right_role;
-SLV2Value side_left_role;
-SLV2Value side_right_role;
+static SLV2Value center_role;
+static SLV2Value left_role;
+static SLV2Value right_role;
+static SLV2Value rear_center_role;
+static SLV2Value rear_left_role;
+static SLV2Value rear_right_role;
+static SLV2Value lfe_role;
+static SLV2Value center_left_role;
+static SLV2Value center_right_role;
+static SLV2Value side_left_role;
+static SLV2Value side_right_role;
 
 static GstSignalProcessorClass *parent_class;
 
@@ -209,6 +209,7 @@ gst_lv2_base_init (gpointer g_class)
   for (j = 0; j < slv2_plugin_get_num_ports (lv2plugin); j++) {
     const SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, j);
     const gboolean is_input = slv2_port_is_a (lv2plugin, port, input_class);
+    gboolean in_group = FALSE;
     struct _GstLV2Port desc = { j, 0 };
     values = slv2_port_get_value (lv2plugin, port, in_group_pred);
 
@@ -217,41 +218,58 @@ gst_lv2_base_init (gpointer g_class)
       SLV2Value group_uri = slv2_values_get_at (values, 0);
       GArray *groups = is_input ? klass->in_groups : klass->out_groups;
       GstLV2Group *group = gst_lv2_class_find_group (groups, group_uri);
+      in_group = TRUE;
       if (group == NULL) {
         GstLV2Group g;
         g.uri = slv2_value_duplicate (group_uri);
         g.pad = is_input ? in_pad_index++ : out_pad_index++;
         g.ports = g_array_new (FALSE, TRUE, sizeof (GstLV2Port));
         g.has_roles = TRUE;
+        g.symbol = NULL;
         sub_values = slv2_plugin_get_value_for_subject (lv2plugin, group_uri,
             lv2_symbol_pred);
-        if (slv2_values_size (sub_values) > 0)
+        /* symbol is mandatory */
+        if (slv2_values_size (sub_values) > 0) {
           g.symbol = slv2_value_duplicate (slv2_values_get_at (sub_values, 0));
-        else
-          g.symbol = NULL;
+          if (!gst_element_class_get_pad_template (element_class,
+                  slv2_value_as_string (g.symbol))) {
+            g_array_append_val (groups, g);
+            group = &g_array_index (groups, GstLV2Group, groups->len - 1);
+            assert (group);
+            assert (slv2_value_equals (group->uri, group_uri));
+          } else {
+            GST_WARNING ("plugin %s has duplicate group symbol '%s'\n",
+                slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)),
+                slv2_value_as_string (g.symbol));
+            in_group = FALSE;
+          }
+        } else {
+          GST_WARNING ("plugin %s has illegal group with no symbol\n",
+              slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)));
+          in_group = FALSE;
+        }
+      }
+
+      if (in_group) {
+        position = GST_AUDIO_CHANNEL_POSITION_INVALID;
+        sub_values = slv2_port_get_value (lv2plugin, port, has_role_pred);
+        if (slv2_values_size (sub_values) > 0) {
+          SLV2Value role = slv2_values_get_at (sub_values, 0);
+          position = gst_lv2_role_to_position (role);
+        }
         slv2_values_free (sub_values);
-
-        g_array_append_val (groups, g);
-        group = &g_array_index (groups, GstLV2Group, groups->len - 1);
+        if (position != GST_AUDIO_CHANNEL_POSITION_INVALID) {
+          desc.position = position;
+          g_array_append_val (group->ports, desc);
+        } else {
+          in_group = FALSE;
+        }
       }
+    }
 
-      position = GST_AUDIO_CHANNEL_POSITION_INVALID;
-      sub_values = slv2_port_get_value (lv2plugin, port, has_role_pred);
-      if (slv2_values_size (sub_values) > 0) {
-        SLV2Value role = slv2_values_get_at (sub_values, 0);
-        position = gst_lv2_role_to_position (role);
-        slv2_values_free (sub_values);
-      }
-      if (position != GST_AUDIO_CHANNEL_POSITION_INVALID) {
-        desc.position = position;
-      } else {
-        group->has_roles = FALSE;
-      }
-
-      g_array_append_val (group->ports, desc);
-
-    } else {
-      /* port is not part of a group */
+    if (!in_group) {
+      /* port is not part of a group, or it is part of a group but that group
+       * is illegal so we just ignore it */
       if (slv2_port_is_a (lv2plugin, port, audio_class)) {
         desc.pad = is_input ? in_pad_index++ : out_pad_index++;
         if (is_input)
@@ -786,6 +804,38 @@ plugin_init (GstPlugin * plugin)
   gst_lv2_plugin = plugin;
 
   return lv2_plugin_discover ();
+}
+
+#ifdef __GNUC__
+__attribute__ ((destructor))
+#endif
+     static void plugin_cleanup (GstPlugin * plugin)
+{
+  slv2_value_free (audio_class);
+  slv2_value_free (control_class);
+  slv2_value_free (input_class);
+  slv2_value_free (output_class);
+
+  slv2_value_free (integer_prop);
+  slv2_value_free (toggled_prop);
+  slv2_value_free (in_place_broken_pred);
+  slv2_value_free (in_group_pred);
+  slv2_value_free (has_role_pred);
+  slv2_value_free (lv2_symbol_pred);
+
+  slv2_value_free (center_role);
+  slv2_value_free (left_role);
+  slv2_value_free (right_role);
+  slv2_value_free (rear_center_role);
+  slv2_value_free (rear_left_role);
+  slv2_value_free (rear_right_role);
+  slv2_value_free (lfe_role);
+  slv2_value_free (center_left_role);
+  slv2_value_free (center_right_role);
+  slv2_value_free (side_left_role);
+  slv2_value_free (side_right_role);
+
+  slv2_world_free (world);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
