@@ -1620,6 +1620,9 @@ mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
         gst_util_guint64_to_gdouble (total_time), 0.0, 100.0);
     gint index = CLAMP (percent, 0, 99);
 
+    /* xing indicated size is preferred over e.g. truncated file size */
+    if (mp3parse->xing_bytes)
+      total_bytes = mp3parse->xing_bytes;
     fa = mp3parse->xing_seek_table[index];
     if (index < 99)
       fb = mp3parse->xing_seek_table[index + 1];
@@ -1639,6 +1642,9 @@ mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
     gint i, j;
     gdouble a, b, fa, fb;
 
+    /* header indicated size is preferred over e.g. truncated file size */
+    if (mp3parse->vbri_bytes)
+      total_bytes = mp3parse->vbri_bytes;
     i = gst_util_uint64_scale (ts, mp3parse->vbri_seek_points - 1, total_time);
     i = CLAMP (i, 0, mp3parse->vbri_seek_points - 1);
 
@@ -1695,9 +1701,14 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
       mp3parse_total_bytes (mp3parse, &total_bytes) &&
       mp3parse_total_time (mp3parse, &total_time)) {
     gdouble fa, fb, fx;
-    gdouble pos = CLAMP ((bytepos * 256.0) / total_bytes, 0.0, 256.0);
-    gint index = CLAMP (pos, 0, 255);
+    gdouble pos;
+    gint index;
 
+    /* xing indicated size is preferred over e.g. truncated file size */
+    if (mp3parse->xing_bytes)
+      total_bytes = mp3parse->xing_bytes;
+    pos = CLAMP ((bytepos * 256.0) / total_bytes, 0.0, 256.0);
+    index = CLAMP (pos, 0, 255);
     fa = mp3parse->xing_seek_table_inverse[index];
     if (index < 255)
       fb = mp3parse->xing_seek_table_inverse[index + 1];
@@ -1718,6 +1729,9 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
     guint64 sum = 0;
     gdouble a, b, fa, fb;
 
+    /* header indicated size is preferred over e.g. truncated file size */
+    if (mp3parse->vbri_bytes)
+      total_bytes = mp3parse->vbri_bytes;
     do {
       sum += mp3parse->vbri_seek_table[i];
       i++;
