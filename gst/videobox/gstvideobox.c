@@ -76,6 +76,8 @@ struct _GstVideoBox
 {
   GstBaseTransform element;
 
+  /* Guarding everything below */
+  GMutex *mutex;
   /* caps */
   guint32 in_fourcc;
   gint in_width, in_height;
@@ -219,6 +221,19 @@ gst_video_box_base_init (gpointer g_class)
 }
 
 static void
+gst_video_box_finalize (GObject * object)
+{
+  GstVideoBox *video_box = GST_VIDEO_BOX (object);
+
+  if (video_box->mutex) {
+    g_mutex_free (video_box->mutex);
+    video_box->mutex = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_video_box_class_init (GstVideoBoxClass * klass)
 {
   GObjectClass *gobject_class;
@@ -229,6 +244,7 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
 
   gobject_class->set_property = gst_video_box_set_property;
   gobject_class->get_property = gst_video_box_get_property;
+  gobject_class->finalize = gst_video_box_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILL_TYPE,
       g_param_spec_enum ("fill", "Fill", "How to fill the borders",
@@ -286,6 +302,8 @@ gst_video_box_init (GstVideoBox * video_box, GstVideoBoxClass * g_class)
   video_box->alpha = DEFAULT_ALPHA;
   video_box->border_alpha = DEFAULT_BORDER_ALPHA;
   video_box->autocrop = FALSE;
+
+  video_box->mutex = g_mutex_new ();
 }
 
 static void
@@ -294,7 +312,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (object);
 
-  GST_BASE_TRANSFORM_LOCK (GST_BASE_TRANSFORM_CAST (video_box));
+  g_mutex_lock (video_box->mutex);
   switch (prop_id) {
     case PROP_LEFT:
       video_box->box_left = g_value_get_int (value);
@@ -353,11 +371,11 @@ gst_video_box_set_property (GObject * object, guint prop_id,
       break;
   }
   video_box_recalc_transform (video_box);
-  /*
-     GST_DEBUG_OBJECT (video_box, "Calling reconfigure");
-     gst_base_transform_reconfigure (GST_BASE_TRANSFORM (video_box));
-   */
-  GST_BASE_TRANSFORM_UNLOCK (GST_BASE_TRANSFORM_CAST (video_box));
+
+  GST_DEBUG_OBJECT (video_box, "Calling reconfigure");
+  gst_base_transform_reconfigure (GST_BASE_TRANSFORM (video_box));
+
+  g_mutex_unlock (video_box->mutex);
 }
 
 static void
@@ -366,8 +384,7 @@ gst_video_box_autocrop (GstVideoBox * video_box)
   gint crop_w = (video_box->in_width - video_box->out_width) / 2;
   gint crop_h = (video_box->in_height - video_box->out_height) / 2;
 
-  GST_BASE_TRANSFORM_LOCK (GST_BASE_TRANSFORM_CAST (video_box));
-
+  g_mutex_lock (video_box->mutex);
   video_box->box_left = crop_w;
   if (video_box->box_left < 0) {
     video_box->border_left = -video_box->box_left;
@@ -404,7 +421,7 @@ gst_video_box_autocrop (GstVideoBox * video_box)
     video_box->crop_bottom = video_box->box_bottom;
   }
 
-  GST_BASE_TRANSFORM_UNLOCK (GST_BASE_TRANSFORM_CAST (video_box));
+  g_mutex_unlock (video_box->mutex);
 }
 
 static void
@@ -1239,6 +1256,7 @@ gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
   indata = GST_BUFFER_DATA (in);
   outdata = GST_BUFFER_DATA (out);
 
+  g_mutex_lock (video_box->mutex);
   switch (video_box->in_fourcc) {
     case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
       switch (video_box->out_fourcc) {
@@ -1267,11 +1285,13 @@ gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
     default:
       goto invalid_format;
   }
+  g_mutex_unlock (video_box->mutex);
   return GST_FLOW_OK;
 
   /* ERRORS */
 invalid_format:
   {
+    g_mutex_unlock (video_box->mutex);
     return GST_FLOW_ERROR;
   }
 }
