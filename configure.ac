@@ -323,6 +323,25 @@ if test "x$HAVE_WINSOCK2_H" = "xyes"; then
   AC_SUBST(WIN32_LIBS)
 fi
 
+dnl check for GMP/GSL, used by the gst_util_uint64_scale unit test only
+AG_GST_CHECK_LIBHEADER(GMP, gmp,
+                        __gmpz_init_set_d, ,
+                        gmp.h,
+                        GMP_LIBS="-lgmp"
+                        AC_SUBST(GMP_LIBS)
+			AC_DEFINE(HAVE_GMP, [1],[Have GMP library]))
+AG_GST_CHECK_LIBHEADER(GSL, gsl,
+                        gsl_rng_uniform_int, -lgslcblas,
+                        gsl/gsl_rng.h,
+                        GSL_LIBS="-lgsl -lgslcblas"
+                        AC_SUBST(GSL_LIBS)
+			AC_DEFINE(HAVE_GSL, [1],[Have GSL library]))
+
+AC_CHECK_LIB(rt, clock_gettime, [
+  AC_DEFINE(HAVE_CLOCK_GETTIME, 1)
+    LIBS="$LIBS -lrt"
+])
+
 dnl *** checks for types/defines ***
 
 dnl *** checks for structures ***

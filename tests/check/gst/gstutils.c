@@ -20,6 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/check/gstcheck.h>
 
 #define SPECIAL_POINTER(x) ((void*)(19283847+(x)))
@@ -738,6 +742,160 @@ GST_START_TEST (test_binary_search)
 
 GST_END_TEST;
 
+#ifdef HAVE_GSL
+#ifdef HAVE_GMP
+
+#include <gsl/gsl_rng.h>
+#include <gmp.h>
+
+static guint64
+randguint64 (gsl_rng * rng, guint64 n)
+{
+  union
+  {
+    guint64 x;
+    struct
+    {
+      guint16 a, b, c, d;
+    } parts;
+  } x;
+  x.parts.a = gsl_rng_uniform_int (rng, 1 << 16);
+  x.parts.b = gsl_rng_uniform_int (rng, 1 << 16);
+  x.parts.c = gsl_rng_uniform_int (rng, 1 << 16);
+  x.parts.d = gsl_rng_uniform_int (rng, 1 << 16);
+  return x.x % n;
+}
+
+
+enum round_t
+{
+  ROUND_TONEAREST = 0,
+  ROUND_UP,
+  ROUND_DOWN
+};
+
+static guint64
+gmp_scale (guint64 x, guint64 a, guint64 b, enum round_t mode)
+{
+  mpz_t mp1, mp2;
+  if (!b)
+    /* overflow */
+    return G_MAXUINT64;
+  mpz_init_set_ui (mp1, x);
+  mpz_init (mp2);
+  mpz_mul_ui (mp2, mp1, a);
+  switch (mode) {
+    case ROUND_TONEAREST:
+      mpz_add_ui (mp1, mp2, b / 2);
+      mpz_set (mp2, mp1);
+      break;
+    case ROUND_UP:
+      mpz_add_ui (mp1, mp2, b - 1);
+      mpz_set (mp2, mp1);
+      break;
+    case ROUND_DOWN:
+      break;
+  }
+  mpz_tdiv_q_ui (mp1, mp2, b);
+  x = mpz_get_ui (mp1);
+  mpz_clear (mp1);
+  mpz_clear (mp2);
+  return x;
+}
+
+static void
+_gmp_test_scale (gsl_rng * rng)
+{
+  guint64 bygst, bygmp;
+  guint64 a = randguint64 (rng, gsl_rng_uniform_int (rng,
+          2) ? G_MAXUINT64 : G_MAXUINT32);
+  guint64 b = randguint64 (rng, gsl_rng_uniform_int (rng, 2) ? G_MAXUINT64 - 1 : G_MAXUINT32 - 1) + 1;  /* 0 not allowed */
+  guint64 val = randguint64 (rng, gmp_scale (G_MAXUINT64, b, a, ROUND_DOWN));
+  enum round_t mode = gsl_rng_uniform_int (rng, 3);
+  const char *func;
+
+  bygmp = gmp_scale (val, a, b, mode);
+  switch (mode) {
+    case ROUND_TONEAREST:
+      bygst = gst_util_uint64_scale_round (val, a, b);
+      func = "gst_util_uint64_scale_round";
+      break;
+    case ROUND_UP:
+      bygst = gst_util_uint64_scale_ceil (val, a, b);
+      func = "gst_util_uint64_scale_ceil";
+      break;
+    case ROUND_DOWN:
+      bygst = gst_util_uint64_scale (val, a, b);
+      func = "gst_util_uint64_scale";
+      break;
+  }
+  fail_unless (bygst == bygmp,
+      "error: %s(): %" G_GUINT64_FORMAT " * %" G_GUINT64_FORMAT " / %"
+      G_GUINT64_FORMAT " = %" G_GUINT64_FORMAT ", correct = %" G_GUINT64_FORMAT
+      "\n", func, val, a, b, bygst, bygmp);
+}
+
+static void
+_gmp_test_scale_int (gsl_rng * rng)
+{
+  guint64 bygst, bygmp;
+  gint32 a = randguint64 (rng, G_MAXINT32);
+  gint32 b = randguint64 (rng, G_MAXINT32 - 1) + 1;     /* 0 not allowed */
+  guint64 val = randguint64 (rng, gmp_scale (G_MAXUINT64, b, a, ROUND_DOWN));
+  enum round_t mode = gsl_rng_uniform_int (rng, 3);
+  const char *func;
+
+  bygmp = gmp_scale (val, a, b, mode);
+  switch (mode) {
+    case ROUND_TONEAREST:
+      bygst = gst_util_uint64_scale_int_round (val, a, b);
+      func = "gst_util_uint64_scale_int_round";
+      break;
+    case ROUND_UP:
+      bygst = gst_util_uint64_scale_int_ceil (val, a, b);
+      func = "gst_util_uint64_scale_int_ceil";
+      break;
+    case ROUND_DOWN:
+      bygst = gst_util_uint64_scale_int (val, a, b);
+      func = "gst_util_uint64_scale_int";
+      break;
+  }
+  fail_unless (bygst == bygmp,
+      "error: %s(): %" G_GUINT64_FORMAT " * %d / %d = %" G_GUINT64_FORMAT
+      ", correct = %" G_GUINT64_FORMAT "\n", func, val, a, b, bygst, bygmp);
+}
+
+#define GMP_TEST_RUNS 100000
+
+GST_START_TEST (test_math_scale_gmp)
+{
+  gsl_rng *rng = gsl_rng_alloc (gsl_rng_mt19937);
+  gint n;
+
+  for (n = 0; n < GMP_TEST_RUNS; n++)
+    _gmp_test_scale (rng);
+
+  gsl_rng_free (rng);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_math_scale_gmp_int)
+{
+  gsl_rng *rng = gsl_rng_alloc (gsl_rng_mt19937);
+  gint n;
+
+  for (n = 0; n < GMP_TEST_RUNS; n++)
+    _gmp_test_scale_int (rng);
+
+  gsl_rng_free (rng);
+}
+
+GST_END_TEST;
+
+#endif
+#endif
+
 static Suite *
 gst_utils_suite (void)
 {
@@ -752,6 +910,13 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_math_scale_ceil);
   tcase_add_test (tc_chain, test_math_scale_uint64);
   tcase_add_test (tc_chain, test_math_scale_random);
+#ifdef HAVE_GSL
+#ifdef HAVE_GMP
+  tcase_add_test (tc_chain, test_math_scale_gmp);
+  tcase_add_test (tc_chain, test_math_scale_gmp_int);
+#endif
+#endif
+
   tcase_add_test (tc_chain, test_guint64_to_gdouble);
   tcase_add_test (tc_chain, test_gdouble_to_guint64);
 #ifndef GST_DISABLE_PARSE

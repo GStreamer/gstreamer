@@ -143,6 +143,8 @@ LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS) \
 	$(CHECK_LIBS)
 
+gst_gstutils_LDADD = $(LDADD) $(GSL_LIBS) $(GMP_LIBS)
+
 libs_gdp_SOURCES = \
 	libs/gdp.c
 libs_gdp_CFLAGS = $(AM_CFLAGS)
