@@ -389,7 +389,44 @@ GST_START_TEST (test_cleanup_recv2)
 
 GST_END_TEST;
 
-Suite *
+GST_START_TEST (test_request_pad_by_template_name)
+{
+  GstElement *rtpbin;
+  GstPad *rtp_sink1, *rtp_sink2, *rtp_sink3;
+
+  rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
+  rtp_sink1 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_%d");
+  fail_unless (rtp_sink1 != NULL);
+  fail_unless_equals_string (GST_PAD_NAME (rtp_sink1), "recv_rtp_sink_0");
+  ASSERT_OBJECT_REFCOUNT (rtp_sink1, "rtp_sink1", 2);
+
+  rtp_sink2 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_%d");
+  fail_unless (rtp_sink2 != NULL);
+  fail_unless_equals_string (GST_PAD_NAME (rtp_sink2), "recv_rtp_sink_1");
+  ASSERT_OBJECT_REFCOUNT (rtp_sink2, "rtp_sink2", 2);
+
+  rtp_sink3 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_%d");
+  fail_unless (rtp_sink3 != NULL);
+  fail_unless_equals_string (GST_PAD_NAME (rtp_sink3), "recv_rtp_sink_2");
+  ASSERT_OBJECT_REFCOUNT (rtp_sink3, "rtp_sink3", 2);
+
+
+  gst_element_release_request_pad (rtpbin, rtp_sink2);
+  gst_element_release_request_pad (rtpbin, rtp_sink1);
+  gst_element_release_request_pad (rtpbin, rtp_sink3);
+  ASSERT_OBJECT_REFCOUNT (rtp_sink3, "rtp_sink3", 1);
+  ASSERT_OBJECT_REFCOUNT (rtp_sink2, "rtp_sink2", 1);
+  ASSERT_OBJECT_REFCOUNT (rtp_sink1, "rtp_sink", 1);
+  gst_object_unref (rtp_sink1);
+  gst_object_unref (rtp_sink2);
+  gst_object_unref (rtp_sink3);
+
+  gst_object_unref (rtpbin);
+}
+
+GST_END_TEST;
+
+static Suite *
 gstrtpbin_suite (void)
 {
   Suite *s = suite_create ("gstrtpbin");
@@ -399,6 +436,7 @@ gstrtpbin_suite (void)
   tcase_add_test (tc_chain, test_cleanup_send);
   tcase_add_test (tc_chain, test_cleanup_recv);
   tcase_add_test (tc_chain, test_cleanup_recv2);
+  tcase_add_test (tc_chain, test_request_pad_by_template_name);
 
   return s;
 }
