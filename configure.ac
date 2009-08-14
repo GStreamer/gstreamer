@@ -121,6 +121,14 @@ PKG_CHECK_MODULES(GST,
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
+# glib-sharp and gtk-sharp are currently only needed for the samples
+PKG_CHECK_MODULES(GLIBSHARP, glib-sharp-2.0 >= 2.12, have_glibsharp=yes, have_glibsharp=no)
+PKG_CHECK_MODULES(GTKSHARP, gtk-sharp-2.0 >= 2.12, have_gtksharp=yes, have_gtksharp=no)
+AC_SUBST(GLIBSHARP_LIBS)
+AC_SUBST(GTKSHARP_LIBS)
+AM_CONDITIONAL(HAVE_GLIB_SHARP, test "x$have_glibsharp" = "xyes")
+AM_CONDITIONAL(HAVE_GTK_SHARP, test "x$have_gtksharp" = "xyes")
+
 AM_CONDITIONAL(ENABLE_MONODOC, test "x$enable_monodoc" = "xyes")
 
 ## Check for the gapi programs
