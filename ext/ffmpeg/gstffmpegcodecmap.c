@@ -430,7 +430,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
       gst_structure_set_value (structure, "rate", &list);
       g_value_unset (&list);
     } else
-      gst_caps_set_simple (caps, "rate", GST_TYPE_INT_RANGE, 8000, 96000, NULL);
+      gst_caps_set_simple (caps, "rate", GST_TYPE_INT_RANGE, 4000, 96000, NULL);
   }
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
