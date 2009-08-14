@@ -1,9 +1,12 @@
 TARGETS =
 
 if HAVE_GLIB_SHARP
-TARGETS += playbin-player.exe decodebin-transcoder.exe helloworld.exe typefind.exe metadata.exe appsrc.exe
+TARGETS += playbin-player.exe decodebin-transcoder.exe helloworld.exe typefind.exe metadata.exe
 if HAVE_GTK_SHARP
 TARGETS += gtk-video-player.exe
+endif
+if HAVE_MONO_CAIRO
+TARGETS += appsrc.exe
 endif
 endif
 DEBUGS = $(addsuffix .mdb, $(TARGETS))
@@ -11,7 +14,7 @@ DEBUGS = $(addsuffix .mdb, $(TARGETS))
 all: $(TARGETS) link
 
 assemblies=$(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll
-references=$(addprefix -r:, $(assemblies)) $(GLIBSHARP_LIBS)
+references=$(addprefix -r:, $(assemblies)) $(GLIB_SHARP_LIBS)
 
 playbin-player.exe: $(srcdir)/PlayBinPlayer.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/PlayBinPlayer.cs
@@ -35,10 +38,10 @@ mp3launchparse.exe: $(srcdir)/MP3LaunchParse.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MP3LaunchParse.cs
 
 appsrc.exe: $(srcdir)/AppSrc.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) -r:Mono.Cairo.dll $(srcdir)/AppSrc.cs
+	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(MONO_CAIRO_LIBS) $(srcdir)/AppSrc.cs
 
 gtk-video-player.exe: $(srcdir)/GtkVideoPlayer.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(GTKSHARP_LIBS) $(srcdir)/GtkVideoPlayer.cs
+	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(GTK_SHARP_LIBS) $(srcdir)/GtkVideoPlayer.cs
 
 link:
 	ln -sf $(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll gstreamer-sharp.dll
