@@ -468,11 +468,7 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
   dv_decode_full_frame (dvdec->decoder, inframe,
       e_dv_color_yuv, outframe_ptrs, outframe_pitches);
 
-  if (dvdec->PAL) {
-    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_TFF);
-  } else {
-    GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_TFF);
-  }
+  GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_TFF);
 
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buf);
   GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_END (buf);
