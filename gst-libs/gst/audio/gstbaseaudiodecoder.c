@@ -24,7 +24,12 @@
 
 #include "gstbaseaudiodecoder.h"
 
+#include <gst/gstutils.h>
 #include <string.h>
+
+/*
+ * FIXME: is still interesting providing sink_query and src_query functions?
+ */
 
 GST_DEBUG_CATEGORY_EXTERN (baseaudio_debug);
 #define GST_CAT_DEFAULT baseaudio_debug
@@ -35,11 +40,11 @@ static gboolean gst_base_audio_decoder_src_event (GstPad * pad,
     GstEvent * event);
 static GstFlowReturn gst_base_audio_decoder_chain (GstPad * pad,
     GstBuffer * buf);
-static gboolean gst_base_audio_decoder_sink_query (GstPad * pad,
-    GstQuery * query);
-static gboolean gst_base_audio_decoder_sink_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value, GstFormat * dest_format,
-    gint64 * dest_value);
+/* static gboolean gst_base_audio_decoder_sink_query (GstPad * pad, */
+/*     GstQuery * query); */
+/* static gboolean gst_base_audio_decoder_sink_convert (GstPad * pad, */
+/*     GstFormat src_format, gint64 src_value, GstFormat * dest_format, */
+/*     gint64 * dest_value); */
 static const GstQueryType *gst_base_audio_decoder_get_query_types (GstPad *
     pad);
 static gboolean gst_base_audio_decoder_src_query (GstPad * pad,
@@ -47,8 +52,10 @@ static gboolean gst_base_audio_decoder_src_query (GstPad * pad,
 static gboolean gst_base_audio_decoder_src_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value, GstFormat * dest_format,
     gint64 * dest_value);
-static void gst_base_audio_decoder_reset (GstBaseAudioDecoder *
-    base_audio_decoder);
+static gboolean gst_base_audio_decoder_reset (GstBaseAudioCodec *
+    base_audio_codec);
+static void gst_base_audio_decoder_handle_discont (GstBaseAudioDecoder *
+    base_audio_decoder, GstBuffer * buffer);
 
 GST_BOILERPLATE (GstBaseAudioDecoder, gst_base_audio_decoder,
     GstBaseAudioCodec, GST_TYPE_BASE_AUDIO_CODEC);
@@ -68,7 +75,9 @@ gst_base_audio_decoder_class_init (GstBaseAudioDecoderClass * klass)
 
   gobject_class->finalize = gst_base_audio_decoder_finalize;
 
-  parent_class = g_type_class_peek_parent (klass);
+  parent_class->reset = gst_base_audio_decoder_reset;
+
+  klass->handle_discont = gst_base_audio_decoder_handle_discont;
 }
 
 static void
@@ -82,7 +91,7 @@ gst_base_audio_decoder_init (GstBaseAudioDecoder * base_audio_decoder,
   pad = GST_BASE_AUDIO_CODEC_SINK_PAD (base_audio_decoder);
 
   gst_pad_set_chain_function (pad, gst_base_audio_decoder_chain);
-  gst_pad_set_query_function (pad, gst_base_audio_decoder_sink_query);
+/*   gst_pad_set_query_function (pad, gst_base_audio_decoder_sink_query); */
 
   pad = GST_BASE_AUDIO_CODEC_SRC_PAD (base_audio_decoder);
 
@@ -94,25 +103,83 @@ gst_base_audio_decoder_init (GstBaseAudioDecoder * base_audio_decoder,
 static void
 gst_base_audio_decoder_finalize (GObject * object)
 {
-  GstBaseAudioDecoder *base_audio_decoder;
-
   g_return_if_fail (GST_IS_BASE_AUDIO_DECODER (object));
 
-  GST_DEBUG_OBJECT (object, "finalize");
-
-  base_audio_decoder = GST_BASE_AUDIO_DECODER (object);
-
-  gst_base_audio_decoder_reset (base_audio_decoder);
+  GST_DEBUG_OBJECT (object, "gst_base_audio_decoder_finalize");
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-/* FIXME: implement */
 static gboolean
 gst_base_audio_decoder_src_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
 {
-  return TRUE;
+  gboolean res = TRUE;
+  GstBaseAudioCodec *codec;
+  gint bytes_per_sample;
+  gint scale = 1;
+  guint byterate;
+  
+  if (src_format == *dest_format || src_value == -1 || src_value == 0) {
+    *dest_value = src_value;
+  }
+
+  codec = GST_BASE_AUDIO_CODEC (GST_PAD_PARENT (pad));
+
+  bytes_per_sample = codec->state.channels * codec->state.bytes_per_sample;
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT: /* Bytes -> Samples */
+	  if (bytes_per_sample == 0)
+	    return FALSE;
+	  *dest_value = src_value / bytes_per_sample;
+	  break;
+        case GST_FORMAT_TIME: /* Bytes -> Time */
+	  byterate = bytes_per_sample * codec->state.rate;
+	  if (byterate == 0)
+	    return FALSE;
+	  *dest_value = 
+	      gst_util_uint64_scale_int (src_value, GST_SECOND, byterate);
+	  break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_DEFAULT:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES: /* Samples -> Bytes */
+          *dest_value = src_value * bytes_per_sample;
+          break;
+        case GST_FORMAT_TIME: /* Samples -> Time */
+          if (codec->state.rate == 0)
+            return FALSE;
+          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
+              codec->state.rate);
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES: /* Time -> Bytes */
+          scale = bytes_per_sample;
+          /* fallthrough */
+        case GST_FORMAT_DEFAULT: /* Time -> Samples */
+          *dest_value = gst_util_uint64_scale_int (src_value,
+              scale * codec->state.rate, GST_SECOND);
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+
+  return res;
 }
 
 #ifndef GST_DISABLE_INDEX
@@ -232,10 +299,10 @@ gst_base_audio_decoder_normal_seek (GstBaseAudioDecoder *base_audio_decoder,
   /* Try seek in bytes if seek in time failed */
   if (!res) {
     conv = GST_FORMAT_BYTES;
-    if (!gst_base_audio_decoder_sink_convert (pad, GST_FORMAT_TIME, time_cur,
+    if (!gst_base_audio_decoder_src_convert (pad, GST_FORMAT_TIME, time_cur,
         &conv, &bytes_cur))
       goto convert_failed;
-    if (!gst_base_audio_decoder_sink_convert (pad, GST_FORMAT_TIME, time_stop,
+    if (!gst_base_audio_decoder_src_convert (pad, GST_FORMAT_TIME, time_stop,
         &conv, &bytes_stop))
       goto convert_failed;
     
@@ -289,7 +356,8 @@ gst_base_audio_decoder_src_event (GstPad * pad, GstEvent * event)
       GST_BASE_AUDIO_DECODER_GET_CLASS (base_audio_decoder);
 
   switch (GST_EVENT_TYPE (event)) {
-  case GST_EVENT_SEEK:{
+  case GST_EVENT_SEEK: 
+    /* Try the demuxer first */
     gst_event_ref (event);
     res = gst_pad_push_event (base_audio_codec->sinkpad, event);
     if (!res) {
@@ -297,7 +365,6 @@ gst_base_audio_decoder_src_event (GstPad * pad, GstEvent * event)
     }
     gst_event_unref (event);
     break;
-  }
   default:
     res = gst_pad_push_event (base_audio_codec->sinkpad, event);
     break;
@@ -341,7 +408,7 @@ gst_base_audio_decoder_src_query (GstPad * pad, GstQuery * query)
     }
     default:
       res = gst_pad_query_default (pad, query);
-    }
+  }
   gst_object_unref (enc);
   return res;
 
@@ -351,34 +418,38 @@ error:
   return res;
 }
 
-/* FIXME: implement */
-static gboolean
-gst_base_audio_decoder_sink_convert (GstPad * pad, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
-{
-  return TRUE;
-}
+/* FIXME: implement  (is this really necessary?) */
+/* static gboolean */
+/* gst_base_audio_decoder_sink_convert (GstPad * pad, GstFormat src_format, */
+/*     gint64 src_value, GstFormat * dest_format, gint64 * dest_value) */
+/* { */
+/*   return TRUE; */
+/* } */
 
-/* FIXME: implement */ 
+/* FIXME: implement (is this really necessary?) */ 
+/* static gboolean */
+/* gst_base_audio_decoder_sink_query (GstPad * pad, GstQuery * query) */
+/* { */
+/*   return TRUE; */
+/* } */
+
 static gboolean
-gst_base_audio_decoder_sink_query (GstPad * pad, GstQuery * query)
+gst_base_audio_decoder_reset (GstBaseAudioCodec * base_audio_codec)
 {
+  GST_DEBUG ("gst_base_audio_decoder_reset");
   return TRUE;
 }
 
 static void
-gst_base_audio_decoder_reset (GstBaseAudioDecoder * base_audio_decoder)
+gst_base_audio_decoder_handle_discont (GstBaseAudioDecoder *base_audio_decoder,
+    GstBuffer *buffer)
 {
-  GstBaseAudioCodecClass *base_audio_codec_class;
   GstBaseAudioCodec *base_audio_codec;
 
   base_audio_codec = GST_BASE_AUDIO_CODEC (base_audio_decoder);
-  base_audio_codec_class = GST_BASE_AUDIO_CODEC_GET_CLASS (base_audio_codec);
 
-  GST_DEBUG ("reset");
-
-  if (base_audio_codec_class->reset) {
-    base_audio_codec_class->reset (base_audio_codec);
+  if (base_audio_codec->started) {
+    gst_base_audio_codec_reset (base_audio_codec);
   }
 }
 
@@ -402,9 +473,7 @@ gst_base_audio_decoder_chain (GstPad * pad, GstBuffer * buf)
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (base_audio_decoder, "received DISCONT buffer");
-    if (base_audio_codec->started) {
-      gst_base_audio_decoder_reset (base_audio_decoder);
-    }
+    gst_base_audio_decoder_handle_discont (base_audio_decoder, buf);
   }
 
   if (!base_audio_codec->started) {

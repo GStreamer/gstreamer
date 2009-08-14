@@ -66,6 +66,7 @@ struct _GstBaseAudioDecoderClass
   GstBaseAudioCodecClass base_audio_codec_class;
 
   GstFlowReturn (*parse_data) (GstBaseAudioDecoder *decoder);
+  void (*handle_discont) (GstBaseAudioDecoder *decoder, GstBuffer *buffer);
 };
 
 GType gst_base_audio_decoder_get_type (void);
