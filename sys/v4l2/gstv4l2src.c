@@ -916,20 +916,22 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     GST_OBJECT_UNLOCK (v4l2src);
 
     if (clock) {
-      GstClockTime latency;
-
       /* the time now is the time of the clock minus the base time */
       timestamp = gst_clock_get_time (clock) - timestamp;
       gst_object_unref (clock);
 
-      latency =
-          gst_util_uint64_scale_int (GST_SECOND, v4l2src->fps_d,
-          v4l2src->fps_n);
+      /* if we have a framerate adjust timestamp for frame latency */
+      if (v4l2src->fps_n > 0 && v4l2src->fps_d > 0) {
+        GstClockTime latency;
 
-      if (timestamp > latency)
-        timestamp -= latency;
-      else
-        timestamp = 0;
+        latency = gst_util_uint64_scale_int (GST_SECOND, v4l2src->fps_d,
+            v4l2src->fps_n);
+
+        if (timestamp > latency)
+          timestamp -= latency;
+        else
+          timestamp = 0;
+      }
     }
 
     /* FIXME: use the timestamp from the buffer itself! */
