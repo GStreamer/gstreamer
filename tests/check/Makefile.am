@@ -19,6 +19,7 @@ clean-local: clean-local-check
 check_PROGRAMS = \
 	generic/plugin-test \
 	generic/libavcodec-locking \
+	elements/ffdec_adpcm \
 	elements/ffdemux_ape
 
 VALGRIND_TO_FIX = \

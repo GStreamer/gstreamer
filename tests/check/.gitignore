@@ -1,3 +1,4 @@
 test-registry.*
+elements/ffdec_adpcm
 elements/ffdemux_ape
 .dirstamp
