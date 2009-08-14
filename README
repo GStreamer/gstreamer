@@ -1,4 +1,21 @@
-To build this Gtk# from trunk is required and the following patches:
+gstreamer-sharp are the C#/CLI bindings for GStreamer.
 
-http://bugzilla.novell.com/show_bug.cgi?id=499900
+It's currently at a early state of development and the API
+might still change slightly in incompatible ways until
+the first stable release 0.10.0.
+
+There are bindings for the complete GStreamer core and some
+of the GStreamer libraries.
+
+For building the bindings you need:
+  * Mono 2.4 or MS .NET 2.0 or higher
+  * GLib >= 2.14
+  * GStreamer and gst-plugins-base >= 0.10.23
+  * Optionally GTK# >= 2.12 and Mono.Cairo for the samples
+  * Optionally nunit >= 2.4 for the unit tests
+
+Note that the Gst.GLib namespace contains complete GLib bindings
+but only for convinience reasons. Once a new glib-sharp was released
+with everything that is needed for gstreamer-sharp this namespace
+will be removed and a dependency on glib-sharp will be added.
 
