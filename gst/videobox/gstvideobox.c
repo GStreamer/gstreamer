@@ -34,73 +34,36 @@
  * 
  * The videobox plugin has many uses such as doing a mosaic of pictures, 
  * letterboxing video, cutting out pieces of video, picture in picture, etc..
+ *
+ * Setting autocrop to true changes the behavior of the plugin so that
+ * caps determine crop properties rather than the other way around: given
+ * input and output dimensions, the crop values are selected so that the
+ * smaller frame is effectively centered in the larger frame.  This
+ * involves either cropping or padding.
+ * 
+ * If you use autocrop there is little point in setting the other
+ * properties manually because they will be overriden if the caps change,
+ * but nothing stops you from doing so.
+ * 
+ * Sample pipeline:
+ * |[
+ * gst-launch videotestsrc ! videobox autocrop=true ! \
+ *   "video/x-raw-yuv, width=600, height=400" ! ffmpegcolorspace ! ximagesink
+ * ]|
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
-#include <gst/video/video.h>
+
+#include "gstvideobox.h"
+
 #include <math.h>
 #include <liboil/liboil.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (videobox_debug);
 #define GST_CAT_DEFAULT videobox_debug
-
-#define GST_TYPE_VIDEO_BOX \
-  (gst_video_box_get_type())
-#define GST_VIDEO_BOX(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_BOX,GstVideoBox))
-#define GST_VIDEO_BOX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_BOX,GstVideoBoxClass))
-#define GST_IS_VIDEO_BOX(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_BOX))
-#define GST_IS_VIDEO_BOX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_BOX))
-
-typedef struct _GstVideoBox GstVideoBox;
-typedef struct _GstVideoBoxClass GstVideoBoxClass;
-
-typedef enum
-{
-  VIDEO_BOX_FILL_BLACK,
-  VIDEO_BOX_FILL_GREEN,
-  VIDEO_BOX_FILL_BLUE,
-  VIDEO_BOX_FILL_LAST
-}
-GstVideoBoxFill;
-
-struct _GstVideoBox
-{
-  GstBaseTransform element;
-
-  /* Guarding everything below */
-  GMutex *mutex;
-  /* caps */
-  guint32 in_fourcc;
-  gint in_width, in_height;
-  guint32 out_fourcc;
-  gint out_width, out_height;
-
-  gint box_left, box_right, box_top, box_bottom;
-
-  gint border_left, border_right, border_top, border_bottom;
-  gint crop_left, crop_right, crop_top, crop_bottom;
-
-  gdouble alpha;
-  gdouble border_alpha;
-
-  GstVideoBoxFill fill_type;
-
-  gboolean autocrop;
-};
-
-struct _GstVideoBoxClass
-{
-  GstBaseTransformClass parent_class;
-};
 
 /* elementfactory information */
 static const GstElementDetails gst_video_box_details =
@@ -132,25 +95,6 @@ enum
       /* FILL ME */
 };
 
-/*
-
-Setting autocrop to true changes the behavior of the plugin so that
-caps determine crop properties rather than the other way around: given
-input and output dimensions, the crop values are selected so that the
-smaller frame is effectively centered in the larger frame.  This
-involves either cropping or padding.
-
-If you use autocrop there is little point in setting the other
-properties manually because they will be overriden if the caps change,
-but nothing stops you from doing so.
-
-Sample pipeline:
-gst-launch videotestsrc ! videobox autocrop=true ! \
-"video/x-raw-yuv, width=600, height=400" ! ffmpegcolorspace ! ximagesink
-
-*/
-
-
 static GstStaticPadTemplate gst_video_box_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -166,7 +110,6 @@ static GstStaticPadTemplate gst_video_box_sink_template =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
         GST_VIDEO_CAPS_YUV ("I420"))
     );
-
 
 GST_BOILERPLATE (GstVideoBox, gst_video_box, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
@@ -273,6 +216,14 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
       g_param_spec_double ("border_alpha", "Border Alpha",
           "Alpha value of the border", 0.0, 1.0, DEFAULT_BORDER_ALPHA,
           G_PARAM_READWRITE));
+  /**
+   * GstVideoBox:autocrop
+   *
+   * If set to %TRUE videobox will automatically crop/pad the input
+   * video to be centered in the output.
+   *
+   * Since: 0.10.16
+   **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_AUTOCROP,
       g_param_spec_boolean ("autocrop", "Auto crop",
           "Auto crop", FALSE, G_PARAM_READWRITE));

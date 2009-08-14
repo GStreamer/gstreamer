@@ -8,4 +8,5 @@ libgstvideobox_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
 libgstvideobox_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideobox_la_LIBTOOLFLAGS = --tag=disable-static
 
+noinst_HEADERS = gstvideobox.h
 EXTRA_DIST = README
