@@ -337,11 +337,6 @@ AG_GST_CHECK_LIBHEADER(GSL, gsl,
                         AC_SUBST(GSL_LIBS)
 			AC_DEFINE(HAVE_GSL, [1],[Have GSL library]))
 
-AC_CHECK_LIB(rt, clock_gettime, [
-  AC_DEFINE(HAVE_CLOCK_GETTIME, 1)
-    LIBS="$LIBS -lrt"
-])
-
 dnl *** checks for types/defines ***
 
 dnl *** checks for structures ***
