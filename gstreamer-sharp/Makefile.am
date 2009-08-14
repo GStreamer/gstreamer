@@ -61,15 +61,15 @@ sources = \
 	glib-sharp/*.cs
 
 overrides = \
-	override/URIHandlerAdapter.cs \
-	override/ColorBalanceAdapter.cs \
-	override/ColorBalance.cs  \
-	override/Mixer.cs \
-	override/MixerAdapter.cs \
-	override/PropertyProbe.cs \
-	override/PropertyProbeAdapter.cs \
-	override/ProbeNeededHandler.cs \
-	override/NavigationAdapter.cs
+	$(srcdir)/override/URIHandlerAdapter.cs \
+	$(srcdir)/override/ColorBalanceAdapter.cs \
+	$(srcdir)/override/ColorBalance.cs  \
+	$(srcdir)/override/Mixer.cs \
+	$(srcdir)/override/MixerAdapter.cs \
+	$(srcdir)/override/PropertyProbe.cs \
+	$(srcdir)/override/PropertyProbeAdapter.cs \
+	$(srcdir)/override/ProbeNeededHandler.cs \
+	$(srcdir)/override/NavigationAdapter.cs
 
 build_sources = $(addprefix $(srcdir)/, $(sources))
 if USE_MONO_COMPILER
