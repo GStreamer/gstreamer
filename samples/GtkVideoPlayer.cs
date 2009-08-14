@@ -106,7 +106,17 @@ public class MainWindow : Gtk.Window {
 
       _pipeline.Add (playbin);
 
-      (sink as XOverlay).XwindowId = gdk_x11_drawable_get_xid (_da.GdkWindow.Handle);
+      switch (System.Environment.OSVersion.Platform) {
+        case PlatformID.Unix:
+          (sink as XOverlay).XwindowId = gdk_x11_drawable_get_xid (_da.GdkWindow.Handle);
+          break;
+        case PlatformID.Win32NT:
+        case PlatformID.Win32S:
+        case PlatformID.Win32Windows:
+        case PlatformID.WinCE:
+          (sink as XOverlay).XwindowId = (ulong) gdk_win32_drawable_get_handle (_da.GdkWindow.Handle);
+          break;
+      }
 
       playbin["video-sink"] = sink;
       playbin["uri"] = "file://" + dialog.Filename;
@@ -183,6 +193,9 @@ public class MainWindow : Gtk.Window {
     return string.Format ("{0}:{1:d2}", mins, secs);
   }
 
-  [DllImport ("libgdk-x11-2.0") ]
+  [DllImport ("libgdk-x11-2.0.so.0") ]
   static extern uint gdk_x11_drawable_get_xid (IntPtr handle);
+
+  [DllImport ("libgdk-win32-2.0-0.dll") ]
+  static extern IntPtr gdk_win32_drawable_get_handle (IntPtr handle);
 }
