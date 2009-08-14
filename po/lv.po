@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.12.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:42+0100\n"
-"PO-Revision-Date: 2009-07-30 11:40+0100\n"
+"POT-Creation-Date: 2009-08-14 18:11+0100\n"
+"PO-Revision-Date: 2009-08-12 20:33+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -75,11 +75,10 @@ msgstr ""
 "neatbalsta šo Open Sound System versiju."
 
 msgid "Volume"
-msgstr ""
+msgstr "Skaļums"
 
-#, fuzzy
 msgid "Master"
-msgstr "Ātrs"
+msgstr "Galvenais"
 
 msgid "Front"
 msgstr "Priekšpuse"
@@ -90,188 +89,176 @@ msgstr "Aizmugure"
 msgid "Headphones"
 msgstr "Austiņas"
 
-#, fuzzy
 msgid "Center"
-msgstr "Centrālais / LFE"
+msgstr "Centrāls"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
-#, fuzzy
 msgid "Surround"
-msgstr "Ieskaujoša skaņa"
+msgstr "Ieskaujošs"
 
 msgid "Side"
 msgstr "Puse"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "Iebūvētais skaļrunis"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 izeja"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 izeja"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX izeja"
 
 msgid "Bass"
-msgstr ""
+msgstr "Basi"
 
 msgid "Treble"
-msgstr ""
+msgstr "Diskants"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D dziļums"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D centrēts"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "3D aptverošs"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Austiņas"
+msgstr "Telefons"
 
 msgid "Microphone"
 msgstr "Mikrofons"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Skaņas izeja"
 
-#, fuzzy
 msgid "Line In"
-msgstr "Line-in"
+msgstr "Skaņas ieeja"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Iekšējais CD"
 
 msgid "Video In"
-msgstr ""
+msgstr "Video ieeja"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX 1 ieeja"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX 2 ieeja"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX ieeja"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Ierakstīšanas pieaugums"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Izvades pieaugums"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Mikrofons"
+msgstr "Mikrofona pastiprinājums"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Atkārtošana"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Diagnostika"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Basu pastiprinājums"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Atskaņošanas porti"
 
 msgid "Input"
 msgstr "Ievade"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Ierakstīšanas avots"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Monitora avots"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Klaviatūras pīkstiens"
 
 msgid "Monitor"
-msgstr ""
+msgstr "Monitors"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Simulēt stereo"
 
 msgid "Stereo"
 msgstr "Stereo"
 
-#, fuzzy
 msgid "Surround Sound"
 msgstr "Ieskaujoša skaņa"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Mikrofons"
+msgstr "Mikrofona pieaugums"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Skaļruņa avots"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Mikrofons"
+msgstr "Mikrofona avots"
 
 msgid "Jack"
-msgstr ""
+msgstr "Ligzda"
 
 msgid "Center / LFE"
 msgstr "Centrālais / LFE"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "Stereo"
+msgstr "Stereo jaukšana"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Mono jaukšana"
 
-#, fuzzy
 msgid "Input Mix"
 msgstr "Ievades jaukšana"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF ieeja"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF izeja"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Mikrofons"
+msgstr "Mikrofons 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Mikrofons"
+msgstr "Mikrofons 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Digitālā izeja"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Digitālā ieeja"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modems"
 
 msgid "Handset"
-msgstr ""
+msgstr "Papildierīce"
 
 msgid "Other"
-msgstr ""
+msgstr "Cits"
 
 msgid "None"
-msgstr ""
+msgstr "Nav"
 
 msgid "On"
 msgstr "Ieslēgts"
@@ -280,13 +267,13 @@ msgid "Off"
 msgstr "Izslēgts"
 
 msgid "Mute"
-msgstr ""
+msgstr "Klusums"
 
 msgid "Fast"
 msgstr "Ātrs"
 
 msgid "Very Low"
-msgstr ""
+msgstr "Ļoti zems"
 
 msgid "Low"
 msgstr "Zems"
@@ -297,126 +284,100 @@ msgstr "Vidējs"
 msgid "High"
 msgstr "Augsts"
 
-#, fuzzy
 msgid "Very High"
 msgstr "Ļoti augsts"
 
 msgid "Production"
 msgstr "Izstrāde"
 
-#, fuzzy
 msgid "Front Panel Microphone"
 msgstr "Priekšējā paneļa nikrofons"
 
-#, fuzzy
 msgid "Front Panel Line In"
-msgstr "Priekšējā paneļa line-in"
+msgstr "Priekšējā paneļa skaņas ieeja"
 
-#, fuzzy
 msgid "Front Panel Headphones"
 msgstr "Priekšējā paneļa austiņas"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "Priekšējā paneļa line-in"
+msgstr "Priekšējā paneļa skaņas izeja"
 
-#, fuzzy
 msgid "Green Connector"
 msgstr "Zaļais savienotājs"
 
-#, fuzzy
 msgid "Pink Connector"
 msgstr "Rozā savienotājs"
 
-#, fuzzy
 msgid "Blue Connector"
 msgstr "Zilais savienotājs"
 
-#, fuzzy
 msgid "White Connector"
 msgstr "Baltais savienotājs"
 
-#, fuzzy
 msgid "Black Connector"
 msgstr "Melnais savienotājs"
 
-#, fuzzy
 msgid "Gray Connector"
 msgstr "Pelēkais savienotājs"
 
-#, fuzzy
 msgid "Orange Connector"
 msgstr "Oranžais savienotājs"
 
-#, fuzzy
 msgid "Red Connector"
 msgstr "Sarkanais savienotājs"
 
-#, fuzzy
 msgid "Yellow Connector"
 msgstr "Dzeltenais savienotājs"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
 msgstr "Zaļais priekšējā paneļa savienotājs"
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
 msgstr "Rozā priekšējā paneļa savienotājs"
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
 msgstr "Zilais priekšējā paneļa savienotājs"
 
-#, fuzzy
 msgid "White Front Panel Connector"
 msgstr "Baltais priekšējā paneļa savienotājs"
 
-#, fuzzy
 msgid "Black Front Panel Connector"
 msgstr "Melnais priekšējā paneļa savienotājs"
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
 msgstr "Pelēkais priekšējā paneļa savienotājs"
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
 msgstr "Oranžais priekšējā paneļa savienotājs"
 
-#, fuzzy
 msgid "Red Front Panel Connector"
 msgstr "Sarkanais priekšējā paneļa savienotājs"
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
 msgstr "Dzeltenais priekšējā paneļa savienotājs"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Sadalīt izvadi"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Pazeminātā jaukšana"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
-msgstr "Virtuālā jaucēja ieeja"
+msgstr "Virtuālā jaucēja ievads"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
-msgstr "Virtuālā jaucēja izeja"
+msgstr "Virtuālā jaucēja izvads"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "Virtuālā jaucēja ieeja"
+msgstr "Virtuālā jaucēja kanāli"
 
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "%s funkcija"
 
 #, c-format
 msgid "%s %d"
-msgstr ""
+msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "

@@ -5,10 +5,10 @@
 # Luca Ferretti <elle.uca@infinito.it>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.11.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:42+0100\n"
-"PO-Revision-Date: 2009-05-13 09:14+0200\n"
+"POT-Creation-Date: 2009-08-14 18:11+0100\n"
+"PO-Revision-Date: 2009-08-14 00:12+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -75,12 +75,11 @@ msgstr ""
 "elemento."
 
 msgid "Volume"
-msgstr ""
+msgstr "Volume"
 
 # NdT: questo e i successivi non ho controllato che sono....
-#, fuzzy
 msgid "Master"
-msgstr "Veloce"
+msgstr "Principale"
 
 msgid "Front"
 msgstr "Fronte"
@@ -91,195 +90,179 @@ msgstr "Dietro"
 msgid "Headphones"
 msgstr "Cuffie"
 
-# NdT: forse questo? --> http://en.wikipedia.org/wiki/Low-frequency_effect
-#
-# o forse Low Frequency Emitter 
-#, fuzzy
 msgid "Center"
-msgstr "Centro / LFE"
+msgstr "Centrale"
 
+# NdT: lfe andrebbe tradotto come effetti a bassa frequenza e andrebbe aperto un bug per low frequency emitter che al limite è la cassa ma non il canale
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
-#, fuzzy
 msgid "Surround"
-msgstr "Suono surround"
+msgstr "Surround"
 
 msgid "Side"
-msgstr "Lato"
+msgstr "Laterale"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "Altop. incorporato"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 out"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 out"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX out"
 
 msgid "Bass"
-msgstr ""
+msgstr "Bassi"
 
 msgid "Treble"
-msgstr ""
+msgstr "Acuti"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "Profondità 3D"
 
 msgid "3D Center"
-msgstr ""
+msgstr "Centro 3D"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "Miglioramento 3D"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Cuffie"
+msgstr "Telefono"
 
 msgid "Microphone"
 msgstr "Microfono"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Linea out"
 
-#, fuzzy
 msgid "Line In"
 msgstr "Linea in"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "CD interno"
 
 msgid "Video In"
-msgstr ""
+msgstr "Video in"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX 1 in"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX 2 in"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX in"
 
 # http://it.wikipedia.org/wiki/Pulse-Code_Modulation
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Guadagno registrazione"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Guadagno uscita"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Microfono"
+msgstr "Incremento microfono"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Loopback"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Diagnostica"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Incremento bassi"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Porte riproduzione"
 
 msgid "Input"
 msgstr "Input"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Sorgente registrazione"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Sorgente monitor"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Beep tastiera"
 
 msgid "Monitor"
-msgstr ""
+msgstr "Monitor"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Simula stereo"
 
 msgid "Stereo"
 msgstr "Stereo"
 
-#, fuzzy
 msgid "Surround Sound"
 msgstr "Suono surround"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Microfono"
+msgstr "Guadagno microfono"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Sorgente altoparlante"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Microfono"
+msgstr "Sorgente microfono"
 
 msgid "Jack"
-msgstr ""
+msgstr "Jack"
 
-# NdT: forse questo? --> http://en.wikipedia.org/wiki/Low-frequency_effect
-#
-# o forse Low Frequency Emitter 
+# vedi prima per lfe
 msgid "Center / LFE"
-msgstr "Centro / LFE"
+msgstr "Centrale / LFE"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "Stereo"
+msgstr "Mix stereo"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Mix mono"
 
-#, fuzzy
 msgid "Input Mix"
 msgstr "Mix ingresso"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF in"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF out"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Microfono"
+msgstr "Microfono 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Microfono"
+msgstr "Microfono 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Uscita digitale"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Ingresso digitale"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modem"
 
 msgid "Handset"
-msgstr ""
+msgstr "Auricolare"
 
 msgid "Other"
-msgstr ""
+msgstr "Altro"
 
 msgid "None"
-msgstr ""
+msgstr "Nessuno"
 
 msgid "On"
 msgstr "Acceso"
@@ -288,14 +271,14 @@ msgid "Off"
 msgstr "Spento"
 
 msgid "Mute"
-msgstr ""
+msgstr "Escluso"
 
 # NdT: questo e i successivi non ho controllato che sono....
 msgid "Fast"
 msgstr "Veloce"
 
 msgid "Very Low"
-msgstr ""
+msgstr "Molto lento"
 
 msgid "Low"
 msgstr "Lento"
@@ -306,126 +289,101 @@ msgstr "Medio"
 msgid "High"
 msgstr "Alto"
 
-#, fuzzy
 msgid "Very High"
 msgstr "Molto alto"
 
 msgid "Production"
 msgstr "Produzione"
 
-#, fuzzy
 msgid "Front Panel Microphone"
 msgstr "Microfono pannello frontale"
 
-#, fuzzy
 msgid "Front Panel Line In"
-msgstr "Canale ingresso pannello frontale"
+msgstr "Linea in pannello frontale"
 
-#, fuzzy
 msgid "Front Panel Headphones"
 msgstr "Cuffie pannello frontale"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "Canale ingresso pannello frontale"
+msgstr "Linea out pannello frontale"
 
-#, fuzzy
 msgid "Green Connector"
 msgstr "Connettore verde"
 
-#, fuzzy
 msgid "Pink Connector"
 msgstr "Connettore rosa"
 
-#, fuzzy
 msgid "Blue Connector"
 msgstr "Connettore blu"
 
-#, fuzzy
 msgid "White Connector"
 msgstr "Connettore bianco"
 
-#, fuzzy
 msgid "Black Connector"
 msgstr "Connettore nero"
 
-#, fuzzy
 msgid "Gray Connector"
 msgstr "Connettore grigio"
 
-#, fuzzy
 msgid "Orange Connector"
 msgstr "Connettore arancione"
 
-#, fuzzy
 msgid "Red Connector"
 msgstr "Connettore rosso"
 
-#, fuzzy
 msgid "Yellow Connector"
 msgstr "Connettore giallo"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
 msgstr "Connettore verde pannello frontale"
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
 msgstr "Connettore rosa pannello frontale"
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
 msgstr "Connettore blu pannello frontale"
 
-#, fuzzy
 msgid "White Front Panel Connector"
 msgstr "Connettore bianco pannello frontale"
 
-#, fuzzy
 msgid "Black Front Panel Connector"
 msgstr "Connettore nero pannello frontale"
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
 msgstr "Connettore grigio pannello frontale"
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
 msgstr "Connettore arancione pannello frontale"
 
-#, fuzzy
 msgid "Red Front Panel Connector"
 msgstr "Connettore rosso pannello frontale"
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
 msgstr "Connettore giallo pannello frontale"
 
+#  int spread;         /* copy front to surr/center channels */ 
 msgid "Spread Output"
-msgstr ""
+msgstr "Uscita diffusa"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Downmix"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
 msgstr "Ingresso mixer virtuale"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
 msgstr "Uscita mixer virtuale"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "Ingresso mixer virtuale"
+msgstr "Canali mixer virtuale"
 
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "Funzione %s"
 
 #, c-format
 msgid "%s %d"
-msgstr ""
+msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -462,85 +420,3 @@ msgstr "Questo dispositivo audio non supporta la registrazione."
 
 msgid "Error recording from audio device."
 msgstr "Errore nel registrare dal dispositivo audio."
-
-#~ msgid "PCM 1"
-#~ msgstr "PCM 1"
-
-#~ msgid "PCM 2"
-#~ msgstr "PCM 2"
-
-#~ msgid "PCM 3"
-#~ msgstr "PCM 3"
-
-#~ msgid "PCM 4"
-#~ msgstr "PCM 4"
-
-#~ msgid "Green connector function"
-#~ msgstr "Funzione connettore verde"
-
-#~ msgid "Green front panel connector function"
-#~ msgstr "Funzione connettore verde pannello frontale"
-
-#~ msgid "Pink connector function"
-#~ msgstr "Funzione connettore rosa"
-
-#~ msgid "Pink front panel connector function"
-#~ msgstr "Funzione connettore rosa pannello frontale"
-
-#~ msgid "Blue connector function"
-#~ msgstr "Funzione connettore blu"
-
-#~ msgid "Blue front panel connector function"
-#~ msgstr "Funzione connettore blu pannello frontale"
-
-#~ msgid "Orange connector function"
-#~ msgstr "Funzione connettore arancione"
-
-#~ msgid "Orange front panel connector function"
-#~ msgstr "Funzione connettore arancione pannello frontale"
-
-#~ msgid "Black connector function"
-#~ msgstr "Funzione connettore nero"
-
-#~ msgid "Black front panel connector function"
-#~ msgstr "Funzione connettore nero pannello frontale"
-
-#~ msgid "Gray connector function"
-#~ msgstr "Funzione connettore grigio"
-
-#~ msgid "Gray front panel connector function"
-#~ msgstr "Funzione connettore grigio pannello frontale"
-
-#~ msgid "White connector function"
-#~ msgstr "Funzione connettore bianco"
-
-#~ msgid "White front panel connector function"
-#~ msgstr "Funzione connettore bianco pannello frontale"
-
-#~ msgid "Red connector function"
-#~ msgstr "Funzione connettore rosso"
-
-#~ msgid "Red front panel connector function"
-#~ msgstr "Funzione connettore rosso pannello frontale"
-
-#~ msgid "Yellow connector function"
-#~ msgstr "Funzione connettore giallo"
-
-#~ msgid "Yellow front panel connector function"
-#~ msgstr "Funzione connettore giallo pannello frontale"
-
-#~ msgid "Virtual mixer channel configuration"
-#~ msgstr "Configurazione canale mixer virtuale"
-
-#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Configurazione dell'encoder TwoLAME non riuscita. Controllare i parametri "
-#~ "dell'encoder."
-
-# NdT: rimosso il richiesto, lo so
-#~ msgid ""
-#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-#~ "bitrate was changed to %d kbit/s."
-#~ msgstr ""
-#~ "Non sono consentiti %d kbit/s come bitrate per la proprietà «%s». Il "
-#~ "bitrate è stato cambiato a %d kbit/s."

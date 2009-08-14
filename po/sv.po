@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:42+0100\n"
-"PO-Revision-Date: 2009-01-23 00:44+0100\n"
+"POT-Creation-Date: 2009-08-14 18:11+0100\n"
+"PO-Revision-Date: 2009-08-12 20:29+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -72,11 +72,10 @@ msgstr ""
 "Sound System stöds inte av detta element."
 
 msgid "Volume"
-msgstr ""
+msgstr "Volym"
 
-#, fuzzy
 msgid "Master"
-msgstr "Snabb"
+msgstr "Övergripande"
 
 msgid "Front"
 msgstr "Fram"
@@ -88,189 +87,178 @@ msgid "Headphones"
 msgstr "Hörlurar"
 
 # LFE=lågfrekvenseffekter
-#, fuzzy
 msgid "Center"
-msgstr "Center / LFE"
+msgstr "Center"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
-#, fuzzy
 msgid "Surround"
-msgstr "Surroundljud"
+msgstr "Surround"
 
 msgid "Side"
 msgstr "Sida"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "Inbyggd högtalare"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 ut"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 ut"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX ut"
 
 msgid "Bass"
-msgstr ""
+msgstr "Bas"
 
 msgid "Treble"
-msgstr ""
+msgstr "Diskant"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D-djup"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D-center"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "3D-förbättring"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Hörlurar"
+msgstr "Telefon"
 
 msgid "Microphone"
 msgstr "Mikrofon"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Linje ut"
 
-#, fuzzy
 msgid "Line In"
-msgstr "Linje-in"
+msgstr "Linje in"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Intern cd"
 
 msgid "Video In"
-msgstr ""
+msgstr "Video in"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX 1 in"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX 2 in"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX in"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Inspelningsförstärkning"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Utgångsförstärkning"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Mikrofon"
+msgstr "Mikrofonförstärkning"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Vändslinga"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Diagnostik"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Basförstärkning"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Uppspelningsportar"
 
 msgid "Input"
 msgstr "Ingång"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Inspelningskälla"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Monitorkälla"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Tangentbordspip"
 
 msgid "Monitor"
-msgstr ""
+msgstr "Monitor"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Simulera stereo"
 
 msgid "Stereo"
 msgstr "Stereo"
 
-#, fuzzy
 msgid "Surround Sound"
 msgstr "Surroundljud"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Mikrofon"
+msgstr "Mikrofonförstärkning"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Högtalarkälla"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Mikrofon"
+msgstr "Mikrofonkälla"
 
 msgid "Jack"
-msgstr ""
+msgstr "Jack"
 
 # LFE=lågfrekvenseffekter
 msgid "Center / LFE"
 msgstr "Center / LFE"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "Stereo"
+msgstr "Stereomix"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Monomix"
 
-#, fuzzy
 msgid "Input Mix"
 msgstr "Ingångsmix"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF in"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF ut"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Mikrofon"
+msgstr "Mikrofon 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Mikrofon"
+msgstr "Mikrofon 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Digital ut"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Digital in"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modem"
 
+# Denna är svår att tolka
 msgid "Handset"
-msgstr ""
+msgstr "Telefonlur"
 
 msgid "Other"
-msgstr ""
+msgstr "Annan"
 
 msgid "None"
-msgstr ""
+msgstr "Ingen"
 
 msgid "On"
 msgstr "På"
@@ -279,13 +267,13 @@ msgid "Off"
 msgstr "Av"
 
 msgid "Mute"
-msgstr ""
+msgstr "Tyst"
 
 msgid "Fast"
 msgstr "Snabb"
 
 msgid "Very Low"
-msgstr ""
+msgstr "Mycket låg"
 
 msgid "Low"
 msgstr "Låg"
@@ -296,126 +284,100 @@ msgstr "Medel"
 msgid "High"
 msgstr "Hög"
 
-#, fuzzy
 msgid "Very High"
 msgstr "Mycket hög"
 
 msgid "Production"
 msgstr "Produktion"
 
-#, fuzzy
 msgid "Front Panel Microphone"
 msgstr "Frontpanelsmikrofon"
 
-#, fuzzy
 msgid "Front Panel Line In"
 msgstr "Linje-in på frontpanel"
 
-#, fuzzy
 msgid "Front Panel Headphones"
 msgstr "Hörlurar på frontpanel"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "Linje-in på frontpanel"
+msgstr "Linje-ut på frontpanel"
 
-#, fuzzy
 msgid "Green Connector"
 msgstr "Grön kontakt"
 
-#, fuzzy
 msgid "Pink Connector"
 msgstr "Rosa kontakt"
 
-#, fuzzy
 msgid "Blue Connector"
 msgstr "Blå kontakt"
 
-#, fuzzy
 msgid "White Connector"
 msgstr "Vit kontakt"
 
-#, fuzzy
 msgid "Black Connector"
 msgstr "Svart kontakt"
 
-#, fuzzy
 msgid "Gray Connector"
 msgstr "Grå kontakt"
 
-#, fuzzy
 msgid "Orange Connector"
 msgstr "Orange kontakt"
 
-#, fuzzy
 msgid "Red Connector"
 msgstr "Röd kontakt"
 
-#, fuzzy
 msgid "Yellow Connector"
 msgstr "Gul kontakt"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
 msgstr "Grön frontpanelskontakt"
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
 msgstr "Rosa frontpanelskontakt"
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
 msgstr "Blå frontpanelskontakt"
 
-#, fuzzy
 msgid "White Front Panel Connector"
 msgstr "Vit frontpanelskontakt"
 
-#, fuzzy
 msgid "Black Front Panel Connector"
 msgstr "Svart frontpanelskontakt"
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
 msgstr "Grå frontpanelskontakt"
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
 msgstr "Orange frontpanelskontakt"
 
-#, fuzzy
 msgid "Red Front Panel Connector"
 msgstr "Röd frontpanelskontakt"
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
 msgstr "Gul frontpanelskontakt"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Spridd utgång"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Nedmixning"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
 msgstr "Virtuell mixeringång"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
 msgstr "Virtuell mixerutgång"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "Virtuell mixeringång"
+msgstr "Virtuella mixerkanaler"
 
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "%s-funktion"
 
 #, c-format
 msgid "%s %d"
-msgstr ""
+msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "

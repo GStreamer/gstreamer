@@ -1,13 +1,14 @@
 # Hungarian translation of gst-plugins-bad
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+#
 # Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.10.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:42+0100\n"
-"PO-Revision-Date: 2009-04-20 02:16+0200\n"
+"POT-Creation-Date: 2009-08-14 18:11+0100\n"
+"PO-Revision-Date: 2009-08-12 23:33+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -73,11 +74,10 @@ msgstr ""
 "hangrendszer ezen verzióját nem támogatja az elem."
 
 msgid "Volume"
-msgstr ""
+msgstr "Hangerő"
 
-#, fuzzy
 msgid "Master"
-msgstr "Gyors"
+msgstr "Master"
 
 msgid "Front"
 msgstr "Elöl"
@@ -88,188 +88,176 @@ msgstr "Hátul"
 msgid "Headphones"
 msgstr "Fülhallgatók"
 
-#, fuzzy
 msgid "Center"
-msgstr "Közép/LFE"
+msgstr "Közép"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
-#, fuzzy
 msgid "Surround"
-msgstr "Térhatású hang"
+msgstr "Térhatású"
 
 msgid "Side"
 msgstr "Oldalt"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "Beépített hangszóró"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "1. AUX ki"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "2. AUX ki"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX ki"
 
 msgid "Bass"
-msgstr ""
+msgstr "Mély"
 
 msgid "Treble"
-msgstr ""
+msgstr "Magas"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D mélység"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D közép"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "3D bővítés"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Fülhallgatók"
+msgstr "Telefon"
 
 msgid "Microphone"
 msgstr "Mikrofon"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Vonalkimenet"
 
-#, fuzzy
 msgid "Line In"
 msgstr "Vonalbemenet"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Belső CD"
 
 msgid "Video In"
-msgstr ""
+msgstr "Videó be"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "1. AUX be"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "2. AUX be"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX be"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Felvétel-erősítés"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Kimenet-erősítés"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Mikrofon"
+msgstr "Mikrofon-erősítés"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Visszacsatolás"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Diagnosztika"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Mély erősítése"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Lejátszási portok"
 
 msgid "Input"
 msgstr "Bemenet"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Forrás felvétele"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Forrás figyelése"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Billentyűzethang"
 
 msgid "Monitor"
-msgstr ""
+msgstr "Figyelés"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Sztereó szimulálása"
 
 msgid "Stereo"
 msgstr "Sztereó"
 
-#, fuzzy
 msgid "Surround Sound"
 msgstr "Térhatású hang"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Mikrofon"
+msgstr "Mikrofon erősítése"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Hangszóróforrás"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Mikrofon"
+msgstr "Mikrofonforrás"
 
 msgid "Jack"
-msgstr ""
+msgstr "Jack"
 
 msgid "Center / LFE"
 msgstr "Közép/LFE"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "Sztereó"
+msgstr "Sztereó keverő"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Mono keverő"
 
-#, fuzzy
 msgid "Input Mix"
 msgstr "Bemeneti keverő"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF be"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF ki"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Mikrofon"
+msgstr "1. mikrofon"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Mikrofon"
+msgstr "2. mikrofon"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Digitális ki"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Digitális be"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modem"
 
 msgid "Handset"
-msgstr ""
+msgstr "Kagyló"
 
 msgid "Other"
-msgstr ""
+msgstr "Egyéb"
 
 msgid "None"
-msgstr ""
+msgstr "Nincs"
 
 msgid "On"
 msgstr "Be"
@@ -278,13 +266,13 @@ msgid "Off"
 msgstr "Ki"
 
 msgid "Mute"
-msgstr ""
+msgstr "Némítás"
 
 msgid "Fast"
 msgstr "Gyors"
 
 msgid "Very Low"
-msgstr ""
+msgstr "Nagyon alacsony"
 
 msgid "Low"
 msgstr "Alacsony"
@@ -295,126 +283,100 @@ msgstr "Közepes"
 msgid "High"
 msgstr "Magas"
 
-#, fuzzy
 msgid "Very High"
 msgstr "Nagyon magas"
 
 msgid "Production"
 msgstr "Előállítás"
 
-#, fuzzy
 msgid "Front Panel Microphone"
 msgstr "Előlapi mikrofon"
 
-#, fuzzy
 msgid "Front Panel Line In"
 msgstr "Előlapi vonalbemenet"
 
-#, fuzzy
 msgid "Front Panel Headphones"
 msgstr "Előlapi fülhallgató"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "Előlapi vonalbemenet"
+msgstr "Előlapi vonalkimenet"
 
-#, fuzzy
 msgid "Green Connector"
 msgstr "Zöld csatlakozó"
 
-#, fuzzy
 msgid "Pink Connector"
 msgstr "Rózsaszín csatlakozó"
 
-#, fuzzy
 msgid "Blue Connector"
 msgstr "Kék csatlakozó"
 
-#, fuzzy
 msgid "White Connector"
 msgstr "Fehér csatlakozó"
 
-#, fuzzy
 msgid "Black Connector"
 msgstr "Fekete csatlakozó"
 
-#, fuzzy
 msgid "Gray Connector"
 msgstr "Szürke csatlakozó"
 
-#, fuzzy
 msgid "Orange Connector"
 msgstr "Narancs csatlakozó"
 
-#, fuzzy
 msgid "Red Connector"
 msgstr "Vörös csatlakozó"
 
-#, fuzzy
 msgid "Yellow Connector"
 msgstr "Sárga csatlakozó"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
 msgstr "Zöld előlapi csatlakozó"
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
 msgstr "Rózsaszín előlapi csatlakozó"
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
 msgstr "Kék előlapi csatlakozó"
 
-#, fuzzy
 msgid "White Front Panel Connector"
 msgstr "Fehér előlapi csatlakozó"
 
-#, fuzzy
 msgid "Black Front Panel Connector"
 msgstr "Fekete előlapi csatlakozó"
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
 msgstr "Szürke előlapi csatlakozó"
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
 msgstr "Narancs előlapi csatlakozó"
 
-#, fuzzy
 msgid "Red Front Panel Connector"
 msgstr "Vörös előlapi csatlakozó"
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
 msgstr "Sárga előlapi csatlakozó"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Kimenet szórása"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Lekeverés"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
 msgstr "Virtuális keverőbemenet"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
 msgstr "Virtuális keverőkimenet"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "Virtuális keverőbemenet"
+msgstr "Virtuális keverőcsatornák"
 
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "%s funkció"
 
 #, c-format
 msgid "%s %d"
-msgstr ""
+msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -451,72 +413,3 @@ msgstr "A hangeszköz nem támogatja a felvételt."
 
 msgid "Error recording from audio device."
 msgstr "Hiba a hangeszközről való felvételkor."
-
-#~ msgid "PCM 1"
-#~ msgstr "PCM 1"
-
-#~ msgid "PCM 2"
-#~ msgstr "PCM 2"
-
-#~ msgid "PCM 3"
-#~ msgstr "PCM 3"
-
-#~ msgid "PCM 4"
-#~ msgstr "PCM 4"
-
-#~ msgid "Green connector function"
-#~ msgstr "Zöld csatlakozó funkciója"
-
-#~ msgid "Green front panel connector function"
-#~ msgstr "Zöld előlapi csatlakozó funkciója"
-
-#~ msgid "Pink connector function"
-#~ msgstr "Rózsaszín csatlakozó funkciója"
-
-#~ msgid "Pink front panel connector function"
-#~ msgstr "Rózsaszín előlapi csatlakozó funkciója"
-
-#~ msgid "Blue connector function"
-#~ msgstr "Kék csatlakozó funkciója"
-
-#~ msgid "Blue front panel connector function"
-#~ msgstr "Kék előlapi csatlakozó funkciója"
-
-#~ msgid "Orange connector function"
-#~ msgstr "Narancs csatlakozó funkciója"
-
-#~ msgid "Orange front panel connector function"
-#~ msgstr "Narancs előlapi csatlakozó funkciója"
-
-#~ msgid "Black connector function"
-#~ msgstr "Fekete csatlakozó funkciója"
-
-#~ msgid "Black front panel connector function"
-#~ msgstr "Fekete előlapi csatlakozó funkciója"
-
-#~ msgid "Gray connector function"
-#~ msgstr "Szürke csatlakozó funkciója"
-
-#~ msgid "Gray front panel connector function"
-#~ msgstr "Szürke előlapi csatlakozó funkciója"
-
-#~ msgid "White connector function"
-#~ msgstr "Fehér csatlakozó funkciója"
-
-#~ msgid "White front panel connector function"
-#~ msgstr "Fehér előlapi csatlakozó funkciója"
-
-#~ msgid "Red connector function"
-#~ msgstr "Vörös csatlakozó funkciója"
-
-#~ msgid "Red front panel connector function"
-#~ msgstr "Vörös előlapi csatlakozó funkciója"
-
-#~ msgid "Yellow connector function"
-#~ msgstr "Sárga csatlakozó funkciója"
-
-#~ msgid "Yellow front panel connector function"
-#~ msgstr "Sárga előlapi csatlakozó funkciója"
-
-#~ msgid "Virtual mixer channel configuration"
-#~ msgstr "Virtuális keverő csatornabeállításai"

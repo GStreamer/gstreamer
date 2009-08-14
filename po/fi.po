@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.10.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:42+0100\n"
-"PO-Revision-Date: 2009-03-11 08:23+0200\n"
+"POT-Creation-Date: 2009-08-14 18:11+0100\n"
+"PO-Revision-Date: 2009-08-12 22:13+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -78,11 +78,10 @@ msgstr ""
 "ei tue tätä versiota Open Sound Systemistä."
 
 msgid "Volume"
-msgstr ""
+msgstr "Äänenvoimakkuus"
 
-#, fuzzy
 msgid "Master"
-msgstr "Nopea"
+msgstr "Pää"
 
 msgid "Front"
 msgstr "Etu"
@@ -93,188 +92,176 @@ msgstr "Taka"
 msgid "Headphones"
 msgstr "Kuulokkeet"
 
-#, fuzzy
 msgid "Center"
-msgstr "Keski / LFE"
+msgstr "Keski"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
-#, fuzzy
 msgid "Surround"
-msgstr "Surround-ääni"
+msgstr "Surround"
 
 msgid "Side"
 msgstr "Sivu"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "Sisäänrakennettu kaiutin"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 ulos"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 ulos"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX ulos"
 
 msgid "Bass"
-msgstr ""
+msgstr "Basso"
 
 msgid "Treble"
-msgstr ""
+msgstr "Diskantit"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D-syvyys"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D-keski"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "3D-parannus"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Kuulokkeet"
+msgstr "Puhelin"
 
 msgid "Microphone"
 msgstr "Mikrofoni"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Linja ulos"
 
-#, fuzzy
 msgid "Line In"
 msgstr "Linja sisään"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Sisäinen CD"
 
 msgid "Video In"
-msgstr ""
+msgstr "Video sisään"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX 1 sisään"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX 2 sisään"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX sisään"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Nauhoitusvahvistus"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Ulostulovahvistus"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Mikrofoni"
+msgstr "Mikrofoni-lisä"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Silmukka"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Diagnosointi"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Basso-lisä"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Toistoportit"
 
 msgid "Input"
 msgstr "Sisääntulo"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Nauhoituslähde"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Monitorointilähde"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Näppäimistöpiippaus"
 
 msgid "Monitor"
-msgstr ""
+msgstr "Monitori"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Simuloitu stereo"
 
 msgid "Stereo"
 msgstr "Stereo"
 
-#, fuzzy
 msgid "Surround Sound"
 msgstr "Surround-ääni"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Mikrofoni"
+msgstr "Mikrofonivahvistus"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Kaiutinlähde"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Mikrofoni"
+msgstr "Mikrofonilähde"
 
 msgid "Jack"
-msgstr ""
+msgstr "Jakki"
 
 msgid "Center / LFE"
 msgstr "Keski / LFE"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "Stereo"
+msgstr "Stereomiksaus"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Monomiksaus"
 
-#, fuzzy
 msgid "Input Mix"
 msgstr "Sisääntulomiksaus"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF sisään"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF ulos"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Mikrofoni"
+msgstr "Mikrofoni 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Mikrofoni"
+msgstr "Mikrofoni 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Digitaalinen ulos"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Digitaalinen sisään"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modeemi"
 
 msgid "Handset"
-msgstr ""
+msgstr "Luuri"
 
 msgid "Other"
-msgstr ""
+msgstr "Muu"
 
 msgid "None"
-msgstr ""
+msgstr "Ei mikään"
 
 msgid "On"
 msgstr "Päällä"
@@ -283,13 +270,13 @@ msgid "Off"
 msgstr "Poissa"
 
 msgid "Mute"
-msgstr ""
+msgstr "Vaimenna"
 
 msgid "Fast"
 msgstr "Nopea"
 
 msgid "Very Low"
-msgstr ""
+msgstr "Erittäin matala"
 
 msgid "Low"
 msgstr "Matala"
@@ -300,126 +287,100 @@ msgstr "Keskitaso"
 msgid "High"
 msgstr "Korkea"
 
-#, fuzzy
 msgid "Very High"
 msgstr "Erittäin korkea"
 
 msgid "Production"
 msgstr "Tuotanto"
 
-#, fuzzy
 msgid "Front Panel Microphone"
 msgstr "Etupaneelin mikrofoni"
 
-#, fuzzy
 msgid "Front Panel Line In"
 msgstr "Etupaneelin linjasisääntulo"
 
-#, fuzzy
 msgid "Front Panel Headphones"
 msgstr "Etupaneelin kuulokkeet"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "Etupaneelin linjasisääntulo"
+msgstr "Etupaneelin linja ulos"
 
-#, fuzzy
 msgid "Green Connector"
 msgstr "Vihreä liitin"
 
-#, fuzzy
 msgid "Pink Connector"
 msgstr "Violetti liitin"
 
-#, fuzzy
 msgid "Blue Connector"
 msgstr "Sininen liitin"
 
-#, fuzzy
 msgid "White Connector"
 msgstr "Valkoinen liitin"
 
-#, fuzzy
 msgid "Black Connector"
 msgstr "Musta liitin"
 
-#, fuzzy
 msgid "Gray Connector"
 msgstr "Harmaa liitin"
 
-#, fuzzy
 msgid "Orange Connector"
 msgstr "Oranssi liitin"
 
-#, fuzzy
 msgid "Red Connector"
 msgstr "Punainen liitin"
 
-#, fuzzy
 msgid "Yellow Connector"
 msgstr "Keltainen liitin"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
 msgstr "Vihreä etupaneelin liitin"
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
 msgstr "Violetti etupaneelin liitin"
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
 msgstr "Sininen etupaneelin liitin"
 
-#, fuzzy
 msgid "White Front Panel Connector"
 msgstr "Valkoinen etupaneelin liitin"
 
-#, fuzzy
 msgid "Black Front Panel Connector"
 msgstr "Musta etupaneelin liitin"
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
 msgstr "Harmaa etupaneelin liitin"
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
 msgstr "Oranssi etupaneelin liitin"
 
-#, fuzzy
 msgid "Red Front Panel Connector"
 msgstr "Punainen etupaneelin liitin"
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
 msgstr "Keltainen etupaneelin liitin"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Leviävä ulostulo"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Alasmiksaus"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
 msgstr "Näennäinen mikserisisääntulo"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
 msgstr "Näennäinen mikseriulostulo"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "Näennäinen mikserisisääntulo"
+msgstr "Näennäiset mikserikanavat"
 
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "%s-toiminto"
 
 #, c-format
 msgid "%s %d"
-msgstr ""
+msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
