@@ -604,6 +604,10 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
   if (!gst_v4l2_close (v4l2object))
     return FALSE;
 
+  if (v4l2object->formats) {
+    gst_v4l2_object_clear_format_list (v4l2object);
+  }
+
   return TRUE;
 }
 

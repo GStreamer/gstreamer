@@ -760,6 +760,11 @@ gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
       /* close the device */
       if (!gst_v4l2_object_stop (v4l2src->v4l2object))
         return GST_STATE_CHANGE_FAILURE;
+
+      if (v4l2src->probed_caps) {
+        gst_caps_unref (v4l2src->probed_caps);
+        v4l2src->probed_caps = NULL;
+      }
       break;
     default:
       break;
