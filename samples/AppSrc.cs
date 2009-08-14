@@ -36,7 +36,8 @@ public class AppSrcDemo
 		Element.Link(appsrc, color, sink);
 
 		// Set the caps on the AppSrc to RGBA, 640x480, 4 fps, square pixels
-		appsrc.Caps = Gst.Video.VideoUtil.FormatNewCaps(Gst.Video.VideoFormat.BGRA, 640, 480, 4, 1, 1, 1);
+		Gst.Video.VideoFormat fmt = (BitConverter.IsLittleEndian) ? Gst.Video.VideoFormat.BGRA : Gst.Video.VideoFormat.ARGB;
+		appsrc.Caps = Gst.Video.VideoUtil.FormatNewCaps(fmt, 640, 480, 4, 1, 1, 1);
 
 		// Connect the handlers
 		appsrc.NeedData += PushAppData;
