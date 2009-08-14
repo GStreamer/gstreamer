@@ -349,6 +349,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstVideoBox::autocrop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Auto crop</NICK>
+<BLURB>Auto crop.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstUDPSink::host</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
