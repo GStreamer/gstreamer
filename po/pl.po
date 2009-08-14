@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:17+0100\n"
-"PO-Revision-Date: 2009-05-12 21:01+0200\n"
+"POT-Creation-Date: 2009-08-14 17:38+0100\n"
+"PO-Revision-Date: 2009-08-12 22:01+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -173,24 +173,23 @@ msgstr "Nie udało się otworzyć urządzenia dźwiękowego do nagrywania."
 msgid "Gain"
 msgstr "Wzmocnienie"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Głośniczek"
+msgstr "Wbudowany głośniczek"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Słuchawki"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Wyjście linii"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "Wyjście SPDIF"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "Wyjście AUX 1"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "Wyjście AUX 2"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -244,9 +243,9 @@ msgstr "Nie udało się otworzyć urządzenia '%s' do odczytu i zapisu."
 msgid "Device '%s' is not a capture device."
 msgstr "Urządzenie '%s' nie jest urządzeniem przechwytującym."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Urządzenie '%s' nie jest urządzeniem przechwytującym."
+msgstr "Urządzenie '%s' nie jest urządzeniem wyjściowym."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -319,52 +318,3 @@ msgstr "Zmiana rozdzielczości w czasie działania nie jest jeszcze obsługiwana
 
 msgid "Cannot operate without a clock"
 msgstr "Nie można pracować bez zegara"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Nie udało się odczytać możliwych formatów obrazu, z którymi działa "
-#~ "urządzenie '%s'"
-
-#~ msgid ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
-#~ msgstr ""
-#~ "Rodzaj bufora nie jest obsługiwany, albo indeks jest poza zakresem, albo "
-#~ "nie przydzielono jeszcze buforów, albo userptr lub length są niepoprawne. "
-#~ "Urządzenie %s"
-
-#~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Nie udało się uzyskać klatek obrazu z urządzenia '%s'. Za mało pamięci."
-
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "niewystarczająca pamięć do skolejkowania bufora wskaźnika użytkownika. "
-#~ "Urządzenie %s."
-
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Brak wolnych buforów w puli dla indeksu %d."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Urządzenie '%s' nie obsługuje przechwytywania obrazu"
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Urządzenie '%s' nie może przechwytywać przy %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Urządzenie '%s' nie może przechwytywać w podanym formacie"
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Nie udało się uzyskać buforów z urządzenia '%s'."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr ""
-#~ "Nie udało się uzyskać wystarczającej liczby buforów z urządzenia '%s'."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Błąd uruchamiania przechwytywania strumienia z urządzenia '%s'."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Błąd zatrzymywania przechwytywania strumienia z urządzenia '%s'."

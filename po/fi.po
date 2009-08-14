@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:17+0100\n"
-"PO-Revision-Date: 2009-05-12 12:57+0300\n"
+"POT-Creation-Date: 2009-08-14 17:38+0100\n"
+"PO-Revision-Date: 2009-08-12 20:53+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -182,24 +182,23 @@ msgstr "Äänilaitetta ei voitu avata nauhoitusta varten."
 msgid "Gain"
 msgstr "Herkkyys"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Kaiutin"
+msgstr "Sisäänrakennettu kaiutin"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Kuulokkeet"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Linja ulos"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF ulos"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 ulos"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 ulos"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -253,9 +252,9 @@ msgstr "Laitetta \"%s\" ei voitu avata luettavaksi ja kirjoitettavaksi."
 msgid "Device '%s' is not a capture device."
 msgstr "Laitteelta \"%s\" ei voi kaapata."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Laitteelta \"%s\" ei voi kaapata."
+msgstr "Laite \"%s\" ei ole ulostulolaite."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

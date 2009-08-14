@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:17+0100\n"
-"PO-Revision-Date: 2009-06-02 23:54+0200\n"
+"POT-Creation-Date: 2009-08-14 17:38+0100\n"
+"PO-Revision-Date: 2009-08-12 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "MIME-Version: 1.0\n"
@@ -181,24 +181,23 @@ msgstr "Kunne ikke åbne lydenhed til optagelse."
 msgid "Gain"
 msgstr "Forhøjelse"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Højtaler"
+msgstr "Indbygget højtaler"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Hovedtelefon"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Linje ud"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF ud"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 ud"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 ud"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -254,9 +253,9 @@ msgstr "Kunne ikke tilgå enhed '%s'."
 msgid "Device '%s' is not a capture device."
 msgstr "Enhed '%s' er ikke en optageenhed."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Enhed '%s' er ikke en optageenhed."
+msgstr "Enhed '%s' er ikke en uddataenhed."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

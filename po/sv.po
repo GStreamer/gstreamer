@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:17+0100\n"
-"PO-Revision-Date: 2009-05-12 17:41+0100\n"
+"POT-Creation-Date: 2009-08-14 17:38+0100\n"
+"PO-Revision-Date: 2009-08-12 20:04+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -176,25 +176,23 @@ msgstr "Kunde inte öppna ljudenheten för inspelning."
 msgid "Gain"
 msgstr "Förstärk"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Högtalare"
+msgstr "Inbyggd högtalare"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Hörlur"
 
-#, fuzzy
 msgid "Line Out"
-msgstr "Linje"
+msgstr "Linje ut"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF ut"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 ut"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 ut"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -250,9 +248,9 @@ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 msgid "Device '%s' is not a capture device."
 msgstr "Enheten \"%s\" är ingen fångstenhet."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Enheten \"%s\" är ingen fångstenhet."
+msgstr "Enheten \"%s\" är ingen utgångsenhet."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

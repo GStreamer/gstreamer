@@ -3,10 +3,10 @@
 # Server Acim <serveracim@gmail.com>, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:17+0100\n"
-"PO-Revision-Date: 2009-06-21 11:35+0200\n"
+"POT-Creation-Date: 2009-08-14 17:38+0100\n"
+"PO-Revision-Date: 2009-08-12 19:50+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -168,24 +168,23 @@ msgstr "Aygıtı kayıt için açamıyor."
 msgid "Gain"
 msgstr "Kazanç"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Hoparlör"
+msgstr "Varsayılan Hoparlör"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Kulaklık"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Hat Çıkışı"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF Çıkış"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 Çıkış"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 Çıkış"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -239,9 +238,9 @@ msgstr "Şu aygıtı '%s' okuma ve yazma için açamıyor."
 msgid "Device '%s' is not a capture device."
 msgstr "Aygıt '%s' bir yakalama aygıtı değil."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Aygıt '%s' bir yakalama aygıtı değil."
+msgstr "Aygıt '%s' bir çıkış aygıtı değil."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
