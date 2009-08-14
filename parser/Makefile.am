@@ -21,6 +21,7 @@ MAINTAINERCLEANFILES = Makefile.in
 EXTRA_DIST = \
 	gst-gapi-fixup.cs \
 	gst-generate-tags.cs \
+	gapi-parser.cs \
 	gapi_pp.pl \
 	gapi2xml.pl
 
