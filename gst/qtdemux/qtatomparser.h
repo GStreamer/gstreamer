@@ -104,10 +104,10 @@ qt_atom_parser_peek_sub (QtAtomParser * parser, guint offset, guint size,
 {
   *sub = *parser;
 
-  if (G_UNLIKELY (!gst_byte_reader_skip (sub, offset)))
+  if (G_UNLIKELY (!qt_atom_parser_skip (sub, offset)))
     return FALSE;
 
-  return (gst_byte_reader_get_remaining (sub) >= size);
+  return (qt_atom_parser_get_remaining (sub) >= size);
 }
 
 static inline gboolean
@@ -120,6 +120,32 @@ qt_atom_parser_skipn_and_get_uint32 (QtAtomParser * parser,
   qt_atom_parser_skip_unchecked (parser, bytes_to_skip);
   *val = qt_atom_parser_get_uint32_unchecked (parser);
   return TRUE;
+}
+
+/* off_size must be either 4 or 8 */
+static inline gboolean
+qt_atom_parser_get_offset (QtAtomParser * parser, guint off_size, guint64 * val)
+{
+  if (G_UNLIKELY (qt_atom_parser_get_remaining (parser) < off_size))
+    return FALSE;
+
+  if (off_size == sizeof (guint64)) {
+    *val = qt_atom_parser_get_uint64_unchecked (parser);
+  } else {
+    *val = qt_atom_parser_get_uint32_unchecked (parser);
+  }
+  return TRUE;
+}
+
+/* off_size must be either 4 or 8 */
+static inline guint64
+qt_atom_parser_get_offset_unchecked (QtAtomParser * parser, guint off_size)
+{
+  if (off_size == sizeof (guint64)) {
+    return qt_atom_parser_get_uint64_unchecked (parser);
+  } else {
+    return qt_atom_parser_get_uint32_unchecked (parser);
+  }
 }
 
 #endif /* QT_ATOM_PARSER_H */
