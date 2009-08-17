@@ -680,6 +680,45 @@ gst_sei_decode_picture_timing (GstH264Parse * h, GstNalBs * bs)
   return 0;
 }
 
+/* decode supplimental enhancement information */
+static gboolean
+gst_nal_decode_sei (GstH264Parse * h, GstNalBs * bs)
+{
+  guint8 tmp;
+  GstSeiPayloadType payloadType = 0;
+  gint8 payloadSize = 0;
+
+  do {
+    tmp = gst_nal_bs_read (bs, 8);
+    payloadType += tmp;
+  } while (tmp == 255);
+  do {
+    tmp = gst_nal_bs_read (bs, 8);
+    payloadSize += tmp;
+  } while (tmp == 255);
+  GST_DEBUG_OBJECT (h,
+      "SEI message received: payloadType = %d, payloadSize = %d bytes",
+      payloadType, payloadSize);
+
+  switch (payloadType) {
+    case SEI_BUF_PERIOD:
+      if (!gst_sei_decode_buffering_period (h, bs))
+        return FALSE;
+      break;
+    case SEI_PIC_TIMING:
+      /* TODO: According to H264 D2.2 Note1, it might be the case that the
+       * picture timing SEI message is encountered before the corresponding SPS
+       * is specified. Need to hold down the message and decode it later.  */
+      if (!gst_sei_decode_picture_timing (h, bs))
+        return FALSE;
+      break;
+    default:
+      GST_DEBUG_OBJECT (h, "SEI message of payloadType = %d is recieved but not"
+          " parsed", payloadType);
+  }
+
+  return TRUE;
+}
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 
