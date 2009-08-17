@@ -551,6 +551,26 @@ gst_nal_decode_sps (GstH264Parse * h, GstNalBs * bs)
   return TRUE;
 }
 
+/* decode pic parameter set */
+static gboolean
+gst_nal_decode_pps (GstH264Parse * h, GstNalBs * bs)
+{
+  guint8 pps_id;
+  GstH264Pps *pps = NULL;
+
+  pps_id = gst_nal_bs_read_ue (bs);
+  pps = gst_h264_parse_get_pps (h, pps_id);
+  if (pps == NULL) {
+    return FALSE;
+  }
+  h->pps = pps;
+
+  pps->sps_id = gst_nal_bs_read_ue (bs);
+
+  /* not parsing the rest for the time being */
+  return TRUE;
+}
+
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 
