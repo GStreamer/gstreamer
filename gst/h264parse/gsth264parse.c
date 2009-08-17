@@ -1001,14 +1001,11 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
 {
   GstFlowReturn res = GST_FLOW_OK;
   const guint8 *data;
-  GstClockTime timestamp;
 
   if (discont) {
     gst_adapter_clear (h264parse->adapter);
     h264parse->discont = TRUE;
   }
-
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   gst_adapter_push (h264parse->adapter, buffer);
 
@@ -1016,7 +1013,8 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
     gint i;
     gint next_nalu_pos = -1;
     gint avail;
-    gboolean delta_unit = TRUE;
+    gboolean delta_unit = FALSE;
+    gboolean got_frame = FALSE;
 
     avail = gst_adapter_available (h264parse->adapter);
     if (avail < h264parse->nal_length_size + 1)
@@ -1146,8 +1144,131 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
     /* we have a packet */
     if (next_nalu_pos > 0) {
       GstBuffer *outbuf;
+      GstClockTime outbuf_dts = GST_CLOCK_TIME_NONE;
 
       outbuf = gst_adapter_take_buffer (h264parse->adapter, next_nalu_pos);
+      outbuf_dts = gst_adapter_prev_timestamp (h264parse->adapter, NULL);       /* Better value for the second parameter? */
+
+      /* Ignore upstream dts that stalls or goes backward. Upstream elements
+       * like filesrc would keep on writing timestamp=0.  XXX: is this correct?
+       * TODO: better way to detect whether upstream timstamps are useful */
+      if (h264parse->last_outbuf_dts != GST_CLOCK_TIME_NONE
+          && outbuf_dts != GST_CLOCK_TIME_NONE
+          && outbuf_dts <= h264parse->last_outbuf_dts)
+        outbuf_dts = GST_CLOCK_TIME_NONE;
+
+      if (got_frame || delta_unit) {
+        GstH264Sps *sps = h264parse->sps;
+        gint duration = 1;
+
+        if (!sps) {
+          GST_DEBUG_OBJECT (h264parse, "referred SPS invalid");
+          goto TIMESTAMP_FINISH;
+        } else if (!sps->timing_info_present_flag) {
+          GST_DEBUG_OBJECT (h264parse,
+              "unable to compute timestamp: timing info not present");
+          goto TIMESTAMP_FINISH;
+        } else if (sps->time_scale == 0) {
+          GST_DEBUG_OBJECT (h264parse,
+              "unable to compute timestamp: time_scale = 0 "
+              "(this is forbidden in spec; bitstream probably contains error)");
+          goto TIMESTAMP_FINISH;
+        }
+
+        if (sps->pic_struct_present_flag
+            && h264parse->sei_pic_struct != (guint8) - 1) {
+          /* Note that when h264parse->sei_pic_struct == -1 (unspecified), there
+           * are ways to infer its value. This is related to computing the
+           * TopFieldOrderCnt and BottomFieldOrderCnt, which looks
+           * complicated and thus not implemented for the time being. Yet
+           * the value we have here is correct for many applications
+           */
+          switch (h264parse->sei_pic_struct) {
+            case SEI_PIC_STRUCT_TOP_FIELD:
+            case SEI_PIC_STRUCT_BOTTOM_FIELD:
+              duration = 1;
+              break;
+            case SEI_PIC_STRUCT_FRAME:
+            case SEI_PIC_STRUCT_TOP_BOTTOM:
+            case SEI_PIC_STRUCT_BOTTOM_TOP:
+              duration = 2;
+              break;
+            case SEI_PIC_STRUCT_TOP_BOTTOM_TOP:
+            case SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM:
+              duration = 3;
+              break;
+            case SEI_PIC_STRUCT_FRAME_DOUBLING:
+              duration = 4;
+              break;
+            case SEI_PIC_STRUCT_FRAME_TRIPLING:
+              duration = 6;
+              break;
+            default:
+              GST_DEBUG_OBJECT (h264parse,
+                  "h264parse->sei_pic_struct of unknown value %d. Not parsed",
+                  h264parse->sei_pic_struct);
+          }
+        } else {
+          duration = h264parse->field_pic_flag ? 1 : 2;
+        }
+
+        /*
+         * h264parse.264 C.1.2 Timing of coded picture removal (equivalent to DTS):
+         * Tr,n(0) = initial_cpb_removal_delay[ SchedSelIdx ] / 90000
+         * Tr,n(n) = Tr,n(nb) + Tc * cpb_removal_delay(n)
+         * where
+         * Tc = num_units_in_tick / time_scale
+         */
+
+        if (h264parse->ts_trn_nb != GST_CLOCK_TIME_NONE) {
+          /* buffering period is present */
+          if (outbuf_dts != GST_CLOCK_TIME_NONE) {
+            /* If upstream timestamp is valid, we respect it and adjust current
+             * reference point */
+            h264parse->ts_trn_nb = outbuf_dts -
+                (GstClockTime) gst_util_uint64_scale_int
+                (h264parse->sei_cpb_removal_delay * GST_SECOND,
+                sps->num_units_in_tick, sps->time_scale);
+          } else {
+            /* If no upstream timestamp is given, we write in new timestamp */
+            h264parse->dts = h264parse->ts_trn_nb +
+                (GstClockTime) gst_util_uint64_scale_int
+                (h264parse->sei_cpb_removal_delay * GST_SECOND,
+                sps->num_units_in_tick, sps->time_scale);
+          }
+        } else {
+          /* naive method: no removal delay specified, use best guess (add prev
+           * frame duration) */
+          if (outbuf_dts != GST_CLOCK_TIME_NONE)
+            h264parse->dts = outbuf_dts;
+          else if (h264parse->dts != GST_CLOCK_TIME_NONE)
+            h264parse->dts +=
+                (GstClockTime) gst_util_uint64_scale_int (h264parse->
+                cur_duration * GST_SECOND, sps->num_units_in_tick,
+                sps->time_scale);
+          else
+            h264parse->dts = 0; /* initialization */
+
+          /* TODO: better approach: construct a buffer queue and put all these
+           * NALs into the buffer. Wait until we are able to get any valid dts
+           * or such like, and dump the buffer and estimate the timestamps of
+           * the NALs by their duration.
+           */
+        }
+
+        h264parse->cur_duration = duration;
+        h264parse->frame_cnt += 1;
+        if (outbuf_dts != GST_CLOCK_TIME_NONE)
+          h264parse->last_outbuf_dts = outbuf_dts;
+      }
+
+      if (outbuf_dts == GST_CLOCK_TIME_NONE)
+        outbuf_dts = h264parse->dts;
+      else
+        h264parse->dts = outbuf_dts;
+
+    TIMESTAMP_FINISH:
+      GST_BUFFER_TIMESTAMP (outbuf) = outbuf_dts;
 
       GST_DEBUG_OBJECT (h264parse,
           "pushing buffer %p, size %u, ts %" GST_TIME_FORMAT, outbuf,
@@ -1164,7 +1285,6 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
         GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (h264parse->srcpad));
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
       res = gst_pad_push (h264parse->srcpad, outbuf);
     } else {
       /* NALU can not be parsed yet, we wait for more data in the adapter. */
