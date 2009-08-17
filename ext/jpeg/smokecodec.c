@@ -145,6 +145,11 @@ smokecodec_encode_new (SmokeCodecInfo ** info,
 
   newinfo->cinfo.dct_method = JDCT_FASTEST;
 
+  /* prepare for raw input */
+#if JPEG_LIB_VERSION >= 70
+  newinfo->cinfo.do_fancy_downsampling = FALSE;
+#endif
+
   newinfo->cinfo.raw_data_in = TRUE;
   newinfo->cinfo.in_color_space = JCS_YCbCr;
   newinfo->cinfo.comp_info[0].h_samp_factor = 2;
