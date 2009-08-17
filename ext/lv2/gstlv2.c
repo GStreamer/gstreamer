@@ -646,7 +646,7 @@ gst_lv2_set_property (GObject * object, guint prop_id, const GValue * value,
         GstLV2Port *desc =
             &g_array_index (lv2_class->control_in_ports, GstLV2Port,
             preset_value->index);
-        gsp->control_in[prop_id] = preset_value->value;
+        gsp->control_in[desc->pad] = preset_value->value;
       }
       lv2->current_preset = num;
       return;
