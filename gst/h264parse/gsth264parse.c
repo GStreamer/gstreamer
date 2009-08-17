@@ -210,6 +210,35 @@ gst_nal_bs_read_ue (GstNalBs * bs)
   return ((1 << i) - 1 + gst_nal_bs_read (bs, i));
 }
 
+/* SEI type */
+typedef enum
+{
+  SEI_BUF_PERIOD = 0,
+  SEI_PIC_TIMING = 1
+      /* and more...  */
+} GstSeiPayloadType;
+
+/* SEI pic_struct type */
+typedef enum
+{
+  SEI_PIC_STRUCT_FRAME = 0,     /* 0: %frame */
+  SEI_PIC_STRUCT_TOP_FIELD = 1, /* 1: top field */
+  SEI_PIC_STRUCT_BOTTOM_FIELD = 2,      /* 2: bottom field */
+  SEI_PIC_STRUCT_TOP_BOTTOM = 3,        /* 3: top field, bottom field, in that order */
+  SEI_PIC_STRUCT_BOTTOM_TOP = 4,        /* 4: bottom field, top field, in that order */
+  SEI_PIC_STRUCT_TOP_BOTTOM_TOP = 5,    /* 5: top field, bottom field, top field repeated, in that order */
+  SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM = 6, /* 6: bottom field, top field, bottom field repeated, in that order */
+  SEI_PIC_STRUCT_FRAME_DOUBLING = 7,    /* 7: %frame doubling */
+  SEI_PIC_STRUCT_FRAME_TRIPLING = 8     /* 8: %frame tripling */
+} GstSeiPicStructType;
+
+/* pic_struct to NumClockTS lookup table */
+static const guint8 sei_num_clock_ts_table[9] = {
+  1, 1, 1, 2, 2, 3, 3, 2, 3
+};
+
+#define Extended_SAR 255
+
 /* SPS: sequential parameter sets */
 struct _GstH264Sps
 {

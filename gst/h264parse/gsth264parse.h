@@ -80,6 +80,16 @@ struct _GstH264Parse
   /* PPS: sequential parameter set */ 
   GstH264Pps *pps_buffers[MAX_PPS_COUNT];
   GstH264Pps *pps; /* Current PPS */ 
+
+  /* SEI: supplemental enhancement messages */ 
+  /* buffering period */ 
+  guint32 initial_cpb_removal_delay[32];
+  /* picture timing */ 
+  guint32 sei_cpb_removal_delay;
+  guint32 sei_dpb_output_delay;
+  guint8 sei_pic_struct;
+  guint8 sei_ct_type; 
+  /* And more... */ 
 };
 
 struct _GstH264ParseClass
