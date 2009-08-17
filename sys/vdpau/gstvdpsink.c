@@ -591,6 +591,7 @@ static gboolean
 gst_vdp_sink_start (GstBaseSink * bsink)
 {
   VdpSink *vdp_sink = GST_VDP_SINK (bsink);
+  gboolean res = TRUE;
 
   vdp_sink->window = NULL;
   vdp_sink->cur_image = NULL;
@@ -601,10 +602,13 @@ gst_vdp_sink_start (GstBaseSink * bsink)
   vdp_sink->fps_d = 1;
 
   GST_OBJECT_LOCK (vdp_sink);
-  vdp_sink->device = gst_vdp_sink_setup_device (vdp_sink);
+  if (!vdp_sink->device) {
+    if (!(vdp_sink->device = gst_vdp_sink_setup_device (vdp_sink)))
+      res = FALSE;
+  }
   GST_OBJECT_UNLOCK (vdp_sink);
 
-  return TRUE;
+  return res;
 }
 
 static void
