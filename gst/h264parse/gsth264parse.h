@@ -81,6 +81,14 @@ struct _GstH264Parse
   GstH264Pps *pps_buffers[MAX_PPS_COUNT];
   GstH264Pps *pps; /* Current PPS */ 
 
+  /* slice header */ 
+  guint8 first_mb_in_slice;
+  guint8 slice_type;
+  guint8 pps_id;
+  guint32 frame_num;
+  gboolean field_pic_flag;
+  gboolean bottom_field_flag;
+
   /* SEI: supplemental enhancement messages */ 
   /* buffering period */ 
   guint32 initial_cpb_removal_delay[32];
