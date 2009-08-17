@@ -455,6 +455,102 @@ gst_sps_decode_vui (GstH264Parse * h, GstNalBs * bs)
   }
 }
 
+/* decode sequential parameter sets */
+static gboolean
+gst_nal_decode_sps (GstH264Parse * h, GstNalBs * bs)
+{
+  guint8 profile_idc, level_idc;
+  guint8 sps_id;
+  GstH264Sps *sps = NULL;
+
+  profile_idc = gst_nal_bs_read (bs, 8);
+  gst_nal_bs_read (bs, 1);      /* constraint_set0_flag */
+  gst_nal_bs_read (bs, 1);      /* constraint_set1_flag */
+  gst_nal_bs_read (bs, 1);      /* constraint_set2_flag */
+  gst_nal_bs_read (bs, 1);      /* constraint_set3_flag */
+  gst_nal_bs_read (bs, 4);      /* reserved */
+  level_idc = gst_nal_bs_read (bs, 8);
+
+  sps_id = gst_nal_bs_read_ue (bs);
+  sps = gst_h264_parse_get_sps (h, sps_id);
+  if (sps == NULL) {
+    return FALSE;
+  }
+  sps->profile_idc = profile_idc;
+  sps->level_idc = level_idc;
+
+  if (profile_idc == 100 || profile_idc == 110 || profile_idc == 122
+      || profile_idc == 244 || profile_idc == 44 ||
+      profile_idc == 83 || profile_idc == 86) {
+    if (gst_nal_bs_read_ue (bs) == 3) { /* chroma_format_idc */
+      gst_nal_bs_read (bs, 1);  /* separate_colour_plane_flag */
+    }
+    gst_nal_bs_read_ue (bs);    /* bit_depth_luma_minus8 */
+    gst_nal_bs_read_ue (bs);    /* bit_depth_chroma_minus8 */
+    gst_nal_bs_read (bs, 1);    /* qpprime_y_zero_transform_bypass_flag */
+    if (gst_nal_bs_read (bs, 1)) {      /* seq_scaling_matrix_present_flag */
+      /* TODO: unfinished */
+    }
+  }
+
+  sps->log2_max_frame_num_minus4 = gst_nal_bs_read_ue (bs);     /* between 0 and 12 */
+  if (sps->log2_max_frame_num_minus4 > 12) {
+    GST_DEBUG_OBJECT (h, "log2_max_frame_num_minus4 = %d out of range"
+        " [0,12]", sps->log2_max_frame_num_minus4);
+    return FALSE;
+  }
+
+  sps->pic_order_cnt_type = gst_nal_bs_read_ue (bs);
+  if (sps->pic_order_cnt_type == 0) {
+    sps->log2_max_pic_order_cnt_lsb_minus4 = gst_nal_bs_read_ue (bs);
+  } else if (sps->pic_order_cnt_type == 1) {
+    /* TODO: unfinished */
+    /*
+       delta_pic_order_always_zero_flag = gst_nal_bs_read (bs, 1);
+       offset_for_non_ref_pic = gst_nal_bs_read_se (bs);
+       offset_for_top_to_bottom_field = gst_nal_bs_read_se (bs);
+
+       num_ref_frames_in_pic_order_cnt_cycle = gst_nal_bs_read_ue (bs);
+       for( i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++ )
+       offset_for_ref_frame[i] = gst_nal_bs_read_se (bs);
+     */
+  }
+
+  gst_nal_bs_read_ue (bs);      /* max_num_ref_frames */
+  gst_nal_bs_read (bs, 1);      /* gaps_in_frame_num_value_allowed_flag */
+  gst_nal_bs_read_ue (bs);      /* pic_width_in_mbs_minus1 */
+  gst_nal_bs_read_ue (bs);      /* pic_height_in_map_units_minus1 */
+
+  sps->frame_mbs_only_flag = gst_nal_bs_read (bs, 1);
+  if (!sps->frame_mbs_only_flag) {
+    gst_nal_bs_read (bs, 1);    /* mb_adaptive_frame_field_flag */
+  }
+
+  gst_nal_bs_read (bs, 1);      /* direct_8x8_inference_flag */
+  if (gst_nal_bs_read (bs, 1)) {        /* frame_cropping_flag */
+    gst_nal_bs_read_ue (bs);    /* frame_crop_left_offset */
+    gst_nal_bs_read_ue (bs);    /* frame_crop_right_offset */
+    gst_nal_bs_read_ue (bs);    /* frame_crop_top_offset */
+    gst_nal_bs_read_ue (bs);    /* frame_crop_bottom_offset */
+  }
+
+  GST_DEBUG_OBJECT (h, "Decoding SPS: profile_idc = %d, "
+      "level_idc = %d, "
+      "sps_id = %d, "
+      "pic_order_cnt_type = %d, "
+      "frame_mbs_only_flag = %d\n",
+      sps->profile_idc,
+      sps->level_idc,
+      sps_id, sps->pic_order_cnt_type, sps->frame_mbs_only_flag);
+
+  sps->vui_parameters_present_flag = gst_nal_bs_read (bs, 1);
+  if (sps->vui_parameters_present_flag) {
+    gst_sps_decode_vui (h, bs);
+  }
+
+  return TRUE;
+}
+
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 
