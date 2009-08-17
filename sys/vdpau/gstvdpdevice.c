@@ -41,6 +41,8 @@ gst_vdp_device_init (GstVdpDevice * device)
   device->display_name = NULL;
   device->display = NULL;
   device->device = VDP_INVALID_HANDLE;
+
+  device->constructed = FALSE;
 }
 
 static void
@@ -162,6 +164,7 @@ gst_vdp_device_constructed (GObject * object)
     }
   }
 
+  device->constructed = TRUE;
   return;
 
 error:
@@ -239,56 +242,80 @@ gst_vdp_device_new (const gchar * display_name)
 
   device = g_object_new (GST_TYPE_VDP_DEVICE, "display", display_name, NULL);
 
+  if (!device->constructed) {
+    g_object_unref (device);
+    return NULL;
+  }
+
   return device;
 }
+
+typedef struct
+{
+  GHashTable *hash_table;
+  GMutex *mutex;
+} GstVdpDeviceCache;
 
 static void
 device_destroyed_cb (gpointer data, GObject * object)
 {
-  GHashTable *devices_hash = data;
+  GstVdpDeviceCache *device_cache = data;
   GHashTableIter iter;
   gpointer device;
 
   GST_DEBUG ("Removing object from hash table");
 
-  g_hash_table_iter_init (&iter, devices_hash);
+  g_mutex_lock (device_cache->mutex);
+
+  g_hash_table_iter_init (&iter, device_cache->hash_table);
   while (g_hash_table_iter_next (&iter, NULL, &device)) {
     if (device == object) {
       g_hash_table_iter_remove (&iter);
       break;
     }
   }
+
+  g_mutex_unlock (device_cache->mutex);
 }
 
 GstVdpDevice *
 gst_vdp_get_device (const gchar * display_name)
 {
   static gsize once = 0;
-  static GHashTable *devices_hash;
+  static GstVdpDeviceCache device_cache;
   GstVdpDevice *device;
 
   if (g_once_init_enter (&once)) {
     GST_DEBUG_CATEGORY_INIT (gst_vdp_device_debug, "vdpaudevice",
         0, "vdpaudevice");
-    devices_hash =
+    device_cache.hash_table =
         g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+    device_cache.mutex = g_mutex_new ();
+
     g_once_init_leave (&once, 1);
   }
 
+  g_mutex_lock (device_cache.mutex);
+
   if (display_name)
-    device = g_hash_table_lookup (devices_hash, display_name);
+    device = g_hash_table_lookup (device_cache.hash_table, display_name);
   else
-    device = g_hash_table_lookup (devices_hash, "");
+    device = g_hash_table_lookup (device_cache.hash_table, "");
 
   if (!device) {
     device = gst_vdp_device_new (display_name);
-    g_object_weak_ref (G_OBJECT (device), device_destroyed_cb, devices_hash);
-    if (display_name)
-      g_hash_table_insert (devices_hash, g_strdup (display_name), device);
-    else
-      g_hash_table_insert (devices_hash, g_strdup (""), device);
+    if (device) {
+      g_object_weak_ref (G_OBJECT (device), device_destroyed_cb, &device_cache);
+      if (display_name)
+        g_hash_table_insert (device_cache.hash_table, g_strdup (display_name),
+            device);
+      else
+        g_hash_table_insert (device_cache.hash_table, g_strdup (""), device);
+    }
   } else
     g_object_ref (device);
+
+  g_mutex_unlock (device_cache.mutex);
 
   return device;
 }

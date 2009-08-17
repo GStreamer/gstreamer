@@ -48,6 +48,8 @@ struct _GstVdpDevice
 {
   GObject object;
 
+  gboolean constructed;
+  
   gchar *display_name;
   Display *display;
   VdpDevice device;
