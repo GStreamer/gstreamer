@@ -810,6 +810,7 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
 static void
 gst_h264_parse_init (GstH264Parse * h264parse, GstH264ParseClass * g_class)
 {
+  gint i;
   h264parse->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   gst_pad_set_chain_function (h264parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_h264_parse_chain));
@@ -824,16 +825,45 @@ gst_h264_parse_init (GstH264Parse * h264parse, GstH264ParseClass * g_class)
 
   h264parse->split_packetized = DEFAULT_SPLIT_PACKETIZED;
   h264parse->adapter = gst_adapter_new ();
+
+  for (i = 0; i < MAX_SPS_COUNT; i++)
+    h264parse->sps_buffers[i] = NULL;
+  h264parse->sps = NULL;
+
+  h264parse->first_mb_in_slice = -1;
+  h264parse->slice_type = -1;
+  h264parse->pps_id = -1;
+  h264parse->frame_num = -1;
+  h264parse->field_pic_flag = FALSE;
+  h264parse->bottom_field_flag = FALSE;
+
+  for (i = 0; i < 32; i++)
+    h264parse->initial_cpb_removal_delay[i] = -1;
+  h264parse->sei_cpb_removal_delay = 0;
+  h264parse->sei_dpb_output_delay = 0;
+  h264parse->sei_pic_struct = -1;
+  h264parse->sei_ct_type = -1;
+
+  h264parse->dts = GST_CLOCK_TIME_NONE;
+  h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
+  h264parse->cur_duration = 0;
+  h264parse->last_outbuf_dts = GST_CLOCK_TIME_NONE;
 }
 
 static void
 gst_h264_parse_finalize (GObject * object)
 {
   GstH264Parse *h264parse;
+  gint i;
 
   h264parse = GST_H264PARSE (object);
 
   g_object_unref (h264parse->adapter);
+
+  for (i = 0; i < MAX_SPS_COUNT; i++) {
+    if (h264parse->sps_buffers[i] != NULL)
+      g_slice_free (GstH264Sps, h264parse->sps_buffers[i]);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

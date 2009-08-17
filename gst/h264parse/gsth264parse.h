@@ -49,6 +49,15 @@ typedef struct _GstH264Pps GstH264Pps;
 
 #define MAX_SPS_COUNT	32
 #define MAX_PPS_COUNT   32
+
+#define CLOCK_BASE 9LL
+#define CLOCK_FREQ (CLOCK_BASE * 10000)
+
+#define MPEGTIME_TO_GSTTIME(time) (gst_util_uint64_scale ((time), \
+            GST_MSECOND/10, CLOCK_BASE))
+#define GSTTIME_TO_MPEGTIME(time) (gst_util_uint64_scale ((time), \
+            CLOCK_BASE, GST_MSECOND/10))
+
 struct _GstH264Parse
 {
   GstElement element;
@@ -98,6 +107,15 @@ struct _GstH264Parse
   guint8 sei_pic_struct;
   guint8 sei_ct_type; 
   /* And more... */ 
+
+  /* cached timestamps */ 
+  GstClockTime dts;
+  GstClockTime last_outbuf_dts;
+  GstClockTime ts_trn_nb; /* dts of last buffering period */ 
+  GstClockTime cur_duration; /* duration of the current access unit */ 
+
+  /* for debug purpose */ 
+  guint32 frame_cnt;
 };
 
 struct _GstH264ParseClass
