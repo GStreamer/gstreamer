@@ -326,6 +326,37 @@ gst_h264_parse_get_pps (GstH264Parse * h, guint8 pps_id)
   return pps;
 }
 
+/* decode hrd parameters */
+static gboolean
+gst_vui_decode_hrd_parameters (GstH264Parse * h, GstNalBs * bs)
+{
+  GstH264Sps *sps = h->sps;
+  gint sched_sel_idx;
+
+  sps->cpb_cnt_minus1 = gst_nal_bs_read_ue (bs);
+  if (sps->cpb_cnt_minus1 > 31U) {
+    GST_ERROR_OBJECT (h, "cpb_cnt_minus1 = %d out of range",
+        sps->cpb_cnt_minus1);
+    return FALSE;
+  }
+
+  gst_nal_bs_read (bs, 4);      /* bit_rate_scale */
+  gst_nal_bs_read (bs, 4);      /* cpb_size_scale */
+
+  for (sched_sel_idx = 0; sched_sel_idx <= sps->cpb_cnt_minus1; sched_sel_idx++) {
+    gst_nal_bs_read_ue (bs);    /* bit_rate_value_minus1 */
+    gst_nal_bs_read_ue (bs);    /* cpb_size_value_minus1 */
+    gst_nal_bs_read (bs, 1);    /* cbr_flag */
+  }
+
+  sps->initial_cpb_removal_delay_length_minus1 = gst_nal_bs_read (bs, 5);
+  sps->cpb_removal_delay_length_minus1 = gst_nal_bs_read (bs, 5);
+  sps->dpb_output_delay_length_minus1 = gst_nal_bs_read (bs, 5);
+  sps->time_offset_length_minus1 = gst_nal_bs_read (bs, 5);
+
+  return TRUE;
+}
+
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 
