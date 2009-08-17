@@ -186,11 +186,20 @@ void               gst_rtsp_watch_unref              (GstRTSPWatch *watch);
 guint              gst_rtsp_watch_attach             (GstRTSPWatch *watch,
                                                       GMainContext *context);
 
+GstRTSPResult      gst_rtsp_watch_write_data         (GstRTSPWatch *watch,
+                                                      const guint8 *data,
+                                                      guint size, guint *id);
+GstRTSPResult      gst_rtsp_watch_send_message       (GstRTSPWatch *watch,
+                                                      GstRTSPMessage *message,
+                                                      guint *id);
+
+#ifndef GST_DISABLE_DEPRECATED
 guint              gst_rtsp_watch_queue_data         (GstRTSPWatch * watch,
                                                       const guint8 * data,
                                                       guint size);
 guint              gst_rtsp_watch_queue_message      (GstRTSPWatch *watch,
                                                       GstRTSPMessage *message);
+#endif
 
 G_END_DECLS
 
