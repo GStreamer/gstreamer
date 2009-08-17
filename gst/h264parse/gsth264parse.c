@@ -720,6 +720,43 @@ gst_nal_decode_sei (GstH264Parse * h, GstNalBs * bs)
   return TRUE;
 }
 
+/* decode slice header */
+static gboolean
+gst_nal_decode_slice_header (GstH264Parse * h, GstNalBs * bs)
+{
+  guint8 pps_id, sps_id;
+  h->first_mb_in_slice = gst_nal_bs_read_ue (bs);
+  h->slice_type = gst_nal_bs_read_ue (bs);
+
+  pps_id = gst_nal_bs_read_ue (bs);
+  h->pps = gst_h264_parse_get_pps (h, pps_id);
+  if (!h->pps)
+    return FALSE;
+  /* FIXME: note that pps might be uninitialized */
+  sps_id = h->pps->sps_id;
+  h->sps = gst_h264_parse_get_sps (h, sps_id);
+  /* FIXME: in some streams sps/pps may not be ready before the first slice
+   * header. In this case it is not a good idea to _get_sps()/_pps() at this
+   * point
+   * TODO: scan one round beforehand for SPS/PPS before decoding slice headers?
+   * */
+
+  /* TODO: separate_color_plane_flag: from SPS, not implemented yet, assumed to
+   * be false */
+
+  h->frame_num =
+      gst_nal_bs_read (bs, h->sps->log2_max_pic_order_cnt_lsb_minus4 + 4);
+
+  if (!h->sps && !h->sps->frame_mbs_only_flag) {
+    h->field_pic_flag = gst_nal_bs_read (bs, 1);
+    if (h->field_pic_flag)
+      h->bottom_field_flag = gst_nal_bs_read (bs, 1);
+  }
+
+  /* not parsing the rest for the time being */
+  return TRUE;
+}
+
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 
 static void gst_h264_parse_finalize (GObject * object);
