@@ -39,6 +39,7 @@ libgstopengl_la_SOURCES = \
 	gstgltestsrc.h \
 	gstgleffects.c \
 	gstgleffects.h \
+        gstgloverlay.h \
 	effects/gstgleffectssources.c \
 	effects/gstgleffectssources.h \
 	effects/gstgleffectscurves.h \
