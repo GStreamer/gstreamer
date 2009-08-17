@@ -48,6 +48,8 @@ typedef struct _GstLV2 GstLV2;
 typedef struct _GstLV2Class GstLV2Class;
 typedef struct _GstLV2Group GstLV2Group;
 typedef struct _GstLV2Port GstLV2Port;
+typedef struct _GstLV2Preset GstLV2Preset;
+typedef struct _GstLV2PresetValue GstLV2PresetValue;
 
 
 struct _GstLV2 {
@@ -57,6 +59,7 @@ struct _GstLV2 {
   SLV2Instance instance;
 
   gboolean activated;
+  gint     current_preset;
 };
 
 struct _GstLV2Group {
@@ -69,9 +72,21 @@ struct _GstLV2Group {
 
 struct _GstLV2Port {
   gint index; /**< LV2 port index (on LV2 plugin) */
-  gint pad; /**< Gst pad index (iff not part of a group) */
+  gint pad; /**< Gst pad (iff not part of a group) or property index */
   SLV2Value role; /**< Channel position / port role */
   GstAudioChannelPosition position; /**< Channel position */
+};
+
+
+struct _GstLV2PresetValue {
+  gint index; /**< LV2 port index */
+  gfloat value; /**< Port value */
+};
+
+struct _GstLV2Preset {
+  SLV2Value uri;
+  SLV2Value name;
+  GArray *values; /**< Array of GstLV2PresetValue */
 };
 
 struct _GstLV2Class {
@@ -86,6 +101,7 @@ struct _GstLV2Class {
   GArray *control_in_ports; /**< Array of GstLV2Port */
   GArray *control_out_ports; /**< Array of GstLV2Port */
 
+  GArray *presets; /**< Array of GstLV2Preset */
 };
 
 
