@@ -210,6 +210,65 @@ gst_nal_bs_read_ue (GstNalBs * bs)
   return ((1 << i) - 1 + gst_nal_bs_read (bs, i));
 }
 
+/* SPS: sequential parameter sets */
+struct _GstH264Sps
+{
+  guint8 profile_idc;
+  guint8 level_idc;
+
+  guint8 sps_id;
+
+  guint8 pic_order_cnt_type;
+
+  guint8 log2_max_frame_num_minus4;
+  gboolean frame_mbs_only_flag;
+  guint8 log2_max_pic_order_cnt_lsb_minus4;
+
+  gboolean frame_cropping_flag;
+
+  /* VUI parameters */
+  gboolean vui_parameters_present_flag;
+
+  gboolean timing_info_present_flag;
+  guint32 num_units_in_tick;
+  guint32 time_scale;
+  gboolean fixed_frame_rate_flag;
+
+  gboolean nal_hrd_parameters_present_flag;
+  gboolean vcl_hrd_parameters_present_flag;
+  /* hrd parameters */
+  guint8 cpb_cnt_minus1;
+  gint initial_cpb_removal_delay_length_minus1; /* initial_cpb_removal_delay_length_minus1 */
+  gint cpb_removal_delay_length_minus1; /* cpb_removal_delay_length_minus1 */
+  gint dpb_output_delay_length_minus1;  /* dpb_output_delay_length_minus1 */
+  gboolean time_offset_length_minus1;
+
+  gboolean pic_struct_present_flag;
+  /* And more...  */
+};
+
+static GstH264Sps *
+gst_h264_parse_get_sps (GstH264Parse * h, guint8 sps_id)
+{
+  GstH264Sps *sps;
+  g_return_val_if_fail (h != NULL, NULL);
+
+  if (sps_id >= MAX_SPS_COUNT) {
+    GST_DEBUG_OBJECT (h, "requested sps_id=%04x out of range", sps_id);
+    return NULL;
+  }
+  sps = h->sps_buffers[sps_id];
+  if (sps == NULL) {
+    GST_DEBUG_OBJECT (h, "Creating sps with sps_id=%04x", sps_id);
+    sps = h->sps_buffers[sps_id] = g_slice_new0 (GstH264Sps);
+    if (sps == NULL) {
+      GST_DEBUG_OBJECT (h, "Allocation failed!");
+    }
+  }
+
+  h->sps = h->sps_buffers[sps_id] = sps;
+  return sps;
+}
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 

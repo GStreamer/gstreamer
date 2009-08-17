@@ -44,6 +44,9 @@ typedef struct _GstH264ParseClass GstH264ParseClass;
 
 typedef struct _GstNalList GstNalList;
 
+typedef struct _GstH264Sps GstH264Sps;
+
+#define MAX_SPS_COUNT	32
 struct _GstH264Parse
 {
   GstElement element;
@@ -68,6 +71,10 @@ struct _GstH264Parse
   gboolean have_i_frame;
 
   GstAdapter *adapter;
+
+  /* SPS: sequential parameter set */ 
+  GstH264Sps *sps_buffers[MAX_SPS_COUNT];
+  GstH264Sps *sps; /* Current SPS */ 
 };
 
 struct _GstH264ParseClass
