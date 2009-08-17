@@ -180,6 +180,8 @@ struct _GstRTSPConnection
   GstPoll *fdset;
   gchar *ip;
 
+  gint read_ahead;
+
   gchar *initial_buffer;
   gsize initial_buffer_offset;
 
@@ -210,6 +212,13 @@ enum
   STATE_READ_LINES,
   STATE_END,
   STATE_LAST
+};
+
+enum
+{
+  READ_AHEAD_EOH = -1,          /* end of headers */
+  READ_AHEAD_CRLF = -2,
+  READ_AHEAD_CRLFCR = -3
 };
 
 /* a structure for constructing RTSPMessages */
@@ -1144,6 +1153,12 @@ read_bytes (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size)
   return GST_RTSP_OK;
 }
 
+/* The code below tries to handle clients using \r, \n or \r\n to indicate the
+ * end of a line. It even does its best to handle clients which mix them (even
+ * though this is a really stupid idea (tm).) It also handles Line White Space
+ * (LWS), where a line end followed by whitespace is considered LWS. This is
+ * the method used in RTSP (and HTTP) to break long lines.
+ */
 static GstRTSPResult
 read_line (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size)
 {
@@ -1151,23 +1166,111 @@ read_line (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size)
     guint8 c;
     gint r;
 
-    r = fill_bytes (conn, &c, 1);
-    if (G_UNLIKELY (r == 0)) {
-      return GST_RTSP_EEOF;
-    } else if (G_UNLIKELY (r < 0)) {
-      if (ERRNO_IS_EAGAIN)
-        return GST_RTSP_EINTR;
-      if (!ERRNO_IS_EINTR)
-        return GST_RTSP_ESYS;
+    if (conn->read_ahead == READ_AHEAD_EOH) {
+      /* the last call to read_line() already determined that we have reached
+       * the end of the headers, so convey that information now */
+      conn->read_ahead = 0;
+      break;
+    } else if (conn->read_ahead == READ_AHEAD_CRLF) {
+      /* the last call to read_line() left off after having read \r\n */
+      c = '\n';
+    } else if (conn->read_ahead == READ_AHEAD_CRLFCR) {
+      /* the last call to read_line() left off after having read \r\n\r */
+      c = '\r';
+    } else if (conn->read_ahead != 0) {
+      /* the last call to read_line() left us with a character to start with */
+      c = (guint8) conn->read_ahead;
+      conn->read_ahead = 0;
     } else {
-      if (c == '\n')            /* end on \n */
-        break;
-      if (c == '\r')            /* ignore \r */
+      /* read the next character */
+      r = fill_bytes (conn, &c, 1);
+      if (G_UNLIKELY (r == 0)) {
+        return GST_RTSP_EEOF;
+      } else if (G_UNLIKELY (r < 0)) {
+        if (ERRNO_IS_EAGAIN)
+          return GST_RTSP_EINTR;
+        if (!ERRNO_IS_EINTR)
+          return GST_RTSP_ESYS;
         continue;
-
-      if (G_LIKELY (*idx < size - 1))
-        buffer[(*idx)++] = c;
+      }
     }
+
+    /* special treatment of line endings */
+    if (c == '\r' || c == '\n') {
+      guint8 read_ahead;
+
+    retry:
+      /* need to read ahead one more character to know what to do... */
+      r = fill_bytes (conn, &read_ahead, 1);
+      if (G_UNLIKELY (r == 0)) {
+        return GST_RTSP_EEOF;
+      } else if (G_UNLIKELY (r < 0)) {
+        if (ERRNO_IS_EAGAIN) {
+          /* remember the original character we read and try again next time */
+          if (conn->read_ahead == 0)
+            conn->read_ahead = c;
+          return GST_RTSP_EINTR;
+        }
+        if (!ERRNO_IS_EINTR)
+          return GST_RTSP_ESYS;
+        goto retry;
+      }
+
+      if (read_ahead == ' ' || read_ahead == '\t') {
+        if (conn->read_ahead == READ_AHEAD_CRLFCR) {
+          /* got \r\n\r followed by whitespace, treat it as a normal line
+           * followed by one starting with LWS */
+          conn->read_ahead = read_ahead;
+          break;
+        } else {
+          /* got LWS, change the line ending to a space and continue */
+          c = ' ';
+          conn->read_ahead = read_ahead;
+        }
+      } else if (conn->read_ahead == READ_AHEAD_CRLFCR) {
+        if (read_ahead == '\r' || read_ahead == '\n') {
+          /* got \r\n\r\r or \r\n\r\n, treat it as the end of the headers */
+          conn->read_ahead = READ_AHEAD_EOH;
+          break;
+        } else {
+          /* got \r\n\r followed by something else, this is not really
+           * supported since we have probably just eaten the first character
+           * of the body or the next message, so just ignore the second \r
+           * and live with it... */
+          conn->read_ahead = read_ahead;
+          break;
+        }
+      } else if (conn->read_ahead == READ_AHEAD_CRLF) {
+        if (read_ahead == '\r') {
+          /* got \r\n\r so far, need one more character... */
+          conn->read_ahead = READ_AHEAD_CRLFCR;
+          goto retry;
+        } else if (read_ahead == '\n') {
+          /* got \r\n\n, treat it as the end of the headers */
+          conn->read_ahead = READ_AHEAD_EOH;
+          break;
+        } else {
+          /* found the end of a line, keep read_ahead for the next line */
+          conn->read_ahead = read_ahead;
+          break;
+        }
+      } else if (c == read_ahead) {
+        /* got double \r or \n, treat it as the end of the headers */
+        conn->read_ahead = READ_AHEAD_EOH;
+        break;
+      } else if (c == '\r' && read_ahead == '\n') {
+        /* got \r\n so far, still need more to know what to do... */
+        conn->read_ahead = READ_AHEAD_CRLF;
+        goto retry;
+      } else {
+        /* found the end of a line, keep read_ahead for the next line */
+        conn->read_ahead = read_ahead;
+        break;
+      }
+    }
+
+    if (G_LIKELY (*idx < size - 1))
+      buffer[(*idx)++] = c;
   }
   buffer[*idx] = '\0';
 
@@ -1776,10 +1879,6 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
           goto done;
 
         /* we have a regular response */
-        if (builder->buffer[0] == '\r') {
-          builder->buffer[0] = '\0';
-        }
-
         if (builder->buffer[0] == '\0') {
           gchar *hdrval;
 
@@ -2155,6 +2254,8 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
 
   g_free (conn->ip);
   conn->ip = NULL;
+
+  conn->read_ahead = 0;
 
   g_free (conn->initial_buffer);
   conn->initial_buffer = NULL;
