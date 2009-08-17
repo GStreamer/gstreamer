@@ -1066,7 +1066,9 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
 
     /* Figure out if this is a delta unit */
     {
-      gint nal_type, nal_ref_idc;
+      GstNalUnitType nal_type;
+      gint nal_ref_idc;
+      GstNalBs bs;
 
       nal_type = (data[0] & 0x1f);
       nal_ref_idc = (data[0] & 0x60) >> 5;
@@ -1074,47 +1076,70 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
       GST_DEBUG_OBJECT (h264parse, "NAL type: %d, ref_idc: %d", nal_type,
           nal_ref_idc);
 
+      gst_nal_bs_init (&bs, data + 1, avail - 1);
+
       /* first parse some things needed to get to the frame type */
-      if (nal_type >= NAL_SLICE && nal_type <= NAL_SLICE_IDR) {
-        GstNalBs bs;
-        gint first_mb_in_slice, slice_type;
+      switch (nal_type) {
+        case NAL_SLICE:
+        case NAL_SLICE_DPA:
+        case NAL_SLICE_DPB:
+        case NAL_SLICE_DPC:
+        case NAL_SLICE_IDR:
+        {
+          gint first_mb_in_slice, slice_type;
 
-        gst_nal_bs_init (&bs, data + 1, avail - 1);
+          gst_nal_decode_slice_header (h264parse, &bs);
+          first_mb_in_slice = h264parse->first_mb_in_slice;
+          slice_type = h264parse->slice_type;
 
-        first_mb_in_slice = gst_nal_bs_read_ue (&bs);
-        slice_type = gst_nal_bs_read_ue (&bs);
+          GST_DEBUG_OBJECT (h264parse, "first MB: %d, slice type: %d",
+              first_mb_in_slice, slice_type);
 
-        GST_DEBUG_OBJECT (h264parse, "first MB: %d, slice type: %d",
-            first_mb_in_slice, slice_type);
+          switch (slice_type) {
+            case 0:
+            case 5:
+            case 3:
+            case 8:            /* SP */
+              /* P frames */
+              GST_DEBUG_OBJECT (h264parse, "we have a P slice");
+              delta_unit = TRUE;
+              break;
+            case 1:
+            case 6:
+              /* B frames */
+              GST_DEBUG_OBJECT (h264parse, "we have a B slice");
+              delta_unit = TRUE;
+              break;
+            case 2:
+            case 7:
+            case 4:
+            case 9:
+              /* I frames */
+              GST_DEBUG_OBJECT (h264parse, "we have an I slice");
+              got_frame = TRUE;
+              break;
+          }
+          break;
 
-        switch (slice_type) {
-          case 0:
-          case 5:
-          case 3:
-          case 8:              /* SP */
-            /* P frames */
-            GST_DEBUG_OBJECT (h264parse, "we have a P slice");
-            delta_unit = TRUE;
-            break;
-          case 1:
-          case 6:
-            /* B frames */
-            GST_DEBUG_OBJECT (h264parse, "we have a B slice");
-            delta_unit = TRUE;
-            break;
-          case 2:
-          case 7:
-          case 4:
-          case 9:
-            /* I frames */
-            GST_DEBUG_OBJECT (h264parse, "we have an I slice");
-            delta_unit = FALSE;
-            break;
         }
-      } else if (nal_type >= NAL_SPS && nal_type <= NAL_PPS) {
-        /* This can be considered as a non delta unit */
-        GST_DEBUG_OBJECT (h264parse, "we have a SPS or PPS NAL");
-        delta_unit = FALSE;
+        case NAL_SEI:
+          GST_DEBUG_OBJECT (h264parse, "we have an SEI NAL");
+          gst_nal_decode_sei (h264parse, &bs);
+          break;
+        case NAL_SPS:
+          GST_DEBUG_OBJECT (h264parse, "we have an SPS NAL");
+          gst_nal_decode_sps (h264parse, &bs);
+          break;
+        case NAL_PPS:
+          GST_DEBUG_OBJECT (h264parse, "we have a PPS NAL");
+          gst_nal_decode_pps (h264parse, &bs);
+          break;
+        case NAL_AU_DELIMITER:
+          GST_DEBUG_OBJECT (h264parse, "we have an access unit delimiter.");
+          break;
+        default:
+          GST_DEBUG_OBJECT (h264parse,
+              "NAL of nal_type = %d encountered but not parsed", nal_type);
       }
     }
 
