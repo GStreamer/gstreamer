@@ -664,6 +664,11 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
         template = klass->private_template;
         name = g_strdup_printf ("private_%04x", stream->PID);
         caps = gst_caps_new_simple ("private/teletext", NULL);
+      } else if (gst_mpeg_descriptor_find (stream->ES_info,
+              DESC_DVB_SUBTITLING)) {
+        template = klass->private_template;
+        name = g_strdup_printf ("private_%04x", stream->PID);
+        caps = gst_caps_new_simple ("private/x-dvbsub", NULL);
       }
       break;
     case ST_HDV_AUX_V:
@@ -1007,8 +1012,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
        * to drop. */
       if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
           && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-          && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
-          discont_PCR) {
+          && demux->streams[demux->streams[stream->PMT_pid]->PMT.
+              PCR_PID]->discont_PCR) {
         GST_WARNING_OBJECT (demux, "middle of discont, dropping");
         goto bad_timestamp;
       }
@@ -1030,8 +1035,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
          */
         if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
             && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-            && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
-            last_PCR > 0) {
+            && demux->streams[demux->streams[stream->PMT_pid]->PMT.
+                PCR_PID]->last_PCR > 0) {
           GST_DEBUG_OBJECT (demux, "timestamps wrapped before noticed in PCR");
           time = MPEGTIME_TO_GSTTIME (pts) + stream->base_time +
               MPEGTIME_TO_GSTTIME ((guint64) (1) << 33);
