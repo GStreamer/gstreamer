@@ -571,6 +571,51 @@ gst_nal_decode_pps (GstH264Parse * h, GstNalBs * bs)
   return TRUE;
 }
 
+/* decode buffering periods */
+static gboolean
+gst_sei_decode_buffering_period (GstH264Parse * h, GstNalBs * bs)
+{
+  guint8 sps_id;
+  gint sched_sel_idx;
+  GstH264Sps *sps;
+
+  sps_id = gst_nal_bs_read_ue (bs);
+  sps = gst_h264_parse_get_sps (h, sps_id);
+  if (!sps)
+    return FALSE;
+
+  if (sps->nal_hrd_parameters_present_flag) {
+    for (sched_sel_idx = 0; sched_sel_idx <= sps->cpb_cnt_minus1;
+        sched_sel_idx++) {
+      h->initial_cpb_removal_delay[sched_sel_idx]
+          = gst_nal_bs_read (bs,
+          sps->initial_cpb_removal_delay_length_minus1 + 1);
+      gst_nal_bs_read (bs, sps->initial_cpb_removal_delay_length_minus1 + 1);   /* initial_cpb_removal_delay_offset */
+    }
+  }
+  if (sps->vcl_hrd_parameters_present_flag) {
+    for (sched_sel_idx = 0; sched_sel_idx <= sps->cpb_cnt_minus1;
+        sched_sel_idx++) {
+      h->initial_cpb_removal_delay[sched_sel_idx]
+          = gst_nal_bs_read (bs,
+          sps->initial_cpb_removal_delay_length_minus1 + 1);
+      gst_nal_bs_read (bs, sps->initial_cpb_removal_delay_length_minus1 + 1);   /* initial_cpb_removal_delay_offset */
+    }
+  }
+#if 0
+  h->ts_trn_nb = MPEGTIME_TO_GSTTIME (h->initial_cpb_removal_delay[0]); /* Assuming SchedSelIdx=0 */
+#endif
+  if (h->ts_trn_nb == GST_CLOCK_TIME_NONE || h->dts == GST_CLOCK_TIME_NONE)
+    h->ts_trn_nb = 0;
+  else
+    h->ts_trn_nb = h->dts;
+
+  GST_DEBUG_OBJECT (h, "h->ts_trn_nb updated: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (h->ts_trn_nb));
+
+  return 0;
+}
+
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 
