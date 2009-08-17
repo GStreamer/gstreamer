@@ -616,6 +616,70 @@ gst_sei_decode_buffering_period (GstH264Parse * h, GstNalBs * bs)
   return 0;
 }
 
+/* decode SEI picture timing message */
+static gboolean
+gst_sei_decode_picture_timing (GstH264Parse * h, GstNalBs * bs)
+{
+  GstH264Sps *sps = h->sps;
+
+  if (sps == NULL) {
+    GST_WARNING_OBJECT (h, "h->sps=NULL; delayed decoding of picture timing "
+        "info not implemented yet");
+    return FALSE;
+  }
+
+  if (sps->nal_hrd_parameters_present_flag
+      || sps->vcl_hrd_parameters_present_flag) {
+    h->sei_cpb_removal_delay =
+        gst_nal_bs_read (bs, sps->cpb_removal_delay_length_minus1 + 1);
+    h->sei_dpb_output_delay =
+        gst_nal_bs_read (bs, sps->dpb_output_delay_length_minus1 + 1);
+  }
+  if (sps->pic_struct_present_flag) {
+    guint i, num_clock_ts;
+    h->sei_pic_struct = gst_nal_bs_read (bs, 4);
+    h->sei_ct_type = 0;
+
+    if (h->sei_pic_struct > SEI_PIC_STRUCT_FRAME_TRIPLING)
+      return FALSE;
+
+    num_clock_ts = sei_num_clock_ts_table[h->sei_pic_struct];
+
+    for (i = 0; i < num_clock_ts; i++) {
+      if (gst_nal_bs_read (bs, 1)) {    /* clock_timestamp_flag */
+        guint full_timestamp_flag;
+        h->sei_ct_type |= 1 << gst_nal_bs_read (bs, 2);
+        gst_nal_bs_read (bs, 1);        /* nuit_field_based_flag */
+        gst_nal_bs_read (bs, 5);        /* counting_type */
+        full_timestamp_flag = gst_nal_bs_read (bs, 1);
+        gst_nal_bs_read (bs, 1);        /* discontinuity_flag */
+        gst_nal_bs_read (bs, 1);        /* cnt_dropped_flag */
+        gst_nal_bs_read (bs, 8);        /* n_frames */
+        if (full_timestamp_flag) {
+          gst_nal_bs_read (bs, 6);      /* seconds_value 0..59 */
+          gst_nal_bs_read (bs, 6);      /* minutes_value 0..59 */
+          gst_nal_bs_read (bs, 5);      /* hours_value 0..23 */
+        } else {
+          if (gst_nal_bs_read (bs, 1)) {        /* seconds_flag */
+            gst_nal_bs_read (bs, 6);    /* seconds_value range 0..59 */
+            if (gst_nal_bs_read (bs, 1)) {      /* minutes_flag */
+              gst_nal_bs_read (bs, 6);  /* minutes_value 0..59 */
+              if (gst_nal_bs_read (bs, 1))      /* hours_flag */
+                gst_nal_bs_read (bs, 5);        /* hours_value 0..23 */
+            }
+          }
+        }
+        if (sps->time_offset_length_minus1 >= 0)
+          gst_nal_bs_read (bs, sps->time_offset_length_minus1 + 1);     /* time_offset */
+      }
+    }
+
+    GST_DEBUG_OBJECT (h, "ct_type:%X pic_struct:%d\n", h->sei_ct_type,
+        h->sei_pic_struct);
+  }
+  return 0;
+}
+
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 
