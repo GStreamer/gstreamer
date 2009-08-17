@@ -92,8 +92,6 @@ struct _GstVdpDevice
 
 GType gst_vdp_device_get_type (void) G_GNUC_CONST;
 
-GstVdpDevice *gst_vdp_device_new (const gchar *display_name);
-
 GstVdpDevice *gst_vdp_get_device (const gchar *display_name);
 
 G_END_DECLS
