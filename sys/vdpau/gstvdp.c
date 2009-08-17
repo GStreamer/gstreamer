@@ -22,6 +22,10 @@ vdpau_init (GstPlugin * vdpau_plugin)
       GST_RANK_NONE, GST_TYPE_VDP_VIDEO_YUV);
   gst_element_register (vdpau_plugin, "vdpauyuvvideo",
       GST_RANK_NONE, GST_TYPE_VDP_YUV_VIDEO);
+  gst_element_register (vdpau_plugin, "vdpauvideopostprocess",
+      GST_RANK_NONE, GST_TYPE_VDP_VIDEO_POST_PROCESS);
+  gst_element_register (vdpau_plugin, "vdpausink",
+      GST_RANK_NONE, GST_TYPE_VDP_SINK);
 
   return TRUE;
 }
