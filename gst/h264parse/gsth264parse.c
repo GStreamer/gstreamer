@@ -357,6 +357,104 @@ gst_vui_decode_hrd_parameters (GstH264Parse * h, GstNalBs * bs)
   return TRUE;
 }
 
+/* decode vui parameters */
+static gboolean
+gst_sps_decode_vui (GstH264Parse * h, GstNalBs * bs)
+{
+  GstH264Sps *sps = h->sps;
+
+  if (gst_nal_bs_read (bs, 1)) {        /* aspect_ratio_info_present_flag */
+    if (gst_nal_bs_read (bs, 8) == Extended_SAR) {      /* aspect_ratio_idc */
+      gst_nal_bs_read (bs, 16); /* sar_width */
+      gst_nal_bs_read (bs, 16); /* sar_height */
+    }
+  }
+
+  if (gst_nal_bs_read (bs, 1)) {        /* overscan_info_present_flag */
+    gst_nal_bs_read (bs, 1);    /* overscan_appropriate_flag */
+  }
+
+  if (gst_nal_bs_read (bs, 1)) {        /* video_signal_type_present_flag */
+    gst_nal_bs_read (bs, 3);    /* video_format */
+    gst_nal_bs_read (bs, 1);    /* video_full_range_flag */
+
+    if (gst_nal_bs_read (bs, 1)) {      /* colour_description_present_flag */
+      gst_nal_bs_read (bs, 8);  /* colour_primaries */
+      gst_nal_bs_read (bs, 8);  /* transfer_characteristics */
+      gst_nal_bs_read (bs, 8);  /* matrix_coefficients */
+    }
+  }
+
+  if (gst_nal_bs_read (bs, 1)) {        /* chroma_loc_info_present_flag */
+    gst_nal_bs_read_ue (bs);    /* chroma_sample_loc_type_top_field */
+    gst_nal_bs_read_ue (bs);    /* chroma_sample_loc_type_bottom_field */
+  }
+
+  /*
+     GST_DEBUG_OBJECT (h,
+     "aspect_ratio_info_present_flag = %d, "
+     "overscan_info_present_flag = %d, "
+     "video_signal_type_present_flag = %d, "
+     "chroma_loc_info_present_flag = %d\n",
+     sps->aspect_ratio_info_present_flag, sps->overscan_info_present_flag,
+     sps->video_signal_type_present_flag, sps->chroma_loc_info_present_flag);
+   */
+
+  sps->timing_info_present_flag = gst_nal_bs_read (bs, 1);
+  if (sps->timing_info_present_flag) {
+    guint32 num_units_in_tick = gst_nal_bs_read (bs, 32);
+    guint32 time_scale = gst_nal_bs_read (bs, 32);
+
+    /* If any of these parameters = 0, discard all timing_info */
+    if (time_scale == 0) {
+      GST_WARNING_OBJECT (h,
+          "time_scale = 0 detected in stream (incompliant to H.264 E.2.1)."
+          " Discarding related info.");
+    } else if (num_units_in_tick == 0) {
+      GST_WARNING_OBJECT (h,
+          "num_units_in_tick  = 0 detected in stream (incompliant to H.264 E.2.1)."
+          " Discarding related info.");
+    } else {
+      sps->num_units_in_tick = num_units_in_tick;
+      sps->time_scale = time_scale;
+      sps->fixed_frame_rate_flag = gst_nal_bs_read (bs, 1);
+    }
+
+    GST_DEBUG_OBJECT (h,
+        "num_units_in_tick = %d, time_scale = %d, "
+        "fixed_frame_rate_flag = %d\n",
+        sps->num_units_in_tick, sps->time_scale, sps->fixed_frame_rate_flag);
+  }
+
+  sps->nal_hrd_parameters_present_flag = gst_nal_bs_read (bs, 1);
+  if (sps->nal_hrd_parameters_present_flag) {
+    gst_vui_decode_hrd_parameters (h, bs);
+  }
+  sps->vcl_hrd_parameters_present_flag = gst_nal_bs_read (bs, 1);
+  if (sps->vcl_hrd_parameters_present_flag) {
+    gst_vui_decode_hrd_parameters (h, bs);
+  }
+  if (sps->nal_hrd_parameters_present_flag
+      || sps->vcl_hrd_parameters_present_flag) {
+    gst_nal_bs_read (bs, 1);    /* low_delay_hrd_flag */
+  }
+
+  sps->pic_struct_present_flag = gst_nal_bs_read (bs, 1);
+
+  /* Not going down anymore */
+  return TRUE;
+
+  if (gst_nal_bs_read (bs, 1)) {        /* bitstream_restriction_flag */
+    gst_nal_bs_read (bs, 1);    /* motion_vectors_over_pic_boundaries_flag */
+    gst_nal_bs_read_ue (bs);    /* max_bytes_per_pic_denom */
+    gst_nal_bs_read_ue (bs);    /* max_bits_per_mb_denom */
+    gst_nal_bs_read_ue (bs);    /* log2_max_mv_length_horizontal */
+    gst_nal_bs_read_ue (bs);    /* log2_max_mv_length_vertical */
+    gst_nal_bs_read_ue (bs);    /* num_reorder_frames */
+    gst_nal_bs_read_ue (bs);    /* max_dec_frame_buffering */
+  }
+}
+
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 
