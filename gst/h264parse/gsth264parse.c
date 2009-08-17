@@ -246,6 +246,12 @@ struct _GstH264Sps
   gboolean pic_struct_present_flag;
   /* And more...  */
 };
+/* PPS: pic parameter sets */
+struct _GstH264Pps
+{
+  guint8 pps_id;
+  guint8 sps_id;
+};
 
 static GstH264Sps *
 gst_h264_parse_get_sps (GstH264Parse * h, guint8 sps_id)
@@ -269,6 +275,28 @@ gst_h264_parse_get_sps (GstH264Parse * h, guint8 sps_id)
   h->sps = h->sps_buffers[sps_id] = sps;
   return sps;
 }
+static GstH264Pps *
+gst_h264_parse_get_pps (GstH264Parse * h, guint8 pps_id)
+{
+  GstH264Pps *pps;
+  g_return_val_if_fail (h != NULL, NULL);
+  if (pps_id >= MAX_PPS_COUNT) {
+    GST_DEBUG_OBJECT (h, "requested pps_id=%04x out of range", pps_id);
+    return NULL;
+  }
+  pps = h->pps_buffers[pps_id];
+  if (pps == NULL) {
+    GST_DEBUG_OBJECT (h, "Creating pps with pps_id=%04x", pps_id);
+    pps = g_slice_new0 (GstH264Pps);
+    if (pps == NULL) {
+      GST_DEBUG_OBJECT (h, "Failed!");
+    }
+  }
+
+  h->pps = h->pps_buffers[pps_id] = pps;
+  return pps;
+}
+
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 
