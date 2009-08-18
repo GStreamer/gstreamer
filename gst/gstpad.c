@@ -122,6 +122,15 @@ static gboolean gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps);
 static xmlNodePtr gst_pad_save_thyself (GstObject * object, xmlNodePtr parent);
 #endif
 
+/* Some deprecated stuff that we need inside here for
+ * backwards compatibility */
+#ifdef GST_DISABLE_DEPRECATED
+#ifndef GST_REMOVE_DEPRECATED
+#define GST_PAD_INTLINKFUNC(pad)	(GST_PAD_CAST(pad)->intlinkfunc)
+GList *gst_pad_get_internal_links_default (GstPad * pad);
+#endif
+#endif
+
 static GstObjectClass *parent_class = NULL;
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
@@ -341,8 +350,10 @@ gst_pad_init (GstPad * pad)
   GST_PAD_QUERYTYPEFUNC (pad) =
       GST_DEBUG_FUNCPTR (gst_pad_get_query_types_default);
   GST_PAD_QUERYFUNC (pad) = GST_DEBUG_FUNCPTR (gst_pad_query_default);
+#ifndef GST_REMOVE_DEPRECATED
   GST_PAD_INTLINKFUNC (pad) =
       GST_DEBUG_FUNCPTR (gst_pad_get_internal_links_default);
+#endif
   GST_PAD_ITERINTLINKFUNC (pad) =
       GST_DEBUG_FUNCPTR (gst_pad_iterate_internal_links_default);
 

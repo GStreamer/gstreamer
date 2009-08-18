@@ -698,7 +698,9 @@ struct _GstPadClass {
 #define GST_PAD_EVENTFUNC(pad)		(GST_PAD_CAST(pad)->eventfunc)
 #define GST_PAD_QUERYTYPEFUNC(pad)	(GST_PAD_CAST(pad)->querytypefunc)
 #define GST_PAD_QUERYFUNC(pad)		(GST_PAD_CAST(pad)->queryfunc)
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_PAD_INTLINKFUNC(pad)	(GST_PAD_CAST(pad)->intlinkfunc)
+#endif
 #define GST_PAD_ITERINTLINKFUNC(pad)    (GST_PAD_CAST(pad)->iterintlinkfunc)
 
 #define GST_PAD_PEER(pad)		(GST_PAD_CAST(pad)->peer)
@@ -923,9 +925,11 @@ gboolean		gst_pad_pause_task			(GstPad *pad);
 gboolean		gst_pad_stop_task			(GstPad *pad);
 
 /* internal links */
+#ifndef GST_DISABLE_DEPRECATED
 void			gst_pad_set_internal_link_function	(GstPad *pad, GstPadIntLinkFunction intlink);
 GList*			gst_pad_get_internal_links		(GstPad *pad);
 GList*			gst_pad_get_internal_links_default	(GstPad *pad);
+#endif
 
 void                    gst_pad_set_iterate_internal_links_function (GstPad * pad,
                                                                  GstPadIterIntLinkFunction iterintlink);
