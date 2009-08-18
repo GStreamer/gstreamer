@@ -2282,6 +2282,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
       gst_ffmpegdec_reset_qos (ffmpegdec);
       gst_ffmpegdec_flush_pcache (ffmpegdec);
+      gst_ts_handler_init (ffmpegdec);
       ffmpegdec->waiting_for_key = TRUE;
       gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
       clear_queued (ffmpegdec);
