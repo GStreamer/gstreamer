@@ -804,9 +804,9 @@ print_pad_info (GstElement * element)
       print_query_types (gst_pad_get_query_types (pad));
     }
 
-    if (pad->intlinkfunc != gst_pad_get_internal_links_default)
-      n_print ("      Has custom intconnfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (pad->intlinkfunc));
+    if (pad->iterintlinkfunc != gst_pad_iterate_internal_links_default)
+      n_print ("      Has custom iterintlinkfunc(): %s\n",
+          GST_DEBUG_FUNCPTR_NAME (pad->iterintlinkfunc));
 
     if (pad->bufferallocfunc)
       n_print ("      Has bufferallocfunc(): %s\n",

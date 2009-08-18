@@ -583,9 +583,9 @@ print_element_info (GstElementFactory * factory)
         PUT_END_TAG (4, "query-type-func");
       }
 
-      if (pad->intlinkfunc != gst_pad_get_internal_links_default)
-        PUT_STRING (4, "<intlink-function function=\"%s\"/>",
-            GST_DEBUG_FUNCPTR_NAME (pad->intlinkfunc));
+      if (pad->iterintlinkfunc != gst_pad_iterate_internal_links_default)
+        PUT_STRING (4, "<iterintlink-function function=\"%s\"/>",
+            GST_DEBUG_FUNCPTR_NAME (pad->iterintlinkfunc));
 
       if (pad->bufferallocfunc)
         PUT_STRING (4, "<bufferalloc-function function=\"%s\"/>",
