@@ -2385,6 +2385,15 @@ gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
 {
   gboolean res = TRUE;
 
+  if (playsink->textchain && playsink->textchain->sink) {
+    gst_event_ref (event);
+    if ((res = gst_element_send_event (playsink->textchain->chain.bin, event))) {
+      GST_DEBUG_OBJECT (playsink, "Sent event succesfully to text sink");
+    } else {
+      GST_DEBUG_OBJECT (playsink, "Event failed when sent to text sink");
+    }
+  }
+
   if (playsink->videochain) {
     gst_event_ref (event);
     if ((res = gst_element_send_event (playsink->videochain->chain.bin, event))) {
@@ -2401,6 +2410,7 @@ gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
     }
     GST_DEBUG_OBJECT (playsink, "Event failed when sent to audio sink");
   }
+
 done:
   gst_event_unref (event);
   return res;
