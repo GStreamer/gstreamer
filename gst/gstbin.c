@@ -1979,6 +1979,7 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
     GstState next)
 {
   GstStateChangeReturn ret;
+  GstState pending, child_current, child_pending;
   gboolean locked;
   GList *found;
 
@@ -1990,8 +1991,10 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
   element->base_time = base_time;
   /* peel off the locked flag */
   locked = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
-  /* get previous state return */
+  /* Get the previous set_state result to preserve NO_PREROLL and ASYNC */
   ret = GST_STATE_RETURN (element);
+  child_current = GST_STATE (element);
+  child_pending = GST_STATE_PENDING (element);
   GST_OBJECT_UNLOCK (element);
 
   /* skip locked elements */
@@ -2007,6 +2010,16 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
   }
 
   GST_OBJECT_LOCK (bin);
+  pending = GST_STATE_PENDING (bin);
+
+  /* Try not to change the state of elements that are already in the state we're
+   * going to */
+  if (!(child_pending != GST_STATE_VOID_PENDING ||
+          (child_pending == GST_STATE_VOID_PENDING &&
+              ((pending > child_current && next > child_current) ||
+                  (pending < child_current && next < child_current)))))
+    goto unneeded;
+
   /* the element was busy with an upwards async state change, we must wait for
    * an ASYNC_DONE message before we attemp to change the state. */
   if ((found =
@@ -2063,6 +2076,18 @@ was_busy:
     GST_OBJECT_UNLOCK (bin);
     GST_STATE_UNLOCK (element);
     return GST_STATE_CHANGE_ASYNC;
+  }
+unneeded:
+  {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "skipping transition from %s to  %s, since bin pending"
+        " is %s : last change state return follows",
+        gst_element_state_get_name (child_current),
+        gst_element_state_get_name (next),
+        gst_element_state_get_name (pending));
+    GST_OBJECT_UNLOCK (bin);
+    GST_STATE_UNLOCK (element);
+    return ret;
   }
 }
 
@@ -2330,8 +2355,7 @@ restart:
         child = GST_ELEMENT_CAST (data);
 
         /* set state and base_time now */
-        ret =
-            gst_bin_element_set_state (bin, child, base_time, start_time,
+        ret = gst_bin_element_set_state (bin, child, base_time, start_time,
             current, next);
 
         switch (ret) {
