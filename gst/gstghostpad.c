@@ -83,7 +83,7 @@ static xmlNodePtr gst_proxy_pad_save_thyself (GstObject * object,
 #endif
 
 static void on_src_target_notify (GstPad * target,
-    GParamSpec * unused, GstGhostPad * pad);
+    GParamSpec * unused, gpointer user_data);
 
 
 static void
@@ -705,23 +705,51 @@ on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 }
 
 static void
-on_src_target_notify (GstPad * target, GParamSpec * unused, GstGhostPad * pad)
+on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
 {
+  GstProxyPad *proxypad;
+  GstGhostPad *gpad;
   GstCaps *caps;
   gboolean changed;
 
   g_object_get (target, "caps", &caps, NULL);
 
-  GST_DEBUG_OBJECT (pad, "notified %p %" GST_PTR_FORMAT, caps, caps);
+  GST_OBJECT_LOCK (target);
+  /* First check if the peer is still available and our proxy pad */
+  if (!GST_PAD_PEER (target) || !GST_IS_PROXY_PAD (GST_PAD_PEER (target))) {
+    GST_OBJECT_UNLOCK (target);
+    gst_caps_unref (caps);
+    return;
+  }
 
-  GST_OBJECT_LOCK (pad);
-  changed = (GST_PAD_CAPS (pad) != caps);
-  if (changed)
-    gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
-  GST_OBJECT_UNLOCK (pad);
+  proxypad = GST_PROXY_PAD (GST_PAD_PEER (target));
+  GST_PROXY_LOCK (proxypad);
+  /* Now check if the proxypad's internal pad is still there and
+   * a ghostpad */
+  if (!GST_PROXY_PAD_INTERNAL (proxypad) ||
+      !GST_IS_GHOST_PAD (GST_PROXY_PAD_INTERNAL (proxypad))) {
+    GST_OBJECT_UNLOCK (target);
+    GST_PROXY_UNLOCK (proxypad);
+    gst_caps_unref (caps);
+    return;
+  }
+  gpad = GST_GHOST_PAD (GST_PROXY_PAD_INTERNAL (proxypad));
+  g_object_ref (gpad);
+  GST_PROXY_UNLOCK (proxypad);
+  GST_OBJECT_UNLOCK (target);
 
+  GST_OBJECT_LOCK (gpad);
+
+  GST_DEBUG_OBJECT (gpad, "notified %p %" GST_PTR_FORMAT, caps, caps);
+
+  changed = (GST_PAD_CAPS (gpad) != caps);
   if (changed)
-    g_object_notify (G_OBJECT (pad), "caps");
+    gst_caps_replace (&(GST_PAD_CAPS (gpad)), caps);
+  GST_OBJECT_UNLOCK (gpad);
+  if (changed)
+    g_object_notify (G_OBJECT (gpad), "caps");
+
+  g_object_unref (gpad);
 
   if (caps)
     gst_caps_unref (caps);
@@ -1152,7 +1180,7 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   if ((oldtarget = GST_PROXY_PAD_TARGET (gpad))) {
     if (GST_PAD_IS_SRC (oldtarget)) {
       g_signal_handlers_disconnect_by_func (oldtarget,
-          (gpointer) on_src_target_notify, gpad);
+          (gpointer) on_src_target_notify, NULL);
     }
 
     GST_PROXY_PAD_RETARGET (internal) = TRUE;
@@ -1171,7 +1199,7 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   if (result && newtarget) {
     if (GST_PAD_IS_SRC (newtarget)) {
       g_signal_connect (newtarget, "notify::caps",
-          G_CALLBACK (on_src_target_notify), gpad);
+          G_CALLBACK (on_src_target_notify), NULL);
     }
 
     /* and link to internal pad */
