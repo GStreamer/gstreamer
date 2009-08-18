@@ -135,7 +135,7 @@ gst_section_filter_push (GstSectionFilter * filter, gboolean pusi,      /* deter
     }
     filter->section_length = GST_READ_UINT16_BE (data + 1);
     filter->section_length &= 0x0fff;
-    if (filter->section_length > 1021) {
+    if (filter->section_length > 4093) {
       GST_DEBUG ("section length too big");
       goto failure;
     }
