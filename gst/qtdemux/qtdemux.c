@@ -2638,6 +2638,10 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           g_node_destroy (demux->moov_node);
           demux->moov_node = NULL;
           GST_DEBUG_OBJECT (demux, "Finished parsing the header");
+        }
+        if (fourcc == FOURCC_ftyp) {
+          GST_DEBUG_OBJECT (demux, "Parsing [ftyp]");
+          qtdemux_parse_ftyp (demux, data, demux->neededbytes);
         } else {
           GST_WARNING_OBJECT (demux,
               "Unknown fourcc while parsing header : %" GST_FOURCC_FORMAT,
