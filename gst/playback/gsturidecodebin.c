@@ -628,7 +628,7 @@ unknown_type_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
 
   capsstr = gst_caps_to_string (caps);
-  GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
+  GST_ELEMENT_WARNING (decoder, CORE, MISSING_PLUGIN,
       (_("No decoder available for type \'%s\'."), capsstr), (NULL));
   g_free (capsstr);
 }
