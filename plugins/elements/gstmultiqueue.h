@@ -55,6 +55,7 @@ struct _GstMultiQueue {
 
   /* The list of individual queues */
   GList *queues;
+  guint32 queues_cookie;
 
   GstDataQueueSize  max_size, extra_size;
 
