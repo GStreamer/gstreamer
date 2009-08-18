@@ -304,6 +304,7 @@ gst_h264_parse_get_sps (GstH264Parse * h, guint8 sps_id)
   h->sps = h->sps_buffers[sps_id] = sps;
   return sps;
 }
+
 static GstH264Pps *
 gst_h264_parse_get_pps (GstH264Parse * h, guint8 pps_id)
 {
@@ -865,6 +866,11 @@ gst_h264_parse_finalize (GObject * object)
       g_slice_free (GstH264Sps, h264parse->sps_buffers[i]);
   }
 
+  for (i = 0; i < MAX_PPS_COUNT; i++) {
+    if (h264parse->pps_buffers[i] != NULL)
+      g_slice_free (GstH264Pps, h264parse->pps_buffers[i]);
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -1242,10 +1248,9 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
           if (outbuf_dts != GST_CLOCK_TIME_NONE)
             h264parse->dts = outbuf_dts;
           else if (h264parse->dts != GST_CLOCK_TIME_NONE)
-            h264parse->dts +=
-                (GstClockTime) gst_util_uint64_scale_int (h264parse->
-                cur_duration * GST_SECOND, sps->num_units_in_tick,
-                sps->time_scale);
+            h264parse->dts += (GstClockTime)
+                gst_util_uint64_scale_int (h264parse->cur_duration * GST_SECOND,
+                sps->num_units_in_tick, sps->time_scale);
           else
             h264parse->dts = 0; /* initialization */
 
