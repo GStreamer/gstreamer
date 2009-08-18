@@ -2379,6 +2379,8 @@ gst_play_sink_handle_message (GstBin * bin, GstMessage * message)
 
 /* Send an event to our sinks until one of them works; don't then send to the
  * remaining sinks (unlike GstBin)
+ * Special case: If a subpicture or text sink is set we need to send the event
+ * to them in case it's source is different from the a/v stream's source.
  */
 static gboolean
 gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
@@ -2391,6 +2393,15 @@ gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
       GST_DEBUG_OBJECT (playsink, "Sent event succesfully to text sink");
     } else {
       GST_DEBUG_OBJECT (playsink, "Event failed when sent to text sink");
+    }
+  }
+
+  if (playsink->subpchain && playsink->subpchain->sink) {
+    gst_event_ref (event);
+    if ((res = gst_element_send_event (playsink->subpchain->chain.bin, event))) {
+      GST_DEBUG_OBJECT (playsink, "Sent event succesfully to subpicture sink");
+    } else {
+      GST_DEBUG_OBJECT (playsink, "Event failed when sent to subpicture sink");
     }
   }
 
