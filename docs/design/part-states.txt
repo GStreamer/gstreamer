@@ -187,7 +187,8 @@ States in GstBin
 
 A GstBin manages the state of its children. It does this by propagating the state
 changes performed on it to all of its children.  The _set_state() function on a 
-bin will call the _set_state() function on all of its children. 
+bin will call the _set_state() function on all of its children, that are
+not already in the target state or in a change state to the target state. 
 
 The children are iterated from the sink elements to the source elements. This makes
 sure that when changing the state of an element, the downstream elements are in
