@@ -933,7 +933,7 @@ auth_digest_compute_response (const gchar * method,
 
   g_checksum_update (md5_context, (const guchar *) hex_a2, 32);
   digest_string = g_checksum_get_string (md5_context);
-  memset (response, 0, sizeof (response));
+  memset (response, 0, 33);
   memcpy (response, digest_string, strlen (digest_string));
 
   g_checksum_free (md5_context);
