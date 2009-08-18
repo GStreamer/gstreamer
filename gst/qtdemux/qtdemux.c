@@ -4727,7 +4727,7 @@ qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, const char *dummy,
   GNode *data;
   char *s;
   int len;
-  int type;
+  guint32 type;
   int offset;
 
   data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
