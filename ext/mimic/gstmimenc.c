@@ -383,7 +383,7 @@ gst_mimenc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
   GST_WRITE_UINT16_LE (p + 4, mimenc->height);
   GST_WRITE_UINT16_LE (p + 6, keyframe ? 1 : 0);
   GST_WRITE_UINT32_LE (p + 8, payload_size);
-  GST_WRITE_UINT16_LE (p + 12, paused ? 0 :
+  GST_WRITE_UINT32_LE (p + 12, paused ? 0 :
       GST_MAKE_FOURCC ('M', 'L', '2', '0'));
   GST_WRITE_UINT32_LE (p + 16, 0);
   GST_WRITE_UINT32_LE (p + 20, timestamp / GST_MSECOND);
