@@ -13,6 +13,7 @@ DIST_SUBDIRS = ffmpeg
 TMP_DIST_DIR=ffmpeg-dist
 DIST_DIR=$(TMP_DIST_DIR)/.ffmpeg
 EXTRA_DIST=Makefile.am
+MAINTAINERCLEANDIRS = $(DIST_SUBDIRS)
 
 all-local:
 	cd ffmpeg && $(MAKE)
@@ -22,10 +23,14 @@ clean-local:
 
 dist-clean:
 	rm -rf $(TMP_DIST_DIR)
-	rm -rf ffmpeg/
 	rm -f Makefile
 
 distclean: dist-clean
+
+maintainer-clean: distclean
+	rm -rf $(MAINTAINERCLEANDIRS)
+
+maintainerclean: maintainer-clean
 
 dist-local:
 	svn -r $(FFMPEG_REVISION) co $(FFMPEG_SVN) $(TMP_DIST_DIR)
