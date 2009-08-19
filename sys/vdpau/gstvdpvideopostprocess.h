@@ -84,6 +84,7 @@ struct _GstVdpVideoPostProcess
 
   gfloat noise_reduction;
   gfloat sharpening;
+  gboolean inverse_telecine;
 };
 
 struct _GstVdpVideoPostProcessClass 

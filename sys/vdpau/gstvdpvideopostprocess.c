@@ -68,7 +68,8 @@ enum
   PROP_DEINTERLACE_MODE,
   PROP_DEINTERLACE_METHOD,
   PROP_NOISE_REDUCTION,
-  PROP_SHARPENING
+  PROP_SHARPENING,
+  PROP_INVERSE_TELECINE
 };
 
 /* the capabilities of the inputs and outputs.
@@ -403,6 +404,8 @@ gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp, GstVdpDevice * device)
     features[n_features++] = VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION;
   if (vpp->sharpening != 0.0)
     features[n_features++] = VDP_VIDEO_MIXER_FEATURE_SHARPNESS;
+  if (vpp->inverse_telecine)
+    features[n_features++] = VDP_VIDEO_MIXER_FEATURE_INVERSE_TELECINE;
 
   status =
       device->vdp_video_mixer_create (device->device, n_features, features,
@@ -858,6 +861,9 @@ gst_vdp_vpp_get_property (GObject * object, guint property_id, GValue * value,
     case PROP_SHARPENING:
       g_value_set_float (value, vpp->sharpening);
       break;
+    case PROP_INVERSE_TELECINE:
+      g_value_set_boolean (value, vpp->inverse_telecine);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -943,6 +949,16 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
       }
       break;
     }
+    case PROP_INVERSE_TELECINE:
+    {
+      vpp->inverse_telecine = g_value_get_boolean (value);
+
+      if (vpp->device) {
+        gst_vdp_vpp_activate_feature (vpp,
+            VDP_VIDEO_MIXER_FEATURE_INVERSE_TELECINE, vpp->inverse_telecine);
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -1008,6 +1024,11 @@ gst_vdp_vpp_class_init (GstVdpVideoPostProcessClass * klass)
   g_object_class_install_property (gobject_class, PROP_SHARPENING,
       g_param_spec_float ("sharpening", "Sharpening",
           "The amount of sharpening or blurring to be applied", -1.0, 1.0, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_INVERSE_TELECINE,
+      g_param_spec_boolean ("inverse-telecine", "Inverse telecine",
+          "Whether inverse telecine should be used", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_vdp_vpp_change_state;
