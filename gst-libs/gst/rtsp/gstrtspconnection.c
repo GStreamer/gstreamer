@@ -1255,6 +1255,7 @@ message_to_string (GstRTSPConnection * conn, GstRTSPMessage * message)
           message->type_data.request.uri, conn->cseq++);
       /* add session id if we have one */
       if (conn->session_id[0] != '\0') {
+        gst_rtsp_message_remove_header (message, GST_RTSP_HDR_SESSION, -1);
         gst_rtsp_message_add_header (message, GST_RTSP_HDR_SESSION,
             conn->session_id);
       }
@@ -1296,6 +1297,7 @@ message_to_string (GstRTSPConnection * conn, GstRTSPMessage * message)
     gen_date_string (date_string, sizeof (date_string));
 
     /* add date header */
+    gst_rtsp_message_remove_header (message, GST_RTSP_HDR_DATE, -1);
     gst_rtsp_message_add_header (message, GST_RTSP_HDR_DATE, date_string);
 
     /* append headers */
