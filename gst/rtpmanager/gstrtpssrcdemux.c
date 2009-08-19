@@ -128,7 +128,7 @@ static gboolean gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad,
 
 /* srcpad stuff */
 static gboolean gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event);
-static GList *gst_rtp_ssrc_demux_internal_links (GstPad * pad);
+static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links (GstPad * pad);
 static gboolean gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query);
 
 static guint gst_rtp_ssrc_demux_signals[LAST_SIGNAL] = { 0 };
@@ -211,12 +211,12 @@ create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
 
   gst_pad_set_event_function (rtp_pad, gst_rtp_ssrc_demux_src_event);
   gst_pad_set_query_function (rtp_pad, gst_rtp_ssrc_demux_src_query);
-  gst_pad_set_internal_link_function (rtp_pad,
-      gst_rtp_ssrc_demux_internal_links);
+  gst_pad_set_iterate_internal_links_function (rtp_pad,
+      gst_rtp_ssrc_demux_iterate_internal_links);
   gst_pad_set_active (rtp_pad, TRUE);
 
-  gst_pad_set_internal_link_function (rtcp_pad,
-      gst_rtp_ssrc_demux_internal_links);
+  gst_pad_set_iterate_internal_links_function (rtcp_pad,
+      gst_rtp_ssrc_demux_iterate_internal_links);
   gst_pad_set_active (rtcp_pad, TRUE);
 
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtp_pad);
@@ -619,35 +619,95 @@ gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-static GList *
-gst_rtp_ssrc_demux_internal_links (GstPad * pad)
+typedef struct
 {
+  GstIterator parent;
+
   GstRtpSsrcDemux *demux;
-  GList *res = NULL;
-  GSList *walk;
+  GstPad *pad;
+  GSList *current;
+} GstRtpSsrcDemuxIterator;
 
-  demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+static void
+_iterate_free (GstIterator * it)
+{
+  GstRtpSsrcDemuxIterator *dit = (GstRtpSsrcDemuxIterator *) it;
 
-  GST_PAD_LOCK (demux);
-  for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
-    GstRtpSsrcDemuxPad *dpad = (GstRtpSsrcDemuxPad *) walk->data;
+  g_object_unref (dit->demux);
+  g_object_unref (dit->pad);
 
-    if (pad == demux->rtp_sink) {
-      res = g_list_prepend (res, dpad->rtp_pad);
-    } else if (pad == demux->rtcp_sink) {
-      res = g_list_prepend (res, dpad->rtcp_pad);
-    } else if (pad == dpad->rtp_pad) {
-      res = g_list_prepend (res, demux->rtp_sink);
+  g_free (it);
+}
+
+static GstIteratorResult
+_iterate_next (GstIterator * it, gpointer * result)
+{
+  GstRtpSsrcDemuxIterator *dit = (GstRtpSsrcDemuxIterator *) it;
+  GSList *current;
+  GstPad *res = NULL;
+
+  for (current = dit->current; current; current = g_slist_next (current)) {
+    GstRtpSsrcDemuxPad *dpad = (GstRtpSsrcDemuxPad *) current->data;
+
+    if (dit->pad == dit->demux->rtp_sink) {
+      res = dpad->rtp_pad;
       break;
-    } else if (pad == dpad->rtcp_pad) {
-      res = g_list_prepend (res, demux->rtcp_sink);
+    } else if (dit->pad == dit->demux->rtcp_sink) {
+      res = dpad->rtcp_pad;
+    } else if (dit->pad == dpad->rtp_pad) {
+      res = dit->demux->rtp_sink;
+      break;
+    } else if (dit->pad == dpad->rtcp_pad) {
+      res = dit->demux->rtcp_sink;
       break;
     }
   }
-  GST_PAD_UNLOCK (demux);
+
+  *result = res;
+
+  dit->current = current;
+
+  return res ? GST_ITERATOR_OK : GST_ITERATOR_DONE;
+}
+
+static GstIteratorItem
+_iterate_item (GstIterator * it, gpointer item)
+{
+  GstPad *pad = (GstPad *) item;
+  gst_object_ref (pad);
+
+  return GST_ITERATOR_ITEM_PASS;
+}
+
+static void
+_iterate_resync (GstIterator * it)
+{
+  GstRtpSsrcDemuxIterator *dit = (GstRtpSsrcDemuxIterator *) it;
+
+  dit->current = dit->demux->srcpads;
+}
+
+static GstIterator *
+gst_rtp_ssrc_demux_iterate_internal_links (GstPad * pad)
+{
+  GstRtpSsrcDemux *demux;
+  GstRtpSsrcDemuxIterator *it;
+
+  demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+
+  it = (GstRtpSsrcDemuxIterator *)
+      gst_iterator_new (sizeof (GstRtpSsrcDemuxIterator),
+      GST_TYPE_PAD,
+      demux->padlock,
+      &GST_ELEMENT_CAST (demux)->pads_cookie,
+      _iterate_next, _iterate_item, _iterate_resync, _iterate_free);
+
+  it->demux = gst_object_ref (demux);
+  it->pad = gst_object_ref (pad);
+  it->current = demux->srcpads;
 
   gst_object_unref (demux);
-  return res;
+  return (GstIterator *) it;
 }
 
 static gboolean
