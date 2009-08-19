@@ -113,6 +113,7 @@ check_PROGRAMS = \
 	elements/asfmux \
 	elements/capssetter \
 	elements/legacyresample \
+	elements/jpegparse \
 	elements/qtmux \
 	elements/selector \
 	elements/shapewipe \

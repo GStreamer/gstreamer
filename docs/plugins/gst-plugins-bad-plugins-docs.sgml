@@ -50,6 +50,7 @@
     <xi:include href="xml/element-ivorbisdec.xml" />
     <xi:include href="xml/element-jackaudiosrc.xml" />
     <xi:include href="xml/element-jackaudiosink.xml" />
+    <xi:include href="xml/element-jpegparse.xml" />
     <xi:include href="xml/element-kateenc.xml" />
     <xi:include href="xml/element-katedec.xml" />
     <xi:include href="xml/element-kateparse.xml" />
@@ -130,6 +131,7 @@
     <xi:include href="xml/plugin-gsm.xml" />
     <xi:include href="xml/plugin-h264parse.xml" />
     <xi:include href="xml/plugin-jack.xml" />
+    <xi:include href="xml/plugin-jpegformat.xml" />
     <xi:include href="xml/plugin-kate.xml" />
     <xi:include href="xml/plugin-ladspa.xml" />
     <xi:include href="xml/plugin-liveadder.xml" />

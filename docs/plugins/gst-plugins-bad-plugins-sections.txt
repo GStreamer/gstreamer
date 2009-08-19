@@ -529,6 +529,20 @@ gst_jack_audio_sink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-jpegparse</FILE>
+<TITLE>jpegparse</TITLE>
+GstJpegParse
+<SUBSECTION Starndard>
+GstJpegParseClass
+GST_JPEG_PARSE
+GST_JPEG_PARSE_CLASS
+GST_IS_JPEG_PARSE
+GST_IS_JPEG_PARSE_CLASS
+GST_TYPE_JPEG_PARSE
+gst_jpeg_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-legacyresample</FILE>
 <TITLE>legacyresample</TITLE>
 GstLegacyresample
