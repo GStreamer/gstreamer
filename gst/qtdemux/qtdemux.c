@@ -300,9 +300,9 @@ static GstFlowReturn gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf);
 static gboolean gst_qtdemux_handle_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer,
-    int length);
+    guint length);
 static gboolean qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node,
-    const guint8 * buffer, int length);
+    const guint8 * buffer, guint length);
 static gboolean qtdemux_parse_tree (GstQTDemux * qtdemux);
 
 static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
@@ -2888,7 +2888,7 @@ qtdemux_zfree (void *opaque, void *addr)
 }
 
 static void *
-qtdemux_inflate (void *z_buffer, int z_length, int length)
+qtdemux_inflate (void *z_buffer, guint z_length, guint length)
 {
   guint8 *buffer;
   z_stream *z;
@@ -2925,7 +2925,7 @@ qtdemux_inflate (void *z_buffer, int z_length, int length)
 #endif /* HAVE_ZLIB */
 
 static gboolean
-qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer, int length)
+qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer, guint length)
 {
   GNode *cmov;
 
@@ -2949,13 +2949,13 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer, int length)
     switch (method) {
 #ifdef HAVE_ZLIB
       case GST_MAKE_FOURCC ('z', 'l', 'i', 'b'):{
-        int uncompressed_length;
-        int compressed_length;
+        guint uncompressed_length;
+        guint compressed_length;
         guint8 *buf;
 
         uncompressed_length = QT_UINT32 ((guint8 *) cmvd->data + 8);
         compressed_length = QT_UINT32 ((guint8 *) cmvd->data + 4) - 12;
-        GST_LOG ("length = %d", uncompressed_length);
+        GST_LOG ("length = %u", uncompressed_length);
 
         buf =
             (guint8 *) qtdemux_inflate ((guint8 *) cmvd->data + 12,
@@ -3083,14 +3083,14 @@ qtdemux_parse_theora_extension (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
 static gboolean
 qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
-    int length)
+    guint length)
 {
   guint32 fourcc;
   guint32 node_length;
   const QtNodeType *type;
   const guint8 *end;
 
-  GST_LOG_OBJECT (qtdemux, "qtdemux_parse buffer %p length %d", buffer, length);
+  GST_LOG_OBJECT (qtdemux, "qtdemux_parse buffer %p length %u", buffer, length);
 
   node_length = QT_UINT32 (buffer);
   fourcc = QT_FOURCC (buffer + 4);
@@ -3104,8 +3104,11 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
   end = buffer + length;
 
   GST_LOG_OBJECT (qtdemux,
-      "parsing '%" GST_FOURCC_FORMAT "', length=%d, name '%s'",
+      "parsing '%" GST_FOURCC_FORMAT "', length=%u, name '%s'",
       GST_FOURCC_ARGS (fourcc), node_length, type->name);
+
+  if (node_length > length)
+    goto broken_file;
 
   if (type->flags & QT_FLAG_CONTAINER) {
     qtdemux_parse_container (qtdemux, node, buffer + 8, end);
@@ -3233,6 +3236,16 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
   GST_LOG_OBJECT (qtdemux, "parsed '%" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (fourcc));
   return TRUE;
+
+/* ERRORS */
+broken_file:
+  {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
+        (_("This file is corrupt and cannot be played.")),
+        ("Atom '%" GST_FOURCC_FORMAT "' has size of %u bytes, but we have only "
+         "%u bytes available.", GST_FOURCC_ARGS (fourcc), node_length, length));
+    return FALSE;
+  }
 }
 
 static GNode *
