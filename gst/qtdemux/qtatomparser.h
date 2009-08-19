@@ -148,4 +148,32 @@ qt_atom_parser_get_offset_unchecked (QtAtomParser * parser, guint off_size)
   }
 }
 
+static inline guint8 *
+qt_atom_parser_peek_bytes_unchecked (QtAtomParser * parser)
+{
+  return (guint8 *) parser->data + parser->byte;
+}
+
+static inline gboolean
+qt_atom_parser_get_fourcc (QtAtomParser * parser, guint32 * fourcc)
+{
+  guint32 f_be;
+
+  if (G_UNLIKELY (qt_atom_parser_get_remaining (parser) < 4))
+    return FALSE;
+
+  f_be = qt_atom_parser_get_uint32_unchecked (parser);
+  *fourcc = GUINT32_SWAP_LE_BE (f_be);
+  return TRUE;
+}
+
+static inline guint32
+qt_atom_parser_get_fourcc_unchecked (QtAtomParser * parser)
+{
+  guint32 fourcc;
+
+  fourcc = qt_atom_parser_get_uint32_unchecked (parser);
+  return GUINT32_SWAP_LE_BE (fourcc);
+}
+
 #endif /* QT_ATOM_PARSER_H */

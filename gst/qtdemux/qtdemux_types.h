@@ -22,11 +22,12 @@
 
 #include <gst/gst.h>
 
+#include "qtatomparser.h"
 #include "qtdemux.h"
 
 G_BEGIN_DECLS
 
-typedef void (*QtDumpFunc) (GstQTDemux * qtdemux, guint8 * buffer, int depth);
+typedef gboolean (*QtDumpFunc) (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
 
 typedef struct _QtNodeType QtNodeType;
 

@@ -25,27 +25,27 @@
 
 G_BEGIN_DECLS
 
-void qtdemux_dump_mvhd (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_tkhd (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_elst (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_mdhd (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_hdlr (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_vmhd (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_dref (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_stsd (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_stts (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_stss (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_stps (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_stsc (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_stsz (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_stco (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_co64 (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_dcom (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_cmvd (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_ctts (GstQTDemux * qtdemux, guint8 * buffer, int depth);
-void qtdemux_dump_unknown (GstQTDemux * qtdemux, guint8 * buffer, int depth);
+gboolean qtdemux_dump_mvhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_tkhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_elst (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_mdhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_hdlr (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_vmhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_dref (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_stsd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_stts (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_stss (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_stps (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_stsc (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_stsz (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_stco (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_co64 (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_dcom (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_cmvd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_ctts (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+gboolean qtdemux_dump_unknown (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
 
-void qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node);
+gboolean qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node);
 
 G_END_DECLS
 
