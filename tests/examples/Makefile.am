@@ -17,20 +17,14 @@ else
   ADAPTER_TEST_DIR =
 endif
 
-# streams test needs pthreads
-if HAVE_PTHREAD_H
-  STREAMS_TEST_DIR = streams
-else
-  STREAMS_TEST_DIR =
-endif
-
 always_dirs = \
 	controller \
 	helloworld \
 	manual     \
 	metadata   \
 	queue      \
-	stepping
+	stepping \
+	streams
 
 #appreader
 #cutter
@@ -51,7 +45,6 @@ always_dirs = \
 SUBDIRS = 				\
 	$(always_dirs)			\
 	$(ADAPTER_TEST_DIR)		\
-	$(STREAMS_TEST_DIR)		\
 	$(GST_PARSE_DIRS)		\
 	$(GST_LOADSAVE_DIRS)
 
