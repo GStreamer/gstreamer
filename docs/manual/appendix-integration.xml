@@ -70,20 +70,19 @@
     <itemizedlist>
       <listitem>
         <para>
-          GNOME applications call <function>gnome_program_init ()</function>
-          to parse command-line options and initialize the necessary gnome
-          modules. &GStreamer; applications would normally call
-          <function>gst_init ()</function> to do the same for GStreamer.
+          GNOME applications usually call <function>gtk_init ()</function>
+          to parse command-line options and initialize GTK. &GStreamer;
+          applications would normally call <function>gst_init ()</function>
+          to do the same for GStreamer.
           This would mean that only one of the two can parse command-line
           options. To work around this issue, &GStreamer; can provide a
           GLib <classname>GOptionGroup</classname> which can be passed to
           <function>gnome_program_init ()</function>. The following
-          example requires Gnome-2.14 or newer (previous libgnome versions
-          do not support command line parsing via GOption yet but use the
-          now deprecated popt)
+          example requires GTK 2.6 or newer (previous GTK versions
+          do not support command line parsing via GOption yet)
         </para>
         <programlisting><!-- example-begin gnome.c a -->
-#include &lt;gnome.h&gt;
+#include &lt;gtk/gtk.h&gt;
 #include &lt;gst/gst.h&gt;
 
 static gchar **cmd_filenames = NULL;
@@ -110,29 +109,32 @@ gint
 main (gint argc, gchar **argv)
 {
   GOptionContext *context;
-  GOptionGroup *gstreamer_group;
-  GnomeProgram *program;
+  GOptionGroup *gstreamer_group, *gtk_group;
+  GError *err = NULL;
 
   /* we must initialise the threading system before using any
    * other GLib funtion, such as g_option_context_new() */
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
-  context = g_option_context_new ("gnome-demo-app");
+  context = g_option_context_new ("gtk-demo-app");
 
   /* get command line options from GStreamer and add them to the group */
   gstreamer_group = gst_init_get_option_group ();
   g_option_context_add_group (context, gstreamer_group);
+  gtk_group = gtk_get_option_group (TRUE);
+  g_option_context_add_group (context, gtk_group);
 
   /* add our own options. If you are using gettext for translation of your
    * strings, use GETTEXT_PACKAGE here instead of NULL */
   g_option_context_add_main_entries (context, cmd_options, NULL);
 
-  program = gnome_program_init ("gnome-demo-app", VERSION
-                                LIBGNOMEUI_MODULE, argc, argv,
-                                GNOME_PARAM_HUMAN_READABLE_NAME, "Gnome Demo",
-                                GNOME_PARAM_GOPTION_CONTEXT, context,
-                                NULL);
+  /* now parse the commandline options, note that this already
+   * calls gtk_init() and gst_init() */
+  if (!g_option_context_parse (ctx, &amp;argc, &amp;argv, &amp;err)) {
+    g_print ("Error initializing: %s\n", err->message);
+    exit (1);
+  }
 
   /* any filenames we got passed on the command line? parse them! */
   if (cmd_filenames != NULL) {
@@ -170,8 +172,10 @@ main (gint argc, gchar **argv)
       <listitem>
         <para>
           &GStreamer; provides data input/output elements for use with the
-          GNOME-VFS system. These elements are called <quote>gnomevfssrc</quote>
-          and <quote>gnomevfssink</quote>.
+          GIO VFS system. These elements are called <quote>giosrc</quote>
+          and <quote>giosink</quote>.
+          The deprecated GNOME-VFS system is supported too but shouldn't be
+          used for any new applications.
         </para>
       </listitem>
     </itemizedlist>
