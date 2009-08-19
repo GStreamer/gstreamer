@@ -67,7 +67,8 @@ enum
   PROP_FORCE_ASPECT_RATIO,
   PROP_DEINTERLACE_MODE,
   PROP_DEINTERLACE_METHOD,
-  PROP_NOISE_REDUCTION
+  PROP_NOISE_REDUCTION,
+  PROP_SHARPENING
 };
 
 /* the capabilities of the inputs and outputs.
@@ -133,6 +134,28 @@ gst_vdp_deinterlace_modes_get_type (void)
         g_enum_register_static ("GstVdpDeinterlaceModes", modes_types);
   }
   return deinterlace_modes_type;
+}
+
+static void
+gst_vdp_vpp_set_attribute_float (GstVdpVideoPostProcess * vpp,
+    VdpVideoMixerAttribute attribute, gfloat value)
+{
+  VdpVideoMixerAttribute attributes[1];
+  const void *attribute_values[1];
+  VdpStatus status;
+
+  attributes[0] = attribute;
+  attribute_values[0] = &value;
+
+  status =
+      vpp->device->vdp_video_mixer_set_attribute_values (vpp->mixer, 1,
+      attributes, attribute_values);
+  if (status != VDP_STATUS_OK) {
+    GST_WARNING_OBJECT (vpp,
+        "Couldn't set noise reduction level on mixer, "
+        "error returned from vdpau was: %s",
+        vpp->device->vdp_get_error_string (status));
+  }
 }
 
 static void
@@ -378,6 +401,8 @@ gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp, GstVdpDevice * device)
   }
   if (vpp->noise_reduction > 0.0)
     features[n_features++] = VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION;
+  if (vpp->sharpening != 0.0)
+    features[n_features++] = VDP_VIDEO_MIXER_FEATURE_SHARPNESS;
 
   status =
       device->vdp_video_mixer_create (device->device, n_features, features,
@@ -393,20 +418,12 @@ gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp, GstVdpDevice * device)
   vpp->device = g_object_ref (device);
 
   if (vpp->noise_reduction > 0.0) {
-    VdpVideoMixerAttribute attributes[1];
-    const void *attribute_values[1];
-
-    attributes[0] = VDP_VIDEO_MIXER_ATTRIBUTE_NOISE_REDUCTION_LEVEL;
-    attribute_values[0] = &vpp->noise_reduction;
-
-    status =
-        vpp->device->vdp_video_mixer_set_attribute_values (vpp->mixer, 1,
-        attributes, attribute_values);
-    if (status != VDP_STATUS_OK) {
-      GST_WARNING_OBJECT (vpp, "Couldn't set noise reduction level on mixer, "
-          "error returned from vdpau was: %s",
-          vpp->device->vdp_get_error_string (status));
-    }
+    gst_vdp_vpp_set_attribute_float (vpp,
+        VDP_VIDEO_MIXER_ATTRIBUTE_NOISE_REDUCTION_LEVEL, vpp->noise_reduction);
+  }
+  if (vpp->sharpening != 0.0) {
+    gst_vdp_vpp_set_attribute_float (vpp,
+        VDP_VIDEO_MIXER_ATTRIBUTE_SHARPNESS_LEVEL, vpp->sharpening);
   }
 
   return GST_FLOW_OK;
@@ -838,6 +855,9 @@ gst_vdp_vpp_get_property (GObject * object, guint property_id, GValue * value,
     case PROP_NOISE_REDUCTION:
       g_value_set_boolean (value, vpp->noise_reduction);
       break;
+    case PROP_SHARPENING:
+      g_value_set_float (value, vpp->sharpening);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -886,10 +906,6 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
         break;
 
       if (vpp->device) {
-        VdpVideoMixerAttribute attributes[1];
-        const void *attribute_values[1];
-        VdpStatus status;
-
         if (vpp->noise_reduction == 0.0)
           gst_vdp_vpp_activate_feature (vpp,
               VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION, FALSE);
@@ -898,18 +914,32 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
           gst_vdp_vpp_activate_feature (vpp,
               VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION, TRUE);
 
-        attributes[0] = VDP_VIDEO_MIXER_ATTRIBUTE_NOISE_REDUCTION_LEVEL;
-        attribute_values[0] = &vpp->noise_reduction;
+        gst_vdp_vpp_set_attribute_float (vpp,
+            VDP_VIDEO_MIXER_ATTRIBUTE_NOISE_REDUCTION_LEVEL,
+            vpp->noise_reduction);
+      }
+      break;
+    }
+    case PROP_SHARPENING:
+    {
+      gfloat old_value;
 
-        status =
-            vpp->device->vdp_video_mixer_set_attribute_values (vpp->mixer, 1,
-            attributes, attribute_values);
-        if (status != VDP_STATUS_OK) {
-          GST_WARNING_OBJECT (vpp,
-              "Couldn't set noise reduction level on mixer, "
-              "error returned from vdpau was: %s",
-              vpp->device->vdp_get_error_string (status));
-        }
+      old_value = vpp->sharpening;
+      vpp->sharpening = g_value_get_float (value);
+      if (vpp->sharpening == old_value)
+        break;
+
+      if (vpp->device) {
+        if (vpp->sharpening == 0.0)
+          gst_vdp_vpp_activate_feature (vpp,
+              VDP_VIDEO_MIXER_FEATURE_SHARPNESS, FALSE);
+
+        if (old_value == 0.0)
+          gst_vdp_vpp_activate_feature (vpp,
+              VDP_VIDEO_MIXER_FEATURE_SHARPNESS, TRUE);
+
+        gst_vdp_vpp_set_attribute_float (vpp,
+            VDP_VIDEO_MIXER_ATTRIBUTE_SHARPNESS_LEVEL, vpp->sharpening);
       }
       break;
     }
@@ -975,6 +1005,11 @@ gst_vdp_vpp_class_init (GstVdpVideoPostProcessClass * klass)
           "The amount of noise reduction that should be done", 0.0, 1.0, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_SHARPENING,
+      g_param_spec_float ("sharpening", "Sharpening",
+          "The amount of sharpening or blurring to be applied", -1.0, 1.0, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_vdp_vpp_change_state;
 }
 
@@ -989,6 +1024,7 @@ gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
   vpp->method = GST_VDP_DEINTERLACE_METHOD_BOB;
 
   vpp->noise_reduction = 0.0;
+  vpp->sharpening = 0.0;
 
   /* SRC PAD */
   vpp->srcpad = gst_pad_new_from_static_template (&src_template, "src");

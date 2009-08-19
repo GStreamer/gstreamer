@@ -83,6 +83,7 @@ struct _GstVdpVideoPostProcess
   GstVdpDeinterlaceMethods method;
 
   gfloat noise_reduction;
+  gfloat sharpening;
 };
 
 struct _GstVdpVideoPostProcessClass 
