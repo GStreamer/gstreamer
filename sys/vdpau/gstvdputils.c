@@ -131,12 +131,21 @@ gst_vdp_video_to_output_caps (GstCaps * caps)
   result = gst_caps_copy (caps);
   for (i = 0; i < gst_caps_get_size (result); i++) {
     GstStructure *structure = gst_caps_get_structure (result, i);
+    gint par_n, par_d;
 
     gst_structure_set_name (structure, "video/x-vdpau-output");
     gst_structure_remove_field (structure, "chroma-type");
 
-    /* FIXME: don't know what to do with pixel-aspect-ratio */
-    gst_structure_remove_field (structure, "pixel-aspect-ratio");
+    if (gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_n,
+            &par_d)) {
+      gint width;
+
+      gst_structure_get_int (structure, "width", &width);
+      width = gst_util_uint64_scale_int (width, par_n, par_d);
+      gst_structure_set (structure, "width", G_TYPE_INT, width, NULL);
+
+      gst_structure_remove_field (structure, "pixel-aspect-ratio");
+    }
   }
 
   return result;

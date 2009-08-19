@@ -509,8 +509,9 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_boolean (structure, "interlaced", &vpp->interlaced);
 
-  output_caps = gst_vdp_video_to_output_caps (caps);
   allowed_caps = gst_pad_get_allowed_caps (vpp->srcpad);
+  structure = gst_caps_get_structure (allowed_caps, 0);
+  output_caps = gst_vdp_video_to_output_caps (caps);
 
   src_caps = gst_caps_intersect (output_caps, allowed_caps);
   gst_caps_truncate (src_caps);
@@ -629,7 +630,10 @@ gst_vdp_vpp_chain (GstPad * pad, GstBuffer * buffer)
     GstVdpOutputBuffer *outbuf;
 
     GstStructure *structure;
-    GstVideoRectangle src_r, dest_r;
+    GstVideoRectangle src_r = { 0, }
+    , dest_r = {
+    0,};
+    gint par_n, par_d;
     VdpRect rect;
 
     GstVdpDevice *device;
@@ -645,6 +649,15 @@ gst_vdp_vpp_chain (GstPad * pad, GstBuffer * buffer)
     if (!gst_structure_get_int (structure, "width", &src_r.w) ||
         !gst_structure_get_int (structure, "height", &src_r.h))
       goto invalid_caps;
+
+    if (gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_n,
+            &par_d)) {
+      gint new_width;
+
+      new_width = gst_util_uint64_scale_int (src_r.w, par_n, par_d);
+      src_r.x += (src_r.w - new_width) / 2;
+      src_r.w = new_width;
+    }
 
     structure = gst_caps_get_structure (GST_BUFFER_CAPS (outbuf), 0);
     if (!gst_structure_get_int (structure, "width", &dest_r.w) ||
