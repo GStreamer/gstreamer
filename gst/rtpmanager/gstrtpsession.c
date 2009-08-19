@@ -1236,29 +1236,87 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
 
 }
 
-static GList *
-gst_rtp_session_internal_links (GstPad * pad)
+typedef struct
+{
+  GstIterator parent;
+
+  GstRtpSession *rtpsession;
+  GstPad *pad;
+  gboolean start;
+} GstRtpSessionIterator;
+
+static void
+_iterate_free (GstIterator * it)
+{
+  GstRtpSessionIterator *sit = (GstRtpSessionIterator *) it;
+
+  g_object_unref (sit->rtpsession);
+  g_object_unref (sit->pad);
+
+  g_free (it);
+}
+
+static GstIteratorResult
+_iterate_next (GstIterator * it, gpointer * result)
+{
+  GstRtpSessionIterator *sit = (GstRtpSessionIterator *) it;
+  GstPad *res = NULL;
+
+  if (!sit->start) {
+    /* go out */
+  } else if (sit->pad == sit->rtpsession->recv_rtp_src) {
+    res = sit->rtpsession->recv_rtp_sink;
+  } else if (sit->pad == sit->rtpsession->recv_rtp_sink) {
+    res = sit->rtpsession->recv_rtp_src;
+  } else if (sit->pad == sit->rtpsession->send_rtp_src) {
+    res = sit->rtpsession->send_rtp_sink;
+  } else if (sit->pad == sit->rtpsession->send_rtp_sink) {
+    res = sit->rtpsession->send_rtp_src;
+  }
+
+  *result = res;
+
+  return res ? GST_ITERATOR_OK : GST_ITERATOR_DONE;
+}
+
+static GstIteratorItem
+_iterate_item (GstIterator * it, gpointer item)
+{
+  GstPad *pad = (GstPad *) item;
+  gst_object_ref (pad);
+
+  return GST_ITERATOR_ITEM_PASS;
+}
+
+static void
+_iterate_resync (GstIterator * it)
+{
+  GstRtpSessionIterator *sit = (GstRtpSessionIterator *) it;
+
+  sit->start = TRUE;
+}
+
+static GstIterator *
+gst_rtp_session_iterate_internal_links (GstPad * pad)
 {
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
-  GList *res = NULL;
+  GstRtpSessionIterator *it;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-  priv = rtpsession->priv;
 
-  if (pad == rtpsession->recv_rtp_src) {
-    res = g_list_prepend (res, rtpsession->recv_rtp_sink);
-  } else if (pad == rtpsession->recv_rtp_sink) {
-    res = g_list_prepend (res, rtpsession->recv_rtp_src);
-  } else if (pad == rtpsession->send_rtp_src) {
-    res = g_list_prepend (res, rtpsession->send_rtp_sink);
-  } else if (pad == rtpsession->send_rtp_sink) {
-    res = g_list_prepend (res, rtpsession->send_rtp_src);
-  }
+  it = (GstRtpSessionIterator *)
+      gst_iterator_new (sizeof (GstRtpSessionIterator),
+      GST_TYPE_PAD,
+      rtpsession->priv->lock,
+      &GST_ELEMENT_CAST (rtpsession)->pads_cookie,
+      _iterate_next, _iterate_item, _iterate_resync, _iterate_free);
+  it->start = TRUE;
+  it->rtpsession = gst_object_ref (rtpsession);
+  it->pad = gst_object_ref (pad);
 
   gst_object_unref (rtpsession);
 
-  return res;
+  return (GstIterator *) it;
 }
 
 static gboolean
@@ -1651,8 +1709,8 @@ create_recv_rtp_sink (GstRtpSession * rtpsession)
       (GstPadEventFunction) gst_rtp_session_event_recv_rtp_sink);
   gst_pad_set_setcaps_function (rtpsession->recv_rtp_sink,
       gst_rtp_session_sink_setcaps);
-  gst_pad_set_internal_link_function (rtpsession->recv_rtp_sink,
-      gst_rtp_session_internal_links);
+  gst_pad_set_iterate_internal_links_function (rtpsession->recv_rtp_sink,
+      gst_rtp_session_iterate_internal_links);
   gst_pad_set_active (rtpsession->recv_rtp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->recv_rtp_sink);
@@ -1661,8 +1719,8 @@ create_recv_rtp_sink (GstRtpSession * rtpsession)
   rtpsession->recv_rtp_src =
       gst_pad_new_from_static_template (&rtpsession_recv_rtp_src_template,
       "recv_rtp_src");
-  gst_pad_set_internal_link_function (rtpsession->recv_rtp_src,
-      gst_rtp_session_internal_links);
+  gst_pad_set_iterate_internal_links_function (rtpsession->recv_rtp_src,
+      gst_rtp_session_iterate_internal_links);
   gst_pad_use_fixed_caps (rtpsession->recv_rtp_src);
   gst_pad_set_active (rtpsession->recv_rtp_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->recv_rtp_src);
@@ -1708,8 +1766,8 @@ create_recv_rtcp_sink (GstRtpSession * rtpsession)
       gst_rtp_session_chain_recv_rtcp);
   gst_pad_set_event_function (rtpsession->recv_rtcp_sink,
       (GstPadEventFunction) gst_rtp_session_event_recv_rtcp_sink);
-  gst_pad_set_internal_link_function (rtpsession->recv_rtcp_sink,
-      gst_rtp_session_internal_links);
+  gst_pad_set_iterate_internal_links_function (rtpsession->recv_rtcp_sink,
+      gst_rtp_session_iterate_internal_links);
   gst_pad_set_active (rtpsession->recv_rtcp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->recv_rtcp_sink);
@@ -1718,8 +1776,8 @@ create_recv_rtcp_sink (GstRtpSession * rtpsession)
   rtpsession->sync_src =
       gst_pad_new_from_static_template (&rtpsession_sync_src_template,
       "sync_src");
-  gst_pad_set_internal_link_function (rtpsession->sync_src,
-      gst_rtp_session_internal_links);
+  gst_pad_set_iterate_internal_links_function (rtpsession->sync_src,
+      gst_rtp_session_iterate_internal_links);
   gst_pad_use_fixed_caps (rtpsession->sync_src);
   gst_pad_set_active (rtpsession->sync_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->sync_src);
@@ -1765,8 +1823,8 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
       gst_rtp_session_setcaps_send_rtp);
   gst_pad_set_event_function (rtpsession->send_rtp_sink,
       (GstPadEventFunction) gst_rtp_session_event_send_rtp_sink);
-  gst_pad_set_internal_link_function (rtpsession->send_rtp_sink,
-      gst_rtp_session_internal_links);
+  gst_pad_set_iterate_internal_links_function (rtpsession->send_rtp_sink,
+      gst_rtp_session_iterate_internal_links);
   gst_pad_set_active (rtpsession->send_rtp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->send_rtp_sink);
@@ -1774,8 +1832,8 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
   rtpsession->send_rtp_src =
       gst_pad_new_from_static_template (&rtpsession_send_rtp_src_template,
       "send_rtp_src");
-  gst_pad_set_internal_link_function (rtpsession->send_rtp_src,
-      gst_rtp_session_internal_links);
+  gst_pad_set_iterate_internal_links_function (rtpsession->send_rtp_src,
+      gst_rtp_session_iterate_internal_links);
   gst_pad_set_active (rtpsession->send_rtp_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->send_rtp_src);
 
@@ -1813,8 +1871,8 @@ create_send_rtcp_src (GstRtpSession * rtpsession)
       "send_rtcp_src");
   gst_pad_use_fixed_caps (rtpsession->send_rtcp_src);
   gst_pad_set_active (rtpsession->send_rtcp_src, TRUE);
-  gst_pad_set_internal_link_function (rtpsession->send_rtcp_src,
-      gst_rtp_session_internal_links);
+  gst_pad_set_iterate_internal_links_function (rtpsession->send_rtcp_src,
+      gst_rtp_session_iterate_internal_links);
   gst_pad_set_query_function (rtpsession->send_rtcp_src,
       gst_rtp_session_query_send_rtcp_src);
   gst_pad_set_event_function (rtpsession->send_rtcp_src,
