@@ -514,6 +514,9 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   src_caps = gst_caps_intersect (output_caps, allowed_caps);
   gst_caps_truncate (src_caps);
+  if (gst_caps_is_empty (src_caps))
+    goto invalid_caps;
+
   GST_DEBUG ("output_caps: %" GST_PTR_FORMAT " allowed_caps: %" GST_PTR_FORMAT
       " src_caps: %" GST_PTR_FORMAT, output_caps, allowed_caps, src_caps);
 

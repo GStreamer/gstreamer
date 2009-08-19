@@ -134,6 +134,9 @@ gst_vdp_video_to_output_caps (GstCaps * caps)
 
     gst_structure_set_name (structure, "video/x-vdpau-output");
     gst_structure_remove_field (structure, "chroma-type");
+
+    /* FIXME: don't know what to do with pixel-aspect-ratio */
+    gst_structure_remove_field (structure, "pixel-aspect-ratio");
   }
 
   return result;
