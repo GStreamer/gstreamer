@@ -853,7 +853,7 @@ gst_vdp_vpp_get_property (GObject * object, guint property_id, GValue * value,
       g_value_set_enum (value, vpp->method);
       break;
     case PROP_NOISE_REDUCTION:
-      g_value_set_boolean (value, vpp->noise_reduction);
+      g_value_set_float (value, vpp->noise_reduction);
       break;
     case PROP_SHARPENING:
       g_value_set_float (value, vpp->sharpening);
