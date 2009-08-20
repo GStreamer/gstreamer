@@ -265,8 +265,8 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   registry = gst_registry_get_default ();
 
   /* check if feature already exists, if it exists there is no need to update it
-   * when the registry is getting updated, outdated plugins and all there
-   * feature are removed and readded.
+   * when the registry is getting updated, outdated plugins and all their
+   * features are removed and readded.
    */
   existing_feature = gst_registry_lookup_feature (registry, name);
   if (existing_feature) {
