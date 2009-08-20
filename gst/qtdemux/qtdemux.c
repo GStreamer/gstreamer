@@ -4065,8 +4065,8 @@ done:
 static gboolean
 qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 {
+  QtAtomParser tkhd;
   int offset;
-  GNode *tkhd;
   GNode *mdia;
   GNode *mdhd;
   GNode *hdlr;
@@ -4083,6 +4083,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   gchar *codec = NULL;
   const guint8 *stsd_data;
   guint32 version;
+  guint32 tkhd_flags;
+  guint8 tkhd_version;
 
   stream = g_new0 (QtDemuxStream, 1);
   /* new streams always need a discont */
@@ -4094,11 +4096,13 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   stream->sample_index = -1;
   stream->last_ret = GST_FLOW_OK;
 
-  if (!(tkhd = qtdemux_tree_get_child_by_type (trak, FOURCC_tkhd)))
+  if (!qtdemux_tree_get_child_by_type_full (trak, FOURCC_tkhd, &tkhd) ||
+      !qt_atom_parser_get_uint8 (&tkhd, &tkhd_version) ||
+      !qt_atom_parser_get_uint24 (&tkhd, &tkhd_flags))
     goto corrupt_file;
 
-  GST_LOG_OBJECT (qtdemux, "track[tkhd] version/flags: 0x%08x",
-      QT_UINT32 ((guint8 *) tkhd->data + 8));
+  GST_LOG_OBJECT (qtdemux, "track[tkhd] version/flags: 0x%02x/%06x",
+      tkhd_version, tkhd_flags);
 
   if (!(mdia = qtdemux_tree_get_child_by_type (trak, FOURCC_mdia)))
     goto corrupt_file;
@@ -4173,15 +4177,18 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   stsd_data = (const guint8 *) stsd->data;
 
   if (stream->subtype == FOURCC_vide) {
-    guint32 fourcc;
-    const guint8 *tkhd_data = (const guint8 *) tkhd->data;
+    guint32 w, h, fourcc;
 
     stream->sampled = TRUE;
 
     /* version 1 uses some 64-bit ints */
-    offset = (QT_UINT8 (tkhd_data + 8) == 1) ? 96 : 84;
-    stream->display_width = (guint) QT_FP32 (tkhd_data + offset);
-    stream->display_height = (guint) QT_FP32 (tkhd_data + offset + 4);
+    if (!qt_atom_parser_skip (&tkhd, (tkhd_version == 1) ? 84 : 72) ||
+        !qt_atom_parser_get_uint32 (&tkhd, &w) ||
+        !qt_atom_parser_get_uint32 (&tkhd, &h))
+      goto corrupt_file;
+
+    stream->display_width = w >> 16;
+    stream->display_height = h >> 16;
 
     offset = 16;
     stream->fourcc = fourcc = QT_FOURCC (stsd_data + offset + 4);
