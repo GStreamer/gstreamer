@@ -66,6 +66,9 @@
 /* max. size considered 'sane' for non-mdat atoms */
 #define QTDEMUX_MAX_ATOM_SIZE (25*1024*1024)
 
+/* if the sample index is larger than this, something is likely wrong */
+#define QTDEMUX_MAX_SAMPLE_INDEX_SIZE (50*1024*1024)
+
 GST_DEBUG_CATEGORY (qtdemux_debug);
 
 /*typedef struct _QtNode QtNode; */
@@ -3570,8 +3573,11 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     if (n_samples == 0)
       goto no_samples;
 
-    GST_DEBUG_OBJECT (qtdemux, "stsz sample_size 0, allocating n_samples %u",
-        n_samples);
+    GST_DEBUG_OBJECT (qtdemux, "stsz sample_size 0, allocating n_samples %u "
+        "(%u MB)", n_samples, (n_samples * sizeof (QtDemuxSample)) >> 20);
+
+    if (n_samples >= QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
+      goto index_too_big;
 
     samples = g_try_new0 (QtDemuxSample, n_samples);
     if (samples == NULL)
@@ -3795,7 +3801,11 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     if (n_samples == 0)
       goto no_samples;
 
-    GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %d", n_samples);
+    GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u (%u MB)", n_samples,
+        (n_samples * sizeof (QtDemuxSample)) >> 20);
+
+    if (n_samples >= QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
+      goto index_too_big;
 
     samples = g_try_new0 (QtDemuxSample, n_samples);
     if (samples == NULL)
@@ -3938,6 +3948,13 @@ no_samples:
 out_of_memory:
   {
     GST_WARNING_OBJECT (qtdemux, "failed to allocate %d samples", n_samples);
+    return FALSE;
+  }
+index_too_big:
+  {
+    GST_WARNING_OBJECT (qtdemux, "not allocating index of %d samples, would "
+        "be larger than %uMB (broken file?)", n_samples,
+        QTDEMUX_MAX_SAMPLE_INDEX_SIZE >> 20);
     return FALSE;
   }
 }
