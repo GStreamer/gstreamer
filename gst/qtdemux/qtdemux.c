@@ -1449,7 +1449,7 @@ static GstFlowReturn
 gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
 {
   guint64 length = 0;
-  guint32 fourcc;
+  guint32 fourcc = 0;
   GstBuffer *buf = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 cur_offset = qtdemux->offset;
