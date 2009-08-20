@@ -267,6 +267,7 @@
   (of-object "GstBaseSink")
   (c-name "gst_base_sink_get_last_buffer")
   (return-type "GstBuffer*")
+  (caller-owns-return #t)
 )
 
 (define-method query_latency
