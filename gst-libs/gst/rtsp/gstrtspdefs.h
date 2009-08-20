@@ -389,6 +389,8 @@ gchar*             gst_rtsp_options_as_text    (GstRTSPMethod options);
 GstRTSPHeaderField gst_rtsp_find_header_field  (const gchar *header);
 GstRTSPMethod      gst_rtsp_find_method        (const gchar *method);
 
+gboolean           gst_rtsp_header_allow_multiple (GstRTSPHeaderField field);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_DEFS_H__ */

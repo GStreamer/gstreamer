@@ -1606,8 +1606,15 @@ parse_line (guint8 * buffer, GstRTSPMessage * msg)
     if (*value == ' ')
       value++;
 
+    /* for headers which may not appear multiple times, and thus may not
+     * contain multiple values on the same line, we can short-circuit the loop
+     * below and the entire value results in just one key:value pair*/
+    if (!gst_rtsp_header_allow_multiple (field))
+      next_value = value + strlen (value);
+    else
+      next_value = value;
+
     /* find the next value, taking special care of quotes and comments */
-    next_value = value;
     while (*next_value != '\0') {
       if ((quoted || comment != 0) && *next_value == '\\' &&
           next_value[1] != '\0')
