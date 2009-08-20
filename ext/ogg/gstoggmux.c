@@ -499,9 +499,10 @@ gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer)
       mux->last_ts = GST_BUFFER_TIMESTAMP (buffer);
   }
 
-  caps = gst_static_pad_template_get_caps (&src_factory);
+  caps = gst_pad_get_negotiated_caps (mux->srcpad);
   gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
+  if (caps)
+    gst_caps_unref (caps);
 
   return gst_pad_push (mux->srcpad, buffer);
 }
@@ -1130,15 +1131,16 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     gst_caps_unref (caps);
   }
   /* and send the buffers */
-  hwalk = hbufs;
-  while (hwalk) {
-    GstBuffer *buf = GST_BUFFER (hwalk->data);
+  while (hbufs != NULL) {
+    GstBuffer *buf = GST_BUFFER (hbufs->data);
 
-    hwalk = hwalk->next;
+    hbufs = g_list_delete_link (hbufs, hbufs);
 
     if ((ret = gst_ogg_mux_push_buffer (mux, buf)) != GST_FLOW_OK)
       break;
   }
+  /* free any remaining nodes/buffers in case we couldn't push them */
+  g_list_foreach (hbufs, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (hbufs);
 
   return ret;

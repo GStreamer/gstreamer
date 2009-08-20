@@ -286,6 +286,22 @@ test_pipeline (const char *pipeline)
 
   start_pipeline (bin, pad);
   g_main_loop_run (loop);
+
+  /* we're EOS now; make sure oggmux out caps have stream headers on them */
+  {
+    GstStructure *s;
+    GstCaps *muxcaps;
+
+    muxcaps = gst_pad_get_negotiated_caps (sinkpad);
+    fail_unless (muxcaps != NULL);
+    s = gst_caps_get_structure (muxcaps, 0);
+    fail_unless (gst_structure_has_name (s, "application/ogg"));
+    fail_unless (gst_structure_has_field (s, "streamheader"));
+    fail_unless (gst_structure_has_field_typed (s, "streamheader",
+            GST_TYPE_ARRAY));
+    gst_caps_unref (muxcaps);
+  }
+
   stop_pipeline (bin, pad);
 
   /* clean up */
@@ -299,6 +315,30 @@ GST_START_TEST (test_vorbis)
 {
   test_pipeline
       ("audiotestsrc num-buffers=5 ! audioconvert ! vorbisenc ! oggmux");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_vorbis_oggmux_unlinked)
+{
+  GstElement *pipe;
+  GstMessage *msg;
+
+  pipe = gst_parse_launch ("audiotestsrc ! vorbisenc ! oggmux", NULL);
+  if (pipe == NULL) {
+    g_printerr ("Skipping test 'test_vorbis_oggmux_unlinked'");
+    return;
+  }
+  /* no sink, no async state change */
+  fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_SUCCESS);
+  /* we expect an error (without any criticals/warnings) */
+  msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipe), -1,
+      GST_MESSAGE_ERROR);
+  gst_message_unref (msg);
+  fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pipe);
 }
 
 GST_END_TEST;
@@ -370,6 +410,7 @@ oggmux_suite (void)
   suite_add_tcase (s, tc_chain);
 #ifdef HAVE_VORBIS
   tcase_add_test (tc_chain, test_vorbis);
+  tcase_add_test (tc_chain, test_vorbis_oggmux_unlinked);
 #endif
 
 #ifdef HAVE_THEORA
