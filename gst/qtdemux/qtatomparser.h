@@ -39,6 +39,13 @@ qt_atom_parser_get_remaining (QtAtomParser * parser)
 }
 
 static inline gboolean
+qt_atom_parser_has_remaining (QtAtomParser * parser, guint64 min_remaining)
+{
+  return G_LIKELY (parser->size >= min_remaining) &&
+      G_LIKELY ((parser->size - min_remaining) >= parser->byte);
+}
+
+static inline gboolean
 qt_atom_parser_skip (QtAtomParser * parser, guint nbytes)
 {
   if (G_UNLIKELY (qt_atom_parser_get_remaining (parser) < nbytes))

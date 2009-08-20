@@ -3573,7 +3573,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     /* set the sample sizes */
     if (sample_size == 0) {
       /* different sizes for each sample */
-      if (qt_atom_parser_get_remaining (&stsz) < 4 * (n_samples))
+      if (!qt_atom_parser_has_remaining (&stsz, 4 * n_samples))
         goto corrupt_file;
 
       for (i = 0; i < n_samples; i++) {
@@ -3592,7 +3592,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         !qt_atom_parser_get_uint32 (&stsc, &n_samples_per_chunk))
       goto corrupt_file;
 
-    if (qt_atom_parser_get_remaining (&stsc) < 12 * n_samples_per_chunk)
+    if (!qt_atom_parser_has_remaining (&stsc, 12 * n_samples_per_chunk))
       goto corrupt_file;
 
     index = 0;
@@ -3665,7 +3665,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
       GST_LOG_OBJECT (qtdemux, "%u timestamp blocks", n_sample_times);
 
       /* make sure there's enough data */
-      if (qt_atom_parser_get_remaining (&stts) < (n_sample_times * (2 * 4)))
+      if (!qt_atom_parser_has_remaining (&stts, n_sample_times * (2 * 4)))
         goto corrupt_file;
 
       timestamp = 0;
@@ -3732,7 +3732,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
           stream->all_keyframe = TRUE;
         } else {
           /* make sure there's enough data */
-          if (qt_atom_parser_get_remaining (&stss) < (n_sample_syncs * 4))
+          if (!qt_atom_parser_has_remaining (&stss, n_sample_syncs * 4))
             goto corrupt_file;
           for (i = 0; i < n_sample_syncs; i++) {
             /* note that the first sample is index 1, not 0 */
@@ -3755,7 +3755,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
              * samples */
           } else {
             /* make sure there's enough data */
-            if (qt_atom_parser_get_remaining (&stps) < (n_sample_syncs * 4))
+            if (!qt_atom_parser_has_remaining (&stps, n_sample_syncs * 4))
               goto corrupt_file;
             for (i = 0; i < n_sample_syncs; i++) {
               /* note that the first sample is index 1, not 0 */
@@ -3802,7 +3802,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     sample_index = 0;
     timestamp = 0;
 
-    if (qt_atom_parser_get_remaining (&stsc) < 12 * n_samples_per_chunk)
+    if (!qt_atom_parser_has_remaining (&stsc, 12 * n_samples_per_chunk))
       goto corrupt_file;
 
     for (i = 0; i < n_samples_per_chunk; i++) {
