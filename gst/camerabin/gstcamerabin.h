@@ -68,6 +68,10 @@ struct _GstCameraBin
   gint fps_n;
   gint fps_d;
 
+  /* Image capture resolution */
+  gint image_width;
+  gint image_height;
+
   /* Image tags are collected here first before sending to imgbin */
   GstTagList *event_tags;
 

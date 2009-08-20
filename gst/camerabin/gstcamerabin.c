@@ -350,6 +350,10 @@ static void gst_camerabin_user_stop (GstCameraBin * camera);
 static void gst_camerabin_user_pause (GstCameraBin * camera);
 
 static void
+gst_camerabin_set_image_capture_caps (GstCameraBin * camera, gint width,
+    gint height);
+
+static void
 gst_camerabin_user_res_fps (GstCameraBin * camera, gint width, gint height,
     gint fps_n, gint fps_d);
 
@@ -1544,7 +1548,14 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
     }
 
     if (!camera->image_capture_caps) {
-      camera->image_capture_caps = gst_caps_copy (camera->view_finder_caps);
+      if (camera->image_width && camera->image_height) {
+        /* Resolution is set, but it isn't in use yet */
+        gst_camerabin_set_image_capture_caps (camera, camera->image_width,
+            camera->image_height);
+      } else {
+        /* Capture resolution not set. Use viewfinder resolution */
+        camera->image_capture_caps = gst_caps_copy (camera->view_finder_caps);
+      }
     }
 
     /* Start preparations for image capture */
@@ -2606,7 +2617,6 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    *
    * Changes the resolution used for still image capture.
    * Does not affect view finder mode and video recording.
-   * Use this action signal in PAUSED or PLAYING state.
    */
 
   camerabin_signals[USER_IMAGE_RES_SIGNAL] =
@@ -2676,6 +2686,8 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->height = DEFAULT_HEIGHT;
   camera->fps_n = DEFAULT_FPS_N;
   camera->fps_d = DEFAULT_FPS_D;
+  camera->image_width = 0;
+  camera->image_height = 0;
 
   camera->event_tags = gst_tag_list_new ();
 
@@ -3254,7 +3266,8 @@ gst_camerabin_user_res_fps (GstCameraBin * camera, gint width, gint height,
 }
 
 static void
-gst_camerabin_user_image_res (GstCameraBin * camera, gint width, gint height)
+gst_camerabin_set_image_capture_caps (GstCameraBin * camera, gint width,
+    gint height)
 {
   GstStructure *structure;
   GstCaps *new_caps = NULL;
@@ -3276,6 +3289,17 @@ gst_camerabin_user_image_res (GstCameraBin * camera, gint width, gint height)
   GST_INFO_OBJECT (camera,
       "init filter caps for image capture %" GST_PTR_FORMAT, new_caps);
   gst_caps_replace (&camera->image_capture_caps, new_caps);
+}
+
+static void
+gst_camerabin_user_image_res (GstCameraBin * camera, gint width, gint height)
+{
+  /* Set the caps now already, if possible */
+  gst_camerabin_set_image_capture_caps (camera, width, height);
+
+  /* These will be used in _start_image_capture() function */
+  camera->image_width = width;
+  camera->image_height = height;
 }
 
 /* entry point to initialize the plug-in
