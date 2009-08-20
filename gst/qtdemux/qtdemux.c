@@ -3085,12 +3085,15 @@ static gboolean
 qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
     guint length)
 {
-  guint32 fourcc;
-  guint32 node_length;
+  guint32 fourcc = 0;
+  guint32 node_length = 0;
   const QtNodeType *type;
   const guint8 *end;
 
   GST_LOG_OBJECT (qtdemux, "qtdemux_parse buffer %p length %u", buffer, length);
+
+  if (G_UNLIKELY (length < 8))
+    goto not_enough_data;
 
   node_length = QT_UINT32 (buffer);
   fourcc = QT_FOURCC (buffer + 4);
@@ -3108,7 +3111,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       GST_FOURCC_ARGS (fourcc), node_length, type->name);
 
   if (node_length > length)
-    goto broken_file;
+    goto broken_atom_size;
 
   if (type->flags & QT_FLAG_CONTAINER) {
     qtdemux_parse_container (qtdemux, node, buffer + 8, end);
@@ -3238,7 +3241,14 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
   return TRUE;
 
 /* ERRORS */
-broken_file:
+not_enough_data:
+  {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
+        (_("This file is corrupt and cannot be played.")),
+        ("Not enough data for an atom header, got only %u bytes", length));
+    return FALSE;
+  }
+broken_atom_size:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")),
