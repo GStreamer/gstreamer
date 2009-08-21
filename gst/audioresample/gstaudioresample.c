@@ -223,8 +223,6 @@ gst_audio_resample_init (GstAudioResample * resample,
 
   resample->quality = SPEEX_RESAMPLER_QUALITY_DEFAULT;
 
-  resample->need_discont = FALSE;
-
   gst_pad_set_query_function (trans->srcpad, gst_audio_resample_query);
   gst_pad_set_query_type_function (trans->srcpad,
       gst_audio_resample_query_type);
@@ -235,6 +233,8 @@ static gboolean
 gst_audio_resample_start (GstBaseTransform * base)
 {
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
+
+  resample->need_discont = TRUE;
 
   resample->t0 = GST_CLOCK_TIME_NONE;
   resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
