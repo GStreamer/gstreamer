@@ -20,6 +20,7 @@ testhelper.la: $(testhelper_la_OBJECTS) $(testhelper_la_DEPENDENCIES)
 
 tests =  \
 	test_adapter.py \
+	test_audio.py \
 	test_bin.py \
 	test_buffer.py \
         test_caps.py \
