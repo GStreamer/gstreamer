@@ -1252,6 +1252,8 @@ no_info:
 }
 
 #define GST_FFMPEG_TYPE_FIND_SIZE 4096
+#define GST_FFMPEG_TYPE_FIND_MIN_SIZE 256
+
 static void
 gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
 {
@@ -1267,6 +1269,16 @@ gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
   if (length == 0 || length > GST_FFMPEG_TYPE_FIND_SIZE)
     length = GST_FFMPEG_TYPE_FIND_SIZE;
 
+  /* The ffmpeg typefinders assume there's a certain minimum amount of data
+   * and will happily do invalid memory access if there isn't, so let's just
+   * skip the ffmpeg typefinders if the data available is too short
+   * (in which case it's unlikely to be a media file anyway) */
+  if (length < GST_FFMPEG_TYPE_FIND_MIN_SIZE) {
+    GST_LOG ("not typefinding %" G_GUINT64_FORMAT " bytes, too short", length);
+    return;
+  }
+
+  GST_LOG ("typefinding %" G_GUINT64_FORMAT " bytes", length);
   if (in_plugin->read_probe &&
       (data = gst_type_find_peek (tf, 0, length)) != NULL) {
     AVProbeData probe_data;
