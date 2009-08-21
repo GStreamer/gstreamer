@@ -183,7 +183,8 @@ probe_element (const gchar * name)
    * if we try to query the "device-name" property when the device isn't open */
   g_object_set (element, "device", "/dev/does/not/exist", NULL);
   g_object_get (element, "device-name", &devname, NULL);
-  g_assert (devname == NULL);
+  GST_LOG ("devname: '%s'", GST_STR_NULL (devname));
+  g_assert (devname == NULL || *devname == '\0');
 
   /* and now for real */
 
