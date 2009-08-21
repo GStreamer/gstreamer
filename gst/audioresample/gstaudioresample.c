@@ -824,7 +824,7 @@ gst_audio_resample_push_drain (GstAudioResample * resample)
     }
 
     /* process */
-    err = resample->funcs->process (resample->state, NULL, &out_len,
+    err = resample->funcs->process (resample->state, NULL, &history_len,
         resample->tmp_out, &out_processed);
 
     /* convert output format */
