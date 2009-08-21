@@ -235,9 +235,16 @@ gst_audio_resample_start (GstBaseTransform * base)
 {
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
 
-  resample->next_offset = -1;
-  resample->next_ts = -1;
-  resample->next_upstream_ts = -1;
+  resample->t0 = GST_CLOCK_TIME_NONE;
+  resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
+  resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
+  resample->next_in_offset = GST_BUFFER_OFFSET_NONE;
+  resample->next_out_offset = GST_BUFFER_OFFSET_NONE;
+
+  resample->tmp_in = NULL;
+  resample->tmp_in_size = 0;
+  resample->tmp_out = NULL;
+  resample->tmp_out_size = 0;
 
   return TRUE;
 }
@@ -754,112 +761,127 @@ gst_audio_resample_convert_buffer (GstAudioResample * resample,
   }
 }
 
+static guint8 *
+gst_audio_resample_workspace_realloc (guint8 ** workspace, guint * size,
+    guint new_size)
+{
+  guint8 *new;
+  if (new_size <= *size)
+    /* no need to resize */
+    return *workspace;
+  new = g_realloc (*workspace, new_size);
+  if (!new)
+    /* failure (re)allocating memeory */
+    return NULL;
+  /* success */
+  *workspace = new;
+  *size = new_size;
+  return *workspace;
+}
+
 static void
 gst_audio_resample_push_drain (GstAudioResample * resample)
 {
-  GstBuffer *buf;
-  GstBaseTransform *trans = GST_BASE_TRANSFORM (resample);
+  GstBuffer *outbuf;
   GstFlowReturn res;
   gint outsize;
   guint out_len, out_processed;
   gint err;
-  guint num, den, len;
-  guint8 *outtmp = NULL;
-  gboolean need_convert = FALSE;
+  guint num, den;
 
   if (!resample->state)
     return;
 
-  /* Don't drain samples if we were resetted. */
-  if (resample->next_ts == -1)
+  /* Don't drain samples if we were reset. */
+  if (!GST_CLOCK_TIME_IS_VALID (resample->t0))
     return;
-
-  need_convert = (resample->funcs->width != resample->width);
 
   resample->funcs->get_ratio (resample->state, &num, &den);
 
   out_len = resample->funcs->get_input_latency (resample->state);
   out_len = out_processed = (out_len * den + num - 1) / num;
-  outsize = (resample->width / 8) * out_len * resample->channels;
-
-  if (need_convert) {
-    guint outsize_tmp =
-        (resample->funcs->width / 8) * out_len * resample->channels;
-    if (outsize_tmp <= resample->tmp_out_size) {
-      outtmp = resample->tmp_out;
-    } else {
-      resample->tmp_out_size = outsize_tmp;
-      resample->tmp_out = outtmp = g_realloc (resample->tmp_out, outsize_tmp);
-    }
-  }
+  outsize = out_len * resample->channels * (resample->width / 8);
 
   res =
-      gst_pad_alloc_buffer_and_set_caps (trans->srcpad, GST_BUFFER_OFFSET_NONE,
-      outsize, GST_PAD_CAPS (trans->srcpad), &buf);
-
+      gst_pad_alloc_buffer_and_set_caps (GST_BASE_TRANSFORM_SRC_PAD (resample),
+      GST_BUFFER_OFFSET_NONE, outsize,
+      GST_PAD_CAPS (GST_BASE_TRANSFORM_SRC_PAD (resample)), &outbuf);
   if (G_UNLIKELY (res != GST_FLOW_OK)) {
     GST_WARNING_OBJECT (resample, "failed allocating buffer of %d bytes",
         outsize);
     return;
   }
 
-  len = resample->funcs->get_input_latency (resample->state);
+  if (resample->funcs->width != resample->width) {
+    /* need to convert data format;  allocate workspace */
+    if (!gst_audio_resample_workspace_realloc (&resample->tmp_out,
+            &resample->tmp_out_size, (resample->funcs->width / 8) * out_len *
+            resample->channels)) {
+      GST_ERROR_OBJECT (resample, "failed to allocate workspace");
+      return;
+    }
 
-  err =
-      resample->funcs->process (resample->state,
-      NULL, &len, (need_convert) ? outtmp : GST_BUFFER_DATA (buf),
-      &out_processed);
+    /* process */
+    err = resample->funcs->process (resample->state, NULL, &out_len,
+        resample->tmp_out, &out_processed);
 
-  if (G_UNLIKELY (err != RESAMPLER_ERR_SUCCESS)) {
-    GST_WARNING_OBJECT (resample, "Failed to process drain: %s",
-        resample->funcs->strerror (err));
-    gst_buffer_unref (buf);
-    return;
-  }
-
-  if (G_UNLIKELY (out_processed == 0)) {
-    GST_WARNING_OBJECT (resample, "Failed to get drain, dropping buffer");
-    gst_buffer_unref (buf);
-    return;
+    /* convert output format */
+    gst_audio_resample_convert_buffer (resample, resample->tmp_out,
+        GST_BUFFER_DATA (outbuf), out_processed, TRUE);
+  } else {
+    /* don't need to convert data format;  process */
+    err = resample->funcs->process (resample->state, NULL, &out_len,
+        GST_BUFFER_DATA (outbuf), &out_processed);
   }
 
   /* If we wrote more than allocated something is really wrong now
    * and we should better abort immediately */
   g_assert (out_len >= out_processed);
 
-  if (need_convert)
-    gst_audio_resample_convert_buffer (resample, outtmp, GST_BUFFER_DATA (buf),
-        out_processed, TRUE);
-
-  GST_BUFFER_DURATION (buf) =
-      GST_FRAMES_TO_CLOCK_TIME (out_processed, resample->outrate);
-  GST_BUFFER_SIZE (buf) =
-      out_processed * resample->channels * (resample->width / 8);
-
-  if (GST_CLOCK_TIME_IS_VALID (resample->next_ts)) {
-    GST_BUFFER_TIMESTAMP (buf) = resample->next_ts;
-    resample->next_ts += GST_BUFFER_DURATION (buf);
+  if (G_UNLIKELY (err != RESAMPLER_ERR_SUCCESS)) {
+    GST_WARNING_OBJECT (resample, "Failed to process drain: %s",
+        resample->funcs->strerror (err));
+    gst_buffer_unref (outbuf);
+    return;
   }
 
-  if (resample->next_offset != -1) {
-    GST_BUFFER_OFFSET (buf) = resample->next_offset;
-    GST_BUFFER_OFFSET_END (buf) = resample->next_offset + out_processed;
-    resample->next_offset += out_processed;
+  if (G_UNLIKELY (out_processed == 0)) {
+    GST_WARNING_OBJECT (resample, "Failed to get drain, dropping buffer");
+    gst_buffer_unref (outbuf);
+    return;
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (resample->t0)) {
+    GST_BUFFER_OFFSET (outbuf) = resample->next_out_offset;
+    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET (outbuf) + out_processed;
+    GST_BUFFER_TIMESTAMP (outbuf) = resample->t0 +
+        gst_util_uint64_scale_int_round (GST_BUFFER_OFFSET (outbuf) -
+        resample->out_offset0, GST_SECOND, resample->outrate);
+    GST_BUFFER_DURATION (outbuf) = resample->t0 +
+        gst_util_uint64_scale_int_round (GST_BUFFER_OFFSET_END (outbuf) -
+        resample->out_offset0, GST_SECOND, resample->outrate) -
+        GST_BUFFER_TIMESTAMP (outbuf);
+    resample->next_out_offset += out_processed;
+    resample->next_in_offset += 0;
   } else {
-    /* should be impossible, but just incase */
-    GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
-    GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
   }
+
+  GST_BUFFER_SIZE (outbuf) =
+      out_processed * resample->channels * (resample->width / 8);
 
   GST_LOG_OBJECT (resample,
       "Pushing drain buffer of %u bytes with timestamp %" GST_TIME_FORMAT
       " duration %" GST_TIME_FORMAT " offset %" G_GUINT64_FORMAT " offset_end %"
-      G_GUINT64_FORMAT, GST_BUFFER_SIZE (buf),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
-      GST_BUFFER_OFFSET_END (buf));
+      G_GUINT64_FORMAT, GST_BUFFER_SIZE (outbuf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf),
+      GST_BUFFER_OFFSET_END (outbuf));
 
-  res = gst_pad_push (trans->srcpad, buf);
+  res = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (resample), outbuf);
 
   if (G_UNLIKELY (res != GST_FLOW_OK))
     GST_WARNING_OBJECT (resample, "Failed to push drain: %s",
@@ -876,16 +898,22 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_audio_resample_reset_state (resample);
-      resample->next_offset = -1;
-      resample->next_ts = -1;
-      resample->next_upstream_ts = -1;
+      resample->t0 = GST_CLOCK_TIME_NONE;
+      resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
+      resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
+      resample->next_in_offset = GST_BUFFER_OFFSET_NONE;
+      resample->next_out_offset = GST_BUFFER_OFFSET_NONE;
+      resample->need_discont = TRUE;
       break;
     case GST_EVENT_NEWSEGMENT:
       gst_audio_resample_push_drain (resample);
       gst_audio_resample_reset_state (resample);
-      resample->next_offset = -1;
-      resample->next_ts = -1;
-      resample->next_upstream_ts = -1;
+      resample->t0 = GST_CLOCK_TIME_NONE;
+      resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
+      resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
+      resample->next_in_offset = GST_BUFFER_OFFSET_NONE;
+      resample->next_out_offset = GST_BUFFER_OFFSET_NONE;
+      resample->need_discont = TRUE;
       break;
     case GST_EVENT_EOS:
       gst_audio_resample_push_drain (resample);
@@ -899,27 +927,40 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
 }
 
 static gboolean
-gst_audio_resample_check_discont (GstAudioResample * resample,
-    GstClockTime timestamp)
+gst_audio_resample_check_discont (GstAudioResample * resample, GstBuffer * buf)
 {
-  if (timestamp != GST_CLOCK_TIME_NONE &&
-      resample->next_upstream_ts != GST_CLOCK_TIME_NONE &&
-      timestamp != resample->next_upstream_ts) {
-    /* Potentially a discontinuous buffer. However, it turns out that many
-     * elements generate imperfect streams due to rounding errors, so we permit
-     * a small error (up to one sample) without triggering a filter 
-     * flush/restart (if triggered incorrectly, this will be audible) */
-    GstClockTimeDiff diff = timestamp - resample->next_upstream_ts;
+  guint64 offset;
+  guint64 delta;
 
-    if (ABS (diff) > (GST_SECOND + resample->inrate - 1) / resample->inrate) {
-      GST_WARNING_OBJECT (resample,
-          "encountered timestamp discontinuity of %s%" GST_TIME_FORMAT,
-          (diff < 0) ? "-" : "", GST_TIME_ARGS ((GstClockTime) ABS (diff)));
-      return TRUE;
-    }
-  }
+  /* is the incoming buffer a discontinuity? */
+  if (G_UNLIKELY (GST_BUFFER_IS_DISCONT (buf)))
+    return TRUE;
 
-  return FALSE;
+  /* no valid timestamps or offsets to compare --> no discontinuity */
+  if (G_UNLIKELY (!(GST_BUFFER_TIMESTAMP_IS_VALID (buf) &&
+              GST_CLOCK_TIME_IS_VALID (resample->t0) &&
+              resample->in_offset0 != GST_BUFFER_OFFSET_NONE &&
+              resample->next_in_offset != GST_BUFFER_OFFSET_NONE)))
+    return FALSE;
+
+  /* convert the inbound timestamp to an offset. */
+  offset =
+      resample->in_offset0 +
+      gst_util_uint64_scale_int_round (GST_BUFFER_TIMESTAMP (buf) -
+      resample->t0, resample->inrate, GST_SECOND);
+
+  /* many elements generate imperfect streams due to rounding errors, so we
+   * permit a small error (up to one sample) without triggering a filter
+   * flush/restart (if triggered incorrectly, this will be audible) */
+  delta = ABS ((gint64) (offset - resample->next_in_offset));
+  if (delta <= 1)
+    return FALSE;
+
+  GST_WARNING_OBJECT (resample,
+      "encountered timestamp discontinuity of %lu samples = %" GST_TIME_FORMAT,
+      delta, GST_TIME_ARGS (gst_util_uint64_scale_int_round (delta, GST_SECOND,
+              resample->inrate)));
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -928,9 +969,7 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
 {
   guint32 in_len, in_processed;
   guint32 out_len, out_processed;
-  gint err = RESAMPLER_ERR_SUCCESS;
-  guint8 *in_tmp = NULL, *out_tmp = NULL;
-  gboolean need_convert = (resample->funcs->width != resample->width);
+  gint err;
 
   in_len = GST_BUFFER_SIZE (inbuf) / resample->channels;
   out_len = GST_BUFFER_SIZE (outbuf) / resample->channels;
@@ -941,95 +980,88 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
   in_processed = in_len;
   out_processed = out_len;
 
-  if (need_convert) {
-    guint in_size_tmp =
-        in_len * resample->channels * (resample->funcs->width / 8);
-    guint out_size_tmp =
-        out_len * resample->channels * (resample->funcs->width / 8);
-
-    if (in_size_tmp <= resample->tmp_in_size) {
-      in_tmp = resample->tmp_in;
-    } else {
-      resample->tmp_in = in_tmp = g_realloc (resample->tmp_in, in_size_tmp);
-      resample->tmp_in_size = in_size_tmp;
+  if (resample->funcs->width != resample->width) {
+    /* need to convert data format for processing;  ensure we have enough
+     * workspace available */
+    if (!gst_audio_resample_workspace_realloc (&resample->tmp_in,
+            &resample->tmp_in_size, in_len * resample->channels *
+            (resample->funcs->width / 8)) ||
+        !gst_audio_resample_workspace_realloc (&resample->tmp_out,
+            &resample->tmp_out_size, out_len * resample->channels *
+            (resample->funcs->width / 8))) {
+      GST_ERROR_OBJECT (resample, "failed to allocate workspace");
+      return GST_FLOW_ERROR;
     }
 
+    /* convert input */
     gst_audio_resample_convert_buffer (resample, GST_BUFFER_DATA (inbuf),
-        in_tmp, in_len, FALSE);
+        resample->tmp_in, in_len, FALSE);
 
-    if (out_size_tmp <= resample->tmp_out_size) {
-      out_tmp = resample->tmp_out;
-    } else {
-      resample->tmp_out = out_tmp = g_realloc (resample->tmp_out, out_size_tmp);
-      resample->tmp_out_size = out_size_tmp;
-    }
-  }
-
-  if (need_convert) {
+    /* process */
     err = resample->funcs->process (resample->state,
-        in_tmp, &in_processed, out_tmp, &out_processed);
+        resample->tmp_in, &in_processed, resample->tmp_out, &out_processed);
+
+    /* convert output */
+    gst_audio_resample_convert_buffer (resample, resample->tmp_out,
+        GST_BUFFER_DATA (outbuf), out_processed, TRUE);
   } else {
+    /* no format conversion required;  process */
     err = resample->funcs->process (resample->state,
-        (const guint8 *) GST_BUFFER_DATA (inbuf), &in_processed,
-        (guint8 *) GST_BUFFER_DATA (outbuf), &out_processed);
+        GST_BUFFER_DATA (inbuf), &in_processed,
+        GST_BUFFER_DATA (outbuf), &out_processed);
   }
 
-  if (G_UNLIKELY (in_len != in_processed))
-    GST_WARNING_OBJECT (resample, "Converted %d of %d input samples",
-        in_processed, in_len);
-
-  if (out_len != out_processed) {
-    if (out_processed == 0) {
-      GST_DEBUG_OBJECT (resample, "Converted to 0 samples, buffer dropped");
-
-      return GST_BASE_TRANSFORM_FLOW_DROPPED;
-    }
-
-    /* If we wrote more than allocated something is really wrong now
-     * and we should better abort immediately */
-    g_assert (out_len >= out_processed);
-  }
+  /* If we wrote more than allocated something is really wrong now and we
+   * should better abort immediately */
+  g_assert (out_len >= out_processed);
 
   if (G_UNLIKELY (err != RESAMPLER_ERR_SUCCESS)) {
     GST_ERROR_OBJECT (resample, "Failed to convert data: %s",
         resample->funcs->strerror (err));
     return GST_FLOW_ERROR;
-  } else {
-
-    if (need_convert)
-      gst_audio_resample_convert_buffer (resample, out_tmp,
-          GST_BUFFER_DATA (outbuf), out_processed, TRUE);
-
-    GST_BUFFER_DURATION (outbuf) =
-        GST_FRAMES_TO_CLOCK_TIME (out_processed, resample->outrate);
-    GST_BUFFER_SIZE (outbuf) =
-        out_processed * resample->channels * (resample->width / 8);
-
-    if (GST_CLOCK_TIME_IS_VALID (resample->next_ts)) {
-      GST_BUFFER_TIMESTAMP (outbuf) = resample->next_ts;
-      resample->next_ts += GST_BUFFER_DURATION (outbuf);
-    }
-
-    if (resample->next_offset != -1) {
-      GST_BUFFER_OFFSET (outbuf) = resample->next_offset;
-      GST_BUFFER_OFFSET_END (outbuf) = resample->next_offset + out_processed;
-      resample->next_offset += out_processed;
-    } else {
-      /* should be impossible, but just incase */
-      GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
-      GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
-    }
-
-    GST_LOG_OBJECT (resample,
-        "Converted to buffer of %u bytes with timestamp %" GST_TIME_FORMAT
-        ", duration %" GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
-        ", offset_end %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (outbuf),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
-        GST_BUFFER_OFFSET (outbuf), GST_BUFFER_OFFSET_END (outbuf));
-
-    return GST_FLOW_OK;
   }
+
+  if (G_UNLIKELY (in_len != in_processed)) {
+    GST_WARNING_OBJECT (resample, "converted %d of %d input samples",
+        in_processed, in_len);
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (resample->t0)) {
+    GST_BUFFER_OFFSET (outbuf) = resample->next_out_offset;
+    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET (outbuf) + out_processed;
+    GST_BUFFER_TIMESTAMP (outbuf) = resample->t0 +
+        gst_util_uint64_scale_int_round (GST_BUFFER_OFFSET (outbuf) -
+        resample->out_offset0, GST_SECOND, resample->outrate);
+    GST_BUFFER_DURATION (outbuf) = resample->t0 +
+        gst_util_uint64_scale_int_round (GST_BUFFER_OFFSET_END (outbuf) -
+        resample->out_offset0, GST_SECOND, resample->outrate) -
+        GST_BUFFER_TIMESTAMP (outbuf);
+    resample->next_out_offset += out_processed;
+    resample->next_in_offset += in_len;
+  } else {
+    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+  }
+
+  GST_BUFFER_SIZE (outbuf) =
+      out_processed * resample->channels * (resample->width / 8);
+
+  GST_LOG_OBJECT (resample,
+      "Converted to buffer of %" G_GUINT32_FORMAT
+      " samples (%u bytes) with timestamp %" GST_TIME_FORMAT ", duration %"
+      GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT ", offset_end %"
+      G_GUINT64_FORMAT, out_processed, GST_BUFFER_SIZE (outbuf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
+      GST_BUFFER_OFFSET (outbuf), GST_BUFFER_OFFSET_END (outbuf));
+
+  if (out_processed == 0) {
+    GST_DEBUG_OBJECT (resample, "buffer dropped");
+    return GST_BASE_TRANSFORM_FLOW_DROPPED;
+  }
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -1038,8 +1070,6 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
 {
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
   gulong size;
-  GstClockTime timestamp;
-  guint insamples;
   GstFlowReturn ret;
 
   if (resample->state == NULL) {
@@ -1054,50 +1084,44 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
   }
 
   size = GST_BUFFER_SIZE (inbuf);
-  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
 
   GST_LOG_OBJECT (resample, "transforming buffer of %ld bytes, ts %"
       GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ", offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
-      size, GST_TIME_ARGS (timestamp),
+      size, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
       GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf));
 
-  /* check for timestamp discontinuities and flush/reset if needed */
-  if (G_UNLIKELY (gst_audio_resample_check_discont (resample, timestamp)
-          || GST_BUFFER_IS_DISCONT (inbuf))) {
-    /* Flush internal samples */
+  /* check for timestamp discontinuities;  flush/reset if needed, and set
+   * flag to resync timestamp and offset counters and send event
+   * downstream */
+  if (G_UNLIKELY (gst_audio_resample_check_discont (resample, inbuf))) {
     gst_audio_resample_reset_state (resample);
-    /* Inform downstream element about discontinuity */
     resample->need_discont = TRUE;
-    /* We want to recalculate the timestamps */
-    resample->next_ts = -1;
-    resample->next_upstream_ts = -1;
-    resample->next_offset = -1;
   }
 
-  insamples = GST_BUFFER_SIZE (inbuf) / resample->channels;
-  insamples /= (resample->width / 8);
-
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)
-      && !GST_CLOCK_TIME_IS_VALID (resample->next_ts)) {
-    resample->next_ts = timestamp;
-  }
-
-  if (resample->next_offset == -1) {
-    if (GST_BUFFER_OFFSET_IS_VALID (inbuf)) {
-      resample->next_offset =
-          gst_util_uint64_scale_int (GST_BUFFER_OFFSET (inbuf),
-          resample->outrate, resample->inrate);
-    } else if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-      resample->next_offset =
-          GST_CLOCK_TIME_TO_FRAMES (timestamp, resample->outrate);
-    } else {
-      resample->next_offset = 0;
-    }
-  }
-
+  /* handle discontinuity */
   if (G_UNLIKELY (resample->need_discont)) {
+    /* resync the timestamp and offset counters if possible */
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (inbuf) &&
+        GST_BUFFER_OFFSET_IS_VALID (inbuf)) {
+      resample->t0 = GST_BUFFER_TIMESTAMP (inbuf);
+      resample->in_offset0 = GST_BUFFER_OFFSET (inbuf);
+      resample->out_offset0 =
+          gst_util_uint64_scale_int_round (resample->in_offset0,
+          resample->outrate, resample->inrate);
+      resample->next_in_offset = resample->in_offset0;
+      resample->next_out_offset = resample->out_offset0;
+    } else {
+      GST_DEBUG_OBJECT (resample, "found discontinuity but timestamp and/or "
+          "offset is invalid, cannot sync output timestamp and offset counter");
+      resample->t0 = GST_CLOCK_TIME_NONE;
+      resample->in_offset0 = GST_BUFFER_OFFSET_NONE;
+      resample->out_offset0 = GST_BUFFER_OFFSET_NONE;
+      resample->next_in_offset = GST_BUFFER_OFFSET_NONE;
+      resample->next_out_offset = GST_BUFFER_OFFSET_NONE;
+    }
+    /* set DISCONT flag on output buffer */
     GST_DEBUG_OBJECT (resample, "marking this buffer with the DISCONT flag");
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
     resample->need_discont = FALSE;
@@ -1107,13 +1131,15 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     return ret;
 
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)
-      && !GST_CLOCK_TIME_IS_VALID (resample->next_upstream_ts))
-    resample->next_upstream_ts = timestamp;
-
-  if (GST_CLOCK_TIME_IS_VALID (resample->next_upstream_ts))
-    resample->next_upstream_ts +=
-        GST_FRAMES_TO_CLOCK_TIME (insamples, resample->inrate);
+  GST_DEBUG_OBJECT (resample, "input = samples [%" G_GUINT64_FORMAT ", %"
+      G_GUINT64_FORMAT ") = [%" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT
+      ") ns;  output = samples [%" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT
+      ") = [%" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ") ns",
+      GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf),
+      GST_BUFFER_TIMESTAMP (inbuf), GST_BUFFER_TIMESTAMP (inbuf) +
+      GST_BUFFER_DURATION (inbuf), GST_BUFFER_OFFSET (outbuf),
+      GST_BUFFER_OFFSET_END (outbuf), GST_BUFFER_TIMESTAMP (outbuf),
+      GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf));
 
   return GST_FLOW_OK;
 }
@@ -1144,7 +1170,7 @@ gst_audio_resample_query (GstPad * pad, GstQuery * query)
       if (gst_base_transform_is_passthrough (trans))
         resampler_latency = 0;
 
-      if ((peer = gst_pad_get_peer (trans->sinkpad))) {
+      if ((peer = gst_pad_get_peer (GST_BASE_TRANSFORM_SINK_PAD (trans)))) {
         if ((res = gst_pad_query (peer, query))) {
           gst_query_parse_latency (query, &live, &min, &max);
 
@@ -1154,8 +1180,8 @@ gst_audio_resample_query (GstPad * pad, GstQuery * query)
 
           /* add our own latency */
           if (rate != 0 && resampler_latency != 0)
-            latency =
-                gst_util_uint64_scale (resampler_latency, GST_SECOND, rate);
+            latency = gst_util_uint64_scale_round (resampler_latency,
+                GST_SECOND, rate);
           else
             latency = 0;
 
@@ -1163,7 +1189,7 @@ gst_audio_resample_query (GstPad * pad, GstQuery * query)
               GST_TIME_ARGS (latency));
 
           min += latency;
-          if (max != GST_CLOCK_TIME_NONE)
+          if (GST_CLOCK_TIME_IS_VALID (max))
             max += latency;
 
           GST_DEBUG_OBJECT (resample, "Calculated total latency : min %"
