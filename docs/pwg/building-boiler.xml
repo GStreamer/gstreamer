@@ -48,6 +48,13 @@ Resolving deltas: 100% (240/240), done.
       directory. You should look over the files in that directory to get a
       general idea of the structure of a source tree for a plugin.
     </para>
+    <para>
+      If for some reason you can't access the git repository, you can also
+      <ulink type="http"
+      url="http://cgit.freedesktop.org/gstreamer/gst-template/commit/">
+      download a snapshot of the latest revision</ulink> via the cgit web
+      interface.
+    </para>
   </sect1>
 
   <!-- ############ sect1 ############# -->
