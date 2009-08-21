@@ -4333,6 +4333,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         stream->samples_per_frame = 1 * stream->n_channels;
         break;
       }
+      case FOURCC_agsm:
+      {
+        stream->samples_per_packet = 160;
+        stream->bytes_per_packet = 33;
+        stream->bytes_per_frame = 33 * stream->n_channels;
+        stream->bytes_per_sample = 2;
+        stream->samples_per_frame = 160 * stream->n_channels;
+        break;
+      }
       default:
         break;
     }
