@@ -731,6 +731,174 @@ GST_END_TEST;
 
 #endif
 
+static void
+_message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  GMainLoop *loop = user_data;
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+    case GST_MESSAGE_WARNING:
+      g_assert_not_reached ();
+      break;
+    case GST_MESSAGE_EOS:
+      g_main_loop_quit (loop);
+      break;
+    default:
+      break;
+  }
+}
+
+typedef struct
+{
+  guint64 latency;
+  GstClockTime in_ts;
+
+  GstClockTime next_out_ts;
+  guint64 next_out_off;
+
+  guint64 in_buffer_count, out_buffer_count;
+} TimestampDriftCtx;
+
+void
+fakesink_handoff_cb (GstElement * object, GstBuffer * buffer, GstPad * pad,
+    gpointer user_data)
+{
+  TimestampDriftCtx *ctx = user_data;
+
+  ctx->out_buffer_count++;
+  if (ctx->latency == GST_CLOCK_TIME_NONE) {
+    ctx->latency = 1000 - GST_BUFFER_SIZE (buffer) / 8;
+  }
+
+  /* Check if we have a perfectly timestampped stream */
+  if (ctx->next_out_ts != GST_CLOCK_TIME_NONE)
+    fail_unless (ctx->next_out_ts == GST_BUFFER_TIMESTAMP (buffer),
+        "expected timestamp %" GST_TIME_FORMAT " got timestamp %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (ctx->next_out_ts),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+
+  /* Check if we have a perfectly offsetted stream */
+  fail_unless (GST_BUFFER_OFFSET_END (buffer) ==
+      GST_BUFFER_OFFSET (buffer) + GST_BUFFER_SIZE (buffer) / 8,
+      "expected offset end %" G_GUINT64_FORMAT " got offset end %"
+      G_GUINT64_FORMAT,
+      GST_BUFFER_OFFSET (buffer) + GST_BUFFER_SIZE (buffer) / 8,
+      GST_BUFFER_OFFSET_END (buffer));
+  if (ctx->next_out_off != GST_BUFFER_OFFSET_NONE) {
+    fail_unless (GST_BUFFER_OFFSET (buffer) == ctx->next_out_off,
+        "expected offset %" G_GUINT64_FORMAT " got offset %" G_GUINT64_FORMAT,
+        ctx->next_out_off, GST_BUFFER_OFFSET (buffer));
+  }
+
+  if (ctx->in_buffer_count != ctx->out_buffer_count) {
+    g_print ("timestamp %" GST_TIME_FORMAT "\n",
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+  }
+
+  if (ctx->in_ts != GST_CLOCK_TIME_NONE && ctx->in_buffer_count > 1
+      && ctx->in_buffer_count == ctx->out_buffer_count) {
+    fail_unless (GST_BUFFER_TIMESTAMP (buffer) ==
+        ctx->in_ts - gst_util_uint64_scale_round (ctx->latency, GST_SECOND,
+            4096),
+        "expected output timestamp %" GST_TIME_FORMAT " (%" G_GUINT64_FORMAT
+        ") got output timestamp %" GST_TIME_FORMAT " (%" G_GUINT64_FORMAT ")",
+        GST_TIME_ARGS (ctx->in_ts - gst_util_uint64_scale_round (ctx->latency,
+                GST_SECOND, 4096)),
+        ctx->in_ts - gst_util_uint64_scale_round (ctx->latency, GST_SECOND,
+            4096), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+        GST_BUFFER_TIMESTAMP (buffer));
+  }
+
+  ctx->next_out_ts =
+      GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
+  ctx->next_out_off = GST_BUFFER_OFFSET_END (buffer);
+}
+
+void
+identity_handoff_cb (GstElement * object, GstBuffer * buffer,
+    gpointer user_data)
+{
+  TimestampDriftCtx *ctx = user_data;
+
+  ctx->in_ts = GST_BUFFER_TIMESTAMP (buffer);
+  ctx->in_buffer_count++;
+}
+
+GST_START_TEST (test_timestamp_drift)
+{
+  TimestampDriftCtx ctx =
+      { GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE,
+    GST_BUFFER_OFFSET_NONE, 0, 0
+  };
+  GstElement *pipeline;
+  GstElement *audiotestsrc, *capsfilter1, *identity, *audioresample,
+      *capsfilter2, *fakesink;
+  GstBus *bus;
+  GMainLoop *loop;
+  GstCaps *caps;
+
+  pipeline = gst_pipeline_new ("pipeline");
+  fail_unless (pipeline != NULL);
+
+  audiotestsrc = gst_element_factory_make ("audiotestsrc", "src");
+  fail_unless (audiotestsrc != NULL);
+  g_object_set (G_OBJECT (audiotestsrc), "num-buffers", 10000,
+      "samplesperbuffer", 4000, NULL);
+
+  capsfilter1 = gst_element_factory_make ("capsfilter", "capsfilter1");
+  fail_unless (capsfilter1 != NULL);
+  caps =
+      gst_caps_from_string
+      ("audio/x-raw-float, channels=1, width=64, rate=16384");
+  g_object_set (G_OBJECT (capsfilter1), "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  identity = gst_element_factory_make ("identity", "identity");
+  fail_unless (identity != NULL);
+  g_object_set (G_OBJECT (identity), "sync", FALSE, "signal-handoffs", TRUE,
+      NULL);
+  g_signal_connect (identity, "handoff", (GCallback) identity_handoff_cb, &ctx);
+
+  audioresample = gst_element_factory_make ("audioresample", "resample");
+  fail_unless (audioresample != NULL);
+  capsfilter2 = gst_element_factory_make ("capsfilter", "capsfilter2");
+  fail_unless (capsfilter2 != NULL);
+  caps =
+      gst_caps_from_string
+      ("audio/x-raw-float, channels=1, width=64, rate=4096");
+  g_object_set (G_OBJECT (capsfilter2), "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  fakesink = gst_element_factory_make ("fakesink", "sink");
+  fail_unless (fakesink != NULL);
+  g_object_set (G_OBJECT (fakesink), "sync", FALSE, "async", FALSE,
+      "signal-handoffs", TRUE, NULL);
+  g_signal_connect (fakesink, "handoff", (GCallback) fakesink_handoff_cb, &ctx);
+
+
+  gst_bin_add_many (GST_BIN (pipeline), audiotestsrc, capsfilter1, identity,
+      audioresample, capsfilter2, fakesink, NULL);
+  fail_unless (gst_element_link_many (audiotestsrc, capsfilter1, identity,
+          audioresample, capsfilter2, fakesink, NULL));
+
+  loop = g_main_loop_new (NULL, FALSE);
+
+  bus = gst_element_get_bus (pipeline);
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message", (GCallback) _message_cb, loop);
+
+  fail_unless (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  g_main_loop_run (loop);
+
+  fail_unless (gst_element_set_state (pipeline,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  g_main_loop_unref (loop);
+  gst_object_unref (pipeline);
+
+} GST_END_TEST;
+
 static Suite *
 audioresample_suite (void)
 {
@@ -743,6 +911,7 @@ audioresample_suite (void)
   tcase_add_test (tc_chain, test_reuse);
   tcase_add_test (tc_chain, test_shutdown);
   tcase_add_test (tc_chain, test_live_switch);
+  tcase_add_test (tc_chain, test_timestamp_drift);
 
 #ifndef GST_DISABLE_PARSE
   tcase_set_timeout (tc_chain, 360);
