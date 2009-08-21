@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <glib.h>
-#include <regex.h>
 
 #include "gstsubparse.h"
 #include "gstssaparse.h"

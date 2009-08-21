@@ -154,25 +154,17 @@ dnl used in gst/ffmpegcolorspace/mem.c
 dnl FIXME: could be fixed by redefining av_malloc and av_free to GLib's
 AC_CHECK_HEADERS([malloc.h])
 
-dnl used in gst/subparse/gstsubparse.c
-AC_CHECK_HEADERS([regex.h], HAVE_REGEX_H="yes", HAVE_REGEX_H="no")
-AM_CONDITIONAL(HAVE_REGEX_H, test "x$HAVE_REGEX_H" = "xyes")
-
-if test "x$HAVE_REGEX_H" = "xyes"; then
-  ac_cppflags_save="$CPPFLAGS"
-  CPPFLAGS="`$PKG_CONFIG --cflags libxml-2.0`"
-  AC_COMPILE_IFELSE(
-    AC_LANG_PROGRAM([
+ac_cppflags_save="$CPPFLAGS"
+CPPFLAGS="`$PKG_CONFIG --cflags libxml-2.0`"
+AC_COMPILE_IFELSE(
+  AC_LANG_PROGRAM([
 #include <libxml/HTMLparser.h>
                      ],[
 #ifndef LIBXML_HTML_ENABLED
 #error libxml2 has no HTML support
 #endif /* LIBXML_HTML_ENABLED */
-                     ]), HAVE_LIBXML_HTML="yes", HAVE_LIBXML_HTML="no")
-  CPPFLAGS="$ac_cppflags_save"
-else
-  HAVE_LIBXML_HTML="no"
-fi
+                   ]), HAVE_LIBXML_HTML="yes", HAVE_LIBXML_HTML="no")
+CPPFLAGS="$ac_cppflags_save"
 AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
 
 dnl used in gst/tcp
