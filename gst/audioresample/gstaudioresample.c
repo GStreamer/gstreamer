@@ -46,6 +46,7 @@
 #include <math.h>
 
 #include "gstaudioresample.h"
+#include <gst/gstutils.h>
 #include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
 
@@ -557,11 +558,11 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
 
   if (direction == GST_PAD_SINK) {
     /* asked to convert size of an incoming buffer. Round up the output size */
-    *othersize = (size * ratio_den + ratio_num - 1) / ratio_num;
+    *othersize = gst_util_uint64_scale_int_ceil (size, ratio_den, ratio_num);
     *othersize *= bytes_per_samp;
   } else {
     /* asked to convert size of an outgoing buffer. Round down the input size */
-    *othersize = (size * ratio_num) / ratio_den;
+    *othersize = gst_util_uint64_scale_int (size, ratio_num, ratio_den);
     *othersize *= bytes_per_samp;
   }
 
@@ -785,7 +786,7 @@ gst_audio_resample_push_drain (GstAudioResample * resample)
   GstBuffer *outbuf;
   GstFlowReturn res;
   gint outsize;
-  guint out_len, out_processed;
+  guint history_len, out_len, out_processed;
   gint err;
   guint num, den;
 
@@ -798,8 +799,9 @@ gst_audio_resample_push_drain (GstAudioResample * resample)
 
   resample->funcs->get_ratio (resample->state, &num, &den);
 
-  out_len = resample->funcs->get_input_latency (resample->state);
-  out_len = out_processed = (out_len * den + num - 1) / num;
+  history_len = resample->funcs->get_input_latency (resample->state);
+  out_len = out_processed =
+      gst_util_uint64_scale_int_ceil (history_len, den, num);
   outsize = out_len * resample->channels * (resample->width / 8);
 
   res =
@@ -830,7 +832,7 @@ gst_audio_resample_push_drain (GstAudioResample * resample)
         GST_BUFFER_DATA (outbuf), out_processed, TRUE);
   } else {
     /* don't need to convert data format;  process */
-    err = resample->funcs->process (resample->state, NULL, &out_len,
+    err = resample->funcs->process (resample->state, NULL, &history_len,
         GST_BUFFER_DATA (outbuf), &out_processed);
   }
 
