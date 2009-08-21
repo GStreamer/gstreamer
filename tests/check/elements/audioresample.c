@@ -653,6 +653,8 @@ GST_START_TEST (test_pipelines)
 
   /* Test qualities 0, 5 and 10 */
   for (quality = 0; quality < 11; quality += 5) {
+    GST_DEBUG ("Checking with quality %d", quality);
+
     test_pipeline (8, FALSE, 44100, 48000, quality);
     test_pipeline (8, FALSE, 48000, 44100, quality);
 
