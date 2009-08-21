@@ -947,30 +947,36 @@ static void
 gst_camerabin_change_mode (GstCameraBin * camera, gint mode)
 {
   if (camera->mode != mode || !camera->active_bin) {
+    GstState state;
+
     GST_DEBUG_OBJECT (camera, "setting mode: %d (old_mode=%d)",
         mode, camera->mode);
     /* Interrupt ongoing capture */
     gst_camerabin_do_stop (camera);
     camera->mode = mode;
-    if (camera->active_bin) {
-      GST_DEBUG_OBJECT (camera, "stopping active bin");
-      gst_element_set_state (camera->active_bin, GST_STATE_READY);
-    }
-    if (camera->mode == MODE_IMAGE) {
-      GstStateChangeReturn state_ret;
-
-      camera->active_bin = camera->imgbin;
-      state_ret = gst_element_set_state (camera->active_bin, GST_STATE_PAUSED);
-
-      if (state_ret == GST_STATE_CHANGE_FAILURE) {
-        GST_WARNING_OBJECT (camera, "state change failed");
-        gst_element_set_state (camera->active_bin, GST_STATE_NULL);
-        camera->active_bin = NULL;
+    gst_element_get_state (GST_ELEMENT (camera), &state, NULL, 0);
+    if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING) {
+      if (camera->active_bin) {
+        GST_DEBUG_OBJECT (camera, "stopping active bin");
+        gst_element_set_state (camera->active_bin, GST_STATE_READY);
       }
-    } else if (camera->mode == MODE_VIDEO) {
-      camera->active_bin = camera->vidbin;
+      if (camera->mode == MODE_IMAGE) {
+        GstStateChangeReturn state_ret;
+
+        camera->active_bin = camera->imgbin;
+        state_ret =
+            gst_element_set_state (camera->active_bin, GST_STATE_PAUSED);
+
+        if (state_ret == GST_STATE_CHANGE_FAILURE) {
+          GST_WARNING_OBJECT (camera, "state change failed");
+          gst_element_set_state (camera->active_bin, GST_STATE_NULL);
+          camera->active_bin = NULL;
+        }
+      } else if (camera->mode == MODE_VIDEO) {
+        camera->active_bin = camera->vidbin;
+      }
+      gst_camerabin_reset_to_view_finder (camera);
     }
-    gst_camerabin_reset_to_view_finder (camera);
   }
 }
 
