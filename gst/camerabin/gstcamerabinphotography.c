@@ -283,6 +283,10 @@ gst_camerabin_set_scene_mode (GstPhotography * photo, GstSceneMode scene_mode)
   if (PHOTOGRAPHY_IS_OK (camera->src_vid_src)) {
     ret = gst_photography_set_scene_mode (GST_PHOTOGRAPHY (camera->src_vid_src),
         scene_mode);
+    if (ret) {
+      gst_photography_get_config (GST_PHOTOGRAPHY (camera->src_vid_src),
+          &camera->photo_settings);
+    }
   }
   return ret;
 }
