@@ -212,7 +212,7 @@ extern gint _gst_trace_on;
 
 #else /* GST_DISABLE_TRACE */
 
-#if defined _GNUC_ && _GNUC_ >= 3
+#if defined __GNUC__ && __GNUC__ >= 3
 #pragma GCC poison 	gst_trace_new
 #pragma GCC poison	gst_trace_destroy
 #pragma GCC poison 	gst_trace_flush

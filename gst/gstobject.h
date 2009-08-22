@@ -307,7 +307,7 @@ gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 GstXmlNodePtr   gst_object_save_thyself    (GstObject *object, GstXmlNodePtr parent);
 void            gst_object_restore_thyself (GstObject *object, GstXmlNodePtr self);
 #else
-#if defined _GNUC_ && _GNUC_ >= 3
+#if defined __GNUC__ && __GNUC__ >= 3
 #pragma GCC poison gst_object_save_thyself
 #pragma GCC poison gst_object_restore_thyself
 #endif
@@ -324,7 +324,7 @@ void        gst_class_signal_emit_by_name   (GstObject     * object,
                                              const gchar   * name,
                                              GstXmlNodePtr   self);
 #else
-#if defined _GNUC_ && _GNUC_ >= 3
+#if defined __GNUC__ && __GNUC__ >= 3
 #pragma GCC poison gst_class_signal_emit_by_name
 #endif
 #endif
