@@ -194,7 +194,11 @@ gst_a52dec_class_init (GstA52DecClass * klass)
 
   /* If no CPU instruction based acceleration is available, end up using the
    * generic software djbfft based one when available in the used liba52 */
+#ifdef MM_ACCEL_DJBFFT
   klass->a52_cpuflags = MM_ACCEL_DJBFFT;
+#else
+  klass->a52_cpuflags = 0;
+#endif
   cpuflags = oil_cpu_get_flags ();
   if (cpuflags & OIL_IMPL_FLAG_MMX)
     klass->a52_cpuflags |= MM_ACCEL_X86_MMX;
