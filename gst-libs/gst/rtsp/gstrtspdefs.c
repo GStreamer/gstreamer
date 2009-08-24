@@ -186,6 +186,8 @@ static const gchar *rtsp_headers[] = {
   "X-StartupProfile",           /* X-StartupProfile */
   "Timestamp",                  /* Timestamp */
 
+  "Authentication-Info",        /* Authentication-Info */
+
   NULL
 };
 

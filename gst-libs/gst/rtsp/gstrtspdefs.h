@@ -311,8 +311,12 @@ typedef enum {
   GST_RTSP_HDR_X_STARTUPPROFILE,    /* X-StartupProfile */
 
   /* Since 0.10.24 */
-  GST_RTSP_HDR_TIMESTAMP            /* Timestamp */
+  GST_RTSP_HDR_TIMESTAMP,           /* Timestamp */
 
+  /* Since 0.10.25 */
+  GST_RTSP_HDR_AUTHENTICATION_INFO, /* Authentication-Info */
+
+  GST_RTSP_HDR_LAST
 } GstRTSPHeaderField;
 
 typedef enum {
