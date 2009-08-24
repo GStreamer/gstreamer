@@ -58,7 +58,7 @@ GST_ELEMENT_DETAILS ("Subtitle parser",
     "Codec/Parser/Subtitle",
     "Parses subtitle (.sub) files into text streams",
     "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>\n"
-    "Ronald S. Bultje <rbultje@ronald.bitfreak.net>");
+    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
 #ifndef GST_DISABLE_XML
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",

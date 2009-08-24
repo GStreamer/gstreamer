@@ -47,7 +47,7 @@ static const GstElementDetails ffmpegcsp_details =
 GST_ELEMENT_DETAILS ("FFMPEG Colorspace converter",
     "Filter/Converter/Video",
     "Converts video from one colorspace to another",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
 
 /* Stereo signals and args */

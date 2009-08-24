@@ -35,7 +35,7 @@ static const GstElementDetails gst_v4lmjpegsink_details =
 GST_ELEMENT_DETAILS ("Video (video4linux/MJPEG) sink",
     "Sink/Video",
     "Writes MJPEG-encoded frames to a zoran MJPEG/video4linux device",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
 /* v4lmjpegsink signals and args */
 enum
@@ -122,6 +122,7 @@ gst_v4lmjpegsink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
 }
+
 static void
 gst_v4lmjpegsink_class_init (GstV4lMjpegSinkClass * klass)
 {

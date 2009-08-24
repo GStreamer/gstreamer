@@ -34,7 +34,7 @@ static const GstElementDetails gst_v4lsrc_details =
 GST_ELEMENT_DETAILS ("Video (video4linux/raw) Source",
     "Source/Video",
     "Reads raw frames from a video4linux device",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
 
 GST_DEBUG_CATEGORY_STATIC (v4lsrc_debug);

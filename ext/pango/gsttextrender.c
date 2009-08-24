@@ -184,7 +184,7 @@ gst_text_render_base_init (gpointer g_class)
       "Filter/Editor/Video",
       "Renders a text string to an image bitmap",
       "David Schleef <ds@schleef.org>, "
-      "Ronald S. Bultje <rbultje@ronald.bitfreak.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 }
 
 static void

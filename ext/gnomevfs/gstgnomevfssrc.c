@@ -99,7 +99,7 @@ GST_ELEMENT_DETAILS ("GnomeVFS Source",
     "Source/File",
     "Read from any GnomeVFS-supported file",
     "Bastien Nocera <hadess@hadess.net>\n"
-    "Ronald S. Bultje <rbultje@ronald.bitfreak.net>");
+    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
 static GStaticMutex count_lock = G_STATIC_MUTEX_INIT;
 static gint ref_count = 0;

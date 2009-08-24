@@ -35,7 +35,7 @@ static const GstElementDetails gst_v4lmjpegsrc_details =
 GST_ELEMENT_DETAILS ("Video (video4linux/MJPEG) Source",
     "Source/Video",
     "Reads MJPEG-encoded frames from a zoran MJPEG/video4linux device",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
 /* V4lMjpegSrc signals and args */
 enum
@@ -151,6 +151,7 @@ gst_v4lmjpegsrc_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));
 }
+
 static void
 gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass * klass)
 {

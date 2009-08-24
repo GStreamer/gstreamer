@@ -60,19 +60,19 @@ static const GstElementDetails gst_ogm_audio_parse_details =
 GST_ELEMENT_DETAILS ("OGM audio stream parser",
     "Codec/Decoder/Audio",
     "parse an OGM audio header and stream",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
 static const GstElementDetails gst_ogm_video_parse_details =
 GST_ELEMENT_DETAILS ("OGM video stream parser",
     "Codec/Decoder/Video",
     "parse an OGM video header and stream",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
 static const GstElementDetails gst_ogm_text_parse_details =
 GST_ELEMENT_DETAILS ("OGM text stream parser",
     "Codec/Decoder/Subtitle",
     "parse an OGM text header and stream",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
 typedef struct _stream_header_video
 {
