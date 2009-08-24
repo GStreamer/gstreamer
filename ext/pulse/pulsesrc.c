@@ -926,8 +926,7 @@ gst_pulsesrc_negotiate (GstBaseSrc * basesrc)
         /* yay, fixed caps, use those then */
         result = gst_pulsesrc_create_stream (GST_PULSESRC_CAST (basesrc), caps);
         if (result)
-          gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
-        result = TRUE;
+          result = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
       }
     }
     gst_caps_unref (caps);
