@@ -2001,38 +2001,40 @@ read_error:
   }
 }
 
-static GString *
-gen_tunnel_reply (GstRTSPConnection * conn, GstRTSPStatusCode code)
+static GstRTSPMessage *
+gen_tunnel_reply (GstRTSPConnection * conn, GstRTSPStatusCode code,
+    const GstRTSPMessage * request)
 {
-  GString *str;
-  gchar date_string[100];
-  const gchar *status;
+  GstRTSPMessage *msg;
+  GstRTSPResult res;
 
-  gen_date_string (date_string, sizeof (date_string));
-
-  status = gst_rtsp_status_as_text (code);
-  if (status == NULL) {
+  if (gst_rtsp_status_as_text (code) == NULL)
     code = GST_RTSP_STS_INTERNAL_SERVER_ERROR;
-    status = "Internal Server Error";
-  }
 
-  str = g_string_new ("");
+  GST_RTSP_CHECK (gst_rtsp_message_new_response (&msg, code, NULL, request),
+      no_message);
 
-  /* */
-  g_string_append_printf (str, "HTTP/1.0 %d %s\r\n", code, status);
-  g_string_append_printf (str,
-      "Server: GStreamer RTSP Server\r\n"
-      "Date: %s\r\n"
-      "Connection: close\r\n"
-      "Cache-Control: no-store\r\n" "Pragma: no-cache\r\n", date_string);
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_SERVER,
+      "GStreamer RTSP Server");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CONNECTION, "close");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CACHE_CONTROL, "no-store");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_PRAGMA, "no-cache");
+
   if (code == GST_RTSP_STS_OK) {
     if (conn->ip)
-      g_string_append_printf (str, "x-server-ip-address: %s\r\n", conn->ip);
-    g_string_append_printf (str,
-        "Content-Type: application/x-rtsp-tunnelled\r\n");
+      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_X_SERVER_IP_ADDRESS,
+          conn->ip);
+    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CONTENT_TYPE,
+        "application/x-rtsp-tunnelled");
   }
-  g_string_append_printf (str, "\r\n");
-  return str;
+
+  return msg;
+
+  /* ERRORS */
+no_message:
+  {
+    return NULL;
+  }
 }
 
 /**
@@ -2078,17 +2080,16 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
       if (message->type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
         if (conn->tstate == TUNNEL_STATE_NONE &&
             message->type_data.request.method == GST_RTSP_GET) {
-          GString *str;
+          GstRTSPMessage *response;
 
           conn->tstate = TUNNEL_STATE_GET;
 
           /* tunnel GET request, we can reply now */
-          str = gen_tunnel_reply (conn, GST_RTSP_STS_OK);
-          res =
-              gst_rtsp_connection_write (conn, (guint8 *) str->str, str->len,
-              timeout);
-          g_string_free (str, TRUE);
-          res = GST_RTSP_ETGET;
+          response = gen_tunnel_reply (conn, GST_RTSP_STS_OK, message);
+          res = gst_rtsp_connection_send (conn, response, timeout);
+          gst_rtsp_message_free (response);
+          if (res == GST_RTSP_OK)
+            res = GST_RTSP_ETGET;
           goto cleanup;
         } else if (conn->tstate == TUNNEL_STATE_NONE &&
             message->type_data.request.method == GST_RTSP_POST) {
@@ -2911,9 +2912,8 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
         if (watch->message.type == GST_RTSP_MESSAGE_HTTP_REQUEST) {
           if (watch->conn->tstate == TUNNEL_STATE_NONE &&
               watch->message.type_data.request.method == GST_RTSP_GET) {
-            GString *str;
+            GstRTSPMessage *response;
             GstRTSPStatusCode code;
-            guint size;
 
             watch->conn->tstate = TUNNEL_STATE_GET;
 
@@ -2922,11 +2922,10 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
             else
               code = GST_RTSP_STS_OK;
 
-            /* queue the response string */
-            str = gen_tunnel_reply (watch->conn, code);
-            size = str->len;
-            gst_rtsp_watch_queue_data (watch, (guint8 *) g_string_free (str,
-                    FALSE), size);
+            /* queue the response */
+            response = gen_tunnel_reply (watch->conn, code, &watch->message);
+            gst_rtsp_watch_queue_message (watch, response);
+            gst_rtsp_message_free (response);
             goto read_done;
           } else if (watch->conn->tstate == TUNNEL_STATE_NONE &&
               watch->message.type_data.request.method == GST_RTSP_POST) {

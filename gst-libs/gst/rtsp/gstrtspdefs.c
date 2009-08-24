@@ -191,6 +191,8 @@ static const gchar *rtsp_headers[] = {
 
   "Authentication-Info",        /* Authentication-Info */
   "Host",                       /* Host */
+  "Pragma",                     /* Pragma */
+  "X-Server-IP-Address",        /* X-Server-IP-Address */
   "X-Sessioncookie",            /* X-Sessioncookie */
 
   NULL

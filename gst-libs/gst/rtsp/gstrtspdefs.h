@@ -322,6 +322,8 @@ typedef enum {
   /* Since 0.10.25 */
   GST_RTSP_HDR_AUTHENTICATION_INFO, /* Authentication-Info */
   GST_RTSP_HDR_HOST,                /* Host */
+  GST_RTSP_HDR_PRAGMA,              /* Pragma */
+  GST_RTSP_HDR_X_SERVER_IP_ADDRESS, /* X-Server-IP-Address */
   GST_RTSP_HDR_X_SESSIONCOOKIE,     /* X-Sessioncookie */
 
   GST_RTSP_HDR_LAST
