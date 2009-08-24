@@ -273,9 +273,7 @@ gst_dshowaudiosrc_get_device_name_values (GstDshowAudioSrc * src)
   hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
       IID_ICreateDevEnum, (LPVOID *) &devices_enum);
   if (hres != S_OK) {
-    GST_CAT_ERROR (dshowaudiosrc_debug,
-        "Can't create an instance of the system device enumerator (error=%d)",
-        hres);
+    GST_ERROR ("Can't create an instance of the system device enumerator (error=0x%x)", hres);
     array = NULL;
     goto clean;
   }
@@ -283,8 +281,7 @@ gst_dshowaudiosrc_get_device_name_values (GstDshowAudioSrc * src)
   hres = devices_enum->CreateClassEnumerator(CLSID_AudioInputDeviceCategory, 
     &moniker_enum, 0);
   if (hres != S_OK || !moniker_enum) {
-    GST_CAT_ERROR (dshowaudiosrc_debug,
-        "Can't get enumeration of audio devices (error=%d)", hres);
+    GST_ERROR ("Can't get enumeration of audio devices (error=0x%x)", hres);
     array = NULL;
     goto clean;
   }
@@ -410,7 +407,7 @@ gst_dshowaudiosrc_get_caps (GstBaseSrc * basesrc)
       gst_dshow_getdevice_from_devicename (&CLSID_AudioInputDeviceCategory,
       &src->device_name);
   if (!src->device) {
-    GST_CAT_ERROR (dshowaudiosrc_debug, "No audio device found.");
+    GST_ERROR ("No audio device found.");
     return NULL;
   }
   unidevice =
@@ -497,8 +494,7 @@ gst_dshowaudiosrc_change_state (GstElement * element, GstStateChange transition)
       if (src->media_filter)
         hres = src->media_filter->Run(0);
       if (hres != S_OK) {
-        GST_CAT_ERROR (dshowaudiosrc_debug,
-            "Can't RUN the directshow capture graph (error=%d)", hres);
+        GST_ERROR ("Can't RUN the directshow capture graph (error=0x%x)", hres);
         src->is_running = FALSE;
         return GST_STATE_CHANGE_FAILURE;
       } else {
@@ -509,8 +505,7 @@ gst_dshowaudiosrc_change_state (GstElement * element, GstStateChange transition)
       if (src->media_filter)
         hres = src->media_filter->Stop();
       if (hres != S_OK) {
-        GST_CAT_ERROR (dshowaudiosrc_debug,
-            "Can't STOP the directshow capture graph (error=%d)", hres);
+        GST_ERROR ("Can't STOP the directshow capture graph (error=0x%x)", hres);
         return GST_STATE_CHANGE_FAILURE;
       }
       src->is_running = FALSE;
@@ -536,17 +531,13 @@ gst_dshowaudiosrc_open (GstAudioSrc * asrc)
   hres = CoCreateInstance (CLSID_FilterGraph, NULL, CLSCTX_INPROC,
       IID_IFilterGraph, (LPVOID *) & src->filter_graph);
   if (hres != S_OK || !src->filter_graph) {
-    GST_CAT_ERROR (dshowaudiosrc_debug,
-        "Can't create an instance of the directshow graph manager (error=%d)",
-        hres);
+    GST_ERROR ("Can't create an instance of the directshow graph manager (error=0x%x)", hres);
     goto error;
   }
 
   hres = src->filter_graph->QueryInterface(IID_IMediaFilter, (LPVOID *) &src->media_filter);
   if (hres != S_OK || !src->media_filter) {
-    GST_CAT_ERROR (dshowaudiosrc_debug,
-        "Can't get IMediacontrol interface from the graph manager (error=%d)",
-        hres);
+    GST_ERROR ("Can't get IMediacontrol interface from the graph manager (error=0x%x)", hres);
     goto error;
   }
 
@@ -555,16 +546,13 @@ gst_dshowaudiosrc_open (GstAudioSrc * asrc)
 
   hres = src->filter_graph->AddFilter(src->audio_cap_filter, L"capture");
   if (hres != S_OK) {
-    GST_CAT_ERROR (dshowaudiosrc_debug,
-        "Can't add the directshow capture filter to the graph (error=%d)",
-        hres);
+    GST_ERROR ("Can't add the directshow capture filter to the graph (error=0x%x)", hres);
     goto error;
   }
 
   hres = src->filter_graph->AddFilter(src->dshow_fakesink, L"fakesink");
   if (hres != S_OK) {
-    GST_CAT_ERROR (dshowaudiosrc_debug,
-        "Can't add our fakesink filter to the graph (error=%d)", hres);
+    GST_ERROR ("Can't add our fakesink filter to the graph (error=0x%x)", hres);
     goto error;
   }
 
@@ -624,8 +612,7 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
         gst_dshow_get_pin_from_filter (src->dshow_fakesink, PINDIR_INPUT,
             &input_pin);
         if (!input_pin) {
-          GST_CAT_ERROR (dshowaudiosrc_debug,
-              "Can't get input pin from our directshow fakesink filter");
+          GST_ERROR ("Can't get input pin from our directshow fakesink filter");
           goto error;
         }
 
@@ -634,9 +621,7 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
         input_pin->Release();
 
         if (hres != S_OK) {
-          GST_CAT_ERROR (dshowaudiosrc_debug,
-              "Can't connect capture filter with fakesink filter (error=%d)",
-              hres);
+          GST_ERROR ("Can't connect capture filter with fakesink filter (error=0x%x)", hres);
           goto error;
         }
 

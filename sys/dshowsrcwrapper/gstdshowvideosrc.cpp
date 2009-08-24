@@ -362,9 +362,7 @@ gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
   hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
       IID_ICreateDevEnum, (LPVOID *) &devices_enum);
   if (hres != S_OK) {
-    GST_CAT_ERROR (dshowvideosrc_debug,
-        "Can't create an instance of the system device enumerator (error=%d)",
-        hres);
+    GST_ERROR ("Can't create system device enumerator (error=0x%x)", hres);
     array = NULL;
     goto clean;
   }
@@ -372,8 +370,7 @@ gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
   hres = devices_enum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, 
     &moniker_enum, 0);
   if (hres != S_OK || !moniker_enum) {
-    GST_CAT_ERROR (dshowvideosrc_debug,
-        "Can't get enumeration of video devices (error=%d)", hres);
+    GST_ERROR ("Can't get enumeration of video devices (error=0x%x)", hres);
     array = NULL;
     goto clean;
   }
@@ -500,7 +497,7 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
       gst_dshow_getdevice_from_devicename (&CLSID_VideoInputDeviceCategory,
       &src->device_name);
   if (!src->device) {
-    GST_CAT_ERROR (dshowvideosrc_debug, "No video device found.");
+    GST_ERROR ("No video device found.");
     return NULL;
   }
   unidevice =
@@ -576,8 +573,7 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
   }
 
   if (src->caps) {
-    GST_CAT_LOG (dshowvideosrc_debug, "getcaps returned %s",
-        gst_caps_to_string (src->caps));
+    GST_LOG ("getcaps returned %s", gst_caps_to_string (src->caps));
     return gst_caps_ref (src->caps);
   }
 
@@ -599,8 +595,7 @@ gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
       if (src->media_filter)
         hres = src->media_filter->Run(0);
       if (hres != S_OK) {
-        GST_CAT_ERROR (dshowvideosrc_debug,
-            "Can't RUN the directshow capture graph (error=%d)", hres);
+        GST_ERROR ("Can't RUN the directshow capture graph (error=0x%x)", hres);
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
@@ -608,8 +603,7 @@ gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
       if (src->media_filter)
         hres = src->media_filter->Stop();
       if (hres != S_OK) {
-        GST_CAT_ERROR (dshowvideosrc_debug,
-            "Can't STOP the directshow capture graph (error=%d)", hres);
+        GST_ERROR ("Can't STOP the directshow capture graph (error=%d)", hres);
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
@@ -631,17 +625,14 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
   hres = CoCreateInstance (CLSID_FilterGraph, NULL, CLSCTX_INPROC,
       IID_IFilterGraph, (LPVOID *) & src->filter_graph);
   if (hres != S_OK || !src->filter_graph) {
-    GST_CAT_ERROR (dshowvideosrc_debug,
-        "Can't create an instance of the dshow graph manager (error=%d)", hres);
+    GST_ERROR ("Can't create an instance of the dshow graph manager (error=0x%x)", hres);
     goto error;
   }
 
   hres = src->filter_graph->QueryInterface(IID_IMediaFilter, 
     (LPVOID *) &src->media_filter);
   if (hres != S_OK || !src->media_filter) {
-    GST_CAT_ERROR (dshowvideosrc_debug,
-        "Can't get IMediacontrol interface from the graph manager (error=%d)",
-        hres);
+    GST_ERROR ("Can't get IMediacontrol interface from the graph manager (error=0x%x)", hres);
     goto error;
   }
 
@@ -650,15 +641,13 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
 
   hres = src->filter_graph->AddFilter(src->video_cap_filter, L"capture");
   if (hres != S_OK) {
-    GST_CAT_ERROR (dshowvideosrc_debug,
-        "Can't add video capture filter to the graph (error=%d)", hres);
+    GST_ERROR ("Can't add video capture filter to the graph (error=0x%x)", hres);
     goto error;
   }
 
   hres = src->filter_graph->AddFilter(src->dshow_fakesink, L"sink");
   if (hres != S_OK) {
-    GST_CAT_ERROR (dshowvideosrc_debug,
-        "Can't add our fakesink filter to the graph (error=%d)", hres);
+    GST_ERROR ("Can't add our fakesink filter to the graph (error=0x%x)", hres);
     goto error;
   }
 
@@ -738,7 +727,7 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 
         /* display all capabilities when using --gst-debug-level=3 */
         src_caps_string = gst_caps_to_string (src->caps);
-        GST_CAT_LEVEL_LOG (dshowvideosrc_debug, GST_LEVEL_INFO, src, src_caps_string);
+        GST_LOG (src_caps_string);
         g_free (src_caps_string);
 
         pin_mediatype = (GstCapturePinMediaType *) type->data;
@@ -758,8 +747,7 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
         gst_dshow_get_pin_from_filter (src->dshow_fakesink, PINDIR_INPUT,
             &input_pin);
         if (!input_pin) {
-          GST_CAT_ERROR (dshowvideosrc_debug,
-              "Can't get input pin from our dshow fakesink");
+          GST_ERROR ("Can't get input pin from our dshow fakesink");
           goto error;
         }
 
@@ -768,9 +756,7 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
         input_pin->Release();
 
         if (hres != S_OK) {
-          GST_CAT_ERROR (dshowvideosrc_debug,
-              "Can't connect capture filter with fakesink filter (error=%d)",
-              hres);
+          GST_ERROR ("Can't connect capture filter with fakesink filter (error=0x%x)", hres);
           goto error;
         }
 
@@ -884,10 +870,9 @@ gst_dshowvideosrc_create (GstPushSrc * psrc, GstBuffer ** buf)
     return GST_FLOW_WRONG_STATE;
   }
 
-  GST_CAT_DEBUG (dshowvideosrc_debug,
-      "dshowvideosrc_create => pts %" GST_TIME_FORMAT " duration %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (*buf)));
+  GST_DEBUG ("dshowvideosrc_create => pts %" GST_TIME_FORMAT " duration %"
+    GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*buf)),
+    GST_TIME_ARGS (GST_BUFFER_DURATION (*buf)));
 
   return GST_FLOW_OK;
 }
@@ -1115,9 +1100,8 @@ gst_dshowvideosrc_push_buffer (byte * buffer, long size, gpointer src_object,
     memcpy (GST_BUFFER_DATA (buf), buffer, size);
   }
 
-  GST_CAT_DEBUG (dshowvideosrc_debug,
-      "push_buffer => pts %" GST_TIME_FORMAT "duration %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_TIME_ARGS (stop - start));
+  GST_DEBUG ("push_buffer => pts %" GST_TIME_FORMAT "duration %" GST_TIME_FORMAT,
+    GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_TIME_ARGS (stop - start));
 
   /* the negotiate() method already set caps on the source pad */
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
