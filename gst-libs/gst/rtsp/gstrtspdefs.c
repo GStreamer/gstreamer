@@ -147,7 +147,7 @@ static struct rtsp_header rtsp_headers[] = {
   {"Session", FALSE},
   {"Server", FALSE},
   {"Speed", FALSE},
-  {"Transport", FALSE},
+  {"Transport", TRUE},
   {"Unsupported", FALSE},
   {"User-Agent", FALSE},
   {"Via", TRUE},
