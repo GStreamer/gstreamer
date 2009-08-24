@@ -159,7 +159,6 @@ gst_amrnbenc_base_init (gpointer klass)
   GstElementDetails details = GST_ELEMENT_DETAILS ("AMR-NB audio encoder",
       "Codec/Encoder/Audio",
       "Adaptive Multi-Rate Narrow-Band audio encoder",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
       "Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,

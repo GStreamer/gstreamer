@@ -117,7 +117,7 @@ gst_amrnbdec_base_init (gpointer klass)
   GstElementDetails details = GST_ELEMENT_DETAILS ("AMR-NB audio decoder",
       "Codec/Decoder/Audio",
       "Adaptive Multi-Rate Narrow-Band audio decoder",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
