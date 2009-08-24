@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-14 17:38+0100\n"
-"PO-Revision-Date: 2009-05-14 22:01+0700\n"
+"POT-Creation-Date: 2009-08-24 17:32+0100\n"
+"PO-Revision-Date: 2009-08-24 11:15-0400\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -173,24 +173,23 @@ msgstr "Tak dapat membuka divais audio untuk merekam."
 msgid "Gain"
 msgstr "Gain"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Pengeras Suara"
+msgstr "Pengeras Suara Terbina"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Headphone"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Jalur Keluar"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF Keluar"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 Keluar"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 Keluar"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -244,9 +243,9 @@ msgstr "Tak dapat membuka divais '%s' untuk dibaca dan ditulis."
 msgid "Device '%s' is not a capture device."
 msgstr "Divais '%s' bukan divais penangkap."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Divais '%s' bukan divais penangkap."
+msgstr "Divais '%s' bukan divais keluaran."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

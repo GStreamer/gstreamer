@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-14 17:38+0100\n"
-"PO-Revision-Date: 2009-05-12 22:43-0300\n"
+"POT-Creation-Date: 2009-08-24 17:32+0100\n"
+"PO-Revision-Date: 2009-08-20 23:46-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
 "MIME-Version: 1.0\n"
@@ -90,7 +90,7 @@ msgid "PCM"
 msgstr "PCM"
 
 msgid "Speaker"
-msgstr "Alto-falante do PC"
+msgstr "Alto-falante"
 
 msgid "Line-in"
 msgstr "Entrada de linha"
@@ -179,24 +179,23 @@ msgstr "Não foi possível abrir o dispositivo de áudio para gravação."
 msgid "Gain"
 msgstr "Ganho"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Alto-falante do PC"
+msgstr "Alto-falante interno"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Fone de ouvido"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Saída de linha"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "Saída SPDIF"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "Saída aux. 1"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "Saída aux. 2"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -250,9 +249,9 @@ msgstr "Não foi possível abrir o dispositivo \"%s\" para leitura e gravação.
 msgid "Device '%s' is not a capture device."
 msgstr "O dispositivo \"%s\" não é um dispositivo de captura."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "O dispositivo \"%s\" não é um dispositivo de captura."
+msgstr "O dispositivo \"%s\" não é um dispositivo de saída."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

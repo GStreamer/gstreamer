@@ -3,8 +3,8 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # PCM = PCM
-# Line-in = Eingang
-# Line-out = Ausgang
+# Line-in = Line-Eingang
+# Line-out = Line-Ausgang
 # Pipeline = Weiterleitung
 # Stream = Strom
 #
@@ -12,10 +12,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-14 17:38+0100\n"
-"PO-Revision-Date: 2009-07-10 18:07+0200\n"
+"POT-Creation-Date: 2009-08-24 17:32+0100\n"
+"PO-Revision-Date: 2009-08-22 17:03+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -25,10 +25,10 @@ msgstr ""
 "X-Poedit-Country: GERMANY\n"
 
 msgid "Could not establish connection to sound server"
-msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden."
+msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden"
 
 msgid "Failed to query sound server capabilities"
-msgstr "Abfrage der Fähigkeiten des Audio-Servers sind fehlgeschlagen"
+msgstr "Abfrage der Fähigkeiten des Audio-Servers ist fehlgeschlagen"
 
 msgid "Internal data stream error."
 msgstr "Interner Datenstromfehler."
@@ -146,7 +146,7 @@ msgstr "Mikrofoneingang"
 
 # Ist hier Kopfhörer oder Telefon gemeint?
 msgid "Phone-out"
-msgstr ""
+msgstr "Mikrofonausgang"
 
 msgid "Video"
 msgstr "Video"
@@ -260,9 +260,9 @@ msgstr "Gerät »%s« konnte nicht zum Lesen oder Schreiben geöffnet werden."
 msgid "Device '%s' is not a capture device."
 msgstr "»%s« ist kein Aufnahmegerät."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "»%s« ist kein Aufnahmegerät."
+msgstr "»%s« ist kein Wiedergabegerät."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
