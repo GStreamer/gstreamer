@@ -1399,6 +1399,9 @@ gst_ring_buffer_clear_all (GstRingBuffer * buf)
 static gboolean
 wait_segment (GstRingBuffer * buf)
 {
+  gint segments;
+  gboolean wait = TRUE;
+
   /* buffer must be started now or we deadlock since nobody is reading */
   if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
           GST_RING_BUFFER_STATE_STARTED)) {
@@ -1407,7 +1410,13 @@ wait_segment (GstRingBuffer * buf)
       goto no_start;
 
     GST_DEBUG_OBJECT (buf, "start!");
+    segments = g_atomic_int_get (&buf->segdone);
     gst_ring_buffer_start (buf);
+
+    /* After starting, the writer may have wrote segments already and then we
+     * don't need to wait anymore */
+    if (G_LIKELY (g_atomic_int_get (&buf->segdone) != segments))
+      wait = FALSE;
   }
 
   /* take lock first, then update our waiting flag */
@@ -1419,16 +1428,18 @@ wait_segment (GstRingBuffer * buf)
           GST_RING_BUFFER_STATE_STARTED))
     goto not_started;
 
-  if (g_atomic_int_compare_and_exchange (&buf->waiting, 0, 1)) {
-    GST_DEBUG_OBJECT (buf, "waiting..");
-    GST_RING_BUFFER_WAIT (buf);
+  if (G_LIKELY (wait)) {
+    if (g_atomic_int_compare_and_exchange (&buf->waiting, 0, 1)) {
+      GST_DEBUG_OBJECT (buf, "waiting..");
+      GST_RING_BUFFER_WAIT (buf);
 
-    if (G_UNLIKELY (buf->abidata.ABI.flushing))
-      goto flushing;
+      if (G_UNLIKELY (buf->abidata.ABI.flushing))
+        goto flushing;
 
-    if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
-            GST_RING_BUFFER_STATE_STARTED))
-      goto not_started;
+      if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
+              GST_RING_BUFFER_STATE_STARTED))
+        goto not_started;
+    }
   }
   GST_OBJECT_UNLOCK (buf);
 
