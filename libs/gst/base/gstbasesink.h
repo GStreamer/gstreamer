@@ -28,13 +28,13 @@
 G_BEGIN_DECLS
 
 
-#define GST_TYPE_BASE_SINK		(gst_base_sink_get_type())
-#define GST_BASE_SINK(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_SINK,GstBaseSink))
-#define GST_BASE_SINK_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_SINK,GstBaseSinkClass))
+#define GST_TYPE_BASE_SINK              (gst_base_sink_get_type())
+#define GST_BASE_SINK(obj)              (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_SINK,GstBaseSink))
+#define GST_BASE_SINK_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_SINK,GstBaseSinkClass))
 #define GST_BASE_SINK_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_SINK, GstBaseSinkClass))
-#define GST_IS_BASE_SINK(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_SINK))
-#define GST_IS_BASE_SINK_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_SINK))
-#define GST_BASE_SINK_CAST(obj)		((GstBaseSink *) (obj))
+#define GST_IS_BASE_SINK(obj)           (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_SINK))
+#define GST_IS_BASE_SINK_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_SINK))
+#define GST_BASE_SINK_CAST(obj)         ((GstBaseSink *) (obj))
 
 /**
  * GST_BASE_SINK_PAD:
@@ -42,7 +42,7 @@ G_BEGIN_DECLS
  *
  * Gives the pointer to the #GstPad object of the element.
  */
-#define GST_BASE_SINK_PAD(obj)		(GST_BASE_SINK_CAST (obj)->sinkpad)
+#define GST_BASE_SINK_PAD(obj)          (GST_BASE_SINK_CAST (obj)->sinkpad)
 
 typedef struct _GstBaseSink GstBaseSink;
 typedef struct _GstBaseSinkClass GstBaseSinkClass;
@@ -55,23 +55,23 @@ typedef struct _GstBaseSinkPrivate GstBaseSinkPrivate;
  * The opaque #GstBaseSink data structure.
  */
 struct _GstBaseSink {
-  GstElement	 element;
+  GstElement     element;
 
   /*< protected >*/
-  GstPad	*sinkpad;
-  GstActivateMode	pad_mode;
+  GstPad        *sinkpad;
+  GstActivateMode       pad_mode;
 
   /*< protected >*/ /* with LOCK */
-  guint64	 offset;
-  gboolean	 can_activate_pull;
-  gboolean	 can_activate_push;
+  guint64        offset;
+  gboolean       can_activate_pull;
+  gboolean       can_activate_push;
 
   /*< protected >*/ /* with PREROLL_LOCK */
-  GQueue	*preroll_queue;
-  gint		 preroll_queue_max_len;
-  gint		 preroll_queued;
-  gint		 buffers_queued;
-  gint		 events_queued;
+  GQueue        *preroll_queue;
+  gint           preroll_queue_max_len;
+  gint           preroll_queued;
+  gint           buffers_queued;
+  gint           events_queued;
   gboolean       eos;
   gboolean       eos_queued;
   gboolean       need_preroll;
@@ -79,7 +79,7 @@ struct _GstBaseSink {
   gboolean       playing_async;
 
   /*< protected >*/ /* with STREAM_LOCK */
-  gboolean	 have_newsegment;
+  gboolean       have_newsegment;
   GstSegment     segment;
 
   /*< private >*/ /* with LOCK */
@@ -94,7 +94,7 @@ struct _GstBaseSink {
       /* segment used for clipping incoming buffers */
       GstSegment    *clip_segment;
       /* max amount of time a buffer can be late, -1 no limit. */
-      gint64	     max_lateness;
+      gint64         max_lateness;
       gboolean       running;
     } ABI;
     gpointer _gst_reserved[GST_PADDING_LARGE - 1];
@@ -116,7 +116,7 @@ struct _GstBaseSink {
  * @unlock: Unlock any pending access to the resource. Subclasses should
  *     unblock any blocked function ASAP
  * @unlock_stop: Clear the previous unlock request. Subclasses should clear
- *     any state they set during unlock(), such as clearing command queues. 
+ *     any state they set during unlock(), such as clearing command queues.
  * @event: Override this to handle events arriving on the sink pad
  * @preroll: Called to present the preroll buffer if desired
  * @render: Called when a buffer should be presented or output, at the
@@ -149,11 +149,11 @@ struct _GstBaseSinkClass {
 
   /* allocate a new buffer with given caps */
   GstFlowReturn (*buffer_alloc) (GstBaseSink *sink, guint64 offset, guint size,
-		                 GstCaps *caps, GstBuffer **buf);
+                                 GstCaps *caps, GstBuffer **buf);
 
   /* get the start and end times for syncing on this buffer */
-  void		(*get_times)    (GstBaseSink *sink, GstBuffer *buffer,
-		                 GstClockTime *start, GstClockTime *end);
+  void          (*get_times)    (GstBaseSink *sink, GstBuffer *buffer,
+                                 GstClockTime *start, GstClockTime *end);
 
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseSink *sink);
@@ -174,12 +174,12 @@ struct _GstBaseSinkClass {
   GstStateChangeReturn (*async_play)   (GstBaseSink *sink);
 
   /* start or stop a pulling thread */
-  gboolean	(*activate_pull)(GstBaseSink *sink, gboolean active);
+  gboolean      (*activate_pull)(GstBaseSink *sink, gboolean active);
 
   /* fixate sink caps during pull-mode negotiation */
-  void		(*fixate)	(GstBaseSink *sink, GstCaps *caps);
+  void          (*fixate)       (GstBaseSink *sink, GstCaps *caps);
 
-  /* Clear a previously indicated unlock request not that unlocking is 
+  /* Clear a previously indicated unlock request not that unlocking is
    * complete. Sub-classes should clear any command queue or indicator they
    * set during unlock */
   gboolean      (*unlock_stop)  (GstBaseSink *sink);
@@ -193,44 +193,44 @@ struct _GstBaseSinkClass {
 
 GType gst_base_sink_get_type(void);
 
-GstFlowReturn	gst_base_sink_do_preroll 	(GstBaseSink *sink, GstMiniObject *obj);
-GstFlowReturn	gst_base_sink_wait_preroll 	(GstBaseSink *sink);
+GstFlowReturn   gst_base_sink_do_preroll        (GstBaseSink *sink, GstMiniObject *obj);
+GstFlowReturn   gst_base_sink_wait_preroll      (GstBaseSink *sink);
 
 /* synchronizing against the clock */
-void		gst_base_sink_set_sync 		(GstBaseSink *sink, gboolean sync);
-gboolean	gst_base_sink_get_sync 		(GstBaseSink *sink);
+void            gst_base_sink_set_sync          (GstBaseSink *sink, gboolean sync);
+gboolean        gst_base_sink_get_sync          (GstBaseSink *sink);
 
 /* dropping late buffers */
-void		gst_base_sink_set_max_lateness 	(GstBaseSink *sink, gint64 max_lateness);
-gint64		gst_base_sink_get_max_lateness 	(GstBaseSink *sink);
+void            gst_base_sink_set_max_lateness  (GstBaseSink *sink, gint64 max_lateness);
+gint64          gst_base_sink_get_max_lateness  (GstBaseSink *sink);
 
 /* performing QoS */
-void		gst_base_sink_set_qos_enabled 	(GstBaseSink *sink, gboolean enabled);
-gboolean	gst_base_sink_is_qos_enabled 	(GstBaseSink *sink);
+void            gst_base_sink_set_qos_enabled   (GstBaseSink *sink, gboolean enabled);
+gboolean        gst_base_sink_is_qos_enabled    (GstBaseSink *sink);
 
 /* doing async state changes */
-void		gst_base_sink_set_async_enabled	(GstBaseSink *sink, gboolean enabled);
-gboolean	gst_base_sink_is_async_enabled 	(GstBaseSink *sink);
+void            gst_base_sink_set_async_enabled (GstBaseSink *sink, gboolean enabled);
+gboolean        gst_base_sink_is_async_enabled  (GstBaseSink *sink);
 
 /* tuning synchronisation */
-void		gst_base_sink_set_ts_offset	(GstBaseSink *sink, GstClockTimeDiff offset);
-GstClockTimeDiff gst_base_sink_get_ts_offset 	(GstBaseSink *sink);
+void            gst_base_sink_set_ts_offset     (GstBaseSink *sink, GstClockTimeDiff offset);
+GstClockTimeDiff gst_base_sink_get_ts_offset    (GstBaseSink *sink);
 
 /* last buffer */
-GstBuffer *	gst_base_sink_get_last_buffer	(GstBaseSink *sink);
+GstBuffer *     gst_base_sink_get_last_buffer   (GstBaseSink *sink);
 
 /* latency */
-gboolean	gst_base_sink_query_latency 	(GstBaseSink *sink, gboolean *live, gboolean *upstream_live,
-						 GstClockTime *min_latency, GstClockTime *max_latency);
-GstClockTime	gst_base_sink_get_latency 	(GstBaseSink *sink);
+gboolean        gst_base_sink_query_latency     (GstBaseSink *sink, gboolean *live, gboolean *upstream_live,
+                                                 GstClockTime *min_latency, GstClockTime *max_latency);
+GstClockTime    gst_base_sink_get_latency       (GstBaseSink *sink);
 
 /* render delay */
-void		gst_base_sink_set_render_delay  (GstBaseSink *sink, GstClockTime delay);
-GstClockTime    gst_base_sink_get_render_delay 	(GstBaseSink *sink);
+void            gst_base_sink_set_render_delay  (GstBaseSink *sink, GstClockTime delay);
+GstClockTime    gst_base_sink_get_render_delay  (GstBaseSink *sink);
 
 /* blocksize */
-void		gst_base_sink_set_blocksize     (GstBaseSink *sink, guint blocksize);
-guint           gst_base_sink_get_blocksize 	(GstBaseSink *sink);
+void            gst_base_sink_set_blocksize     (GstBaseSink *sink, guint blocksize);
+guint           gst_base_sink_get_blocksize     (GstBaseSink *sink);
 
 GstClockReturn  gst_base_sink_wait_clock        (GstBaseSink *sink, GstClockTime time,
                                                  GstClockTimeDiff * jitter);
