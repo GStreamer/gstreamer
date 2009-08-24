@@ -9,4 +9,4 @@ libgstasf_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS)\
 libgstasf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstasf_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstasfdemux.h asfheaders.h asfpacket.h gstasfmux.h gstrtpasfdepay.h gstrtspwms.h
+noinst_HEADERS = gstasfdemux.h asfheaders.h asfpacket.h gstrtpasfdepay.h gstrtspwms.h
