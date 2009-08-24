@@ -102,6 +102,7 @@ struct _GstAppSinkPrivate
   GQueue *queue;
   GstBuffer *preroll;
   gboolean flushing;
+  gboolean unlock;
   gboolean started;
   gboolean is_eos;
 
@@ -577,7 +578,7 @@ gst_app_sink_unlock_start (GstBaseSink * bsink)
 
   g_mutex_lock (appsink->priv->mutex);
   GST_DEBUG_OBJECT (appsink, "unlock start");
-  appsink->priv->flushing = TRUE;
+  appsink->priv->unlock = TRUE;
   g_cond_signal (appsink->priv->cond);
   g_mutex_unlock (appsink->priv->mutex);
 
@@ -591,7 +592,7 @@ gst_app_sink_unlock_stop (GstBaseSink * bsink)
 
   g_mutex_lock (appsink->priv->mutex);
   GST_DEBUG_OBJECT (appsink, "unlock stop");
-  appsink->priv->flushing = FALSE;
+  appsink->priv->unlock = FALSE;
   g_cond_signal (appsink->priv->cond);
   g_mutex_unlock (appsink->priv->mutex);
 
@@ -716,9 +717,11 @@ static GstFlowReturn
 gst_app_sink_render_common (GstBaseSink * psink, GstMiniObject * data,
     gboolean is_list)
 {
+  GstFlowReturn ret;
   GstAppSink *appsink = GST_APP_SINK (psink);
   gboolean emit;
 
+restart:
   g_mutex_lock (appsink->priv->mutex);
   if (appsink->priv->flushing)
     goto flushing;
@@ -738,6 +741,17 @@ gst_app_sink_render_common (GstBaseSink * psink, GstMiniObject * data,
     } else {
       GST_DEBUG_OBJECT (appsink, "waiting for free space, length %d >= %d",
           appsink->priv->queue->length, appsink->priv->max_buffers);
+
+      if (appsink->priv->unlock) {
+        /* we are asked to unlock, call the wait_preroll method */
+        g_mutex_unlock (appsink->priv->mutex);
+        if ((ret = gst_base_sink_wait_preroll (psink)) != GST_FLOW_OK)
+          goto stopping;
+
+        /* we are allowed to continue now */
+        goto restart;
+      }
+
       /* wait for a buffer to be removed or flush */
       g_cond_wait (appsink->priv->cond, appsink->priv->mutex);
       if (appsink->priv->flushing)
@@ -767,6 +781,11 @@ flushing:
     GST_DEBUG_OBJECT (appsink, "we are flushing");
     g_mutex_unlock (appsink->priv->mutex);
     return GST_FLOW_WRONG_STATE;
+  }
+stopping:
+  {
+    GST_DEBUG_OBJECT (appsink, "we are stopping");
+    return ret;
   }
 }
 
