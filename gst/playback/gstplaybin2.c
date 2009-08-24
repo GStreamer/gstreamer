@@ -1618,8 +1618,12 @@ gst_play_bin_get_current_sink (GstPlayBin * playbin, GstElement ** elem,
       GST_PTR_FORMAT ", the originally set %s sink is %" GST_PTR_FORMAT,
       dbg, sink, dbg, *elem);
 
-  if (sink == NULL)
-    sink = *elem;
+  if (sink == NULL) {
+    GST_PLAY_BIN_LOCK (playbin);
+    if ((sink = *elem))
+      gst_object_ref (sink);
+    GST_PLAY_BIN_UNLOCK (playbin);
+  }
 
   return sink;
 }
@@ -1720,26 +1724,26 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       GST_PLAY_BIN_UNLOCK (playbin);
       break;
     case PROP_VIDEO_SINK:
-      g_value_set_object (value,
+      g_value_take_object (value,
           gst_play_bin_get_current_sink (playbin, &playbin->video_sink,
               "video", GST_PLAY_SINK_TYPE_VIDEO));
       break;
     case PROP_AUDIO_SINK:
-      g_value_set_object (value,
+      g_value_take_object (value,
           gst_play_bin_get_current_sink (playbin, &playbin->audio_sink,
               "audio", GST_PLAY_SINK_TYPE_AUDIO));
       break;
     case PROP_VIS_PLUGIN:
-      g_value_set_object (value,
+      g_value_take_object (value,
           gst_play_sink_get_vis_plugin (playbin->playsink));
       break;
     case PROP_TEXT_SINK:
-      g_value_set_object (value,
+      g_value_take_object (value,
           gst_play_bin_get_current_sink (playbin, &playbin->text_sink,
               "text", GST_PLAY_SINK_TYPE_TEXT));
       break;
     case PROP_SUBPIC_SINK:
-      g_value_set_object (value,
+      g_value_take_object (value,
           gst_play_bin_get_current_sink (playbin, &playbin->subpic_sink,
               "subpicture", GST_PLAY_SINK_TYPE_SUBPIC));
       break;
