@@ -263,7 +263,7 @@ gst_matroska_mux_base_init (gpointer g_class)
   gst_element_class_set_details_simple (element_class, "Matroska muxer",
       "Codec/Muxer",
       "Muxes video/audio/subtitle streams into a matroska stream",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   GST_DEBUG_CATEGORY_INIT (matroskamux_debug, "matroskamux", 0,
       "Matroska muxer");

@@ -138,7 +138,6 @@ gst_avi_demux_base_init (GstAviDemuxClass * klass)
       "Demultiplex an avi file into audio and video",
       "Erik Walthinsen <omega@cse.ogi.edu>\n"
       "Wim Taymans <wim.taymans@chello.be>\n"
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
       "Thijs Vermeir <thijsvermeir@gmail.com>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstPadTemplate *videosrctempl, *audiosrctempl, *subsrctempl;

@@ -67,7 +67,6 @@ static const GstElementDetails gst_auto_audio_sink_details =
 GST_ELEMENT_DETAILS ("Auto audio sink",
     "Sink/Audio",
     "Wrapper audio sink for automatically detected audio sink",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
     "Jan Schmidt <thaytan@noraisin.net>");
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

@@ -83,7 +83,7 @@ static const GstElementDetails gst_avi_mux_details =
 GST_ELEMENT_DETAILS ("Avi muxer",
     "Codec/Muxer",
     "Muxes audio and video into an avi stream",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

@@ -63,7 +63,6 @@ static const GstElementDetails gst_ape_demux_details =
 GST_ELEMENT_DETAILS ("APE tag demuxer",
     "Codec/Demuxer/Metadata",
     "Read and output APE tags while demuxing the contents",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
     "Tim-Philipp Müller <tim centricular net>");
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",

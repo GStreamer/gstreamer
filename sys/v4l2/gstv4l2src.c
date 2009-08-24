@@ -62,8 +62,7 @@ static const GstElementDetails gst_v4l2src_details =
 GST_ELEMENT_DETAILS ("Video (video4linux2) Source",
     "Source/Video",
     "Reads frames from a video4linux2 (BT8x8) device",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>,"
-    " Edgard Lima <edgard.lima@indt.org.br>,"
+    "Edgard Lima <edgard.lima@indt.org.br>,"
     " Stefan Kost <ensonic@users.sf.net>");
 
 GST_DEBUG_CATEGORY (v4l2src_debug);

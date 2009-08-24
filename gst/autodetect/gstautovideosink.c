@@ -68,7 +68,6 @@ static const GstElementDetails gst_auto_video_sink_details =
 GST_ELEMENT_DETAILS ("Auto video sink",
     "Sink/Video",
     "Wrapper video sink for automatically detected video sink",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
     "Jan Schmidt <thaytan@noraisin.net>");
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

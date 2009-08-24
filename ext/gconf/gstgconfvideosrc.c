@@ -59,7 +59,7 @@ gst_gconf_video_src_base_init (gpointer klass)
       GST_ELEMENT_DETAILS ("GConf video source",
       "Source/Video",
       "Video source embedding the GConf-settings for video input",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
   static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,

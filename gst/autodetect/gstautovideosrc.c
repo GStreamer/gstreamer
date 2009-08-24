@@ -69,7 +69,6 @@ static const GstElementDetails gst_auto_video_src_details =
 GST_ELEMENT_DETAILS ("Auto video source",
     "Source/Video",
     "Wrapper video source for automatically detected video source",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
     "Jan Schmidt <thaytan@noraisin.net>\n"
     "Stefan Kost <ensonic@users.sf.net>");
 

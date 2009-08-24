@@ -57,7 +57,7 @@ gst_gconf_video_sink_base_init (gpointer klass)
       GST_ELEMENT_DETAILS ("GConf video sink",
       "Sink/Video",
       "Video sink embedding the GConf-settings for video output",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
   static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,

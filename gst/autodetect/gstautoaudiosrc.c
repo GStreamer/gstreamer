@@ -68,7 +68,6 @@ static const GstElementDetails gst_auto_audio_src_details =
 GST_ELEMENT_DETAILS ("Auto audio source",
     "Source/Audio",
     "Wrapper audio source for automatically detected audio source",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
     "Jan Schmidt <thaytan@noraisin.net>\n"
     "Stefan Kost <ensonic@users.sf.net>");
 

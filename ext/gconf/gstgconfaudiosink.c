@@ -72,7 +72,6 @@ gst_gconf_audio_sink_base_init (gpointer klass)
       GST_ELEMENT_DETAILS ("GConf audio sink",
       "Sink/Audio",
       "Audio sink embedding the GConf-settings for audio output",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
       "Jan Schmidt <thaytan@mad.scientist.com>");
   gst_element_class_set_details (eklass, &gst_gconf_audio_sink_details);
 }

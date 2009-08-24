@@ -190,7 +190,7 @@ gst_matroska_demux_base_init (gpointer klass)
   gst_element_class_set_details_simple (element_class, "Matroska demuxer",
       "Codec/Demuxer",
       "Demuxes a Matroska Stream into video/audio/subtitles",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 }
 
 static void
