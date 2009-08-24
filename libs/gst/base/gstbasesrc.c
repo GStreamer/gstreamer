@@ -2560,15 +2560,15 @@ gst_base_src_start (GstBaseSrc * basesrc)
     if (!(caps = gst_type_find_helper (basesrc->srcpad, size)))
       goto typefind_failed;
 
-    gst_pad_set_caps (basesrc->srcpad, caps);
+    result = gst_pad_set_caps (basesrc->srcpad, caps);
     gst_caps_unref (caps);
   } else {
     /* use class or default negotiate function */
-    if (!gst_base_src_negotiate (basesrc))
+    if (!(result = gst_base_src_negotiate (basesrc)))
       goto could_not_negotiate;
   }
 
-  return TRUE;
+  return result;
 
   /* ERROR */
 could_not_start:
