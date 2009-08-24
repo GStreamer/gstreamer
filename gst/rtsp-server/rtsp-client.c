@@ -182,7 +182,7 @@ send_response (GstRTSPClient * client, GstRTSPSession * session,
   gst_rtsp_message_dump (response);
 #endif
 
-  gst_rtsp_watch_queue_message (client->watch, response);
+  gst_rtsp_watch_send_message (client->watch, response, NULL);
   gst_rtsp_message_unset (response);
 }
 
@@ -298,7 +298,7 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
   size = GST_BUFFER_SIZE (buffer);
   gst_rtsp_message_take_body (&message, data, size);
 
-  gst_rtsp_watch_queue_message (client->watch, &message);
+  gst_rtsp_watch_send_message (client->watch, &message, NULL);
 
   gst_rtsp_message_steal_body (&message, &data, &size);
   gst_rtsp_message_unset (&message);
