@@ -42,7 +42,7 @@
  * my_element_base_init (gpointer g_class)
  * {
  *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
- *   
+ *
  *   // sinktemplate should be a #GstStaticPadTemplate with direction
  *   // #GST_PAD_SINK and name "sink"
  *   gst_element_class_add_pad_template (gstelement_class,
@@ -267,14 +267,14 @@ struct _GstBaseSinkPrivate
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE /* fixme: enable me */
 #define DEFAULT_CAN_ACTIVATE_PUSH TRUE
 
-#define DEFAULT_PREROLL_QUEUE_LEN	0
-#define DEFAULT_SYNC			TRUE
-#define DEFAULT_MAX_LATENESS		-1
-#define DEFAULT_QOS			FALSE
-#define DEFAULT_ASYNC			TRUE
-#define DEFAULT_TS_OFFSET		0
-#define DEFAULT_BLOCKSIZE 		4096
-#define DEFAULT_RENDER_DELAY 		0
+#define DEFAULT_PREROLL_QUEUE_LEN   0
+#define DEFAULT_SYNC                TRUE
+#define DEFAULT_MAX_LATENESS        -1
+#define DEFAULT_QOS                 FALSE
+#define DEFAULT_ASYNC               TRUE
+#define DEFAULT_TS_OFFSET           0
+#define DEFAULT_BLOCKSIZE           4096
+#define DEFAULT_RENDER_DELAY        0
 
 enum
 {
@@ -430,7 +430,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * GstBaseSink:ts-offset
    *
    * Controls the final synchronisation, a negative value will render the buffer
-   * earlier while a positive value delays playback. This property can be 
+   * earlier while a positive value delays playback. This property can be
    * used to fix synchronisation in bad files.
    *
    * Since: 0.10.15
@@ -890,7 +890,7 @@ gst_base_sink_get_ts_offset (GstBaseSink * sink)
  * rendering. This property can be used to generate thumbnails.
  *
  * The #GstCaps on the buffer can be used to determine the type of the buffer.
- * 
+ *
  * Returns: a #GstBuffer. gst_buffer_unref() after usage. This function returns
  * NULL when no buffer has arrived in the sink yet or when the sink is not in
  * PAUSED or PLAYING.
@@ -968,13 +968,13 @@ gst_base_sink_get_latency (GstBaseSink * sink)
  * Query the sink for the latency parameters. The latency will be queried from
  * the upstream elements. @live will be TRUE if @sink is configured to
  * synchronize against the clock. @upstream_live will be TRUE if an upstream
- * element is live. 
+ * element is live.
  *
  * If both @live and @upstream_live are TRUE, the sink will want to compensate
  * for the latency introduced by the upstream elements by setting the
  * @min_latency to a strictly possitive value.
  *
- * This function is mostly used by subclasses. 
+ * This function is mostly used by subclasses.
  *
  * Returns: TRUE if the query succeeded.
  *
@@ -1065,10 +1065,10 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
  * @sink: a #GstBaseSink
  * @delay: the new delay
  *
- * Set the render delay in @sink to @delay. The render delay is the time 
+ * Set the render delay in @sink to @delay. The render delay is the time
  * between actual rendering of a buffer and its synchronisation time. Some
  * devices might delay media rendering which can be compensated for with this
- * function. 
+ * function.
  *
  * After calling this function, this sink will report additional latency and
  * other sinks will adjust their latency to delay the rendering of their media.
@@ -1966,7 +1966,7 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   GST_OBJECT_UNLOCK (sink);
 
   /* A blocking wait is performed on the clock. We save the ClockID
-   * so we can unlock the entry at any time. While we are blocking, we 
+   * so we can unlock the entry at any time. While we are blocking, we
    * release the PREROLL_LOCK so that other threads can interrupt the
    * entry. */
   sink->clock_id = id;
@@ -2155,7 +2155,7 @@ gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
      * because we don't interact with the device on EOS normally. */
     stime = gst_base_sink_adjust_time (sink, time);
 
-    /* wait for the clock, this can be interrupted because we got shut down or 
+    /* wait for the clock, this can be interrupted because we got shut down or
      * we PAUSED. */
     status = gst_base_sink_wait_clock (sink, stime, jitter);
 
@@ -2198,7 +2198,7 @@ flushing:
  * Some objects do not need synchronisation (most events) and so this function
  * immediatly returns GST_FLOW_OK.
  *
- * for objects that arrive later than max-lateness to be synchronized to the 
+ * for objects that arrive later than max-lateness to be synchronized to the
  * clock have the @late boolean set to TRUE.
  *
  * This function keeps a running average of the jitter (the diff between the
@@ -2563,7 +2563,7 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
         "buffer is too late %" GST_TIME_FORMAT
         " > %" GST_TIME_FORMAT, GST_TIME_ARGS (start + jitter),
         GST_TIME_ARGS (max_lateness));
-    /* !!emergency!!, if we did not receive anything valid for more than a 
+    /* !!emergency!!, if we did not receive anything valid for more than a
      * second, render it anyway so the user sees something */
     if (priv->last_in_time != -1 && start - priv->last_in_time > GST_SECOND) {
       late = FALSE;
@@ -2756,8 +2756,8 @@ again:
           GstMessage *message;
 
           /* the EOS event is completely handled so we mark
-           * ourselves as being in the EOS state. eos is also 
-           * protected by the object lock so we can read it when 
+           * ourselves as being in the EOS state. eos is also
+           * protected by the object lock so we can read it when
            * answering the POSITION query. */
           GST_OBJECT_LOCK (basesink);
           basesink->eos = TRUE;
@@ -2819,8 +2819,8 @@ flushing:
 
 /* with STREAM_LOCK, PREROLL_LOCK
  *
- * Perform preroll on the given object. For buffers this means 
- * calling the preroll subclass method. 
+ * Perform preroll on the given object. For buffers this means
+ * calling the preroll subclass method.
  * If that succeeds, the state will be commited.
  *
  * function does not take ownership of obj.
@@ -2890,7 +2890,7 @@ stopping:
   }
 }
 
-/* with STREAM_LOCK, PREROLL_LOCK 
+/* with STREAM_LOCK, PREROLL_LOCK
  *
  * Queue an object for rendering.
  * The first prerollable object queued will complete the preroll. If the
@@ -2920,7 +2920,7 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         goto preroll_failed;
     }
-    /* need to recheck if we need preroll, commmit state during preroll 
+    /* need to recheck if we need preroll, commmit state during preroll
      * could have made us not need more preroll. */
     if (G_UNLIKELY (basesink->need_preroll)) {
       /* see if we can render now, if we can't add the object to the preroll
@@ -3127,7 +3127,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
         gst_event_unref (event);
       } else {
         /* the new segment is a non prerollable item and does not block anything,
-         * we need to configure the current clipping segment and insert the event 
+         * we need to configure the current clipping segment and insert the event
          * in the queue to serialize it with the buffers for rendering. */
         gst_base_sink_configure_segment (basesink, pad, event,
             basesink->abidata.ABI.clip_segment);
@@ -3235,7 +3235,7 @@ gst_base_sink_needs_preroll (GstBaseSink * basesink)
   return res;
 }
 
-/* with STREAM_LOCK, PREROLL_LOCK 
+/* with STREAM_LOCK, PREROLL_LOCK
  *
  * Takes a buffer and compare the timestamps with the last segment.
  * If the buffer falls outside of the segment boundaries, drop it.
@@ -3455,7 +3455,7 @@ gst_base_sink_default_prepare_seek_segment (GstBaseSink * sink,
     GstEvent * event, GstSegment * segment)
 {
   /* By default, we try one of 2 things:
-   *   - For absolute seek positions, convert the requested position to our 
+   *   - For absolute seek positions, convert the requested position to our
    *     configured processing format and place it in the output segment \
    *   - For relative seek positions, convert our current (input) values to the
    *     seek format, adjust by the relative seek offset and then convert back to
@@ -3573,7 +3573,7 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
             cur_type, cur, stop_type, stop, &update);
       }
     }
-    /* Else, no seek event passed, so we're just (re)starting the 
+    /* Else, no seek event passed, so we're just (re)starting the
        current segment. */
   }
 
@@ -3592,13 +3592,13 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
     gst_pad_push_event (pad, gst_event_new_flush_stop ());
     gst_base_sink_flush_stop (sink, pad);
   } else if (res && sink->abidata.ABI.running) {
-    /* we are running the current segment and doing a non-flushing seek, 
+    /* we are running the current segment and doing a non-flushing seek,
      * close the segment first based on the last_stop. */
     GST_DEBUG_OBJECT (sink, "closing running segment %" G_GINT64_FORMAT
         " to %" G_GINT64_FORMAT, sink->segment.start, sink->segment.last_stop);
   }
 
-  /* The subclass must have converted the segment to the processing format 
+  /* The subclass must have converted the segment to the processing format
    * by now */
   if (res && seeksegment.format != dest_format) {
     GST_DEBUG_OBJECT (sink, "Subclass failed to prepare a seek segment "
@@ -4354,7 +4354,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   /* this function might release the LOCK */
   gst_base_sink_get_position_last (basesink, format, &last, upstream);
 
-  /* need to release the object lock before we can get the time, 
+  /* need to release the object lock before we can get the time,
    * a clock might take the LOCK of the provider, which could be
    * a basesink subclass. */
   GST_OBJECT_UNLOCK (basesink);
@@ -4374,9 +4374,9 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       goto convert_failed;
   }
 
-  /* subtract base time and accumulated time from the clock time. 
+  /* subtract base time and accumulated time from the clock time.
    * Make sure we don't go negative. This is the current time in
-   * the segment which we need to scale with the combined 
+   * the segment which we need to scale with the combined
    * rate and applied rate. */
   base += accum;
   base += latency;
