@@ -152,7 +152,7 @@ typedef struct _GstRTSPWatch GstRTSPWatch;
  *   you usually pair the tunnelid of this connection with the saved one using
  *   gst_rtsp_connection_do_tunnel().
  * @error_full: callback when an error occured with more information than
- *   the @error callback
+ *   the @error callback. Since 0.10.25
  *
  * Callback functions from a #GstRTSPWatch.
  *

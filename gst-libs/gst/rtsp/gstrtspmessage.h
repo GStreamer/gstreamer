@@ -54,8 +54,8 @@ G_BEGIN_DECLS
  * @GST_RTSP_MESSAGE_INVALID: invalid message type
  * @GST_RTSP_MESSAGE_REQUEST: RTSP request message
  * @GST_RTSP_MESSAGE_RESPONSE: RTSP response message
- * @GST_RTSP_MESSAGE_HTTP_REQUEST: HTTP request message
- * @GST_RTSP_MESSAGE_HTTP_RESPONSE: HTTP response message
+ * @GST_RTSP_MESSAGE_HTTP_REQUEST: HTTP request message. Since 0.10.25
+ * @GST_RTSP_MESSAGE_HTTP_RESPONSE: HTTP response message. Since 0.10.25
  * @GST_RTSP_MESSAGE_DATA: data message
  *
  * The type of a message.
