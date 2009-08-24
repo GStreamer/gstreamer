@@ -1806,9 +1806,14 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
           gchar *hdrval;
 
           /* empty line, end of message header */
-          /* see if there is a Content-Length header */
+          /* see if there is a Content-Length header, but ignore it if this
+           * is a POST request with an x-sessioncookie header */
           if (gst_rtsp_message_get_header (message,
-                  GST_RTSP_HDR_CONTENT_LENGTH, &hdrval, 0) == GST_RTSP_OK) {
+                  GST_RTSP_HDR_CONTENT_LENGTH, &hdrval, 0) == GST_RTSP_OK &&
+              (message->type != GST_RTSP_MESSAGE_HTTP_REQUEST ||
+                  message->type_data.request.method != GST_RTSP_POST ||
+                  gst_rtsp_message_get_header (message,
+                      GST_RTSP_HDR_X_SESSIONCOOKIE, NULL, 0) != GST_RTSP_OK)) {
             /* there is, prepare to read the body */
             builder->body_len = atol (hdrval);
             builder->body_data = g_malloc (builder->body_len + 1);
