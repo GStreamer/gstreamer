@@ -2,7 +2,7 @@
 <SECTION>
 <FILE>gstappsrc</FILE>
 <TITLE>appsrc</TITLE>
-<INCLUDE>gst/app/appsrc.h</INCLUDE>
+<INCLUDE>gst/app/gstappsrc.h</INCLUDE>
 GstAppSrc
 GstAppStreamType
 gst_app_src_set_caps
@@ -47,7 +47,7 @@ gst_app_buffer_new
 <SECTION>
 <FILE>gstappsink</FILE>
 <TITLE>appsink</TITLE>
-<INCLUDE>gst/app/appsink.h</INCLUDE>
+<INCLUDE>gst/app/gstappsink.h</INCLUDE>
 GstAppSink
 gst_app_sink_set_caps
 gst_app_sink_get_caps
