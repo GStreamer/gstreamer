@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.12.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-14 18:11+0100\n"
-"PO-Revision-Date: 2009-06-13 22:03+0700\n"
+"POT-Creation-Date: 2009-08-24 19:04+0100\n"
+"PO-Revision-Date: 2009-08-24 11:38-0400\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -71,11 +71,10 @@ msgstr ""
 "Sound System ini tak didukung oleh elemen ini."
 
 msgid "Volume"
-msgstr ""
+msgstr "Volume"
 
-#, fuzzy
 msgid "Master"
-msgstr "Cepat"
+msgstr "Induk"
 
 msgid "Front"
 msgstr "Depan"
@@ -86,188 +85,176 @@ msgstr "Belakang"
 msgid "Headphones"
 msgstr "Headphone"
 
-#, fuzzy
 msgid "Center"
-msgstr "Tengah / LFE"
+msgstr "Tengah"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
-#, fuzzy
 msgid "Surround"
-msgstr "Surround sound"
+msgstr "Surround"
 
 msgid "Side"
 msgstr "Samping"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "Pengeras Suara Terbina"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 Keluar"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 Keluar"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX Keluar"
 
 msgid "Bass"
-msgstr ""
+msgstr "Bass"
 
 msgid "Treble"
-msgstr ""
+msgstr "Treble"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D Dalam"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D Tengah"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "3D Tingkatkan"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Headphone"
+msgstr "Telepon"
 
 msgid "Microphone"
 msgstr "Mikrofon"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Jalur Masuk"
 
-#, fuzzy
 msgid "Line In"
-msgstr "Jalur-masuk"
+msgstr "Jalur Masuk"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "CD Internal"
 
 msgid "Video In"
-msgstr ""
+msgstr "Video Masuk"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX 1 Masuk"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX 2 Masuk"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX Masuk"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Gain Rekaman"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Keluaran Gain"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Mikrofon"
+msgstr "Mikrofon Galak"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Simpul Berulang"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Diagnostik"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Bass Galak"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Pangkalan Putar Kembali"
 
 msgid "Input"
 msgstr "Masukan"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Sumber Rekaman"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Sumber Monitor"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Bip Papan Ketik"
 
 msgid "Monitor"
-msgstr ""
+msgstr "Monitor"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Simulasikan Stereo"
 
 msgid "Stereo"
 msgstr "Stereo"
 
-#, fuzzy
 msgid "Surround Sound"
-msgstr "Surround sound"
+msgstr "Suara Surround"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Mikrofon"
+msgstr "Mikrofon Galak"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Sumber Pengeras Suara"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Mikrofon"
+msgstr "Sumber Mikrofon"
 
 msgid "Jack"
-msgstr ""
+msgstr "Pengungkit"
 
 msgid "Center / LFE"
 msgstr "Tengah / LFE"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "Stereo"
+msgstr "Mix Stereo"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Mix Mono"
 
-#, fuzzy
 msgid "Input Mix"
-msgstr "Mix masukan"
+msgstr "Mix Masukan"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF Masukan"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF Keluaran"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Mikrofon"
+msgstr "Mikrofon 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Mikrofon"
+msgstr "Mikrofon 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Digital Keluar"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Digital Masuk"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modem"
 
 msgid "Handset"
-msgstr ""
+msgstr "Handset"
 
 msgid "Other"
-msgstr ""
+msgstr "Lainnya"
 
 msgid "None"
-msgstr ""
+msgstr "Tak Ada"
 
 msgid "On"
 msgstr "Hidup"
@@ -276,13 +263,13 @@ msgid "Off"
 msgstr "Mati"
 
 msgid "Mute"
-msgstr ""
+msgstr "Diam"
 
 msgid "Fast"
 msgstr "Cepat"
 
 msgid "Very Low"
-msgstr ""
+msgstr "Sangat Rendah"
 
 msgid "Low"
 msgstr "Rendah"
@@ -293,126 +280,100 @@ msgstr "Sedang"
 msgid "High"
 msgstr "Tinggi"
 
-#, fuzzy
 msgid "Very High"
-msgstr "Sangat tinggi"
+msgstr "Sangat Tinggi"
 
 msgid "Production"
 msgstr "Produksi"
 
-#, fuzzy
 msgid "Front Panel Microphone"
-msgstr "Mikrofon panel depan"
+msgstr "Mikrofon Panel Depan"
 
-#, fuzzy
 msgid "Front Panel Line In"
-msgstr "Jalur-masuk panel depan"
+msgstr "Jalur Masuk Panel Depan"
 
-#, fuzzy
 msgid "Front Panel Headphones"
-msgstr "Headphone panel depan"
+msgstr "Headphone Panel Depan"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "Jalur-masuk panel depan"
+msgstr "Jalur Keluar Panel Depan"
 
-#, fuzzy
 msgid "Green Connector"
-msgstr "Penyambung hijau"
+msgstr "Konektor Hijau"
 
-#, fuzzy
 msgid "Pink Connector"
-msgstr "Penyambung merah jambu"
+msgstr "Konektor Merah Jambu"
 
-#, fuzzy
 msgid "Blue Connector"
-msgstr "Penyambung biru"
+msgstr "Konektor Biru"
 
-#, fuzzy
 msgid "White Connector"
-msgstr "Penyambung putih"
+msgstr "Konektor Putih"
 
-#, fuzzy
 msgid "Black Connector"
-msgstr "Penyambung hitam"
+msgstr "Konektor Hitam"
 
-#, fuzzy
 msgid "Gray Connector"
-msgstr "Penyambung abu-abu"
+msgstr "Konektor Abu-abu"
 
-#, fuzzy
 msgid "Orange Connector"
-msgstr "Penyambung jingga"
+msgstr "Konektor Jingga"
 
-#, fuzzy
 msgid "Red Connector"
-msgstr "Penyambung merah"
+msgstr "Konektor Merah"
 
-#, fuzzy
 msgid "Yellow Connector"
-msgstr "Penyambung kuning"
+msgstr "Konektor Kuning"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
-msgstr "Penyambung panel depan hijau"
+msgstr "Konektor Panel Depan Hijau"
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
-msgstr "Penyambung panel depan merah jambu"
+msgstr "Konektor Panel Depan Merah Jambu"
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
-msgstr "Penyambung panel depan biru"
+msgstr "Konektor Panel Depan Biru"
 
-#, fuzzy
 msgid "White Front Panel Connector"
-msgstr "Penyambung panel depan putih"
+msgstr "Konektor Panel Depan Putih"
 
-#, fuzzy
 msgid "Black Front Panel Connector"
-msgstr "Penyambung panel depan hitam"
+msgstr "Konektor Panel Depan Hitam"
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
-msgstr "Penyambung panel depan abu-abu"
+msgstr "Konektor Panel Depan Abu-abu"
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
-msgstr "Penyambung panel depan jingga"
+msgstr "Konektor Panel Depan Jingga"
 
-#, fuzzy
 msgid "Red Front Panel Connector"
-msgstr "Penyambung panel depan merah"
+msgstr "Konektor Panel Depan Merah"
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
-msgstr "Penyambung panel depan kuning"
+msgstr "Konektor Panel Depan Kuning"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Sebar Keluaran"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Downmix"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
-msgstr "Masukan mixer virtual"
+msgstr "Masukan Mixer Virtual"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
-msgstr "Keluaran mixer virtual"
+msgstr "Keluaran Mixer Virtual"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "Masukan mixer virtual"
+msgstr "Kanal Mixer Virtual"
 
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "Fungsi %s"
 
 #, c-format
 msgid "%s %d"
-msgstr ""
+msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "

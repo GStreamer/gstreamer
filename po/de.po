@@ -2,14 +2,14 @@
 # Copyright (C) 2007 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Andre Klapper <ak-47@gmx.net>, 2008.
-# Christian Kirbach <Christian.Kirbach@googlemail.com>, 2009.
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.12.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-14 18:11+0100\n"
-"PO-Revision-Date: 2009-06-24 16:58+0200\n"
+"POT-Creation-Date: 2009-08-24 19:04+0100\n"
+"PO-Revision-Date: 2009-08-22 16:58+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Could not read title information for DVD."
-msgstr "Es konnte keine Titelinformationen der DVD gelesen werden."
+msgstr "Die Titelinformationen der DVD konnten nicht gelesen werden."
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
@@ -74,11 +74,10 @@ msgstr ""
 "Sound System (OSS) wird nicht von diesem Element unterstützt."
 
 msgid "Volume"
-msgstr ""
+msgstr "Lautstärke"
 
-#, fuzzy
 msgid "Master"
-msgstr "Schnell"
+msgstr "Hauptregler"
 
 msgid "Front"
 msgstr "Vorne"
@@ -89,188 +88,176 @@ msgstr "Hinten"
 msgid "Headphones"
 msgstr "Kopfhörer"
 
-#, fuzzy
 msgid "Center"
-msgstr "Mitte / LFE"
+msgstr "Mitte"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
-#, fuzzy
 msgid "Surround"
-msgstr "Surround-Ton"
+msgstr "Surround"
 
 msgid "Side"
 msgstr "Seite"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "Eingebauter Lautsprecher"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX-Ausgang 1"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX-Ausgang 2"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX-Ausgang"
 
 msgid "Bass"
-msgstr ""
+msgstr "Bass"
 
 msgid "Treble"
-msgstr ""
+msgstr "Höhen"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D-Tiefe"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D-Mitte"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "3D-Erweiterung"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Kopfhörer"
+msgstr "Telefon"
 
 msgid "Microphone"
 msgstr "Mikrofon"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Line-Ausgang"
 
-#, fuzzy
 msgid "Line In"
-msgstr "Line-in"
+msgstr "Line-Eingang"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Interne CD"
 
 msgid "Video In"
-msgstr ""
+msgstr "Video-Eingang"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX-Eingang 1"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX-Eingang 2"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX-Eingang"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Aufnahmepegel"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Ausgabepegel"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Mikrofon"
+msgstr "Mikrofon-Boost"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Schleife"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Zur Diagnose"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Bass-Boost"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Wiedergabe-Ports"
 
 msgid "Input"
-msgstr "Aufnahme"
+msgstr "Eingang"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Aufnahmequelle"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Beobachtungsquelle"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Tastaturpiepsen"
 
 msgid "Monitor"
-msgstr ""
+msgstr "Beobachtung"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Stereo simulieren"
 
 msgid "Stereo"
 msgstr "Stereo"
 
-#, fuzzy
 msgid "Surround Sound"
 msgstr "Surround-Ton"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Mikrofon"
+msgstr "Mikrofonpegel"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Lautsprecherquelle"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Mikrofon"
+msgstr "Mikrofonquelle"
 
 msgid "Jack"
-msgstr ""
+msgstr "Stecker"
 
 msgid "Center / LFE"
 msgstr "Mitte / LFE"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "Stereo"
+msgstr "Stereo-Mischer"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Mono-Mischer"
 
-#, fuzzy
 msgid "Input Mix"
-msgstr "Aufnahmemixer"
+msgstr "Aufnahme-Mischer"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF-Eingang"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF-Ausgang"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Mikrofon"
+msgstr "Mikrofon 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Mikrofon"
+msgstr "Mikrofon 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Digitaler Ausgang"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Digitaler Eingang"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modem"
 
 msgid "Handset"
-msgstr ""
+msgstr "Hörer"
 
 msgid "Other"
-msgstr ""
+msgstr "Andere"
 
 msgid "None"
-msgstr ""
+msgstr "Keine"
 
 msgid "On"
 msgstr "Ein"
@@ -279,13 +266,13 @@ msgid "Off"
 msgstr "Aus"
 
 msgid "Mute"
-msgstr ""
+msgstr "Stumm"
 
 msgid "Fast"
 msgstr "Schnell"
 
 msgid "Very Low"
-msgstr ""
+msgstr "Sehr tief"
 
 msgid "Low"
 msgstr "Tief"
@@ -296,126 +283,101 @@ msgstr "Mittel"
 msgid "High"
 msgstr "Hoch"
 
-#, fuzzy
 msgid "Very High"
 msgstr "Sehr hoch"
 
 msgid "Production"
 msgstr "Produktion"
 
-#, fuzzy
 msgid "Front Panel Microphone"
-msgstr "Mikrofon am Fronteingang"
+msgstr "Mikrofon an der Front"
 
-#, fuzzy
 msgid "Front Panel Line In"
-msgstr "Front-Line-in"
+msgstr "Line-Eingang an der Front"
 
-#, fuzzy
 msgid "Front Panel Headphones"
-msgstr "Front-Kopfhörer"
+msgstr "Kopfhörer an der Front"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "Front-Line-in"
+msgstr "Line-Ausgang an der Front"
 
-#, fuzzy
 msgid "Green Connector"
 msgstr "Grüner Stecker"
 
-#, fuzzy
 msgid "Pink Connector"
 msgstr "Rosa Stecker"
 
-#, fuzzy
 msgid "Blue Connector"
 msgstr "Blauer Stecker"
 
-#, fuzzy
 msgid "White Connector"
 msgstr "Weißer Stecker"
 
-#, fuzzy
 msgid "Black Connector"
 msgstr "Schwarzer Stecker"
 
-#, fuzzy
 msgid "Gray Connector"
 msgstr "Grauer Stecker"
 
-#, fuzzy
 msgid "Orange Connector"
 msgstr "Oranger Stecker"
 
-#, fuzzy
 msgid "Red Connector"
 msgstr "Roter Stecker"
 
-#, fuzzy
 msgid "Yellow Connector"
 msgstr "Gelber Stecker"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
 msgstr "Grüner Frontstecker"
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
 msgstr "Rosa Frontstecker"
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
 msgstr "Blauer Frontstecker"
 
-#, fuzzy
 msgid "White Front Panel Connector"
 msgstr "Weißer Frontstecker"
 
-#, fuzzy
 msgid "Black Front Panel Connector"
 msgstr "Schwarzer Frontstecker"
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
 msgstr "Grauer Frontstecker"
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
 msgstr "Oranger Frontstecker"
 
-#, fuzzy
 msgid "Red Front Panel Connector"
 msgstr "Roter Frontstecker"
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
 msgstr "Gelber Frontstecker"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Verteilter Ausgang"
 
+# Als Downmix wird im Bereich der Tontechnik ein manuelles oder automatisches Verfahren bezeichnet, bei dem der Ton eines Mehrkanal-Tonformats zu einer Fassung mit weniger unabhängigen Kanälen zusammengefasst wird. In den meisten Fällen ist dies eine Stereo-Fassung.
 msgid "Downmix"
-msgstr ""
+msgstr "Downmix"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
 msgstr "Eingang des virtuellen Mischers"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
 msgstr "Ausgang des virtuellen Mischers"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "Eingang des virtuellen Mischers"
+msgstr "Kanäle des virtuellen Mischers"
 
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "%s-Funktion"
 
 #, c-format
 msgid "%s %d"
-msgstr ""
+msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
