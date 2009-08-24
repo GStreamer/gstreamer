@@ -73,7 +73,7 @@ gst_amrwbenc_bandmode_get_type ()
   };
   if (!gst_amrwbenc_bandmode_type) {
     gst_amrwbenc_bandmode_type =
-        g_enum_register_static ("GstAmrwbEncBandMode", gst_amrwbenc_bandmode);
+        g_enum_register_static ("GstAmrWbEncBandMode", gst_amrwbenc_bandmode);
   }
   return gst_amrwbenc_bandmode_type;
 }
@@ -132,7 +132,10 @@ _do_init (GType object_type)
       "AMR-WB audio encoder");
 }
 
-GST_BOILERPLATE_FULL (GstAmrwbEnc, gst_amrwbenc, GstElement, GST_TYPE_ELEMENT,
+#define GstAmrWbEnc GstAmrwbEnc
+#define GstAmrWbEncClass GstAmrwbEncClass
+
+GST_BOILERPLATE_FULL (GstAmrWbEnc, gst_amrwbenc, GstElement, GST_TYPE_ELEMENT,
     _do_init);
 
 static void
