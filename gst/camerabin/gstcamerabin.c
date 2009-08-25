@@ -1646,11 +1646,17 @@ gst_camerabin_send_video_eos (GstCameraBin * camera)
 
   g_return_if_fail (camera != NULL);
 
-  /* Send eos event to video bin */
-  GST_INFO_OBJECT (camera, "sending eos to videobin");
-  videopad = gst_element_get_static_pad (camera->vidbin, "sink");
-  gst_pad_send_event (videopad, gst_event_new_eos ());
-  gst_object_unref (videopad);
+  if (!camera->eos_handled) {
+    /* Send eos event to video bin */
+    GST_INFO_OBJECT (camera, "sending eos to videobin");
+    videopad = gst_element_get_static_pad (camera->vidbin, "sink");
+    gst_pad_send_event (videopad, gst_event_new_eos ());
+    gst_object_unref (videopad);
+    camera->eos_handled = TRUE;
+  }
+  else {
+    GST_INFO_OBJECT (camera, "dropping duplicate EOS");
+  }
 }
 
 /*
@@ -1796,7 +1802,7 @@ gst_camerabin_have_vid_buffer (GstPad * pad, GstBuffer * buffer,
   gboolean ret = TRUE;
   GST_LOG ("got video buffer %p with size %d",
       buffer, GST_BUFFER_SIZE (buffer));
-  if (camera->stop_requested) {
+  if (G_UNLIKELY (camera->stop_requested)) {
     gst_camerabin_send_video_eos (camera);
     ret = FALSE;                /* Drop buffer */
   }
@@ -1951,6 +1957,7 @@ gst_camerabin_reset_to_view_finder (GstCameraBin * camera)
   /* Reset counters and flags */
   camera->stop_requested = FALSE;
   camera->paused = FALSE;
+  camera->eos_handled = FALSE;
 
   /* Enable view finder mode in v4l2camsrc */
   if (camera->src_vid_src &&
@@ -2687,6 +2694,7 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->paused = FALSE;
   camera->capturing = FALSE;
   camera->night_mode = FALSE;
+  camera->eos_handled = FALSE;
 
   camera->width = DEFAULT_WIDTH;
   camera->height = DEFAULT_HEIGHT;

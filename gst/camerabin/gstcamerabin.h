@@ -94,6 +94,7 @@ struct _GstCameraBin
   GMutex *capture_mutex;
   GCond *cond;
   gboolean capturing;
+  gboolean eos_handled;
 
   /* pad names for output and input selectors */
   GstPad *pad_src_view;
