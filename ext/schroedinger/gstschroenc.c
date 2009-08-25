@@ -526,6 +526,13 @@ gst_schro_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
       g_value_init (&value, GST_TYPE_BUFFER);
       size = GST_BUFFER_SIZE (schro_enc->seq_header_buffer);
       buf = gst_buffer_new_and_alloc (size + SCHRO_PARSE_HEADER_SIZE);
+
+      /* ogg(mux) expects the header buffers to have 0 timestamps -
+         set OFFSET and OFFSET_END accordingly */
+      GST_BUFFER_OFFSET (buf) = 0;
+      GST_BUFFER_OFFSET_END (buf) = 0;
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+
       memcpy (GST_BUFFER_DATA (buf),
           GST_BUFFER_DATA (schro_enc->seq_header_buffer), size);
       GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + size + 0, 0x42424344);
