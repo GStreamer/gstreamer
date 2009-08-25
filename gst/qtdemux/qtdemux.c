@@ -3256,7 +3256,8 @@ broken_atom_size:
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")),
         ("Atom '%" GST_FOURCC_FORMAT "' has size of %u bytes, but we have only "
-         "%u bytes available.", GST_FOURCC_ARGS (fourcc), node_length, length));
+            "%u bytes available.", GST_FOURCC_ARGS (fourcc), node_length,
+            length));
     return FALSE;
   }
 }
@@ -3589,7 +3590,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     /* set the sample sizes */
     if (sample_size == 0) {
       /* different sizes for each sample */
-      if (!qt_atom_parser_has_remaining (&stsz, 4 * n_samples))
+      if (!qt_atom_parser_has_chunks (&stsz, n_samples, 4))
         goto corrupt_file;
 
       for (i = 0; i < n_samples; i++) {
@@ -3608,7 +3609,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         !qt_atom_parser_get_uint32 (&stsc, &n_samples_per_chunk))
       goto corrupt_file;
 
-    if (!qt_atom_parser_has_remaining (&stsc, 12 * n_samples_per_chunk))
+    if (!qt_atom_parser_has_chunks (&stsc, n_samples_per_chunk, 12))
       goto corrupt_file;
 
     index = 0;
@@ -3681,7 +3682,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
       GST_LOG_OBJECT (qtdemux, "%u timestamp blocks", n_sample_times);
 
       /* make sure there's enough data */
-      if (!qt_atom_parser_has_remaining (&stts, n_sample_times * (2 * 4)))
+      if (!qt_atom_parser_has_chunks (&stts, n_sample_times, 2 * 4))
         goto corrupt_file;
 
       timestamp = 0;
@@ -3723,8 +3724,9 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
        * We however look at the last timestamp to estimate the track length so we
        * need something in here. */
       for (; index < n_samples; index++) {
-        GST_DEBUG_OBJECT (qtdemux, "fill sample %d: timestamp %" GST_TIME_FORMAT,
-            index, GST_TIME_ARGS (timestamp));
+        GST_DEBUG_OBJECT (qtdemux,
+            "fill sample %d: timestamp %" GST_TIME_FORMAT, index,
+            GST_TIME_ARGS (timestamp));
         samples[index].timestamp = timestamp;
         samples[index].duration = -1;
       }
@@ -3748,7 +3750,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
           stream->all_keyframe = TRUE;
         } else {
           /* make sure there's enough data */
-          if (!qt_atom_parser_has_remaining (&stss, n_sample_syncs * 4))
+          if (!qt_atom_parser_has_chunks (&stss, n_sample_syncs, 4))
             goto corrupt_file;
           for (i = 0; i < n_sample_syncs; i++) {
             /* note that the first sample is index 1, not 0 */
@@ -3771,7 +3773,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
              * samples */
           } else {
             /* make sure there's enough data */
-            if (!qt_atom_parser_has_remaining (&stps, n_sample_syncs * 4))
+            if (!qt_atom_parser_has_chunks (&stps, n_sample_syncs, 4))
               goto corrupt_file;
             for (i = 0; i < n_sample_syncs; i++) {
               /* note that the first sample is index 1, not 0 */
@@ -3822,7 +3824,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     sample_index = 0;
     timestamp = 0;
 
-    if (!qt_atom_parser_has_remaining (&stsc, 12 * n_samples_per_chunk))
+    if (!qt_atom_parser_has_chunks (&stsc, n_samples_per_chunk, 12))
       goto corrupt_file;
 
     for (i = 0; i < n_samples_per_chunk; i++) {

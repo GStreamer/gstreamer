@@ -46,6 +46,15 @@ qt_atom_parser_has_remaining (QtAtomParser * parser, guint64 min_remaining)
 }
 
 static inline gboolean
+qt_atom_parser_has_chunks (QtAtomParser * parser, guint32 n_chunks,
+    guint32 chunk_size)
+{
+  /* assumption: n_chunks and chunk_size are 32-bit, we cast to 64-bit here
+   * to avoid overflows, to handle e.g. (guint32)-1 * size correctly */
+  return qt_atom_parser_has_remaining (parser, (guint64) n_chunks * chunk_size);
+}
+
+static inline gboolean
 qt_atom_parser_skip (QtAtomParser * parser, guint nbytes)
 {
   if (G_UNLIKELY (qt_atom_parser_get_remaining (parser) < nbytes))

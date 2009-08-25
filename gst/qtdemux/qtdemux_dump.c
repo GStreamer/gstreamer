@@ -112,7 +112,7 @@ qtdemux_dump_elst (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
   GST_LOG ("%*s  n entries:     %d", depth, "", num_entries);
 
-  if (!qt_atom_parser_has_remaining (data, num_entries * (4 + 4 + 4)))
+  if (!qt_atom_parser_has_chunks (data, num_entries, 4 + 4 + 4))
     return FALSE;
 
   for (i = 0; i < num_entries; i++) {
@@ -301,12 +301,12 @@ qtdemux_dump_stts (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
   GST_LOG ("%*s  n entries:     %d", depth, "", num_entries);
 
-  if (!qt_atom_parser_has_remaining (data, num_entries * (4 + 4)))
+  if (!qt_atom_parser_has_chunks (data, num_entries, 4 + 4))
     return FALSE;
 
   for (i = 0; i < num_entries; i++) {
     GST_LOG ("%*s    count:         %u", depth, "", GET_UINT32 (data));
-    GST_LOG ("%*s    duration:      %u", depth, "",GET_UINT32 (data));
+    GST_LOG ("%*s    duration:      %u", depth, "", GET_UINT32 (data));
   }
   return TRUE;
 }
@@ -323,7 +323,7 @@ qtdemux_dump_stps (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
   GST_LOG ("%*s  n entries:     %d", depth, "", num_entries);
 
-  if (!qt_atom_parser_has_remaining (data, num_entries * 4))
+  if (!qt_atom_parser_has_chunks (data, num_entries, 4))
     return FALSE;
 
   for (i = 0; i < num_entries; i++) {
@@ -344,7 +344,7 @@ qtdemux_dump_stss (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
   GST_LOG ("%*s  n entries:     %d", depth, "", num_entries);
 
-  if (!qt_atom_parser_has_remaining (data, num_entries * 4))
+  if (!qt_atom_parser_has_chunks (data, num_entries, 4))
     return FALSE;
 
   for (i = 0; i < num_entries; i++) {
@@ -365,7 +365,7 @@ qtdemux_dump_stsc (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
   GST_LOG ("%*s  n entries:     %d", depth, "", num_entries);
 
-  if (!qt_atom_parser_has_remaining (data, num_entries * (4 + 4 + 4)))
+  if (!qt_atom_parser_has_chunks (data, num_entries, 4 + 4 + 4))
     return FALSE;
 
   for (i = 0; i < num_entries; i++) {
@@ -394,7 +394,7 @@ qtdemux_dump_stsz (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 
     GST_LOG ("%*s  n entries:     %d", depth, "", num_entries);
 #if 0
-    if (!qt_atom_parser_has_remaining (data, num_entries * 4)))
+    if (!qt_atom_parser_has_chunks (data, num_entries, 4))
       return FALSE;
     for (i = 0; i < num_entries; i++) {
       GST_LOG ("%*s    sample size:   %u", depth, "", GET_UINT32 (data));
@@ -416,7 +416,7 @@ qtdemux_dump_stco (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
   GST_LOG ("%*s  n entries:     %d", depth, "", num_entries);
 
-  if (!qt_atom_parser_has_remaining (data, num_entries * 4))
+  if (!qt_atom_parser_has_chunks (data, num_entries, 4))
     return FALSE;
 
   for (i = 0; i < num_entries; i++) {
@@ -437,7 +437,7 @@ qtdemux_dump_ctts (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
   GST_LOG ("%*s  n entries:     %d", depth, "", num_entries);
 
-  if (!qt_atom_parser_has_remaining (data, num_entries * (4 + 4)))
+  if (!qt_atom_parser_has_chunks (data, num_entries, 4 + 4))
     return FALSE;
 
   for (i = 0; i < num_entries; i++) {
@@ -460,7 +460,7 @@ qtdemux_dump_co64 (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
   GST_LOG ("%*s  n entries:     %d", depth, "", num_entries);
 
-  if (!qt_atom_parser_has_remaining (data, num_entries * 8))
+  if (!qt_atom_parser_has_chunks (data, num_entries, 8))
     return FALSE;
 
   for (i = 0; i < num_entries; i++) {
@@ -508,7 +508,7 @@ static gboolean
 qtdemux_node_dump_foreach (GNode * node, gpointer qtdemux)
 {
   QtAtomParser parser;
-  guint8 *buffer = (guint8 *) node->data; // FIXME: move to byte reader
+  guint8 *buffer = (guint8 *) node->data;       /* FIXME: move to byte reader */
   guint32 node_length;
   guint32 fourcc;
   const QtNodeType *type;
@@ -533,8 +533,8 @@ qtdemux_node_dump_foreach (GNode * node, gpointer qtdemux)
     ret = type->dump (GST_QTDEMUX_CAST (qtdemux), &parser, depth);
 
     if (!ret) {
-     GST_WARNING ("%*s  not enough data parsing atom %" GST_FOURCC_FORMAT,
-         depth, "", GST_FOURCC_ARGS (fourcc));
+      GST_WARNING ("%*s  not enough data parsing atom %" GST_FOURCC_FORMAT,
+          depth, "", GST_FOURCC_ARGS (fourcc));
     }
   }
 
