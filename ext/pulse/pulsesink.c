@@ -106,7 +106,6 @@ struct _GstPulseRingBuffer
 
   pa_sample_spec sample_spec;
   gint64 offset;
-  gint64 write_offset;
 
   gboolean corked;
   gboolean in_commit;
@@ -677,7 +676,6 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   else
     pbuf->offset = -gst_util_uint64_scale_int (-time_offset,
         pbuf->sample_spec.rate, GST_SECOND);
-  pbuf->write_offset = 0;
   GST_LOG_OBJECT (psink, "sample offset %" G_GINT64_FORMAT, pbuf->offset);
 
   for (;;) {
@@ -1089,7 +1087,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
   gboolean reverse;
   gint *toprocess;
   gint inr, outr, bps;
-  gint64 offset, diff;
+  gint64 offset;
   guint bufsize;
 
   pbuf = GST_PULSERING_BUFFER_CAST (buf);
@@ -1155,9 +1153,6 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
   /* offset is in bytes */
   offset *= bps;
 
-  diff = offset - pbuf->write_offset;
-  pbuf->write_offset = offset;
-
   while (*toprocess > 0) {
     size_t avail;
     guint towrite;
@@ -1205,13 +1200,11 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
     if (G_LIKELY (inr == outr && !reverse)) {
       /* no rate conversion, simply write out the samples */
-      if (pa_stream_write (pbuf->stream, data, towrite, NULL, diff,
-              PA_SEEK_RELATIVE) < 0)
+      if (pa_stream_write (pbuf->stream, data, towrite, NULL, offset,
+              PA_SEEK_ABSOLUTE) < 0)
         goto write_failed;
 
       data += towrite;
-      diff = 0;
-      pbuf->write_offset += towrite;
       in_samples -= avail;
       out_samples -= avail;
     } else {
