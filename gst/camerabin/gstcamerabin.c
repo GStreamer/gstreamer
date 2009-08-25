@@ -1611,6 +1611,8 @@ gst_camerabin_start_video_recording (GstCameraBin * camera)
 
   if (state_ret != GST_STATE_CHANGE_FAILURE) {
     g_mutex_lock (camera->capture_mutex);
+    camera->capturing = TRUE;
+    g_mutex_unlock (camera->capture_mutex);
     gst_element_set_locked_state (camera->vidbin, FALSE);
     g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
         "active-pad", camera->pad_src_vid, NULL);
@@ -1620,11 +1622,8 @@ gst_camerabin_start_video_recording (GstCameraBin * camera)
             "capture-mode")) {
       g_object_set (G_OBJECT (camera->src_vid_src), "capture-mode", 2, NULL);
     }
-
     gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING);
     gst_element_set_locked_state (camera->vidbin, TRUE);
-    camera->capturing = TRUE;
-    g_mutex_unlock (camera->capture_mutex);
   } else {
     GST_WARNING_OBJECT (camera, "videobin state change failed");
     gst_element_set_state (camera->vidbin, GST_STATE_NULL);
