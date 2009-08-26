@@ -319,71 +319,21 @@ gst_selector_pad_reset (GstSelectorPad * pad)
 
 /* strictly get the linked pad from the sinkpad. If the pad is active we return
  * the srcpad else we return NULL */
-typedef struct
-{
-  GstIterator parent;
-
-  GstPad *pad;
-  gboolean start;
-} GstSelectorIterator;
-
-static void
-_iterate_free (GstIterator * it)
-{
-  GstSelectorIterator *sit = (GstSelectorIterator *) it;
-
-  gst_object_unref (sit->pad);
-  g_free (it);
-}
-
-static GstIteratorResult
-_iterate_next (GstIterator * it, gpointer * result)
-{
-  GstSelectorIterator *sit = (GstSelectorIterator *) it;
-
-  if (sit->start) {
-    GstPad *res = gst_input_selector_get_linked_pad (sit->pad, TRUE);
-
-    *result = res;
-    sit->start = FALSE;
-    return res ? GST_ITERATOR_OK : GST_ITERATOR_DONE;
-  }
-
-  *result = NULL;
-  return GST_ITERATOR_DONE;
-}
-
-static GstIteratorItem
-_iterate_item (GstIterator * it, gpointer item)
-{
-  return GST_ITERATOR_ITEM_PASS;
-}
-
-static void
-_iterate_resync (GstIterator * it)
-{
-  GstSelectorIterator *sit = (GstSelectorIterator *) it;
-
-  sit->start = TRUE;
-}
-
 static GstIterator *
 gst_selector_pad_iterate_linked_pads (GstPad * pad)
 {
   GstInputSelector *sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
-  GstSelectorIterator *it = (GstSelectorIterator *)
-      gst_iterator_new (sizeof (GstSelectorIterator),
-      GST_TYPE_PAD,
-      sel->lock,
-      &GST_ELEMENT_CAST (sel)->pads_cookie,
-      _iterate_next, _iterate_item, _iterate_resync, _iterate_free);
+  GstPad *otherpad;
+  GstIterator *it;
 
-  it->pad = gst_object_ref (pad);
-  it->start = TRUE;
+  otherpad = gst_input_selector_get_linked_pad (pad, TRUE);
+  it = gst_iterator_new_single (GST_TYPE_PAD, otherpad,
+      (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
 
+  gst_object_unref (otherpad);
   gst_object_unref (sel);
 
-  return (GstIterator *) it;
+  return it;
 }
 
 static gboolean
