@@ -1236,87 +1236,31 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
 
 }
 
-typedef struct
-{
-  GstIterator parent;
-
-  GstRtpSession *rtpsession;
-  GstPad *pad;
-  gboolean start;
-} GstRtpSessionIterator;
-
-static void
-_iterate_free (GstIterator * it)
-{
-  GstRtpSessionIterator *sit = (GstRtpSessionIterator *) it;
-
-  g_object_unref (sit->rtpsession);
-  g_object_unref (sit->pad);
-
-  g_free (it);
-}
-
-static GstIteratorResult
-_iterate_next (GstIterator * it, gpointer * result)
-{
-  GstRtpSessionIterator *sit = (GstRtpSessionIterator *) it;
-  GstPad *res = NULL;
-
-  if (!sit->start) {
-    /* go out */
-  } else if (sit->pad == sit->rtpsession->recv_rtp_src) {
-    res = sit->rtpsession->recv_rtp_sink;
-  } else if (sit->pad == sit->rtpsession->recv_rtp_sink) {
-    res = sit->rtpsession->recv_rtp_src;
-  } else if (sit->pad == sit->rtpsession->send_rtp_src) {
-    res = sit->rtpsession->send_rtp_sink;
-  } else if (sit->pad == sit->rtpsession->send_rtp_sink) {
-    res = sit->rtpsession->send_rtp_src;
-  }
-
-  *result = res;
-
-  return res ? GST_ITERATOR_OK : GST_ITERATOR_DONE;
-}
-
-static GstIteratorItem
-_iterate_item (GstIterator * it, gpointer item)
-{
-  GstPad *pad = (GstPad *) item;
-  gst_object_ref (pad);
-
-  return GST_ITERATOR_ITEM_PASS;
-}
-
-static void
-_iterate_resync (GstIterator * it)
-{
-  GstRtpSessionIterator *sit = (GstRtpSessionIterator *) it;
-
-  sit->start = TRUE;
-}
-
 static GstIterator *
 gst_rtp_session_iterate_internal_links (GstPad * pad)
 {
   GstRtpSession *rtpsession;
-  GstRtpSessionIterator *it;
+  GstPad *otherpad = NULL;
+  GstIterator *it;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
 
-  it = (GstRtpSessionIterator *)
-      gst_iterator_new (sizeof (GstRtpSessionIterator),
-      GST_TYPE_PAD,
-      rtpsession->priv->lock,
-      &GST_ELEMENT_CAST (rtpsession)->pads_cookie,
-      _iterate_next, _iterate_item, _iterate_resync, _iterate_free);
-  it->start = TRUE;
-  it->rtpsession = gst_object_ref (rtpsession);
-  it->pad = gst_object_ref (pad);
+  if (pad == rtpsession->recv_rtp_src) {
+    otherpad = rtpsession->recv_rtp_sink;
+  } else if (pad == rtpsession->recv_rtp_sink) {
+    otherpad = rtpsession->recv_rtp_src;
+  } else if (pad == rtpsession->send_rtp_src) {
+    otherpad = rtpsession->send_rtp_sink;
+  } else if (pad == rtpsession->send_rtp_sink) {
+    otherpad = rtpsession->send_rtp_src;
+  }
+
+  it = gst_iterator_new_single (GST_TYPE_PAD, otherpad,
+      (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
 
   gst_object_unref (rtpsession);
 
-  return (GstIterator *) it;
+  return it;
 }
 
 static gboolean

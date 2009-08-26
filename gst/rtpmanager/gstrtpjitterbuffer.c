@@ -466,88 +466,29 @@ gst_rtp_jitter_buffer_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-typedef struct
-{
-  GstIterator parent;
-
-  GstRtpJitterBuffer *jitterbuffer;
-  GstPad *pad;
-  gboolean start;
-} GstRtpJitterBufferIterator;
-
-static void
-_iterate_free (GstIterator * it)
-{
-  GstRtpJitterBufferIterator *jit = (GstRtpJitterBufferIterator *) it;
-
-  g_object_unref (jit->jitterbuffer);
-  g_object_unref (jit->pad);
-
-  g_free (it);
-}
-
-static GstIteratorResult
-_iterate_next (GstIterator * it, gpointer * result)
-{
-  GstRtpJitterBufferIterator *jit = (GstRtpJitterBufferIterator *) it;
-  GstPad *res = NULL;
-  GstRtpJitterBufferPrivate *priv;
-
-  priv = jit->jitterbuffer->priv;
-
-  if (!jit->start) {
-    /* go out */
-  } else if (jit->pad == priv->sinkpad) {
-    res = priv->srcpad;
-  } else if (jit->pad == priv->srcpad) {
-    res = priv->sinkpad;
-  } else if (jit->pad == priv->rtcpsinkpad) {
-    res = NULL;
-  }
-
-  *result = res;
-
-  return res ? GST_ITERATOR_OK : GST_ITERATOR_DONE;
-}
-
-static GstIteratorItem
-_iterate_item (GstIterator * it, gpointer item)
-{
-  GstPad *pad = (GstPad *) item;
-  gst_object_ref (pad);
-
-  return GST_ITERATOR_ITEM_PASS;
-}
-
-static void
-_iterate_resync (GstIterator * it)
-{
-  GstRtpJitterBufferIterator *jit = (GstRtpJitterBufferIterator *) it;
-
-  jit->start = TRUE;
-}
-
 static GstIterator *
 gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad)
 {
   GstRtpJitterBuffer *jitterbuffer;
-  GstRtpJitterBufferIterator *it;
+  GstPad *otherpad = NULL;
+  GstIterator *it;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
 
-  it = (GstRtpJitterBufferIterator *)
-      gst_iterator_new (sizeof (GstRtpJitterBufferIterator),
-      GST_TYPE_PAD,
-      GST_OBJECT_CAST (jitterbuffer)->lock,
-      &GST_ELEMENT_CAST (jitterbuffer)->pads_cookie,
-      _iterate_next, _iterate_item, _iterate_resync, _iterate_free);
-  it->start = TRUE;
-  it->jitterbuffer = gst_object_ref (jitterbuffer);
-  it->pad = gst_object_ref (pad);
+  if (pad == jitterbuffer->priv->sinkpad) {
+    otherpad = jitterbuffer->priv->srcpad;
+  } else if (pad == jitterbuffer->priv->srcpad) {
+    otherpad = jitterbuffer->priv->sinkpad;
+  } else if (pad == jitterbuffer->priv->rtcpsinkpad) {
+    otherpad = NULL;
+  }
+
+  it = gst_iterator_new_single (GST_TYPE_PAD, otherpad,
+      (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
 
   gst_object_unref (jitterbuffer);
 
-  return (GstIterator *) it;
+  return it;
 }
 
 static GstPad *
