@@ -330,7 +330,8 @@ gst_selector_pad_iterate_linked_pads (GstPad * pad)
   it = gst_iterator_new_single (GST_TYPE_PAD, otherpad,
       (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
 
-  gst_object_unref (otherpad);
+  if (otherpad)
+    gst_object_unref (otherpad);
   gst_object_unref (sel);
 
   return it;
