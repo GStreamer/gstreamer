@@ -674,7 +674,7 @@ static GstIteratorResult
 gst_single_object_iterator_iterator_next (GstSingleObjectIterator * it,
     gpointer * result)
 {
-  if (it->visited) {
+  if (it->visited || !it->object) {
     *result = NULL;
     return GST_ITERATOR_DONE;
   }
@@ -692,7 +692,8 @@ gst_single_object_iterator_resync (GstSingleObjectIterator * it)
 static void
 gst_single_object_iterator_free (GstSingleObjectIterator * it)
 {
-  it->free (it->object);
+  if (it->object)
+    it->free (it->object);
   g_free (it);
 }
 
@@ -717,7 +718,6 @@ gst_iterator_new_single (GType type, gpointer object, GstCopyFunction copy,
 {
   GstSingleObjectIterator *result;
 
-  g_return_val_if_fail (object != NULL, NULL);
   g_return_val_if_fail (copy != NULL, NULL);
   g_return_val_if_fail (free != NULL, NULL);
 
@@ -728,7 +728,7 @@ gst_iterator_new_single (GType type, gpointer object, GstCopyFunction copy,
       (GstIteratorResyncFunction) gst_single_object_iterator_resync,
       (GstIteratorFreeFunction) gst_single_object_iterator_free);
 
-  result->object = copy (object);
+  result->object = (object) ? copy (object) : NULL;
   result->copy = copy;
   result->free = free;
   result->visited = FALSE;
