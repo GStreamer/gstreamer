@@ -365,8 +365,6 @@ gst_directsound_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   HRESULT hRes;                 /* Result for windows functions */
   DSCBUFFERDESC descSecondary;  /* Capturebuffer decsiption */
 
-  int fmt = 0;                  /* audio format */
-
   dsoundsrc = GST_DIRECTSOUND_SRC (asrc);
 
   GST_DEBUG ("initializing directsoundsrc\n");
@@ -473,12 +471,6 @@ WAVEFORMATEX.nBlockAlign: %d, WAVEFORMATEX.nAvgBytesPerSec: %ld\n", spec->channe
 
   return TRUE;
 
-wrong_format:
-  {
-    GST_ELEMENT_ERROR (dsoundsrc, RESOURCE, OPEN_READ,
-        ("Unable to get format %d", spec->format), (NULL));
-    return FALSE;
-  }
 capture_buffer:
   {
     GST_ELEMENT_ERROR (dsoundsrc, RESOURCE, OPEN_READ,

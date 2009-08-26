@@ -355,17 +355,44 @@ dnl *** sys plug-ins ***
 
 dnl DirectSound
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTSOUND, true)
-AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], [directsound], [
-    AC_CHECK_HEADER(dsound.h, HAVE_DIRECTSOUND="yes", HAVE_DIRECTSOUND="no")
-])
+AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], directsoundsrc, [
+  HAVE_DIRECTSOUND="no"
+  save_CFLAGS="$CFLAGS"
+  save_LDFLAGS="$LDFLAGS"
+  save_LIBS="$LIBS"
+  CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
+  LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
+  LIBS="$LIBS -ldsound -ldxerr9 -luser32"
+  AC_MSG_CHECKING(for DirectSound LDFLAGS)
+  AC_LINK_IFELSE([
+#include <windows.h>
+#include <dxerr9.h>
+#include <dsound.h>
 
-AC_CHECK_LIB( dsound, DXGetErrorString9, [
-	echo "Errorstrings in DirectSoundSink - enabled"
-	AM_CONDITIONAL( DSOUND9, true )
-], [
-	echo "Errorstrings in DirectSoundSink - disabled"
-	AM_CONDITIONAL( DSOUND9, false )
-] )
+int main ()
+{
+  DXGetErrorString9 (0);
+  DirectSoundCreate(NULL, NULL, NULL);
+
+  return 0;
+}
+],
+    [HAVE_DIRECTSOUND="yes"],
+    [HAVE_DIRECTSOUND="no"])
+  AC_MSG_RESULT($HAVE_DIRECTSOUND)
+  CFLAGS=$save_CFLAGS
+  LDFLAGS=$save_LDFLAGS
+  LIBS=$save_LIBS
+
+  if test "x$HAVE_DIRECTSOUND" = "xyes";  then
+    dnl this is much more than we want
+    DIRECTSOUND_LIBS="-ldsound -ldxerr9 -luser32"
+    AC_SUBST(DIRECTX_CFLAGS)
+    AC_SUBST(DIRECTX_LDFLAGS)
+    AC_SUBST(DIRECTSOUND_LIBS)
+  fi
+  AC_SUBST(HAVE_DIRECTSOUND)
+])
 
 dnl DirectDraw
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTDRAW, true)
@@ -374,8 +401,8 @@ AG_GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
   save_CFLAGS="$CFLAGS"
   save_LDFLAGS="$LDFLAGS"
   save_LIBS="$LIBS"
-  CFLAGS="$CFLAGS $DIRECTDRAW_CFLAGS"
-  LDFLAGS="$LDFLAGS $DIRECTDRAW_LDFLAGS"
+  CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
+  LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -lddraw -lgdi32"
   AC_MSG_CHECKING(for DirectDraw LDFLAGS)
   AC_LINK_IFELSE([
@@ -400,8 +427,8 @@ int main ()
   if test "x$HAVE_DIRECTDRAW" = "xyes";  then
     dnl this is much more than we want
     DIRECTDRAW_LIBS="-lddraw -ldxguid -lgdi32"
-    AC_SUBST(DIRECTDRAW_CFLAGS)
-    AC_SUBST(DIRECTDRAW_LDFLAGS)
+    AC_SUBST(DIRECTX_CFLAGS)
+    AC_SUBST(DIRECTX_LDFLAGS)
     AC_SUBST(DIRECTDRAW_LIBS)
   fi
   AC_SUBST(HAVE_DIRECTDRAW)
