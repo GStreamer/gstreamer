@@ -138,6 +138,19 @@ typedef void		  (*GstIteratorFreeFunction)	(GstIterator *it);
 typedef gboolean	  (*GstIteratorFoldFunction)    (gpointer item, GValue *ret, gpointer user_data);
 
 /**
+ * GstCopyFunction:
+ * @object: The object to copy
+ *
+ * A function to create a copy of some object or
+ * increase it's reference count.
+ *
+ * Returns: a copy of the object or the same object with increased reference count
+ *
+ * Since: 0.10.25
+ */
+typedef gpointer          (*GstCopyFunction)             (gpointer object);
+
+/**
  * GST_ITERATOR:
  * @it: the #GstIterator value
  *
@@ -225,6 +238,11 @@ GstIterator*		gst_iterator_new_list		(GType type,
 							 gpointer owner,
 							 GstIteratorItemFunction item,
 							 GstIteratorDisposeFunction free);
+
+GstIterator*            gst_iterator_new_single         (GType type,
+                                                         gpointer object,
+                                                         GstCopyFunction copy,
+                                                         GFreeFunc free);
 
 /* using iterators */
 GstIteratorResult	gst_iterator_next		(GstIterator *it, gpointer *elem);
