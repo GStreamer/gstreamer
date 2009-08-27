@@ -270,6 +270,7 @@ static gint nb_frame_size[16] = {
   12, 13, 15, 17, 19, 20, 26, 31,
   5, -1, -1, -1, -1, -1, -1, 0
 };
+
 static gint wb_frame_size[16] = {
   17, 23, 32, 36, 40, 46, 50, 58,
   60, -1, -1, -1, -1, -1, -1, 0
@@ -291,7 +292,7 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   else
     frame_size = wb_frame_size;
 
-  /* when we get here, 1 channel, 8000/16000 Hz, octet aligned, no CRC, 
+  /* when we get here, 1 channel, 8000/16000 Hz, octet aligned, no CRC,
    * no robust sorting, no interleaving data is to be depayloaded */
   {
     guint8 *payload, *p, *dp;
@@ -311,7 +312,7 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     /* depay CMR. The CMR is used by the sender to request
      * a new encoding mode.
      *
-     *  0 1 2 3 4 5 6 7 
+     *  0 1 2 3 4 5 6 7
      * +-+-+-+-+-+-+-+-+
      * | CMR   |R|R|R|R|
      * +-+-+-+-+-+-+-+-+
@@ -335,8 +336,8 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         goto wrong_interleaving;
     }
 
-    /* 
-     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
+    /*
+     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
      * +-+-+-+-+-+-+-+-+..
      * |F|  FT   |Q|P|P| more FT..
      * +-+-+-+-+-+-+-+-+..

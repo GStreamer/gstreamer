@@ -32,10 +32,10 @@ GST_DEBUG_CATEGORY_STATIC (rtpamrpay_debug);
 
 /* references:
  *
- * RFC 3267 - Real-Time Transport Protocol (RTP) Payload Format and File 
- *    Storage Format for the Adaptive Multi-Rate (AMR) and Adaptive 
+ * RFC 3267 - Real-Time Transport Protocol (RTP) Payload Format and File
+ *    Storage Format for the Adaptive Multi-Rate (AMR) and Adaptive
  *    Multi-Rate Wideband (AMR-WB) Audio Codecs.
- *    
+ *
  * ETSI TS 126 201 V6.0.0 (2004-12) - Digital cellular telecommunications system (Phase 2+);
  *                 Universal Mobile Telecommunications System (UMTS);
  *                          AMR speech codec, wideband;
@@ -164,11 +164,11 @@ gst_rtp_amr_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 
   gst_basertppayload_set_outcaps (basepayload,
       "encoding-params", G_TYPE_STRING, "1", "octet-align", G_TYPE_STRING, "1",
-      /* don't set the defaults 
-       * 
+      /* don't set the defaults
+       *
        * "crc", G_TYPE_STRING, "0",
        * "robust-sorting", G_TYPE_STRING, "0",
-       * "interleaving", G_TYPE_STRING, "0", 
+       * "interleaving", G_TYPE_STRING, "0",
        */
       NULL);
 
@@ -188,6 +188,7 @@ static gint nb_frame_size[16] = {
   12, 13, 15, 17, 19, 20, 26, 31,
   5, -1, -1, -1, -1, -1, -1, 0
 };
+
 static gint wb_frame_size[16] = {
   17, 23, 32, 36, 40, 46, 50, 58,
   60, -1, -1, -1, -1, -1, -1, 0
@@ -224,7 +225,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   GST_DEBUG_OBJECT (basepayload, "got %d bytes", size);
 
-  /* FIXME, only 
+  /* FIXME, only
    * octet aligned, no interleaving, single channel, no CRC,
    * no robust-sorting. To fix this you need to implement the downstream
    * negotiation function. */
@@ -282,7 +283,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* get payload, this is now writable */
   payload = gst_rtp_buffer_get_payload (outbuf);
 
-  /*   0 1 2 3 4 5 6 7 
+  /*   0 1 2 3 4 5 6 7
    *  +-+-+-+-+-+-+-+-+
    *  |  CMR  |R|R|R|R|
    *  +-+-+-+-+-+-+-+-+
