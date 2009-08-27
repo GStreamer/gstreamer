@@ -276,6 +276,8 @@ gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       gst_rtp_mp4g_depay_parse_int (structure, "constantsize", 0);
   rtpmp4gdepay->constantDuration =
       gst_rtp_mp4g_depay_parse_int (structure, "constantduration", 0);
+  rtpmp4gdepay->maxDisplacement =
+      gst_rtp_mp4g_depay_parse_int (structure, "maxdisplacement", 0);
 
 
   /* get config string */
@@ -546,6 +548,22 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
             GST_DEBUG_OBJECT (rtpmp4gdepay, "new interleave group, flushing");
             /* a new interleave group started, flush */
             gst_rtp_mp4g_depay_flush_queue (rtpmp4gdepay);
+          }
+          if (G_UNLIKELY (!rtpmp4gdepay->maxDisplacement &&
+                  rtpmp4gdepay->max_AU_index != -1
+                  && rtpmp4gdepay->max_AU_index >= AU_index)) {
+            GstBuffer *outbuf;
+
+            /* some broken non-interleaved streams have AU-index jumping around
+             * all over the place, apparently assuming receiver disregards */
+            GST_DEBUG_OBJECT (rtpmp4gdepay, "non-interleaved broken AU indices;"
+                " forcing continuous flush");
+            /* reset AU to avoid repeated DISCONT in such case */
+            outbuf = g_queue_peek_head (rtpmp4gdepay->packets);
+            if (G_LIKELY (outbuf)) {
+              rtpmp4gdepay->next_AU_index = GST_BUFFER_OFFSET (outbuf);
+              gst_rtp_mp4g_depay_flush_queue (rtpmp4gdepay);
+            }
           }
           rtpmp4gdepay->prev_rtptime = rtptime;
         } else {

@@ -49,6 +49,7 @@ struct _GstRtpMP4GDepay
 
   gint constantSize;
   gint constantDuration;
+  gint maxDisplacement;
 
   gint sizelength;
   gint indexlength;
