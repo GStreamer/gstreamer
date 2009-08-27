@@ -2891,11 +2891,23 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       }
       break;
     case ARG_PREVIEW_CAPS:
-      GST_OBJECT_LOCK (camera);
-      gst_caps_replace (&camera->preview_caps,
-          (GstCaps *) gst_value_get_caps (value));
-      GST_OBJECT_UNLOCK (camera);
-      gst_camerabin_preview_create_pipeline (camera);
+      /* Currently camerabin only provides preview for images, so we don't
+       * even handle video mode */
+      if (camera->mode == MODE_IMAGE) {
+        GstCaps *new_caps = NULL;
+
+        new_caps = (GstCaps *) gst_value_get_caps (value);
+        GST_DEBUG_OBJECT (camera,
+            "setting preview caps: %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT,
+             camera->preview_caps, new_caps);
+
+        if (!gst_caps_is_equal (camera->preview_caps, new_caps)) {
+          GST_OBJECT_LOCK (camera);
+          gst_caps_replace (&camera->preview_caps, new_caps);
+          GST_OBJECT_UNLOCK (camera);
+          gst_camerabin_preview_create_pipeline (camera);
+        }
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
