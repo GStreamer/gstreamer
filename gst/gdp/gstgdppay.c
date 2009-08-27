@@ -432,11 +432,28 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
 
       bufval = &g_array_index (buffers, GValue, i);
       buffer = g_value_peek_pointer (bufval);
+      /* this buffer is deserialized by gdpdepay as a regular buffer,
+         it needs IN_CAPS, because it's a streamheader - otherwise it
+         is mixed with regular data buffers */
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
+      GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
+
       outbuffer = gst_gdp_pay_buffer_from_buffer (this, buffer);
       if (!outbuffer) {
         g_value_unset (&array);
         goto no_buffer;
       }
+
+      /* Setting IN_CAPS as other GDP event buffers */
+      GST_DEBUG_OBJECT (this,
+          "Setting IN_CAPS flag on outgoing buffer %" GST_PTR_FORMAT,
+          outbuffer);
+      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
+      GST_BUFFER_OFFSET (outbuffer) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_OFFSET_END (outbuffer) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_TIMESTAMP (outbuffer) = GST_CLOCK_TIME_NONE;
 
       g_value_init (&value, GST_TYPE_BUFFER);
       gst_value_set_buffer (&value, outbuffer);
