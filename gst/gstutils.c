@@ -247,6 +247,26 @@ gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
   c1->ll = (guint64) v.l.high * n.l.high + c1->l.high + a1.l.high + b0.l.high;
 }
 
+/* count leading zeros */
+static guint
+gst_util_clz (guint32 val)
+{
+  guint s;
+
+  s = val | (val >> 1);
+  s |= (s >> 2);
+  s |= (s >> 4);
+  s |= (s >> 8);
+  s = ~(s | (s >> 16));
+  s = s - ((s >> 1) & 0x55555555);
+  s = (s & 0x33333333) + ((s >> 2) & 0x33333333);
+  s = (s + (s >> 4)) & 0x0f0f0f0f;
+  s += (s >> 8);
+  s = (s + (s >> 16)) & 0x3f;
+
+  return s;
+}
+
 /* based on Hacker's Delight p152 */
 static guint64
 gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
@@ -259,16 +279,7 @@ gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
 
   /* count number of leading zeroes, we know they must be in the high
    * part of denom since denom > G_MAXUINT32. */
-  s = v.l.high | (v.l.high >> 1);
-  s |= (s >> 2);
-  s |= (s >> 4);
-  s |= (s >> 8);
-  s = ~(s | (s >> 16));
-  s = s - ((s >> 1) & 0x55555555);
-  s = (s & 0x33333333) + ((s >> 2) & 0x33333333);
-  s = (s + (s >> 4)) & 0x0f0f0f0f;
-  s += (s >> 8);
-  s = (s + (s >> 16)) & 0x3f;
+  s = gst_util_clz (v.l.high);
 
   if (s > 0) {
     /* normalize divisor and dividend */
