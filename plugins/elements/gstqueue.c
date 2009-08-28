@@ -585,7 +585,7 @@ apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment,
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
-  /* if no timestamp is set, assume it's continuous with the previous 
+  /* if no timestamp is set, assume it's continuous with the previous
    * time */
   if (timestamp == GST_CLOCK_TIME_NONE)
     timestamp = segment->last_stop;
@@ -640,7 +640,7 @@ gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
     /* if this is the first buffer update the end side as well, but without the
      * duration. */
     /* FIXME : This will only be useful for current time level if the
-     * source task is running, which is not the case for ex in 
+     * source task is running, which is not the case for ex in
      * gstplaybasebin when pre-rolling.
      * See #482147 */
     /*     if (queue->cur_level.buffers == 1) */

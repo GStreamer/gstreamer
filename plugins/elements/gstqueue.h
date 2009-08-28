@@ -40,9 +40,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE))
 
 enum {
-  GST_QUEUE_NO_LEAK		= 0,
-  GST_QUEUE_LEAK_UPSTREAM	= 1,
-  GST_QUEUE_LEAK_DOWNSTREAM	= 2
+  GST_QUEUE_NO_LEAK             = 0,
+  GST_QUEUE_LEAK_UPSTREAM       = 1,
+  GST_QUEUE_LEAK_DOWNSTREAM     = 2
 };
 
 typedef struct _GstQueue GstQueue;
@@ -94,18 +94,18 @@ struct _GstQueue {
   GQueue *queue;
 
   GstQueueSize
-    cur_level,		/* currently in the queue */
-    max_size,		/* max. amount of data allowed in the queue */
-    min_threshold,	/* min. amount of data required to wake reader */
+    cur_level,          /* currently in the queue */
+    max_size,           /* max. amount of data allowed in the queue */
+    min_threshold,      /* min. amount of data required to wake reader */
     orig_min_threshold; /* Original min.threshold, for reset in EOS */
 
   /* whether we leak data, and at which end */
   gint leaky;
 
-  GMutex *qlock;	/* lock for queue (vs object lock) */
-  GCond *item_add;	/* signals buffers now available for reading */
-  GCond *item_del;	/* signals space now available for writing */
-  
+  GMutex *qlock;        /* lock for queue (vs object lock) */
+  GCond *item_add;      /* signals buffers now available for reading */
+  GCond *item_del;      /* signals space now available for writing */
+
   gboolean head_needs_discont, tail_needs_discont;
 };
 
@@ -114,11 +114,11 @@ struct _GstQueueClass {
 
   /* signals - 'running' is called from both sides
    * which might make it sort of non-useful... */
-  void (*underrun)	(GstQueue *queue);
-  void (*running)	(GstQueue *queue);
-  void (*overrun)	(GstQueue *queue);
+  void (*underrun)      (GstQueue *queue);
+  void (*running)       (GstQueue *queue);
+  void (*overrun)       (GstQueue *queue);
 
-  void (*pushing)	(GstQueue *queue);
+  void (*pushing)       (GstQueue *queue);
 };
 
 GType gst_queue_get_type (void);
