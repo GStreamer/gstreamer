@@ -38,7 +38,7 @@
  *
  * Other methods such as gst_adapter_take() and gst_adapter_take_buffer()
  * combine gst_adapter_peek() and gst_adapter_flush() in one method and are
- * potentially more convenient for some use cases. 
+ * potentially more convenient for some use cases.
  *
  * For example, a sink pad's chain function that needs to pass data to a library
  * in 512-byte chunks could be implemented like this:
@@ -49,11 +49,11 @@
  *   MyElement *this;
  *   GstAdapter *adapter;
  *   GstFlowReturn ret = GST_FLOW_OK;
- *   
- *   // will give the element an extra ref; remember to drop it 
+ *
+ *   // will give the element an extra ref; remember to drop it
  *   this = MY_ELEMENT (gst_pad_get_parent (pad));
  *   adapter = this->adapter;
- *   
+ *
  *   // put buffer into adapter
  *   gst_adapter_push (adapter, buffer);
  *   // while we can read out 512 bytes, process them
@@ -62,7 +62,7 @@
  *     ret = my_library_foo (gst_adapter_peek (adapter, 512));
  *     gst_adapter_flush (adapter, 512);
  *   }
- *   
+ *
  *   gst_object_unref (this);
  *   return ret;
  * }
@@ -100,7 +100,7 @@
  * of GstAdapter is inside one pad's chain function, in which case access is
  * serialized via the pad's STREAM_LOCK.
  *
- * Note that gst_adapter_push() takes ownership of the buffer passed. Use 
+ * Note that gst_adapter_push() takes ownership of the buffer passed. Use
  * gst_buffer_ref() before pushing it into the adapter if you still want to
  * access the buffer later. The adapter will never modify the data in the
  * buffer pushed in it.
@@ -345,7 +345,7 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
 
     head = gst_buffer_join (head, cur);
 
-    /* Delete the front list item, and store our new buffer in the 2nd list 
+    /* Delete the front list item, and store our new buffer in the 2nd list
      * item */
     adapter->buflist = g_slist_delete_link (adapter->buflist, adapter->buflist);
     g->data = head;
@@ -368,7 +368,7 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
  * of its chain function, the buffer will have an invalid data pointer after
  * your element flushes the bytes. In that case you should use
  * gst_adapter_take(), which returns a freshly-allocated buffer that you can set
- * as #GstBuffer malloc_data or the potentially more performant 
+ * as #GstBuffer malloc_data or the potentially more performant
  * gst_adapter_take_buffer().
  *
  * Returns #NULL if @size bytes are not available.
@@ -400,7 +400,7 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
   if (GST_BUFFER_SIZE (cur) >= size + skip)
     return GST_BUFFER_DATA (cur) + skip;
 
-  /* We may be able to efficiently merge buffers in our pool to 
+  /* We may be able to efficiently merge buffers in our pool to
    * gather a big enough chunk to return it from the head buffer directly */
   if (gst_adapter_try_to_merge_up (adapter, size)) {
     /* Merged something! Check if there's enough avail now */
@@ -571,7 +571,7 @@ gst_adapter_take (GstAdapter * adapter, guint nbytes)
  *
  * Returns a #GstBuffer containing the first @nbytes bytes of the
  * @adapter. The returned bytes will be flushed from the adapter.
- * This function is potentially more performant than gst_adapter_take() 
+ * This function is potentially more performant than gst_adapter_take()
  * since it can reuse the memory in pushed buffers by subbuffering
  * or merging.
  *
@@ -579,7 +579,7 @@ gst_adapter_take (GstAdapter * adapter, guint nbytes)
  *
  * Since: 0.10.6
  *
- * Returns: a #GstBuffer containing the first @nbytes of the adapter, 
+ * Returns: a #GstBuffer containing the first @nbytes of the adapter,
  * or #NULL if @nbytes bytes are not available
  */
 GstBuffer *
@@ -674,10 +674,10 @@ gst_adapter_available (GstAdapter * adapter)
  * @adapter: a #GstAdapter
  *
  * Gets the maximum number of bytes that are immediately available without
- * requiring any expensive operations (like copying the data into a 
+ * requiring any expensive operations (like copying the data into a
  * temporary buffer).
  *
- * Returns: number of bytes that are available in @adapter without expensive 
+ * Returns: number of bytes that are available in @adapter without expensive
  * operations
  */
 guint
@@ -741,7 +741,7 @@ gst_adapter_prev_timestamp (GstAdapter * adapter, guint64 * distance)
  * @size: number of bytes to scan from offset
  *
  * Scan for pattern @pattern with applied mask @mask in the adapter data,
- * starting from offset @offset. 
+ * starting from offset @offset.
  *
  * The bytes in @pattern and @mask are interpreted left-to-right, regardless
  * of endianness.  All four bytes of the pattern must be present in the
@@ -755,7 +755,7 @@ gst_adapter_prev_timestamp (GstAdapter * adapter, guint64 * distance)
  * Example:
  * <programlisting>
  * // Assume the adapter contains 0x00 0x01 0x02 ... 0xfe 0xff
- * 
+ *
  * gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x00010203, 0, 256);
  * // -> returns 0
  * gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x00010203, 1, 255);
