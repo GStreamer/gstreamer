@@ -521,7 +521,7 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 guint64
 gst_util_uint64_scale_round (guint64 val, guint64 num, guint64 denom)
 {
-  return _gst_util_uint64_scale (val, num, denom, denom / 2);
+  return _gst_util_uint64_scale (val, num, denom, denom >> 1);
 }
 
 /**
@@ -622,7 +622,9 @@ gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 guint64
 gst_util_uint64_scale_int_round (guint64 val, gint num, gint denom)
 {
-  return _gst_util_uint64_scale_int (val, num, denom, denom / 2);
+  /* we can use a shift to divide by 2 because denom is required to be
+   * positive. */
+  return _gst_util_uint64_scale_int (val, num, denom, denom >> 1);
 }
 
 /**
