@@ -119,7 +119,7 @@ struct _GstBaseRTPPayloadClass
   gboolean      (*set_caps)             (GstBaseRTPPayload *payload, GstCaps *caps);
   /* handle a buffer, perform 0 or more gst_basertppayload_push() on
    * the RTP buffers. This function takes ownership of the buffer. */
-  GstFlowReturn (*handle_buffer)        (GstBaseRTPPayload *payload, 
+  GstFlowReturn (*handle_buffer)        (GstBaseRTPPayload *payload,
                                          GstBuffer *buffer);
   gboolean      (*handle_event)         (GstPad * pad, GstEvent * event);
   GstCaps *     (*get_caps)             (GstBaseRTPPayload *payload, GstPad * pad);
@@ -130,18 +130,18 @@ struct _GstBaseRTPPayloadClass
 
 GType           gst_basertppayload_get_type             (void);
 
-void            gst_basertppayload_set_options          (GstBaseRTPPayload *payload, 
+void            gst_basertppayload_set_options          (GstBaseRTPPayload *payload,
                                                          gchar *media, gboolean dynamic,
                                                          gchar *encoding_name,
                                                          guint32 clock_rate);
 
-gboolean        gst_basertppayload_set_outcaps          (GstBaseRTPPayload *payload, 
+gboolean        gst_basertppayload_set_outcaps          (GstBaseRTPPayload *payload,
                                                          gchar *fieldname, ...);
 
 gboolean        gst_basertppayload_is_filled            (GstBaseRTPPayload *payload,
                                                          guint size, GstClockTime duration);
 
-GstFlowReturn   gst_basertppayload_push                 (GstBaseRTPPayload *payload, 
+GstFlowReturn   gst_basertppayload_push                 (GstBaseRTPPayload *payload,
                                                          GstBuffer *buffer);
 
 GstFlowReturn   gst_basertppayload_push_list            (GstBaseRTPPayload *payload,
