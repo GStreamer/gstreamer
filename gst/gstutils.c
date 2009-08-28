@@ -675,7 +675,7 @@ gst_util_seqnum_next (void)
  * @s2: Another sequence number.
  *
  * Compare two sequence numbers, handling wraparound.
- * 
+ *
  * The current implementation just returns (gint32)(@s1 - @s2).
  *
  * Returns: A negative number if @s1 is before @s2, 0 if they are equal, or a
@@ -2547,9 +2547,9 @@ gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
  * If the buffers point to contiguous areas of memory, the buffer
  * is created without copying the data.
  *
- * This is a convenience function for C programmers. See also 
- * gst_buffer_merge(), which does the same thing without 
- * unreffing the input parameters. Language bindings without 
+ * This is a convenience function for C programmers. See also
+ * gst_buffer_merge(), which does the same thing without
+ * unreffing the input parameters. Language bindings without
  * explicit reference counting should not wrap this function.
  *
  * Returns: the new #GstBuffer which is the concatenation of the source buffers.
@@ -2980,7 +2980,7 @@ gst_pad_query_peer_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
  * @value: value to set
  *
  * Unconditionally sets the atomic integer to @value.
- * 
+ *
  * Deprecated: Use g_atomic_int_set().
  *
  */
@@ -3580,37 +3580,37 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
 
 /**
  * gst_type_register_static_full:
- * @parent_type: The GType of the parent type the newly registered type will 
+ * @parent_type: The GType of the parent type the newly registered type will
  *   derive from
  * @type_name: NULL-terminated string used as the name of the new type
  * @class_size: Size of the class structure.
  * @base_init: Location of the base initialization function (optional).
  * @base_finalize: Location of the base finalization function (optional).
- * @class_init: Location of the class initialization function for class types 
- *   Location of the default vtable inititalization function for interface 
+ * @class_init: Location of the class initialization function for class types
+ *   Location of the default vtable inititalization function for interface
  *   types. (optional)
  * @class_finalize: Location of the class finalization function for class types.
- *   Location of the default vtable finalization function for interface types. 
+ *   Location of the default vtable finalization function for interface types.
  *   (optional)
  * @class_data: User-supplied data passed to the class init/finalize functions.
- * @instance_size: Size of the instance (object) structure (required for 
+ * @instance_size: Size of the instance (object) structure (required for
  *   instantiatable types only).
- * @n_preallocs: The number of pre-allocated (cached) instances to reserve 
+ * @n_preallocs: The number of pre-allocated (cached) instances to reserve
  *   memory for (0 indicates no caching). Ignored on recent GLib's.
- * @instance_init: Location of the instance initialization function (optional, 
+ * @instance_init: Location of the instance initialization function (optional,
  *   for instantiatable types only).
- * @value_table: A GTypeValueTable function table for generic handling of 
- *   GValues of this type (usually only useful for fundamental types). 
+ * @value_table: A GTypeValueTable function table for generic handling of
+ *   GValues of this type (usually only useful for fundamental types).
  * @flags: #GTypeFlags for this GType. E.g: G_TYPE_FLAG_ABSTRACT
  *
- * Helper function which constructs a #GTypeInfo structure and registers a 
- * GType, but which generates less linker overhead than a static const 
+ * Helper function which constructs a #GTypeInfo structure and registers a
+ * GType, but which generates less linker overhead than a static const
  * #GTypeInfo structure. For further details of the parameters, please see
  * #GTypeInfo in the GLib documentation.
  *
- * Registers type_name as the name of a new static type derived from 
- * parent_type. The value of flags determines the nature (e.g. abstract or 
- * not) of the type. It works by filling a GTypeInfo struct and calling 
+ * Registers type_name as the name of a new static type derived from
+ * parent_type. The value of flags determines the nature (e.g. abstract or
+ * not) of the type. It works by filling a GTypeInfo struct and calling
  * g_type_info_register_static().
  *
  * Returns: A #GType for the newly-registered type.
