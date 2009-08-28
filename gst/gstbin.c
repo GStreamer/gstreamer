@@ -202,6 +202,9 @@ struct _GstBinPrivate
   gboolean pending_async_done;
 
   guint32 structure_cookie;
+
+  /* cached index */
+  GstIndex *index;
 };
 
 typedef struct
@@ -231,6 +234,8 @@ static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
 
 static void gst_bin_set_index_func (GstElement * element, GstIndex * index);
+static GstIndex *gst_bin_get_index_func (GstElement * element);
+
 static GstClock *gst_bin_provide_clock_func (GstElement * element);
 static gboolean gst_bin_set_clock_func (GstElement * element, GstClock * clock);
 
@@ -459,6 +464,7 @@ gst_bin_class_init (GstBinClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_bin_change_state_func);
   gstelement_class->get_state = GST_DEBUG_FUNCPTR (gst_bin_get_state_func);
+  gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_bin_get_index_func);
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_bin_set_index_func);
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_bin_provide_clock_func);
@@ -513,6 +519,7 @@ gst_bin_dispose (GObject * object)
   GstBus **child_bus_p = &bin->child_bus;
   GstClock **provided_clock_p = &bin->provided_clock;
   GstElement **clock_provider_p = &bin->clock_provider;
+  GstIndex **index_p = &bin->priv->index;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
@@ -520,6 +527,7 @@ gst_bin_dispose (GObject * object)
   gst_object_replace ((GstObject **) child_bus_p, NULL);
   gst_object_replace ((GstObject **) provided_clock_p, NULL);
   gst_object_replace ((GstObject **) clock_provider_p, NULL);
+  gst_object_replace ((GstObject **) index_p, NULL);
   bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
   GST_OBJECT_UNLOCK (object);
 
@@ -588,6 +596,23 @@ gst_bin_get_property (GObject * object, guint prop_id,
   }
 }
 
+/* return the cached index */
+static GstIndex *
+gst_bin_get_index_func (GstElement * element)
+{
+  GstBin *bin;
+  GstIndex *result;
+
+  bin = GST_BIN (element);
+
+  GST_OBJECT_LOCK (bin);
+  if ((result = bin->priv->index))
+    gst_object_ref (result);
+  GST_OBJECT_UNLOCK (bin);
+
+  return result;
+}
+
 /* set the index on all elements in this bin
  *
  * MT safe
@@ -598,11 +623,25 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
   GstBin *bin;
   gboolean done;
   GstIterator *it;
+  GstIndex *old;
 
   bin = GST_BIN (element);
 
+  GST_OBJECT_LOCK (bin);
+  old = bin->priv->index;
+  if (G_UNLIKELY (old == index))
+    goto was_set;
+  if (index)
+    gst_object_ref (index);
+  bin->priv->index = index;
+  GST_OBJECT_UNLOCK (bin);
+
+  if (old)
+    gst_object_unref (old);
+
   it = gst_bin_iterate_elements (bin);
 
+  /* set the index on all elements in the bin */
   done = FALSE;
   while (!done) {
     gpointer data;
@@ -630,6 +669,14 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
     }
   }
   gst_iterator_free (it);
+  return;
+
+was_set:
+  {
+    GST_DEBUG_OBJECT (bin, "index was already set");
+    GST_OBJECT_UNLOCK (bin);
+    return;
+  }
 }
 
 /* set the clock on all elements in this bin
@@ -995,6 +1042,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
    * that is not important right now. When the pipeline goes to PLAYING,
    * a new clock will be selected */
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
+  /* set the cached index on the children */
+  gst_element_set_index (element, bin->priv->index);
 
   ret = GST_STATE_RETURN (bin);
   /* no need to update the state if we are in error */
