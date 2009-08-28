@@ -453,6 +453,7 @@ EXPORTS
 	gst_iterator_item_get_type
 	gst_iterator_new
 	gst_iterator_new_list
+	gst_iterator_new_single
 	gst_iterator_next
 	gst_iterator_push
 	gst_iterator_result_get_type
