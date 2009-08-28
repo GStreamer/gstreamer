@@ -204,6 +204,16 @@ typedef union
   } l;
 } GstUInt64;
 
+#if defined (__x86_64__) && defined (__GNUC__)
+static void
+gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
+    guint64 arg2)
+{
+  __asm__ __volatile__ ("mul %3":"=a" (c0->ll), "=d" (c1->ll)
+      :"a" (arg1), "g" (arg2)
+      );
+}
+#else /* defined (__x86_64__) */
 /* multiply two 64-bit unsigned ints into a 128-bit unsigned int.  the high
  * and low 64 bits of the product are placed in c1 and c0 respectively.
  * this operation cannot overflow. */
@@ -246,8 +256,21 @@ gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
    * the high words of a1 and b0 to b1, the result is c1. */
   c1->ll = (guint64) v.l.high * n.l.high + c1->l.high + a1.l.high + b0.l.high;
 }
+#endif /* defined (__x86_64__) */
 
 /* count leading zeros */
+#if defined (__x86_64__) && defined (__GNUC__)
+static guint
+gst_util_clz (guint32 val)
+{
+  guint s;
+
+  __asm__ __volatile__ ("bsrl %0, %0    \n\t"
+      "xor $31, %0    \n\t":"=r" (s):"0" (val)
+      );
+  return s;
+}
+#else /* defined (__x86_64__) */
 static guint
 gst_util_clz (guint32 val)
 {
@@ -266,6 +289,7 @@ gst_util_clz (guint32 val)
 
   return s;
 }
+#endif /* defined (__x86_64__) */
 
 /* based on Hacker's Delight p152 */
 static guint64
@@ -329,6 +353,21 @@ gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
 /* multiply a 64-bit unsigned int by a 32-bit unsigned int into a 96-bit
  * unsigned int.  the high 64 bits and low 32 bits of the product are
  * placed in c1 and c0 respectively.  this operation cannot overflow. */
+#if defined (__x86_64__) && defined (__GNUC__)
+static void
+gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
+    guint32 arg2)
+{
+  __asm__ __volatile__ ("mul %%rcx               \n\t"
+      "mov %%rax, %%rcx        \n\t"
+      "shl $32, %%rdx          \n\t"
+      "shr $32, %%rcx          \n\t"
+      "or  %%rcx, %%rdx        \n\t"
+      "and $0xffffffff, %%eax  \n\t":"=a" (c0->ll), "=d" (c1->ll)
+      :"a" (arg1), "c" ((guint64) arg2)
+      );
+}
+#else /* defined (__x86_64__) */
 static void
 gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
     guint32 arg2)
@@ -341,6 +380,7 @@ gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
   c1->ll = (guint64) a.l.high * arg2 + c0->l.high;
   c0->l.high = 0;
 }
+#endif /* defined (__x86_64__) */
 
 /* divide a 96-bit unsigned int by a 32-bit unsigned int when we know the
  * quotient fits into 64 bits.  the high 64 bits and low 32 bits of the
