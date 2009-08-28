@@ -46,6 +46,12 @@
 
 #include <errno.h>
 
+#ifdef G_OS_WIN32
+#  define WIN32_LEAN_AND_MEAN   /* prevents from including too many things */
+#  include <windows.h>          /* QueryPerformance* stuff */
+#  undef WIN32_LEAN_AND_MEAN
+#endif /* G_OS_WIN32 */
+
 /* Define this to get some extra debug about jitter from each clock_wait */
 #undef WAIT_DEBUGGING
 
@@ -55,6 +61,11 @@ struct _GstSystemClockPrivate
   GstPoll *timer;
   gint wakeup_count;            /* the number of entries with a pending wakeup */
   gboolean async_wakeup;        /* if the wakeup was because of a async list change */
+
+#ifdef G_OS_WIN32
+  LARGE_INTEGER start;
+  LARGE_INTEGER frequency;
+#endif                          /* G_OS_WIN32 */
 };
 
 #define GST_SYSTEM_CLOCK_GET_PRIVATE(obj)  \
@@ -154,6 +165,14 @@ gst_system_clock_init (GstSystemClock * clock)
 
   clock->priv->clock_type = DEFAULT_CLOCK_TYPE;
   clock->priv->timer = gst_poll_new_timer ();
+
+#ifdef G_OS_WIN32
+  QueryPerformanceFrequency (&clock->priv->frequency);
+  /* can be 0 if the hardware does not have hardware support */
+  if (clock->priv->frequency.QuadPart != 0)
+    /* we take a base time so that time starts from 0 to ease debugging */
+    QueryPerformanceCounter (&clock->priv->start);
+#endif /* G_OS_WIN32 */
 
 #if 0
   /* Uncomment this to start the async clock thread straight away */
@@ -459,42 +478,67 @@ clock_type_to_posix_id (GstClockType clock_type)
 static GstClockTime
 gst_system_clock_get_internal_time (GstClock * clock)
 {
-#ifdef HAVE_POSIX_TIMERS
-  GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
-  clockid_t ptype;
-  struct timespec ts;
+#ifdef G_OS_WIN32
+  if (clock->priv->frequency.QuadPart != 0) {
+    GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
+    LARGE_INTEGER now;
 
-  ptype = clock_type_to_posix_id (sysclock->priv->clock_type);
+    /* we prefer the highly accurate performance counters on windows */
+    QueryPerformanceCounter (&now);
 
-  if (G_UNLIKELY (clock_gettime (ptype, &ts)))
-    return GST_CLOCK_TIME_NONE;
+    return gst_util_uint64_scale (now.QuadPart - sysclock->priv->start.QuadPart,
+        GST_SECOND, sysclock->priv->frequency.QuadPart);
+  } else
+#endif /* G_OS_WIN32 */
+#if !defined HAVE_POSIX_TIMERS
+  {
+    GTimeVal timeval;
 
-  return GST_TIMESPEC_TO_TIME (ts);
+    g_get_current_time (&timeval);
+
+    return GST_TIMEVAL_TO_TIME (timeval);
+  }
 #else
-  GTimeVal timeval;
+  {
+    GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
+    clockid_t ptype;
+    struct timespec ts;
 
-  g_get_current_time (&timeval);
+    ptype = clock_type_to_posix_id (sysclock->priv->clock_type);
 
-  return GST_TIMEVAL_TO_TIME (timeval);
+    if (G_UNLIKELY (clock_gettime (ptype, &ts)))
+      return GST_CLOCK_TIME_NONE;
+
+    return GST_TIMESPEC_TO_TIME (ts);
+  }
 #endif
 }
 
 static guint64
 gst_system_clock_get_resolution (GstClock * clock)
 {
+#ifdef G_OS_WIN32
+  if (clock->priv->frequency.QuadPart != 0) {
+    return GST_SECOND / sysclock->priv->frequency.QuadPart;
+  } else
+#endif /* G_OS_WIN32 */
 #ifdef HAVE_POSIX_TIMERS
-  GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
-  clockid_t ptype;
-  struct timespec ts;
+  {
+    GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
+    clockid_t ptype;
+    struct timespec ts;
 
-  ptype = clock_type_to_posix_id (sysclock->priv->clock_type);
+    ptype = clock_type_to_posix_id (sysclock->priv->clock_type);
 
-  if (G_UNLIKELY (clock_getres (ptype, &ts)))
-    return GST_CLOCK_TIME_NONE;
+    if (G_UNLIKELY (clock_getres (ptype, &ts)))
+      return GST_CLOCK_TIME_NONE;
 
-  return GST_TIMESPEC_TO_TIME (ts);
+    return GST_TIMESPEC_TO_TIME (ts);
+  }
 #else
-  return 1 * GST_USECOND;
+  {
+    return 1 * GST_USECOND;
+  }
 #endif
 }
 
