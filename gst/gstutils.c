@@ -205,7 +205,7 @@ typedef union
 } GstUInt64;
 
 #if defined (__x86_64__) && defined (__GNUC__)
-static void
+static inline void
 gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
     guint64 arg2)
 {
@@ -217,7 +217,7 @@ gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
 /* multiply two 64-bit unsigned ints into a 128-bit unsigned int.  the high
  * and low 64 bits of the product are placed in c1 and c0 respectively.
  * this operation cannot overflow. */
-static void
+static inline void
 gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
     guint64 arg2)
 {
@@ -260,7 +260,7 @@ gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
 
 /* count leading zeros */
 #if defined (__x86_64__) && defined (__GNUC__)
-static guint
+static inline guint
 gst_util_clz (guint32 val)
 {
   guint s;
@@ -271,7 +271,7 @@ gst_util_clz (guint32 val)
   return s;
 }
 #else /* defined (__x86_64__) */
-static guint
+static inline guint
 gst_util_clz (guint32 val)
 {
   guint s;
@@ -292,7 +292,7 @@ gst_util_clz (guint32 val)
 #endif /* defined (__x86_64__) */
 
 /* based on Hacker's Delight p152 */
-static guint64
+static inline guint64
 gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
 {
   GstUInt64 q1, q0, rhat;
@@ -354,7 +354,7 @@ gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
  * unsigned int.  the high 64 bits and low 32 bits of the product are
  * placed in c1 and c0 respectively.  this operation cannot overflow. */
 #if defined (__x86_64__) && defined (__GNUC__)
-static void
+static inline void
 gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
     guint32 arg2)
 {
@@ -368,7 +368,7 @@ gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
       );
 }
 #else /* defined (__x86_64__) */
-static void
+static inline void
 gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
     guint32 arg2)
 {
@@ -385,7 +385,7 @@ gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
 /* divide a 96-bit unsigned int by a 32-bit unsigned int when we know the
  * quotient fits into 64 bits.  the high 64 bits and low 32 bits of the
  * numerator are expected in c1 and c0 respectively. */
-static guint64
+static inline guint64
 gst_util_div96_32 (guint64 c1, guint64 c0, guint32 denom)
 {
   c0 += (c1 % denom) << 32;
