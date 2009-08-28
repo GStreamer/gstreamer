@@ -349,6 +349,18 @@ gst_util_div96_32 (guint64 c1, guint64 c0, guint32 denom)
   return ((c1 / denom) << 32) + (c0 / denom);
 }
 
+/* add correction with carry */
+#define CORRECT(c0,c1,val)                    \
+  if (val) {                                  \
+    if (G_MAXUINT64 - c0.ll < val) {          \
+      if (G_UNLIKELY (c1.ll == G_MAXUINT64))  \
+        /* overflow */                        \
+        return G_MAXUINT64;                   \
+      c1.ll++;                                \
+    }                                         \
+    c0.ll += val;                             \
+  }
+
 static guint64
 gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
     guint64 denom, GstRoundingMode mode)
@@ -362,24 +374,12 @@ gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
   switch (mode) {
     case GST_ROUND_TONEAREST:
       /* add 1/2 the denominator to the numerator with carry */
-      if (G_MAXUINT64 - c0.ll < denom / 2) {
-        if (G_UNLIKELY (c1.ll == G_MAXUINT64))
-          /* overflow */
-          return G_MAXUINT64;
-        c1.ll++;
-      }
-      c0.ll += denom / 2;
+      CORRECT (c0, c1, denom / 2);
       break;
 
     case GST_ROUND_UP:
       /* add denominator - 1 to the numerator with carry */
-      if (G_MAXUINT64 - c0.ll < denom - 1) {
-        if (G_UNLIKELY (c1.ll == G_MAXUINT64))
-          /* overflow */
-          return G_MAXUINT64;
-        c1.ll++;
-      }
-      c0.ll += denom - 1;
+      CORRECT (c0, c1, denom - 1);
       break;
 
     case GST_ROUND_DOWN:
@@ -408,24 +408,12 @@ gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num,
   switch (mode) {
     case GST_ROUND_TONEAREST:
       /* add 1/2 the denominator to the numerator with carry */
-      if (G_MAXUINT64 - c0.ll < denom / 2) {
-        if (G_UNLIKELY (c1.ll == G_MAXUINT64))
-          /* overflow */
-          return G_MAXUINT64;
-        c1.ll++;
-      }
-      c0.ll += denom / 2;
+      CORRECT (c0, c1, denom / 2);
       break;
 
     case GST_ROUND_UP:
       /* add denominator - 1 to the numerator with carry */
-      if (G_MAXUINT64 - c0.ll < denom - 1) {
-        if (G_UNLIKELY (c1.ll == G_MAXUINT64))
-          /* overflow */
-          return G_MAXUINT64;
-        c1.ll++;
-      }
-      c0.ll += denom - 1;
+      CORRECT (c0, c1, denom - 1);
       break;
 
     case GST_ROUND_DOWN:
