@@ -327,7 +327,7 @@ gst_element_default_error (GObject * object, GstObject * source, GError * error,
  * Makes the element free the previously requested pad as obtained
  * with gst_element_get_request_pad().
  *
- * This does not unref the pad. If the pad was created by using 
+ * This does not unref the pad. If the pad was created by using
  * gst_element_get_request_pad(), gst_element_release_request_pad() needs to be
  * followed by gst_object_unref() to free the @pad.
  *
@@ -451,6 +451,7 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
   GstClock **clock_p;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (clock == NULL || GST_IS_CLOCK (clock), FALSE);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
@@ -590,10 +591,10 @@ gst_element_set_start_time (GstElement * element, GstClockTime time)
  * @element: a #GstElement.
  *
  * Returns the start time of the element. The start time is the
- * running time of the clock when this element was last put to PAUSED. 
+ * running time of the clock when this element was last put to PAUSED.
  *
  * Usually the start_time is managed by a toplevel element such as
- * #GstPipeline. 
+ * #GstPipeline.
  *
  * MT safe.
  *
@@ -653,7 +654,7 @@ gst_element_set_index (GstElement * element, GstIndex * index)
   GstElementClass *oclass;
 
   g_return_if_fail (GST_IS_ELEMENT (element));
-  g_return_if_fail (GST_IS_INDEX (index));
+  g_return_if_fail (index == NULL || GST_IS_INDEX (index));
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
@@ -1251,12 +1252,12 @@ gst_element_class_set_details (GstElementClass * klass,
  * @classification: String describing the type of element, as an unordered list
  * separated with slashes ('/'). See draft-klass.txt of the design docs
  * for more details and common types. E.g: "Sink/File"
- * @description: Sentence describing the purpose of the element. 
+ * @description: Sentence describing the purpose of the element.
  * E.g: "Write stream to a file"
- * @author: Name and contact details of the author(s). Use \n to separate 
+ * @author: Name and contact details of the author(s). Use \n to separate
  * multiple author details. E.g: "Joe Bloggs &lt;joe.blogs at foo.com&gt;"
  *
- * Sets the detailed information for a #GstElementClass. Simpler version of 
+ * Sets the detailed information for a #GstElementClass. Simpler version of
  * gst_element_class_set_details() that generates less linker overhead.
  * <note>This function is for use in _base_init functions only.</note>
  *
