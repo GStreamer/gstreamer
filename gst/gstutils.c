@@ -204,14 +204,6 @@ typedef union
   } l;
 } GstUInt64;
 
-/* used internally by muldiv functions to control rounding mode */
-typedef enum
-{
-  GST_ROUND_TONEAREST,
-  GST_ROUND_UP,
-  GST_ROUND_DOWN,
-} GstRoundingMode;
-
 /* multiply two 64-bit unsigned ints into a 128-bit unsigned int.  the high
  * and low 64 bits of the product are placed in c1 and c0 respectively.
  * this operation cannot overflow. */
@@ -363,29 +355,15 @@ gst_util_div96_32 (guint64 c1, guint64 c0, guint32 denom)
 
 static guint64
 gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
-    guint64 denom, GstRoundingMode mode)
+    guint64 denom, guint64 correct)
 {
   GstUInt64 c1, c0;
 
   /* compute 128-bit numerator product */
   gst_util_uint64_mul_uint64 (&c1, &c0, val, num);
 
-  /* condition numerator based on rounding mode */
-  switch (mode) {
-    case GST_ROUND_TONEAREST:
-      /* add 1/2 the denominator to the numerator with carry */
-      CORRECT (c0, c1, denom / 2);
-      break;
-
-    case GST_ROUND_UP:
-      /* add denominator - 1 to the numerator with carry */
-      CORRECT (c0, c1, denom - 1);
-      break;
-
-    case GST_ROUND_DOWN:
-      /* natural behaviour */
-      break;
-  }
+  /* perform rounding correction */
+  CORRECT (c0, c1, correct);
 
   /* high word as big as or bigger than denom --> overflow */
   if (G_UNLIKELY (c1.ll >= denom))
@@ -397,7 +375,7 @@ gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
 
 static inline guint64
 gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num,
-    guint32 denom, GstRoundingMode mode)
+    guint32 denom, guint32 correct)
 {
   GstUInt64 c1, c0;
 
@@ -405,21 +383,7 @@ gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num,
   gst_util_uint64_mul_uint32 (&c1, &c0, val, num);
 
   /* condition numerator based on rounding mode */
-  switch (mode) {
-    case GST_ROUND_TONEAREST:
-      /* add 1/2 the denominator to the numerator with carry */
-      CORRECT (c0, c1, denom / 2);
-      break;
-
-    case GST_ROUND_UP:
-      /* add denominator - 1 to the numerator with carry */
-      CORRECT (c0, c1, denom - 1);
-      break;
-
-    case GST_ROUND_DOWN:
-      /* natural behaviour */
-      break;
-  }
+  CORRECT (c0, c1, correct);
 
   /* high 32 bits as big as or bigger than denom --> overflow */
   if (G_UNLIKELY (c1.l.high >= denom))
@@ -432,7 +396,7 @@ gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num,
 /* the guts of the gst_util_uint64_scale() variants */
 static guint64
 _gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom,
-    GstRoundingMode mode)
+    guint64 correct)
 {
   g_return_val_if_fail (denom != 0, G_MAXUINT64);
 
@@ -447,16 +411,16 @@ _gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom,
     /* num is low --> use 96 bit muldiv */
     if (G_LIKELY (num <= G_MAXUINT32))
       return gst_util_uint64_scale_uint32_unchecked (val, (guint32) num,
-          (guint32) denom, mode);
+          (guint32) denom, correct);
 
     /* num is high but val is low --> swap and use 96-bit muldiv */
     if (G_LIKELY (val <= G_MAXUINT32))
       return gst_util_uint64_scale_uint32_unchecked (num, (guint32) val,
-          (guint32) denom, mode);
+          (guint32) denom, correct);
   }
 
   /* val is high and num is high --> use 128-bit muldiv */
-  return gst_util_uint64_scale_uint64_unchecked (val, num, denom, mode);
+  return gst_util_uint64_scale_uint64_unchecked (val, num, denom, correct);
 }
 
 /**
@@ -481,7 +445,7 @@ _gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom,
 guint64
 gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 {
-  return _gst_util_uint64_scale (val, num, denom, GST_ROUND_DOWN);
+  return _gst_util_uint64_scale (val, num, denom, 0);
 }
 
 /**
@@ -506,7 +470,7 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 guint64
 gst_util_uint64_scale_round (guint64 val, guint64 num, guint64 denom)
 {
-  return _gst_util_uint64_scale (val, num, denom, GST_ROUND_TONEAREST);
+  return _gst_util_uint64_scale (val, num, denom, denom / 2);
 }
 
 /**
@@ -531,13 +495,12 @@ gst_util_uint64_scale_round (guint64 val, guint64 num, guint64 denom)
 guint64
 gst_util_uint64_scale_ceil (guint64 val, guint64 num, guint64 denom)
 {
-  return _gst_util_uint64_scale (val, num, denom, GST_ROUND_UP);
+  return _gst_util_uint64_scale (val, num, denom, denom - 1);
 }
 
 /* the guts of the gst_util_uint64_scale_int() variants */
 static guint64
-_gst_util_uint64_scale_int (guint64 val, gint num, gint denom,
-    GstRoundingMode mode)
+_gst_util_uint64_scale_int (guint64 val, gint num, gint denom, gint correct)
 {
   g_return_val_if_fail (denom > 0, G_MAXUINT64);
   g_return_val_if_fail (num >= 0, G_MAXUINT64);
@@ -554,27 +517,15 @@ _gst_util_uint64_scale_int (guint64 val, gint num, gint denom,
      * because val*num <= G_MAXUINT32 * G_MAXINT32 < G_MAXUINT64 -
      * G_MAXINT32, so there's room to add another gint32. */
     val *= (guint64) num;
-    switch (mode) {
-      case GST_ROUND_TONEAREST:
-        /* add 1/2 the denominator to the numerator. */
-        val += denom / 2;
-        break;
+    /* add rounding correction */
+    val += correct;
 
-      case GST_ROUND_UP:
-        /* add denominator - 1 to the numerator. */
-        val += denom - 1;
-        break;
-
-      case GST_ROUND_DOWN:
-        /* natural behaviour */
-        break;
-    }
     return val / (guint64) denom;
   }
 
   /* num and denom are not negative so casts are OK */
   return gst_util_uint64_scale_uint32_unchecked (val, (guint32) num,
-      (guint32) denom, mode);
+      (guint32) denom, (guint32) correct);
 }
 
 /**
@@ -597,7 +548,7 @@ _gst_util_uint64_scale_int (guint64 val, gint num, gint denom,
 guint64
 gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 {
-  return _gst_util_uint64_scale_int (val, num, denom, GST_ROUND_DOWN);
+  return _gst_util_uint64_scale_int (val, num, denom, 0);
 }
 
 /**
@@ -620,7 +571,7 @@ gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 guint64
 gst_util_uint64_scale_int_round (guint64 val, gint num, gint denom)
 {
-  return _gst_util_uint64_scale_int (val, num, denom, GST_ROUND_TONEAREST);
+  return _gst_util_uint64_scale_int (val, num, denom, denom / 2);
 }
 
 /**
@@ -643,7 +594,7 @@ gst_util_uint64_scale_int_round (guint64 val, gint num, gint denom)
 guint64
 gst_util_uint64_scale_int_ceil (guint64 val, gint num, gint denom)
 {
-  return _gst_util_uint64_scale_int (val, num, denom, GST_ROUND_UP);
+  return _gst_util_uint64_scale_int (val, num, denom, denom - 1);
 }
 
 /**
