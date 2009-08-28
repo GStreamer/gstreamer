@@ -284,6 +284,9 @@ gst_cdda_base_src_finalize (GObject * obj)
   g_free (cddasrc->uri);
   g_free (cddasrc->device);
 
+  if (cddasrc->index)
+    gst_object_unref (cddasrc->index);
+
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
@@ -1362,12 +1365,26 @@ static void
 gst_cdda_base_src_set_index (GstElement * element, GstIndex * index)
 {
   GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (element);
+  GstIndex *old;
 
+  GST_OBJECT_LOCK (element);
+  old = src->index;
+  if (old == index) {
+    GST_OBJECT_UNLOCK (element);
+    return;
+  }
+  if (index)
+    gst_object_ref (index);
   src->index = index;
+  GST_OBJECT_UNLOCK (element);
+  if (old)
+    gst_object_unref (old);
 
-  gst_index_get_writer_id (index, GST_OBJECT (src), &src->index_id);
-  gst_index_add_format (index, src->index_id, track_format);
-  gst_index_add_format (index, src->index_id, sector_format);
+  if (index) {
+    gst_index_get_writer_id (index, GST_OBJECT (src), &src->index_id);
+    gst_index_add_format (index, src->index_id, track_format);
+    gst_index_add_format (index, src->index_id, sector_format);
+  }
 }
 
 
@@ -1375,8 +1392,14 @@ static GstIndex *
 gst_cdda_base_src_get_index (GstElement * element)
 {
   GstCddaBaseSrc *src = GST_CDDA_BASE_SRC (element);
+  GstIndex *index;
 
-  return src->index;
+  GST_OBJECT_LOCK (element);
+  if ((index = src->index))
+    gst_object_ref (index);
+  GST_OBJECT_UNLOCK (element);
+
+  return index;
 }
 
 static gint
