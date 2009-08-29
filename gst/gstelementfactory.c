@@ -286,6 +286,8 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   GST_LOG_OBJECT (factory, "Created new elementfactory for type %s",
       g_type_name (type));
 
+  /* provide info needed during class structure setup */
+  g_type_set_qdata (type, _gst_elementclass_factory, factory);
   klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
   if ((klass->details.longname == NULL) ||
       (klass->details.klass == NULL) || (klass->details.author == NULL))
@@ -306,7 +308,6 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
         g_list_append (factory->staticpadtemplates, newt);
   }
   factory->numpadtemplates = klass->numpadtemplates;
-  g_type_set_qdata (type, _gst_elementclass_factory, factory);
 
   /* special stuff for URI handling */
   if (g_type_is_a (type, GST_TYPE_URI_HANDLER)) {
