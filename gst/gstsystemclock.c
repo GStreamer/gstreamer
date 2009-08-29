@@ -43,6 +43,7 @@
 #include "gstsystemclock.h"
 #include "gstenumtypes.h"
 #include "gstpoll.h"
+#include "gstutils.h"
 
 #include <errno.h>
 
@@ -479,8 +480,9 @@ static GstClockTime
 gst_system_clock_get_internal_time (GstClock * clock)
 {
 #ifdef G_OS_WIN32
-  if (clock->priv->frequency.QuadPart != 0) {
-    GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
+  GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
+
+  if (sysclock->priv->frequency.QuadPart != 0) {
     LARGE_INTEGER now;
 
     /* we prefer the highly accurate performance counters on windows */
@@ -518,7 +520,9 @@ static guint64
 gst_system_clock_get_resolution (GstClock * clock)
 {
 #ifdef G_OS_WIN32
-  if (clock->priv->frequency.QuadPart != 0) {
+  GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
+
+  if (sysclock->priv->frequency.QuadPart != 0) {
     return GST_SECOND / sysclock->priv->frequency.QuadPart;
   } else
 #endif /* G_OS_WIN32 */
