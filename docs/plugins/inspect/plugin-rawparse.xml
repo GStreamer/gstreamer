@@ -3,18 +3,18 @@
   <description>Parses byte streams into raw frames</description>
   <filename>../../gst/rawparse/.libs/libgstrawparse.so</filename>
   <basename>libgstrawparse.so</basename>
-  <version>0.10.13.1</version>
+  <version>0.10.14</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>audioparse</name>
       <longname>Audio Parse</longname>
       <class>Filter/Audio</class>
       <description>Converts stream into audio frames</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>src</name>
@@ -35,13 +35,13 @@
       <longname>Video Parse</longname>
       <class>Filter/Video</class>
       <description>Converts stream into video frames</description>
-      <author>David Schleef &lt;ds@schleef.org&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>David Schleef &lt;ds@schleef.org&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc){ I420, YV12, YUY2, UYVY, v210 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-rgb; video/x-raw-gray</details>
+          <details>video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray; video/x-raw-bayer</details>
         </caps>
         <caps>
           <name>sink</name>

@@ -3,11 +3,11 @@
   <description>MPEG demuxers</description>
   <filename>../../gst/mpegdemux/.libs/libgstmpegdemux.so</filename>
   <basename>libgstmpegdemux.so</basename>
-  <version>0.10.13.1</version>
+  <version>0.10.14</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>mpegpsdemux</name>
@@ -38,7 +38,7 @@
           <name>audio_%02x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>audio/mpeg, mpegversion=(int)1; audio/x-private1-lpcm; audio/x-private1-ac3; audio/x-private1-dts; audio/ac3</details>
+          <details>audio/mpeg, mpegversion=(int){ 1, 4 }; audio/x-private1-lpcm; audio/x-private1-ac3; audio/x-private1-dts; audio/ac3</details>
         </caps>
         <caps>
           <name>video_%02x</name>
@@ -77,13 +77,13 @@
           <name>audio_%04x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>audio/mpeg, mpegversion=(int){ 1, 4 }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-dts</details>
+          <details>audio/mpeg, mpegversion=(int){ 1, 4 }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-private1-lpcm</details>
         </caps>
         <caps>
           <name>video_%04x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-h264; video/x-dirac</details>
+          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-h264; video/x-dirac; video/x-wmv, wmvversion=(int)3, format=(fourcc)WVC1</details>
         </caps>
       </pads>
     </element>

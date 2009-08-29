@@ -11,7 +11,7 @@
 <ARG>
 <NAME>GstPitch::pitch</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pitch</NICK>
 <BLURB>Audio stream pitch.</BLURB>
@@ -21,7 +21,7 @@
 <ARG>
 <NAME>GstPitch::rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate</NICK>
 <BLURB>Audio stream rate.</BLURB>
@@ -31,7 +31,7 @@
 <ARG>
 <NAME>GstPitch::tempo</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tempo</NICK>
 <BLURB>Audio stream tempo.</BLURB>
@@ -41,7 +41,7 @@
 <ARG>
 <NAME>GstXvidEnc::averaging-period</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Averaging Period</NICK>
 <BLURB>[CBR] Number of frames for which XviD averages bitrate.</BLURB>
@@ -91,7 +91,7 @@
 <ARG>
 <NAME>GstXvidEnc::buffer</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer Size</NICK>
 <BLURB>[CBR] Size of the video buffers.</BLURB>
@@ -121,7 +121,7 @@
 <ARG>
 <NAME>GstXvidEnc::container-frame-overhead</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Container Frame Overhead</NICK>
 <BLURB>[PASS2] Average container overhead per frame.</BLURB>
@@ -151,7 +151,7 @@
 <ARG>
 <NAME>GstXvidEnc::flow-control-strength</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flow Control Strength</NICK>
 <BLURB>[PASS2] Overflow control strength per frame.</BLURB>
@@ -211,7 +211,7 @@
 <ARG>
 <NAME>GstXvidEnc::keyframe-reduction</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe Reduction</NICK>
 <BLURB>[PASS2] Keyframe size reduction in % of those within threshold.</BLURB>
@@ -221,7 +221,7 @@
 <ARG>
 <NAME>GstXvidEnc::keyframe-threshold</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe Threshold</NICK>
 <BLURB>[PASS2] Distance between keyframes not to be subject to reduction.</BLURB>
@@ -281,7 +281,7 @@
 <ARG>
 <NAME>GstXvidEnc::max-overflow-degradation</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Overflow Degradation</NICK>
 <BLURB>[PASS2] Amount in % that flow control can decrease frame size compared to ideal curve.</BLURB>
@@ -291,7 +291,7 @@
 <ARG>
 <NAME>GstXvidEnc::max-overflow-improvement</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Overflow Improvement</NICK>
 <BLURB>[PASS2] Amount in % that flow control can increase frame size compared to ideal curve.</BLURB>
@@ -421,7 +421,7 @@
 <ARG>
 <NAME>GstXvidEnc::reaction-delay-factor</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Reaction Delay Factor</NICK>
 <BLURB>[CBR] Reaction delay factor.</BLURB>
@@ -821,7 +821,7 @@
 <ARG>
 <NAME>GstMpeg2enc::max-gop-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,250]</RANGE>
+<RANGE>[G_MAXULONG,250]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max. GOP size</NICK>
 <BLURB>Maximal size per Group-of-Pictures (-1=default).</BLURB>
@@ -831,7 +831,7 @@
 <ARG>
 <NAME>GstMpeg2enc::min-gop-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,250]</RANGE>
+<RANGE>[G_MAXULONG,250]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Min. GOP size</NICK>
 <BLURB>Minimal size per Group-of-Pictures (-1=default).</BLURB>
@@ -911,7 +911,7 @@
 <ARG>
 <NAME>GstMpeg2enc::quantisation</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,31]</RANGE>
+<RANGE>[G_MAXULONG,31]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Quantisation</NICK>
 <BLURB>Quantisation factor (-1=cbr, 0=default, 1=best, 31=worst).</BLURB>
@@ -1341,7 +1341,7 @@
 <ARG>
 <NAME>GstSpeed::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,40]</RANGE>
+<RANGE>[0.1,40]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>speed</NICK>
 <BLURB>speed.</BLURB>
@@ -1691,7 +1691,7 @@
 <ARG>
 <NAME>GstDvbSrc::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -16865,7 +16865,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-Wet-Balance</NICK>
 <BLURB>Dry-Wet-Balance.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17475,7 +17475,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17515,7 +17515,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17815,7 +17815,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
 <BLURB>The sensitivity around the center for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,3</DEFAULT>
+<DEFAULT>0.3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17855,7 +17855,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern center</NICK>
 <BLURB>The center of the black/white separation (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18005,7 +18005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>stereo</NICK>
 <BLURB>stereo.</BLURB>
-<DEFAULT>0,1</DEFAULT>
+<DEFAULT>0.1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18161,7 +18161,7 @@
 <ARG>
 <NAME>DvbBaseBin::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -18440,12 +18440,12 @@
 
 <ARG>
 <NAME>GstVideoParse::format</NAME>
-<TYPE>GstVideoParseFormat</TYPE>
+<TYPE>GstVideoFormat</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Format</NICK>
 <BLURB>Format of images in raw stream.</BLURB>
-<DEFAULT>I420</DEFAULT>
+<DEFAULT>GST_VIDEO_FORMAT_I420</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22226,7 +22226,7 @@
 <ARG>
 <NAME>GstDCCPClientSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22266,7 +22266,7 @@
 <ARG>
 <NAME>GstDCCPServerSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22326,7 +22326,7 @@
 <ARG>
 <NAME>GstDCCPClientSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22386,7 +22386,7 @@
 <ARG>
 <NAME>GstDCCPServerSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22446,7 +22446,7 @@
 <ARG>
 <NAME>GstMpegTSDemux::program-number</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Program Number</NICK>
 <BLURB>Program number to demux for (-1 to ignore).</BLURB>
@@ -22460,13 +22460,13 @@
 <FLAGS>rw</FLAGS>
 <NICK>Overlap Length</NICK>
 <BLURB>Percentage of stride to overlap.</BLURB>
-<DEFAULT>0,2</DEFAULT>
+<DEFAULT>0.2</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstScaletempo::rate</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-2,14748e+09,2,14748e+09]</RANGE>
+<RANGE>[-2.14748e+09,2.14748e+09]</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Playback Rate</NICK>
 <BLURB>Current playback rate.</BLURB>
@@ -22506,7 +22506,7 @@
 <ARG>
 <NAME>GstPcapParse::dst-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Destination port</NICK>
 <BLURB>Destination port to restrict to.</BLURB>
@@ -22526,7 +22526,7 @@
 <ARG>
 <NAME>GstPcapParse::src-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Source port</NICK>
 <BLURB>Source port to restrict to.</BLURB>
@@ -23066,7 +23066,7 @@
 <ARG>
 <NAME>GstRTPDTMFSrc::seqnum-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sequence number Offset</NICK>
 <BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
@@ -23096,7 +23096,7 @@
 <ARG>
 <NAME>GstRTPDTMFSrc::timestamp-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
 <BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
@@ -23146,7 +23146,7 @@
 <ARG>
 <NAME>GstRTPMux::seqnum-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sequence number Offset</NICK>
 <BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
@@ -23166,7 +23166,7 @@
 <ARG>
 <NAME>GstRTPMux::timestamp-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
 <BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
@@ -25811,5 +25811,1955 @@
 <NICK>time_r</NICK>
 <BLURB>time_r.</BLURB>
 <DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-threshold0r::threshold</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>The threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-glow::blur</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Blur</NICK>
+<BLURB>Blur of the glow.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-color-distance::color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color</NICK>
+<BLURB>The Source Color.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-color-distance::color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color</NICK>
+<BLURB>The Source Color.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-color-distance::color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color-R</NICK>
+<BLURB>The Source Color.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-water::distort</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>distort</NICK>
+<BLURB>distort all surface like dropping a bucket to the floor.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-water::physics</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>physics</NICK>
+<BLURB>water density: from 1 to 4.</BLURB>
+<DEFAULT>1.37974e-309</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-water::rain</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rain</NICK>
+<BLURB>rain drops all over.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-water::randomize-swirl</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>randomize_swirl</NICK>
+<BLURB>randomize the swirling angle.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-water::smooth</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>smooth</NICK>
+<BLURB>smooth up all perturbations on the surface.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-water::splash-Y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>splash</NICK>
+<BLURB>make a big splash in the center.</BLURB>
+<DEFAULT>1.37429e-309</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-water::splash-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>splash</NICK>
+<BLURB>make a big splash in the center.</BLURB>
+<DEFAULT>1.37974e-309</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-water::surfer</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>surfer</NICK>
+<BLURB>surf the surface with a wandering finger.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-water::swirl</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>swirl</NICK>
+<BLURB>swirling whirpool in the center.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-lissajous0r::ratiox</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ratiox</NICK>
+<BLURB>x-ratio.</BLURB>
+<DEFAULT>1.64635e-316</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-lissajous0r::ratioy</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ratioy</NICK>
+<BLURB>y-ratio.</BLURB>
+<DEFAULT>1.79495e-316</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-delay0r::delaytime</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DelayTime</NICK>
+<BLURB>the delay time.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cartoon::diffspace</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>diffspace</NICK>
+<BLURB>difference space: a value from 0 to 256.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-cartoon::triplevel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>triplevel</NICK>
+<BLURB>level of trip: use high numbers, incremented by 100.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-onecol0r::color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color</NICK>
+<BLURB>the color of the image.</BLURB>
+<DEFAULT>1.25462e-37</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-onecol0r::color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color</NICK>
+<BLURB>the color of the image.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-onecol0r::color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color-R</NICK>
+<BLURB>the color of the image.</BLURB>
+<DEFAULT>9.27398e-38</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-lens-correction::brightness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>brightness</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-lens-correction::correctionnearcenter</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>correctionnearcenter</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-lens-correction::correctionnearedges</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>correctionnearedges</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-lens-correction::xcenter</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>xcenter</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-lens-correction::ycenter</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ycenter</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-brightness::brightness</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Brightness</NICK>
+<BLURB>The brightness value.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-contrast0r::contrast</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Contrast</NICK>
+<BLURB>The contrast value.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-ising0r::border-growth</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Border Growth</NICK>
+<BLURB>Border Growth.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-ising0r::spontaneous-growth</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spontaneous Growth</NICK>
+<BLURB>Spontaneous Growth.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-ising0r::temperature</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temperature</NICK>
+<BLURB>Noise Temperature.</BLURB>
+<DEFAULT>3.86793e-311</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pixeliz0r::blocksizex</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>BlockSizeX</NICK>
+<BLURB>Horizontal size of one "pixel".</BLURB>
+<DEFAULT>0.021875</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-pixeliz0r::blocksizey</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>BlockSizeY</NICK>
+<BLURB>Vertical size of one "pixel".</BLURB>
+<DEFAULT>0.0291667</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::center-position--x-</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Center position (X)</NICK>
+<BLURB>Position of the center of rotation on the X axis.</BLURB>
+<DEFAULT>2.3695e-38</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::center-position--y-</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Center position (Y)</NICK>
+<BLURB>Position of the center of rotation on the Y axis.</BLURB>
+<DEFAULT>2.38772e-38</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::don-t-blank-mask</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Don't blank mask</NICK>
+<BLURB>Mask for frame transposition is not blanked, so a trace of old transpositions is maintained.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::fill-with-image-or-black</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fill with image or black</NICK>
+<BLURB>If true, pixels that are not transposed are black, otherwise, they are copied with the original.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::invert-rotation-assignment</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert rotation assignment</NICK>
+<BLURB>If true, when mapping rotation, make inverted (wrong) assignment.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::x-axis-rotation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X axis rotation</NICK>
+<BLURB>Rotation on the X axis.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::x-axis-rotation-rate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X axis rotation rate</NICK>
+<BLURB>Rotation rate on the X axis.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::y-axis-rotation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y axis rotation</NICK>
+<BLURB>Rotation on the Y axis.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::y-axis-rotation-rate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y axis rotation rate</NICK>
+<BLURB>Rotation rate on the Y axis.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::z-axis-rotation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Z axis rotation</NICK>
+<BLURB>Rotation on the Z axis.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3dflippo::z-axis-rotation-rate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Z axis rotation rate</NICK>
+<BLURB>Rotation rate on the Z axis.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-mask0mate::blur</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Blur</NICK>
+<BLURB>Blur the outline of the mask.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-mask0mate::bottom</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bottom</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-mask0mate::invert</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert</NICK>
+<BLURB>Invert the mask, creates a hole in the frame.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-mask0mate::left</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Left</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-mask0mate::right</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Right</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-mask0mate::top</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Top</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-saturat0r::saturation</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Saturation</NICK>
+<BLURB>The saturation value.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-gamma::gamma</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Gamma</NICK>
+<BLURB>The gamma value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-hueshift0r::hue</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Hue</NICK>
+<BLURB>The shift value.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-edgeglow::lredscale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>lredscale</NICK>
+<BLURB>multiplier for downscaling non-edge brightness.</BLURB>
+<DEFAULT>-5.83169e+303</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-edgeglow::lthresh</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>lthresh</NICK>
+<BLURB>threshold for edge lightening.</BLURB>
+<DEFAULT>-5.83035e+303</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-edgeglow::lupscale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>lupscale</NICK>
+<BLURB>multiplier for upscaling edge brightness.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-k-means-clustering::dist-weight</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dist weight</NICK>
+<BLURB>The weight on distance.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-k-means-clustering::num</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Num</NICK>
+<BLURB>The number of clusters.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-white-balance::green-tint</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Green Tint</NICK>
+<BLURB>Adjust the level of green.</BLURB>
+<DEFAULT>1.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-white-balance::neutral-color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Neutral Color</NICK>
+<BLURB>Choose a color from the source image that should be white.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-white-balance::neutral-color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Neutral Color</NICK>
+<BLURB>Choose a color from the source image that should be white.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-white-balance::neutral-color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Neutral Color-R</NICK>
+<BLURB>Choose a color from the source image that should be white.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-perspective::bottom-left-Y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bottom Left</NICK>
+<BLURB></BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-perspective::bottom-left-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bottom Left</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-perspective::bottom-right-Y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bottom Right</NICK>
+<BLURB></BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-perspective::bottom-right-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bottom Right</NICK>
+<BLURB></BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-perspective::top-left-Y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Top Left</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-perspective::top-left-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Top Left</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-perspective::top-right-Y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Top Right</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-perspective::top-right-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Top Right</NICK>
+<BLURB></BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-flippo::x-axis</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X axis</NICK>
+<BLURB>Flipping on the horizontal axis.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-flippo::y-axis</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y axis</NICK>
+<BLURB>Flipping on the vertical axis.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-blend::blend</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>blend</NICK>
+<BLURB>blend factor.</BLURB>
+<DEFAULT>4.74303e-322</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-mixer-xfade0r::fader</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>fader</NICK>
+<BLURB>the fader position.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-partik0l::down</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>down</NICK>
+<BLURB>blossom on a lower prime number.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-partik0l::up</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>up</NICK>
+<BLURB>blossom on a higher prime number.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-tehroxx0r::interval</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interval</NICK>
+<BLURB>Changing speed of small blocks.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-letterb0xed::border-width</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Border Width</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-letterb0xed::transparency</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transparency</NICK>
+<BLURB></BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-squareblur::kernel-size</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Kernel size</NICK>
+<BLURB>The size of the kernel, as a proportion to its coverage of the image.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-distort0r::amplitude</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amplitude</NICK>
+<BLURB>The amplitude of the plasma signal.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-distort0r::frequency</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frequency</NICK>
+<BLURB>The frequency of the plasma signal.</BLURB>
+<DEFAULT>0.005</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-transparency::transparency</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transparency</NICK>
+<BLURB>The transparency value.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-scale0tilt::clip-bottom</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Clip bottom</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-scale0tilt::clip-left</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Clip left</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-scale0tilt::clip-right</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Clip right</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-scale0tilt::clip-top</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Clip top</NICK>
+<BLURB></BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-scale0tilt::scale-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scale X</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-scale0tilt::scale-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scale Y</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-scale0tilt::tilt-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tilt X</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-scale0tilt::tilt-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tilt Y</NICK>
+<BLURB></BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-nosync0r::hsync</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>HSync</NICK>
+<BLURB>the hsync offset.</BLURB>
+<DEFAULT>1.80868e-316</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAsfMux::is-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Is Live</NICK>
+<BLURB>If this stream should be threated as a live, meaning that it doesn't need indexes nor late update of headers.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAsfMux::merge-stream-tags</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Merge Stream Tags</NICK>
+<BLURB>If the stream metadata (received as events in the sink) should be merged to the main file metadata.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAsfMux::packet-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 18</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Packet size</NICK>
+<BLURB>The ASF packets size (bytes).</BLURB>
+<DEFAULT>4800</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAsfMux::padding</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Padding</NICK>
+<BLURB>Size of the padding object to be added to the end of the header. If this less than 24 (the smaller size of an ASF object), no padding is added.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAsfMux::preroll</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Preroll</NICK>
+<BLURB>The preroll time (milisecs).</BLURB>
+<DEFAULT>5000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVdpMpegDec::display</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Display</NICK>
+<BLURB>X Display name.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVdpYUVVideo::display</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Display</NICK>
+<BLURB>X Display name.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateDec::category</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Category</NICK>
+<BLURB>The category of the stream.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateDec::language</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Language</NICK>
+<BLURB>The language of the stream.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateDec::original-canvas-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Original canvas height</NICK>
+<BLURB>The canvas height this stream was authored for (0 is unspecified).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateDec::original-canvas-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Original canvas width (0 is unspecified)</NICK>
+<BLURB>The canvas width this stream was authored for.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateDec::remove-markup</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Remove markup</NICK>
+<BLURB>Remove markup from decoded text ?.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateEnc::category</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Category</NICK>
+<BLURB>The category of the stream.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateEnc::default-spu-duration</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default SPU duration</NICK>
+<BLURB>The assumed max duration (in seconds) of SPUs with no duration specified.</BLURB>
+<DEFAULT>1.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateEnc::granule-rate-denominator</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Granule rate denominator</NICK>
+<BLURB>The denominator of the granule rate.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateEnc::granule-rate-numerator</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Granule rate numerator</NICK>
+<BLURB>The numerator of the granule rate.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateEnc::granule-shift</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,64]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Granule shift</NICK>
+<BLURB>The granule shift.</BLURB>
+<DEFAULT>32</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateEnc::keepalive-min-time</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keepalive mimimum time</NICK>
+<BLURB>Minimum time to emit keepalive packets (0 disables keepalive packets).</BLURB>
+<DEFAULT>2.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateEnc::language</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Language</NICK>
+<BLURB>The language of the stream (e.g. "fr" or "fr_FR" for French).</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateEnc::original-canvas-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Original canvas height</NICK>
+<BLURB>The height of the canvas this stream was authored for (0 is unspecified).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateEnc::original-canvas-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Original canvas width</NICK>
+<BLURB>The width of the canvas this stream was authored for (0 is unspecified).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTag::category</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Category</NICK>
+<BLURB>Set the category of the stream.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTag::language</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Language</NICK>
+<BLURB>Set the language of the stream.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTag::original-canvas-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Original canvas height</NICK>
+<BLURB>Set the height of the canvas this stream was authored for (0 is unspecified).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTag::original-canvas-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Original canvas width</NICK>
+<BLURB>Set the width of the canvas this stream was authored for (0 is unspecified).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::category</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Category</NICK>
+<BLURB>The category of the stream.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-background-alpha</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default background color (alpha component)</NICK>
+<BLURB>Default background color (alpha component, between 0 and 255) to render text with.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-background-blue</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default background color (blue component)</NICK>
+<BLURB>Default background color (blue component, between 0 and 255) to render text with.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-background-green</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default background color (green component)</NICK>
+<BLURB>Default background color (green component, between 0 and 255) to render text with.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-background-red</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default background color (red component)</NICK>
+<BLURB>Default background color (red component, between 0 and 255) to render text with.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-font-alpha</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default font color (alpha component)</NICK>
+<BLURB>Default font color (alpha component, between 0 and 255) to render text with.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-font-blue</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default font color (blue component)</NICK>
+<BLURB>Default font color (blue component, between 0 and 255) to render text with.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-font-desc</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default font description</NICK>
+<BLURB>Default font description (Pango style) to render text with.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-font-effect</NAME>
+<TYPE>GstFontEffect</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Default font effect</NICK>
+<BLURB>Whether to apply an effect to text by default, for increased readability.</BLURB>
+<DEFAULT>none</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-font-effect-strength</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default font effect strength</NICK>
+<BLURB>How pronounced should the font effect be (effect dependent).</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-font-green</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default font color (green component)</NICK>
+<BLURB>Default font color (green component, between 0 and 255) to render text with.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::default-font-red</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default font color (red component)</NICK>
+<BLURB>Default font color (red component, between 0 and 255) to render text with.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::language</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Language</NICK>
+<BLURB>The language of the stream.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::original-canvas-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Original canvas height</NICK>
+<BLURB>The canvas height this stream was authored for (0 is unspecified).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::original-canvas-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Original canvas width (0 is unspecified)</NICK>
+<BLURB>The canvas width this stream was authored for.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKateTiger::quality</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rendering quality</NICK>
+<BLURB>Rendering quality (0 is faster, 1 is best and slower).</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::au-distance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>au_distance</NICK>
+<BLURB>au_distance.</BLURB>
+<DEFAULT>120</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>bitrate</NICK>
+<BLURB>bitrate.</BLURB>
+<DEFAULT>13824000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::buffer-level</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>buffer_level</NICK>
+<BLURB>buffer_level.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>buffer_size</NICK>
+<BLURB>buffer_size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-bigblock-estimation</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_bigblock_estimation</NICK>
+<BLURB>enable_bigblock_estimation.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-dc-multiquant</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_dc_multiquant</NICK>
+<BLURB>enable_dc_multiquant.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-fullscan-estimation</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_fullscan_estimation</NICK>
+<BLURB>enable_fullscan_estimation.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-global-motion</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_global_motion</NICK>
+<BLURB>enable_global_motion.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-hierarchical-estimation</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_hierarchical_estimation</NICK>
+<BLURB>enable_hierarchical_estimation.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-internal-testing</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_internal_testing</NICK>
+<BLURB>enable_internal_testing.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-md5</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_md5</NICK>
+<BLURB>enable_md5.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-multiquant</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_multiquant</NICK>
+<BLURB>enable_multiquant.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-noarith</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_noarith</NICK>
+<BLURB>enable_noarith.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-phasecorr-estimation</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_phasecorr_estimation</NICK>
+<BLURB>enable_phasecorr_estimation.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-psnr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_psnr</NICK>
+<BLURB>enable_psnr.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-ssim</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_ssim</NICK>
+<BLURB>enable_ssim.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-zero-estimation</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_zero_estimation</NICK>
+<BLURB>enable_zero_estimation.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::filter-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>filter_value</NICK>
+<BLURB>filter_value.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::filtering</NAME>
+<TYPE>SchroEncoderSettingEnum_filtering</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>filtering</NICK>
+<BLURB>filtering.</BLURB>
+<DEFAULT>none</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::gop-structure</NAME>
+<TYPE>SchroEncoderSettingEnum_gop_structure</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>gop_structure</NICK>
+<BLURB>gop_structure.</BLURB>
+<DEFAULT>adaptive</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::horiz-slices</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>horiz_slices</NICK>
+<BLURB>horiz_slices.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::inter-wavelet</NAME>
+<TYPE>SchroEncoderSettingEnum_inter_wavelet</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>inter_wavelet</NICK>
+<BLURB>inter_wavelet.</BLURB>
+<DEFAULT>le_gall_5_3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::interlaced-coding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>interlaced_coding</NICK>
+<BLURB>interlaced_coding.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::intra-wavelet</NAME>
+<TYPE>SchroEncoderSettingEnum_intra_wavelet</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>intra_wavelet</NICK>
+<BLURB>intra_wavelet.</BLURB>
+<DEFAULT>desl_dubuc_9_7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::level</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>level</NICK>
+<BLURB>level.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-allocation-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_allocation_scale</NICK>
+<BLURB>magic_allocation_scale.</BLURB>
+<DEFAULT>1.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-badblock-multiplier-nonref</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_badblock_multiplier_nonref</NICK>
+<BLURB>magic_badblock_multiplier_nonref.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-badblock-multiplier-ref</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_badblock_multiplier_ref</NICK>
+<BLURB>magic_badblock_multiplier_ref.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-bailout-weight</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_bailout_weight</NICK>
+<BLURB>magic_bailout_weight.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-block-search-threshold</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_block_search_threshold</NICK>
+<BLURB>magic_block_search_threshold.</BLURB>
+<DEFAULT>15</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-chroma-lambda-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_chroma_lambda_scale</NICK>
+<BLURB>magic_chroma_lambda_scale.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-dc-metric-offset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_dc_metric_offset</NICK>
+<BLURB>magic_dc_metric_offset.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-error-power</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_error_power</NICK>
+<BLURB>magic_error_power.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-inter-b-weight</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_inter_b_weight</NICK>
+<BLURB>magic_inter_b_weight.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-inter-p-weight</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_inter_p_weight</NICK>
+<BLURB>magic_inter_p_weight.</BLURB>
+<DEFAULT>1.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-keyframe-weight</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_keyframe_weight</NICK>
+<BLURB>magic_keyframe_weight.</BLURB>
+<DEFAULT>7.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-lambda</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_lambda</NICK>
+<BLURB>magic_lambda.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-mc-bailout-limit</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_mc_bailout_limit</NICK>
+<BLURB>magic_mc_bailout_limit.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-mc-lambda</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_mc_lambda</NICK>
+<BLURB>magic_mc_lambda.</BLURB>
+<DEFAULT>0.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-nonref-lambda-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_nonref_lambda_scale</NICK>
+<BLURB>magic_nonref_lambda_scale.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-scene-change-threshold</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_scene_change_threshold</NICK>
+<BLURB>magic_scene_change_threshold.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-subband0-lambda-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_subband0_lambda_scale</NICK>
+<BLURB>magic_subband0_lambda_scale.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-subgroup-length</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_subgroup_length</NICK>
+<BLURB>magic_subgroup_length.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::max-bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>max_bitrate</NICK>
+<BLURB>max_bitrate.</BLURB>
+<DEFAULT>13824000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::min-bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>min_bitrate</NICK>
+<BLURB>min_bitrate.</BLURB>
+<DEFAULT>13824000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::motion-block-overlap</NAME>
+<TYPE>SchroEncoderSettingEnum_motion_block_overlap</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>motion_block_overlap</NICK>
+<BLURB>motion_block_overlap.</BLURB>
+<DEFAULT>automatic</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::motion-block-size</NAME>
+<TYPE>SchroEncoderSettingEnum_motion_block_size</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>motion_block_size</NICK>
+<BLURB>motion_block_size.</BLURB>
+<DEFAULT>automatic</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::mv-precision</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,3]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mv_precision</NICK>
+<BLURB>mv_precision.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::noise-threshold</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>noise_threshold</NICK>
+<BLURB>noise_threshold.</BLURB>
+<DEFAULT>25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::open-gop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>open_gop</NICK>
+<BLURB>open_gop.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::perceptual-distance</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>perceptual_distance</NICK>
+<BLURB>perceptual_distance.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::perceptual-weighting</NAME>
+<TYPE>SchroEncoderSettingEnum_perceptual_weighting</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>perceptual_weighting</NICK>
+<BLURB>perceptual_weighting.</BLURB>
+<DEFAULT>ccir959</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::profile</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>profile</NICK>
+<BLURB>profile.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::quality</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>quality</NICK>
+<BLURB>quality.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::queue-depth</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,40]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>queue_depth</NICK>
+<BLURB>queue_depth.</BLURB>
+<DEFAULT>20</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::rate-control</NAME>
+<TYPE>SchroEncoderSettingEnum_rate_control</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rate_control</NICK>
+<BLURB>rate_control.</BLURB>
+<DEFAULT>constant_quality</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::ref-distance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[2,20]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ref_distance</NICK>
+<BLURB>ref_distance.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::transform-depth</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,6]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>transform_depth</NICK>
+<BLURB>transform_depth.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::vert-slices</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>vert_slices</NICK>
+<BLURB>vert_slices.</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAmrWbEnc::band-mode</NAME>
+<TYPE>GstAmrWbEncBandMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Band Mode</NICK>
+<BLURB>Encoding Band Mode (Kbps).</BLURB>
+<DEFAULT>MR660</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMimEnc::paused-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Paused mode</NICK>
+<BLURB>If enabled, empty frames will be generated every 4 seconds when no data is received.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

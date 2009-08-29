@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plug-ins 0.10.13 "Supersonic Rocket"
+Release notes for GStreamer Bad Plug-ins 0.10.14 "Your New Best Friends"
         
 
 
@@ -60,31 +60,63 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * New shapewipe video transition plugin
-      * qtmux improvements
-      * camerabin improvements
-      * HDV MPEG-TS private streams support
-      * Output interlacing information in mpegvideoparse
-      * MS-ADPCM decoder
-      * RTP fixes and enhancements
-      * DTS decoder improvements
-      * New ID3 tagging plugin that supports v1, v2.3 and v2.4
-      * Support for PGS (BluRay) subtitles
-      * Many other bug fixes and enhancements
+      * Moved rtpmanager to -good
+      * Moved dirac elements from schroedinger to gst-plugins-bad (new schroedinger release without the gstreamer elements will follow shortly)
+      * amrwb: Remove AMR-WB parser and decoder and rename encoder plugin from amrwb to amrwbenc (the removed elements will re-appear in the next -ugly release; no migration strategy provided in this case because of the 'special' status of the amrwb plugin)
+      * asfmux, rtpasfpay: add ASF muxer and windows media payloader
+      * basevideo: add experimental video base class library/API
+      * camerabin: lots of fixes and improvements
+      * capssetter: new element for debugging purposes
+      * directdraw: Implement GstNavigation interface
+      * directshow: refactor and improve dshowsrcwrapper, dshowideosrc, dshowaudiosrc
+      * frei0r: wrapper for frei0r video filter plugins
+      * gme: add libgme plugin which supersedes the existing OpenSPC spc plugin
+      * Implement SEEKING query in more demuxers and decoders (notably mpeg-ps/mpeg-ts, mxf, musepack, rawparse)
+      * kate: add kate subtitle encoder, decoder and overlay
+      * mimic: lots of fixes for mimenc and mimdec; add "paused mode"
+      * mpegpsdemux: added caps for AAC and fixed playback of a clip with LPCM
+      * mpegtsdemux: added VC1, EAC3 and LPCM related to blueray/hdmv
+      * qtmux: handle pixel-aspect-ratio; misc. other fixes and improvements
+      * shapewipe: support ARGB/RGBA for video input/output; fix for still images
+      * vdpau: add experimental vdpau plugin
 
 Bugs fixed in this release
      
-      * 584945 : camerabin unit tests failing
-      * 511097 : Support self-signed certificates in neonhttpsrc
+      * 587819 : [mpegtsparse] crash because of double free
+      * 344129 : [directsoundsrc] Plugin for Directsound source
+      * 377784 : xvidenc should output video/mpeg
+      * 540128 : Totem freeze with short HDV file
+      * 541962 : [directdrawsink] crash when exposing in GST_STATE_READY
+      * 561241 : metadatademux pad activation deadlock
       * 561752 : GstRtpBin implement Release pad functions
-      * 584164 : gstspu-pgs.c warnings for format string args and uninitia...
-      * 584165 : rtpbin sdes message broken
-      * 584360 : gppmux ftyp
-      * 585015 : debugutils can't find libgstinterfaces
-      * 585660 : segfault in scaletempo plugin
-      * 584114 : gppmux and h263
-      * 583188 : Problem with sdp: bind failed or video disappear after fe...
-      * 583627 : statistic file name needs to be standardized
+      * 575672 : [mpegtsdemux] crashes when souphttpsrc is used as a stream source
+      * 575818 : [ivorbisdec] extract vorbis tags
+      * 576800 : gstreamer SPC plugin requires non-portable x86 code
+      * 583470 : mpegtsparse: Old pes pids not removed when receiving PAT table
+      * 584252 : enhancements to OSSv4 plugin
+      * 584897 : Remove AMR plugin as it has been replaced by updated OpenCore plugin
+      * 585839 : Support for sending RTP packets as GstBufferList in the gstrtpbin
+      * 586019 : [mxfdemux] stray semicolons after if statement
+      * 586097 : GStreamer DVB tuning too quick for some devices
+      * 586956 : Include < sys/time.h > only if it is present in the system
+      * 587023 : [freeze] disable plugin static lib
+      * 587595 : [dshowsrcwrapper] start refactoring
+      * 588638 : [katedec] add x-dvd-subpicture output
+      * 588944 : mpegpsdemux doesn't support seeking with GST_FORMAT_TIME anymore
+      * 590030 : rtpsource: Incoming buffers do not always have caps
+      * 590208 : GstNavigation interface support for directdrawsink
+      * 590360 : [qtmux] requires endianness even if the samples are 8bit
+      * 590446 : [mpegdemux] MPEG TS with A52 not seekable
+      * 590797 : Memory leak in rtpsource.c
+      * 591440 : rtpdtmfsrc event cleanup
+      * 591538 : generic states test fails (vdpau, mimenc)
+      * 591610 : asfmux: messing up with sinkpads
+      * 591927 : REQUIREMENTS is out of date
+      * 592259 : mimenc: fourcc written incorrectly
+      * 593024 : regression in schroenc streamheader initialization
+      * 593063 : resindvd and rawparse do not use correct base LDFLAGS
+      * 593068 : Disarray in directsoundsrc/directdrawsink
+      * 586354 : [h264parse] blocked in infinite loop while parsing a corrupted frame
 
 Download
 
@@ -113,18 +145,42 @@ Applications
   
 Contributors to this release
     
-      * Ali Sabil
+      * Aleksey Yulin
+      * Andoni Morales
+      * Arek Korbik
+      * Austin Lund
+      * Branko Subasic
+      * Carl-Anton Ingmarsson
+      * Changwoo Ryu
       * Christian Schaller
+      * Dave Robillard
+      * David Schleef
       * Edward Hervey
+      * Garrett D'Amore
+      * Iago Toral
       * Jan Schmidt
+      * Jan Urbanski
+      * Joni Valtanen
+      * Josep Torra
+      * Julien Isorce
       * Lasse Laukkanen
       * Mark Nauwelaerts
-      * Mathias Hasselmann
-      * Michael Smith
+      * Matijs van Zuijlen
+      * Maximilian Högner
+      * Michael Pyne
+      * Miguel Àngel Farré
+      * Mikael Magnusson
       * Olivier Crête
+      * Руслан Ижбулатов
       * Sebastian Dröge
+      * Sebastian Pölsterl
       * Stefan Kost
+      * Thiago Santos
       * Tim-Philipp Müller
-      * Tristan Matthews
+      * Tommi Myöhänen
+      * Vincent Penquerc'h
       * Wim Taymans
+      * Zaheer Abbas Merali
+      * Zaheer Merali
+      * Zeeshan Ali (Khattak)
  

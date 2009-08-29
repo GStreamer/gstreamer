@@ -3,10 +3,10 @@
   <description>Kate plugin</description>
   <filename>../../ext/kate/.libs/libgstkate.so</filename>
   <basename>libgstkate.so</basename>
-  <version>0.10.13.1</version>
+  <version>0.10.14</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>text/plain; text/x-pango-markup</details>
+          <details>text/plain; text/x-pango-markup; video/x-dvd-subpicture</details>
         </caps>
       </pads>
     </element>

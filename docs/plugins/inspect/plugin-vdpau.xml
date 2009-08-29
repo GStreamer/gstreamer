@@ -1,0 +1,76 @@
+<plugin>
+  <name>vdpau</name>
+  <description>Various elements utilizing VDPAU</description>
+  <filename>../../sys/vdpau/.libs/libgstvdpau.so</filename>
+  <basename>libgstvdpau.so</basename>
+  <version>0.10.14</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer</package>
+  <origin>http://gstreamer.net/</origin>
+  <elements>
+    <element>
+      <name>vdpaumpegdec</name>
+      <longname>VDPAU Mpeg Decoder</longname>
+      <class>Decoder</class>
+      <description>decode mpeg stream with vdpau</description>
+      <author>Carl-Anton Ingmarsson &lt;ca.ingmarsson@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-vdpau-video, chroma-type=(int)[ 0, 2 ], width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], systemstream=(boolean)false, parsed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vdpauvideoyuv</name>
+      <longname>VdpauVideoYUV</longname>
+      <class>Covideo_yuv/Decoder/Video</class>
+      <description>VDPAU video surface to YUV</description>
+      <author>Carl-Anton Ingmarsson &lt;ca.ingmarsson@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-vdpau-video, chroma-type=(int)[ 0, 2 ], width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vdpauyuvvideo</name>
+      <longname>VdpauYUVVideo</longname>
+      <class>Coyuv_video/Decoder/Video</class>
+      <description>VDPAU video surface to YUV</description>
+      <author>Carl-Anton Ingmarsson &lt;ca.ingmarsson@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-vdpau-video, chroma-type=(int)[ 0, 2 ], width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
