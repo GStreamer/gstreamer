@@ -36,6 +36,8 @@
 #include <ogg/ogg.h>
 #include <string.h>
 
+#include "gstoggstream.h"
+
 static const GstElementDetails gst_ogg_parse_details =
 GST_ELEMENT_DETAILS ("Ogg parser",
     "Codec/Parser",
@@ -55,22 +57,6 @@ static GType gst_ogg_parse_get_type (void);
 
 typedef struct _GstOggParse GstOggParse;
 typedef struct _GstOggParseClass GstOggParseClass;
-
-/* Each ogg logical stream has a GstOggStream associated with it */
-typedef struct
-{
-  /*ogg_stream_state stream; *//* We need this to get the packets out in order
-     to do codec identification, for various
-     codec-specific tasks */
-
-  gboolean in_headers;          /* Initially true, false once we've read all the
-                                   headers for this logical stream */
-
-  guint32 serialno;             /* Unique serial number of this stream */
-
-  GSList *headers;              /* List of ogg pages that we'll set on caps */
-  GSList *unknown_pages;        /* List of pages we haven't yet classified */
-} GstOggStream;
 
 struct _GstOggParse
 {
@@ -130,8 +116,8 @@ gst_ogg_parse_get_type (void)
 static void
 free_stream (GstOggStream * stream)
 {
-  g_slist_foreach (stream->headers, (GFunc) gst_mini_object_unref, NULL);
-  g_slist_foreach (stream->unknown_pages, (GFunc) gst_mini_object_unref, NULL);
+  g_list_foreach (stream->headers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_foreach (stream->unknown_pages, (GFunc) gst_mini_object_unref, NULL);
 
   g_free (stream);
 }
@@ -145,28 +131,40 @@ gst_ogg_parse_delete_all_streams (GstOggParse * ogg)
 }
 
 static GstOggStream *
-gst_ogg_parse_new_stream (GstOggParse * parser, guint32 serialno)
+gst_ogg_parse_new_stream (GstOggParse * parser, ogg_page * page)
 {
-  GstOggStream *ret;
+  GstOggStream *stream;
+  ogg_packet packet;
+  int ret;
+  guint32 serialno;
+
+  serialno = ogg_page_serialno (page);
 
   GST_DEBUG_OBJECT (parser, "creating new stream %08x", serialno);
 
-  ret = g_new0 (GstOggStream, 1);
+  stream = g_new0 (GstOggStream, 1);
 
-  ret->serialno = serialno;
-  ret->in_headers = 1;
+  stream->serialno = serialno;
+  stream->in_headers = 1;
 
-  /*
-     if (ogg_stream_init (&ret->stream, serialno) != 0) {
-     GST_ERROR ("Could not initialize ogg_stream struct for serial %08lx.",
-     serialno);
-     return NULL;
-     }
-   */
+  if (ogg_stream_init (&stream->stream, serialno) != 0) {
+    GST_ERROR ("Could not initialize ogg_stream struct for serial %08lx.",
+        serialno);
+    return NULL;
+  }
 
-  parser->oggstreams = g_slist_append (parser->oggstreams, ret);
+  /* FIXME check return */
+  ogg_stream_pagein (&stream->stream, page);
 
-  return ret;
+  /* FIXME check return */
+  ret = ogg_stream_packetout (&stream->stream, &packet);
+  if (ret == 1) {
+    gst_ogg_stream_setup_map (stream, &packet);
+  }
+
+  parser->oggstreams = g_slist_append (parser->oggstreams, stream);
+
+  return stream;
 }
 
 static GstOggStream *
@@ -400,23 +398,26 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
       /* discontinuity; track how many bytes we skipped (-ret) */
       ogg->offset -= ret;
     } else {
-#ifndef GST_DISABLE_GST_DEBUG
       gint64 granule = ogg_page_granulepos (&page);
+#ifndef GST_DISABLE_GST_DEBUG
       int bos = ogg_page_bos (&page);
 #endif
       guint64 startoffset = ogg->offset;
+      GstOggStream *stream;
+
+      serialno = ogg_page_serialno (&page);
+      stream = gst_ogg_parse_find_stream (ogg, serialno);
 
       GST_LOG_OBJECT (ogg, "Timestamping outgoing buffer as %" GST_TIME_FORMAT,
           GST_TIME_ARGS (buffertimestamp));
-      /* Turn our page into a GstBuffer TODO: better timestamps? Requires format
-       * parsing. */
+
+      buffertimestamp = gst_ogg_stream_get_end_time_for_granulepos (stream,
+          granule);
       pagebuffer = gst_ogg_parse_buffer_from_page (&page, startoffset, FALSE,
           buffertimestamp);
 
       /* We read out 'ret' bytes, so we set the next offset appropriately */
       ogg->offset += ret;
-
-      serialno = ogg_page_serialno (&page);
 
       GST_LOG_OBJECT (ogg,
           "processing ogg page (serial %08x, pageno %ld, "
@@ -444,12 +445,12 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
           gst_ogg_parse_delete_all_streams (ogg);
         }
 
-        stream = gst_ogg_parse_new_stream (ogg, serialno);
+        stream = gst_ogg_parse_new_stream (ogg, &page);
 
         ogg->last_page_not_bos = FALSE;
 
         gst_buffer_ref (pagebuffer);
-        stream->headers = g_slist_append (stream->headers, pagebuffer);
+        stream->headers = g_list_append (stream->headers, pagebuffer);
 
         if (!ogg->in_headers) {
           GST_LOG_OBJECT (ogg,
@@ -488,7 +489,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
         if (type == PAGE_PENDING && ogg->in_headers) {
           gst_buffer_ref (pagebuffer);
 
-          stream->unknown_pages = g_slist_append (stream->unknown_pages,
+          stream->unknown_pages = g_list_append (stream->unknown_pages,
               pagebuffer);
         } else if (type == PAGE_HEADER) {
           if (!ogg->in_headers) {
@@ -499,11 +500,11 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             /* Append the header to the buffer list, after any unknown previous
              * pages
              */
-            stream->headers = g_slist_concat (stream->headers,
+            stream->headers = g_list_concat (stream->headers,
                 stream->unknown_pages);
-            g_slist_free (stream->unknown_pages);
+            g_list_free (stream->unknown_pages);
             gst_buffer_ref (pagebuffer);
-            stream->headers = g_slist_append (stream->headers, pagebuffer);
+            stream->headers = g_list_append (stream->headers, pagebuffer);
           }
         } else {                /* PAGE_DATA, or PAGE_PENDING but outside headers */
           if (ogg->in_headers) {
@@ -527,7 +528,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             for (l = ogg->oggstreams; l != NULL; l = l->next) {
               GstOggStream *stream = (GstOggStream *) l->data;
 
-              if (g_slist_length (stream->headers) == 0) {
+              if (g_list_length (stream->headers) == 0) {
                 GST_LOG_OBJECT (ogg, "No primary header found for stream %u",
                     stream->serialno);
                 goto failure;
@@ -542,9 +543,9 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               GstOggStream *stream = (GstOggStream *) l->data;
               int j;
 
-              for (j = 1; j < g_slist_length (stream->headers); j++) {
+              for (j = 1; j < g_list_length (stream->headers); j++) {
                 gst_ogg_parse_append_header (&array,
-                    GST_BUFFER (g_slist_nth_data (stream->headers, j)));
+                    GST_BUFFER (g_list_nth_data (stream->headers, j)));
                 count++;
               }
             }
@@ -581,9 +582,9 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               GstOggStream *stream = (GstOggStream *) l->data;
               int j;
 
-              for (j = 1; j < g_slist_length (stream->headers); j++) {
+              for (j = 1; j < g_list_length (stream->headers); j++) {
                 GstBuffer *buf =
-                    GST_BUFFER (g_slist_nth_data (stream->headers, j));
+                    GST_BUFFER (g_list_nth_data (stream->headers, j));
                 gst_buffer_set_caps (buf, caps);
 
                 result = gst_pad_push (ogg->srcpad, buf);
@@ -597,7 +598,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             /* And finally the pending data pages */
             for (l = ogg->oggstreams; l != NULL; l = l->next) {
               GstOggStream *stream = (GstOggStream *) l->data;
-              GSList *k;
+              GList *k;
 
               if (stream->unknown_pages == NULL)
                 continue;
@@ -609,7 +610,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               found_pending_headers = TRUE;
 
               GST_LOG_OBJECT (ogg, "Pushing %d pending pages after headers",
-                  g_slist_length (stream->unknown_pages) + 1);
+                  g_list_length (stream->unknown_pages) + 1);
 
               for (k = stream->unknown_pages; k != NULL; k = k->next) {
                 GstBuffer *buf;
@@ -620,9 +621,9 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
                 if (result != GST_FLOW_OK)
                   return result;
               }
-              g_slist_foreach (stream->unknown_pages,
+              g_list_foreach (stream->unknown_pages,
                   (GFunc) gst_mini_object_unref, NULL);
-              g_slist_free (stream->unknown_pages);
+              g_list_free (stream->unknown_pages);
               stream->unknown_pages = NULL;
             }
 

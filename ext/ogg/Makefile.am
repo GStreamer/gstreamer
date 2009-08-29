@@ -6,7 +6,12 @@ libgstogg_la_SOURCES = \
 	gstoggmux.c \
 	gstogmparse.c \
 	gstoggaviparse.c \
-	gstoggparse.c
+	gstoggparse.c \
+	gstoggstream.c \
+	gstoggstream.h \
+	dirac_parse.c \
+	dirac_parse.h \
+	vorbis_parse.c
 
 noinst_HEADERS = \
 	gstoggdemux.h gstoggmux.h
