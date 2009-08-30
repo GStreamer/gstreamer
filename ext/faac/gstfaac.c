@@ -84,6 +84,7 @@ static void gst_faac_base_init (GstFaacClass * klass);
 static void gst_faac_class_init (GstFaacClass * klass);
 static void gst_faac_init (GstFaac * faac);
 static void gst_faac_finalize (GObject * object);
+static void gst_faac_reset (GstFaac * faac);
 
 static void gst_faac_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -257,11 +258,6 @@ gst_faac_class_init (GstFaacClass * klass)
 static void
 gst_faac_init (GstFaac * faac)
 {
-  faac->handle = NULL;
-  faac->samplerate = -1;
-  faac->channels = -1;
-  faac->offset = 0;
-
   faac->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (faac->sinkpad,
       GST_DEBUG_FUNCPTR (gst_faac_chain));
@@ -284,6 +280,18 @@ gst_faac_init (GstFaac * faac)
   faac->outputformat = 0;       /* RAW */
   faac->tns = FALSE;
   faac->midside = TRUE;
+
+  gst_faac_reset (faac);
+}
+
+static void
+gst_faac_reset (GstFaac * faac)
+{
+  faac->handle = NULL;
+  faac->samplerate = -1;
+  faac->channels = -1;
+  faac->offset = 0;
+  gst_adapter_clear (faac->adapter);
 }
 
 static void
@@ -634,12 +642,6 @@ gst_faac_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_event_default (pad, event);
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
-      ret = gst_pad_push_event (faac->srcpad, event);
-      break;
-    case GST_EVENT_TAG:
-      ret = gst_pad_event_default (pad, event);
-      break;
     default:
       ret = gst_pad_event_default (pad, event);
       break;
@@ -772,16 +774,8 @@ gst_faac_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
-      GST_OBJECT_LOCK (faac);
-      if (faac->handle) {
-        faacEncClose (faac->handle);
-        faac->handle = NULL;
-      }
-      gst_adapter_clear (faac->adapter);
-      faac->offset = 0;
-      faac->samplerate = -1;
-      faac->channels = -1;
-      GST_OBJECT_UNLOCK (faac);
+      gst_faac_close_encoder (faac);
+      gst_faac_reset (faac);
       break;
     }
     default:
