@@ -103,9 +103,7 @@ gst_byte_writer_copy_bytes (GstByteWriter * w, guint8 * dest, guint offset,
   if (size == -1)
     size = length - offset;
 
-#if GLIB_CHECK_VERSION(2,16,0)
   g_warn_if_fail (length >= (offset + size));
-#endif
 
   memcpy (dest, w->str + offset, MIN (size, length - offset));
 }
