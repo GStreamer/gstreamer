@@ -1011,12 +1011,15 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
     GstCaps *caps;
 
     /* set rtcp caps on output pad */
-    if (!(caps = GST_PAD_CAPS (rtpsession->send_rtcp_src))) {
+    caps = GST_PAD_CAPS (rtpsession->send_rtcp_src);
+    if (!caps) {
       caps = gst_caps_new_simple ("application/x-rtcp", NULL);
       gst_pad_set_caps (rtpsession->send_rtcp_src, caps);
-      gst_caps_unref (caps);
+    } else {
+      gst_caps_ref (caps);
     }
     gst_buffer_set_caps (buffer, caps);
+    gst_caps_unref (caps);
     GST_LOG_OBJECT (rtpsession, "sending RTCP");
     result = gst_pad_push (rtpsession->send_rtcp_src, buffer);
 
