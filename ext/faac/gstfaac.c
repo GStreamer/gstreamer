@@ -91,7 +91,9 @@ static void gst_faac_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_faac_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_faac_configure_source_pad (GstFaac * faac);
 static gboolean gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_faac_push_buffers (GstFaac * faac, gboolean force);
 static GstFlowReturn gst_faac_chain (GstPad * pad, GstBuffer * data);
 static GstStateChangeReturn gst_faac_change_state (GstElement * element,
     GstStateChange transition);
@@ -294,6 +296,16 @@ gst_faac_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_faac_close_encoder (GstFaac * faac)
+{
+  if (faac->handle)
+    faacEncClose (faac->handle);
+  faac->handle = NULL;
+  gst_adapter_clear (faac->adapter);
+  faac->offset = 0;
+}
+
 static gboolean
 gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -305,24 +317,12 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   gboolean result = FALSE;
 
   if (!gst_caps_is_fixed (caps))
-    goto done;
-
-  GST_OBJECT_LOCK (faac);
-  if (faac->handle) {
-    faacEncClose (faac->handle);
-    faac->handle = NULL;
-  }
-  gst_adapter_clear (faac->adapter);
-  faac->offset = 0;
-  GST_OBJECT_UNLOCK (faac);
+    goto refuse_caps;
 
   if (!gst_structure_get_int (structure, "channels", &channels) ||
       !gst_structure_get_int (structure, "rate", &samplerate)) {
-    goto done;
+    goto refuse_caps;
   }
-
-  if (!(handle = faacEncOpen (samplerate, channels, &samples, &bytes)))
-    goto done;
 
   if (gst_structure_has_name (structure, "audio/x-raw-int")) {
     gst_structure_get_int (structure, "width", &width);
@@ -344,12 +344,26 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
     bps = 4;
   }
 
-  if (!fmt) {
-    faacEncClose (handle);
-    goto done;
+  if (!fmt)
+    goto refuse_caps;
+
+  /* If the encoder is initialized, do not
+     reinitialize it again if not necessary */
+  if (faac->handle) {
+    if (samplerate == faac->samplerate && channels == faac->channels &&
+        fmt == faac->format)
+      return TRUE;
+
+    /* clear out pending frames */
+    gst_faac_push_buffers (faac, TRUE);
+
+    gst_faac_close_encoder (faac);
   }
 
-  GST_OBJECT_LOCK (faac);
+  if (!(handle = faacEncOpen (samplerate, channels, &samples, &bytes)))
+    goto setup_failed;
+
+  /* ok, record and set up */
   faac->format = fmt;
   faac->bps = bps;
   faac->handle = handle;
@@ -357,13 +371,25 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   faac->samples = samples;
   faac->channels = channels;
   faac->samplerate = samplerate;
-  GST_OBJECT_UNLOCK (faac);
 
-  result = TRUE;
+  /* finish up */
+  result = gst_faac_configure_source_pad (faac);
 
 done:
   gst_object_unref (faac);
   return result;
+
+  /* ERRORS */
+setup_failed:
+  {
+    GST_ELEMENT_ERROR (faac, LIBRARY, SETTINGS, (NULL), (NULL));
+    goto done;
+  }
+refuse_caps:
+  {
+    GST_WARNING_OBJECT (faac, "refused caps %" GST_PTR_FORMAT, caps);
+    goto done;
+  }
 }
 
 static gboolean
@@ -372,7 +398,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
   GstCaps *allowed_caps;
   GstCaps *srccaps;
   gboolean ret = FALSE;
-  gint n, ver, mpegversion;
+  gint n, ver, mpegversion = 2;
   faacEncConfiguration *conf;
   guint maxbitrate;
 
@@ -381,24 +407,23 @@ gst_faac_configure_source_pad (GstFaac * faac)
   allowed_caps = gst_pad_get_allowed_caps (faac->srcpad);
   GST_DEBUG_OBJECT (faac, "allowed caps: %" GST_PTR_FORMAT, allowed_caps);
 
-  if (allowed_caps == NULL)
-    return FALSE;
+  if (allowed_caps) {
+    if (gst_caps_is_empty (allowed_caps))
+      goto empty_caps;
 
-  if (gst_caps_is_empty (allowed_caps))
-    goto empty_caps;
+    if (!gst_caps_is_any (allowed_caps)) {
+      for (n = 0; n < gst_caps_get_size (allowed_caps); n++) {
+        GstStructure *s = gst_caps_get_structure (allowed_caps, n);
 
-  if (!gst_caps_is_any (allowed_caps)) {
-    for (n = 0; n < gst_caps_get_size (allowed_caps); n++) {
-      GstStructure *s = gst_caps_get_structure (allowed_caps, n);
-
-      if (gst_structure_get_int (s, "mpegversion", &ver) &&
-          (ver == 4 || ver == 2)) {
-        mpegversion = ver;
-        break;
+        if (gst_structure_get_int (s, "mpegversion", &ver) &&
+            (ver == 4 || ver == 2)) {
+          mpegversion = ver;
+          break;
+        }
       }
     }
+    gst_caps_unref (allowed_caps);
   }
-  gst_caps_unref (allowed_caps);
 
   /* we negotiated caps update current configuration */
   conf = faacEncGetCurrentConfiguration (faac->handle);
@@ -635,11 +660,6 @@ gst_faac_chain (GstPad * pad, GstBuffer * inbuf)
   if (!faac->handle)
     goto no_handle;
 
-  if (!GST_PAD_CAPS (faac->srcpad)) {
-    if (!gst_faac_configure_source_pad (faac))
-      goto nego_failed;
-  }
-
   GST_LOG_OBJECT (faac, "Got buffer time: %" GST_TIME_FORMAT " duration: %"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)));
@@ -658,14 +678,6 @@ no_handle:
   {
     GST_ELEMENT_ERROR (faac, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before chain function"));
-    gst_buffer_unref (inbuf);
-    result = GST_FLOW_ERROR;
-    goto done;
-  }
-nego_failed:
-  {
-    GST_ELEMENT_ERROR (faac, CORE, NEGOTIATION, (NULL),
-        ("failed to negotiate MPEG/AAC format with next element"));
     gst_buffer_unref (inbuf);
     result = GST_FLOW_ERROR;
     goto done;
