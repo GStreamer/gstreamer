@@ -483,32 +483,11 @@ gst_mxf_demux_handle_primer_pack (GstMXFDemux * demux, const MXFUL * key,
   return GST_FLOW_OK;
 }
 
-#if !GLIB_CHECK_VERSION (2, 16, 0)
-static void
-set_resolve_state_none (gpointer key, gpointer value, gpointer user_data)
-{
-  MXFMetadataBase *m = (MXFMetadataBase *) value;
-  m->resolved = MXF_METADATA_BASE_RESOLVE_STATE_NONE;
-}
-
-static void
-build_values_in_hash_table (gpointer key, gpointer value, gpointer user_data)
-{
-  GList **valuelist = (GList **) (user_data);
-
-  *valuelist = g_list_prepend (*valuelist, value);
-}
-#endif
-
 static GstFlowReturn
 gst_mxf_demux_resolve_references (GstMXFDemux * demux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-#if GLIB_CHECK_VERSION (2, 16, 0)
   GHashTableIter iter;
-#else
-  GList *l, *values = NULL;
-#endif
   MXFMetadataBase *m = NULL;
   GstStructure *structure;
   GstTagList *taglist;
@@ -523,26 +502,15 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
     g_static_rw_lock_writer_unlock (&demux->metadata_lock);
     return GST_FLOW_ERROR;
   }
-#if GLIB_CHECK_VERSION (2, 16, 0)
+
   g_hash_table_iter_init (&iter, demux->metadata);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer) & m)) {
     m->resolved = MXF_METADATA_BASE_RESOLVE_STATE_NONE;
   }
-#else
-  g_hash_table_foreach (demux->metadata, set_resolve_state_none, NULL);
-#endif
 
-#if GLIB_CHECK_VERSION (2, 16, 0)
   g_hash_table_iter_init (&iter, demux->metadata);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer) & m)) {
     gboolean resolved;
-#else
-  g_hash_table_foreach (demux->metadata, build_values_in_hash_table, &values);
-  for (l = values; l; l = l->next) {
-    gboolean resolved;
-
-    m = l->data;
-#endif
 
     resolved = mxf_metadata_base_resolve (m, demux->metadata);
 
@@ -564,19 +532,11 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
   gst_element_found_tags (GST_ELEMENT (demux), taglist);
   gst_structure_free (structure);
 
-#if !GLIB_CHECK_VERSION (2, 16, 0)
-  g_list_free (values);
-#endif
-
   g_static_rw_lock_writer_unlock (&demux->metadata_lock);
 
   return ret;
 
 error:
-#if !GLIB_CHECK_VERSION (2, 16, 0)
-  g_list_free (values);
-#endif
-
   demux->metadata_resolved = FALSE;
   g_static_rw_lock_writer_unlock (&demux->metadata_lock);
 

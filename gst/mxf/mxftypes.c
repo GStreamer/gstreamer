@@ -1458,32 +1458,16 @@ mxf_primer_pack_to_buffer (const MXFPrimerPack * pack)
   if (pack->mappings) {
     guint local_tag;
     MXFUL *ul;
-#if GLIB_CHECK_VERSION (2, 16, 0)
     GHashTableIter iter;
 
     g_hash_table_iter_init (&iter, pack->mappings);
-#else
-    GList *l, *keys;
 
-    keys = g_hash_table_get_keys (pack->mappings);
-#endif
-
-#if GLIB_CHECK_VERSION (2, 16, 0)
     while (g_hash_table_iter_next (&iter, (gpointer) & local_tag,
             (gpointer) & ul)) {
-#else
-    for (l = keys; l; l = l->next) {
-      local_tag = GPOINTER_TO_UINT (l->data);
-      ul = g_hash_table_lookup (pack->mappings, GUINT_TO_POINTER (local_tag));
-#endif
       GST_WRITE_UINT16_BE (data, local_tag);
       memcpy (data + 2, ul, 16);
       data += 18;
     }
-
-#if !GLIB_CHECK_VERSION (2, 16, 0)
-    g_list_free (keys);
-#endif
   }
 
   return ret;

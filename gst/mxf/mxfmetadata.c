@@ -62,15 +62,6 @@ mxf_metadata_base_resolve_default (MXFMetadataBase * self,
   return TRUE;
 }
 
-#if !GLIB_CHECK_VERSION (2, 16, 0)
-static void
-build_values_in_hash_table (gpointer key, gpointer value, gpointer user_data)
-{
-  GList **valuelist = (GList **) (user_data);
-  *valuelist = g_list_prepend (*valuelist, value);
-}
-#endif
-
 static GstStructure *
 mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
 {
@@ -100,26 +91,12 @@ mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
     GValue v = { 0, };
     GstStructure *s;
     GstBuffer *buf;
-#if GLIB_CHECK_VERSION (2, 16, 0)
     GHashTableIter iter;
 
     g_hash_table_iter_init (&iter, self->other_tags);
-#else
-    GList *l, *values = NULL;
-
-    g_hash_table_foreach (self->other_tags, build_values_in_hash_table,
-        &values);
-#endif
-
     g_value_init (&va, GST_TYPE_ARRAY);
 
-#if GLIB_CHECK_VERSION (2, 16, 0)
     while (g_hash_table_iter_next (&iter, NULL, (gpointer) & tag)) {
-#else
-    for (l = values; l; l = l->next) {
-      tag = l->data;
-#endif
-
       g_value_init (&v, GST_TYPE_STRUCTURE);
       s = gst_structure_id_empty_new (MXF_QUARK (TAG));
 
@@ -140,10 +117,6 @@ mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
 
     gst_structure_id_set_value (ret, MXF_QUARK (OTHER_TAGS), &va);
     g_value_unset (&va);
-
-#if !GLIB_CHECK_VERSION (2, 16, 0)
-    g_list_free (values);
-#endif
   }
 
   return ret;
@@ -261,22 +234,11 @@ mxf_metadata_base_to_buffer (MXFMetadataBase * self, MXFPrimerPack * primer)
   /* Add unknown tags */
   if (self->other_tags) {
     MXFLocalTag *tmp;
-#if GLIB_CHECK_VERSION (2, 16, 0)
     GHashTableIter iter;
 
     g_hash_table_iter_init (&iter, self->other_tags);
-#else
-    GList *l, *values;
 
-    values = g_hash_table_get_values (self->other_tags);
-#endif
-
-#if GLIB_CHECK_VERSION (2, 16, 0)
     while (g_hash_table_iter_next (&iter, NULL, (gpointer) & t)) {
-#else
-    for (l = values; l; l = l->next) {
-      t = l->data;
-#endif
       tmp = g_slice_dup (MXFLocalTag, t);
       if (t->g_slice) {
         tmp->data = g_slice_alloc (t->size);
@@ -287,10 +249,6 @@ mxf_metadata_base_to_buffer (MXFMetadataBase * self, MXFPrimerPack * primer)
       }
       tags = g_list_prepend (tags, tmp);
     }
-
-#if !GLIB_CHECK_VERSION (2, 16, 0)
-    g_list_free (values);
-#endif
   }
 
   l = g_list_last (tags);
@@ -1646,22 +1604,11 @@ mxf_metadata_essence_container_data_resolve (MXFMetadataBase * m,
   MXFMetadataEssenceContainerData *self =
       MXF_METADATA_ESSENCE_CONTAINER_DATA (m);
   MXFMetadataBase *current = NULL;
-#if GLIB_CHECK_VERSION (2, 16, 0)
   GHashTableIter iter;
 
   g_hash_table_iter_init (&iter, metadata);
-#else
-  GList *l, *values = NULL;
 
-  g_hash_table_foreach (metadata, build_values_in_hash_table, &values);
-#endif
-
-#if GLIB_CHECK_VERSION (2, 16, 0)
   while (g_hash_table_iter_next (&iter, NULL, (gpointer) & current)) {
-#else
-  for (l = values; l; l = l->next) {
-    current = l->data;
-#endif
     if (MXF_IS_METADATA_SOURCE_PACKAGE (current)) {
       MXFMetadataSourcePackage *package = MXF_METADATA_SOURCE_PACKAGE (current);
 
@@ -1674,10 +1621,6 @@ mxf_metadata_essence_container_data_resolve (MXFMetadataBase * m,
       }
     }
   }
-
-#if !GLIB_CHECK_VERSION (2, 16, 0)
-  g_list_free (values);
-#endif
 
   if (!self->linked_package) {
     GST_ERROR ("Couldn't resolve a package");
@@ -3390,22 +3333,11 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFMetadataSourceClip *self = MXF_METADATA_SOURCE_CLIP (m);
   MXFMetadataBase *current = NULL;
-#if GLIB_CHECK_VERSION (2, 16, 0)
   GHashTableIter iter;
 
   g_hash_table_iter_init (&iter, metadata);
-#else
-  GList *l, *values = NULL;
 
-  g_hash_table_foreach (metadata, build_values_in_hash_table, &values);
-#endif
-
-#if GLIB_CHECK_VERSION (2, 16, 0)
   while (g_hash_table_iter_next (&iter, NULL, (gpointer) & current)) {
-#else
-  for (l = values; l; l = l->next) {
-    current = l->data;
-#endif
     if (MXF_IS_METADATA_SOURCE_PACKAGE (current)) {
       MXFMetadataGenericPackage *p = MXF_METADATA_GENERIC_PACKAGE (current);
 
@@ -3415,10 +3347,6 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m, GHashTable * metadata)
       }
     }
   }
-
-#if !GLIB_CHECK_VERSION (2, 16, 0)
-  g_list_free (values);
-#endif
 
   return
       MXF_METADATA_BASE_CLASS (mxf_metadata_source_clip_parent_class)->resolve
