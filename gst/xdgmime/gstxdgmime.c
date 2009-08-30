@@ -21,16 +21,11 @@
 #endif
 
 #include <gst/gst.h>
-#include "xdgmime/xdgmime.h"
 
 GST_DEBUG_CATEGORY (xdgmime_debug);
 #define GST_CAT_DEFAULT xdgmime_debug
 
-#if GLIB_CHECK_VERSION (2, 16, 0)
 #include <gio/gio.h>
-#else
-G_LOCK_DEFINE_STATIC (xdg_lock);
-#endif
 
 static void
 xdgmime_typefind (GstTypeFind * find, gpointer user_data)
@@ -39,6 +34,7 @@ xdgmime_typefind (GstTypeFind * find, gpointer user_data)
   gsize length = 16384;
   guint64 tf_length;
   guint8 *data;
+  gchar *tmp;
 
   if ((tf_length = gst_type_find_get_length (find)) > 0)
     length = MIN (length, tf_length);
@@ -46,45 +42,20 @@ xdgmime_typefind (GstTypeFind * find, gpointer user_data)
   if ((data = gst_type_find_peek (find, 0, length)) == NULL)
     return;
 
-#if GLIB_CHECK_VERSION (2, 16, 0)
-  {
-    gchar *tmp;
 
-    tmp = g_content_type_guess (NULL, data, length, NULL);
-    if (tmp == NULL || g_content_type_is_unknown (tmp)) {
-      g_free (tmp);
-      return;
-    }
-
-    mimetype = g_content_type_get_mime_type (tmp);
+  tmp = g_content_type_guess (NULL, data, length, NULL);
+  if (tmp == NULL || g_content_type_is_unknown (tmp)) {
     g_free (tmp);
-
-    if (mimetype == NULL)
-      return;
-
-    GST_DEBUG ("Got mimetype '%s'", mimetype);
+    return;
   }
-#else
-  {
-    const gchar *tmp;
-    gint prio;
 
-    /* FIXME: xdg-mime is not thread-safe as it stores the cache globally
-     * and updates it from every call if changes were done without
-     * any locking
-     */
-    G_LOCK (xdg_lock);
-    tmp = xdg_mime_get_mime_type_for_data (data, length, &prio);
-    G_UNLOCK (xdg_lock);
+  mimetype = g_content_type_get_mime_type (tmp);
+  g_free (tmp);
 
-    if (tmp == NULL || g_str_equal (tmp, XDG_MIME_TYPE_UNKNOWN))
-      return;
+  if (mimetype == NULL)
+    return;
 
-    GST_DEBUG ("Got mimetype '%s' with prio %d", tmp, prio);
-
-    mimetype = g_strdup (tmp);
-  }
-#endif
+  GST_DEBUG ("Got mimetype '%s'", mimetype);
 
   /* Ignore audio/video types:
    *  - our own typefinders in -base are likely to be better at this
@@ -112,23 +83,12 @@ xdgmime_typefind (GstTypeFind * find, gpointer user_data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstCaps *caps = NULL;
-  guint major, minor, micro, nano;
   gboolean ret;
-
-  /* FIXME: GStreamer before 0.10.22.1 produced assertions
-   * when storing typefind factories with NULL caps */
-  gst_version (&major, &minor, &micro, &nano);
-  if (major <= 0 && minor <= 10 && micro <= 22 && nano <= 0)
-    caps = gst_caps_new_empty ();
 
   GST_DEBUG_CATEGORY_INIT (xdgmime_debug, "xdgmime", 0, "XDG-MIME");
 
   ret = gst_type_find_register (plugin,
-      "xdgmime", GST_RANK_MARGINAL, xdgmime_typefind, NULL, caps, NULL, NULL);
-
-  if (caps)
-    gst_caps_unref (caps);
+      "xdgmime", GST_RANK_MARGINAL, xdgmime_typefind, NULL, NULL, NULL, NULL);
 
   return ret;
 }

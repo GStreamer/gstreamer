@@ -312,8 +312,8 @@ dnl disable experimental plug-ins
 #fi
 
 # For xdgmime, to use g_content_type_guess()
+# This will always succeed because we depend on GLib >= 2.16
 PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.16, HAVE_GIO=yes, HAVE_GIO=no)
-AM_CONDITIONAL(HAVE_GIO, test "x$HAVE_GIO" = "xyes")
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
 
