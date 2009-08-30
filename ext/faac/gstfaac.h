@@ -21,6 +21,8 @@
 #define __GST_FAAC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
+#include <gst/audio/audio.h>
 #include <faac.h>
 
 G_BEGIN_DECLS
@@ -60,11 +62,9 @@ typedef struct _GstFaac {
   faacEncHandle handle;
 
   /* cache of the input */
-  GstBuffer *cache;
-  guint64 cache_time, cache_duration;
-
-  /* Expected timestamp of the next buffer to output */
-  GstClockTime next_ts;
+  GstAdapter *adapter;
+  /* offset of data to be encoded next */
+  guint offset;
 } GstFaac;
 
 typedef struct _GstFaacClass {

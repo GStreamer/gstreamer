@@ -1,5 +1,6 @@
 /* GStreamer FAAC (Free AAC Encoder) plugin
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2009 Mark Nauwelaerts <mnauw@users.sourceforge.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -82,6 +83,7 @@ enum
 static void gst_faac_base_init (GstFaacClass * klass);
 static void gst_faac_class_init (GstFaacClass * klass);
 static void gst_faac_init (GstFaac * faac);
+static void gst_faac_finalize (GObject * object);
 
 static void gst_faac_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -222,6 +224,7 @@ gst_faac_class_init (GstFaacClass * klass)
 
   gobject_class->set_property = gst_faac_set_property;
   gobject_class->get_property = gst_faac_get_property;
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_faac_finalize);
 
   /* properties */
   g_object_class_install_property (gobject_class, ARG_BITRATE,
@@ -255,10 +258,7 @@ gst_faac_init (GstFaac * faac)
   faac->handle = NULL;
   faac->samplerate = -1;
   faac->channels = -1;
-  faac->cache = NULL;
-  faac->cache_time = GST_CLOCK_TIME_NONE;
-  faac->cache_duration = 0;
-  faac->next_ts = GST_CLOCK_TIME_NONE;
+  faac->offset = 0;
 
   faac->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (faac->sinkpad,
@@ -273,6 +273,8 @@ gst_faac_init (GstFaac * faac)
   gst_pad_use_fixed_caps (faac->srcpad);
   gst_element_add_pad (GST_ELEMENT (faac), faac->srcpad);
 
+  faac->adapter = gst_adapter_new ();
+
   /* default properties */
   faac->bitrate = 1000 * 128;
   faac->profile = MAIN;
@@ -280,6 +282,16 @@ gst_faac_init (GstFaac * faac)
   faac->outputformat = 0;       /* RAW */
   faac->tns = FALSE;
   faac->midside = TRUE;
+}
+
+static void
+gst_faac_finalize (GObject * object)
+{
+  GstFaac *faac = (GstFaac *) object;
+
+  g_object_unref (faac->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -300,10 +312,8 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
     faacEncClose (faac->handle);
     faac->handle = NULL;
   }
-  if (faac->cache) {
-    gst_buffer_unref (faac->cache);
-    faac->cache = NULL;
-  }
+  gst_adapter_clear (faac->adapter);
+  faac->offset = 0;
   GST_OBJECT_UNLOCK (faac);
 
   if (!gst_structure_get_int (structure, "channels", &channels) ||
@@ -464,6 +474,119 @@ set_failed:
   }
 }
 
+static GstFlowReturn
+gst_faac_push_buffers (GstFaac * faac, gboolean force)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  gint av, frame_size, size, ret_size;
+  GstBuffer *outbuf;
+  guint64 timestamp, distance;
+  const guint8 *data;
+
+  /* samples already considers channel count */
+  frame_size = faac->samples * faac->bps;
+
+  while (ret == GST_FLOW_OK) {
+
+    av = gst_adapter_available (faac->adapter);
+
+    GST_LOG_OBJECT (faac, "pushing: force: %d, frame_size: %d, av: %d, "
+        "offset: %d", force, frame_size, av, faac->offset);
+
+    /* idea:
+     * - start of adapter corresponds with what has already been encoded
+     * (i.e. really returned by faac)
+     * - start + offset is what needs to be fed to faac next
+     * That way we can timestamp the output based
+     * on adapter provided timestamp (and duration is a fixed frame duration) */
+
+    /* not enough data for one frame and no flush forcing */
+    if (!force && (av < frame_size + faac->offset))
+      break;
+
+    if (G_LIKELY (av - faac->offset >= frame_size)) {
+      GST_LOG_OBJECT (faac, "encoding a frame");
+      data = gst_adapter_peek (faac->adapter, faac->offset + frame_size);
+      data += faac->offset;
+      size = frame_size;
+    } else if (av - faac->offset > 0) {
+      GST_LOG_OBJECT (faac, "encoding leftover");
+      data = gst_adapter_peek (faac->adapter, av);
+      data += faac->offset;
+      size = av - faac->offset;
+    } else {
+      GST_LOG_OBJECT (faac, "emptying encoder");
+      data = NULL;
+      size = 0;
+    }
+
+    outbuf = gst_buffer_new_and_alloc (faac->bytes);
+
+    if ((ret_size = faacEncEncode (faac->handle, (gint32 *) data,
+                size / faac->bps, GST_BUFFER_DATA (outbuf), faac->bytes)) < 0) {
+      gst_buffer_unref (outbuf);
+      goto encode_failed;
+    }
+
+    GST_LOG_OBJECT (faac, "encoder return: %d", ret_size);
+
+    /* consumed, advanced view */
+    faac->offset += size;
+    g_assert (faac->offset <= av);
+
+    if (!ret_size) {
+      gst_buffer_unref (outbuf);
+      if (size)
+        continue;
+      else
+        break;
+    }
+
+    /* after some caching, finally some data */
+    /* adapter gives time */
+    timestamp = gst_adapter_prev_timestamp (faac->adapter, &distance);
+    if ((av = gst_adapter_available (faac->adapter)) >= frame_size) {
+      /* must have then come from a complete frame */
+      gst_adapter_flush (faac->adapter, frame_size);
+      faac->offset -= frame_size;
+      size = frame_size;
+    } else {
+      /* otherwise leftover */
+      gst_adapter_clear (faac->adapter);
+      faac->offset = 0;
+      size = av;
+    }
+
+    GST_BUFFER_SIZE (outbuf) = ret_size;
+    if (GST_CLOCK_TIME_IS_VALID (timestamp))
+      GST_BUFFER_TIMESTAMP (outbuf) = timestamp +
+          GST_FRAMES_TO_CLOCK_TIME (distance / faac->channels / faac->bps,
+          faac->samplerate);
+    GST_BUFFER_DURATION (outbuf) =
+        GST_FRAMES_TO_CLOCK_TIME (size / faac->channels / faac->bps,
+        faac->samplerate);
+    /* perhaps check/set DISCONT based on timestamps ? */
+
+    GST_LOG_OBJECT (faac, "Pushing out buffer time: %" GST_TIME_FORMAT
+        " duration: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
+
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (faac->srcpad));
+    ret = gst_pad_push (faac->srcpad, outbuf);
+  }
+
+  return ret;
+
+  /* ERRORS */
+encode_failed:
+  {
+    GST_ELEMENT_ERROR (faac, LIBRARY, ENCODE, (NULL), (NULL));
+    gst_buffer_unref (outbuf);
+    return GST_FLOW_ERROR;
+  }
+}
+
 static gboolean
 gst_faac_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -472,46 +595,17 @@ gst_faac_sink_event (GstPad * pad, GstEvent * event)
 
   faac = GST_FAAC (gst_pad_get_parent (pad));
 
+  GST_LOG_OBJECT (faac, "received %s", GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
-      GstBuffer *outbuf;
-
-      if (!faac->handle)
-        ret = FALSE;
-      else
-        ret = TRUE;
-
-      /* flush first */
-      GST_DEBUG ("Pushing out remaining buffers because of EOS");
-      while (ret) {
-        if (gst_pad_alloc_buffer_and_set_caps (faac->srcpad,
-                GST_BUFFER_OFFSET_NONE, faac->bytes,
-                GST_PAD_CAPS (faac->srcpad), &outbuf) == GST_FLOW_OK) {
-          gint ret_size;
-
-          GST_DEBUG ("next_ts %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (faac->next_ts));
-
-          if ((ret_size = faacEncEncode (faac->handle, NULL, 0,
-                      GST_BUFFER_DATA (outbuf), faac->bytes)) > 0) {
-            GST_BUFFER_SIZE (outbuf) = ret_size;
-            GST_BUFFER_TIMESTAMP (outbuf) = faac->next_ts;
-            /* faac seems to always consume a fixed number of input samples,
-             * therefore extrapolate the duration from that value and the incoming
-             * bitrate */
-            GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale (faac->samples,
-                GST_SECOND, faac->channels * faac->samplerate);
-            if (GST_CLOCK_TIME_IS_VALID (faac->next_ts))
-              faac->next_ts += GST_BUFFER_DURATION (outbuf);
-            gst_pad_push (faac->srcpad, outbuf);
-          } else {
-            gst_buffer_unref (outbuf);
-            ret = FALSE;
-          }
-        } else
-          ret = FALSE;
+      if (faac->handle) {
+        /* flush first */
+        GST_DEBUG_OBJECT (faac, "Pushing out remaining buffers because of EOS");
+        gst_faac_push_buffers (faac, TRUE);
       }
+
       ret = gst_pad_event_default (pad, event);
       break;
     }
@@ -534,9 +628,7 @@ static GstFlowReturn
 gst_faac_chain (GstPad * pad, GstBuffer * inbuf)
 {
   GstFlowReturn result = GST_FLOW_OK;
-  GstBuffer *outbuf, *subbuf;
   GstFaac *faac;
-  guint size, ret_size, in_size, frame_size;
 
   faac = GST_FAAC (gst_pad_get_parent (pad));
 
@@ -548,124 +640,13 @@ gst_faac_chain (GstPad * pad, GstBuffer * inbuf)
       goto nego_failed;
   }
 
-  GST_DEBUG ("Got buffer time:%" GST_TIME_FORMAT " duration:%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
+  GST_LOG_OBJECT (faac, "Got buffer time: %" GST_TIME_FORMAT " duration: %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)));
 
-  size = GST_BUFFER_SIZE (inbuf);
-  in_size = size;
-  if (faac->cache)
-    in_size += GST_BUFFER_SIZE (faac->cache);
-  frame_size = faac->samples * faac->bps;
+  gst_adapter_push (faac->adapter, inbuf);
 
-  while (1) {
-    /* do we have enough data for one frame? */
-    if (in_size / faac->bps < faac->samples) {
-      if (in_size > size) {
-        GstBuffer *merge;
-
-        /* this is panic! we got a buffer, but still don't have enough
-         * data. Merge them and retry in the next cycle... */
-        merge = gst_buffer_merge (faac->cache, inbuf);
-        gst_buffer_unref (faac->cache);
-        gst_buffer_unref (inbuf);
-        faac->cache = merge;
-      } else if (in_size == size) {
-        /* this shouldn't happen, but still... */
-        faac->cache = inbuf;
-      } else if (in_size > 0) {
-        faac->cache = gst_buffer_create_sub (inbuf, size - in_size, in_size);
-        GST_BUFFER_DURATION (faac->cache) =
-            GST_BUFFER_DURATION (inbuf) * GST_BUFFER_SIZE (faac->cache) / size;
-        GST_BUFFER_TIMESTAMP (faac->cache) =
-            GST_BUFFER_TIMESTAMP (inbuf) + (GST_BUFFER_DURATION (inbuf) *
-            (size - in_size) / size);
-        gst_buffer_unref (inbuf);
-      } else {
-        gst_buffer_unref (inbuf);
-      }
-
-      goto done;
-    }
-
-    /* create the frame */
-    if (in_size > size) {
-      GstBuffer *merge;
-
-      /* merge */
-      subbuf = gst_buffer_create_sub (inbuf, 0, frame_size - (in_size - size));
-      GST_BUFFER_DURATION (subbuf) =
-          GST_BUFFER_DURATION (inbuf) * GST_BUFFER_SIZE (subbuf) / size;
-      merge = gst_buffer_merge (faac->cache, subbuf);
-      gst_buffer_unref (faac->cache);
-      gst_buffer_unref (subbuf);
-      subbuf = merge;
-      faac->cache = NULL;
-    } else {
-      subbuf = gst_buffer_create_sub (inbuf, size - in_size, frame_size);
-      GST_BUFFER_DURATION (subbuf) =
-          GST_BUFFER_DURATION (inbuf) * GST_BUFFER_SIZE (subbuf) / size;
-      GST_BUFFER_TIMESTAMP (subbuf) =
-          GST_BUFFER_TIMESTAMP (inbuf) + (GST_BUFFER_DURATION (inbuf) *
-          (size - in_size) / size);
-    }
-
-    result =
-        gst_pad_alloc_buffer_and_set_caps (faac->srcpad, GST_BUFFER_OFFSET_NONE,
-        faac->bytes, GST_PAD_CAPS (faac->srcpad), &outbuf);
-    if (result != GST_FLOW_OK)
-      goto done;
-
-    if ((ret_size = faacEncEncode (faac->handle,
-                (gint32 *) GST_BUFFER_DATA (subbuf),
-                GST_BUFFER_SIZE (subbuf) / faac->bps,
-                GST_BUFFER_DATA (outbuf), faac->bytes)) < 0) {
-      GST_ELEMENT_ERROR (faac, LIBRARY, ENCODE, (NULL), (NULL));
-      gst_buffer_unref (inbuf);
-      gst_buffer_unref (subbuf);
-      result = GST_FLOW_ERROR;
-      goto done;
-    }
-
-    if (ret_size > 0) {
-      GST_BUFFER_SIZE (outbuf) = ret_size;
-      if (faac->cache_time != GST_CLOCK_TIME_NONE) {
-        GST_BUFFER_TIMESTAMP (outbuf) = faac->cache_time;
-        faac->cache_time = GST_CLOCK_TIME_NONE;
-      } else
-        GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (subbuf);
-      GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (subbuf);
-      if (faac->cache_duration) {
-        GST_BUFFER_DURATION (outbuf) += faac->cache_duration;
-        faac->cache_duration = 0;
-      }
-      /* Store the value of the next expected timestamp to output
-       * This is required in order to output the trailing encoded packets
-       * at EOS with proper timestamps and duration. */
-      faac->next_ts =
-          GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf);
-      GST_DEBUG ("Pushing out buffer time:%" GST_TIME_FORMAT " duration:%"
-          GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-          GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
-      result = gst_pad_push (faac->srcpad, outbuf);
-    } else {
-      /* FIXME: what I'm doing here isn't fully correct, but there
-       * really isn't a better way yet.
-       * Problem is that libfaac caches buffers (for encoding
-       * purposes), so the timestamp of the outgoing buffer isn't
-       * the same as the timestamp of the data that I pushed in.
-       * However, I don't know the delay between those two so I
-       * cannot really say aything about it. This is a bad guess. */
-
-      gst_buffer_unref (outbuf);
-      if (faac->cache_time != GST_CLOCK_TIME_NONE)
-        faac->cache_time = GST_BUFFER_TIMESTAMP (subbuf);
-      faac->cache_duration += GST_BUFFER_DURATION (subbuf);
-    }
-
-    in_size -= frame_size;
-    gst_buffer_unref (subbuf);
-  }
+  result = gst_faac_push_buffers (faac, FALSE);
 
 done:
   gst_object_unref (faac);
@@ -784,15 +765,10 @@ gst_faac_change_state (GstElement * element, GstStateChange transition)
         faacEncClose (faac->handle);
         faac->handle = NULL;
       }
-      if (faac->cache) {
-        gst_buffer_unref (faac->cache);
-        faac->cache = NULL;
-      }
-      faac->cache_time = GST_CLOCK_TIME_NONE;
-      faac->cache_duration = 0;
+      gst_adapter_clear (faac->adapter);
+      faac->offset = 0;
       faac->samplerate = -1;
       faac->channels = -1;
-      faac->next_ts = GST_CLOCK_TIME_NONE;
       GST_OBJECT_UNLOCK (faac);
       break;
     }
