@@ -90,7 +90,8 @@ gst_dvd_sub_parse_finalize (GObject * object)
 {
   GstDvdSubParse *parse = GST_DVD_SUB_PARSE (object);
 
-  gst_object_unref (parse->adapter);
+  g_object_unref (parse->adapter);
+  parse->adapter = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
