@@ -260,8 +260,6 @@ gst_wildmidi_init (GstWildmidi * filter, GstWildmidiClass * g_class)
   gst_pad_set_activatepull_function (filter->sinkpad,
       gst_wildmidi_activatepull);
   gst_pad_set_activate_function (filter->sinkpad, gst_wildmidi_activate);
-  gst_pad_set_setcaps_function (filter->sinkpad, gst_pad_set_caps);
-  gst_pad_use_fixed_caps (filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   filter->srcpad =
@@ -271,7 +269,6 @@ gst_wildmidi_init (GstWildmidi * filter, GstWildmidiClass * g_class)
   gst_pad_set_query_function (filter->srcpad, gst_wildmidi_src_query);
   gst_pad_set_event_function (filter->srcpad, gst_wildmidi_src_event);
   gst_pad_use_fixed_caps (filter->srcpad);
-  gst_pad_set_setcaps_function (filter->srcpad, gst_pad_set_caps);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
