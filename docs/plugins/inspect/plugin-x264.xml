@@ -1,0 +1,34 @@
+<plugin>
+  <name>x264</name>
+  <description>libx264-based H264 plugins</description>
+  <filename>../../ext/x264/.libs/libgstx264.so</filename>
+  <basename>libgstx264.so</basename>
+  <version>0.10.12.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>x264enc</name>
+      <longname>x264enc</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>H264 Encoder</description>
+      <author>Josef Zlomek &lt;josef.zlomek@itonis.tv&gt;, Mark Nauwelaerts &lt;mnauw@users.sf.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 16, 2147483647 ], height=(int)[ 16, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-h264, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

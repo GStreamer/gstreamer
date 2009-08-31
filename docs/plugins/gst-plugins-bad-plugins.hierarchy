@@ -119,6 +119,7 @@ GObject
         GstRTPDTMFSrc
       GstAmrWbEnc
       GstTRM
+      GstX264Enc
       GstGSMEnc
       GstGSMDec
       GstBaseMetadata
@@ -146,6 +147,7 @@ GObject
       GstBz2enc
       GstBz2dec
       GstFaad
+      GstRsvgDec
       GstModPlug
       GstSignalProcessor
         ladspa-amp-mono
@@ -187,6 +189,7 @@ GObject
       GstGPPMux
       GstMJ2Mux
       GstFestival
+      MpegPsMux
       GstCDXAParse
       GstVcdParse
       AIFFParse
@@ -198,6 +201,8 @@ GObject
       MpegTSParse
       GstSirenDec
       GstSirenEnc
+      GstFlacBaseParse
+        GstFlacParse
       GstAsfMux
       GstBaseRTPPayload
         GstRtpAsfPay
@@ -265,8 +270,6 @@ GObject
   MpegTsPatInfo
   MpegTsPmtInfo
   GstColorBalanceChannel
-  GstMixerTrack
-    GstMixerOptions
 GInterface
   GTypePlugin
   GstChildProxy

@@ -1,0 +1,34 @@
+<plugin>
+  <name>flacparse</name>
+  <description>The FLAC Lossless compressor Codec parser</description>
+  <filename>../../gst/flacparse/.libs/libgstflacparse.so</filename>
+  <basename>libgstflacparse.so</basename>
+  <version>0.10.13.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>flacparse</name>
+      <longname>FLAC audio parser</longname>
+      <class>Codec/Parser/Audio</class>
+      <description>Parses audio with the FLAC lossless audio codec</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-flac</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-flac, channels=(int)[ 1, 8 ], rate=(int)[ 1, 655350 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

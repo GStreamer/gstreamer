@@ -19,6 +19,7 @@ GstMMS GstURIHandler
 GstNeonhttpSrc GstURIHandler
 GstVCDSrc GstURIHandler
 GstAmrWbEnc GstPreset
+GstX264Enc GstPreset
 GstMetadataMux GstTagSetter
 GstFaac GstPreset
 GstXvidEnc GstPreset
