@@ -113,7 +113,7 @@ beach:
 }
 
 int
-gst_udp_set_loop_ttl (int sockfd, gboolean loop, int ttl)
+gst_udp_set_loop (int sockfd, gboolean loop)
 {
   socklen_t socklen;
   struct sockaddr_storage addr;
@@ -128,29 +128,70 @@ gst_udp_set_loop_ttl (int sockfd, gboolean loop, int ttl)
   switch (addr.ss_family) {
     case AF_INET:
     {
-      if ((ret =
-              setsockopt (sockfd, IPPROTO_IP, IP_MULTICAST_LOOP, &l,
-                  sizeof (l))) < 0)
+      ret = setsockopt (sockfd, IPPROTO_IP, IP_MULTICAST_LOOP, &l, sizeof (l));
+      if (ret < 0)
         return ret;
 
-      if ((ret =
-              setsockopt (sockfd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl,
-                  sizeof (ttl))) < 0)
+      break;
+    }
+    case AF_INET6:
+    {
+      ret =
+          setsockopt (sockfd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &l,
+          sizeof (l));
+      if (ret < 0)
+        return ret;
+
+      break;
+    }
+    default:
+#ifdef G_OS_WIN32
+      WSASetLastError (WSAEAFNOSUPPORT);
+#else
+      errno = EAFNOSUPPORT;
+#endif
+  }
+
+  return ret;
+}
+
+int
+gst_udp_set_ttl (int sockfd, int ttl, gboolean is_multicast)
+{
+  socklen_t socklen;
+  struct sockaddr_storage addr;
+  int optname = -1;
+  int ret = -1;
+
+  socklen = sizeof (addr);
+  if ((ret = getsockname (sockfd, (struct sockaddr *) &addr, &socklen)) < 0) {
+    return ret;
+  }
+
+  switch (addr.ss_family) {
+    case AF_INET:
+    {
+      optname = (is_multicast == TRUE) ? IP_MULTICAST_TTL : IP_TTL;
+      ret = setsockopt (sockfd, IPPROTO_IP, optname, &ttl, sizeof (ttl));
+      if (ret < 0)
         return ret;
       break;
     }
     case AF_INET6:
     {
-      if ((ret =
-              setsockopt (sockfd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &l,
-                  sizeof (l))) < 0)
+      optname =
+          (is_multicast == TRUE) ? IPV6_MULTICAST_HOPS : IPV6_UNICAST_HOPS;
+      ret = setsockopt (sockfd, IPPROTO_IPV6, optname, &ttl, sizeof (ttl));
+      if (ret < 0)
         return ret;
 
-      if ((ret =
-              setsockopt (sockfd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ttl,
-                  sizeof (ttl))) < 0)
+      /* When using IPV4 address with IPV6 socket, both TTL values
+         must be set in order to actually use the given value.
+         Has no effect when IPV6 address is used. */
+      optname = (is_multicast == TRUE) ? IP_MULTICAST_TTL : IP_TTL;
+      ret = setsockopt (sockfd, IPPROTO_IP, optname, &ttl, sizeof (ttl));
+      if (ret < 0)
         return ret;
-
       break;
     }
     default:

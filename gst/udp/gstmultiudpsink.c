@@ -723,14 +723,26 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   sink->bytes_to_serve = 0;
   sink->bytes_served = 0;
 
-  gst_udp_set_loop_ttl (sink->sock, sink->loop, sink->ttl);
   gst_multiudpsink_setup_qos_dscp (sink);
 
-  /* look for multicast clients and join multicast groups appropriately */
+  /* look for multicast clients and join multicast groups appropriately
+     set also ttl and multicast loopback delivery appropriately  */
   for (clients = sink->clients; clients; clients = g_list_next (clients)) {
     client = (GstUDPClient *) clients->data;
-    if (sink->auto_multicast && gst_udp_is_multicast (&client->theiraddr))
-      gst_udp_join_group (*(client->sock), &client->theiraddr, NULL);
+    if (gst_udp_is_multicast (&client->theiraddr)) {
+      if (sink->auto_multicast) {
+        if (gst_udp_join_group (*(client->sock), &client->theiraddr, NULL)
+            != 0)
+          goto join_group_failed;
+      }
+      if (gst_udp_set_loop (sink->sock, sink->loop) != 0)
+        goto loop_failed;
+      if (gst_udp_set_ttl (sink->sock, sink->ttl, TRUE) != 0)
+        goto ttl_failed;
+    } else {
+      if (gst_udp_set_ttl (sink->sock, sink->ttl, FALSE) != 0)
+        goto ttl_failed;
+    }
   }
   return TRUE;
 
@@ -746,6 +758,29 @@ no_broadcast:
     CLOSE_IF_REQUESTED (sink);
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
         ("Could not set broadcast socket option (%d): %s", errno,
+            g_strerror (errno)));
+    return FALSE;
+  }
+join_group_failed:
+  {
+    CLOSE_IF_REQUESTED (sink);
+    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
+        ("Could not join multicast group (%d): %s", errno, g_strerror (errno)));
+    return FALSE;
+  }
+ttl_failed:
+  {
+    CLOSE_IF_REQUESTED (sink);
+    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
+        ("Could not set TTL socket option (%d): %s", errno,
+            g_strerror (errno)));
+    return FALSE;
+  }
+loop_failed:
+  {
+    CLOSE_IF_REQUESTED (sink);
+    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
+        ("Could not set loopback socket option (%d): %s", errno,
             g_strerror (errno)));
     return FALSE;
   }
