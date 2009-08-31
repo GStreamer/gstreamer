@@ -196,8 +196,6 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
 static void
 mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
 {
-  guint i;
-
   mux->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&mpegtsmux_src_factory), "src");
@@ -211,10 +209,7 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
   mux->tsmux = tsmux_new ();
   tsmux_set_write_func (mux->tsmux, new_packet_cb, mux);
 
-  mux->programs = g_ptr_array_new ();
-  for (i = 0; i < MAX_PROG_NUMBER; i++)
-    g_ptr_array_add (mux->programs, NULL);
-
+  mux->programs = g_new0 (TsMuxProgram *, MAX_PROG_NUMBER);
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
   mux->adapter = gst_adapter_new ();
@@ -248,7 +243,7 @@ mpegtsmux_dispose (GObject * object)
     mux->prog_map = NULL;
   }
   if (mux->programs) {
-    g_ptr_array_free (mux->programs, TRUE);
+    g_free (mux->programs);
     mux->programs = NULL;
   }
 
@@ -486,13 +481,12 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       }
     }
 
-    ts_data->prog =
-        (TsMuxProgram *) g_ptr_array_index (mux->programs, ts_data->prog_id);
+    ts_data->prog = mux->programs[ts_data->prog_id];
     if (ts_data->prog == NULL) {
       ts_data->prog = tsmux_program_new (mux->tsmux);
       if (ts_data->prog == NULL)
         goto no_program;
-      g_ptr_array_index (mux->programs, ts_data->prog_id) = ts_data->prog;
+      mux->programs[ts_data->prog_id] = ts_data->prog;
     }
 
     if (ts_data->stream == NULL) {

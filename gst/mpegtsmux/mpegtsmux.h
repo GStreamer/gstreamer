@@ -109,7 +109,7 @@ struct MpegTsMux {
   GstCollectPads *collect;
 
   TsMux *tsmux;
-  GPtrArray *programs;
+  TsMuxProgram **programs;
   GstStructure *prog_map;
 
   gboolean first;
