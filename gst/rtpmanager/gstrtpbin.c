@@ -24,12 +24,12 @@
  * RTP bin combines the functions of #GstRtpSession, #GstRtpsSrcDemux,
  * #GstRtpJitterBuffer and #GstRtpPtDemux in one element. It allows for multiple
  * RTP sessions that will be synchronized together using RTCP SR packets.
- * 
+ *
  * #GstRtpBin is configured with a number of request pads that define the
  * functionality that is activated, similar to the #GstRtpSession element.
- * 
+ *
  * To use #GstRtpBin as an RTP receiver, request a recv_rtp_sink_%%d pad. The session
- * number must be specified in the pad name. 
+ * number must be specified in the pad name.
  * Data received on the recv_rtp_sink_%%d pad will be processed in the gstrtpsession
  * manager and after being validated forwarded on #GstRtpsSrcDemux element. Each
  * RTP stream is demuxed based on the SSRC and send to a #GstRtpJitterBuffer. After
@@ -38,26 +38,26 @@
  * on the payload type and will create a unique pad recv_rtp_src_%%d_%%d_%%d on
  * gstrtpbin with the session number, SSRC and payload type respectively as the pad
  * name.
- * 
+ *
  * To also use #GstRtpBin as an RTCP receiver, request a recv_rtcp_sink_%%d pad. The
  * session number must be specified in the pad name.
- * 
+ *
  * If you want the session manager to generate and send RTCP packets, request
  * the send_rtcp_src_%%d pad with the session number in the pad name. Packet pushed
  * on this pad contain SR/RR RTCP reports that should be sent to all participants
  * in the session.
- * 
+ *
  * To use #GstRtpBin as a sender, request a send_rtp_sink_%%d pad, which will
  * automatically create a send_rtp_src_%%d pad. If the session number is not provided,
  * the pad from the lowest available session will be returned. The session manager will modify the
  * SSRC in the RTP packets to its own SSRC and wil forward the packets on the
  * send_rtp_src_%%d pad after updating its internal state.
- * 
+ *
  * The session manager needs the clock-rate of the payload types it is handling
  * and will signal the #GstRtpSession::request-pt-map signal when it needs such a
  * mapping. One can clear the cached values with the #GstRtpSession::clear-pt-map
  * signal.
- * 
+ *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
@@ -81,7 +81,7 @@
  * on port 5001 and the audio RTCP packets for session 0 are sent on port 5003.
  * RTCP packets for session 0 are received on port 5005 and RTCP for session 1
  * is received on port 5007. Since RTCP packets from the sender should be sent
- * as soon as possible and do not participate in preroll, sync=false and 
+ * as soon as possible and do not participate in preroll, sync=false and
  * async=false is configured on udpsink
  * |[
  * gst-launch -v gstrtpbin name=rtpbin                                          \
@@ -906,7 +906,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
 
     /* calculate the min of all deltas, ignoring streams that did not yet have a
      * valid unix_delta because we did not yet receive an SR packet for those
-     * streams. 
+     * streams.
      * We calculate the mininum because we would like to only apply positive
      * offsets to streams, delaying their playback instead of trying to speed up
      * other streams (which might be imposible when we have to create negative
@@ -1294,7 +1294,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * GstRtpBin::on-new-ssrc:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of a new SSRC that entered @session.
    */
@@ -1307,7 +1307,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * GstRtpBin::on-ssrc-collision:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify when we have an SSRC collision
    */
@@ -1320,7 +1320,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * GstRtpBin::on-ssrc-validated:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of a new SSRC that became validated.
    */
@@ -1360,7 +1360,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * GstRtpBin::on-bye-ssrc:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of an SSRC that became inactive because of a BYE packet.
    */
@@ -1373,7 +1373,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * GstRtpBin::on-bye-timeout:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of an SSRC that has timed out because of BYE
    */
@@ -1386,7 +1386,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * GstRtpBin::on-timeout:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of an SSRC that has timed out
    */
@@ -1399,7 +1399,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * GstRtpBin::on-sender-timeout:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of a sender SSRC that has timed out and became a receiver
    */
@@ -1413,7 +1413,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * GstRtpBin::on-npt-stop:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify that SSRC sender has sent data up to the configured NPT stop time.
    */
@@ -2348,7 +2348,7 @@ gst_rtp_bin_get_free_pad_name (GstElement * element, GstPadTemplate * templ)
   return pad_name;
 }
 
-/* 
+/*
  */
 static GstPad *
 gst_rtp_bin_request_new_pad (GstElement * element,
