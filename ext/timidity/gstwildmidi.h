@@ -47,6 +47,12 @@ G_BEGIN_DECLS
 typedef struct _GstWildmidi GstWildmidi;
 typedef struct _GstWildmidiClass GstWildmidiClass;
 
+typedef enum {
+  GST_WILDMIDI_STATE_LOAD,
+  GST_WILDMIDI_STATE_PARSE,
+  GST_WILDMIDI_STATE_PLAY
+} GstWildmidiState;
+
 struct _GstWildmidi
 {
   GstElement element;
@@ -54,14 +60,13 @@ struct _GstWildmidi
   GstPad *sinkpad, *srcpad;
 
   /* input stream properties */
-  gint64 mididata_size, mididata_offset;
-  gchar *mididata;
-  gboolean mididata_filled;
-
+  GstWildmidiState state;
+  GstAdapter *adapter;
   midi *song;
+  guint64 offset;
 
   /* output data */
-  gboolean o_new_segment, o_segment_changed, o_seek;
+  gboolean o_new_segment, o_seek;
   GstSegment o_segment[1];
   gint64 o_len;
 

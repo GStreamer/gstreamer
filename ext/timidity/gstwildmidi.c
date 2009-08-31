@@ -83,7 +83,9 @@ enum
 
 static void gst_wildmidi_base_init (gpointer g_class);
 static void gst_wildmidi_class_init (GstWildmidiClass * klass);
+static void gst_wildmidi_finalize (GObject * object);
 
+static gboolean gst_wildmidi_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_wildmidi_src_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_wildmidi_change_state (GstElement * element,
@@ -92,6 +94,7 @@ static gboolean gst_wildmidi_activate (GstPad * pad);
 static gboolean gst_wildmidi_activatepull (GstPad * pad, gboolean active);
 
 static void gst_wildmidi_loop (GstPad * sinkpad);
+static GstFlowReturn gst_wildmidi_chain (GstPad * sinkpad, GstBuffer * buffer);
 
 static gboolean gst_wildmidi_src_query (GstPad * pad, GstQuery * query);
 
@@ -230,7 +233,7 @@ gst_wildmidi_class_init (GstWildmidiClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gstelement_class->change_state = gst_wildmidi_change_state;
+  gobject_class->finalize = gst_wildmidi_finalize;
   gobject_class->set_property = gst_wildmidi_set_property;
   gobject_class->get_property = gst_wildmidi_get_property;
 
@@ -241,6 +244,8 @@ gst_wildmidi_class_init (GstWildmidiClass * klass)
   g_object_class_install_property (gobject_class, ARG_HIGH_QUALITY,
       g_param_spec_boolean ("high-quality", "High Quality",
           "High Quality", TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  gstelement_class->change_state = gst_wildmidi_change_state;
 }
 
 /* initialize the new element
@@ -260,6 +265,8 @@ gst_wildmidi_init (GstWildmidi * filter, GstWildmidiClass * g_class)
   gst_pad_set_activatepull_function (filter->sinkpad,
       gst_wildmidi_activatepull);
   gst_pad_set_activate_function (filter->sinkpad, gst_wildmidi_activate);
+  gst_pad_set_event_function (filter->sinkpad, gst_wildmidi_sink_event);
+  gst_pad_set_chain_function (filter->sinkpad, gst_wildmidi_chain);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   filter->srcpad =
@@ -274,8 +281,16 @@ gst_wildmidi_init (GstWildmidi * filter, GstWildmidiClass * g_class)
 
   gst_segment_init (filter->o_segment, GST_FORMAT_DEFAULT);
 
+  filter->adapter = gst_adapter_new ();
+
   filter->bytes_per_frame = WILDMIDI_BPS;
   filter->time_per_frame = GST_SECOND / WILDMIDI_RATE;
+}
+
+static void
+gst_wildmidi_finalize (GObject * object)
+{
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -378,20 +393,6 @@ gst_wildmidi_src_query (GstPad * pad, GstQuery * query)
   }
 
   gst_object_unref (wildmidi);
-  return res;
-}
-
-static gboolean
-gst_wildmidi_get_upstream_size (GstWildmidi * wildmidi, gint64 * size)
-{
-  GstFormat format = GST_FORMAT_BYTES;
-  gboolean res = FALSE;
-  GstPad *peer = gst_pad_get_peer (wildmidi->sinkpad);
-
-  if (peer != NULL)
-    res = gst_pad_query_duration (peer, &format, size) && *size >= 0;
-
-  gst_object_unref (peer);
   return res;
 }
 
@@ -521,6 +522,7 @@ gst_wildmidi_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+
 static gboolean
 gst_wildmidi_activate (GstPad * sinkpad)
 {
@@ -643,123 +645,58 @@ gst_wildmidi_get_buffer (GstWildmidi * wildmidi)
   return gst_wildmidi_clip_buffer (wildmidi, out);
 }
 
-static void
-gst_wildmidi_loop (GstPad * sinkpad)
+static gboolean
+gst_wildmidi_parse_song (GstWildmidi * wildmidi)
 {
-  GstWildmidi *wildmidi = GST_WILDMIDI (GST_PAD_PARENT (sinkpad));
-  GstBuffer *out;
-  GstFlowReturn ret;
+  struct _WM_Info *info;
   GstCaps *outcaps;
+  guint8 *data;
+  guint size;
 
-  if (wildmidi->mididata_size == 0) {
-    if (!gst_wildmidi_get_upstream_size (wildmidi, &wildmidi->mididata_size)) {
-      GST_ELEMENT_ERROR (wildmidi, STREAM, DECODE, (NULL),
-          ("Unable to get song length"));
-      goto paused;
-    }
+  GST_DEBUG_OBJECT (wildmidi, "Parsing song");
 
-    if (wildmidi->mididata)
-      free (wildmidi->mididata);
+  size = gst_adapter_available (wildmidi->adapter);
+  data = gst_adapter_take (wildmidi->adapter, size);
 
-    wildmidi->mididata = malloc (wildmidi->mididata_size);
-    wildmidi->mididata_offset = 0;
-    return;
-  }
-
-  if (wildmidi->mididata_offset < wildmidi->mididata_size) {
-    GstBuffer *buffer;
-    gint64 size;
-
-    GST_DEBUG_OBJECT (wildmidi, "loading song");
-
-    ret =
-        gst_pad_pull_range (wildmidi->sinkpad, wildmidi->mididata_offset,
-        -1, &buffer);
-    if (ret != GST_FLOW_OK) {
-      GST_ELEMENT_ERROR (wildmidi, STREAM, DECODE, (NULL),
-          ("Unable to load song"));
-      goto paused;
-    }
-
-    size = wildmidi->mididata_size - wildmidi->mididata_offset;
-    if (GST_BUFFER_SIZE (buffer) < size)
-      size = GST_BUFFER_SIZE (buffer);
-
-    memmove (wildmidi->mididata + wildmidi->mididata_offset,
-        GST_BUFFER_DATA (buffer), size);
-    gst_buffer_unref (buffer);
-
-    wildmidi->mididata_offset += size;
-    GST_DEBUG_OBJECT (wildmidi, "Song loaded");
-    return;
-  }
+  /* this method takes our memory block */
+  wildmidi->song = WildMidi_OpenBuffer (data, size);
 
   if (!wildmidi->song) {
-    struct _WM_Info *info;
-
-    GST_DEBUG_OBJECT (wildmidi, "Parsing song");
-
-    /* this method takes our memory block */
-    wildmidi->song =
-        WildMidi_OpenBuffer ((unsigned char *) wildmidi->mididata,
-        wildmidi->mididata_size);
-    wildmidi->mididata_size = 0;
-    wildmidi->mididata = NULL;
-
-    if (!wildmidi->song) {
-      GST_ELEMENT_ERROR (wildmidi, STREAM, DECODE, (NULL),
-          ("Unable to parse midi"));
-      goto paused;
-    }
-
-    WildMidi_LoadSamples (wildmidi->song);
-
-    WildMidi_SetOption (wildmidi->song, WM_MO_LINEAR_VOLUME,
-        wildmidi->linear_volume);
-    WildMidi_SetOption (wildmidi->song, WM_MO_EXPENSIVE_INTERPOLATION,
-        wildmidi->high_quality);
-
-    info = WildMidi_GetInfo (wildmidi->song);
-    wildmidi->o_len = info->approx_total_samples;
-
-    outcaps = gst_caps_copy (gst_pad_get_pad_template_caps (wildmidi->srcpad));
-    gst_pad_set_caps (wildmidi->srcpad, outcaps);
-    gst_caps_unref (outcaps);
-
-    gst_segment_set_newsegment (wildmidi->o_segment, FALSE, 1.0,
-        GST_FORMAT_DEFAULT, 0, GST_CLOCK_TIME_NONE, 0);
-
-    gst_pad_push_event (wildmidi->srcpad,
-        gst_wildmidi_get_new_segment_event (wildmidi, GST_FORMAT_TIME, FALSE));
-
-    GST_DEBUG_OBJECT (wildmidi, "Parsing song done");
-    return;
+    GST_ELEMENT_ERROR (wildmidi, STREAM, DECODE, (NULL),
+        ("Unable to parse midi"));
+    return FALSE;
   }
 
-  if (wildmidi->o_segment_changed) {
-    GstSegment *segment;
+  WildMidi_LoadSamples (wildmidi->song);
 
-    GST_DEBUG_OBJECT (wildmidi, "segment changed");
+  WildMidi_SetOption (wildmidi->song, WM_MO_LINEAR_VOLUME,
+      wildmidi->linear_volume);
+  WildMidi_SetOption (wildmidi->song, WM_MO_EXPENSIVE_INTERPOLATION,
+      wildmidi->high_quality);
 
-    segment = gst_wildmidi_get_segment (wildmidi, GST_FORMAT_TIME,
-        !wildmidi->o_new_segment);
+  info = WildMidi_GetInfo (wildmidi->song);
+  wildmidi->o_len = info->approx_total_samples;
 
-    GST_LOG_OBJECT (wildmidi,
-        "sending newsegment from %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT
-        ", pos=%" GST_TIME_FORMAT, GST_TIME_ARGS ((guint64) segment->start),
-        GST_TIME_ARGS ((guint64) segment->stop),
-        GST_TIME_ARGS ((guint64) segment->time));
+  outcaps = gst_caps_copy (gst_pad_get_pad_template_caps (wildmidi->srcpad));
+  gst_pad_set_caps (wildmidi->srcpad, outcaps);
+  gst_caps_unref (outcaps);
 
-    if (wildmidi->o_segment->flags & GST_SEEK_FLAG_SEGMENT) {
-      gst_element_post_message (GST_ELEMENT (wildmidi),
-          gst_message_new_segment_start (GST_OBJECT (wildmidi),
-              segment->format, segment->start));
-    }
+  gst_segment_set_newsegment (wildmidi->o_segment, FALSE, 1.0,
+      GST_FORMAT_DEFAULT, 0, GST_CLOCK_TIME_NONE, 0);
 
-    gst_segment_free (segment);
-    wildmidi->o_segment_changed = FALSE;
-    return;
-  }
+  gst_pad_push_event (wildmidi->srcpad,
+      gst_wildmidi_get_new_segment_event (wildmidi, GST_FORMAT_TIME, FALSE));
+
+  GST_DEBUG_OBJECT (wildmidi, "Parsing song done");
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_wildmidi_do_play (GstWildmidi * wildmidi)
+{
+  GstBuffer *out;
+  GstFlowReturn ret;
 
   if (wildmidi->o_seek) {
     unsigned long int sample;
@@ -781,7 +718,7 @@ gst_wildmidi_loop (GstPad * sinkpad)
     GST_LOG_OBJECT (wildmidi, "Song ended, generating eos");
     gst_pad_push_event (wildmidi->srcpad, gst_event_new_eos ());
     wildmidi->o_seek = FALSE;
-    goto paused;
+    return GST_FLOW_UNEXPECTED;
   }
 
   if (wildmidi->o_seek) {
@@ -792,9 +729,94 @@ gst_wildmidi_loop (GstPad * sinkpad)
   gst_buffer_set_caps (out, GST_PAD_CAPS (wildmidi->srcpad));
   ret = gst_pad_push (wildmidi->srcpad, out);
 
-  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED)
-    goto error;
+  return ret;
+}
 
+static gboolean
+gst_wildmidi_sink_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res = FALSE;
+  GstWildmidi *wildmidi = GST_WILDMIDI (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (pad, "%s event received", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      wildmidi->state = GST_WILDMIDI_STATE_PARSE;
+      /* now start the parsing task */
+      gst_pad_start_task (wildmidi->sinkpad,
+          (GstTaskFunction) gst_wildmidi_loop, wildmidi->sinkpad);
+      gst_event_unref (event);
+      break;
+    default:
+      res = gst_pad_push_event (wildmidi->srcpad, event);
+      break;
+  }
+  return res;
+}
+
+static GstFlowReturn
+gst_wildmidi_chain (GstPad * sinkpad, GstBuffer * buffer)
+{
+  GstFlowReturn ret;
+  GstWildmidi *wildmidi;
+
+  wildmidi = GST_WILDMIDI (GST_PAD_PARENT (sinkpad));
+
+  gst_adapter_push (wildmidi->adapter, buffer);
+
+  ret = GST_FLOW_OK;
+
+  return ret;
+}
+
+static void
+gst_wildmidi_loop (GstPad * sinkpad)
+{
+  GstWildmidi *wildmidi = GST_WILDMIDI (GST_PAD_PARENT (sinkpad));
+  GstFlowReturn ret;
+
+  switch (wildmidi->state) {
+    case GST_WILDMIDI_STATE_LOAD:
+    {
+      GstBuffer *buffer;
+
+      GST_DEBUG_OBJECT (wildmidi, "loading song");
+
+      ret =
+          gst_pad_pull_range (wildmidi->sinkpad, wildmidi->offset, -1, &buffer);
+
+      if (ret == GST_FLOW_UNEXPECTED) {
+        GST_DEBUG_OBJECT (wildmidi, "Song loaded");
+        wildmidi->state = GST_WILDMIDI_STATE_PARSE;
+      } else if (ret != GST_FLOW_OK) {
+        GST_ELEMENT_ERROR (wildmidi, STREAM, DECODE, (NULL),
+            ("Unable to load song"));
+        goto paused;
+      } else {
+        GST_DEBUG_OBJECT (wildmidi, "pushing buffer");
+        gst_adapter_push (wildmidi->adapter, buffer);
+        wildmidi->offset += GST_BUFFER_SIZE (buffer);
+      }
+      break;
+    }
+    case GST_WILDMIDI_STATE_PARSE:
+    {
+      if (!wildmidi->song) {
+        if (!gst_wildmidi_parse_song (wildmidi))
+          goto paused;
+      }
+      wildmidi->state = GST_WILDMIDI_STATE_PLAY;
+      break;
+    }
+    case GST_WILDMIDI_STATE_PLAY:
+      ret = gst_wildmidi_do_play (wildmidi);
+      if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED)
+        goto error;
+      break;
+    default:
+      break;
+  }
   return;
 
 paused:
@@ -821,10 +843,10 @@ gst_wildmidi_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      wildmidi->mididata = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      wildmidi->mididata_size = 0;
+      wildmidi->offset = 0;
+      wildmidi->state = GST_WILDMIDI_STATE_LOAD;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -841,9 +863,7 @@ gst_wildmidi_change_state (GstElement * element, GstStateChange transition)
       if (wildmidi->song)
         WildMidi_Close (wildmidi->song);
       wildmidi->song = NULL;
-      if (wildmidi->mididata)
-        free (wildmidi->mididata);
-      wildmidi->mididata = NULL;
+      gst_adapter_clear (wildmidi->adapter);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
