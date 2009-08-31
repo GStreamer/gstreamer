@@ -258,19 +258,20 @@ gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
 }
 #endif /* defined (__x86_64__) */
 
-/* count leading zeros */
 #if defined (__x86_64__) && defined (__GNUC__)
-static inline guint
-gst_util_clz (guint32 val)
+static inline guint64
+gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
 {
-  guint s;
+  guint64 res;
 
-  __asm__ __volatile__ ("bsrl %0, %0    \n\t"
-      "xor $31, %0    \n\t":"=r" (s):"0" (val)
+  __asm__ __volatile__ ("divq %3":"=a" (res)
+      :"d" (c1.ll), "a" (c0.ll), "g" (denom)
       );
-  return s;
+
+  return res;
 }
-#else /* defined (__x86_64__) */
+#else
+/* count leading zeros */
 static inline guint
 gst_util_clz (guint32 val)
 {
@@ -289,7 +290,6 @@ gst_util_clz (guint32 val)
 
   return s;
 }
-#endif /* defined (__x86_64__) */
 
 /* based on Hacker's Delight p152 */
 static inline guint64
@@ -349,48 +349,7 @@ gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
 
   return q0.ll;
 }
-
-/* multiply a 64-bit unsigned int by a 32-bit unsigned int into a 96-bit
- * unsigned int.  the high 64 bits and low 32 bits of the product are
- * placed in c1 and c0 respectively.  this operation cannot overflow. */
-#if defined (__x86_64__) && defined (__GNUC__)
-static inline void
-gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
-    guint32 arg2)
-{
-  __asm__ __volatile__ ("mul %%rcx               \n\t"
-      "mov %%rax, %%rcx        \n\t"
-      "shl $32, %%rdx          \n\t"
-      "shr $32, %%rcx          \n\t"
-      "or  %%rcx, %%rdx        \n\t"
-      "and $0xffffffff, %%eax  \n\t":"=a" (c0->ll), "=d" (c1->ll)
-      :"a" (arg1), "c" ((guint64) arg2)
-      );
-}
-#else /* defined (__x86_64__) */
-static inline void
-gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
-    guint32 arg2)
-{
-  GstUInt64 a;
-
-  a.ll = arg1;
-
-  c0->ll = (guint64) a.l.low * arg2;
-  c1->ll = (guint64) a.l.high * arg2 + c0->l.high;
-  c0->l.high = 0;
-}
-#endif /* defined (__x86_64__) */
-
-/* divide a 96-bit unsigned int by a 32-bit unsigned int when we know the
- * quotient fits into 64 bits.  the high 64 bits and low 32 bits of the
- * numerator are expected in c1 and c0 respectively. */
-static inline guint64
-gst_util_div96_32 (guint64 c1, guint64 c0, guint32 denom)
-{
-  c0 += (c1 % denom) << 32;
-  return ((c1 / denom) << 32) + (c0 / denom);
-}
+#endif /* defined (__GNUC__) */
 
 /* add correction with carry */
 #define CORRECT(c0,c1,val)                    \
@@ -424,6 +383,30 @@ gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
   return gst_util_div128_64 (c1, c0, denom);
 }
 
+#if !defined (__x86_64__)
+static inline void
+gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
+    guint32 arg2)
+{
+  GstUInt64 a;
+
+  a.ll = arg1;
+
+  c0->ll = (guint64) a.l.low * arg2;
+  c1->ll = (guint64) a.l.high * arg2 + c0->l.high;
+  c0->l.high = 0;
+}
+
+/* divide a 96-bit unsigned int by a 32-bit unsigned int when we know the
+ * quotient fits into 64 bits.  the high 64 bits and low 32 bits of the
+ * numerator are expected in c1 and c0 respectively. */
+static inline guint64
+gst_util_div96_32 (guint64 c1, guint64 c0, guint32 denom)
+{
+  c0 += (c1 % denom) << 32;
+  return ((c1 / denom) << 32) + (c0 / denom);
+}
+
 static inline guint64
 gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num,
     guint32 denom, guint32 correct)
@@ -443,6 +426,7 @@ gst_util_uint64_scale_uint32_unchecked (guint64 val, guint32 num,
   /* compute quotient, fits in 64 bits */
   return gst_util_div96_32 (c1.ll, c0.ll, denom);
 }
+#endif
 
 /* the guts of the gst_util_uint64_scale() variants */
 static guint64
@@ -457,6 +441,8 @@ _gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom,
   if (G_UNLIKELY (num == denom))
     return val;
 
+  /* on 64bits we always use a full 128bits multipy/division */
+#if !defined (__x86_64__)
   /* denom is low --> try to use 96 bit muldiv */
   if (G_LIKELY (denom <= G_MAXUINT32)) {
     /* num is low --> use 96 bit muldiv */
@@ -469,6 +455,7 @@ _gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom,
       return gst_util_uint64_scale_uint32_unchecked (num, (guint32) val,
           (guint32) denom, correct);
   }
+#endif /* !defined (__x86_64__) */
 
   /* val is high and num is high --> use 128-bit muldiv */
   return gst_util_uint64_scale_uint64_unchecked (val, num, denom, correct);
@@ -573,10 +560,14 @@ _gst_util_uint64_scale_int (guint64 val, gint num, gint denom, gint correct)
 
     return val / (guint64) denom;
   }
-
+#if !defined (__x86_64__)
   /* num and denom are not negative so casts are OK */
   return gst_util_uint64_scale_uint32_unchecked (val, (guint32) num,
       (guint32) denom, (guint32) correct);
+#else
+  /* always use full 128bits scale */
+  return gst_util_uint64_scale_uint64_unchecked (val, num, denom, correct);
+#endif
 }
 
 /**
