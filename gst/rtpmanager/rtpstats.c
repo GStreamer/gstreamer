@@ -261,3 +261,27 @@ rtp_stats_calculate_bye_interval (RTPSessionStats * stats)
 
   return interval * GST_SECOND;
 }
+
+/**
+ * rtp_stats_get_packets_lost:
+ * @stats: an #RTPSourceStats struct
+ *
+ * Calculate the total number of RTP packets lost since beginning of
+ * reception. Packets that arrive late are not considered lost, and
+ * duplicates are not taken into account. Hence, the loss may be negative
+ * if there are duplicates.
+ *
+ * Returns: total RTP packets lost.
+ */
+gint64
+rtp_stats_get_packets_lost (const RTPSourceStats *stats)
+{
+  gint64 lost;
+  guint64 extended_max, expected;
+
+  extended_max = stats->cycles + stats->max_seq;
+  expected = extended_max - stats->base_seq + 1;
+  lost = expected - stats->packets_received;
+
+  return lost;
+}

@@ -194,5 +194,5 @@ void           rtp_stats_set_bandwidths             (RTPSessionStats *stats,
 GstClockTime   rtp_stats_calculate_rtcp_interval    (RTPSessionStats *stats, gboolean sender, gboolean first);
 GstClockTime   rtp_stats_add_rtcp_jitter            (RTPSessionStats *stats, GstClockTime interval);
 GstClockTime   rtp_stats_calculate_bye_interval     (RTPSessionStats *stats);
-
+gint64         rtp_stats_get_packets_lost           (const RTPSourceStats *stats);
 #endif /* __RTP_STATS_H__ */

@@ -209,7 +209,9 @@ rtp_source_create_stats (RTPSource * src)
       "validated", G_TYPE_BOOLEAN, src->validated,
       "received-bye", G_TYPE_BOOLEAN, src->received_bye,
       "is-csrc", G_TYPE_BOOLEAN, src->is_csrc,
-      "is-sender", G_TYPE_BOOLEAN, is_sender, NULL);
+      "is-sender", G_TYPE_BOOLEAN, is_sender,
+      "seqnum-base", G_TYPE_INT, src->seqnum_base,
+      "clock-rate", G_TYPE_INT, src->clock_rate, NULL);
 
   /* add address and port */
   if (src->have_rtp_from) {
@@ -225,17 +227,18 @@ rtp_source_create_stats (RTPSource * src)
 
   if (internal) {
     /* our internal source */
-    if (is_sender) {
-      /* if we are sending, report about how much we sent, other sources will
-       * have a RB with info on reception. */
-      gst_structure_set (s,
-          "octets-sent", G_TYPE_UINT64, src->stats.octets_sent,
-          "packets-sent", G_TYPE_UINT64, src->stats.packets_sent,
-          "bitrate", G_TYPE_UINT64, src->bitrate, NULL);
-    } else {
-      /* if we are not sending we have nothing more to report */
-    }
+
+    /* report accumulated send statistics, other sources will have a RB with
+     * info on reception. */
+    gst_structure_set (s,
+        "octets-sent", G_TYPE_UINT64, src->stats.octets_sent,
+        "packets-sent", G_TYPE_UINT64, src->stats.packets_sent, NULL);
+
+    if (is_sender)
+      gst_structure_set (s, "bitrate", G_TYPE_UINT64, src->bitrate, NULL);
+
   } else {
+    /* other sources */
     gboolean have_rb;
     guint8 fractionlost = 0;
     gint32 packetslost = 0;
@@ -245,7 +248,13 @@ rtp_source_create_stats (RTPSource * src)
     guint32 dlsr = 0;
     guint32 round_trip = 0;
 
-    /* other sources */
+    gst_structure_set (s,
+        "octets-received", G_TYPE_UINT64, src->stats.octets_received,
+        "packets-received", G_TYPE_UINT64, src->stats.packets_received,
+        "bitrate", G_TYPE_UINT64, src->bitrate,
+        "packets-lost", G_TYPE_INT, (gint) rtp_stats_get_packets_lost (&src->stats),
+        "jitter", G_TYPE_UINT, (guint) (src->stats.jitter >> 4), NULL);
+
     if (is_sender) {
       gboolean have_sr;
       GstClockTime time = 0;
@@ -258,9 +267,6 @@ rtp_source_create_stats (RTPSource * src)
       have_sr = rtp_source_get_last_sr (src, &time, &ntptime, &rtptime,
           &packet_count, &octet_count);
       gst_structure_set (s,
-          "octets-received", G_TYPE_UINT64, src->stats.octets_received,
-          "packets-received", G_TYPE_UINT64, src->stats.packets_received,
-          "bitrate", G_TYPE_UINT64, src->bitrate,
           "have-sr", G_TYPE_BOOLEAN, have_sr,
           "sr-ntptime", G_TYPE_UINT64, ntptime,
           "sr-rtptime", G_TYPE_UINT, (guint) rtptime,
@@ -899,11 +905,11 @@ do_bitrate_estimation (RTPSource * src, GstClockTime running_time,
     elapsed = running_time - src->prev_rtime;
 
     if (elapsed > (G_GINT64_CONSTANT (1) << 31)) {
+      const guint64 bits_per_byte = G_GUINT64_CONSTANT (8);
       guint64 rate;
 
-      rate =
-          gst_util_uint64_scale (*bytes_handled, elapsed,
-          (G_GINT64_CONSTANT (1) << 29));
+      rate = gst_util_uint64_scale (*bytes_handled,
+				    bits_per_byte * GST_SECOND, elapsed);
 
       GST_LOG ("Elapsed %" G_GUINT64_FORMAT ", bytes %" G_GUINT64_FORMAT
           ", rate %" G_GUINT64_FORMAT, elapsed, *bytes_handled, rate);
