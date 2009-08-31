@@ -1009,7 +1009,7 @@ AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
   AM_CONDITIONAL(USE_TIGER, test "x$HAVE_TIGER" = "xyes")
   AC_SUBST(TIGER_CFLAGS)
   AC_SUBST(TIGER_LIBS)
-])
+],,,[AM_CONDITIONAL(USE_TIGER, false)])
 
 dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
