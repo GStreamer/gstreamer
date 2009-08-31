@@ -698,7 +698,7 @@ gst_single_object_iterator_free (GstSingleObjectIterator * it)
 }
 
 /**
- * gst_iterator_new:
+ * gst_iterator_new_single:
  * @type: #GType of the passed object
  * @object: object that this iterator should return
  * @copy: Function that returns a copy of @object or increases its refcount
@@ -709,8 +709,9 @@ gst_single_object_iterator_free (GstSingleObjectIterator * it)
  * a single object has the be considered. This happens often
  * for the #GstPadIterIntLinkFunction.
  *
- * Since: 0.10.25
+ * Returns: the new #GstIterator for @object.
  *
+ * Since: 0.10.25
  */
 GstIterator *
 gst_iterator_new_single (GType type, gpointer object, GstCopyFunction copy,
