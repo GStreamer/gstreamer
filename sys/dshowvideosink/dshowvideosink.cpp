@@ -405,7 +405,6 @@ gst_dshowvideosink_handle_event (GstDshowVideoSink *sink)
   if (sink->filter_media_event) {
     long evCode;
     LONG_PTR param1, param2;
-    HRESULT hr;
     while (SUCCEEDED (sink->filter_media_event->GetEvent(&evCode, &param1, &param2, 0)))
     {
       GST_INFO_OBJECT (sink, "Received DirectShow graph event code 0x%x", evCode);
