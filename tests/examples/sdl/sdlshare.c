@@ -18,22 +18,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gst.h>
-
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include "SDL.h"
-#include "SDL_opengl.h"
-#endif
-#ifndef WIN32
-#include <GL/glx.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <GL/glx.h>
 #include "SDL/SDL_syswm.h"
 #endif
-#include <GL/gl.h>              // Header File For The OpenGL32 Library
-#include <GL/glu.h>             // Header File For The GLu32 Library
+
+#include <gst/gst.h>
+
 
 /* hack */
 typedef struct _GstGLBuffer GstGLBuffer;
@@ -347,8 +345,7 @@ main (int argc, char **argv)
 #ifdef WIN32
   wglMakeCurrent (0, 0);
 #else
-  g_print ("no yet implemented if not win32\n");
-  return -1;
+  glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
 #endif
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
