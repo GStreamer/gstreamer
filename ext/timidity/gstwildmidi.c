@@ -652,6 +652,7 @@ gst_wildmidi_loop (GstPad * sinkpad)
   GstWildmidi *wildmidi = GST_WILDMIDI (GST_PAD_PARENT (sinkpad));
   GstBuffer *out;
   GstFlowReturn ret;
+  GstCaps *outcaps;
 
   if (wildmidi->mididata_size == 0) {
     if (!gst_wildmidi_get_upstream_size (wildmidi, &wildmidi->mididata_size)) {
@@ -724,6 +725,10 @@ gst_wildmidi_loop (GstPad * sinkpad)
     info = WildMidi_GetInfo (wildmidi->song);
     wildmidi->o_len = info->approx_total_samples;
 
+    outcaps = gst_caps_copy (gst_pad_get_pad_template_caps (wildmidi->srcpad));
+    gst_pad_set_caps (wildmidi->srcpad, outcaps);
+    gst_caps_unref (outcaps);
+
     gst_segment_set_newsegment (wildmidi->o_segment, FALSE, 1.0,
         GST_FORMAT_DEFAULT, 0, GST_CLOCK_TIME_NONE, 0);
 
@@ -787,7 +792,7 @@ gst_wildmidi_loop (GstPad * sinkpad)
     wildmidi->o_seek = FALSE;
   }
 
-  gst_buffer_set_caps (out, wildmidi->out_caps);
+  gst_buffer_set_caps (out, GST_PAD_CAPS (wildmidi->srcpad));
   ret = gst_pad_push (wildmidi->srcpad, out);
 
   if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED)
@@ -819,8 +824,6 @@ gst_wildmidi_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      wildmidi->out_caps =
-          gst_caps_copy (gst_pad_get_pad_template_caps (wildmidi->srcpad));
       wildmidi->mididata = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -846,7 +849,6 @@ gst_wildmidi_change_state (GstElement * element, GstStateChange transition)
       wildmidi->mididata = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_caps_unref (wildmidi->out_caps);
       break;
     default:
       break;
