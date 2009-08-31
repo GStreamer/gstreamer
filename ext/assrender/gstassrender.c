@@ -295,15 +295,29 @@ gst_assrender_setcaps_video (GstPad * pad, GstCaps * caps)
 
   if (gst_structure_get_int (structure, "width", &render->width) &&
       gst_structure_get_int (structure, "height", &render->height)) {
+    gdouble dar;
+
     ret = gst_pad_set_caps (render->srcpad, caps);
     ass_set_frame_size (render->ass_renderer, render->width, render->height);
-    /* FIXME: Does this expect aspect ratio or pixel aspect ratio? */
+
+    dar = (((gdouble) par_n) * ((gdouble) render->width));
+    dar /= (((gdouble) par_d) * ((gdouble) render->height));
+#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907010
+    ass_set_aspect_ratio (render->ass_renderer, dar);
+#else
     ass_set_aspect_ratio (render->ass_renderer,
-        ((gdouble) par_n) / ((gdouble) par_d));
+        dar, ((gdouble) render->width) / ((gdouble) render->height));
+#endif
     ass_set_font_scale (render->ass_renderer, 1.0);
     ass_set_hinting (render->ass_renderer, ASS_HINTING_NATIVE);
+
+#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907010
     ass_set_fonts (render->ass_renderer, "Arial", "sans-serif");
     ass_set_fonts (render->ass_renderer, NULL, "Sans");
+#else
+    ass_set_fonts (render->ass_renderer, "Arial", "sans-serif", 1, NULL, 1);
+    ass_set_fonts (render->ass_renderer, NULL, "Sans", 1, NULL, 1);
+#endif
     ass_set_margins (render->ass_renderer, 0, 0, 0, 0);
     ass_set_use_margins (render->ass_renderer, 0);
 
@@ -383,7 +397,7 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
   gint64 start, stop, clip_start = 0, clip_stop = 0;
   double timestamp;
   double step;
-  ass_image_t *ass_image;
+  ASS_Image *ass_image;
 
   render = GST_ASSRENDER (GST_PAD_PARENT (pad));
 

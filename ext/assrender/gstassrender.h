@@ -26,6 +26,13 @@
 
 G_BEGIN_DECLS
 
+#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907010
+#define ASS_Library ass_library_t
+#define ASS_Renderer ass_renderer_t
+#define ASS_Track ass_track_t
+#define ASS_Image ass_image_t
+#endif
+
 #define GST_TYPE_ASSRENDER (gst_assrender_get_type())
 #define GST_ASSRENDER(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ASSRENDER,Gstassrender))
 #define GST_ASSRENDER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ASSRENDER,GstassrenderClass))
@@ -44,9 +51,9 @@ struct _Gstassrender
 
   gint width, height;
 
-  ass_library_t *ass_library;
-  ass_renderer_t *ass_renderer;
-  ass_track_t *ass_track;
+  ASS_Library *ass_library;
+  ASS_Renderer *ass_renderer;
+  ASS_Track *ass_track;
 
   gboolean renderer_init_ok, track_init_ok, enable, embeddedfonts;
 };

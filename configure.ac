@@ -482,7 +482,7 @@ AG_GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
 dnl *** assrender ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ASSRENDER, true)
 AG_GST_CHECK_FEATURE(ASSRENDER, [ASS/SSA renderer], assrender, [
-  PKG_CHECK_MODULES(ASSRENDER, libass >= 0.9.4 libass < 0.9.7, [
+  PKG_CHECK_MODULES(ASSRENDER, libass >= 0.9.4, [
     HAVE_ASSRENDER="yes" ], [
     HAVE_ASSRENDER="no"
     AC_MSG_RESULT(no)
