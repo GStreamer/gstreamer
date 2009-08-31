@@ -454,6 +454,7 @@ gst_rtcp_buffer_add_packet (GstBuffer * buffer, GstRTCPType type,
       break;
     case GST_RTCP_TYPE_PSFB:
       len = 12;
+      break;
     default:
       goto unknown_type;
   }
