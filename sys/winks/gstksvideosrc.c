@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+ *               2009 Andres Colubri <andres.colubri@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -123,12 +124,22 @@ typedef struct
     (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_KS_VIDEO_SRC, \
     GstKsVideoSrcPrivate))
 
+static void gst_ks_video_src_init_interfaces (GType type);
+
 static void gst_ks_video_src_finalize (GObject * object);
 static void gst_ks_video_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_ks_video_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
+static void gst_ks_video_src_probe_interface_init (GstPropertyProbeInterface *
+    iface);
+static const GList *gst_ks_video_src_probe_get_properties (GstPropertyProbe *
+    probe);
+static GValueArray *gst_ks_video_src_probe_get_values (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec);
+static GValueArray *gst_ks_video_src_get_device_name_values (GstKsVideoSrc *
+    self);
 static void gst_ks_video_src_reset (GstKsVideoSrc * self);
 
 static GstStateChangeReturn gst_ks_video_src_change_state (GstElement * element,
@@ -147,8 +158,8 @@ static gboolean gst_ks_video_src_unlock_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_ks_video_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buffer);
 
-GST_BOILERPLATE (GstKsVideoSrc, gst_ks_video_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC);
+GST_BOILERPLATE_FULL (GstKsVideoSrc, gst_ks_video_src, GstPushSrc,
+    GST_TYPE_PUSH_SRC, gst_ks_video_src_init_interfaces);
 
 static void
 gst_ks_video_src_base_init (gpointer gclass)
@@ -158,8 +169,9 @@ gst_ks_video_src_base_init (gpointer gclass)
   gst_element_class_set_details_simple (element_class, "KsVideoSrc",
       "Source/Video",
       "Stream data from a video capture device through Windows kernel streaming",
-      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>, "
-      "Haakon Sporsheim <hakon.sporsheim@tandberg.com>");
+      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>\n"
+      "Haakon Sporsheim <hakon.sporsheim@tandberg.com>\n"
+      "Andres Colubri <andres.colubri@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -302,8 +314,13 @@ gst_ks_video_src_set_property (GObject * object, guint prop_id,
       priv->device_path = g_value_dup_string (value);
       break;
     case PROP_DEVICE_NAME:
+    {
+      const gchar *device_name = g_value_get_string (value);
       g_free (priv->device_name);
-      priv->device_name = g_value_dup_string (value);
+      priv->device_name = NULL;
+      if (device_name && strlen (device_name) != 0)
+        priv->device_name = g_strdup (device_name);
+    }
       break;
     case PROP_DEVICE_INDEX:
       priv->device_index = g_value_get_int (value);
@@ -373,6 +390,88 @@ gst_ks_video_src_apply_driver_quirks (GstKsVideoSrc * self)
     if (mod != NULL)
       GST_WARNING_OBJECT (self, "failed to neutralize Logitech DLL");
   }
+}
+
+static void
+gst_ks_video_src_init_interfaces (GType type)
+{
+  static const GInterfaceInfo ksvideosrc_info = {
+    (GInterfaceInitFunc) gst_ks_video_src_probe_interface_init,
+    NULL,
+    NULL,
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE, &ksvideosrc_info);
+}
+
+static void
+gst_ks_video_src_probe_interface_init (GstPropertyProbeInterface * iface)
+{
+  iface->get_properties = gst_ks_video_src_probe_get_properties;
+  iface->get_values = gst_ks_video_src_probe_get_values;
+}
+
+static const GList *
+gst_ks_video_src_probe_get_properties (GstPropertyProbe * probe)
+{
+  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
+  static GList *props = NULL;
+
+  if (!props) {
+    GParamSpec *pspec;
+
+    pspec = g_object_class_find_property (klass, "device-name");
+    props = g_list_append (props, pspec);
+  }
+
+  return props;
+}
+
+static GValueArray *
+gst_ks_video_src_probe_get_values (GstPropertyProbe * probe, guint prop_id,
+    const GParamSpec * pspec)
+{
+  GstKsVideoSrc *src = GST_KS_VIDEO_SRC (probe);
+  GValueArray *array = NULL;
+
+  switch (prop_id) {
+    case PROP_DEVICE_NAME:
+      array = gst_ks_video_src_get_device_name_values (src);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return array;
+}
+
+static GValueArray *
+gst_ks_video_src_get_device_name_values (GstKsVideoSrc * self)
+{
+  GList *devices, *cur;
+  GValueArray *array = g_value_array_new (0);
+
+  devices = ks_enumerate_devices (&KSCATEGORY_VIDEO);
+  if (devices == NULL)
+    return array;
+
+  devices = ks_video_device_list_sort_cameras_first (devices);
+
+  for (cur = devices; cur != NULL; cur = cur->next) {
+    GValue value = { 0, };
+    KsDeviceEntry *entry = cur->data;
+
+    g_value_init (&value, G_TYPE_STRING);
+    g_value_set_string (&value, entry->name);
+    g_value_array_append (array, &value);
+    g_value_unset (&value);
+
+    ks_device_entry_free (entry);
+  }
+
+  g_list_free (devices);
+  return array;
 }
 
 static gboolean
