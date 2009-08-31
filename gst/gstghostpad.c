@@ -916,7 +916,7 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
    * At this point, the GstGhostPad has a refcount of 1, and the internal pad has
    * a refcount of 1.
    * When the refcount of the GstGhostPad drops to 0, the ghostpad will dispose
-   * it's refcount on the internal pad in the dispose method by un-parenting it.
+   * its refcount on the internal pad in the dispose method by un-parenting it.
    * This is why we don't take extra refcounts in the assignments below
    */
   GST_PROXY_PAD_INTERNAL (pad) = internal;

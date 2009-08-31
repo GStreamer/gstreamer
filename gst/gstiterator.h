@@ -142,7 +142,7 @@ typedef gboolean	  (*GstIteratorFoldFunction)    (gpointer item, GValue *ret, gp
  * @object: The object to copy
  *
  * A function to create a copy of some object or
- * increase it's reference count.
+ * increase its reference count.
  *
  * Returns: a copy of the object or the same object with increased reference count
  *

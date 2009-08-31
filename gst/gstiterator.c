@@ -701,7 +701,7 @@ gst_single_object_iterator_free (GstSingleObjectIterator * it)
  * gst_iterator_new:
  * @type: #GType of the passed object
  * @object: object that this iterator should return
- * @copy: Function that returns a copy of @object or increases it's refcount
+ * @copy: Function that returns a copy of @object or increases its refcount
  * @free: Function to be called for freeing @object
  *
  * This #GstIterator is a convenient iterator for the common
