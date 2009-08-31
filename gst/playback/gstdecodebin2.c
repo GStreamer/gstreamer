@@ -1115,6 +1115,9 @@ unknown_type:
       do_async_done (dbin);
     }
 
+    gst_element_post_message (GST_ELEMENT_CAST (dbin),
+        gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
+
     if (src == dbin->typefind) {
       gchar *desc;
 
@@ -1132,9 +1135,6 @@ unknown_type:
             ("Stream caps %" GST_PTR_FORMAT, caps));
       }
     }
-
-    gst_element_post_message (GST_ELEMENT_CAST (dbin),
-        gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
     return;
   }
 non_fixed:
