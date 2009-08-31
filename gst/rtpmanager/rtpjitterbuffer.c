@@ -343,7 +343,13 @@ no_skew:
   /* the output time is defined as the base timestamp plus the RTP time
    * adjusted for the clock skew .*/
   if (jbuf->base_time != -1) {
-    out_time = jbuf->base_time + send_diff + jbuf->skew;
+    out_time = jbuf->base_time + send_diff;
+    /* skew can be negative and we don't want to make invalid timestamps */
+    if (jbuf->skew < 0 && out_time < -jbuf->skew) {
+      out_time = 0;
+    } else {
+      out_time += jbuf->skew;
+    }
     /* check if timestamps are not going backwards, we can only check this if we
      * have a previous out time and a previous send_diff */
     if (G_LIKELY (jbuf->prev_out_time != -1 && jbuf->prev_send_diff != -1)) {
