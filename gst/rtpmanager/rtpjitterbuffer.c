@@ -213,8 +213,14 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
   jbuf->last_rtptime = ext_rtptime;
 
   if (jbuf->clock_rate != clock_rate) {
-    GST_WARNING ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
+    if (jbuf->clock_rate == -1) {
+      GST_DEBUG ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
         G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
+    }
+    else {
+      GST_WARNING ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
+        G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
+    }
     jbuf->base_time = -1;
     jbuf->base_rtptime = -1;
     jbuf->clock_rate = clock_rate;
