@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2007 Haakon Sporsheim <hakon.sporsheim@tandberg.com>
  *               2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+ *               2009 Knut Inge Hvidsten <knut.inge.hvidsten@tandberg.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -155,6 +156,28 @@ ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
   return structure;
 }
 
+static void
+guess_aspect (gint width, gint height, gint * par_width, gint * par_height)
+{
+  /*
+   * As we dont have access to the actual pixel aspect, we will try to do a
+   * best-effort guess. The guess is based on most sensors being either 4/3
+   * or 16/9, and most pixel aspects being close to 1/1.
+   */
+  if ((width == 768) && (height == 448)) {      /* special case for w448p */
+    *par_width = 28;
+    *par_height = 27;
+  } else {
+    if (((float) width / (float) height) < 1.2778) {
+      *par_width = 12;
+      *par_height = 11;
+    } else {
+      *par_width = 1;
+      *par_height = 1;
+    }
+  }
+}
+
 static gboolean
 ks_video_append_video_stream_cfg_fields (GstStructure * structure,
     const KS_VIDEO_STREAM_CONFIG_CAPS * vscc)
@@ -192,6 +215,16 @@ ks_video_append_video_stream_cfg_fields (GstStructure * structure,
         "framerate", GST_TYPE_FRACTION_RANGE,
         (gint) (10000000 / vscc->MaxFrameInterval), 1,
         (gint) (10000000 / vscc->MinFrameInterval), 1, NULL);
+  }
+
+  {
+    gint par_width, par_height;
+
+    guess_aspect (vscc->MaxOutputSize.cx, vscc->MaxOutputSize.cy,
+        &par_width, &par_height);
+
+    gst_structure_set (structure,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_width, par_height, NULL);
   }
 
   return TRUE;
