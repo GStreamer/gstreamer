@@ -390,13 +390,12 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
 {
   GstBaseRTPDepayload *filter;
   gboolean res = TRUE;
+  gboolean forward = TRUE;
 
   filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      res = gst_pad_push_event (filter->srcpad, event);
-
       gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
       filter->need_newsegment = TRUE;
       filter->priv->next_seqnum = -1;
@@ -416,7 +415,7 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
 
       /* don't pass the event downstream, we generate our own segment including
        * the NTP time and other things we receive in caps */
-      gst_event_unref (event);
+      forward = FALSE;
       break;
     }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
@@ -438,15 +437,19 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
          */
         if (bclass->packet_lost)
           res = bclass->packet_lost (filter, event);
+        forward = FALSE;
       }
-      gst_event_unref (event);
       break;
     }
     default:
-      /* pass other events forward */
-      res = gst_pad_push_event (filter->srcpad, event);
       break;
   }
+
+  if (forward)
+    res = gst_pad_push_event (filter->srcpad, event);
+  else
+    gst_event_unref (event);
+
   return res;
 }
 
