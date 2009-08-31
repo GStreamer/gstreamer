@@ -2440,23 +2440,20 @@ gst_wavparse_sink_activate (GstPad * sinkpad)
   GstWavParse *wav = GST_WAVPARSE (gst_pad_get_parent (sinkpad));
   gboolean res;
 
-  if (wav->adapter)
+  if (wav->adapter) {
+    gst_adapter_clear (wav->adapter);
     g_object_unref (wav->adapter);
+    wav->adapter = NULL;
+  }
 
   if (gst_pad_check_pull_range (sinkpad)) {
     GST_DEBUG ("going to pull mode");
     wav->streaming = FALSE;
-    if (wav->adapter) {
-      gst_adapter_clear (wav->adapter);
-      g_object_unref (wav->adapter);
-    }
-    wav->adapter = NULL;
     res = gst_pad_activate_pull (sinkpad, TRUE);
   } else {
     GST_DEBUG ("going to push (streaming) mode");
     wav->streaming = TRUE;
-    if (wav->adapter == NULL)
-      wav->adapter = gst_adapter_new ();
+    wav->adapter = gst_adapter_new ();
     res = gst_pad_activate_push (sinkpad, TRUE);
   }
   gst_object_unref (wav);
