@@ -1096,6 +1096,25 @@ check_collision (RTPSession * sess, RTPSource * source,
      * Maybe should be done in upper layer, only the SDES can tell us
      * if its a collision or a loop
      */
+
+    /* If the source has been inactive for some time, we assume that it has
+     * simply changed its transport source address. Hence, there is no true
+     * third-party collision - only a simulated one. */
+    if (arrival->time > source->last_activity) {
+      GstClockTime inactivity_period = arrival->time - source->last_activity;
+      if (inactivity_period > 1*GST_SECOND) {
+        /* Use new network address */
+        if (rtp) {
+          g_assert (source->have_rtp_from);
+          rtp_source_set_rtp_from (source, &arrival->address);
+        }
+        else {
+          g_assert (source->have_rtcp_from);
+          rtp_source_set_rtcp_from (source, &arrival->address);
+        }
+        return FALSE;
+      }
+    }
   } else {
     /* This is sending with our ssrc, is it an address we already know */
 
