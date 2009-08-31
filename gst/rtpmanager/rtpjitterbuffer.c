@@ -203,6 +203,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
   gint64 old;
   gint pos, i;
   GstClockTime gstrtptime, out_time;
+  guint64 slope;
 
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&jbuf->ext_rtptime, rtptime);
 
@@ -258,12 +259,20 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
   /* elapsed time at receiver, includes the jitter */
   recv_diff = time - jbuf->base_time;
 
-  GST_DEBUG ("time %" GST_TIME_FORMAT ", base %" GST_TIME_FORMAT ", recv_diff %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (time), GST_TIME_ARGS (jbuf->base_time),
-      GST_TIME_ARGS (recv_diff));
-
   /* measure the diff */
   delta = ((gint64) recv_diff) - ((gint64) send_diff);
+
+  /* measure the slope, this gives a rought estimate between the sender speed
+   * and the receiver speed. This should be approximately 8, higher values
+   * indicate a burst (especially when the connection starts) */
+  if (recv_diff > 0)
+    slope = (send_diff * 8) / recv_diff;
+  else
+    slope = 8;
+
+  GST_DEBUG ("time %" GST_TIME_FORMAT ", base %" GST_TIME_FORMAT ", recv_diff %"
+      GST_TIME_FORMAT ", slope %" G_GUINT64_FORMAT, GST_TIME_ARGS (time),
+      GST_TIME_ARGS (jbuf->base_time), GST_TIME_ARGS (recv_diff), slope);
 
   /* if the difference between the sender timeline and the receiver timeline
    * changed too quickly we have to resync because the server likely restarted
