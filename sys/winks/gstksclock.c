@@ -227,7 +227,8 @@ gst_ks_clock_close_unlocked (GstKsClock * self)
     GST_KS_CLOCK_LOCK ();
   }
 
-  gst_ks_clock_set_state_unlocked (self, KSSTATE_STOP);
+  if (priv->open)
+    gst_ks_clock_set_state_unlocked (self, KSSTATE_STOP);
 
   if (ks_is_valid_handle (priv->clock_handle)) {
     CloseHandle (priv->clock_handle);
