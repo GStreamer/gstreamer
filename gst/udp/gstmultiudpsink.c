@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
+ * Copyright (C) <2009> Jarkko Palviainen <jarkko.palviainen@sesca.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -81,6 +82,7 @@ enum
  * be configured in the element that does the receive. */
 #define DEFAULT_AUTO_MULTICAST     TRUE
 #define DEFAULT_TTL                64
+#define DEFAULT_TTL_MC             1
 #define DEFAULT_LOOP               TRUE
 #define DEFAULT_QOS_DSCP           -1
 
@@ -95,6 +97,7 @@ enum
   PROP_CLIENTS,
   PROP_AUTO_MULTICAST,
   PROP_TTL,
+  PROP_TTL_MC,
   PROP_LOOP,
   PROP_QOS_DSCP,
   PROP_LAST
@@ -307,9 +310,13 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
           "Automatically join/leave the multicast groups, FALSE means user"
           " has to do it himself", DEFAULT_AUTO_MULTICAST, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_TTL,
-      g_param_spec_int ("ttl", "Multicast TTL",
-          "Used for setting the multicast TTL parameter",
+      g_param_spec_int ("ttl", "Unicast TTL",
+          "Used for setting the unicast TTL parameter",
           0, 255, DEFAULT_TTL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_TTL_MC,
+      g_param_spec_int ("ttl-mc", "Multicast TTL",
+          "Used for setting the multicast TTL parameter",
+          0, 255, DEFAULT_TTL_MC, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_LOOP,
       g_param_spec_boolean ("loop", "Multicast Loopback",
           "Used for setting the multicast loop parameter. TRUE = enable,"
@@ -346,6 +353,7 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   sink->externalfd = (sink->sockfd != -1);
   sink->auto_multicast = DEFAULT_AUTO_MULTICAST;
   sink->ttl = DEFAULT_TTL;
+  sink->ttl_mc = DEFAULT_TTL_MC;
   sink->loop = DEFAULT_LOOP;
   sink->qos_dscp = DEFAULT_QOS_DSCP;
 }
@@ -635,6 +643,9 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
     case PROP_TTL:
       udpsink->ttl = g_value_get_int (value);
       break;
+    case PROP_TTL_MC:
+      udpsink->ttl_mc = g_value_get_int (value);
+      break;
     case PROP_LOOP:
       udpsink->loop = g_value_get_boolean (value);
       break;
@@ -681,6 +692,9 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TTL:
       g_value_set_int (value, udpsink->ttl);
+      break;
+    case PROP_TTL_MC:
+      g_value_set_int (value, udpsink->ttl_mc);
       break;
     case PROP_LOOP:
       g_value_set_boolean (value, udpsink->loop);
@@ -737,7 +751,7 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
       }
       if (gst_udp_set_loop (sink->sock, sink->loop) != 0)
         goto loop_failed;
-      if (gst_udp_set_ttl (sink->sock, sink->ttl, TRUE) != 0)
+      if (gst_udp_set_ttl (sink->sock, sink->ttl_mc, TRUE) != 0)
         goto ttl_failed;
     } else {
       if (gst_udp_set_ttl (sink->sock, sink->ttl, FALSE) != 0)

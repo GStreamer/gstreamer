@@ -1,6 +1,7 @@
 /* GStreamer UDP network utility functions
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2006 Joni Valtanen <joni.valtanen@movial.fi>
+ * Copyright (C) 2009 Jarkko Palviainen <jarkko.palviainen@sesca.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
