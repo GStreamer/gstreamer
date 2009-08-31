@@ -1,6 +1,6 @@
 /*
  * gstwildmidi - wildmidi plugin for gstreamer
- * 
+ *
  * Copyright 2007 Wouter Paesen <wouter@blue-gate.be>
  *
  * This library is free software; you can redistribute it and/or
@@ -28,7 +28,7 @@
  * It offers better sound quality compared to the timidity element. Wildmidi
  * uses the same sound-patches as timidity (it tries the path in $WILDMIDI_CFG,
  * $HOME/.wildmidirc and /etc/wildmidi.cfg)
- * 
+ *
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
@@ -82,7 +82,6 @@ enum
 };
 
 static void gst_wildmidi_base_init (gpointer g_class);
-
 static void gst_wildmidi_class_init (GstWildmidiClass * klass);
 
 static gboolean gst_wildmidi_src_event (GstPad * pad, GstEvent * event);
@@ -90,7 +89,6 @@ static gboolean gst_wildmidi_src_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_wildmidi_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_wildmidi_activate (GstPad * pad);
-
 static gboolean gst_wildmidi_activatepull (GstPad * pad, gboolean active);
 
 static void gst_wildmidi_loop (GstPad * sinkpad);
@@ -135,7 +133,6 @@ static gboolean
 wildmidi_open_config ()
 {
   gchar *path = g_strdup (g_getenv ("WILDMIDI_CFG"));
-
   gint ret;
 
   GST_DEBUG ("trying %s", GST_STR_NULL (path));
@@ -209,7 +206,7 @@ wildmidi_open_config ()
      * ln -s /usr/share/timidity/timidity.cfg /etc/wildmidi.cfg
      * we could make it use : WILDMIDI_CFG
      * but unfortunately it fails to create a proper filename if the config
-     * has a redirect   
+     * has a redirect
      * http://sourceforge.net/tracker/index.php?func=detail&aid=1657358&group_id=42635&atid=433744
      */
     GST_WARNING ("no config file, can't initialise");
@@ -228,7 +225,6 @@ static void
 gst_wildmidi_class_init (GstWildmidiClass * klass)
 {
   GObjectClass *gobject_class;
-
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -291,7 +287,6 @@ gst_wildmidi_src_convert (GstWildmidi * wildmidi,
     GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
-
   gint64 frames;
 
   if (src_format == *dest_format) {
@@ -337,11 +332,8 @@ static gboolean
 gst_wildmidi_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-
   GstWildmidi *wildmidi = GST_WILDMIDI (gst_pad_get_parent (pad));
-
   GstFormat src_format, dst_format;
-
   gint64 src_value, dst_value;
 
   if (!wildmidi->song) {
@@ -396,9 +388,7 @@ static gboolean
 gst_wildmidi_get_upstream_size (GstWildmidi * wildmidi, gint64 * size)
 {
   GstFormat format = GST_FORMAT_BYTES;
-
   gboolean res = FALSE;
-
   GstPad *peer = gst_pad_get_peer (wildmidi->sinkpad);
 
   if (peer != NULL)
@@ -413,7 +403,6 @@ gst_wildmidi_get_segment (GstWildmidi * wildmidi, GstFormat format,
     gboolean update)
 {
   gint64 start, stop, time;
-
   GstSegment *segment = gst_segment_new ();
 
   gst_wildmidi_src_convert (wildmidi,
@@ -443,7 +432,6 @@ gst_wildmidi_get_new_segment_event (GstWildmidi * wildmidi, GstFormat format,
     gboolean update)
 {
   GstSegment *segment;
-
   GstEvent *event;
 
   segment = gst_wildmidi_get_segment (wildmidi, format, update);
@@ -461,7 +449,6 @@ static gboolean
 gst_wildmidi_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = FALSE;
-
   GstWildmidi *wildmidi = GST_WILDMIDI (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (pad, "%s event received", GST_EVENT_TYPE_NAME (event));
@@ -470,15 +457,10 @@ gst_wildmidi_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:
     {
       gdouble rate;
-
       GstFormat src_format, dst_format;
-
       GstSeekFlags flags;
-
       GstSeekType start_type, stop_type;
-
       gint64 orig_start, start, stop;
-
       gboolean flush, update;
 
       if (!wildmidi->song)
@@ -571,9 +553,7 @@ static GstBuffer *
 gst_wildmidi_clip_buffer (GstWildmidi * wildmidi, GstBuffer * buffer)
 {
   gint64 new_start, new_stop;
-
   gint64 offset, length;
-
   GstBuffer *out;
 
   return buffer;
@@ -610,7 +590,6 @@ static GstBuffer *
 gst_wildmidi_fill_buffer (GstWildmidi * wildmidi, GstBuffer * buffer)
 {
   size_t bytes_read;
-
   gint64 samples;
 
   bytes_read =
@@ -671,9 +650,7 @@ static void
 gst_wildmidi_loop (GstPad * sinkpad)
 {
   GstWildmidi *wildmidi = GST_WILDMIDI (GST_PAD_PARENT (sinkpad));
-
   GstBuffer *out;
-
   GstFlowReturn ret;
 
   if (wildmidi->mididata_size == 0) {
@@ -693,7 +670,6 @@ gst_wildmidi_loop (GstPad * sinkpad)
 
   if (wildmidi->mididata_offset < wildmidi->mididata_size) {
     GstBuffer *buffer;
-
     gint64 size;
 
     GST_DEBUG_OBJECT (wildmidi, "loading song");
@@ -839,7 +815,6 @@ static GstStateChangeReturn
 gst_wildmidi_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-
   GstWildmidi *wildmidi = GST_WILDMIDI (element);
 
   switch (transition) {
