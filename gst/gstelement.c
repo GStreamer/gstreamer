@@ -2882,11 +2882,15 @@ gst_element_dispose (GObject * object)
   /* ERRORS */
 not_null:
   {
+    gboolean is_locked = gst_element_is_locked_state (element);
     g_critical
-        ("\nTrying to dispose element %s, but it is not in the NULL state.\n"
+        ("\nTrying to dispose element %s, but it is in %s%s instead of the NULL"
+        " state.\n"
         "You need to explicitly set elements to the NULL state before\n"
         "dropping the final reference, to allow them to clean up.\n",
-        GST_OBJECT_NAME (element));
+        GST_OBJECT_NAME (element),
+        gst_element_state_get_name (GST_STATE (element)),
+        is_locked ? " (locked)" : "");
     return;
   }
 }
