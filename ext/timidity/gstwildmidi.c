@@ -290,6 +290,12 @@ gst_wildmidi_init (GstWildmidi * filter, GstWildmidiClass * g_class)
 static void
 gst_wildmidi_finalize (GObject * object)
 {
+  GstWildmidi *wildmidi;
+
+  wildmidi = GST_WILDMIDI (object);
+
+  g_object_unref (wildmidi->adapter);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
