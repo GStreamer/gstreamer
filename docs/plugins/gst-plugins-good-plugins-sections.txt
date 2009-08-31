@@ -1603,20 +1603,6 @@ gst_tag_inject_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-taglibmux</FILE>
-<TITLE>taglibmux</TITLE>
-GstTagLibMux
-<SUBSECTION Standard>
-GstTagLibMuxClass
-GST_TYPE_TAG_LIB_MUX
-GST_TAG_LIB_MUX
-GST_TAG_LIB_MUX_CLASS
-GST_IS_TAG_LIB_MUX
-GST_IS_TAG_LIB_MUX_CLASS
-gst_tag_lib_mux_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-udpsrc</FILE>
 <TITLE>udpsrc</TITLE>
 GstUDPSrc
@@ -1976,20 +1962,6 @@ GST_IS_VERTIGOTV
 GST_IS_VERTIGOTV_CLASS
 GST_TYPE_VERTIGOTV
 gst_vertigotv_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-warptv</FILE>
-<TITLE>warptv</TITLE>
-GstWarpTV
-<SUBSECTION Standard>
-GstWarpTVClass
-GST_WARPTV
-GST_WARPTV_CLASS
-GST_IS_WARPTV
-GST_IS_WARPTV_CLASS
-GST_TYPE_WARPTV
-gst_warptv_get_type
 </SECTION>
 
 <SECTION>
