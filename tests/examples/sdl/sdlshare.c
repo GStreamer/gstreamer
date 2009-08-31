@@ -23,16 +23,17 @@
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#endif
-#if defined(__APPLE__) && defined(__MACH__)
-#include <OpenGL/gl.h>	// Header File For The OpenGL32 Library
-#include <OpenGL/glu.h>	// Header File For The GLu32 Library
-#else
-#include <GL/gl.h>	// Header File For The OpenGL32 Library
-#include <GL/glu.h>	// Header File For The GLu32 Library
-#endif
 #include "SDL.h"
 #include "SDL_opengl.h"
+#endif
+#ifndef WIN32
+#include <GL/glx.h>
+#include "SDL/SDL.h"
+#include "SDL/SDL_opengl.h"
+#include "SDL/SDL_syswm.h"
+#endif
+#include <GL/gl.h>              // Header File For The OpenGL32 Library
+#include <GL/glu.h>             // Header File For The GLu32 Library
 
 /* hack */
 typedef struct _GstGLBuffer GstGLBuffer;
@@ -54,100 +55,111 @@ float rtri = 0.0f;
 float rquad = 0.0f;
 
 /* A general OpenGL initialization function.  Sets all of the initial parameters. */
-void InitGL(int Width, int Height)	        // We call this right after our OpenGL window is created.
+void
+InitGL (int Width, int Height)  // We call this right after our OpenGL window is created.
 {
-  glViewport(0, 0, Width, Height);
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);		// This Will Clear The Background Color To Black
-  glClearDepth(1.0);				// Enables Clearing Of The Depth Buffer
-  glDepthFunc(GL_LESS);				// The Type Of Depth Test To Do
-  glEnable(GL_DEPTH_TEST);			// Enables Depth Testing
-  glShadeModel(GL_SMOOTH);			// Enables Smooth Color Shading
+  glViewport (0, 0, Width, Height);
+  glClearColor (0.0f, 0.0f, 0.0f, 0.0f);        // This Will Clear The Background Color To Black
+  glClearDepth (1.0);           // Enables Clearing Of The Depth Buffer
+  glDepthFunc (GL_LESS);        // The Type Of Depth Test To Do
+  glEnable (GL_DEPTH_TEST);     // Enables Depth Testing
+  glShadeModel (GL_SMOOTH);     // Enables Smooth Color Shading
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();				// Reset The Projection Matrix
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();            // Reset The Projection Matrix
 
-  gluPerspective(45.0f,(GLfloat)Width/(GLfloat)Height,0.1f,100.0f);	// Calculate The Aspect Ratio Of The Window
+  gluPerspective (45.0f, (GLfloat) Width / (GLfloat) Height, 0.1f, 100.0f);     // Calculate The Aspect Ratio Of The Window
 
-  glMatrixMode(GL_MODELVIEW);
+  glMatrixMode (GL_MODELVIEW);
 }
 
 /* The main drawing function. */
-void DrawGLScene(GstGLBuffer *gst_gl_buf)
+void
+DrawGLScene (GstGLBuffer * gst_gl_buf)
 {
   GLuint texture = gst_gl_buf->texture;
   GLfloat width = (GLfloat) gst_gl_buf->width;
   GLfloat height = (GLfloat) gst_gl_buf->height;
-  
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		// Clear The Screen And The Depth Buffer
-  glLoadIdentity();				// Reset The View
 
-  glTranslatef(-1.5f,0.0f,-6.0f);		// Move Left 1.5 Units And Into The Screen 6.0
-	
-  glRotatef(rtri,0.0f,1.0f,0.0f);		// Rotate The Triangle On The Y axis 
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clear The Screen And The Depth Buffer
+  glLoadIdentity ();            // Reset The View
+
+  glTranslatef (-1.5f, 0.0f, -6.0f);    // Move Left 1.5 Units And Into The Screen 6.0
+
+  glRotatef (rtri, 0.0f, 1.0f, 0.0f);   // Rotate The Triangle On The Y axis 
   // draw a triangle (in smooth coloring mode)
-  glBegin(GL_POLYGON);				// start drawing a polygon
-  glColor3f(1.0f,0.0f,0.0f);			// Set The Color To Red
-  glVertex3f( 0.0f, 1.0f, 0.0f);		// Top
-  glColor3f(0.0f,1.0f,0.0f);			// Set The Color To Green
-  glVertex3f( 1.0f,-1.0f, 0.0f);		// Bottom Right
-  glColor3f(0.0f,0.0f,1.0f);			// Set The Color To Blue
-  glVertex3f(-1.0f,-1.0f, 0.0f);		// Bottom Left	
-  glEnd();					// we're done with the polygon (smooth color interpolation)
+  glBegin (GL_POLYGON);         // start drawing a polygon
+  glColor3f (1.0f, 0.0f, 0.0f); // Set The Color To Red
+  glVertex3f (0.0f, 1.0f, 0.0f);        // Top
+  glColor3f (0.0f, 1.0f, 0.0f); // Set The Color To Green
+  glVertex3f (1.0f, -1.0f, 0.0f);       // Bottom Right
+  glColor3f (0.0f, 0.0f, 1.0f); // Set The Color To Blue
+  glVertex3f (-1.0f, -1.0f, 0.0f);      // Bottom Left  
+  glEnd ();                     // we're done with the polygon (smooth color interpolation)
 
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+      GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+      GL_CLAMP_TO_EDGE);
   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-  glLoadIdentity();				// make sure we're no longer rotated.
-  glTranslatef(1.5f,0.0f,-6.0f);		// Move Right 3 Units, and back into the screen 6.0
-	
-  glRotatef(rquad,1.0f,0.0f,0.0f);		// Rotate The Quad On The X axis 
+  glLoadIdentity ();            // make sure we're no longer rotated.
+  glTranslatef (1.5f, 0.0f, -6.0f);     // Move Right 3 Units, and back into the screen 6.0
+
+  glRotatef (rquad, 1.0f, 0.0f, 0.0f);  // Rotate The Quad On The X axis 
   // draw a square (quadrilateral)
-  glColor3f(0.5f,0.5f,1.0f);			// set color to a blue shade.
-  glBegin(GL_QUADS);				// start drawing a polygon (4 sided)
+  glColor3f (0.5f, 0.5f, 1.0f); // set color to a blue shade.
+  glBegin (GL_QUADS);           // start drawing a polygon (4 sided)
   glTexCoord3f (0.0f, height, 0.0f);
-  glVertex3f(-1.0f, 1.0f, 0.0f);		// Top Left
+  glVertex3f (-1.0f, 1.0f, 0.0f);       // Top Left
   glTexCoord3f (width, height, 0.0f);
-  glVertex3f( 1.0f, 1.0f, 0.0f);		// Top Right
+  glVertex3f (1.0f, 1.0f, 0.0f);        // Top Right
   glTexCoord3f (width, 0.0f, 0.0f);
-  glVertex3f( 1.0f,-1.0f, 0.0f);		// Bottom Right
+  glVertex3f (1.0f, -1.0f, 0.0f);       // Bottom Right
   glTexCoord3f (0.0f, 0.0f, 0.0f);
-  glVertex3f(-1.0f,-1.0f, 0.0f);		// Bottom Left	
-  glEnd();					// done with the polygon
+  glVertex3f (-1.0f, -1.0f, 0.0f);      // Bottom Left  
+  glEnd ();                     // done with the polygon
 
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 
-  rtri+=1.0f;					// Increase The Rotation Variable For The Triangle
-  rquad-=1.0f;					// Decrease The Rotation Variable For The Quad 
+  rtri += 1.0f;                 // Increase The Rotation Variable For The Triangle
+  rquad -= 1.0f;                // Decrease The Rotation Variable For The Quad 
 
   // swap buffers to display, since we're double buffered.
-  SDL_GL_SwapBuffers();
+  SDL_GL_SwapBuffers ();
 }
 
-gboolean update_sdl_scene (GstElement *fakesink)
+gboolean
+update_sdl_scene (void *fk)
 {
-  GMainLoop *loop = g_object_get_data (G_OBJECT (fakesink), "loop");
-  GAsyncQueue *queue_input_buf = g_object_get_data (G_OBJECT (fakesink), "queue_input_buf");
-  GAsyncQueue *queue_output_buf = g_object_get_data (G_OBJECT (fakesink), "queue_output_buf");
-  GstGLBuffer *gst_gl_buf = g_async_queue_pop (queue_input_buf);
-  
+  GstElement *fakesink = (GstElement *) fk;
+  GMainLoop *loop =
+      (GMainLoop *) g_object_get_data (G_OBJECT (fakesink), "loop");
+  GAsyncQueue *queue_input_buf =
+      (GAsyncQueue *) g_object_get_data (G_OBJECT (fakesink),
+      "queue_input_buf");
+  GAsyncQueue *queue_output_buf =
+      (GAsyncQueue *) g_object_get_data (G_OBJECT (fakesink),
+      "queue_output_buf");
+  GstGLBuffer *gst_gl_buf = (GstGLBuffer *) g_async_queue_pop (queue_input_buf);
+
   SDL_Event event;
-  while ( SDL_PollEvent(&event) ) {
-    if ( event.type == SDL_QUIT ) {
-      g_main_loop_quit(loop);
+  while (SDL_PollEvent (&event)) {
+    if (event.type == SDL_QUIT) {
+      g_main_loop_quit (loop);
     }
-    if ( event.type == SDL_KEYDOWN ) {
-      if ( event.key.keysym.sym == SDLK_ESCAPE ) {
-        g_main_loop_quit(loop);
+    if (event.type == SDL_KEYDOWN) {
+      if (event.key.keysym.sym == SDLK_ESCAPE) {
+        g_main_loop_quit (loop);
       }
     }
   }
 
-  DrawGLScene(gst_gl_buf);
+  DrawGLScene (gst_gl_buf);
 
   /* push buffer so it can be unref later */
   g_async_queue_push (queue_output_buf, gst_gl_buf);
@@ -157,35 +169,41 @@ gboolean update_sdl_scene (GstElement *fakesink)
 
 /* fakesink handoff callback */
 void
-on_gst_buffer (GstElement *fakesink, GstBuffer *buf, GstPad *pad, gpointer data)
+on_gst_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
+    gpointer data)
 {
   GAsyncQueue *queue_input_buf = NULL;
   GAsyncQueue *queue_output_buf = NULL;
 
   /* ref then push buffer to use it in sdl */
   gst_buffer_ref (buf);
-  queue_input_buf = g_object_get_data (G_OBJECT (fakesink), "queue_input_buf");
+  queue_input_buf =
+      (GAsyncQueue *) g_object_get_data (G_OBJECT (fakesink),
+      "queue_input_buf");
   g_async_queue_push (queue_input_buf, buf);
   if (g_async_queue_length (queue_input_buf) > 3)
-    g_idle_add (update_sdl_scene, fakesink);
+    g_idle_add (update_sdl_scene, (gpointer) fakesink);
 
   /* pop then unref buffer we have finished to use in sdl */
-  queue_output_buf = g_object_get_data (G_OBJECT (fakesink), "queue_output_buf");
+  queue_output_buf =
+      (GAsyncQueue *) g_object_get_data (G_OBJECT (fakesink),
+      "queue_output_buf");
   if (g_async_queue_length (queue_output_buf) > 3) {
-    GstBuffer *buf_old = g_async_queue_pop (queue_output_buf);
+    GstBuffer *buf_old = (GstBuffer *) g_async_queue_pop (queue_output_buf);
     gst_buffer_unref (buf_old);
   }
 }
 
 /* gst bus signal watch callback */
 void
-end_stream_cb (GstBus *bus, GstMessage *msg, GMainLoop *loop)
+end_stream_cb (GstBus * bus, GstMessage * msg, GMainLoop * loop)
 {
   switch (GST_MESSAGE_TYPE (msg)) {
 
     case GST_MESSAGE_EOS:
       g_print ("End-of-stream\n");
-      g_print ("For more information, try to run: GST_DEBUG=gldisplay:2 ./sdlshare\n");
+      g_print
+          ("For more information, try to run: GST_DEBUG=gldisplay:2 ./sdlshare\n");
       break;
 
     case GST_MESSAGE_ERROR:
@@ -213,7 +231,8 @@ end_stream_cb (GstBus *bus, GstMessage *msg, GMainLoop *loop)
   g_main_loop_quit (loop);
 }
 
-int main(int argc, char **argv) 
+int
+main (int argc, char **argv)
 {
 
 #ifdef WIN32
@@ -231,28 +250,29 @@ int main(int argc, char **argv)
   GstBus *bus = NULL;
   GstElement *glupload = NULL;
   GstElement *fakesink = NULL;
-  GstState state = 0;
+  GstState state;
   GAsyncQueue *queue_input_buf = NULL;
   GAsyncQueue *queue_output_buf = NULL;
 
   /* Initialize SDL for video output */
-  if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
-    fprintf(stderr, "Unable to initialize SDL: %s\n", SDL_GetError());
+  if (SDL_Init (SDL_INIT_VIDEO) < 0) {
+    fprintf (stderr, "Unable to initialize SDL: %s\n", SDL_GetError ());
     return -1;
   }
 
   /* Create a 640x480 OpenGL screen */
-  if ( SDL_SetVideoMode(640, 480, 0, SDL_OPENGL) == NULL ) {
-    fprintf(stderr, "Unable to create OpenGL screen: %s\n", SDL_GetError());
-    SDL_Quit();
+  if (SDL_SetVideoMode (640, 480, 0, SDL_OPENGL) == NULL) {
+    fprintf (stderr, "Unable to create OpenGL screen: %s\n", SDL_GetError ());
+    SDL_Quit ();
     return -1;
   }
 
   /* Set the title bar in environments that support it */
-  SDL_WM_SetCaption("SDL and gst-plugins-gl", NULL);
+  SDL_WM_SetCaption ("SDL and gst-plugins-gl", NULL);
+
 
   /* Loop, drawing and checking events */
-  InitGL(640, 480);
+  InitGL (640, 480);
 
   gst_init (&argc, &argv);
   loop = g_main_loop_new (NULL, FALSE);
@@ -263,17 +283,18 @@ int main(int argc, char **argv)
   sdl_dc = wglGetCurrentDC ();
   wglMakeCurrent (0, 0);
 #else
+  SDL_VERSION (&info.version);
+  SDL_GetWMInfo (&info);
   sdl_display = info.info.x11.display;
-  sdl_win = info.info.x11.wmwindow;
+  sdl_win = info.info.x11.window;
   sdl_gl_context = glXGetCurrentContext ();
-  glXMakeCurrent (clutter_display, None, 0);
+  glXMakeCurrent (sdl_display, None, 0);
 #endif
 
   pipeline =
-    GST_PIPELINE (gst_parse_launch
-    ("videotestsrc ! video/x-raw-yuv, width=320, height=240, framerate=(fraction)30/1 ! "
-       "glupload ! gleffects effect=5 ! fakesink sync=1",
-       NULL));
+      GST_PIPELINE (gst_parse_launch
+      ("videotestsrc ! video/x-raw-yuv, width=320, height=240, framerate=(fraction)30/1 ! "
+          "glupload ! gleffects effect=5 ! fakesink sync=1", NULL));
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_signal_watch (bus);
@@ -284,15 +305,16 @@ int main(int argc, char **argv)
 
   /* sdl_gl_context is an external OpenGL context with which gst-plugins-gl want to share textures */
   glupload = gst_bin_get_by_name (GST_BIN (pipeline), "glupload0");
-  g_object_set (G_OBJECT (glupload), "external-opengl-context", sdl_gl_context, NULL);
+  g_object_set (G_OBJECT (glupload), "external-opengl-context",
+      sdl_gl_context, NULL);
   g_object_unref (glupload);
 
   /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
    * shared with the sdl one */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
   state = GST_STATE_PAUSED;
-  if (gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, 
-        GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
+  if (gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
+          GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
     g_debug ("failed to pause pipeline\n");
     return -1;
   }
@@ -301,7 +323,7 @@ int main(int argc, char **argv)
 #ifdef WIN32
   wglMakeCurrent (sdl_dc, sdl_gl_context);
 #else
-  glXMakeCurrent (sdl_display, sdl_win, clutter_gl_context);
+  glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
 #endif
 
   /* append a gst-gl texture to this queue when you do not need it no more */
@@ -339,18 +361,18 @@ int main(int argc, char **argv)
   glXMakeCurrent (sdl_display, None, 0);
 #endif
 
-  SDL_Quit();
+  SDL_Quit ();
 
   /* make sure there is no pending gst gl buffer in the communication queues 
    * between sdl and gst-gl
    */
   while (g_async_queue_length (queue_input_buf) > 0) {
-    GstBuffer *buf = g_async_queue_pop (queue_input_buf);
+    GstBuffer *buf = (GstBuffer *) g_async_queue_pop (queue_input_buf);
     gst_buffer_unref (buf);
   }
 
   while (g_async_queue_length (queue_output_buf) > 0) {
-    GstBuffer *buf = g_async_queue_pop (queue_output_buf);
+    GstBuffer *buf = (GstBuffer *) g_async_queue_pop (queue_output_buf);
     gst_buffer_unref (buf);
   }
 
