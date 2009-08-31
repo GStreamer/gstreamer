@@ -206,7 +206,7 @@ gst_mxf_mux_reset (GstMXFMux * mux)
   while ((sl = mux->collect->data) != NULL) {
     GstMXFMuxPad *cpad = (GstMXFMuxPad *) sl->data;
 
-    gst_object_unref (cpad->adapter);
+    g_object_unref (cpad->adapter);
     g_free (cpad->mapping_data);
 
     gst_collect_pads_remove_pad (mux->collect, cpad->collect.pad);
@@ -432,7 +432,7 @@ gst_mxf_mux_release_pad (GstElement * element, GstPad * pad)
   /*GstMXFMux *mux = GST_MXF_MUX (GST_PAD_PARENT (pad));
      GstMXFMuxPad *cpad = (GstMXFMuxPad *) gst_pad_get_element_private (pad);
 
-     gst_object_unref (cpad->adapter);
+     g_object_unref (cpad->adapter);
      g_free (cpad->mapping_data);
 
      gst_collect_pads_remove_pad (mux->collect, pad);

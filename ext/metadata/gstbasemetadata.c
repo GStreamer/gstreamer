@@ -306,12 +306,12 @@ gst_base_metadata_dispose_members (GstBaseMetadata * filter)
   /* adapter used during parsing process */
 
   if (filter->adapter_parsing) {
-    gst_object_unref (filter->adapter_parsing);
+    g_object_unref (filter->adapter_parsing);
     filter->adapter_parsing = NULL;
   }
 
   if (filter->adapter_holding) {
-    gst_object_unref (filter->adapter_holding);
+    g_object_unref (filter->adapter_holding);
     filter->adapter_holding = NULL;
   }
 

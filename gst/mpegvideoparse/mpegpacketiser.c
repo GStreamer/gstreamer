@@ -45,7 +45,7 @@ mpeg_packetiser_init (MPEGPacketiser * p)
 void
 mpeg_packetiser_free (MPEGPacketiser * p)
 {
-  gst_object_unref (p->adapter);
+  g_object_unref (p->adapter);
   g_free (p->blocks);
 }
 

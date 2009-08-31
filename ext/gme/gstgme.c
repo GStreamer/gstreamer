@@ -171,7 +171,7 @@ gst_gme_dec_dispose (GObject * object)
   GstGmeDec *gme = GST_GME_DEC (object);
 
   if (gme->adapter) {
-    gst_object_unref (gme->adapter);
+    g_object_unref (gme->adapter);
     gme->adapter = NULL;
   }
 }

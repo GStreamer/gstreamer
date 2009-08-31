@@ -191,7 +191,8 @@ gst_nuv_demux_finalize (GObject * object)
   gst_nuv_demux_destoy_src_pad (nuv);
   gst_nuv_demux_reset (nuv);
   if (nuv->adapter != NULL) {
-    gst_object_unref (nuv->adapter);
+    g_object_unref (nuv->adapter);
+    nuv->adapter = NULL;
   }
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -800,7 +801,7 @@ gst_nuv_demux_sink_activate (GstPad * sinkpad)
   if (gst_pad_check_pull_range (sinkpad)) {
     nuv->mode = 0;
     if (nuv->adapter != NULL) {
-      gst_object_unref (nuv->adapter);
+      g_object_unref (nuv->adapter);
       nuv->adapter = NULL;
     }
     res = gst_pad_activate_pull (sinkpad, TRUE);

@@ -114,7 +114,7 @@ gst_rsvg_dec_finalize (GObject * object)
   GstRsvgDec *rsvg = GST_RSVG_DEC (object);
 
   if (rsvg->adapter) {
-    gst_object_unref (rsvg->adapter);
+    g_object_unref (rsvg->adapter);
     rsvg->adapter = NULL;
   }
 

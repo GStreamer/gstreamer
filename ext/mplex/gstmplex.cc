@@ -238,7 +238,7 @@ gst_mplex_reset (GstMplex * mplex)
 
     if (!mpad->pad) {
       g_cond_free (mpad->cond);
-      gst_object_unref (mpad->adapter);
+      g_object_unref (mpad->adapter);
       g_free (mpad);
     } else
       nlist = g_slist_append (nlist, mpad);

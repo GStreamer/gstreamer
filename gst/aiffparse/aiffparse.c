@@ -1516,7 +1516,7 @@ gst_aiffparse_sink_activate (GstPad * sinkpad)
   gboolean res;
 
   if (aiff->adapter)
-    gst_object_unref (aiff->adapter);
+    g_object_unref (aiff->adapter);
 
   if (gst_pad_check_pull_range (sinkpad)) {
     GST_DEBUG ("going to pull mode");

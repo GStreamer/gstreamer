@@ -227,7 +227,7 @@ mpegtsmux_dispose (GObject * object)
 
   if (mux->adapter) {
     gst_adapter_clear (mux->adapter);
-    gst_object_unref (mux->adapter);
+    g_object_unref (mux->adapter);
     mux->adapter = NULL;
   }
   if (mux->collect) {

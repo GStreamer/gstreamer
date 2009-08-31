@@ -177,17 +177,17 @@ metadata_dispose (MetaData ** meta_data)
   metadata_chunk_array_free (&(*meta_data)->inject_chunks);
 
   if ((*meta_data)->xmp_adapter) {
-    gst_object_unref ((*meta_data)->xmp_adapter);
+    g_object_unref ((*meta_data)->xmp_adapter);
     (*meta_data)->xmp_adapter = NULL;
   }
 
   if ((*meta_data)->iptc_adapter) {
-    gst_object_unref ((*meta_data)->iptc_adapter);
+    g_object_unref ((*meta_data)->iptc_adapter);
     (*meta_data)->iptc_adapter = NULL;
   }
 
   if ((*meta_data)->exif_adapter) {
-    gst_object_unref ((*meta_data)->exif_adapter);
+    g_object_unref ((*meta_data)->exif_adapter);
     (*meta_data)->exif_adapter = NULL;
   }
 
