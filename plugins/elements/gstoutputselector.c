@@ -152,7 +152,7 @@ gst_output_selector_init (GstOutputSelector * sel,
   /* srcpad management */
   sel->active_srcpad = NULL;
   sel->nb_srcpads = 0;
-  gst_segment_init (&sel->segment, GST_FORMAT_UNDEFINED);
+  gst_segment_init (&sel->segment, GST_FORMAT_TIME);
   sel->pending_srcpad = NULL;
 
   sel->resend_latest = FALSE;
