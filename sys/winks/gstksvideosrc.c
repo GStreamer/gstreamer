@@ -1077,10 +1077,14 @@ error_alloc_buffer:
   }
 error_read_frame:
   {
-    if (result != GST_FLOW_WRONG_STATE && result != GST_FLOW_UNEXPECTED) {
+    if (result == GST_FLOW_ERROR) {
       GST_ELEMENT_ERROR (self, RESOURCE, READ,
           ("read failed: %s [0x%08x]", error_str, error_code),
           ("gst_ks_video_device_read_frame failed"));
+    }
+    else if (result == GST_FLOW_UNEXPECTED) {
+      GST_ELEMENT_ERROR (self, RESOURCE, READ,
+          ("read failed"), ("gst_ks_video_device_read_frame failed"));
     }
 
     g_free (error_str);
