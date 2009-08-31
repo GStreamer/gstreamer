@@ -529,7 +529,7 @@ gst_wildmidi_activate (GstPad * sinkpad)
   if (gst_pad_check_pull_range (sinkpad))
     return gst_pad_activate_pull (sinkpad, TRUE);
 
-  return FALSE;
+  return gst_pad_activate_push (sinkpad, TRUE);
 }
 
 static gboolean
