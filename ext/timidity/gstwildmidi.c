@@ -543,12 +543,6 @@ gst_wildmidi_activatepull (GstPad * pad, gboolean active)
 }
 
 static GstBuffer *
-gst_wildmidi_allocate_buffer (GstWildmidi * wildmidi, gint64 samples)
-{
-  return gst_buffer_new_and_alloc (samples * wildmidi->bytes_per_frame);
-}
-
-static GstBuffer *
 gst_wildmidi_clip_buffer (GstWildmidi * wildmidi, GstBuffer * buffer)
 {
   gint64 new_start, new_stop;
@@ -586,10 +580,13 @@ gst_wildmidi_clip_buffer (GstWildmidi * wildmidi, GstBuffer * buffer)
 
 /* generate audio data and advance internal timers */
 static GstBuffer *
-gst_wildmidi_fill_buffer (GstWildmidi * wildmidi, GstBuffer * buffer)
+gst_wildmidi_get_buffer (GstWildmidi * wildmidi)
 {
   size_t bytes_read;
   gint64 samples;
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_and_alloc (256 * wildmidi->bytes_per_frame);
 
   bytes_read =
       WildMidi_GetOutput (wildmidi->song, (char *) GST_BUFFER_DATA (buffer),
@@ -627,22 +624,7 @@ gst_wildmidi_fill_buffer (GstWildmidi * wildmidi, GstBuffer * buffer)
       GST_TIME_ARGS (((guint64) (GST_BUFFER_TIMESTAMP (buffer) +
                   GST_BUFFER_DURATION (buffer)))), samples);
 
-  return buffer;
-}
-
-static GstBuffer *
-gst_wildmidi_get_buffer (GstWildmidi * wildmidi)
-{
-  GstBuffer *out;
-
-  out =
-      gst_wildmidi_fill_buffer (wildmidi,
-      gst_wildmidi_allocate_buffer (wildmidi, 256));
-
-  if (!out)
-    return NULL;
-
-  return gst_wildmidi_clip_buffer (wildmidi, out);
+  return gst_wildmidi_clip_buffer (wildmidi, buffer);
 }
 
 static gboolean
@@ -713,13 +695,8 @@ gst_wildmidi_do_play (GstWildmidi * wildmidi)
     wildmidi->o_segment->last_stop = wildmidi->o_segment->time = sample;
   }
 
-  out = gst_wildmidi_get_buffer (wildmidi);
-  if (!out) {
-    GST_LOG_OBJECT (wildmidi, "Song ended, generating eos");
-    gst_pad_push_event (wildmidi->srcpad, gst_event_new_eos ());
-    wildmidi->o_seek = FALSE;
-    return GST_FLOW_UNEXPECTED;
-  }
+  if (!(out = gst_wildmidi_get_buffer (wildmidi)))
+    goto eos;
 
   if (wildmidi->o_seek) {
     GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
@@ -730,6 +707,14 @@ gst_wildmidi_do_play (GstWildmidi * wildmidi)
   ret = gst_pad_push (wildmidi->srcpad, out);
 
   return ret;
+
+  /* ERRORS */
+eos:
+  {
+    GST_LOG_OBJECT (wildmidi, "Song ended");
+    wildmidi->o_seek = FALSE;
+    return GST_FLOW_UNEXPECTED;
+  }
 }
 
 static gboolean
@@ -746,6 +731,7 @@ gst_wildmidi_sink_event (GstPad * pad, GstEvent * event)
       /* now start the parsing task */
       gst_pad_start_task (wildmidi->sinkpad,
           (GstTaskFunction) gst_wildmidi_loop, wildmidi->sinkpad);
+      /* don't forward the event */
       gst_event_unref (event);
       break;
     default:
@@ -758,16 +744,15 @@ gst_wildmidi_sink_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 gst_wildmidi_chain (GstPad * sinkpad, GstBuffer * buffer)
 {
-  GstFlowReturn ret;
   GstWildmidi *wildmidi;
 
   wildmidi = GST_WILDMIDI (GST_PAD_PARENT (sinkpad));
 
+  /* push stuff in the adapter, we will start doing something in the sink event
+   * handler when we get EOS */
   gst_adapter_push (wildmidi->adapter, buffer);
 
-  ret = GST_FLOW_OK;
-
-  return ret;
+  return GST_FLOW_OK;
 }
 
 static void
