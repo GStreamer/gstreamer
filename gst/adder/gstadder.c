@@ -244,6 +244,7 @@ gst_adder_sink_getcaps (GstPad * pad)
   if (peercaps) {
     /* restrict with filter-caps if any */
     if (adder->filter_caps) {
+      GST_DEBUG_OBJECT (adder, "filtering peer caps");
       result = gst_caps_intersect (peercaps, adder->filter_caps);
       gst_caps_unref (peercaps);
       peercaps = result;
@@ -256,8 +257,15 @@ gst_adder_sink_getcaps (GstPad * pad)
   } else {
     /* the peer has no caps (or there is no peer), just use the allowed caps
      * of this sinkpad. */
-    GST_DEBUG_OBJECT (adder, "no peer caps, using sinkcaps");
-    result = sinkcaps;
+    /* restrict with filter-caps if any */
+    if (adder->filter_caps) {
+      GST_DEBUG_OBJECT (adder, "no peer caps, using filtered sinkcaps");
+      result = gst_caps_intersect (sinkcaps, adder->filter_caps);
+      gst_caps_unref (sinkcaps);
+    } else {
+      GST_DEBUG_OBJECT (adder, "no peer caps, using sinkcaps");
+      result = sinkcaps;
+    }
   }
   GST_OBJECT_UNLOCK (adder);
 
@@ -868,7 +876,7 @@ gst_adder_init (GstAdder * adder)
   adder->padcount = 0;
   adder->func = NULL;
 
-  adder->filter_caps = gst_caps_new_any ();
+  adder->filter_caps = NULL;
 
   /* keep track of the sinkpads requested */
   adder->collect = gst_collect_pads_new ();
@@ -903,13 +911,11 @@ gst_adder_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_FILTER_CAPS:{
-      GstCaps *new_caps;
+      GstCaps *new_caps = NULL;
       GstCaps *old_caps;
       const GstCaps *new_caps_val = gst_value_get_caps (value);
 
-      if (new_caps_val == NULL) {
-        new_caps = gst_caps_new_any ();
-      } else {
+      if (new_caps_val != NULL) {
         new_caps = (GstCaps *) new_caps_val;
         gst_caps_ref (new_caps);
       }
@@ -919,7 +925,8 @@ gst_adder_set_property (GObject * object, guint prop_id,
       adder->filter_caps = new_caps;
       GST_OBJECT_UNLOCK (adder);
 
-      gst_caps_unref (old_caps);
+      if (old_caps)
+        gst_caps_unref (old_caps);
 
       GST_DEBUG_OBJECT (adder, "set new caps %" GST_PTR_FORMAT, new_caps);
       break;
