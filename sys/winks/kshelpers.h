@@ -52,6 +52,7 @@ gboolean ks_object_get_supported_property_sets (HANDLE handle, GUID ** propsets,
 
 gboolean ks_object_set_connection_state (HANDLE handle, KSSTATE state);
 
+gchar * ks_guid_to_string (const GUID * guid);
 const gchar * ks_state_to_string (KSSTATE state);
 gchar * ks_options_flags_to_string (gulong flags);
 gchar * ks_property_set_to_string (const GUID * guid);

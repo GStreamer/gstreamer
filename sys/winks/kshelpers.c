@@ -300,6 +300,15 @@ ks_object_set_connection_state (HANDLE handle, KSSTATE state)
       KSPROPERTY_CONNECTION_STATE, &state, sizeof (state));
 }
 
+gchar *
+ks_guid_to_string (const GUID * guid)
+{
+  return g_strdup_printf ("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+      guid->Data1, guid->Data2, guid->Data3, guid->Data4[0], guid->Data4[1],
+      guid->Data4[2], guid->Data4[3], guid->Data4[4], guid->Data4[5],
+      guid->Data4[6], guid->Data4[7]);
+}
+
 const gchar *
 ks_state_to_string (KSSTATE state)
 {
@@ -464,8 +473,5 @@ ks_property_set_to_string (const GUID * guid)
       return g_strdup_printf ("KSPROPSETID_%s", known_property_sets[i].name);
   }
 
-  return g_strdup_printf ("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-      guid->Data1, guid->Data2, guid->Data3, guid->Data4[0], guid->Data4[1],
-      guid->Data4[2], guid->Data4[3], guid->Data4[4], guid->Data4[5],
-      guid->Data4[6], guid->Data4[7]);
+  return ks_guid_to_string (guid);
 }
