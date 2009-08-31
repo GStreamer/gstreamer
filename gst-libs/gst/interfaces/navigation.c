@@ -821,7 +821,7 @@ gst_navigation_event_parse_command (GstEvent * event,
 
   if (command) {
     s = gst_event_get_structure (event);
-    g_return_val_if_fail (gst_structure_get_uint (s, "command-code", command),
+    g_return_val_if_fail (gst_structure_get_uint (s, "command-code", (guint*)command),
         FALSE);
   }
 
