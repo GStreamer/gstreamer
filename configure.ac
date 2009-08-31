@@ -672,6 +672,17 @@ AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
   AC_SUBST(CELT_LIBS)
 ])
 
+dnl *** Cog ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_COG, true)
+AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
+  PKG_CHECK_MODULES(ORC, orc-0.4 >= 0.4.2.1, HAVE_COG="yes", [
+    HAVE_COG="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(ORC_CFLAGS)
+  AC_SUBST(ORC_LIBS)
+])
+
 dnl *** dc1394  ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DC1394, true)
 AG_GST_CHECK_FEATURE(DC1394, [libdc1394], dc1394, [
@@ -1798,6 +1809,7 @@ ext/apexsink/Makefile
 ext/bz2/Makefile
 ext/cdaudio/Makefile
 ext/celt/Makefile
+ext/cog/Makefile
 ext/dc1394/Makefile
 ext/dirac/Makefile
 ext/directfb/Makefile

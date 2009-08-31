@@ -1,0 +1,32 @@
+plugin_LTLIBRARIES = libgstcog.la
+
+libgstcog_la_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_CFLAGS) \
+	$(COG_CFLAGS)
+libgstcog_la_LIBADD = \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_BASE_LIBS) \
+	$(GST_LIBS) \
+	$(COG_LIBS)
+libgstcog_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
+libgstcog_la_LIBTOOLFLAGS = --tag=disable-static
+
+libgstcog_la_SOURCES = \
+	cogframe.c \
+	cogframe.h \
+	cogorc.c \
+	cogorc.h \
+	cogvirtframe.c \
+	cogvirtframe.h \
+	gstcog.c \
+	gstcogcolorspace.c \
+	gstcogdownsample.c \
+	gstcogfilter.c \
+	gstcogmse.c \
+	gstcogscale.c \
+	gstcogutils.c \
+	gstcogutils.h \
+	gstcolorconvert.c \
+	gstlogoinsert.c
+
