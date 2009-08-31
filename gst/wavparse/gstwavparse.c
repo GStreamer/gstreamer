@@ -2441,7 +2441,7 @@ gst_wavparse_sink_activate (GstPad * sinkpad)
   gboolean res;
 
   if (wav->adapter)
-    gst_object_unref (wav->adapter);
+    g_object_unref (wav->adapter);
 
   if (gst_pad_check_pull_range (sinkpad)) {
     GST_DEBUG ("going to pull mode");

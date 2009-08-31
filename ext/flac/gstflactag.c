@@ -146,7 +146,7 @@ gst_flac_tag_dispose (GObject * object)
   GstFlacTag *tag = GST_FLAC_TAG (object);
 
   if (tag->adapter) {
-    gst_object_unref (tag->adapter);
+    g_object_unref (tag->adapter);
     tag->adapter = NULL;
   }
   if (tag->vorbiscomment) {
