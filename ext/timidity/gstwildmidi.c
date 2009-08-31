@@ -633,7 +633,7 @@ gst_wildmidi_get_buffer (GstWildmidi * wildmidi)
   return gst_wildmidi_clip_buffer (wildmidi, buffer);
 }
 
-static gboolean
+static GstFlowReturn
 gst_wildmidi_parse_song (GstWildmidi * wildmidi)
 {
   struct _WM_Info *info;
@@ -652,7 +652,7 @@ gst_wildmidi_parse_song (GstWildmidi * wildmidi)
   if (!wildmidi->song) {
     GST_ELEMENT_ERROR (wildmidi, STREAM, DECODE, (NULL),
         ("Unable to parse midi"));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   WildMidi_LoadSamples (wildmidi->song);
@@ -677,7 +677,7 @@ gst_wildmidi_parse_song (GstWildmidi * wildmidi)
 
   GST_DEBUG_OBJECT (wildmidi, "Parsing song done");
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -783,7 +783,7 @@ gst_wildmidi_loop (GstPad * sinkpad)
       } else if (ret != GST_FLOW_OK) {
         GST_ELEMENT_ERROR (wildmidi, STREAM, DECODE, (NULL),
             ("Unable to load song"));
-        goto paused;
+        goto pause;
       } else {
         GST_DEBUG_OBJECT (wildmidi, "pushing buffer");
         gst_adapter_push (wildmidi->adapter, buffer);
@@ -794,35 +794,45 @@ gst_wildmidi_loop (GstPad * sinkpad)
     case GST_WILDMIDI_STATE_PARSE:
     {
       if (!wildmidi->song) {
-        if (!gst_wildmidi_parse_song (wildmidi))
-          goto paused;
+        ret = gst_wildmidi_parse_song (wildmidi);
+        if (ret != GST_FLOW_OK)
+          goto pause;
       }
       wildmidi->state = GST_WILDMIDI_STATE_PLAY;
       break;
     }
     case GST_WILDMIDI_STATE_PLAY:
       ret = gst_wildmidi_do_play (wildmidi);
-      if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED)
-        goto error;
+      if (ret != GST_FLOW_OK)
+        goto pause;
       break;
     default:
       break;
   }
   return;
 
-paused:
+pause:
   {
-    GST_DEBUG_OBJECT (wildmidi, "pausing task");
-    gst_pad_pause_task (wildmidi->sinkpad);
-    return;
-  }
-error:
-  {
-    GST_ELEMENT_ERROR (wildmidi, STREAM, FAILED,
-        ("Internal data stream error"),
-        ("Streaming stopped, reason %s", gst_flow_get_name (ret)));
-    gst_pad_push_event (wildmidi->srcpad, gst_event_new_eos ());
-    goto paused;
+    const gchar *reason = gst_flow_get_name (ret);
+    GstEvent *event;
+
+    GST_DEBUG_OBJECT (wildmidi, "pausing task, reason %s", reason);
+    gst_pad_pause_task (sinkpad);
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      if (ret == GST_FLOW_UNEXPECTED) {
+        /* perform EOS logic */
+        event = gst_event_new_eos ();
+        gst_pad_push_event (wildmidi->srcpad, event);
+      } else {
+        event = gst_event_new_eos ();
+        /* for fatal errors we post an error message, post the error
+         * first so the app knows about the error first. */
+        GST_ELEMENT_ERROR (wildmidi, STREAM, FAILED,
+            ("Internal data flow error."),
+            ("streaming task paused, reason %s (%d)", reason, ret));
+        gst_pad_push_event (wildmidi->srcpad, event);
+      }
+    }
   }
 }
 
