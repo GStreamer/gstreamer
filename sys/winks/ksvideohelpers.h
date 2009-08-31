@@ -51,6 +51,8 @@ struct _KsVideoMediaType
   GstCaps * translated_caps;
 };
 
+GList * ks_video_device_list_sort_cameras_first (GList * devices);
+
 KsVideoMediaType * ks_video_media_type_dup (KsVideoMediaType * media_type);
 void ks_video_media_type_free (KsVideoMediaType * media_type);
 GList * ks_video_probe_filter_for_caps (HANDLE filter_handle);

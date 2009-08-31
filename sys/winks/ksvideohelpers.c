@@ -37,6 +37,97 @@ extern const GUID MEDIASUBTYPE_I420 =
     0x71}
 };
 
+typedef struct _KsVideoDeviceEntry KsVideoDeviceEntry;
+
+struct _KsVideoDeviceEntry
+{
+  KsDeviceEntry *device;
+  gint priority;
+};
+
+static void
+ks_video_device_entry_decide_priority (KsVideoDeviceEntry * videodevice)
+{
+  HANDLE filter_handle;
+
+  videodevice->priority = 0;
+
+  filter_handle = CreateFile (videodevice->device->path,
+      GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+      FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
+  if (ks_is_valid_handle (filter_handle)) {
+    GUID *propsets = NULL;
+    gulong propsets_len;
+
+    if (ks_object_get_supported_property_sets (filter_handle, &propsets,
+            &propsets_len)) {
+      gulong i;
+
+      for (i = 0; i < propsets_len; i++) {
+        if (memcmp (&propsets[i], &PROPSETID_VIDCAP_CAMERACONTROL,
+                sizeof (GUID)) == 0) {
+          videodevice->priority++;
+          break;
+        }
+      }
+
+      g_free (propsets);
+    }
+  }
+
+  CloseHandle (filter_handle);
+}
+
+static gint
+ks_video_device_entry_compare (gconstpointer a, gconstpointer b)
+{
+  const KsVideoDeviceEntry *videodevice_a = a;
+  const KsVideoDeviceEntry *videodevice_b = b;
+
+  if (videodevice_a->priority > videodevice_b->priority)
+    return -1;
+  else if (videodevice_a->priority == videodevice_b->priority)
+    return 0;
+  else
+    return 1;
+}
+
+GList *
+ks_video_device_list_sort_cameras_first (GList * devices)
+{
+  GList *videodevices = NULL, *walk;
+  guint i;
+
+  for (walk = devices; walk != NULL; walk = walk->next) {
+    KsDeviceEntry *device = walk->data;
+    KsVideoDeviceEntry *videodevice;
+
+    videodevice = g_new (KsVideoDeviceEntry, 1);
+    videodevice->device = device;
+    ks_video_device_entry_decide_priority (videodevice);
+
+    videodevices = g_list_append (videodevices, videodevice);
+  }
+
+  videodevices = g_list_sort (videodevices, ks_video_device_entry_compare);
+
+  g_list_free (devices);
+  devices = NULL;
+
+  for (walk = videodevices, i = 0; walk != NULL; walk = walk->next, i++) {
+    KsVideoDeviceEntry *videodevice = walk->data;
+
+    videodevice->device->index = i;
+    devices = g_list_append (devices, videodevice->device);
+
+    g_free (videodevice);
+  }
+
+  g_list_free (videodevices);
+
+  return devices;
+}
+
 static GstStructure *
 ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
 {

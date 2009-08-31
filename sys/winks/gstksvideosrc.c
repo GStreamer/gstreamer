@@ -388,6 +388,8 @@ gst_ks_video_src_open_device (GstKsVideoSrc * self)
   if (devices == NULL)
     goto error_no_devices;
 
+  devices = ks_video_device_list_sort_cameras_first (devices);
+
   for (cur = devices; cur != NULL; cur = cur->next) {
     KsDeviceEntry *entry = cur->data;
 
