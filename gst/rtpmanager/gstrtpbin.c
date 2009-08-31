@@ -577,6 +577,9 @@ free_session (GstRtpBinSession * sess, GstRtpBin * bin)
 {
   GST_DEBUG_OBJECT (bin, "freeing session %p", sess);
 
+  gst_element_set_locked_state (sess->demux, TRUE);
+  gst_element_set_locked_state (sess->session, TRUE);
+
   gst_element_set_state (sess->demux, GST_STATE_NULL);
   gst_element_set_state (sess->session, GST_STATE_NULL);
 
@@ -1159,6 +1162,9 @@ free_stream (GstRtpBinStream * stream)
   g_signal_handler_disconnect (stream->buffer, stream->buffer_handlesync_sig);
   g_signal_handler_disconnect (stream->buffer, stream->buffer_ptreq_sig);
   g_signal_handler_disconnect (stream->buffer, stream->buffer_ntpstop_sig);
+
+  gst_element_set_locked_state (stream->demux, TRUE);
+  gst_element_set_locked_state (stream->buffer, TRUE);
 
   gst_element_set_state (stream->demux, GST_STATE_NULL);
   gst_element_set_state (stream->buffer, GST_STATE_NULL);
