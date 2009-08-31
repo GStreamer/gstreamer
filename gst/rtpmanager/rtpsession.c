@@ -1669,6 +1669,7 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
     guint32 ssrc;
     gboolean changed, created;
     RTPSource *source;
+    GstStructure *sdes;
 
     ssrc = gst_rtcp_packet_sdes_get_ssrc (packet);
 
@@ -1681,23 +1682,44 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
     if (!source)
       return;
 
+    sdes = gst_structure_new ("application/x-rtp-source-sdes", NULL);
+
     more_entries = gst_rtcp_packet_sdes_first_entry (packet);
     j = 0;
     while (more_entries) {
       GstRTCPSDESType type;
       guint8 len;
       guint8 *data;
+      gchar *name;
+      gchar *value;
 
       gst_rtcp_packet_sdes_get_entry (packet, &type, &len, &data);
 
       GST_DEBUG ("entry %d, type %d, len %d, data %.*s", j, type, len, len,
           data);
 
-      changed |= rtp_source_set_sdes (source, type, data, len);
+      if (type == GST_RTCP_SDES_PRIV) {
+        name = g_strndup ((const gchar *) &data[1], data[0]);
+        len -= data[0] + 1;
+        data += data[0] + 1;
+      } else {
+        name = g_strdup (gst_rtcp_sdes_type_to_name (type));
+      }
+
+      value = g_strndup ((const gchar *) data, len);
+
+      gst_structure_set (sdes, name, G_TYPE_STRING, value, NULL);
+
+      g_free (name);
+      g_free (value);
 
       more_entries = gst_rtcp_packet_sdes_next_entry (packet);
       j++;
     }
+
+    changed = rtp_source_set_sdes_struct (source, sdes);
+
+    gst_structure_free (sdes);
 
     source->validated = TRUE;
 
@@ -2296,27 +2318,60 @@ static void
 session_sdes (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
-  guint8 *sdes_data;
-  guint sdes_len;
+  GstStructure *sdes;
+  gint i, n_fields;
 
   /* add SDES packet */
   gst_rtcp_buffer_add_packet (data->rtcp, GST_RTCP_TYPE_SDES, packet);
 
   gst_rtcp_packet_sdes_add_item (packet, sess->source->ssrc);
 
-  rtp_source_get_sdes (sess->source, GST_RTCP_SDES_CNAME, &sdes_data,
-      &sdes_len);
-  gst_rtcp_packet_sdes_add_entry (packet, GST_RTCP_SDES_CNAME, sdes_len,
-      sdes_data);
+  sdes = rtp_source_get_sdes_struct (sess->source);
 
-  /* other SDES items must only be added at regular intervals and only when the
-   * user requests to since it might be a privacy problem */
-#if 0
-  gst_rtcp_packet_sdes_add_entry (&packet, GST_RTCP_SDES_NAME,
-      strlen (sess->name), (guint8 *) sess->name);
-  gst_rtcp_packet_sdes_add_entry (&packet, GST_RTCP_SDES_TOOL,
-      strlen (sess->tool), (guint8 *) sess->tool);
-#endif
+  /* add all fields in the structure, the order is not important. */
+  n_fields = gst_structure_n_fields (sdes);
+  for (i = 0; i < n_fields; ++i) {
+    const gchar *field;
+    const gchar *value;
+    GstRTCPSDESType type;
+
+    field = gst_structure_nth_field_name (sdes, i);
+    if (field == NULL)
+      continue;
+    value = gst_structure_get_string (sdes, field);
+    if (value == NULL)
+      continue;
+    type = gst_rtcp_sdes_name_to_type (field);
+
+    if (type > GST_RTCP_SDES_END && type < GST_RTCP_SDES_PRIV) {
+      gst_rtcp_packet_sdes_add_entry (packet, type, strlen (value),
+          (const guint8 *) value);
+    } else if (type == GST_RTCP_SDES_PRIV) {
+      gsize prefix_len;
+      gsize value_len;
+      gsize data_len;
+      guint8 data[256];
+
+      /* don't accept entries that are too big */
+      prefix_len = strlen (field);
+      if (prefix_len > 255)
+        continue;
+      value_len = strlen (value);
+      if (value_len > 255)
+        continue;
+      data_len = 1 + prefix_len + value_len;
+      if (data_len > 255)
+        continue;
+
+      data[0] = prefix_len;
+      memcpy (&data[1], field, prefix_len);
+      memcpy (&data[1 + prefix_len], value, value_len);
+
+      gst_rtcp_packet_sdes_add_entry (packet, type, data_len, data);
+    }
+  }
+
+  gst_structure_free (sdes);
 
   data->has_sdes = TRUE;
 }

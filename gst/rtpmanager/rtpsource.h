@@ -117,8 +117,7 @@ struct _RTPSource {
   gboolean      is_csrc;
   gboolean      is_sender;
 
-  guint8       *sdes[9];
-  guint         sdes_len[9];
+  GstStructure  *sdes;
 
   gboolean      received_bye;
   gchar        *bye_reason;
@@ -179,16 +178,11 @@ gchar *         rtp_source_get_bye_reason      (RTPSource *src);
 void            rtp_source_update_caps         (RTPSource *src, GstCaps *caps);
 
 /* SDES info */
-gboolean        rtp_source_set_sdes            (RTPSource *src, GstRTCPSDESType type, 
-                                                const guint8 *data, guint len);
 gboolean        rtp_source_set_sdes_string     (RTPSource *src, GstRTCPSDESType type,
                                                 const gchar *data);
-gboolean        rtp_source_get_sdes            (RTPSource *src, GstRTCPSDESType type,
-                                                guint8 **data, guint *len);
 gchar*          rtp_source_get_sdes_string     (RTPSource *src, GstRTCPSDESType type);
-
 GstStructure *  rtp_source_get_sdes_struct     (RTPSource * src);
-void            rtp_source_set_sdes_struct     (RTPSource * src, const GstStructure *sdes);
+gboolean        rtp_source_set_sdes_struct     (RTPSource * src, const GstStructure *sdes);
 
 /* handling network address */
 void            rtp_source_set_rtp_from        (RTPSource *src, GstNetAddress *address);

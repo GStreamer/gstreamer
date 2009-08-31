@@ -98,16 +98,19 @@ rtp_source_class_init (RTPSourceClass * klass)
   /**
    * RTPSource::sdes
    *
-   * The current SDES items of the source. Returns a structure with the
-   * following fields:
+   * The current SDES items of the source. Returns a structure with name
+   * application/x-rtp-source-sdes and may contain the following fields:
    *
-   *  'cname'    G_TYPE_STRING  : The canonical name
-   *  'name'     G_TYPE_STRING  : The user name
-   *  'email'    G_TYPE_STRING  : The user's electronic mail address
-   *  'phone'    G_TYPE_STRING  : The user's phone number
-   *  'location' G_TYPE_STRING  : The geographic user location
-   *  'tool'     G_TYPE_STRING  : The name of application or tool
-   *  'note'     G_TYPE_STRING  : A notice about the source
+   *  'cname'       G_TYPE_STRING  : The canonical name
+   *  'name'        G_TYPE_STRING  : The user name
+   *  'email'       G_TYPE_STRING  : The user's electronic mail address
+   *  'phone'       G_TYPE_STRING  : The user's phone number
+   *  'location'    G_TYPE_STRING  : The geographic user location
+   *  'tool'        G_TYPE_STRING  : The name of application or tool
+   *  'note'        G_TYPE_STRING  : A notice about the source
+   *
+   *  other fields may be present and these represent private items in
+   *  the SDES where the field name is the prefix.
    */
   g_object_class_install_property (gobject_class, PROP_SDES,
       g_param_spec_boxed ("sdes", "SDES",
@@ -156,6 +159,8 @@ rtp_source_init (RTPSource * src)
   src->internal = FALSE;
   src->probation = RTP_DEFAULT_PROBATION;
 
+  src->sdes = gst_structure_new ("application/x-rtp-source-sdes", NULL);
+
   src->payload = -1;
   src->clock_rate = -1;
   src->packets = g_queue_new ();
@@ -170,7 +175,6 @@ rtp_source_finalize (GObject * object)
 {
   RTPSource *src;
   GstBuffer *buffer;
-  gint i;
 
   src = RTP_SOURCE_CAST (object);
 
@@ -178,8 +182,7 @@ rtp_source_finalize (GObject * object)
     gst_buffer_unref (buffer);
   g_queue_free (src->packets);
 
-  for (i = 0; i < 9; i++)
-    g_free (src->sdes[i]);
+  gst_structure_free (src->sdes);
 
   g_free (src->bye_reason);
 
@@ -281,88 +284,64 @@ rtp_source_create_stats (RTPSource * src)
 
 /**
  * rtp_source_get_sdes_struct:
- * @src: an #RTSPSource
+ * @src: an #RTPSource
  *
- * Get the SDES data as a GstStructure
+ * Get the SDES from @src.
  *
- * Returns: a GstStructure with SDES items for @src.
+ * Returns: %GstStructure of type "application/x-rtp-source-sdes", see
+ * the SDES property for more details.
  */
 GstStructure *
 rtp_source_get_sdes_struct (RTPSource * src)
 {
-  GstStructure *s;
-  gchar *str;
+  g_return_val_if_fail (RTP_IS_SOURCE (src), NULL);
 
-  s = gst_structure_new ("application/x-rtp-source-sdes",
-      "ssrc", G_TYPE_UINT, (guint) src->ssrc, NULL);
+  return gst_structure_copy (src->sdes);
+}
 
-  if ((str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_CNAME))) {
-    gst_structure_set (s, "cname", G_TYPE_STRING, str, NULL);
-    g_free (str);
-  }
-  if ((str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_NAME))) {
-    gst_structure_set (s, "name", G_TYPE_STRING, str, NULL);
-    g_free (str);
-  }
-  if ((str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_EMAIL))) {
-    gst_structure_set (s, "email", G_TYPE_STRING, str, NULL);
-    g_free (str);
-  }
-  if ((str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_PHONE))) {
-    gst_structure_set (s, "phone", G_TYPE_STRING, str, NULL);
-    g_free (str);
-  }
-  if ((str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_LOC))) {
-    gst_structure_set (s, "location", G_TYPE_STRING, str, NULL);
-    g_free (str);
-  }
-  if ((str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_TOOL))) {
-    gst_structure_set (s, "tool", G_TYPE_STRING, str, NULL);
-    g_free (str);
-  }
-  if ((str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_NOTE))) {
-    gst_structure_set (s, "note", G_TYPE_STRING, str, NULL);
-    g_free (str);
-  }
-  return s;
+static gboolean
+sdes_struct_compare_func (GQuark field_id, const GValue * value,
+    gpointer user_data)
+{
+  GstStructure *old = GST_STRUCTURE (user_data);
+  const gchar *field = g_quark_to_string (field_id);
+
+  if (!gst_structure_has_field (old, field))
+    return FALSE;
+
+  g_assert (G_VALUE_HOLDS_STRING (value));
+  return strcmp (g_value_get_string (value), gst_structure_get_string (old,
+          field)) == 0;
 }
 
 /**
- * rtp_source_set_sdes_struct:
- * @src: an #RTSPSource
- * @sdes: a #GstStructure with SDES info
+ * rtp_source_set_sdes:
+ * @src: an #RTPSource
+ * @sdes: the SDES structure
  *
- * Set the SDES items from @sdes.
+ * Store the @sdes in @src. @sdes must be a structure of type
+ * "application/x-rtp-source-sdes", see the SDES property for more details.
+ *
+ * Returns: %FALSE if the SDES was unchanged.
  */
-void
+gboolean
 rtp_source_set_sdes_struct (RTPSource * src, const GstStructure * sdes)
 {
-  const gchar *str;
+  gboolean changed;
 
-  if (!gst_structure_has_name (sdes, "application/x-rtp-source-sdes"))
-    return;
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
 
-  if ((str = gst_structure_get_string (sdes, "cname"))) {
-    rtp_source_set_sdes_string (src, GST_RTCP_SDES_CNAME, str);
+  g_return_val_if_fail (strcmp (gst_structure_get_name (sdes),
+          "application/x-rtp-source-sdes") == 0, FALSE);
+
+  changed = !gst_structure_foreach (sdes, sdes_struct_compare_func, src->sdes);
+
+  if (changed) {
+    gst_structure_free (src->sdes);
+    src->sdes = gst_structure_copy (sdes);
   }
-  if ((str = gst_structure_get_string (sdes, "name"))) {
-    rtp_source_set_sdes_string (src, GST_RTCP_SDES_NAME, str);
-  }
-  if ((str = gst_structure_get_string (sdes, "email"))) {
-    rtp_source_set_sdes_string (src, GST_RTCP_SDES_EMAIL, str);
-  }
-  if ((str = gst_structure_get_string (sdes, "phone"))) {
-    rtp_source_set_sdes_string (src, GST_RTCP_SDES_PHONE, str);
-  }
-  if ((str = gst_structure_get_string (sdes, "location"))) {
-    rtp_source_set_sdes_string (src, GST_RTCP_SDES_LOC, str);
-  }
-  if ((str = gst_structure_get_string (sdes, "tool"))) {
-    rtp_source_set_sdes_string (src, GST_RTCP_SDES_TOOL, str);
-  }
-  if ((str = gst_structure_get_string (sdes, "note"))) {
-    rtp_source_set_sdes_string (src, GST_RTCP_SDES_NOTE, str);
-  }
+
+  return changed;
 }
 
 static void
@@ -657,54 +636,12 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
 }
 
 /**
- * rtp_source_set_sdes:
- * @src: an #RTPSource
- * @type: the type of the SDES item
- * @data: the SDES data
- * @len: the SDES length
- *
- * Store an SDES item of @type in @src.
- *
- * Returns: %FALSE if the SDES item was unchanged or @type is unknown.
- */
-gboolean
-rtp_source_set_sdes (RTPSource * src, GstRTCPSDESType type,
-    const guint8 * data, guint len)
-{
-  guint8 *old;
-
-  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
-
-  if (type < 0 || type > GST_RTCP_SDES_PRIV)
-    return FALSE;
-
-  old = src->sdes[type];
-
-  /* lengths are the same, check if the data is the same */
-  if ((src->sdes_len[type] == len))
-    if (data != NULL && old != NULL && (memcmp (old, data, len) == 0))
-      return FALSE;
-
-  /* NULL data, make sure we store 0 length or if no length is given,
-   * take strlen */
-  if (data == NULL)
-    len = 0;
-
-  g_free (src->sdes[type]);
-  src->sdes[type] = g_memdup (data, len);
-  src->sdes_len[type] = len;
-
-  return TRUE;
-}
-
-/**
  * rtp_source_set_sdes_string:
  * @src: an #RTPSource
  * @type: the type of the SDES item
  * @data: the SDES data
  *
- * Store an SDES item of @type in @src. This function is similar to
- * rtp_source_set_sdes() but takes a null-terminated string for convenience.
+ * Store an SDES item of @type in @src.
  *
  * Returns: %FALSE if the SDES item was unchanged or @type is unknown.
  */
@@ -712,48 +649,26 @@ gboolean
 rtp_source_set_sdes_string (RTPSource * src, GstRTCPSDESType type,
     const gchar * data)
 {
-  guint len;
-  gboolean result;
+  const gchar *old;
+  const gchar *field;
 
-  if (data)
-    len = strlen (data);
+  field = gst_rtcp_sdes_type_to_name (type);
+
+  if (gst_structure_has_field (src->sdes, field))
+    old = gst_structure_get_string (src->sdes, field);
   else
-    len = 0;
+    old = NULL;
 
-  result = rtp_source_set_sdes (src, type, (guint8 *) data, len);
-
-  return result;
-}
-
-/**
- * rtp_source_get_sdes:
- * @src: an #RTPSource
- * @type: the type of the SDES item
- * @data: location to store the SDES data or NULL
- * @len: location to store the SDES length or NULL
- *
- * Get the SDES item of @type from @src. Note that @data does not always point
- * to a null-terminated string, use rtp_source_get_sdes_string() to retrieve a
- * null-terminated string instead.
- *
- * @data remains valid until the next call to rtp_source_set_sdes().
- *
- * Returns: %TRUE if @type was valid and @data and @len contain valid
- * data. @data can be NULL when the item was unset.
- */
-gboolean
-rtp_source_get_sdes (RTPSource * src, GstRTCPSDESType type, guint8 ** data,
-    guint * len)
-{
-  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
-
-  if (type < 0 || type > GST_RTCP_SDES_PRIV)
+  if (old == NULL && data == NULL)
     return FALSE;
 
-  if (data)
-    *data = src->sdes[type];
-  if (len)
-    *len = src->sdes_len[type];
+  if (old != NULL && data != NULL && strcmp (old, data) == 0)
+    return FALSE;
+
+  if (data == NULL)
+    gst_structure_remove_field (src->sdes, field);
+  else
+    gst_structure_set (src->sdes, field, G_TYPE_STRING, data, NULL);
 
   return TRUE;
 }
@@ -772,13 +687,19 @@ gchar *
 rtp_source_get_sdes_string (RTPSource * src, GstRTCPSDESType type)
 {
   gchar *result;
+  const gchar *type_name;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), NULL);
 
-  if (type < 0 || type > GST_RTCP_SDES_PRIV)
+  if (type < 0 || type > GST_RTCP_SDES_PRIV - 1)
     return NULL;
 
-  result = g_strndup ((const gchar *) src->sdes[type], src->sdes_len[type]);
+  type_name = gst_rtcp_sdes_type_to_name (type);
+
+  if (!gst_structure_has_field (src->sdes, type_name))
+    return NULL;
+
+  result = g_strdup (gst_structure_get_string (src->sdes, type_name));
 
   return result;
 }
