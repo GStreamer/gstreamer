@@ -10,7 +10,7 @@ endif
 
 # flags used to compile this plugin
 libgstkate_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(TIGER_CFLAGS) $(KATE_CFLAGS)
-libgstkate_la_LIBADD = $(GST_PLUGIN_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) $(GST_LIBS) $(TIGER_LIBS) $(KATE_LIBS)
+libgstkate_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) $(GST_LIBS) $(TIGER_LIBS) $(KATE_LIBS)
 libgstkate_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstkate_la_LIBTOOLFLAGS = --tag=disable-static
 
