@@ -138,26 +138,24 @@ static guint32 palettes[COLORS * PATTERN];
 GST_BOILERPLATE (GstRadioacTV, gst_radioactv, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define CAPS_STR GST_VIDEO_CAPS_RGBx
+#else
+#define CAPS_STR GST_VIDEO_CAPS_xBGR
+#endif
+
 static GstStaticPadTemplate gst_radioactv_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx)
-#else
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xBGR)
-#endif
+    GST_STATIC_CAPS (CAPS_STR)
     );
 
 static GstStaticPadTemplate gst_radioactv_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx)
-#else
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xBGR)
-#endif
+    GST_STATIC_CAPS (CAPS_STR)
     );
 
 static void
