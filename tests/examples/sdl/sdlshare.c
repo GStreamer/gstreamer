@@ -18,14 +18,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 
-#ifdef WIN32
-#include <windows.h>
-#else
+#ifndef WIN32
 #include <GL/glx.h>
 #include "SDL/SDL_syswm.h"
 #endif
