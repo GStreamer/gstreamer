@@ -680,6 +680,7 @@ gst_single_object_iterator_iterator_next (GstSingleObjectIterator * it,
   }
 
   *result = it->copy (it->object);
+  it->visited = TRUE;
   return GST_ITERATOR_OK;
 }
 
