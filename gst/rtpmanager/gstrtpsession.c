@@ -878,10 +878,8 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn res;
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
 
   rtpsession = GST_RTP_SESSION (element);
-  priv = rtpsession->priv;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -948,11 +946,9 @@ gst_rtp_session_process_rtp (RTPSession * sess, RTPSource * src,
 {
   GstFlowReturn result;
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
   GstPad *rtp_src;
 
   rtpsession = GST_RTP_SESSION (user_data);
-  priv = rtpsession->priv;
 
   GST_RTP_SESSION_LOCK (rtpsession);
   if ((rtp_src = rtpsession->recv_rtp_src))
@@ -979,11 +975,9 @@ gst_rtp_session_send_rtp (RTPSession * sess, RTPSource * src,
 {
   GstFlowReturn result;
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
   GstPad *rtp_src;
 
   rtpsession = GST_RTP_SESSION (user_data);
-  priv = rtpsession->priv;
 
   GST_RTP_SESSION_LOCK (rtpsession);
   if ((rtp_src = rtpsession->send_rtp_src))
@@ -1015,11 +1009,9 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
 {
   GstFlowReturn result;
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
   GstPad *rtcp_src;
 
   rtpsession = GST_RTP_SESSION (user_data);
-  priv = rtpsession->priv;
 
   GST_RTP_SESSION_LOCK (rtpsession);
   if (rtpsession->priv->stop_thread)
@@ -1076,11 +1068,9 @@ gst_rtp_session_sync_rtcp (RTPSession * sess, RTPSource * src,
 {
   GstFlowReturn result;
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
   GstPad *sync_src;
 
   rtpsession = GST_RTP_SESSION (user_data);
-  priv = rtpsession->priv;
 
   GST_RTP_SESSION_LOCK (rtpsession);
   if (rtpsession->priv->stop_thread)
@@ -1237,11 +1227,9 @@ static gboolean
 gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
   gboolean ret = FALSE;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-  priv = rtpsession->priv;
 
   GST_DEBUG_OBJECT (rtpsession, "received event %s",
       GST_EVENT_TYPE_NAME (event));
@@ -1324,10 +1312,8 @@ static gboolean
 gst_rtp_session_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-  priv = rtpsession->priv;
 
   GST_RTP_SESSION_LOCK (rtpsession);
   gst_rtp_session_cache_caps (rtpsession, caps);
@@ -1393,11 +1379,9 @@ static gboolean
 gst_rtp_session_event_recv_rtcp_sink (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
   gboolean ret = FALSE;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-  priv = rtpsession->priv;
 
   GST_DEBUG_OBJECT (rtpsession, "received event %s",
       GST_EVENT_TYPE_NAME (event));
@@ -1440,11 +1424,9 @@ static gboolean
 gst_rtp_session_query_send_rtcp_src (GstPad * pad, GstQuery * query)
 {
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
   gboolean ret = FALSE;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-  priv = rtpsession->priv;
 
   GST_DEBUG_OBJECT (rtpsession, "received QUERY");
 
@@ -1468,11 +1450,9 @@ static gboolean
 gst_rtp_session_event_send_rtcp_src (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
   gboolean ret;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-  priv = rtpsession->priv;
 
   GST_DEBUG_OBJECT (rtpsession, "received EVENT");
 
@@ -1499,11 +1479,9 @@ static gboolean
 gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
   gboolean ret = FALSE;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-  priv = rtpsession->priv;
 
   GST_DEBUG_OBJECT (rtpsession, "received event");
 
