@@ -1029,7 +1029,7 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
     GstCaps *caps;
 
     /* set rtcp caps on output pad */
-    if ((caps = GST_PAD_CAPS (rtcp_src))) {
+    if (!(caps = GST_PAD_CAPS (rtcp_src))) {
       caps = gst_caps_new_simple ("application/x-rtcp", NULL);
       gst_pad_set_caps (rtcp_src, caps);
       gst_caps_unref (caps);
