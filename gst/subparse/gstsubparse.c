@@ -150,7 +150,7 @@ gst_sub_parse_dispose (GObject * object)
   }
 
   if (subparse->adapter) {
-    gst_object_unref (subparse->adapter);
+    g_object_unref (subparse->adapter);
     subparse->adapter = NULL;
   }
 
