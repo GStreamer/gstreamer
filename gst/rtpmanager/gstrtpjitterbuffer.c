@@ -1,7 +1,7 @@
 /*
  * Farsight Voice+Video library
  *
- *  Copyright 2007 Collabora Ltd, 
+ *  Copyright 2007 Collabora Ltd,
  *  Copyright 2007 Nokia Corporation
  *   @author: Philippe Kalaf <philippe.kalaf@collabora.co.uk>.
  *  Copyright 2007 Wim Taymans <wim.taymans@gmail.com>
@@ -30,17 +30,17 @@
  * from a network source. It will also wait for missing packets up to a
  * configurable time limit using the #GstRtpJitterBuffer:latency property.
  * Packets arriving too late are considered to be lost packets.
- * 
+ *
  * This element acts as a live element and so adds #GstRtpJitterBuffer:latency
  * to the pipeline.
- * 
+ *
  * The element needs the clock-rate of the RTP payload in order to estimate the
  * delay. This information is obtained either from the caps on the sink pad or,
  * when no caps are present, from the #GstRtpJitterBuffer::request-pt-map signal.
  * To clear the previous pt-map use the #GstRtpJitterBuffer::clear-pt-map signal.
- * 
+ *
  * This element will automatically be used inside gstrtpbin.
- * 
+ *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
@@ -300,7 +300,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
 
   /**
    * GstRtpJitterBuffer::latency:
-   * 
+   *
    * The maximum latency of the jitterbuffer. Packets will be kept in the buffer
    * for at most this time.
    */
@@ -310,8 +310,8 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READWRITE));
   /**
    * GstRtpJitterBuffer::drop-on-latency:
-   * 
-   * Drop oldest buffers when the queue is completely filled. 
+   *
+   * Drop oldest buffers when the queue is completely filled.
    */
   g_object_class_install_property (gobject_class, PROP_DROP_ON_LATENCY,
       g_param_spec_boolean ("drop-on-latency",
@@ -320,7 +320,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           DEFAULT_DROP_ON_LATENCY, G_PARAM_READWRITE));
   /**
    * GstRtpJitterBuffer::ts-offset:
-   * 
+   *
    * Adjust GStreamer output buffer timestamps in the jitterbuffer with offset.
    * This is mainly used to ensure interstream synchronisation.
    */
@@ -332,7 +332,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
 
   /**
    * GstRtpJitterBuffer::do-lost:
-   * 
+   *
    * Send out a GstRTPPacketLost event downstream when a packet is considered
    * lost.
    */
@@ -761,7 +761,7 @@ gst_rtp_jitter_buffer_flush_start (GstRtpJitterBuffer * jitterbuffer)
   GST_DEBUG_OBJECT (jitterbuffer, "Disabling pop on queue");
   /* this unblocks any waiting pops on the src pad task */
   JBUF_SIGNAL (priv);
-  /* unlock clock, we just unschedule, the entry will be released by the 
+  /* unlock clock, we just unschedule, the entry will be released by the
    * locking streaming thread. */
   if (priv->clock_id) {
     gst_clock_id_unschedule (priv->clock_id);
@@ -1211,7 +1211,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
    * have a duplicate. */
   if (G_UNLIKELY (!rtp_jitter_buffer_insert (priv->jbuf, buffer, timestamp,
-              priv->clock_rate, &tail)))
+              priv->clock_rate, (priv->latency_ms * GST_MSECOND), &tail)))
     goto duplicate;
 
   /* signal addition of new buffer when the _loop is waiting. */

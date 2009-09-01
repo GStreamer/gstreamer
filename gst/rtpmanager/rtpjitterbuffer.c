@@ -183,7 +183,7 @@ rtp_jitter_buffer_resync (RTPJitterBuffer * jbuf, GstClockTime time,
  *
  * Both the window and the weighting used for averaging influence the accuracy
  * of the drift estimation. Finding the correct parameters turns out to be a
- * compromise between accuracy and inertia. 
+ * compromise between accuracy and inertia.
  *
  * We use a 2 second window or up to 512 data points, which is statistically big
  * enough to catch spikes (FIXME, detect spikes).
@@ -195,7 +195,7 @@ rtp_jitter_buffer_resync (RTPJitterBuffer * jbuf, GstClockTime time,
  */
 static GstClockTime
 calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
-    guint32 clock_rate)
+    guint32 clock_rate, GstClockTime max_delay)
 {
   guint64 ext_rtptime;
   guint64 send_diff, recv_diff;
@@ -278,7 +278,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
    * changed too quickly we have to resync because the server likely restarted
    * its timestamps. */
   if (ABS (delta - jbuf->skew) > GST_SECOND) {
-    GST_WARNING ("delta %" GST_TIME_FORMAT " too big, reset skew",
+    GST_WARNING ("delta - skew: %" GST_TIME_FORMAT " too big, reset skew",
         GST_TIME_ARGS (delta - jbuf->skew));
     rtp_jitter_buffer_resync (jbuf, time, gstrtptime, ext_rtptime, TRUE);
     send_diff = 0;
@@ -386,6 +386,18 @@ no_skew:
         out_time = jbuf->prev_out_time;
       }
     }
+
+    if (out_time + max_delay < time) {
+      /* if we are going to produce a timestamp that is later than the input
+       * timestamp, we need to reset the jitterbuffer. Likely the server paused
+       * temporarily */
+      GST_DEBUG ("out %" GST_TIME_FORMAT " + %" G_GUINT64_FORMAT " < time %"
+          GST_TIME_FORMAT ", reset jitterbuffer", GST_TIME_ARGS (out_time),
+          max_delay, GST_TIME_ARGS (time));
+      rtp_jitter_buffer_resync (jbuf, time, gstrtptime, ext_rtptime, TRUE);
+      out_time = time;
+      send_diff = 0;
+    }
   } else
     out_time = -1;
 
@@ -404,6 +416,7 @@ no_skew:
  * @buf: a buffer
  * @time: a running_time when this buffer was received in nanoseconds
  * @clock_rate: the clock-rate of the payload of @buf
+ * @max_delay: the maximum lateness of @buf
  * @tail: TRUE when the tail element changed.
  *
  * Inserts @buf into the packet queue of @jbuf. The sequence number of the
@@ -415,7 +428,8 @@ no_skew:
  */
 gboolean
 rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
-    GstClockTime time, guint32 clock_rate, gboolean * tail)
+    GstClockTime time, guint32 clock_rate, GstClockTime max_delay,
+    gboolean * tail)
 {
   GList *list;
   guint32 rtptime;
@@ -449,7 +463,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
    * receive time, this function will retimestamp @buf with the skew corrected
    * running time. */
   rtptime = gst_rtp_buffer_get_timestamp (buf);
-  time = calculate_skew (jbuf, rtptime, time, clock_rate);
+  time = calculate_skew (jbuf, rtptime, time, clock_rate, max_delay);
   GST_BUFFER_TIMESTAMP (buf) = time;
 
   /* It's more likely that the packet was inserted in the front of the buffer */

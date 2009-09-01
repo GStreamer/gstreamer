@@ -82,9 +82,10 @@ RTPJitterBuffer*      rtp_jitter_buffer_new              (void);
 void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf);
 
 gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf, GstBuffer *buf,
-		                                          GstClockTime time,
-		                                          guint32 clock_rate,
-		                                          gboolean *tail);
+                                                          GstClockTime time,
+                                                          guint32 clock_rate,
+                                                          GstClockTime max_delay,
+                                                          gboolean *tail);
 GstBuffer *           rtp_jitter_buffer_peek             (RTPJitterBuffer *jbuf);
 GstBuffer *           rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf);
 
@@ -95,7 +96,6 @@ guint32               rtp_jitter_buffer_get_ts_diff      (RTPJitterBuffer *jbuf)
 
 void                  rtp_jitter_buffer_get_sync         (RTPJitterBuffer *jbuf, guint64 *rtptime,
                                                           guint64 *timestamp, guint32 *clock_rate,
-							  guint64 *last_rtptime);
-
+                                                          guint64 *last_rtptime);
 
 #endif /* __RTP_JITTER_BUFFER_H__ */
