@@ -677,6 +677,7 @@ gst_v4lsrc_buffer_init (GTypeInstance * instance, gpointer g_class)
 static void
 gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer)
 {
+  GstMiniObjectClass *miniobject_class;
   GstV4lSrc *v4lsrc;
   gint num;
 
@@ -693,8 +694,8 @@ gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer)
 
   gst_object_unref (v4lsrc);
 
-  GST_MINI_OBJECT_CLASS (v4lbuffer_parent_class)->
-      finalize (GST_MINI_OBJECT (v4lsrc_buffer));
+  miniobject_class = (GstMiniObjectClass *) v4lbuffer_parent_class;
+  miniobject_class->finalize (GST_MINI_OBJECT_CAST (v4lsrc_buffer));
 }
 
 /* Create a V4lSrc buffer from our mmap'd data area */
