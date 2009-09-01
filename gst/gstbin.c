@@ -1043,7 +1043,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
    * a new clock will be selected */
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
   /* set the cached index on the children */
-  gst_element_set_index (element, bin->priv->index);
+  if (bin->priv->index)
+    gst_element_set_index (element, bin->priv->index);
 
   ret = GST_STATE_RETURN (bin);
   /* no need to update the state if we are in error */
