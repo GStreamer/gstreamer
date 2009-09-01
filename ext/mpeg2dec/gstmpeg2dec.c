@@ -244,6 +244,12 @@ gst_mpeg2dec_finalize (GObject * object)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (object);
 
+  if (mpeg2dec->index) {
+    gst_object_unref (mpeg2dec->index);
+    mpeg2dec->index = NULL;
+    mpeg2dec->index_id = 0;
+  }
+
   if (mpeg2dec->decoder) {
     GST_DEBUG_OBJECT (mpeg2dec, "closing decoder");
     mpeg2_close (mpeg2dec->decoder);
@@ -259,6 +265,12 @@ gst_mpeg2dec_finalize (GObject * object)
 static void
 gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec)
 {
+  if (mpeg2dec->index) {
+    gst_object_unref (mpeg2dec->index);
+    mpeg2dec->index = NULL;
+    mpeg2dec->index_id = 0;
+  }
+
   /* reset the initial video state */
   mpeg2dec->format = MPEG2DEC_FORMAT_NONE;
   mpeg2dec->width = -1;
@@ -289,9 +301,17 @@ gst_mpeg2dec_set_index (GstElement * element, GstIndex * index)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (element);
 
-  mpeg2dec->index = index;
+  GST_OBJECT_LOCK (mpeg2dec);
+  if (mpeg2dec->index)
+    gst_object_unref (mpeg2dec->index);
+  mpeg2dec->index = NULL;
+  mpeg2dec->index_id = 0;
+  if (index) {
+    mpeg2dec->index = gst_object_ref (index);
+    gst_index_get_writer_id (index, GST_OBJECT (element), &mpeg2dec->index_id);
+  }
 
-  gst_index_get_writer_id (index, GST_OBJECT (element), &mpeg2dec->index_id);
+  GST_OBJECT_UNLOCK (mpeg2dec);
 }
 
 static GstIndex *
@@ -299,7 +319,7 @@ gst_mpeg2dec_get_index (GstElement * element)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (element);
 
-  return mpeg2dec->index;
+  return (mpeg2dec->index) ? gst_object_ref (mpeg2dec->index) : NULL;
 }
 #endif
 
