@@ -1032,9 +1032,10 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
     if (!(caps = GST_PAD_CAPS (rtcp_src))) {
       caps = gst_caps_new_simple ("application/x-rtcp", NULL);
       gst_pad_set_caps (rtcp_src, caps);
+    } else
       gst_caps_unref (caps);
-    }
     gst_buffer_set_caps (buffer, caps);
+    gst_caps_unref (caps);
     GST_LOG_OBJECT (rtpsession, "sending RTCP");
 
     gst_object_ref (rtcp_src);
@@ -1092,9 +1093,10 @@ gst_rtp_session_sync_rtcp (RTPSession * sess,
     if (!(caps = GST_PAD_CAPS (sync_src))) {
       caps = gst_caps_new_simple ("application/x-rtcp", NULL);
       gst_pad_set_caps (sync_src, caps);
+    } else
       gst_caps_unref (caps);
-    }
     gst_buffer_set_caps (buffer, caps);
+    gst_caps_unref (caps);
     gst_object_ref (sync_src);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
