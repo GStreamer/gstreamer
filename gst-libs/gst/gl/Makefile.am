@@ -3,7 +3,9 @@ lib_LTLIBRARIES = libgstgl-@GST_MAJORMINOR@.la
 
 EXTRA_DIST = \
 	gstglwindow_x11.c \
+	gstglwindow_x11ES2.c \
 	gstglwindow_win32.c \
+	gstglwindow_winCE.c \
 	gstglwindow_cocoa.m
 
 libgstgl_@GST_MAJORMINOR@_la_SOURCES = \
@@ -20,6 +22,9 @@ libgstgl_@GST_MAJORMINOR@_la_SOURCES += gstglwindow_cocoa.m
 endif
 if GL_BACKEND_X11
 libgstgl_@GST_MAJORMINOR@_la_SOURCES += gstglwindow_x11.c
+endif
+if GL_BACKEND_X11ES2
+libgstgl_@GST_MAJORMINOR@_la_SOURCES += gstglwindow_x11ES2.c
 endif
 
 libgstgl_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/gl
