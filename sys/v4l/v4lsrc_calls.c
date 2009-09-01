@@ -259,9 +259,10 @@ gst_v4lsrc_capture_start (GstV4lSrc * v4lsrc)
 gboolean
 gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
 {
-  GST_LOG_OBJECT (v4lsrc, "grabbing frame %d", *num);
   GST_V4L_CHECK_OPEN (GST_V4LELEMENT (v4lsrc));
   GST_V4L_CHECK_ACTIVE (GST_V4LELEMENT (v4lsrc));
+
+  GST_LOG_OBJECT (v4lsrc, "grabbing frame");
 
   g_mutex_lock (v4lsrc->mutex_queue_state);
 
@@ -296,6 +297,8 @@ gst_v4lsrc_grab_frame (GstV4lSrc * v4lsrc, gint * num)
   v4lsrc->sync_frame = (v4lsrc->sync_frame + 1) % v4lsrc->mbuf.frames;
 
   g_mutex_unlock (v4lsrc->mutex_queue_state);
+
+  GST_LOG_OBJECT (v4lsrc, "grabbed frame %d", *num);
 
   return TRUE;
 }
