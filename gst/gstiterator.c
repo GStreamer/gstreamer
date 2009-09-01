@@ -724,7 +724,7 @@ gst_iterator_new_single (GType type, gpointer object, GstCopyFunction copy,
 
   result = (GstSingleObjectIterator *)
       gst_iterator_new (sizeof (GstSingleObjectIterator),
-      G_TYPE_FROM_INSTANCE (object), NULL, &_single_object_dummy_cookie,
+      type, NULL, &_single_object_dummy_cookie,
       (GstIteratorNextFunction) gst_single_object_iterator_iterator_next, NULL,
       (GstIteratorResyncFunction) gst_single_object_iterator_resync,
       (GstIteratorFreeFunction) gst_single_object_iterator_free);
