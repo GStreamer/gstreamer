@@ -34,8 +34,8 @@
  * </itemizedlist>
  *
  * The source can be configured to operate in any #GstFormat with the
- * gst_base_src_set_format() method. The currently set format determines 
- * the format of the internal #GstSegment and any #GST_EVENT_NEWSEGMENT 
+ * gst_base_src_set_format() method. The currently set format determines
+ * the format of the internal #GstSegment and any #GST_EVENT_NEWSEGMENT
  * events. The default format for #GstBaseSrc is #GST_FORMAT_BYTES.
  *
  * #GstBaseSrc always supports push mode scheduling. If the following
@@ -46,12 +46,12 @@
  *   <listitem><para>#GstBaseSrc::is_seekable returns %TRUE.</para>
  *   </listitem>
  * </itemizedlist>
- * 
- * Since 0.10.9, any #GstBaseSrc can enable pull based scheduling at any 
- * time by overriding #GstBaseSrc::check_get_range so that it returns %TRUE. 
- * 
+ *
+ * Since 0.10.9, any #GstBaseSrc can enable pull based scheduling at any
+ * time by overriding #GstBaseSrc::check_get_range so that it returns %TRUE.
+ *
  * If all the conditions are met for operating in pull mode, #GstBaseSrc is
- * automatically seekable in push mode as well. The following conditions must 
+ * automatically seekable in push mode as well. The following conditions must
  * be met to make the element seekable in push mode when the format is not
  * #GST_FORMAT_BYTES:
  * <itemizedlist>
@@ -66,52 +66,52 @@
  *     #GstBaseSrc::do_seek is implemented, performs the seek and returns %TRUE.
  *   </para></listitem>
  * </itemizedlist>
- * 
+ *
  * When the element does not meet the requirements to operate in pull mode,
  * the offset and length in the #GstBaseSrc::create method should be ignored.
  * It is recommended to subclass #GstPushSrc instead, in this situation. If the
  * element can operate in pull mode but only with specific offsets and
  * lengths, it is allowed to generate an error when the wrong values are passed
  * to the #GstBaseSrc::create function.
- * 
+ *
  * #GstBaseSrc has support for live sources. Live sources are sources that when
  * paused discard data, such as audio or video capture devices. A typical live
  * source also produces data at a fixed rate and thus provides a clock to publish
  * this rate.
  * Use gst_base_src_set_live() to activate the live source mode.
- * 
- * A live source does not produce data in the PAUSED state. This means that the 
+ *
+ * A live source does not produce data in the PAUSED state. This means that the
  * #GstBaseSrc::create method will not be called in PAUSED but only in PLAYING.
  * To signal the pipeline that the element will not produce data, the return
  * value from the READY to PAUSED state will be #GST_STATE_CHANGE_NO_PREROLL.
- * 
- * A typical live source will timestamp the buffers it creates with the 
+ *
+ * A typical live source will timestamp the buffers it creates with the
  * current running time of the pipeline. This is one reason why a live source
- * can only produce data in the PLAYING state, when the clock is actually 
- * distributed and running. 
- * 
+ * can only produce data in the PLAYING state, when the clock is actually
+ * distributed and running.
+ *
  * Live sources that synchronize and block on the clock (an audio source, for
  * example) can since 0.10.12 use gst_base_src_wait_playing() when the ::create
  * function was interrupted by a state change to PAUSED.
- * 
- * The #GstBaseSrc::get_times method can be used to implement pseudo-live 
+ *
+ * The #GstBaseSrc::get_times method can be used to implement pseudo-live
  * sources.
- * It only makes sense to implement the ::get_times function if the source is 
+ * It only makes sense to implement the ::get_times function if the source is
  * a live source. The ::get_times function should return timestamps starting
  * from 0, as if it were a non-live source. The base class will make sure that
  * the timestamps are transformed into the current running_time.
  * The base source will then wait for the calculated running_time before pushing
  * out the buffer.
- * 
+ *
  * For live sources, the base class will by default report a latency of 0.
  * For pseudo live sources, the base class will by default measure the difference
  * between the first buffer timestamp and the start time of get_times and will
- * report this value as the latency. 
+ * report this value as the latency.
  * Subclasses should override the query function when this behaviour is not
  * acceptable.
- * 
- * There is only support in #GstBaseSrc for exactly one source pad, which 
- * should be named "src". A source implementation (subclass of #GstBaseSrc) 
+ *
+ * There is only support in #GstBaseSrc for exactly one source pad, which
+ * should be named "src". A source implementation (subclass of #GstBaseSrc)
  * should install a pad template in its class_init function, like so:
  * <programlisting>
  * static void
@@ -138,19 +138,19 @@
  * event down the pipeline. The application would then wait for an
  * EOS message posted on the pipeline's bus to know when all data has
  * been processed and the pipeline can safely be stopped.
- * 
+ *
  * Since GStreamer 0.10.16 an application may send an EOS event to a source
  * element to make it perform the EOS logic (send EOS event downstream or post a
  * #GST_MESSAGE_SEGMENT_DONE on the bus). This can typically be done
  * with the gst_element_send_event() function on the element or its parent bin.
- * 
+ *
  * After the EOS has been sent to the element, the application should wait for
  * an EOS message to be posted on the pipeline's bus. Once this EOS message is
  * received, it may safely shut down the entire pipeline.
- * 
+ *
  * The old behaviour for controlled shutdown introduced since GStreamer 0.10.3
  * is still available but deprecated as it is dangerous and less flexible.
- * 
+ *
  * Last reviewed on 2007-12-19 (0.10.16)
  * </para>
  * </refsect2>
@@ -191,8 +191,8 @@ enum
 
 #define DEFAULT_BLOCKSIZE       4096
 #define DEFAULT_NUM_BUFFERS     -1
-#define DEFAULT_TYPEFIND	FALSE
-#define DEFAULT_DO_TIMESTAMP	FALSE
+#define DEFAULT_TYPEFIND        FALSE
+#define DEFAULT_DO_TIMESTAMP    FALSE
 
 enum
 {
@@ -495,11 +495,11 @@ flushing:
  * @live: new live-mode
  *
  * If the element listens to a live source, @live should
- * be set to %TRUE. 
+ * be set to %TRUE.
  *
  * A live source will not produce data in the PAUSED state and
  * will therefore not be able to participate in the PREROLL phase
- * of a pipeline. To signal this fact to the application and the 
+ * of a pipeline. To signal this fact to the application and the
  * pipeline, the state change return value of the live source will
  * be GST_STATE_CHANGE_NO_PREROLL.
  */
@@ -568,7 +568,7 @@ gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
  * between the running time and the timestamp of the first buffer.
  * @max_latency is always the undefined value of -1.
  *
- * This function is mostly used by subclasses. 
+ * This function is mostly used by subclasses.
  *
  * Returns: TRUE if the query succeeded.
  *
@@ -1038,7 +1038,7 @@ gst_base_src_default_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
     GstSegment * segment)
 {
   /* By default, we try one of 2 things:
-   *   - For absolute seek positions, convert the requested position to our 
+   *   - For absolute seek positions, convert the requested position to our
    *     configured processing format and place it in the output segment \
    *   - For relative seek positions, convert our current (input) values to the
    *     seek format, adjust by the relative seek offset and then convert back to
@@ -1137,14 +1137,14 @@ gst_base_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
  * release the STREAM_LOCK. We say eventually because when the sink
  * blocks on the sample we might wait a very long time until the sink
  * unblocks the sample. In any case we acquire the STREAM_LOCK and
- * can continue the seek. A non-flushing seek is normally done in a 
+ * can continue the seek. A non-flushing seek is normally done in a
  * running pipeline to perform seamless playback, this means that the sink is
  * PLAYING and will return from its chain function.
  * In the case of a non-flushing seek we need to make sure that the
  * data we output after the seek is continuous with the previous data,
  * this is because a non-flushing seek does not reset the running-time
  * to 0. We do this by closing the currently running segment, ie. sending
- * a new_segment event with the stop position set to the last processed 
+ * a new_segment event with the stop position set to the last processed
  * position.
  *
  * After updating the segment.start/stop values, we prepare for
@@ -1156,9 +1156,9 @@ gst_base_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
  * when we reach the segment.stop we have to post a segment.done
  * instead of EOS when doing a segment seek.
  */
-/* FIXME (0.11), we have the unlock gboolean here because most current 
+/* FIXME (0.11), we have the unlock gboolean here because most current
  * implementations (fdsrc, -base/gst/tcp/, ...) unconditionally unlock, even when
- * the streaming thread isn't running, resulting in bogus unlocks later when it 
+ * the streaming thread isn't running, resulting in bogus unlocks later when it
  * starts. This is fixed by adding unlock_stop, but we should still avoid unlocking
  * unnecessarily for backwards compatibility. Ergo, the unlock variable stays
  * until 0.11
@@ -1224,7 +1224,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   gst_base_src_set_flushing (src, TRUE, FALSE, unlock, &playing);
 
   /* grab streaming lock, this should eventually be possible, either
-   * because the task is paused, our streaming thread stopped 
+   * because the task is paused, our streaming thread stopped
    * or because our peer is flushing. */
   GST_PAD_STREAM_LOCK (src->srcpad);
   if (G_UNLIKELY (src->priv->seqnum == seqnum)) {
@@ -1262,7 +1262,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
             cur_type, cur, stop_type, stop, &update);
       }
     }
-    /* Else, no seek event passed, so we're just (re)starting the 
+    /* Else, no seek event passed, so we're just (re)starting the
        current segment. */
   }
 
@@ -1283,7 +1283,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
      * are not yet providing data as we still have the STREAM_LOCK. */
     gst_pad_push_event (src->srcpad, tevent);
   } else if (res && src->data.ABI.running) {
-    /* we are running the current segment and doing a non-flushing seek, 
+    /* we are running the current segment and doing a non-flushing seek,
      * close the segment first based on the last_stop. */
     GST_DEBUG_OBJECT (src, "closing running segment %" G_GINT64_FORMAT
         " to %" G_GINT64_FORMAT, src->segment.start, src->segment.last_stop);
@@ -1298,7 +1298,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     gst_event_set_seqnum (src->priv->close_segment, seqnum);
   }
 
-  /* The subclass must have converted the segment to the processing format 
+  /* The subclass must have converted the segment to the processing format
    * by now */
   if (res && seeksegment.format != dest_format) {
     GST_DEBUG_OBJECT (src, "Subclass failed to prepare a seek segment "
@@ -1418,7 +1418,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       bclass = GST_BASE_SRC_GET_CLASS (src);
 
       /* queue EOS and make sure the task or pull function performs the EOS
-       * actions. 
+       * actions.
        *
        * We have two possibilities:
        *
@@ -1696,7 +1696,7 @@ gst_base_src_wait (GstBaseSrc * basesrc, GstClock * clock, GstClockTime time)
   return ret;
 }
 
-/* perform synchronisation on a buffer. 
+/* perform synchronisation on a buffer.
  * with STREAM_LOCK.
  */
 static GstClockReturn
@@ -1719,7 +1719,7 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   /* get buffer timestamp */
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  /* grab the lock to prepare for clocking and calculate the startup 
+  /* grab the lock to prepare for clocking and calculate the startup
    * latency. */
   GST_OBJECT_LOCK (basesrc);
 
@@ -1882,7 +1882,7 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
 
   /* check size if we have one */
   if (maxsize != -1) {
-    /* if we run past the end, check if the file became bigger and 
+    /* if we run past the end, check if the file became bigger and
      * retry. */
     if (G_UNLIKELY (offset + *length >= maxsize)) {
       /* see if length of the file changed */
@@ -1910,7 +1910,7 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
     }
   }
 
-  /* keep track of current position. segment is in bytes, we checked 
+  /* keep track of current position. segment is in bytes, we checked
    * that above. */
   gst_segment_set_last_stop (&src->segment, GST_FORMAT_BYTES, offset);
 
@@ -2011,7 +2011,7 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
       break;
     case GST_CLOCK_UNSCHEDULED:
       /* this case is triggered when we were waiting for the clock and
-       * it got unlocked because we did a state change. We return 
+       * it got unlocked because we did a state change. We return
        * WRONG_STATE in this case to stop the dataflow also get rid of the
        * produced buffer. */
       GST_DEBUG_OBJECT (src,
@@ -2393,10 +2393,10 @@ null_buffer:
   }
 }
 
-/* default negotiation code. 
+/* default negotiation code.
  *
  * Take intersection between src and sink pads, take first
- * caps and fixate. 
+ * caps and fixate.
  */
 static gboolean
 gst_base_src_default_negotiate (GstBaseSrc * basesrc)
@@ -2617,7 +2617,7 @@ gst_base_src_stop (GstBaseSrc * basesrc)
   return result;
 }
 
-/* start or stop flushing dataprocessing 
+/* start or stop flushing dataprocessing
  */
 static gboolean
 gst_base_src_set_flushing (GstBaseSrc * basesrc,

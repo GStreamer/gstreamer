@@ -28,13 +28,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASE_SRC		(gst_base_src_get_type())
-#define GST_BASE_SRC(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_SRC,GstBaseSrc))
-#define GST_BASE_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_SRC,GstBaseSrcClass))
+#define GST_TYPE_BASE_SRC               (gst_base_src_get_type())
+#define GST_BASE_SRC(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_SRC,GstBaseSrc))
+#define GST_BASE_SRC_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_SRC,GstBaseSrcClass))
 #define GST_BASE_SRC_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_SRC, GstBaseSrcClass))
-#define GST_IS_BASE_SRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_SRC))
-#define GST_IS_BASE_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_SRC))
-#define GST_BASE_SRC_CAST(obj)		((GstBaseSrc *)(obj))
+#define GST_IS_BASE_SRC(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_SRC))
+#define GST_IS_BASE_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_SRC))
+#define GST_BASE_SRC_CAST(obj)          ((GstBaseSrc *)(obj))
 
 /**
  * GstBaseSrcFlags:
@@ -72,31 +72,31 @@ struct _GstBaseSrc {
   GstElement     element;
 
   /*< protected >*/
-  GstPad	*srcpad;
+  GstPad        *srcpad;
 
   /* available to subclass implementations */
   /* MT-protected (with LIVE_LOCK) */
-  GMutex	*live_lock;
-  GCond		*live_cond;
-  gboolean	 is_live;
-  gboolean	 live_running;
+  GMutex        *live_lock;
+  GCond         *live_cond;
+  gboolean       is_live;
+  gboolean       live_running;
 
   /* MT-protected (with LOCK) */
-  gint		 blocksize;	/* size of buffers when operating push based */
-  gboolean	 can_activate_push;	/* some scheduling properties */
+  gint           blocksize;     /* size of buffers when operating push based */
+  gboolean       can_activate_push;     /* some scheduling properties */
   GstActivateMode pad_mode;
   gboolean       seekable; /* not used anymore */
   gboolean       random_access;
 
-  GstClockID     clock_id;	/* for syncing */
+  GstClockID     clock_id;      /* for syncing */
   GstClockTime   end_time;
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment     segment;
-  gboolean	 need_newsegment;
+  gboolean       need_newsegment;
 
-  guint64	 offset;	/* current offset in the resource, unused */
-  guint64        size;		/* total size of the resource, unused */
+  guint64        offset;        /* current offset in the resource, unused */
+  guint64        size;          /* total size of the resource, unused */
 
   gint           num_buffers;
   gint           num_buffers_left;
@@ -125,31 +125,31 @@ struct _GstBaseSrc {
  * @start: Start processing. Subclasses should open resources and prepare
  *    to produce data.
  * @stop: Stop processing. Subclasses should use this to close resources.
- * @get_times: Given a buffer, return the start and stop time when it 
- *    should be pushed out. The base class will sync on the clock using 
- *    these times. 
+ * @get_times: Given a buffer, return the start and stop time when it
+ *    should be pushed out. The base class will sync on the clock using
+ *    these times.
  * @get_size: Return the total size of the resource, in the configured format.
  * @is_seekable: Check if the source can seek
  * @unlock: Unlock any pending access to the resource. Subclasses should
  *    unblock any blocked function ASAP
  * @unlock_stop: Clear the previous unlock request. Subclasses should clear
- *    any state they set during unlock(), such as clearing command queues. 
+ *    any state they set during unlock(), such as clearing command queues.
  * @event: Override this to implement custom event handling.
  * @create: Ask the subclass to create a buffer with offset and size.
  * @do_seek: Perform seeking on the resource to the indicated segment.
- * @prepare_seek_segment: Prepare the GstSegment that will be passed to the 
- *   do_seek vmethod for executing a seek request. Sub-classes should override 
- *   this if they support seeking in formats other than the configured native 
- *   format. By default, it tries to convert the seek arguments to the 
+ * @prepare_seek_segment: Prepare the GstSegment that will be passed to the
+ *   do_seek vmethod for executing a seek request. Sub-classes should override
+ *   this if they support seeking in formats other than the configured native
+ *   format. By default, it tries to convert the seek arguments to the
  *   configured native format and prepare a segment in that format.
  *   Since: 0.10.13
- * @query: Handle a requested query. 
- * @check_get_range: Check whether the source would support pull-based 
- *   operation if it were to be opened now. This vfunc is optional, but 
- *   should be implemented if possible to avoid unnecessary start/stop 
- *   cycles. The default implementation will open and close the resource 
- *   to find out whether get_range is supported, and that is usually 
- *   undesirable. 
+ * @query: Handle a requested query.
+ * @check_get_range: Check whether the source would support pull-based
+ *   operation if it were to be opened now. This vfunc is optional, but
+ *   should be implemented if possible to avoid unnecessary start/stop
+ *   cycles. The default implementation will open and close the resource
+ *   to find out whether get_range is supported, and that is usually
+ *   undesirable.
  * @fixate: Called during negotiation if caps need fixating. Implement instead of
  *   setting a fixate function on the source pad.
  *
@@ -197,7 +197,7 @@ struct _GstBaseSrcClass {
 
   /* ask the subclass to create a buffer with offset and size */
   GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size,
-		                 GstBuffer **buf);
+                                 GstBuffer **buf);
 
   /* additions that change padding... */
   /* notify subclasses of a seek */
@@ -214,15 +214,15 @@ struct _GstBaseSrcClass {
   gboolean      (*check_get_range) (GstBaseSrc *src);
 
   /* called if, in negotiation, caps need fixating */
-  void		(*fixate)	(GstBaseSrc *src, GstCaps *caps);
+  void          (*fixate)       (GstBaseSrc *src, GstCaps *caps);
 
   /* Clear any pending unlock request, as we succeeded in unlocking */
   gboolean      (*unlock_stop)  (GstBaseSrc *src);
 
   /* Prepare the segment on which to perform do_seek(), converting to the
    * current basesrc format. */
-  gboolean      (*prepare_seek_segment) (GstBaseSrc *src, GstEvent *seek, 
-                                         GstSegment *segment); 
+  gboolean      (*prepare_seek_segment) (GstBaseSrc *src, GstEvent *seek,
+                                         GstSegment *segment);
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE - 6];
@@ -230,22 +230,22 @@ struct _GstBaseSrcClass {
 
 GType gst_base_src_get_type (void);
 
-GstFlowReturn   gst_base_src_wait_playing  (GstBaseSrc *src);
+GstFlowReturn   gst_base_src_wait_playing     (GstBaseSrc *src);
 
-void		gst_base_src_set_live	   (GstBaseSrc *src, gboolean live);
-gboolean	gst_base_src_is_live	   (GstBaseSrc *src);
+void            gst_base_src_set_live         (GstBaseSrc *src, gboolean live);
+gboolean        gst_base_src_is_live          (GstBaseSrc *src);
 
-void		gst_base_src_set_format	   (GstBaseSrc *src, GstFormat format);
+void            gst_base_src_set_format       (GstBaseSrc *src, GstFormat format);
 
-gboolean        gst_base_src_query_latency (GstBaseSrc *src, gboolean * live,
-                                            GstClockTime * min_latency, 
-					    GstClockTime * max_latency);
+gboolean        gst_base_src_query_latency    (GstBaseSrc *src, gboolean * live,
+                                               GstClockTime * min_latency,
+                                               GstClockTime * max_latency);
 
-void		gst_base_src_set_blocksize    (GstBaseSrc *src, gulong blocksize);
+void            gst_base_src_set_blocksize    (GstBaseSrc *src, gulong blocksize);
 gulong          gst_base_src_get_blocksize    (GstBaseSrc *src);
 
-void		gst_base_src_set_do_timestamp (GstBaseSrc *src, gboolean timestamp);
-gboolean	gst_base_src_get_do_timestamp (GstBaseSrc *src);
+void            gst_base_src_set_do_timestamp (GstBaseSrc *src, gboolean timestamp);
+gboolean        gst_base_src_get_do_timestamp (GstBaseSrc *src);
 
 G_END_DECLS
 
