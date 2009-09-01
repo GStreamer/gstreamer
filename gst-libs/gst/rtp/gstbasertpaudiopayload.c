@@ -233,9 +233,7 @@ gst_base_rtp_audio_payload_set_frame_options (GstBaseRTPAudioPayload
   basertpaudiopayload->frame_size = frame_size;
   basertpaudiopayload->frame_duration = frame_duration;
 
-  if (basertpaudiopayload->priv->adapter) {
-    gst_adapter_clear (basertpaudiopayload->priv->adapter);
-  }
+  gst_adapter_clear (basertpaudiopayload->priv->adapter);
 }
 
 /**
@@ -255,9 +253,7 @@ gst_base_rtp_audio_payload_set_sample_options (GstBaseRTPAudioPayload
   /* sample_size is in bits internally */
   basertpaudiopayload->sample_size = sample_size * 8;
 
-  if (basertpaudiopayload->priv->adapter) {
-    gst_adapter_clear (basertpaudiopayload->priv->adapter);
-  }
+  gst_adapter_clear (basertpaudiopayload->priv->adapter);
 }
 
 /**
@@ -277,9 +273,7 @@ gst_base_rtp_audio_payload_set_samplebits_options (GstBaseRTPAudioPayload
 
   basertpaudiopayload->sample_size = sample_size;
 
-  if (basertpaudiopayload->priv->adapter) {
-    gst_adapter_clear (basertpaudiopayload->priv->adapter);
-  }
+  gst_adapter_clear (basertpaudiopayload->priv->adapter);
 }
 
 static GstFlowReturn
@@ -374,8 +368,7 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
       "Calculated min_payload_len %u and max_payload_len %u",
       min_payload_len, max_payload_len);
 
-  if (basertpaudiopayload->priv->adapter &&
-      gst_adapter_available (basertpaudiopayload->priv->adapter)) {
+  if (gst_adapter_available (basertpaudiopayload->priv->adapter)) {
     /* If there is always data in the adapter, we have to use it */
     gst_adapter_push (basertpaudiopayload->priv->adapter, buffer);
     available = gst_adapter_available (basertpaudiopayload->priv->adapter);
@@ -430,7 +423,7 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
   }
 
   if (!use_adapter) {
-    if (available != 0 && basertpaudiopayload->priv->adapter) {
+    if (available != 0) {
       GstBuffer *buf;
 
       buf = gst_buffer_create_sub (buffer,
@@ -452,7 +445,6 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
   const guint8 *data = NULL;
   GstFlowReturn ret;
   guint available;
-
   guint maxptime_octets = G_MAXUINT;
   guint minptime_octets = 0;
   guint min_payload_len;
@@ -479,8 +471,8 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
 
   /* max number of bytes based on given ptime */
   if (basepayload->max_ptime != -1) {
-    maxptime_octets = 8 * basepayload->max_ptime * basepayload->clock_rate /
-        (basertpaudiopayload->sample_size * GST_SECOND);
+    maxptime_octets = gst_util_uint64_scale (basepayload->max_ptime * 8,
+        basepayload->clock_rate, basertpaudiopayload->sample_size * GST_SECOND);
   }
 
   max_payload_len = MIN (
@@ -492,8 +484,8 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
 
   /* min number of bytes based on a given ptime, has to be a multiple
      of sample rate */
-  minptime_octets = 8 * basepayload->min_ptime * basepayload->clock_rate /
-      (basertpaudiopayload->sample_size * GST_SECOND);
+  minptime_octets = gst_util_uint64_scale (basepayload->min_ptime * 8,
+      basepayload->clock_rate, basertpaudiopayload->sample_size * GST_SECOND);
 
   min_payload_len = MAX (minptime_octets, fragment_size);
 
@@ -505,8 +497,7 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
       "Calculated min_payload_len %u and max_payload_len %u",
       min_payload_len, max_payload_len);
 
-  if (basertpaudiopayload->priv->adapter &&
-      gst_adapter_available (basertpaudiopayload->priv->adapter)) {
+  if (gst_adapter_available (basertpaudiopayload->priv->adapter)) {
     /* If there is always data in the adapter, we have to use it */
     gst_adapter_push (basertpaudiopayload->priv->adapter, buffer);
     available = gst_adapter_available (basertpaudiopayload->priv->adapter);
@@ -564,7 +555,7 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
   }
 
   if (!use_adapter) {
-    if (available != 0 && basertpaudiopayload->priv->adapter) {
+    if (available != 0) {
       GstBuffer *buf;
 
       buf = gst_buffer_create_sub (buffer,
@@ -633,9 +624,7 @@ gst_base_rtp_payload_audio_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (basertppayload->priv->adapter) {
-        gst_adapter_clear (basertppayload->priv->adapter);
-      }
+      gst_adapter_clear (basertppayload->priv->adapter);
       break;
     default:
       break;
@@ -654,14 +643,10 @@ gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      if (basertpaudiopayload->priv->adapter) {
-        gst_adapter_clear (basertpaudiopayload->priv->adapter);
-      }
+      gst_adapter_clear (basertpaudiopayload->priv->adapter);
       break;
     case GST_EVENT_FLUSH_STOP:
-      if (basertpaudiopayload->priv->adapter) {
-        gst_adapter_clear (basertpaudiopayload->priv->adapter);
-      }
+      gst_adapter_clear (basertpaudiopayload->priv->adapter);
       break;
     default:
       break;
