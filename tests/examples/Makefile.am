@@ -48,4 +48,4 @@ SUBDIRS = 				\
 	$(GST_PARSE_DIRS)		\
 	$(GST_LOADSAVE_DIRS)
 
-DIST_SUBDIRS = $(always_dirs) adapter streams xml typefind launch
+DIST_SUBDIRS = $(always_dirs) adapter xml typefind launch
