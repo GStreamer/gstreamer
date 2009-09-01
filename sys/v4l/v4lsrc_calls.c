@@ -705,9 +705,10 @@ gst_v4lsrc_buffer_finalize (GstV4lSrcBuffer * v4lsrc_buffer)
 GstBuffer *
 gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
 {
-  GstBuffer *buf;
-  gint fps_n, fps_d;
   GstClockTime duration, timestamp, latency;
+  GstBuffer *buf;
+  GstClock *clock;
+  gint fps_n, fps_d;
 
   GST_DEBUG_OBJECT (v4lsrc, "creating buffer for frame %d", num);
 
@@ -723,16 +724,38 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
   GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
   GST_BUFFER_SIZE (buf) = v4lsrc->buffer_size;
   GST_BUFFER_OFFSET (buf) = v4lsrc->offset++;
+  GST_BUFFER_OFFSET_END (buf) = v4lsrc->offset;
 
-  duration = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
-  latency = duration;
+  /* timestamps, LOCK to get clock and base time. */
+  GST_OBJECT_LOCK (v4lsrc);
+  if ((clock = GST_ELEMENT_CLOCK (v4lsrc))) {
+    /* we have a clock, get base time and ref clock */
+    timestamp = GST_ELEMENT_CAST (v4lsrc)->base_time;
+    gst_object_ref (clock);
+  } else {
+    /* no clock, can't set timestamps */
+    timestamp = GST_CLOCK_TIME_NONE;
+  }
+  GST_OBJECT_UNLOCK (v4lsrc);
 
-  timestamp = gst_clock_get_time (GST_ELEMENT_CAST (v4lsrc)->clock);
-  timestamp -= gst_element_get_base_time (GST_ELEMENT_CAST (v4lsrc));
-  if (timestamp > latency)
-    timestamp -= latency;
-  else
-    timestamp = 0;
+  duration =
+      gst_util_uint64_scale_int (GST_SECOND, fps_d * v4lsrc->offset, fps_n) -
+      gst_util_uint64_scale_int (GST_SECOND, fps_d * (v4lsrc->offset - 1),
+      fps_n);
+
+  latency = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
+
+  if (clock) {
+    /* the time now is the time of the clock minus the base time */
+    timestamp = gst_clock_get_time (clock) - timestamp;
+    gst_object_unref (clock);
+
+    /* adjust timestamp for frame latency (we assume we have a framerate) */
+    if (timestamp > latency)
+      timestamp -= latency;
+    else
+      timestamp = 0;
+  }
 
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
