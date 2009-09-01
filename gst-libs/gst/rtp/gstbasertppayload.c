@@ -241,9 +241,9 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
       gst_basertppayload_chain);
   gst_element_add_pad (GST_ELEMENT (basertppayload), basertppayload->sinkpad);
 
-  basertppayload->seq_rand = g_rand_new ();
-  basertppayload->ssrc_rand = g_rand_new ();
-  basertppayload->ts_rand = g_rand_new ();
+  basertppayload->seq_rand = g_rand_new_with_seed (g_random_int ());
+  basertppayload->ssrc_rand = g_rand_new_with_seed (g_random_int ());
+  basertppayload->ts_rand = g_rand_new_with_seed (g_random_int ());
 
   basertppayload->mtu = DEFAULT_MTU;
   basertppayload->pt = DEFAULT_PT;
@@ -902,20 +902,19 @@ gst_basertppayload_change_state (GstElement * element,
       gst_segment_init (&basertppayload->segment, GST_FORMAT_UNDEFINED);
 
       if (priv->seqnum_offset_random)
-        basertppayload->seqnum_base =
-            g_rand_int_range (basertppayload->seq_rand, 0, G_MAXUINT16);
+        basertppayload->seqnum_base = g_random_int_range (0, G_MAXUINT16);
       else
         basertppayload->seqnum_base = basertppayload->seqnum_offset;
       priv->next_seqnum = basertppayload->seqnum_base;
       basertppayload->seqnum = basertppayload->seqnum_base;
 
       if (priv->ssrc_random)
-        basertppayload->current_ssrc = g_rand_int (basertppayload->ssrc_rand);
+        basertppayload->current_ssrc = g_random_int ();
       else
         basertppayload->current_ssrc = basertppayload->ssrc;
 
       if (priv->ts_offset_random)
-        basertppayload->ts_base = g_rand_int (basertppayload->ts_rand);
+        basertppayload->ts_base = g_random_int ();
       else
         basertppayload->ts_base = basertppayload->ts_offset;
       basertppayload->timestamp = basertppayload->ts_base;
