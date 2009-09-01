@@ -1683,6 +1683,14 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   if (len < 0 && (mode_switch || ffmpegdec->context->hurry_up))
     len = 0;
 
+  if (len > 0 && have_data <= 0 && (mode_switch
+          || ffmpegdec->context->hurry_up)) {
+    /* we consumed some bytes but nothing decoded and we are skipping frames,
+     * disable the interpollation of DTS timestamps */
+    ffmpegdec->ts_is_dts = FALSE;
+    ffmpegdec->last_out = -1;
+  }
+
   /* no data, we're done */
   if (len < 0 || have_data <= 0)
     goto beach;
