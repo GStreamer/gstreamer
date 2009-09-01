@@ -1036,11 +1036,11 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
       gst_caps_unref (caps);
     gst_buffer_set_caps (buffer, caps);
     gst_caps_unref (caps);
-    GST_LOG_OBJECT (rtpsession, "sending RTCP");
 
     gst_object_ref (rtcp_src);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
+    GST_LOG_OBJECT (rtpsession, "sending RTCP");
     result = gst_pad_push (rtcp_src, buffer);
 
     /* we have to send EOS after this packet */
@@ -1071,8 +1071,8 @@ stopping:
 /* called when the session manager has an SR RTCP packet ready for handling
  * inter stream synchronisation */
 static GstFlowReturn
-gst_rtp_session_sync_rtcp (RTPSession * sess,
-    RTPSource * src, GstBuffer * buffer, gpointer user_data)
+gst_rtp_session_sync_rtcp (RTPSession * sess, RTPSource * src,
+    GstBuffer * buffer, gpointer user_data)
 {
   GstFlowReturn result;
   GstRtpSession *rtpsession;
@@ -1097,6 +1097,7 @@ gst_rtp_session_sync_rtcp (RTPSession * sess,
       gst_caps_unref (caps);
     gst_buffer_set_caps (buffer, caps);
     gst_caps_unref (caps);
+
     gst_object_ref (sync_src);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
