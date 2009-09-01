@@ -6166,10 +6166,12 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("Apple lossless audio");
       caps = gst_caps_new_simple ("audio/x-alac", NULL);
       break;
+    case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
+      _codec ("QualComm PureVoice");
+      caps = gst_caps_from_string ("audio/qcelp");
+      break;
     case GST_MAKE_FOURCC ('q', 't', 'v', 'r'):
       /* ? */
-    case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
-      /* QUALCOMM PureVoice */
     default:
     {
       char *s;
