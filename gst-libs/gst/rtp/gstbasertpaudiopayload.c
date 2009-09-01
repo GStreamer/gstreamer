@@ -311,7 +311,7 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
   GstFlowReturn ret;
   guint available;
   gint frame_size, frame_duration;
-
+  guint max_frames;
   guint maxptime_octets = G_MAXUINT;
   guint minptime_octets = 0;
   guint min_payload_len;
@@ -324,11 +324,9 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
   basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (basepayload);
 
   if (basertpaudiopayload->frame_size == 0 ||
-      basertpaudiopayload->frame_duration == 0) {
-    GST_DEBUG_OBJECT (basertpaudiopayload, "Required options not set");
-    gst_buffer_unref (buffer);
-    return GST_FLOW_ERROR;
-  }
+      basertpaudiopayload->frame_duration == 0)
+    goto config_error;
+
   frame_size = basertpaudiopayload->frame_size;
   frame_duration = basertpaudiopayload->frame_duration;
 
@@ -345,12 +343,13 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
     }
   }
 
-  max_payload_len = MIN (
-      /* MTU max */
-      (int) (gst_rtp_buffer_calc_payload_len (GST_BASE_RTP_PAYLOAD_MTU
-              (basertpaudiopayload), 0, 0) / frame_size) * frame_size,
-      /* ptime max */
-      maxptime_octets);
+  /* MTU max */
+  max_frames = gst_rtp_buffer_calc_payload_len (GST_BASE_RTP_PAYLOAD_MTU
+      (basertpaudiopayload), 0, 0);
+  /* round down to frame_size */
+  max_frames = (max_frames / frame_size) * frame_size;
+  /* max payload length */
+  max_payload_len = MIN (max_frames, maxptime_octets);
 
   /* min number of bytes based on a given ptime, has to be a multiple
      of frame duration */
@@ -360,9 +359,8 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
 
   min_payload_len = MAX (minptime_octets, frame_size);
 
-  if (min_payload_len > max_payload_len) {
+  if (min_payload_len > max_payload_len)
     min_payload_len = max_payload_len;
-  }
 
   GST_DEBUG_OBJECT (basertpaudiopayload,
       "Calculated min_payload_len %u and max_payload_len %u",
@@ -432,8 +430,15 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
     }
     gst_buffer_unref (buffer);
   }
-
   return ret;
+
+  /* ERRORS */
+config_error:
+  {
+    GST_DEBUG_OBJECT (basertpaudiopayload, "Required options not set");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -457,11 +462,8 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
 
   basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (basepayload);
 
-  if (basertpaudiopayload->sample_size == 0) {
-    GST_DEBUG_OBJECT (basertpaudiopayload, "Required options not set");
-    gst_buffer_unref (buffer);
-    return GST_FLOW_ERROR;
-  }
+  if (basertpaudiopayload->sample_size == 0)
+    goto config_error;
 
   /* sample_size is in bits and is converted into multiple bytes */
   fragment_size = basertpaudiopayload->sample_size;
@@ -489,9 +491,8 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
 
   min_payload_len = MAX (minptime_octets, fragment_size);
 
-  if (min_payload_len > max_payload_len) {
+  if (min_payload_len > max_payload_len)
     min_payload_len = max_payload_len;
-  }
 
   GST_DEBUG_OBJECT (basertpaudiopayload,
       "Calculated min_payload_len %u and max_payload_len %u",
@@ -566,6 +567,14 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
   }
 
   return ret;
+
+  /* ERRORS */
+config_error:
+  {
+    GST_DEBUG_OBJECT (basertpaudiopayload, "Required options not set");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
+  }
 }
 
 /**
@@ -643,6 +652,7 @@ gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
+      /* FIXME. push remaining bytes */
       gst_adapter_clear (basertpaudiopayload->priv->adapter);
       break;
     case GST_EVENT_FLUSH_STOP:
