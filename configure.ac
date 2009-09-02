@@ -528,7 +528,7 @@ AG_GST_CHECK_FEATURE(GNOME_VFS, [GNOME VFS], gnomevfs, [
 dnl *** libgio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
 AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
-  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.15.2, [
+  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.16, [
     HAVE_GIO="yes"
     GIO_MODULE_DIR="`$PKG_CONFIG --variable=giomoduledir gio-2.0`"
     AC_DEFINE_UNQUOTED(GIO_MODULE_DIR, "$GIO_MODULE_DIR",

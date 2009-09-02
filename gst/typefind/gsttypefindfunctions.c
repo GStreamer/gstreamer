@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
+ * Copyright (C) 2005-2009 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * gsttypefindfunctions.c: collection of various typefind functions
  *
@@ -24,6 +26,12 @@
 #endif
 
 #include <glib.h>
+
+/* don't want to add gio xdgmime typefinder if gio was disabled via configure */
+#ifdef HAVE_GIO
+#include <gio/gio.h>
+#define USE_GIO
+#endif
 
 #include <gst/gsttypefind.h>
 #include <gst/gstelement.h>
@@ -3242,6 +3250,62 @@ vivo_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** XDG MIME typefinder (to avoid false positives mostly) ***/
+
+#ifdef USE_GIO
+static void
+xdgmime_typefind (GstTypeFind * find, gpointer user_data)
+{
+  gchar *mimetype;
+  gsize length = 16384;
+  guint64 tf_length;
+  guint8 *data;
+  gchar *tmp;
+
+  if ((tf_length = gst_type_find_get_length (find)) > 0)
+    length = MIN (length, tf_length);
+
+  if ((data = gst_type_find_peek (find, 0, length)) == NULL)
+    return;
+
+  tmp = g_content_type_guess (NULL, data, length, NULL);
+  if (tmp == NULL || g_content_type_is_unknown (tmp)) {
+    g_free (tmp);
+    return;
+  }
+
+  mimetype = g_content_type_get_mime_type (tmp);
+  g_free (tmp);
+
+  if (mimetype == NULL)
+    return;
+
+  GST_DEBUG ("Got mimetype '%s'", mimetype);
+
+  /* Ignore audio/video types:
+   *  - our own typefinders in -base are likely to be better at this
+   *    (and if they're not, we really want to fix them, that's why we don't
+   *    report xdg-detected audio/video types at all, not even with a low
+   *    probability)
+   *  - we want to detect GStreamer media types and not MIME types
+   *  - the purpose of this xdg mime finder is mainly to prevent false
+   *    positives of non-media formats, not to typefind audio/video formats */
+  if (g_str_has_prefix (mimetype, "audio/") ||
+      g_str_has_prefix (mimetype, "video/")) {
+    GST_LOG ("Ignoring audio/video mime type");
+    g_free (mimetype);
+    return;
+  }
+
+  /* Again, we mainly want the xdg typefinding to prevent false-positives on
+   * non-media formats, so suggest the type with a probability that trumps
+   * uncertain results of our typefinders, but not more than that. */
+  GST_LOG ("Suggesting '%s' with probability POSSIBLE", mimetype);
+  gst_type_find_suggest_simple (find, GST_TYPE_FIND_POSSIBLE, mimetype, NULL);
+  g_free (mimetype);
+}
+#endif /* USE_GIO */
+
 /*** generic typefind for streams that have some data at a specific position***/
 typedef struct
 {
@@ -3688,6 +3752,12 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER_START_WITH (plugin, "image/vnd.adobe.photoshop",
       GST_RANK_SECONDARY, psd_exts, "8BPS\000\001\000\000\000\000", 10,
       GST_TYPE_FIND_LIKELY);
+
+#ifdef USE_GIO
+  TYPE_FIND_REGISTER (plugin, "xdgmime-base", GST_RANK_MARGINAL,
+      xdgmime_typefind, NULL, NULL, NULL, NULL);
+#endif
+
   return TRUE;
 }
 
