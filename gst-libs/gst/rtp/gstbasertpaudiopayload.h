@@ -43,6 +43,8 @@ typedef struct _GstBaseRTPAudioPayloadPrivate GstBaseRTPAudioPayloadPrivate;
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_RTP_AUDIO_PAYLOAD))
 #define GST_IS_BASE_RTP_AUDIO_PAYLOAD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_RTP_AUDIO_PAYLOAD))
+#define GST_BASE_RTP_AUDIO_PAYLOAD_CAST(obj) \
+  ((GstBaseRTPAudioPayload *) (obj))
 
 struct _GstBaseRTPAudioPayload
 {
