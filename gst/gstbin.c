@@ -1717,6 +1717,7 @@ typedef struct _GstBinSortIterator
   GstElement *best;             /* next element with least dependencies */
   gint best_deg;                /* best degree */
   GHashTable *hash;             /* hashtable with element dependencies */
+  gboolean dirty;               /* we detected structure change */
 } GstBinSortIterator;
 
 /* we add and subtract 1 to make sure we don't confuse NULL and 0 */
@@ -1820,6 +1821,13 @@ update_degree (GstElement * element, GstBinSortIterator * bit)
          * srcpad, check if it's busy in a link/unlink */
         if (G_UNLIKELY (find_message (bit->bin, GST_OBJECT_CAST (peer),
                     GST_MESSAGE_STRUCTURE_CHANGE))) {
+          /* mark the iterator as dirty because we won't be updating the degree
+           * of the peer parent now. This would result in the 'loop detected'
+           * later on because the peer parent element could become the best next
+           * element with a degree > 0. We will simply continue our state
+           * changes and we'll eventually resync when the unlink completed and
+           * the iterator cookie is updated. */
+          bit->dirty = TRUE;
           gst_object_unref (peer);
           continue;
         }
@@ -1905,7 +1913,9 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
     bit->best_deg = G_MAXINT;
     g_list_foreach (bin->children, (GFunc) find_element, bit);
     if ((best = bit->best)) {
-      if (bit->best_deg != 0) {
+      /* when we detected an unlink, don't warn because our degrees might be
+       * screwed up. We will resync later */
+      if (bit->best_deg != 0 && !bit->dirty) {
         /* we don't fail on this one yet */
         GST_WARNING_OBJECT (bin, "loop dected in graph");
         g_warning ("loop detected in the graph of bin %s!!",
@@ -1941,6 +1951,7 @@ gst_bin_sort_iterator_resync (GstBinSortIterator * bit)
   GstBin *bin = bit->bin;
 
   GST_DEBUG_OBJECT (bin, "resync");
+  bit->dirty = FALSE;
   clear_queue (bit->queue);
   /* reset degrees */
   g_list_foreach (bin->children, (GFunc) reset_degree, bit);
