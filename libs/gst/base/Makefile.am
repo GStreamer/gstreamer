@@ -33,6 +33,9 @@ libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
 	gsttypefindhelper.h	\
 	gstdataqueue.h
 
+noinst_HEADERS = \
+	gstbytereader-docs.h
+
 CLEANFILES = *.gcno *.gcda *.gcov
 
 %.c.gcov: .libs/libgstbase_@GST_MAJORMINOR@_la-%.gcda %.c

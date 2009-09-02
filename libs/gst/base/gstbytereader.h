@@ -1,6 +1,7 @@
-/* GStreamer
+/* GStreamer byte reader
  *
  * Copyright (C) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>.
+ * Copyright (C) 2009 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -161,6 +162,84 @@ guint    gst_byte_reader_masked_scan_uint32 (GstByteReader * reader,
  * Since: 0.10.22
  */
 #define GST_BYTE_READER_INIT_FROM_BUFFER(buffer) {GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 0}
+
+
+/* unchecked variants */
+
+static inline void
+gst_byte_reader_skip_unchecked (GstByteReader * reader, guint nbytes)
+{
+  reader->byte += nbytes;
+}
+
+#define __GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(bits,type,lower,upper,adj) \
+\
+static inline type \
+gst_byte_reader_peek_##lower##_unchecked (GstByteReader * reader) \
+{ \
+  type val = (type) GST_READ_##upper (reader->data + reader->byte); \
+  adj \
+  return val; \
+} \
+\
+static inline type \
+gst_byte_reader_get_##lower##_unchecked (GstByteReader * reader) \
+{ \
+  type val = gst_byte_reader_peek_##lower##_unchecked (reader); \
+  reader->byte += bits / 8; \
+  return val; \
+}
+
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(8,guint8,uint8,UINT8,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(8,gint8,int8,UINT8,/* */)
+
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(16,guint16,uint16_le,UINT16_LE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(16,guint16,uint16_be,UINT16_BE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(16,gint16,int16_le,UINT16_LE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(16,gint16,int16_be,UINT16_BE,/* */)
+
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(32,guint32,uint32_le,UINT32_LE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(32,guint32,uint32_be,UINT32_BE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(32,gint32,int32_le,UINT32_LE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(32,gint32,int32_be,UINT32_BE,/* */)
+
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(24,guint32,uint24_le,UINT24_LE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(24,guint32,uint24_be,UINT24_BE,/* */)
+
+/* fix up the sign for 24-bit signed ints stored in 32-bit signed ints */
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(24,gint32,int24_le,UINT24_LE,
+    if (val & 0x00800000) val |= 0xff000000;)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(24,gint32,int24_be,UINT24_BE,
+    if (val & 0x00800000) val |= 0xff000000;)
+
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(64,guint64,uint64_le,UINT64_LE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(64,guint64,uint64_be,UINT64_BE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(64,gint64,int64_le,UINT64_LE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(64,gint64,int64_be,UINT64_BE,/* */)
+
+#undef __GET_PEEK_BITS_UNCHECKED
+
+static inline const guint8 *
+gst_byte_reader_peek_data_unchecked (GstByteReader * reader)
+{
+  return (const guint8 *) (reader->data + reader->byte);
+}
+
+static inline const guint8 *
+gst_byte_reader_get_data_unchecked (GstByteReader * reader, guint size)
+{
+  const guint8 *data;
+
+  data = gst_byte_reader_peek_data_unchecked (reader);
+  gst_byte_reader_skip_unchecked (reader, size);
+  return data;
+}
+
+static inline guint8 *
+gst_byte_reader_dup_data_unchecked (GstByteReader * reader, guint size)
+{
+  return g_memdup (gst_byte_reader_get_data_unchecked (reader, size), size);
+}
 
 G_END_DECLS
 

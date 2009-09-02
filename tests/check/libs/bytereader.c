@@ -131,9 +131,9 @@ GST_START_TEST (test_get_uint_le)
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 16);
   guint8 a;
-  guint16 b;
-  guint32 c;
-  guint64 d;
+  guint16 b = 0;
+  guint32 c = 0;
+  guint64 d = 0;
 
   GET_CHECK8 (&reader, a, 0x12);
   GET_CHECK (&reader, b, 16, le, 0x5634);
@@ -174,9 +174,9 @@ GST_START_TEST (test_get_uint_be)
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 16);
   guint8 a;
-  guint16 b;
-  guint32 c;
-  guint64 d;
+  guint16 b = 0;
+  guint32 c = 0;
+  guint64 d = 0;
 
   GET_CHECK8 (&reader, a, 0x12);
   GET_CHECK (&reader, b, 16, be, 0x3456);
@@ -262,9 +262,9 @@ GST_START_TEST (test_get_int_le)
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 16);
   gint8 a;
-  gint16 b;
-  gint32 c;
-  gint64 d;
+  gint16 b = 0;
+  gint32 c = 0;
+  gint64 d = 0;
 
   GET_CHECK8 (&reader, a, -1);
   GET_CHECK (&reader, b, 16, le, -1);
@@ -306,9 +306,9 @@ GST_START_TEST (test_get_int_be)
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 16);
   gint8 a;
-  gint16 b;
-  gint32 c;
-  gint64 d;
+  gint16 b = 0;
+  gint32 c = 0;
+  gint64 d = 0;
 
   GET_CHECK8 (&reader, a, -1);
   GET_CHECK (&reader, b, 16, be, -1);
@@ -558,7 +558,7 @@ GST_START_TEST (test_string_funcs)
   guint32 *c32;
   guint16 *c16;
   gchar *c8;
-  guint8 data[200], *d;
+  guint8 data[200], *d = 0;
   guint i;
 
   /* fill half the buffer with a pattern */
@@ -664,8 +664,8 @@ GST_START_TEST (test_dup_string)
 {
   const gchar moredata[] = { 0x99, 0x10, 'f', '0', '0', '!', '\0', 0xff };
   GstByteReader reader;
-  guint16 num;
-  guint8 x;
+  guint16 num = 0;
+  guint8 x = 0;
   gchar *s;
 
   gst_byte_reader_init (&reader, (guint8 *) moredata, sizeof (moredata));
