@@ -87,6 +87,7 @@ static void gst_pcap_parse_set_property (GObject * object, guint prop_id,
 static void gst_pcap_parse_reset (GstPcapParse * self);
 
 static GstFlowReturn gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_pcap_sink_event (GstPad * pad, GstEvent * event);
 
 GST_BOILERPLATE (GstPcapParse, gst_pcap_parse, GstElement, GST_TYPE_ELEMENT);
 
@@ -146,6 +147,8 @@ gst_pcap_parse_init (GstPcapParse * self, GstPcapParseClass * gclass)
   gst_pad_set_chain_function (self->sink_pad,
       GST_DEBUG_FUNCPTR (gst_pcap_parse_chain));
   gst_pad_use_fixed_caps (self->sink_pad);
+  gst_pad_set_event_function (self->sink_pad,
+      GST_DEBUG_FUNCPTR (gst_pcap_sink_event));
   gst_element_add_pad (GST_ELEMENT (self), self->sink_pad);
 
   self->src_pad = gst_pad_new_from_static_template (&src_template, "src");
@@ -261,6 +264,8 @@ gst_pcap_parse_reset (GstPcapParse * self)
   self->swap_endian = FALSE;
   self->cur_packet_size = -1;
   self->buffer_offset = 0;
+  self->cur_ts = GST_CLOCK_TIME_NONE;
+  self->newsegment_sent = FALSE;
 
   gst_adapter_clear (self->adapter);
 }
@@ -402,7 +407,18 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
                 GST_PAD_CAPS (self->src_pad), &out_buf);
 
             if (ret == GST_FLOW_OK) {
+
               memcpy (GST_BUFFER_DATA (out_buf), payload_data, payload_size);
+              GST_BUFFER_TIMESTAMP (out_buf) = self->cur_ts;
+
+              if (!self->newsegment_sent &&
+                  GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
+                GstEvent *newsegment =
+                    gst_event_new_new_segment (FALSE, 1, GST_FORMAT_TIME,
+                    self->cur_ts, -1, 0);
+                gst_pad_push_event (self->src_pad, newsegment);
+                self->newsegment_sent = TRUE;
+              }
 
               ret = gst_pad_push (self->src_pad, out_buf);
 
@@ -432,6 +448,7 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
 
         gst_adapter_flush (self->adapter, 16);
 
+        self->cur_ts = ts_sec * GST_SECOND + ts_usec * GST_USECOND;
         self->cur_packet_size = incl_len;
       }
     } else {
@@ -463,6 +480,26 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   return ret;
 }
+
+static gboolean
+gst_pcap_sink_event (GstPad * pad, GstEvent * event)
+{
+  gboolean ret = TRUE;
+  GstPcapParse *self = GST_PCAP_PARSE (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      /* Drop it, we'll replace it with our own */
+      break;
+    default:
+      ret = gst_pad_push_event (self->src_pad, event);
+  }
+
+  gst_object_unref (self);
+
+  return ret;
+}
+
 
 static gboolean
 plugin_init (GstPlugin * plugin)
