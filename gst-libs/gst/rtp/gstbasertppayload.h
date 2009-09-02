@@ -36,6 +36,8 @@ G_BEGIN_DECLS
         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_RTP_PAYLOAD))
 #define GST_IS_BASE_RTP_PAYLOAD_CLASS(klass) \
         (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_RTP_PAYLOAD))
+#define GST_BASE_RTP_PAYLOAD_CAST(obj) \
+        ((GstBaseRTPPayload*)(obj))
 
 typedef struct _GstBaseRTPPayload GstBaseRTPPayload;
 typedef struct _GstBaseRTPPayloadPrivate GstBaseRTPPayloadPrivate;
