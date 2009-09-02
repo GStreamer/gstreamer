@@ -9,7 +9,7 @@
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more 
+ * Library General Public License for more
  */
 
 /**
@@ -54,7 +54,7 @@ enum
   LAST_SIGNAL
 };
 
-/* FIXME 0.11, a better default is the Ethernet MTU of 
+/* FIXME 0.11, a better default is the Ethernet MTU of
  * 1500 - sizeof(headers) as pointed out by marcelm in IRC:
  * So an Ethernet MTU of 1500, minus 60 for the max IP, minus 8 for UDP, gives
  * 1432 bytes or so.  And that should be adjusted downward further for other
@@ -418,7 +418,7 @@ no_function:
  * @payload: a #GstBaseRTPPayload
  * @media: the media type (typically "audio" or "video")
  * @dynamic: if the payload type is dynamic
- * @encoding_name: the encoding name 
+ * @encoding_name: the encoding name
  * @clock_rate: the clock rate of the media
  *
  * Set the rtp options of the payloader. These options will be set in the caps
@@ -621,6 +621,7 @@ typedef struct
   guint8 pt;
   GstCaps *caps;
   GstClockTime timestamp;
+  guint64 offset;
   guint32 rtptime;
 } HeaderData;
 
@@ -628,9 +629,10 @@ static GstBufferListItem
 find_timestamp (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
 {
   data->timestamp = GST_BUFFER_TIMESTAMP (*buffer);
+  data->offset = GST_BUFFER_OFFSET (*buffer);
 
-  /* stop when we find a timestamp */
-  if (data->timestamp != -1)
+  /* stop when we find a timestamp and duration */
+  if (data->timestamp != -1 && data->offset != -1)
     return GST_BUFFER_LIST_END;
   else
     return GST_BUFFER_LIST_CONTINUE;
@@ -644,6 +646,7 @@ set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
   gst_rtp_buffer_set_seq (*buffer, data->seqnum);
   gst_rtp_buffer_set_timestamp (*buffer, data->rtptime);
   gst_buffer_set_caps (*buffer, data->caps);
+  /* increment the seqnum for each buffer */
   data->seqnum++;
 
   return GST_BUFFER_LIST_SKIP_GROUP;
@@ -681,12 +684,17 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
         (GstBufferListFunc) find_timestamp, &data);
   } else {
     data.timestamp = GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (obj));
+    data.offset = GST_BUFFER_OFFSET (GST_BUFFER_CAST (obj));
   }
 
   /* convert to RTP time */
-  if (GST_CLOCK_TIME_IS_VALID (data.timestamp)) {
+  if (data.offset != GST_BUFFER_OFFSET_NONE) {
+    /* if we have an offset, use that for making an RTP timestamp */
+    data.rtptime = payload->ts_base + data.offset;
+  } else if (GST_CLOCK_TIME_IS_VALID (data.timestamp)) {
     gint64 rtime;
 
+    /* no offset, use the gstreamer timestamp */
     rtime = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
         data.timestamp);
 
@@ -764,7 +772,7 @@ gst_basertppayload_push_list (GstBaseRTPPayload * payload, GstBufferList * list)
  *
  * Push @buffer to the peer element of the payloader. The SSRC, payload type,
  * seqnum and timestamp of the RTP buffer will be updated first.
- * 
+ *
  * This function takes ownership of @buffer.
  *
  * Returns: a #GstFlowReturn.
