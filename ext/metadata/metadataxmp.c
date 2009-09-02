@@ -168,8 +168,8 @@ static const SchemaTagMap schema_map_dublin_tags_map[] = {
 };
 
 static const SchemaTagMap schema_map_photoshop_tags_map[] = {
-  {"country",     GST_TAG_XMP_GEO_LOCATION_COUNTRY },
-  {"city",        GST_TAG_XMP_GEO_LOCATION_CITY   },
+  {"Country",     GST_TAG_XMP_GEO_LOCATION_COUNTRY },
+  {"City",        GST_TAG_XMP_GEO_LOCATION_CITY   },
   {NULL, NULL}
 };
 
