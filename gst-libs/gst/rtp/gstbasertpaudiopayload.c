@@ -75,7 +75,7 @@ typedef gboolean (*GetLengthsFunc) (GstBaseRTPPayload * basepayload,
     guint * min_payload_len, guint * max_payload_len, guint * align);
 /* function to convert bytes to a duration */
 typedef GstClockTime (*GetDurationFunc) (GstBaseRTPAudioPayload * payload,
-    guint bytes);
+    guint64 bytes);
 
 struct _GstBaseRTPAudioPayloadPrivate
 {
@@ -104,10 +104,10 @@ static gboolean gst_base_rtp_audio_payload_get_sample_lengths (GstBaseRTPPayload
 /* duration functions */
 static GstClockTime
 gst_base_rtp_audio_payload_get_frame_duration (GstBaseRTPAudioPayload * payload,
-    guint bytes);
+    guint64 bytes);
 static GstClockTime
 gst_base_rtp_audio_payload_get_sample_duration (GstBaseRTPAudioPayload *
-    payload, guint bytes);
+    payload, guint64 bytes);
 
 static GstFlowReturn gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload
     * payload, GstBuffer * buffer);
@@ -392,7 +392,7 @@ gst_base_rtp_audio_payload_get_frame_lengths (GstBaseRTPPayload *
 
 static GstClockTime
 gst_base_rtp_audio_payload_get_frame_duration (GstBaseRTPAudioPayload *
-    payload, guint bytes)
+    payload, guint64 bytes)
 {
   return gst_util_uint64_scale (bytes, payload->frame_duration * GST_MSECOND,
       payload->frame_size);
@@ -431,7 +431,7 @@ gst_base_rtp_audio_payload_get_sample_lengths (GstBaseRTPPayload *
       maxptime_octets);
 
   /* min number of bytes based on a given ptime, has to be a multiple
-     of sample rate */
+   * of sample rate */
   minptime_octets = gst_util_uint64_scale (basepayload->min_ptime * 8,
       basepayload->clock_rate, payload->sample_size * GST_SECOND);
 
@@ -445,10 +445,10 @@ gst_base_rtp_audio_payload_get_sample_lengths (GstBaseRTPPayload *
 
 static GstClockTime
 gst_base_rtp_audio_payload_get_sample_duration (GstBaseRTPAudioPayload *
-    payload, guint bytes)
+    payload, guint64 bytes)
 {
-  return gst_util_uint64_scale (bytes * 8 * GST_SECOND,
-      GST_BASE_RTP_PAYLOAD (payload)->clock_rate, payload->sample_size);
+  return (bytes * 8 * GST_SECOND) /
+      (GST_BASE_RTP_PAYLOAD (payload)->clock_rate * payload->sample_size);
 }
 
 static GstFlowReturn
@@ -617,7 +617,8 @@ gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      /* FIXME. push remaining bytes */
+      /* FIXME. push remaining bytes? maybe not because it would violate the
+       * min-ptime. */
       gst_adapter_clear (payload->priv->adapter);
       break;
     case GST_EVENT_FLUSH_STOP:
