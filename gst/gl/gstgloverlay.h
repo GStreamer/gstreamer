@@ -40,6 +40,9 @@ struct _GstGLOverlay
   gchar *location;
   gboolean pbuf_has_changed;
 
+  gint8		pos_x;
+  gint8		pos_y;
+  guint8       	size;
   guchar *pixbuf;
   gint width, height;
   GLuint pbuftexture;

@@ -73,12 +73,9 @@ enum
 {
   PROP_0,
   PROP_LOCATION,
-//  PROP_STRETCH,
-  /* future properties? */
-  /* PROP_WIDTH, */
-  /* PROP_HEIGHT, */
-  /* PROP_XPOS, */
-  /* PROP_YPOS */
+  PROP_XPOS,
+  PROP_YPOS,
+  PROP_SIZE
 };
 
 
@@ -128,6 +125,26 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
       g_param_spec_string ("location",
           "Location of the image",
           "Location of the image", NULL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      PROP_XPOS,
+      g_param_spec_int ("xpos",
+          "X position of overlay image in percents",
+          "X position of overlay image in percents",
+          0, 100, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class,
+      PROP_YPOS,
+      g_param_spec_int ("ypos",
+          "Y position of overlay image in percents",
+          "Y position of overlay image in percents",
+          0, 100, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class,
+      PROP_SIZE,
+      g_param_spec_int ("proportion",
+          "Relative size of overlay image, in percents",
+          "Relative size of iverlay image, in percents",
+          0, 100, 0, G_PARAM_READWRITE));
+
   /*
      g_object_class_install_property (gobject_class,
      PROP_STRETCH,
@@ -143,6 +160,9 @@ gst_gl_overlay_draw_texture (GstGLOverlay * overlay, GLuint tex)
 {
   GstGLFilter *filter = GST_GL_FILTER (overlay);
 
+  gfloat posx = 0.0;
+  gfloat posy = 0.0;
+  gfloat size = 0.0;
   gfloat width = (gfloat) filter->width;
   gfloat height = (gfloat) filter->height;
 
@@ -179,14 +199,24 @@ gst_gl_overlay_draw_texture (GstGLOverlay * overlay, GLuint tex)
 
   glBegin (GL_QUADS);
 
+  size = (overlay->size) / 50.0;
+  posx = (overlay->pos_x - 50.0) / 50.0;
+  posx =
+      (posx - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posx + (size / 2) >
+      1.00) ? (1.0 - size / 2) : posx;
+  posy = (overlay->pos_y - 50.0) / 50.0;
+  posy =
+      (posy - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posy + (size / 2) >
+      1.00) ? (1.0 - size / 2) : posy;
+
   glTexCoord2f (0.0, 0.0);
-  glVertex2f (-1.0, -1.0);
+  glVertex2f (posx - (size / 2), posy - (size / 2));
   glTexCoord2f (width, 0.0);
-  glVertex2f (1.0, -1.0);
+  glVertex2f (posx + (size / 2), posy - (size / 2));
   glTexCoord2f (width, height);
-  glVertex2f (1.0, 1.0);
+  glVertex2f (posx + (size / 2), posy + (size / 2));
   glTexCoord2f (0.0, height);
-  glVertex2f (-1.0, 1.0);
+  glVertex2f (posx - (size / 2), posy + (size / 2));
 
   glEnd ();
 
@@ -203,6 +233,9 @@ gst_gl_overlay_init (GstGLOverlay * overlay, GstGLOverlayClass * klass)
   overlay->pbuftexture = 0;
   overlay->width = 0;
   overlay->height = 0;
+  overlay->pos_x = 0.0;
+  overlay->pos_y = 0.0;
+  overlay->size = 100;
 //  overlay->stretch = TRUE;
   overlay->pbuf_has_changed = FALSE;
 }
@@ -226,6 +259,15 @@ gst_gl_overlay_set_property (GObject * object, guint prop_id,
       overlay->pbuf_has_changed = TRUE;
       overlay->location = g_value_dup_string (value);
       break;
+    case PROP_XPOS:
+      overlay->pos_x = g_value_get_int (value);
+      break;
+    case PROP_YPOS:
+      overlay->pos_y = g_value_get_int (value);
+      break;
+    case PROP_SIZE:
+      overlay->size = g_value_get_int (value);
+      break;
 /*  case PROP_STRETCH:
     overlay->stretch = g_value_get_boolean (value);
     break;
@@ -245,6 +287,15 @@ gst_gl_overlay_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LOCATION:
       g_value_set_string (value, overlay->location);
+      break;
+    case PROP_XPOS:
+      g_value_set_int (value, overlay->pos_x);
+      break;
+    case PROP_YPOS:
+      g_value_set_int (value, overlay->pos_y);
+      break;
+    case PROP_SIZE:
+      g_value_set_int (value, overlay->size);
       break;
 /*  case PROP_STRETCH:
     g_value_set_boolean (value, overlay->stretch);
