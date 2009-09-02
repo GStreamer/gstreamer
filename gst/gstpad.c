@@ -1673,7 +1673,7 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   if ((parent = GST_ELEMENT_CAST (gst_pad_get_parent (srcpad)))) {
     if (GST_IS_ELEMENT (parent)) {
       gst_element_post_message (parent,
-          gst_message_new_structure_change (GST_OBJECT_CAST (srcpad),
+          gst_message_new_structure_change (GST_OBJECT_CAST (sinkpad),
               GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK, parent, TRUE));
     } else {
       gst_object_unref (parent);
@@ -1715,7 +1715,7 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
 done:
   if (parent != NULL) {
     gst_element_post_message (parent,
-        gst_message_new_structure_change (GST_OBJECT_CAST (srcpad),
+        gst_message_new_structure_change (GST_OBJECT_CAST (sinkpad),
             GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK, parent, FALSE));
     gst_object_unref (parent);
   }
@@ -1997,7 +1997,7 @@ gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
   if ((parent = GST_ELEMENT_CAST (gst_pad_get_parent (srcpad)))) {
     if (GST_IS_ELEMENT (parent)) {
       gst_element_post_message (parent,
-          gst_message_new_structure_change (GST_OBJECT_CAST (srcpad),
+          gst_message_new_structure_change (GST_OBJECT_CAST (sinkpad),
               GST_STRUCTURE_CHANGE_TYPE_PAD_LINK, parent, TRUE));
     } else {
       gst_object_unref (parent);
@@ -2059,7 +2059,7 @@ gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
 done:
   if (parent) {
     gst_element_post_message (parent,
-        gst_message_new_structure_change (GST_OBJECT_CAST (srcpad),
+        gst_message_new_structure_change (GST_OBJECT_CAST (sinkpad),
             GST_STRUCTURE_CHANGE_TYPE_PAD_LINK, parent, FALSE));
     gst_object_unref (parent);
   }

@@ -1814,23 +1814,21 @@ update_degree (GstElement * element, GstBinSortIterator * bit)
 
       pad = GST_PAD_CAST (pads->data);
 
+      /* we're iterating over the sinkpads, check if it's busy in a link/unlink */
+      if (G_UNLIKELY (find_message (bit->bin, GST_OBJECT_CAST (pad),
+                  GST_MESSAGE_STRUCTURE_CHANGE))) {
+        /* mark the iterator as dirty because we won't be updating the degree
+         * of the peer parent now. This would result in the 'loop detected'
+         * later on because the peer parent element could become the best next
+         * element with a degree > 0. We will simply continue our state
+         * changes and we'll eventually resync when the unlink completed and
+         * the iterator cookie is updated. */
+        bit->dirty = TRUE;
+        continue;
+      }
+
       if ((peer = gst_pad_get_peer (pad))) {
         GstElement *peer_element;
-
-        /* we're iterating over the sinkpads, this is the peer and thus the
-         * srcpad, check if it's busy in a link/unlink */
-        if (G_UNLIKELY (find_message (bit->bin, GST_OBJECT_CAST (peer),
-                    GST_MESSAGE_STRUCTURE_CHANGE))) {
-          /* mark the iterator as dirty because we won't be updating the degree
-           * of the peer parent now. This would result in the 'loop detected'
-           * later on because the peer parent element could become the best next
-           * element with a degree > 0. We will simply continue our state
-           * changes and we'll eventually resync when the unlink completed and
-           * the iterator cookie is updated. */
-          bit->dirty = TRUE;
-          gst_object_unref (peer);
-          continue;
-        }
 
         if ((peer_element = gst_pad_get_parent_element (peer))) {
           GST_OBJECT_LOCK (peer_element);
