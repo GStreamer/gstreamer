@@ -124,7 +124,6 @@ dnl check for libm, for sin() etc.
 AC_CHECK_LIBM
 AC_SUBST(LIBM)
 
-dnl needed for gst/xdgmime
 AC_FUNC_MMAP
 
 dnl *** checks for header files ***
@@ -298,7 +297,6 @@ AG_GST_CHECK_PLUGIN(tta)
 AG_GST_CHECK_PLUGIN(valve)
 AG_GST_CHECK_PLUGIN(videosignal)
 AG_GST_CHECK_PLUGIN(vmnc)
-AG_GST_CHECK_PLUGIN(xdgmime)
 
 dnl *** plug-ins to exclude ***
 
@@ -312,7 +310,6 @@ dnl disable experimental plug-ins
 #if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
 #fi
 
-# For xdgmime, to use g_content_type_guess()
 # This will always succeed because we depend on GLib >= 2.16
 PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.16, HAVE_GIO=yes, HAVE_GIO=no)
 AC_SUBST(GIO_CFLAGS)
@@ -1749,7 +1746,6 @@ gst/tta/Makefile
 gst/valve/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile
-gst/xdgmime/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/interfaces/Makefile
