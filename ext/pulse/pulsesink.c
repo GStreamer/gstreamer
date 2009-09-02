@@ -250,7 +250,9 @@ gst_pulsering_destroy_context (GstPulseRingBuffer * pbuf)
 
     /* Make sure we don't get any further callbacks */
     pa_context_set_state_callback (pbuf->context, NULL, NULL);
+#if HAVE_PULSE_0_9_12
     pa_context_set_subscribe_callback (pbuf->context, NULL, NULL);
+#endif
 
     pa_context_unref (pbuf->context);
     pbuf->context = NULL;
