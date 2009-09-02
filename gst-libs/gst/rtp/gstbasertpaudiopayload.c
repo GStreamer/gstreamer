@@ -82,6 +82,7 @@ struct _GstBaseRTPAudioPayloadPrivate
   AudioCodecType type;
   GstAdapter *adapter;
   guint64 min_ptime;
+  guint fragment_size;
 };
 
 
@@ -242,7 +243,6 @@ gst_base_rtp_audio_payload_set_frame_options (GstBaseRTPAudioPayload
  * @sample_size: Size per sample in bytes.
  *
  * Sets the options for sample based audio codecs.
- *
  */
 void
 gst_base_rtp_audio_payload_set_sample_options (GstBaseRTPAudioPayload
@@ -251,9 +251,8 @@ gst_base_rtp_audio_payload_set_sample_options (GstBaseRTPAudioPayload
   g_return_if_fail (basertpaudiopayload != NULL);
 
   /* sample_size is in bits internally */
-  basertpaudiopayload->sample_size = sample_size * 8;
-
-  gst_adapter_clear (basertpaudiopayload->priv->adapter);
+  gst_base_rtp_audio_payload_set_samplebits_options (basertpaudiopayload,
+      sample_size * 8);
 }
 
 /**
@@ -269,9 +268,17 @@ void
 gst_base_rtp_audio_payload_set_samplebits_options (GstBaseRTPAudioPayload
     * basertpaudiopayload, gint sample_size)
 {
+  guint fragment_size;
+
   g_return_if_fail (basertpaudiopayload != NULL);
 
   basertpaudiopayload->sample_size = sample_size;
+
+  /* sample_size is in bits and is converted into multiple bytes */
+  fragment_size = sample_size;
+  while ((fragment_size % 8) != 0)
+    fragment_size += fragment_size;
+  basertpaudiopayload->priv->fragment_size = fragment_size / 8;
 
   gst_adapter_clear (basertpaudiopayload->priv->adapter);
 }
@@ -300,6 +307,49 @@ gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload * basepayload,
   return ret;
 }
 
+/**
+ * gst_base_rtp_audio_payload_flush:
+ * @baseaudiopayload: a #GstBaseRTPPayload
+ * @payload_len: length of payload
+ * @timestamp: a #GstClockTime
+ *
+ * Create an RTP buffer and store @payload_len bytes of the adapter as the
+ * payload. Set the timestamp on the new buffer to @timestamp before pushing
+ * the buffer downstream.
+ *
+ * Returns: a #GstFlowReturn
+ *
+ * Since: 0.10.25
+ */
+GstFlowReturn
+gst_base_rtp_audio_payload_flush (GstBaseRTPAudioPayload * baseaudiopayload,
+    guint payload_len, GstClockTime timestamp)
+{
+  GstBaseRTPPayload *basepayload;
+  GstBuffer *outbuf;
+  guint8 *payload;
+  GstFlowReturn ret;
+
+  basepayload = GST_BASE_RTP_PAYLOAD (baseaudiopayload);
+
+  GST_DEBUG_OBJECT (baseaudiopayload, "Pushing %d bytes ts %" GST_TIME_FORMAT,
+      payload_len, GST_TIME_ARGS (timestamp));
+
+  /* create buffer to hold the payload */
+  outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+
+  /* copy payload */
+  gst_rtp_buffer_set_payload_type (outbuf, basepayload->pt);
+  payload = gst_rtp_buffer_get_payload (outbuf);
+  gst_adapter_copy (baseaudiopayload->priv->adapter, payload, 0, payload_len);
+  gst_adapter_flush (baseaudiopayload->priv->adapter, payload_len);
+
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  ret = gst_basertppayload_push (basepayload, outbuf);
+
+  return ret;
+}
+
 /* this assumes all frames have a constant duration and a constant size */
 static GstFlowReturn
 gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
@@ -307,7 +357,6 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
   guint payload_len;
-  const guint8 *data = NULL;
   GstFlowReturn ret;
   guint available;
   gint frame_size, frame_duration;
@@ -316,8 +365,8 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
   guint minptime_octets = 0;
   guint min_payload_len;
   guint max_payload_len;
-  gboolean use_adapter = FALSE;
   guint minptime_ms;
+  guint size;
 
   ret = GST_FLOW_OK;
 
@@ -366,69 +415,57 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
       "Calculated min_payload_len %u and max_payload_len %u",
       min_payload_len, max_payload_len);
 
-  if (gst_adapter_available (basertpaudiopayload->priv->adapter)) {
-    /* If there is always data in the adapter, we have to use it */
-    gst_adapter_push (basertpaudiopayload->priv->adapter, buffer);
-    available = gst_adapter_available (basertpaudiopayload->priv->adapter);
-    use_adapter = TRUE;
-  } else {
-    /* let's set the base timestamp */
-    basertpaudiopayload->base_ts = GST_BUFFER_TIMESTAMP (buffer);
+  size = GST_BUFFER_SIZE (buffer);
 
-    /* If buffer fits on an RTP packet, let's just push it through */
-    /* this will check against max_ptime and max_mtu */
-    if (GST_BUFFER_SIZE (buffer) >= min_payload_len &&
-        GST_BUFFER_SIZE (buffer) <= max_payload_len) {
-      ret = gst_base_rtp_audio_payload_push (basertpaudiopayload,
-          GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          GST_BUFFER_TIMESTAMP (buffer));
-      gst_buffer_unref (buffer);
+  /* shortcut, we don't need to use the adapter when the packet can be pushed
+   * through directly. */
+  available = gst_adapter_available (basertpaudiopayload->priv->adapter);
 
-      return ret;
-    }
-
-    available = GST_BUFFER_SIZE (buffer);
-    data = (guint8 *) GST_BUFFER_DATA (buffer);
-  }
-
-  /* as long as we have full frames */
-  while (available >= min_payload_len) {
-    gfloat ts_inc;
-
-    /* We send as much as we can */
-    payload_len = MIN (max_payload_len, (available / frame_size) * frame_size);
-
-    if (use_adapter) {
-      data = gst_adapter_peek (basertpaudiopayload->priv->adapter, payload_len);
-    }
-
-    ret =
-        gst_base_rtp_audio_payload_push (basertpaudiopayload, data, payload_len,
-        basertpaudiopayload->base_ts);
-
-    ts_inc = (payload_len * frame_duration) / frame_size;
-
-    ts_inc = ts_inc * GST_MSECOND;
-    basertpaudiopayload->base_ts += gst_gdouble_to_guint64 (ts_inc);
-
-    if (use_adapter) {
-      gst_adapter_flush (basertpaudiopayload->priv->adapter, payload_len);
-      available = gst_adapter_available (basertpaudiopayload->priv->adapter);
-    } else {
-      available -= payload_len;
-      data += payload_len;
-    }
-  }
-
-  if (!use_adapter) {
-    if (available != 0) {
-      GstBuffer *buf;
-
-      buf = gst_buffer_create_sub (buffer,
-          GST_BUFFER_SIZE (buffer) - available, available);
-      gst_adapter_push (basertpaudiopayload->priv->adapter, buf);
-    }
+  if (available == 0 && (size >= min_payload_len && size <= max_payload_len)) {
+    /* If buffer fits on an RTP packet, let's just push it through
+     * this will check against max_ptime and max_mtu */
+    GST_DEBUG_OBJECT (basertpaudiopayload, "Fast packet push");
+    ret = gst_base_rtp_audio_payload_push (basertpaudiopayload,
+        GST_BUFFER_DATA (buffer), size, GST_BUFFER_TIMESTAMP (buffer));
     gst_buffer_unref (buffer);
+  } else {
+    /* push the buffer in the adapter */
+    gst_adapter_push (basertpaudiopayload->priv->adapter, buffer);
+    available += size;
+
+    /* as long as we have full frames */
+    while (available >= min_payload_len) {
+      guint64 distance;
+      GstClockTime timestamp;
+
+      /* We send as much as we can */
+      payload_len =
+          MIN (max_payload_len, (available / frame_size) * frame_size);
+
+      /* calculate the timestamp */
+      timestamp =
+          gst_adapter_prev_timestamp (basertpaudiopayload->priv->adapter,
+          &distance);
+
+      GST_LOG_OBJECT (basertpaudiopayload,
+          "last timestamp %" GST_TIME_FORMAT ", distance %" G_GUINT64_FORMAT,
+          GST_TIME_ARGS (timestamp), distance);
+
+      if (GST_CLOCK_TIME_IS_VALID (timestamp) && distance > 0) {
+        /* convert the number of bytes since the last timestamp to time and add to
+         * the last seen timestamp */
+        timestamp +=
+            gst_util_uint64_scale (distance, frame_duration * GST_MSECOND,
+            frame_size);
+      }
+
+      /* and flush out the bytes from the adapter */
+      ret =
+          gst_base_rtp_audio_payload_flush (basertpaudiopayload, payload_len,
+          timestamp);
+
+      available -= payload_len;
+    }
   }
   return ret;
 
@@ -447,16 +484,15 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
   guint payload_len;
-  const guint8 *data = NULL;
   GstFlowReturn ret;
   guint available;
   guint maxptime_octets = G_MAXUINT;
   guint minptime_octets = 0;
   guint min_payload_len;
   guint max_payload_len;
-  gboolean use_adapter = FALSE;
-
   guint fragment_size;
+  guint64 datarate;
+  guint size;
 
   ret = GST_FLOW_OK;
 
@@ -466,10 +502,8 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
     goto config_error;
 
   /* sample_size is in bits and is converted into multiple bytes */
-  fragment_size = basertpaudiopayload->sample_size;
-  while ((fragment_size % 8) != 0)
-    fragment_size += fragment_size;
-  fragment_size /= 8;
+  fragment_size = basertpaudiopayload->priv->fragment_size;
+  datarate = basertpaudiopayload->sample_size * basepayload->clock_rate;
 
   /* max number of bytes based on given ptime */
   if (basepayload->max_ptime != -1) {
@@ -498,74 +532,62 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
       "Calculated min_payload_len %u and max_payload_len %u",
       min_payload_len, max_payload_len);
 
-  if (gst_adapter_available (basertpaudiopayload->priv->adapter)) {
-    /* If there is always data in the adapter, we have to use it */
-    gst_adapter_push (basertpaudiopayload->priv->adapter, buffer);
-    available = gst_adapter_available (basertpaudiopayload->priv->adapter);
-    use_adapter = TRUE;
-  } else {
-    /* let's set the base timestamp */
-    basertpaudiopayload->base_ts = GST_BUFFER_TIMESTAMP (buffer);
+  size = GST_BUFFER_SIZE (buffer);
 
-    /* If buffer fits on an RTP packet, let's just push it through */
-    /* this will check against max_ptime and max_mtu */
-    if (GST_BUFFER_SIZE (buffer) >= min_payload_len &&
-        GST_BUFFER_SIZE (buffer) <= max_payload_len) {
-      ret = gst_base_rtp_audio_payload_push (basertpaudiopayload,
-          GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          GST_BUFFER_TIMESTAMP (buffer));
-      gst_buffer_unref (buffer);
+  /* shortcut, we don't need to use the adapter when the packet can be pushed
+   * through directly. */
+  available = gst_adapter_available (basertpaudiopayload->priv->adapter);
 
-      return ret;
-    }
+  GST_DEBUG_OBJECT (basertpaudiopayload, "got buffer size %u, available %u",
+      size, available);
 
-    available = GST_BUFFER_SIZE (buffer);
-    data = (guint8 *) GST_BUFFER_DATA (buffer);
-  }
-
-  while (available >= min_payload_len) {
-    gfloat num, datarate;
-
-    payload_len =
-        MIN (max_payload_len, (available / fragment_size) * fragment_size);
-
-    if (use_adapter) {
-      data = gst_adapter_peek (basertpaudiopayload->priv->adapter, payload_len);
-    }
-
-    ret =
-        gst_base_rtp_audio_payload_push (basertpaudiopayload, data, payload_len,
-        basertpaudiopayload->base_ts);
-
-    num = payload_len * 8;
-    datarate = (basertpaudiopayload->sample_size * basepayload->clock_rate);
-
-    basertpaudiopayload->base_ts +=
-        /* payload_len (bits) * nsecs/sec / datarate (bits*sec) */
-        gst_gdouble_to_guint64 (num / datarate * GST_SECOND);
-    GST_DEBUG_OBJECT (basertpaudiopayload, "New ts is %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (basertpaudiopayload->base_ts));
-
-    if (use_adapter) {
-      gst_adapter_flush (basertpaudiopayload->priv->adapter, payload_len);
-      available = gst_adapter_available (basertpaudiopayload->priv->adapter);
-    } else {
-      available -= payload_len;
-      data += payload_len;
-    }
-  }
-
-  if (!use_adapter) {
-    if (available != 0) {
-      GstBuffer *buf;
-
-      buf = gst_buffer_create_sub (buffer,
-          GST_BUFFER_SIZE (buffer) - available, available);
-      gst_adapter_push (basertpaudiopayload->priv->adapter, buf);
-    }
+  if (available == 0 && (size >= min_payload_len && size <= max_payload_len)) {
+    /* If buffer fits on an RTP packet, let's just push it through
+     * this will check against max_ptime and max_mtu */
+    GST_DEBUG_OBJECT (basertpaudiopayload, "Fast packet push");
+    ret = gst_base_rtp_audio_payload_push (basertpaudiopayload,
+        GST_BUFFER_DATA (buffer), size, GST_BUFFER_TIMESTAMP (buffer));
     gst_buffer_unref (buffer);
-  }
+  } else {
+    /* push the buffer in the adapter */
+    gst_adapter_push (basertpaudiopayload->priv->adapter, buffer);
+    available += size;
 
+    GST_DEBUG_OBJECT (basertpaudiopayload, "available now %u", available);
+
+    /* as long as we have full frames */
+    while (available >= min_payload_len) {
+      guint64 distance;
+      GstClockTime timestamp;
+
+      payload_len =
+          MIN (max_payload_len, (available / fragment_size) * fragment_size);
+
+      /* calculate the timestamp */
+      timestamp =
+          gst_adapter_prev_timestamp (basertpaudiopayload->priv->adapter,
+          &distance);
+
+      GST_LOG_OBJECT (basertpaudiopayload,
+          "last timestamp %" GST_TIME_FORMAT ", distance %" G_GUINT64_FORMAT,
+          GST_TIME_ARGS (timestamp), distance);
+
+      if (GST_CLOCK_TIME_IS_VALID (timestamp) && distance > 0) {
+        /* convert the number of bytes since the last timestamp to time and add to
+         * the last seen timestamp */
+        timestamp += gst_util_uint64_scale (distance * 8, GST_SECOND, datarate);
+      }
+
+      /* and flush out the bytes from the adapter */
+      ret =
+          gst_base_rtp_audio_payload_flush (basertpaudiopayload, payload_len,
+          timestamp);
+
+      available -= payload_len;
+      GST_DEBUG_OBJECT (basertpaudiopayload, "available after push %u",
+          available);
+    }
+  }
   return ret;
 
   /* ERRORS */

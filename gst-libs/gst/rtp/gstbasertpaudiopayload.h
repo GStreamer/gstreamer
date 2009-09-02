@@ -68,33 +68,28 @@ struct _GstBaseRTPAudioPayloadClass
 
 GType gst_base_rtp_audio_payload_get_type (void);
 
-void
-gst_base_rtp_audio_payload_set_frame_based (GstBaseRTPAudioPayload
-    *basertpaudiopayload);
+/* configure frame based */
+void            gst_base_rtp_audio_payload_set_frame_based        (GstBaseRTPAudioPayload *basertpaudiopayload);
 
-void
-gst_base_rtp_audio_payload_set_sample_based (GstBaseRTPAudioPayload
-    *basertpaudiopayload);
+void            gst_base_rtp_audio_payload_set_frame_options      (GstBaseRTPAudioPayload *basertpaudiopayload,
+                                                                   gint frame_duration, gint frame_size);
 
-void
-gst_base_rtp_audio_payload_set_frame_options (GstBaseRTPAudioPayload
-    *basertpaudiopayload, gint frame_duration, gint frame_size);
+/* configure sample based */
+void            gst_base_rtp_audio_payload_set_sample_based       (GstBaseRTPAudioPayload *basertpaudiopayload);
+void            gst_base_rtp_audio_payload_set_sample_options     (GstBaseRTPAudioPayload *basertpaudiopayload,
+                                                                   gint sample_size);
+void            gst_base_rtp_audio_payload_set_samplebits_options (GstBaseRTPAudioPayload *basertpaudiopayload,
+                                                                   gint sample_size);
 
-void
-gst_base_rtp_audio_payload_set_sample_options (GstBaseRTPAudioPayload
-    *basertpaudiopayload, gint sample_size);
+/* get the internal adapter */
+GstAdapter*     gst_base_rtp_audio_payload_get_adapter            (GstBaseRTPAudioPayload *basertpaudiopayload);
 
-void
-gst_base_rtp_audio_payload_set_samplebits_options (GstBaseRTPAudioPayload
-    *basertpaudiopayload, gint sample_size);
-
-GstFlowReturn
-gst_base_rtp_audio_payload_push (GstBaseRTPAudioPayload * baseaudiopayload, 
-    const guint8 * data, guint payload_len, GstClockTime timestamp);
-
-GstAdapter*
-gst_base_rtp_audio_payload_get_adapter (GstBaseRTPAudioPayload 
-    *basertpaudiopayload);
+/* push and flushing data */
+GstFlowReturn   gst_base_rtp_audio_payload_push                   (GstBaseRTPAudioPayload * baseaudiopayload,
+                                                                   const guint8 * data, guint payload_len,
+                                                                   GstClockTime timestamp);
+GstFlowReturn   gst_base_rtp_audio_payload_flush                  (GstBaseRTPAudioPayload * baseaudiopayload,
+                                                                   guint payload_len, GstClockTime timestamp);
 
 G_END_DECLS
 

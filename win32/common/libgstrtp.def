@@ -1,4 +1,5 @@
 EXPORTS
+	gst_base_rtp_audio_payload_flush
 	gst_base_rtp_audio_payload_get_adapter
 	gst_base_rtp_audio_payload_get_type
 	gst_base_rtp_audio_payload_push
