@@ -630,11 +630,10 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
 
     if (G_UNLIKELY (prog->pcr_stream == NULL)) {
       if (best) {
-        MpegTsPadData *ts_data = (MpegTsPadData *) best;
         /* Take the first data stream for the PCR */
         GST_DEBUG_OBJECT (COLLECT_DATA_PAD (best),
             "Use stream (pid=%d) from pad as PCR for program (prog_id = %d)",
-            ts_data->pid, ts_data->prog_id);
+            MPEG_TS_PAD_DATA (best)->pid, MPEG_TS_PAD_DATA (best)->prog_id);
 
         /* Set the chosen PCR stream */
         tsmux_program_set_pcr_stream (prog, best->stream);

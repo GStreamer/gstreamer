@@ -484,14 +484,13 @@ mpegpsmux_collected (GstCollectPads * pads, MpegPsMux * mux)
   if (best != NULL) {
     /* @*buf : the buffer to be processed */
     GstBuffer *buf = best->queued_buf;
-    GstCollectData *c_data = (GstCollectData *) best;
     gint64 pts = -1;
 
     g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
     GST_DEBUG_OBJECT (mux,
         "Chose stream from pad %" GST_PTR_FORMAT " for output (PID: 0x%04x)",
-        c_data->pad, best->stream_id);
+        best->collect.pad, best->stream_id);
 
     /* set timestamp */
     if (GST_CLOCK_TIME_IS_VALID (best->cur_ts)) {
