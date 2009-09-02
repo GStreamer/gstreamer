@@ -594,7 +594,7 @@ gst_vdp_vpp_stop (GstVdpVideoPostProcess * vpp)
 {
   if (vpp->mixer != VDP_INVALID_HANDLE)
     vpp->device->vdp_video_mixer_destroy (vpp->mixer);
-  if (!vpp->device)
+  if (vpp->device)
     g_object_unref (vpp->device);
 
   gst_vdp_vpp_flush (vpp);
