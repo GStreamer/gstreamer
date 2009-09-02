@@ -293,6 +293,49 @@ gst_base_rtp_audio_payload_set_samplebits_options (GstBaseRTPAudioPayload
 }
 
 /**
+ * gst_base_rtp_audio_payload_push:
+ * @baseaudiopayload: a #GstBaseRTPPayload
+ * @data: data to set as payload
+ * @payload_len: length of payload
+ * @timestamp: a #GstClockTime
+ *
+ * Create an RTP buffer and store @payload_len bytes of @data as the
+ * payload. Set the timestamp on the new buffer to @timestamp before pushing
+ * the buffer downstream.
+ *
+ * Returns: a #GstFlowReturn
+ *
+ * Since: 0.10.13
+ */
+GstFlowReturn
+gst_base_rtp_audio_payload_push (GstBaseRTPAudioPayload * baseaudiopayload,
+    const guint8 * data, guint payload_len, GstClockTime timestamp)
+{
+  GstBaseRTPPayload *basepayload;
+  GstBuffer *outbuf;
+  guint8 *payload;
+  GstFlowReturn ret;
+
+  basepayload = GST_BASE_RTP_PAYLOAD (baseaudiopayload);
+
+  GST_DEBUG_OBJECT (baseaudiopayload, "Pushing %d bytes ts %" GST_TIME_FORMAT,
+      payload_len, GST_TIME_ARGS (timestamp));
+
+  /* create buffer to hold the payload */
+  outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+
+  /* copy payload */
+  gst_rtp_buffer_set_payload_type (outbuf, basepayload->pt);
+  payload = gst_rtp_buffer_get_payload (outbuf);
+  memcpy (payload, data, payload_len);
+
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  ret = gst_basertppayload_push (basepayload, outbuf);
+
+  return ret;
+}
+
+/**
  * gst_base_rtp_audio_payload_flush:
  * @baseaudiopayload: a #GstBaseRTPPayload
  * @payload_len: length of payload
@@ -540,49 +583,6 @@ config_error:
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
-}
-
-/**
- * gst_base_rtp_audio_payload_push:
- * @baseaudiopayload: a #GstBaseRTPPayload
- * @data: data to set as payload
- * @payload_len: length of payload
- * @timestamp: a #GstClockTime
- *
- * Create an RTP buffer and store @payload_len bytes of @data as the
- * payload. Set the timestamp on the new buffer to @timestamp before pushing
- * the buffer downstream.
- *
- * Returns: a #GstFlowReturn
- *
- * Since: 0.10.13
- */
-GstFlowReturn
-gst_base_rtp_audio_payload_push (GstBaseRTPAudioPayload * baseaudiopayload,
-    const guint8 * data, guint payload_len, GstClockTime timestamp)
-{
-  GstBaseRTPPayload *basepayload;
-  GstBuffer *outbuf;
-  guint8 *payload;
-  GstFlowReturn ret;
-
-  basepayload = GST_BASE_RTP_PAYLOAD (baseaudiopayload);
-
-  GST_DEBUG_OBJECT (baseaudiopayload, "Pushing %d bytes ts %" GST_TIME_FORMAT,
-      payload_len, GST_TIME_ARGS (timestamp));
-
-  /* create buffer to hold the payload */
-  outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
-
-  /* copy payload */
-  gst_rtp_buffer_set_payload_type (outbuf, basepayload->pt);
-  payload = gst_rtp_buffer_get_payload (outbuf);
-  memcpy (payload, data, payload_len);
-
-  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-  ret = gst_basertppayload_push (basepayload, outbuf);
-
-  return ret;
 }
 
 static GstStateChangeReturn
