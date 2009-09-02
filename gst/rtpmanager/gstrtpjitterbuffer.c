@@ -609,7 +609,10 @@ gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer)
   priv = jitterbuffer->priv;
 
   /* this will trigger a new pt-map request signal, FIXME, do something better. */
+
+  JBUF_LOCK (priv);
   priv->clock_rate = -1;
+  JBUF_UNLOCK (priv);
 }
 
 static GstCaps *
@@ -646,6 +649,10 @@ gst_rtp_jitter_buffer_getcaps (GstPad * pad)
 
   return caps;
 }
+
+/*
+ * Must be called with JBUF_LOCK held
+ */
 
 static gboolean
 gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
@@ -737,7 +744,9 @@ gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps)
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
   priv = jitterbuffer->priv;
 
+  JBUF_LOCK (priv);
   res = gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
+  JBUF_UNLOCK (priv);
 
   /* set same caps on srcpad on success */
   if (res)
@@ -1032,6 +1041,10 @@ gst_rtp_jitter_buffer_sink_rtcp_event (GstPad * pad, GstEvent * event)
   return TRUE;
 }
 
+/*
+ * Must be called with JBUF_LOCK held
+ */
+
 static gboolean
 gst_rtp_jitter_buffer_get_clock_rate (GstRtpJitterBuffer * jitterbuffer,
     guint8 pt)
@@ -1094,6 +1107,23 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   pt = gst_rtp_buffer_get_payload_type (buffer);
 
+  /* take the timestamp of the buffer. This is the time when the packet was
+   * received and is used to calculate jitter and clock skew. We will adjust
+   * this timestamp with the smoothed value after processing it in the
+   * jitterbuffer. */
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  /* bring to running time */
+  timestamp = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME,
+      timestamp);
+
+  seqnum = gst_rtp_buffer_get_seq (buffer);
+
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "Received packet #%d at time %" GST_TIME_FORMAT, seqnum,
+      GST_TIME_ARGS (timestamp));
+
+  JBUF_LOCK_CHECK (priv, out_flushing);
+
   if (G_UNLIKELY (priv->last_pt != pt)) {
     GstCaps *caps;
 
@@ -1117,22 +1147,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
       goto no_clock_rate;
   }
 
-  /* take the timestamp of the buffer. This is the time when the packet was
-   * received and is used to calculate jitter and clock skew. We will adjust
-   * this timestamp with the smoothed value after processing it in the
-   * jitterbuffer. */
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  /* bring to running time */
-  timestamp = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME,
-      timestamp);
-
-  seqnum = gst_rtp_buffer_get_seq (buffer);
-
-  GST_DEBUG_OBJECT (jitterbuffer,
-      "Received packet #%d at time %" GST_TIME_FORMAT, seqnum,
-      GST_TIME_ARGS (timestamp));
-
-  JBUF_LOCK_CHECK (priv, out_flushing);
   /* don't accept more data on EOS */
   if (G_UNLIKELY (priv->eos))
     goto have_eos;
@@ -1252,8 +1266,7 @@ no_clock_rate:
     GST_WARNING_OBJECT (jitterbuffer,
         "No clock-rate in caps!, dropping buffer");
     gst_buffer_unref (buffer);
-    gst_object_unref (jitterbuffer);
-    return GST_FLOW_OK;
+    goto finished;
   }
 out_flushing:
   {
