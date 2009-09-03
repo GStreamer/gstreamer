@@ -71,10 +71,10 @@ enum
 
 /* update average packet size, we keep this scaled by 16 to keep enough
  * precision. */
-#define UPDATE_AVG(avg, val)    	\
-  if ((avg) == 0)			\
-   (avg) = (val) << 4;          	\
-  else 					\
+#define UPDATE_AVG(avg, val)            \
+  if ((avg) == 0)                       \
+   (avg) = (val) << 4;                  \
+  else                                  \
    (avg) = ((val) + (15 * (avg))) >> 4;
 
 /* The number RTCP intervals after which to timeout entries in the
@@ -824,9 +824,9 @@ rtp_session_get_rtcp_fraction (RTPSession * sess)
  * rtp_session_set_sdes_string:
  * @sess: an #RTPSession
  * @type: the type of the SDES item
- * @item: a null-terminated string to set. 
+ * @item: a null-terminated string to set.
  *
- * Store an SDES item of @type in @sess. 
+ * Store an SDES item of @type in @sess.
  *
  * Returns: %FALSE if the data was unchanged @type is invalid.
  */
@@ -850,7 +850,7 @@ rtp_session_set_sdes_string (RTPSession * sess, GstRTCPSDESType type,
  * @sess: an #RTPSession
  * @type: the type of the SDES item
  *
- * Get the SDES item of @type from @sess. 
+ * Get the SDES item of @type from @sess.
  *
  * Returns: a null-terminated copy of the SDES item or NULL when @type was not
  * valid. g_free() after usage.
@@ -1182,7 +1182,7 @@ rtp_session_set_internal_ssrc (RTPSession * sess, guint32 ssrc)
  *
  * Get the internal SSRC of @sess.
  *
- * Returns: The SSRC of the session. 
+ * Returns: The SSRC of the session.
  */
 guint32
 rtp_session_get_internal_ssrc (RTPSession * sess)
