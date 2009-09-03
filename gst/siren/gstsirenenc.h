@@ -52,8 +52,9 @@ struct _GstSirenEnc
 
   /* protected by the stream lock */
   SirenEncoder encoder;
-  /* protected by the object lock */
   GstAdapter *adapter;
+
+  gboolean discont;
 
   GstPad *srcpad;
   GstPad *sinkpad;
