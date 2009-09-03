@@ -42,17 +42,6 @@ G_BEGIN_DECLS
 typedef struct _GstDshowVideoSrc GstDshowVideoSrc;
 typedef struct _GstDshowVideoSrcClass GstDshowVideoSrcClass;
 
-/* video default properties associated to a video format (YUY2, I420, RGB24 ...) */
-typedef struct _GstCaptureVideoDefault
-{
-  gint defaultWidth;
-  gint defaultHeight;
-  gint defaultFPS;
-
-  gint granularityWidth; //will be removed when GST_TYPE_INT_RANGE_STEP exits
-  gint granularityHeight; //will be removed when GST_TYPE_INT_RANGE_STEP exits
-
-} GstCaptureVideoDefault;
 
 struct _GstDshowVideoSrc
 {

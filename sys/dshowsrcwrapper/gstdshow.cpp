@@ -321,3 +321,59 @@ gst_dshow_show_propertypage (IBaseFilter *base_filter)
   }
   return ret;
 }
+
+GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
+  const VIDEO_STREAM_CONFIG_CAPS * vscc, const VIDEOINFOHEADER *video_info, 
+  GstCaptureVideoDefault *video_default)
+{
+  GstCaps *video_caps = NULL;
+  GstStructure *video_structure = NULL;
+  
+  video_default->defaultWidth = video_info->bmiHeader.biWidth;
+  video_default->defaultHeight = video_info->bmiHeader.biHeight;
+  video_default->defaultFPS = (gint) (10000000 / video_info->AvgTimePerFrame);
+  video_default->granularityWidth = vscc->OutputGranularityX;
+  video_default->granularityHeight = vscc->OutputGranularityY;
+
+  /* raw video format */
+  switch (video_format) {
+    case GST_VIDEO_FORMAT_BGR:
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_BGR);
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("I420"));
+    default:
+      break;
+  }
+
+  /* other video format */
+  if (!video_caps){
+    if (g_strcasecmp (name, "video/x-dv, systemstream=FALSE") == 0) {
+      video_caps = gst_caps_new_simple ("video/x-dv", 
+        "systemstream", G_TYPE_BOOLEAN, FALSE,
+        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
+        NULL);
+    } else if (g_strcasecmp (name, "video/x-dv, systemstream=TRUE") == 0) {
+      video_caps = gst_caps_new_simple ("video/x-dv", 
+        "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
+      return video_caps;
+    }
+  }
+
+  if (!video_caps)
+    return NULL;
+
+  video_structure = gst_caps_get_structure (video_caps, 0);
+
+  gst_structure_set (video_structure,
+      "width", GST_TYPE_INT_RANGE, vscc->MinOutputSize.cx, vscc->MaxOutputSize.cx,
+      "height", GST_TYPE_INT_RANGE, vscc->MinOutputSize.cy, vscc->MaxOutputSize.cy,
+      "framerate", GST_TYPE_FRACTION_RANGE, 
+          (gint) (10000000 / vscc->MaxFrameInterval), 1,
+          (gint) (10000000 / vscc->MinFrameInterval), 1,
+       NULL);
+
+  g_print ("caps are %s\n", gst_caps_to_string (video_caps));
+
+  return video_caps;
+}

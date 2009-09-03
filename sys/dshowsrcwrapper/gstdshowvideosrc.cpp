@@ -924,21 +924,9 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
 
       /* I420 */
       if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_I420, FORMAT_VideoInfo)) {
-        video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
-        video_default->defaultWidth = video_info->bmiHeader.biWidth;
-        video_default->defaultHeight = video_info->bmiHeader.biHeight;
-        video_default->defaultFPS = (int) (10000000 / video_info->AvgTimePerFrame);
-        video_default->granularityWidth = vscc.OutputGranularityX;
-        video_default->granularityHeight = vscc.OutputGranularityY;
-
-        mediacaps = gst_caps_new_simple ("video/x-raw-yuv",
-          "width", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cx, vscc.MaxOutputSize.cx,
-          "height", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cy, vscc.MaxOutputSize.cy,
-          "framerate", GST_TYPE_FRACTION_RANGE,
-          (int) (10000000 / vscc.MaxFrameInterval), 1,
-          (int) (10000000 / vscc.MinFrameInterval), 1,
-          "format", GST_TYPE_FOURCC, MAKEFOURCC ('I', '4', '2', '0'), NULL);
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_I420, NULL, &vscc, 
+          (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat, video_default);
 
         if (mediacaps) {
           src->pins_mediatypes =
@@ -955,27 +943,9 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
 
       /* BGR */
       if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_RGB24, FORMAT_VideoInfo)) {
-        video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
-        video_default->defaultWidth = video_info->bmiHeader.biWidth;
-        video_default->defaultHeight = video_info->bmiHeader.biHeight;
-        video_default->defaultFPS = (int) (10000000 / video_info->AvgTimePerFrame);
-        video_default->granularityWidth = vscc.OutputGranularityX;
-        video_default->granularityHeight = vscc.OutputGranularityY;
-
-        /* ffmpegcolorspace handles RGB24 in BIG_ENDIAN */
-        mediacaps = gst_caps_new_simple ("video/x-raw-rgb",
-          "bpp", G_TYPE_INT, 24,
-          "depth", G_TYPE_INT, 24,
-          "width", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cx, vscc.MaxOutputSize.cx,
-          "height", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cy, vscc.MaxOutputSize.cy,
-          "framerate", GST_TYPE_FRACTION_RANGE,
-          (int) (10000000 / vscc.MaxFrameInterval), 1,
-          (int) (10000000 / vscc.MinFrameInterval), 1,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-          "red_mask", G_TYPE_INT, 255,
-          "green_mask", G_TYPE_INT, 65280,
-          "blue_mask", G_TYPE_INT, 16711680, NULL);
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_BGR, NULL, &vscc, 
+          (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat, video_default);
 
         if (mediacaps) {
           src->pins_mediatypes =
@@ -992,22 +962,10 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
 
       /* DVSD */
       if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_VideoInfo)) {
-        video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
-
-        video_default->defaultWidth = video_info->bmiHeader.biWidth;
-        video_default->defaultHeight = video_info->bmiHeader.biHeight;
-        video_default->defaultFPS = (int) (10000000 / video_info->AvgTimePerFrame);
-        video_default->granularityWidth = vscc.OutputGranularityX;
-        video_default->granularityHeight = vscc.OutputGranularityY;
-
-        mediacaps = gst_caps_new_simple ("video/x-dv",
-          "systemstream", G_TYPE_BOOLEAN, FALSE,
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
-          "framerate", GST_TYPE_FRACTION_RANGE,
-          (int) (10000000 / vscc.MaxFrameInterval), 1,
-          (int) (10000000 / vscc.MinFrameInterval), 1,
-          "width", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cx, vscc.MaxOutputSize.cx,
-          "height", GST_TYPE_INT_RANGE, vscc.MinOutputSize.cy, vscc.MaxOutputSize.cy, NULL);
+        
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN,
+          "video/x-dv, systemstream=FALSE", &vscc, (VIDEOINFOHEADER *) 
+          pin_mediatype->mediatype->pbFormat, video_default);
 
         if (mediacaps) {
           src->pins_mediatypes =
@@ -1026,15 +984,12 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
       if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_DvInfo)) {
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
-        //No video size in caps when stream ? I do know if the following fields exist
-        video_default->defaultWidth = video_info->bmiHeader.biWidth;
-        video_default->defaultHeight = video_info->bmiHeader.biHeight;
-        video_default->defaultFPS = (int) (10000000 / video_info->AvgTimePerFrame);
-        video_default->granularityWidth = vscc.OutputGranularityX;
-        video_default->granularityHeight = vscc.OutputGranularityY;
-
-        mediacaps = gst_caps_new_simple ("video/x-dv",
-            "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
+        video_default->granularityWidth = 0;
+        video_default->granularityHeight = 0;
+        
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN,
+          "video/x-dv, systemstream=TRUE", &vscc, (VIDEOINFOHEADER *) 
+          pin_mediatype->mediatype->pbFormat, video_default);
 
         if (mediacaps) {
           src->pins_mediatypes =

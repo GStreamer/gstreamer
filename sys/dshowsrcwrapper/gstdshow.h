@@ -31,12 +31,26 @@
 #include <Rpc.h>
 
 #include <glib.h>
+#include <gst/gst.h>
+#include <gst/video/video.h>
 
 typedef struct _GstCapturePinMediaType
 {
   AM_MEDIA_TYPE *mediatype;
   IPin *capture_pin;
 } GstCapturePinMediaType;
+
+/* video default properties associated to a video format (YUY2, I420, RGB24 ...) */
+typedef struct _GstCaptureVideoDefault
+{
+  gint defaultWidth;
+  gint defaultHeight;
+  gint defaultFPS;
+
+  gint granularityWidth; //will be removed when GST_TYPE_INT_RANGE_STEP exits
+  gint granularityHeight; //will be removed when GST_TYPE_INT_RANGE_STEP exits
+
+} GstCaptureVideoDefault;
 
 #ifdef  __cplusplus
 extern "C" {
@@ -71,6 +85,12 @@ gchar *gst_dshow_getdevice_from_devicename (const GUID *device_category, gchar *
 
 /* show the capture filter property page (generally used to setup the device). the page is modal*/
 gboolean gst_dshow_show_propertypage (IBaseFilter *base_filter);
+
+/* transform a dshow video caps to a gstreamer video caps */ 
+GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
+  const VIDEO_STREAM_CONFIG_CAPS * vscc, const VIDEOINFOHEADER *video_info, 
+  GstCaptureVideoDefault *video_default);
+
 
 #ifdef  __cplusplus
 }
