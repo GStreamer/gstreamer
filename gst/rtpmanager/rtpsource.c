@@ -973,6 +973,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   GstFlowReturn result = GST_FLOW_OK;
   guint16 seqnr, udelta;
   RTPSourceStats *stats;
+  guint16 expected;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -995,8 +996,6 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
 
   /* if we are still on probation, check seqnum */
   if (src->probation) {
-    guint16 expected;
-
     expected = src->stats.max_seq + 1;
 
     /* when in probation, we require consecutive seqnums */
@@ -1022,10 +1021,8 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
         goto done;
       }
     } else {
-      GST_DEBUG ("probation: seqnr %d != expected %d", seqnr, expected);
-      src->probation = RTP_DEFAULT_PROBATION;
-      src->stats.max_seq = seqnr;
-      goto done;
+      /* unexpected seqnum in probation */
+      goto probation_seqnum;
     }
   } else if (udelta < RTP_MAX_DROPOUT) {
     /* in order, with permissible gap */
@@ -1074,6 +1071,14 @@ done:
 bad_sequence:
   {
     GST_WARNING ("unacceptable seqnum received");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
+probation_seqnum:
+  {
+    GST_WARNING ("probation: seqnr %d != expected %d", seqnr, expected);
+    src->probation = RTP_DEFAULT_PROBATION;
+    src->stats.max_seq = seqnr;
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
