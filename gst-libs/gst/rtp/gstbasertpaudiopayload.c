@@ -668,11 +668,19 @@ gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload *
        * output buffers containing the same RTP timestamp gap as the gap
        * between the GST timestamps. */
       if (timestamp > priv->last_timestamp) {
+        GstClockTime diff;
+        guint64 bytes;
         /* we're only going to apply a positive gap, otherwise we let the marker
          * bit do its thing. simply convert to bytes and add the the current
          * offset */
-        priv->offset +=
-            priv->time_to_bytes (payload, timestamp - priv->last_timestamp);
+        diff = timestamp - priv->last_timestamp;
+        bytes = priv->time_to_bytes (payload, diff);
+        priv->offset += bytes;
+
+        GST_DEBUG_OBJECT (payload,
+            "elapsed time %" GST_TIME_FORMAT ", bytes %" G_GUINT64_FORMAT
+            ", new offset %" G_GUINT64_FORMAT, GST_TIME_ARGS (diff), bytes,
+            priv->offset);
       }
     }
   }
