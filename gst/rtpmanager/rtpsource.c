@@ -101,8 +101,8 @@ rtp_source_class_init (RTPSourceClass * klass)
    * The current SDES items of the source. Returns a structure with the
    * following fields:
    *
-   *  'cname'    G_TYPE_STRING  : The canonical name 
-   *  'name'     G_TYPE_STRING  : The user name 
+   *  'cname'    G_TYPE_STRING  : The canonical name
+   *  'name'     G_TYPE_STRING  : The user name
    *  'email'    G_TYPE_STRING  : The user's electronic mail address
    *  'phone'    G_TYPE_STRING  : The user's phone number
    *  'location' G_TYPE_STRING  : The geographic user location
@@ -119,7 +119,7 @@ rtp_source_class_init (RTPSourceClass * klass)
    *
    * The statistics of the source. This property returns a GstStructure with
    * name application/x-rtp-source-stats with the following fields:
-   * 
+   *
    */
   g_object_class_install_property (gobject_class, PROP_STATS,
       g_param_spec_boxed ("stats", "Stats",
@@ -663,7 +663,7 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
  * @data: the SDES data
  * @len: the SDES length
  *
- * Store an SDES item of @type in @src. 
+ * Store an SDES item of @type in @src.
  *
  * Returns: %FALSE if the SDES item was unchanged or @type is unknown.
  */
@@ -763,7 +763,7 @@ rtp_source_get_sdes (RTPSource * src, GstRTCPSDESType type, guint8 ** data,
  * @src: an #RTPSource
  * @type: the type of the SDES item
  *
- * Get the SDES item of @type from @src. 
+ * Get the SDES item of @type from @src.
  *
  * Returns: a null-terminated copy of the SDES item or NULL when @type was not
  * valid or the SDES item was unset. g_free() after usage.
