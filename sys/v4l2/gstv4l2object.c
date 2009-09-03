@@ -724,7 +724,7 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
 {
   guint32 fourcc = fmt->pixelformat;
 #ifdef V4L2_FMT_FLAG_EMULATED
-  gboolean emulated = ((flags & V4L2_FMT_FLAG_EMULATED) != 0);
+  gboolean emulated = ((fmt->flags & V4L2_FMT_FLAG_EMULATED) != 0);
 #else
   gboolean emulated = FALSE;
 #endif
