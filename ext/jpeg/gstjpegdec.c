@@ -872,6 +872,18 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   }
   buf = NULL;
 
+  /* If we are non-packetized and know the total incoming size in bytes,
+   * just wait until we have enough before doing any processing. */
+
+  if (!dec->packetized && (dec->segment.format == GST_FORMAT_BYTES) &&
+      (dec->segment.stop != -1) &&
+      (GST_BUFFER_SIZE (dec->tempbuf) < dec->segment.stop)) {
+    /* We assume that non-packetized input in bytes is *one* single jpeg image */
+    GST_DEBUG ("Non-packetized mode. Got %d bytes, need %d",
+        GST_BUFFER_SIZE (dec->tempbuf), dec->segment.stop);
+    goto need_more_data;
+  }
+
   if (!gst_jpeg_dec_ensure_header (dec))
     goto need_more_data;
 
