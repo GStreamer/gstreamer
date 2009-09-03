@@ -151,6 +151,25 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="SetDefaultHandler">
+      <MemberSignature Language="C#" Value="public static Gst.GLib.LogFunc SetDefaultHandler (Gst.GLib.LogFunc log_func);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.GLib.LogFunc</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="log_func" Type="Gst.GLib.LogFunc" />
+      </Parameters>
+      <Docs>
+        <param name="log_func">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="SetLogHandler">
       <MemberSignature Language="C#" Value="public static uint SetLogHandler (string logDomain, Gst.GLib.LogLevelFlags flags, Gst.GLib.LogFunc logFunc);" />
       <MemberType>Method</MemberType>
