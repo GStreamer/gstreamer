@@ -198,7 +198,7 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
      *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      * |             MBZ               |          Frag_offset          |
-     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
     payload = gst_rtp_buffer_get_payload (outbuf);
     payload[0] = 0;
@@ -245,7 +245,7 @@ gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     rtpmpapay->duration = 0;
   }
 
-  /* get packet length of previous data and this new data, 
+  /* get packet length of previous data and this new data,
    * payload length includes a 4 byte header */
   packet_len = gst_rtp_buffer_calc_packet_len (4 + avail + size, 0, 0);
 
