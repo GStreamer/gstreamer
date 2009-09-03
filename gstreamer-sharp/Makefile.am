@@ -117,8 +117,8 @@ customs = 			\
 	ControlSource.custom	\
 	VideoUtil.custom
 
-plugin_csfiles = coreplugins/generated/*.cs \
-	baseplugins/generated/*.cs
+plugin_csfiles = $(builddir)/coreplugins/generated/*.cs \
+	$(builddir)/baseplugins/generated/*.cs
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 
@@ -147,12 +147,12 @@ generated-stamp: $(API) $(build_customs) $(overrides)
 	&& mv generated/ObjectManager.cs.tmp generated/ObjectManager.cs \
 	&& touch generated-stamp
 
-coreplugins/generated/*.cs: coreplugins/generated
-coreplugins/generated: $(API) coreplugins/*.metadata coreplugins/inspect/*.raw
+coreplugins/generated/*.cs: $(API) $(builddir)/coreplugins/generated
+coreplugins/generated: $(API) $(srcdir)/coreplugins/*.metadata $(srcdir)/coreplugins/inspect/*.raw
 	$(MAKE) -C coreplugins
 
-baseplugins/generated/*.cs: baseplugins/generated
-baseplugins/generated: $(API) baseplugins/*.custom baseplugins/*.metadata baseplugins/inspect/*.raw
+baseplugins/generated/*.cs: $(API) $(builddir)/baseplugins/generated
+baseplugins/generated: $(API) $(srcdir)/baseplugins/*.custom $(srcdir)/baseplugins/*.metadata $(srcdir)/baseplugins/inspect/*.raw
 	$(MAKE) -C baseplugins
 
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk

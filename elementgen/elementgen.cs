@@ -466,8 +466,8 @@ public class ElementGen {
   }
 
   public static int Main (string[] args) {
-    if (args.Length != 3) {
-      Console.Error.WriteLine ("Usage: element-gen --namespace=<namespace> --api=<api> --input=<in-filename>");
+    if (args.Length != 4) {
+      Console.Error.WriteLine ("Usage: element-gen --namespace=<namespace> --api=<api> --input=<in-filename> --customfile=<custom-file>");
       return -1;
     }
 
@@ -475,6 +475,8 @@ public class ElementGen {
     XmlDocument api_doc = new XmlDocument ();
     XmlDocument introspect_doc = new XmlDocument ();
     string filename = null;
+    string customfile = null;
+    StreamReader custom_code = null;
 
     foreach (string arg in args) {
 
@@ -482,13 +484,19 @@ public class ElementGen {
         filename = arg.Substring (8);
 
         try {
-          Stream stream = File.OpenRead (filename + ".xml");
+          Stream stream = File.OpenRead (filename);
           introspect_doc.Load (stream);
           stream.Close ();
         } catch (Exception e) {
           Console.Error.WriteLine ("Failed to load introspection XML:\n" + e.ToString ());
           return -2;
         }
+      } else if (arg.StartsWith ("--customfile=")) {
+        customfile = arg.Substring (13);
+
+        try {
+          custom_code = System.IO.File.OpenText (customfile);
+        } catch (Exception) { } // No custom file is OK
       } else if (arg.StartsWith ("--api=")) {
 
         string api_filename = arg.Substring (6);
@@ -524,11 +532,6 @@ public class ElementGen {
       Console.Error.WriteLine ("Failed to open output file:\n" + e.ToString ());
       return -2;
     }
-
-    StreamReader custom_code = null;
-    try {
-      custom_code = System.IO.File.OpenText (filename + ".custom");
-    } catch (Exception) {}  // No custom file is OK
 
     if (IsHidden (introspect_doc.DocumentElement))
       return 0;

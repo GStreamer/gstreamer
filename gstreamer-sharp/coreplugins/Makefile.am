@@ -1,16 +1,16 @@
 ELEMENTS = capsfilter fakesrc fakesink fdsrc fdsink filesrc filesink identity queue tee typefind multiqueue
 
 NAMESPACE = Gst.CorePlugins
-INSPECT_FILES = $(patsubst %,inspect/%.raw,$(ELEMENTS))
+INSPECT_FILES = $(patsubst %,$(srcdir)/inspect/%.raw,$(ELEMENTS))
 CUSTOM_FILES = 
-METADATA_FILES = typefind.metadata \
-		fakesrc.metadata \
-		fakesink.metadata \
-		identity.metadata
-CS_FILES = $(patsubst %,generated/%.cs,$(ELEMENTS))
-OTHER_CS_FILES = memindex.cs \
-	fileindex.cs
-XML_FILES = $(patsubst %,%.xml,$(ELEMENTS))
+METADATA_FILES = $(srcdir)/typefind.metadata \
+		$(srcdir)/fakesrc.metadata \
+		$(srcdir)/fakesink.metadata \
+		$(srcdir)/identity.metadata
+CS_FILES = $(patsubst %,$(builddir)/generated/%.cs,$(ELEMENTS))
+OTHER_CS_FILES = $(srcdir)/memindex.cs \
+	$(srcdir)/fileindex.cs
+XML_FILES = $(patsubst %,$(builddir)/%.xml,$(ELEMENTS))
 
 EXTRA_DIST = $(METADATA_FILES) $(CUSTOM_FILES) $(INSPECT_FILES) $(OTHER_CS_FILES)
 CLEANFILES = $(XML_FILES) $(CS_FILES)
@@ -22,15 +22,15 @@ inspect-%:
 all: $(XML_FILES) $(CS_FILES)
 	touch generated
 
-generated/%.cs: $(top_builddir)/elementgen/element-gen.exe $(srcdir)/../gstreamer-api.xml $(CUSTOM_FILES) %.xml
+generated/%.cs: $(top_builddir)/elementgen/element-gen.exe $(srcdir)/../gstreamer-api.xml $(CUSTOM_FILES) $(builddir)/%.xml
 	@mkdir -p generated
 	$(MONO) $(top_builddir)/elementgen/element-gen.exe --namespace=$(NAMESPACE) \
-		--api=$(srcdir)/../gstreamer-api.xml --input=$(patsubst generated/%.cs,%,$@) > $@
+		--api=$(srcdir)/../gstreamer-api.xml --input=$(patsubst generated/%.cs,$(builddir)/%.xml,$@) --customfile=$(patsubst generated/%.cs,$(srcdir)/%.custom,$@) > $@
 
-%.xml: $(top_builddir)/parser/gst-gapi-fixup.exe inspect/%.raw %.metadata
-	cp $(patsubst %.xml,inspect/%.raw,$@) $@
-	$(MONO) $(top_builddir)/parser/gst-gapi-fixup.exe --api=$@ --metadata=$(patsubst %.xml,%.metadata,$@)
+%.xml: $(top_builddir)/parser/gst-gapi-fixup.exe $(srcdir)/inspect/%.raw $(srcdir)/%.metadata
+	cp $(patsubst %.xml,$(srcdir)/inspect/%.raw,$@) $@
+	$(MONO) $(top_builddir)/parser/gst-gapi-fixup.exe --api=$@ --metadata=$(patsubst %.xml,$(srcdir)/%.metadata,$@)
 
-%.xml: $(top_builddir)/parser/gst-gapi-fixup.exe inspect/%.raw
-	cp $(patsubst %.xml,inspect/%.raw,$@) $@
+%.xml: $(top_builddir)/parser/gst-gapi-fixup.exe $(srcdir)/inspect/%.raw
+	cp $(patsubst %.xml,$(srcdir)/inspect/%.raw,$@) $@
 
