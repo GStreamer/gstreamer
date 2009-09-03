@@ -669,15 +669,19 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
           NULL);
       break;
     case ST_BD_AUDIO_AC3:
-      if (gst_mpeg_descriptor_find (stream->ES_info, DESC_DVB_AC3)) {
-        template = klass->audio_template;
-        name = g_strdup_printf ("audio_%04x", stream->PID);
-        caps = gst_caps_new_simple ("audio/x-ac3", NULL);
-      } else if (gst_mpeg_descriptor_find (stream->ES_info,
-              DESC_DVB_ENHANCED_AC3)) {
+      if (gst_mpeg_descriptor_find (stream->ES_info, DESC_DVB_ENHANCED_AC3)) {
         template = klass->audio_template;
         name = g_strdup_printf ("audio_%04x", stream->PID);
         caps = gst_caps_new_simple ("audio/x-eac3", NULL);
+      } else {
+        if (!gst_mpeg_descriptor_find (stream->ES_info, DESC_DVB_AC3)) {
+          GST_WARNING ("AC3 stream type found but no corresponding "
+              "descriptor to differentiate between AC3 and EAC3. "
+              "Assuming plain AC3.");
+        }
+        template = klass->audio_template;
+        name = g_strdup_printf ("audio_%04x", stream->PID);
+        caps = gst_caps_new_simple ("audio/x-ac3", NULL);
       }
       break;
     case ST_BD_AUDIO_EAC3:
