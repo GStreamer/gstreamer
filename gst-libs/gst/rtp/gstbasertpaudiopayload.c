@@ -258,10 +258,13 @@ gst_base_rtp_audio_payload_set_frame_options (GstBaseRTPAudioPayload
 {
   g_return_if_fail (basertpaudiopayload != NULL);
 
-  basertpaudiopayload->frame_size = frame_size;
   basertpaudiopayload->frame_duration = frame_duration;
+  basertpaudiopayload->frame_size = frame_size;
 
   gst_adapter_clear (basertpaudiopayload->priv->adapter);
+
+  GST_DEBUG_OBJECT (basertpaudiopayload, "frame set to %d ms and size %d",
+      frame_duration, frame_size);
 }
 
 /**
@@ -308,6 +311,9 @@ gst_base_rtp_audio_payload_set_samplebits_options (GstBaseRTPAudioPayload
   basertpaudiopayload->priv->fragment_size = fragment_size / 8;
 
   gst_adapter_clear (basertpaudiopayload->priv->adapter);
+
+  GST_DEBUG_OBJECT (basertpaudiopayload,
+      "Samplebits set to sample size %d bits", sample_size);
 }
 
 static void
@@ -514,16 +520,21 @@ static GstClockTime
 gst_base_rtp_audio_payload_get_frame_duration (GstBaseRTPAudioPayload *
     payload, guint64 bytes)
 {
-  return gst_util_uint64_scale (bytes, payload->frame_duration * GST_MSECOND,
-      payload->frame_size);
+  return (bytes / payload->frame_size) * (payload->frame_duration *
+      GST_MSECOND);
 }
 
 static guint32
 gst_base_rtp_audio_payload_get_frame_rtptime (GstBaseRTPAudioPayload * payload,
     guint64 bytes)
 {
-  return gst_util_uint64_scale (bytes, payload->frame_duration * GST_MSECOND,
-      payload->frame_size * GST_BASE_RTP_PAYLOAD_CAST (payload)->clock_rate);
+  GstClockTime duration;
+
+  duration =
+      (bytes / payload->frame_size) * (payload->frame_duration * GST_MSECOND);
+
+  return gst_util_uint64_scale_int (duration,
+      GST_BASE_RTP_PAYLOAD_CAST (payload)->clock_rate, GST_SECOND);
 }
 
 static gboolean
@@ -575,8 +586,8 @@ static GstClockTime
 gst_base_rtp_audio_payload_get_sample_duration (GstBaseRTPAudioPayload *
     payload, guint64 bytes)
 {
-  return (bytes * 8 * GST_SECOND) /
-      (GST_BASE_RTP_PAYLOAD (payload)->clock_rate * payload->sample_size);
+  return gst_util_uint64_scale (bytes * 8, GST_SECOND,
+      GST_BASE_RTP_PAYLOAD (payload)->clock_rate * payload->sample_size);
 }
 
 static guint32
