@@ -134,7 +134,7 @@ namespace GtkSharp.Generation {
 				sw.WriteLine ();
 				if (Access != "private") {
 					sw.WriteLine (indent + Access + " " + wrapped + " " + wrapped_name + " {");
-					sw.WriteLine (indent + "\tget { return " + table.FromNativeReturn (CType, Name) + "; }");
+					sw.WriteLine (indent + "\tget { return " + table.FromNative (CType, Name) + "; }");
 					sw.WriteLine (indent + "}");
 				}
 			} else if (IsPointer && CSType != "string") {

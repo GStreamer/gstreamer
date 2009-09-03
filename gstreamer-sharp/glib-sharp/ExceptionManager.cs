@@ -1,4 +1,4 @@
-// Gst.GLib.Application.cs - static Application class
+// GLib.Application.cs - static Application class
 //
 // Authors: Mike Kestner <mkestner@novell.com>
 //
@@ -53,7 +53,7 @@ namespace Gst.GLib {
 		{
 			if (UnhandledException == null) {
 				Console.Error.WriteLine ("Exception in Gtk# callback delegate");
-				Console.Error.WriteLine ("  Note: Applications can use Gst.GLib.ExceptionManager.UnhandledException to handle the exception.");
+				Console.Error.WriteLine ("  Note: Applications can use GLib.ExceptionManager.UnhandledException to handle the exception.");
 				Console.Error.WriteLine (e);
 				Console.Error.WriteLine (new System.Diagnostics.StackTrace (true));
 				Environment.Exit (1);

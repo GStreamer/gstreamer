@@ -112,7 +112,7 @@ namespace GtkSharp.Generation {
 			if (Elem.HasAttribute ("gtype")) {
 				sw.WriteLine ();
 				sw.WriteLine ("\tinternal class " + Name + "GType {");
-				sw.WriteLine ("\t\t[DllImport (\"" + LibraryName + "\")]");
+				sw.WriteLine ("\t\t[DllImport (\"" + LibraryName + "\", CallingConvention = GLib.Global.CallingConvention)]");
 				sw.WriteLine ("\t\tstatic extern IntPtr " + Elem.GetAttribute ("gtype") + " ();");
 				sw.WriteLine ();
 				sw.WriteLine ("\t\tpublic static Gst.GLib.GType GType {");

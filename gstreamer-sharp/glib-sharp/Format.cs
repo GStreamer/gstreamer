@@ -26,7 +26,7 @@ using System.Runtime.InteropServices;
 namespace Gst.GLib {
 #if GTK_SHARP_2_14
 	public class Format {
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_format_size_for_display (long size);
 		
 		static public string SizeForDisplay (long size)

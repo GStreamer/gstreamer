@@ -1,4 +1,4 @@
-// Gst.GLib.MainContext.cs - mainContext class implementation
+// GLib.MainContext.cs - mainContext class implementation
 //
 // Author: Radek Doulik <rodo@matfyz.cz>
 //
@@ -25,32 +25,143 @@ namespace Gst.GLib {
 	using System.Runtime.InteropServices;
 
         public class MainContext {
-		
-		[DllImport("libglib-2.0-0.dll")]
+		IntPtr handle;
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern IntPtr g_main_context_new ();
+
+		public MainContext ()
+		{
+			handle = g_main_context_new ();
+		}
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern void g_main_context_ref (IntPtr raw);
+
+		internal MainContext (IntPtr raw)
+		{
+			handle = raw;
+			g_main_context_ref (handle);
+		}
+
+		internal IntPtr Handle {
+			get {
+				return handle;
+			}
+		}
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern void g_main_context_unref (IntPtr raw);
+
+		~MainContext ()
+		{
+			g_main_context_unref (handle);
+			handle = IntPtr.Zero;
+		}
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern IntPtr g_main_context_default ();
+
+		public static MainContext Default {
+			get {
+				return new MainContext (g_main_context_default ());
+			}
+		}
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern IntPtr g_main_context_thread_default ();
+
+		public MainContext ThreadDefault {
+			get {
+				IntPtr raw = g_main_context_thread_default ();
+				// NULL is returned if the thread-default main context is the default context. We'd rather not adopt this strange bahaviour.
+				return raw == IntPtr.Zero ? Default : new MainContext (raw);
+			}
+		}
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern void g_main_context_push_thread_default (IntPtr raw);
+
+		public void PushThreadDefault ()
+		{
+			g_main_context_push_thread_default (handle);
+		}
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern void g_main_context_pop_thread_default (IntPtr raw);
+
+		public void PopThreadDefault ()
+		{
+			g_main_context_pop_thread_default (handle);
+		}
+
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern bool g_main_context_iteration (IntPtr raw, bool may_block);
+
+		public bool RunIteration (bool may_block)
+		{
+			return g_main_context_iteration (handle, may_block);
+		}
+
+		public bool RunIteration ()
+		{
+			return RunIteration (false);
+		}
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern bool g_main_context_pending (IntPtr raw);
+
+		public bool HasPendingEvents
+		{
+			get {
+				return g_main_context_pending (handle);
+			}
+		}
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern void g_main_context_wakeup (IntPtr raw);
+
+		public void Wakeup ()
+		{
+			g_main_context_wakeup (handle);
+		}
+
+
+		public override bool Equals (object o)
+		{
+			if (!(o is MainContext))
+				return false;
+
+			return Handle == (o as MainContext).Handle;
+		}
+
+		public override int GetHashCode ()
+		{
+			return Handle.GetHashCode ();
+		}
+
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern int g_main_depth ();
 		public static int Depth {
 			get { return g_main_depth (); }
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
-		static extern bool g_main_context_iteration (IntPtr Raw, bool MayBlock);
 
 		public static bool Iteration ()
 		{
-			return g_main_context_iteration (IntPtr.Zero, false);
+			return Iteration (false);
 		}
 
-		public static bool Iteration (bool MayBlock)
+		public static bool Iteration (bool may_block)
 		{
-			return g_main_context_iteration (IntPtr.Zero, MayBlock);
+			return Default.RunIteration (may_block);
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
-		static extern bool g_main_context_pending (IntPtr Raw);
-		
 		public static bool Pending ()
 		{
-			return g_main_context_pending (IntPtr.Zero);
+			return Default.HasPendingEvents;
 		}
 	}
 }

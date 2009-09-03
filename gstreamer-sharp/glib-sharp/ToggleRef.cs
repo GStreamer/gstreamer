@@ -1,4 +1,4 @@
-// Gst.GLib.ToggleRef.cs - GLib ToggleRef class implementation
+// GLib.ToggleRef.cs - GLib ToggleRef class implementation
 //
 // Author: Mike Kestner <mkestner@novell.com>
 //
@@ -33,7 +33,7 @@ namespace Gst.GLib {
 		GCHandle gch;
 		Hashtable signals;
 
-		public ToggleRef (Gst.GLib.Object target)
+		public ToggleRef (GLib.Object target)
 		{
 			handle = target.Handle;
 			gch = GCHandle.Alloc (this);
@@ -67,15 +67,15 @@ namespace Gst.GLib {
 			}
 		}
 
-		public Gst.GLib.Object Target {
+		public GLib.Object Target {
 			get {
 				if (reference == null)
 					return null;
-				else if (reference is Gst.GLib.Object)
-					return reference as Gst.GLib.Object;
+				else if (reference is GLib.Object)
+					return reference as GLib.Object;
 
 				WeakReference weak = reference as WeakReference;
-				return weak.Target as Gst.GLib.Object;
+				return weak.Target as GLib.Object;
 			}
 		}
 
@@ -111,7 +111,7 @@ namespace Gst.GLib {
 
 		void Toggle (bool is_last_ref)
 		{
-			if (is_last_ref && reference is Gst.GLib.Object)
+			if (is_last_ref && reference is GLib.Object)
 				reference = new WeakReference (reference);
 			else if (!is_last_ref && reference is WeakReference) {
 				WeakReference weak = reference as WeakReference;
@@ -120,7 +120,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[UnmanagedFunctionPointer (Global.CallingConvention)]
 		delegate void ToggleNotifyHandler (IntPtr data, IntPtr handle, bool is_last_ref);
 
 		static void RefToggled (IntPtr data, IntPtr handle, bool is_last_ref)
@@ -143,16 +143,16 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_object_add_toggle_ref (IntPtr raw, ToggleNotifyHandler notify_cb, IntPtr data);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_object_remove_toggle_ref (IntPtr raw, ToggleNotifyHandler notify_cb, IntPtr data);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_object_ref (IntPtr raw);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_object_unref (IntPtr raw);
 
 	}

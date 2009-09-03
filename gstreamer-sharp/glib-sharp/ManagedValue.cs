@@ -1,4 +1,4 @@
-// Gst.GLib.ManagedValue.cs : Managed types boxer
+// GLib.ManagedValue.cs : Managed types boxer
 //
 // Author: Rachel Hestilow <hestilow@ximian.com>
 //
@@ -58,16 +58,16 @@ namespace Gst.GLib {
 			}
 		}
 
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[UnmanagedFunctionPointer (Global.CallingConvention)]
 		delegate IntPtr CopyFunc (IntPtr gch);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[UnmanagedFunctionPointer (Global.CallingConvention)]
 		delegate void FreeFunc (IntPtr gch);
 		
 		static CopyFunc copy;
 		static FreeFunc free;
 		static GType boxed_type = GType.Invalid;
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_boxed_type_register_static (IntPtr typename, CopyFunc copy_func, FreeFunc free_func);
 		
 		public static GType GType {
@@ -77,7 +77,7 @@ namespace Gst.GLib {
 					free = new FreeFunc (Free);
 				
 					IntPtr name = Marshaller.StringToPtrGStrdup ("GstGLibSharpValue");
-					boxed_type = new Gst.GLib.GType (g_boxed_type_register_static (name, copy, free));
+					boxed_type = new GLib.GType (g_boxed_type_register_static (name, copy, free));
 					Marshaller.Free (name);
 				}
 

@@ -29,7 +29,7 @@ namespace Gst.GLib {
 
 		private Marshaller () {}
 		
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_free (IntPtr mem);
 
 		public static void Free (IntPtr ptr)
@@ -46,7 +46,7 @@ namespace Gst.GLib {
 				g_free (ptrs [i]);
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_filename_to_utf8 (IntPtr mem, int len, IntPtr read, out IntPtr written, out IntPtr error);
 
 		public static string FilenamePtrToString (IntPtr ptr) 
@@ -56,7 +56,7 @@ namespace Gst.GLib {
 			IntPtr dummy, error;
 			IntPtr utf8 = g_filename_to_utf8 (ptr, -1, IntPtr.Zero, out dummy, out error);
 			if (error != IntPtr.Zero)
-				throw new Gst.GLib.GException (error);
+				throw new GLib.GException (error);
 			return Utf8PtrToString (utf8);
 		}
 
@@ -114,7 +114,7 @@ namespace Gst.GLib {
 			return ret;
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_filename_from_utf8 (IntPtr mem, int len, IntPtr read, out IntPtr written, out IntPtr error);
 
 		public static IntPtr StringToFilenamePtr (string str) 
@@ -161,7 +161,7 @@ namespace Gst.GLib {
 			return result;
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_strfreev (IntPtr mem);
 
 		public static void StrFreeV (IntPtr null_term_array)
@@ -200,9 +200,9 @@ namespace Gst.GLib {
 			string[] members = new string[count];
 			for (int i = 0; i < count; ++i) {
 				IntPtr s = Marshal.ReadIntPtr (string_array, i * IntPtr.Size);
-				members[i] = Gst.GLib.Marshaller.PtrToStringGFree (s);
+				members[i] = GLib.Marshaller.PtrToStringGFree (s);
 			}
-			Gst.GLib.Marshaller.Free (string_array);
+			GLib.Marshaller.Free (string_array);
 			return members;
 		}
 
@@ -215,7 +215,7 @@ namespace Gst.GLib {
 		// transparently, since we need to alloc buffers of
 		// [native pointer size] * [count] bytes.
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_malloc(UIntPtr size);
 
 		public static IntPtr Malloc (ulong size)
@@ -262,7 +262,7 @@ namespace Gst.GLib {
 			return buf;
 		}
 
-		[Obsolete ("Use Gst.GLib.Argv instead to avoid leaks.")]
+		[Obsolete ("Use GLib.Argv instead to avoid leaks.")]
 		public static IntPtr ArgvToArrayPtr (string[] args)
 		{
 			if (args.Length == 0)
@@ -303,7 +303,7 @@ namespace Gst.GLib {
 			return args;
 		}		
 
-		[Obsolete ("Use Gst.GLib.Argv instead to avoid leaks.")]
+		[Obsolete ("Use GLib.Argv instead to avoid leaks.")]
 		public static string[] ArrayPtrToArgv (IntPtr array, int argc)
 		{
 			if (argc == 0)
@@ -328,10 +328,10 @@ namespace Gst.GLib {
 			return local_epoch.AddSeconds (time_t.ToInt64 () + utc_offset);
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_malloc0 (UIntPtr size);
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern int g_unichar_to_utf8 (uint c, IntPtr buf);
 
 		public static char GUnicharToChar (uint ucs4_char)
@@ -356,7 +356,7 @@ namespace Gst.GLib {
 			return PtrToStringGFree (buf);
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_utf16_to_ucs4 (ref ushort c, IntPtr len, IntPtr d1, IntPtr d2, IntPtr d3);
 
 		public static uint CharToGUnichar (char c)
@@ -379,10 +379,10 @@ namespace Gst.GLib {
 		{
 			Type array_type = elem_type == typeof (ListBase.FilenameString) ? typeof (string) : elem_type;
 			ListBase list;
-			if (list_type == typeof(Gst.GLib.List))
-				list = new Gst.GLib.List (list_ptr, elem_type, owned, elements_owned);
+			if (list_type == typeof(GLib.List))
+				list = new GLib.List (list_ptr, elem_type, owned, elements_owned);
 			else
-				list = new Gst.GLib.SList (list_ptr, elem_type, owned, elements_owned);
+				list = new GLib.SList (list_ptr, elem_type, owned, elements_owned);
 
 			using (list)
 				return ListToArray (list, array_type);
@@ -390,7 +390,7 @@ namespace Gst.GLib {
 
 		public static Array PtrArrayToArray (IntPtr list_ptr, bool owned, bool elements_owned, Type elem_type)
 		{
-			Gst.GLib.PtrArray array = new Gst.GLib.PtrArray (list_ptr, elem_type, owned, elements_owned);
+			GLib.PtrArray array = new GLib.PtrArray (list_ptr, elem_type, owned, elements_owned);
 			Array ret = Array.CreateInstance (elem_type, array.Count);
 			array.CopyTo (ret, 0);
 			array.Dispose ();
@@ -403,7 +403,7 @@ namespace Gst.GLib {
 			if (list.Count > 0)
 				list.CopyTo (result, 0);
 
-			if (type.IsSubclassOf (typeof (Gst.GLib.Opaque)))
+			if (type.IsSubclassOf (typeof (GLib.Opaque)))
 				list.elements_owned = false;
 
 			return result;

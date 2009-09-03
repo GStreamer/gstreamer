@@ -1,4 +1,4 @@
-// Gst.GLib.Source.cs - Source class implementation
+// GLib.Source.cs - Source class implementation
 //
 // Author: Duncan Mak  <duncan@ximian.com>
 //
@@ -49,7 +49,7 @@ namespace Gst.GLib {
 		
 		internal static Hashtable source_handlers = new Hashtable ();
 		
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern bool g_source_remove (uint tag);
 
 		public static bool Remove (uint tag)

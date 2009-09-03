@@ -1,4 +1,4 @@
-// Gst.GLib.Type.cs - GLib GType class implementation
+// GLib.Type.cs - GLib GType class implementation
 //
 // Author: Mike Kestner <mkestner@speakeasy.net>
 //
@@ -29,7 +29,7 @@ namespace Gst.GLib {
 	using System.Runtime.InteropServices;
 	using System.Text;
 
-	public delegate System.Type TypeResolutionHandler (Gst.GLib.GType gtype, string gtype_name);
+	public delegate System.Type TypeResolutionHandler (GLib.GType gtype, string gtype_name);
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct GType {
@@ -103,8 +103,8 @@ namespace Gst.GLib {
 
 		static GType ()
 		{
-			if (!Gst.GLib.Thread.Supported)
-				Gst.GLib.Thread.Init ();
+			if (!GLib.Thread.Supported)
+				GLib.Thread.Init ();
 
 			g_type_init ();
 
@@ -119,7 +119,7 @@ namespace Gst.GLib {
 			Register (GType.Double, typeof (double));
 			Register (GType.String, typeof (string));
 			Register (GType.Pointer, typeof (IntPtr));
-			Register (GType.Object, typeof (Gst.GLib.Object));
+			Register (GType.Object, typeof (GLib.Object));
 			Register (GType.Pointer, typeof (IntPtr));
 
 			// One-way mapping
@@ -135,8 +135,8 @@ namespace Gst.GLib {
 					return (GType)gtypes[type];
 			}
 
-			if (type.IsSubclassOf (typeof (Gst.GLib.Object))) {
-				gtype = Gst.GLib.Object.LookupGType (type);
+			if (type.IsSubclassOf (typeof (GLib.Object))) {
+				gtype = GLib.Object.LookupGType (type);
 				Register (gtype, type);
 				return gtype;
 			}
@@ -148,7 +148,7 @@ namespace Gst.GLib {
 				GTypeAttribute gattr = (GTypeAttribute)Attribute.GetCustomAttribute (type, typeof (GTypeAttribute), false);
 				pi = gattr.WrapperType.GetProperty ("GType", BindingFlags.Public | BindingFlags.Static);
 				gtype = (GType) pi.GetValue (null, null);
-			} else if (type.IsSubclassOf (typeof (Gst.GLib.Opaque)))
+			} else if (type.IsSubclassOf (typeof (GLib.Opaque)))
 				gtype = GType.Pointer;
 			else
 				gtype = ManagedValue.GType;
@@ -162,7 +162,7 @@ namespace Gst.GLib {
 			for (int i = 1; i < cname.Length; i++) {
 				if (System.Char.IsUpper (cname[i])) {
 					if (i == 1 && cname [0] == 'G')
-						return "Gst.GLib." + cname.Substring (1);
+						return "GLib." + cname.Substring (1);
 					else
 						return cname.Substring (0, i) + "." + cname.Substring (i);
 				}
@@ -193,7 +193,7 @@ namespace Gst.GLib {
 			string native_name = Marshaller.Utf8PtrToString (g_type_name (typeid));
 
 			if (ResolveType != null) {
-				Gst.GLib.GType gt = new Gst.GLib.GType (typeid);
+				GLib.GType gt = new GLib.GType (typeid);
 
 				Delegate[] invocation_list = ResolveType.GetInvocationList ();
 				foreach (Delegate d in invocation_list) {
@@ -285,41 +285,33 @@ namespace Gst.GLib {
 			return Marshaller.Utf8PtrToString (g_type_name (val));
 		}
 
-		public IntPtr ClassPtr {
-			get {
-				IntPtr klass = g_type_class_peek (val);
-				if (klass == IntPtr.Zero)
-					klass = g_type_class_ref (val);
-				return klass;
-			}
+		public IntPtr GetClassPtr ()
+		{
+			IntPtr klass = g_type_class_peek (val);
+			if (klass == IntPtr.Zero)
+				klass = g_type_class_ref (val);
+			return klass;
 		}
 
-		public GType BaseType {
-			get {
-				IntPtr parent = g_type_parent (this.Val);
-				if (parent == IntPtr.Zero)
-					return GType.None;
-				else
-					return new GType (parent);
-			}
+		public GType GetBaseType ()
+		{
+			IntPtr parent = g_type_parent (this.Val);
+			return parent == IntPtr.Zero ? GType.None : new GType (parent);
 		}
 
-		public GType ThresholdType {
-			get {
-				Gst.GLib.GType curr_type = this;
-				while (curr_type.ToString ().StartsWith ("__gtksharp_")) {
-					curr_type = curr_type.BaseType;
-				}
-				return curr_type;
-			}
+		public GType GetThresholdType ()
+		{
+			GType curr_type = this;
+			while (curr_type.ToString ().StartsWith ("__gtksharp_"))
+				curr_type = curr_type.GetBaseType ();
+			return curr_type;
 		}
 
-		public uint ClassSize {
-			get {
-				GTypeQuery query;
-				g_type_query (this.Val, out query);
-				return query.class_size;
-			}
+		public uint GetClassSize ()
+		{
+			GTypeQuery query;
+			g_type_query (this.Val, out query);
+			return query.class_size;
 		}
 
 		internal void EnsureClass ()
@@ -357,14 +349,14 @@ namespace Gst.GLib {
 		{
 			GType parent_gtype = LookupGObjectType (t.BaseType);
 			string name = BuildEscapedName (t);
-			IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
 			GTypeQuery query;
 			g_type_query (parent_gtype.Val, out query);
 			GTypeInfo info = new GTypeInfo ();
 			info.class_size = (ushort) query.class_size;
 			info.instance_size = (ushort) query.instance_size;
 			GType gtype = new GType (g_type_register_static (parent_gtype.Val, native_name, ref info, 0));
-			Gst.GLib.Marshaller.Free (native_name);
+			GLib.Marshaller.Free (native_name);
 			Register (gtype, t);
 			return gtype;
 		}
@@ -380,7 +372,7 @@ namespace Gst.GLib {
 			if (pi != null)
 				return (GType) pi.GetValue (null, null);
 			
-			return Gst.GLib.Object.RegisterGType (t);
+			return GLib.Object.RegisterGType (t);
 		}
 
 		internal static IntPtr ValFromInstancePtr (IntPtr handle)
@@ -404,31 +396,31 @@ namespace Gst.GLib {
 			return GType.Is (ValFromInstancePtr (raw), this);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_type_class_peek (IntPtr gtype);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_type_class_ref (IntPtr gtype);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_type_from_name (string name);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_type_init ();
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_type_name (IntPtr raw);
 		
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_type_parent (IntPtr type);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_type_query (IntPtr type, out GTypeQuery query);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_type_register_static (IntPtr parent, IntPtr name, ref GTypeInfo info, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern bool g_type_is_a (IntPtr type, IntPtr is_a_type);
 	}
 }

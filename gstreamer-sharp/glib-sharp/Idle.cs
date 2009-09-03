@@ -1,4 +1,4 @@
-// Gst.GLib.Idle.cs - Idle class implementation
+// GLib.Idle.cs - Idle class implementation
 //
 // Author(s):
 //	Mike Kestner <mkestner@speakeasy.net>
@@ -34,7 +34,7 @@ namespace Gst.GLib {
 
 	public class Idle {
 
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[UnmanagedFunctionPointer (Global.CallingConvention)]
 		delegate bool IdleHandlerInternal ();
 
 
@@ -65,7 +65,7 @@ namespace Gst.GLib {
 		{
 		}
 		
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern uint g_idle_add (IdleHandlerInternal d, IntPtr data);
 
 		public static uint Add (IdleHandler hndlr)
@@ -78,7 +78,7 @@ namespace Gst.GLib {
 			return p.ID;
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern uint g_idle_add_full (int priority, IdleHandlerInternal d, IntPtr data, DestroyNotify notify);
 
 		public static uint Add (IdleHandler hndlr, Priority priority)
@@ -91,7 +91,7 @@ namespace Gst.GLib {
 			return p.ID;
 		}
 		
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern bool g_source_remove_by_funcs_user_data (Delegate d, IntPtr data);
                                                                                 
 		public static void Remove (uint id)

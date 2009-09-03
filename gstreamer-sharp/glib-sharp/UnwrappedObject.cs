@@ -24,7 +24,7 @@ namespace Gst.GLib {
 	using System;
 	using System.Runtime.InteropServices;
 	
-	[Obsolete ("Replaced by direct object-type casts to/from Gst.GLib.Value")]
+	[Obsolete ("Replaced by direct object-type casts to/from GLib.Value")]
 	public class UnwrappedObject {
 		IntPtr obj;
 		

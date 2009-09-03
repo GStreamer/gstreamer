@@ -1,4 +1,4 @@
-// Gst.GLib.FileUtils.cs - GFileUtils class implementation
+// GLib.FileUtils.cs - GFileUtils class implementation
 //
 // Author: Martin Baulig <martin@gnome.org>
 //
@@ -27,7 +27,7 @@ namespace Gst.GLib {
 
 	public class FileUtils
 	{
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		extern static bool g_file_get_contents (IntPtr filename, out IntPtr contents, out int length, out IntPtr error);
 
 		public static string GetFileContents (string filename)

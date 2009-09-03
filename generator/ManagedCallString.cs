@@ -141,8 +141,10 @@ namespace GtkSharp.Generation {
 					continue;
 				else if (igen is StructBase || igen is ByRefGen)
 					ret += indent + String.Format ("if ({0} != IntPtr.Zero) System.Runtime.InteropServices.Marshal.StructureToPtr (my{0}, {0}, false);\n", p.Name);
+				else if (igen is IManualMarshaler)
+					ret += String.Format ("{0}{1} = {2};", indent, p.Name, (igen as IManualMarshaler).AllocNative ("my" + p.Name));
 				else
-					ret += indent + p.Name + " = " + igen.ToNativeReturn ("my" + p.Name) + ";\n";
+					ret += indent + p.Name + " = " + igen.CallByName ("my" + p.Name) + ";\n";
 			}
 
 			return ret;

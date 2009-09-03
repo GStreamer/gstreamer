@@ -32,7 +32,7 @@ namespace Gst.GLib {
 		static private ArrayList PendingFrees = new ArrayList ();
 		static private bool idle_queued = false;
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_value_array_new (uint n_preallocs);
 
 		public ValueArray (uint n_preallocs)
@@ -57,7 +57,7 @@ namespace Gst.GLib {
 			GC.SuppressFinalize (this);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_value_array_free (IntPtr raw);
 
 		void Dispose (bool disposing)
@@ -115,31 +115,31 @@ namespace Gst.GLib {
 			get { return Native.values; }
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
-		static extern void g_value_array_append (IntPtr raw, ref Gst.GLib.Value val);
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern void g_value_array_append (IntPtr raw, ref GLib.Value val);
 
-		public void Append (Gst.GLib.Value val)
+		public void Append (GLib.Value val)
 		{
 			g_value_array_append (Handle, ref val);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
-		static extern void g_value_array_insert (IntPtr raw, uint idx, ref Gst.GLib.Value val);
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern void g_value_array_insert (IntPtr raw, uint idx, ref GLib.Value val);
 
-		public void Insert (uint idx, Gst.GLib.Value val)
+		public void Insert (uint idx, GLib.Value val)
 		{
 			g_value_array_insert (Handle, idx, ref val);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
-		static extern void g_value_array_prepend (IntPtr raw, ref Gst.GLib.Value val);
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern void g_value_array_prepend (IntPtr raw, ref GLib.Value val);
 
-		public void Prepend (Gst.GLib.Value val)
+		public void Prepend (GLib.Value val)
 		{
 			g_value_array_prepend (Handle, ref val);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_value_array_remove (IntPtr raw, uint idx);
 
 		public void Remove (uint idx)
@@ -152,13 +152,13 @@ namespace Gst.GLib {
 			get { return (int) Native.n_values; }
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_value_array_get_nth (IntPtr raw, uint idx);
 
 		public object this [int index] { 
 			get { 
 				IntPtr raw_val = g_value_array_get_nth (Handle, (uint) index);
-				return Marshal.PtrToStructure (raw_val, typeof (Gst.GLib.Value));
+				return Marshal.PtrToStructure (raw_val, typeof (GLib.Value));
 			}
 		}
 
@@ -226,7 +226,7 @@ namespace Gst.GLib {
 			return new ListEnumerator (this);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_value_array_copy (IntPtr raw);
 
 		// ICloneable
@@ -235,12 +235,12 @@ namespace Gst.GLib {
 			return new ValueArray (g_value_array_copy (Handle));
 		}
 
-		[DllImport ("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_value_array_get_type ();
 
-		public static Gst.GLib.GType GType {
+		public static GLib.GType GType {
 			get {
-				return new Gst.GLib.GType (g_value_array_get_type ());
+				return new GLib.GType (g_value_array_get_type ());
 			}
 		}
 	}

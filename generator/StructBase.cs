@@ -160,7 +160,7 @@ namespace GtkSharp.Generation {
 				sw.WriteLine ("\t[Obsolete]");
 			sw.WriteLine ("\t[StructLayout(LayoutKind.Sequential)]");
 			string access = IsInternal ? "internal" : "public";
-			sw.WriteLine ("\t" + access + " struct " + Name + " {");
+			sw.WriteLine ("\t" + access + " partial struct " + Name + " {");
 			sw.WriteLine ();
 
 			need_read_native = false;

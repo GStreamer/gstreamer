@@ -215,7 +215,7 @@ namespace Gst {
       if (use_cache && class_structs.Contains (gtype))
         return (GstMiniObjectClass) class_structs [gtype];
       else {
-        IntPtr class_ptr = gtype.ClassPtr;
+        IntPtr class_ptr = gtype.GetClassPtr ();
         GstMiniObjectClass class_struct = (GstMiniObjectClass) Marshal.PtrToStructure (class_ptr, typeof (GstMiniObjectClass));
         if (use_cache)
           class_structs.Add (gtype, class_struct);
@@ -224,7 +224,7 @@ namespace Gst {
     }
 
     static void OverrideClassStruct (Gst.GLib.GType gtype, GstMiniObjectClass class_struct) {
-      IntPtr class_ptr = gtype.ClassPtr;
+      IntPtr class_ptr = gtype.GetClassPtr ();
       Marshal.StructureToPtr (class_struct, class_ptr, false);
     }
 

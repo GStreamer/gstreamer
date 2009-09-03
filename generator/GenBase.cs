@@ -72,12 +72,6 @@ namespace GtkSharp.Generation {
 			}
 		}
 
-		public virtual string MarshalReturnType { 
-			get {
-				return MarshalType;
-			}
-		}
-
 		public abstract string MarshalType { get; }
 
 		public string Name {
@@ -97,12 +91,6 @@ namespace GtkSharp.Generation {
 		public string QualifiedName {
 			get {
 				return NS + "." + Name;
-			}
-		}
-
-		public virtual string ToNativeReturnType { 
-			get {
-				return MarshalType;
 			}
 		}
 
@@ -129,16 +117,6 @@ namespace GtkSharp.Generation {
 		public abstract string CallByName (string var);
 
 		public abstract string FromNative (string var);
-
-		public virtual string FromNativeReturn (string var)
-		{
-			return FromNative (var);
-		}
-
-		public virtual string ToNativeReturn (string var)
-		{
-			return CallByName (var);
-		}
 
 		public abstract bool Validate ();
 

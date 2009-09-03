@@ -97,12 +97,6 @@ namespace GtkSharp.Generation {
 			}
 		}
 
-		private bool DisableGTypeCtor {
-			get {
-				return Elem.HasAttribute ("disable_gtype_ctor");
-			}
-		}
-
 		private class DirectoryInfo {
 			public string assembly_name;
 			public Hashtable objects;
@@ -156,7 +150,7 @@ namespace GtkSharp.Generation {
 				sw.WriteLine ("\t[Obsolete]");
 			foreach (string attr in custom_attrs)
 				sw.WriteLine ("\t" + attr);
-			sw.Write ("\t{0} {1}class " + Name, IsInternal ? "internal" : "public", IsAbstract ? "abstract " : "");
+			sw.Write ("\t{0} partial {1}class " + Name, IsInternal ? "internal" : "public", IsAbstract ? "abstract " : "");
 			string cs_parent = table.GetCSType(Elem.GetAttribute("parent"));
 			if (cs_parent != "") {
 				di.objects.Add (CName, QualifiedName);
@@ -254,10 +248,6 @@ namespace GtkSharp.Generation {
 			if (!Elem.HasAttribute("parent"))
 				return;
 
-			if (!DisableGTypeCtor) {
-				gen_info.Writer.WriteLine("\t\t[Obsolete]");
-				gen_info.Writer.WriteLine("\t\tprotected " + Name + "(Gst.GLib.GType gtype) : base(gtype) {}");
-			}
 			gen_info.Writer.WriteLine("\t\tpublic " + Name + "(IntPtr raw) : base(raw) {}");
 			if (ctors.Count == 0 && !DisableVoidCtor) {
 				gen_info.Writer.WriteLine();
@@ -312,7 +302,7 @@ namespace GtkSharp.Generation {
 			if (cs_parent == "")
 				sw.WriteLine ("\t\tstatic uint class_offset = 0;");
 			else
-				sw.WriteLine ("\t\tstatic uint class_offset = ((Gst.GLib.GType) typeof ({0})).ClassSize;", cs_parent);
+				sw.WriteLine ("\t\tstatic uint class_offset = ((Gst.GLib.GType) typeof ({0})).GetClassSize ();", cs_parent);
 			sw.WriteLine ("\t\tstatic Hashtable class_structs;");
 			sw.WriteLine ();
 			sw.WriteLine ("\t\tstatic {0} GetClassStruct (Gst.GLib.GType gtype, bool use_cache)", class_struct_name);
@@ -323,7 +313,7 @@ namespace GtkSharp.Generation {
 			sw.WriteLine ("\t\t\tif (use_cache && class_structs.Contains (gtype))");
 			sw.WriteLine ("\t\t\t\treturn ({0}) class_structs [gtype];", class_struct_name);
 			sw.WriteLine ("\t\t\telse {");
-			sw.WriteLine ("\t\t\t\tIntPtr class_ptr = new IntPtr (gtype.ClassPtr.ToInt64 () + class_offset);");
+			sw.WriteLine ("\t\t\t\tIntPtr class_ptr = new IntPtr (gtype.GetClassPtr ().ToInt64 () + class_offset);");
 			sw.WriteLine ("\t\t\t\t{0} class_struct = ({0}) Marshal.PtrToStructure (class_ptr, typeof ({0}));", class_struct_name);
 			sw.WriteLine ("\t\t\t\tif (use_cache)");
 			sw.WriteLine ("\t\t\t\t\tclass_structs.Add (gtype, class_struct);");
@@ -333,7 +323,7 @@ namespace GtkSharp.Generation {
 			sw.WriteLine ();
 			sw.WriteLine ("\t\tstatic void OverrideClassStruct (Gst.GLib.GType gtype, {0} class_struct)", class_struct_name);
 			sw.WriteLine ("\t\t{");
-			sw.WriteLine ("\t\t\tIntPtr class_ptr = new IntPtr (gtype.ClassPtr.ToInt64 () + class_offset);");
+			sw.WriteLine ("\t\t\tIntPtr class_ptr = new IntPtr (gtype.GetClassPtr ().ToInt64 () + class_offset);");
 			sw.WriteLine ("\t\t\tMarshal.StructureToPtr (class_struct, class_ptr, false);");
 			sw.WriteLine ("\t\t}");
 			sw.WriteLine ();

@@ -214,22 +214,6 @@ namespace GtkSharp.Generation {
 			return types [type];
 		}
 
-		public string FromNativeReturn(string c_type, string val)
-		{
-			IGeneratable gen = this[c_type];
-			if (gen == null)
-				return "";
-			return gen.FromNativeReturn (val);
-		}
-		
-		public string ToNativeReturn(string c_type, string val)
-		{
-			IGeneratable gen = this[c_type];
-			if (gen == null)
-				return "";
-			return gen.ToNativeReturn (val);
-		}
-
 		public string FromNative(string c_type, string val)
 		{
 			IGeneratable gen = this[c_type];
@@ -252,22 +236,6 @@ namespace GtkSharp.Generation {
 			if (gen == null)
 				return "";
 			return gen.Name;
-		}
-		
-		public string GetMarshalReturnType(string c_type)
-		{
-			IGeneratable gen = this[c_type];
-			if (gen == null)
-				return "";
-			return gen.MarshalReturnType;
-		}
-		
-		public string GetToNativeReturnType(string c_type)
-		{
-			IGeneratable gen = this[c_type];
-			if (gen == null)
-				return "";
-			return gen.ToNativeReturnType;
 		}
 		
 		public string GetMarshalType(string c_type)

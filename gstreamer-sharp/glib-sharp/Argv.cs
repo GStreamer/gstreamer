@@ -1,4 +1,4 @@
-// Gst.GLib.Argv.cs : Argv marshaling class
+// GLib.Argv.cs : Argv marshaling class
 //
 // Author: Mike Kestner  <mkestner@novell.com>
 //
@@ -30,10 +30,10 @@ namespace Gst.GLib {
 		IntPtr handle;
 		bool add_progname = false;
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_malloc(IntPtr size);
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_free (IntPtr mem);
 
 		~Argv ()

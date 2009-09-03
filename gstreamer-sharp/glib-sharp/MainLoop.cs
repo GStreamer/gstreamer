@@ -1,4 +1,4 @@
-// Gst.GLib.MainLoop.cs - g_main_loop class implementation
+// GLib.MainLoop.cs - g_main_loop class implementation
 //
 // Author: Jeroen Zwartepoorte <jeroen@xs4all.nl>
 //
@@ -25,15 +25,19 @@ namespace Gst.GLib {
 	public class MainLoop {
 		private IntPtr handle;
 	
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_main_loop_new (IntPtr context, bool isRunning);
 
-		public MainLoop ()
+		public MainLoop () : this (MainContext.Default) { }
+
+		public MainLoop (MainContext context) : this (context, false) { }
+
+		public MainLoop (MainContext context, bool is_running)
 		{
-			handle = g_main_loop_new (IntPtr.Zero, false);
+			handle = g_main_loop_new (context.Handle, is_running);
 		}
 		
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_main_loop_unref (IntPtr loop);
 
 		~MainLoop ()
@@ -42,7 +46,7 @@ namespace Gst.GLib {
 			handle = IntPtr.Zero;
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern bool g_main_loop_is_running (IntPtr loop);
 
 		public bool IsRunning {
@@ -51,7 +55,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_main_loop_run (IntPtr loop);
 
 		public void Run ()
@@ -59,12 +63,35 @@ namespace Gst.GLib {
 			g_main_loop_run (handle);
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_main_loop_quit (IntPtr loop);
 
 		public void Quit ()
 		{
 			g_main_loop_quit (handle);
+		}
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern IntPtr g_main_loop_get_context (IntPtr loop);
+
+		public MainContext Context {
+			get {
+				return new MainContext (g_main_loop_get_context (handle));
+			}
+		}
+
+
+		public override bool Equals (object o)
+		{
+			if (!(o is MainLoop))
+				return false;
+
+			return handle == (o as MainLoop).handle;
+		}
+
+		public override int GetHashCode ()
+		{
+			return handle.GetHashCode ();
 		}
 	}
 }

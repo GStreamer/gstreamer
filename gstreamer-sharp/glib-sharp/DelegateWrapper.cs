@@ -56,8 +56,8 @@ namespace Gst.GLib {
 				// currently only GObjects store
 				// callbacks over the long-term
 
-				if (o is Gst.GLib.Object) {
-					AddDestroyNotify ((Gst.GLib.Object) o);
+				if (o is GLib.Object) {
+					AddDestroyNotify ((GLib.Object) o);
 				}
 			} else {
 				// If o is null, we cannot ask for a destroy
@@ -69,13 +69,13 @@ namespace Gst.GLib {
 			}
 		}
 
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[UnmanagedFunctionPointer (Global.CallingConvention)]
 		private delegate void DestroyNotify (IntPtr data);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		private static extern void g_object_set_data_full (IntPtr obj, IntPtr name, IntPtr data, DestroyNotify destroy);
 		
-		private void AddDestroyNotify (Gst.GLib.Object o) {
+		private void AddDestroyNotify (GLib.Object o) {
 			// This is a bit of an ugly hack. There is no
 			// way of getting a destroy notification
 			// explicitly, so we set some data and ask

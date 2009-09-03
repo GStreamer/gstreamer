@@ -115,7 +115,7 @@ namespace GtkSharp.Generation {
 			if (getterName != null) {
 				sw.WriteLine (indent + "[DllImport (\"{0}\")]", gen_info.GluelibName);
 				sw.WriteLine (indent + "extern static {0} {1} ({2} raw);",
-					      table.GetMarshalReturnType (CType), getterName,
+					      table.GetMarshalType (CType), getterName,
 					      container_type.MarshalType);
 			}
 
@@ -165,7 +165,7 @@ namespace GtkSharp.Generation {
 			} else if (getterName != null) {
 				sw.WriteLine (indent + "\tget {");
 				container_type.Prepare (sw, indent + "\t\t");
-				sw.WriteLine (indent + "\t\t" + CSType + " result = " + table.FromNativeReturn (ctype, getterName + " (" + container_type.CallByName () + ")") + ";");
+				sw.WriteLine (indent + "\t\t" + CSType + " result = " + table.FromNative (ctype, getterName + " (" + container_type.CallByName () + ")") + ";");
 				container_type.Finish (sw, indent + "\t\t");
 				sw.WriteLine (indent + "\t\treturn result;");
 				sw.WriteLine (indent + "\t}");
@@ -176,12 +176,15 @@ namespace GtkSharp.Generation {
 					sw.WriteLine (indent + "\t\t\t" + CSType + "* raw_ptr = (" + CSType + "*)(((byte*)" + container_type.CallByName () + ") + " + offsetName + ");");
 					sw.WriteLine (indent + "\t\t\treturn *raw_ptr;");
 				} else {
-					sw.WriteLine (indent + "\t\t\t" + table.GetMarshalReturnType (CType) + "* raw_ptr = (" + table.GetMarshalReturnType (CType) + "*)(((byte*)" + container_type.CallByName () + ") + " + offsetName + ");");
-					sw.WriteLine (indent + "\t\t\treturn " + table.FromNativeReturn (ctype, "(*raw_ptr)") + ";");
+					sw.WriteLine (indent + "\t\t\t" + table.GetMarshalType (CType) + "* raw_ptr = (" + table.GetMarshalType (CType) + "*)(((byte*)" + container_type.CallByName () + ") + " + offsetName + ");");
+					sw.WriteLine (indent + "\t\t\treturn " + table.FromNative (ctype, "(*raw_ptr)") + ";");
 				}
 				sw.WriteLine (indent + "\t\t}");
 				sw.WriteLine (indent + "\t}");
 			}
+
+			IGeneratable gen = table [CType];
+			string to_native = (gen is IManualMarshaler) ? (gen as IManualMarshaler).AllocNative ("value") : gen.CallByName ("value");
 
 			if (Setter != null) {
 				sw.Write (indent + "\tset ");
@@ -190,7 +193,7 @@ namespace GtkSharp.Generation {
 			} else if (setterName != null) {
 				sw.WriteLine (indent + "\tset {");
 				container_type.Prepare (sw, indent + "\t\t");
-				sw.WriteLine (indent + "\t\t" + setterName + " (" + container_type.CallByName () + ", " + table.CallByName (ctype, "value") + ");");
+				sw.WriteLine (indent + "\t\t" + setterName + " (" + container_type.CallByName () + ", " + to_native + ");");
 				container_type.Finish (sw, indent + "\t\t");
 				sw.WriteLine (indent + "\t}");
 			} else if (Writable && offsetName != null) {
@@ -200,8 +203,8 @@ namespace GtkSharp.Generation {
 					sw.WriteLine (indent + "\t\t\t" + CSType + "* raw_ptr = (" + CSType + "*)(((byte*)" + container_type.CallByName () + ") + " + offsetName + ");");
 					sw.WriteLine (indent + "\t\t\t*raw_ptr = value;");
 				} else {
-					sw.WriteLine (indent + "\t\t\t" + table.GetMarshalReturnType (CType) + "* raw_ptr = (" + table.GetMarshalReturnType (CType) + "*)(((byte*)" + container_type.CallByName () + ") + " + offsetName + ");");
-					sw.WriteLine (indent + "\t\t\t*raw_ptr = " + table.ToNativeReturn (ctype, "value") + ";");
+					sw.WriteLine (indent + "\t\t\t" + table.GetMarshalType (CType) + "* raw_ptr = (" + table.GetMarshalType (CType) + "*)(((byte*)" + container_type.CallByName () + ") + " + offsetName + ");");
+					sw.WriteLine (indent + "\t\t\t*raw_ptr = " + to_native + ";");
 				}
 				sw.WriteLine (indent + "\t\t}");
 				sw.WriteLine (indent + "\t}");

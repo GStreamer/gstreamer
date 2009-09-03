@@ -73,7 +73,7 @@ namespace GtkSharp.Generation {
 			if (parms.Count > 0)
 				native_signature += parms.ImportSignature;
 
-			sw.WriteLine ("\t\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
+			sw.WriteLine ("\t\t[UnmanagedFunctionPointer (GLib.Global.CallingConvention)]");
 			sw.WriteLine ("\t\tdelegate {0} {1}NativeDelegate ({2});", retval.ToNativeType, this.Name, native_signature);
 			sw.WriteLine ();
 			sw.WriteLine ("\t\tstatic {0} {1}_cb ({2})", retval.ToNativeType, this.Name, native_signature);

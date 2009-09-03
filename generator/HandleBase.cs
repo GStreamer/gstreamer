@@ -58,16 +58,6 @@ namespace GtkSharp.Generation {
 			return FromNative (var, false);
 		}
 
-		public string FromNativeReturn (string var, bool owned)
-		{
-			return FromNative (var, owned);
-		}
-
-		public override string FromNativeReturn (string var)
-		{
-			return FromNativeReturn (var, false);
-		}
-
 		public void WriteAccessors (StreamWriter sw, string indent, string var)
 		{
 			sw.WriteLine (indent + "get {");

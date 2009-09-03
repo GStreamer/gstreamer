@@ -1,4 +1,4 @@
-// Gst.GLib.GString.cs : Marshaler for GStrings 
+// GLib.GString.cs : Marshaler for GStrings 
 //
 // Author: Mike Kestner  <mkestner@ximian.com>
 //
@@ -23,11 +23,11 @@ namespace Gst.GLib {
 	using System;
 	using System.Runtime.InteropServices;
 	
-	public class GString : Gst.GLib.IWrapper {
+	public class GString : GLib.IWrapper {
 
 		IntPtr handle;
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_string_free (IntPtr mem, bool free_segments);
 
 		~GString ()
@@ -35,7 +35,7 @@ namespace Gst.GLib {
 			g_string_free (handle, true);
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_string_new (IntPtr text);
 
 		public GString (string text) 

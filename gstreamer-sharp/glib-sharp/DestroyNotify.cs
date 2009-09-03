@@ -1,4 +1,4 @@
-// Gst.GLib.DestroyNotify.cs - internal DestroyNotify helper
+// GLib.DestroyNotify.cs - internal DestroyNotify helper
 //
 // Author: Mike Kestner <mkestner@novell.com>
 //
@@ -23,7 +23,7 @@ namespace Gst.GLib {
 	using System;
 	using System.Runtime.InteropServices;
 
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	[UnmanagedFunctionPointer (Global.CallingConvention)]
 	public delegate void DestroyNotify (IntPtr data);
 
 	public class DestroyHelper {

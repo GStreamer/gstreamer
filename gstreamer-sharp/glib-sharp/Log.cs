@@ -58,15 +58,73 @@ namespace Gst.GLib {
 
 	public class Log {
 
-		static Hashtable handlers;
+		[UnmanagedFunctionPointer (Global.CallingConvention)]
+		delegate void LogFuncNative (IntPtr log_domain, LogLevelFlags flags, IntPtr message, IntPtr user_data);
+
+		static LogFuncNative native_handler;
+
+		static void NativeCallback (IntPtr log_domain_native, LogLevelFlags flags, IntPtr message_native, IntPtr user_data)
+		{
+			if (user_data == IntPtr.Zero)
+				return;
+			string log_domain = Marshaller.Utf8PtrToString (log_domain_native);
+			string message = Marshaller.Utf8PtrToString (message_native);
+			GCHandle gch = (GCHandle) user_data;
+			LogFunc func = gch.Target as LogFunc;
+			if (func != null)
+				func (log_domain, flags, message);
+		}
+
+		[UnmanagedFunctionPointer (Global.CallingConvention)]
+		delegate void PrintFuncNative (IntPtr message);
+
+		class PrintHelper {
+
+			PrintFuncNative native;
+			PrintFunc managed;
+
+			public PrintHelper (PrintFuncNative native)
+			{
+				this.native = native;
+			}
+
+			public PrintHelper (PrintFunc managed)
+			{
+				this.managed = managed;
+				GCHandle.Alloc (this);
+			}
+
+			void Callback (IntPtr nmessage)
+			{
+				string message = Marshaller.Utf8PtrToString (nmessage);
+				managed (message);
+			}
+
+			void Invoke (string message)
+			{
+				IntPtr nmessage = Marshaller.StringToPtrGStrdup (message);
+				native (nmessage);
+				Marshaller.Free (nmessage);
+			}
+
+			public PrintFuncNative Handler {
+				get { return new PrintFuncNative (Callback); }
+			}
+
+			public PrintFunc Invoker {
+				get { return new PrintFunc (Invoke); }
+			}
+		}
+
+		static System.Collections.Generic.Dictionary<uint, GCHandle> handlers;
 
 		static void EnsureHash ()
 		{
 			if (handlers == null)
-				handlers = new Hashtable ();
+				handlers = new System.Collections.Generic.Dictionary<uint, GCHandle> ();
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_logv (IntPtr log_domain, LogLevelFlags flags, IntPtr message);
 		
 		public void WriteLog (string logDomain, LogLevelFlags flags, string format, params object [] args)
@@ -78,57 +136,61 @@ namespace Gst.GLib {
 			Marshaller.Free (nmessage);
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
-		static extern uint g_log_set_handler (IntPtr log_domain, LogLevelFlags flags, LogFunc log_func, IntPtr user_data);
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern uint g_log_set_handler (IntPtr log_domain, LogLevelFlags flags, LogFuncNative log_func, IntPtr user_data);
 		
 		public static uint SetLogHandler (string logDomain, LogLevelFlags flags, LogFunc logFunc)
 		{
+			if (native_handler == null)
+				native_handler = new LogFuncNative (NativeCallback);
+
 			IntPtr ndom = Marshaller.StringToPtrGStrdup (logDomain);
-			uint result = g_log_set_handler (ndom, flags, logFunc, IntPtr.Zero);
+			GCHandle gch = GCHandle.Alloc (logFunc);
+			uint result = g_log_set_handler (ndom, flags, native_handler, (IntPtr) gch);
 			Marshaller.Free (ndom);
 			EnsureHash ();
-			handlers [result] = logFunc;
-
+			handlers [result] = gch;
 			return result;
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern uint g_log_remove_handler (IntPtr log_domain, uint handler_id);
 
 		public static void RemoveLogHandler (string logDomain, uint handlerID)
 		{
-			if (handlers != null && handlers.ContainsKey (handlerID))
+			if (handlers != null && handlers.ContainsKey (handlerID)) {
+				handlers [handlerID].Free ();
 				handlers.Remove (handlerID);
+			}
 			
 			IntPtr ndom = Marshaller.StringToPtrGStrdup (logDomain);
 			g_log_remove_handler (ndom, handlerID);
 			Marshaller.Free (ndom);
 		}
 
-
-		[DllImport("libglib-2.0-0.dll")]
-		static extern PrintFunc g_set_print_handler (PrintFunc handler);
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern PrintFuncNative g_set_print_handler (PrintFuncNative handler);
 
 		public static PrintFunc SetPrintHandler (PrintFunc handler)
 		{
-			EnsureHash ();
-			handlers ["PrintHandler"] = handler;
-
-			return g_set_print_handler (handler);
+			PrintHelper helper = new PrintHelper (handler);
+			PrintFuncNative prev = g_set_print_handler (helper.Handler);
+			helper = new PrintHelper (prev);
+			return helper.Invoker;
 		}
 		
-		[DllImport("libglib-2.0-0.dll")]
-		static extern PrintFunc g_set_printerr_handler (PrintFunc handler);
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern PrintFuncNative g_set_printerr_handler (PrintFuncNative handler);
 
 		public static PrintFunc SetPrintErrorHandler (PrintFunc handler)
 		{
-			EnsureHash ();
-			handlers ["PrintErrorHandler"] = handler;
-
-			return g_set_printerr_handler (handler);
+			PrintHelper helper = new PrintHelper (handler);
+			PrintFuncNative prev = g_set_printerr_handler (helper.Handler);
+			helper = new PrintHelper (prev);
+			return helper.Invoker;
 		}
 		
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_log_default_handler (IntPtr log_domain, LogLevelFlags log_level, IntPtr message, IntPtr unused_data);
 
 		public static void DefaultHandler (string logDomain, LogLevelFlags logLevel, string message)
@@ -141,7 +203,7 @@ namespace Gst.GLib {
 			Marshaller.Free (nmess);
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		extern static LogLevelFlags g_log_set_always_fatal (LogLevelFlags fatal_mask);
 		
 		public static LogLevelFlags SetAlwaysFatal (LogLevelFlags fatalMask)
@@ -149,7 +211,7 @@ namespace Gst.GLib {
 			return g_log_set_always_fatal (fatalMask);
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		extern static LogLevelFlags g_log_set_fatal_mask (IntPtr log_domain, LogLevelFlags fatal_mask);
 		
 		public static LogLevelFlags SetAlwaysFatal (string logDomain, LogLevelFlags fatalMask)
@@ -158,6 +220,44 @@ namespace Gst.GLib {
 			LogLevelFlags result = g_log_set_fatal_mask (ndom, fatalMask);
 			Marshaller.Free (ndom);
 			return result;
+		}
+
+		class Invoker {
+
+			LogFuncNative native;
+
+			public Invoker (LogFuncNative native)
+			{
+				this.native = native;
+			}
+
+			void Invoke (string log_domain, LogLevelFlags flags, string message)
+			{
+				IntPtr ndom = Marshaller.StringToPtrGStrdup (log_domain);
+				IntPtr nmess = Marshaller.StringToPtrGStrdup (message);
+				native (ndom, flags, nmess, IntPtr.Zero);
+				Marshaller.Free (ndom);
+				Marshaller.Free (nmess);
+			}
+
+			public LogFunc Handler {
+				get { return new LogFunc (Invoke); }
+			}
+		}
+
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		extern static LogFuncNative g_log_set_default_handler (LogFuncNative log_func, IntPtr user_data);
+		
+		public static LogFunc SetDefaultHandler (LogFunc log_func)
+		{
+			if (native_handler == null)
+				native_handler = new LogFuncNative (NativeCallback);
+
+			LogFuncNative prev = g_log_set_default_handler (native_handler, (IntPtr) GCHandle.Alloc (log_func));
+			if (prev == null)
+				return null;
+			Invoker invoker = new Invoker (prev);
+			return invoker.Handler;
 		}
 
 		/*

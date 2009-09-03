@@ -1,4 +1,4 @@
-// Gst.GLib.SignalCallback.cs - Signal callback base class implementation
+// GLib.SignalCallback.cs - Signal callback base class implementation
 //
 // Authors: Mike Kestner <mkestner@ximian.com>
 //
@@ -25,7 +25,7 @@ namespace Gst.GLib {
 	using System.Collections;
 	using System.Runtime.InteropServices;
 
-	[Obsolete ("Replaced by Gst.GLib.Signal.")]
+	[Obsolete ("Replaced by GLib.Signal.")]
 	public abstract class SignalCallback : IDisposable {
 
 		// A counter used to produce unique keys for instances.
@@ -35,13 +35,13 @@ namespace Gst.GLib {
 		protected static Hashtable _Instances = new Hashtable ();
 
 		// protected instance members
-		protected Gst.GLib.Object _obj;
+		protected GLib.Object _obj;
 		protected Delegate _handler;
 		protected int _key;
 		protected System.Type _argstype;
 		protected uint _HandlerID;
 
-		protected SignalCallback (Gst.GLib.Object obj, Delegate eh, System.Type argstype)
+		protected SignalCallback (GLib.Object obj, Delegate eh, System.Type argstype)
 		{
 			_key = _NextKey++;
 			_obj = obj;
@@ -60,7 +60,7 @@ namespace Gst.GLib {
 			_handler = Delegate.Remove (_handler, d);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern uint g_signal_connect_data(IntPtr obj, IntPtr name, Delegate cb, int key, IntPtr p, int flags);
 
 		protected void Connect (string name, Delegate cb, int flags)
@@ -70,10 +70,10 @@ namespace Gst.GLib {
 			Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_signal_handler_disconnect (IntPtr instance, uint handler);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern bool g_signal_handler_is_connected (IntPtr instance, uint handler);
 
 		protected void Disconnect ()

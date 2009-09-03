@@ -178,10 +178,12 @@ namespace GtkSharp.Generation {
 					} else
 						sw.WriteLine("\t\t\t\targs.Args[" + idx + "] = " + p.FromNative ("arg" + idx)  + ";");
 				}
-				if (igen is StructBase && p.PassAs == "ref")
+				if ((igen is StructBase || igen is ByRefGen) && p.PassAs != "")
 					finish += "\t\t\t\tif (arg" + idx + " != IntPtr.Zero) System.Runtime.InteropServices.Marshal.StructureToPtr (args.Args[" + idx + "], arg" + idx + ", false);\n";
+				else if (igen is IManualMarshaler && p.PassAs != "")
+					finish += String.Format ("\t\t\t\targ{0} = {1};\n", idx, (igen as IManualMarshaler).AllocNative ("args.Args[" + idx + "]"));
 				else if (p.PassAs != "")
-					finish += "\t\t\t\targ" + idx + " = " + igen.ToNativeReturn ("((" + p.CSType + ")args.Args[" + idx + "])") + ";\n";
+					finish += "\t\t\t\targ" + idx + " = " + igen.CallByName ("((" + p.CSType + ")args.Args[" + idx + "])") + ";\n";
 			}
 			return finish;
 		}
@@ -198,7 +200,7 @@ namespace GtkSharp.Generation {
 					sw.WriteLine ("\t\t\t\tif (args.RetVal == null)");
 					sw.WriteLine ("\t\t\t\t\treturn false;");
 				}
-				sw.WriteLine("\t\t\t\treturn " + SymbolTable.Table.ToNativeReturn (retval.CType, "((" + retval.CSType + ")args.RetVal)") + ";");
+				sw.WriteLine ("\t\t\t\treturn {0};", retval.ToNative (String.Format ("(({0}) args.RetVal)", retval.CSType)));
 			}
 			sw.WriteLine("\t\t\t} catch (Exception) {");
 			sw.WriteLine ("\t\t\t\tException ex = new Exception (\"args.RetVal or 'out' property unset or set to incorrect type in " + EventHandlerQualifiedName + " callback\");");
@@ -219,7 +221,7 @@ namespace GtkSharp.Generation {
 				native_signature += ", " + CallbackSig;
 			native_signature += ", IntPtr gch";
 
-			sw.WriteLine ("\t\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
+			sw.WriteLine ("\t\t[UnmanagedFunctionPointer (GLib.Global.CallingConvention)]");
 			sw.WriteLine ("\t\tdelegate {0} {1} ({2});", retval.ToNativeType, DelegateName, native_signature);
 			sw.WriteLine ();
 			sw.WriteLine ("\t\tstatic {0} {1} ({2})", retval.ToNativeType, CallbackName, native_signature);

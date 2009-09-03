@@ -32,7 +32,7 @@ namespace Gst.GLib {
 		internal bool elements_owned = false;
 		protected System.Type element_type = null;
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_ptr_array_sized_new (uint n_preallocs);
 
 		public PtrArray (uint n_preallocs, System.Type element_type, bool owned, bool elements_owned)
@@ -43,7 +43,7 @@ namespace Gst.GLib {
 			this.elements_owned = elements_owned;
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_ptr_array_new ();
 
 		public PtrArray (System.Type element_type, bool owned, bool elements_owned)
@@ -77,13 +77,13 @@ namespace Gst.GLib {
 			GC.SuppressFinalize (this);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_ptr_array_free (IntPtr raw, bool free_seg);
 
-		[DllImport ("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_object_unref (IntPtr item);
 
-		[DllImport ("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_free (IntPtr item);
 
 		void Dispose (bool disposing)
@@ -94,10 +94,10 @@ namespace Gst.GLib {
 			if (elements_owned) {
 				int count = Count;
 				for (uint i = 0; i < count; i++)
-					if (typeof (Gst.GLib.Object).IsAssignableFrom (element_type))
+					if (typeof (GLib.Object).IsAssignableFrom (element_type))
 						g_object_unref (NthData (i));
-					else if (typeof (Gst.GLib.Opaque).IsAssignableFrom (element_type))
-						Gst.GLib.Opaque.GetOpaque (NthData (i), element_type, true).Dispose ();
+					else if (typeof (GLib.Opaque).IsAssignableFrom (element_type))
+						GLib.Opaque.GetOpaque (NthData (i), element_type, true).Dispose ();
 					else 
 						g_free (NthData (i));
 			}
@@ -120,7 +120,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_ptr_array_add (IntPtr raw, IntPtr val);
 
 		public void Add (IntPtr val)
@@ -128,7 +128,7 @@ namespace Gst.GLib {
 			g_ptr_array_add (Handle, val);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_ptr_array_remove (IntPtr raw, IntPtr data);
 
 		public void Remove (IntPtr data)
@@ -136,7 +136,7 @@ namespace Gst.GLib {
 			g_ptr_array_remove (Handle, data);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_ptr_array_remove_range (IntPtr raw, uint index, uint length);
 
 		public void RemoveRange (IntPtr data, uint index, uint length)
@@ -174,10 +174,10 @@ namespace Gst.GLib {
 					ret = Marshaller.Utf8PtrToString (data);
 				else if (element_type == typeof (IntPtr))
 					ret = data;
-				else if (element_type.IsSubclassOf (typeof (Gst.GLib.Object)))
-					ret = Gst.GLib.Object.GetObject (data, false);
-				else if (element_type.IsSubclassOf (typeof (Gst.GLib.Opaque)))
-					ret = Gst.GLib.Opaque.GetOpaque (data, element_type, elements_owned);
+				else if (element_type.IsSubclassOf (typeof (GLib.Object)))
+					ret = GLib.Object.GetObject (data, false);
+				else if (element_type.IsSubclassOf (typeof (GLib.Opaque)))
+					ret = GLib.Opaque.GetOpaque (data, element_type, elements_owned);
 				else if (element_type == typeof (int))
 					ret = (int) data;
 				else if (element_type.IsValueType)
@@ -186,7 +186,7 @@ namespace Gst.GLib {
 					ret = Activator.CreateInstance (element_type, new object[] {data});
 
 			} else if (Object.IsObject (data))
-				ret = Gst.GLib.Object.GetObject (data, false);
+				ret = GLib.Object.GetObject (data, false);
 
 			return ret;
 		}
@@ -260,7 +260,7 @@ namespace Gst.GLib {
 			return new ListEnumerator (this);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_ptr_array_copy (IntPtr raw);
 
 		// ICloneable

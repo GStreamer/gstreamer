@@ -63,7 +63,7 @@ namespace GtkSharp.Generation {
 
 			if (IsDeprecated)
 				sw.WriteLine ("\t[Obsolete]");
-			sw.Write ("\t{0}{1}class " + Name, IsInternal ? "internal " : "public ", IsAbstract ? "abstract " : String.Empty);
+			sw.Write ("\t{0} partial {1}class " + Name, IsInternal ? "internal" : "public", IsAbstract ? "abstract " : String.Empty);
 			string cs_parent = table.GetCSType(Elem.GetAttribute("parent"));
 			if (cs_parent != "")
 				sw.Write (" : " + cs_parent);

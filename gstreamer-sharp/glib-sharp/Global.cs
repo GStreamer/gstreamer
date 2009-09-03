@@ -1,4 +1,4 @@
-// Gst.GLib.Global.cs - Global glib properties and methods.
+// GLib.Global.cs - Global glib properties and methods.
 //
 // Author: Andres G. Aragoneses <aaragoneses@novell.com>
 //
@@ -31,38 +31,40 @@ namespace Gst.GLib {
 		//this is a static class
 		private Global () {}
 
+		public const System.Runtime.InteropServices.CallingConvention CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl;
+
 		public static string ProgramName {
 			get {
-				return Gst.GLib.Marshaller.PtrToStringGFree(g_get_prgname());
+				return GLib.Marshaller.PtrToStringGFree(g_get_prgname());
 			}
 			set { 
-				IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (value);
+				IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (value);
 				g_set_prgname (native_name);
-				Gst.GLib.Marshaller.Free (native_name);
+				GLib.Marshaller.Free (native_name);
 			}
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_set_prgname (IntPtr name);
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_get_prgname ();
 
 		public static string ApplicationName {
 			get {
-				return Gst.GLib.Marshaller.PtrToStringGFree(g_get_application_name());	
+				return GLib.Marshaller.PtrToStringGFree(g_get_application_name());	
 			}
 			set {
-				IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (value);
+				IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (value);
 				g_set_application_name (native_name);
-				Gst.GLib.Marshaller.Free (native_name);				
+				GLib.Marshaller.Free (native_name);				
 			}
 		}
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_set_application_name (IntPtr name);
 
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_get_application_name ();
 	}
 }

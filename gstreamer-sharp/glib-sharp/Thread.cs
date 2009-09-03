@@ -28,7 +28,7 @@ namespace Gst.GLib
 	{
 		private Thread () {}
 		
-		[DllImport("libgthread-2.0-0.dll")]
+		[DllImport ("libgthread-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_thread_init (IntPtr i);
 
 		public static void Init ()
@@ -36,13 +36,13 @@ namespace Gst.GLib
 			g_thread_init (IntPtr.Zero);
 		}
 
-		[DllImport("glibsharpglue-2")]
-		static extern bool glibsharp_g_thread_supported ();
+		[DllImport("gstreamersharpglue-0.10")]
+		static extern bool gstglibsharp_g_thread_supported ();
 
 		public static bool Supported
 		{
 			get {
-				return glibsharp_g_thread_supported ();
+				return gstglibsharp_g_thread_supported ();
 			}
 		}
 	}

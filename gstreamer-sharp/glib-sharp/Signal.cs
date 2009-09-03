@@ -1,4 +1,4 @@
-// Gst.GLib.Signal.cs - signal marshaling class
+// GLib.Signal.cs - signal marshaling class
 //
 // Authors: Mike Kestner <mkestner@novell.com>
 //          Andrés G. Aragoneses <aaragoneses@novell.com>
@@ -63,7 +63,7 @@ namespace Gst.GLib {
 			public IntPtr param_types;
 		}
 
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[UnmanagedFunctionPointer (Global.CallingConvention)]
 		public delegate bool EmissionHookNative (ref InvocationHint hint, uint n_pvals, IntPtr pvals, IntPtr data);
 
 		public delegate bool EmissionHook (InvocationHint ihint, object[] inst_and_param_values);
@@ -140,7 +140,7 @@ namespace Gst.GLib {
 		SignalClosure after_closure;
 		Delegate marshaler;
 
-		private Signal (Gst.GLib.Object obj, string signal_name, Delegate marshaler)
+		private Signal (GLib.Object obj, string signal_name, Delegate marshaler)
 		{
 			tref = obj.ToggleRef;
 			name = signal_name;
@@ -148,7 +148,7 @@ namespace Gst.GLib {
 			this.marshaler = marshaler;
 		}
 
-		private Signal (Gst.GLib.Object obj, string signal_name, Type args_type)
+		private Signal (GLib.Object obj, string signal_name, Type args_type)
 		{
 			tref = obj.ToggleRef;
 			name = signal_name;
@@ -215,12 +215,12 @@ namespace Gst.GLib {
 			}
 		}
 
-		public static Signal Lookup (Gst.GLib.Object obj, string name)
+		public static Signal Lookup (GLib.Object obj, string name)
 		{
 			return Lookup (obj, name, typeof (EventArgs));
 		}
 
-		public static Signal Lookup (Gst.GLib.Object obj, string name, Delegate marshaler)
+		public static Signal Lookup (GLib.Object obj, string name, Delegate marshaler)
 		{
 			Signal result = obj.ToggleRef.Signals [name] as Signal;
 			if (result == null)
@@ -228,7 +228,7 @@ namespace Gst.GLib {
 			return result;
 		}
 
-		public static Signal Lookup (Gst.GLib.Object obj, string name, Type args_type)
+		public static Signal Lookup (GLib.Object obj, string name, Type args_type)
 		{
 			Signal result = obj.ToggleRef.Signals [name] as Signal;
 			if (result == null)
@@ -313,7 +313,7 @@ namespace Gst.GLib {
 			}
 		}
 		
-		public static object Emit (Gst.GLib.Object instance, string detailed_signal, params object[] args)
+		public static object Emit (GLib.Object instance, string detailed_signal, params object[] args)
 		{
 			uint gquark, signal_id;
 			string signal_name;
@@ -321,13 +321,13 @@ namespace Gst.GLib {
 			signal_id = GetSignalId (signal_name, instance);
 			if (signal_id <= 0)
 				throw new ArgumentException ("Invalid signal name: " + signal_name);
-			Gst.GLib.Value[] vals = new Gst.GLib.Value [args.Length + 1];
-			Gst.GLib.ValueArray inst_and_params = new Gst.GLib.ValueArray ((uint) args.Length + 1);
+			GLib.Value[] vals = new GLib.Value [args.Length + 1];
+			GLib.ValueArray inst_and_params = new GLib.ValueArray ((uint) args.Length + 1);
 			
-			vals [0] = new Gst.GLib.Value (instance);
+			vals [0] = new GLib.Value (instance);
 			inst_and_params.Append (vals [0]);
 			for (int i = 1; i < vals.Length; i++) {
-				vals [i] = new Gst.GLib.Value (args [i - 1]);
+				vals [i] = new GLib.Value (args [i - 1]);
 				inst_and_params.Append (vals [i]);
 			}
 
@@ -335,27 +335,27 @@ namespace Gst.GLib {
 			Query query;
 			g_signal_query (signal_id, out query);
 			if (query.return_type != GType.None.Val) {
-				Gst.GLib.Value ret = Gst.GLib.Value.Empty;
+				GLib.Value ret = GLib.Value.Empty;
 				g_signal_emitv (inst_and_params.ArrayPtr, signal_id, gquark, ref ret);
 				ret_obj = ret.Val;
 				ret.Dispose ();
 			} else
 				g_signal_emitv (inst_and_params.ArrayPtr, signal_id, gquark, IntPtr.Zero);
 			
-			foreach (Gst.GLib.Value val in vals)
+			foreach (GLib.Value val in vals)
 				val.Dispose ();
 
 			return ret_obj;
 		}
 		
 		private static uint GetGQuarkFromString (string str) {
-			IntPtr native_string = Gst.GLib.Marshaller.StringToPtrGStrdup (str);
+			IntPtr native_string = GLib.Marshaller.StringToPtrGStrdup (str);
 			uint ret = g_quark_from_string (native_string);
-			Gst.GLib.Marshaller.Free (native_string);
+			GLib.Marshaller.Free (native_string);
 			return ret;
 		}
 
-		private static uint GetSignalId (string signal_name, Gst.GLib.Object obj)
+		private static uint GetSignalId (string signal_name, GLib.Object obj)
 		{
 			IntPtr typeid = GType.ValFromInstancePtr (obj.Handle);
 			return GetSignalId (signal_name, typeid);
@@ -363,13 +363,13 @@ namespace Gst.GLib {
 		
 		private static uint GetSignalId (string signal_name, IntPtr typeid)
 		{
-			IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (signal_name);
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (signal_name);
 			uint signal_id = g_signal_lookup (native_name, typeid);
-			Gst.GLib.Marshaller.Free (native_name);
+			GLib.Marshaller.Free (native_name);
 			return signal_id;
 		}
 		
-		public static ulong AddEmissionHook (string detailed_signal, Gst.GLib.GType type, EmissionHook handler_func)
+		public static ulong AddEmissionHook (string detailed_signal, GLib.GType type, EmissionHook handler_func)
 		{
 			uint gquark;
 			string signal_name;
@@ -388,32 +388,32 @@ namespace Gst.GLib {
 			g_signal_override_class_closure (id, gtype.Val, closure);
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_cclosure_new (Delegate cb, IntPtr data, IntPtr notify);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_signal_get_invocation_hint (IntPtr instance);
 
-		[DllImport("libgobject-2.0-0.dll")]
-		static extern void g_signal_emitv (IntPtr instance_and_params, uint signal_id, uint gquark_detail, ref Gst.GLib.Value return_value);
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		static extern void g_signal_emitv (IntPtr instance_and_params, uint signal_id, uint gquark_detail, ref GLib.Value return_value);
 		
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_signal_emitv (IntPtr instance_and_params, uint signal_id, uint gquark_detail, IntPtr return_value);
 		
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern uint g_signal_lookup (IntPtr name, IntPtr itype);
 		
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_signal_override_class_closure (uint id, IntPtr gtype, IntPtr closure);
 		
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern void g_signal_query (uint signal_id, out Query query);
 
 		//better not to expose g_quark_from_static_string () due to memory allocation issues
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern uint g_quark_from_string (IntPtr str);
 		
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern ulong g_signal_add_emission_hook (uint signal_id, uint gquark_detail, EmissionHookNative hook_func, IntPtr hook_data, IntPtr data_destroy);
 
 	}

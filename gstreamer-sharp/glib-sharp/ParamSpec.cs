@@ -40,9 +40,9 @@ namespace Gst.GLib {
 			int flags = (int) pflags;
 			IntPtr ret;
 
-			IntPtr p_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
-			IntPtr p_nick = Gst.GLib.Marshaller.StringToPtrGStrdup (nick);
-			IntPtr p_blurb = Gst.GLib.Marshaller.StringToPtrGStrdup (blurb);
+			IntPtr p_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr p_nick = GLib.Marshaller.StringToPtrGStrdup (nick);
+			IntPtr p_blurb = GLib.Marshaller.StringToPtrGStrdup (blurb);
 
 			if (type == GType.Char)
 				ret = g_param_spec_char (p_name, p_nick, p_blurb, SByte.MinValue, SByte.MaxValue, 0, flags);
@@ -85,9 +85,9 @@ namespace Gst.GLib {
 			else
 				throw new ArgumentException ("type");
 
-			Gst.GLib.Marshaller.Free (p_name);
-			Gst.GLib.Marshaller.Free (p_nick);
-			Gst.GLib.Marshaller.Free (p_blurb);
+			GLib.Marshaller.Free (p_name);
+			GLib.Marshaller.Free (p_nick);
+			GLib.Marshaller.Free (p_blurb);
 
 			return ret;
 		}
@@ -124,7 +124,7 @@ namespace Gst.GLib {
 		public string Name {
 			get {
 				GParamSpec spec = (GParamSpec) Marshal.PtrToStructure (Handle, typeof (GParamSpec));
-				return Gst.GLib.Marshaller.Utf8PtrToString (spec.name);
+				return GLib.Marshaller.Utf8PtrToString (spec.name);
 			}
 		}
 
@@ -147,58 +147,58 @@ namespace Gst.GLib {
 			uint param_id;
 		}
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_char (IntPtr name, IntPtr nick, IntPtr blurb, sbyte min, sbyte max, sbyte dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_uchar (IntPtr name, IntPtr nick, IntPtr blurb, byte min, byte max, byte dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_boolean (IntPtr name, IntPtr nick, IntPtr blurb, bool dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_int (IntPtr name, IntPtr nick, IntPtr blurb, int min, int max, int dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_uint (IntPtr name, IntPtr nick, IntPtr blurb, uint min, uint max, uint dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_long (IntPtr name, IntPtr nick, IntPtr blurb, IntPtr min, IntPtr max, IntPtr dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_ulong (IntPtr name, IntPtr nick, IntPtr blurb, UIntPtr min, UIntPtr max, UIntPtr dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_int64 (IntPtr name, IntPtr nick, IntPtr blurb, long min, long max, long dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_uint64 (IntPtr name, IntPtr nick, IntPtr blurb, ulong min, ulong max, ulong dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_float (IntPtr name, IntPtr nick, IntPtr blurb, float min, float max, float dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_double (IntPtr name, IntPtr nick, IntPtr blurb, double min, double max, double dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_string (IntPtr name, IntPtr nick, IntPtr blurb, IntPtr dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_pointer (IntPtr name, IntPtr nick, IntPtr blurb, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_gtype (IntPtr name, IntPtr nick, IntPtr blurb, IntPtr dval, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_boxed (IntPtr name, IntPtr nick, IntPtr blurb, IntPtr return_type, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_param_spec_object (IntPtr name, IntPtr nick, IntPtr blurb, IntPtr return_type, int flags);
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_gtype_get_type ();
 
-		[DllImport("libgobject-2.0-0.dll")]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern bool g_type_is_a (IntPtr a, IntPtr b);
 
 	}

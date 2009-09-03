@@ -1,4 +1,4 @@
-// Gst.GLib.TypeFundamentals.cs : Standard Types enumeration 
+// GLib.TypeFundamentals.cs : Standard Types enumeration 
 //
 // Author: Mike Kestner <mkestner@speakeasy.net>
 //

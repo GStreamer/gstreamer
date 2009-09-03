@@ -29,7 +29,7 @@ namespace Gst.GLib {
 	public class Markup {
 		private Markup () {}
 		
-		[DllImport("libglib-2.0-0.dll")]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
 		static extern IntPtr g_markup_escape_text (IntPtr text, int len);
 		
 		static public string EscapeText (string s)

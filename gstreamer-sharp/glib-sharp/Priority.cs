@@ -1,4 +1,4 @@
-// Gst.GLib.Priority.cs
+// GLib.Priority.cs
 //
 // Author(s):
 //	Stephane Delcroix <stephane@delcroix.org>
