@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS = dist-bzip2
+
 SUBDIRS = source parser generator elementgen gstreamer-sharp doc tests samples
 
 pkgconfigdir = $(libdir)/pkgconfig
