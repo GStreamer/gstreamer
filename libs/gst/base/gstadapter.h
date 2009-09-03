@@ -49,17 +49,17 @@ typedef struct _GstAdapterPrivate GstAdapterPrivate;
  * The opaque #GstAdapter data structure.
  */
 struct _GstAdapter {
-  GObject	object;
+  GObject       object;
 
   /*< private >*/
-  GSList *	buflist;
-  guint		size;
-  guint		skip;
+  GSList *      buflist;
+  guint         size;
+  guint         skip;
 
   /* we keep state of assembled pieces */
-  guint8 *	assembled_data;
-  guint		assembled_size;
-  guint		assembled_len;
+  guint8 *      assembled_data;
+  guint         assembled_size;
+  guint         assembled_len;
 
   /* ABI added */
   /* Remember where the end of our buffer list is to
@@ -72,26 +72,26 @@ struct _GstAdapter {
 };
 
 struct _GstAdapterClass {
-  GObjectClass	parent_class;
+  GObjectClass  parent_class;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType			gst_adapter_get_type		(void);
+GType                   gst_adapter_get_type            (void);
 
-GstAdapter *		gst_adapter_new			(void);
+GstAdapter *            gst_adapter_new                 (void);
 
-void			gst_adapter_clear		(GstAdapter *adapter);
-void			gst_adapter_push		(GstAdapter *adapter, GstBuffer* buf);
-const guint8 *		gst_adapter_peek      		(GstAdapter *adapter, guint size);
-void    		gst_adapter_copy      		(GstAdapter *adapter, guint8 *dest,
+void                    gst_adapter_clear               (GstAdapter *adapter);
+void                    gst_adapter_push                (GstAdapter *adapter, GstBuffer* buf);
+const guint8 *          gst_adapter_peek                (GstAdapter *adapter, guint size);
+void                    gst_adapter_copy                (GstAdapter *adapter, guint8 *dest,
                                                          guint offset, guint size);
-void			gst_adapter_flush		(GstAdapter *adapter, guint flush);
-guint8*			gst_adapter_take		(GstAdapter *adapter, guint nbytes);
-GstBuffer*		gst_adapter_take_buffer		(GstAdapter *adapter, guint nbytes);
-guint			gst_adapter_available		(GstAdapter *adapter);
-guint			gst_adapter_available_fast    	(GstAdapter *adapter);
+void                    gst_adapter_flush               (GstAdapter *adapter, guint flush);
+guint8*                 gst_adapter_take                (GstAdapter *adapter, guint nbytes);
+GstBuffer*              gst_adapter_take_buffer         (GstAdapter *adapter, guint nbytes);
+guint                   gst_adapter_available           (GstAdapter *adapter);
+guint                   gst_adapter_available_fast      (GstAdapter *adapter);
 
 GstClockTime            gst_adapter_prev_timestamp      (GstAdapter *adapter, guint64 *distance);
 
