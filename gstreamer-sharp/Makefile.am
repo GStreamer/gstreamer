@@ -55,8 +55,6 @@ sources = \
 	NavigationMessage.cs \
 	NavigationEvent.cs \
 	NavigationQuery.cs \
-	coreplugins/generated/*.cs \
-	baseplugins/generated/*.cs \
 	coreplugins/*.cs \
 	glib-sharp/*.cs
 
@@ -119,6 +117,9 @@ customs = 			\
 	ControlSource.custom	\
 	VideoUtil.custom
 
+plugin_csfiles = coreplugins/generated/*.cs \
+	baseplugins/generated/*.cs
+
 build_customs = $(addprefix $(srcdir)/, $(customs))
 
 EXTRA_DIST =			\
@@ -157,8 +158,8 @@ baseplugins/generated: $(API) baseplugins/*.custom baseplugins/*.metadata basepl
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
 	cp $(top_srcdir)/gstreamer-sharp.snk .
 
-$(ASSEMBLY): $(build_sources) generated-stamp $(KEYFILE)
-	$(CSC) -nowarn:0612 -debug -unsafe -out:$(ASSEMBLY) -target:library $(references) $(csc_build_sources) $(GENERATED_SOURCES)
+$(ASSEMBLY): $(build_sources) generated-stamp $(KEYFILE) $(plugin_csfiles)
+	$(CSC) -nowarn:0612 -debug -unsafe -out:$(ASSEMBLY) -target:library $(references) $(csc_build_sources) $(GENERATED_SOURCES) $(plugin_csfiles)
 
 plugins-update:
 	$(MAKE) -C coreplugins plugins-update
