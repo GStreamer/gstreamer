@@ -1,0 +1,61 @@
+
+Release notes for GStreamer C# bindings 0.9.0 "Good things come to those who wait"
+        
+
+
+The GStreamer team is proud to announce a first development release
+of the GStreamer C# bindings for the 0.10.x release series.
+
+
+The 0.10.x series is a stable series targeted at end users.
+It is not API or ABI compatible with the stable 0.8.x series.
+It is, however, parallel installable with the 0.8.x series.
+
+Please note that at this time the GStreamer C# bindings
+        are not consindered API/ABI stable, and public interfaces
+	may still change from release to release. These changes
+	will most likely be small. Please read the README file
+	for more information on this.
+
+
+  
+
+Features of this release
+    
+      * Initial release of gstreamer-sharp
+There were no bugs fixed in this release
+    
+
+Download
+
+You can find source releases of gstreamer-sharp in the download directory:
+http://gstreamer.freedesktop.org/src/gstreamer-sharp/
+
+GStreamer Homepage
+
+More details can be found on the project's website:
+http://gstreamer.freedesktop.org/
+
+Support and Bugs
+
+We use GNOME's bugzilla for bug reports and feature requests:
+http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+
+Developers
+
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
+Interested developers of the core library, plug-ins, and applications should
+subscribe to the gstreamer-devel list. If there is sufficient interest we
+will create more lists as necessary.
+
+        
+Applications
+  
+Contributors to this release
+    
+      * Aaron Bockover
+      * Khaled Mohammed
+      * Maarten Bosmans
+      * Michael Dominic K
+      * Sebastian Dröge
+ 
