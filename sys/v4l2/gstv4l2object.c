@@ -720,88 +720,126 @@ gst_v4l2_object_get_format_from_fourcc (GstV4l2Object * v4l2object,
 #define PWC_BASE_RANK        1
 
 static gint
-gst_v4l2_object_format_get_rank (guint32 fourcc)
+gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
 {
+  guint32 fourcc = fmt->pixelformat;
+#ifdef V4L2_FMT_FLAG_EMULATED
+  gboolean emulated = ((flags & V4L2_FMT_FLAG_EMULATED) != 0);
+#else
+  gboolean emulated = FALSE;
+#endif
+  gint rank = 0;
+
   switch (fourcc) {
     case V4L2_PIX_FMT_MJPEG:
-      return JPEG_BASE_RANK;
+      rank = JPEG_BASE_RANK;
+      break;
     case V4L2_PIX_FMT_JPEG:
-      return JPEG_BASE_RANK + 1;
+      rank = JPEG_BASE_RANK + 1;
+      break;
 
     case V4L2_PIX_FMT_RGB332:
     case V4L2_PIX_FMT_RGB555:
     case V4L2_PIX_FMT_RGB555X:
     case V4L2_PIX_FMT_RGB565:
     case V4L2_PIX_FMT_RGB565X:
-      return RGB_ODD_BASE_RANK;
+      rank = RGB_ODD_BASE_RANK;
+      break;
 
     case V4L2_PIX_FMT_RGB24:
     case V4L2_PIX_FMT_BGR24:
-      return RGB_BASE_RANK - 1;
+      rank = RGB_BASE_RANK - 1;
+      break;
 
     case V4L2_PIX_FMT_RGB32:
     case V4L2_PIX_FMT_BGR32:
-      return RGB_BASE_RANK;
+      rank = RGB_BASE_RANK;
+      break;
 
     case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
-      return GREY_BASE_RANK;
+      rank = GREY_BASE_RANK;
+      break;
 
     case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
     case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
     case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
     case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
-      return YUV_ODD_BASE_RANK;
+      rank = YUV_ODD_BASE_RANK;
+      break;
 
     case V4L2_PIX_FMT_YVU410:  /* YVU9,  9 bits per pixel */
-      return YUV_BASE_RANK + 3;
+      rank = YUV_BASE_RANK + 3;
+      break;
     case V4L2_PIX_FMT_YUV410:  /* YUV9,  9 bits per pixel */
-      return YUV_BASE_RANK + 2;
+      rank = YUV_BASE_RANK + 2;
+      break;
     case V4L2_PIX_FMT_YUV420:  /* I420, 12 bits per pixel */
-      return YUV_BASE_RANK + 7;
+      rank = YUV_BASE_RANK + 7;
+      break;
     case V4L2_PIX_FMT_YUYV:    /* YUY2, 16 bits per pixel */
-      return YUV_BASE_RANK + 10;
+      rank = YUV_BASE_RANK + 10;
+      break;
     case V4L2_PIX_FMT_YVU420:  /* YV12, 12 bits per pixel */
-      return YUV_BASE_RANK + 6;
+      rank = YUV_BASE_RANK + 6;
+      break;
     case V4L2_PIX_FMT_UYVY:    /* UYVY, 16 bits per pixel */
-      return YUV_BASE_RANK + 9;
+      rank = YUV_BASE_RANK + 9;
+      break;
     case V4L2_PIX_FMT_Y41P:    /* Y41P, 12 bits per pixel */
-      return YUV_BASE_RANK + 5;
+      rank = YUV_BASE_RANK + 5;
+      break;
     case V4L2_PIX_FMT_YUV411P: /* Y41B, 12 bits per pixel */
-      return YUV_BASE_RANK + 4;
+      rank = YUV_BASE_RANK + 4;
+      break;
     case V4L2_PIX_FMT_YUV422P: /* Y42B, 16 bits per pixel */
-      return YUV_BASE_RANK + 8;
+      rank = YUV_BASE_RANK + 8;
+      break;
 
     case V4L2_PIX_FMT_DV:
-      return DV_BASE_RANK;
+      rank = DV_BASE_RANK;
+      break;
 
     case V4L2_PIX_FMT_MPEG:    /* MPEG          */
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
-      return 0;
+      rank = 0;
+      break;
 
 #ifdef V4L2_PIX_FMT_SBGGR8
     case V4L2_PIX_FMT_SBGGR8:
-      return BAYER_BASE_RANK;
+      rank = BAYER_BASE_RANK;
+      break;
 #endif
 
 #ifdef V4L2_PIX_FMT_SN9C10X
     case V4L2_PIX_FMT_SN9C10X:
-      return S910_BASE_RANK;
+      rank = S910_BASE_RANK;
+      break;
 #endif
 
 #ifdef V4L2_PIX_FMT_PWC1
     case V4L2_PIX_FMT_PWC1:
-      return PWC_BASE_RANK;
+      rank = PWC_BASE_RANK;
+      break;
 #endif
 #ifdef V4L2_PIX_FMT_PWC2
     case V4L2_PIX_FMT_PWC2:
-      return PWC_BASE_RANK;
+      rank = PWC_BASE_RANK;
+      break;
 #endif
 
     default:
+      rank = 0;
       break;
   }
 
-  return 0;
+  /* All ranks are below 1<<15 so a shift by 15
+   * will a) make all non-emulated formats larger
+   * than emulated and b) will not overflow
+   */
+  if (!emulated)
+    rank <<= 15;
+
+  return rank;
 }
 
 
@@ -809,14 +847,14 @@ gst_v4l2_object_format_get_rank (guint32 fourcc)
 static gint
 format_cmp_func (gconstpointer a, gconstpointer b)
 {
-  guint32 pf1 = ((struct v4l2_fmtdesc *) a)->pixelformat;
-  guint32 pf2 = ((struct v4l2_fmtdesc *) b)->pixelformat;
+  const struct v4l2_fmtdesc *fa = a;
+  const struct v4l2_fmtdesc *fb = b;
 
-  if (pf1 == pf2)
+  if (fa->pixelformat == fb->pixelformat)
     return 0;
 
-  return gst_v4l2_object_format_get_rank (pf2) -
-      gst_v4l2_object_format_get_rank (pf1);
+  return gst_v4l2_object_format_get_rank (fa) -
+      gst_v4l2_object_format_get_rank (fb);
 }
 
 /******************************************************
