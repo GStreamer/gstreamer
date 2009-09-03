@@ -373,7 +373,5 @@ GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* nam
           (gint) (10000000 / vscc->MinFrameInterval), 1,
        NULL);
 
-  g_print ("caps are %s\n", gst_caps_to_string (video_caps));
-
   return video_caps;
 }

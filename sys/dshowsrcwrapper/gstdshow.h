@@ -22,15 +22,12 @@
 #ifndef _GSTDSHOW_
 #define _GSTDSHOW_
 
-#ifdef __cplusplus
 #include <streams.h>
-#endif
 #include <windows.h>
 #include <objbase.h>
 #include <dshow.h>
 #include <Rpc.h>
 
-#include <glib.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
@@ -51,13 +48,6 @@ typedef struct _GstCaptureVideoDefault
   gint granularityHeight; //will be removed when GST_TYPE_INT_RANGE_STEP exits
 
 } GstCaptureVideoDefault;
-
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
-/* register fake filters as COM object and as Direct Show filters in the registry */
-//HRESULT gst_dshow_register_fakefilters ();
 
 /* free memory of the input pin mediatype */
 void gst_dshow_free_pin_mediatype (gpointer pt);
@@ -90,10 +80,5 @@ gboolean gst_dshow_show_propertypage (IBaseFilter *base_filter);
 GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
   const VIDEO_STREAM_CONFIG_CAPS * vscc, const VIDEOINFOHEADER *video_info, 
   GstCaptureVideoDefault *video_default);
-
-
-#ifdef  __cplusplus
-}
-#endif
 
 #endif /* _GSTDSHOW_ */
