@@ -711,6 +711,8 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
   if (priv->perfect_rtptime && data.offset != GST_BUFFER_OFFSET_NONE) {
     /* if we have an offset, use that for making an RTP timestamp */
     data.rtptime = payload->ts_base + data.offset;
+    GST_LOG_OBJECT (payload,
+        "Using offset %" G_GUINT64_FORMAT " for RTP timestamp", data.offset);
   } else if (GST_CLOCK_TIME_IS_VALID (data.timestamp)) {
     gint64 rtime;
 
@@ -718,11 +720,18 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
     rtime = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
         data.timestamp);
 
+    GST_LOG_OBJECT (payload,
+        "Using running_time %" GST_TIME_FORMAT " for RTP timestamp",
+        GST_TIME_ARGS (rtime));
+
     rtime = gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
 
     /* add running_time in clock-rate units to the base timestamp */
     data.rtptime = payload->ts_base + rtime;
   } else {
+    GST_LOG_OBJECT (payload,
+        "Using previous timestamp %" GST_TIME_FORMAT " for RTP timestamp",
+        GST_TIME_ARGS (payload->timestamp));
     /* no timestamp to convert, take previous timestamp */
     data.rtptime = payload->timestamp;
   }
