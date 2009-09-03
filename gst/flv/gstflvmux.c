@@ -186,10 +186,6 @@ gst_flv_mux_reset (GstElement * element)
     gst_element_release_request_pad (element, cpad->collect.pad);
   }
 
-  if (mux->tags)
-    gst_tag_list_free (mux->tags);
-  mux->tags = NULL;
-
   g_list_foreach (mux->index, (GFunc) gst_flv_mux_index_entry_free, NULL);
   g_list_free (mux->index);
   mux->index = NULL;
@@ -198,6 +194,9 @@ gst_flv_mux_reset (GstElement * element)
   mux->have_audio = mux->have_video = FALSE;
 
   mux->state = GST_FLV_MUX_STATE_HEADER;
+
+  /* tags */
+  gst_tag_setter_reset_tags (GST_TAG_SETTER (mux));
 }
 
 static gboolean
@@ -226,17 +225,12 @@ gst_flv_mux_handle_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
-      GstTagList *tags;
+      GstTagList *list;
+      GstTagSetter *setter = GST_TAG_SETTER (mux);
+      const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
 
-      if (!mux->tags)
-        mux->tags = gst_tag_list_new ();
-
-      gst_event_parse_tag (event, &tags);
-      if (tags) {
-        gst_tag_list_insert (mux->tags, tags,
-            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
-      }
-
+      gst_event_parse_tag (event, &list);
+      gst_tag_setter_merge_tags (setter, list, mode);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
@@ -560,22 +554,16 @@ gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
 static GstFlowReturn
 gst_flv_mux_write_metadata (GstFlvMux * mux)
 {
-  GstTagList *merged_tags;
-  const GstTagList *user_tags;
+  const GstTagList *tags;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *script_tag, *tmp;
   guint8 *data;
   gint i, n_tags, tags_written = 0;
   GstClockTime duration = GST_CLOCK_TIME_NONE;
 
-  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
-  GST_DEBUG_OBJECT (mux, "upstream tags = %" GST_PTR_FORMAT, mux->tags);
-  GST_DEBUG_OBJECT (mux, "user-set tags = %" GST_PTR_FORMAT, user_tags);
+  tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
 
-  merged_tags = gst_tag_list_merge (user_tags, mux->tags,
-      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
-
-  GST_DEBUG_OBJECT (mux, "merged tags = %" GST_PTR_FORMAT, merged_tags);
+  GST_DEBUG_OBJECT (mux, "tags = %" GST_PTR_FORMAT, tags);
 
   script_tag = gst_buffer_new_and_alloc (11);
   data = GST_BUFFER_DATA (script_tag);
@@ -602,21 +590,20 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
 
   script_tag = gst_buffer_join (script_tag, tmp);
 
-  n_tags =
-      (merged_tags) ? gst_structure_n_fields ((GstStructure *) merged_tags) : 0;
+  n_tags = (tags) ? gst_structure_n_fields ((GstStructure *) tags) : 0;
   tmp = gst_buffer_new_and_alloc (5);
   data = GST_BUFFER_DATA (tmp);
   data[0] = 8;                  /* ECMA array */
   GST_WRITE_UINT32_BE (data + 1, n_tags);
   script_tag = gst_buffer_join (script_tag, tmp);
 
-  for (i = 0; merged_tags && i < n_tags; i++) {
+  for (i = 0; tags && i < n_tags; i++) {
     const gchar *tag_name =
-        gst_structure_nth_field_name ((const GstStructure *) merged_tags, i);
+        gst_structure_nth_field_name ((const GstStructure *) tags, i);
     if (!strcmp (tag_name, GST_TAG_DURATION)) {
       guint64 dur;
 
-      if (!gst_tag_list_get_uint64 (merged_tags, GST_TAG_DURATION, &dur))
+      if (!gst_tag_list_get_uint64 (tags, GST_TAG_DURATION, &dur))
         continue;
       duration = dur;
     } else if (!strcmp (tag_name, GST_TAG_ARTIST) ||
@@ -629,7 +616,7 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
       else if (!strcmp (tag_name, GST_TAG_TITLE))
         t = "title";
 
-      if (!gst_tag_list_get_string (merged_tags, tag_name, &s))
+      if (!gst_tag_list_get_string (tags, tag_name, &s))
         continue;
 
       tmp = gst_buffer_new_and_alloc (2 + strlen (t) + 1 + 2 + strlen (s));
@@ -806,9 +793,6 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
 
   gst_buffer_set_caps (script_tag, GST_PAD_CAPS (mux->srcpad));
   ret = gst_flv_mux_push (mux, script_tag);
-
-  if (merged_tags)
-    gst_tag_list_free (merged_tags);
 
   return ret;
 }
