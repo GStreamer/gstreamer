@@ -365,6 +365,16 @@ GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* nam
 
   video_structure = gst_caps_get_structure (video_caps, 0);
 
+  /* Hope GST_TYPE_INT_RANGE_STEP will exits in future gstreamer releases  */
+  /* because we could use :  */
+  /* "width", GST_TYPE_INT_RANGE_STEP, video_default->minWidth, video_default->maxWidth,  video_default->granularityWidth */
+  /* instead of : */
+  /* "width", GST_TYPE_INT_RANGE, video_default->minWidth, video_default->maxWidth */
+
+  /* For framerate we do not need a step (granularity) because  */
+  /* "The IAMStreamConfig::SetFormat method will set the frame rate to the closest  */
+  /* value that the filter supports" as it said in the VIDEO_STREAM_CONFIG_CAPS dshwo doc */
+  
   gst_structure_set (video_structure,
       "width", GST_TYPE_INT_RANGE, vscc->MinOutputSize.cx, vscc->MaxOutputSize.cx,
       "height", GST_TYPE_INT_RANGE, vscc->MinOutputSize.cy, vscc->MaxOutputSize.cy,
