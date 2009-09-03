@@ -27,3 +27,5 @@ MAINTAINERCLEANFILES = \
 	intltool-update.in  \
 	mkinstalldirs
 
+check: all
+	$(MAKE) -C tests run-test
