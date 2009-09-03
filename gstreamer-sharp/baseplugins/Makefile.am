@@ -17,15 +17,15 @@ inspect-%:
 all: $(XML_FILES) $(CS_FILES)
 	touch generated
 
-generated/%.cs: $(top_builddir)/elementgen/element-gen.exe $(srcdir)/../gstreamer-api.xml $(CUSTOM_FILES) $(builddir)/%.xml
+generated/%.cs: $(top_builddir)/elementgen/element-gen.exe $(top_builddir)/gstreamer-sharp/gstreamer-api.xml $(CUSTOM_FILES) $(builddir)/%.xml
 	@mkdir -p generated
 	$(MONO) $(top_builddir)/elementgen/element-gen.exe --namespace=$(NAMESPACE) \
-		--api=$(srcdir)/../gstreamer-api.xml --input=$(patsubst generated/%.cs,$(builddir)/%.xml,$@) --customfile=$(patsubst generated/%.cs,$(srcdir)/%.custom,$@) > $@
+		--api=$(top_builddir)/gstreamer-sharp/gstreamer-api.xml --input=$(patsubst generated/%.cs,$(builddir)/%.xml,$@) --customfile=$(patsubst generated/%.cs,$(srcdir)/%.custom,$@) --interfacesdir=$(top_srcdir)/elementgen/interfaces > $@
 
 %.xml: $(top_builddir)/parser/gst-gapi-fixup.exe $(srcdir)/inspect/%.raw $(srcdir)/%.metadata
-	cp $(patsubst %.xml,$(srcdir)/inspect/%.raw,$@) $@
-	$(MONO) $(top_builddir)/parser/gst-gapi-fixup.exe --api=$@ --metadata=$(patsubst %.xml,$(srcdir)/%.metadata,$@)
+	cp $(patsubst %.xml,$(srcdir)/inspect/%.raw,$@) $(builddir)/$@
+	chmod +w $(builddir)/$@
+	$(MONO) $(top_builddir)/parser/gst-gapi-fixup.exe --api=$(builddir)/$@ --metadata=$(patsubst %.xml,$(srcdir)/%.metadata,$@)
 
-%.xml: $(top_builddir)/parser/gst-gapi-fixup.exe $(srcdir)/inspect/%.raw
-	cp $(patsubst %.xml,$(srcdir)/inspect/%.raw,$@) $@
-
+%.xml: $(top_builddir)/parser/gst-gapi-fixup.exe $(srcdir)/inspect/%.raw 
+	cp $(patsubst %.xml,$(srcdir)/inspect/%.raw,$@) $(builddir)/$@

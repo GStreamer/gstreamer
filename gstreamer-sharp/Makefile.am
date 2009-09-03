@@ -127,24 +127,24 @@ EXTRA_DIST =			\
 	$(SYMBOLS)		\
 	$(METADATA)		\
 	$(customs)		\
-	$(sources)		\
+	$(build_sources)	\
 	$(overrides)		\
 	$(ASSEMBLY).config.in
 
 $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA) $(srcdir)/$(SYMBOLS)
-	cp $(srcdir)/$(RAW_API) $(API)
+	cp $(srcdir)/$(RAW_API) $(builddir)/$(API)
 	chmod u+w $(API)
-	$(MONO) $(top_builddir)/parser/gst-gapi-fixup.exe --api=$(API) --metadata=$(srcdir)/$(METADATA) \
-		--symbols=$(srcdir)/$(SYMBOLS)
+	$(MONO) $(top_builddir)/parser/gst-gapi-fixup.exe --api=$(builddir)/$(API) \
+		--metadata=$(srcdir)/$(METADATA) --symbols=$(srcdir)/$(SYMBOLS)
 
 generated-stamp: $(API) $(build_customs) $(overrides)
-	 $(MONO) $(top_builddir)/generator/gst-gapi_codegen.exe --generate $(API) \
-		--outdir=generated --customdir=$(srcdir) --assembly-name=$(ASSEMBLY_NAME) \
-		--gluelib-name=gstreamersharpglue-0.10.dll --glue-filename=glue/generated.c \
+	 $(MONO) $(top_builddir)/generator/gst-gapi_codegen.exe --generate $(builddir)/$(API) \
+		--outdir=$(builddir)/generated --customdir=$(srcdir) --assembly-name=$(ASSEMBLY_NAME) \
+		--gluelib-name=gstreamersharpglue-0.10.dll --glue-filename=$(builddir)/glue/generated.c \
 		--glue-includes=$(glue_includes) \
 	&& cp $(overrides) $(builddir)/generated \
-	&& sed 's;public class ObjectManager;internal class ObjectManager;g' generated/ObjectManager.cs > generated/ObjectManager.cs.tmp \
-	&& mv generated/ObjectManager.cs.tmp generated/ObjectManager.cs \
+	&& sed 's;public class ObjectManager;internal class ObjectManager;g' $(builddir)/generated/ObjectManager.cs > $(builddir)/generated/ObjectManager.cs.tmp \
+	&& mv $(builddir)/generated/ObjectManager.cs.tmp $(builddir)/generated/ObjectManager.cs \
 	&& touch generated-stamp
 
 coreplugins/generated/*.cs: $(API) $(builddir)/coreplugins/generated
