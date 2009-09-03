@@ -17,5 +17,6 @@ CLEANFILES = $(TARGETS) $(DEBUGS)
 MAINTAINERCLEANFILES = Makefile.in
 
 EXTRA_DIST = \
-	elementgen.cs
+	elementgen.cs \
+	interfaces/*.cs
 

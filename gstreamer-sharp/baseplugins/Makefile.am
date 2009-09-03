@@ -7,7 +7,7 @@ METADATA_FILES = decodebin.metadata playbin.metadata decodebin2.metadata playbin
 CS_FILES = $(patsubst %,generated/%.cs,$(ELEMENTS))
 XML_FILES = $(patsubst %,%.xml,$(ELEMENTS))
 
-EXTRA_DIST = $(CUSTOM_FILES) $(INSPECT_FILES)
+EXTRA_DIST = $(METADATA_FILES) $(CUSTOM_FILES) $(INSPECT_FILES)
 CLEANFILES = $(XML_FILES) $(CS_FILES)
 
 plugins-update: $(patsubst inspect/%.raw, inspect-%, $(INSPECT_FILES))

@@ -8,8 +8,9 @@ $(ASSEMBLY): $(ASSEMBLY_CSFILES)
 	$(CSC) $(MCS_FLAGS) -out:$@ -target:library -r:$(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll $(ASSEMBLY_CSFILES) $(GLIBSHARP_LIBS)
 
 run-test: $(ASSEMBLY)
-	MONO_PATH="../gstreamer-sharp/" $(MONO) $(NUNIT_TESTER) -labels $(ASSEMBLY)
+	LD_LIBRARY_PATH=$(top_builddir)/gstreamer-sharp/glue/.libs:$$LD_LIBRARY_PATH MONO_PATH=$(top_builddir)/gstreamer-sharp $(MONO) $(NUNIT_TESTER) -labels $(ASSEMBLY)
 
+EXTRA_DIST = $(ASSEMBLY_CSFILES)
 CLEANFILES = $(ASSEMBLY) *.mdb *.pdb TestResult.xml
 DISTCLEANFILES = Makefile.in
 
