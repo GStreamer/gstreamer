@@ -852,12 +852,14 @@ gst_speex_enc_sinkevent (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_TAG:
     {
-      GstTagList *list;
-
-      gst_event_parse_tag (event, &list);
       if (enc->tags) {
+        GstTagList *list;
+
+        gst_event_parse_tag (event, &list);
         gst_tag_list_insert (enc->tags, list,
             gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (enc)));
+      } else {
+        g_assert_not_reached ();
       }
       res = gst_pad_event_default (pad, event);
       break;
