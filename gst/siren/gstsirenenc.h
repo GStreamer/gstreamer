@@ -58,8 +58,6 @@ struct _GstSirenEnc
 
   GstPad *srcpad;
   GstPad *sinkpad;
-
-  GstCaps *srccaps;
 };
 
 struct _GstSirenEncClass

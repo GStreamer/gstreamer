@@ -79,7 +79,10 @@ enum
 
 
 
-static void gst_siren_enc_dispose (GObject * object);
+static void gst_siren_enc_finalize (GObject * object);
+
+static gboolean gst_siren_enc_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_siren_enc_sink_event (GstPad * pad, GstEvent * event);
 
 static GstFlowReturn gst_siren_enc_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn
@@ -119,7 +122,7 @@ gst_siren_enc_class_init (GstSirenEncClass * klass)
 
   GST_DEBUG ("Initializing Class");
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_siren_enc_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_siren_enc_finalize);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_siren_change_state);
 
@@ -137,40 +140,70 @@ gst_siren_enc_init (GstSirenEnc * enc, GstSirenEncClass * klass)
   enc->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   enc->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
 
+  gst_pad_set_setcaps_function (enc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_siren_enc_sink_setcaps));
+  gst_pad_set_event_function (enc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_siren_enc_sink_event));
   gst_pad_set_chain_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_siren_enc_chain));
 
   gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
 
-  enc->srccaps = gst_static_pad_template_get_caps (&srctemplate);
-
   GST_DEBUG_OBJECT (enc, "Init done");
 }
 
 static void
-gst_siren_enc_dispose (GObject * object)
+gst_siren_enc_finalize (GObject * object)
 {
   GstSirenEnc *enc = GST_SIREN_ENC (object);
 
   GST_DEBUG_OBJECT (object, "Disposing");
 
-  if (enc->encoder) {
-    Siren7_CloseEncoder (enc->encoder);
-    enc->encoder = NULL;
-  }
-
-  if (enc->adapter) {
-    g_object_unref (enc->adapter);
-    enc->adapter = NULL;
-  }
-
-  if (enc->srccaps) {
-    gst_caps_unref (enc->srccaps);
-    enc->srccaps = NULL;
-  }
+  Siren7_CloseEncoder (enc->encoder);
+  g_object_unref (enc->adapter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static gboolean
+gst_siren_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstSirenEnc *enc;
+  gboolean res;
+  GstCaps *outcaps;
+
+  enc = GST_SIREN_ENC (GST_PAD_PARENT (pad));
+
+  outcaps = gst_static_pad_template_get_caps (&srctemplate);
+  res = gst_pad_set_caps (enc->srcpad, outcaps);
+  gst_caps_unref (outcaps);
+
+  return res;
+}
+
+static gboolean
+gst_siren_enc_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstSirenEnc *enc;
+  gboolean res;
+
+  enc = GST_SIREN_ENC (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      gst_adapter_clear (enc->adapter);
+      res = gst_pad_push_event (enc->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_adapter_clear (enc->adapter);
+      res = gst_pad_push_event (enc->srcpad, event);
+      break;
+    default:
+      res = gst_pad_push_event (enc->srcpad, event);
+      break;
+  }
+  return res;
 }
 
 static GstFlowReturn
@@ -210,7 +243,7 @@ gst_siren_enc_chain (GstPad * pad, GstBuffer * buf)
   if (num_frames == 0)
     goto done;
 
-  /* this is the output size */
+  /* this is the input/output size */
   in_size = num_frames * 640;
   out_size = num_frames * 40;
 
@@ -219,7 +252,7 @@ gst_siren_enc_chain (GstPad * pad, GstBuffer * buf)
 
   /* get a buffer */
   ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad, -1,
-      out_size, enc->srccaps, &out_buf);
+      out_size, GST_PAD_CAPS (enc->srcpad), &out_buf);
   if (ret != GST_FLOW_OK)
     goto alloc_failed;
 
