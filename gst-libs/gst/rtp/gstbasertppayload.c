@@ -45,6 +45,7 @@ struct _GstBaseRTPPayloadPrivate
   gboolean seqnum_offset_random;
   gboolean ssrc_random;
   guint16 next_seqnum;
+  gboolean perfect_rtptime;
 };
 
 /* BaseRTPPayload signals and args */
@@ -67,6 +68,7 @@ enum
 #define DEFAULT_SEQNUM_OFFSET           -1
 #define DEFAULT_MAX_PTIME               -1
 #define DEFAULT_MIN_PTIME               0
+#define DEFAULT_PERFECT_RTPTIME         TRUE
 
 enum
 {
@@ -79,7 +81,9 @@ enum
   PROP_MAX_PTIME,
   PROP_MIN_PTIME,
   PROP_TIMESTAMP,
-  PROP_SEQNUM
+  PROP_SEQNUM,
+  PROP_PERFECT_RTPTIME,
+  PROP_LAST
 };
 
 static void gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass);
@@ -204,6 +208,21 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
           "The RTP sequence number of the last processed packet",
           0, G_MAXUINT16, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstBaseRTPAudioPayload:perfect-rtptime:
+   *
+   * Try to use the offset fields to generate perfect RTP timestamps. when this
+   * option is disabled, RTP timestamps are generated from the GStreamer
+   * timestamps, which could result in RTP timestamps that don't increment with
+   * the amount of data in the packet.
+   *
+   * Since: 0.10.25
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PERFECT_RTPTIME,
+      g_param_spec_boolean ("perfect-rtptime", "Perfect RTP Time",
+          "Generate perfect RTP timestamps when possible",
+          DEFAULT_PERFECT_RTPTIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_basertppayload_change_state;
 
   GST_DEBUG_CATEGORY_INIT (basertppayload_debug, "basertppayload", 0,
@@ -256,6 +275,7 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
 
   basertppayload->max_ptime = DEFAULT_MAX_PTIME;
   basertppayload->min_ptime = DEFAULT_MIN_PTIME;
+  basertppayload->priv->perfect_rtptime = DEFAULT_PERFECT_RTPTIME;
 
   basertppayload->media = NULL;
   basertppayload->encoding_name = NULL;
@@ -688,7 +708,7 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
   }
 
   /* convert to RTP time */
-  if (data.offset != GST_BUFFER_OFFSET_NONE) {
+  if (priv->perfect_rtptime && data.offset != GST_BUFFER_OFFSET_NONE) {
     /* if we have an offset, use that for making an RTP timestamp */
     data.rtptime = payload->ts_base + data.offset;
   } else if (GST_CLOCK_TIME_IS_VALID (data.timestamp)) {
@@ -833,6 +853,9 @@ gst_basertppayload_set_property (GObject * object, guint prop_id,
     case PROP_MIN_PTIME:
       basertppayload->min_ptime = g_value_get_int64 (value);
       break;
+    case PROP_PERFECT_RTPTIME:
+      priv->perfect_rtptime = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -885,6 +908,9 @@ gst_basertppayload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SEQNUM:
       g_value_set_uint (value, basertppayload->seqnum);
+      break;
+    case PROP_PERFECT_RTPTIME:
+      g_value_set_boolean (value, priv->perfect_rtptime);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
