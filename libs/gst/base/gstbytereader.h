@@ -241,6 +241,195 @@ gst_byte_reader_dup_data_unchecked (GstByteReader * reader, guint size)
   return g_memdup (gst_byte_reader_get_data_unchecked (reader, size), size);
 }
 
+/* inlined variants (do not use directly) */
+
+static inline guint
+_gst_byte_reader_get_remaining_inline (const GstByteReader * reader)
+{
+  return reader->size - reader->byte;
+}
+
+#define __GST_BYTE_READER_GET_PEEK_BITS_INLINE(bits,type,name) \
+\
+static inline gboolean \
+_gst_byte_reader_peek_##name##_inline (GstByteReader * reader, type * val) \
+{ \
+  if (_gst_byte_reader_get_remaining_inline (reader) < (bits / 8)) \
+    return FALSE; \
+\
+  *val =  gst_byte_reader_peek_##name##_unchecked (reader); \
+  return TRUE; \
+} \
+\
+static inline gboolean \
+_gst_byte_reader_get_##name##_inline (GstByteReader * reader, type * val) \
+{ \
+  if (_gst_byte_reader_get_remaining_inline (reader) < (bits / 8)) \
+    return FALSE; \
+\
+  *val =  gst_byte_reader_get_##name##_unchecked (reader); \
+  return TRUE; \
+}
+
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(8,guint8,uint8)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(8,gint8,int8)
+
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(16,guint16,uint16_le)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(16,guint16,uint16_be)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(16,gint16,int16_le)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(16,gint16,int16_be)
+
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(32,guint32,uint32_le)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(32,guint32,uint32_be)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(32,gint32,int32_le)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(32,gint32,int32_be)
+
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(24,guint32,uint24_le)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(24,guint32,uint24_be)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(24,gint32,int24_le)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(24,gint32,int24_be)
+
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,guint64,uint64_le)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,guint64,uint64_be)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,gint64,int64_le)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,gint64,int64_be)
+
+#undef __GST_BYTE_READER_GET_PEEK_BITS_INLINE
+
+#ifndef GST_BYTE_READER_DISABLE_INLINES
+
+#define gst_byte_reader_get_remaining(reader) \
+    _gst_byte_reader_get_remaining_inline(reader)
+
+/* we use defines here so we can add the G_LIKELY() */
+#define gst_byte_reader_get_uint8(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_uint8_inline(reader,val))
+#define gst_byte_reader_get_int8(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_int8_inline(reader,val))
+#define gst_byte_reader_get_uint16_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_uint16_le_inline(reader,val))
+#define gst_byte_reader_get_int16_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_int16_le_inline(reader,val))
+#define gst_byte_reader_get_uint16_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_uint16_be_inline(reader,val))
+#define gst_byte_reader_get_int16_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_int16_be_inline(reader,val))
+#define gst_byte_reader_get_uint24_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_uint24_le_inline(reader,val))
+#define gst_byte_reader_get_int24_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_int24_le_inline(reader,val))
+#define gst_byte_reader_get_uint24_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_uint24_be_inline(reader,val))
+#define gst_byte_reader_get_int24_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_int24_be_inline(reader,val))
+#define gst_byte_reader_get_uint32_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_uint32_le_inline(reader,val))
+#define gst_byte_reader_get_int32_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_int32_le_inline(reader,val))
+#define gst_byte_reader_get_uint32_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_uint32_be_inline(reader,val))
+#define gst_byte_reader_get_int32_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_int32_be_inline(reader,val))
+#define gst_byte_reader_get_uint64_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_uint64_le_inline(reader,val))
+#define gst_byte_reader_get_int64_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_int64_le_inline(reader,val))
+#define gst_byte_reader_get_uint64_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_uint64_be_inline(reader,val))
+#define gst_byte_reader_get_int64_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_int64_be_inline(reader,val))
+
+#define gst_byte_reader_peek_uint8(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_uint8_inline(reader,val))
+#define gst_byte_reader_peek_int8(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_int8_inline(reader,val))
+#define gst_byte_reader_peek_uint16_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_uint16_le_inline(reader,val))
+#define gst_byte_reader_peek_int16_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_int16_le_inline(reader,val))
+#define gst_byte_reader_peek_uint16_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_uint16_be_inline(reader,val))
+#define gst_byte_reader_peek_int16_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_int16_be_inline(reader,val))
+#define gst_byte_reader_peek_uint24_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_uint24_le_inline(reader,val))
+#define gst_byte_reader_peek_int24_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_int24_le_inline(reader,val))
+#define gst_byte_reader_peek_uint24_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_uint24_be_inline(reader,val))
+#define gst_byte_reader_peek_int24_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_int24_be_inline(reader,val))
+#define gst_byte_reader_peek_uint32_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_uint32_le_inline(reader,val))
+#define gst_byte_reader_peek_int32_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_int32_le_inline(reader,val))
+#define gst_byte_reader_peek_uint32_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_uint32_be_inline(reader,val))
+#define gst_byte_reader_peek_int32_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_int32_be_inline(reader,val))
+#define gst_byte_reader_peek_uint64_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_uint64_le_inline(reader,val))
+#define gst_byte_reader_peek_int64_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_int64_le_inline(reader,val))
+#define gst_byte_reader_peek_uint64_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_uint64_be_inline(reader,val))
+#define gst_byte_reader_peek_int64_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_int64_be_inline(reader,val))
+
+#endif /* GST_BYTE_READER_DISABLE_INLINES */
+
+// FIXME:
+//gboolean gst_byte_reader_get_float32_le (GstByteReader *reader, gfloat *val);
+//gboolean gst_byte_reader_get_float32_be (GstByteReader *reader, gfloat *val);
+//gboolean gst_byte_reader_get_float64_le (GstByteReader *reader, gdouble *val);
+//gboolean gst_byte_reader_get_float64_be (GstByteReader *reader, gdouble *val);
+
+//gboolean gst_byte_reader_peek_float32_le (GstByteReader *reader, gfloat *val);
+//gboolean gst_byte_reader_peek_float32_be (GstByteReader *reader, gfloat *val);
+//gboolean gst_byte_reader_peek_float64_le (GstByteReader *reader, gdouble *val);
+//gboolean gst_byte_reader_peek_float64_be (GstByteReader *reader, gdouble *val);
+
+static inline gboolean
+_gst_byte_reader_dup_data_inline (GstByteReader * reader, guint size, guint8 ** val)
+{
+  if (G_UNLIKELY (size > reader->size || _gst_byte_reader_get_remaining_inline (reader) < size))
+    return FALSE;
+
+  *val = gst_byte_reader_dup_data_unchecked (reader, size);
+  return TRUE;
+}
+
+static inline gboolean
+_gst_byte_reader_get_data_inline (GstByteReader * reader, guint size, const guint8 ** val)
+{
+  if (G_UNLIKELY (size > reader->size || _gst_byte_reader_get_remaining_inline (reader) < size))
+    return FALSE;
+
+  *val = gst_byte_reader_get_data_unchecked (reader, size);
+  return TRUE;
+}
+
+static inline gboolean
+_gst_byte_reader_peek_data_inline (GstByteReader * reader, guint size, const guint8 ** val)
+{
+  if (G_UNLIKELY (size > reader->size || _gst_byte_reader_get_remaining_inline (reader) < size))
+    return FALSE;
+
+  *val = gst_byte_reader_peek_data_unchecked (reader);
+  return TRUE;
+}
+
+#ifndef GST_BYTE_READER_DISABLE_INLINES
+
+#define gst_byte_reader_dup_data(reader,size,val) \
+    G_LIKELY(_gst_byte_reader_dup_data_inline(reader,size,val))
+#define gst_byte_reader_get_data(reader,size,val) \
+    G_LIKELY(_gst_byte_reader_get_data_inline(reader,size,val))
+#define gst_byte_reader_peek_data(reader,size,val) \
+    G_LIKELY(_gst_byte_reader_peek_data_inline(reader,size,val))
+
+#endif /* GST_BYTE_READER_DISABLE_INLINES */
+
 G_END_DECLS
 
 #endif /* __GST_BYTE_READER_H__ */

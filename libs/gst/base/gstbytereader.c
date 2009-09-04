@@ -23,6 +23,7 @@
 #include "config.h"
 #endif
 
+#define GST_BYTE_READER_DISABLE_INLINES
 #include "gstbytereader.h"
 
 #include <string.h>
@@ -198,8 +199,10 @@ gst_byte_reader_get_remaining (const GstByteReader * reader)
 {
   g_return_val_if_fail (reader != NULL, 0);
 
-  return reader->size - reader->byte;
+  return _gst_byte_reader_get_remaining_inline (reader);
 }
+
+#define gst_byte_reader_get_remaining _gst_byte_reader_get_remaining_inline
 
 /**
  * gst_byte_reader_skip:
@@ -697,11 +700,7 @@ gst_byte_reader_get_##name (GstByteReader * reader, type * val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
-    return FALSE; \
-  \
-  *val = gst_byte_reader_get_##name##_unchecked (reader); \
-  return TRUE; \
+  return _gst_byte_reader_get_##name##_inline (reader, val); \
 } \
 \
 gboolean \
@@ -710,11 +709,7 @@ gst_byte_reader_peek_##name (GstByteReader * reader, type * val) \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
-  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
-    return FALSE; \
-  \
-  *val = gst_byte_reader_peek_##name##_unchecked (reader); \
-  return TRUE; \
+  return _gst_byte_reader_peek_##name##_inline (reader, val); \
 }
 
 GST_BYTE_READER_PEEK_GET_INTS(8,guint8,uint8)
@@ -921,11 +916,7 @@ gst_byte_reader_get_data (GstByteReader * reader, guint size,
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (gst_byte_reader_get_remaining (reader) < size)
-    return FALSE;
-
-  *val = gst_byte_reader_get_data_unchecked (reader, size);
-  return TRUE;
+  return _gst_byte_reader_get_data_inline (reader, size, val);
 }
 
 /**
@@ -950,11 +941,7 @@ gst_byte_reader_peek_data (GstByteReader * reader, guint size,
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (val != NULL, FALSE);
 
-  if (gst_byte_reader_get_remaining (reader) < size)
-    return FALSE;
-
-  *val = gst_byte_reader_peek_data_unchecked (reader);
-  return TRUE;
+  return _gst_byte_reader_peek_data_inline (reader, size, val);
 }
 
 /**
@@ -974,13 +961,10 @@ gst_byte_reader_peek_data (GstByteReader * reader, guint size,
 gboolean
 gst_byte_reader_dup_data (GstByteReader * reader, guint size, guint8 ** val)
 {
-  const guint8 *cval = NULL;
+  g_return_val_if_fail (reader != NULL, FALSE);
+  g_return_val_if_fail (val != NULL, FALSE);
 
-  if (!gst_byte_reader_get_data (reader, size, &cval))
-    return FALSE;
-
-  *val = g_memdup (cval, size);
-  return TRUE;
+  return _gst_byte_reader_dup_data_inline (reader, size, val);
 }
 
 /**
