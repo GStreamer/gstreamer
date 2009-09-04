@@ -995,7 +995,7 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #gfloat to store the result
  *
- * Read a 32 bit little endian integer into @val
+ * Read a 32 bit little endian floating point value into @val
  * and update the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -1008,7 +1008,7 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #gfloat to store the result
  *
- * Read a 32 bit little endian integer into @val
+ * Read a 32 bit little endian floating point value into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -1021,7 +1021,7 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #gfloat to store the result
  *
- * Read a 32 bit big endian integer into @val
+ * Read a 32 bit big endian floating point value into @val
  * and update the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -1034,7 +1034,7 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #gfloat to store the result
  *
- * Read a 32 bit big endian integer into @val
+ * Read a 32 bit big endian floating point value into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -1047,7 +1047,7 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #gdouble to store the result
  *
- * Read a 64 bit little endian integer into @val
+ * Read a 64 bit little endian floating point value into @val
  * and update the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -1060,7 +1060,7 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #gdouble to store the result
  *
- * Read a 64 bit little endian integer into @val
+ * Read a 64 bit little endian floating point value into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -1073,7 +1073,7 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #gdouble to store the result
  *
- * Read a 64 bit big endian integer into @val
+ * Read a 64 bit big endian floating point value into @val
  * and update the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -1086,7 +1086,7 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #gdouble to store the result
  *
- * Read a 64 bit big endian integer into @val
+ * Read a 64 bit big endian floating point value into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
