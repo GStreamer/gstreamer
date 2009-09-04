@@ -769,20 +769,46 @@ theora_enc_init_yuv_buffer (yuv_buffer * yuv,
   yuv->v = yuv->u + GST_ROUND_UP_2 (height) / 2 * yuv->uv_stride;
 }
 
+/* NB: This function does no input checking */
+static void
+copy_plane (guint8 * dest, int dest_width, int dest_height, int dest_stride,
+    const guint8 * src, int src_width, int src_height, int src_stride,
+    int offset_x, int offset_y, GstTheoraEncBorderMode border, int black)
+{
+  int right_x, right_border, i;
+
+  /* fill top border */
+  if (border != BORDER_NONE) {
+    memset (dest, black, dest_stride * offset_y);
+  }
+  dest += dest_stride * offset_y;
+
+  right_x = src_width + offset_x;
+  right_border = dest_width - right_x;
+
+  /* copy source */
+  for (i = 0; i < src_height; i++) {
+    memcpy (dest + offset_x, src, src_width);
+    if (border != BORDER_NONE) {
+      memset (dest, black, offset_x);
+      memset (dest + right_x, black, right_border);
+    }
+
+    dest += dest_stride;
+    src += src_stride;
+  }
+
+  /* fill bottom border */
+  if (border != BORDER_NONE) {
+    memset (dest, black, dest_stride * (dest_height - src_height - offset_y));
+  }
+}
+
 static GstBuffer *
 theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
 {
+  yuv_buffer dest, src;
   GstBuffer *newbuf;
-  gint i;
-  guchar *dest_y, *src_y;
-  guchar *dest_u, *src_u;
-  guchar *dest_v, *src_v;
-  gint src_y_stride, src_uv_stride;
-  gint dst_y_stride, dst_uv_stride;
-  gint width, height;
-  gint cwidth, cheight;
-  gint offset_x, right_x, right_border;
-  gint y_size;
 
   if (enc->width == enc->info_width && enc->height == enc->info_height) {
     GST_LOG_OBJECT (enc, "no cropping/conversion needed");
@@ -790,24 +816,9 @@ theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
   }
 
   GST_LOG_OBJECT (enc, "cropping/conversion needed for strides");
-  /* source width/height */
-  width = enc->width;
-  height = enc->height;
-  /* soucre chroma width/height */
-  cwidth = width / 2;
-  cheight = height / 2;
 
-  /* source strides as defined in videotestsrc */
-  src_y_stride = GST_ROUND_UP_4 (width);
-  src_uv_stride = GST_ROUND_UP_8 (width) / 2;
-
-  /* destination strides from the real picture width */
-  dst_y_stride = enc->info_width;
-  dst_uv_stride = enc->info_width / 2;
-
-  y_size = enc->info_width * enc->info_height;
-
-  newbuf = gst_buffer_new_and_alloc (y_size * 3 / 2);
+  newbuf =
+      gst_buffer_new_and_alloc (enc->info_width * enc->info_height * 3 / 2);
   if (!newbuf) {
     gst_buffer_unref (buffer);
     return NULL;
@@ -815,90 +826,21 @@ theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
   GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET_NONE;
   gst_buffer_set_caps (newbuf, GST_PAD_CAPS (enc->srcpad));
 
-  dest_y = GST_BUFFER_DATA (newbuf);
-  dest_u = dest_y + y_size;
-  dest_v = dest_u + y_size / 4;
+  theora_enc_init_yuv_buffer (&src, GST_BUFFER_DATA (buffer),
+      enc->width, enc->height);
+  theora_enc_init_yuv_buffer (&dest, GST_BUFFER_DATA (newbuf),
+      enc->info_width, enc->info_height);
 
-  src_y = GST_BUFFER_DATA (buffer);
-  src_u = src_y + src_y_stride * GST_ROUND_UP_2 (height);
-  src_v = src_u + src_uv_stride * GST_ROUND_UP_2 (height) / 2;
+  copy_plane (dest.y, dest.y_width, dest.y_height, dest.y_stride,
+      src.y, src.y_width, src.y_height, src.y_stride,
+      enc->offset_x, enc->offset_y, enc->border, 0);
 
-  if (enc->border != BORDER_NONE) {
-    /* fill top border */
-    for (i = 0; i < enc->offset_y; i++) {
-      memset (dest_y, 0, dst_y_stride);
-      dest_y += dst_y_stride;
-    }
-  } else {
-    dest_y += dst_y_stride * enc->offset_y;
-  }
-
-  offset_x = enc->offset_x;
-  right_x = width + enc->offset_x;
-  right_border = dst_y_stride - right_x;
-
-  /* copy Y plane */
-  for (i = 0; i < height; i++) {
-    memcpy (dest_y + offset_x, src_y, width);
-    if (enc->border != BORDER_NONE) {
-      memset (dest_y, 0, offset_x);
-      memset (dest_y + right_x, 0, right_border);
-    }
-
-    dest_y += dst_y_stride;
-    src_y += src_y_stride;
-  }
-
-  if (enc->border != BORDER_NONE) {
-    /* fill bottom border */
-    for (i = height + enc->offset_y; i < enc->info.height; i++) {
-      memset (dest_y, 0, dst_y_stride);
-      dest_y += dst_y_stride;
-    }
-
-    /* fill top border chroma */
-    for (i = 0; i < enc->offset_y / 2; i++) {
-      memset (dest_u, 128, dst_uv_stride);
-      memset (dest_v, 128, dst_uv_stride);
-      dest_u += dst_uv_stride;
-      dest_v += dst_uv_stride;
-    }
-  } else {
-    dest_u += dst_uv_stride * enc->offset_y / 2;
-    dest_v += dst_uv_stride * enc->offset_y / 2;
-  }
-
-  offset_x = enc->offset_x / 2;
-  right_x = cwidth + offset_x;
-  right_border = dst_uv_stride - right_x;
-
-  /* copy UV planes */
-  for (i = 0; i < cheight; i++) {
-    memcpy (dest_v + offset_x, src_v, cwidth);
-    memcpy (dest_u + offset_x, src_u, cwidth);
-
-    if (enc->border != BORDER_NONE) {
-      memset (dest_u, 128, offset_x);
-      memset (dest_u + right_x, 128, right_border);
-      memset (dest_v, 128, offset_x);
-      memset (dest_v + right_x, 128, right_border);
-    }
-
-    dest_u += dst_uv_stride;
-    dest_v += dst_uv_stride;
-    src_u += src_uv_stride;
-    src_v += src_uv_stride;
-  }
-
-  if (enc->border != BORDER_NONE) {
-    /* fill bottom border */
-    for (i = cheight + enc->offset_y / 2; i < enc->info_height / 2; i++) {
-      memset (dest_u, 128, dst_uv_stride);
-      memset (dest_v, 128, dst_uv_stride);
-      dest_u += dst_uv_stride;
-      dest_v += dst_uv_stride;
-    }
-  }
+  copy_plane (dest.u, dest.uv_width, dest.uv_height, dest.uv_stride,
+      src.u, src.uv_width, src.uv_height, src.uv_stride,
+      enc->offset_x / 2, enc->offset_y / 2, enc->border, 128);
+  copy_plane (dest.v, dest.uv_width, dest.uv_height, dest.uv_stride,
+      src.v, src.uv_width, src.uv_height, src.uv_stride,
+      enc->offset_x / 2, enc->offset_y / 2, enc->border, 128);
 
   gst_buffer_unref (buffer);
   return newbuf;
