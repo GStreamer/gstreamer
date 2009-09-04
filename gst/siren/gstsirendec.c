@@ -218,6 +218,7 @@ gst_siren_dec_chain (GstPad * pad, GstBuffer * buf)
   gboolean discont;
   GstClockTime timestamp;
   guint64 distance;
+  GstCaps *outcaps;
 
   dec = GST_SIREN_DEC (GST_PAD_PARENT (pad));
 
@@ -248,9 +249,16 @@ gst_siren_dec_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (dec, "we have %u frames, %u in, %u out", num_frames, in_size,
       out_size);
 
+  /* set output caps when needed */
+  if ((outcaps = GST_PAD_CAPS (dec->srcpad)) == NULL) {
+    outcaps = gst_static_pad_template_get_caps (&srctemplate);
+    gst_pad_set_caps (dec->srcpad, outcaps);
+    gst_caps_unref (outcaps);
+  }
+
   /* get a buffer */
   ret = gst_pad_alloc_buffer_and_set_caps (dec->srcpad, -1,
-      out_size, GST_PAD_CAPS (dec->srcpad), &out_buf);
+      out_size, outcaps, &out_buf);
   if (ret != GST_FLOW_OK)
     goto alloc_failed;
 
