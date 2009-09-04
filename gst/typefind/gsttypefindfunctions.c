@@ -3534,6 +3534,8 @@ plugin_init (GstPlugin * plugin)
 #endif
   TYPE_FIND_REGISTER (plugin, "audio/midi", GST_RANK_PRIMARY, mid_type_find,
       mid_exts, MID_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER_RIFF (plugin, "audio/midi", GST_RANK_PRIMARY, mid_exts,
+      "RMID");
   TYPE_FIND_REGISTER (plugin, "audio/mobile-xmf", GST_RANK_PRIMARY,
       mxmf_type_find, mxmf_exts, MXMF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-fli", GST_RANK_MARGINAL, flx_type_find,
