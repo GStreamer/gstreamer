@@ -752,6 +752,23 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstClockTime timestamp,
   return ret;
 }
 
+static void
+theora_enc_init_yuv_buffer (yuv_buffer * yuv,
+    guint8 * data, gint width, gint height)
+{
+  yuv->y_width = width;
+  yuv->y_height = height;
+  yuv->y_stride = GST_ROUND_UP_4 (width);
+
+  yuv->uv_width = width / 2;
+  yuv->uv_height = height / 2;
+  yuv->uv_stride = GST_ROUND_UP_8 (width) / 2;
+
+  yuv->y = data;
+  yuv->u = yuv->y + GST_ROUND_UP_2 (height) * yuv->y_stride;
+  yuv->v = yuv->u + GST_ROUND_UP_2 (height) / 2 * yuv->uv_stride;
+}
+
 static GstBuffer *
 theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
 {
@@ -1044,28 +1061,13 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   {
     yuv_buffer yuv;
     gint res;
-    gint y_size;
-    guint8 *pixels;
-
-    yuv.y_width = enc->info_width;
-    yuv.y_height = enc->info_height;
-    yuv.y_stride = enc->info_width;
-
-    yuv.uv_width = enc->info_width / 2;
-    yuv.uv_height = enc->info_height / 2;
-    yuv.uv_stride = yuv.uv_width;
-
-    y_size = enc->info_width * enc->info_height;
 
     buffer = theora_enc_resize_buffer (enc, buffer);
     if (buffer == NULL)
       return GST_FLOW_ERROR;
 
-    pixels = GST_BUFFER_DATA (buffer);
-
-    yuv.y = pixels;
-    yuv.u = yuv.y + y_size;
-    yuv.v = yuv.u + y_size / 4;
+    theora_enc_init_yuv_buffer (&yuv, GST_BUFFER_DATA (buffer), enc->info_width,
+        enc->info_height);
 
     if (theora_enc_is_discontinuous (enc, running_time, duration)) {
       theora_enc_reset (enc);
