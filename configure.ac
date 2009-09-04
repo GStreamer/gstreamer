@@ -17,16 +17,13 @@ AC_SUBST(PACKAGE_VERSION)
 MONO_REQUIRED_VERSION=2.4
 AC_SUBST(MONO_REQUIRED_VERSION)
 PKG_CHECK_MODULES(MONO_DEPENDENCY, mono >= $MONO_REQUIRED_VERSION, has_mono=true, has_mono=false)
-AC_PATH_PROG(MONO, mono, no)
-AC_SUBST(MONO)
-
 
 AM_PROG_LIBTOOL
 
 if test "x$has_mono" = "xtrue"; then
 	GACUTIL_FLAGS='/package $(PACKAGE_VERSION) /gacdir $(libdir) /root $(DESTDIR)/$(libdir)'
 	GENERATED_SOURCES=generated/*.cs
-	AC_PATH_PROG(RUNTIME, mono, no)
+	AC_PATH_PROG(MONO, mono, no)
 	AC_PATH_PROG(CSC, gmcs, no)
 	if test `uname -s` = "Darwin"; then
         	LIB_PREFIX=
@@ -49,6 +46,7 @@ else
 	fi
 fi
 AM_CONDITIONAL(USE_MONO_COMPILER, test "x$has_mono" = "xtrue")
+AC_SUBST(MONO)
 
 CS="C#"
 if test "x$CSC" = "xno" ; then
