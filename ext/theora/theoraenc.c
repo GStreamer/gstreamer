@@ -351,8 +351,12 @@ theora_enc_finalize (GObject * object)
 static void
 theora_enc_reset (GstTheoraEnc * enc)
 {
+  int result;
+
   theora_clear (&enc->state);
-  theora_encode_init (&enc->state, &enc->info);
+  result = theora_encode_init (&enc->state, &enc->info);
+  /* We ensure this function cannot fail. */
+  g_assert (result == 0);
 #ifdef TH_ENCCTL_SET_SPLEVEL
   theora_control (&enc->state, TH_ENCCTL_SET_SPLEVEL, &enc->speed_level,
       sizeof (enc->speed_level));
@@ -1062,6 +1066,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     res = theora_encode_YUVin (&enc->state, &yuv);
+    /* none of the failure cases can happen here */
+    g_assert (res == 0);
 
     ret = GST_FLOW_OK;
     while (theora_encode_packetout (&enc->state, 0, &op)) {
