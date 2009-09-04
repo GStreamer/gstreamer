@@ -143,8 +143,8 @@ enum
 };
 
 /* properties */
-#define DEFAULT_PROP_URI	    NULL
-#define DEFAULT_PROP_SOURCE	    NULL
+#define DEFAULT_PROP_URI            NULL
+#define DEFAULT_PROP_SOURCE         NULL
 #define DEFAULT_CONNECTION_SPEED    0
 #define DEFAULT_CAPS                NULL
 #define DEFAULT_SUBTITLE_ENCODING   NULL
@@ -788,7 +788,8 @@ array_has_uri_value (const gchar * values[], const gchar * value)
 /* list of URIs that we consider to be streams and that need buffering.
  * We have no mechanism yet to figure this out with a query. */
 static const gchar *stream_uris[] = { "http://", "mms://", "mmsh://",
-  "mmsu://", "mmst://", "fd://", NULL
+  "mmsu://", "mmst://", "fd://", "myth://", "ssh://", "ftp://", "sftp://",
+  NULL
 };
 
 /* list of URIs that need a queue because they are pretty bursty */
