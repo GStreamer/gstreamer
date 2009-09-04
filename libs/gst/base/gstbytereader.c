@@ -693,7 +693,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
  * Since: 0.10.22
  */
 
-#define GST_BYTE_READER_PEEK_GET_INTS(bits,type,name) \
+#define GST_BYTE_READER_PEEK_GET(bits,type,name) \
 gboolean \
 gst_byte_reader_get_##name (GstByteReader * reader, type * val) \
 { \
@@ -712,28 +712,28 @@ gst_byte_reader_peek_##name (GstByteReader * reader, type * val) \
   return _gst_byte_reader_peek_##name##_inline (reader, val); \
 }
 
-GST_BYTE_READER_PEEK_GET_INTS(8,guint8,uint8)
-GST_BYTE_READER_PEEK_GET_INTS(8,gint8,int8)
+GST_BYTE_READER_PEEK_GET(8,guint8,uint8)
+GST_BYTE_READER_PEEK_GET(8,gint8,int8)
 
-GST_BYTE_READER_PEEK_GET_INTS(16,guint16,uint16_le)
-GST_BYTE_READER_PEEK_GET_INTS(16,guint16,uint16_be)
-GST_BYTE_READER_PEEK_GET_INTS(16,gint16,int16_le)
-GST_BYTE_READER_PEEK_GET_INTS(16,gint16,int16_be)
+GST_BYTE_READER_PEEK_GET(16,guint16,uint16_le)
+GST_BYTE_READER_PEEK_GET(16,guint16,uint16_be)
+GST_BYTE_READER_PEEK_GET(16,gint16,int16_le)
+GST_BYTE_READER_PEEK_GET(16,gint16,int16_be)
 
-GST_BYTE_READER_PEEK_GET_INTS(24,guint32,uint24_le)
-GST_BYTE_READER_PEEK_GET_INTS(24,guint32,uint24_be)
-GST_BYTE_READER_PEEK_GET_INTS(24,gint32,int24_le)
-GST_BYTE_READER_PEEK_GET_INTS(24,gint32,int24_be)
+GST_BYTE_READER_PEEK_GET(24,guint32,uint24_le)
+GST_BYTE_READER_PEEK_GET(24,guint32,uint24_be)
+GST_BYTE_READER_PEEK_GET(24,gint32,int24_le)
+GST_BYTE_READER_PEEK_GET(24,gint32,int24_be)
 
-GST_BYTE_READER_PEEK_GET_INTS(32,guint32,uint32_le)
-GST_BYTE_READER_PEEK_GET_INTS(32,guint32,uint32_be)
-GST_BYTE_READER_PEEK_GET_INTS(32,gint32,int32_le)
-GST_BYTE_READER_PEEK_GET_INTS(32,gint32,int32_be)
+GST_BYTE_READER_PEEK_GET(32,guint32,uint32_le)
+GST_BYTE_READER_PEEK_GET(32,guint32,uint32_be)
+GST_BYTE_READER_PEEK_GET(32,gint32,int32_le)
+GST_BYTE_READER_PEEK_GET(32,gint32,int32_be)
 
-GST_BYTE_READER_PEEK_GET_INTS(64,guint64,uint64_le)
-GST_BYTE_READER_PEEK_GET_INTS(64,guint64,uint64_be)
-GST_BYTE_READER_PEEK_GET_INTS(64,gint64,int64_le)
-GST_BYTE_READER_PEEK_GET_INTS(64,gint64,int64_be)
+GST_BYTE_READER_PEEK_GET(64,guint64,uint64_le)
+GST_BYTE_READER_PEEK_GET(64,guint64,uint64_be)
+GST_BYTE_READER_PEEK_GET(64,gint64,int64_le)
+GST_BYTE_READER_PEEK_GET(64,gint64,int64_be)
 
 /**
  * gst_byte_reader_get_float32_le:
@@ -839,60 +839,10 @@ GST_BYTE_READER_PEEK_GET_INTS(64,gint64,int64_be)
  * Since: 0.10.22
  */
 
-#define GST_BYTE_READER_READ_FLOATS(bits, type, TYPE) \
-gboolean \
-gst_byte_reader_get_float##bits##_le (GstByteReader *reader, g##type *val) \
-{ \
-  g_return_val_if_fail (reader != NULL, FALSE); \
-  g_return_val_if_fail (val != NULL, FALSE); \
-  \
-  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
-    return FALSE; \
-  \
-  *val = GST_READ_##TYPE##_LE (&reader->data[reader->byte]); \
-  reader->byte += bits / 8; \
-  return TRUE; \
-} \
-gboolean \
-gst_byte_reader_get_float##bits##_be (GstByteReader *reader, g##type *val) \
-{ \
-  g_return_val_if_fail (reader != NULL, FALSE); \
-  g_return_val_if_fail (val != NULL, FALSE); \
-  \
-  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
-    return FALSE; \
-  \
-  *val = GST_READ_##TYPE##_BE (&reader->data[reader->byte]); \
-  reader->byte += bits / 8; \
-  return TRUE; \
-} \
-gboolean \
-gst_byte_reader_peek_float##bits##_le (GstByteReader *reader, g##type *val) \
-{ \
-  g_return_val_if_fail (reader != NULL, FALSE); \
-  g_return_val_if_fail (val != NULL, FALSE); \
-  \
-  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
-    return FALSE; \
-  \
-  *val = GST_READ_##TYPE##_LE (&reader->data[reader->byte]); \
-  return TRUE; \
-} \
-gboolean \
-gst_byte_reader_peek_float##bits##_be (GstByteReader *reader, g##type *val) \
-{ \
-  g_return_val_if_fail (reader != NULL, FALSE); \
-  g_return_val_if_fail (val != NULL, FALSE); \
-  \
-  if (gst_byte_reader_get_remaining (reader) < bits / 8) \
-    return FALSE; \
-  \
-  *val = GST_READ_##TYPE##_BE (&reader->data[reader->byte]); \
-  return TRUE; \
-}
-
-GST_BYTE_READER_READ_FLOATS (32, float, FLOAT);
-GST_BYTE_READER_READ_FLOATS (64, double, DOUBLE);
+GST_BYTE_READER_PEEK_GET(32,gfloat,float32_le)
+GST_BYTE_READER_PEEK_GET(32,gfloat,float32_be)
+GST_BYTE_READER_PEEK_GET(64,gdouble,float64_le)
+GST_BYTE_READER_PEEK_GET(64,gdouble,float64_be)
 
 /**
  * gst_byte_reader_get_data:

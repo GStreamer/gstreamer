@@ -217,6 +217,11 @@ __GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(64,guint64,uint64_be,UINT64_BE,/* */)
 __GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(64,gint64,int64_le,UINT64_LE,/* */)
 __GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(64,gint64,int64_be,UINT64_BE,/* */)
 
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(32,gfloat,float32_le,FLOAT_LE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(32,gfloat,float32_be,FLOAT_BE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(64,gdouble,float64_le,DOUBLE_LE,/* */)
+__GST_BYTE_READER_GET_PEEK_BITS_UNCHECKED(64,gdouble,float64_be,DOUBLE_BE,/* */)
+
 #undef __GET_PEEK_BITS_UNCHECKED
 
 static inline const guint8 *
@@ -293,6 +298,11 @@ __GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,guint64,uint64_le)
 __GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,guint64,uint64_be)
 __GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,gint64,int64_le)
 __GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,gint64,int64_be)
+
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(32,gfloat,float32_le)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(32,gfloat,float32_be)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,gdouble,float64_le)
+__GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,gdouble,float64_be)
 
 #undef __GST_BYTE_READER_GET_PEEK_BITS_INLINE
 
@@ -376,18 +386,24 @@ __GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,gint64,int64_be)
 #define gst_byte_reader_peek_int64_be(reader,val) \
     G_LIKELY(_gst_byte_reader_peek_int64_be_inline(reader,val))
 
+#define gst_byte_reader_get_float32_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_float32_le_inline(reader,val))
+#define gst_byte_reader_get_float32_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_float32_be_inline(reader,val))
+#define gst_byte_reader_get_float64_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_float64_le_inline(reader,val))
+#define gst_byte_reader_get_float64_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_get_float64_be_inline(reader,val))
+#define gst_byte_reader_peek_float32_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_float32_le_inline(reader,val))
+#define gst_byte_reader_peek_float32_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_float32_be_inline(reader,val))
+#define gst_byte_reader_peek_float64_le(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_float64_le_inline(reader,val))
+#define gst_byte_reader_peek_float64_be(reader,val) \
+    G_LIKELY(_gst_byte_reader_peek_float64_be_inline(reader,val))
+
 #endif /* GST_BYTE_READER_DISABLE_INLINES */
-
-// FIXME:
-//gboolean gst_byte_reader_get_float32_le (GstByteReader *reader, gfloat *val);
-//gboolean gst_byte_reader_get_float32_be (GstByteReader *reader, gfloat *val);
-//gboolean gst_byte_reader_get_float64_le (GstByteReader *reader, gdouble *val);
-//gboolean gst_byte_reader_get_float64_be (GstByteReader *reader, gdouble *val);
-
-//gboolean gst_byte_reader_peek_float32_le (GstByteReader *reader, gfloat *val);
-//gboolean gst_byte_reader_peek_float32_be (GstByteReader *reader, gfloat *val);
-//gboolean gst_byte_reader_peek_float64_le (GstByteReader *reader, gdouble *val);
-//gboolean gst_byte_reader_peek_float64_be (GstByteReader *reader, gdouble *val);
 
 static inline gboolean
 _gst_byte_reader_dup_data_inline (GstByteReader * reader, guint size, guint8 ** val)

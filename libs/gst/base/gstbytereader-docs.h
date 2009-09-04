@@ -505,6 +505,104 @@ gint64 gst_byte_reader_get_int64_be_unchecked (GstByteReader * reader);
 gint64 gst_byte_reader_peek_int64_le_unchecked (GstByteReader * reader);
 gint64 gst_byte_reader_peek_int64_be_unchecked (GstByteReader * reader);
 
+/**
+ * gst_byte_reader_get_float32_le_unchecked:
+ * @reader: a #GstByteReader instance
+ *
+ * Read a 32 bit little endian float without checking if there is enough
+ * data available and update the current position.
+ *
+ * Returns: floating point value read
+ *
+ * Since: 0.10.25
+ */
+/**
+ * gst_byte_reader_peek_float32_le_unchecked:
+ * @reader: a #GstByteReader instance
+ *
+ * Read a 32 bit little endian float without checking if there is enough
+ * data available, but keep the current position.
+ *
+ * Returns: floating point value read
+ *
+ * Since: 0.10.25
+ */
+/**
+ * gst_byte_reader_get_float32_be_unchecked:
+ * @reader: a #GstByteReader instance
+ *
+ * Read a 32 bit big endian float without checking if there is enough
+ * data available and update the current position.
+ *
+ * Returns: floating point value read
+ *
+ * Since: 0.10.25
+ */
+/**
+ * gst_byte_reader_peek_float32_be_unchecked:
+ * @reader: a #GstByteReader instance
+ *
+ * Read a 32 bit big endian float without checking if there is enough
+ * data available, but keep the current position.
+ *
+ * Returns: floating point value read
+ *
+ * Since: 0.10.25
+ */
+/**
+ * gst_byte_reader_get_float64_le_unchecked:
+ * @reader: a #GstByteReader instance
+ *
+ * Read a 64 bit little endian float without checking if there is enough
+ * data available and update the current position.
+ *
+ * Returns: double precision floating point value read
+ *
+ * Since: 0.10.25
+ */
+/**
+ * gst_byte_reader_peek_float64_le_unchecked:
+ * @reader: a #GstByteReader instance
+ *
+ * Read a 64 bit little endian float without checking if there is enough
+ * data available, but keep the current position.
+ *
+ * Returns: double precision floating point value read
+ *
+ * Since: 0.10.25
+ */
+/**
+ * gst_byte_reader_get_float64_be_unchecked:
+ * @reader: a #GstByteReader instance
+ *
+ * Read a 64 bit big endian float without checking if there is enough
+ * data available and update the current position.
+ *
+ * Returns: double precision floating point value read
+ *
+ * Since: 0.10.25
+ */
+/**
+ * gst_byte_reader_peek_float64_be_unchecked:
+ * @reader: a #GstByteReader instance
+ *
+ * Read a 64 bit big endian float without checking if there is enough
+ * data available, but keep the current position.
+ *
+ * Returns: double precision floating point value read
+ *
+ * Since: 0.10.25
+ */
+
+gfloat  gst_byte_reader_get_float32_le_unchecked (GstByteReader * reader);
+gfloat  gst_byte_reader_get_float32_be_unchecked (GstByteReader * reader);
+gdouble gst_byte_reader_get_float64_le_unchecked (GstByteReader * reader);
+gdouble gst_byte_reader_get_float64_be_unchecked (GstByteReader * reader);
+
+gfloat  gst_byte_reader_peek_float32_le_unchecked (GstByteReader * reader);
+gfloat  gst_byte_reader_peek_float32_be_unchecked (GstByteReader * reader);
+gdouble gst_byte_reader_peek_float64_le_unchecked (GstByteReader * reader);
+gdouble gst_byte_reader_peek_float64_be_unchecked (GstByteReader * reader);
 
 /**
  * gst_byte_reader_peek_data_unchecked:
