@@ -185,8 +185,8 @@
 #define ST_BD_SECONDARY_AC3_PLUS        0xa1
 #define ST_BD_SECONDARY_DTS_HD          0xa2
 
-/* VC1 extension */
-#define ST_VIDEO_VC1                    0xea
+/* defined for VC1 extension in RP227 */
+#define ST_PRIVATE_EA                   0xea
 
 /* HDV AUX stream mapping
  * 0xA0      ISO/IEC 61834-11

@@ -206,6 +206,9 @@ static MpegTsPmtInfo *mpegts_demux_build_pmt_info (GstMpegTSDemux * demux,
 
 static GstElementClass *parent_class = NULL;
 
+static FORCE_INLINE GstMpegTSStream
+    * gst_mpegts_demux_get_stream_for_PID (GstMpegTSDemux * demux, guint16 PID);
+
 /*static guint gst_mpegts_demux_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
@@ -563,7 +566,6 @@ gst_mpegts_stream_is_video (GstMpegTSStream * stream)
     case ST_VIDEO_MPEG2:
     case ST_VIDEO_MPEG4:
     case ST_VIDEO_H264:
-    case ST_VIDEO_VC1:
       return TRUE;
     case ST_VIDEO_DIRAC:
       return gst_mpegts_is_dirac_stream (stream);
@@ -660,7 +662,16 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
         caps = gst_caps_new_simple ("video/x-dirac", NULL);
       }
       break;
-    case ST_VIDEO_VC1:
+    case ST_PRIVATE_EA:        /* Try to detect a VC1 stream */
+    {
+      guint8 *desc = NULL;
+
+      if (stream->ES_info)
+        desc = gst_mpeg_descriptor_find (stream->ES_info, DESC_REGISTRATION);
+      if (!(desc && DESC_REGISTRATION_format_identifier (desc) == DRF_ID_VC1)) {
+        GST_WARNING ("0xea private stream type found but no descriptor "
+            "for VC1. Assuming plain VC1.");
+      }
       template = klass->video_template;
       name = g_strdup_printf ("video_%04x", stream->PID);
       caps = gst_caps_new_simple ("video/x-wmv",
@@ -668,8 +679,23 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
           "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('W', 'V', 'C', '1'),
           NULL);
       break;
+    }
     case ST_BD_AUDIO_AC3:
-      if (gst_mpeg_descriptor_find (stream->ES_info, DESC_DVB_ENHANCED_AC3)) {
+    {
+      GstMpegTSStream *PMT_stream =
+          gst_mpegts_demux_get_stream_for_PID (stream->demux, stream->PMT_pid);
+      GstMPEGDescriptor *program_info = PMT_stream->PMT.program_info;
+      guint8 *desc = NULL;
+
+      if (program_info)
+        desc = gst_mpeg_descriptor_find (program_info, DESC_REGISTRATION);
+
+      if (desc && DESC_REGISTRATION_format_identifier (desc) == DRF_ID_HDMV) {
+        template = klass->audio_template;
+        name = g_strdup_printf ("audio_%04x", stream->PID);
+        caps = gst_caps_new_simple ("audio/x-eac3", NULL);
+      } else if (gst_mpeg_descriptor_find (stream->ES_info,
+              DESC_DVB_ENHANCED_AC3)) {
         template = klass->audio_template;
         name = g_strdup_printf ("audio_%04x", stream->PID);
         caps = gst_caps_new_simple ("audio/x-eac3", NULL);
@@ -684,6 +710,7 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
         caps = gst_caps_new_simple ("audio/x-ac3", NULL);
       }
       break;
+    }
     case ST_BD_AUDIO_EAC3:
       template = klass->audio_template;
       name = g_strdup_printf ("audio_%04x", stream->PID);
@@ -2848,7 +2875,6 @@ beach:
 
   return res;
 }
-
 
 static FORCE_INLINE gint
 is_mpegts_sync (const guint8 * in_data, const guint8 * end_data,
