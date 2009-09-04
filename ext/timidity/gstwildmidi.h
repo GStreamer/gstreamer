@@ -66,16 +66,12 @@ struct _GstWildmidi
   guint64 offset;
 
   /* output data */
-  gboolean o_new_segment, o_seek;
+  gboolean discont;
   GstSegment o_segment[1];
   gint64 o_len;
 
   /* format of the stream */
-  gint64 bytes_per_frame;
-  GstClockTime time_per_frame;
-
-  /* options */
-  gboolean accurate_seek;
+  guint bytes_per_frame;
 
   /* wildmidi settings */
   gboolean high_quality;
