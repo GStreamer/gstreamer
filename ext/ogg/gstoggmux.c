@@ -231,8 +231,6 @@ gst_ogg_mux_clear (GstOggMux * ogg_mux)
 {
   ogg_mux->pulling = NULL;
   ogg_mux->need_headers = TRUE;
-  ogg_mux->max_delay = DEFAULT_MAX_DELAY;
-  ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
   ogg_mux->delta_pad = NULL;
   ogg_mux->offset = 0;
   ogg_mux->next_ts = 0;
@@ -259,6 +257,9 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   gst_collect_pads_set_function (ogg_mux->collect,
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_ogg_mux_collected),
       ogg_mux);
+
+  ogg_mux->max_delay = DEFAULT_MAX_DELAY;
+  ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
 
   gst_ogg_mux_clear (ogg_mux);
 }
