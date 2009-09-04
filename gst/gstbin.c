@@ -2982,6 +2982,8 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 
       /* collect all eos messages from the children */
       GST_OBJECT_LOCK (bin);
+      /* ref message for future use  */
+      gst_message_ref (message);
       bin_replace_message (bin, message, GST_MESSAGE_EOS);
       eos = is_eos (bin);
       GST_OBJECT_UNLOCK (bin);
@@ -2996,6 +2998,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
             "all sinks posted EOS, posting seqnum #%" G_GUINT32_FORMAT, seqnum);
         gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
       }
+      gst_message_unref (message);
       break;
     }
     case GST_MESSAGE_STATE_DIRTY:
