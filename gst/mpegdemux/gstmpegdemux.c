@@ -1037,6 +1037,12 @@ gst_flups_demux_do_seek (GstFluPSDemux * demux, GstSegment * seeksegment)
   guint64 scr_rate_n = demux->last_scr_offset - demux->first_scr_offset;
   guint64 scr_rate_d = demux->last_scr - demux->first_scr;
 
+  /* In some clips the PTS values are completely unaligned with SCR values.
+   * To improve the seek in that situation we apply a factor considering the
+   * relationship between last PTS and last SCR */
+  if (demux->last_scr > demux->last_pts)
+    scr = gst_util_uint64_scale (scr, demux->last_scr, demux->last_pts);
+
   scr = MIN (demux->last_scr, scr);
   scr = MAX (demux->first_scr, scr);
   fscr = scr;
