@@ -451,7 +451,6 @@ souphttpsrc_suite (void)
   suite_add_tcase (s, tc_chain);
   run_server (&http_port, &https_port);
   tcase_add_test (tc_chain, test_first_buffer_has_offset);
-  tcase_add_test (tc_chain, test_https);
   tcase_add_test (tc_chain, test_redirect_yes);
   tcase_add_test (tc_chain, test_redirect_no);
   tcase_add_test (tc_chain, test_not_found);
@@ -463,6 +462,8 @@ souphttpsrc_suite (void)
   tcase_add_test (tc_chain, test_good_user_digest_auth);
   tcase_add_test (tc_chain, test_bad_user_digest_auth);
   tcase_add_test (tc_chain, test_bad_password_digest_auth);
+  if (soup_ssl_supported)
+    tcase_add_test (tc_chain, test_https);
 
   suite_add_tcase (s, tc_internet);
   tcase_set_timeout (tc_internet, 250);
