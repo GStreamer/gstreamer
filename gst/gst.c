@@ -468,8 +468,8 @@ gst_init_check (int *argc, char **argv[], GError ** err)
 
 /**
  * gst_init:
- * @argc: pointer to application's argc
- * @argv: pointer to application's argv
+ * @argc: (inout): pointer to application's argc
+ * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
  *
  * Initializes the GStreamer library, setting up internal path lists,
  * registering built-in elements, and loading standard plugins.

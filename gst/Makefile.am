@@ -236,3 +236,44 @@ gstenumtypes.c: $(gst_headers)
 	$(GCOV) -b -f -o $^ > $@.out
 
 gcov: $(libgstreamer_@GST_MAJORMINOR@_la_SOURCES:=.gcov)
+
+if HAVE_INTROSPECTION
+BUILT_GIRSOURCES = Gst-@GST_MAJORMINOR@.gir
+
+gir_headers=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_MAJORMINOR@include_HEADERS))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstreamer_@GST_MAJORMINOR@_la_SOURCES))
+
+Gst-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_MAJORMINOR@.la
+	$(INTROSPECTION_SCANNER) -v --namespace Gst \
+		--nsversion=@GST_MAJORMINOR@ \
+		-I$(top_srcdir) \
+		--c-include='gst/gst.h' \
+		--library=gstreamer-0.10 \
+		--include=GLib-2.0 \
+		--include=GObject-2.0 \
+		--include=GModule-2.0 \
+		--include=libxml2-2.0 \
+		--libtool="$(top_builddir)/libtool" \
+		--pkg glib-2.0 \
+		--pkg gobject-2.0 \
+		--pkg gmodule-no-export-2.0 \
+		--pkg gthread-2.0 \
+		--pkg libxml-2.0 \
+		--output $@ \
+		$(gir_headers) \
+		$(gir_sources)
+
+# INTROSPECTION_GIRDIR/INTROSPECTION_TYPELIBDIR aren't the right place to
+# install anything - we need to install inside our prefix.
+girdir = $(datadir)/gir-1.0
+gir_DATA = $(BUILT_GIRSOURCES)
+
+typelibsdir = $(libdir)/girepository-1.0/
+
+typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
+
+%.typelib: %.gir $(INTROSPECTION_COMPILER)
+	$(INTROSPECTION_COMPILER) --includedir=$(srcdir) --includedir=$(builddir) $(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+
+CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
+endif

@@ -18,3 +18,5 @@ gstconfig.h
 *.gcno
 *.gcov
 *.gcov.out
+*.gir
+*.typelib
