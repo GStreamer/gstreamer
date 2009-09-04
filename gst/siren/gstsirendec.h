@@ -53,10 +53,11 @@ struct _GstSirenDec
   /* Protected by stream lock */
   SirenDecoder decoder;
 
+  GstAdapter *adapter;
+  gboolean discont;
+
   GstPad *sinkpad;
   GstPad *srcpad;
-
-  GstCaps *srccaps;
 };
 
 struct _GstSirenDecClass
