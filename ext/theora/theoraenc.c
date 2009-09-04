@@ -169,7 +169,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) I420, "
+        "format = (fourcc) { I420, Y42B, Y444 }, "
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -381,9 +381,11 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstTheoraEnc *enc = GST_THEORA_ENC (gst_pad_get_parent (pad));
+  guint32 fourcc;
   const GValue *par;
   gint fps_n, fps_d;
 
+  gst_structure_get_fourcc (structure, "format", &fourcc);
   gst_structure_get_int (structure, "width", &enc->width);
   gst_structure_get_int (structure, "height", &enc->height);
   gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d);
@@ -397,6 +399,19 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info_height = enc->info.height = (enc->height + 15) & ~15;
   enc->info.frame_width = enc->width;
   enc->info.frame_height = enc->height;
+  switch (fourcc) {
+    case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+      enc->info.pixelformat = OC_PF_420;
+      break;
+    case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
+      enc->info.pixelformat = OC_PF_422;
+      break;
+    case GST_MAKE_FOURCC ('Y', '4', '4', '4'):
+      enc->info.pixelformat = OC_PF_444;
+      break;
+    default:
+      g_assert_not_reached ();
+  }
 
   /* center image if needed */
   if (enc->center) {
@@ -753,20 +768,39 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstClockTime timestamp,
 }
 
 static void
-theora_enc_init_yuv_buffer (yuv_buffer * yuv,
+theora_enc_init_yuv_buffer (yuv_buffer * yuv, theora_pixelformat format,
     guint8 * data, gint width, gint height)
 {
+  yuv->y = data;
   yuv->y_width = width;
   yuv->y_height = height;
   yuv->y_stride = GST_ROUND_UP_4 (width);
 
-  yuv->uv_width = width / 2;
-  yuv->uv_height = height / 2;
-  yuv->uv_stride = GST_ROUND_UP_8 (width) / 2;
-
-  yuv->y = data;
-  yuv->u = yuv->y + GST_ROUND_UP_2 (height) * yuv->y_stride;
-  yuv->v = yuv->u + GST_ROUND_UP_2 (height) / 2 * yuv->uv_stride;
+  switch (format) {
+    case OC_PF_444:
+      yuv->uv_width = width;
+      yuv->uv_height = height;
+      yuv->uv_stride = GST_ROUND_UP_4 (width);
+      yuv->u = yuv->y + height * yuv->y_stride;
+      yuv->v = yuv->u + height * yuv->uv_stride;
+      break;
+    case OC_PF_420:
+      yuv->uv_width = width / 2;
+      yuv->uv_height = height / 2;
+      yuv->uv_stride = GST_ROUND_UP_8 (width) / 2;
+      yuv->u = yuv->y + GST_ROUND_UP_2 (height) * yuv->y_stride;
+      yuv->v = yuv->u + GST_ROUND_UP_2 (height) / 2 * yuv->uv_stride;
+      break;
+    case OC_PF_422:
+      yuv->uv_width = width / 2;
+      yuv->uv_height = height;
+      yuv->uv_stride = GST_ROUND_UP_8 (width) / 2;
+      yuv->u = yuv->y + height * yuv->y_stride;
+      yuv->v = yuv->u + height * yuv->uv_stride;
+      break;
+    default:
+      g_assert_not_reached ();
+  }
 }
 
 /* NB: This function does no input checking */
@@ -804,11 +838,29 @@ copy_plane (guint8 * dest, int dest_width, int dest_height, int dest_stride,
   }
 }
 
+static guint
+theora_format_get_bits_per_pixel (theora_pixelformat format)
+{
+  switch (format) {
+    case OC_PF_420:
+      return 12;
+    case OC_PF_422:
+      return 16;
+    case OC_PF_444:
+      return 24;
+    default:
+      g_assert_not_reached ();
+      return 0;
+  }
+}
+
 static GstBuffer *
 theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
 {
   yuv_buffer dest, src;
   GstBuffer *newbuf;
+  int uv_offset_x;
+  int uv_offset_y;
 
   if (enc->width == enc->info_width && enc->height == enc->info_height) {
     GST_LOG_OBJECT (enc, "no cropping/conversion needed");
@@ -817,8 +869,8 @@ theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
 
   GST_LOG_OBJECT (enc, "cropping/conversion needed for strides");
 
-  newbuf =
-      gst_buffer_new_and_alloc (enc->info_width * enc->info_height * 3 / 2);
+  newbuf = gst_buffer_new_and_alloc (enc->info_width * enc->info_height *
+      theora_format_get_bits_per_pixel (enc->info.pixelformat) / 8);
   if (!newbuf) {
     gst_buffer_unref (buffer);
     return NULL;
@@ -826,21 +878,24 @@ theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
   GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET_NONE;
   gst_buffer_set_caps (newbuf, GST_PAD_CAPS (enc->srcpad));
 
-  theora_enc_init_yuv_buffer (&src, GST_BUFFER_DATA (buffer),
-      enc->width, enc->height);
-  theora_enc_init_yuv_buffer (&dest, GST_BUFFER_DATA (newbuf),
-      enc->info_width, enc->info_height);
+  theora_enc_init_yuv_buffer (&src, enc->info.pixelformat,
+      GST_BUFFER_DATA (buffer), enc->width, enc->height);
+  theora_enc_init_yuv_buffer (&dest, enc->info.pixelformat,
+      GST_BUFFER_DATA (newbuf), enc->info_width, enc->info_height);
 
   copy_plane (dest.y, dest.y_width, dest.y_height, dest.y_stride,
       src.y, src.y_width, src.y_height, src.y_stride,
       enc->offset_x, enc->offset_y, enc->border, 0);
 
+  uv_offset_x = enc->offset_x * dest.uv_width / dest.y_width;
+  uv_offset_y = enc->offset_y * dest.uv_height / dest.y_height;
+
   copy_plane (dest.u, dest.uv_width, dest.uv_height, dest.uv_stride,
       src.u, src.uv_width, src.uv_height, src.uv_stride,
-      enc->offset_x / 2, enc->offset_y / 2, enc->border, 128);
+      uv_offset_x, uv_offset_y, enc->border, 128);
   copy_plane (dest.v, dest.uv_width, dest.uv_height, dest.uv_stride,
       src.v, src.uv_width, src.uv_height, src.uv_stride,
-      enc->offset_x / 2, enc->offset_y / 2, enc->border, 128);
+      uv_offset_x, uv_offset_y, enc->border, 128);
 
   gst_buffer_unref (buffer);
   return newbuf;
@@ -1008,8 +1063,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     if (buffer == NULL)
       return GST_FLOW_ERROR;
 
-    theora_enc_init_yuv_buffer (&yuv, GST_BUFFER_DATA (buffer), enc->info_width,
-        enc->info_height);
+    theora_enc_init_yuv_buffer (&yuv, enc->info.pixelformat,
+        GST_BUFFER_DATA (buffer), enc->info_width, enc->info_height);
 
     if (theora_enc_is_discontinuous (enc, running_time, duration)) {
       theora_enc_reset (enc);
