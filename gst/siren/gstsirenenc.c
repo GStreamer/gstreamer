@@ -209,7 +209,7 @@ gst_siren_enc_sink_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 gst_siren_enc_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstSirenEnc *enc = GST_SIREN_ENC (gst_pad_get_parent_element (pad));
+  GstSirenEnc *enc;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
   guint8 *in_data, *out_data;
@@ -221,6 +221,8 @@ gst_siren_enc_chain (GstPad * pad, GstBuffer * buf)
   GstClockTime timestamp;
   guint64 distance;
 
+  enc = GST_SIREN_ENC (GST_PAD_PARENT (pad));
+
   discont = GST_BUFFER_IS_DISCONT (buf);
   if (discont) {
     GST_DEBUG_OBJECT (enc, "received DISCONT, flush adapter");
@@ -230,10 +232,10 @@ gst_siren_enc_chain (GstPad * pad, GstBuffer * buf)
 
   gst_adapter_push (enc->adapter, buf);
 
-  GST_LOG_OBJECT (enc, "Received buffer of size %d with adapter of size : %d",
-      GST_BUFFER_SIZE (buf), gst_adapter_available (enc->adapter));
-
   size = gst_adapter_available (enc->adapter);
+
+  GST_LOG_OBJECT (enc, "Received buffer of size %d with adapter of size : %d",
+      GST_BUFFER_SIZE (buf), size);
 
   /* we need to process 640 input bytes to produce 40 output bytes */
   /* calculate the amount of frames we will handle */
@@ -260,7 +262,8 @@ gst_siren_enc_chain (GstPad * pad, GstBuffer * buf)
   timestamp = gst_adapter_prev_timestamp (enc->adapter, &distance);
 
   /* add the amount of time taken by the distance */
-  timestamp += gst_util_uint64_scale_int (distance / 2, GST_SECOND, 16000);
+  if (timestamp != -1)
+    timestamp += gst_util_uint64_scale_int (distance / 2, GST_SECOND, 16000);
 
   GST_LOG_OBJECT (enc,
       "timestamp %" GST_TIME_FORMAT ", distance %" G_GUINT64_FORMAT,
@@ -298,8 +301,6 @@ gst_siren_enc_chain (GstPad * pad, GstBuffer * buf)
 done:
   if (to_free)
     g_free (to_free);
-
-  gst_object_unref (enc);
 
   return ret;
 
