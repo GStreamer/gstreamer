@@ -137,7 +137,7 @@ enum
       "mute = (boolean) { FALSE, TRUE }; " \
     "audio/x-ac3; audio/x-eac3;" \
     "audio/x-dts;" \
-    "audio/x-private1-lpcm" \
+    "audio/x-private-ts-lpcm" \
   )
 
 /* Can also use the subpicture pads for text subtitles? */
@@ -705,7 +705,7 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
     case ST_BD_AUDIO_LPCM:
       template = klass->audio_template;
       name = g_strdup_printf ("audio_%04x", stream->PID);
-      caps = gst_caps_new_simple ("audio/x-private1-lpcm", NULL);
+      caps = gst_caps_new_simple ("audio/x-private-ts-lpcm", NULL);
       break;
     case ST_PS_DVD_SUBPICTURE:
       template = klass->subpicture_template;
