@@ -752,6 +752,141 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstClockTime timestamp,
   return ret;
 }
 
+static GstBuffer *
+theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
+{
+  GstBuffer *newbuf;
+  gint i;
+  guchar *dest_y, *src_y;
+  guchar *dest_u, *src_u;
+  guchar *dest_v, *src_v;
+  gint src_y_stride, src_uv_stride;
+  gint dst_y_stride, dst_uv_stride;
+  gint width, height;
+  gint cwidth, cheight;
+  gint offset_x, right_x, right_border;
+  gint y_size;
+
+  if (enc->width == enc->info_width && enc->height == enc->info_height) {
+    GST_LOG_OBJECT (enc, "no cropping/conversion needed");
+    return buffer;
+  }
+
+  GST_LOG_OBJECT (enc, "cropping/conversion needed for strides");
+  /* source width/height */
+  width = enc->width;
+  height = enc->height;
+  /* soucre chroma width/height */
+  cwidth = width / 2;
+  cheight = height / 2;
+
+  /* source strides as defined in videotestsrc */
+  src_y_stride = GST_ROUND_UP_4 (width);
+  src_uv_stride = GST_ROUND_UP_8 (width) / 2;
+
+  /* destination strides from the real picture width */
+  dst_y_stride = enc->info_width;
+  dst_uv_stride = enc->info_width / 2;
+
+  y_size = enc->info_width * enc->info_height;
+
+  newbuf = gst_buffer_new_and_alloc (y_size * 3 / 2);
+  if (!newbuf) {
+    gst_buffer_unref (buffer);
+    return NULL;
+  }
+  GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET_NONE;
+  gst_buffer_set_caps (newbuf, GST_PAD_CAPS (enc->srcpad));
+
+  dest_y = GST_BUFFER_DATA (newbuf);
+  dest_u = dest_y + y_size;
+  dest_v = dest_u + y_size / 4;
+
+  src_y = GST_BUFFER_DATA (buffer);
+  src_u = src_y + src_y_stride * GST_ROUND_UP_2 (height);
+  src_v = src_u + src_uv_stride * GST_ROUND_UP_2 (height) / 2;
+
+  if (enc->border != BORDER_NONE) {
+    /* fill top border */
+    for (i = 0; i < enc->offset_y; i++) {
+      memset (dest_y, 0, dst_y_stride);
+      dest_y += dst_y_stride;
+    }
+  } else {
+    dest_y += dst_y_stride * enc->offset_y;
+  }
+
+  offset_x = enc->offset_x;
+  right_x = width + enc->offset_x;
+  right_border = dst_y_stride - right_x;
+
+  /* copy Y plane */
+  for (i = 0; i < height; i++) {
+    memcpy (dest_y + offset_x, src_y, width);
+    if (enc->border != BORDER_NONE) {
+      memset (dest_y, 0, offset_x);
+      memset (dest_y + right_x, 0, right_border);
+    }
+
+    dest_y += dst_y_stride;
+    src_y += src_y_stride;
+  }
+
+  if (enc->border != BORDER_NONE) {
+    /* fill bottom border */
+    for (i = height + enc->offset_y; i < enc->info.height; i++) {
+      memset (dest_y, 0, dst_y_stride);
+      dest_y += dst_y_stride;
+    }
+
+    /* fill top border chroma */
+    for (i = 0; i < enc->offset_y / 2; i++) {
+      memset (dest_u, 128, dst_uv_stride);
+      memset (dest_v, 128, dst_uv_stride);
+      dest_u += dst_uv_stride;
+      dest_v += dst_uv_stride;
+    }
+  } else {
+    dest_u += dst_uv_stride * enc->offset_y / 2;
+    dest_v += dst_uv_stride * enc->offset_y / 2;
+  }
+
+  offset_x = enc->offset_x / 2;
+  right_x = cwidth + offset_x;
+  right_border = dst_uv_stride - right_x;
+
+  /* copy UV planes */
+  for (i = 0; i < cheight; i++) {
+    memcpy (dest_v + offset_x, src_v, cwidth);
+    memcpy (dest_u + offset_x, src_u, cwidth);
+
+    if (enc->border != BORDER_NONE) {
+      memset (dest_u, 128, offset_x);
+      memset (dest_u + right_x, 128, right_border);
+      memset (dest_v, 128, offset_x);
+      memset (dest_v + right_x, 128, right_border);
+    }
+
+    dest_u += dst_uv_stride;
+    dest_v += dst_uv_stride;
+    src_u += src_uv_stride;
+    src_v += src_uv_stride;
+  }
+
+  if (enc->border != BORDER_NONE) {
+    /* fill bottom border */
+    for (i = cheight + enc->offset_y / 2; i < enc->info_height / 2; i++) {
+      memset (dest_u, 128, dst_uv_stride);
+      memset (dest_v, 128, dst_uv_stride);
+      dest_u += dst_uv_stride;
+      dest_v += dst_uv_stride;
+    }
+  }
+
+  gst_buffer_unref (buffer);
+  return newbuf;
+}
+
 static GstFlowReturn
 theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -922,138 +1057,15 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
     y_size = enc->info_width * enc->info_height;
 
-    if (enc->width == enc->info_width && enc->height == enc->info_height) {
-      GST_LOG_OBJECT (enc, "no cropping/conversion needed");
-      /* easy case, no cropping/conversion needed */
-      pixels = GST_BUFFER_DATA (buffer);
+    buffer = theora_enc_resize_buffer (enc, buffer);
+    if (buffer == NULL)
+      return GST_FLOW_ERROR;
 
-      yuv.y = pixels;
-      yuv.u = yuv.y + y_size;
-      yuv.v = yuv.u + y_size / 4;
-    } else {
-      GstBuffer *newbuf;
-      gint i;
-      guchar *dest_y, *src_y;
-      guchar *dest_u, *src_u;
-      guchar *dest_v, *src_v;
-      gint src_y_stride, src_uv_stride;
-      gint dst_y_stride, dst_uv_stride;
-      gint width, height;
-      gint cwidth, cheight;
-      gint offset_x, right_x, right_border;
+    pixels = GST_BUFFER_DATA (buffer);
 
-      GST_LOG_OBJECT (enc, "cropping/conversion needed for strides");
-      /* source width/height */
-      width = enc->width;
-      height = enc->height;
-      /* soucre chroma width/height */
-      cwidth = width / 2;
-      cheight = height / 2;
-
-      /* source strides as defined in videotestsrc */
-      src_y_stride = GST_ROUND_UP_4 (width);
-      src_uv_stride = GST_ROUND_UP_8 (width) / 2;
-
-      /* destination strides from the real picture width */
-      dst_y_stride = enc->info_width;
-      dst_uv_stride = enc->info_width / 2;
-
-      newbuf = gst_buffer_new_and_alloc (y_size * 3 / 2);
-      if (!newbuf) {
-        ret = GST_FLOW_ERROR;
-        goto no_buffer;
-      }
-      GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET_NONE;
-      gst_buffer_set_caps (newbuf, GST_PAD_CAPS (enc->srcpad));
-
-      dest_y = yuv.y = GST_BUFFER_DATA (newbuf);
-      dest_u = yuv.u = yuv.y + y_size;
-      dest_v = yuv.v = yuv.u + y_size / 4;
-
-      src_y = GST_BUFFER_DATA (buffer);
-      src_u = src_y + src_y_stride * GST_ROUND_UP_2 (height);
-      src_v = src_u + src_uv_stride * GST_ROUND_UP_2 (height) / 2;
-
-      if (enc->border != BORDER_NONE) {
-        /* fill top border */
-        for (i = 0; i < enc->offset_y; i++) {
-          memset (dest_y, 0, dst_y_stride);
-          dest_y += dst_y_stride;
-        }
-      } else {
-        dest_y += dst_y_stride * enc->offset_y;
-      }
-
-      offset_x = enc->offset_x;
-      right_x = width + enc->offset_x;
-      right_border = dst_y_stride - right_x;
-
-      /* copy Y plane */
-      for (i = 0; i < height; i++) {
-        memcpy (dest_y + offset_x, src_y, width);
-        if (enc->border != BORDER_NONE) {
-          memset (dest_y, 0, offset_x);
-          memset (dest_y + right_x, 0, right_border);
-        }
-
-        dest_y += dst_y_stride;
-        src_y += src_y_stride;
-      }
-
-      if (enc->border != BORDER_NONE) {
-        /* fill bottom border */
-        for (i = height + enc->offset_y; i < enc->info.height; i++) {
-          memset (dest_y, 0, dst_y_stride);
-          dest_y += dst_y_stride;
-        }
-
-        /* fill top border chroma */
-        for (i = 0; i < enc->offset_y / 2; i++) {
-          memset (dest_u, 128, dst_uv_stride);
-          memset (dest_v, 128, dst_uv_stride);
-          dest_u += dst_uv_stride;
-          dest_v += dst_uv_stride;
-        }
-      } else {
-        dest_u += dst_uv_stride * enc->offset_y / 2;
-        dest_v += dst_uv_stride * enc->offset_y / 2;
-      }
-
-      offset_x = enc->offset_x / 2;
-      right_x = cwidth + offset_x;
-      right_border = dst_uv_stride - right_x;
-
-      /* copy UV planes */
-      for (i = 0; i < cheight; i++) {
-        memcpy (dest_v + offset_x, src_v, cwidth);
-        memcpy (dest_u + offset_x, src_u, cwidth);
-
-        if (enc->border != BORDER_NONE) {
-          memset (dest_u, 128, offset_x);
-          memset (dest_u + right_x, 128, right_border);
-          memset (dest_v, 128, offset_x);
-          memset (dest_v + right_x, 128, right_border);
-        }
-
-        dest_u += dst_uv_stride;
-        dest_v += dst_uv_stride;
-        src_u += src_uv_stride;
-        src_v += src_uv_stride;
-      }
-
-      if (enc->border != BORDER_NONE) {
-        /* fill bottom border */
-        for (i = cheight + enc->offset_y / 2; i < enc->info_height / 2; i++) {
-          memset (dest_u, 128, dst_uv_stride);
-          memset (dest_v, 128, dst_uv_stride);
-          dest_u += dst_uv_stride;
-          dest_v += dst_uv_stride;
-        }
-      }
-
-      gst_buffer_unref (buffer);
-      buffer = newbuf;
-    }
+    yuv.y = pixels;
+    yuv.u = yuv.y + y_size;
+    yuv.v = yuv.u + y_size / 4;
 
     if (theora_enc_is_discontinuous (enc, running_time, duration)) {
       theora_enc_reset (enc);
@@ -1097,10 +1109,6 @@ header_buffer_alloc:
 header_push:
   {
     gst_buffer_unref (buffer);
-    return ret;
-  }
-no_buffer:
-  {
     return ret;
   }
 data_push:
