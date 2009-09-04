@@ -203,7 +203,6 @@ gst_dshowvideosrc_init (GstDshowVideoSrc * src, GstDshowVideoSrcClass * klass)
   src->media_filter = NULL;
   src->filter_graph = NULL;
   src->caps = NULL;
-  src->video_defaults = NULL;
   src->pins_mediatypes = NULL;
   src->is_rgb = FALSE;
 
@@ -237,12 +236,12 @@ gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   }
 
   if (res != -1) {
-    GList *type_video_default = g_list_nth (src->video_defaults, res);
-    if (type_video_default) {
-      GstCaptureVideoDefault *video_default = (GstCaptureVideoDefault *) type_video_default->data;
-      gst_structure_fixate_field_nearest_int (structure, "width", video_default->defaultWidth);
-      gst_structure_fixate_field_nearest_int (structure, "height", video_default->defaultHeight);
-      gst_structure_fixate_field_nearest_fraction (structure, "framerate", video_default->defaultFPS, 1);
+    GList *type_pin_mediatype = g_list_nth (src->pins_mediatypes, res);
+    if (type_pin_mediatype) {
+      GstCapturePinMediaType *pin_mediatype = (GstCapturePinMediaType *) type_pin_mediatype->data;
+      gst_structure_fixate_field_nearest_int (structure, "width", pin_mediatype->defaultWidth);
+      gst_structure_fixate_field_nearest_int (structure, "height", pin_mediatype->defaultHeight);
+      gst_structure_fixate_field_nearest_fraction (structure, "framerate", pin_mediatype->defaultFPS, 1);
     }
   }
 }
@@ -265,11 +264,6 @@ gst_dshowvideosrc_dispose (GObject * gobject)
   if (src->caps) {
     gst_caps_unref (src->caps);
     src->caps = NULL;
-  }
-
-  if (src->video_defaults) {
-    g_list_free (src->video_defaults);
-    src->video_defaults = NULL;
   }
 
   if (src->pins_mediatypes) {
@@ -551,6 +545,7 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
               GstCaps *caps =
                   gst_dshowvideosrc_getcaps_from_streamcaps (src, capture_pin,
                   streamcaps);
+              g_print ("caps: %s\n", gst_caps_to_string(caps));
 
               if (caps) {
                 gst_caps_append (src->caps, caps);
@@ -694,15 +689,10 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 
     if (res != -1 && src->pins_mediatypes) {
       /* get the corresponding media type and build the dshow graph */
-      GList *type = g_list_nth (src->pins_mediatypes, res);
+      GList *type_pin_mediatype = g_list_nth (src->pins_mediatypes, res);
 
-      //will be removed when GST_TYPE_INT_RANGE_STEP exits
-      GList *type_video_default = g_list_nth (src->video_defaults, res);
-
-      if (type && type_video_default) {
-        //will be removed when GST_TYPE_INT_RANGE_STEP exits
-        GstCaptureVideoDefault *video_default = (GstCaptureVideoDefault *) type_video_default->data;
-        GstCapturePinMediaType *pin_mediatype = NULL;
+      if (type_pin_mediatype) {
+        GstCapturePinMediaType *pin_mediatype = (GstCapturePinMediaType *) type_pin_mediatype->data;
         gchar *caps_string = NULL;
         gchar *src_caps_string = NULL;
 
@@ -719,17 +709,10 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
         /* check if the desired video size is valid about granularity  */
 		    /* This check will be removed when GST_TYPE_INT_RANGE_STEP exits */
         /* See remarks in gst_dshowvideosrc_getcaps_from_streamcaps function */
-        if (video_default->granularityWidth != 0 && width % video_default->granularityWidth != 0)
-          g_warning ("your desired video size is not valid : %d mod %d !=0\n", width, video_default->granularityWidth) ;
-        if (video_default->granularityHeight !=0 && height % video_default->granularityHeight != 0)
-          g_warning ("your desired video size is not valid : %d mod %d !=0\n", height, video_default->granularityHeight) ;
-
-        /* display all capabilities when using --gst-debug-level=3 */
-        src_caps_string = gst_caps_to_string (src->caps);
-        GST_LOG (src_caps_string);
-        g_free (src_caps_string);
-
-        pin_mediatype = (GstCapturePinMediaType *) type->data;
+        if (pin_mediatype->granularityWidth != 0 && width % pin_mediatype->granularityWidth != 0)
+          g_warning ("your desired video size is not valid : %d mod %d !=0\n", width, pin_mediatype->granularityWidth) ;
+        if (pin_mediatype->granularityHeight !=0 && height % pin_mediatype->granularityHeight != 0)
+          g_warning ("your desired video size is not valid : %d mod %d !=0\n", height, pin_mediatype->granularityHeight) ;
 
         /* update mediatype */
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
@@ -899,7 +882,6 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
 
   for (; i < icount; i++) {
     GstCapturePinMediaType *pin_mediatype = g_new0 (GstCapturePinMediaType, 1);
-    GstCaptureVideoDefault *video_default = g_new0 (GstCaptureVideoDefault, 1);
 
     pin->AddRef();
     pin_mediatype->capture_pin = pin;
@@ -907,42 +889,33 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
     hres = streamcaps->GetStreamCaps(i, &pin_mediatype->mediatype, (BYTE *) & vscc);
     if (FAILED (hres) || !pin_mediatype->mediatype) {
       gst_dshow_free_pin_mediatype (pin_mediatype);
-      g_free (video_default);
     } else {
       GstCaps *mediacaps = NULL;
 
       if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_I420, FORMAT_VideoInfo)) {
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_I420, NULL, &vscc, 
-          (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat, video_default);
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_I420, NULL, &vscc, pin_mediatype);
 
       } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_RGB24, FORMAT_VideoInfo)) {
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_BGR, NULL, &vscc, 
-          (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat, video_default);
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_BGR, NULL, &vscc, pin_mediatype);
 
       } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_VideoInfo)) {
         mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN,
-          "video/x-dv, systemstream=FALSE", &vscc, (VIDEOINFOHEADER *) 
-          pin_mediatype->mediatype->pbFormat, video_default);
+          "video/x-dv, systemstream=FALSE", &vscc, pin_mediatype);
 
-      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_DvInfo)) {
-
-        video_default->granularityWidth = 0;
-        video_default->granularityHeight = 0;
-        
+      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_DvInfo)) { 
         mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN,
-          "video/x-dv, systemstream=TRUE", &vscc, (VIDEOINFOHEADER *) 
-          pin_mediatype->mediatype->pbFormat, video_default);
+          "video/x-dv, systemstream=TRUE", &vscc, pin_mediatype);
+
+        pin_mediatype->granularityWidth = 0;
+        pin_mediatype->granularityHeight = 0;
       }
 
       if (mediacaps) {
         src->pins_mediatypes =
           g_list_append (src->pins_mediatypes, pin_mediatype);
-        src->video_defaults =
-          g_list_append (src->video_defaults, video_default);
         gst_caps_append (caps, mediacaps);
       } else {
         gst_dshow_free_pin_mediatype (pin_mediatype);
-        g_free (video_default);
       }
 
     }

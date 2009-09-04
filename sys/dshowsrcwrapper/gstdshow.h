@@ -35,19 +35,15 @@ typedef struct _GstCapturePinMediaType
 {
   AM_MEDIA_TYPE *mediatype;
   IPin *capture_pin;
-} GstCapturePinMediaType;
 
-/* video default properties associated to a video format (YUY2, I420, RGB24 ...) */
-typedef struct _GstCaptureVideoDefault
-{
+  //default caps
   gint defaultWidth;
   gint defaultHeight;
   gint defaultFPS;
 
   gint granularityWidth; //will be removed when GST_TYPE_INT_RANGE_STEP exits
   gint granularityHeight; //will be removed when GST_TYPE_INT_RANGE_STEP exits
-
-} GstCaptureVideoDefault;
+} GstCapturePinMediaType;
 
 /* free memory of the input pin mediatype */
 void gst_dshow_free_pin_mediatype (gpointer pt);
@@ -78,7 +74,6 @@ gboolean gst_dshow_show_propertypage (IBaseFilter *base_filter);
 
 /* transform a dshow video caps to a gstreamer video caps */ 
 GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
-  const VIDEO_STREAM_CONFIG_CAPS * vscc, const VIDEOINFOHEADER *video_info, 
-  GstCaptureVideoDefault *video_default);
+  const VIDEO_STREAM_CONFIG_CAPS * vscc, GstCapturePinMediaType *pin_mediatype);
 
 #endif /* _GSTDSHOW_ */

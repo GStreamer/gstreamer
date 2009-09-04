@@ -323,17 +323,17 @@ gst_dshow_show_propertypage (IBaseFilter *base_filter)
 }
 
 GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
-  const VIDEO_STREAM_CONFIG_CAPS * vscc, const VIDEOINFOHEADER *video_info, 
-  GstCaptureVideoDefault *video_default)
+  const VIDEO_STREAM_CONFIG_CAPS * vscc, GstCapturePinMediaType *pin_mediatype)
 {
   GstCaps *video_caps = NULL;
   GstStructure *video_structure = NULL;
+  VIDEOINFOHEADER *video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
   
-  video_default->defaultWidth = video_info->bmiHeader.biWidth;
-  video_default->defaultHeight = video_info->bmiHeader.biHeight;
-  video_default->defaultFPS = (gint) (10000000 / video_info->AvgTimePerFrame);
-  video_default->granularityWidth = vscc->OutputGranularityX;
-  video_default->granularityHeight = vscc->OutputGranularityY;
+  pin_mediatype->defaultWidth = video_info->bmiHeader.biWidth;
+  pin_mediatype->defaultHeight = video_info->bmiHeader.biHeight;
+  pin_mediatype->defaultFPS = (gint) (10000000 / video_info->AvgTimePerFrame);
+  pin_mediatype->granularityWidth = vscc->OutputGranularityX;
+  pin_mediatype->granularityHeight = vscc->OutputGranularityY;
 
   /* raw video format */
   switch (video_format) {

@@ -56,9 +56,6 @@ struct _GstDshowVideoSrc
   /* list of caps created from the list of supported media types of the dshow capture filter */
   GstCaps *caps;
 
-  /* list of dshow default video properties from filter's capture pins */
-  GList *video_defaults;
-
   /* list of dshow media types from the filter's capture pins */
   GList *pins_mediatypes;
 
