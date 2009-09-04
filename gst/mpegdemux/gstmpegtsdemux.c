@@ -103,7 +103,6 @@ enum
   PROP_PROGRAM_NUMBER,
   PROP_PAT_INFO,
   PROP_PMT_INFO,
-  PROP_M2TS
 };
 
 #define GSTTIME_TO_BYTES(time) \
@@ -307,11 +306,6 @@ gst_mpegts_demux_class_init (GstMpegTSDemuxClass * klass)
           "about the currently selected program and its streams",
           MPEGTS_TYPE_PMT_INFO, G_PARAM_READABLE));
 
-  g_object_class_install_property (gobject_class, PROP_M2TS,
-      g_param_spec_boolean ("m2ts_mode", "M2TS(192 bytes) Mode",
-          "Defines if the input is normal TS ie .ts(188 bytes)"
-          "or Blue-Ray Format ie .m2ts(192 bytes).", FALSE, G_PARAM_READWRITE));
-
   gstelement_class->change_state = gst_mpegts_demux_change_state;
   gstelement_class->provide_clock = gst_mpegts_demux_provide_clock;
 }
@@ -333,8 +327,6 @@ gst_mpegts_demux_init (GstMpegTSDemux * demux)
   demux->nb_elementary_pids = 0;
   demux->check_crc = DEFAULT_PROP_CHECK_CRC;
   demux->program_number = DEFAULT_PROP_PROGRAM_NUMBER;
-  demux->packetsize = MPEGTS_NORMAL_TS_PACKETSIZE;
-  demux->m2ts_mode = FALSE;
   demux->sync_lut = NULL;
   demux->sync_lut_len = 0;
   demux->bitrate = -1;
@@ -487,34 +479,18 @@ static gboolean
 gst_mpegts_demux_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstMpegTSDemux *demux = GST_MPEGTS_DEMUX (gst_pad_get_parent (pad));
-  gboolean ret = FALSE;
   GstStructure *structure = NULL;
-  gint expected_packetsize =
-      (demux->m2ts_mode ? MPEGTS_M2TS_TS_PACKETSIZE :
-      MPEGTS_NORMAL_TS_PACKETSIZE);
-  gint packetsize = expected_packetsize;
 
   structure = gst_caps_get_structure (caps, 0);
 
   GST_DEBUG_OBJECT (demux, "setcaps called with %" GST_PTR_FORMAT, caps);
 
-  if (!gst_structure_get_int (structure, "packetsize", &packetsize)) {
+  if (!gst_structure_get_int (structure, "packetsize", &demux->packetsize)) {
     GST_DEBUG_OBJECT (demux, "packetsize parameter not found in sink caps");
   }
 
-  if (packetsize < expected_packetsize) {
-    GST_WARNING_OBJECT (demux, "packetsize = %" G_GINT32_FORMAT "is less then"
-        "expected packetsize of %d bytes", packetsize, expected_packetsize);
-    goto beach;
-  }
-
-  /* here we my have a correct value for packet size */
-  demux->packetsize = packetsize;
-  ret = TRUE;
-
-beach:
   gst_object_unref (demux);
-  return ret;
+  return TRUE;
 }
 
 static FORCE_INLINE guint32
@@ -2901,6 +2877,26 @@ is_mpegts_sync (const guint8 * in_data, const guint8 * end_data,
   return ret;
 }
 
+static inline void
+gst_mpegts_demux_detect_packet_size (GstMpegTSDemux * demux, guint len)
+{
+  guint i, packetsize;
+
+  for (i = 1; i < len; i++) {
+    packetsize = demux->sync_lut[i] - demux->sync_lut[i - 1];
+    if (packetsize == MPEGTS_NORMAL_TS_PACKETSIZE ||
+        packetsize == MPEGTS_M2TS_TS_PACKETSIZE ||
+        packetsize == MPEGTS_DVB_ASI_TS_PACKETSIZE ||
+        packetsize == MPEGTS_ATSC_TS_PACKETSIZE)
+      goto done;
+    else
+      packetsize = 0;
+  }
+
+done:
+  demux->packetsize = (packetsize ? packetsize : MPEGTS_NORMAL_TS_PACKETSIZE);
+  GST_DEBUG_OBJECT (demux, "packet_size set to %d bytes", demux->packetsize);
+}
 
 static FORCE_INLINE guint
 gst_mpegts_demux_sync_scan (GstMpegTSDemux * demux, const guint8 * in_data,
@@ -2909,10 +2905,12 @@ gst_mpegts_demux_sync_scan (GstMpegTSDemux * demux, const guint8 * in_data,
   guint sync_count = 0;
   const guint8 *end_scan = in_data + size - demux->packetsize;
   guint8 *ptr_data = (guint8 *) in_data;
+  guint packetsize =
+      (demux->packetsize ? demux->packetsize : MPEGTS_NORMAL_TS_PACKETSIZE);
 
   /* Check if the LUT table is big enough */
-  if (G_UNLIKELY (demux->sync_lut_len < (size / MPEGTS_NORMAL_TS_PACKETSIZE))) {
-    demux->sync_lut_len = size / MPEGTS_NORMAL_TS_PACKETSIZE;
+  if (G_UNLIKELY (demux->sync_lut_len < (size / packetsize))) {
+    demux->sync_lut_len = size / packetsize;
     if (demux->sync_lut)
       g_free (demux->sync_lut);
     demux->sync_lut = g_new0 (guint8 *, demux->sync_lut_len);
@@ -2922,22 +2920,24 @@ gst_mpegts_demux_sync_scan (GstMpegTSDemux * demux, const guint8 * in_data,
 
   while (ptr_data <= end_scan && sync_count < demux->sync_lut_len) {
     /* if sync code is found try to store it in the LUT */
-    guint chance = is_mpegts_sync (ptr_data, end_scan, demux->packetsize);
+    guint chance = is_mpegts_sync (ptr_data, end_scan, packetsize);
     if (G_LIKELY (chance > 50)) {
       /* skip paketsize bytes and try find next */
-      guint8 *next_sync = ptr_data + demux->packetsize;
+      guint8 *next_sync = ptr_data + packetsize;
       if (next_sync < end_scan) {
         demux->sync_lut[sync_count] = ptr_data;
         sync_count++;
-        ptr_data += demux->packetsize;
+        ptr_data += packetsize;
       } else
         goto done;
-
     } else {
       ptr_data++;
     }
   }
 done:
+  if (G_UNLIKELY (!demux->packetsize))
+    gst_mpegts_demux_detect_packet_size (demux, sync_count);
+
   *flush = ptr_data - in_data;
 
   return sync_count;
@@ -3147,9 +3147,6 @@ gst_mpegts_demux_set_property (GObject * object, guint prop_id,
     case PROP_PROGRAM_NUMBER:
       demux->program_number = g_value_get_int (value);
       break;
-    case PROP_M2TS:
-      demux->m2ts_mode = g_value_get_boolean (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3200,9 +3197,6 @@ gst_mpegts_demux_get_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case PROP_M2TS:
-      g_value_set_boolean (value, demux->m2ts_mode);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
