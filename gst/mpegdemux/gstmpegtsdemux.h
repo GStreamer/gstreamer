@@ -59,6 +59,8 @@ G_BEGIN_DECLS
 #define MPEGTS_MAX_PID 0x1fff
 #define MPEGTS_NORMAL_TS_PACKETSIZE  188
 #define MPEGTS_M2TS_TS_PACKETSIZE    192
+#define MPEGTS_DVB_ASI_TS_PACKETSIZE 204
+#define MPEGTS_ATSC_TS_PACKETSIZE    208
 
 #define IS_MPEGTS_SYNC(data) (((data)[0] == 0x47) && \
                                     (((data)[1] & 0x80) == 0x00) && \
@@ -200,7 +202,7 @@ struct _GstMpegTSDemux {
   /* indicates that we need to close our pad group, because we've added
    * at least one pad */
   gboolean          need_no_more_pads;
-  guint16           packetsize;
+  gint              packetsize;
   gboolean          m2ts_mode;
   /* clocking */
   GstClock          * clock;

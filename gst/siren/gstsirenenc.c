@@ -40,6 +40,8 @@
 GST_DEBUG_CATEGORY (sirenenc_debug);
 #define GST_CAT_DEFAULT (sirenenc_debug)
 
+#define FRAME_DURATION  (20 * GST_MSECOND)
+
 /* elementfactory information */
 static const GstElementDetails gst_siren_enc_details =
 GST_ELEMENT_DETAILS ("Siren Encoder element",
@@ -77,7 +79,10 @@ enum
 
 
 
-static void gst_siren_enc_dispose (GObject * object);
+static void gst_siren_enc_finalize (GObject * object);
+
+static gboolean gst_siren_enc_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_siren_enc_sink_event (GstPad * pad, GstEvent * event);
 
 static GstFlowReturn gst_siren_enc_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn
@@ -117,7 +122,7 @@ gst_siren_enc_class_init (GstSirenEncClass * klass)
 
   GST_DEBUG ("Initializing Class");
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_siren_enc_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_siren_enc_finalize);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_siren_change_state);
 
@@ -135,106 +140,185 @@ gst_siren_enc_init (GstSirenEnc * enc, GstSirenEncClass * klass)
   enc->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   enc->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
 
+  gst_pad_set_setcaps_function (enc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_siren_enc_sink_setcaps));
+  gst_pad_set_event_function (enc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_siren_enc_sink_event));
   gst_pad_set_chain_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_siren_enc_chain));
 
   gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
 
-  enc->srccaps = gst_static_pad_template_get_caps (&srctemplate);
-
   GST_DEBUG_OBJECT (enc, "Init done");
 }
 
 static void
-gst_siren_enc_dispose (GObject * object)
+gst_siren_enc_finalize (GObject * object)
 {
   GstSirenEnc *enc = GST_SIREN_ENC (object);
 
   GST_DEBUG_OBJECT (object, "Disposing");
 
-  if (enc->encoder) {
-    Siren7_CloseEncoder (enc->encoder);
-    enc->encoder = NULL;
-  }
-
-  if (enc->adapter) {
-    g_object_unref (enc->adapter);
-    enc->adapter = NULL;
-  }
-
-  if (enc->srccaps) {
-    gst_caps_unref (enc->srccaps);
-    enc->srccaps = NULL;
-  }
+  Siren7_CloseEncoder (enc->encoder);
+  g_object_unref (enc->adapter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static gboolean
+gst_siren_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstSirenEnc *enc;
+  gboolean res;
+  GstCaps *outcaps;
+
+  enc = GST_SIREN_ENC (GST_PAD_PARENT (pad));
+
+  outcaps = gst_static_pad_template_get_caps (&srctemplate);
+  res = gst_pad_set_caps (enc->srcpad, outcaps);
+  gst_caps_unref (outcaps);
+
+  return res;
+}
+
+static gboolean
+gst_siren_enc_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstSirenEnc *enc;
+  gboolean res;
+
+  enc = GST_SIREN_ENC (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      gst_adapter_clear (enc->adapter);
+      res = gst_pad_push_event (enc->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_adapter_clear (enc->adapter);
+      res = gst_pad_push_event (enc->srcpad, event);
+      break;
+    default:
+      res = gst_pad_push_event (enc->srcpad, event);
+      break;
+  }
+  return res;
 }
 
 static GstFlowReturn
 gst_siren_enc_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstSirenEnc *enc = GST_SIREN_ENC (gst_pad_get_parent_element (pad));
+  GstSirenEnc *enc;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *encoded = NULL;
-  guint8 *data = NULL;
-  gint out_offset = 0;
-  gint encode_ret = 0;
-  gint size = 0;
-  guint in_offset = 0;
+  GstBuffer *out_buf;
+  guint8 *in_data, *out_data;
+  guint8 *to_free = NULL;
+  guint i, size, num_frames;
+  gint out_size, in_size;
+  gint encode_ret;
+  gboolean discont;
+  GstClockTime timestamp;
+  guint64 distance;
 
-  GST_OBJECT_LOCK (enc);
+  enc = GST_SIREN_ENC (GST_PAD_PARENT (pad));
+
+  discont = GST_BUFFER_IS_DISCONT (buf);
+  if (discont) {
+    GST_DEBUG_OBJECT (enc, "received DISCONT, flush adapter");
+    gst_adapter_clear (enc->adapter);
+    enc->discont = TRUE;
+  }
 
   gst_adapter_push (enc->adapter, buf);
 
-  GST_LOG_OBJECT (enc, "Received buffer of size %d with adapter of size : %d",
-      GST_BUFFER_SIZE (buf), gst_adapter_available (enc->adapter));
-
   size = gst_adapter_available (enc->adapter);
-  size /= 16;
-  size -= size % 40;
 
-  if (size == 0) {
-    GST_OBJECT_UNLOCK (enc);
-    goto out;
-  }
+  GST_LOG_OBJECT (enc, "Received buffer of size %d with adapter of size : %d",
+      GST_BUFFER_SIZE (buf), size);
 
-  data = gst_adapter_take (enc->adapter, size * 16);
+  /* we need to process 640 input bytes to produce 40 output bytes */
+  /* calculate the amount of frames we will handle */
+  num_frames = size / 640;
 
-  GST_OBJECT_UNLOCK (enc);
+  /* no frames, wait some more */
+  if (num_frames == 0)
+    goto done;
 
-  ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
-      GST_BUFFER_OFFSET (buf) / 16, size, enc->srccaps, &encoded);
+  /* this is the input/output size */
+  in_size = num_frames * 640;
+  out_size = num_frames * 40;
 
+  GST_LOG_OBJECT (enc, "we have %u frames, %u in, %u out", num_frames, in_size,
+      out_size);
+
+  /* get a buffer */
+  ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad, -1,
+      out_size, GST_PAD_CAPS (enc->srcpad), &out_buf);
   if (ret != GST_FLOW_OK)
-    goto out;
+    goto alloc_failed;
 
-  while (out_offset < size && ret == GST_FLOW_OK) {
-    GST_LOG_OBJECT (enc, "Encoding frame");
+  /* get the timestamp for the output buffer */
+  timestamp = gst_adapter_prev_timestamp (enc->adapter, &distance);
 
-    encode_ret = Siren7_EncodeFrame (enc->encoder,
-        data + in_offset, GST_BUFFER_DATA (encoded) + out_offset);
-    if (encode_ret != 0) {
-      GST_ERROR_OBJECT (enc, "Siren7_EncodeFrame returned %d", encode_ret);
-      ret = GST_FLOW_ERROR;
-      gst_buffer_unref (encoded);
-      goto out;
-    }
+  /* add the amount of time taken by the distance */
+  if (timestamp != -1)
+    timestamp += gst_util_uint64_scale_int (distance / 2, GST_SECOND, 16000);
 
-    out_offset += 40;
-    in_offset += 640;
+  GST_LOG_OBJECT (enc,
+      "timestamp %" GST_TIME_FORMAT ", distance %" G_GUINT64_FORMAT,
+      GST_TIME_ARGS (timestamp), distance);
+
+  /* get the input data for all the frames */
+  to_free = in_data = gst_adapter_take (enc->adapter, in_size);
+  out_data = GST_BUFFER_DATA (out_buf);
+
+  for (i = 0; i < num_frames; i++) {
+    GST_LOG_OBJECT (enc, "Encoding frame %u/%u", i, num_frames);
+
+    /* encode 640 input bytes to 40 output bytes */
+    encode_ret = Siren7_EncodeFrame (enc->encoder, in_data, out_data);
+    if (encode_ret != 0)
+      goto encode_error;
+
+    /* move to next frame */
+    out_data += 40;
+    in_data += 640;
   }
 
-  GST_LOG_OBJECT (enc, "Finished encoding : %d", out_offset);
+  GST_LOG_OBJECT (enc, "Finished encoding");
 
-  ret = gst_pad_push (enc->srcpad, encoded);
+  /* mark discont */
+  if (enc->discont) {
+    GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DISCONT);
+    enc->discont = FALSE;
+  }
+  GST_BUFFER_TIMESTAMP (out_buf) = timestamp;
+  GST_BUFFER_DURATION (out_buf) = num_frames * FRAME_DURATION;
 
-out:
-  if (data)
-    g_free (data);
+  ret = gst_pad_push (enc->srcpad, out_buf);
 
-  gst_object_unref (enc);
+done:
+  if (to_free)
+    g_free (to_free);
+
   return ret;
+
+  /* ERRORS */
+alloc_failed:
+  {
+    GST_DEBUG_OBJECT (enc, "failed to pad_alloc buffer: %d (%d)", ret,
+        gst_flow_get_name (ret));
+    goto done;
+  }
+encode_error:
+  {
+    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
+        ("Error encoding frame: %d", encode_ret));
+    ret = GST_FLOW_ERROR;
+    gst_buffer_unref (out_buf);
+    goto done;
+  }
 }
 
 static GstStateChangeReturn
@@ -243,16 +327,19 @@ gst_siren_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstSirenEnc *enc = GST_SIREN_ENC (element);
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      enc->discont = FALSE;
+      break;
+    default:
+      break;
+  }
 
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_OBJECT_LOCK (element);
       gst_adapter_clear (enc->adapter);
-      GST_OBJECT_UNLOCK (element);
       break;
     default:
       break;

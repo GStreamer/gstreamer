@@ -178,14 +178,15 @@
 #define ST_BD_AUDIO_AC3_TRUE_HD         0x83
 #define ST_BD_AUDIO_AC3_PLUS            0x84
 #define ST_BD_AUDIO_DTS_HD              0x85
+#define ST_BD_AUDIO_EAC3                0x87
 #define ST_BD_PGS_SUBPICTURE            0x90
 #define ST_BD_IGS                       0x91
 #define ST_BD_SUBTITLE                  0x92
 #define ST_BD_SECONDARY_AC3_PLUS        0xa1
 #define ST_BD_SECONDARY_DTS_HD          0xa2
 
-/* VC1 extension */
-#define ST_VIDEO_VC1                    0xea
+/* defined for VC1 extension in RP227 */
+#define ST_PRIVATE_EA                   0xea
 
 /* HDV AUX stream mapping
  * 0xA0      ISO/IEC 61834-11

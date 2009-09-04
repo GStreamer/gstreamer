@@ -126,6 +126,8 @@ struct MpegTsMuxClass  {
   GstElementClass parent_class;
 };
 
+#define MPEG_TS_PAD_DATA(data)  ((MpegTsPadData *)(data))
+
 struct MpegTsPadData {
   GstCollectData collect; /* Parent */
 

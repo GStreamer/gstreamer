@@ -321,3 +321,67 @@ gst_dshow_show_propertypage (IBaseFilter *base_filter)
   }
   return ret;
 }
+
+GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
+  const VIDEO_STREAM_CONFIG_CAPS * vscc, GstCapturePinMediaType *pin_mediatype)
+{
+  GstCaps *video_caps = NULL;
+  GstStructure *video_structure = NULL;
+  VIDEOINFOHEADER *video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
+  
+  pin_mediatype->defaultWidth = video_info->bmiHeader.biWidth;
+  pin_mediatype->defaultHeight = video_info->bmiHeader.biHeight;
+  pin_mediatype->defaultFPS = (gint) (10000000 / video_info->AvgTimePerFrame);
+  pin_mediatype->granularityWidth = vscc->OutputGranularityX;
+  pin_mediatype->granularityHeight = vscc->OutputGranularityY;
+
+  /* raw video format */
+  switch (video_format) {
+    case GST_VIDEO_FORMAT_BGR:
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_BGR);
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("I420"));
+    default:
+      break;
+  }
+
+  /* other video format */
+  if (!video_caps){
+    if (g_strcasecmp (name, "video/x-dv, systemstream=FALSE") == 0) {
+      video_caps = gst_caps_new_simple ("video/x-dv", 
+        "systemstream", G_TYPE_BOOLEAN, FALSE,
+        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
+        NULL);
+    } else if (g_strcasecmp (name, "video/x-dv, systemstream=TRUE") == 0) {
+      video_caps = gst_caps_new_simple ("video/x-dv", 
+        "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
+      return video_caps;
+    }
+  }
+
+  if (!video_caps)
+    return NULL;
+
+  video_structure = gst_caps_get_structure (video_caps, 0);
+
+  /* Hope GST_TYPE_INT_RANGE_STEP will exits in future gstreamer releases  */
+  /* because we could use :  */
+  /* "width", GST_TYPE_INT_RANGE_STEP, video_default->minWidth, video_default->maxWidth,  video_default->granularityWidth */
+  /* instead of : */
+  /* "width", GST_TYPE_INT_RANGE, video_default->minWidth, video_default->maxWidth */
+
+  /* For framerate we do not need a step (granularity) because  */
+  /* "The IAMStreamConfig::SetFormat method will set the frame rate to the closest  */
+  /* value that the filter supports" as it said in the VIDEO_STREAM_CONFIG_CAPS dshwo doc */
+  
+  gst_structure_set (video_structure,
+      "width", GST_TYPE_INT_RANGE, vscc->MinOutputSize.cx, vscc->MaxOutputSize.cx,
+      "height", GST_TYPE_INT_RANGE, vscc->MinOutputSize.cy, vscc->MaxOutputSize.cy,
+      "framerate", GST_TYPE_FRACTION_RANGE, 
+          (gint) (10000000 / vscc->MaxFrameInterval), 1,
+          (gint) (10000000 / vscc->MinFrameInterval), 1,
+       NULL);
+
+  return video_caps;
+}

@@ -319,6 +319,10 @@
 /* DVB Carousel Identifier Descriptor */
 #define DESC_DVB_CAROUSEL_IDENTIFIER_carousel_id(desc)		(GST_READ_UINT32_BE((desc) + 2))
 
+/* registration_descriptor format IDs */
+#define DRF_ID_HDMV       0x48444d56
+#define DRF_ID_VC1        0x56432D31   /* defined in RP227 */
+
 typedef struct {
   guint    n_desc;
   guint8   data_length;

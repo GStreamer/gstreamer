@@ -22,28 +22,28 @@
 #ifndef _GSTDSHOW_
 #define _GSTDSHOW_
 
-#ifdef __cplusplus
 #include <streams.h>
-#endif
 #include <windows.h>
 #include <objbase.h>
 #include <dshow.h>
 #include <Rpc.h>
 
-#include <glib.h>
+#include <gst/gst.h>
+#include <gst/video/video.h>
 
 typedef struct _GstCapturePinMediaType
 {
   AM_MEDIA_TYPE *mediatype;
   IPin *capture_pin;
+
+  //default caps
+  gint defaultWidth;
+  gint defaultHeight;
+  gint defaultFPS;
+
+  gint granularityWidth; //will be removed when GST_TYPE_INT_RANGE_STEP exits
+  gint granularityHeight; //will be removed when GST_TYPE_INT_RANGE_STEP exits
 } GstCapturePinMediaType;
-
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
-/* register fake filters as COM object and as Direct Show filters in the registry */
-//HRESULT gst_dshow_register_fakefilters ();
 
 /* free memory of the input pin mediatype */
 void gst_dshow_free_pin_mediatype (gpointer pt);
@@ -72,8 +72,8 @@ gchar *gst_dshow_getdevice_from_devicename (const GUID *device_category, gchar *
 /* show the capture filter property page (generally used to setup the device). the page is modal*/
 gboolean gst_dshow_show_propertypage (IBaseFilter *base_filter);
 
-#ifdef  __cplusplus
-}
-#endif
+/* transform a dshow video caps to a gstreamer video caps */ 
+GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
+  const VIDEO_STREAM_CONFIG_CAPS * vscc, GstCapturePinMediaType *pin_mediatype);
 
 #endif /* _GSTDSHOW_ */
