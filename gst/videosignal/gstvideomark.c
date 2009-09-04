@@ -92,14 +92,16 @@ static GstStaticPadTemplate gst_video_mark_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, Y41B, Y42B, Y444 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
+        ("{ I420, YV12, Y41B, Y42B, Y444, YUY2, UYVY, AYUV, YVYU }"))
     );
 
 static GstStaticPadTemplate gst_video_mark_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, Y41B, Y42B, Y444 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
+        ("{ I420, YV12, Y41B, Y42B, Y444, YUY2, UYVY, AYUV, YVYU }"))
     );
 
 static GstVideoFilterClass *parent_class = NULL;
@@ -129,16 +131,15 @@ gst_video_mark_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
 static void
 gst_video_mark_draw_box (GstVideoMark * videomark, guint8 * data,
-    gint width, gint height, gint stride, guint8 color)
+    gint width, gint height, gint row_stride, gint pixel_stride, guint8 color)
 {
   gint i, j;
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
-      data[j] = color;
+      data[pixel_stride * j] = color;
     }
-    /* move to next line */
-    data += stride;
+    data += row_stride;
   }
 }
 
@@ -146,8 +147,8 @@ static GstFlowReturn
 gst_video_mark_yuv (GstVideoMark * videomark, GstBuffer * buffer)
 {
   GstVideoFormat format;
-  gint i, pw, ph, stride, width, height;
-  gint req_width, req_height;
+  gint i, pw, ph, row_stride, pixel_stride, offset;
+  gint width, height, req_width, req_height;
   guint8 *d, *data;
   guint pattern_shift;
   guint8 color;
@@ -160,7 +161,9 @@ gst_video_mark_yuv (GstVideoMark * videomark, GstBuffer * buffer)
 
   pw = videomark->pattern_width;
   ph = videomark->pattern_height;
-  stride = gst_video_format_get_row_stride (format, 0, width);
+  row_stride = gst_video_format_get_row_stride (format, 0, width);
+  pixel_stride = gst_video_format_get_pixel_stride (format, 0);
+  offset = gst_video_format_get_component_offset (format, 0, width, height);
 
   req_width =
       (videomark->pattern_count + videomark->pattern_data_count) * pw +
@@ -175,12 +178,12 @@ gst_video_mark_yuv (GstVideoMark * videomark, GstBuffer * buffer)
 
   /* draw the bottom left pixels */
   for (i = 0; i < videomark->pattern_count; i++) {
-    d = data;
+    d = data + offset;
     /* move to start of bottom left */
-    d += stride * (height - ph - videomark->bottom_offset) +
-        videomark->left_offset;
+    d += row_stride * (height - ph - videomark->bottom_offset) +
+        pixel_stride * videomark->left_offset;
     /* move to i-th pattern */
-    d += pw * i;
+    d += pixel_stride * pw * i;
 
     if (i & 1)
       /* odd pixels must be white */
@@ -189,28 +192,30 @@ gst_video_mark_yuv (GstVideoMark * videomark, GstBuffer * buffer)
       color = 0;
 
     /* draw box of width * height */
-    gst_video_mark_draw_box (videomark, d, pw, ph, stride, color);
+    gst_video_mark_draw_box (videomark, d, pw, ph, row_stride, pixel_stride,
+        color);
   }
 
   pattern_shift = 1 << (videomark->pattern_data_count - 1);
 
   /* get the data of the pattern */
   for (i = 0; i < videomark->pattern_data_count; i++) {
-    d = data;
+    d = data + offset;
     /* move to start of bottom left, adjust for offsets */
-    d += stride * (height - ph - videomark->bottom_offset) +
-        videomark->left_offset;
+    d += row_stride * (height - ph - videomark->bottom_offset) +
+        pixel_stride * videomark->left_offset;
     /* move after the fixed pattern */
-    d += (videomark->pattern_count * pw);
+    d += pixel_stride * videomark->pattern_count * pw;
     /* move to i-th pattern data */
-    d += pw * i;
+    d += pixel_stride * pw * i;
 
     if (videomark->pattern_data & pattern_shift)
       color = 255;
     else
       color = 0;
 
-    gst_video_mark_draw_box (videomark, d, pw, ph, stride, color);
+    gst_video_mark_draw_box (videomark, d, pw, ph, row_stride, pixel_stride,
+        color);
 
     pattern_shift >>= 1;
   }

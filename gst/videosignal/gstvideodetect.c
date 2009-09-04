@@ -145,14 +145,16 @@ static GstStaticPadTemplate gst_video_detect_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, Y41B, Y42B, Y444 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
+        ("{ I420, YV12, Y41B, Y42B, Y444, YUY2, UYVY, AYUV, YVYU }"))
     );
 
 static GstStaticPadTemplate gst_video_detect_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, Y41B, Y42B, Y444 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
+        ("{ I420, YV12, Y41B, Y42B, Y444, YUY2, UYVY, AYUV, YVYU }"))
     );
 
 static GstVideoFilterClass *parent_class = NULL;
@@ -212,7 +214,7 @@ gst_video_detect_post_message (GstVideoDetect * videodetect, GstBuffer * buffer,
 
 static gdouble
 gst_video_detect_calc_brightness (GstVideoDetect * videodetect, guint8 * data,
-    gint width, gint height, gint stride)
+    gint width, gint height, gint row_stride, gint pixel_stride)
 {
   gint i, j;
   guint64 sum;
@@ -220,10 +222,9 @@ gst_video_detect_calc_brightness (GstVideoDetect * videodetect, guint8 * data,
   sum = 0;
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
-      sum += data[j];
+      sum += data[pixel_stride * j];
     }
-    /* move to next line */
-    data += stride;
+    data += row_stride;
   }
   return sum / (255.0 * width * height);
 }
@@ -233,8 +234,8 @@ gst_video_detect_yuv (GstVideoDetect * videodetect, GstBuffer * buffer)
 {
   GstVideoFormat format;
   gdouble brightness;
-  gint i, pw, ph, stride, width, height;
-  gint req_width, req_height;
+  gint i, pw, ph, row_stride, pixel_stride, offset;
+  gint width, height, req_width, req_height;
   guint8 *d, *data;
   guint pattern_data;
 
@@ -246,7 +247,9 @@ gst_video_detect_yuv (GstVideoDetect * videodetect, GstBuffer * buffer)
 
   pw = videodetect->pattern_width;
   ph = videodetect->pattern_height;
-  stride = gst_video_format_get_row_stride (format, 0, width);
+  row_stride = gst_video_format_get_row_stride (format, 0, width);
+  pixel_stride = gst_video_format_get_pixel_stride (format, 0);
+  offset = gst_video_format_get_component_offset (format, 0, width, height);
 
   req_width =
       (videodetect->pattern_count + videodetect->pattern_data_count) * pw +
@@ -258,16 +261,16 @@ gst_video_detect_yuv (GstVideoDetect * videodetect, GstBuffer * buffer)
 
   /* analyse the bottom left pixels */
   for (i = 0; i < videodetect->pattern_count; i++) {
-    d = data;
+    d = data + offset;
     /* move to start of bottom left, adjust for offsets */
-    d += stride * (height - ph - videodetect->bottom_offset) +
-        videodetect->left_offset;
+    d += row_stride * (height - ph - videodetect->bottom_offset) +
+        pixel_stride * videodetect->left_offset;
     /* move to i-th pattern */
-    d += pw * i;
+    d += pixel_stride * pw * i;
 
     /* calc brightness of width * height box */
-    brightness =
-        gst_video_detect_calc_brightness (videodetect, d, pw, ph, stride);
+    brightness = gst_video_detect_calc_brightness (videodetect, d, pw, ph,
+        row_stride, pixel_stride);
 
     GST_DEBUG_OBJECT (videodetect, "brightness %f", brightness);
 
@@ -291,18 +294,18 @@ gst_video_detect_yuv (GstVideoDetect * videodetect, GstBuffer * buffer)
 
   /* get the data of the pattern */
   for (i = 0; i < videodetect->pattern_data_count; i++) {
-    d = data;
+    d = data + offset;
     /* move to start of bottom left, adjust for offsets */
-    d += stride * (height - ph - videodetect->bottom_offset) +
-        videodetect->left_offset;
+    d += row_stride * (height - ph - videodetect->bottom_offset) +
+        pixel_stride * videodetect->left_offset;
     /* move after the fixed pattern */
-    d += (videodetect->pattern_count * pw);
+    d += pixel_stride * (videodetect->pattern_count * pw);
     /* move to i-th pattern data */
-    d += pw * i;
+    d += pixel_stride * pw * i;
 
     /* calc brightness of width * height box */
-    brightness =
-        gst_video_detect_calc_brightness (videodetect, d, pw, ph, stride);
+    brightness = gst_video_detect_calc_brightness (videodetect, d, pw, ph,
+        row_stride, pixel_stride);
     /* update pattern, we just use the center to decide between black and white. */
     pattern_data <<= 1;
     if (brightness > videodetect->pattern_center)
