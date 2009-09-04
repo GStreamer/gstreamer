@@ -92,14 +92,14 @@ static GstStaticPadTemplate gst_video_mark_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, Y41B, Y42B, Y444 }"))
     );
 
 static GstStaticPadTemplate gst_video_mark_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, Y41B, Y42B, Y444 }"))
     );
 
 static GstVideoFilterClass *parent_class = NULL;
@@ -110,6 +110,7 @@ gst_video_mark_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 {
   GstVideoMark *vf;
   GstStructure *in_s;
+  guint32 fourcc;
   gboolean ret;
 
   vf = GST_VIDEO_MARK (btrans);
@@ -118,12 +119,13 @@ gst_video_mark_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   ret = gst_structure_get_int (in_s, "width", &vf->width);
   ret &= gst_structure_get_int (in_s, "height", &vf->height);
-  ret &= gst_structure_get_fourcc (in_s, "format", &vf->format);
+  ret &= gst_structure_get_fourcc (in_s, "format", &fourcc);
+
+  if (ret)
+    vf->format = gst_video_format_from_fourcc (fourcc);
 
   return ret;
 }
-
-#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
 
 static void
 gst_video_mark_draw_box (GstVideoMark * videomark, guint8 * data,
@@ -141,8 +143,9 @@ gst_video_mark_draw_box (GstVideoMark * videomark, guint8 * data,
 }
 
 static GstFlowReturn
-gst_video_mark_420 (GstVideoMark * videomark, GstBuffer * buffer)
+gst_video_mark_yuv (GstVideoMark * videomark, GstBuffer * buffer)
 {
+  GstVideoFormat format;
   gint i, pw, ph, stride, width, height;
   gint req_width, req_height;
   guint8 *d, *data;
@@ -151,12 +154,13 @@ gst_video_mark_420 (GstVideoMark * videomark, GstBuffer * buffer)
 
   data = GST_BUFFER_DATA (buffer);
 
+  format = videomark->format;
   width = videomark->width;
   height = videomark->height;
 
   pw = videomark->pattern_width;
   ph = videomark->pattern_height;
-  stride = GST_VIDEO_I420_Y_ROWSTRIDE (width);
+  stride = gst_video_format_get_row_stride (format, 0, width);
 
   req_width =
       (videomark->pattern_count + videomark->pattern_data_count) * pw +
@@ -223,7 +227,7 @@ gst_video_mark_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   videomark = GST_VIDEO_MARK (trans);
 
   if (videomark->enabled)
-    return gst_video_mark_420 (videomark, buf);
+    return gst_video_mark_yuv (videomark, buf);
 
   return ret;
 }

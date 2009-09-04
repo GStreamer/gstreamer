@@ -21,6 +21,7 @@
 #define __GST_VIDEO_DETECT_H__
 
 #include <gst/video/gstvideofilter.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -47,7 +48,7 @@ struct _GstVideoDetect {
   GstVideoFilter videofilter;
   
   gint width, height;
-  guint32 format;
+  GstVideoFormat format;
 
   gboolean message;
   gint pattern_width;

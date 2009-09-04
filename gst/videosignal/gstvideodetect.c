@@ -145,14 +145,14 @@ static GstStaticPadTemplate gst_video_detect_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, Y41B, Y42B, Y444 }"))
     );
 
 static GstStaticPadTemplate gst_video_detect_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, Y41B, Y42B, Y444 }"))
     );
 
 static GstVideoFilterClass *parent_class = NULL;
@@ -163,6 +163,7 @@ gst_video_detect_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 {
   GstVideoDetect *vf;
   GstStructure *in_s;
+  guint32 fourcc;
   gboolean ret;
 
   vf = GST_VIDEO_DETECT (btrans);
@@ -171,12 +172,13 @@ gst_video_detect_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   ret = gst_structure_get_int (in_s, "width", &vf->width);
   ret &= gst_structure_get_int (in_s, "height", &vf->height);
-  ret &= gst_structure_get_fourcc (in_s, "format", &vf->format);
+  ret &= gst_structure_get_fourcc (in_s, "format", &fourcc);
+
+  if (ret)
+    vf->format = gst_video_format_from_fourcc (fourcc);
 
   return ret;
 }
-
-#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
 
 static void
 gst_video_detect_post_message (GstVideoDetect * videodetect, GstBuffer * buffer,
@@ -227,8 +229,9 @@ gst_video_detect_calc_brightness (GstVideoDetect * videodetect, guint8 * data,
 }
 
 static void
-gst_video_detect_420 (GstVideoDetect * videodetect, GstBuffer * buffer)
+gst_video_detect_yuv (GstVideoDetect * videodetect, GstBuffer * buffer)
 {
+  GstVideoFormat format;
   gdouble brightness;
   gint i, pw, ph, stride, width, height;
   gint req_width, req_height;
@@ -237,12 +240,13 @@ gst_video_detect_420 (GstVideoDetect * videodetect, GstBuffer * buffer)
 
   data = GST_BUFFER_DATA (buffer);
 
+  format = videodetect->format;
   width = videodetect->width;
   height = videodetect->height;
 
   pw = videodetect->pattern_width;
   ph = videodetect->pattern_height;
-  stride = GST_VIDEO_I420_Y_ROWSTRIDE (width);
+  stride = gst_video_format_get_row_stride (format, 0, width);
 
   req_width =
       (videodetect->pattern_count + videodetect->pattern_data_count) * pw +
@@ -331,7 +335,7 @@ gst_video_detect_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   videodetect = GST_VIDEO_DETECT (trans);
 
-  gst_video_detect_420 (videodetect, buf);
+  gst_video_detect_yuv (videodetect, buf);
 
   return ret;
 }

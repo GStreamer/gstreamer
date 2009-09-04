@@ -21,6 +21,7 @@
 #define __GST_VIDEO_MARK_H__
 
 #include <gst/video/gstvideofilter.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -47,7 +48,7 @@ struct _GstVideoMark {
   GstVideoFilter videofilter;
   
   gint width, height;
-  guint32 format;
+  GstVideoFormat format;
 
   gint pattern_width;
   gint pattern_height;
