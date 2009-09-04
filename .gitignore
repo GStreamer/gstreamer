@@ -37,3 +37,8 @@ gstreamer-sharp-0.10.pc
 *.la
 *.lo
 *.o
+*.swp
+*.bak
+*.orig
+gstreamer-sharp-*.tar.gz*
+gstreamer-sharp-*.tar.bz2*
