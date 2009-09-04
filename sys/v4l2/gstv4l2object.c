@@ -719,15 +719,18 @@ gst_v4l2_object_get_format_from_fourcc (GstV4l2Object * v4l2object,
 #define GREY_BASE_RANK       5
 #define PWC_BASE_RANK        1
 
+/* This flag is already used by libv4l2 although
+ * it was added to the Linux kernel in 2.6.32
+ */
+#ifndef V4L2_FMT_FLAG_EMULATED
+#define V4L2_FMT_FLAG_EMULATED 0x0002
+#endif
+
 static gint
 gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
 {
   guint32 fourcc = fmt->pixelformat;
-#ifdef V4L2_FMT_FLAG_EMULATED
   gboolean emulated = ((fmt->flags & V4L2_FMT_FLAG_EMULATED) != 0);
-#else
-  gboolean emulated = FALSE;
-#endif
   gint rank = 0;
 
   switch (fourcc) {
