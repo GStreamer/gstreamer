@@ -144,6 +144,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstphotography-%{majorminor}.so.0.0.0
 %{_libdir}/libgstbasevideo*
 %{_libdir}/libgstsignalprocessor*
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegpsmux.so
 # %{_datadir}/gstreamer-%{majorminor}/presets/GstFAAC.prs
 # gstreamer-plugins with external dependencies but in the main package
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
