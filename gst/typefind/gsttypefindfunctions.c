@@ -3534,8 +3534,8 @@ plugin_init (GstPlugin * plugin)
 #endif
   TYPE_FIND_REGISTER (plugin, "audio/midi", GST_RANK_PRIMARY, mid_type_find,
       mid_exts, MID_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER_RIFF (plugin, "audio/midi", GST_RANK_PRIMARY, mid_exts,
-      "RMID");
+  TYPE_FIND_REGISTER_RIFF (plugin, "audio/riff-midi", GST_RANK_PRIMARY,
+      mid_exts, "RMID");
   TYPE_FIND_REGISTER (plugin, "audio/mobile-xmf", GST_RANK_PRIMARY,
       mxmf_type_find, mxmf_exts, MXMF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-fli", GST_RANK_MARGINAL, flx_type_find,
@@ -3554,8 +3554,8 @@ plugin_init (GstPlugin * plugin)
       mp3_exts, MP3_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-ac3", GST_RANK_PRIMARY, ac3_type_find,
       ac3_exts, AC3_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "audio/x-gsm", GST_RANK_PRIMARY, NULL,
-      gsm_exts, GSM_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-gsm", GST_RANK_PRIMARY, NULL, gsm_exts,
+      GSM_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg-sys", GST_RANK_PRIMARY,
       mpeg_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpegts", GST_RANK_PRIMARY,
