@@ -36,6 +36,8 @@ typedef struct _GstCapturePinMediaType
   AM_MEDIA_TYPE *mediatype;
   IPin *capture_pin;
 
+  VIDEO_STREAM_CONFIG_CAPS vscc;
+
   //default caps
   gint defaultWidth;
   gint defaultHeight;
@@ -50,6 +52,9 @@ void gst_dshow_free_pin_mediatype (gpointer pt);
 
 /* free memory of the input dshow mediatype */
 void gst_dshow_free_mediatype (AM_MEDIA_TYPE *pmt);
+
+/* create a new capture media type that handles dshow video caps of a capture pin */
+GstCapturePinMediaType *gst_dshow_new_pin_mediatype (IPin *pin, gint id, IAMStreamConfig * streamcaps);
 
 /* free the memory of all mediatypes of the input list if pin mediatype */
 void gst_dshow_free_pins_mediatypes (GList *mediatypes);
@@ -74,6 +79,6 @@ gboolean gst_dshow_show_propertypage (IBaseFilter *base_filter);
 
 /* transform a dshow video caps to a gstreamer video caps */ 
 GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
-  const VIDEO_STREAM_CONFIG_CAPS * vscc, GstCapturePinMediaType *pin_mediatype);
+  GstCapturePinMediaType *pin_mediatype);
 
 #endif /* _GSTDSHOW_ */

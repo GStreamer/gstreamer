@@ -545,7 +545,6 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
               GstCaps *caps =
                   gst_dshowvideosrc_getcaps_from_streamcaps (src, capture_pin,
                   streamcaps);
-              g_print ("caps: %s\n", gst_caps_to_string(caps));
 
               if (caps) {
                 gst_caps_append (src->caps, caps);
@@ -881,30 +880,27 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
   caps = gst_caps_new_empty ();
 
   for (; i < icount; i++) {
-    GstCapturePinMediaType *pin_mediatype = g_new0 (GstCapturePinMediaType, 1);
+    
+    GstCapturePinMediaType *pin_mediatype = 
+      gst_dshow_new_pin_mediatype (pin, i, streamcaps);
 
-    pin->AddRef();
-    pin_mediatype->capture_pin = pin;
-
-    hres = streamcaps->GetStreamCaps(i, &pin_mediatype->mediatype, (BYTE *) & vscc);
-    if (FAILED (hres) || !pin_mediatype->mediatype) {
-      gst_dshow_free_pin_mediatype (pin_mediatype);
-    } else {
+    if (pin_mediatype) {
+    
       GstCaps *mediacaps = NULL;
 
       if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_I420, FORMAT_VideoInfo)) {
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_I420, NULL, &vscc, pin_mediatype);
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_I420, NULL, pin_mediatype);
 
       } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_RGB24, FORMAT_VideoInfo)) {
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_BGR, NULL, &vscc, pin_mediatype);
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_BGR, NULL, pin_mediatype);
 
       } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_VideoInfo)) {
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN,
-          "video/x-dv, systemstream=FALSE", &vscc, pin_mediatype);
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN, "video/x-dv, systemstream=FALSE", 
+          pin_mediatype);
 
       } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_DvInfo)) { 
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN,
-          "video/x-dv, systemstream=TRUE", &vscc, pin_mediatype);
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN, "video/x-dv, systemstream=TRUE", 
+          pin_mediatype);
 
         pin_mediatype->granularityWidth = 0;
         pin_mediatype->granularityHeight = 0;
@@ -915,6 +911,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
           g_list_append (src->pins_mediatypes, pin_mediatype);
         gst_caps_append (caps, mediacaps);
       } else {
+        /* failed to convert dshow caps */
         gst_dshow_free_pin_mediatype (pin_mediatype);
       }
 

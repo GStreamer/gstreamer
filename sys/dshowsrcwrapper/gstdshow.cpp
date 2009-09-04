@@ -57,6 +57,22 @@ gst_dshow_free_pin_mediatype (gpointer pt)
   }
 }
 
+GstCapturePinMediaType * 
+gst_dshow_new_pin_mediatype (IPin *pin, gint id, IAMStreamConfig * streamcaps)
+{
+  GstCapturePinMediaType *pin_mediatype = g_new0 (GstCapturePinMediaType, 1);
+
+  HRESULT hres = streamcaps->GetStreamCaps(id, &pin_mediatype->mediatype, (BYTE *) & pin_mediatype->vscc);
+  if (FAILED (hres) || !pin_mediatype->mediatype) {
+    gst_dshow_free_pin_mediatype (pin_mediatype);
+    return NULL;
+  }
+
+  pin->AddRef();
+  pin_mediatype->capture_pin = pin;
+
+  return pin_mediatype;
+}
 
 void 
 gst_dshow_free_pins_mediatypes (GList *pins_mediatypes)
@@ -323,7 +339,7 @@ gst_dshow_show_propertypage (IBaseFilter *base_filter)
 }
 
 GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
-  const VIDEO_STREAM_CONFIG_CAPS * vscc, GstCapturePinMediaType *pin_mediatype)
+  GstCapturePinMediaType *pin_mediatype)
 {
   GstCaps *video_caps = NULL;
   GstStructure *video_structure = NULL;
@@ -332,8 +348,8 @@ GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* nam
   pin_mediatype->defaultWidth = video_info->bmiHeader.biWidth;
   pin_mediatype->defaultHeight = video_info->bmiHeader.biHeight;
   pin_mediatype->defaultFPS = (gint) (10000000 / video_info->AvgTimePerFrame);
-  pin_mediatype->granularityWidth = vscc->OutputGranularityX;
-  pin_mediatype->granularityHeight = vscc->OutputGranularityY;
+  pin_mediatype->granularityWidth = pin_mediatype->vscc.OutputGranularityX;
+  pin_mediatype->granularityHeight = pin_mediatype->vscc.OutputGranularityY;
 
   /* raw video format */
   switch (video_format) {
@@ -376,11 +392,11 @@ GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* nam
   /* value that the filter supports" as it said in the VIDEO_STREAM_CONFIG_CAPS dshwo doc */
   
   gst_structure_set (video_structure,
-      "width", GST_TYPE_INT_RANGE, vscc->MinOutputSize.cx, vscc->MaxOutputSize.cx,
-      "height", GST_TYPE_INT_RANGE, vscc->MinOutputSize.cy, vscc->MaxOutputSize.cy,
+      "width", GST_TYPE_INT_RANGE, pin_mediatype->vscc.MinOutputSize.cx, pin_mediatype->vscc.MaxOutputSize.cx,
+      "height", GST_TYPE_INT_RANGE, pin_mediatype->vscc.MinOutputSize.cy, pin_mediatype->vscc.MaxOutputSize.cy,
       "framerate", GST_TYPE_FRACTION_RANGE, 
-          (gint) (10000000 / vscc->MaxFrameInterval), 1,
-          (gint) (10000000 / vscc->MinFrameInterval), 1,
+          (gint) (10000000 / pin_mediatype->vscc.MaxFrameInterval), 1,
+          (gint) (10000000 / pin_mediatype->vscc.MinFrameInterval), 1,
        NULL);
 
   return video_caps;
