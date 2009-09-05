@@ -937,8 +937,10 @@ gst_xvimagesink_xwindow_set_title (GstXvImageSink * xvimagesink,
 
       if (title) {
         if ((XStringListToTextProperty (((char **) &title), 1,
-                    &xproperty)) != 0)
+                    &xproperty)) != 0) {
           XSetWMName (xvimagesink->xcontext->disp, xwindow->win, &xproperty);
+          XFree (xproperty.value);
+        }
 
         g_free (title_mem);
       }
