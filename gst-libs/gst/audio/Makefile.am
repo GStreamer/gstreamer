@@ -17,27 +17,27 @@ CLEANFILES = $(BUILT_SOURCES)
 
 libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
 	audio.c \
+	gstringbuffer.c \
 	gstaudioclock.c \
 	mixerutils.c \
 	multichannel.c \
-	gstaudiofilter.c \
-	gstaudiosink.c \
-	gstaudiosrc.c \
 	gstbaseaudiosink.c \
 	gstbaseaudiosrc.c \
-	gstringbuffer.c
+	gstaudiofilter.c \
+	gstaudiosink.c \
+	gstaudiosrc.c
 nodist_libgstaudio_@GST_MAJORMINOR@_la_SOURCES = $(built_sources) $(built_headers)
 
 libgstaudio_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/audio
 libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	audio.h \
+	gstringbuffer.h \
 	gstaudioclock.h \
 	gstaudiofilter.h \
-	gstaudiosink.h \
-	gstaudiosrc.h \
 	gstbaseaudiosink.h \
 	gstbaseaudiosrc.h \
-	gstringbuffer.h \
+	gstaudiosink.h \
+	gstaudiosrc.h \
 	mixerutils.h \
 	multichannel.h
 
@@ -67,6 +67,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstaudio_@GST_MAJORMIN
 gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS))
 
 GstAudio-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_MAJORMINOR@.la
+	echo $(gir_headers) $(gir_sources)
 	$(INTROSPECTION_SCANNER) -v --namespace GstAudio \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
