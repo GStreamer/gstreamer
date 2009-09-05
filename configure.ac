@@ -134,6 +134,9 @@ AM_PROG_CC_C_O
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
+dnl check for gobject-introspection
+GOBJECT_INTROSPECTION_CHECK([0.6.3])
+
 dnl check for documentation tools
 GTK_DOC_CHECK([1.3])
 AS_PATH_PYTHON([2.1])
