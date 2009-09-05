@@ -40,3 +40,5 @@ gst-plugins-base-*.tar*
 /m4
 Makefile.in
 Makefile
+*.gir
+*.typelib
