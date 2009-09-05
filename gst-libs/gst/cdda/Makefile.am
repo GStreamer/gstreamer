@@ -25,6 +25,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/cdda/%',$(libgstcdda_@GST_MAJORMINOR
 GstCdda-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcdda-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstCdda \
 		--nsversion=@GST_MAJORMINOR@ \
+		--strip-prefix=Gst \
 		$(gir_cincludes) \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-base-0.10` \

@@ -29,6 +29,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/riff/%',$(libgstriff_@GST_MAJORMINOR
 GstRiff-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstriff-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstRiff \
 		--nsversion=@GST_MAJORMINOR@ \
+		--strip-prefix=Gst \
 		$(gir_cincludes) \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
 		--library=gstriff-0.10 \

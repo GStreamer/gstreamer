@@ -58,6 +58,7 @@ gir_cincludes+=$(patsubst %,--c-include='gst/pbutils/%',$(nodist_libgstpbutils_@
 GstPbutils-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstPbutils \
 		--nsversion=@GST_MAJORMINOR@ \
+		--strip-prefix=Gst \
 		$(gir_cincludes) \
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \

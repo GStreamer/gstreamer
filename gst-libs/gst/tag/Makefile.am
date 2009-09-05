@@ -23,6 +23,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgsttainclude_HEADERS))
 GstTag-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgsttag-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstTag \
 		--nsversion=@GST_MAJORMINOR@ \
+		--strip-prefix=Gst \
 		$(gir_cincludes) \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
 		--library=gsttag-0.10 \

@@ -21,6 +21,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstsdpinclude_HEADERS)
 GstSdp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstsdp-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstSdp \
 		--nsversion=@GST_MAJORMINOR@ \
+		--strip-prefix=Gst \
 		$(gir_cincludes) \
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
