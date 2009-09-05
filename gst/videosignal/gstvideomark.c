@@ -140,10 +140,11 @@ gst_video_mark_draw_box (GstVideoMark * videomark, guint8 * data,
   }
 }
 
-static void
+static GstFlowReturn
 gst_video_mark_420 (GstVideoMark * videomark, GstBuffer * buffer)
 {
   gint i, pw, ph, stride, width, height;
+  gint req_width, req_height;
   guint8 *d, *data;
   guint pattern_shift;
   guint8 color;
@@ -156,6 +157,17 @@ gst_video_mark_420 (GstVideoMark * videomark, GstBuffer * buffer)
   pw = videomark->pattern_width;
   ph = videomark->pattern_height;
   stride = GST_VIDEO_I420_Y_ROWSTRIDE (width);
+
+  req_width =
+      (videomark->pattern_count + videomark->pattern_data_count) * pw +
+      videomark->left_offset;
+  req_height = videomark->bottom_offset + ph;
+  if (req_width > width || req_height > height) {
+    GST_ELEMENT_ERROR (videomark, STREAM, WRONG_TYPE, (NULL),
+        ("videomark pattern doesn't fit video, need at least %ix%i (stream has %ix%i)",
+            req_width, req_height, width, height));
+    return GST_FLOW_ERROR;
+  }
 
   /* draw the bottom left pixels */
   for (i = 0; i < videomark->pattern_count; i++) {
@@ -198,6 +210,8 @@ gst_video_mark_420 (GstVideoMark * videomark, GstBuffer * buffer)
 
     pattern_shift >>= 1;
   }
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -209,7 +223,7 @@ gst_video_mark_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   videomark = GST_VIDEO_MARK (trans);
 
   if (videomark->enabled)
-    gst_video_mark_420 (videomark, buf);
+    return gst_video_mark_420 (videomark, buf);
 
   return ret;
 }

@@ -231,6 +231,7 @@ gst_video_detect_420 (GstVideoDetect * videodetect, GstBuffer * buffer)
 {
   gdouble brightness;
   gint i, pw, ph, stride, width, height;
+  gint req_width, req_height;
   guint8 *d, *data;
   guint pattern_data;
 
@@ -242,6 +243,14 @@ gst_video_detect_420 (GstVideoDetect * videodetect, GstBuffer * buffer)
   pw = videodetect->pattern_width;
   ph = videodetect->pattern_height;
   stride = GST_VIDEO_I420_Y_ROWSTRIDE (width);
+
+  req_width =
+      (videodetect->pattern_count + videodetect->pattern_data_count) * pw +
+      videodetect->left_offset;
+  req_height = videodetect->bottom_offset + ph;
+  if (req_width > width || req_height > height) {
+    goto no_pattern;
+  }
 
   /* analyse the bottom left pixels */
   for (i = 0; i < videodetect->pattern_count; i++) {
