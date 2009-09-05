@@ -35,7 +35,7 @@ BUILT_GIRSOURCES = GstApp-@GST_MAJORMINOR@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstapp_@GST_MAJORMINOR@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstapp_@GST_MAJORMINOR@_la_SOURCES))
-gir_sources+=$(patsubst %,$(srcdir)/%, $(nodist_libgstapp_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstapp_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/app/%',$(libgstapp_@GST_MAJORMINOR@include_HEADERS))
 
 GstApp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstapp-@GST_MAJORMINOR@.la
@@ -43,6 +43,8 @@ GstApp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstapp-@GST_MAJORMINOR@
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
+		-I$(top_srcdir)/gst-libs \
+		-I$(top_builddir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-base-0.10` \
 		--library=gstapp-0.10 \

@@ -52,9 +52,9 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstRtsp-@GST_MAJORMINOR@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstrtspinclude_HEADERS))
-gir_headers+=$(patsubst %,$(srcdir)/%, $(nodist_libgstrtspinclude_HEADERS))
+gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstrtspinclude_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstrtsp_@GST_MAJORMINOR@_la_SOURCES))
-gir_sources+=$(patsubst %,$(srcdir)/%, $(nodist_libgstrtsp_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstrtsp_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstrtspinclude_HEADERS))
 gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstrtspinclude_HEADERS))
 
@@ -63,6 +63,8 @@ GstRtsp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_MAJORMINO
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
+		-I$(top_builddir)/gst-libs \
+		-I$(top_srcdir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
 		--add-include-path=$(builddir)/../sdp \
 		--library=gstrtsp-0.10 \

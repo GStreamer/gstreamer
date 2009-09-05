@@ -31,9 +31,9 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstVideo-@GST_MAJORMINOR@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstvideo_@GST_MAJORMINOR@include_HEADERS))
-gir_headers+=$(patsubst %,$(srcdir)/%, $(nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS))
+gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstvideo_@GST_MAJORMINOR@_la_SOURCES))
-gir_sources+=$(patsubst %,$(srcdir)/%, $(nodist_libgstvideo_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstvideo_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstvideo_@GST_MAJORMINOR@include_HEADERS))
 gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS))
 
@@ -43,6 +43,7 @@ GstVideo-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstvideo-@GST_MAJORMI
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
 		-I$(top_srcdir)/gst-libs \
+		-I$(top_builddir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-base-0.10` \
 		--library=gstvideo-0.10 \

@@ -60,9 +60,9 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstAudio-@GST_MAJORMINOR@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstaudio_@GST_MAJORMINOR@include_HEADERS))
-gir_headers+=$(patsubst %,$(srcdir)/%, $(nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS))
+gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstaudio_@GST_MAJORMINOR@_la_SOURCES))
-gir_sources+=$(patsubst %,$(srcdir)/%, $(nodist_libgstaudio_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstaudio_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstaudio_@GST_MAJORMINOR@include_HEADERS))
 gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS))
 
@@ -70,6 +70,8 @@ GstAudio-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_MAJORMI
 	$(INTROSPECTION_SCANNER) -v --namespace GstAudio \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
+		-I$(top_srcdir)/gst-libs \
+		-I$(top_builddir)/gst-libs \
 		$(gir_cincludes) \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-base-0.10` \

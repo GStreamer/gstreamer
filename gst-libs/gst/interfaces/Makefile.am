@@ -71,9 +71,9 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstInterfaces-@GST_MAJORMINOR@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstinterfacesinclude_HEADERS))
-gir_headers+=$(patsubst %,$(srcdir)/%, $(nodist_libgstinterfacesinclude_HEADERS))
+gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstinterfacesinclude_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES))
-gir_sources+=$(patsubst %,$(srcdir)/%, $(nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/interfaces/%',$(libgstinterfacesinclude_HEADERS))
 gir_cincludes+=$(patsubst %,--c-include='gst/interfaces/%',$(nodist_libgstinterfacesinclude_HEADERS))
 
@@ -83,6 +83,7 @@ GstInterfaces-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstinterfaces-@G
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
 		-I$(top_srcdir)/gst-libs \
+		-I$(top_builddir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
 		--library=gstinterfaces-0.10 \
 		--include=Gst-0.10 \
