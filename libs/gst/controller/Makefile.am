@@ -31,3 +31,39 @@ CLEANFILES = *.gcno *.gcda *.gcov
 	$(GCOV) -b -f -o $^ > $@.out
 
 gcov: $(libgstcontroller_@GST_MAJORMINOR@_la_SOURCES:=.gcov)
+
+if HAVE_INTROSPECTION
+BUILT_GIRSOURCES = GstController-@GST_MAJORMINOR@.gir
+
+gir_headers=$(patsubst %,$(srcdir)/%, $(libgstcontroller_@GST_MAJORMINOR@_include_HEADERS))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstcontroller_@GST_MAJORMINOR@_la_SOURCES))
+gir_cincludes=$(patsubst %,--c-include='gst/controller/%',$(libgstcontroller_@GST_MAJORMINOR@_include_HEADERS))
+
+GstController-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@GST_MAJORMINOR@.la
+	$(INTROSPECTION_SCANNER) -v --namespace GstController \
+		--nsversion=@GST_MAJORMINOR@ \
+		-I$(top_srcdir) \
+		$(gir_cincludes) \
+		--add-include-path=$(top_srcdir)/gst \
+		--library=gstcontroller-0.10 \
+		--include=Gst-0.10 \
+		--libtool="$(top_builddir)/libtool" \
+		--pkg gstreamer-0.10 \
+		--output $@ \
+		$(gir_headers) \
+		$(gir_sources)
+
+# INTROSPECTION_GIRDIR/INTROSPECTION_TYPELIBDIR aren't the right place to
+# install anything - we need to install inside our prefix.
+girdir = $(datadir)/gir-1.0
+gir_DATA = $(BUILT_GIRSOURCES)
+
+typelibsdir = $(libdir)/girepository-1.0/
+
+typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
+
+%.typelib: %.gir $(INTROSPECTION_COMPILER)
+	$(INTROSPECTION_COMPILER) --includedir=$(srcdir) --includedir=$(builddir) $(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+
+CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
+endif
