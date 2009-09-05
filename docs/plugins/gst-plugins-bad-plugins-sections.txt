@@ -316,6 +316,20 @@ SPU_STATE_FLAGS_MASK
 </SECTION>
 
 <SECTION>
+<FILE>element-faac</FILE>
+<TITLE>faac</TITLE>
+GstFaac
+<SUBSECTION Standard>
+GstFaacClass
+GST_TYPE_FAAC
+GST_FAAC
+GST_IS_FAAC
+GST_FAAC_CLASS
+GST_IS_FAAC_CLASS
+gst_faac_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-festival</FILE>
 <TITLE>festival</TITLE>
 GstFestival
