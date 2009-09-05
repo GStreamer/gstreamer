@@ -47,3 +47,44 @@ glib_enum_define=gst_rtsp
 glib_enum_headers=gstrtspdefs.h
 
 include $(top_srcdir)/common/glib-gen.mak
+
+if HAVE_INTROSPECTION
+BUILT_GIRSOURCES = GstRtsp-@GST_MAJORMINOR@.gir
+
+gir_headers=$(patsubst %,$(srcdir)/%, $(libgstrtspinclude_HEADERS))
+gir_headers+=$(patsubst %,$(srcdir)/%, $(nodist_libgstrtspinclude_HEADERS))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstrtsp_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources+=$(patsubst %,$(srcdir)/%, $(nodist_libgstrtsp_@GST_MAJORMINOR@_la_SOURCES))
+gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstrtspinclude_HEADERS))
+gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstrtspinclude_HEADERS))
+
+GstRtsp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_MAJORMINOR@.la
+	$(INTROSPECTION_SCANNER) -v --namespace GstRtsp \
+		--nsversion=@GST_MAJORMINOR@ \
+		$(gir_cincludes) \
+		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
+		--add-include-path=$(builddir)/../sdp \
+		--library=gstrtsp-0.10 \
+		--include=Gst-0.10 \
+		--include=GstSdp-0.10 \
+		--libtool="$(top_builddir)/libtool" \
+		--pkg gstreamer-0.10 \
+		--pkg gstreamer-sdp-0.10 \
+		--output $@ \
+		$(gir_headers) \
+		$(gir_sources)
+
+# INTROSPECTION_GIRDIR/INTROSPECTION_TYPELIBDIR aren't the right place to
+# install anything - we need to install inside our prefix.
+girdir = $(datadir)/gir-1.0
+gir_DATA = $(BUILT_GIRSOURCES)
+
+typelibsdir = $(libdir)/girepository-1.0/
+
+typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
+
+%.typelib: %.gir $(INTROSPECTION_COMPILER)
+	$(INTROSPECTION_COMPILER) --includedir=$(srcdir) --includedir=$(builddir) $(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+
+CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
+endif
