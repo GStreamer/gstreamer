@@ -51,6 +51,7 @@ BUILT_GIRSOURCES = GstPbutils-@GST_MAJORMINOR@.gir
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstpbutils_@GST_MAJORMINOR@include_HEADERS))
 gir_headers+=$(patsubst %,$(srcdir)/%, $(nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstpbutils_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources+=$(patsubst %,$(srcdir)/%, $(nodist_libgstpbutils_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/pbutils/%',$(libgstpbutils_@GST_MAJORMINOR@include_HEADERS))
 gir_cincludes+=$(patsubst %,--c-include='gst/pbutils/%',$(nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS))
 

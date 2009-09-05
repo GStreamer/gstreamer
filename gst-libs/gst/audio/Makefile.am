@@ -60,8 +60,11 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstAudio-@GST_MAJORMINOR@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstaudio_@GST_MAJORMINOR@include_HEADERS))
+gir_headers+=$(patsubst %,$(srcdir)/%, $(nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstaudio_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources+=$(patsubst %,$(srcdir)/%, $(nodist_libgstaudio_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstaudio_@GST_MAJORMINOR@include_HEADERS))
+gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS))
 
 GstAudio-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstAudio \
