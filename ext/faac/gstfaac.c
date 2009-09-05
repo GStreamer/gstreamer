@@ -18,6 +18,32 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-faac
+ * @seealso: faad
+ *
+ * faac encodes raw audio to AAC (MPEG-4 part 10) streams.
+ *
+ * The #GstFaac:outputformat property determines whether or not the
+ * AAC data needs additional framing provided by a container
+ * (such as Matroska or Quicktime).
+ * This is required for raw data, whereas ADTS formatted AAC already provides
+ * framing and needs no container.
+ *
+ * The #GstFaac:profile property determines the AAC profile, where the default
+ * Main profile is fine for most players and settings,
+ * but in some cases (e.g. hardware platforms)
+ * a more restricted profile/level may be necessary.
+ * In particular, typical (iTunes) m4a expects LC profile AAC data.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * <programlisting>
+ * gst-launch audiotestsrc wave=sine num-buffers=100 ! audioconvert ! faac ! matroskamux ! filesink location=sine.mkv
+ * </programlisting>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
