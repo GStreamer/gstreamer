@@ -13,8 +13,8 @@ SUBDIRS = \
 	pbutils \
 	riff \
 	rtp \
-	rtsp \
 	sdp \
+	rtsp \
 	video \
 	app
 
