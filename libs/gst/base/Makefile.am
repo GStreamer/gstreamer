@@ -50,6 +50,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/base/%',$(libgstbase_@GST_MAJORMINOR
 GstBase-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstBase \
 		--nsversion=@GST_MAJORMINOR@ \
+		--strip-prefix=Gst \
 		-I$(top_srcdir) \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \

@@ -32,6 +32,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/net/%',$(libgstbase_@GST_MAJORMINOR@
 
 GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstNet \
+		--strip-prefix=Gst \
 		--nsversion=@GST_MAJORMINOR@ \
 		-I$(top_srcdir) \
 		$(gir_cincludes) \

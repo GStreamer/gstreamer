@@ -31,6 +31,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/dataprotocol/%',$(libgstdataprotocol
 
 GstDataprotocol-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstdataprotocol-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstDataprotocol \
+		--strip-prefix=Gst \
 		--nsversion=@GST_MAJORMINOR@ \
 		-I$(top_srcdir) \
 		$(gir_cincludes) \

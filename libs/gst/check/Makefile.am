@@ -111,6 +111,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/check/%',$(libgstcheck_@GST_MAJORMIN
 GstCheck-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstCheck \
 		--nsversion=@GST_MAJORMINOR@ \
+		--strip-prefix=Gst \
 		-I$(top_srcdir) \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \

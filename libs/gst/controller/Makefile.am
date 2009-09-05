@@ -42,6 +42,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/controller/%',$(libgstcontroller_@GS
 GstController-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@GST_MAJORMINOR@.la
 	$(INTROSPECTION_SCANNER) -v --namespace GstController \
 		--nsversion=@GST_MAJORMINOR@ \
+		--strip-prefix=Gst \
 		-I$(top_srcdir) \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
