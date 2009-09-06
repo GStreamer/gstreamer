@@ -352,7 +352,7 @@ gst_video_mark_class_init (gpointer klass, gpointer class_data)
           DEFAULT_PATTERN_HEIGHT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, PROP_PATTERN_COUNT,
       g_param_spec_int ("pattern-count", "Pattern count",
-          "The number of pattern markers", 1, G_MAXINT,
+          "The number of pattern markers", 0, G_MAXINT,
           DEFAULT_PATTERN_COUNT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, PROP_PATTERN_DATA_COUNT,
       g_param_spec_int ("pattern-data-count", "Pattern data count",
