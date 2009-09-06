@@ -545,7 +545,7 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
   /* samples already considers channel count */
   frame_size = faac->samples * faac->bps;
 
-  while (ret == GST_FLOW_OK) {
+  while (G_LIKELY (ret == GST_FLOW_OK)) {
 
     av = gst_adapter_available (faac->adapter);
 
@@ -581,8 +581,9 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
 
     outbuf = gst_buffer_new_and_alloc (faac->bytes);
 
-    if ((ret_size = faacEncEncode (faac->handle, (gint32 *) data,
-                size / faac->bps, GST_BUFFER_DATA (outbuf), faac->bytes)) < 0) {
+    if (G_UNLIKELY ((ret_size = faacEncEncode (faac->handle, (gint32 *) data,
+                    size / faac->bps, GST_BUFFER_DATA (outbuf),
+                    faac->bytes)) < 0)) {
       gst_buffer_unref (outbuf);
       goto encode_failed;
     }
@@ -593,7 +594,7 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
     faac->offset += size;
     g_assert (faac->offset <= av);
 
-    if (!ret_size) {
+    if (G_UNLIKELY (!ret_size)) {
       gst_buffer_unref (outbuf);
       if (size)
         continue;
@@ -611,7 +612,7 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
     /* after some caching, finally some data */
     /* adapter gives time */
     timestamp = gst_adapter_prev_timestamp (faac->adapter, &distance);
-    if ((av = gst_adapter_available (faac->adapter)) >= frame_size) {
+    if (G_LIKELY ((av = gst_adapter_available (faac->adapter)) >= frame_size)) {
       /* must have then come from a complete frame */
       gst_adapter_flush (faac->adapter, frame_size);
       faac->offset -= frame_size;
@@ -624,7 +625,7 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
     }
 
     GST_BUFFER_SIZE (outbuf) = ret_size;
-    if (GST_CLOCK_TIME_IS_VALID (timestamp))
+    if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (timestamp)))
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp +
           GST_FRAMES_TO_CLOCK_TIME (distance / faac->channels / faac->bps,
           faac->samplerate);
