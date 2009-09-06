@@ -159,7 +159,7 @@ gst_y4m_encode_setcaps (GstPad * pad, GstCaps * vscaps)
   GstStructure *structure;
   gboolean res;
   gint w, h;
-  const GValue *fps, *par;
+  const GValue *fps, *par, *interlaced;
 
   filter = GST_Y4M_ENCODE (GST_PAD_PARENT (pad));
 
@@ -171,6 +171,9 @@ gst_y4m_encode_setcaps (GstPad * pad, GstCaps * vscaps)
 
   if (!res || w <= 0 || h <= 0 || !GST_VALUE_HOLDS_FRACTION (fps))
     return FALSE;
+
+  /* optional interlaced info */
+  interlaced = gst_structure_get_value (structure, "interlaced");
 
   /* optional par info */
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
@@ -186,7 +189,12 @@ gst_y4m_encode_setcaps (GstPad * pad, GstCaps * vscaps)
     filter->par_num = 0;
     filter->par_den = 0;
   }
-
+  if ((interlaced != NULL) && G_VALUE_HOLDS (interlaced, G_TYPE_BOOLEAN)) {
+    filter->interlaced = g_value_get_boolean (interlaced);
+  } else {
+    /* assume progressive if no interlaced property in caps */
+    filter->interlaced = FALSE;
+  }
   /* the template caps will do for the src pad, should always accept */
   return gst_pad_set_caps (filter->srcpad,
       gst_static_pad_template_get_caps (&y4mencode_src_factory));
@@ -197,9 +205,17 @@ gst_y4m_encode_get_stream_header (GstY4mEncode * filter)
 {
   gpointer header;
   GstBuffer *buf;
+  gchar interlaced;
 
-  header = g_strdup_printf ("YUV4MPEG2 W%d H%d I? F%d:%d A%d:%d\n",
-      filter->width, filter->height,
+  interlaced = 'p';
+
+  if (filter->interlaced && filter->top_field_first)
+    interlaced = 't';
+  else if (filter->interlaced)
+    interlaced = 'b';
+
+  header = g_strdup_printf ("YUV4MPEG2 W%d H%d I%c F%d:%d A%d:%d\n",
+      filter->width, filter->height, interlaced,
       filter->fps_num, filter->fps_den, filter->par_num, filter->par_den);
 
   buf = gst_buffer_new ();
@@ -244,6 +260,13 @@ gst_y4m_encode_chain (GstPad * pad, GstBuffer * buf)
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   if (G_UNLIKELY (!filter->header)) {
+    if (filter->interlaced == TRUE) {
+      if (GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_TFF)) {
+        filter->top_field_first = TRUE;
+      } else {
+        filter->top_field_first = FALSE;
+      }
+    }
     outbuf = gst_y4m_encode_get_stream_header (filter);
     filter->header = TRUE;
     outbuf = gst_buffer_join (outbuf, gst_y4m_encode_get_frame_header (filter));

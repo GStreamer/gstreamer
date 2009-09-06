@@ -51,7 +51,8 @@ struct _GstY4mEncode {
   gint width, height;
   gint fps_num, fps_den;
   gint par_num, par_den;
-
+  gboolean interlaced;
+  gboolean top_field_first;
   /* state information */
   gboolean header;
 };
