@@ -28,6 +28,8 @@
 
 #include <string.h>
 
+/* FIXME 0.11: inline everything and get rid of non-inlined functions */
+
 /**
  * SECTION:gstbytereader
  * @short_description: Reads different integer, string and floating point
@@ -712,6 +714,8 @@ gst_byte_reader_peek_##name (GstByteReader * reader, type * val) \
   return _gst_byte_reader_peek_##name##_inline (reader, val); \
 }
 
+/* *INDENT-OFF* */
+
 GST_BYTE_READER_PEEK_GET(8,guint8,uint8)
 GST_BYTE_READER_PEEK_GET(8,gint8,int8)
 
@@ -843,6 +847,8 @@ GST_BYTE_READER_PEEK_GET(32,gfloat,float32_le)
 GST_BYTE_READER_PEEK_GET(32,gfloat,float32_be)
 GST_BYTE_READER_PEEK_GET(64,gdouble,float64_le)
 GST_BYTE_READER_PEEK_GET(64,gdouble,float64_be)
+
+/* *INDENT-ON* */
 
 /**
  * gst_byte_reader_get_data:

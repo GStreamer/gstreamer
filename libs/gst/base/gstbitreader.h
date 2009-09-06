@@ -23,6 +23,8 @@
 
 #include <gst/gst.h>
 
+/* FIXME: inline functions */
+
 G_BEGIN_DECLS
 
 /**
