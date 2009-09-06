@@ -601,6 +601,13 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
         break;
     }
 
+    /* in case encoder returns more data than is expected (which seems possible)
+     * ignore the extra part */
+    if (G_UNLIKELY (av == 0 && faac->offset == 0)) {
+      gst_buffer_unref (outbuf);
+      continue;
+    }
+
     /* after some caching, finally some data */
     /* adapter gives time */
     timestamp = gst_adapter_prev_timestamp (faac->adapter, &distance);
@@ -633,6 +640,12 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
 
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (faac->srcpad));
     ret = gst_pad_push (faac->srcpad, outbuf);
+  }
+
+  /* in case encoder returns less than expected, clear our view as well */
+  if (G_UNLIKELY (force)) {
+    gst_adapter_clear (faac->adapter);
+    faac->offset = 0;
   }
 
   return ret;
