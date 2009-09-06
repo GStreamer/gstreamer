@@ -160,8 +160,16 @@ gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels)
     }
   }
 
-  if (nchannels == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER)
-    pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+  if (nchannels == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER) {
+    GST_DEBUG ("mono common case; won't set channel positions");
+    g_free (pos);
+    pos = NULL;
+  } else if (nchannels == 2 && pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT
+      && pos[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) {
+    GST_DEBUG ("stereo common case; won't set channel positions");
+    g_free (pos);
+    pos = NULL;
+  }
 
   return pos;
 }
