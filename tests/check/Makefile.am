@@ -27,6 +27,12 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-bad.supp
 
 clean-local: clean-local-check
 
+if USE_FAAC
+check_faac = elements/faac
+else
+check_faac =
+endif
+
 if USE_METADATA
 check_metadata = pipelines/metadata
 else
@@ -89,6 +95,7 @@ noinst_PROGRAMS = \
 
 check_PROGRAMS = \
 	generic/states \
+	$(check_faac)  \
 	$(check_mpeg2enc)  \
 	$(check_mplex)     \
 	$(check_ofa)        \
