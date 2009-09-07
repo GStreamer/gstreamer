@@ -26,15 +26,23 @@
 #define READ_TIMEOUT           (10 * 1000)
 #define MJPEG_MAX_PADDING      128
 #define MAX_OUTSTANDING_FRAMES 128
-#define BUFFER_ALIGNMENT       512
+
+#define KS_BUFFER_ALIGNMENT    4096
 
 #define DEFAULT_DEVICE_PATH NULL
 
 GST_DEBUG_CATEGORY_EXTERN (gst_ks_debug);
 #define GST_CAT_DEFAULT gst_ks_debug
 
-#define GST_DEBUG_IS_ENABLED() \
+#define GST_DEBUG_IS_ENABLED()  \
     (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_DEBUG)
+#define UNREF_BUFFER(b)         \
+  G_STMT_START {                \
+    if (*(b) != NULL) {         \
+      gst_buffer_unref (*(b));  \
+      *(b) = NULL;              \
+    }                           \
+  } G_STMT_END
 
 enum
 {
@@ -52,8 +60,7 @@ typedef struct
 typedef struct
 {
   KSSTREAM_READ_PARAMS params;
-  guint8 *buf_unaligned;
-  guint8 *buf;
+  GstBuffer *buf;
   OVERLAPPED overlapped;
 } ReadRequest;
 
@@ -84,8 +91,9 @@ struct _GstKsVideoDevicePrivate
   gulong num_requests;
   GArray *requests;
   GArray *request_events;
+  GstBuffer *spare_buffers[2];
   GstClockTime last_timestamp;
-} GstKsVideoDevicePrivate;
+};
 
 #define GST_KS_VIDEO_DEVICE_GET_PRIVATE(o) ((o)->priv)
 
@@ -96,6 +104,7 @@ static void gst_ks_video_device_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static void gst_ks_video_device_reset_caps (GstKsVideoDevice * self);
+static guint gst_ks_video_device_get_frame_size (GstKsVideoDevice * self);
 
 GST_BOILERPLATE (GstKsVideoDevice, gst_ks_video_device, GObject, G_TYPE_OBJECT);
 
@@ -258,11 +267,16 @@ gst_ks_video_device_clear_buffers (GstKsVideoDevice * self)
   }
 
   /* Clean up */
+  for (i = 0; i < G_N_ELEMENTS (priv->spare_buffers); i++) {
+    gst_buffer_unref (priv->spare_buffers[i]);
+    priv->spare_buffers[i] = NULL;
+  }
+
   for (i = 0; i < priv->requests->len; i++) {
     ReadRequest *req = &g_array_index (priv->requests, ReadRequest, i);
     HANDLE ev = g_array_index (priv->request_events, HANDLE, i);
 
-    g_free (req->buf_unaligned);
+    gst_buffer_unref (req->buf);
 
     if (ev)
       CloseHandle (ev);
@@ -293,12 +307,16 @@ gst_ks_video_device_prepare_buffers (GstKsVideoDevice * self)
 
   frame_size = gst_ks_video_device_get_frame_size (self);
 
+  for (i = 0; i < G_N_ELEMENTS (priv->spare_buffers); i++) {
+    priv->spare_buffers[i] = self->allocfunc (frame_size, KS_BUFFER_ALIGNMENT,
+        self->allocfunc_data);
+  }
+
   for (i = 0; i < priv->num_requests; i++) {
     ReadRequest req = { 0, };
 
-    req.buf_unaligned = g_malloc (frame_size + BUFFER_ALIGNMENT - 1);
-    req.buf = (guint8 *) (((gsize) req.buf_unaligned + BUFFER_ALIGNMENT - 1)
-        & ~(BUFFER_ALIGNMENT - 1));
+    req.buf = self->allocfunc (frame_size, KS_BUFFER_ALIGNMENT,
+        self->allocfunc_data);
 
     req.overlapped.hEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
 
@@ -330,6 +348,20 @@ gst_ks_video_device_dump_supported_property_sets (GstKsVideoDevice * self,
     GST_DEBUG ("[%d] %s", i, propset_name);
     g_free (propset_name);
   }
+}
+
+GstKsVideoDevice *
+gst_ks_video_device_new (const gchar * device_path, GstKsClock * clock,
+    GstKsAllocFunction allocfunc, gpointer allocfunc_data)
+{
+  GstKsVideoDevice *device;
+
+  device = g_object_new (GST_TYPE_KS_VIDEO_DEVICE,
+      "device-path", device_path, "clock", clock, NULL);
+  device->allocfunc = allocfunc;
+  device->allocfunc_data = allocfunc_data;
+
+  return device;
 }
 
 gboolean
@@ -556,8 +588,8 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
   g_free (framing_ex);
 
   /*
-   * TODO: We also need to respect alignment, but for now we just align
-   *       on FILE_512_BYTE_ALIGNMENT.
+   * TODO: We also need to respect alignment, but for now we just assume
+   *       that allocfunc provides the appropriate alignment...
    */
 
   /* Set the memory transport to use. */
@@ -818,7 +850,7 @@ gst_ks_video_device_set_state (GstKsVideoDevice * self, KSSTATE state)
   return TRUE;
 }
 
-guint
+static guint
 gst_ks_video_device_get_frame_size (GstKsVideoDevice * self)
 {
   GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
@@ -855,6 +887,41 @@ gst_ks_video_device_get_latency (GstKsVideoDevice * self,
 }
 
 static gboolean
+gst_ks_read_request_pick_buffer (GstKsVideoDevice * self, ReadRequest * req)
+{
+  GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
+  gboolean buffer_found = FALSE;
+  guint i;
+
+  buffer_found = gst_buffer_is_writable (req->buf);
+
+  for (i = 0; !buffer_found && i < G_N_ELEMENTS (priv->spare_buffers); i++) {
+    if (gst_buffer_is_writable (priv->spare_buffers[i])) {
+      GstBuffer *hold;
+
+      hold = req->buf;
+      req->buf = priv->spare_buffers[i];
+      priv->spare_buffers[i] = hold;
+
+      buffer_found = TRUE;
+    }
+  }
+
+  if (!buffer_found) {
+    gst_buffer_unref (req->buf);
+    req->buf = self->allocfunc (gst_ks_video_device_get_frame_size (self),
+        KS_BUFFER_ALIGNMENT, self->allocfunc_data);
+  }
+
+  if (req->buf != NULL) {
+    GST_BUFFER_FLAGS (req->buf) = 0;
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_ks_video_device_request_frame (GstKsVideoDevice * self, ReadRequest * req,
     gulong * error_code, gchar ** error_str)
 {
@@ -863,6 +930,9 @@ gst_ks_video_device_request_frame (GstKsVideoDevice * self, ReadRequest * req,
   KSSTREAM_READ_PARAMS *params;
   BOOL success;
   DWORD bytes_returned = 0;
+
+  if (!gst_ks_read_request_pick_buffer (self, req))
+    goto error_pick_buffer;
 
   /* Reset the OVERLAPPED structure */
   event = req->overlapped.hEvent;
@@ -877,17 +947,8 @@ gst_ks_video_device_request_frame (GstKsVideoDevice * self, ReadRequest * req,
   params->header.PresentationTime.Numerator = 1;
   params->header.PresentationTime.Denominator = 1;
   params->header.FrameExtent = gst_ks_video_device_get_frame_size (self);
-  params->header.Data = req->buf;
+  params->header.Data = GST_BUFFER_DATA (req->buf);
   params->frame_info.ExtendedHeaderSize = sizeof (KS_FRAME_INFO);
-
-  /*
-   * Clear the buffer like DirectShow does
-   *
-   * REVISIT: Could probably remove this later, for now it's here to help
-   *          track down the case where we capture old frames. This has been
-   *          observed with UVC cameras, presumably with some system load.
-   */
-  memset (params->header.Data, 0, params->header.FrameExtent);
 
   success = DeviceIoControl (priv->pin_handle, IOCTL_KS_READ_STREAM, NULL, 0,
       params, params->header.Size, &bytes_returned, &req->overlapped);
@@ -897,6 +958,14 @@ gst_ks_video_device_request_frame (GstKsVideoDevice * self, ReadRequest * req,
   return TRUE;
 
   /* ERRORS */
+error_pick_buffer:
+  {
+    if (error_code != NULL)
+      *error_code = 0;
+    if (error_str != NULL)
+      *error_str = NULL;
+    return FALSE;
+  }
 error_ioctl:
   {
     gst_ks_video_device_parse_win32_error ("DeviceIoControl", GetLastError (),
@@ -905,10 +974,57 @@ error_ioctl:
   }
 }
 
+static void
+gst_ks_video_device_correct_or_drop_frame (GstKsVideoDevice * self,
+    GstBuffer ** frame_buf)
+{
+  GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
+  gboolean valid = FALSE;
+  guint padding = 0;
+  guint8 *data;
+  guint data_size;
+
+  if (!priv->is_mjpeg)
+    return;
+
+  /*
+   * Workaround for cameras/drivers that intermittently provide us
+   * with incomplete or corrupted MJPEG frames.
+   *
+   * Happens with for instance Microsoft LifeCam VX-7000.
+   */
+
+  data = GST_BUFFER_DATA (*frame_buf);
+  data_size = GST_BUFFER_SIZE (*frame_buf);
+
+  if (data_size > MJPEG_MAX_PADDING) {
+    /* JFIF SOI marker */
+    if (data[0] == 0xff && data[1] == 0xd8) {
+      guint8 *p = data + data_size - 2;
+
+      /* JFIF EOI marker (but skip any padding) */
+      while (padding < MJPEG_MAX_PADDING - 1 - 2 && !valid) {
+        if (p[0] == 0xff && p[1] == 0xd9) {
+          valid = TRUE;
+        } else {
+          padding++;
+          p--;
+        }
+      }
+    }
+  }
+
+  if (valid) {
+    GST_BUFFER_SIZE (*frame_buf) -= padding;
+  } else {
+    gst_buffer_unref (*frame_buf);
+    *frame_buf = NULL;
+  }
+}
+
 GstFlowReturn
-gst_ks_video_device_read_frame (GstKsVideoDevice * self, guint8 * buf,
-    gulong buf_size, gulong * bytes_read, GstClockTime * presentation_time,
-    gulong * error_code, gchar ** error_str)
+gst_ks_video_device_read_frame (GstKsVideoDevice * self, GstBuffer ** buf,
+    GstClockTime * presentation_time, gulong * error_code, gchar ** error_str)
 {
   GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
   guint req_idx;
@@ -930,6 +1046,8 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, guint8 * buf,
     }
   }
 
+  *buf = NULL;
+
   do {
     /* Wait for either a request to complete, a cancel or a timeout */
     wait_ret = WaitForMultipleObjects (priv->request_events->len,
@@ -942,8 +1060,6 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, guint8 * buf,
     /* Stopped? */
     if (WaitForSingleObject (priv->cancel_event, 0) == WAIT_OBJECT_0)
       goto error_cancel;
-
-    *bytes_read = 0;
 
     /* Find the last ReadRequest that finished and get the result, immediately
      * re-issuing each request that has completed. */
@@ -977,8 +1093,13 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, guint8 * buf,
         if (hdr->OptionsFlags & KSSTREAM_HEADER_OPTIONSF_DURATIONVALID)
           duration = hdr->Duration * 100;
 
-        /* Assume it's a good frame */
-        *bytes_read = hdr->DataUsed;
+        UNREF_BUFFER (buf);
+
+        if (G_LIKELY (hdr->DataUsed != 0)) {
+          /* Assume it's a good frame */
+          GST_BUFFER_SIZE (req->buf) = hdr->DataUsed;
+          *buf = gst_buffer_ref (req->buf);
+        }
 
         if (G_LIKELY (presentation_time != NULL))
           *presentation_time = timestamp;
@@ -1006,64 +1127,31 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, guint8 * buf,
                 ", timestamp=%" GST_TIME_FORMAT ")",
                 GST_TIME_ARGS (priv->last_timestamp),
                 GST_TIME_ARGS (timestamp));
-            *bytes_read = 0;
+            UNREF_BUFFER (buf);
           } else {
             priv->last_timestamp = timestamp;
           }
         }
 
-        if (*bytes_read > 0) {
-          /* Grab the frame data */
-          g_assert (buf_size >= hdr->DataUsed);
-          memcpy (buf, req->buf, hdr->DataUsed);
-
-          if (priv->is_mjpeg) {
-            /*
-             * Workaround for cameras/drivers that intermittently provide us
-             * with incomplete or corrupted MJPEG frames.
-             *
-             * Happens with for instance Microsoft LifeCam VX-7000.
-             */
-
-            gboolean valid = FALSE;
-            guint padding = 0;
-
-            /* JFIF SOI marker */
-            if (*bytes_read > MJPEG_MAX_PADDING
-                && buf[0] == 0xff && buf[1] == 0xd8) {
-              guint8 *p = buf + *bytes_read - 2;
-
-              /* JFIF EOI marker (but skip any padding) */
-              while (padding < MJPEG_MAX_PADDING - 1 - 2 && !valid) {
-                if (p[0] == 0xff && p[1] == 0xd9) {
-                  valid = TRUE;
-                } else {
-                  padding++;
-                  p--;
-                }
-              }
-            }
-
-            if (valid)
-              *bytes_read -= padding;
-            else
-              *bytes_read = 0;
-          }
-        }
-      } else if (GetLastError () != ERROR_OPERATION_ABORTED)
+        if (*buf != NULL)
+          gst_ks_video_device_correct_or_drop_frame (self, buf);
+      } else if (GetLastError () != ERROR_OPERATION_ABORTED) {
         goto error_get_result;
+      }
 
       /* Submit a new request immediately */
       if (!gst_ks_video_device_request_frame (self, req, error_code, error_str))
         goto error_request_failed;
     }
-  } while (*bytes_read == 0);
+  } while (*buf == NULL);
 
   return GST_FLOW_OK;
 
   /* ERRORS */
 error_request_failed:
   {
+    UNREF_BUFFER (buf);
+
     return GST_FLOW_ERROR;
   }
 error_timeout:

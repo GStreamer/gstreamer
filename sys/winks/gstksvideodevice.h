@@ -20,6 +20,8 @@
 #ifndef __GST_KS_VIDEO_DEVICE_H__
 #define __GST_KS_VIDEO_DEVICE_H__
 
+#include "gstksclock.h"
+
 #include <gst/gst.h>
 
 #include <windows.h>
@@ -42,9 +44,14 @@ typedef struct _GstKsVideoDevice        GstKsVideoDevice;
 typedef struct _GstKsVideoDeviceClass   GstKsVideoDeviceClass;
 typedef struct _GstKsVideoDevicePrivate GstKsVideoDevicePrivate;
 
+typedef GstBuffer * (* GstKsAllocFunction)(guint buf_size, guint alignment, gpointer user_data);
+
 struct _GstKsVideoDevice
 {
   GObject parent;
+
+  GstKsAllocFunction allocfunc;
+  gpointer allocfunc_data;
 
   GstKsVideoDevicePrivate *priv;
 };
@@ -56,6 +63,7 @@ struct _GstKsVideoDeviceClass
 
 GType gst_ks_video_device_get_type (void);
 
+GstKsVideoDevice * gst_ks_video_device_new (const gchar * device_path, GstKsClock * clock, GstKsAllocFunction allocfunc, gpointer allocfunc_data);
 gboolean gst_ks_video_device_open (GstKsVideoDevice * self);
 void gst_ks_video_device_close (GstKsVideoDevice * self);
 
@@ -65,11 +73,10 @@ gboolean gst_ks_video_device_set_caps (GstKsVideoDevice * self, GstCaps * caps);
 
 gboolean gst_ks_video_device_set_state (GstKsVideoDevice * self, KSSTATE state);
 
-guint gst_ks_video_device_get_frame_size (GstKsVideoDevice * self);
 GstClockTime gst_ks_video_device_get_duration (GstKsVideoDevice * self);
 gboolean gst_ks_video_device_get_latency (GstKsVideoDevice * self, GstClockTime * min_latency, GstClockTime * max_latency);
 
-GstFlowReturn gst_ks_video_device_read_frame (GstKsVideoDevice * self, guint8 * buf, gulong buf_size, gulong * bytes_read, GstClockTime * presentation_time, gulong * error_code, gchar ** error_str);
+GstFlowReturn gst_ks_video_device_read_frame (GstKsVideoDevice * self, GstBuffer ** buf, GstClockTime * presentation_time, gulong * error_code, gchar ** error_str);
 void gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self, guint8 * buf, guint buf_size);
 void gst_ks_video_device_cancel (GstKsVideoDevice * self);
 void gst_ks_video_device_cancel_stop (GstKsVideoDevice * self);

@@ -155,6 +155,8 @@ static gboolean gst_ks_video_src_unlock_stop (GstBaseSrc * basesrc);
 
 static GstFlowReturn gst_ks_video_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buffer);
+static GstBuffer *gst_ks_video_src_alloc_buffer (guint size, guint alignment,
+    gpointer user_data);
 
 GST_BOILERPLATE_FULL (GstKsVideoSrc, gst_ks_video_src, GstPushSrc,
     GST_TYPE_PUSH_SRC, gst_ks_video_src_init_interfaces);
@@ -524,8 +526,8 @@ gst_ks_video_src_open_device (GstKsVideoSrc * self)
         priv->ksclock = NULL;
       }
 
-      device = g_object_new (GST_TYPE_KS_VIDEO_DEVICE,
-          "clock", priv->ksclock, "device-path", entry->path, NULL);
+      device = gst_ks_video_device_new (entry->path, priv->ksclock,
+          gst_ks_video_src_alloc_buffer, self);
     }
 
     ks_device_entry_free (entry);
@@ -991,13 +993,10 @@ gst_ks_video_src_update_statistics (GstKsVideoSrc * self)
 }
 
 static GstFlowReturn
-gst_ks_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
+gst_ks_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
 {
   GstKsVideoSrc *self = GST_KS_VIDEO_SRC (pushsrc);
   GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
-  guint buf_size;
-  GstCaps *caps;
-  GstBuffer *buf = NULL;
   GstFlowReturn result;
   GstClockTime presentation_time;
   gulong error_code;
@@ -1007,18 +1006,6 @@ gst_ks_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 
   if (!gst_ks_video_device_has_caps (priv->device))
     goto error_no_caps;
-
-  buf_size = gst_ks_video_device_get_frame_size (priv->device);
-  g_assert (buf_size);
-
-  caps = gst_pad_get_negotiated_caps (GST_BASE_SRC_PAD (self));
-  if (caps == NULL)
-    goto error_no_caps;
-  result = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (self), priv->offset,
-      buf_size, caps, &buf);
-  gst_caps_unref (caps);
-  if (G_UNLIKELY (result != GST_FLOW_OK))
-    goto error_alloc_buffer;
 
   if (G_UNLIKELY (!priv->running)) {
     KS_WORKER_LOCK (priv);
@@ -1034,25 +1021,24 @@ gst_ks_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   }
 
   do {
-    gulong bytes_read;
+    if (*buf != NULL) {
+      gst_buffer_unref (*buf);
+      *buf = NULL;
+    }
 
-    result = gst_ks_video_device_read_frame (priv->device,
-        GST_BUFFER_DATA (buf), buf_size, &bytes_read, &presentation_time,
-        &error_code, &error_str);
+    result = gst_ks_video_device_read_frame (priv->device, buf,
+        &presentation_time, &error_code, &error_str);
     if (G_UNLIKELY (result != GST_FLOW_OK))
       goto error_read_frame;
-
-    GST_BUFFER_SIZE (buf) = bytes_read;
   }
-  while (!gst_ks_video_src_timestamp_buffer (self, buf, presentation_time));
+  while (!gst_ks_video_src_timestamp_buffer (self, *buf, presentation_time));
 
   if (G_UNLIKELY (priv->do_stats))
     gst_ks_video_src_update_statistics (self);
 
   gst_ks_video_device_postprocess_frame (priv->device,
-      GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+      GST_BUFFER_DATA (*buf), GST_BUFFER_SIZE (*buf));
 
-  *buffer = buf;
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -1071,28 +1057,61 @@ error_start_capture:
 
     return GST_FLOW_ERROR;
   }
-error_alloc_buffer:
-  {
-    GST_ELEMENT_ERROR (self, CORE, PAD, ("alloc_buffer failed"), (NULL));
-
-    return result;
-  }
 error_read_frame:
   {
     if (result == GST_FLOW_ERROR) {
-      GST_ELEMENT_ERROR (self, RESOURCE, READ,
-          ("read failed: %s [0x%08x]", error_str, error_code),
-          ("gst_ks_video_device_read_frame failed"));
-    }
-    else if (result == GST_FLOW_UNEXPECTED) {
+      if (error_str != NULL) {
+        GST_ELEMENT_ERROR (self, RESOURCE, READ,
+            ("read failed: %s [0x%08x]", error_str, error_code),
+            ("gst_ks_video_device_read_frame failed"));
+      }
+    } else if (result == GST_FLOW_UNEXPECTED) {
       GST_ELEMENT_ERROR (self, RESOURCE, READ,
           ("read failed"), ("gst_ks_video_device_read_frame failed"));
     }
 
     g_free (error_str);
-    gst_buffer_unref (buf);
 
     return result;
+  }
+}
+
+static GstBuffer *
+gst_ks_video_src_alloc_buffer (guint size, guint alignment, gpointer user_data)
+{
+  GstKsVideoSrc *self = GST_KS_VIDEO_SRC (user_data);
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstFlowReturn flow_ret;
+
+  caps = gst_pad_get_negotiated_caps (GST_BASE_SRC_PAD (self));
+  if (caps == NULL)
+    goto error_no_caps;
+  flow_ret = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (self), 0,
+      size + (alignment - 1), caps, &buf);
+  gst_caps_unref (caps);
+  if (G_UNLIKELY (flow_ret != GST_FLOW_OK))
+    goto error_alloc_buffer;
+
+  GST_BUFFER_DATA (buf) =
+      GSIZE_TO_POINTER ((GPOINTER_TO_SIZE (GST_BUFFER_DATA (buf)) + (alignment -
+              1)) & ~(alignment - 1));
+  GST_BUFFER_SIZE (buf) = size;
+
+  return buf;
+
+error_no_caps:
+  {
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+        ("not negotiated"), ("maybe setcaps failed?"));
+
+    return NULL;
+  }
+error_alloc_buffer:
+  {
+    GST_ELEMENT_ERROR (self, CORE, PAD, ("alloc_buffer failed"), (NULL));
+
+    return NULL;
   }
 }
 
