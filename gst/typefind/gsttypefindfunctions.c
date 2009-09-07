@@ -581,6 +581,9 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
     return;
   }
 
+/* disabled because it happily typefinds /dev/urandom as audio/x-flac, and
+ * because I yet have to see header-less flac in the wild */
+#if 0
   /* flac without headers (subset format) */
   /* 64K should be enough */
   while (c.offset < (64 * 1024)) {
@@ -634,6 +637,7 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
   advance:
     data_scan_ctx_advance (tf, &c, 1);
   }
+#endif
 }
 
 /*** audio/mpeg version 2, 4 ***/
@@ -1610,7 +1614,7 @@ suggest:
   }
 };
 
-/** video/mpegts Transport Stream **/
+/*** video/mpegts Transport Stream ***/
 static GstStaticCaps mpegts_caps = GST_STATIC_CAPS ("video/mpegts, "
     "systemstream = (boolean) true, packetsize = (int) [ 188, 208 ]");
 #define MPEGTS_CAPS gst_static_caps_get(&mpegts_caps)
@@ -1706,8 +1710,7 @@ mpeg_ts_type_find (GstTypeFind * tf, gpointer unused)
 #define GST_MPEGVID_TYPEFIND_TRY_PICTURES 6
 #define GST_MPEGVID_TYPEFIND_TRY_SYNC (100 * 1024)      /* 100 kB */
 
-/**
- * Scan ahead a maximum of max_extra_offset bytes until the next IS_MPEG_HEADER
+/* Scan ahead a maximum of max_extra_offset bytes until the next IS_MPEG_HEADER
  * offset.  After the call, offset will be after the 0x000001, i.e. at the 4th
  * byte of the MPEG header.  Returns TRUE if a header was found, FALSE if not.
  */
