@@ -251,10 +251,10 @@ gst_mpeg4vparse_handle_vo (GstMpeg4VParse * parse, const guint8 * data,
     goto failed;
 
   /* check if aspect ratio info  is extended par */
-  if (bits == 0xff) {
-    GET_BITS (&bs, 4, &bits);
+  if (bits == 0xf) {
+    GET_BITS (&bs, 8, &bits);
     aspect_ratio_width = bits;
-    GET_BITS (&bs, 4, &bits);
+    GET_BITS (&bs, 8, &bits);
     aspect_ratio_height = bits;
   } else if (bits < 0x6) {
     aspect_ratio_width = aspect_ratio_table[bits][0];
