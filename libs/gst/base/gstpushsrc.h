@@ -29,12 +29,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_PUSH_SRC  		(gst_push_src_get_type())
-#define GST_PUSH_SRC(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PUSH_SRC,GstPushSrc))
-#define GST_PUSH_SRC_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PUSH_SRC,GstPushSrcClass))
+#define GST_TYPE_PUSH_SRC               (gst_push_src_get_type())
+#define GST_PUSH_SRC(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PUSH_SRC,GstPushSrc))
+#define GST_PUSH_SRC_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PUSH_SRC,GstPushSrcClass))
 #define GST_PUSH_SRC_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PUSH_SRC, GstPushSrcClass))
-#define GST_IS_PUSH_SRC(obj)  		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PUSH_SRC))
-#define GST_IS_PUSH_SRC_CLASS(klass)  	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PUSH_SRC))
+#define GST_IS_PUSH_SRC(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PUSH_SRC))
+#define GST_IS_PUSH_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PUSH_SRC))
 
 typedef struct _GstPushSrc GstPushSrc;
 typedef struct _GstPushSrcClass GstPushSrcClass;

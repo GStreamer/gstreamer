@@ -25,10 +25,10 @@
  *
  * The fakesrc element is a multipurpose element that can generate
  * a wide range of buffers and can operate in various scheduling modes.
- * 
+ *
  * It is mostly used as a testing element, one trivial example for testing
  * basic <application>GStreamer</application> core functionality is:
- * 
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
@@ -36,7 +36,7 @@
  * ]| This pipeline will push 5 empty buffers to the fakesink element and then
  * sends an EOS.
  * </refsect2>
- * 
+ *
  * Last reviewed on 2008-06-20 (0.10.21)
  */
 
