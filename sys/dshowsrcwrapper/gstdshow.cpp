@@ -22,10 +22,10 @@
 #include "gstdshow.h"
 #include "gstdshowfakesink.h"
 
-void 
+void
 gst_dshow_free_mediatype (AM_MEDIA_TYPE *pmt)
 {
-  if (pmt != NULL) {    
+  if (pmt != NULL) {
     if (pmt->cbFormat != 0) {
       CoTaskMemFree((PVOID)pmt->pbFormat);
       pmt->cbFormat = 0;
@@ -41,7 +41,7 @@ gst_dshow_free_mediatype (AM_MEDIA_TYPE *pmt)
   }
 }
 
-void 
+void
 gst_dshow_free_pin_mediatype (gpointer pt)
 {
   GstCapturePinMediaType * pin_mediatype = (GstCapturePinMediaType *) pt;
@@ -57,7 +57,7 @@ gst_dshow_free_pin_mediatype (gpointer pt)
   }
 }
 
-GstCapturePinMediaType * 
+GstCapturePinMediaType *
 gst_dshow_new_pin_mediatype (IPin *pin, gint id, IAMStreamConfig * streamcaps)
 {
   GstCapturePinMediaType *pin_mediatype = g_new0 (GstCapturePinMediaType, 1);
@@ -74,7 +74,7 @@ gst_dshow_new_pin_mediatype (IPin *pin, gint id, IAMStreamConfig * streamcaps)
   return pin_mediatype;
 }
 
-void 
+void
 gst_dshow_free_pins_mediatypes (GList *pins_mediatypes)
 {
   guint i = 0;
@@ -87,27 +87,27 @@ gst_dshow_free_pins_mediatypes (GList *pins_mediatypes)
 }
 
 gboolean
-gst_dshow_check_mediatype (AM_MEDIA_TYPE *media_type, const GUID sub_type, 
+gst_dshow_check_mediatype (AM_MEDIA_TYPE *media_type, const GUID sub_type,
   const GUID format_type)
 {
   RPC_STATUS rpcstatus;
-  
+
   g_return_val_if_fail (media_type != NULL, FALSE);
-  
-  return 
+
+  return
     UuidCompare (&media_type->subtype, (UUID *) &sub_type,
     &rpcstatus) == 0 && rpcstatus == RPC_S_OK &&
     UuidCompare (&media_type->formattype, (UUID *) &format_type,
     &rpcstatus) == 0 && rpcstatus == RPC_S_OK;
 }
 
-gboolean 
+gboolean
 gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin **pin)
 {
   gboolean ret = FALSE;
   IEnumPins *enumpins = NULL;
   IPin *pintmp = NULL;
-  HRESULT hres; 
+  HRESULT hres;
   *pin = NULL;
 
   hres = filter->EnumPins (&enumpins);
@@ -131,8 +131,8 @@ gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin *
   return ret;
 }
 
-gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype, 
-                               CLSID output_majortype, CLSID output_subtype, 
+gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
+                               CLSID output_majortype, CLSID output_subtype,
                                gchar * prefered_filter_name, IBaseFilter **filter)
 {
   gboolean ret = FALSE;
@@ -156,24 +156,24 @@ gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
     _strupr (prefered_filter_upper);
   }
 
-  hres = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC, 
+  hres = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC,
       IID_IFilterMapper2, (void **) &mapper);
   if (FAILED(hres))
     goto clean;
-  
+
   memcpy(&arrayInTypes[0], &input_majortype, sizeof (CLSID));
   memcpy(&arrayInTypes[1], &input_subtype, sizeof (CLSID));
   memcpy(&arrayOutTypes[0], &output_majortype, sizeof (CLSID));
   memcpy(&arrayOutTypes[1], &output_subtype, sizeof (CLSID));
 
-  hres = mapper->EnumMatchingFilters (&enum_moniker, 0, FALSE, MERIT_DO_NOT_USE+1, 
-          TRUE, 1, arrayInTypes, NULL, NULL, FALSE, 
+  hres = mapper->EnumMatchingFilters (&enum_moniker, 0, FALSE, MERIT_DO_NOT_USE+1,
+          TRUE, 1, arrayInTypes, NULL, NULL, FALSE,
           TRUE, 1, arrayOutTypes, NULL, NULL);
   if (FAILED(hres))
     goto clean;
-  
+
   enum_moniker->Reset ();
-  
+
   while(hres = enum_moniker->Next (1, &moniker, &fetched),hres == S_OK
     && !exit) {
     IBaseFilter *filter_temp = NULL;
@@ -184,11 +184,11 @@ gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
     if(SUCCEEDED(hres) && property_bag) {
       VARIANT varFriendlyName;
       VariantInit (&varFriendlyName);
-      
+
       hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
       if(hres == S_OK && varFriendlyName.bstrVal) {
-         friendly_name = g_utf16_to_utf8((const gunichar2*)varFriendlyName.bstrVal, 
-            wcslen(varFriendlyName.bstrVal), NULL, NULL, NULL);        
+         friendly_name = g_utf16_to_utf8((const gunichar2*)varFriendlyName.bstrVal,
+            wcslen(varFriendlyName.bstrVal), NULL, NULL, NULL);
          if (friendly_name)
            _strupr (friendly_name);
         SysFreeString (varFriendlyName.bstrVal);
@@ -196,7 +196,7 @@ gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
       property_bag->Release ();
     }
 
-    hres = moniker->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&filter_temp);    
+    hres = moniker->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&filter_temp);
     if(SUCCEEDED(hres) && filter_temp) {
       ret = TRUE;
       if (filter) {
@@ -211,8 +211,8 @@ gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
           exit = TRUE;
       }
 
-      /* if we just want to know if the formats are supported OR 
-          if we don't care about what will be the filter used 
+      /* if we just want to know if the formats are supported OR
+          if we don't care about what will be the filter used
           => we can stop enumeration */
       if (!filter || !prefered_filter_upper)
         exit = TRUE;
@@ -247,7 +247,7 @@ gst_dshow_getdevice_from_devicename  (const GUID *device_category, gchar **devic
   HRESULT hres = S_FALSE;
   ULONG fetched;
   gboolean bfound = FALSE;
-  
+
   hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
       IID_ICreateDevEnum, (void**)&devices_enum);
   if(hres != S_OK) {
@@ -263,7 +263,7 @@ gst_dshow_getdevice_from_devicename  (const GUID *device_category, gchar **devic
   }
 
   enum_moniker->Reset ();
-  
+
   while(hres = enum_moniker->Next (1, &moniker, &fetched),hres == S_OK
     && !bfound) {
     IPropertyBag *property_bag = NULL;
@@ -271,10 +271,10 @@ gst_dshow_getdevice_from_devicename  (const GUID *device_category, gchar **devic
     if(SUCCEEDED(hres) && property_bag) {
       VARIANT varFriendlyName;
       VariantInit (&varFriendlyName);
-      
+
       hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
       if(hres == S_OK && varFriendlyName.bstrVal) {
-        gchar * friendly_name = g_utf16_to_utf8((const gunichar2*)varFriendlyName.bstrVal, 
+        gchar * friendly_name = g_utf16_to_utf8((const gunichar2*)varFriendlyName.bstrVal,
             wcslen(varFriendlyName.bstrVal), NULL, NULL, NULL);
 
         if (!*device_name) {
@@ -285,7 +285,7 @@ gst_dshow_getdevice_from_devicename  (const GUID *device_category, gchar **devic
           WCHAR *wszDisplayName = NULL;
           hres = moniker->GetDisplayName (NULL, NULL, &wszDisplayName);
           if(hres == S_OK && wszDisplayName) {
-            ret = g_utf16_to_utf8((const gunichar2*)wszDisplayName, 
+            ret = g_utf16_to_utf8((const gunichar2*)wszDisplayName,
              wcslen(wszDisplayName), NULL, NULL, NULL);
             CoTaskMemFree (wszDisplayName);
           }
@@ -310,19 +310,19 @@ clean:
   return ret;
 }
 
-gboolean 
+gboolean
 gst_dshow_show_propertypage (IBaseFilter *base_filter)
 {
   gboolean ret = FALSE;
   ISpecifyPropertyPages *pProp = NULL;
   HRESULT hres = base_filter->QueryInterface (IID_ISpecifyPropertyPages, (void **)&pProp);
-  if (SUCCEEDED(hres)) 
+  if (SUCCEEDED(hres))
   {
     /* Get the filter's name and IUnknown pointer.*/
     FILTER_INFO FilterInfo;
     CAUUID caGUID;
     IUnknown *pFilterUnk = NULL;
-    hres = base_filter->QueryFilterInfo (&FilterInfo); 
+    hres = base_filter->QueryFilterInfo (&FilterInfo);
     base_filter->QueryInterface (IID_IUnknown, (void **)&pFilterUnk);
 
     /* Show the page. */
@@ -338,13 +338,13 @@ gst_dshow_show_propertypage (IBaseFilter *base_filter)
   return ret;
 }
 
-GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
+GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name,
   GstCapturePinMediaType *pin_mediatype)
 {
   GstCaps *video_caps = NULL;
   GstStructure *video_structure = NULL;
   VIDEOINFOHEADER *video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
-  
+
   pin_mediatype->defaultWidth = video_info->bmiHeader.biWidth;
   pin_mediatype->defaultHeight = video_info->bmiHeader.biHeight;
   pin_mediatype->defaultFPS = (gint) (10000000 / video_info->AvgTimePerFrame);
@@ -365,12 +365,12 @@ GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* nam
   /* other video format */
   if (!video_caps){
     if (g_strcasecmp (name, "video/x-dv, systemstream=FALSE") == 0) {
-      video_caps = gst_caps_new_simple ("video/x-dv", 
+      video_caps = gst_caps_new_simple ("video/x-dv",
         "systemstream", G_TYPE_BOOLEAN, FALSE,
         "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
         NULL);
     } else if (g_strcasecmp (name, "video/x-dv, systemstream=TRUE") == 0) {
-      video_caps = gst_caps_new_simple ("video/x-dv", 
+      video_caps = gst_caps_new_simple ("video/x-dv",
         "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
       return video_caps;
     }
@@ -390,11 +390,11 @@ GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* nam
   /* For framerate we do not need a step (granularity) because  */
   /* "The IAMStreamConfig::SetFormat method will set the frame rate to the closest  */
   /* value that the filter supports" as it said in the VIDEO_STREAM_CONFIG_CAPS dshwo doc */
-  
+
   gst_structure_set (video_structure,
       "width", GST_TYPE_INT_RANGE, pin_mediatype->vscc.MinOutputSize.cx, pin_mediatype->vscc.MaxOutputSize.cx,
       "height", GST_TYPE_INT_RANGE, pin_mediatype->vscc.MinOutputSize.cy, pin_mediatype->vscc.MaxOutputSize.cy,
-      "framerate", GST_TYPE_FRACTION_RANGE, 
+      "framerate", GST_TYPE_FRACTION_RANGE,
           (gint) (10000000 / pin_mediatype->vscc.MaxFrameInterval), 1,
           (gint) (10000000 / pin_mediatype->vscc.MinFrameInterval), 1,
        NULL);

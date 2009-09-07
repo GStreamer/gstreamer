@@ -2,7 +2,7 @@
  * Copyright (C)  2007 Sebastien Moutte <sebastien@moutte.net>
  * Copyright (C)  2009 Julien Isorce <julien.isorce@gmail.com>
  *
- * gstdshowvideosrc.c: 
+ * gstdshowvideosrc.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -179,13 +179,13 @@ gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
-          "Directshow device path (@..classID/name)", NULL, 
+          "Directshow device path (@..classID/name)", NULL,
           static_cast<GParamFlags>(G_PARAM_READWRITE)));
 
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", NULL, 
+          "Human-readable name of the sound device", NULL,
           static_cast<GParamFlags>(G_PARAM_READWRITE)));
 
   GST_DEBUG_CATEGORY_INIT (dshowvideosrc_debug, "dshowvideosrc", 0,
@@ -361,7 +361,7 @@ gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
     goto clean;
   }
 
-  hres = devices_enum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, 
+  hres = devices_enum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory,
     &moniker_enum, 0);
   if (hres != S_OK || !moniker_enum) {
     GST_ERROR ("Can't get enumeration of video devices (error=0x%x)", hres);
@@ -502,7 +502,7 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
     if (SUCCEEDED (hres)) {
       hres = MkParseDisplayName (lpbc, (LPCOLESTR) unidevice, &dwEaten, &videom);
       if (SUCCEEDED (hres)) {
-        hres = videom->BindToObject(lpbc, NULL, IID_IBaseFilter, 
+        hres = videom->BindToObject(lpbc, NULL, IID_IBaseFilter,
           (LPVOID *) &src->video_cap_filter);
         videom->Release();
       }
@@ -622,7 +622,7 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
     goto error;
   }
 
-  hres = src->filter_graph->QueryInterface(IID_IMediaFilter, 
+  hres = src->filter_graph->QueryInterface(IID_IMediaFilter,
     (LPVOID *) &src->media_filter);
   if (hres != S_OK || !src->media_filter) {
     GST_ERROR ("Can't get IMediacontrol interface from the graph manager (error=0x%x)", hres);
@@ -732,7 +732,7 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           goto error;
         }
 
-        hres = src->filter_graph->ConnectDirect(pin_mediatype->capture_pin, 
+        hres = src->filter_graph->ConnectDirect(pin_mediatype->capture_pin,
           input_pin, pin_mediatype->mediatype);
         input_pin->Release();
 
@@ -880,12 +880,12 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
   caps = gst_caps_new_empty ();
 
   for (; i < icount; i++) {
-    
-    GstCapturePinMediaType *pin_mediatype = 
+
+    GstCapturePinMediaType *pin_mediatype =
       gst_dshow_new_pin_mediatype (pin, i, streamcaps);
 
     if (pin_mediatype) {
-    
+
       GstCaps *mediacaps = NULL;
 
       if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_I420, FORMAT_VideoInfo)) {
@@ -895,11 +895,11 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
         mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_BGR, NULL, pin_mediatype);
 
       } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_VideoInfo)) {
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN, "video/x-dv, systemstream=FALSE", 
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN, "video/x-dv, systemstream=FALSE",
           pin_mediatype);
 
-      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_DvInfo)) { 
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN, "video/x-dv, systemstream=TRUE", 
+      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_DvInfo)) {
+        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN, "video/x-dv, systemstream=TRUE",
           pin_mediatype);
 
         pin_mediatype->granularityWidth = 0;
@@ -949,7 +949,7 @@ gst_dshowvideosrc_push_buffer (byte * buffer, long size, gpointer src_object,
   GST_BUFFER_DURATION (buf) = stop - start;
 
   if (src->is_rgb) {
-    /* FOR RGB directshow decoder will return bottom-up BITMAP 
+    /* FOR RGB directshow decoder will return bottom-up BITMAP
      * There is probably a way to get top-bottom video frames from
      * the decoder...
      */

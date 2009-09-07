@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C)  2007 Sebastien Moutte <sebastien@moutte.net>
  *
- * gstdshowaudiosrc.c: 
+ * gstdshowaudiosrc.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -172,7 +172,7 @@ gst_dshowaudiosrc_class_init (GstDshowAudioSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", NULL, 
+          "Human-readable name of the sound device", NULL,
           static_cast<GParamFlags>(G_PARAM_READWRITE)));
 
   GST_DEBUG_CATEGORY_INIT (dshowaudiosrc_debug, "dshowaudiosrc", 0,
@@ -278,7 +278,7 @@ gst_dshowaudiosrc_get_device_name_values (GstDshowAudioSrc * src)
     goto clean;
   }
 
-  hres = devices_enum->CreateClassEnumerator(CLSID_AudioInputDeviceCategory, 
+  hres = devices_enum->CreateClassEnumerator(CLSID_AudioInputDeviceCategory,
     &moniker_enum, 0);
   if (hres != S_OK || !moniker_enum) {
     GST_ERROR ("Can't get enumeration of audio devices (error=0x%x)", hres);
@@ -292,7 +292,7 @@ gst_dshowaudiosrc_get_device_name_values (GstDshowAudioSrc * src)
       hres == S_OK) {
     IPropertyBag *property_bag = NULL;
 
-    hres = moniker->BindToStorage(NULL, NULL, IID_IPropertyBag, 
+    hres = moniker->BindToStorage(NULL, NULL, IID_IPropertyBag,
       (LPVOID *) &property_bag);
     if (SUCCEEDED (hres) && property_bag) {
       VARIANT varFriendlyName;
@@ -418,7 +418,7 @@ gst_dshowaudiosrc_get_caps (GstBaseSrc * basesrc)
     if (SUCCEEDED (hres)) {
       hres = MkParseDisplayName (lpbc, (LPCOLESTR) unidevice, &dwEaten, &audiom);
       if (SUCCEEDED (hres)) {
-        hres = audiom->BindToObject(lpbc, NULL, IID_IBaseFilter, 
+        hres = audiom->BindToObject(lpbc, NULL, IID_IBaseFilter,
           (LPVOID *) &src->audio_cap_filter);
         audiom->Release();
       }
@@ -616,7 +616,7 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
           goto error;
         }
 
-        hres = src->filter_graph->ConnectDirect(pin_mediatype->capture_pin, 
+        hres = src->filter_graph->ConnectDirect(pin_mediatype->capture_pin,
           input_pin, NULL);
         input_pin->Release();
 
