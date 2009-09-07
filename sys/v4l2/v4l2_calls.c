@@ -231,30 +231,31 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   v4l2object->norms = g_list_reverse (v4l2object->norms);
 
   GST_DEBUG_OBJECT (e, "  controls+menus");
+
   /* and lastly, controls+menus (if appropriate) */
   for (n = V4L2_CID_BASE;; n++) {
     struct v4l2_queryctrl control = { 0, };
     GstV4l2ColorBalanceChannel *v4l2channel;
-
     GstColorBalanceChannel *channel;
 
     /* when we reached the last official CID, continue with private CIDs */
     if (n == V4L2_CID_LASTP1) {
       GST_DEBUG_OBJECT (e, "checking private CIDs");
       n = V4L2_CID_PRIVATE_BASE;
-      /* FIXME: We are still not handling private controls. We need a new GstInterface
-         to export those controls */
-      break;
     }
+    GST_DEBUG_OBJECT (e, "checking control %08x", n);
 
     control.id = n;
     if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_QUERYCTRL, &control) < 0) {
       if (errno == EINVAL) {
-        if (n < V4L2_CID_PRIVATE_BASE)
+        if (n < V4L2_CID_PRIVATE_BASE) {
+          GST_DEBUG_OBJECT (e, "skipping control %08x", n);
           /* continue so that we also check private controls */
           continue;
-        else
+        } else {
+          GST_DEBUG_OBJECT (e, "controls finished");
           break;
+        }
       } else {
         GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
             (_("Failed getting controls attributes on device '%s'."),
@@ -264,8 +265,10 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         return FALSE;
       }
     }
-    if (control.flags & V4L2_CTRL_FLAG_DISABLED)
+    if (control.flags & V4L2_CTRL_FLAG_DISABLED) {
+      GST_DEBUG_OBJECT (e, "skipping disabled control");
       continue;
+    }
 
     switch (n) {
       case V4L2_CID_BRIGHTNESS:
@@ -281,6 +284,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       case V4L2_CID_EXPOSURE:
       case V4L2_CID_AUTOGAIN:
       case V4L2_CID_GAIN:
+#ifdef V4L2_CID_SHARPNESS
+      case V4L2_CID_SHARPNESS:
+#endif
         /* we only handle these for now (why?) */
         break;
       case V4L2_CID_HFLIP:

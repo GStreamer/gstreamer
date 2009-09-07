@@ -615,63 +615,67 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
 /*
  * common format / caps utilities:
  */
+typedef struct
+{
+  guint32 format;
+  gboolean dimensions;
+} GstV4L2FormatDesc;
 
-
-static const guint32 gst_v4l2_formats[] = {
+static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   /* from Linux 2.6.15 videodev2.h */
-  V4L2_PIX_FMT_RGB332,
-  V4L2_PIX_FMT_RGB555,
-  V4L2_PIX_FMT_RGB565,
-  V4L2_PIX_FMT_RGB555X,
-  V4L2_PIX_FMT_RGB565X,
-  V4L2_PIX_FMT_BGR24,
-  V4L2_PIX_FMT_RGB24,
-  V4L2_PIX_FMT_BGR32,
-  V4L2_PIX_FMT_RGB32,
-  V4L2_PIX_FMT_GREY,
-  V4L2_PIX_FMT_YVU410,
-  V4L2_PIX_FMT_YVU420,
-  V4L2_PIX_FMT_YUYV,
-  V4L2_PIX_FMT_UYVY,
-  V4L2_PIX_FMT_YUV422P,
-  V4L2_PIX_FMT_YUV411P,
-  V4L2_PIX_FMT_Y41P,
+  {V4L2_PIX_FMT_RGB332, TRUE},
+  {V4L2_PIX_FMT_RGB555, TRUE},
+  {V4L2_PIX_FMT_RGB565, TRUE},
+  {V4L2_PIX_FMT_RGB555X, TRUE},
+  {V4L2_PIX_FMT_RGB565X, TRUE},
+  {V4L2_PIX_FMT_BGR24, TRUE},
+  {V4L2_PIX_FMT_RGB24, TRUE},
+  {V4L2_PIX_FMT_BGR32, TRUE},
+  {V4L2_PIX_FMT_RGB32, TRUE},
+  {V4L2_PIX_FMT_GREY, TRUE},
+  {V4L2_PIX_FMT_YVU410, TRUE},
+  {V4L2_PIX_FMT_YVU420, TRUE},
+  {V4L2_PIX_FMT_YUYV, TRUE},
+  {V4L2_PIX_FMT_UYVY, TRUE},
+  {V4L2_PIX_FMT_YUV422P, TRUE},
+  {V4L2_PIX_FMT_YUV411P, TRUE},
+  {V4L2_PIX_FMT_Y41P, TRUE},
 
   /* two planes -- one Y, one Cr + Cb interleaved  */
-  V4L2_PIX_FMT_NV12,
-  V4L2_PIX_FMT_NV21,
+  {V4L2_PIX_FMT_NV12, TRUE},
+  {V4L2_PIX_FMT_NV21, TRUE},
 
   /*  The following formats are not defined in the V4L2 specification */
-  V4L2_PIX_FMT_YUV410,
-  V4L2_PIX_FMT_YUV420,
-  V4L2_PIX_FMT_YYUV,
-  V4L2_PIX_FMT_HI240,
+  {V4L2_PIX_FMT_YUV410, TRUE},
+  {V4L2_PIX_FMT_YUV420, TRUE},
+  {V4L2_PIX_FMT_YYUV, TRUE},
+  {V4L2_PIX_FMT_HI240, TRUE},
 
   /* see http://www.siliconimaging.com/RGB%20Bayer.htm */
 #ifdef V4L2_PIX_FMT_SBGGR8
-  V4L2_PIX_FMT_SBGGR8,
+  {V4L2_PIX_FMT_SBGGR8, TRUE},
 #endif
 
   /* compressed formats */
-  V4L2_PIX_FMT_MJPEG,
-  V4L2_PIX_FMT_JPEG,
-  V4L2_PIX_FMT_DV,
-  V4L2_PIX_FMT_MPEG,
+  {V4L2_PIX_FMT_MJPEG, TRUE},
+  {V4L2_PIX_FMT_JPEG, TRUE},
+  {V4L2_PIX_FMT_DV, TRUE},
+  {V4L2_PIX_FMT_MPEG, FALSE},
 
   /*  Vendor-specific formats   */
-  V4L2_PIX_FMT_WNVA,
+  {V4L2_PIX_FMT_WNVA, TRUE},
 
 #ifdef V4L2_PIX_FMT_SN9C10X
-  V4L2_PIX_FMT_SN9C10X,
+  {V4L2_PIX_FMT_SN9C10X, TRUE},
 #endif
 #ifdef V4L2_PIX_FMT_PWC1
-  V4L2_PIX_FMT_PWC1,
+  {V4L2_PIX_FMT_PWC1, TRUE},
 #endif
 #ifdef V4L2_PIX_FMT_PWC2
-  V4L2_PIX_FMT_PWC2,
+  {V4L2_PIX_FMT_PWC2, TRUE},
 #endif
 #ifdef V4L2_PIX_FMT_YVYU
-  V4L2_PIX_FMT_YVYU,
+  {V4L2_PIX_FMT_YVYU, TRUE},
 #endif
 };
 
@@ -740,6 +744,9 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
     case V4L2_PIX_FMT_JPEG:
       rank = JPEG_BASE_RANK + 1;
       break;
+    case V4L2_PIX_FMT_MPEG:    /* MPEG          */
+      rank = JPEG_BASE_RANK + 2;
+      break;
 
     case V4L2_PIX_FMT_RGB332:
     case V4L2_PIX_FMT_RGB555:
@@ -802,7 +809,6 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
       rank = DV_BASE_RANK;
       break;
 
-    case V4L2_PIX_FMT_MPEG:    /* MPEG          */
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       rank = 0;
       break;
@@ -1101,7 +1107,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
           NULL);
       break;
     case V4L2_PIX_FMT_MPEG:    /* MPEG          */
-      /* someone figure out the MPEG format used... */
+      structure = gst_structure_new ("video/mpegts", NULL);
       break;
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       break;
@@ -1148,12 +1154,15 @@ gst_v4l2_object_get_all_caps (void)
 
     caps = gst_caps_new_empty ();
     for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-      structure = gst_v4l2_object_v4l2fourcc_to_structure (gst_v4l2_formats[i]);
+      structure =
+          gst_v4l2_object_v4l2fourcc_to_structure (gst_v4l2_formats[i].format);
       if (structure) {
-        gst_structure_set (structure,
-            "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
-            "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
-            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
+        if (gst_v4l2_formats[i].dimensions) {
+          gst_structure_set (structure,
+              "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
+              "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
+        }
         gst_caps_append_structure (caps, structure);
       }
     }
@@ -1187,6 +1196,16 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
 
   structure = gst_caps_get_structure (caps, 0);
 
+  mimetype = gst_structure_get_name (structure);
+
+  if (strcmp (mimetype, "video/mpegts") == 0) {
+    fourcc = V4L2_PIX_FMT_MPEG;
+    outsize = 8192;
+    *fps_n = 0;
+    *fps_d = 1;
+    goto done;
+  }
+
   if (!gst_structure_get_int (structure, "width", w))
     return FALSE;
 
@@ -1199,8 +1218,6 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
 
   *fps_n = gst_value_get_fraction_numerator (framerate);
   *fps_d = gst_value_get_fraction_denominator (framerate);
-
-  mimetype = gst_structure_get_name (structure);
 
   if (!strcmp (mimetype, "video/x-raw-yuv")) {
     gst_structure_get_fourcc (structure, "format", &fourcc);
@@ -1309,6 +1326,7 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
   if (fourcc == 0)
     return FALSE;
 
+done:
   *format = gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc);
   *size = outsize;
 
@@ -1550,6 +1568,9 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
   struct v4l2_frmsizeenum size;
   GList *results = NULL;
   guint32 w, h;
+
+  if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
+    return gst_caps_new_simple ("video/mpegts", NULL);
 
   memset (&size, 0, sizeof (struct v4l2_frmsizeenum));
   size.index = 0;
@@ -1841,6 +1862,9 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
 
   memset (&format, 0x00, sizeof (struct v4l2_format));
   format.type = v4l2object->type;
+
+  if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
+    return TRUE;
 
   if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0)
     goto get_fmt_failed;
