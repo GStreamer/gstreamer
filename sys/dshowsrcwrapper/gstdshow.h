@@ -24,6 +24,7 @@
 
 #include <streams.h>
 #include <windows.h>
+#include <tchar.h>
 #include <objbase.h>
 #include <dshow.h>
 #include <Rpc.h>
