@@ -302,7 +302,7 @@ gst_assrender_setcaps_video (GstPad * pad, GstCaps * caps)
 
     dar = (((gdouble) par_n) * ((gdouble) render->width));
     dar /= (((gdouble) par_d) * ((gdouble) render->height));
-#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907010
+#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
     ass_set_aspect_ratio (render->ass_renderer, dar);
 #else
     ass_set_aspect_ratio (render->ass_renderer,
@@ -311,7 +311,7 @@ gst_assrender_setcaps_video (GstPad * pad, GstCaps * caps)
     ass_set_font_scale (render->ass_renderer, 1.0);
     ass_set_hinting (render->ass_renderer, ASS_HINTING_NATIVE);
 
-#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907010
+#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
     ass_set_fonts (render->ass_renderer, "Arial", "sans-serif");
     ass_set_fonts (render->ass_renderer, NULL, "Sans");
 #else
