@@ -202,6 +202,7 @@ static gboolean theora_enc_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn theora_enc_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_enc_change_state (GstElement * element,
     GstStateChange transition);
+static GstCaps *theora_enc_sink_getcaps (GstPad * pad);
 static gboolean theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps);
 static void theora_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -302,6 +303,7 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
       gst_pad_new_from_static_template (&theora_enc_sink_factory, "sink");
   gst_pad_set_chain_function (enc->sinkpad, theora_enc_chain);
   gst_pad_set_event_function (enc->sinkpad, theora_enc_sink_event);
+  gst_pad_set_getcaps_function (enc->sinkpad, theora_enc_sink_getcaps);
   gst_pad_set_setcaps_function (enc->sinkpad, theora_enc_sink_setcaps);
   gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
 
@@ -374,6 +376,73 @@ theora_enc_clear (GstTheoraEnc * enc)
   enc->next_ts = GST_CLOCK_TIME_NONE;
   enc->next_discont = FALSE;
   enc->expected_ts = GST_CLOCK_TIME_NONE;
+}
+
+static char *
+theora_enc_get_supported_formats (void)
+{
+  theora_state state;
+  theora_info info;
+  struct
+  {
+    theora_pixelformat pixelformat;
+    char *fourcc;
+  } formats[] = {
+    {
+    OC_PF_420, "I420"}, {
+    OC_PF_422, "Y42B"}, {
+    OC_PF_444, "Y444"}
+  };
+  GString *string = NULL;
+  guint i;
+
+  theora_info_init (&info);
+  info.width = 16;
+  info.height = 16;
+  info.fps_numerator = 25;
+  info.fps_denominator = 1;
+  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+    info.pixelformat = formats[i].pixelformat;
+
+    if (theora_encode_init (&state, &info) != 0)
+      continue;
+
+    GST_LOG ("format %s is supported", formats[i].fourcc);
+    theora_clear (&state);
+
+    if (string == NULL) {
+      string = g_string_new (formats[i].fourcc);
+    } else {
+      g_string_append (string, ", ");
+      g_string_append (string, formats[i].fourcc);
+    }
+  }
+  theora_info_clear (&info);
+
+  return string == NULL ? NULL : g_string_free (string, FALSE);
+}
+
+static GstCaps *
+theora_enc_sink_getcaps (GstPad * pad)
+{
+  GstCaps *caps;
+  char *supported_formats, *caps_string;
+
+  supported_formats = theora_enc_get_supported_formats ();
+  if (!supported_formats) {
+    GST_WARNING ("no supported formats found. Encoder disabled?");
+    return gst_caps_new_empty ();
+  }
+
+  caps_string = g_strdup_printf ("video/x-raw-yuv, "
+      "format = (fourcc) { %s }, "
+      "framerate = (fraction) [0/1, MAX], "
+      "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]",
+      supported_formats);
+  caps = gst_caps_from_string (caps_string);
+  g_free (caps_string);
+
+  return caps;
 }
 
 static gboolean
