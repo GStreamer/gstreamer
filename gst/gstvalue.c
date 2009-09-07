@@ -2992,7 +2992,7 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
  * @value1: a value to union
  * @value2: another value to union
  *
- * Creates a GValue cooresponding to the union of @value1 and @value2.
+ * Creates a GValue corresponding to the union of @value1 and @value2.
  *
  * Returns: always returns %TRUE
  */
