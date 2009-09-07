@@ -74,6 +74,7 @@ enum
   PROP_PATTERN_COUNT,
   PROP_PATTERN_DATA_COUNT,
   PROP_PATTERN_DATA,
+  PROP_PATTERN_DATA_64,
   PROP_ENABLED,
   PROP_LEFT_OFFSET,
   PROP_BOTTOM_OFFSET
@@ -150,7 +151,7 @@ gst_video_mark_yuv (GstVideoMark * videomark, GstBuffer * buffer)
   gint i, pw, ph, row_stride, pixel_stride, offset;
   gint width, height, req_width, req_height;
   guint8 *d, *data;
-  guint pattern_shift;
+  guint64 pattern_shift;
   guint8 color;
 
   data = GST_BUFFER_DATA (buffer);
@@ -196,7 +197,7 @@ gst_video_mark_yuv (GstVideoMark * videomark, GstBuffer * buffer)
         color);
   }
 
-  pattern_shift = 1 << (videomark->pattern_data_count - 1);
+  pattern_shift = G_GUINT64_CONSTANT (1) << (videomark->pattern_data_count - 1);
 
   /* get the data of the pattern */
   for (i = 0; i < videomark->pattern_data_count; i++) {
@@ -258,6 +259,9 @@ gst_video_mark_set_property (GObject * object, guint prop_id,
     case PROP_PATTERN_DATA_COUNT:
       videomark->pattern_data_count = g_value_get_int (value);
       break;
+    case PROP_PATTERN_DATA_64:
+      videomark->pattern_data = g_value_get_uint64 (value);
+      break;
     case PROP_PATTERN_DATA:
       videomark->pattern_data = g_value_get_int (value);
       break;
@@ -297,8 +301,11 @@ gst_video_mark_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_PATTERN_DATA_COUNT:
       g_value_set_int (value, videomark->pattern_data_count);
       break;
+    case PROP_PATTERN_DATA_64:
+      g_value_set_uint64 (value, videomark->pattern_data);
+      break;
     case PROP_PATTERN_DATA:
-      g_value_set_int (value, videomark->pattern_data);
+      g_value_set_int (value, MIN (videomark->pattern_data, G_MAXINT));
       break;
     case PROP_ENABLED:
       g_value_set_boolean (value, videomark->enabled);
@@ -356,12 +363,16 @@ gst_video_mark_class_init (gpointer klass, gpointer class_data)
           DEFAULT_PATTERN_COUNT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, PROP_PATTERN_DATA_COUNT,
       g_param_spec_int ("pattern-data-count", "Pattern data count",
-          "The number of extra data pattern markers", 0, G_MAXINT,
+          "The number of extra data pattern markers", 0, 64,
           DEFAULT_PATTERN_DATA_COUNT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (gobject_class, PROP_PATTERN_DATA_64,
+      g_param_spec_uint64 ("pattern-data-uint64", "Pattern data",
+          "The extra data pattern markers", 0, G_MAXUINT64,
+          DEFAULT_PATTERN_DATA, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, PROP_PATTERN_DATA,
       g_param_spec_int ("pattern-data", "Pattern data",
           "The extra data pattern markers", 0, G_MAXINT,
-          DEFAULT_PATTERN_DATA, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_PATTERN_DATA, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_ENABLED,
       g_param_spec_boolean ("enabled", "Enabled",
           "Enable or disable the filter",

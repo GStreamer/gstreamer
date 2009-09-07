@@ -78,6 +78,13 @@
  * </listitem>
  * <listitem>
  *   <para>
+ *   #guint64
+ *   <classname>&quot;data-uint64&quot;</classname>:
+ *   the data-pattern found after the pattern or 0 when have-signal is #FALSE.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
  *   #guint
  *   <classname>&quot;data&quot;</classname>:
  *   the data-pattern found after the pattern or 0 when have-signal is #FALSE.
@@ -184,7 +191,7 @@ gst_video_detect_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
 static void
 gst_video_detect_post_message (GstVideoDetect * videodetect, GstBuffer * buffer,
-    guint data)
+    guint64 data)
 {
   GstBaseTransform *trans;
   GstMessage *m;
@@ -208,7 +215,8 @@ gst_video_detect_post_message (GstVideoDetect * videodetect, GstBuffer * buffer,
           "stream-time", G_TYPE_UINT64, stream_time,
           "running-time", G_TYPE_UINT64, running_time,
           "duration", G_TYPE_UINT64, duration,
-          "data", G_TYPE_UINT, data, NULL));
+          "data-uint64", G_TYPE_UINT64, data,
+          "data", G_TYPE_UINT, (guint) MIN (data, G_MAXINT), NULL));
   gst_element_post_message (GST_ELEMENT_CAST (videodetect), m);
 }
 
@@ -237,7 +245,7 @@ gst_video_detect_yuv (GstVideoDetect * videodetect, GstBuffer * buffer)
   gint i, pw, ph, row_stride, pixel_stride, offset;
   gint width, height, req_width, req_height;
   guint8 *d, *data;
-  guint pattern_data;
+  guint64 pattern_data;
 
   data = GST_BUFFER_DATA (buffer);
 
