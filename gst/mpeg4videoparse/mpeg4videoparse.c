@@ -129,6 +129,7 @@ gst_mpeg4vparse_set_new_caps (GstMpeg4VParse * parse,
 
 #define START_MARKER                    0x000001
 #define VISUAL_OBJECT_STARTCODE_MARKER  ((START_MARKER << 8) + VISUAL_OBJECT_STARTCODE)
+#define USER_DATA_STARTCODE_MARKER      ((START_MARKER << 8) + USER_DATA_STARTCODE)
 
 typedef struct
 {
@@ -327,6 +328,24 @@ failed:
   }
 }
 
+static inline gboolean
+skip_user_data (bitstream_t * bs, guint32 * bits)
+{
+  while (*bits == USER_DATA_STARTCODE_MARKER) {
+    guint32 b;
+
+    do {
+      GET_BITS (bs, 8, &b);
+      *bits = (*bits << 8) | b;
+    } while ((*bits >> 8) != START_MARKER);
+  }
+
+  return TRUE;
+
+failed:
+  return FALSE;
+}
+
 /* Returns whether we successfully set the caps downstream if needed */
 static gboolean
 gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
@@ -373,6 +392,10 @@ gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
   /* Expect Visual Object startcode */
   GET_BITS (&bs, 32, &bits);
 
+  /* but skip optional user data */
+  if (!skip_user_data (&bs, &bits))
+    goto failed;
+
   if (bits != VISUAL_OBJECT_STARTCODE_MARKER)
     goto failed;
 
@@ -403,6 +426,13 @@ gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
 
   if (!next_start_code (&bs))
     goto failed;
+
+  /* skip optional user data */
+  GET_BITS (&bs, 32, &bits);
+  if (!skip_user_data (&bs, &bits))
+    goto failed;
+  /* rewind to start code */
+  bs.offset -= 4;
 
   data = &bs.data[bs.offset];
   size -= bs.offset;
