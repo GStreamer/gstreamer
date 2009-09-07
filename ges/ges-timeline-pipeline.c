@@ -77,5 +77,5 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
 GESTimelinePipeline *
 ges_timeline_pipeline_new (void)
 {
-  return g_object_new (GEST_TYPE_TIMELINE_PIPELINE, NULL);
+  return g_object_new (GES_TYPE_TIMELINE_PIPELINE, NULL);
 }
