@@ -43,42 +43,46 @@ typedef struct _GstCapturePinMediaType
   gint defaultHeight;
   gint defaultFPS;
 
-  gint granularityWidth; //will be removed when GST_TYPE_INT_RANGE_STEP exits
-  gint granularityHeight; //will be removed when GST_TYPE_INT_RANGE_STEP exits
+  gint granularityWidth;        //will be removed when GST_TYPE_INT_RANGE_STEP exits
+  gint granularityHeight;       //will be removed when GST_TYPE_INT_RANGE_STEP exits
 } GstCapturePinMediaType;
 
 /* free memory of the input pin mediatype */
 void gst_dshow_free_pin_mediatype (gpointer pt);
 
 /* free memory of the input dshow mediatype */
-void gst_dshow_free_mediatype (AM_MEDIA_TYPE *pmt);
+void gst_dshow_free_mediatype (AM_MEDIA_TYPE * pmt);
 
 /* create a new capture media type that handles dshow video caps of a capture pin */
-GstCapturePinMediaType *gst_dshow_new_pin_mediatype (IPin *pin, gint id, IAMStreamConfig * streamcaps);
+GstCapturePinMediaType *gst_dshow_new_pin_mediatype (IPin * pin, gint id,
+    IAMStreamConfig * streamcaps);
 
 /* free the memory of all mediatypes of the input list if pin mediatype */
-void gst_dshow_free_pins_mediatypes (GList *mediatypes);
+void gst_dshow_free_pins_mediatypes (GList * mediatypes);
 
 /* allow to know what kind of media type we have */
-gboolean gst_dshow_check_mediatype (AM_MEDIA_TYPE *media_type, const GUID sub_type, const GUID format_type);
+gboolean gst_dshow_check_mediatype (AM_MEDIA_TYPE * media_type,
+    const GUID sub_type, const GUID format_type);
 
 /* get a pin from directshow filter */
-gboolean gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin **pin);
+gboolean gst_dshow_get_pin_from_filter (IBaseFilter * filter,
+    PIN_DIRECTION pindir, IPin ** pin);
 
 /* find and return a filter according to the input and output types */
-gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype, 
-                               CLSID output_majortype, CLSID output_subtype,
-                               gchar * prefered_filter_name, IBaseFilter **filter);
+gboolean gst_dshow_find_filter (CLSID input_majortype, CLSID input_subtype,
+    CLSID output_majortype, CLSID output_subtype,
+    gchar * prefered_filter_name, IBaseFilter ** filter);
 
 /* get the dshow device path from device friendly name. 
 If friendly name is not set, it will return the first available device */
-gchar *gst_dshow_getdevice_from_devicename (const GUID *device_category, gchar **device_name);
+gchar *gst_dshow_getdevice_from_devicename (const GUID * device_category,
+    gchar ** device_name);
 
 /* show the capture filter property page (generally used to setup the device). the page is modal*/
-gboolean gst_dshow_show_propertypage (IBaseFilter *base_filter);
+gboolean gst_dshow_show_propertypage (IBaseFilter * base_filter);
 
-/* transform a dshow video caps to a gstreamer video caps */ 
-GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name, 
-  GstCapturePinMediaType *pin_mediatype);
+/* transform a dshow video caps to a gstreamer video caps */
+GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format,
+    const gchar * name, GstCapturePinMediaType * pin_mediatype);
 
 #endif /* _GSTDSHOW_ */

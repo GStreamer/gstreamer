@@ -21,28 +21,30 @@
 
 #include "gstdshowfakesink.h"
 
-CDshowFakeSink::CDshowFakeSink() : 
-  m_hres(S_OK),
-  m_callback(NULL),
-  m_data(NULL),
-  CBaseRenderer(CLSID_DshowFakeSink, "DshowFakeSink", NULL, &m_hres)
+CDshowFakeSink::CDshowFakeSink ():
+m_hres (S_OK),
+m_callback (NULL),
+m_data (NULL),
+CBaseRenderer (CLSID_DshowFakeSink, "DshowFakeSink", NULL, &m_hres)
 {
 }
 
-STDMETHODIMP CDshowFakeSink::gst_set_media_type (AM_MEDIA_TYPE *pmt)
+STDMETHODIMP CDshowFakeSink::gst_set_media_type (AM_MEDIA_TYPE * pmt)
 {
   m_MediaType.Set (*pmt);
   return S_OK;
 }
 
-STDMETHODIMP CDshowFakeSink::gst_set_buffer_callback (push_buffer_func push, gpointer data)
+STDMETHODIMP
+    CDshowFakeSink::gst_set_buffer_callback (push_buffer_func push,
+    gpointer data)
 {
   m_callback = push;
   m_data = data;
   return S_OK;
 }
 
-HRESULT CDshowFakeSink::CheckMediaType(const CMediaType *pmt)
+HRESULT CDshowFakeSink::CheckMediaType (const CMediaType * pmt)
 {
   if (pmt != NULL) {
     if (*pmt == m_MediaType)
@@ -52,19 +54,21 @@ HRESULT CDshowFakeSink::CheckMediaType(const CMediaType *pmt)
   return S_FALSE;
 }
 
-HRESULT CDshowFakeSink::DoRenderSample(IMediaSample *pMediaSample)
+HRESULT CDshowFakeSink::DoRenderSample (IMediaSample * pMediaSample)
 {
-  if(pMediaSample && m_callback)
-  {
-    BYTE *pBuffer = NULL;
-    LONGLONG lStart = 0, lStop = 0;
-    pMediaSample->GetPointer(&pBuffer);
-    long size = pMediaSample->GetActualDataLength();
-    pMediaSample->GetTime(&lStart, &lStop);
-    lStart*=100;
-    lStop*=100;
-    m_callback(pBuffer, size, m_data, lStart, lStop);
+  if (pMediaSample && m_callback) {
+    BYTE *
+        pBuffer = NULL;
+    LONGLONG
+        lStart = 0, lStop = 0;
+    pMediaSample->GetPointer (&pBuffer);
+    long
+        size = pMediaSample->GetActualDataLength ();
+    pMediaSample->GetTime (&lStart, &lStop);
+    lStart *= 100;
+    lStop *= 100;
+    m_callback (pBuffer, size, m_data, lStart, lStop);
   }
-  
+
   return S_OK;
 }

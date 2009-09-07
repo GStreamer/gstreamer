@@ -45,17 +45,14 @@ const GUID MEDIASUBTYPE_I420
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        GST_VIDEO_CAPS_BGR ";"
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_YUV ("{ I420 }") ";"
         "video/x-dv,"
         "systemstream = (boolean) FALSE,"
         "width = (int) [ 1, MAX ],"
         "height = (int) [ 1, MAX ],"
         "framerate = (fraction) [ 0, MAX ],"
-        "format = (fourcc) dvsd;"
-        "video/x-dv,"
-        "systemstream = (boolean) TRUE")
+        "format = (fourcc) dvsd;" "video/x-dv," "systemstream = (boolean) TRUE")
     );
 
 static void gst_dshowvideosrc_init_interfaces (GType type);
@@ -180,13 +177,13 @@ gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
       (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "Directshow device path (@..classID/name)", NULL,
-          static_cast<GParamFlags>(G_PARAM_READWRITE)));
+          static_cast < GParamFlags > (G_PARAM_READWRITE)));
 
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device", NULL,
-          static_cast<GParamFlags>(G_PARAM_READWRITE)));
+          static_cast < GParamFlags > (G_PARAM_READWRITE)));
 
   GST_DEBUG_CATEGORY_INIT (dshowvideosrc_debug, "dshowvideosrc", 0,
       "Directshow video source");
@@ -238,10 +235,14 @@ gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   if (res != -1) {
     GList *type_pin_mediatype = g_list_nth (src->pins_mediatypes, res);
     if (type_pin_mediatype) {
-      GstCapturePinMediaType *pin_mediatype = (GstCapturePinMediaType *) type_pin_mediatype->data;
-      gst_structure_fixate_field_nearest_int (structure, "width", pin_mediatype->defaultWidth);
-      gst_structure_fixate_field_nearest_int (structure, "height", pin_mediatype->defaultHeight);
-      gst_structure_fixate_field_nearest_fraction (structure, "framerate", pin_mediatype->defaultFPS, 1);
+      GstCapturePinMediaType *pin_mediatype =
+          (GstCapturePinMediaType *) type_pin_mediatype->data;
+      gst_structure_fixate_field_nearest_int (structure, "width",
+          pin_mediatype->defaultWidth);
+      gst_structure_fixate_field_nearest_int (structure, "height",
+          pin_mediatype->defaultHeight);
+      gst_structure_fixate_field_nearest_fraction (structure, "framerate",
+          pin_mediatype->defaultFPS, 1);
     }
   }
 }
@@ -273,7 +274,7 @@ gst_dshowvideosrc_dispose (GObject * gobject)
 
   /* clean dshow */
   if (src->video_cap_filter) {
-    src->video_cap_filter->Release();
+    src->video_cap_filter->Release ();
     src->video_cap_filter = NULL;
   }
 
@@ -354,35 +355,34 @@ gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
   ULONG fetched;
 
   hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
-      IID_ICreateDevEnum, (LPVOID *) &devices_enum);
+      IID_ICreateDevEnum, (LPVOID *) & devices_enum);
   if (hres != S_OK) {
     GST_ERROR ("Can't create system device enumerator (error=0x%x)", hres);
     array = NULL;
     goto clean;
   }
 
-  hres = devices_enum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory,
-    &moniker_enum, 0);
+  hres = devices_enum->CreateClassEnumerator (CLSID_VideoInputDeviceCategory,
+      &moniker_enum, 0);
   if (hres != S_OK || !moniker_enum) {
     GST_ERROR ("Can't get enumeration of video devices (error=0x%x)", hres);
     array = NULL;
     goto clean;
   }
 
-  moniker_enum->Reset();
+  moniker_enum->Reset ();
 
-  while (hres = moniker_enum->Next(1, &moniker, &fetched),
-      hres == S_OK) {
+  while (hres = moniker_enum->Next (1, &moniker, &fetched), hres == S_OK) {
     IPropertyBag *property_bag = NULL;
 
     hres =
-      moniker->BindToStorage(NULL, NULL, IID_IPropertyBag,
-        (LPVOID *) &property_bag);
+        moniker->BindToStorage (NULL, NULL, IID_IPropertyBag,
+        (LPVOID *) & property_bag);
     if (SUCCEEDED (hres) && property_bag) {
       VARIANT varFriendlyName;
 
       VariantInit (&varFriendlyName);
-      hres = property_bag->Read(L"FriendlyName", &varFriendlyName, NULL);
+      hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
       if (hres == S_OK && varFriendlyName.bstrVal) {
         gchar *friendly_name =
             g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
@@ -396,17 +396,17 @@ gst_dshowvideosrc_get_device_name_values (GstDshowVideoSrc * src)
         g_free (friendly_name);
         SysFreeString (varFriendlyName.bstrVal);
       }
-      property_bag->Release();
+      property_bag->Release ();
     }
-    moniker->Release();
+    moniker->Release ();
   }
 
 clean:
   if (moniker_enum)
-    moniker_enum->Release();
+    moniker_enum->Release ();
 
   if (devices_enum)
-    devices_enum->Release();
+    devices_enum->Release ();
 
   return array;
 }
@@ -500,13 +500,14 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
   if (!src->video_cap_filter) {
     hres = CreateBindCtx (0, &lpbc);
     if (SUCCEEDED (hres)) {
-      hres = MkParseDisplayName (lpbc, (LPCOLESTR) unidevice, &dwEaten, &videom);
+      hres =
+          MkParseDisplayName (lpbc, (LPCOLESTR) unidevice, &dwEaten, &videom);
       if (SUCCEEDED (hres)) {
-        hres = videom->BindToObject(lpbc, NULL, IID_IBaseFilter,
-          (LPVOID *) &src->video_cap_filter);
-        videom->Release();
+        hres = videom->BindToObject (lpbc, NULL, IID_IBaseFilter,
+            (LPVOID *) & src->video_cap_filter);
+        videom->Release ();
       }
-      lpbc->Release();
+      lpbc->Release ();
     }
   }
 
@@ -520,28 +521,29 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
     IEnumPins *enumpins = NULL;
     HRESULT hres;
 
-    hres = src->video_cap_filter->EnumPins(&enumpins);
+    hres = src->video_cap_filter->EnumPins (&enumpins);
     if (SUCCEEDED (hres)) {
-      while (enumpins->Next(1, &capture_pin, NULL) == S_OK) {
+      while (enumpins->Next (1, &capture_pin, NULL) == S_OK) {
         IKsPropertySet *pKs = NULL;
-        hres = capture_pin->QueryInterface(IID_IKsPropertySet, (LPVOID *) &pKs);
+        hres =
+            capture_pin->QueryInterface (IID_IKsPropertySet, (LPVOID *) & pKs);
         if (SUCCEEDED (hres) && pKs) {
           DWORD cbReturned;
           GUID pin_category;
           RPC_STATUS rpcstatus;
 
           hres =
-              pKs->Get(AMPROPSETID_Pin,
+              pKs->Get (AMPROPSETID_Pin,
               AMPROPERTY_PIN_CATEGORY, NULL, 0, &pin_category, sizeof (GUID),
               &cbReturned);
 
           /* we only want capture pins */
-          if (UuidCompare (&pin_category, (UUID *) &PIN_CATEGORY_CAPTURE,
+          if (UuidCompare (&pin_category, (UUID *) & PIN_CATEGORY_CAPTURE,
                   &rpcstatus) == 0) {
             IAMStreamConfig *streamcaps = NULL;
 
-            if (SUCCEEDED (capture_pin->QueryInterface(
-                        IID_IAMStreamConfig, (LPVOID *) &streamcaps))) {
+            if (SUCCEEDED (capture_pin->QueryInterface (IID_IAMStreamConfig,
+                        (LPVOID *) & streamcaps))) {
               GstCaps *caps =
                   gst_dshowvideosrc_getcaps_from_streamcaps (src, capture_pin,
                   streamcaps);
@@ -549,16 +551,16 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
               if (caps) {
                 gst_caps_append (src->caps, caps);
               }
-              streamcaps->Release();
+              streamcaps->Release ();
             }
           }
 
-          pKs->Release();
+          pKs->Release ();
         }
 
-        capture_pin->Release();
+        capture_pin->Release ();
       }
-      enumpins->Release();
+      enumpins->Release ();
     }
   }
 
@@ -586,7 +588,7 @@ gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       if (src->media_filter)
-        hres = src->media_filter->Run(0);
+        hres = src->media_filter->Run (0);
       if (hres != S_OK) {
         GST_ERROR ("Can't RUN the directshow capture graph (error=0x%x)", hres);
         return GST_STATE_CHANGE_FAILURE;
@@ -594,7 +596,7 @@ gst_dshowvideosrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       if (src->media_filter)
-        hres = src->media_filter->Stop();
+        hres = src->media_filter->Stop ();
       if (hres != S_OK) {
         GST_ERROR ("Can't STOP the directshow capture graph (error=%d)", hres);
         return GST_STATE_CHANGE_FAILURE;
@@ -618,27 +620,32 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
   hres = CoCreateInstance (CLSID_FilterGraph, NULL, CLSCTX_INPROC,
       IID_IFilterGraph, (LPVOID *) & src->filter_graph);
   if (hres != S_OK || !src->filter_graph) {
-    GST_ERROR ("Can't create an instance of the dshow graph manager (error=0x%x)", hres);
+    GST_ERROR
+        ("Can't create an instance of the dshow graph manager (error=0x%x)",
+        hres);
     goto error;
   }
 
-  hres = src->filter_graph->QueryInterface(IID_IMediaFilter,
-    (LPVOID *) &src->media_filter);
+  hres = src->filter_graph->QueryInterface (IID_IMediaFilter,
+      (LPVOID *) & src->media_filter);
   if (hres != S_OK || !src->media_filter) {
-    GST_ERROR ("Can't get IMediacontrol interface from the graph manager (error=0x%x)", hres);
+    GST_ERROR
+        ("Can't get IMediacontrol interface from the graph manager (error=0x%x)",
+        hres);
     goto error;
   }
 
   src->dshow_fakesink = new CDshowFakeSink;
-  src->dshow_fakesink->AddRef();
+  src->dshow_fakesink->AddRef ();
 
-  hres = src->filter_graph->AddFilter(src->video_cap_filter, L"capture");
+  hres = src->filter_graph->AddFilter (src->video_cap_filter, L"capture");
   if (hres != S_OK) {
-    GST_ERROR ("Can't add video capture filter to the graph (error=0x%x)", hres);
+    GST_ERROR ("Can't add video capture filter to the graph (error=0x%x)",
+        hres);
     goto error;
   }
 
-  hres = src->filter_graph->AddFilter(src->dshow_fakesink, L"sink");
+  hres = src->filter_graph->AddFilter (src->dshow_fakesink, L"sink");
   if (hres != S_OK) {
     GST_ERROR ("Can't add our fakesink filter to the graph (error=0x%x)", hres);
     goto error;
@@ -648,16 +655,16 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
 
 error:
   if (src->dshow_fakesink) {
-    src->dshow_fakesink->Release();
+    src->dshow_fakesink->Release ();
     src->dshow_fakesink = NULL;
   }
 
   if (src->media_filter) {
-    src->media_filter->Release();
+    src->media_filter->Release ();
     src->media_filter = NULL;
   }
   if (src->filter_graph) {
-    src->filter_graph->Release();
+    src->filter_graph->Release ();
     src->filter_graph = NULL;
   }
 
@@ -691,7 +698,8 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
       GList *type_pin_mediatype = g_list_nth (src->pins_mediatypes, res);
 
       if (type_pin_mediatype) {
-        GstCapturePinMediaType *pin_mediatype = (GstCapturePinMediaType *) type_pin_mediatype->data;
+        GstCapturePinMediaType *pin_mediatype =
+            (GstCapturePinMediaType *) type_pin_mediatype->data;
         gchar *caps_string = NULL;
         gchar *src_caps_string = NULL;
 
@@ -706,24 +714,29 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
         gst_structure_get_fraction (s, "framerate", &numerator, &denominator);
 
         /* check if the desired video size is valid about granularity  */
-		    /* This check will be removed when GST_TYPE_INT_RANGE_STEP exits */
+        /* This check will be removed when GST_TYPE_INT_RANGE_STEP exits */
         /* See remarks in gst_dshowvideosrc_getcaps_from_streamcaps function */
-        if (pin_mediatype->granularityWidth != 0 && width % pin_mediatype->granularityWidth != 0)
-          g_warning ("your desired video size is not valid : %d mod %d !=0\n", width, pin_mediatype->granularityWidth) ;
-        if (pin_mediatype->granularityHeight !=0 && height % pin_mediatype->granularityHeight != 0)
-          g_warning ("your desired video size is not valid : %d mod %d !=0\n", height, pin_mediatype->granularityHeight) ;
+        if (pin_mediatype->granularityWidth != 0
+            && width % pin_mediatype->granularityWidth != 0)
+          g_warning ("your desired video size is not valid : %d mod %d !=0\n",
+              width, pin_mediatype->granularityWidth);
+        if (pin_mediatype->granularityHeight != 0
+            && height % pin_mediatype->granularityHeight != 0)
+          g_warning ("your desired video size is not valid : %d mod %d !=0\n",
+              height, pin_mediatype->granularityHeight);
 
         /* update mediatype */
         video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
         video_info->bmiHeader.biWidth = width;
         video_info->bmiHeader.biHeight = height;
-        video_info->AvgTimePerFrame = (LONGLONG) (10000000 * denominator / (double)numerator);
-        video_info->bmiHeader.biSizeImage = DIBSIZE(video_info->bmiHeader);
-        pin_mediatype->mediatype->lSampleSize = DIBSIZE(video_info->bmiHeader);
+        video_info->AvgTimePerFrame =
+            (LONGLONG) (10000000 * denominator / (double) numerator);
+        video_info->bmiHeader.biSizeImage = DIBSIZE (video_info->bmiHeader);
+        pin_mediatype->mediatype->lSampleSize = DIBSIZE (video_info->bmiHeader);
 
         src->dshow_fakesink->gst_set_media_type (pin_mediatype->mediatype);
-        src->dshow_fakesink->gst_set_buffer_callback(
-          (push_buffer_func) gst_dshowvideosrc_push_buffer, src);
+        src->dshow_fakesink->gst_set_buffer_callback (
+            (push_buffer_func) gst_dshowvideosrc_push_buffer, src);
 
         gst_dshow_get_pin_from_filter (src->dshow_fakesink, PINDIR_INPUT,
             &input_pin);
@@ -732,12 +745,14 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           goto error;
         }
 
-        hres = src->filter_graph->ConnectDirect(pin_mediatype->capture_pin,
-          input_pin, pin_mediatype->mediatype);
-        input_pin->Release();
+        hres = src->filter_graph->ConnectDirect (pin_mediatype->capture_pin,
+            input_pin, pin_mediatype->mediatype);
+        input_pin->Release ();
 
         if (hres != S_OK) {
-          GST_ERROR ("Can't connect capture filter with fakesink filter (error=0x%x)", hres);
+          GST_ERROR
+              ("Can't connect capture filter with fakesink filter (error=0x%x)",
+              hres);
           goto error;
         }
 
@@ -779,30 +794,30 @@ gst_dshowvideosrc_stop (GstBaseSrc * bsrc)
   gst_dshow_get_pin_from_filter (src->video_cap_filter, PINDIR_OUTPUT,
       &output_pin);
   if (output_pin) {
-    hres = src->filter_graph->Disconnect(output_pin);
-    output_pin->Release();
+    hres = src->filter_graph->Disconnect (output_pin);
+    output_pin->Release ();
   }
 
   gst_dshow_get_pin_from_filter (src->dshow_fakesink, PINDIR_INPUT, &input_pin);
   if (input_pin) {
-    hres = src->filter_graph->Disconnect(input_pin);
-    input_pin->Release();
+    hres = src->filter_graph->Disconnect (input_pin);
+    input_pin->Release ();
   }
 
   /*remove filters from the graph */
-  src->filter_graph->RemoveFilter(src->video_cap_filter);
-  src->filter_graph->RemoveFilter(src->dshow_fakesink);
+  src->filter_graph->RemoveFilter (src->video_cap_filter);
+  src->filter_graph->RemoveFilter (src->dshow_fakesink);
 
   /*release our gstreamer dshow sink */
-  src->dshow_fakesink->Release();
+  src->dshow_fakesink->Release ();
   src->dshow_fakesink = NULL;
 
   /*release media filter interface */
-  src->media_filter->Release();
+  src->media_filter->Release ();
   src->media_filter = NULL;
 
   /*release the filter graph manager */
-  src->filter_graph->Release();
+  src->filter_graph->Release ();
   src->filter_graph = NULL;
 
   return TRUE;
@@ -852,8 +867,8 @@ gst_dshowvideosrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   }
 
   GST_DEBUG ("dshowvideosrc_create => pts %" GST_TIME_FORMAT " duration %"
-    GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*buf)),
-    GST_TIME_ARGS (GST_BUFFER_DURATION (*buf)));
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (*buf)));
 
   return GST_FLOW_OK;
 }
@@ -872,7 +887,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
   if (!streamcaps)
     return NULL;
 
-  streamcaps->GetNumberOfCapabilities(&icount, &isize);
+  streamcaps->GetNumberOfCapabilities (&icount, &isize);
 
   if (isize != sizeof (vscc))
     return NULL;
@@ -882,25 +897,35 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
   for (; i < icount; i++) {
 
     GstCapturePinMediaType *pin_mediatype =
-      gst_dshow_new_pin_mediatype (pin, i, streamcaps);
+        gst_dshow_new_pin_mediatype (pin, i, streamcaps);
 
     if (pin_mediatype) {
 
       GstCaps *mediacaps = NULL;
 
-      if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_I420, FORMAT_VideoInfo)) {
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_I420, NULL, pin_mediatype);
+      if (gst_dshow_check_mediatype (pin_mediatype->mediatype,
+              MEDIASUBTYPE_I420, FORMAT_VideoInfo)) {
+        mediacaps =
+            gst_dshow_new_video_caps (GST_VIDEO_FORMAT_I420, NULL,
+            pin_mediatype);
 
-      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_RGB24, FORMAT_VideoInfo)) {
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_BGR, NULL, pin_mediatype);
+      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype,
+              MEDIASUBTYPE_RGB24, FORMAT_VideoInfo)) {
+        mediacaps =
+            gst_dshow_new_video_caps (GST_VIDEO_FORMAT_BGR, NULL,
+            pin_mediatype);
 
-      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_VideoInfo)) {
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN, "video/x-dv, systemstream=FALSE",
-          pin_mediatype);
+      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype,
+              MEDIASUBTYPE_dvsd, FORMAT_VideoInfo)) {
+        mediacaps =
+            gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN,
+            "video/x-dv, systemstream=FALSE", pin_mediatype);
 
-      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype, MEDIASUBTYPE_dvsd, FORMAT_DvInfo)) {
-        mediacaps = gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN, "video/x-dv, systemstream=TRUE",
-          pin_mediatype);
+      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype,
+              MEDIASUBTYPE_dvsd, FORMAT_DvInfo)) {
+        mediacaps =
+            gst_dshow_new_video_caps (GST_VIDEO_FORMAT_UNKNOWN,
+            "video/x-dv, systemstream=TRUE", pin_mediatype);
 
         pin_mediatype->granularityWidth = 0;
         pin_mediatype->granularityHeight = 0;
@@ -908,7 +933,7 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
 
       if (mediacaps) {
         src->pins_mediatypes =
-          g_list_append (src->pins_mediatypes, pin_mediatype);
+            g_list_append (src->pins_mediatypes, pin_mediatype);
         gst_caps_append (caps, mediacaps);
       } else {
         /* failed to convert dshow caps */
@@ -964,8 +989,9 @@ gst_dshowvideosrc_push_buffer (byte * buffer, long size, gpointer src_object,
     memcpy (GST_BUFFER_DATA (buf), buffer, size);
   }
 
-  GST_DEBUG ("push_buffer => pts %" GST_TIME_FORMAT "duration %" GST_TIME_FORMAT,
-    GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_TIME_ARGS (stop - start));
+  GST_DEBUG ("push_buffer => pts %" GST_TIME_FORMAT "duration %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (stop - start));
 
   /* the negotiate() method already set caps on the source pad */
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));

@@ -65,7 +65,7 @@ struct _GstDshowAudioSrc
   IMediaFilter *media_filter;
   IFilterGraph *filter_graph;
 
-  /* bytes array*/
+  /* bytes array */
   GByteArray *gbarray;
   GMutex *gbarray_lock;
 

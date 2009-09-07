@@ -26,20 +26,25 @@
 
 //{6A780808-9725-4d0b-8695-A4DD8D210773}
 static const GUID CLSID_DshowFakeSink =
-  { 0x6a780808, 0x9725, 0x4d0b, { 0x86, 0x95,  0xa4,  0xdd,  0x8d,  0x21,  0x7,  0x73 } };
+    { 0x6a780808, 0x9725, 0x4d0b, {0x86, 0x95, 0xa4, 0xdd, 0x8d, 0x21, 0x7,
+    0x73}
+};
 
-typedef bool (*push_buffer_func) (byte *buffer, long size, gpointer src_object, UINT64 start, UINT64 stop);
+typedef bool (*push_buffer_func) (byte * buffer, long size, gpointer src_object,
+    UINT64 start, UINT64 stop);
 
-class CDshowFakeSink :  public CBaseRenderer
+class CDshowFakeSink:public CBaseRenderer
 {
 public:
   CDshowFakeSink ();
-  virtual ~CDshowFakeSink () {}
+  virtual ~ CDshowFakeSink ()
+  {
+  }
 
-  virtual HRESULT CheckMediaType (const CMediaType *pmt);
-  virtual HRESULT DoRenderSample (IMediaSample *pMediaSample);
-  
-  STDMETHOD (gst_set_media_type) (AM_MEDIA_TYPE *pmt);
+  virtual HRESULT CheckMediaType (const CMediaType * pmt);
+  virtual HRESULT DoRenderSample (IMediaSample * pMediaSample);
+
+  STDMETHOD (gst_set_media_type) (AM_MEDIA_TYPE * pmt);
   STDMETHOD (gst_set_buffer_callback) (push_buffer_func push, gpointer data);
 
 protected:

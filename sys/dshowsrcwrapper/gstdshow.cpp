@@ -23,31 +23,31 @@
 #include "gstdshowfakesink.h"
 
 void
-gst_dshow_free_mediatype (AM_MEDIA_TYPE *pmt)
+gst_dshow_free_mediatype (AM_MEDIA_TYPE * pmt)
 {
   if (pmt != NULL) {
     if (pmt->cbFormat != 0) {
-      CoTaskMemFree((PVOID)pmt->pbFormat);
+      CoTaskMemFree ((PVOID) pmt->pbFormat);
       pmt->cbFormat = 0;
       pmt->pbFormat = NULL;
     }
     if (pmt->pUnk != NULL) {
       /* Unecessary because pUnk should not be used, but safest. */
-      pmt->pUnk->Release();
+      pmt->pUnk->Release ();
       pmt->pUnk = NULL;
     }
 
-    CoTaskMemFree(pmt);
+    CoTaskMemFree (pmt);
   }
 }
 
 void
 gst_dshow_free_pin_mediatype (gpointer pt)
 {
-  GstCapturePinMediaType * pin_mediatype = (GstCapturePinMediaType *) pt;
+  GstCapturePinMediaType *pin_mediatype = (GstCapturePinMediaType *) pt;
   if (pin_mediatype) {
     if (pin_mediatype->capture_pin) {
-      pin_mediatype->capture_pin->Release();
+      pin_mediatype->capture_pin->Release ();
       pin_mediatype->capture_pin = NULL;
     }
     if (pin_mediatype->mediatype) {
@@ -58,51 +58,53 @@ gst_dshow_free_pin_mediatype (gpointer pt)
 }
 
 GstCapturePinMediaType *
-gst_dshow_new_pin_mediatype (IPin *pin, gint id, IAMStreamConfig * streamcaps)
+gst_dshow_new_pin_mediatype (IPin * pin, gint id, IAMStreamConfig * streamcaps)
 {
   GstCapturePinMediaType *pin_mediatype = g_new0 (GstCapturePinMediaType, 1);
 
-  HRESULT hres = streamcaps->GetStreamCaps(id, &pin_mediatype->mediatype, (BYTE *) & pin_mediatype->vscc);
+  HRESULT hres = streamcaps->GetStreamCaps (id, &pin_mediatype->mediatype,
+      (BYTE *) & pin_mediatype->vscc);
   if (FAILED (hres) || !pin_mediatype->mediatype) {
     gst_dshow_free_pin_mediatype (pin_mediatype);
     return NULL;
   }
 
-  pin->AddRef();
+  pin->AddRef ();
   pin_mediatype->capture_pin = pin;
 
   return pin_mediatype;
 }
 
 void
-gst_dshow_free_pins_mediatypes (GList *pins_mediatypes)
+gst_dshow_free_pins_mediatypes (GList * pins_mediatypes)
 {
   guint i = 0;
   for (; i < g_list_length (pins_mediatypes); i++) {
     GList *mylist = g_list_nth (pins_mediatypes, i);
     if (mylist && mylist->data)
-      gst_dshow_free_pin_mediatype ((GstCapturePinMediaType *)mylist->data);
+      gst_dshow_free_pin_mediatype ((GstCapturePinMediaType *) mylist->data);
   }
   g_list_free (pins_mediatypes);
 }
 
 gboolean
-gst_dshow_check_mediatype (AM_MEDIA_TYPE *media_type, const GUID sub_type,
-  const GUID format_type)
+gst_dshow_check_mediatype (AM_MEDIA_TYPE * media_type, const GUID sub_type,
+    const GUID format_type)
 {
   RPC_STATUS rpcstatus;
 
   g_return_val_if_fail (media_type != NULL, FALSE);
 
   return
-    UuidCompare (&media_type->subtype, (UUID *) &sub_type,
-    &rpcstatus) == 0 && rpcstatus == RPC_S_OK &&
-    UuidCompare (&media_type->formattype, (UUID *) &format_type,
-    &rpcstatus) == 0 && rpcstatus == RPC_S_OK;
+      UuidCompare (&media_type->subtype, (UUID *) & sub_type,
+      &rpcstatus) == 0 && rpcstatus == RPC_S_OK &&
+      UuidCompare (&media_type->formattype, (UUID *) & format_type,
+      &rpcstatus) == 0 && rpcstatus == RPC_S_OK;
 }
 
 gboolean
-gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin **pin)
+gst_dshow_get_pin_from_filter (IBaseFilter * filter, PIN_DIRECTION pindir,
+    IPin ** pin)
 {
   gboolean ret = FALSE;
   IEnumPins *enumpins = NULL;
@@ -111,18 +113,17 @@ gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin *
   *pin = NULL;
 
   hres = filter->EnumPins (&enumpins);
-  if (FAILED(hres)) {
+  if (FAILED (hres)) {
     return ret;
   }
 
-  while (enumpins->Next (1, &pintmp, NULL) == S_OK)
-  {
+  while (enumpins->Next (1, &pintmp, NULL) == S_OK) {
     PIN_DIRECTION pindirtmp;
     hres = pintmp->QueryDirection (&pindirtmp);
     if (hres == S_OK && pindir == pindirtmp) {
       *pin = pintmp;
       ret = TRUE;
-        break;
+      break;
     }
     pintmp->Release ();
   }
@@ -131,9 +132,10 @@ gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir, IPin *
   return ret;
 }
 
-gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
-                               CLSID output_majortype, CLSID output_subtype,
-                               gchar * prefered_filter_name, IBaseFilter **filter)
+gboolean
+gst_dshow_find_filter (CLSID input_majortype, CLSID input_subtype,
+    CLSID output_majortype, CLSID output_subtype,
+    gchar * prefered_filter_name, IBaseFilter ** filter)
 {
   gboolean ret = FALSE;
   HRESULT hres;
@@ -156,48 +158,54 @@ gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
     _strupr (prefered_filter_upper);
   }
 
-  hres = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC,
+  hres = CoCreateInstance (CLSID_FilterMapper2, NULL, CLSCTX_INPROC,
       IID_IFilterMapper2, (void **) &mapper);
-  if (FAILED(hres))
+  if (FAILED (hres))
     goto clean;
 
-  memcpy(&arrayInTypes[0], &input_majortype, sizeof (CLSID));
-  memcpy(&arrayInTypes[1], &input_subtype, sizeof (CLSID));
-  memcpy(&arrayOutTypes[0], &output_majortype, sizeof (CLSID));
-  memcpy(&arrayOutTypes[1], &output_subtype, sizeof (CLSID));
+  memcpy (&arrayInTypes[0], &input_majortype, sizeof (CLSID));
+  memcpy (&arrayInTypes[1], &input_subtype, sizeof (CLSID));
+  memcpy (&arrayOutTypes[0], &output_majortype, sizeof (CLSID));
+  memcpy (&arrayOutTypes[1], &output_subtype, sizeof (CLSID));
 
-  hres = mapper->EnumMatchingFilters (&enum_moniker, 0, FALSE, MERIT_DO_NOT_USE+1,
-          TRUE, 1, arrayInTypes, NULL, NULL, FALSE,
-          TRUE, 1, arrayOutTypes, NULL, NULL);
-  if (FAILED(hres))
+  hres =
+      mapper->EnumMatchingFilters (&enum_moniker, 0, FALSE,
+      MERIT_DO_NOT_USE + 1, TRUE, 1, arrayInTypes, NULL, NULL, FALSE, TRUE, 1,
+      arrayOutTypes, NULL, NULL);
+  if (FAILED (hres))
     goto clean;
 
   enum_moniker->Reset ();
 
-  while(hres = enum_moniker->Next (1, &moniker, &fetched),hres == S_OK
-    && !exit) {
+  while (hres = enum_moniker->Next (1, &moniker, &fetched), hres == S_OK
+      && !exit) {
     IBaseFilter *filter_temp = NULL;
     IPropertyBag *property_bag = NULL;
-    gchar * friendly_name = NULL;
+    gchar *friendly_name = NULL;
 
-    hres = moniker->BindToStorage (NULL, NULL, IID_IPropertyBag, (void **)&property_bag);
-    if(SUCCEEDED(hres) && property_bag) {
+    hres =
+        moniker->BindToStorage (NULL, NULL, IID_IPropertyBag,
+        (void **) &property_bag);
+    if (SUCCEEDED (hres) && property_bag) {
       VARIANT varFriendlyName;
       VariantInit (&varFriendlyName);
 
       hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
-      if(hres == S_OK && varFriendlyName.bstrVal) {
-         friendly_name = g_utf16_to_utf8((const gunichar2*)varFriendlyName.bstrVal,
-            wcslen(varFriendlyName.bstrVal), NULL, NULL, NULL);
-         if (friendly_name)
-           _strupr (friendly_name);
+      if (hres == S_OK && varFriendlyName.bstrVal) {
+        friendly_name =
+            g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
+            wcslen (varFriendlyName.bstrVal), NULL, NULL, NULL);
+        if (friendly_name)
+          _strupr (friendly_name);
         SysFreeString (varFriendlyName.bstrVal);
       }
       property_bag->Release ();
     }
 
-    hres = moniker->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&filter_temp);
-    if(SUCCEEDED(hres) && filter_temp) {
+    hres =
+        moniker->BindToObject (NULL, NULL, IID_IBaseFilter,
+        (void **) &filter_temp);
+    if (SUCCEEDED (hres) && filter_temp) {
       ret = TRUE;
       if (filter) {
         if (*filter)
@@ -207,13 +215,13 @@ gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype,
         (*filter)->AddRef ();
 
         if (prefered_filter_upper && friendly_name &&
-          strstr(friendly_name, prefered_filter_upper))
+            strstr (friendly_name, prefered_filter_upper))
           exit = TRUE;
       }
 
       /* if we just want to know if the formats are supported OR
-          if we don't care about what will be the filter used
-          => we can stop enumeration */
+         if we don't care about what will be the filter used
+         => we can stop enumeration */
       if (!filter || !prefered_filter_upper)
         exit = TRUE;
 
@@ -238,7 +246,8 @@ clean:
 
 
 gchar *
-gst_dshow_getdevice_from_devicename  (const GUID *device_category, gchar **device_name)
+gst_dshow_getdevice_from_devicename (const GUID * device_category,
+    gchar ** device_name)
 {
   gchar *ret = NULL;
   ICreateDevEnum *devices_enum = NULL;
@@ -249,44 +258,47 @@ gst_dshow_getdevice_from_devicename  (const GUID *device_category, gchar **devic
   gboolean bfound = FALSE;
 
   hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
-      IID_ICreateDevEnum, (void**)&devices_enum);
-  if(hres != S_OK) {
-    /*error*/
+      IID_ICreateDevEnum, (void **) &devices_enum);
+  if (hres != S_OK) {
+    /*error */
     goto clean;
   }
 
   hres = devices_enum->CreateClassEnumerator (*device_category,
       &enum_moniker, 0);
   if (hres != S_OK || !enum_moniker) {
-    /*error*/
+    /*error */
     goto clean;
   }
 
   enum_moniker->Reset ();
 
-  while(hres = enum_moniker->Next (1, &moniker, &fetched),hres == S_OK
-    && !bfound) {
+  while (hres = enum_moniker->Next (1, &moniker, &fetched), hres == S_OK
+      && !bfound) {
     IPropertyBag *property_bag = NULL;
-    hres = moniker->BindToStorage(NULL, NULL, IID_IPropertyBag, (void **)&property_bag);
-    if(SUCCEEDED(hres) && property_bag) {
+    hres =
+        moniker->BindToStorage (NULL, NULL, IID_IPropertyBag,
+        (void **) &property_bag);
+    if (SUCCEEDED (hres) && property_bag) {
       VARIANT varFriendlyName;
       VariantInit (&varFriendlyName);
 
       hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
-      if(hres == S_OK && varFriendlyName.bstrVal) {
-        gchar * friendly_name = g_utf16_to_utf8((const gunichar2*)varFriendlyName.bstrVal,
-            wcslen(varFriendlyName.bstrVal), NULL, NULL, NULL);
+      if (hres == S_OK && varFriendlyName.bstrVal) {
+        gchar *friendly_name =
+            g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
+            wcslen (varFriendlyName.bstrVal), NULL, NULL, NULL);
 
         if (!*device_name) {
           *device_name = g_strdup (friendly_name);
         }
 
-        if (_stricmp(*device_name, friendly_name) == 0) {
+        if (_stricmp (*device_name, friendly_name) == 0) {
           WCHAR *wszDisplayName = NULL;
           hres = moniker->GetDisplayName (NULL, NULL, &wszDisplayName);
-          if(hres == S_OK && wszDisplayName) {
-            ret = g_utf16_to_utf8((const gunichar2*)wszDisplayName,
-             wcslen(wszDisplayName), NULL, NULL, NULL);
+          if (hres == S_OK && wszDisplayName) {
+            ret = g_utf16_to_utf8 ((const gunichar2 *) wszDisplayName,
+                wcslen (wszDisplayName), NULL, NULL, NULL);
             CoTaskMemFree (wszDisplayName);
           }
           bfound = TRUE;
@@ -311,39 +323,41 @@ clean:
 }
 
 gboolean
-gst_dshow_show_propertypage (IBaseFilter *base_filter)
+gst_dshow_show_propertypage (IBaseFilter * base_filter)
 {
   gboolean ret = FALSE;
   ISpecifyPropertyPages *pProp = NULL;
-  HRESULT hres = base_filter->QueryInterface (IID_ISpecifyPropertyPages, (void **)&pProp);
-  if (SUCCEEDED(hres))
-  {
-    /* Get the filter's name and IUnknown pointer.*/
+  HRESULT hres =
+      base_filter->QueryInterface (IID_ISpecifyPropertyPages, (void **) &pProp);
+  if (SUCCEEDED (hres)) {
+    /* Get the filter's name and IUnknown pointer. */
     FILTER_INFO FilterInfo;
     CAUUID caGUID;
     IUnknown *pFilterUnk = NULL;
     hres = base_filter->QueryFilterInfo (&FilterInfo);
-    base_filter->QueryInterface (IID_IUnknown, (void **)&pFilterUnk);
+    base_filter->QueryInterface (IID_IUnknown, (void **) &pFilterUnk);
 
     /* Show the page. */
     pProp->GetPages (&caGUID);
     pProp->Release ();
-    OleCreatePropertyFrame(GetDesktopWindow(), 0, 0, FilterInfo.achName,
+    OleCreatePropertyFrame (GetDesktopWindow (), 0, 0, FilterInfo.achName,
         1, &pFilterUnk, caGUID.cElems, caGUID.pElems, 0, 0, NULL);
 
     pFilterUnk->Release ();
     FilterInfo.pGraph->Release ();
-    CoTaskMemFree(caGUID.pElems);
+    CoTaskMemFree (caGUID.pElems);
   }
   return ret;
 }
 
-GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* name,
-  GstCapturePinMediaType *pin_mediatype)
+GstCaps *
+gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar * name,
+    GstCapturePinMediaType * pin_mediatype)
 {
   GstCaps *video_caps = NULL;
   GstStructure *video_structure = NULL;
-  VIDEOINFOHEADER *video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
+  VIDEOINFOHEADER *video_info =
+      (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
 
   pin_mediatype->defaultWidth = video_info->bmiHeader.biWidth;
   pin_mediatype->defaultHeight = video_info->bmiHeader.biHeight;
@@ -363,15 +377,15 @@ GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* nam
   }
 
   /* other video format */
-  if (!video_caps){
+  if (!video_caps) {
     if (g_strcasecmp (name, "video/x-dv, systemstream=FALSE") == 0) {
       video_caps = gst_caps_new_simple ("video/x-dv",
-        "systemstream", G_TYPE_BOOLEAN, FALSE,
-        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
-        NULL);
+          "systemstream", G_TYPE_BOOLEAN, FALSE,
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
+          NULL);
     } else if (g_strcasecmp (name, "video/x-dv, systemstream=TRUE") == 0) {
       video_caps = gst_caps_new_simple ("video/x-dv",
-        "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
+          "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
       return video_caps;
     }
   }
@@ -392,12 +406,13 @@ GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar* nam
   /* value that the filter supports" as it said in the VIDEO_STREAM_CONFIG_CAPS dshwo doc */
 
   gst_structure_set (video_structure,
-      "width", GST_TYPE_INT_RANGE, pin_mediatype->vscc.MinOutputSize.cx, pin_mediatype->vscc.MaxOutputSize.cx,
-      "height", GST_TYPE_INT_RANGE, pin_mediatype->vscc.MinOutputSize.cy, pin_mediatype->vscc.MaxOutputSize.cy,
-      "framerate", GST_TYPE_FRACTION_RANGE,
-          (gint) (10000000 / pin_mediatype->vscc.MaxFrameInterval), 1,
-          (gint) (10000000 / pin_mediatype->vscc.MinFrameInterval), 1,
-       NULL);
+      "width", GST_TYPE_INT_RANGE, pin_mediatype->vscc.MinOutputSize.cx,
+      pin_mediatype->vscc.MaxOutputSize.cx, "height", GST_TYPE_INT_RANGE,
+      pin_mediatype->vscc.MinOutputSize.cy,
+      pin_mediatype->vscc.MaxOutputSize.cy, "framerate",
+      GST_TYPE_FRACTION_RANGE,
+      (gint) (10000000 / pin_mediatype->vscc.MaxFrameInterval), 1,
+      (gint) (10000000 / pin_mediatype->vscc.MinFrameInterval), 1, NULL);
 
   return video_caps;
 }
