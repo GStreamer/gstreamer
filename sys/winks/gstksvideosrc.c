@@ -84,7 +84,7 @@ typedef enum
   KS_WORKER_STATE_ERROR,
 } KsWorkerState;
 
-typedef struct
+struct _GstKsVideoSrcPrivate
 {
   /* Properties */
   gchar *device_path;
@@ -118,11 +118,9 @@ typedef struct
   GstClockTime last_sampling;
   guint count;
   guint fps;
-} GstKsVideoSrcPrivate;
+};
 
-#define GST_KS_VIDEO_SRC_GET_PRIVATE(o) \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_KS_VIDEO_SRC, \
-    GstKsVideoSrcPrivate))
+#define GST_KS_VIDEO_SRC_GET_PRIVATE(o) ((o)->priv)
 
 static void gst_ks_video_src_init_interfaces (GType type);
 
@@ -238,8 +236,12 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
 static void
 gst_ks_video_src_init (GstKsVideoSrc * self, GstKsVideoSrcClass * gclass)
 {
-  GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
   GstBaseSrc *basesrc = GST_BASE_SRC (self);
+  GstKsVideoSrcPrivate *priv;
+
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_KS_VIDEO_SRC,
+      GstKsVideoSrcPrivate);
+  priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
 
   gst_base_src_set_live (basesrc, TRUE);
   gst_base_src_set_format (basesrc, GST_FORMAT_TIME);

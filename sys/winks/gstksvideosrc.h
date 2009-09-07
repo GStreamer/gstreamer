@@ -36,12 +36,15 @@ G_BEGIN_DECLS
 #define GST_IS_KS_VIDEO_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_KS_VIDEO_SRC))
 
-typedef struct _GstKsVideoSrc      GstKsVideoSrc;
-typedef struct _GstKsVideoSrcClass GstKsVideoSrcClass;
+typedef struct _GstKsVideoSrc         GstKsVideoSrc;
+typedef struct _GstKsVideoSrcClass    GstKsVideoSrcClass;
+typedef struct _GstKsVideoSrcPrivate  GstKsVideoSrcPrivate;
 
 struct _GstKsVideoSrc
 {
   GstPushSrc push_src;
+
+  GstKsVideoSrcPrivate * priv;
 };
 
 struct _GstKsVideoSrcClass

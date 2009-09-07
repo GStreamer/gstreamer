@@ -24,7 +24,7 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_ks_debug);
 #define GST_CAT_DEFAULT gst_ks_debug
 
-typedef struct
+struct _GstKsClockPrivate
 {
   GMutex *mutex;
   GCond *client_cond;
@@ -41,11 +41,9 @@ typedef struct
   gboolean worker_initialized;
 
   GstClock *master_clock;
-} GstKsClockPrivate;
+};
 
-#define GST_KS_CLOCK_GET_PRIVATE(o) \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_KS_CLOCK, \
-    GstKsClockPrivate))
+#define GST_KS_CLOCK_GET_PRIVATE(o) ((o)->priv)
 
 #define GST_KS_CLOCK_LOCK() g_mutex_lock (priv->mutex)
 #define GST_KS_CLOCK_UNLOCK() g_mutex_unlock (priv->mutex)
@@ -74,7 +72,12 @@ gst_ks_clock_class_init (GstKsClockClass * klass)
 static void
 gst_ks_clock_init (GstKsClock * self, GstKsClockClass * gclass)
 {
-  GstKsClockPrivate *priv = GST_KS_CLOCK_GET_PRIVATE (self);
+  GstKsClockPrivate *priv;
+
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_KS_CLOCK,
+      GstKsClockPrivate);
+
+  priv = GST_KS_CLOCK_GET_PRIVATE (self);
 
   priv->mutex = g_mutex_new ();
   priv->client_cond = g_cond_new ();

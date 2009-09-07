@@ -57,7 +57,7 @@ typedef struct
   OVERLAPPED overlapped;
 } ReadRequest;
 
-typedef struct
+struct _GstKsVideoDevicePrivate
 {
   gboolean open;
   KSSTATE state;
@@ -87,9 +87,7 @@ typedef struct
   GstClockTime last_timestamp;
 } GstKsVideoDevicePrivate;
 
-#define GST_KS_VIDEO_DEVICE_GET_PRIVATE(o) \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_KS_VIDEO_DEVICE, \
-    GstKsVideoDevicePrivate))
+#define GST_KS_VIDEO_DEVICE_GET_PRIVATE(o) ((o)->priv)
 
 static void gst_ks_video_device_dispose (GObject * object);
 static void gst_ks_video_device_get_property (GObject * object, guint prop_id,
@@ -132,8 +130,12 @@ static void
 gst_ks_video_device_init (GstKsVideoDevice * self,
     GstKsVideoDeviceClass * gclass)
 {
-  GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
+  GstKsVideoDevicePrivate *priv;
 
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_KS_VIDEO_DEVICE,
+      GstKsVideoDevicePrivate);
+
+  priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
   priv->open = FALSE;
   priv->state = KSSTATE_STOP;
 }
