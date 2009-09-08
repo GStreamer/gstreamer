@@ -252,6 +252,7 @@ static GstStateChangeReturn
 gst_pulsemixer_change_state (GstElement * element, GstStateChange transition)
 {
   GstPulseMixer *this = GST_PULSEMIXER (element);
+  GstStateChangeReturn res;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -260,19 +261,22 @@ gst_pulsemixer_change_state (GstElement * element, GstStateChange transition)
             gst_pulsemixer_ctrl_new (G_OBJECT (this), this->server,
             this->device, GST_PULSEMIXER_UNKNOWN);
       break;
+    default:
+      ;
+  }
+
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (this->mixer) {
         gst_pulsemixer_ctrl_free (this->mixer);
         this->mixer = NULL;
       }
       break;
-
     default:
       ;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return res;
 }

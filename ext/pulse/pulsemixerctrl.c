@@ -213,6 +213,8 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
 
   g_assert (c);
 
+  GST_DEBUG_OBJECT (c->object, "ctrl open");
+
   c->mainloop = pa_threaded_mainloop_new ();
   g_assert (c->mainloop);
 
@@ -275,6 +277,7 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
   /* Get sink info */
 
   if (c->type == GST_PULSEMIXER_UNKNOWN || c->type == GST_PULSEMIXER_SINK) {
+    GST_WARNING_OBJECT (c->object, "Get info for '%s'", c->device);
     if (!(o =
             pa_context_get_sink_info_by_name (c->context, c->device,
                 gst_pulsemixer_ctrl_sink_info_cb, c))) {
@@ -353,6 +356,8 @@ gst_pulsemixer_ctrl_close (GstPulseMixerCtrl * c)
 {
   g_assert (c);
 
+  GST_DEBUG_OBJECT (c->object, "ctrl close");
+
   if (c->mainloop)
     pa_threaded_mainloop_stop (c->mainloop);
 
@@ -386,6 +391,7 @@ gst_pulsemixer_ctrl_new (GObject * object, const gchar * server,
 {
   GstPulseMixerCtrl *c = NULL;
 
+  GST_DEBUG_OBJECT (object, "new mixer ctrl for %s", device);
   c = g_new (GstPulseMixerCtrl, 1);
   c->object = g_object_ref (object);
   c->tracklist = NULL;

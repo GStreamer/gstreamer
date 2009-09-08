@@ -103,6 +103,8 @@ gst_pulseprobe_open (GstPulseProbe * c)
 
   g_assert (c);
 
+  GST_DEBUG_OBJECT (c->object, "probe open");
+
   c->mainloop = pa_threaded_mainloop_new ();
   g_assert (c->mainloop);
 
@@ -183,6 +185,8 @@ static gboolean
 gst_pulseprobe_enumerate (GstPulseProbe * c)
 {
   pa_operation *o = NULL;
+
+  GST_DEBUG_OBJECT (c->object, "probe enumerate");
 
   pa_threaded_mainloop_lock (c->mainloop);
 
@@ -267,6 +271,8 @@ static void
 gst_pulseprobe_close (GstPulseProbe * c)
 {
   g_assert (c);
+
+  GST_DEBUG_OBJECT (c->object, "probe close");
 
   if (c->mainloop)
     pa_threaded_mainloop_stop (c->mainloop);
