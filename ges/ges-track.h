@@ -43,10 +43,32 @@ G_BEGIN_DECLS
 #define GES_TRACK_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK, GESTrackClass))
 
+
+#define GES_TYPE_TRACK_TYPE (ges_track_type_get_type ())
+GType ges_track_type_get_type (void);
+
+/**
+ * GESTrackType:
+ * @GES_TRACK_TYPE_AUDIO: An audio track
+ * @GES_TRACK_TYPE_VIDEO: A video track
+ * @GES_TRACK_TYPE_TEXT: A text (subtitle) track
+ * @GES_TRACK_TYPE_CUSTOM: A custom-content track
+ *
+ * Types of content handled by a track.
+ */
+
+typedef enum {
+  GES_TRACK_TYPE_AUDIO	= 0,
+  GES_TRACK_TYPE_VIDEO	= 1,
+  GES_TRACK_TYPE_TEXT	= 2,
+  GES_TRACK_TYPE_CUSTOM	= 3
+} GESTrackType;
+
 struct _GESTrack {
   GstBin parent;
 
   GESTimeline * timeline;
+  GESTrackType type;
 
   GstCaps * caps;
 
@@ -60,7 +82,7 @@ struct _GESTrackClass {
 
 GType ges_track_get_type (void);
 
-GESTrack* ges_track_new (GstCaps * caps);
+GESTrack* ges_track_new (GESTrackType type, GstCaps * caps);
 
 void ges_track_set_timeline (GESTrack * track, GESTimeline *timeline);
 void ges_track_set_caps (GESTrack * track, const GstCaps * caps);
