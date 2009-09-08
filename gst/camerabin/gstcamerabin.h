@@ -64,15 +64,16 @@ struct _GstCameraBin
   gboolean stop_requested;        /* TRUE if capturing stop needed */
   gboolean paused;                /* TRUE if capturing paused */
 
-  /* resolution and frames per second of image captured by v4l2 device */
+  /* Resolution of the buffers configured to camerabin */
   gint width;
   gint height;
+  /* Frames per second configured to camerabin */
   gint fps_n;
   gint fps_d;
 
   /* Image capture resolution */
-  gint image_width;
-  gint image_height;
+  gint image_capture_width;
+  gint image_capture_height;
 
   /* Image tags are collected here first before sending to imgbin */
   GstTagList *event_tags;
@@ -147,6 +148,13 @@ struct _GstCameraBin
 
   /* Buffer probe id for captured image handling */
   gulong image_captured_id;
+
+  /* Optional base crop for frames. Used to crop frames e.g.
+     due to wrong aspect ratio, before the crop related to zooming. */
+  gint base_crop_top;
+  gint base_crop_bottom;
+  gint base_crop_left;
+  gint base_crop_right;
 };
 
 /**
@@ -169,7 +177,7 @@ struct _GstCameraBinClass
 
   /* signals (callback) */
 
-   gboolean (*img_done) (GstCameraBin * camera, const gchar * filename);
+    gboolean (*img_done) (GstCameraBin * camera, const gchar * filename);
 };
 
 /**
@@ -188,4 +196,4 @@ typedef enum
 GType gst_camerabin_get_type (void);
 
 G_END_DECLS
-#endif                          /* #ifndef __GST_CAMERABIN_H__ */
+#endif /* #ifndef __GST_CAMERABIN_H__ */
