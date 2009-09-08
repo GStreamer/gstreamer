@@ -3489,6 +3489,7 @@ gst_rtspsrc_parse_digest_challenge (GstRTSPConnection * conn,
       value = NULL;
 
     gst_rtsp_connection_set_auth_param (conn, item, value);
+    g_free (item);
   }
 
   g_slist_free (list);
