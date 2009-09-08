@@ -1486,7 +1486,7 @@ again:
 
     if (gap > 0) {
       /* we have a gap */
-      GST_WARNING_OBJECT (jitterbuffer,
+      GST_DEBUG_OBJECT (jitterbuffer,
           "Sequence number GAP detected: expected %d instead of %d (%d missing)",
           next_seqnum, seqnum, gap);
 
@@ -1498,7 +1498,7 @@ again:
          * number of packets we are missing, this is the estimated duration
          * for the missing packet based on equidistant packet spacing. Also make
          * sure we never go negative. */
-        if (out_time > priv->last_out_time)
+        if (out_time >= priv->last_out_time)
           duration = (out_time - priv->last_out_time) / (gap + 1);
         else
           goto lost;
@@ -1567,7 +1567,7 @@ again:
       GstEvent *event;
 
       /* we had a gap and thus we lost a packet. Create an event for this.  */
-      GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", next_seqnum);
+      GST_WARNING_OBJECT (jitterbuffer, "Packet #%d lost", next_seqnum);
       priv->num_late++;
       discont = TRUE;
 
