@@ -31,8 +31,7 @@
  * possible to encode images with other dimensions because an arbitrary
  * rectangular cropping region can be set up. This element will automatically
  * set up a correct cropping region if the dimensions are not multiples of 16
- * pixels. The #GstTheoraEnc::border and #GstTheoraEnc::center properties
- * control how this cropping region will be set up.
+ * pixels.
  *
  * To control the quality of the encoding, the #GstTheoraEnc::bitrate and
  * #GstTheoraEnc::quality properties can be used. These two properties are
@@ -107,7 +106,6 @@ _ilog (unsigned int v)
   return (ret);
 }
 
-#define THEORA_DEF_CENTER               TRUE
 #define THEORA_DEF_BORDER               BORDER_BLACK
 #define THEORA_DEF_BITRATE              0
 #define THEORA_DEF_QUALITY              48
@@ -234,7 +232,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_CENTER,
       g_param_spec_boolean ("center", "Center",
-          "Center image when sizes not multiple of 16", THEORA_DEF_CENTER,
+          "ignored and kept for API compat only", TRUE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_BORDER,
       g_param_spec_enum ("border", "Border",
@@ -314,7 +312,6 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
 
   gst_segment_init (&enc->segment, GST_FORMAT_UNDEFINED);
 
-  enc->center = THEORA_DEF_CENTER;
   enc->border = THEORA_DEF_BORDER;
 
   enc->video_bitrate = THEORA_DEF_BITRATE;
@@ -484,17 +481,8 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
       g_assert_not_reached ();
   }
 
-  /* center image if needed */
-  if (enc->center) {
-    /* make sure offset is even, for easier decoding */
-    enc->offset_x = GST_ROUND_UP_2 ((enc->info_width - enc->width) / 2);
-    enc->offset_y = GST_ROUND_UP_2 ((enc->info_height - enc->height) / 2);
-  } else {
-    enc->offset_x = 0;
-    enc->offset_y = 0;
-  }
-  enc->info.offset_x = enc->offset_x;
-  enc->info.offset_y = enc->offset_y;
+  enc->info.offset_x = 0;
+  enc->info.offset_y = 0;
 
   enc->info.fps_numerator = enc->fps_n = fps_n;
   enc->info.fps_denominator = enc->fps_d = fps_d;
@@ -878,25 +866,17 @@ theora_enc_init_yuv_buffer (yuv_buffer * yuv, theora_pixelformat format,
 static void
 copy_plane (guint8 * dest, int dest_width, int dest_height, int dest_stride,
     const guint8 * src, int src_width, int src_height, int src_stride,
-    int offset_x, int offset_y, GstTheoraEncBorderMode border, int black)
+    GstTheoraEncBorderMode border, int black)
 {
-  int right_x, right_border, i;
+  int right_border, i;
 
-  /* fill top border */
-  if (border != BORDER_NONE) {
-    memset (dest, black, dest_stride * offset_y);
-  }
-  dest += dest_stride * offset_y;
-
-  right_x = src_width + offset_x;
-  right_border = dest_width - right_x;
+  right_border = dest_width - src_width;
 
   /* copy source */
   for (i = 0; i < src_height; i++) {
-    memcpy (dest + offset_x, src, src_width);
+    memcpy (dest, src, src_width);
     if (border != BORDER_NONE) {
-      memset (dest, black, offset_x);
-      memset (dest + right_x, black, right_border);
+      memset (dest + src_width, black, right_border);
     }
 
     dest += dest_stride;
@@ -905,7 +885,7 @@ copy_plane (guint8 * dest, int dest_width, int dest_height, int dest_stride,
 
   /* fill bottom border */
   if (border != BORDER_NONE) {
-    memset (dest, black, dest_stride * (dest_height - src_height - offset_y));
+    memset (dest, black, dest_stride * (dest_height - src_height));
   }
 }
 
@@ -930,8 +910,6 @@ theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
 {
   yuv_buffer dest, src;
   GstBuffer *newbuf;
-  int uv_offset_x;
-  int uv_offset_y;
 
   if (enc->width == enc->info_width && enc->height == enc->info_height) {
     GST_LOG_OBJECT (enc, "no cropping/conversion needed");
@@ -955,18 +933,12 @@ theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
       GST_BUFFER_DATA (newbuf), enc->info_width, enc->info_height);
 
   copy_plane (dest.y, dest.y_width, dest.y_height, dest.y_stride,
-      src.y, src.y_width, src.y_height, src.y_stride,
-      enc->offset_x, enc->offset_y, enc->border, 0);
-
-  uv_offset_x = enc->offset_x * dest.uv_width / dest.y_width;
-  uv_offset_y = enc->offset_y * dest.uv_height / dest.y_height;
+      src.y, src.y_width, src.y_height, src.y_stride, enc->border, 0);
 
   copy_plane (dest.u, dest.uv_width, dest.uv_height, dest.uv_stride,
-      src.u, src.uv_width, src.uv_height, src.uv_stride,
-      uv_offset_x, uv_offset_y, enc->border, 128);
+      src.u, src.uv_width, src.uv_height, src.uv_stride, enc->border, 128);
   copy_plane (dest.v, dest.uv_width, dest.uv_height, dest.uv_stride,
-      src.v, src.uv_width, src.uv_height, src.uv_stride,
-      uv_offset_x, uv_offset_y, enc->border, 128);
+      src.v, src.uv_width, src.uv_height, src.uv_stride, enc->border, 128);
 
   gst_buffer_unref (buffer);
   return newbuf;
@@ -1250,7 +1222,7 @@ theora_enc_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_CENTER:
-      enc->center = g_value_get_boolean (value);
+      /* kept for API compat, but ignored */
       break;
     case ARG_BORDER:
       enc->border = g_value_get_enum (value);
@@ -1306,7 +1278,7 @@ theora_enc_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_CENTER:
-      g_value_set_boolean (value, enc->center);
+      g_value_set_boolean (value, TRUE);
       break;
     case ARG_BORDER:
       g_value_set_enum (value, enc->border);

@@ -76,7 +76,6 @@ struct _GstTheoraEnc
   theora_comment comment;
   gboolean initialised;
 
-  gboolean center;
   GstTheoraEncBorderMode border;
 
   gint video_bitrate;           /* bitrate target for Theora video */
@@ -92,7 +91,6 @@ struct _GstTheoraEnc
 
   gint info_width, info_height;
   gint width, height;
-  gint offset_x, offset_y;
   gint fps_n, fps_d;
   GstClockTime next_ts;
 
