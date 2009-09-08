@@ -72,6 +72,8 @@ static void gst_navigation_class_init (GstNavigationInterface * iface);
 #define GST_NAVIGATION_QUERY_NAME "GstNavigationQuery"
 #define GST_NAVIGATION_EVENT_NAME "application/x-gst-navigation"
 
+#define WARN_IF_FAIL(exp,msg) if(G_UNLIKELY(!(exp))){g_warning("%s",(msg));}
+
 GType
 gst_navigation_get_type (void)
 {
@@ -455,20 +457,21 @@ gst_navigation_query_parse_angles (GstQuery * query, guint * cur_angle,
     guint * n_angles)
 {
   GstStructure *structure;
+  gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_NAVIGATION_QUERY_HAS_TYPE (query, ANGLES), FALSE);
 
   structure = gst_query_get_structure (query);
 
   if (cur_angle)
-    g_return_val_if_fail (gst_structure_get_uint (structure,
-            "angle", cur_angle), FALSE);
+    ret &= gst_structure_get_uint (structure, "angle", cur_angle);
 
   if (n_angles)
-    g_return_val_if_fail (gst_structure_get_uint (structure,
-            "angles", n_angles), FALSE);
+    ret &= gst_structure_get_uint (structure, "angles", n_angles);
 
-  return TRUE;
+  WARN_IF_FAIL (ret, "Couldn't extract details from angles query");
+
+  return ret;
 }
 
 /* Navigation Messages */
@@ -644,20 +647,21 @@ gst_navigation_message_parse_angles_changed (GstMessage * message,
     guint * cur_angle, guint * n_angles)
 {
   const GstStructure *s;
+  gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_NAVIGATION_MESSAGE_HAS_TYPE (message,
           ANGLES_CHANGED), FALSE);
 
   s = gst_message_get_structure (message);
   if (cur_angle)
-    g_return_val_if_fail (gst_structure_get_uint (s, "angle", cur_angle),
-        FALSE);
+    ret &= gst_structure_get_uint (s, "angle", cur_angle);
 
   if (n_angles)
-    g_return_val_if_fail (gst_structure_get_uint (s, "angles", n_angles),
-        FALSE);
+    ret &= gst_structure_get_uint (s, "angles", n_angles);
 
-  return TRUE;
+  WARN_IF_FAIL (ret, "Couldn't extract details from angles-changed event");
+
+  return ret;
 }
 
 #define GST_NAVIGATION_EVENT_HAS_TYPE(event,event_type) \
@@ -756,6 +760,7 @@ gst_navigation_event_parse_mouse_button_event (GstEvent * event, gint * button,
 {
   GstNavigationEventType e_type;
   const GstStructure *s;
+  gboolean ret = TRUE;
 
   e_type = gst_navigation_event_get_type (event);
   g_return_val_if_fail (e_type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS ||
@@ -763,13 +768,15 @@ gst_navigation_event_parse_mouse_button_event (GstEvent * event, gint * button,
 
   s = gst_event_get_structure (event);
   if (x)
-    g_return_val_if_fail (gst_structure_get_double (s, "pointer_x", x), FALSE);
+    ret &= gst_structure_get_double (s, "pointer_x", x);
   if (y)
-    g_return_val_if_fail (gst_structure_get_double (s, "pointer_y", y), FALSE);
+    ret &= gst_structure_get_double (s, "pointer_y", y);
   if (button)
-    g_return_val_if_fail (gst_structure_get_int (s, "button", button), FALSE);
+    ret &= gst_structure_get_int (s, "button", button);
 
-  return TRUE;
+  WARN_IF_FAIL (ret, "Couldn't extract details from mouse button event");
+
+  return ret;
 }
 
 /**
@@ -788,17 +795,20 @@ gst_navigation_event_parse_mouse_move_event (GstEvent * event, gdouble * x,
     gdouble * y)
 {
   const GstStructure *s;
+  gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_NAVIGATION_EVENT_HAS_TYPE (event, MOUSE_MOVE),
       FALSE);
 
   s = gst_event_get_structure (event);
   if (x)
-    g_return_val_if_fail (gst_structure_get_double (s, "pointer_x", x), FALSE);
+    ret &= gst_structure_get_double (s, "pointer_x", x);
   if (y)
-    g_return_val_if_fail (gst_structure_get_double (s, "pointer_y", y), FALSE);
+    ret &= gst_structure_get_double (s, "pointer_y", y);
 
-  return TRUE;
+  WARN_IF_FAIL (ret, "Couldn't extract positions from mouse move event");
+
+  return ret;
 }
 
 /**
@@ -817,13 +827,15 @@ gst_navigation_event_parse_command (GstEvent * event,
     GstNavigationCommand * command)
 {
   const GstStructure *s;
+  gboolean ret = TRUE;
+
   g_return_val_if_fail (GST_NAVIGATION_EVENT_HAS_TYPE (event, COMMAND), FALSE);
 
   if (command) {
     s = gst_event_get_structure (event);
-    g_return_val_if_fail (gst_structure_get_uint (s, "command-code", (guint*)command),
-        FALSE);
+    ret = gst_structure_get_uint (s, "command-code", (guint *) command);
+    WARN_IF_FAIL (ret, "Couldn't extract command code from command event");
   }
 
-  return TRUE;
+  return ret;
 }
