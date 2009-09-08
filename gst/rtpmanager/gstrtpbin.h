@@ -46,6 +46,7 @@ struct _GstRtpBin {
   /* default latency for sessions */
   guint           latency;
   gboolean        do_lost;
+  gboolean        ignore_pt;
   /* a list of session */
   GSList         *sessions;
 
