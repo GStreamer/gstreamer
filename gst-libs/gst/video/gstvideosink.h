@@ -1,7 +1,6 @@
-/*
- *  GStreamer Video sink.
- *
+/*  GStreamer video sink base class
  *  Copyright (C) <2003> Julien Moutte <julien@moutte.net>
+ *  Copyright (C) <2009> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,7 +17,9 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
+/* FIXME 0.11: turn this into a proper base class */
+
 #ifndef __GST_VIDEO_SINK_H__
 #define __GST_VIDEO_SINK_H__
 
@@ -80,18 +81,40 @@ struct _GstVideoRectangle {
   gint h;
 };
 
+/**
+ * GstVideoSink:
+ * @element: the parent object structure (which is GstBaseSink)
+ * @height: video height (derived class needs to set this)
+ * @width: video width (derived class needs to set this)
+ *
+ * The video sink instance structure. Derived video sinks should set the
+ * @height and @width members.
+ */
 struct _GstVideoSink {
-  GstBaseSink element;
+  GstBaseSink element;    /* FIXME 0.11: this should not be called 'element' */
   
   gint width, height;
   
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstVideoSinkClass:
+ * @parent_class: the parent class structure
+ * @show_frame: render a video frame. Maps to #GstBaseSink::render and
+ *     #GstBaseSink::preroll vfuncs. Since: 0.10.25
+ *
+ * The video sink class structure. Derived classes should override the
+ * @show_frame virtual function.
+ */
 struct _GstVideoSinkClass {
   GstBaseSinkClass parent_class;
-      
-  gpointer _gst_reserved[GST_PADDING];
+
+  GstFlowReturn  (*show_frame) (GstVideoSink *video_sink, GstBuffer *buf);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 GType gst_video_sink_get_type (void);

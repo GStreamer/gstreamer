@@ -1,7 +1,6 @@
-/*
- *  GStreamer Video sink.
- *
+/*  GStreamer video sink base class
  *  Copyright (C) <2003> Julien Moutte <julien@moutte.net>
+ *  Copyright (C) <2009> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -44,7 +43,12 @@
 GST_DEBUG_CATEGORY_STATIC (video_sink_debug);
 #define GST_CAT_DEFAULT video_sink_debug
 
-static GstElementClass *parent_class = NULL;
+static GstBaseSinkClass *parent_class = NULL;
+
+static GstFlowReturn gst_video_sink_show_preroll_frame (GstBaseSink * bsink,
+    GstBuffer * buf);
+static GstFlowReturn gst_video_sink_show_frame (GstBaseSink * bsink,
+    GstBuffer * buf);
 
 /**
  * gst_video_sink_center_rect:
@@ -112,13 +116,59 @@ gst_video_sink_init (GstVideoSink * videosink)
 static void
 gst_video_sink_class_init (GstVideoSinkClass * klass)
 {
+  GstBaseSinkClass *basesink_class = (GstBaseSinkClass *) klass;
+
   parent_class = g_type_class_peek_parent (klass);
+
+  basesink_class->render = GST_DEBUG_FUNCPTR (gst_video_sink_show_frame);
+  basesink_class->preroll =
+      GST_DEBUG_FUNCPTR (gst_video_sink_show_preroll_frame);
 }
 
 static void
 gst_video_sink_base_init (gpointer g_class)
 {
   GST_DEBUG_CATEGORY_INIT (video_sink_debug, "videosink", 0, "GstVideoSink");
+}
+
+static GstFlowReturn
+gst_video_sink_show_preroll_frame (GstBaseSink * bsink, GstBuffer * buf)
+{
+  GstVideoSinkClass *klass;
+
+  klass = GST_VIDEO_SINK_GET_CLASS (bsink);
+
+  if (klass->show_frame == NULL) {
+    if (parent_class->preroll != NULL)
+      return parent_class->preroll (bsink, buf);
+    else
+      return GST_FLOW_OK;
+  }
+
+  GST_LOG_OBJECT (bsink, "rendering frame, ts=%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+  return klass->show_frame (GST_VIDEO_SINK_CAST (bsink), buf);
+}
+
+static GstFlowReturn
+gst_video_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+{
+  GstVideoSinkClass *klass;
+
+  klass = GST_VIDEO_SINK_GET_CLASS (bsink);
+
+  if (klass->show_frame == NULL) {
+    if (parent_class->render != NULL)
+      return parent_class->render (bsink, buf);
+    else
+      return GST_FLOW_OK;
+  }
+
+  GST_LOG_OBJECT (bsink, "rendering frame, ts=%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+  return klass->show_frame (GST_VIDEO_SINK_CAST (bsink), buf);
 }
 
 /* Public methods */
