@@ -505,6 +505,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
     /* copy it into a buffer */
     codec_data = gst_buffer_new_and_alloc (config_len);
     memcpy (GST_BUFFER_DATA (codec_data), config, config_len);
+    free (config);
 
     /* add to caps */
     gst_caps_set_simple (srccaps,
@@ -605,6 +606,7 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
     /* in case encoder returns more data than is expected (which seems possible)
      * ignore the extra part */
     if (G_UNLIKELY (av == 0 && faac->offset == 0)) {
+      GST_DEBUG_OBJECT (faac, "encoder returned unexpected data; discarding");
       gst_buffer_unref (outbuf);
       continue;
     }
@@ -645,6 +647,10 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
 
   /* in case encoder returns less than expected, clear our view as well */
   if (G_UNLIKELY (force)) {
+#ifndef GST_DISABLE_GST_DEBUG
+    if ((av = gst_adapter_available (faac->adapter)))
+      GST_WARNING_OBJECT (faac, "encoder left %d bytes; discarding", av);
+#endif
     gst_adapter_clear (faac->adapter);
     faac->offset = 0;
   }
