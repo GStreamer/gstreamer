@@ -1622,13 +1622,13 @@ gst_ximagesink_get_times (GstBaseSink * bsink, GstBuffer * buf,
 }
 
 static GstFlowReturn
-gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstXImageSink *ximagesink;
 
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
-  ximagesink = GST_XIMAGESINK (bsink);
+  ximagesink = GST_XIMAGESINK (vsink);
 
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
@@ -1671,7 +1671,7 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 no_ximage:
   {
     /* No image available. That's very bad ! */
-    GST_DEBUG ("could not create image");
+    GST_WARNING_OBJECT (ximagesink, "could not create image");
     return GST_FLOW_ERROR;
   }
 no_window:
@@ -2295,10 +2295,12 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
+  GstVideoSinkClass *videosink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
+  videosink_class = (GstVideoSinkClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -2339,9 +2341,9 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
   gstbasesink_class->buffer_alloc =
       GST_DEBUG_FUNCPTR (gst_ximagesink_buffer_alloc);
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_ximagesink_get_times);
-  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_ximagesink_show_frame);
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_ximagesink_show_frame);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_ximagesink_event);
+
+  videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_ximagesink_show_frame);
 }
 
 /* ============================================================= */

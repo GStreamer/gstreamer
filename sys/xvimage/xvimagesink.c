@@ -2313,11 +2313,11 @@ gst_xvimagesink_get_times (GstBaseSink * bsink, GstBuffer * buf,
 }
 
 static GstFlowReturn
-gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstXvImageSink *xvimagesink;
 
-  xvimagesink = GST_XVIMAGESINK (bsink);
+  xvimagesink = GST_XVIMAGESINK (vsink);
 
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
@@ -3368,10 +3368,12 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
+  GstVideoSinkClass *videosink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
+  videosink_class = (GstVideoSinkClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -3490,9 +3492,9 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
   gstbasesink_class->buffer_alloc =
       GST_DEBUG_FUNCPTR (gst_xvimagesink_buffer_alloc);
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_xvimagesink_get_times);
-  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_xvimagesink_show_frame);
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_xvimagesink_show_frame);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_xvimagesink_event);
+
+  videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_xvimagesink_show_frame);
 }
 
 /* ============================================================= */
