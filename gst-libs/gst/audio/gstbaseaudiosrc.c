@@ -841,9 +841,18 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
         GstClockTime current_time;
         guint64 running_time_sample;
         gint running_time_segment;
-        gint current_segment;
+        gint last_read_segment;
         gint segment_skew;
         gint sps;
+        gint segments_written;
+        gint last_written_segment;
+
+        /* get the amount of segments written from the device by now */
+        segments_written = g_atomic_int_get (&ringbuffer->segdone);
+
+        /* subtract the base to segments_written to get the number of the
+           last written segment in the ringbuffer (one segment written = segment 0) */
+        last_written_segment = segments_written - ringbuffer->segbase - 1;
 
         /* samples per segment */
         sps = ringbuffer->samples_per_seg;
@@ -865,72 +874,52 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
         running_time_segment = running_time_sample / sps;
 
         /* the segment currently read from the ringbuffer */
-        current_segment = sample / sps;
+        last_read_segment = sample / sps;
 
-        /* the skew we have between running_time and the ringbuffertime */
-        segment_skew = running_time_segment - current_segment;
+        /* the skew we have between running_time and the ringbuffertime (last written to) */
+        segment_skew = running_time_segment - last_written_segment;
 
-        GST_DEBUG_OBJECT (bsrc, "\n running_time = %" GST_TIME_FORMAT
-            "\n timestamp     = %" GST_TIME_FORMAT
-            "\n running_time_segment = %d"
-            "\n current_segment      = %d"
-            "\n segment_skew         = %d",
-            GST_TIME_ARGS (running_time),
-            GST_TIME_ARGS (timestamp),
-            running_time_segment, current_segment, segment_skew);
+        GST_DEBUG_OBJECT (bsrc,
+            "\n running_time                                              = %"
+            GST_TIME_FORMAT
+            "\n timestamp                                                  = %"
+            GST_TIME_FORMAT
+            "\n running_time_segment                                       = %d"
+            "\n last_written_segment                                       = %d"
+            "\n segment_skew (running time segment - last_written_segment) = %d"
+            "\n last_read_segment                                          = %d",
+            GST_TIME_ARGS (running_time), GST_TIME_ARGS (timestamp),
+            running_time_segment, last_written_segment, segment_skew,
+            last_read_segment);
 
         /* Resync the ringbuffer if:
-         * 1. We get one segment into the future.
-         *    This is clearly a lie, because we can't
-         *    possibly have a buffer with timestamp 1 at
-         *    time 0. (unless it has time-travelled...)
          *
-         * 2. We are more than the length of the ringbuffer behind.
+         * 1. We are more than the length of the ringbuffer behind.
          *    The length of the ringbuffer then gets to dictate
          *    the threshold for what is concidered "too late"
          *
-         * 3. If this is our first buffer.
+         * 2. If this is our first buffer.
          *    We know that we should catch up to running_time
          *    the first time we are ran.
          */
-        if ((segment_skew < 0) ||
-            (segment_skew >= ringbuffer->spec.segtotal) ||
-            (current_segment == 0)) {
-          gint segments_written;
-          gint first_segment;
-          gint last_segment;
-          gint new_last_segment;
+        if ((segment_skew >= ringbuffer->spec.segtotal) ||
+            (last_read_segment == 0)) {
+          gint new_read_segment;
           gint segment_diff;
-          gint new_first_segment;
           guint64 new_sample;
 
-          /* we are going to say that the last segment was captured at the current time
-             (running_time), minus one segment of creation-latency in the ringbuffer.
-             This can be thought of as: The segment arrived in the ringbuffer at time X, and
-             that means it was created at time X - (one segment). */
-          new_last_segment = running_time_segment - 1;
+          /* the difference between running_time and the last written segment */
+          segment_diff = running_time_segment - last_written_segment;
 
-          /* for better readablity */
-          first_segment = current_segment;
+          /* advance the ringbuffer */
+          gst_ring_buffer_advance (ringbuffer, segment_diff);
 
-          /* get the amount of segments written from the device by now */
-          segments_written = g_atomic_int_get (&ringbuffer->segdone);
-
-          /* subtract the base to segments_written to get the number of the
-             last written segment in the ringbuffer (one segment written = segment 0) */
-          last_segment = segments_written - ringbuffer->segbase - 1;
-
-          /* we see how many segments the ringbuffer was timeshifted */
-          segment_diff = new_last_segment - last_segment;
-
-          /* we move the first segment an equal amount */
-          new_first_segment = first_segment + segment_diff;
-
-          /* and we also move the segmentbase the same amount */
-          ringbuffer->segbase -= segment_diff;
+          /* we move the  new read segment to the last known written segment */
+          new_read_segment =
+              g_atomic_int_get (&ringbuffer->segdone) - ringbuffer->segbase;
 
           /* we calculate the new sample value */
-          new_sample = ((guint64) new_first_segment) * sps;
+          new_sample = ((guint64) new_read_segment) * sps;
 
           /* and get the relative time to this -> our new timestamp */
           timestamp =
