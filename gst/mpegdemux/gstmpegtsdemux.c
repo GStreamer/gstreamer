@@ -205,9 +205,6 @@ static MpegTsPmtInfo *mpegts_demux_build_pmt_info (GstMpegTSDemux * demux,
 
 static GstElementClass *parent_class = NULL;
 
-static FORCE_INLINE GstMpegTSStream
-    * gst_mpegts_demux_get_stream_for_PID (GstMpegTSDemux * demux, guint16 PID);
-
 /*static guint gst_mpegts_demux_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
@@ -548,6 +545,76 @@ gst_mpegts_stream_is_video (GstMpegTSStream * stream)
   }
 
   return FALSE;
+}
+
+static gboolean
+gst_mpegts_demux_is_reserved_PID (GstMpegTSDemux * demux, guint16 PID)
+{
+  return (PID >= PID_RESERVED_FIRST) && (PID < PID_RESERVED_LAST);
+}
+
+/* This function assumes that provided PID never will be greater than
+ * MPEGTS_MAX_PID (13 bits), this is currently guaranteed as everywhere in
+ * the code recovered PID at maximum is 13 bits long. 
+ */
+static FORCE_INLINE GstMpegTSStream *
+gst_mpegts_demux_get_stream_for_PID (GstMpegTSDemux * demux, guint16 PID)
+{
+  GstMpegTSStream *stream = NULL;
+
+  stream = demux->streams[PID];
+
+  if (G_UNLIKELY (stream == NULL)) {
+    stream = g_new0 (GstMpegTSStream, 1);
+
+    stream->demux = demux;
+    stream->PID = PID;
+    stream->pad = NULL;
+    stream->base_PCR = -1;
+    stream->last_PCR = -1;
+    stream->last_PCR_difference = -1;
+    stream->PMT.version_number = -1;
+    stream->PAT.version_number = -1;
+    stream->PMT_pid = MPEGTS_MAX_PID + 1;
+    stream->flags |= MPEGTS_STREAM_FLAG_STREAM_TYPE_UNKNOWN;
+    stream->pes_buffer_in_sync = FALSE;
+    switch (PID) {
+        /* check for fixed mapping */
+      case PID_PROGRAM_ASSOCIATION_TABLE:
+        stream->PID_type = PID_TYPE_PROGRAM_ASSOCIATION;
+        /* initialise section filter */
+        gst_section_filter_init (&stream->section_filter);
+        break;
+      case PID_CONDITIONAL_ACCESS_TABLE:
+        stream->PID_type = PID_TYPE_CONDITIONAL_ACCESS;
+        /* initialise section filter */
+        gst_section_filter_init (&stream->section_filter);
+        break;
+      case PID_NULL_PACKET:
+        stream->PID_type = PID_TYPE_NULL_PACKET;
+        break;
+      default:
+        /* mark reserved PIDs */
+        if (gst_mpegts_demux_is_reserved_PID (demux, PID)) {
+          stream->PID_type = PID_TYPE_RESERVED;
+        } else {
+          /* check if PMT found in PAT */
+          if (gst_mpegts_demux_is_PMT (demux, PID)) {
+            stream->PID_type = PID_TYPE_PROGRAM_MAP;
+            /* initialise section filter */
+            gst_section_filter_init (&stream->section_filter);
+          } else
+            stream->PID_type = PID_TYPE_UNKNOWN;
+        }
+        break;
+    }
+    GST_DEBUG_OBJECT (demux, "creating stream %p for PID 0x%04x, PID_type %d",
+        stream, PID, stream->PID_type);
+
+    demux->streams[PID] = stream;
+  }
+
+  return stream;
 }
 
 static gboolean
@@ -1108,76 +1175,6 @@ static void
 gst_mpegts_demux_resync_cb (GstPESFilter * filter, GstMpegTSStream * stream)
 {
   /* does nothing for now */
-}
-
-static gboolean
-gst_mpegts_demux_is_reserved_PID (GstMpegTSDemux * demux, guint16 PID)
-{
-  return (PID >= PID_RESERVED_FIRST) && (PID < PID_RESERVED_LAST);
-}
-
-/* This function assumes that provided PID never will be greater than
- * MPEGTS_MAX_PID (13 bits), this is currently guaranteed as everywhere in
- * the code recovered PID at maximum is 13 bits long. 
- */
-static FORCE_INLINE GstMpegTSStream *
-gst_mpegts_demux_get_stream_for_PID (GstMpegTSDemux * demux, guint16 PID)
-{
-  GstMpegTSStream *stream = NULL;
-
-  stream = demux->streams[PID];
-
-  if (G_UNLIKELY (stream == NULL)) {
-    stream = g_new0 (GstMpegTSStream, 1);
-
-    stream->demux = demux;
-    stream->PID = PID;
-    stream->pad = NULL;
-    stream->base_PCR = -1;
-    stream->last_PCR = -1;
-    stream->last_PCR_difference = -1;
-    stream->PMT.version_number = -1;
-    stream->PAT.version_number = -1;
-    stream->PMT_pid = MPEGTS_MAX_PID + 1;
-    stream->flags |= MPEGTS_STREAM_FLAG_STREAM_TYPE_UNKNOWN;
-    stream->pes_buffer_in_sync = FALSE;
-    switch (PID) {
-        /* check for fixed mapping */
-      case PID_PROGRAM_ASSOCIATION_TABLE:
-        stream->PID_type = PID_TYPE_PROGRAM_ASSOCIATION;
-        /* initialise section filter */
-        gst_section_filter_init (&stream->section_filter);
-        break;
-      case PID_CONDITIONAL_ACCESS_TABLE:
-        stream->PID_type = PID_TYPE_CONDITIONAL_ACCESS;
-        /* initialise section filter */
-        gst_section_filter_init (&stream->section_filter);
-        break;
-      case PID_NULL_PACKET:
-        stream->PID_type = PID_TYPE_NULL_PACKET;
-        break;
-      default:
-        /* mark reserved PIDs */
-        if (gst_mpegts_demux_is_reserved_PID (demux, PID)) {
-          stream->PID_type = PID_TYPE_RESERVED;
-        } else {
-          /* check if PMT found in PAT */
-          if (gst_mpegts_demux_is_PMT (demux, PID)) {
-            stream->PID_type = PID_TYPE_PROGRAM_MAP;
-            /* initialise section filter */
-            gst_section_filter_init (&stream->section_filter);
-          } else
-            stream->PID_type = PID_TYPE_UNKNOWN;
-        }
-        break;
-    }
-    GST_DEBUG_OBJECT (demux, "creating stream %p for PID 0x%04x, PID_type %d",
-        stream, PID, stream->PID_type);
-
-    demux->streams[PID] = stream;
-  }
-
-  return stream;
 }
 
 /*
