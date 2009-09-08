@@ -64,6 +64,7 @@ G_BEGIN_DECLS
 typedef struct _GstVideoSink GstVideoSink;
 typedef struct _GstVideoSinkClass GstVideoSinkClass;
 typedef struct _GstVideoRectangle GstVideoRectangle;
+typedef struct _GstVideoSinkPrivate GstVideoSinkPrivate;
 
 /**
  * GstVideoRectangle:
@@ -96,14 +97,18 @@ struct _GstVideoSink {
   gint width, height;
   
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  GstVideoSinkPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 /**
  * GstVideoSinkClass:
  * @parent_class: the parent class structure
  * @show_frame: render a video frame. Maps to #GstBaseSink::render and
- *     #GstBaseSink::preroll vfuncs. Since: 0.10.25
+ *     #GstBaseSink::preroll vfuncs. Rendering during preroll will be
+ *     suppressed if the 'show-preroll-frame' property is set to #FALSE.
+ *     Since: 0.10.25
  *
  * The video sink class structure. Derived classes should override the
  * @show_frame virtual function.

@@ -40,10 +40,27 @@
 
 #include "gstvideosink.h"
 
+enum
+{
+  PROP_SHOW_PREROLL_FRAME = 1
+};
+
+#define DEFAULT_SHOW_PREROLL_FRAME TRUE
+
+struct _GstVideoSinkPrivate
+{
+  gboolean show_preroll_frame;  /* ATOMIC */
+};
+
 GST_DEBUG_CATEGORY_STATIC (video_sink_debug);
 #define GST_CAT_DEFAULT video_sink_debug
 
 static GstBaseSinkClass *parent_class = NULL;
+
+static void gst_video_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_video_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_video_sink_show_preroll_frame (GstBaseSink * bsink,
     GstBuffer * buf);
@@ -111,18 +128,41 @@ gst_video_sink_init (GstVideoSink * videosink)
   /* 20ms is more than enough, 80-130ms is noticable */
   gst_base_sink_set_max_lateness (GST_BASE_SINK (videosink), 20 * GST_MSECOND);
   gst_base_sink_set_qos_enabled (GST_BASE_SINK (videosink), TRUE);
+
+  videosink->priv = G_TYPE_INSTANCE_GET_PRIVATE (videosink,
+      GST_TYPE_VIDEO_SINK, GstVideoSinkPrivate);
 }
 
 static void
 gst_video_sink_class_init (GstVideoSinkClass * klass)
 {
   GstBaseSinkClass *basesink_class = (GstBaseSinkClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->set_property = gst_video_sink_set_property;
+  gobject_class->get_property = gst_video_sink_get_property;
+
+  /**
+   * GstVideoSink:show-preroll-frame
+   *
+   * Whether to show video frames during preroll. If set to #FALSE, video
+   * frames will only be rendered in PLAYING state.
+   *
+   * Since: 0.10.25
+   */
+  g_object_class_install_property (gobject_class, PROP_SHOW_PREROLL_FRAME,
+      g_param_spec_boolean ("show-preroll-frame", "Show preroll frame",
+          "Whether to render video frames during preroll",
+          DEFAULT_SHOW_PREROLL_FRAME,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_video_sink_show_frame);
   basesink_class->preroll =
       GST_DEBUG_FUNCPTR (gst_video_sink_show_preroll_frame);
+
+  g_type_class_add_private (klass, sizeof (GstVideoSinkPrivate));
 }
 
 static void
@@ -135,10 +175,21 @@ static GstFlowReturn
 gst_video_sink_show_preroll_frame (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstVideoSinkClass *klass;
+  GstVideoSink *vsink;
+  gboolean do_show;
 
-  klass = GST_VIDEO_SINK_GET_CLASS (bsink);
+  vsink = GST_VIDEO_SINK_CAST (bsink);
+  klass = GST_VIDEO_SINK_GET_CLASS (vsink);
 
-  if (klass->show_frame == NULL) {
+  do_show = g_atomic_int_get (&vsink->priv->show_preroll_frame);
+
+  if (G_UNLIKELY (!do_show)) {
+    GST_DEBUG_OBJECT (bsink, "not rendering frame with ts=%" GST_TIME_FORMAT
+        ", preroll rendering disabled",
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+  }
+
+  if (klass->show_frame == NULL || !do_show) {
     if (parent_class->preroll != NULL)
       return parent_class->preroll (bsink, buf);
     else
@@ -169,6 +220,44 @@ gst_video_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   return klass->show_frame (GST_VIDEO_SINK_CAST (bsink), buf);
+}
+
+static void
+gst_video_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVideoSink *vsink;
+
+  vsink = GST_VIDEO_SINK (object);
+
+  switch (prop_id) {
+    case PROP_SHOW_PREROLL_FRAME:
+      g_atomic_int_set (&vsink->priv->show_preroll_frame,
+          g_value_get_boolean (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_video_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVideoSink *vsink;
+
+  vsink = GST_VIDEO_SINK (object);
+
+  switch (prop_id) {
+    case PROP_SHOW_PREROLL_FRAME:
+      g_value_set_boolean (value,
+          g_atomic_int_get (&vsink->priv->show_preroll_frame));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 /* Public methods */
