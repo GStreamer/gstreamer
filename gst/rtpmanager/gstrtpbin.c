@@ -220,6 +220,7 @@ struct _GstRtpBinPrivate
 enum
 {
   SIGNAL_REQUEST_PT_MAP,
+  SIGNAL_PAYLOAD_TYPE_CHANGE,
   SIGNAL_CLEAR_PT_MAP,
   SIGNAL_RESET_SYNC,
   SIGNAL_GET_INTERNAL_SESSION,
@@ -259,6 +260,8 @@ static guint gst_rtp_bin_signals[LAST_SIGNAL] = { 0 };
 
 static GstCaps *pt_map_requested (GstElement * element, guint pt,
     GstRtpBinSession * session);
+static void payload_type_change (GstElement * element, guint pt,
+    GstRtpBinSession * session);
 static void free_client (GstRtpBinClient * client, GstRtpBin * bin);
 static void free_stream (GstRtpBinStream * stream);
 
@@ -291,7 +294,7 @@ struct _GstRtpBinStream
   gulong demux_newpad_sig;
   gulong demux_padremoved_sig;
   gulong demux_ptreq_sig;
-  gulong demux_pt_change_sig;
+  gulong demux_ptchange_sig;
 
   /* if we have calculated a valid unix_delta for this stream */
   gboolean have_sync;
@@ -1195,6 +1198,7 @@ free_stream (GstRtpBinStream * stream)
 
   g_signal_handler_disconnect (stream->demux, stream->demux_newpad_sig);
   g_signal_handler_disconnect (stream->demux, stream->demux_ptreq_sig);
+  g_signal_handler_disconnect (stream->demux, stream->demux_ptchange_sig);
   g_signal_handler_disconnect (stream->buffer, stream->buffer_handlesync_sig);
   g_signal_handler_disconnect (stream->buffer, stream->buffer_ptreq_sig);
   g_signal_handler_disconnect (stream->buffer, stream->buffer_ntpstop_sig);
@@ -1294,6 +1298,23 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, request_pt_map),
       NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 2,
       G_TYPE_UINT, G_TYPE_UINT);
+
+    /**
+   * GstRtpBin::payload-type-change:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @pt: the pt
+   *
+   * Signal that the current payload type changed to @pt in @session.
+   *
+   * Since: 0.10.17
+   */
+  gst_rtp_bin_signals[SIGNAL_PAYLOAD_TYPE_CHANGE] =
+      g_signal_new ("payload-type-change", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, payload_type_change),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+
   /**
    * GstRtpBin::clear-pt-map:
    * @rtpbin: the object which received the signal
@@ -1306,6 +1327,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
           clear_pt_map), NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE,
       0, G_TYPE_NONE);
+
   /**
    * GstRtpBin::reset-sync:
    * @rtpbin: the object which received the signal
@@ -1842,6 +1864,17 @@ no_caps:
   }
 }
 
+static void
+payload_type_change (GstElement * element, guint pt, GstRtpBinSession * session)
+{
+  GST_DEBUG_OBJECT (session->bin,
+      "emiting signal for pt type changed to %d in session %d", pt,
+      session->id);
+
+  g_signal_emit (session->bin, gst_rtp_bin_signals[SIGNAL_PAYLOAD_TYPE_CHANGE],
+      0, session->id, pt);
+}
+
 /* emited when caps changed for the session */
 static void
 caps_changed (GstPad * pad, GParamSpec * pspec, GstRtpBinSession * session)
@@ -1932,6 +1965,9 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
    * depayloaders. */
   stream->demux_ptreq_sig = g_signal_connect (stream->demux,
       "request-pt-map", (GCallback) pt_map_requested, session);
+  /* connect to the  signal so it can be forwarded. */
+  stream->demux_ptchange_sig = g_signal_connect (stream->demux,
+      "payload-type-change", (GCallback) payload_type_change, session);
 
   GST_RTP_SESSION_UNLOCK (session);
   GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
