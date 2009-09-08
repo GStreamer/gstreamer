@@ -73,5 +73,12 @@ main (int argc, gchar ** argv)
   ges_timeline_layer_add_object (layer, (GESTimelineObject *) src2);
   ges_timeline_layer_add_object (layer, (GESTimelineObject *) src3);
 
+  if (!ges_timeline_pipeline_add_timeline (pipeline, timeline))
+    return -1;
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+
+  g_usleep (10 * G_USEC_PER_SEC);
+
   return 0;
 }
