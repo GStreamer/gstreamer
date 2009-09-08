@@ -606,7 +606,7 @@ AG_GST_CHECK_FEATURE(THEORA, [Xiph Theora video codec], theora, [
 
   AG_GST_PKG_CHECK_MODULES(THEORA, theoradec theoraenc)
   if test x$HAVE_THEORA = xno; then
-    AG_GST_PKG_CHECK_MODULES(THEORA, theora >= 1.0alpha5)
+    AG_GST_PKG_CHECK_MODULES(THEORA, theora >= 1.0beta1)
   fi
 ])
 

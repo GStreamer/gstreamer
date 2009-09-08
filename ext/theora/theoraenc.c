@@ -65,15 +65,6 @@
 #define GST_CAT_DEFAULT theoraenc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-/* With libtheora-1.0beta1 the granulepos scheme was changed:
- * where earlier the granulepos refered to the index/beginning
- * of a frame, it now refers to the end, which matches the use
- * in vorbis/speex. There don't seem to be defines for the
- * theora version we're compiling against, so we'll just use
- * a run-time check for now. See theora_enc_get_ogg_packet_end_time().
- */
-static gboolean use_old_granulepos;
-
 #define GST_TYPE_BORDER_MODE (gst_border_mode_get_type())
 static GType
 gst_border_mode_get_type (void)
@@ -289,8 +280,6 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
 
   gstelement_class->change_state = theora_enc_change_state;
   GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");
-
-  use_old_granulepos = (theora_version_number () <= 0x00030200);
 }
 
 static void
@@ -662,25 +651,6 @@ theora_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   return caps;
 }
 
-static GstClockTime
-theora_enc_get_ogg_packet_end_time (GstTheoraEnc * enc, ogg_packet * op)
-{
-  ogg_int64_t end_granule;
-
-  /* FIXME: remove this hack once we depend on libtheora >= 1.0beta1 */
-  if (G_UNLIKELY (use_old_granulepos)) {
-    /* This is where we hack around theora's broken idea of what granulepos
-     * is -- normally we wouldn't need to add the 1, because granulepos
-     * should be the presentation time of the last sample in the packet, but
-     * theora starts with 0 instead of 1... (update: this only applies to old
-     * bitstream/theora versions, this is fixed with bitstream version 3.2.1) */
-    end_granule = granulepos_add (op->granulepos, 1, enc->granule_shift);
-  } else {
-    end_granule = op->granulepos;
-  }
-  return theora_granule_time (&enc->state, end_granule) * GST_SECOND;
-}
-
 static void
 theora_enc_force_keyframe (GstTheoraEnc * enc)
 {
@@ -727,7 +697,7 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
         /* push last packet with eos flag, should not be called */
         while (theora_encode_packetout (&enc->state, 1, &op)) {
           GstClockTime next_time =
-              theora_enc_get_ogg_packet_end_time (enc, &op);
+              theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
 
           theora_push_packet (enc, &op, GST_CLOCK_TIME_NONE, enc->next_ts,
               next_time - enc->next_ts);
@@ -1120,7 +1090,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     while (theora_encode_packetout (&enc->state, 0, &op)) {
       GstClockTime next_time;
 
-      next_time = theora_enc_get_ogg_packet_end_time (enc, &op);
+      next_time = theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
 
       ret =
           theora_push_packet (enc, &op, timestamp, enc->next_ts,
