@@ -818,7 +818,7 @@ try_element (GstPlaySink * playsink, GstElement * element, gboolean unref)
 }
 
 /* make the element (bin) that contains the elements needed to perform
- * video display. 
+ * video display.
  *
  *  +------------------------------------------------------------+
  *  | vbin                                                       |
@@ -828,7 +828,7 @@ try_element (GstPlaySink * playsink, GstElement * element, gboolean unref)
  *  |   |  +-------+   +----------+   +----------+   +---------+ |
  * sink-+                                                        |
  *  +------------------------------------------------------------+
- *           
+ *
  */
 static GstPlayVideoChain *
 gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
@@ -1035,7 +1035,7 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
  *  |          +-----+      | textoverlay |        |
  *  |          | csp | +--video_sink      |        |
  * sink-------sink  src+ +-text_sink     src--+    |
- *  |          +-----+   |  +-------------+   +-- src   
+ *  |          +-----+   |  +-------------+   +-- src
  * text_sink-------------+                         |
  *  +----------------------------------------------+
  */
@@ -1194,7 +1194,7 @@ gen_text_chain (GstPlaySink * playsink)
  *  |       +-------+    +-----+      |   dvdspu    |        |
  *  |       | queue |    | csp | +---video          |        |
  * sink----sink    src--sink  src+ +-subpicture    src--+    |
- *  |       +-------+    +-----+   |  +-------------+   +-- src   
+ *  |       +-------+    +-----+   |  +-------------+   +-- src
  * subpicture----------------------+                         |
  *  +--------------------------------------------------------+
  */
@@ -1317,7 +1317,7 @@ gen_subp_chain (GstPlaySink * playsink)
 }
 
 /* make the chain that contains the elements needed to perform
- * audio playback. 
+ * audio playback.
  *
  * We add a tee as the first element so that we can link the visualisation chain
  * to it when requested.
@@ -1623,7 +1623,7 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
  *  |   |  +----------+   +------------+   +----------+   +-------+  |  |
  * sink-+                                                            +-src
  *  +-------------------------------------------------------------------+
- *           
+ *
  */
 static GstPlayVisChain *
 gen_vis_chain (GstPlaySink * playsink)
@@ -1839,7 +1839,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
         GST_DEBUG_OBJECT (playsink, "unlinking vis chain");
 
-        /* also had visualisation, release the tee srcpad before we then 
+        /* also had visualisation, release the tee srcpad before we then
          * unlink the video from it */
         if (playsink->audio_tee_vissrc) {
           gst_element_release_request_pad (playsink->audio_tee,

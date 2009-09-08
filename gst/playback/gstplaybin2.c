@@ -80,7 +80,7 @@
  * When playback has finished (an EOS message has been received on the bus)
  * or an error has occured (an ERROR message has been received on the bus) or
  * the user wants to play a different track, playbin should be set back to
- * READY or NULL state, then the #GstPlayBin2:uri property should be set to the 
+ * READY or NULL state, then the #GstPlayBin2:uri property should be set to the
  * new location and then playbin be set to PLAYING state again.
  *
  * Seeking can be done using gst_element_seek_simple() or gst_element_seek()
@@ -421,7 +421,7 @@ struct _GstPlayBinClass
 #define DEFAULT_SUBURI            NULL
 #define DEFAULT_SOURCE            NULL
 #define DEFAULT_FLAGS             GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_TEXT | \
-	                          GST_PLAY_FLAG_SOFT_VOLUME
+                                  GST_PLAY_FLAG_SOFT_VOLUME
 #define DEFAULT_N_VIDEO           0
 #define DEFAULT_CURRENT_VIDEO     -1
 #define DEFAULT_N_AUDIO           0
@@ -644,7 +644,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   /**
    * GstPlayBin2:n-video
    *
-   * Get the total number of available video streams. 
+   * Get the total number of available video streams.
    */
   g_object_class_install_property (gobject_klass, PROP_N_VIDEO,
       g_param_spec_int ("n-video", "Number Video",
@@ -663,7 +663,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   /**
    * GstPlayBin2:n-audio
    *
-   * Get the total number of available audio streams. 
+   * Get the total number of available audio streams.
    */
   g_object_class_install_property (gobject_klass, PROP_N_AUDIO,
       g_param_spec_int ("n-audio", "Number Audio",
@@ -682,7 +682,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   /**
    * GstPlayBin2:n-text
    *
-   * Get the total number of available subtitle streams. 
+   * Get the total number of available subtitle streams.
    */
   g_object_class_install_property (gobject_klass, PROP_N_TEXT,
       g_param_spec_int ("n-text", "Number Text",
@@ -931,7 +931,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * If @caps is %NULL, no conversion will be performed and this function is
    * equivalent to the #GstPlayBin::frame property.
    *
-   * Returns: a #GstBuffer of the current video frame converted to #caps. 
+   * Returns: a #GstBuffer of the current video frame converted to #caps.
    * The caps on the buffer will describe the final layout of the buffer data.
    * %NULL is returned when no current buffer can be retrieved or when the
    * conversion failed.
@@ -947,7 +947,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * @playbin: a #GstPlayBin2
    * @stream: a video stream number
    *
-   * Action signal to retrieve the stream-selector sinkpad for a specific 
+   * Action signal to retrieve the stream-selector sinkpad for a specific
    * video stream.
    * This pad can be used for notifications of caps changes, stream-specific
    * queries, etc.
@@ -964,7 +964,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * @playbin: a #GstPlayBin2
    * @stream: an audio stream number
    *
-   * Action signal to retrieve the stream-selector sinkpad for a specific 
+   * Action signal to retrieve the stream-selector sinkpad for a specific
    * audio stream.
    * This pad can be used for notifications of caps changes, stream-specific
    * queries, etc.
@@ -981,7 +981,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * @playbin: a #GstPlayBin2
    * @stream: a text stream number
    *
-   * Action signal to retrieve the stream-selector sinkpad for a specific 
+   * Action signal to retrieve the stream-selector sinkpad for a specific
    * text stream.
    * This pad can be used for notifications of caps changes, stream-specific
    * queries, etc.
