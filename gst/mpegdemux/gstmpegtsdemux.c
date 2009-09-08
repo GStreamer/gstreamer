@@ -2543,6 +2543,7 @@ gst_mpegts_demux_src_event (GstPad * pad, GstEvent * event)
 static void
 gst_mpegts_demux_flush (GstMpegTSDemux * demux, gboolean discard)
 {
+  gint i;
   GstMpegTSStream *PCR_stream;
   GstMpegTSStream *PMT_stream;
 
@@ -2567,6 +2568,15 @@ gst_mpegts_demux_flush (GstMpegTSDemux * demux, gboolean discard)
     goto beach;
 
   PCR_stream->last_PCR = -1;
+
+  /* Reset last time of all streams */
+  for (i = 0; i < MPEGTS_MAX_PID + 1; i++) {
+    GstMpegTSStream *stream = demux->streams[i];
+
+    if (stream)
+      stream->last_time = 0;
+  }
+
 
 beach:
   return;
