@@ -1268,7 +1268,7 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
 
   demux = stream->demux;
 
-  if (*data++ != 0x02)
+  if (G_UNLIKELY (*data++ != 0x02))
     goto wrong_id;
   if ((data[0] & 0xc0) != 0x80)
     goto wrong_sync;
@@ -1278,7 +1278,7 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
   data += 2;
 
   if (demux->check_crc)
-    if (gst_mpegts_demux_calc_crc32 (data - 3, datalen) != 0)
+    if (G_UNLIKELY (gst_mpegts_demux_calc_crc32 (data - 3, datalen) != 0))
       goto wrong_crc;
 
   GST_LOG_OBJECT (demux, "PMT section_length: %d", datalen - 3);
@@ -1786,7 +1786,8 @@ gst_mpegts_demux_parse_adaptation_field (GstMpegTSStream * stream,
             demux->pcr[0] = pcr;
             demux->num_packets = 0;
           } /* Considering a difference of 1 sec ie 90000 ticks */
-          else if (demux->pcr[1] == -1 && ((pcr - demux->pcr[0]) >= 90000)) {
+          else if (G_UNLIKELY (demux->pcr[1] == -1
+                  && ((pcr - demux->pcr[0]) >= 90000))) {
             GST_DEBUG ("RECORDING pcr[1]:%" G_GUINT64_FORMAT, pcr);
             demux->pcr[1] = pcr;
           }
@@ -1923,7 +1924,7 @@ gst_mpegts_stream_parse_pat (GstMpegTSStream * stream,
     goto wrong_id;
   if ((data[0] & 0xc0) != 0x80)
     goto wrong_sync;
-  if ((data[0] & 0x0c) != 0x00)
+  if (G_UNLIKELY ((data[0] & 0x0c) != 0x00))
     goto wrong_seclen;
 
   data += 2;
@@ -1937,7 +1938,7 @@ gst_mpegts_stream_parse_pat (GstMpegTSStream * stream,
 
   version_number = (data[2] & 0x3e) >> 1;
   GST_DEBUG_OBJECT (demux, "PAT version_number: %d", version_number);
-  if (version_number == PAT->version_number)
+  if (G_UNLIKELY (version_number == PAT->version_number))
     goto same_version;
 
   current_next_indicator = (data[2] & 0x01);
@@ -2232,7 +2233,7 @@ gst_mpegts_demux_parse_stream (GstMpegTSDemux * demux, GstMpegTSStream * stream,
     /* For unknown streams, check if the PID is in the partial PIDs
      * list as an elementary stream and override the type if so 
      */
-    if (stream->PID_type == PID_TYPE_UNKNOWN) {
+    if (G_UNLIKELY (stream->PID_type == PID_TYPE_UNKNOWN)) {
       if (mpegts_is_elem_pid (demux, PID)) {
         GST_DEBUG_OBJECT (demux,
             "PID 0x%04x is an elementary stream in the PID list", PID);
