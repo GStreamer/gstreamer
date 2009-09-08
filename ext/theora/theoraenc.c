@@ -106,7 +106,6 @@ _ilog (unsigned int v)
   return (ret);
 }
 
-#define THEORA_DEF_BORDER               BORDER_BLACK
 #define THEORA_DEF_BITRATE              0
 #define THEORA_DEF_QUALITY              48
 #define THEORA_DEF_QUICK                TRUE
@@ -236,8 +235,8 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_BORDER,
       g_param_spec_enum ("border", "Border",
-          "Border color to add when sizes not multiple of 16",
-          GST_TYPE_BORDER_MODE, THEORA_DEF_BORDER,
+          "ignored and kept for API compat only",
+          GST_TYPE_BORDER_MODE, BORDER_BLACK,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* general encoding stream options */
   g_object_class_install_property (gobject_class, ARG_BITRATE,
@@ -311,8 +310,6 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
 
   gst_segment_init (&enc->segment, GST_FORMAT_UNDEFINED);
-
-  enc->border = THEORA_DEF_BORDER;
 
   enc->video_bitrate = THEORA_DEF_BITRATE;
   enc->video_quality = THEORA_DEF_QUALITY;
@@ -866,7 +863,7 @@ theora_enc_init_yuv_buffer (yuv_buffer * yuv, theora_pixelformat format,
 static void
 copy_plane (guint8 * dest, int dest_width, int dest_height, int dest_stride,
     const guint8 * src, int src_width, int src_height, int src_stride,
-    GstTheoraEncBorderMode border, int black)
+    int black)
 {
   int right_border, i;
 
@@ -875,18 +872,14 @@ copy_plane (guint8 * dest, int dest_width, int dest_height, int dest_stride,
   /* copy source */
   for (i = 0; i < src_height; i++) {
     memcpy (dest, src, src_width);
-    if (border != BORDER_NONE) {
-      memset (dest + src_width, black, right_border);
-    }
+    memset (dest + src_width, black, right_border);
 
     dest += dest_stride;
     src += src_stride;
   }
 
   /* fill bottom border */
-  if (border != BORDER_NONE) {
-    memset (dest, black, dest_stride * (dest_height - src_height));
-  }
+  memset (dest, black, dest_stride * (dest_height - src_height));
 }
 
 static guint
@@ -933,12 +926,12 @@ theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
       GST_BUFFER_DATA (newbuf), enc->info_width, enc->info_height);
 
   copy_plane (dest.y, dest.y_width, dest.y_height, dest.y_stride,
-      src.y, src.y_width, src.y_height, src.y_stride, enc->border, 0);
+      src.y, src.y_width, src.y_height, src.y_stride, 0);
 
   copy_plane (dest.u, dest.uv_width, dest.uv_height, dest.uv_stride,
-      src.u, src.uv_width, src.uv_height, src.uv_stride, enc->border, 128);
+      src.u, src.uv_width, src.uv_height, src.uv_stride, 128);
   copy_plane (dest.v, dest.uv_width, dest.uv_height, dest.uv_stride,
-      src.v, src.uv_width, src.uv_height, src.uv_stride, enc->border, 128);
+      src.v, src.uv_width, src.uv_height, src.uv_stride, 128);
 
   gst_buffer_unref (buffer);
   return newbuf;
@@ -1222,10 +1215,8 @@ theora_enc_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_CENTER:
-      /* kept for API compat, but ignored */
-      break;
     case ARG_BORDER:
-      enc->border = g_value_get_enum (value);
+      /* kept for API compat, but ignored */
       break;
     case ARG_BITRATE:
       enc->video_bitrate = g_value_get_int (value) * 1000;
@@ -1281,7 +1272,7 @@ theora_enc_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, TRUE);
       break;
     case ARG_BORDER:
-      g_value_set_enum (value, enc->border);
+      g_value_set_enum (value, BORDER_BLACK);
       break;
     case ARG_BITRATE:
       g_value_set_int (value, enc->video_bitrate / 1000);

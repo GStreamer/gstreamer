@@ -76,8 +76,6 @@ struct _GstTheoraEnc
   theora_comment comment;
   gboolean initialised;
 
-  GstTheoraEncBorderMode border;
-
   gint video_bitrate;           /* bitrate target for Theora video */
   gint video_quality;           /* Theora quality selector 0 = low, 63 = high */
   gboolean quick;
