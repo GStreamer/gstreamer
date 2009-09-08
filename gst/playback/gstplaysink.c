@@ -171,6 +171,37 @@ struct _GstPlaySinkClass
   GstBinClass parent_class;
 };
 
+static GstStaticPadTemplate audiorawtemplate =
+GST_STATIC_PAD_TEMPLATE ("audio_raw_sink",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
+static GstStaticPadTemplate audiotemplate =
+GST_STATIC_PAD_TEMPLATE ("audio_sink",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
+static GstStaticPadTemplate videorawtemplate =
+GST_STATIC_PAD_TEMPLATE ("video_raw_sink",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
+static GstStaticPadTemplate videotemplate =
+GST_STATIC_PAD_TEMPLATE ("video_sink",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
+static GstStaticPadTemplate texttemplate = GST_STATIC_PAD_TEMPLATE ("text_sink",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
+static GstStaticPadTemplate subpictemplate =
+GST_STATIC_PAD_TEMPLATE ("subpic_sink",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
+
+
 
 /* props */
 enum
@@ -190,6 +221,10 @@ static void gst_play_sink_init (GstPlaySink * playsink);
 static void gst_play_sink_dispose (GObject * object);
 static void gst_play_sink_finalize (GObject * object);
 
+static GstPad *gst_play_sink_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * name);
+static void gst_play_sink_release_request_pad (GstElement * element,
+    GstPad * pad);
 static gboolean gst_play_sink_send_event (GstElement * element,
     GstEvent * event);
 static GstStateChangeReturn gst_play_sink_change_state (GstElement * element,
@@ -201,8 +236,8 @@ static void gst_play_sink_handle_message (GstBin * bin, GstMessage * message);
 
 static const GstElementDetails gst_play_sink_details =
 GST_ELEMENT_DETAILS ("Player Sink",
-    "Generic/Bin/Player",
-    "Autoplug and play media from an uri",
+    "Generic/Bin/Sink",
+    "Convenience sink for multiple streams",
     "Wim Taymans <wim.taymans@gmail.com>");
 
 G_DEFINE_TYPE (GstPlaySink, gst_play_sink, GST_TYPE_BIN);
@@ -221,16 +256,30 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_sink_dispose);
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_sink_finalize);
 
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&audiorawtemplate));
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&audiotemplate));
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&videorawtemplate));
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&videotemplate));
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&texttemplate));
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&subpictemplate));
   gst_element_class_set_details (gstelement_klass, &gst_play_sink_details);
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_sink_change_state);
   gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_play_sink_send_event);
+  gstelement_klass->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_play_sink_request_new_pad);
+  gstelement_klass->release_pad =
+      GST_DEBUG_FUNCPTR (gst_play_sink_release_request_pad);
 
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_play_sink_handle_message);
-
-  GST_DEBUG_CATEGORY_INIT (gst_play_sink_debug, "playsink", 0, "play bin");
 }
 
 static void
@@ -2207,14 +2256,18 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
   gboolean created = FALSE;
   gboolean raw = FALSE;
   gboolean activate = TRUE;
+  const gchar *pad_name = NULL;
 
   GST_DEBUG_OBJECT (playsink, "request pad type %d", type);
 
   GST_PLAY_SINK_LOCK (playsink);
   switch (type) {
     case GST_PLAY_SINK_TYPE_AUDIO_RAW:
+      pad_name = "audio_raw_sink";
       raw = TRUE;
     case GST_PLAY_SINK_TYPE_AUDIO:
+      if (pad_name == NULL)
+        pad_name = "audio_sink";
       if (!playsink->audio_tee) {
         GST_LOG_OBJECT (playsink, "creating tee");
         /* create tee when needed. This element will feed the audio sink chain
@@ -2230,19 +2283,22 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       if (!playsink->audio_pad) {
         GST_LOG_OBJECT (playsink, "ghosting tee sinkpad");
         playsink->audio_pad =
-            gst_ghost_pad_new ("audio_sink", playsink->audio_tee_sink);
+            gst_ghost_pad_new (pad_name, playsink->audio_tee_sink);
         created = TRUE;
       }
       playsink->audio_pad_raw = raw;
       res = playsink->audio_pad;
       break;
     case GST_PLAY_SINK_TYPE_VIDEO_RAW:
+      pad_name = "video_raw_sink";
       raw = TRUE;
     case GST_PLAY_SINK_TYPE_VIDEO:
+      if (pad_name == NULL)
+        pad_name = "video_sink";
       if (!playsink->video_pad) {
         GST_LOG_OBJECT (playsink, "ghosting videosink");
         playsink->video_pad =
-            gst_ghost_pad_new_no_target ("video_sink", GST_PAD_SINK);
+            gst_ghost_pad_new_no_target (pad_name, GST_PAD_SINK);
         created = TRUE;
       }
       playsink->video_pad_raw = raw;
@@ -2297,6 +2353,48 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
   return res;
 }
 
+static GstPad *
+gst_play_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * name)
+{
+  GstPlaySink *psink;
+  GstPad *pad;
+  GstElementClass *klass;
+  GstPlaySinkType type;
+  const gchar *tplname;
+
+  g_return_val_if_fail (templ != NULL, NULL);
+
+  GST_DEBUG_OBJECT (element, "name:%s", name);
+
+  psink = GST_PLAY_SINK (element);
+  klass = GST_ELEMENT_GET_CLASS (element);
+  tplname = GST_PAD_TEMPLATE_NAME_TEMPLATE (templ);
+
+  /* Figure out the GstPlaySinkType based on the template */
+  if (!strcmp (tplname, "audio_sink"))
+    type = GST_PLAY_SINK_TYPE_AUDIO;
+  else if (!strcmp (tplname, "aduio_raw_sink"))
+    type = GST_PLAY_SINK_TYPE_AUDIO_RAW;
+  else if (!strcmp (tplname, "video_sink"))
+    type = GST_PLAY_SINK_TYPE_VIDEO;
+  else if (!strcmp (tplname, "video_raw_sink"))
+    type = GST_PLAY_SINK_TYPE_VIDEO_RAW;
+  else if (!strcmp (tplname, "text_sink"))
+    type = GST_PLAY_SINK_TYPE_TEXT;
+  else if (!strcmp (tplname, "subpicsink"))
+    type = GST_PLAY_SINK_TYPE_SUBPIC;
+  else
+    goto unknown_template;
+
+  pad = gst_play_sink_request_pad (psink, type);
+  return pad;
+
+unknown_template:
+  GST_WARNING_OBJECT (element, "Unknown pad template");
+  return NULL;
+}
+
 void
 gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
 {
@@ -2332,6 +2430,13 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
     gst_element_remove_pad (GST_ELEMENT_CAST (playsink), *res);
     *res = NULL;
   }
+}
+static void
+gst_play_sink_release_request_pad (GstElement * element, GstPad * pad)
+{
+  GstPlaySink *psink = GST_PLAY_SINK (element);
+
+  gst_play_sink_release_pad (psink, pad);
 }
 
 static void
@@ -2576,4 +2681,13 @@ activate_failed:
         "element failed to change states -- activation problem?");
     return GST_STATE_CHANGE_FAILURE;
   }
+}
+
+gboolean
+gst_play_sink_plugin_init (GstPlugin * plugin)
+{
+  GST_DEBUG_CATEGORY_INIT (gst_play_sink_debug, "playsink", 0, "play bin");
+
+  return gst_element_register (plugin, "playsink", GST_RANK_NONE,
+      GST_TYPE_PLAY_SINK);
 }

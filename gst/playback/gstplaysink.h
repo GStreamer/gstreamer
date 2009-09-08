@@ -95,6 +95,8 @@ GstBuffer *      gst_play_sink_get_last_frame (GstPlaySink * playsink);
 
 gboolean         gst_play_sink_reconfigure    (GstPlaySink * playsink);
 
+gboolean         gst_play_sink_plugin_init    (GstPlugin * plugin);
+
 G_END_DECLS
 
 #endif /* __GST_PLAY_SINK_H__ */

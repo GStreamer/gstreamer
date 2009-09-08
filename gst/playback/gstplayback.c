@@ -29,6 +29,7 @@
 
 #include "gststreamselector.h"
 #include "gststreaminfo.h"
+#include "gstplaysink.h"
 
 gboolean gst_play_bin_plugin_init (GstPlugin * plugin);
 gboolean gst_play_bin2_plugin_init (GstPlugin * plugin);
@@ -54,6 +55,7 @@ plugin_init (GstPlugin * plugin)
 
   res = gst_play_bin_plugin_init (plugin);
   res &= gst_play_bin2_plugin_init (plugin);
+  res &= gst_play_sink_plugin_init (plugin);
 
   return res;
 }
