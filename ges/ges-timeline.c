@@ -36,6 +36,15 @@
 
 G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN);
 
+/* private structure to contain our track-related information */
+
+typedef struct
+{
+  GESTimeline *timeline;
+  GESTrack *track;
+  GstPad *pad;                  /* Pad from the track */
+  GstPad *ghostpad;
+} TrackPrivate;
 
 enum
 {
@@ -48,6 +57,7 @@ enum
 
 static guint ges_timeline_signals[LAST_SIGNAL] = { 0 };
 
+gint custom_find_track (TrackPrivate * priv, GESTrack * track);
 static void
 ges_timeline_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -155,7 +165,8 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   GST_DEBUG ("New TimelineObject %p added to layer %p", object, layer);
 
   for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
-    GESTrack *track = (GESTrack *) tmp->data;
+    TrackPrivate *priv = (TrackPrivate *) tmp->data;
+    GESTrack *track = priv->track;
     GESTrackObject *trobj;
 
     GST_LOG ("Trying with track %p", track);
@@ -189,8 +200,9 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GESTrackObject *trobj = (GESTrackObject *) tmp->data;
 
     GST_DEBUG ("Trying to remove TrackObject %p", trobj);
-
-    if (G_LIKELY (g_list_find (timeline->tracks, trobj->track))) {
+    if (G_LIKELY (g_list_find_custom (timeline->tracks,
+                (gconstpointer) trobj->track,
+                (GCompareFunc) custom_find_track))) {
       GST_DEBUG ("Belongs to one of the tracks we control");
       ges_track_remove_object (trobj->track, trobj);
 
@@ -267,13 +279,69 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   return TRUE;
 }
 
+static void
+pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * priv)
+{
+  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
+
+  if (G_UNLIKELY (priv->pad)) {
+    GST_WARNING ("We are already controlling a pad for this track");
+    return;
+  }
+
+  /* Remember the pad */
+  priv->pad = pad;
+
+  /* ghost it ! */
+  GST_DEBUG ("Ghosting pad and adding it to ourself");
+  priv->ghostpad = gst_ghost_pad_new (GST_PAD_NAME (pad), pad);
+  gst_pad_set_active (priv->ghostpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT (priv->timeline), priv->ghostpad);
+}
+
+static void
+pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * priv)
+{
+  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
+
+  if (G_UNLIKELY (priv->pad != pad)) {
+    GST_WARNING ("Not the pad we're controlling");
+    return;
+  }
+
+  if (G_UNLIKELY (priv->ghostpad == NULL)) {
+    GST_WARNING ("We don't have a ghostpad for this pad !");
+    return;
+  }
+
+  GST_DEBUG ("Removing ghostpad");
+  gst_pad_set_active (priv->ghostpad, FALSE);
+  gst_element_remove_pad (GST_ELEMENT (priv->timeline), priv->ghostpad);
+  gst_object_unref (priv->ghostpad);
+  priv->ghostpad = NULL;
+  priv->pad = NULL;
+}
+
+gint
+custom_find_track (TrackPrivate * priv, GESTrack * track)
+{
+  if (priv->track == track)
+    return 0;
+  return -1;
+}
+
 gboolean
 ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
+  GList *tmp;
+  TrackPrivate *priv;
+
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
   /* make sure we don't already control it */
-  if (G_UNLIKELY (g_list_find (timeline->tracks, (gconstpointer) track))) {
+  if (G_UNLIKELY ((tmp =
+              g_list_find_custom (timeline->tracks, (gconstpointer) track,
+                  (GCompareFunc) custom_find_track)))) {
     GST_WARNING ("Track is already controlled by this timeline");
     return FALSE;
   }
@@ -285,8 +353,16 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     return FALSE;
   }
 
+  priv = g_new0 (TrackPrivate, 1);
+  priv->timeline = timeline;
+  priv->track = track;
+
   /* Add the track to the list of tracks we track */
-  timeline->tracks = g_list_append (timeline->tracks, track);
+  timeline->tracks = g_list_append (timeline->tracks, priv);
+
+  /* Listen to pad-added/-removed */
+  g_signal_connect (track, "pad-added", (GCallback) pad_added_cb, priv);
+  g_signal_connect (track, "pad-removed", (GCallback) pad_removed_cb, priv);
 
   /* Inform the track that it's currently being used by ourself */
   ges_track_set_timeline (track, timeline);
@@ -302,16 +378,37 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 gboolean
 ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 {
+  GList *tmp;
+  TrackPrivate *priv;
+
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
-  if (G_UNLIKELY (!g_list_find (timeline->tracks, track))) {
+  if (G_UNLIKELY (!(tmp =
+              g_list_find_custom (timeline->tracks, (gconstpointer) track,
+                  (GCompareFunc) custom_find_track)))) {
     GST_WARNING ("Track doesn't belong to this timeline");
     return FALSE;
   }
 
-  timeline->tracks = g_list_remove (timeline->tracks, track);
+  priv = tmp->data;
+  timeline->tracks = g_list_remove (timeline->tracks, priv);
 
   ges_track_set_timeline (track, NULL);
+
+  /* Remove ghost pad */
+  if (priv->ghostpad) {
+    GST_DEBUG ("Removing ghostpad");
+    gst_pad_set_active (priv->ghostpad, FALSE);
+    gst_ghost_pad_set_target ((GstGhostPad *) priv->ghostpad, NULL);
+    gst_element_remove_pad (GST_ELEMENT (timeline), priv->ghostpad);
+  }
+
+  /* Remove pad-added/-removed handlers */
+  g_signal_handlers_disconnect_by_func (track, pad_added_cb, priv);
+  g_signal_handlers_disconnect_by_func (track, pad_removed_cb, priv);
+
+  /* Signal track removal to all layers/objects */
+  g_signal_emit (timeline, ges_timeline_signals[TRACK_REMOVED], 0, track);
 
   /* remove track from our bin */
   if (G_UNLIKELY (!gst_bin_remove (GST_BIN (timeline), GST_ELEMENT (track)))) {
@@ -319,8 +416,32 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
     return FALSE;
   }
 
-  /* Signal track removal to all layers/objects */
-  g_signal_emit (timeline, ges_timeline_signals[TRACK_REMOVED], 0, track);
+  g_free (priv);
 
   return TRUE;
+}
+
+/**
+ * ges_timeline_get_track_for_pad:
+ * @timeline: The #GESTimeline
+ * @pad: The #GstPad
+ *
+ * Search the #GESTrack corresponding to the given @timeline's @pad.
+ *
+ * Returns: The corresponding #GESTrack if it is found, or #NULL if there is
+ * an error.
+ */
+
+GESTrack *
+ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
+{
+  GList *tmp;
+
+  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *priv = (TrackPrivate *) tmp->data;
+    if (pad == priv->ghostpad)
+      return priv->track;
+  }
+
+  return NULL;
 }

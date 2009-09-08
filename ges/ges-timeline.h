@@ -74,6 +74,8 @@ gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESTimelineLayer *lay
 gboolean ges_timeline_add_track (GESTimeline *timeline, GESTrack *track);
 gboolean ges_timeline_remove_track (GESTimeline *timeline, GESTrack *track);
 
+GESTrack * ges_timeline_get_track_for_pad (GESTimeline *timeline, GstPad *pad);
+
 G_END_DECLS
 
 #endif /* _GES_TIMELINE */
