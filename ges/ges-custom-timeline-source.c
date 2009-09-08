@@ -85,7 +85,7 @@ ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
 {
   gboolean res;
 
-  GST_DEBUG ("Calling callback (timelineobj:%p, trackobj:%, gnlobj:%p)",
+  GST_DEBUG ("Calling callback (timelineobj:%p, trackobj:%p, gnlobj:%p)",
       object, trobject, gnlobj);
 
   res =
