@@ -530,6 +530,7 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   GST_BUFFER_OFFSET (databuf) = mux->offset;
   mux->offset += GST_BUFFER_SIZE (databuf);
   GST_BUFFER_OFFSET_END (databuf) = mux->offset;
+  GST_BUFFER_FLAG_SET (databuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   GST_DEBUG_OBJECT (mux, "pushing %u bytes data buffer",
       GST_BUFFER_SIZE (databuf));
