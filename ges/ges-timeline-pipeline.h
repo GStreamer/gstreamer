@@ -44,6 +44,12 @@ G_BEGIN_DECLS
 
 struct _GESTimelinePipeline {
   GstPipeline parent;
+
+  /* <private> */
+  GESTimeline * timeline;
+  GstElement * sink;
+
+  GList *chains;
 };
 
 struct _GESTimelinePipelineClass {
@@ -53,6 +59,9 @@ struct _GESTimelinePipelineClass {
 GType ges_timeline_pipeline_get_type (void);
 
 GESTimelinePipeline* ges_timeline_pipeline_new (void);
+
+gboolean ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
+					     GESTimeline * timeline);
 
 G_END_DECLS
 
