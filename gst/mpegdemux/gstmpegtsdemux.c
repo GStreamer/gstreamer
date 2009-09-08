@@ -868,7 +868,7 @@ gst_mpegts_demux_send_new_segment (GstMpegTSDemux * demux,
   demux->base_pts = time = MPEGTIME_TO_GSTTIME (base_PCR);
 
   GST_DEBUG_OBJECT (demux, "segment PTS to (%" G_GUINT64_FORMAT ") time: %"
-      G_GUINT64_FORMAT, base_PCR, time);
+      GST_TIME_FORMAT, base_PCR, GST_TIME_ARGS (time));
 
   if (demux->clock && demux->clock_base == GST_CLOCK_TIME_NONE) {
     demux->clock_base = gst_clock_get_time (demux->clock);
