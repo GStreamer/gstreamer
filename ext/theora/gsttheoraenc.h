@@ -81,7 +81,6 @@ struct _GstTheoraEnc
   gboolean keyframe_auto;
   gint keyframe_freq;
   gint keyframe_force;
-  gint keyframe_mindistance;
   gint noise_sensitivity;
   gint sharpness;
 
