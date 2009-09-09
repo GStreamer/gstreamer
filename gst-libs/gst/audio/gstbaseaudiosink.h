@@ -83,12 +83,12 @@ G_BEGIN_DECLS
  * @GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE: Resample to match the master clock
  * @GST_BASE_AUDIO_SINK_SLAVE_SKEW: Adjust playout pointer when master clock
  * drifts too much.
- * @GST_BASE_AUDIO_SINK_SLAVE_NONE: No adjustment is done. 
+ * @GST_BASE_AUDIO_SINK_SLAVE_NONE: No adjustment is done.
  *
  * Different possible clock slaving algorithms used when the internal audio
  * clock is not selected as the pipeline master clock.
  */
-typedef enum 
+typedef enum
 {
   GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE,
   GST_BASE_AUDIO_SINK_SLAVE_SKEW,
@@ -156,7 +156,7 @@ GstRingBuffer *gst_base_audio_sink_create_ringbuffer (GstBaseAudioSink *sink);
 void       gst_base_audio_sink_set_provide_clock      (GstBaseAudioSink *sink, gboolean provide);
 gboolean   gst_base_audio_sink_get_provide_clock      (GstBaseAudioSink *sink);
 
-void       gst_base_audio_sink_set_slave_method       (GstBaseAudioSink *sink, 
+void       gst_base_audio_sink_set_slave_method       (GstBaseAudioSink *sink,
                                                        GstBaseAudioSinkSlaveMethod method);
 GstBaseAudioSinkSlaveMethod
            gst_base_audio_sink_get_slave_method       (GstBaseAudioSink *sink);
