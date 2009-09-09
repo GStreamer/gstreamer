@@ -189,6 +189,7 @@ gst_util_gdouble_to_guint64 (gdouble value)
   return ((guint64) ((gint64) value));
 }
 
+#ifndef HAVE_UINT128_T
 /* convenience struct for getting high and low uint32 parts of
  * a guint64 */
 typedef union
@@ -382,8 +383,39 @@ gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
   /* compute quotient, fits in 64 bits */
   return gst_util_div128_64 (c1, c0, denom);
 }
+#else
 
-#if !defined (__x86_64__)
+#define GST_MAXUINT128 ((__uint128_t) -1)
+static guint64
+gst_util_uint64_scale_uint64_unchecked (guint64 val, guint64 num,
+    guint64 denom, guint64 correct)
+{
+  __uint128_t tmp;
+
+  /* Calculate val * num */
+  tmp = ((__uint128_t) val) * ((__uint128_t) num);
+
+  /* overflow checks */
+  if (G_UNLIKELY (GST_MAXUINT128 - correct < tmp))
+    return G_MAXUINT64;
+
+  /* perform rounding correction */
+  tmp += correct;
+
+  /* Divide by denom */
+  tmp /= denom;
+
+  /* if larger than G_MAXUINT64 --> overflow */
+  if (G_UNLIKELY (tmp > G_MAXUINT64))
+    return G_MAXUINT64;
+
+  /* compute quotient, fits in 64 bits */
+  return (guint64) tmp;
+}
+
+#endif
+
+#if !defined (__x86_64__) && !defined (HAVE_UINT128_T)
 static inline void
 gst_util_uint64_mul_uint32 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
     guint32 arg2)
@@ -442,7 +474,7 @@ _gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom,
     return val;
 
   /* on 64bits we always use a full 128bits multipy/division */
-#if !defined (__x86_64__)
+#if !defined (__x86_64__) && !defined (HAVE_UINT128_T)
   /* denom is low --> try to use 96 bit muldiv */
   if (G_LIKELY (denom <= G_MAXUINT32)) {
     /* num is low --> use 96 bit muldiv */
@@ -455,7 +487,7 @@ _gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom,
       return gst_util_uint64_scale_uint32_unchecked (num, (guint32) val,
           (guint32) denom, correct);
   }
-#endif /* !defined (__x86_64__) */
+#endif /* !defined (__x86_64__) && !defined (HAVE_UINT128_T) */
 
   /* val is high and num is high --> use 128-bit muldiv */
   return gst_util_uint64_scale_uint64_unchecked (val, num, denom, correct);
@@ -560,7 +592,7 @@ _gst_util_uint64_scale_int (guint64 val, gint num, gint denom, gint correct)
 
     return val / (guint64) denom;
   }
-#if !defined (__x86_64__)
+#if !defined (__x86_64__) && !defined (HAVE_UINT128_T)
   /* num and denom are not negative so casts are OK */
   return gst_util_uint64_scale_uint32_unchecked (val, (guint32) num,
       (guint32) denom, (guint32) correct);

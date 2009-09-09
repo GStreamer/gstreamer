@@ -346,6 +346,22 @@ dnl *** checks for structures ***
 
 dnl *** checks for compiler characteristics ***
 
+dnl check if the compiler supports __uint128_t (gcc)
+AC_CACHE_CHECK(for __uint128_t, gst_cv_uint128_t,
+    AC_TRY_COMPILE([ ], [
+      __uint128_t u = 0;
+
+      return 0;
+    ], [
+      gst_cv_uint128_t=yes
+    ], [
+      gst_cv_uint128_t=no
+    ])
+)
+if test x$gst_cv_uint128_t = xyes; then
+  AC_DEFINE(HAVE_UINT128_T, 1, [Have __uint128_t type])
+fi
+
 OPT_CFLAGS=
 dnl Check for some compiler flags that optimize our code.
 if test "x$GCC" = xyes; then
