@@ -625,6 +625,7 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
   GstRingBufferSpec *spec;
+  GstClockTime now;
 
   if (!sink->ringbuffer)
     return FALSE;
@@ -632,6 +633,11 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   spec = &sink->ringbuffer->spec;
 
   GST_DEBUG_OBJECT (sink, "release old ringbuffer");
+
+  /* get current time, updates the last_time */
+  now = gst_clock_get_time (sink->provided_clock);
+
+  GST_DEBUG_OBJECT (sink, "time was %" GST_TIME_FORMAT, GST_TIME_ARGS (now));
 
   /* release old ringbuffer */
   gst_ring_buffer_pause (sink->ringbuffer);
