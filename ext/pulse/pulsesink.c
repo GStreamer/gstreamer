@@ -105,7 +105,6 @@ struct _GstPulseRingBuffer
   pa_stream *stream;
 
   pa_sample_spec sample_spec;
-  gint64 offset;
 
   gboolean corked;
   gboolean in_commit;
@@ -572,7 +571,6 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   pa_stream_flags_t flags;
   const gchar *name;
   GstAudioClock *clock;
-  gint64 time_offset;
 
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (buf));
   pbuf = GST_PULSERING_BUFFER_CAST (buf);
@@ -666,19 +664,6 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   /* our clock will now start from 0 again */
   clock = GST_AUDIO_CLOCK (GST_BASE_AUDIO_SINK (psink)->provided_clock);
   gst_audio_clock_reset (clock, 0);
-  time_offset = clock->abidata.ABI.time_offset;
-
-  GST_LOG_OBJECT (psink, "got time offset %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (time_offset));
-
-  /* calculate the sample offset for 0 */
-  if (time_offset > 0)
-    pbuf->offset = gst_util_uint64_scale_int (time_offset,
-        pbuf->sample_spec.rate, GST_SECOND);
-  else
-    pbuf->offset = -gst_util_uint64_scale_int (-time_offset,
-        pbuf->sample_spec.rate, GST_SECOND);
-  GST_LOG_OBJECT (psink, "sample offset %" G_GINT64_FORMAT, pbuf->offset);
 
   for (;;) {
     pa_stream_state_t state;
@@ -1139,21 +1124,8 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
   if (pbuf->paused)
     goto was_paused;
 
-  /* correct for sample offset against the internal clock */
-  offset = *sample;
-  if (pbuf->offset >= 0) {
-    if (offset > pbuf->offset)
-      offset -= pbuf->offset;
-    else
-      offset = 0;
-  } else {
-    if (offset > -pbuf->offset)
-      offset += pbuf->offset;
-    else
-      offset = 0;
-  }
   /* offset is in bytes */
-  offset *= bps;
+  offset = *sample * bps;
 
   while (*toprocess > 0) {
     size_t avail;
