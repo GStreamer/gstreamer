@@ -34,6 +34,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_sink_debug);
 
 #define VOLUME_MAX_DOUBLE 10.0
 
+#define DEFAULT_FLAGS             GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_TEXT | \
+                                  GST_PLAY_FLAG_SOFT_VOLUME
+
 #define GST_PLAY_CHAIN(c) ((GstPlayChain *)(c))
 
 /* holds the common data fields for the audio and video pipelines. We keep them
@@ -169,6 +172,8 @@ struct _GstPlaySink
 struct _GstPlaySinkClass
 {
   GstBinClass parent_class;
+
+    gboolean (*reconfigure) (GstPlaySink * playsink);
 };
 
 static GstStaticPadTemplate audiorawtemplate =
@@ -207,6 +212,7 @@ GST_STATIC_PAD_TEMPLATE ("subpic_sink",
 enum
 {
   PROP_0,
+  PROP_FLAGS,
   PROP_LAST
 };
 
@@ -273,6 +279,11 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
           GST_TYPE_PLAY_FLAGS, DEFAULT_FLAGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_signal_new ("reconfigure", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
+          reconfigure), NULL, NULL, gst_marshal_BOOLEAN__VOID, G_TYPE_BOOLEAN,
+      0, G_TYPE_NONE);
+
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&audiorawtemplate));
   gst_element_class_add_pad_template (gstelement_klass,
@@ -297,6 +308,8 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_play_sink_handle_message);
+
+  klass->reconfigure = GST_DEBUG_FUNCPTR (gst_play_sink_reconfigure);
 }
 
 static void
