@@ -102,7 +102,6 @@ _ilog (unsigned int v)
 #define THEORA_DEF_KEYFRAME_AUTO        TRUE
 #define THEORA_DEF_KEYFRAME_FREQ        64
 #define THEORA_DEF_KEYFRAME_FREQ_FORCE  64
-#define THEORA_DEF_SHARPNESS            0
 #define THEORA_DEF_SPEEDLEVEL           1
 enum
 {
@@ -264,8 +263,8 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           "ignored and kept for API compat only", 0, 32768, 1,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SHARPNESS,
-      g_param_spec_int ("sharpness", "Sharpness", "Sharpness", 0, 2,
-          THEORA_DEF_SHARPNESS,
+      g_param_spec_int ("sharpness", "Sharpness",
+          "ignored and kept for API compat only", 0, 2, 0,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SPEEDLEVEL,
       g_param_spec_int ("speed-level", "Speed level",
@@ -301,7 +300,6 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
   enc->keyframe_auto = THEORA_DEF_KEYFRAME_AUTO;
   enc->keyframe_freq = THEORA_DEF_KEYFRAME_FREQ;
   enc->keyframe_force = THEORA_DEF_KEYFRAME_FREQ_FORCE;
-  enc->sharpness = THEORA_DEF_SHARPNESS;
 
   enc->granule_shift = _ilog (enc->info.keyframe_frequency_force - 1);
   GST_DEBUG_OBJECT (enc,
@@ -482,7 +480,6 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info.keyframe_frequency = enc->keyframe_freq;
   enc->info.keyframe_frequency_force = enc->keyframe_force;
   enc->info.keyframe_data_target_bitrate = enc->video_bitrate * 1.5;
-  enc->info.sharpness = enc->sharpness;
 
   /* as done in theora */
   enc->granule_shift = _ilog (enc->info.keyframe_frequency_force - 1);
@@ -1177,6 +1174,7 @@ theora_enc_set_property (GObject * object, guint prop_id,
     case ARG_KEYFRAME_THRESHOLD:
     case ARG_KEYFRAME_MINDISTANCE:
     case ARG_NOISE_SENSITIVITY:
+    case ARG_SHARPNESS:
       /* kept for API compat, but ignored */
       break;
     case ARG_BITRATE:
@@ -1195,9 +1193,6 @@ theora_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_KEYFRAME_FREQ_FORCE:
       enc->keyframe_force = g_value_get_int (value);
-      break;
-    case ARG_SHARPNESS:
-      enc->sharpness = g_value_get_int (value);
       break;
     case ARG_SPEEDLEVEL:
 #ifdef TH_ENCCTL_SET_SPLEVEL
@@ -1251,7 +1246,7 @@ theora_enc_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, 1);
       break;
     case ARG_SHARPNESS:
-      g_value_set_int (value, enc->sharpness);
+      g_value_set_int (value, 0);
       break;
     case ARG_SPEEDLEVEL:
       g_value_set_int (value, enc->speed_level);
