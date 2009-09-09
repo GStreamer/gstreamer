@@ -102,7 +102,6 @@ _ilog (unsigned int v)
 #define THEORA_DEF_KEYFRAME_AUTO        TRUE
 #define THEORA_DEF_KEYFRAME_FREQ        64
 #define THEORA_DEF_KEYFRAME_FREQ_FORCE  64
-#define THEORA_DEF_KEYFRAME_THRESHOLD   80
 #define THEORA_DEF_KEYFRAME_MINDISTANCE 8
 #define THEORA_DEF_NOISE_SENSITIVITY    1
 #define THEORA_DEF_SHARPNESS            0
@@ -256,7 +255,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_KEYFRAME_THRESHOLD,
       g_param_spec_int ("keyframe-threshold", "Keyframe threshold",
-          "Keyframe threshold", 0, 32768, THEORA_DEF_KEYFRAME_THRESHOLD,
+          "ignored and kept for API compat only", 0, 32768, 80,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_KEYFRAME_MINDISTANCE,
       g_param_spec_int ("keyframe-mindistance", "Keyframe mindistance",
@@ -304,7 +303,6 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
   enc->keyframe_auto = THEORA_DEF_KEYFRAME_AUTO;
   enc->keyframe_freq = THEORA_DEF_KEYFRAME_FREQ;
   enc->keyframe_force = THEORA_DEF_KEYFRAME_FREQ_FORCE;
-  enc->keyframe_threshold = THEORA_DEF_KEYFRAME_THRESHOLD;
   enc->keyframe_mindistance = THEORA_DEF_KEYFRAME_MINDISTANCE;
   enc->noise_sensitivity = THEORA_DEF_NOISE_SENSITIVITY;
   enc->sharpness = THEORA_DEF_SHARPNESS;
@@ -488,7 +486,6 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info.keyframe_frequency = enc->keyframe_freq;
   enc->info.keyframe_frequency_force = enc->keyframe_force;
   enc->info.keyframe_data_target_bitrate = enc->video_bitrate * 1.5;
-  enc->info.keyframe_auto_threshold = enc->keyframe_threshold;
   enc->info.keyframe_mindistance = enc->keyframe_mindistance;
   enc->info.noise_sensitivity = enc->noise_sensitivity;
   enc->info.sharpness = enc->sharpness;
@@ -1183,6 +1180,7 @@ theora_enc_set_property (GObject * object, guint prop_id,
     case ARG_CENTER:
     case ARG_BORDER:
     case ARG_QUICK:
+    case ARG_KEYFRAME_THRESHOLD:
       /* kept for API compat, but ignored */
       break;
     case ARG_BITRATE:
@@ -1201,9 +1199,6 @@ theora_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_KEYFRAME_FREQ_FORCE:
       enc->keyframe_force = g_value_get_int (value);
-      break;
-    case ARG_KEYFRAME_THRESHOLD:
-      enc->keyframe_threshold = g_value_get_int (value);
       break;
     case ARG_KEYFRAME_MINDISTANCE:
       enc->keyframe_mindistance = g_value_get_int (value);
@@ -1257,7 +1252,7 @@ theora_enc_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, enc->keyframe_force);
       break;
     case ARG_KEYFRAME_THRESHOLD:
-      g_value_set_int (value, enc->keyframe_threshold);
+      g_value_set_int (value, 80);
       break;
     case ARG_KEYFRAME_MINDISTANCE:
       g_value_set_int (value, enc->keyframe_mindistance);
