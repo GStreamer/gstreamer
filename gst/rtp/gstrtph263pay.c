@@ -389,8 +389,8 @@ static void gst_rtp_h263_pay_get_property (GObject * object, guint prop_id,
 static GstFlowReturn gst_rtp_h263_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
-static GstRtpH263PayBoundry *gst_rtp_h263_pay_boundry_new (guint8 * start,
-    guint8 * end, guint8 sbit, guint8 ebit);
+static void gst_rtp_h263_pay_boundry_init (GstRtpH263PayBoundry * boundry,
+    guint8 * start, guint8 * end, guint8 sbit, guint8 ebit);
 static GstRtpH263PayGob *gst_rtp_h263_pay_gob_new (GstRtpH263PayBoundry *
     boundry, guint gobn);
 static GstRtpH263PayMB *gst_rtp_h263_pay_mb_new (GstRtpH263PayBoundry * boundry,
@@ -400,7 +400,6 @@ static GstRtpH263PayPackage *gst_rtp_h263_pay_package_new (guint8 * start,
     guint8 * end, guint length, guint8 sbit, guint8 ebit, GstBuffer * outbuf,
     gboolean marker);
 
-static void gst_rtp_h263_pay_boundry_destroy (GstRtpH263PayBoundry * boundry);
 static void gst_rtp_h263_pay_mb_destroy (GstRtpH263PayMB * mb);
 static void gst_rtp_h263_pay_gob_destroy (GstRtpH263PayGob * gob, guint ind);
 static void gst_rtp_h263_pay_context_destroy (GstRtpH263PayContext * context,
@@ -598,27 +597,14 @@ gst_rtp_h263_pay_package_destroy (GstRtpH263PayPackage * pack)
     g_free (pack);
 }
 
-static GstRtpH263PayBoundry *
-gst_rtp_h263_pay_boundry_new (guint8 * start, guint8 * end, guint8 sbit,
-    guint8 ebit)
+static void
+gst_rtp_h263_pay_boundry_init (GstRtpH263PayBoundry * boundry,
+    guint8 * start, guint8 * end, guint8 sbit, guint8 ebit)
 {
-  GstRtpH263PayBoundry *boundry;
-
-  boundry = (GstRtpH263PayBoundry *) g_malloc0 (sizeof (GstRtpH263PayBoundry));
-
   boundry->start = start;
   boundry->end = end;
   boundry->sbit = sbit;
   boundry->ebit = ebit;
-
-  return boundry;
-}
-
-static void
-gst_rtp_h263_pay_boundry_destroy (GstRtpH263PayBoundry * boundry)
-{
-  if (boundry)
-    g_free (boundry);
 }
 
 static void
@@ -698,14 +684,13 @@ gst_rtp_h263_pay_splat_header_B (guint8 * header,
 
 }
 
-static GstRtpH263PayBoundry *
+static gboolean
 gst_rtp_h263_pay_gobfinder (GstRtpH263Pay * rtph263pay,
     GstRtpH263PayBoundry * boundry)
 {
   guint8 *current;
   guint range;
   guint i;
-  GstRtpH263PayBoundry *b;
 
   current = boundry->end + 1;
   range = (rtph263pay->data - current) + rtph263pay->available_data;
@@ -717,28 +702,26 @@ gst_rtp_h263_pay_gobfinder (GstRtpH263Pay * rtph263pay,
 
   /* If we are past the end, stop */
   if (current >= rtph263pay->data + rtph263pay->available_data)
-    return NULL;
+    return FALSE;
 
   for (i = 3; i < range - 3; i++) {
     if ((current[i] == 0x0) &&
         (current[i + 1] == 0x0) && (current[i + 2] >> 7 == 0x1)) {
       GST_LOG ("GOB end found at: %p start: %p len: %d", current + i - 1,
           boundry->end + 1, current + i - boundry->end + 2);
-      b = gst_rtp_h263_pay_boundry_new (boundry->end + 1, current + i - 1, 0,
-          0);
-      gst_rtp_h263_pay_boundry_destroy (boundry);
+      gst_rtp_h263_pay_boundry_init (boundry, boundry->end + 1,
+          current + i - 1, 0, 0);
 
-      return b;
+      return TRUE;
     }
   }
 
   GST_DEBUG ("Couldn't find any new GBSC in this frame, range:%u", range);
 
-  b = gst_rtp_h263_pay_boundry_new (boundry->end + 1,
+  gst_rtp_h263_pay_boundry_init (boundry, boundry->end + 1,
       (guint8 *) (rtph263pay->data + rtph263pay->available_data - 1), 0, 0);
-  gst_rtp_h263_pay_boundry_destroy (boundry);
 
-  return b;
+  return TRUE;
 }
 
 static GstRtpH263PayGob *
@@ -981,10 +964,13 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
   guint cbpy_type_index;
   guint tcoef_type_index;
   GstRtpH263PayMB *mac;
+  GstRtpH263PayBoundry boundry;
 
-  mac =
-      gst_rtp_h263_pay_mb_new (gst_rtp_h263_pay_boundry_new (macroblock->end,
-          macroblock->end, 8 - macroblock->ebit, macroblock->ebit), mba);
+
+  gst_rtp_h263_pay_boundry_init (&boundry, macroblock->end,
+      macroblock->end, 8 - macroblock->ebit, macroblock->ebit);
+  mac = gst_rtp_h263_pay_mb_new (&boundry, mba);
+
 
   if (mac->sbit == 8) {
     mac->start++;
@@ -1428,7 +1414,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
     /*---------- MODE B MODE FRAGMENTATION ----------*/
   GstRtpH263PayMB *mac;
   guint max_payload_size;
-  GstRtpH263PayBoundry *boundry;
+  GstRtpH263PayBoundry boundry;
   guint mb;
   //TODO remove m
   GstRtpH263PayMB *m;
@@ -1439,7 +1425,8 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
   max_payload_size =
       context->mtu - GST_RTP_H263_PAYLOAD_HEADER_MODE_B - GST_RTP_HEADER_LEN;
 
-  boundry = gst_rtp_h263_pay_boundry_new (gob->start, gob->start, gob->sbit, 0);
+  gst_rtp_h263_pay_boundry_init (&boundry, gob->start, gob->start, gob->sbit,
+      0);
 
   gob->macroblocks =
       (GstRtpH263PayMB **) g_malloc0 (sizeof (GstRtpH263PayMB *) *
@@ -1448,9 +1435,9 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
   GST_LOG ("GOB isn't PB frame, applying mode B");
 
   //initializing window
-  context->win_end = boundry->end;
-  if (gst_rtp_h263_pay_move_window_right (context, 32, boundry->ebit,
-          &boundry->end, &gob->end) != 0) {
+  context->win_end = boundry.end;
+  if (gst_rtp_h263_pay_move_window_right (context, 32, boundry.ebit,
+          &boundry.end, &gob->end) != 0) {
     GST_ERROR
         ("The rest of the bits should be 0, exiting, because something bad happend");
     gst_adapter_flush (rtph263pay->adapter, rtph263pay->available_data);
@@ -1462,9 +1449,9 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
     GST_LOG ("Initial GOB");
     shift = 43;
 
-    boundry->ebit =
-        gst_rtp_h263_pay_move_window_right (context, shift, boundry->ebit,
-        &boundry->end, &gob->end);
+    boundry.ebit =
+        gst_rtp_h263_pay_move_window_right (context, shift, boundry.ebit,
+        &boundry.end, &gob->end);
 
     //We need PQUANT for mode B packages - so we store it
     gob->quant = context->window >> 27;
@@ -1474,24 +1461,24 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
     shift = 6;
     if (context->cpm == 1)
       shift += 2;
-    boundry->ebit =
-        gst_rtp_h263_pay_move_window_right (context, shift, boundry->ebit,
-        &boundry->end, &gob->end);
+    boundry.ebit =
+        gst_rtp_h263_pay_move_window_right (context, shift, boundry.ebit,
+        &boundry.end, &gob->end);
 
     GST_DEBUG ("window: 0x%08x", context->window);
 
     //Shifting the PEI and PSPARE fields
     while ((context->window & 0x80000000) == 0x80000000) {
-      boundry->ebit =
+      boundry.ebit =
           gst_rtp_h263_pay_move_window_right (context, 9,
-          boundry->ebit, &boundry->end, &gob->end);
+          boundry.ebit, &boundry.end, &gob->end);
       GST_LOG ("window: 0x%x", context->window);
     }
 
     //shift the last PEI field
-    boundry->ebit =
-        gst_rtp_h263_pay_move_window_right (context, 1, boundry->ebit,
-        &boundry->end, &gob->end);
+    boundry.ebit =
+        gst_rtp_h263_pay_move_window_right (context, 1, boundry.ebit,
+        &boundry.end, &gob->end);
 
   } else {
     //skipping GOBs 24 header bits + 5 GQUANT
@@ -1504,17 +1491,17 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
       shift += 2;
 
     GST_LOG ("window: 0x%x", context->window);
-    boundry->ebit =
+    boundry.ebit =
         gst_rtp_h263_pay_move_window_right (context, shift,
-        boundry->ebit, &boundry->end, &gob->end);
+        boundry.ebit, &boundry.end, &gob->end);
 
     //We need GQUANT for mode B packages - so we store it
     gob->quant = context->window >> 27;
 
     shift = 5;
-    boundry->ebit =
+    boundry.ebit =
         gst_rtp_h263_pay_move_window_right (context, shift,
-        boundry->ebit, &boundry->end, &gob->end);
+        boundry.ebit, &boundry.end, &gob->end);
 
     GST_LOG ("window: 0x%x", context->window);
   }
@@ -1523,7 +1510,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
 
   // We are on MB layer
 
-  m = mac = gst_rtp_h263_pay_mb_new (boundry, 0);
+  m = mac = gst_rtp_h263_pay_mb_new (&boundry, 0);
   for (mb = 0; mb < format_props[context->piclayer->ptype_srcformat][1]; mb++) {
 
     GST_DEBUG ("================ START MB %d =================", mb);
@@ -1562,7 +1549,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
 
   mb = 0;
   first = 0;
-  payload_len = boundry->end - boundry->start + 1;
+  payload_len = boundry.end - boundry.start + 1;
   GST_DEBUG ("------------------------- NEW PACKAGE ----------------------");
   while (mb < gob->nmacroblocs) {
     if (payload_len + gob->macroblocks[mb]->length < max_payload_size) {
@@ -1577,7 +1564,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
       //    first == mb - 1, payload_len);
 
       if (gst_rtp_h263_pay_B_fragment_push (rtph263pay, context, gob, first,
-              mb - 1, boundry)) {
+              mb - 1, &boundry)) {
         GST_ERROR ("Oooops, there was an error sending");
         return FALSE;
       }
@@ -1595,7 +1582,7 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
   GST_DEBUG ("Remainder first: %d, MB: %d", first, mb);
   if (payload_len != 0) {
     if (gst_rtp_h263_pay_B_fragment_push (rtph263pay, context, gob, first,
-            mb - 1, boundry)) {
+            mb - 1, &boundry)) {
       GST_ERROR ("Oooops, there was an error sending!");
       return FALSE;
     }
@@ -1688,7 +1675,7 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
   } else {
 
       /*---------- FRAGMENTING THE FRAME BECAUSE TOO LARGE TO FIT IN MTU ----------*/
-    GstRtpH263PayBoundry *bound;
+    GstRtpH263PayBoundry bound;
     gint first;
     guint payload_len;
 
@@ -1697,7 +1684,7 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
      * Let's go trough all the data and fragment it untill end is reached
      */
 
-    bound = gst_rtp_h263_pay_boundry_new (NULL, rtph263pay->data - 1, 0, 0);
+    gst_rtp_h263_pay_boundry_init (&bound, NULL, rtph263pay->data - 1, 0, 0);
     context->gobs =
         (GstRtpH263PayGob **) g_malloc0 (format_props[context->piclayer->
             ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
@@ -1705,23 +1692,20 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
     for (i = 0; i < format_props[context->piclayer->ptype_srcformat][0]; i++) {
       GST_DEBUG ("Searching for gob %d", i);
-      bound = gst_rtp_h263_pay_gobfinder (rtph263pay, bound);
-      if (!bound) {
+      if (!gst_rtp_h263_pay_gobfinder (rtph263pay, &bound)) {
         GST_WARNING
             ("No GOB's were found in data stream! Please enable RTP mode in encoder. Forcing mode A for now.");
         ret = gst_rtp_h263_send_entire_frame (rtph263pay, context);
         goto end;
       }
 
-      context->gobs[i] = gst_rtp_h263_pay_gob_new (bound, i);
+      context->gobs[i] = gst_rtp_h263_pay_gob_new (&bound, i);
       //FIXME - encoders may generate an EOS gob that has to be processed
       GST_DEBUG
           ("Gob values are: gobn: %d, start: %p len: %d ebit: %d sbit: %d", i,
           context->gobs[i]->start, context->gobs[i]->length,
           context->gobs[i]->ebit, context->gobs[i]->sbit);
     }
-
-    gst_rtp_h263_pay_boundry_destroy (bound);
 
     // Make packages smaller than MTU
     //   A mode
