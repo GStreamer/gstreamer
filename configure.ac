@@ -605,9 +605,6 @@ AG_GST_CHECK_FEATURE(THEORA, [Xiph Theora video codec], theora, [
   dnl theoraenc and theoradec appeared in 1.0beta3
 
   AG_GST_PKG_CHECK_MODULES(THEORA, theoradec theoraenc)
-  if test x$HAVE_THEORA = xno; then
-    AG_GST_PKG_CHECK_MODULES(THEORA, theora >= 1.0beta1)
-  fi
 ])
 
 dnl *** vorbis ***
