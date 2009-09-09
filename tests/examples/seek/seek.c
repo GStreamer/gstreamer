@@ -67,6 +67,9 @@ GST_DEBUG_CATEGORY_STATIC (seek_debug);
 
 #define DEFAULT_VIDEO_HEIGHT 300
 
+/* the state to go to when stop is pressed */
+#define STOP_STATE      GST_STATE_READY
+
 
 static GList *seekable_pads = NULL;
 static GList *rate_pads = NULL;
@@ -1518,18 +1521,18 @@ failed:
 static void
 stop_cb (GtkButton * button, gpointer data)
 {
-  if (state != GST_STATE_READY) {
+  if (state != STOP_STATE) {
     GstStateChangeReturn ret;
 
     g_print ("READY pipeline\n");
     gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
 
     g_static_mutex_lock (&state_mutex);
-    ret = gst_element_set_state (pipeline, GST_STATE_READY);
+    ret = gst_element_set_state (pipeline, STOP_STATE);
     if (ret == GST_STATE_CHANGE_FAILURE)
       goto failed;
 
-    state = GST_STATE_READY;
+    state = STOP_STATE;
     gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Stopped");
 
     is_live = FALSE;
@@ -1559,7 +1562,7 @@ stop_cb (GtkButton * button, gpointer data)
 
       pipeline = pipelines[pipeline_type].func (pipeline_spec);
       g_assert (pipeline);
-      gst_element_set_state (pipeline, GST_STATE_READY);
+      gst_element_set_state (pipeline, STOP_STATE);
       connect_bus_signals (pipeline);
     }
 #endif
