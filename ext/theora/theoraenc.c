@@ -99,7 +99,6 @@ _ilog (unsigned int v)
 
 #define THEORA_DEF_BITRATE              0
 #define THEORA_DEF_QUALITY              48
-#define THEORA_DEF_QUICK                TRUE
 #define THEORA_DEF_KEYFRAME_AUTO        TRUE
 #define THEORA_DEF_KEYFRAME_FREQ        64
 #define THEORA_DEF_KEYFRAME_FREQ_FORCE  64
@@ -239,8 +238,8 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           THEORA_DEF_QUALITY,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_QUICK,
-      g_param_spec_boolean ("quick", "Quick", "Quick encoding",
-          THEORA_DEF_QUICK,
+      g_param_spec_boolean ("quick", "Quick",
+          "ignored and kept for API compat only", TRUE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_KEYFRAME_AUTO,
       g_param_spec_boolean ("keyframe-auto", "Keyframe Auto",
@@ -302,7 +301,6 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
 
   enc->video_bitrate = THEORA_DEF_BITRATE;
   enc->video_quality = THEORA_DEF_QUALITY;
-  enc->quick = THEORA_DEF_QUICK;
   enc->keyframe_auto = THEORA_DEF_KEYFRAME_AUTO;
   enc->keyframe_freq = THEORA_DEF_KEYFRAME_FREQ;
   enc->keyframe_force = THEORA_DEF_KEYFRAME_FREQ_FORCE;
@@ -486,8 +484,6 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info.target_bitrate = enc->video_bitrate;
   enc->info.quality = enc->video_quality;
 
-  enc->info.dropframes_p = 0;
-  enc->info.quick_p = (enc->quick ? 1 : 0);
   enc->info.keyframe_auto_p = (enc->keyframe_auto ? 1 : 0);
   enc->info.keyframe_frequency = enc->keyframe_freq;
   enc->info.keyframe_frequency_force = enc->keyframe_force;
@@ -1186,6 +1182,7 @@ theora_enc_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_CENTER:
     case ARG_BORDER:
+    case ARG_QUICK:
       /* kept for API compat, but ignored */
       break;
     case ARG_BITRATE:
@@ -1195,9 +1192,6 @@ theora_enc_set_property (GObject * object, guint prop_id,
     case ARG_QUALITY:
       enc->video_quality = g_value_get_int (value);
       enc->video_bitrate = 0;
-      break;
-    case ARG_QUICK:
-      enc->quick = g_value_get_boolean (value);
       break;
     case ARG_KEYFRAME_AUTO:
       enc->keyframe_auto = g_value_get_boolean (value);
@@ -1251,7 +1245,7 @@ theora_enc_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, enc->video_quality);
       break;
     case ARG_QUICK:
-      g_value_set_boolean (value, enc->quick);
+      g_value_set_boolean (value, TRUE);
       break;
     case ARG_KEYFRAME_AUTO:
       g_value_set_boolean (value, enc->keyframe_auto);
