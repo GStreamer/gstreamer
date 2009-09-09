@@ -2404,7 +2404,7 @@ void
 gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 {
   GstPadFixateCapsFunction fixatefunc;
-  guint n, len;
+  guint len;
 
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (caps != NULL);
@@ -2419,10 +2419,14 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 
   /* default fixation */
   len = gst_caps_get_size (caps);
-  for (n = 0; n < len; n++) {
-    GstStructure *s = gst_caps_get_structure (caps, n);
+  if (len > 0) {
+    GstStructure *s = gst_caps_get_structure (caps, 0);
 
     gst_structure_foreach (s, gst_pad_default_fixate, s);
+  }
+
+  if (len > 1) {
+    gst_caps_truncate (caps);
   }
 }
 
