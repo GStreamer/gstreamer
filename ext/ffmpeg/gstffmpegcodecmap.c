@@ -309,7 +309,6 @@ gst_ff_vid_caps_new (AVCodecContext * context, enum CodecID codec_id,
 
 /* same for audio - now with channels/sample rate
  */
-
 static GstCaps *
 gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
     const char *mimetype, const char *fieldname, ...)
@@ -1165,6 +1164,23 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-alaw", NULL);
       break;
 
+    case CODEC_ID_ADPCM_G726:
+    {
+      /* the G726 decoder can also handle G721 */
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-adpcm",
+          "layout", G_TYPE_STRING, "g726", NULL);
+      if (context)
+        gst_caps_set_simple (caps,
+            "block_align", G_TYPE_INT, context->block_align,
+            "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+
+      if (!encode) {
+        gst_caps_append (caps, gst_caps_new_simple ("audio/x-adpcm",
+                "layout", G_TYPE_STRING, "g721",
+                "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL));
+      }
+      break;
+    }
     case CODEC_ID_ADPCM_IMA_QT:
     case CODEC_ID_ADPCM_IMA_WAV:
     case CODEC_ID_ADPCM_IMA_DK3:
@@ -1180,7 +1196,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_XA:
     case CODEC_ID_ADPCM_ADX:
     case CODEC_ID_ADPCM_EA:
-    case CODEC_ID_ADPCM_G726:
     case CODEC_ID_ADPCM_CT:
     case CODEC_ID_ADPCM_SWF:
     case CODEC_ID_ADPCM_YAMAHA:
@@ -1241,9 +1256,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           break;
         case CODEC_ID_ADPCM_EA:
           layout = "ea";
-          break;
-        case CODEC_ID_ADPCM_G726:
-          layout = "g726";
           break;
         case CODEC_ID_ADPCM_CT:
           layout = "ct";
@@ -1794,6 +1806,7 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
   GstStructure *structure;
   gint depth = 0, width = 0, endianness = 0;
   gboolean signedness = FALSE;
+  const gchar *name;
 
   g_return_if_fail (gst_caps_get_size (caps) == 1);
   structure = gst_caps_get_structure (caps, 0);
@@ -1806,7 +1819,9 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
   if (!raw)
     return;
 
-  if (!strcmp (gst_structure_get_name (structure), "audio/x-raw-float")) {
+  name = gst_structure_get_name (structure);
+
+  if (!strcmp (name, "audio/x-raw-float")) {
     /* FLOAT */
     if (gst_structure_get_int (structure, "width", &width) &&
         gst_structure_get_int (structure, "endianness", &endianness)) {
@@ -2273,7 +2288,18 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
         }
     }
     case CODEC_ID_ADPCM_G726:
+    {
+      const gchar *layout;
+
+      if ((layout = gst_structure_get_string (str, "layout"))) {
+        if (!strcmp (layout, "g721")) {
+          context->sample_rate = 8000;
+          context->channels = 1;
+          context->bit_rate = 32000;
+        }
+      }
       break;
+    }
     default:
       break;
   }
@@ -2924,6 +2950,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     } else if (!strcmp (layout, "ea")) {
       id = CODEC_ID_ADPCM_EA;
     } else if (!strcmp (layout, "g726")) {
+      id = CODEC_ID_ADPCM_G726;
+    } else if (!strcmp (layout, "g721")) {
       id = CODEC_ID_ADPCM_G726;
     } else if (!strcmp (layout, "ct")) {
       id = CODEC_ID_ADPCM_CT;
