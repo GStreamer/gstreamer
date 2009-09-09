@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstbaseaudiosink.c: 
+ * gstbaseaudiosink.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -67,7 +67,7 @@ enum
 
 /* we tollerate half a second diff before we start resyncing. This
  * should be enough to compensate for various rounding errors in the timestamp
- * and sample offset position. 
+ * and sample offset position.
  * This is an emergency resync fallback since buffers marked as DISCONT will
  * always lock to the correct timestamp immediatly and buffers not marked as
  * DISCONT are contiguous by definition.
@@ -474,7 +474,7 @@ gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
  * @sink: a #GstBaseAudioSink
  * @provide: new state
  *
- * Controls whether @sink will provide a clock or not. If @provide is %TRUE, 
+ * Controls whether @sink will provide a clock or not. If @provide is %TRUE,
  * gst_element_provide_clock() will return a clock that reflects the datarate
  * of @sink. If @provide is %FALSE, gst_element_provide_clock() will return NULL.
  *
@@ -521,7 +521,7 @@ gst_base_audio_sink_get_provide_clock (GstBaseAudioSink * sink)
  * @sink: a #GstBaseAudioSink
  * @method: the new slave method
  *
- * Controls how clock slaving will be performed in @sink. 
+ * Controls how clock slaving will be performed in @sink.
  *
  * Since: 0.10.16
  */
@@ -658,7 +658,7 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     gst_ring_buffer_activate (sink->ringbuffer, TRUE);
   }
 
-  /* calculate actual latency and buffer times. 
+  /* calculate actual latency and buffer times.
    * FIXME: In 0.11, store the latency_time internally in ns */
   spec->latency_time = gst_util_uint64_scale (spec->segsize,
       (GST_SECOND / GST_USECOND), spec->rate * spec->bytes_per_sample);
@@ -1115,7 +1115,7 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
     GST_DEBUG_OBJECT (sink, "possibly waiting for clock to reach %"
         GST_TIME_FORMAT, GST_TIME_ARGS (time));
 
-    /* wait for the clock, this can be interrupted because we got shut down or 
+    /* wait for the clock, this can be interrupted because we got shut down or
      * we PAUSED. */
     status = gst_base_sink_wait_clock (bsink, time, &jitter);
 
@@ -1220,6 +1220,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   gboolean sync, slaved, align_next;
   GstFlowReturn ret;
   GstSegment clip_seg;
+  gint64 time_offset;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
@@ -1310,8 +1311,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
   /* samples should be rendered based on their timestamp. All samples
-   * arriving before the segment.start or after segment.stop are to be 
-   * thrown away. All samples should also be clipped to the segment 
+   * arriving before the segment.start or after segment.stop are to be
+   * thrown away. All samples should also be clipped to the segment
    * boundaries */
   if (!gst_segment_clip (&clip_seg, GST_FORMAT_TIME, time, stop, &ctime,
           &cstop))
@@ -1400,6 +1401,18 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     gst_base_audio_sink_none_slaving (sink, render_start, render_stop,
         &render_start, &render_stop);
   }
+
+  /* bring to position in the ringbuffer */
+  time_offset =
+      GST_AUDIO_CLOCK_CAST (sink->provided_clock)->abidata.ABI.time_offset;
+  if (render_start > time_offset)
+    render_start -= time_offset;
+  else
+    render_start = 0;
+  if (render_stop > time_offset)
+    render_stop -= time_offset;
+  else
+    render_stop = 0;
 
   /* and bring the time to the rate corrected offset in the buffer */
   render_start = gst_util_uint64_scale_int (render_start,
