@@ -157,6 +157,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   GESTrack *track;
   const gchar *sinkpad_name;
   GstPad *sinkpad;
+  gboolean reconfigured = FALSE;
 
   GST_DEBUG_OBJECT (self, "new pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -182,6 +183,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       return;
   }
 
+  /* Request a sinkpad from playsink */
   if (G_UNLIKELY (!(sinkpad =
               gst_element_get_request_pad (self->sink, sinkpad_name)))) {
     GST_WARNING_OBJECT (self, "Couldn't get a pad from the playsink !");
@@ -194,6 +196,12 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     return;
   }
 
+  GST_DEBUG ("Reconfiguring playsink");
+
+  /* reconfigure playsink */
+  g_signal_emit_by_name (self->sink, "reconfigure", &reconfigured);
+  GST_DEBUG ("'reconfigure' returned %d", reconfigured);
+
   /* Create a new chain */
   chain = g_new0 (OutputChain, 1);
   chain->pipeline = self;
@@ -202,7 +210,6 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
 
   self->chains = g_list_append (self->chains, chain);
 
-  /* Request a sinkpad from playsink */
   GST_DEBUG ("done");
 }
 
