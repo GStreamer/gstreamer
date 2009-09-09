@@ -21,7 +21,7 @@
 #define __GST_THEORAENC_H__
 
 #include <gst/gst.h>
-#include <theora/theora.h>
+#include <theora/theoraenc.h>
 
 G_BEGIN_DECLS
 
@@ -71,9 +71,9 @@ struct _GstTheoraEnc
 
   ogg_stream_state to;
 
-  theora_state state;
-  theora_info info;
-  theora_comment comment;
+  th_enc_ctx *encoder;
+  th_info info;
+  th_comment comment;
   gboolean initialised;
 
   gint video_bitrate;           /* bitrate target for Theora video */
@@ -96,7 +96,6 @@ struct _GstTheoraEnc
   guint64 bytes_out;
   guint64 granulepos_offset;
   guint64 timestamp_offset;
-  gint granule_shift;  
 
   gint speed_level;
 };

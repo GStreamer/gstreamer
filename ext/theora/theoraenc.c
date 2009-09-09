@@ -61,6 +61,7 @@
 #include <stdlib.h>             /* free */
 
 #include <gst/tag/tag.h>
+#include <gst/video/video.h>
 
 #define GST_CAT_DEFAULT theoraenc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -127,7 +128,7 @@ static GstClockTime
 granulepos_to_timestamp (GstTheoraEnc * theoraenc, ogg_int64_t granulepos)
 {
   guint64 iframe, pframe;
-  int shift = theoraenc->granule_shift;
+  int shift = theoraenc->info.keyframe_granule_shift;
 
   if (granulepos < 0)
     return GST_CLOCK_TIME_NONE;
@@ -301,10 +302,6 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
   enc->keyframe_freq = THEORA_DEF_KEYFRAME_FREQ;
   enc->keyframe_force = THEORA_DEF_KEYFRAME_FREQ_FORCE;
 
-  enc->granule_shift = _ilog (enc->info.keyframe_frequency_force - 1);
-  GST_DEBUG_OBJECT (enc,
-      "keyframe_frequency_force is %d, granule shift is %d",
-      enc->info.keyframe_frequency_force, enc->granule_shift);
   enc->expected_ts = GST_CLOCK_TIME_NONE;
 
   enc->speed_level = THEORA_DEF_SPEEDLEVEL;
@@ -316,9 +313,10 @@ theora_enc_finalize (GObject * object)
   GstTheoraEnc *enc = GST_THEORA_ENC (object);
 
   GST_DEBUG_OBJECT (enc, "Finalizing");
-  theora_clear (&enc->state);
-  theora_comment_clear (&enc->comment);
-  theora_info_clear (&enc->info);
+  if (enc->encoder)
+    th_encode_free (enc->encoder);
+  th_comment_clear (&enc->comment);
+  th_info_clear (&enc->info);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -326,16 +324,22 @@ theora_enc_finalize (GObject * object)
 static void
 theora_enc_reset (GstTheoraEnc * enc)
 {
-  int result;
+  ogg_uint32_t keyframe_force;
 
-  theora_clear (&enc->state);
-  result = theora_encode_init (&enc->state, &enc->info);
+  if (enc->encoder)
+    th_encode_free (enc->encoder);
+  enc->encoder = th_encode_alloc (&enc->info);
   /* We ensure this function cannot fail. */
-  g_assert (result == 0);
+  g_assert (enc->encoder != NULL);
 #ifdef TH_ENCCTL_SET_SPLEVEL
-  theora_control (&enc->state, TH_ENCCTL_SET_SPLEVEL, &enc->speed_level,
+  th_encode_ctl (enc->encoder, TH_ENCCTL_SET_SPLEVEL, &enc->speed_level,
       sizeof (enc->speed_level));
 #endif
+
+  keyframe_force = enc->keyframe_auto ?
+      enc->keyframe_force : enc->keyframe_freq;
+  th_encode_ctl (enc->encoder, TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE,
+      &keyframe_force, sizeof (keyframe_force));
 }
 
 static void
@@ -354,34 +358,35 @@ theora_enc_clear (GstTheoraEnc * enc)
 static char *
 theora_enc_get_supported_formats (void)
 {
-  theora_state state;
-  theora_info info;
+  th_enc_ctx *encoder;
+  th_info info;
   struct
   {
-    theora_pixelformat pixelformat;
+    th_pixel_fmt pixelformat;
     char *fourcc;
   } formats[] = {
     {
-    OC_PF_420, "I420"}, {
-    OC_PF_422, "Y42B"}, {
-    OC_PF_444, "Y444"}
+    TH_PF_420, "I420"}, {
+    TH_PF_422, "Y42B"}, {
+    TH_PF_444, "Y444"}
   };
   GString *string = NULL;
   guint i;
 
-  theora_info_init (&info);
-  info.width = 16;
-  info.height = 16;
+  th_info_init (&info);
+  info.frame_width = 16;
+  info.frame_height = 16;
   info.fps_numerator = 25;
   info.fps_denominator = 1;
   for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-    info.pixelformat = formats[i].pixelformat;
+    info.pixel_fmt = formats[i].pixelformat;
 
-    if (theora_encode_init (&state, &info) != 0)
+    encoder = th_encode_alloc (&info);
+    if (encoder == NULL)
       continue;
 
     GST_LOG ("format %s is supported", formats[i].fourcc);
-    theora_clear (&state);
+    th_encode_free (encoder);
 
     if (string == NULL) {
       string = g_string_new (formats[i].fourcc);
@@ -390,7 +395,7 @@ theora_enc_get_supported_formats (void)
       g_string_append (string, formats[i].fourcc);
     }
   }
-  theora_info_clear (&info);
+  th_info_clear (&info);
 
   return string == NULL ? NULL : g_string_free (string, FALSE);
 }
@@ -435,30 +440,27 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d);
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
-  theora_info_clear (&enc->info);
-  theora_info_init (&enc->info);
+  th_info_clear (&enc->info);
+  th_info_init (&enc->info);
   /* Theora has a divisible-by-sixteen restriction for the encoded video size but
-   * we can define a visible area using the frame_width/frame_height */
-  enc->info_width = enc->info.width = (enc->width + 15) & ~15;
-  enc->info_height = enc->info.height = (enc->height + 15) & ~15;
-  enc->info.frame_width = enc->width;
-  enc->info.frame_height = enc->height;
+   * we can define a picture area using pic_width/pic_height */
+  enc->info.frame_width = GST_ROUND_UP_16 (enc->width);
+  enc->info.frame_height = GST_ROUND_UP_16 (enc->height);
+  enc->info.pic_width = enc->width;
+  enc->info.pic_height = enc->height;
   switch (fourcc) {
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-      enc->info.pixelformat = OC_PF_420;
+      enc->info.pixel_fmt = TH_PF_420;
       break;
     case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
-      enc->info.pixelformat = OC_PF_422;
+      enc->info.pixel_fmt = TH_PF_422;
       break;
     case GST_MAKE_FOURCC ('Y', '4', '4', '4'):
-      enc->info.pixelformat = OC_PF_444;
+      enc->info.pixel_fmt = TH_PF_444;
       break;
     default:
       g_assert_not_reached ();
   }
-
-  enc->info.offset_x = 0;
-  enc->info.offset_y = 0;
 
   enc->info.fps_numerator = enc->fps_n = fps_n;
   enc->info.fps_denominator = enc->fps_d = fps_d;
@@ -472,20 +474,15 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
     enc->info.aspect_denominator = 0;
   }
 
-  enc->info.colorspace = OC_CS_UNSPECIFIED;
+  enc->info.colorspace = TH_CS_UNSPECIFIED;
   enc->info.target_bitrate = enc->video_bitrate;
   enc->info.quality = enc->video_quality;
 
-  enc->info.keyframe_auto_p = (enc->keyframe_auto ? 1 : 0);
-  enc->info.keyframe_frequency = enc->keyframe_freq;
-  enc->info.keyframe_frequency_force = enc->keyframe_force;
-  enc->info.keyframe_data_target_bitrate = enc->video_bitrate * 1.5;
-
   /* as done in theora */
-  enc->granule_shift = _ilog (enc->info.keyframe_frequency_force - 1);
+  enc->info.keyframe_granule_shift = _ilog (enc->keyframe_force - 1);
   GST_DEBUG_OBJECT (enc,
       "keyframe_frequency_force is %d, granule shift is %d",
-      enc->info.keyframe_frequency_force, enc->granule_shift);
+      enc->keyframe_force, enc->info.keyframe_granule_shift);
 
   theora_enc_reset (enc);
   enc->initialised = TRUE;
@@ -529,7 +526,7 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
    * time representation */
   GST_BUFFER_OFFSET_END (buf) =
       granulepos_add (packet->granulepos, enc->granulepos_offset,
-      enc->granule_shift);
+      enc->info.keyframe_granule_shift);
   GST_BUFFER_OFFSET (buf) = granulepos_to_timestamp (enc,
       GST_BUFFER_OFFSET_END (buf));
 
@@ -585,52 +582,41 @@ theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet,
 }
 
 static GstCaps *
-theora_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
-    GstBuffer * buf2, GstBuffer * buf3)
+theora_set_header_on_caps (GstCaps * caps, GSList * buffers)
 {
   GstStructure *structure;
   GValue array = { 0 };
   GValue value = { 0 };
+  GstBuffer *buffer;
+  GSList *walk;
 
   caps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (caps, 0);
 
-  /* mark buffers */
-  GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_FLAG_IN_CAPS);
-  GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_FLAG_IN_CAPS);
-  GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_IN_CAPS);
-
-  /* Copy buffers, because we can't use the originals -
-   * it creates a circular refcount with the caps<->buffers */
-  buf1 = gst_buffer_copy (buf1);
-  buf2 = gst_buffer_copy (buf2);
-  buf3 = gst_buffer_copy (buf3);
-
   /* put copies of the buffers in a fixed list */
   g_value_init (&array, GST_TYPE_ARRAY);
 
-  g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, buf1);
-  gst_value_array_append_value (&array, &value);
-  g_value_unset (&value);
+  for (walk = buffers; walk; walk = walk->next) {
+    buffer = walk->data;
 
-  g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, buf2);
-  gst_value_array_append_value (&array, &value);
-  g_value_unset (&value);
+    /* mark buffer */
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
 
-  g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, buf3);
-  gst_value_array_append_value (&array, &value);
-  g_value_unset (&value);
+    /* Copy buffer, because we can't use the original -
+     * it creates a circular refcount with the caps<->buffers */
+    buffer = gst_buffer_copy (buffer);
+
+    g_value_init (&value, GST_TYPE_BUFFER);
+    gst_value_set_buffer (&value, buffer);
+    gst_value_array_append_value (&array, &value);
+    g_value_unset (&value);
+
+    /* Unref our copy */
+    gst_buffer_unref (buffer);
+  }
 
   gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&array);
-
-  /* Unref our copies */
-  gst_buffer_unref (buf1);
-  gst_buffer_unref (buf2);
-  gst_buffer_unref (buf3);
 
   return caps;
 }
@@ -679,9 +665,9 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       if (enc->initialised) {
         /* push last packet with eos flag, should not be called */
-        while (theora_encode_packetout (&enc->state, 1, &op)) {
+        while (th_encode_packetout (enc->encoder, 1, &op)) {
           GstClockTime next_time =
-              theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
+              th_granule_time (enc->encoder, op.granulepos) * GST_SECOND;
 
           theora_push_packet (enc, &op, GST_CLOCK_TIME_NONE, enc->next_ts,
               next_time - enc->next_ts);
@@ -778,117 +764,44 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstClockTime timestamp,
 }
 
 static void
-theora_enc_init_yuv_buffer (yuv_buffer * yuv, theora_pixelformat format,
-    guint8 * data, gint width, gint height)
+theora_enc_init_buffer (th_ycbcr_buffer buf, th_info * info, guint8 * data)
 {
-  yuv->y = data;
-  yuv->y_width = width;
-  yuv->y_height = height;
-  yuv->y_stride = GST_ROUND_UP_4 (width);
+  GstVideoFormat format;
+  guint i;
 
-  switch (format) {
-    case OC_PF_444:
-      yuv->uv_width = width;
-      yuv->uv_height = height;
-      yuv->uv_stride = GST_ROUND_UP_4 (width);
-      yuv->u = yuv->y + height * yuv->y_stride;
-      yuv->v = yuv->u + height * yuv->uv_stride;
+  switch (info->pixel_fmt) {
+    case TH_PF_444:
+      format = GST_VIDEO_FORMAT_Y444;
       break;
-    case OC_PF_420:
-      yuv->uv_width = width / 2;
-      yuv->uv_height = height / 2;
-      yuv->uv_stride = GST_ROUND_UP_8 (width) / 2;
-      yuv->u = yuv->y + GST_ROUND_UP_2 (height) * yuv->y_stride;
-      yuv->v = yuv->u + GST_ROUND_UP_2 (height) / 2 * yuv->uv_stride;
+    case TH_PF_420:
+      format = GST_VIDEO_FORMAT_I420;
       break;
-    case OC_PF_422:
-      yuv->uv_width = width / 2;
-      yuv->uv_height = height;
-      yuv->uv_stride = GST_ROUND_UP_8 (width) / 2;
-      yuv->u = yuv->y + height * yuv->y_stride;
-      yuv->v = yuv->u + height * yuv->uv_stride;
+    case TH_PF_422:
+      format = GST_VIDEO_FORMAT_Y42B;
       break;
     default:
       g_assert_not_reached ();
   }
-}
 
-/* NB: This function does no input checking */
-static void
-copy_plane (guint8 * dest, int dest_width, int dest_height, int dest_stride,
-    const guint8 * src, int src_width, int src_height, int src_stride,
-    int black)
-{
-  int right_border, i;
+  /* According to Theora developer Timothy Terriberry, the Theora 
+   * encoder will not use memory outside of pic_width/height, even when
+   * the frame size is bigger. The values outside this region will be encoded
+   * to default values.
+   * Due to this, setting the frame's width/height as the buffer width/height
+   * is perfectly ok, even though it does not strictly look ok.
+   */
+  for (i = 0; i < 3; i++) {
+    buf[i].width =
+        gst_video_format_get_component_width (format, i, info->frame_width);
+    buf[i].height =
+        gst_video_format_get_component_height (format, i, info->frame_height);
 
-  right_border = dest_width - src_width;
-
-  /* copy source */
-  for (i = 0; i < src_height; i++) {
-    memcpy (dest, src, src_width);
-    memset (dest + src_width, black, right_border);
-
-    dest += dest_stride;
-    src += src_stride;
+    buf[i].data =
+        data + gst_video_format_get_component_offset (format, i,
+        info->pic_width, info->pic_height);
+    buf[i].stride =
+        gst_video_format_get_row_stride (format, i, info->pic_width);
   }
-
-  /* fill bottom border */
-  memset (dest, black, dest_stride * (dest_height - src_height));
-}
-
-static guint
-theora_format_get_bits_per_pixel (theora_pixelformat format)
-{
-  switch (format) {
-    case OC_PF_420:
-      return 12;
-    case OC_PF_422:
-      return 16;
-    case OC_PF_444:
-      return 24;
-    default:
-      g_assert_not_reached ();
-      return 0;
-  }
-}
-
-static GstBuffer *
-theora_enc_resize_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
-{
-  yuv_buffer dest, src;
-  GstBuffer *newbuf;
-
-  if (enc->width == enc->info_width && enc->height == enc->info_height) {
-    GST_LOG_OBJECT (enc, "no cropping/conversion needed");
-    return buffer;
-  }
-
-  GST_LOG_OBJECT (enc, "cropping/conversion needed for strides");
-
-  newbuf = gst_buffer_new_and_alloc (enc->info_width * enc->info_height *
-      theora_format_get_bits_per_pixel (enc->info.pixelformat) / 8);
-  if (!newbuf) {
-    gst_buffer_unref (buffer);
-    return NULL;
-  }
-  GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET_NONE;
-  gst_buffer_set_caps (newbuf, GST_PAD_CAPS (enc->srcpad));
-
-  theora_enc_init_yuv_buffer (&src, enc->info.pixelformat,
-      GST_BUFFER_DATA (buffer), enc->width, enc->height);
-  theora_enc_init_yuv_buffer (&dest, enc->info.pixelformat,
-      GST_BUFFER_DATA (newbuf), enc->info_width, enc->info_height);
-
-  copy_plane (dest.y, dest.y_width, dest.y_height, dest.y_stride,
-      src.y, src.y_width, src.y_height, src.y_stride, 0);
-
-  copy_plane (dest.u, dest.uv_width, dest.uv_height, dest.uv_stride,
-      src.u, src.uv_width, src.uv_height, src.uv_stride, 128);
-  copy_plane (dest.v, dest.uv_width, dest.uv_height, dest.uv_stride,
-      src.v, src.uv_width, src.uv_height, src.uv_stride, 128);
-
-  gst_buffer_unref (buffer);
-  return newbuf;
 }
 
 static GstFlowReturn
@@ -954,7 +867,9 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   if (enc->packetno == 0) {
     /* no packets written yet, setup headers */
     GstCaps *caps;
-    GstBuffer *buf1, *buf2, *buf3;
+    GstBuffer *buf;
+    GSList *buffers = NULL;
+    int result;
 
     enc->granulepos_offset = 0;
     enc->timestamp_offset = 0;
@@ -967,75 +882,47 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
        make the headers, then pass them to libtheora one at a time;
        libtheora handles the additional Ogg bitstream constraints */
 
-    /* first packet will get its own page automatically */
-    if (theora_encode_header (&enc->state, &op) != 0)
-      goto encoder_disabled;
-
-    ret =
-        theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
-        GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, &buf1);
-    if (ret != GST_FLOW_OK) {
-      goto header_buffer_alloc;
-    }
-
     /* create the remaining theora headers */
-    theora_comment_clear (&enc->comment);
-    theora_comment_init (&enc->comment);
+    th_comment_clear (&enc->comment);
+    th_comment_init (&enc->comment);
 
-    if (theora_encode_comment (&enc->comment, &op) != 0)
+    while ((result =
+            th_encode_flushheader (enc->encoder, &enc->comment, &op)) > 0) {
+      ret =
+          theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
+          GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, &buf);
+      if (ret != GST_FLOW_OK) {
+        goto header_buffer_alloc;
+      }
+      buffers = g_slist_prepend (buffers, buf);
+    }
+    if (result < 0) {
+      g_slist_foreach (buffers, (GFunc) gst_buffer_unref, NULL);
+      g_slist_free (buffers);
       goto encoder_disabled;
-
-    ret =
-        theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
-        GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, &buf2);
-    /* Theora expects us to put this packet buffer into an ogg page,
-     * in which case it becomes the ogg library's responsibility to
-     * free it. Since we're copying and outputting a gst_buffer,
-     * we need to free it ourselves. */
-    if (op.packet)
-      free (op.packet);
-
-    if (ret != GST_FLOW_OK) {
-      gst_buffer_unref (buf1);
-      goto header_buffer_alloc;
     }
 
-    if (theora_encode_tables (&enc->state, &op) != 0)
-      goto encoder_disabled;
-
-    ret =
-        theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
-        GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, &buf3);
-    if (ret != GST_FLOW_OK) {
-      gst_buffer_unref (buf1);
-      gst_buffer_unref (buf2);
-      goto header_buffer_alloc;
-    }
+    buffers = g_slist_reverse (buffers);
 
     /* mark buffers and put on caps */
     caps = gst_pad_get_caps (enc->srcpad);
-    caps = theora_set_header_on_caps (caps, buf1, buf2, buf3);
+    caps = theora_set_header_on_caps (caps, buffers);
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (enc->srcpad, caps);
 
-    gst_buffer_set_caps (buf1, caps);
-    gst_buffer_set_caps (buf2, caps);
-    gst_buffer_set_caps (buf3, caps);
+    g_slist_foreach (buffers, (GFunc) gst_buffer_set_caps, caps);
 
     gst_caps_unref (caps);
 
     /* push out the header buffers */
-    if ((ret = theora_push_buffer (enc, buf1)) != GST_FLOW_OK) {
-      gst_buffer_unref (buf2);
-      gst_buffer_unref (buf3);
-      goto header_push;
-    }
-    if ((ret = theora_push_buffer (enc, buf2)) != GST_FLOW_OK) {
-      gst_buffer_unref (buf3);
-      goto header_push;
-    }
-    if ((ret = theora_push_buffer (enc, buf3)) != GST_FLOW_OK) {
-      goto header_push;
+    while (buffers) {
+      buf = buffers->data;
+      buffers = g_slist_delete_link (buffers, buffers);
+      if ((ret = theora_push_buffer (enc, buf)) != GST_FLOW_OK) {
+        g_slist_foreach (buffers, (GFunc) gst_buffer_unref, NULL);
+        g_slist_free (buffers);
+        goto header_push;
+      }
     }
 
     enc->granulepos_offset =
@@ -1046,15 +933,10 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   {
-    yuv_buffer yuv;
+    th_ycbcr_buffer ycbcr;
     gint res;
 
-    buffer = theora_enc_resize_buffer (enc, buffer);
-    if (buffer == NULL)
-      return GST_FLOW_ERROR;
-
-    theora_enc_init_yuv_buffer (&yuv, enc->info.pixelformat,
-        GST_BUFFER_DATA (buffer), enc->info_width, enc->info_height);
+    theora_enc_init_buffer (ycbcr, &enc->info, GST_BUFFER_DATA (buffer));
 
     if (theora_enc_is_discontinuous (enc, running_time, duration)) {
       theora_enc_reset (enc);
@@ -1066,15 +948,15 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       enc->next_discont = TRUE;
     }
 
-    res = theora_encode_YUVin (&enc->state, &yuv);
+    res = th_encode_ycbcr_in (enc->encoder, ycbcr);
     /* none of the failure cases can happen here */
     g_assert (res == 0);
 
     ret = GST_FLOW_OK;
-    while (theora_encode_packetout (&enc->state, 0, &op)) {
+    while (th_encode_packetout (enc->encoder, 0, &op)) {
       GstClockTime next_time;
 
-      next_time = theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
+      next_time = th_granule_time (enc->encoder, op.granulepos) * GST_SECOND;
 
       ret =
           theora_push_packet (enc, &op, timestamp, enc->next_ts,
@@ -1127,8 +1009,8 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (enc, "READY->PAUSED Initing theora state");
-      theora_info_init (&enc->info);
-      theora_comment_init (&enc->comment);
+      th_info_init (&enc->info);
+      th_comment_init (&enc->comment);
       enc->packetno = 0;
       enc->force_keyframe = FALSE;
       break;
@@ -1145,9 +1027,12 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (enc, "PAUSED->READY Clearing theora state");
-      theora_clear (&enc->state);
-      theora_comment_clear (&enc->comment);
-      theora_info_clear (&enc->info);
+      if (enc->encoder) {
+        th_encode_free (enc->encoder);
+        enc->encoder = NULL;
+      }
+      th_comment_clear (&enc->comment);
+      th_info_clear (&enc->info);
 
       theora_enc_clear (enc);
       enc->initialised = FALSE;
