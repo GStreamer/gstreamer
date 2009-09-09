@@ -282,6 +282,8 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 static void
 pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * priv)
 {
+  gchar *padname;
+
   GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
 
   if (G_UNLIKELY (priv->pad)) {
@@ -294,7 +296,9 @@ pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * priv)
 
   /* ghost it ! */
   GST_DEBUG ("Ghosting pad and adding it to ourself");
-  priv->ghostpad = gst_ghost_pad_new (GST_PAD_NAME (pad), pad);
+  padname = g_strdup_printf ("track_%p_src", track);
+  priv->ghostpad = gst_ghost_pad_new (padname, pad);
+  g_free (padname);
   gst_pad_set_active (priv->ghostpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (priv->timeline), priv->ghostpad);
 }
