@@ -441,6 +441,7 @@ theora_enc_sink_getcaps (GstPad * pad)
       supported_formats);
   caps = gst_caps_from_string (caps_string);
   g_free (caps_string);
+  GST_DEBUG ("Supported caps: %" GST_PTR_FORMAT, caps);
 
   return caps;
 }
