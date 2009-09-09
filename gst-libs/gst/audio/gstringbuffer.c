@@ -1612,8 +1612,8 @@ default_commit (GstRingBuffer * buf, guint64 * sample,
       diff = writeseg - segdone;
 
       GST_DEBUG
-          ("pointer at %d, write to %d-%d, diff %d, segtotal %d, segsize %d",
-          segdone, writeseg, sampleoff, diff, segtotal, segsize);
+          ("pointer at %d, write to %d-%d, diff %d, segtotal %d, segsize %d, base %d",
+          segdone, writeseg, sampleoff, diff, segtotal, segsize, buf->segbase);
 
       /* segment too far ahead, writer too slow, we need to drop, hopefully UNLIKELY */
       if (G_UNLIKELY (diff < 0)) {
