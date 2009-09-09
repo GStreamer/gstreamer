@@ -352,6 +352,16 @@ gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
 }
 #endif /* defined (__GNUC__) */
 
+/* This always gives the correct result because:
+ * a) val <= G_MAXUINT64-1
+ * b) (c0,c1) <= G_MAXUINT64 * (G_MAXUINT64-1)
+ *    or
+ *    (c0,c1) == G_MAXUINT64 * G_MAXUINT64 and denom < G_MAXUINT64
+ *    (note: num==denom case is handled by short path)
+ * This means that (c0,c1) either has enough space for val
+ * or that the overall result will overflow anyway.
+ */
+
 /* add correction with carry */
 #define CORRECT(c0,c1,val)                    \
   if (val) {                                  \
