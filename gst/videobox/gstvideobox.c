@@ -951,8 +951,8 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
             Vtemp[UVfloor (a + j)] =
                 (Vtemp[UVfloor (a + j)] + ((guint8 *) & src_loc1[j])[3]) / 2;
           } else {
-            Utemp[UVfloor (a + j)] = ((guint8 *) & src_loc1[j])[2] / 2;
-            Vtemp[UVfloor (a + j)] = ((guint8 *) & src_loc1[j])[3] / 2;
+            Utemp[UVfloor (a + j)] = ((guint8 *) & src_loc1[j])[2];
+            Vtemp[UVfloor (a + j)] = ((guint8 *) & src_loc1[j])[3];
           }
         }
         Ydest += crop_w;
