@@ -22,25 +22,30 @@
 /* A simple timeline with 3 video-only sources */
 
 static gboolean
-fill_videotestsrc (GESTimelineObject * object, GESTrackObject * trobject,
+fill_customsrc (GESTimelineObject * object, GESTrackObject * trobject,
     GstElement * gnlobj, gpointer user_data)
 {
-  GstElement *vsrc;
+  GstElement *src;
   guint var = GPOINTER_TO_UINT (user_data);
 
-  vsrc = gst_element_factory_make ("videotestsrc", NULL);
-  g_object_set (vsrc, "pattern", var, NULL);
+  if (trobject->track->type == GES_TRACK_TYPE_VIDEO) {
+    src = gst_element_factory_make ("videotestsrc", NULL);
+    g_object_set (src, "pattern", var, NULL);
+  } else if (trobject->track->type == GES_TRACK_TYPE_AUDIO) {
+    src = gst_element_factory_make ("audiotestsrc", NULL);
+    g_object_set (src, "freq", 440.0 * (var + 1), NULL);
+  } else
+    return FALSE;
 
-  return gst_bin_add (GST_BIN (gnlobj), vsrc);
+  return gst_bin_add (GST_BIN (gnlobj), src);
 }
-
 
 int
 main (int argc, gchar ** argv)
 {
   GESTimelinePipeline *pipeline;
   GESTimeline *timeline;
-  GESTrack *track;
+  GESTrack *trackv, *tracka;
   GESTimelineLayer *layer;
   GESCustomTimelineSource *src1, *src2, *src3;
   GMainLoop *mainloop;
@@ -51,23 +56,23 @@ main (int argc, gchar ** argv)
 
   pipeline = ges_timeline_pipeline_new ();
   timeline = ges_timeline_new ();
-  track = ges_track_video_raw_new ();
+  trackv = ges_track_video_raw_new ();
+  tracka = ges_track_audio_raw_new ();
   layer = ges_timeline_layer_new ();
 
   if (!ges_timeline_add_layer (timeline, layer))
     return -1;
 
-  if (!ges_timeline_add_track (timeline, track))
+  if (!ges_timeline_add_track (timeline, trackv))
+    return -1;
+  if (!ges_timeline_add_track (timeline, tracka))
     return -1;
 
-  src1 =
-      ges_custom_timeline_source_new (fill_videotestsrc, GUINT_TO_POINTER (0));
+  src1 = ges_custom_timeline_source_new (fill_customsrc, GUINT_TO_POINTER (0));
   g_object_set (src1, "start", 0, "duration", GST_SECOND, NULL);
-  src2 =
-      ges_custom_timeline_source_new (fill_videotestsrc, GUINT_TO_POINTER (1));
+  src2 = ges_custom_timeline_source_new (fill_customsrc, GUINT_TO_POINTER (1));
   g_object_set (src2, "start", GST_SECOND, "duration", GST_SECOND, NULL);
-  src3 =
-      ges_custom_timeline_source_new (fill_videotestsrc, GUINT_TO_POINTER (0));
+  src3 = ges_custom_timeline_source_new (fill_customsrc, GUINT_TO_POINTER (0));
   g_object_set (src3, "start", 2 * GST_SECOND, "duration", GST_SECOND, NULL);
 
   ges_timeline_layer_add_object (layer, (GESTimelineObject *) src1);
