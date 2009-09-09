@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib libgstinterfaces-0.10.lib libgstaudio-0.10.lib glib-2.0.lib gmodule-2.0.lib gobject-2.0.lib gthread-2.0.lib winmm.lib rpcrt4.lib strmbasd.lib strmiids.lib"
+				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib libgstinterfaces-0.10.lib libgstaudio-0.10.lib libgstvideo-0.10.lib glib-2.0.lib gmodule-2.0.lib gobject-2.0.lib gthread-2.0.lib winmm.lib rpcrt4.lib strmbasd.lib strmiids.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="C:\msys\1.0\local\lib;&quot;C:\Program Files\Microsoft SDKs\Windows\v6.1\Lib&quot;;&quot;C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses\Debug&quot;"
 				GenerateDebugInformation="true"
@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib libgstinterfaces-0.10.lib libgstaudio-0.10.lib glib-2.0.lib gmodule-2.0.lib gobject-2.0.lib gthread-2.0.lib winmm.lib rpcrt4.lib strmbase.lib strmiids.lib"
+				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib libgstinterfaces-0.10.lib libgstaudio-0.10.lib libgstvideo-0.10.lib glib-2.0.lib gmodule-2.0.lib gobject-2.0.lib gthread-2.0.lib winmm.lib rpcrt4.lib strmbase.lib strmiids.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="C:\msys\1.0\local\lib;&quot;C:\Program Files\Microsoft SDKs\Windows\v6.1\Lib&quot;;&quot;C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses\Release&quot;"
 				GenerateDebugInformation="true"
@@ -214,7 +214,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib libgstinterfaces-0.10.lib libgstaudio-0.10.lib glib-2.0.lib gmodule-2.0.lib gobject-2.0.lib gthread-2.0.lib winmm.lib rpcrt4.lib strmbasd.lib strmiids.lib"
+				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib libgstinterfaces-0.10.lib libgstaudio-0.10.lib libgstvideo-0.10.lib glib-2.0.lib gmodule-2.0.lib gobject-2.0.lib gthread-2.0.lib winmm.lib rpcrt4.lib strmbasd.lib strmiids.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="C:\msys\1.0\local\lib;&quot;C:\Program Files\Microsoft SDKs\Windows\v6.1\Lib&quot;;&quot;C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses\Debug_MBCS&quot;"
 				GenerateDebugInformation="true"
@@ -290,7 +290,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib libgstinterfaces-0.10.lib libgstaudio-0.10.lib glib-2.0.lib gmodule-2.0.lib gobject-2.0.lib gthread-2.0.lib winmm.lib rpcrt4.lib strmbase.lib strmiids.lib"
+				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib libgstinterfaces-0.10.lib libgstaudio-0.10.lib libgstvideo-0.10.lib glib-2.0.lib gmodule-2.0.lib gobject-2.0.lib gthread-2.0.lib winmm.lib rpcrt4.lib strmbase.lib strmiids.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="C:\msys\1.0\local\lib;&quot;C:\Program Files\Microsoft SDKs\Windows\v6.1\Lib&quot;;&quot;C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses\Release_MBCS&quot;"
 				GenerateDebugInformation="true"

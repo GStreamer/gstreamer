@@ -37,11 +37,6 @@ GST_ELEMENT_DETAILS ("DirectShow video capture source",
 GST_DEBUG_CATEGORY_STATIC (dshowvideosrc_debug);
 #define GST_CAT_DEFAULT dshowvideosrc_debug
 
-const GUID MEDIASUBTYPE_I420
-    = { 0x30323449, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B,
-    0x71}
-};
-
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -103,7 +98,9 @@ static GstFlowReturn gst_dshowvideosrc_create (GstPushSrc * psrc,
 
 /*utils*/
 static GstCaps *gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc *
-    src, IPin * pin, IAMStreamConfig * streamcaps);
+    src, IPin * pin);
+static GstCaps *gst_dshowvideosrc_getcaps_from_enum_mediatypes (GstDshowVideoSrc *
+    src, IPin * pin);
 static gboolean gst_dshowvideosrc_push_buffer (byte * buffer, long size,
     gpointer src_object, UINT64 start, UINT64 stop);
 
@@ -540,18 +537,16 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
           /* we only want capture pins */
           if (UuidCompare (&pin_category, (UUID *) & PIN_CATEGORY_CAPTURE,
                   &rpcstatus) == 0) {
-            IAMStreamConfig *streamcaps = NULL;
-
-            if (SUCCEEDED (capture_pin->QueryInterface (IID_IAMStreamConfig,
-                        (LPVOID *) & streamcaps))) {
+            {
               GstCaps *caps =
-                  gst_dshowvideosrc_getcaps_from_streamcaps (src, capture_pin,
-                  streamcaps);
-
+                  gst_dshowvideosrc_getcaps_from_streamcaps (src, capture_pin);
               if (caps) {
                 gst_caps_append (src->caps, caps);
+              } else {
+                caps = gst_dshowvideosrc_getcaps_from_enum_mediatypes (src, capture_pin);
+                if (caps)
+                  gst_caps_append (src->caps, caps);
               }
-              streamcaps->Release ();
             }
           }
 
@@ -563,6 +558,8 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
       enumpins->Release ();
     }
   }
+
+  g_print ("caps: %s\n", gst_caps_to_string (src->caps));
 
   if (unidevice) {
     g_free (unidevice);
@@ -874,8 +871,7 @@ gst_dshowvideosrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 }
 
 static GstCaps *
-gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
-    IAMStreamConfig * streamcaps)
+gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin)
 {
   GstCaps *caps = NULL;
   HRESULT hres = S_OK;
@@ -883,36 +879,36 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
   int isize = 0;
   VIDEO_STREAM_CONFIG_CAPS vscc;
   int i = 0;
+  IAMStreamConfig *streamcaps = NULL;
 
-  if (!streamcaps)
+  hres = pin->QueryInterface (IID_IAMStreamConfig, (LPVOID *) & streamcaps);
+  if (FAILED (hres)) {
+    GST_ERROR ("Failed to retrieve IAMStreamConfig (error=0x%x)", hres);
     return NULL;
+  }
 
   streamcaps->GetNumberOfCapabilities (&icount, &isize);
 
-  if (isize != sizeof (vscc))
+  if (isize != sizeof (vscc)) {
+    streamcaps->Release ();
     return NULL;
+  }
 
   caps = gst_caps_new_empty ();
 
-  for (; i < icount; i++) {
+  for (i = 0; i < icount; i++) {
 
     GstCapturePinMediaType *pin_mediatype =
-        gst_dshow_new_pin_mediatype (pin, i, streamcaps);
+      gst_dshow_new_pin_mediatype_from_streamcaps (pin, i, streamcaps);
 
     if (pin_mediatype) {
 
       GstCaps *mediacaps = NULL;
+      GstVideoFormat video_format = 
+        gst_dshow_guid_to_gst_video_format (pin_mediatype->mediatype);
 
-      if (gst_dshow_check_mediatype (pin_mediatype->mediatype,
-              MEDIASUBTYPE_I420, FORMAT_VideoInfo)) {
-        mediacaps =
-            gst_dshow_new_video_caps (GST_VIDEO_FORMAT_I420, NULL,
-            pin_mediatype);
-
-      } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype,
-              MEDIASUBTYPE_RGB24, FORMAT_VideoInfo)) {
-        mediacaps =
-            gst_dshow_new_video_caps (GST_VIDEO_FORMAT_BGR, NULL,
+      if (video_format != GST_VIDEO_FORMAT_UNKNOWN) {
+        mediacaps = gst_dshow_new_video_caps (video_format, NULL,
             pin_mediatype);
 
       } else if (gst_dshow_check_mediatype (pin_mediatype->mediatype,
@@ -939,9 +935,56 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin,
         /* failed to convert dshow caps */
         gst_dshow_free_pin_mediatype (pin_mediatype);
       }
-
     }
   }
+
+  streamcaps->Release ();
+
+  if (caps && gst_caps_is_empty (caps)) {
+    gst_caps_unref (caps);
+    caps = NULL;
+  }
+
+  return caps;
+}
+
+static GstCaps *
+gst_dshowvideosrc_getcaps_from_enum_mediatypes (GstDshowVideoSrc * src, IPin * pin)
+{
+  GstCaps *caps = NULL;
+  IEnumMediaTypes *enum_mediatypes = NULL;
+  HRESULT hres = S_OK;
+  GstCapturePinMediaType *pin_mediatype = NULL;
+
+  hres = pin->EnumMediaTypes (&enum_mediatypes);
+  if (FAILED (hres)) {
+    GST_ERROR ("Failed to retrieve IEnumMediaTypes (error=0x%x)", hres);
+    return NULL;
+  }
+
+  caps = gst_caps_new_empty ();
+
+  while ((pin_mediatype = gst_dshow_new_pin_mediatype_from_enum_mediatypes (pin, enum_mediatypes)) != NULL) {
+
+    GstCaps *mediacaps = NULL;
+    GstVideoFormat video_format = gst_dshow_guid_to_gst_video_format (pin_mediatype->mediatype);
+
+    if (video_format != GST_VIDEO_FORMAT_UNKNOWN)
+      mediacaps = gst_video_format_new_caps (video_format, 
+          pin_mediatype->defaultWidth, pin_mediatype->defaultHeight,
+          pin_mediatype->defaultFPS, 1, 1, 1);
+
+    if (mediacaps) {
+      src->pins_mediatypes =
+          g_list_append (src->pins_mediatypes, pin_mediatype);
+      gst_caps_append (caps, mediacaps);
+    } else {
+      /* failed to convert dshow caps */
+      gst_dshow_free_pin_mediatype (pin_mediatype);
+    }
+  }
+
+  enum_mediatypes->Release ();
 
   if (caps && gst_caps_is_empty (caps)) {
     gst_caps_unref (caps);

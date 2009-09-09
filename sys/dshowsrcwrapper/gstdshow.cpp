@@ -22,6 +22,11 @@
 #include "gstdshow.h"
 #include "gstdshowfakesink.h"
 
+const GUID MEDIASUBTYPE_I420
+    = { 0x30323449, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B,
+    0x71}
+};
+
 void
 gst_dshow_free_mediatype (AM_MEDIA_TYPE * pmt)
 {
@@ -58,9 +63,44 @@ gst_dshow_free_pin_mediatype (gpointer pt)
 }
 
 GstCapturePinMediaType *
-gst_dshow_new_pin_mediatype (IPin * pin, gint id, IAMStreamConfig * streamcaps)
+gst_dshow_new_pin_mediatype (IPin * pin)
 {
   GstCapturePinMediaType *pin_mediatype = g_new0 (GstCapturePinMediaType, 1);
+
+  pin->AddRef ();
+  pin_mediatype->capture_pin = pin;
+
+  return pin_mediatype;
+}
+
+GstCapturePinMediaType *
+gst_dshow_new_pin_mediatype_from_enum_mediatypes (IPin * pin, IEnumMediaTypes *enum_mediatypes)
+{
+  GstCapturePinMediaType *pin_mediatype = gst_dshow_new_pin_mediatype (pin);
+  VIDEOINFOHEADER *video_info = NULL;
+
+  HRESULT hres = enum_mediatypes->Next (1, &pin_mediatype->mediatype, NULL);
+  if (hres != S_OK || !pin_mediatype->mediatype) {
+    gst_dshow_free_pin_mediatype (pin_mediatype);
+    return NULL;
+  }
+
+  video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
+
+  pin_mediatype->defaultWidth = video_info->bmiHeader.biWidth;
+  pin_mediatype->defaultHeight = video_info->bmiHeader.biHeight;
+  pin_mediatype->defaultFPS = (gint) (10000000 / video_info->AvgTimePerFrame);
+  pin_mediatype->granularityWidth = 1;
+  pin_mediatype->granularityHeight = 1;
+
+  return pin_mediatype;
+}
+
+GstCapturePinMediaType *
+gst_dshow_new_pin_mediatype_from_streamcaps (IPin * pin, gint id, IAMStreamConfig * streamcaps)
+{
+  GstCapturePinMediaType *pin_mediatype = gst_dshow_new_pin_mediatype (pin);
+  VIDEOINFOHEADER *video_info = NULL;
 
   HRESULT hres = streamcaps->GetStreamCaps (id, &pin_mediatype->mediatype,
       (BYTE *) & pin_mediatype->vscc);
@@ -69,8 +109,13 @@ gst_dshow_new_pin_mediatype (IPin * pin, gint id, IAMStreamConfig * streamcaps)
     return NULL;
   }
 
-  pin->AddRef ();
-  pin_mediatype->capture_pin = pin;
+  video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
+
+  pin_mediatype->defaultWidth = video_info->bmiHeader.biWidth;
+  pin_mediatype->defaultHeight = video_info->bmiHeader.biHeight;
+  pin_mediatype->defaultFPS = (gint) (10000000 / video_info->AvgTimePerFrame);
+  pin_mediatype->granularityWidth = pin_mediatype->vscc.OutputGranularityX;
+  pin_mediatype->granularityHeight = pin_mediatype->vscc.OutputGranularityY;
 
   return pin_mediatype;
 }
@@ -98,6 +143,7 @@ gst_dshow_check_mediatype (AM_MEDIA_TYPE * media_type, const GUID sub_type,
   return
       UuidCompare (&media_type->subtype, (UUID *) & sub_type,
       &rpcstatus) == 0 && rpcstatus == RPC_S_OK &&
+      //IsEqualGUID (&media_type->subtype, &sub_type)
       UuidCompare (&media_type->formattype, (UUID *) & format_type,
       &rpcstatus) == 0 && rpcstatus == RPC_S_OK;
 }
@@ -350,20 +396,24 @@ gst_dshow_show_propertypage (IBaseFilter * base_filter)
   return ret;
 }
 
+GstVideoFormat
+gst_dshow_guid_to_gst_video_format (AM_MEDIA_TYPE *mediatype)
+{
+  if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_I420, FORMAT_VideoInfo))
+    return GST_VIDEO_FORMAT_I420;
+
+  if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_RGB24, FORMAT_VideoInfo))
+    return GST_VIDEO_FORMAT_BGR;
+
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
 GstCaps *
 gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar * name,
     GstCapturePinMediaType * pin_mediatype)
 {
   GstCaps *video_caps = NULL;
   GstStructure *video_structure = NULL;
-  VIDEOINFOHEADER *video_info =
-      (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
-
-  pin_mediatype->defaultWidth = video_info->bmiHeader.biWidth;
-  pin_mediatype->defaultHeight = video_info->bmiHeader.biHeight;
-  pin_mediatype->defaultFPS = (gint) (10000000 / video_info->AvgTimePerFrame);
-  pin_mediatype->granularityWidth = pin_mediatype->vscc.OutputGranularityX;
-  pin_mediatype->granularityHeight = pin_mediatype->vscc.OutputGranularityY;
 
   /* raw video format */
   switch (video_format) {

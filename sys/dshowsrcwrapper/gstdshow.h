@@ -55,8 +55,15 @@ void gst_dshow_free_pin_mediatype (gpointer pt);
 void gst_dshow_free_mediatype (AM_MEDIA_TYPE * pmt);
 
 /* create a new capture media type that handles dshow video caps of a capture pin */
-GstCapturePinMediaType *gst_dshow_new_pin_mediatype (IPin * pin, gint id,
-    IAMStreamConfig * streamcaps);
+GstCapturePinMediaType *gst_dshow_new_pin_mediatype (IPin * pin);
+
+/* create a new capture media type from enum mediatype */
+GstCapturePinMediaType * gst_dshow_new_pin_mediatype_from_enum_mediatypes (IPin * pin, 
+    IEnumMediaTypes *enum_mediatypes);
+
+/* create a new capture media type from streamcaps */
+GstCapturePinMediaType *gst_dshow_new_pin_mediatype_from_streamcaps (IPin * pin, 
+    gint id, IAMStreamConfig * streamcaps);
 
 /* free the memory of all mediatypes of the input list if pin mediatype */
 void gst_dshow_free_pins_mediatypes (GList * mediatypes);
@@ -81,6 +88,9 @@ gchar *gst_dshow_getdevice_from_devicename (const GUID * device_category,
 
 /* show the capture filter property page (generally used to setup the device). the page is modal*/
 gboolean gst_dshow_show_propertypage (IBaseFilter * base_filter);
+
+/* translate GUID format to gsteamer video format */
+GstVideoFormat gst_dshow_guid_to_gst_video_format (AM_MEDIA_TYPE *mediatype);
 
 /* transform a dshow video caps to a gstreamer video caps */
 GstCaps *gst_dshow_new_video_caps (GstVideoFormat video_format,
