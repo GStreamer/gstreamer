@@ -95,6 +95,7 @@ gst_audio_clock_class_init (GstAudioClockClass * klass)
 static void
 gst_audio_clock_init (GstAudioClock * clock)
 {
+  GST_DEBUG_OBJECT (clock, "init");
   clock->last_time = 0;
   clock->abidata.ABI.time_offset = 0;
   GST_OBJECT_FLAG_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER);
@@ -148,8 +149,9 @@ gst_audio_clock_reset (GstAudioClock * clock, GstClockTime time)
   clock->abidata.ABI.time_offset = time_offset;
 
   GST_DEBUG_OBJECT (clock,
-      "reset clock to %" GST_TIME_FORMAT ", offset %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (time), GST_TIME_ARGS (time_offset));
+      "reset clock to %" GST_TIME_FORMAT ", last %" GST_TIME_FORMAT ", offset %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (time), GST_TIME_ARGS (clock->last_time),
+      GST_TIME_ARGS (time_offset));
 }
 
 static GstClockTime
@@ -200,8 +202,13 @@ gst_audio_clock_get_time (GstClock * clock)
 
   result = aclock->func (clock, aclock->user_data);
   if (result == GST_CLOCK_TIME_NONE) {
+    GST_DEBUG_OBJECT (clock, "no time, reuse last");
     result = aclock->last_time - aclock->abidata.ABI.time_offset;
   }
+
+  GST_DEBUG_OBJECT (clock,
+      "result %" GST_TIME_FORMAT ", last_time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (result), GST_TIME_ARGS (aclock->last_time));
 
   return result;
 }
