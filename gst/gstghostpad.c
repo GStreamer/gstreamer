@@ -718,8 +718,7 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
   /* First check if the peer is still available and our proxy pad */
   if (!GST_PAD_PEER (target) || !GST_IS_PROXY_PAD (GST_PAD_PEER (target))) {
     GST_OBJECT_UNLOCK (target);
-    gst_caps_unref (caps);
-    return;
+    goto done;
   }
 
   proxypad = GST_PROXY_PAD (GST_PAD_PEER (target));
@@ -730,8 +729,7 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
       !GST_IS_GHOST_PAD (GST_PROXY_PAD_INTERNAL (proxypad))) {
     GST_OBJECT_UNLOCK (target);
     GST_PROXY_UNLOCK (proxypad);
-    gst_caps_unref (caps);
-    return;
+    goto done;
   }
   gpad = GST_GHOST_PAD (GST_PROXY_PAD_INTERNAL (proxypad));
   g_object_ref (gpad);
@@ -751,6 +749,7 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
 
   g_object_unref (gpad);
 
+done:
   if (caps)
     gst_caps_unref (caps);
 }
