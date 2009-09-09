@@ -61,13 +61,13 @@ main (int argc, gchar ** argv)
     return -1;
 
   src1 =
-      ges_custom_timeline_source_new (fill_videotestsrc, GUINT_TO_POINTER (1));
+      ges_custom_timeline_source_new (fill_videotestsrc, GUINT_TO_POINTER (0));
   g_object_set (src1, "start", 0, "duration", GST_SECOND, NULL);
   src2 =
       ges_custom_timeline_source_new (fill_videotestsrc, GUINT_TO_POINTER (1));
   g_object_set (src2, "start", GST_SECOND, "duration", GST_SECOND, NULL);
   src3 =
-      ges_custom_timeline_source_new (fill_videotestsrc, GUINT_TO_POINTER (1));
+      ges_custom_timeline_source_new (fill_videotestsrc, GUINT_TO_POINTER (0));
   g_object_set (src3, "start", 2 * GST_SECOND, "duration", GST_SECOND, NULL);
 
   ges_timeline_layer_add_object (layer, (GESTimelineObject *) src1);
@@ -80,7 +80,7 @@ main (int argc, gchar ** argv)
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   mainloop = g_main_loop_new (NULL, FALSE);
-  g_timeout_add_seconds (4, g_main_loop_quit, mainloop);
+  g_timeout_add_seconds (4, (GSourceFunc) g_main_loop_quit, mainloop);
   g_main_loop_run (mainloop);
 
   return 0;
