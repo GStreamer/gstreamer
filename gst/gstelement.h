@@ -401,7 +401,7 @@ G_STMT_START {                                                          \
  * @last_return: the last return value of an element state change
  * @bus: the bus of the element. This bus is provided to the element by the
  * parent element or the application. A #GstPipeline has a bus of its own.
- * @clock: the clock of the element. This clock is usually provided by to the
+ * @clock: the clock of the element. This clock is usually provided to the
  * element by the toplevel #GstPipeline.
  * @base_time: the time of the clock right before the element is set to
  * PLAYING. Subtracting @base_time from the current clock time in the PLAYING
