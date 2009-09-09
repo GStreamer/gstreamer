@@ -43,6 +43,7 @@ main (int argc, gchar ** argv)
   GESTrack *track;
   GESTimelineLayer *layer;
   GESCustomTimelineSource *src1, *src2, *src3;
+  GMainLoop *mainloop;
 
   gst_init (&argc, &argv);
 
@@ -78,7 +79,9 @@ main (int argc, gchar ** argv)
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  g_usleep (10 * G_USEC_PER_SEC);
+  mainloop = g_main_loop_new (NULL, FALSE);
+  g_timeout_add_seconds (4, g_main_loop_quit, mainloop);
+  g_main_loop_run (mainloop);
 
   return 0;
 }
