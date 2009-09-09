@@ -1,0 +1,115 @@
+BufferPools
+-----------
+
+This document proposes a mechnism to build pools of reusable buffers. The
+proposal should improve performance and help to implement zero-copy usecases.
+
+Last edited: 2009-09.01 Stefan Kost
+
+
+Current Behaviour
+-----------------
+
+Elements either create own buffers or request downstream buffers via pad_alloc.
+There is hardly any reuse of buffers, instead they are ususaly disposed after
+being rendered.
+
+
+Problems
+--------
+
+  - hardware based elements like to reuse buffers as they e.g.
+    - mlock them (dsp)
+    - establish a index<->adress relation (v4l2)
+  - not reusing buffers has overhead and makes run time behaviour
+    non-deterministic:
+    - malloc (which usualy becomes an mmap for bigger buffers and thus a
+      syscall) and free (can trigger compression of freelists in the allocator)
+    - shm alloc/attach, detach/free (xvideo)
+  - some usecases cause memcpys
+    - not having the right amount of buffers (e.g. too few buffers in v4l2src)
+    - receiving buffers of wrong type (e.g. plain buffers in xvimagesink)
+    - receving buffers with wrong alignment (dsp)
+  - some usecases cause unneded cacheflushes when buffers are passed between
+    user and kernel-space
+
+
+What is needed
+--------------
+
+Elements that sink raw data buffers of usualy constant size would like to 
+maintain a bufferpool. These could be sinks or encoders. We need mechanims to
+select and dynamicaly update:
+
+  - the bufferpool owners in a pipeline
+  - the bufferpool sizes
+  - the queued buffer sizes, alignments and flags
+
+
+Proposal
+--------
+Querying the bufferpool size and buffer alignments can work simillar to latency
+queries (gst/gstbin.c:{gst_bin_query,bin_query_latency_fold}. Aggregation is
+quite straight forward : number-of-buffers is summed up and for alignment we
+gather the MAX value.
+
+Bins need to track which elemnts have been selected as bufferpools owners and
+update if those are removed (FIXME: in which states?).
+
+Bins would also need to track if elements that replied to the query are removed
+and update the bufferpool configuration (event). Likewise addition of new
+elements needs to be handled (query and if configuration is changed, update with
+event).
+
+Bufferpools owners need to handle caps changes to keep the queued buffers valid
+for the negotiated format.
+
+The bufferpool could be a helper GObject (like we use GstAdapter). If would
+manage a collection of GstBuffers. For each buffer t tracks wheter its in use or
+available. The bufferpool in gst-plgin-good/sys/v4l2/gstv4l2bufferpool might be
+a starting point.
+
+
+Scenarios
+---------
+
+v4l2src ! xvimagesink
+~~~~~~~~~~~~~~~~~~~~~
+- v4l2src would report 1 buffer (do we still want the queue-size property?)
+- xvimagesink would report 1 buffer
+
+v4l2src ! tee name=t ! queue ! xvimagesink t. ! queue ! enc ! mux ! filesink
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- v4l2src would report 1 buffer
+- xvimagesink would report 1 buffer
+- enc would report 1 buffer
+
+filesrc ! demux ! queue ! dec ! xvimagesink
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- dec would report 1 buffer
+- xvimagesink would report 1 buffer
+
+
+Issues
+------
+
+Does it make sense to also have pools for sources or should they always use
+buffers from a downstream element.
+
+Do we need to add +1 to aggregated buffercount to alloc to have a buffer
+floating? E.g. Can we push buffers queickly enough to have e.g.  v4l2src !
+xvimagesink working with 2 buffers. What about v4l2src ! queue ! xvimagesink?
+
+There are more attributes on buffers needed to reduce the overhead even more:
+
+  - padding: when using buffers on hardware one might need to pad the buffer on
+    the end to a specific alignment
+  - mlock: hardware that uses DMA needs buffers memory locked, if a buffer is
+    already memory locked, it can be used by other hardware based elements as is
+  - cache flushes: hardware based elements usualy need to flush cpu caches when
+    sending results as the dma based memory writes do no update eventually
+    cached values on the cpu. now if there is no element next in the pipeline
+    that actually reads from this memory area we could avoid the flushes. All
+    other hardware elements and elements with any caps (tee, queue, capsfilter)
+    are examples for those.
+
