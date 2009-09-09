@@ -479,18 +479,20 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (basesrc);
   gunichar2 *unidevice = NULL;
 
-  if (src->device) {
-    g_free (src->device);
-    src->device = NULL;
+  if (src->caps) {
+    return gst_caps_ref (src->caps);
   }
 
-  src->device =
-      gst_dshow_getdevice_from_devicename (&CLSID_VideoInputDeviceCategory,
-      &src->device_name);
   if (!src->device) {
-    GST_ERROR ("No video device found.");
-    return NULL;
+    src->device =
+        gst_dshow_getdevice_from_devicename (&CLSID_VideoInputDeviceCategory,
+        &src->device_name);
+    if (!src->device) {
+      GST_ERROR ("No video device found.");
+      return NULL;
+    }
   }
+
   unidevice =
       g_utf8_to_utf16 (src->device, strlen (src->device), NULL, NULL, NULL);
 
@@ -549,17 +551,13 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc)
               }
             }
           }
-
           pKs->Release ();
         }
-
         capture_pin->Release ();
       }
       enumpins->Release ();
     }
   }
-
-  g_print ("caps: %s\n", gst_caps_to_string (src->caps));
 
   if (unidevice) {
     g_free (unidevice);
@@ -712,7 +710,7 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
 
         /* check if the desired video size is valid about granularity  */
         /* This check will be removed when GST_TYPE_INT_RANGE_STEP exits */
-        /* See remarks in gst_dshowvideosrc_getcaps_from_streamcaps function */
+        /* See remarks in gst_dshow_new_video_caps function */
         if (pin_mediatype->granularityWidth != 0
             && width % pin_mediatype->granularityWidth != 0)
           g_warning ("your desired video size is not valid : %d mod %d !=0\n",
@@ -801,22 +799,34 @@ gst_dshowvideosrc_stop (GstBaseSrc * bsrc)
     input_pin->Release ();
   }
 
-  /*remove filters from the graph */
+  /* remove filters from the graph */
   src->filter_graph->RemoveFilter (src->video_cap_filter);
   src->filter_graph->RemoveFilter (src->dshow_fakesink);
 
-  /*release our gstreamer dshow sink */
+  /* release our gstreamer dshow sink */
   src->dshow_fakesink->Release ();
   src->dshow_fakesink = NULL;
 
-  /*release media filter interface */
+  /* release media filter interface */
   src->media_filter->Release ();
   src->media_filter = NULL;
 
-  /*release the filter graph manager */
+  /* release the filter graph manager */
   src->filter_graph->Release ();
   src->filter_graph = NULL;
 
+  /* reset caps */
+  if (src->caps) {
+    gst_caps_unref (src->caps);
+    src->caps = NULL;
+  }
+
+  /* reset device id */
+  if (src->device) {
+    g_free (src->device);
+    src->device = NULL;
+  }
+  
   return TRUE;
 }
 
