@@ -66,7 +66,7 @@ typedef enum
  * @GST_MIXER_MESSAGE_MIXER_CHANGED: A mixer-changed GstMixer message, posted
  *     when the list of available mixer tracks has changed. The application
  *     should re-build its interface in this case (Since: 0.10.18)
- * 
+ *
  * An enumeration for the type of a GstMixer message received on the bus
  *
  * Since: 0.10.14
@@ -93,7 +93,7 @@ typedef enum
  *    marked without either input or output.  Controls marked as input or
  *    output should be grouped with input & output sliders, even if they
  *    are options or bare switches. Since: 0.10.23
- * 
+ *
  * Flags indicating which optional features are supported by a mixer
  * implementation.
  *
@@ -111,7 +111,7 @@ struct _GstMixerClass {
   GTypeInterface klass;
 
   GstMixerType mixer_type;
-  
+
   /* virtual functions */
   const GList *  (* list_tracks)   (GstMixer      *mixer);
 
@@ -157,7 +157,7 @@ struct _GstMixerClass {
   gpointer padding2;
 #endif /* not GST_DISABLE_DEPRECATED */
 
-  GstMixerFlags (* get_mixer_flags) (GstMixer *mixer); 
+  GstMixerFlags (* get_mixer_flags) (GstMixer *mixer);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING-1];
