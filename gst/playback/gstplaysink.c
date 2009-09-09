@@ -220,6 +220,10 @@ static void gst_play_sink_class_init (GstPlaySinkClass * klass);
 static void gst_play_sink_init (GstPlaySink * playsink);
 static void gst_play_sink_dispose (GObject * object);
 static void gst_play_sink_finalize (GObject * object);
+static void gst_play_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * spec);
+static void gst_play_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * spec);
 
 static GstPad *gst_play_sink_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
@@ -255,6 +259,19 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_sink_dispose);
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_sink_finalize);
+  gobject_klass->set_property = GST_DEBUG_FUNCPTR (gst_play_sink_set_property);
+  gobject_klass->get_property = GST_DEBUG_FUNCPTR (gst_play_sink_get_property);
+
+
+  /**
+   * GstPlaySink:flags
+   *
+   * Control the behaviour of playsink.
+   */
+  g_object_class_install_property (gobject_klass, PROP_FLAGS,
+      g_param_spec_flags ("flags", "Flags", "Flags to control behaviour",
+          GST_TYPE_PLAY_FLAGS, DEFAULT_FLAGS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&audiorawtemplate));
@@ -292,7 +309,7 @@ gst_play_sink_init (GstPlaySink * playsink)
   playsink->text_sink = NULL;
   playsink->volume = 1.0;
   playsink->font_desc = NULL;
-  playsink->flags = GST_PLAY_FLAG_SOFT_VOLUME;
+  playsink->flags = DEFAULT_FLAGS;
 
   playsink->lock = g_mutex_new ();
   playsink->need_async_start = TRUE;
@@ -2682,6 +2699,39 @@ activate_failed:
     return GST_STATE_CHANGE_FAILURE;
   }
 }
+
+static void
+gst_play_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * spec)
+{
+  GstPlaySink *playsink = GST_PLAY_SINK (object);
+
+  switch (prop_id) {
+    case PROP_FLAGS:
+      gst_play_sink_set_flags (playsink, g_value_get_flags (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
+      break;
+  }
+}
+
+static void
+gst_play_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * spec)
+{
+  GstPlaySink *playsink = GST_PLAY_SINK (object);
+
+  switch (prop_id) {
+    case PROP_FLAGS:
+      g_value_set_flags (value, gst_play_sink_get_flags (playsink));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
+      break;
+  }
+}
+
 
 gboolean
 gst_play_sink_plugin_init (GstPlugin * plugin)
