@@ -40,12 +40,12 @@
  * <title>Using an element factory</title>
  * <programlisting language="c">
  *   #include &lt;gst/gst.h&gt;
- *   
+ *
  *   GstElement *src;
  *   GstElementFactory *srcfactory;
- *   
+ *
  *   gst_init (&amp;argc, &amp;argv);
- *   
+ *
  *   srcfactory = gst_element_factory_find ("filesrc");
  *   g_return_if_fail (srcfactory != NULL);
  *   src = gst_element_factory_create (srcfactory, "src");
@@ -410,7 +410,7 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
     goto no_element;
 
   /* fill in the pointer to the factory in the element class. The
-   * class will not be unreffed currently. 
+   * class will not be unreffed currently.
    * Be thread safe as there might be 2 threads creating the first instance of
    * an element at the same moment
    */

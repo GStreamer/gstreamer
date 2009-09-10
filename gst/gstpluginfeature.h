@@ -29,13 +29,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_PLUGIN_FEATURE 		(gst_plugin_feature_get_type())
-#define GST_PLUGIN_FEATURE(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PLUGIN_FEATURE, GstPluginFeature))
-#define GST_IS_PLUGIN_FEATURE(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PLUGIN_FEATURE))
-#define GST_PLUGIN_FEATURE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PLUGIN_FEATURE, GstPluginFeatureClass))
-#define GST_IS_PLUGIN_FEATURE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLUGIN_FEATURE))
-#define GST_PLUGIN_FEATURE_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PLUGIN_FEATURE, GstPluginFeatureClass))
-#define GST_PLUGIN_FEATURE_CAST(obj) 		((GstPluginFeature*)(obj))
+#define GST_TYPE_PLUGIN_FEATURE                 (gst_plugin_feature_get_type())
+#define GST_PLUGIN_FEATURE(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PLUGIN_FEATURE, GstPluginFeature))
+#define GST_IS_PLUGIN_FEATURE(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PLUGIN_FEATURE))
+#define GST_PLUGIN_FEATURE_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PLUGIN_FEATURE, GstPluginFeatureClass))
+#define GST_IS_PLUGIN_FEATURE_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLUGIN_FEATURE))
+#define GST_PLUGIN_FEATURE_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PLUGIN_FEATURE, GstPluginFeatureClass))
+#define GST_PLUGIN_FEATURE_CAST(obj)            ((GstPluginFeature*)(obj))
 
 /**
  * GST_PLUGIN_FEATURE_NAME:
@@ -90,7 +90,7 @@ struct _GstPluginFeature {
 };
 
 struct _GstPluginFeatureClass {
-  GstObjectClass	parent_class;
+  GstObjectClass        parent_class;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -104,8 +104,8 @@ struct _GstPluginFeatureClass {
  * Structure used for filtering based on @name and @type.
  */
 typedef struct {
-  const gchar 	*name;
-  GType		 type;
+  const gchar   *name;
+  GType          type;
 } GstTypeNameData;
 
 /**
@@ -123,18 +123,18 @@ typedef gboolean        (*GstPluginFeatureFilter)       (GstPluginFeature *featu
                                                          gpointer user_data);
 
 /* normal GObject stuff */
-GType		gst_plugin_feature_get_type		(void);
+GType           gst_plugin_feature_get_type             (void);
 
 GstPluginFeature *
-                gst_plugin_feature_load         	(GstPluginFeature *feature);
+                gst_plugin_feature_load                 (GstPluginFeature *feature);
 
-gboolean	gst_plugin_feature_type_name_filter	(GstPluginFeature *feature,
-							 GstTypeNameData *data);
+gboolean        gst_plugin_feature_type_name_filter     (GstPluginFeature *feature,
+                                                         GstTypeNameData *data);
 
-void		gst_plugin_feature_set_rank		(GstPluginFeature *feature, guint rank);
-void		gst_plugin_feature_set_name		(GstPluginFeature *feature, const gchar *name);
-guint		gst_plugin_feature_get_rank		(GstPluginFeature *feature);
-G_CONST_RETURN gchar *gst_plugin_feature_get_name	(GstPluginFeature *feature);
+void            gst_plugin_feature_set_rank             (GstPluginFeature *feature, guint rank);
+void            gst_plugin_feature_set_name             (GstPluginFeature *feature, const gchar *name);
+guint           gst_plugin_feature_get_rank             (GstPluginFeature *feature);
+G_CONST_RETURN gchar *gst_plugin_feature_get_name       (GstPluginFeature *feature);
 
 void            gst_plugin_feature_list_free            (GList *list);
 
