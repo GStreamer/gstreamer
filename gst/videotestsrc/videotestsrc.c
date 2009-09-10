@@ -1471,13 +1471,15 @@ static void
 paint_hline_I420 (paintinfo * p, int x, int y, int w)
 {
   int x1 = x / 2;
-  int x2 = (x + w) / 2;
+  int w1 = (x + w) / 2 - x1;
   int offset = y * p->ystride;
   int offset1 = (y / 2) * p->ustride;
 
+  if (x + w == p->width)
+    w1++;
   oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
-  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, x2 - x1);
-  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, x2 - x1);
+  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, w1);
+  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, w1);
 }
 
 static void
@@ -1688,13 +1690,14 @@ static void
 paint_hline_YUY2 (paintinfo * p, int x, int y, int w)
 {
   int x1 = x / 2;
-  int x2 = (x + w) / 2;
-  int offset;
+  int w1 = (x + w) / 2 - x1;
+  int offset = y * p->ystride;
 
-  offset = y * p->ystride;
+  if (x + w == p->width)
+    w1++;
   oil_splat_u8 (p->yp + offset + x * 2, 2, &p->yuv_color->Y, w);
-  oil_splat_u8 (p->up + offset + x1 * 4, 4, &p->yuv_color->U, x2 - x1);
-  oil_splat_u8 (p->vp + offset + x1 * 4, 4, &p->yuv_color->V, x2 - x1);
+  oil_splat_u8 (p->up + offset + x1 * 4, 4, &p->yuv_color->U, w1);
+  oil_splat_u8 (p->vp + offset + x1 * 4, 4, &p->yuv_color->V, w1);
 }
 
 static void
@@ -1760,13 +1763,15 @@ static void
 paint_hline_Y42B (paintinfo * p, int x, int y, int w)
 {
   int x1 = x / 2;
-  int x2 = (x + w) / 2;
+  int w1 = (x + w) / 2 - x1;
   int offset = y * p->ystride;
   int offset1 = y * p->ustride;
 
+  if (x + w == p->width)
+    w1++;
   oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
-  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, x2 - x1);
-  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, x2 - x1);
+  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, w1);
+  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, w1);
 }
 
 static void
