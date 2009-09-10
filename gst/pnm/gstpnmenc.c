@@ -37,6 +37,7 @@
 #include "gstpnmutils.h"
 
 #include <gst/gstutils.h>
+#include <gst/video/video.h>
 
 #include <string.h>
 
@@ -47,12 +48,58 @@ GST_ELEMENT_DETAILS ("PNM converter", "Codec/Encoder/Image",
 
 static GstStaticPadTemplate sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, bpp = (int) 24, "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ]"));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx));
 
 static GstStaticPadTemplate src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (MIME_ALL));
+
+static gboolean
+gst_pnmenc_set_srccaps (GstPnmenc * s, GstPad * pad)
+{
+  guint i;
+  GstCaps *othercaps, *caps = NULL;
+
+  othercaps = gst_pad_peer_get_caps (pad);
+  if (!othercaps) {
+    caps = gst_caps_from_string (MIME_BM);
+    gst_pad_set_caps (pad, caps);
+    gst_caps_unref (caps);
+    return TRUE;
+  }
+
+  s->info.fields &= ~GST_PNM_INFO_FIELDS_TYPE;
+  for (i = 0; i < gst_caps_get_size (othercaps); i++) {
+    GstStructure *structure = gst_caps_get_structure (othercaps, i);
+    const gchar *mime = gst_structure_get_name (structure);
+
+    if (!strcmp (mime, MIME_BM)) {
+      s->info.type = GST_PNM_TYPE_BITMAP_RAW;
+      caps = gst_caps_from_string (MIME_BM);
+      break;
+    }
+    if (!strcmp (mime, MIME_GM)) {
+      s->info.type = GST_PNM_TYPE_GRAYMAP_RAW;
+      caps = gst_caps_from_string (MIME_GM);
+      break;
+    }
+    if (!strcmp (mime, MIME_PM) || !strcmp (mime, MIME_AM)) {
+      s->info.type = GST_PNM_TYPE_PIXMAP_RAW;
+      caps = gst_caps_from_string (MIME_PM);
+      break;
+    }
+  }
+  gst_caps_unref (othercaps);
+  if (!caps) {
+    return FALSE;
+  }
+  s->info.max = 255;
+  s->info.fields |= GST_PNM_INFO_FIELDS_TYPE | GST_PNM_INFO_FIELDS_MAX;
+
+  gst_pad_set_caps (pad, caps);
+  gst_caps_unref (caps);
+  return TRUE;
+}
 
 static GstFlowReturn
 gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
@@ -65,9 +112,10 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
 
   /* The caps on the source may not be set. */
   if (!GST_PAD_CAPS (src)) {
-    GstCaps *caps = gst_caps_new_simple (MIME_PM, NULL);
-    gst_pad_set_caps (src, caps);
-    gst_caps_unref (caps);
+    if (!gst_pnmenc_set_srccaps (s, src)) {
+      r = GST_FLOW_NOT_NEGOTIATED;
+      goto out;
+    }
   }
 
   /* Assumption: One buffer, one image. That is, always first write header. */
@@ -76,12 +124,19 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
   out = gst_buffer_new ();
   gst_buffer_set_data (out, (guchar *) header, strlen (header));
   gst_buffer_set_caps (out, GST_PAD_CAPS (src));
-  if ((r = gst_pad_push (src, buf)) != GST_FLOW_OK)
-    return r;
+  if ((r = gst_pad_push (src, out)) != GST_FLOW_OK)
+    goto out;
 
   /* Pass through the data. */
+  buf = gst_buffer_make_metadata_writable (buf);
   gst_buffer_set_caps (buf, GST_PAD_CAPS (src));
-  return gst_pad_push (src, buf);
+  r = gst_pad_push (src, buf);
+
+out:
+  gst_object_unref (src);
+  gst_object_unref (s);
+
+  return r;
 }
 
 static gboolean
@@ -95,37 +150,7 @@ gst_pnmenc_setcaps_func_sink (GstPad * pad, GstCaps * caps)
     return FALSE;
   s->info.fields = GST_PNM_INFO_FIELDS_WIDTH | GST_PNM_INFO_FIELDS_HEIGHT;
 
-  return TRUE;
-}
-
-static GstPadLinkReturn
-gst_pnmenc_setcaps_func_src (GstPad * pad, GstCaps * caps)
-{
-  GstPnmenc *s = GST_PNMENC (gst_pad_get_parent (pad));
-  guint i;
-
-  s->info.fields &= ~GST_PNM_INFO_FIELDS_TYPE;
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (caps, i);
-    const gchar *mime = gst_structure_get_name (structure);
-
-    if (!strcmp (mime, MIME_BM)) {
-      s->info.type = GST_PNM_TYPE_BITMAP_RAW;
-      break;
-    }
-    if (!strcmp (mime, MIME_GM)) {
-      s->info.type = GST_PNM_TYPE_GRAYMAP_RAW;
-      break;
-    }
-    if (!strcmp (mime, MIME_PM) || !strcmp (mime, MIME_AM)) {
-      s->info.type = GST_PNM_TYPE_PIXMAP_RAW;
-      break;
-    }
-  }
-  if (i == gst_caps_get_size (caps))
-    return FALSE;
-  s->info.max = 255;
-  s->info.fields |= GST_PNM_INFO_FIELDS_TYPE | GST_PNM_INFO_FIELDS_MAX;
+  gst_object_unref (s);
 
   return TRUE;
 }
@@ -140,12 +165,13 @@ gst_pnmenc_init (GstPnmenc * s, GstPnmencClass * klass)
       (&sink_pad_template), "sink");
   gst_pad_set_setcaps_function (pad, gst_pnmenc_setcaps_func_sink);
   gst_pad_set_chain_function (pad, gst_pnmenc_chain);
+  gst_pad_use_fixed_caps (pad);
   gst_element_add_pad (GST_ELEMENT (s), pad);
 
   pad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&src_pad_template), "src");
-  gst_pad_set_setcaps_function (pad, gst_pnmenc_setcaps_func_src);
+  gst_pad_use_fixed_caps (pad);
   gst_element_add_pad (GST_ELEMENT (s), pad);
 }
 
