@@ -37,6 +37,7 @@
 #include "gstpnmutils.h"
 
 #include <gst/gstutils.h>
+#include <gst/video/video.h>
 
 #include <string.h>
 
@@ -48,8 +49,7 @@ static GstElementClass *parent_class;
 
 static GstStaticPadTemplate gst_pnmdec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, bpp = (int) 24, "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ]"));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx));
 
 static GstStaticPadTemplate gst_pnmdec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -70,19 +70,25 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
             GST_BUFFER_SIZE (data))) {
       case GST_PNM_INFO_MNGR_RESULT_FAILED:
         gst_buffer_unref (data);
-        return GST_FLOW_ERROR;
+        r = GST_FLOW_ERROR;
+        goto out;
       case GST_PNM_INFO_MNGR_RESULT_READING:
         gst_buffer_unref (data);
-        return GST_FLOW_OK;
+        r = GST_FLOW_OK;
+        goto out;
       case GST_PNM_INFO_MNGR_RESULT_FINISHED:
         offset = s->mngr.data_offset;
         caps = gst_pad_get_caps (src);
+        caps = gst_caps_make_writable (caps);
+        gst_caps_truncate (caps);
         gst_caps_set_simple (caps,
             "width", G_TYPE_INT, s->mngr.info.width,
-            "height", G_TYPE_INT, s->mngr.info.height, NULL);
+            "height", G_TYPE_INT, s->mngr.info.height, "framerate",
+            GST_TYPE_FRACTION, 0, 1, NULL);
         if (!gst_pad_set_caps (src, caps)) {
           gst_caps_unref (caps);
-          return GST_FLOW_ERROR;
+          r = GST_FLOW_ERROR;
+          goto out;
         }
         gst_caps_unref (caps);
         switch (s->mngr.info.type) {
@@ -100,8 +106,10 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
     }
   }
 
-  if (offset == GST_BUFFER_SIZE (data))
-    return GST_FLOW_OK;
+  if (offset == GST_BUFFER_SIZE (data)) {
+    r = GST_FLOW_OK;
+    goto out;
+  }
 
   /* If we got the whole image, just push the buffer. */
   if (GST_BUFFER_SIZE (data) - offset == s->size) {
@@ -110,7 +118,8 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
     memset (&s->mngr, 0, sizeof (GstPnmInfoMngr));
     s->size = 0;
     gst_buffer_set_caps (buf, GST_PAD_CAPS (src));
-    return gst_pad_push (src, buf);
+    r = gst_pad_push (src, buf);
+    goto out;
   }
 
   /* We didn't get the whole image. */
@@ -123,8 +132,10 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
     gst_buffer_unref (s->buf);
     s->buf = buf;
   }
-  if (!s->buf)
-    return GST_FLOW_ERROR;
+  if (!s->buf) {
+    r = GST_FLOW_ERROR;
+    goto out;
+  }
 
   /* Do we now have the full image? If yes, push. */
   if (GST_BUFFER_SIZE (s->buf) == s->size) {
@@ -134,6 +145,10 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
     memset (&s->mngr, 0, sizeof (GstPnmInfoMngr));
     s->size = 0;
   }
+
+out:
+  gst_object_unref (src);
+  gst_object_unref (s);
 
   return r;
 }
