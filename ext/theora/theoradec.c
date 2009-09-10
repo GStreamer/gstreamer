@@ -43,6 +43,7 @@
 
 #include "gsttheoradec.h"
 #include <gst/tag/tag.h>
+#include <gst/video/video.h>
 
 #define GST_CAT_DEFAULT theoradec_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -1132,194 +1133,60 @@ theora_dec_push_reverse (GstTheoraDec * dec, GstBuffer * buf)
 
 /* Allocate buffer and copy image data into Y444 format */
 static GstFlowReturn
-theora_handle_444_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
-    GstBuffer ** out)
+theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
 {
-  gint width = dec->width;
-  gint height = dec->height;
-  gint out_size;
-  gint stride;
+  gint width, height, stride;
   GstFlowReturn result;
   int i, plane;
+  GstVideoFormat format;
+  guint8 *dest, *src;
 
-  stride = GST_ROUND_UP_4 (width);
-  out_size = stride * height * 3;
-
-  /* now copy over the area contained in pic_x, pic_y,
-   * pic_width, pic_height */
-  result =
-      gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-      out_size, GST_PAD_CAPS (dec->srcpad), out);
-  if (G_UNLIKELY (result != GST_FLOW_OK))
-    goto no_buffer;
-
-  {
-    guchar *dest, *src;
-
-    for (plane = 0; plane < 3; plane++) {
-      dest = GST_BUFFER_DATA (*out) + plane * stride * height;
-
-      src = buf[plane].data + dec->offset_x + dec->offset_y * buf[plane].stride;
-
-      for (i = 0; i < height; i++) {
-        memcpy (dest, src, width);
-
-        dest += stride;
-        src += buf[0].stride;
-      }
-    }
+  switch (dec->info.pixel_fmt) {
+    case TH_PF_444:
+      format = GST_VIDEO_FORMAT_Y444;
+      break;
+    case TH_PF_420:
+      format = GST_VIDEO_FORMAT_I420;
+      break;
+    case TH_PF_422:
+      format = GST_VIDEO_FORMAT_Y42B;
+      break;
+    default:
+      g_assert_not_reached ();
   }
 
-no_buffer:
-  {
+  result =
+      gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+      gst_video_format_get_size (format, dec->width, dec->height),
+      GST_PAD_CAPS (dec->srcpad), out);
+  if (G_UNLIKELY (result != GST_FLOW_OK)) {
     GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
         gst_flow_get_name (result));
     return result;
   }
-}
 
+  for (plane = 0; plane < 3; plane++) {
+    width = gst_video_format_get_component_width (format, plane, dec->width);
+    height = gst_video_format_get_component_width (format, plane, dec->height);
+    stride = gst_video_format_get_row_stride (format, plane, dec->width);
 
-/* Allocate buffer and copy image data into Y42B format */
-static GstFlowReturn
-theora_handle_422_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
-    GstBuffer ** out)
-{
-  gint width = dec->width;
-  gint uvwidth = GST_ROUND_UP_2 (dec->width) / 2;
-  gint height = dec->height;
-  gint out_size;
-  gint ystride, uvstride;
-  GstFlowReturn result;
-  int i;
-  guint8 *dst, *src;
-
-  ystride = GST_ROUND_UP_4 (width);
-  uvstride = GST_ROUND_UP_8 (width) / 2;
-  out_size = ystride * height + uvstride * height * 2;
-
-  /* now copy over the area contained in pic_x, pic_y,
-   * pic_width, pic_height */
-  result =
-      gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-      out_size, GST_PAD_CAPS (dec->srcpad), out);
-  if (G_UNLIKELY (result != GST_FLOW_OK))
-    goto no_buffer;
-
-  dst = GST_BUFFER_DATA (*out);
-
-  src = buf[0].data + dec->offset_x + dec->offset_y * buf[0].stride;
-  for (i = 0; i < height; i++) {
-    memcpy (dst, src, width);
-    src += buf[0].stride;
-    dst += ystride;
-  }
-
-  src = buf[1].data + dec->offset_x / 2 + dec->offset_y * buf[1].stride;
-  for (i = 0; i < height; i++) {
-    memcpy (dst, src, uvwidth);
-    src += buf[1].stride;
-    dst += uvstride;
-  }
-
-  src = buf[2].data + dec->offset_x / 2 + dec->offset_y * buf[2].stride;
-  for (i = 0; i < height; i++) {
-    memcpy (dst, src, uvwidth);
-    src += buf[2].stride;
-    dst += uvstride;
-  }
-
-no_buffer:
-  {
-    GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
-        gst_flow_get_name (result));
-    return result;
-  }
-}
-
-/* Allocate buffer and copy image data into I420 format */
-static GstFlowReturn
-theora_handle_420_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
-    GstBuffer ** out)
-{
-  gint width = dec->width;
-  gint height = dec->height;
-  gint cwidth = GST_ROUND_UP_2 (width) / 2;
-  gint cheight = GST_ROUND_UP_2 (height) / 2;
-  gint out_size;
-  gint stride_y, stride_uv;
-  GstFlowReturn result;
-  int i;
-
-  /* should get the stride from the caps, for now we round up to the nearest
-   * multiple of 4 because some element needs it. chroma needs special 
-   * treatment, see videotestsrc. */
-  stride_y = GST_ROUND_UP_4 (width);
-  stride_uv = GST_ROUND_UP_8 (width) / 2;
-
-  out_size =
-      stride_y * GST_ROUND_UP_2 (height) + stride_uv * GST_ROUND_UP_2 (height);
-
-  /* now copy over the area contained in pic_x, pic_y,
-   * pic_width, pic_height */
-  result =
-      gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-      out_size, GST_PAD_CAPS (dec->srcpad), out);
-  if (G_UNLIKELY (result != GST_FLOW_OK))
-    goto no_buffer;
-
-  /* copy the visible region to the destination. This is actually pretty
-   * complicated and gstreamer doesn't support all the needed caps to do this
-   * correctly. For example, when we have an odd offset, we should only combine
-   * 1 row/column of luma samples with one chroma sample in colorspace conversion. 
-   * We compensate for this by adding a black border around the image when the
-   * offset or size is odd (see above).
-   */
-  {
-    guchar *dest_y, *src_y;
-    guchar *dest_u, *src_u;
-    guchar *dest_v, *src_v;
-
-    dest_y = GST_BUFFER_DATA (*out);
-    dest_u = dest_y + stride_y * GST_ROUND_UP_2 (height);
-    dest_v = dest_u + stride_uv * GST_ROUND_UP_2 (height) / 2;
-
-    GST_LOG_OBJECT (dec, "plane 0, offset 0");
-    GST_LOG_OBJECT (dec, "plane 1, offset %" G_GINT64_FORMAT,
-        (gint64) (dest_u - dest_y));
-    GST_LOG_OBJECT (dec, "plane 2, offset %" G_GINT64_FORMAT,
-        (gint64) (dest_v - dest_y));
-
-    src_y = buf[0].data + dec->offset_x + dec->offset_y * buf[0].stride;
+    dest =
+        GST_BUFFER_DATA (*out) + gst_video_format_get_component_offset (format,
+        plane, dec->width, dec->height);
+    src = buf[plane].data;
+    src += ((height < dec->height) ? dec->offset_y : dec->offset_y / 2)
+        * buf[plane].stride;
+    src += (width < dec->width) ? dec->offset_x : dec->offset_x / 2;
 
     for (i = 0; i < height; i++) {
-      memcpy (dest_y, src_y, width);
+      memcpy (dest, src, width);
 
-      dest_y += stride_y;
-      src_y += buf[0].stride;
-    }
-
-    src_u = buf[1].data + dec->offset_x / 2 + dec->offset_y / 2 * buf[1].stride;
-    src_v = buf[2].data + dec->offset_x / 2 + dec->offset_y / 2 * buf[2].stride;
-
-    for (i = 0; i < cheight; i++) {
-      memcpy (dest_u, src_u, cwidth);
-      memcpy (dest_v, src_v, cwidth);
-
-      dest_u += stride_uv;
-      src_u += buf[1].stride;
-      dest_v += stride_uv;
-      src_v += buf[2].stride;
+      dest += stride;
+      src += buf[plane].stride;
     }
   }
-  return result;
 
-  /* ERRORS */
-no_buffer:
-  {
-    GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
-        gst_flow_get_name (result));
-    return result;
-  }
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -1381,16 +1248,7 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
           || (buf[0].height != dec->info.frame_height)))
     goto wrong_dimensions;
 
-  if (dec->info.pixel_fmt == TH_PF_420) {
-    result = theora_handle_420_image (dec, buf, &out);
-  } else if (dec->info.pixel_fmt == TH_PF_422) {
-    result = theora_handle_422_image (dec, buf, &out);
-  } else if (dec->info.pixel_fmt == TH_PF_444) {
-    result = theora_handle_444_image (dec, buf, &out);
-  } else {
-    g_assert_not_reached ();
-  }
-
+  result = theora_handle_image (dec, buf, &out);
   if (result != GST_FLOW_OK)
     return result;
 
