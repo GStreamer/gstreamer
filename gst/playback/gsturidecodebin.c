@@ -20,7 +20,8 @@
 /**
  * SECTION:element-uridecodebin
  *
- * Decodes data from a URI into raw media.
+ * Decodes data from a URI into raw media. It selects a source element that can
+ * handle the given #GstURIDecodeBin:uri scheme and connects it to a decodebin2.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -304,12 +305,12 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
       g_param_spec_int ("buffer-size", "Buffer size (bytes)",
-          "Buffer size when buffering network streams",
+          "Buffer size when buffering network streams (-1 queue2 default value)",
           -1, G_MAXINT, DEFAULT_BUFFER_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BUFFER_DURATION,
       g_param_spec_int64 ("buffer-duration", "Buffer duration (ns)",
-          "Buffer duration when buffering network streams",
+          "Buffer duration when buffering network streams (-1 queue2 default value)",
           -1, G_MAXINT64, DEFAULT_BUFFER_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
