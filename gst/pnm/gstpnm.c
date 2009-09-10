@@ -79,7 +79,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *exts[] = { "pnm", NULL };
 
   if (!gst_type_find_register (plugin, "", GST_RANK_PRIMARY,
-          gst_my_typefind_function, exts, gst_caps_new_simple (MIME_ALL, NULL),
+          gst_my_typefind_function, exts, gst_caps_from_string (MIME_ALL),
           NULL, NULL))
     return FALSE;
 
