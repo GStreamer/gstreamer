@@ -142,7 +142,9 @@ typedef struct
 typedef void (*GstId3v2AddTagFunc) (GstId3v2Tag * tag, const GstTagList * list,
     const gchar * gst_tag, guint num_tags, const gchar * data);
 
-#define ID3V2_ENCODING_UTF8    0x03
+#define ID3V2_ENCODING_ISO_8859_1    0x00
+#define ID3V2_ENCODING_UTF16_BOM     0x01
+#define ID3V2_ENCODING_UTF8          0x03
 
 static gboolean id3v2_tag_init (GstId3v2Tag * tag, guint major_version);
 static void id3v2_tag_unset (GstId3v2Tag * tag);
@@ -320,12 +322,76 @@ id3v2_frame_unset (GstId3v2Frame * frame)
   memset (frame, 0, sizeof (GstId3v2Frame));
 }
 
+static gboolean
+id3v2_string_is_ascii (const gchar * string)
+{
+  while (*string) {
+    if (!g_ascii_isprint (*string++))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static int
+id3v2_tag_string_encoding (GstId3v2Tag * tag, const gchar * string)
+{
+  int encoding;
+  if (tag->major_version == 4) {
+    /* ID3v2.4 supports UTF8, use it unconditionally as it's really the only
+       sensible encoding. */
+    encoding = ID3V2_ENCODING_UTF8;
+  } else {
+    /* If we're not writing v2.4, then check to see if it's ASCII.
+       If it is, write ISO-8859-1 (compatible with ASCII).
+       Otherwise, write UTF-16-LE with a byte order marker.
+       Note that we don't write arbitrary ISO-8859-1 as ISO-8859-1, because much
+       software misuses this - and non-ASCII might confuse it. */
+    if (id3v2_string_is_ascii (string))
+      encoding = ID3V2_ENCODING_ISO_8859_1;
+    else
+      encoding = ID3V2_ENCODING_UTF16_BOM;
+  }
+
+  return encoding;
+}
+
+static void
+id3v2_frame_write_string (GstId3v2Frame * frame, int encoding,
+    const gchar * string, gboolean null_terminate)
+{
+  int terminator_length;
+  if (encoding == ID3V2_ENCODING_UTF16_BOM) {
+    gsize utf16len;
+    /* This converts to little-endian UTF-16, WITH a byte-order-marker */
+    gchar *utf16 = g_convert (string, -1, "UTF-16LE", "UTF-8",
+        NULL, &utf16len, NULL);
+    if (!utf16) {
+      GST_WARNING ("Failed to convert UTF-8 to UTF-16LE");
+      return;
+    }
+
+    /* NUL terminator is 2 bytes, if present */
+    terminator_length = null_terminate ? 2 : 0;
+    id3v2_frame_write_bytes (frame, (const guint8 *) utf16,
+        utf16len + terminator_length);
+
+    g_free (utf16);
+  } else {
+    /* write NUL terminator as well if requested */
+    terminator_length = null_terminate ? 1 : 0;
+    id3v2_frame_write_bytes (frame, (const guint8 *) string,
+        strlen (string) + terminator_length);
+  }
+}
+
 static void
 id3v2_tag_add_text_frame (GstId3v2Tag * tag, const gchar * frame_id,
     gchar ** strings_utf8, int num_strings)
 {
   GstId3v2Frame frame;
   guint len, i;
+  int encoding;
 
   if (num_strings < 1 || strings_utf8 == NULL || strings_utf8[0] == NULL) {
     GST_LOG ("Not adding text frame, no strings");
@@ -333,7 +399,9 @@ id3v2_tag_add_text_frame (GstId3v2Tag * tag, const gchar * frame_id,
   }
 
   id3v2_frame_init (&frame, frame_id, 0);
-  id3v2_frame_write_uint8 (&frame, ID3V2_ENCODING_UTF8);
+
+  encoding = id3v2_tag_string_encoding (tag, strings_utf8[0]);
+  id3v2_frame_write_uint8 (&frame, encoding);
 
   GST_LOG ("Adding text frame %s with %d strings", frame_id, num_strings);
 
@@ -341,8 +409,8 @@ id3v2_tag_add_text_frame (GstId3v2Tag * tag, const gchar * frame_id,
     len = strlen (strings_utf8[i]);
     g_return_if_fail (g_utf8_validate (strings_utf8[i], len, NULL));
 
-    /* write NUL terminator as well */
-    id3v2_frame_write_bytes (&frame, (const guint8 *) strings_utf8[i], len + 1);
+    id3v2_frame_write_string (&frame, encoding, strings_utf8[i],
+        i != num_strings - 1);
 
     /* only v2.4.0 supports multiple strings per frame (according to the
      * earlier specs tag readers should just ignore everything after the first
@@ -530,11 +598,10 @@ add_comment_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 
     if (gst_tag_list_get_string_index (list, tag, n, &s) && s != NULL) {
       gchar *desc = NULL, *val = NULL, *lang = NULL;
-      int desclen, vallen;
+      int desclen, vallen, encoding1, encoding2, encoding;
       GstId3v2Frame frame;
 
       id3v2_frame_init (&frame, "COMM", 0);
-      id3v2_frame_write_uint8 (&frame, ID3V2_ENCODING_UTF8);
 
       if (strcmp (tag, GST_TAG_COMMENT) == 0 ||
           !gst_tag_parse_extended_comment (s, &desc, &lang, &val, TRUE)) {
@@ -556,10 +623,15 @@ add_comment_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
       GST_LOG ("%s[%u] = '%s' (%s|%s|%s)", tag, n, s, GST_STR_NULL (desc),
           GST_STR_NULL (lang), GST_STR_NULL (val));
 
+      encoding1 = id3v2_tag_string_encoding (id3v2tag, desc);
+      encoding2 = id3v2_tag_string_encoding (id3v2tag, val);
+      encoding = MAX (encoding1, encoding2);
+
+      id3v2_frame_write_uint8 (&frame, encoding);
       id3v2_frame_write_bytes (&frame, (const guint8 *) lang, 3);
-      /* write description and value, each including NULL terminator */
-      id3v2_frame_write_bytes (&frame, (const guint8 *) desc, desclen + 1);
-      id3v2_frame_write_bytes (&frame, (const guint8 *) val, vallen + 1);
+      /* write description and value */
+      id3v2_frame_write_string (&frame, encoding, desc, TRUE);
+      id3v2_frame_write_string (&frame, encoding, val, FALSE);
 
       g_free (lang);
       g_free (desc);
@@ -597,6 +669,7 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
       if (mime_type != NULL) {
         const gchar *desc;
         GstId3v2Frame frame;
+        int encoding;
 
         /* APIC frame specifies "-->" if we're providing a URL to the image
            rather than directly embedding it */
@@ -607,9 +680,14 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
             GST_BUFFER_SIZE (image), mime_type);
 
         id3v2_frame_init (&frame, "APIC", 0);
-        id3v2_frame_write_uint8 (&frame, ID3V2_ENCODING_UTF8);
-        id3v2_frame_write_bytes (&frame, (const guint8 *) mime_type,
-            strlen (mime_type) + 1);
+
+        desc = gst_structure_get_string (s, "image-description");
+        if (!desc)
+          desc = "";
+        encoding = id3v2_tag_string_encoding (id3v2tag, desc);
+        id3v2_frame_write_uint8 (&frame, encoding);
+
+        id3v2_frame_write_string (&frame, encoding, mime_type, TRUE);
 
         /* FIXME set image type properly from caps */
         if (strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0)
@@ -617,11 +695,7 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
         else
           id3v2_frame_write_uint8 (&frame, ID3V2_APIC_PICTURE_OTHER);
 
-        desc = gst_structure_get_string (s, "image-description");
-        if (!desc)
-          desc = "";
-        id3v2_frame_write_bytes (&frame, (const guint8 *) desc,
-            strlen (desc) + 1);
+        id3v2_frame_write_string (&frame, encoding, desc, TRUE);
 
         g_array_append_val (id3v2tag->frames, frame);
       }
@@ -669,24 +743,22 @@ add_musicbrainz_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
       /* add two frames, one with the ID the musicbrainz.org spec mentions
        * and one with the ID that applications use in the real world */
       GstId3v2Frame frame1, frame2;
+      int encoding;
 
       GST_DEBUG ("Setting '%s' to '%s'", mb_ids[idx].spec_id, id_str);
+      encoding = id3v2_tag_string_encoding (id3v2tag, id_str);
 
       id3v2_frame_init (&frame1, "TXXX", 0);
-      id3v2_frame_write_uint8 (&frame1, ID3V2_ENCODING_UTF8);
-      id3v2_frame_write_bytes (&frame1, (const guint8 *) mb_ids[idx].spec_id,
-          strlen (mb_ids[idx].spec_id) + 1);
-      id3v2_frame_write_bytes (&frame1, (const guint8 *) id_str,
-          strlen (id_str) + 1);
+      id3v2_frame_write_uint8 (&frame1, encoding);
+      id3v2_frame_write_string (&frame1, encoding, mb_ids[idx].spec_id, TRUE);
+      id3v2_frame_write_string (&frame1, encoding, id_str, FALSE);
       g_array_append_val (id3v2tag->frames, frame1);
 
       id3v2_frame_init (&frame2, "TXXX", 0);
-      id3v2_frame_write_uint8 (&frame2, ID3V2_ENCODING_UTF8);
-      id3v2_frame_write_bytes (&frame2,
-          (const guint8 *) mb_ids[idx].realworld_id,
-          strlen (mb_ids[idx].realworld_id) + 1);
-      id3v2_frame_write_bytes (&frame2, (const guint8 *) id_str,
-          strlen (id_str) + 1);
+      id3v2_frame_write_uint8 (&frame2, encoding);
+      id3v2_frame_write_string (&frame2, encoding,
+          mb_ids[idx].realworld_id, TRUE);
+      id3v2_frame_write_string (&frame2, encoding, id_str, FALSE);
       g_array_append_val (id3v2tag->frames, frame2);
 
       g_free (id_str);
