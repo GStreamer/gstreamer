@@ -1867,6 +1867,10 @@ grow41_line (uint8_t * dst, const uint8_t * src, int width)
     s1++;
     d += 4;
   }
+  for (; w >= 0; w--) {
+    d[0] = s1[0];
+    d++;
+  }
 }
 
 /* 1x1 -> 2x1 */
