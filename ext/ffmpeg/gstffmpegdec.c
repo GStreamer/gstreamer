@@ -1821,7 +1821,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
    */
   if (out_offset != GST_BUFFER_OFFSET_NONE) {
     /* out_offset already contains the offset from opaque_find() call */
-  } else if (out_timestamp >= 0) {
+  } else if (out_timestamp != GST_CLOCK_TIME_NONE) {
     GstFormat out_fmt = GST_FORMAT_DEFAULT;
     GST_LOG_OBJECT (ffmpegdec, "Using offset converted from timestamp");
     gst_pad_query_peer_convert (ffmpegdec->sinkpad,
