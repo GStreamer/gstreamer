@@ -394,6 +394,13 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_param_spec_object ("vis-plugin", "Vis plugin",
           "the visualization element to use (NULL = none)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstPlayBin:volume:
+   *
+   * Get or set the current audio stream volume. 1.0 means 100%,
+   * 0.0 means mute. This uses a linear volume scale.
+   *
+   */
   g_object_class_install_property (gobject_klass, ARG_VOLUME,
       g_param_spec_double ("volume", "volume", "volume",
           0.0, VOLUME_MAX_DOUBLE, 1.0,
@@ -522,8 +529,8 @@ gst_play_bin_vis_blocked (GstPad * tee_pad, gboolean blocked,
   }
 
   vis_bin =
-      GST_BIN_CAST (gst_object_get_parent (GST_OBJECT_CAST (play_bin->
-              visualisation)));
+      GST_BIN_CAST (gst_object_get_parent (GST_OBJECT_CAST
+          (play_bin->visualisation)));
 
   if (!GST_IS_BIN (vis_bin) || !GST_IS_PAD (tee_pad)) {
     goto beach;
@@ -665,8 +672,8 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
           GstBin *vis_bin = NULL;
 
           vis_bin =
-              GST_BIN_CAST (gst_object_get_parent (GST_OBJECT_CAST (play_bin->
-                      visualisation)));
+              GST_BIN_CAST (gst_object_get_parent (GST_OBJECT_CAST
+                  (play_bin->visualisation)));
 
           /* Check if the visualisation is already in a bin */
           if (GST_IS_BIN (vis_bin)) {

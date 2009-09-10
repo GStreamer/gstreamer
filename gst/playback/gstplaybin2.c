@@ -728,6 +728,13 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "the subpicture output element to use (NULL = default dvdspu)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstPlayBin2:volume:
+   *
+   * Get or set the current audio stream volume. 1.0 means 100%,
+   * 0.0 means mute. This uses a linear volume scale.
+   *
+   */
   g_object_class_install_property (gobject_klass, PROP_VOLUME,
       g_param_spec_double ("volume", "Volume", "The audio volume, 1.0=100%",
           0.0, VOLUME_MAX_DOUBLE, 1.0,
