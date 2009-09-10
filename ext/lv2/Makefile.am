@@ -6,7 +6,7 @@ libgstlv2_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CONTROLLER_CFLAGS) $(GST_CFLAGS) $(SLV2_CFLAGS)
 libgstlv2_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/signalprocessor/libgstsignalprocessor.la \
+	$(top_builddir)/gst-libs/gst/signalprocessor/libgstsignalprocessor-@GST_MAJORMINOR@.la \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) \
 	$(LIBM) $(SLV2_LIBS)
 libgstlv2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
