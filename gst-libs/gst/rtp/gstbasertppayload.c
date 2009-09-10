@@ -730,8 +730,7 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
     data.rtptime = payload->ts_base + rtime;
   } else {
     GST_LOG_OBJECT (payload,
-        "Using previous timestamp %" GST_TIME_FORMAT " for RTP timestamp",
-        GST_TIME_ARGS (payload->timestamp));
+        "Using previous RTP timestamp %" G_GUINT32_FORMAT, payload->timestamp);
     /* no timestamp to convert, take previous timestamp */
     data.rtptime = payload->timestamp;
   }
