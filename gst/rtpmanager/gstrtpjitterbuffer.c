@@ -1358,7 +1358,7 @@ flushing:
   }
 }
 
-/**
+/*
  * This funcion will push out buffers on the source pad.
  *
  * For each pushed buffer, the seqnum is recorded, if the next buffer B has a

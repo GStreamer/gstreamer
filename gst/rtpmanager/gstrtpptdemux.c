@@ -97,7 +97,7 @@ GST_STATIC_PAD_TEMPLATE ("src_%d",
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_pt_demux_debug);
 #define GST_CAT_DEFAULT gst_rtp_pt_demux_debug
 
-/**
+/*
  * Item for storing GstPad<->pt pairs.
  */
 struct _GstRtpPtDemuxPad
@@ -425,7 +425,7 @@ find_pad_for_pt (GstRtpPtDemux * rtpdemux, guint8 pt)
   return respad;
 }
 
-/**
+/*
  * Reserves resources for the object.
  */
 static gboolean
@@ -437,7 +437,7 @@ gst_rtp_pt_demux_setup (GstRtpPtDemux * ptdemux)
   return TRUE;
 }
 
-/**
+/*
  * Free resources for the object.
  */
 static void
