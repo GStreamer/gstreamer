@@ -637,6 +637,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
   gchar *hostparam;
   GstRTSPMessage *msg;
   GstRTSPMessage response;
+  gboolean old_http;
 
   memset (&response, 0, sizeof (response));
   gst_rtsp_message_init (&response);
@@ -692,10 +693,11 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
   /* we need to temporarily set manual_http to TRUE since
    * gst_rtsp_connection_receive() will treat the HTTP response as a parsing
    * failure otherwise */
+  old_http = conn->manual_http;
   conn->manual_http = TRUE;
   GST_RTSP_CHECK (gst_rtsp_connection_receive (conn, &response, timeout),
       read_failed);
-  conn->manual_http = FALSE;
+  conn->manual_http = old_http;
 
   if (response.type != GST_RTSP_MESSAGE_HTTP_RESPONSE ||
       response.type_data.response.code != GST_RTSP_STS_OK)
@@ -3066,7 +3068,6 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
             watch->message.type_data.response.version =
                 GST_RTSP_VERSION_INVALID;
         }
-        res = GST_RTSP_EPARSE;
       }
 
       if (G_LIKELY (res == GST_RTSP_OK)) {
