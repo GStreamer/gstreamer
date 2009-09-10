@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2009> LRN <lrn1986 _at_ gmail _dot_ com>
+ * Copyright (C) <2009> Руслан Ижбулатов <lrn1986 _at_ gmail _dot_ com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,36 +57,34 @@ static const GstElementDetails measure_collector_details =
 GST_ELEMENT_DETAILS ("Video measure collector",
     "Filter/Effect/Video",
     "Collect measurements from a measuring element",
-    "LRN <lrn _at_ gmail _dot_ com>");
+    "Руслан Ижбулатов <lrn _at_ gmail _dot_ com>");
 
 static GstStaticPadTemplate gst_measure_collector_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY
-    );
+    GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate gst_measure_collector_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY
-    );
+    GST_STATIC_CAPS_ANY);
 
 //static GstBaseTransformClass *parent_class = NULL;
 
 static void gst_measure_collector_finalize (GObject * object);
 static gboolean gst_measure_collector_event (GstBaseTransform * base,
     GstEvent * event);
-static void gst_measure_collector_save_csv(GstMeasureCollector *mc);
+static void gst_measure_collector_save_csv (GstMeasureCollector * mc);
 
-static void gst_measure_collector_post_message (GstMeasureCollector *mc);
+static void gst_measure_collector_post_message (GstMeasureCollector * mc);
 
 GST_BOILERPLATE (GstMeasureCollector, gst_measure_collector, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 
 static void
-gst_measure_collector_collect (GstMeasureCollector *mc, GstEvent *gstevent)
+gst_measure_collector_collect (GstMeasureCollector * mc, GstEvent * gstevent)
 {
   const GstStructure *str;
   const gchar *event, *metric;
@@ -98,20 +96,18 @@ gst_measure_collector_collect (GstMeasureCollector *mc, GstEvent *gstevent)
   event = gst_structure_get_string (str, "event");
   metric = gst_structure_get_string (str, "metric");
 
-  if (strcmp (event, "frame-measured") == 0 && metric != NULL)
-  {
+  if (strcmp (event, "frame-measured") == 0 && metric != NULL) {
     GstStructure *cpy;
     cpy = gst_structure_copy (str);
 
     framenumber_v = gst_structure_get_value (str, "offset");
-    if (framenumber_v)
-    {
+    if (framenumber_v) {
       if (G_VALUE_TYPE (framenumber_v) == G_TYPE_UINT64)
         framenumber = g_value_get_uint64 (framenumber_v);
       else if (G_VALUE_TYPE (framenumber_v) == G_TYPE_INT64)
         framenumber = g_value_get_int64 (framenumber_v);
     }
-    
+
     if (framenumber == G_MAXUINT64)
       framenumber = mc->nextoffset++;
 
@@ -127,7 +123,7 @@ gst_measure_collector_collect (GstMeasureCollector *mc, GstEvent *gstevent)
 }
 
 static void
-gst_measure_collector_post_message (GstMeasureCollector *mc)
+gst_measure_collector_post_message (GstMeasureCollector * mc)
 {
   GstBaseTransform *trans;
   GstMessage *m;
@@ -137,16 +133,15 @@ gst_measure_collector_post_message (GstMeasureCollector *mc)
 
   g_return_if_fail (mc->metric);
 
-  if (strcmp (mc->metric, "SSIM") == 0)
-  {
+  if (strcmp (mc->metric, "SSIM") == 0) {
     gfloat dresult = 0;
     g_free (mc->result);
     mc->result = g_new0 (GValue, 1);
-    g_value_init (mc->result, G_TYPE_FLOAT);   
-    for (i = 0; i < mc->measurements->len; i++)
-    {
+    g_value_init (mc->result, G_TYPE_FLOAT);
+    for (i = 0; i < mc->measurements->len; i++) {
       const GValue *v;
-      GstStructure *str = (GstStructure *) g_ptr_array_index (mc->measurements, i);
+      GstStructure *str =
+          (GstStructure *) g_ptr_array_index (mc->measurements, i);
       v = gst_structure_get_value (str, "mean");
       dresult += g_value_get_float (v);
     }
@@ -155,8 +150,7 @@ gst_measure_collector_post_message (GstMeasureCollector *mc)
 
   m = gst_message_new_element (GST_OBJECT_CAST (mc),
       gst_structure_new ("GstMeasureCollector",
-          "measure-result", G_TYPE_VALUE, mc->result,
-          NULL));
+          "measure-result", G_TYPE_VALUE, mc->result, NULL));
 
   gst_element_post_message (GST_ELEMENT_CAST (mc), m);
 }
@@ -184,7 +178,7 @@ gst_measure_collector_set_property (GObject * object, guint prop_id,
 
 static void
 gst_measure_collector_get_property (GObject * object, guint prop_id,
-    GValue * value,  GParamSpec * pspec)
+    GValue * value, GParamSpec * pspec)
 {
   GstMeasureCollector *measurecollector;
 
@@ -224,7 +218,8 @@ gst_measure_collector_event (GstBaseTransform * base, GstEvent * event)
   return parent_class->event (base, event);
 }
 
-static void gst_measure_collector_save_csv(GstMeasureCollector *mc)
+static void
+gst_measure_collector_save_csv (GstMeasureCollector * mc)
 {
   gchar *name_local;
   FILE *file;
@@ -243,7 +238,7 @@ static void gst_measure_collector_save_csv(GstMeasureCollector *mc)
   if (mc->filename == NULL || mc->filename[0] == '\0')
     goto no_filename;
 
-  name_local = g_filename_from_utf8 ((const gchar*) mc->filename,
+  name_local = g_filename_from_utf8 ((const gchar *) mc->filename,
       -1, NULL, NULL, NULL);
 
   /* open the file */
@@ -256,40 +251,38 @@ static void gst_measure_collector_save_csv(GstMeasureCollector *mc)
    * we use g_fopen. */
   file = fopen (name_local, "wb");
 
-  g_free(name_local);
+  g_free (name_local);
 
   if (file == NULL)
     goto open_failed;
 
   str = (GstStructure *) g_ptr_array_index (mc->measurements, 0);
 
-  for (j = 0; j < gst_structure_n_fields (str); j++)
-  {
+  for (j = 0; j < gst_structure_n_fields (str); j++) {
     const gchar *fieldname;
     fieldname = gst_structure_nth_field_name (str, j);
     if (G_LIKELY (j > 0))
-      fprintf(file, ";", fieldname);
-    fprintf(file, "%s", fieldname);
+      fprintf (file, ";", fieldname);
+    fprintf (file, "%s", fieldname);
   }
 
-  for (i = 0; i < mc->measurements->len; i++)
-  {
-    fprintf(file, "\n");
+  for (i = 0; i < mc->measurements->len; i++) {
+    fprintf (file, "\n");
     str = (GstStructure *) g_ptr_array_index (mc->measurements, i);
-    for (j = 0; j < gst_structure_n_fields (str); j++)
-    {
+    for (j = 0; j < gst_structure_n_fields (str); j++) {
       const gchar *fieldname;
       fieldname = gst_structure_nth_field_name (str, j);
       if (G_LIKELY (j > 0))
-        fprintf(file, ";", fieldname);
-      if (G_LIKELY (g_value_transform (gst_structure_get_value (str, fieldname), &tmp)))
-        fprintf(file, "%s", g_value_get_string (&tmp));
+        fprintf (file, ";", fieldname);
+      if (G_LIKELY (g_value_transform (gst_structure_get_value (str, fieldname),
+                  &tmp)))
+        fprintf (file, "%s", g_value_get_string (&tmp));
       else
-        fprintf(file, "<untranslatable>");
+        fprintf (file, "<untranslatable>");
     }
   }
 
-  fclose(file);
+  fclose (file);
 
   /* ERRORS */
 empty:
@@ -306,8 +299,7 @@ not_good_filename:
   {
     GST_ELEMENT_ERROR (mc, RESOURCE, NOT_FOUND,
         (_("Given file name \"%s\" can't be converted to local file name \
-encoding."),
-        mc->filename), (NULL));
+encoding."), mc->filename), (NULL));
     return;
   }
 open_failed:
@@ -333,7 +325,7 @@ gst_measure_collector_base_init (gpointer g_class)
 }
 
 static void
-gst_measure_collector_class_init (GstMeasureCollectorClass *klass)
+gst_measure_collector_class_init (GstMeasureCollectorClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
@@ -358,19 +350,17 @@ gst_measure_collector_class_init (GstMeasureCollectorClass *klass)
   g_object_class_install_property (gobject_class, PROP_FILENAME,
       g_param_spec_string ("filename", "Output file name",
           "A name of a file into which element will write the measurement \
-information",
-          "", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+information", "", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  trans_class->event =
-      GST_DEBUG_FUNCPTR (gst_measure_collector_event);
+  trans_class->event = GST_DEBUG_FUNCPTR (gst_measure_collector_event);
 
   trans_class->passthrough_on_same_caps = TRUE;
 
 }
 
 static void
-gst_measure_collector_init (GstMeasureCollector *instance,
-    GstMeasureCollectorClass *g_class)
+gst_measure_collector_init (GstMeasureCollector * instance,
+    GstMeasureCollectorClass * g_class)
 {
   GstMeasureCollector *measurecollector;
 
@@ -396,14 +386,14 @@ gst_measure_collector_finalize (GObject * object)
   gint i;
   GstMeasureCollector *mc = GST_MEASURE_COLLECTOR (object);
 
-  for (i = 0; i < mc->measurements->len; i++)
-  {
-    gst_structure_free ((GstStructure *) g_ptr_array_index (mc->measurements, i));
+  for (i = 0; i < mc->measurements->len; i++) {
+    gst_structure_free ((GstStructure *) g_ptr_array_index (mc->measurements,
+            i));
   }
 
   g_ptr_array_free (mc->measurements, TRUE);
   mc->measurements = NULL;
-  
+
   g_free (mc->result);
   mc->result = NULL;
 
@@ -413,5 +403,5 @@ gst_measure_collector_finalize (GObject * object)
   g_free (mc->filename);
   mc->filename = NULL;
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);  
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }

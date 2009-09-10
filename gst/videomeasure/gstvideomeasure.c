@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2009> LRN <lrn1986 _at_ gmail _dot_ com>
+ * Copyright (C) <2009> Руслан Ижбулатов <lrn1986 _at_ gmail _dot_ com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,12 +25,12 @@
 #include "gstvideomeasure_ssim.h"
 #include "gstvideomeasure_collector.h"
 
-GstEvent *gst_event_new_measured (guint64 framenumber, GstClockTime timestamp,
-    const gchar *metric, const GValue *mean, const GValue *lowest,
-    const GValue *highest)
+GstEvent *
+gst_event_new_measured (guint64 framenumber, GstClockTime timestamp,
+    const gchar * metric, const GValue * mean, const GValue * lowest,
+    const GValue * highest)
 {
-  GstStructure *str = gst_structure_new(
-      GST_EVENT_VIDEO_MEASURE,
+  GstStructure *str = gst_structure_new (GST_EVENT_VIDEO_MEASURE,
       "event", G_TYPE_STRING, "frame-measured",
       "offset", G_TYPE_UINT64, framenumber,
       "timestamp", GST_TYPE_CLOCK_TIME, timestamp,
@@ -54,8 +54,7 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
 
-  res = gst_element_register (plugin, "ssim", GST_RANK_NONE,
-      GST_TYPE_SSIM);
+  res = gst_element_register (plugin, "ssim", GST_RANK_NONE, GST_TYPE_SSIM);
 
   res &= gst_element_register (plugin, "measurecollector", GST_RANK_NONE,
       GST_TYPE_MEASURE_COLLECTOR);

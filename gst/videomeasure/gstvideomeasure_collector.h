@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2009> LRN <lrn1986 _at_ gmail _dot_ com>
+ * Copyright (C) <2009> Руслан Ижбулатов <lrn1986 _at_ gmail _dot_ com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
