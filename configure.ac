@@ -308,8 +308,9 @@ if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
 fi
 
 dnl disable experimental plug-ins
-#if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
-#fi
+if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
+  AG_GST_DISABLE_PLUGIN(pnm)
+fi
 
 # This will always succeed because we depend on GLib >= 2.16
 PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.16, HAVE_GIO=yes, HAVE_GIO=no)
