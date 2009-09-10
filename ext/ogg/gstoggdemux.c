@@ -1820,7 +1820,13 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
       pad->is_sparse =
           gst_structure_has_name (gst_caps_get_structure (GST_PAD_CAPS (pad),
-              0), "application/x-ogm-text");
+              0), "application/x-ogm-text") ||
+          gst_structure_has_name (gst_caps_get_structure (GST_PAD_CAPS (pad),
+              0), "text/x-cmml") ||
+          gst_structure_has_name (gst_caps_get_structure (GST_PAD_CAPS (pad),
+              0), "subtitle/x-kate") ||
+          gst_structure_has_name (gst_caps_get_structure (GST_PAD_CAPS (pad),
+              0), "application/x-kate");
 
       /* activate first */
       gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
