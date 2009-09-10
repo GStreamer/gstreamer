@@ -909,16 +909,25 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   }
 
   if (dec->crop) {
-    /* add black borders to make width/height/offsets even. we need this because
-     * we cannot express an offset to the peer plugin. */
-    dec->width = GST_ROUND_UP_2 (dec->info.pic_width + (dec->info.pic_x & 1));
-    dec->height = GST_ROUND_UP_2 (dec->info.pic_height + (dec->info.pic_y & 1));
-    dec->offset_x = dec->info.pic_x & ~1;
-    dec->offset_y = dec->info.pic_y & ~1;
-  } else {
-    /* no cropping, use the encoded dimensions */
     dec->width = dec->info.pic_width;
     dec->height = dec->info.pic_height;
+    dec->offset_x = dec->info.pic_x;
+    dec->offset_y = dec->info.pic_y;
+    /* Ensure correct offsets in chroma for formats that need it
+     * by rounding the offset. libtheora will add proper pixels,
+     * so no need to handle them ourselves. */
+    if (dec->offset_x & 1 && dec->info.pixel_fmt != TH_PF_444) {
+      dec->offset_x--;
+      dec->width++;
+    }
+    if (dec->offset_y & 1 && dec->info.pixel_fmt == TH_PF_420) {
+      dec->offset_y--;
+      dec->height++;
+    }
+  } else {
+    /* no cropping, use the encoded dimensions */
+    dec->width = dec->info.frame_width;
+    dec->height = dec->info.frame_height;
     dec->offset_x = 0;
     dec->offset_y = 0;
   }
@@ -1176,7 +1185,7 @@ theora_handle_422_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
     GstBuffer ** out)
 {
   gint width = dec->width;
-  gint uvwidth = dec->width / 2;
+  gint uvwidth = GST_ROUND_UP_2 (dec->width) / 2;
   gint height = dec->height;
   gint out_size;
   gint ystride, uvstride;
@@ -1198,21 +1207,21 @@ theora_handle_422_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
 
   dst = GST_BUFFER_DATA (*out);
 
-  src = buf[0].data;
+  src = buf[0].data + dec->offset_x + dec->offset_y * buf[0].stride;
   for (i = 0; i < height; i++) {
     memcpy (dst, src, width);
     src += buf[0].stride;
     dst += ystride;
   }
 
-  src = buf[1].data;
+  src = buf[1].data + dec->offset_x / 2 + dec->offset_y * buf[1].stride;
   for (i = 0; i < height; i++) {
     memcpy (dst, src, uvwidth);
     src += buf[1].stride;
     dst += uvstride;
   }
 
-  src = buf[2].data;
+  src = buf[2].data + dec->offset_x / 2 + dec->offset_y * buf[2].stride;
   for (i = 0; i < height; i++) {
     memcpy (dst, src, uvwidth);
     src += buf[2].stride;
@@ -1234,8 +1243,8 @@ theora_handle_420_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
 {
   gint width = dec->width;
   gint height = dec->height;
-  gint cwidth = width / 2;
-  gint cheight = height / 2;
+  gint cwidth = GST_ROUND_UP_2 (width) / 2;
+  gint cheight = GST_ROUND_UP_2 (height) / 2;
   gint out_size;
   gint stride_y, stride_uv;
   GstFlowReturn result;
@@ -1269,7 +1278,6 @@ theora_handle_420_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
     guchar *dest_y, *src_y;
     guchar *dest_u, *src_u;
     guchar *dest_v, *src_v;
-    gint offset;
 
     dest_y = GST_BUFFER_DATA (*out);
     dest_u = dest_y + stride_y * GST_ROUND_UP_2 (height);
@@ -1290,10 +1298,8 @@ theora_handle_420_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
       src_y += buf[0].stride;
     }
 
-    offset = dec->offset_x / 2 + dec->offset_y / 2 * buf[1].stride;
-
-    src_u = buf[1].data + offset;
-    src_v = buf[2].data + offset;
+    src_u = buf[1].data + dec->offset_x / 2 + dec->offset_y / 2 * buf[1].stride;
+    src_v = buf[2].data + dec->offset_x / 2 + dec->offset_y / 2 * buf[2].stride;
 
     for (i = 0; i < cheight; i++) {
       memcpy (dest_u, src_u, cwidth);
