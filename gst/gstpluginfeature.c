@@ -290,12 +290,16 @@ gst_plugin_feature_check_version (GstPluginFeature * feature,
 
   if (plugin) {
     const gchar *ver_str;
-    guint major, minor, micro;
+    guint major, minor, micro, nano;
+    gint nscan;
 
     ver_str = gst_plugin_get_version (plugin);
     g_return_val_if_fail (ver_str != NULL, FALSE);
 
-    if (sscanf (ver_str, "%u.%u.%u", &major, &minor, &micro) == 3) {
+    nscan = sscanf (ver_str, "%u.%u.%u.%u", &major, &minor, &micro, &nano);
+    GST_DEBUG ("version string '%s' parsed to %d values", ver_str, nscan);
+
+    if (nscan >= 3) {
       if (major > min_major)
         ret = TRUE;
       else if (major < min_major)
@@ -305,6 +309,10 @@ gst_plugin_feature_check_version (GstPluginFeature * feature,
       else if (minor < min_minor)
         ret = FALSE;
       else if (micro > min_micro)
+        ret = TRUE;
+      /* micro is 1 smaller but we have a nano version, this is the upcomming
+       * release of the requested version and we're ok then */
+      else if (nscan == 4 && nano > 0 && (micro + 1 == min_micro))
         ret = TRUE;
       else
         ret = (micro == min_micro);
