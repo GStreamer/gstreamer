@@ -1865,11 +1865,11 @@ paint_setup_YVU9 (paintinfo * p, unsigned char *dest)
 
   p->yp = dest;
   p->ystride = GST_ROUND_UP_4 (p->width);
-  p->vp = p->yp + p->ystride * GST_ROUND_UP_4 (p->height);
+  p->vp = p->yp + p->ystride * h;
   p->vstride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->up = p->vp + p->vstride * GST_ROUND_UP_4 (h / 4);
+  p->up = p->vp + p->vstride * h / 4;
   p->ustride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->endptr = p->up + p->ustride * GST_ROUND_UP_4 (h / 4);
+  p->endptr = p->up + p->ustride * h / 4;
 }
 
 static void
@@ -1882,22 +1882,24 @@ paint_setup_YUV9 (paintinfo * p, unsigned char *dest)
   p->ystride = GST_ROUND_UP_4 (p->width);
   p->up = p->yp + p->ystride * h;
   p->ustride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->vp = p->up + p->ustride * GST_ROUND_UP_4 (h / 4);
+  p->vp = p->up + p->ustride * h / 4;
   p->vstride = GST_ROUND_UP_4 (p->ystride / 4);
-  p->endptr = p->vp + p->vstride * GST_ROUND_UP_4 (h / 4);
+  p->endptr = p->vp + p->vstride * h / 4;
 }
 
 static void
 paint_hline_YUV9 (paintinfo * p, int x, int y, int w)
 {
   int x1 = x / 4;
-  int x2 = (x + w) / 4;
+  int w1 = (x + w) / 4 - x1;
   int offset = y * p->ystride;
   int offset1 = (y / 4) * p->ustride;
 
+  if (x + w == p->width)
+    w1++;
   oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
-  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, x2 - x1);
-  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, x2 - x1);
+  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, w1);
+  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, w1);
 }
 
 static void
