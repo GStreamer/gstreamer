@@ -56,6 +56,8 @@ struct _GstBaseAudioSinkPrivate
   gboolean sync_latency;
 
   GstClockTime eos_time;
+
+  gboolean do_time_offset;
 };
 
 /* BaseAudioSink signals and args */
@@ -231,12 +233,15 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
    * thread-safety in GObject */
   g_type_class_ref (GST_TYPE_AUDIO_CLOCK);
   g_type_class_ref (GST_TYPE_RING_BUFFER);
+
 }
 
 static void
 gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
     GstBaseAudioSinkClass * g_class)
 {
+  GstPluginFeature *feature;
+
   baseaudiosink->priv = GST_BASE_AUDIO_SINK_GET_PRIVATE (baseaudiosink);
 
   baseaudiosink->buffer_time = DEFAULT_BUFFER_TIME;
@@ -253,6 +258,24 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
   /* install some custom pad_query functions */
   gst_pad_set_query_function (GST_BASE_SINK_PAD (baseaudiosink),
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_query_pad));
+
+  baseaudiosink->priv->do_time_offset = TRUE;
+
+  /* check the factory, pulsesink < 0.10.17 does the timestamp offset itself so
+   * we should not do ourselves */
+  feature =
+      GST_PLUGIN_FEATURE_CAST (GST_ELEMENT_CLASS (g_class)->elementfactory);
+  GST_DEBUG ("created from factory %p", feature);
+
+  /* HACK for old pulsesink that did the time_offset themselves */
+  if (feature) {
+    if (strcmp (gst_plugin_feature_get_name (feature), "pulsesink") == 0) {
+      if (!gst_plugin_feature_check_version (feature, 0, 10, 17)) {
+        /* we're dealing with an old pulsesink, we need to disable time corection */
+        baseaudiosink->priv->do_time_offset = FALSE;
+      }
+    }
+  }
 }
 
 static void
@@ -1409,16 +1432,18 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
   /* bring to position in the ringbuffer */
-  time_offset =
-      GST_AUDIO_CLOCK_CAST (sink->provided_clock)->abidata.ABI.time_offset;
-  if (render_start > time_offset)
-    render_start -= time_offset;
-  else
-    render_start = 0;
-  if (render_stop > time_offset)
-    render_stop -= time_offset;
-  else
-    render_stop = 0;
+  if (sink->priv->do_time_offset) {
+    time_offset =
+        GST_AUDIO_CLOCK_CAST (sink->provided_clock)->abidata.ABI.time_offset;
+    if (render_start > time_offset)
+      render_start -= time_offset;
+    else
+      render_start = 0;
+    if (render_stop > time_offset)
+      render_stop -= time_offset;
+    else
+      render_stop = 0;
+  }
 
   /* and bring the time to the rate corrected offset in the buffer */
   render_start = gst_util_uint64_scale_int (render_start,
