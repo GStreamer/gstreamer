@@ -298,17 +298,19 @@ get_v4l2_object (GstElement * v4l2elem)
 
 
 /**
- * Construct a new buffer pool
+ * gst_v4l2_buffer_pool_new:
+ * @v4l2elem:  the v4l2 element (src or sink) that owns this pool
+ * @fd:   the video device file descriptor
+ * @num_buffers:  the requested number of buffers in the pool
+ * @caps:  the caps to set on the buffer
+ * @requeuebuf: if %TRUE, and if the pool is still in the running state, a
+ *  buffer with no remaining references is immediately passed back to v4l2
+ *  (VIDIOC_QBUF), otherwise it is returned to the pool of available buffers
+ *  (which can be accessed via gst_v4l2_buffer_pool_get().
  *
- * @v4l2elem  the v4l2 element (src or sink) that owns this pool
- * @fd   the video device file descriptor
- * @num_buffers  the requested number of buffers in the pool
- * @caps  the caps to set on the buffer
- * @requeuebuf  if <code>TRUE</code>, and if the pool is still in the
- *   <code>running</code> state, a buffer with no remaining references
- *   is immediately passed back to v4l2 (<code>VIDIOC_QBUF</code>),
- *   otherwise it is returned to the pool of available buffers
- *   (which can be accessed via <code>gst_v4l2_buffer_pool_get()</code>.
+ * Construct a new buffer pool.
+ *
+ * Returns: the new pool, use gst_v4l2_buffer_pool_destroy() to free resources
  */
 GstV4l2BufferPool *
 gst_v4l2_buffer_pool_new (GstElement * v4l2elem, gint fd, gint num_buffers,
@@ -409,7 +411,12 @@ buffer_new_failed:
   }
 }
 
-
+/**
+ * gst_v4l2_buffer_pool_destroy:
+ * @pool: the pool
+ *
+ * Free all resources in the pool and the pool itself.
+ */
 void
 gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
 {
@@ -443,9 +450,10 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
 }
 
 /**
- * Get an available buffer in the pool
+ * gst_v4l2_buffer_pool_get:
+ * @pool: the pool
  *
- * @pool   the "this" object
+ * Get an available buffer in the pool
  */
 GstV4l2Buffer *
 gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool)
@@ -462,10 +470,13 @@ gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool)
 
 
 /**
+ * gst_v4l2_buffer_pool_qbuf:
+ * @pool: the pool
+ * @buf: the buffer to queue
+ *
  * Queue a buffer to the driver
  *
- * @pool   the "this" object
- * @buf    the buffer to queue
+ * Returns: %TRUE for success
  */
 gboolean
 gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstV4l2Buffer * buf)
@@ -483,11 +494,14 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstV4l2Buffer * buf)
 }
 
 /**
+ * gst_v4l2_buffer_pool_dqbuf:
+ * @pool: the pool
+ *
  * Dequeue a buffer from the driver.  Some generic error handling is done in
  * this function, but any error handling specific to v4l2src (capture) or
  * v4l2sink (output) can be done outside this function by checking 'errno'
  *
- * @pool   the "this" object
+ * Returns: a buffer
  */
 GstV4l2Buffer *
 gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool)
@@ -590,8 +604,12 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool)
 
 /**
  * gst_v4l2_buffer_pool_available_buffers:
- * Returns the number of buffers available to the driver, ie. buffers that
+ * @pool: the pool
+ *
+ * Check the number of buffers available to the driver, ie. buffers that
  * have been QBUF'd but not yet DQBUF'd.
+ *
+ * Returns: the number of buffers available.
  */
 gint
 gst_v4l2_buffer_pool_available_buffers (GstV4l2BufferPool * pool)

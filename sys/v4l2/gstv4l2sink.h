@@ -59,13 +59,13 @@ struct _GstV4l2Sink {
   GstV4l2BufferPool *pool;
   guint32 num_buffers;
 
-  /**
+  /*
    * field to store requested overlay-top/left/width/height props:
    * note, could maybe be combined with 'vwin' field in GstV4l2Object?
    */
   struct v4l2_rect overlay;
 
-  /**
+  /*
    * bitmask to track which 'overlay' fields user has requested by
    * setting properties:
    */

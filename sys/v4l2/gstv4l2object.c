@@ -924,7 +924,7 @@ failed:
   }
 }
 
-/**
+/*
  * Get the list of supported capture formats, a list of
  * <code>struct v4l2_fmtdesc</code>.
  */

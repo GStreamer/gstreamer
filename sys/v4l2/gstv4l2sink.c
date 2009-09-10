@@ -309,7 +309,7 @@ gst_v4l2sink_finalize (GstV4l2Sink * v4l2sink)
 }
 
 
-/**
+/*
  * State values
  */
 enum
@@ -319,7 +319,7 @@ enum
   STATE_STREAMING
 };
 
-/**
+/*
  * flags to indicate which overlay properties the user has set (and therefore
  * which ones should override the defaults from the driver)
  */
@@ -598,7 +598,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   return TRUE;
 }
 
-/** buffer alloc function to implement pad_alloc for upstream element */
+/* buffer alloc function to implement pad_alloc for upstream element */
 static GstFlowReturn
 gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
@@ -651,7 +651,7 @@ gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   }
 }
 
-/** called after A/V sync to render frame */
+/* called after A/V sync to render frame */
 static GstFlowReturn
 gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 {
