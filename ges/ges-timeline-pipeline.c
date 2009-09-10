@@ -17,12 +17,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-timeline-pipeline
+ * @short_description: Convenience #GstPipeline for editing.
+ *
+ * #GESTimelinePipeline allows developers to view and render #GESTimeline
+ * in a simple fashion.
+ * Its usage is inspired by the 'playbin' element from gst-plugins-base.
+ */
+
 #include "ges-internal.h"
 #include "ges-timeline-pipeline.h"
-
-/* TimelinePipeline
- *
- */
 
 /* Structure corresponding to a timeline - sink link */
 /* TODO : Don't forget we want to render also :) */

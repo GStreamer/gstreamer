@@ -54,7 +54,9 @@ GType ges_track_type_get_type (void);
  * @GES_TRACK_TYPE_TEXT: A text (subtitle) track
  * @GES_TRACK_TYPE_CUSTOM: A custom-content track
  *
- * Types of content handled by a track.
+ * Types of content handled by a track. If the content is not one of
+ * @GEST_TRACK_TYPE_AUDIO, @GES_TRACK_TYPE_VIDEO or @GES_TRACK_TYPE_TEXT,
+ * the user of the #GESTrack must set the type to @GES_TRACK_TYPE_CUSTOM.
  */
 
 typedef enum {
@@ -67,8 +69,11 @@ typedef enum {
 struct _GESTrack {
   GstBin parent;
 
-  GESTimeline * timeline;
+  /*< public >*/ /* READ-ONLY */
   GESTrackType type;
+
+  /*< private >*/
+  GESTimeline * timeline;
 
   GstCaps * caps;
 

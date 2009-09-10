@@ -17,16 +17,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-timeline-layer
+ * @short_description: Non-overlaping sequence of #GESTimelineObject
+ *
+ * Responsible for the ordering of the various contained TimelineObject(s)
+ */
+
 #include "ges-internal.h"
 #include "gesmarshal.h"
 #include "ges-timeline-layer.h"
 #include "ges.h"
-
-/**
- * GESTimelineLayer
- *
- * Responsible for the ordering of the various contained TimelineObject(s)
- */
 
 G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_OBJECT);
 

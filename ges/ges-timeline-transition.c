@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION: ges-timeline-transition
+ * @short_description: Base Class for transitions in a #GESTimelineLayer
+ */
+
 #include "ges-internal.h"
 #include "ges-timeline-transition.h"
 

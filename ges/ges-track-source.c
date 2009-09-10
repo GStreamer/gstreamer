@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-track-source
+ * @short_description: Base Class for single-media sources
+ */
+
 #include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-track-source.h"

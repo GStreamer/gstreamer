@@ -17,6 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-simple-timeline-layer
+ * @short_description: High-level #GESTimelineLayer
+ *
+ * #GESSimpleTimelineLayer allows using #GESTimelineObject(s) with a list-like
+ * API.
+ */
+
 #include "ges-internal.h"
 #include "ges-simple-timeline-layer.h"
 

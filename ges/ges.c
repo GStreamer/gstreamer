@@ -22,6 +22,18 @@
 
 GST_DEBUG_CATEGORY (ges_debug);
 
+/**
+ * SECTION:ges
+ * @short_description: Initialization.
+ */
+
+/**
+ * ges_init:
+ *
+ * Initialize the GStreamer Editing Service. Call this before any usage of
+ * GES.
+ */
+
 void
 ges_init (void)
 {

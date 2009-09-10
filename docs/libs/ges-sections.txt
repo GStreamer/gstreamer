@@ -10,8 +10,6 @@ ges_init
 <TITLE>GESTrack</TITLE>
 GESTrack
 GESTrackClass
-FillTrackObjectFunc
-FillTrackObjectUserFunc
 GESTrackType
 ges_track_add_object
 ges_track_audio_raw_new
@@ -37,6 +35,8 @@ GES_TYPE_TRACK_TYPE
 <TITLE>GESTrackObject</TITLE>
 GESTrackObject
 GESTrackObjectClass
+FillTrackObjectFunc
+FillTrackObjectUserFunc
 ges_track_object_new
 ges_track_object_set_duration_internal
 ges_track_object_set_inpoint_internal

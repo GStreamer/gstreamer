@@ -17,17 +17,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-timeline-object
+ * @short_description: Base Class for objects in a #GESTimelineLayer
+ *
+ * Responsible for creating the #GESTrackObject(s) for given #GESTimelineTrack(s)
+ *
+ * Keeps a reference to the #GESTrackObject(s) it created and sets/updates their properties.
+ */
+
 #include "ges-timeline-object.h"
 #include "ges.h"
 #include "ges-internal.h"
-
-/**
- * GESTimelineObject
- *
- * Responsible for creating the TrackObject(s) for given TimelineTrack(s)
- *
- * Keeps a reference to the TrackObject(s) it created and sets/updates their properties.
- */
 
 
 G_DEFINE_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT);

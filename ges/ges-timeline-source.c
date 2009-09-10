@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-timeline-source
+ * @short_description: Base Class for sources of a #GESTimelineLayer
+ */
+
 #include "ges-internal.h"
 #include "ges-timeline-object.h"
 #include "ges-timeline-source.h"

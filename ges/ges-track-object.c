@@ -17,6 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-track-object
+ * @short_description: Base Class for objects contained in a #GESTrack
+ *
+ * #GESTrackObject is the Base Class for any object that can be contained in a
+ * #GESTrack.
+ */
+
 #include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-timeline-object.h"

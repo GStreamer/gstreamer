@@ -17,6 +17,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-custom-timeline-source
+ * @short_description: Convenience #GESTimelineSource
+ *
+ * #GESCustomTimelineSource allows creating #GESTimelineSource(s) without the
+ * need to subclass.
+ * 
+ * Its usage should be limited to testing and prototyping purposes.
+ */
+
 #include "ges-internal.h"
 #include "ges-custom-timeline-source.h"
 #include "ges-timeline-source.h"

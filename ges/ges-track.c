@@ -17,17 +17,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-track
+ * @short_description: Composition of objects
+ *
+ * Corresponds to one output format (i.e. audio OR video).
+ *
+ * Contains the compatible TrackObject(s).
+ *
+ * Wraps GNonLin's 'gnlcomposition' element.
+ */
+
 #include "ges-internal.h"
 #include "ges-track.h"
 #include "ges-track-object.h"
-
-/**
- * GESTrack
- *
- * Corresponds to one output format (i.e. audio OR video)
- *
- * Contains the compatible TrackObject(s)
- */
 
 G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN);
 

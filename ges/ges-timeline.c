@@ -17,6 +17,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-timeline
+ * @short_description: Multimedia timeline
+ *
+ * #GESTimeline is the central object for any multimedia timeline.
+ * 
+ * Contains a list of #GESTimelineLayer which users should use to arrange the
+ * various timeline objects through time.
+ *
+ * The output type is determined by the #GESTimelineTrack that are set on
+ * the #GESTimeline.
+ */
+
 #include "gesmarshal.h"
 #include "ges-internal.h"
 #include "ges-timeline.h"
@@ -24,15 +37,6 @@
 #include "ges-timeline-layer.h"
 #include "ges.h"
 
-/**
- * GESTimelinePipeline
- *
- * Top-level container for pipelines
- * 
- * Contains a list of TimelineLayer which users should use to arrange the
- * various timeline objects.
- *
- */
 
 G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN);
 
