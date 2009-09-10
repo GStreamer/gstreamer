@@ -141,6 +141,10 @@ typedef enum {
 
 #define GST_TAG_FLAG_IS_VALID(flag)     (((flag) > GST_TAG_FLAG_UNDEFINED) && ((flag) < GST_TAG_FLAG_COUNT))
 
+/* FIXME 0.11: Don't typedef GstTagList to be a GstStructure, they're
+ *             internally the same but not from an API point of view.
+ *             See bug #518934.
+ */
 /**
  * GstTagList:
  *
