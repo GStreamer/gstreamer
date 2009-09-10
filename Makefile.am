@@ -1,8 +1,8 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-SUBDIRS = ges tests common m4
+SUBDIRS = ges tests common m4 docs
 
-DIST_SUBDIRS = ges tests common m4
+DIST_SUBDIRS = $(SUBDIRS)
 
 # include before EXTRA_DIST for win32 assignment
 #include $(top_srcdir)/common/win32.mak
