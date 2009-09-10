@@ -223,6 +223,65 @@ build_linear_format (int depth, int width, int unsignd, int big_endian)
   return formats;
 }
 
+#ifndef GST_DISABLE_DEBUG
+static const gchar *format_type_names[] = {
+  "linear",
+  "float",
+  "mu law",
+  "a law",
+  "ima adpcm",
+  "mpeg",
+  "gsm",
+  "iec958",
+  "ac3",
+  "eac3",
+  "dts"
+};
+
+static const gchar *format_names[] = {
+  "unknown",
+  "s8",
+  "u8",
+  "s16_le",
+  "s16_be",
+  "u16_le",
+  "u16_be",
+  "s24_le",
+  "s24_be",
+  "u24_le",
+  "u24_be",
+  "s32_le",
+  "s32_be",
+  "u32_le",
+  "u32_be",
+  "s24_3le",
+  "s24_3be",
+  "u24_3le",
+  "u24_3be",
+  "s20_3le",
+  "s20_3be",
+  "u20_3le",
+  "u20_3be",
+  "s18_3le",
+  "s18_3be",
+  "u18_3le",
+  "u18_3be",
+  "float32_le",
+  "float32_be",
+  "float64_le",
+  "float64_be",
+  "mu_law",
+  "a_law",
+  "ima_adpcm",
+  "mpeg",
+  "gsm",
+  "iec958",
+  "ac3",
+  "eac3",
+  "dts"
+};
+#endif
+
 /**
  * gst_ring_buffer_debug_spec_caps:
  * @spec: the spec to debug
@@ -235,8 +294,10 @@ gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
   gint i, bytes;
 
   GST_DEBUG ("spec caps: %p %" GST_PTR_FORMAT, spec->caps, spec->caps);
-  GST_DEBUG ("parsed caps: type:         %d", spec->type);
-  GST_DEBUG ("parsed caps: format:       %d", spec->format);
+  GST_DEBUG ("parsed caps: type:         %d, '%s'", spec->type,
+      format_type_names[spec->type]);
+  GST_DEBUG ("parsed caps: format:       %d, '%s'", spec->format,
+      format_names[spec->format]);
   GST_DEBUG ("parsed caps: width:        %d", spec->width);
   GST_DEBUG ("parsed caps: depth:        %d", spec->depth);
   GST_DEBUG ("parsed caps: sign:         %d", spec->sign);
