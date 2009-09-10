@@ -39,6 +39,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting functions and macros.
 DOC_SOURCE_DIR = $(top_srcdir)/ges/
+DOC_BUILD_DIR=$(top_builddir)/ges/
 
 SCAN_OPTIONS= 
 
@@ -59,7 +60,9 @@ FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \
 HFILE_GLOB=$(DOC_SOURCE_DIR)/ges-*.h
 CFILE_GLOB=$(DOC_SOURCE_DIR)/ges-*.c
 
-SCANOBJ_DEPS = 
+SCANOBJ_DEPS = \
+	$(top_builddir)/ges/libges-@GST_MAJORMINOR@.la
+
 # Extra options to supply to gtkdoc-scan.
 SCANOBJ_OPTIONS=--type-init-func="g_type_init();gst_init(&argc,&argv)"
 
@@ -89,7 +92,7 @@ extra_files =
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
-GTKDOC_CFLAGS = $(GST_BASE_CFLAGS) -I$(top_builddir)
+GTKDOC_CFLAGS = -I$(top_builddir) $(GST_BASE_CFLAGS)
 GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_BASE_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
