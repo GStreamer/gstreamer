@@ -731,10 +731,8 @@ camerabin_create_elements (GstCameraBin * camera)
   /* To avoid deadlock, we won't restrict the image queue size */
   /* FIXME: actually we would like to have some kind of restriction here (size),
      but deadlocks must be handled somehow... */
-  g_object_set (G_OBJECT (camera->img_queue),
-      "max-size-time", G_GUINT64_CONSTANT (0),
-      "max-size-bytes", G_GUINT64_CONSTANT (0),
-      "max-size-buffers", G_GUINT64_CONSTANT (0), NULL);
+  g_object_set (G_OBJECT (camera->img_queue), "max-size-buffers", 0,
+      "max-size-bytes", 0, "max-size-time", G_GUINT64_CONSTANT (0), NULL);
 
   camera->pad_src_queue = gst_element_get_static_pad (camera->img_queue, "src");
 
