@@ -205,6 +205,7 @@ gst_camerabin_remove_elements_from_bin (GstBin * bin)
       case GST_ITERATOR_OK:
         elem = GST_ELEMENT (data);
         gst_bin_remove (bin, elem);
+        gst_element_set_state (GST_ELEMENT (elem), GST_STATE_NULL);
         /* Iterator increased the element refcount, so unref */
         gst_object_unref (elem);
         break;

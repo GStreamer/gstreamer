@@ -3171,6 +3171,12 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_NULL:
       camerabin_destroy_elements (camera);
       break;
+      /* In some error situation camerabin may end up being still in NULL
+         state so we must take care of destroying elements. */
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (ret == GST_STATE_CHANGE_FAILURE)
+        camerabin_destroy_elements (camera);
+      break;
     default:
       break;
   }
