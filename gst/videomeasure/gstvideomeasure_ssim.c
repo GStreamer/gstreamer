@@ -1216,13 +1216,13 @@ gst_ssim_request_new_pad (GstElement * element, GstPadTemplate * templ,
 bad_name:
   {
     g_warning ("gstssim: request new pad with bad name %s (must be "
-        "'modified\%d')\n", padname);
+        "'modified')\n", padname);
     return NULL;
   }
 unnamed_pad:
   {
     g_warning ("gstssim: request new pad without a name (must be "
-        "'modified\%d')\n");
+        "'modified')\n");
     return NULL;
   }
 not_sink:

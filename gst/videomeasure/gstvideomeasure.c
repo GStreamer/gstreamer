@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <gst/gst-i18n-plugin.h>
+
 #include "gstvideomeasure.h"
 #include "gstvideomeasure_ssim.h"
 #include "gstvideomeasure_collector.h"

@@ -32,7 +32,7 @@
 #include "config.h"
 #endif
 
-#include "../../gst-libs/gst/gst-i18n-plugin.h"
+#include <gst/gst-i18n-plugin.h>
 
 #include "gstvideomeasure_collector.h"
 
@@ -262,7 +262,7 @@ gst_measure_collector_save_csv (GstMeasureCollector * mc)
     const gchar *fieldname;
     fieldname = gst_structure_nth_field_name (str, j);
     if (G_LIKELY (j > 0))
-      fprintf (file, ";", fieldname);
+      fprintf (file, ";");
     fprintf (file, "%s", fieldname);
   }
 
@@ -273,7 +273,7 @@ gst_measure_collector_save_csv (GstMeasureCollector * mc)
       const gchar *fieldname;
       fieldname = gst_structure_nth_field_name (str, j);
       if (G_LIKELY (j > 0))
-        fprintf (file, ";", fieldname);
+        fprintf (file, ";");
       if (G_LIKELY (g_value_transform (gst_structure_get_value (str, fieldname),
                   &tmp)))
         fprintf (file, "%s", g_value_get_string (&tmp));
