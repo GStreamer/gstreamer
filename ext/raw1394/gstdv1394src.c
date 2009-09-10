@@ -56,6 +56,7 @@
 
 #include "gstdv1394src.h"
 #include "gst1394probe.h"
+#include "gst1394clock.h"
 
 
 #define CONTROL_STOP            'S'     /* stop the select call */
@@ -136,6 +137,8 @@ static void gst_dv1394src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_dv1394src_dispose (GObject * object);
 
+static GstClock *gst_dv1394src_provide_clock (GstElement * element);
+
 static gboolean gst_dv1394src_start (GstBaseSrc * bsrc);
 static gboolean gst_dv1394src_stop (GstBaseSrc * bsrc);
 static gboolean gst_dv1394src_unlock (GstBaseSrc * bsrc);
@@ -183,16 +186,20 @@ static void
 gst_dv1394src_class_init (GstDV1394SrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
   gobject_class->set_property = gst_dv1394src_set_property;
   gobject_class->get_property = gst_dv1394src_get_property;
   gobject_class->dispose = gst_dv1394src_dispose;
+
+  gstelement_class->provide_clock = gst_dv1394src_provide_clock;
 
   gst_dv1394src_signals[SIGNAL_FRAME_DROPPED] =
       g_signal_new ("frame-dropped", G_TYPE_FROM_CLASS (klass),
@@ -274,12 +281,18 @@ gst_dv1394src_init (GstDV1394Src * dv1394src, GstDV1394SrcClass * klass)
   dv1394src->buf = NULL;
   dv1394src->frame = NULL;
   dv1394src->frame_sequence = 0;
+
+  dv1394src->provided_clock = gst_1394_clock_new ("dv1394clock");
 }
 
 static void
 gst_dv1394src_dispose (GObject * object)
 {
   GstDV1394Src *src = GST_DV1394SRC (object);
+
+  if (src->provided_clock) {
+    g_object_unref (src->provided_clock);
+  }
 
   g_free (src->uri);
   src->uri = NULL;
@@ -361,6 +374,14 @@ gst_dv1394src_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstClock *
+gst_dv1394src_provide_clock (GstElement * element)
+{
+  GstDV1394Src *dv1394src = GST_DV1394SRC (element);
+
+  return GST_CLOCK_CAST (gst_object_ref (dv1394src->provided_clock));
 }
 
 #ifdef HAVE_LIBIEC61883
@@ -833,6 +854,8 @@ gst_dv1394src_start (GstBaseSrc * bsrc)
     }
   }
 
+  gst_1394_clock_set_handle (src->provided_clock, src->handle);
+
   return TRUE;
 
 socket_pair:
@@ -926,6 +949,8 @@ gst_dv1394src_stop (GstBaseSrc * bsrc)
           g_strerror (errno));
     }
   }
+
+  gst_1394_clock_unset_handle (src->provided_clock);
 
   raw1394_destroy_handle (src->handle);
 
