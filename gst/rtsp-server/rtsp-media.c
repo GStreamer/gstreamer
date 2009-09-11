@@ -1547,6 +1547,12 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
   return TRUE;
 }
 
+/**
+ * gst_rtsp_media_remove_elements:
+ * @media: a #GstRTSPMedia
+ *
+ * Remove all elements and the pipeline controlled by @media.
+ */
 void
 gst_rtsp_media_remove_elements (GstRTSPMedia *media)
 {
