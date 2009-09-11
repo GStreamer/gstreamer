@@ -131,6 +131,7 @@ cleanup_audioresample (GstElement * audioresample)
   gst_check_teardown_src_pad (audioresample);
   gst_check_teardown_sink_pad (audioresample);
   gst_check_teardown_element (audioresample);
+  gst_check_drop_buffers ();
 }
 
 static void
@@ -792,7 +793,7 @@ fakesink_handoff_cb (GstElement * object, GstBuffer * buffer, GstPad * pad,
   }
 
   if (ctx->in_buffer_count != ctx->out_buffer_count) {
-    g_print ("timestamp %" GST_TIME_FORMAT "\n",
+    GST_INFO ("timestamp %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
   }
 
