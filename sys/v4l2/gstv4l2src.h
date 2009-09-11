@@ -45,7 +45,7 @@ G_BEGIN_DECLS
 typedef struct _GstV4l2Src GstV4l2Src;
 typedef struct _GstV4l2SrcClass GstV4l2SrcClass;
 
-
+typedef GstFlowReturn (*GstV4l2SrcGetFunc)(GstV4l2Src * v4l2src, GstBuffer ** buf);
 
 /**
  * GstV4l2Src:
@@ -80,6 +80,8 @@ struct _GstV4l2Src
   guint64 offset;
 
   gint     fps_d, fps_n;       /* framerate if device is open */
+  
+  GstV4l2SrcGetFunc get_frame;
 };
 
 struct _GstV4l2SrcClass
