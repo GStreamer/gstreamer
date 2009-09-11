@@ -9,7 +9,6 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	message.c \
 	event.c \
 	structure.c \
-	taglist.c \
 	task.c \
 	object.c \
 	pad.c \

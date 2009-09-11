@@ -61,6 +61,20 @@ public Gst.PadChainFunction ChainFunction {
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
+static extern void gst_pad_set_chain_list_function (IntPtr raw, GstSharp.PadChainListFunctionNative chain);
+
+public Gst.PadChainListFunction ChainListFunction {
+  set {
+    if (PersistentData["ChainListFunction"] != null)
+      PersistentData["ChainListFunction"] = null;
+
+    GstSharp.PadChainListFunctionWrapper value_wrapper = new GstSharp.PadChainListFunctionWrapper (value);
+    PersistentData["ChainListFunction"] = value_wrapper;
+    gst_pad_set_chain_list_function (Handle, value_wrapper.NativeDelegate);
+  }
+}
+
+[DllImport("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_checkgetrange_function (IntPtr raw, GstSharp.PadCheckGetRangeFunctionNative check);
 
 public Gst.PadCheckGetRangeFunction CheckGetRangeFunction {

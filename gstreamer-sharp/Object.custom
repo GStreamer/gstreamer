@@ -70,9 +70,7 @@ public object Emit (string signal, params object[] parameters) {
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
-static extern void gst_object_sink (IntPtr raw);
-[DllImport("libgstreamer-0.10.dll") ]
-static extern IntPtr gst_object_ref (IntPtr raw);
+static extern IntPtr gst_object_ref_sink (IntPtr raw);
 
 protected override IntPtr Raw {
   get {
@@ -80,8 +78,7 @@ protected override IntPtr Raw {
   }
   set {
     if (value != IntPtr.Zero) {
-      gst_object_ref (value);
-      gst_object_sink (value);
+      gst_object_ref_sink (value);
     }
     base.Raw = value;
   }

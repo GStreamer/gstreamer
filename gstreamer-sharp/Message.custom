@@ -73,6 +73,25 @@ public uint Seqnum {
   }
 }
 
+[DllImport("libgstreamer-0.10.dll") ]
+static extern IntPtr gst_message_get_stream_status_object (IntPtr raw);
+
+[DllImport("libgstreamer-0.10.dll") ]
+static extern void gst_message_set_stream_status_object (IntPtr raw, ref Gst.GLib.Value o);
+
+public GLib.Value StreamStatusObject {
+  get  {
+    IntPtr raw_ret = gst_message_get_stream_status_object (Handle);
+    GLib.Value ret = (Gst.GLib.Value) Marshal.PtrToStructure (raw_ret, typeof (Gst.GLib.Value));
+    return ret;
+  }
+  set  {
+    if (!IsWritable)
+      throw new ApplicationException ();
+
+    gst_message_set_stream_status_object (Handle, ref value);
+  }
+}
 
 private Gst.Structure cached_structure = null;
 
@@ -546,6 +565,8 @@ public void ParseInfo (out Enum error) {
 
 [DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_tag (IntPtr src, IntPtr tags);
+[DllImport("libgstreamer-0.10.dll") ]
+static extern IntPtr gst_message_new_tag_full (IntPtr src, IntPtr pad, IntPtr tags);
 
 [DllImport("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_tag_list_copy (IntPtr handle);
@@ -556,20 +577,31 @@ public static Message NewTag (Gst.Object src, TagList tags) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
-static extern void gst_message_parse_tag (IntPtr msg, out IntPtr tags);
+public static Message NewTag (Gst.Object src, Gst.Pad pad, TagList tags) {
+  Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_tag_full (src.Handle, pad.Handle, gst_tag_list_copy (tags.Handle)), true);
 
-public void ParseTag (out TagList tags) {
+  return msg;
+}
+
+[DllImport("libgstreamer-0.10.dll") ]
+static extern void gst_message_parse_tag_full (IntPtr msg, out IntPtr pad, out IntPtr tags);
+
+public void ParseTag (out Gst.Pad pad, out TagList tags) {
   if (Type != MessageType.Tag)
     throw new ArgumentException ();
 
   IntPtr raw_ptr;
+  IntPtr raw_ptr2;
 
-  gst_message_parse_tag (Handle, out raw_ptr);
+  gst_message_parse_tag_full (Handle, out raw_ptr2, out raw_ptr);
   if (raw_ptr == IntPtr.Zero)
     tags = null;
   else
     tags = (TagList) Gst.GLib.Opaque.GetOpaque (raw_ptr, typeof (TagList), true);
+  if (raw_ptr2 == IntPtr.Zero)
+    pad = null;
+  else
+    pad = (Gst.Pad) Gst.GLib.Object.GetObject (raw_ptr2, true);
 }
 
 [DllImport("libgstreamer-0.10.dll") ]
@@ -861,3 +893,64 @@ public void ParseStructureChange (out StructureChangeType type, out Gst.Element 
 static Message () {
   Gst.GLib.GType.Register (Message.GType, typeof (Message));
 }
+
+[DllImport("libgstreamer-0.10.dll") ]
+static extern IntPtr gst_message_new_step_done (IntPtr src, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate, ulong duration, bool eos);
+
+public static Message NewStepDone (Gst.Object src, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate, ulong duration, bool eos) {
+  Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_step_done (src.Handle, format, amount, rate, flush, intermediate, duration, eos), true);
+
+  return msg;
+}
+
+[DllImport("libgstreamer-0.10.dll") ]
+static extern void gst_message_parse_step_done (IntPtr msg, out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate, out ulong duration, out bool eos);
+
+public void ParseStepDone (out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate, out ulong duration, out bool eos) {
+  if (Type != MessageType.StepDone)
+    throw new ArgumentException ();
+
+  gst_message_parse_step_done (Handle, out format, out amount, out rate, out flush, out intermediate, out duration, out eos);
+}
+
+[DllImport("libgstreamer-0.10.dll") ]
+static extern IntPtr gst_message_new_step_start (IntPtr src, bool active, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate);
+
+public static Message NewStepDone (Gst.Object src, bool active, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate) {
+  Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_step_start (src.Handle, active, format, amount, rate, flush, intermediate), true);
+
+  return msg;
+}
+
+[DllImport("libgstreamer-0.10.dll") ]
+static extern void gst_message_parse_step_start (IntPtr msg, out bool active, out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate);
+
+public void ParseStepStart (out bool active, out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate) {
+  if (Type != MessageType.StepStart)
+    throw new ArgumentException ();
+
+  gst_message_parse_step_start (Handle, out active, out format, out amount, out rate, out flush, out intermediate);
+}
+
+[DllImport("libgstreamer-0.10.dll") ]
+static extern IntPtr gst_message_new_stream_status (IntPtr src, StreamStatusType type, IntPtr owner);
+
+public static Message NewStreamStatus (Gst.Object src, StreamStatusType type, Gst.Element owner) {
+  Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_stream_status (src.Handle, type, owner.Handle), true);
+
+  return msg;
+}
+
+[DllImport("libgstreamer-0.10.dll") ]
+static extern void gst_message_parse_stream_status (IntPtr msg, out StreamStatusType type, out IntPtr owner);
+
+public void ParseStreamStatus (out StreamStatusType type, out Gst.Element owner) {
+  if (Type != MessageType.StreamStatus)
+    throw new ArgumentException ();
+
+  IntPtr raw_ptr;
+
+  gst_message_parse_stream_status (Handle, out type, out raw_ptr);
+  owner = Gst.GLib.Object.GetObject (raw_ptr, false) as Gst.Element;
+}
+

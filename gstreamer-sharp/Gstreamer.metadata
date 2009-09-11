@@ -80,6 +80,8 @@
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
 
   <change-node-type path="/api/namespace/object[@name='BufferList']">mini-object</change-node-type>
+  <attr path="/api/namespace/mini-object[@name='BufferList']/method[@cname='gst_buffer_list_get']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/mini-object[@name='BufferList']/method[@cname='gst_buffer_list_iterate']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_post']/parameters/parameter[@name='message']" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_peek']/return-type" name="owned">true</attr>
@@ -308,6 +310,7 @@
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_create_all_pads']" name="accessibility">protected</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_no_more_pads']" name="accessibility">protected</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_remove_pad']" name="accessibility">protected</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_lost_state_full']" name="name">LostState</attr>
   
   <attr path="/api/namespace/struct[@name='ElementDetails']" name="internal">1</attr>
 
@@ -527,6 +530,7 @@
   <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_get_parent']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_check_uniqueness']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Object']/signal[@cname='deep-notify']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_ref_sink']" name="hidden">1</attr>
   
   <attr path="/api/namespace/enum[@name='ObjectFlags']/member[@cname='GST_OBJECT_FLAG_LAST']" name="name">Last</attr>
 
@@ -574,6 +578,7 @@
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_pull_range']/parameters/parameter[@name='buffer']" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_bufferalloc_function']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_chain_function']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_chain_list_function']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_checkgetrange_function']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_getrange_function']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_event_function']" name="hidden">1</attr>
@@ -612,7 +617,9 @@
   </add-node>
 
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_chain']/parameters/parameter[@name='buffer']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_chain_list']/parameters/parameter[@name='list']" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_push']/parameters/parameter[@name='buffer']" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_push_list']/parameters/parameter[@name='list']" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_push_event']/parameters/parameter[@name='event']" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_send_event']/parameters/parameter[@name='event']" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_event_default']/parameters/parameter[@name='event']" name="owned">true</attr>
@@ -648,6 +655,7 @@
 
   <attr path="/api/namespace/callback[@name='PadBufferAllocFunction']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
   <attr path="/api/namespace/callback[@name='PadChainFunction']/parameters/parameter[@name='buffer']" name="owned">true</attr>
+  <attr path="/api/namespace/callback[@name='PadChainListFunction']/parameters/parameter[@name='list']" name="owned">true</attr>
   <attr path="/api/namespace/callback[@name='PadGetCapsFunction']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLAG_LAST']" name="name">Last</attr>
@@ -714,10 +722,10 @@
   <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="elements_owned">true</attr>
 
-  <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_set_new_stream_time']" name="name">SetStreamTime</attr>
-  <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_get_last_stream_time']" name="name">GetStreamTime</attr>
   <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_get_bus']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_get_clock']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_get_last_stream_time']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pipeline']/method[@cname='gst_pipeline_set_new_stream_time']" name="hidden">1</attr>
 
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_FIXED_CLOCK']" name="value">BinFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_LAST']" name="value">BinFlags.Last &lt;&lt; 4</attr>
@@ -734,6 +742,8 @@
   <attr path="/api/namespace/object[@name='Plugin']/method[@cname='gst_plugin_load_by_name']" name="name">Load</attr>
 
   <attr path="/api/namespace/struct[@name='PluginDesc']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/callback[@name='PluginInitFullFunc']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_set_name']" name="name">SetFeatureName</attr>
   <attr path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_get_name']" name="name">GetFeatureName</attr>
@@ -879,6 +889,10 @@
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_has_name']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_field_type']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_nth_field_name']" name="accessibility">private</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_get']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_get_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_new']" name="hidden">1</attr>
 
   <attr path="/api/namespace/callback[@name='StructureForeachFunc']" name="hidden">1</attr>
 
@@ -888,6 +902,8 @@
 
   <attr path="/api/namespace/object[@name='Task']/field[@name='Func']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Task']/field[@name='Data']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/struct[@name='TaskThreadCallbacks']" name="hidden">1</attr>
 
   <attr path="/api/namespace/class[@name='Tag']" name="disable_void_ctor">1</attr>
   <attr path="/api/namespace/class[@name='Tag']/method[@cname='gst_tag_merge_strings_with_comma']" name="hidden">1</attr>
@@ -938,12 +954,14 @@
   <attr path="/api/namespace/boxed[@name='TagList']/method[@cname='gst_tag_list_get_value_index']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='TagList']/method[@cname='gst_tag_list_copy_value']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='TagList']/method[@cname='gst_tag_list_merge']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='TagList']/method[@cname='gst_tag_list_add_value']" name="accessibility">private</attr>
 
   <attr path="/api/namespace/interface[@name='TagSetter']/method[@cname='gst_tag_setter_add_tag_valist']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@name='TagSetter']/method[@cname='gst_tag_setter_add_tag_valist_values']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@name='TagSetter']/method[@cname='gst_tag_setter_add_tag_values']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@name='TagSetter']/method[@cname='gst_tag_setter_add_tags']" name="hidden">1</attr>
-  <attr path="/api/namespace/interface[@name='TagSetter']/method[@cname='gst_tag_setter_merge_tags']" name="name">AddTags</attr>
+  <attr path="/api/namespace/interface[@name='TagSetter']/method[@cname='gst_tag_setter_add_tag_value']" name="name">AddTag</attr>
+  <attr path="/api/namespace/interface[@name='TagSetter']/method[@cname='gst_tag_setter_merge_tags']" name="name">AddTag</attr>
 
   <attr path="/api/namespace/callback[@name='TagMergeFunc']/parameters/parameter[@name='dest']" name="pass_as">out</attr>
   <attr path="/api/namespace/callback[@name='TagMergeFunc']/parameters/parameter[@name='src']" name="pass_as">ref</attr>

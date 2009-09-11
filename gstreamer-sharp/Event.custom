@@ -322,3 +322,22 @@ public void ParseLatency (out ulong latency) {
   gst_event_parse_latency (Handle, out latency);
 }
 
+[DllImport("libgstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_step (Gst.Format format, ulong amount, double rate, bool flush, bool intermediate);
+
+public static Gst.Event NewStep (Gst.Format format, ulong amount, double rate, bool flush, bool intermediate) {
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_step (format, amount, rate, flush, intermediate), true);
+
+  return ev;
+}
+
+[DllImport("libgstreamer-0.10.dll") ]
+static extern void gst_event_parse_step (IntPtr ev, out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate);
+
+public void ParseStep (out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate) {
+  if (Type != EventType.Step)
+    throw new ArgumentException ();
+
+  gst_event_parse_step (Handle, out format, out amount, out rate, out flush, out intermediate);
+}
+

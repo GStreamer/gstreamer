@@ -57,17 +57,16 @@ public object this[string tag] {
   }
 }
 
-[DllImport ("gstreamersharpglue-0.10.dll") ]
-static extern void gstsharp_gst_tag_list_add_value (IntPtr list, Gst.TagMergeMode mode, IntPtr tag, ref Gst.GLib.Value v);
-
 public void Add (Gst.TagMergeMode mode, string tag, object value) {
   if (!Tag.Exists (tag))
     throw new ArgumentException (String.Format ("Invalid tag name '{0}'", tag));
 
   Gst.GLib.Value v = new Gst.GLib.Value (value);
+  IntPtr raw_v = Gst.GLib.Marshaller.StructureToPtrAlloc (v);
 
   IntPtr raw_string = Gst.GLib.Marshaller.StringToPtrGStrdup (tag);
-  gstsharp_gst_tag_list_add_value (Handle, mode, raw_string, ref v);
+  gst_tag_list_add_value (Handle, (int) mode, raw_string, raw_v);
+  Marshal.FreeHGlobal (raw_v);
   v.Dispose ();
   Gst.GLib.Marshaller.Free (raw_string);
 }
