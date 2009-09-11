@@ -580,6 +580,31 @@ gst_property_probe_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gststreamvolume</FILE>
+<INCLUDE>gst/interfaces/streamvolume.h</INCLUDE>
+GstStreamVolume
+GstStreamVolumeFormat
+
+gst_stream_volume_get_volume
+gst_stream_volume_set_volume
+
+gst_stream_volume_get_mute
+gst_stream_volume_set_mute
+
+gst_stream_volume_convert_volume
+
+<SUBSECTION Standard>
+GstStreamVolumeInterface
+GST_TYPE_STREAM_VOLUME
+GST_STREAM_VOLUME
+GST_STREAM_VOLUME_INTERFACE
+GST_STREAM_VOLUME_GET_INTERFACE
+GST_IS_STREAM_VOLUME
+GST_IS_STREAM_VOLUME_INTERFACE
+gst_stream_volume_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gsttuner</FILE>
 <INCLUDE>gst/interfaces/tuner.h</INCLUDE>
 GstTuner

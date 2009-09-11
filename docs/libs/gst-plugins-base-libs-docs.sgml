@@ -37,6 +37,7 @@
 <!ENTITY GstMixerTrack SYSTEM "xml/gstmixertrack.xml">
 <!ENTITY GstNavigation SYSTEM "xml/gstnavigation.xml">
 <!ENTITY GstPropertyProbe SYSTEM "xml/gstpropertyprobe.xml">
+<!ENTITY GstStreamVolume SYSTEM "xml/gststreamvolume.xml">
 <!ENTITY GstTuner SYSTEM "xml/gsttuner.xml">
 <!ENTITY GstTunerChannel SYSTEM "xml/gsttunerchannel.xml">
 <!ENTITY GstTunerNorm SYSTEM "xml/gsttunernorm.xml">
@@ -186,6 +187,7 @@
       &GstMixerTrack;
       &GstNavigation;
       &GstPropertyProbe;
+      &GstStreamVolume;
       &GstTuner;
       &GstTunerChannel;
       &GstTunerNorm;
