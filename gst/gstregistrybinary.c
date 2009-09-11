@@ -794,9 +794,11 @@ fail_free_list:
     for (walk = to_write; walk; walk = g_list_next (walk)) {
       GstBinaryChunk *cur = walk->data;
 
-      if (!(cur->flags & GST_BINARY_REGISTRY_FLAG_CONST))
-        g_free (cur->data);
-      g_free (cur);
+      if (cur) {
+        if (!(cur->flags & GST_BINARY_REGISTRY_FLAG_CONST))
+          g_free (cur->data);
+        g_free (cur);
+      }
     }
     g_list_free (to_write);
 
