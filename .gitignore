@@ -27,6 +27,5 @@ autoregen.sh
 autom4te.cache
 aclocal.m4
 INSTALL
-COPYING
 gst-ffmpeg.spec
 -
