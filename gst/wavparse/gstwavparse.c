@@ -1351,8 +1351,13 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         }
         wav->offset += 8;
         wav->datastart = wav->offset;
-        /* file might be truncated */
-        if (upstream_size) {
+        /* If size is zero, then the data chunk probably actually extends to
+           the end of the file */
+        if (size == 0 && upstream_size) {
+          size = upstream_size - wav->datastart;
+        }
+        /* Or the file might be truncated */
+        else if (upstream_size) {
           size = MIN (size, (upstream_size - wav->datastart));
         }
         wav->datasize = (guint64) size;
