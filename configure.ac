@@ -135,6 +135,31 @@ AM_CONDITIONAL(HAVE_MONO_CAIRO, test "x$have_monocairo" = "xyes")
 
 AM_CONDITIONAL(ENABLE_MONODOC, test "x$enable_monodoc" = "xyes")
 
+WIN64DEFINES=
+case "$host" in
+        x86_64-*-mingw*|x86_64-*-cygwin*)
+                WIN64DEFINES="-define:WIN64LONGS"
+                platform_win32=yes
+                AC_DEFINE(PLATFORM_WIN32,1,[Platform is Win32])
+                if test "x$cross_compiling" = "xno"; then
+                        CC="gcc -mno-cygwin -g"
+                        HOST_CC="gcc"
+                fi
+                ;;
+        *-*-mingw*|*-*-cygwin*)
+                platform_win32=yes
+                AC_DEFINE(PLATFORM_WIN32,1,[Platform is Win32])
+                if test "x$cross_compiling" = "xno"; then
+                        CC="gcc -mno-cygwin -g"
+                        HOST_CC="gcc"
+                fi
+                ;;
+        *)
+                platform_win32=no
+                ;;
+esac
+AC_SUBST(WIN64DEFINES)
+
 ## Check for the gapi programs
 #PKG_CHECK_MODULES(GAPI, gapi-2.0 >= $GLIBSHARP_REQUIRED_VERSION)
 

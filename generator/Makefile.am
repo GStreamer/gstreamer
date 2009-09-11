@@ -66,5 +66,5 @@ EXTRA_DIST =					\
 CLEANFILES = gst-gapi_codegen.exe gst-gapi_codegen.exe.mdb
 
 gst-gapi_codegen.exe: $(build_sources)
-	$(CSC) -debug -out:gst-gapi_codegen.exe $(OFF_T_FLAGS) $(references) $(build_sources)
+	$(CSC) -debug -out:gst-gapi_codegen.exe $(WIN64DEFINES) $(OFF_T_FLAGS) $(references) $(build_sources)
 
