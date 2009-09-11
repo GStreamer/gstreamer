@@ -41,7 +41,7 @@ struct _GstSpectrum
   GstAudioFilter parent;
 
   /* properties */
-  gboolean message;             /* whether or not to post messages */
+  gboolean post_messages;       /* whether or not to post messages */
   gboolean message_magnitude;
   gboolean message_phase;
   guint64 interval;             /* how many nanoseconds between emits */

@@ -22,8 +22,8 @@
  * SECTION:element-spectrum
  *
  * The Spectrum element analyzes the frequency spectrum of an audio signal.
- * If the #GstSpectrum:message property is #TRUE, it sends analysis results as
- * application messages named
+ * If the #GstSpectrum:post-messages property is #TRUE, it sends analysis results
+ * as application messages named
  * <classname>&quot;spectrum&quot;</classname> after each interval of time given
  * by the #GstSpectrum:interval property.
  *
@@ -130,6 +130,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_spectrum_debug);
 
 /* Spectrum properties */
 #define DEFAULT_MESSAGE			TRUE
+#define DEFAULT_POST_MESSAGES			TRUE
 #define DEFAULT_MESSAGE_MAGNITUDE	TRUE
 #define DEFAULT_MESSAGE_PHASE		FALSE
 #define DEFAULT_INTERVAL		(GST_SECOND / 10)
@@ -140,6 +141,7 @@ enum
 {
   PROP_0,
   PROP_MESSAGE,
+  PROP_POST_MESSAGES,
   PROP_MESSAGE_MAGNITUDE,
   PROP_MESSAGE_PHASE,
   PROP_INTERVAL,
@@ -199,10 +201,23 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
 
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_spectrum_setup);
 
+  /* FIXME 0.11, remove in favour of post-messages */
   g_object_class_install_property (gobject_class, PROP_MESSAGE,
       g_param_spec_boolean ("message", "Message",
           "Whether to post a 'spectrum' element message on the bus for each "
-          "passed interval", DEFAULT_MESSAGE,
+          "passed interval (deprecated, use post-messages)", DEFAULT_MESSAGE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstSpectrum:post-messages
+   *
+   * Post messages on the bus with spectrum information.
+   *
+   * Since: 0.10.17
+   */
+  g_object_class_install_property (gobject_class, PROP_POST_MESSAGES,
+      g_param_spec_boolean ("post-messages", "Post Messages",
+          "Whether to post a 'spectrum' element message on the bus for each "
+          "passed interval", DEFAULT_POST_MESSAGES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MESSAGE_MAGNITUDE,
@@ -242,7 +257,7 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
 static void
 gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
 {
-  spectrum->message = DEFAULT_MESSAGE;
+  spectrum->post_messages = DEFAULT_POST_MESSAGES;
   spectrum->message_magnitude = DEFAULT_MESSAGE_MAGNITUDE;
   spectrum->message_phase = DEFAULT_MESSAGE_PHASE;
   spectrum->interval = DEFAULT_INTERVAL;
@@ -292,7 +307,8 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_MESSAGE:
-      filter->message = g_value_get_boolean (value);
+    case PROP_POST_MESSAGES:
+      filter->post_messages = g_value_get_boolean (value);
       break;
     case PROP_MESSAGE_MAGNITUDE:
       filter->message_magnitude = g_value_get_boolean (value);
@@ -340,7 +356,8 @@ gst_spectrum_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_MESSAGE:
-      g_value_set_boolean (value, filter->message);
+    case PROP_POST_MESSAGES:
+      g_value_set_boolean (value, filter->post_messages);
       break;
     case PROP_MESSAGE_MAGNITUDE:
       g_value_set_boolean (value, filter->message_magnitude);
@@ -597,7 +614,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       else
         spectrum->accumulated_error += spectrum->error_per_interval;
 
-      if (spectrum->message) {
+      if (spectrum->post_messages) {
         GstMessage *m;
 
         /* Calculate average */
