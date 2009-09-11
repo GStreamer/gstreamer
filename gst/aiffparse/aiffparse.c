@@ -834,6 +834,7 @@ gst_aiffparse_stream_headers (AIFFParse * aiff)
         GstFormat fmt;
         GstBuffer *ssndbuf = NULL;
         const guint8 *ssnddata = NULL;
+        guint32 datasize;
 
         GST_DEBUG_OBJECT (aiff, "Got 'SSND' TAG, size : %d", size);
 
@@ -859,23 +860,26 @@ gst_aiffparse_stream_headers (AIFFParse * aiff)
         } else {
           gst_buffer_unref (ssndbuf);
         }
-        aiff->offset += 16;
+        /* 8 byte chunk header, 16 byte SSND header */
+        aiff->offset += 24;
+
+        datasize = size - 16;
 
         aiff->datastart = aiff->offset + aiff->ssnd_offset;
         /* file might be truncated */
         fmt = GST_FORMAT_BYTES;
         if (upstream_size) {
-          size = MIN (size, (upstream_size - aiff->datastart));
+          size = MIN (datasize, (upstream_size - aiff->datastart));
         }
-        aiff->datasize = (guint64) size;
-        aiff->dataleft = (guint64) size;
-        aiff->end_offset = size + aiff->datastart;
+        aiff->datasize = (guint64) datasize;
+        aiff->dataleft = (guint64) datasize;
+        aiff->end_offset = datasize + aiff->datastart;
         if (!aiff->streaming) {
           /* We will continue looking at chunks until the end - to read tags,
            * etc. */
-          aiff->offset += size;
+          aiff->offset += datasize;
         }
-        GST_DEBUG_OBJECT (aiff, "datasize = %d", size);
+        GST_DEBUG_OBJECT (aiff, "datasize = %d", datasize);
         if (aiff->streaming) {
           done = TRUE;
         }
