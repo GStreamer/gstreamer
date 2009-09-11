@@ -225,6 +225,7 @@
 
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/interfaces/streamvolume.h>
 
 #include "gstplay-enum.h"
 #include "gstplay-marshal.h"
@@ -581,9 +582,15 @@ gst_play_bin_get_type (void)
       (GInstanceInitFunc) gst_play_bin_init,
       NULL
     };
+    static const GInterfaceInfo svol_info = {
+      NULL, NULL, NULL
+    };
 
     gst_play_bin_type = g_type_register_static (GST_TYPE_PIPELINE,
         "GstPlayBin2", &gst_play_bin_info, 0);
+
+    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_STREAM_VOLUME,
+        &svol_info);
   }
 
   return gst_play_bin_type;
