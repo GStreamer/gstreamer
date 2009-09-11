@@ -56,8 +56,8 @@ struct _GstMultiFileSink
   GstBaseSink parent;
 
   gchar *filename;
-  gchar *uri;
-  int index;
+  gint index;
+  gboolean silent;
 };
 
 struct _GstMultiFileSinkClass
