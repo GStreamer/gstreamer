@@ -711,7 +711,7 @@ gst_message_new_structure_change (GstObject * src, GstStructureChangeType type,
   GstStructure *structure;
 
   g_return_val_if_fail (GST_IS_PAD (src), NULL);
-  // g_return_val_if_fail (GST_PAD_DIRECTION (src) == GST_PAD_SINK, NULL);
+  /* g_return_val_if_fail (GST_PAD_DIRECTION (src) == GST_PAD_SINK, NULL); */
   g_return_val_if_fail (GST_IS_ELEMENT (owner), NULL);
 
   structure = gst_structure_id_new (GST_QUARK (MESSAGE_STRUCTURE_CHANGE),
