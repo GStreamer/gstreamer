@@ -92,6 +92,7 @@ enum
 
 #define DEFAULT_SILENT          TRUE
 #define DEFAULT_NEW_PREF        1.0
+#define DEFAULT_SKIP_TO_FIRST   FALSE
 
 enum
 {
@@ -102,7 +103,8 @@ enum
   ARG_DROP,
   ARG_SILENT,
   ARG_NEW_PREF,
-  /* FILL ME */
+  ARG_SKIP_TO_FIRST
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate gst_video_rate_src_template =
@@ -183,6 +185,10 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
       g_param_spec_double ("new-pref", "New Pref",
           "Value indicating how much to prefer new frames (unused)", 0.0, 1.0,
           DEFAULT_NEW_PREF, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, ARG_SKIP_TO_FIRST,
+      g_param_spec_boolean ("skip-to-first", "Skip to first buffer",
+          "Don't produce buffers before the first one we receive",
+          DEFAULT_SKIP_TO_FIRST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = gst_video_rate_change_state;
 }
@@ -667,7 +673,16 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
     if (!GST_CLOCK_TIME_IS_VALID (videorate->next_ts)) {
       /* new buffer, we expect to output a buffer that matches the first
        * timestamp in the segment */
-      videorate->next_ts = videorate->segment.start + videorate->segment.accum;
+      if (videorate->skip_to_first) {
+        videorate->next_ts = in_ts;
+        videorate->segment_out = gst_util_uint64_scale (in_ts,
+            videorate->to_rate_numerator,
+            videorate->to_rate_denominator * GST_SECOND) -
+            (videorate->segment.accum + videorate->segment.start);
+      } else {
+        videorate->next_ts =
+            videorate->segment.start + videorate->segment.accum;
+      }
     }
   } else {
     GstClockTime prevtime;
@@ -791,6 +806,9 @@ gst_video_rate_set_property (GObject * object,
     case ARG_NEW_PREF:
       videorate->new_pref = g_value_get_double (value);
       break;
+    case ARG_SKIP_TO_FIRST:
+      videorate->skip_to_first = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -821,6 +839,9 @@ gst_video_rate_get_property (GObject * object,
       break;
     case ARG_NEW_PREF:
       g_value_set_double (value, videorate->new_pref);
+      break;
+    case ARG_SKIP_TO_FIRST:
+      g_value_set_boolean (value, videorate->skip_to_first);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

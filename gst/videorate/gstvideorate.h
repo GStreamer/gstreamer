@@ -66,6 +66,7 @@ struct _GstVideoRate
   guint64 in, out, dup, drop;
   gboolean silent;
   gdouble new_pref;
+  gboolean skip_to_first;
 };
 
 struct _GstVideoRateClass
