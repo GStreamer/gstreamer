@@ -1475,7 +1475,7 @@ paint_hline_I420 (paintinfo * p, int x, int y, int w)
   int offset = y * p->ystride;
   int offset1 = (y / 2) * p->ustride;
 
-  if (x + w == p->width)
+  if (x + w == p->width && p->width % 2 != 0)
     w1++;
   oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
   oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, w1);
@@ -1693,7 +1693,7 @@ paint_hline_YUY2 (paintinfo * p, int x, int y, int w)
   int w1 = (x + w) / 2 - x1;
   int offset = y * p->ystride;
 
-  if (x + w == p->width)
+  if (x + w == p->width && p->width % 2 != 0)
     w1++;
   oil_splat_u8 (p->yp + offset + x * 2, 2, &p->yuv_color->Y, w);
   oil_splat_u8 (p->up + offset + x1 * 4, 4, &p->yuv_color->U, w1);
@@ -1767,7 +1767,7 @@ paint_hline_Y42B (paintinfo * p, int x, int y, int w)
   int offset = y * p->ystride;
   int offset1 = y * p->ustride;
 
-  if (x + w == p->width)
+  if (x + w == p->width && p->width % 2 != 0)
     w1++;
   oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
   oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, w1);
@@ -1895,7 +1895,7 @@ paint_hline_YUV9 (paintinfo * p, int x, int y, int w)
   int offset = y * p->ystride;
   int offset1 = (y / 4) * p->ustride;
 
-  if (x + w == p->width)
+  if (x + w == p->width && p->width % 4 != 0)
     w1++;
   oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
   oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, w1);
