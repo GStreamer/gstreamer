@@ -137,13 +137,18 @@ static void gst_volume_mixer_init (GstMixerClass * iface);
 
 #define _init_interfaces(type)                                          \
   {                                                                     \
-    static const GInterfaceInfo voliface_info = {                     \
+    static const GInterfaceInfo voliface_info = {                       \
       (GInterfaceInitFunc) gst_volume_interface_init,                   \
       NULL,                                                             \
       NULL                                                              \
     };                                                                  \
-    static const GInterfaceInfo volmixer_info = {                     \
+    static const GInterfaceInfo volmixer_info = {                       \
       (GInterfaceInitFunc) gst_volume_mixer_init,                       \
+      NULL,                                                             \
+      NULL                                                              \
+    };                                                                  \
+    static const GInterfaceInfo svol_info = {                           \
+      NULL,                                                             \
       NULL,                                                             \
       NULL                                                              \
     };                                                                  \
@@ -151,6 +156,7 @@ static void gst_volume_mixer_init (GstMixerClass * iface);
     g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,   \
         &voliface_info);                                                \
     g_type_add_interface_static (type, GST_TYPE_MIXER, &volmixer_info); \
+    g_type_add_interface_static (type, GST_TYPE_STREAM_VOLUME, &svol_info); \
   }
 
 GST_BOILERPLATE_FULL (GstVolume, gst_volume, GstAudioFilter,
@@ -302,8 +308,7 @@ volume_update_volume (GstVolume * this, gfloat volume, gboolean mute)
 static gboolean
 gst_volume_interface_supported (GstImplementsInterface * iface, GType type)
 {
-  g_return_val_if_fail (type == GST_TYPE_MIXER, FALSE);
-  return TRUE;
+  return (type == GST_TYPE_MIXER || type == GST_TYPE_STREAM_VOLUME);
 }
 
 static void

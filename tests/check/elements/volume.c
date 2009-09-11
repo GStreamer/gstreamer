@@ -25,6 +25,7 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/check/gstcheck.h>
 #include <gst/controller/gstcontroller.h>
+#include <gst/interfaces/streamvolume.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
@@ -147,6 +148,35 @@ cleanup_volume (GstElement * volume)
   gst_check_teardown_sink_pad (volume);
   gst_check_teardown_element (volume);
 }
+
+GST_START_TEST (test_get_set)
+{
+  GstElement *volume = gst_element_factory_make ("volume", NULL);
+  gdouble val;
+
+  fail_unless (volume != NULL);
+  g_object_get (G_OBJECT (volume), "volume", &val, NULL);
+  fail_unless (val == 1.0);
+  fail_unless (val == gst_stream_volume_get_volume (GST_STREAM_VOLUME (volume),
+          GST_STREAM_VOLUME_FORMAT_LINEAR));
+
+  g_object_set (G_OBJECT (volume), "volume", 0.5, NULL);
+  g_object_get (G_OBJECT (volume), "volume", &val, NULL);
+  fail_unless (val == 0.5);
+  fail_unless (val == gst_stream_volume_get_volume (GST_STREAM_VOLUME (volume),
+          GST_STREAM_VOLUME_FORMAT_LINEAR));
+
+  gst_stream_volume_set_volume (GST_STREAM_VOLUME (volume),
+      GST_STREAM_VOLUME_FORMAT_LINEAR, 1.0);
+  g_object_get (G_OBJECT (volume), "volume", &val, NULL);
+  fail_unless (val == 1.0);
+  fail_unless (val == gst_stream_volume_get_volume (GST_STREAM_VOLUME (volume),
+          GST_STREAM_VOLUME_FORMAT_LINEAR));
+
+  gst_object_unref (volume);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_unity_s8)
 {
@@ -1459,6 +1489,7 @@ volume_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_get_set);
   tcase_add_test (tc_chain, test_unity_s8);
   tcase_add_test (tc_chain, test_half_s8);
   tcase_add_test (tc_chain, test_double_s8);

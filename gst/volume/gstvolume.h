@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/interfaces/streamvolume.h>
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>
 
