@@ -185,6 +185,14 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
       g_param_spec_double ("new-pref", "New Pref",
           "Value indicating how much to prefer new frames (unused)", 0.0, 1.0,
           DEFAULT_NEW_PREF, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVideoRate:skip-to-first:
+   * 
+   * Don't produce buffers before the first one we receive.
+   *
+   * Since: 0.10.25
+   */
   g_object_class_install_property (object_class, ARG_SKIP_TO_FIRST,
       g_param_spec_boolean ("skip-to-first", "Skip to first buffer",
           "Don't produce buffers before the first one we receive",
