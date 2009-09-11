@@ -62,6 +62,7 @@ GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
 #define DEFAULT_DEVICE          NULL
 #define DEFAULT_DEVICE_NAME     NULL
 #define DEFAULT_VOLUME          1.0
+#define DEFAULT_MUTE            FALSE
 #define MAX_VOLUME              10.0
 
 enum
@@ -71,6 +72,7 @@ enum
   PROP_DEVICE,
   PROP_DEVICE_NAME,
   PROP_VOLUME,
+  PROP_MUTE,
   PROP_LAST
 };
 
@@ -651,6 +653,11 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 #endif
       PA_STREAM_START_CORKED;
 
+#if HAVE_PULSE_0_9_12
+  if (psink->mute_set && psink->mute)
+    flags |= PA_STREAM_START_MUTED;
+#endif
+
   /* we always start corked (see flags above) */
   pbuf->corked = TRUE;
 
@@ -1081,8 +1088,10 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
   /* FIXME post message rather than using a signal (as mixer interface) */
-  if (g_atomic_int_compare_and_exchange (&psink->notify, 1, 0))
+  if (g_atomic_int_compare_and_exchange (&psink->notify, 1, 0)) {
     g_object_notify (G_OBJECT (psink), "volume");
+    g_object_notify (G_OBJECT (psink), "mute");
+  }
 
   /* make sure the ringbuffer is started */
   if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
@@ -1472,6 +1481,11 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
       g_param_spec_double ("volume", "Volume",
           "Volume of this stream, 1.0=100%", 0.0, MAX_VOLUME, DEFAULT_VOLUME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_MUTE,
+      g_param_spec_boolean ("mute", "Mute",
+          "Mute state of this stream", DEFAULT_MUTE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 }
 
@@ -1528,6 +1542,9 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
 
   pulsesink->volume = 1.0;
   pulsesink->volume_set = FALSE;
+
+  pulsesink->mute = FALSE;
+  pulsesink->mute_set = FALSE;
 
   pulsesink->notify = 0;
 
@@ -1636,6 +1653,61 @@ volume_failed:
 }
 
 static void
+gst_pulsesink_set_mute (GstPulseSink * psink, gboolean mute)
+{
+  pa_operation *o = NULL;
+  GstPulseRingBuffer *pbuf;
+  uint32_t idx;
+
+  pa_threaded_mainloop_lock (psink->mainloop);
+
+  GST_DEBUG_OBJECT (psink, "setting mute state to %d", mute);
+
+  psink->mute = mute;
+  psink->mute_set = TRUE;
+
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+  if (pbuf == NULL || pbuf->stream == NULL)
+    goto no_buffer;
+
+  if ((idx = pa_stream_get_index (pbuf->stream)) == PA_INVALID_INDEX)
+    goto no_index;
+
+  if (!(o = pa_context_set_sink_input_mute (pbuf->context, idx,
+              mute, NULL, NULL)))
+    goto mute_failed;
+
+  /* We don't really care about the result of this call */
+unlock:
+
+  if (o)
+    pa_operation_unref (o);
+
+  pa_threaded_mainloop_unlock (psink->mainloop);
+
+  return;
+
+  /* ERRORS */
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
+    goto unlock;
+  }
+no_index:
+  {
+    GST_DEBUG_OBJECT (psink, "we don't have a stream index");
+    goto unlock;
+  }
+mute_failed:
+  {
+    GST_ELEMENT_ERROR (psink, RESOURCE, FAILED,
+        ("pa_stream_set_sink_input_mute() failed: %s",
+            pa_strerror (pa_context_errno (pbuf->context))), (NULL));
+    goto unlock;
+  }
+}
+
+static void
 gst_pulsesink_sink_input_info_cb (pa_context * c, const pa_sink_input_info * i,
     int eol, void *userdata)
 {
@@ -1654,8 +1726,10 @@ gst_pulsesink_sink_input_info_cb (pa_context * c, const pa_sink_input_info * i,
   /* If the index doesn't match our current stream,
    * it implies we just recreated the stream (caps change)
    */
-  if (i->index == pa_stream_get_index (pbuf->stream))
+  if (i->index == pa_stream_get_index (pbuf->stream)) {
     psink->volume = pa_sw_volume_to_linear (pa_cvolume_max (&i->volume));
+    psink->mute = i->mute;
+  }
 
 done:
   pa_threaded_mainloop_signal (psink->mainloop, 0);
@@ -1701,6 +1775,62 @@ unlock:
   }
 
   return v;
+
+  /* ERRORS */
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
+    goto unlock;
+  }
+no_index:
+  {
+    GST_DEBUG_OBJECT (psink, "we don't have a stream index");
+    goto unlock;
+  }
+info_failed:
+  {
+    GST_ELEMENT_ERROR (psink, RESOURCE, FAILED,
+        ("pa_context_get_sink_input_info() failed: %s",
+            pa_strerror (pa_context_errno (pbuf->context))), (NULL));
+    goto unlock;
+  }
+}
+
+static gboolean
+gst_pulsesink_get_mute (GstPulseSink * psink)
+{
+  GstPulseRingBuffer *pbuf;
+  pa_operation *o = NULL;
+  uint32_t idx;
+  gboolean mute;
+
+  pa_threaded_mainloop_lock (psink->mainloop);
+
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+  if (pbuf == NULL || pbuf->stream == NULL)
+    goto no_buffer;
+
+  if ((idx = pa_stream_get_index (pbuf->stream)) == PA_INVALID_INDEX)
+    goto no_index;
+
+  if (!(o = pa_context_get_sink_input_info (pbuf->context, idx,
+              gst_pulsesink_sink_input_info_cb, pbuf)))
+    goto info_failed;
+
+  while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+    pa_threaded_mainloop_wait (psink->mainloop);
+    if (gst_pulsering_is_dead (psink, pbuf))
+      goto unlock;
+  }
+
+unlock:
+  if (o)
+    pa_operation_unref (o);
+
+  mute = psink->mute;
+  pa_threaded_mainloop_unlock (psink->mainloop);
+
+  return mute;
 
   /* ERRORS */
 no_buffer:
@@ -1816,6 +1946,9 @@ gst_pulsesink_set_property (GObject * object,
     case PROP_VOLUME:
       gst_pulsesink_set_volume (pulsesink, g_value_get_double (value));
       break;
+    case PROP_MUTE:
+      gst_pulsesink_set_mute (pulsesink, g_value_get_boolean (value));
+      break;
 #endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1843,6 +1976,9 @@ gst_pulsesink_get_property (GObject * object,
 #if HAVE_PULSE_0_9_12
     case PROP_VOLUME:
       g_value_set_double (value, gst_pulsesink_get_volume (pulsesink));
+      break;
+    case PROP_MUTE:
+      g_value_set_boolean (value, gst_pulsesink_get_mute (pulsesink));
       break;
 #endif
     default:

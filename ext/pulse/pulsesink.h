@@ -61,6 +61,8 @@ struct _GstPulseSink
 
   gdouble volume;
   gboolean volume_set;
+  gboolean mute;
+  gboolean mute_set;
   gint notify;
 
   const gchar *pa_version;
