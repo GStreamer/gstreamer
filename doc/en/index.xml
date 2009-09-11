@@ -1,6 +1,6 @@
 <Overview>
   <Assemblies>
-    <Assembly Name="gstreamer-sharp" Version="0.9.0.0">
+    <Assembly Name="gstreamer-sharp" Version="0.9.1.0">
       <Attributes>
         <Attribute>
           <AttributeName>System.Runtime.CompilerServices.RuntimeCompatibility(WrapNonExceptionThrows=true)</AttributeName>
@@ -25,6 +25,11 @@
       <Type Name="BufferCopyFlags" Kind="Enumeration" />
       <Type Name="BufferFlags" Kind="Enumeration" />
       <Type Name="BufferingMode" Kind="Enumeration" />
+      <Type Name="BufferList" Kind="Class" />
+      <Type Name="BufferListDoFunction" Kind="Delegate" />
+      <Type Name="BufferListFunc" Kind="Delegate" />
+      <Type Name="BufferListItem" Kind="Enumeration" />
+      <Type Name="BufferListIterator" Kind="Class" />
       <Type Name="Bus" Kind="Class" />
       <Type Name="BusFlags" Kind="Enumeration" />
       <Type Name="BusFunc" Kind="Delegate" />
@@ -120,6 +125,7 @@
       <Type Name="PadBufferAllocFunction" Kind="Delegate" />
       <Type Name="PadBufferProbeCallback" Kind="Delegate" />
       <Type Name="PadChainFunction" Kind="Delegate" />
+      <Type Name="PadChainListFunction" Kind="Delegate" />
       <Type Name="PadCheckGetRangeFunction" Kind="Delegate" />
       <Type Name="PadCreatedArgs" Kind="Class" />
       <Type Name="PadCreatedHandler" Kind="Delegate" />
@@ -184,6 +190,7 @@
       <Type Name="StateChangeReturn" Kind="Enumeration" />
       <Type Name="StaticPadTemplate" Kind="Class" />
       <Type Name="StreamError" Kind="Enumeration" />
+      <Type Name="StreamStatusType" Kind="Enumeration" />
       <Type Name="Structure" Kind="Class" />
       <Type Name="StructureChangeType" Kind="Enumeration" />
       <Type Name="SyncMessageArgs" Kind="Class" />
@@ -199,6 +206,8 @@
       <Type Name="TagSetterImplementor" Kind="Interface" />
       <Type Name="Task" Kind="Class" />
       <Type Name="TaskFunction" Kind="Delegate" />
+      <Type Name="TaskPool" Kind="Class" />
+      <Type Name="TaskPoolFunction" Kind="Delegate" />
       <Type Name="TaskState" Kind="Enumeration" />
       <Type Name="TypeFind" Kind="Class" />
       <Type Name="TypeFindFactory" Kind="Class" />
@@ -222,6 +231,8 @@
       <Type Name="AppStreamType" Kind="Enumeration" />
       <Type Name="NeedDataArgs" Kind="Class" />
       <Type Name="NeedDataHandler" Kind="Delegate" />
+      <Type Name="NewBufferListArgs" Kind="Class" />
+      <Type Name="NewBufferListHandler" Kind="Delegate" />
       <Type Name="SeekDataArgs" Kind="Class" />
       <Type Name="SeekDataHandler" Kind="Delegate" />
     </Namespace>
@@ -264,7 +275,13 @@
       <Type Name="PlayBin+StreamInfo+MutedHandler" Kind="Delegate" />
       <Type Name="PlayBin+StreamInfo+StreamType" Kind="Enumeration" />
       <Type Name="PlayBin2" Kind="Class" />
+      <Type Name="PlayBin2+AudioTagsChangedArgs" Kind="Class" />
+      <Type Name="PlayBin2+AudioTagsChangedHandler" Kind="Delegate" />
       <Type Name="PlayBin2+PlayFlagsType" Kind="Enumeration" />
+      <Type Name="PlayBin2+TextTagsChangedArgs" Kind="Class" />
+      <Type Name="PlayBin2+TextTagsChangedHandler" Kind="Delegate" />
+      <Type Name="PlayBin2+VideoTagsChangedArgs" Kind="Class" />
+      <Type Name="PlayBin2+VideoTagsChangedHandler" Kind="Delegate" />
       <Type Name="XvImageSink" Kind="Class" />
     </Namespace>
     <Namespace Name="Gst.Cdda">
@@ -329,6 +346,7 @@
       <Type Name="EnumWrapper" Kind="Class" />
       <Type Name="ExceptionManager" Kind="Class" />
       <Type Name="FileUtils" Kind="Class" />
+      <Type Name="Format" Kind="Class" />
       <Type Name="GException" Kind="Class" />
       <Type Name="GInterfaceAdapter" Kind="Class" />
       <Type Name="GInterfaceAttribute" Kind="Class" />
@@ -341,6 +359,7 @@
       <Type Name="Idle" Kind="Class" />
       <Type Name="IdleHandler" Kind="Delegate" />
       <Type Name="IgnoreClassInitializersAttribute" Kind="Class" />
+      <Type Name="InitiallyUnowned" Kind="Class" />
       <Type Name="IOChannel" Kind="Class" />
       <Type Name="IOChannelError" Kind="Enumeration" />
       <Type Name="IOCondition" Kind="Enumeration" />
