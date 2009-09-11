@@ -44,6 +44,6 @@ typedef enum
 
 /* Functions */
 
-gint gst_fft_next_fast_length (gint n);
+gint gst_fft_next_fast_length (gint n) G_GNUC_CONST;
 
 #endif /* __GST_FFT_H__ */

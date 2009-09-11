@@ -28,6 +28,9 @@
 typedef struct _GstFFTS16 GstFFTS16;
 typedef struct _GstFFTS16Complex GstFFTS16Complex;
 
+/* FIXME 0.11: Move the struct definition to the sources,
+ *             there's no reason to have it public.
+ */
 /**
  * GstFFTS16:
  *
