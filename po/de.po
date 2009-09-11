@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-13 10:58+0100\n"
-"PO-Revision-Date: 2009-06-21 23:55+0200\n"
+"POT-Creation-Date: 2009-09-11 23:31+0100\n"
+"PO-Revision-Date: 2009-08-22 17:21+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -29,13 +29,11 @@ msgstr "Höhen"
 msgid "PCM"
 msgstr "PCM"
 
-#, fuzzy
 msgid "Synth"
 msgstr "Synth"
 
-#, fuzzy
 msgid "Line-in"
-msgstr "Line-in"
+msgstr "Line-Eingang"
 
 msgid "CD"
 msgstr "CD"
@@ -95,7 +93,6 @@ msgstr "Audio-Gerät konnte nicht zur Aufnahme geöffnet werden."
 msgid "Could not open CD device for reading."
 msgstr "Das CD-Laufwerk konnte nicht zum Lesen geöffnet werden."
 
-#, fuzzy
 msgid "Could not seek CD."
 msgstr "Suchvorgang auf der CD ist fehlgeschlagen."
 
@@ -313,10 +310,10 @@ msgid "MusicBrainz album artist ID"
 msgstr "Kennung des Albeninterpreten von MusicBrainz"
 
 msgid "track TRM ID"
-msgstr ""
+msgstr "TRM-Kennung verfolgen"
 
 msgid "MusicBrainz TRM ID"
-msgstr ""
+msgstr "MusicBrainz-TRM-Kennung"
 
 msgid "This CD has no audio tracks"
 msgstr "Auf dieser CD befinden sich keine Audio-Tracks"
@@ -394,7 +391,7 @@ msgid "Uncompressed planar YUV 4:1:1"
 msgstr "Unkomprimiertes ebenes YUV 4:1:1"
 
 msgid "Uncompressed black and white Y-plane"
-msgstr ""
+msgstr "Unkomprimiertes schwarz-weißes Y-plane"
 
 msgid "Uncompressed YUV"
 msgstr "Unkomprimiertes YUV"
@@ -439,15 +436,15 @@ msgstr "%s Protokollquelle"
 
 #, c-format
 msgid "%s video RTP depayloader"
-msgstr ""
+msgstr "%s-Video RTP-Payload-Entnahme"
 
 #, c-format
 msgid "%s audio RTP depayloader"
-msgstr ""
+msgstr "%s-Audio RTP-Payload-Entnahme"
 
 #, c-format
 msgid "%s RTP depayloader"
-msgstr ""
+msgstr "%s-RTP-Payload-Entnahme"
 
 #, c-format
 msgid "%s demuxer"
@@ -459,15 +456,15 @@ msgstr "%s-Decoder"
 
 #, c-format
 msgid "%s video RTP payloader"
-msgstr ""
+msgstr "%s-Video RTP-Payloader"
 
 #, c-format
 msgid "%s audio RTP payloader"
-msgstr ""
+msgstr "%s-Audio RTP-Payloader"
 
 #, c-format
 msgid "%s RTP payloader"
-msgstr ""
+msgstr "%s-RTP-Payloader"
 
 #, c-format
 msgid "%s muxer"
