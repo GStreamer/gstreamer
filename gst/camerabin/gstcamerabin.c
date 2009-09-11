@@ -3246,7 +3246,10 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * msg)
       } else if (GST_MESSAGE_SRC (msg) == GST_OBJECT (camera->imgbin)) {
         /* Image eos */
         GST_DEBUG_OBJECT (camera, "got image eos message");
-        g_idle_add (gst_camerabin_imgbin_finished, camera);
+        /* Calling callback directly will deadlock in
+           imagebin state change functions */
+        g_idle_add_full (G_PRIORITY_HIGH, gst_camerabin_imgbin_finished, camera,
+            NULL);
       }
       break;
     case GST_MESSAGE_ERROR:
