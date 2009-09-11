@@ -55,7 +55,7 @@ struct _GstGdkPixbufSink
   gboolean     has_alpha;
 
   /* properties */
-  gboolean     send_messages;
+  gboolean     post_messages;
   GdkPixbuf  * last_pixbuf;
 };
 

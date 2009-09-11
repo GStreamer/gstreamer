@@ -97,13 +97,18 @@
 
 #include <gst/video/video.h>
 
+#define DEFAULT_SEND_MESSAGES TRUE
+#define DEFAULT_POST_MESSAGES TRUE
+
 enum
 {
-  PROP_SEND_MESSAGES = 1,
-  PROP_LAST_PIXBUF
+  PROP_0,
+  PROP_SEND_MESSAGES,
+  PROP_POST_MESSAGES,
+  PROP_LAST_PIXBUF,
+  PROP_LAST
 };
 
-#define DEFAULT_SEND_MESSAGES TRUE
 
 GST_BOILERPLATE (GstGdkPixbufSink, gst_gdk_pixbuf_sink, GstVideoSink,
     GST_TYPE_VIDEO_SINK);
@@ -154,10 +159,23 @@ gst_gdk_pixbuf_sink_class_init (GstGdkPixbufSinkClass * klass)
   gobject_class->set_property = gst_gdk_pixbuf_sink_set_property;
   gobject_class->get_property = gst_gdk_pixbuf_sink_get_property;
 
+  /* FIXME 0.11, remove in favour of post-messages */
   g_object_class_install_property (gobject_class, PROP_SEND_MESSAGES,
       g_param_spec_boolean ("send-messages", "Send Messages",
-          "Whether to post messages containing pixbufs on the bus",
+          "Whether to post messages containing pixbufs on the bus "
+          " (deprecated, use post-messages)",
           DEFAULT_SEND_MESSAGES, G_PARAM_READWRITE));
+  /**
+   * GstGdkPixbuf:post-messages:
+   *
+   * Post messages on the bus containing pixbufs.
+   *
+   * Since: 0.10.17
+   */
+  g_object_class_install_property (gobject_class, PROP_POST_MESSAGES,
+      g_param_spec_boolean ("post-messages", "Post Messages",
+          "Whether to post messages containing pixbufs on the bus",
+          DEFAULT_POST_MESSAGES, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_LAST_PIXBUF,
       g_param_spec_object ("last-pixbuf", "Last Pixbuf",
@@ -178,7 +196,7 @@ gst_gdk_pixbuf_sink_init (GstGdkPixbufSink * sink,
   sink->par_d = 0;
   sink->has_alpha = FALSE;
   sink->last_pixbuf = NULL;
-  sink->send_messages = DEFAULT_SEND_MESSAGES;
+  sink->post_messages = DEFAULT_POST_MESSAGES;
 
   /* we're not a real video sink, we just derive from GstVideoSink in case
    * anything interesting is added to it in future */
@@ -304,7 +322,7 @@ gst_gdk_pixbuf_sink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf,
 
   GST_OBJECT_LOCK (sink);
 
-  do_post = sink->send_messages;
+  do_post = sink->post_messages;
 
   if (sink->last_pixbuf)
     g_object_unref (sink->last_pixbuf);
@@ -369,8 +387,9 @@ gst_gdk_pixbuf_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SEND_MESSAGES:
+    case PROP_POST_MESSAGES:
       GST_OBJECT_LOCK (sink);
-      sink->send_messages = g_value_get_boolean (value);
+      sink->post_messages = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (sink);
       break;
     default:
@@ -389,8 +408,9 @@ gst_gdk_pixbuf_sink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SEND_MESSAGES:
+    case PROP_POST_MESSAGES:
       GST_OBJECT_LOCK (sink);
-      g_value_set_boolean (value, sink->send_messages);
+      g_value_set_boolean (value, sink->post_messages);
       GST_OBJECT_UNLOCK (sink);
       break;
     case PROP_LAST_PIXBUF:
