@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-04 23:00+0100\n"
+"POT-Creation-Date: 2009-09-11 23:09+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -311,6 +311,19 @@ msgstr ""
 #, fuzzy
 msgid "album containing this data for sorting purposes"
 msgstr "album containing this data"
+
+#, fuzzy
+msgid "album artist"
+msgstr "artist"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr ""
+
+msgid "album artist sortname"
+msgstr ""
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr ""
 
 msgid "date"
 msgstr "date"

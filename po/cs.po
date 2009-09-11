@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-04 23:00+0100\n"
+"POT-Creation-Date: 2009-09-11 23:09+0100\n"
 "PO-Revision-Date: 2008-10-12 12:12+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -299,6 +299,20 @@ msgstr "album pro řazení"
 
 msgid "album containing this data for sorting purposes"
 msgstr "album obsahující tato data pro řazení"
+
+#, fuzzy
+msgid "album artist"
+msgstr "umělec"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr ""
+
+#, fuzzy
+msgid "album artist sortname"
+msgstr "umělec pro řazení"
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr ""
 
 msgid "date"
 msgstr "datum"

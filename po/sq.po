@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-04 23:00+0100\n"
+"POT-Creation-Date: 2009-09-11 23:09+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -316,6 +316,19 @@ msgstr ""
 #, fuzzy
 msgid "album containing this data for sorting purposes"
 msgstr "albumi që përmban këtë të dhënë"
+
+#, fuzzy
+msgid "album artist"
+msgstr "artisti"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr ""
+
+msgid "album artist sortname"
+msgstr ""
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr ""
 
 msgid "date"
 msgstr "data"

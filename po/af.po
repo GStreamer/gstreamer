@@ -7,12 +7,12 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-04 23:00+0100\n"
+"POT-Creation-Date: 2009-09-11 23:09+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Print the GStreamer version"
@@ -22,7 +22,7 @@ msgid "Make all warnings fatal"
 msgstr "Maak alle waarskuwings fataal"
 
 msgid "Print available debug categories and exit"
-msgstr "Vertoon beskikbare ontfoutkategorië en stop"
+msgstr "Vertoon beskikbare ontfoutkategoriÃ« en stop"
 
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
@@ -38,7 +38,7 @@ msgid ""
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
 "Komma-geskeide lys van kategorie_naam:vlak pare om die individuele "
-"kategorieë op te stel. Byvoorbeeld: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+"kategorieÃ« op te stel. Byvoorbeeld: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
 msgstr "LYS"
@@ -111,7 +111,7 @@ msgstr ""
 "%s\n"
 
 msgid "GStreamer encountered a general core library error."
-msgstr "GStreamer het 'n fout teëgekom in die algemene kernbiblioteek."
+msgstr "GStreamer het 'n fout teÃ«gekom in die algemene kernbiblioteek."
 
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
@@ -161,7 +161,7 @@ msgstr ""
 
 msgid "GStreamer encountered a general supporting library error."
 msgstr ""
-"GStreamer het 'n fout teëgekom in 'n algemene ondersteuningsbiblioteek."
+"GStreamer het 'n fout teÃ«gekom in 'n algemene ondersteuningsbiblioteek."
 
 msgid "Could not initialize supporting library."
 msgstr "Ondersteuningsbiblioteek kon nie aan die gang gesit word nie."
@@ -174,7 +174,7 @@ msgid "Could not configure supporting library."
 msgstr "Kon nie ondersteunende biblioteek toemaak nie."
 
 msgid "GStreamer encountered a general resource error."
-msgstr "GStreamer het 'n algemene hulpbronfout teëgekom."
+msgstr "GStreamer het 'n algemene hulpbronfout teÃ«gekom."
 
 msgid "Resource not found."
 msgstr "Hulpbron nie gevind nie."
@@ -213,7 +213,7 @@ msgid "No space left on the resource."
 msgstr ""
 
 msgid "GStreamer encountered a general stream error."
-msgstr "GStreamer het 'n algemene stroomfout teëgekom."
+msgstr "GStreamer het 'n algemene stroomfout teÃ«gekom."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
@@ -304,6 +304,19 @@ msgstr ""
 #, fuzzy
 msgid "album containing this data for sorting purposes"
 msgstr "album wat hierdie data bevat"
+
+#, fuzzy
+msgid "album artist"
+msgstr "kunstenaar"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr ""
+
+msgid "album artist sortname"
+msgstr ""
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr ""
 
 msgid "date"
 msgstr "datum"
@@ -629,7 +642,7 @@ msgstr ", "
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "gespesifiseerde leë houer \"%s\" is ontoelaatbaar"
+msgstr "gespesifiseerde leÃ« houer \"%s\" is ontoelaatbaar"
 
 #, c-format
 msgid "no bin \"%s\", skipping"
@@ -678,7 +691,7 @@ msgid "could not link sink element for URI \"%s\""
 msgstr "kon nie aan bestemming-element vir  URI \"%s\" verbind nie"
 
 msgid "empty pipeline not allowed"
-msgstr "leë pyplyn word nie toegelaat nie"
+msgstr "leÃ« pyplyn word nie toegelaat nie"
 
 #, fuzzy
 msgid "Internal clock error."
@@ -706,30 +719,30 @@ msgid ""
 msgstr ""
 
 msgid "No file name specified for writing."
-msgstr "Geen lêernaam om heen te skryf nie."
+msgstr "Geen lÃªernaam om heen te skryf nie."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
+msgstr "Kon nie lÃªer \"%s\" oopmaak om in te skryf nie."
 
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Fout met toemaak van lêer \"%s\"."
+msgstr "Fout met toemaak van lÃªer \"%s\"."
 
 #, fuzzy, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Fout tydens skryf na lêer \"%s\"."
+msgstr "Fout tydens skryf na lÃªer \"%s\"."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Fout tydens skryf na lêer \"%s\"."
+msgstr "Fout tydens skryf na lÃªer \"%s\"."
 
 msgid "No file name specified for reading."
-msgstr "Geen lêernaam om uit te lees nie."
+msgstr "Geen lÃªernaam om uit te lees nie."
 
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie. %s."
+msgstr "Kon nie lÃªer \"%s\" oopmaak om te lees nie. %s."
 
 #, fuzzy, c-format
 msgid "Could not get info on \"%s\"."
@@ -741,7 +754,7 @@ msgstr "\"%s\" is 'n gids."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Lêer \"%s\" is 'n sok."
+msgstr "LÃªer \"%s\" is 'n sok."
 
 msgid "Failed after iterations as requested."
 msgstr "Mislukking na die vasgestelde aantal probeerslae."
@@ -750,7 +763,7 @@ msgid "caps"
 msgstr "caps"
 
 msgid "detected capabilities in stream"
-msgstr "vermoëns wat bespeur kon word in die stroom"
+msgstr "vermoÃ«ns wat bespeur kon word in die stroom"
 
 msgid "minimum"
 msgstr "minimum"
@@ -814,22 +827,22 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."
+msgstr "Kon nie lÃªer \"%s\" oopmaak om in te skryf nie."
 
 #, fuzzy, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "geen bronelement vir URI \"%s\""
 
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Gebruik so: gst-xmllaunch <lêer.xml> [ element.eienskap=waarde ... ]\n"
+msgstr "Gebruik so: gst-xmllaunch <lÃªer.xml> [ element.eienskap=waarde ... ]\n"
 
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "FOUT: ontleding van xml-lêer '%s' het misluk.\n"
+msgstr "FOUT: ontleding van xml-lÃªer '%s' het misluk.\n"
 
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "FOUT: geen topvlak pyplynelement in lêer '%s' nie.\n"
+msgstr "FOUT: geen topvlak pyplynelement in lÃªer '%s' nie.\n"
 
 #, fuzzy
 msgid "WARNING: only one toplevel element is supported at this time.\n"
@@ -933,10 +946,10 @@ msgid "TYPE1,TYPE2,..."
 msgstr "TIPE1, TIPE2,..."
 
 msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Stoor xml-voorstelling van pyplyn na LÊER en stop"
+msgstr "Stoor xml-voorstelling van pyplyn na LÃŠER en stop"
 
 msgid "FILE"
-msgstr "LÊER"
+msgstr "LÃŠER"
 
 msgid "Do not install a fault handler"
 msgstr "Moenie 'n fouthanteerder installeer nie"
@@ -999,7 +1012,7 @@ msgid "An error happened while waiting for EOS\n"
 msgstr ""
 
 msgid "Execution ended after %"
-msgstr "Uitvoering het geëindig na %"
+msgstr "Uitvoering het geÃ«indig na %"
 
 msgid "Setting pipeline to READY ...\n"
 msgstr "Pyplyn word gestel na GEREED ...\n"
@@ -1015,7 +1028,7 @@ msgstr "Pyplyn word gestel na NULL ...\n"
 #~ msgstr "Interne GStreamer-fout: state change failed."
 
 #~ msgid "original location of file as a URI"
-#~ msgstr "oorsprong van lêer gegee as 'n URI"
+#~ msgstr "oorsprong van lÃªer gegee as 'n URI"
 
 #~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 #~ msgstr "Element \"%s\" het verander van SPEEL na POUSE, verlaat dus.\n"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-04 23:00+0100\n"
+"POT-Creation-Date: 2009-09-11 23:09+0100\n"
 "PO-Revision-Date: 2009-05-21 11:00+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -305,6 +305,20 @@ msgstr "nom d'album pour le tri"
 
 msgid "album containing this data for sorting purposes"
 msgstr "album contenant ces données, dans un but de tri"
+
+#, fuzzy
+msgid "album artist"
+msgstr "artiste"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr ""
+
+#, fuzzy
+msgid "album artist sortname"
+msgstr "nom d'artiste pour le tri"
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr ""
 
 msgid "date"
 msgstr "date"

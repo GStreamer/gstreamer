@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-04 23:00+0100\n"
+"POT-Creation-Date: 2009-09-11 23:09+0100\n"
 "PO-Revision-Date: 2008-10-16 19:57+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -290,6 +290,20 @@ msgid "album sortname"
 msgstr "アルバムのソート名"
 
 msgid "album containing this data for sorting purposes"
+msgstr ""
+
+#, fuzzy
+msgid "album artist"
+msgstr "アーティスト"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr ""
+
+#, fuzzy
+msgid "album artist sortname"
+msgstr "アーティストのソート名"
+
+msgid "The artist of the entire album, as it should be sorted"
 msgstr ""
 
 msgid "date"

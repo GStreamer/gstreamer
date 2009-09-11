@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-04 23:00+0100\n"
+"POT-Creation-Date: 2009-09-11 23:09+0100\n"
 "PO-Revision-Date: 2009-01-13 11:10+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -420,6 +420,20 @@ msgstr "nome ordinamento album"
 
 msgid "album containing this data for sorting purposes"
 msgstr "l'album che contiene questi dati a scopo di ordinamento"
+
+#, fuzzy
+msgid "album artist"
+msgstr "artista"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr ""
+
+#, fuzzy
+msgid "album artist sortname"
+msgstr "nome ordinamento artista"
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr ""
 
 msgid "date"
 msgstr "data"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-04 23:00+0100\n"
+"POT-Creation-Date: 2009-09-11 23:09+0100\n"
 "PO-Revision-Date: 2009-05-13 23:16+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -296,6 +296,20 @@ msgstr "tập nhạc sắp xếp tên"
 
 msgid "album containing this data for sorting purposes"
 msgstr "tập nhạc chứa dữ liệu này, cho mục đích sắp xếp"
+
+#, fuzzy
+msgid "album artist"
+msgstr "nghệ sĩ"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr ""
+
+#, fuzzy
+msgid "album artist sortname"
+msgstr "nghệ sĩ sắp xếp tên"
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr ""
 
 msgid "date"
 msgstr "ngày"
