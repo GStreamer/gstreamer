@@ -1,9 +1,83 @@
-=== release 0.10.16 ===
+2009-09-11 22:41:28 +0100  Jan Schmidt <thaytan@noraisin.net>
 
-2009-08-05  Jan Schmidt <jan.schmidt@sun.com>
+	* testsuite/test_message.py:
+	  test: Fix the structure_changed message test
+	  The core changed to use sink pads for the structure changed
+	  message instead of source pads. Might as well fix the test too.
+
+2009-09-05 10:25:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 94f95e3 to 19fa4f3
+
+2009-08-21 16:41:29 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* testsuite/Makefile.am:
+	* testsuite/test_audio.py:
+	  Add test_audio.py.
+
+2009-08-21 16:22:38 +0200  Johannes Berg <johannes@sipsolutions.net>
+
+	* gst/Makefile.am:
+	  Use only one copy of pygstminiobject. Fixes #590348.
+	  Instead of linking pygstminiobject.c into all the modules,
+	  we can link it only into _gst and export the symbols for
+	  the other modules. This fixes bug #590348 because now the
+	  class key/id is common for all modules as a side-effect.
+	  Also makes the modules smaller.
+
+2009-08-20 15:46:53 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/base.defs:
+	  Fix leak in gst_base_sink_get_lasy_buffer. Fixes #592447.
+
+2009-08-18 14:45:41 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* gst-python.spec.in:
+	  Update spec file
+
+2009-08-13 11:45:51 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/gstpad.override:
+	  Release the GIL around gst_pad_link.
+
+2009-08-13 11:00:49 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstpad.override:
+	  gstpad: Don't forget to acquire/release the GIL in pac_block_destroy_data
+
+2009-08-08 22:49:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* testsuite/Makefile.am:
+	  Use LC_ALL=C for the tests as some are comparing localized strings
+	  Fixes bug #590803.
+
+2009-05-10 11:17:26 +0200  Marc-Andre Lureau <marcandre.lureau@gmail.com>
+
+	* autogen.sh:
+	  Run libtoolize before aclocal
+	  This unbreaks the build in some cases. Fixes bug #582021
+
+2009-08-06 01:45:07 +0100  Jan Schmidt <thaytan@noraisin.net>
 
 	* configure.ac:
-	  releasing 0.10.16, "Distorted memory"
+	  back to development -> 0.10.16.1
+
+2009-08-05 02:04:12 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst-python.doap:
+	  Add 0.10.16 release to the doap file
+
+=== release 0.10.16 ===
+
+2009-08-05 01:34:03 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Release 0.10.16
 
 2009-07-24 00:43:35 +0300  Stefan Kost <ensonic@users.sf.net>
 
