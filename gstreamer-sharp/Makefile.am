@@ -61,7 +61,6 @@ sources = \
 overrides = \
 	$(srcdir)/override/URIHandlerAdapter.cs \
 	$(srcdir)/override/ColorBalanceAdapter.cs \
-	$(srcdir)/override/ColorBalance.cs  \
 	$(srcdir)/override/Mixer.cs \
 	$(srcdir)/override/MixerAdapter.cs \
 	$(srcdir)/override/PropertyProbe.cs \

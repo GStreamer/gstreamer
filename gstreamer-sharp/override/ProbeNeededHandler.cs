@@ -7,7 +7,7 @@ namespace Gst.Interfaces {
 
 	public delegate void ProbeNeededHandler(object o, ProbeNeededArgs args);
 
-	public class ProbeNeededArgs : GLib.SignalArgs {
+	public class ProbeNeededArgs : Gst.GLib.SignalArgs {
 		public string Property {
 			get {
 				IntPtr pspec = (IntPtr) Args[0];

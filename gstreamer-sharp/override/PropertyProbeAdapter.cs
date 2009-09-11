@@ -7,7 +7,7 @@ namespace Gst.Interfaces {
 	using System.Runtime.InteropServices;
 	using System.Collections;
 
-	public class PropertyProbeAdapter : GLib.GInterfaceAdapter, Gst.Interfaces.PropertyProbe {
+	public partial class PropertyProbeAdapter : Gst.GLib.GInterfaceAdapter, Gst.Interfaces.PropertyProbe {
 
 		[StructLayout (LayoutKind.Sequential)]
 		struct GstPropertyProbeInterface {
@@ -24,14 +24,14 @@ namespace Gst.Interfaces {
 
 		static PropertyProbeAdapter ()
 		{
-			GLib.GType.Register (_gtype, typeof(PropertyProbeAdapter));
+			Gst.GLib.GType.Register (_gtype, typeof(PropertyProbeAdapter));
 			iface.GetProperties = new GetPropertiesNativeDelegate (GetProperties_cb);
 			iface.NeedsProbe = new NeedsProbeNativeDelegate (NeedsProbe_cb);
 			iface.ProbeProperty = new ProbePropertyNativeDelegate (ProbeProperty_cb);
 			iface.GetValues = new GetValuesNativeDelegate (GetValues_cb);
 		}
 
-		[GLib.CDeclCallback]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate IntPtr GetPropertiesNativeDelegate (IntPtr inst);
 
 		[DllImport("libglib-2.0-0.dll")]
@@ -40,15 +40,15 @@ namespace Gst.Interfaces {
 		static IntPtr GetProperties_cb (IntPtr inst)
 		{
 			try {
-				PropertyProbeImplementor __obj = GLib.Object.GetObject (inst, false) as PropertyProbeImplementor;
+				PropertyProbeImplementor __obj = Gst.GLib.Object.GetObject (inst, false) as PropertyProbeImplementor;
 
 				string[] properties = __obj.Properties;
-				GLib.List properties_list = new GLib.List (typeof (IntPtr));
+				Gst.GLib.List properties_list = new Gst.GLib.List (typeof (IntPtr));
 				IntPtr gclass = Marshal.ReadIntPtr (inst);
 				foreach (string prop in properties) {
-					IntPtr name = GLib.Marshaller.StringToPtrGStrdup (prop);
+					IntPtr name = Gst.GLib.Marshaller.StringToPtrGStrdup (prop);
 					IntPtr pspec = g_object_class_find_property (gclass, name);
-					GLib.Marshaller.Free (name);
+					Gst.GLib.Marshaller.Free (name);
 					if (pspec != IntPtr.Zero)
 						properties_list.Prepend (pspec);
 				}
@@ -56,59 +56,59 @@ namespace Gst.Interfaces {
 				/* FIXME: We leak the list! */
 				return properties_list.Handle;
 			} catch (Exception e) {
-				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				Gst.GLib.ExceptionManager.RaiseUnhandledException (e, true);
 				// NOTREACHED: above call does not return.
 				throw e;
 			}
 		}
 
-		[GLib.CDeclCallback]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate bool NeedsProbeNativeDelegate (IntPtr inst, uint prop_id, IntPtr pspec);
 
 		static bool NeedsProbe_cb (IntPtr inst, uint prop_id, IntPtr pspec)
 		{
 			try {
-				PropertyProbeImplementor __obj = GLib.Object.GetObject (inst, false) as PropertyProbeImplementor;
+				PropertyProbeImplementor __obj = Gst.GLib.Object.GetObject (inst, false) as PropertyProbeImplementor;
 				Gst.PropertyInfo pi = new Gst.PropertyInfo (pspec);
 				bool __result = __obj.NeedsProbe (pi.Name);
 				return __result;
 			} catch (Exception e) {
-				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				Gst.GLib.ExceptionManager.RaiseUnhandledException (e, true);
 				// NOTREACHED: above call does not return.
 				throw e;
 			}
 		}
 
-		[GLib.CDeclCallback]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate void ProbePropertyNativeDelegate (IntPtr inst, uint prop_id, IntPtr pspec);
 
 		static void ProbeProperty_cb (IntPtr inst, uint prop_id, IntPtr pspec)
 		{
 			try {
-				PropertyProbeImplementor __obj = GLib.Object.GetObject (inst, false) as PropertyProbeImplementor;
+				PropertyProbeImplementor __obj = Gst.GLib.Object.GetObject (inst, false) as PropertyProbeImplementor;
 				Gst.PropertyInfo pi = new Gst.PropertyInfo (pspec);
 				__obj.ProbeProperty (pi.Name);
 			} catch (Exception e) {
-				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+				Gst.GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
-		[GLib.CDeclCallback]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate IntPtr GetValuesNativeDelegate (IntPtr inst, uint prop_id, IntPtr pspec);
 
 		static IntPtr GetValues_cb (IntPtr inst, uint prop_id, IntPtr pspec)
 		{
 			try {
-				PropertyProbeImplementor __obj = GLib.Object.GetObject (inst, false) as PropertyProbeImplementor;
+				PropertyProbeImplementor __obj = Gst.GLib.Object.GetObject (inst, false) as PropertyProbeImplementor;
 				Gst.PropertyInfo pi = new Gst.PropertyInfo (pspec);
 				object[] values = __obj.GetValues (pi.Name);
-				GLib.ValueArray va = new GLib.ValueArray ((uint) values.Length);
+				Gst.GLib.ValueArray va = new Gst.GLib.ValueArray ((uint) values.Length);
 
 				foreach (object v in values)
-					va.Append (new GLib.Value (v));
+					va.Append (new Gst.GLib.Value (v));
 				return va.Handle;
 			} catch (Exception e) {
-				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+				Gst.GLib.ExceptionManager.RaiseUnhandledException (e, false);
 				// NOTREACHED: above call does not return.
 				throw e;
 			}
@@ -129,54 +129,59 @@ namespace Gst.Interfaces {
 			gch.Free ();
 		}
 
+		Gst.GLib.Object implementor;
+
 		public PropertyProbeAdapter ()
 		{
-			InitHandler = new GLib.GInterfaceInitHandler (Initialize);
+			InitHandler = new Gst.GLib.GInterfaceInitHandler (Initialize);
 		}
-
-		PropertyProbeImplementor implementor;
 
 		public PropertyProbeAdapter (PropertyProbeImplementor implementor)
 		{
 			if (implementor == null)
 				throw new ArgumentNullException ("implementor");
-			this.implementor = implementor;
+			else if (!(implementor is Gst.GLib.Object))
+				throw new ArgumentException ("implementor must be a subclass of Gst.GLib.Object");
+			this.implementor = implementor as Gst.GLib.Object;
 		}
 
 		public PropertyProbeAdapter (IntPtr handle)
 		{
 			if (!_gtype.IsInstance (handle))
 				throw new ArgumentException ("The gobject doesn't implement the GInterface of this adapter", "handle");
-			this.handle = handle;
+			implementor = Gst.GLib.Object.GetObject (handle);
 		}
 
 		[DllImport("libgstinterfaces-0.10.dll")]
 		static extern IntPtr gst_property_probe_get_type();
 
-		private static GLib.GType _gtype = new GLib.GType (gst_property_probe_get_type ());
+		private static Gst.GLib.GType _gtype = new Gst.GLib.GType (gst_property_probe_get_type ());
 
-		public override GLib.GType GType {
+		public override Gst.GLib.GType GType {
 			get {
 				return _gtype;
 			}
 		}
 
-		IntPtr handle;
 		public override IntPtr Handle {
 			get {
-				if (handle != IntPtr.Zero)
-					return handle;
-				return implementor == null ? IntPtr.Zero : implementor.Handle;
+				return implementor.Handle;
+			}
+		}
+
+		public IntPtr OwnedHandle {
+			get {
+				return implementor.OwnedHandle;
 			}
 		}
 
 		public static PropertyProbe GetObject (IntPtr handle, bool owned)
 		{
-			GLib.Object obj = GLib.Object.GetObject (handle, owned);
+			Gst.GLib.Object obj = Gst.GLib.Object.GetObject (handle, owned);
 			return GetObject (obj);
 		}
 
-		public static PropertyProbe GetObject (GLib.Object obj)
+		public static PropertyProbe GetObject (Gst.GLib.Object obj)
 		{
 			if (obj == null)
 				return null;
@@ -190,19 +195,19 @@ namespace Gst.Interfaces {
 
 		public PropertyProbeImplementor Implementor {
 			get {
-				return implementor;
+				return implementor as PropertyProbeImplementor;
 			}
 		}
 		
 
-		[GLib.Signal("probe-needed")]
+		[Gst.GLib.Signal("probe-needed")]
 		public event Gst.Interfaces.ProbeNeededHandler ProbeNeeded {
 			add {
-				GLib.Signal sig = GLib.Signal.Lookup (GLib.Object.GetObject (Handle), "probe-needed", typeof (Gst.Interfaces.ProbeNeededArgs));
+				Gst.GLib.Signal sig = Gst.GLib.Signal.Lookup (Gst.GLib.Object.GetObject (Handle), "probe-needed", typeof (Gst.Interfaces.ProbeNeededArgs));
 				sig.AddDelegate (value);
 			}
 			remove {
-				GLib.Signal sig = GLib.Signal.Lookup (GLib.Object.GetObject (Handle), "probe-needed", typeof (Gst.Interfaces.ProbeNeededArgs));
+				Gst.GLib.Signal sig = Gst.GLib.Signal.Lookup (Gst.GLib.Object.GetObject (Handle), "probe-needed", typeof (Gst.Interfaces.ProbeNeededArgs));
 				sig.RemoveDelegate (value);
 			}
 		}
@@ -211,10 +216,10 @@ namespace Gst.Interfaces {
 		static extern bool gst_property_probe_needs_probe_name(IntPtr raw, IntPtr name);
 
 		public bool NeedsProbe(string name) {
-			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
 			bool raw_ret = gst_property_probe_needs_probe_name(Handle, native_name);
 			bool ret = raw_ret;
-			GLib.Marshaller.Free (native_name);
+			Gst.GLib.Marshaller.Free (native_name);
 			return ret;
 		}
 
@@ -222,9 +227,9 @@ namespace Gst.Interfaces {
 		static extern void gst_property_probe_probe_property_name(IntPtr raw, IntPtr name);
 
 		public void Probe(string name) {
-			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
 			gst_property_probe_probe_property_name(Handle, native_name);
-			GLib.Marshaller.Free (native_name);
+			Gst.GLib.Marshaller.Free (native_name);
 		}
 
 		[DllImport("libgstinterfaces-0.10.dll")]
@@ -236,7 +241,7 @@ namespace Gst.Interfaces {
 				if (raw_ret == IntPtr.Zero)
 					return new string[] {};
 
-				GLib.List raw_ret_list = new GLib.List(raw_ret, typeof (IntPtr));
+				Gst.GLib.List raw_ret_list = new Gst.GLib.List(raw_ret, typeof (IntPtr));
 				ArrayList ret = new ArrayList ();
 
 				foreach (IntPtr pspec in raw_ret_list) {
@@ -252,15 +257,15 @@ namespace Gst.Interfaces {
 		static extern IntPtr gst_property_probe_get_values_name (IntPtr raw, IntPtr name);
 
 		public object[] GetValues (string name) {
-			IntPtr raw_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr raw_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
 			IntPtr raw_ret = gst_property_probe_get_values_name (Handle, raw_name);
-			GLib.Marshaller.Free (raw_name);
+			Gst.GLib.Marshaller.Free (raw_name);
 			if (raw_ret == IntPtr.Zero)
 				return new object[] {};
 
-			GLib.ValueArray va = new GLib.ValueArray (raw_ret);
+			Gst.GLib.ValueArray va = new Gst.GLib.ValueArray (raw_ret);
 			ArrayList ret = new ArrayList ();
-			foreach (GLib.Value v in va)
+			foreach (Gst.GLib.Value v in va)
 			  ret.Add ((object) v.Val);
 
 			va.Dispose ();
@@ -272,15 +277,15 @@ namespace Gst.Interfaces {
 		static extern IntPtr gst_property_probe_probe_and_get_values_name (IntPtr raw, IntPtr name);
 
 		public object[] ProbeAndGetValues (string name) {
-			IntPtr raw_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr raw_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
 			IntPtr raw_ret = gst_property_probe_probe_and_get_values_name (Handle, raw_name);
-			GLib.Marshaller.Free (raw_name);
+			Gst.GLib.Marshaller.Free (raw_name);
 			if (raw_ret == IntPtr.Zero)
 				return new object[] {};
 
-			GLib.ValueArray va = new GLib.ValueArray (raw_ret);
+			Gst.GLib.ValueArray va = new Gst.GLib.ValueArray (raw_ret);
 			ArrayList ret = new ArrayList ();
-			foreach (GLib.Value v in va)
+			foreach (Gst.GLib.Value v in va)
 			  ret.Add ((object) v.Val);
 
 			va.Dispose ();
