@@ -223,7 +223,7 @@ build_linear_format (int depth, int width, int unsignd, int big_endian)
   return formats;
 }
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
 static const gchar *format_type_names[] = {
   "linear",
   "float",
