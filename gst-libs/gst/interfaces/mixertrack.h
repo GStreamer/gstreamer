@@ -69,6 +69,8 @@ G_BEGIN_DECLS
  * @GST_MIXER_TRACK_NO_MUTE: play track doesn't support mute. Since: 0.10.23
  * @GST_MIXER_TRACK_WHITELIST: track should be displayed "by default" in apps.
  *     Since: 0.10.23
+ * @GST_MIXER_TRACK_READONLY: track is read-only. Since: 0.10.25
+ * @GST_MIXER_TRACK_WRITEONLY: track is write-only. Since: 0.10.25
  *
  * Mixer track flags.
  */
@@ -82,7 +84,11 @@ typedef enum {
   GST_MIXER_TRACK_NO_RECORD = (1<<6),
   GST_MIXER_TRACK_NO_MUTE = (1<<7),
   GST_MIXER_TRACK_WHITELIST = (1<<8),
+  GST_MIXER_TRACK_READONLY = (1<<9),
+  GST_MIXER_TRACK_WRITEONLY = (1<<10)
 } GstMixerTrackFlags;
+
+/* FIXME 0.11: READONLY/WRITEONLY -> READABLE/WRITABLE etc. */
 
 #define GST_MIXER_TRACK_HAS_FLAG(channel, flag) \
   ((channel)->flags & flag)
