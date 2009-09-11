@@ -83,8 +83,7 @@ GST_START_TEST (test_y4m)
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   int i, num_buffers, size;
-  const gchar *data0 = "YUV4MPEG2 W384 H288 I? F25:1 A1:1\nFRAME\n";
-
+  const gchar *data0 = "YUV4MPEG2 W384 H288 Ip F25:1 A1:1\nFRAME\n";
 
   y4menc = setup_y4menc ();
   fail_unless (gst_element_set_state (y4menc,

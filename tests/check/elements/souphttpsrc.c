@@ -27,6 +27,7 @@
 #include <glib/gprintf.h>
 #include <libsoup/soup-address.h>
 #include <libsoup/soup-message.h>
+#include <libsoup/soup-misc.h>
 #include <libsoup/soup-server.h>
 #include <libsoup/soup-auth-domain.h>
 #include <libsoup/soup-auth-domain-basic.h>
