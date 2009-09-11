@@ -3062,11 +3062,13 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
           watch->message.type_data.request.method = GST_RTSP_INVALID;
           if (watch->message.type_data.request.version != GST_RTSP_VERSION_1_0)
             watch->message.type_data.request.version = GST_RTSP_VERSION_INVALID;
+          res = GST_RTSP_EPARSE;
         } else if (watch->message.type == GST_RTSP_MESSAGE_HTTP_RESPONSE) {
           watch->message.type = GST_RTSP_MESSAGE_RESPONSE;
           if (watch->message.type_data.response.version != GST_RTSP_VERSION_1_0)
             watch->message.type_data.response.version =
                 GST_RTSP_VERSION_INVALID;
+          res = GST_RTSP_EPARSE;
         }
       }
 
