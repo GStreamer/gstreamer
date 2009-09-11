@@ -168,7 +168,7 @@ class TestCreateMessages(TestCase):
 
     def testStructureChangeMessage(self):
         if hasattr(gst, 'message_new_structure_change'):
-            p = gst.Pad("blah", gst.PAD_SRC)
+            p = gst.Pad("blah", gst.PAD_SINK)
             m = gst.message_new_structure_change(p,
                                                  gst.STRUCTURE_CHANGE_TYPE_PAD_LINK,
                                                  self.element, True)
