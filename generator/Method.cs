@@ -185,7 +185,7 @@ namespace GtkSharp.Generation {
 			string import_sig = IsStatic ? "" : container_type.MarshalType + " raw";
 			import_sig += !IsStatic && Parameters.Count > 0 ? ", " : "";
 			import_sig += Parameters.ImportSignature.ToString();
-			sw.WriteLine("\t\t[DllImport(\"" + LibraryName + "\", CallingConvention = GLib.Global.CallingConvention)]");
+			sw.WriteLine("\t\t[DllImport(\"" + LibraryName + "\", CallingConvention = CallingConvention.Cdecl)]");
 			if (retval.MarshalType.StartsWith ("[return:"))
 				sw.WriteLine("\t\t" + retval.MarshalType + " static extern " + Safety + retval.CSType + " " + CName + "(" + import_sig + ");");
 			else
