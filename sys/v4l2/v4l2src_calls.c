@@ -49,6 +49,7 @@
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 
 /* lalala... */
 #define GST_V4L2_SET_ACTIVE(element) (element)->buffer = GINT_TO_POINTER (-1)
@@ -157,6 +158,10 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
       || !gst_v4l2_buffer_pool_available_buffers (pool);
 
   if (G_UNLIKELY (need_copy)) {
+    if (!v4l2src->always_copy) {
+      GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, v4l2src,
+          "running out of buffers, making a copy to reuse current one");
+    }
     *buf = gst_buffer_copy (pool_buffer);
     GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
     /* this will requeue */
