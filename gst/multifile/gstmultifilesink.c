@@ -30,7 +30,7 @@
  * The filename property should contain a string with a %d placeholder that will
  * be substituted with the index for each filename.
  *
- * If the #GstMultiFileSink:silent property is #FALSE, it sends an application
+ * If the #GstMultiFileSink:post-messages property is #TRUE, it sends an application
  * message named
  * <classname>&quot;GstMultiFileSink&quot;</classname> after writing each
  * buffer.
@@ -99,7 +99,7 @@
  * <refsect2>
  * |[
  * gst-launch audiotestsrc ! multifilesink
- * gst-launch videotestsrc ! multifilesink silent=false filename="frame%d"
+ * gst-launch videotestsrc ! multifilesink post-messages=true filename="frame%d"
  * ]|
  * </refsect2>
  *
@@ -128,14 +128,14 @@ GST_ELEMENT_DETAILS ("Multi-File Sink",
 
 #define DEFAULT_LOCATION "%05d"
 #define DEFAULT_INDEX 0
-#define DEFAULT_SILENT TRUE
+#define DEFAULT_POST_MESSAGES FALSE
 
 enum
 {
   PROP_0,
   PROP_LOCATION,
   PROP_INDEX,
-  PROP_SILENT,
+  PROP_POST_MESSAGES,
   PROP_LAST
 };
 
@@ -185,16 +185,16 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
           "index is incremented by one for each buffer written.",
           0, G_MAXINT, DEFAULT_INDEX, G_PARAM_READWRITE));
   /**
-   * GstMultiFileSink:silent
+   * GstMultiFileSink:post-messages
    *
    * Post a message on the GstBus for each file.
    *
    * Since: 0.10.17
    */
-  g_object_class_install_property (gobject_class, PROP_SILENT,
-      g_param_spec_boolean ("silent", "Silent",
-          "Message to show a message for each file to save with the timestamp "
-          " of the buffer", DEFAULT_SILENT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_POST_MESSAGES,
+      g_param_spec_boolean ("post-messages", "Post Messages",
+          "Post a message for each file with information of the buffer",
+          DEFAULT_POST_MESSAGES, G_PARAM_READWRITE));
 
   gobject_class->finalize = gst_multi_file_sink_finalize;
 
@@ -208,7 +208,7 @@ gst_multi_file_sink_init (GstMultiFileSink * multifilesink,
 {
   multifilesink->filename = g_strdup (DEFAULT_LOCATION);
   multifilesink->index = DEFAULT_INDEX;
-  multifilesink->silent = DEFAULT_SILENT;
+  multifilesink->post_messages = DEFAULT_POST_MESSAGES;
 
   gst_base_sink_set_sync (GST_BASE_SINK (multifilesink), FALSE);
 }
@@ -247,8 +247,8 @@ gst_multi_file_sink_set_property (GObject * object, guint prop_id,
     case PROP_INDEX:
       sink->index = g_value_get_int (value);
       break;
-    case PROP_SILENT:
-      sink->silent = g_value_get_boolean (value);
+    case PROP_POST_MESSAGES:
+      sink->post_messages = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -269,8 +269,8 @@ gst_multi_file_sink_get_property (GObject * object, guint prop_id,
     case PROP_INDEX:
       g_value_set_int (value, sink->index);
       break;
-    case PROP_SILENT:
-      g_value_set_boolean (value, sink->silent);
+    case PROP_POST_MESSAGES:
+      g_value_set_boolean (value, sink->post_messages);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -299,7 +299,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   if (!ret)
     goto write_error;
 
-  if (!multifilesink->silent) {
+  if (multifilesink->post_messages) {
     GstClockTime duration, timestamp;
     GstClockTime running_time, stream_time;
     guint64 offset, offset_end;

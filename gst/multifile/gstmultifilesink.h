@@ -57,7 +57,7 @@ struct _GstMultiFileSink
 
   gchar *filename;
   gint index;
-  gboolean silent;
+  gboolean post_messages;
 };
 
 struct _GstMultiFileSinkClass
