@@ -136,7 +136,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[UnmanagedFunctionPointer (Global.CallingConvention)]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate void ClosureMarshal (IntPtr closure, IntPtr return_val, uint n_param_vals, IntPtr param_values, IntPtr invocation_hint, IntPtr marshal_data);
 
 		static void MarshalCallback (IntPtr raw_closure, IntPtr return_val, uint n_param_vals, IntPtr param_values, IntPtr invocation_hint, IntPtr marshal_data)
@@ -183,7 +183,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[UnmanagedFunctionPointer (Global.CallingConvention)]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate void ClosureNotify (IntPtr data, IntPtr closure);
 
 		static void NotifyCallback (IntPtr data, IntPtr raw_closure)
@@ -202,25 +202,25 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_cclosure_new (Delegate cb, IntPtr user_data, ClosureNotify notify);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_closure_new_simple (int closure_size, IntPtr dummy);
   
-  		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+  		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_closure_set_marshal (IntPtr closure, ClosureMarshal marshaler);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_closure_add_finalize_notifier (IntPtr closure, IntPtr dummy, ClosureNotify notify);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_signal_connect_closure (IntPtr obj, IntPtr name, IntPtr closure, bool is_after);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_signal_handler_disconnect (IntPtr instance, uint handler);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_signal_handler_is_connected (IntPtr instance, uint handler);
 	}
 }

@@ -27,7 +27,7 @@ namespace Gst.GLib {
 
 	public class FileUtils
 	{
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		extern static bool g_file_get_contents (IntPtr filename, out IntPtr contents, out int length, out IntPtr error);
 
 		public static string GetFileContents (string filename)

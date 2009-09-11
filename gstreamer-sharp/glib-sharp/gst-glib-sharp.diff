@@ -1,6 +1,6 @@
-diff -Naur glib/Argv.cs glib-sharp/Argv.cs
---- glib/Argv.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Argv.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Argv.cs glib-sharp/Argv.cs
+--- glib-sharp-upstream/Argv.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Argv.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -10,9 +10,9 @@ diff -Naur glib/Argv.cs glib-sharp/Argv.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/Boxed.cs glib-sharp/Boxed.cs
---- glib/Boxed.cs	2004-10-21 03:08:10.000000000 +0200
-+++ glib-sharp/Boxed.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Boxed.cs glib-sharp/Boxed.cs
+--- glib-sharp-upstream/Boxed.cs	2004-10-21 03:08:10.000000000 +0200
++++ glib-sharp/Boxed.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -18,7 +18,7 @@
  // Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  // Boston, MA 02111-1307, USA.
@@ -22,9 +22,9 @@ diff -Naur glib/Boxed.cs glib-sharp/Boxed.cs
  
  	using System;
  
-diff -Naur glib/CDeclCallbackAttribute.cs glib-sharp/CDeclCallbackAttribute.cs
---- glib/CDeclCallbackAttribute.cs	2009-07-02 22:18:10.000000000 +0200
-+++ glib-sharp/CDeclCallbackAttribute.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/CDeclCallbackAttribute.cs glib-sharp/CDeclCallbackAttribute.cs
+--- glib-sharp-upstream/CDeclCallbackAttribute.cs	2009-07-02 22:18:10.000000000 +0200
++++ glib-sharp/CDeclCallbackAttribute.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -34,9 +34,9 @@ diff -Naur glib/CDeclCallbackAttribute.cs glib-sharp/CDeclCallbackAttribute.cs
  
  	using System;
  
-diff -Naur glib/ClassInitializerAttribute.cs glib-sharp/ClassInitializerAttribute.cs
---- glib/ClassInitializerAttribute.cs	2007-09-07 16:40:46.000000000 +0200
-+++ glib-sharp/ClassInitializerAttribute.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/ClassInitializerAttribute.cs glib-sharp/ClassInitializerAttribute.cs
+--- glib-sharp-upstream/ClassInitializerAttribute.cs	2007-09-07 16:40:46.000000000 +0200
++++ glib-sharp/ClassInitializerAttribute.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -46,9 +46,9 @@ diff -Naur glib/ClassInitializerAttribute.cs glib-sharp/ClassInitializerAttribut
  
  	using System;
  
-diff -Naur glib/ConnectBeforeAttribute.cs glib-sharp/ConnectBeforeAttribute.cs
---- glib/ConnectBeforeAttribute.cs	2004-06-25 20:42:19.000000000 +0200
-+++ glib-sharp/ConnectBeforeAttribute.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/ConnectBeforeAttribute.cs glib-sharp/ConnectBeforeAttribute.cs
+--- glib-sharp-upstream/ConnectBeforeAttribute.cs	2004-06-25 20:42:19.000000000 +0200
++++ glib-sharp/ConnectBeforeAttribute.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -58,9 +58,9 @@ diff -Naur glib/ConnectBeforeAttribute.cs glib-sharp/ConnectBeforeAttribute.cs
  
  	using System;
  
-diff -Naur glib/DefaultSignalHandlerAttribute.cs glib-sharp/DefaultSignalHandlerAttribute.cs
---- glib/DefaultSignalHandlerAttribute.cs	2004-06-25 20:42:19.000000000 +0200
-+++ glib-sharp/DefaultSignalHandlerAttribute.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/DefaultSignalHandlerAttribute.cs glib-sharp/DefaultSignalHandlerAttribute.cs
+--- glib-sharp-upstream/DefaultSignalHandlerAttribute.cs	2004-06-25 20:42:19.000000000 +0200
++++ glib-sharp/DefaultSignalHandlerAttribute.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -70,9 +70,9 @@ diff -Naur glib/DefaultSignalHandlerAttribute.cs glib-sharp/DefaultSignalHandler
  
  	using System;
  
-diff -Naur glib/DelegateWrapper.cs glib-sharp/DelegateWrapper.cs
---- glib/DelegateWrapper.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/DelegateWrapper.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/DelegateWrapper.cs glib-sharp/DelegateWrapper.cs
+--- glib-sharp-upstream/DelegateWrapper.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/DelegateWrapper.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -22,7 +22,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -82,9 +82,9 @@ diff -Naur glib/DelegateWrapper.cs glib-sharp/DelegateWrapper.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/DestroyNotify.cs glib-sharp/DestroyNotify.cs
---- glib/DestroyNotify.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/DestroyNotify.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/DestroyNotify.cs glib-sharp/DestroyNotify.cs
+--- glib-sharp-upstream/DestroyNotify.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/DestroyNotify.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -18,7 +18,7 @@
  // Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  // Boston, MA 02111-1307, USA.
@@ -94,9 +94,9 @@ diff -Naur glib/DestroyNotify.cs glib-sharp/DestroyNotify.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/EnumWrapper.cs glib-sharp/EnumWrapper.cs
---- glib/EnumWrapper.cs	2005-07-22 20:36:50.000000000 +0200
-+++ glib-sharp/EnumWrapper.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/EnumWrapper.cs glib-sharp/EnumWrapper.cs
+--- glib-sharp-upstream/EnumWrapper.cs	2005-07-22 20:36:50.000000000 +0200
++++ glib-sharp/EnumWrapper.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -106,9 +106,9 @@ diff -Naur glib/EnumWrapper.cs glib-sharp/EnumWrapper.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/ExceptionManager.cs glib-sharp/ExceptionManager.cs
---- glib/ExceptionManager.cs	2007-03-08 21:28:24.000000000 +0100
-+++ glib-sharp/ExceptionManager.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/ExceptionManager.cs glib-sharp/ExceptionManager.cs
+--- glib-sharp-upstream/ExceptionManager.cs	2007-03-08 21:28:24.000000000 +0100
++++ glib-sharp/ExceptionManager.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -118,9 +118,9 @@ diff -Naur glib/ExceptionManager.cs glib-sharp/ExceptionManager.cs
  
  	using System;
  
-diff -Naur glib/FileUtils.cs glib-sharp/FileUtils.cs
---- glib/FileUtils.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/FileUtils.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/FileUtils.cs glib-sharp/FileUtils.cs
+--- glib-sharp-upstream/FileUtils.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/FileUtils.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -130,9 +130,9 @@ diff -Naur glib/FileUtils.cs glib-sharp/FileUtils.cs
  
  	using System;
  	using System.Text;
-diff -Naur glib/Format.cs glib-sharp/Format.cs
---- glib/Format.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Format.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Format.cs glib-sharp/Format.cs
+--- glib-sharp-upstream/Format.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Format.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -23,7 +23,7 @@
  using System;
  using System.Runtime.InteropServices;
@@ -141,10 +141,10 @@ diff -Naur glib/Format.cs glib-sharp/Format.cs
 +namespace Gst.GLib {
  #if GTK_SHARP_2_14
  	public class Format {
- 		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
-diff -Naur glib/GException.cs glib-sharp/GException.cs
---- glib/GException.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/GException.cs	2009-09-03 10:41:01.000000000 +0200
+ 		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+diff -Naur glib-sharp-upstream/GException.cs glib-sharp/GException.cs
+--- glib-sharp-upstream/GException.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/GException.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -154,9 +154,9 @@ diff -Naur glib/GException.cs glib-sharp/GException.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/GInterfaceAdapter.cs glib-sharp/GInterfaceAdapter.cs
---- glib/GInterfaceAdapter.cs	2009-07-21 08:51:10.000000000 +0200
-+++ glib-sharp/GInterfaceAdapter.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/GInterfaceAdapter.cs glib-sharp/GInterfaceAdapter.cs
+--- glib-sharp-upstream/GInterfaceAdapter.cs	2009-07-21 08:51:10.000000000 +0200
++++ glib-sharp/GInterfaceAdapter.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -166,9 +166,9 @@ diff -Naur glib/GInterfaceAdapter.cs glib-sharp/GInterfaceAdapter.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/GInterfaceAttribute.cs glib-sharp/GInterfaceAttribute.cs
---- glib/GInterfaceAttribute.cs	2007-09-11 22:34:24.000000000 +0200
-+++ glib-sharp/GInterfaceAttribute.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/GInterfaceAttribute.cs glib-sharp/GInterfaceAttribute.cs
+--- glib-sharp-upstream/GInterfaceAttribute.cs	2007-09-11 22:34:24.000000000 +0200
++++ glib-sharp/GInterfaceAttribute.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -17,7 +17,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -178,9 +178,12 @@ diff -Naur glib/GInterfaceAttribute.cs glib-sharp/GInterfaceAttribute.cs
  
  	using System;
  
-diff -Naur glib/Global.cs glib-sharp/Global.cs
---- glib/Global.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Global.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/glib-api.xml glib-sharp/glib-api.xml
+diff -Naur glib-sharp-upstream/glib-sharp-3.0.pc.in glib-sharp/glib-sharp-3.0.pc.in
+diff -Naur glib-sharp-upstream/glib-sharp.dll.config.in glib-sharp/glib-sharp.dll.config.in
+diff -Naur glib-sharp-upstream/Global.cs glib-sharp/Global.cs
+--- glib-sharp-upstream/Global.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Global.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -190,12 +193,13 @@ diff -Naur glib/Global.cs glib-sharp/Global.cs
  
  	using System;
  	using System.Text;
-diff -Naur glib/glue/Makefile.am glib-sharp/glue/Makefile.am
-diff -Naur glib/glue/thread.c glib-sharp/glue/thread.c
-diff -Naur glib/glue/win32dll.c glib-sharp/glue/win32dll.c
-diff -Naur glib/GString.cs glib-sharp/GString.cs
---- glib/GString.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/GString.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/glue/Makefile.am glib-sharp/glue/Makefile.am
+diff -Naur glib-sharp-upstream/glue/thread.c glib-sharp/glue/thread.c
+diff -Naur glib-sharp-upstream/glue/win32dll.c glib-sharp/glue/win32dll.c
+diff -Naur glib-sharp-upstream/gst-glib-sharp.diff glib-sharp/gst-glib-sharp.diff
+diff -Naur glib-sharp-upstream/GString.cs glib-sharp/GString.cs
+--- glib-sharp-upstream/GString.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/GString.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -205,9 +209,9 @@ diff -Naur glib/GString.cs glib-sharp/GString.cs
  	using System;
  	using System.Runtime.InteropServices;
  	
-diff -Naur glib/GTypeAttribute.cs glib-sharp/GTypeAttribute.cs
---- glib/GTypeAttribute.cs	2005-05-04 18:54:24.000000000 +0200
-+++ glib-sharp/GTypeAttribute.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/GTypeAttribute.cs glib-sharp/GTypeAttribute.cs
+--- glib-sharp-upstream/GTypeAttribute.cs	2005-05-04 18:54:24.000000000 +0200
++++ glib-sharp/GTypeAttribute.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -17,7 +17,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -217,9 +221,9 @@ diff -Naur glib/GTypeAttribute.cs glib-sharp/GTypeAttribute.cs
  
  	using System;
  
-diff -Naur glib/GType.cs glib-sharp/GType.cs
---- glib/GType.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/GType.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/GType.cs glib-sharp/GType.cs
+--- glib-sharp-upstream/GType.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/GType.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -20,7 +20,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -229,9 +233,9 @@ diff -Naur glib/GType.cs glib-sharp/GType.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/Idle.cs glib-sharp/Idle.cs
---- glib/Idle.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Idle.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Idle.cs glib-sharp/Idle.cs
+--- glib-sharp-upstream/Idle.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Idle.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -24,7 +24,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -241,9 +245,9 @@ diff -Naur glib/Idle.cs glib-sharp/Idle.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/IgnoreClassInitializersAttribute.cs glib-sharp/IgnoreClassInitializersAttribute.cs
---- glib/IgnoreClassInitializersAttribute.cs	2007-09-07 16:40:46.000000000 +0200
-+++ glib-sharp/IgnoreClassInitializersAttribute.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/IgnoreClassInitializersAttribute.cs glib-sharp/IgnoreClassInitializersAttribute.cs
+--- glib-sharp-upstream/IgnoreClassInitializersAttribute.cs	2007-09-07 16:40:46.000000000 +0200
++++ glib-sharp/IgnoreClassInitializersAttribute.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -253,9 +257,9 @@ diff -Naur glib/IgnoreClassInitializersAttribute.cs glib-sharp/IgnoreClassInitia
  
  	using System;
  
-diff -Naur glib/InitiallyUnowned.cs glib-sharp/InitiallyUnowned.cs
---- glib/InitiallyUnowned.cs	2009-08-08 05:06:53.000000000 +0200
-+++ glib-sharp/InitiallyUnowned.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/InitiallyUnowned.cs glib-sharp/InitiallyUnowned.cs
+--- glib-sharp-upstream/InitiallyUnowned.cs	2009-08-08 05:06:53.000000000 +0200
++++ glib-sharp/InitiallyUnowned.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -20,7 +20,7 @@
  
  #if GTK_SHARP_2_10
@@ -265,9 +269,9 @@ diff -Naur glib/InitiallyUnowned.cs glib-sharp/InitiallyUnowned.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/IOChannel.cs glib-sharp/IOChannel.cs
---- glib/IOChannel.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/IOChannel.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/IOChannel.cs glib-sharp/IOChannel.cs
+--- glib-sharp-upstream/IOChannel.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/IOChannel.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -286,9 +290,9 @@ diff -Naur glib/IOChannel.cs glib-sharp/IOChannel.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/IWrapper.cs glib-sharp/IWrapper.cs
---- glib/IWrapper.cs	2004-06-25 20:42:19.000000000 +0200
-+++ glib-sharp/IWrapper.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/IWrapper.cs glib-sharp/IWrapper.cs
+--- glib-sharp-upstream/IWrapper.cs	2004-06-25 20:42:19.000000000 +0200
++++ glib-sharp/IWrapper.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -298,9 +302,9 @@ diff -Naur glib/IWrapper.cs glib-sharp/IWrapper.cs
  {
  	using System;
  
-diff -Naur glib/ListBase.cs glib-sharp/ListBase.cs
---- glib/ListBase.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/ListBase.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/ListBase.cs glib-sharp/ListBase.cs
+--- glib-sharp-upstream/ListBase.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/ListBase.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -20,7 +20,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -310,9 +314,9 @@ diff -Naur glib/ListBase.cs glib-sharp/ListBase.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/List.cs glib-sharp/List.cs
---- glib/List.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/List.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/List.cs glib-sharp/List.cs
+--- glib-sharp-upstream/List.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/List.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -322,9 +326,9 @@ diff -Naur glib/List.cs glib-sharp/List.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/Log.cs glib-sharp/Log.cs
---- glib/Log.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Log.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Log.cs glib-sharp/Log.cs
+--- glib-sharp-upstream/Log.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Log.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -22,7 +22,7 @@
  
  //
@@ -334,9 +338,9 @@ diff -Naur glib/Log.cs glib-sharp/Log.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/MainContext.cs glib-sharp/MainContext.cs
---- glib/MainContext.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/MainContext.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/MainContext.cs glib-sharp/MainContext.cs
+--- glib-sharp-upstream/MainContext.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/MainContext.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -346,9 +350,9 @@ diff -Naur glib/MainContext.cs glib-sharp/MainContext.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/MainLoop.cs glib-sharp/MainLoop.cs
---- glib/MainLoop.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/MainLoop.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/MainLoop.cs glib-sharp/MainLoop.cs
+--- glib-sharp-upstream/MainLoop.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/MainLoop.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -21,7 +21,7 @@
  using System;
  using System.Runtime.InteropServices;
@@ -358,10 +362,10 @@ diff -Naur glib/MainLoop.cs glib-sharp/MainLoop.cs
  	public class MainLoop {
  		private IntPtr handle;
  	
-diff -Naur glib/Makefile.am glib-sharp/Makefile.am
-diff -Naur glib/ManagedValue.cs glib-sharp/ManagedValue.cs
---- glib/ManagedValue.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/ManagedValue.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Makefile.am glib-sharp/Makefile.am
+diff -Naur glib-sharp-upstream/ManagedValue.cs glib-sharp/ManagedValue.cs
+--- glib-sharp-upstream/ManagedValue.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/ManagedValue.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -380,9 +384,9 @@ diff -Naur glib/ManagedValue.cs glib-sharp/ManagedValue.cs
  					boxed_type = new GLib.GType (g_boxed_type_register_static (name, copy, free));
  					Marshaller.Free (name);
  				}
-diff -Naur glib/Markup.cs glib-sharp/Markup.cs
---- glib/Markup.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Markup.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Markup.cs glib-sharp/Markup.cs
+--- glib-sharp-upstream/Markup.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Markup.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -23,7 +23,7 @@
  using System;
  using System.Runtime.InteropServices;
@@ -392,9 +396,9 @@ diff -Naur glib/Markup.cs glib-sharp/Markup.cs
  
  
  	public class Markup {
-diff -Naur glib/Marshaller.cs glib-sharp/Marshaller.cs
---- glib/Marshaller.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Marshaller.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Marshaller.cs glib-sharp/Marshaller.cs
+--- glib-sharp-upstream/Marshaller.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Marshaller.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -21,7 +21,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -404,9 +408,9 @@ diff -Naur glib/Marshaller.cs glib-sharp/Marshaller.cs
  	using System;
  	using System.Runtime.InteropServices;
  	
-diff -Naur glib/MissingIntPtrCtorException.cs glib-sharp/MissingIntPtrCtorException.cs
---- glib/MissingIntPtrCtorException.cs	2004-06-25 20:42:19.000000000 +0200
-+++ glib-sharp/MissingIntPtrCtorException.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/MissingIntPtrCtorException.cs glib-sharp/MissingIntPtrCtorException.cs
+--- glib-sharp-upstream/MissingIntPtrCtorException.cs	2004-06-25 20:42:19.000000000 +0200
++++ glib-sharp/MissingIntPtrCtorException.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -416,9 +420,9 @@ diff -Naur glib/MissingIntPtrCtorException.cs glib-sharp/MissingIntPtrCtorExcept
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/NotifyHandler.cs glib-sharp/NotifyHandler.cs
---- glib/NotifyHandler.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/NotifyHandler.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/NotifyHandler.cs glib-sharp/NotifyHandler.cs
+--- glib-sharp-upstream/NotifyHandler.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/NotifyHandler.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -14,7 +14,7 @@
  // Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  // Boston, MA 02111-1307, USA.
@@ -428,9 +432,9 @@ diff -Naur glib/NotifyHandler.cs glib-sharp/NotifyHandler.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/Object.cs glib-sharp/Object.cs
---- glib/Object.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Object.cs	2009-09-03 10:45:33.000000000 +0200
+diff -Naur glib-sharp-upstream/Object.cs glib-sharp/Object.cs
+--- glib-sharp-upstream/Object.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Object.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -20,7 +20,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -506,7 +510,7 @@ diff -Naur glib/Object.cs glib-sharp/Object.cs
 +			OverrideClassStruct (gtype, klass);
  		}
  
- 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+ 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 @@ -230,9 +256,68 @@
  			return pspec.Handle;
  		}
@@ -640,9 +644,9 @@ diff -Naur glib/Object.cs glib-sharp/Object.cs
  		struct GObject {
  			public GTypeInstance type_instance;
  			public uint ref_count;
-diff -Naur glib/ObjectManager.cs glib-sharp/ObjectManager.cs
---- glib/ObjectManager.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/ObjectManager.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/ObjectManager.cs glib-sharp/ObjectManager.cs
+--- glib-sharp-upstream/ObjectManager.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/ObjectManager.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -20,7 +20,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -652,9 +656,9 @@ diff -Naur glib/ObjectManager.cs glib-sharp/ObjectManager.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/Opaque.cs glib-sharp/Opaque.cs
---- glib/Opaque.cs	2009-01-29 17:26:09.000000000 +0100
-+++ glib-sharp/Opaque.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Opaque.cs glib-sharp/Opaque.cs
+--- glib-sharp-upstream/Opaque.cs	2009-01-29 17:26:09.000000000 +0100
++++ glib-sharp/Opaque.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -24,7 +24,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -664,9 +668,9 @@ diff -Naur glib/Opaque.cs glib-sharp/Opaque.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/ParamSpec.cs glib-sharp/ParamSpec.cs
---- glib/ParamSpec.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/ParamSpec.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/ParamSpec.cs glib-sharp/ParamSpec.cs
+--- glib-sharp-upstream/ParamSpec.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/ParamSpec.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,50 +19,49 @@
  // Boston, MA 02111-1307, USA.
  
@@ -806,9 +810,9 @@ diff -Naur glib/ParamSpec.cs glib-sharp/ParamSpec.cs
  			ParamFlags flags;
  			public IntPtr value_type;
  			IntPtr owner_type;
-diff -Naur glib/Priority.cs glib-sharp/Priority.cs
---- glib/Priority.cs	2009-05-03 21:34:22.000000000 +0200
-+++ glib-sharp/Priority.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Priority.cs glib-sharp/Priority.cs
+--- glib-sharp-upstream/Priority.cs	2009-05-03 21:34:22.000000000 +0200
++++ glib-sharp/Priority.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  // Boston, MA 02111-1307, USA.
@@ -818,9 +822,9 @@ diff -Naur glib/Priority.cs glib-sharp/Priority.cs
  	public enum Priority
  	{
  		High = -100,
-diff -Naur glib/PropertyAttribute.cs glib-sharp/PropertyAttribute.cs
---- glib/PropertyAttribute.cs	2008-06-06 18:55:00.000000000 +0200
-+++ glib-sharp/PropertyAttribute.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/PropertyAttribute.cs glib-sharp/PropertyAttribute.cs
+--- glib-sharp-upstream/PropertyAttribute.cs	2008-06-06 18:55:00.000000000 +0200
++++ glib-sharp/PropertyAttribute.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -17,7 +17,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -830,9 +834,9 @@ diff -Naur glib/PropertyAttribute.cs glib-sharp/PropertyAttribute.cs
  
  	using System;
  
-diff -Naur glib/PtrArray.cs glib-sharp/PtrArray.cs
---- glib/PtrArray.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/PtrArray.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/PtrArray.cs glib-sharp/PtrArray.cs
+--- glib-sharp-upstream/PtrArray.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/PtrArray.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -842,9 +846,9 @@ diff -Naur glib/PtrArray.cs glib-sharp/PtrArray.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/SignalArgs.cs glib-sharp/SignalArgs.cs
---- glib/SignalArgs.cs	2004-06-25 20:42:19.000000000 +0200
-+++ glib-sharp/SignalArgs.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/SignalArgs.cs glib-sharp/SignalArgs.cs
+--- glib-sharp-upstream/SignalArgs.cs	2004-06-25 20:42:19.000000000 +0200
++++ glib-sharp/SignalArgs.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -20,7 +20,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -854,9 +858,9 @@ diff -Naur glib/SignalArgs.cs glib-sharp/SignalArgs.cs
  	using System;
  	using System.Collections;
  
-diff -Naur glib/SignalAttribute.cs glib-sharp/SignalAttribute.cs
---- glib/SignalAttribute.cs	2005-10-08 23:08:04.000000000 +0200
-+++ glib-sharp/SignalAttribute.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/SignalAttribute.cs glib-sharp/SignalAttribute.cs
+--- glib-sharp-upstream/SignalAttribute.cs	2005-10-08 23:08:04.000000000 +0200
++++ glib-sharp/SignalAttribute.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -20,7 +20,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -866,9 +870,9 @@ diff -Naur glib/SignalAttribute.cs glib-sharp/SignalAttribute.cs
  
  	using System;
  
-diff -Naur glib/SignalCallback.cs glib-sharp/SignalCallback.cs
---- glib/SignalCallback.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/SignalCallback.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/SignalCallback.cs glib-sharp/SignalCallback.cs
+--- glib-sharp-upstream/SignalCallback.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/SignalCallback.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -20,7 +20,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -878,9 +882,9 @@ diff -Naur glib/SignalCallback.cs glib-sharp/SignalCallback.cs
  	using System;
  	using System.Collections;
  	using System.Runtime.InteropServices;
-diff -Naur glib/SignalClosure.cs glib-sharp/SignalClosure.cs
---- glib/SignalClosure.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/SignalClosure.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/SignalClosure.cs glib-sharp/SignalClosure.cs
+--- glib-sharp-upstream/SignalClosure.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/SignalClosure.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -890,9 +894,9 @@ diff -Naur glib/SignalClosure.cs glib-sharp/SignalClosure.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/Signal.cs glib-sharp/Signal.cs
---- glib/Signal.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Signal.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Signal.cs glib-sharp/Signal.cs
+--- glib-sharp-upstream/Signal.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Signal.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -20,7 +20,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -902,9 +906,9 @@ diff -Naur glib/Signal.cs glib-sharp/Signal.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/SList.cs glib-sharp/SList.cs
---- glib/SList.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/SList.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/SList.cs glib-sharp/SList.cs
+--- glib-sharp-upstream/SList.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/SList.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -914,9 +918,9 @@ diff -Naur glib/SList.cs glib-sharp/SList.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/Source.cs glib-sharp/Source.cs
---- glib/Source.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Source.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Source.cs glib-sharp/Source.cs
+--- glib-sharp-upstream/Source.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Source.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -926,9 +930,9 @@ diff -Naur glib/Source.cs glib-sharp/Source.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/Spawn.cs glib-sharp/Spawn.cs
---- glib/Spawn.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Spawn.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Spawn.cs glib-sharp/Spawn.cs
+--- glib-sharp-upstream/Spawn.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Spawn.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -938,9 +942,9 @@ diff -Naur glib/Spawn.cs glib-sharp/Spawn.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/Thread.cs glib-sharp/Thread.cs
---- glib/Thread.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Thread.cs	2009-09-03 10:59:53.000000000 +0200
+diff -Naur glib-sharp-upstream/Thread.cs glib-sharp/Thread.cs
+--- glib-sharp-upstream/Thread.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Thread.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -967,9 +971,9 @@ diff -Naur glib/Thread.cs glib-sharp/Thread.cs
  			}
  		}
  	}
-diff -Naur glib/Timeout.cs glib-sharp/Timeout.cs
---- glib/Timeout.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Timeout.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Timeout.cs glib-sharp/Timeout.cs
+--- glib-sharp-upstream/Timeout.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Timeout.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -22,7 +22,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -979,9 +983,9 @@ diff -Naur glib/Timeout.cs glib-sharp/Timeout.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/ToggleRef.cs glib-sharp/ToggleRef.cs
---- glib/ToggleRef.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/ToggleRef.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/ToggleRef.cs glib-sharp/ToggleRef.cs
+--- glib-sharp-upstream/ToggleRef.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/ToggleRef.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -991,9 +995,9 @@ diff -Naur glib/ToggleRef.cs glib-sharp/ToggleRef.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/TypeConverter.cs glib-sharp/TypeConverter.cs
---- glib/TypeConverter.cs	2005-05-04 18:54:24.000000000 +0200
-+++ glib-sharp/TypeConverter.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/TypeConverter.cs glib-sharp/TypeConverter.cs
+--- glib-sharp-upstream/TypeConverter.cs	2005-05-04 18:54:24.000000000 +0200
++++ glib-sharp/TypeConverter.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -1003,9 +1007,9 @@ diff -Naur glib/TypeConverter.cs glib-sharp/TypeConverter.cs
  	using System;
  
  	public class TypeConverter {
-diff -Naur glib/TypeFundamentals.cs glib-sharp/TypeFundamentals.cs
---- glib/TypeFundamentals.cs	2004-07-09 17:25:39.000000000 +0200
-+++ glib-sharp/TypeFundamentals.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/TypeFundamentals.cs glib-sharp/TypeFundamentals.cs
+--- glib-sharp-upstream/TypeFundamentals.cs	2004-07-09 17:25:39.000000000 +0200
++++ glib-sharp/TypeFundamentals.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -1015,9 +1019,9 @@ diff -Naur glib/TypeFundamentals.cs glib-sharp/TypeFundamentals.cs
  
  	public enum TypeFundamentals {
  		TypeInvalid	= 0 << 2,
-diff -Naur glib/TypeInitializerAttribute.cs glib-sharp/TypeInitializerAttribute.cs
---- glib/TypeInitializerAttribute.cs	2007-09-07 16:40:46.000000000 +0200
-+++ glib-sharp/TypeInitializerAttribute.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/TypeInitializerAttribute.cs glib-sharp/TypeInitializerAttribute.cs
+--- glib-sharp-upstream/TypeInitializerAttribute.cs	2007-09-07 16:40:46.000000000 +0200
++++ glib-sharp/TypeInitializerAttribute.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -1027,9 +1031,9 @@ diff -Naur glib/TypeInitializerAttribute.cs glib-sharp/TypeInitializerAttribute.
  
  	using System;
  
-diff -Naur glib/UnwrappedObject.cs glib-sharp/UnwrappedObject.cs
---- glib/UnwrappedObject.cs	2005-07-22 20:36:50.000000000 +0200
-+++ glib-sharp/UnwrappedObject.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/UnwrappedObject.cs glib-sharp/UnwrappedObject.cs
+--- glib-sharp-upstream/UnwrappedObject.cs	2005-07-22 20:36:50.000000000 +0200
++++ glib-sharp/UnwrappedObject.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -1039,9 +1043,9 @@ diff -Naur glib/UnwrappedObject.cs glib-sharp/UnwrappedObject.cs
  
  	using System;
  	using System.Runtime.InteropServices;
-diff -Naur glib/ValueArray.cs glib-sharp/ValueArray.cs
---- glib/ValueArray.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/ValueArray.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/ValueArray.cs glib-sharp/ValueArray.cs
+--- glib-sharp-upstream/ValueArray.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/ValueArray.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -19,7 +19,7 @@
  // Boston, MA 02111-1307, USA.
  
@@ -1051,9 +1055,9 @@ diff -Naur glib/ValueArray.cs glib-sharp/ValueArray.cs
  
  	using System;
  	using System.Collections;
-diff -Naur glib/Value.cs glib-sharp/Value.cs
---- glib/Value.cs	2009-09-02 22:17:37.000000000 +0200
-+++ glib-sharp/Value.cs	2009-09-03 10:41:01.000000000 +0200
+diff -Naur glib-sharp-upstream/Value.cs glib-sharp/Value.cs
+--- glib-sharp-upstream/Value.cs	2009-09-03 21:50:53.000000000 +0200
++++ glib-sharp/Value.cs	2009-09-11 08:35:22.000000000 +0200
 @@ -20,7 +20,7 @@
  // Boston, MA 02111-1307, USA.
  

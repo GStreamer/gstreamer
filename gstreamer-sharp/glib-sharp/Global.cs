@@ -31,8 +31,6 @@ namespace Gst.GLib {
 		//this is a static class
 		private Global () {}
 
-		public const System.Runtime.InteropServices.CallingConvention CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl;
-
 		public static string ProgramName {
 			get {
 				return GLib.Marshaller.PtrToStringGFree(g_get_prgname());
@@ -44,10 +42,10 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_set_prgname (IntPtr name);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_get_prgname ();
 
 		public static string ApplicationName {
@@ -61,10 +59,10 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_set_application_name (IntPtr name);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_get_application_name ();
 	}
 }

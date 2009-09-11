@@ -25,7 +25,7 @@ namespace Gst.GLibSharp {
 	using System.Runtime.InteropServices;
 	using GLib;
 
-	[UnmanagedFunctionPointer (Global.CallingConvention)]
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate bool IOFuncNative(IntPtr source, int condition, IntPtr data);
 
 	internal class IOFuncWrapper {
@@ -319,100 +319,100 @@ namespace Gst.GLib {
 			return (IOChannelError) g_io_channel_error_from_errno (en);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_io_channel_unix_new (int fd);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_io_channel_new_file (IntPtr filename, IntPtr mode, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_error_quark ();
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_error_from_errno (int en);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_flush (IntPtr raw, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_io_channel_init (IntPtr raw);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_read_chars (IntPtr raw, byte[] buf, UIntPtr count, out UIntPtr bytes_read, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_read_line (IntPtr raw, out IntPtr str_return, IntPtr length, out UIntPtr terminator_pos, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_read_to_end (IntPtr raw, out IntPtr str_return, out UIntPtr length, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_read_unichar (IntPtr raw, out uint thechar, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_seek_position (IntPtr raw, long offset, int type, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_shutdown (IntPtr raw, bool flush, out IntPtr err);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_write_chars (IntPtr raw, byte[] buf, IntPtr count, out UIntPtr bytes_written, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_write_unichar (IntPtr raw, uint thechar, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_get_buffer_condition (IntPtr raw);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_io_channel_get_buffered (IntPtr raw);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_io_channel_set_buffered (IntPtr raw, bool buffered);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr g_io_channel_get_buffer_size (IntPtr raw);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_io_channel_set_buffer_size (IntPtr raw, UIntPtr size);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_io_channel_get_close_on_unref (IntPtr raw);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_io_channel_set_close_on_unref (IntPtr raw, bool do_close);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_io_channel_get_encoding (IntPtr raw);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_set_encoding (IntPtr raw, IntPtr encoding, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_get_flags (IntPtr raw);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_set_flags (IntPtr raw, int flags, out IntPtr error);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_io_channel_get_line_term (IntPtr raw, out int length);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_io_channel_set_line_term (IntPtr raw, byte[] term, int length);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_io_channel_unix_get_fd (IntPtr raw);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_io_channel_ref (IntPtr raw);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_io_channel_unref (IntPtr raw);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_io_add_watch_full (IntPtr raw, int priority, int condition, IOFuncNative func, IntPtr user_data, DestroyNotify notify);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_io_create_watch (IntPtr raw, int condition);
 	}
 

@@ -58,16 +58,16 @@ namespace Gst.GLib {
 			}
 		}
 
-		[UnmanagedFunctionPointer (Global.CallingConvention)]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate IntPtr CopyFunc (IntPtr gch);
-		[UnmanagedFunctionPointer (Global.CallingConvention)]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate void FreeFunc (IntPtr gch);
 		
 		static CopyFunc copy;
 		static FreeFunc free;
 		static GType boxed_type = GType.Invalid;
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_boxed_type_register_static (IntPtr typename, CopyFunc copy_func, FreeFunc free_func);
 		
 		public static GType GType {

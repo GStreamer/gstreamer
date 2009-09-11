@@ -25,7 +25,7 @@ namespace Gst.GLib {
 	public class MainLoop {
 		private IntPtr handle;
 	
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_main_loop_new (IntPtr context, bool isRunning);
 
 		public MainLoop () : this (MainContext.Default) { }
@@ -37,7 +37,7 @@ namespace Gst.GLib {
 			handle = g_main_loop_new (context.Handle, is_running);
 		}
 		
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_main_loop_unref (IntPtr loop);
 
 		~MainLoop ()
@@ -46,7 +46,7 @@ namespace Gst.GLib {
 			handle = IntPtr.Zero;
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_main_loop_is_running (IntPtr loop);
 
 		public bool IsRunning {
@@ -55,7 +55,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_main_loop_run (IntPtr loop);
 
 		public void Run ()
@@ -63,7 +63,7 @@ namespace Gst.GLib {
 			g_main_loop_run (handle);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_main_loop_quit (IntPtr loop);
 
 		public void Quit ()
@@ -71,7 +71,7 @@ namespace Gst.GLib {
 			g_main_loop_quit (handle);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_main_loop_get_context (IntPtr loop);
 
 		public MainContext Context {

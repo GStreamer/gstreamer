@@ -49,7 +49,7 @@ namespace Gst.GLib {
 		
 		internal static Hashtable source_handlers = new Hashtable ();
 		
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_source_remove (uint tag);
 
 		public static bool Remove (uint tag)

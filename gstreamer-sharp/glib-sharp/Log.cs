@@ -58,7 +58,7 @@ namespace Gst.GLib {
 
 	public class Log {
 
-		[UnmanagedFunctionPointer (Global.CallingConvention)]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate void LogFuncNative (IntPtr log_domain, LogLevelFlags flags, IntPtr message, IntPtr user_data);
 
 		static LogFuncNative native_handler;
@@ -75,7 +75,7 @@ namespace Gst.GLib {
 				func (log_domain, flags, message);
 		}
 
-		[UnmanagedFunctionPointer (Global.CallingConvention)]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate void PrintFuncNative (IntPtr message);
 
 		class PrintHelper {
@@ -124,7 +124,7 @@ namespace Gst.GLib {
 				handlers = new System.Collections.Generic.Dictionary<uint, GCHandle> ();
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_logv (IntPtr log_domain, LogLevelFlags flags, IntPtr message);
 		
 		public void WriteLog (string logDomain, LogLevelFlags flags, string format, params object [] args)
@@ -136,7 +136,7 @@ namespace Gst.GLib {
 			Marshaller.Free (nmessage);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_log_set_handler (IntPtr log_domain, LogLevelFlags flags, LogFuncNative log_func, IntPtr user_data);
 		
 		public static uint SetLogHandler (string logDomain, LogLevelFlags flags, LogFunc logFunc)
@@ -153,7 +153,7 @@ namespace Gst.GLib {
 			return result;
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_log_remove_handler (IntPtr log_domain, uint handler_id);
 
 		public static void RemoveLogHandler (string logDomain, uint handlerID)
@@ -168,7 +168,7 @@ namespace Gst.GLib {
 			Marshaller.Free (ndom);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern PrintFuncNative g_set_print_handler (PrintFuncNative handler);
 
 		public static PrintFunc SetPrintHandler (PrintFunc handler)
@@ -179,7 +179,7 @@ namespace Gst.GLib {
 			return helper.Invoker;
 		}
 		
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern PrintFuncNative g_set_printerr_handler (PrintFuncNative handler);
 
 		public static PrintFunc SetPrintErrorHandler (PrintFunc handler)
@@ -190,7 +190,7 @@ namespace Gst.GLib {
 			return helper.Invoker;
 		}
 		
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_log_default_handler (IntPtr log_domain, LogLevelFlags log_level, IntPtr message, IntPtr unused_data);
 
 		public static void DefaultHandler (string logDomain, LogLevelFlags logLevel, string message)
@@ -203,7 +203,7 @@ namespace Gst.GLib {
 			Marshaller.Free (nmess);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		extern static LogLevelFlags g_log_set_always_fatal (LogLevelFlags fatal_mask);
 		
 		public static LogLevelFlags SetAlwaysFatal (LogLevelFlags fatalMask)
@@ -211,7 +211,7 @@ namespace Gst.GLib {
 			return g_log_set_always_fatal (fatalMask);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		extern static LogLevelFlags g_log_set_fatal_mask (IntPtr log_domain, LogLevelFlags fatal_mask);
 		
 		public static LogLevelFlags SetAlwaysFatal (string logDomain, LogLevelFlags fatalMask)
@@ -245,7 +245,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		extern static LogFuncNative g_log_set_default_handler (LogFuncNative log_func, IntPtr user_data);
 		
 		public static LogFunc SetDefaultHandler (LogFunc log_func)

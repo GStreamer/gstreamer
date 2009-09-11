@@ -396,31 +396,31 @@ namespace Gst.GLib {
 			return GType.Is (ValFromInstancePtr (raw), this);
 		}
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_type_class_peek (IntPtr gtype);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_type_class_ref (IntPtr gtype);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_type_from_name (string name);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_type_init ();
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_type_name (IntPtr raw);
 		
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_type_parent (IntPtr type);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_type_query (IntPtr type, out GTypeQuery query);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_type_register_static (IntPtr parent, IntPtr name, ref GTypeInfo info, int flags);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_type_is_a (IntPtr type, IntPtr is_a_type);
 	}
 }

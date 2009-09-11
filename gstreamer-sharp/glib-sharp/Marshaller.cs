@@ -29,7 +29,7 @@ namespace Gst.GLib {
 
 		private Marshaller () {}
 		
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_free (IntPtr mem);
 
 		public static void Free (IntPtr ptr)
@@ -46,7 +46,7 @@ namespace Gst.GLib {
 				g_free (ptrs [i]);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_filename_to_utf8 (IntPtr mem, int len, IntPtr read, out IntPtr written, out IntPtr error);
 
 		public static string FilenamePtrToString (IntPtr ptr) 
@@ -114,7 +114,7 @@ namespace Gst.GLib {
 			return ret;
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_filename_from_utf8 (IntPtr mem, int len, IntPtr read, out IntPtr written, out IntPtr error);
 
 		public static IntPtr StringToFilenamePtr (string str) 
@@ -161,7 +161,7 @@ namespace Gst.GLib {
 			return result;
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_strfreev (IntPtr mem);
 
 		public static void StrFreeV (IntPtr null_term_array)
@@ -215,7 +215,7 @@ namespace Gst.GLib {
 		// transparently, since we need to alloc buffers of
 		// [native pointer size] * [count] bytes.
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_malloc(UIntPtr size);
 
 		public static IntPtr Malloc (ulong size)
@@ -328,10 +328,10 @@ namespace Gst.GLib {
 			return local_epoch.AddSeconds (time_t.ToInt64 () + utc_offset);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_malloc0 (UIntPtr size);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_unichar_to_utf8 (uint c, IntPtr buf);
 
 		public static char GUnicharToChar (uint ucs4_char)
@@ -356,7 +356,7 @@ namespace Gst.GLib {
 			return PtrToStringGFree (buf);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_utf16_to_ucs4 (ref ushort c, IntPtr len, IntPtr d1, IntPtr d2, IntPtr d3);
 
 		public static uint CharToGUnichar (char c)

@@ -32,7 +32,7 @@ namespace Gst.GLib {
 		internal bool elements_owned = false;
 		protected System.Type element_type = null;
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_ptr_array_sized_new (uint n_preallocs);
 
 		public PtrArray (uint n_preallocs, System.Type element_type, bool owned, bool elements_owned)
@@ -43,7 +43,7 @@ namespace Gst.GLib {
 			this.elements_owned = elements_owned;
 		}
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_ptr_array_new ();
 
 		public PtrArray (System.Type element_type, bool owned, bool elements_owned)
@@ -77,13 +77,13 @@ namespace Gst.GLib {
 			GC.SuppressFinalize (this);
 		}
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_ptr_array_free (IntPtr raw, bool free_seg);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_object_unref (IntPtr item);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_free (IntPtr item);
 
 		void Dispose (bool disposing)
@@ -120,7 +120,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_ptr_array_add (IntPtr raw, IntPtr val);
 
 		public void Add (IntPtr val)
@@ -128,7 +128,7 @@ namespace Gst.GLib {
 			g_ptr_array_add (Handle, val);
 		}
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_ptr_array_remove (IntPtr raw, IntPtr data);
 
 		public void Remove (IntPtr data)
@@ -136,7 +136,7 @@ namespace Gst.GLib {
 			g_ptr_array_remove (Handle, data);
 		}
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_ptr_array_remove_range (IntPtr raw, uint index, uint length);
 
 		public void RemoveRange (IntPtr data, uint index, uint length)
@@ -260,7 +260,7 @@ namespace Gst.GLib {
 			return new ListEnumerator (this);
 		}
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_ptr_array_copy (IntPtr raw);
 
 		// ICloneable

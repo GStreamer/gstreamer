@@ -69,10 +69,10 @@ namespace Gst.GLib {
 			}
 		}
 
-		[UnmanagedFunctionPointer (Global.CallingConvention)]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		private delegate void DestroyNotify (IntPtr data);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern void g_object_set_data_full (IntPtr obj, IntPtr name, IntPtr data, DestroyNotify destroy);
 		
 		private void AddDestroyNotify (GLib.Object o) {

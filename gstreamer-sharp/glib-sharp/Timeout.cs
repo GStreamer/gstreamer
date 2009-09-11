@@ -32,7 +32,7 @@ namespace Gst.GLib {
 
 	public class Timeout {
 
-		[UnmanagedFunctionPointer (Global.CallingConvention)]
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate bool TimeoutHandlerInternal ();
 
 		internal class TimeoutProxy : SourceProxy {
@@ -59,7 +59,7 @@ namespace Gst.GLib {
 		}
 		
 		private Timeout () {} 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_timeout_add (uint interval, TimeoutHandlerInternal d, IntPtr data);
 
 		public static uint Add (uint interval, TimeoutHandler hndlr)
@@ -73,7 +73,7 @@ namespace Gst.GLib {
 			return p.ID;
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_timeout_add_full (int priority, uint interval, TimeoutHandlerInternal d, IntPtr data, DestroyNotify notify);
 
 		public static uint Add (uint interval, TimeoutHandler hndlr, Priority priority)
@@ -87,7 +87,7 @@ namespace Gst.GLib {
 			return p.ID;
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_timeout_add_seconds (uint interval, TimeoutHandlerInternal d, IntPtr data);
 
 		public static uint AddSeconds (uint interval, TimeoutHandler hndlr)
@@ -106,7 +106,7 @@ namespace Gst.GLib {
 			Source.Remove (id);
 		}
 		
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_source_remove_by_funcs_user_data (Delegate d, IntPtr data);
                                                                                 
 		public static bool Remove (TimeoutHandler hndlr)

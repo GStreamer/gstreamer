@@ -27,7 +27,7 @@ namespace Gst.GLib {
         public class MainContext {
 		IntPtr handle;
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_main_context_new ();
 
 		public MainContext ()
@@ -35,7 +35,7 @@ namespace Gst.GLib {
 			handle = g_main_context_new ();
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_main_context_ref (IntPtr raw);
 
 		internal MainContext (IntPtr raw)
@@ -50,7 +50,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_main_context_unref (IntPtr raw);
 
 		~MainContext ()
@@ -59,7 +59,7 @@ namespace Gst.GLib {
 			handle = IntPtr.Zero;
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_main_context_default ();
 
 		public static MainContext Default {
@@ -68,7 +68,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_main_context_thread_default ();
 
 		public MainContext ThreadDefault {
@@ -79,7 +79,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_main_context_push_thread_default (IntPtr raw);
 
 		public void PushThreadDefault ()
@@ -87,7 +87,7 @@ namespace Gst.GLib {
 			g_main_context_push_thread_default (handle);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_main_context_pop_thread_default (IntPtr raw);
 
 		public void PopThreadDefault ()
@@ -96,7 +96,7 @@ namespace Gst.GLib {
 		}
 
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_main_context_iteration (IntPtr raw, bool may_block);
 
 		public bool RunIteration (bool may_block)
@@ -109,7 +109,7 @@ namespace Gst.GLib {
 			return RunIteration (false);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_main_context_pending (IntPtr raw);
 
 		public bool HasPendingEvents
@@ -119,7 +119,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_main_context_wakeup (IntPtr raw);
 
 		public void Wakeup ()
@@ -142,7 +142,7 @@ namespace Gst.GLib {
 		}
 
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_main_depth ();
 		public static int Depth {
 			get { return g_main_depth (); }

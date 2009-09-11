@@ -27,7 +27,7 @@ namespace Gst.GLib {
 
 		IntPtr handle;
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_string_free (IntPtr mem, bool free_segments);
 
 		~GString ()
@@ -35,7 +35,7 @@ namespace Gst.GLib {
 			g_string_free (handle, true);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_string_new (IntPtr text);
 
 		public GString (string text) 

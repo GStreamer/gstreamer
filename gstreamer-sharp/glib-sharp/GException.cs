@@ -46,7 +46,7 @@ namespace Gst.GLib {
 			}
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_clear_error (ref IntPtr errptr);
 		~GException ()
 		{

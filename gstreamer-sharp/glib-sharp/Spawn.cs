@@ -60,7 +60,7 @@ namespace Gst.GLib {
 
 	public delegate void SpawnChildSetupFunc ();
 
-	[UnmanagedFunctionPointer (Global.CallingConvention)]
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate void SpawnChildSetupFuncNative (IntPtr gch);
 
 	internal class SpawnChildSetupWrapper {
@@ -102,7 +102,7 @@ namespace Gst.GLib {
 			this.pid = pid;
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_spawn_close_pid (int pid);
 
 		public void Close ()
@@ -110,7 +110,7 @@ namespace Gst.GLib {
 			g_spawn_close_pid ((int) pid);
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_spawn_async (IntPtr dir, IntPtr[] argv, IntPtr[] envp, int flags, SpawnChildSetupFuncNative func, IntPtr data, out int pid, out IntPtr error);
 
 		public static bool SpawnAsync (string working_directory, string[] argv, string[] envp, SpawnFlags flags, SpawnChildSetupFunc child_setup, out Process child_process)
@@ -130,7 +130,7 @@ namespace Gst.GLib {
 			return result;
 		}  
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_spawn_async_with_pipes (IntPtr dir, IntPtr[] argv, IntPtr[] envp, int flags, SpawnChildSetupFuncNative func, IntPtr data, out int pid, IntPtr stdin, IntPtr stdout, IntPtr stderr, out IntPtr error);
 
 		public static bool SpawnAsyncWithPipes (string working_directory, string[] argv, string[] envp, SpawnFlags flags, SpawnChildSetupFunc child_setup, out Process child_process, ref int stdin, ref int stdout, ref int stderr)
@@ -165,7 +165,7 @@ namespace Gst.GLib {
 			return result;
 		}  
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_spawn_sync (IntPtr dir, IntPtr[] argv, IntPtr[] envp, int flags, SpawnChildSetupFuncNative func, IntPtr data, out IntPtr stdout, out IntPtr stderr, out int exit_status, out IntPtr error);
 
 		public static bool SpawnSync (string working_directory, string[] argv, string[] envp, SpawnFlags flags, SpawnChildSetupFunc child_setup, out string stdout, out string stderr, out int exit_status)
@@ -185,7 +185,7 @@ namespace Gst.GLib {
 			return result;
 		}  
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_spawn_command_line_async (IntPtr cmdline, out IntPtr error);
 
 		public static bool SpawnCommandLineAsync (string command_line)
@@ -198,7 +198,7 @@ namespace Gst.GLib {
 			return result;
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_spawn_command_line_sync (IntPtr cmdline, out IntPtr stdout, out IntPtr stderr, out int exit_status, out IntPtr error);
 
 		public static bool SpawnCommandLineSync (string command_line, out string stdout, out string stderr, out int exit_status)

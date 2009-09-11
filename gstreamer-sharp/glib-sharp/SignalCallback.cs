@@ -60,7 +60,7 @@ namespace Gst.GLib {
 			_handler = Delegate.Remove (_handler, d);
 		}
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint g_signal_connect_data(IntPtr obj, IntPtr name, Delegate cb, int key, IntPtr p, int flags);
 
 		protected void Connect (string name, Delegate cb, int flags)
@@ -70,10 +70,10 @@ namespace Gst.GLib {
 			Marshaller.Free (native_name);
 		}
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_signal_handler_disconnect (IntPtr instance, uint handler);
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = Global.CallingConvention)]
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_signal_handler_is_connected (IntPtr instance, uint handler);
 
 		protected void Disconnect ()
