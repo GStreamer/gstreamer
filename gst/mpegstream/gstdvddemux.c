@@ -1204,14 +1204,12 @@ gst_dvd_demux_synchronise_pads (GstMPEGDemux * mpeg_demux,
   parent_class->synchronise_pads (mpeg_demux, threshold, new_ts);
 
   for (i = 0; i < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS; i++) {
-#ifndef GST_DISABLE_DEBUG
     if (dvd_demux->subpicture_stream[i]) {
       GST_LOG_OBJECT (mpeg_demux, "stream: %d, current: %" GST_TIME_FORMAT
           ", threshold %" GST_TIME_FORMAT, i,
           GST_TIME_ARGS (dvd_demux->subpicture_stream[i]->cur_ts),
           GST_TIME_ARGS (threshold));
     }
-#endif
     if (dvd_demux->subpicture_stream[i]
         && (dvd_demux->subpicture_stream[i]->cur_ts < threshold)) {
       DEMUX_CLASS (mpeg_demux)->sync_stream_to_time (mpeg_demux,
