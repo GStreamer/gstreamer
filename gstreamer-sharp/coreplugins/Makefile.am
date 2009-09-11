@@ -15,7 +15,7 @@ XML_FILES = $(patsubst %,$(builddir)/%.xml,$(ELEMENTS))
 EXTRA_DIST = $(METADATA_FILES) $(CUSTOM_FILES) $(INSPECT_FILES) $(OTHER_CS_FILES)
 CLEANFILES = $(XML_FILES) $(CS_FILES)
 
-plugins-update: $(patsubst inspect/%.raw, inspect-%, $(INSPECT_FILES))
+plugins-update: $(patsubst $(srcdir)/inspect/%.raw, inspect-%, $(INSPECT_FILES))
 inspect-%:
 	$(top_builddir)/elementgen/gsts-xmlinspect $(patsubst inspect-%,%,$@) > inspect/$(patsubst inspect-%,%,$@).raw
 

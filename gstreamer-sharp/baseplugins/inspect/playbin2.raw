@@ -78,6 +78,7 @@
     <flag value="16" nick="soft-volume"/>
     <flag value="32" nick="native-audio"/>
     <flag value="64" nick="native-video"/>
+    <flag value="128" nick="download"/>
    </flags-values>
   </element-property>
   <element-property>
@@ -186,7 +187,7 @@
    <name>volume</name>
    <type>gdouble</type>
    <nick>Volume</nick>
-   <blurb>The audio volume</blurb>
+   <blurb>The audio volume, 1.0=100%</blurb>
    <flags>RW</flags>
    <range min="0" max="10"/>
    <default>1,000000</default>
@@ -220,7 +221,7 @@
    <nick>Connection Speed</nick>
    <blurb>Network connection speed in kbps (0 = unknown)</blurb>
    <flags>RW</flags>
-   <range min="0" max="4294967295"/>
+   <range min="0" max="4294967"/>
    <default>0</default>
   </element-property>
   <element-property>
@@ -269,6 +270,30 @@
    <return-type>void</return-type>
    <object-type>GstPlayBin2</object-type>
    <params>
+   </params>
+  </signal>
+  <signal>
+   <name>video-tags-changed</name>
+   <return-type>void</return-type>
+   <object-type>GstPlayBin2</object-type>
+   <params>
+    <type>gint</type>
+   </params>
+  </signal>
+  <signal>
+   <name>audio-tags-changed</name>
+   <return-type>void</return-type>
+   <object-type>GstPlayBin2</object-type>
+   <params>
+    <type>gint</type>
+   </params>
+  </signal>
+  <signal>
+   <name>text-tags-changed</name>
+   <return-type>void</return-type>
+   <object-type>GstPlayBin2</object-type>
+   <params>
+    <type>gint</type>
    </params>
   </signal>
  </element-signals>
