@@ -46,6 +46,7 @@
 
 #include <gst/base/gstbasesink.h>
 #include <gst/gsttaglist.h>
+#include <gst/interfaces/streamvolume.h>
 
 #include "pulsesink.h"
 #include "pulseutil.h"
@@ -1356,6 +1357,13 @@ gst_pulsesink_init_interfaces (GType type)
     NULL,
     NULL,
   };
+#if HAVE_PULSE_0_9_12
+  static const GInterfaceInfo svol_iface_info = {
+    NULL, NULL, NULL
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_STREAM_VOLUME, &svol_iface_info);
+#endif
 
   g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
       &implements_iface_info);
