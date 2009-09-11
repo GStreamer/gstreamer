@@ -38,6 +38,11 @@
       <member cname="GST_BUFFER_FLAG_MEDIA3" name="Media3" value="GST_MINI_OBJECT_FLAG_LAST &lt;&lt; 7" />
       <member cname="GST_BUFFER_FLAG_LAST" name="Last" value="GST_MINI_OBJECT_FLAG_LAST &lt;&lt; 8" />
     </enum>
+    <enum name="BufferListItem" cname="GstBufferListItem" gtype="gst_buffer_list_item_get_type" type="enum">
+      <member cname="GST_BUFFER_LIST_CONTINUE" name="Continue" />
+      <member cname="GST_BUFFER_LIST_SKIP_GROUP" name="SkipGroup" />
+      <member cname="GST_BUFFER_LIST_END" name="End" />
+    </enum>
     <enum name="BufferingMode" cname="GstBufferingMode" gtype="gst_buffering_mode_get_type" type="enum">
       <member cname="GST_BUFFERING_STREAM" name="Stream" />
       <member cname="GST_BUFFERING_DOWNLOAD" name="Download" />
@@ -127,6 +132,8 @@
       <member cname="_GST_EVENT_NAVIGATION" name="GstEventNavigation" value="GST_EVENT_MAKE_TYPE (17" />
       <member cname="_FLAG" name="Flag" />
       <member cname="_GST_EVENT_LATENCY" name="GstEventLatency" value="GST_EVENT_MAKE_TYPE (18" />
+      <member cname="_FLAG" name="Flag" />
+      <member cname="_GST_EVENT_STEP" name="GstEventStep" value="GST_EVENT_MAKE_TYPE (19" />
       <member cname="_FLAG" name="Flag" />
       <member cname="_GST_EVENT_CUSTOM_UPSTREAM" name="GstEventCustomUpstream" value="GST_EVENT_MAKE_TYPE (32" />
       <member cname="_FLAG" name="Flag" />
@@ -224,6 +231,7 @@
       <member cname="GST_MESSAGE_ASYNC_START" name="AsyncStart" value="1 &lt;&lt; 20" />
       <member cname="GST_MESSAGE_ASYNC_DONE" name="AsyncDone" value="1 &lt;&lt; 21" />
       <member cname="GST_MESSAGE_REQUEST_STATE" name="RequestState" value="1 &lt;&lt; 22" />
+      <member cname="GST_MESSAGE_STEP_START" name="StepStart" value="1 &lt;&lt; 23" />
       <member cname="GST_MESSAGE_ANY" name="Any" value="~0" />
     </enum>
     <enum name="MiniObjectFlags" cname="GstMiniObjectFlags" gtype="gst_mini_object_flags_get_type" type="flags">
@@ -391,6 +399,15 @@
       <member cname="GST_STREAM_ERROR_DECRYPT_NOKEY" name="DecryptNokey" />
       <member cname="GST_STREAM_ERROR_NUM_ERRORS" name="NumErrors" />
     </enum>
+    <enum name="StreamStatusType" cname="GstStreamStatusType" gtype="gst_stream_status_type_get_type" type="enum">
+      <member cname="GST_STREAM_STATUS_TYPE_CREATE" name="Create" />
+      <member cname="GST_STREAM_STATUS_TYPE_ENTER" name="Enter" value="1" />
+      <member cname="GST_STREAM_STATUS_TYPE_LEAVE" name="Leave" value="2" />
+      <member cname="GST_STREAM_STATUS_TYPE_DESTROY" name="Destroy" value="3" />
+      <member cname="GST_STREAM_STATUS_TYPE_START" name="Start" value="8" />
+      <member cname="GST_STREAM_STATUS_TYPE_PAUSE" name="Pause" value="9" />
+      <member cname="GST_STREAM_STATUS_TYPE_STOP" name="Stop" value="10" />
+    </enum>
     <enum name="StructureChangeType" cname="GstStructureChangeType" gtype="gst_structure_change_type_get_type" type="enum">
       <member cname="GST_STRUCTURE_CHANGE_TYPE_PAD_LINK" name="Link" />
       <member cname="GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK" name="Unlink" value="1" />
@@ -429,6 +446,22 @@
       <member cname="GST_URI_SINK" name="Sink" />
       <member cname="GST_URI_SRC" name="Src" />
     </enum>
+    <callback name="BufferListDoFunction" cname="GstBufferListDoFunction">
+      <return-type type="GstBuffer*" />
+      <parameters>
+        <parameter type="GstBuffer*" name="buffer" />
+        <parameter type="gpointer" name="user_data" />
+      </parameters>
+    </callback>
+    <callback name="BufferListFunc" cname="GstBufferListFunc">
+      <return-type type="GstBufferListItem" />
+      <parameters>
+        <parameter type="GstBuffer**" name="buffer" />
+        <parameter type="guint" name="group" />
+        <parameter type="guint" name="idx" />
+        <parameter type="gpointer" name="user_data" />
+      </parameters>
+    </callback>
     <callback name="BusFunc" cname="GstBusFunc">
       <return-type type="gboolean" />
       <parameters>
@@ -528,6 +561,13 @@
         <parameter type="GstBuffer*" name="buffer" />
       </parameters>
     </callback>
+    <callback name="PadChainListFunction" cname="GstPadChainListFunction">
+      <return-type type="GstFlowReturn" />
+      <parameters>
+        <parameter type="GstPad*" name="pad" />
+        <parameter type="GstBufferList*" name="list" />
+      </parameters>
+    </callback>
     <callback name="PadCheckGetRangeFunction" cname="GstPadCheckGetRangeFunction">
       <return-type type="gboolean" />
       <parameters>
@@ -623,6 +663,13 @@
         <parameter type="gpointer" name="user_data" />
       </parameters>
     </callback>
+    <callback name="PluginInitFullFunc" cname="GstPluginInitFullFunc">
+      <return-type type="gboolean" />
+      <parameters>
+        <parameter type="GstPlugin*" name="plugin" />
+        <parameter type="gpointer" name="user_data" />
+      </parameters>
+    </callback>
     <callback name="PluginInitFunc" cname="GstPluginInitFunc">
       <return-type type="gboolean" />
       <parameters>
@@ -661,6 +708,12 @@
       </parameters>
     </callback>
     <callback name="TaskFunction" cname="GstTaskFunction">
+      <return-type type="void" />
+      <parameters>
+        <parameter type="void*" name="data" />
+      </parameters>
+    </callback>
+    <callback name="TaskPoolFunction" cname="GstTaskPoolFunction">
       <return-type type="void" />
       <parameters>
         <parameter type="void*" name="data" />
@@ -956,6 +1009,14 @@
           <parameter type="GstTagMergeMode" name="mode" />
           <parameter type="const-gchar*" name="tag" />
           <parameter type="va_list" name="var_args" />
+        </parameters>
+      </method>
+      <method name="AddTagValue" cname="gst_tag_setter_add_tag_value">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTagMergeMode" name="mode" />
+          <parameter type="const-gchar*" name="tag" />
+          <parameter type="const-GValue*" name="value" />
         </parameters>
       </method>
       <method name="AddTagValues" cname="gst_tag_setter_add_tag_values">
@@ -1310,6 +1371,35 @@
         </parameters>
       </method>
     </object>
+    <object name="BufferList" cname="GstBufferList" parent="GstMiniObject">
+      <class_struct cname="GstBufferListClass">
+        <field name="MiniObjectClass" cname="mini_object_class" type="GstMiniObjectClass" />
+      </class_struct>
+      <method name="Foreach" cname="gst_buffer_list_foreach">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstBufferListFunc" name="func" />
+          <parameter type="gpointer" name="user_data" />
+        </parameters>
+      </method>
+      <method name="Get" cname="gst_buffer_list_get">
+        <return-type type="GstBuffer*" />
+        <parameters>
+          <parameter type="guint" name="group" />
+          <parameter type="guint" name="idx" />
+        </parameters>
+      </method>
+      <method name="GetType" cname="gst_buffer_list_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="Iterate" cname="gst_buffer_list_iterate">
+        <return-type type="GstBufferListIterator*" />
+      </method>
+      <method name="NGroups" cname="gst_buffer_list_n_groups">
+        <return-type type="guint" />
+      </method>
+      <constructor cname="gst_buffer_list_new" />
+    </object>
     <object name="Bus" cname="GstBus" parent="GstObject">
       <class_struct cname="GstBusClass">
         <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
@@ -1477,7 +1567,7 @@
       <field name="Timeout" cname="timeout" type="GstClockTime" />
       <field name="Times" cname="times" type="GstClockTime*" />
       <field name="Clockid" cname="clockid" type="GstClockID" />
-      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="GstClockTime" />
+      <field name="Priv" cname="priv" type="GstClockPrivate*" />
       <property name="Stats" cname="stats" type="gboolean" readable="true" writeable="true" />
       <property name="WindowSize" cname="window-size" type="gint" readable="true" writeable="true" />
       <property name="WindowThreshold" cname="window-threshold" type="gint" readable="true" writeable="true" />
@@ -1904,6 +1994,9 @@
           <parameter type="const-gchar*" name="name" />
         </parameters>
       </method>
+      <method name="GetStartTime" cname="gst_element_get_start_time">
+        <return-type type="GstClockTime" />
+      </method>
       <method name="GetState" cname="gst_element_get_state">
         <return-type type="GstStateChangeReturn" />
         <parameters>
@@ -1981,6 +2074,12 @@
       </method>
       <method name="LostState" cname="gst_element_lost_state">
         <return-type type="void" />
+      </method>
+      <method name="LostStateFull" cname="gst_element_lost_state_full">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="new_base_time" />
+        </parameters>
       </method>
       <method name="MakeFromUri" cname="gst_element_make_from_uri" shared="true">
         <return-type type="GstElement*" />
@@ -2125,6 +2224,12 @@
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gboolean" name="locked_state" />
+        </parameters>
+      </method>
+      <method name="SetStartTime" cname="gst_element_set_start_time">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstClockTime" name="time" />
         </parameters>
       </method>
       <method name="SetState" cname="gst_element_set_state">
@@ -2339,6 +2444,15 @@
           <parameter type="gint64" name="stop" />
         </parameters>
       </constructor>
+      <constructor cname="gst_event_new_step">
+        <parameters>
+          <parameter type="GstFormat" name="format" />
+          <parameter type="guint64" name="amount" />
+          <parameter type="gdouble" name="rate" />
+          <parameter type="gboolean" name="flush" />
+          <parameter type="gboolean" name="intermediate" />
+        </parameters>
+      </constructor>
       <constructor cname="gst_event_new_tag">
         <parameters>
           <parameter type="GstTagList*" name="taglist" />
@@ -2400,6 +2514,16 @@
           <parameter type="gint64*" name="start" />
           <parameter type="GstSeekType*" name="stop_type" />
           <parameter type="gint64*" name="stop" />
+        </parameters>
+      </method>
+      <method name="ParseStep" cname="gst_event_parse_step">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstFormat*" name="format" />
+          <parameter type="guint64*" name="amount" />
+          <parameter type="gdouble*" name="rate" />
+          <parameter type="gboolean*" name="flush" />
+          <parameter type="gboolean*" name="intermediate" />
         </parameters>
       </method>
       <method name="ParseTag" cname="gst_event_parse_tag">
@@ -2722,6 +2846,9 @@
       <method name="GetSeqnum" cname="gst_message_get_seqnum">
         <return-type type="guint32" />
       </method>
+      <method name="GetStreamStatusObject" cname="gst_message_get_stream_status_object">
+        <return-type type="const-GValue*" />
+      </method>
       <method name="GetStructure" cname="gst_message_get_structure">
         <return-type type="const-GstStructure*" />
       </method>
@@ -2847,6 +2974,36 @@
           <parameter type="GstObject*" name="src" />
         </parameters>
       </constructor>
+      <constructor cname="gst_message_new_step_done">
+        <parameters>
+          <parameter type="GstObject*" name="src" />
+          <parameter type="GstFormat" name="format" />
+          <parameter type="guint64" name="amount" />
+          <parameter type="gdouble" name="rate" />
+          <parameter type="gboolean" name="flush" />
+          <parameter type="gboolean" name="intermediate" />
+          <parameter type="guint64" name="duration" />
+          <parameter type="gboolean" name="eos" />
+        </parameters>
+      </constructor>
+      <constructor cname="gst_message_new_step_start">
+        <parameters>
+          <parameter type="GstObject*" name="src" />
+          <parameter type="gboolean" name="active" />
+          <parameter type="GstFormat" name="format" />
+          <parameter type="guint64" name="amount" />
+          <parameter type="gdouble" name="rate" />
+          <parameter type="gboolean" name="flush" />
+          <parameter type="gboolean" name="intermediate" />
+        </parameters>
+      </constructor>
+      <constructor cname="gst_message_new_stream_status">
+        <parameters>
+          <parameter type="GstObject*" name="src" />
+          <parameter type="GstStreamStatusType" name="type" />
+          <parameter type="GstElement*" name="owner" />
+        </parameters>
+      </constructor>
       <constructor cname="gst_message_new_structure_change">
         <parameters>
           <parameter type="GstObject*" name="src" />
@@ -2858,6 +3015,13 @@
       <constructor cname="gst_message_new_tag">
         <parameters>
           <parameter type="GstObject*" name="src" />
+          <parameter type="GstTagList*" name="tag_list" />
+        </parameters>
+      </constructor>
+      <constructor cname="gst_message_new_tag_full">
+        <parameters>
+          <parameter type="GstObject*" name="src" />
+          <parameter type="GstPad*" name="pad" />
           <parameter type="GstTagList*" name="tag_list" />
         </parameters>
       </constructor>
@@ -2957,6 +3121,36 @@
           <parameter type="GstState*" name="pending" />
         </parameters>
       </method>
+      <method name="ParseStepDone" cname="gst_message_parse_step_done">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstFormat*" name="format" />
+          <parameter type="guint64*" name="amount" />
+          <parameter type="gdouble*" name="rate" />
+          <parameter type="gboolean*" name="flush" />
+          <parameter type="gboolean*" name="intermediate" />
+          <parameter type="guint64*" name="duration" />
+          <parameter type="gboolean*" name="eos" />
+        </parameters>
+      </method>
+      <method name="ParseStepStart" cname="gst_message_parse_step_start">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean*" name="active" />
+          <parameter type="GstFormat*" name="format" />
+          <parameter type="guint64*" name="amount" />
+          <parameter type="gdouble*" name="rate" />
+          <parameter type="gboolean*" name="flush" />
+          <parameter type="gboolean*" name="intermediate" />
+        </parameters>
+      </method>
+      <method name="ParseStreamStatus" cname="gst_message_parse_stream_status">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstStreamStatusType*" name="type" />
+          <parameter type="GstElement**" name="owner" />
+        </parameters>
+      </method>
       <method name="ParseStructureChange" cname="gst_message_parse_structure_change">
         <return-type type="void" />
         <parameters>
@@ -2968,6 +3162,13 @@
       <method name="ParseTag" cname="gst_message_parse_tag">
         <return-type type="void" />
         <parameters>
+          <parameter type="GstTagList**" name="tag_list" />
+        </parameters>
+      </method>
+      <method name="ParseTagFull" cname="gst_message_parse_tag_full">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstPad**" name="pad" />
           <parameter type="GstTagList**" name="tag_list" />
         </parameters>
       </method>
@@ -2991,6 +3192,12 @@
         <return-type type="void" />
         <parameters>
           <parameter type="guint32" name="seqnum" />
+        </parameters>
+      </method>
+      <method name="SetStreamStatusObject" cname="gst_message_set_stream_status_object">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="const-GValue*" name="object" />
         </parameters>
       </method>
       <method name="TypeGetName" cname="gst_message_type_get_name" shared="true">
@@ -3151,6 +3358,12 @@
       </method>
       <method name="Ref" cname="gst_object_ref" shared="true">
         <return-type type="gpointer" />
+        <parameters>
+          <parameter type="gpointer" name="object" />
+        </parameters>
+      </method>
+      <method name="RefSink" cname="gst_object_ref_sink" shared="true">
+        <return-type type="void" />
         <parameters>
           <parameter type="gpointer" name="object" />
         </parameters>
@@ -3370,6 +3583,12 @@
           <parameter type="GstBuffer*" name="buffer" />
         </parameters>
       </method>
+      <method name="ChainList" cname="gst_pad_chain_list">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBufferList*" name="list" />
+        </parameters>
+      </method>
       <method name="CheckPullRange" cname="gst_pad_check_pull_range">
         <return-type type="gboolean" />
       </method>
@@ -3535,6 +3754,12 @@
           <parameter type="GstEvent*" name="event" />
         </parameters>
       </method>
+      <method name="PushList" cname="gst_pad_push_list">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBufferList*" name="list" />
+        </parameters>
+      </method>
       <method name="Query" cname="gst_pad_query">
         <return-type type="gboolean" />
         <parameters>
@@ -3686,6 +3911,12 @@
         <return-type type="void" />
         <parameters>
           <parameter type="GstPadChainFunction" name="chain" />
+        </parameters>
+      </method>
+      <method name="SetChainListFunction" cname="gst_pad_set_chain_list_function">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstPadChainListFunction" name="chainlist" />
         </parameters>
       </method>
       <method name="SetCheckgetrangeFunction" cname="gst_pad_set_checkgetrange_function">
@@ -3860,7 +4091,7 @@
       <method name="GetDelay" cname="gst_pipeline_get_delay">
         <return-type type="GstClockTime" />
       </method>
-      <method name="GetLastStreamTime" cname="gst_pipeline_get_last_stream_time">
+      <method name="GetLastStreamTime" cname="gst_pipeline_get_last_stream_time" deprecated="1">
         <return-type type="GstClockTime" />
       </method>
       <method name="GetType" cname="gst_pipeline_get_type" shared="true">
@@ -3889,7 +4120,7 @@
           <parameter type="GstClockTime" name="delay" />
         </parameters>
       </method>
-      <method name="SetNewStreamTime" cname="gst_pipeline_set_new_stream_time">
+      <method name="SetNewStreamTime" cname="gst_pipeline_set_new_stream_time" deprecated="1">
         <return-type type="void" />
         <parameters>
           <parameter type="GstClockTime" name="time" />
@@ -3938,6 +4169,9 @@
       </method>
       <method name="ErrorQuark" cname="gst_plugin_error_quark" shared="true">
         <return-type type="GQuark" />
+      </method>
+      <method name="GetCacheData" cname="gst_plugin_get_cache_data">
+        <return-type type="const-GstStructure*" />
       </method>
       <method name="GetDescription" cname="gst_plugin_get_description">
         <return-type type="const-gchar*" />
@@ -4013,6 +4247,28 @@
           <parameter type="const-gchar*" name="source" />
           <parameter type="const-gchar*" name="package" />
           <parameter type="const-gchar*" name="origin" />
+        </parameters>
+      </method>
+      <method name="RegisterStaticFull" cname="gst_plugin_register_static_full" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint" name="major_version" />
+          <parameter type="gint" name="minor_version" />
+          <parameter type="const-gchar*" name="name" />
+          <parameter type="gchar*" name="description" />
+          <parameter type="GstPluginInitFullFunc" name="init_full_func" />
+          <parameter type="const-gchar*" name="version" />
+          <parameter type="const-gchar*" name="license" />
+          <parameter type="const-gchar*" name="source" />
+          <parameter type="const-gchar*" name="package" />
+          <parameter type="const-gchar*" name="origin" />
+          <parameter type="gpointer" name="user_data" />
+        </parameters>
+      </method>
+      <method name="SetCacheData" cname="gst_plugin_set_cache_data">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstStructure*" name="cache_data" />
         </parameters>
       </method>
     </object>
@@ -4530,7 +4786,7 @@
     <object name="Task" cname="GstTask" parent="GstObject">
       <class_struct cname="GstTaskClass">
         <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
-        <field name="Pool" cname="pool" type="GThreadPool*" />
+        <field name="Pool" cname="pool" type="GstTaskPool*" />
         <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
       </class_struct>
       <field name="State" cname="state" type="GstTaskState" access="public" />
@@ -4540,6 +4796,7 @@
       <field name="Data" cname="data" type="gpointer" access="public" />
       <field name="Running" cname="running" type="gboolean" access="public" />
       <field name="Thread" cname="thread" type="GThread*" />
+      <field name="Priv" cname="priv" type="GstTaskPrivate*" />
       <method name="CleanupAll" cname="gst_task_cleanup_all" shared="true">
         <return-type type="void" />
       </method>
@@ -4549,6 +4806,9 @@
           <parameter type="GstTaskFunction" name="func" />
           <parameter type="gpointer" name="data" />
         </parameters>
+      </method>
+      <method name="GetPool" cname="gst_task_get_pool">
+        <return-type type="GstTaskPool*" />
       </method>
       <method name="GetState" cname="gst_task_get_state">
         <return-type type="GstTaskState" />
@@ -4568,11 +4828,100 @@
           <parameter type="GStaticRecMutex*" name="mutex" />
         </parameters>
       </method>
+      <method name="SetPool" cname="gst_task_set_pool">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTaskPool*" name="pool" />
+        </parameters>
+      </method>
+      <method name="SetPriority" cname="gst_task_set_priority">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GThreadPriority" name="priority" />
+        </parameters>
+      </method>
+      <method name="SetState" cname="gst_task_set_state">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstTaskState" name="state" />
+        </parameters>
+      </method>
+      <method name="SetThreadCallbacks" cname="gst_task_set_thread_callbacks">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTaskThreadCallbacks*" name="callbacks" />
+          <parameter type="gpointer" name="user_data" />
+          <parameter type="GDestroyNotify" name="notify" />
+        </parameters>
+      </method>
       <method name="Start" cname="gst_task_start">
         <return-type type="gboolean" />
       </method>
       <method name="Stop" cname="gst_task_stop">
         <return-type type="gboolean" />
+      </method>
+    </object>
+    <object name="TaskPool" cname="GstTaskPool" parent="GstObject">
+      <class_struct cname="GstTaskPoolClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <method vm="prepare" />
+        <method vm="cleanup" />
+        <method vm="push" />
+        <method vm="join" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <field name="Pool" cname="pool" type="GThreadPool*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <virtual_method name="Prepare" cname="prepare">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GError**" name="error" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Cleanup" cname="cleanup">
+        <return-type type="void" />
+        <parameters />
+      </virtual_method>
+      <virtual_method name="Push" cname="push">
+        <return-type type="gpointer" />
+        <parameters>
+          <parameter type="GstTaskPoolFunction" name="func" />
+          <parameter type="gpointer" name="user_data" />
+          <parameter type="GError**" name="error" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Join" cname="join">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gpointer" name="id" />
+        </parameters>
+      </virtual_method>
+      <method name="Cleanup" cname="gst_task_pool_cleanup">
+        <return-type type="void" />
+      </method>
+      <method name="GetType" cname="gst_task_pool_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="Join" cname="gst_task_pool_join">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gpointer" name="id" />
+        </parameters>
+      </method>
+      <constructor cname="gst_task_pool_new" />
+      <method name="Prepare" cname="gst_task_pool_prepare">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GError**" name="error" />
+        </parameters>
+      </method>
+      <method name="Push" cname="gst_task_pool_push">
+        <return-type type="gpointer" />
+        <parameters>
+          <parameter type="GstTaskPoolFunction" name="func" />
+          <parameter type="gpointer" name="user_data" />
+          <parameter type="GError**" name="error" />
+        </parameters>
       </method>
     </object>
     <object name="TypeFindFactory" cname="GstTypeFindFactory" parent="GstPluginFeature">
@@ -4606,6 +4955,51 @@
       </method>
     </object>
     <object name="CastT" cname="cast_t" />
+    <struct name="BufferListIterator" cname="GstBufferListIterator" opaque="true">
+      <method name="Add" cname="gst_buffer_list_iterator_add">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buffer" />
+        </parameters>
+      </method>
+      <method name="AddGroup" cname="gst_buffer_list_iterator_add_group">
+        <return-type type="void" />
+      </method>
+      <method name="Do" cname="gst_buffer_list_iterator_do">
+        <return-type type="GstBuffer*" />
+        <parameters>
+          <parameter type="GstBufferListDoFunction" name="do_func" />
+          <parameter type="gpointer" name="user_data" />
+        </parameters>
+      </method>
+      <method name="Free" cname="gst_buffer_list_iterator_free">
+        <return-type type="void" />
+      </method>
+      <method name="MergeGroup" cname="gst_buffer_list_iterator_merge_group">
+        <return-type type="GstBuffer*" />
+      </method>
+      <method name="NBuffers" cname="gst_buffer_list_iterator_n_buffers">
+        <return-type type="guint" />
+      </method>
+      <method name="Next" cname="gst_buffer_list_iterator_next">
+        <return-type type="GstBuffer*" />
+      </method>
+      <method name="NextGroup" cname="gst_buffer_list_iterator_next_group">
+        <return-type type="gboolean" />
+      </method>
+      <method name="Remove" cname="gst_buffer_list_iterator_remove">
+        <return-type type="void" />
+      </method>
+      <method name="Steal" cname="gst_buffer_list_iterator_steal">
+        <return-type type="GstBuffer*" />
+      </method>
+      <method name="Take" cname="gst_buffer_list_iterator_take">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buffer" />
+        </parameters>
+      </method>
+    </struct>
     <boxed name="Caps" cname="GstCaps" opaque="true">
       <field name="Type" cname="type" type="GType" access="public" writeable="true" />
       <field name="Refcount" cname="refcount" type="gint" access="public" writeable="true" />
@@ -4956,6 +5350,13 @@
           <parameter type="gint64" name="time" />
         </parameters>
       </method>
+      <method name="SetRunningTime" cname="gst_segment_set_running_time">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstFormat" name="format" />
+          <parameter type="gint64" name="running_time" />
+        </parameters>
+      </method>
       <method name="SetSeek" cname="gst_segment_set_seek">
         <return-type type="void" />
         <parameters>
@@ -4967,6 +5368,13 @@
           <parameter type="GstSeekType" name="stop_type" />
           <parameter type="gint64" name="stop" />
           <parameter type="gboolean*" name="update" />
+        </parameters>
+      </method>
+      <method name="ToPosition" cname="gst_segment_to_position">
+        <return-type type="gint64" />
+        <parameters>
+          <parameter type="GstFormat" name="format" />
+          <parameter type="gint64" name="running_time" />
         </parameters>
       </method>
       <method name="ToRunningTime" cname="gst_segment_to_running_time">
@@ -5071,6 +5479,13 @@
           <parameter type="gchar**" name="end" />
         </parameters>
       </method>
+      <method name="Get" cname="gst_structure_get">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-char*" name="first_fieldname" />
+          <parameter ellipsis="true" />
+        </parameters>
+      </method>
       <method name="GetBoolean" cname="gst_structure_get_boolean">
         <return-type type="gboolean" />
         <parameters>
@@ -5157,6 +5572,13 @@
           <parameter type="guint*" name="value" />
         </parameters>
       </method>
+      <method name="GetValist" cname="gst_structure_get_valist">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-char*" name="first_fieldname" />
+          <parameter type="va_list" name="args" />
+        </parameters>
+      </method>
       <method name="GetValue" cname="gst_structure_get_value">
         <return-type type="const-GValue*" />
         <parameters>
@@ -5188,10 +5610,32 @@
           <parameter type="GQuark" name="quark" />
         </parameters>
       </method>
+      <method name="IdGet" cname="gst_structure_id_get">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GQuark" name="first_field_id" />
+          <parameter ellipsis="true" />
+        </parameters>
+      </method>
+      <method name="IdGetValist" cname="gst_structure_id_get_valist">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GQuark" name="first_field_id" />
+          <parameter type="va_list" name="args" />
+        </parameters>
+      </method>
       <method name="IdGetValue" cname="gst_structure_id_get_value">
         <return-type type="const-GValue*" />
         <parameters>
           <parameter type="GQuark" name="field" />
+        </parameters>
+      </method>
+      <method name="IdNew" cname="gst_structure_id_new" shared="true">
+        <return-type type="GstStructure*" />
+        <parameters>
+          <parameter type="GQuark" name="name_quark" />
+          <parameter type="GQuark" name="field_quark" />
+          <parameter ellipsis="true" />
         </parameters>
       </method>
       <method name="IdSet" cname="gst_structure_id_set">
@@ -5333,6 +5777,14 @@
           <parameter type="GstTagMergeMode" name="mode" />
           <parameter type="const-gchar*" name="tag" />
           <parameter type="va_list" name="var_args" />
+        </parameters>
+      </method>
+      <method name="AddValue" cname="gst_tag_list_add_value">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTagMergeMode" name="mode" />
+          <parameter type="const-gchar*" name="tag" />
+          <parameter type="const-GValue*" name="value" />
         </parameters>
       </method>
       <method name="AddValues" cname="gst_tag_list_add_values">
@@ -5623,6 +6075,17 @@
         </parameters>
       </method>
       <constructor cname="gst_tag_list_new" />
+      <constructor cname="gst_tag_list_new_full">
+        <parameters>
+          <parameter type="const-gchar*" name="tag" />
+          <parameter ellipsis="true" />
+        </parameters>
+      </constructor>
+      <constructor cname="gst_tag_list_new_full_valist">
+        <parameters>
+          <parameter type="va_list" name="var_args" />
+        </parameters>
+      </constructor>
       <method name="RemoveTag" cname="gst_tag_list_remove_tag">
         <return-type type="void" />
         <parameters>
@@ -5630,6 +6093,21 @@
         </parameters>
       </method>
     </boxed>
+    <struct name="TaskThreadCallbacks" cname="GstTaskThreadCallbacks">
+      <callback cname="enter_thread">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTask*" name="task," />
+        </parameters>
+      </callback>
+      <callback cname="leave_thread">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstTask*" name="task," />
+        </parameters>
+      </callback>
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+    </struct>
     <struct name="TypeFind" cname="GstTypeFind">
       <callback cname="peek">
         <return-type type="guint8*" />
@@ -6200,7 +6678,8 @@
       <field name="AssembledSize" cname="assembled_size" type="guint" />
       <field name="AssembledLen" cname="assembled_len" type="guint" />
       <field name="BuflistEnd" cname="buflist_end" type="GSList*" />
-      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING - 1" type="gpointer" />
+      <field name="Priv" cname="priv" type="GstAdapterPrivate*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING - 2" type="gpointer" />
       <method name="Available" cname="gst_adapter_available">
         <return-type type="guint" />
       </method>
@@ -6227,11 +6706,26 @@
       <method name="GetType" cname="gst_adapter_get_type" shared="true">
         <return-type type="GType" />
       </method>
+      <method name="MaskedScanUint32" cname="gst_adapter_masked_scan_uint32">
+        <return-type type="guint" />
+        <parameters>
+          <parameter type="guint32" name="mask" />
+          <parameter type="guint32" name="pattern" />
+          <parameter type="guint" name="offset" />
+          <parameter type="guint" name="size" />
+        </parameters>
+      </method>
       <constructor cname="gst_adapter_new" />
       <method name="Peek" cname="gst_adapter_peek">
         <return-type type="const-guint8*" />
         <parameters>
           <parameter type="guint" name="size" />
+        </parameters>
+      </method>
+      <method name="PrevTimestamp" cname="gst_adapter_prev_timestamp">
+        <return-type type="GstClockTime" />
+        <parameters>
+          <parameter type="guint64*" name="distance" />
         </parameters>
       </method>
       <method name="Push" cname="gst_adapter_push">
@@ -6270,7 +6764,8 @@
         <method vm="activate_pull" />
         <method vm="fixate" />
         <method vm="unlock_stop" />
-        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING_LARGE-4" />
+        <method vm="render_list" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING_LARGE-5" />
       </class_struct>
       <field name="Sinkpad" cname="sinkpad" type="GstPad*" />
       <field name="PadMode" cname="pad_mode" type="GstActivateMode" />
@@ -6380,6 +6875,12 @@
       <virtual_method name="UnlockStop" cname="unlock_stop">
         <return-type type="gboolean" />
         <parameters />
+      </virtual_method>
+      <virtual_method name="RenderList" cname="render_list">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBufferList*" name="buffer_list" />
+        </parameters>
       </virtual_method>
       <method name="DoPreroll" cname="gst_base_sink_do_preroll">
         <return-type type="GstFlowReturn" />
@@ -7299,7 +7800,9 @@
         <method signal_vm="new_buffer" />
         <method signal_vm="pull_preroll" />
         <method signal_vm="pull_buffer" />
-        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+        <method signal_vm="new_buffer_list" />
+        <method signal_vm="pull_buffer_list" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING - 2" />
       </class_struct>
       <field name="Priv" cname="priv" type="GstAppSinkPrivate*" />
       <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
@@ -7320,12 +7823,20 @@
         <return-type type="void" />
         <parameters />
       </signal>
+      <signal name="NewBufferList" cname="new-buffer-list" when="LAST" field_name="new_buffer_list">
+        <return-type type="GstBufferList*" />
+        <parameters />
+      </signal>
       <signal name="PullPreroll" cname="pull-preroll" when="LAST" field_name="pull_preroll">
         <return-type type="GstBuffer*" />
         <parameters />
       </signal>
       <signal name="PullBuffer" cname="pull-buffer" when="LAST" field_name="pull_buffer">
         <return-type type="GstBuffer*" />
+        <parameters />
+      </signal>
+      <signal name="PullBufferList" cname="pull-buffer-list" when="LAST" field_name="pull_buffer_list">
+        <return-type type="GstBufferList*" />
         <parameters />
       </signal>
       <method name="GetCaps" cname="gst_app_sink_get_caps">
@@ -7348,6 +7859,9 @@
       </method>
       <method name="PullBuffer" cname="gst_app_sink_pull_buffer">
         <return-type type="GstBuffer*" />
+      </method>
+      <method name="PullBufferList" cname="gst_app_sink_pull_buffer_list">
+        <return-type type="GstBufferList*" />
       </method>
       <method name="PullPreroll" cname="gst_app_sink_pull_preroll">
         <return-type type="GstBuffer*" />
@@ -7532,7 +8046,13 @@
           <parameter type="GstAppSink*" name="sink," />
         </parameters>
       </callback>
-      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <callback cname="new_buffer_list">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstAppSink*" name="sink," />
+        </parameters>
+      </callback>
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING - 1" type="gpointer" />
     </struct>
     <struct name="AppSrcCallbacks" cname="GstAppSrcCallbacks">
       <callback cname="need_data">
@@ -7668,6 +8188,9 @@
           <parameter type="GstColorBalanceChannel*" name="channel" />
         </parameters>
       </virtual_method>
+      <method name="GetBalanceType" cname="gst_color_balance_get_balance_type">
+        <return-type type="GstColorBalanceType" />
+      </method>
       <method name="GetType" cname="gst_color_balance_get_type" shared="true">
         <return-type type="GType" />
       </method>
@@ -7704,43 +8227,13 @@
         <method vm="get_volume" />
         <method vm="set_mute" />
         <method vm="set_record" />
-        <method signal_vm="mute_toggled" />
-        <method signal_vm="record_toggled" />
-        <method signal_vm="volume_changed" />
+        <field name="Padding1" cname="padding1" type="gpointer" array_len="3" />
         <method vm="set_option" />
         <method vm="get_option" />
-        <method signal_vm="option_changed" />
+        <field name="Padding2" cname="padding2" type="gpointer" />
         <method vm="get_mixer_flags" />
         <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING-1" />
       </class_struct>
-      <signal name="RecordToggled" cname="record-toggled" when="LAST" field_name="record_toggled">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GstMixerTrack*" name="channel" />
-          <parameter type="gboolean" name="record" />
-        </parameters>
-      </signal>
-      <signal name="MuteToggled" cname="mute-toggled" when="LAST" field_name="mute_toggled">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GstMixerTrack*" name="channel" />
-          <parameter type="gboolean" name="mute" />
-        </parameters>
-      </signal>
-      <signal name="VolumeChanged" cname="volume-changed" when="LAST" manual="true" field_name="volume_changed">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GstMixerTrack*" name="channel" />
-          <parameter type="gint*" name="volumes" />
-        </parameters>
-      </signal>
-      <signal name="OptionChanged" cname="option-changed" when="LAST" field_name="option_changed">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GstMixerOptions*" name="opts" />
-          <parameter type="gchar*" name="option" />
-        </parameters>
-      </signal>
       <virtual_method name="ListTracks" cname="list_tracks">
         <return-type type="GList*" />
         <parameters />
@@ -7792,6 +8285,9 @@
       </virtual_method>
       <method name="GetMixerFlags" cname="gst_mixer_get_mixer_flags">
         <return-type type="GstMixerFlags" />
+      </method>
+      <method name="GetMixerType" cname="gst_mixer_get_mixer_type">
+        <return-type type="GstMixerType" />
       </method>
       <method name="GetOption" cname="gst_mixer_get_option">
         <return-type type="const-gchar*" />
@@ -8553,18 +9049,11 @@
     <object name="MixerOptions" cname="GstMixerOptions" parent="GstMixerTrack">
       <class_struct cname="GstMixerOptionsClass">
         <field name="Parent" cname="parent" type="GstMixerTrackClass" />
-        <method signal_vm="option_changed" />
         <method vm="get_values" />
         <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING-1" />
       </class_struct>
       <field name="Values" cname="values" type="GList*" />
       <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
-      <signal name="OptionChanged" cname="option_changed" when="LAST" field_name="option_changed">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="gchar*" name="value" />
-        </parameters>
-      </signal>
       <virtual_method name="GetValues" cname="get_values">
         <return-type type="GList*" />
         <parameters />
@@ -8586,9 +9075,6 @@
     <object name="MixerTrack" cname="GstMixerTrack" parent="GObject">
       <class_struct cname="GstMixerTrackClass">
         <field name="Parent" cname="parent" type="GObjectClass" />
-        <method signal_vm="mute_toggled" />
-        <method signal_vm="record_toggled" />
-        <method signal_vm="volume_changed" />
         <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
       </class_struct>
       <field name="Label" cname="label" type="gchar*" />
@@ -8603,24 +9089,6 @@
       <property name="MaxVolume" cname="max-volume" type="gint" readable="true" />
       <property name="Flags" cname="flags" type="guint" readable="true" />
       <property name="NumChannels" cname="num-channels" type="gint" readable="true" />
-      <signal name="RecordToggled" cname="record_toggled" when="LAST" field_name="record_toggled">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="gboolean" name="record" />
-        </parameters>
-      </signal>
-      <signal name="MuteToggled" cname="mute_toggled" when="LAST" field_name="mute_toggled">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="gboolean" name="mute" />
-        </parameters>
-      </signal>
-      <signal name="VolumeChanged" cname="volume_changed" when="LAST" manual="true" field_name="volume_changed">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="gint*" name="volumes" />
-        </parameters>
-      </signal>
       <method name="GetType" cname="gst_mixer_track_get_type" shared="true">
         <return-type type="GType" />
       </method>
@@ -8702,6 +9170,9 @@
       <member cname="GST_VIDEO_FORMAT_Y41B" name="Y41b" />
       <member cname="GST_VIDEO_FORMAT_Y42B" name="Y42b" />
       <member cname="GST_VIDEO_FORMAT_YVYU" name="Yvyu" />
+      <member cname="GST_VIDEO_FORMAT_Y444" name="Y444" />
+      <member cname="GST_VIDEO_FORMAT_v210" name="V210" />
+      <member cname="GST_VIDEO_FORMAT_v216" name="V216" />
     </enum>
     <object name="VideoFilter" cname="GstVideoFilter" parent="GstBaseTransform">
       <class_struct cname="GstVideoFilterClass">

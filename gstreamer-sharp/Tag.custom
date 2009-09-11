@@ -55,6 +55,7 @@ public const string Codec = "codec";
 public const string VideoCodec = "video-codec";
 public const string AudioCodec = "audio-codec";
 public const string SubtitleCodec = "subtitle-codec";
+public const string ContainerFormat = "container-format";
 public const string Bitrate = "bitrate";
 public const string NominalBitrate = "nominal-bitrate";
 public const string MinimumBitrate = "minimum-bitrate";
