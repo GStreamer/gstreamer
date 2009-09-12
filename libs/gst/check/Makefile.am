@@ -109,7 +109,8 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstcheck_@GST_MAJORMINOR@_la_SOURCES)
 gir_cincludes=$(patsubst %,--c-include='gst/check/%',$(libgstcheck_@GST_MAJORMINOR@include_HEADERS))
 
 GstCheck-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_MAJORMINOR@.la
-	$(INTROSPECTION_SCANNER) -v --namespace GstCheck \
+	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(top_builddir)/pkgconfig" \
+		$(INTROSPECTION_SCANNER) -v --namespace GstCheck \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		-I$(top_srcdir) \

@@ -11,17 +11,17 @@ ACLOCAL_AMFLAGS = -I common/m4 -I .
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 
-SUBDIRS = \
+SUBDIRS = pkgconfig \
 	gst libs plugins tools tests \
 	docs \
-	pkgconfig po \
+	po \
 	common
 
 # These are all the possible subdirs
-DIST_SUBDIRS = \
+DIST_SUBDIRS = pkgconfig \
 	gst libs plugins tools tests \
 	docs \
-	pkgconfig po \
+	po \
 	common
 
 # include before EXTRA_DIST for win32 assignment
