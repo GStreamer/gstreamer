@@ -45,7 +45,7 @@ GST_DEBUG_CATEGORY_STATIC (h264_parse_debug);
 
 static const GstElementDetails gst_h264_parse_details =
 GST_ELEMENT_DETAILS ("H264Parse",
-    "Codec/Parser",
+    "Codec/Parser/Video",
     "Parses raw h264 stream",
     "Michal Benes <michal.benes@itonis.tv>,"
     "Wim Taymans <wim.taymans@gmail.com>");
