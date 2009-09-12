@@ -2617,7 +2617,9 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
             last_granule = granulepos;
             last_pad = pad;
           }
-          done = TRUE;
+          if (last_granule != -1) {
+            done = TRUE;
+          }
           break;
         }
       }
