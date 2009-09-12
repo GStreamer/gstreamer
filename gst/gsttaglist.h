@@ -150,7 +150,12 @@ typedef enum {
  *
  * Opaque #GstTagList data structure.
  */
+#ifdef IN_GOBJECT_INTROSPECTION
+typedef struct _GstTagList GstTagList;
+#else
 typedef GstStructure GstTagList;
+#endif
+
 #define GST_TAG_LIST(x)       ((GstTagList *) (x))
 #define GST_IS_TAG_LIST(x)    ((x) != NULL && gst_is_tag_list (GST_TAG_LIST (x)))
 #define GST_TYPE_TAG_LIST     (gst_tag_list_get_type ())

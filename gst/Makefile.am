@@ -248,6 +248,7 @@ Gst-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_MAJORMINOR@
 		--nsversion=@GST_MAJORMINOR@ \
 		-I$(top_srcdir) \
 		-I$(top_builddir) \
+		-DIN_GOBJECT_INTROSPECTION=1 \
 		--c-include='gst/gst.h' \
 		--library=gstreamer-0.10 \
 		--include=GLib-2.0 \
