@@ -1213,20 +1213,21 @@ gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
 
   dv_decode_full_audio (dvdemux->decoder, data, dvdemux->audio_buffers);
 
-  if ((num_samples = dv_get_num_samples (dvdemux->decoder)) > 0) {
+  if (G_LIKELY ((num_samples = dv_get_num_samples (dvdemux->decoder)) > 0)) {
     gint16 *a_ptr;
     gint i, j;
     GstBuffer *outbuf;
     gint frequency, channels;
 
-    if (dvdemux->audiosrcpad == NULL)
+    if (G_UNLIKELY (dvdemux->audiosrcpad == NULL))
       dvdemux->audiosrcpad = gst_dvdemux_add_pad (dvdemux, &audio_src_temp);
 
     /* get initial format or check if format changed */
     frequency = dv_get_frequency (dvdemux->decoder);
     channels = dv_get_num_channels (dvdemux->decoder);
 
-    if ((frequency != dvdemux->frequency) || (channels != dvdemux->channels)) {
+    if (G_UNLIKELY ((frequency != dvdemux->frequency)
+            || (channels != dvdemux->channels))) {
       GstCaps *caps;
 
       dvdemux->frequency = frequency;
@@ -1264,6 +1265,8 @@ gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
     dvdemux->audio_offset += num_samples;
     GST_BUFFER_OFFSET_END (outbuf) = dvdemux->audio_offset;
 
+    if (dvdemux->new_media)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (dvdemux->audiosrcpad));
 
     ret = gst_pad_push (dvdemux->audiosrcpad, outbuf);
@@ -1285,7 +1288,7 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
   gboolean wide;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (dvdemux->videosrcpad == NULL)
+  if (G_UNLIKELY (dvdemux->videosrcpad == NULL))
     dvdemux->videosrcpad = gst_dvdemux_add_pad (dvdemux, &video_src_temp);
 
   /* get params */
@@ -1339,6 +1342,8 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
   GST_BUFFER_OFFSET_END (outbuf) = dvdemux->video_offset + 1;
   GST_BUFFER_DURATION (outbuf) = duration;
 
+  if (dvdemux->new_media)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (dvdemux->videosrcpad));
 
   GST_DEBUG ("pushing video %" GST_TIME_FORMAT,
@@ -1405,8 +1410,7 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
   data = GST_BUFFER_DATA (buffer);
 
   dv_parse_packs (dvdemux->decoder, data);
-  if (G_UNLIKELY (dv_is_new_recording (dvdemux->decoder, data)))
-    dvdemux->new_media = TRUE;
+  dvdemux->new_media = dv_is_new_recording (dvdemux->decoder, data);
 
   /* does not take ownership of buffer */
   aret = ret = gst_dvdemux_demux_audio (dvdemux, buffer, duration);
