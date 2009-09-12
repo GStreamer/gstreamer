@@ -1,9 +1,283 @@
-=== release 0.10.8 ===
+2009-09-11 22:35:33 +0100  Jan Schmidt <thaytan@noraisin.net>
 
-2009-06-29  Jan Schmidt <jan.schmidt@sun.com>
+	* .gitignore:
+	* COPYING:
+	* COPYING.LIB:
+	* README:
+	  license: Add COPYING and COPYING.LIB
+	  Add GPLv2 COPYING file, and LGPL COPYING.LIB. Add the boilerplate
+	  text about the plugin code being LGPL versus the linked plugin
+	  being GPL.
+	  Fixes: #590964
+
+2009-09-10 14:11:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: correctly check for NONE timestamp
+
+2009-09-09 13:33:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpeg: add support for G721
+	  Add support for g721, which is like G726 but with 1 channel, 8KHz and a bitrate
+	  of 32000.
+	  Fixes #594454
+
+2009-09-06 23:09:21 +1000  Jonathan Matthew <jonathan@d14n.org>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: don't set channel-positions for common mono and stereo cases
+
+2009-09-05 10:24:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 94f95e3 to 19fa4f3
+
+2009-09-01 21:42:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: disable interpolation when dropping frames
+	  When we are dropping frames because of QoS disable the DTS interpolation because
+	  we won't be able to update the timestamps and end up setting the wrong
+	  timestamps. Instead, simply use the timestamps from ffmpeg.
+
+2009-08-26 15:37:02 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
 
 	* configure.ac:
-	  releasing 0.10.8, "Brilliant in the morning"
+	  Add AG_GST_ARG_WITH_PKG_CONFIG_PATH to configure
+
+2009-08-21 02:58:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  typefinders: skip ffmpeg typefinders if there isn't enough data
+	  ffmpeg typefinders don't do bounds checking for small chunks of
+	  data, so just skip them if we don't have a lot of data, to avoid
+	  invalid memory access and/or crashes.
+
+2009-08-14 16:39:19 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/.gitignore:
+	* tests/check/Makefile.am:
+	* tests/check/elements/ffdec_adpcm.c:
+	* tests/files/591809.wav:
+	* tests/files/Makefile.am:
+	  checks: add minimal unit test for adpcm decoder
+	  The sample file is so small, we may just as well add a little
+	  unit test for the previously fixed bug.
+
+2009-08-19 15:28:35 +0200  Jarkko Palviainen <jarkko.palviainen@sesca.com>
+
+	* gst-libs/ext/Makefile.am:
+	  build: Remove gst-libs/ext/ffmpeg in maintainerclean target only
+	  Fixes bug #586894.
+
+2009-08-18 13:20:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: reset timestamp queue after flush
+
+2009-08-14 16:07:07 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  Lower minimum sample rate in generic template caps from 8000 to 4000
+	  Fixes playback of ADPCM clip (#591809).
+
+2009-08-13 17:38:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Fix strict aliasing warnings
+
+2009-08-12 10:57:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Don't use guintptr as it's new in GLib 2.18
+	  Fixes bug #591469.
+
+2009-08-10 12:04:39 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  gstffmpeg: Lower debugging levels from WARNING to DEBUG
+	  These statements aren't critical per se... and just clutter debug logs.
+
+2009-08-09 09:47:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: Return all supported caps instead of only the first
+
+2009-08-08 22:43:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: If an encoder lists the supported pixfmts use them to create the caps
+	  ...instead of creating standard caps with all pixfmts.
+	  Fixes bug #591038.
+
+2009-08-08 17:41:18 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Fix duration calculation when ticks_per_frame isn't 1
+	  Fixes bug #591163.
+
+2009-08-06 06:56:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Fix compiler warning and indention
+
+2009-07-30 19:02:12 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Assign offsets to outgoing buffers more accurate
+	  This now uses ffmpeg functionality to keep random metadata next to
+	  the buffers and to get the correct offset for a frame, similar to how
+	  timestamps are handled.
+	  Fixes bug #578278.
+
+2009-08-04 09:53:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ffmpegrev:
+	  Update ffmpeg revision to 19580 of the 0.5 branch
+	  This cleans up licensing and makes it possible to build with LGPL code
+	  only again.
+	  Apart from that an opencore-amr encoder/decoder exists now but this
+	  is not enabled as we don't want to use external libraries through ffmpeg
+	  and have our own plugins for this already.
+
+2009-07-31 13:27:28 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  gstffmpegenc: Try getting the caps for the declared pixfmt without a context.
+	  PixFmt that are declared in AVCodec.pix_fmts are ones which are 'officially'
+	  declared as being supported. We should therefore not have to create a
+	  AVCodecContext and open an encoder to know if it's supported or not.
+	  Also, doing it this way allows us to better pickup configuration overrides
+	  we have in gstffmpegcodecmap for some codecs (like restrictions on width,
+	  height, framerate like it's the case for dnxhd).
+	  Fixes #575545
+
+2009-07-29 14:49:56 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Disable theora decoder
+	  The wrapper does not give the decoder the extradata correctly.
+	  Just use theoradec.
+	  Fixes bug #590172
+
+2009-07-18 18:53:22 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  Codec frame delay fix and trailing zero-length frame fix
+	  Takes codec frame delay into account (roughly the same way it does for timestamps for reordered frames) to produce frames with correct offsets.
+	  A special hack to allow trailing frame with timestamp=segment.stop to be displayed.
+	  Fixes bug #578278.
+
+2009-07-28 23:48:21 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/generic/plugin-test.c:
+	  check: remove unused variable from unit test
+
+2009-07-28 23:40:31 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffmpegdemux: use gst_element_found_tags() for global tags
+	  So we get a message on the bus *and* tag events pushed downstream.
+
+2009-07-28 23:21:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* tests/Makefile.am:
+	* tests/check/.gitignore:
+	* tests/check/Makefile.am:
+	* tests/check/elements/ffdemux_ape.c:
+	* tests/files/586957.ape:
+	* tests/files/Makefile.am:
+	  ffmpegdemux: cache events from upstream and re-send them later
+	  Cache any events we get from upstream before we're open, especially
+	  tag events we may be getting from apedemux/id3demux or the like, and
+	  push them downstream later when we've added our pads instead of just
+	  dropping them silently. Fixes transcoding tags for Monkey's Audio
+	  Files with preceding APE or ID3v2 tags (#586957). Add minimal unit
+	  test for this.
+	  Also push stream tags later after the global tags and the newsegment
+	  event rather than right after creating the pad.
+
+2009-07-24 00:43:20 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From fedaaee to 94f95e3
+
+2009-07-20 11:48:45 +0200  Jordi Mas <jordimash@gmail.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegmux: Add proper audio mapping for DVD muxer. Fixes #588546
+
+2009-07-13 12:24:25 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5845b63 to fedaaee
+
+2009-06-30 02:27:22 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: pass --disable-vhook to ffmpeg's configure
+	  So we don't build stuff we don't use, with the added benefit that
+	  the GStreamer registry won't complain about not being able to
+	  load these 'plugins' when running GStreamer uninstalled.
+
+2009-06-30 02:15:21 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpegmux: don't leak caps if type already exists
+	  We don't know if gst_element_register() will replace the known type
+	  or reject it, so we really need to free the caps before.
+
+2009-06-30 02:11:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffmpegdemux: post tags after the initial newsegment event
+
+2009-07-01 10:06:26 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* autogen.sh:
+	  autogen.sh: Use printf instead of 'echo -n'. Check for automake-1.1[01]
+	  Check for more automake command variants. Use printf instead of 'echo -n'
+	  for portability
+
+2009-07-01 10:05:05 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  Back to development - 0.10.8.1
+
+2009-07-01 11:23:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: don't wait for keyframe after discont
+	  After a DISCONT, mark the next frame with DISCONT but don't wait for a new
+	  keyframe. This greatly improves performance on lossy networks or currupted
+	  frames as the decoder can usually continue and conceil errors up to the next
+	  keyframe.
+
+2009-07-01 11:21:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' of ssh://git.freedesktop.org/git/gstreamer/gst-ffmpeg
+
+=== release 0.10.8 ===
+
+2009-06-29 22:42:00 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-ffmpeg.doap:
+	  release 0.10.8
 
 2009-06-29 13:53:50 +0200  Edward Hervey <bilboed@bilboed.com>
 
@@ -20,6 +294,12 @@
 
 	* configure.ac:
 	  0.10.7.3 pre-release
+
+2009-06-09 16:34:04 +0200  Arnout Vandecappelle <arnout@mind.be>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: don't drop buffers when caps change.
+	  Fixes #585257
 
 2009-06-24 15:24:25 +0100  Jan Schmidt <thaytan@noraisin.net>
 
