@@ -27,7 +27,8 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstriff_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/riff/%',$(libgstriff_@GST_MAJORMINOR@include_HEADERS))
 
 GstRiff-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstriff-@GST_MAJORMINOR@.la
-	$(INTROSPECTION_SCANNER) -v --namespace GstRiff \
+	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(top_builddir)/pkgconfig" \
+		$(INTROSPECTION_SCANNER) -v --namespace GstRiff \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		$(gir_cincludes) \

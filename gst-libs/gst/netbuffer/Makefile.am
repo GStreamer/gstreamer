@@ -17,7 +17,8 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstnetbuffer_@GST_MAJORMINOR@_la_SOUR
 gir_cincludes=$(patsubst %,--c-include='gst/netbuffer/%',$(libgstnetbufferinclude_HEADERS))
 
 GstNetbuffer-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnetbuffer-@GST_MAJORMINOR@.la
-	$(INTROSPECTION_SCANNER) -v --namespace GstNetbuffer \
+	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(top_builddir)/pkgconfig" \
+		$(INTROSPECTION_SCANNER) -v --namespace GstNetbuffer \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		$(gir_cincludes) \

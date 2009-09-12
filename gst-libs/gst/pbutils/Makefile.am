@@ -56,7 +56,8 @@ gir_cincludes=$(patsubst %,--c-include='gst/pbutils/%',$(libgstpbutils_@GST_MAJO
 gir_cincludes+=$(patsubst %,--c-include='gst/pbutils/%',$(nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS))
 
 GstPbutils-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_MAJORMINOR@.la
-	$(INTROSPECTION_SCANNER) -v --namespace GstPbutils \
+	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(top_builddir)/pkgconfig" \
+		$(INTROSPECTION_SCANNER) -v --namespace GstPbutils \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		$(gir_cincludes) \

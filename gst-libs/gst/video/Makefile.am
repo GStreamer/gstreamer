@@ -38,7 +38,8 @@ gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstvideo_@GST_MAJORMIN
 gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS))
 
 GstVideo-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstvideo-@GST_MAJORMINOR@.la
-	$(INTROSPECTION_SCANNER) -v --namespace GstVideo \
+	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(top_builddir)/pkgconfig" \
+		$(INTROSPECTION_SCANNER) -v --namespace GstVideo \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
