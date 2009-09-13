@@ -59,6 +59,32 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (MIME_ALL));
 
 static GstFlowReturn
+gst_pnmdec_push (GstPnmdec * s, GstPad * src, GstBuffer * buf)
+{
+  /* Need to convert from PNM rowstride to GStreamer rowstride */
+  if ((s->mngr.info.type == GST_PNM_TYPE_PIXMAP_ASCII ||
+          s->mngr.info.type == GST_PNM_TYPE_PIXMAP_RAW)
+      && s->mngr.info.width % 4 != 0) {
+    guint i_rowstride = 3 * s->mngr.info.width;
+    guint o_rowstride = GST_ROUND_UP_4 (3 * s->mngr.info.width);
+    GstBuffer *obuf =
+        gst_buffer_new_and_alloc (o_rowstride * s->mngr.info.height);
+    guint i;
+
+    gst_buffer_copy_metadata (obuf, buf, GST_BUFFER_COPY_ALL);
+
+    for (i = 0; i < s->mngr.info.height; i++)
+      memcpy (GST_BUFFER_DATA (obuf) + i * o_rowstride,
+          GST_BUFFER_DATA (buf) + i * i_rowstride, i_rowstride);
+
+    gst_buffer_unref (buf);
+    return gst_pad_push (src, obuf);
+  } else {
+    return gst_pad_push (src, buf);
+  }
+}
+
+static GstFlowReturn
 gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
 {
   GstPnmdec *s = GST_PNMDEC (gst_pad_get_parent (pad));
@@ -121,7 +147,7 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
     memset (&s->mngr, 0, sizeof (GstPnmInfoMngr));
     s->size = 0;
     gst_buffer_set_caps (buf, GST_PAD_CAPS (src));
-    r = gst_pad_push (src, buf);
+    r = gst_pnmdec_push (s, src, buf);
     goto out;
   }
 
@@ -143,7 +169,7 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
   /* Do we now have the full image? If yes, push. */
   if (GST_BUFFER_SIZE (s->buf) == s->size) {
     gst_buffer_set_caps (s->buf, GST_PAD_CAPS (src));
-    r = gst_pad_push (src, s->buf);
+    r = gst_pnmdec_push (s, src, s->buf);
     s->buf = NULL;
     memset (&s->mngr, 0, sizeof (GstPnmInfoMngr));
     s->size = 0;

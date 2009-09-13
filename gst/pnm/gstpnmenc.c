@@ -79,8 +79,22 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
   if ((r = gst_pad_push (s->src, out)) != GST_FLOW_OK)
     goto out;
 
-  /* Pass through the data. */
-  buf = gst_buffer_make_metadata_writable (buf);
+  /* Need to convert from GStreamer rowstride to PNM rowstride */
+  if (s->info.type == GST_PNM_TYPE_PIXMAP_RAW && s->info.width % 4 != 0) {
+    guint i_rowstride = GST_ROUND_UP_4 (s->info.width * 3);
+    guint o_rowstride = s->info.width * 3;
+    GstBuffer *obuf = gst_buffer_new_and_alloc (o_rowstride * s->info.height);
+    guint i;
+
+    for (i = 0; i < s->info.height; i++)
+      memcpy (GST_BUFFER_DATA (obuf) + o_rowstride * i,
+          GST_BUFFER_DATA (buf) + i_rowstride * i, o_rowstride);
+    gst_buffer_unref (buf);
+    buf = obuf;
+  } else {
+    /* Pass through the data. */
+    buf = gst_buffer_make_metadata_writable (buf);
+  }
   gst_buffer_set_caps (buf, GST_PAD_CAPS (s->src));
   r = gst_pad_push (s->src, buf);
 
