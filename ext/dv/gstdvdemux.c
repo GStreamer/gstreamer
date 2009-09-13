@@ -1356,6 +1356,31 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
   return ret;
 }
 
+static gboolean
+gst_dvdemux_is_new_media (GstDVDemux * dvdemux, GstBuffer * buffer)
+{
+  guint8 *data = GST_BUFFER_DATA (buffer);
+  int aaux_offset;
+  int dif;
+  int n_difs;
+
+  n_difs = dvdemux->PAL ? 12 : 10;
+
+  for (dif = 0; dif < n_difs; dif++) {
+    if (dif & 1) {
+      aaux_offset = (dif * 12000) + (6 + 16 * 1) * 80 + 3;
+    } else {
+      aaux_offset = (dif * 12000) + (6 + 16 * 4) * 80 + 3;
+    }
+    if (data[aaux_offset + 0] == 0x51) {
+      if ((data[aaux_offset + 2] & 0x80) == 0)
+        return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 /* takes ownership of buffer */
 static GstFlowReturn
 gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
@@ -1410,7 +1435,13 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
   data = GST_BUFFER_DATA (buffer);
 
   dv_parse_packs (dvdemux->decoder, data);
-  dvdemux->new_media = dv_is_new_recording (dvdemux->decoder, data);
+  dvdemux->new_media = FALSE;
+  if (gst_dvdemux_is_new_media (dvdemux, buffer) &&
+      dvdemux->frames_since_new_media > 2) {
+    dvdemux->new_media = TRUE;
+    dvdemux->frames_since_new_media = 0;
+  }
+  dvdemux->frames_since_new_media++;
 
   /* does not take ownership of buffer */
   aret = ret = gst_dvdemux_demux_audio (dvdemux, buffer, duration);

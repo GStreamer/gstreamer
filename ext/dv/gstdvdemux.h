@@ -80,6 +80,7 @@ struct _GstDVDemux {
   gboolean       running;
   gboolean       need_segment;
   gboolean       new_media;
+  int            frames_since_new_media;
   
   gint           found_header; /* ATOMIC */
   GstEvent      *seek_event;
