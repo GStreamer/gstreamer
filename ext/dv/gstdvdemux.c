@@ -1293,7 +1293,7 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
 
   /* get params */
   /* framerate is already up-to-date */
-  height = (dvdemux->PAL ? PAL_HEIGHT : NTSC_HEIGHT);
+  height = dvdemux->decoder->height;
   wide = dv_format_wide (dvdemux->decoder);
 
   /* see if anything changed */
@@ -1304,7 +1304,7 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
     dvdemux->height = height;
     dvdemux->wide = wide;
 
-    if (dvdemux->PAL) {
+    if (dvdemux->decoder->system == e_dv_system_625_50) {
       if (wide) {
         par_x = PAL_WIDE_PAR_X;
         par_y = PAL_WIDE_PAR_Y;
@@ -1364,7 +1364,7 @@ gst_dvdemux_is_new_media (GstDVDemux * dvdemux, GstBuffer * buffer)
   int dif;
   int n_difs;
 
-  n_difs = dvdemux->PAL ? 12 : 10;
+  n_difs = dvdemux->decoder->num_dif_seqs;
 
   for (dif = 0; dif < n_difs; dif++) {
     if (dif & 1) {
@@ -1500,9 +1500,8 @@ gst_dvdemux_flush (GstDVDemux * dvdemux)
       goto parse_header_error;
 
     /* after parsing the header we know the length of the data */
-    dvdemux->PAL = dv_system_50_fields (dvdemux->decoder);
-    length = dvdemux->frame_len = (dvdemux->PAL ? PAL_BUFFER : NTSC_BUFFER);
-    if (dvdemux->PAL) {
+    length = dvdemux->frame_len = dvdemux->decoder->frame_size;
+    if (dvdemux->decoder->system == e_dv_system_625_50) {
       dvdemux->framerate_numerator = PAL_FRAMERATE_NUMERATOR;
       dvdemux->framerate_denominator = PAL_FRAMERATE_DENOMINATOR;
     } else {
@@ -1626,9 +1625,8 @@ gst_dvdemux_loop (GstPad * pad)
       goto parse_header_error;
 
     /* after parsing the header we know the length of the data */
-    dvdemux->PAL = dv_system_50_fields (dvdemux->decoder);
-    dvdemux->frame_len = (dvdemux->PAL ? PAL_BUFFER : NTSC_BUFFER);
-    if (dvdemux->PAL) {
+    dvdemux->frame_len = dvdemux->decoder->frame_size;
+    if (dvdemux->decoder->system == e_dv_system_625_50) {
       dvdemux->framerate_numerator = PAL_FRAMERATE_NUMERATOR;
       dvdemux->framerate_denominator = PAL_FRAMERATE_DENOMINATOR;
     } else {
