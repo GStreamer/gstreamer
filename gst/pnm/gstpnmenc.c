@@ -51,7 +51,7 @@ static GstStaticPadTemplate sink_pad_template =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; "
         "video/x-raw-gray, width =" GST_VIDEO_SIZE_RANGE ", "
         "height =" GST_VIDEO_SIZE_RANGE ", framerate =" GST_VIDEO_FPS_RANGE ", "
-        "bpp= (int) 8, depth= (int) 8, endianness = (int) BIG_ENDIAN"));
+        "bpp= (int) 8, depth= (int) 8"));
 
 static GstStaticPadTemplate src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -103,7 +103,7 @@ gst_pnmenc_setcaps_func_sink (GstPad * pad, GstCaps * caps)
   s->info.fields = GST_PNM_INFO_FIELDS_MAX;
 
   /* Set caps on the source. */
-  if (!strcmp (mime, GST_VIDEO_CAPS_RGB)) {
+  if (!strcmp (mime, "video/x-raw-rgb")) {
     s->info.type = GST_PNM_TYPE_PIXMAP_RAW;
     srccaps = gst_caps_from_string (MIME_PM);
   } else if (!strcmp (mime, "video/x-raw-gray")) {

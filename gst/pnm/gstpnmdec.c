@@ -52,7 +52,7 @@ static GstStaticPadTemplate gst_pnmdec_src_pad_template =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; "
         "video/x-raw-gray, width =" GST_VIDEO_SIZE_RANGE ", "
         "height =" GST_VIDEO_SIZE_RANGE ", framerate =" GST_VIDEO_FPS_RANGE ", "
-        "bpp= (int) 8, depth= (int) 8, endianness = (int) BIG_ENDIAN"));
+        "bpp= (int) 8, depth= (int) 8"));
 
 static GstStaticPadTemplate gst_pnmdec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
