@@ -110,6 +110,7 @@
 #  include "config.h"
 #endif
 #include <gst/base/gstbasetransform.h>
+#include <glib/gstdio.h>
 #include "gstmultifilesink.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -129,6 +130,7 @@ GST_ELEMENT_DETAILS ("Multi-File Sink",
 #define DEFAULT_LOCATION "%05d"
 #define DEFAULT_INDEX 0
 #define DEFAULT_POST_MESSAGES FALSE
+#define DEFAULT_NEXT_FILE GST_MULTI_FILE_SINK_NEXT_BUFFER
 
 enum
 {
@@ -136,6 +138,7 @@ enum
   PROP_LOCATION,
   PROP_INDEX,
   PROP_POST_MESSAGES,
+  PROP_NEXT_FILE,
   PROP_LAST
 };
 
@@ -146,8 +149,29 @@ static void gst_multi_file_sink_set_property (GObject * object, guint prop_id,
 static void gst_multi_file_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_multi_file_sink_stop (GstBaseSink * sink);
 static GstFlowReturn gst_multi_file_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
+
+#define GST_TYPE_MULTI_FILE_SINK_NEXT (gst_multi_file_sink_next_get_type ())
+static GType
+gst_multi_file_sink_next_get_type (void)
+{
+  static GType multi_file_sync_next_type = 0;
+  static const GEnumValue next_types[] = {
+    {GST_MULTI_FILE_SINK_NEXT_BUFFER, "New file for each buffer", "buffer"},
+    {GST_MULTI_FILE_SINK_NEXT_DISCONT, "New file after each discontinuity",
+        "discont"},
+    {0, NULL, NULL}
+  };
+
+  if (!multi_file_sync_next_type) {
+    multi_file_sync_next_type =
+        g_enum_register_static ("GstMultiFileSinkNext", next_types);
+  }
+
+  return multi_file_sync_next_type;
+}
 
 GST_BOILERPLATE (GstMultiFileSink, gst_multi_file_sink, GstBaseSink,
     GST_TYPE_BASE_SINK);
@@ -195,10 +219,23 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
       g_param_spec_boolean ("post-messages", "Post Messages",
           "Post a message for each file with information of the buffer",
           DEFAULT_POST_MESSAGES, G_PARAM_READWRITE));
+  /**
+   * GstMultiFileSink:next-file
+   *
+   * When to start a new file.
+   *
+   * Since: 0.10.17
+   */
+  g_object_class_install_property (gobject_class, PROP_NEXT_FILE,
+      g_param_spec_enum ("next-file", "Next File",
+          "When to start a new file",
+          GST_TYPE_MULTI_FILE_SINK_NEXT, DEFAULT_NEXT_FILE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_multi_file_sink_finalize;
 
   gstbasesink_class->get_times = NULL;
+  gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_multi_file_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_file_sink_render);
 }
 
@@ -250,6 +287,9 @@ gst_multi_file_sink_set_property (GObject * object, guint prop_id,
     case PROP_POST_MESSAGES:
       sink->post_messages = g_value_get_boolean (value);
       break;
+    case PROP_NEXT_FILE:
+      sink->next_file = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -272,33 +312,35 @@ gst_multi_file_sink_get_property (GObject * object, guint prop_id,
     case PROP_POST_MESSAGES:
       g_value_set_boolean (value, sink->post_messages);
       break;
+    case PROP_NEXT_FILE:
+      g_value_set_enum (value, sink->next_file);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
-static GstFlowReturn
-gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
+static gboolean
+gst_multi_file_sink_stop (GstBaseSink * sink)
 {
   GstMultiFileSink *multifilesink;
-  guint size;
-  guint8 *data;
-  gchar *filename;
-  gboolean ret;
-  GError *error = NULL;
-
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
 
   multifilesink = GST_MULTI_FILE_SINK (sink);
 
-  filename = g_strdup_printf (multifilesink->filename, multifilesink->index);
-  ret = g_file_set_contents (filename, (char *) data, size, &error);
+  if (multifilesink->file != NULL) {
+    fclose (multifilesink->file);
+    multifilesink->file = NULL;
+  }
 
-  if (!ret)
-    goto write_error;
+  return TRUE;
+}
 
+
+static void
+gst_multi_file_sink_post_message (GstMultiFileSink * multifilesink,
+    GstBuffer * buffer, const char *filename)
+{
   if (multifilesink->post_messages) {
     GstClockTime duration, timestamp;
     GstClockTime running_time, stream_time;
@@ -307,7 +349,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
     GstSegment *segment;
     GstFormat format;
 
-    segment = &sink->segment;
+    segment = &GST_BASE_SINK (multifilesink)->segment;
     format = segment->format;
 
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
@@ -331,9 +373,70 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
     gst_element_post_message (GST_ELEMENT_CAST (multifilesink),
         gst_message_new_element (GST_OBJECT_CAST (multifilesink), s));
   }
+}
 
-  multifilesink->index++;
-  g_free (filename);
+static GstFlowReturn
+gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
+{
+  GstMultiFileSink *multifilesink;
+  guint size;
+  guint8 *data;
+  gchar *filename;
+  gboolean ret;
+  GError *error = NULL;
+
+  size = GST_BUFFER_SIZE (buffer);
+  data = GST_BUFFER_DATA (buffer);
+
+  multifilesink = GST_MULTI_FILE_SINK (sink);
+
+  switch (multifilesink->next_file) {
+    case GST_MULTI_FILE_SINK_NEXT_BUFFER:
+      filename = g_strdup_printf (multifilesink->filename,
+          multifilesink->index);
+
+      ret = g_file_set_contents (filename, (char *) data, size, &error);
+      if (!ret)
+        goto write_error;
+
+      gst_multi_file_sink_post_message (multifilesink, buffer, filename);
+      multifilesink->index++;
+
+      g_free (filename);
+      break;
+    case GST_MULTI_FILE_SINK_NEXT_DISCONT:
+      if (GST_BUFFER_IS_DISCONT (buffer)) {
+        if (multifilesink->file) {
+          fclose (multifilesink->file);
+          multifilesink->file = NULL;
+
+          filename = g_strdup_printf (multifilesink->filename,
+              multifilesink->index);
+          gst_multi_file_sink_post_message (multifilesink, buffer, filename);
+          g_free (filename);
+          multifilesink->index++;
+        }
+      }
+
+      if (multifilesink->file == NULL) {
+        filename = g_strdup_printf (multifilesink->filename,
+            multifilesink->index);
+        multifilesink->file = g_fopen (filename, "wb");
+        g_free (filename);
+
+        if (multifilesink->file == NULL)
+          goto stdio_write_error;
+      }
+
+      ret = fwrite (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 1,
+          multifilesink->file);
+      if (ret != 1)
+        goto stdio_write_error;
+
+      break;
+    default:
+      g_assert_not_reached ();
+  }
 
   return GST_FLOW_OK;
 
@@ -357,4 +460,8 @@ write_error:
 
     return GST_FLOW_ERROR;
   }
+stdio_write_error:
+  GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
+      ("Error while writing to file."), (NULL));
+  return GST_FLOW_ERROR;
 }
