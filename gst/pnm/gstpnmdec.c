@@ -24,7 +24,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=test.pnm ! pnmdec ! ximagesink
+ * gst-launch filesrc location=test.pnm ! pnmdec ! ffmpegcolorspace ! autovideosink
  * ]| The above pipeline reads a pnm file and renders it to the screen.
  * </refsect2>
  */
@@ -48,8 +48,11 @@ static GstElementDetails pnmdec_details = GST_ELEMENT_DETAILS ("PNM converter",
 static GstElementClass *parent_class;
 
 static GstStaticPadTemplate gst_pnmdec_src_pad_template =
-GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx));
+    GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; "
+        "video/x-raw-gray, width =" GST_VIDEO_SIZE_RANGE ", "
+        "height =" GST_VIDEO_SIZE_RANGE ", framerate =" GST_VIDEO_FPS_RANGE ", "
+        "bpp= (int) 8, depth= (int) 8, endianness = (int) BIG_ENDIAN"));
 
 static GstStaticPadTemplate gst_pnmdec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -78,9 +81,21 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
         goto out;
       case GST_PNM_INFO_MNGR_RESULT_FINISHED:
         offset = s->mngr.data_offset;
-        caps = gst_pad_get_caps (src);
-        caps = gst_caps_make_writable (caps);
-        gst_caps_truncate (caps);
+        caps = gst_caps_copy (gst_pad_get_pad_template_caps (src));
+        switch (s->mngr.info.type) {
+          case GST_PNM_TYPE_BITMAP_RAW:
+          case GST_PNM_TYPE_BITMAP_ASCII:
+          case GST_PNM_TYPE_GRAYMAP_RAW:
+          case GST_PNM_TYPE_GRAYMAP_ASCII:
+            gst_caps_remove_structure (caps, 0);
+            s->size = s->mngr.info.width * s->mngr.info.height * 1;
+            break;
+          case GST_PNM_TYPE_PIXMAP_RAW:
+          case GST_PNM_TYPE_PIXMAP_ASCII:
+            gst_caps_remove_structure (caps, 1);
+            s->size = s->mngr.info.width * s->mngr.info.height * 3;
+            break;
+        }
         gst_caps_set_simple (caps,
             "width", G_TYPE_INT, s->mngr.info.width,
             "height", G_TYPE_INT, s->mngr.info.height, "framerate",
@@ -91,18 +106,6 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
           goto out;
         }
         gst_caps_unref (caps);
-        switch (s->mngr.info.type) {
-          case GST_PNM_TYPE_BITMAP_RAW:
-          case GST_PNM_TYPE_BITMAP_ASCII:
-          case GST_PNM_TYPE_GRAYMAP_RAW:
-          case GST_PNM_TYPE_GRAYMAP_ASCII:
-            s->size = s->mngr.info.width * s->mngr.info.height * 1;
-            break;
-          case GST_PNM_TYPE_PIXMAP_RAW:
-          case GST_PNM_TYPE_PIXMAP_ASCII:
-            s->size = s->mngr.info.width * s->mngr.info.height * 3;
-            break;
-        }
     }
   }
 
@@ -180,7 +183,6 @@ gst_pnmdec_init (GstPnmdec * s, GstPnmdecClass * klass)
   pad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_pnmdec_src_pad_template), "src");
-  gst_pad_use_fixed_caps (pad);
   gst_element_add_pad (GST_ELEMENT (s), pad);
 }
 

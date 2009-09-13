@@ -24,7 +24,7 @@
  * <refsect">
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc num_buffers=1 ! pnmenc ! filesink location=test.pnm
+ * gst-launch videotestsrc num_buffers=1 ! pnmenc ! ffmpegcolorspace ! "video/x-raw-gray" ! pnmenc ! filesink location=test.pnm
  * ]| The above pipeline writes a test pnm file.
  * </refsect2>
  */
@@ -47,75 +47,27 @@ GST_ELEMENT_DETAILS ("PNM converter", "Codec/Encoder/Image",
     "Lutz Mueller <lutz@users.sourceforge.net>");
 
 static GstStaticPadTemplate sink_pad_template =
-GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx));
+    GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; "
+        "video/x-raw-gray, width =" GST_VIDEO_SIZE_RANGE ", "
+        "height =" GST_VIDEO_SIZE_RANGE ", framerate =" GST_VIDEO_FPS_RANGE ", "
+        "bpp= (int) 8, depth= (int) 8, endianness = (int) BIG_ENDIAN"));
 
 static GstStaticPadTemplate src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (MIME_ALL));
 
-static gboolean
-gst_pnmenc_set_srccaps (GstPnmenc * s, GstPad * pad)
-{
-  guint i;
-  GstCaps *othercaps, *caps = NULL;
-
-  othercaps = gst_pad_peer_get_caps (pad);
-  if (!othercaps) {
-    caps = gst_caps_from_string (MIME_BM);
-    gst_pad_set_caps (pad, caps);
-    gst_caps_unref (caps);
-    return TRUE;
-  }
-
-  s->info.fields &= ~GST_PNM_INFO_FIELDS_TYPE;
-  for (i = 0; i < gst_caps_get_size (othercaps); i++) {
-    GstStructure *structure = gst_caps_get_structure (othercaps, i);
-    const gchar *mime = gst_structure_get_name (structure);
-
-    if (!strcmp (mime, MIME_BM)) {
-      s->info.type = GST_PNM_TYPE_BITMAP_RAW;
-      caps = gst_caps_from_string (MIME_BM);
-      break;
-    }
-    if (!strcmp (mime, MIME_GM)) {
-      s->info.type = GST_PNM_TYPE_GRAYMAP_RAW;
-      caps = gst_caps_from_string (MIME_GM);
-      break;
-    }
-    if (!strcmp (mime, MIME_PM) || !strcmp (mime, MIME_AM)) {
-      s->info.type = GST_PNM_TYPE_PIXMAP_RAW;
-      caps = gst_caps_from_string (MIME_PM);
-      break;
-    }
-  }
-  gst_caps_unref (othercaps);
-  if (!caps) {
-    return FALSE;
-  }
-  s->info.max = 255;
-  s->info.fields |= GST_PNM_INFO_FIELDS_TYPE | GST_PNM_INFO_FIELDS_MAX;
-
-  gst_pad_set_caps (pad, caps);
-  gst_caps_unref (caps);
-  return TRUE;
-}
-
 static GstFlowReturn
 gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstPnmenc *s = GST_PNMENC (gst_pad_get_parent (pad));
-  GstPad *src = gst_element_get_static_pad (GST_ELEMENT (s), "src");
   GstFlowReturn r;
   gchar *header;
   GstBuffer *out;
 
-  /* The caps on the source may not be set. */
-  if (!GST_PAD_CAPS (src)) {
-    if (!gst_pnmenc_set_srccaps (s, src)) {
-      r = GST_FLOW_NOT_NEGOTIATED;
-      goto out;
-    }
+  if (s->info.fields != GST_PNM_INFO_FIELDS_ALL) {
+    r = GST_FLOW_NOT_NEGOTIATED;
+    goto out;
   }
 
   /* Assumption: One buffer, one image. That is, always first write header. */
@@ -123,17 +75,16 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
       s->info.type, s->info.width, s->info.height, s->info.max);
   out = gst_buffer_new ();
   gst_buffer_set_data (out, (guchar *) header, strlen (header));
-  gst_buffer_set_caps (out, GST_PAD_CAPS (src));
-  if ((r = gst_pad_push (src, out)) != GST_FLOW_OK)
+  gst_buffer_set_caps (out, GST_PAD_CAPS (s->src));
+  if ((r = gst_pad_push (s->src, out)) != GST_FLOW_OK)
     goto out;
 
   /* Pass through the data. */
   buf = gst_buffer_make_metadata_writable (buf);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (src));
-  r = gst_pad_push (src, buf);
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (s->src));
+  r = gst_pad_push (s->src, buf);
 
 out:
-  gst_object_unref (src);
   gst_object_unref (s);
 
   return r;
@@ -144,15 +95,39 @@ gst_pnmenc_setcaps_func_sink (GstPad * pad, GstCaps * caps)
 {
   GstPnmenc *s = GST_PNMENC (gst_pad_get_parent (pad));
   GstStructure *structure = gst_caps_get_structure (caps, 0);
+  const gchar *mime = gst_structure_get_name (structure);
+  gboolean r = TRUE;
+  GstCaps *srccaps;
 
+  s->info.max = 255;
+  s->info.fields = GST_PNM_INFO_FIELDS_MAX;
+
+  /* Set caps on the source. */
+  if (!strcmp (mime, GST_VIDEO_CAPS_RGB)) {
+    s->info.type = GST_PNM_TYPE_PIXMAP_RAW;
+    srccaps = gst_caps_from_string (MIME_PM);
+  } else if (!strcmp (mime, "video/x-raw-gray")) {
+    s->info.type = GST_PNM_TYPE_GRAYMAP_RAW;
+    srccaps = gst_caps_from_string (MIME_GM);
+  } else {
+    r = FALSE;
+    goto out;
+  }
+  gst_pad_set_caps (s->src, srccaps);
+  gst_caps_unref (srccaps);
+  s->info.fields |= GST_PNM_INFO_FIELDS_TYPE;
+
+  /* Remember width and height of the input data. */
   if (!gst_structure_get_int (structure, "width", (int *) &s->info.width) ||
-      !gst_structure_get_int (structure, "height", (int *) &s->info.height))
-    return FALSE;
-  s->info.fields = GST_PNM_INFO_FIELDS_WIDTH | GST_PNM_INFO_FIELDS_HEIGHT;
+      !gst_structure_get_int (structure, "height", (int *) &s->info.height)) {
+    r = FALSE;
+    goto out;
+  }
+  s->info.fields |= GST_PNM_INFO_FIELDS_WIDTH | GST_PNM_INFO_FIELDS_HEIGHT;
 
+out:
   gst_object_unref (s);
-
-  return TRUE;
+  return r;
 }
 
 static void
@@ -168,11 +143,10 @@ gst_pnmenc_init (GstPnmenc * s, GstPnmencClass * klass)
   gst_pad_use_fixed_caps (pad);
   gst_element_add_pad (GST_ELEMENT (s), pad);
 
-  pad =
+  s->src =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&src_pad_template), "src");
-  gst_pad_use_fixed_caps (pad);
-  gst_element_add_pad (GST_ELEMENT (s), pad);
+  gst_element_add_pad (GST_ELEMENT (s), s->src);
 }
 
 static void

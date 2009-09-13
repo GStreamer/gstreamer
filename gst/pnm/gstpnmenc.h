@@ -39,6 +39,8 @@ struct _GstPnmenc
   GstElement element;
 
   GstPnmInfo info;
+
+  GstPad *src;
 };
 
 struct _GstPnmencClass
