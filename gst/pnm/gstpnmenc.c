@@ -80,12 +80,21 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
     goto out;
 
   /* Need to convert from GStreamer rowstride to PNM rowstride */
-  if (s->info.type == GST_PNM_TYPE_PIXMAP_RAW && s->info.width % 4 != 0) {
-    guint i_rowstride = GST_ROUND_UP_4 (s->info.width * 3);
-    guint o_rowstride = s->info.width * 3;
-    GstBuffer *obuf = gst_buffer_new_and_alloc (o_rowstride * s->info.height);
+  if (s->info.width % 4 != 0) {
+    guint i_rowstride;
+    guint o_rowstride;
+    GstBuffer *obuf;
     guint i;
 
+    if (s->info.type == GST_PNM_TYPE_PIXMAP_RAW) {
+      o_rowstride = 3 * s->info.width;
+      i_rowstride = GST_ROUND_UP_4 (o_rowstride);
+    } else {
+      o_rowstride = s->info.width;
+      i_rowstride = GST_ROUND_UP_4 (o_rowstride);
+    }
+
+    obuf = gst_buffer_new_and_alloc (o_rowstride * s->info.height);
     for (i = 0; i < s->info.height; i++)
       memcpy (GST_BUFFER_DATA (obuf) + o_rowstride * i,
           GST_BUFFER_DATA (buf) + i_rowstride * i, o_rowstride);

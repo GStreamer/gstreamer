@@ -62,14 +62,22 @@ static GstFlowReturn
 gst_pnmdec_push (GstPnmdec * s, GstPad * src, GstBuffer * buf)
 {
   /* Need to convert from PNM rowstride to GStreamer rowstride */
-  if ((s->mngr.info.type == GST_PNM_TYPE_PIXMAP_ASCII ||
-          s->mngr.info.type == GST_PNM_TYPE_PIXMAP_RAW)
-      && s->mngr.info.width % 4 != 0) {
-    guint i_rowstride = 3 * s->mngr.info.width;
-    guint o_rowstride = GST_ROUND_UP_4 (3 * s->mngr.info.width);
-    GstBuffer *obuf =
-        gst_buffer_new_and_alloc (o_rowstride * s->mngr.info.height);
+  if (s->mngr.info.width % 4 != 0) {
+    guint i_rowstride;
+    guint o_rowstride;
+    GstBuffer *obuf;
     guint i;
+
+    if (s->mngr.info.type == GST_PNM_TYPE_PIXMAP_RAW ||
+        s->mngr.info.type == GST_PNM_TYPE_PIXMAP_ASCII) {
+      i_rowstride = 3 * s->mngr.info.width;
+      o_rowstride = GST_ROUND_UP_4 (i_rowstride);
+    } else {
+      i_rowstride = s->mngr.info.width;
+      o_rowstride = GST_ROUND_UP_4 (i_rowstride);
+    }
+
+    obuf = gst_buffer_new_and_alloc (o_rowstride * s->mngr.info.height);
 
     gst_buffer_copy_metadata (obuf, buf, GST_BUFFER_COPY_ALL);
 
