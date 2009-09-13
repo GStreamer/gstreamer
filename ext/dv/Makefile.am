@@ -11,3 +11,10 @@ libgstdv_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = gstdvdemux.h gstdvdec.h
 
 EXTRA_DIST = NOTES
+
+noinst_PROGRAMS = smpte_test
+
+smpte_test_SOURCES = smpte_test.c gstsmptetimecode.c
+smpte_test_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(LIBDV_CFLAGS)
+smpte_test_LDADD = $(GST_BASE_LIBS) $(GST_LIBS)
+
