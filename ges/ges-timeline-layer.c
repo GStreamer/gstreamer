@@ -63,6 +63,13 @@ ges_timeline_layer_set_property (GObject * object, guint property_id,
 static void
 ges_timeline_layer_dispose (GObject * object)
 {
+  GESTimelineLayer *layer = GES_TIMELINE_LAYER (object);
+
+  if (layer->objects_start) {
+    g_slist_foreach (layer->objects_start, (GFunc) g_object_unref, NULL);
+    g_slist_free (layer->objects_start);
+    layer->objects_start = NULL;
+  }
   G_OBJECT_CLASS (ges_timeline_layer_parent_class)->dispose (object);
 }
 
@@ -133,6 +140,18 @@ objects_start_compare (GESTimelineObject * a, GESTimelineObject * b)
   return 0;
 }
 
+/**
+ * ges_timeline_layer_add_object:
+ * @layer: a #GESTimelineLayer
+ * @object: the #GESTimelineObject to add.
+ *
+ * Adds the object to the layer. The layer will steal a reference to the
+ * provided object.
+ *
+ * Returns: TRUE if the object was properly added to the layer, or FALSE
+ * if the @layer refused to add the object.
+ */
+
 gboolean
 ges_timeline_layer_add_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
@@ -146,7 +165,7 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
 
   /* Take a reference to the object and store it stored by start/priority */
   layer->objects_start =
-      g_slist_insert_sorted (layer->objects_start, g_object_ref (object),
+      g_slist_insert_sorted (layer->objects_start, object,
       (GCompareFunc) objects_start_compare);
 
   /* Inform the object it's now in this layer */
@@ -158,6 +177,18 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
   return TRUE;
 }
 
+/**
+ * ges_timeline_layer_remove_object:
+ * @layer: a #GESTimelineLayer
+ * @object: the #GESTimelineObject to remove
+ *
+ * Removes the given @object from the @layer. The reference stolen by the @layer
+ * when the object was added will be removed. If you wish to use the object after
+ * this function, make sure you take an extra reference to the object before
+ * calling this function.
+ *
+ * Returns: TRUE if the object was properly remove, else FALSE.
+ */
 gboolean
 ges_timeline_layer_remove_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
