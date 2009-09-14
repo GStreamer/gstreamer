@@ -61,7 +61,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed. This
  * message is used internally and never forwarded to the application.
  * @GST_MESSAGE_STREAM_STATUS: status about a stream, emitted when it starts,
- *                             stops, errors, etc.. Not implemented yet.
+ *                             stops, errors, etc..
  * @GST_MESSAGE_APPLICATION: message posted by the application, possibly
  *                           via an application-specific element.
  * @GST_MESSAGE_ELEMENT: element-specific message, see the specific element's
