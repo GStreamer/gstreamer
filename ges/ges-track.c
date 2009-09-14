@@ -138,10 +138,29 @@ ges_track_class_init (GESTrackClass * klass)
   object_class->dispose = ges_track_dispose;
   object_class->finalize = ges_track_finalize;
 
+  /**
+   * GESTrack:caps
+   *
+   * Caps used to filter/choose the output stream. This is generally set to
+   * a generic set of caps like 'video/x-raw-rgb;video/x-raw-yuv' for raw video.
+   *
+   * Default value: #GST_CAPS_ANY.
+   */
   g_object_class_install_property (object_class, ARG_CAPS,
       g_param_spec_boxed ("caps", "Caps",
           "Caps used to filter/choose the output stream",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  /**
+   * GESTrack:track-type
+   *
+   * Type of stream the track outputs. This is used when creating the #GESTrack
+   * to specify in generic terms what type of content will be outputted.
+   *
+   * It also serves as a 'fast' way to check what type of data will be outputted
+   * from the #GESTrack without having to actually check the #GESTrack's caps
+   * property.
+   */
   g_object_class_install_property (object_class, ARG_TYPE,
       g_param_spec_enum ("track-type", "TrackType",
           "Type of stream the track outputs",
@@ -163,12 +182,29 @@ ges_track_init (GESTrack * self)
     GST_ERROR ("Couldn't add composition to bin !");
 }
 
+/**
+ * ges_track_new:
+ * @type: The type of track
+ * @caps: The caps to restrict the output of the track to.
+ *
+ * Creates a new #GESTrack with the given @type and @caps.
+ *
+ * Returns: A new #GESTrack.
+ */
 GESTrack *
 ges_track_new (GESTrackType type, GstCaps * caps)
 {
   return g_object_new (GES_TYPE_TRACK, "caps", caps, "track-type", type, NULL);
 }
 
+/**
+ * ges_track_video_raw_new:
+ *
+ * Creates a new #GESTrack of type #GES_TRACK_TYPE_VIDEO and with generic
+ * raw video caps ("video/x-raw-yuv;video/x-raw-rgb");
+ *
+ * Returns: A new #GESTrack.
+ */
 GESTrack *
 ges_track_video_raw_new ()
 {
@@ -181,6 +217,14 @@ ges_track_video_raw_new ()
   return track;
 }
 
+/**
+ * ges_track_audio_raw_new:
+ *
+ * Creates a new #GESTrack of type #GES_TRACK_TYPE_AUDIO and with generic
+ * raw audio caps ("audio/x-raw-int;audio/x-raw-float");
+ *
+ * Returns: A new #GESTrack.
+ */
 GESTrack *
 ges_track_audio_raw_new ()
 {
@@ -201,6 +245,13 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
   track->timeline = timeline;
 }
 
+/**
+ * ges_track_set_caps:
+ * @track: a #GESTrack
+ * @caps: the #GstCaps to set
+ *
+ * Sets the given @caps on the track.
+ */
 void
 ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 {
@@ -215,6 +266,16 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
   /* FIXME : update all trackobjects ? */
 }
 
+/**
+ * ges_track_add_object:
+ * @track: a #GESTrack
+ * @object: the #GESTrackObject to add
+ *
+ * Adds the given object to the track.
+ *
+ * Returns: #TRUE if the object was properly added. #FALSE if the track does not
+ * want to accept the object.
+ */
 gboolean
 ges_track_add_object (GESTrack * track, GESTrackObject * object)
 {
@@ -247,6 +308,16 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
   return TRUE;
 }
 
+/**
+ * ges_track_remove_object:
+ * @track: a #GESTrack
+ * @object: the #GESTrackObject to remove
+ *
+ * Removes the object from the track.
+ *
+ * Returns: #TRUE if the object was removed, else #FALSE if the track
+ * could not remove the object (like if it didn't belong to the track).
+ */
 gboolean
 ges_track_remove_object (GESTrack * track, GESTrackObject * object)
 {
