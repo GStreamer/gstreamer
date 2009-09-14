@@ -108,9 +108,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
-#ifdef HAVE_FORK
-#include <sys/wait.h>
-#endif /* HAVE_FORK */
 #ifdef HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
 #endif
@@ -136,11 +133,13 @@ static gboolean gst_initialized = FALSE;
 static gboolean gst_deinitialized = FALSE;
 
 #ifdef G_OS_WIN32
-static HMODULE gst_dll_handle = NULL;
+HMODULE _priv_gst_dll_handle = NULL;
 #endif
 
 #ifndef GST_DISABLE_REGISTRY
-static GList *plugin_paths = NULL;      /* for delayed processing in post_init */
+GList *_priv_gst_plugin_paths = NULL;   /* for delayed processing in post_init */
+
+extern gboolean _priv_gst_disable_registry_update;
 #endif
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -148,22 +147,10 @@ extern const gchar *priv_gst_dump_dot_dir;
 #endif
 
 /* defaults */
-#if defined(HAVE_FORK) && !defined(GST_HAVE_UNSAFE_FORK)
-#define DEFAULT_FORK TRUE
-#else
-#define DEFAULT_FORK FALSE
-#endif /* HAVE_FORK */
 
 /* set to TRUE when segfaults need to be left as is */
 static gboolean _gst_disable_segtrap = FALSE;
 
-/* control the behaviour of registry rebuild */
-static gboolean _gst_enable_registry_fork = DEFAULT_FORK;
-
-/*set to TRUE when registry needn't to be updated */
-static gboolean _gst_disable_registry_update = FALSE;
-
-static void load_plugin_func (gpointer data, gpointer user_data);
 static gboolean init_pre (GOptionContext * context, GOptionGroup * group,
     gpointer data, GError ** error);
 static gboolean init_post (GOptionContext * context, GOptionGroup * group,
@@ -173,7 +160,7 @@ static gboolean parse_goption_arg (const gchar * s_opt,
     const gchar * arg, gpointer data, GError ** err);
 #endif
 
-static GSList *preload_plugins = NULL;
+GSList *_priv_gst_preload_plugins = NULL;
 
 const gchar g_log_domain_gstreamer[] = "GStreamer";
 
@@ -293,7 +280,7 @@ BOOL WINAPI
 DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
   if (fdwReason == DLL_PROCESS_ATTACH)
-    gst_dll_handle = (HMODULE) hinstDLL;
+    _priv_gst_dll_handle = (HMODULE) hinstDLL;
   return TRUE;
 }
 
@@ -372,7 +359,7 @@ gst_init_get_option_group (void)
     {"gst-disable-registry-fork", 0, G_OPTION_FLAG_NO_ARG,
           G_OPTION_ARG_CALLBACK,
           (gpointer) parse_goption_arg,
-          N_("Disable the use of fork() while scanning the registry"),
+          N_("Disable spawning a helper process while scanning the registry"),
         NULL},
     {NULL}
   };
@@ -509,7 +496,8 @@ static void
 add_path_func (gpointer data, gpointer user_data)
 {
   GST_INFO ("Adding plugin path: \"%s\", will scan later", (gchar *) data);
-  plugin_paths = g_list_append (plugin_paths, g_strdup (data));
+  _priv_gst_plugin_paths =
+      g_list_append (_priv_gst_plugin_paths, g_strdup (data));
 }
 #endif
 
@@ -517,35 +505,10 @@ add_path_func (gpointer data, gpointer user_data)
 static void
 prepare_for_load_plugin_func (gpointer data, gpointer user_data)
 {
-  preload_plugins = g_slist_prepend (preload_plugins, g_strdup (data));
+  _priv_gst_preload_plugins =
+      g_slist_prepend (_priv_gst_preload_plugins, g_strdup (data));
 }
 #endif
-
-static void
-load_plugin_func (gpointer data, gpointer user_data)
-{
-  GstPlugin *plugin;
-  const gchar *filename;
-  GError *err = NULL;
-
-  filename = (const gchar *) data;
-
-  plugin = gst_plugin_load_file (filename, &err);
-
-  if (plugin) {
-    GST_INFO ("Loaded plugin: \"%s\"", filename);
-
-    gst_default_registry_add_plugin (plugin);
-  } else {
-    if (err) {
-      /* Report error to user, and free error */
-      GST_ERROR ("Failed to load plugin: %s", err->message);
-      g_error_free (err);
-    } else {
-      GST_WARNING ("Failed to load plugin: \"%s\"", filename);
-    }
-  }
-}
 
 #ifndef GST_DISABLE_OPTION_PARSING
 static void
@@ -655,321 +618,6 @@ gst_register_core_elements (GstPlugin * plugin)
 
   return TRUE;
 }
-
-#ifndef GST_DISABLE_REGISTRY
-
-typedef enum
-{
-  REGISTRY_SCAN_AND_UPDATE_FAILURE = 0,
-  REGISTRY_SCAN_AND_UPDATE_SUCCESS_NOT_CHANGED,
-  REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED
-} GstRegistryScanAndUpdateResult;
-
-/*
- * scan_and_update_registry:
- * @default_registry: the #GstRegistry
- * @registry_file: registry filename
- * @write_changes: write registry if it has changed?
- *
- * Scans for registry changes and eventually updates the registry cache. 
- *
- * Return: %REGISTRY_SCAN_AND_UPDATE_FAILURE if the registry could not scanned
- *         or updated, %REGISTRY_SCAN_AND_UPDATE_SUCCESS_NOT_CHANGED if the
- *         registry is clean and %REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED if
- *         it has been updated and the cache needs to be re-read.
- */
-static GstRegistryScanAndUpdateResult
-scan_and_update_registry (GstRegistry * default_registry,
-    const gchar * registry_file, gboolean write_changes, GError ** error)
-{
-  const gchar *plugin_path;
-  gboolean changed = FALSE;
-  GList *l;
-
-  GST_INFO ("Validating registry cache: %s", registry_file);
-  /* It sounds tempting to just compare the mtime of directories with the mtime
-   * of the registry cache, but it does not work. It would not catch updated
-   * plugins, which might bring more or less features.
-   */
-
-  /* scan paths specified via --gst-plugin-path */
-  GST_DEBUG ("scanning paths added via --gst-plugin-path");
-  for (l = plugin_paths; l != NULL; l = l->next) {
-    GST_INFO ("Scanning plugin path: \"%s\"", (gchar *) l->data);
-    changed |= gst_registry_scan_path (default_registry, (gchar *) l->data);
-  }
-  /* keep plugin_paths around in case a re-scan is forced later on */
-
-  /* GST_PLUGIN_PATH specifies a list of directories to scan for
-   * additional plugins.  These take precedence over the system plugins */
-  plugin_path = g_getenv ("GST_PLUGIN_PATH");
-  if (plugin_path) {
-    char **list;
-    int i;
-
-    GST_DEBUG ("GST_PLUGIN_PATH set to %s", plugin_path);
-    list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
-    for (i = 0; list[i]; i++) {
-      changed |= gst_registry_scan_path (default_registry, list[i]);
-    }
-    g_strfreev (list);
-  } else {
-    GST_DEBUG ("GST_PLUGIN_PATH not set");
-  }
-
-  /* GST_PLUGIN_SYSTEM_PATH specifies a list of plugins that are always
-   * loaded by default.  If not set, this defaults to the system-installed
-   * path, and the plugins installed in the user's home directory */
-  plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH");
-  if (plugin_path == NULL) {
-    char *home_plugins;
-
-    GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH not set");
-
-    /* plugins in the user's home directory take precedence over
-     * system-installed ones */
-    home_plugins = g_build_filename (g_get_home_dir (),
-        ".gstreamer-" GST_MAJORMINOR, "plugins", NULL);
-    GST_DEBUG ("scanning home plugins %s", home_plugins);
-    changed |= gst_registry_scan_path (default_registry, home_plugins);
-    g_free (home_plugins);
-
-    /* add the main (installed) library path */
-    GST_DEBUG ("scanning main plugins %s", PLUGINDIR);
-    changed |= gst_registry_scan_path (default_registry, PLUGINDIR);
-
-#ifdef G_OS_WIN32
-    {
-      char *base_dir;
-      char *dir;
-
-      base_dir =
-          g_win32_get_package_installation_directory_of_module (gst_dll_handle);
-
-      dir = g_build_filename (base_dir, "lib", "gstreamer-0.10", NULL);
-      GST_DEBUG ("scanning DLL dir %s", dir);
-
-      changed |= gst_registry_scan_path (default_registry, dir);
-
-      g_free (dir);
-      g_free (base_dir);
-    }
-#endif
-  } else {
-    gchar **list;
-    gint i;
-
-    GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH set to %s", plugin_path);
-    list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
-    for (i = 0; list[i]; i++) {
-      changed |= gst_registry_scan_path (default_registry, list[i]);
-    }
-    g_strfreev (list);
-  }
-
-  /* Remove cached plugins so stale info is cleared. */
-  changed |= _priv_gst_registry_remove_cache_plugins (default_registry);
-
-  if (!changed) {
-    GST_INFO ("Registry cache has not changed");
-    return REGISTRY_SCAN_AND_UPDATE_SUCCESS_NOT_CHANGED;
-  }
-
-  if (!write_changes) {
-    GST_INFO ("Registry cache changed, but writing is disabled. Not writing.");
-    return REGISTRY_SCAN_AND_UPDATE_FAILURE;
-  }
-
-  GST_INFO ("Registry cache changed. Writing new registry cache");
-  if (!gst_registry_binary_write_cache (default_registry, registry_file)) {
-    g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-        _("Error writing registry cache to %s: %s"),
-        registry_file, g_strerror (errno));
-    return REGISTRY_SCAN_AND_UPDATE_FAILURE;
-  }
-
-  GST_INFO ("Registry cache written successfully");
-  return REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED;
-}
-
-static gboolean
-ensure_current_registry_nonforking (GstRegistry * default_registry,
-    const gchar * registry_file, GError ** error)
-{
-  /* fork() not available */
-  GST_DEBUG ("Updating registry cache in-process");
-  scan_and_update_registry (default_registry, registry_file, TRUE, error);
-  return TRUE;
-}
-
-/* when forking is not available this function always does nothing but return
- * TRUE immediatly */
-static gboolean
-ensure_current_registry_forking (GstRegistry * default_registry,
-    const gchar * registry_file, GError ** error)
-{
-#ifdef HAVE_FORK
-  pid_t pid;
-  int pfd[2];
-  int ret;
-
-  /* We fork here, and let the child read and possibly rebuild the registry.
-   * After that, the parent will re-read the freshly generated registry. */
-  GST_DEBUG ("forking to update registry");
-
-  if (pipe (pfd) == -1) {
-    g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-        _("Error re-scanning registry %s: %s"),
-        ", could not create pipes. Error", g_strerror (errno));
-    return FALSE;
-  }
-
-  pid = fork ();
-  if (pid == -1) {
-    GST_ERROR ("Failed to fork()");
-    g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-        _("Error re-scanning registry %s: %s"),
-        ", failed to fork. Error", g_strerror (errno));
-    return FALSE;
-  }
-
-  if (pid == 0) {
-    gint result_code;
-
-    /* this is the child. Close the read pipe */
-    (void) close (pfd[0]);
-
-    GST_DEBUG ("child reading registry cache");
-    result_code =
-        scan_and_update_registry (default_registry, registry_file, TRUE, NULL);
-
-    /* need to use _exit, so that any exit handlers registered don't
-     * bring down the main program */
-    GST_DEBUG ("child exiting: %d", result_code);
-
-    /* make valgrind happy (yes, you can call it insane) */
-    g_free ((char *) registry_file);
-
-    /* write a result byte to the pipe */
-    do {
-      ret = write (pfd[1], &result_code, sizeof (result_code));
-    } while (ret == -1 && errno == EINTR);
-    /* if ret == -1 now, we could not write to pipe, probably 
-     * means parent has exited before us */
-    (void) close (pfd[1]);
-
-    _exit (0);
-  } else {
-    gint result_code;
-
-    /* parent. Close write pipe */
-    (void) close (pfd[1]);
-
-    /* Wait for result from the pipe */
-    GST_DEBUG ("Waiting for data from child");
-    do {
-      ret = read (pfd[0], &result_code, sizeof (result_code));
-    } while (ret == -1 && errno == EINTR);
-
-    if (ret == -1) {
-      g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-          _("Error re-scanning registry %s: %s"),
-          ", read returned error", g_strerror (errno));
-      close (pfd[0]);
-      return FALSE;
-    }
-    (void) close (pfd[0]);
-
-    /* Wait to ensure the child is reaped, but ignore the result */
-    GST_DEBUG ("parent waiting on child");
-    waitpid (pid, NULL, 0);
-    GST_DEBUG ("parent done waiting on child");
-
-    if (ret == 0) {
-      GST_ERROR ("child did not exit normally, terminated by signal");
-      g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-          _("Error re-scanning registry %s"), ", child terminated by signal");
-      return FALSE;
-    }
-
-    if (result_code == REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED) {
-      GST_DEBUG ("Child succeeded. Parent reading registry cache");
-      _priv_gst_registry_remove_cache_plugins (default_registry);
-      gst_registry_binary_read_cache (default_registry, registry_file);
-    } else if (result_code == REGISTRY_SCAN_AND_UPDATE_FAILURE) {
-      GST_DEBUG ("Child failed. Parent re-scanning registry, ignoring errors.");
-      scan_and_update_registry (default_registry, registry_file, FALSE, NULL);
-    }
-  }
-#endif /* HAVE_FORK */
-  return TRUE;
-}
-
-static gboolean
-ensure_current_registry (GError ** error)
-{
-  gchar *registry_file;
-  GstRegistry *default_registry;
-  gboolean ret = TRUE;
-  gboolean do_fork;
-  gboolean do_update;
-  gboolean have_cache;
-
-  default_registry = gst_registry_get_default ();
-  registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
-  if (registry_file == NULL) {
-    registry_file = g_build_filename (g_get_home_dir (),
-        ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".bin", NULL);
-  }
-
-  GST_INFO ("reading registry cache: %s", registry_file);
-  have_cache = gst_registry_binary_read_cache (default_registry, registry_file);
-
-  if (have_cache) {
-    do_update = !_gst_disable_registry_update;
-    if (do_update) {
-      const gchar *update_env;
-
-      if ((update_env = g_getenv ("GST_REGISTRY_UPDATE"))) {
-        /* do update for any value different from "no" */
-        do_update = (strcmp (update_env, "no") != 0);
-      }
-    }
-  } else {
-    do_update = TRUE;
-  }
-
-  if (do_update) {
-    /* first see if forking is enabled */
-    do_fork = _gst_enable_registry_fork;
-    if (do_fork) {
-      const gchar *fork_env;
-
-      /* forking enabled, see if it is disabled with an env var */
-      if ((fork_env = g_getenv ("GST_REGISTRY_FORK"))) {
-        /* fork enabled for any value different from "no" */
-        do_fork = strcmp (fork_env, "no") != 0;
-      }
-    }
-
-    /* now check registry with or without forking */
-    if (do_fork) {
-      GST_DEBUG ("forking for registry rebuild");
-      ret = ensure_current_registry_forking (default_registry, registry_file,
-          error);
-    } else {
-      GST_DEBUG ("requested not to fork for registry rebuild");
-      ret = ensure_current_registry_nonforking (default_registry, registry_file,
-          error);
-    }
-  }
-
-  g_free (registry_file);
-  GST_INFO ("registry reading and updating done, result = %d", ret);
-
-  return ret;
-}
-#endif /* GST_DISABLE_REGISTRY */
 
 /*
  * this bit handles:
@@ -1112,14 +760,8 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
    */
   gst_initialized = TRUE;
 
-#ifndef GST_DISABLE_REGISTRY
-  if (!ensure_current_registry (error))
+  if (!gst_update_registry ())
     return FALSE;
-#endif /* GST_DISABLE_REGISTRY */
-
-  /* if we need to preload plugins, do so now */
-  g_slist_foreach (preload_plugins, load_plugin_func, NULL);
-  /* keep preload_plugins around in case a re-scan is forced later on */
 
 #ifndef GST_DISABLE_TRACE
   _gst_trace_on = 0;
@@ -1268,10 +910,12 @@ parse_one_option (gint opt, const gchar * arg, GError ** err)
       _gst_disable_segtrap = TRUE;
       break;
     case ARG_REGISTRY_UPDATE_DISABLE:
-      _gst_disable_registry_update = TRUE;
+#ifndef GST_DISABLE_REGISTRY
+      _priv_gst_disable_registry_update = TRUE;
+#endif
       break;
     case ARG_REGISTRY_FORK_DISABLE:
-      _gst_enable_registry_fork = FALSE;
+      gst_registry_fork_set_enabled (FALSE);
       break;
     default:
       g_set_error (err, G_OPTION_ERROR, G_OPTION_ERROR_UNKNOWN_OPTION,
@@ -1324,8 +968,6 @@ parse_goption_arg (const gchar * opt,
 }
 #endif
 
-extern GstRegistry *_gst_registry_default;
-
 /**
  * gst_deinit:
  *
@@ -1350,14 +992,14 @@ gst_deinit (void)
     return;
   }
 
-  g_slist_foreach (preload_plugins, (GFunc) g_free, NULL);
-  g_slist_free (preload_plugins);
-  preload_plugins = NULL;
+  g_slist_foreach (_priv_gst_preload_plugins, (GFunc) g_free, NULL);
+  g_slist_free (_priv_gst_preload_plugins);
+  _priv_gst_preload_plugins = NULL;
 
 #ifndef GST_DISABLE_REGISTRY
-  g_list_foreach (plugin_paths, (GFunc) g_free, NULL);
-  g_list_free (plugin_paths);
-  plugin_paths = NULL;
+  g_list_foreach (_priv_gst_plugin_paths, (GFunc) g_free, NULL);
+  g_list_free (_priv_gst_plugin_paths);
+  _priv_gst_plugin_paths = NULL;
 #endif
 
   clock = gst_system_clock_obtain ();
@@ -1530,96 +1172,4 @@ void
 gst_segtrap_set_enabled (gboolean enabled)
 {
   _gst_disable_segtrap = !enabled;
-}
-
-/**
- * gst_registry_fork_is_enabled:
- *
- * By default GStreamer will perform a fork() when scanning and rebuilding the
- * registry file. 
- *
- * Applications might want to disable this behaviour with the
- * gst_registry_fork_set_enabled() function. 
- *
- * Returns: %TRUE if GStreamer will use fork() when rebuilding the registry. On
- * platforms without fork(), this function will always return %FALSE.
- *
- * Since: 0.10.10
- */
-gboolean
-gst_registry_fork_is_enabled (void)
-{
-  return _gst_enable_registry_fork;
-}
-
-/**
- * gst_registry_fork_set_enabled:
- * @enabled: whether rebuilding the registry may fork
- *
- * Applications might want to disable/enable the usage of fork() when rebuilding
- * the registry. See gst_registry_fork_is_enabled() for more information.
- *
- * On platforms without fork(), this function will have no effect on the return
- * value of gst_registry_fork_is_enabled().
- *
- * Since: 0.10.10
- */
-void
-gst_registry_fork_set_enabled (gboolean enabled)
-{
-#ifdef HAVE_FORK
-  _gst_enable_registry_fork = enabled;
-#endif /* HAVE_FORK */
-}
-
-
-/**
- * gst_update_registry:
- *
- * Forces GStreamer to re-scan its plugin paths and update the default
- * plugin registry.
- *
- * Applications will almost never need to call this function, it is only
- * useful if the application knows new plugins have been installed (or old
- * ones removed) since the start of the application (or, to be precise, the
- * first call to gst_init()) and the application wants to make use of any
- * newly-installed plugins without restarting the application.
- *
- * Applications should assume that the registry update is neither atomic nor
- * thread-safe and should therefore not have any dynamic pipelines running
- * (including the playbin and decodebin elements) and should also not create
- * any elements or access the GStreamer registry while the update is in
- * progress.
- *
- * Note that this function may block for a significant amount of time.
- *
- * Returns: %TRUE if the registry has been updated successfully (does not
- *          imply that there were changes), otherwise %FALSE.
- *
- * Since: 0.10.12
- */
-gboolean
-gst_update_registry (void)
-{
-  gboolean res = FALSE;
-
-#ifndef GST_DISABLE_REGISTRY
-  GError *err = NULL;
-
-  res = ensure_current_registry (&err);
-  if (err) {
-    GST_WARNING ("registry update failed: %s", err->message);
-    g_error_free (err);
-  } else {
-    GST_LOG ("registry update succeeded");
-  }
-
-  if (preload_plugins) {
-    g_slist_foreach (preload_plugins, load_plugin_func, NULL);
-  }
-#else
-  GST_WARNING ("registry update failed: %s", "registry disabled");
-#endif /* GST_DISABLE_REGISTRY */
-
-  return res;
 }
