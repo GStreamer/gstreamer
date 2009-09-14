@@ -559,6 +559,35 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
       info->sink_usec, sink_usec);
 }
 
+#if HAVE_PULSE_0_9_15
+static void
+gst_pulsering_stream_event_cb (pa_stream * p, const char *name,
+    pa_proplist * pl, void *userdata)
+{
+  GstPulseSink *psink;
+  GstPulseRingBuffer *pbuf;
+
+  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+
+  if (!strcmp (name, PA_STREAM_EVENT_REQUEST_CORK)) {
+    /* the stream wants to PAUSE, post a message for the application. */
+    GST_DEBUG_OBJECT (psink, "got request for CORK");
+    gst_element_post_message (GST_ELEMENT_CAST (psink),
+        gst_message_new_request_state (GST_OBJECT_CAST (psink),
+            GST_STATE_PAUSED));
+
+  } else if (!strcmp (name, PA_STREAM_EVENT_REQUEST_UNCORK)) {
+    GST_DEBUG_OBJECT (psink, "got request for UNCORK");
+    gst_element_post_message (GST_ELEMENT_CAST (psink),
+        gst_message_new_request_state (GST_OBJECT_CAST (psink),
+            GST_STATE_PLAYING));
+  } else {
+    GST_DEBUG_OBJECT (psink, "got unknown event %s", name);
+  }
+}
+#endif
+
 /* This method should create a new stream of the given @spec. No playback should
  * start yet so we start in the corked state. */
 static gboolean
@@ -623,6 +652,10 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       gst_pulsering_stream_overflow_cb, pbuf);
   pa_stream_set_latency_update_callback (pbuf->stream,
       gst_pulsering_stream_latency_cb, pbuf);
+#if HAVE_PULSE_0_9_15
+  pa_stream_set_event_callback (pbuf->stream,
+      gst_pulsering_stream_event_cb, pbuf);
+#endif
 
   /* buffering requirements. When setting prebuf to 0, the stream will not pause
    * when we cause an underrun, which causes time to continue. */
