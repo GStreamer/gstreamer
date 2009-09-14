@@ -43,11 +43,17 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE, GESTimelineClass))
 
+/**
+ * GESTimeline:
+ * @tracks: a list of #GESTrack
+ */
 struct _GESTimeline {
   GstBin parent;
 
-  GList *layers;	/* TimelineLayer(s) ordered by priority */
-  GList *tracks;	/* TimelineTrack(s) */
+  /*< private >*/
+  GList *layers; /* A list of GESTimelineLayer sorted by priority */
+  /*< public >*/
+  GList *tracks;
 };
 
 struct _GESTimelineClass {
