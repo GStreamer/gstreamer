@@ -119,6 +119,11 @@ ges_track_dispose (GObject * object)
     track->composition = NULL;
   }
 
+  if (track->caps) {
+    gst_caps_unref (track->caps);
+    track->caps = NULL;
+  }
+
   G_OBJECT_CLASS (ges_track_parent_class)->dispose (object);
 }
 
@@ -189,12 +194,20 @@ ges_track_init (GESTrack * self)
  *
  * Creates a new #GESTrack with the given @type and @caps.
  *
+ * The newly created track will steal a reference to the caps. If you wish to 
+ * use those caps elsewhere, you will have to take an extra reference.
+ *
  * Returns: A new #GESTrack.
  */
 GESTrack *
 ges_track_new (GESTrackType type, GstCaps * caps)
 {
-  return g_object_new (GES_TYPE_TRACK, "caps", caps, "track-type", type, NULL);
+  GESTrack *track;
+
+  track = g_object_new (GES_TYPE_TRACK, "caps", caps, "track-type", type, NULL);
+  gst_caps_unref (caps);
+
+  return track;
 }
 
 /**
@@ -212,7 +225,6 @@ ges_track_video_raw_new ()
   GstCaps *caps = gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb");
 
   track = ges_track_new (GES_TRACK_TYPE_VIDEO, caps);
-  gst_caps_unref (caps);
 
   return track;
 }
@@ -232,7 +244,6 @@ ges_track_audio_raw_new ()
   GstCaps *caps = gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
 
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, caps);
-  gst_caps_unref (caps);
 
   return track;
 }
