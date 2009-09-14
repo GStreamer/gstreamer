@@ -213,6 +213,10 @@ enum
 {
   PROP_0,
   PROP_FLAGS,
+  PROP_MUTE,
+  PROP_VOLUME,
+  PROP_FONT_DESC,
+  PROP_VIS_PLUGIN,
   PROP_LAST
 };
 
@@ -278,6 +282,32 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
       g_param_spec_flags ("flags", "Flags", "Flags to control behaviour",
           GST_TYPE_PLAY_FLAGS, DEFAULT_FLAGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPlaySink:volume:
+   *
+   * Get or set the current audio stream volume. 1.0 means 100%,
+   * 0.0 means mute. This uses a linear volume scale.
+   *
+   */
+  g_object_class_install_property (gobject_klass, PROP_VOLUME,
+      g_param_spec_double ("volume", "Volume", "The audio volume, 1.0=100%",
+          0.0, VOLUME_MAX_DOUBLE, 1.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_klass, PROP_MUTE,
+      g_param_spec_boolean ("mute", "Mute",
+          "Mute the audio channel without changing the volume", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_klass, PROP_FONT_DESC,
+      g_param_spec_string ("subtitle-font-desc",
+          "Subtitle font description",
+          "Pango font description of font "
+          "to be used for subtitle rendering", NULL,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_klass, PROP_VIS_PLUGIN,
+      g_param_spec_object ("vis-plugin", "Vis plugin",
+          "the visualization element to use (NULL = default)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_signal_new ("reconfigure", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
@@ -2723,6 +2753,18 @@ gst_play_sink_set_property (GObject * object, guint prop_id,
     case PROP_FLAGS:
       gst_play_sink_set_flags (playsink, g_value_get_flags (value));
       break;
+    case PROP_VOLUME:
+      gst_play_sink_set_volume (playsink, g_value_get_double (value));
+      break;
+    case PROP_MUTE:
+      gst_play_sink_set_mute (playsink, g_value_get_boolean (value));
+      break;
+    case PROP_FONT_DESC:
+      gst_play_sink_set_font_desc (playsink, g_value_get_string (value));
+      break;
+    case PROP_VIS_PLUGIN:
+      gst_play_sink_set_vis_plugin (playsink, g_value_get_object (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
       break;
@@ -2738,6 +2780,18 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_FLAGS:
       g_value_set_flags (value, gst_play_sink_get_flags (playsink));
+      break;
+    case PROP_VOLUME:
+      g_value_set_double (value, gst_play_sink_get_volume (playsink));
+      break;
+    case PROP_MUTE:
+      g_value_set_boolean (value, gst_play_sink_get_mute (playsink));
+      break;
+    case PROP_FONT_DESC:
+      g_value_take_string (value, gst_play_sink_get_font_desc (playsink));
+      break;
+    case PROP_VIS_PLUGIN:
+      gst_play_sink_set_vis_plugin (playsink, g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
