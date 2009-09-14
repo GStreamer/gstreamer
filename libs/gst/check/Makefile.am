@@ -14,6 +14,7 @@ libgstcheck_@GST_MAJORMINOR@_la_SOURCES =	\
 	gstconsistencychecker.c
 
 libgstcheck_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS) \
+	-I$(top_builddir)/libs \
 	-I$(top_builddir)/libs/gst/check \
 	-I$(top_builddir)/libs/gst/check/libcheck
 libgstcheck_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS) \
