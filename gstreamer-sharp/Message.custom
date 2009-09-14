@@ -954,3 +954,22 @@ public void ParseStreamStatus (out StreamStatusType type, out Gst.Element owner)
   owner = Gst.GLib.Object.GetObject (raw_ptr, false) as Gst.Element;
 }
 
+[DllImport("libgstreamer-0.10.dll") ]
+static extern IntPtr gst_message_new_request_state (IntPtr src, Gst.State state);
+
+public static Message NewRequestState (Gst.Object src, Gst.State state) {
+  Message msg = (Message) Gst.MiniObject.GetObject (gst_message_new_request_state (src.Handle, state), true);
+
+  return msg;
+}
+
+[DllImport("libgstreamer-0.10.dll") ]
+static extern void gst_message_parse_request_state (IntPtr msg, out Gst.State state);
+
+public void ParseRequestState (out Gst.State state) {
+  if (Type != MessageType.RequestState)
+    throw new ArgumentException ();
+
+  gst_message_parse_request_state (Handle, out state);
+}
+

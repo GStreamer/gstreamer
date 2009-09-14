@@ -987,6 +987,27 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="NewRequestState">
+      <MemberSignature Language="C#" Value="public static Gst.Message NewRequestState (Gst.Object src, Gst.State state);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.1.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Message</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="src" Type="Gst.Object" />
+        <Parameter Name="state" Type="Gst.State" />
+      </Parameters>
+      <Docs>
+        <param name="src">To be added.</param>
+        <param name="state">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="NewSegmentDone">
       <MemberSignature Language="C#" Value="public static Gst.Message NewSegmentDone (Gst.Object src, Gst.Format format, long position);" />
       <MemberType>Method</MemberType>
@@ -1827,6 +1848,24 @@
       </Parameters>
       <Docs>
         <param name="clock">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ParseRequestState">
+      <MemberSignature Language="C#" Value="public void ParseRequestState (out Gst.State state);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.1.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="state" Type="Gst.State&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="state">To be added.</param>
         <summary>To be added.</summary>
         <remarks>To be added.</remarks>
       </Docs>
