@@ -23,6 +23,10 @@
  *
  * #GESTrackObject is the Base Class for any object that can be contained in a
  * #GESTrack.
+ *
+ * It contains the basic information as to the location of the object within
+ * its container, like the start position, the in-point, the duration and the
+ * priority.
  */
 
 #include "ges-internal.h"
@@ -127,16 +131,51 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
   object_class->dispose = ges_track_object_dispose;
   object_class->finalize = ges_track_object_finalize;
 
+  /**
+   * GESTrackObject:start
+   *
+   * The position of the object in the container #GESTrack (in nanoseconds).
+   */
   g_object_class_install_property (object_class, PROP_START,
       g_param_spec_uint64 ("start", "Start",
           "The position in the container", 0, G_MAXUINT64, 0,
           G_PARAM_READWRITE));
+
+  /**
+   * GESTrackObject:in-point
+   *
+   * The in-point at which this #GESTrackObject will start outputting data
+   * from its contents (in nanoseconds).
+   *
+   * Ex : an in-point of 5 seconds means that the first outputted buffer will
+   * be the one located 5 seconds in the controlled resource.
+   */
   g_object_class_install_property (object_class, PROP_INPOINT,
-      g_param_spec_uint64 ("inpoint", "In-point", "The in-point", 0,
+      g_param_spec_uint64 ("in-point", "In-point", "The in-point", 0,
           G_MAXUINT64, 0, G_PARAM_READWRITE));
+
+  /**
+   * GESTrackObject:duration
+   *
+   * The duration (in nanoseconds) which will be used in the container #GESTrack
+   * starting from 'in-point'.
+   *
+   */
   g_object_class_install_property (object_class, PROP_DURATION,
       g_param_spec_uint64 ("duration", "Duration", "The duration to use",
           0, G_MAXUINT64, GST_SECOND, G_PARAM_READWRITE));
+
+  /**
+   * GESTrackObject:priority
+   *
+   * The priority of the object within the containing #GESTrack.
+   * If two objects intersect over the same region of time, the @priority
+   * property is used to decide which one takes precedence.
+   *
+   * The highest priority (that supercedes everything) is 0, and then lowering
+   * priorities go in increasing numerical value (with #G_MAXUINT64 being the
+   * lowest priority).
+   */
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",
           "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
@@ -147,23 +186,6 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
 static void
 ges_track_object_init (GESTrackObject * self)
 {
-}
-
-GESTrackObject *
-ges_track_object_new (GESTimelineObject * timelineobj, GESTrack * track)
-{
-  GESTrackObject *obj;
-
-  obj = g_object_new (GES_TYPE_TRACK_OBJECT, NULL);
-
-  /* FIXME : THIS IS TOTALLY BOGUS ! */
-
-  /* Set the timeline object and track */
-  obj->timelineobj = timelineobj;
-  obj->track = track;
-
-
-  return obj;
 }
 
 gboolean

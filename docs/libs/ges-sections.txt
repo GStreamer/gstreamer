@@ -36,16 +36,13 @@ GES_TYPE_TRACK_TYPE
 <TITLE>GESTrackObject</TITLE>
 GESTrackObject
 GESTrackObjectClass
-FillTrackObjectFunc
-FillTrackObjectUserFunc
-ges_track_object_new
+<SUBSECTION Standard>
+ges_track_object_set_timeline_object
+ges_track_object_set_track
 ges_track_object_set_duration_internal
 ges_track_object_set_inpoint_internal
 ges_track_object_set_priority_internal
 ges_track_object_set_start_internal
-ges_track_object_set_timeline_object
-ges_track_object_set_track
-<SUBSECTION Standard>
 ges_track_object_get_type
 GES_IS_TRACK_OBJECT
 GES_IS_TRACK_OBJECT_CLASS
@@ -120,6 +117,7 @@ GES_TYPE_TIMELINE_LAYER
 <TITLE>GESTimelineObject</TITLE>
 GESTimelineObject
 GESTimelineObjectClass
+FillTrackObjectFunc
 ges_timeline_object_set_inpoint
 ges_timeline_object_set_layer
 ges_timeline_object_set_priority
@@ -197,6 +195,7 @@ ges_timeline_transition_get_type
 <TITLE>GESCustomTimelineSource</TITLE>
 GESCustomTimelineSource
 GESCustomTimelineSourceClass
+FillTrackObjectUserFunc
 ges_custom_timeline_source_new
 <SUBSECTION Standard>
 ges_cust_timeline_src_get_type

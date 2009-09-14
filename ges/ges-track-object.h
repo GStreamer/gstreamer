@@ -45,36 +45,57 @@ G_BEGIN_DECLS
 #define GES_TRACK_OBJECT_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_OBJECT, GESTrackObjectClass))
 
+/**
+ * GESTrackObject:
+ * @timelineobj: The #GESTimelineObject to which this object belongs.
+ * @track: The #GESTrack in which this object is.
+ * @valid: #TRUE if the content of the @gnlobject is valid.
+ * @start: Position (in nanoseconds) of the object the track.
+ * @inpoint: in-point (in nanoseconds) of the object in the track.
+ * @duration: Duration of the object
+ * @priority: Priority of the object in the track (0:top priority)
+ * @gnlobject: The GNonLin object this object is controlling.
+ *
+ * The GESTrackObject base class. Only sub-classes can access these fields.
+ */
 struct _GESTrackObject {
   GObject parent;
 
-  GESTimelineObject *timelineobj;	/* The associated timeline object */
-  GESTrack *track;			/* The associated Track */
+  /*< public >*/
+  GESTimelineObject *timelineobj;
+  GESTrack *track;
 
-  gboolean valid;	/* TRUE if the contents of gnlobject are valid/usable */
+  gboolean valid;
 
   /* Cached values of the gnlobject properties */
-  guint64 start;	/* position (in time) of the object in the layer */
-  guint64 inpoint;	/* in-point */
-  guint64 duration;	/* duration of the object used in the layer */
-  guint32 priority;	/* priority of the object in the layer (0:top priority) */
+  guint64 start;
+  guint64 inpoint;
+  guint64 duration;
+  guint32 priority;
 
-  GstElement *gnlobject;	/* The associated GnlObject */
+  GstElement *gnlobject;
 };
 
+/**
+ * GESTrackObjectClass:
+ * @create_gnl_object: method to create the GNonLin container object.
+ *
+ * Subclasses can override the @create_gnl_object method to override what type
+ * of GNonLin object will be created.
+ */ 
 struct _GESTrackObjectClass {
   GObjectClass parent_class;
 
-  /* signal callbacks */
+  /*< private >*/
+  /* signals */
   void	(*changed)	(GESTrackObject * object);
 
-  /* virtual methods */
+  /*< public >*/
+  /* virtual methods for subclasses */
   gboolean (*create_gnl_object) (GESTrackObject * object);
 };
 
 GType ges_track_object_get_type (void);
-
-GESTrackObject* ges_track_object_new (GESTimelineObject *timelineobj, GESTrack *track);
 
 gboolean ges_track_object_set_track (GESTrackObject * object, GESTrack * track);
 void ges_track_object_set_timeline_object (GESTrackObject * object, GESTimelineObject * tlobject);
