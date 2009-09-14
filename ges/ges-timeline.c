@@ -217,7 +217,16 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   GST_DEBUG ("Done");
 }
 
-
+/**
+ * ges_timeline_add_layer:
+ * @timeline: a #GESTimeline
+ * @layer: the #GESTimelineLayer to add
+ *
+ * Add the layer to the timeline. The reference to the @layer will be stolen
+ * by the @timeline.
+ *
+ * Returns: TRUE if the layer was properly added, else FALSE.
+ */
 gboolean
 ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
@@ -235,8 +244,8 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
     return FALSE;
   }
 
-  /* Reference is taken */
-  timeline->layers = g_list_append (timeline->layers, g_object_ref (layer));
+  /* Reference is stolen */
+  timeline->layers = g_list_append (timeline->layers, layer);
 
   /* Inform the layer that it belongs to a new timeline */
   ges_timeline_layer_set_timeline (layer, timeline);
@@ -338,6 +347,17 @@ custom_find_track (TrackPrivate * priv, GESTrack * track)
   return -1;
 }
 
+/**
+ * ges_timeline_add_track:
+ * @timeline: a #GESTimeline
+ * @track: the #GESTrack to add
+ *
+ * Add a track to the timeline. The reference to the track will be stolen by the
+ * pipeline.
+ *
+ * Returns: TRUE if the track was properly added, else FALSE.
+ */
+
 gboolean
 ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
@@ -355,7 +375,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   }
 
   /* Add the track to ourself (as a GstBin) 
-   * Reference is taken ! */
+   * Reference is stolen ! */
   if (G_UNLIKELY (!gst_bin_add (GST_BIN (timeline), GST_ELEMENT (track)))) {
     GST_WARNING ("Couldn't add track to ourself (GST)");
     return FALSE;
@@ -383,6 +403,17 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   return TRUE;
 }
 
+/**
+ * ges_timeline_remove_track:
+ * @timeline: a #GESTimeline
+ * @track: the #GESTrack to remove
+ *
+ * Remove the @track from the @timeline. The reference stolen when adding the
+ * @track will be removed. If you wish to use the @track after calling this
+ * function you must ensure that you have a reference to it.
+ *
+ * Returns: TRUE if the @track was properly removed, else FALSE.
+ */
 gboolean
 ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 {
