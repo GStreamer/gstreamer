@@ -763,43 +763,52 @@ gst_flups_demux_clear_times (GstFluPSDemux * demux)
 
 static inline void
 gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
-    GstClockTime new_time)
+    GstClockTime new_start)
 {
-  /* Advance all lagging streams by sending a segment update */
+  GstClockTime base_time, stop, time;
   gint i, count = demux->found_count;
   GstEvent *event = NULL;
 
-  /* FIXME: Handle reverse playback */
+  /* Advance all lagging streams by sending a segment update */
+  if ((base_time = demux->base_time) == GST_CLOCK_TIME_NONE)
+    base_time = 0;
 
-  if (new_time > demux->src_segment.stop)
+  stop = demux->src_segment.stop;
+  if (stop != GST_CLOCK_TIME_NONE)
+    stop += base_time;
+
+  if (new_start > stop)
     return;
 
+  time = demux->src_segment.time;
+  time += new_start - (demux->src_segment.start + base_time);
+
+  /* FIXME: Handle reverse playback */
   for (i = 0; i < count; i++) {
     GstFluPSStream *stream = demux->streams_found[i];
 
     if (stream) {
       if (stream->last_ts == GST_CLOCK_TIME_NONE ||
-          stream->last_ts < demux->src_segment.start)
-        stream->last_ts = demux->src_segment.start;
-      if (stream->last_ts + stream->segment_thresh < new_time) {
+          stream->last_ts < demux->src_segment.start + base_time)
+        stream->last_ts = demux->src_segment.start + base_time;
+
+      if (stream->last_ts + stream->segment_thresh < new_start) {
 #if 0
         g_print ("Segment update to pad %s time %" GST_TIME_FORMAT " stop now %"
             GST_TIME_FORMAT "\n", GST_PAD_NAME (stream->pad),
-            GST_TIME_ARGS (new_time), GST_TIME_ARGS (demux->src_segment.stop));
+            GST_TIME_ARGS (new_start), GST_TIME_ARGS (demux->src_segment.stop));
 #endif
         GST_DEBUG_OBJECT (demux,
             "Segment update to pad %s time %" GST_TIME_FORMAT,
-            GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_time));
+            GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_start));
         if (event == NULL) {
           event = gst_event_new_new_segment_full (TRUE,
               demux->src_segment.rate, demux->src_segment.applied_rate,
-              GST_FORMAT_TIME, new_time,
-              demux->src_segment.stop,
-              demux->src_segment.time + (new_time - demux->src_segment.start));
+              GST_FORMAT_TIME, new_start, stop, time);
         }
         gst_event_ref (event);
         gst_pad_push_event (stream->pad, event);
-        stream->last_seg_start = stream->last_ts = new_time;
+        stream->last_seg_start = stream->last_ts = new_start;
         stream->need_segment = FALSE;
       }
     }
