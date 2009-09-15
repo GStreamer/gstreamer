@@ -75,6 +75,13 @@ struct _MpegTSParsePad
   GstFlowReturn flow_return;
 };
 
+static GQuark QUARK_PROGRAMS;
+static GQuark QUARK_PROGRAM_NUMBER;
+static GQuark QUARK_PID;
+static GQuark QUARK_PCR_PID;
+static GQuark QUARK_STREAMS;
+static GQuark QUARK_STREAM_TYPE;
+
 static GstElementDetails mpegts_parse_details =
 GST_ELEMENT_DETAILS ("MPEG transport stream parser",
     "Codec/Parser",
@@ -134,8 +141,10 @@ static gboolean mpegts_parse_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn mpegts_parse_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean mpegts_parse_src_pad_query (GstPad * pad, GstQuery * query);
+static void _extra_init (GType type);
 
-GST_BOILERPLATE (MpegTSParse, mpegts_parse, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE_FULL (MpegTSParse, mpegts_parse, GstElement, GST_TYPE_ELEMENT,
+    _extra_init);
 
 static const guint32 crc_tab[256] = {
   0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc, 0x17c56b6b,
@@ -194,6 +203,17 @@ mpegts_parse_calc_crc32 (guint8 * data, guint datalen)
     crc = (crc << 8) ^ crc_tab[((crc >> 24) ^ *data++) & 0xff];
   }
   return crc;
+}
+
+static void
+_extra_init (GType type)
+{
+  QUARK_PROGRAMS = g_quark_from_string ("programs");
+  QUARK_PROGRAM_NUMBER = g_quark_from_string ("program-number");
+  QUARK_PID = g_quark_from_string ("pid");
+  QUARK_PCR_PID = g_quark_from_string ("pcr-pid");
+  QUARK_STREAMS = g_quark_from_string ("streams");
+  QUARK_STREAM_TYPE = g_quark_from_string ("stream-type");
 }
 
 static void
@@ -564,13 +584,13 @@ mpegts_parse_deactivate_pmt (MpegTSParse * parse, MpegTSParseProgram * program)
   const GValue *value;
 
   if (program->pmt_info) {
-    streams = gst_structure_get_value (program->pmt_info, "streams");
+    streams = gst_structure_id_get_value (program->pmt_info, QUARK_STREAMS);
 
     for (i = 0; i < gst_value_list_get_size (streams); ++i) {
       value = gst_value_list_get_value (streams, i);
       stream = g_value_get_boxed (value);
-      gst_structure_get_uint (stream, "pid", &pid);
-      gst_structure_get_uint (stream, "stream-type", &stream_type);
+      gst_structure_id_get (stream, QUARK_PID, G_TYPE_UINT, &pid,
+          QUARK_STREAM_TYPE, G_TYPE_UINT, &stream_type, NULL);
       mpegts_parse_program_remove_stream (parse, program, (guint16) pid);
       g_hash_table_remove (parse->pes_pids, GINT_TO_POINTER ((gint) pid));
     }
@@ -900,14 +920,14 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GstStructure * pat_info)
           gst_structure_copy (pat_info)));
 
   GST_OBJECT_LOCK (parse);
-  programs = gst_structure_get_value (pat_info, "programs");
+  programs = gst_structure_id_get_value (pat_info, QUARK_PROGRAMS);
   /* activate the new table */
   for (i = 0; i < gst_value_list_get_size (programs); ++i) {
     value = gst_value_list_get_value (programs, i);
 
     program_info = g_value_get_boxed (value);
-    gst_structure_get_uint (program_info, "program-number", &program_number);
-    gst_structure_get_uint (program_info, "pid", &pid);
+    gst_structure_id_get (program_info, QUARK_PROGRAM_NUMBER, G_TYPE_UINT,
+        &program_number, QUARK_PID, G_TYPE_UINT, &pid, NULL);
 
     program = mpegts_parse_get_program (parse, program_number);
     if (program) {
@@ -936,13 +956,14 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GstStructure * pat_info)
   if (old_pat) {
     /* deactivate the old table */
 
-    programs = gst_structure_get_value (old_pat, "programs");
+    programs = gst_structure_id_get_value (old_pat, QUARK_PROGRAMS);
     for (i = 0; i < gst_value_list_get_size (programs); ++i) {
       value = gst_value_list_get_value (programs, i);
 
       program_info = g_value_get_boxed (value);
-      gst_structure_get_uint (program_info, "program-number", &program_number);
-      gst_structure_get_uint (program_info, "pid", &pid);
+      gst_structure_id_get (program_info,
+          QUARK_PROGRAM_NUMBER, G_TYPE_UINT, &program_number,
+          QUARK_PID, G_TYPE_UINT, &pid, NULL);
 
       program = mpegts_parse_get_program (parse, program_number);
       if (program == NULL) {
@@ -990,9 +1011,10 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   const GValue *new_streams;
   const GValue *value;
 
-  gst_structure_get_uint (pmt_info, "program-number", &program_number);
-  gst_structure_get_uint (pmt_info, "pcr-pid", &pcr_pid);
-  new_streams = gst_structure_get_value (pmt_info, "streams");
+  gst_structure_id_get (pmt_info,
+      QUARK_PROGRAM_NUMBER, G_TYPE_UINT, &program_number,
+      QUARK_PCR_PID, G_TYPE_UINT, &pcr_pid, NULL);
+  new_streams = gst_structure_id_get_value (pmt_info, QUARK_STREAMS);
 
   GST_OBJECT_LOCK (parse);
   program = mpegts_parse_get_program (parse, program_number);
@@ -1021,8 +1043,8 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
     value = gst_value_list_get_value (new_streams, i);
     stream = g_value_get_boxed (value);
 
-    gst_structure_get_uint (stream, "pid", &pid);
-    gst_structure_get_uint (stream, "stream-type", &stream_type);
+    gst_structure_id_get (stream, QUARK_PID, G_TYPE_UINT, &pid,
+        QUARK_STREAM_TYPE, G_TYPE_UINT, &stream_type, NULL);
     mpegts_parse_program_add_stream (parse, program,
         (guint16) pid, (guint8) stream_type);
     g_hash_table_insert (parse->pes_pids, GINT_TO_POINTER ((gint) pid),
