@@ -811,7 +811,7 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet,
           }
           tspad->pushed = TRUE;
 
-          if (GST_FLOW_IS_FATAL (tspad->flow_return)) {
+          if (G_UNLIKELY (GST_FLOW_IS_FATAL (tspad->flow_return))) {
             /* return the error upstream */
             ret = tspad->flow_return;
             done = TRUE;
@@ -867,7 +867,7 @@ mpegts_parse_is_psi (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
       table_id = *(packet->data);
       i = 0;
       while (si_tables[i] != TABLE_ID_UNSET) {
-        if (si_tables[i] == table_id) {
+        if (G_UNLIKELY (si_tables[i] == table_id)) {
           GST_DEBUG_OBJECT (parse, "Packet has table id 0x%x", table_id);
           retval = TRUE;
           break;
@@ -884,7 +884,7 @@ mpegts_parse_is_psi (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
         GST_DEBUG_OBJECT (parse, "section table id: 0x%x",
             stream->section_table_id);
         while (si_tables[i] != TABLE_ID_UNSET) {
-          if (si_tables[i] == stream->section_table_id) {
+          if (G_UNLIKELY (si_tables[i] == stream->section_table_id)) {
             retval = TRUE;
             break;
           }
