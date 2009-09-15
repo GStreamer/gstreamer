@@ -1966,12 +1966,7 @@ mpegts_packetizer_clear_packet (MpegTSPacketizer * packetizer,
 {
   if (packet->buffer)
     gst_buffer_unref (packet->buffer);
-  packet->buffer = NULL;
-  packet->continuity_counter = 0;
-  packet->payload_unit_start_indicator = 0;
-  packet->payload = NULL;
-  packet->data_start = NULL;
-  packet->data_end = NULL;
+  memset (packet, 0, sizeof (MpegTSPacketizerPacket));
 }
 
 gboolean
