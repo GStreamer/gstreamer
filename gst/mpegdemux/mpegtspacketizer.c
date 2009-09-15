@@ -1924,17 +1924,12 @@ mpegts_packetizer_new ()
 void
 mpegts_packetizer_push (MpegTSPacketizer * packetizer, GstBuffer * buffer)
 {
-  g_return_if_fail (GST_IS_MPEGTS_PACKETIZER (packetizer));
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-
   gst_adapter_push (packetizer->adapter, buffer);
 }
 
 gboolean
 mpegts_packetizer_has_packets (MpegTSPacketizer * packetizer)
 {
-  g_return_val_if_fail (GST_IS_MPEGTS_PACKETIZER (packetizer), FALSE);
-
   return gst_adapter_available (packetizer->adapter) >= 188;
 }
 
@@ -1944,9 +1939,6 @@ mpegts_packetizer_next_packet (MpegTSPacketizer * packetizer,
 {
   guint8 sync_byte;
   gboolean ret = FALSE;
-
-  g_return_val_if_fail (GST_IS_MPEGTS_PACKETIZER (packetizer), FALSE);
-  g_return_val_if_fail (packet != NULL, FALSE);
 
   packet->buffer = NULL;
   while (gst_adapter_available (packetizer->adapter) >= 188) {
@@ -1972,9 +1964,6 @@ void
 mpegts_packetizer_clear_packet (MpegTSPacketizer * packetizer,
     MpegTSPacketizerPacket * packet)
 {
-  g_return_if_fail (GST_IS_MPEGTS_PACKETIZER (packetizer));
-  g_return_if_fail (packet != NULL);
-
   if (packet->buffer)
     gst_buffer_unref (packet->buffer);
   packet->buffer = NULL;
@@ -1996,10 +1985,6 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
   guint section_length;
   GstBuffer *sub_buf;
   guint8 *data;
-
-  g_return_val_if_fail (GST_IS_MPEGTS_PACKETIZER (packetizer), FALSE);
-  g_return_val_if_fail (packet != NULL, FALSE);
-  g_return_val_if_fail (section != NULL, FALSE);
 
   data = packet->data;
   section->pid = packet->pid;
