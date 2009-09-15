@@ -466,10 +466,10 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
       GstFormat fmt;
       gboolean update;
       gint64 start, end, pos;
-      gdouble rate;
+      gdouble rate, arate;
 
-      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &end,
-          &pos);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
+          &start, &end, &pos);
 
       /* drain queued buffers before activating the segment so that we can clip
        * against the old segment first */
@@ -487,6 +487,11 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
       } else {
         a52dec->time = start;
         a52dec->sent_segment = TRUE;
+        GST_DEBUG_OBJECT (a52dec,
+            "Pushing newseg rate %g, applied rate %g, format %d, start %"
+            G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", pos %"
+            G_GINT64_FORMAT, rate, arate, fmt, start, end, time);
+
         ret = gst_pad_push_event (a52dec->srcpad, event);
       }
 
