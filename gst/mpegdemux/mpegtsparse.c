@@ -1093,8 +1093,8 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
   gboolean res = TRUE;
   GstStructure *structure = NULL;
 
-  if (mpegts_parse_calc_crc32 (GST_BUFFER_DATA (section->buffer),
-          GST_BUFFER_SIZE (section->buffer)) != 0) {
+  if (G_UNLIKELY (mpegts_parse_calc_crc32 (GST_BUFFER_DATA (section->buffer),
+              GST_BUFFER_SIZE (section->buffer)) != 0)) {
     GST_WARNING_OBJECT (parse, "bad crc in psi pid 0x%x", section->pid);
     return FALSE;
   }
@@ -1103,7 +1103,7 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
     case 0x00:
       /* PAT */
       structure = mpegts_packetizer_parse_pat (parse->packetizer, section);
-      if (structure)
+      if (G_LIKELY (structure))
         mpegts_parse_apply_pat (parse, structure);
       else
         res = FALSE;
@@ -1111,7 +1111,7 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
       break;
     case 0x02:
       structure = mpegts_packetizer_parse_pmt (parse->packetizer, section);
-      if (structure)
+      if (G_LIKELY (structure))
         mpegts_parse_apply_pmt (parse, section->pid, structure);
       else
         res = FALSE;
@@ -1122,7 +1122,7 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
     case 0x41:
       /* NIT, other network */
       structure = mpegts_packetizer_parse_nit (parse->packetizer, section);
-      if (structure)
+      if (G_LIKELY (structure))
         mpegts_parse_apply_nit (parse, section->pid, structure);
       else
         res = FALSE;
@@ -1131,7 +1131,7 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
     case 0x42:
     case 0x46:
       structure = mpegts_packetizer_parse_sdt (parse->packetizer, section);
-      if (structure)
+      if (G_LIKELY (structure))
         mpegts_parse_apply_sdt (parse, section->pid, structure);
       else
         res = FALSE;
@@ -1173,7 +1173,7 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
     case 0x6F:
       /* EIT, schedule */
       structure = mpegts_packetizer_parse_eit (parse->packetizer, section);
-      if (structure)
+      if (G_LIKELY (structure))
         mpegts_parse_apply_eit (parse, section->pid, structure);
       else
         res = FALSE;
@@ -1225,7 +1225,7 @@ mpegts_parse_chain (GstPad * pad, GstBuffer * buf)
       !GST_FLOW_IS_FATAL (res)) {
     /* get the next packet */
     parsed = mpegts_packetizer_next_packet (packetizer, &packet);
-    if (!parsed)
+    if (G_UNLIKELY (!parsed))
       /* bad header, skip the packet */
       goto next;
 
@@ -1234,16 +1234,16 @@ mpegts_parse_chain (GstPad * pad, GstBuffer * buf)
       MpegTSPacketizerSection section;
 
       parsed = mpegts_packetizer_push_section (packetizer, &packet, &section);
-      if (!parsed)
+      if (G_UNLIKELY (!parsed))
         /* bad section data */
         goto next;
 
-      if (section.complete) {
+      if (G_LIKELY (section.complete)) {
         /* section complete */
         parsed = mpegts_parse_handle_psi (parse, &section);
         gst_buffer_unref (section.buffer);
 
-        if (!parsed)
+        if (G_UNLIKELY (!parsed))
           /* bad PSI table */
           goto next;
       }

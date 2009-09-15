@@ -1981,7 +1981,7 @@ mpegts_packetizer_next_packet (MpegTSPacketizer * packetizer,
   packet->buffer = NULL;
   while (gst_adapter_available (packetizer->adapter) >= 188) {
     sync_byte = *gst_adapter_peek (packetizer->adapter, 1);
-    if (sync_byte != 0x47) {
+    if (G_UNLIKELY (sync_byte != 0x47)) {
       GST_DEBUG ("lost sync %02x", sync_byte);
       gst_adapter_flush (packetizer->adapter, 1);
       continue;
