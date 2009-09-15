@@ -228,7 +228,7 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
           GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
           GST_BUFFER_TIMESTAMP (buf));
       gst_buffer_unref (buf);
-
+      g_object_unref (adapter);
       return ret;
     }
 
