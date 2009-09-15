@@ -1971,15 +1971,15 @@ mpegts_packetizer_has_packets (MpegTSPacketizer * packetizer)
   return gst_adapter_available (packetizer->adapter) >= 188;
 }
 
-gboolean
+MpegTSPacketizerPacketReturn
 mpegts_packetizer_next_packet (MpegTSPacketizer * packetizer,
     MpegTSPacketizerPacket * packet)
 {
   guint8 sync_byte;
-  gboolean ret = FALSE;
+  guint avail;
 
   packet->buffer = NULL;
-  while (gst_adapter_available (packetizer->adapter) >= 188) {
+  while ((avail = gst_adapter_available (packetizer->adapter)) >= 188) {
     sync_byte = *gst_adapter_peek (packetizer->adapter, 1);
     if (G_UNLIKELY (sync_byte != 0x47)) {
       GST_DEBUG ("lost sync %02x", sync_byte);
@@ -1991,11 +1991,10 @@ mpegts_packetizer_next_packet (MpegTSPacketizer * packetizer,
     packet->data_start = GST_BUFFER_DATA (packet->buffer);
     packet->data_end =
         GST_BUFFER_DATA (packet->buffer) + GST_BUFFER_SIZE (packet->buffer);
-    ret = mpegts_packetizer_parse_packet (packetizer, packet);
-    break;
+    return mpegts_packetizer_parse_packet (packetizer, packet);
   }
 
-  return ret;
+  return PACKET_NEED_MORE;
 }
 
 void

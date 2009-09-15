@@ -1214,6 +1214,7 @@ mpegts_parse_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn res = GST_FLOW_OK;
   MpegTSParse *parse;
   gboolean parsed;
+  MpegTSPacketizerPacketReturn pret;
   MpegTSPacketizer *packetizer;
   MpegTSPacketizerPacket packet;
 
@@ -1221,11 +1222,10 @@ mpegts_parse_chain (GstPad * pad, GstBuffer * buf)
   packetizer = parse->packetizer;
 
   mpegts_packetizer_push (parse->packetizer, buf);
-  while (mpegts_packetizer_has_packets (parse->packetizer) &&
-      !GST_FLOW_IS_FATAL (res)) {
-    /* get the next packet */
-    parsed = mpegts_packetizer_next_packet (packetizer, &packet);
-    if (G_UNLIKELY (!parsed))
+  while (((pret =
+              mpegts_packetizer_next_packet (parse->packetizer,
+                  &packet)) != PACKET_NEED_MORE) && !GST_FLOW_IS_FATAL (res)) {
+    if (G_UNLIKELY (pret == PACKET_BAD))
       /* bad header, skip the packet */
       goto next;
 

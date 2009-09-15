@@ -104,6 +104,11 @@ typedef struct
   GSList *subtables;
 } MpegTSPacketizerStream;
 
+typedef enum {
+  PACKET_BAD       = FALSE,
+  PACKET_OK        = TRUE,
+  PACKET_NEED_MORE
+} MpegTSPacketizerPacketReturn;
 
 GType gst_mpegts_packetizer_get_type(void);
 
@@ -111,7 +116,7 @@ MpegTSPacketizer *mpegts_packetizer_new ();
 void mpegts_packetizer_clear (MpegTSPacketizer *packetizer);
 void mpegts_packetizer_push (MpegTSPacketizer *packetizer, GstBuffer *buffer);
 gboolean mpegts_packetizer_has_packets (MpegTSPacketizer *packetizer);
-gboolean mpegts_packetizer_next_packet (MpegTSPacketizer *packetizer,
+MpegTSPacketizerPacketReturn mpegts_packetizer_next_packet (MpegTSPacketizer *packetizer,
   MpegTSPacketizerPacket *packet);
 void mpegts_packetizer_clear_packet (MpegTSPacketizer *packetizer,
   MpegTSPacketizerPacket *packet);
