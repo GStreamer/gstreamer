@@ -599,7 +599,6 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
   GValue transports = { 0 };
   GValue transport_value = { 0 };
   GValueArray *descriptors = NULL;
-  gchar *dbg_str;
 
   GST_DEBUG ("NIT");
   /* fixed header + CRC == 16 */
@@ -1205,9 +1204,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
   gst_structure_set_value (nit, "transports", &transports);
   g_value_unset (&transports);
 
-  dbg_str = gst_structure_to_string (nit);
-  GST_DEBUG ("NIT %s", dbg_str);
-  g_free (dbg_str);
+  GST_DEBUG ("NIT %" GST_PTR_FORMAT, nit);
 
   return nit;
 
@@ -1237,7 +1234,6 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
   GValue services = { 0 };
   GValueArray *descriptors = NULL;
   GValue service_value = { 0 };
-  gchar *dbg_str;
 
   GST_DEBUG ("SDT");
   /* fixed header + CRC == 16 */
@@ -1414,9 +1410,6 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
   gst_structure_set_value (sdt, "services", &services);
   g_value_unset (&services);
 
-  dbg_str = gst_structure_to_string (sdt);
-  g_free (dbg_str);
-
   return sdt;
 
 error:
@@ -1447,7 +1440,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
   GValue events = { 0 };
   GValue event_value = { 0 };
   GValueArray *descriptors = NULL;
-  gchar *dbg_str, *event_name;
+  gchar *event_name;
   guint tmp;
 
   /* fixed header + CRC == 16 */
@@ -1876,9 +1869,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
   gst_structure_set_value (eit, "events", &events);
   g_value_unset (&events);
 
-  dbg_str = gst_structure_to_string (eit);
-  GST_DEBUG ("EIT %s", dbg_str);
-  g_free (dbg_str);
+  GST_DEBUG ("EIT %" GST_PTR_FORMAT, eit);
 
   return eit;
 

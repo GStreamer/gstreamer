@@ -889,14 +889,11 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GstStructure * pat_info)
   MpegTSParseProgram *program;
   gint i;
   const GValue *programs;
-  gchar *dbg;
 
   old_pat = parse->pat;
   parse->pat = gst_structure_copy (pat_info);
 
-  dbg = gst_structure_to_string (pat_info);
-  GST_INFO_OBJECT (parse, "PAT %s", dbg);
-  g_free (dbg);
+  GST_INFO_OBJECT (parse, "PAT %" GST_PTR_FORMAT, pat_info);
 
   gst_element_post_message (GST_ELEMENT_CAST (parse),
       gst_message_new_element (GST_OBJECT (parse),
@@ -958,12 +955,8 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GstStructure * pat_info)
         /* the program has been referenced by the new pat, keep it */
         continue;
 
-      {
-        gchar *dbg = gst_structure_to_string (program_info);
-
-        GST_INFO_OBJECT (parse, "PAT removing program %s", dbg);
-        g_free (dbg);
-      }
+      GST_INFO_OBJECT (parse, "PAT removing program %" GST_PTR_FORMAT,
+          program_info);
 
       if (program->active)
         parse->pads_to_remove = g_list_append (parse->pads_to_remove,
@@ -1038,12 +1031,7 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   }
   GST_OBJECT_UNLOCK (parse);
 
-  {
-    gchar *dbg = gst_structure_to_string (pmt_info);
-
-    GST_DEBUG_OBJECT (parse, "new pmt %s", dbg);
-    g_free (dbg);
-  }
+  GST_DEBUG_OBJECT (parse, "new pmt %" GST_PTR_FORMAT, pmt_info);
 
   gst_element_post_message (GST_ELEMENT_CAST (parse),
       gst_message_new_element (GST_OBJECT (parse),
