@@ -1164,6 +1164,8 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
 
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
 
+  /* Handle Interaction, produces navigation events */
+
   /* We get all pointer motion events, only the last position is
      interesting. */
   g_mutex_lock (xvimagesink->flow_lock);
@@ -1632,7 +1634,8 @@ gst_xvimagesink_event_thread (GstXvImageSink * xvimagesink)
     if (xvimagesink->xwindow) {
       gst_xvimagesink_handle_xevents (xvimagesink);
     }
-    g_usleep (50000);
+    /* FIXME: do we want to align this with the framerate or anything else? */
+    g_usleep (G_USEC_PER_SEC / 20);
 
     GST_OBJECT_LOCK (xvimagesink);
   }
@@ -1640,6 +1643,45 @@ gst_xvimagesink_event_thread (GstXvImageSink * xvimagesink)
 
   return NULL;
 }
+
+static void
+gst_xvimagesink_manage_event_thread (GstXvImageSink * xvimagesink)
+{
+  GThread *thread = NULL;
+
+  /* don't start the thread too early */
+  if (xvimagesink->xcontext == NULL) {
+    return;
+  }
+
+  GST_OBJECT_LOCK (xvimagesink);
+  if (xvimagesink->handle_expose || xvimagesink->handle_events) {
+    if (!xvimagesink->event_thread) {
+      /* Setup our event listening thread */
+      GST_DEBUG_OBJECT (xvimagesink, "run xevent thread, expose %d, events %d",
+          xvimagesink->handle_expose, xvimagesink->handle_events);
+      xvimagesink->running = TRUE;
+      xvimagesink->event_thread = g_thread_create (
+          (GThreadFunc) gst_xvimagesink_event_thread, xvimagesink, TRUE, NULL);
+    }
+  } else {
+    if (xvimagesink->event_thread) {
+      GST_DEBUG_OBJECT (xvimagesink, "stop xevent thread, expose %d, events %d",
+          xvimagesink->handle_expose, xvimagesink->handle_events);
+      xvimagesink->running = FALSE;
+      /* grab thread and mark it as NULL */
+      thread = xvimagesink->event_thread;
+      xvimagesink->event_thread = NULL;
+    }
+  }
+  GST_OBJECT_UNLOCK (xvimagesink);
+
+  /* Wait for our event thread to finish */
+  if (thread)
+    g_thread_join (thread);
+
+}
+
 
 /* This function calculates the pixel aspect ratio based on the properties
  * in the xcontext structure and stores it there. */
@@ -1868,13 +1910,6 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
     XFree (xv_attr);
 
   g_mutex_unlock (xvimagesink->x_lock);
-
-  /* Setup our event listening thread */
-  GST_OBJECT_LOCK (xvimagesink);
-  xvimagesink->running = TRUE;
-  xvimagesink->event_thread = g_thread_create (
-      (GThreadFunc) gst_xvimagesink_event_thread, xvimagesink, TRUE, NULL);
-  GST_OBJECT_UNLOCK (xvimagesink);
 
   return xcontext;
 }
@@ -2252,6 +2287,7 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
           xvimagesink->synchronous ? "TRUE" : "FALSE");
       XSynchronize (xvimagesink->xcontext->disp, xvimagesink->synchronous);
       gst_xvimagesink_update_colorbalance (xvimagesink);
+      gst_xvimagesink_manage_event_thread (xvimagesink);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_mutex_lock (xvimagesink->pool_lock);
@@ -3127,12 +3163,14 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
     case ARG_HANDLE_EVENTS:
       gst_xvimagesink_set_event_handling (GST_X_OVERLAY (xvimagesink),
           g_value_get_boolean (value));
+      gst_xvimagesink_manage_event_thread (xvimagesink);
       break;
     case ARG_DEVICE:
       xvimagesink->adaptor_no = atoi (g_value_get_string (value));
       break;
     case ARG_HANDLE_EXPOSE:
       xvimagesink->handle_expose = g_value_get_boolean (value);
+      gst_xvimagesink_manage_event_thread (xvimagesink);
       break;
     case ARG_DOUBLE_BUFFER:
       xvimagesink->double_buffer = g_value_get_boolean (value);
