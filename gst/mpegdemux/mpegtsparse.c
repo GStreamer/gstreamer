@@ -296,6 +296,7 @@ mpegts_parse_init (MpegTSParse * parse, MpegTSParseClass * klass)
   parse->psi_pids = g_hash_table_new (g_direct_hash, g_direct_equal);
   parse->pes_pids = g_hash_table_new (g_direct_hash, g_direct_equal);
   mpegts_parse_reset (parse);
+
 }
 
 static void
@@ -795,7 +796,7 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet,
   while (!done) {
     switch (gst_iterator_next (iterator, &pad)) {
       case GST_ITERATOR_OK:
-        tspad = gst_pad_get_element_private (GST_PAD (pad));
+        tspad = gst_pad_get_element_private (GST_PAD_CAST (pad));
 
         /* make sure to push only once if the iterator resyncs */
         if (!tspad->pushed) {
@@ -822,7 +823,7 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet,
           ret = tspad->flow_return;
 
         /* the iterator refs the pad */
-        g_object_unref (GST_PAD (pad));
+        g_object_unref (GST_PAD_CAST (pad));
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iterator);
@@ -893,6 +894,7 @@ mpegts_parse_is_psi (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
       }
     }
   }
+
   GST_DEBUG_OBJECT (parse, "Packet of pid 0x%x is psi: %d", packet->pid,
       retval);
   return retval;
