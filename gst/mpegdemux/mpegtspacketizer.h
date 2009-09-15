@@ -107,7 +107,6 @@ typedef struct
 
 GType gst_mpegts_packetizer_get_type(void);
 
-void mpegts_packetizer_init_debug ();
 MpegTSPacketizer *mpegts_packetizer_new ();
 void mpegts_packetizer_clear (MpegTSPacketizer *packetizer);
 void mpegts_packetizer_push (MpegTSPacketizer *packetizer, GstBuffer *buffer);

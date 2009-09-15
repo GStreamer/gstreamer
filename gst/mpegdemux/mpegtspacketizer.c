@@ -30,7 +30,9 @@
 GST_DEBUG_CATEGORY_STATIC (mpegts_packetizer_debug);
 #define GST_CAT_DEFAULT mpegts_packetizer_debug
 
-G_DEFINE_TYPE (MpegTSPacketizer, mpegts_packetizer, G_TYPE_OBJECT);
+static void _init_local (void);
+G_DEFINE_TYPE_EXTENDED (MpegTSPacketizer, mpegts_packetizer, G_TYPE_OBJECT, 0,
+    _init_local ());
 
 static void mpegts_packetizer_dispose (GObject * object);
 static void mpegts_packetizer_finalize (GObject * object);
@@ -2085,8 +2087,8 @@ out:
   return res;
 }
 
-void
-mpegts_packetizer_init_debug ()
+static void
+_init_local ()
 {
   GST_DEBUG_CATEGORY_INIT (mpegts_packetizer_debug, "mpegtspacketizer", 0,
       "MPEG transport stream parser");

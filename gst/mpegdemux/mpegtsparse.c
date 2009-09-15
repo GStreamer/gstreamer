@@ -1302,7 +1302,6 @@ gst_mpegtsparse_plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (mpegts_parse_debug, "mpegtsparse", 0,
       "MPEG transport stream parser");
 
-  mpegts_packetizer_init_debug ();
   gst_mpegtsdesc_init_debug ();
 
   return gst_element_register (plugin, "mpegtsparse",
