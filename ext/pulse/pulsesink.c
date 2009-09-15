@@ -545,6 +545,10 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
   pbuf = GST_PULSERING_BUFFER_CAST (userdata);
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
+  if (!info) {
+    GST_LOG_OBJECT (psink, "latency update (information unknown)");
+    return;
+  }
 #if HAVE_PULSE_0_9_11
   sink_usec = info->configured_sink_usec;
 #else
