@@ -528,6 +528,11 @@ gst_pulsesrc_stream_latency_update_cb (pa_stream * s, void *userdata)
 
   info = pa_stream_get_timing_info (s);
 
+  if (!info) {
+    GST_LOG_OBJECT (GST_PULSESRC_CAST (userdata),
+        "latency update (information unknown)");
+    return;
+  }
 #if HAVE_PULSE_0_9_11
   source_usec = info->configured_source_usec;
 #else
