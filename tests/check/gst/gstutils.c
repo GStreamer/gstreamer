@@ -774,32 +774,84 @@ enum round_t
   ROUND_DOWN
 };
 
+static void
+gmp_set_uint64 (mpz_t mp, guint64 x)
+{
+  mpz_t two_32, tmp;
+
+  mpz_init (two_32);
+  mpz_init (tmp);
+
+  mpz_ui_pow_ui (two_32, 2, 32);
+  mpz_set_ui (mp, (unsigned long) ((x >> 32) & G_MAXUINT32));
+  mpz_mul (tmp, mp, two_32);
+  mpz_add_ui (mp, tmp, (unsigned long) (x & G_MAXUINT32));
+  mpz_clear (two_32);
+  mpz_clear (tmp);
+}
+
+static guint64
+gmp_get_uint64 (mpz_t mp)
+{
+  mpz_t two_64, two_32, tmp;
+  guint64 ret;
+
+  mpz_init (two_64);
+  mpz_init (two_32);
+  mpz_init (tmp);
+
+  mpz_ui_pow_ui (two_64, 2, 64);
+  mpz_ui_pow_ui (two_32, 2, 32);
+  if (mpz_cmp (tmp, two_64) >= 0)
+    return G_MAXUINT64;
+  mpz_clear (two_64);
+
+  mpz_tdiv_q (tmp, mp, two_32);
+  ret = mpz_get_ui (tmp);
+  ret <<= 32;
+  ret |= mpz_get_ui (mp);
+  mpz_clear (two_32);
+  mpz_clear (tmp);
+
+  return ret;
+}
+
 static guint64
 gmp_scale (guint64 x, guint64 a, guint64 b, enum round_t mode)
 {
-  mpz_t mp1, mp2;
+  mpz_t mp1, mp2, mp3;
   if (!b)
     /* overflow */
     return G_MAXUINT64;
-  mpz_init_set_ui (mp1, x);
+  mpz_init (mp1);
   mpz_init (mp2);
-  mpz_mul_ui (mp2, mp1, a);
+  mpz_init (mp3);
+
+  gmp_set_uint64 (mp1, x);
+  gmp_set_uint64 (mp3, a);
+  mpz_mul (mp2, mp1, mp3);
   switch (mode) {
     case ROUND_TONEAREST:
-      mpz_add_ui (mp1, mp2, b / 2);
+      gmp_set_uint64 (mp1, b);
+      mpz_tdiv_q_ui (mp3, mp1, 2);
+      mpz_add (mp1, mp2, mp3);
       mpz_set (mp2, mp1);
       break;
     case ROUND_UP:
-      mpz_add_ui (mp1, mp2, b - 1);
+      gmp_set_uint64 (mp1, b);
+      mpz_sub_ui (mp3, mp1, 1);
+      mpz_add (mp1, mp2, mp3);
       mpz_set (mp2, mp1);
       break;
     case ROUND_DOWN:
       break;
   }
-  mpz_tdiv_q_ui (mp1, mp2, b);
-  x = mpz_get_ui (mp1);
+  gmp_set_uint64 (mp3, b);
+  mpz_tdiv_q (mp1, mp2, mp3);
+  x = gmp_get_uint64 (mp1);
   mpz_clear (mp1);
   mpz_clear (mp2);
+  mpz_clear (mp3);
   return x;
 }
 
