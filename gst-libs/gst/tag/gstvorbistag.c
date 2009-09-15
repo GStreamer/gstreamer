@@ -566,6 +566,7 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
             g_free (val);
           } else {
             GST_WARNING ("Not a valid extended comment string: %s", str);
+            continue;
           }
         } else {
           result = g_strdup_printf ("%s=%s", vorbis_tag, str);
@@ -587,14 +588,15 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
         if (tag_type == GST_TYPE_DATE) {
           GDate *date;
 
-          if (gst_tag_list_get_date_index (list, tag, i, &date)) {
-            /* vorbis suggests using ISO date formats */
-            result =
-                g_strdup_printf ("%s=%04d-%02d-%02d", vorbis_tag,
-                (gint) g_date_get_year (date), (gint) g_date_get_month (date),
-                (gint) g_date_get_day (date));
-            g_date_free (date);
-          }
+          if (!gst_tag_list_get_date_index (list, tag, i, &date))
+            g_return_val_if_reached (NULL);
+
+          /* vorbis suggests using ISO date formats */
+          result =
+              g_strdup_printf ("%s=%04d-%02d-%02d", vorbis_tag,
+              (gint) g_date_get_year (date), (gint) g_date_get_month (date),
+              (gint) g_date_get_day (date));
+          g_date_free (date);
         } else {
           GST_DEBUG ("Couldn't write tag %s", tag);
           continue;
