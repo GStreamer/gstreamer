@@ -1,4 +1,6 @@
-This is GStreamer C# bindings 0.9.0 "Good things come to those who wait"
+This is GStreamer C# bindings 0.9.1 "(Almost) nothing new here"
 
-      * Initial release of gstreamer-sharp
+	* Update bindings to GStreamer 0.10.24
+	* Update internal glib-sharp copy to latest SVN trunk
+	* Some cleanup
 
