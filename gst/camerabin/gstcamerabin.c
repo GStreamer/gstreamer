@@ -125,7 +125,7 @@
  * The pipeline in the camerabin is
  *
  * videosrc [ ! ffmpegcsp ] ! capsfilter ! crop ! scale ! capsfilter ! \
- *     out-sel name=osel ! queue name=img_q
+ *     [ video_filter ! ] out-sel name=osel ! queue name=img_q
  *
  * View finder:
  * osel. ! in-sel name=isel ! scale ! capsfilter [ ! ffmpegcsp ] ! vfsink
@@ -583,6 +583,11 @@ camerabin_create_src_elements (GstCameraBin * camera)
             gst_camerabin_create_and_add_element (cbin, "capsfilter")))
       goto done;
   }
+  if (camera->app_video_filter) {
+    if (!gst_camerabin_add_element (cbin, camera->app_video_filter)) {
+      goto done;
+    }
+  }
   if (!(camera->src_out_sel =
           gst_camerabin_create_and_add_element (cbin, "output-selector")))
     goto done;
@@ -881,6 +886,11 @@ camerabin_dispose_elements (GstCameraBin * camera)
   if (camera->user_vid_src) {
     gst_object_unref (camera->user_vid_src);
     camera->user_vid_src = NULL;
+  }
+
+  if (camera->app_video_filter) {
+    gst_object_unref (camera->app_video_filter);
+    camera->app_video_filter = NULL;
   }
 
   /* Free caps */
@@ -2581,6 +2591,23 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
+   *  GstCameraBin:video-source-filter:
+   *
+   * Set up optional video filter element, all frames from video source
+   * will be processed by this element. e.g. An application might add
+   * image enhancers/parameter adjustment filters here to improve captured
+   * image/video results, or add analyzers to give feedback on capture
+   * the application.
+   * This property can only be set while #GstCameraBin is in NULL state.
+   * The ownership of the element will be taken by #GstCameraBin.
+   */
+
+  g_object_class_install_property (gobject_class, ARG_VIDEO_SOURCE_FILTER,
+      g_param_spec_object ("video-source-filter", "video source filter element",
+          "Optional video filter GStreamer element, filters all frames from"
+          "the video source", GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+
+  /**
    * GstCameraBin:video-source-caps:
    *
    * The allowed modes of operation of the video source. Have in mind that it
@@ -2825,6 +2852,7 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->src_zoom_filter = NULL;
   camera->src_out_sel = NULL;
 
+  camera->app_video_filter = NULL;
   camera->user_vid_src = NULL;
 
   camera->active_bin = NULL;
@@ -3007,6 +3035,17 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       gst_camerabin_video_set_audio_src (GST_CAMERABIN_VIDEO (camera->vidbin),
           g_value_get_object (value));
       break;
+    case ARG_VIDEO_SOURCE_FILTER:
+      if (GST_STATE (camera) != GST_STATE_NULL) {
+        GST_ELEMENT_ERROR (camera, CORE, FAILED,
+            ("camerabin must be in NULL state when setting the video filter element"),
+            (NULL));
+      } else {
+        if (camera->app_video_filter)
+          gst_object_unref (camera->app_video_filter);
+        camera->app_video_filter = g_value_dup_object (value);
+      }
+      break;
     case ARG_FILTER_CAPS:
       GST_OBJECT_LOCK (camera);
       gst_caps_replace (&camera->view_finder_caps,
@@ -3124,6 +3163,9 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
       g_value_set_object (value,
           gst_camerabin_video_get_audio_src (GST_CAMERABIN_VIDEO
               (camera->vidbin)));
+      break;
+    case ARG_VIDEO_SOURCE_FILTER:
+      g_value_set_object (value, camera->app_video_filter);
       break;
     case ARG_INPUT_CAPS:
       gst_value_set_caps (value, gst_camerabin_get_allowed_input_caps (camera));
