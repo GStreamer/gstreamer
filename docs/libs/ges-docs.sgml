@@ -53,4 +53,13 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-custom-timeline-source.xml"/>
   </chapter>
 
+  <chapter id="ges-hierarchy">
+    <title>Object Hierarchy</title>
+    <xi:include href="xml/tree_index.sgml"/>
+  </chapter>
+
+  <index id="api-index-full">
+    <title>API Index</title>
+    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+  </index>
 </book>
