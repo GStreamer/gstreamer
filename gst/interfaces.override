@@ -39,6 +39,9 @@ headers
 #ifdef HAVE_VIDEO_ORIENTATION_INTERFACE
 #include <gst/interfaces/videoorientation.h>
 #endif
+#ifdef HAVE_STREAM_VOLUME_INTERFACE
+#include <gst/interfaces/streamvolume.h>
+#endif
 
 %%
 modulename gst.interfaces

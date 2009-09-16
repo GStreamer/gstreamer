@@ -841,6 +841,15 @@
   )
 )
 
+(define-method can_intersect
+  (of-object "GstCaps")
+  (c-name "gst_caps_can_intersect")
+  (return-type "gboolean")
+  (parameters
+    '("const-GstCaps*" "caps2")
+  )
+)
+
 (define-method intersect
   (of-object "GstCaps")
   (c-name "gst_caps_intersect")

@@ -1,0 +1,9 @@
+%%
+ignore
+%%
+ignore-glob
+	gst_stream_volume_*
+%%
+ignore-type
+	GstStreamVolumeFormat
+%%

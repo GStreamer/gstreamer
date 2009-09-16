@@ -165,6 +165,8 @@
     '("no-record" "GST_MIXER_TRACK_NO_RECORD")
     '("no-mute" "GST_MIXER_TRACK_NO_MUTE")
     '("whitelist" "GST_MIXER_TRACK_WHITELIST")
+    '("readonly" "GST_MIXER_TRACK_READONLY")
+    '("writeonly" "GST_MIXER_TRACK_WRITEONLY")
   )
 )
 
@@ -226,6 +228,17 @@
     '("mouse-button-release" "GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE")
     '("mouse-move" "GST_NAVIGATION_EVENT_MOUSE_MOVE")
     '("command" "GST_NAVIGATION_EVENT_COMMAND")
+  )
+)
+
+(define-enum StreamVolumeFormat
+  (in-module "Gst")
+  (c-name "GstStreamVolumeFormat")
+  (gtype-id "GST_TYPE_STREAM_VOLUME_FORMAT")
+  (values
+    '("linear" "GST_STREAM_VOLUME_FORMAT_LINEAR")
+    '("cubic" "GST_STREAM_VOLUME_FORMAT_CUBIC")
+    '("db" "GST_STREAM_VOLUME_FORMAT_DB")
   )
 )
 
@@ -899,6 +912,53 @@
   (parameters
     '("guint" "prop_id")
     '("const-GParamSpec*" "pspec")
+  )
+)
+
+
+;; From streamvolume.h
+
+(define-method set_volume
+  (of-object "GstStreamVolume")
+  (c-name "gst_stream_volume_set_volume")
+  (return-type "none")
+  (parameters
+    '("GstStreamVolumeFormat" "format")
+    '("gdouble" "val")
+  )
+)
+
+(define-method get_volume
+  (of-object "GstStreamVolume")
+  (c-name "gst_stream_volume_get_volume")
+  (return-type "gdouble")
+  (parameters
+    '("GstStreamVolumeFormat" "format")
+  )
+)
+
+(define-method set_mute
+  (of-object "GstStreamVolume")
+  (c-name "gst_stream_volume_set_mute")
+  (return-type "none")
+  (parameters
+    '("gboolean" "mute")
+  )
+)
+
+(define-method get_mute
+  (of-object "GstStreamVolume")
+  (c-name "gst_stream_volume_get_mute")
+  (return-type "gboolean")
+)
+
+(define-function stream_volume_convert_volume
+  (c-name "gst_stream_volume_convert_volume")
+  (return-type "gdouble")
+  (parameters
+    '("GstStreamVolumeFormat" "from")
+    '("GstStreamVolumeFormat" "to")
+    '("gdouble" "val")
   )
 )
 
