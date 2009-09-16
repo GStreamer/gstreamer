@@ -9,8 +9,8 @@ of the GStreamer libraries.
 
 For building the bindings you need:
   * Mono 2.4 or MS .NET 2.0 or higher
-  * GLib >= 2.14
-  * GStreamer and gst-plugins-base >= 0.10.23
+  * GLib >= 2.18
+  * GStreamer and gst-plugins-base >= 0.10.24
   * Optionally GTK# >= 2.12 and Mono.Cairo for the samples
   * Optionally nunit >= 2.4 for the unit tests
 
