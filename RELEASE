@@ -1,15 +1,13 @@
 
-Release notes for GStreamer C# bindings 0.9.0 "Good things come to those who wait"
+Release notes for GStreamer C# bindings 0.9.1 "(Almost) nothing new here"
         
 
 
-The GStreamer team is proud to announce a first development release
-of the GStreamer C# bindings for the 0.10.x release series.
+The GStreamer team is proud to announce a new development release
+of the GStreamer C# bindings for the GStreamer 0.10.x release series.
 
 
-The 0.10.x series is a stable series targeted at end users.
-It is not API or ABI compatible with the stable 0.8.x series.
-It is, however, parallel installable with the 0.8.x series.
+The GStreamer 0.10.x release series is a stable series targeted at end users.
 
 Please note that at this time the GStreamer C# bindings
         are not consindered API/ABI stable, and public interfaces
@@ -22,9 +20,13 @@ Please note that at this time the GStreamer C# bindings
 
 Features of this release
     
-      * Initial release of gstreamer-sharp
-There were no bugs fixed in this release
-    
+      * Update bindings to GStreamer 0.10.24
+      * Update internal glib-sharp copy to latest SVN trunk
+      * Some cleanup
+
+Bugs fixed in this release
+     
+      * 594127 : gstreamer-sharp does not build
 
 Download
 
@@ -53,9 +55,6 @@ Applications
   
 Contributors to this release
     
-      * Aaron Bockover
-      * Khaled Mohammed
-      * Maarten Bosmans
-      * Michael Dominic K
+      * Gabriel Burt
       * Sebastian Dröge
  
