@@ -12,6 +12,7 @@ libgstosxaudio_la_LIBADD = 			  \
     -lgstinterfaces-@GST_MAJORMINOR@  \
     -lgstaudio-@GST_MAJORMINOR@       \
     $(GST_PLUGINS_BASE_LIBS)          \
+    $(GST_BASE_LIBS)                  \
     $(GST_LIBS)
 libgstosxaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework -Wl,CoreAudio -Wl,-framework -Wl,AudioUnit -Wl,-framework -Wl,CoreServices
 libgstosxaudio_la_LIBTOOLFLAGS = --tag=disable-static
