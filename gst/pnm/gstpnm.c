@@ -57,16 +57,13 @@ gst_my_typefind_function (GstTypeFind * tf, gpointer d)
       return;
     case GST_PNM_INFO_MNGR_RESULT_FINISHED:
       switch (mngr.info.type) {
-        case GST_PNM_TYPE_BITMAP_ASCII:
-        case GST_PNM_TYPE_BITMAP_RAW:
+        case GST_PNM_TYPE_BITMAP:
           gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, BITMAP_CAPS);
           return;
-        case GST_PNM_TYPE_GRAYMAP_ASCII:
-        case GST_PNM_TYPE_GRAYMAP_RAW:
+        case GST_PNM_TYPE_GRAYMAP:
           gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, GRAYMAP_CAPS);
           return;
-        case GST_PNM_TYPE_PIXMAP_ASCII:
-        case GST_PNM_TYPE_PIXMAP_RAW:
+        case GST_PNM_TYPE_PIXMAP:
           gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, PIXMAP_CAPS);
           return;
       }

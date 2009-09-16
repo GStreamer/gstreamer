@@ -68,8 +68,7 @@ gst_pnmdec_push (GstPnmdec * s, GstPad * src, GstBuffer * buf)
     GstBuffer *obuf;
     guint i;
 
-    if (s->mngr.info.type == GST_PNM_TYPE_PIXMAP_RAW ||
-        s->mngr.info.type == GST_PNM_TYPE_PIXMAP_ASCII) {
+    if (s->mngr.info.type == GST_PNM_TYPE_PIXMAP) {
       i_rowstride = 3 * s->mngr.info.width;
       o_rowstride = GST_ROUND_UP_4 (i_rowstride);
     } else {
@@ -115,17 +114,25 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
         goto out;
       case GST_PNM_INFO_MNGR_RESULT_FINISHED:
         offset = s->mngr.data_offset;
+        if (s->mngr.info.encoding == GST_PNM_ENCODING_ASCII) {
+          GST_DEBUG_OBJECT (s, "FIXME: ASCII encoding not implemented!");
+          gst_buffer_unref (data);
+          r = GST_FLOW_ERROR;
+          goto out;
+        }
         caps = gst_caps_copy (gst_pad_get_pad_template_caps (src));
         switch (s->mngr.info.type) {
-          case GST_PNM_TYPE_BITMAP_RAW:
-          case GST_PNM_TYPE_BITMAP_ASCII:
-          case GST_PNM_TYPE_GRAYMAP_RAW:
-          case GST_PNM_TYPE_GRAYMAP_ASCII:
+          case GST_PNM_TYPE_BITMAP:
+            GST_DEBUG_OBJECT (s, "FIXME: BITMAP format not implemented!");
+            gst_caps_unref (caps);
+            gst_buffer_unref (data);
+            r = GST_FLOW_ERROR;
+            goto out;
+          case GST_PNM_TYPE_GRAYMAP:
             gst_caps_remove_structure (caps, 0);
             s->size = s->mngr.info.width * s->mngr.info.height * 1;
             break;
-          case GST_PNM_TYPE_PIXMAP_RAW:
-          case GST_PNM_TYPE_PIXMAP_ASCII:
+          case GST_PNM_TYPE_PIXMAP:
             gst_caps_remove_structure (caps, 1);
             s->size = s->mngr.info.width * s->mngr.info.height * 3;
             break;
@@ -136,6 +143,7 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
             GST_TYPE_FRACTION, 0, 1, NULL);
         if (!gst_pad_set_caps (src, caps)) {
           gst_caps_unref (caps);
+          gst_buffer_unref (data);
           r = GST_FLOW_ERROR;
           goto out;
         }
@@ -144,6 +152,7 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
   }
 
   if (offset == GST_BUFFER_SIZE (data)) {
+    gst_buffer_unref (data);
     r = GST_FLOW_OK;
     goto out;
   }

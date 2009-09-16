@@ -19,13 +19,15 @@
 /**
  * SECTION:element-pnmenc
  *
- * Encodes pnm images.
+ * Encodes pnm images. This plugin supports both raw and ASCII encoding.
+ * To enable ASCII encoding, set the parameter ascii to TRUE. If you omit
+ * the parameter or set it to FALSE, the output will be raw encoded.
  *
  * <refsect">
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc num_buffers=1 ! pnmenc ! ffmpegcolorspace ! "video/x-raw-gray" ! pnmenc ! filesink location=test.pnm
- * ]| The above pipeline writes a test pnm file.
+ * gst-launch videotestsrc num_buffers=1 ! ffmpegcolorspace ! "video/x-raw-gray" ! pnmenc ascii=true ! filesink location=test.pnm
+ * ]| The above pipeline writes a test pnm file (ASCII encoding).
  * </refsect2>
  */
 
@@ -40,6 +42,13 @@
 #include <gst/video/video.h>
 
 #include <string.h>
+
+enum
+{
+  GST_PNMENC_PROP_0,
+  GST_PNMENC_PROP_ASCII
+      /* Add here. */
+};
 
 static GstElementDetails pnmenc_details =
 GST_ELEMENT_DETAILS ("PNM converter", "Codec/Encoder/Image",
@@ -57,6 +66,42 @@ static GstStaticPadTemplate src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (MIME_ALL));
 
+static void
+gst_pnmenc_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
+{
+  GstPnmenc *s = GST_PNMENC (object);
+
+  switch (prop_id) {
+    case GST_PNMENC_PROP_ASCII:
+      if (g_value_get_boolean (value))
+        s->info.encoding = GST_PNM_ENCODING_ASCII;
+      else
+        s->info.encoding = GST_PNM_ENCODING_RAW;
+      s->info.fields |= GST_PNM_INFO_FIELDS_ENCODING;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_pnmenc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstPnmenc *s = GST_PNMENC (object);
+
+  switch (prop_id) {
+    case GST_PNMENC_PROP_ASCII:
+      g_value_set_boolean (value, s->info.encoding == GST_PNM_ENCODING_ASCII);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static GstFlowReturn
 gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -65,14 +110,10 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
   gchar *header;
   GstBuffer *out;
 
-  if (s->info.fields != GST_PNM_INFO_FIELDS_ALL) {
-    r = GST_FLOW_NOT_NEGOTIATED;
-    goto out;
-  }
-
   /* Assumption: One buffer, one image. That is, always first write header. */
   header = g_strdup_printf ("P%i\n%i %i\n%i\n",
-      s->info.type, s->info.width, s->info.height, s->info.max);
+      s->info.type + 3 * (1 - s->info.encoding), s->info.width, s->info.height,
+      s->info.max);
   out = gst_buffer_new ();
   gst_buffer_set_data (out, (guchar *) header, strlen (header));
   gst_buffer_set_caps (out, GST_PAD_CAPS (s->src));
@@ -86,7 +127,7 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
     GstBuffer *obuf;
     guint i;
 
-    if (s->info.type == GST_PNM_TYPE_PIXMAP_RAW) {
+    if (s->info.type == GST_PNM_TYPE_PIXMAP) {
       o_rowstride = 3 * s->info.width;
       i_rowstride = GST_ROUND_UP_4 (o_rowstride);
     } else {
@@ -104,6 +145,25 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
     /* Pass through the data. */
     buf = gst_buffer_make_metadata_writable (buf);
   }
+
+  /* We might need to convert to ASCII... */
+  if (s->info.encoding == GST_PNM_ENCODING_ASCII) {
+    GstBuffer *obuf;
+    guint i, o;
+
+    obuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buf) * (4 + 1 / 20.));
+    for (i = o = 0; i < GST_BUFFER_SIZE (buf); i++) {
+      g_snprintf ((char *) GST_BUFFER_DATA (obuf) + o, 4, "%3i",
+          GST_BUFFER_DATA (buf)[i]);
+      o += 3;
+      GST_BUFFER_DATA (obuf)[o++] = ' ';
+      if (!(i % 20))
+        GST_BUFFER_DATA (obuf)[o++] = '\n';
+    }
+    gst_buffer_unref (buf);
+    buf = obuf;
+  }
+
   gst_buffer_set_caps (buf, GST_PAD_CAPS (s->src));
   r = gst_pad_push (s->src, buf);
 
@@ -127,10 +187,10 @@ gst_pnmenc_setcaps_func_sink (GstPad * pad, GstCaps * caps)
 
   /* Set caps on the source. */
   if (!strcmp (mime, "video/x-raw-rgb")) {
-    s->info.type = GST_PNM_TYPE_PIXMAP_RAW;
+    s->info.type = GST_PNM_TYPE_PIXMAP;
     srccaps = gst_caps_from_string (MIME_PM);
   } else if (!strcmp (mime, "video/x-raw-gray")) {
-    s->info.type = GST_PNM_TYPE_GRAYMAP_RAW;
+    s->info.type = GST_PNM_TYPE_GRAYMAP;
     srccaps = gst_caps_from_string (MIME_GM);
   } else {
     r = FALSE;
@@ -187,7 +247,14 @@ gst_pnmenc_base_init (gpointer g_class)
 static void
 gst_pnmenc_class_init (GstPnmencClass * klass)
 {
-  /* Nothing to see here. Move along. */
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->set_property = gst_pnmenc_set_property;
+  gobject_class->get_property = gst_pnmenc_get_property;
+
+  g_object_class_install_property (gobject_class, GST_PNMENC_PROP_ASCII,
+      g_param_spec_boolean ("ascii", "ASCII Encoding", "The output will be "
+          "ASCII encoded", FALSE, G_PARAM_READWRITE));
 }
 
 GST_BOILERPLATE (GstPnmenc, gst_pnmenc, GstElement, GST_TYPE_ELEMENT)

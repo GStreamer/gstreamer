@@ -94,27 +94,34 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
     case GST_PNM_INFO_MNGR_STATE_DATA_TYPE:
       switch (buf[i++]) {
         case '1':
-          mngr->info.type = GST_PNM_TYPE_BITMAP_ASCII;
+          mngr->info.type = GST_PNM_TYPE_BITMAP;
+          mngr->info.encoding = GST_PNM_ENCODING_ASCII;
           break;
         case '2':
-          mngr->info.type = GST_PNM_TYPE_GRAYMAP_ASCII;
+          mngr->info.type = GST_PNM_TYPE_GRAYMAP;
+          mngr->info.encoding = GST_PNM_ENCODING_ASCII;
           break;
         case '3':
-          mngr->info.type = GST_PNM_TYPE_PIXMAP_ASCII;
+          mngr->info.type = GST_PNM_TYPE_PIXMAP;
+          mngr->info.encoding = GST_PNM_ENCODING_ASCII;
           break;
         case '4':
-          mngr->info.type = GST_PNM_TYPE_BITMAP_RAW;
+          mngr->info.type = GST_PNM_TYPE_BITMAP;
+          mngr->info.encoding = GST_PNM_ENCODING_RAW;
           break;
         case '5':
-          mngr->info.type = GST_PNM_TYPE_GRAYMAP_RAW;
+          mngr->info.type = GST_PNM_TYPE_GRAYMAP;
+          mngr->info.encoding = GST_PNM_ENCODING_RAW;
           break;
         case '6':
-          mngr->info.type = GST_PNM_TYPE_PIXMAP_RAW;
+          mngr->info.type = GST_PNM_TYPE_PIXMAP;
+          mngr->info.encoding = GST_PNM_ENCODING_RAW;
           break;
         default:
           return GST_PNM_INFO_MNGR_RESULT_FAILED;
       }
-      mngr->info.fields |= GST_PNM_INFO_FIELDS_TYPE;
+      mngr->info.fields |=
+          GST_PNM_INFO_FIELDS_TYPE | GST_PNM_INFO_FIELDS_ENCODING;
       mngr->state = GST_PNM_INFO_MNGR_STATE_WHITE_SPACE;
       if (i == buf_len)
         return GST_PNM_INFO_MNGR_RESULT_READING;
@@ -176,28 +183,4 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
       return gst_pnm_info_mngr_scan (mngr, buf + i, buf_len - i);
   }
   return GST_PNM_INFO_MNGR_RESULT_FAILED;
-}
-
-GType
-gst_pnm_type_get_type (void)
-{
-  static GType etype = 0;
-
-  if (etype == 0) {
-    static const GEnumValue values[] = {
-      {GST_PNM_TYPE_BITMAP_RAW, "GST_PNM_TYPE_BITMAP_RAW", MIME_BM " (ascii)"},
-      {GST_PNM_TYPE_GRAYMAP_ASCII, "GST_PNM_TYPE_BITMAP_ASCII",
-          MIME_BM " (raw)"},
-      {GST_PNM_TYPE_GRAYMAP_RAW, "GST_PNM_TYPE_GRAYMAP_RAW",
-          MIME_GM " (ascii)"},
-      {GST_PNM_TYPE_GRAYMAP_ASCII, "GST_PNM_TYPE_GRAYMAP_ASCII",
-          MIME_GM " (raw)"},
-      {GST_PNM_TYPE_PIXMAP_RAW, "GST_PNM_TYPE_PIXMAP_RAW", MIME_PM " (ascii)"},
-      {GST_PNM_TYPE_PIXMAP_ASCII, "GST_PNM_TYPE_PIXMAP_ASCII",
-          MIME_PM " (raw)"},
-      {0, NULL, NULL}
-    };
-    etype = g_enum_register_static ("GstPnmdecType", values);
-  }
-  return etype;
 }
