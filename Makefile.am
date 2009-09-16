@@ -6,6 +6,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer-sharp-0.10.pc
 
 EXTRA_DIST = \
+	RELEASE \
 	gstreamer-sharp-0.10.pc.in \
 	gstreamer-sharp.snk
 
