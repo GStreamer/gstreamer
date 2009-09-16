@@ -766,14 +766,15 @@ static GstFlowReturn
 mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet,
     MpegTSPacketizerSection * section)
 {
-  GstIterator *iterator;
+  guint32 pads_cookie;
   gboolean done = FALSE;
-  gpointer pad = NULL;
+  GstPad *pad = NULL;
   MpegTSParsePad *tspad;
   guint16 pid;
   GstBuffer *buffer;
   GstFlowReturn ret;
   GstCaps *caps;
+  GList *srcpads;
 
   pid = packet->pid;
   buffer = packet->buffer;
@@ -790,53 +791,66 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet,
     ret = GST_FLOW_NOT_LINKED;
   else
     ret = GST_FLOW_OK;
+
+  /* Get cookie and source pads list */
+  pads_cookie = GST_ELEMENT_CAST (parse)->pads_cookie;
+  srcpads = GST_ELEMENT_CAST (parse)->srcpads;
+  if (G_LIKELY (srcpads)) {
+    pad = GST_PAD_CAST (srcpads->data);
+    g_object_ref (pad);
+  }
   GST_OBJECT_UNLOCK (parse);
 
-  iterator = gst_element_iterate_src_pads (GST_ELEMENT_CAST (parse));
-  while (!done) {
-    switch (gst_iterator_next (iterator, &pad)) {
-      case GST_ITERATOR_OK:
-        tspad = gst_pad_get_element_private (GST_PAD_CAST (pad));
+  while (pad && !done) {
+    tspad = gst_pad_get_element_private (pad);
 
-        /* make sure to push only once if the iterator resyncs */
-        if (!tspad->pushed) {
-          /* ref the buffer as gst_pad_push takes a ref but we want to reuse the
-           * same buffer for next pushes */
-          gst_buffer_ref (buffer);
-          if (section) {
-            tspad->flow_return =
-                mpegts_parse_tspad_push_section (parse, tspad, section, buffer);
-          } else {
-            tspad->flow_return =
-                mpegts_parse_tspad_push (parse, tspad, pid, buffer);
-          }
-          tspad->pushed = TRUE;
+    if (G_LIKELY (!tspad->pushed)) {
+      /* ref the buffer as gst_pad_push takes a ref but we want to reuse the
+       * same buffer for next pushes */
+      gst_buffer_ref (buffer);
+      if (section) {
+        tspad->flow_return =
+            mpegts_parse_tspad_push_section (parse, tspad, section, buffer);
+      } else {
+        tspad->flow_return =
+            mpegts_parse_tspad_push (parse, tspad, pid, buffer);
+      }
+      tspad->pushed = TRUE;
 
-          if (G_UNLIKELY (GST_FLOW_IS_FATAL (tspad->flow_return))) {
-            /* return the error upstream */
-            ret = tspad->flow_return;
-            done = TRUE;
-          }
-        }
-
-        if (ret == GST_FLOW_NOT_LINKED)
-          ret = tspad->flow_return;
-
-        /* the iterator refs the pad */
-        g_object_unref (GST_PAD_CAST (pad));
-        break;
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (iterator);
-        break;
-      case GST_ITERATOR_DONE:
+      if (G_UNLIKELY (GST_FLOW_IS_FATAL (tspad->flow_return))) {
+        /* return the error upstream */
+        ret = tspad->flow_return;
         done = TRUE;
-        break;
-      default:
-        g_warning ("this should not be reached");
+      }
+
+    }
+
+    if (ret == GST_FLOW_NOT_LINKED)
+      ret = tspad->flow_return;
+
+    g_object_unref (pad);
+
+    if (G_UNLIKELY (!done)) {
+      GST_OBJECT_LOCK (parse);
+      if (G_UNLIKELY (pads_cookie != GST_ELEMENT_CAST (parse)->pads_cookie)) {
+        /* resync */
+        GST_DEBUG ("resync");
+        pads_cookie = GST_ELEMENT_CAST (parse)->pads_cookie;
+        srcpads = GST_ELEMENT_CAST (parse)->srcpads;
+      } else {
+        GST_DEBUG ("getting next pad");
+        /* Get next pad */
+        srcpads = g_list_next (srcpads);
+      }
+
+      if (srcpads) {
+        pad = GST_PAD_CAST (srcpads->data);
+        g_object_ref (pad);
+      } else
+        done = TRUE;
+      GST_OBJECT_UNLOCK (parse);
     }
   }
-
-  gst_iterator_free (iterator);
 
   gst_buffer_unref (buffer);
   packet->buffer = NULL;
