@@ -35,12 +35,6 @@
 
 #include "gstrtpg729pay.h"
 
-/* TODO: fix gstrtpbuffer.h */
-#undef GST_RTP_PAYLOAD_G729
-#define GST_RTP_PAYLOAD_G729 18
-#undef GST_RTP_PAYLOAD_G729_STRING
-#define GST_RTP_PAYLOAD_G729_STRING "18"
-
 #define G729_FRAME_SIZE 10
 #define G729B_CN_FRAME_SIZE 2
 #define G729_FRAME_DURATION (10 * GST_MSECOND)
