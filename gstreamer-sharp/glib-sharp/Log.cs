@@ -39,7 +39,7 @@ namespace Gst.GLib {
 		FlagRecursion          = 1 << 0,
 		FlagFatal              = 1 << 1,
 
-		/* GLib log levels */
+		/* Gst.GLib log levels */
 		Error                  = 1 << 2,       /* always fatal */
 		Critical               = 1 << 3,
 		Warning                = 1 << 4,

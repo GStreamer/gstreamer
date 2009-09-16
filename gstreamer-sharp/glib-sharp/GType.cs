@@ -1,4 +1,4 @@
-// GLib.Type.cs - GLib GType class implementation
+// Gst.GLib.Type.cs - Gst.GLib GType class implementation
 //
 // Author: Mike Kestner <mkestner@speakeasy.net>
 //
@@ -29,7 +29,7 @@ namespace Gst.GLib {
 	using System.Runtime.InteropServices;
 	using System.Text;
 
-	public delegate System.Type TypeResolutionHandler (GLib.GType gtype, string gtype_name);
+	public delegate System.Type TypeResolutionHandler (Gst.GLib.GType gtype, string gtype_name);
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct GType {
@@ -103,8 +103,8 @@ namespace Gst.GLib {
 
 		static GType ()
 		{
-			if (!GLib.Thread.Supported)
-				GLib.Thread.Init ();
+			if (!Gst.GLib.Thread.Supported)
+				Gst.GLib.Thread.Init ();
 
 			g_type_init ();
 
@@ -119,7 +119,7 @@ namespace Gst.GLib {
 			Register (GType.Double, typeof (double));
 			Register (GType.String, typeof (string));
 			Register (GType.Pointer, typeof (IntPtr));
-			Register (GType.Object, typeof (GLib.Object));
+			Register (GType.Object, typeof (Gst.GLib.Object));
 			Register (GType.Pointer, typeof (IntPtr));
 
 			// One-way mapping
@@ -135,8 +135,8 @@ namespace Gst.GLib {
 					return (GType)gtypes[type];
 			}
 
-			if (type.IsSubclassOf (typeof (GLib.Object))) {
-				gtype = GLib.Object.LookupGType (type);
+			if (type.IsSubclassOf (typeof (Gst.GLib.Object))) {
+				gtype = Gst.GLib.Object.LookupGType (type);
 				Register (gtype, type);
 				return gtype;
 			}
@@ -148,7 +148,7 @@ namespace Gst.GLib {
 				GTypeAttribute gattr = (GTypeAttribute)Attribute.GetCustomAttribute (type, typeof (GTypeAttribute), false);
 				pi = gattr.WrapperType.GetProperty ("GType", BindingFlags.Public | BindingFlags.Static);
 				gtype = (GType) pi.GetValue (null, null);
-			} else if (type.IsSubclassOf (typeof (GLib.Opaque)))
+			} else if (type.IsSubclassOf (typeof (Gst.GLib.Opaque)))
 				gtype = GType.Pointer;
 			else
 				gtype = ManagedValue.GType;
@@ -162,7 +162,7 @@ namespace Gst.GLib {
 			for (int i = 1; i < cname.Length; i++) {
 				if (System.Char.IsUpper (cname[i])) {
 					if (i == 1 && cname [0] == 'G')
-						return "GLib." + cname.Substring (1);
+						return "Gst.GLib." + cname.Substring (1);
 					else
 						return cname.Substring (0, i) + "." + cname.Substring (i);
 				}
@@ -193,7 +193,7 @@ namespace Gst.GLib {
 			string native_name = Marshaller.Utf8PtrToString (g_type_name (typeid));
 
 			if (ResolveType != null) {
-				GLib.GType gt = new GLib.GType (typeid);
+				Gst.GLib.GType gt = new Gst.GLib.GType (typeid);
 
 				Delegate[] invocation_list = ResolveType.GetInvocationList ();
 				foreach (Delegate d in invocation_list) {
@@ -302,7 +302,7 @@ namespace Gst.GLib {
 		public GType GetThresholdType ()
 		{
 			GType curr_type = this;
-			while (curr_type.ToString ().StartsWith ("__gtksharp_"))
+			while (curr_type.ToString ().StartsWith ("__gst_gtksharp_"))
 				curr_type = curr_type.GetBaseType ();
 			return curr_type;
 		}
@@ -326,7 +326,7 @@ namespace Gst.GLib {
 			string qn = t.FullName;
 			// Just a random guess
 			StringBuilder sb = new StringBuilder (20 + qn.Length);
-			sb.Append ("__gtksharp_");
+			sb.Append ("__gst_gtksharp_");
 			sb.Append (type_uid++);
 			sb.Append ("_");
 			foreach (char c in qn) {
@@ -349,14 +349,14 @@ namespace Gst.GLib {
 		{
 			GType parent_gtype = LookupGObjectType (t.BaseType);
 			string name = BuildEscapedName (t);
-			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr native_name = Gst.GLib.Marshaller.StringToPtrGStrdup (name);
 			GTypeQuery query;
 			g_type_query (parent_gtype.Val, out query);
 			GTypeInfo info = new GTypeInfo ();
 			info.class_size = (ushort) query.class_size;
 			info.instance_size = (ushort) query.instance_size;
 			GType gtype = new GType (g_type_register_static (parent_gtype.Val, native_name, ref info, 0));
-			GLib.Marshaller.Free (native_name);
+			Gst.GLib.Marshaller.Free (native_name);
 			Register (gtype, t);
 			return gtype;
 		}
@@ -372,7 +372,7 @@ namespace Gst.GLib {
 			if (pi != null)
 				return (GType) pi.GetValue (null, null);
 			
-			return GLib.Object.RegisterGType (t);
+			return Gst.GLib.Object.RegisterGType (t);
 		}
 
 		internal static IntPtr ValFromInstancePtr (IntPtr handle)

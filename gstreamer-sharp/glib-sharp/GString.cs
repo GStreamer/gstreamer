@@ -1,4 +1,4 @@
-// GLib.GString.cs : Marshaler for GStrings 
+// Gst.GLib.GString.cs : Marshaler for GStrings 
 //
 // Author: Mike Kestner  <mkestner@ximian.com>
 //
@@ -23,7 +23,7 @@ namespace Gst.GLib {
 	using System;
 	using System.Runtime.InteropServices;
 	
-	public class GString : GLib.IWrapper {
+	public class GString : Gst.GLib.IWrapper {
 
 		IntPtr handle;
 

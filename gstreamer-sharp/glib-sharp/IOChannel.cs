@@ -23,7 +23,7 @@ namespace Gst.GLibSharp {
 
 	using System;
 	using System.Runtime.InteropServices;
-	using GLib;
+	using Gst.GLib;
 
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate bool IOFuncNative(IntPtr source, int condition, IntPtr data);
@@ -55,7 +55,7 @@ namespace Gst.GLib {
 
 	using System;
 	using System.Runtime.InteropServices;
-	using GLibSharp;
+	using Gst.GLibSharp;
 
 	public class IOChannel : IDisposable, IWrapper {
 

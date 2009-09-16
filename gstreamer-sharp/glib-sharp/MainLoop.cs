@@ -1,4 +1,4 @@
-// GLib.MainLoop.cs - g_main_loop class implementation
+// Gst.GLib.MainLoop.cs - g_main_loop class implementation
 //
 // Author: Jeroen Zwartepoorte <jeroen@xs4all.nl>
 //

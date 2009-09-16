@@ -126,7 +126,7 @@ namespace Gst.GLib {
 			Marshaller.Free (native_dir);
 			Marshaller.Free (native_argv);
 			Marshaller.Free (native_envp);
-			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			if (error != IntPtr.Zero) throw new Gst.GLib.GException (error);
 			return result;
 		}  
 
@@ -161,7 +161,7 @@ namespace Gst.GLib {
 			Marshaller.Free (native_dir);
 			Marshaller.Free (native_argv);
 			Marshaller.Free (native_envp);
-			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			if (error != IntPtr.Zero) throw new Gst.GLib.GException (error);
 			return result;
 		}  
 
@@ -181,7 +181,7 @@ namespace Gst.GLib {
 			Marshaller.Free (native_envp);
 			stdout = Marshaller.PtrToStringGFree (native_stdout);
 			stderr = Marshaller.PtrToStringGFree (native_stderr);
-			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			if (error != IntPtr.Zero) throw new Gst.GLib.GException (error);
 			return result;
 		}  
 
@@ -194,7 +194,7 @@ namespace Gst.GLib {
 			IntPtr native_cmd = Marshaller.StringToPtrGStrdup (command_line);
 			bool result = g_spawn_command_line_async (native_cmd, out error);
 			Marshaller.Free (native_cmd);
-			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			if (error != IntPtr.Zero) throw new Gst.GLib.GException (error);
 			return result;
 		}
 
@@ -209,7 +209,7 @@ namespace Gst.GLib {
 			Marshaller.Free (native_cmd);
 			stdout = Marshaller.PtrToStringGFree (native_stdout);
 			stderr = Marshaller.PtrToStringGFree (native_stderr);
-			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			if (error != IntPtr.Zero) throw new Gst.GLib.GException (error);
 			return result;
 		}
 	}

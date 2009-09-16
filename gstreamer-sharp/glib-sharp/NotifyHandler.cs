@@ -21,7 +21,7 @@ namespace Gst.GLib {
 
 	public delegate void NotifyHandler (object o, NotifyArgs args);
 
-	public class NotifyArgs : GLib.SignalArgs {
+	public class NotifyArgs : Gst.GLib.SignalArgs {
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_param_spec_get_name (IntPtr pspec);
 

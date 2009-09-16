@@ -1,4 +1,4 @@
-// GLib.FileUtils.cs - GFileUtils class implementation
+// Gst.GLib.FileUtils.cs - GFileUtils class implementation
 //
 // Author: Martin Baulig <martin@gnome.org>
 //

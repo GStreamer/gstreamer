@@ -1,4 +1,4 @@
-// GLib.DestroyNotify.cs - internal DestroyNotify helper
+// Gst.GLib.DestroyNotify.cs - internal DestroyNotify helper
 //
 // Author: Mike Kestner <mkestner@novell.com>
 //

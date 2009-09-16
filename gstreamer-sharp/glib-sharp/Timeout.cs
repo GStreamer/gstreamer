@@ -1,4 +1,4 @@
-// GLib.Timeout.cs - Timeout class implementation
+// Gst.GLib.Timeout.cs - Timeout class implementation
 //
 // Author(s):
 //	Mike Kestner <mkestner@speakeasy.net>
