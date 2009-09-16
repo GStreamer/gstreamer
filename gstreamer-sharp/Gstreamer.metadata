@@ -1010,8 +1010,8 @@
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_guint64_to_gdouble']" name="hidden">1</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_seqnum_compare']" name="hidden">1</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_set_object_arg']" name="hidden">1</attr>
-  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale']" name="hidden">1</attr>
-  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale_int']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale']" name="name">ScaleUInt64</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale_int']" name="name">ScaleUInt64</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_set_value_from_string']" name="hidden">1</attr>
 
   <!-- We implement this ourselves -->
