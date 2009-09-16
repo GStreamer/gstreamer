@@ -275,9 +275,8 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
       buf2 = gst_buffer_create_sub (buf,
           GST_BUFFER_SIZE (buf) - available, available);
       gst_adapter_push (adapter, buf2);
-    } else {
-      gst_buffer_unref (buf);
     }
+    gst_buffer_unref (buf);
   }
 
   if (adapter) {
