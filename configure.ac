@@ -1,4 +1,4 @@
-AC_INIT(gstreamer-sharp, 0.9.0.1,
+AC_INIT(gstreamer-sharp, 0.9.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=gst-sharp,
     gstreamer-sharp)
 AC_CANONICAL_SYSTEM
