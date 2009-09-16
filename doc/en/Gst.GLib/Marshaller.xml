@@ -23,7 +23,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>System.Obsolete("Use GLib.Argv instead to avoid leaks.")</AttributeName>
+          <AttributeName>System.Obsolete("Use Gst.GLib.Argv instead to avoid leaks.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -48,7 +48,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>System.Obsolete("Use GLib.Argv instead to avoid leaks.")</AttributeName>
+          <AttributeName>System.Obsolete("Use Gst.GLib.Argv instead to avoid leaks.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

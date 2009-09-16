@@ -99,7 +99,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>System.Obsolete("Replaced by GLib.Signal marshaling mechanism.")</AttributeName>
+          <AttributeName>System.Obsolete("Replaced by Gst.GLib.Signal marshaling mechanism.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -120,7 +120,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>System.Obsolete("Replaced by GLib.Signal marshaling mechanism.")</AttributeName>
+          <AttributeName>System.Obsolete("Replaced by Gst.GLib.Signal marshaling mechanism.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -141,7 +141,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>System.Obsolete("Replaced by GLib.Signal marshaling mechanism.")</AttributeName>
+          <AttributeName>System.Obsolete("Replaced by Gst.GLib.Signal marshaling mechanism.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -162,7 +162,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>System.Obsolete("Replaced by GLib.Signal marshaling mechanism.")</AttributeName>
+          <AttributeName>System.Obsolete("Replaced by Gst.GLib.Signal marshaling mechanism.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

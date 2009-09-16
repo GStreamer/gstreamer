@@ -15,7 +15,7 @@
   </Interfaces>
   <Attributes>
     <Attribute>
-      <AttributeName>System.Obsolete("Replaced by GLib.Signal.")</AttributeName>
+      <AttributeName>System.Obsolete("Replaced by Gst.GLib.Signal.")</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>

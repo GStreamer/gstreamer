@@ -11,7 +11,7 @@
   <Interfaces />
   <Attributes>
     <Attribute>
-      <AttributeName>System.Obsolete("Replaced by direct enum type casts to/from GLib.Value")</AttributeName>
+      <AttributeName>System.Obsolete("Replaced by direct enum type casts to/from Gst.GLib.Value")</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>

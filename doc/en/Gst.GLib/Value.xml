@@ -559,7 +559,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>System.Obsolete("Replaced by GLib.Object cast")</AttributeName>
+          <AttributeName>System.Obsolete("Replaced by Gst.GLib.Object cast")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
