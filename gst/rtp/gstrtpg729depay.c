@@ -199,10 +199,10 @@ gst_rtp_g729_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     goto bad_packet;
   }
 
-  GST_DEBUG_OBJECT (rtpg729depay, "payload len %d", payload_len);
+  GST_LOG_OBJECT (rtpg729depay, "payload len %d", payload_len);
 
   if ((payload_len % 10) == 2) {
-    GST_DEBUG_OBJECT (rtpg729depay, "G729 payload contains CNG frame");
+    GST_LOG_OBJECT (rtpg729depay, "G729 payload contains CNG frame");
   }
 
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
@@ -213,7 +213,7 @@ gst_rtp_g729_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   }
 
-  GST_DEBUG ("gst_rtp_g729_depay_chain: pushing buffer of size %d",
+  GST_LOG_OBJECT (depayload, "pushing buffer of size %d",
       GST_BUFFER_SIZE (outbuf));
 
   return outbuf;

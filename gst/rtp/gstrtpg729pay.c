@@ -205,7 +205,7 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
     min_payload_len = max_payload_len;
   }
 
-  GST_DEBUG_OBJECT (basertpaudiopayload,
+  GST_LOG_OBJECT (basertpaudiopayload,
       "Calculated min_payload_len %u and max_payload_len %u",
       min_payload_len, max_payload_len);
 
