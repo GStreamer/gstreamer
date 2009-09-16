@@ -35,6 +35,9 @@
 
 #include "gstrtpg729pay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtpg729pay_debug);
+#define GST_CAT_DEFAULT (rtpg729pay_debug)
+
 #define G729_FRAME_SIZE 10
 #define G729B_CN_FRAME_SIZE 2
 #define G729_FRAME_DURATION (10 * GST_MSECOND)
@@ -91,6 +94,9 @@ gst_rtp_g729_pay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_g729_pay_src_template));
   gst_element_class_set_details (element_class, &gst_rtp_g729_pay_details);
+
+  GST_DEBUG_CATEGORY_INIT (rtpg729pay_debug, "rtpg729pay", 0,
+      "G.729 RTP Payloader");
 }
 
 static void

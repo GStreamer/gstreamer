@@ -26,6 +26,10 @@
 #include <string.h>
 #include "gstrtpg729depay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtpg729depay_debug);
+#define GST_CAT_DEFAULT (rtpg729depay_debug)
+
+
 /* references:
  *
  * RFC 3551 (4.5.6)
@@ -93,6 +97,9 @@ gst_rtp_g729_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_g729_depay_sink_template));
 
   gst_element_class_set_details (element_class, &gst_rtp_g729depay_details);
+
+  GST_DEBUG_CATEGORY_INIT (rtpg729depay_debug, "rtpg729depay", 0,
+      "G.729 RTP Depayloader");
 }
 
 static void
