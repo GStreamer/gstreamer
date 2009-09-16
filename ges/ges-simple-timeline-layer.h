@@ -60,12 +60,8 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer *layer,
 				      GESTimelineObject *object, gint position);
 
 gboolean
-ges_simple_timeline_layer_remove_object (GESSimpleTimelineLayer *layer,
-					 GESTimelineObject *object);
-
-gboolean
 ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer *layer,
-				       GESTimelineObject, gint newposition);
+				       GESTimelineObject *object, gint newposition);
 
 G_END_DECLS
 

@@ -118,6 +118,13 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
   }
 }
 
+/**
+ * ges_timeline_pipeline_new:
+ *
+ * Creates a new conveninence #GESTimelinePipeline.
+ *
+ * Returns: the new #GESTimelinePipeline.
+ */
 GESTimelinePipeline *
 ges_timeline_pipeline_new (void)
 {
@@ -226,7 +233,18 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   GST_DEBUG ("done");
 }
 
-
+/**
+ * ges_timeline_pipeline_add_timeline:
+ * @pipeline: a #GESTimelinePipeline
+ * @timeline: the #GESTimeline to set on the @pipeline.
+ *
+ * Sets the timeline to use in this pipeline.
+ *
+ * The reference to the @timeline will be stolen by the @pipeline.
+ *
+ * Returns: TRUE if the @timeline could be successfully set on the @pipeline,
+ * else FALSE.
+ */
 gboolean
 ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
     GESTimeline * timeline)

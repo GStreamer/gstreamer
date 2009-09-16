@@ -112,13 +112,35 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   object_class->dispose = ges_timeline_object_dispose;
   object_class->finalize = ges_timeline_object_finalize;
 
+  /**
+   * GESTimelineObject:start
+   *
+   * The position of the object in the #GESTimelineLayer (in nanoseconds).
+   */
   g_object_class_install_property (object_class, PROP_START,
       g_param_spec_uint64 ("start", "Start",
           "The position in the container", 0, G_MAXUINT64, 0,
           G_PARAM_READWRITE));
+
+  /**
+   * GESTimelineObject:in-point
+   *
+   * The in-point at which this #GESTimelineObject will start outputting data
+   * from its contents (in nanoseconds).
+   *
+   * Ex : an in-point of 5 seconds means that the first outputted buffer will
+   * be the one located 5 seconds in the controlled resource.
+   */
   g_object_class_install_property (object_class, PROP_INPOINT,
-      g_param_spec_uint64 ("inpoint", "In-point", "The in-point", 0,
+      g_param_spec_uint64 ("in-point", "In-point", "The in-point", 0,
           G_MAXUINT64, 0, G_PARAM_READWRITE));
+
+  /**
+   * GESTimelineObject:duration
+   *
+   * The duration (in nanoseconds) which will be used in the container #GESTrack
+   * starting from 'in-point'.
+   */
   g_object_class_install_property (object_class, PROP_DURATION,
       g_param_spec_uint64 ("duration", "Duration", "The duration to use",
           0, G_MAXUINT64, GST_SECOND, G_PARAM_READWRITE));
@@ -130,12 +152,6 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
 static void
 ges_timeline_object_init (GESTimelineObject * self)
 {
-}
-
-GESTimelineObject *
-ges_timeline_object_new (void)
-{
-  return g_object_new (GES_TYPE_TIMELINE_OBJECT, NULL);
 }
 
 /**

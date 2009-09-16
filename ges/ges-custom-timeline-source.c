@@ -107,6 +107,15 @@ ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
   return res;
 }
 
+/**
+ * ges_custom_timeline_source_new:
+ * @func: The #FillTrackObjectUserFunc that will be used to fill the track objects.
+ * @user_data: a gpointer that will be used when @func is called.
+ *
+ * Creates a new #GESCustomTimelineSource.
+ *
+ * Returns: The new #GESCustomTimelineSource.
+ */
 GESCustomTimelineSource *
 ges_custom_timeline_source_new (FillTrackObjectUserFunc func,
     gpointer user_data)

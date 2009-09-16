@@ -104,28 +104,50 @@ ges_timeline_class_init (GESTimelineClass * klass)
   object_class->dispose = ges_timeline_dispose;
   object_class->finalize = ges_timeline_finalize;
 
-  /* Signals
-   * 'track-added'
-   * 'track-removed'
-   * 'layer-added'
-   * 'layer-removed'
-   */
 
+  /**
+   * GESTimeline::track-added
+   * @timeline: the #GESTimeline
+   * @track: the #GESTrack that was added to the timeline
+   *
+   * Will be emitted after the track was added to the timeline.
+   */
   ges_timeline_signals[TRACK_ADDED] =
       g_signal_new ("track-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, track_added), NULL,
       NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GES_TYPE_TRACK);
 
+  /**
+   * GESTimeline::track-removed
+   * @timeline: the #GESTimeline
+   * @track: the #GESTrack that was removed from the timeline
+   *
+   * Will be emitted after the track was removed from the timeline.
+   */
   ges_timeline_signals[TRACK_REMOVED] =
       g_signal_new ("track-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, track_removed),
       NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GES_TYPE_TRACK);
 
+  /**
+   * GESTimeline::layer-added
+   * @timeline: the #GESTimeline
+   * @layer: the #GESTimelineLayer that was added to the timeline
+   *
+   * Will be emitted after the layer was added to the timeline.
+   */
   ges_timeline_signals[LAYER_ADDED] =
       g_signal_new ("layer-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_added), NULL,
       NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GES_TYPE_TIMELINE_LAYER);
 
+  /**
+   * GESTimeline::layer-removed
+   * @timeline: the #GESTimeline
+   * @layer: the #GESTimelineLayer that was removed from the timeline
+   *
+   * Will be emitted after the layer was removed from the timeline.
+   */
   ges_timeline_signals[LAYER_REMOVED] =
       g_signal_new ("layer-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_removed),
@@ -140,11 +162,30 @@ ges_timeline_init (GESTimeline * self)
   self->tracks = NULL;
 }
 
+/**
+ * ges_timeline_new:
+ *
+ * Creates a new empty #GESTimeline.
+ *
+ * Returns: The new timeline.
+ */
+
 GESTimeline *
 ges_timeline_new (void)
 {
   return g_object_new (GES_TYPE_TIMELINE, NULL);
 }
+
+/**
+ * ges_timeline_load_from_uri:
+ * @uri: The URI to load from
+ *
+ * Creates a timeline from the contents of given uri.
+ *
+ * NOT_IMPLEMENTED !
+ *
+ * Returns: A new #GESTimeline if loading was successful, else NULL.
+ */
 
 GESTimeline *
 ges_timeline_load_from_uri (gchar * uri)
@@ -152,6 +193,19 @@ ges_timeline_load_from_uri (gchar * uri)
   /* FIXME : IMPLEMENT */
   return NULL;
 }
+
+/**
+ * ges_timeline_save:
+ * @timeline: a #GESTimeline
+ * @uri: The location to save to
+ *
+ * Saves the timeline to the given location
+ *
+ * NOT_IMPLEMENTED !
+ *
+ * Returns: TRUE if the timeline was successfully saved to the given location,
+ * else FALSE.
+ */
 
 gboolean
 ges_timeline_save (GESTimeline * timeline, gchar * uri)
@@ -264,6 +318,18 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 
   return TRUE;
 }
+
+/**
+ * ges_timeline_remove_layer:
+ * @timeline: a #GESTimeline
+ * @layer: the #GESTimelineLayer to remove
+ *
+ * Removes the layer from the timeline. The reference that the @timeline holds on
+ * the layer will be dropped. If you wish to use the @layer after calling this
+ * method, you need to take a reference before calling.
+ *
+ * Returns: TRUE if the layer was properly removed, else FALSE.
+ */
 
 gboolean
 ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)

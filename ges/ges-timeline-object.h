@@ -43,15 +43,37 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_OBJECT_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
 
+/**
+ * FillTrackObjectFunc:
+ * @object: the #GESTimelineObject controlling the track object
+ * @trobject: the #GESTrackObject
+ * @gnlobj: the GNonLin object that needs to be filled.
+ *
+ * A function that will be called when the GNonLin object of a corresponding
+ * track object needs to be filled.
+ *
+ * The implementer of this function shall add the proper #GstElement to @gnlobj
+ * using gst_bin_add().
+ *
+ * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
+ */
 typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
 					 GESTrackObject * trobject,
 					 GstElement * gnlobj);
 
+/**
+ * GESTimelineObject:
+ * @layer: the #GESTImelineLayer where this object is being used.
+ *
+ * The GESTimelineObject subclass. Subclasses can access these fields.
+ */
 struct _GESTimelineObject {
   GObject parent;
 
-  GESTimelineLayer * layer;	/* The layer where this object is being used */
+  /*< public >*/
+  GESTimelineLayer * layer;
 
+  /*< private >*/
   GList *trackobjects;	/* A list of TrackObject controlled by this TimelineObject */
 
   /* start, inpoint, duration and fullduration are in nanoseconds */
@@ -63,6 +85,14 @@ struct _GESTimelineObject {
   guint64 fullduration; /* Full usable duration of the object (-1: no duration) */
 };
 
+/**
+ * GESTimelineObjectClass:
+ * @parent_class: object parent class
+ * @create_track_object: method to create a #GESTrackObject for a given #GESTrack.
+ * @fill_track_object: method to fill an associated #GESTrackObject.
+ *
+ * Subclasses can override the @create_track_object and @fill_track_object methods.
+ */
 struct _GESTimelineObjectClass {
   GObjectClass parent_class;
 
@@ -73,9 +103,6 @@ struct _GESTimelineObjectClass {
 };
 
 GType ges_timeline_object_get_type (void);
-
-GESTimelineObject*
-ges_timeline_object_new (void);
 
 void ges_timeline_object_set_start (GESTimelineObject * object, guint64 start);
 void ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint);

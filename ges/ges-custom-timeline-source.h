@@ -43,6 +43,21 @@ G_BEGIN_DECLS
 #define GES_CUSTOM_TIMELINE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_CUSTOM_TIMELINE_SOURCE, GESCustomTimelineSourceClass))
 
+/**
+ * FillTrackObjectUserFunc:
+ * @object: the #GESTimelineObject controlling the track object
+ * @trobject: the #GESTrackObject
+ * @gnlobj: the GNonLin object that needs to be filled.
+ * @user_data: the gpointer to optional user data
+ *
+ * A function that will be called when the GNonLin object of a corresponding
+ * track object needs to be filled.
+ *
+ * The implementer of this function shall add the proper #GstElement to @gnlobj
+ * using gst_bin_add().
+ *
+ * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
+ */
 typedef gboolean (*FillTrackObjectUserFunc) (GESTimelineObject * object,
 					     GESTrackObject * trobject,
 					     GstElement * gnlobj,

@@ -73,14 +73,14 @@ ges_track_source_get_type
 <TITLE>GESTimeline</TITLE>
 GESTimeline
 GESTimelineClass
-ges_timeline_remove_layer
-ges_timeline_remove_track
-ges_timeline_save
+ges_timeline_new
 ges_timeline_add_layer
+ges_timeline_remove_layer
 ges_timeline_add_track
+ges_timeline_remove_track
 ges_timeline_get_track_for_pad
 ges_timeline_load_from_uri
-ges_timeline_new
+ges_timeline_save
 <SUBSECTION Standard>
 ges_timeline_get_type
 GES_IS_TIMELINE
@@ -100,8 +100,8 @@ GESTimelineLayerClass
 ges_timeline_layer_add_object
 ges_timeline_layer_new
 ges_timeline_layer_remove_object
-ges_timeline_layer_set_timeline
 <SUBSECTION Standard>
+ges_timeline_layer_set_timeline
 ges_timeline_layer_get_type
 GES_IS_TIMELINE_LAYER
 GES_IS_TIMELINE_LAYER_CLASS
@@ -119,15 +119,14 @@ GESTimelineObject
 GESTimelineObjectClass
 FillTrackObjectFunc
 ges_timeline_object_set_inpoint
-ges_timeline_object_set_layer
-ges_timeline_object_set_priority
 ges_timeline_object_set_start
-ges_timeline_object_create_track_object
-ges_timeline_object_fill_track_object
-ges_timeline_object_new
-ges_timeline_object_release_track_object
 ges_timeline_object_set_duration
 <SUBSECTION Standard>
+ges_timeline_object_create_track_object
+ges_timeline_object_fill_track_object
+ges_timeline_object_release_track_object
+ges_timeline_object_set_layer
+ges_timeline_object_set_priority
 GES_IS_TIMELINE_OBJECT
 GES_IS_TIMELINE_OBJECT_CLASS
 GES_TIMELINE_OBJECT
@@ -213,10 +212,9 @@ GES_TYPE_CUSTOM_TIMELINE_SOURCE
 <TITLE>GESSimpleTimelineLayer</TITLE>
 GESSimpleTimelineLayer
 GESSimpleTimelineLayerClass
+ges_simple_timeline_layer_new
 ges_simple_timeline_layer_add_object
 ges_simple_timeline_layer_move_object
-ges_simple_timeline_layer_new
-ges_simple_timeline_layer_remove_object
 <SUBSECTION Standard>
 ges_simple_timeline_layer_get_type
 GES_IS_SIMPLE_TIMELINE_LAYER

@@ -79,6 +79,62 @@ ges_simple_timeline_layer_init (GESSimpleTimelineLayer * self)
 {
 }
 
+/**
+ * ges_simple_timeline_layer_add_object:
+ * @layer: a #GESSimpleTimelineLayer
+ * @object: the #GESTimelineObject to add
+ * @position: the position at which to add the object
+ *
+ * Adds the object at the given position in the layer. The position is where
+ * the object will be inserted. To put the object before all objects, use
+ * position 0. To put after all objects, use position -1.
+ *
+ * The layer will steal a reference to the provided object.
+ *
+ * NOT IMPLEMENTED !
+ *
+ * Returns: TRUE if the object was successfuly added, else FALSE.
+ */
+gboolean
+ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
+    GESTimelineObject * object, gint position)
+{
+  /* NOT IMPLEMENTED */
+
+  return FALSE;
+}
+
+/**
+ * ges_simple_timeline_layer_move_object:
+ * @layer: a #GESSimpleTimelineLayer
+ * @object: the #GESTimelineObject to move
+ * @newposition: the new position at which to move the object
+ *
+ * Moves the object to the given position in the layer. To put the object before
+ * all other objects, use position 0. To put the objects after all objects, use
+ * position -1.
+ *
+ * NOT IMPLEMENTED !
+ *
+ * Returns: TRUE if the object was successfuly moved, else FALSE.
+ */
+
+gboolean
+ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
+    GESTimelineObject * object, gint newposition)
+{
+  /* NOT IMPLEMENTED */
+
+  return FALSE;
+}
+
+/**
+ * ges_simple_timeline_layer_new:
+ *
+ * Creates a new #GESSimpleTimelineLayer.
+ *
+ * Returns: The new #GESSimpleTimelineLayer
+ */
 GESSimpleTimelineLayer *
 ges_simple_timeline_layer_new (void)
 {
