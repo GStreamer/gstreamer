@@ -1333,23 +1333,31 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
                   (0xf <<  4)  /* mode|mode extension */ | \
                   (0xf))        /* copyright|emphasis */
 
-        /* require 2 matching headers in a row */
+        /* require 2 valid matching headers in a row */
         if ((header2 & HDRMASK) != (header & HDRMASK)) {
           GST_DEBUG_OBJECT (mp3parse, "next header doesn't match "
               "(header=%08X (%08X), header2=%08X (%08X), bpf=%d)",
               (guint) header, (guint) header & HDRMASK, (guint) header2,
               (guint) header2 & HDRMASK, bpf);
-          /* This frame is invalid.  Start looking for a valid frame at the 
-           * next position in the stream */
-          mp3parse->resyncing = TRUE;
-          gst_adapter_flush (mp3parse->adapter, 1);
-          if (mp3parse->cur_offset != -1)
-            mp3parse->cur_offset++;
-          mp3parse->tracked_offset++;
-          continue;
+        } else if ((((header2 >> 12) & 0xf) == 0) ||
+            (((header2 >> 12) & 0xf) == 0xf)) {
+          /* optimized validity check for almost equal headers;
+           * only bitrate needs checking */
+          GST_DEBUG_OBJECT (mp3parse, "next header invalid (bitrate)");
+        } else {
+          goto valid;
         }
+        /* This frame is invalid.  Start looking for a valid frame at the
+         * next position in the stream */
+        mp3parse->resyncing = TRUE;
+        gst_adapter_flush (mp3parse->adapter, 1);
+        if (mp3parse->cur_offset != -1)
+          mp3parse->cur_offset++;
+        mp3parse->tracked_offset++;
+        continue;
       }
 
+    valid:
       /* if we don't have the whole frame... */
       if (available < bpf) {
         GST_DEBUG_OBJECT (mp3parse, "insufficient data available, need "
