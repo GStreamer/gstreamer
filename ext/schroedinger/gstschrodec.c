@@ -545,6 +545,7 @@ gst_schro_dec_scan_for_sync (GstBaseVideoDecoder * base_video_decoder,
 {
   GstAdapter *adapter = base_video_decoder->input_adapter;
   int n_available;
+  int ret;
 
   n_available = gst_adapter_available (adapter) - offset;
 
@@ -556,10 +557,14 @@ gst_schro_dec_scan_for_sync (GstBaseVideoDecoder * base_video_decoder,
     }
   }
 
-  n_available -= 3;
+  n = MIN (n, n_available - 3);
 
-  return gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x42424344,
-      offset, MIN (n, n_available - 3));
+  ret = gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x42424344,
+      offset, n);
+  if (ret == -1) {
+    return n;
+  }
+  return ret;
 }
 
 
