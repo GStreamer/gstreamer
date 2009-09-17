@@ -157,7 +157,7 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
           GST_BUFFER_DATA (buf)[i]);
       o += 3;
       GST_BUFFER_DATA (obuf)[o++] = ' ';
-      if (!(i % 20))
+      if (!((i + 1) % 20))
         GST_BUFFER_DATA (obuf)[o++] = '\n';
     }
     gst_buffer_unref (buf);

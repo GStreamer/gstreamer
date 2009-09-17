@@ -92,14 +92,88 @@ gst_pnmdec_push (GstPnmdec * s, GstPad * src, GstBuffer * buf)
 }
 
 static GstFlowReturn
+gst_pnmdec_chain_raw (GstPnmdec * s, GstPad * src, GstBuffer * buf)
+{
+  GstFlowReturn r = GST_FLOW_OK;
+
+  /* If we got the whole image, just push the buffer. */
+  if (GST_BUFFER_SIZE (buf) == s->size) {
+    memset (&s->mngr, 0, sizeof (GstPnmInfoMngr));
+    s->size = 0;
+    gst_buffer_set_caps (buf, GST_PAD_CAPS (src));
+    return gst_pnmdec_push (s, src, buf);
+  }
+
+  /* We didn't get the whole image. */
+  if (!s->buf) {
+    s->buf = buf;
+  } else {
+    buf = gst_buffer_span (s->buf, 0, buf,
+        GST_BUFFER_SIZE (s->buf) + GST_BUFFER_SIZE (buf));
+    gst_buffer_unref (s->buf);
+    s->buf = buf;
+  }
+  if (!s->buf)
+    return GST_FLOW_ERROR;
+
+  /* Do we now have the full image? If yes, push. */
+  if (GST_BUFFER_SIZE (s->buf) == s->size) {
+    gst_buffer_set_caps (s->buf, GST_PAD_CAPS (src));
+    r = gst_pnmdec_push (s, src, s->buf);
+    s->buf = NULL;
+    memset (&s->mngr, 0, sizeof (GstPnmInfoMngr));
+    s->size = 0;
+  }
+
+  return r;
+}
+
+static GstFlowReturn
+gst_pnmdec_chain_ascii (GstPnmdec * s, GstPad * src, GstBuffer * buf)
+{
+  GScanner *scanner;
+  GstBuffer *out = gst_buffer_new_and_alloc (s->size);
+  guint i = 0;
+
+  scanner = g_scanner_new (NULL);
+  g_scanner_input_text (scanner, (gchar *) GST_BUFFER_DATA (buf),
+      GST_BUFFER_SIZE (buf));
+  while (!g_scanner_eof (scanner)) {
+    switch (g_scanner_get_next_token (scanner)) {
+      case G_TOKEN_INT:
+        if (i == s->size) {
+          GST_DEBUG_OBJECT (s, "PNM file contains too much data.");
+          gst_buffer_unref (buf);
+          gst_buffer_unref (out);
+          return GST_FLOW_ERROR;
+        }
+        GST_BUFFER_DATA (out)[i++] = scanner->value.v_int;
+        break;
+      default:
+        /* Should we care? */ ;
+    }
+  }
+  g_scanner_destroy (scanner);
+  gst_buffer_unref (buf);
+
+  if (i < s->size) {
+    GST_DEBUG_OBJECT (s, "FIXME: Decoding of ASCII encoded files split "
+        "over several buffers is not implemented!");
+    gst_buffer_unref (out);
+    return GST_FLOW_ERROR;
+  }
+
+  return gst_pnmdec_chain_raw (s, src, out);
+}
+
+static GstFlowReturn
 gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
 {
   GstPnmdec *s = GST_PNMDEC (gst_pad_get_parent (pad));
   GstPad *src = gst_element_get_static_pad (GST_ELEMENT (s), "src");
-  GstBuffer *buf;
   GstCaps *caps = NULL;
   GstFlowReturn r = GST_FLOW_OK;
-  guint8 offset = 0;
+  guint offset = 0;
 
   if (!(s->mngr.info.fields & GST_PNM_INFO_FIELDS_ALL)) {
     switch (gst_pnm_info_mngr_scan (&s->mngr, GST_BUFFER_DATA (data),
@@ -114,12 +188,6 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
         goto out;
       case GST_PNM_INFO_MNGR_RESULT_FINISHED:
         offset = s->mngr.data_offset;
-        if (s->mngr.info.encoding == GST_PNM_ENCODING_ASCII) {
-          GST_DEBUG_OBJECT (s, "FIXME: ASCII encoding not implemented!");
-          gst_buffer_unref (data);
-          r = GST_FLOW_ERROR;
-          goto out;
-        }
         caps = gst_caps_copy (gst_pad_get_pad_template_caps (src));
         switch (s->mngr.info.type) {
           case GST_PNM_TYPE_BITMAP:
@@ -157,40 +225,17 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
     goto out;
   }
 
-  /* If we got the whole image, just push the buffer. */
-  if (GST_BUFFER_SIZE (data) - offset == s->size) {
-    buf = gst_buffer_create_sub (data, offset, s->size);
-    gst_buffer_unref (data);
-    memset (&s->mngr, 0, sizeof (GstPnmInfoMngr));
-    s->size = 0;
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (src));
-    r = gst_pnmdec_push (s, src, buf);
-    goto out;
-  }
-
-  /* We didn't get the whole image. */
-  if (!s->buf) {
-    s->buf = gst_buffer_create_sub (data, offset,
+  if (offset) {
+    GstBuffer *buf = gst_buffer_create_sub (data, offset,
         GST_BUFFER_SIZE (data) - offset);
-  } else {
-    buf = gst_buffer_span (s->buf, 0, data,
-        GST_BUFFER_SIZE (s->buf) + GST_BUFFER_SIZE (data) - offset);
-    gst_buffer_unref (s->buf);
-    s->buf = buf;
-  }
-  if (!s->buf) {
-    r = GST_FLOW_ERROR;
-    goto out;
+    gst_buffer_unref (data);
+    data = buf;
   }
 
-  /* Do we now have the full image? If yes, push. */
-  if (GST_BUFFER_SIZE (s->buf) == s->size) {
-    gst_buffer_set_caps (s->buf, GST_PAD_CAPS (src));
-    r = gst_pnmdec_push (s, src, s->buf);
-    s->buf = NULL;
-    memset (&s->mngr, 0, sizeof (GstPnmInfoMngr));
-    s->size = 0;
-  }
+  if (s->mngr.info.encoding == GST_PNM_ENCODING_ASCII)
+    r = gst_pnmdec_chain_ascii (s, src, data);
+  else
+    r = gst_pnmdec_chain_raw (s, src, data);
 
 out:
   gst_object_unref (src);
