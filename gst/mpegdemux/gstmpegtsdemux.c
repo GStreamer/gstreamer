@@ -1146,6 +1146,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
     gst_element_add_pad (GST_ELEMENT_CAST (demux), srcpad);
     demux->need_no_more_pads = TRUE;
 
+    stream->discont = TRUE;
+
     /* send new_segment */
     gst_mpegts_demux_send_new_segment (demux, stream, pts);
 
@@ -1155,6 +1157,10 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
 
   GST_DEBUG_OBJECT (srcpad, "pushing buffer");
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (srcpad));
+  if (stream->discont) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    stream->discont = FALSE;
+  }
   ret = gst_pad_push (srcpad, buffer);
   ret = gst_mpegts_demux_combine_flows (demux, stream, ret);
 
@@ -2578,8 +2584,10 @@ gst_mpegts_demux_flush (GstMpegTSDemux * demux, gboolean discard)
   for (i = 0; i < MPEGTS_MAX_PID + 1; i++) {
     GstMpegTSStream *stream = demux->streams[i];
 
-    if (stream)
+    if (stream) {
       stream->last_time = 0;
+      stream->discont = TRUE;
+    }
   }
 
 

@@ -170,6 +170,7 @@ struct _GstMpegTSStream {
   GstClockTime      last_time;
   /* pid of PMT that this stream belongs to */
   guint16           PMT_pid;
+  gboolean          discont;
 };
 
 struct _GstMpegTSDemux {
