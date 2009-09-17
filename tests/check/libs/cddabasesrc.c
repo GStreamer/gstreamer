@@ -289,6 +289,24 @@ tag_list_has_tag (GstTagList * list, const gchar * tag, GType type)
   return TRUE;
 }
 
+static void
+test_uri_parse (const char *uri, const char *device, int track)
+{
+  GstElement *foosrc;
+  char *set_device;
+  int set_track;
+
+  foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc), uri) == TRUE,
+      "couldn't set uri %s", uri);
+  g_object_get (foosrc, "device", &set_device, "track", &set_track, NULL);
+  fail_unless (strcmp (set_device, device) == 0,
+      "device set was %s, expected %s", set_device, device);
+  fail_unless (set_track == track, "track set was %d, expected %d", set_track,
+      track);
+  gst_object_unref (foosrc);
+}
+
 GST_START_TEST (test_discid_calculations)
 {
   GstElement *foosrc, *pipeline, *sink;
@@ -401,6 +419,45 @@ GST_START_TEST (test_buffer_timestamps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_uri_parsing)
+{
+  GstElement *foosrc;
+
+  fail_unless (gst_element_register (NULL, "cdfoosrc", GST_RANK_SECONDARY,
+          GST_TYPE_CD_FOO_SRC));
+
+  /* wrong protocol */
+  foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
+          "x://") == FALSE);
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
+          "cddaq://") == FALSE);
+
+  /* cdda://track */
+  test_uri_parse ("cdda://", "/dev/cdrom", 1);
+  test_uri_parse ("cdda://2", "/dev/cdrom", 2);
+  test_uri_parse ("cdda://47", "/dev/cdrom", 47);
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
+          "cdda://-1") == FALSE);
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
+          "cdda://what") == FALSE);
+
+  /* cdda://device#track */
+  test_uri_parse ("cdda:///dev/hdb#1", "/dev/hdb", 1);
+  test_uri_parse ("cdda://anything#8", "anything", 8);
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
+          "cdda:///dev/hdb#nonsense") == FALSE);
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
+          "cdda:///dev/hdb#-2") == FALSE);
+
+  /* cdda://track#device (device should be ignored - FIXME 0.11) */
+  test_uri_parse ("cdda://8#/dev/hdb", "/dev/cdrom", 8);
+
+  gst_object_unref (foosrc);
+}
+
+GST_END_TEST;
+
 static Suite *
 cddabasesrc_suite (void)
 {
@@ -410,6 +467,7 @@ cddabasesrc_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_discid_calculations);
   tcase_add_test (tc_chain, test_buffer_timestamps);
+  tcase_add_test (tc_chain, test_uri_parsing);
 
   return s;
 }

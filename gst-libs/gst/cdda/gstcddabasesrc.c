@@ -972,7 +972,10 @@ gst_cdda_base_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   location = uri + 7;
   track_number = g_strrstr (location, "#");
   src->uri_track = 0;
-  if (track_number) {
+  /* FIXME 0.11: ignore URI fragments that look like device paths for
+   * the benefit of rhythmbox and possibly other applications.
+   */
+  if (track_number && track_number[1] != '/') {
     gchar *device, *nuri = g_strdup (uri);
 
     track_number = nuri + (track_number - uri);
@@ -989,7 +992,7 @@ gst_cdda_base_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
       src->uri_track = strtol (location, NULL, 10);
   }
 
-  if (src->uri_track == 0)
+  if (src->uri_track < 1)
     goto failed;
 
   if (src->num_tracks > 0
