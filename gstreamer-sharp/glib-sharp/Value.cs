@@ -440,6 +440,10 @@ namespace Gst.GLib {
 					return (long) this;
 				else if (type == GType.UInt64.Val)
 					return (ulong) this;
+				else if (type == GType.Long.Val)
+					return g_value_get_long (ref this).ToInt64 ();
+				else if (type == GType.ULong.Val)
+					return g_value_get_ulong (ref this).ToUInt64 ();
 				else if (GType.Is (type, GType.Enum) ||
 					 GType.Is (type, GType.Flags))
 					return ToEnum ();
@@ -483,6 +487,10 @@ namespace Gst.GLib {
 					g_value_set_int64 (ref this, (long) value);
 				else if (type == GType.UInt64.Val)
 					g_value_set_uint64 (ref this, (ulong) value);
+				else if (type == GType.Long.Val)
+					g_value_set_long (ref this, new IntPtr (((IConvertible)value).ToInt64 (null)));
+				else if (type == GType.ULong.Val)
+					g_value_set_ulong (ref this, new UIntPtr (((IConvertible)value).ToUInt64 (null)));
 				else if (GType.Is (type, GType.Enum))
 					g_value_set_enum (ref this, (int)value);
 				else if (GType.Is (type, GType.Flags))
@@ -603,6 +611,12 @@ namespace Gst.GLib {
 		static extern void g_value_set_uint64 (ref Value val, ulong data);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void g_value_set_long (ref Value val, IntPtr data);
+
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void g_value_set_ulong (ref Value val, UIntPtr data);
+
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_value_set_object (ref Value val, IntPtr data);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -648,6 +662,12 @@ namespace Gst.GLib {
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong g_value_get_uint64 (ref Value val);
+
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr g_value_get_long (ref Value val);
+
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern UIntPtr g_value_get_ulong (ref Value val);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_value_get_object (ref Value val);
