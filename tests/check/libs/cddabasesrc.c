@@ -290,20 +290,22 @@ tag_list_has_tag (GstTagList * list, const gchar * tag, GType type)
 }
 
 static void
-test_uri_parse (const char *uri, const char *device, int track)
+test_uri_parse (const gchar * uri, const gchar * device, gint track)
 {
   GstElement *foosrc;
-  char *set_device;
-  int set_track;
+  gchar *set_device = NULL;
+  gint set_track = 0;
 
   foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc), uri) == TRUE,
       "couldn't set uri %s", uri);
   g_object_get (foosrc, "device", &set_device, "track", &set_track, NULL);
+  fail_unless (set_device != NULL);
   fail_unless (strcmp (set_device, device) == 0,
       "device set was %s, expected %s", set_device, device);
   fail_unless (set_track == track, "track set was %d, expected %d", set_track,
       track);
+  g_free (set_device);
   gst_object_unref (foosrc);
 }
 

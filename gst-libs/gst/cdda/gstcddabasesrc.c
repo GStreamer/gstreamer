@@ -293,6 +293,13 @@ gst_cdda_base_src_finalize (GObject * obj)
 static void
 gst_cdda_base_src_set_device (GstCddaBaseSrc * src, const gchar * device)
 {
+  if (src->device)
+    g_free (src->device);
+  src->device = NULL;
+
+  if (!device)
+    return;
+
   /* skip multiple slashes */
   while (*device == '/' && *(device + 1) == '/')
     device++;
@@ -333,12 +340,7 @@ gst_cdda_base_src_set_property (GObject * object, guint prop_id,
     case ARG_DEVICE:{
       const gchar *dev = g_value_get_string (value);
 
-      g_free (src->device);
-      if (dev && *dev) {
-        gst_cdda_base_src_set_device (src, dev);
-      } else {
-        src->device = NULL;
-      }
+      gst_cdda_base_src_set_device (src, dev);
       break;
     }
     case ARG_TRACK:{
