@@ -119,6 +119,7 @@ gst_base_audio_decoder_src_convert (GstPad * pad, GstFormat src_format,
 
   if (src_format == *dest_format || src_value == -1 || src_value == 0) {
     *dest_value = src_value;
+    return TRUE;
   }
 
   codec = GST_BASE_AUDIO_CODEC (GST_PAD_PARENT (pad));
