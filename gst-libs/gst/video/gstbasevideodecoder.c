@@ -673,6 +673,10 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
     n = gst_adapter_available (base_video_decoder->input_adapter);
     m = klass->scan_for_sync (base_video_decoder, FALSE, 0, n);
 
+    if (m < 0) {
+      g_warning ("subclass returned negative scan %d", m);
+    }
+
     if (m >= n) {
       g_warning ("subclass scanned past end %d >= %d", m, n);
     }
