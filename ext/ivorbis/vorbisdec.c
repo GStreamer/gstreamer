@@ -27,12 +27,13 @@
  * This element decodes a Vorbis stream to raw int audio.
  * <ulink url="http://www.vorbis.com/">Vorbis</ulink> is a royalty-free
  * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
- * Foundation</ulink>.
+ * Foundation</ulink>. The decoder uses integer math to be more suitable for
+ * embedded devices.
  * 
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! alsasink
+ * gst-launch -v filesrc location=sine.ogg ! oggdemux ! ivorbisdec ! audioconvert ! alsasink
  * ]| Decode an Ogg/Vorbis. To create an Ogg/Vorbis file refer to the
  * documentation of vorbisenc.
  * </refsect2>
