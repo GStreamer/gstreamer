@@ -153,7 +153,8 @@ gst_celt_enc_class_init (GstCeltEncClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
       g_param_spec_int ("bitrate", "Encoding Bit-rate",
           "Specify an encoding bit-rate (in Kbps). (0 = automatic)",
-          0, 150, DEFAULT_BITRATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          10, 320, DEFAULT_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FRAMESIZE,
       g_param_spec_int ("framesize", "Frame Size",
           "The number of samples per frame", 64, 512, DEFAULT_FRAMESIZE,
@@ -553,23 +554,6 @@ gst_celt_enc_setup (GstCeltEnc * enc)
   gint bytes_per_packet;
 
   enc->setup = FALSE;
-
-  /* Fix bitrate */
-  if (enc->channels == 1) {
-    if (enc->bitrate <= 0)
-      enc->bitrate = 64;
-    else if (enc->bitrate < 32)
-      enc->bitrate = 32;
-    else if (enc->bitrate > 110)
-      enc->bitrate = 110;
-  } else {
-    if (enc->bitrate <= 0)
-      enc->bitrate = 128;
-    else if (enc->bitrate < 64)
-      enc->bitrate = 64;
-    else if (enc->bitrate > 150)
-      enc->bitrate = 150;
-  }
 
   enc->mode =
       celt_mode_create (enc->rate, enc->channels, enc->frame_size, &error);
