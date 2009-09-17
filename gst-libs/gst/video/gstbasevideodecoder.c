@@ -840,6 +840,10 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
         return GST_FLOW_OK;
       }
 
+      if (m < 0) {
+        g_warning ("subclass returned negative scan %d", m);
+      }
+
       if (m >= n) {
         GST_ERROR ("subclass scanned past end %d >= %d", m, n);
       }
