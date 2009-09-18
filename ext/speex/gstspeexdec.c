@@ -655,7 +655,7 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
     /* send data to the bitstream */
     speex_bits_read_from (&dec->bits, (char *) data, size);
 
-    fpp = dec->header->frames_per_packet;
+    fpp = 0;
     bits = &dec->bits;
 
     GST_DEBUG_OBJECT (dec, "received buffer of size %u, fpp %d", size, fpp);
@@ -677,8 +677,9 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
   }
 
 
-  /* now decode each frame */
-  for (i = 0; i < fpp; i++) {
+  /* now decode each frame, catering for unknown number of them (e.g. rtp) */
+  for (i = 0; (!fpp || i < fpp) && (!bits || speex_bits_remaining (bits) > 0);
+      i++) {
     GstBuffer *outbuf;
     gint16 *out_data;
     gint ret;
