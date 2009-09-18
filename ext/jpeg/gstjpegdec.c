@@ -82,6 +82,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 GST_DEBUG_CATEGORY_STATIC (jpeg_dec_debug);
 #define GST_CAT_DEFAULT jpeg_dec_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 /* These macros are adapted from videotestsrc.c 
  *  and/or gst-plugins/gst/games/gstvideoimage.c */
@@ -191,6 +192,7 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_change_state);
 
   GST_DEBUG_CATEGORY_INIT (jpeg_dec_debug, "jpegdec", 0, "JPEG decoder");
+  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
 static boolean
@@ -1057,7 +1059,10 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
    * copy over the data into our final picture buffer, otherwise jpeglib might
    * write over the end of a line into the beginning of the next line,
    * resulting in blocky artifacts on the left side of the picture. */
-  if (r_h != 2 || width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0) {
+  if (G_UNLIKELY (r_h != 2
+          || width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0)) {
+    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
+        "indirect decoding using extra buffer copy");
     gst_jpeg_dec_decode_indirect (dec, base, last, width, height, r_v, r_h);
   } else {
     gst_jpeg_dec_decode_direct (dec, base, last, width, height, r_v);
