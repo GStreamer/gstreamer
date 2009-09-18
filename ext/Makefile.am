@@ -64,6 +64,12 @@ else
 CELT_DIR=
 endif
 
+if USE_COG
+COG_DIR=cog
+else
+COG_DIR=
+endif
+
 if USE_DC1394
 DC1394_DIR=dc1394
 else
@@ -366,6 +372,7 @@ SUBDIRS=\
 	$(BZ2_DIR) \
 	$(CDAUDIO_DIR) \
 	$(CELT_DIR) \
+	$(COG_DIR) \
 	$(DC1394_DIR) \
 	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \
@@ -422,6 +429,7 @@ DIST_SUBDIRS = \
 	bz2 \
 	cdaudio \
 	celt \
+	cog \
 	dc1394 \
 	dirac \
 	directfb \

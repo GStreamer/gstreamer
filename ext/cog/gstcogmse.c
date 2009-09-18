@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <string.h>
-#include <cog-video/cogframe.h>
+#include <cog/cogframe.h>
 #include <orc/orc.h>
 #include <math.h>
 
@@ -171,19 +171,20 @@ gst_mse_init (GstMSE * filter, GstMSEClass * klass)
 {
   gst_element_create_all_pads (GST_ELEMENT (filter));
 
-  filter->srcpad = gst_element_get_pad (GST_ELEMENT (filter), "src");
+  filter->srcpad = gst_element_get_static_pad (GST_ELEMENT (filter), "src");
 
   //gst_pad_set_link_function (filter->srcpad, gst_mse_link_src);
   gst_pad_set_getcaps_function (filter->srcpad, gst_mse_getcaps);
 
-  filter->sinkpad_ref = gst_element_get_pad (GST_ELEMENT (filter), "sink_ref");
+  filter->sinkpad_ref =
+      gst_element_get_static_pad (GST_ELEMENT (filter), "sink_ref");
 
   gst_pad_set_chain_function (filter->sinkpad_ref, gst_mse_chain_ref);
   gst_pad_set_event_function (filter->sinkpad_ref, gst_mse_sink_event);
   gst_pad_set_getcaps_function (filter->sinkpad_ref, gst_mse_getcaps);
 
   filter->sinkpad_test =
-      gst_element_get_pad (GST_ELEMENT (filter), "sink_test");
+      gst_element_get_static_pad (GST_ELEMENT (filter), "sink_test");
 
   gst_pad_set_chain_function (filter->sinkpad_test, gst_mse_chain_test);
   gst_pad_set_event_function (filter->sinkpad_test, gst_mse_sink_event);
@@ -499,8 +500,8 @@ cog_frame_component_squared_error (CogFrameData * a, CogFrameData * b)
   int j;
   double sum;
 
-  COG_ASSERT (a->width == b->width);
-  COG_ASSERT (a->height == b->height);
+  g_return_val_if_fail (a->width == b->width, 0.0);
+  g_return_val_if_fail (a->height == b->height, 0.0);
 
   sum = 0;
   for (j = 0; j < a->height; j++) {

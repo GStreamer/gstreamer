@@ -5,12 +5,13 @@
 
 #define COG_ENABLE_UNSTABLE_API 1
 
-#include <cog-video/cogvirtframe.h>
-#include <cog-video/cogorc.h>
+#include <cog/cogvirtframe.h>
+#include <cog/cogorc.h>
 #include <cog/cog.h>
 #include <string.h>
 #include <math.h>
 #include <orc/orc.h>
+#include <gst/gst.h>
 
 
 CogFrame *
@@ -69,7 +70,7 @@ cog_frame_new_virtual (CogMemoryDomain * domain, CogFrameFormat format,
       bytes_pp = 4;
       break;
     default:
-      COG_ASSERT (0);
+      g_return_val_if_reached (NULL);
       bytes_pp = 0;
       break;
   }
@@ -128,8 +129,8 @@ cog_virt_frame_get_line (CogFrame * frame, int component, int i)
   int min;
   int min_j;
 
-  //COG_ASSERT(i >= 0);
-  //COG_ASSERT(i < comp->height);
+  g_return_val_if_fail (i >= 0, NULL);
+  g_return_val_if_fail (i < comp->height, NULL);
 
   if (!frame->is_virtual) {
     return COG_FRAME_DATA_GET_LINE (&frame->components[component], i);
@@ -179,7 +180,7 @@ copy (CogFrame * frame, void *_dest, int component, int i)
       orc_memcpy (dest, src, frame->components[component].width * 2);
       break;
     default:
-      COG_ASSERT (0);
+      g_return_if_reached ();
       break;
   }
 }
@@ -189,8 +190,8 @@ cog_virt_frame_render (CogFrame * frame, CogFrame * dest)
 {
   int i, k;
 
-  COG_ASSERT (frame->width == dest->width);
-  COG_ASSERT (frame->height >= dest->height);
+  g_return_if_fail (frame->width == dest->width);
+  g_return_if_fail (frame->height >= dest->height);
 
   if (frame->is_virtual) {
     for (k = 0; k < 3; k++) {
@@ -329,8 +330,7 @@ cog_virt_frame_new_horiz_downsample (CogFrame * vf, int n_taps)
       virt_frame->render_line = cog_virt_frame_render_downsample_horiz_halfsite;
       break;
     default:
-      COG_ASSERT (0);
-      return NULL;
+      g_return_val_if_reached (NULL);
   }
 
   return virt_frame;
@@ -469,7 +469,7 @@ cog_virt_frame_render_downsample_vert_halfsite (CogFrame * frame,
       }
       break;
     default:
-      COG_ASSERT (0);
+      g_return_if_reached ();
       break;
   }
 }
@@ -1334,8 +1334,7 @@ cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format)
       format == COG_FRAME_FORMAT_U8_444) {
     render_line = convert_422_444;
   } else {
-    COG_ASSERT (0);
-    return NULL;
+    g_return_val_if_reached (NULL);
   }
   virt_frame = cog_frame_new_virtual (NULL, format, vf->width, vf->height);
   virt_frame->virt_frame1 = vf;
@@ -1367,7 +1366,7 @@ cog_virt_frame_new_convert_u8 (CogFrame * vf)
   virt_frame = cog_frame_new_virtual (NULL, format, vf->width, vf->height);
   virt_frame->virt_frame1 = vf;
   virt_frame->render_line = convert_u8_s16;
-  virt_frame->virt_priv = cog_malloc (sizeof (int16_t) * vf->width);
+  virt_frame->virt_priv = g_malloc (sizeof (int16_t) * vf->width);
 
   return virt_frame;
 }
@@ -1426,8 +1425,8 @@ cog_virt_frame_new_crop (CogFrame * vf, int width, int height)
   if (width == vf->width && height == vf->height)
     return vf;
 
-  COG_ASSERT (width <= vf->width);
-  COG_ASSERT (height <= vf->height);
+  g_return_val_if_fail (width <= vf->width, NULL);
+  g_return_val_if_fail (height <= vf->height, NULL);
 
   virt_frame = cog_frame_new_virtual (NULL, vf->format, width, height);
   virt_frame->virt_frame1 = vf;
@@ -1439,7 +1438,7 @@ cog_virt_frame_new_crop (CogFrame * vf, int width, int height)
       virt_frame->render_line = crop_s16;
       break;
     default:
-      COG_ASSERT (0);
+      g_return_val_if_reached (NULL);
       break;
   }
 
@@ -1487,8 +1486,8 @@ cog_virt_frame_new_edgeextend (CogFrame * vf, int width, int height)
   if (width == vf->width && height == vf->height)
     return vf;
 
-  COG_ASSERT (width >= vf->width);
-  COG_ASSERT (height >= vf->height);
+  g_return_val_if_fail (width >= vf->width, NULL);
+  g_return_val_if_fail (height >= vf->height, NULL);
 
   virt_frame = cog_frame_new_virtual (NULL, vf->format, width, height);
   virt_frame->virt_frame1 = vf;
@@ -1500,7 +1499,7 @@ cog_virt_frame_new_edgeextend (CogFrame * vf, int width, int height)
       virt_frame->render_line = edge_extend_s16;
       break;
     default:
-      COG_ASSERT (0);
+      g_return_val_if_reached (NULL);
       break;
   }
 

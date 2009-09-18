@@ -66,7 +66,7 @@
 #include <gst/video/video.h>
 #include <gst/base/gstbasetransform.h>
 #include <cog/cog.h>
-#include <cog-video/cogvirtframe.h>
+#include <cog/cogvirtframe.h>
 #include "gstcogutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (cog_scale_debug);

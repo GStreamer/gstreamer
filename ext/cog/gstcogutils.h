@@ -23,7 +23,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <cog/cog.h>
-#include <cog-video/cogframe.h>
+#include <cog/cogframe.h>
 
 CogFrame *
 gst_cog_buffer_wrap (GstBuffer *buf, GstVideoFormat format, int width,

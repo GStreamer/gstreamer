@@ -23,36 +23,27 @@
 #include <string.h>
 
 #include <gst/gst.h>
-#include <cog/cog.h>
+#include <orc/orc.h>
 
-#include "gstjpegdec.h"
-
-//GType gst_dither_get_type (void);
 GType gst_deblock_get_type (void);
 GType gst_cogdownsample_get_type (void);
-GType gst_motion_detect_get_type (void);
 GType gst_cogcolorspace_get_type (void);
 GType gst_cog_scale_get_type (void);
 GType gst_colorconvert_get_type (void);
 GType gst_logoinsert_get_type (void);
 GType gst_mse_get_type (void);
+#if 0
 GType gst_decimate_get_type (void);
+GType gst_motion_detect_get_type (void);
+#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  cog_init ();
+  orc_init ();
 
-  gst_element_register (plugin, "cogjpegdec", GST_RANK_PRIMARY,
-      GST_TYPE_JPEG_DEC);
-  //gst_element_register (plugin, "dither", GST_RANK_NONE,
-  //      gst_dither_get_type());
-  gst_element_register (plugin, "deblock", GST_RANK_NONE,
-      gst_deblock_get_type ());
   gst_element_register (plugin, "cogdownsample", GST_RANK_NONE,
       gst_cogdownsample_get_type ());
-  gst_element_register (plugin, "motiondetect", GST_RANK_NONE,
-      gst_motion_detect_get_type ());
   gst_element_register (plugin, "cogcolorspace", GST_RANK_NONE,
       gst_cogcolorspace_get_type ());
   gst_element_register (plugin, "cogscale", GST_RANK_NONE,
@@ -62,8 +53,14 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "coglogoinsert", GST_RANK_NONE,
       gst_logoinsert_get_type ());
   gst_element_register (plugin, "cogmse", GST_RANK_NONE, gst_mse_get_type ());
+#if 0
   gst_element_register (plugin, "cogdecimate", GST_RANK_NONE,
       gst_decimate_get_type ());
+  gst_element_register (plugin, "motiondetect", GST_RANK_NONE,
+      gst_motion_detect_get_type ());
+  gst_element_register (plugin, "deblock", GST_RANK_NONE,
+      gst_deblock_get_type ());
+#endif
 
   return TRUE;
 }

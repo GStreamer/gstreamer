@@ -26,7 +26,7 @@
 #include <gst/video/video.h>
 #include <string.h>
 #include <cog/cog.h>
-#include <cog-video/cogvirtframe.h>
+#include <cog/cogvirtframe.h>
 #include <math.h>
 
 #include "gstcogutils.h"
@@ -293,7 +293,7 @@ cog_virt_frame_new_color_transform (CogFrame * frame)
 {
   CogFrame *virt_frame;
 
-  COG_ASSERT (frame->format == COG_FRAME_FORMAT_U8_444);
+  g_return_val_if_fail (frame->format == COG_FRAME_FORMAT_U8_444, NULL);
 
   virt_frame = cog_frame_new_virtual (NULL, COG_FRAME_FORMAT_U8_444,
       frame->width, frame->height);

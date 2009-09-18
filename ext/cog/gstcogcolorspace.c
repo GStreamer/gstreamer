@@ -35,7 +35,7 @@
 #include <string.h>
 #include <cog/cog.h>
 #include <math.h>
-#include <cog-video/cogvirtframe.h>
+#include <cog/cogvirtframe.h>
 #include "gstcogutils.h"
 
 #define GST_TYPE_COGCOLORSPACE \

@@ -1,6 +1,8 @@
 plugin_LTLIBRARIES = libgstcog.la
 
 libgstcog_la_CFLAGS = \
+	-DCOG_ENABLE_UNSTABLE_API \
+	-I$(srcdir)/.. \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(COG_CFLAGS)
@@ -13,10 +15,12 @@ libgstcog_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
 libgstcog_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstcog_la_SOURCES = \
+	cog.h \
 	cogframe.c \
 	cogframe.h \
 	cogorc.c \
 	cogorc.h \
+	cogutils.h \
 	cogvirtframe.c \
 	cogvirtframe.h \
 	gstcog.c \

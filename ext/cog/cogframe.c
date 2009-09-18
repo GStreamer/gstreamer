@@ -5,9 +5,10 @@
 #endif
 
 #include <cog/cog.h>
-#include <cog-video/cogframe.h>
-#include <cog-video/cogvirtframe.h>
-#include <cog-video/cogorc.h>
+#include <cog/cogframe.h>
+#include <cog/cogvirtframe.h>
+#include <cog/cogorc.h>
+#include <gst/gst.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +27,7 @@ cog_frame_new (void)
 {
   CogFrame *frame;
 
-  frame = cog_malloc0 (sizeof (*frame));
+  frame = g_malloc0 (sizeof (*frame));
   frame->refcount = 1;
 
   return frame;
@@ -58,8 +59,8 @@ cog_frame_new_and_alloc_extended (CogMemoryDomain * domain,
   int ext_width;
   int ext_height;
 
-  COG_ASSERT (width > 0);
-  COG_ASSERT (height > 0);
+  g_return_val_if_fail (width > 0, NULL);
+  g_return_val_if_fail (height > 0, NULL);
 
   frame->format = format;
   frame->width = width;
@@ -71,7 +72,7 @@ cog_frame_new_and_alloc_extended (CogMemoryDomain * domain,
   ext_height = height + extension * 2;
 
   if (COG_FRAME_IS_PACKED (format)) {
-    COG_ASSERT (extension == 0);
+    g_return_val_if_fail (extension == 0, NULL);
 
     frame->components[0].format = format;
     frame->components[0].width = width;
@@ -87,7 +88,7 @@ cog_frame_new_and_alloc_extended (CogMemoryDomain * domain,
       //frame->regions[0] = cog_memory_domain_alloc (domain,
       //   frame->components[0].length);
     } else {
-      frame->regions[0] = cog_malloc (frame->components[0].length);
+      frame->regions[0] = g_malloc (frame->components[0].length);
     }
 
     frame->components[0].data = frame->regions[0];
@@ -108,7 +109,7 @@ cog_frame_new_and_alloc_extended (CogMemoryDomain * domain,
       bytes_pp = 4;
       break;
     default:
-      COG_ASSERT (0);
+      g_return_val_if_reached (NULL);
       bytes_pp = 0;
       break;
   }
@@ -159,14 +160,14 @@ cog_frame_new_and_alloc_extended (CogMemoryDomain * domain,
         frame->components[1].length + frame->components[2].length);
   }
 
-  frame->components[0].data = frame->regions[0] +
-      frame->components[0].stride * extension + bytes_pp * extension;
-  frame->components[1].data = frame->regions[0] +
+  frame->components[0].data = COG_OFFSET (frame->regions[0],
+      frame->components[0].stride * extension + bytes_pp * extension);
+  frame->components[1].data = COG_OFFSET (frame->regions[0],
       frame->components[0].length +
-      frame->components[1].stride * extension + bytes_pp * extension;
-  frame->components[2].data = frame->regions[0] +
+      frame->components[1].stride * extension + bytes_pp * extension);
+  frame->components[2].data = COG_OFFSET (frame->regions[0],
       frame->components[0].length + frame->components[1].length +
-      frame->components[2].stride * extension + bytes_pp * extension;
+      frame->components[2].stride * extension + bytes_pp * extension);
 
   return frame;
 }
@@ -409,7 +410,7 @@ cog_frame_new_from_data_I420 (void *data, int width, int height)
   frame->components[1].length =
       frame->components[1].stride * frame->components[1].height;
   frame->components[1].data =
-      frame->components[0].data + frame->components[0].length;
+      COG_OFFSET (frame->components[0].data, frame->components[0].length);
   frame->components[1].v_shift = 1;
   frame->components[1].h_shift = 1;
 
@@ -420,7 +421,7 @@ cog_frame_new_from_data_I420 (void *data, int width, int height)
   frame->components[2].length =
       frame->components[2].stride * frame->components[2].height;
   frame->components[2].data =
-      frame->components[1].data + frame->components[1].length;
+      COG_OFFSET (frame->components[1].data, frame->components[1].length);
   frame->components[2].v_shift = 1;
   frame->components[2].h_shift = 1;
 
@@ -465,7 +466,7 @@ cog_frame_new_from_data_YV12 (void *data, int width, int height)
   frame->components[2].length =
       frame->components[2].stride * frame->components[2].height;
   frame->components[2].data =
-      frame->components[0].data + frame->components[0].length;
+      COG_OFFSET (frame->components[0].data, frame->components[0].length);
   frame->components[2].v_shift = 1;
   frame->components[2].h_shift = 1;
 
@@ -476,7 +477,7 @@ cog_frame_new_from_data_YV12 (void *data, int width, int height)
   frame->components[1].length =
       frame->components[1].stride * frame->components[1].height;
   frame->components[1].data =
-      frame->components[2].data + frame->components[2].length;
+      COG_OFFSET (frame->components[2].data, frame->components[2].length);
   frame->components[1].v_shift = 1;
   frame->components[1].h_shift = 1;
 
@@ -521,7 +522,7 @@ cog_frame_new_from_data_Y42B (void *data, int width, int height)
   frame->components[1].length =
       frame->components[1].stride * frame->components[1].height;
   frame->components[1].data =
-      frame->components[0].data + frame->components[0].length;
+      COG_OFFSET (frame->components[0].data, frame->components[0].length);
   frame->components[1].v_shift = 0;
   frame->components[1].h_shift = 1;
 
@@ -532,7 +533,7 @@ cog_frame_new_from_data_Y42B (void *data, int width, int height)
   frame->components[2].length =
       frame->components[2].stride * frame->components[2].height;
   frame->components[2].data =
-      frame->components[1].data + frame->components[1].length;
+      COG_OFFSET (frame->components[1].data, frame->components[1].length);
   frame->components[2].v_shift = 0;
   frame->components[2].h_shift = 1;
 
@@ -577,7 +578,7 @@ cog_frame_new_from_data_Y444 (void *data, int width, int height)
   frame->components[1].length =
       frame->components[1].stride * frame->components[1].height;
   frame->components[1].data =
-      frame->components[0].data + frame->components[0].length;
+      COG_OFFSET (frame->components[0].data, frame->components[0].length);
   frame->components[1].v_shift = 0;
   frame->components[1].h_shift = 0;
 
@@ -588,7 +589,7 @@ cog_frame_new_from_data_Y444 (void *data, int width, int height)
   frame->components[2].length =
       frame->components[2].stride * frame->components[2].height;
   frame->components[2].data =
-      frame->components[1].data + frame->components[1].length;
+      COG_OFFSET (frame->components[1].data, frame->components[1].length);
   frame->components[2].v_shift = 0;
   frame->components[2].h_shift = 0;
 
@@ -776,7 +777,7 @@ cog_frame_unref (CogFrame * frame)
 {
   int i;
 
-  COG_ASSERT (frame->refcount > 0);
+  g_return_if_fail (frame->refcount > 0);
 
   frame->refcount--;
   if (frame->refcount == 0) {
@@ -806,10 +807,10 @@ cog_frame_unref (CogFrame * frame)
       cog_frame_unref (frame->virt_frame2);
     }
     if (frame->virt_priv) {
-      cog_free (frame->virt_priv);
+      g_free (frame->virt_priv);
     }
 
-    cog_free (frame);
+    g_free (frame);
   }
 }
 
@@ -844,8 +845,8 @@ cog_frame_convert (CogFrame * dest, CogFrame * src)
   CogFrame *frame;
   CogFrameFormat dest_format;
 
-  COG_ASSERT (dest != NULL);
-  COG_ASSERT (src != NULL);
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (src != NULL);
 
   switch (dest->format) {
     case COG_FRAME_FORMAT_YUYV:
@@ -863,52 +864,52 @@ cog_frame_convert (CogFrame * dest, CogFrame * src)
   cog_frame_ref (src);
 
   frame = cog_virt_frame_new_unpack (src);
-  COG_DEBUG ("unpack %p", frame);
+  GST_DEBUG ("unpack %p", frame);
 
   if (COG_FRAME_FORMAT_DEPTH (dest_format) !=
       COG_FRAME_FORMAT_DEPTH (frame->format)) {
     if (COG_FRAME_FORMAT_DEPTH (dest_format) == COG_FRAME_FORMAT_DEPTH_U8) {
       frame = cog_virt_frame_new_convert_u8 (frame);
-      COG_DEBUG ("convert_u8 %p", frame);
+      GST_DEBUG ("convert_u8 %p", frame);
     } else if (COG_FRAME_FORMAT_DEPTH (dest_format) ==
         COG_FRAME_FORMAT_DEPTH_S16) {
       frame = cog_virt_frame_new_convert_s16 (frame);
-      COG_DEBUG ("convert_s16 %p", frame);
+      GST_DEBUG ("convert_s16 %p", frame);
     }
   }
 
   if ((dest_format & 3) != (frame->format & 3)) {
     frame = cog_virt_frame_new_subsample (frame, dest_format);
-    COG_DEBUG ("subsample %p", frame);
+    GST_DEBUG ("subsample %p", frame);
   }
 
   switch (dest->format) {
     case COG_FRAME_FORMAT_YUYV:
       frame = cog_virt_frame_new_pack_YUY2 (frame);
-      COG_DEBUG ("pack_YUY2 %p", frame);
+      GST_DEBUG ("pack_YUY2 %p", frame);
       break;
     case COG_FRAME_FORMAT_UYVY:
       frame = cog_virt_frame_new_pack_UYVY (frame);
-      COG_DEBUG ("pack_UYVY %p", frame);
+      GST_DEBUG ("pack_UYVY %p", frame);
       break;
     case COG_FRAME_FORMAT_AYUV:
       frame = cog_virt_frame_new_pack_AYUV (frame);
-      COG_DEBUG ("pack_AYUV %p", frame);
+      GST_DEBUG ("pack_AYUV %p", frame);
       break;
     default:
       break;
   }
 
   if (dest->width < frame->width || dest->height < frame->height) {
-    COG_DEBUG ("crop %d %d to %d %d",
+    GST_DEBUG ("crop %d %d to %d %d",
         frame->width, frame->height, dest->width, dest->height);
 
     frame = cog_virt_frame_new_crop (frame, dest->width, dest->height);
-    COG_DEBUG ("crop %p", frame);
+    GST_DEBUG ("crop %p", frame);
   }
   if (dest->width > src->width || dest->height > src->height) {
     frame = cog_virt_frame_new_edgeextend (frame, dest->width, dest->height);
-    COG_DEBUG ("edgeextend %p", frame);
+    GST_DEBUG ("edgeextend %p", frame);
   }
 
   cog_virt_frame_render (frame, dest);
@@ -949,7 +950,7 @@ cog_frame_md5 (CogFrame * frame, uint32_t * state)
     }
   }
 
-  COG_DEBUG
+  GST_DEBUG
       ("md5 %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
       state[0] & 0xff, (state[0] >> 8) & 0xff, (state[0] >> 16) & 0xff,
       (state[0] >> 24) & 0xff, state[1] & 0xff, (state[1] >> 8) & 0xff,
@@ -965,7 +966,7 @@ cog_frame_split_fields (CogFrame * dest1, CogFrame * dest2, CogFrame * src)
 {
   CogFrame src_tmp;
 
-  COG_ASSERT ((src->height & 1) == 0);
+  g_return_if_fail ((src->height & 1) == 0);
 
   memcpy (&src_tmp, src, sizeof (src_tmp));
 
@@ -989,7 +990,7 @@ cog_frame_get_subdata (CogFrame * frame, CogFrameData * fd,
 {
   CogFrameData *comp = frame->components + component;
 
-  COG_ASSERT (COG_FRAME_FORMAT_DEPTH (comp->format) ==
+  g_return_if_fail (COG_FRAME_FORMAT_DEPTH (comp->format) ==
       COG_FRAME_FORMAT_DEPTH_U8);
 
   fd->format = comp->format;

@@ -3,7 +3,7 @@
 #define __COG_VIRT_FRAME_H__
 
 #include <cog/cogutils.h>
-#include <cog-video/cogframe.h>
+#include <cog/cogframe.h>
 
 COG_BEGIN_DECLS
 

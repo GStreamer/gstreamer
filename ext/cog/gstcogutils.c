@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <cog/cog.h>
-#include <cog-video/cogvirtframe.h>
+#include <cog/cogvirtframe.h>
 #include <math.h>
 #include <string.h>
 

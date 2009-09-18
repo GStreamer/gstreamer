@@ -35,7 +35,7 @@
 #include <string.h>
 #include <cog/cog.h>
 #include <math.h>
-#include <cog-video/cogvirtframe.h>
+#include <cog/cogvirtframe.h>
 
 #define GST_TYPE_COGDOWNSAMPLE \
   (gst_cogdownsample_get_type())

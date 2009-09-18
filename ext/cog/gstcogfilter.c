@@ -25,8 +25,6 @@
  * $Id: make_filter,v 1.8 2004/04/19 22:51:57 ds Exp $
  */
 
-#define SCHRO_ENABLE_UNSTABLE_API
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -34,50 +32,48 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
+#include <cog/cogframe.h>
 #include <string.h>
-#include <schroedinger/schro.h>
-#include <schroedinger/schrotables.h>
-#include <liboil/liboil.h>
 #include <math.h>
 
-#define GST_TYPE_SCHROFILTER \
-  (gst_schrofilter_get_type())
-#define GST_SCHROFILTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SCHROFILTER,GstSchrofilter))
-#define GST_SCHROFILTER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SCHROFILTER,GstSchrofilterClass))
-#define GST_IS_SCHROFILTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SCHROFILTER))
-#define GST_IS_SCHROFILTER_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SCHROFILTER))
+#define GST_TYPE_COG_FILTER \
+  (gst_cog_filter_get_type())
+#define GST_COG_FILTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_COG_FILTER,GstCogFilter))
+#define GST_COG_FILTER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COG_FILTER,GstCogFilterClass))
+#define GST_IS_COG_FILTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COG_FILTER))
+#define GST_IS_COG_FILTER_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COG_FILTER))
 
-typedef struct _GstSchrofilter GstSchrofilter;
-typedef struct _GstSchrofilterClass GstSchrofilterClass;
+typedef struct _GstCogFilter GstCogFilter;
+typedef struct _GstCogFilterClass GstCogFilterClass;
 
-struct _GstSchrofilter
+struct _GstCogFilter
 {
   GstBaseTransform base_transform;
 
   int wavelet_type;
   int level;
 
-  SchroVideoFormat format;
+  GstVideoFormat format;
 
-  SchroFrame *tmp_frame;
+  CogFrame *tmp_frame;
   int16_t *tmpbuf;
 
   int frame_number;
 
 };
 
-struct _GstSchrofilterClass
+struct _GstCogFilterClass
 {
   GstBaseTransformClass parent_class;
 
 };
 
 
-/* GstSchrofilter signals and args */
+/* GstCogFilter signals and args */
 enum
 {
   /* FILL ME */
@@ -92,28 +88,28 @@ enum
       /* FILL ME */
 };
 
-GType gst_schrofilter_get_type (void);
+GType gst_cog_filter_get_type (void);
 
-static void gst_schrofilter_base_init (gpointer g_class);
-static void gst_schrofilter_class_init (gpointer g_class, gpointer class_data);
-static void gst_schrofilter_init (GTypeInstance * instance, gpointer g_class);
+static void gst_cog_filter_base_init (gpointer g_class);
+static void gst_cog_filter_class_init (gpointer g_class, gpointer class_data);
+static void gst_cog_filter_init (GTypeInstance * instance, gpointer g_class);
 
-static void gst_schrofilter_set_property (GObject * object, guint prop_id,
+static void gst_cog_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_schrofilter_get_property (GObject * object, guint prop_id,
+static void gst_cog_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_schrofilter_transform_ip (GstBaseTransform *
+static GstFlowReturn gst_cog_filter_transform_ip (GstBaseTransform *
     base_transform, GstBuffer * buf);
 
-static GstStaticPadTemplate gst_schrofilter_sink_template =
+static GstStaticPadTemplate gst_cog_filter_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
 
-static GstStaticPadTemplate gst_schrofilter_src_template =
+static GstStaticPadTemplate gst_cog_filter_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -121,62 +117,62 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 GType
-gst_schrofilter_get_type (void)
+gst_cog_filter_get_type (void)
 {
   static GType compress_type = 0;
 
   if (!compress_type) {
     static const GTypeInfo compress_info = {
-      sizeof (GstSchrofilterClass),
-      gst_schrofilter_base_init,
+      sizeof (GstCogFilterClass),
+      gst_cog_filter_base_init,
       NULL,
-      gst_schrofilter_class_init,
+      gst_cog_filter_class_init,
       NULL,
       NULL,
-      sizeof (GstSchrofilter),
+      sizeof (GstCogFilter),
       0,
-      gst_schrofilter_init,
+      gst_cog_filter_init,
     };
 
     compress_type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-        "GstSchrofilter", &compress_info, 0);
+        "GstCogFilter", &compress_info, 0);
   }
   return compress_type;
 }
 
 
 static void
-gst_schrofilter_base_init (gpointer g_class)
+gst_cog_filter_base_init (gpointer g_class)
 {
   static GstElementDetails compress_details =
-      GST_ELEMENT_DETAILS ("Schroedinger Video Filters",
+      GST_ELEMENT_DETAILS ("Cog Video Filter",
       "Filter/Effect/Video",
-      "Applies a Schroedinger compression pre-filter to video",
+      "Applies a cog pre-filter to video",
       "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   //GstBaseTransformClass *base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_schrofilter_src_template));
+      gst_static_pad_template_get (&gst_cog_filter_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_schrofilter_sink_template));
+      gst_static_pad_template_get (&gst_cog_filter_sink_template));
 
   gst_element_class_set_details (element_class, &compress_details);
 }
 
 static void
-gst_schrofilter_class_init (gpointer g_class, gpointer class_data)
+gst_cog_filter_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *base_transform_class;
-  GstSchrofilterClass *filter_class;
+  GstCogFilterClass *filter_class;
 
   gobject_class = G_OBJECT_CLASS (g_class);
   base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
-  filter_class = GST_SCHROFILTER_CLASS (g_class);
+  filter_class = GST_COG_FILTER_CLASS (g_class);
 
-  gobject_class->set_property = gst_schrofilter_set_property;
-  gobject_class->get_property = gst_schrofilter_get_property;
+  gobject_class->set_property = gst_cog_filter_set_property;
+  gobject_class->get_property = gst_cog_filter_get_property;
 
   g_object_class_install_property (gobject_class, ARG_WAVELET_TYPE,
       g_param_spec_int ("wavelet-type", "wavelet type", "wavelet type",
@@ -185,28 +181,28 @@ gst_schrofilter_class_init (gpointer g_class, gpointer class_data)
       g_param_spec_int ("level", "level", "level",
           0, 100, 0, G_PARAM_READWRITE));
 
-  base_transform_class->transform_ip = gst_schrofilter_transform_ip;
+  base_transform_class->transform_ip = gst_cog_filter_transform_ip;
 }
 
 static void
-gst_schrofilter_init (GTypeInstance * instance, gpointer g_class)
+gst_cog_filter_init (GTypeInstance * instance, gpointer g_class)
 {
-  //GstSchrofilter *compress = GST_SCHROFILTER (instance);
+  //GstCogFilter *compress = GST_COG_FILTER (instance);
   //GstBaseTransform *btrans = GST_BASE_TRANSFORM (instance);
 
-  GST_DEBUG ("gst_schrofilter_init");
+  GST_DEBUG ("gst_cog_filter_init");
 }
 
 static void
-gst_schrofilter_set_property (GObject * object, guint prop_id,
+gst_cog_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstSchrofilter *src;
+  GstCogFilter *src;
 
-  g_return_if_fail (GST_IS_SCHROFILTER (object));
-  src = GST_SCHROFILTER (object);
+  g_return_if_fail (GST_IS_COG_FILTER (object));
+  src = GST_COG_FILTER (object);
 
-  GST_DEBUG ("gst_schrofilter_set_property");
+  GST_DEBUG ("gst_cog_filter_set_property");
   switch (prop_id) {
     case ARG_WAVELET_TYPE:
       src->wavelet_type = g_value_get_int (value);
@@ -220,13 +216,13 @@ gst_schrofilter_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_schrofilter_get_property (GObject * object, guint prop_id, GValue * value,
+gst_cog_filter_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstSchrofilter *src;
+  GstCogFilter *src;
 
-  g_return_if_fail (GST_IS_SCHROFILTER (object));
-  src = GST_SCHROFILTER (object);
+  g_return_if_fail (GST_IS_COG_FILTER (object));
+  src = GST_COG_FILTER (object);
 
   switch (prop_id) {
     case ARG_WAVELET_TYPE:
@@ -242,24 +238,22 @@ gst_schrofilter_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstFlowReturn
-gst_schrofilter_transform_ip (GstBaseTransform * base_transform,
-    GstBuffer * buf)
+gst_cog_filter_transform_ip (GstBaseTransform * base_transform, GstBuffer * buf)
 {
-  GstSchrofilter *compress;
-  SchroFrame *frame;
+  GstCogFilter *compress;
+  CogFrame *frame;
   int width, height;
 
-  g_return_val_if_fail (GST_IS_SCHROFILTER (base_transform), GST_FLOW_ERROR);
-  compress = GST_SCHROFILTER (base_transform);
+  g_return_val_if_fail (GST_IS_COG_FILTER (base_transform), GST_FLOW_ERROR);
+  compress = GST_COG_FILTER (base_transform);
 
   gst_structure_get_int (gst_caps_get_structure (buf->caps, 0),
       "width", &width);
   gst_structure_get_int (gst_caps_get_structure (buf->caps, 0),
       "height", &height);
 
-  frame = schro_frame_new_from_data_I420 (GST_BUFFER_DATA (buf), width, height);
-  schro_frame_filter_lowpass2 (frame, 5.0);
-  //schro_frame_filter_wavelet (frame);
+  frame = cog_frame_new_from_data_I420 (GST_BUFFER_DATA (buf), width, height);
+  //cog_frame_filter_lowpass2 (frame, 5.0);
 
   return GST_FLOW_OK;
 }
