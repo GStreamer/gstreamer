@@ -75,6 +75,12 @@ else
 check_kate=
 endif
 
+if USE_MIMIC
+check_mimic=pipelines/mimic
+else
+check_mimic=
+endif
+
 
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
@@ -111,7 +117,8 @@ check_PROGRAMS = \
 	elements/mxfdemux \
 	elements/mxfmux \
 	pipelines/mxf \
-	$(check_metadata)
+	$(check_metadata) \
+	$(check_mimic)
 
 noinst_HEADERS = elements/mxfdemux.h elements/amrparse_data.h elements/aacparse_data.h
 
