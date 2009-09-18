@@ -4,6 +4,7 @@ noinst_HEADERS = gstvideomeasure_ssim.h gstvideomeasure_collector.h
 
 libgstvideomeasure_la_SOURCES = \
     gstvideomeasure.c \
+    gstvideomeasure.h \
     gstvideomeasure_ssim.c \
     gstvideomeasure_collector.c
 
