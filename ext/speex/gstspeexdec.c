@@ -218,7 +218,7 @@ speex_dec_convert (GstPad * pad,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          scale = sizeof (float) * dec->header->nb_channels;
+          scale = 2 * dec->header->nb_channels;
         case GST_FORMAT_DEFAULT:
           *dest_value =
               gst_util_uint64_scale_int (scale * src_value, dec->header->rate,
@@ -232,7 +232,7 @@ speex_dec_convert (GstPad * pad,
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          *dest_value = src_value * sizeof (float) * dec->header->nb_channels;
+          *dest_value = src_value * 2 * dec->header->nb_channels;
           break;
         case GST_FORMAT_TIME:
           *dest_value =
@@ -247,11 +247,11 @@ speex_dec_convert (GstPad * pad,
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value / (sizeof (float) * dec->header->nb_channels);
+          *dest_value = src_value / (2 * dec->header->nb_channels);
           break;
         case GST_FORMAT_TIME:
           *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
-              dec->header->rate * sizeof (float) * dec->header->nb_channels);
+              dec->header->rate * 2 * dec->header->nb_channels);
           break;
         default:
           res = FALSE;
