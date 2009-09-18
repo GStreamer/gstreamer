@@ -75,6 +75,7 @@ struct _GstSchroEnc
   GstBuffer *seq_header_buffer;
 
   guint64 last_granulepos;
+  guint64 granule_offset;
 };
 
 struct _GstSchroEncClass
@@ -414,6 +415,8 @@ gst_schro_enc_start (GstBaseVideoEncoder * base_video_encoder)
       2 * (int) schro_encoder_setting_get_double (schro_enc->encoder,
           "queue_depth"));
 
+  schro_enc->granule_offset = ~0;
+
   gst_caps_unref (caps);
   return TRUE;
 }
@@ -457,6 +460,13 @@ gst_schro_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   const GstVideoState *state;
 
   state = gst_base_video_encoder_get_state (base_video_encoder);
+
+  if (schro_enc->granule_offset == ~0LL) {
+    schro_enc->granule_offset =
+        gst_util_uint64_scale (frame->presentation_timestamp,
+        2 * state->fps_n, GST_SECOND * state->fps_d);
+    GST_ERROR ("granule offset %lld", schro_enc->granule_offset);
+  }
 
   schro_frame = gst_schro_buffer_wrap (frame->sink_buffer,
       state->format, state->width, state->height);
@@ -612,8 +622,8 @@ gst_schro_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
 
   dpn = frame->decode_frame_number;
 
-  pt = frame->presentation_frame_number * 2;
-  dt = frame->decode_frame_number * 2;
+  pt = frame->presentation_frame_number * 2 + schro_enc->granule_offset;
+  dt = frame->decode_frame_number * 2 + schro_enc->granule_offset;
   delay = pt - dt;
   dist = frame->distance_from_sync;
 
