@@ -155,7 +155,6 @@ gst_mimenc_init (GstMimEnc * mimenc, GstMimEncClass * klass)
 
   gst_segment_init (&mimenc->segment, GST_FORMAT_UNDEFINED);
 
-  // TODO property to set resolution
   mimenc->res = MIMIC_RES_HIGH;
   mimenc->buffer_size = -1;
   mimenc->width = 0;
