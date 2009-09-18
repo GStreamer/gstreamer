@@ -465,7 +465,7 @@ gst_schro_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     schro_enc->granule_offset =
         gst_util_uint64_scale (frame->presentation_timestamp,
         2 * state->fps_n, GST_SECOND * state->fps_d);
-    GST_ERROR ("granule offset %lld", schro_enc->granule_offset);
+    GST_DEBUG ("granule offset %lld", schro_enc->granule_offset);
   }
 
   schro_frame = gst_schro_buffer_wrap (frame->sink_buffer,
