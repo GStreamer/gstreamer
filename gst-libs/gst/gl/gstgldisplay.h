@@ -113,9 +113,6 @@ struct _GstGLDisplay
   GLuint gen_texture;
   GLuint gen_texture_width;
   GLuint gen_texture_height;
-  GLuint del_texture;
-  GLuint del_texture_width;
-  GLuint del_texture_height;
 
   //client callbacks
   CRCB clientReshapeCallback;
