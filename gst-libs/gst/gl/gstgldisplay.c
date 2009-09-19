@@ -59,7 +59,6 @@ gpointer gst_gl_display_thread_create_context (GstGLDisplay * display);
 void gst_gl_display_thread_destroy_context (GstGLDisplay * display);
 void gst_gl_display_thread_run_generic (GstGLDisplay * display);
 void gst_gl_display_thread_gen_texture (GstGLDisplay * display);
-void gst_gl_display_thread_del_texture (GstGLDisplay * display);
 #ifdef OPENGL_ES2
 void gst_gl_display_thread_init_redisplay (GstGLDisplay * display);
 #endif
@@ -145,9 +144,6 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
   display->gen_texture = 0;
   display->gen_texture_width = 0;
   display->gen_texture_height = 0;
-  display->del_texture = 0;
-  display->del_texture_width = 0;
-  display->del_texture_height = 0;
 
   //client callbacks
   display->clientReshapeCallback = NULL;
@@ -763,14 +759,6 @@ gst_gl_display_thread_gen_texture (GstGLDisplay * display)
       display->gen_texture_width, display->gen_texture_height);
 }
 
-
-/* Called in the gl thread */
-void
-gst_gl_display_thread_del_texture (GstGLDisplay * display)
-{
-  gst_gl_display_gldel_texture (display, &display->del_texture,
-      display->del_texture_width, display->del_texture_height);
-}
 
 #ifdef OPENGL_ES2
 /* Called in the gl thread */
@@ -2187,11 +2175,7 @@ gst_gl_display_del_texture (GstGLDisplay * display, GLuint texture, GLint width,
 {
   gst_gl_display_lock (display);
   if (texture) {
-    display->del_texture = texture;
-    display->del_texture_width = width;
-    display->del_texture_height = height;
-    gst_gl_window_send_message (display->gl_window,
-        GST_GL_WINDOW_CB (gst_gl_display_thread_del_texture), display);
+    gst_gl_display_gldel_texture (display, &texture, width, height);
   }
   gst_gl_display_unlock (display);
 }
