@@ -681,6 +681,11 @@ AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
   ])
   AC_SUBST(COG_CFLAGS)
   AC_SUBST(COG_LIBS)
+  ORCC=`$PKG_CONFIG --variable=orcc orc-0.4`
+  if test "x$ORCC" = x ; then
+    ORCC=orcc
+  fi
+  AC_SUBST(ORCC)
 ])
 
 dnl *** dc1394  ***

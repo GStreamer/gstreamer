@@ -189,6 +189,8 @@ gst_cogcolorspace_class_init (gpointer g_class, gpointer class_data)
   base_transform_class->transform = gst_cogcolorspace_transform;
   base_transform_class->transform_caps = gst_cogcolorspace_transform_caps;
   base_transform_class->get_unit_size = gst_cogcolorspace_get_unit_size;
+
+  base_transform_class->passthrough_on_same_caps = TRUE;
 }
 
 static void

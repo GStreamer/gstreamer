@@ -6,12 +6,13 @@
 #define COG_ENABLE_UNSTABLE_API 1
 
 #include <cog/cogvirtframe.h>
-#include <cog/cogorc.h>
 #include <cog/cog.h>
 #include <string.h>
 #include <math.h>
 #include <orc/orc.h>
 #include <gst/gst.h>
+
+#include "cogorc.h"
 
 
 CogFrame *
@@ -354,7 +355,7 @@ cog_virt_frame_render_downsample_vert_cosite (CogFrame * frame,
   src3 = cog_virt_frame_get_line (frame->virt_frame1, component,
       CLAMP (i * 2 + 1, 0, n_src - 1));
 
-  cogorc_downsample_vert_halfsite_3tap (dest, src1, src2, src3,
+  cogorc_downsample_vert_cosite_3tap (dest, src1, src2, src3,
       frame->components[component].width);
 }
 
@@ -1196,9 +1197,8 @@ convert_444_422 (CogFrame * frame, void *_dest, int component, int i)
   if (component == 0) {
     orc_memcpy (dest, src, frame->width);
   } else {
-    cogorc_downsample_horiz_cosite_3tap (dest + 1,
-        (uint16_t *) (src + 1), (uint16_t *) (src + 3),
-        frame->components[component].width - 1);
+    cogorc_downsample_horiz_cosite_1tap (dest + 1,
+        (uint16_t *) (src + 2), frame->components[component].width - 1);
 
     {
       int j;
@@ -1226,18 +1226,15 @@ convert_422_420 (CogFrame * frame, void *_dest, int component, int i)
     uint8_t *dest = _dest;
     uint8_t *src1;
     uint8_t *src2;
-    uint8_t *src3;
     int n_src;
 
     n_src = frame->virt_frame1->components[component].height;
     src1 = cog_virt_frame_get_line (frame->virt_frame1, component,
-        CLAMP (i * 2 - 1, 0, n_src - 1));
-    src2 = cog_virt_frame_get_line (frame->virt_frame1, component,
         CLAMP (i * 2 + 0, 0, n_src - 1));
-    src3 = cog_virt_frame_get_line (frame->virt_frame1, component,
+    src2 = cog_virt_frame_get_line (frame->virt_frame1, component,
         CLAMP (i * 2 + 1, 0, n_src - 1));
 
-    cogorc_downsample_vert_halfsite_3tap (dest, src1, src2, src3,
+    cogorc_downsample_vert_halfsite_2tap (dest, src1, src2,
         frame->components[component].width);
   }
 }
@@ -1255,8 +1252,12 @@ convert_422_444 (CogFrame * frame, void *_dest, int component, int i)
   if (component == 0) {
     orc_memcpy (dest, src, frame->width);
   } else {
+    cogorc_upsample_horiz_cosite_1tap (dest, src,
+        frame->components[component].width / 2 - 1);
+#if 0
     cogorc_upsample_horiz_cosite (dest, src, src + 1,
         frame->components[component].width / 2 - 1);
+#endif
     dest[frame->components[component].width - 2] =
         src[frame->components[component].width / 2 - 1];
     dest[frame->components[component].width - 1] =
@@ -1274,6 +1275,7 @@ convert_420_422 (CogFrame * frame, void *_dest, int component, int i)
     src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
     orc_memcpy (dest, src, frame->components[component].width);
   } else {
+#if 0
     if ((i & 1) && i < frame->components[component].height - 1) {
       uint8_t *src2;
 
@@ -1286,6 +1288,10 @@ convert_420_422 (CogFrame * frame, void *_dest, int component, int i)
       src = cog_virt_frame_get_line (frame->virt_frame1, component, i >> 1);
       orc_memcpy (dest, src, frame->components[component].width);
     }
+#else
+    src = cog_virt_frame_get_line (frame->virt_frame1, component, i >> 1);
+    orc_memcpy (dest, src, frame->components[component].width);
+#endif
   }
 }
 

@@ -18,8 +18,6 @@ libgstcog_la_SOURCES = \
 	cog.h \
 	cogframe.c \
 	cogframe.h \
-	cogorc.c \
-	cogorc.h \
 	cogutils.h \
 	cogvirtframe.c \
 	cogvirtframe.h \
@@ -33,4 +31,15 @@ libgstcog_la_SOURCES = \
 	gstcogutils.h \
 	gstcolorconvert.c \
 	gstlogoinsert.c
+
+nodist_libgstcog_la_SOURCES = cogorc.c cogorc.h
+CLEANFILES = cogorc.c cogorc.h
+
+EXTRA_DIST=cog.orc
+
+cogorc.c: cog.orc
+	$(ORCC) --implementation -o cogorc.c cog.orc
+
+cogorc.h: cog.orc
+	$(ORCC) --header -o cogorc.h cog.orc
 
