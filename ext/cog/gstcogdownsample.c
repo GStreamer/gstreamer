@@ -55,7 +55,6 @@ struct _GstCogdownsample
 {
   GstBaseTransform base_transform;
 
-  //CogVideoFormat format;
 };
 
 struct _GstCogdownsampleClass
@@ -146,7 +145,6 @@ gst_cogdownsample_base_init (gpointer g_class)
       "Decreases size of video by a factor of 2",
       "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  //GstBaseTransformClass *base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_cogdownsample_src_template));
@@ -187,8 +185,6 @@ gst_cogdownsample_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_cogdownsample_init (GTypeInstance * instance, gpointer g_class)
 {
-  //GstCogdownsample *compress = GST_COGDOWNSAMPLE (instance);
-  //GstBaseTransform *btrans = GST_BASE_TRANSFORM (instance);
 
   GST_DEBUG ("gst_cogdownsample_init");
 }

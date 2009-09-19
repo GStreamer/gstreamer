@@ -101,7 +101,6 @@ static GstFlowReturn gst_mse_chain_test (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_mse_chain_ref (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_mse_sink_event (GstPad * pad, GstEvent * event);
 static void gst_mse_reset (GstMSE * filter);
-//static GstPadLinkReturn gst_mse_link_src (GstPad *pad, GstPad *peer);
 static GstCaps *gst_mse_getcaps (GstPad * pad);
 static gboolean gst_mse_set_caps (GstPad * pad, GstCaps * outcaps);
 static void gst_mse_finalize (GObject * object);
@@ -173,7 +172,6 @@ gst_mse_init (GstMSE * filter, GstMSEClass * klass)
 
   filter->srcpad = gst_element_get_static_pad (GST_ELEMENT (filter), "src");
 
-  //gst_pad_set_link_function (filter->srcpad, gst_mse_link_src);
   gst_pad_set_getcaps_function (filter->srcpad, gst_mse_getcaps);
 
   filter->sinkpad_ref =
@@ -271,7 +269,6 @@ static void
 gst_mse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  //GstMSE *fs = GST_MSE (object);
 
   switch (prop_id) {
     default:

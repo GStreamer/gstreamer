@@ -154,7 +154,6 @@ gst_cogcolorspace_base_init (gpointer g_class)
       "YCbCr format conversion",
       "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  //GstBaseTransformClass *base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_cogcolorspace_src_template));
@@ -195,8 +194,6 @@ gst_cogcolorspace_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_cogcolorspace_init (GTypeInstance * instance, gpointer g_class)
 {
-  //GstCogcolorspace *compress = GST_COGCOLORSPACE (instance);
-  //GstBaseTransform *btrans = GST_BASE_TRANSFORM (instance);
 
   GST_DEBUG ("gst_cogcolorspace_init");
 }

@@ -362,8 +362,6 @@ static void
 cog_virt_frame_render_downsample_vert_halfsite_2tap (CogFrame * frame,
     void *_dest, int component, int i)
 {
-  //static OrcProgram *p = NULL;
-  //OrcExecutor _ex, *ex = &_ex;
   uint8_t *dest = _dest;
   uint8_t *src1;
   uint8_t *src2;
@@ -383,8 +381,6 @@ static void
 cog_virt_frame_render_downsample_vert_halfsite_4tap (CogFrame * frame,
     void *_dest, int component, int i)
 {
-  //static OrcProgram *p = NULL;
-  //OrcExecutor _ex, *ex = &_ex;
   uint8_t *dest = _dest;
   uint8_t *src1;
   uint8_t *src2;
@@ -461,7 +457,6 @@ cog_virt_frame_render_downsample_vert_halfsite (CogFrame * frame,
       for (j = 0; j < frame->components[component].width; j++) {
         int x = 0;
         const int taps10[10] = { 1, -2, -5, 9, 29, 29, 9, -5, -2, 1 };
-        //const int taps10[10] = { -1, 1, 6, 11, 15, 15, 11, 6, 1, -1 };
         for (k = 0; k < 10; k++) {
           x += taps10[k] * src[k][j];
         }

@@ -37,10 +37,14 @@ GType gst_decimate_get_type (void);
 GType gst_motion_detect_get_type (void);
 #endif
 
+GST_DEBUG_CATEGORY (cog_debug);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   orc_init ();
+
+  GST_DEBUG_CATEGORY_INIT (cog_debug, "cog", 0, "Cog");
 
   gst_element_register (plugin, "cogdownsample", GST_RANK_NONE,
       gst_cogdownsample_get_type ());

@@ -84,12 +84,7 @@ cog_frame_new_and_alloc_extended (CogMemoryDomain * domain,
     }
     frame->components[0].length = frame->components[0].stride * height;
 
-    if (domain) {
-      //frame->regions[0] = cog_memory_domain_alloc (domain,
-      //   frame->components[0].length);
-    } else {
-      frame->regions[0] = g_malloc (frame->components[0].length);
-    }
+    frame->regions[0] = g_malloc (frame->components[0].length);
 
     frame->components[0].data = frame->regions[0];
     frame->components[0].v_shift = 0;
@@ -151,14 +146,8 @@ cog_frame_new_and_alloc_extended (CogMemoryDomain * domain,
   frame->components[2].v_shift = v_shift;
   frame->components[2].h_shift = h_shift;
 
-  if (domain) {
-    //frame->regions[0] = cog_memory_domain_alloc (domain,
-    //    frame->components[0].length +
-    //    frame->components[1].length + frame->components[2].length);
-  } else {
-    frame->regions[0] = malloc (frame->components[0].length +
-        frame->components[1].length + frame->components[2].length);
-  }
+  frame->regions[0] = malloc (frame->components[0].length +
+      frame->components[1].length + frame->components[2].length);
 
   frame->components[0].data = COG_OFFSET (frame->regions[0],
       frame->components[0].stride * extension + bytes_pp * extension);
@@ -792,11 +781,7 @@ cog_frame_unref (CogFrame * frame)
 
     for (i = 0; i < 3; i++) {
       if (frame->regions[i]) {
-        if (frame->domain) {
-          //cog_memory_domain_memfree(frame->domain, frame->regions[i]);
-        } else {
-          free (frame->regions[i]);
-        }
+        g_free (frame->regions[i]);
       }
     }
 

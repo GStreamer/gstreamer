@@ -141,7 +141,6 @@ gst_colorconvert_base_init (gpointer g_class)
       "Template for a video filter",
       "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  //GstBaseTransformClass *base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_colorconvert_src_template));
@@ -172,8 +171,6 @@ gst_colorconvert_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_colorconvert_init (GTypeInstance * instance, gpointer g_class)
 {
-  //GstColorconvert *compress = GST_COLORCONVERT (instance);
-  //GstBaseTransform *btrans = GST_BASE_TRANSFORM (instance);
 
   GST_DEBUG ("gst_colorconvert_init");
 }
@@ -526,15 +523,16 @@ color_matrix_build_yuv_to_rgb_601 (ColorMatrix * dst)
 
   /* colour matrix, YCbCr -> RGB */
   /* Requires Y in [0,1.0], Cb&Cr in [-0.5,0.5] */
-  color_matrix_YCbCr_to_RGB (dst, 0.2990, 0.1140);      // SD
-  //color_matrix_YCbCr_to_RGB (dst, 0.2126, 0.0722);  // HD
+  color_matrix_YCbCr_to_RGB (dst, 0.2990, 0.1140);      /* SD */
 
   /*
    * We are now in RGB space
    */
 
+#if 0
   /* scale to output range. */
-  //color_matrix_scale_components (dst, 255.0, 255.0, 255.0);
+  color_matrix_scale_components (dst, 255.0, 255.0, 255.0);
+#endif
 }
 
 void
@@ -550,10 +548,9 @@ color_matrix_build_bt709_to_bt601 (ColorMatrix * dst)
 
   /* colour matrix, YCbCr -> RGB */
   /* Requires Y in [0,1.0], Cb&Cr in [-0.5,0.5] */
-  //color_matrix_YCbCr_to_RGB (dst, 0.2990, 0.1140);  // SD
-  color_matrix_YCbCr_to_RGB (dst, 0.2126, 0.0722);      // HD
+  color_matrix_YCbCr_to_RGB (dst, 0.2126, 0.0722);      /* HD */
 
-  color_matrix_RGB_to_YCbCr (dst, 0.2990, 0.1140);      // SD
+  color_matrix_RGB_to_YCbCr (dst, 0.2990, 0.1140);      /* SD */
 
   color_matrix_scale_components (dst, 219.0, 224.0, 224.0);
 
@@ -565,11 +562,7 @@ color_matrix_build_rgb_to_yuv_601 (ColorMatrix * dst)
 {
   color_matrix_set_identity (dst);
 
-  //color_matrix_scale_components (dst, (1/255.0), (1/255.0), (1/255.0));
-
-  color_matrix_RGB_to_YCbCr (dst, 0.2990, 0.1140);      // SD
-  //color_matrix_RGB_to_YCbCr (dst, 0.2126, 0.0722); // HD
-  //color_matrix_RGB_to_YCbCr (dst, 0.212, 0.087); // SMPTE 240M
+  color_matrix_RGB_to_YCbCr (dst, 0.2990, 0.1140);      /* SD */
 
   color_matrix_scale_components (dst, 219.0, 224.0, 224.0);
 

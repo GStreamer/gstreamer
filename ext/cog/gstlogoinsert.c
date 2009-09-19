@@ -153,7 +153,6 @@ gst_logoinsert_base_init (gpointer g_class)
       "Template for a video filter",
       "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  //GstBaseTransformClass *base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_logoinsert_src_template));
@@ -188,8 +187,6 @@ gst_logoinsert_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_logoinsert_init (GTypeInstance * instance, gpointer g_class)
 {
-  //GstLogoinsert *compress = GST_LOGOINSERT (instance);
-  //GstBaseTransform *btrans = GST_BASE_TRANSFORM (instance);
 
   GST_DEBUG ("gst_logoinsert_init");
 }
@@ -409,10 +406,7 @@ cog_frame_new_from_png (void *data, int size)
   png_read_image (png_ptr, rows);
   g_free (rows);
 
-  //  PNG_TRANSFORM_STRP_16 | PNG_TRANSFORM_PACKING,
-
   png_destroy_read_struct (&png_ptr, &info_ptr, png_infopp_NULL);
-
 
   return frame;
 }

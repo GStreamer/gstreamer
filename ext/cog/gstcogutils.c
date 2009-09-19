@@ -28,8 +28,8 @@
 #include <math.h>
 #include <string.h>
 
-//GST_DEBUG_CATEGORY_EXTERN (cog_debug);
-//#define GST_CAT_DEFAULT cog_debug
+GST_DEBUG_CATEGORY_EXTERN (cog_debug);
+#define GST_CAT_DEFAULT cog_debug
 
 
 

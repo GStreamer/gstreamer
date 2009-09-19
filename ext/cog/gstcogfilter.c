@@ -150,7 +150,6 @@ gst_cog_filter_base_init (gpointer g_class)
       "Applies a cog pre-filter to video",
       "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  //GstBaseTransformClass *base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_cog_filter_src_template));
@@ -187,8 +186,6 @@ gst_cog_filter_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_cog_filter_init (GTypeInstance * instance, gpointer g_class)
 {
-  //GstCogFilter *compress = GST_COG_FILTER (instance);
-  //GstBaseTransform *btrans = GST_BASE_TRANSFORM (instance);
 
   GST_DEBUG ("gst_cog_filter_init");
 }
@@ -253,7 +250,8 @@ gst_cog_filter_transform_ip (GstBaseTransform * base_transform, GstBuffer * buf)
       "height", &height);
 
   frame = cog_frame_new_from_data_I420 (GST_BUFFER_DATA (buf), width, height);
-  //cog_frame_filter_lowpass2 (frame, 5.0);
+
+  /* FIXME do something here */
 
   return GST_FLOW_OK;
 }
