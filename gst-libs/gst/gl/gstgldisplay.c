@@ -1895,89 +1895,64 @@ void
 gst_gl_display_glgen_texture (GstGLDisplay * display, GLuint * pTexture,
     GLint width, GLint height)
 {
-  if (display->isAlive) {
-    GQueue *sub_texture_pool = NULL;
+  glGenTextures (1, pTexture);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
 
-    //make a unique key from w and h
-    //the key cannot be w*h because (4*6 = 6*4 = 2*12 = 12*2)
-    guint key = (gint) width;
-    key <<= 16;
-    key |= (gint) height;
-    sub_texture_pool =
-        g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER (key));
-
-    //if there is a sub texture pool associated to th given key
-    if (sub_texture_pool && g_queue_get_length (sub_texture_pool) > 0) {
-      //a texture is available in the pool
-      GstGLDisplayTex *tex = g_queue_pop_head (sub_texture_pool);
-      *pTexture = tex->texture;
-      g_free (tex);
-      GST_LOG ("get texture id:%d from the sub texture pool: %d",
-          *pTexture, key);
-    } else {
-      //sub texture pool does not exist yet or empty
-      glGenTextures (1, pTexture);
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
-
-      switch (display->upload_video_format) {
-        case GST_VIDEO_FORMAT_RGB:
-        case GST_VIDEO_FORMAT_BGR:
-        case GST_VIDEO_FORMAT_RGBx:
-        case GST_VIDEO_FORMAT_BGRx:
-        case GST_VIDEO_FORMAT_xRGB:
-        case GST_VIDEO_FORMAT_xBGR:
-        case GST_VIDEO_FORMAT_RGBA:
-        case GST_VIDEO_FORMAT_BGRA:
-        case GST_VIDEO_FORMAT_ARGB:
-        case GST_VIDEO_FORMAT_ABGR:
+  switch (display->upload_video_format) {
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+          width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+      switch (display->upload_colorspace_conversion) {
+        case GST_GL_DISPLAY_CONVERSION_GLSL:
+        case GST_GL_DISPLAY_CONVERSION_MATRIX:
           glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
               width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
           break;
-        case GST_VIDEO_FORMAT_YUY2:
-        case GST_VIDEO_FORMAT_UYVY:
-          switch (display->upload_colorspace_conversion) {
-            case GST_GL_DISPLAY_CONVERSION_GLSL:
-            case GST_GL_DISPLAY_CONVERSION_MATRIX:
-              glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-                  width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-              break;
-            case GST_GL_DISPLAY_CONVERSION_MESA:
-              if (display->upload_width != display->upload_data_width ||
-                  display->upload_height != display->upload_data_height)
-                glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-                    width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-              else
-                glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width,
-                    height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
-              break;
-            default:
-              g_assert_not_reached ();
-          }
-          break;
-        case GST_VIDEO_FORMAT_I420:
-        case GST_VIDEO_FORMAT_YV12:
-        case GST_VIDEO_FORMAT_AYUV:
-          glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-              width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        case GST_GL_DISPLAY_CONVERSION_MESA:
+          if (display->upload_width != display->upload_data_width ||
+              display->upload_height != display->upload_data_height)
+            glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+                width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+          else
+            glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width,
+                height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
           break;
         default:
           g_assert_not_reached ();
       }
+      break;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_AYUV:
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+          width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
 
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+      GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+      GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+      GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+      GL_CLAMP_TO_EDGE);
 
-      GST_LOG ("generate texture id:%d", *pTexture);
-    }
-
-  } else
-    *pTexture = 0;
+  GST_LOG ("generated texture id:%d", *pTexture);
 }
 
 
@@ -2169,11 +2144,38 @@ gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
     GLint width, GLint height)
 {
   gst_gl_display_lock (display);
-  display->gen_texture_width = width;
-  display->gen_texture_height = height;
-  gst_gl_window_send_message (display->gl_window,
-      GST_GL_WINDOW_CB (gst_gl_display_thread_gen_texture), display);
-  *pTexture = display->gen_texture;
+
+  if (display->isAlive) {
+    GQueue *sub_texture_pool = NULL;
+
+    //make a unique key from w and h
+    //the key cannot be w*h because (4*6 = 6*4 = 2*12 = 12*2)
+    guint key = (gint) width;
+    key <<= 16;
+    key |= (gint) height;
+    sub_texture_pool =
+        g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER (key));
+
+    //if there is a sub texture pool associated to the given key
+    if (sub_texture_pool && g_queue_get_length (sub_texture_pool) > 0) {
+      //a texture is available in the pool
+      GstGLDisplayTex *tex = g_queue_pop_head (sub_texture_pool);
+      *pTexture = tex->texture;
+      g_free (tex);
+      GST_LOG ("get texture id:%d from the sub texture pool: %d",
+          *pTexture, key);
+    } else {
+      //only in this case we want to ask a texture from the gl thread
+      display->gen_texture_width = width;
+      display->gen_texture_height = height;
+      gst_gl_window_send_message (display->gl_window,
+          GST_GL_WINDOW_CB (gst_gl_display_thread_gen_texture), display);
+      *pTexture = display->gen_texture;
+    }
+
+  } else
+    *pTexture = 0;
+ 
   gst_gl_display_unlock (display);
 }
 
