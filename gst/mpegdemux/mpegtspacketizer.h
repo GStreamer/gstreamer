@@ -28,6 +28,14 @@
 #include <gst/base/gstadapter.h>
 #include <glib.h>
 
+#define MPEGTS_NORMAL_PACKETSIZE  188
+#define MPEGTS_M2TS_PACKETSIZE    192
+#define MPEGTS_DVB_ASI_PACKETSIZE 204
+#define MPEGTS_ATSC_PACKETSIZE    208
+
+#define MPEGTS_MIN_PACKETSIZE MPEGTS_NORMAL_PACKETSIZE
+#define MPEGTS_MAX_PACKETSIZE MPEGTS_ATSC_PACKETSIZE
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPEGTS_PACKETIZER \
@@ -52,6 +60,8 @@ struct _MpegTSPacketizer {
   /* streams hashed by pid */
   GHashTable *streams;
   gboolean disposed;
+  gboolean know_packet_size;
+  guint16 packet_size;
 };
 
 struct _MpegTSPacketizerClass {

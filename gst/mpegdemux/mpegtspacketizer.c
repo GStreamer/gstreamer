@@ -167,6 +167,7 @@ mpegts_packetizer_init (MpegTSPacketizer * packetizer)
   packetizer->adapter = gst_adapter_new ();
   packetizer->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, mpegts_packetizer_destroy_streams_value);
+  packetizer->know_packet_size = FALSE;
 }
 
 static void
@@ -1965,10 +1966,61 @@ mpegts_packetizer_push (MpegTSPacketizer * packetizer, GstBuffer * buffer)
   gst_adapter_push (packetizer->adapter, buffer);
 }
 
+void
+mpegts_try_discover_packet_size (MpegTSPacketizer * packetizer)
+{
+  guint8 *dest;
+  int i, pos, j;
+  const guint psizes[] = { MPEGTS_NORMAL_PACKETSIZE,
+    MPEGTS_M2TS_PACKETSIZE,
+    MPEGTS_DVB_ASI_PACKETSIZE,
+    MPEGTS_ATSC_PACKETSIZE
+  };
+  /* wait for 3 sync bytes */
+  /* so first return if there is not enough data for 4 * max packetsize */
+  if (gst_adapter_available_fast (packetizer->adapter) <
+      MPEGTS_MAX_PACKETSIZE * 4)
+    return;
+  /* check for sync bytes */
+  dest = g_malloc (MPEGTS_MAX_PACKETSIZE * 4);
+  gst_adapter_copy (packetizer->adapter, dest, 0, MPEGTS_MAX_PACKETSIZE * 4);
+  /* find first sync byte */
+  pos = -1;
+  for (i = 0; i < MPEGTS_MAX_PACKETSIZE; i++) {
+    if (dest[i] == 0x47) {
+      for (j = 0; j < 4; j++) {
+        guint packetsize = psizes[j];
+        /* check each of the packet size possibilities in turn */
+        if (dest[i] == 0x47 && dest[i + packetsize] == 0x47 &&
+            dest[i + packetsize * 2] == 0x47 &&
+            dest[i + packetsize * 3] == 0x47) {
+          packetizer->know_packet_size = TRUE;
+          packetizer->packet_size = packetsize;
+          pos = i;
+          break;
+        }
+      }
+      break;
+    }
+  }
+  GST_DEBUG ("have packetsize detected: %d of %u bytes",
+      packetizer->know_packet_size, packetizer->packet_size);
+  /* flush to sync byte */
+  if (pos > 0)
+    gst_adapter_flush (packetizer->adapter, pos);
+  g_free (dest);
+}
+
+
 gboolean
 mpegts_packetizer_has_packets (MpegTSPacketizer * packetizer)
 {
-  return gst_adapter_available (packetizer->adapter) >= 188;
+  if (G_UNLIKELY (packetizer->know_packet_size == FALSE)) {
+    mpegts_try_discover_packet_size (packetizer);
+    if (!packetizer->know_packet_size)
+      return FALSE;
+  }
+  return gst_adapter_available (packetizer->adapter) >= packetizer->packet_size;
 }
 
 MpegTSPacketizerPacketReturn
@@ -1979,7 +2031,13 @@ mpegts_packetizer_next_packet (MpegTSPacketizer * packetizer,
   guint avail;
 
   packet->buffer = NULL;
-  while ((avail = gst_adapter_available (packetizer->adapter)) >= 188) {
+  if (G_UNLIKELY (!packetizer->know_packet_size)) {
+    mpegts_try_discover_packet_size (packetizer);
+    if (!packetizer->know_packet_size)
+      return PACKET_NEED_MORE;
+  }
+  while ((avail = gst_adapter_available (packetizer->adapter)) >=
+      packetizer->packet_size) {
     sync_byte = *gst_adapter_peek (packetizer->adapter, 1);
     if (G_UNLIKELY (sync_byte != 0x47)) {
       GST_DEBUG ("lost sync %02x", sync_byte);
@@ -1987,7 +2045,8 @@ mpegts_packetizer_next_packet (MpegTSPacketizer * packetizer,
       continue;
     }
 
-    packet->buffer = gst_adapter_take_buffer (packetizer->adapter, 188);
+    packet->buffer = gst_adapter_take_buffer (packetizer->adapter,
+        packetizer->packet_size);
     packet->data_start = GST_BUFFER_DATA (packet->buffer);
     packet->data_end =
         GST_BUFFER_DATA (packet->buffer) + GST_BUFFER_SIZE (packet->buffer);
