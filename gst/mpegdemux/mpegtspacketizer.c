@@ -176,6 +176,11 @@ mpegts_packetizer_dispose (GObject * object)
   MpegTSPacketizer *packetizer = GST_MPEGTS_PACKETIZER (object);
 
   if (!packetizer->disposed) {
+    if (packetizer->know_packet_size && packetizer->caps != NULL) {
+      gst_caps_unref (packetizer->caps);
+      packetizer->caps = NULL;
+      packetizer->know_packet_size = FALSE;
+    }
     gst_adapter_clear (packetizer->adapter);
     g_object_unref (packetizer->adapter);
     packetizer->disposed = TRUE;
@@ -1931,6 +1936,14 @@ remove_all (gpointer key, gpointer value, gpointer user_data)
 void
 mpegts_packetizer_clear (MpegTSPacketizer * packetizer)
 {
+  if (packetizer->know_packet_size) {
+    packetizer->know_packet_size = FALSE;
+    packetizer->packet_size = 0;
+    if (packetizer->caps != NULL) {
+      gst_caps_unref (packetizer->caps);
+      packetizer->caps = NULL;
+    }
+  }
   /* FIXME can't use remove_all because we don't depend on 2.12 yet */
   g_hash_table_foreach_remove (packetizer->streams, remove_all, NULL);
   gst_adapter_clear (packetizer->adapter);
