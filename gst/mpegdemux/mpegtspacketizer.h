@@ -62,6 +62,7 @@ struct _MpegTSPacketizer {
   gboolean disposed;
   gboolean know_packet_size;
   guint16 packet_size;
+  GstCaps *caps;
 };
 
 struct _MpegTSPacketizerClass {

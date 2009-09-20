@@ -773,15 +773,12 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet,
   guint16 pid;
   GstBuffer *buffer;
   GstFlowReturn ret;
-  GstCaps *caps;
   GList *srcpads;
 
   pid = packet->pid;
   buffer = packet->buffer;
   /* we have the same caps on all the src pads */
-  caps = gst_static_pad_template_get_caps (&src_template);
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
+  gst_buffer_set_caps (buffer, parse->packetizer->caps);
 
   GST_OBJECT_LOCK (parse);
   /* clear tspad->pushed on pads */
