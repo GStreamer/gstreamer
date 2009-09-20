@@ -36,7 +36,7 @@ namespace Gst.GLib
 			g_thread_init (IntPtr.Zero);
 		}
 
-		[DllImport("gstreamersharpglue-0.10")]
+		[DllImport("gstreamersharpglue-0.10.dll")]
 		static extern bool gstglibsharp_g_thread_supported ();
 
 		public static bool Supported
