@@ -92,17 +92,16 @@ public bool TrySlaveLock () {
   return g_mutex_trylock (SlaveLockPtr);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_clock_get_master (IntPtr raw);
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern bool gst_clock_set_master (IntPtr raw, IntPtr master);
 public Gst.Clock Master {
   get  {
     IntPtr raw_ret = gst_clock_get_master (Handle);
     Gst.Clock ret = Gst.GLib.Object.GetObject (raw_ret, true) as Gst.Clock;
     return ret;
-  }
-  set {
+  } set {
     if (!gst_clock_set_master (Handle, value == null ? IntPtr.Zero : value.Handle))
       throw new Exception ();
   }

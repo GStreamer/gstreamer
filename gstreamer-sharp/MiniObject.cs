@@ -341,8 +341,7 @@ namespace Gst {
     protected virtual IntPtr Raw {
       get {
         return handle;
-      }
-      set {
+      } set {
         if (handle != IntPtr.Zero)
           Objects.Remove (handle);
         handle = value;
@@ -409,8 +408,7 @@ namespace Gst {
       get {
         GstMiniObject inst_struct = (GstMiniObject) Marshal.PtrToStructure (Handle, typeof (GstMiniObject));
         return inst_struct.flags;
-      }
-      set {
+      } set {
         GstMiniObject inst_struct = (GstMiniObject) Marshal.PtrToStructure (Handle, typeof (GstMiniObject));
         inst_struct.flags = value;
       }

@@ -18,8 +18,7 @@ namespace Gst {
     public uint Domain {
       get {
         return domain_quark;
-      }
-      set {
+      } set {
         domain_quark = value;
       }
     }
@@ -27,8 +26,7 @@ namespace Gst {
     public int Code {
       get {
         return code;
-      }
-      set {
+      } set {
         code = value;
       }
     }
@@ -38,8 +36,7 @@ namespace Gst {
         if (message == IntPtr.Zero)
           return null;
         return Gst.GLib.Marshaller.Utf8PtrToString (message);
-      }
-      set {
+      } set {
         if (message != IntPtr.Zero)
           Gst.GLib.Marshaller.Free (message);
         message = Gst.GLib.Marshaller.StringToPtrGStrdup (value);

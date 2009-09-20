@@ -252,12 +252,12 @@ print_element_properties (GstElement * element, gint pfx)
     /* Ignore GstObject, GstElement, GstBin, GstPipeline properties */
     if (param->owner_type == GST_TYPE_OBJECT ||
         param->owner_type == GST_TYPE_ELEMENT ||
-	param->owner_type == GST_TYPE_BIN ||
-	param->owner_type == GST_TYPE_PIPELINE ||
-	param->owner_type == GST_TYPE_BASE_SRC ||
-	param->owner_type == GST_TYPE_BASE_SINK ||
-	param->owner_type == GST_TYPE_BASE_TRANSFORM ||
-	param->owner_type == GST_TYPE_PUSH_SRC)
+        param->owner_type == GST_TYPE_BIN ||
+        param->owner_type == GST_TYPE_PIPELINE ||
+        param->owner_type == GST_TYPE_BASE_SRC ||
+        param->owner_type == GST_TYPE_BASE_SINK ||
+        param->owner_type == GST_TYPE_BASE_TRANSFORM ||
+        param->owner_type == GST_TYPE_PUSH_SRC)
       continue;
 
     PUT_START_TAG (pfx + 1, "element-property");

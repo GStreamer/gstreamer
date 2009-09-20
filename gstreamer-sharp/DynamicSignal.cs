@@ -56,8 +56,7 @@ namespace Gst {
       public IntPtr Closure {
         get {
           return closure;
-        }
-        set {
+        } set {
           closure = value;
         }
       }
@@ -65,8 +64,7 @@ namespace Gst {
       public uint HandlerId {
         get {
           return handlerId;
-        }
-        set {
+        } set {
           handlerId = value;
         }
       }
@@ -74,8 +72,7 @@ namespace Gst {
       public Delegate RegisteredHandler {
         get {
           return registeredHandler;
-        }
-        set {
+        } set {
           registeredHandler = value;
         }
       }
@@ -83,8 +80,7 @@ namespace Gst {
       public Type ArgsType {
         get {
           return argsType;
-        }
-        set {
+        } set {
           argsType = value;
         }
       }
@@ -94,65 +90,65 @@ namespace Gst {
         this.closure = closure;
         this.registeredHandler = registeredHandler;
 
-	if (!IsValidDelegate (registeredHandler))
-	  throw new Exception ("Invalid delegate");
+        if (!IsValidDelegate (registeredHandler))
+          throw new Exception ("Invalid delegate");
 
-	MethodInfo mi = registeredHandler.Method;
-	ParameterInfo[] parms = mi.GetParameters ();
-	this.argsType = parms[1].ParameterType;
+        MethodInfo mi = registeredHandler.Method;
+        ParameterInfo[] parms = mi.GetParameters ();
+        this.argsType = parms[1].ParameterType;
       }
 
       public void UpdateArgsType (Delegate d) {
         if (!IsCompatibleDelegate (d))
-	  throw new Exception ("Incompatible delegate");
+          throw new Exception ("Incompatible delegate");
 
-	MethodInfo mi = d.Method;
-	ParameterInfo[] parms = mi.GetParameters ();
+        MethodInfo mi = d.Method;
+        ParameterInfo[] parms = mi.GetParameters ();
 
-	Type t1 = parms[1].ParameterType;
-	Type t2 = argsType;
+        Type t1 = parms[1].ParameterType;
+        Type t2 = argsType;
 
-	if (t1 == t2)
-	  return;
-	
-	if (t1.IsSubclassOf (t2))
-	  argsType = t1;
-	else if (t2.IsSubclassOf (t1))
-	  argsType = t2;
-	else
-	  throw new Exception ("Incompatible delegate");
+        if (t1 == t2)
+          return;
+
+        if (t1.IsSubclassOf (t2))
+          argsType = t1;
+        else if (t2.IsSubclassOf (t1))
+          argsType = t2;
+        else
+          throw new Exception ("Incompatible delegate");
       }
 
       public bool IsCompatibleDelegate (Delegate d) {
         if (!IsValidDelegate (d))
-	  return false;
-	
-	MethodInfo mi = d.Method;
-	ParameterInfo[] parms = mi.GetParameters ();
+          return false;
 
-	if (parms[1].ParameterType != this.argsType &&
-	  !parms[1].ParameterType.IsSubclassOf (this.argsType) &&
-	  !this.argsType.IsSubclassOf (parms[1].ParameterType))
-	  return false;
+        MethodInfo mi = d.Method;
+        ParameterInfo[] parms = mi.GetParameters ();
 
-	return true;
+        if (parms[1].ParameterType != this.argsType &&
+            !parms[1].ParameterType.IsSubclassOf (this.argsType) &&
+            !this.argsType.IsSubclassOf (parms[1].ParameterType))
+          return false;
+
+        return true;
       }
 
       public static bool IsValidDelegate (Delegate d) {
-	MethodInfo mi = d.Method;
-	
-	if (mi.ReturnType != typeof (void))
-	  return false;
+        MethodInfo mi = d.Method;
 
-	ParameterInfo[] parms = mi.GetParameters ();
-	if (parms.Length != 2)
-	  return false;
-	
-	if (parms[1].ParameterType != typeof (Gst.GLib.SignalArgs) &&
-	  !parms[1].ParameterType.IsSubclassOf (typeof (Gst.GLib.SignalArgs)))
-	  return false;
+        if (mi.ReturnType != typeof (void))
+          return false;
 
-	return true;
+        ParameterInfo[] parms = mi.GetParameters ();
+        if (parms.Length != 2)
+          return false;
+
+        if (parms[1].ParameterType != typeof (Gst.GLib.SignalArgs) &&
+            !parms[1].ParameterType.IsSubclassOf (typeof (Gst.GLib.SignalArgs)))
+          return false;
+
+        return true;
       }
     }
 
@@ -181,20 +177,20 @@ namespace Gst {
 
       ObjectSignalKey k = new ObjectSignalKey (o, name);
 
-     if (!SignalInfo.IsValidDelegate (handler))
-	throw new Exception ("Invalid delegate");
+      if (!SignalInfo.IsValidDelegate (handler))
+        throw new Exception ("Invalid delegate");
 
       if (SignalHandlers[k] != null) {
         SignalInfo si = (SignalInfo) SignalHandlers[k];
-	if (!si.IsCompatibleDelegate (handler))
-		throw new Exception ("Incompatible delegate");
+        if (!si.IsCompatibleDelegate (handler))
+          throw new Exception ("Incompatible delegate");
 
         newHandler = Delegate.Combine (si.RegisteredHandler, handler);
-	si.UpdateArgsType (handler);
+        si.UpdateArgsType (handler);
         si.RegisteredHandler = newHandler;
       } else {
-      	if (!SignalInfo.IsValidDelegate (handler))
-		throw new Exception ("Invalid delegate");
+        if (!SignalInfo.IsValidDelegate (handler))
+          throw new Exception ("Invalid delegate");
 
         IntPtr closure = g_closure_new_simple (g_closure_sizeof, IntPtr.Zero);
         g_closure_set_meta_marshal (closure, (IntPtr) GCHandle.Alloc (k),  marshalHandler);
@@ -233,13 +229,13 @@ namespace Gst {
 
       if (data == IntPtr.Zero) {
         Console.Error.WriteLine ("No available data");
-	return;
+        return;
       }
 
       ObjectSignalKey k = (ObjectSignalKey) ( (GCHandle) data).Target;
       if (k != null) {
         SignalInfo si = (SignalInfo) SignalHandlers[k];
-	Gst.GLib.SignalArgs arg = (Gst.GLib.SignalArgs) Activator.CreateInstance (si.ArgsType);
+        Gst.GLib.SignalArgs arg = (Gst.GLib.SignalArgs) Activator.CreateInstance (si.ArgsType);
         arg.Args = args;
         si.RegisteredHandler.DynamicInvoke (new object[] {o, arg});
         if (arg.RetVal != null) {
@@ -254,7 +250,7 @@ namespace Gst {
 
     [DllImport ("libgobject-2.0-0.dll") ]
     static extern uint g_signal_connect_closure (IntPtr instance,
-          string name, IntPtr closure, bool after);
+        string name, IntPtr closure, bool after);
 
     [DllImport ("libgobject-2.0-0.dll") ]
     static extern void g_closure_set_meta_marshal (IntPtr closure, IntPtr data, GClosureMarshal marshal);

@@ -1,4 +1,4 @@
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_plugin_load_file (IntPtr filename, out IntPtr gerror);
 
 public static Gst.Plugin LoadFile (string filename) {

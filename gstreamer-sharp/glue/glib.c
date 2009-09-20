@@ -27,7 +27,5 @@ gboolean gstglibsharp_g_thread_supported (void);
 gboolean
 gstglibsharp_g_thread_supported ()
 {
-	return g_thread_supported ();
+  return g_thread_supported ();
 }
-
-

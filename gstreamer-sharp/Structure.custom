@@ -1,6 +1,6 @@
 internal bool FreeNative = true;
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_structure_free (IntPtr raw);
 
 protected override void Free (IntPtr raw) {
@@ -30,10 +30,10 @@ class FinalizerInfo {
   Gst.GLib.Timeout.Add (50, new Gst.GLib.TimeoutHandler (info.Handler));
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_structure_get_name (IntPtr raw);
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_structure_set_name (IntPtr raw, IntPtr name);
 
 public string Name {
@@ -41,8 +41,7 @@ public string Name {
     IntPtr raw_ret = gst_structure_get_name (Handle);
     string ret = Gst.GLib.Marshaller.Utf8PtrToString (raw_ret);
     return ret;
-  }
-  set  {
+  } set  {
     if (!IsMutable)
       throw new ApplicationException ();
 
@@ -52,7 +51,7 @@ public string Name {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_structure_set_value (IntPtr raw, IntPtr fieldname, IntPtr value);
 
 public void SetValue (string fieldname, Gst.GLib.Value value) {
@@ -67,7 +66,7 @@ public void SetValue (string fieldname, Gst.GLib.Value value) {
   Marshal.FreeHGlobal (native_value);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern bool gst_structure_fixate_field_boolean (IntPtr raw, IntPtr field_name, bool target);
 
 public bool FixateFieldBoolean (string field_name, bool target) {
@@ -81,7 +80,7 @@ public bool FixateFieldBoolean (string field_name, bool target) {
   return ret;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_structure_remove_all_fields (IntPtr raw);
 
 public void RemoveAllFields() {
@@ -91,7 +90,7 @@ public void RemoveAllFields() {
   gst_structure_remove_all_fields (Handle);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_structure_remove_field (IntPtr raw, IntPtr fieldname);
 
 public void RemoveField (string fieldname) {
@@ -103,7 +102,7 @@ public void RemoveField (string fieldname) {
   Gst.GLib.Marshaller.Free (native_fieldname);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern bool gst_structure_fixate_field_nearest_double (IntPtr raw, IntPtr field_name, double target);
 
 public bool FixateFieldNearestDouble (string field_name, double target) {
@@ -117,7 +116,7 @@ public bool FixateFieldNearestDouble (string field_name, double target) {
   return ret;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern bool gst_structure_fixate_field_nearest_int (IntPtr raw, IntPtr field_name, int target);
 
 public bool FixateFieldNearestInt (string field_name, int target) {
@@ -131,7 +130,7 @@ public bool FixateFieldNearestInt (string field_name, int target) {
   return ret;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern bool gst_structure_fixate_field_nearest_fraction (IntPtr raw, IntPtr field_name, int target_numerator, int target_denominator);
 
 public bool FixateFieldNearestFraction (string field_name, int target_numerator, int target_denominator) {
@@ -212,7 +211,7 @@ public static Structure FromString (string structure) {
   return ret;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 private static extern IntPtr gst_structure_from_string (IntPtr structure, IntPtr end);
 
 public bool FixateFieldNearestFraction (string field_name, Fraction target) {

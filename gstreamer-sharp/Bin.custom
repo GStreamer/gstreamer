@@ -1,6 +1,6 @@
 public Bin () : this (null) {}
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern bool gst_bin_add (IntPtr raw, IntPtr element);
 
 [DllImport ("libgobject-2.0-0.dll") ]

@@ -10,8 +10,7 @@ public ulong Timestamp {
       ulong* raw_ptr = (ulong*) ( ( (byte*) Handle) + timestamp_offset);
       return (*raw_ptr);
     }
-  }
-  set {
+  } set {
     if (!IsWritable)
       throw new ApplicationException ();
 
@@ -38,8 +37,7 @@ public Gst.Object Src {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + src_offset);
       return Gst.GLib.Object.GetObject ( (*raw_ptr)) as Gst.Object;
     }
-  }
-  set {
+  } set {
     if (!IsWritable)
       throw new ApplicationException ();
 
@@ -53,10 +51,10 @@ public Gst.Object Src {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern uint gst_message_get_seqnum (IntPtr raw);
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_set_seqnum (IntPtr raw, uint seqnum);
 
 public uint Seqnum {
@@ -64,8 +62,7 @@ public uint Seqnum {
     uint raw_ret = gst_message_get_seqnum (Handle);
     uint ret = raw_ret;
     return ret;
-  }
-  set  {
+  } set  {
     if (!IsWritable)
       throw new ApplicationException ();
 
@@ -73,10 +70,10 @@ public uint Seqnum {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_get_stream_status_object (IntPtr raw);
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_set_stream_status_object (IntPtr raw, ref Gst.GLib.Value o);
 
 public GLib.Value StreamStatusObject {
@@ -84,8 +81,7 @@ public GLib.Value StreamStatusObject {
     IntPtr raw_ret = gst_message_get_stream_status_object (Handle);
     GLib.Value ret = (Gst.GLib.Value) Marshal.PtrToStructure (raw_ret, typeof (Gst.GLib.Value));
     return ret;
-  }
-  set  {
+  } set  {
     if (!IsWritable)
       throw new ApplicationException ();
 
@@ -95,7 +91,7 @@ public GLib.Value StreamStatusObject {
 
 private Gst.Structure cached_structure = null;
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_get_structure (IntPtr raw);
 
 public Gst.Structure Structure {
@@ -118,7 +114,7 @@ public Gst.Structure Structure {
   cached_structure = null;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_eos (IntPtr src);
 
 public static Message NewEos (Gst.Object src) {
@@ -127,7 +123,7 @@ public static Message NewEos (Gst.Object src) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_error_get_message (uint domain, int code);
 
 static string GetMessage (uint domain, int code) {
@@ -138,16 +134,16 @@ static string GetMessage (uint domain, int code) {
   return Gst.GLib.Marshaller.PtrToStringGFree (raw_ret);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern uint gst_core_error_quark ();
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern uint gst_library_error_quark ();
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern uint gst_stream_error_quark ();
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern uint gst_resource_error_quark ();
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_error (IntPtr src, ref Gst.GError error, IntPtr debug);
 
 public static Message NewError (Gst.Object src, Gst.CoreError error, string message, string debug) {
@@ -237,7 +233,7 @@ public static Message NewError (Gst.Object src, Gst.ResourceError error) {
   return NewError (src, error, null, null);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_error (IntPtr msg, out IntPtr err, out IntPtr debug);
 
 public void ParseError (out Enum error, out string message, out string debug) {
@@ -285,7 +281,7 @@ public void ParseError (out Enum error) {
   ParseError (out error, out tmp, out tmp2);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_warning (IntPtr src, ref Gst.GError error, IntPtr debug);
 
 public static Message NewWarning (Gst.Object src, Gst.CoreError error, string message, string debug) {
@@ -376,7 +372,7 @@ public static Message NewWarning (Gst.Object src, Gst.ResourceError error) {
   return NewWarning (src, error, null, null);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_warning (IntPtr msg, out IntPtr err, out IntPtr debug);
 
 public void ParseWarning (out Enum error, out string message, out string debug) {
@@ -424,7 +420,7 @@ public void ParseWarning (out Enum error) {
   ParseWarning (out error, out tmp, out tmp2);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_info (IntPtr src, ref Gst.GError error, IntPtr debug);
 
 public static Message NewInfo (Gst.Object src, Gst.CoreError error, string message, string debug) {
@@ -515,7 +511,7 @@ public static Message NewInfo (Gst.Object src, Gst.ResourceError error) {
   return NewInfo (src, error, null, null);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_info (IntPtr msg, out IntPtr err, out IntPtr debug);
 
 public void ParseInfo (out Enum error, out string message, out string debug) {
@@ -563,12 +559,12 @@ public void ParseInfo (out Enum error) {
   ParseInfo (out error, out tmp, out tmp2);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_tag (IntPtr src, IntPtr tags);
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_tag_full (IntPtr src, IntPtr pad, IntPtr tags);
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_tag_list_copy (IntPtr handle);
 
 public static Message NewTag (Gst.Object src, TagList tags) {
@@ -583,7 +579,7 @@ public static Message NewTag (Gst.Object src, Gst.Pad pad, TagList tags) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_tag_full (IntPtr msg, out IntPtr pad, out IntPtr tags);
 
 public void ParseTag (out Gst.Pad pad, out TagList tags) {
@@ -604,7 +600,7 @@ public void ParseTag (out Gst.Pad pad, out TagList tags) {
     pad = (Gst.Pad) Gst.GLib.Object.GetObject (raw_ptr2, true);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_buffering (IntPtr src, int percent);
 
 public static Message NewBuffering (Gst.Object src, int percent) {
@@ -613,7 +609,7 @@ public static Message NewBuffering (Gst.Object src, int percent) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_buffering (IntPtr msg, out int percent);
 
 public void ParseBuffering (out int percent) {
@@ -623,7 +619,7 @@ public void ParseBuffering (out int percent) {
   gst_message_parse_buffering (Handle, out percent);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_set_buffering_stats (IntPtr msg, Gst.BufferingMode mode, int avg_in, int avg_out, long buffering_left);
 
 public void SetBufferingStats (Gst.BufferingMode mode, int avg_in, int avg_out, long buffering_left) {
@@ -635,7 +631,7 @@ public void SetBufferingStats (Gst.BufferingMode mode, int avg_in, int avg_out, 
   gst_message_set_buffering_stats (Handle, mode, avg_in, avg_out, buffering_left);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_buffering_stats (IntPtr msg, out Gst.BufferingMode mode, out int avg_in, out int avg_out, out long buffering_left);
 
 public void ParseBufferingStats (out Gst.BufferingMode mode, out int avg_in, out int avg_out, out long buffering_left) {
@@ -645,7 +641,7 @@ public void ParseBufferingStats (out Gst.BufferingMode mode, out int avg_in, out
   gst_message_parse_buffering_stats (Handle, out mode, out avg_in, out avg_out, out buffering_left);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_state_changed (IntPtr src, State oldstate, State newstate, State pendingstate);
 
 public static Message NewStateChanged (Gst.Object src, State oldstate, State newstate, State pendingstate) {
@@ -654,7 +650,7 @@ public static Message NewStateChanged (Gst.Object src, State oldstate, State new
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_state_changed (IntPtr msg, out State oldstate, out State newstate, out State pendingstate);
 
 public void ParseStateChanged (out State oldstate, out State newstate, out State pendingstate) {
@@ -664,7 +660,7 @@ public void ParseStateChanged (out State oldstate, out State newstate, out State
   gst_message_parse_state_changed (Handle, out oldstate, out newstate, out pendingstate);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_state_dirty (IntPtr src);
 
 public static Message NewStateDirty (Gst.Object src) {
@@ -672,7 +668,7 @@ public static Message NewStateDirty (Gst.Object src) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_clock_provide (IntPtr src, IntPtr clock, bool ready);
 
 public static Message NewClockProvide (Gst.Object src, Gst.Clock clock, bool ready) {
@@ -681,7 +677,7 @@ public static Message NewClockProvide (Gst.Object src, Gst.Clock clock, bool rea
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_clock_provide (IntPtr msg, out IntPtr clock, out bool ready);
 
 public void ParseClockProvide (out Gst.Clock clock, out bool ready) {
@@ -695,7 +691,7 @@ public void ParseClockProvide (out Gst.Clock clock, out bool ready) {
   clock = Gst.GLib.Object.GetObject (raw, false) as Gst.Clock;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_clock_lost (IntPtr src, IntPtr clock);
 
 public static Message NewClockLost (Gst.Object src, Gst.Clock clock) {
@@ -704,7 +700,7 @@ public static Message NewClockLost (Gst.Object src, Gst.Clock clock) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_clock_lost (IntPtr msg, out IntPtr clock);
 
 public void ParseClockLost (out Gst.Clock clock) {
@@ -718,7 +714,7 @@ public void ParseClockLost (out Gst.Clock clock) {
   clock = Gst.GLib.Object.GetObject (raw, true) as Gst.Clock;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_new_clock (IntPtr src, IntPtr clock);
 
 public static Message NewNewClock (Gst.Object src, Gst.Clock clock) {
@@ -727,7 +723,7 @@ public static Message NewNewClock (Gst.Object src, Gst.Clock clock) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_new_clock (IntPtr msg, out IntPtr clock);
 
 public void ParseNewClock (out Gst.Clock clock) {
@@ -741,7 +737,7 @@ public void ParseNewClock (out Gst.Clock clock) {
   clock = Gst.GLib.Object.GetObject (raw, true) as Gst.Clock;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_application (IntPtr src, IntPtr structure);
 
 public static Message NewApplication (Gst.Object src, Gst.Structure structure) {
@@ -752,7 +748,7 @@ public static Message NewApplication (Gst.Object src, Gst.Structure structure) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_element (IntPtr src, IntPtr structure);
 
 public static Message NewElement (Gst.Object src, Gst.Structure structure) {
@@ -763,7 +759,7 @@ public static Message NewElement (Gst.Object src, Gst.Structure structure) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_custom (Gst.MessageType type, IntPtr src, IntPtr structure);
 
 public static Message NewCustom (Gst.MessageType type, Gst.Object src, Gst.Structure structure) {
@@ -774,7 +770,7 @@ public static Message NewCustom (Gst.MessageType type, Gst.Object src, Gst.Struc
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_segment_start (IntPtr src, Gst.Format format, long position);
 
 public static Message NewSegmentStart (Gst.Object src, Gst.Format format, long position) {
@@ -783,7 +779,7 @@ public static Message NewSegmentStart (Gst.Object src, Gst.Format format, long p
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_segment_start (IntPtr msg, out Gst.Format format, out long position);
 
 public void ParseSegmentStart (out Gst.Format format, out long position) {
@@ -793,7 +789,7 @@ public void ParseSegmentStart (out Gst.Format format, out long position) {
   gst_message_parse_segment_start (Handle, out format, out position);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_segment_done (IntPtr src, Gst.Format format, long position);
 
 public static Message NewSegmentDone (Gst.Object src, Gst.Format format, long position) {
@@ -802,7 +798,7 @@ public static Message NewSegmentDone (Gst.Object src, Gst.Format format, long po
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_segment_done (IntPtr msg, out Gst.Format format, out long position);
 
 public void ParseSegmentDone (out Gst.Format format, out long position) {
@@ -812,7 +808,7 @@ public void ParseSegmentDone (out Gst.Format format, out long position) {
   gst_message_parse_segment_done (Handle, out format, out position);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_duration (IntPtr src, Gst.Format format, long duration);
 
 public static Message NewDuration (Gst.Object src, Gst.Format format, long duration) {
@@ -821,7 +817,7 @@ public static Message NewDuration (Gst.Object src, Gst.Format format, long durat
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_duration (IntPtr msg, out Gst.Format format, out long duration);
 
 public void ParseDuration (out Gst.Format format, out long duration) {
@@ -831,7 +827,7 @@ public void ParseDuration (out Gst.Format format, out long duration) {
   gst_message_parse_duration (Handle, out format, out duration);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_latency (IntPtr src);
 
 public static Message NewLatency (Gst.Object src) {
@@ -840,7 +836,7 @@ public static Message NewLatency (Gst.Object src) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_async_start (IntPtr src, bool new_base_time);
 
 public static Message NewAsyncStart (Gst.Object src, bool new_base_time) {
@@ -849,7 +845,7 @@ public static Message NewAsyncStart (Gst.Object src, bool new_base_time) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_async_start (IntPtr msg, out bool new_base_time);
 
 public void ParseAsyncStart (out bool new_base_time) {
@@ -859,7 +855,7 @@ public void ParseAsyncStart (out bool new_base_time) {
   gst_message_parse_async_start (Handle, out new_base_time);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_async_done (IntPtr src);
 
 public static Message NewAsyncDone (Gst.Object src) {
@@ -868,7 +864,7 @@ public static Message NewAsyncDone (Gst.Object src) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_structure_change (IntPtr src, StructureChangeType type, IntPtr owner, bool busy);
 
 public static Message NewStructureChange (Gst.Object src, StructureChangeType type, Gst.Element owner, bool busy) {
@@ -877,7 +873,7 @@ public static Message NewStructureChange (Gst.Object src, StructureChangeType ty
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_structure_change (IntPtr msg, out StructureChangeType type, out IntPtr owner, out bool busy);
 
 public void ParseStructureChange (out StructureChangeType type, out Gst.Element owner, out bool busy) {
@@ -894,7 +890,7 @@ static Message () {
   Gst.GLib.GType.Register (Message.GType, typeof (Message));
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_step_done (IntPtr src, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate, ulong duration, bool eos);
 
 public static Message NewStepDone (Gst.Object src, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate, ulong duration, bool eos) {
@@ -903,7 +899,7 @@ public static Message NewStepDone (Gst.Object src, Gst.Format format, ulong amou
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_step_done (IntPtr msg, out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate, out ulong duration, out bool eos);
 
 public void ParseStepDone (out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate, out ulong duration, out bool eos) {
@@ -913,7 +909,7 @@ public void ParseStepDone (out Gst.Format format, out ulong amount, out double r
   gst_message_parse_step_done (Handle, out format, out amount, out rate, out flush, out intermediate, out duration, out eos);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_step_start (IntPtr src, bool active, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate);
 
 public static Message NewStepDone (Gst.Object src, bool active, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate) {
@@ -922,7 +918,7 @@ public static Message NewStepDone (Gst.Object src, bool active, Gst.Format forma
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_step_start (IntPtr msg, out bool active, out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate);
 
 public void ParseStepStart (out bool active, out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate) {
@@ -932,7 +928,7 @@ public void ParseStepStart (out bool active, out Gst.Format format, out ulong am
   gst_message_parse_step_start (Handle, out active, out format, out amount, out rate, out flush, out intermediate);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_stream_status (IntPtr src, StreamStatusType type, IntPtr owner);
 
 public static Message NewStreamStatus (Gst.Object src, StreamStatusType type, Gst.Element owner) {
@@ -941,7 +937,7 @@ public static Message NewStreamStatus (Gst.Object src, StreamStatusType type, Gs
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_stream_status (IntPtr msg, out StreamStatusType type, out IntPtr owner);
 
 public void ParseStreamStatus (out StreamStatusType type, out Gst.Element owner) {
@@ -954,7 +950,7 @@ public void ParseStreamStatus (out StreamStatusType type, out Gst.Element owner)
   owner = Gst.GLib.Object.GetObject (raw_ptr, false) as Gst.Element;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_request_state (IntPtr src, Gst.State state);
 
 public static Message NewRequestState (Gst.Object src, Gst.State state) {
@@ -963,7 +959,7 @@ public static Message NewRequestState (Gst.Object src, Gst.State state) {
   return msg;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_request_state (IntPtr msg, out Gst.State state);
 
 public void ParseRequestState (out Gst.State state) {

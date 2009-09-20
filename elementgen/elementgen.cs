@@ -152,13 +152,13 @@ public class ElementGen {
       if (parms != null) {
         si.parameters = new ArrayList ();
         foreach (XmlElement parm in parms.ChildNodes) {
-	  SignalParameter par = new SignalParameter ();
-	  par.type = parm.InnerText;
+          SignalParameter par = new SignalParameter ();
+          par.type = parm.InnerText;
 
-	  if (parm.Attributes["name"] == null)
-	    throw new Exception ("All signal parameters need the 'name' attribute");
+          if (parm.Attributes["name"] == null)
+            throw new Exception ("All signal parameters need the 'name' attribute");
 
-	  par.name = parm.Attributes["name"].InnerText;
+          par.name = parm.Attributes["name"].InnerText;
           si.parameters.Add (par);
         }
       }
@@ -190,13 +190,13 @@ public class ElementGen {
       if (parms != null) {
         si.parameters = new ArrayList ();
         foreach (XmlElement parm in parms.ChildNodes) {
-	  SignalParameter par = new SignalParameter ();
-	  par.type = parm.InnerText;
+          SignalParameter par = new SignalParameter ();
+          par.type = parm.InnerText;
 
-	  if (parm.Attributes["name"] == null)
-	    throw new Exception ("All signal parameters need the 'name' attribute");
+          if (parm.Attributes["name"] == null)
+            throw new Exception ("All signal parameters need the 'name' attribute");
 
-	  par.name = parm.Attributes["name"].InnerText;
+          par.name = parm.Attributes["name"].InnerText;
           si.parameters.Add (par);
         }
       }
@@ -207,44 +207,44 @@ public class ElementGen {
   }
 
   public static string CTypeToManagedType (string ctype, XmlDocument api_doc) {
-        switch (ctype) {
-	 case "GObject":
-	  return "Gst.GLib.Object";
-	 case "gchararray":
-	  return "string";
-	 case "gboolean":
-	  return "bool";
-	 case "guint":
-	  return "uint";
-	 case "gint":
-	  return "int";
-	 case "gulong":
-	 case "guint64":
-	   return "ulong";
-	 case "glong":
-	 case "gint64":
-	   return "long";
-	 case "gfloat":
-	   return "float";
-	 case "gdouble":
-	   return "double";
-	 case "GValueArray":
-	   return "Gst.GLib.ValueArray";
-	}
-	
-	XPathNavigator api_nav = api_doc.CreateNavigator ();
-	XPathNodeIterator type_iter = api_nav.Select ("/api/namespace/*[@cname='" + ctype + "']");
-	while (type_iter.MoveNext ()) {
-	  string ret = type_iter.Current.GetAttribute ("name", "");
-	  if (ret != null && ret != String.Empty) {
-	    XPathNavigator parent = type_iter.Current.Clone ();
-	    parent.MoveToParent ();
-	    ret = parent.GetAttribute ("name", "") + "." + ret;
-	    return ret;
-	  }
-	}
+    switch (ctype) {
+      case "GObject":
+        return "Gst.GLib.Object";
+      case "gchararray":
+        return "string";
+      case "gboolean":
+        return "bool";
+      case "guint":
+        return "uint";
+      case "gint":
+        return "int";
+      case "gulong":
+      case "guint64":
+        return "ulong";
+      case "glong":
+      case "gint64":
+        return "long";
+      case "gfloat":
+        return "float";
+      case "gdouble":
+        return "double";
+      case "GValueArray":
+        return "Gst.GLib.ValueArray";
+    }
 
-	return null;
+    XPathNavigator api_nav = api_doc.CreateNavigator ();
+    XPathNodeIterator type_iter = api_nav.Select ("/api/namespace/*[@cname='" + ctype + "']");
+    while (type_iter.MoveNext ()) {
+      string ret = type_iter.Current.GetAttribute ("name", "");
+      if (ret != null && ret != String.Empty) {
+        XPathNavigator parent = type_iter.Current.Clone ();
+        parent.MoveToParent ();
+        ret = parent.GetAttribute ("name", "") + "." + ret;
+        return ret;
+      }
+    }
+
+    return null;
   }
 
   public static void writeElement (TextWriter writer, ElementInfo ei, StreamReader custom_code, XmlDocument api_doc, string interfaces_dir) {
@@ -261,7 +261,7 @@ public class ElementGen {
       string parent_managed_type = CTypeToManagedType (parent_type, api_doc);
       if (parent_managed_type != null) {
         writer.Write (parent_managed_type);
-	break;
+        break;
       }
     }
 
@@ -302,28 +302,28 @@ public class ElementGen {
       } else if (managed_type == null) {
         pinfo.enuminfo.name = pinfo.type;
         enums.Add (pinfo.enuminfo);
-	managed_type = pinfo.type.StartsWith (ei.gtype_name) ? pinfo.type.Substring (ei.gtype_name.Length) : pinfo.type.StartsWith ("Gst") ? pinfo.type.Substring (3) : pinfo.type;
-	managed_type += "Type";
+        managed_type = pinfo.type.StartsWith (ei.gtype_name) ? pinfo.type.Substring (ei.gtype_name.Length) : pinfo.type.StartsWith ("Gst") ? pinfo.type.Substring (3) : pinfo.type;
+        managed_type += "Type";
       }
 
       writer.WriteLine ("\t\t[Gst.GLib.Property (\"" + pinfo.name + "\")]");
       writer.WriteLine ("\t\tpublic " + managed_type + " " + managed_name + " {");
       if (pinfo.readable) {
         writer.WriteLine ("\t\t\tget {");
-	writer.WriteLine ("\t\t\t\tGst.GLib.Value val = GetProperty (\"" + pinfo.name + "\");");
-	writer.WriteLine ("\t\t\t\t" + managed_type + " ret = (" + managed_type + ") val.Val;");
-	writer.WriteLine ("\t\t\t\tval.Dispose ();");
-	writer.WriteLine ("\t\t\t\treturn ret;");
-	writer.WriteLine ("\t\t\t}");
+        writer.WriteLine ("\t\t\t\tGst.GLib.Value val = GetProperty (\"" + pinfo.name + "\");");
+        writer.WriteLine ("\t\t\t\t" + managed_type + " ret = (" + managed_type + ") val.Val;");
+        writer.WriteLine ("\t\t\t\tval.Dispose ();");
+        writer.WriteLine ("\t\t\t\treturn ret;");
+        writer.WriteLine ("\t\t\t}");
       }
 
       if (pinfo.writeable) {
         writer.WriteLine ("\t\t\tset {");
-	writer.WriteLine ("\t\t\t\tGst.GLib.Value val = new Gst.GLib.Value (this, \"" + pinfo.name + "\");");
-	writer.WriteLine ("\t\t\t\tval.Val = value;");
-	writer.WriteLine ("\t\t\t\tSetProperty (\"" + pinfo.name + "\", val);");
-	writer.WriteLine ("\t\t\t\tval.Dispose ();");
-	writer.WriteLine ("\t\t\t}");
+        writer.WriteLine ("\t\t\t\tGst.GLib.Value val = new Gst.GLib.Value (this, \"" + pinfo.name + "\");");
+        writer.WriteLine ("\t\t\t\tval.Val = value;");
+        writer.WriteLine ("\t\t\t\tSetProperty (\"" + pinfo.name + "\", val);");
+        writer.WriteLine ("\t\t\t\tval.Dispose ();");
+        writer.WriteLine ("\t\t\t}");
       }
       writer.WriteLine ("\t\t}\n");
     }
@@ -334,66 +334,66 @@ public class ElementGen {
       foreach (SignalInfo si in ei.signals) {
         string managed_name = (si.managed_name != null) ? si.managed_name : PropToCamelCase (si.name);
 
-	if (si.parameters.Count > 0) {
-	  writer.WriteLine ("\t\tpublic delegate void " + managed_name + "Handler (object o, " + managed_name + "Args args);\n");
-	
-	  writer.WriteLine ("\t\tpublic class " + managed_name + "Args : Gst.GLib.SignalArgs {");
-	  for (int i = 0; i < si.parameters.Count; i++) {
-	    SignalParameter param = (SignalParameter) si.parameters[i];
+        if (si.parameters.Count > 0) {
+          writer.WriteLine ("\t\tpublic delegate void " + managed_name + "Handler (object o, " + managed_name + "Args args);\n");
+
+          writer.WriteLine ("\t\tpublic class " + managed_name + "Args : Gst.GLib.SignalArgs {");
+          for (int i = 0; i < si.parameters.Count; i++) {
+            SignalParameter param = (SignalParameter) si.parameters[i];
             string managed_type = CTypeToManagedType (param.type, api_doc);
-	    writer.WriteLine ("\t\t\tpublic " + managed_type + " " + param.name + " {");
-	    writer.WriteLine ("\t\t\t\tget {");
-	    writer.WriteLine ("\t\t\t\t\treturn (" + managed_type + ") Args[" + i + "];");
-	    writer.WriteLine ("\t\t\t\t}");
-	    writer.WriteLine ("\t\t\t}\n");
-	  }
-	  writer.WriteLine ("\t\t}\n");
+            writer.WriteLine ("\t\t\tpublic " + managed_type + " " + param.name + " {");
+            writer.WriteLine ("\t\t\t\tget {");
+            writer.WriteLine ("\t\t\t\t\treturn (" + managed_type + ") Args[" + i + "];");
+            writer.WriteLine ("\t\t\t\t}");
+            writer.WriteLine ("\t\t\t}\n");
+          }
+          writer.WriteLine ("\t\t}\n");
 
-	  writer.WriteLine ("\t\tpublic event " + managed_name + "Handler " + managed_name + " {");
-	} else {
-	  writer.WriteLine ("\t\tpublic event SignalHandler " + managed_name + " {");
-	}
+          writer.WriteLine ("\t\tpublic event " + managed_name + "Handler " + managed_name + " {");
+        } else {
+          writer.WriteLine ("\t\tpublic event SignalHandler " + managed_name + " {");
+        }
 
-	writer.WriteLine ("\t\t\tadd {");
-	writer.WriteLine ("\t\t\t\tDynamicSignal.Connect (this, \"" + si.name + "\", value);");
-	writer.WriteLine ("\t\t\t}\n");
+        writer.WriteLine ("\t\t\tadd {");
+        writer.WriteLine ("\t\t\t\tDynamicSignal.Connect (this, \"" + si.name + "\", value);");
+        writer.WriteLine ("\t\t\t}\n");
 
-	writer.WriteLine ("\t\t\tremove {");
-	writer.WriteLine ("\t\t\t\tDynamicSignal.Disconnect (this, \"" + si.name + "\", value);");
-	writer.WriteLine ("\t\t\t}");
-	writer.WriteLine ("\t\t}");
+        writer.WriteLine ("\t\t\tremove {");
+        writer.WriteLine ("\t\t\t\tDynamicSignal.Disconnect (this, \"" + si.name + "\", value);");
+        writer.WriteLine ("\t\t\t}");
+        writer.WriteLine ("\t\t}");
       }
     }
 
     if (ei.actions.Count > 0) {
       foreach (SignalInfo si in ei.actions) {
         string managed_name = (si.managed_name != null) ? si.managed_name : PropToCamelCase (si.name);
-	string managed_return = CTypeToManagedType (si.return_type, api_doc);
+        string managed_return = CTypeToManagedType (si.return_type, api_doc);
 
-	writer.Write ("\t\tpublic " + managed_return + " " + managed_name + " (");
+        writer.Write ("\t\tpublic " + managed_return + " " + managed_name + " (");
 
-	for (int i = 0; i < si.parameters.Count; i++) {
-	  SignalParameter param = (SignalParameter) si.parameters[i];
+        for (int i = 0; i < si.parameters.Count; i++) {
+          SignalParameter param = (SignalParameter) si.parameters[i];
           string managed_type = CTypeToManagedType (param.type, api_doc);
 
-	  if (i == 0)
-	    writer.Write (managed_type + " " + param.name);
-	  else
-	    writer.Write (", " + managed_type + " " + param.name);
-	}
-	writer.WriteLine (") {");
+          if (i == 0)
+            writer.Write (managed_type + " " + param.name);
+          else
+            writer.Write (", " + managed_type + " " + param.name);
+        }
+        writer.WriteLine (") {");
 
-	writer.WriteLine ("\t\t\tobject[] parameters = new object[" + si.parameters.Count + "];");
-	
-	for (int i = 0; i < si.parameters.Count; i++) {
-	  SignalParameter param = (SignalParameter) si.parameters[i];
-	  
-	  writer.WriteLine ("\t\t\tparameters[" + i + "] = " + param.name + ";");
-	}
+        writer.WriteLine ("\t\t\tobject[] parameters = new object[" + si.parameters.Count + "];");
 
-	writer.WriteLine ("\t\t\treturn (" + managed_return + ") Emit (\"" + si.name + "\", parameters);");
+        for (int i = 0; i < si.parameters.Count; i++) {
+          SignalParameter param = (SignalParameter) si.parameters[i];
 
-	writer.WriteLine ("\t\t}\n");
+          writer.WriteLine ("\t\t\tparameters[" + i + "] = " + param.name + ";");
+        }
+
+        writer.WriteLine ("\t\t\treturn (" + managed_return + ") Emit (\"" + si.name + "\", parameters);");
+
+        writer.WriteLine ("\t\t}\n");
       }
     }
 
@@ -403,32 +403,32 @@ public class ElementGen {
         writer.WriteLine ("#region Customized code");
         writer.WriteLine ("#line 1 \"" + iface + ".cs\"");
         StreamReader interface_code = System.IO.File.OpenText (interfaces_dir + "/" + iface + ".cs");
-	string iface_code = interface_code.ReadToEnd ();
-	writer.WriteLine (iface_code);
-      }      
+        string iface_code = interface_code.ReadToEnd ();
+        writer.WriteLine (iface_code);
+      }
     }
 
     if (enums.Count > 0) {
       foreach (EnumInfo eni in enums) {
         writer.WriteLine ("\t\t[GTypeName (\"" + eni.name + "\")]");
-	if (eni.flag)
-	  writer.WriteLine ("\t\t[Flags]");
+        if (eni.flag)
+          writer.WriteLine ("\t\t[Flags]");
 
-	string enum_name = eni.name.StartsWith (ei.gtype_name) ? eni.name.Substring (ei.gtype_name.Length) : eni.name.StartsWith ("Gst") ? eni.name.Substring (3) : eni.name;
+        string enum_name = eni.name.StartsWith (ei.gtype_name) ? eni.name.Substring (ei.gtype_name.Length) : eni.name.StartsWith ("Gst") ? eni.name.Substring (3) : eni.name;
 
-	enum_name += "Type";
+        enum_name += "Type";
 
-	writer.WriteLine ("\t\tpublic enum " + enum_name + " {");
-	if (eni.flag) {
-	  foreach (FlagValue ev in eni.values) {
-	    writer.WriteLine ("\t\t\t" + PropToCamelCase (ev.name) + " = " + ev.value + ", ");
-	  }
-	} else {
-	  foreach (EnumValue ev in eni.values) {
-	    writer.WriteLine ("\t\t\t" + PropToCamelCase (ev.name) + " = " + ev.value + ", ");
-	  }
-	}
-	writer.WriteLine ("\t\t}\n");
+        writer.WriteLine ("\t\tpublic enum " + enum_name + " {");
+        if (eni.flag) {
+          foreach (FlagValue ev in eni.values) {
+            writer.WriteLine ("\t\t\t" + PropToCamelCase (ev.name) + " = " + ev.value + ", ");
+          }
+        } else {
+          foreach (EnumValue ev in eni.values) {
+            writer.WriteLine ("\t\t\t" + PropToCamelCase (ev.name) + " = " + ev.value + ", ");
+          }
+        }
+        writer.WriteLine ("\t\t}\n");
       }
     }
 
@@ -449,13 +449,13 @@ public class ElementGen {
   public static string PropToCamelCase (string pname) {
     string ret = Char.ToUpper (pname[0]).ToString ();
     bool next_upper = false;
-    
+
     for (int i = 1; i < pname.Length; i++) {
       if (pname[i] == '-') {
         next_upper = true;
       } else if (next_upper) {
         ret = ret + Char.ToUpper (pname[i]);
-	next_upper = false;
+        next_upper = false;
       } else {
         ret = ret + pname[i];
       }

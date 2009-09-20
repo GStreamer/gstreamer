@@ -4,8 +4,7 @@ public object this[string property] {
     object o = v.Val;
     v.Dispose ();
     return o;
-  }
-  set {
+  } set {
     Gst.GLib.Value v = new Gst.GLib.Value (this, property);
     v.Val = value;
     SetProperty (property, v);
@@ -69,14 +68,13 @@ public object Emit (string signal, params object[] parameters) {
   return DynamicSignal.Emit (this, signal, parameters);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_object_ref_sink (IntPtr raw);
 
 protected override IntPtr Raw {
   get {
     return base.Raw;
-  }
-  set {
+  } set {
     if (value != IntPtr.Zero) {
       gst_object_ref_sink (value);
     }
@@ -85,9 +83,9 @@ protected override IntPtr Raw {
 }
 
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern bool gst_object_set_parent (IntPtr raw, IntPtr parent);
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_object_get_parent (IntPtr raw);
 
 public Gst.Object Parent {
@@ -135,7 +133,7 @@ public bool TryLock () {
   return g_mutex_trylock (LockPtr);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern bool gst_object_check_uniqueness (IntPtr list, IntPtr name);
 
 public static bool CheckUniqueness (Gst.Object[] objects, string name) {

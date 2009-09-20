@@ -28,8 +28,7 @@ namespace Gst {
     public string TypeName {
       get {
         return type_name;
-      }
-      set {
+      } set {
         type_name = value;
       }
     }
@@ -160,16 +159,16 @@ namespace Gst {
       RegisterManagedTypes ();
     }
 
-    [DllImport("libgstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     private static extern void gst_init (ref int argc, ref IntPtr argv);
 
-    [DllImport("libgstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     private static extern bool gst_init_check (ref int argc, ref IntPtr argv, out IntPtr error);
 
-    [DllImport("libgstcontroller-0.10.dll") ]
+    [DllImport ("libgstcontroller-0.10.dll") ]
     private static extern void gst_controller_init (ref int argc, ref IntPtr argv);
 
-    [DllImport("libgstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     private static extern void gst_deinit();
   }
 }

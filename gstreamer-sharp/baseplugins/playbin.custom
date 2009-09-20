@@ -52,8 +52,7 @@ public class StreamInfo : Gst.GLib.Object {
       bool ret = (bool) val;
       val.Dispose ();
       return ret;
-    }
-    set {
+    } set {
       Gst.GLib.Value val = new Gst.GLib.Value (this, "mute");
       val.Val = value;
       SetProperty ("mute", val);

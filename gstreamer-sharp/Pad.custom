@@ -1,6 +1,6 @@
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_pad_get_pad_template_caps (IntPtr raw);
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_caps_copy (IntPtr raw);
 
 public Gst.Caps PadTemplateCaps {
@@ -11,28 +11,28 @@ public Gst.Caps PadTemplateCaps {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_remove_data_probe (IntPtr raw, uint handler_id);
 
 public void RemoveDataProbe (ulong handler_id) {
   gst_pad_remove_data_probe (Handle, (uint) handler_id);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_remove_event_probe (IntPtr raw, uint handler_id);
 
 public void RemoveEventProbe (ulong handler_id) {
   gst_pad_remove_event_probe (Handle, (uint) handler_id);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_remove_buffer_probe (IntPtr raw, uint handler_id);
 
 public void RemoveBufferProbe (ulong handler_id) {
   gst_pad_remove_buffer_probe (Handle, (uint) handler_id);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_bufferalloc_function (IntPtr raw, GstSharp.PadBufferAllocFunctionNative bufalloc);
 
 public Gst.PadBufferAllocFunction BufferAllocFunction {
@@ -46,7 +46,7 @@ public Gst.PadBufferAllocFunction BufferAllocFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_chain_function (IntPtr raw, GstSharp.PadChainFunctionNative chain);
 
 public Gst.PadChainFunction ChainFunction {
@@ -60,7 +60,7 @@ public Gst.PadChainFunction ChainFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_chain_list_function (IntPtr raw, GstSharp.PadChainListFunctionNative chain);
 
 public Gst.PadChainListFunction ChainListFunction {
@@ -74,7 +74,7 @@ public Gst.PadChainListFunction ChainListFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_checkgetrange_function (IntPtr raw, GstSharp.PadCheckGetRangeFunctionNative check);
 
 public Gst.PadCheckGetRangeFunction CheckGetRangeFunction {
@@ -88,7 +88,7 @@ public Gst.PadCheckGetRangeFunction CheckGetRangeFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_getrange_function (IntPtr raw, GstSharp.PadGetRangeFunctionNative get);
 
 public Gst.PadGetRangeFunction GetRangeFunction {
@@ -102,7 +102,7 @@ public Gst.PadGetRangeFunction GetRangeFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_event_function (IntPtr raw, GstSharp.PadEventFunctionNative evnt);
 
 public Gst.PadEventFunction EventFunction {
@@ -116,7 +116,7 @@ public Gst.PadEventFunction EventFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_link_function (IntPtr raw, GstSharp.PadLinkFunctionNative link);
 
 public Gst.PadLinkFunction LinkFunction {
@@ -130,7 +130,7 @@ public Gst.PadLinkFunction LinkFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_unlink_function (IntPtr raw, GstSharp.PadUnlinkFunctionNative unlink);
 
 public Gst.PadUnlinkFunction UnlinkFunction {
@@ -144,7 +144,7 @@ public Gst.PadUnlinkFunction UnlinkFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_acceptcaps_function (IntPtr raw, GstSharp.PadAcceptCapsFunctionNative acceptcaps);
 
 public Gst.PadAcceptCapsFunction AcceptCapsFunction {
@@ -158,7 +158,7 @@ public Gst.PadAcceptCapsFunction AcceptCapsFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_getcaps_function (IntPtr raw, GstSharp.PadGetCapsFunctionNative getcaps);
 
 public Gst.PadGetCapsFunction GetCapsFunction {
@@ -172,7 +172,7 @@ public Gst.PadGetCapsFunction GetCapsFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_setcaps_function (IntPtr raw, GstSharp.PadSetCapsFunctionNative setcaps);
 
 public Gst.PadSetCapsFunction SetCapsFunction {
@@ -186,7 +186,7 @@ public Gst.PadSetCapsFunction SetCapsFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_fixatecaps_function (IntPtr raw, GstSharp.PadFixateCapsFunctionNative fixatecaps);
 
 public Gst.PadFixateCapsFunction FixateCapsFunction {
@@ -200,7 +200,7 @@ public Gst.PadFixateCapsFunction FixateCapsFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_activate_function (IntPtr raw, GstSharp.PadActivateFunctionNative activate);
 
 public Gst.PadActivateFunction ActivateFunction {
@@ -214,7 +214,7 @@ public Gst.PadActivateFunction ActivateFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_activatepull_function (IntPtr raw, GstSharp.PadActivateModeFunctionNative activatepull);
 
 public Gst.PadActivateModeFunction ActivatePullFunction {
@@ -228,7 +228,7 @@ public Gst.PadActivateModeFunction ActivatePullFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_activatepush_function (IntPtr raw, GstSharp.PadActivateModeFunctionNative activatepush);
 
 public Gst.PadActivateModeFunction ActivatePushFunction {
@@ -242,7 +242,7 @@ public Gst.PadActivateModeFunction ActivatePushFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern int gst_pad_pull_range (IntPtr raw, ulong offset, uint size, out IntPtr buffer);
 
 public Gst.FlowReturn PullRange (ulong offset, uint size, out Gst.Buffer buffer) {
@@ -254,7 +254,7 @@ public Gst.FlowReturn PullRange (ulong offset, uint size, out Gst.Buffer buffer)
 
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_query_function (IntPtr raw, GstSharp.PadQueryFunctionNative query);
 
 public Gst.PadQueryFunction QueryFunction {
@@ -268,7 +268,7 @@ public Gst.PadQueryFunction QueryFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_pad_set_query_type_function (IntPtr raw, GstSharp.PadQueryTypeFunctionNative query);
 
 public Gst.PadQueryTypeFunction QueryTypeFunction {
@@ -282,7 +282,7 @@ public Gst.PadQueryTypeFunction QueryTypeFunction {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_pad_get_query_types (IntPtr raw);
 
 public Gst.QueryType[] QueryTypes {
@@ -308,7 +308,7 @@ public Gst.QueryType[] QueryTypes {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_pad_get_query_types_default (IntPtr raw);
 
 static Gst.QueryType[] GetQueryTypesDefault (Gst.Pad pad) {

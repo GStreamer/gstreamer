@@ -1,6 +1,6 @@
 [DllImport ("libgobject-2.0-0.dll") ]
 static extern IntPtr g_object_ref (IntPtr raw);
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern bool gst_element_add_pad (IntPtr raw, IntPtr pad);
 
 protected bool AddPad (Pad p) {
@@ -30,23 +30,23 @@ public Gst.StateChangeReturn GetState (out Gst.State state, ulong timeout) {
   return GetState (out state, out pending, timeout);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_element_found_tags (IntPtr raw, IntPtr list);
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_tag_list_copy (IntPtr raw);
 
 protected void FoundTags (Gst.TagList list) {
   gst_element_found_tags (Handle, list == null ? IntPtr.Zero : gst_tag_list_copy (list.Handle));
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_element_found_tags_for_pad (IntPtr raw, IntPtr pad, IntPtr list);
 
 protected void FoundTagsForPad (Gst.Pad pad, Gst.TagList list) {
   gst_element_found_tags_for_pad (Handle, pad == null ? IntPtr.Zero : pad.Handle, list == null ? IntPtr.Zero : gst_tag_list_copy (list.Handle));
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_element_get_query_types (IntPtr raw);
 
 public Gst.QueryType[] GetQueryTypes () {
@@ -70,7 +70,7 @@ public Gst.QueryType[] GetQueryTypes () {
   return (Gst.QueryType[]) result.ToArray (typeof (Gst.QueryType));
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_element_class_add_pad_template (IntPtr klass, IntPtr templ);
 
 protected static void AddPadTemplate (Gst.GLib.GType gtype, Gst.PadTemplate templ) {
@@ -78,7 +78,7 @@ protected static void AddPadTemplate (Gst.GLib.GType gtype, Gst.PadTemplate temp
   gst_element_class_add_pad_template (class_ptr, templ.Handle);
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_element_class_get_pad_template (IntPtr klass, IntPtr name);
 
 public Gst.PadTemplate GetPadTemplate (string name) {
@@ -91,7 +91,7 @@ public Gst.PadTemplate GetPadTemplate (string name) {
   return Gst.GLib.Object.GetObject (raw_ret, false) as Gst.PadTemplate;
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_element_class_get_pad_template_list (IntPtr klass);
 
 public Gst.PadTemplate[] PadTemplates {
@@ -104,7 +104,7 @@ public Gst.PadTemplate[] PadTemplates {
   }
 }
 
-[DllImport("libgstreamer-0.10.dll") ]
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_element_class_set_details_simple (IntPtr klass, IntPtr longname, IntPtr classification, IntPtr desc, IntPtr author);
 
 protected static void SetDetails (Gst.GLib.GType gtype, string longname, string klass, string description, string author) {

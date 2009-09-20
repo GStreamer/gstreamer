@@ -29,7 +29,7 @@ namespace Gst {
 
     [DllImport ("libgobject-2.0-0.dll") ]
     static extern IntPtr g_type_default_interface_ref (IntPtr type);
-    [DllImport("libgstreamer-0.10.dll") ]
+    [DllImport ("libgstreamer-0.10.dll") ]
     static extern IntPtr gst_preset_get_type();
 
     static PresetDefault () {

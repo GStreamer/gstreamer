@@ -2,7 +2,8 @@
 #include <gst/base/gstadapter.h>
 
 GstBuffer *
-gstsharp_gst_adapter_peek_buffer (GstAdapter *adapter, guint size) {
+gstsharp_gst_adapter_peek_buffer (GstAdapter * adapter, guint size)
+{
   GstBuffer *ret = gst_buffer_try_new_and_alloc (size);
 
   if (ret == NULL)
