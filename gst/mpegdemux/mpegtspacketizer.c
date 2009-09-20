@@ -155,7 +155,7 @@ static void
 mpegts_packetizer_init (MpegTSPacketizer * packetizer)
 {
   packetizer->adapter = gst_adapter_new ();
-  memset (packetizer->streams, 0, 8192);
+  packetizer->streams = g_new0 (MpegTSPacketizerStream *, 8192);
   packetizer->know_packet_size = FALSE;
 }
 
@@ -176,6 +176,7 @@ mpegts_packetizer_dispose (GObject * object)
         if (packetizer->streams[i])
           mpegts_packetizer_stream_free (packetizer->streams[i]);
       }
+      g_free (packetizer->streams);
     }
 
     gst_adapter_clear (packetizer->adapter);

@@ -67,7 +67,7 @@ struct _MpegTSPacketizer {
 
   GstAdapter *adapter;
   /* streams hashed by pid */
-  MpegTSPacketizerStream *streams[8192];
+  MpegTSPacketizerStream **streams;
   gboolean disposed;
   gboolean know_packet_size;
   guint16 packet_size;
