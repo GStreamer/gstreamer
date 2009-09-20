@@ -53,12 +53,21 @@ G_BEGIN_DECLS
 typedef struct _MpegTSPacketizer MpegTSPacketizer;
 typedef struct _MpegTSPacketizerClass MpegTSPacketizerClass;
 
+typedef struct
+{
+  guint continuity_counter;
+  GstAdapter *section_adapter;
+  guint8 section_table_id;
+  guint section_length;
+  GSList *subtables;
+} MpegTSPacketizerStream;
+
 struct _MpegTSPacketizer {
   GObject object;
 
   GstAdapter *adapter;
   /* streams hashed by pid */
-  GHashTable *streams;
+  MpegTSPacketizerStream **streams;
   gboolean disposed;
   gboolean know_packet_size;
   guint16 packet_size;
@@ -105,15 +114,6 @@ typedef struct
   guint16 subtable_extension;
   guint8 version_number;
 } MpegTSPacketizerStreamSubtable;
-
-typedef struct
-{
-  guint continuity_counter;
-  GstAdapter *section_adapter;
-  guint8 section_table_id;
-  guint section_length;
-  GSList *subtables;
-} MpegTSPacketizerStream;
 
 typedef enum {
   PACKET_BAD       = FALSE,

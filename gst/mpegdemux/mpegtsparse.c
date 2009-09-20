@@ -887,10 +887,7 @@ mpegts_parse_is_psi (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
         i++;
       }
     } else {
-      MpegTSPacketizerStream *stream = (MpegTSPacketizerStream *)
-          g_hash_table_lookup (parse->packetizer->streams,
-          GINT_TO_POINTER ((gint) packet->pid));
-
+      MpegTSPacketizerStream *stream = parse->packetizer->streams[packet->pid];
       if (stream) {
         i = 0;
         GST_DEBUG_OBJECT (parse, "section table id: 0x%x",

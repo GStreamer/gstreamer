@@ -74,7 +74,6 @@ static gchar *convert_to_utf8 (const gchar * text, gint length, guint start,
 static gchar *get_encoding (const gchar * text, guint * start_text,
     gboolean * is_multibyte);
 static gchar *get_encoding_and_convert (const gchar * text, guint length);
-static void mpegts_packetizer_destroy_streams_value (gpointer data);
 
 #define CONTINUITY_UNSET 255
 #define MAX_CONTINUITY 15
@@ -132,15 +131,6 @@ mpegts_packetizer_stream_free (MpegTSPacketizerStream * stream)
 }
 
 static void
-mpegts_packetizer_destroy_streams_value (gpointer data)
-{
-  MpegTSPacketizerStream *stream;
-
-  stream = (MpegTSPacketizerStream *) data;
-  mpegts_packetizer_stream_free (stream);
-}
-
-static void
 mpegts_packetizer_clear_section (MpegTSPacketizer * packetizer,
     MpegTSPacketizerStream * stream)
 {
@@ -165,8 +155,7 @@ static void
 mpegts_packetizer_init (MpegTSPacketizer * packetizer)
 {
   packetizer->adapter = gst_adapter_new ();
-  packetizer->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-      NULL, mpegts_packetizer_destroy_streams_value);
+  packetizer->streams = g_new0 (MpegTSPacketizerStream *, 8192);
   packetizer->know_packet_size = FALSE;
 }
 
@@ -181,6 +170,15 @@ mpegts_packetizer_dispose (GObject * object)
       packetizer->caps = NULL;
       packetizer->know_packet_size = FALSE;
     }
+    if (packetizer->streams) {
+      int i;
+      for (i = 0; i < 8192; i++) {
+        if (packetizer->streams[i])
+          mpegts_packetizer_stream_free (packetizer->streams[i]);
+      }
+      g_free (packetizer->streams);
+    }
+
     gst_adapter_clear (packetizer->adapter);
     g_object_unref (packetizer->adapter);
     packetizer->disposed = TRUE;
@@ -193,10 +191,6 @@ mpegts_packetizer_dispose (GObject * object)
 static void
 mpegts_packetizer_finalize (GObject * object)
 {
-  MpegTSPacketizer *packetizer = GST_MPEGTS_PACKETIZER (object);
-
-  g_hash_table_destroy (packetizer->streams);
-
   if (G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize)
     G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize (object);
 }
@@ -1927,12 +1921,6 @@ error:
   return NULL;
 }
 
-static gboolean
-remove_all (gpointer key, gpointer value, gpointer user_data)
-{
-  return TRUE;
-}
-
 void
 mpegts_packetizer_clear (MpegTSPacketizer * packetizer)
 {
@@ -1944,21 +1932,27 @@ mpegts_packetizer_clear (MpegTSPacketizer * packetizer)
       packetizer->caps = NULL;
     }
   }
-  /* FIXME can't use remove_all because we don't depend on 2.12 yet */
-  g_hash_table_foreach_remove (packetizer->streams, remove_all, NULL);
+  if (packetizer->streams) {
+    int i;
+    for (i = 0; i < 8192; i++) {
+      if (packetizer->streams[i]) {
+        mpegts_packetizer_stream_free (packetizer->streams[i]);
+        packetizer->streams[i] = NULL;
+      }
+    }
+  }
+
   gst_adapter_clear (packetizer->adapter);
 }
 
 void
 mpegts_packetizer_remove_stream (MpegTSPacketizer * packetizer, gint16 pid)
 {
-  MpegTSPacketizerStream *stream =
-      (MpegTSPacketizerStream *) g_hash_table_lookup (packetizer->streams,
-      GINT_TO_POINTER ((gint) pid));
+  MpegTSPacketizerStream *stream = packetizer->streams[pid];
   if (stream) {
     GST_INFO ("Removing stream for PID %d", pid);
-
-    g_hash_table_remove (packetizer->streams, GINT_TO_POINTER ((gint) pid));
+    mpegts_packetizer_stream_free (stream);
+    packetizer->streams[pid] = NULL;
   }
 }
 
@@ -2115,12 +2109,10 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
   sub_buf = gst_buffer_create_sub (packet->buffer,
       data - GST_BUFFER_DATA (packet->buffer), packet->data_end - data);
 
-  stream = (MpegTSPacketizerStream *) g_hash_table_lookup (packetizer->streams,
-      GINT_TO_POINTER ((gint) packet->pid));
+  stream = packetizer->streams[packet->pid];
   if (stream == NULL) {
     stream = mpegts_packetizer_stream_new ();
-    g_hash_table_insert (packetizer->streams,
-        GINT_TO_POINTER ((gint) packet->pid), stream);
+    packetizer->streams[packet->pid] = stream;
   }
 
   if (packet->payload_unit_start_indicator) {
