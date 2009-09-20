@@ -13,10 +13,12 @@ const gchar *__gtype_prefix = "__gtksharp_";
 static GObjectClass *
 get_threshold_class (GObject *obj)
 {
+	GObjectClass *klass;
         GType gtype = G_TYPE_FROM_INSTANCE (obj);
+
         while (HAS_PREFIX (g_type_name (gtype)))
                 gtype = g_type_parent (gtype);
-        GObjectClass *klass = g_type_class_peek (gtype);
+        klass = g_type_class_peek (gtype);
         if (klass == NULL) klass = g_type_class_ref (gtype);
         return klass;
 }
