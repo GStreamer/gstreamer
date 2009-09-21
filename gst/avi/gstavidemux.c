@@ -1982,6 +1982,202 @@ sort (gst_avi_index_entry * a, gst_avi_index_entry * b)
 }
 
 /*
+ * gst_avi_demux_parse_index2:
+ * @avi: calling element (used for debugging/errors).
+ * @buf: buffer containing the full index.
+ *
+ * Read index entries from the provided buffer.
+ * The buffer should contain a GST_RIFF_TAG_idx1 chunk.
+ */
+static void
+gst_avi_demux_parse_index2 (GstAviDemux * avi, GstBuffer * buf)
+{
+  guint64 pos_before;
+  guint8 *data;
+  guint size;
+  guint i, num, n;
+  gst_riff_index_entry *index;
+  GstClockTime stamp;
+  avi_stream_context *stream;
+#ifndef GST_DISABLE_GST_DEBUG
+  guint total_idx = 0, total_max = 0;
+#endif
+
+  if (!buf)
+    goto empty_list;
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  stamp = gst_util_get_timestamp ();
+
+  num = size / sizeof (gst_riff_index_entry);
+  if (num == 0)
+    goto empty_list;
+
+  index = (gst_riff_index_entry *) data;
+
+  pos_before = avi->offset;
+  GST_INFO_OBJECT (avi, "Parsing index, nr_entries = %6d", num);
+
+  for (i = 0, n = 0; i < num; i++) {
+    GstAviIndexEntry entry;
+    guint32 id;
+    guint stream_nr;
+
+    id = GST_READ_UINT32_LE (&index[i].id);
+    entry.offset = GST_READ_UINT32_LE (&index[i].offset);
+
+    /* some sanity checks */
+    if (G_UNLIKELY (id == GST_RIFF_rec || id == 0 ||
+            (entry.offset == 0 && n > 0)))
+      continue;
+
+    /* get the stream for this entry */
+    stream_nr = CHUNKID_TO_STREAMNR (id);
+    if (G_UNLIKELY (stream_nr >= avi->num_streams)) {
+      GST_WARNING_OBJECT (avi,
+          "Index entry %d has invalid stream nr %d", i, stream_nr);
+      continue;
+    }
+    stream = &avi->stream[stream_nr];
+    if (G_UNLIKELY (!stream->strh)) {
+      GST_WARNING_OBJECT (avi, "Unhandled stream %d, skipping", stream_nr);
+      continue;
+    }
+
+    /* handle flags */
+    if (stream->strh->type == GST_RIFF_FCC_auds) {
+      /* all audio frames are keyframes */
+      entry.flags = GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME;
+      stream->n_keyframes++;
+    } else {
+      entry.flags = GST_READ_UINT32_LE (&index[i].flags);
+      if (entry.flags & GST_RIFF_IF_KEYFRAME) {
+        entry.flags = GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME;
+        stream->n_keyframes++;
+      } else {
+        entry.flags = 0;
+      }
+    }
+
+    /* handle size */
+    entry.size = GST_READ_UINT32_LE (&index[i].size);
+
+    /* add to the index */
+    if (stream->idx_n >= stream->idx_max) {
+      /* we need to make some more room */
+      if (stream->idx_max == 0) {
+        /* initial size guess, assume each stream has an equal amount of entries,
+         * overshoot with at least 8K */
+        stream->idx_max =
+            (num / avi->num_streams) + (8192 / sizeof (GstAviIndexEntry));
+      } else {
+        stream->idx_max += 8192 / sizeof (GstAviIndexEntry);
+        GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "expanded index to %u",
+            stream->idx_max);
+      }
+      stream->index = g_try_renew (GstAviIndexEntry, stream->index,
+          stream->idx_max);
+      if (G_UNLIKELY (!stream->index))
+        goto out_of_mem;
+    }
+    if (stream->idx_n == 0) {
+      /* first entry, set total bytes to 0 */
+      entry.total = 0;
+    } else {
+      /* calculate bytes based on previous entry */
+      entry.total = stream->index[stream->idx_n - 1].total +
+          stream->index[stream->idx_n - 1].size;
+    }
+    /* and copy */
+    GST_LOG_OBJECT (avi,
+        "Adding stream %d, index entry %d, flags %02x, size %u "
+        ", offset %" G_GUINT64_FORMAT ", total %" G_GUINT64_FORMAT, stream_nr,
+        stream->idx_n, entry.flags, entry.size, entry.offset, entry.total);
+    stream->index[stream->idx_n++] = entry;
+
+    /* figure out if the index is 0 based or relative to the MOVI start */
+    if (G_UNLIKELY (n == 0)) {
+      if (entry.offset < pos_before)
+        avi->index_offset = pos_before + 8;
+      else
+        avi->index_offset = 0;
+      GST_DEBUG ("index_offset = %" G_GUINT64_FORMAT, avi->index_offset);
+    }
+    n++;
+  }
+  /* get stream stats now */
+  for (i = 0; i < avi->num_streams; i++) {
+    GstAviIndexEntry *entry;
+    guint64 total;
+
+    if (!(stream = &avi->stream[i]))
+      continue;
+    if (!stream->strh)
+      continue;
+    if (!stream->index || stream->idx_n == 0)
+      continue;
+
+    entry = &stream->index[stream->idx_n - 1];
+    total = entry->total + entry->size;
+
+    /* calculate duration */
+    if (stream->is_vbr) {
+      /* VBR stream next timestamp */
+      if (stream->strh->type == GST_RIFF_FCC_auds) {
+        stream->idx_duration =
+            avi_stream_convert_frames_to_time_unchecked (stream, total);
+      } else {
+        stream->idx_duration =
+            avi_stream_convert_frames_to_time_unchecked (stream, stream->idx_n);
+      }
+    } else {
+      /* constant rate stream */
+      stream->idx_duration = avi_stream_convert_bytes_to_time_unchecked (stream,
+          total);
+    }
+#ifndef GST_DISABLE_GST_DEBUG
+    total_idx += stream->idx_n;
+    total_max += stream->idx_max;
+#endif
+    GST_INFO_OBJECT (avi, "Stream %d, dur %" GST_TIME_FORMAT ", %6u entries, "
+        "%5lu keyframes, entry size = %2u, total size = %10u, allocated %10u",
+        i, GST_TIME_ARGS (stream->idx_duration), stream->idx_n,
+        stream->n_keyframes, (guint) sizeof (GstAviIndexEntry),
+        (guint) (stream->idx_n * sizeof (GstAviIndexEntry)),
+        (guint) (stream->idx_max * sizeof (GstAviIndexEntry)));
+  }
+#ifndef GST_DISABLE_GST_DEBUG
+  total_idx *= sizeof (GstAviIndexEntry);
+  total_max *= sizeof (GstAviIndexEntry);
+#endif
+  GST_INFO_OBJECT (avi, "%u bytes for index vs %u ideally, %u wasted",
+      total_max, total_idx, total_max - total_idx);
+
+  stamp = gst_util_get_timestamp () - stamp;
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "parsing index %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (stamp));
+
+  return;
+
+  /* ERRORS */
+empty_list:
+  {
+    GST_DEBUG_OBJECT (avi, "empty index");
+    return;
+  }
+out_of_mem:
+  {
+    GST_ELEMENT_ERROR (avi, RESOURCE, NO_SPACE_LEFT, (NULL),
+        ("Cannot allocate memory for %u*%u=%u bytes",
+            (guint) sizeof (GstAviIndexEntry), num,
+            (guint) sizeof (GstAviIndexEntry) * num));
+    return;
+  }
+}
+
+/*
  * gst_avi_demux_parse_index:
  * @avi: calling element (used for debugging/errors).
  * @buf: buffer containing the full index.
@@ -2227,6 +2423,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
   GST_DEBUG ("will parse index chunk size %u for tag %"
       GST_FOURCC_FORMAT, GST_BUFFER_SIZE (buf), GST_FOURCC_ARGS (tag));
 
+  gst_avi_demux_parse_index2 (avi, buf);
   gst_avi_demux_parse_index (avi, buf, index);
   if (*index)
     *alloc_list = g_list_append (*alloc_list, (*index)->data);

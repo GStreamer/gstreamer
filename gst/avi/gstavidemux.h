@@ -62,6 +62,14 @@ typedef struct {
   guint32        size;          /* could be read from the chunk (if we don't split) */
 } gst_avi_index_entry;
 
+/* new index entries 24 bytes */
+typedef struct {
+  guint32        flags;
+  guint32        size;    /* bytes of the data */
+  guint64        offset;  /* data offset in file */
+  guint64        total;   /* total bytes before */
+} GstAviIndexEntry;
+
 typedef struct {
   /* index of this streamcontext */
   guint          num;
@@ -90,6 +98,7 @@ typedef struct {
   guint64        total_bytes;
   guint32        total_frames;
   guint32        total_blocks;
+  guint          n_keyframes;
   /* stream length according to index */
   GstClockTime   idx_duration;
   /* stream length according to header */
@@ -103,6 +112,11 @@ typedef struct {
   /* openDML support (for files >4GB) */
   gboolean       superindex;
   guint64       *indexes;
+
+  /* new indexes */
+  GstAviIndexEntry *index;     /* array with index entries */
+  guint             idx_n;     /* number of entries */
+  guint             idx_max;   /* max allocated size of entries */
 
   GstTagList	*taglist;
 } avi_stream_context;
