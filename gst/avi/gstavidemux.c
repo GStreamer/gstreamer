@@ -1200,7 +1200,7 @@ gst_avi_demux_read_subindexes_push (GstAviDemux * avi,
         continue;
       }
 
-      avi->offset += 8 + ((size + 1) & ~1);
+      avi->offset += 8 + GST_ROUND_UP_2 (size);
 
       buf = gst_buffer_new ();
       GST_BUFFER_DATA (buf) = gst_adapter_take (avi->adapter, size);
@@ -2076,6 +2076,15 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
             (entry.offset == 0 && n > 0)))
       continue;
 
+    /* figure out if the index is 0 based or relative to the MOVI start */
+    if (G_UNLIKELY (n == 0)) {
+      if (entry.offset < pos_before)
+        avi->index_offset = pos_before + 8;
+      else
+        avi->index_offset = 0;
+      GST_DEBUG ("index_offset = %" G_GUINT64_FORMAT, avi->index_offset);
+    }
+
     /* get the stream for this entry */
     stream_nr = CHUNKID_TO_STREAMNR (id);
     if (G_UNLIKELY (stream_nr >= avi->num_streams)) {
@@ -2138,21 +2147,14 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
         goto out_of_mem;
     }
 
-    /* and copy */
     GST_LOG_OBJECT (avi,
         "Adding stream %d, index entry %d, flags %02x, size %u "
         ", offset %" G_GUINT64_FORMAT ", total %" G_GUINT64_FORMAT, stream_nr,
         stream->idx_n, entry.flags, entry.size, entry.offset, entry.total);
+
+    /* and copy */
     stream->index[stream->idx_n++] = entry;
 
-    /* figure out if the index is 0 based or relative to the MOVI start */
-    if (G_UNLIKELY (n == 0)) {
-      if (entry.offset < pos_before)
-        avi->index_offset = pos_before + 8;
-      else
-        avi->index_offset = 0;
-      GST_DEBUG ("index_offset = %" G_GUINT64_FORMAT, avi->index_offset);
-    }
     n++;
   }
   /* get stream stats now */
@@ -2438,8 +2440,8 @@ gst_avi_demux_stream_index (GstAviDemux * avi)
   if (tag == GST_RIFF_TAG_LIST) {
     /* this is the movi tag */
     GST_DEBUG_OBJECT (avi, "skip LIST chunk, size %" G_GUINT32_FORMAT,
-        (8 + ((size + 1) & ~1)));
-    offset += 8 + ((size + 1) & ~1);
+        (8 + GST_ROUND_UP_2 (size)));
+    offset += 8 + GST_ROUND_UP_2 (size);
     gst_buffer_unref (buf);
     res = gst_pad_pull_range (avi->sinkpad, offset, 8, &buf);
     if (res != GST_FLOW_OK)
@@ -3262,7 +3264,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
   switch (avi->header_state) {
     case GST_AVI_DEMUX_HEADER_TAG_LIST:
       if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
-        avi->offset += 8 + ((size + 1) & ~1);
+        avi->offset += 8 + GST_ROUND_UP_2 (size);
         if (tag != GST_RIFF_TAG_LIST)
           goto header_no_list;
 
@@ -3392,7 +3394,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
                       &avi->globaltags);
                   gst_buffer_unref (buf);
 
-                  avi->offset += ((size + 1) & ~1) - 4;
+                  avi->offset += GST_ROUND_UP_2 (size) - 4;
                 } else {
                   GST_DEBUG ("skipping INFO LIST prefix");
                 }
@@ -3403,8 +3405,8 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
               break;
             default:
               if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
-                avi->offset += 8 + ((size + 1) & ~1);
-                gst_adapter_flush (avi->adapter, 8 + ((size + 1) & ~1));
+                avi->offset += 8 + GST_ROUND_UP_2 (size);
+                gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
                 // ??? goto iterate; ???
               } else {
                 /* Need more data */
@@ -3414,8 +3416,8 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
           }
         } else {
           if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
-            avi->offset += 8 + ((size + 1) & ~1);
-            gst_adapter_flush (avi->adapter, 8 + ((size + 1) & ~1));
+            avi->offset += 8 + GST_ROUND_UP_2 (size);
+            gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
             //goto iterate;
           } else {
             /* Need more data */
@@ -3716,7 +3718,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             GST_WARNING_OBJECT (avi,
                 "Skipping unknown list tag %" GST_FOURCC_FORMAT,
                 GST_FOURCC_ARGS (ltag));
-            avi->offset += 8 + ((size + 1) & ~1);
+            avi->offset += 8 + GST_ROUND_UP_2 (size);
             break;
         }
       }
@@ -3727,7 +3729,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
         /* Fall-through */
       case GST_MAKE_FOURCC ('J', 'U', 'N', 'Q'):
       case GST_MAKE_FOURCC ('J', 'U', 'N', 'K'):
-        avi->offset += 8 + ((size + 1) & ~1);
+        avi->offset += 8 + GST_ROUND_UP_2 (size);
         break;
     }
   } while (1);
@@ -4553,7 +4555,7 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
     }
 
     /* correct for index offset */
-    offset += avi->index_offset;
+    offset += avi->index_offset + 8;
 
     GST_LOG ("reading buffer (size=%d) from stream %d at current pos %"
         G_GUINT64_FORMAT " (%llx)", size, stream_num, offset, offset);
@@ -4751,8 +4753,8 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       /* recoverable */
       GST_WARNING ("Invalid stream ID %d (%" GST_FOURCC_FORMAT ")",
           stream_nr, GST_FOURCC_ARGS (tag));
-      avi->offset += 8 + ((size + 1) & ~1);
-      gst_adapter_flush (avi->adapter, 8 + ((size + 1) & ~1));
+      avi->offset += 8 + GST_ROUND_UP_2 (size);
+      gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
     } else {
       GstAviStream *stream;
       GstClockTime next_ts = 0;
@@ -4761,10 +4763,10 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       gst_adapter_flush (avi->adapter, 8);
 
       /* get buffer */
-      buf = gst_adapter_take_buffer (avi->adapter, ((size + 1) & ~1));
+      buf = gst_adapter_take_buffer (avi->adapter, GST_ROUND_UP_2 (size));
       /* patch the size */
       GST_BUFFER_SIZE (buf) = size;
-      avi->offset += 8 + ((size + 1) & ~1);
+      avi->offset += 8 + GST_ROUND_UP_2 (size);
 
       stream = &avi->stream[stream_nr];
 
