@@ -892,7 +892,7 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
       if (component == 0) {
         return GST_ROUND_UP_4 (width);
       } else {
-        return GST_ROUND_UP_8 (width) / 4;
+        return GST_ROUND_UP_16 (width) / 4;
       }
     case GST_VIDEO_FORMAT_Y42B:
       if (component == 0) {
@@ -1237,7 +1237,8 @@ gst_video_format_get_component_offset (GstVideoFormat format, int component,
       if (component == 1)
         return GST_ROUND_UP_4 (width) * height;
       if (component == 2)
-        return (GST_ROUND_UP_4 (width) + (GST_ROUND_UP_8 (width) / 4)) * height;
+        return (GST_ROUND_UP_4 (width) +
+            (GST_ROUND_UP_16 (width) / 4)) * height;
       return 0;
     case GST_VIDEO_FORMAT_Y42B:
       if (component == 0)
@@ -1312,7 +1313,7 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
       return GST_ROUND_UP_4 (width * 3) * height;
     case GST_VIDEO_FORMAT_Y41B:
       /* simplification of ROUNDUP4(w)*h + 2*((ROUNDUP8(w)/4)*h */
-      return (GST_ROUND_UP_4 (width) + (GST_ROUND_UP_8 (width) / 2)) * height;
+      return (GST_ROUND_UP_4 (width) + (GST_ROUND_UP_16 (width) / 2)) * height;
     case GST_VIDEO_FORMAT_Y42B:
       /* simplification of ROUNDUP4(w)*h + 2*(ROUNDUP8(w)/2)*h: */
       return (GST_ROUND_UP_4 (width) + GST_ROUND_UP_8 (width)) * height;
