@@ -73,9 +73,13 @@ enum
 {
   PROP_0,
   PROP_LOCATION,
-  PROP_XPOS,
-  PROP_YPOS,
-  PROP_SIZE
+  PROP_XPOS_PNG,
+  PROP_YPOS_PNG,
+  PROP_SIZE_PNG,
+  PROP_XPOS_VIDEO,
+  PROP_YPOS_VIDEO,
+  PROP_SIZE_VIDEO,
+  PROP_VIDEOTOP
 };
 
 
@@ -127,36 +131,142 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
           "Location of the image", NULL, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
-      PROP_XPOS,
-      g_param_spec_int ("xpos",
+      PROP_XPOS_PNG,
+      g_param_spec_int ("xpos-png",
           "X position of overlay image in percents",
           "X position of overlay image in percents",
           0, 100, 0, G_PARAM_READWRITE));
+
   g_object_class_install_property (gobject_class,
-      PROP_YPOS,
-      g_param_spec_int ("ypos",
+      PROP_YPOS_PNG,
+      g_param_spec_int ("ypos-png",
           "Y position of overlay image in percents",
           "Y position of overlay image in percents",
           0, 100, 0, G_PARAM_READWRITE));
+
   g_object_class_install_property (gobject_class,
-      PROP_SIZE,
-      g_param_spec_int ("proportion",
+      PROP_SIZE_PNG,
+      g_param_spec_int ("proportion-png",
           "Relative size of overlay image, in percents",
           "Relative size of iverlay image, in percents",
           0, 100, 0, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class,
+      PROP_XPOS_VIDEO,
+      g_param_spec_int ("xpos-video",
+          "X position of overlay video in percents",
+          "X position of overlay video in percents",
+          0, 100, 0, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      PROP_YPOS_VIDEO,
+      g_param_spec_int ("ypos-video",
+          "Y position of overlay video in percents",
+          "Y position of overlay video in percents",
+          0, 100, 0, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      PROP_SIZE_VIDEO,
+      g_param_spec_int ("proportion-video",
+          "Relative size of overlay video, in percents",
+          "Relative size of iverlay video, in percents",
+          0, 100, 0, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      PROP_VIDEOTOP,
+      g_param_spec_boolean ("video-top",
+          "Video-top", "Video is over png image", FALSE, G_PARAM_READWRITE));
   /*
      g_object_class_install_property (gobject_class,
      PROP_STRETCH,
      g_param_spec_boolean ("stretch",
-     "Stretch the image to texture size", 
-     "Stretch the image to fit video texture size", 
+     "Stretch the image to texture size",
+     "Stretch the image to fit video texture size",
      TRUE, G_PARAM_READWRITE));
    */
 }
 
-void
-gst_gl_overlay_draw_texture (GstGLOverlay * overlay, GLuint tex)
+static void
+gst_gl_overlay_draw_texture_video_on_png (GstGLOverlay * overlay, GLuint tex)
+{
+  GstGLFilter *filter = GST_GL_FILTER (overlay);
+
+  gfloat posx = 0.0;
+  gfloat posy = 0.0;
+  gfloat size = 0.0;
+  gfloat width = (gfloat) overlay->width;
+  gfloat height = (gfloat) overlay->height;
+
+  if (overlay->pbuftexture == 0)
+    return;
+
+//  if (overlay->stretch) {
+//  width = (gfloat) overlay->width;
+// height = (gfloat) overlay->height;
+//  }
+
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable (GL_BLEND);
+
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, overlay->pbuftexture);
+
+  glBegin (GL_QUADS);
+
+  size = (overlay->size_png) / 50.0;
+  posx = (overlay->pos_x_png - 50.0) / 50.0;
+  posx =
+      (posx - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posx + (size / 2) >
+      1.00) ? (1.0 - size / 2) : posx;
+  posy = (overlay->pos_y_png - 50.0) / 50.0;
+  posy =
+      (posy - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posy + (size / 2) >
+      1.00) ? (1.0 - size / 2) : posy;
+
+  glTexCoord2f (0.0, 0.0);
+  glVertex2f (posx - (size / 2), posy - (size / 2));
+  glTexCoord2f (width, 0.0);
+  glVertex2f (posx + (size / 2), posy - (size / 2));
+  glTexCoord2f (width, height);
+  glVertex2f (posx + (size / 2), posy + (size / 2));
+  glTexCoord2f (0.0, height);
+  glVertex2f (posx - (size / 2), posy + (size / 2));
+
+  glEnd ();
+
+  width = (gfloat) filter->width;
+  height = (gfloat) filter->height;
+  glActiveTexture (GL_TEXTURE0);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
+
+  glBegin (GL_QUADS);
+
+  size = (overlay->size_video) / 50.0;
+  posx = (overlay->pos_x_video - 50.0) / 50.0;
+  posx =
+      (posx - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posx + (size / 2) >
+      1.00) ? (1.0 - size / 2) : posx;
+  posy = (overlay->pos_y_video - 50.0) / 50.0;
+  posy =
+      (posy - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posy + (size / 2) >
+      1.00) ? (1.0 - size / 2) : posy;
+
+  glTexCoord2f (0.0, 0.0);
+  glVertex2f (posx - (size / 2), posy - (size / 2));
+  glTexCoord2f (width, 0.0);
+  glVertex2f (posx + (size / 2), posy - (size / 2));
+  glTexCoord2f (width, height);
+  glVertex2f (posx + (size / 2), posy + (size / 2));
+  glTexCoord2f (0.0, height);
+  glVertex2f (posx - (size / 2), posy + (size / 2));
+  glEnd ();
+
+  glFlush ();
+}
+
+static void
+gst_gl_overlay_draw_texture_png_on_video (GstGLOverlay * overlay, GLuint tex)
 {
   GstGLFilter *filter = GST_GL_FILTER (overlay);
 
@@ -172,14 +282,24 @@ gst_gl_overlay_draw_texture (GstGLOverlay * overlay, GLuint tex)
 
   glBegin (GL_QUADS);
 
+  size = (overlay->size_video) / 50.0;
+  posx = (overlay->pos_x_video - 50.0) / 50.0;
+  posx =
+      (posx - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posx + (size / 2) >
+      1.00) ? (1.0 - size / 2) : posx;
+  posy = (overlay->pos_y_video - 50.0) / 50.0;
+  posy =
+      (posy - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posy + (size / 2) >
+      1.00) ? (1.0 - size / 2) : posy;
+
   glTexCoord2f (0.0, 0.0);
-  glVertex2f (-1.0, -1.0);
+  glVertex2f (posx - (size / 2), posy - (size / 2));
   glTexCoord2f (width, 0.0);
-  glVertex2f (1.0, -1.0);
+  glVertex2f (posx + (size / 2), posy - (size / 2));
   glTexCoord2f (width, height);
-  glVertex2f (1.0, 1.0);
+  glVertex2f (posx + (size / 2), posy + (size / 2));
   glTexCoord2f (0.0, height);
-  glVertex2f (-1.0, 1.0);
+  glVertex2f (posx - (size / 2), posy + (size / 2));
 
   glEnd ();
 
@@ -199,12 +319,12 @@ gst_gl_overlay_draw_texture (GstGLOverlay * overlay, GLuint tex)
 
   glBegin (GL_QUADS);
 
-  size = (overlay->size) / 50.0;
-  posx = (overlay->pos_x - 50.0) / 50.0;
+  size = (overlay->size_png) / 50.0;
+  posx = (overlay->pos_x_png - 50.0) / 50.0;
   posx =
       (posx - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posx + (size / 2) >
       1.00) ? (1.0 - size / 2) : posx;
-  posy = (overlay->pos_y - 50.0) / 50.0;
+  posy = (overlay->pos_y_png - 50.0) / 50.0;
   posy =
       (posy - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posy + (size / 2) >
       1.00) ? (1.0 - size / 2) : posy;
@@ -220,9 +340,10 @@ gst_gl_overlay_draw_texture (GstGLOverlay * overlay, GLuint tex)
 
   glEnd ();
 
-
   glFlush ();
 }
+
+
 
 static void
 gst_gl_overlay_init (GstGLOverlay * overlay, GstGLOverlayClass * klass)
@@ -233,9 +354,13 @@ gst_gl_overlay_init (GstGLOverlay * overlay, GstGLOverlayClass * klass)
   overlay->pbuftexture = 0;
   overlay->width = 0;
   overlay->height = 0;
-  overlay->pos_x = 0.0;
-  overlay->pos_y = 0.0;
-  overlay->size = 100;
+  overlay->pos_x_png = 0.0;
+  overlay->pos_y_png = 0.0;
+  overlay->size_png = 100;
+  overlay->pos_x_video = 0.0;
+  overlay->pos_y_video = 0.0;
+  overlay->size_video = 100;
+  overlay->video_top = FALSE;
 //  overlay->stretch = TRUE;
   overlay->pbuf_has_changed = FALSE;
 }
@@ -259,14 +384,26 @@ gst_gl_overlay_set_property (GObject * object, guint prop_id,
       overlay->pbuf_has_changed = TRUE;
       overlay->location = g_value_dup_string (value);
       break;
-    case PROP_XPOS:
-      overlay->pos_x = g_value_get_int (value);
+    case PROP_XPOS_PNG:
+      overlay->pos_x_png = g_value_get_int (value);
       break;
-    case PROP_YPOS:
-      overlay->pos_y = g_value_get_int (value);
+    case PROP_YPOS_PNG:
+      overlay->pos_y_png = g_value_get_int (value);
       break;
-    case PROP_SIZE:
-      overlay->size = g_value_get_int (value);
+    case PROP_SIZE_PNG:
+      overlay->size_png = g_value_get_int (value);
+      break;
+    case PROP_XPOS_VIDEO:
+      overlay->pos_x_video = g_value_get_int (value);
+      break;
+    case PROP_YPOS_VIDEO:
+      overlay->pos_y_video = g_value_get_int (value);
+      break;
+    case PROP_SIZE_VIDEO:
+      overlay->size_video = g_value_get_int (value);
+      break;
+    case PROP_VIDEOTOP:
+      overlay->video_top = g_value_get_boolean (value);
       break;
 /*  case PROP_STRETCH:
     overlay->stretch = g_value_get_boolean (value);
@@ -288,14 +425,26 @@ gst_gl_overlay_get_property (GObject * object, guint prop_id,
     case PROP_LOCATION:
       g_value_set_string (value, overlay->location);
       break;
-    case PROP_XPOS:
-      g_value_set_int (value, overlay->pos_x);
+    case PROP_XPOS_PNG:
+      g_value_set_int (value, overlay->pos_x_png);
       break;
-    case PROP_YPOS:
-      g_value_set_int (value, overlay->pos_y);
+    case PROP_YPOS_PNG:
+      g_value_set_int (value, overlay->pos_y_png);
       break;
-    case PROP_SIZE:
-      g_value_set_int (value, overlay->size);
+    case PROP_SIZE_PNG:
+      g_value_set_int (value, overlay->size_png);
+      break;
+    case PROP_XPOS_VIDEO:
+      g_value_set_int (value, overlay->pos_x_video);
+      break;
+    case PROP_YPOS_VIDEO:
+      g_value_set_int (value, overlay->pos_y_video);
+      break;
+    case PROP_SIZE_VIDEO:
+      g_value_set_int (value, overlay->size_video);
+      break;
+    case PROP_VIDEOTOP:
+      g_value_set_boolean (value, overlay->video_top);
       break;
 /*  case PROP_STRETCH:
     g_value_set_boolean (value, overlay->stretch);
@@ -321,7 +470,10 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
 
-  gst_gl_overlay_draw_texture (overlay, texture);
+  if (overlay->video_top)
+    gst_gl_overlay_draw_texture_video_on_png (overlay, texture);
+  else
+    gst_gl_overlay_draw_texture_png_on_video (overlay, texture);
 }
 
 static void
