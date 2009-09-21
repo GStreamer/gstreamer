@@ -4322,8 +4322,6 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
          stream->delay = next_ts;
        */
 
-      stream->current_frame++;
-      stream->current_byte += size;
 
       /* parsing of corresponding header may have failed */
       if (G_UNLIKELY (!stream->pad)) {
@@ -4337,6 +4335,9 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         gst_pad_query_position (stream->pad, &format, (gint64 *) & next_ts);
         if (G_UNLIKELY (format != GST_FORMAT_TIME))
           goto wrong_format;
+
+        stream->current_frame++;
+        stream->current_byte += size;
 
         /* invert the picture if needed */
         buf = gst_avi_demux_invert (stream, buf);
@@ -4354,10 +4355,11 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
 
         gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
         GST_DEBUG_OBJECT (avi,
-            "Pushing buffer with time=%" GST_TIME_FORMAT
-            ", offset %" G_GUINT64_FORMAT " and size %d over pad %s",
-            GST_TIME_ARGS (next_ts), GST_BUFFER_OFFSET (buf), size,
-            GST_PAD_NAME (stream->pad));
+            "Pushing buffer with time=%" GST_TIME_FORMAT ", duration %"
+            GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
+            " and size %d over pad %s", GST_TIME_ARGS (next_ts),
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_OFFSET (buf),
+            size, GST_PAD_NAME (stream->pad));
 
         /* update current position in the segment */
         gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, next_ts);
