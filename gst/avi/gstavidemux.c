@@ -54,6 +54,7 @@
 
 GST_DEBUG_CATEGORY_STATIC (avidemux_debug);
 #define GST_CAT_DEFAULT avidemux_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_EVENT);
 
@@ -173,6 +174,7 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (avidemux_debug, "avidemux",
       0, "Demuxer for AVI streams");
+  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -862,6 +864,9 @@ static gboolean
 gst_avi_demux_parse_file_header (GstElement * element, GstBuffer * buf)
 {
   guint32 doctype;
+  GstClockTime stamp;
+
+  stamp = gst_util_get_timestamp ();
 
   /* riff_parse posts an error */
   if (!gst_riff_parse_file_header (element, buf, &doctype))
@@ -869,6 +874,10 @@ gst_avi_demux_parse_file_header (GstElement * element, GstBuffer * buf)
 
   if (doctype != GST_RIFF_RIFF_AVI)
     goto not_avi;
+
+  stamp = gst_util_get_timestamp () - stamp;
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "parsing header %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (stamp));
 
   return TRUE;
 
@@ -1993,10 +2002,10 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
   guint8 *data;
   GList *entries_list = NULL;
   guint i, num, n;
-
 #ifndef GST_DISABLE_GST_DEBUG
   gulong _nr_keyframes = 0;
 #endif
+  GstClockTime stamp;
 
   if (!buf || !GST_BUFFER_SIZE (buf)) {
     *_entries_list = NULL;
@@ -2005,6 +2014,8 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
       gst_buffer_unref (buf);
     return;
   }
+
+  stamp = gst_util_get_timestamp ();
 
   data = GST_BUFFER_DATA (buf);
   num = GST_BUFFER_SIZE (buf) / sizeof (gst_riff_index_entry);
@@ -2133,6 +2144,11 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
   } else {
     g_free (entries);
   }
+
+  stamp = gst_util_get_timestamp () - stamp;
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "parsing index %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (stamp));
+
   return;
 
   /* ERRORS */
@@ -2700,6 +2716,9 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
   guint i;
   GList *node;
   gint64 delay = G_GINT64_CONSTANT (0);
+  GstClockTime stamp;
+
+  stamp = gst_util_get_timestamp ();
 
   GST_LOG_OBJECT (avi, "Starting index massage, nr_entries = %d",
       list ? g_list_length (list) : 0);
@@ -2872,13 +2891,21 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
 #endif
 
   GST_LOG_OBJECT (avi, "Index massaging done");
+
+  stamp = gst_util_get_timestamp () - stamp;
+
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "massaging index %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (stamp));
+
   return TRUE;
 
   /* ERRORS */
 out_of_mem:
-  GST_WARNING_OBJECT (avi, "Out of memory for %" G_GSIZE_FORMAT " bytes",
-      sizeof (gst_avi_index_entry) * avi->index_size);
-  return FALSE;
+  {
+    GST_WARNING_OBJECT (avi, "Out of memory for %" G_GSIZE_FORMAT " bytes",
+        sizeof (gst_avi_index_entry) * avi->index_size);
+    return FALSE;
+  }
 }
 
 static void
@@ -3261,6 +3288,9 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
   guint offset = 4;
   gint64 stop;
   GstElement *element = GST_ELEMENT_CAST (avi);
+  GstClockTime stamp;
+
+  stamp = gst_util_get_timestamp ();
 
   /* the header consists of a 'hdrl' LIST tag */
   res = gst_riff_read_chunk (element, avi->sinkpad, &avi->offset, &tag, &buf);
@@ -3491,6 +3521,10 @@ skipping_done:
   avi->seek_event = gst_event_new_new_segment
       (FALSE, avi->segment.rate, GST_FORMAT_TIME,
       avi->segment.start, stop, avi->segment.start);
+
+  stamp = gst_util_get_timestamp () - stamp;
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "pulling header %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (stamp));
 
   /* at this point we know all the streams and we can signal the no more
    * pads signal */
