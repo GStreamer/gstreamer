@@ -49,19 +49,6 @@ G_BEGIN_DECLS
 
 #define GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME 1
 
-/* 48 bytes */
-typedef struct {
-  guint          index_nr;      /* = (entry-index_entries)/sizeof(gst_avi_index_entry); */
-  guchar         stream_nr;
-  guchar         flags;
-  guint64        ts;
-  guint64        dur;           /* =entry[1].ts-entry->ts */
-  guint64        offset;
-  guint64        bytes_before;  /* calculated */
-  guint32        frames_before; /* calculated */
-  guint32        size;          /* could be read from the chunk (if we don't split) */
-} gst_avi_index_entry;
-
 /* new index entries 24 bytes */
 typedef struct {
   guint32        flags;
@@ -88,15 +75,21 @@ typedef struct {
   GstBuffer     *extradata, *initdata;
   gchar         *name;
 
+  /* the start/step/stop entries */
+  guint          start_entry;
+  guint          step_entry;
+  guint          stop_entry;
   /* current position (byte, frame, time) and other status vars */
+  guint          current_entry;
   guint          current_frame;
   guint64        current_byte;
+  guint64        current_time;
+
   GstFlowReturn  last_flow;
   gboolean       discont;
 
   /* stream length */
   guint64        total_bytes;
-  guint32        total_frames;
   guint32        total_blocks;
   guint          n_keyframes;
   /* stream length according to index */
@@ -119,7 +112,7 @@ typedef struct {
   guint             idx_max;   /* max allocated size of entries */
 
   GstTagList	*taglist;
-} avi_stream_context;
+} GstAviStream;
 
 typedef enum {
   GST_AVI_DEMUX_START,
@@ -148,25 +141,19 @@ typedef struct _GstAviDemux {
   guint64        offset;
   gboolean       abort_buffering;
 
-  /* index */
-  gst_avi_index_entry *index_entries;
-  guint          index_size;
+  /* index offset in the file */
   guint64        index_offset;
-  guint          current_entry;
-  guint          reverse_start_index;
-  guint          reverse_stop_index;
 
   /* streams */
+  GstAviStream   stream[GST_AVI_DEMUX_MAX_STREAMS];
   guint          num_streams;
   guint          num_v_streams;
   guint          num_a_streams;
   guint          num_t_streams;  /* subtitle text streams */
 
-  avi_stream_context stream[GST_AVI_DEMUX_MAX_STREAMS];
-
   /* for streaming mode */
-  gboolean      streaming;
-  gboolean      have_eos;
+  gboolean       streaming;
+  gboolean       have_eos;
   GstAdapter    *adapter;
 
   /* some stream info for length */
@@ -179,8 +166,7 @@ typedef struct _GstAviDemux {
   /* pending tags/events */
   GstEvent      *seek_event;
   GstTagList	*globaltags;
-  gboolean	got_tags;
-
+  gboolean	 got_tags;
 } GstAviDemux;
 
 typedef struct _GstAviDemuxClass {
