@@ -15,7 +15,8 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp # $(srcdir)/gst-plugins-bad.supp
 clean-local: clean-local-check
 
 check_PROGRAMS = \
-	ges/basic
+	ges/basic	\
+	ges/filesource
 
 noinst_HEADERS = 
 
