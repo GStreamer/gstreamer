@@ -2926,6 +2926,10 @@ gst_camerabin_override_photo_properties (GObjectClass * gobject_class)
 
   g_object_class_override_property (gobject_class, ARG_EXPOSURE,
       GST_PHOTOGRAPHY_PROP_EXPOSURE);
+
+  g_object_class_override_property (gobject_class,
+      ARG_IMAGE_CAPTURE_SUPPORTED_CAPS,
+      GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS);
 }
 
 static void

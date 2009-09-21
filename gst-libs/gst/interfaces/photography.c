@@ -500,4 +500,11 @@ gst_photography_iface_class_init (gpointer g_class)
           "Exposure time in milliseconds",
           "Exposure time defines how long the shutter will stay open (0 = auto)",
           0, G_MAXUINT32, 0, G_PARAM_READWRITE));
+
+  /* Image capture caps */
+  g_object_interface_install_property (g_class,
+      g_param_spec_boxed (GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
+          "Image capture supported caps",
+          "Caps describing supported image capture formats", GST_TYPE_CAPS,
+          G_PARAM_READABLE));
 }

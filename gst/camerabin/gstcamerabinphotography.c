@@ -544,6 +544,18 @@ gst_camerabin_photography_get_property (GstCameraBin * camera, guint prop_id,
       ret = TRUE;
       break;
     }
+    case ARG_IMAGE_CAPTURE_SUPPORTED_CAPS:
+    {
+      GST_DEBUG_OBJECT (camera, "==== GETTING PROP_IMAGE_CAPTURE_CAPS ====");
+      if (PHOTOGRAPHY_IS_OK (camera->src_vid_src)) {
+        g_object_get_property (G_OBJECT (camera->src_vid_src),
+            "image-capture-supported-caps", value);
+      } else {
+        g_object_get_property (G_OBJECT (camera), "video-source-caps", value);
+      }
+      ret = TRUE;
+      break;
+    }
     default:
       break;
   }

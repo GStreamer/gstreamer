@@ -63,6 +63,8 @@ G_BEGIN_DECLS
 #define GST_PHOTOGRAPHY_PROP_ISO_SPEED    "iso-speed"
 #define GST_PHOTOGRAPHY_PROP_APERTURE     "aperture"
 #define GST_PHOTOGRAPHY_PROP_EXPOSURE     "exposure"
+#define GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS \
+    "image-capture-supported-caps"
 
 /**
  * GstPhotography:
@@ -196,6 +198,7 @@ typedef void (*GstPhotoCapturePrepared) (gpointer data,
  * @set_autofocus: vmethod to set autofocus on/off
  * @set_config: vmethod to set all configuration parameters at once
  * @get_config: vmethod to get all configuration parameters at once
+ * @get_image_capture_supported_caps: vmethod to get caps describing supported image capture formats
  *
  * #GstPhotographyInterface interface.
  */
