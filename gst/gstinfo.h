@@ -427,7 +427,7 @@ GstDebugCategory *_gst_debug_get_category (const gchar *name);
  * GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
  * ...
  * GST_DEBUG_CATEGORY_INIT (gst_myplugin_debug, "myplugin", 0, "nice element");
- * GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "performance);
+ * GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "performance");
  * ]|
  *
  * Since: 0.10.24
