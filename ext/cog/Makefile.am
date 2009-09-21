@@ -18,6 +18,7 @@ libgstcog_la_SOURCES = \
 	cog.h \
 	cogframe.c \
 	cogframe.h \
+	cogtables.c \
 	cogutils.h \
 	cogvirtframe.c \
 	cogvirtframe.h \
@@ -31,6 +32,10 @@ libgstcog_la_SOURCES = \
 	gstcogutils.h \
 	gstcolorconvert.c \
 	gstlogoinsert.c
+
+noinst_PROGRAMS = generate_tables
+generate_tables_CFLAGS = $(GST_CFLAGS)
+generate_tables_LDADD = $(GST_LIBS)
 
 nodist_libgstcog_la_SOURCES = cogorc.c cogorc.h
 CLEANFILES = cogorc.c cogorc.h

@@ -318,6 +318,24 @@ mergebw t2, s2, s3
 mergewl d1, t1, t2
 
 
+.function cogorc_combine2_u8
+.dest 1 d1
+.source 1 s1
+.source 1 s2
+.param 2 p1
+.param 2 p2
+.temp 2 t1
+.temp 2 t2
+
+convubw t1, s1
+mullw t1, t1, p1
+convubw t2, s2
+mullw t2, t2, p2
+addw t1, t1, t2
+shruw t1, t1, 8
+convuuswb d1, t1
+
+
 .function cogorc_combine4_u8
 .dest 1 d1
 .source 1 s1
