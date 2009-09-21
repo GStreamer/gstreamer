@@ -590,10 +590,12 @@ gst_celt_enc_setup (GstCeltEnc * enc)
   if (!enc->state)
     goto encoder_creation_failed;
 
+#ifdef CELT_SET_VBR_RATE
   if (!enc->cbr) {
     GST_ERROR ("setting vbr");
     celt_encoder_ctl (enc->state, CELT_SET_VBR_RATE (enc->bitrate), 0);
   }
+#endif
   celt_encoder_ctl (enc->state, CELT_SET_COMPLEXITY (enc->complexity), 0);
 
   GST_LOG_OBJECT (enc, "we have frame size %d", enc->frame_size);
@@ -975,7 +977,9 @@ gst_celt_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, enc->frame_size);
       break;
     case PROP_CBR:
+#ifdef CELT_SET_VBR_RATE
       g_value_set_boolean (value, enc->cbr);
+#endif
       break;
     case PROP_COMPLEXITY:
       g_value_set_int (value, enc->complexity);
