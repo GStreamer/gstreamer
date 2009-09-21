@@ -37,6 +37,8 @@
 #include <ges/ges-track-source.h>
 
 #include <ges/ges-custom-timeline-source.h>
+#include <ges/ges-timeline-file-source.h>
+#include <ges/ges-track-filesource.h>
 
 G_BEGIN_DECLS
 

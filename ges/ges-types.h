@@ -41,6 +41,8 @@ typedef struct _GESTimelinePipelineClass GESTimelinePipelineClass;
 typedef struct _GESTimelineSource GESTimelineSource;
 typedef struct _GESTimelineSourceClass GESTimelineSourceClass;
 
+typedef struct _GESTimelineFileSource GESTimelineFileSource;
+typedef struct _GESTimelineFileSourceClass GESTimelineFileSourceClass;
 typedef struct _GESTimelineTransition GESTimelineTransition;
 typedef struct _GESTimelineTransitionClass GESTimelineTransitionClass;
 
@@ -52,6 +54,9 @@ typedef struct _GESTrackObjectClass GESTrackObjectClass;
 
 typedef struct _GESTrackSource GESTrackSource;
 typedef struct _GESTrackSourceClass GESTrackSourceClass;
+
+typedef struct _GESTrackFileSource GESTrackFileSource;
+typedef struct _GESTrackFileSourceClass GESTrackFileSourceClass;
 
 
 #endif /* __GES_TYPES_H__ */

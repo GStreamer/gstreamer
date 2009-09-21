@@ -90,6 +90,7 @@ struct _GESTimelineObject {
  * @parent_class: object parent class
  * @create_track_object: method to create a #GESTrackObject for a given #GESTrack.
  * @fill_track_object: method to fill an associated #GESTrackObject.
+ * @need_fill_track: Set to TRUE if @fill_track_object needs to be called.
  *
  * Subclasses can override the @create_track_object and @fill_track_object methods.
  */
@@ -100,6 +101,7 @@ struct _GESTimelineObjectClass {
 						 GESTrack * track);
   /* FIXME : might need a release_track_object */
   FillTrackObjectFunc	fill_track_object;
+  gboolean need_fill_track;
 };
 
 GType ges_timeline_object_get_type (void);

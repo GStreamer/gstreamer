@@ -147,6 +147,8 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",
           "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
+
+  klass->need_fill_track = TRUE;
 }
 
 static void
@@ -159,7 +161,9 @@ ges_timeline_object_init (GESTimelineObject * self)
  * @object: The origin #GESTimelineObject
  * @track: The #GESTrack to create a #GESTrackObject for.
  *
- * Creates a #GESTrackObject for the provided @track.
+ * Creates a #GESTrackObject for the provided @track. The timeline object
+ * keep a reference to the newly created trackobject, you therefore need to
+ * call @ges_timeline_object_release_track_object when you are done with it.
  *
  * Returns: A #GESTrackObject. Returns NULL if the #GESTrackObject could not
  * be created.
@@ -187,7 +191,8 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
     ges_track_object_set_timeline_object (res, object);
 
     GST_DEBUG ("Adding TrackObject to the list of controlled track objects");
-    object->trackobjects = g_list_append (object->trackobjects, res);
+    object->trackobjects =
+        g_list_append (object->trackobjects, g_object_ref (res));
 
   }
 
@@ -196,6 +201,11 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
   return res;
 }
 
+/**
+ * ges_timeline_object_release_track_object:
+ * @object: a #GESTimelineObject
+ * @trobj: the #GESTrackObject to release
+ */
 gboolean
 ges_timeline_object_release_track_object (GESTimelineObject * object,
     GESTrackObject * trobj)
@@ -212,6 +222,8 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
   object->trackobjects = g_list_remove (object->trackobjects, trobj);
 
   ges_track_object_set_timeline_object (trobj, NULL);
+
+  g_object_unref (trobj);
 
   return TRUE;
 }
@@ -230,19 +242,21 @@ ges_timeline_object_fill_track_object (GESTimelineObject * object,
     GESTrackObject * trackobj, GstElement * gnlobj)
 {
   GESTimelineObjectClass *class;
-  gboolean res;
+  gboolean res = TRUE;
 
   GST_DEBUG ("object:%p, trackobject:%p, gnlobject:%p",
       object, trackobj, gnlobj);
 
   class = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
-  if (G_UNLIKELY (class->fill_track_object == NULL)) {
-    GST_WARNING ("No 'fill_track_object' implementation available");
-    return FALSE;
-  }
+  if (class->need_fill_track) {
+    if (G_UNLIKELY (class->fill_track_object == NULL)) {
+      GST_WARNING ("No 'fill_track_object' implementation available");
+      return FALSE;
+    }
 
-  res = class->fill_track_object (object, trackobj, gnlobj);
+    res = class->fill_track_object (object, trackobj, gnlobj);
+  }
 
   if (G_LIKELY (res)) {
     GST_DEBUG ("Setting properties");
