@@ -18,8 +18,8 @@ void cog_virt_frame_render (CogFrame *frame, CogFrame *dest);
 
 CogFrame *cog_virt_frame_new_horiz_downsample (CogFrame *vf, int n_taps);
 CogFrame *cog_virt_frame_new_vert_downsample (CogFrame *vf, int n_taps);
-CogFrame *cog_virt_frame_new_vert_resample (CogFrame *vf, int height);
-CogFrame *cog_virt_frame_new_horiz_resample (CogFrame *vf, int width);
+CogFrame *cog_virt_frame_new_vert_resample (CogFrame *vf, int height, int n_taps);
+CogFrame *cog_virt_frame_new_horiz_resample (CogFrame *vf, int width, int n_taps);
 CogFrame *cog_virt_frame_new_unpack (CogFrame *vf);
 CogFrame *cog_virt_frame_new_pack_YUY2 (CogFrame *vf);
 CogFrame *cog_virt_frame_new_pack_UYVY (CogFrame *vf);

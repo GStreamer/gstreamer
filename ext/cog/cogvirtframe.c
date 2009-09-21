@@ -506,12 +506,14 @@ cog_virt_frame_render_resample_vert_1tap (CogFrame * frame, void *_dest,
   uint8_t *dest = _dest;
   uint8_t *src1;
   int n_src;
-  double *scale = (double *) frame->virt_priv;
-  double x;
+  int scale = frame->param1;
+  int acc;
+  int x;
   int src_i;
 
-  x = (*scale) * i;
-  src_i = floor (x);
+  acc = scale * i;
+  src_i = acc >> 8;
+  x = acc & 0xff;
 
   n_src = frame->virt_frame1->components[component].height;
   src1 = cog_virt_frame_get_line (frame->virt_frame1, component,
@@ -528,13 +530,14 @@ cog_virt_frame_render_resample_vert_2tap (CogFrame * frame, void *_dest,
   uint8_t *src1;
   uint8_t *src2;
   int n_src;
-  double *scale = (double *) frame->virt_priv;
-  double x;
+  int scale = frame->param1;
+  int acc;
+  int x;
   int src_i;
 
-  x = (*scale) * i;
-  src_i = floor (x);
-  x -= floor (x);
+  acc = scale * i;
+  src_i = acc >> 8;
+  x = acc & 0xff;
 
   n_src = frame->virt_frame1->components[component].height;
   src1 = cog_virt_frame_get_line (frame->virt_frame1, component,
@@ -542,8 +545,12 @@ cog_virt_frame_render_resample_vert_2tap (CogFrame * frame, void *_dest,
   src2 = cog_virt_frame_get_line (frame->virt_frame1, component,
       CLAMP (src_i + 1, 0, n_src - 1));
 
-  cogorc_combine2_u8 (dest, src1, src2,
-      rint (256 * (1 - x)), rint (256 * x), frame->components[component].width);
+  if (x == 0) {
+    memcpy (dest, src1, frame->components[component].width);
+  } else {
+    cogorc_combine2_u8 (dest, src1, src2,
+        256 - x, x, frame->components[component].width);
+  }
 }
 
 void
@@ -556,53 +563,55 @@ cog_virt_frame_render_resample_vert_4tap (CogFrame * frame, void *_dest,
   uint8_t *src3;
   uint8_t *src4;
   int n_src;
-  double *scale = (double *) frame->virt_priv;
-  double x;
+  int scale = frame->param1;
+  int acc;
+  int x;
   int src_i;
-  int y;
 
-  x = (*scale) * i;
-  src_i = floor (x);
-  y = 256 * (x - floor (x));
+  acc = scale * i;
+  src_i = acc >> 8;
+  x = acc & 0xff;
 
   n_src = frame->virt_frame1->components[component].height;
-  src1 = cog_virt_frame_get_line (frame->virt_frame1, component,
-      CLAMP (src_i - 1, 0, n_src - 1));
-  src2 = cog_virt_frame_get_line (frame->virt_frame1, component,
-      CLAMP (src_i + 0, 0, n_src - 1));
-  src3 = cog_virt_frame_get_line (frame->virt_frame1, component,
-      CLAMP (src_i + 1, 0, n_src - 1));
-  src4 = cog_virt_frame_get_line (frame->virt_frame1, component,
-      CLAMP (src_i + 2, 0, n_src - 1));
+  if (src_i < 1 || src_i >= n_src - 3) {
+    src1 = cog_virt_frame_get_line (frame->virt_frame1, component,
+        CLAMP (src_i - 1, 0, n_src - 1));
+    src2 = cog_virt_frame_get_line (frame->virt_frame1, component,
+        CLAMP (src_i + 0, 0, n_src - 1));
+    src3 = cog_virt_frame_get_line (frame->virt_frame1, component,
+        CLAMP (src_i + 1, 0, n_src - 1));
+    src4 = cog_virt_frame_get_line (frame->virt_frame1, component,
+        CLAMP (src_i + 2, 0, n_src - 1));
+  } else {
+    src1 = cog_virt_frame_get_line (frame->virt_frame1, component, src_i - 1);
+    src2 = cog_virt_frame_get_line (frame->virt_frame1, component, src_i + 0);
+    src3 = cog_virt_frame_get_line (frame->virt_frame1, component, src_i + 1);
+    src4 = cog_virt_frame_get_line (frame->virt_frame1, component, src_i + 2);
+  }
 
   cogorc_combine4_u8 (dest, src1, src2, src3, src4,
-      cog_resample_table_4tap[y][0],
-      cog_resample_table_4tap[y][1],
-      cog_resample_table_4tap[y][2],
-      cog_resample_table_4tap[y][3], frame->components[component].width);
+      cog_resample_table_4tap[x][0],
+      cog_resample_table_4tap[x][1],
+      cog_resample_table_4tap[x][2],
+      cog_resample_table_4tap[x][3], frame->components[component].width);
 }
 
 CogFrame *
-cog_virt_frame_new_vert_resample (CogFrame * vf, int height)
+cog_virt_frame_new_vert_resample (CogFrame * vf, int height, int n_taps)
 {
   CogFrame *virt_frame;
-  double *scale;
-  int taps = 4;
 
   virt_frame = cog_frame_new_virtual (NULL, vf->format, vf->width, height);
   virt_frame->virt_frame1 = vf;
-  if (taps == 1) {
+  if (n_taps == 1) {
     virt_frame->render_line = cog_virt_frame_render_resample_vert_1tap;
-  } else if (taps == 2) {
+  } else if (n_taps == 2) {
     virt_frame->render_line = cog_virt_frame_render_resample_vert_2tap;
   } else {
     virt_frame->render_line = cog_virt_frame_render_resample_vert_4tap;
   }
 
-  scale = malloc (sizeof (double));
-  virt_frame->virt_priv = scale;
-
-  *scale = (double) vf->height / height;
+  virt_frame->param1 = 256 * vf->height / height;
 
   return virt_frame;
 }
@@ -624,6 +633,53 @@ cog_virt_frame_render_resample_horiz_1tap (CogFrame * frame, void *_dest,
   acc = 0;
   for (j = 0; j < frame->components[component].width; j++) {
     dest[j] = src[(acc >> 8)];
+    acc += scale;
+  }
+}
+
+void
+cog_virt_frame_render_resample_horiz_2tap (CogFrame * frame, void *_dest,
+    int component, int i)
+{
+  uint8_t *dest = _dest;
+  uint8_t *src;
+  int j;
+  int n_src;
+  int scale = frame->param1;
+  int acc;
+
+  n_src = frame->virt_frame1->components[component].width;
+  src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
+
+  acc = 0;
+  for (j = 0; j < frame->components[component].width - 2; j++) {
+    int src_i;
+    int y;
+    int z;
+
+    src_i = acc >> 8;
+    y = acc & 255;
+
+    z = 128;
+    z += (256 - y) * src[src_i + 0];
+    z += y * src[src_i + 1];
+    z >>= 8;
+    dest[j] = CLAMP (z, 0, 255);
+    acc += scale;
+  }
+  for (; j < frame->components[component].width; j++) {
+    int src_i;
+    int y;
+    int z;
+
+    src_i = acc >> 8;
+    y = acc & 255;
+
+    z = 128;
+    z += (256 - y) * src[CLAMP (src_i + 0, 0, n_src - 1)];
+    z += y * src[CLAMP (src_i + 1, 0, n_src - 1)];
+    z >>= 8;
+    dest[j] = CLAMP (z, 0, 255);
     acc += scale;
   }
 }
@@ -697,25 +753,21 @@ cog_virt_frame_render_resample_horiz_4tap (CogFrame * frame, void *_dest,
 }
 
 CogFrame *
-cog_virt_frame_new_horiz_resample (CogFrame * vf, int width)
+cog_virt_frame_new_horiz_resample (CogFrame * vf, int width, int n_taps)
 {
   CogFrame *virt_frame;
-  double *scale;
-  int taps = 4;
 
   virt_frame = cog_frame_new_virtual (NULL, vf->format, width, vf->height);
   virt_frame->virt_frame1 = vf;
-  if (taps == 1) {
+  if (n_taps == 1) {
     virt_frame->render_line = cog_virt_frame_render_resample_horiz_1tap;
+  } else if (n_taps == 2) {
+    virt_frame->render_line = cog_virt_frame_render_resample_horiz_2tap;
   } else {
     virt_frame->render_line = cog_virt_frame_render_resample_horiz_4tap;
   }
 
-  scale = malloc (sizeof (double));
-  virt_frame->virt_priv = scale;
-
-  *scale = (double) vf->width / width;
-  virt_frame->param1 = 256.0 * (*scale);
+  virt_frame->param1 = 256 * vf->width / width;
 
   return virt_frame;
 }

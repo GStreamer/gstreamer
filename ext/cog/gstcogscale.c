@@ -83,21 +83,6 @@ GST_DEBUG_CATEGORY_STATIC (cog_scale_debug);
 #define GST_IS_COG_SCALE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COG_SCALE))
 
-/**
- * GstCogScaleMethod:
- * @GST_COG_SCALE_NEAREST: use nearest neighbour scaling (fast and ugly)
- * @GST_COG_SCALE_BILINEAR: use bilinear scaling (slower but prettier).
- * @GST_COG_SCALE_4TAP: use a 4-tap filter for scaling (slow).
- *
- * The videoscale method to use.
- */
-typedef enum
-{
-  GST_COG_SCALE_NEAREST,
-  GST_COG_SCALE_BILINEAR,
-  GST_COG_SCALE_4TAP
-} GstCogScaleMethod;
-
 typedef struct _GstCogScale GstCogScale;
 typedef struct _GstCogScaleClass GstCogScaleClass;
 
@@ -110,7 +95,7 @@ struct _GstCogScale
 {
   GstBaseTransform element;
 
-  GstCogScaleMethod method;
+  int quality;
 
   /* negotiated stuff */
   GstVideoFormat format;
@@ -139,13 +124,12 @@ GST_ELEMENT_DETAILS ("Video scaler",
     "Resizes video",
     "Wim Taymans <wim.taymans@chello.be>");
 
-#define DEFAULT_PROP_METHOD	GST_COG_SCALE_NEAREST
+#define DEFAULT_QUALITY 5
 
 enum
 {
   PROP_0,
-  PROP_METHOD
-      /* FILL ME */
+  PROP_QUALITY
 };
 
 /* can't handle width/height of 1 yet, since we divide a lot by (n-1) */
@@ -167,61 +151,43 @@ GST_VIDEO_CAPS_RGBx
     GST_VIDEO_CAPS_ABGR GST_VIDEO_CAPS_RGB GST_VIDEO_CAPS_BGR
 GST_VIDEO_CAPS_YUV ("{ Y41B, YVYU }")
 #endif
-#define GST_TYPE_COG_SCALE_METHOD (gst_cog_scale_method_get_type())
-     static GType gst_cog_scale_method_get_type (void)
-{
-  static GType cog_scale_method_type = 0;
-  static const GEnumValue cog_scale_methods[] = {
-    {GST_COG_SCALE_NEAREST, "Nearest Neighbour", "nearest-neighbour"},
-    {GST_COG_SCALE_BILINEAR, "Bilinear", "bilinear"},
-    {GST_COG_SCALE_4TAP, "4-tap", "4-tap"},
-    {0, NULL, NULL},
-  };
-
-  if (!cog_scale_method_type) {
-    cog_scale_method_type =
-        g_enum_register_static ("GstCogScaleMethod", cog_scale_methods);
-  }
-  return cog_scale_method_type;
-}
-
-static GstStaticPadTemplate gst_cog_scale_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+     static GstStaticPadTemplate gst_cog_scale_src_template =
+         GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     TEMPLATE_CAPS);
 
-static GstStaticPadTemplate gst_cog_scale_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+     static GstStaticPadTemplate gst_cog_scale_sink_template =
+         GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     TEMPLATE_CAPS);
 
-static void gst_cog_scale_base_init (gpointer g_class);
-static void gst_cog_scale_class_init (GstCogScaleClass * klass);
-static void gst_cog_scale_init (GstCogScale * videoscale);
-static void gst_cog_scale_finalize (GstCogScale * videoscale);
-static gboolean gst_cog_scale_src_event (GstBaseTransform * trans,
+     static void gst_cog_scale_base_init (gpointer g_class);
+     static void gst_cog_scale_class_init (GstCogScaleClass * klass);
+     static void gst_cog_scale_init (GstCogScale * videoscale);
+     static void gst_cog_scale_finalize (GstCogScale * videoscale);
+     static gboolean gst_cog_scale_src_event (GstBaseTransform * trans,
     GstEvent * event);
 
 /* base transform vmethods */
-static GstCaps *gst_cog_scale_transform_caps (GstBaseTransform * trans,
+     static GstCaps *gst_cog_scale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps);
-static gboolean gst_cog_scale_set_caps (GstBaseTransform * trans,
+     static gboolean gst_cog_scale_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
-static gboolean gst_cog_scale_get_unit_size (GstBaseTransform * trans,
+     static gboolean gst_cog_scale_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, guint * size);
-static GstFlowReturn gst_cog_scale_transform (GstBaseTransform * trans,
+     static GstFlowReturn gst_cog_scale_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
-static void gst_cog_scale_fixate_caps (GstBaseTransform * base,
+     static void gst_cog_scale_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 
-static void gst_cog_scale_set_property (GObject * object, guint prop_id,
+     static void gst_cog_scale_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_cog_scale_get_property (GObject * object, guint prop_id,
+     static void gst_cog_scale_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementClass *parent_class = NULL;
+     static GstElementClass *parent_class = NULL;
 
 
 GType
@@ -277,10 +243,9 @@ gst_cog_scale_class_init (GstCogScaleClass * klass)
   gobject_class->set_property = gst_cog_scale_set_property;
   gobject_class->get_property = gst_cog_scale_get_property;
 
-  g_object_class_install_property (gobject_class, PROP_METHOD,
-      g_param_spec_enum ("method", "method", "method",
-          GST_TYPE_COG_SCALE_METHOD, DEFAULT_PROP_METHOD,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QUALITY,
+      g_param_spec_int ("quality", "quality", "Scaling Quality",
+          0, 10, DEFAULT_QUALITY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_cog_scale_transform_caps);
@@ -299,7 +264,7 @@ static void
 gst_cog_scale_init (GstCogScale * videoscale)
 {
   gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (videoscale), TRUE);
-  videoscale->method = DEFAULT_PROP_METHOD;
+  videoscale->quality = DEFAULT_QUALITY;
 }
 
 static void
@@ -315,9 +280,9 @@ gst_cog_scale_set_property (GObject * object, guint prop_id,
   GstCogScale *vscale = GST_COG_SCALE (object);
 
   switch (prop_id) {
-    case PROP_METHOD:
+    case PROP_QUALITY:
       GST_OBJECT_LOCK (vscale);
-      vscale->method = g_value_get_enum (value);
+      vscale->quality = g_value_get_int (value);
       GST_OBJECT_UNLOCK (vscale);
       break;
     default:
@@ -333,9 +298,9 @@ gst_cog_scale_get_property (GObject * object, guint prop_id, GValue * value,
   GstCogScale *vscale = GST_COG_SCALE (object);
 
   switch (prop_id) {
-    case PROP_METHOD:
+    case PROP_QUALITY:
       GST_OBJECT_LOCK (vscale);
-      g_value_set_enum (value, vscale->method);
+      g_value_set_int (value, vscale->quality);
       GST_OBJECT_UNLOCK (vscale);
       break;
     default:
@@ -352,31 +317,13 @@ gst_cog_scale_transform_caps (GstBaseTransform * trans,
   GstCaps *ret;
   GstStructure *structure;
   const GValue *par;
-  gint method;
 
   /* this function is always called with a simple caps */
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
 
   videoscale = GST_COG_SCALE (trans);
 
-  GST_OBJECT_LOCK (videoscale);
-  method = videoscale->method;
-  GST_OBJECT_UNLOCK (videoscale);
-
   structure = gst_caps_get_structure (caps, 0);
-
-  /* check compatibility of format and method before we copy the input caps */
-  if (method == GST_COG_SCALE_4TAP) {
-    guint32 fourcc;
-
-    if (!gst_structure_has_name (structure, "video/x-raw-yuv"))
-      goto method_not_implemented_for_format;
-    if (!gst_structure_get_fourcc (structure, "format", &fourcc))
-      goto method_not_implemented_for_format;
-    if (fourcc != GST_MAKE_FOURCC ('I', '4', '2', '0') &&
-        fourcc != GST_MAKE_FOURCC ('Y', 'V', '1', '2'))
-      goto method_not_implemented_for_format;
-  }
 
   ret = gst_caps_copy (caps);
   structure = gst_caps_get_structure (ret, 0);
@@ -406,13 +353,6 @@ gst_cog_scale_transform_caps (GstBaseTransform * trans,
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
-
-method_not_implemented_for_format:
-  {
-    GST_DEBUG_OBJECT (trans, "method %d not implemented for format %"
-        GST_PTR_FORMAT ", returning empty caps", method, caps);
-    return gst_caps_new_empty ();
-  }
 }
 
 static gboolean
@@ -619,13 +559,15 @@ gst_cog_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   GstFlowReturn ret = GST_FLOW_OK;
   CogFrame *outframe;
   CogFrame *frame;
-  gint method;
   int w, h;
+  int quality;
+  static const int n_vert_taps[11] = { 1, 1, 2, 2, 2, 2, 4, 4, 4, 4, 4 };
+  static const int n_horiz_taps[11] = { 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4 };
 
   videoscale = GST_COG_SCALE (trans);
 
   GST_OBJECT_LOCK (videoscale);
-  method = videoscale->method;
+  quality = videoscale->quality;
   GST_OBJECT_UNLOCK (videoscale);
 
   frame = gst_cog_buffer_wrap (gst_buffer_ref (in), videoscale->format,
@@ -648,10 +590,12 @@ gst_cog_scale_transform (GstBaseTransform * trans, GstBuffer * in,
     }
   }
   if (w != videoscale->to_width) {
-    frame = cog_virt_frame_new_horiz_resample (frame, videoscale->to_width);
+    frame = cog_virt_frame_new_horiz_resample (frame, videoscale->to_width,
+        n_horiz_taps[quality]);
   }
   if (h != videoscale->to_height) {
-    frame = cog_virt_frame_new_vert_resample (frame, videoscale->to_height);
+    frame = cog_virt_frame_new_vert_resample (frame, videoscale->to_height,
+        n_vert_taps[quality]);
   }
 
   switch (videoscale->format) {
