@@ -86,6 +86,7 @@ struct _CogFrame {
   CogFrameData components[3];
 
   int is_virtual;
+  int cache_offset[3];
   int cached_lines[3][COG_FRAME_CACHE_SIZE];
   CogFrame *virt_frame1;
   CogFrame *virt_frame2;

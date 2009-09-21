@@ -53,8 +53,9 @@ cog_frame_new_virtual (CogMemoryDomain * domain, CogFrameFormat format,
     frame->regions[0] =
         malloc (frame->components[0].stride * COG_FRAME_CACHE_SIZE);
     for (i = 0; i < COG_FRAME_CACHE_SIZE; i++) {
-      frame->cached_lines[0][i] = -1;
+      frame->cached_lines[0][i] = 0;
     }
+    frame->cache_offset[0] = 0;
     frame->is_virtual = TRUE;
 
     return frame;
@@ -114,8 +115,9 @@ cog_frame_new_virtual (CogMemoryDomain * domain, CogFrameFormat format,
 
     frame->regions[i] = malloc (comp->stride * COG_FRAME_CACHE_SIZE);
     for (j = 0; j < COG_FRAME_CACHE_SIZE; j++) {
-      frame->cached_lines[i][j] = -1;
+      frame->cached_lines[i][j] = 0;
     }
+    frame->cache_offset[i] = 0;
   }
   frame->is_virtual = TRUE;
 
@@ -127,8 +129,6 @@ cog_virt_frame_get_line (CogFrame * frame, int component, int i)
 {
   CogFrameData *comp = &frame->components[component];
   int j;
-  int min;
-  int min_j;
 
   g_return_val_if_fail (i >= 0, NULL);
   g_return_val_if_fail (i < comp->height, NULL);
@@ -137,27 +137,26 @@ cog_virt_frame_get_line (CogFrame * frame, int component, int i)
     return COG_FRAME_DATA_GET_LINE (&frame->components[component], i);
   }
 
-  for (j = 0; j < COG_FRAME_CACHE_SIZE; j++) {
-    if (frame->cached_lines[component][j] == i) {
-      return COG_OFFSET (frame->regions[component], comp->stride * j);
-    }
+  if (i < frame->cache_offset[component]) {
+    g_warning ("cache failure");
+    return NULL;
   }
 
-  min_j = 0;
-  min = frame->cached_lines[component][0];
-  for (j = 1; j < COG_FRAME_CACHE_SIZE; j++) {
-    if (frame->cached_lines[component][j] < min) {
-      min = frame->cached_lines[component][j];
-      min_j = j;
-    }
+  while (i >= frame->cache_offset[component] + COG_FRAME_CACHE_SIZE) {
+    j = frame->cache_offset[component] & (COG_FRAME_CACHE_SIZE - 1);
+    frame->cached_lines[component][j] = 0;
+
+    frame->cache_offset[component]++;
   }
-  frame->cached_lines[component][min_j] = i;
 
-  cog_virt_frame_render_line (frame,
-      COG_OFFSET (frame->regions[component], comp->stride * min_j),
-      component, i);
+  j = i & (COG_FRAME_CACHE_SIZE - 1);
+  if (!frame->cached_lines[component][j]) {
+    cog_virt_frame_render_line (frame,
+        COG_OFFSET (frame->regions[component], comp->stride * j), component, i);
+    frame->cached_lines[component][j] = 1;
+  }
 
-  return COG_OFFSET (frame->regions[component], comp->stride * min_j);
+  return COG_OFFSET (frame->regions[component], comp->stride * j);
 }
 
 void
