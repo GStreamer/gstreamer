@@ -393,6 +393,7 @@ gst_gl_overlay_loader (GstGLFilter * filter)
   png_FILE_p fp = NULL;
   guint y = 0;
   guchar **rows = NULL;
+  gint filler;
 
   if (!filter->display)
     return TRUE;
@@ -424,6 +425,12 @@ gst_gl_overlay_loader (GstGLFilter * filter)
 
   png_get_IHDR (png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
       &interlace_type, int_p_NULL, int_p_NULL);
+
+  if (color_type == PNG_COLOR_TYPE_RGB) {
+    filler = 0xff;
+    png_set_filler (png_ptr, filler, PNG_FILLER_AFTER);
+    color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+  }
 
   if (color_type != PNG_COLOR_TYPE_RGB_ALPHA) {
     fclose (fp);
