@@ -134,6 +134,7 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
           case '\n':
           case '\t':
           case ' ':
+            mngr->info.fields |= GST_PNM_INFO_FIELDS_WIDTH;
             mngr->state = GST_PNM_INFO_MNGR_STATE_WHITE_SPACE;
             mngr->data_offset += i;
             return gst_pnm_info_mngr_scan (mngr, buf + i, buf_len - i);
@@ -143,7 +144,6 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
       }
       mngr->info.width *= 10;
       mngr->info.width += buf[i++] - 0x030;
-      mngr->info.fields |= GST_PNM_INFO_FIELDS_WIDTH;
       mngr->data_offset += i;
       return gst_pnm_info_mngr_scan (mngr, buf + i, buf_len - i);
     case GST_PNM_INFO_MNGR_STATE_DATA_HEIGHT:
@@ -152,6 +152,7 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
           case '\n':
           case '\t':
           case ' ':
+            mngr->info.fields |= GST_PNM_INFO_FIELDS_HEIGHT;
             mngr->state = GST_PNM_INFO_MNGR_STATE_WHITE_SPACE;
             mngr->data_offset += i;
             return gst_pnm_info_mngr_scan (mngr, buf + i, buf_len - i);
@@ -161,7 +162,6 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
       }
       mngr->info.height *= 10;
       mngr->info.height += buf[i++] - 0x030;
-      mngr->info.fields |= GST_PNM_INFO_FIELDS_HEIGHT;
       mngr->data_offset += i;
       return gst_pnm_info_mngr_scan (mngr, buf + i, buf_len - i);
     case GST_PNM_INFO_MNGR_STATE_DATA_MAX:
@@ -170,6 +170,7 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
           case '\n':
           case '\t':
           case ' ':
+            mngr->info.fields |= GST_PNM_INFO_FIELDS_MAX;
             mngr->data_offset += i + 1;
             return GST_PNM_INFO_MNGR_RESULT_FINISHED;
           default:
@@ -178,7 +179,6 @@ gst_pnm_info_mngr_scan (GstPnmInfoMngr * mngr, const guint8 * buf,
       }
       mngr->info.max *= 10;
       mngr->info.max += buf[i++] - 0x030;
-      mngr->info.fields |= GST_PNM_INFO_FIELDS_MAX;
       mngr->data_offset += i;
       return gst_pnm_info_mngr_scan (mngr, buf + i, buf_len - i);
   }

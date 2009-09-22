@@ -39,7 +39,7 @@ struct _GstPnmdec
   GstElement element;
 
   GstPnmInfoMngr mngr;
-  guint size;
+  guint size, last_byte;
   GstBuffer *buf;
 };
 
