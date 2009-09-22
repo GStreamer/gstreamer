@@ -56,6 +56,7 @@
   <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Timestamp']" name="hidden">1</attr>
   <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Caps']" name="hidden">1</attr>
   <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='FreeFunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Size']" name="hidden">1</attr>
   <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_get_caps']" name="hidden">1</attr>
   <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_set_caps']" name="hidden">1</attr>
   <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_stamp']" name="hidden">1</attr>

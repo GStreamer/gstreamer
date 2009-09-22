@@ -52,15 +52,14 @@ public class AppSrcDemo {
     ulong mseconds = 0;
     if (appsrc.Clock != null)
       mseconds = appsrc.Clock.Time / Clock.MSecond;
-    byte[] data = DrawData (mseconds);
-
-    Gst.Buffer buffer = new Gst.Buffer (data);
+    Gst.Buffer buffer = DrawData (mseconds);
     appsrc.PushBuffer (buffer);
   }
 
-  // Returns a byte[] presentation of one 640x480 BGRA frame using Cairo
-  static byte[] DrawData (ulong seconds) {
-    Cairo.ImageSurface img = new Cairo.ImageSurface (Cairo.Format.Argb32, 640, 480);
+  // Returns a Gst.Buffer presentation of one 640x480 BGRA frame using Cairo
+  static Gst.Buffer DrawData (ulong seconds) {
+    Gst.Buffer buffer = new Gst.Buffer (640*480*4);
+    Cairo.ImageSurface img = new Cairo.ImageSurface (buffer.Data, Cairo.Format.Argb32, 640, 480, 640*4);
     using (Cairo.Context context = new Cairo.Context (img)) {
       double dx = (double) (seconds % 2180) / 5;
       context.Color = new Color (1.0, 1.0, 0);
@@ -71,10 +70,8 @@ public class AppSrcDemo {
       context.Color = new Color (0, 0, 1.0);
       context.Stroke();
     }
-
-    byte[] data = img.Data;
     img.Destroy();
-    return data;
+    return buffer;
   }
 
   static void MessageHandler (object sender, MessageArgs args) {

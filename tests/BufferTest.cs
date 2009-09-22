@@ -69,9 +69,6 @@ public class BufferTest {
 
     Gst.Buffer buffer = new Gst.Buffer (data);
 
-    ArrayIsEqual (data, buffer.Data);
-    for (uint i = 0; i < buffer.Size; i++)
-      Assert.IsTrue (buffer[i] == data[i]);
-
+    ArrayIsEqual (data, buffer.ToByteArray ());
   }
 }

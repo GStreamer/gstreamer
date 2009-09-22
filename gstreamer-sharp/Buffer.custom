@@ -10,8 +10,12 @@ public Buffer (uint size) {
   Raw = raw;
 }
 
+public Buffer (IntPtr data, uint size) : this () {
+  SetData (data, size);
+}
+
 public Buffer (byte[] data) : this () {
-  Data = data;
+  SetData (data);
 }
 
 [DllImport ("gstreamersharpglue-0.10.dll") ]
@@ -22,52 +26,41 @@ extern static void gstsharp_gst_buffer_set_data (IntPtr handle, IntPtr data, uin
 extern static IntPtr g_try_malloc (int size);
 
 static uint data_offset = gstsharp_gst_buffer_get_data_offset ();
-public byte[] Data {
+public IntPtr Data {
   get {
     IntPtr raw_ptr;
     unsafe {
       raw_ptr = * ( (IntPtr *) ( ( (byte*) Handle) + data_offset));
     }
 
-    byte[] data = new byte[Size];
-    Marshal.Copy (raw_ptr, data, 0, (int) Size);
-
-    return data;
-  }
-
-  set {
-    if (!IsWritable)
-      throw new ApplicationException ();
-
-    IntPtr raw_ptr = g_try_malloc (value.Length);
-    if (raw_ptr == IntPtr.Zero)
-      throw new OutOfMemoryException ();
-
-    Marshal.Copy (value, 0, raw_ptr, value.Length);
-    gstsharp_gst_buffer_set_data (Handle, raw_ptr, (uint) value.Length);
+    return raw_ptr;
   }
 }
 
-public byte this [uint index] {
-  get {
-    if (index >= Size)
-      throw new ArgumentOutOfRangeException ();
-
-    unsafe {
-      byte **raw_ptr = (byte **) ( ( (byte*) Handle) + data_offset);
-      return * ( (*raw_ptr) + index);
-    }
-  } set {
-    if (index >= Size)
-      throw new ArgumentOutOfRangeException ();
+public void SetData (IntPtr data, uint size) {
     if (!IsWritable)
       throw new ApplicationException ();
 
-    unsafe {
-      byte **raw_ptr = (byte **) ( ( (byte*) Handle) + data_offset);
-      * ( (*raw_ptr) + index) = value;
-    }
-  }
+    gstsharp_gst_buffer_set_data (Handle, data, size);
+}
+
+public void SetData (byte[] data) {
+    if (!IsWritable)
+      throw new ApplicationException ();
+
+    IntPtr raw_ptr = g_try_malloc (data.Length);
+    if (raw_ptr == IntPtr.Zero)
+      throw new OutOfMemoryException ();
+
+    Marshal.Copy (data, 0, raw_ptr, data.Length);
+    gstsharp_gst_buffer_set_data (Handle, raw_ptr, (uint) data.Length);
+}
+
+public byte[] ToByteArray () {
+    byte[] data = new byte[Size];
+    Marshal.Copy (Data, data, 0, (int) Size);
+
+    return data;
 }
 
 [DllImport ("libgstreamer-0.10.dll") ]
@@ -100,6 +93,30 @@ public Gst.Caps Caps {
     gst_buffer_set_caps (Handle, value == null ? IntPtr.Zero : value.Handle);
   }
 }
+
+[DllImport ("gstreamersharpglue-0.10.dll") ]
+extern static uint gstsharp_gst_buffer_get_size_offset ();
+static uint size_offset = gstsharp_gst_buffer_get_size_offset ();
+
+public uint Size {
+  get {
+    unsafe {
+      uint *raw_ptr = ( (uint*) ( ( (byte*) Handle) + size_offset));
+      return *raw_ptr;
+    }
+  }
+
+  set {
+    if (!IsMetadataWritable)
+      throw new ApplicationException ();
+
+    unsafe {
+      uint *raw_ptr = ( (uint*) ( ( (byte*) Handle) + size_offset));
+      *raw_ptr = value;
+    }
+  }
+}
+
 
 [DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gstsharp_gst_buffer_get_timestamp_offset ();

@@ -16,6 +16,12 @@ gstsharp_gst_buffer_set_data (GstBuffer * buffer, guint8 * new_data, guint size)
 }
 
 guint
+gstsharp_gst_buffer_get_size_offset (void)
+{
+	return (guint)G_STRUCT_OFFSET (GstBuffer, size);
+}
+
+guint
 gstsharp_gst_buffer_get_data_offset (void)
 {
   return (guint) G_STRUCT_OFFSET (GstBuffer, data);
