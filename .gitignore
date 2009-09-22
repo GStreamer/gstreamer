@@ -36,3 +36,5 @@ Makefile
 *~
 
 /m4
+
+ext/dv/smpte_test
