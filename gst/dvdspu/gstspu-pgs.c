@@ -520,25 +520,32 @@ parse_set_window (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 {
   SpuState *state = &dvdspu->spu_state;
   guint8 *end = payload + len;
-  guint8 win_id, win_ver;
+  guint8 win_count, win_id;
+  gint i;
 
-  if (payload + 10 > end)
+  if (payload + 1 > end)
     return 0;
 
   dump_bytes (payload, len);
 
-  /* FIXME: This is just a guess as to what the numbers mean: */
-  win_id = payload[0];
-  win_ver = payload[1];
-  state->pgs.win_x = GST_READ_UINT16_BE (payload + 2);
-  state->pgs.win_y = GST_READ_UINT16_BE (payload + 4);
-  state->pgs.win_w = GST_READ_UINT16_BE (payload + 6);
-  state->pgs.win_h = GST_READ_UINT16_BE (payload + 8);
-  payload += 10;
+  win_count = payload[0];
 
-  PGS_DUMP ("Win ID %u version %d x %d y %d w %d h %d\n",
-      win_id, win_ver, state->pgs.win_x, state->pgs.win_y, state->pgs.win_w,
-      state->pgs.win_h);
+  for (i = 0; i < win_count; i++) {
+    if (payload + 9 > end)
+      return 0;
+
+    /* FIXME: Store each window ID separately into an array */
+    win_id = payload[0];
+    state->pgs.win_x = GST_READ_UINT16_BE (payload + 1);
+    state->pgs.win_y = GST_READ_UINT16_BE (payload + 3);
+    state->pgs.win_w = GST_READ_UINT16_BE (payload + 5);
+    state->pgs.win_h = GST_READ_UINT16_BE (payload + 7);
+    payload += 9;
+
+    PGS_DUMP ("Win ID %u x %d y %d w %d h %d\n",
+        win_id, state->pgs.win_x, state->pgs.win_y, state->pgs.win_w,
+        state->pgs.win_h);
+  }
 
   if (payload != end) {
     GST_ERROR ("PGS Set Window: %" G_GSSIZE_FORMAT " bytes not consumed",
