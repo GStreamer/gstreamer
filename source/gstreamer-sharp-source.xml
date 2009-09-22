@@ -35,8 +35,6 @@
 	<!-- Needs to be bound -->
         <exclude>../../gstreamer/libs/gst/base/gstdataqueue.h</exclude>
         <exclude>../../gstreamer/libs/gst/base/gstcollectpads.h</exclude>
-        <exclude>../../gstreamer/libs/gst/base/gstbitreader.h</exclude>
-        <exclude>../../gstreamer/libs/gst/base/gstbytereader.h</exclude>
       </namespace>
     </library>
     <library name="libgstcontroller-0.10.dll">
