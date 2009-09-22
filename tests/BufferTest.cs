@@ -70,5 +70,22 @@ public class BufferTest {
     Gst.Buffer buffer = new Gst.Buffer (data);
 
     ArrayIsEqual (data, buffer.ToByteArray ());
+
+    Gst.Base.ByteReader reader = new Gst.Base.ByteReader (buffer);
+    byte b;
+    Assert.IsTrue (reader.GetUint8 (out b));
+    Assert.IsTrue (b == 0 && 0 == data[reader.Pos-1]);
+    Assert.IsTrue (reader.GetUint8 (out b));
+    Assert.IsTrue (b == 1 && 1 == data[reader.Pos-1]);
+    Assert.IsTrue (reader.GetUint8 (out b));
+    Assert.IsTrue (b == 2 && 2 == data[reader.Pos-1]);
+    Assert.IsTrue (reader.GetUint8 (out b));
+    Assert.IsTrue (b == 3 && 3 == data[reader.Pos-1]);
+    Assert.IsTrue (reader.GetUint8 (out b));
+    Assert.IsTrue (b == 4 && 4 == data[reader.Pos-1]);
+    Assert.IsTrue (reader.GetUint8 (out b));
+    Assert.IsTrue (b == 5 && 5 == data[reader.Pos-1]);
+    Assert.IsFalse (reader.GetUint8 (out b));
+    Assert.IsTrue (reader.Pos == buffer.Size);
   }
 }
