@@ -57,9 +57,9 @@ typedef struct {
 } GstAviIndexEntry;
 
 #define GST_AVI_KEYFRAME 1
-#define ENTRY_IS_KEYFRAME(e) (((e)->flags & GST_AVI_KEYFRAME) == GST_AVI_KEYFRAME)
-#define ENTRY_SET_KEYFRAME(e) ((e)->flags |= GST_AVI_KEYFRAME)
-#define ENTRY_UNSET_KEYFRAME(e) ((e)->flags &= ~(GST_AVI_KEYFRAME))
+#define ENTRY_IS_KEYFRAME(e) ((e)->flags == GST_AVI_KEYFRAME)
+#define ENTRY_SET_KEYFRAME(e) ((e)->flags = GST_AVI_KEYFRAME)
+#define ENTRY_UNSET_KEYFRAME(e) ((e)->flags = 0)
 
 typedef struct {
   /* index of this streamcontext */
@@ -149,6 +149,8 @@ typedef struct _GstAviDemux {
   guint64        offset;
   gboolean       abort_buffering;
 
+  /* when we loaded the indexes */
+  gboolean       have_index;
   /* index offset in the file */
   guint64        index_offset;
 
