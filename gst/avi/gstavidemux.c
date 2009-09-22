@@ -1231,7 +1231,7 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi,
     entries_list = g_list_prepend (entries_list, entry);
   }
 
-  GST_INFO_OBJECT (avi, "Parsed index, %6lu/%6lu entries, %5lu keyframes, "
+  GST_INFO_OBJECT (avi, "Parsed index, %6u/%6u entries, %5lu keyframes, "
       "entry size = %2u, total size = %10d", i, num, _nr_keyframes,
       (gint) sizeof (gst_avi_index_entry),
       (gint) (i * sizeof (gst_avi_index_entry)));
@@ -1581,7 +1581,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           s_dur = gst_util_uint64_scale (GST_SECOND, strh->scale, strh->rate);
           GST_DEBUG_OBJECT (avi, "verifying stream framerate %d/%d, "
               "frame duration = %d ms", strh->rate, strh->scale,
-              s_dur / GST_MSECOND);
+              (gint) (s_dur / GST_MSECOND));
           if (h_dur > (10 * GST_MSECOND) && (s_dur > 10 * h_dur)) {
             strh->rate = GST_SECOND / GST_USECOND;
             strh->scale = h_dur / GST_USECOND;

@@ -978,7 +978,7 @@ string_utf8_dup (const gchar * start, const guint size)
       if ((utf8 =
               g_convert (start, size, "UTF-8", *c, &bytes_read, NULL, NULL))) {
         if (bytes_read == size) {
-          GST_DEBUG ("Using charset %s to interperate id3 tags\n", c);
+          GST_DEBUG ("Using charset %s to interperate id3 tags\n", *c);
           g_strfreev (csets);
           goto beach;
         }

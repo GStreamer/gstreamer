@@ -31,7 +31,7 @@ FLV_GET_STRING (GstByteReader * reader)
 {
   guint16 string_size = 0;
   gchar *string = NULL;
-  const guint8 *str;
+  const guint8 *str = NULL;
 
   g_return_val_if_fail (reader != NULL, NULL);
 
@@ -150,7 +150,7 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
   switch (tag_type) {
     case 0:                    // Double
     {                           /* Use a union to read the uint64 and then as a double */
-      gdouble d;
+      gdouble d = 0;
 
       if (!gst_byte_reader_get_float64_be (reader, &d))
         goto error;
@@ -176,7 +176,7 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
     }
     case 1:                    // Boolean
     {
-      guint8 b;
+      guint8 b = 0;
 
       if (!gst_byte_reader_get_uint8 (reader, &b))
         goto error;
@@ -243,7 +243,7 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
     }
     case 8:                    // ECMA array
     {
-      guint32 nb_elems;
+      guint32 nb_elems = 0;
       gboolean end_of_object_marker = FALSE;
 
       if (!gst_byte_reader_get_uint32_be (reader, &nb_elems))
@@ -278,7 +278,7 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
     }
     case 10:                   // Array
     {
-      guint32 nb_elems;
+      guint32 nb_elems = 0;
 
       if (!gst_byte_reader_get_uint32_be (reader, &nb_elems))
         goto error;
@@ -298,7 +298,7 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
       }
 
       while (nb_elems--) {
-        guint8 elem_type;
+        guint8 elem_type = 0;
 
         if (!gst_byte_reader_get_uint8 (reader, &elem_type))
           goto error;
@@ -331,8 +331,8 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
     }
     case 11:                   // Date
     {
-      gdouble d;
-      gint16 i;
+      gdouble d = 0;
+      gint16 i = 0;
 
       if (!gst_byte_reader_get_float64_be (reader, &d))
         goto error;
@@ -366,7 +366,7 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
-  guint8 type;
+  guint8 type = 0;
 
   g_return_val_if_fail (GST_BUFFER_SIZE (buffer) >= 7, GST_FLOW_ERROR);
 
