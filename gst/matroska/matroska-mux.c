@@ -2431,6 +2431,8 @@ gst_matroska_mux_create_buffer_header (GstMatroskaTrackContext * track,
   return hdr;
 }
 
+#define DIRAC_PARSE_CODE_SEQUENCE 0x00
+
 static GstBuffer *
 gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
     GstMatroskaPad * collect_pad, GstBuffer * buf)
@@ -2451,13 +2453,13 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
 
   /* Check if this buffer contains a picture packet */
   while (size >= 13) {
-    if (GST_READ_UINT32_BE (data) != 0x42424344) {
+    if (GST_READ_UINT32_BE (data) != 0x42424344 /* 'BBCD' */ ) {
       gst_buffer_unref (buf);
       return ret;
     }
 
     parse_code = GST_READ_UINT8 (data + 4);
-    if (parse_code == 0x00) {
+    if (parse_code == DIRAC_PARSE_CODE_SEQUENCE) {
       if (ctx->dirac_unit) {
         gst_buffer_unref (ctx->dirac_unit);
         ctx->dirac_unit = NULL;
@@ -2468,6 +2470,9 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
     }
 
     next_parse_offset = GST_READ_UINT32_BE (data + 5);
+
+    if (G_UNLIKELY (next_parse_offset == 0))
+      break;
 
     data += next_parse_offset;
     size -= next_parse_offset;
