@@ -386,9 +386,11 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
 
     if (this->tag_buf) {
       gst_gdp_stamp_buffer (this, this->tag_buf);
-      GST_DEBUG_OBJECT (this, "1.0, appending copy of tag buffer %p",
+      GST_DEBUG_OBJECT (this, "1.0, appending current tags buffer %p",
           this->tag_buf);
-      tag_buf = gst_buffer_copy (this->tag_buf);
+      tag_buf = this->tag_buf;
+      this->tag_buf = NULL;
+
       gst_buffer_set_caps (tag_buf, NULL);
       g_value_init (&value, GST_TYPE_BUFFER);
       gst_value_set_buffer (&value, tag_buf);
