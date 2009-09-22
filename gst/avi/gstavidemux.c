@@ -52,6 +52,9 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/base/gstadapter.h>
 
+
+#define DIV_ROUND_UP(s,v) ((s) + ((v)-1) / (v))
+
 GST_DEBUG_CATEGORY_STATIC (avidemux_debug);
 #define GST_CAT_DEFAULT avidemux_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
@@ -1874,14 +1877,14 @@ gst_avi_demux_index_last (GstAviDemux * avi, GstAviStream * stream)
 /* find a previous entry in the index with the given flags */
 static guint
 gst_avi_demux_index_prev (GstAviDemux * avi, GstAviStream * stream,
-    guint last, guint32 flags)
+    guint last, gboolean keyframe)
 {
   GstAviIndexEntry *entry;
   guint i;
 
   for (i = last; i > 0; i--) {
     entry = &stream->index[i - 1];
-    if ((entry->flags & flags) == flags) {
+    if (!keyframe || ENTRY_IS_KEYFRAME (entry)) {
       return i;
     }
   }
@@ -1890,14 +1893,14 @@ gst_avi_demux_index_prev (GstAviDemux * avi, GstAviStream * stream,
 
 static guint
 gst_avi_demux_index_next (GstAviDemux * avi, GstAviStream * stream,
-    guint last, guint32 flags)
+    guint last, gboolean keyframe)
 {
   GstAviIndexEntry *entry;
   gint i;
 
   for (i = last + 1; i < stream->idx_n; i++) {
     entry = &stream->index[i];
-    if ((entry->flags & flags) == flags) {
+    if (!keyframe || ENTRY_IS_KEYFRAME (entry)) {
       return i;
     }
   }
@@ -2020,7 +2023,7 @@ gst_avi_demux_get_entry_info (GstAviDemux * avi, GstAviStream * stream,
   if (size)
     *size = entry->size;
   if (keyframe)
-    *keyframe = (entry->flags & GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME) != 0;
+    *keyframe = ENTRY_IS_KEYFRAME (entry);
 }
 
 
@@ -2101,15 +2104,17 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
     /* handle flags */
     if (stream->strh->type == GST_RIFF_FCC_auds) {
       /* all audio frames are keyframes */
-      entry.flags = GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME;
+      ENTRY_SET_KEYFRAME (&entry);
       stream->n_keyframes++;
     } else {
-      entry.flags = GST_READ_UINT32_LE (&index[i].flags);
-      if (entry.flags & GST_RIFF_IF_KEYFRAME) {
-        entry.flags = GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME;
+      guint32 flags;
+      /* else read flags */
+      flags = GST_READ_UINT32_LE (&index[i].flags);
+      if (flags & GST_RIFF_IF_KEYFRAME) {
+        ENTRY_SET_KEYFRAME (&entry);
         stream->n_keyframes++;
       } else {
-        entry.flags = 0;
+        ENTRY_UNSET_KEYFRAME (&entry);
       }
     }
 
@@ -2120,10 +2125,9 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
     entry.total = stream->total_bytes;
     stream->total_bytes += entry.size;
     if (stream->strh->type == GST_RIFF_FCC_auds) {
-      if (stream->strf.auds->blockalign > 0)
-        stream->total_blocks +=
-            (entry.size + stream->strf.auds->blockalign -
-            1) / stream->strf.auds->blockalign;
+      gint blockalign = stream->strf.auds->blockalign;
+      if (blockalign > 0)
+        stream->total_blocks += DIV_ROUND_UP (entry.size, blockalign);
       else
         stream->total_blocks++;
     }
@@ -2148,9 +2152,10 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
     }
 
     GST_LOG_OBJECT (avi,
-        "Adding stream %d, index entry %d, flags %02x, size %u "
+        "Adding stream %d, index entry %d, kf %d, size %u "
         ", offset %" G_GUINT64_FORMAT ", total %" G_GUINT64_FORMAT, stream_nr,
-        stream->idx_n, entry.flags, entry.size, entry.offset, entry.total);
+        stream->idx_n, ENTRY_IS_KEYFRAME (&entry), entry.size, entry.offset,
+        entry.total);
 
     /* and copy */
     stream->index[stream->idx_n++] = entry;
@@ -3861,8 +3866,7 @@ gst_avi_demux_move_stream (GstAviDemux * avi, GstAviStream * stream,
      * to the next keyframe. If there is a smart decoder downstream he will notice
      * that there are too many encoded frames send and return UNEXPECTED when there
      * are enough decoded frames to fill the segment. */
-    next_key = gst_avi_demux_index_next (avi, stream, index,
-        GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME);
+    next_key = gst_avi_demux_index_next (avi, stream, index, TRUE);
 
     stream->start_entry = 0;
     stream->step_entry = index;
@@ -3916,8 +3920,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
     GST_DEBUG_OBJECT (avi, "not keyframe, searching back");
     /* now go to the previous keyframe, this is where we should start
      * decoding from. */
-    index = gst_avi_demux_index_prev (avi, stream, index,
-        GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME);
+    index = gst_avi_demux_index_prev (avi, stream, index, TRUE);
     GST_DEBUG_OBJECT (avi, "previous keyframe at %u", index);
   }
 
@@ -3953,8 +3956,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
     gst_avi_demux_get_entry_info (avi, ostream, index,
         NULL, NULL, NULL, NULL, &kentry);
     if (!kentry) {
-      index = gst_avi_demux_index_prev (avi, ostream, index,
-          GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME);
+      index = gst_avi_demux_index_prev (avi, ostream, index, TRUE);
     }
     gst_avi_demux_move_stream (avi, ostream, segment, index);
   }
@@ -4457,7 +4459,7 @@ gst_avi_demux_advance (GstAviDemux * avi, GstAviStream * stream,
       /* backwards, stop becomes step, find a new step */
       stream->stop_entry = stream->step_entry;
       stream->step_entry = gst_avi_demux_index_prev (avi, stream,
-          stream->stop_entry, GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME);
+          stream->stop_entry, TRUE);
       stream->current_entry = stream->step_entry;
 
       GST_DEBUG_OBJECT (avi,

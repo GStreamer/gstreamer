@@ -47,7 +47,6 @@ G_BEGIN_DECLS
   ((((chunkid) & 0xff) - '0') * 10 + \
    (((chunkid) >> 8) & 0xff) - '0')
 
-#define GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME 1
 
 /* new index entries 24 bytes */
 typedef struct {
@@ -56,6 +55,11 @@ typedef struct {
   guint64        offset;  /* data offset in file */
   guint64        total;   /* total bytes before */
 } GstAviIndexEntry;
+
+#define GST_AVI_KEYFRAME 1
+#define ENTRY_IS_KEYFRAME(e) (((e)->flags & GST_AVI_KEYFRAME) == GST_AVI_KEYFRAME)
+#define ENTRY_SET_KEYFRAME(e) ((e)->flags |= GST_AVI_KEYFRAME)
+#define ENTRY_UNSET_KEYFRAME(e) ((e)->flags &= ~(GST_AVI_KEYFRAME))
 
 typedef struct {
   /* index of this streamcontext */
