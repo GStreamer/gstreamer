@@ -167,13 +167,6 @@ gst_lv2_build_positions (GstLV2Group * group)
   return positions;
 }
 
-static gint
-gst_lv2_compare_symbol (gconstpointer a, gconstpointer b, gpointer data)
-{
-  return strcmp (slv2_value_as_string ((SLV2Value) a),
-      slv2_value_as_string ((SLV2Value) b));
-}
-
 static void
 gst_lv2_base_init (gpointer g_class)
 {
@@ -183,16 +176,13 @@ gst_lv2_base_init (gpointer g_class)
   GstElementDetails *details;
   SLV2Plugin lv2plugin;
   SLV2Value val;
-  SLV2Values values = NULL, sub_values = NULL;
-  SLV2Value prev = NULL;
+  SLV2Values values, sub_values;
   GstLV2Group *group = NULL;
   GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_INVALID;
   GstAudioChannelPosition mono_position = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
   GstAudioChannelPosition *positions = NULL;
-  guint j, in_pad_index = 0, out_pad_index = 0, in_prop_index = 0;
+  guint j, in_pad_index = 0, out_pad_index = 0;
   gchar *klass_tags;
-  GTree *control_port_indices = g_tree_new_full (gst_lv2_compare_symbol,
-      NULL, NULL, free);
 
   GST_DEBUG ("base_init %p", g_class);
 
@@ -220,17 +210,8 @@ gst_lv2_base_init (gpointer g_class)
     const SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, j);
     const gboolean is_input = slv2_port_is_a (lv2plugin, port, input_class);
     gboolean in_group = FALSE;
-    struct _GstLV2Port desc;
-    desc.index = j;
-    desc.pad = 0;
-    desc.role = NULL;
-    desc.position = GST_AUDIO_CHANNEL_POSITION_INVALID;
-
-    /* we only care about audio port groups (for multi-channel) */
-    if (slv2_port_is_a (lv2plugin, port, audio_class))
-      values = slv2_port_get_value (lv2plugin, port, in_group_pred);
-    else
-      values = NULL;
+    struct _GstLV2Port desc = { j, 0 };
+    values = slv2_port_get_value (lv2plugin, port, in_group_pred);
 
     if (slv2_values_size (values) > 0) {
       /* port is part of a group */
@@ -291,22 +272,15 @@ gst_lv2_base_init (gpointer g_class)
        * is illegal so we just ignore it */
       if (slv2_port_is_a (lv2plugin, port, audio_class)) {
         desc.pad = is_input ? in_pad_index++ : out_pad_index++;
-        if (is_input) {
+        if (is_input)
           g_array_append_val (klass->audio_in_ports, desc);
-        } else {
+        else
           g_array_append_val (klass->audio_out_ports, desc);
-        }
       } else if (slv2_port_is_a (lv2plugin, port, control_class)) {
-        if (is_input) {
-          gint *prop_num = malloc (sizeof (gint));
-          desc.pad = in_prop_index++;
-          *prop_num = desc.pad;
-          g_tree_insert (control_port_indices, slv2_port_get_symbol (lv2plugin,
-                  port), prop_num);
+        if (is_input)
           g_array_append_val (klass->control_in_ports, desc);
-        } else {
+        else
           g_array_append_val (klass->control_out_ports, desc);
-        }
       } else {
         /* unknown port type */
         continue;
@@ -377,59 +351,6 @@ gst_lv2_base_init (gpointer g_class)
     gst_signal_processor_class_add_pad_template (gsp_class, name, GST_PAD_SINK,
         j, 1, &mono_position);
   }
-
-  /* find presets */
-  values = slv2_plugin_query_sparql (lv2plugin,
-      "PREFIX pset: <http://lv2plug.in/ns/dev/presets#>\n"
-      "PREFIX dc:   <http://dublincore.org/documents/dcmi-namespace/>\n"
-      "SELECT ?preset ?name ?sym ?val WHERE {\n"
-      "  <>      pset:hasPreset ?preset .\n"
-      "  ?preset dc:title       ?name ;\n"
-      "          lv2:port       ?port .\n"
-      "  ?port   lv2:symbol     ?sym ;\n"
-      "          pset:value     ?val .\n" "}\n");
-  for (; !slv2_results_finished (values); slv2_results_next (values)) {
-    SLV2Value preset = slv2_results_get_binding_value (values, 0);
-    SLV2Value name = slv2_results_get_binding_value (values, 1);
-    SLV2Value sym = slv2_results_get_binding_value (values, 2);
-    SLV2Value val = slv2_results_get_binding_value (values, 3);
-    GstLV2Preset *p = NULL;
-    const gint *index = NULL;
-    GstLV2PresetValue preset_val;
-
-    if (!klass->presets)
-      klass->presets = g_array_new (FALSE, TRUE, sizeof (GstLV2Preset));
-
-    if (!slv2_value_equals (prev, preset)) {
-      struct _GstLV2Preset new_preset;
-      new_preset.uri = preset;
-      new_preset.name = name;
-      new_preset.values = NULL;
-      g_array_append_val (klass->presets, new_preset);
-    }
-    p = &g_array_index (klass->presets, GstLV2Preset, klass->presets->len - 1);
-    prev = p->uri;
-
-    /* we don't understand non-float port values */
-    if (!slv2_value_is_float (val)) {
-      continue;
-    }
-
-    /* look up port by symbol (we need the index) */
-    index = (gint *) g_tree_lookup (control_port_indices, sym);
-    if (!index) {
-      /* we don't know about this port, just ignore it */
-      continue;
-    }
-
-    preset_val.index = *index;
-    preset_val.value = slv2_value_as_float (val);
-    if (!p->values)
-      p->values = g_array_new (FALSE, TRUE, sizeof (GstLV2PresetValue));
-    g_array_append_val (p->values, preset_val);
-  }
-
-  g_tree_destroy (control_port_indices);
 
   /* construct the element details struct */
   details = g_new0 (GstElementDetails, 1);
@@ -545,8 +466,7 @@ gst_lv2_class_init (GstLV2Class * klass, SLV2Plugin lv2plugin)
 {
   GObjectClass *gobject_class;
   GstSignalProcessorClass *gsp_class;
-  GParamSpec *preset_spec;
-  gint i, offset = 1;
+  gint i;
 
   GST_DEBUG ("class_init %p", klass);
 
@@ -563,22 +483,7 @@ gst_lv2_class_init (GstLV2Class * klass, SLV2Plugin lv2plugin)
 
   klass->plugin = lv2plugin;
 
-  /* register preset property */
-  if (klass->presets) {
-    gint perms =
-        G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT |
-        GST_PARAM_CONTROLLABLE;
-    preset_spec =
-        g_param_spec_int ("preset", "preset", "preset", 0,
-        klass->presets->len - 1, 0, perms);
-    g_object_class_install_property (G_OBJECT_CLASS (klass), 1, preset_spec);
-
-    /* if there is a preset property, then port properties are offset by 2
-     * relative to lv2 port index (rather than 1) */
-    offset = 2;
-  }
-
-  /* register control port properties */
+  /* register properties */
 
   for (i = 0; i < gsp_class->num_control_in; i++) {
     GParamSpec *p;
@@ -586,8 +491,8 @@ gst_lv2_class_init (GstLV2Class * klass, SLV2Plugin lv2plugin)
     p = gst_lv2_class_get_param_spec (klass,
         g_array_index (klass->control_in_ports, GstLV2Port, i).index);
 
-    /* control properties have an offset of (offset) */
-    g_object_class_install_property (G_OBJECT_CLASS (klass), i + offset, p);
+    /* properties have an offset of 1 */
+    g_object_class_install_property (G_OBJECT_CLASS (klass), i + 1, p);
   }
 
   for (i = 0; i < gsp_class->num_control_out; i++) {
@@ -596,9 +501,9 @@ gst_lv2_class_init (GstLV2Class * klass, SLV2Plugin lv2plugin)
     p = gst_lv2_class_get_param_spec (klass,
         g_array_index (klass->control_out_ports, GstLV2Port, i).index);
 
-    /* control properties have an offset of (offset), and we already added num_control_in */
+    /* properties have an offset of 1, and we already added num_control_in */
     g_object_class_install_property (G_OBJECT_CLASS (klass),
-        gsp_class->num_control_in + i + offset, p);
+        gsp_class->num_control_in + i + 1, p);
   }
 }
 
@@ -608,7 +513,6 @@ gst_lv2_init (GstLV2 * lv2, GstLV2Class * klass)
   lv2->plugin = klass->plugin;
   lv2->instance = NULL;
   lv2->activated = FALSE;
-  lv2->current_preset = 0;
 }
 
 static void
@@ -617,43 +521,12 @@ gst_lv2_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstSignalProcessor *gsp;
   GstSignalProcessorClass *gsp_class;
-  GstLV2 *lv2;
-  GstLV2Class *lv2_class;
-  gint i;
 
   gsp = GST_SIGNAL_PROCESSOR (object);
   gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (object);
-  lv2 = (GstLV2 *) gsp;
-  lv2_class = (GstLV2Class *) gsp_class;
 
-  /* remember, properties have an offset of 1, or 2 if there are presets */
+  /* remember, properties have an offset of 1 */
   prop_id--;
-
-  if (lv2_class->presets) {
-    if (prop_id == 0) {
-      GstLV2Preset *preset;
-      gint num = g_value_get_int (value);
-      if (num > lv2_class->presets->len) {
-        GST_WARNING ("Preset number out of range\n");
-        return;
-      }
-      preset = &g_array_index (lv2_class->presets, GstLV2Preset, num);
-
-      /* apply preset controls */
-      for (i = 0; i < preset->values->len; ++i) {
-        GstLV2PresetValue *preset_value =
-            &g_array_index (preset->values, GstLV2PresetValue, i);
-        GstLV2Port *desc =
-            &g_array_index (lv2_class->control_in_ports, GstLV2Port,
-            preset_value->index);
-        gsp->control_in[prop_id] = preset_value->value;
-      }
-      lv2->current_preset = num;
-      return;
-    } else {
-      prop_id--;
-    }
-  }
 
   /* only input ports */
   g_return_if_fail (prop_id < gsp_class->num_control_in);
@@ -680,25 +553,13 @@ gst_lv2_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstSignalProcessor *gsp;
   GstSignalProcessorClass *gsp_class;
-  GstLV2 *lv2;
-  GstLV2Class *lv2_class;
   gfloat *controls;
 
   gsp = GST_SIGNAL_PROCESSOR (object);
   gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (object);
-  lv2 = (GstLV2 *) gsp;
-  lv2_class = (GstLV2Class *) gsp_class;
 
   /* remember, properties have an offset of 1 */
   prop_id--;
-  if (lv2_class->presets != NULL) {
-    if (prop_id == 0) {
-      g_value_set_int (value, lv2->current_preset);
-      return;
-    } else {
-      prop_id--;
-    }
-  }
 
   if (prop_id < gsp_class->num_control_in) {
     controls = gsp->control_in;
