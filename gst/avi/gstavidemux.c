@@ -3303,7 +3303,7 @@ skipping_done:
     gst_event_unref (avi->seek_event);
   avi->seek_event = gst_event_new_new_segment
       (FALSE, avi->segment.rate, GST_FORMAT_TIME,
-      avi->segment.start, stop, avi->segment.start);
+      avi->segment.start, stop, avi->segment.time);
 
   /* at this point we know all the streams and we can signal the no more
    * pads signal */
@@ -3602,7 +3602,7 @@ skipping_done:
     gst_event_unref (avi->seek_event);
   avi->seek_event = gst_event_new_new_segment
       (FALSE, avi->segment.rate, GST_FORMAT_TIME,
-      avi->segment.start, stop, avi->segment.start);
+      avi->segment.start, stop, avi->segment.time);
 
   stamp = gst_util_get_timestamp () - stamp;
   GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "pulling header %" GST_TIME_FORMAT,
@@ -3769,9 +3769,11 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
         GST_TIME_ARGS (seek_time));
   }
 
-  /* the seek time is also the last_stop and stream time */
+  /* the seek time is also the last_stop and stream time when going
+   * forwards */
   segment->last_stop = seek_time;
-  segment->time = seek_time;
+  if (segment->rate > 0.0)
+    segment->time = seek_time;
 
   /* now set DISCONT and align the other streams */
   for (i = 0; i < avi->num_streams; i++) {
@@ -3809,6 +3811,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gboolean flush;
   gboolean update;
   GstSegment seeksegment = { 0, };
+  gint i;
 
   if (event) {
     GST_DEBUG_OBJECT (avi, "doing seek with event");
@@ -3845,14 +3848,14 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   flush = flags & GST_SEEK_FLAG_FLUSH;
 
   if (flush) {
-    GstEvent *event = gst_event_new_flush_start ();
+    GstEvent *fevent = gst_event_new_flush_start ();
 
     /* for a flushing seek, we send a flush_start on all pads. This will
      * eventually stop streaming with a WRONG_STATE. We can thus eventually
      * take the STREAM_LOCK. */
     GST_DEBUG_OBJECT (avi, "sending flush start");
-    gst_avi_demux_push_event (avi, gst_event_ref (event));
-    gst_pad_push_event (avi->sinkpad, event);
+    gst_avi_demux_push_event (avi, gst_event_ref (fevent));
+    gst_pad_push_event (avi->sinkpad, fevent);
   } else {
     /* a non-flushing seek, we PAUSE the task so that we can take the
      * STREAM_LOCK */
@@ -3878,12 +3881,11 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_avi_demux_do_seek (avi, &seeksegment);
 
   if (flush) {
-    GstEvent *event = gst_event_new_flush_stop ();
-    gint i;
+    GstEvent *fevent = gst_event_new_flush_stop ();
 
     GST_DEBUG_OBJECT (avi, "sending flush stop");
-    gst_avi_demux_push_event (avi, gst_event_ref (event));
-    gst_pad_push_event (avi->sinkpad, event);
+    gst_avi_demux_push_event (avi, gst_event_ref (fevent));
+    gst_pad_push_event (avi->sinkpad, fevent);
 
     /* reset the last flow and mark discont, FLUSH is always DISCONT */
     for (i = 0; i < avi->num_streams; i++) {
@@ -4103,8 +4105,6 @@ gst_avi_demux_advance (GstAviDemux * avi, GstAviStream * stream,
       gst_avi_demux_get_buffer_info (avi, stream, new_entry,
           NULL, &stream->current_ts_end, NULL, &stream->current_offset_end);
     } else {
-      GST_DEBUG_OBJECT (avi, "DISCONT move from %u to %u", old_entry,
-          new_entry);
       /* we moved DISCONT, full update */
       gst_avi_demux_get_buffer_info (avi, stream, new_entry,
           &stream->current_timestamp, &stream->current_ts_end,
@@ -4112,6 +4112,12 @@ gst_avi_demux_advance (GstAviDemux * avi, GstAviStream * stream,
       /* and MARK discont for this stream */
       stream->last_flow = GST_FLOW_OK;
       stream->discont = TRUE;
+      GST_DEBUG_OBJECT (avi, "Moved from %u to %u, ts %" GST_TIME_FORMAT
+          ", ts_end %" GST_TIME_FORMAT ", off %" G_GUINT64_FORMAT
+          ", off_end %" G_GUINT64_FORMAT, old_entry, new_entry,
+          GST_TIME_ARGS (stream->current_timestamp),
+          GST_TIME_ARGS (stream->current_ts_end), stream->current_offset,
+          stream->current_offset_end);
     }
   }
   return ret;
@@ -4126,12 +4132,45 @@ eos:
   }
 }
 
+/* find the stream with the lowest current position when going forwards or with
+ * the highest position when going backwards, this is the stream
+ * we should push from next */
+static gint
+gst_avi_demux_find_next (GstAviDemux * avi, gfloat rate)
+{
+  guint64 min_time, max_time;
+  guint stream_num, i;
+
+  max_time = 0;
+  min_time = G_MAXUINT64;
+  stream_num = -1;
+
+  for (i = 0; i < avi->num_streams; i++) {
+    guint64 position;
+    GstAviStream *stream;
+
+    stream = &avi->stream[i];
+    position = stream->current_timestamp;
+
+    /* position of -1 is EOS */
+    if (position != -1) {
+      if (rate > 0.0 && position < min_time) {
+        min_time = position;
+        stream_num = i;
+      } else if (rate < 0.0 && position >= max_time) {
+        max_time = position;
+        stream_num = i;
+      }
+    }
+  }
+  return stream_num;
+}
+
 static GstFlowReturn
 gst_avi_demux_loop_data (GstAviDemux * avi)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  guint stream_num, i;
-  guint64 min_time;
+  guint stream_num;
   GstAviStream *stream;
   gboolean processed = FALSE;
   GstBuffer *buf;
@@ -4142,22 +4181,7 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
   GstAviIndexEntry *entry;
 
   do {
-    min_time = G_MAXUINT64;
-    /* first find the stream with the lowest current position, this is the one
-     * we should push from next */
-    stream_num = -1;
-    for (i = 0; i < avi->num_streams; i++) {
-      guint64 position;
-
-      stream = &avi->stream[i];
-      position = stream->current_timestamp;
-
-      /* position of -1 is EOS */
-      if (position != -1 && position < min_time) {
-        min_time = position;
-        stream_num = i;
-      }
-    }
+    stream_num = gst_avi_demux_find_next (avi, avi->segment.rate);
 
     /* all are EOS */
     if (G_UNLIKELY (stream_num == -1)) {
