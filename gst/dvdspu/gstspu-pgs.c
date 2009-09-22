@@ -176,7 +176,7 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
   guint8 *planes[3];            /* YUV frame pointers */
   guint8 *data, *end;
   guint16 obj_w, obj_h;
-  guint x, y, i, max_x;
+  guint x, y, i, min_x, max_x;
 
   if (G_UNLIKELY (obj->rle_data == NULL || obj->rle_data_size == 0
           || obj->rle_data_used != obj->rle_data_size))
@@ -201,8 +201,7 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
   g_return_if_fail (planes[2] + (state->UV_height * state->UV_stride) <=
       GST_BUFFER_DATA (dest_buf) + GST_BUFFER_SIZE (dest_buf));
 
-  x = obj->x;
-  y = obj->y;
+  y = MIN (obj->y, state->Y_height);
 
   planes[0] += state->Y_stride * y;
   planes[1] += state->UV_stride * (y / 2);
@@ -213,9 +212,10 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
   obj_h = GST_READ_UINT16_BE (data + 2);
   data += 4;
 
-  max_x = x + obj_w;
+  min_x = MIN (obj->x, state->Y_stride);
+  max_x = MIN (obj->x + obj_w, state->Y_stride);
 
-  state->comp_left = x;
+  state->comp_left = x = min_x;
   state->comp_right = max_x;
 
   gstspu_clear_comp_buffers (state);
@@ -264,6 +264,8 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
     colour = &state->pgs.palette[pal_id];
     if (colour->A) {
       guint32 inv_A = 0xff - colour->A;
+      if (G_UNLIKELY (x + run_len > max_x))
+        run_len = (max_x - x);
 
       for (i = 0; i < run_len; i++) {
         planes[0][x] = (inv_A * planes[0][x] + colour->Y) / 0xff;
@@ -278,7 +280,7 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
     }
 
     if (!run_len || x > max_x) {
-      x = state->pgs.win_x;
+      x = min_x;
       planes[0] += state->Y_stride;
 
       if (y % 2) {
@@ -289,6 +291,8 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
         planes[2] += state->UV_stride;
       }
       y++;
+      if (y >= state->Y_height)
+        return;                 /* Hit the bottom */
     }
   }
 
