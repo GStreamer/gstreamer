@@ -20,7 +20,8 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	tunernorm.c \
 	adapter.c \
 	controller.c \
-	controlsource.c
+	controlsource.c \
+	videoutil.c
 
 nodist_libgstreamersharpglue_0_10_la_SOURCES = generated.c 
 

@@ -22,3 +22,14 @@ public static Gst.Fourcc FormatToFourcc (Gst.Video.VideoFormat format) {
 public static Gst.Video.VideoFormat FormatFromFourcc (Gst.Fourcc fourcc) {
   return FormatFromFourcc (fourcc.Val);
 }
+
+[DllImport ("gstreamersharpglue-0.10.dll") ]
+static extern IntPtr gstsharp_gst_videoutil_get_template_caps (Gst.Video.VideoFormat fmt);
+
+public static Gst.Caps FormatToTemplateCaps (Gst.Video.VideoFormat fmt) {
+  IntPtr raw_ret = gstsharp_gst_videoutil_get_template_caps (fmt);
+  if (raw_ret == IntPtr.Zero)
+    return null;
+
+  return (Gst.Caps) Gst.GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
+}
