@@ -83,11 +83,15 @@ typedef struct {
   guint          start_entry;
   guint          step_entry;
   guint          stop_entry;
-  /* current position (byte, frame, time) and other status vars */
+
+  /* current index entry */
   guint          current_entry;
-  guint          current_frame;
-  guint64        current_byte;
-  guint64        current_time;
+  /* position (byte, frame, time) for current_entry */
+  guint          current_total;
+  GstClockTime   current_timestamp;
+  GstClockTime   current_ts_end;
+  guint64        current_offset;
+  guint64        current_offset_end;
 
   GstFlowReturn  last_flow;
   gboolean       discont;
