@@ -294,7 +294,7 @@ gst_data_queue_locked_is_full (GstDataQueue * queue)
  * gst_data_queue_flush:
  * @queue: a #GstDataQueue.
  *
- * Flushes all the contents of the @queue. Any call to #gst_data_queue_pull and
+ * Flushes all the contents of the @queue. Any call to #gst_data_queue_push and
  * #gst_data_queue_pop will be released.
  * MT safe.
  */
