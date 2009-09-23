@@ -4296,7 +4296,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     GST_LOG_OBJECT (qtdemux, "frame count:   %u",
         QT_UINT16 (stsd_data + offset + 48));
 
-    if (fourcc == FOURCC_drms)
+    if ((fourcc == FOURCC_drms) || (fourcc == FOURCC_drmi) ||
+        ((fourcc & 0xFFFFFF00) == GST_MAKE_FOURCC ('e', 'n', 'c', 0)))
       goto error_encrypted;
 
     stream->caps =
@@ -4633,7 +4634,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GST_WARNING_OBJECT (qtdemux, "unknown version %08x", version);
     }
 
-    if (fourcc == FOURCC_drms)
+    if ((fourcc == FOURCC_drms) || (fourcc == FOURCC_drmi) ||
+        ((fourcc & 0xFFFFFF00) == GST_MAKE_FOURCC ('e', 'n', 'c', 0)))
       goto error_encrypted;
 
     stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc, NULL, 0,
