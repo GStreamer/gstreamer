@@ -1531,10 +1531,9 @@ gst_play_bin_set_sink (GstPlayBin * playbin, GstElement ** elem,
     GstElement *old;
 
     old = *elem;
-    if (sink) {
-      gst_object_ref (sink);
-      gst_object_sink (sink);
-    }
+    if (sink)
+      gst_object_ref_sink (sink);
+
     *elem = sink;
     if (old)
       gst_object_unref (old);
@@ -2463,8 +2462,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
     /* store the sink in the group, we will configure it later when we
      * reconfigure the sink */
     GST_DEBUG_OBJECT (playbin, "remember sink");
-    gst_object_ref (element);
-    gst_object_sink (element);
+    gst_object_ref_sink (element);
     *sinkp = element;
   } else {
     /* some other thread configured a sink while we were testing the sink, set

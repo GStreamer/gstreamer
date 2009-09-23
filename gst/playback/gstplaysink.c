@@ -611,8 +611,7 @@ gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis)
   if (playsink->visualisation)
     gst_object_unref (playsink->visualisation);
   /* take ownership */
-  gst_object_ref (vis);
-  gst_object_sink (vis);
+  gst_object_ref_sink (vis);
   playsink->visualisation = vis;
 
   /* now try to change the plugin in the running vis chain, if we have no chain,
@@ -993,8 +992,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
    * that when something goes wrong we only need to unref the bin */
   chain->chain.bin = gst_bin_new ("vbin");
   bin = GST_BIN_CAST (chain->chain.bin);
-  gst_object_ref (bin);
-  gst_object_sink (bin);
+  gst_object_ref_sink (bin);
   gst_bin_add (bin, chain->sink);
 
   if (queue) {
@@ -1163,8 +1161,7 @@ gen_text_chain (GstPlaySink * playsink)
 
   chain->chain.bin = gst_bin_new ("tbin");
   bin = GST_BIN_CAST (chain->chain.bin);
-  gst_object_ref (bin);
-  gst_object_sink (bin);
+  gst_object_ref_sink (bin);
 
   videosinkpad = textsinkpad = srcpad = NULL;
 
@@ -1322,8 +1319,7 @@ gen_subp_chain (GstPlaySink * playsink)
 
   chain->chain.bin = gst_bin_new ("pbin");
   bin = GST_BIN_CAST (chain->chain.bin);
-  gst_object_ref (bin);
-  gst_object_sink (bin);
+  gst_object_ref_sink (bin);
 
   subpsinkpad = srcpad = NULL;
 
@@ -1480,8 +1476,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 
   chain->chain.bin = gst_bin_new ("abin");
   bin = GST_BIN_CAST (chain->chain.bin);
-  gst_object_ref (bin);
-  gst_object_sink (bin);
+  gst_object_ref_sink (bin);
   gst_bin_add (bin, chain->sink);
 
   if (queue) {
@@ -1750,8 +1745,7 @@ gen_vis_chain (GstPlaySink * playsink)
 
   chain->chain.bin = gst_bin_new ("visbin");
   bin = GST_BIN_CAST (chain->chain.bin);
-  gst_object_ref (bin);
-  gst_object_sink (bin);
+  gst_object_ref_sink (bin);
 
   /* we're queuing raw audio here, we can remove this queue when we can disable
    * async behaviour in the video sink. */
