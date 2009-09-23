@@ -50,11 +50,14 @@ namespace GtkSharp.Generation {
 					error_param = p.Name;
 					continue;
 				}
+
 				this.parms.Add (p);
 
 				if (p.PassAs != String.Empty && (p.Name != p.FromNative (p.Name)))
 					this.special.Add (true);
 				else if (p.Generatable is CallbackGen)
+					this.special.Add (true);
+				else if (p.Scope == "call")
 					this.special.Add (true);
 				else
 					this.special.Add (false);
@@ -96,6 +99,11 @@ namespace GtkSharp.Generation {
 						ret += indent + String.Format ("{0} {1}_invoker = new {0} ({1}, {2});\n", (igen as CallbackGen).InvokerName, p.Name, user_data_param);
 					else
 						ret += indent + String.Format ("{0} {1}_invoker = new {0} ({1}, {2}, {3});\n", (igen as CallbackGen).InvokerName, p.Name, user_data_param, destroy_param);
+				} else if (p.Scope == "call") {
+					if (igen is ObjectBase)
+						ret += indent + igen.QualifiedName + " my" + p.Name + " = " + (igen as ObjectBase).FromNative (p.Name, true) + ";\n";
+					else
+						throw new NotImplementedException();
 				} else {
 					ret += indent + igen.QualifiedName + " my" + p.Name;
 					if (p.PassAs == "ref")
@@ -137,16 +145,25 @@ namespace GtkSharp.Generation {
 				Parameter p = parms [i] as Parameter;
 				IGeneratable igen = p.Generatable;
 
-				if (igen is CallbackGen)
+				if (igen is CallbackGen) {
 					continue;
-				else if (igen is StructBase || igen is ByRefGen)
+				} else if (igen is StructBase || igen is ByRefGen) {
 					ret += indent + String.Format ("if ({0} != IntPtr.Zero) System.Runtime.InteropServices.Marshal.StructureToPtr (my{0}, {0}, false);\n", p.Name);
-				else if (igen is IManualMarshaler)
+				} else if (igen is IManualMarshaler) {
 					ret += String.Format ("{0}{1} = {2};", indent, p.Name, (igen as IManualMarshaler).AllocNative ("my" + p.Name));
-				else
-					ret += indent + p.Name + " = " + igen.CallByName ("my" + p.Name) + ";\n";
-			}
+				} else if (p.Scope == "call") {
+					if (igen is ObjectBase || igen is OpaqueGen) {
+						if (igen is ObjectBase)
+							ret += indent + "IntPtr dummy = my" + p.Name + ".OwnedHandle;\n";
+						else
+							throw new NotImplementedException();
 
+						ret += indent + "my" + p.Name + ".Dispose();\n";
+					}
+				} else {
+					ret += indent + p.Name + " = " + igen.CallByName ("my" + p.Name) + ";\n";
+				}
+			}
 			return ret;
 		}
 	}
