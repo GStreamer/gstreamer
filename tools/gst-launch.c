@@ -709,8 +709,6 @@ main (int argc, char *argv[])
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
-  gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
-
 #ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("PIPELINE-DESCRIPTION");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
@@ -741,6 +739,7 @@ main (int argc, char *argv[])
     if (!gst_alloc_trace_available ()) {
       g_warning ("Trace not available (recompile with trace enabled).");
     }
+    gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
     gst_alloc_trace_print_live ();
   }
 
