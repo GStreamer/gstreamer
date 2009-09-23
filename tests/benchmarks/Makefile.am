@@ -5,7 +5,8 @@ noinst_PROGRAMS = \
         init \
         mass-elements \
         gstpollstress \
-        gstclockstress
+        gstclockstress	\
+	gstbufferstress
 
 LDADD = $(GST_OBJ_LIBS)
 AM_CFLAGS = $(GST_OBJ_CFLAGS)
