@@ -51,6 +51,8 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_Y444: planar 4:4:4 YUV (Since: 0.10.24)
  * @GST_VIDEO_FORMAT_v210: packed 4:2:2 10-bit YUV, complex format (Since: 0.10.24)
  * @GST_VIDEO_FORMAT_v216: packed 4:2:2 16-bit YUV, Y0-U0-Y1-V1 order (Since: 0.10.24)
+ * @GST_VIDEO_FORMAT_NV12: planar 4:2:0 YUV with interleaved UV plane (Since: 0.10.25)
+ * @GST_VIDEO_FORMAT_NV21: planar 4:2:0 YUV with interleaved VU plane (Since: 0.10.25)
  *
  * Enum value describing the most common video formats.
  */
@@ -76,7 +78,9 @@ typedef enum {
   GST_VIDEO_FORMAT_YVYU,
   GST_VIDEO_FORMAT_Y444,
   GST_VIDEO_FORMAT_v210,
-  GST_VIDEO_FORMAT_v216
+  GST_VIDEO_FORMAT_v216,
+  GST_VIDEO_FORMAT_NV12,
+  GST_VIDEO_FORMAT_NV21
 } GstVideoFormat;
 
 #define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
