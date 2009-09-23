@@ -590,13 +590,12 @@ static void glue (RGB_NAME, _to_nv12) (AVPicture * dst, const AVPicture * src,
       lum[0] = RGB_TO_Y_CCIR (r, g, b);
       c[0] = RGB_TO_U_CCIR (r1, g1, b1, 1);
       c[1] = RGB_TO_V_CCIR (r1, g1, b1, 1);
-      c += 2;
       p += -wrap3 + BPP;
       lum += -wrap + 1;
     }
     p += wrap3 + (wrap3 - width * BPP);
     lum += wrap + (wrap - width);
-    c += dst->linesize[1] - width;
+    c += dst->linesize[1] - (width & ~1);
   }
   /* handle odd height */
   if (height) {
@@ -694,13 +693,12 @@ static void glue (RGB_NAME, _to_nv21) (AVPicture * dst, const AVPicture * src,
       lum[0] = RGB_TO_Y_CCIR (r, g, b);
       c[1] = RGB_TO_U_CCIR (r1, g1, b1, 1);
       c[0] = RGB_TO_V_CCIR (r1, g1, b1, 1);
-      c += 2;
       p += -wrap3 + BPP;
       lum += -wrap + 1;
     }
     p += wrap3 + (wrap3 - width * BPP);
     lum += wrap + (wrap - width);
-    c += dst->linesize[1] - width;
+    c += dst->linesize[1] - (width & ~1);
   }
   /* handle odd height */
   if (height) {
