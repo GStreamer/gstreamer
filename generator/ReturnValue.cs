@@ -43,6 +43,7 @@ namespace GtkSharp.Generation {
 				owned = elem.GetAttribute ("owned") == "true";
 				ctype = elem.GetAttribute("type");
 				element_ctype = elem.GetAttribute ("element_type");
+				default_value = elem.GetAttribute ("default_value");
 			}
 		}
 
@@ -64,8 +65,11 @@ namespace GtkSharp.Generation {
 			}
 		}
 
+		private string default_value = null;
 		public string DefaultValue {
 			get {
+				if (default_value != null && default_value != String.Empty)
+					return default_value;
 				if (IGen == null)
 					return String.Empty;
 				return IGen.DefaultValue;
