@@ -438,7 +438,7 @@ mxf_mpeg_is_mpeg2_keyframe (GstBuffer * buffer)
 
   while (gst_byte_reader_get_remaining (&reader) > 3) {
     if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
-      guint8 type;
+      guint8 type = 0;
 
       /* Found sync code */
       gst_byte_reader_skip (&reader, 3);
@@ -450,7 +450,7 @@ mxf_mpeg_is_mpeg2_keyframe (GstBuffer * buffer)
       if (type == 0xb8) {
         return TRUE;
       } else if (type == 0x00) {
-        guint8 pic_type;
+        guint8 pic_type = 0;
 
         if (!gst_byte_reader_skip (&reader, 5))
           break;
@@ -481,7 +481,7 @@ mxf_mpeg_is_mpeg4_keyframe (GstBuffer * buffer)
 
   while (gst_byte_reader_get_remaining (&reader) > 3) {
     if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
-      guint8 type;
+      guint8 type = 0;
 
       /* Found sync code */
       gst_byte_reader_skip (&reader, 3);
@@ -490,7 +490,7 @@ mxf_mpeg_is_mpeg4_keyframe (GstBuffer * buffer)
         break;
 
       if (type == 0xb6) {
-        guint8 pic_type;
+        guint8 pic_type = 0;
 
         if (!gst_byte_reader_get_uint8 (&reader, &pic_type))
           break;
@@ -1021,7 +1021,7 @@ mxf_mpeg_is_mpeg2_frame (GstBuffer * buffer)
 
   while (gst_byte_reader_get_remaining (&reader) > 3) {
     if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
-      guint8 type;
+      guint8 type = 0;
 
       /* Found sync code */
       gst_byte_reader_skip (&reader, 3);
@@ -1049,7 +1049,7 @@ mxf_mpeg_is_mpeg4_frame (GstBuffer * buffer)
 
   while (gst_byte_reader_get_remaining (&reader) > 3) {
     if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
-      guint8 type;
+      guint8 type = 0;
 
       /* Found sync code */
       gst_byte_reader_skip (&reader, 3);

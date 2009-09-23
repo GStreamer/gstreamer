@@ -442,10 +442,10 @@ gst_asf_parse_mult_payload (GstByteReader * reader, gboolean * has_keyframe)
 {
   guint payloads;
   guint8 payload_len_type;
-  guint8 rep_data_len;
+  guint8 rep_data_len = 0;
   guint32 payload_len;
-  guint8 stream_num;
-  guint8 aux;
+  guint8 stream_num = 0;
+  guint8 aux = 0;
   guint i;
 
   if (!gst_byte_reader_get_uint8 (reader, &aux))
@@ -504,7 +504,7 @@ error:
 static gboolean
 gst_asf_parse_single_payload (GstByteReader * reader, gboolean * has_keyframe)
 {
-  guint8 stream_num;
+  guint8 stream_num = 0;
   if (!gst_byte_reader_get_uint8 (reader, &stream_num))
     return GST_FLOW_ERROR;
   *has_keyframe = (stream_num & 0x80) != 0;
@@ -520,9 +520,9 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
 {
   GstByteReader *reader;
   gboolean ret = TRUE;
-  guint8 first;
+  guint8 first = 0;
   guint8 err_length = 0;        /* length of the error fields */
-  guint8 aux;
+  guint8 aux = 0;
   guint8 packet_len_type;
   guint8 padding_len_type;
   guint8 seq_len_type;
@@ -532,8 +532,8 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
   gboolean mult_payloads;
   guint32 packet_len;
   guint32 padd_len;
-  guint32 send_time;
-  guint16 duration;
+  guint32 send_time = 0;
+  guint16 duration = 0;
   gboolean has_keyframe;
 
   reader = gst_byte_reader_new_from_buffer (buffer);
@@ -657,10 +657,10 @@ static gboolean
 gst_asf_parse_file_properties_obj (GstByteReader * reader,
     GstAsfFileInfo * asfinfo)
 {
-  guint32 min_ps;
-  guint32 max_ps;
-  guint64 packets;
-  guint32 flags;
+  guint32 min_ps = 0;
+  guint32 max_ps = 0;
+  guint64 packets = 0;
+  guint32 flags = 0;
   GST_DEBUG ("ASF: Parsing file properties object");
 
   /* skip until data packets count */
@@ -703,7 +703,7 @@ gboolean
 gst_asf_parse_headers (GstBuffer * buffer, GstAsfFileInfo * file_info)
 {
   gboolean ret = TRUE;
-  guint32 header_objects;
+  guint32 header_objects = 0;
   guint32 i;
   GstByteReader *reader;
   guint64 object_size;
@@ -731,7 +731,7 @@ gst_asf_parse_headers (GstBuffer * buffer, GstAsfFileInfo * file_info)
   /* iterate through childs of header object */
   for (i = 0; i < header_objects; i++) {
     const guint8 *guid = NULL;
-    guint64 obj_size;
+    guint64 obj_size = 0;
     if (!gst_byte_reader_get_data (reader, ASF_GUID_SIZE, &guid))
       goto error;
     if (!gst_byte_reader_get_uint64_le (reader, &obj_size))

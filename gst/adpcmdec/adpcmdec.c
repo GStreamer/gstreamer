@@ -338,7 +338,7 @@ adpcmdec_decode_ima_block (ADPCMDec * dec, int n_samples, guint8 * data,
 
   for (channel = 0; channel < dec->channels; channel++) {
     samples[channel] = read_sample (data + channel * 4);
-    stepindex[channel] = CLAMP (data[channel * 4 + 2], 0, 88);
+    stepindex[channel] = MIN (data[channel * 4 + 2], 88);
 
     if (data[channel * 4 + 3] != 0) {
       GST_WARNING_OBJECT (dec, "Synchronisation error");

@@ -442,8 +442,9 @@ gst_sps_decode_vui (GstH264Parse * h, GstNalBs * bs)
 
   sps->pic_struct_present_flag = gst_nal_bs_read (bs, 1);
 
+
+#if 0
   /* Not going down anymore */
-  return TRUE;
 
   if (gst_nal_bs_read (bs, 1)) {        /* bitstream_restriction_flag */
     gst_nal_bs_read (bs, 1);    /* motion_vectors_over_pic_boundaries_flag */
@@ -454,6 +455,9 @@ gst_sps_decode_vui (GstH264Parse * h, GstNalBs * bs)
     gst_nal_bs_read_ue (bs);    /* num_reorder_frames */
     gst_nal_bs_read_ue (bs);    /* max_dec_frame_buffering */
   }
+#endif
+
+  return TRUE;
 }
 
 /* decode sequential parameter sets */

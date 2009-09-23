@@ -107,7 +107,7 @@ gst_asf_parse_parse_data_object (GstAsfParse * asfparse, GstBuffer * buffer)
 {
   GstByteReader *reader;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint64 packet_count;
+  guint64 packet_count = 0;
 
   GST_DEBUG_OBJECT (asfparse, "Parsing data object");
 

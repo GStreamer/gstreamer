@@ -2901,7 +2901,7 @@ is_mpegts_sync (const guint8 * in_data, const guint8 * end_data,
 static inline void
 gst_mpegts_demux_detect_packet_size (GstMpegTSDemux * demux, guint len)
 {
-  guint i, packetsize;
+  guint i, packetsize = 0;
 
   for (i = 1; i < len; i++) {
     packetsize = demux->sync_lut[i] - demux->sync_lut[i - 1];

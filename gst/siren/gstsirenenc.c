@@ -315,7 +315,7 @@ done:
   /* ERRORS */
 alloc_failed:
   {
-    GST_DEBUG_OBJECT (enc, "failed to pad_alloc buffer: %d (%d)", ret,
+    GST_DEBUG_OBJECT (enc, "failed to pad_alloc buffer: %d (%s)", ret,
         gst_flow_get_name (ret));
     goto done;
   }
