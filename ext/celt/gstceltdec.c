@@ -609,6 +609,7 @@ celt_dec_chain_parse_data (GstCeltDec * dec, GstBuffer * buf,
   GstBuffer *outbuf;
   gint16 *out_data;
   gint error = CELT_OK;
+  int skip = 0;
 
   if (timestamp != -1) {
     dec->segment.last_stop = timestamp;
@@ -636,6 +637,10 @@ celt_dec_chain_parse_data (GstCeltDec * dec, GstBuffer * buf,
     size = 0;
   }
 
+  if (dec->discont) {
+    celt_mode_info (dec->mode, CELT_GET_LOOKAHEAD, &skip);
+  }
+
   res = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
       GST_BUFFER_OFFSET_NONE, dec->frame_size * dec->header.nb_channels * 2,
       GST_PAD_CAPS (dec->srcpad), &outbuf);
@@ -655,6 +660,14 @@ celt_dec_chain_parse_data (GstCeltDec * dec, GstBuffer * buf,
     return GST_FLOW_ERROR;
   }
 
+  if (skip > 0) {
+    GST_ERROR ("skipping %d samples", skip);
+    GST_BUFFER_DATA (outbuf) = GST_BUFFER_DATA (outbuf) +
+        skip * dec->header.nb_channels * 2;
+    GST_BUFFER_SIZE (outbuf) = GST_BUFFER_SIZE (outbuf) -
+        skip * dec->header.nb_channels * 2;
+  }
+
   if (dec->granulepos == -1) {
     if (dec->segment.format != GST_FORMAT_TIME) {
       GST_WARNING_OBJECT (dec, "segment not initialized or not TIME format");
@@ -672,6 +685,10 @@ celt_dec_chain_parse_data (GstCeltDec * dec, GstBuffer * buf,
       gst_util_uint64_scale_int (dec->granulepos - dec->frame_size, GST_SECOND,
       dec->header.sample_rate);
   GST_BUFFER_DURATION (outbuf) = dec->frame_duration;
+  if (dec->discont) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    dec->discont = 0;
+  }
 
   dec->granulepos += dec->frame_size;
   dec->segment.last_stop += dec->frame_duration;
@@ -695,6 +712,10 @@ celt_dec_chain (GstPad * pad, GstBuffer * buf)
   GstCeltDec *dec;
 
   dec = GST_CELT_DEC (gst_pad_get_parent (pad));
+
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    dec->discont = TRUE;
+  }
 
   if (dec->packetno == 0)
     res = celt_dec_chain_parse_header (dec, buf);

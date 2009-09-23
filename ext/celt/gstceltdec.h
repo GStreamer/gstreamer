@@ -58,6 +58,7 @@ struct _GstCeltDec {
 
   GstSegment            segment;    /* STREAM LOCK */
   gint64                granulepos; /* -1 = needs to be set from current time */
+  gboolean              discont;
 };
 
 struct _GstCeltDecClass {
