@@ -203,6 +203,11 @@ gst_matroska_demux_finalize (GObject * object)
     demux->src = NULL;
   }
 
+  if (demux->global_tags) {
+    gst_tag_list_free (demux->global_tags);
+    demux->global_tags = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -398,6 +403,11 @@ gst_matroska_demux_reset (GstElement * element)
     demux->element_index = NULL;
   }
   demux->element_index_writer_id = -1;
+
+  if (demux->global_tags) {
+    gst_tag_list_free (demux->global_tags);
+  }
+  demux->global_tags = gst_tag_list_new ();
 }
 
 static gint
@@ -2010,6 +2020,23 @@ gst_matroskademux_do_index_seek (GstMatroskaDemux * demux,
   return entry;
 }
 
+/* takes ownership of taglist */
+static void
+gst_matroska_demux_found_global_tag (GstMatroskaDemux * demux,
+    GstTagList * taglist)
+{
+  if (demux->global_tags) {
+    /* nothing sent yet, add to cache */
+    gst_tag_list_insert (demux->global_tags, taglist, GST_TAG_MERGE_APPEND);
+    gst_tag_list_free (taglist);
+  } else {
+    /* hm, already sent, no need to cache and wait anymore */
+    GST_DEBUG_OBJECT (demux, "Sending late global tags %" GST_PTR_FORMAT,
+        demux->global_tags);
+    gst_element_found_tags (GST_ELEMENT (demux), demux->global_tags);
+  }
+}
+
 /* takes ownership of the passed event! */
 static gboolean
 gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
@@ -2030,14 +2057,25 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
     gst_event_ref (event);
     gst_pad_push_event (stream->pad, event);
 
-    if (stream->pending_tags) {
-      GST_DEBUG_OBJECT (demux, "Sending pending_tags %p for pad %s:%s",
-          stream->pending_tags, GST_DEBUG_PAD_NAME (stream->pad));
+    if (G_UNLIKELY (stream->pending_tags)) {
+      GST_DEBUG_OBJECT (demux, "Sending pending_tags %p for pad %s:%s : %"
+          GST_PTR_FORMAT, stream->pending_tags,
+          GST_DEBUG_PAD_NAME (stream->pad), stream->pending_tags);
       gst_element_found_tags_for_pad (GST_ELEMENT (demux), stream->pad,
           stream->pending_tags);
       stream->pending_tags = NULL;
     }
   }
+
+  if (G_UNLIKELY (demux->global_tags)) {
+    gst_tag_list_add (demux->global_tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_CONTAINER_FORMAT, "Matroska", NULL);
+    GST_DEBUG_OBJECT (demux, "Sending global_tags %p : %" GST_PTR_FORMAT,
+        demux->global_tags, demux->global_tags);
+    gst_element_found_tags (GST_ELEMENT (demux), demux->global_tags);
+    demux->global_tags = NULL;
+  }
+
   gst_event_unref (event);
   return ret;
 }
@@ -2827,7 +2865,7 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
         taglist = gst_tag_list_new ();
         gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, text,
             NULL);
-        gst_element_found_tags (GST_ELEMENT (ebml), taglist);
+        gst_matroska_demux_found_global_tag (demux, taglist);
         g_free (text);
         break;
       }
@@ -3109,10 +3147,7 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux)
 
   DEBUG_ELEMENT_STOP (demux, ebml, "Tags", ret);
 
-  /* FIXME: tags must be pushed *after* the initial newsegment event */
-  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_CONTAINER_FORMAT,
-      "Matroska", NULL);
-  gst_element_found_tags (GST_ELEMENT (ebml), taglist);
+  gst_matroska_demux_found_global_tag (demux, taglist);
 
   return ret;
 }
@@ -3327,8 +3362,8 @@ gst_matroska_demux_parse_attachments (GstMatroskaDemux * demux)
   DEBUG_ELEMENT_STOP (demux, ebml, "Attachments", ret);
 
   if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
-    GST_DEBUG_OBJECT (demux, "Posting attachment tags");
-    gst_element_found_tags (GST_ELEMENT (ebml), taglist);
+    GST_DEBUG_OBJECT (demux, "Storing attachment tags");
+    gst_matroska_demux_found_global_tag (demux, taglist);
   } else {
     GST_DEBUG_OBJECT (demux, "No valid attachments found");
     gst_tag_list_free (taglist);
@@ -4899,14 +4934,14 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
           return ret;
 
         demux->state = GST_MATROSKA_DEMUX_STATE_DATA;
+        GST_DEBUG_OBJECT (demux, "signaling no more pads");
+        gst_element_no_more_pads (GST_ELEMENT (demux));
         /* send initial discont */
         gst_matroska_demux_send_event (demux,
             gst_event_new_new_segment (FALSE, 1.0,
                 GST_FORMAT_TIME, 0,
                 (demux->segment.duration > 0) ? demux->segment.duration : -1,
                 0));
-        GST_DEBUG_OBJECT (demux, "signaling no more pads");
-        gst_element_no_more_pads (GST_ELEMENT (demux));
       } else {
         /* The idea is that we parse one cluster per loop and
          * then break out of the loop here. In the next call

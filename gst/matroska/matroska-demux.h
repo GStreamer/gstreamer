@@ -95,6 +95,7 @@ typedef struct _GstMatroskaDemux {
 
   GstEvent                *close_segment;
   GstEvent                *new_segment;
+  GstTagList              *global_tags;
 } GstMatroskaDemux;
 
 typedef struct _GstMatroskaDemuxClass {
