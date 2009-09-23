@@ -1158,7 +1158,7 @@ gst_video_test_src_checkers8 (GstVideoTestSrc * v, guchar * dest, int w, int h)
     for (x = 0; x < w; x += 8) {
       int len = MIN (8, w - x);
 
-      if ((x ^ y) & (1 << 4)) {
+      if ((x ^ y) & (1 << 3)) {
         p->rgb_color = p->rgb_colors + COLOR_GREEN;
         p->yuv_color = p->yuv_colors + COLOR_GREEN;
         p->gray_color = p->gray_colors + COLOR_GREEN;
