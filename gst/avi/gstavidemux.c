@@ -455,6 +455,7 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
       GST_DEBUG ("pos query for stream %d: frames %d, bytes %" G_GUINT64_FORMAT,
           stream->num, stream->current_entry, stream->current_total);
 
+      /* FIXME, this looks clumsy */
       if (stream->strh->type == GST_RIFF_FCC_auds) {
         if (stream->is_vbr) {
           /* VBR */
@@ -4000,29 +4001,35 @@ static void
 push_tag_lists (GstAviDemux * avi)
 {
   guint i;
+  GstTagList *tags;
 
   if (!avi->got_tags)
     return;
 
   GST_DEBUG_OBJECT (avi, "Pushing pending tag lists");
 
-  for (i = 0; i < avi->num_streams; i++)
-    if (avi->stream[i].pad && avi->stream[i].taglist) {
-      GST_DEBUG_OBJECT (avi->stream[i].pad, "Tags: %" GST_PTR_FORMAT,
-          avi->stream[i].taglist);
-      gst_element_found_tags_for_pad (GST_ELEMENT (avi), avi->stream[i].pad,
-          avi->stream[i].taglist);
-      avi->stream[i].taglist = NULL;
+  for (i = 0; i < avi->num_streams; i++) {
+    GstAviStream *stream = &avi->stream[i];
+    GstPad *pad = stream->pad;
+
+    tags = stream->taglist;
+
+    if (pad && tags) {
+      GST_DEBUG_OBJECT (pad, "Tags: %" GST_PTR_FORMAT, tags);
+
+      gst_element_found_tags_for_pad (GST_ELEMENT_CAST (avi), pad, tags);
+      stream->taglist = NULL;
     }
+  }
 
-  if (avi->globaltags == NULL)
-    avi->globaltags = gst_tag_list_new ();
+  if (!(tags = avi->globaltags))
+    tags = gst_tag_list_new ();
 
-  gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE,
+  gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
       GST_TAG_CONTAINER_FORMAT, "AVI", NULL);
 
-  GST_DEBUG_OBJECT (avi, "Global tags: %" GST_PTR_FORMAT, avi->globaltags);
-  gst_element_found_tags (GST_ELEMENT (avi), avi->globaltags);
+  GST_DEBUG_OBJECT (avi, "Global tags: %" GST_PTR_FORMAT, tags);
+  gst_element_found_tags (GST_ELEMENT_CAST (avi), tags);
   avi->globaltags = NULL;
   avi->got_tags = FALSE;
 }
@@ -4035,16 +4042,16 @@ gst_avi_demux_loop (GstPad * pad)
 
   switch (avi->state) {
     case GST_AVI_DEMUX_START:
-      if (G_UNLIKELY ((res =
-                  gst_avi_demux_stream_init_pull (avi)) != GST_FLOW_OK)) {
+      res = gst_avi_demux_stream_init_pull (avi);
+      if (G_UNLIKELY (res != GST_FLOW_OK)) {
         GST_WARNING ("stream_init flow: %s", gst_flow_get_name (res));
         goto pause;
       }
       avi->state = GST_AVI_DEMUX_HEADER;
       /* fall-through */
     case GST_AVI_DEMUX_HEADER:
-      if (G_UNLIKELY ((res =
-                  gst_avi_demux_stream_header_pull (avi)) != GST_FLOW_OK)) {
+      res = gst_avi_demux_stream_header_pull (avi);
+      if (G_UNLIKELY (res != GST_FLOW_OK)) {
         GST_WARNING ("stream_header flow: %s", gst_flow_get_name (res));
         goto pause;
       }
