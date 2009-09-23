@@ -222,6 +222,8 @@ G_BEGIN_DECLS
 #define FOURCC_traf     GST_MAKE_FOURCC('t','r','a','f')
 #define FOURCC_trex     GST_MAKE_FOURCC('t','r','e','x')
 #define FOURCC_trun     GST_MAKE_FOURCC('t','r','u','n')
+#define FOURCC_ovc1     GST_MAKE_FOURCC('o','v','c','1')
+#define FOURCC_owma     GST_MAKE_FOURCC('o','w','m','a')
 
 G_END_DECLS
 

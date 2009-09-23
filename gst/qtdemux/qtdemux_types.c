@@ -169,6 +169,8 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_mvex, "mvex", QT_FLAG_CONTAINER,},
   {FOURCC_mehd, "movie extends header", 0,
       qtdemux_dump_mehd},
+  {FOURCC_ovc1, "ovc1", 0},
+  {FOURCC_owma, "owma", 0},
   {0, "unknown", 0,},
 };
 

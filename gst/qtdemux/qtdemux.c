@@ -6149,6 +6149,30 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           qtdemux_parse_theora_extension (qtdemux, stream, xdxt);
           break;
         }
+        case FOURCC_ovc1:
+        {
+          GNode *ovc1;
+          gchar *ovc1_data;
+          guint ovc1_len;
+          GstBuffer *buf;
+
+          GST_DEBUG_OBJECT (qtdemux, "parse ovc1 header");
+          ovc1 = qtdemux_tree_get_child_by_type (stsd, FOURCC_ovc1);
+          if (!ovc1)
+            break;
+          ovc1_data = ovc1->data;
+          ovc1_len = QT_UINT32 (ovc1_data);
+          if (ovc1_len <= 198) {
+            GST_WARNING_OBJECT (qtdemux, "Too small ovc1 header, skipping");
+            break;
+          }
+          buf = gst_buffer_new_and_alloc (ovc1_len - 198);
+          memcpy (GST_BUFFER_DATA (buf), ovc1_data + 198, ovc1_len - 198);
+          gst_caps_set_simple (stream->caps,
+              "codec_data", GST_TYPE_BUFFER, buf, NULL);
+          gst_buffer_unref (buf);
+          break;
+        }
         default:
           break;
       }
@@ -6318,6 +6342,67 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         if (enda) {
           gst_caps_set_simple (stream->caps,
               "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, NULL);
+        }
+        break;
+      }
+      case FOURCC_owma:
+      {
+        GNode *owma;
+        const gchar *owma_data, *codec_name = NULL;
+        guint owma_len;
+        GstBuffer *buf;
+        gint version = 1;
+        /* from http://msdn.microsoft.com/en-us/library/dd757720(VS.85).aspx */
+        typedef struct
+        {
+          gint16 wFormatTag;
+          gint16 nChannels;
+          gint32 nSamplesPerSec;
+          gint32 nAvgBytesPerSec;
+          gint16 nBlockAlign;
+          gint16 wBitsPerSample;
+          gint16 cbSize;
+        } WAVEFORMATEX;
+        WAVEFORMATEX *wfex;
+
+        GST_DEBUG_OBJECT (qtdemux, "parse owma");
+        owma = qtdemux_tree_get_child_by_type (stsd, FOURCC_owma);
+        if (!owma)
+          break;
+        owma_data = owma->data;
+        owma_len = QT_UINT32 (owma_data);
+        if (owma_len <= 54) {
+          GST_WARNING_OBJECT (qtdemux, "Too small owma header, skipping");
+          break;
+        }
+        wfex = (WAVEFORMATEX *) (owma_data + 36);
+        buf = gst_buffer_new_and_alloc (owma_len - 54);
+        memcpy (GST_BUFFER_DATA (buf), owma_data + 54, owma_len - 54);
+        if (wfex->wFormatTag == 0x0161) {
+          codec_name = "Windows Media Audio";
+          version = 2;
+        } else if (wfex->wFormatTag == 0x0162) {
+          codec_name = "Windows Media Audio 9 Pro";
+          version = 3;
+        } else if (wfex->wFormatTag == 0x0163) {
+          codec_name = "Windows Media Audio 9 Lossless";
+          /* is that correct? gstffmpegcodecmap.c is missing it, but
+           * fluendo codec seems to support it */
+          version = 4;
+        }
+
+        gst_caps_set_simple (stream->caps,
+            "codec_data", GST_TYPE_BUFFER, buf,
+            "wmaversion", G_TYPE_INT, version,
+            "block_align", G_TYPE_INT, wfex->nBlockAlign,
+            "bitrate", G_TYPE_INT, wfex->nAvgBytesPerSec,
+            "width", G_TYPE_INT, wfex->wBitsPerSample,
+            "depth", G_TYPE_INT, wfex->wBitsPerSample, NULL);
+        gst_buffer_unref (buf);
+
+        if (codec_name) {
+          g_free (codec);
+          codec = g_strdup (codec_name);
         }
         break;
       }
@@ -8327,6 +8412,12 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('V', 'P', '8', '0'):
       _codec ("On2 VP8");
       caps = gst_caps_from_string ("video/x-vp8");
+    case FOURCC_ovc1:
+      _codec ("VC-1");
+      caps = gst_caps_new_simple ("video/x-wmv",
+          "wmvversion", G_TYPE_INT, 3,
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('W', 'V', 'C', '1'),
+          NULL);
       break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
@@ -8522,6 +8613,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
       _codec ("QualComm PureVoice");
       caps = gst_caps_from_string ("audio/qcelp");
+      break;
+    case FOURCC_owma:
+      _codec ("WMA");
+      caps = gst_caps_new_simple ("audio/x-wma", NULL);
       break;
     case GST_MAKE_FOURCC ('q', 't', 'v', 'r'):
       /* ? */
