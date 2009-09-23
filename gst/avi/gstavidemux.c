@@ -53,7 +53,7 @@
 #include <gst/base/gstadapter.h>
 
 
-#define DIV_ROUND_UP(s,v) ((s) + ((v)-1) / (v))
+#define DIV_ROUND_UP(s,v) (((s) + ((v)-1)) / (v))
 
 GST_DEBUG_CATEGORY_STATIC (avidemux_debug);
 #define GST_CAT_DEFAULT avidemux_debug
@@ -1004,33 +1004,51 @@ gst_avi_demux_add_index (GstAviDemux * avi, GstAviStream * stream,
 {
   /* ensure index memory */
   if (G_UNLIKELY (stream->idx_n >= stream->idx_max)) {
+    guint idx_max = stream->idx_max;
+    GstAviIndexEntry *new_idx;
+
     /* we need to make some more room */
-    if (stream->idx_max == 0) {
+    if (idx_max == 0) {
       /* initial size guess, assume each stream has an equal amount of entries,
        * overshoot with at least 8K */
-      stream->idx_max =
-          (num / avi->num_streams) + (8192 / sizeof (GstAviIndexEntry));
+      idx_max = (num / avi->num_streams) + (8192 / sizeof (GstAviIndexEntry));
     } else {
-      stream->idx_max += 8192 / sizeof (GstAviIndexEntry);
-      GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "expanded index to %u",
-          stream->idx_max);
+      idx_max += 8192 / sizeof (GstAviIndexEntry);
+      GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "expanded index from %u to %u",
+          stream->idx_max, idx_max);
     }
-    stream->index = g_try_renew (GstAviIndexEntry, stream->index,
-        stream->idx_max);
-    if (G_UNLIKELY (!stream->index))
+    new_idx = g_try_renew (GstAviIndexEntry, stream->index, idx_max);
+    /* out of memory, if this fails stream->index is untouched. */
+    if (G_UNLIKELY (!new_idx))
       return FALSE;
+    /* use new index */
+    stream->index = new_idx;
+    stream->idx_max = idx_max;
   }
 
-  /* update stream stats and total size */
-  entry->total = stream->total_bytes;
-  stream->total_bytes += entry->size;
+  /* update entry total and stream stats. The entry total can be converted to
+   * the timestamp of the entry easily. */
   if (stream->strh->type == GST_RIFF_FCC_auds) {
-    gint blockalign = stream->strf.auds->blockalign;
+    gint blockalign;
+
+    if (stream->is_vbr) {
+      entry->total = stream->total_blocks;
+    } else {
+      entry->total = stream->total_bytes;
+    }
+    blockalign = stream->strf.auds->blockalign;
     if (blockalign > 0)
       stream->total_blocks += DIV_ROUND_UP (entry->size, blockalign);
     else
       stream->total_blocks++;
+  } else {
+    if (stream->is_vbr) {
+      entry->total = stream->idx_n;
+    } else {
+      entry->total = stream->total_bytes;
+    }
   }
+  stream->total_bytes += entry->size;
   if (ENTRY_IS_KEYFRAME (entry))
     stream->n_keyframes++;
 
@@ -1043,6 +1061,58 @@ gst_avi_demux_add_index (GstAviDemux * avi, GstAviStream * stream,
   stream->index[stream->idx_n++] = *entry;
 
   return TRUE;
+}
+
+/* given @entry_n in @stream, calculate info such as timestamps and
+ * offsets for the entry. */
+static void
+gst_avi_demux_get_buffer_info (GstAviDemux * avi, GstAviStream * stream,
+    guint entry_n, GstClockTime * timestamp, GstClockTime * ts_end,
+    guint64 * offset, guint64 * offset_end)
+{
+  GstAviIndexEntry *entry;
+
+  entry = &stream->index[entry_n];
+
+  if (stream->is_vbr) {
+    /* VBR stream next timestamp */
+    if (stream->strh->type == GST_RIFF_FCC_auds) {
+      if (timestamp)
+        *timestamp =
+            avi_stream_convert_frames_to_time_unchecked (stream, entry->total);
+      if (ts_end)
+        *ts_end = avi_stream_convert_frames_to_time_unchecked (stream,
+            entry->total + 1);
+    } else {
+      if (timestamp)
+        *timestamp =
+            avi_stream_convert_frames_to_time_unchecked (stream, entry_n);
+      if (ts_end)
+        *ts_end = avi_stream_convert_frames_to_time_unchecked (stream,
+            entry_n + 1);
+    }
+  } else {
+    /* constant rate stream */
+    if (timestamp)
+      *timestamp =
+          avi_stream_convert_bytes_to_time_unchecked (stream, entry->total);
+    if (ts_end)
+      *ts_end = avi_stream_convert_bytes_to_time_unchecked (stream,
+          entry->total + entry->size);
+  }
+  if (stream->strh->type == GST_RIFF_FCC_vids) {
+    /* video offsets are the frame number */
+    if (offset)
+      *offset = entry_n;
+    if (offset_end)
+      *offset_end = entry_n + 1;
+  } else {
+    /* no offsets for audio */
+    if (offset)
+      *offset = -1;
+    if (offset_end)
+      *offset_end = -1;
+  }
 }
 
 /* collect and debug stats about the indexes for all streams.
@@ -1058,9 +1128,7 @@ gst_avi_demux_do_index_stats (GstAviDemux * avi)
 
   /* get stream stats now */
   for (i = 0; i < avi->num_streams; i++) {
-    GstAviIndexEntry *entry;
     GstAviStream *stream;
-    guint64 total;
 
     if (G_UNLIKELY (!(stream = &avi->stream[i])))
       continue;
@@ -1069,24 +1137,11 @@ gst_avi_demux_do_index_stats (GstAviDemux * avi)
     if (G_UNLIKELY (!stream->index || stream->idx_n == 0))
       continue;
 
-    entry = &stream->index[stream->idx_n - 1];
-    total = entry->total + entry->size;
+    /* we interested in the end_ts of the last entry, which is the total
+     * duration of this stream */
+    gst_avi_demux_get_buffer_info (avi, stream, stream->idx_n - 1,
+        NULL, &stream->idx_duration, NULL, NULL);
 
-    /* calculate duration */
-    if (stream->is_vbr) {
-      /* VBR stream next timestamp */
-      if (stream->strh->type == GST_RIFF_FCC_auds) {
-        stream->idx_duration =
-            avi_stream_convert_frames_to_time_unchecked (stream, total);
-      } else {
-        stream->idx_duration =
-            avi_stream_convert_frames_to_time_unchecked (stream, stream->idx_n);
-      }
-    } else {
-      /* constant rate stream */
-      stream->idx_duration = avi_stream_convert_bytes_to_time_unchecked (stream,
-          total);
-    }
 #ifndef GST_DISABLE_GST_DEBUG
     total_idx += stream->idx_n;
     total_max += stream->idx_max;
@@ -2030,58 +2085,6 @@ gst_avi_demux_index_for_time (GstAviDemux * avi,
   }
 
   return index;
-}
-
-/* given @entry_n in @stream, calculate info such as timestamps and
- * offsets for the entry. */
-static void
-gst_avi_demux_get_buffer_info (GstAviDemux * avi, GstAviStream * stream,
-    guint entry_n, GstClockTime * timestamp, GstClockTime * ts_end,
-    guint64 * offset, guint64 * offset_end)
-{
-  GstAviIndexEntry *entry;
-
-  entry = &stream->index[entry_n];
-
-  if (stream->is_vbr) {
-    /* VBR stream next timestamp */
-    if (stream->strh->type == GST_RIFF_FCC_auds) {
-      if (timestamp)
-        *timestamp =
-            avi_stream_convert_frames_to_time_unchecked (stream, entry->total);
-      if (ts_end)
-        *ts_end = avi_stream_convert_frames_to_time_unchecked (stream,
-            entry->total + entry->size);
-    } else {
-      if (timestamp)
-        *timestamp =
-            avi_stream_convert_frames_to_time_unchecked (stream, entry_n);
-      if (ts_end)
-        *ts_end = avi_stream_convert_frames_to_time_unchecked (stream,
-            entry_n + 1);
-    }
-  } else {
-    /* constant rate stream */
-    if (timestamp)
-      *timestamp =
-          avi_stream_convert_bytes_to_time_unchecked (stream, entry->total);
-    if (ts_end)
-      *ts_end = avi_stream_convert_bytes_to_time_unchecked (stream,
-          entry->total + entry->size);
-  }
-  if (stream->strh->type == GST_RIFF_FCC_vids) {
-    /* video offsets are the frame number */
-    if (offset)
-      *offset = entry_n;
-    if (offset_end)
-      *offset_end = entry_n + 1;
-  } else {
-    /* no offsets for audio */
-    if (offset)
-      *offset = -1;
-    if (offset_end)
-      *offset_end = -1;
-  }
 }
 
 static inline GstAviStream *
@@ -3525,7 +3528,8 @@ gst_avi_demux_combine_flows (GstAviDemux * avi, GstAviStream * stream,
   /* if we get here, all other pads were unlinked and we return
    * NOT_LINKED then */
 done:
-  GST_LOG_OBJECT (avi, "combined return %s", gst_flow_get_name (ret));
+  GST_LOG_OBJECT (avi, "combined %s to return %s",
+      gst_flow_get_name (stream->last_flow), gst_flow_get_name (ret));
   return ret;
 }
 
@@ -3737,23 +3741,20 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
 
     gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
 
-    GST_DEBUG_OBJECT (avi, "Pushing buffer of size %u, ts %"
-        GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", off %" G_GUINT64_FORMAT
-        ", off_end %" G_GUINT64_FORMAT " on pad %s",
-        GST_BUFFER_SIZE (buf), GST_TIME_ARGS (timestamp),
-        GST_TIME_ARGS (duration), GST_BUFFER_OFFSET (buf),
-        GST_BUFFER_OFFSET_END (buf), GST_PAD_NAME (stream->pad));
-
     /* update current position in the segment */
     gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, timestamp);
+
+    GST_DEBUG_OBJECT (avi, "Pushing buffer of size %u, ts %"
+        GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", off %" G_GUINT64_FORMAT
+        ", off_end %" G_GUINT64_FORMAT,
+        GST_BUFFER_SIZE (buf), GST_TIME_ARGS (timestamp),
+        GST_TIME_ARGS (duration), out_offset, out_offset_end);
 
     ret = gst_pad_push (stream->pad, buf);
 
     /* mark as processed, we increment the frame and byte counters then
      * leave the while loop and return the GstFlowReturn */
     processed = TRUE;
-    GST_DEBUG_OBJECT (avi, "Processed buffer %u: %s", stream->current_entry,
-        gst_flow_get_name (ret));
 
     if (avi->segment.rate < 0) {
       if (timestamp > avi->segment.stop && ret == GST_FLOW_UNEXPECTED) {
@@ -4071,8 +4072,6 @@ gst_avi_demux_loop (GstPad * pad)
       res = GST_FLOW_ERROR;
       goto pause;
   }
-
-  GST_LOG_OBJECT (avi, "state: %d res:%s", avi->state, gst_flow_get_name (res));
 
   return;
 
