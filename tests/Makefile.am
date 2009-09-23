@@ -2,7 +2,7 @@ MCS_FLAGS = -debug $(MONO_NUNIT_LIBS)
 
 ASSEMBLY_NAME = gstreamer-tests
 ASSEMBLY = $(ASSEMBLY_NAME).dll
-ASSEMBLY_CSFILES = $(srcdir)/ApplicationTest.cs $(srcdir)/BinTest.cs $(srcdir)/BufferTest.cs $(srcdir)/CapsTest.cs $(srcdir)/PadTest.cs $(srcdir)/ElementTest.cs $(srcdir)/MessageTest.cs $(srcdir)/PipelineTest.cs
+ASSEMBLY_CSFILES = $(srcdir)/ApplicationTest.cs $(srcdir)/BinTest.cs $(srcdir)/BufferTest.cs $(srcdir)/CapsTest.cs $(srcdir)/PadTest.cs $(srcdir)/ElementTest.cs $(srcdir)/MessageTest.cs $(srcdir)/PipelineTest.cs $(srcdir)/BaseTransformTest.cs
 
 $(ASSEMBLY): $(ASSEMBLY_CSFILES)
 	$(CSC) $(MCS_FLAGS) -out:$@ -target:library -r:$(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll $(ASSEMBLY_CSFILES) $(GLIBSHARP_LIBS)
