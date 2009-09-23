@@ -6,7 +6,7 @@ if HAVE_GTK_SHARP
 TARGETS += gtk-video-player.exe
 endif
 if HAVE_MONO_CAIRO
-TARGETS += appsrc.exe
+TARGETS += appsrc.exe transform-sample.exe
 endif
 endif
 DEBUGS = $(addsuffix .mdb, $(TARGETS))
@@ -39,6 +39,9 @@ mp3launchparse.exe: $(srcdir)/MP3LaunchParse.cs $(assemblies)
 
 appsrc.exe: $(srcdir)/AppSrc.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(MONO_CAIRO_LIBS) $(srcdir)/AppSrc.cs
+
+transform-sample.exe: $(srcdir)/TransformSample.cs $(assemblies)
+	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(MONO_CAIRO_LIBS) $(srcdir)/TransformSample.cs
 
 gtk-video-player.exe: $(srcdir)/GtkVideoPlayer.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(GTK_SHARP_LIBS) $(srcdir)/GtkVideoPlayer.cs
