@@ -4989,7 +4989,7 @@ gst_matroska_demux_loop (GstPad * pad)
   GstFlowReturn ret;
 
   /* first, if we're to start, let's actually get starting */
-  if (demux->state == GST_MATROSKA_DEMUX_STATE_START) {
+  if (G_UNLIKELY (demux->state == GST_MATROSKA_DEMUX_STATE_START)) {
     ret = gst_matroska_demux_init_stream (demux);
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (demux, "init stream failed!");
@@ -4998,15 +4998,14 @@ gst_matroska_demux_loop (GstPad * pad)
     demux->state = GST_MATROSKA_DEMUX_STATE_HEADER;
   }
 
-  /* If we have to close a segment are send a new segment do
-   * this now */
+  /* If we have to close a segment, send a new segment to do this now */
 
-  if (demux->state == GST_MATROSKA_DEMUX_STATE_DATA) {
-    if (demux->close_segment) {
+  if (G_LIKELY (demux->state == GST_MATROSKA_DEMUX_STATE_DATA)) {
+    if (G_UNLIKELY (demux->close_segment)) {
       gst_matroska_demux_send_event (demux, demux->close_segment);
       demux->close_segment = NULL;
     }
-    if (demux->new_segment) {
+    if (G_UNLIKELY (demux->new_segment)) {
       gst_matroska_demux_send_event (demux, demux->new_segment);
       demux->new_segment = NULL;
     }
@@ -5017,7 +5016,7 @@ gst_matroska_demux_loop (GstPad * pad)
     goto pause;
 
   /* check if we're at the end of a configured segment */
-  if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop)) {
+  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))) {
     guint i;
 
     g_assert (demux->num_streams == demux->src->len);
@@ -5033,7 +5032,7 @@ gst_matroska_demux_loop (GstPad * pad)
     }
   }
 
-  if (ebml->offset == gst_ebml_read_get_length (ebml)) {
+  if (G_UNLIKELY (ebml->offset == gst_ebml_read_get_length (ebml))) {
     GST_LOG_OBJECT (demux, "Reached end of stream, sending EOS");
     ret = GST_FLOW_UNEXPECTED;
     goto pause;
