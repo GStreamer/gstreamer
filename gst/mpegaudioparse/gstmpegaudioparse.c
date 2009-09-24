@@ -335,6 +335,7 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
   mp3parse->next_ts = GST_CLOCK_TIME_NONE;
   mp3parse->cur_offset = -1;
 
+  mp3parse->sync_offset = 0;
   mp3parse->tracked_offset = 0;
   mp3parse->pending_ts = GST_CLOCK_TIME_NONE;
   mp3parse->pending_offset = -1;
@@ -488,6 +489,7 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
           mp3parse->next_ts = seek->timestamp_start;
           mp3parse->pending_ts = GST_CLOCK_TIME_NONE;
           mp3parse->tracked_offset = 0;
+          mp3parse->sync_offset = 0;
 
           gst_event_parse_new_segment_full (event, &update, &rate,
               &applied_rate, &format, &start, &stop, &pos);
@@ -546,6 +548,7 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       mp3parse->next_ts = GST_CLOCK_TIME_NONE;
       mp3parse->pending_ts = GST_CLOCK_TIME_NONE;
       mp3parse->tracked_offset = 0;
+      mp3parse->sync_offset = 0;
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &pos);
@@ -1339,6 +1342,8 @@ gst_mp3parse_handle_data (GstMPEGAudioParse * mp3parse, gboolean at_eos)
     if (!head_check (mp3parse, header)) {
       /* Not a valid MP3 header; we start looking forward byte-by-byte trying to
          find a place to resync */
+      if (!mp3parse->resyncing)
+        mp3parse->sync_offset = mp3parse->tracked_offset;
       mp3parse->resyncing = TRUE;
       gst_mp3parse_flush_bytes (mp3parse, 1);
       GST_DEBUG_OBJECT (mp3parse, "wrong header, skipping byte");
@@ -1363,6 +1368,10 @@ gst_mp3parse_handle_data (GstMPEGAudioParse * mp3parse, gboolean at_eos)
      */
     available = gst_adapter_available (mp3parse->adapter);
 
+    if (G_UNLIKELY (mp3parse->resyncing &&
+            mp3parse->tracked_offset - mp3parse->sync_offset > 2 * 1024 * 1024))
+      goto sync_failure;
+
     bpf = mp3_type_frame_length_from_header (mp3parse, header,
         &version, &layer, &channels, &bitrate, &rate, &mode, &crc);
     g_assert (bpf != 0);
@@ -1385,6 +1394,8 @@ gst_mp3parse_handle_data (GstMPEGAudioParse * mp3parse, gboolean at_eos)
       if (!valid) {
         /* Extended validation failed; we probably got false sync.
            Continue searching from the next byte in the stream */
+        if (!mp3parse->resyncing)
+          mp3parse->sync_offset = mp3parse->tracked_offset;
         mp3parse->resyncing = TRUE;
         gst_mp3parse_flush_bytes (mp3parse, 1);
         continue;
@@ -1460,6 +1471,14 @@ gst_mp3parse_handle_data (GstMPEGAudioParse * mp3parse, gboolean at_eos)
   }
 
   return flow;
+
+  /* ERRORS */
+sync_failure:
+  {
+    GST_ELEMENT_ERROR (mp3parse, STREAM, DECODE,
+        ("Failed to parse stream"), (NULL));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn

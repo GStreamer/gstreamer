@@ -73,6 +73,8 @@ struct _GstMPEGAudioParse {
   gint64 pending_offset;
   /* Offset since the last newseg */
   gint64 tracked_offset;
+  /* tracked_offset when resyncing started */
+  gint64 sync_offset;
 
   GstAdapter *adapter;
 
