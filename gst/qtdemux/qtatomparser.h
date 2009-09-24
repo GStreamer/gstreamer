@@ -28,7 +28,13 @@ typedef GstByteReader QtAtomParser;
 
 #define qt_atom_parser_init gst_byte_reader_init
 #define qt_atom_parser_get_remaining gst_byte_reader_get_remaining
-#define qt_atom_parser_has_remaining gst_byte_reader_has_remaining
+
+static inline gboolean
+qt_atom_parser_has_remaining (QtAtomParser * parser, guint64 bytes_needed)
+{
+  return G_LIKELY (parser->size >= bytes_needed) &&
+      G_LIKELY ((parser->size - bytes_needed) >= parser->byte);
+}
 
 static inline gboolean
 qt_atom_parser_has_chunks (QtAtomParser * parser, guint32 n_chunks,
