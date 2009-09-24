@@ -989,7 +989,7 @@ gst_vdp_vpp_base_init (gpointer gclass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_set_details_simple (element_class,
-      "VDPAU Mpeg Decoder",
+      "VdpauVideoPostProcess",
       "Filter/Converter/Decoder/Video",
       "Post process GstVdpVideoBuffers and output GstVdpOutputBuffers",
       "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
