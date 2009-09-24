@@ -2486,6 +2486,7 @@ next_entry_size (GstQTDemux * demux)
   int i;
   int smallidx = -1;
   guint64 smalloffs = (guint64) - 1;
+  QtDemuxSample *sample;
 
   GST_LOG_OBJECT (demux, "Finding entry at offset %lld", demux->offset);
 
@@ -2500,16 +2501,16 @@ next_entry_size (GstQTDemux * demux)
       continue;
     }
 
+    sample = &stream->samples[stream->sample_index];
+
     GST_LOG_OBJECT (demux,
         "Checking Stream %d (sample_index:%d / offset:%lld / size:%d)",
-        i, stream->sample_index, stream->samples[stream->sample_index].offset,
-        stream->samples[stream->sample_index].size);
+        i, stream->sample_index, sample->offset, sample->size);
 
     if (((smalloffs == -1)
-            || (stream->samples[stream->sample_index].offset < smalloffs))
-        && (stream->samples[stream->sample_index].size)) {
+            || (sample->offset < smalloffs)) && (sample->size)) {
       smallidx = i;
-      smalloffs = stream->samples[stream->sample_index].offset;
+      smalloffs = sample->offset;
     }
   }
 
@@ -2518,12 +2519,13 @@ next_entry_size (GstQTDemux * demux)
 
   if (smallidx == -1)
     return -1;
-  stream = demux->streams[smallidx];
 
-  if (stream->samples[stream->sample_index].offset >= demux->offset) {
-    demux->todrop =
-        stream->samples[stream->sample_index].offset - demux->offset;
-    return stream->samples[stream->sample_index].size + demux->todrop;
+  stream = demux->streams[smallidx];
+  sample = &stream->samples[stream->sample_index];
+
+  if (sample->offset >= demux->offset) {
+    demux->todrop = sample->offset - demux->offset;
+    return sample->size + demux->todrop;
   }
 
   GST_DEBUG_OBJECT (demux, "There wasn't any entry at offset %lld",
