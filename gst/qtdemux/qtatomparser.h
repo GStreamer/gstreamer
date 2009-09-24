@@ -26,24 +26,9 @@
 
 typedef GstByteReader QtAtomParser;
 
-static inline void
-qt_atom_parser_init (QtAtomParser * parser, const guint8 * data, guint size)
-{
-  gst_byte_reader_init (parser, data, size);
-}
-
-static inline guint
-qt_atom_parser_get_remaining (QtAtomParser * parser)
-{
-  return parser->size - parser->byte;
-}
-
-static inline gboolean
-qt_atom_parser_has_remaining (QtAtomParser * parser, guint64 min_remaining)
-{
-  return G_LIKELY (parser->size >= min_remaining) &&
-      G_LIKELY ((parser->size - min_remaining) >= parser->byte);
-}
+#define qt_atom_parser_init gst_byte_reader_init
+#define qt_atom_parser_get_remaining gst_byte_reader_get_remaining
+#define qt_atom_parser_has_remaining gst_byte_reader_has_remaining
 
 static inline gboolean
 qt_atom_parser_has_chunks (QtAtomParser * parser, guint32 n_chunks,
@@ -54,65 +39,34 @@ qt_atom_parser_has_chunks (QtAtomParser * parser, guint32 n_chunks,
   return qt_atom_parser_has_remaining (parser, (guint64) n_chunks * chunk_size);
 }
 
-static inline gboolean
-qt_atom_parser_skip (QtAtomParser * parser, guint nbytes)
-{
-  if (G_UNLIKELY (qt_atom_parser_get_remaining (parser) < nbytes))
-    return FALSE;
+#define qt_atom_parser_skip gst_byte_reader_skip
+#define qt_atom_parser_skip_unchecked gst_byte_reader_skip_unchecked
 
-  parser->byte += nbytes;
-  return TRUE;
-}
+#define qt_atom_parser_get_uint8  gst_byte_reader_get_uint8
+#define qt_atom_parser_get_uint16 gst_byte_reader_get_uint16_be
+#define qt_atom_parser_get_uint24 gst_byte_reader_get_uint24_be
+#define qt_atom_parser_get_uint32 gst_byte_reader_get_uint32_be
+#define qt_atom_parser_get_uint64 gst_byte_reader_get_uint64_be
 
-static inline void
-qt_atom_parser_skip_unchecked (QtAtomParser * parser, guint nbytes)
-{
-  parser->byte += nbytes;
-}
+#define qt_atom_parser_peek_uint8  gst_byte_reader_peek_uint8
+#define qt_atom_parser_peek_uint16 gst_byte_reader_peek_uint16_be
+#define qt_atom_parser_peek_uint24 gst_byte_reader_peek_uint24_be
+#define qt_atom_parser_peek_uint32 gst_byte_reader_peek_uint32_be
+#define qt_atom_parser_peek_uint64 gst_byte_reader_peek_uint64_be
 
-#ifndef GST_READ_UINT8_BE
-#define GST_READ_UINT8_BE GST_READ_UINT8
-#endif
+#define qt_atom_parser_get_uint8_unchecked  gst_byte_reader_get_uint8_unchecked
+#define qt_atom_parser_get_uint16_unchecked gst_byte_reader_get_uint16_be_unchecked
+#define qt_atom_parser_get_uint24_unchecked gst_byte_reader_get_uint24_be_unchecked
+#define qt_atom_parser_get_uint32_unchecked gst_byte_reader_get_uint32_be_unchecked
+#define qt_atom_parser_get_uint64_unchecked gst_byte_reader_get_uint64_be_unchecked
 
-#define _QT_ATOM_PARSER_GET_PEEK_BITS(bits,typebits) \
-static inline gboolean \
-qt_atom_parser_get_uint##bits (QtAtomParser * parser, guint##typebits * val)  \
-{ \
-  if (G_UNLIKELY (qt_atom_parser_get_remaining (parser) < (bits / 8))) \
-    return FALSE; \
-  *val = GST_READ_UINT##bits##_BE (parser->data + parser->byte);  \
-  parser->byte += bits / 8; \
-  return TRUE; \
-} \
-\
-static inline gboolean \
-qt_atom_parser_peek_uint##bits (QtAtomParser * parser, guint##typebits * val)  \
-{ \
-  if (G_UNLIKELY (qt_atom_parser_get_remaining (parser) < (bits / 8))) \
-    return FALSE; \
-  *val = GST_READ_UINT##bits##_BE (parser->data + parser->byte);  \
-  return TRUE; \
-} \
-\
-static inline guint##typebits \
-qt_atom_parser_get_uint##bits##_unchecked (QtAtomParser * parser)  \
-{ \
-  guint##typebits val = GST_READ_UINT##bits##_BE (parser->data + parser->byte);  \
-  parser->byte += bits / 8; \
-  return val; \
-} \
-\
-static inline guint##typebits \
-qt_atom_parser_peek_uint##bits##_unchecked (QtAtomParser * parser)  \
-{ \
-  return GST_READ_UINT##bits##_BE (parser->data + parser->byte);  \
-}
+#define qt_atom_parser_peek_uint8_unchecked  gst_byte_reader_peek_uint8_unchecked
+#define qt_atom_parser_peek_uint16_unchecked gst_byte_reader_peek_uint16_be_unchecked
+#define qt_atom_parser_peek_uint24_unchecked gst_byte_reader_peek_uint24_be_unchecked
+#define qt_atom_parser_peek_uint32_unchecked gst_byte_reader_peek_uint32_be_unchecked
+#define qt_atom_parser_peek_uint64_unchecked gst_byte_reader_peek_uint64_be_unchecked
 
-_QT_ATOM_PARSER_GET_PEEK_BITS(8,8);
-_QT_ATOM_PARSER_GET_PEEK_BITS(16,16);
-_QT_ATOM_PARSER_GET_PEEK_BITS(24,32);
-_QT_ATOM_PARSER_GET_PEEK_BITS(32,32);
-_QT_ATOM_PARSER_GET_PEEK_BITS(64,64);
+#define qt_atom_parser_peek_bytes_unchecked gst_byte_reader_peek_data_unchecked
 
 static inline gboolean
 qt_atom_parser_peek_sub (QtAtomParser * parser, guint offset, guint size,
@@ -162,12 +116,6 @@ qt_atom_parser_get_offset_unchecked (QtAtomParser * parser, guint off_size)
   } else {
     return qt_atom_parser_get_uint32_unchecked (parser);
   }
-}
-
-static inline guint8 *
-qt_atom_parser_peek_bytes_unchecked (QtAtomParser * parser)
-{
-  return (guint8 *) parser->data + parser->byte;
 }
 
 static inline gboolean
