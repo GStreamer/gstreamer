@@ -240,7 +240,6 @@ gst_factory_list_filter (GValueArray * array, const GstCaps * caps)
 
       /* we only care about the sink templates */
       if (templ->direction == GST_PAD_SINK) {
-        GstCaps *intersect;
         GstCaps *tmpl_caps;
 
         /* try to intersect the caps with the caps of the template */
@@ -248,21 +247,19 @@ gst_factory_list_filter (GValueArray * array, const GstCaps * caps)
 
         /* FIXME, intersect is not the right method, we ideally want to check
          * for a subset here */
-        intersect = gst_caps_intersect (caps, tmpl_caps);
-        gst_caps_unref (tmpl_caps);
 
         /* check if the intersection is empty */
-        if (!gst_caps_is_empty (intersect)) {
+        if (gst_caps_can_intersect (caps, tmpl_caps)) {
           /* non empty intersection, we can use this element */
           GValue resval = { 0, };
           g_value_init (&resval, G_TYPE_OBJECT);
           g_value_set_object (&resval, factory);
           g_value_array_append (result, &resval);
           g_value_unset (&resval);
-          gst_caps_unref (intersect);
+          gst_caps_unref (tmpl_caps);
           break;
         }
-        gst_caps_unref (intersect);
+        gst_caps_unref (tmpl_caps);
       }
     }
   }
