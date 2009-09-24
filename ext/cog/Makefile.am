@@ -7,7 +7,7 @@ libgstcog_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(COG_CFLAGS)
 libgstcog_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) libgstcogorc.la \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(COG_LIBS)
@@ -37,16 +37,13 @@ noinst_PROGRAMS = generate_tables
 generate_tables_CFLAGS = $(GST_CFLAGS)
 generate_tables_LDADD = $(GST_LIBS)
 
-noinst_LTLIBRARIES = libgstcogorc.la
-libgstcogorc_la_SOURCES = cogorc.c cogorc.h
-libgstcogorc_la_CFLAGS = \
-	-DCOG_ENABLE_UNSTABLE_API \
-	$(COG_CFLAGS)
+nodist_libgstcog_la_SOURCES = cogorc.c cogorc.h
+BUILT_SOURCES = cogorc.c cogorc.h
 CLEANFILES = cogorc.c cogorc.h
 
 EXTRA_DIST=cog.orc
 
-cogorc.c: cog.orc cogorc.h
+cogorc.c: cog.orc
 	$(ORCC) --implementation -o cogorc.c cog.orc
 
 cogorc.h: cog.orc
