@@ -201,6 +201,7 @@ struct _GstBaseParsePrivate
   GstFormat duration_fmt;
 
   guint min_frame_size;
+  gboolean passthrough;
 
   gboolean discont;
   gboolean flushing;
@@ -405,6 +406,7 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   parse->priv->pad_mode = GST_ACTIVATE_NONE;
   parse->priv->duration = -1;
   parse->priv->min_frame_size = 1;
+  parse->priv->passthrough = FALSE;
   parse->priv->discont = FALSE;
   parse->priv->flushing = FALSE;
   parse->priv->offset = 0;
@@ -919,7 +921,11 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   if (G_LIKELY (buffer)) {
     GST_LOG_OBJECT (parse, "buffer size: %d, offset = %lld",
         GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
-    gst_adapter_push (parse->adapter, buffer);
+    if (G_UNLIKELY (parse->priv->passthrough)) {
+      buffer = gst_buffer_make_metadata_writable (buffer);
+      return gst_base_parse_push_buffer (parse, buffer);
+    } else
+      gst_adapter_push (parse->adapter, buffer);
   }
 
   /* Parse and push as many frames as possible */
@@ -1407,6 +1413,30 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
   GST_BASE_PARSE_LOCK (parse);
   parse->priv->min_frame_size = min_size;
   GST_LOG_OBJECT (parse, "set frame_min_size: %d", min_size);
+  GST_BASE_PARSE_UNLOCK (parse);
+}
+
+/**
+ * gst_base_transform_set_passthrough:
+ * @trans: the #GstBaseTransform to set
+ * @passthrough: boolean indicating passthrough mode.
+ *
+ * Set passthrough mode for this filter by default. This is mostly
+ * useful for filters that do not care about negotiation.
+ *
+ * Always TRUE for filters which don't implement either a transform
+ * or transform_ip method.
+ *
+ * MT safe.
+ */
+void
+gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
+{
+  g_return_if_fail (parse != NULL);
+
+  GST_BASE_PARSE_LOCK (parse);
+  parse->priv->passthrough = passthrough;
+  GST_LOG_OBJECT (parse, "set passthrough: %d", passthrough);
   GST_BASE_PARSE_UNLOCK (parse);
 }
 
