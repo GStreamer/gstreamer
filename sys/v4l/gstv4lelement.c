@@ -122,7 +122,7 @@ static gboolean
 gst_v4l_class_probe_devices_with_udev (GstV4lElementClass * klass,
     gboolean check)
 {
-  GUdevClient *client;
+  GUdevClient *client = NULL;
   GList *item;
 
   if (!check) {
