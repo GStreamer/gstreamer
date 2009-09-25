@@ -3236,6 +3236,12 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         }
         break;
       }
+      case FOURCC_avc1:
+      {
+        GST_MEMDUMP_OBJECT (qtdemux, "avc1", buffer, end - buffer);
+        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
+        break;
+      }
       case FOURCC_mjp2:
       {
         qtdemux_parse_container (qtdemux, node, buffer + 86, end);
@@ -4298,6 +4304,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     esds = NULL;
     pasp = NULL;
     mp4v = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4v);
+    /* H264 is MPEG-4 after all,
+     * and qt seems to put MPEG-4 stuff in there as well */
+    if (!mp4v)
+      mp4v = qtdemux_tree_get_child_by_type (stsd, FOURCC_avc1);
     if (mp4v) {
       esds = qtdemux_tree_get_child_by_type (mp4v, FOURCC_esds);
       pasp = qtdemux_tree_get_child_by_type (mp4v, FOURCC_pasp);
