@@ -3538,7 +3538,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   QtDemuxSample *samples;
   gint i, j, k;
   int index;
-  guint64 timestamp, time;
+  guint64 timestamp;
   guint co_size;
 
   /* sample to chunk */
@@ -3676,6 +3676,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   done2:
     {
       guint32 n_sample_times;
+      guint32 time;
 
       if (!qt_atom_parser_skip (&stts, 4))
         goto corrupt_file;
