@@ -131,6 +131,7 @@ rsn_base_src_get_type (void)
   }
   return base_src_type;
 }
+
 static GstCaps *rsn_base_src_getcaps (GstPad * pad);
 static gboolean rsn_base_src_setcaps (GstPad * pad, GstCaps * caps);
 static void rsn_base_src_fixate (GstPad * pad, GstCaps * caps);
