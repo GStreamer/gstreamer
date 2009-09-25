@@ -715,71 +715,19 @@ rsn_stream_selector_set_active (RsnStreamSelector * sel, GstPad * pad)
   GST_OBJECT_UNLOCK (GST_OBJECT_CAST (sel));
 }
 
-typedef struct
-{
-  GstIterator parent;
-
-  GstPad *pad;
-  gboolean start;
-} RsnStreamSelectorIterator;
-
-static void
-_iterate_free (GstIterator * it)
-{
-  RsnStreamSelectorIterator *sit = (RsnStreamSelectorIterator *) it;
-
-  gst_object_unref (sit->pad);
-  g_free (it);
-}
-
-static GstIteratorResult
-_iterate_next (GstIterator * it, gpointer * result)
-{
-  RsnStreamSelectorIterator *sit = (RsnStreamSelectorIterator *) it;
-
-  if (sit->start) {
-    GstPad *res = rsn_stream_selector_get_linked_pad (sit->pad, TRUE);
-
-    *result = res;
-    sit->start = FALSE;
-    return res ? GST_ITERATOR_OK : GST_ITERATOR_DONE;
-  }
-
-  *result = NULL;
-  return GST_ITERATOR_DONE;
-}
-
-static GstIteratorItem
-_iterate_item (GstIterator * it, gpointer item)
-{
-  return GST_ITERATOR_ITEM_PASS;
-}
-
-static void
-_iterate_resync (GstIterator * it)
-{
-  RsnStreamSelectorIterator *sit = (RsnStreamSelectorIterator *) it;
-
-  sit->start = TRUE;
-}
-
 static GstIterator *
 rsn_stream_selector_iterate_linked_pads (GstPad * pad)
 {
   RsnStreamSelector *sel = RSN_STREAM_SELECTOR (gst_pad_get_parent (pad));
-  RsnStreamSelectorIterator *it = (RsnStreamSelectorIterator *)
-      gst_iterator_new (sizeof (RsnStreamSelectorIterator),
-      GST_TYPE_PAD,
-      GST_OBJECT_CAST (sel)->lock,
-      &GST_ELEMENT_CAST (sel)->pads_cookie,
-      _iterate_next, _iterate_item, _iterate_resync, _iterate_free);
+  GstPad *otherpad = rsn_stream_selector_get_linked_pad (pad, TRUE);
+  GstIterator *it = gst_iterator_new_single (GST_TYPE_PAD, otherpad,
+      (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
 
-  it->pad = gst_object_ref (pad);
-  it->start = TRUE;
-
+  if (otherpad)
+    gst_object_unref (otherpad);
   gst_object_unref (sel);
 
-  return (GstIterator *) it;
+  return it;
 }
 
 static GstPad *
