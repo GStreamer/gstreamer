@@ -238,6 +238,8 @@ struct _QtDemuxStream
   guint32 to_sample;
 
   gboolean sent_eos;
+  GstTagList *pending_tags;
+  gboolean send_global_tags;
 };
 
 enum QtDemuxState
@@ -593,6 +595,31 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
   gst_object_unref (qtdemux);
 
   return res;
+}
+
+static void
+gst_qtdemux_push_tags (GstQTDemux * qtdemux, QtDemuxStream * stream)
+{
+  if (G_LIKELY (stream->pad)) {
+    GST_DEBUG_OBJECT (qtdemux, "Checking pad %s:%s for tags",
+        GST_DEBUG_PAD_NAME (stream->pad));
+
+    if (G_UNLIKELY (stream->pending_tags)) {
+      GST_DEBUG_OBJECT (qtdemux, "Sending tags %" GST_PTR_FORMAT,
+          stream->pending_tags);
+      gst_pad_push_event (stream->pad,
+          gst_event_new_tag (stream->pending_tags));
+      stream->pending_tags = NULL;
+    }
+
+    if (G_UNLIKELY (stream->send_global_tags && qtdemux->tag_list)) {
+      GST_DEBUG_OBJECT (qtdemux, "Sending global tags %" GST_PTR_FORMAT,
+          qtdemux->tag_list);
+      gst_pad_push_event (stream->pad,
+          gst_event_new_tag (gst_tag_list_copy (qtdemux->tag_list)));
+      stream->send_global_tags = FALSE;
+    }
+  }
 }
 
 /* push event on all source pads; takes ownership of the event */
@@ -1372,6 +1399,9 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       if (qtdemux->comp_brands)
         gst_buffer_unref (qtdemux->comp_brands);
       qtdemux->comp_brands = NULL;
+      if (qtdemux->tag_list)
+        gst_tag_list_free (qtdemux->tag_list);
+      qtdemux->tag_list = NULL;
       gst_adapter_clear (qtdemux->adapter);
       for (n = 0; n < qtdemux->n_streams; n++) {
         QtDemuxStream *stream = qtdemux->streams[n];
@@ -1389,6 +1419,8 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
           gst_caps_unref (stream->caps);
         if (stream->segments)
           g_free (stream->segments);
+        if (stream->pending_tags)
+          gst_tag_list_free (stream->pending_tags);
         g_free (stream);
       }
       qtdemux->major_brand = 0;
@@ -1804,6 +1836,8 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     gst_pad_push_event (stream->pad, event);
     /* assume we can send more data now */
     stream->last_ret = GST_FLOW_OK;
+    /* clear to send tags on this pad now */
+    gst_qtdemux_push_tags (qtdemux, stream);
   }
 
   /* and move to the keyframe before the indicated media time of the
@@ -2718,6 +2752,19 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           demux->offset += demux->todrop;
         }
 
+        /* first buffer? */
+        /* initial newsegment sent here after having added pads,
+         * possible others in sink_event */
+        if (G_UNLIKELY (demux->last_ts == GST_CLOCK_TIME_NONE)) {
+          gst_qtdemux_push_event (demux,
+              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+                  0, GST_CLOCK_TIME_NONE, 0));
+          /* clear to send tags on all streams */
+          for (i = 0; i < demux->n_streams; i++) {
+            gst_qtdemux_push_tags (demux, demux->streams[i]);
+          }
+        }
+
         /* Figure out which stream this is packet belongs to */
         for (i = 0; i < demux->n_streams; i++) {
           stream = demux->streams[i];
@@ -2735,15 +2782,6 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 
         if (G_UNLIKELY (stream == NULL || i == demux->n_streams))
           goto unknown_stream;
-
-        /* first buffer? */
-        /* initial newsegment sent here after having added pads,
-         * possible others in sink_event */
-        if (G_UNLIKELY (demux->last_ts == GST_CLOCK_TIME_NONE)) {
-          gst_qtdemux_push_event (demux,
-              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-                  0, GST_CLOCK_TIME_NONE, 0));
-        }
 
         /* Put data in a buffer, set timestamps, caps, ... */
         outbuf = gst_adapter_take_buffer (demux->adapter, demux->neededbytes);
@@ -3504,9 +3542,16 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
         GST_OBJECT_NAME (stream->pad), stream->pad, qtdemux);
     gst_pad_set_active (stream->pad, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
-    if (list)
-      gst_element_found_tags_for_pad (GST_ELEMENT_CAST (qtdemux), stream->pad,
-          list);
+    if (stream->pending_tags)
+      gst_tag_list_free (stream->pending_tags);
+    stream->pending_tags = list;
+    /* post now, send event on pad later */
+    GST_DEBUG_OBJECT (qtdemux, "Posting tags %" GST_PTR_FORMAT,
+        stream->pending_tags);
+    gst_element_post_message (GST_ELEMENT (qtdemux),
+        gst_message_new_tag_full (GST_OBJECT (qtdemux), stream->pad,
+            gst_tag_list_copy (list)));
+    stream->send_global_tags = TRUE;
   }
 done:
   return TRUE;
@@ -5628,11 +5673,13 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     GST_LOG_OBJECT (qtdemux, "No udta node found.");
   }
 
-  /* FIXME: tags must be pushed after the initial newsegment event */
   qtdemux->tag_list = qtdemux_add_container_format (qtdemux, qtdemux->tag_list);
-  GST_INFO_OBJECT (qtdemux, "global tags: %" GST_PTR_FORMAT, qtdemux->tag_list);
-  gst_element_found_tags (GST_ELEMENT_CAST (qtdemux), qtdemux->tag_list);
-  qtdemux->tag_list = NULL;
+  GST_INFO_OBJECT (qtdemux, "posting global tags: %" GST_PTR_FORMAT,
+      qtdemux->tag_list);
+  /* post now, send event on pads later */
+  gst_element_post_message (GST_ELEMENT (qtdemux),
+      gst_message_new_tag (GST_OBJECT (qtdemux),
+          gst_tag_list_copy (qtdemux->tag_list)));
 
   return TRUE;
 }
