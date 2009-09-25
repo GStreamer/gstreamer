@@ -3982,6 +3982,15 @@ no_setup:
   }
 }
 
+/* masks to be kept in sync with the hardcoded protocol order of preference
+ * in code below */
+static guint protocol_masks[] = {
+  GST_RTSP_LOWER_TRANS_UDP,
+  GST_RTSP_LOWER_TRANS_UDP_MCAST,
+  GST_RTSP_LOWER_TRANS_TCP,
+  0
+};
+
 static GstRTSPResult
 gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
     GstRTSPLowerTrans protocols, gchar ** transports)
@@ -4185,6 +4194,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     gchar *transports;
     gint retry = 0;
+    guint mask = 0;
 
     stream = (GstRTSPStream *) walk->data;
 
@@ -4225,9 +4235,18 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     GST_DEBUG_OBJECT (src, "doing setup of stream %p with %s", stream,
         stream->setup_url);
 
+    /* first selectable protocol */
+    while (protocol_masks[mask] && !(protocols & protocol_masks[mask]))
+      mask++;
+    if (!protocol_masks[mask])
+      goto no_protocols;
+
   retry:
-    /* create a string with all the transports */
-    res = gst_rtspsrc_create_transports_string (src, protocols, &transports);
+    GST_DEBUG_OBJECT (src, "protocols = 0x%x, protocol mask = 0x%x", protocols,
+        protocol_masks[mask]);
+    /* create a string with first transport in line */
+    res = gst_rtspsrc_create_transports_string (src,
+        protocols & protocol_masks[mask], &transports);
     if (res < 0)
       goto setup_transport_failed;
 
@@ -4281,12 +4300,20 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
           retry++;
           goto retry;
         }
-        /* give up on this stream and move to the next stream,
-         * but not without doing some postprocessing so we can
+        /* this transport did not go down well, but we may have others to try
+         * that we did not send yet, try those and only give up then
+         * but not without checking for lost cause/extension so we can
          * post a nicer/more useful error message later */
         if (!unsupported_real)
           unsupported_real = gst_rtspsrc_stream_is_real_media (stream);
-        continue;
+        /* select next available protocol, give up on this stream if none */
+        mask++;
+        while (protocol_masks[mask] && !(protocols & protocol_masks[mask]))
+          mask++;
+        if (!protocol_masks[mask] || unsupported_real)
+          continue;
+        else
+          goto retry;
       default:
         /* cleanup of leftover transport and move to the next stream */
         gst_rtspsrc_stream_free_udp (stream);
@@ -4430,8 +4457,9 @@ nothing_to_activate:
           (NULL));
     } else {
       GST_ELEMENT_ERROR (src, STREAM, CODEC_NOT_FOUND,
-          (_("No supported stream was found. You might be missing the right "
-                  "GStreamer RTSP extension plugin.")), (NULL));
+          (_("No supported stream was found. You might need to allow "
+                  "more transport protocols or may otherwise be missing "
+                  "the right GStreamer RTSP extension plugin.")), (NULL));
     }
     return FALSE;
   }
