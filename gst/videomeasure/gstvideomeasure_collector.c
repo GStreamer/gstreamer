@@ -135,17 +135,27 @@ gst_measure_collector_post_message (GstMeasureCollector * mc)
 
   if (strcmp (mc->metric, "SSIM") == 0) {
     gfloat dresult = 0;
+    guint64 mlen;
     g_free (mc->result);
     mc->result = g_new0 (GValue, 1);
     g_value_init (mc->result, G_TYPE_FLOAT);
+    mlen = mc->measurements->len;
     for (i = 0; i < mc->measurements->len; i++) {
       const GValue *v;
       GstStructure *str =
           (GstStructure *) g_ptr_array_index (mc->measurements, i);
-      v = gst_structure_get_value (str, "mean");
-      dresult += g_value_get_float (v);
+      if (str)
+      {
+        v = gst_structure_get_value (str, "mean");
+        dresult += g_value_get_float (v);
+      }
+      else
+      {
+        GST_WARNING_OBJECT (mc, "No measurement info for frame %" G_GUINT64_FORMAT, i);
+        mlen--;
+      }
     }
-    g_value_set_float (mc->result, dresult / mc->measurements->len);
+    g_value_set_float (mc->result, dresult / mlen);
   }
 
   m = gst_message_new_element (GST_OBJECT_CAST (mc),
@@ -269,16 +279,18 @@ gst_measure_collector_save_csv (GstMeasureCollector * mc)
   for (i = 0; i < mc->measurements->len; i++) {
     fprintf (file, "\n");
     str = (GstStructure *) g_ptr_array_index (mc->measurements, i);
-    for (j = 0; j < gst_structure_n_fields (str); j++) {
-      const gchar *fieldname;
-      fieldname = gst_structure_nth_field_name (str, j);
-      if (G_LIKELY (j > 0))
-        fprintf (file, ";");
-      if (G_LIKELY (g_value_transform (gst_structure_get_value (str, fieldname),
-                  &tmp)))
-        fprintf (file, "%s", g_value_get_string (&tmp));
-      else
-        fprintf (file, "<untranslatable>");
+    if (str != NULL) {
+      for (j = 0; j < gst_structure_n_fields (str); j++) {
+        const gchar *fieldname;
+        fieldname = gst_structure_nth_field_name (str, j);
+        if (G_LIKELY (j > 0))
+          fprintf (file, ";");
+        if (G_LIKELY (g_value_transform (gst_structure_get_value (str, fieldname),
+                    &tmp)))
+          fprintf (file, "%s", g_value_get_string (&tmp));
+        else
+          fprintf (file, "<untranslatable>");
+      }
     }
   }
 
@@ -387,8 +399,9 @@ gst_measure_collector_finalize (GObject * object)
   GstMeasureCollector *mc = GST_MEASURE_COLLECTOR (object);
 
   for (i = 0; i < mc->measurements->len; i++) {
-    gst_structure_free ((GstStructure *) g_ptr_array_index (mc->measurements,
-            i));
+    if (g_ptr_array_index (mc->measurements,i) != NULL)
+      gst_structure_free ((GstStructure *) g_ptr_array_index (mc->measurements,
+              i));
   }
 
   g_ptr_array_free (mc->measurements, TRUE);
