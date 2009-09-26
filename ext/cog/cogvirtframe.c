@@ -139,8 +139,14 @@ cog_virt_frame_get_line (CogFrame * frame, int component, int i)
   }
 
   if (i < frame->cache_offset[component]) {
-    g_warning ("cache failure");
-    return NULL;
+    g_warning ("cache failure: %d outside [%d,%d]", i,
+        frame->cache_offset[component],
+        frame->cache_offset[component] + COG_FRAME_CACHE_SIZE - 1);
+
+    frame->cache_offset[component] = i;
+    for (j = 0; j < COG_FRAME_CACHE_SIZE; j++) {
+      frame->cached_lines[component][j] = 0;
+    }
   }
 
   while (i >= frame->cache_offset[component] + COG_FRAME_CACHE_SIZE) {
