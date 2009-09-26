@@ -465,95 +465,36 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 }
 
-typedef struct
-{
-  GstIterator parent;
-
-  GstMultiQueue *mqueue;
-  GstPad *pad;
-  GList *current;
-} GstMultiQueueIterator;
-
-static void
-_iterate_free (GstIterator * it)
-{
-  GstMultiQueueIterator *mit = (GstMultiQueueIterator *) it;
-
-  g_object_unref (mit->mqueue);
-  g_object_unref (mit->pad);
-
-  g_free (it);
-}
-
-static GstIteratorResult
-_iterate_next (GstIterator * it, gpointer * result)
-{
-  GstMultiQueueIterator *mit = (GstMultiQueueIterator *) it;
-  GList *current;
-  GstPad *res = NULL;
-
-  /* Find which single queue it belongs to */
-  for (current = mit->current; !res && current; current = current->next) {
-    GstSingleQueue *sq = (GstSingleQueue *) current->data;
-
-    if (sq->sinkpad == mit->pad)
-      res = sq->srcpad;
-    if (sq->srcpad == mit->pad)
-      res = sq->sinkpad;
-  }
-
-  *result = res;
-
-  mit->current = current;
-
-  return res ? GST_ITERATOR_OK : GST_ITERATOR_DONE;
-}
-
-static GstIteratorItem
-_iterate_item (GstIterator * it, gpointer item)
-{
-  GstPad *pad = (GstPad *) item;
-  gst_object_ref (pad);
-
-  return GST_ITERATOR_ITEM_PASS;
-}
-
-static void
-_iterate_resync (GstIterator * it)
-{
-  GstMultiQueueIterator *mit = (GstMultiQueueIterator *) it;
-
-  mit->current = mit->mqueue->queues;
-}
-
 static GstIterator *
 gst_multi_queue_iterate_internal_links (GstPad * pad)
 {
-  GstMultiQueue *mqueue;
-  GstMultiQueueIterator *ret;
+  GstIterator *it = NULL;
+  GstPad *opad;
+  GstSingleQueue *squeue;
+  GstMultiQueue *mq = GST_MULTI_QUEUE (gst_pad_get_parent (pad));
 
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-  mqueue = GST_MULTI_QUEUE (GST_PAD_PARENT (pad));
-  if (!mqueue)
-    goto no_parent;
+  GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+  squeue = gst_pad_get_element_private (pad);
+  if (!squeue)
+    goto out;
 
-  ret = (GstMultiQueueIterator *)
-      gst_iterator_new (sizeof (GstMultiQueueIterator),
-      GST_TYPE_PAD,
-      mqueue->qlock,
-      &mqueue->queues_cookie,
-      _iterate_next, _iterate_item, _iterate_resync, _iterate_free);
-  ret->mqueue = g_object_ref (mqueue);
-  ret->current = mqueue->queues;
-  ret->pad = g_object_ref (pad);
+  if (squeue->sinkpad == pad)
+    opad = gst_object_ref (squeue->srcpad);
+  else if (squeue->srcpad == pad)
+    opad = gst_object_ref (squeue->sinkpad);
+  else
+    goto out;
 
-  return (GstIterator *) ret;
+  it = gst_iterator_new_single (GST_TYPE_PAD, opad,
+      (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
 
-no_parent:
-  {
-    GST_DEBUG_OBJECT (pad, "no parent");
-    return NULL;
-  }
+  gst_object_unref (opad);
+
+out:
+  GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+  gst_object_unref (mq);
+
+  return it;
 }
 
 
@@ -623,6 +564,8 @@ gst_multi_queue_release_pad (GstElement * element, GstPad * pad)
 
   gst_pad_set_active (sq->srcpad, FALSE);
   gst_pad_set_active (sq->sinkpad, FALSE);
+  gst_pad_set_element_private (sq->srcpad, NULL);
+  gst_pad_set_element_private (sq->sinkpad, NULL);
   gst_element_remove_pad (element, sq->srcpad);
   gst_element_remove_pad (element, sq->sinkpad);
   gst_single_queue_free (sq);
