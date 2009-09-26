@@ -26,9 +26,7 @@
 GST_START_TEST (test_remove1)
 {
   GstElement *b1, *b2, *src, *sink;
-
   GstPad *srcpad, *sinkpad;
-
   GstPadLinkReturn ret;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -80,9 +78,7 @@ GST_END_TEST;
 GST_START_TEST (test_remove2)
 {
   GstElement *b1, *b2, *src, *sink;
-
   GstPad *srcpad, *sinkpad;
-
   GstPadLinkReturn ret;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -157,15 +153,10 @@ GST_END_TEST;
 GST_START_TEST (test_ghost_pads_notarget)
 {
   GstElement *b1, *b2, *sink;
-
   GstPad *srcpad, *sinkpad, *peer;
-
   GstPadLinkReturn ret;
-
   gboolean bret;
-
   GstBus *bus;
-
   GstCaps *caps;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -221,7 +212,6 @@ GST_END_TEST;
 GST_START_TEST (test_remove_target)
 {
   GstElement *b1, *b2, *src, *sink;
-
   GstPad *sinkpad, *ghost, *target;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -265,9 +255,7 @@ GST_END_TEST;
 GST_START_TEST (test_link)
 {
   GstElement *b1, *b2, *src, *sink;
-
   GstPad *srcpad, *sinkpad, *gpad;
-
   GstPadLinkReturn ret;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -322,9 +310,7 @@ GST_END_TEST;
 GST_START_TEST (test_ghost_pads)
 {
   GstElement *b1, *b2, *src, *i1, *sink;
-
   GstPad *gsink, *gsrc, *gisrc, *gisink, *isink, *isrc, *fsrc, *fsink;
-
   GstStateChangeReturn ret;
 
   b1 = gst_element_factory_make ("pipeline", NULL);
@@ -428,17 +414,11 @@ GST_END_TEST;
 GST_START_TEST (test_ghost_pads_bin)
 {
   GstBin *pipeline;
-
   GstBin *srcbin;
-
   GstBin *sinkbin;
-
   GstElement *src;
-
   GstElement *sink;
-
   GstPad *srcpad, *srcghost, *target;
-
   GstPad *sinkpad, *sinkghost;
 
   pipeline = GST_BIN (gst_pipeline_new ("pipe"));
@@ -504,15 +484,10 @@ block_callback (GstPad * pad, gboolean blocked, gpointer user_data)
 GST_START_TEST (test_ghost_pads_block)
 {
   GstBin *pipeline;
-
   GstBin *srcbin;
-
   GstElement *src;
-
   GstPad *srcpad;
-
   GstPad *srcghost;
-
   BlockData block_data;
 
   pipeline = GST_BIN (gst_pipeline_new ("pipeline"));
@@ -550,15 +525,10 @@ GST_END_TEST;
 GST_START_TEST (test_ghost_pads_probes)
 {
   GstBin *pipeline;
-
   GstBin *srcbin;
-
   GstElement *src;
-
   GstPad *srcpad;
-
   GstPad *srcghost;
-
   BlockData block_data;
 
   pipeline = GST_BIN (gst_pipeline_new ("pipeline"));
