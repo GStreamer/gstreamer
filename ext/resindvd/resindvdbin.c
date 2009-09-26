@@ -706,9 +706,7 @@ can_sink_caps (GstElement * e, GstCaps * caps)
   if (sink) {
     GstCaps *sink_caps = gst_pad_get_caps (sink);
     if (sink_caps) {
-      GstCaps *intersect = gst_caps_intersect (sink_caps, caps);
-      res = !gst_caps_is_empty (intersect);
-      gst_caps_unref (intersect);
+      res = gst_caps_can_intersect (sink_caps, caps);
       gst_caps_unref (sink_caps);
     }
     gst_object_unref (sink);
