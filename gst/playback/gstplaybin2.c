@@ -2008,6 +2008,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
      * pushing data into the selectors before we have a chance to collect all
      * streams and connect the sinks, resulting in not-linked errors. After we
      * configured the sinks we will unblock them all. */
+    GST_DEBUG_OBJECT (playbin, "blocking %" GST_PTR_FORMAT, select->srcpad);
     gst_pad_set_blocked_async (select->srcpad, TRUE, selector_blocked, NULL);
   }
 
