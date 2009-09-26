@@ -2484,7 +2484,7 @@ gst_decode_pad_init (GstDecodePad * pad)
 }
 
 static void
-source_pad_blocked_cb (GstDecodePad * dpad, gboolean blocked, gpointer unused)
+source_pad_blocked_cb (GstPad * opad, gboolean blocked, GstDecodePad * dpad)
 {
   GstDecodeGroup *group;
   GstDecodeBin *dbin;
@@ -2531,10 +2531,16 @@ static void
 gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
 {
   GstDecodeBin *dbin = dpad->dbin;
+  GstPad *opad;
 
   DECODE_BIN_DYN_LOCK (dbin);
-  gst_pad_set_blocked_async (GST_PAD (dpad), blocked,
-      (GstPadBlockCallback) source_pad_blocked_cb, NULL);
+  opad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (dpad));
+  if (!opad)
+    goto out;
+
+  gst_pad_set_blocked_async_full (opad, blocked,
+      (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
+      (GDestroyNotify) gst_object_unref);
   if (blocked) {
     if (dbin->shutdown) {
       /* deactivate to force flushing state to prevent NOT_LINKED errors */
@@ -2548,6 +2554,8 @@ gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
       gst_object_unref (dpad);
     dbin->blocked_pads = g_list_remove (dbin->blocked_pads, dpad);
   }
+  gst_object_unref (opad);
+out:
   DECODE_BIN_DYN_UNLOCK (dbin);
 }
 
@@ -2659,15 +2667,20 @@ unblock_pads (GstDecodeBin * dbin)
 
   for (tmp = dbin->blocked_pads; tmp; tmp = next) {
     GstDecodePad *dpad = (GstDecodePad *) tmp->data;
+    GstPad *opad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (dpad));
 
     next = g_list_next (tmp);
+    if (!opad)
+      continue;
 
     GST_DEBUG_OBJECT (dpad, "unblocking");
-    gst_pad_set_blocked_async (GST_PAD (dpad), FALSE,
-        (GstPadBlockCallback) source_pad_blocked_cb, NULL);
+    gst_pad_set_blocked_async_full (opad, FALSE,
+        (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
+        (GDestroyNotify) gst_object_unref);
     /* make flushing, prevent NOT_LINKED */
     GST_PAD_SET_FLUSHING (GST_PAD (dpad));
     gst_object_unref (dpad);
+    gst_object_unref (opad);
     GST_DEBUG_OBJECT (dpad, "unblocked");
   }
 
