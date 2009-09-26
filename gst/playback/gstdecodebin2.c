@@ -2191,7 +2191,7 @@ out:
  *
  * Returns TRUE if the chain is complete, this means either
  * a) This chain is a dead end, i.e. we have no suitable plugins
- * b) This chain ends in an endpad and this is blocked
+ * b) This chain ends in an endpad and this is blocked or exposed
  *
  * Not MT-safe, always call with decodebin expose lock
  */
@@ -2200,7 +2200,12 @@ gst_decode_chain_is_complete (GstDecodeChain * chain)
 {
   gboolean complete = FALSE;
 
-  if (chain->deadend || (chain->endpad && chain->endpad->blocked)) {
+  if (chain->deadend) {
+    complete = TRUE;
+    goto out;
+  }
+
+  if (chain->endpad && (chain->endpad->blocked || chain->endpad->exposed)) {
     complete = TRUE;
     goto out;
   }
@@ -2543,7 +2548,7 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads)
     return TRUE;
 
   if (chain->endpad) {
-    if (!chain->endpad->blocked)
+    if (!chain->endpad->blocked && !chain->endpad->exposed)
       return FALSE;
     *endpads = g_list_prepend (*endpads, gst_object_ref (chain->endpad));
     return TRUE;
