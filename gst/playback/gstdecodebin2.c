@@ -857,18 +857,16 @@ gst_decode_bin_set_subs_encoding (GstDecodeBin * dbin, const gchar * encoding)
 
   GST_DEBUG_OBJECT (dbin, "Setting new encoding: %s", GST_STR_NULL (encoding));
 
-  DECODE_BIN_LOCK (dbin);
   GST_OBJECT_LOCK (dbin);
   g_free (dbin->encoding);
   dbin->encoding = g_strdup (encoding);
-  GST_OBJECT_UNLOCK (dbin);
 
   /* set the subtitle encoding on all added elements */
   for (walk = dbin->subtitles; walk; walk = g_list_next (walk)) {
     g_object_set (G_OBJECT (walk->data), "subtitle-encoding", dbin->encoding,
         NULL);
   }
-  DECODE_BIN_UNLOCK (dbin);
+  GST_OBJECT_UNLOCK (dbin);
 }
 
 static gchar *
@@ -1319,11 +1317,11 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       continue;
     }
     if (subtitle) {
-      DECODE_BIN_LOCK (dbin);
+      GST_OBJECT_LOCK (dbin);
       /* we added the element now, add it to the list of subtitle-encoding
        * elements when we can set the property */
       dbin->subtitles = g_list_prepend (dbin->subtitles, element);
-      DECODE_BIN_UNLOCK (dbin);
+      GST_OBJECT_UNLOCK (dbin);
     }
 
     res = TRUE;
@@ -2364,10 +2362,10 @@ restart:
 
 done:
   gst_element_set_state (element, GST_STATE_NULL);
-  DECODE_BIN_LOCK (dbin);
+  GST_OBJECT_LOCK (dbin);
   /* remove possible subtitle element */
   dbin->subtitles = g_list_remove (dbin->subtitles, element);
-  DECODE_BIN_UNLOCK (dbin);
+  GST_OBJECT_UNLOCK (dbin);
   gst_bin_remove (GST_BIN (dbin), element);
 
 beach:
