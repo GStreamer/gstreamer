@@ -39,18 +39,12 @@ struct _RsnAudioDec {
   GstBin element;
 
   /* Our sink and source pads */
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstGhostPad *sinkpad;
+  GstGhostPad *srcpad;
 
-  /* Proxy pads that are linked to the child sink pad
-   * and source pad respectively */
-  GstPad *child_sink_proxy;
-  GstPad *child_src_proxy;
+  GstPadEventFunction sink_event_func;
 
   GstElement *current_decoder;
-  /* Current child's sink and source pads */
-  GstPad *child_sink;
-  GstPad *child_src;
 };
 
 struct _RsnAudioDecClass {
