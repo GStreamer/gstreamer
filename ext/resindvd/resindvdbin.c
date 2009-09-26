@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_EXTERN (resindvd_debug);
 
 #define USE_VIDEOQ 0
 #define USE_HARDCODED_VIDEODEC 1
-#define USE_HARDCODED_AUDIODEC 1
+#define USE_HARDCODED_AUDIODEC 0
 
 #define DVDBIN_LOCK(d) g_mutex_lock((d)->dvd_lock)
 #define DVDBIN_UNLOCK(d) g_mutex_unlock((d)->dvd_lock)
@@ -697,6 +697,26 @@ connect_thru_mq (RsnDvdBin * dvdbin, GstPad * pad)
   return mq_src;
 }
 
+static gboolean
+can_sink_caps (GstElement * e, GstCaps * caps)
+{
+  gboolean res = FALSE;
+  GstPad *sink = gst_element_get_static_pad (e, "sink");
+
+  if (sink) {
+    GstCaps *sink_caps = gst_pad_get_caps (sink);
+    if (sink_caps) {
+      GstCaps *intersect = gst_caps_intersect (sink_caps, caps);
+      res = !gst_caps_is_empty (intersect);
+      gst_caps_unref (intersect);
+      gst_caps_unref (sink_caps);
+    }
+    gst_object_unref (sink);
+  }
+
+  return res;
+}
+
 static void
 demux_pad_added (GstElement * element, GstPad * pad, RsnDvdBin * dvdbin)
 {
@@ -720,6 +740,9 @@ demux_pad_added (GstElement * element, GstPad * pad, RsnDvdBin * dvdbin)
     return;
   }
 
+  GST_DEBUG_OBJECT (dvdbin,
+      "Pad %" GST_PTR_FORMAT " has caps: %" GST_PTR_FORMAT, pad, caps);
+
   s = gst_caps_get_structure (caps, 0);
   g_return_if_fail (s != NULL);
 
@@ -731,10 +754,15 @@ demux_pad_added (GstElement * element, GstPad * pad, RsnDvdBin * dvdbin)
         gst_element_get_request_pad (dvdbin->pieces[DVD_ELEM_SPU_SELECT],
         "sink%d");
     skip_mq = TRUE;
-  } else if (g_str_equal (gst_structure_get_name (s), "audio/x-private1-ac3")) {
+  } else if (can_sink_caps (dvdbin->pieces[DVD_ELEM_AUDDEC], caps)) {
+    GST_LOG_OBJECT (dvdbin, "Found audio pad w/ caps %" GST_PTR_FORMAT, caps);
     dest_pad =
         gst_element_get_request_pad (dvdbin->pieces[DVD_ELEM_AUD_SELECT],
         "sink%d");
+  } else {
+    /* FIXME: Consider and fire a missing-element message here */
+    GST_DEBUG_OBJECT (dvdbin, "Ignoring unusable pad w/ caps %" GST_PTR_FORMAT,
+        caps);
   }
 
   gst_caps_unref (caps);

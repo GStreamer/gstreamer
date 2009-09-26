@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "rsnaudiodec.h"
 
 GST_DEBUG_CATEGORY_STATIC (rsn_audiodec_debug);
@@ -89,6 +91,9 @@ static gboolean rsn_audiodec_proxy_src_event (GstPad * pad, GstEvent * event);
 
 static void rsn_audiodec_dispose (GObject * gobj);
 static void cleanup_child (RsnAudioDec * self);
+
+static GList *decoder_factories = NULL;
+static GstCaps *decoder_caps = NULL;
 
 static void
 rsn_audiodec_class_init (RsnAudioDecClass * klass)
@@ -165,13 +170,14 @@ error:
 static GstCaps *
 rsn_audiodec_get_sink_caps (GstPad * sinkpad)
 {
-  /* FIXME: Calculate set of allowed caps for all discovered decoders */
   RsnAudioDec *self = (RsnAudioDec *) gst_pad_get_parent (sinkpad);
   GstCaps *res;
   if (self == NULL || self->child_sink == NULL)
     goto error;
 
-  res = gst_pad_get_caps (self->child_sink);
+  /* FIXME: Can't get the caps of the child as this
+   * will deadlock! */
+  res = gst_caps_copy (decoder_caps);
   GST_INFO_OBJECT (self, "Returning caps %" GST_PTR_FORMAT, res);
 
   gst_object_unref (self);
@@ -205,11 +211,8 @@ error:
 static gboolean
 rsn_audiodec_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstPad *sinkpad = GST_PAD (gst_pad_get_parent (pad));
-  RsnAudioDec *self = (RsnAudioDec *) gst_pad_get_parent (sinkpad);
+  RsnAudioDec *self = RSN_AUDIODEC (gst_pad_get_parent (pad));
   gboolean res;
-
-  gst_object_unref (sinkpad);
 
   if (self == NULL)
     goto error;
@@ -388,18 +391,127 @@ cleanup_child (RsnAudioDec * self)
   }
 }
 
+static gboolean
+rsnaudiodec_factory_filter (GstPluginFeature * feature, GstCaps * desired_caps)
+{
+  GstElementFactory *factory;
+  guint rank;
+  const gchar *klass;
+  const GList *templates;
+  GList *walk;
+  gboolean can_sink = FALSE;
+
+  /* we only care about element factories */
+  if (!GST_IS_ELEMENT_FACTORY (feature))
+    return FALSE;
+
+  factory = GST_ELEMENT_FACTORY (feature);
+
+  klass = gst_element_factory_get_klass (factory);
+  /* only decoders can play */
+  if (strstr (klass, "Decoder") == NULL)
+    return FALSE;
+
+  /* only select elements with autoplugging rank */
+  rank = gst_plugin_feature_get_rank (feature);
+  if (rank < GST_RANK_MARGINAL)
+    return FALSE;
+
+  /* See if the element has a sink pad that can possibly sink this caps */
+
+  /* get the templates from the element factory */
+  templates = gst_element_factory_get_static_pad_templates (factory);
+  for (walk = (GList *) templates; walk && !can_sink; walk = g_list_next (walk)) {
+    GstStaticPadTemplate *templ = walk->data;
+
+    /* we only care about the sink templates */
+    if (templ->direction == GST_PAD_SINK) {
+      GstCaps *intersect;
+      GstCaps *tmpl_caps;
+
+      /* try to intersect the caps with the caps of the template */
+      tmpl_caps = gst_static_caps_get (&templ->static_caps);
+
+      intersect = gst_caps_intersect (desired_caps, tmpl_caps);
+      gst_caps_unref (tmpl_caps);
+
+      /* check if the intersection is empty */
+      if (!gst_caps_is_empty (intersect)) {
+        GstCaps *new_dec_caps;
+        /* non empty intersection, we can use this element */
+        can_sink = TRUE;
+        new_dec_caps = gst_caps_union (decoder_caps, intersect);
+        gst_caps_unref (decoder_caps);
+        decoder_caps = new_dec_caps;
+      }
+      gst_caps_unref (intersect);
+    }
+  }
+
+  if (can_sink) {
+    GST_DEBUG ("Found decoder element %s (%s)",
+        gst_element_factory_get_longname (factory),
+        gst_plugin_feature_get_name (feature));
+  }
+
+  return can_sink;
+}
+
+static gint
+sort_by_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
+{
+  gint diff;
+  const gchar *rname1, *rname2;
+
+  diff = gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
+  if (diff != 0)
+    return diff;
+
+  rname1 = gst_plugin_feature_get_name (f1);
+  rname2 = gst_plugin_feature_get_name (f2);
+
+  diff = strcmp (rname2, rname1);
+
+  return diff;
+}
+
+static gpointer
+_get_decoder_factories (gpointer arg)
+{
+  GList *factories;
+  GstCaps *desired_caps =
+      gst_caps_from_string ("audio/mpeg,mpegversion = (int) 1;"
+      "audio/x-private1-lpcm; " "audio/x-private1-ac3; audio/ac3; "
+      "audio/x-private1-dts");
+
+  /* Set decoder caps to empty. Will be filled by the factory_filter */
+  decoder_caps = gst_caps_new_empty ();
+
+  factories = gst_default_registry_feature_filter (
+      (GstPluginFeatureFilter) rsnaudiodec_factory_filter, FALSE, desired_caps);
+
+  decoder_factories = g_list_sort (factories, (GCompareFunc) sort_by_ranks);
+
+  GST_DEBUG ("Available decoder caps %" GST_PTR_FORMAT, decoder_caps);
+
+  return NULL;
+}
+
 static GstStateChangeReturn
 rsn_audiodec_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   RsnAudioDec *self = RSN_AUDIODEC (element);
+  static GOnce gonce = G_ONCE_INIT;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:{
       GstElement *new_child;
       create_proxy_pads (self);
       GST_DEBUG_OBJECT (self, "Created proxy pads");
-      new_child = gst_element_factory_make ("a52dec", NULL);
+      new_child = gst_element_factory_make ("autoconvert", NULL);
+      g_once (&gonce, _get_decoder_factories, NULL);
+      g_object_set (G_OBJECT (new_child), "factories", decoder_factories, NULL);
       if (new_child == NULL || !rsn_audiodec_set_child (self, new_child))
         ret = GST_STATE_CHANGE_FAILURE;
       break;
