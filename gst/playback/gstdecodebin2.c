@@ -2108,7 +2108,7 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
 {
   GstDecodeBin *dbin;
   GstPad *srcpad, *sinkpad;
-  gchar *nb, *sinkname, *srcname;
+  GstIterator *it = NULL;
 
   dbin = group->dbin;
 
@@ -2126,29 +2126,32 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
 
   if ((gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK)) {
     GST_ERROR_OBJECT (dbin, "Couldn't link demuxer and multiqueue");
-    goto beach;
+    goto error;
+  }
+
+  it = gst_pad_iterate_internal_links (sinkpad);
+
+  if (!it || (gst_iterator_next (it, (gpointer *) & srcpad)) != GST_ITERATOR_OK
+      || srcpad == NULL) {
+    GST_ERROR_OBJECT (dbin,
+        "Couldn't get srcpad from multiqueue for sinkpad %" GST_PTR_FORMAT,
+        sinkpad);
+    goto error;
   }
 
   CHAIN_MUTEX_LOCK (group->parent);
   group->reqpads = g_list_prepend (group->reqpads, gst_object_ref (sinkpad));
-
-  sinkname = gst_pad_get_name (sinkpad);
-  nb = sinkname + 4;
-  srcname = g_strdup_printf ("src%s", nb);
-  g_free (sinkname);
-
-  if (!(srcpad = gst_element_get_static_pad (group->multiqueue, srcname))) {
-    GST_ERROR_OBJECT (dbin, "Couldn't get srcpad %s from multiqueue", srcname);
-    goto chiringuito;
-  }
-
-chiringuito:
-  g_free (srcname);
   CHAIN_MUTEX_UNLOCK (group->parent);
 
 beach:
+  if (it)
+    gst_iterator_free (it);
   gst_object_unref (sinkpad);
   return srcpad;
+
+error:
+  gst_element_release_request_pad (group->multiqueue, sinkpad);
+  goto beach;
 }
 
 /* gst_decode_group_is_complete:
