@@ -56,6 +56,7 @@ struct _GstCogcolorspace
 {
   GstBaseTransform base_transform;
 
+  int quality;
 };
 
 struct _GstCogcolorspaceClass
@@ -73,18 +74,13 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_QUALITY 5
+
 enum
 {
-  ARG_0,
-  ARG_WAVELET_TYPE,
-  ARG_LEVEL
-      /* FILL ME */
+  PROP_0,
+  PROP_QUALITY
 };
-
-static void gst_cogcolorspace_base_init (gpointer g_class);
-static void gst_cogcolorspace_class_init (gpointer g_class,
-    gpointer class_data);
-static void gst_cogcolorspace_init (GTypeInstance * instance, gpointer g_class);
 
 static void gst_cogcolorspace_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -120,6 +116,10 @@ static GstStaticPadTemplate gst_cogcolorspace_src_template =
         ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR)
     );
 
+GST_BOILERPLATE (GstCogcolorspace, gst_cogcolorspace, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM);
+
+#if 0
 GType
 gst_cogcolorspace_get_type (void)
 {
@@ -143,15 +143,15 @@ gst_cogcolorspace_get_type (void)
   }
   return compress_type;
 }
-
+#endif
 
 static void
 gst_cogcolorspace_base_init (gpointer g_class)
 {
   static GstElementDetails compress_details =
-      GST_ELEMENT_DETAILS ("YCbCr format conversion",
+      GST_ELEMENT_DETAILS ("YCbCr/RGB format conversion",
       "Filter/Effect/Video",
-      "YCbCr format conversion",
+      "YCbCr/RGB format conversion",
       "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -164,27 +164,21 @@ gst_cogcolorspace_base_init (gpointer g_class)
 }
 
 static void
-gst_cogcolorspace_class_init (gpointer g_class, gpointer class_data)
+gst_cogcolorspace_class_init (GstCogcolorspaceClass * colorspace_class)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *base_transform_class;
-  GstCogcolorspaceClass *colorspace_class;
 
-  gobject_class = G_OBJECT_CLASS (g_class);
-  base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
-  colorspace_class = GST_COGCOLORSPACE_CLASS (g_class);
+  gobject_class = G_OBJECT_CLASS (colorspace_class);
+  base_transform_class = GST_BASE_TRANSFORM_CLASS (colorspace_class);
+  colorspace_class = GST_COGCOLORSPACE_CLASS (colorspace_class);
 
   gobject_class->set_property = gst_cogcolorspace_set_property;
   gobject_class->get_property = gst_cogcolorspace_get_property;
 
-#if 0
-  g_object_class_install_property (gobject_class, ARG_WAVELET_TYPE,
-      g_param_spec_int ("wavelet-type", "wavelet type", "wavelet type",
-          0, 4, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_LEVEL,
-      g_param_spec_int ("level", "level", "level",
-          0, 100, 0, G_PARAM_READWRITE));
-#endif
+  g_object_class_install_property (gobject_class, PROP_QUALITY,
+      g_param_spec_int ("quality", "Quality", "Quality",
+          0, 10, DEFAULT_QUALITY, G_PARAM_READWRITE));
 
   base_transform_class->transform = gst_cogcolorspace_transform;
   base_transform_class->transform_caps = gst_cogcolorspace_transform_caps;
@@ -194,23 +188,30 @@ gst_cogcolorspace_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_cogcolorspace_init (GTypeInstance * instance, gpointer g_class)
+gst_cogcolorspace_init (GstCogcolorspace * colorspace,
+    GstCogcolorspaceClass * klass)
 {
-
   GST_DEBUG ("gst_cogcolorspace_init");
+
+  colorspace->quality = DEFAULT_QUALITY;
 }
 
 static void
 gst_cogcolorspace_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstCogcolorspace *src;
+  GstCogcolorspace *colorspace;
 
   g_return_if_fail (GST_IS_COGCOLORSPACE (object));
-  src = GST_COGCOLORSPACE (object);
+  colorspace = GST_COGCOLORSPACE (object);
 
   GST_DEBUG ("gst_cogcolorspace_set_property");
   switch (prop_id) {
+    case PROP_QUALITY:
+      GST_OBJECT_LOCK (colorspace);
+      colorspace->quality = g_value_get_int (value);
+      GST_OBJECT_UNLOCK (colorspace);
+      break;
     default:
       break;
   }
@@ -220,12 +221,17 @@ static void
 gst_cogcolorspace_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstCogcolorspace *src;
+  GstCogcolorspace *colorspace;
 
   g_return_if_fail (GST_IS_COGCOLORSPACE (object));
-  src = GST_COGCOLORSPACE (object);
+  colorspace = GST_COGCOLORSPACE (object);
 
   switch (prop_id) {
+    case PROP_QUALITY:
+      GST_OBJECT_LOCK (colorspace);
+      g_value_set_int (value, colorspace->quality);
+      GST_OBJECT_UNLOCK (colorspace);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -425,11 +431,11 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
 
   if (gst_video_format_is_rgb (out_format) &&
       gst_video_format_is_yuv (in_format)) {
-    frame = cog_virt_frame_new_color_matrix (frame);
+    frame = cog_virt_frame_new_color_matrix_YCbCr_to_RGB (frame);
   }
   if (gst_video_format_is_yuv (out_format) &&
       gst_video_format_is_rgb (in_format)) {
-    GST_ERROR ("not supported!");
+    frame = cog_virt_frame_new_color_matrix_RGB_to_YCbCr (frame);
   }
 
   switch (out_format) {

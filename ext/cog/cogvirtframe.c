@@ -1261,7 +1261,7 @@ cog_virt_frame_new_pack_RGB (CogFrame * vf)
 }
 
 static void
-color_matrix (CogFrame * frame, void *_dest, int component, int i)
+color_matrix_RGB_to_YCbCr (CogFrame * frame, void *_dest, int component, int i)
 {
   uint8_t *dest = _dest;
   uint8_t *src1;
@@ -1274,7 +1274,6 @@ color_matrix (CogFrame * frame, void *_dest, int component, int i)
   src2 = cog_virt_frame_get_line (frame->virt_frame1, 1, i);
   src3 = cog_virt_frame_get_line (frame->virt_frame1, 2, i);
 
-#if 0
   /* for RGB -> YUV */
   switch (component) {
     case 0:
@@ -1282,18 +1281,21 @@ color_matrix (CogFrame * frame, void *_dest, int component, int i)
       m2 = 0.50413;
       m3 = 0.097906;
       offset = 16;
+      orc_matrix3_u8 (dest, src1, src2, src3, 16, 32, 6, 16, frame->width);
       break;
     case 1:
       m1 = -0.14822;
       m2 = -0.29099;
       m3 = 0.43922;
       offset = 128;
+      orc_matrix3_u8 (dest, src1, src2, src3, -9, -19, 28, 128, frame->width);
       break;
     case 2:
       m1 = 0.43922;
       m2 = -0.36779;
       m3 = -0.071427;
       offset = 128;
+      orc_matrix3_u8 (dest, src1, src2, src3, 28, -24, -5, 128, frame->width);
       break;
     default:
       m1 = 0.0;
@@ -1302,7 +1304,22 @@ color_matrix (CogFrame * frame, void *_dest, int component, int i)
       offset = 0;
       break;
   }
-#endif
+
+}
+
+static void
+color_matrix_YCbCr_to_RGB (CogFrame * frame, void *_dest, int component, int i)
+{
+  uint8_t *dest = _dest;
+  uint8_t *src1;
+  uint8_t *src2;
+  uint8_t *src3;
+  double m1, m2, m3;
+  double offset;
+
+  src1 = cog_virt_frame_get_line (frame->virt_frame1, 0, i);
+  src2 = cog_virt_frame_get_line (frame->virt_frame1, 1, i);
+  src3 = cog_virt_frame_get_line (frame->virt_frame1, 2, i);
 
   switch (component) {
     case 0:
@@ -1338,14 +1355,27 @@ color_matrix (CogFrame * frame, void *_dest, int component, int i)
 }
 
 CogFrame *
-cog_virt_frame_new_color_matrix (CogFrame * vf)
+cog_virt_frame_new_color_matrix_YCbCr_to_RGB (CogFrame * vf)
 {
   CogFrame *virt_frame;
 
   virt_frame = cog_frame_new_virtual (NULL, COG_FRAME_FORMAT_U8_444,
       vf->width, vf->height);
   virt_frame->virt_frame1 = vf;
-  virt_frame->render_line = color_matrix;
+  virt_frame->render_line = color_matrix_YCbCr_to_RGB;
+
+  return virt_frame;
+}
+
+CogFrame *
+cog_virt_frame_new_color_matrix_RGB_to_YCbCr (CogFrame * vf)
+{
+  CogFrame *virt_frame;
+
+  virt_frame = cog_frame_new_virtual (NULL, COG_FRAME_FORMAT_U8_444,
+      vf->width, vf->height);
+  virt_frame->virt_frame1 = vf;
+  virt_frame->render_line = color_matrix_RGB_to_YCbCr;
 
   return virt_frame;
 }
@@ -1501,6 +1531,7 @@ cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format)
       format == COG_FRAME_FORMAT_U8_444) {
     render_line = convert_422_444;
   } else {
+    GST_ERROR ("trying to subsample from %d to %d", vf->format, format);
     g_return_val_if_reached (NULL);
   }
   virt_frame = cog_frame_new_virtual (NULL, format, vf->width, vf->height);

@@ -31,7 +31,9 @@ libgstcog_la_SOURCES = \
 	gstcogutils.c \
 	gstcogutils.h \
 	gstcolorconvert.c \
-	gstlogoinsert.c
+	gstlogoinsert.c \
+	gstcms.h \
+	gstcms.c
 
 noinst_PROGRAMS = generate_tables
 generate_tables_CFLAGS = $(GST_CFLAGS)

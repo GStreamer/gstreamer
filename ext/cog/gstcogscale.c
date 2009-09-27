@@ -585,7 +585,7 @@ gst_cog_scale_transform (GstBaseTransform * trans, GstBuffer * in,
       w /= 2;
     }
     if (h >= 2 * videoscale->to_height) {
-      frame = cog_virt_frame_new_vert_downsample (frame, 2);
+      frame = cog_virt_frame_new_vert_downsample (frame, 4);
       h /= 2;
     }
   }
