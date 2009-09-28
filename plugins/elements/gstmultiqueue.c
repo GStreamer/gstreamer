@@ -1428,8 +1428,10 @@ gst_single_queue_new (GstMultiQueue * mqueue)
 
   sq->mqueue = mqueue;
   sq->srcresult = GST_FLOW_WRONG_STATE;
-  sq->queue = gst_data_queue_new ((GstDataQueueCheckFullFunction)
-      single_queue_check_full, sq);
+  sq->queue = gst_data_queue_new_full ((GstDataQueueCheckFullFunction)
+      single_queue_check_full,
+      (GstDataQueueFullCallback) single_queue_overrun_cb,
+      (GstDataQueueEmptyCallback) single_queue_underrun_cb, sq);
   sq->is_eos = FALSE;
   gst_segment_init (&sq->sink_segment, GST_FORMAT_TIME);
   gst_segment_init (&sq->src_segment, GST_FORMAT_TIME);
@@ -1437,12 +1439,6 @@ gst_single_queue_new (GstMultiQueue * mqueue)
   sq->nextid = 0;
   sq->oldid = 0;
   sq->turn = g_cond_new ();
-
-  /* attach to underrun/overrun signals to handle non-starvation  */
-  g_signal_connect (sq->queue, "full",
-      G_CALLBACK (single_queue_overrun_cb), sq);
-  g_signal_connect (sq->queue, "empty",
-      G_CALLBACK (single_queue_underrun_cb), sq);
 
   tmp = g_strdup_printf ("sink%d", sq->id);
   sq->sinkpad = gst_pad_new_from_static_template (&sinktemplate, tmp);
