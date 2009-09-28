@@ -1166,9 +1166,9 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
 
   g_return_val_if_fail (GST_IS_GHOST_PAD (gpad), FALSE);
 
-  GST_PROXY_LOCK (gpad);
+  /* no need for locking, the internal pad's lifecycle is directly linked to the
+   * ghostpad's */
   internal = GST_PROXY_PAD_INTERNAL (gpad);
-  g_assert (internal);
 
   if (newtarget)
     GST_DEBUG_OBJECT (gpad, "set target %s:%s", GST_DEBUG_PAD_NAME (newtarget));
@@ -1176,6 +1176,7 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
     GST_DEBUG_OBJECT (gpad, "clearing target");
 
   /* clear old target */
+  GST_PROXY_LOCK (gpad);
   if ((oldtarget = GST_PROXY_PAD_TARGET (gpad))) {
     if (GST_PAD_IS_SRC (oldtarget)) {
       g_signal_handlers_disconnect_by_func (oldtarget,
@@ -1194,6 +1195,7 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   }
 
   result = gst_proxy_pad_set_target_unlocked (GST_PAD_CAST (gpad), newtarget);
+  GST_PROXY_UNLOCK (gpad);
 
   if (result && newtarget) {
     if (GST_PAD_IS_SRC (newtarget)) {
@@ -1212,7 +1214,6 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
     if (lret != GST_PAD_LINK_OK)
       goto link_failed;
   }
-  GST_PROXY_UNLOCK (gpad);
 
   return result;
 
