@@ -133,8 +133,15 @@ struct _GstSingleQueue
 
   /* flowreturn of previous srcpad push */
   GstFlowReturn srcresult;
+
+  /* segments */
   GstSegment sink_segment;
   GstSegment src_segment;
+
+  /* position of src/sink */
+  GstClockTime sinktime, srctime;
+  /* TRUE if either position needs to be recalculated */
+  gboolean sink_tainted, src_tainted;
 
   /* queue of data */
   GstDataQueue *queue;
@@ -592,6 +599,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
 
     GST_LOG_OBJECT (mq, "SingleQueue %d : pausing task", sq->id);
     result = gst_pad_pause_task (sq->srcpad);
+    sq->sink_tainted = sq->src_tainted = TRUE;
   } else {
     gst_data_queue_flush (sq->queue);
     gst_segment_init (&sq->sink_segment, GST_FORMAT_TIME);
@@ -622,16 +630,25 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
 {
   gint64 sink_time, src_time;
 
-  sink_time =
-      gst_segment_to_running_time (&sq->sink_segment, GST_FORMAT_TIME,
-      sq->sink_segment.last_stop);
-  if (sink_time == GST_CLOCK_TIME_NONE)
-    goto beach;
+  if (sq->sink_tainted) {
+    sink_time = sq->sinktime =
+        gst_segment_to_running_time (&sq->sink_segment, GST_FORMAT_TIME,
+        sq->sink_segment.last_stop);
+    if (sink_time == GST_CLOCK_TIME_NONE)
+      goto beach;
+    sq->sink_tainted = FALSE;
+  } else
+    sink_time = sq->sinktime;
 
-  src_time = gst_segment_to_running_time (&sq->src_segment, GST_FORMAT_TIME,
-      sq->src_segment.last_stop);
-  if (src_time == GST_CLOCK_TIME_NONE)
-    goto beach;
+  if (sq->src_tainted) {
+    src_time = sq->srctime =
+        gst_segment_to_running_time (&sq->src_segment, GST_FORMAT_TIME,
+        sq->src_segment.last_stop);
+    if (src_time == GST_CLOCK_TIME_NONE)
+      goto beach;
+    sq->src_tainted = FALSE;
+  } else
+    src_time = sq->srctime;
 
   GST_DEBUG_OBJECT (mq,
       "queue %d, sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT, sq->id,
@@ -680,6 +697,11 @@ apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
   gst_segment_set_newsegment_full (segment, update,
       rate, arate, format, start, stop, time);
 
+  if (segment == &sq->sink_segment)
+    sq->sink_tainted = TRUE;
+  else
+    sq->src_tainted = TRUE;
+
   GST_DEBUG_OBJECT (mq,
       "queue %d, configured NEWSEGMENT %" GST_SEGMENT_FORMAT, sq->id, segment);
 
@@ -709,6 +731,11 @@ apply_buffer (GstMultiQueue * mq, GstSingleQueue * sq, GstClockTime timestamp,
       sq->id, GST_TIME_ARGS (timestamp));
 
   gst_segment_set_last_stop (segment, GST_FORMAT_TIME, timestamp);
+
+  if (segment == &sq->sink_segment)
+    sq->sink_tainted = TRUE;
+  else
+    sq->src_tainted = TRUE;
 
   /* calc diff with other end */
   update_time_level (mq, sq);
@@ -1439,6 +1466,11 @@ gst_single_queue_new (GstMultiQueue * mqueue)
   sq->nextid = 0;
   sq->oldid = 0;
   sq->turn = g_cond_new ();
+
+  sq->sinktime = GST_CLOCK_TIME_NONE;
+  sq->srctime = GST_CLOCK_TIME_NONE;
+  sq->sink_tainted = TRUE;
+  sq->src_tainted = TRUE;
 
   tmp = g_strdup_printf ("sink%d", sq->id);
   sq->sinkpad = gst_pad_new_from_static_template (&sinktemplate, tmp);
