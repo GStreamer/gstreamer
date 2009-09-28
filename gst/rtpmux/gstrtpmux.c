@@ -209,7 +209,8 @@ gst_rtp_mux_init (GstRTPMux * object, GstRTPMuxClass * g_class)
 }
 
 static GstPad *
-gst_rtp_mux_create_sinkpad (GstRTPMux * rtp_mux, GstPadTemplate * templ)
+gst_rtp_mux_create_sinkpad (GstRTPMux * rtp_mux, GstPadTemplate * templ,
+    const gchar * req_name)
 {
   GstPad *newpad = NULL;
   GstPadTemplate *class_templ;
@@ -219,12 +220,16 @@ gst_rtp_mux_create_sinkpad (GstRTPMux * rtp_mux, GstPadTemplate * templ)
       "sink_%d");
 
   if (templ == class_templ) {
-    gchar *name;
+    gchar *tmpname = NULL;
+    const gchar *name = NULL;
 
     /* create new pad with the name */
-    name = g_strdup_printf ("sink_%02d", rtp_mux->numpads);
+    if (req_name)
+      name = req_name;
+    else
+      name = tmpname = g_strdup_printf ("sink_%02d", rtp_mux->numpads);
     newpad = gst_pad_new_from_template (templ, name);
-    g_free (name);
+    g_free (tmpname);
 
     rtp_mux->numpads++;
   } else {
@@ -276,7 +281,7 @@ gst_rtp_mux_request_new_pad (GstElement * element,
     return NULL;
   }
 
-  newpad = gst_rtp_mux_create_sinkpad (rtp_mux, templ);
+  newpad = gst_rtp_mux_create_sinkpad (rtp_mux, templ, req_name);
   if (newpad)
     gst_rtp_mux_setup_sinkpad (rtp_mux, newpad);
   else
