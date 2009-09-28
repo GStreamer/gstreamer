@@ -877,7 +877,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   GstQueue *queue;
   GstClockTime duration, timestamp;
 
-  queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
+  queue = (GstQueue *) GST_OBJECT_PARENT (pad);
 
   /* we have to lock the queue since we span threads */
   GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
@@ -1123,7 +1123,7 @@ gst_queue_loop (GstPad * pad)
   GstQueue *queue;
   GstFlowReturn ret;
 
-  queue = GST_QUEUE (GST_PAD_PARENT (pad));
+  queue = (GstQueue *) GST_PAD_PARENT (pad);
 
   /* have to lock for thread-safety */
   GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
