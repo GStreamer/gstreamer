@@ -185,6 +185,39 @@ gst_data_queue_init (GstDataQueue * queue)
 }
 
 /**
+ * gst_data_queue_new_full:
+ * @checkfull: the callback used to tell if the element considers the queue full
+ * or not.
+ * @fullcallback: the callback which will be called when the queue is considered full.
+ * @emptycallback: the callback which will be called when the queue is considered empty.
+ * @checkdata: a #gpointer that will be given in the @checkfull callback.
+ *
+ * Creates a new #GstDataQueue. The difference with @gst_data_queue_new is that it will
+ * not emit the 'full' and 'empty' signals, but instead calling directly @fullcallback
+ * or @emptycallback.
+ *
+ * Returns: a new #GstDataQueue.
+ */
+
+GstDataQueue *
+gst_data_queue_new_full (GstDataQueueCheckFullFunction checkfull,
+    GstDataQueueFullCallback fullcallback,
+    GstDataQueueEmptyCallback emptycallback, gpointer checkdata)
+{
+  GstDataQueue *ret;
+
+  g_return_val_if_fail (checkfull != NULL, NULL);
+
+  ret = g_object_new (GST_TYPE_DATA_QUEUE, NULL);
+  ret->checkfull = checkfull;
+  ret->checkdata = checkdata;
+  ret->fullcallback = fullcallback;
+  ret->emptycallback = emptycallback;
+
+  return ret;
+}
+
+/**
  * gst_data_queue_new:
  * @checkfull: the callback used to tell if the element considers the queue full
  * or not.
@@ -196,15 +229,7 @@ gst_data_queue_init (GstDataQueue * queue)
 GstDataQueue *
 gst_data_queue_new (GstDataQueueCheckFullFunction checkfull, gpointer checkdata)
 {
-  GstDataQueue *ret;
-
-  g_return_val_if_fail (checkfull != NULL, NULL);
-
-  ret = g_object_new (GST_TYPE_DATA_QUEUE, NULL);
-  ret->checkfull = checkfull;
-  ret->checkdata = checkdata;
-
-  return ret;
+  return gst_data_queue_new_full (checkfull, NULL, NULL, checkdata);
 }
 
 static void
@@ -383,7 +408,10 @@ gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
   /* We ALWAYS need to check for queue fillness */
   if (gst_data_queue_locked_is_full (queue)) {
     GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
-    g_signal_emit (queue, gst_data_queue_signals[SIGNAL_FULL], 0);
+    if (G_LIKELY (queue->fullcallback))
+      queue->fullcallback (queue, queue->checkdata);
+    else
+      g_signal_emit (queue, gst_data_queue_signals[SIGNAL_FULL], 0);
     GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
 
     /* signal might have removed some items */
@@ -441,7 +469,10 @@ gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
 
   if (gst_data_queue_locked_is_empty (queue)) {
     GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
-    g_signal_emit (queue, gst_data_queue_signals[SIGNAL_EMPTY], 0);
+    if (G_LIKELY (queue->emptycallback))
+      queue->emptycallback (queue, queue->checkdata);
+    else
+      g_signal_emit (queue, gst_data_queue_signals[SIGNAL_EMPTY], 0);
     GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
 
     while (gst_data_queue_locked_is_empty (queue)) {

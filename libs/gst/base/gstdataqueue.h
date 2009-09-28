@@ -98,6 +98,9 @@ struct _GstDataQueueSize
 typedef gboolean (*GstDataQueueCheckFullFunction) (GstDataQueue * queue,
     guint visible, guint bytes, guint64 time, gpointer checkdata);
 
+typedef void (*GstDataQueueFullCallback) (GstDataQueue * queue, gpointer checkdata);
+typedef void (*GstDataQueueEmptyCallback) (GstDataQueue * queue, gpointer checkdata);
+
 /**
  * GstDataQueue:
  *
@@ -120,8 +123,9 @@ struct _GstDataQueue
   GCond *item_del;              /* signals space now available for writing */
   gboolean flushing;            /* indicates whether conditions where signalled because
                                  * of external flushing */
-
-  gpointer _gst_reserved[GST_PADDING];
+  GstDataQueueFullCallback fullcallback;
+  GstDataQueueEmptyCallback emptycallback;
+  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 struct _GstDataQueueClass
@@ -139,6 +143,11 @@ GType gst_data_queue_get_type (void);
 
 GstDataQueue * gst_data_queue_new            (GstDataQueueCheckFullFunction checkfull,
                                               gpointer checkdata);
+
+GstDataQueue * gst_data_queue_new_full       (GstDataQueueCheckFullFunction checkfull,
+					      GstDataQueueFullCallback fullcallback,
+					      GstDataQueueEmptyCallback emptycallback,
+					      gpointer checkdata);
 
 gboolean       gst_data_queue_push           (GstDataQueue * queue, GstDataQueueItem * item);
 gboolean       gst_data_queue_pop            (GstDataQueue * queue, GstDataQueueItem ** item);
