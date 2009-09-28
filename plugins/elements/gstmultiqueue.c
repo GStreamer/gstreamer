@@ -966,7 +966,7 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
   GstClockTime timestamp, duration;
 
   sq = gst_pad_get_element_private (pad);
-  mq = (GstMultiQueue *) gst_pad_get_parent (pad);
+  mq = sq->mqueue;
 
   /* Get a unique incrementing id */
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
@@ -989,8 +989,6 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
   apply_buffer (mq, sq, timestamp, duration, &sq->sink_segment);
 
 done:
-  gst_object_unref (mq);
-
   return ret;
 
   /* ERRORS */
