@@ -655,10 +655,10 @@ gst_queue_locked_flush (GstQueue * queue)
 }
 
 /* enqueue an item an update the level stats, with QUEUE_LOCK */
-static void
-gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
+static inline void
+gst_queue_locked_enqueue (GstQueue * queue, gpointer item, gboolean isbuffer)
 {
-  if (GST_IS_BUFFER (item)) {
+  if (isbuffer) {
     GstBuffer *buffer = GST_BUFFER_CAST (item);
 
     /* add buffer to the statistics */
@@ -674,7 +674,7 @@ gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
      * See #482147 */
     /*     if (queue->cur_level.buffers == 1) */
     /*       apply_buffer (queue, buffer, &queue->src_segment, FALSE); */
-  } else if (GST_IS_EVENT (item)) {
+  } else {
     GstEvent *event = GST_EVENT_CAST (item);
 
     switch (GST_EVENT_TYPE (event)) {
@@ -695,11 +695,6 @@ gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
       default:
         break;
     }
-  } else {
-    g_warning ("Unexpected item %p added in queue %s (refcounting problem?)",
-        item, GST_OBJECT_NAME (queue));
-    /* we can't really unref since we don't know what it is */
-    item = NULL;
   }
 
   if (item)
@@ -822,7 +817,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
         /* refuse more events on EOS */
         if (queue->eos)
           goto out_eos;
-        gst_queue_locked_enqueue (queue, event);
+        gst_queue_locked_enqueue (queue, event, FALSE);
         GST_QUEUE_MUTEX_UNLOCK (queue);
       } else {
         /* non-serialized events are passed upstream. */
@@ -986,7 +981,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   /* put buffer in queue now */
-  gst_queue_locked_enqueue (queue, buffer);
+  gst_queue_locked_enqueue (queue, buffer, TRUE);
   GST_QUEUE_MUTEX_UNLOCK (queue);
 
   return GST_FLOW_OK;
