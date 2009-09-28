@@ -13,7 +13,8 @@ libgstbase_@GST_API_VERSION@_la_SOURCES = \
 	gstbytewriter.c         \
 	gstcollectpads.c	\
 	gstpushsrc.c		\
-	gsttypefindhelper.c
+	gsttypefindhelper.c	\
+	gstqueuearray.c
 
 libgstbase_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstbase_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS)
@@ -33,7 +34,8 @@ libgstbase_@GST_API_VERSION@include_HEADERS =	\
 	gstbytewriter.h         \
 	gstcollectpads.h	\
 	gstpushsrc.h		\
-	gsttypefindhelper.h
+	gsttypefindhelper.h	\
+	gstqueuearray.h
 
 noinst_HEADERS = \
 	gstbytereader-docs.h \
