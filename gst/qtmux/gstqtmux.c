@@ -297,6 +297,7 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   }
   if (qtmux->fast_start_file) {
     fclose (qtmux->fast_start_file);
+    g_remove (qtmux->fast_start_file_path);
     qtmux->fast_start_file = NULL;
   }
   if (qtmux->moov_recov_file) {
@@ -1104,13 +1105,6 @@ gst_qt_mux_send_buffered_data (GstQTMux * qtmux, guint64 * offset)
   if (buf)
     gst_buffer_unref (buf);
 
-exit:
-  /* best cleaning up effort, eat possible error */
-  fclose (qtmux->fast_start_file);
-  qtmux->fast_start_file = NULL;
-
-  /* FIXME maybe delete temporary file, or let the system handle that ? */
-
   return ret;
 
   /* ERRORS */
@@ -1119,14 +1113,14 @@ flush_failed:
     GST_ELEMENT_ERROR (qtmux, RESOURCE, WRITE,
         ("Failed to flush temporary file"), GST_ERROR_SYSTEM);
     ret = GST_FLOW_ERROR;
-    goto exit;
+    return ret;
   }
 seek_failed:
   {
     GST_ELEMENT_ERROR (qtmux, RESOURCE, SEEK,
         ("Failed to seek temporary file"), GST_ERROR_SYSTEM);
     ret = GST_FLOW_ERROR;
-    goto exit;
+    return ret;
   }
 }
 
