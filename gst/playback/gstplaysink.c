@@ -2491,6 +2491,7 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
     *res = NULL;
   }
 }
+
 static void
 gst_play_sink_release_request_pad (GstElement * element, GstPad * pad)
 {
@@ -2791,7 +2792,7 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
       g_value_take_string (value, gst_play_sink_get_font_desc (playsink));
       break;
     case PROP_VIS_PLUGIN:
-      gst_play_sink_set_vis_plugin (playsink, g_value_get_object (value));
+      g_value_take_object (value, gst_play_sink_get_vis_plugin (playsink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
