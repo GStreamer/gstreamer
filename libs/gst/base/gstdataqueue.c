@@ -29,6 +29,7 @@
  */
 
 #include <gst/gst.h>
+#include "string.h"
 #include "gstdataqueue.h"
 
 GST_DEBUG_CATEGORY_STATIC (data_queue_debug);
@@ -267,7 +268,7 @@ gst_data_queue_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static void
+static inline void
 gst_data_queue_locked_flush (GstDataQueue * queue)
 {
   STATUS (queue, "before flushing");
@@ -277,13 +278,13 @@ gst_data_queue_locked_flush (GstDataQueue * queue)
   g_cond_signal (queue->item_del);
 }
 
-static gboolean
+static inline gboolean
 gst_data_queue_locked_is_empty (GstDataQueue * queue)
 {
   return (queue->queue->length == 0);
 }
 
-static gboolean
+static inline gboolean
 gst_data_queue_locked_is_full (GstDataQueue * queue)
 {
   return queue->checkfull (queue, queue->cur_level.visible,
@@ -587,9 +588,7 @@ gst_data_queue_limits_changed (GstDataQueue * queue)
 void
 gst_data_queue_get_level (GstDataQueue * queue, GstDataQueueSize * level)
 {
-  level->visible = queue->cur_level.visible;
-  level->bytes = queue->cur_level.bytes;
-  level->time = queue->cur_level.time;
+  memcpy (level, (&queue->cur_level), sizeof (GstDataQueueSize));
 }
 
 static void
