@@ -120,7 +120,8 @@ check_PROGRAMS = \
 	elements/mxfmux \
 	pipelines/mxf \
 	$(check_metadata) \
-	$(check_mimic)
+	$(check_mimic) \
+	elements/rtpmux
 
 noinst_HEADERS = elements/mxfdemux.h elements/amrparse_data.h elements/aacparse_data.h
 
@@ -146,5 +147,8 @@ elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
 elements_kate_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
+
+elements_rtpmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_rtpmux_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstrtp-0.10
 
 EXTRA_DIST = gst-plugins-bad.supp
