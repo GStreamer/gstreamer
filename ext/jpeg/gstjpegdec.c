@@ -856,7 +856,6 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   guint img_len, outsize;
   gint width, height;
   gint r_h, r_v;
-  gint i;
   guint code, hdr_ok;
   GstClockTime timestamp, duration;
 
@@ -951,10 +950,14 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
       dec->cinfo.num_components, dec->cinfo.comps_in_scan);
 
 #ifndef GST_DISABLE_GST_DEBUG
-  for (i = 0; i < dec->cinfo.comps_in_scan; ++i) {
-    GST_LOG_OBJECT (dec, "[%d] h_samp_factor=%d, v_samp_factor=%d", i,
-        dec->cinfo.cur_comp_info[i]->h_samp_factor,
-        dec->cinfo.cur_comp_info[i]->v_samp_factor);
+  {
+    gint i;
+
+    for (i = 0; i < dec->cinfo.comps_in_scan; ++i) {
+      GST_LOG_OBJECT (dec, "[%d] h_samp_factor=%d, v_samp_factor=%d", i,
+          dec->cinfo.cur_comp_info[i]->h_samp_factor,
+          dec->cinfo.cur_comp_info[i]->v_samp_factor);
+    }
   }
 #endif
 
