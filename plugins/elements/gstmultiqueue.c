@@ -827,7 +827,8 @@ gst_multi_queue_item_destroy (GstMultiQueueItem * item)
 
 /* takes ownership of passed mini object! */
 static GstMultiQueueItem *
-gst_multi_queue_item_new (GstMiniObject * object, guint32 curid)
+gst_multi_queue_item_new (GstMiniObject * object, guint32 curid,
+    gboolean isbuffer)
 {
   GstMultiQueueItem *item;
 
@@ -836,7 +837,7 @@ gst_multi_queue_item_new (GstMiniObject * object, guint32 curid)
   item->destroy = (GDestroyNotify) gst_multi_queue_item_destroy;
   item->posid = curid;
 
-  if (GST_IS_BUFFER (object)) {
+  if (isbuffer) {
     item->size = GST_BUFFER_SIZE (object);
     item->duration = GST_BUFFER_DURATION (object);
     if (item->duration == GST_CLOCK_TIME_NONE)
@@ -1003,7 +1004,7 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
   GST_LOG_OBJECT (mq, "SingleQueue %d : about to enqueue buffer %p with id %d",
       sq->id, buffer, curid);
 
-  item = gst_multi_queue_item_new (GST_MINI_OBJECT_CAST (buffer), curid);
+  item = gst_multi_queue_item_new (GST_MINI_OBJECT_CAST (buffer), curid, TRUE);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
@@ -1099,7 +1100,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
   curid = mq->counter++;
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
-  item = gst_multi_queue_item_new ((GstMiniObject *) event, curid);
+  item = gst_multi_queue_item_new ((GstMiniObject *) event, curid, FALSE);
 
   GST_DEBUG_OBJECT (mq,
       "SingleQueue %d : Enqueuing event %p of type %s with id %d",
