@@ -1184,10 +1184,28 @@ atom_mvhd_clear (AtomMVHD * mvhd)
 }
 
 static void
+atom_mehd_init (AtomMEHD * mehd)
+{
+  guint8 flags[3] = { 0, 0, 0 };
+
+  atom_full_init (&mehd->header, FOURCC_mehd, 0, 0, 1, flags);
+  mehd->fragment_duration = 0;
+}
+
+static void
+atom_mvex_init (AtomMVEX * mvex)
+{
+  atom_header_set (&mvex->header, FOURCC_mvex, 0, 0);
+  atom_mehd_init (&mvex->mehd);
+  mvex->trexs = NULL;
+}
+
+static void
 atom_moov_init (AtomMOOV * moov, AtomsContext * context)
 {
   atom_header_set (&(moov->header), FOURCC_moov, 0, 0);
   atom_mvhd_init (&(moov->mvhd));
+  atom_mvex_init (&(moov->mvex));
   moov->udta = NULL;
   moov->traks = NULL;
   moov->context = *context;
@@ -1200,6 +1218,28 @@ atom_moov_new (AtomsContext * context)
 
   atom_moov_init (moov, context);
   return moov;
+}
+
+static void
+atom_trex_free (AtomTREX * trex)
+{
+  atom_full_clear (&trex->header);
+  g_free (trex);
+}
+
+static void
+atom_mvex_clear (AtomMVEX * mvex)
+{
+  GList *walker;
+
+  atom_clear (&mvex->header);
+  walker = mvex->trexs;
+  while (walker) {
+    atom_trex_free ((AtomTREX *) walker->data);
+    walker = g_list_next (walker);
+  }
+  g_list_free (mvex->trexs);
+  mvex->trexs = NULL;
 }
 
 void
@@ -1222,6 +1262,8 @@ atom_moov_free (AtomMOOV * moov)
     atom_udta_free (moov->udta);
     moov->udta = NULL;
   }
+
+  atom_mvex_clear (&moov->mvex);
 
   g_free (moov);
 }
@@ -2279,6 +2321,70 @@ atom_udta_copy_data (AtomUDTA * udta, guint8 ** buffer, guint64 * size,
   return *offset - original_offset;
 }
 
+static guint64
+atom_mehd_copy_data (AtomMEHD * mehd, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+
+  if (!atom_full_copy_data (&mehd->header, buffer, size, offset)) {
+    return 0;
+  }
+
+  prop_copy_uint64 (mehd->fragment_duration, buffer, size, offset);
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
+static guint64
+atom_trex_copy_data (AtomTREX * trex, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+
+  if (!atom_full_copy_data (&trex->header, buffer, size, offset)) {
+    return 0;
+  }
+
+  prop_copy_uint32 (trex->track_ID, buffer, size, offset);
+  prop_copy_uint32 (trex->default_sample_description_index, buffer, size,
+      offset);
+  prop_copy_uint32 (trex->default_sample_duration, buffer, size, offset);
+  prop_copy_uint32 (trex->default_sample_size, buffer, size, offset);
+  prop_copy_uint32 (trex->default_sample_flags, buffer, size, offset);
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
+static guint64
+atom_mvex_copy_data (AtomMVEX * mvex, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+  GList *walker;
+
+  if (!atom_copy_data (&mvex->header, buffer, size, offset)) {
+    return 0;
+  }
+
+  if (!atom_mehd_copy_data (&mvex->mehd, buffer, size, offset)) {
+    return 0;
+  }
+
+  walker = g_list_first (mvex->trexs);
+  while (walker != NULL) {
+    if (!atom_trex_copy_data ((AtomTREX *) walker->data, buffer, size, offset)) {
+      return 0;
+    }
+    walker = g_list_next (walker);
+  }
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
 guint64
 atom_moov_copy_data (AtomMOOV * atom, guint8 ** buffer, guint64 * size,
     guint64 * offset)
@@ -2302,6 +2408,12 @@ atom_moov_copy_data (AtomMOOV * atom, guint8 ** buffer, guint64 * size,
 
   if (atom->udta) {
     if (!atom_udta_copy_data (atom->udta, buffer, size, offset)) {
+      return 0;
+    }
+  }
+
+  if (atom->fragmented) {
+    if (!atom_mvex_copy_data (&atom->mvex, buffer, size, offset)) {
       return 0;
     }
   }
@@ -2488,6 +2600,32 @@ atom_moov_add_trak (AtomMOOV * moov, AtomTRAK * trak)
   moov->traks = g_list_append (moov->traks, trak);
 }
 
+void
+atom_moov_add_trex (AtomMOOV * moov, AtomTREX * trex)
+{
+  moov->mvex.trexs = g_list_append (moov->mvex.trexs, trex);
+}
+
+AtomTREX *
+atom_trex_new (AtomsContext * context, AtomTRAK * trak,
+    guint32 default_sample_description_index,
+    guint32 default_sample_duration, guint32 default_sample_size,
+    guint32 default_sample_flags)
+{
+  guint8 flags[3] = { 0, 0, 0 };
+  AtomTREX *trex = g_new0 (AtomTREX, 1);
+
+  atom_full_init (&trex->header, FOURCC_trex, 0, 0, 0, flags);
+
+  trex->track_ID = trak->tkhd.track_ID;
+  trex->default_sample_description_index = default_sample_description_index;
+  trex->default_sample_duration = default_sample_duration;
+  trex->default_sample_size = default_sample_size;
+  trex->default_sample_flags = default_sample_flags;
+
+  return trex;
+}
+
 static guint64
 atom_trak_get_duration (AtomTRAK * trak)
 {
@@ -2550,6 +2688,7 @@ atom_moov_update_duration (AtomMOOV * moov)
     traks = g_list_next (traks);
   }
   moov->mvhd.time_info.duration = duration;
+  moov->mvex.mehd.fragment_duration = duration;
 }
 
 static void
@@ -2585,6 +2724,12 @@ atom_moov_set_64bits (AtomMOOV * moov, gboolean large_file)
     atom_trak_set_64bits (trak, large_file);
     traks = g_list_next (traks);
   }
+}
+
+void
+atom_moov_set_fragmented (AtomMOOV * moov, gboolean fragmented)
+{
+  moov->fragmented = fragmented;
 }
 
 void
