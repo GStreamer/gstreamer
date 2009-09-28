@@ -116,15 +116,15 @@ typedef struct
   GstElement *sink;             /* custom sink to receive subpicture buffers */
 } GstPlaySubpChain;
 
-#define GST_PLAY_SINK_GET_LOCK(playsink) (((GstPlaySink *)playsink)->lock)
-#define GST_PLAY_SINK_LOCK(playsink)     g_mutex_lock (GST_PLAY_SINK_GET_LOCK (playsink))
-#define GST_PLAY_SINK_UNLOCK(playsink)   g_mutex_unlock (GST_PLAY_SINK_GET_LOCK (playsink))
+#define GST_PLAY_SINK_GET_LOCK(playsink) (&((GstPlaySink *)playsink)->lock)
+#define GST_PLAY_SINK_LOCK(playsink)     g_static_rec_mutex_lock (GST_PLAY_SINK_GET_LOCK (playsink))
+#define GST_PLAY_SINK_UNLOCK(playsink)   g_static_rec_mutex_unlock (GST_PLAY_SINK_GET_LOCK (playsink))
 
 struct _GstPlaySink
 {
   GstBin bin;
 
-  GMutex *lock;
+  GStaticRecMutex lock;
 
   gboolean async_pending;
   gboolean need_async_start;
@@ -354,7 +354,7 @@ gst_play_sink_init (GstPlaySink * playsink)
   playsink->font_desc = NULL;
   playsink->flags = DEFAULT_FLAGS;
 
-  playsink->lock = g_mutex_new ();
+  g_static_rec_mutex_init (&playsink->lock);
   playsink->need_async_start = TRUE;
   GST_OBJECT_FLAG_SET (playsink, GST_ELEMENT_IS_SINK);
 }
@@ -438,7 +438,7 @@ gst_play_sink_finalize (GObject * object)
 
   playsink = GST_PLAY_SINK (object);
 
-  g_mutex_free (playsink->lock);
+  g_static_rec_mutex_free (&playsink->lock);
 
   G_OBJECT_CLASS (gst_play_sink_parent_class)->finalize (object);
 }
