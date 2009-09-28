@@ -410,6 +410,12 @@ gst_queue_init (GstQueue * queue, GstQueueClass * g_class)
   queue->item_del = g_cond_new ();
   queue->queue = g_queue_new ();
 
+  queue->sinktime = GST_CLOCK_TIME_NONE;
+  queue->srctime = GST_CLOCK_TIME_NONE;
+
+  queue->sink_tainted = TRUE;
+  queue->src_tainted = TRUE;
+
   GST_DEBUG_OBJECT (queue,
       "initialized queue's not_empty & not_full conditions");
 }
@@ -525,12 +531,21 @@ update_time_level (GstQueue * queue)
 {
   gint64 sink_time, src_time;
 
-  sink_time =
-      gst_segment_to_running_time (&queue->sink_segment, GST_FORMAT_TIME,
-      queue->sink_segment.last_stop);
+  if (queue->sink_tainted) {
+    queue->sinktime =
+        gst_segment_to_running_time (&queue->sink_segment, GST_FORMAT_TIME,
+        queue->sink_segment.last_stop);
+    queue->sink_tainted = FALSE;
+  }
+  sink_time = queue->sinktime;
 
-  src_time = gst_segment_to_running_time (&queue->src_segment, GST_FORMAT_TIME,
-      queue->src_segment.last_stop);
+  if (queue->src_tainted) {
+    queue->srctime =
+        gst_segment_to_running_time (&queue->src_segment, GST_FORMAT_TIME,
+        queue->src_segment.last_stop);
+    queue->src_tainted = FALSE;
+  }
+  src_time = queue->srctime;
 
   GST_LOG_OBJECT (queue, "sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT,
       GST_TIME_ARGS (sink_time), GST_TIME_ARGS (src_time));
@@ -544,7 +559,8 @@ update_time_level (GstQueue * queue)
 /* take a NEWSEGMENT event and apply the values to segment, updating the time
  * level of queue. */
 static void
-apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment)
+apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment,
+    gboolean sink)
 {
   gboolean update;
   GstFormat format;
@@ -568,6 +584,11 @@ apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment)
   gst_segment_set_newsegment_full (segment, update,
       rate, arate, format, start, stop, time);
 
+  if (sink)
+    queue->sink_tainted = TRUE;
+  else
+    queue->src_tainted = TRUE;
+
   GST_DEBUG_OBJECT (queue,
       "configured NEWSEGMENT %" GST_SEGMENT_FORMAT, segment);
 
@@ -578,7 +599,7 @@ apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment)
 /* take a buffer and update segment, updating the time level of the queue. */
 static void
 apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment,
-    gboolean with_duration)
+    gboolean with_duration, gboolean sink)
 {
   GstClockTime duration, timestamp;
 
@@ -598,6 +619,11 @@ apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment,
       GST_TIME_ARGS (timestamp));
 
   gst_segment_set_last_stop (segment, GST_FORMAT_TIME, timestamp);
+  if (sink)
+    queue->sink_tainted = TRUE;
+  else
+    queue->src_tainted = TRUE;
+
 
   /* calc diff with other end */
   update_time_level (queue);
@@ -621,6 +647,9 @@ gst_queue_locked_flush (GstQueue * queue)
   gst_segment_init (&queue->src_segment, GST_FORMAT_TIME);
   queue->head_needs_discont = queue->tail_needs_discont = FALSE;
 
+  queue->sinktime = queue->srctime = GST_CLOCK_TIME_NONE;
+  queue->sink_tainted = queue->src_tainted = TRUE;
+
   /* we deleted a lot of something */
   GST_QUEUE_SIGNAL_DEL (queue);
 }
@@ -635,7 +664,7 @@ gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
     /* add buffer to the statistics */
     queue->cur_level.buffers++;
     queue->cur_level.bytes += GST_BUFFER_SIZE (buffer);
-    apply_buffer (queue, buffer, &queue->sink_segment, TRUE);
+    apply_buffer (queue, buffer, &queue->sink_segment, TRUE, TRUE);
 
     /* if this is the first buffer update the end side as well, but without the
      * duration. */
@@ -658,7 +687,7 @@ gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
         queue->eos = TRUE;
         break;
       case GST_EVENT_NEWSEGMENT:
-        apply_segment (queue, event, &queue->sink_segment);
+        apply_segment (queue, event, &queue->sink_segment, TRUE);
         /* a new segment allows us to accept more buffers if we got UNEXPECTED
          * from downstream */
         queue->unexpected = FALSE;
@@ -696,7 +725,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
 
     queue->cur_level.buffers--;
     queue->cur_level.bytes -= GST_BUFFER_SIZE (buffer);
-    apply_buffer (queue, buffer, &queue->src_segment, TRUE);
+    apply_buffer (queue, buffer, &queue->src_segment, TRUE, FALSE);
 
     /* if the queue is empty now, update the other side */
     if (queue->cur_level.buffers == 0)
@@ -713,7 +742,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
         GST_QUEUE_CLEAR_LEVEL (queue->cur_level);
         break;
       case GST_EVENT_NEWSEGMENT:
-        apply_segment (queue, event, &queue->src_segment);
+        apply_segment (queue, event, &queue->src_segment, FALSE);
         break;
       default:
         break;
