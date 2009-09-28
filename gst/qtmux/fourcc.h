@@ -194,6 +194,21 @@ G_BEGIN_DECLS
 #define FOURCC_SEQH     GST_MAKE_FOURCC('S','E','Q','H')
 #define FOURCC_SMI_     GST_MAKE_FOURCC('S','M','I',' ')
 
+/* fragmented mp4 */
+#define FOURCC_mvex     GST_MAKE_FOURCC('m','v','e','x')
+#define FOURCC_mehd     GST_MAKE_FOURCC('m','e','h','d')
+#define FOURCC_trex     GST_MAKE_FOURCC('t','r','e','x')
+#define FOURCC_mfra     GST_MAKE_FOURCC('m','f','r','a')
+#define FOURCC_moof     GST_MAKE_FOURCC('m','o','o','f')
+#define FOURCC_tfra     GST_MAKE_FOURCC('t','f','r','a')
+#define FOURCC_tfhd     GST_MAKE_FOURCC('t','f','h','d')
+#define FOURCC_trun     GST_MAKE_FOURCC('t','r','u','n')
+#define FOURCC_sdtp     GST_MAKE_FOURCC('s','d','t','p')
+#define FOURCC_mfro     GST_MAKE_FOURCC('m','f','r','o')
+#define FOURCC_mfhd     GST_MAKE_FOURCC('m','f','h','d')
+#define FOURCC_mvhd     GST_MAKE_FOURCC('m','v','h','d')
+#define FOURCC_traf     GST_MAKE_FOURCC('t','r','a','f')
+
 /* Xiph fourcc */
 #define FOURCC_XiTh     GST_MAKE_FOURCC('X','i','T','h')
 #define FOURCC_XdxT     GST_MAKE_FOURCC('X','d','x','T')
@@ -219,6 +234,9 @@ G_BEGIN_DECLS
    'm', 's', then the 16 bit wave codec id */
 #define MS_WAVE_FOURCC(codecid)  GST_MAKE_FOURCC( \
         'm', 's', ((codecid)>>8)&0xff, ((codecid)&0xff))
+
+#define FOURCC_owma     GST_MAKE_FOURCC('o','w','m','a')
+#define FOURCC_ovc1     GST_MAKE_FOURCC('o','v','c','1')
 
 G_END_DECLS
 
