@@ -61,6 +61,39 @@ typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
 					 GESTrackObject * trobject,
 					 GstElement * gnlobj);
 
+
+/**
+ * GES_TIMELINE_OBJECT_START:
+ * @obj: a #GESTimelineObject
+ *
+ * The start position of the object (in nanoseconds).
+ */
+#define GES_TIMELINE_OBJECT_START(obj) (((GESTimelineObject*)obj)->start)
+
+/**
+ * GES_TIMELINE_OBJECT_INPOINT:
+ * @obj: a #GESTimelineObject
+ *
+ * The in-point of the object (in nanoseconds).
+ */
+#define GES_TIMELINE_OBJECT_INPOINT(obj) (((GESTimelineObject*)obj)->inpoint)
+
+/**
+ * GES_TIMELINE_OBJECT_DURATION:
+ * @obj: a #GESTimelineObject
+ *
+ * The duration position of the object (in nanoseconds).
+ */
+#define GES_TIMELINE_OBJECT_DURATION(obj) (((GESTimelineObject*)obj)->duration)
+
+/**
+ * GES_TIMELINE_OBJECT_PRIORITY:
+ * @obj: a #GESTimelineObject
+ *
+ * The priority of the object (in nanoseconds).
+ */
+#define GES_TIMELINE_OBJECT_PRIORITY(obj) (((GESTimelineObject*)obj)->priority)
+
 /**
  * GESTimelineObject:
  * @layer: the #GESTImelineLayer where this object is being used.
