@@ -45,6 +45,12 @@ G_BEGIN_DECLS
 
 struct _GESSimpleTimelineLayer {
   GESTimelineLayer parent;
+
+  /*< private >*/
+  /* Sorted list of objects */
+  GList *objects;
+
+  gboolean adding_object;
 };
 
 struct _GESSimpleTimelineLayerClass {
