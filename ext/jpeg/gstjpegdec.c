@@ -850,7 +850,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstJpegDec *dec;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
   guchar *data, *outdata;
   guchar *base[3], *last[3];
   guint img_len, outsize;
@@ -1143,6 +1143,10 @@ exit:
 need_more_data:
   {
     GST_LOG_OBJECT (dec, "we need more data");
+    if (outbuf) {
+      gst_buffer_unref (outbuf);
+      outbuf = NULL;
+    }
     ret = GST_FLOW_OK;
     goto exit;
   }
@@ -1160,6 +1164,10 @@ decode_error:
     GST_ELEMENT_ERROR (dec, STREAM, DECODE,
         (_("Failed to decode JPEG image")),
         ("Error #%u: %s", code, dec->jerr.pub.jpeg_message_table[code]));
+    if (outbuf) {
+      gst_buffer_unref (outbuf);
+      outbuf = NULL;
+    }
     ret = GST_FLOW_ERROR;
     goto done;
   }
