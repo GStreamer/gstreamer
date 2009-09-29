@@ -1098,8 +1098,8 @@ atom_tag_new (guint32 fourcc, guint32 flags_as_uint)
   tag->header.type = fourcc;
   atom_tag_data_init (&tag->data);
   tag->data.header.flags[2] = flags_as_uint & 0xFF;
-  tag->data.header.flags[1] = flags_as_uint & 0xFF00;
-  tag->data.header.flags[0] = flags_as_uint & 0xFF0000;
+  tag->data.header.flags[1] = (flags_as_uint & 0xFF00) >> 8;
+  tag->data.header.flags[0] = (flags_as_uint & 0xFF0000) >> 16;
   return tag;
 }
 
