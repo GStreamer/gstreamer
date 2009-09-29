@@ -25,8 +25,6 @@
 
 static guint64 nbbuffers;
 static GMutex *mutex;
-static GCond *cond;
-static gboolean ready = FALSE;
 
 static GstClockTime
 gst_get_current_time (void)
@@ -46,10 +44,6 @@ run_test (void *user_data)
   GstClockTime start, end;
 
   g_mutex_lock (mutex);
-  if (!ready) {
-    g_print ("Waiting for cond thread %d\n", threadid);
-    g_cond_wait (cond, mutex);
-  }
   g_mutex_unlock (mutex);
 
   start = gst_get_current_time ();
@@ -80,7 +74,6 @@ main (gint argc, gchar * argv[])
 
   gst_init (&argc, &argv);
   mutex = g_mutex_new ();
-  cond = g_cond_new ();
 
   if (argc != 3) {
     g_print ("usage: %s <num_threads> <nbbuffers>\n", argv[0]);
@@ -90,6 +83,7 @@ main (gint argc, gchar * argv[])
   num_threads = atoi (argv[1]);
   nbbuffers = atoi (argv[2]);
 
+  g_mutex_lock (mutex);
   /* Let's just make sure the GstBufferClass is loaded ... */
   tmp = gst_buffer_new ();
 
@@ -104,15 +98,9 @@ main (gint argc, gchar * argv[])
     }
   }
 
-  g_print ("MAIN taking lock\n");
-  g_mutex_lock (mutex);
-  start = gst_get_current_time ();
-  g_print ("MAIN broadcasting\n");
-  ready = TRUE;
-  g_cond_broadcast (cond);
-  g_print ("MAIN RELEASING\n");
-  g_mutex_unlock (mutex);
   /* Signal all threads to start */
+  start = gst_get_current_time ();
+  g_mutex_unlock (mutex);
 
   for (t = 0; t < num_threads; t++) {
     if (threads[t])
