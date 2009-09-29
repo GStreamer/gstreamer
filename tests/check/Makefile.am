@@ -94,6 +94,7 @@ REGISTRY_CHECKS =				\
 	libs/basesrc				\
 	libs/basesink				\
 	libs/controller				\
+	libs/queuearray				\
 	libs/typefindhelper			\
 	pipelines/seek				\
 	pipelines/stress			\
