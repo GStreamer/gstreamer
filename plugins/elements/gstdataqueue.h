@@ -24,6 +24,7 @@
 #define __GST_DATA_QUEUE_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstqueuearray.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_DATA_QUEUE \
@@ -120,8 +121,8 @@ struct _GstDataQueue
   GObject object;
 
   /*< private >*/
-  /* the queue of data we're keeping our grubby hands on */
-  GQueue *queue;
+  /* the array of data we're keeping our grubby hands on */
+  GstQueueArray *queue;
 
   GstDataQueueSize cur_level;   /* size of the queue */
   GstDataQueueCheckFullFunction checkfull;      /* Callback to check if the queue is full */

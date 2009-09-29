@@ -181,7 +181,7 @@ gst_data_queue_init (GstDataQueue * queue)
   g_mutex_init (&queue->qlock);
   g_cond_init (&queue->item_add);
   g_cond_init (&queue->item_del);
-  queue->queue = g_queue_new ();
+  queue->queue = gst_queue_array_new (50);
 
   GST_DEBUG ("initialized queue's not_empty & not_full conditions");
 }
@@ -239,8 +239,8 @@ gst_data_queue_new (GstDataQueueCheckFullFunction checkfull, gpointer checkdata)
 static void
 gst_data_queue_cleanup (GstDataQueue * queue)
 {
-  while (!g_queue_is_empty (queue->queue)) {
-    GstDataQueueItem *item = g_queue_pop_head (queue->queue);
+  while (!gst_queue_array_is_empty (queue->queue)) {
+    GstDataQueueItem *item = gst_queue_array_pop_head (queue->queue);
 
     /* Just call the destroy notify on the item */
     item->destroy (item);
@@ -259,7 +259,7 @@ gst_data_queue_finalize (GObject * object)
   GST_DEBUG ("finalizing queue");
 
   gst_data_queue_cleanup (queue);
-  g_queue_free (queue->queue);
+  gst_queue_array_free (queue->queue);
 
   GST_DEBUG ("free mutex");
   g_mutex_clear (&queue->qlock);
@@ -441,7 +441,7 @@ gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
     }
   }
 
-  g_queue_push_tail (queue->queue, item);
+  gst_queue_array_push_tail (queue->queue, item);
 
   if (item->visible)
     queue->cur_level.visible++;
@@ -507,7 +507,7 @@ gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
   }
 
   /* Get the item from the GQueue */
-  *item = g_queue_pop_head (queue->queue);
+  *item = gst_queue_array_pop_head (queue->queue);
 
   /* update current level counter */
   if ((*item)->visible)
@@ -532,6 +532,12 @@ flushing:
   }
 }
 
+static gint
+is_of_type (gconstpointer a, gconstpointer b)
+{
+  return !G_TYPE_CHECK_INSTANCE_TYPE (a, GPOINTER_TO_INT (b));
+}
+
 /**
  * gst_data_queue_drop_head:
  * @queue: The #GstDataQueue to drop an item from.
@@ -547,27 +553,21 @@ gboolean
 gst_data_queue_drop_head (GstDataQueue * queue, GType type)
 {
   gboolean res = FALSE;
-  GList *item;
   GstDataQueueItem *leak = NULL;
+  guint idx;
 
   g_return_val_if_fail (GST_IS_DATA_QUEUE (queue), FALSE);
 
   GST_DEBUG ("queue:%p", queue);
 
   GST_DATA_QUEUE_MUTEX_LOCK (queue);
-  for (item = g_queue_peek_head_link (queue->queue); item; item = item->next) {
-    GstDataQueueItem *tmp = (GstDataQueueItem *) item->data;
+  idx = gst_queue_array_find (queue->queue, is_of_type, GINT_TO_POINTER (type));
 
-    if (G_TYPE_CHECK_INSTANCE_TYPE (tmp->object, type)) {
-      leak = tmp;
-      break;
-    }
-  }
-
-  if (!leak)
+  if (idx == -1)
     goto done;
 
-  g_queue_delete_link (queue->queue, item);
+  leak = queue->queue->array[idx];
+  gst_queue_array_drop_element (queue->queue, idx);
 
   if (leak->visible)
     queue->cur_level.visible--;
