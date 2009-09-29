@@ -53,6 +53,7 @@ struct _GESTimelineLayer {
 struct _GESTimelineLayerClass {
   GObjectClass parent_class;
 
+  /*< signals >*/
   void	(*object_added)		(GESTimelineLayer * layer, GESTimelineObject * object);
   void	(*object_removed)	(GESTimelineLayer * layer, GESTimelineObject * object);
 };
