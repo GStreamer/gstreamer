@@ -2218,9 +2218,13 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
   guint64 offset = 0;
   guint64 size;
 
-  while ((data = gst_type_find_peek (tf, offset, 8)) != NULL) {
+  while ((data = gst_type_find_peek (tf, offset, 12)) != NULL) {
     guint64 new_offset;
 
+    if (STRNCMP (&data[4], "ftypqt  ", 8) == 0) {
+      tip = GST_TYPE_FIND_MAXIMUM;
+      break;
+    }
     /* box/atom types that are in common with ISO base media file format */
     if (STRNCMP (&data[4], "moov", 4) == 0 ||
         STRNCMP (&data[4], "mdat", 4) == 0 ||
