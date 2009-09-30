@@ -56,6 +56,7 @@ enum
   PROP_INPOINT,
   PROP_DURATION,
   PROP_PRIORITY,
+  PROP_ACTIVE
 };
 
 static gboolean
@@ -80,6 +81,9 @@ ges_track_object_get_property (GObject * object, guint property_id,
     case PROP_PRIORITY:
       g_value_set_uint (value, tobj->priority);
       break;
+    case PROP_ACTIVE:
+      g_value_set_boolean (value, tobj->active);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -103,6 +107,9 @@ ges_track_object_set_property (GObject * object, guint property_id,
       break;
     case PROP_PRIORITY:
       ges_track_object_set_priority_internal (tobj, g_value_get_uint (value));
+      break;
+    case PROP_ACTIVE:
+      ges_track_object_set_active (tobj, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -180,6 +187,16 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       g_param_spec_uint ("priority", "Priority",
           "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
 
+  /**
+   * GESTrackObject:active
+   *
+   * Whether the object should be taken into account in the #GEStrack output.
+   * If #FALSE, then its contents will not be used in the resulting track.
+   */
+  g_object_class_install_property (object_class, PROP_ACTIVE,
+      g_param_spec_boolean ("active", "Active", "Use object in output",
+          TRUE, G_PARAM_READWRITE));
+
   klass->create_gnl_object = ges_track_object_create_gnl_object_func;
 }
 
@@ -253,6 +270,20 @@ ges_track_object_set_priority_internal (GESTrackObject * object,
     return FALSE;
 
   g_object_set (object->gnlobject, "priority", priority, NULL);
+  return TRUE;
+}
+
+gboolean
+ges_track_object_set_active (GESTrackObject * object, gboolean active)
+{
+  GST_DEBUG ("object:%p, active:%d", object, active);
+
+  g_return_val_if_fail (object->gnlobject, FALSE);
+
+  if (G_UNLIKELY (active == object->active))
+    return FALSE;
+
+  g_object_set (object->gnlobject, "active", active, NULL);
   return TRUE;
 }
 

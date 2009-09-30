@@ -72,6 +72,7 @@ struct _GESTrackObject {
   guint64 inpoint;
   guint64 duration;
   guint32 priority;
+  gboolean active;
 
   GstElement *gnlobject;
 };
@@ -105,7 +106,7 @@ gboolean ges_track_object_set_start_internal (GESTrackObject * object, guint64 s
 gboolean ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint);
 gboolean ges_track_object_set_duration_internal (GESTrackObject * object, guint64 duration);
 gboolean ges_track_object_set_priority_internal (GESTrackObject * object, guint32 priority);
-
+gboolean ges_track_object_set_active (GESTrackObject * object, gboolean active);
 G_END_DECLS
 
 #endif /* _GES_TRACK_OBJECT */
