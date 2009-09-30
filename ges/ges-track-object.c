@@ -228,7 +228,6 @@ ges_track_object_set_start_internal (GESTrackObject * object, guint64 start)
 gboolean
 ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint)
 {
-  guint64 dur;
 
   GST_DEBUG ("object:%p, inpoint:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (inpoint));
@@ -238,11 +237,8 @@ ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint)
   if (G_UNLIKELY (inpoint == object->inpoint))
     return FALSE;
 
-  /* Calculate new media-start/duration/media-duration */
-  dur = object->inpoint - inpoint + object->duration;
+  g_object_set (object->gnlobject, "media-start", inpoint, NULL);
 
-  g_object_set (object->gnlobject, "media-start", inpoint, "duration", dur,
-      "media-duration", dur, NULL);
   return TRUE;
 }
 
@@ -292,6 +288,88 @@ ges_track_object_set_active (GESTrackObject * object, gboolean active)
   return TRUE;
 }
 
+/* Callbacks from the GNonLin object */
+void
+gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
+    GESTrackObject * obj)
+{
+  guint64 start;
+  g_object_get (gnlobject, "start", &start, NULL);
+
+  GST_DEBUG ("gnlobject start : %" GST_TIME_FORMAT " current : %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (obj->start));
+
+  if (start != obj->start) {
+    obj->start = start;
+    /* FIXME : emit changed */
+  }
+}
+
+/* Callbacks from the GNonLin object */
+void
+gnlobject_media_start_cb (GstElement * gnlobject,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrackObject * obj)
+{
+  guint64 start;
+  g_object_get (gnlobject, "media-start", &start, NULL);
+
+  GST_DEBUG ("gnlobject in-point : %" GST_TIME_FORMAT " current : %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (obj->inpoint));
+
+  if (start != obj->inpoint) {
+    obj->inpoint = start;
+    /* FIXME : emit changed */
+  }
+}
+
+void
+gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
+    GESTrackObject * obj)
+{
+  guint64 priority;
+  g_object_get (gnlobject, "priority", &priority, NULL);
+
+  GST_DEBUG ("gnlobject priority : %" GST_TIME_FORMAT " current : %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (priority), GST_TIME_ARGS (obj->priority));
+
+  if (priority != obj->priority) {
+    obj->priority = priority;
+    /* FIXME : emit changed */
+  }
+}
+
+void
+gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
+    GESTrackObject * obj)
+{
+  guint64 duration;
+  g_object_get (gnlobject, "duration", &duration, NULL);
+
+  GST_DEBUG ("gnlobject duration : %" GST_TIME_FORMAT " current : %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (duration), GST_TIME_ARGS (obj->duration));
+
+  if (duration != obj->duration) {
+    obj->duration = duration;
+    /* FIXME : emit changed */
+  }
+}
+
+void
+gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
+    GESTrackObject * obj)
+{
+  gboolean active;
+  g_object_get (gnlobject, "active", &active, NULL);
+
+  GST_DEBUG ("gnlobject active : %d current : %d", active, obj->active);
+
+  if (active != obj->active) {
+    obj->active = active;
+    /* FIXME : emit changed */
+  }
+}
+
+
 /* default 'create_gnl_object' virtual method implementation */
 static gboolean
 ges_track_object_create_gnl_object_func (GESTrackObject * object)
@@ -329,6 +407,18 @@ ensure_gnl_object (GESTrackObject * object)
         ("'create_gnl_object' implementation returned TRUE but no GnlObject is available");
     return FALSE;
   }
+
+  /* Connect to property notifications */
+  g_signal_connect (G_OBJECT (object->gnlobject), "notify::start",
+      G_CALLBACK (gnlobject_start_cb), object);
+  g_signal_connect (G_OBJECT (object->gnlobject), "notify::media-start",
+      G_CALLBACK (gnlobject_media_start_cb), object);
+  g_signal_connect (G_OBJECT (object->gnlobject), "notify::duration",
+      G_CALLBACK (gnlobject_duration_cb), object);
+  g_signal_connect (G_OBJECT (object->gnlobject), "notify::priority",
+      G_CALLBACK (gnlobject_priority_cb), object);
+  g_signal_connect (G_OBJECT (object->gnlobject), "notify::active",
+      G_CALLBACK (gnlobject_active_cb), object);
 
   /* 2. Fill in the GnlObject */
   if (res) {
