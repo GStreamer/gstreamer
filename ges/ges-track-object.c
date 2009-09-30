@@ -203,6 +203,11 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
 static void
 ges_track_object_init (GESTrackObject * self)
 {
+  /* Sane default values */
+  self->start = 0;
+  self->inpoint = 0;
+  self->duration = GST_SECOND;
+  self->priority = 1;
 }
 
 gboolean
