@@ -1063,6 +1063,22 @@ write_error:
   }
 }
 
+static gboolean
+gst_qt_mux_seek_to_beginning (FILE * f)
+{
+#ifdef HAVE_FSEEKO
+  if (fseeko (f, (off_t) 0, SEEK_SET) != 0)
+    return FALSE;
+#elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
+  if (lseek (fileno (f), (off_t) 0, SEEK_SET) == (off_t) - 1)
+    return FALSE;
+#else
+  if (fseek (f, (long) 0, SEEK_SET) != 0)
+    return FALSE;
+#endif
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_qt_mux_send_buffered_data (GstQTMux * qtmux, guint64 * offset)
 {
@@ -1072,17 +1088,8 @@ gst_qt_mux_send_buffered_data (GstQTMux * qtmux, guint64 * offset)
   if (fflush (qtmux->fast_start_file))
     goto flush_failed;
 
-#ifdef HAVE_FSEEKO
-  if (fseeko (qtmux->fast_start_file, (off_t) 0, SEEK_SET) != 0)
+  if (!gst_qt_mux_seek_to_beginning (qtmux->fast_start_file))
     goto seek_failed;
-#elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
-  if (lseek (fileno (qtmux->fast_start_file), (off_t) 0,
-          SEEK_SET) == (off_t) - 1)
-    goto seek_failed;
-#else
-  if (fseek (qtmux->fast_start_file, (long) 0, SEEK_SET) != 0)
-    goto seek_failed;
-#endif
 
   /* hm, this could all take a really really long time,
    * but there may not be another way to get moov atom first
@@ -1104,6 +1111,11 @@ gst_qt_mux_send_buffered_data (GstQTMux * qtmux, guint64 * offset)
   }
   if (buf)
     gst_buffer_unref (buf);
+
+  if (ftruncate (fileno (qtmux->fast_start_file), 0))
+    goto seek_failed;
+  if (!gst_qt_mux_seek_to_beginning (qtmux->fast_start_file))
+    goto seek_failed;
 
   return ret;
 
