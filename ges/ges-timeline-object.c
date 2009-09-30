@@ -262,9 +262,9 @@ ges_timeline_object_fill_track_object (GESTimelineObject * object,
     GST_DEBUG ("Setting properties");
 
     ges_track_object_set_start_internal (trackobj, object->start);
-    ges_track_object_set_inpoint_internal (trackobj, object->inpoint);
-    ges_track_object_set_duration_internal (trackobj, object->duration);
     ges_track_object_set_priority_internal (trackobj, object->priority);
+    ges_track_object_set_duration_internal (trackobj, object->duration);
+    ges_track_object_set_inpoint_internal (trackobj, object->inpoint);
 
   }
 
