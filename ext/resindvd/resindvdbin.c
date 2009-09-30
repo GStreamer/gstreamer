@@ -60,20 +60,18 @@ enum
   ARG_DEVICE
 };
 
-/* FIXME: Could list specific video and audio caps: */
 static GstStaticPadTemplate video_src_template =
 GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS
-    ("video/mpeg, mpegversion=(int) { 1, 2 }, systemstream=false")
+    GST_STATIC_CAPS ("video/x-raw-yuv")
     );
 
 static GstStaticPadTemplate audio_src_template =
     GST_STATIC_PAD_TEMPLATE ("audio",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("audio/x-raw-int;audio/x-raw-float")
+    GST_STATIC_CAPS ("audio/x-raw-int; audio/x-raw-float")
     );
 
 static GstStaticPadTemplate subpicture_src_template =
@@ -360,6 +358,7 @@ _pad_block_destroy_notify (RsnDvdBinPadBlockCtx * ctx)
 static gboolean
 create_elements (RsnDvdBin * dvdbin)
 {
+  GstPadTemplate *src_templ = NULL;
   GstPad *src = NULL;
   GstPad *sink = NULL;
   RsnDvdBinPadBlockCtx *bctx = NULL;
@@ -451,7 +450,9 @@ create_elements (RsnDvdBin * dvdbin)
 #endif
   if (src == NULL)
     goto failed_video_ghost;
-  dvdbin->video_pad = gst_ghost_pad_new ("video", src);
+  src_templ = gst_static_pad_template_get (&video_src_template);
+  dvdbin->video_pad = gst_ghost_pad_new_from_template ("video", src, src_templ);
+  gst_object_unref (src_templ);
   if (dvdbin->video_pad == NULL)
     goto failed_video_ghost;
   gst_pad_set_active (dvdbin->video_pad, TRUE);
@@ -494,7 +495,10 @@ create_elements (RsnDvdBin * dvdbin)
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_SPUQ], "src");
   if (src == NULL)
     goto failed_spu_ghost;
-  dvdbin->subpicture_pad = gst_ghost_pad_new ("subpicture", src);
+  src_templ = gst_static_pad_template_get (&subpicture_src_template);
+  dvdbin->subpicture_pad =
+      gst_ghost_pad_new_from_template ("subpicture", src, src_templ);
+  gst_object_unref (src_templ);
   if (dvdbin->subpicture_pad == NULL)
     goto failed_spu_ghost;
   gst_pad_set_active (dvdbin->subpicture_pad, TRUE);
@@ -551,7 +555,9 @@ create_elements (RsnDvdBin * dvdbin)
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUD_MUNGE], "src");
   if (src == NULL)
     goto failed_aud_ghost;
-  dvdbin->audio_pad = gst_ghost_pad_new ("audio", src);
+  src_templ = gst_static_pad_template_get (&audio_src_template);
+  dvdbin->audio_pad = gst_ghost_pad_new_from_template ("audio", src, src_templ);
+  gst_object_unref (src_templ);
   if (dvdbin->audio_pad == NULL)
     goto failed_aud_ghost;
   gst_pad_set_active (dvdbin->audio_pad, TRUE);
@@ -589,7 +595,7 @@ failed_vidq_connect:
 #endif
 failed_video_ghost:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
-      ("Could not ghost SPU output pad"));
+      ("Could not ghost video output pad"));
   goto error_out;
 failed_spuq_connect:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
