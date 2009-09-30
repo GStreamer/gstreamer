@@ -90,13 +90,13 @@ LIBGSTCHECK_EXPORTED_SYMBOLS = \
 	$(LIBGSTCHECK_EXPORTED_FUNCS)
 
 print-check-symbols:
-	CHECK_SYMS=`sed -n -e 's/^..*CK_EXPORT[[:space:]][[:space:]]*\([[:alnum:]_][[:alnum:]_]*\)..*$$/\1/p' @top_srcdir@/libs/gst/check/libcheck/check.h.in` ; \
+	CHECK_SYMS=`$(SED) -n -e 's/^..*CK_EXPORT[ ]\{1,\}\([_0-9A-Za-z]\{1,\}\)..*$$/\1/p' @top_srcdir@/libs/gst/check/libcheck/check.h.in` ; \
 	for s in $$CHECK_SYMS; do \
 	  echo $$s; \
 	done;
 
 $(SYMBOLS_FILE):
-	CHECK_SYMS=`sed -n -e 's/^..*CK_EXPORT[[:space:]][[:space:]]*\([[:alnum:]_][[:alnum:]_]*\)..*$$/\1/p' @top_srcdir@/libs/gst/check/libcheck/check.h.in` ; \
+	CHECK_SYMS=`$(SED) -n -e 's/^..*CK_EXPORT[ ]\{1,\}\([_0-9A-Za-z]\{1,\}\)..*$$/\1/p' @top_srcdir@/libs/gst/check/libcheck/check.h.in` ; \
 	rm -f $(SYMBOLS_FILE) 2>/dev/null; \
 	for s in $(LIBGSTCHECK_EXPORTED_SYMBOLS) $$CHECK_SYMS; do \
 	  echo $$s >> $(SYMBOLS_FILE); \
