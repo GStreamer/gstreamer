@@ -17,7 +17,8 @@ clean-local: clean-local-check
 check_PROGRAMS = \
 	ges/basic	\
 	ges/filesource	\
-	ges/simplelayer
+	ges/simplelayer	\
+	ges/timelineobject
 
 noinst_HEADERS = 
 
