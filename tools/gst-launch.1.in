@@ -30,7 +30,7 @@ Print help synopsis and available FLAGS
 .B  \-v, \-\-verbose
 Output status information and property notifications
 .TP 8
-.B  \-v, \-\-quiet
+.B  \-q, \-\-quiet
 Do not print any progress information
 .TP 8
 .B  \-m, \-\-messages
