@@ -8,7 +8,7 @@ libgstdv_la_LIBADD = \
 libgstdv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdv_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstdvdemux.h gstdvdec.h
+noinst_HEADERS = gstdvdemux.h gstdvdec.h gstsmptetimecode.h
 
 EXTRA_DIST = NOTES
 
