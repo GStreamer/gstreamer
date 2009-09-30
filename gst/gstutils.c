@@ -2654,7 +2654,7 @@ intersect_caps_func (GstPad * pad, GValue * ret, GstPad * orig)
  *
  * This function is useful as a default getcaps function for an element
  * that can handle any stream format, but requires all its pads to have
- * the same caps.  Two such elements are tee and aggregator.
+ * the same caps.  Two such elements are tee and adder.
  *
  * Returns: the intersection of the other pads' allowed caps.
  */
