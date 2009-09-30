@@ -6,7 +6,7 @@
 #  the receiver RTCP reports are sent to port 5007
 #
 #             .-------.      .----------.     .---------.   .-------.   .--------.
-#  RTP        |udpsrc |      | rtpbin   |     |pcmadepay|   |alawdec|   |alsasink|
+#  RTP        |udpsrc |      | rtpbin   |     |pcmadepay|   |alawdec|   |autoaudiosink|
 #  port=5002  |      src->recv_rtp recv_rtp->sink     src->sink   src->sink      |
 #             '-------'      |          |     '---------'   '-------'   '--------'
 #                            |          |      
@@ -30,6 +30,6 @@ DEST=127.0.0.1
 
 gst-launch -v gstrtpbin name=rtpbin                                                \
 	   udpsrc caps=$AUDIO_CAPS port=5002 ! rtpbin.recv_rtp_sink_0              \
-	         rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! alsasink \
+	         rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! autoaudiosink \
            udpsrc port=5003 ! rtpbin.recv_rtcp_sink_0                              \
          rtpbin.send_rtcp_src_0 ! udpsink port=5007 host=$DEST sync=false async=false

@@ -4,7 +4,7 @@
 #  sends the output of v4l2src as h264 encoded RTP on port 5000, RTCP is sent on
 #  port 5001. The destination is 127.0.0.1.
 #  the video receiver RTCP reports are received on port 5005
-#  sends the output of alsasrc as alaw encoded RTP on port 5002, RTCP is sent on
+#  sends the output of autoaudiosrc as alaw encoded RTP on port 5002, RTCP is sent on
 #  port 5003. The destination is 127.0.0.1.
 #  the receiver RTCP reports are received on port 5007
 #
@@ -22,7 +22,7 @@
 #                           '-------'      |          |              
 #                                          |          |
 # .-------.    .-------.    .-------.      |          |     .-------.
-# |alsasrc|    |alawenc|    |pcmapay|      | rtpbin   |     |udpsink|  RTP
+# |autoaudiosrc|    |alawenc|    |pcmapay|      | rtpbin   |     |udpsink|  RTP
 # |      src->sink    src->sink    src->send_rtp send_rtp->sink     | port=5002
 # '-------'    '-------'    '-------'      |          |     '-------'
 #                                          |          |      
@@ -58,7 +58,7 @@ VRTCPSINK="udpsink port=5001 host=$DEST sync=false async=false name=vrtcpsink"
 VRTCPSRC="udpsrc port=5005 name=vrtpsrc"
 
 # PCMA encode from the source
-AELEM="alsasrc"
+AELEM="autoaudiosrc"
 #AELEM="audiotestsrc is-live=1"
 ASOURCE="$AELEM ! queue ! audioresample ! audioconvert"
 AENC="alawenc ! rtppcmapay"

@@ -1,12 +1,12 @@
 #!/bin/sh
 #
 # A simple RTP server 
-#  sends the output of alsasrc as alaw encoded RTP on port 5002, RTCP is sent on
+#  sends the output of autoaudiosrc as alaw encoded RTP on port 5002, RTCP is sent on
 #  port 5003. The destination is 127.0.0.1.
 #  the receiver RTCP reports are received on port 5007
 #
 # .-------.    .-------.    .-------.      .----------.     .-------.
-# |alsasrc|    |alawenc|    |pcmapay|      | rtpbin   |     |udpsink|  RTP
+# |autoaudiosrc|    |alawenc|    |pcmapay|      | rtpbin   |     |udpsink|  RTP
 # |      src->sink    src->sink    src->send_rtp send_rtp->sink     | port=5002
 # '-------'    '-------'    '-------'      |          |     '-------'
 #                                          |          |      
@@ -21,7 +21,7 @@
 # change this to send the RTP data and RTCP to another host
 DEST=127.0.0.1
 
-#AELEM=alsasrc
+#AELEM=autoaudiosrc
 AELEM=audiotestsrc
 
 # PCMA encode from an the source

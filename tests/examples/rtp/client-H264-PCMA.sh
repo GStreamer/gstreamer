@@ -21,7 +21,7 @@
 #             '-------'      |          |              
 #                            |          |
 #             .-------.      |          |     .---------.   .-------.   .--------.
-#  RTP        |udpsrc |      | rtpbin   |     |pcmadepay|   |alawdec|   |alsasink|
+#  RTP        |udpsrc |      | rtpbin   |     |pcmadepay|   |alawdec|   |autoaudiosink|
 #  port=5002  |      src->recv_rtp recv_rtp->sink     src->sink   src->sink      |
 #             '-------'      |          |     '---------'   '-------'   '--------'
 #                            |          |      
@@ -53,6 +53,6 @@ gst-launch -v gstrtpbin name=rtpbin latency=$LATENCY                            
      udpsrc port=5001 ! rtpbin.recv_rtcp_sink_0                                       \
          rtpbin.send_rtcp_src_0 ! udpsink port=5005 host=$DEST sync=false async=false \
      udpsrc caps=$AUDIO_CAPS port=5002 ! rtpbin.recv_rtp_sink_1                       \
-       rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! alsasink     \
+       rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! autoaudiosink     \
      udpsrc port=5003 ! rtpbin.recv_rtcp_sink_1                                       \
          rtpbin.send_rtcp_src_1 ! udpsink port=5007 host=$DEST sync=false async=false
