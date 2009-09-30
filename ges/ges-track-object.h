@@ -46,6 +46,38 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_OBJECT, GESTrackObjectClass))
 
 /**
+ * GES_TRACK_OBJECT_START:
+ * @obj: a #GESTrackObject
+ *
+ * The start position of the object (in nanoseconds).
+ */
+#define GES_TRACK_OBJECT_START(obj) (((GESTrackObject*)obj)->start)
+
+/**
+ * GES_TRACK_OBJECT_INPOINT:
+ * @obj: a #GESTrackObject
+ *
+ * The in-point of the object (in nanoseconds).
+ */
+#define GES_TRACK_OBJECT_INPOINT(obj) (((GESTrackObject*)obj)->inpoint)
+
+/**
+ * GES_TRACK_OBJECT_DURATION:
+ * @obj: a #GESTrackObject
+ *
+ * The duration position of the object (in nanoseconds).
+ */
+#define GES_TRACK_OBJECT_DURATION(obj) (((GESTrackObject*)obj)->duration)
+
+/**
+ * GES_TRACK_OBJECT_PRIORITY:
+ * @obj: a #GESTrackObject
+ *
+ * The priority of the object (in nanoseconds).
+ */
+#define GES_TRACK_OBJECT_PRIORITY(obj) (((GESTrackObject*)obj)->priority)
+
+/**
  * GESTrackObject:
  * @timelineobj: The #GESTimelineObject to which this object belongs.
  * @track: The #GESTrack in which this object is.
