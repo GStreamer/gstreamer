@@ -30,6 +30,9 @@
 #include "avcodec.h"
 #include "gstffmpegcodecmap.h"
 
+GST_DEBUG_CATEGORY_EXTERN (ffmpegcolorspace_debug);
+#define GST_CAT_DEFAULT ffmpegcolorspace_debug
+
 static GstCaps *
 gst_ff_vid_caps_new (AVCodecContext * context,
     const char *mimetype, const char *fieldname, ...)

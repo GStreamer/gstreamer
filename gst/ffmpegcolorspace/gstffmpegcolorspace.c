@@ -39,7 +39,7 @@
 #include "gstffmpegcolorspace.h"
 #include "gstffmpegcodecmap.h"
 
-GST_DEBUG_CATEGORY_STATIC (ffmpegcolorspace_debug);
+GST_DEBUG_CATEGORY (ffmpegcolorspace_debug);
 #define GST_CAT_DEFAULT ffmpegcolorspace_debug
 
 /* elementfactory information */
@@ -360,9 +360,6 @@ gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
 #endif
 
   gstbasetransform_class->passthrough_on_same_caps = TRUE;
-
-  GST_DEBUG_CATEGORY_INIT (ffmpegcolorspace_debug, "ffmpegcolorspace", 0,
-      "FFMPEG-based colorspace converter");
 }
 
 static void
@@ -488,6 +485,9 @@ gboolean
 gst_ffmpegcolorspace_register (GstPlugin * plugin)
 {
   GstCaps *caps;
+
+  GST_DEBUG_CATEGORY_INIT (ffmpegcolorspace_debug, "ffmpegcolorspace", 0,
+      "FFMPEG-based colorspace converter");
 
   /* template caps */
   caps = gst_ffmpegcsp_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
