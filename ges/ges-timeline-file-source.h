@@ -49,6 +49,8 @@ struct _GESTimelineFileSource {
 
   /*< private >*/
   gchar *uri;
+
+  gboolean mute;
 };
 
 struct _GESTimelineFileSourceClass {
