@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gst/pbutils/missing-plugins.h>
 
 #include "resindvdbin.h"
 #include "resindvdsrc.h"
@@ -753,9 +754,21 @@ demux_pad_added (GstElement * element, GstPad * pad, RsnDvdBin * dvdbin)
         gst_element_get_request_pad (dvdbin->pieces[DVD_ELEM_AUD_SELECT],
         "sink%d");
   } else {
-    /* FIXME: Consider and fire a missing-element message here */
+    GstStructure *s;
+
     GST_DEBUG_OBJECT (dvdbin, "Ignoring unusable pad w/ caps %" GST_PTR_FORMAT,
         caps);
+    gst_element_post_message (GST_ELEMENT_CAST (dvdbin),
+        gst_missing_decoder_message_new (GST_ELEMENT_CAST (dvdbin), caps));
+
+    s = gst_caps_get_structure (caps, 0);
+    if (g_str_has_prefix ("video/", gst_structure_get_name (s))) {
+      GST_ELEMENT_ERROR (dvdbin, STREAM, CODEC_NOT_FOUND, (NULL),
+          ("No MPEG video decoder found"));
+    } else {
+      GST_ELEMENT_WARNING (dvdbin, STREAM, CODEC_NOT_FOUND, (NULL),
+          ("No MPEG video decoder found"));
+    }
   }
 
   gst_caps_unref (caps);
