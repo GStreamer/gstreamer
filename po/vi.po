@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2009-05-13 23:16+0930\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-18 16:57+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -126,6 +126,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Lỗi GStreamer: không thay đổi được tình trạng, và một phần tử nào đó không "
+"gửi được thông điệp lỗi đúng chứa lý do của lỗi này."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề đệm."
@@ -265,10 +267,10 @@ msgid "title"
 msgstr "tựa"
 
 msgid "commonly used title"
-msgstr "tựa thường dụng"
+msgstr "tựa đề thường dụng"
 
 msgid "title sortname"
-msgstr "tựa đề sắp xếp tên"
+msgstr "tên sắp tựa"
 
 msgid "commonly used title for sorting purposes"
 msgstr "tựa đề thường dụng cho mục đích sắp xếp"
@@ -280,7 +282,7 @@ msgid "person(s) responsible for the recording"
 msgstr "người thu nhạc này"
 
 msgid "artist sortname"
-msgstr "nghệ sĩ sắp xếp tên"
+msgstr "tên sắp nghệ sĩ"
 
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "(các) người chịu trách nhiệm về bản thu, cho mục đích sắp xếp"
@@ -292,24 +294,22 @@ msgid "album containing this data"
 msgstr "tập nhạc chứa dữ liệu này"
 
 msgid "album sortname"
-msgstr "tập nhạc sắp xếp tên"
+msgstr "tên sắp tập"
 
 msgid "album containing this data for sorting purposes"
 msgstr "tập nhạc chứa dữ liệu này, cho mục đích sắp xếp"
 
-#, fuzzy
 msgid "album artist"
-msgstr "nghệ sĩ"
+msgstr "nghệ sĩ tập"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "Nghệ sĩ của toàn bộ tập nhạc, như hiển thị đúng"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "nghệ sĩ sắp xếp tên"
+msgstr "tên sắp nghệ sĩ tập"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "Nghệ sĩ của toàn bộ tập nhạc, theo thứ tự đúng"
 
 msgid "date"
 msgstr "ngày"
@@ -327,24 +327,24 @@ msgid "comment"
 msgstr "ghi chú"
 
 msgid "free text commenting the data"
-msgstr "ý kiến bạn về nhạc này"
+msgstr "ý kiến của bạn về nhạc này"
 
 msgid "extended comment"
-msgstr "ghi chú đã kếo dài"
+msgstr "ghi chú kéo dài"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"văn bản tự do đặt ghi chú về dữ liệu có định dạng key=value (khoá=giá trị) "
-"hay key[en]=comment (khoá[en]=ghi chú)"
+"văn bản tự do đặt ghi chú về dữ liệu dưới dạng key=value (khoá=giá trị) hay "
+"key[en]=comment (khoá[en]=ghi chú)"
 
 msgid "track number"
 msgstr "số rãnh"
 
 msgid "track number inside a collection"
-msgstr "số hiệu rãnh ở trong tập hợp"
+msgstr "số thứ tự rãnh ở trong tập hợp"
 
 msgid "track count"
-msgstr "số đếm rãnh"
+msgstr "đếm rãnh"
 
 msgid "count of tracks inside collection this track belongs to"
 msgstr "số đếm rãnh ở trong tập hợp"
@@ -353,10 +353,10 @@ msgid "disc number"
 msgstr "số đĩa"
 
 msgid "disc number inside a collection"
-msgstr "số hiệu đĩa ở trong tập hợp"
+msgstr "số thứ tự đĩa ở trong tập hợp"
 
 msgid "disc count"
-msgstr "số đếm đĩa"
+msgstr "đếm đĩa"
 
 msgid "count of discs inside collection this disc belongs to"
 msgstr "số đếm đĩa ở trong tập hợp"
@@ -394,8 +394,8 @@ msgstr "ISRC"
 
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
-"Luật thu chuẩn quốc tế (International Standard Recording Code) — xem <http://"
-"www.ifpi.org/isrc/>."
+"Luật thu Tiêu chuẩn Quốc tế (International Standard Recording Code) — xem "
+"<http://www.ifpi.org/isrc/>."
 
 msgid "organization"
 msgstr "tổ chức"
@@ -472,13 +472,11 @@ msgstr "codec phụ đề"
 msgid "codec the subtitle data is stored in"
 msgstr "codec theo đó dữ liệu phụ đề được mã hoá"
 
-#, fuzzy
 msgid "container format"
-msgstr "thông tin liên lạc"
+msgstr "dạng bao bọc"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "cách mã hóa/giải mà dữ liệu này"
+msgstr "định dạng bao bọc theo đó dữ liệu được cất giữ"
 
 msgid "bitrate"
 msgstr "tỷ lệ bit"
@@ -506,19 +504,19 @@ msgid "maximum bitrate in bits/s"
 msgstr "số bit dữ liệu trong mỗi giây được phát, tối đa, theo bit/giây"
 
 msgid "encoder"
-msgstr "bộ mã hóa"
+msgstr "mã hóa"
 
 msgid "encoder used to encode this stream"
 msgstr "bộ mã hóa được dùng để mã hóa luồng này"
 
 msgid "encoder version"
-msgstr "phiên bản bộ mã hóa"
+msgstr "phiên bản mã"
 
 msgid "version of the encoder used to encode this stream"
 msgstr "phiên bản của bộ mã hóa được dùng để mã hóa luồng này"
 
 msgid "serial"
-msgstr "số sản xuất"
+msgstr "SSX"
 
 msgid "serial number of track"
 msgstr "số sản xuất của rãnh này"
@@ -592,12 +590,11 @@ msgstr "các từ khoá định giới bằng dấu phẩy, diễn tả nội du
 msgid "geo location name"
 msgstr "tên định vị địa lý"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
-"vị trí miêu tả cho người đọc được hay nơi nhạc/phím đã được thu hay tạo"
+"vị trí miêu tả cho người đọc được của nơi ở đó nhạc/phím đã được thu hay tạo"
 
 msgid "geo location latitude"
 msgstr "độ vĩ định vị địa lý"
@@ -699,7 +696,7 @@ msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Nhiều bộ đệm bị bỏ."
 
 msgid "Internal data flow problem."
 msgstr "Vấn đề luồng dữ liệu nội bộ."
@@ -854,21 +851,21 @@ msgstr "LỖI: không thể phân tách đối số dòng lệnh %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "CẢNH BÁO : không tìm thấy yếu tố tên « %s ».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Mới nhận kết thúc luồng (EOS) từ yếu tố « %s ».\n"
+msgstr "Nhận được thông điệp số %u từ phần tử « %s » (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "Nhận được thông điệp số %u từ đệm « %s:%s » (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "Nhận được thông điệp số %u từ đối tượng « %s » (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Nhận được thông điệp #%"
+msgstr "Nhận được thông điệp số %u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -878,16 +875,16 @@ msgstr "Mới nhận kết thúc luồng (EOS) từ yếu tố « %s ».\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "THẺ ĐÃ TÌM      : được tìm bởi yếu tố « %s ».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "THẺ ĐÃ TÌM      : được tìm bởi yếu tố « %s ».\n"
+msgstr "THẺ ĐÃ TÌM      : được tìm bởi đệm « %s:%s ».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "THẺ ĐÃ TÌM      : được tìm bởi yếu tố « %s ».\n"
+msgstr "THẺ ĐÃ TÌM      : được tìm bởi đối tượng « %s ».\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "THẺ ĐÃ TÌM\n"
 
 #, c-format
 msgid ""
@@ -1019,12 +1016,3 @@ msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Đang giải phóng đường ống...\n"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Lỗi nội bộ GStreamer: việc thay đổi trạng thái bị lỗi."
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Gặp lỗi khi ghi vào mô tả tập tin « %d »."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Mô tả tập tin « %d » không hợp lệ."

@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2009-04-16 21:46+0200\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-17 18:34+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -128,6 +128,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Błąd GStreamera: zmiana stanu nie powiodła się, a któryś element nie "
+"przesłał właściwego komunikatu błędu."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Błąd wewnętrzny GStreamera: problem z wyrównaniem."
@@ -301,19 +303,17 @@ msgstr "album do sortowania"
 msgid "album containing this data for sorting purposes"
 msgstr "album zawierający te dane - na potrzeby sortowania"
 
-#, fuzzy
 msgid "album artist"
-msgstr "artysta"
+msgstr "artysta dla albumu"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "Artysta dla całego albumu w postaci do wyświetlania"
 
-#, fuzzy
 msgid "album artist sortname"
 msgstr "artysta do sortowania"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "Artysta dla całego albumu w postaci do sortowania"
 
 msgid "date"
 msgstr "data"
@@ -476,13 +476,11 @@ msgstr "kodek napisów"
 msgid "codec the subtitle data is stored in"
 msgstr "kodek użyty do zapisu danych napisów"
 
-#, fuzzy
 msgid "container format"
-msgstr "informacje kontaktowe"
+msgstr "format kontenera"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "kodek użyty do zapisu danych"
+msgstr "format kontenera użytego do zapisu danych"
 
 msgid "bitrate"
 msgstr "prędkość bitowa"
@@ -595,7 +593,6 @@ msgstr "oddzielone przecinkami słowa kluczowe opisujące treść"
 msgid "geo location name"
 msgstr "nazwa położenia geograficznego"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
@@ -700,7 +697,7 @@ msgid "Internal data flow error."
 msgstr "Wewnętrzny błąd przepływu danych."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Wiele buforów zostało zgubionych."
 
 msgid "Internal data flow problem."
 msgstr "Wewnętrzny problem przepływu danych."
@@ -860,21 +857,21 @@ msgstr "BŁĄD: nie udało się przeanalizować argumentu %d linii poleceń: %s.
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "UWAGA: nie znaleziono elementu o nazwie '%s'.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Otrzymano EOS od elementu \"%s\".\n"
+msgstr "Odebrano komunikat #%u od elementu \"%s\" (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "Odebrano komunikat #%u od pola \"%s:%s\" (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "Odebrano komunikat #%u od obiektu \"%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Odebrano komunikat #%"
+msgstr "Odebrano komunikat #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -884,16 +881,16 @@ msgstr "Otrzymano EOS od elementu \"%s\".\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ZNACZNIK       : znaleziony przez element \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "ZNACZNIK       : znaleziony przez element \"%s\".\n"
+msgstr "ZNACZNIK       : znaleziony przez pole \"%s:%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "ZNACZNIK       : znaleziony przez element \"%s\".\n"
+msgstr "ZNACZNIK       : znaleziony przez obiekt \"%s\".\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "ZNACZNIK\n"
 
 #, c-format
 msgid ""
@@ -1023,12 +1020,3 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Błąd wewnętrzny GStreamera: zmiana stanu nie powiodła się."
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Błąd podczas zapisu do deskryptora pliku \"%d\"."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Deskryptor pliku \"%d\" nie jest poprawny."

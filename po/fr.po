@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2009-05-21 11:00+0200\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-22 18:23+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "MIME-Version: 1.0\n"
@@ -132,9 +132,11 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Erreur GStreamer : échec de changement d'état et un élément n'a pas pu "
+"signaler un message d'erreur correct contenant la raison de l'échec."
 
 msgid "Internal GStreamer error: pad problem."
-msgstr "Erreur interne de GStreamer : problème de remplissage."
+msgstr "Erreur interne de GStreamer : problème de connecteur."
 
 msgid "Internal GStreamer error: thread problem."
 msgstr "Erreur interne de GStreamer : problème de thread."
@@ -306,19 +308,17 @@ msgstr "nom d'album pour le tri"
 msgid "album containing this data for sorting purposes"
 msgstr "album contenant ces données, dans un but de tri"
 
-#, fuzzy
 msgid "album artist"
-msgstr "artiste"
+msgstr "artiste de l'album"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "L'artiste de l'album entier, tel qu'il devrait s'afficher"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "nom d'artiste pour le tri"
+msgstr "nom d'artiste de l'album pour le tri"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "L'artiste de l'album entier, adapté pour le tri"
 
 msgid "date"
 msgstr "date"
@@ -479,13 +479,11 @@ msgstr "codec des sous-titres"
 msgid "codec the subtitle data is stored in"
 msgstr "codec de stockage des sous-titres"
 
-#, fuzzy
 msgid "container format"
-msgstr "informations sur le contact"
+msgstr "format du conteneur"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "codec de stockage des données"
+msgstr "format du conteneur dans lequel sont stockées les données"
 
 msgid "bitrate"
 msgstr "débit"
@@ -598,7 +596,6 @@ msgstr "mots-clés décrivant le contenu, séparés par des virgules"
 msgid "geo location name"
 msgstr "nom d'emplacement géographique"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
@@ -702,7 +699,7 @@ msgid "Internal data flow error."
 msgstr "Erreur interne de flux de données."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "De nombreux tampons sont éliminés."
 
 msgid "Internal data flow problem."
 msgstr "Problème interne de flux de données."
@@ -866,21 +863,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVERTISSEMENT : l'élément nommé « %s » est introuvable.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "EOS reçu de l'élément « %s ».\n"
+msgstr "Message n°%u reçu de l'élément « %s » (%s) : "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "Message n°%u reçu du connecteur « %s:%s » (%s) : "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "Message n°%u reçu de l'objet « %s » (%s) : "
 
 #, c-format
 msgid "Got message #%u (%s): "
-msgstr ""
+msgstr "Message n°%u reçu (%s) : "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -890,16 +887,16 @@ msgstr "EOS reçu de l'élément « %s ».\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "BALISE TROUVÉE  : découverte par l'élément « %s ».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "BALISE TROUVÉE  : découverte par l'élément « %s ».\n"
+msgstr "BALISE TROUVÉE  : découverte par le connecteur « %s:%s ».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "BALISE TROUVÉE  : découverte par l'élément « %s ».\n"
+msgstr "BALISE TROUVÉE  : découverte par l'objet « %s ».\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "BALISE TROUVÉE\n"
 
 #, c-format
 msgid ""
@@ -1029,12 +1026,3 @@ msgstr "Définition du pipeline à NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Libération du pipeline...\n"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Erreur interne de GStreamer : le changement d'état a échoué."
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Erreur lors de l'écriture vers le descripteur de fichier « %d »."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Le descripteur de fichier « %d » n'est pas valide."

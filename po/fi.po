@@ -10,10 +10,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2009-04-19 21:15+0300\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-17 10:58+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -132,6 +132,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Gstreamer-virhe: tilasiirtymä epäonnistui ja jokin elementti ei onnistunut "
+"ilmoittamaan kunnollista virheilmoitusta epäonnistumisen syyksi."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Sisäinen GStreamer-virhe: täyteongelma."
@@ -306,19 +308,17 @@ msgstr "levy lajitteluun"
 msgid "album containing this data for sorting purposes"
 msgstr "levy, joka sisältää tämän datan, lajittelua varten"
 
-#, fuzzy
 msgid "album artist"
-msgstr "esittäjä"
+msgstr "levyn esittäjä"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "Koko levyn esittäjä sellaisena kuin se tulisi näyttää"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "esittäjä lajitteluun"
+msgstr "levyn esittäjä lajitteluun"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "Koko levyn esittäjä sellaisena kuin sitä tulisi käyttää lajitteluun"
 
 msgid "date"
 msgstr "päiväys"
@@ -480,13 +480,11 @@ msgstr "tekstityskoodekki"
 msgid "codec the subtitle data is stored in"
 msgstr "koodekki, jolla tekstitystiedot on tallennettu"
 
-#, fuzzy
 msgid "container format"
-msgstr "yhteystiedot"
+msgstr "säilöntämuoto"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "koodekki, jolla data on tallennettu"
+msgstr "säilöntämuoto, jolla data on tallennettu"
 
 msgid "bitrate"
 msgstr "bittinopeus"
@@ -599,7 +597,6 @@ msgstr "pilkuilla erotellut avainsanat,jotka kuvaavat sisältöä"
 msgid "geo location name"
 msgstr "maantietellisen sijainnin nimi"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
@@ -706,7 +703,7 @@ msgid "Internal data flow error."
 msgstr "Sisäinen tiedon virtausvirhe."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Useita puskureita putoilee."
 
 msgid "Internal data flow problem."
 msgstr "Sisäinen tiedon virtausongelma."
@@ -863,21 +860,21 @@ msgstr "VIRHE: ei voitu jäsentää komentoriviargumenttia %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VAROITUS: elementtiä nimeltä \"%s\" ei löytynyt.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Saatiin Viesti elementiltä \"%s\" (%s): "
+msgstr "Saatiin viesti #%u elementiltä ”%s” (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Saatiin Viesti elementiltä \"%s\" (%s): "
+msgstr "Saatiin viesti #%u täytteeltä ”%s:%s” (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Saatiin Viesti elementiltä \"%s\" (%s): "
+msgstr "Saatiin viesti #%u oliolta ”%s” (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Saatiin viesti #%"
+msgstr "Saatiin viesti #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -887,16 +884,16 @@ msgstr "Saatiin EOS (virran loppu) elementiltä \"%s\".\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "LÖYTYI MERKINTÄ: sen löysi elementti \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "LÖYTYI MERKINTÄ: sen löysi elementti \"%s\".\n"
+msgstr "LÖYTYI MERKINTÄ: sen löysi täyte ”%s:%s”.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "LÖYTYI MERKINTÄ: sen löysi elementti \"%s\".\n"
+msgstr "LÖYTYI MERKINTÄ: sen löysi olio ”%s”.\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "LÖYTI MERKINTÄ\n"
 
 #, c-format
 msgid ""

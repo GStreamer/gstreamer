@@ -5,10 +5,10 @@
 # Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2009-04-17 23:54+0200\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-17 23:54+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -127,6 +127,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"GStreamer hiba: az állapotváltás meghiúsult és néhány elem nem volt képes "
+"megfelelő hibaüzenetet küldeni a hiba okáról."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Belső GStreamer hiba: kitöltési probléma."
@@ -301,19 +303,17 @@ msgstr "album rendezési neve"
 msgid "album containing this data for sorting purposes"
 msgstr "az adatokat tartalmazó album, rendezési céllal"
 
-#, fuzzy
 msgid "album artist"
-msgstr "előadó"
+msgstr "albumelőadó"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "A teljes album előadója, megjelenítendő formában"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "előadó rendezési neve"
+msgstr "albumelőadó rendezési neve"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "A teljes album előadója, rendezéshez használható formában"
 
 msgid "date"
 msgstr "dátum"
@@ -338,7 +338,7 @@ msgstr "kiterjesztett megjegyzés"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"az adatokhoz fűzött szabadszöveges megjegyzés kulcs=érték vagy kulcs[hu]"
+"az adatokhoz fűzött szabad szöveges megjegyzés kulcs=érték vagy kulcs[hu]"
 "=megjegyzés formában"
 
 msgid "track number"
@@ -476,13 +476,11 @@ msgstr "feliratkodek"
 msgid "codec the subtitle data is stored in"
 msgstr "a feliratadatok tárolására használt kodek"
 
-#, fuzzy
 msgid "container format"
-msgstr "kapcsolatinformációk"
+msgstr "tárolóformátum"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "az adatok tárolására használt kodek"
+msgstr "az adatok tárolására használt tárolóformátum"
 
 msgid "bitrate"
 msgstr "bitsebesség"
@@ -595,13 +593,12 @@ msgstr "a tartalmat leíró, vesszővel elválasztott kulcsszavak"
 msgid "geo location name"
 msgstr "földrajzi hely neve"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
-"emberek által olvasható leíró jellegű hely, vagy ahol a média felvételre "
-"vagy előállításra került"
+"emberek által olvasható leíró jellegű hely, ahol a média felvételre vagy "
+"előállításra került"
 
 msgid "geo location latitude"
 msgstr "földrajzi hely szélessége"
@@ -700,7 +697,7 @@ msgid "Internal data flow error."
 msgstr "Belső adatfolyam-hiba."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Rengetek puffer kerül eldobásra."
 
 msgid "Internal data flow problem."
 msgstr "Belső adatfolyam-probléma."
@@ -856,21 +853,21 @@ msgstr "HIBA: nem elemezhető a(z) %d. parancssori argumentum: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "FIGYELMEZTETÉS: a(z) „%s” nevű elem nem található.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "EOS érkezett a következő elemtől: „%s”.\n"
+msgstr "%u számú üzenet érkezett a következő elemtől: „%s” (%s)."
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "%u számú üzenet érkezett a(z) „%s:%s” (%s) kitöltőtől: "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "%u számú üzenet érkezett a(z) „%s” (%s) objektumtól: "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Üzenet érkezett: #%"
+msgstr "%u számú üzenet (%s) érkezett:"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -880,16 +877,16 @@ msgstr "EOS érkezett a következő elemtől: „%s”.\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” elem által.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” elem által.\n"
+msgstr "CÍMKE MEGTALÁLVA: a(z) „%s:%s” kitöltő által.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” elem által.\n"
+msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” objektum által.\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "CÍMKE MEGTALÁLVA\n"
 
 #, c-format
 msgid ""

@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2009-05-14 07:37+0300\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-19 12:04+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "MIME-Version: 1.0\n"
@@ -131,6 +131,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Грешка на GStreamer: неуспех при промяната на състоянието, а някой от "
+"елементите пропусна да подаде съобщение за грешка с причината за това."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Вътрешна грешка на GStreamer: проблем в допълването."
@@ -306,19 +308,17 @@ msgstr "албум, ползва се при подреждане"
 msgid "album containing this data for sorting purposes"
 msgstr "албум съдържащ тези данни, ползва се при подреждане"
 
-#, fuzzy
 msgid "album artist"
-msgstr "изпълнител"
+msgstr "изпълнител на албум"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "изпълнител на целия албум, ползва се при показване"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "име на изпълнител, ползва се при подреждане"
+msgstr "изпълнител на албум, ползва се при подреждане"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "изпълнител на целия албум, ползва се при подреждане"
 
 msgid "date"
 msgstr "дата"
@@ -479,13 +479,11 @@ msgstr "кодер за субтитрите"
 msgid "codec the subtitle data is stored in"
 msgstr "кодер, чрез който са съхранени данните на субтитрите"
 
-#, fuzzy
 msgid "container format"
-msgstr "информация за контакт"
+msgstr "информация за контейнера"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "кодер, чрез който са съхранени данните"
+msgstr "формат на контейнера, в който са съхранени данните"
 
 msgid "bitrate"
 msgstr "скорост на битовете"
@@ -598,11 +596,10 @@ msgstr "ключови думи за съдържанието, разделен�
 msgid "geo location name"
 msgstr "местоположение"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
-msgstr "описание на мястото на запис или създаване на медията"
+msgstr "разбираемо описание на мястото на запис или създаване на медията"
 
 msgid "geo location latitude"
 msgstr "географска широчина"
@@ -700,7 +697,7 @@ msgid "Internal data flow error."
 msgstr "Вътрешна грешка на потока от данни."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Много буфери се пропускат."
 
 msgid "Internal data flow problem."
 msgstr "Вътрешен проблем на потока от данни."
@@ -860,21 +857,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: елементът на име „%s“ не е открит.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Получен е EOS (край на потока) от елемент „%s“.\n"
+msgstr "Получено е съобщение #%u от елемент „%s“ (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "Получено е съобщение #%u от допълването „%s:%s“ (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "Получено е съобщение #%u от обект „%s“ (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Получено съобщение #%"
+msgstr "Получено е съобщение #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -882,18 +879,18 @@ msgstr "Получен е EOS (край на потока) от елемент �
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "ОТКРИТ ЕТИКЕТ      : открит към елемент „%s“.\n"
+msgstr "ОТКРИТ ЕТИКЕТ      : открит около елемент „%s“.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "ОТКРИТ ЕТИКЕТ      : открит към елемент „%s“.\n"
+msgstr "ОТКРИТ ЕТИКЕТ      : открит около допълването „%s:%s“.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "ОТКРИТ ЕТИКЕТ      : открит към елемент „%s“.\n"
+msgstr "ОТКРИТ ЕТИКЕТ      : открит около обект „%s“.\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "ОТКРИТ ЕТИКЕТ\n"
 
 #, c-format
 msgid ""
@@ -1026,12 +1023,3 @@ msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Конвейерът се освобождава…\n"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Вътрешна грешка на GStreamer: неуспех при промяната на състоянието."
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Грешка при запис във файловия дескриптор „%d“."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Файловият дескриптор „%d“ е неправилен."

@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2009-04-18 20:31+0700\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-17 12:26-0400\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -126,6 +126,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Galat GStreamer: gagal mengubah kondisi dan beberapa elemen gagal untuk "
+"mengirim pesan galat yang benar dengan alasan bagi kegagalan."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Galat GStreamer internal: masalah landasan."
@@ -303,19 +305,17 @@ msgstr "nama singkat album"
 msgid "album containing this data for sorting purposes"
 msgstr "album yang berisi data ini untuk kepentingan pengurutan"
 
-#, fuzzy
 msgid "album artist"
-msgstr "artis"
+msgstr "album artis"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "Artis untuk semua album, seperti yang seharusnya ditampilkan"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "nama singkat artis"
+msgstr "album artis nama urut"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "Artis untuk semua album, seperti yang seharusnya diurutkan"
 
 msgid "date"
 msgstr "tanggal"
@@ -477,13 +477,11 @@ msgstr "codec subjudul"
 msgid "codec the subtitle data is stored in"
 msgstr "codec data subjudul tersimpan di"
 
-#, fuzzy
 msgid "container format"
-msgstr "informasi kontak"
+msgstr "format pembatasan"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "codec data tersimpan"
+msgstr "format pembatasan data tersimpan"
 
 msgid "bitrate"
 msgstr "bitrasi"
@@ -596,12 +594,11 @@ msgstr "kata kunci yang dipisahkan koma menerangkan isi data"
 msgid "geo location name"
 msgstr "nama lokasi geografis"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
-"lokasi deskriptif dapat dibaca manusia atau dimana media telah direkam atau "
+"lokasi deskriptif dapat dibaca manusia dimana media telah direkam atau "
 "dihasilkan"
 
 msgid "geo location latitude"
@@ -700,7 +697,7 @@ msgid "Internal data flow error."
 msgstr "Galat aliran data internal."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Banyak penyangga yang didrop."
 
 msgid "Internal data flow problem."
 msgstr "Masalah aliran data internal."
@@ -855,21 +852,21 @@ msgstr "GALAT: tak dapat menguraikan argumen baris perintah %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "GALAT: elemen yang dinamakan '%s' tak ditemukan.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Mendapat Pesan dari elemen \"%s\" (%s): "
+msgstr "Mendapat pesan #%u dari elemen \"%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Mendapat Pesan dari elemen \"%s\" (%s): "
+msgstr "Mendapat pesan #%u dari bantalan \"%s:%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Mendapat Pesan dari elemen \"%s\" (%s): "
+msgstr "Mendapat pesan #%u dari objek \"%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Dapat Pesan #%"
+msgstr "Mendapat Pesan #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -879,16 +876,16 @@ msgstr "Mendapat EOS dari elemen \"%s\".\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
+msgstr "MENEMUKAN TAG      : ditemukan oleh bantalan \"%s:%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
+msgstr "MENEMUKAN TAG      : ditemukan oleh objek \"%s\".\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "MENEMUKAN TAG\n"
 
 #, c-format
 msgid ""

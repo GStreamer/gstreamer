@@ -3,13 +3,13 @@
 # Copyright (C) 2004, 2005 gstreamer's COPYRIGHT HOLDER
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.20.3\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2008-09-25 09:55+0100\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-21 10:11+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "MIME-Version: 1.0\n"
@@ -135,6 +135,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Chyba GStreamer: zlyhala zmena stavu a niektorý prvok nedokázal poslať "
+"patričné hlásenie o chybe s dôvodom zlyhania."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr ""
@@ -321,19 +323,17 @@ msgstr "album/triedenie"
 msgid "album containing this data for sorting purposes"
 msgstr "album obsahujúci tieto údaje, na účely triedenia"
 
-#, fuzzy
 msgid "album artist"
-msgstr "umelec"
+msgstr "umelec albumu"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "Umelec celého albumu, ako sa má zobraziť"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "umelec/triedenie"
+msgstr "meno umelca albumu pre triedenie"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "Umelec celého albumu, ako sa má zoradiť"
 
 msgid "date"
 msgstr "dátum"
@@ -394,12 +394,11 @@ msgstr ""
 "Zdroj média, ako napríklad URI (miesto, kde je uložený originál tohto súboru "
 "alebo prúdu údajov)"
 
-#, fuzzy
 msgid "homepage"
-msgstr "obrázok"
+msgstr "domovská stránka"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
+msgstr "Domovská stránka tohto média (napr. umelca, alebo filmu)"
 
 msgid "description"
 msgstr "popis"
@@ -488,21 +487,17 @@ msgstr "zvukový kodek"
 msgid "codec the audio data is stored in"
 msgstr "kodek, v ktorom sú zvukové údaje uložené"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "video kodek"
+msgstr "kodek pre titulky"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "kodek, v ktorom sú video údaje uložené"
+msgstr "kodek pre titulky sa nachádza v"
 
-#, fuzzy
 msgid "container format"
-msgstr "kontaktné informácie"
+msgstr "formát kontajneru"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "kodek, v ktorom sú údaje uložené"
+msgstr "formát kontajneru, v ktorom sú uložené dáta"
 
 msgid "bitrate"
 msgstr "Bitová rýchlosť"
@@ -615,7 +610,6 @@ msgstr "kľúčové slová, opisujúce obsah, oddelené čiarkou"
 msgid "geo location name"
 msgstr "geografické umiestnenie"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
@@ -718,7 +712,7 @@ msgid "Internal data flow error."
 msgstr "Vnútorná chyba toku údajov."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Veľa vyrovnávacej pamäte sa zahadzuje."
 
 msgid "Internal data flow problem."
 msgstr "Vnútorný problém v toku údajov."
@@ -841,10 +835,11 @@ msgstr ""
 "vonkajšími automatickými mechanizmami inštalácie zásuvných modulov"
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Vypísať zoznam zásuvných modulov"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
+"Zobraziť podporované URI schémy, spolu s prvkami ktoré ich implementujú"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -865,10 +860,9 @@ msgstr "CHYBA: zlyhala analýza xml súboru '%s'.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "CHYBA: v súbore '%s' chýba prvok rúry najvyššej úrovne.\n"
 
-#, fuzzy
 msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr ""
-"VAROVANIE: v súčasnosti je podporovaný iba jeden prvok najvyššej úrovne."
+"VAROVANIE: v súčasnosti je podporovaný iba jeden prvok najvyššej úrovne.\n"
 
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
@@ -878,21 +872,21 @@ msgstr "CHYBA: nepodarilo sa analyzovať argument príkazového riadku %d: %s.\n
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VAROVANIE: prvok s názvom '%s' sa nenašiel.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Dostal som správu od prvku \"%s\" (%s):"
+msgstr "Dostal som správu #%u od prvku \"%s\" (%s):"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Dostal som správu od prvku \"%s\" (%s):"
+msgstr "Dostal som správu #%u od padu \"%s:%s\" (%s):"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Dostal som správu od prvku \"%s\" (%s):"
+msgstr "Dostal som správu #%u od objektu \"%s\" (%s):"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Dostal som správu od prvku \"%s\" (%s):"
+msgstr "Dostal som správu #%u (%s):"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -902,16 +896,16 @@ msgstr "Dostal som EOS od prvku \"%s\".\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "NAŠLA SA ZNAČKA    : našiel ju prvok \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "NAŠLA SA ZNAČKA    : našiel ju prvok \"%s\".\n"
+msgstr "NAŠLA SA ZNAČKA    : našiel ju pad \"%s:%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "NAŠLA SA ZNAČKA    : našiel ju prvok \"%s\".\n"
+msgstr "NAŠLA SA ZNAČKA    : našiel ju objekt \"%s\".\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "NAŠLA SA ZNAČKA\n"
 
 #, c-format
 msgid ""
@@ -928,9 +922,8 @@ msgstr "VAROVANIE: z prvku %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Predčítané, čakám na dokončenie napĺňania vyrovnávacej pamäte...\n"
 
-#, fuzzy
 msgid "buffering..."
-msgstr "Ukladám do vyrovnávacej pamäte... %d \n"
+msgstr "Ukladám do vyrovnávacej pamäte..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Vyrovnávacia pamäť je naplnená, nastavujem rúru na PREHRÁVA ...\n"
@@ -939,11 +932,11 @@ msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Napĺňa sa vyrovnávacia pamäť, nastavujem rúru na POZASTAVENÚ ...\n"
 
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Predistribuovať latenciu...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "Nastavujem stav na %s ako požaduje %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Prerušenie: Zastavujem rúru ...\n"
@@ -954,9 +947,8 @@ msgstr "Vypísať značky (známe tiež ako metadáta)"
 msgid "Output status information and property notifications"
 msgstr "Vypísať informácie o stave a upozornenia o vlastnostiach"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "Nevypisovať informácie o stave TYPU"
+msgstr "Nevypisovať informácie o stave"
 
 msgid "Output messages"
 msgstr "Vypísať správy"
@@ -980,7 +972,7 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Vypisovať stopu alokácie (ak je to povolené pri kompilácii)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "Vynútiť EOS na zdrojoch pred vypnutím rúry"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1024,17 +1016,16 @@ msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "CHYBA: Rúra nechce hrať.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
+msgstr "EOS pri vypnutí je povolený -- Vynucujem EOS pre rúru\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "Čakám na EOS...\n"
 
-#, fuzzy
 msgid "EOS received - stopping pipeline...\n"
-msgstr "Prerušenie: Zastavujem rúru ...\n"
+msgstr "Prijatý EOS - zastavujem rúru ...\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Počas čakania na EOS nastala chyba\n"
 
 msgid "Execution ended after %"
 msgstr "Vykonávanie skončilo po %"
@@ -1045,9 +1036,8 @@ msgstr "Nastavujem rúru na PRIPRAVENÚ ...\n"
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Nastavujem rúru na NULOVÚ ...\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "Nastavujem rúru na NULOVÚ ...\n"
+msgstr "Uvoľňujem rúru ...\n"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr ""

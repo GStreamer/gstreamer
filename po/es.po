@@ -1,21 +1,20 @@
-# translation of gstreamer-0.10.22.2.po to Español
+# translation of gstreamer-0.10.24.2.po to Español
 # spanish translation for gstreamer
 # This file is put in the public domain.
 #
 # Jorge González González <aloriel@gmail.com>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2009-06-11 14:08+0200\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-29 20:32+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
-"X-Generator: KBabel 1.11.4\n"
 
 msgid "Print the GStreamer version"
 msgstr "Imprimir la versión de GStreamer"
@@ -131,6 +130,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Error de GStreamer: falló el cambio de estado y algún elemento falló al "
+"publicar el error de mensaje correspondiente con el motivo del fallo."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr " "
@@ -277,7 +278,7 @@ msgid "commonly used title"
 msgstr "título usado comúnmente"
 
 msgid "title sortname"
-msgstr "nombre corto del título"
+msgstr "nombre de ordenación del título"
 
 msgid "commonly used title for sorting purposes"
 msgstr "título usado comúnmente para propósitos de ordenamiento"
@@ -289,7 +290,7 @@ msgid "person(s) responsible for the recording"
 msgstr "persona(s) responsables de la grabación"
 
 msgid "artist sortname"
-msgstr "nombre corto del artista"
+msgstr "nombre de ordenación del artista"
 
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr ""
@@ -302,24 +303,22 @@ msgid "album containing this data"
 msgstr "el álbum que contiene estos datos"
 
 msgid "album sortname"
-msgstr "nombre corto del álbum"
+msgstr "nombre de ordenación del álbum"
 
 msgid "album containing this data for sorting purposes"
 msgstr "el álbum que contiene estos datos para propósitos de ordenamiento"
 
-#, fuzzy
 msgid "album artist"
-msgstr "artista"
+msgstr "artista del álbum"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "El artista del álbum entero, como se debería mostrar"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "nombre corto del artista"
+msgstr "nombre de ordenación del artista del álbum"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "El artista del álbum entero, como se debería ordenar"
 
 msgid "date"
 msgstr "fecha"
@@ -483,13 +482,11 @@ msgstr "códec del subtítulo"
 msgid "codec the subtitle data is stored in"
 msgstr "códec en el que están almacenados los datos del subtítulo"
 
-#, fuzzy
 msgid "container format"
-msgstr "información de contacto"
+msgstr "formato del contenedor"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "códec en el que están almacenados los datos"
+msgstr "formato del contenedor en el que están almacenados los datos"
 
 msgid "bitrate"
 msgstr "tasa de bits"
@@ -602,12 +599,11 @@ msgstr "palabras clave separadas por comas describiendo el contenido"
 msgid "geo location name"
 msgstr "nombre de la geoubicación"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
-"descripción de la ubicación entendible por humanos o dónde se ha grabado o "
+"descripción de la ubicación entendible por humanos de dónde se ha grabado o "
 "producido el medio"
 
 msgid "geo location latitude"
@@ -707,7 +703,7 @@ msgid "Internal data flow error."
 msgstr "Error en el flujo de datos interno."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Se están desechando muchos búferes."
 
 msgid "Internal data flow problem."
 msgstr "Problema en el flujo de datos interno."
@@ -869,21 +865,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ADVERTENCIA: no se encontró el elemento llamado «%s».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Se recibió un mensaje del elemento «%s» (%s): "
+msgstr "Se obtuvo el mensaje nº %u del elemento «%s» (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Se recibió un mensaje del elemento «%s» (%s): "
+msgstr "Se obtuvo el mensaje nº %u de la celda «%s:%s» (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Se recibió un mensaje del elemento «%s» (%s): "
+msgstr "Se recibió el mensaje nº %u del objeto «%s» (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Se obtuvo el mensaje #%"
+msgstr "Se obtuvo el mensaje nº %u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -893,16 +889,16 @@ msgstr "Se recibió un EOS del elemento «%s».\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ETIQUETA ENCONTRADA      : encontrada por el elemento «%s».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "ETIQUETA ENCONTRADA      : encontrada por el elemento «%s».\n"
+msgstr "ETIQUETA ENCONTRADA      : encontrada por la celda «%s:%s».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "ETIQUETA ENCONTRADA      : encontrada por el elemento «%s».\n"
+msgstr "ETIQUETA ENCONTRADA      : encontrada por el objeto «%s».\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "ETIQUETA ENCONTRADA\n"
 
 #, c-format
 msgid ""

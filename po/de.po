@@ -1,4 +1,4 @@
-# German translation for gstreamer.
+# German translation for gstreamer 0.10.24.2
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2009-07-31 21:58+0200\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-19 11:43+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -132,6 +132,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"GStreamer-Fehler: Zustandswechsel schlug fehl und einige Elemente gaben "
+"keine richtige Fehlernachricht mit einer Ursachenbegründung."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Interner GStreamer-Fehler: Padding-Problem."
@@ -317,19 +319,17 @@ msgstr "Sortiername des Albums"
 msgid "album containing this data for sorting purposes"
 msgstr "Album, das diese Daten enthält, zu Sortierzwecken"
 
-#, fuzzy
 msgid "album artist"
-msgstr "Interpret"
+msgstr "Interpret des Albums"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "Der Interpret des gesamten Albums, so wie er angezeigt werden soll"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "Sortiername des Interpreten"
+msgstr "Sortiername des Albeninterpreten"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "Der Interpret des gesamten Albums, so wie er einsortiert werden soll"
 
 msgid "date"
 msgstr "Datum"
@@ -540,35 +540,36 @@ msgstr "Seriennummer"
 msgid "serial number of track"
 msgstr "Seriennummer des Titels"
 
+# http://www.audiohq.de/index.php?showtopic=23#Referenzlautstaerke
 msgid "replaygain track gain"
-msgstr ""
+msgstr "Lautstärkeanpassung des Titelpegels"
 
 msgid "track gain in db"
-msgstr "Pegel des Titels in dB"
+msgstr "Pegelanpassung des Titels in dB"
 
 msgid "replaygain track peak"
-msgstr ""
+msgstr "Lautstärkeanpassung des Spitzenpegels"
 
 msgid "peak of the track"
 msgstr "Spitzenpegel des Titels"
 
 msgid "replaygain album gain"
-msgstr ""
+msgstr "Lautstärkeanpassung des Albenpegels"
 
 msgid "album gain in db"
-msgstr "Pegel des Albums in dB"
+msgstr "Pegelanpassung des Albums in dB"
 
 msgid "replaygain album peak"
-msgstr ""
+msgstr "Lautstärkeanpassung des Albenspitzenpegels"
 
 msgid "peak of the album"
 msgstr "Spitzenpegel des Albums"
 
 msgid "replaygain reference level"
-msgstr ""
+msgstr "Referenzpegel der Lautstärkeanpassung"
 
 msgid "reference level of track and album gain values"
-msgstr "Referenz für die Spitzenpegelwerte des Titels und des Albums"
+msgstr "Referenzpegel für die Pegelanpassungen von Titel und Album"
 
 msgid "language code"
 msgstr "Sprachcode"
@@ -609,13 +610,11 @@ msgstr "Durch Komma getrennte Schlüsselwörter, die den Inhalt beschreiben"
 msgid "geo location name"
 msgstr "geologischer Ort"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
-"Lesbare Ortsbeschreibung bzw. wo das Medium aufgezeichnet oder produziert "
-"wurde"
+"Lesbare Ortsbeschreibung, wo das Medium aufgezeichnet oder produziert wurde"
 
 msgid "geo location latitude"
 msgstr "geografischer Breitengrad"
@@ -714,7 +713,7 @@ msgid "Internal data flow error."
 msgstr "Interner Fehler im Datenfluss."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Es werden viele Puffer verworfen."
 
 msgid "Internal data flow problem."
 msgstr "Internes Problem im Datenfluss."
@@ -786,10 +785,10 @@ msgid "maximum"
 msgstr "Maximum"
 
 msgid "force caps"
-msgstr ""
+msgstr "Fähigkeiten erzwingen"
 
 msgid "force caps without doing a typefind"
-msgstr ""
+msgstr "Fähigkeiten ohne Typensuche erzwingen"
 
 msgid "Stream contains no data."
 msgstr "Der Datenstrom enthält keine Daten."
@@ -872,40 +871,40 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WARNUNG: Element namens »%s« nicht gefunden.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "FEHLER: EOS von Element »%s« erhalten.\n"
+msgstr "Nachricht #%u wurde von Element »%s« (%s) erhalten: "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "FEHLER: EOS von Element »%s« erhalten.\n"
+msgstr "Nachricht #%u wurde von Padding »%s:%s« (%s) erhalten: "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "FEHLER: EOS von Element »%s« erhalten.\n"
+msgstr "Nachricht #%u wurde von Objekt »%s« (%s) erhalten: "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Nachricht »#%« wurde erhalten"
+msgstr "Nachricht #%u (%s) wurde erhalten: "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "FEHLER: EOS von Element »%s« erhalten.\n"
+msgstr "EOS wurde von Element »%s« erhalten.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Element »%s« .\n"
+msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Element »%s«.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Element »%s« .\n"
+msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Padding »%s:%s«.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Element »%s« .\n"
+msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Objekt »%s«.\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "KENNZEICHEN GEFUNDEN\n"
 
 #, c-format
 msgid ""

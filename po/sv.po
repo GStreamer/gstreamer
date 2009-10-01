@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-16 22:57+0100\n"
-"PO-Revision-Date: 2009-04-19 10:57+0100\n"
+"POT-Creation-Date: 2009-10-01 16:11+0100\n"
+"PO-Revision-Date: 2009-09-18 17:34+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -129,6 +129,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"GStreamer-fel: tillståndsändring misslyckades och några element misslyckades "
+"med att posta ett korrekt felmeddelande med anledningen till felet."
 
 # Richard Hult säger: "Pad" i gstreamer betyder ungefär "kontakt", man
 # kopplar ihop två element via deras "pads".
@@ -278,10 +280,10 @@ msgid "commonly used title"
 msgstr "vanligtvis använd titel"
 
 msgid "title sortname"
-msgstr "titelsorteringsnamn"
+msgstr "sorteringsnamn för titel"
 
 msgid "commonly used title for sorting purposes"
-msgstr "vanligtvis använd titel för sorteringsändamål"
+msgstr "vanligen använd titel för sorteringsändamål"
 
 msgid "artist"
 msgstr "artist"
@@ -290,7 +292,7 @@ msgid "person(s) responsible for the recording"
 msgstr "person(er) som ansvarar för inspelningen"
 
 msgid "artist sortname"
-msgstr "artistsorteringsnamn"
+msgstr "sorteringsnamn för artist"
 
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "person(er) som ansvarar för inspelningen för sorteringsändamål"
@@ -302,24 +304,22 @@ msgid "album containing this data"
 msgstr "album som innehåller dessa data"
 
 msgid "album sortname"
-msgstr "albumsorteringsnamn"
+msgstr "sorteringsnamn för album"
 
 msgid "album containing this data for sorting purposes"
 msgstr "album som innehåller dessa data för sorteringsändamål"
 
-#, fuzzy
 msgid "album artist"
-msgstr "artist"
+msgstr "albumartist"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "Artisten för hela albumet, som det ska visas"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "artistsorteringsnamn"
+msgstr "sorteringsnamn för albumartist"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "Artisten för hela albumet, som det ska sorteras"
 
 msgid "date"
 msgstr "datum"
@@ -480,13 +480,11 @@ msgstr "kodek för undertext"
 msgid "codec the subtitle data is stored in"
 msgstr "kodek som undertextdata lagrats med"
 
-#, fuzzy
 msgid "container format"
-msgstr "kontaktinformation"
+msgstr "behållarformat"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "komprimeringsmetod som dessa data lagras med"
+msgstr "behållarformatet som dessa data lagras med"
 
 msgid "bitrate"
 msgstr "bitfrekvens"
@@ -604,12 +602,11 @@ msgstr "kommaseparerade nyckelord som beskriver innehållet"
 msgid "geo location name"
 msgstr "geografiskt platsnamn"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
-"mänskligt läslig beskrivande plats eller var mediet har spelats in eller "
+"mänskligt läslig beskrivande plats för var mediet har spelats in eller "
 "producerats"
 
 msgid "geo location latitude"
@@ -711,7 +708,7 @@ msgid "Internal data flow error."
 msgstr "Internt fel i dataflöde."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Förkastar en stor mängd buffertar."
 
 msgid "Internal data flow problem."
 msgstr "Internt dataflödesproblem."
@@ -870,21 +867,21 @@ msgstr "FEL: kunde inte tolka kommandoradsargumentet %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VARNING: elementet med namnet \"%s\" hittades inte.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Fick meddelande från element \"%s\" (%s): "
+msgstr "Fick meddelande #%u från elementet \"%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Fick meddelande från element \"%s\" (%s): "
+msgstr "Fick meddelande #%u från kontakten (pad) \"%s:%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Fick meddelande från element \"%s\" (%s): "
+msgstr "Fick meddelande #%u från objektet \"%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Fick meddelande #%"
+msgstr "Fick meddelande #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -894,16 +891,16 @@ msgstr "Fick EOS från element \"%s\".\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
+msgstr "HITTADE TAGG   : hittat av kontakten \"%s:%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
+msgstr "HITTADE TAGG   : hittat av objektet \"%s\".\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "HITTADE TAGG\n"
 
 #, c-format
 msgid ""
