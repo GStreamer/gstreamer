@@ -56,13 +56,14 @@ typedef enum {
 } RTPJitterBufferMode;
 
 /**
- * RTPTailChanged:
+ * RTPBufferingStats:
  * @jbuf: an #RTPJitterBuffer
+ * @percent: the buffering percent
  * @user_data: user data specified when registering
  *
- * This callback will be called when the tail buffer of @jbuf changed.
+ * Called when buffering is going on in @jbuf.
  */
-typedef void (*RTPTailChanged) (RTPJitterBuffer *jbuf, gpointer user_data);
+typedef void (*RTPBufferingStats) (RTPJitterBuffer *jbuf, guint percent, gpointer user_data);
 
 #define RTP_JITTER_BUFFER_MAX_WINDOW 512
 /**
@@ -77,7 +78,15 @@ struct _RTPJitterBuffer {
 
   RTPJitterBufferMode mode;
 
-  gboolean       buffering;
+  GstClockTime   delay;
+
+  /* for buffering */
+  gboolean          buffering;
+  guint64           level;
+  guint64           low_level;
+  guint64           high_level;
+  RTPBufferingStats stats_cb;
+  gpointer          stats_data;
 
   /* for calculating skew */
   GstClockTime   base_time;
@@ -105,8 +114,14 @@ GType rtp_jitter_buffer_get_type (void);
 /* managing lifetime */
 RTPJitterBuffer*      rtp_jitter_buffer_new              (void);
 
+void                  rtp_jitter_buffer_set_stats_cb     (RTPJitterBuffer *jbuf, RTPBufferingStats stats_cb,
+                                                          gpointer user_data);
+
 RTPJitterBufferMode   rtp_jitter_buffer_get_mode         (RTPJitterBuffer *jbuf);
 void                  rtp_jitter_buffer_set_mode         (RTPJitterBuffer *jbuf, RTPJitterBufferMode mode);
+
+GstClockTime          rtp_jitter_buffer_get_delay        (RTPJitterBuffer *jbuf);
+void                  rtp_jitter_buffer_set_delay        (RTPJitterBuffer *jbuf, GstClockTime delay);
 
 void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf);
 

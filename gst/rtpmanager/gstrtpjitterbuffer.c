@@ -285,6 +285,9 @@ static gboolean gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query);
 
 static void
 gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer);
+static void
+do_stats_cb (RTPJitterBuffer * jbuf, guint percent,
+    GstRtpJitterBuffer * jitterbuffer);
 
 static void
 gst_rtp_jitter_buffer_base_init (gpointer klass)
@@ -448,6 +451,9 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer,
   priv->do_lost = DEFAULT_DO_LOST;
 
   priv->jbuf = rtp_jitter_buffer_new ();
+  rtp_jitter_buffer_set_delay (priv->jbuf, priv->latency_ns);
+  rtp_jitter_buffer_set_stats_cb (priv->jbuf, (RTPBufferingStats) do_stats_cb,
+      jitterbuffer);
   priv->jbuf_lock = g_mutex_new ();
   priv->jbuf_cond = g_cond_new ();
 
@@ -1132,6 +1138,19 @@ parse_failed:
   }
 }
 
+static void
+do_stats_cb (RTPJitterBuffer * jbuf, guint percent,
+    GstRtpJitterBuffer * jitterbuffer)
+{
+  GstMessage *message;
+
+  /* Post a buffering message */
+  message = gst_message_new_buffering (GST_OBJECT_CAST (jitterbuffer), percent);
+  gst_message_set_buffering_stats (message, GST_BUFFERING_LIVE, -1, -1, -1);
+
+  gst_element_post_message (GST_ELEMENT_CAST (jitterbuffer), message);
+}
+
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -1438,8 +1457,8 @@ again:
     id = NULL;
     /* always wait if we are blocked */
     if (G_LIKELY (!priv->blocked)) {
-      /* we're buffering, wait */
-      if (rtp_jitter_buffer_is_buffering (priv->jbuf))
+      /* we're buffering but not EOS, wait. */
+      if (!priv->eos && rtp_jitter_buffer_is_buffering (priv->jbuf))
         goto do_wait;
       /* if we have a packet, we can exit the loop and grab it */
       if (rtp_jitter_buffer_num_packets (priv->jbuf) > 0)
@@ -1969,6 +1988,7 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       old_latency = priv->latency_ms;
       priv->latency_ms = new_latency;
       priv->latency_ns = priv->latency_ms * GST_MSECOND;
+      rtp_jitter_buffer_set_delay (priv->jbuf, priv->latency_ns);
       JBUF_UNLOCK (priv);
 
       /* post message if latency changed, this will inform the parent pipeline
