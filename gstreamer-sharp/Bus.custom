@@ -19,3 +19,15 @@ public bool AsyncSignalFunc (Gst.Message message) {
   bool ret = raw_ret;
   return ret;
 }
+
+[DllImport ("libgstreamer-0.10.dll", CallingConvention = CallingConvention.Cdecl) ]
+static extern void gst_bus_set_sync_handler (IntPtr raw, GstSharp.BusSyncHandlerNative func, IntPtr data);
+private GstSharp.BusSyncHandlerWrapper sync_handler = null;
+
+public Gst.BusSyncHandler SyncHandler {
+  set  {
+    GstSharp.BusSyncHandlerWrapper value_wrapper = new GstSharp.BusSyncHandlerWrapper (value);
+    sync_handler = value_wrapper;
+    gst_bus_set_sync_handler (Handle, value_wrapper.NativeDelegate, IntPtr.Zero);
+  }
+}

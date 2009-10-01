@@ -99,6 +99,7 @@
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_async_signal_func']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_add_signal_watch_full']" name="name">AddSignalWatch</attr>
   <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_poll']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_set_sync_handler']" name="hidden">1</attr>
 
   <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLUSHING']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
