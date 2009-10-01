@@ -17,12 +17,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __RSNAUDIODEC_H__
-#define __RSNAUDIODEC_H__
+#ifndef __RSNDEC_H__
+#define __RSNDEC_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+#define RSN_TYPE_DEC               (rsn_dec_get_type())
+#define RSN_DEC(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),RSN_TYPE_DEC,RsnDec))
+#define RSN_DEC_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),RSN_TYPE_DEC,RsnDecClass))
+#define RSN_IS_DEC(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),RSN_TYPE_DEC))
+#define RSN_IS_DEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),RSN_TYPE_DEC))
+#define RSN_DEC_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), RSN_TYPE_DEC, RsnDecClass))
 
 #define RSN_TYPE_AUDIODEC               (rsn_audiodec_get_type())
 #define RSN_AUDIODEC(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),RSN_TYPE_AUDIODEC,RsnAudioDec))
@@ -30,12 +37,26 @@ G_BEGIN_DECLS
 #define RSN_IS_AUDIODEC(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),RSN_TYPE_AUDIODEC))
 #define RSN_IS_AUDIODEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),RSN_TYPE_AUDIODEC))
 
-GType           rsn_audiodec_get_type           (void) G_GNUC_CONST;
+#define RSN_TYPE_VIDEODEC               (rsn_videodec_get_type())
+#define RSN_VIDEODEC(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),RSN_TYPE_VIDEODEC,RsnVideoDec))
+#define RSN_VIDEODEC_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),RSN_TYPE_VIDEODEC,RsnVideoDecClass))
+#define RSN_IS_VIDEODEC(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),RSN_TYPE_VIDEODEC))
+#define RSN_IS_VIDEODEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),RSN_TYPE_VIDEODEC))
 
-typedef struct _RsnAudioDec             RsnAudioDec;
-typedef struct _RsnAudioDecClass        RsnAudioDecClass;
+GType           rsn_dec_get_type           (void) G_GNUC_CONST;
+GType           rsn_audiodec_get_type      (void) G_GNUC_CONST;
+GType           rsn_videodec_get_type      (void) G_GNUC_CONST;
 
-struct _RsnAudioDec {
+typedef struct _RsnDec             RsnDec;
+typedef struct _RsnDecClass        RsnDecClass;
+
+typedef struct _RsnDec             RsnAudioDec;
+typedef struct _RsnDecClass        RsnAudioDecClass;
+
+typedef struct _RsnDec             RsnVideoDec;
+typedef struct _RsnDecClass        RsnVideoDecClass;
+
+struct _RsnDec {
   GstBin element;
 
   /* Our sink and source pads */
@@ -47,10 +68,12 @@ struct _RsnAudioDec {
   GstElement *current_decoder;
 };
 
-struct _RsnAudioDecClass {
+struct _RsnDecClass {
   GstBinClass parent_class;
+
+  const GList * (*get_decoder_factories) (RsnDecClass *klass);
 };
 
 G_END_DECLS
 
-#endif /* __RSNAUDIODEC_H__ */
+#endif /* __RSNDEC_H__ */

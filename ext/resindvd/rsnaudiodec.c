@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2009> Jan Schmidt <thaytan@noraisin.net>
+ * Copyright (C) <2009> Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,96 +26,36 @@
 
 #include "rsnaudiodec.h"
 
-GST_DEBUG_CATEGORY_STATIC (rsn_audiodec_debug);
-#define GST_CAT_DEFAULT rsn_audiodec_debug
+GST_DEBUG_CATEGORY_STATIC (rsn_dec_debug);
+#define GST_CAT_DEFAULT rsn_dec_debug
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg,mpegversion=(int)1;"
-        "audio/x-private1-lpcm;"
-        "audio/x-private1-ac3;" "audio/ac3;" "audio/x-ac3;"
-        "audio/x-private1-dts;")
-    );
-
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) { 32, 64 }; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
-        "signed = (boolean) true; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 24, "
-        "depth = (int) 24, "
-        "signed = (boolean) true; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "signed = (boolean) true; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) true")
-    );
-
-G_DEFINE_TYPE (RsnAudioDec, rsn_audiodec, GST_TYPE_BIN);
-
-static GstStateChangeReturn rsn_audiodec_change_state (GstElement * element,
+static GstStateChangeReturn rsn_dec_change_state (GstElement * element,
     GstStateChange transition);
 
-static void rsn_audiodec_dispose (GObject * gobj);
-static void cleanup_child (RsnAudioDec * self);
+static void rsn_dec_dispose (GObject * gobj);
+static void cleanup_child (RsnDec * self);
 
-static GList *decoder_factories = NULL;
-static GstCaps *decoder_caps = NULL;
+static GstBinClass *rsn_dec_parent_class = NULL;
 
 static void
-rsn_audiodec_class_init (RsnAudioDecClass * klass)
+rsn_dec_class_init (RsnDecClass * klass)
 {
-  static GstElementDetails element_details = {
-    "RsnAudioDec",
-    "Audio/Decoder",
-    "Resin DVD audio stream decoder",
-    "Jan Schmidt <thaytan@noraisin.net>"
-  };
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  GST_DEBUG_CATEGORY_INIT (rsn_audiodec_debug, "rsnaudiodec",
-      0, "Resin DVD audio stream decoder");
+  GST_DEBUG_CATEGORY_INIT (rsn_dec_debug, "rsndec",
+      0, "Resin DVD stream decoder");
 
-  object_class->dispose = rsn_audiodec_dispose;
+  rsn_dec_parent_class = (GstBinClass *) g_type_class_peek_parent (klass);
+  object_class->dispose = rsn_dec_dispose;
 
-  element_class->change_state = GST_DEBUG_FUNCPTR (rsn_audiodec_change_state);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_details (element_class, &element_details);
+  element_class->change_state = GST_DEBUG_FUNCPTR (rsn_dec_change_state);
 }
 
 static gboolean
-rsn_audiodec_sink_event (GstPad * pad, GstEvent * event)
+rsn_dec_sink_event (GstPad * pad, GstEvent * event)
 {
-  RsnAudioDec *self = RSN_AUDIODEC (gst_pad_get_parent (pad));
+  RsnDec *self = RSN_DEC (gst_pad_get_parent (pad));
   gboolean ret = TRUE;
   const GstStructure *s = gst_event_get_structure (event);
   const gchar *name = (s ? gst_structure_get_name (s) : NULL);
@@ -130,38 +71,40 @@ rsn_audiodec_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static void
-rsn_audiodec_init (RsnAudioDec * self)
+rsn_dec_init (RsnDec * self, RsnDecClass * klass)
 {
   GstPadTemplate *templ;
 
-  templ = gst_static_pad_template_get (&sink_template);
+  templ =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "sink");
+  g_assert (templ != NULL);
   self->sinkpad =
       GST_GHOST_PAD_CAST (gst_ghost_pad_new_no_target_from_template ("sink",
           templ));
-  gst_object_unref (templ);
   self->sink_event_func = GST_PAD_EVENTFUNC (self->sinkpad);
   gst_pad_set_event_function (GST_PAD_CAST (self->sinkpad),
-      GST_DEBUG_FUNCPTR (rsn_audiodec_sink_event));
-  templ = gst_static_pad_template_get (&src_template);
+      GST_DEBUG_FUNCPTR (rsn_dec_sink_event));
+
+  templ = gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "src");
+  g_assert (templ != NULL);
   self->srcpad =
       GST_GHOST_PAD_CAST (gst_ghost_pad_new_no_target_from_template ("src",
           templ));
-  gst_object_unref (templ);
   gst_element_add_pad (GST_ELEMENT (self), GST_PAD_CAST (self->sinkpad));
   gst_element_add_pad (GST_ELEMENT (self), GST_PAD_CAST (self->srcpad));
 }
 
 static void
-rsn_audiodec_dispose (GObject * object)
+rsn_dec_dispose (GObject * object)
 {
-  RsnAudioDec *self = (RsnAudioDec *) object;
+  RsnDec *self = (RsnDec *) object;
   cleanup_child (self);
 
-  G_OBJECT_CLASS (rsn_audiodec_parent_class)->dispose (object);
+  G_OBJECT_CLASS (rsn_dec_parent_class)->dispose (object);
 }
 
 static gboolean
-rsn_audiodec_set_child (RsnAudioDec * self, GstElement * new_child)
+rsn_dec_set_child (RsnDec * self, GstElement * new_child)
 {
   GstPad *child_pad;
   if (self->current_decoder) {
@@ -200,14 +143,20 @@ rsn_audiodec_set_child (RsnAudioDec * self, GstElement * new_child)
 }
 
 static void
-cleanup_child (RsnAudioDec * self)
+cleanup_child (RsnDec * self)
 {
   GST_DEBUG_OBJECT (self, "Removing child element");
-  (void) rsn_audiodec_set_child (self, NULL);
+  (void) rsn_dec_set_child (self, NULL);
 }
 
+typedef struct
+{
+  GstCaps *desired_caps;
+  GstCaps *decoder_caps;
+} RsnDecFactoryFilterCtx;
+
 static gboolean
-rsnaudiodec_factory_filter (GstPluginFeature * feature, GstCaps * desired_caps)
+rsndec_factory_filter (GstPluginFeature * feature, RsnDecFactoryFilterCtx * ctx)
 {
   GstElementFactory *factory;
   guint rank;
@@ -247,7 +196,7 @@ rsnaudiodec_factory_filter (GstPluginFeature * feature, GstCaps * desired_caps)
       /* try to intersect the caps with the caps of the template */
       tmpl_caps = gst_static_caps_get (&templ->static_caps);
 
-      intersect = gst_caps_intersect (desired_caps, tmpl_caps);
+      intersect = gst_caps_intersect (ctx->desired_caps, tmpl_caps);
       gst_caps_unref (tmpl_caps);
 
       /* check if the intersection is empty */
@@ -255,9 +204,9 @@ rsnaudiodec_factory_filter (GstPluginFeature * feature, GstCaps * desired_caps)
         GstCaps *new_dec_caps;
         /* non empty intersection, we can use this element */
         can_sink = TRUE;
-        new_dec_caps = gst_caps_union (decoder_caps, intersect);
-        gst_caps_unref (decoder_caps);
-        decoder_caps = new_dec_caps;
+        new_dec_caps = gst_caps_union (ctx->decoder_caps, intersect);
+        gst_caps_unref (ctx->decoder_caps);
+        ctx->decoder_caps = new_dec_caps;
       }
       gst_caps_unref (intersect);
     }
@@ -293,40 +242,43 @@ sort_by_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 static gpointer
 _get_decoder_factories (gpointer arg)
 {
-  GstElement *element = arg;
+  GstElementClass *klass = arg;
   GList *factories;
-  GstPadTemplate *templ =
-      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
+  GstPadTemplate *templ = gst_element_class_get_pad_template (klass,
       "sink");
-  GstCaps *desired_caps = gst_pad_template_get_caps (templ);
+  RsnDecFactoryFilterCtx ctx = { NULL, };
 
+  ctx.desired_caps = gst_pad_template_get_caps (templ);
   /* Set decoder caps to empty. Will be filled by the factory_filter */
-  decoder_caps = gst_caps_new_empty ();
+  ctx.decoder_caps = gst_caps_new_empty ();
 
   factories = gst_default_registry_feature_filter (
-      (GstPluginFeatureFilter) rsnaudiodec_factory_filter, FALSE, desired_caps);
+      (GstPluginFeatureFilter) rsndec_factory_filter, FALSE, &ctx);
 
-  decoder_factories = g_list_sort (factories, (GCompareFunc) sort_by_ranks);
+  factories = g_list_sort (factories, (GCompareFunc) sort_by_ranks);
 
-  GST_DEBUG ("Available decoder caps %" GST_PTR_FORMAT, decoder_caps);
+  GST_DEBUG ("Available decoder caps %" GST_PTR_FORMAT, ctx.decoder_caps);
+  gst_caps_unref (ctx.decoder_caps);
 
-  return NULL;
+  return factories;
 }
 
 static GstStateChangeReturn
-rsn_audiodec_change_state (GstElement * element, GstStateChange transition)
+rsn_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  RsnAudioDec *self = RSN_AUDIODEC (element);
-  static GOnce gonce = G_ONCE_INIT;
+  RsnDec *self = RSN_DEC (element);
+  RsnDecClass *klass = RSN_DEC_GET_CLASS (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:{
       GstElement *new_child;
+      const GList *decoder_factories;
+
       new_child = gst_element_factory_make ("autoconvert", NULL);
-      g_once (&gonce, _get_decoder_factories, element);
+      decoder_factories = klass->get_decoder_factories (klass);
       g_object_set (G_OBJECT (new_child), "factories", decoder_factories, NULL);
-      if (new_child == NULL || !rsn_audiodec_set_child (self, new_child))
+      if (new_child == NULL || !rsn_dec_set_child (self, new_child))
         ret = GST_STATE_CHANGE_FAILURE;
       break;
     }
@@ -339,7 +291,7 @@ rsn_audiodec_change_state (GstElement * element, GstStateChange transition)
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
   ret =
-      GST_ELEMENT_CLASS (rsn_audiodec_parent_class)->change_state (element,
+      GST_ELEMENT_CLASS (rsn_dec_parent_class)->change_state (element,
       transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
@@ -355,5 +307,162 @@ rsn_audiodec_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+}
 
+GType
+rsn_dec_get_type (void)
+{
+  static volatile gsize type = 0;
+
+  if (g_once_init_enter (&type)) {
+    GType _type;
+    static const GTypeInfo type_info = {
+      sizeof (RsnDecClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) rsn_dec_class_init,
+      NULL,
+      NULL,
+      sizeof (RsnDec),
+      0,
+      (GInstanceInitFunc) rsn_dec_init,
+    };
+
+    _type = g_type_register_static (GST_TYPE_BIN,
+        "RsnDec", &type_info, G_TYPE_FLAG_ABSTRACT);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+/** Audio decoder subclass */
+static GstStaticPadTemplate audio_sink_template =
+    GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/mpeg,mpegversion=(int)1;"
+        "audio/x-private1-lpcm;"
+        "audio/x-private1-ac3;" "audio/ac3;" "audio/x-ac3;"
+        "audio/x-private1-dts;")
+    );
+
+static GstStaticPadTemplate audio_src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-float, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) { 32, 64 }; "
+        "audio/x-raw-int, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 32, "
+        "depth = (int) 32, "
+        "signed = (boolean) true; "
+        "audio/x-raw-int, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 24, "
+        "depth = (int) 24, "
+        "signed = (boolean) true; "
+        "audio/x-raw-int, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
+        "signed = (boolean) true; "
+        "audio/x-raw-int, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) true")
+    );
+
+G_DEFINE_TYPE (RsnAudioDec, rsn_audiodec, RSN_TYPE_DEC);
+
+static const GList *
+rsn_audiodec_get_decoder_factories (RsnDecClass * klass)
+{
+  static GOnce gonce = G_ONCE_INIT;
+
+  g_once (&gonce, _get_decoder_factories, klass);
+
+  return (const GList *) gonce.retval;
+}
+
+static void
+rsn_audiodec_class_init (RsnAudioDecClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  RsnDecClass *dec_class = RSN_DEC_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&audio_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&audio_sink_template));
+
+  gst_element_class_set_details_simple (element_class, "RsnAudioDec",
+      "Audio/Decoder",
+      "Resin DVD audio stream decoder", "Jan Schmidt <thaytan@noraisin.net>");
+
+  dec_class->get_decoder_factories = rsn_audiodec_get_decoder_factories;
+}
+
+static void
+rsn_audiodec_init (RsnAudioDec * self)
+{
+}
+
+/** Video decoder subclass */
+static GstStaticPadTemplate video_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/mpeg, "
+        "mpegversion = (int) [ 1, 2 ], " "systemstream = (bool) FALSE")
+    );
+
+static GstStaticPadTemplate video_src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw-yuv")
+    );
+
+G_DEFINE_TYPE (RsnVideoDec, rsn_videodec, RSN_TYPE_DEC);
+
+static const GList *
+rsn_videodec_get_decoder_factories (RsnDecClass * klass)
+{
+  static GOnce gonce = G_ONCE_INIT;
+
+  g_once (&gonce, _get_decoder_factories, klass);
+
+  return (const GList *) gonce.retval;
+}
+
+static void
+rsn_videodec_class_init (RsnAudioDecClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  RsnDecClass *dec_class = RSN_DEC_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&video_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&video_sink_template));
+
+  gst_element_class_set_details_simple (element_class, "RsnVideoDec",
+      "Video/Decoder",
+      "Resin DVD video stream decoder", "Jan Schmidt <thaytan@noraisin.net>");
+
+  dec_class->get_decoder_factories = rsn_videodec_get_decoder_factories;
+}
+
+static void
+rsn_videodec_init (RsnVideoDec * self)
+{
 }
