@@ -63,6 +63,10 @@
 
 #include "gstx264enc.h"
 
+#if X264_BUILD >= 76
+#define X264_ENC_NALS 1
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -591,6 +595,9 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264param.i_deblocking_filter_beta = 0;
   encoder->x264param.rc.f_ip_factor = encoder->ip_factor;
   encoder->x264param.rc.f_pb_factor = encoder->pb_factor;
+#ifdef X264_ENC_NALS
+  encoder->x264param.b_annexb = encoder->byte_stream;
+#endif
 
   switch (encoder->pass) {
     case GST_X264_ENC_PASS_QUANT:
@@ -685,7 +692,10 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   int i_nal;
   int header_return;
   int i_size;
-  int nal_size, i_data;
+  int nal_size;
+#ifndef X264_ENC_NALS
+  int i_data;
+#endif
   guint8 *buffer, *sps;
   gulong buffer_size;
 
@@ -714,7 +724,13 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   buffer_size = (nal[1].i_payload + nal[2].i_payload) * 4 + 100;
   buffer = g_malloc (buffer_size);
 
+  /* old style API: nal's are not encapsulated, and have no sync/size prefix,
+   * new style API: nal's are encapsulated, and have 4-byte size prefix */
+#ifndef X264_ENC_NALS
   sps = nal[1].p_payload;
+#else
+  sps = nal[1].p_payload + 4;
+#endif
 
   buffer[0] = 1;                /* AVC Decoder Configuration Record ver. 1 */
   buffer[1] = sps[0];           /* profile_idc                             */
@@ -726,15 +742,25 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 
   buffer[i_size++] = 0xe0 | 1;  /* number of SPSs */
 
+#ifndef X264_ENC_NALS
   i_data = buffer_size - i_size - 2;
   nal_size = x264_nal_encode (buffer + i_size + 2, &i_data, 0, &nal[1]);
+#else
+  nal_size = nal[1].i_payload - 4;
+  memcpy (buffer + i_size + 2, nal[1].p_payload + 4, nal_size);
+#endif
   GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
   i_size += nal_size + 2;
 
   buffer[i_size++] = 1;         /* number of PPSs */
 
+#ifndef X264_ENC_NALS
   i_data = buffer_size - i_size - 2;
   nal_size = x264_nal_encode (buffer + i_size + 2, &i_data, 0, &nal[2]);
+#else
+  nal_size = nal[2].i_payload - 4;
+  memcpy (buffer + i_size + 2, nal[2].p_payload + 4, nal_size);
+#endif
   GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
   i_size += nal_size + 2;
 
@@ -968,12 +994,15 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   x264_picture_t pic_out;
   x264_nal_t *nal;
   int i_size;
+#ifndef X264_ENC_NALS
   int nal_size;
-  int encoder_return;
   gint i;
+#endif
+  int encoder_return;
   GstFlowReturn ret;
   GstClockTime timestamp;
   GstClockTime duration;
+  guint8 *data;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
@@ -990,7 +1019,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   if (!*i_nal) {
     return GST_FLOW_OK;
   }
-
+#ifndef X264_ENC_NALS
   i_size = 0;
   for (i = 0; i < *i_nal; i++) {
     gint i_data = encoder->buffer_size - i_size - 4;
@@ -1010,6 +1039,11 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
 
     i_size += nal_size + 4;
   }
+  data = encoder->buffer;
+#else
+  i_size = encoder_return;
+  data = nal[0].p_payload;
+#endif
 
   in_buf = g_queue_pop_head (encoder->delay);
   if (in_buf) {
@@ -1030,7 +1064,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  memcpy (GST_BUFFER_DATA (out_buf), encoder->buffer, i_size);
+  memcpy (GST_BUFFER_DATA (out_buf), data, i_size);
   GST_BUFFER_SIZE (out_buf) = i_size;
 
   /* PTS */
