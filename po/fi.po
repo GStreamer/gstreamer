@@ -10,10 +10,10 @@
 # Suomennos: http://gnome.fi/
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-17 00:08+0100\n"
-"PO-Revision-Date: 2009-04-19 21:17+0300\n"
+"POT-Creation-Date: 2009-10-01 16:27+0100\n"
+"PO-Revision-Date: 2009-09-17 11:02+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -129,9 +129,8 @@ msgstr ""
 msgid "This appears to be a text file"
 msgstr "Tämä näyttää olevan tekstitiedosto"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Elementtiä \"typefind\" ei voitu luoda."
+msgstr "Virran tyyppiä ei voitu määrittää"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
@@ -183,21 +182,19 @@ msgstr "Puuttuva elementti \"%s\" - tarkista GStreamer-asennuksesi."
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Sekä autovideosink- ja xvimagesink-elementit puuttuvat."
+msgstr "Sekä autovideosink- ja %s-elementit puuttuvat."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "Sekä autovideosink- ja xvimagesink-elementit puuttuvat."
+msgstr "Autovideosink-elementti puuttuu."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Sekä autovideosink- ja xvimagesink-elementit eivät toimi."
+msgstr "Sekä autovideosink- ja %s-elementit eivät toimi."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "Sekä autovideosink- ja xvimagesink-elementit eivät toimi."
+msgstr "Autovideosink-elementti ei toimi."
 
 msgid "Custom text sink element is not usable."
 msgstr "Räätälöity tekstinieluelementti ei ole käyttökunnossa."
@@ -205,42 +202,37 @@ msgstr "Räätälöity tekstinieluelementti ei ole käyttökunnossa."
 msgid "No volume control found"
 msgstr "Äänenvoimakkuuden hallintaa ei löytynyt"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
+msgstr "Sekä autoaudiosink- että %s-elementit puuttuvat."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
+msgstr "Autoaudiosink-elementti puuttuu."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Sekä autoaudiosink- että alsasink-elementit eivät toimi."
+msgstr "Sekä autoaudiosink- että %s-elementit eivät toimi."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Sekä autoaudiosink- että alsasink-elementit eivät toimi."
+msgstr "Autoaudiosink-elementti ei toimi."
 
 msgid "Can't play a text file without video."
 msgstr "Ei voida toistaa tekstitiedosta ilman kuvaa."
 
-#, fuzzy
 msgid "Can't display both text subtitles and subpictures."
-msgstr "Ei voida toistaa tekstitystä sekä alikuvaa."
+msgstr "Ei voida toistaa sekä tekstitystä että alikuvaa."
 
-#, fuzzy
 msgid "No Temp directory specified."
-msgstr "Laitetta ei ole määritelty."
+msgstr "Tilapäishakemistoa ei ole määritelty."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "VFS-tiedostoa \"%s\" ei voitu sulkea."
+msgstr "Tilapäistiedostoa ”%s” ei voitu luoda."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tiedostoa \"%s\" ei voi avata luettavaksi."
 
-#, fuzzy
 msgid "Internal data flow error."
 msgstr "Sisäisen tietovirran virhe."
 

@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-17 00:08+0100\n"
-"PO-Revision-Date: 2009-08-22 17:21+0200\n"
+"POT-Creation-Date: 2009-10-01 16:27+0100\n"
+"PO-Revision-Date: 2009-09-19 11:59+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Master"
-msgstr "Maste"
+msgstr "Hauptregler"
 
 msgid "Bass"
 msgstr "Bass"
@@ -126,20 +126,19 @@ msgstr ""
 msgid "This appears to be a text file"
 msgstr "Dies scheint eine Textdatei zu sein"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Das Element »typefind« konnte nicht erstellt werden."
+msgstr "Der Typ des Datenstroms konnte nicht bestimmt werden"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Ungültige Untertitel-URI »%s«, Untertitel werden deaktiviert."
 
 msgid "No URI specified to play from."
-msgstr "Kein Ort (URI) zum Abspielen angegeben."
+msgstr "Keine Adresse (URI) zum Abspielen angegeben."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "Ungültiger Ort (URI) »%s«."
+msgstr "Ungültige Adresse (URI) »%s«."
 
 msgid "RTSP streams cannot be played yet."
 msgstr "RTSP-Datenströme können noch nicht abgespielt werden."
@@ -182,21 +181,19 @@ msgstr ""
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Beide Elemente »autovideosink« und »xvimagesink« fehlen."
+msgstr "Beide Elemente »autovideosink« und »%s« fehlen."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "Beide Elemente »autovideosink« und »xvimagesink« fehlen."
+msgstr "Das Element »autovideosink« fehlt."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Beide Elemente »autovideosink« und »xvimagesink« funktionieren nicht."
+msgstr "Beide Elemente »autovideosink« und »%s« funktionieren nicht."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "Beide Elemente »autovideosink« und »xvimagesink« funktionieren nicht."
+msgstr "Das Element »autovideosink« funktioniert nicht."
 
 msgid "Custom text sink element is not usable."
 msgstr "Das eigene Element des Textziels ist nicht verwendbar."
@@ -204,42 +201,38 @@ msgstr "Das eigene Element des Textziels ist nicht verwendbar."
 msgid "No volume control found"
 msgstr "Keine Lautstärkeregelung gefunden"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
+msgstr "Beide Elemente »autoaudiosink« und »%s« fehlen."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
+msgstr "Das Element »autoaudiosink« fehlt."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Beide Elemente »autoaudiosink« und »alsasink« funktionieren nicht."
+msgstr "Beide Elemente »autoaudiosink« und »%s« funktionieren nicht."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Beide Elemente »autoaudiosink« und »alsasink« funktionieren nicht."
+msgstr "Das Element »autoaudiosink« funktioniert nicht."
 
 msgid "Can't play a text file without video."
 msgstr "Es kann keine Textdatei ohne Video abgespielt werden."
 
-#, fuzzy
 msgid "Can't display both text subtitles and subpictures."
-msgstr "Es können keine Untertiteltexte und Kleinbilder abgespielt werden."
+msgstr ""
+"Es können nicht Untertiteltexte und Kleinbilder zugleich angezeigt werden."
 
-#, fuzzy
 msgid "No Temp directory specified."
-msgstr "Kein Gerät angegeben."
+msgstr "Kein temporärer Ordner angegeben."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "VFS-Datei »%s« konnte nicht geschlossen werden."
+msgstr "Temporäre Datei »%s« konnte nicht erstellt werden."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Die Datei »%s« konnte zum Lesen nicht geöffnet werden."
 
-#, fuzzy
 msgid "Internal data flow error."
 msgstr "Interner Fehler im Datenstrom."
 
@@ -398,7 +391,7 @@ msgstr "Unkomprimiertes YUV"
 
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr ""
+msgstr "Unkomprimiertes palettiertes %d-Bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -468,7 +461,7 @@ msgstr "%s-RTP-Payloader"
 
 #, c-format
 msgid "%s muxer"
-msgstr "%s-Muxer"
+msgstr "%s-Multiplexer"
 
 #, c-format
 msgid "%s encoder"
@@ -476,7 +469,7 @@ msgstr "%s-Encoder"
 
 #, c-format
 msgid "GStreamer element %s"
-msgstr "GStreamer Element %s"
+msgstr "GStreamer-Element %s"
 
 msgid "Unknown source element"
 msgstr "Unbekanntes Quellelement"

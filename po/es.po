@@ -1,20 +1,19 @@
-# translation of gst-plugins-base-0.10.22.2.po to Español
+# translation of gst-plugins-base-0.10.24.2.po to Español
 # spanish translation for gst-plugins-base
 # This file is put in the public domain.
 #
 # Jorge González González <aloriel@gmail.com>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-17 00:08+0100\n"
-"PO-Revision-Date: 2009-06-11 14:00+0200\n"
+"POT-Creation-Date: 2009-10-01 16:27+0100\n"
+"PO-Revision-Date: 2009-09-29 20:36+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Master"
@@ -126,9 +125,8 @@ msgstr ""
 msgid "This appears to be a text file"
 msgstr "Esto parece ser un archivo de texto"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "No se pudo crear el elemento «typefind»."
+msgstr "No se pudo determinar el tipo de flujo"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
@@ -181,21 +179,19 @@ msgstr "Falta el elemento «%s»; compruebe su instalación de GStreamer."
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Tanto el elemento autoaudiosink como alsasink faltan."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Tanto el elemento autovideosink como xvimagesink faltan."
+msgstr "Tanto el elemento autovideosink como %s faltan."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "Tanto el elemento autovideosink como xvimagesink faltan."
+msgstr "Falta el elemento autovideosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Tanto el elemento autovideosink como xvimagesink no están funcionando."
+msgstr "Tanto el elemento autovideosink como %s no están funcionando."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "Tanto el elemento autovideosink como xvimagesink no están funcionando."
+msgstr "El elemento autovideosink no está funcionando."
 
 msgid "Custom text sink element is not usable."
 msgstr "No se puede usar el elemento sumidero (sink) de texto personalizado."
@@ -203,45 +199,39 @@ msgstr "No se puede usar el elemento sumidero (sink) de texto personalizado."
 msgid "No volume control found"
 msgstr "No se encontró ningún control de volumen"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Tanto el elemento autoaudiosink como alsasink faltan."
+msgstr "Tanto el elemento autoaudiosink como %s faltan."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "Tanto el elemento autoaudiosink como alsasink faltan."
+msgstr "Falta el elemento autoaudiosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Tanto el elemento autoaudiosink como alsasink no están funcionando."
+msgstr "Tanto el elemento autoaudiosink como %s no están funcionando."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Tanto el elemento autoaudiosink como alsasink no están funcionando."
+msgstr "El elemento autoaudiosink no está funcionando."
 
 msgid "Can't play a text file without video."
 msgstr "No se puede reproducir un archivo de texto sin vídeo."
 
-#, fuzzy
 msgid "Can't display both text subtitles and subpictures."
-msgstr ""
-"No se puede reproducir un archivo de texto de subtítulos y subimágenes."
+msgstr "No se pueden mostrar a la vez subtítulos de texto y subimágenes."
 
-#, fuzzy
 msgid "No Temp directory specified."
-msgstr "No se especificó un dispositivo."
+msgstr "No se especificó un directorio temporal."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "No se pudo cerrar el archivo VFS «%s»."
+msgstr "No se pudo cerrar el archivo temporal «%s»."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "No se pudo abrir el archivo «%s» para leer."
 
-#, fuzzy
 msgid "Internal data flow error."
-msgstr "Error interno de flujo de datos."
+msgstr "Error en el flujo de datos interno."
 
 #, c-format
 msgid "No decoder available for type '%s'."

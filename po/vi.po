@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-17 00:08+0100\n"
-"PO-Revision-Date: 2009-05-13 00:01+0930\n"
+"POT-Creation-Date: 2009-10-01 16:27+0100\n"
+"PO-Revision-Date: 2009-09-18 17:15+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -121,9 +121,8 @@ msgstr "Cần phần bổ sung %s để phát luồng này nhưng chưa cài đ�
 msgid "This appears to be a text file"
 msgstr "Hình như đây là tập tin văn bản"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Không thể tạo phần tử « typefind »."
+msgstr "Không thể quyết định loại luồng"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
@@ -175,21 +174,19 @@ msgstr "Thiếu phần tử « %s » — hãy kiểm tra lại cài đặt GStre
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử alsasink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Thiếu phần tử autovideosink, cũng thiếu phần tử xvimagesink."
+msgstr "Thiếu phần tử autovideosink, cũng thiếu phần tử %s."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "Thiếu phần tử autovideosink, cũng thiếu phần tử xvimagesink."
+msgstr "Thiếu phần tử autovideosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Cả hai yếu tố autovideosink và xvimagesink không hoạt động."
+msgstr "Cả hai phần tử autovideosink và %s không hoạt động."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "Cả hai yếu tố autovideosink và xvimagesink không hoạt động."
+msgstr "Phần tử autovideosink không hoạt động."
 
 msgid "Custom text sink element is not usable."
 msgstr "Không thể sử dụng yếu tố ổ chìm văn bản riêng."
@@ -197,42 +194,37 @@ msgstr "Không thể sử dụng yếu tố ổ chìm văn bản riêng."
 msgid "No volume control found"
 msgstr "Không tìm thấy điều khiển âm lượng"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử alsasink."
+msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử %s."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử alsasink."
+msgstr "Thiếu phần tử autoaudiosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Cả hai yếu tố autoaudiosink và alsasink không hoạt động."
+msgstr "Cả hai phần tử autoaudiosink và %s không hoạt động."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Cả hai yếu tố autoaudiosink và alsasink không hoạt động."
+msgstr "Phần tử autoaudiosink không hoạt động."
 
 msgid "Can't play a text file without video."
 msgstr "Không thể phát tập tin văn bản mà không có ảnh động."
 
-#, fuzzy
 msgid "Can't display both text subtitles and subpictures."
 msgstr "Không thể hiển thị đồng thời phụ đề và ảnh phụ."
 
-#, fuzzy
 msgid "No Temp directory specified."
-msgstr "Chưa ghi rõ thiết bị nào"
+msgstr "Chưa ghi rõ thư mục Tạm thời."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Không thể đóng tập tin VFS « %s »."
+msgstr "Không thể tạo tập tin tạm thời « %s »."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không thể mở tập tin « %s » để đọc."
 
-#, fuzzy
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
@@ -508,6 +500,3 @@ msgstr "Thiết bị « %s » đang được dùng."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
-
-#~ msgid "No file name specified."
-#~ msgstr "Chưa ghi rõ tên tập tin."

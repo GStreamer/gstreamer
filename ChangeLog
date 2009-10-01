@@ -1,3 +1,194 @@
+2009-10-01 10:37:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/pango/gsttextoverlay.c:
+	* ext/pango/gsttextrender.c:
+	  pango: Unpremultiply Cairo's ARGB to match GStreamers ARGB
+
+2009-09-28 22:06:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: make the lock recursive for now
+	  Fixes #583255
+
+2009-09-28 21:54:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: fix the vis property getter
+
+2009-09-30 18:06:56 +0100  Christian F.K. Schaller <christian.schaller@collabora.co.uk>
+
+	* gst-plugins-base.spec.in:
+	  Add missing file to spec file
+
+2009-09-17 16:57:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	* tests/check/libs/cddabasesrc.c:
+	  cddabasesrc: Fix string leaks in the unit test and a leak in cddabasesrc
+
+2009-09-17 23:42:52 +1000  Jonathan Matthew <jonathan@d14n.org>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	* tests/check/libs/cddabasesrc.c:
+	  cddabasesrc: ignore URI fragments that look like device paths
+	  Rhythmbox uses cdda:// URIs of the form cdda://track#device, which
+	  worked before the fix for bug #321532.
+	  Also adds a check for negative track numbers and some unit tests for URI
+	  parsing.
+	  Fixes bug #595454.
+
+2009-09-17 01:20:45 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  0.10.24.3 pre-release
+
+2009-09-15 15:23:49 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  vorbistag: don't ever return NULL in list of strings.
+
+2009-09-14 12:18:33 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Expose mute,volume,vis-plugin and font-desc properties
+	  https://bugzilla.gnome.org/show_bug.cgi?id=594623
+
+2009-09-09 12:42:04 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gstplaysink.c:
+	  GstPlaySink: Expose 'reconfigure' as an action signal.
+
+2009-09-09 11:17:28 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gstplaysink.c:
+	  GstPlaySink: Expose flags as a gobject property.
+
+2009-09-08 11:35:20 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gstplayback.c:
+	* gst/playback/gstplaysink.c:
+	* gst/playback/gstplaysink.h:
+	  playback: Register playsink as an element.
+	  This allows using playsink from outside the playback plugin.
+	  Add code to be able to request the sink pads using standard GStreamer API.
+	  TODO : expose GObject properties/signals.
+
+2009-09-12 14:55:06 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* docs/libs/gst-plugins-base-libs.types:
+	  docs: add new gst_stream_volume_get_type to types file
+	  This is needs to get Gobject features to show up in the docs.
+
+2009-09-12 15:48:11 -0700  David Schleef <ds@schleef.org>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Fix duration calculation for truncated files
+	  If the last page of a stream has a granulepos of -1, that is,
+	  it doesn't complete a packet, we need to continue to search
+	  for the last granulepos.
+
+2009-09-12 14:01:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	* gst-libs/gst/app/Makefile.am:
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/cdda/Makefile.am:
+	* gst-libs/gst/fft/Makefile.am:
+	* gst-libs/gst/interfaces/Makefile.am:
+	* gst-libs/gst/netbuffer/Makefile.am:
+	* gst-libs/gst/pbutils/Makefile.am:
+	* gst-libs/gst/riff/Makefile.am:
+	* gst-libs/gst/rtp/Makefile.am:
+	* gst-libs/gst/rtsp/Makefile.am:
+	* gst-libs/gst/sdp/Makefile.am:
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/video/Makefile.am:
+	  introspection: Build pkgconfig before all libraries and set PKG_CONFIG_PATH
+	  This way g-ir-scanner can find the gstreamer-*-0.10 pkg-config files.
+
+2009-09-12 02:23:07 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/theora/theoraenc.c:
+	  theoraenc: Fix a string leak in _getcaps()
+
+2009-09-11 23:49:11 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* po/LINGUAS:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  0.10.24.2 pre-release
+
+2009-09-11 21:44:18 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/elements/audioresample.c:
+	  check: Improve audioresample test
+	  Make the audioresample test work with CK_FORK=no, and
+	  turn a g_print into a GST_INFO.
+
 2009-09-11 22:09:06 +0200  Benjamin Otte <otte@gnome.org>
 
 	* gst/videotestsrc/videotestsrc.c:

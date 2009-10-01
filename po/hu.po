@@ -1,14 +1,15 @@
 # Hungarian translation of gst-plugins-base
 # This file is distributed under the same license as the gst-plugins-base package.
 # Copyright (C) 2004, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+#
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
 # Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-17 00:08+0100\n"
-"PO-Revision-Date: 2009-04-20 01:44+0200\n"
+"POT-Creation-Date: 2009-10-01 16:27+0100\n"
+"PO-Revision-Date: 2009-09-18 00:13+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -127,9 +128,8 @@ msgstr ""
 msgid "This appears to be a text file"
 msgstr "Ez egy szövegfájlnak tűnik"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Nem hozható létre „typefind” elem."
+msgstr "Nem határozható meg az adatfolyam típusa"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
@@ -179,23 +179,21 @@ msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "A(z) „%s” elem hiányzik - ellenőrizze a Gstreamer telepítését."
 
 msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Mind az autoaudiosink, mind az  alsasink elemek hiányoznak."
+msgstr "Az autoaudiosink és az alsasink elem is hiányzik."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Mind az autovideosink, mind az xvimagesink elemek hiányoznak."
+msgstr "Az autovideosink és a(z) %s elem is hiányzik."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "Mind az autovideosink, mind az xvimagesink elemek hiányoznak."
+msgstr "Az autovideosink elem hiányzik."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Sem az autovideosink, sem az xvimagesink elem nem működik."
+msgstr "Sem az autovideosink, sem a(z) %s elem nem működik."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "Sem az autovideosink, sem az xvimagesink elem nem működik."
+msgstr "Az autovideosink elem nem működik."
 
 msgid "Custom text sink element is not usable."
 msgstr "Az egyéni szövegnyelő elem nem használható."
@@ -203,42 +201,37 @@ msgstr "Az egyéni szövegnyelő elem nem használható."
 msgid "No volume control found"
 msgstr "Nem található hangerőszabályzó"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Mind az autoaudiosink, mind az  alsasink elemek hiányoznak."
+msgstr "Az autoaudiosink és a(z) %s elem is hiányzik."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "Mind az autoaudiosink, mind az  alsasink elemek hiányoznak."
+msgstr "Az autoaudiosink elem hiányzik."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Sem az autoaudiosink, sem az alsasink elem nem működik."
+msgstr "Sem az autoaudiosink, sem a(z) %s elem nem működik."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Sem az autoaudiosink, sem az alsasink elem nem működik."
+msgstr "Az autoaudiosink elem nem működik."
 
 msgid "Can't play a text file without video."
 msgstr "A szövegfájl nem játszható le videó nélkül."
 
-#, fuzzy
 msgid "Can't display both text subtitles and subpictures."
-msgstr "Nem játszható le szöveges felirat és részképek."
+msgstr "Nem jeleníthető meg együtt a szöveges felirat és a részképek."
 
-#, fuzzy
 msgid "No Temp directory specified."
-msgstr "Nincs megadva eszköz."
+msgstr "Nincs megadva ideiglenes könyvtár."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Nem lehet bezárni a(z) „%s” vfs-fájlt."
+msgstr "Nem hozható létre a(z) „%s” átmeneti fájl."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "A(z) „%s” fájl nem nyitható meg olvasásra."
 
-#, fuzzy
 msgid "Internal data flow error."
 msgstr "Belső adatfolyam-hiba."
 
@@ -447,7 +440,7 @@ msgstr "%s RTP dekódoló"
 
 #, c-format
 msgid "%s demuxer"
-msgstr "%s demuxer"
+msgstr "%s szétválasztó"
 
 #, c-format
 msgid "%s decoder"
@@ -509,6 +502,3 @@ msgstr "Az eszköz („%s”) már használatban van."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nem lehet olvasásra és írásra megnyitni az eszközt („%s”)."
-
-#~ msgid "No file name specified."
-#~ msgstr "Nincs megadva fájlnév."

@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-09-17 00:08+0100\n"
-"PO-Revision-Date: 2009-04-18 20:34+0700\n"
+"POT-Creation-Date: 2009-10-01 16:27+0100\n"
+"PO-Revision-Date: 2009-09-17 12:31-0400\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -121,9 +121,8 @@ msgstr "Plugin %s dibutuhkan untuk memutar arus ini, tapi tidak diinstal."
 msgid "This appears to be a text file"
 msgstr "Ini kelihatannya merupakan berkas teks"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Tak dapat membuat elemen \"typefind\"."
+msgstr "Tak dapat menentukan tipe arus"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
@@ -175,21 +174,19 @@ msgstr "Elemen '%s' hilang - cek instalasi GStreamer anda."
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Baik elemen autoaudiosink maupun alsasink hilang."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Baik elemen autovideosink maupun xvimagesink hilang."
+msgstr "Baik elemen autovideosink maupun %s hilang."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "Baik elemen autovideosink maupun xvimagesink hilang."
+msgstr "Elemen autovideosink hilang."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Baik elemen autovideosink maupun xvimagesink tidak bekerja."
+msgstr "Baik elemen autovideosink maupun %s tidak bekerja."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "Baik elemen autovideosink maupun xvimagesink tidak bekerja."
+msgstr "Elemen autovideosink tidak bekerja."
 
 msgid "Custom text sink element is not usable."
 msgstr "Elemen teks tenggelam suai tak dapat digunakan."
@@ -197,42 +194,37 @@ msgstr "Elemen teks tenggelam suai tak dapat digunakan."
 msgid "No volume control found"
 msgstr "Tak ada kontrol volume yang ditemukan"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Baik elemen autoaudiosink maupun alsasink hilang."
+msgstr "Baik elemen autoaudiosink maupun %s hilang."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "Baik elemen autoaudiosink maupun alsasink hilang."
+msgstr "Elemen autoaudiosink hilang."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Baik elemen autoaudiosink maupun alsasink tidak bekerja."
+msgstr "Baik elemen autoaudiosink maupun %s tidak bekerja."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Baik elemen autoaudiosink maupun alsasink tidak bekerja."
+msgstr "Elemen autoaudiosink tidak bekerja."
 
 msgid "Can't play a text file without video."
 msgstr "Tak dapat memutar berkas teks tanpa video."
 
-#, fuzzy
 msgid "Can't display both text subtitles and subpictures."
-msgstr "Tak dapat memutar teks subjudul dan subgambar."
+msgstr "Tak dapat menampilkan baik teks subjudul dan subgambar."
 
-#, fuzzy
 msgid "No Temp directory specified."
-msgstr "Tak ada divais yang ditentukan."
+msgstr "Tak ada direktori Temp yang ditentukan."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Tak dapat menutup berkas vfs \"%s\"."
+msgstr "Tak dapat membuat berkas temp \"%s\"."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tak dapat membuka berkas \"%s\" untuk dibaca."
 
-#, fuzzy
 msgid "Internal data flow error."
 msgstr "Galat arus data internal."
 
