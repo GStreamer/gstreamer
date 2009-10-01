@@ -155,6 +155,7 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseVideoEncoder *base_video_encoder;
   GstBaseVideoEncoderClass *base_video_encoder_class;
+  gboolean res;
 
   base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
   base_video_encoder_class =
@@ -164,12 +165,12 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   gst_base_video_state_from_caps (&base_video_encoder->state, caps);
 
-  base_video_encoder_class->set_format (base_video_encoder,
+  res = base_video_encoder_class->set_format (base_video_encoder,
       &base_video_encoder->state);
 
   g_object_unref (base_video_encoder);
 
-  return TRUE;
+  return res;
 }
 
 static void
