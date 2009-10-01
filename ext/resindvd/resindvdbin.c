@@ -326,6 +326,8 @@ try_create_piece (RsnDvdBin * dvdbin, gint index,
 
   return TRUE;
 create_failed:
+  gst_element_post_message (GST_ELEMENT_CAST (dvdbin),
+      gst_missing_element_message_new (GST_ELEMENT_CAST (dvdbin), factory));
   GST_ELEMENT_ERROR (dvdbin, CORE, MISSING_PLUGIN, (NULL),
       ("Could not create %s element '%s'", descr, factory));
   return FALSE;
