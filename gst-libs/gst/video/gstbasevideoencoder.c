@@ -357,6 +357,7 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   GstBaseVideoEncoder *base_video_encoder;
   GstBaseVideoEncoderClass *klass;
   GstVideoFrame *frame;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (!gst_pad_is_negotiated (pad)) {
     return GST_FLOW_NOT_NEGOTIATED;
@@ -389,12 +390,12 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   base_video_encoder->frames =
       g_list_append (base_video_encoder->frames, frame);
 
-  klass->handle_frame (base_video_encoder, frame);
+  ret = klass->handle_frame (base_video_encoder, frame);
 
 done:
   g_object_unref (base_video_encoder);
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static GstStateChangeReturn

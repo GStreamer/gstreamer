@@ -90,7 +90,7 @@ struct _GstBaseVideoEncoderClass
   gboolean (*start) (GstBaseVideoEncoder *coder);
   gboolean (*stop) (GstBaseVideoEncoder *coder);
   gboolean (*finish) (GstBaseVideoEncoder *coder, GstVideoFrame *frame);
-  gboolean (*handle_frame) (GstBaseVideoEncoder *coder, GstVideoFrame *frame);
+  GstFlowReturn (*handle_frame) (GstBaseVideoEncoder *coder, GstVideoFrame *frame);
   GstFlowReturn (*shape_output) (GstBaseVideoEncoder *coder, GstVideoFrame *frame);
   GstCaps *(*get_caps) (GstBaseVideoEncoder *coder);
 
