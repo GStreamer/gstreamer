@@ -34,6 +34,28 @@ typedef struct _RTPJitterBufferClass RTPJitterBufferClass;
 #define RTP_JITTER_BUFFER_CAST(src)        ((RTPJitterBuffer *)(src))
 
 /**
+ * RTPJitterBufferMode:
+ *
+ * RTP_JITTER_BUFFER_MODE_NONE: don't do any skew correction, outgoing
+ *    timestamps are calculated directly from the RTP timestamps. This mode is
+ *    good for recording but not for real-time applications.
+ * RTP_JITTER_BUFFER_MODE_SLAVE: calculate the skew between sender and receiver
+ *    and produce smoothed adjusted outgoing timestamps. This mode is good for
+ *    low latency communications.
+ * RTP_JITTER_BUFFER_MODE_BUFFER: buffer packets between low/high watermarks.
+ *    This mode is good for streaming communication.
+ * RTP_JITTER_BUFFER_MODE_LAST: last buffer mode.
+ *
+ * The different buffer modes for a jitterbuffer.
+ */
+typedef enum {
+  RTP_JITTER_BUFFER_MODE_NONE    = 0,
+  RTP_JITTER_BUFFER_MODE_SLAVE   = 1,
+  RTP_JITTER_BUFFER_MODE_BUFFER  = 2,
+  RTP_JITTER_BUFFER_MODE_LAST
+} RTPJitterBufferMode;
+
+/**
  * RTPTailChanged:
  * @jbuf: an #RTPJitterBuffer
  * @user_data: user data specified when registering
@@ -52,6 +74,10 @@ struct _RTPJitterBuffer {
   GObject        object;
 
   GQueue        *packets;
+
+  RTPJitterBufferMode mode;
+
+  gboolean       buffering;
 
   /* for calculating skew */
   GstClockTime   base_time;
@@ -78,6 +104,9 @@ GType rtp_jitter_buffer_get_type (void);
 
 /* managing lifetime */
 RTPJitterBuffer*      rtp_jitter_buffer_new              (void);
+
+RTPJitterBufferMode   rtp_jitter_buffer_get_mode         (RTPJitterBuffer *jbuf);
+void                  rtp_jitter_buffer_set_mode         (RTPJitterBuffer *jbuf, RTPJitterBufferMode mode);
 
 void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf);
 

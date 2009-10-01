@@ -65,6 +65,7 @@ static void
 rtp_jitter_buffer_init (RTPJitterBuffer * jbuf)
 {
   jbuf->packets = g_queue_new ();
+  jbuf->mode = RTP_JITTER_BUFFER_MODE_SLAVE;
 
   rtp_jitter_buffer_reset_skew (jbuf);
 }
@@ -99,6 +100,39 @@ rtp_jitter_buffer_new (void)
   return jbuf;
 }
 
+/**
+ * rtp_jitter_buffer_get_mode:
+ * @jbuf: an #RTPJitterBuffer
+ *
+ * Get the current jitterbuffer mode.
+ *
+ * Returns: the current jitterbuffer mode.
+ */
+RTPJitterBufferMode
+rtp_jitter_buffer_get_mode (RTPJitterBuffer * jbuf)
+{
+  return jbuf->mode;
+}
+
+/**
+ * rtp_jitter_buffer_set_mode:
+ * @jbuf: an #RTPJitterBuffer
+ * @mode: a #RTPJitterBufferMode
+ *
+ * Set the buffering and clock slaving algorithm used in the @jbuf.
+ */
+void
+rtp_jitter_buffer_set_mode (RTPJitterBuffer * jbuf, RTPJitterBufferMode mode)
+{
+  jbuf->mode = mode;
+}
+
+/**
+ * rtp_jitter_buffer_reset_skew:
+ * @jbuf: an #RTPJitterBuffer
+ *
+ * Reset the skew calculations in @jbuf.
+ */
 void
 rtp_jitter_buffer_reset_skew (RTPJitterBuffer * jbuf)
 {
@@ -468,7 +502,20 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
    * receive time, this function will retimestamp @buf with the skew corrected
    * running time. */
   rtptime = gst_rtp_buffer_get_timestamp (buf);
-  time = calculate_skew (jbuf, rtptime, time, clock_rate, max_delay);
+  switch (jbuf->mode) {
+    case RTP_JITTER_BUFFER_MODE_NONE:
+      time = GST_BUFFER_TIMESTAMP (buf);
+      break;
+    case RTP_JITTER_BUFFER_MODE_SLAVE:
+      time = calculate_skew (jbuf, rtptime, time, clock_rate, max_delay);
+      break;
+    case RTP_JITTER_BUFFER_MODE_BUFFER:
+      time = GST_BUFFER_TIMESTAMP (buf);
+      break;
+    default:
+      break;
+  }
+
   GST_BUFFER_TIMESTAMP (buf) = time;
 
   /* It's more likely that the packet was inserted in the front of the buffer */
@@ -564,9 +611,16 @@ rtp_jitter_buffer_flush (RTPJitterBuffer * jbuf)
 guint
 rtp_jitter_buffer_num_packets (RTPJitterBuffer * jbuf)
 {
+  guint result;
+
   g_return_val_if_fail (jbuf != NULL, 0);
 
-  return jbuf->packets->length;
+  if (!jbuf->buffering)
+    result = jbuf->packets->length;
+  else
+    result = 0;
+
+  return result;
 }
 
 /**
