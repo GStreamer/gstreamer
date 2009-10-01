@@ -965,11 +965,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_WMV3:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-wmv",
-          "wmvversion", G_TYPE_INT, 3, NULL);
+          "wmvversion", G_TYPE_INT, 3, "format", GST_TYPE_FOURCC,
+          GST_MAKE_FOURCC ('W', 'M', 'V', '3'), NULL);
       break;
     case CODEC_ID_VC1:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-wmv",
-          "wmvversion", G_TYPE_INT, 3, "fourcc", GST_TYPE_FOURCC,
+          "wmvversion", G_TYPE_INT, 3, "format", GST_TYPE_FOURCC,
           GST_MAKE_FOURCC ('W', 'V', 'C', '1'), NULL);
       break;
     case CODEC_ID_QDM2:
@@ -2156,6 +2157,11 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
       context->extradata_size = size;
     }
 
+    /* Hack for VC1. Sometimes the first (length) byte is 0 for some files */
+    if (codec_id == CODEC_ID_VC1 && size > 0 && data[0] == 0) {
+      context->extradata[0] = (guint8) size;
+    }
+
     GST_DEBUG ("have codec data of size %d", size);
   } else if (context->extradata == NULL) {
     /* no extradata, alloc dummy with 0 sized, some codecs insist on reading
@@ -2716,12 +2722,15 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
         {
           guint32 fourcc;
 
-          if (gst_structure_get_fourcc (structure, "fourcc", &fourcc)) {
+          /* WMV3 unless the fourcc exists and says otherwise */
+          id = CODEC_ID_WMV3;
+
+          if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
             if ((fourcc == GST_MAKE_FOURCC ('W', 'V', 'C', '1')) ||
-                (fourcc == GST_MAKE_FOURCC ('W', 'M', 'V', 'A')))
+                (fourcc == GST_MAKE_FOURCC ('W', 'M', 'V', 'A'))) {
               id = CODEC_ID_VC1;
-          } else
-            id = CODEC_ID_WMV3;
+            }
+          }
         }
           break;
       }
