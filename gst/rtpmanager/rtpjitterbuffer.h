@@ -120,6 +120,8 @@ GstBuffer *           rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf)
 
 void                  rtp_jitter_buffer_flush            (RTPJitterBuffer *jbuf);
 
+gboolean              rtp_jitter_buffer_is_buffering     (RTPJitterBuffer * jbuf);
+
 guint                 rtp_jitter_buffer_num_packets      (RTPJitterBuffer *jbuf);
 guint32               rtp_jitter_buffer_get_ts_diff      (RTPJitterBuffer *jbuf);
 

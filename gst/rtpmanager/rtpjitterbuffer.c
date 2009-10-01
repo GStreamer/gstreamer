@@ -125,6 +125,12 @@ void
 rtp_jitter_buffer_set_mode (RTPJitterBuffer * jbuf, RTPJitterBufferMode mode)
 {
   jbuf->mode = mode;
+
+  if (mode == RTP_JITTER_BUFFER_MODE_BUFFER) {
+    /* when we're in buffering mode, always set our state to buffering, we'll
+     * get out of it when we push the next buffer */
+    jbuf->buffering = TRUE;
+  }
 }
 
 /**
@@ -510,14 +516,19 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
         time = 0;
       else
         time = -1;
-
       time = calculate_skew (jbuf, rtptime, time, clock_rate, max_delay);
       break;
     case RTP_JITTER_BUFFER_MODE_SLAVE:
       time = calculate_skew (jbuf, rtptime, time, clock_rate, max_delay);
       break;
     case RTP_JITTER_BUFFER_MODE_BUFFER:
-      time = GST_BUFFER_TIMESTAMP (buf);
+      /* send -1 for all timestamps except the first one. This will make the
+       * timestamps increase according to the RTP timestamps. When in buffering
+       * mode we will adjust the outgoing timestamps relative with how long we
+       * buffered */
+      if (jbuf->base_time != -1)
+        time = -1;
+      time = calculate_skew (jbuf, rtptime, time, clock_rate, max_delay);
       break;
     default:
       break;
@@ -608,6 +619,21 @@ rtp_jitter_buffer_flush (RTPJitterBuffer * jbuf)
 }
 
 /**
+ * rtp_jitter_buffer_is_buffering:
+ * @jbuf: an #RTPJitterBuffer
+ *
+ * Check if @jbuf is buffering currently. Users of the jitterbuffer should not
+ * pop packets while in buffering mode.
+ *
+ * Returns: the buffering state of @jbuf
+ */
+gboolean
+rtp_jitter_buffer_is_buffering (RTPJitterBuffer * jbuf)
+{
+  return jbuf->buffering;
+}
+
+/**
  * rtp_jitter_buffer_num_packets:
  * @jbuf: an #RTPJitterBuffer
  *
@@ -618,16 +644,9 @@ rtp_jitter_buffer_flush (RTPJitterBuffer * jbuf)
 guint
 rtp_jitter_buffer_num_packets (RTPJitterBuffer * jbuf)
 {
-  guint result;
-
   g_return_val_if_fail (jbuf != NULL, 0);
 
-  if (!jbuf->buffering)
-    result = jbuf->packets->length;
-  else
-    result = 0;
-
-  return result;
+  return jbuf->packets->length;
 }
 
 /**

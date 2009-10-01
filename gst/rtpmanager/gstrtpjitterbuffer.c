@@ -1438,6 +1438,9 @@ again:
     id = NULL;
     /* always wait if we are blocked */
     if (G_LIKELY (!priv->blocked)) {
+      /* we're buffering, wait */
+      if (rtp_jitter_buffer_is_buffering (priv->jbuf))
+        goto do_wait;
       /* if we have a packet, we can exit the loop and grab it */
       if (rtp_jitter_buffer_num_packets (priv->jbuf) > 0)
         break;
@@ -1460,6 +1463,7 @@ again:
         GST_OBJECT_UNLOCK (jitterbuffer);
       }
     }
+  do_wait:
     /* now we wait */
     GST_DEBUG_OBJECT (jitterbuffer, "waiting");
     priv->waiting = TRUE;
