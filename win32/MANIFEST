@@ -9,4 +9,3 @@ win32/vs6/libgstmpegvideoparse.dsp
 win32/vs6/libgstneon.dsp
 win32/vs8/gst-plugins-bad.sln
 win32/vs8/libgstdirectdraw.vcproj
-win32/vs8/libdshowsrcwrapper.vcproj

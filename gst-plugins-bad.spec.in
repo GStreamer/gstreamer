@@ -95,7 +95,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg4videoparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfbdevsink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmetadata.so
 %{_libdir}/gstreamer-%{majorminor}/libgstselector.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoss4audio.so
@@ -127,13 +126,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstshapewipe.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdebugutilsbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgstasfmux.so
-%{_libdir}/gstreamer-%{majorminor}/libgstofa.so
+%{_libdir}/gstreamer-%{majorminor}/libgstpnm.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideomeasure.so
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideocodec.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideodecoder.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoencoder.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoparse.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoutils.h
 %{_datadir}/gstreamer-%{majorminor}/camera-apps/gst-camera.glade
+%{_includedir}/gstreamer-%{majorminor}/gst/signalprocessor/gstsignalprocessor.h
 
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography.h
@@ -174,6 +175,8 @@ rm -rf $RPM_BUILD_ROOT
 @USE_ASSRENDER_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstassrender.so
 @USE_PLUGIN_FREI0R_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
 @USE_SCHRO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstschro.so
+@USE_OFA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstofa.so
+@USE_METADATA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmetadata.so
 
 %changelog
 * Thu Mar 12 2009 Christian Schaller <chrisian.schaller at collabora dot co uk>
