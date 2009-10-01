@@ -299,6 +299,7 @@ AG_GST_CHECK_PLUGIN(valve)
 AG_GST_CHECK_PLUGIN(videomeasure)
 AG_GST_CHECK_PLUGIN(videosignal)
 AG_GST_CHECK_PLUGIN(vmnc)
+AG_GST_CHECK_PLUGIN(zbar)
 
 dnl *** plug-ins to exclude ***
 
@@ -1596,6 +1597,12 @@ AG_GST_CHECK_FEATURE(SCHRO, [Schroedinger video codec], schro, [
   AG_GST_PKG_CHECK_MODULES(SCHRO, schroedinger-1.0 >= 1.0.7)
 ])
 
+dnl *** zbar ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ZBAR, true)
+AG_GST_CHECK_FEATURE(ZBAR, [ZBar barcode detector], zbar, [
+  AG_GST_PKG_CHECK_MODULES(ZBAR, zbar >= 0.9)
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -1655,6 +1662,7 @@ AM_CONDITIONAL(USE_WININET, false)
 AM_CONDITIONAL(USE_ACM, false)
 AM_CONDITIONAL(USE_VDPAU, false)
 AM_CONDITIONAL(USE_SCHRO, false)
+AM_CONDITIONAL(USE_ZBAR, false)
 
 fi dnl of EXT plugins
 
@@ -1855,6 +1863,7 @@ ext/swfdec/Makefile
 ext/theora/Makefile
 ext/timidity/Makefile
 ext/xvid/Makefile
+ext/zbar/Makefile
 po/Makefile.in
 docs/Makefile
 docs/plugins/Makefile
