@@ -387,6 +387,12 @@ gst_text_render_fixate_caps (GstPad * pad, GstCaps * caps)
   gst_object_unref (render);
 }
 
+#define CAIRO_UNPREMULTIPLY(a,r,g,b) G_STMT_START { \
+  b = (a > 0) ? MIN ((b * 255 + a / 2) / a, 255) : 0; \
+  g = (a > 0) ? MIN ((g * 255 + a / 2) / a, 255) : 0; \
+  r = (a > 0) ? MIN ((r * 255 + a / 2) / a, 255) : 0; \
+} G_STMT_END
+
 static void
 gst_text_renderer_image_to_ayuv (GstTextRender * render, guchar * pixbuf,
     int xpos, int ypos, int stride)
@@ -409,6 +415,9 @@ gst_text_renderer_image_to_ayuv (GstTextRender * render, guchar * pixbuf,
       r = bitp[CAIRO_ARGB_R];
       a = bitp[CAIRO_ARGB_A];
       bitp += 4;
+
+      /* Cairo uses pre-multiplied ARGB, unpremultiply it */
+      CAIRO_UNPREMULTIPLY (a, r, g, b);
 
       *p++ = a;
       *p++ = CLAMP ((int) (((19595 * r) >> 16) + ((38470 * g) >> 16) +
@@ -440,6 +449,9 @@ gst_text_renderer_image_to_argb (GstTextRender * render, guchar * pixbuf,
       p[1] = bitp[CAIRO_ARGB_R];
       p[2] = bitp[CAIRO_ARGB_G];
       p[3] = bitp[CAIRO_ARGB_B];
+
+      /* Cairo uses pre-multiplied ARGB, unpremultiply it */
+      CAIRO_UNPREMULTIPLY (p[0], p[1], p[2], p[3]);
 
       bitp += 4;
       p += 4;

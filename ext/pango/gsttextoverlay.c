@@ -1013,6 +1013,12 @@ gst_text_overlay_adjust_values_with_fontdesc (GstTextOverlay * overlay,
     overlay->outline_offset = MINIMUM_OUTLINE_OFFSET;
 }
 
+#define CAIRO_UNPREMULTIPLY(a,r,g,b) G_STMT_START { \
+  b = (a > 0) ? MIN ((b * 255 + a / 2) / a, 255) : 0; \
+  g = (a > 0) ? MIN ((g * 255 + a / 2) / a, 255) : 0; \
+  r = (a > 0) ? MIN ((r * 255 + a / 2) / a, 255) : 0; \
+} G_STMT_END
+
 static inline void
 gst_text_overlay_blit_1 (GstTextOverlay * overlay, guchar * dest, gint xpos,
     gint ypos, guchar * text_image, guint dest_stride)
@@ -1047,6 +1053,8 @@ gst_text_overlay_blit_1 (GstTextOverlay * overlay, guchar * dest, gint xpos,
       g = pimage[CAIRO_ARGB_G];
       r = pimage[CAIRO_ARGB_R];
       a = pimage[CAIRO_ARGB_A];
+      CAIRO_UNPREMULTIPLY (a, r, g, b);
+
       pimage += 4;
       if (a == 0) {
         py++;
@@ -1067,6 +1075,7 @@ gst_text_overlay_blit_sub2x2cbcr (GstTextOverlay * overlay,
   gint i, j;
   gint x, cb, cr;
   gushort r, g, b, a;
+  gushort r1, g1, b1, a1;
   guchar *pimage1, *pimage2;
   guchar *pcb, *pcr;
   gint width = overlay->image_width - 2;
@@ -1097,25 +1106,41 @@ gst_text_overlay_blit_sub2x2cbcr (GstTextOverlay * overlay,
       g = pimage1[CAIRO_ARGB_G];
       r = pimage1[CAIRO_ARGB_R];
       a = pimage1[CAIRO_ARGB_A];
+      CAIRO_UNPREMULTIPLY (a, r, g, b);
       pimage1 += 4;
 
-      b += pimage1[CAIRO_ARGB_B];
-      g += pimage1[CAIRO_ARGB_G];
-      r += pimage1[CAIRO_ARGB_R];
-      a += pimage1[CAIRO_ARGB_A];
+      b1 = pimage1[CAIRO_ARGB_B];
+      g1 = pimage1[CAIRO_ARGB_G];
+      r1 = pimage1[CAIRO_ARGB_R];
+      a1 = pimage1[CAIRO_ARGB_A];
+      CAIRO_UNPREMULTIPLY (a1, r1, g1, b1);
+      b += b1;
+      g += g1;
+      r += r1;
+      a += a1;
       pimage1 += 4;
 
-      b += pimage2[CAIRO_ARGB_B];
-      g += pimage2[CAIRO_ARGB_G];
-      r += pimage2[CAIRO_ARGB_R];
-      a += pimage2[CAIRO_ARGB_A];
+      b1 = pimage2[CAIRO_ARGB_B];
+      g1 = pimage2[CAIRO_ARGB_G];
+      r1 = pimage2[CAIRO_ARGB_R];
+      a1 = pimage2[CAIRO_ARGB_A];
+      CAIRO_UNPREMULTIPLY (a1, r1, g1, b1);
+      b += b1;
+      g += g1;
+      r += r1;
+      a += a1;
       pimage2 += 4;
 
       /* + 2 for rounding */
-      b += pimage2[CAIRO_ARGB_B] + 2;
-      g += pimage2[CAIRO_ARGB_G] + 2;
-      r += pimage2[CAIRO_ARGB_R] + 2;
-      a += pimage2[CAIRO_ARGB_A] + 2;
+      b1 = pimage2[CAIRO_ARGB_B];
+      g1 = pimage2[CAIRO_ARGB_G];
+      r1 = pimage2[CAIRO_ARGB_R];
+      a1 = pimage2[CAIRO_ARGB_A];
+      CAIRO_UNPREMULTIPLY (a1, r1, g1, b1);
+      b += b1 + 2;
+      g += g1 + 2;
+      r += r1 + 2;
+      a += a1 + 2;
       pimage2 += 4;
 
       b /= 4;
@@ -1430,12 +1455,14 @@ gst_text_overlay_blit_UYVY (GstTextOverlay * overlay,
       g0 = pimage[CAIRO_ARGB_G];
       r0 = pimage[CAIRO_ARGB_R];
       a0 = pimage[CAIRO_ARGB_A];
+      CAIRO_UNPREMULTIPLY (a0, r0, g0, b0);
       pimage += 4;
 
       b1 = pimage[CAIRO_ARGB_B];
       g1 = pimage[CAIRO_ARGB_G];
       r1 = pimage[CAIRO_ARGB_R];
       a1 = pimage[CAIRO_ARGB_A];
+      CAIRO_UNPREMULTIPLY (a1, r1, g1, b1);
       pimage += 4;
 
       a0 += a1 + 2;
@@ -1501,9 +1528,13 @@ gst_text_overlay_blit_##name (GstTextOverlay * overlay, \
     dest = rgb_pixels + (i + ypos) * 4 * overlay->width + xpos * 4; \
     for (j = 0; j < w; j++) { \
       a = pimage[CAIRO_ARGB_A]; \
-      b = (pimage[CAIRO_ARGB_B] * a + dest[B] * (255-a)) / 255; \
-      g = (pimage[CAIRO_ARGB_G] * a + dest[G] * (255-a)) / 255; \
-      r = (pimage[CAIRO_ARGB_R] * a + dest[R] * (255-a)) / 255; \
+      b = pimage[CAIRO_ARGB_B]; \
+      g = pimage[CAIRO_ARGB_G]; \
+      r = pimage[CAIRO_ARGB_R]; \
+      CAIRO_UNPREMULTIPLY (a, r, g, b); \
+      b = (b*a + dest[B] * (255-a)) / 255; \
+      g = (g*a + dest[G] * (255-a)) / 255; \
+      r = (r*a + dest[R] * (255-a)) / 255; \
       \
       dest[B] = b; \
       dest[G] = g; \
