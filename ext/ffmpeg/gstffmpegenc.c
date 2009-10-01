@@ -642,13 +642,19 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
 static void
 ffmpegenc_setup_working_buf (GstFFMpegEnc * ffmpegenc)
 {
+  guint wanted_size =
+      ffmpegenc->context->width * ffmpegenc->context->height * 6 + 200;
+
+  /* Above is the buffer size used by ffmpeg/ffmpeg.c */
+
   if (ffmpegenc->working_buf == NULL ||
-      ffmpegenc->working_buf_size != ffmpegenc->buffer_size) {
+      ffmpegenc->working_buf_size != wanted_size) {
     if (ffmpegenc->working_buf)
       g_free (ffmpegenc->working_buf);
-    ffmpegenc->working_buf_size = ffmpegenc->buffer_size;
+    ffmpegenc->working_buf_size = wanted_size;
     ffmpegenc->working_buf = g_malloc (ffmpegenc->working_buf_size);
   }
+  ffmpegenc->buffer_size = wanted_size;
 }
 
 static GstFlowReturn
@@ -742,6 +748,8 @@ gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, guint8 * audio_in,
   audio_out = GST_BUFFER_DATA (outbuf);
 
   GST_LOG_OBJECT (ffmpegenc, "encoding buffer of max size %d", max_size);
+  if (ffmpegenc->buffer_size != max_size)
+    ffmpegenc->buffer_size = max_size;
 
   res = avcodec_encode_audio (ctx, audio_out, max_size, (short *) audio_in);
 
@@ -849,8 +857,9 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
           ctx->sample_rate);
       duration -= (timestamp - ffmpegenc->adapter_ts);
 
-      /* 4 times the input size should be big enough... */
-      out_size = MAX (frame_bytes * 4, FF_MIN_BUFFER_SIZE);
+      /* 4 times the input size plus the minimal buffer size
+       * should be big enough... */
+      out_size = frame_bytes * 4 + FF_MIN_BUFFER_SIZE;
 
       ret = gst_ffmpegenc_encode_audio (ffmpegenc, in_data, out_size,
           timestamp, duration, ffmpegenc->discont);
@@ -877,6 +886,9 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
     out_size = size / osize;
     if (coded_bps)
       out_size *= coded_bps;
+
+    /* We need to provide at least ffmpegs minimal buffer size */
+    out_size += FF_MIN_BUFFER_SIZE;
 
     in_data = (guint8 *) GST_BUFFER_DATA (inbuf);
     ret = gst_ffmpegenc_encode_audio (ffmpegenc, in_data, out_size,
@@ -1038,7 +1050,6 @@ gst_ffmpegenc_set_property (GObject * object,
       ffmpegenc->me_method = g_value_get_enum (value);
       break;
     case ARG_BUFSIZE:
-      ffmpegenc->buffer_size = g_value_get_ulong (value);
       break;
     case ARG_RTP_PAYLOAD_SIZE:
       ffmpegenc->rtp_payload_size = g_value_get_ulong (value);
