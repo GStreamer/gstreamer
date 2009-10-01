@@ -468,7 +468,7 @@ gst_schro_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GST_DEBUG ("granule offset %lld", schro_enc->granule_offset);
   }
 
-  schro_frame = gst_schro_buffer_wrap (frame->sink_buffer,
+  schro_frame = gst_schro_buffer_wrap (gst_buffer_ref (frame->sink_buffer),
       state->format, state->width, state->height);
 
   GST_DEBUG ("pushing frame %p", frame);
