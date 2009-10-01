@@ -29,7 +29,7 @@
 #include "resindvdsrc.h"
 #include "rsnstreamselector.h"
 #include "rsnaudiomunge.h"
-#include "rsnaudiodec.h"
+#include "rsndec.h"
 #include "rsnparsetter.h"
 
 #include "gstmpegdemux.h"

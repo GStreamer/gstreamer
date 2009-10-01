@@ -24,7 +24,7 @@
 
 #include <string.h>
 
-#include "rsnaudiodec.h"
+#include "rsndec.h"
 
 GST_DEBUG_CATEGORY_STATIC (rsn_dec_debug);
 #define GST_CAT_DEFAULT rsn_dec_debug
