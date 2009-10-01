@@ -144,6 +144,36 @@ gst_rsvg_dec_reset (GstRsvgDec * dec)
   }
 }
 
+#define CAIRO_UNPREMULTIPLY(a,r,g,b) G_STMT_START { \
+  b = (a > 0) ? MIN ((b * 255 + a / 2) / a, 255) : 0; \
+  g = (a > 0) ? MIN ((g * 255 + a / 2) / a, 255) : 0; \
+  r = (a > 0) ? MIN ((r * 255 + a / 2) / a, 255) : 0; \
+} G_STMT_END
+
+static void
+gst_rsvg_decode_unpremultiply (guint8 * data, gint width, gint height)
+{
+  gint i, j;
+  guint a;
+
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+      a = data[3];
+      data[0] = (a > 0) ? MIN ((data[0] * 255 + a / 2) / a, 255) : 0;
+      data[1] = (a > 0) ? MIN ((data[1] * 255 + a / 2) / a, 255) : 0;
+      data[2] = (a > 0) ? MIN ((data[2] * 255 + a / 2) / a, 255) : 0;
+#else
+      a = data[0];
+      data[1] = (a > 0) ? MIN ((data[1] * 255 + a / 2) / a, 255) : 0;
+      data[2] = (a > 0) ? MIN ((data[2] * 255 + a / 2) / a, 255) : 0;
+      data[3] = (a > 0) ? MIN ((data[3] * 255 + a / 2) / a, 255) : 0;
+#endif
+      data += 4;
+    }
+  }
+}
+
 static GstFlowReturn
 gst_rsvg_decode_image (GstRsvgDec * rsvg, const guint8 * data, guint size,
     GstBuffer ** buffer)
@@ -273,6 +303,10 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, const guint8 * data, guint size,
   g_object_unref (handle);
   cairo_destroy (cr);
   cairo_surface_destroy (surface);
+
+  /* Now unpremultiply Cairo's ARGB to match GStreamer's */
+  gst_rsvg_decode_unpremultiply (GST_BUFFER_DATA (*buffer), rsvg->width,
+      rsvg->height);
 
   return ret;
 }
