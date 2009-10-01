@@ -504,7 +504,14 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
   rtptime = gst_rtp_buffer_get_timestamp (buf);
   switch (jbuf->mode) {
     case RTP_JITTER_BUFFER_MODE_NONE:
-      time = GST_BUFFER_TIMESTAMP (buf);
+      /* send 0 as the first timestamp and -1 for the other ones. This will
+       * interpollate them from the RTP timestamps with a 0 origin. */
+      if (jbuf->base_time == -1)
+        time = 0;
+      else
+        time = -1;
+
+      time = calculate_skew (jbuf, rtptime, time, clock_rate, max_delay);
       break;
     case RTP_JITTER_BUFFER_MODE_SLAVE:
       time = calculate_skew (jbuf, rtptime, time, clock_rate, max_delay);

@@ -70,10 +70,6 @@
 GST_DEBUG_CATEGORY (rtpjitterbuffer_debug);
 #define GST_CAT_DEFAULT (rtpjitterbuffer_debug)
 
-/* low and high threshold tell the queue when to start and stop buffering */
-#define LOW_THRESHOLD 0.2
-#define HIGH_THRESHOLD 0.8
-
 /* elementfactory information */
 static const GstElementDetails gst_rtp_jitter_buffer_details =
 GST_ELEMENT_DETAILS ("RTP packet jitter-buffer",
@@ -92,10 +88,31 @@ enum
   LAST_SIGNAL
 };
 
+#define RTP_TYPE_JITTER_BUFFER_MODE (rtp_jitter_buffer_mode_get_type())
+static GType
+rtp_jitter_buffer_mode_get_type (void)
+{
+  static GType jitter_buffer_mode_type = 0;
+  static const GEnumValue jitter_buffer_modes[] = {
+    {RTP_JITTER_BUFFER_MODE_NONE, "Only use RTP timestamps", "none"},
+    {RTP_JITTER_BUFFER_MODE_SLAVE, "Slave receiver to sender clock", "slave"},
+    {RTP_JITTER_BUFFER_MODE_BUFFER, "Do low/high watermark buffering",
+        "buffer"},
+    {0, NULL, NULL},
+  };
+
+  if (!jitter_buffer_mode_type) {
+    jitter_buffer_mode_type =
+        g_enum_register_static ("RTPJitterBufferMode", jitter_buffer_modes);
+  }
+  return jitter_buffer_mode_type;
+}
+
 #define DEFAULT_LATENCY_MS      200
 #define DEFAULT_DROP_ON_LATENCY FALSE
 #define DEFAULT_TS_OFFSET       0
 #define DEFAULT_DO_LOST         FALSE
+#define DEFAULT_MODE            RTP_JITTER_BUFFER_MODE_SLAVE
 
 enum
 {
@@ -104,6 +121,7 @@ enum
   PROP_DROP_ON_LATENCY,
   PROP_TS_OFFSET,
   PROP_DO_LOST,
+  PROP_MODE,
   PROP_LAST
 };
 
@@ -341,6 +359,16 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
       g_param_spec_boolean ("do-lost", "Do Lost",
           "Send an event downstream when a packet is lost", DEFAULT_DO_LOST,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpJitterBuffer::mode:
+   *
+   * Control the buffering and timestamping mode used by the jitterbuffer.
+   */
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode",
+          "Control the buffering algorithm in use", RTP_TYPE_JITTER_BUFFER_MODE,
+          DEFAULT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
@@ -1968,6 +1996,11 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->do_lost = g_value_get_boolean (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_MODE:
+      JBUF_LOCK (priv);
+      rtp_jitter_buffer_set_mode (priv->jbuf, g_value_get_enum (value));
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2003,6 +2036,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_DO_LOST:
       JBUF_LOCK (priv);
       g_value_set_boolean (value, priv->do_lost);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_MODE:
+      JBUF_LOCK (priv);
+      g_value_set_enum (value, rtp_jitter_buffer_get_mode (priv->jbuf));
       JBUF_UNLOCK (priv);
       break;
     default:
