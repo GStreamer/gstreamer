@@ -959,8 +959,9 @@ gst_audio_resample_check_discont (GstAudioResample * resample, GstBuffer * buf)
     return FALSE;
 
   GST_WARNING_OBJECT (resample,
-      "encountered timestamp discontinuity of %lu samples = %" GST_TIME_FORMAT,
-      delta, GST_TIME_ARGS (gst_util_uint64_scale_int_round (delta, GST_SECOND,
+      "encountered timestamp discontinuity of %" G_GUINT64_FORMAT " samples = %"
+      GST_TIME_FORMAT, delta,
+      GST_TIME_ARGS (gst_util_uint64_scale_int_round (delta, GST_SECOND,
               resample->inrate)));
   return TRUE;
 }
