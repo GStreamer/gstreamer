@@ -91,6 +91,7 @@ GST_BOILERPLATE_FULL (RsnDvdBin, rsn_dvdbin, GstBin,
 
 static void demux_pad_added (GstElement * element, GstPad * pad,
     RsnDvdBin * dvdbin);
+static void demux_no_more_pads (GstElement * element, RsnDvdBin * dvdbin);
 static void rsn_dvdbin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void rsn_dvdbin_get_property (GObject * object, guint prop_id,
@@ -385,6 +386,9 @@ create_elements (RsnDvdBin * dvdbin)
   g_signal_connect (G_OBJECT (dvdbin->pieces[DVD_ELEM_DEMUX]), "pad-added",
       G_CALLBACK (demux_pad_added), dvdbin);
 
+  g_signal_connect (G_OBJECT (dvdbin->pieces[DVD_ELEM_DEMUX]), "no-more-pads",
+      G_CALLBACK (demux_no_more_pads), dvdbin);
+
   if (!try_create_piece (dvdbin, DVD_ELEM_MQUEUE, "multiqueue", 0, "mq",
           "multiqueue"))
     return FALSE;
@@ -564,7 +568,8 @@ create_elements (RsnDvdBin * dvdbin)
   gst_object_unref (src);
   src = NULL;
 
-  if (dvdbin->video_added && dvdbin->audio_added && dvdbin->subpicture_added) {
+  if (dvdbin->video_added && (dvdbin->audio_added || dvdbin->audio_broken)
+      && dvdbin->subpicture_added) {
     GST_DEBUG_OBJECT (dvdbin, "Firing no more pads");
     gst_element_no_more_pads (GST_ELEMENT (dvdbin));
   }
@@ -661,6 +666,7 @@ remove_elements (RsnDvdBin * dvdbin)
   }
 
   dvdbin->video_added = dvdbin->audio_added = dvdbin->subpicture_added = FALSE;
+  dvdbin->audio_broken = FALSE;
   dvdbin->video_pad = dvdbin->audio_pad = dvdbin->subpicture_pad = NULL;
 }
 
@@ -807,6 +813,30 @@ failed:
 }
 
 static void
+demux_no_more_pads (GstElement * element, RsnDvdBin * dvdbin)
+{
+  gboolean no_more_pads = FALSE;
+  guint n_audio_pads = 0;
+
+  DVDBIN_PREROLL_LOCK (dvdbin);
+
+  g_object_get (dvdbin->pieces[DVD_ELEM_AUD_SELECT], "n-pads", &n_audio_pads,
+      NULL);
+  if (n_audio_pads == 0) {
+    no_more_pads = dvdbin->video_added && dvdbin->subpicture_added;
+    dvdbin->audio_broken = TRUE;
+  }
+
+  DVDBIN_PREROLL_UNLOCK (dvdbin);
+
+  if (no_more_pads) {
+    GST_DEBUG_OBJECT (dvdbin,
+        "Firing no more pads from demuxer no-more-pads cb");
+    gst_element_no_more_pads (GST_ELEMENT (dvdbin));
+  }
+}
+
+static void
 dvdbin_pad_blocked_cb (GstPad * opad, gboolean blocked,
     RsnDvdBinPadBlockCtx * ctx)
 {
@@ -832,7 +862,8 @@ dvdbin_pad_blocked_cb (GstPad * opad, gboolean blocked,
 
     if (!added) {
       gst_element_add_pad (GST_ELEMENT (dvdbin), dvdbin->subpicture_pad);
-      added_last_pad = (dvdbin->audio_added && dvdbin->video_added);
+      added_last_pad = ((dvdbin->audio_broken || dvdbin->audio_added)
+          && dvdbin->video_added);
     }
     DVDBIN_PREROLL_UNLOCK (dvdbin);
 
@@ -861,7 +892,8 @@ dvdbin_pad_blocked_cb (GstPad * opad, gboolean blocked,
 
     if (!added) {
       gst_element_add_pad (GST_ELEMENT (dvdbin), dvdbin->video_pad);
-      added_last_pad = (dvdbin->subpicture_added && dvdbin->audio_added);
+      added_last_pad = (dvdbin->subpicture_added && (dvdbin->audio_added
+              || dvdbin->audio_broken));
     }
     DVDBIN_PREROLL_UNLOCK (dvdbin);
 

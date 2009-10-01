@@ -70,6 +70,7 @@ struct _RsnDvdBin
 
   gboolean video_added;
   gboolean audio_added;
+  gboolean audio_broken;
   gboolean subpicture_added;
 
   GList *mq_req_pads;
