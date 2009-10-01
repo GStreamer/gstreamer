@@ -27,6 +27,8 @@
 GST_DEBUG_CATEGORY_EXTERN (basevideo_debug);
 #define GST_CAT_DEFAULT basevideo_debug
 
+static gboolean gst_base_video_encoder_sink_activate (GstBaseVideoEncoder *
+    base_video_encoder, gboolean active);
 static void gst_base_video_encoder_finalize (GObject * object);
 
 static gboolean gst_base_video_encoder_sink_setcaps (GstPad * pad,
@@ -41,6 +43,8 @@ static const GstQueryType *gst_base_video_encoder_get_query_types (GstPad *
     pad);
 static gboolean gst_base_video_encoder_src_query (GstPad * pad,
     GstQuery * query);
+static gboolean gst_base_video_encoder_sink_activate_push (GstPad * pad,
+    gboolean active);
 
 static void
 _do_init (GType object_type)
@@ -90,6 +94,8 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
 
   pad = GST_BASE_VIDEO_CODEC_SINK_PAD (base_video_encoder);
 
+  gst_pad_set_activatepush_function (pad,
+      gst_base_video_encoder_sink_activate_push);
   gst_pad_set_chain_function (pad, gst_base_video_encoder_chain);
   gst_pad_set_event_function (pad, gst_base_video_encoder_sink_event);
   gst_pad_set_setcaps_function (pad, gst_base_video_encoder_sink_setcaps);
@@ -98,6 +104,50 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
 
   gst_pad_set_query_type_function (pad, gst_base_video_encoder_get_query_types);
   gst_pad_set_query_function (pad, gst_base_video_encoder_src_query);
+}
+
+static gboolean
+gst_base_video_encoder_sink_activate (GstBaseVideoEncoder * encoder,
+    gboolean active)
+{
+  GstBaseVideoEncoderClass *klass;
+  gboolean result = FALSE;
+
+  GST_DEBUG_OBJECT (encoder, "activate");
+
+  klass = GST_BASE_VIDEO_ENCODER_GET_CLASS (encoder);
+
+  if (active) {
+    if (klass->start)
+      result = klass->start (encoder);
+  } else {
+    /* We must make sure streaming has finished before resetting things
+     * and calling the ::stop vfunc */
+    GST_PAD_STREAM_LOCK (GST_BASE_VIDEO_CODEC_SINK_PAD (encoder));
+    GST_PAD_STREAM_UNLOCK (GST_BASE_VIDEO_CODEC_SINK_PAD (encoder));
+
+    if (klass->stop)
+      result = klass->stop (encoder);
+  }
+
+  GST_DEBUG_OBJECT (encoder, "activate: %d", result);
+
+  return result;
+}
+
+static gboolean
+gst_base_video_encoder_sink_activate_push (GstPad * pad, gboolean active)
+{
+  gboolean result = TRUE;
+  GstBaseVideoEncoder *base_video_encoder;
+
+  base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
+
+  result = gst_base_video_encoder_sink_activate (base_video_encoder, active);
+
+  gst_object_unref (base_video_encoder);
+
+  return result;
 }
 
 static gboolean
@@ -116,8 +166,6 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   base_video_encoder_class->set_format (base_video_encoder,
       &base_video_encoder->state);
-
-  base_video_encoder_class->start (base_video_encoder);
 
   g_object_unref (base_video_encoder);
 
@@ -369,9 +417,6 @@ gst_base_video_encoder_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (base_video_encoder_class->stop) {
-        base_video_encoder_class->stop (base_video_encoder);
-      }
       break;
     default:
       break;
