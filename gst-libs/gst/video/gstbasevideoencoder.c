@@ -486,6 +486,7 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
         frame->src_buffer);
   }
 
+  gst_buffer_unref (frame->sink_buffer);
   g_free (frame);
 
   return ret;
