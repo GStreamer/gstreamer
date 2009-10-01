@@ -364,16 +364,6 @@ gst_vdp_mpeg_dec_decode (GstVdpMpegDec * mpeg_dec,
 
   device = GST_VDP_VIDEO_BUFFER (outbuf)->device;
 
-  if (info->forward_reference != VDP_INVALID_HANDLE &&
-      info->picture_coding_type != I_FRAME)
-    gst_vdp_video_buffer_add_reference (GST_VDP_VIDEO_BUFFER (outbuf),
-        GST_VDP_VIDEO_BUFFER (mpeg_dec->f_buffer));
-
-  if (info->backward_reference != VDP_INVALID_HANDLE
-      && info->picture_coding_type == B_FRAME)
-    gst_vdp_video_buffer_add_reference (GST_VDP_VIDEO_BUFFER (outbuf),
-        GST_VDP_VIDEO_BUFFER (mpeg_dec->b_buffer));
-
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = mpeg_dec->duration;
   GST_BUFFER_OFFSET (outbuf) = mpeg_dec->frame_nr;

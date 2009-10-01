@@ -24,18 +24,6 @@
 
 #include "gstvdpvideobuffer.h"
 
-
-void
-gst_vdp_video_buffer_add_reference (GstVdpVideoBuffer * buffer,
-    GstVdpVideoBuffer * buf)
-{
-  g_assert (GST_IS_VDP_VIDEO_BUFFER (buffer));
-  g_assert (GST_IS_VDP_VIDEO_BUFFER (buf));
-
-  gst_buffer_ref (GST_BUFFER (buf));
-  buffer->refs = g_slist_prepend (buffer->refs, buf);
-}
-
 GstVdpVideoBuffer *
 gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type,
     gint width, gint height)
@@ -66,7 +54,6 @@ static GObjectClass *gst_vdp_video_buffer_parent_class;
 static void
 gst_vdp_video_buffer_finalize (GstVdpVideoBuffer * buffer)
 {
-  GSList *iter;
   GstVdpDevice *device;
   VdpStatus status;
 
@@ -80,14 +67,6 @@ gst_vdp_video_buffer_finalize (GstVdpVideoBuffer * buffer)
 
   g_object_unref (buffer->device);
 
-  for (iter = buffer->refs; iter; iter = g_slist_next (iter)) {
-    GstBuffer *buf;
-
-    buf = (GstBuffer *) (iter->data);
-    gst_buffer_unref (buf);
-  }
-  g_slist_free (buffer->refs);
-
   GST_MINI_OBJECT_CLASS (gst_vdp_video_buffer_parent_class)->finalize
       (GST_MINI_OBJECT (buffer));
 }
@@ -97,8 +76,6 @@ gst_vdp_video_buffer_init (GstVdpVideoBuffer * buffer, gpointer g_class)
 {
   buffer->device = NULL;
   buffer->surface = VDP_INVALID_HANDLE;
-
-  buffer->refs = NULL;
 }
 
 static void

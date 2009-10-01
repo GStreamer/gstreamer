@@ -40,8 +40,6 @@ struct _GstVdpVideoBuffer {
 
   GstVdpDevice *device;
   VdpVideoSurface surface;
-
-  GSList *refs;
 };
 
 typedef struct
