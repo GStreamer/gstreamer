@@ -139,6 +139,7 @@ struct _GstRtpJitterBufferPrivate
 
   /* properties */
   guint latency_ms;
+  guint64 latency_ns;
   gboolean drop_on_latency;
   gint64 ts_offset;
   gboolean do_lost;
@@ -414,6 +415,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer,
   jitterbuffer->priv = priv;
 
   priv->latency_ms = DEFAULT_LATENCY_MS;
+  priv->latency_ns = priv->latency_ms * GST_MSECOND;
   priv->drop_on_latency = DEFAULT_DROP_ON_LATENCY;
   priv->do_lost = DEFAULT_DO_LOST;
 
@@ -1225,7 +1227,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
    * have a duplicate. */
   if (G_UNLIKELY (!rtp_jitter_buffer_insert (priv->jbuf, buffer, timestamp,
-              priv->clock_rate, (priv->latency_ms * GST_MSECOND), &tail)))
+              priv->clock_rate, priv->latency_ns, &tail)))
     goto duplicate;
 
   /* signal addition of new buffer when the _loop is waiting. */
@@ -1326,7 +1328,7 @@ get_sync_time (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
 
   result = timestamp + GST_ELEMENT_CAST (jitterbuffer)->base_time;
   /* add latency, this includes our own latency and the peer latency. */
-  result += (priv->latency_ms * GST_MSECOND);
+  result += priv->latency_ns;
   result += priv->peer_latency;
 
   return result;
@@ -1864,7 +1866,7 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
         /* store this so that we can safely sync on the peer buffers. */
         JBUF_LOCK (priv);
         priv->peer_latency = min_latency;
-        our_latency = ((guint64) priv->latency_ms) * GST_MSECOND;
+        our_latency = priv->latency_ns;
         JBUF_UNLOCK (priv);
 
         GST_DEBUG_OBJECT (jitterbuffer, "Our latency: %" GST_TIME_FORMAT,
@@ -1912,6 +1914,7 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       JBUF_LOCK (priv);
       old_latency = priv->latency_ms;
       priv->latency_ms = new_latency;
+      priv->latency_ns = priv->latency_ms * GST_MSECOND;
       JBUF_UNLOCK (priv);
 
       /* post message if latency changed, this will inform the parent pipeline
