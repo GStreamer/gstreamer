@@ -293,11 +293,12 @@ sort_by_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 static gpointer
 _get_decoder_factories (gpointer arg)
 {
+  GstElement *element = arg;
   GList *factories;
-  GstCaps *desired_caps =
-      gst_caps_from_string ("audio/mpeg,mpegversion = (int) 1;"
-      "audio/x-private1-lpcm; " "audio/x-private1-ac3; audio/ac3; "
-      "audio/x-private1-dts");
+  GstPadTemplate *templ =
+      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
+      "sink");
+  GstCaps *desired_caps = gst_pad_template_get_caps (templ);
 
   /* Set decoder caps to empty. Will be filled by the factory_filter */
   decoder_caps = gst_caps_new_empty ();
@@ -323,7 +324,7 @@ rsn_audiodec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:{
       GstElement *new_child;
       new_child = gst_element_factory_make ("autoconvert", NULL);
-      g_once (&gonce, _get_decoder_factories, NULL);
+      g_once (&gonce, _get_decoder_factories, element);
       g_object_set (G_OBJECT (new_child), "factories", decoder_factories, NULL);
       if (new_child == NULL || !rsn_audiodec_set_child (self, new_child))
         ret = GST_STATE_CHANGE_FAILURE;
