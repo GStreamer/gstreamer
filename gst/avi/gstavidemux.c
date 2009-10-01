@@ -57,9 +57,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (avidemux_debug);
 #define GST_CAT_DEFAULT avidemux_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
-
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_EVENT);
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -177,7 +174,6 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (avidemux_debug, "avidemux",
       0, "Demuxer for AVI streams");
-  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -779,7 +775,7 @@ gst_avi_demux_parse_file_header (GstElement * element, GstBuffer * buf)
     goto not_avi;
 
   stamp = gst_util_get_timestamp () - stamp;
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "parsing header %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (element, "parsing header %" GST_TIME_FORMAT,
       GST_TIME_ARGS (stamp));
 
   return TRUE;
@@ -1015,7 +1011,7 @@ gst_avi_demux_add_index (GstAviDemux * avi, GstAviStream * stream,
       idx_max = (num / avi->num_streams) + (8192 / sizeof (GstAviIndexEntry));
     } else {
       idx_max += 8192 / sizeof (GstAviIndexEntry);
-      GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "expanded index from %u to %u",
+      GST_DEBUG_OBJECT (avi, "expanded index from %u to %u",
           stream->idx_max, idx_max);
     }
     new_idx = g_try_renew (GstAviIndexEntry, stream->index, idx_max);
@@ -2202,7 +2198,7 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
   gst_avi_demux_do_index_stats (avi);
 
   stamp = gst_util_get_timestamp () - stamp;
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "parsing index %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (avi, "parsing index %" GST_TIME_FORMAT,
       GST_TIME_ARGS (stamp));
 
   /* we have an index now */
@@ -3088,7 +3084,7 @@ skipping_done:
       avi->segment.start, stop, avi->segment.time);
 
   stamp = gst_util_get_timestamp () - stamp;
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "pulling header %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (avi, "pulling header %" GST_TIME_FORMAT,
       GST_TIME_ARGS (stamp));
 
   /* at this point we know all the streams and we can signal the no more
