@@ -38,7 +38,7 @@ GST_DEBUG_CATEGORY_EXTERN (resindvd_debug);
 #define GST_CAT_DEFAULT resindvd_debug
 
 #define USE_VIDEOQ 0
-#define USE_HARDCODED_VIDEODEC 1
+#define USE_HARDCODED_VIDEODEC 0
 #define USE_HARDCODED_AUDIODEC 0
 
 #define DVDBIN_LOCK(d) g_mutex_lock((d)->dvd_lock)
@@ -90,10 +90,6 @@ GST_BOILERPLATE_FULL (RsnDvdBin, rsn_dvdbin, GstBin,
 
 static void demux_pad_added (GstElement * element, GstPad * pad,
     RsnDvdBin * dvdbin);
-#if !USE_HARDCODED_VIDEODEC
-static void viddec_pad_added (GstElement * element, GstPad * pad,
-    gboolean last, RsnDvdBin * dvdbin);
-#endif
 static void rsn_dvdbin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void rsn_dvdbin_get_property (GObject * object, guint prop_id,
@@ -401,19 +397,15 @@ create_elements (RsnDvdBin * dvdbin)
 
 #else
   /* Decodebin will throw a missing element message to find an MPEG decoder */
-  if (!try_create_piece (dvdbin, DVD_ELEM_VIDDEC, "decodebin2", 0, "viddec",
-          "video decoder"))
+  if (!try_create_piece (dvdbin, DVD_ELEM_VIDDEC, NULL, RSN_TYPE_VIDEODEC,
+          "viddec", "video decoder"))
     return FALSE;
-
-  g_signal_connect (G_OBJECT (dvdbin->pieces[DVD_ELEM_VIDDEC]),
-      "new-decoded-pad", G_CALLBACK (viddec_pad_added), dvdbin);
 #endif
 
   if (!try_create_piece (dvdbin, DVD_ELEM_PARSET, NULL, RSN_TYPE_RSNPARSETTER,
           "rsnparsetter", "Aspect ratio adjustment"))
     return FALSE;
 
-#if USE_HARDCODED_VIDEODEC
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_VIDDEC], "src");
   sink = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_PARSET], "sink");
   if (src == NULL || sink == NULL)
@@ -423,7 +415,6 @@ create_elements (RsnDvdBin * dvdbin)
   gst_object_unref (src);
   gst_object_unref (sink);
   src = sink = NULL;
-#endif
 
 #if USE_VIDEOQ
   /* Add a small amount of queueing after the video decoder. */
@@ -581,12 +572,10 @@ failed_connect:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
       ("Could not connect DVD source and demuxer elements"));
   goto error_out;
-#if USE_HARDCODED_VIDEODEC
 failed_viddec_connect:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
       ("Could not connect DVD video decoder and aspect ratio adjuster"));
   goto error_out;
-#endif
 #if USE_VIDEOQ
 failed_vidq_connect:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
@@ -750,7 +739,7 @@ demux_pad_added (GstElement * element, GstPad * pad, RsnDvdBin * dvdbin)
   s = gst_caps_get_structure (caps, 0);
   g_return_if_fail (s != NULL);
 
-  if (g_str_equal (gst_structure_get_name (s), "video/mpeg")) {
+  if (can_sink_caps (dvdbin->pieces[DVD_ELEM_VIDDEC], caps)) {
     dest_pad =
         gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_VIDDEC], "sink");
   } else if (g_str_equal (gst_structure_get_name (s), "video/x-dvd-subpicture")) {
@@ -870,22 +859,6 @@ dvdbin_pad_blocked_cb (GstPad * opad, gboolean blocked,
     gst_element_no_more_pads (GST_ELEMENT (dvdbin));
   }
 }
-
-#if !USE_HARDCODED_VIDEODEC
-static void
-viddec_pad_added (GstElement * element, GstPad * pad, gboolean last,
-    RsnDvdBin * dvdbin)
-{
-  GstPad *q_pad;
-
-  GST_DEBUG_OBJECT (dvdbin, "New video pad: %" GST_PTR_FORMAT, pad);
-
-  q_pad = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_PARSET], "sink");
-  gst_pad_link (pad, q_pad);
-
-  gst_object_unref (q_pad);
-}
-#endif
 
 static void
 rsn_dvdbin_set_property (GObject * object, guint prop_id,
