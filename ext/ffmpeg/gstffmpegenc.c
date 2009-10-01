@@ -643,8 +643,7 @@ static void
 ffmpegenc_setup_working_buf (GstFFMpegEnc * ffmpegenc)
 {
   guint wanted_size =
-      ffmpegenc->context->width * ffmpegenc->context->height * 6 +
-      FF_MIN_BUFFER_SIZE;
+      ffmpegenc->context->width * ffmpegenc->context->height * 6 + 200;
 
   /* Above is the buffer size used by ffmpeg/ffmpeg.c */
 
