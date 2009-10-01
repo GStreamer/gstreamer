@@ -200,6 +200,7 @@ doc/Makefile
 tests/Makefile
 samples/Makefile
 gstreamer-sharp-0.10.pc
+gstreamer-sharp-0.10-uninstalled.pc
 Makefile
 ])
 
