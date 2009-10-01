@@ -3,6 +3,7 @@
  * Copyright (C) <2003> David A. Schleef <ds@schleef.org>
  * Copyright (C) <2006> Wim Taymans <wim@fluendo.com>
  * Copyright (C) <2007> Julien Moutte <julien@fluendo.com>
+ * Copyright (C) <2009> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -5248,41 +5249,7 @@ static void
 qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, const char *dummy,
     GNode * node)
 {
-  static const gchar *genres[] = {
-    "N/A", "Blues", "Classic Rock", "Country", "Dance", "Disco",
-    "Funk", "Grunge", "Hip-Hop", "Jazz", "Metal", "New Age", "Oldies",
-    "Other", "Pop", "R&B", "Rap", "Reggae", "Rock", "Techno",
-    "Industrial", "Alternative", "Ska", "Death Metal", "Pranks",
-    "Soundtrack", "Euro-Techno", "Ambient", "Trip-Hop", "Vocal",
-    "Jazz+Funk", "Fusion", "Trance", "Classical", "Instrumental",
-    "Acid", "House", "Game", "Sound Clip", "Gospel", "Noise",
-    "AlternRock", "Bass", "Soul", "Punk", "Space", "Meditative",
-    "Instrumental Pop", "Instrumental Rock", "Ethnic", "Gothic",
-    "Darkwave", "Techno-Industrial", "Electronic", "Pop-Folk",
-    "Eurodance", "Dream", "Southern Rock", "Comedy", "Cult", "Gangsta",
-    "Top 40", "Christian Rap", "Pop/Funk", "Jungle", "Native American",
-    "Cabaret", "New Wave", "Psychadelic", "Rave", "Showtunes",
-    "Trailer", "Lo-Fi", "Tribal", "Acid Punk", "Acid Jazz", "Polka",
-    "Retro", "Musical", "Rock & Roll", "Hard Rock", "Folk",
-    "Folk/Rock", "National Folk", "Swing", "Fast-Fusion", "Bebob",
-    "Latin", "Revival", "Celtic", "Bluegrass", "Avantgarde",
-    "Gothic Rock", "Progressive Rock", "Psychedelic Rock",
-    "Symphonic Rock", "Slow Rock", "Big Band", "Chorus",
-    "Easy Listening", "Acoustic", "Humour", "Speech", "Chanson",
-    "Opera", "Chamber Music", "Sonata", "Symphony", "Booty Bass",
-    "Primus", "Porn Groove", "Satire", "Slow Jam", "Club", "Tango",
-    "Samba", "Folklore", "Ballad", "Power Ballad", "Rhythmic Soul",
-    "Freestyle", "Duet", "Punk Rock", "Drum Solo", "A capella",
-    "Euro-House", "Dance Hall", "Goa", "Drum & Bass", "Club House",
-    "Hardcore", "Terror", "Indie", "BritPop", "NegerPunk",
-    "Polsk Punk", "Beat", "Christian Gangsta", "Heavy Metal",
-    "Black Metal", "Crossover", "Contemporary C", "Christian Rock",
-    "Merengue", "Salsa", "Thrash Metal", "Anime", "JPop", "SynthPop"
-  };
   GNode *data;
-  int len;
-  int type;
-  int n;
 
   data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
 
@@ -5295,14 +5262,21 @@ qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, const char *dummy,
   }
 
   if (data) {
+    guint len, type, n;
+
     len = QT_UINT32 (data->data);
     type = QT_UINT32 ((guint8 *) data->data + 8);
     if (type == 0x00000000 && len >= 18) {
       n = QT_UINT16 ((guint8 *) data->data + 16);
-      if (n > 0 && n < sizeof (genres) / sizeof (char *)) {
-        GST_DEBUG_OBJECT (qtdemux, "adding %d [%s]", n, genres[n]);
-        gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
-            tag, genres[n], NULL);
+      if (n > 0) {
+        const gchar *genre;
+
+        genre = gst_tag_id3_genre_get (n - 1);
+        if (genre != NULL) {
+          GST_DEBUG_OBJECT (qtdemux, "adding %d [%s]", n, genre);
+          gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
+              tag, genre, NULL);
+        }
       }
     }
   }
