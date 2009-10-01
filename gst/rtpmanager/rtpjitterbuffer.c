@@ -215,11 +215,10 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
   if (jbuf->clock_rate != clock_rate) {
     if (jbuf->clock_rate == -1) {
       GST_DEBUG ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
-        G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
-    }
-    else {
+          G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
+    } else {
       GST_WARNING ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
-        G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
+          G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
     }
     jbuf->base_time = -1;
     jbuf->base_rtptime = -1;
@@ -393,7 +392,7 @@ no_skew:
       }
     }
 
-    if (out_time + max_delay < time) {
+    if (time != -1 && out_time + max_delay < time) {
       /* if we are going to produce a timestamp that is later than the input
        * timestamp, we need to reset the jitterbuffer. Likely the server paused
        * temporarily */
