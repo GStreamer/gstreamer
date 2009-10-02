@@ -100,6 +100,8 @@ static gboolean gst_zbar_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps);
 static GstFlowReturn gst_zbar_transform_ip (GstBaseTransform * transform,
     GstBuffer * buf);
+static gboolean gst_zbar_start (GstBaseTransform * base);
+static gboolean gst_zbar_stop (GstBaseTransform * base);
 
 GST_BOILERPLATE (GstZBar, gst_zbar, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
@@ -132,14 +134,14 @@ gst_zbar_class_init (GstZBarClass * g_class)
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_zbar_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_zbar_transform_ip);
+  trans_class->start = GST_DEBUG_FUNCPTR (gst_zbar_start);
+  trans_class->start = GST_DEBUG_FUNCPTR (gst_zbar_stop);
 }
 
 static void
 gst_zbar_init (GstZBar * zbar, GstZBarClass * g_class)
 {
   zbar->scanner = zbar_image_scanner_create ();
-  /* FIXME: do this in start/stop vmethods */
-  zbar_image_scanner_enable_cache (zbar->scanner, TRUE);
 }
 
 static void
@@ -187,37 +189,30 @@ gst_zbar_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_zbar_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
 {
-  GstZBar *this;
+  GstZBar *zbar = GST_ZBAR (base);
   GstStructure *structure;
   gboolean res;
 
-  this = GST_ZBAR (base);
-
-  GST_DEBUG_OBJECT (this,
+  GST_DEBUG_OBJECT (zbar,
       "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
   structure = gst_caps_get_structure (incaps, 0);
 
-  res = gst_structure_get_int (structure, "width", &this->width);
-  res &= gst_structure_get_int (structure, "height", &this->height);
-  if (!res)
-    goto done;
+  res = gst_structure_get_int (structure, "width", &zbar->width);
+  res &= gst_structure_get_int (structure, "height", &zbar->height);
 
-done:
   return res;
 }
 
 static GstFlowReturn
 gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
-  GstZBar *zbar;
+  GstZBar *zbar = GST_ZBAR (base);
   guint8 *data;
   guint size;
   zbar_image_t *image;
   const zbar_symbol_t *symbol;
   int n;
-
-  zbar = GST_ZBAR (base);
 
   if (base->passthrough)
     goto done;
@@ -241,17 +236,40 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     /* do something useful with results */
     zbar_symbol_type_t typ = zbar_symbol_get_type (symbol);
     const char *data = zbar_symbol_get_data (symbol);
+
+    /* FIXME: post a message instead */
     printf ("decoded %s symbol \"%s\"\n", zbar_get_symbol_name (typ), data);
   }
 
   /* clean up */
   zbar_image_destroy (image);
 
-
 done:
   return GST_FLOW_OK;
 
 /* ERRORS */
+}
+
+static gboolean
+gst_zbar_start (GstBaseTransform * base)
+{
+  GstZBar *zbar = GST_ZBAR (base);
+
+  /* start the cache (e.g. for filtering dupes) */
+  zbar_image_scanner_enable_cache (zbar->scanner, TRUE);
+
+  return TRUE;
+}
+
+static gboolean
+gst_zbar_stop (GstBaseTransform * base)
+{
+  GstZBar *zbar = GST_ZBAR (base);
+
+  /* stop the cache (e.g. for filtering dupes) */
+  zbar_image_scanner_enable_cache (zbar->scanner, FALSE);
+
+  return TRUE;
 }
 
 static gboolean
