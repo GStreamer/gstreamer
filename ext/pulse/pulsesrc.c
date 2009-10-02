@@ -1014,8 +1014,11 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   GST_INFO_OBJECT (pulsesrc, "fragsize:  %d (wanted %d)",
       actual->fragsize, wanted.fragsize);
 
-  /* adjust latency again */
-  spec->segsize = actual->fragsize;
+  if (actual->fragsize >= wanted.fragsize) {
+    spec->segsize = actual->fragsize;
+  } else {
+    spec->segsize = actual->fragsize * (wanted.fragsize / actual->fragsize);
+  }
   spec->segtotal = actual->maxlength / spec->segsize;
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
