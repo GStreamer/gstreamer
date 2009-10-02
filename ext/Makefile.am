@@ -360,6 +360,12 @@ else
 XVID_DIR=
 endif
 
+if USE_ZBAR
+ZBAR_DIR=zbar
+else
+ZBAR_DIR=
+endif
+
 SUBDIRS=\
 	$(ALSASPDIF_DIR) \
 	$(ASSRENDER_DIR) \
@@ -419,7 +425,8 @@ SUBDIRS=\
 	$(THEORA_DIR) \
 	$(TIMIDITY_DIR) \
 	$(XINE_DIR) \
-	$(XVID_DIR)
+	$(XVID_DIR) \
+	$(ZBAR_DIR)
 
 DIST_SUBDIRS = \
 	alsaspdif \
@@ -467,4 +474,5 @@ DIST_SUBDIRS = \
 	swfdec \
 	theora \
 	timidity \
-	xvid
+	xvid \
+        	zbar
