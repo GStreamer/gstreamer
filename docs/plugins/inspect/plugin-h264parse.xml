@@ -7,12 +7,12 @@
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>h264parse</name>
       <longname>H264Parse</longname>
-      <class>Codec/Parser</class>
+      <class>Codec/Parser/Video</class>
       <description>Parses raw h264 stream</description>
       <author>Michal Benes &lt;michal.benes@itonis.tv&gt;,Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>

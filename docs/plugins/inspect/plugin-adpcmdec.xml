@@ -7,13 +7,13 @@
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
-      <name>msadpcmdec</name>
-      <longname>MS-ADPCM decoder</longname>
+      <name>adpcmdec</name>
+      <longname>ADPCM decoder</longname>
       <class>Codec/Decoder/Audio</class>
-      <description>Decode MS AD-PCM audio</description>
+      <description>Decode MS and IMA ADPCM audio</description>
       <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com</author>
       <pads>
         <caps>
@@ -26,7 +26,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-adpcm, layout=(string)microsoft, block_align=(int)[ 64, 8096 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-adpcm, layout=(string){ microsoft, dvi }, block_align=(int)[ 64, 8096 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>
