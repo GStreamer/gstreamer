@@ -299,7 +299,6 @@ AG_GST_CHECK_PLUGIN(valve)
 AG_GST_CHECK_PLUGIN(videomeasure)
 AG_GST_CHECK_PLUGIN(videosignal)
 AG_GST_CHECK_PLUGIN(vmnc)
-AG_GST_CHECK_PLUGIN(zbar)
 
 dnl *** plug-ins to exclude ***
 
