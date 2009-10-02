@@ -320,7 +320,7 @@ gst_video_detect_yuv (GstVideoDetect * videodetect, GstBuffer * buffer)
       pattern_data |= 1;
   }
 
-  GST_DEBUG_OBJECT (videodetect, "have data %u", pattern_data);
+  GST_DEBUG_OBJECT (videodetect, "have data %" G_GUINT64_FORMAT, pattern_data);
 
   videodetect->in_pattern = TRUE;
   gst_video_detect_post_message (videodetect, buffer, pattern_data);
