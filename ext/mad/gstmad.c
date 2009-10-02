@@ -35,6 +35,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <string.h>
 #include "gstmad.h"
 #include <gst/audio/audio.h>
