@@ -42,7 +42,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-celt, "
-        "rate = (int) [ 32000, 64000 ], " "channels = (int) [1, 2]")
+        "rate = (int) [ 32000, 64000 ], "
+        "channels = (int) [1, 2], " "frame-size = (int) [ 64, 512 ]")
     );
 
 static GstStaticPadTemplate gst_rtp_celt_pay_src_template =
@@ -160,6 +161,7 @@ gst_rtp_celt_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
 {
   GstCaps *otherpadcaps;
   GstCaps *caps;
+  const gchar *params;
 
   otherpadcaps = gst_pad_get_allowed_caps (payload->srcpad);
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
@@ -168,11 +170,23 @@ gst_rtp_celt_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
     if (!gst_caps_is_empty (otherpadcaps)) {
       GstStructure *ps = gst_caps_get_structure (otherpadcaps, 0);
       GstStructure *s = gst_caps_get_structure (caps, 0);
-      gint clock_rate;
+      gint clock_rate = 0, frame_size = 0, channels = 1;
 
       if (gst_structure_get_int (ps, "clock-rate", &clock_rate)) {
         gst_structure_fixate_field_nearest_int (s, "rate", clock_rate);
       }
+
+      if ((params = gst_structure_get_string (ps, "frame-size")))
+        frame_size = atoi (params);
+      if (frame_size)
+        gst_structure_set (s, "frame-size", G_TYPE_INT, frame_size, NULL);
+
+      if ((params = gst_structure_get_string (ps, "encoding-params")))
+        channels = atoi (params);
+      gst_structure_fixate_field_nearest_int (s, "channels", channels);
+
+      GST_DEBUG_OBJECT (payload, "clock-rate=%d frame-size=%d channels=%d",
+          clock_rate, frame_size, channels);
     }
     gst_caps_unref (otherpadcaps);
   }

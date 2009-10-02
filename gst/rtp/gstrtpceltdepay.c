@@ -27,6 +27,9 @@
 
 #include "gstrtpceltdepay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtpceltdepay_debug);
+#define GST_CAT_DEFAULT (rtpceltdepay_debug)
+
 /* elementfactory information */
 static const GstElementDetails gst_rtp_celtdepay_details =
 GST_ELEMENT_DETAILS ("RTP CELT depayloader",
@@ -35,6 +38,11 @@ GST_ELEMENT_DETAILS ("RTP CELT depayloader",
     "Wim Taymans <wim.taymans@gmail.com>");
 
 /* RtpCELTDepay signals and args */
+
+#define DEFAULT_FRAMESIZE       480
+#define DEFAULT_CHANNELS        1
+#define DEFAULT_CLOCKRATE       32000
+
 enum
 {
   /* FILL ME */
@@ -82,6 +90,9 @@ gst_rtp_celt_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_celt_depay_sink_template));
   gst_element_class_set_details (element_class, &gst_rtp_celtdepay_details);
+
+  GST_DEBUG_CATEGORY_INIT (rtpceltdepay_debug, "rtpceltdepay", 0,
+      "CELT RTP Depayloader");
 }
 
 static void
@@ -113,7 +124,7 @@ gst_rtp_celt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpCELTDepay *rtpceltdepay;
-  gint clock_rate, nb_channels, frame_size;
+  gint clock_rate, nb_channels = 0, frame_size = 0;
   GstBuffer *buf;
   guint8 *data;
   const gchar *params;
@@ -128,17 +139,19 @@ gst_rtp_celt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     goto no_clockrate;
   depayload->clock_rate = clock_rate;
 
-  if (!(params = gst_structure_get_string (structure, "encoding-params")))
-    nb_channels = 1;
-  else {
+  if ((params = gst_structure_get_string (structure, "encoding-params")))
     nb_channels = atoi (params);
-  }
+  if (!nb_channels)
+    nb_channels = DEFAULT_CHANNELS;
 
-  if (!(params = gst_structure_get_string (structure, "frame-size")))
-    frame_size = 480;
-  else {
+  if ((params = gst_structure_get_string (structure, "frame-size")))
     frame_size = atoi (params);
-  }
+  if (!frame_size)
+    frame_size = DEFAULT_FRAMESIZE;
+  rtpceltdepay->frame_size = frame_size;
+
+  GST_DEBUG_OBJECT (depayload, "clock-rate=%d channels=%d frame-size=%d",
+      clock_rate, nb_channels, frame_size);
 
   /* construct minimal header and comment packet for the decoder */
   buf = gst_buffer_new_and_alloc (60);
@@ -194,11 +207,26 @@ gst_rtp_celt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   guint8 *payload;
   guint offset, pos, payload_len, total_size, size;
   guint8 s;
+  gint clock_rate = 0, frame_size = 0;
+  GstClockTime framesize_ns = 0, timestamp;
+  guint n = 0;
+  GstRtpCELTDepay *rtpceltdepay;
 
-  GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
+  rtpceltdepay = GST_RTP_CELT_DEPAY (depayload);
+  clock_rate = depayload->clock_rate;
+  frame_size = rtpceltdepay->frame_size;
+  framesize_ns = gst_util_uint64_scale_int (frame_size, GST_SECOND, clock_rate);
+
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+
+  GST_DEBUG_OBJECT (depayload, "process : got %d bytes, mark %d ts %u seqn %d",
       GST_BUFFER_SIZE (buf),
       gst_rtp_buffer_get_marker (buf),
       gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
+
+  GST_LOG_OBJECT (depayload, "got clock-rate=%d, frame_size=%d, "
+      "_ns=%" GST_TIME_FORMAT ", timestamp=%" GST_TIME_FORMAT, clock_rate,
+      frame_size, GST_TIME_ARGS (framesize_ns), GST_TIME_ARGS (timestamp));
 
   payload = gst_rtp_buffer_get_payload (buf);
   payload_len = gst_rtp_buffer_get_payload_len (buf);
@@ -218,6 +246,7 @@ gst_rtp_celt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   total_size = 0;
   pos = 0;
   while (total_size < payload_len) {
+    n++;
     size = 0;
     do {
       s = payload[pos++];
@@ -227,6 +256,15 @@ gst_rtp_celt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, offset, size);
     offset += size;
+
+    if (frame_size != -1 && clock_rate != -1) {
+      GST_BUFFER_TIMESTAMP (outbuf) = timestamp + framesize_ns * n;
+      GST_BUFFER_DURATION (outbuf) = framesize_ns;
+    }
+    GST_LOG_OBJECT (depayload, "push timestamp=%"
+        GST_TIME_FORMAT ", duration=%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
     gst_base_rtp_depayload_push (depayload, outbuf);
   }

@@ -37,6 +37,7 @@ typedef struct _GstRtpCELTDepayClass GstRtpCELTDepayClass;
 struct _GstRtpCELTDepay
 {
   GstBaseRTPDepayload depayload;
+  gint frame_size;
 };
 
 struct _GstRtpCELTDepayClass
