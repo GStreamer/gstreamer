@@ -139,8 +139,7 @@ remove_element_and_fail:
   return NULL;
 
 cleanup_and_fail:
-  if (element != NULL)
-    g_object_unref (G_OBJECT (element));
+  g_object_unref (G_OBJECT (element));
 
   return NULL;
 }
