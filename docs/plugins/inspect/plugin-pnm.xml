@@ -1,0 +1,55 @@
+<plugin>
+  <name>pnm</name>
+  <description>PNM plugin</description>
+  <filename>../../gst/pnm/.libs/libgstpnm.so</filename>
+  <basename>libgstpnm.so</basename>
+  <version>0.10.14.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
+  <elements>
+    <element>
+      <name>pnmdec</name>
+      <longname>PNM converter</longname>
+      <class>Codec/Decoder/Image</class>
+      <description>Decodes PNM format</description>
+      <author>Lutz Mueller &lt;lutz@users.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-gray, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], bpp=(int)8, depth=(int)8</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/x-image-bitmap; image/x-image-graymap; image/x-image-pixmap; image/x-image-anymap</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>pnmenc</name>
+      <longname>PNM converter</longname>
+      <class>Codec/Encoder/Image</class>
+      <description>Encodes in PNM format</description>
+      <author>Lutz Mueller &lt;lutz@users.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/x-image-bitmap; image/x-image-graymap; image/x-image-pixmap; image/x-image-anymap</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-gray, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], bpp=(int)8, depth=(int)8</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

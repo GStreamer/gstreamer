@@ -1,0 +1,34 @@
+<plugin>
+  <name>zbar</name>
+  <description>zbar barcode scanner</description>
+  <filename>../../ext/zbar/.libs/libgstzbar.so</filename>
+  <basename>libgstzbar.so</basename>
+  <version>0.10.14.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
+  <elements>
+    <element>
+      <name>zbar</name>
+      <longname>Barcode detector</longname>
+      <class>Filter/Analyzer/Video</class>
+      <description>Detect bar codes in the video streams</description>
+      <author>Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc){ Y800 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc){ Y800 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
