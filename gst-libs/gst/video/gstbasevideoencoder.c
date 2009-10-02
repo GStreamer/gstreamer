@@ -548,3 +548,19 @@ gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *
   gst_base_video_encoder_set_latency (base_video_encoder, latency, latency);
 
 }
+
+GstVideoFrame *
+gst_base_video_encoder_get_frame (GstBaseVideoEncoder * coder, int frame_number)
+{
+  GList *g;
+
+  for (g = coder->frames; g; g = g_list_next (g)) {
+    GstVideoFrame *frame = g->data;
+
+    if (frame->system_frame_number == frame_number) {
+      return frame;
+    }
+  }
+
+  return NULL;
+}
