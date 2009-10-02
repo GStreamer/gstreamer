@@ -55,6 +55,7 @@
 #include "gstvideomeasure.h"
 #include "gstvideomeasure_ssim.h"
 #include <gst/audio/audio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
