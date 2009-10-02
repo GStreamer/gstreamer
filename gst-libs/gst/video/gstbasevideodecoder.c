@@ -30,6 +30,8 @@ GST_DEBUG_CATEGORY_EXTERN (basevideo_debug);
 
 static void gst_base_video_decoder_finalize (GObject * object);
 
+static gboolean gst_base_video_decoder_sink_activate_push (GstPad * pad,
+    gboolean active);
 static gboolean gst_base_video_decoder_sink_setcaps (GstPad * pad,
     GstCaps * caps);
 static gboolean gst_base_video_decoder_sink_event (GstPad * pad,
@@ -97,6 +99,8 @@ gst_base_video_decoder_init (GstBaseVideoDecoder * base_video_decoder,
 
   pad = GST_BASE_VIDEO_CODEC_SINK_PAD (base_video_decoder);
 
+  gst_pad_set_activatepush_function (pad,
+      gst_base_video_decoder_sink_activate_push);
   gst_pad_set_chain_function (pad, gst_base_video_decoder_chain);
   gst_pad_set_event_function (pad, gst_base_video_decoder_sink_event);
   gst_pad_set_setcaps_function (pad, gst_base_video_decoder_sink_setcaps);
@@ -118,6 +122,50 @@ gst_base_video_decoder_init (GstBaseVideoDecoder * base_video_decoder,
       gst_base_video_decoder_new_frame (base_video_decoder);
 
   base_video_decoder->sink_clipping = TRUE;
+}
+
+static gboolean
+gst_base_video_decoder_sink_activate (GstBaseVideoDecoder * decoder,
+    gboolean active)
+{
+  GstBaseVideoDecoderClass *klass;
+  gboolean result = FALSE;
+
+  GST_DEBUG_OBJECT (decoder, "activate");
+
+  klass = GST_BASE_VIDEO_DECODER_GET_CLASS (decoder);
+
+  if (active) {
+    if (klass->start)
+      result = klass->start (decoder);
+  } else {
+    /* We must make sure streaming has finished before resetting things
+     * and calling the ::stop vfunc */
+    GST_PAD_STREAM_LOCK (GST_BASE_VIDEO_CODEC_SINK_PAD (decoder));
+    GST_PAD_STREAM_UNLOCK (GST_BASE_VIDEO_CODEC_SINK_PAD (decoder));
+
+    if (klass->stop)
+      result = klass->stop (decoder);
+  }
+
+  GST_DEBUG_OBJECT (decoder, "activate: %d", result);
+
+  return result;
+}
+
+static gboolean
+gst_base_video_decoder_sink_activate_push (GstPad * pad, gboolean active)
+{
+  gboolean result = TRUE;
+  GstBaseVideoDecoder *base_video_decoder;
+
+  base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+
+  result = gst_base_video_decoder_sink_activate (base_video_decoder, active);
+
+  gst_object_unref (base_video_decoder);
+
+  return result;
 }
 
 static gboolean
@@ -144,10 +192,6 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   codec_data = gst_structure_get_value (structure, "codec_data");
   if (codec_data && G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
     base_video_decoder->codec_data = gst_value_get_buffer (codec_data);
-  }
-
-  if (base_video_decoder_class->start) {
-    base_video_decoder_class->start (base_video_decoder);
   }
 
   g_object_unref (base_video_decoder);
@@ -735,9 +779,6 @@ gst_base_video_decoder_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (base_video_decoder_class->stop) {
-        base_video_decoder_class->stop (base_video_decoder);
-      }
       break;
     default:
       break;
