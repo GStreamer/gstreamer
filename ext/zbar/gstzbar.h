@@ -54,6 +54,7 @@ struct _GstZBar
   gint height;
 
   /* properties */
+  gboolean message;
   
   /* internals */
   zbar_image_scanner_t *scanner;

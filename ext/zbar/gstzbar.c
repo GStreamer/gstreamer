@@ -27,7 +27,35 @@
 /**
  * SECTION:element-zbar
  *
- * Detect bar codes in the video streams and send them as app messages.
+ * Detect bar codes in the video streams and send them as element messages to
+ * the #GstBus if .#GstZBar:message property is %TRUE.
+ *
+ * The element generate messages named
+ * <classname>&quot;barcode&quot;</classname>. The structure containes these
+ * fields:
+ * <itemizedlist>
+ * <listitem>
+ *   <para>
+ *   #GstClockTime
+ *   <classname>&quot;timestamp&quot;</classname>:
+ *   the timestamp of the buffer that triggered the message.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   gchar*
+ *   <classname>&quot;type&quot;</classname>:
+ *   the symbol type.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   gchar*
+ *   <classname>&quot;symbol&quot;</classname>:
+ *   the deteted bar code data.
+ *   </para>
+ * </listitem>
+ * </itemizedlist>
  *
  * <refsect2>
  * <title>Example launch lines</title>
@@ -65,7 +93,7 @@ enum
 enum
 {
   PROP_0,
-  /* FILL ME */
+  PROP_MESSAGE,
 };
 
 #define DEFAULT_PROP_ZBAR  1
@@ -132,6 +160,11 @@ gst_zbar_class_init (GstZBarClass * g_class)
   gobject_class->get_property = gst_zbar_get_property;
   gobject_class->finalize = gst_zbar_finalize;
 
+  g_object_class_install_property (gobject_class, PROP_MESSAGE,
+      g_param_spec_boolean ("message", "mesage",
+          "Post a barcode message for each detected code",
+          TRUE, G_PARAM_READWRITE));
+
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_zbar_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_zbar_transform_ip);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_zbar_start);
@@ -141,6 +174,8 @@ gst_zbar_class_init (GstZBarClass * g_class)
 static void
 gst_zbar_init (GstZBar * zbar, GstZBarClass * g_class)
 {
+  zbar->message = TRUE;
+
   zbar->scanner = zbar_image_scanner_create ();
 }
 
@@ -164,6 +199,9 @@ gst_zbar_set_property (GObject * object, guint prop_id, const GValue * value,
   zbar = GST_ZBAR (object);
 
   switch (prop_id) {
+    case PROP_MESSAGE:
+      zbar->message = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -180,6 +218,9 @@ gst_zbar_get_property (GObject * object, guint prop_id, GValue * value,
   zbar = GST_ZBAR (object);
 
   switch (prop_id) {
+    case PROP_MESSAGE:
+      g_value_set_boolean (value, zbar->message);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -226,19 +267,30 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   zbar_image_set_data (image, (gpointer) data, zbar->width * zbar->height,
       NULL);
 
-
   /* scan the image for barcodes */
   n = zbar_scan_image (zbar->scanner, image);
 
   /* extract results */
   symbol = zbar_image_first_symbol (image);
   for (; symbol; symbol = zbar_symbol_next (symbol)) {
-    /* do something useful with results */
     zbar_symbol_type_t typ = zbar_symbol_get_type (symbol);
     const char *data = zbar_symbol_get_data (symbol);
 
-    /* FIXME: post a message instead */
-    printf ("decoded %s symbol \"%s\"\n", zbar_get_symbol_name (typ), data);
+    GST_DEBUG_OBJECT (zbar, "decoded %s symbol \"%s\"",
+        zbar_get_symbol_name (typ), data);
+
+    if (zbar->message) {
+      GstMessage *m;
+      GstStructure *s;
+
+      /* post a message */
+      s = gst_structure_new ("barcode",
+          "timestamp", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (outbuf),
+          "type", G_TYPE_STRING, zbar_get_symbol_name (typ),
+          "symbol", G_TYPE_STRING, data, NULL);
+      m = gst_message_new_element (GST_OBJECT (zbar), s);
+      gst_element_post_message (GST_ELEMENT (zbar), m);
+    }
   }
 
   /* clean up */
