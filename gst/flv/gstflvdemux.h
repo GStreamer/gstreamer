@@ -114,6 +114,8 @@ struct _GstFLVDemux
   gboolean push_tags;
   gboolean strict;
   gboolean flushing;
+
+  gboolean no_more_pads;
 };
 
 struct _GstFLVDemuxClass

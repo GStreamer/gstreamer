@@ -655,6 +655,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
     if (demux->audio_pad && demux->video_pad) {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
       gst_element_no_more_pads (GST_ELEMENT (demux));
+      demux->no_more_pads = TRUE;
     }
   }
 
@@ -969,6 +970,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
     if (demux->audio_pad && demux->video_pad) {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
       gst_element_no_more_pads (GST_ELEMENT (demux));
+      demux->no_more_pads = TRUE;
     }
   }
 
