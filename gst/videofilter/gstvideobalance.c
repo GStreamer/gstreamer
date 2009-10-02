@@ -539,6 +539,7 @@ gst_video_balance_set_property (GObject * object, guint prop_id,
       src->saturation = g_value_get_double (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 

@@ -168,6 +168,7 @@ gst_gamma_set_property (GObject * object, guint prop_id, const GValue * value,
       gst_gamma_calculate_tables (gamma);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
