@@ -118,9 +118,7 @@ struct _GstBaseVideoDecoderClass
 {
   GstBaseVideoCodecClass base_video_codec_class;
 
-  gboolean (*set_format) (GstBaseVideoDecoder *coder, GstVideoFormat,
-      int width, int height, int fps_n, int fps_d,
-      int par_n, int par_d);
+  gboolean (*set_sink_caps) (GstBaseVideoDecoder *coder, GstCaps *caps);
   gboolean (*start) (GstBaseVideoDecoder *coder);
   gboolean (*stop) (GstBaseVideoDecoder *coder);
   gboolean (*reset) (GstBaseVideoDecoder *coder);
@@ -131,7 +129,6 @@ struct _GstBaseVideoDecoderClass
   GstFlowReturn (*handle_frame) (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
   GstFlowReturn (*shape_output) (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
   GstCaps *(*get_caps) (GstBaseVideoDecoder *coder);
-
 };
 
 GType gst_base_video_decoder_get_type (void);

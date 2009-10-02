@@ -175,6 +175,7 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseVideoDecoderClass *base_video_decoder_class;
   GstStructure *structure;
   const GValue *codec_data;
+  gboolean res = TRUE;
 
   base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
   base_video_decoder_class =
@@ -194,9 +195,12 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     base_video_decoder->codec_data = gst_value_get_buffer (codec_data);
   }
 
+  if (base_video_decoder_class->set_sink_caps)
+    res = base_video_decoder_class->set_sink_caps (base_video_decoder, caps);
+
   g_object_unref (base_video_decoder);
 
-  return TRUE;
+  return res;
 }
 
 static void
