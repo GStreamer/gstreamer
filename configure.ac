@@ -357,7 +357,7 @@ AG_GST_CHECK_FEATURE(TWOLAME, [twolame], twolame, [
 dnl *** x264 (MPEG-4 part 10/h.264/AVC encoder) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_X264, true)
 AG_GST_CHECK_FEATURE(X264, [x264 plug-in], x264, [
-  AG_GST_CHECK_LIBHEADER(X264, x264, x264_nal_encode, -lm, x264.h,
+  AG_GST_CHECK_LIBHEADER(X264, x264, x264_encoder_encode, -lm, x264.h,
       AC_MSG_CHECKING([for uptodate x264 API version])
       dnl _stdint not yet generated, so no compiling
       AC_TRY_CPP([
