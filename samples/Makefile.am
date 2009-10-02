@@ -17,34 +17,34 @@ assemblies=$(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll
 references=$(addprefix -r:, $(assemblies)) $(GLIB_SHARP_LIBS)
 
 playbin-player.exe: $(srcdir)/PlayBinPlayer.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/PlayBinPlayer.cs
+	$(CSC) -debug -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/PlayBinPlayer.cs
 
 decodebin-transcoder.exe: $(srcdir)/DecodeBinTranscoder.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/DecodeBinTranscoder.cs 
+	$(CSC) -debug -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/DecodeBinTranscoder.cs 
 
 helloworld.exe: $(srcdir)/HelloWorld.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/HelloWorld.cs
+	$(CSC) -debug -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/HelloWorld.cs
 
 typefind.exe: $(srcdir)/TypeFind.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/TypeFind.cs
+	$(CSC) -debug -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/TypeFind.cs
 
 queueexample.exe: $(srcdir)/QueueExample.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/QueueExample.cs
+	$(CSC) -debug -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/QueueExample.cs
 
 metadata.exe: $(srcdir)/MetaData.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MetaData.cs
+	$(CSC) -debug -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MetaData.cs
 
 mp3launchparse.exe: $(srcdir)/MP3LaunchParse.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MP3LaunchParse.cs
+	$(CSC) -debug -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MP3LaunchParse.cs
 
 appsrc.exe: $(srcdir)/AppSrc.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(MONO_CAIRO_LIBS) $(srcdir)/AppSrc.cs
+	$(CSC) -debug -out:$@ $(GLIBSHARP_LIBS) $(references) $(MONO_CAIRO_LIBS) $(srcdir)/AppSrc.cs
 
 transform-sample.exe: $(srcdir)/TransformSample.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(MONO_CAIRO_LIBS) $(srcdir)/TransformSample.cs
+	$(CSC) -debug -out:$@ $(GLIBSHARP_LIBS) $(references) $(MONO_CAIRO_LIBS) $(srcdir)/TransformSample.cs
 
 gtk-video-player.exe: $(srcdir)/GtkVideoPlayer.cs $(assemblies)
-	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(GTK_SHARP_LIBS) $(srcdir)/GtkVideoPlayer.cs
+	$(CSC) -debug -out:$@ $(GLIBSHARP_LIBS) $(references) $(GTK_SHARP_LIBS) $(srcdir)/GtkVideoPlayer.cs
 
 link:
 	ln -sf $(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll gstreamer-sharp.dll

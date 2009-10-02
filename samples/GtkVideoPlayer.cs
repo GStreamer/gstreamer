@@ -10,7 +10,8 @@ using Gst.BasePlugins;
 
 public class MainWindow : Gtk.Window {
   DrawingArea _da;
-  Pipeline _pipeline;
+  ulong _xWindowId;
+  PlayBin2 _playbin;
   HScale _scale;
   Label _lbl;
   bool _updatingScale;
@@ -21,6 +22,19 @@ public class MainWindow : Gtk.Window {
     Gst.Application.Init ();
     MainWindow window = new MainWindow ();
     window.ShowAll ();
+
+    switch (System.Environment.OSVersion.Platform) {
+      case PlatformID.Unix:
+        window._xWindowId = gdk_x11_drawable_get_xid (window._da.GdkWindow.Handle);
+        break;
+      case PlatformID.Win32NT:
+      case PlatformID.Win32S:
+      case PlatformID.Win32Windows:
+      case PlatformID.WinCE:
+        window._xWindowId = (ulong) gdk_win32_drawable_get_handle (window._da.GdkWindow.Handle);
+        break;
+    }
+
     Gtk.Application.Run ();
   }
 
@@ -31,6 +45,7 @@ public class MainWindow : Gtk.Window {
     _da = new DrawingArea ();
     _da.ModifyBg (Gtk.StateType.Normal, new Gdk.Color (0, 0, 0));
     _da.SetSizeRequest (400, 300);
+    _da.DoubleBuffered = false;
     vBox.PackStart (_da);
 
     _scale = new HScale (0, 1, 0.01);
@@ -75,6 +90,13 @@ public class MainWindow : Gtk.Window {
 
   void OnDeleteEvent (object sender, DeleteEventArgs args) {
     Gtk.Application.Quit ();
+
+    if (_playbin != null) {
+      _playbin.SetState (Gst.State.Null);
+      _playbin.Dispose ();
+      _playbin = null;
+    }
+
     args.RetVal = true;
   }
 
@@ -85,47 +107,56 @@ public class MainWindow : Gtk.Window {
     if (dialog.Run () == (int) ResponseType.Accept) {
       _pipelineOK = false;
 
-      if (_pipeline != null) {
-        _pipeline.SetState (Gst.State.Null);
-        _pipeline.Dispose ();
+      if (_playbin != null) {
+        _playbin.SetState (Gst.State.Null);
+      } else {
+        _playbin = new PlayBin2 ();
       }
 
       _scale.Value = 0;
 
-      _pipeline = new Pipeline (string.Empty);
-
-      Element playbin = ElementFactory.Make ("playbin", "playbin");
-      XvImageSink sink = XvImageSink.Make ("sink");
-
-      if (_pipeline == null)
-        Console.WriteLine ("Unable to create pipeline");
-      if (playbin == null)
+      if (_playbin == null)
         Console.WriteLine ("Unable to create element 'playbin'");
-      if (sink == null)
-        Console.WriteLine ("Unable to create element 'sink'");
 
-      _pipeline.Add (playbin);
+      _playbin.Bus.EnableSyncMessageEmission ();
+      _playbin.Bus.AddSignalWatch ();
 
-      switch (System.Environment.OSVersion.Platform) {
-        case PlatformID.Unix:
-          (sink as XOverlay).XwindowId = gdk_x11_drawable_get_xid (_da.GdkWindow.Handle);
-          break;
-        case PlatformID.Win32NT:
-        case PlatformID.Win32S:
-        case PlatformID.Win32Windows:
-        case PlatformID.WinCE:
-          (sink as XOverlay).XwindowId = (ulong) gdk_win32_drawable_get_handle (_da.GdkWindow.Handle);
-          break;
-      }
+      _playbin.Bus.SyncMessage += delegate (object bus, SyncMessageArgs sargs) {
+        Gst.Message msg = sargs.Message;
+        if (msg == null || msg.Type != Gst.MessageType.Element ||
+            msg.Structure == null || msg.Structure.Name == null ||
+            !msg.Structure.Name.Equals ("prepare-xwindow-id"))
+          return;
 
-      playbin["video-sink"] = sink;
-      playbin["uri"] = "file://" + dialog.Filename;
+        (msg.Src as XOverlay).XwindowId = _xWindowId;
+        (msg.Src as XOverlay).HandleEvents (true);
+      };
 
-      StateChangeReturn sret = _pipeline.SetState (Gst.State.Playing);
+      _playbin.Bus.Message += delegate (object bus, MessageArgs margs) {
+        Message message = margs.Message;
+
+        switch (message.Type) {
+          case Gst.MessageType.Error:
+            Enum err;
+            string msg;
+
+            message.ParseError (out err, out msg);
+            Console.WriteLine (String.Format ("Error message: {0}", msg));
+            _pipelineOK = false;
+            break;
+          case Gst.MessageType.Eos:
+            Console.WriteLine ("EOS");
+            break;
+        }
+      };
+
+      _playbin["uri"] = "file://" + dialog.Filename;
+
+      StateChangeReturn sret = _playbin.SetState (Gst.State.Playing);
 
       if (sret == StateChangeReturn.Async) {
         State state, pending;
-        sret = _pipeline.GetState (out state, out pending, Clock.Second * 5);
+        sret = _playbin.GetState (out state, out pending, Clock.Second * 5);
       }
 
       if (sret == StateChangeReturn.Success)
@@ -138,13 +169,13 @@ public class MainWindow : Gtk.Window {
   }
 
   void ButtonPlayClicked (object sender, EventArgs args) {
-    if ( (_pipeline != null) && _pipelineOK)
-      _pipeline.SetState (Gst.State.Playing);
+    if ( (_playbin != null) && _pipelineOK)
+      _playbin.SetState (Gst.State.Playing);
   }
 
   void ButtonPauseClicked (object sender, EventArgs args) {
-    if ( (_pipeline != null) && _pipelineOK)
-      _pipeline.SetState (Gst.State.Paused);
+    if ( (_playbin != null) && _pipelineOK)
+      _playbin.SetState (Gst.State.Paused);
   }
 
   void ScaleValueChanged (object sender, EventArgs args) {
@@ -154,20 +185,20 @@ public class MainWindow : Gtk.Window {
     long duration;
     Gst.Format fmt = Gst.Format.Time;
 
-    if ( (_pipeline != null) && _pipelineOK && _pipeline.QueryDuration (ref fmt, out duration)) {
+    if ( (_playbin != null) && _pipelineOK && _playbin.QueryDuration (ref fmt, out duration) && duration != -1) {
       long pos = (long) (duration * _scale.Value);
-      //Console.WriteLine ("Seek to {0}/{1} ({2}%)", pos, duration, _scale.Value);
+      Console.WriteLine ("Seek to {0}/{1} ({2}%)", pos, duration, _scale.Value);
 
-      _pipeline.Seek (Format.Time, SeekFlags.Flush, pos);
+      _playbin.Seek (Format.Time, SeekFlags.Flush | SeekFlags.KeyUnit, pos);
     }
   }
 
   bool UpdatePos () {
     Gst.Format fmt = Gst.Format.Time;
     long duration, pos;
-    if ( (_pipeline != null) && _pipelineOK &&
-         _pipeline.QueryDuration (ref fmt, out duration) &&
-         _pipeline.QueryPosition (ref fmt, out pos)) {
+    if ( (_playbin != null) && _pipelineOK &&
+         _playbin.QueryDuration (ref fmt, out duration) &&
+         _playbin.QueryPosition (ref fmt, out pos)) {
       _lbl.Text = string.Format ("{0} / {1}", TimeString (pos), TimeString (duration));
 
       _updatingScale = true;
