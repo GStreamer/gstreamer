@@ -26,7 +26,7 @@
  * is #TRUE, generates an element message named
  * <classname>&quot;level&quot;</classname>:
  * after each interval of time given by the #GstLevel:interval property.
- * The message's structure contains four fields:
+ * The message's structure contains these fields:
  * <itemizedlist>
  * <listitem>
  *   <para>
