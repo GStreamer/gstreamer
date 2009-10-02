@@ -950,25 +950,25 @@ no_nego_needed:
 static gboolean
 gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 {
-  pa_buffer_attr buf_attr;
-  const pa_buffer_attr *buf_attr_ptr;
+  pa_buffer_attr wanted;
+  const pa_buffer_attr *actual;
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
-  buf_attr.maxlength = -1;
-  buf_attr.tlength = -1;
-  buf_attr.prebuf = 0;
-  buf_attr.minreq = -1;
-  buf_attr.fragsize = spec->segsize;
+  wanted.maxlength = -1;
+  wanted.tlength = -1;
+  wanted.prebuf = 0;
+  wanted.minreq = -1;
+  wanted.fragsize = spec->segsize;
 
-  GST_INFO_OBJECT (pulsesrc, "maxlength: %d", buf_attr.maxlength);
-  GST_INFO_OBJECT (pulsesrc, "tlength:   %d", buf_attr.tlength);
-  GST_INFO_OBJECT (pulsesrc, "prebuf:    %d", buf_attr.prebuf);
-  GST_INFO_OBJECT (pulsesrc, "minreq:    %d", buf_attr.minreq);
-  GST_INFO_OBJECT (pulsesrc, "fragsize:  %d", buf_attr.fragsize);
+  GST_INFO_OBJECT (pulsesrc, "maxlength: %d", wanted.maxlength);
+  GST_INFO_OBJECT (pulsesrc, "tlength:   %d", wanted.tlength);
+  GST_INFO_OBJECT (pulsesrc, "prebuf:    %d", wanted.prebuf);
+  GST_INFO_OBJECT (pulsesrc, "minreq:    %d", wanted.minreq);
+  GST_INFO_OBJECT (pulsesrc, "fragsize:  %d", wanted.fragsize);
 
-  if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &buf_attr,
+  if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &wanted,
           PA_STREAM_INTERPOLATE_TIMING |
           PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_NOT_MONOTONOUS |
 #if HAVE_PULSE_0_9_11
@@ -1003,20 +1003,20 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   }
 
   /* get the actual buffering properties now */
-  buf_attr_ptr = pa_stream_get_buffer_attr (pulsesrc->stream);
+  actual = pa_stream_get_buffer_attr (pulsesrc->stream);
 
-  GST_INFO_OBJECT (pulsesrc, "maxlength: %d", buf_attr_ptr->maxlength);
+  GST_INFO_OBJECT (pulsesrc, "maxlength: %d", actual->maxlength);
   GST_INFO_OBJECT (pulsesrc, "tlength:   %d (wanted: %d)",
-      buf_attr_ptr->tlength, buf_attr.tlength);
-  GST_INFO_OBJECT (pulsesrc, "prebuf:    %d", buf_attr_ptr->prebuf);
-  GST_INFO_OBJECT (pulsesrc, "minreq:    %d (wanted %d)", buf_attr_ptr->minreq,
-      buf_attr.minreq);
+      actual->tlength, wanted.tlength);
+  GST_INFO_OBJECT (pulsesrc, "prebuf:    %d", actual->prebuf);
+  GST_INFO_OBJECT (pulsesrc, "minreq:    %d (wanted %d)", actual->minreq,
+      wanted.minreq);
   GST_INFO_OBJECT (pulsesrc, "fragsize:  %d (wanted %d)",
-      buf_attr_ptr->fragsize, buf_attr.fragsize);
+      actual->fragsize, wanted.fragsize);
 
   /* adjust latency again */
-  spec->segsize = buf_attr_ptr->fragsize;
-  spec->segtotal = buf_attr_ptr->maxlength / spec->segsize;
+  spec->segsize = actual->fragsize;
+  spec->segtotal = actual->maxlength / spec->segsize;
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 

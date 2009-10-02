@@ -599,8 +599,8 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
-  pa_buffer_attr buf_attr;
-  const pa_buffer_attr *buf_attr_ptr;
+  pa_buffer_attr wanted;
+  const pa_buffer_attr *actual;
   pa_channel_map channel_map;
   pa_operation *o = NULL;
   pa_cvolume v, *pv;
@@ -663,16 +663,16 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   /* buffering requirements. When setting prebuf to 0, the stream will not pause
    * when we cause an underrun, which causes time to continue. */
-  memset (&buf_attr, 0, sizeof (buf_attr));
-  buf_attr.tlength = spec->segtotal * spec->segsize;
-  buf_attr.maxlength = -1;
-  buf_attr.prebuf = 0;
-  buf_attr.minreq = -1;
+  memset (&wanted, 0, sizeof (wanted));
+  wanted.tlength = spec->segtotal * spec->segsize;
+  wanted.maxlength = -1;
+  wanted.prebuf = 0;
+  wanted.minreq = -1;
 
-  GST_INFO_OBJECT (psink, "tlength:   %d", buf_attr.tlength);
-  GST_INFO_OBJECT (psink, "maxlength: %d", buf_attr.maxlength);
-  GST_INFO_OBJECT (psink, "prebuf:    %d", buf_attr.prebuf);
-  GST_INFO_OBJECT (psink, "minreq:    %d", buf_attr.minreq);
+  GST_INFO_OBJECT (psink, "tlength:   %d", wanted.tlength);
+  GST_INFO_OBJECT (psink, "maxlength: %d", wanted.maxlength);
+  GST_INFO_OBJECT (psink, "prebuf:    %d", wanted.prebuf);
+  GST_INFO_OBJECT (psink, "minreq:    %d", wanted.minreq);
 
   /* configure volume when we changed it, else we leave the default */
   if (psink->volume_set) {
@@ -703,7 +703,7 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   GST_LOG_OBJECT (psink, "connect for playback to device %s",
       GST_STR_NULL (psink->device));
   if (pa_stream_connect_playback (pbuf->stream, psink->device,
-          &buf_attr, flags, pv, NULL) < 0)
+          &wanted, flags, pv, NULL) < 0)
     goto connect_failed;
 
   /* our clock will now start from 0 again */
@@ -730,17 +730,17 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   GST_LOG_OBJECT (psink, "stream is acquired now");
 
   /* get the actual buffering properties now */
-  buf_attr_ptr = pa_stream_get_buffer_attr (pbuf->stream);
+  actual = pa_stream_get_buffer_attr (pbuf->stream);
 
-  GST_INFO_OBJECT (psink, "tlength:   %d (wanted: %d)", buf_attr_ptr->tlength,
-      buf_attr.tlength);
-  GST_INFO_OBJECT (psink, "maxlength: %d", buf_attr_ptr->maxlength);
-  GST_INFO_OBJECT (psink, "prebuf:    %d", buf_attr_ptr->prebuf);
-  GST_INFO_OBJECT (psink, "minreq:    %d (wanted %d)", buf_attr_ptr->minreq,
-      buf_attr.minreq);
+  GST_INFO_OBJECT (psink, "tlength:   %d (wanted: %d)", actual->tlength,
+      wanted.tlength);
+  GST_INFO_OBJECT (psink, "maxlength: %d", actual->maxlength);
+  GST_INFO_OBJECT (psink, "prebuf:    %d", actual->prebuf);
+  GST_INFO_OBJECT (psink, "minreq:    %d (wanted %d)", actual->minreq,
+      wanted.minreq);
 
-  spec->segsize = buf_attr_ptr->minreq;
-  spec->segtotal = buf_attr_ptr->tlength / spec->segsize;
+  spec->segsize = actual->minreq;
+  spec->segtotal = actual->tlength / spec->segsize;
 
   pa_threaded_mainloop_unlock (psink->mainloop);
 
