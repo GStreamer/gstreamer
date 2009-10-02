@@ -553,6 +553,12 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
 
   GST_LOG_OBJECT (demux, "parsing an audio tag");
 
+  if (demux->no_more_pads && !demux->audio_pad) {
+    GST_WARNING_OBJECT (demux,
+        "Signaled no-more-pads already but had no audio pad -- ignoring");
+    goto beach;
+  }
+
   g_return_val_if_fail (GST_BUFFER_SIZE (buffer) == demux->tag_size,
       GST_FLOW_ERROR);
 
@@ -784,6 +790,20 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
       GST_BUFFER_SIZE (outbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf));
 
+  if (!GST_CLOCK_TIME_IS_VALID (demux->audio_start)) {
+    demux->audio_start = GST_BUFFER_TIMESTAMP (outbuf);
+  }
+
+  if (G_UNLIKELY (!demux->no_more_pads
+          && GST_CLOCK_DIFF (demux->audio_start,
+              GST_BUFFER_TIMESTAMP (outbuf) > 6 * GST_SECOND))) {
+    GST_DEBUG_OBJECT (demux,
+        "Signalling no-more-pads because no video stream was found"
+        " after 6 seconds of audio");
+    gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
+    demux->no_more_pads = TRUE;
+  }
+
   /* Push downstream */
   ret = gst_pad_push (demux->audio_pad, outbuf);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
@@ -889,8 +909,15 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
 
   GST_LOG_OBJECT (demux, "parsing a video tag");
 
+
   GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X", data[0], data[1],
       data[2], data[3]);
+
+  if (demux->no_more_pads && !demux->video_pad) {
+    GST_WARNING_OBJECT (demux,
+        "Signaled no-more-pads already but had no audio pad -- ignoring");
+    goto beach;
+  }
 
   /* Grab information about video tag */
   pts = GST_READ_UINT24_BE (data);
@@ -1113,6 +1140,20 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf),
       keyframe);
+
+  if (!GST_CLOCK_TIME_IS_VALID (demux->video_start)) {
+    demux->video_start = GST_BUFFER_TIMESTAMP (outbuf);
+  }
+
+  if (G_UNLIKELY (!demux->no_more_pads
+          && GST_CLOCK_DIFF (demux->video_start,
+              GST_BUFFER_TIMESTAMP (outbuf) > 6 * GST_SECOND))) {
+    GST_DEBUG_OBJECT (demux,
+        "Signalling no-more-pads because no audio stream was found"
+        " after 6 seconds of video");
+    gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
+    demux->no_more_pads = TRUE;
+  }
 
   /* Push downstream */
   ret = gst_pad_push (demux->video_pad, outbuf);
