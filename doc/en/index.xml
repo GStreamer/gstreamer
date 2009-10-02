@@ -1,6 +1,6 @@
 <Overview>
   <Assemblies>
-    <Assembly Name="gstreamer-sharp" Version="0.9.1.0">
+    <Assembly Name="gstreamer-sharp" Version="0.9.2.0">
       <Attributes>
         <Attribute>
           <AttributeName>System.Runtime.CompilerServices.RuntimeCompatibility(WrapNonExceptionThrows=true)</AttributeName>
@@ -242,6 +242,8 @@
       <Type Name="BaseSrc" Kind="Class" />
       <Type Name="BaseSrcFlags" Kind="Enumeration" />
       <Type Name="BaseTransform" Kind="Class" />
+      <Type Name="BitReader" Kind="Class" />
+      <Type Name="ByteReader" Kind="Class" />
       <Type Name="PushSrc" Kind="Class" />
       <Type Name="TypeFindHelper" Kind="Class" />
       <Type Name="TypeFindHelperGetRangeFunction" Kind="Delegate" />

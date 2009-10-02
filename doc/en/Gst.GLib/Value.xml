@@ -4,6 +4,7 @@
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.1.0</AssemblyVersion>
+    <AssemblyVersion>0.9.2.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.ValueType</BaseTypeName>
@@ -24,6 +25,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="Gst.GLib.GInterfaceAdapter" />
@@ -40,6 +42,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="gtype" Type="Gst.GLib.GType" />
@@ -56,6 +59,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="Gst.GLib.Object" />
@@ -72,6 +76,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="Gst.GLib.ValueArray" />
@@ -88,6 +93,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.Boolean" />
@@ -104,6 +110,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.Byte" />
@@ -120,6 +127,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.Double" />
@@ -136,6 +144,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.Int32" />
@@ -152,6 +161,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.Int64" />
@@ -168,6 +178,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.IntPtr" />
@@ -184,6 +195,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="obj" Type="System.Object" />
@@ -200,6 +212,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.SByte" />
@@ -216,6 +229,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.Single" />
@@ -232,6 +246,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.String" />
@@ -248,6 +263,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.String[]" />
@@ -264,6 +280,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.UInt16" />
@@ -280,6 +297,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.UInt32" />
@@ -296,6 +314,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="System.UInt64" />
@@ -312,6 +331,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -335,6 +355,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="obj" Type="Gst.GLib.Object" />
@@ -353,6 +374,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="val" Type="Gst.GLib.Opaque" />
@@ -371,6 +393,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -396,6 +419,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -421,6 +445,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -437,6 +462,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.GLib.Value</ReturnType>
@@ -452,6 +478,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -471,6 +498,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.GLib.Boxed</ReturnType>
@@ -491,6 +519,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -516,6 +545,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.GLib.Object</ReturnType>
@@ -536,6 +566,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.GLib.Opaque</ReturnType>
@@ -556,6 +587,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -581,6 +613,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.GLib.ValueArray</ReturnType>
@@ -601,6 +634,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -621,6 +655,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Byte</ReturnType>
@@ -641,6 +676,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Double</ReturnType>
@@ -661,6 +697,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Enum</ReturnType>
@@ -681,6 +718,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -701,6 +739,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int64</ReturnType>
@@ -721,6 +760,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.IntPtr</ReturnType>
@@ -741,6 +781,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.SByte</ReturnType>
@@ -761,6 +802,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
@@ -781,6 +823,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.String</ReturnType>
@@ -801,6 +844,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.String[]</ReturnType>
@@ -821,6 +865,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.UInt16</ReturnType>
@@ -841,6 +886,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.UInt32</ReturnType>
@@ -861,6 +907,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.UInt64</ReturnType>
@@ -881,6 +928,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Object</ReturnType>

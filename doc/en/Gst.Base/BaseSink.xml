@@ -4,6 +4,7 @@
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.1.0</AssemblyVersion>
+    <AssemblyVersion>0.9.2.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>Gst.Element</BaseTypeName>
@@ -20,6 +21,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -33,6 +35,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="raw" Type="System.IntPtr" />
@@ -49,6 +52,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -70,6 +74,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -91,6 +96,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.FlowReturn</ReturnType>
@@ -111,6 +117,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.GLib.GType</ReturnType>
@@ -127,6 +134,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.Buffer</ReturnType>
@@ -143,6 +151,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.UInt64</ReturnType>
@@ -159,6 +168,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -180,6 +190,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -205,6 +216,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -227,6 +239,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -258,6 +271,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -283,6 +297,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -307,6 +322,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -329,6 +345,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -357,6 +374,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -382,6 +400,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -407,6 +426,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -432,6 +452,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -457,6 +478,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -479,6 +501,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -501,6 +524,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -523,6 +547,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -545,6 +570,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -566,6 +592,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -587,6 +614,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -613,6 +641,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -634,6 +663,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -655,6 +685,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -676,6 +707,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.ClockReturn</ReturnType>
@@ -698,6 +730,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.FlowReturn</ReturnType>
@@ -720,6 +753,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.FlowReturn</ReturnType>

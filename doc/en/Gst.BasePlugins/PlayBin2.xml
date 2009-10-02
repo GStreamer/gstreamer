@@ -4,6 +4,7 @@
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.1.0</AssemblyVersion>
+    <AssemblyVersion>0.9.2.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>Gst.Pipeline</BaseTypeName>
@@ -25,6 +26,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -38,6 +40,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="raw" Type="System.IntPtr" />
@@ -54,6 +57,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="name" Type="System.String" />
@@ -70,6 +74,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.SignalHandler</ReturnType>
@@ -85,6 +90,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.SignalHandler</ReturnType>
@@ -100,6 +106,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -120,6 +127,7 @@
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.BasePlugins.PlayBin2+AudioTagsChangedHandler</ReturnType>
@@ -135,6 +143,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -156,6 +165,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -177,6 +187,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -198,6 +209,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.Buffer</ReturnType>
@@ -218,6 +230,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -239,6 +252,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -260,6 +274,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -281,6 +296,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -302,6 +318,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.Pad</ReturnType>
@@ -322,6 +339,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.TagList</ReturnType>
@@ -342,6 +360,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.Pad</ReturnType>
@@ -362,6 +381,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.TagList</ReturnType>
@@ -382,6 +402,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.Pad</ReturnType>
@@ -402,6 +423,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.TagList</ReturnType>
@@ -422,6 +444,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.UInt32</ReturnType>
@@ -438,6 +461,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -457,6 +481,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -476,6 +501,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.Object</ReturnType>
@@ -496,6 +522,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.Object</ReturnType>
@@ -516,6 +543,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.BasePlugins.PlayBin2</ReturnType>
@@ -533,6 +561,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.BasePlugins.PlayBin2</ReturnType>
@@ -553,6 +582,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -574,6 +604,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -595,6 +626,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -616,6 +648,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -637,6 +670,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -658,6 +692,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -679,6 +714,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -700,6 +736,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -721,6 +758,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -742,6 +780,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -763,6 +802,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.SignalHandler</ReturnType>
@@ -778,6 +818,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -798,6 +839,7 @@
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.BasePlugins.PlayBin2+TextTagsChangedHandler</ReturnType>
@@ -813,6 +855,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -834,6 +877,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.SignalHandler</ReturnType>
@@ -849,6 +893,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -869,6 +914,7 @@
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.BasePlugins.PlayBin2+VideoTagsChangedHandler</ReturnType>
@@ -884,6 +930,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
@@ -905,6 +952,7 @@
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
