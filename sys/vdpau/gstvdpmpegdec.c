@@ -299,10 +299,13 @@ gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec, GstBuffer ** outbuf)
 {
   GstFlowReturn ret;
 
-  ret = gst_pad_alloc_buffer_and_set_caps (mpeg_dec->src, 0, 0,
-      GST_PAD_CAPS (mpeg_dec->src), outbuf);
+  ret = gst_pad_alloc_buffer (mpeg_dec->src, 0, 0, GST_PAD_CAPS (mpeg_dec->src),
+      outbuf);
   if (ret != GST_FLOW_OK)
     return ret;
+
+  if (!GST_IS_VDP_VIDEO_BUFFER (*outbuf))
+    goto wrong_buffer;
 
   if (!mpeg_dec->device) {
     GstVdpDevice *device;
@@ -323,6 +326,12 @@ gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec, GstBuffer ** outbuf)
   }
 
   return ret;
+
+wrong_buffer:
+  {
+    gst_buffer_unref (*outbuf);
+    return GST_FLOW_NOT_LINKED;
+  }
 }
 
 static GstFlowReturn
