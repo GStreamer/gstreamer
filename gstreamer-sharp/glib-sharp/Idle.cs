@@ -45,6 +45,29 @@ namespace Gst.GLib {
 				proxy_handler = new IdleHandlerInternal (Handler);
 			}
 
+			~IdleProxy ()
+			{
+				Dispose (false);
+			}
+
+			public void Dispose ()
+			{
+				Dispose (true);
+				GC.SuppressFinalize (this);
+			}
+
+			protected virtual void Dispose (bool disposing)
+			{
+				// Both branches remove our delegate from the
+				// managed list of handlers, but only
+				// Source.Remove will remove it from the
+
+				if (disposing)
+					Remove ();
+				else
+					Source.Remove (ID);
+			}
+
 			public bool Handler ()
 			{
 				try {

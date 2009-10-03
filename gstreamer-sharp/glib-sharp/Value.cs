@@ -261,12 +261,18 @@ namespace Gst.GLib {
 
 		public static explicit operator long (Value val)
 		{
-			return g_value_get_int64 (ref val);
+			if (val.type == GType.Long.Val)
+				return val.GetLongForPlatform ();
+			else
+				return g_value_get_int64 (ref val);
 		}
 
 		public static explicit operator ulong (Value val)
 		{
-			return g_value_get_uint64 (ref val);
+			if (val.type == GType.ULong.Val)
+				return val.GetULongForPlatform ();
+			else
+				return g_value_get_uint64 (ref val);
 		}
 
 		[Obsolete ("Replaced by Enum cast")]
@@ -393,6 +399,62 @@ namespace Gst.GLib {
 			this = (Gst.GLib.Value) parameters[0];
 		}
 
+		long GetLongForPlatform ()
+		{
+			switch (Environment.OSVersion.Platform) {
+			case PlatformID.Win32NT:
+			case PlatformID.Win32S:
+			case PlatformID.Win32Windows:
+			case PlatformID.WinCE:
+				return (long) g_value_get_long_as_int (ref this);
+			default:
+				return g_value_get_long (ref this).ToInt64 ();
+			}
+		}
+
+		ulong GetULongForPlatform ()
+		{
+			switch (Environment.OSVersion.Platform) {
+			case PlatformID.Win32NT:
+			case PlatformID.Win32S:
+			case PlatformID.Win32Windows:
+			case PlatformID.WinCE:
+				return (ulong) g_value_get_ulong_as_uint (ref this);
+			default:
+				return g_value_get_ulong (ref this).ToUInt64 ();
+			}
+		}
+
+		void SetLongForPlatform (long val)
+		{
+			switch (Environment.OSVersion.Platform) {
+			case PlatformID.Win32NT:
+			case PlatformID.Win32S:
+			case PlatformID.Win32Windows:
+			case PlatformID.WinCE:
+				g_value_set_long (ref this, (int) val);
+				break;
+			default:
+				g_value_set_long (ref this, new IntPtr (val));
+				break;
+			}
+		}
+
+		void SetULongForPlatform (ulong val)
+		{
+			switch (Environment.OSVersion.Platform) {
+			case PlatformID.Win32NT:
+			case PlatformID.Win32S:
+			case PlatformID.Win32Windows:
+			case PlatformID.WinCE:
+				g_value_set_ulong (ref this, (uint) val);
+				break;
+			default:
+				g_value_set_ulong (ref this, new UIntPtr (val));
+				break;
+			}
+		}
+
 		object ToEnum ()
 		{
 			Type t = GType.LookupType (type);
@@ -438,19 +500,12 @@ namespace Gst.GLib {
 					return (uint) this;
 				else if (type == GType.Int64.Val)
 					return (long) this;
+				else if (type == GType.Long.Val)
+					return GetLongForPlatform ();
 				else if (type == GType.UInt64.Val)
 					return (ulong) this;
-#if WIN64LONGS
-				else if (type == GType.Long.Val)
-					return g_value_get_long (ref this);
 				else if (type == GType.ULong.Val)
-					return g_value_get_ulong (ref this);
-#else
-				else if (type == GType.Long.Val)
-					return g_value_get_long (ref this).ToInt64 ();
-				else if (type == GType.ULong.Val)
-					return g_value_get_ulong (ref this).ToUInt64 ();
-#endif
+					return GetULongForPlatform ();
 				else if (GType.Is (type, GType.Enum) ||
 					 GType.Is (type, GType.Flags))
 					return ToEnum ();
@@ -492,19 +547,12 @@ namespace Gst.GLib {
 					g_value_set_uint (ref this, (uint) value);
 				else if (type == GType.Int64.Val)
 					g_value_set_int64 (ref this, (long) value);
+				else if (type == GType.Long.Val)
+					SetLongForPlatform ((long) value);
 				else if (type == GType.UInt64.Val)
 					g_value_set_uint64 (ref this, (ulong) value);
-#if WIN64LONGS
-				else if (type == GType.Long.Val)
-					g_value_set_long (ref this, ((IConvertible)value).ToInt32 (null));
 				else if (type == GType.ULong.Val)
-					g_value_set_ulong (ref this, ((IConvertible)value).ToUInt32 (null));
-#else
-				else if (type == GType.Long.Val)
-					g_value_set_long (ref this, new IntPtr (((IConvertible)value).ToInt64 (null)));
-				else if (type == GType.ULong.Val)
-					g_value_set_ulong (ref this, new UIntPtr (((IConvertible)value).ToUInt64 (null)));
-#endif
+					SetULongForPlatform ((ulong) value);
 				else if (GType.Is (type, GType.Enum))
 					g_value_set_enum (ref this, (int)value);
 				else if (GType.Is (type, GType.Flags))
@@ -622,22 +670,13 @@ namespace Gst.GLib {
 		static extern void g_value_set_int64 (ref Value val, long data);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void g_value_set_uint64 (ref Value val, ulong data);
+		static extern void g_value_set_long (ref Value val, IntPtr data);
 
-                /* Windows on x86-64 has 32 bit longs */
-#if WIN64LONGS
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_value_set_long (ref Value val, int data);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void g_value_set_ulong (ref Value val, uint data);
-#else
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void g_value_set_long (ref Value val, IntPtr data);
-
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void g_value_set_ulong (ref Value val, UIntPtr data);
-#endif
+		static extern void g_value_set_uint64 (ref Value val, ulong data);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_value_set_object (ref Value val, IntPtr data);
@@ -653,6 +692,12 @@ namespace Gst.GLib {
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_value_set_uint (ref Value val, uint data);
+
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void g_value_set_ulong (ref Value val, UIntPtr data);
+
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void g_value_set_ulong (ref Value val, uint data);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_value_set_enum (ref Value val, int data);
@@ -684,22 +729,19 @@ namespace Gst.GLib {
 		static extern long g_value_get_int64 (ref Value val);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern ulong g_value_get_uint64 (ref Value val);
-
-                /* Windows on x86-64 has 32 bit longs */
-#if WIN64LONGS
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int g_value_get_long (ref Value val);
-
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern uint g_value_get_ulong (ref Value val);
-#else
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_value_get_long (ref Value val);
+
+		[DllImport ("libgobject-2.0-0.dll", EntryPoint = "g_value_get_long", CallingConvention = CallingConvention.Cdecl)]
+		static extern int g_value_get_long_as_int (ref Value val);
+
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong g_value_get_uint64 (ref Value val);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr g_value_get_ulong (ref Value val);
-#endif
+
+		[DllImport ("libgobject-2.0-0.dll", EntryPoint = "g_value_get_ulong", CallingConvention = CallingConvention.Cdecl)]
+		static extern int g_value_get_ulong_as_uint (ref Value val);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_value_get_object (ref Value val);

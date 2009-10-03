@@ -161,7 +161,7 @@ $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
 	cp $(top_srcdir)/gstreamer-sharp.snk .
 
 $(ASSEMBLY): $(build_sources) generated-stamp $(KEYFILE) $(plugin_csfiles)
-	$(CSC) -nowarn:0612 -debug -unsafe -out:$(ASSEMBLY) -target:library $(references) $(csc_build_sources) $(GENERATED_SOURCES) $(plugin_csfiles) $(WIN64DEFINES) -define:GTK_SHARP_2_6 -define:GTK_SHARP_2_8 -define:GTK_SHARP_2_10 -define:GTK_SHARP_2_12 -define:GTK_SHARP_2_14
+	$(CSC) -nowarn:0612 -debug -unsafe -out:$(ASSEMBLY) -target:library $(references) $(csc_build_sources) $(GENERATED_SOURCES) $(plugin_csfiles) -define:GTK_SHARP_2_6 -define:GTK_SHARP_2_8 -define:GTK_SHARP_2_10 -define:GTK_SHARP_2_12 -define:GTK_SHARP_2_14
 
 plugins-update:
 	$(MAKE) -C coreplugins plugins-update
