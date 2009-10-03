@@ -4330,7 +4330,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       sub = gst_buffer_create_sub (buf,
           GST_BUFFER_SIZE (buf) - size, lace_size[n]);
-      GST_WARNING_OBJECT (demux, "created subbuffer %p", sub);
+      GST_DEBUG_OBJECT (demux, "created subbuffer %p", sub);
 
       if (stream->encodings != NULL && stream->encodings->len > 0)
         sub = gst_matroska_decode_buffer (stream, sub);
