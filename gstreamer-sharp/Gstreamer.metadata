@@ -1370,6 +1370,64 @@
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_encoder_description']">/api/namespace/class[@cname='GstDescriptions']</move-node>
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_sink_description']">/api/namespace/class[@cname='GstDescriptions']</move-node>
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_source_description']">/api/namespace/class[@cname='GstDescriptions']</move-node>
+  <add-node path="/api/namespace[@name='Gst.PbUtils']">
+    <class name="Install" cname="GstInstall" disable_void_ctor="1">
+      <method name="InstallPlugins" cname="gst_install_plugins_async" shared="true">
+        <return-type type="GstInstallPluginsReturn" />
+        <parameters>
+          <parameter type="gchar**" name="details" />
+          <parameter type="GstInstallPluginsContext*" name="ctx" />
+          <parameter type="GstInstallPluginsResultFunc" name="func" />
+          <parameter type="gpointer" name="user_data" />
+        </parameters>
+      </method>
+      <method name="GetInProgress" cname="gst_install_plugins_installation_in_progress" shared="true">
+        <return-type type="gboolean" />
+      </method>
+      <method name="GetSupported" cname="gst_install_plugins_supported" shared="true">
+        <return-type type="gboolean" />
+      </method>
+      <method name="InstallPlugins" cname="gst_install_plugins_sync" shared="true">
+        <return-type type="GstInstallPluginsReturn" />
+        <parameters>
+          <parameter type="gchar**" name="details" />
+          <parameter type="GstInstallPluginsContext*" name="ctx" />
+        </parameters>
+      </method>
+    </class>
+    <class name="MissingDetail" cname="GstMissing_">
+      <method name="NewDecoderInstallerDetail" cname="gst_missing_decoder_installer_detail_new" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="decode_caps" />
+        </parameters>
+      </method>
+      <method name="NewElementInstallerDetail" cname="gst_missing_element_installer_detail_new" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="factory_name" />
+        </parameters>
+      </method>
+      <method name="NewEncoderInstallerDetail" cname="gst_missing_encoder_installer_detail_new" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="encode_caps" />
+        </parameters>
+      </method>
+      <method name="NewUriSinkInstallerDetail" cname="gst_missing_uri_sink_installer_detail_new" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="protocol" />
+        </parameters>
+      </method>
+      <method name="NewUriSourceInstallerDetail" cname="gst_missing_uri_source_installer_detail_new" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="protocol" />
+        </parameters>
+      </method>
+    </class>
+  </add-node>
 
 
 </metadata>
