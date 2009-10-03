@@ -1,0 +1,21 @@
+<Type Name="InstallPluginsResultFunc" FullName="Gst.PbUtils.InstallPluginsResultFunc">
+  <TypeSignature Language="C#" Value="public delegate void InstallPluginsResultFunc(InstallPluginsReturn result);" />
+  <AssemblyInfo>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.2.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="result" Type="Gst.PbUtils.InstallPluginsReturn" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>System.Void</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="result">To be added.</param>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

@@ -473,6 +473,14 @@
       <Type Name="XOverlayAdapter" Kind="Class" />
       <Type Name="XOverlayImplementor" Kind="Interface" />
     </Namespace>
+    <Namespace Name="Gst.PbUtils">
+      <Type Name="Descriptions" Kind="Class" />
+      <Type Name="Install" Kind="Class" />
+      <Type Name="InstallPluginsContext" Kind="Class" />
+      <Type Name="InstallPluginsResultFunc" Kind="Delegate" />
+      <Type Name="InstallPluginsReturn" Kind="Enumeration" />
+      <Type Name="MissingDetail" Kind="Class" />
+    </Namespace>
     <Namespace Name="Gst.Video">
       <Type Name="VideoFilter" Kind="Class" />
       <Type Name="VideoFormat" Kind="Enumeration" />
