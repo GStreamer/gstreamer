@@ -1362,14 +1362,14 @@
   <attr path="/api/namespace/object[@cname='GstVideoSink']/method[@cname='gst_video_sink_center_rect']/parameters/parameter[@name='result']" name="pass_as">ref</attr>
 
   <!-- GStreamer PbUtils library -->
-  <add-node path="/api/namespace[@name='Gst.PbUtils']"><class name="Descriptions" cname="GstPbUtils" disable_void_ctor="1" /></add-node>
-  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_add_codec_description_to_tag_list']">/api/namespace/class[@cname='GstPbUtils']</move-node>
-  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_codec_description']">/api/namespace/class[@cname='GstPbUtils']</move-node>
-  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_decoder_description']">/api/namespace/class[@cname='GstPbUtils']</move-node>
-  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_element_description']">/api/namespace/class[@cname='GstPbUtils']</move-node>
-  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_encoder_description']">/api/namespace/class[@cname='GstPbUtils']</move-node>
-  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_sink_description']">/api/namespace/class[@cname='GstPbUtils']</move-node>
-  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_source_description']">/api/namespace/class[@cname='GstPbUtils']</move-node>
+  <add-node path="/api/namespace[@name='Gst.PbUtils']"><class name="Descriptions" cname="GstDescriptions" disable_void_ctor="1" /></add-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_add_codec_description_to_tag_list']">/api/namespace/class[@cname='GstDescriptions']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_codec_description']">/api/namespace/class[@cname='GstDescriptions']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_decoder_description']">/api/namespace/class[@cname='GstDescriptions']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_element_description']">/api/namespace/class[@cname='GstDescriptions']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_encoder_description']">/api/namespace/class[@cname='GstDescriptions']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_sink_description']">/api/namespace/class[@cname='GstDescriptions']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_pb_utils_get_source_description']">/api/namespace/class[@cname='GstDescriptions']</move-node>
 
 
 </metadata>
