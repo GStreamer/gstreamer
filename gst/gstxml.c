@@ -345,8 +345,7 @@ gst_xml_object_loaded (GstObject * private, GstObject * object, xmlNodePtr self,
   GstXML *xml = GST_XML (data);
 
   /* FIXME check that this element was created from the same xmlDocPtr... */
-  g_signal_emit (G_OBJECT (xml), gst_xml_signals[OBJECT_LOADED], 0, object,
-      self);
+  g_signal_emit (xml, gst_xml_signals[OBJECT_LOADED], 0, object, self);
 }
 
 /**

@@ -392,7 +392,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
       data->parent = element;
       data->name = g_strdup(value);
       data->value_str = g_strdup(pos);
-      data->signal_id = g_signal_connect(GST_OBJECT (element),"child-added", G_CALLBACK (gst_parse_new_child), data);
+      data->signal_id = g_signal_connect(element, "child-added", G_CALLBACK (gst_parse_new_child), data);
     }
     else {
       SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
@@ -481,7 +481,7 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       } else {
       	data->caps = NULL;
       }
-      data->signal_id = g_signal_connect (G_OBJECT (src), "pad-added", 
+      data->signal_id = g_signal_connect (src, "pad-added",
           G_CALLBACK (gst_parse_found_pad), data);
       return TRUE;
     }

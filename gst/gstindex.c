@@ -723,7 +723,7 @@ gst_index_add_entry (GstIndex * index, GstIndexEntry * entry)
     iclass->add_entry (index, entry);
   }
 
-  g_signal_emit (G_OBJECT (index), gst_index_signals[ENTRY_ADDED], 0, entry);
+  g_signal_emit (index, gst_index_signals[ENTRY_ADDED], 0, entry);
 }
 
 /**

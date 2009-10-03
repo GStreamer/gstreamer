@@ -417,8 +417,7 @@ gst_pad_template_get_caps (GstPadTemplate * templ)
 void
 gst_pad_template_pad_created (GstPadTemplate * templ, GstPad * pad)
 {
-  g_signal_emit (G_OBJECT (templ),
-      gst_pad_template_signals[TEMPL_PAD_CREATED], 0, pad);
+  g_signal_emit (templ, gst_pad_template_signals[TEMPL_PAD_CREATED], 0, pad);
 }
 
 static void

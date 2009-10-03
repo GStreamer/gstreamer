@@ -1096,7 +1096,7 @@ no_state_recalc:
       elem_name);
   g_free (elem_name);
 
-  g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_ADDED], 0, element);
+  g_signal_emit (bin, gst_bin_signals[ELEMENT_ADDED], 0, element);
 
   return TRUE;
 
@@ -1385,7 +1385,7 @@ no_state_recalc:
   GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_UNPARENTING);
   GST_OBJECT_UNLOCK (element);
 
-  g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_REMOVED], 0, element);
+  g_signal_emit (bin, gst_bin_signals[ELEMENT_REMOVED], 0, element);
 
   /* element is really out of our control now */
   gst_object_unref (element);
@@ -2254,7 +2254,7 @@ gst_bin_recalculate_latency (GstBin * bin)
 {
   gboolean res;
 
-  g_signal_emit (G_OBJECT (bin), gst_bin_signals[DO_LATENCY], 0, &res);
+  g_signal_emit (bin, gst_bin_signals[DO_LATENCY], 0, &res);
   GST_DEBUG_OBJECT (bin, "latency returned %d", res);
 
   return res;

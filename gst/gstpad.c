@@ -1704,8 +1704,8 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
 
   /* fire off a signal to each of the pads telling them
    * that they've been unlinked */
-  g_signal_emit (G_OBJECT (srcpad), gst_pad_signals[PAD_UNLINKED], 0, sinkpad);
-  g_signal_emit (G_OBJECT (sinkpad), gst_pad_signals[PAD_UNLINKED], 0, srcpad);
+  g_signal_emit (srcpad, gst_pad_signals[PAD_UNLINKED], 0, sinkpad);
+  g_signal_emit (sinkpad, gst_pad_signals[PAD_UNLINKED], 0, srcpad);
 
   GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "unlinked %s:%s and %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
@@ -2040,8 +2040,8 @@ gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
 
     /* fire off a signal to each of the pads telling them
      * that they've been linked */
-    g_signal_emit (G_OBJECT (srcpad), gst_pad_signals[PAD_LINKED], 0, sinkpad);
-    g_signal_emit (G_OBJECT (sinkpad), gst_pad_signals[PAD_LINKED], 0, srcpad);
+    g_signal_emit (srcpad, gst_pad_signals[PAD_LINKED], 0, sinkpad);
+    g_signal_emit (sinkpad, gst_pad_signals[PAD_LINKED], 0, srcpad);
 
     GST_CAT_INFO (GST_CAT_PADS, "linked %s:%s and %s:%s, successful",
         GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
