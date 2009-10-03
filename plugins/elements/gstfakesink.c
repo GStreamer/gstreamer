@@ -478,8 +478,8 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     gst_fake_sink_notify_last_message (sink);
   }
   if (sink->signal_handoffs)
-    g_signal_emit (G_OBJECT (sink), gst_fake_sink_signals[SIGNAL_HANDOFF], 0,
-        buf, bsink->sinkpad);
+    g_signal_emit (sink, gst_fake_sink_signals[SIGNAL_HANDOFF], 0, buf,
+        bsink->sinkpad);
 
   if (sink->dump) {
     gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));

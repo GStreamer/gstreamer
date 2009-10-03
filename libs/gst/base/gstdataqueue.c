@@ -383,7 +383,7 @@ gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
   /* We ALWAYS need to check for queue fillness */
   if (gst_data_queue_locked_is_full (queue)) {
     GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
-    g_signal_emit (G_OBJECT (queue), gst_data_queue_signals[SIGNAL_FULL], 0);
+    g_signal_emit (queue, gst_data_queue_signals[SIGNAL_FULL], 0);
     GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
 
     /* signal might have removed some items */
@@ -441,7 +441,7 @@ gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
 
   if (gst_data_queue_locked_is_empty (queue)) {
     GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
-    g_signal_emit (G_OBJECT (queue), gst_data_queue_signals[SIGNAL_EMPTY], 0);
+    g_signal_emit (queue, gst_data_queue_signals[SIGNAL_EMPTY], 0);
     GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
 
     while (gst_data_queue_locked_is_empty (queue)) {

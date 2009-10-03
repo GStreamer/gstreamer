@@ -614,8 +614,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   }
 
   if (identity->signal_handoffs)
-    g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
-        buf);
+    g_signal_emit (identity, gst_identity_signals[SIGNAL_HANDOFF], 0, buf);
 
   if (trans->segment.format == GST_FORMAT_TIME)
     runtimestamp = gst_segment_to_running_time (&trans->segment,

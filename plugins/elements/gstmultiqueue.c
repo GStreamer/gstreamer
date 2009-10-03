@@ -1382,7 +1382,7 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
   /* Overrun is always forwarded, since this is blocking the upstream element */
   if (filled) {
     GST_DEBUG_OBJECT (mq, "A queue is filled, signalling overrun");
-    g_signal_emit (G_OBJECT (mq), gst_multi_queue_signals[SIGNAL_OVERRUN], 0);
+    g_signal_emit (mq, gst_multi_queue_signals[SIGNAL_OVERRUN], 0);
   }
 
 beach:
@@ -1422,7 +1422,7 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
   if (empty) {
     GST_DEBUG_OBJECT (mq, "All queues are empty, signalling it");
-    g_signal_emit (G_OBJECT (mq), gst_multi_queue_signals[SIGNAL_UNDERRUN], 0);
+    g_signal_emit (mq, gst_multi_queue_signals[SIGNAL_UNDERRUN], 0);
   }
 }
 
@@ -1498,9 +1498,9 @@ gst_single_queue_new (GstMultiQueue * mqueue)
   sq->turn = g_cond_new ();
 
   /* attach to underrun/overrun signals to handle non-starvation  */
-  g_signal_connect (G_OBJECT (sq->queue), "full",
+  g_signal_connect (sq->queue, "full",
       G_CALLBACK (single_queue_overrun_cb), sq);
-  g_signal_connect (G_OBJECT (sq->queue), "empty",
+  g_signal_connect (sq->queue, "empty",
       G_CALLBACK (single_queue_underrun_cb), sq);
 
   tmp = g_strdup_printf ("sink%d", sq->id);

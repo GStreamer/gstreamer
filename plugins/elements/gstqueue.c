@@ -900,7 +900,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
    * We always handle events and they don't count in our statistics. */
   while (gst_queue_is_filled (queue)) {
     GST_QUEUE_MUTEX_UNLOCK (queue);
-    g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_OVERRUN], 0);
+    g_signal_emit (queue, gst_queue_signals[SIGNAL_OVERRUN], 0);
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
 
     /* we recheck, the signal could have changed the thresholds */
@@ -937,7 +937,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is not full");
 
         GST_QUEUE_MUTEX_UNLOCK (queue);
-        g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_RUNNING], 0);
+        g_signal_emit (queue, gst_queue_signals[SIGNAL_RUNNING], 0);
         GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
         break;
       }
@@ -1130,7 +1130,7 @@ gst_queue_loop (GstPad * pad)
 
   while (gst_queue_is_empty (queue)) {
     GST_QUEUE_MUTEX_UNLOCK (queue);
-    g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_UNDERRUN], 0);
+    g_signal_emit (queue, gst_queue_signals[SIGNAL_UNDERRUN], 0);
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is empty");
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
 
@@ -1140,8 +1140,8 @@ gst_queue_loop (GstPad * pad)
     }
     GST_QUEUE_MUTEX_UNLOCK (queue);
 
-    g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_RUNNING], 0);
-    g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_PUSHING], 0);
+    g_signal_emit (queue, gst_queue_signals[SIGNAL_RUNNING], 0);
+    g_signal_emit (queue, gst_queue_signals[SIGNAL_PUSHING], 0);
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is not empty");
 
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);

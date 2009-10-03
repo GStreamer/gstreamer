@@ -856,8 +856,8 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
 
   if (src->signal_handoffs) {
     GST_LOG_OBJECT (src, "pre handoff emit");
-    g_signal_emit (G_OBJECT (src), gst_fake_src_signals[SIGNAL_HANDOFF], 0,
-        buf, basesrc->srcpad);
+    g_signal_emit (src, gst_fake_src_signals[SIGNAL_HANDOFF], 0, buf,
+        basesrc->srcpad);
     GST_LOG_OBJECT (src, "post handoff emit");
   }
 
