@@ -62,5 +62,6 @@ EXTRA_DIST = \
 	TypeFind.cs \
 	MetaData.cs \
 	AppSrc.cs \
-	GtkVideoPlayer.cs
+	GtkVideoPlayer.cs \
+	TransformSample.cs
 
