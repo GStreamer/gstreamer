@@ -1,6 +1,5 @@
-diff -Naur generator-upstream/BoxedGen.cs generator/BoxedGen.cs
 --- generator-upstream/BoxedGen.cs	2009-01-04 23:29:56.000000000 +0100
-+++ generator/BoxedGen.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/BoxedGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -40,16 +40,16 @@
  
  			StreamWriter sw = gen_info.Writer = gen_info.OpenStream (Name);
@@ -21,9 +20,8 @@ diff -Naur generator-upstream/BoxedGen.cs generator/BoxedGen.cs
  			sw.WriteLine ("\t\t{");
  
  			sw.WriteLine ("\t\t\treturn (" + QualifiedName + ") val.Val;");
-diff -Naur generator-upstream/ByRefGen.cs generator/ByRefGen.cs
 --- generator-upstream/ByRefGen.cs	2008-02-26 17:29:14.000000000 +0100
-+++ generator/ByRefGen.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/ByRefGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -46,7 +46,7 @@
  
  		public string AllocNative (string var_name)
@@ -33,9 +31,8 @@ diff -Naur generator-upstream/ByRefGen.cs generator/ByRefGen.cs
  		}
  
  		public override string FromNative (string var_name)
-diff -Naur generator-upstream/CallbackGen.cs generator/CallbackGen.cs
 --- generator-upstream/CallbackGen.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/CallbackGen.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/CallbackGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -140,7 +140,7 @@
  			sw.WriteLine ();
  			sw.WriteLine ("\t\t" + Name + "Native native_cb;");
@@ -63,9 +60,8 @@ diff -Naur generator-upstream/CallbackGen.cs generator/CallbackGen.cs
  			if (fatal) {
  				sw.WriteLine ("\t\t\t\t// NOTREACHED: Above call does not return.");
  				sw.WriteLine ("\t\t\t\tthrow e;");
-diff -Naur generator-upstream/ConstFilenameGen.cs generator/ConstFilenameGen.cs
 --- generator-upstream/ConstFilenameGen.cs	2007-09-21 18:37:04.000000000 +0200
-+++ generator/ConstFilenameGen.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/ConstFilenameGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -35,17 +35,17 @@
  		
  		public override string FromNative (string var)
@@ -87,9 +83,8 @@ diff -Naur generator-upstream/ConstFilenameGen.cs generator/ConstFilenameGen.cs
  		}
  	}
  }
-diff -Naur generator-upstream/ConstStringGen.cs generator/ConstStringGen.cs
 --- generator-upstream/ConstStringGen.cs	2009-08-13 16:46:33.000000000 +0200
-+++ generator/ConstStringGen.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/ConstStringGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -37,17 +37,17 @@
  		
  		public override string FromNative (string var)
@@ -111,9 +106,8 @@ diff -Naur generator-upstream/ConstStringGen.cs generator/ConstStringGen.cs
  		}
  	}
  }
-diff -Naur generator-upstream/Ctor.cs generator/Ctor.cs
 --- generator-upstream/Ctor.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/Ctor.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/Ctor.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -32,14 +32,16 @@
  		private bool preferred;
  		private string name;
@@ -164,9 +158,8 @@ diff -Naur generator-upstream/Ctor.cs generator/Ctor.cs
  							sw.WriteLine ("\t\t\t\treturn;");
  						} else
  							sw.WriteLine ("\t\t\t\tthrow new InvalidOperationException (\"Can't override this constructor.\");");
-diff -Naur generator-upstream/DefaultSignalHandler.cs generator/DefaultSignalHandler.cs
 --- generator-upstream/DefaultSignalHandler.cs	2009-04-13 19:44:48.000000000 +0200
-+++ generator/DefaultSignalHandler.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/DefaultSignalHandler.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -68,13 +68,13 @@
  		{
  			GenerateMethodBody (sw, implementor);
@@ -252,9 +245,8 @@ diff -Naur generator-upstream/DefaultSignalHandler.cs generator/DefaultSignalHan
  				default:
  					throw new Exception (retval.CSType);
  				}
-diff -Naur generator-upstream/EnumGen.cs generator/EnumGen.cs
 --- generator-upstream/EnumGen.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/EnumGen.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/EnumGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -98,7 +98,7 @@
  			if (Elem.GetAttribute("type") == "flags")
  				sw.WriteLine ("\t[Flags]");
@@ -276,9 +268,8 @@ diff -Naur generator-upstream/EnumGen.cs generator/EnumGen.cs
  				sw.WriteLine ("\t\t\t}");
  				sw.WriteLine ("\t\t}");
  				sw.WriteLine ("\t}");
-diff -Naur generator-upstream/FieldBase.cs generator/FieldBase.cs
 --- generator-upstream/FieldBase.cs	2009-08-13 16:46:33.000000000 +0200
-+++ generator/FieldBase.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/FieldBase.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -89,7 +89,7 @@
  		void CheckGlue ()
  		{
@@ -299,10 +290,8 @@ diff -Naur generator-upstream/FieldBase.cs generator/FieldBase.cs
  
  			if (Getter != null) {
  				sw.Write (indent + "\tget ");
-diff -Naur generator-upstream/gapi3-codegen.in generator/gapi3-codegen.in
-diff -Naur generator-upstream/GObjectVM.cs generator/GObjectVM.cs
 --- generator-upstream/GObjectVM.cs	2009-08-09 01:42:15.000000000 +0200
-+++ generator/GObjectVM.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/GObjectVM.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -154,17 +154,17 @@
  				sw.WriteLine ("\t\tpublic static " + Name + "Delegate " + Name + "Handler {");
  				sw.WriteLine ("\t\t\tset {");
@@ -342,11 +331,8 @@ diff -Naur generator-upstream/GObjectVM.cs generator/GObjectVM.cs
  					return "G_TYPE_NONE";
  				default:
  					return val;
-diff -Naur generator-upstream/gst-gapi_codegen.exe generator/gst-gapi_codegen.exe
-diff -Naur generator-upstream/gst-gapi_codegen.exe.mdb generator/gst-gapi_codegen.exe.mdb
-diff -Naur generator-upstream/InterfaceGen.cs generator/InterfaceGen.cs
 --- generator-upstream/InterfaceGen.cs	2009-08-19 18:13:17.000000000 +0200
-+++ generator/InterfaceGen.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/InterfaceGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -60,7 +60,7 @@
  
  		public override string CallByName (string var, bool owned)
@@ -467,471 +453,69 @@ diff -Naur generator-upstream/InterfaceGen.cs generator/InterfaceGen.cs
  			sw.WriteLine ();
  			
  			foreach (Signal sig in sigs.Values) {
-diff -Naur generator-upstream/Makefile generator/Makefile
---- generator-upstream/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ generator/Makefile	2009-09-11 07:59:21.000000000 +0200
-@@ -0,0 +1,456 @@
-+# Makefile.in generated by automake 1.11 from Makefile.am.
-+# generator/Makefile.  Generated from Makefile.in by configure.
+--- generator-upstream/ManagedCallString.cs	2009-08-13 16:46:33.000000000 +0200
++++ generator/ManagedCallString.cs	2009-10-03 11:57:28.000000000 +0200
+@@ -50,12 +50,15 @@
+ 					error_param = p.Name;
+ 					continue;
+ 				}
 +
-+# Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-+# 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation,
-+# Inc.
-+# This Makefile.in is free software; the Free Software Foundation
-+# gives unlimited permission to copy and/or distribute it,
-+# with or without modifications, as long as this notice is preserved.
+ 				this.parms.Add (p);
+ 
+ 				if (p.PassAs != String.Empty && (p.Name != p.FromNative (p.Name)))
+ 					this.special.Add (true);
+ 				else if (p.Generatable is CallbackGen)
+ 					this.special.Add (true);
++				else if (p.Scope == "call")
++					this.special.Add (true);
+ 				else
+ 					this.special.Add (false);
+ 			}
+@@ -96,6 +99,11 @@
+ 						ret += indent + String.Format ("{0} {1}_invoker = new {0} ({1}, {2});\n", (igen as CallbackGen).InvokerName, p.Name, user_data_param);
+ 					else
+ 						ret += indent + String.Format ("{0} {1}_invoker = new {0} ({1}, {2}, {3});\n", (igen as CallbackGen).InvokerName, p.Name, user_data_param, destroy_param);
++				} else if (p.Scope == "call") {
++					if (igen is ObjectBase)
++						ret += indent + igen.QualifiedName + " my" + p.Name + " = " + (igen as ObjectBase).FromNative (p.Name, true) + ";\n";
++					else
++						throw new NotImplementedException();
+ 				} else {
+ 					ret += indent + igen.QualifiedName + " my" + p.Name;
+ 					if (p.PassAs == "ref")
+@@ -137,16 +145,25 @@
+ 				Parameter p = parms [i] as Parameter;
+ 				IGeneratable igen = p.Generatable;
+ 
+-				if (igen is CallbackGen)
++				if (igen is CallbackGen) {
+ 					continue;
+-				else if (igen is StructBase || igen is ByRefGen)
++				} else if (igen is StructBase || igen is ByRefGen) {
+ 					ret += indent + String.Format ("if ({0} != IntPtr.Zero) System.Runtime.InteropServices.Marshal.StructureToPtr (my{0}, {0}, false);\n", p.Name);
+-				else if (igen is IManualMarshaler)
++				} else if (igen is IManualMarshaler) {
+ 					ret += String.Format ("{0}{1} = {2};", indent, p.Name, (igen as IManualMarshaler).AllocNative ("my" + p.Name));
+-				else
++				} else if (p.Scope == "call") {
++					if (igen is ObjectBase || igen is OpaqueGen) {
++						if (igen is ObjectBase)
++							ret += indent + "IntPtr dummy = my" + p.Name + ".OwnedHandle;\n";
++						else
++							throw new NotImplementedException();
 +
-+# This program is distributed in the hope that it will be useful,
-+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
-+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-+# PARTICULAR PURPOSE.
-+
-+
-+
-+
-+pkgdatadir = $(datadir)/gstreamer-sharp
-+pkgincludedir = $(includedir)/gstreamer-sharp
-+pkglibdir = $(libdir)/gstreamer-sharp
-+pkglibexecdir = $(libexecdir)/gstreamer-sharp
-+am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
-+install_sh_DATA = $(install_sh) -c -m 644
-+install_sh_PROGRAM = $(install_sh) -c
-+install_sh_SCRIPT = $(install_sh) -c
-+INSTALL_HEADER = $(INSTALL_DATA)
-+transform = $(program_transform_name)
-+NORMAL_INSTALL = :
-+PRE_INSTALL = :
-+POST_INSTALL = :
-+NORMAL_UNINSTALL = :
-+PRE_UNINSTALL = :
-+POST_UNINSTALL = :
-+build_triplet = x86_64-unknown-linux-gnu
-+host_triplet = x86_64-unknown-linux-gnu
-+target_triplet = x86_64-unknown-linux-gnu
-+subdir = generator
-+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
-+ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
-+am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
-+	$(ACLOCAL_M4)
-+mkinstalldirs = $(install_sh) -d
-+CONFIG_HEADER = $(top_builddir)/config.h
-+CONFIG_CLEAN_FILES =
-+CONFIG_CLEAN_VPATH_FILES =
-+SCRIPTS = $(noinst_SCRIPTS)
-+SOURCES =
-+DIST_SOURCES =
-+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-+ACLOCAL = ${SHELL} /home/slomo/projects/gstreamer/head/gstreamer-sharp/missing --run aclocal-1.11
-+AMTAR = ${SHELL} /home/slomo/projects/gstreamer/head/gstreamer-sharp/missing --run tar
-+AR = ar
-+AUTOCONF = ${SHELL} /home/slomo/projects/gstreamer/head/gstreamer-sharp/missing --run autoconf
-+AUTOHEADER = ${SHELL} /home/slomo/projects/gstreamer/head/gstreamer-sharp/missing --run autoheader
-+AUTOMAKE = ${SHELL} /home/slomo/projects/gstreamer/head/gstreamer-sharp/missing --run automake-1.11
-+AWK = gawk
-+CC = gcc-4.4
-+CCDEPMODE = depmode=gcc3
-+CFLAGS = -g -O2
-+CPP = cpp-4.4
-+CPPFLAGS = 
-+CSC = /usr/bin/gmcs
-+CYGPATH_W = echo
-+DEFS = -DHAVE_CONFIG_H
-+DEPDIR = .deps
-+DSYMUTIL = 
-+DUMPBIN = 
-+ECHO_C = 
-+ECHO_N = -n
-+ECHO_T = 
-+EGREP = /bin/grep -E
-+EXEEXT = 
-+FGREP = /bin/grep -F
-+GACUTIL = /usr/bin/gacutil
-+GACUTIL_FLAGS = /package $(PACKAGE_VERSION) /gacdir $(libdir) /root $(DESTDIR)/$(libdir)
-+GENERATED_SOURCES = generated/*.cs
-+GLIB_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  
-+GLIB_LIBS = -lgobject-2.0 -lglib-2.0  
-+GLIB_SHARP_CFLAGS = -I:/usr/local/lib/pkgconfig/../../share/gapi-2.0/glib-api.xml  
-+GLIB_SHARP_LIBS = -r:/usr/local/lib/pkgconfig/../../lib/mono/gtk-sharp-2.0/glib-sharp.dll  
-+GREP = /bin/grep
-+GSTREAMER_PLUGINS_REQUIRED_VERSION = 0.10.24
-+GSTREAMER_REQUIRED_VERSION = 0.10.24
-+GST_CFLAGS = -pthread -I/home/slomo/projects/gstreamer/head/gstreamer/pkgconfig/.. -I./.. -I/home/slomo/projects/gstreamer/head/gstreamer/pkgconfig/../libs -I./../libs -I/home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs -I./../gst-libs -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/libxml2  
-+GST_LIBS = /home/slomo/projects/gstreamer/head/gstreamer/pkgconfig/../gst/libgstreamer-0.10.la /home/slomo/projects/gstreamer/head/gstreamer/pkgconfig/../libs/gst/base/libgstbase-0.10.la /home/slomo/projects/gstreamer/head/gstreamer/pkgconfig/../libs/gst/controller/libgstcontroller-0.10.la /home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/app/libgstapp-0.10.la /home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/audio/libgstaudio-0.10.la /home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/interfaces/libgstinterfaces-0.10.la /home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/cdda/libgstcdda-0.10.la /home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/tag/libgsttag-0.10.la /home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/pbutils/libgstpbutils-0.10.la /home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/video/libgstvideo-0.10.la -pthread -L/home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/app -L/home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/audio -L/home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/interfaces -L/home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/cdda -L/home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/tag -L/home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/pbutils -L/home/slomo/projects/gstreamer/head/gst-plugins-base/pkgconfig/../gst-libs/gst/video -lgobject-2.0 -lgmodule-2.0 -lgthread-2.0 -lrt -lxml2 -lglib-2.0  
-+GTK_SHARP_CFLAGS = -I:/usr/local/lib/pkgconfig/../../share/gapi-2.0/pango-api.xml -I:/usr/local/lib/pkgconfig/../../share/gapi-2.0/atk-api.xml -I:/usr/local/lib/pkgconfig/../../share/gapi-2.0/gdk-api.xml -I:/usr/local/lib/pkgconfig/../../share/gapi-2.0/gtk-api.xml -I:/usr/local/lib/pkgconfig/../../share/gapi-2.0/glib-api.xml  
-+GTK_SHARP_LIBS = -r:/usr/local/lib/pkgconfig/../../lib/mono/gtk-sharp-2.0/pango-sharp.dll -r:/usr/local/lib/pkgconfig/../../lib/mono/gtk-sharp-2.0/atk-sharp.dll -r:/usr/local/lib/pkgconfig/../../lib/mono/gtk-sharp-2.0/gdk-sharp.dll -r:/usr/local/lib/pkgconfig/../../lib/mono/gtk-sharp-2.0/gtk-sharp.dll -r:/usr/local/lib/pkgconfig/../../lib/mono/gtk-sharp-2.0/glib-sharp.dll  
-+INSTALL = /usr/bin/install -c
-+INSTALL_DATA = ${INSTALL} -m 644
-+INSTALL_PROGRAM = ${INSTALL}
-+INSTALL_SCRIPT = ${INSTALL}
-+INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-+LD = /usr/bin/ld -m elf_x86_64
-+LDFLAGS = 
-+LIBOBJS = 
-+LIBS = 
-+LIBTOOL = $(SHELL) $(top_builddir)/libtool
-+LIB_PREFIX = .so
-+LIB_SUFFIX = 
-+LIPO = 
-+LN_S = ln -s
-+LTLIBOBJS = 
-+MAINT = 
-+MAKEINFO = ${SHELL} /home/slomo/projects/gstreamer/head/gstreamer-sharp/missing --run makeinfo
-+MDASSEMBLER = /usr/bin/mdassembler
-+MKDIR_P = /bin/mkdir -p
-+MONO = /usr/bin/mono
-+MONODOCER = /usr/bin/monodocer
-+MONODOCS2HTML = /usr/bin/monodocs2html
-+MONODOC_DEPENDENCY_CFLAGS =  
-+MONODOC_DEPENDENCY_LIBS = /r:/usr/lib/mono/monodoc/monodoc.dll  
-+MONODOC_REQUIRED_VERSION = 1.1
-+MONO_CAIRO_CFLAGS =  
-+MONO_CAIRO_LIBS = -r:/usr/lib/mono/2.0/Mono.Cairo.dll  
-+MONO_DEPENDENCY_CFLAGS = -D_REENTRANT -pthread -I/usr/include/mono-1.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  
-+MONO_DEPENDENCY_LIBS = -Wl,--export-dynamic -pthread -lmono -ldl -lpthread -lm -lgthread-2.0 -lrt -lglib-2.0  
-+MONO_NUNIT_CFLAGS =  
-+MONO_NUNIT_LIBS = -r:/usr/lib/cli/nunit-2.4/nunit.core.dll -r:/usr/lib/cli/nunit-2.4/nunit.util.dll -r:/usr/lib/cli/nunit-2.4/nunit.framework.dll -r:/usr/lib/cli/nunit-2.4/nunit.core.interfaces.dll  
-+MONO_REQUIRED_VERSION = 2.4
-+NM = /usr/bin/nm -B
-+NMEDIT = 
-+NUNIT_TESTER = /usr/bin/nunit-console
-+OBJDUMP = objdump
-+OBJEXT = o
-+OFF_T_FLAGS = -define:OFF_T_8
-+OTOOL = 
-+OTOOL64 = 
-+PACKAGE = gstreamer-sharp
-+PACKAGE_BUGREPORT = http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=gst-sharp
-+PACKAGE_NAME = gstreamer-sharp
-+PACKAGE_STRING = gstreamer-sharp 0.9.0
-+PACKAGE_TARNAME = gstreamer-sharp
-+PACKAGE_URL = 
-+PACKAGE_VERSION = gstreamer-sharp-0.10
-+PATH_SEPARATOR = :
-+PKG_CONFIG = /usr/bin/pkg-config
-+RANLIB = ranlib
-+RUNTIME = 
-+SED = /bin/sed
-+SET_MAKE = 
-+SHELL = /bin/sh
-+STRIP = strip
-+VERSION = 0.9.0
-+abs_builddir = /home/slomo/projects/gstreamer/head/gstreamer-sharp/generator
-+abs_srcdir = /home/slomo/projects/gstreamer/head/gstreamer-sharp/generator
-+abs_top_builddir = /home/slomo/projects/gstreamer/head/gstreamer-sharp
-+abs_top_srcdir = /home/slomo/projects/gstreamer/head/gstreamer-sharp
-+ac_ct_CC = gcc-4.4
-+ac_ct_DUMPBIN = 
-+am__include = include
-+am__leading_dot = .
-+am__quote = 
-+am__tar = ${AMTAR} chof - "$$tardir"
-+am__untar = ${AMTAR} xf -
-+bindir = ${exec_prefix}/bin
-+build = x86_64-unknown-linux-gnu
-+build_alias = 
-+build_cpu = x86_64
-+build_os = linux-gnu
-+build_vendor = unknown
-+builddir = .
-+datadir = ${datarootdir}
-+datarootdir = ${prefix}/share
-+docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
-+dvidir = ${docdir}
-+exec_prefix = ${prefix}
-+host = x86_64-unknown-linux-gnu
-+host_alias = 
-+host_cpu = x86_64
-+host_os = linux-gnu
-+host_vendor = unknown
-+htmldir = ${docdir}
-+includedir = ${prefix}/include
-+infodir = ${datarootdir}/info
-+install_sh = ${SHELL} /home/slomo/projects/gstreamer/head/gstreamer-sharp/install-sh
-+libdir = ${exec_prefix}/lib
-+libexecdir = ${exec_prefix}/libexec
-+localedir = ${datarootdir}/locale
-+localstatedir = ${prefix}/var
-+lt_ECHO = echo
-+mandir = ${datarootdir}/man
-+mkdir_p = /bin/mkdir -p
-+oldincludedir = /usr/include
-+pdfdir = ${docdir}
-+prefix = /usr/local
-+program_transform_name = s,x,x,
-+psdir = ${docdir}
-+sbindir = ${exec_prefix}/sbin
-+sharedstatedir = ${prefix}/com
-+srcdir = .
-+sysconfdir = ${prefix}/etc
-+target = x86_64-unknown-linux-gnu
-+target_alias = 
-+target_cpu = x86_64
-+target_os = linux-gnu
-+target_vendor = unknown
-+top_build_prefix = ../
-+top_builddir = ..
-+top_srcdir = ..
-+noinst_SCRIPTS = gst-gapi_codegen.exe
-+references = 
-+sources = \
-+	AliasGen.cs			\
-+	BoxedGen.cs			\
-+	ByRefGen.cs			\
-+	CallbackGen.cs			\
-+	ChildProperty.cs		\
-+	ClassBase.cs			\
-+	ClassField.cs			\
-+	ClassGen.cs			\
-+	CodeGenerator.cs		\
-+	ConstFilenameGen.cs		\
-+	ConstStringGen.cs		\
-+	Ctor.cs				\
-+	DefaultSignalHandler.cs		\
-+	EnumGen.cs			\
-+	FieldBase.cs			\
-+	GenBase.cs			\
-+	GenerationInfo.cs		\
-+	GObjectVM.cs			\
-+	HandleBase.cs			\
-+	IAccessor.cs			\
-+	IGeneratable.cs			\
-+	IManualMarshaler.cs		\
-+	InterfaceGen.cs			\
-+	InterfaceVM.cs			\
-+	LPGen.cs			\
-+	LPUGen.cs			\
-+	ManagedCallString.cs		\
-+	ManualGen.cs			\
-+	MarshalGen.cs			\
-+	MethodBase.cs			\
-+	MethodBody.cs			\
-+	Method.cs			\
-+	MiniObjectGen.cs		\
-+	ObjectField.cs			\
-+	ObjectBase.cs			\
-+	ObjectGen.cs			\
-+	OpaqueGen.cs			\
-+	Parameters.cs			\
-+	Parser.cs			\
-+	Property.cs			\
-+	PropertyBase.cs			\
-+	ReturnValue.cs			\
-+	Signal.cs			\
-+	Signature.cs			\
-+	SimpleBase.cs			\
-+	SimpleGen.cs			\
-+	Statistics.cs			\
-+	StructBase.cs			\
-+	StructField.cs			\
-+	StructGen.cs			\
-+	SymbolTable.cs			\
-+	VirtualMethod.cs		\
-+	VMSignature.cs
-+
-+build_sources = $(addprefix $(srcdir)/, $(sources))
-+dist_sources = $(sources)
-+EXTRA_DIST = \
-+	$(dist_sources)
-+
-+CLEANFILES = gst-gapi_codegen.exe gst-gapi_codegen.exe.mdb
-+all: all-am
-+
-+.SUFFIXES:
-+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
-+	@for dep in $?; do \
-+	  case '$(am__configure_deps)' in \
-+	    *$$dep*) \
-+	      ( cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh ) \
-+	        && { if test -f $@; then exit 0; else break; fi; }; \
-+	      exit 1;; \
-+	  esac; \
-+	done; \
-+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign generator/Makefile'; \
-+	$(am__cd) $(top_srcdir) && \
-+	  $(AUTOMAKE) --foreign generator/Makefile
-+.PRECIOUS: Makefile
-+Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
-+	@case '$?' in \
-+	  *config.status*) \
-+	    cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh;; \
-+	  *) \
-+	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
-+	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
-+	esac;
-+
-+$(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
-+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-+
-+$(top_srcdir)/configure:  $(am__configure_deps)
-+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-+$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
-+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-+$(am__aclocal_m4_deps):
-+
-+mostlyclean-libtool:
-+	-rm -f *.lo
-+
-+clean-libtool:
-+	-rm -rf .libs _libs
-+tags: TAGS
-+TAGS:
-+
-+ctags: CTAGS
-+CTAGS:
-+
-+
-+distdir: $(DISTFILES)
-+	@srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
-+	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
-+	list='$(DISTFILES)'; \
-+	  dist_files=`for file in $$list; do echo $$file; done | \
-+	  sed -e "s|^$$srcdirstrip/||;t" \
-+	      -e "s|^$$topsrcdirstrip/|$(top_builddir)/|;t"`; \
-+	case $$dist_files in \
-+	  */*) $(MKDIR_P) `echo "$$dist_files" | \
-+			   sed '/\//!d;s|^|$(distdir)/|;s,/[^/]*$$,,' | \
-+			   sort -u` ;; \
-+	esac; \
-+	for file in $$dist_files; do \
-+	  if test -f $$file || test -d $$file; then d=.; else d=$(srcdir); fi; \
-+	  if test -d $$d/$$file; then \
-+	    dir=`echo "/$$file" | sed -e 's,/[^/]*$$,,'`; \
-+	    if test -d "$(distdir)/$$file"; then \
-+	      find "$(distdir)/$$file" -type d ! -perm -700 -exec chmod u+rwx {} \;; \
-+	    fi; \
-+	    if test -d $(srcdir)/$$file && test $$d != $(srcdir); then \
-+	      cp -fpR $(srcdir)/$$file "$(distdir)$$dir" || exit 1; \
-+	      find "$(distdir)/$$file" -type d ! -perm -700 -exec chmod u+rwx {} \;; \
-+	    fi; \
-+	    cp -fpR $$d/$$file "$(distdir)$$dir" || exit 1; \
-+	  else \
-+	    test -f "$(distdir)/$$file" \
-+	    || cp -p $$d/$$file "$(distdir)/$$file" \
-+	    || exit 1; \
-+	  fi; \
-+	done
-+check-am: all-am
-+check: check-am
-+all-am: Makefile $(SCRIPTS)
-+installdirs:
-+install: install-am
-+install-exec: install-exec-am
-+install-data: install-data-am
-+uninstall: uninstall-am
-+
-+install-am: all-am
-+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
-+
-+installcheck: installcheck-am
-+install-strip:
-+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
-+	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
-+	  `test -z '$(STRIP)' || \
-+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
-+mostlyclean-generic:
-+
-+clean-generic:
-+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
-+
-+distclean-generic:
-+	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
-+	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-+
-+maintainer-clean-generic:
-+	@echo "This command is intended for maintainers to use"
-+	@echo "it deletes files that may require special tools to rebuild."
-+clean: clean-am
-+
-+clean-am: clean-generic clean-libtool mostlyclean-am
-+
-+distclean: distclean-am
-+	-rm -f Makefile
-+distclean-am: clean-am distclean-generic
-+
-+dvi: dvi-am
-+
-+dvi-am:
-+
-+html: html-am
-+
-+html-am:
-+
-+info: info-am
-+
-+info-am:
-+
-+install-data-am:
-+
-+install-dvi: install-dvi-am
-+
-+install-dvi-am:
-+
-+install-exec-am:
-+
-+install-html: install-html-am
-+
-+install-html-am:
-+
-+install-info: install-info-am
-+
-+install-info-am:
-+
-+install-man:
-+
-+install-pdf: install-pdf-am
-+
-+install-pdf-am:
-+
-+install-ps: install-ps-am
-+
-+install-ps-am:
-+
-+installcheck-am:
-+
-+maintainer-clean: maintainer-clean-am
-+	-rm -f Makefile
-+maintainer-clean-am: distclean-am maintainer-clean-generic
-+
-+mostlyclean: mostlyclean-am
-+
-+mostlyclean-am: mostlyclean-generic mostlyclean-libtool
-+
-+pdf: pdf-am
-+
-+pdf-am:
-+
-+ps: ps-am
-+
-+ps-am:
-+
-+uninstall-am:
-+
-+.MAKE: install-am install-strip
-+
-+.PHONY: all all-am check check-am clean clean-generic clean-libtool \
-+	distclean distclean-generic distclean-libtool distdir dvi \
-+	dvi-am html html-am info info-am install install-am \
-+	install-data install-data-am install-dvi install-dvi-am \
-+	install-exec install-exec-am install-html install-html-am \
-+	install-info install-info-am install-man install-pdf \
-+	install-pdf-am install-ps install-ps-am install-strip \
-+	installcheck installcheck-am installdirs maintainer-clean \
-+	maintainer-clean-generic mostlyclean mostlyclean-generic \
-+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am
-+
-+
-+gst-gapi_codegen.exe: $(build_sources)
-+	$(CSC) -debug -out:gst-gapi_codegen.exe $(OFF_T_FLAGS) $(references) $(build_sources)
-+
-+# Tell versions [3.59,3.63) of GNU make to not export all variables.
-+# Otherwise a system limit (for SysV at least) may be exceeded.
-+.NOEXPORT:
-diff -Naur generator-upstream/Makefile.am generator/Makefile.am
-diff -Naur generator-upstream/Makefile.in generator/Makefile.in
-diff -Naur generator-upstream/MethodBody.cs generator/MethodBody.cs
++						ret += indent + "my" + p.Name + ".Dispose();\n";
++					}
++				} else {
+ 					ret += indent + p.Name + " = " + igen.CallByName ("my" + p.Name) + ";\n";
++				}
+ 			}
+-
+ 			return ret;
+ 		}
+ 	}
 --- generator-upstream/MethodBody.cs	2009-01-07 18:10:08.000000000 +0100
-+++ generator/MethodBody.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/MethodBody.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -111,7 +111,7 @@
  						sw.WriteLine (indent + "\t\t\t\t{0} = null;", parameters [i + 2].Name);
  						sw.WriteLine (indent + "\t\t\t} else {");
@@ -950,9 +534,8 @@ diff -Naur generator-upstream/MethodBody.cs generator/MethodBody.cs
  		}
  		
  		public bool ThrowsException {
-diff -Naur generator-upstream/Method.cs generator/Method.cs
 --- generator-upstream/Method.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/Method.cs	2009-09-11 08:32:04.000000000 +0200
++++ generator/Method.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -118,7 +118,7 @@
  
  			if (Name == "ToString" && Parameters.Count == 0)
@@ -962,9 +545,8 @@ diff -Naur generator-upstream/Method.cs generator/Method.cs
  				sw.Write("new ");
  			else if (Modifiers == "new " || (dup != null && ((dup.Signature != null && Signature != null && dup.Signature.ToString() == Signature.ToString()) || (dup.Signature == null && Signature == null))))
  				sw.Write("new ");
-diff -Naur generator-upstream/MiniObjectGen.cs generator/MiniObjectGen.cs
 --- generator-upstream/MiniObjectGen.cs	1970-01-01 01:00:00.000000000 +0100
-+++ generator/MiniObjectGen.cs	2009-09-03 11:03:48.000000000 +0200
++++ generator/MiniObjectGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -0,0 +1,326 @@
 +// GtkSharp.Generation.MiniObjectGen.cs - The Mini Object Generatable.
 +//
@@ -1292,9 +874,8 @@ diff -Naur generator-upstream/MiniObjectGen.cs generator/MiniObjectGen.cs
 +	}
 +}
 +
-diff -Naur generator-upstream/ObjectBase.cs generator/ObjectBase.cs
 --- generator-upstream/ObjectBase.cs	2009-08-05 08:24:27.000000000 +0200
-+++ generator/ObjectBase.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/ObjectBase.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -164,7 +164,7 @@
  
  		public override string FromNative (string var, bool owned)
@@ -1304,9 +885,8 @@ diff -Naur generator-upstream/ObjectBase.cs generator/ObjectBase.cs
  		}
  
  		public string ClassStructName {
-diff -Naur generator-upstream/ObjectGen.cs generator/ObjectGen.cs
 --- generator-upstream/ObjectGen.cs	2009-08-19 18:13:17.000000000 +0200
-+++ generator/ObjectGen.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/ObjectGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -253,7 +253,7 @@
  				gen_info.Writer.WriteLine();
  				gen_info.Writer.WriteLine("\t\tprotected " + Name + "() : base(IntPtr.Zero)");
@@ -1356,9 +936,8 @@ diff -Naur generator-upstream/ObjectGen.cs generator/ObjectGen.cs
  			}
  					
  			sw.WriteLine ("\t\t}");
-diff -Naur generator-upstream/OpaqueGen.cs generator/OpaqueGen.cs
 --- generator-upstream/OpaqueGen.cs	2009-08-19 18:13:17.000000000 +0200
-+++ generator/OpaqueGen.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/OpaqueGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -32,7 +32,7 @@
  	
  		public override string FromNative(string var, bool owned)
@@ -1398,9 +977,8 @@ diff -Naur generator-upstream/OpaqueGen.cs generator/OpaqueGen.cs
  				sw.WriteLine ("\t\t\tresult.Owned = true;");
  				sw.WriteLine ("\t\t\treturn result;");
  				sw.WriteLine ("\t\t}");
-diff -Naur generator-upstream/Parameters.cs generator/Parameters.cs
 --- generator-upstream/Parameters.cs	2009-07-13 00:01:52.000000000 +0200
-+++ generator/Parameters.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/Parameters.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -263,9 +263,9 @@
  				} else if (gen is IManualMarshaler)
  					call_parm = "native_" + CallName;
@@ -1413,9 +991,8 @@ diff -Naur generator-upstream/Parameters.cs generator/Parameters.cs
  			
  				return call_parm;
  			}
-diff -Naur generator-upstream/Parser.cs generator/Parser.cs
 --- generator-upstream/Parser.cs	2009-04-13 19:44:48.000000000 +0200
-+++ generator/Parser.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/Parser.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -138,6 +138,9 @@
  				case "object":
  					result.Add (new ObjectGen (ns, elem));
@@ -1426,9 +1003,8 @@ diff -Naur generator-upstream/Parser.cs generator/Parser.cs
  				case "class":
  					result.Add (new ClassGen (ns, elem));
  					break;
-diff -Naur generator-upstream/Property.cs generator/Property.cs
 --- generator-upstream/Property.cs	2008-09-17 01:21:50.000000000 +0200
-+++ generator/Property.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/Property.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -64,7 +64,7 @@
  		}
  
@@ -1484,10 +1060,9 @@ diff -Naur generator-upstream/Property.cs generator/Property.cs
  					if (v_type != "" && !(table.IsObject (CType) || table.IsInterface (CType) || table.IsOpaque (CType))) {
  						sw.Write(v_type + " ");
  					}
-diff -Naur generator-upstream/ReturnValue.cs generator/ReturnValue.cs
---- generator-upstream/ReturnValue.cs	2009-08-13 16:46:33.000000000 +0200
-+++ generator/ReturnValue.cs	2009-09-11 08:32:06.000000000 +0200
-@@ -110,7 +110,9 @@
+--- generator-upstream/ReturnValue.cs	2009-09-23 23:27:15.000000000 +0200
++++ generator/ReturnValue.cs	2009-10-03 11:56:16.000000000 +0200
+@@ -114,7 +114,9 @@
  			get {
  				if (IGen == null)
  					return String.Empty;
@@ -1498,7 +1073,7 @@ diff -Naur generator-upstream/ReturnValue.cs generator/ReturnValue.cs
  			}
  		}
  
-@@ -121,14 +123,14 @@
+@@ -125,14 +127,14 @@
  
  			if (ElementType != String.Empty) {
  				string args = (owned ? "true" : "false") + ", " + (elements_owned ? "true" : "false");
@@ -1517,7 +1092,7 @@ diff -Naur generator-upstream/ReturnValue.cs generator/ReturnValue.cs
  			else
  				return IGen.FromNative (var);
  		}
-@@ -142,11 +144,11 @@
+@@ -146,11 +148,11 @@
  				string args = ", typeof (" + ElementType + "), " + (owned ? "true" : "false") + ", " + (elements_owned ? "true" : "false");
  				var = "new " + IGen.QualifiedName + "(" + var + args + ")";
  			} else if (is_null_term)
@@ -1531,9 +1106,8 @@ diff -Naur generator-upstream/ReturnValue.cs generator/ReturnValue.cs
  				return var + " == null ? IntPtr.Zero : " + var + ".OwnedHandle";
  			else if (IGen is OpaqueGen && owned)
  				return var + " == null ? IntPtr.Zero : " + var + ".OwnedCopy";
-diff -Naur generator-upstream/Signal.cs generator/Signal.cs
 --- generator-upstream/Signal.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/Signal.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/Signal.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -204,7 +204,7 @@
  			}
  			sw.WriteLine("\t\t\t} catch (Exception) {");
@@ -1592,9 +1166,8 @@ diff -Naur generator-upstream/Signal.cs generator/Signal.cs
  			sw.WriteLine("\t\t\t\tsig.RemoveDelegate (value);");
  			sw.WriteLine("\t\t\t}");
  			sw.WriteLine("\t\t}");
-diff -Naur generator-upstream/StructBase.cs generator/StructBase.cs
 --- generator-upstream/StructBase.cs	2009-08-19 18:13:17.000000000 +0200
-+++ generator/StructBase.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/StructBase.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -92,7 +92,7 @@
  		
  		public string AllocNative (string var)
@@ -1604,9 +1177,8 @@ diff -Naur generator-upstream/StructBase.cs generator/StructBase.cs
  		}
  
  		public string ReleaseNative (string var)
-diff -Naur generator-upstream/StructGen.cs generator/StructGen.cs
 --- generator-upstream/StructGen.cs	2005-08-05 22:34:45.000000000 +0200
-+++ generator/StructGen.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/StructGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -36,8 +36,8 @@
  			StreamWriter sw = gen_info.Writer = gen_info.OpenStream (Name);
  			base.Generate (gen_info);
@@ -1618,9 +1190,8 @@ diff -Naur generator-upstream/StructGen.cs generator/StructGen.cs
  				sw.WriteLine ("\t\t}");
  			}
  			sw.WriteLine ("#endregion");
-diff -Naur generator-upstream/SymbolTable.cs generator/SymbolTable.cs
 --- generator-upstream/SymbolTable.cs	2009-08-13 16:46:33.000000000 +0200
-+++ generator/SymbolTable.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/SymbolTable.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -108,23 +108,24 @@
  			AddType (new ConstStringGen ("const-xmlChar"));
  			AddType (new ConstStringGen ("const-char"));
@@ -1679,9 +1250,8 @@ diff -Naur generator-upstream/SymbolTable.cs generator/SymbolTable.cs
  				return true;
  
  			return false;
-diff -Naur generator-upstream/VirtualMethod.cs generator/VirtualMethod.cs
 --- generator-upstream/VirtualMethod.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/VirtualMethod.cs	2009-09-11 08:32:06.000000000 +0200
++++ generator/VirtualMethod.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -92,7 +92,7 @@
  				else
  					type = this.container_type.Name;
