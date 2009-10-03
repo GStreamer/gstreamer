@@ -448,7 +448,7 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:{
       gint64 pos = 0;
 
-      GST_DEBUG ("pos query for stream %d: frames %d, bytes %" G_GUINT64_FORMAT,
+      GST_DEBUG ("pos query for stream %u: frames %u, bytes %u",
           stream->num, stream->current_entry, stream->current_total);
 
       /* FIXME, this looks clumsy */
@@ -464,7 +464,7 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
           pos = gst_util_uint64_scale (stream->current_total, GST_SECOND,
               (guint64) stream->strf.auds->av_bps);
           GST_DEBUG_OBJECT (avi,
-              "CBR convert bytes %" G_GUINT64_FORMAT ", time %" GST_TIME_FORMAT,
+              "CBR convert bytes %u, time %" GST_TIME_FORMAT,
               stream->current_total, GST_TIME_ARGS (pos));
         } else if (stream->idx_n != 0 && stream->total_bytes != 0) {
           /* calculate timestamps based on percentage of length */
@@ -479,9 +479,9 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
           } else {
             pos = gst_util_uint64_scale (xlen, stream->current_total,
                 stream->total_bytes);
-            GST_DEBUG_OBJECT (avi, "CBR perc convert bytes %" G_GUINT64_FORMAT
-                ", time %" GST_TIME_FORMAT, stream->current_total,
-                GST_TIME_ARGS (pos));
+            GST_DEBUG_OBJECT (avi,
+                "CBR perc convert bytes %u, time %" GST_TIME_FORMAT,
+                stream->current_total, GST_TIME_ARGS (pos));
           }
         } else {
           /* we don't know */
@@ -2519,7 +2519,7 @@ gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
     /* now pick a good duration */
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
       /* index gave valid duration, use that */
-      GST_INFO ("Stream %d duration according to index: %" GST_TIME_FORMAT,
+      GST_INFO ("Stream %p duration according to index: %" GST_TIME_FORMAT,
           stream, GST_TIME_ARGS (duration));
     } else {
       /* fall back to header info to calculate a duration */
@@ -2542,7 +2542,7 @@ gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
           || stream->duration == 0) {
         stream->duration = total;
 
-        GST_INFO ("Stream %d duration according to total: %" GST_TIME_FORMAT,
+        GST_INFO ("Stream %p duration according to total: %" GST_TIME_FORMAT,
             stream, GST_TIME_ARGS (total));
       }
     }
@@ -3688,7 +3688,7 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
 
     /* skip empty entries */
     if (size == 0) {
-      GST_DEBUG_OBJECT (avi, "Skipping entry %u (%u, %p)",
+      GST_DEBUG_OBJECT (avi, "Skipping entry %u (%" G_GUINT64_FORMAT ", %p)",
           stream->current_entry, size, stream->pad);
       goto next;
     }
@@ -3701,7 +3701,7 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
       }
     }
 
-    GST_LOG ("reading buffer (size=%d), stream %d, pos %"
+    GST_LOG ("reading buffer (size=%" G_GUINT64_FORMAT "), stream %d, pos %"
         G_GUINT64_FORMAT " (%llx), kf %d", size, stream_num, offset,
         offset, keyframe);
 
@@ -3791,13 +3791,13 @@ eos_stop:
 pull_failed:
   {
     GST_DEBUG_OBJECT (avi, "pull range failed: pos=%" G_GUINT64_FORMAT
-        " size=%d", offset, size);
+        " size=%" G_GUINT64_FORMAT, offset, size);
     goto beach;
   }
 short_buffer:
   {
     GST_WARNING_OBJECT (avi, "Short read at offset %" G_GUINT64_FORMAT
-        ", only got %d/%d bytes (truncated file?)", offset,
+        ", only got %d/%" G_GUINT64_FORMAT " bytes (truncated file?)", offset,
         GST_BUFFER_SIZE (buf), size);
     gst_buffer_unref (buf);
     ret = GST_FLOW_UNEXPECTED;
