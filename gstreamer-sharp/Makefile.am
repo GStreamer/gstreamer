@@ -116,7 +116,8 @@ customs = 			\
 	ControlSource.custom	\
 	VideoUtil.custom	\
 	BitReader.custom        \
-	ByteReader.custom
+	ByteReader.custom       \
+	MissingPluginMessage.cs
 
 plugin_csfiles = $(builddir)/coreplugins/generated/*.cs \
 	$(builddir)/baseplugins/generated/*.cs
