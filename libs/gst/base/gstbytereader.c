@@ -28,8 +28,6 @@
 
 #include <string.h>
 
-/* FIXME 0.11: inline everything and get rid of non-inlined functions */
-
 /**
  * SECTION:gstbytereader
  * @short_description: Reads different integer, string and floating point

@@ -26,8 +26,6 @@
 
 #include <string.h>
 
-/* FIXME 0.11: inline everything and get rid of non-inlined functions */
-
 /**
  * SECTION:gstbitreader
  * @short_description: Reads any number of bits from a memory buffer
