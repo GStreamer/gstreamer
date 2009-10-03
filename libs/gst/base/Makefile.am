@@ -9,6 +9,7 @@ libgstbase_@GST_MAJORMINOR@_la_SOURCES = \
 	gstbasetransform.c	\
 	gstbitreader.c		\
 	gstbytereader.c		\
+	gstbytewriter.c         \
 	gstcollectpads.c	\
 	gstpushsrc.c		\
 	gsttypefindhelper.c	\
@@ -28,6 +29,7 @@ libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
 	gstbasetransform.h	\
 	gstbitreader.h		\
 	gstbytereader.h		\
+	gstbytewriter.h         \
 	gstcollectpads.h	\
 	gstpushsrc.h		\
 	gsttypefindhelper.h	\
