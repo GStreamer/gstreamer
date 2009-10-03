@@ -68,5 +68,10 @@
         <dir>../../gst-plugins-base/gst-libs/gst/video</dir>
       </namespace>
     </library>
+    <library name="libgstpbutils-0.10.dll">
+      <namespace name="Gst.PbUtils">
+        <dir>../../gst-plugins-base/gst-libs/gst/pbutils</dir>
+      </namespace>
+    </library>
   </api>
 </gapi-parser-input>

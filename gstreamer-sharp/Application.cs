@@ -41,6 +41,7 @@ namespace Gst {
 
       gst_init (ref argc, ref argv);
       gst_controller_init (ref argc, ref argv);
+      gst_pb_utils_init ();
       RegisterManagedTypes ();
     }
 
@@ -148,6 +149,7 @@ namespace Gst {
       }
 
       gst_controller_init (ref argc, ref argv_ptr);
+      gst_pb_utils_init ();
 
       if (argc <= 1) {
         args = new string[0];
@@ -167,6 +169,9 @@ namespace Gst {
 
     [DllImport ("libgstcontroller-0.10.dll") ]
     private static extern void gst_controller_init (ref int argc, ref IntPtr argv);
+
+    [DllImport ("libgstpbutils-0.10.dll") ]
+    private static extern void gst_pb_utils_init ();
 
     [DllImport ("libgstreamer-0.10.dll") ]
     private static extern void gst_deinit();

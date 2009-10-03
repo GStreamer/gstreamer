@@ -9882,4 +9882,170 @@
       </method>
     </class>
   </namespace>
+  <namespace name="Gst.PbUtils" library="libgstpbutils-0.10.dll">
+    <enum name="InstallPluginsReturn" cname="GstInstallPluginsReturn" gtype="gst_install_plugins_return_get_type" type="enum">
+      <member cname="GST_INSTALL_PLUGINS_SUCCESS" name="Success" />
+      <member cname="GST_INSTALL_PLUGINS_NOT_FOUND" name="NotFound" value="1" />
+      <member cname="GST_INSTALL_PLUGINS_ERROR" name="Error" value="2" />
+      <member cname="GST_INSTALL_PLUGINS_PARTIAL_SUCCESS" name="PartialSuccess" value="3" />
+      <member cname="GST_INSTALL_PLUGINS_USER_ABORT" name="UserAbort" value="4" />
+      <member cname="GST_INSTALL_PLUGINS_CRASHED" name="Crashed" value="100" />
+      <member cname="GST_INSTALL_PLUGINS_INVALID" name="Invalid" />
+      <member cname="GST_INSTALL_PLUGINS_STARTED_OK" name="StartedOk" value="200" />
+      <member cname="GST_INSTALL_PLUGINS_INTERNAL_FAILURE" name="InternalFailure" />
+      <member cname="GST_INSTALL_PLUGINS_HELPER_MISSING" name="HelperMissing" />
+      <member cname="GST_INSTALL_PLUGINS_INSTALL_IN_PROGRESS" name="InstallInProgress" />
+    </enum>
+    <callback name="InstallPluginsResultFunc" cname="GstInstallPluginsResultFunc">
+      <return-type type="void" />
+      <parameters>
+        <parameter type="GstInstallPluginsReturn" name="result" />
+        <parameter type="gpointer" name="user_data" />
+      </parameters>
+    </callback>
+    <boxed name="InstallPluginsContext" cname="GstInstallPluginsContext" opaque="true">
+      <method name="Free" cname="gst_install_plugins_context_free">
+        <return-type type="void" />
+      </method>
+      <method name="GetType" cname="gst_install_plugins_context_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <constructor cname="gst_install_plugins_context_new" />
+      <method name="SetXid" cname="gst_install_plugins_context_set_xid">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint" name="xid" />
+        </parameters>
+      </method>
+    </boxed>
+    <class name="Global" cname="Gst.PbUtilsGlobal">
+      <method name="AddCodecDescriptionToTagList" cname="gst_pb_utils_add_codec_description_to_tag_list" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstTagList*" name="taglist" />
+          <parameter type="const-gchar*" name="codec_tag" />
+          <parameter type="const-GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="GetCodecDescription" cname="gst_pb_utils_get_codec_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="GetDecoderDescription" cname="gst_pb_utils_get_decoder_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="GetElementDescription" cname="gst_pb_utils_get_element_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="factory_name" />
+        </parameters>
+      </method>
+      <method name="GetEncoderDescription" cname="gst_pb_utils_get_encoder_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="GetSinkDescription" cname="gst_pb_utils_get_sink_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="protocol" />
+        </parameters>
+      </method>
+      <method name="GetSourceDescription" cname="gst_pb_utils_get_source_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="protocol" />
+        </parameters>
+      </method>
+    </class>
+  </namespace>
+  <namespace name="Gst.PbUtils" library="libgstpbutils-0.10.dll">
+    <enum name="InstallPluginsReturn" cname="GstInstallPluginsReturn" gtype="gst_install_plugins_return_get_type" type="enum">
+      <member cname="GST_INSTALL_PLUGINS_SUCCESS" name="Success" />
+      <member cname="GST_INSTALL_PLUGINS_NOT_FOUND" name="NotFound" value="1" />
+      <member cname="GST_INSTALL_PLUGINS_ERROR" name="Error" value="2" />
+      <member cname="GST_INSTALL_PLUGINS_PARTIAL_SUCCESS" name="PartialSuccess" value="3" />
+      <member cname="GST_INSTALL_PLUGINS_USER_ABORT" name="UserAbort" value="4" />
+      <member cname="GST_INSTALL_PLUGINS_CRASHED" name="Crashed" value="100" />
+      <member cname="GST_INSTALL_PLUGINS_INVALID" name="Invalid" />
+      <member cname="GST_INSTALL_PLUGINS_STARTED_OK" name="StartedOk" value="200" />
+      <member cname="GST_INSTALL_PLUGINS_INTERNAL_FAILURE" name="InternalFailure" />
+      <member cname="GST_INSTALL_PLUGINS_HELPER_MISSING" name="HelperMissing" />
+      <member cname="GST_INSTALL_PLUGINS_INSTALL_IN_PROGRESS" name="InstallInProgress" />
+    </enum>
+    <callback name="InstallPluginsResultFunc" cname="GstInstallPluginsResultFunc">
+      <return-type type="void" />
+      <parameters>
+        <parameter type="GstInstallPluginsReturn" name="result" />
+        <parameter type="gpointer" name="user_data" />
+      </parameters>
+    </callback>
+    <boxed name="InstallPluginsContext" cname="GstInstallPluginsContext" opaque="true">
+      <method name="Free" cname="gst_install_plugins_context_free">
+        <return-type type="void" />
+      </method>
+      <method name="GetType" cname="gst_install_plugins_context_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <constructor cname="gst_install_plugins_context_new" />
+      <method name="SetXid" cname="gst_install_plugins_context_set_xid">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint" name="xid" />
+        </parameters>
+      </method>
+    </boxed>
+    <class name="Global" cname="Gst.PbUtilsGlobal">
+      <method name="AddCodecDescriptionToTagList" cname="gst_pb_utils_add_codec_description_to_tag_list" shared="true">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="GstTagList*" name="taglist" />
+          <parameter type="const-gchar*" name="codec_tag" />
+          <parameter type="const-GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="GetCodecDescription" cname="gst_pb_utils_get_codec_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="GetDecoderDescription" cname="gst_pb_utils_get_decoder_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="GetElementDescription" cname="gst_pb_utils_get_element_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="factory_name" />
+        </parameters>
+      </method>
+      <method name="GetEncoderDescription" cname="gst_pb_utils_get_encoder_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="caps" />
+        </parameters>
+      </method>
+      <method name="GetSinkDescription" cname="gst_pb_utils_get_sink_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="protocol" />
+        </parameters>
+      </method>
+      <method name="GetSourceDescription" cname="gst_pb_utils_get_source_description" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="const-gchar*" name="protocol" />
+        </parameters>
+      </method>
+    </class>
+  </namespace>
 </api>
