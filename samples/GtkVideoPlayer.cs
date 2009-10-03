@@ -15,7 +15,7 @@ public class MainWindow : Gtk.Window {
   HScale _scale;
   Label _lbl;
   bool _updatingScale;
-  bool _pipelineOK;
+  bool _pipelineOK = false;
 
   public static void Main (string[] args) {
     Gtk.Application.Init ();
@@ -128,8 +128,15 @@ public class MainWindow : Gtk.Window {
             !msg.Structure.Name.Equals ("prepare-xwindow-id"))
           return;
 
-        (msg.Src as XOverlay).XwindowId = _xWindowId;
-        (msg.Src as XOverlay).HandleEvents (true);
+        Element src = msg.Src as Element;
+        if (src == null)
+          return;
+
+        if (src.HasProperty ("force-aspect-ratio"))
+          src["force-aspect-ratio"] = true;
+
+        (src as XOverlay).XwindowId = _xWindowId;
+        (src as XOverlay).HandleEvents (true);
       };
 
       _playbin.Bus.Message += delegate (object bus, MessageArgs margs) {
@@ -159,10 +166,12 @@ public class MainWindow : Gtk.Window {
         sret = _playbin.GetState (out state, out pending, Clock.Second * 5);
       }
 
-      if (sret == StateChangeReturn.Success)
+      if (sret == StateChangeReturn.Success) {
+        Console.WriteLine ("State change successful");
         _pipelineOK = true;
-      else
+      } else {
         Console.WriteLine ("State change failed for {0} ({1})\n", dialog.Filename, sret);
+      }
     }
 
     dialog.Destroy ();
@@ -184,12 +193,15 @@ public class MainWindow : Gtk.Window {
 
     long duration;
     Gst.Format fmt = Gst.Format.Time;
+    Console.WriteLine ("Trying to seek");
 
     if ( (_playbin != null) && _pipelineOK && _playbin.QueryDuration (ref fmt, out duration) && duration != -1) {
       long pos = (long) (duration * _scale.Value);
       Console.WriteLine ("Seek to {0}/{1} ({2}%)", pos, duration, _scale.Value);
 
-      _playbin.Seek (Format.Time, SeekFlags.Flush | SeekFlags.KeyUnit, pos);
+      bool ret = _playbin.Seek (Format.Time, SeekFlags.Flush | SeekFlags.KeyUnit, pos);
+
+      Console.WriteLine ("Seeked {0}successfully", (ret ? "" : "not "));
     }
   }
 
