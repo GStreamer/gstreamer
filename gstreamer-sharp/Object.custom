@@ -31,6 +31,16 @@ public PropertyInfo GetPropertyInfo (string property) {
   return new PropertyInfo (pspec);
 }
 
+public bool HasProperty (string property) {
+  IntPtr klass = Marshal.ReadIntPtr (Handle);
+
+  IntPtr native_property = Gst.GLib.Marshaller.StringToPtrGStrdup (property);
+  IntPtr pspec = g_object_class_find_property (klass, native_property);
+  Gst.GLib.Marshaller.Free (native_property);
+
+  return pspec != IntPtr.Zero;
+}
+
 public PropertyInfo[] Properties {
   get {
     uint n_properties;
