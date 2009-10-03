@@ -115,6 +115,7 @@ customs = 			\
 	Controller.custom	\
 	ControlSource.custom	\
 	VideoUtil.custom	\
+	BitReader.custom        \
 	ByteReader.custom
 
 plugin_csfiles = $(builddir)/coreplugins/generated/*.cs \

@@ -1068,6 +1068,7 @@
   <attr path="/api/namespace/struct[@cname='GstBitReader']/method[@cname='gst_bit_reader_init']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstBitReader']/method[@cname='gst_bit_reader_init_from_buffer']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstBitReader']/constructor[@cname='gst_bit_reader_new']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstBitReader']/constructor[@cname='gst_bit_reader_new_from_buffer']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstBitReader']/method[@cname='gst_bit_reader_get_bits_uint8']" name="name">Get</attr>
   <attr path="/api/namespace/struct[@cname='GstBitReader']/method[@cname='gst_bit_reader_get_bits_uint16']" name="name">Get</attr>
   <attr path="/api/namespace/struct[@cname='GstBitReader']/method[@cname='gst_bit_reader_get_bits_uint32']" name="name">Get</attr>
@@ -1080,6 +1081,7 @@
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_init']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_init_from_buffer']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/constructor[@cname='gst_byte_reader_new']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/constructor[@cname='gst_byte_reader_new_from_buffer']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint8']" name="name">PeekUInt8</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint16_le']" name="name">PeekUInt16Le</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint16_be']" name="name">PeekUInt16Be</attr>
