@@ -27,6 +27,8 @@
 
 G_BEGIN_DECLS
 
+#define GST_BIT_READER(reader) ((GstBitReader *) (reader))
+
 /**
  * GstBitReader:
  * @data: Data from which the bit reader will read
@@ -55,6 +57,8 @@ gboolean gst_bit_reader_set_pos (GstBitReader *reader, guint pos);
 
 guint gst_bit_reader_get_pos (const GstBitReader *reader);
 guint gst_bit_reader_get_remaining (const GstBitReader *reader);
+
+guint gst_bit_reader_get_size (const GstBitReader *reader);
 
 gboolean gst_bit_reader_skip (GstBitReader *reader, guint nbits);
 gboolean gst_bit_reader_skip_to_byte (GstBitReader *reader);

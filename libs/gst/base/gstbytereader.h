@@ -26,6 +26,8 @@
 
 G_BEGIN_DECLS
 
+#define GST_BYTE_READER(reader) ((GstByteReader *) (reader))
+
 /**
  * GstByteReader:
  * @data: Data from which the bit reader will read
@@ -52,6 +54,8 @@ gboolean gst_byte_reader_set_pos (GstByteReader *reader, guint pos);
 
 guint gst_byte_reader_get_pos (const GstByteReader *reader);
 guint gst_byte_reader_get_remaining (const GstByteReader *reader);
+
+guint gst_byte_reader_get_size (const GstByteReader *reader);
 
 gboolean gst_byte_reader_skip (GstByteReader *reader, guint nbytes);
 
@@ -254,6 +258,12 @@ _gst_byte_reader_get_remaining_inline (const GstByteReader * reader)
   return reader->size - reader->byte;
 }
 
+static inline guint
+_gst_byte_reader_get_size_inline (const GstByteReader * reader)
+{
+  return reader->size;
+}
+
 #define __GST_BYTE_READER_GET_PEEK_BITS_INLINE(bits,type,name) \
 \
 static inline gboolean \
@@ -310,6 +320,9 @@ __GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,gdouble,float64_be)
 
 #define gst_byte_reader_get_remaining(reader) \
     _gst_byte_reader_get_remaining_inline(reader)
+
+#define gst_byte_reader_get_size(reader) \
+    _gst_byte_reader_get_size_inline(reader)
 
 /* we use defines here so we can add the G_LIKELY() */
 #define gst_byte_reader_get_uint8(reader,val) \

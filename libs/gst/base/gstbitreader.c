@@ -198,6 +198,24 @@ gst_bit_reader_get_remaining (const GstBitReader * reader)
 }
 
 /**
+ * gst_bit_reader_get_size:
+ * @reader: a #GstBitReader instance
+ *
+ * Returns the total number of bits of a #GstBitReader instance.
+ *
+ * Returns: The total number of bits of @reader instance.
+ * 
+ * Since: 0.10.25
+ */
+guint
+gst_bit_reader_get_size (const GstBitReader * reader)
+{
+  g_return_val_if_fail (reader != NULL, 0);
+
+  return reader->size * 8;
+}
+
+/**
  * gst_bit_reader_skip:
  * @reader: a #GstBitReader instance
  * @nbits: the number of bits to skip
