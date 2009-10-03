@@ -165,9 +165,15 @@ gst_signal_processor_pad_get_type (void)
   return type;
 }
 
+static void
+_do_init (GType object_type)
+{
+  GST_DEBUG_CATEGORY_INIT (gst_signal_processor_debug, "gst-dsp", 0,
+      "signalprocessor element");
+}
 
-GST_BOILERPLATE (GstSignalProcessor, gst_signal_processor, GstElement,
-    GST_TYPE_ELEMENT);
+GST_BOILERPLATE_FULL (GstSignalProcessor, gst_signal_processor, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
 
 
 static void gst_signal_processor_finalize (GObject * object);
@@ -189,8 +195,7 @@ static gboolean gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps);
 static void
 gst_signal_processor_base_init (gpointer g_class)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_signal_processor_debug, "gst-dsp", 0,
-      "signalprocessor element");
+  /* NOP */
 }
 
 static void
