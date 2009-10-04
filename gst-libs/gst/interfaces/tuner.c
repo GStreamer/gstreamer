@@ -221,7 +221,8 @@ gst_tuner_list_channels (GstTuner * tuner)
  * @tuner: the #GstTuner (a #GstElement) that owns the channel.
  * @channel: the channel to tune to.
  *
- * Tunes the object to the given channel.
+ * Tunes the object to the given channel, which should be one of the
+ * channels returned by gst_tuner_list_channels().
  */
 
 void
@@ -293,7 +294,8 @@ gst_tuner_list_norms (GstTuner * tuner)
  * @tuner: the #GstTuner (a #GstElement) to set the norm on.
  * @norm: the norm to use for the current channel.
  *
- * Changes the video norm on this tuner to the given norm.
+ * Changes the video norm on this tuner to the given norm, which should be
+ * one of the norms returned by gst_tuner_list_norms().
  */
 
 void
