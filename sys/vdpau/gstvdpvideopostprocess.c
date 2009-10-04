@@ -44,10 +44,9 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstvideosink.h>
+#include <gst/vdpau/gstvdpoutputbuffer.h>
 
 #include "gstvdputils.h"
-#include "gstvdpvideobuffer.h"
-#include "gstvdpoutputbuffer.h"
 
 #include "gstvdpvideopostprocess.h"
 

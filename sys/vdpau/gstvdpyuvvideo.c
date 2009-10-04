@@ -24,8 +24,8 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/vdpau/gstvdpvideobuffer.h>
 
-#include "gstvdpvideobuffer.h"
 #include "gstvdputils.h"
 #include "gstvdpyuvvideo.h"
 

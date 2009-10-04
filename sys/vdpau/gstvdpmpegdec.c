@@ -38,6 +38,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
+#include <gst/vdpau/gstvdpvideobuffer.h>
 #include <string.h>
 
 #include "mpegutil.h"

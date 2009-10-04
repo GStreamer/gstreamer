@@ -23,8 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
-
-#include "gstvdpdevice.h"
+#include <gst/vdpau/gstvdpdevice.h>
 
 G_BEGIN_DECLS
 
