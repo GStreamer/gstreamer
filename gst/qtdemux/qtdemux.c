@@ -3629,7 +3629,8 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
       goto no_samples;
 
     GST_DEBUG_OBJECT (qtdemux, "stsz sample_size 0, allocating n_samples %u "
-        "(%u MB)", n_samples, (n_samples * sizeof (QtDemuxSample)) >> 20);
+        "(%u MB)", n_samples,
+        (guint) (n_samples * sizeof (QtDemuxSample)) >> 20);
 
     if (n_samples >= QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
       goto index_too_big;
@@ -3859,7 +3860,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
       goto no_samples;
 
     GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u (%u MB)", n_samples,
-        (n_samples * sizeof (QtDemuxSample)) >> 20);
+        (guint) (n_samples * sizeof (QtDemuxSample)) >> 20);
 
     if (n_samples >= QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
       goto index_too_big;
