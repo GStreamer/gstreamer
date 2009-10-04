@@ -222,12 +222,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 {
   g_return_val_if_fail (reader != NULL, FALSE);
 
-  if (gst_byte_reader_get_remaining (reader) < nbytes)
-    return FALSE;
-
-  reader->byte += nbytes;
-
-  return TRUE;
+  return _gst_byte_reader_skip_inline (reader, nbytes);
 }
 
 /**

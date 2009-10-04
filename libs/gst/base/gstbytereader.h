@@ -435,6 +435,16 @@ _gst_byte_reader_peek_data_inline (GstByteReader * reader, guint size, const gui
   return TRUE;
 }
 
+static inline gboolean
+_gst_byte_reader_skip_inline (GstByteReader * reader, guint nbytes)
+{
+  if (G_UNLIKELY (_gst_byte_reader_get_remaining_inline (reader) < nbytes))
+    return FALSE;
+
+  reader->byte += nbytes;
+  return TRUE;
+}
+
 #ifndef GST_BYTE_READER_DISABLE_INLINES
 
 #define gst_byte_reader_dup_data(reader,size,val) \
@@ -443,6 +453,8 @@ _gst_byte_reader_peek_data_inline (GstByteReader * reader, guint size, const gui
     G_LIKELY(_gst_byte_reader_get_data_inline(reader,size,val))
 #define gst_byte_reader_peek_data(reader,size,val) \
     G_LIKELY(_gst_byte_reader_peek_data_inline(reader,size,val))
+#define gst_byte_reader_skip(reader,nbytes) \
+    G_LIKELY(_gst_byte_reader_skip_inline(reader,nbytes))
 
 #endif /* GST_BYTE_READER_DISABLE_INLINES */
 
