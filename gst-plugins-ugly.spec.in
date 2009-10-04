@@ -112,6 +112,11 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_datadir}/gtk-doc/html/gst-plugins-ugly-plugins-%{majorminor}/*
 @USE_X264_TRUE@%{_datadir}/gstreamer-%{majorminor}/presets/GstX264Enc.prs
 @USE_X264_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstx264.so
+@USE_AMRNB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstamrnb.so
+@USE_AMRWB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstamrwbdec.so
+@USE_AMRNB_TRUE@%{_datadir}/gstreamer-%{majorminor}/presets/GstAmrnbEnc.prs
+@USE_CDIO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdio.so
+
 
 %changelog
 * Fri Jun 5 2009 Jan Schmidt <thaytan at mad dot scientist dot com>
