@@ -27,6 +27,8 @@
 #ifndef G_OS_WIN32
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #endif
 #include <errno.h>
@@ -42,9 +44,10 @@
 #include <gst/gstregistrybinary.h>
 
 /* IMPORTANT: Bump the version number if the plugin loader packet protocol
- * changes. Changes in the binary registry format are handled by bumps
- * in the GST_MAGIC_BINARY_VERSION_STR as before */
-static const guint32 loader_protocol_version = 2;
+ * changes. Changes in the binary registry format itself are handled by
+ * bumping the GST_MAGIC_BINARY_VERSION_STR
+ */
+static const guint32 loader_protocol_version = 3;
 
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
 
@@ -105,7 +108,11 @@ struct _GstPluginLoader
 
 #define BUF_INIT_SIZE 512
 #define BUF_GROW_EXTRA 512
-#define HEADER_SIZE 8
+#define BUF_MAX_SIZE (32 * 1024 * 1024)
+
+#define HEADER_SIZE 12
+/* 4 magic hex bytes to mark each packet */
+#define HEADER_MAGIC 0xbefec0ae
 #define ALIGNMENT   (sizeof (void *))
 
 static gboolean gst_plugin_loader_spawn (GstPluginLoader * loader);
@@ -457,10 +464,16 @@ put_packet (GstPluginLoader * l, guint type, guint32 tag,
 
   out = l->tx_buf + l->tx_buf_write;
 
+  /* one byte packet type */
   out[0] = type;
+  /* 3 byte packet tag number */
   GST_WRITE_UINT24_BE (out + 1, tag);
+  /* 4 bytes packet length */
   GST_WRITE_UINT32_BE (out + 4, payload_len);
+  /* payload */
   memcpy (out + HEADER_SIZE, payload, payload_len);
+  /* Write magic into the header */
+  GST_WRITE_UINT32_BE (out + 8, HEADER_MAGIC);
 
   l->tx_buf_write += len;
   gst_poll_fd_ctl_write (l->fdset, &l->fd_w, TRUE);
@@ -497,14 +510,27 @@ static gboolean
 write_one (GstPluginLoader * l)
 {
   guint8 *out;
-  guint32 to_write;
+  guint32 to_write, magic;
   int res;
 
   if (l->tx_buf_read + HEADER_SIZE > l->tx_buf_write)
     return FALSE;
 
   out = l->tx_buf + l->tx_buf_read;
+
+  magic = GST_READ_UINT32_BE (out + 8);
+  if (magic != HEADER_MAGIC) {
+    GST_ERROR ("Packet magic number is missing. Memory corruption detected");
+    goto fail_and_cleanup;
+  }
+
   to_write = GST_READ_UINT32_BE (out + 4) + HEADER_SIZE;
+  /* Check that the magic is intact, and the size is sensible */
+  if (to_write > l->tx_buf_size) {
+    GST_ERROR ("Indicated packet size is too large. Corruption detected");
+    goto fail_and_cleanup;
+  }
+
   l->tx_buf_read += to_write;
 
   GST_LOG ("Writing packet of size %d bytes to fd %d", to_write, l->fd_w.fd);
@@ -518,15 +544,19 @@ write_one (GstPluginLoader * l)
   } while (to_write > 0 && res < 0 && (errno == EAGAIN || errno == EINTR));
   if (res < 0) {
     /* Failed to write -> child died */
-    plugin_loader_cleanup_child (l);
-    return FALSE;
+    goto fail_and_cleanup;
   }
 
   if (l->tx_buf_read == l->tx_buf_write) {
     gst_poll_fd_ctl_write (l->fdset, &l->fd_w, FALSE);
     l->tx_buf_read = l->tx_buf_write = 0;
   }
+
   return TRUE;
+
+fail_and_cleanup:
+  plugin_loader_cleanup_child (l);
+  return FALSE;
 }
 
 static gboolean
@@ -537,7 +567,7 @@ do_plugin_load (GstPluginLoader * l, const gchar * filename, guint tag)
 
   GST_DEBUG ("Plugin scanner loading file %s. tag %u\n", filename, tag);
 
-#if 0                           /* Test code - crash based on an env var */
+#if 0                           /* Test code - crash based on filename */
   if (strstr (filename, "coreelements") == NULL) {
     g_printerr ("Crashing on file %s\n", filename);
     g_printerr ("%d", *(gint *) (NULL));
@@ -577,6 +607,15 @@ do_plugin_load (GstPluginLoader * l, const gchar * filename, guint tag)
       /* Store the size of the written payload */
       GST_WRITE_UINT32_BE (l->tx_buf + hdr_pos + 4, offset - HEADER_SIZE);
     }
+#if 0                           /* Test code - corrupt the tx buffer based on filename */
+    if (strstr (filename, "sink") != NULL) {
+      int fd, res;
+      g_printerr ("Corrupting tx buf on file %s\n", filename);
+      fd = open ("/dev/urandom", O_RDONLY);
+      res = read (fd, l->tx_buf, l->tx_buf_size);
+      close (fd);
+    }
+#endif
 
     gst_object_unref (newplugin);
   } else {
@@ -744,6 +783,7 @@ handle_rx_packet (GstPluginLoader * l,
 static gboolean
 read_one (GstPluginLoader * l)
 {
+  guint64 magic;
   guint32 to_read, packet_len, tag;
   guint8 *in;
   gint res;
@@ -763,7 +803,19 @@ read_one (GstPluginLoader * l)
     return FALSE;
   }
 
+  magic = GST_READ_UINT32_BE (l->rx_buf + 8);
+  if (magic != HEADER_MAGIC) {
+    GST_WARNING
+        ("Invalid packet (bad magic number) received from plugin scanner subprocess");
+    return FALSE;
+  }
+
   packet_len = GST_READ_UINT32_BE (l->rx_buf + 4);
+  if (packet_len + HEADER_SIZE > BUF_MAX_SIZE) {
+    GST_WARNING
+        ("Received excessively large packet for plugin scanner subprocess");
+    return FALSE;
+  }
 
   if (packet_len + HEADER_SIZE >= l->rx_buf_size) {
     l->rx_buf_size = packet_len + HEADER_SIZE + BUF_GROW_EXTRA;
