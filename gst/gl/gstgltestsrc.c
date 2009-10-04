@@ -76,6 +76,8 @@ static void gst_gl_test_src_set_property (GObject * object, guint prop_id,
 static void gst_gl_test_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_gl_test_src_src_query (GstPad * pad, GstQuery * query);
+
 static gboolean gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 static void gst_gl_test_src_src_fixate (GstPad * pad, GstCaps * caps);
 
@@ -190,6 +192,9 @@ gst_gl_test_src_init (GstGLTestSrc * src, GstGLTestSrcClass * g_class)
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
+  
+  gst_pad_set_query_function (pad,
+      GST_DEBUG_FUNCPTR (gst_gl_test_src_src_query));
 }
 
 static void
@@ -302,6 +307,27 @@ gst_gl_test_src_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
+gst_gl_test_src_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+  GstElement *parent = GST_ELEMENT (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CUSTOM:
+    {
+      GstStructure *structure = gst_query_get_structure (query);
+      res = g_strcmp0 (gst_element_get_name (parent), gst_structure_get_name (structure)) == 0;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  return res;
+}
+
+static gboolean
 gst_gl_test_src_parse_caps (const GstCaps * caps,
     gint * width, gint * height, gint * rate_numerator, gint * rate_denominator)
 {
@@ -360,8 +386,6 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     GST_DEBUG_OBJECT (gltestsrc, "size %dx%d, %d/%d fps",
         gltestsrc->width, gltestsrc->height,
         gltestsrc->rate_numerator, gltestsrc->rate_denominator);
-
-    gltestsrc->display = gst_gl_display_new ();
 
     gst_gl_display_create_context (gltestsrc->display,
         gltestsrc->width, gltestsrc->height, 0);
@@ -596,12 +620,30 @@ static gboolean
 gst_gl_test_src_start (GstBaseSrc * basesrc)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
+  GstElement *parent = GST_ELEMENT (gst_element_get_parent (src));
+  GstStructure *structure = gst_structure_new (gst_element_get_name (src), NULL);
+  GstQuery *query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
+
+  gboolean isPerformed = gst_element_query (parent, query);
+
+  if (isPerformed) {
+    const GValue *id_value = gst_structure_get_value (structure, "gstgldisplay");
+    if (G_VALUE_HOLDS_POINTER (id_value))
+      /* at least one gl element is before in our gl chain */
+      src->display = g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+    else
+      /* this gl filter is a sink in terms of the gl chain */
+      src->display = gst_gl_display_new ();
+  }
+
+  gst_query_unref (query);
+  gst_object_unref (GST_OBJECT (parent));
 
   src->running_time = 0;
   src->n_frames = 0;
   src->negotiated = FALSE;
 
-  return TRUE;
+  return isPerformed;
 }
 
 static gboolean

@@ -135,6 +135,8 @@ static void gst_gl_download_set_property (GObject * object, guint prop_id,
 static void gst_gl_download_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_gl_download_src_query (GstPad *pad, GstQuery * query);
+
 static void gst_gl_download_reset (GstGLDownload * download);
 static gboolean gst_gl_download_set_caps (GstBaseTransform * bt,
     GstCaps * incaps, GstCaps * outcaps);
@@ -185,6 +187,11 @@ gst_gl_download_class_init (GstGLDownloadClass * klass)
 static void
 gst_gl_download_init (GstGLDownload * download, GstGLDownloadClass * klass)
 {
+  GstBaseTransform *base_trans = GST_BASE_TRANSFORM (download);
+  
+  gst_pad_set_query_function (base_trans->srcpad,
+      GST_DEBUG_FUNCPTR (gst_gl_download_src_query));
+  
   gst_gl_download_reset (download);
 }
 
@@ -216,6 +223,27 @@ gst_gl_download_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+gst_gl_download_src_query (GstPad * pad, GstQuery * query)
+{
+  GstGLDownload *download = GST_GL_DOWNLOAD (gst_pad_get_parent (pad));
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CUSTOM:
+    {
+      GstStructure *structure = gst_query_get_structure (query);
+      gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER, download->display, NULL);
+      res = gst_pad_query_default (pad, query);
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  return res;
+}
 
 static void
 gst_gl_download_reset (GstGLDownload * download)
@@ -230,7 +258,9 @@ gst_gl_download_reset (GstGLDownload * download)
 static gboolean
 gst_gl_download_start (GstBaseTransform * bt)
 {
-  //GstGLDownload* download = GST_GL_DOWNLOAD (bt);
+  GstGLDownload* download = GST_GL_DOWNLOAD (bt);
+
+  download->display = gst_gl_display_new ();
 
   return TRUE;
 }
@@ -319,6 +349,15 @@ gst_gl_download_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     return FALSE;
   }
 
+  if (!download->display) {
+    GST_ERROR ("display is null");
+    return FALSE;
+  }
+
+  //blocking call, init color space conversion if needed
+  gst_gl_display_init_download (download->display, download->video_format,
+      download->width, download->height);
+
   return ret;
 }
 
@@ -352,15 +391,6 @@ gst_gl_download_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 {
   GstGLDownload *download = GST_GL_DOWNLOAD (trans);
   GstGLBuffer *gl_inbuf = GST_GL_BUFFER (inbuf);
-
-  if (download->display == NULL) {
-    download->display = g_object_ref (gl_inbuf->display);
-
-    //blocking call, init color space conversion if needed
-    gst_gl_display_init_download (download->display, download->video_format,
-        download->width, download->height);
-  } else
-    g_assert (download->display == gl_inbuf->display);
 
   GST_DEBUG ("making video %p size %d",
       GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));

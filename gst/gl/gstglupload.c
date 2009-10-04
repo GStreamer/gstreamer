@@ -136,6 +136,8 @@ static void gst_gl_upload_set_property (GObject * object, guint prop_id,
 static void gst_gl_upload_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_gl_upload_src_query (GstPad *pad, GstQuery * query);
+
 static void gst_gl_upload_reset (GstGLUpload * upload);
 static gboolean gst_gl_upload_set_caps (GstBaseTransform * bt,
     GstCaps * incaps, GstCaps * outcaps);
@@ -196,6 +198,11 @@ gst_gl_upload_class_init (GstGLUploadClass * klass)
 static void
 gst_gl_upload_init (GstGLUpload * upload, GstGLUploadClass * klass)
 {
+  GstBaseTransform *base_trans = GST_BASE_TRANSFORM (upload);
+  
+  gst_pad_set_query_function (base_trans->srcpad,
+      GST_DEBUG_FUNCPTR (gst_gl_upload_src_query));
+
   gst_gl_upload_reset (upload);
 }
 
@@ -230,6 +237,29 @@ gst_gl_upload_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+gst_gl_upload_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+  GstElement *parent = GST_ELEMENT (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CUSTOM:
+    {
+      GstStructure *structure = gst_query_get_structure (query);
+      res = g_strcmp0 (gst_element_get_name (parent), gst_structure_get_name (structure)) == 0;
+      if (!res)
+        res = gst_pad_query_default (pad, query);
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  return res;
+}
+
 static void
 gst_gl_upload_reset (GstGLUpload * upload)
 {
@@ -243,9 +273,27 @@ gst_gl_upload_reset (GstGLUpload * upload)
 static gboolean
 gst_gl_upload_start (GstBaseTransform * bt)
 {
-  //GstGLUpload* upload = GST_GL_UPLOAD (bt);
+  GstGLUpload* upload = GST_GL_UPLOAD (bt);
+  GstElement *parent = GST_ELEMENT (gst_element_get_parent (upload));
+  GstStructure *structure = gst_structure_new (gst_element_get_name (upload), NULL);
+  GstQuery *query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
 
-  return TRUE;
+  gboolean isPerformed = gst_element_query (parent, query);
+
+  if (isPerformed) {
+    const GValue *id_value = gst_structure_get_value (structure, "gstgldisplay");
+    if (G_VALUE_HOLDS_POINTER (id_value))
+      /* at least one gl element is before in our gl chain */
+      upload->display = g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+    else
+      /* this gl filter is a sink in terms of the gl chain */
+      upload->display = gst_gl_display_new ();
+  }
+
+  gst_query_unref (query);
+  gst_object_unref (GST_OBJECT (parent));
+
+  return isPerformed;
 }
 
 static gboolean
@@ -444,8 +492,6 @@ gst_gl_upload_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     GST_DEBUG ("caps connot be parsed");
     return FALSE;
   }
-  //we have video and gl size, we can now init OpenGL stuffs
-  upload->display = gst_gl_display_new ();
 
   //init unvisible opengl context
   gst_gl_display_create_context (upload->display,

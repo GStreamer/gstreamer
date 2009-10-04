@@ -55,6 +55,8 @@ static void gst_gl_filter_set_property (GObject * object, guint prop_id,
 static void gst_gl_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_gl_filter_src_query (GstPad *pad, GstQuery * query);
+
 static GstCaps *gst_gl_filter_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps);
 static void gst_gl_filter_reset (GstGLFilter * filter);
@@ -118,10 +120,10 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
 static void
 gst_gl_filter_init (GstGLFilter * filter, GstGLFilterClass * klass)
 {
-  //gst_element_create_all_pads (GST_ELEMENT (filter));
-
-  filter->sinkpad = gst_element_get_static_pad (GST_ELEMENT (filter), "sink");
-  filter->srcpad = gst_element_get_static_pad (GST_ELEMENT (filter), "src");
+  GstBaseTransform *base_trans = GST_BASE_TRANSFORM (filter);
+  
+  gst_pad_set_query_function (base_trans->srcpad,
+      GST_DEBUG_FUNCPTR (gst_gl_filter_src_query));
 
   gst_gl_filter_reset (filter);
 }
@@ -150,6 +152,36 @@ gst_gl_filter_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_gl_filter_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+  GstElement *parent = GST_ELEMENT (gst_pad_get_parent (pad));
+  GstGLFilter *filter = GST_GL_FILTER (parent);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CUSTOM:
+    {
+      GstStructure *structure = gst_query_get_structure (query);
+      if (filter->display) {
+        /* this gl filter is a sink in terms of the gl chain */
+        gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER, filter->display, NULL);
+      } else {
+        /* at least one gl element is before in our gl chain */
+        res = g_strcmp0 (gst_element_get_name (parent), gst_structure_get_name (structure)) == 0;
+      }
+      if (!res)
+        res = gst_pad_query_default (pad, query);
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  return res;
 }
 
 static void
@@ -181,6 +213,27 @@ gst_gl_filter_start (GstBaseTransform * bt)
 {
   GstGLFilter *filter = GST_GL_FILTER (bt);
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
+  GstElement *parent = GST_ELEMENT (gst_element_get_parent (filter));
+  GstStructure *structure = gst_structure_new (gst_element_get_name (filter), NULL);
+  GstQuery *query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
+
+  gboolean isPerformed = gst_element_query (parent, query);
+
+  if (isPerformed) {
+    const GValue *id_value = gst_structure_get_value (structure, "gstgldisplay");
+    if (G_VALUE_HOLDS_POINTER (id_value))
+      /* at least one gl element is before in our gl chain */
+      filter->display = g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+    else
+      /* this gl filter is a sink in terms of the gl chain */
+      filter->display = gst_gl_display_new ();
+  }
+
+  gst_query_unref (query);
+  gst_object_unref (GST_OBJECT (parent));
+
+  if (!isPerformed)
+    return FALSE;
 
   if (filter_class->onStart)
     filter_class->onStart (filter);
@@ -275,24 +328,6 @@ gst_gl_filter_prepare_output_buffer (GstBaseTransform * trans,
 
   filter = GST_GL_FILTER (trans);
 
-  if (filter->display == NULL) {
-    GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
-
-    filter->display = g_object_ref (gl_inbuf->display);
-
-    //blocking call, generate a FBO
-    gst_gl_display_gen_fbo (filter->display, filter->width, filter->height,
-        &filter->fbo, &filter->depthbuffer);
-
-    if (filter_class->display_init_cb != NULL) {
-      gst_gl_display_thread_add (filter->display, gst_gl_filter_start_gl,
-          filter);
-    }
-
-    if (filter_class->onInitFBO)
-      filter_class->onInitFBO (filter);
-  }
-
   gl_outbuf = gst_gl_buffer_new (filter->display,
       filter->width, filter->height);
 
@@ -313,7 +348,22 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
   gboolean ret = FALSE;
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
+  if (!filter->display)
+    return FALSE;
+
   ret = gst_gl_buffer_parse_caps (outcaps, &filter->width, &filter->height);
+
+  //blocking call, generate a FBO
+  gst_gl_display_gen_fbo (filter->display, filter->width, filter->height,
+      &filter->fbo, &filter->depthbuffer);
+
+  if (filter_class->display_init_cb != NULL) {
+    gst_gl_display_thread_add (filter->display, gst_gl_filter_start_gl,
+        filter);
+  }
+
+  if (filter_class->onInitFBO)
+    filter_class->onInitFBO (filter);
 
   if (filter_class->set_caps)
     filter_class->set_caps (filter, incaps, outcaps);

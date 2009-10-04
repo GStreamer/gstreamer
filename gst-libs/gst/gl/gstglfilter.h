@@ -57,9 +57,6 @@ struct _GstGLFilter
 {
   GstBaseTransform base_transform;
 
-  GstPad *srcpad;
-  GstPad *sinkpad;
-
   GstGLDisplay *display;
 
   gint width;
