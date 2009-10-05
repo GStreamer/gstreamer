@@ -1706,6 +1706,7 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
         GSList *walk;
 
         /* find the session, the message source has it */
+        GST_RTP_BIN_LOCK (rtpbin);
         for (walk = rtpbin->sessions; walk; walk = g_slist_next (walk)) {
           GstRtpBinSession *sess = (GstRtpBinSession *) walk->data;
 
@@ -1720,6 +1721,7 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
             break;
           }
         }
+        GST_RTP_BIN_UNLOCK (rtpbin);
       }
       /* fallthrough to forward the modified message to the parent */
     }
