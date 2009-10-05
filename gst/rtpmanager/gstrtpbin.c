@@ -1841,6 +1841,8 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
         GST_RTP_BIN_UNLOCK (rtpbin);
 
         gst_message_unref (message);
+
+        /* make a new buffering message with the min value */
         message =
             gst_message_new_buffering (GST_OBJECT_CAST (bin), min_percent);
 
