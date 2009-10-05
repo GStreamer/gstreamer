@@ -255,7 +255,40 @@ static gboolean
 gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GstVideoState * state)
 {
+  GstCaps *caps;
+  GstStructure *structure;
   GstSchroEnc *schro_enc = GST_SCHRO_ENC (base_video_encoder);
+
+  GST_DEBUG ("set_output_caps");
+  caps =
+      gst_pad_get_allowed_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
+      (base_video_encoder));
+
+  if (gst_caps_is_empty (caps)) {
+    gst_caps_unref (caps);
+    return FALSE;
+  }
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_has_name (structure, "video/x-dirac")) {
+    schro_enc->output_format = GST_SCHRO_ENC_OUTPUT_OGG;
+  } else if (gst_structure_has_name (structure, "video/x-qt-part")) {
+    schro_enc->output_format = GST_SCHRO_ENC_OUTPUT_QUICKTIME;
+  } else if (gst_structure_has_name (structure, "video/x-avi-part")) {
+    schro_enc->output_format = GST_SCHRO_ENC_OUTPUT_AVI;
+  } else if (gst_structure_has_name (structure, "video/x-mp4-part")) {
+    schro_enc->output_format = GST_SCHRO_ENC_OUTPUT_MP4;
+  } else {
+    gst_caps_unref (caps);
+    return FALSE;
+  }
+
+  gst_caps_unref (caps);
+
+  gst_base_video_encoder_set_latency_fields (base_video_encoder,
+      2 * (int) schro_encoder_setting_get_double (schro_enc->encoder,
+          "queue_depth"));
 
   schro_video_format_set_std_video_format (schro_enc->video_format,
       SCHRO_VIDEO_FORMAT_CUSTOM);
@@ -376,48 +409,13 @@ gst_schro_enc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-/*
- * start is called once the input format is known.  This function
- * must decide on an output format and negotiate it.
- */
 static gboolean
 gst_schro_enc_start (GstBaseVideoEncoder * base_video_encoder)
 {
   GstSchroEnc *schro_enc = GST_SCHRO_ENC (base_video_encoder);
-  GstCaps *caps;
-  GstStructure *structure;
-
-  GST_DEBUG ("set_output_caps");
-  caps =
-      gst_pad_get_allowed_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
-      (base_video_encoder));
-
-  if (gst_caps_is_empty (caps)) {
-    gst_caps_unref (caps);
-    return FALSE;
-  }
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (gst_structure_has_name (structure, "video/x-dirac")) {
-    schro_enc->output_format = GST_SCHRO_ENC_OUTPUT_OGG;
-  } else if (gst_structure_has_name (structure, "video/x-qt-part")) {
-    schro_enc->output_format = GST_SCHRO_ENC_OUTPUT_QUICKTIME;
-  } else if (gst_structure_has_name (structure, "video/x-avi-part")) {
-    schro_enc->output_format = GST_SCHRO_ENC_OUTPUT_AVI;
-  } else if (gst_structure_has_name (structure, "video/x-mp4-part")) {
-    schro_enc->output_format = GST_SCHRO_ENC_OUTPUT_MP4;
-  } else {
-    return FALSE;
-  }
-
-  gst_base_video_encoder_set_latency_fields (base_video_encoder,
-      2 * (int) schro_encoder_setting_get_double (schro_enc->encoder,
-          "queue_depth"));
 
   schro_enc->granule_offset = ~0;
 
-  gst_caps_unref (caps);
   return TRUE;
 }
 
