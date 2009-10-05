@@ -22,6 +22,7 @@ clean-local:
 	cd ffmpeg && $(MAKE) clean
 
 dist-clean:
+	cd ffmpeg && $(MAKE) distclean
 	rm -rf $(TMP_DIST_DIR)
 	rm -f Makefile
 
