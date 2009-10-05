@@ -4844,7 +4844,7 @@ qtdemux_is_brand_3gp (GstQTDemux * qtdemux, gboolean major)
   if (major) {
     return ((qtdemux->major_brand & GST_MAKE_FOURCC (255, 255, 0, 0)) ==
         GST_MAKE_FOURCC ('3', 'g', 0, 0));
-  } else {
+  } else if (qtdemux->comp_brands != NULL) {
     guint8 *data = GST_BUFFER_DATA (qtdemux->comp_brands);
     guint size = GST_BUFFER_SIZE (qtdemux->comp_brands);
     gboolean res = FALSE;
@@ -4856,6 +4856,8 @@ qtdemux_is_brand_3gp (GstQTDemux * qtdemux, gboolean major)
       size -= 4;
     }
     return res;
+  } else {
+    return FALSE;
   }
 }
 
