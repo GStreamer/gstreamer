@@ -577,17 +577,16 @@ gst_iir_equ_process_ ## TYPE (GstIirEqualizer *equ, guint8 *data,       \
 guint size, guint channels)                                             \
 {                                                                       \
   guint frames = size / channels / sizeof (TYPE);                       \
-  guint i, c, f;                                                        \
+  guint i, c, f, nf = equ->freq_band_count;                             \
   BIG_TYPE cur;                                                         \
+  GstIirEqualizerBand **filters = equ->bands;                           \
                                                                         \
   for (i = 0; i < frames; i++) {                                        \
+    SecondOrderHistory ## TYPE *history = equ->history;                 \
     for (c = 0; c < channels; c++) {                                    \
-      SecondOrderHistory ## TYPE *history = equ->history;               \
       cur = *((TYPE *) data);                                           \
-      for (f = 0; f < equ->freq_band_count; f++) {                      \
-        GstIirEqualizerBand *filter = equ->bands[f];                    \
-                                                                        \
-        cur = one_step_ ## TYPE (filter, history, cur);                 \
+      for (f = 0; f < nf; f++) {                                        \
+        cur = one_step_ ## TYPE (filters[f], history, cur);             \
         history++;                                                      \
       }                                                                 \
       cur = CLAMP (cur, MIN_VAL, MAX_VAL);                              \
@@ -597,18 +596,18 @@ guint size, guint channels)                                             \
   }                                                                     \
 }
 
-#define CREATE_OPTIMIZED_FUNCTIONS(TYPE)       \
+#define CREATE_OPTIMIZED_FUNCTIONS(TYPE)                                \
 typedef struct {                                                        \
   TYPE x1, x2;          /* history of input values for a filter */  \
   TYPE y1, y2;          /* history of output values for a filter */ \
 } SecondOrderHistory ## TYPE;                                           \
                                                                         \
-static inline TYPE                                                  \
+static inline TYPE                                                      \
 one_step_ ## TYPE (GstIirEqualizerBand *filter,                         \
-    SecondOrderHistory ## TYPE *history, TYPE input)                \
+    SecondOrderHistory ## TYPE *history, TYPE input)                    \
 {                                                                       \
   /* calculate output */                                                \
-  TYPE output = filter->a0 * input + filter->a1 * history->x1 +     \
+  TYPE output = filter->a0 * input + filter->a1 * history->x1 +         \
       filter->a2 * history->x2 + filter->b1 * history->y1 +             \
       filter->b2 * history->y2;                                         \
   /* update history */                                                  \
@@ -628,17 +627,16 @@ gst_iir_equ_process_ ## TYPE (GstIirEqualizer *equ, guint8 *data,       \
 guint size, guint channels)                                             \
 {                                                                       \
   guint frames = size / channels / sizeof (TYPE);                       \
-  guint i, c, f;                                                        \
-  TYPE cur;                                                         \
+  guint i, c, f, nf = equ->freq_band_count;                             \
+  TYPE cur;                                                             \
+  GstIirEqualizerBand **filters = equ->bands;                           \
                                                                         \
   for (i = 0; i < frames; i++) {                                        \
+    SecondOrderHistory ## TYPE *history = equ->history;                 \
     for (c = 0; c < channels; c++) {                                    \
-      SecondOrderHistory ## TYPE *history = equ->history;               \
       cur = *((TYPE *) data);                                           \
-      for (f = 0; f < equ->freq_band_count; f++) {                      \
-        GstIirEqualizerBand *filter = equ->bands[f];                    \
-                                                                        \
-        cur = one_step_ ## TYPE (filter, history, cur);                 \
+      for (f = 0; f < nf; f++) {                                        \
+        cur = one_step_ ## TYPE (filters[f], history, cur);             \
         history++;                                                      \
       }                                                                 \
       *((TYPE *) data) = (TYPE) cur;                                    \
