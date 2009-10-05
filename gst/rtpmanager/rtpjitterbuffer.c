@@ -157,6 +157,8 @@ rtp_jitter_buffer_set_delay (RTPJitterBuffer * jbuf, GstClockTime delay)
 {
   jbuf->delay = delay;
   jbuf->low_level = (delay * 15) / 100;
+  /* the high level is at 90% in order to release packets before we fill up the
+   * buffer up to the latency */
   jbuf->high_level = (delay * 90) / 100;
 
   GST_DEBUG ("delay %" GST_TIME_FORMAT ", min %" GST_TIME_FORMAT ", max %"

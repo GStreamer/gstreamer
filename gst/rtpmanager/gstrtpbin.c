@@ -1176,8 +1176,8 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   stream->buffer_ntpstop_sig = g_signal_connect (buffer, "on-npt-stop",
       (GCallback) on_npt_stop, stream);
 
-  g_object_set_data (G_OBJECT (buffer), "GstRtpBinSession", session);
-  g_object_set_data (G_OBJECT (buffer), "GstRtpBinStream", stream);
+  g_object_set_data (G_OBJECT (buffer), "GstRTPBin.session", session);
+  g_object_set_data (G_OBJECT (buffer), "GstRTPBin.stream", stream);
 
   /* configure latency and packet lost */
   g_object_set (buffer, "latency", rtpbin->latency, NULL);
@@ -1757,23 +1757,17 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
 
       /* we change the structure name and add the session ID to it */
       if (gst_structure_has_name (s, "application/x-rtp-source-sdes")) {
-        GSList *walk;
+        GstRtpBinSession *sess;
 
-        /* find the session, the message source has it */
-        GST_RTP_BIN_LOCK (rtpbin);
-        for (walk = rtpbin->sessions; walk; walk = g_slist_next (walk)) {
-          GstRtpBinSession *sess = (GstRtpBinSession *) walk->data;
+        /* find the session we set it as object data */
+        sess = g_object_get_data (G_OBJECT (GST_MESSAGE_SRC (message)),
+            "GstRTPBin.session");
 
-          /* if we found the session, change message. else we exit the loop and
-           * leave the message unchanged */
-          if (GST_OBJECT_CAST (sess->session) == GST_MESSAGE_SRC (message)) {
-            message = gst_message_make_writable (message);
-            s = gst_message_get_structure (message);
-
-            gst_structure_set ((GstStructure *) s, "session", G_TYPE_UINT,
-                sess->id, NULL);
-            break;
-          }
+        if (G_LIKELY (sess)) {
+          message = gst_message_make_writable (message);
+          s = gst_message_get_structure (message);
+          gst_structure_set ((GstStructure *) s, "session", G_TYPE_UINT,
+              sess->id, NULL);
         }
         GST_RTP_BIN_UNLOCK (rtpbin);
       }
@@ -1786,23 +1780,23 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
       gint min_percent = 100;
       GSList *sessions, *streams, *elements = NULL;
       GstRtpBinStream *stream;
-      guint64 base_time = 0;
       gboolean change = FALSE, active = FALSE;
 
       gst_message_parse_buffering (message, &percent);
 
       stream =
           g_object_get_data (G_OBJECT (GST_MESSAGE_SRC (message)),
-          "GstRtpBinStream");
+          "GstRTPBin.stream");
 
       GST_DEBUG_OBJECT (bin, "got percent %d from stream %p", percent, stream);
 
       /* get the stream */
-      if (stream) {
+      if (G_LIKELY (stream)) {
         GST_RTP_BIN_LOCK (rtpbin);
         /* fill in the percent */
         stream->percent = percent;
 
+        /* calculate the min value for all streams */
         for (sessions = rtpbin->sessions; sessions;
             sessions = g_slist_next (sessions)) {
           GstRtpBinSession *session = (GstRtpBinSession *) sessions->data;
@@ -1846,12 +1840,25 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
         message =
             gst_message_new_buffering (GST_OBJECT_CAST (bin), min_percent);
 
-        if (change) {
-          while (elements) {
+        if (G_UNLIKELY (change)) {
+          GstClock *clock;
+          guint64 running_time, base_time, now;
+
+          /* figure out a new base_time */
+          clock = gst_element_get_clock (GST_ELEMENT_CAST (bin));
+          if (G_LIKELY (clock)) {
+            now = gst_clock_get_time (clock);
+            base_time = gst_element_get_base_time (GST_ELEMENT_CAST (bin));
+            running_time = now - base_time;
+          } else {
+            running_time = 0;
+          }
+
+          while (G_LIKELY (elements)) {
             GstElement *element = elements->data;
 
             GST_DEBUG_OBJECT (bin, "setting %p to %d", element, active);
-            g_signal_emit_by_name (element, "set-active", active, base_time,
+            g_signal_emit_by_name (element, "set-active", active, running_time,
                 NULL);
             gst_object_unref (element);
             elements = g_slist_delete_link (elements, elements);

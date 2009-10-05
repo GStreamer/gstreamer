@@ -50,6 +50,7 @@ struct _GstRtpBin {
   gboolean        ignore_pt;
   RTPJitterBufferMode buffer_mode;
   gboolean        buffering;
+  GstClockTime    buffer_start;
   /* a list of session */
   GSList         *sessions;
 
