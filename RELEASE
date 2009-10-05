@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.24 "Counting the days"
+Release notes for GStreamer Base Plug-ins 0.10.25 "Standard disclaimers apply"
         
 
 
@@ -54,91 +54,83 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Recognise Kate subpicture subtitles
-      * Support progressive download in playbin2
-      * GIO improvements
-      * Add buffer-list support in appsink
-      * Add gaussian-noise mode to audiotestsrc
-      * bump cdparanoia req to 0.10.2 and improve caching
-      * Improve audio source base class
-      * Add frame-by-frame stepping and examples
-      * Extend stream-probing in decodebin2
-      * Many RTSP improvements
-      * support for PGS subpictures
-      * adder improvements
-      * Add Y444, v210, v216 formats
-      * implement preset interface in vorbisenc, theoraenc, oggmux
-      * Improve libvisual visualisation timestamp tracking
-      * playbin2 enhancements: custom audiosink, subpictures, cdda
-      * Improvements in textrender
-      * Support raw YUV 4:2:2 and SIREN in RIFF
-      * Add 4:2:2 and 4:4:4 support to theoradec
-      * Many other bug-fixes and improvements
+      * Add per-stream volume controls
+      * Theora 1.0 and Y444 and Y42B format support
+      * Improve audio capture timing
+      * GObject introspection support
+      * Improve audio output startup
+      * RTSP improvements
+      * Use pango-cairo instead of pangoft2
+      * Allow cdda://(device#)?track URI scheme in cddabasesrc
+      * Support interlaced content in videoscale and ffmpegcolorspacee
+      * Many other bug fixes and improvements
 
 Bugs fixed in this release
      
-      * 510417 : [gio] make non-experimental
-      * 513373 : [PATCH] [gstvorbistag] Preserve cover art in Ogg/Vorbis tags
-      * 529300 : [giosink] [PATCH] Allow overwrite
-      * 531035 : [cdparanoia] Should depend on LGPL'd version of the libra...
-      * 567997 : [patch] add allow-pull-scheduling property to audio sinks
-      * 576552 : [subparse] post GST_TAG_SUBTITLE_CODEC tags
-      * 577637 : [playbin2] expose temp-location property
-      * 579692 : mp3_type_find is over-optimistic
-      * 580318 : [tagdemux] drops tag events from upstream
-      * 581460 : [baseaudiosrc] Reusing audio source leads to null timesta...
-      * 581571 : ARGB and alignment added to textrender
-      * 582021 : autogen: libtoolize must be called before aclocal
-      * 582749 : uridecodebin caps property not implemented yet
-      * 582819 : multifdsink: add num-fds property
-      * 583867 : gdpdepay + identity cause failed assertions
-      * 584020 : [playbin2] inadvertently resets configured audio/video sinks
-      * 584686 : [playbin2] Need {audio,video,text}-tags-changed signals
-      * 585197 : [subparse] fails to detect subrip subtitles with fewer th...
-      * 585758 : Remove deprecated GTK+ symbols
-      * 585970 : gst_audioringbuffer_get_type is not thread safe
-      * 585994 : gst-rtsp-message doesn't support " Timestamp " filed
-      * 586331 : [cdparanoia] expose cd cache size parameter
-      * 586356 : [playbin2] use private copy of input-selector as long as ...
-      * 586519 : white Gaussian noise would be useful in audiotestsrc
-      * 587080 : rtsp fails to compile - doesn't see some ws2tcpip functions
-      * 587278 : Support for GstBufferList in appsink
-      * 587676 : Call tzset() before localtime_r(), in e.g. gst-plugins-ba...
-      * 587695 : Patches to add stream-status messages audio elements
-      * 587896 :  " No stream given yet " error from giostreamsrc
-      * 587980 : gstchannelmix.c: protect debug code with GST_DISABLE_GST_...
-      * 588078 : [playbin2] Fails to go to READY again after an error
-      * 588205 : Pipeline with giostreamsrc will not enter playing state
-      * 588550 : build failure in git, missing gstinterfaces-0.10
-      * 588551 : queue2: download buffering fixes
-      * 588724 : [vorbisdec] empty encoder string causes GStreamer
-      * 588746 : [audiotestsrc] Make sure tags are properly serialized in ...
-      * 588747 : [adder] Serialize incoming in-band events (tags) in the d...
-      * 588748 : [adder] Check dataflow consistency in unit tests
-      * 589075 : [playbin2] changing volume doesn't work after stream rest...
-      * 589581 : typefinder: recognise more Kate subtitle categories
-      * 589622 : Cannot use both playbin and input-selector
-      * 589663 : gstreamer asserts in gstaudiofilter
-      * 589797 : alsasrc does not set GstAlsaSrc- > handle to NULL after snd...
-      * 590470 : [typefinding] certain flac-in-ogg files not detected any ...
-      * 536313 : [cdda] Remove sha1 copy once we depend on glib-2.16
-      * 579642 : [oggdemux] handle broken ogg/vorbis files better
-      * 582528 : playbin2 Audio CD playback broken since
-      * 583318 : Assertion from within playbin2
-      * 585079 : undefined references to gst_adapter_* functions in schro
-      * 585708 : [adder] Wrong handling of flushing seeks
-      * 588218 : Siren in .wav support
-      * 586920 : rtsp: needs < netinet/in.h > on FreeBSD
+      * 595401 : gobject assertion and null access to volume instance in playbin
+      * 563828 : [decodebin2] Complains about loops in the graph when demuxer output requires another demuxer
+      * 591677 : Easy codec installation is not working
+      * 588523 : smarter sink selection in playbin2
+      * 590146 : adder regressions
+      * 321532 : [cddabasesrc] Support device setting in cdda:// URI
+      * 340887 : add pangocairo textoverlay plugin.
+      * 397419 : [oggdemux] ogm video with subtitles stuck on first frame
+      * 556537 : [PATCH] typefind: more flexible MPEG4 start code recognition
+      * 559049 : gstcheck.c:76:F:general:test_state_changes_* failure: GST_IS_CLOCK(clock) assertion fails
+      * 567660 : [API] need a stream volume interface for sinks that do volume control
+      * 567928 : Make videorate work with a live source
+      * 571610 : [playbin] Scale of volume property is not documented
+      * 583255 : [playbin2] deadlock when disabling visualisations
+      * 586180 : RTSP improvements
+      * 588717 : [oggmux] gst_caps_unref() warning if not linked downstream
+      * 588761 : [videoscale] Needs special support for interlaced content
+      * 588915 : audioresample's output offset counter's initialization could maybe be improved
+      * 589095 : [appsrc] clarify documentation on caps and linkage
+      * 589574 : [typefind] incorrect sdp file detection
+      * 590243 : [videoscale] Claims to support MAX width/height
+      * 590425 : Slaved alsasrc clock with slave-method=re-timestamp not usable for RTP audio
+      * 590856 : [decodebin2] triggers assertion failure on NULL caps
+      * 591207 : totem does display the following subtitle srt file.
+      * 591357 : gst-plugins-base git won't build due to warning in gstrtspconnection.c
+      * 591577 : [playbin2] Incorrect error message string
+      * 591664 : [playbin2] after seeking, srt subtitles don't resync correctly
+      * 591934 : timestamp drift in audioresample
+      * 592544 : Remove regex.h check
+      * 592657 : [appsink] Blocks after entering on pause state
+      * 592864 : deadlocks from recent inputselector/streamselector change
+      * 592884 : [playbin2] g_object_get increases refcount by 2 and therefore leaves memleak
+      * 593035 : gdp doesn't preserve fields of the buffers put into the caps' streamheader
+      * 593284 : basertppayloader takes time in instance init
+      * 594020 : Totem don't play videos from ssh remote host
+      * 594094 : Playback Error playing Midi file
+      * 594136 : [alsasink] Regression from 0.10.23 -- element reuse doesn't work
+      * 594165 : [theoraenc] Implement support for new formats
+      * 594256 : improved slave-skew resynch mechanism
+      * 594258 : missing break in rtcpbuffer
+      * 594275 : Add cast to navigation to fix compiler warning
+      * 594623 : Expose playsink as a fully-fledged element
+      * 594732 : parse error
+      * 594757 : build fails due to warning in gstbasertppayload.c
+      * 594993 : [introspection] pkg-config file madness
+      * 594994 : [streamvolume] Add get_type function to the documentation
+      * 595454 : [cddabasesrc] uri format change breaks rhythmbox
+      * 545807 : [baseaudiosink] audible crack when starting the pipeline
 
 API changed in this release
      
 - API additions:
     
-* GstNetAddress::gst_netaddress_to_string()
-* Add gst_rtsp_watch_queue_data()
-* playbin2: Add {audio,video,text}-tags-changed signals
-* Add gst_color_balance_get_balance_type()
-* Add gst_mixer_get_mixer_type()
+* gst_rtsp_connection_create_from_fd()
+* gst_rtsp_connection_set_http_mode()
+* gst_rtsp_watch_write_data()
+* gst_rtsp_watch_send_message()
+* GstBaseRTPPayload::perfect-rtptime
+* GstBaseRTPAudioPayload::gst_base_rtp_audio_payload_flush()
+* GstVideoSinkClass::show_frame()
+* GstVideoSink:show-preroll-frame
+* GST_MIXER_TRACK_READONLY
+* GST_MIXER_TRACK_WRITEONLY
+* GstStreamVolume interface
 
 Download
 
@@ -167,34 +159,34 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Andy Wingo
       * Arnout Vandecappelle
-      * Balachandran C
-      * Bastien Nocera
-      * Branko Subasic
-      * Christian Schaller
+      * Benjamin Gaignard
+      * Benjamin Otte
+      * Christian F.K. Schaller
       * David Schleef
       * Edward Hervey
-      * Elliott Sales de Andrade
-      * Filippo Argiolas
-      * Hans-Peter Nilsson
+      * Eero Nurkkala
+      * Havard Graff
+      * Håvard Graff
       * Jan Schmidt
       * John Millikin
+      * Jonas Holmberg
       * Jonathan Matthew
-      * Kapil Agrawal
+      * Josep Torra
       * Kipp Cannon
-      * LRN
-      * Marc-Andre Lureau
+      * Marc-André Lureau
+      * Mark Nauwelaerts
+      * Mart Raudsepp
       * Michael Smith
       * Olivier Crête
       * Peter Kjellerstedt
       * Philip Jägenstedt
       * René Stadler
       * Sebastian Dröge
+      * Siarhei Siamashka
       * Stefan Kost
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wim Taymans
+      * Young-Ho Cha
       * Руслан Ижбулатов
  

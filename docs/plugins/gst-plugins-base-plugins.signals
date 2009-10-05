@@ -456,3 +456,10 @@ GstAppSrc *gstappsrc
 guint64  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstPlaySink::reconfigure</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlaySink *gstplaysink
+</SIGNAL>
+

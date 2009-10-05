@@ -1,4 +1,82 @@
-This is GStreamer Base Plug-ins 0.10.24, "Counting the days"
+This is GStreamer Base Plug-ins 0.10.25, "Standard disclaimers apply"
+
+Changes since 0.10.24:
+    
+      * Add per-stream volume controls
+      * Theora 1.0 and Y444 and Y42B format support
+      * Improve audio capture timing
+      * GObject introspection support
+      * Improve audio output startup
+      * RTSP improvements
+      * Use pango-cairo instead of pangoft2
+      * Allow cdda://(device#)?track URI scheme in cddabasesrc
+      * Support interlaced content in videoscale and ffmpegcolorspacee
+      * Many other bug fixes and improvements
+
+Bugs fixed since 0.10.24:
+     
+      * 595401 : gobject assertion and null access to volume instance in playbin
+      * 563828 : [decodebin2] Complains about loops in the graph when demuxer output requires another demuxer
+      * 591677 : Easy codec installation is not working
+      * 588523 : smarter sink selection in playbin2
+      * 590146 : adder regressions
+      * 321532 : [cddabasesrc] Support device setting in cdda:// URI
+      * 340887 : add pangocairo textoverlay plugin.
+      * 397419 : [oggdemux] ogm video with subtitles stuck on first frame
+      * 556537 : [PATCH] typefind: more flexible MPEG4 start code recognition
+      * 559049 : gstcheck.c:76:F:general:test_state_changes_* failure: GST_IS_CLOCK(clock) assertion fails
+      * 567660 : [API] need a stream volume interface for sinks that do volume control
+      * 567928 : Make videorate work with a live source
+      * 571610 : [playbin] Scale of volume property is not documented
+      * 583255 : [playbin2] deadlock when disabling visualisations
+      * 586180 : RTSP improvements
+      * 588717 : [oggmux] gst_caps_unref() warning if not linked downstream
+      * 588761 : [videoscale] Needs special support for interlaced content
+      * 588915 : audioresample's output offset counter's initialization could maybe be improved
+      * 589095 : [appsrc] clarify documentation on caps and linkage
+      * 589574 : [typefind] incorrect sdp file detection
+      * 590243 : [videoscale] Claims to support MAX width/height
+      * 590425 : Slaved alsasrc clock with slave-method=re-timestamp not usable for RTP audio
+      * 590856 : [decodebin2] triggers assertion failure on NULL caps
+      * 591207 : totem does display the following subtitle srt file.
+      * 591357 : gst-plugins-base git won't build due to warning in gstrtspconnection.c
+      * 591577 : [playbin2] Incorrect error message string
+      * 591664 : [playbin2] after seeking, srt subtitles don't resync correctly
+      * 591934 : timestamp drift in audioresample
+      * 592544 : Remove regex.h check
+      * 592657 : [appsink] Blocks after entering on pause state
+      * 592864 : deadlocks from recent inputselector/streamselector change
+      * 592884 : [playbin2] g_object_get increases refcount by 2 and therefore leaves memleak
+      * 593035 : gdp doesn't preserve fields of the buffers put into the caps' streamheader
+      * 593284 : basertppayloader takes time in instance init
+      * 594020 : Totem don't play videos from ssh remote host
+      * 594094 : Playback Error playing Midi file
+      * 594136 : [alsasink] Regression from 0.10.23 -- element reuse doesn't work
+      * 594165 : [theoraenc] Implement support for new formats
+      * 594256 : improved slave-skew resynch mechanism
+      * 594258 : missing break in rtcpbuffer
+      * 594275 : Add cast to navigation to fix compiler warning
+      * 594623 : Expose playsink as a fully-fledged element
+      * 594732 : parse error
+      * 594757 : build fails due to warning in gstbasertppayload.c
+      * 594993 : [introspection] pkg-config file madness
+      * 594994 : [streamvolume] Add get_type function to the documentation
+      * 595454 : [cddabasesrc] uri format change breaks rhythmbox
+      * 545807 : [baseaudiosink] audible crack when starting the pipeline
+
+API added since 0.10.24:
+    
+      * gst_rtsp_connection_create_from_fd()
+      * gst_rtsp_connection_set_http_mode()
+      * gst_rtsp_watch_write_data()
+      * gst_rtsp_watch_send_message()
+      * GstBaseRTPPayload::perfect-rtptime
+      * GstBaseRTPAudioPayload::gst_base_rtp_audio_payload_flush()
+      * GstVideoSinkClass::show_frame()
+      * GstVideoSink:show-preroll-frame
+      * GST_MIXER_TRACK_READONLY
+      * GST_MIXER_TRACK_WRITEONLY
+      * GstStreamVolume interface
 
 Changes since 0.10.23:
 

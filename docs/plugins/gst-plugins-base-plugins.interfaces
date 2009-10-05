@@ -2,7 +2,8 @@ GstBin GstChildProxy
 GstPipeline GstChildProxy
 GstPlayBaseBin GstChildProxy
 GstPlayBin GstChildProxy
-GstPlayBin2 GstChildProxy
+GstPlayBin2 GstChildProxy GstStreamVolume
+GstPlaySink GstChildProxy
 GstDecodeBin2 GstChildProxy
 GstURIDecodeBin GstChildProxy
 GstDecodeBin GstChildProxy
@@ -25,4 +26,5 @@ GstVorbisTag GstTagSetter
 GstOggMux GstPreset
 GstTheoraEnc GstPreset
 GstAlsaMixerElement GstImplementsInterface GstMixer GstPropertyProbe
-GstVolume GstImplementsInterface GstMixer
+GstVolume GstImplementsInterface GstMixer GstStreamVolume
+PangoCairoFcFontMap PangoCairoFontMap

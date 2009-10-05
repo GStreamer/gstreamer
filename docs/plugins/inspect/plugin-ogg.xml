@@ -3,7 +3,7 @@
   <description>ogg stream manipulation (info about ogg: http://xiph.org)</description>
   <filename>../../ext/ogg/.libs/libgstogg.so</filename>
   <basename>libgstogg.so</basename>
-  <version>0.10.24</version>
+  <version>0.10.25</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -98,7 +98,7 @@
       <longname>OGM audio stream parser</longname>
       <class>Codec/Decoder/Audio</class>
       <description>parse an OGM audio header and stream</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>
@@ -119,7 +119,7 @@
       <longname>OGM text stream parser</longname>
       <class>Codec/Decoder/Subtitle</class>
       <description>parse an OGM text header and stream</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>
@@ -140,7 +140,7 @@
       <longname>OGM video stream parser</longname>
       <class>Codec/Decoder/Video</class>
       <description>parse an OGM video header and stream</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>

@@ -13,6 +13,7 @@ GObject
           GstPlayBaseBin
             GstPlayBin
           GstPlayBin2
+        GstPlaySink
         GstDecodeBin2
         GstURIDecodeBin
         GstDecodeBin
@@ -115,7 +116,7 @@ GObject
   GstTunerChannel
   PangoFontMap
     PangoFcFontMap
-      PangoFT2FontMap
+      PangoCairoFcFontMap
   PangoContext
   GOutputStream
   GInputStream
@@ -132,4 +133,6 @@ GInterface
   GstXOverlay
   GstColorBalance
   GstNavigation
+  GstStreamVolume
+  PangoCairoFontMap
   GFile

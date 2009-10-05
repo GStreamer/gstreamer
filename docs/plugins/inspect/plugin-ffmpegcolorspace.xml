@@ -3,7 +3,7 @@
   <description>colorspace conversion copied from FFMpeg 0.4.9-pre1</description>
   <filename>../../gst/ffmpegcolorspace/.libs/libgstffmpegcolorspace.so</filename>
   <basename>libgstffmpegcolorspace.so</basename>
-  <version>0.10.24</version>
+  <version>0.10.25</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>FFMpeg</package>
@@ -14,7 +14,7 @@
       <longname>FFMPEG Colorspace converter</longname>
       <class>Filter/Converter/Video</class>
       <description>Converts video from one colorspace to another</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

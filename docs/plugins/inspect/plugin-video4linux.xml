@@ -3,7 +3,7 @@
   <description>elements for Video 4 Linux</description>
   <filename>../../sys/v4l/.libs/libgstvideo4linux.so</filename>
   <basename>libgstvideo4linux.so</basename>
-  <version>0.10.24</version>
+  <version>0.10.25</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -14,7 +14,7 @@
       <longname>Video (video4linux/raw) Source</longname>
       <class>Source/Video</class>
       <description>Reads raw frames from a video4linux device</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>

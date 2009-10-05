@@ -1499,6 +1499,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstVideoRate::skip-to-first</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip to first buffer</NICK>
+<BLURB>Don't produce buffers before the first one we receive.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioRate::add</NAME>
 <TYPE>guint64</TYPE>
 <RANGE></RANGE>
@@ -1756,6 +1766,26 @@
 <NICK>Wait Text</NICK>
 <BLURB>Whether to wait for subtitles.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::auto-resize</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>auto resize</NICK>
+<BLURB>Automatically adjust font size to screen-size.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::vertical-render</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>vertical render</NICK>
+<BLURB>Vertical Render.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2114,7 +2144,7 @@
 <RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer duration (ns)</NICK>
-<BLURB>Buffer duration when buffering network streams.</BLURB>
+<BLURB>Buffer duration when buffering network streams (-1 queue2 default value).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
@@ -2124,7 +2154,7 @@
 <RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer size (bytes)</NICK>
-<BLURB>Buffer size when buffering network streams.</BLURB>
+<BLURB>Buffer size when buffering network streams (-1 queue2 default value).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
@@ -2916,5 +2946,55 @@
 <NICK>Target caps</NICK>
 <BLURB>Set target format for mixing (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlaySink::flags</NAME>
+<TYPE>GstPlayFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags to control behaviour.</BLURB>
+<DEFAULT>Render the video stream|Render the audio stream|Render subtitles|Use software volume</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlaySink::mute</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mute</NICK>
+<BLURB>Mute the audio channel without changing the volume.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlaySink::subtitle-font-desc</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Subtitle font description</NICK>
+<BLURB>Pango font description of font to be used for subtitle rendering.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlaySink::vis-plugin</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Vis plugin</NICK>
+<BLURB>the visualization element to use (NULL = default).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlaySink::volume</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Volume</NICK>
+<BLURB>The audio volume, 1.0=100%.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
