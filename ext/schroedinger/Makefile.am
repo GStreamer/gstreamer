@@ -11,10 +11,9 @@ libgstschro_la_SOURCES = \
 	gstschroparse.c \
 	gstschroutils.c
 libgstschro_la_CFLAGS = \
-        -I$(top_srcdir)/gst-libs/gst/video \
+	$(GST_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
         $(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
 	$(SCHRO_CFLAGS)
 libgstschro_la_LIBADD = \

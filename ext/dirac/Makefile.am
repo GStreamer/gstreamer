@@ -5,8 +5,8 @@ libgstdirac_la_SOURCES = \
 	gstdiracenc.cc
 
 libgstdirac_la_CXXFLAGS = \
-        -I$(top_srcdir)/gst-libs/gst/video \
-        $(GST_PLUGINS_BASE_CFLAGS) $(GST_CXXFLAGS) $(DIRAC_CFLAGS) \
+        $(GST_CXXFLAGS) \
+        $(GST_PLUGINS_BASE_CFLAGS) $(DIRAC_CFLAGS) \
 	-DGST_USE_UNSTABLE_API
 libgstdirac_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_MAJORMINOR@.la \
