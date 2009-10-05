@@ -1,4 +1,57 @@
-This is GStreamer 0.10.24 "It matters"
+This is GStreamer 0.10.25 "Feel the burn"
+
+Changes since 0.10.24:
+    
+      * Improve the byte-reader API
+      * GObject introspection support
+      * Improve clock accuracy on win32
+      * Optimisations in capabilities checking
+      * Optimisations and fixes in the basetransform base class
+      * new 64-bit scaling utility function variants
+      * Various bug-fixes and improvements (see ChangeLog and bugs list below)
+
+Bugs fixed since 0.10.24:
+     
+      * 583999 : [basetransform] caps refcounting problem causing GST_IS_CAPS assertion failures
+      * 566881 : [GstIndex] support/caching in GstBin
+      * 588472 : [basetransform] problems in reverse-negotiating
+      * 589173 : macros cause spurious semicolon warnings
+      * 589314 : [basetransform] clears GAP flag in passthrough mode
+      * 589524 : gst_base_transform_acceptcaps() could provide more verbose debugging output
+      * 589849 : [segment] Clipping fails to handle start=stop < segment_start correctly
+      * 589991 : [queue] limited error handling might cause pipeline appearing to hang
+      * 590045 : Query position fails when pipeline is paused and format is not time
+      * 590430 : Add support for " album artist " tags
+      * 590841 : configure script check for libxml2 is incorrect
+      * 590919 : gst_util_uint64_scale_int() and friends don't round
+      * 591045 : [basesrc] Leaking GstTask instances
+      * 591318 : ghostpad : core dump : on_src_target_notify called with an invalid ghostpad
+      * 591441 : append mode for filesink
+      * 592209 : [GstPad] Deprecated markers missing in the header for internal links function related things
+      * 592314 : core/tests/examples/streams/ does not link to pthread
+      * 593460 : Broken win32-specific systemclock code
+      * 593719 : regression: segfault when using gstrtpbin and certain video codecs
+      * 594107 : [gstbin] : use of freed message : valgrind Invalid read
+      * 594225 : [API] [bytereader] add _unchecked() variants and inline most common functions
+      * 594990 : [introspection] pkg-config file madness and another bug
+      * 595130 : checks fail
+      * 595133 : gst/gstutils check fails
+      * 595209 : Fix out-of-tree build
+      * 368536 : bin_change_state makes children go through unnecessary state changes
+
+API additions since 0.10.24:
+    
+      * gst_caps_can_intersect()
+      * gst_util_uint64_scale_int_round()
+      * gst_util_uint64_scale_int_ceil()
+      * gst_util_uint64_scale_round()
+      * gst_util_uint64_scale_ceil()
+      * gst_iterator_new_single()
+      * gst_byte_reader_skip_unchecked()
+      * gst_byte_reader_peek_*_unchecked()
+      * gst_byte_reader_get_*_unchecked()
+      * gst_byte_reader_{peek,get,dup}_data_unchecked()
+      * gst_byte_reader_get_float*_unchecked()
 
 Changes since 0.10.23:
     

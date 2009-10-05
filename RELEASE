@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.24 "It matters"
+Release notes for GStreamer 0.10.25 "Feel the burn"
         
 
 
@@ -37,111 +37,58 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Fully support nested structures in caps
-      * Support frame-by-frame stepping in sinks
-      * Add buffer-lists to pass around groups of buffers
-      * Use TaskPools for managing worker threads
-      * New stream-status API for finer thread control
-      * Code optimisations
-      * Many other bug-fixes and enhancements
+      * Improve the byte-reader API
+      * GObject introspection support
+      * Improve clock accuracy on win32
+      * Optimisations in capabilities checking
+      * Optimisations and fixes in the basetransform base class
+      * new 64-bit scaling utility function variants
+      * Various bug-fixes and improvements (see ChangeLog and bugs list below)
 
 Bugs fixed in this release
      
-      * 580579 : crash in Volume Control: aucunes idées désolé.
-      * 527488 : [GstXML] can't load elements with request pads from XML
-      * 570233 : allow plugins caching data in the registry
-      * 584389 : don't recreate plugin feature and element factories on fi...
-      * 534208 : [API] add gst_structure_get()
-      * 545787 : [API] add gst_plugin_register_static_full() for bindings
-      * 554460 : thumbnailer crash in gst_fake_sink_event() on FLUSH_START...
-      * 559643 : Don't allow empty or NULL strings in taglists
-      * 560345 : gst_tag_list_get_string() may return NULL or empty string
-      * 560442 : GNOME Goal: Remove deprecated GLib symbols
-      * 572285 : Buffer Lists
-      * 577926 : Remove old xml registry
-      * 578908 : [fdsink] implement seeking on seekable fds
-      * 580177 : glibc 2.10 deprecates register_printf_function
-      * 580716 : race condition in gst_element_lost_state
-      * 581198 : [tags] Add gst_tag_setter_add_tag_value() and gst_tag_lis...
-      * 581281 : [GstURIHandler] Doesn't use get_type_full() at all
-      * 582010 : audiotestsrc is-live=1 ! pulsesink unreliable
-      * 582564 : [controller] Use ordered GSequence instead of GList in th...
-      * 582588 : [API] Add a way to get the pad corresponding to a taglist
-      * 582878 : [GstClock] ABI breakage in GIT on x86
-      * 583187 : [API] add gst_adapter_masked_scan_uint32() and gst_adapte...
-      * 583419 : Bad translatable string in gst-launch.c
-      * 583456 : framestep functionality
-      * 583554 : Slow down or lock if date time is changed to the past
-      * 584835 : MSVC compiler fails with 'static inline' function
-      * 584838 : basesrc: confusing QUERY_SEEKING handling
-      * 585039 : rtpool-test can't find pthreads
-      * 585075 : Compilation with MSVC fails for files including config.h ...
-      * 585137 : gst_xml_write_file() fails serialising GstStructure property
-      * 585592 : [API] add gst_byte_reader_masked_scan_uint32()
-      * 585733 : Wrong #include order in gstsegment.c
-      * 585748 : [API] add gst_tag_list_new_full() to create taglist with ...
-      * 586566 : Add GAP Flag support to gstcapsfilter
-      * 586568 : [bytereader] add misc. string functions and gst_byte_read...
-      * 587973 : use G_DIR_SEPARATOR_S instead of " /' " 
-      * 587976 : Fix for gst-inspect and gst-launch when option parsing is...
-      * 588744 : [check] Stream consistency checker utility
-      * 588745 : [basesrc] Serialize tags in the dataflow
-      * 589127 : gsttask leaks the pool
-      * 590056 : [collectpads] race resulting in double flush-stop being o...
-      * 590622 : [bytereader] buffer size checks subject to wrap-around ov...
-      * 579177 : GstInfo: maintain ABI compatibility
-      * 581321 : typefind element leaks force-caps property
-      * 584118 : [gstadapter][doc] Improve documentation of gst_adapter_ma...
-      * 585433 : [queue] Can lock down if min-threshold conflicts with max...
-      * 585569 : rtsp/rtp streaming fails when skipping explicit PAUSED st...
-      * 585834 : Support for GstBufferList in ghostpads
-      * 585960 : Support for GstBufferList in gstbasesink
-      * 587052 : [filesink.c] Support for files > 4GB on windows makes file...
+      * 583999 : [basetransform] caps refcounting problem causing GST_IS_CAPS assertion failures
+      * 566881 : [GstIndex] support/caching in GstBin
+      * 588472 : [basetransform] problems in reverse-negotiating
+      * 589173 : macros cause spurious semicolon warnings
+      * 589314 : [basetransform] clears GAP flag in passthrough mode
+      * 589524 : gst_base_transform_acceptcaps() could provide more verbose debugging output
+      * 589849 : [segment] Clipping fails to handle start=stop < segment_start correctly
+      * 589991 : [queue] limited error handling might cause pipeline appearing to hang
+      * 590045 : Query position fails when pipeline is paused and format is not time
+      * 590430 : Add support for " album artist " tags
+      * 590841 : configure script check for libxml2 is incorrect
+      * 590919 : gst_util_uint64_scale_int() and friends don't round
+      * 591045 : [basesrc] Leaking GstTask instances
+      * 591318 : ghostpad : core dump : on_src_target_notify called with an invalid ghostpad
+      * 591441 : append mode for filesink
+      * 592209 : [GstPad] Deprecated markers missing in the header for internal links function related things
+      * 592314 : core/tests/examples/streams/ does not link to pthread
+      * 593460 : Broken win32-specific systemclock code
+      * 593719 : regression: segfault when using gstrtpbin and certain video codecs
+      * 594107 : [gstbin] : use of freed message : valgrind Invalid read
+      * 594225 : [API] [bytereader] add _unchecked() variants and inline most common functions
+      * 594990 : [introspection] pkg-config file madness and another bug
+      * 595130 : checks fail
+      * 595133 : gst/gstutils check fails
+      * 595209 : Fix out-of-tree build
+      * 368536 : bin_change_state makes children go through unnecessary state changes
 
 API changed in this release
      
 - API additions:
     
-* GST_DEBUG_CATEGORY_GET() macro
-* gst_byte_reader_dup_data
-* gst_byte_reader_dup_string
-* gst_byte_reader_dup_string_utf8
-* gst_byte_reader_dup_string_utf16
-* gst_byte_reader_dup_string_utf32
-* gst_byte_reader_skip_string
-* gst_byte_reader_skip_string_utf8
-* gst_byte_reader_skip_string_utf16
-* gst_byte_reader_skip_string_utf32
-* gst_byte_reader_peek_string
-* gst_byte_reader_peek_string_utf8
-* gst_byte_reader_get_string
-* gst_byte_reader_get_string_utf8
-* add gst_tag_list_new_full()
-* add gst_tag_list_new_full_valist()
-* add gst_byte_reader_masked_scan_uint32()
-* add gst_plugin_get_cache_data, gst_plugin_set_cache_data
-* gst_structure_get()
-* gst_structure_id_get()
-* gst_structure_get_valist()
-* gst_structure_id_get_valist()
-* GstSegment::gst_segment_set_running_time()
-* Add GST_MESSAGE_SRC_NAME() macro
-* GstSegment::gst_segment_to_position()
-* GstEvent::gst_event_new_step()
-* GstEvent::gst_event_parse_step()
-* GstMessage::gst_message_new_step_done()
-* GstMessage::gst_message_parse_step_done()
-* gst_structure_id_new()
-* Add gst_message_{new,parse}_tag_full() to get/set the source pad
-* GstAdapter::gst_adapter_masked_scan_uint32()
-* GstElement::gst_element_lost_state_full()
-* GstAdapter::gst_adapter_prev_timestamp()
-* gst_plugin_register_static_full()
-* gst_tag_list_add_value()
-* gst_tag_setter_add_tag_value()
-* add GST_TAG_CONTAINER_FORMAT tag
-* GstTask::gst_task_set_state()
-* GstObject::gst_object_ref_sink()
+* gst_caps_can_intersect()
+* gst_util_uint64_scale_int_round()
+* gst_util_uint64_scale_int_ceil()
+* gst_util_uint64_scale_round()
+* gst_util_uint64_scale_ceil()
+* gst_iterator_new_single()
+* gst_byte_reader_skip_unchecked()
+* gst_byte_reader_peek_*_unchecked()
+* gst_byte_reader_get_*_unchecked()
+* gst_byte_reader_{peek,get,dup}_data_unchecked()
+* gst_byte_reader_get_float*_unchecked()
 
 Download
 
@@ -175,30 +122,21 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Andoni Morales
-      * Arnout Vandecappelle
-      * Benjamin Gaignard
-      * Branko Subasic
-      * Chad Hanna
-      * Christopher Halse Rogers
+      * Antoine Tremblay
+      * Aurelien Grimaud
+      * Benjamin Otte
       * David Schleef
       * Edward Hervey
-      * Hannes Bistry
       * Jan Schmidt
+      * John Millikin
       * Jonas Holmberg
-      * Josep Torra
-      * José Alburquerque
-      * Marc-Andre Lureau
+      * Kipp Cannon
+      * Laurent Glayal
       * Mark Nauwelaerts
-      * Ognyan Tonchev
-      * Olivier Crête
-      * Philip Jägenstedt
-      * René Stadler
-      * Robin Stocker
       * Sebastian Dröge
       * Stefan Kost
-      * Thiago Santos
-      * Thomas Vander Stichele
+      * Stian Selnes
+      * Thijs Vermeir
       * Tim-Philipp Müller
       * Wim Taymans
       * Руслан Ижбулатов

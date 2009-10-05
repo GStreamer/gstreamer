@@ -619,6 +619,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstFileSink::append</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Append</NICK>
+<BLURB>Append to an already existing file.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstTee::has-chain</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
