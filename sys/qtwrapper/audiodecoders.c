@@ -537,7 +537,7 @@ open_decoder (QTWrapperAudioDecoder * qtwrapper, GstCaps * caps,
 
   /* if we have codec_data, give it to the converter ! */
   if (codec_data) {
-    gsize len;
+    gsize len = 0;
     gpointer magiccookie;
 
     switch (oclass->componentSubType) {
