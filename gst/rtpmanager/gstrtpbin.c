@@ -297,7 +297,7 @@ struct _GstRtpBinStream
   gulong buffer_handlesync_sig;
   gulong buffer_ptreq_sig;
   gulong buffer_ntpstop_sig;
-  gboolean buffering;
+  gint percent;
 
   /* the PT demuxer of the SSRC */
   GstElement *demux;
@@ -1167,6 +1167,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
 
   stream->have_sync = FALSE;
   stream->unix_delta = 0;
+  stream->percent = 100;
   session->streams = g_slist_prepend (session->streams, stream);
 
   /* provide clock_rate to the jitterbuffer when needed */
@@ -1174,6 +1175,9 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
       (GCallback) pt_map_requested, session);
   stream->buffer_ntpstop_sig = g_signal_connect (buffer, "on-npt-stop",
       (GCallback) on_npt_stop, stream);
+
+  g_object_set_data (G_OBJECT (buffer), "GstRtpBinSession", session);
+  g_object_set_data (G_OBJECT (buffer), "GstRtpBinStream", stream);
 
   /* configure latency and packet lost */
   g_object_set (buffer, "latency", rtpbin->latency, NULL);
@@ -1779,8 +1783,79 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_BUFFERING:
     {
       gint percent;
+      gint min_percent = 100;
+      GSList *sessions, *streams, *elements = NULL;
+      GstRtpBinStream *stream;
+      guint64 base_time = 0;
+      gboolean change = FALSE, active = FALSE;
 
       gst_message_parse_buffering (message, &percent);
+
+      stream =
+          g_object_get_data (G_OBJECT (GST_MESSAGE_SRC (message)),
+          "GstRtpBinStream");
+
+      GST_DEBUG_OBJECT (bin, "got percent %d from stream %p", percent, stream);
+
+      /* get the stream */
+      if (stream) {
+        GST_RTP_BIN_LOCK (rtpbin);
+        /* fill in the percent */
+        stream->percent = percent;
+
+        for (sessions = rtpbin->sessions; sessions;
+            sessions = g_slist_next (sessions)) {
+          GstRtpBinSession *session = (GstRtpBinSession *) sessions->data;
+
+          GST_RTP_SESSION_LOCK (session);
+          for (streams = session->streams; streams;
+              streams = g_slist_next (streams)) {
+            GstRtpBinStream *stream = (GstRtpBinStream *) streams->data;
+            GstElement *element = stream->buffer;
+
+            GST_DEBUG_OBJECT (bin, "stream %p percent %d", stream,
+                stream->percent);
+
+            /* find min percent */
+            if (min_percent > stream->percent)
+              min_percent = stream->percent;
+
+            elements = g_slist_prepend (elements, gst_object_ref (element));
+          }
+          GST_RTP_SESSION_UNLOCK (session);
+        }
+        GST_DEBUG_OBJECT (bin, "min percent %d", min_percent);
+
+        if (rtpbin->buffering) {
+          if (min_percent == 100) {
+            rtpbin->buffering = FALSE;
+            active = TRUE;
+            change = TRUE;
+          }
+        } else {
+          /* pause the streams */
+          rtpbin->buffering = TRUE;
+          active = FALSE;
+          change = TRUE;
+        }
+        GST_RTP_BIN_UNLOCK (rtpbin);
+
+        gst_message_unref (message);
+        message =
+            gst_message_new_buffering (GST_OBJECT_CAST (bin), min_percent);
+
+        if (change) {
+          while (elements) {
+            GstElement *element = elements->data;
+
+            GST_DEBUG_OBJECT (bin, "setting %p to %d", element, active);
+            g_signal_emit_by_name (element, "set-active", active, base_time,
+                NULL);
+            gst_object_unref (element);
+            elements = g_slist_delete_link (elements, elements);
+          }
+        }
+      }
 
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
       break;

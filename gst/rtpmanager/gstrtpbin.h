@@ -49,6 +49,7 @@ struct _GstRtpBin {
   gboolean        do_lost;
   gboolean        ignore_pt;
   RTPJitterBufferMode buffer_mode;
+  gboolean        buffering;
   /* a list of session */
   GSList         *sessions;
 

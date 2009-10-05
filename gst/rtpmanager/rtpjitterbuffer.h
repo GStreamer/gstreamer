@@ -58,16 +58,6 @@ typedef enum {
 #define RTP_TYPE_JITTER_BUFFER_MODE (rtp_jitter_buffer_mode_get_type())
 GType rtp_jitter_buffer_mode_get_type (void);
 
-/**
- * RTPBufferingStats:
- * @jbuf: an #RTPJitterBuffer
- * @percent: the buffering percent
- * @user_data: user data specified when registering
- *
- * Called when buffering is going on in @jbuf.
- */
-typedef void (*RTPBufferingStats) (RTPJitterBuffer *jbuf, guint percent, gpointer user_data);
-
 #define RTP_JITTER_BUFFER_MAX_WINDOW 512
 /**
  * RTPJitterBuffer:
@@ -88,8 +78,6 @@ struct _RTPJitterBuffer {
   guint64           level;
   guint64           low_level;
   guint64           high_level;
-  RTPBufferingStats stats_cb;
-  gpointer          stats_data;
 
   /* for calculating skew */
   GstClockTime   base_time;
@@ -117,9 +105,6 @@ GType rtp_jitter_buffer_get_type (void);
 /* managing lifetime */
 RTPJitterBuffer*      rtp_jitter_buffer_new              (void);
 
-void                  rtp_jitter_buffer_set_stats_cb     (RTPJitterBuffer *jbuf, RTPBufferingStats stats_cb,
-                                                          gpointer user_data);
-
 RTPJitterBufferMode   rtp_jitter_buffer_get_mode         (RTPJitterBuffer *jbuf);
 void                  rtp_jitter_buffer_set_mode         (RTPJitterBuffer *jbuf, RTPJitterBufferMode mode);
 
@@ -131,10 +116,9 @@ void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf)
 gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf, GstBuffer *buf,
                                                           GstClockTime time,
                                                           guint32 clock_rate,
-                                                          GstClockTime max_delay,
-                                                          gboolean *tail);
+                                                          gboolean *tail, gint *percent);
 GstBuffer *           rtp_jitter_buffer_peek             (RTPJitterBuffer *jbuf);
-GstBuffer *           rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf);
+GstBuffer *           rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf, gint *percent);
 
 void                  rtp_jitter_buffer_flush            (RTPJitterBuffer *jbuf);
 

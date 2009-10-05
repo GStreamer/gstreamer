@@ -120,24 +120,6 @@ rtp_jitter_buffer_new (void)
 }
 
 /**
- * rtp_jitter_buffer_set_stats_cb:
- * @jbuf: an #RTPJitterBuffer
- * @stats: the stats callback
- * @user_data: user data passed to the callback
- *
- * Install a callbacl that will be called when the buffering state of @jbuf
- * changed.
- */
-void
-rtp_jitter_buffer_set_stats_cb (RTPJitterBuffer * jbuf,
-    RTPBufferingStats stats_cb, gpointer user_data)
-{
-  jbuf->stats_cb = stats_cb;
-  jbuf->stats_data = user_data;
-}
-
-
-/**
  * rtp_jitter_buffer_get_mode:
  * @jbuf: an #RTPJitterBuffer
  *
@@ -225,7 +207,7 @@ rtp_jitter_buffer_resync (RTPJitterBuffer * jbuf, GstClockTime time,
 }
 
 static void
-update_buffer_level (RTPJitterBuffer * jbuf)
+update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
 {
   GstBuffer *high_buf, *low_buf;
   gboolean post = FALSE;
@@ -262,19 +244,19 @@ update_buffer_level (RTPJitterBuffer * jbuf)
     }
   }
   if (post) {
-    gint percent;
+    gint perc;
 
     if (jbuf->buffering) {
-      percent = (jbuf->level * 100 / jbuf->delay);
-      percent = MIN (percent, 100);
+      perc = (jbuf->level * 100 / jbuf->delay);
+      perc = MIN (perc, 100);
     } else {
-      percent = 100;
+      perc = 100;
     }
 
-    if (jbuf->stats_cb)
-      jbuf->stats_cb (jbuf, percent, jbuf->stats_data);
+    if (percent)
+      *percent = perc;
 
-    GST_DEBUG ("buffering %d", percent);
+    GST_DEBUG ("buffering %d", perc);
   }
 }
 
@@ -575,8 +557,7 @@ no_skew:
  */
 gboolean
 rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
-    GstClockTime time, guint32 clock_rate, GstClockTime max_delay,
-    gboolean * tail)
+    GstClockTime time, guint32 clock_rate, gboolean * tail, gint * percent)
 {
   GList *list;
   guint32 rtptime;
@@ -642,7 +623,9 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
 
   /* buffering mode, update buffer stats */
   if (jbuf->mode == RTP_JITTER_BUFFER_MODE_BUFFER)
-    update_buffer_level (jbuf);
+    update_buffer_level (jbuf, percent);
+  else
+    *percent = -1;
 
   /* tail was changed when we did not find a previous packet, we set the return
    * flag when requested. */
@@ -662,6 +645,7 @@ duplicate:
 /**
  * rtp_jitter_buffer_pop:
  * @jbuf: an #RTPJitterBuffer
+ * @percent: the buffering percent
  *
  * Pops the oldest buffer from the packet queue of @jbuf. The popped buffer will
  * have its timestamp adjusted with the incomming running_time and the detected
@@ -670,7 +654,7 @@ duplicate:
  * Returns: a #GstBuffer or %NULL when there was no packet in the queue.
  */
 GstBuffer *
-rtp_jitter_buffer_pop (RTPJitterBuffer * jbuf)
+rtp_jitter_buffer_pop (RTPJitterBuffer * jbuf, gint * percent)
 {
   GstBuffer *buf;
 
@@ -680,7 +664,9 @@ rtp_jitter_buffer_pop (RTPJitterBuffer * jbuf)
 
   /* buffering mode, update buffer stats */
   if (jbuf->mode == RTP_JITTER_BUFFER_MODE_BUFFER)
-    update_buffer_level (jbuf);
+    update_buffer_level (jbuf, percent);
+  else
+    *percent = -1;
 
   return buf;
 }
