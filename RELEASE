@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Python bindings 0.10.16 "Distorted memory"
+Release notes for GStreamer Python bindings 0.10.17 "Shiny new button"
         
 
 
@@ -17,15 +17,16 @@ It is, however, parallel installable with the 0.8.x series.
 
 Features of this release
     
-      * Update bindings for GStreamer 0.10.24
-      * Fixes for the python plugin loader
+      * Fix leak in gst_base_sink_get_last_buffer()
+      * Fix linking of pygstminiobject
+      * Add test_audio.py example
+      * Fix deadlocks calling gst_pad_link()
 
 Bugs fixed in this release
      
-      * 580992 : gst_preset_get_preset_names not wrapped in gst-python
-      * 583378 : libgstpython.so causes a segfault
-      * 583607 : Error when building from tarball
-      * 584445 : gst.TagList getters and setters should convert unicode ob...
+      * 590348 : [audio (and other modules)] can't use pygstminiobject !
+      * 590803 : checks fail in non-English locale
+      * 592447 : memory leak on certain pipelines with appsink
 
 Download
 
@@ -54,9 +55,11 @@ Applications
   
 Contributors to this release
     
+      * Alessandro Decina
+      * Christian Schaller
       * Edward Hervey
       * Jan Schmidt
-      * Olivier Crête
-      * Stefan Kost
-      * Thomas Vander Stichele
+      * Johannes Berg
+      * Marc-Andre Lureau
+      * Sebastian Dröge
  

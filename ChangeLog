@@ -1,3 +1,33 @@
+=== release 0.10.17 ===
+
+2009-10-05  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.17, "Shiny new button"
+
+2009-09-17 01:21:47 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  0.10.16.3 pre-release
+
+2009-09-16 16:23:27 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.25.ignore:
+	* gst/gst-pb-0.10.25.ignore:
+	* gst/gst.defs:
+	* gst/gstversion.override.in:
+	* gst/interfaces.defs:
+	* gst/interfaces.override:
+	  Update definitions and ignores for core/base 0.10.25. Fixes #587432
+
+2009-09-12 00:26:57 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	  0.10.16.2 pre-release
+
 2009-09-11 22:41:28 +0100  Jan Schmidt <thaytan@noraisin.net>
 
 	* testsuite/test_message.py:
