@@ -106,6 +106,7 @@ check_PROGRAMS =				\
 	libs/adapter				\
 	libs/bitreader				\
 	libs/bytereader				\
+	libs/bytewriter				\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider			\
 	libs/transform1				
@@ -168,6 +169,9 @@ libs_bitreader_LDADD = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(LDADD)
 libs_bytereader_LDADD = \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(LDADD)
+libs_bytewriter_LDADD = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(LDADD)
 libs_adapter_LDADD = \
