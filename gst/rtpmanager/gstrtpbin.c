@@ -246,6 +246,7 @@ enum
 #define DEFAULT_DO_LOST              FALSE
 #define DEFAULT_IGNORE_PT            FALSE
 #define DEFAULT_AUTOREMOVE           FALSE
+#define DEFAULT_BUFFER_MODE          RTP_JITTER_BUFFER_MODE_SLAVE
 
 enum
 {
@@ -255,6 +256,7 @@ enum
   PROP_DO_LOST,
   PROP_IGNORE_PT,
   PROP_AUTOREMOVE,
+  PROP_BUFFER_MODE,
   PROP_LAST
 };
 
@@ -295,6 +297,7 @@ struct _GstRtpBinStream
   gulong buffer_handlesync_sig;
   gulong buffer_ptreq_sig;
   gulong buffer_ntpstop_sig;
+  gboolean buffering;
 
   /* the PT demuxer of the SSRC */
   GstElement *demux;
@@ -1175,6 +1178,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   /* configure latency and packet lost */
   g_object_set (buffer, "latency", rtpbin->latency, NULL);
   g_object_set (buffer, "do-lost", rtpbin->do_lost, NULL);
+  g_object_set (buffer, "mode", rtpbin->buffer_mode, NULL);
 
   if (!rtpbin->ignore_pt)
     gst_bin_add (GST_BIN_CAST (rtpbin), demux);
@@ -1232,7 +1236,7 @@ free_stream (GstRtpBinStream * stream)
   gst_element_set_state (stream->demux, GST_STATE_NULL);
   gst_element_set_state (stream->buffer, GST_STATE_NULL);
 
-  /* now remove this signal, we need this while going to NULL because it to 
+  /* now remove this signal, we need this while going to NULL because it to
    * do some cleanups */
   if (stream->demux)
     g_signal_handler_disconnect (stream->demux, stream->demux_padremoved_sig);
@@ -1522,15 +1526,27 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "Send an event downstream when a packet is lost", DEFAULT_DO_LOST,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_IGNORE_PT,
-      g_param_spec_boolean ("ignore-pt", "Ignore PT",
-          "Do not demultiplex based on PT values", DEFAULT_IGNORE_PT,
-          G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_AUTOREMOVE,
       g_param_spec_boolean ("autoremove", "Auto Remove",
           "Automatically removed timed out sources", DEFAULT_AUTOREMOVE,
           G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_IGNORE_PT,
+      g_param_spec_boolean ("ignore_pt", "Ignore PT",
+          "Do not demultiplex based on PT values", DEFAULT_IGNORE_PT,
+          G_PARAM_READWRITE));
+  /**
+   * GstRtpBin::buffer-mode:
+   *
+   * Control the buffering and timestamping mode used by the jitterbuffer.
+   *
+   * Since: 0.10.17
+   */
+  g_object_class_install_property (gobject_class, PROP_BUFFER_MODE,
+      g_param_spec_enum ("buffer-mode", "Buffer Mode",
+          "Control the buffering algorithm in use", RTP_TYPE_JITTER_BUFFER_MODE,
+          DEFAULT_BUFFER_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
@@ -1560,6 +1576,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
   rtpbin->do_lost = DEFAULT_DO_LOST;
   rtpbin->ignore_pt = DEFAULT_IGNORE_PT;
   rtpbin->priv->autoremove = DEFAULT_AUTOREMOVE;
+  rtpbin->buffer_mode = DEFAULT_BUFFER_MODE;
 
   /* some default SDES entries */
   str = g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
@@ -1672,6 +1689,13 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
     case PROP_AUTOREMOVE:
       rtpbin->priv->autoremove = g_value_get_boolean (value);
       break;
+    case PROP_BUFFER_MODE:
+      GST_RTP_BIN_LOCK (rtpbin);
+      rtpbin->buffer_mode = g_value_get_enum (value);
+      GST_RTP_BIN_UNLOCK (rtpbin);
+      /* propagate the property down to the jitterbuffer */
+      gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin, "mode", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1705,6 +1729,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AUTOREMOVE:
       g_value_set_boolean (value, rtpbin->priv->autoremove);
+      break;
+    case PROP_BUFFER_MODE:
+      g_value_set_enum (value, rtpbin->buffer_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1746,7 +1773,17 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
         }
         GST_RTP_BIN_UNLOCK (rtpbin);
       }
-      /* fallthrough to forward the modified message to the parent */
+      GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+      break;
+    }
+    case GST_MESSAGE_BUFFERING:
+    {
+      gint percent;
+
+      gst_message_parse_buffering (message, &percent);
+
+      GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+      break;
     }
     default:
     {

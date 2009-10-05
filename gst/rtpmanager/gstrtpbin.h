@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 
 #include "rtpsession.h"
+#include "rtpjitterbuffer.h"
 
 #define GST_TYPE_RTP_BIN \
   (gst_rtp_bin_get_type())
@@ -47,6 +48,7 @@ struct _GstRtpBin {
   guint           latency;
   gboolean        do_lost;
   gboolean        ignore_pt;
+  RTPJitterBufferMode buffer_mode;
   /* a list of session */
   GSList         *sessions;
 

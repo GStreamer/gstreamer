@@ -88,26 +88,6 @@ enum
   LAST_SIGNAL
 };
 
-#define RTP_TYPE_JITTER_BUFFER_MODE (rtp_jitter_buffer_mode_get_type())
-static GType
-rtp_jitter_buffer_mode_get_type (void)
-{
-  static GType jitter_buffer_mode_type = 0;
-  static const GEnumValue jitter_buffer_modes[] = {
-    {RTP_JITTER_BUFFER_MODE_NONE, "Only use RTP timestamps", "none"},
-    {RTP_JITTER_BUFFER_MODE_SLAVE, "Slave receiver to sender clock", "slave"},
-    {RTP_JITTER_BUFFER_MODE_BUFFER, "Do low/high watermark buffering",
-        "buffer"},
-    {0, NULL, NULL},
-  };
-
-  if (!jitter_buffer_mode_type) {
-    jitter_buffer_mode_type =
-        g_enum_register_static ("RTPJitterBufferMode", jitter_buffer_modes);
-  }
-  return jitter_buffer_mode_type;
-}
-
 #define DEFAULT_LATENCY_MS      200
 #define DEFAULT_DROP_ON_LATENCY FALSE
 #define DEFAULT_TS_OFFSET       0

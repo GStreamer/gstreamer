@@ -55,6 +55,9 @@ typedef enum {
   RTP_JITTER_BUFFER_MODE_LAST
 } RTPJitterBufferMode;
 
+#define RTP_TYPE_JITTER_BUFFER_MODE (rtp_jitter_buffer_mode_get_type())
+GType rtp_jitter_buffer_mode_get_type (void);
+
 /**
  * RTPBufferingStats:
  * @jbuf: an #RTPJitterBuffer

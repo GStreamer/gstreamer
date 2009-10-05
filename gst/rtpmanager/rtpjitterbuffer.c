@@ -44,6 +44,25 @@ enum
 /* GObject vmethods */
 static void rtp_jitter_buffer_finalize (GObject * object);
 
+GType
+rtp_jitter_buffer_mode_get_type (void)
+{
+  static GType jitter_buffer_mode_type = 0;
+  static const GEnumValue jitter_buffer_modes[] = {
+    {RTP_JITTER_BUFFER_MODE_NONE, "Only use RTP timestamps", "none"},
+    {RTP_JITTER_BUFFER_MODE_SLAVE, "Slave receiver to sender clock", "slave"},
+    {RTP_JITTER_BUFFER_MODE_BUFFER, "Do low/high watermark buffering",
+        "buffer"},
+    {0, NULL, NULL},
+  };
+
+  if (!jitter_buffer_mode_type) {
+    jitter_buffer_mode_type =
+        g_enum_register_static ("RTPJitterBufferMode", jitter_buffer_modes);
+  }
+  return jitter_buffer_mode_type;
+}
+
 /* static guint rtp_jitter_buffer_signals[LAST_SIGNAL] = { 0 }; */
 
 G_DEFINE_TYPE (RTPJitterBuffer, rtp_jitter_buffer, G_TYPE_OBJECT);
@@ -243,9 +262,14 @@ update_buffer_level (RTPJitterBuffer * jbuf)
     }
   }
   if (post) {
-    gint percent = (jbuf->level * 100 / jbuf->delay);
+    gint percent;
 
-    percent = MIN (percent, 100);
+    if (jbuf->buffering) {
+      percent = (jbuf->level * 100 / jbuf->delay);
+      percent = MIN (percent, 100);
+    } else {
+      percent = 100;
+    }
 
     if (jbuf->stats_cb)
       jbuf->stats_cb (jbuf, percent, jbuf->stats_data);
