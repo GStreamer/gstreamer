@@ -363,7 +363,8 @@ id3v2_frame_write_string (GstId3v2Frame * frame, int encoding,
   int terminator_length;
   if (encoding == ID3V2_ENCODING_UTF16_BOM) {
     gsize utf16len;
-    /* This converts to little-endian UTF-16, WITH a byte-order-marker */
+    const guint8 bom[] = { 0xFF, 0xFE };
+    /* This converts to little-endian UTF-16 */
     gchar *utf16 = g_convert (string, -1, "UTF-16LE", "UTF-8",
         NULL, &utf16len, NULL);
     if (!utf16) {
@@ -371,6 +372,8 @@ id3v2_frame_write_string (GstId3v2Frame * frame, int encoding,
       return;
     }
 
+    /* Write the BOM */
+    id3v2_frame_write_bytes (frame, (const guint8 *) bom, 2);
     /* NUL terminator is 2 bytes, if present */
     terminator_length = null_terminate ? 2 : 0;
     id3v2_frame_write_bytes (frame, (const guint8 *) utf16,
