@@ -4,6 +4,7 @@ amrparse
 asfmux
 camerabin
 deinterleave
+faac
 gdpdepay
 gdppay
 interleave
