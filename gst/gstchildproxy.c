@@ -249,8 +249,7 @@ gst_child_proxy_get_property (GstObject * object, const gchar * name,
 
 not_found:
   {
-    g_warning ("cannot get property %s from object %s", name,
-        GST_OBJECT_NAME (object));
+    g_warning ("no property %s in object %s", name, GST_OBJECT_NAME (object));
     return;
   }
 }
@@ -270,6 +269,8 @@ gst_child_proxy_get_valist (GstObject * object,
   const gchar *name;
   gchar *error = NULL;
   GValue value = { 0, };
+  GParamSpec *pspec;
+  GstObject *target;
 
   g_return_if_fail (G_IS_OBJECT (object));
 
@@ -277,14 +278,32 @@ gst_child_proxy_get_valist (GstObject * object,
 
   /* iterate over pairs */
   while (name) {
-    gst_child_proxy_get_property (object, name, &value);
+    if (!gst_child_proxy_lookup (object, name, &target, &pspec))
+      goto not_found;
+
+    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    g_object_get_property (G_OBJECT (target), pspec->name, &value);
+    gst_object_unref (target);
+
     G_VALUE_LCOPY (&value, var_args, 0, &error);
-    if (error) {
-      g_warning ("error copying value: %s", error);
-      return;
-    }
+    if (error)
+      goto cant_copy;
     g_value_unset (&value);
     name = va_arg (var_args, gchar *);
+  }
+  return;
+
+not_found:
+  {
+    g_warning ("no property %s in object %s", name, GST_OBJECT_NAME (object));
+    return;
+  }
+cant_copy:
+  {
+    g_warning ("error copying value %s in object %s: %s", pspec->name,
+        GST_OBJECT_NAME (object), error);
+    g_value_unset (&value);
+    return;
   }
 }
 
@@ -357,6 +376,8 @@ gst_child_proxy_set_valist (GstObject * object,
   const gchar *name;
   gchar *error = NULL;
   GValue value = { 0, };
+  GParamSpec *pspec;
+  GstObject *target;
 
   g_return_if_fail (G_IS_OBJECT (object));
 
@@ -364,26 +385,34 @@ gst_child_proxy_set_valist (GstObject * object,
 
   /* iterate over pairs */
   while (name) {
-    GParamSpec *pspec;
-    GstObject *target;
+    if (!gst_child_proxy_lookup (object, name, &target, &pspec))
+      goto not_found;
 
-    if (!gst_child_proxy_lookup (object, name, &target, &pspec)) {
-      g_warning ("no such property %s in object %s", name,
-          GST_OBJECT_NAME (object));
-      continue;
-    }
     g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
     G_VALUE_COLLECT (&value, var_args, G_VALUE_NOCOPY_CONTENTS, &error);
-    if (error) {
-      g_warning ("error copying value: %s", error);
-      gst_object_unref (target);
-      return;
-    }
+    if (error)
+      goto cant_copy;
+
     g_object_set_property (G_OBJECT (target), pspec->name, &value);
     gst_object_unref (target);
 
     g_value_unset (&value);
     name = va_arg (var_args, gchar *);
+  }
+  return;
+
+not_found:
+  {
+    g_warning ("no property %s in object %s", name, GST_OBJECT_NAME (object));
+    return;
+  }
+cant_copy:
+  {
+    g_warning ("error copying value %s in object %s: %s", pspec->name,
+        GST_OBJECT_NAME (object), error);
+    g_value_unset (&value);
+    gst_object_unref (target);
+    return;
   }
 }
 

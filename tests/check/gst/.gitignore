@@ -6,6 +6,7 @@ gstbuffer
 gstbufferlist
 gstbus
 gstcaps
+gstchildproxy
 gstdata
 gstelement
 gstevent

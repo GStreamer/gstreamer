@@ -46,6 +46,7 @@ else
 REGISTRY_CHECKS =				\
 	gst/gst					\
 	gst/gstbin				\
+	gst/gstchildproxy			\
 	gst/gstelement				\
 	gst/gstevent				\
 	gst/gstghostpad				\
