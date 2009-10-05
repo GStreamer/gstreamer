@@ -11,16 +11,16 @@ libgstschro_la_SOURCES = \
 	gstschroparse.c \
 	gstschroutils.c
 libgstschro_la_CFLAGS = \
-	$(GST_CFLAGS) \
-        $(GST_BASE_CFLAGS) \
+        -I$(top_srcdir)/gst-libs/gst/video \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+        $(GST_BASE_CFLAGS) \
+	$(GST_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
 	$(SCHRO_CFLAGS)
 libgstschro_la_LIBADD = \
-	$(GST_LIBS) \
-        $(GST_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
 	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_MAJORMINOR@.la \
-	$(GST_PLUGINS_BASE_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
+        $(GST_BASE_LIBS) $(GST_LIBS) \
 	$(SCHRO_LIBS)
 libgstschro_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstschro_la_LIBTOOLFLAGS = --tag=disable-static
