@@ -155,8 +155,8 @@ static GstFlowReturn gst_dirac_enc_shape_output (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstCaps *gst_dirac_enc_get_caps (GstBaseVideoEncoder *
     base_video_encoder);
-static void gst_dirac_enc_create_codec_data (GstDiracEnc *dirac_enc,
-    GstBuffer *seq_header);
+static void gst_dirac_enc_create_codec_data (GstDiracEnc * dirac_enc,
+    GstBuffer * seq_header);
 
 static GstFlowReturn
 gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence);
@@ -180,7 +180,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate gst_dirac_enc_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-dirac;video/x-qt-part;video/x-mp4-part")
@@ -323,6 +323,42 @@ gst_dirac_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GstVideoState * state)
 {
   GstDiracEnc *dirac_enc = GST_DIRAC_ENC (base_video_encoder);
+  GstCaps *caps;
+  GstStructure *structure;
+
+  GST_DEBUG ("set_output_caps");
+  caps =
+      gst_pad_get_allowed_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
+      (base_video_encoder));
+
+  if (caps == NULL) {
+    caps =
+        gst_caps_copy (gst_pad_get_pad_template_caps
+        (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
+  }
+
+  if (gst_caps_is_empty (caps)) {
+    gst_caps_unref (caps);
+    return FALSE;
+  }
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_has_name (structure, "video/x-dirac")) {
+    dirac_enc->output_format = GST_DIRAC_ENC_OUTPUT_OGG;
+  } else if (gst_structure_has_name (structure, "video/x-qt-part")) {
+    dirac_enc->output_format = GST_DIRAC_ENC_OUTPUT_QUICKTIME;
+  } else if (gst_structure_has_name (structure, "video/x-avi-part")) {
+    dirac_enc->output_format = GST_DIRAC_ENC_OUTPUT_AVI;
+  } else if (gst_structure_has_name (structure, "video/x-mp4-part")) {
+    dirac_enc->output_format = GST_DIRAC_ENC_OUTPUT_MP4;
+  } else {
+    return FALSE;
+  }
+
+  gst_caps_unref (caps);
+
+  gst_base_video_encoder_set_latency_fields (base_video_encoder, 2 * 2);
 
   switch (state->format) {
     case GST_VIDEO_FORMAT_I420:
@@ -767,40 +803,11 @@ static gboolean
 gst_dirac_enc_start (GstBaseVideoEncoder * base_video_encoder)
 {
   GstDiracEnc *dirac_enc = GST_DIRAC_ENC (base_video_encoder);
-  GstCaps *caps;
-  GstStructure *structure;
-
-  GST_DEBUG ("set_output_caps");
-  caps =
-      gst_pad_get_allowed_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
-      (base_video_encoder));
-
-  if (gst_caps_is_empty (caps)) {
-    gst_caps_unref (caps);
-    return FALSE;
-  }
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (gst_structure_has_name (structure, "video/x-dirac")) {
-    dirac_enc->output_format = GST_DIRAC_ENC_OUTPUT_OGG;
-  } else if (gst_structure_has_name (structure, "video/x-qt-part")) {
-    dirac_enc->output_format = GST_DIRAC_ENC_OUTPUT_QUICKTIME;
-  } else if (gst_structure_has_name (structure, "video/x-avi-part")) {
-    dirac_enc->output_format = GST_DIRAC_ENC_OUTPUT_AVI;
-  } else if (gst_structure_has_name (structure, "video/x-mp4-part")) {
-    dirac_enc->output_format = GST_DIRAC_ENC_OUTPUT_MP4;
-  } else {
-    return FALSE;
-  }
-
-  gst_base_video_encoder_set_latency_fields (base_video_encoder, 2 * 2);
 
   dirac_enc->granule_offset = ~0;
 
   dirac_enc->encoder = dirac_encoder_init (&dirac_enc->enc_ctx, FALSE);
 
-  gst_caps_unref (caps);
   return TRUE;
 }
 
@@ -866,8 +873,7 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
       data = (uint8_t *) g_malloc (GST_BUFFER_SIZE (frame->sink_buffer));
       for (j = 0; j < state->height; j++) {
         for (i = 0; i < state->width; i++) {
-          data[j * state->width + i] =
-              bufdata[j * state->width * 2 + i * 2];
+          data[j * state->width + i] = bufdata[j * state->width * 2 + i * 2];
         }
         for (i = 0; i < state->width / 2; i++) {
           data[state->height * state->width +
@@ -879,7 +885,8 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
               bufdata[j * state->width * 2 + i * 4 + 3];
         }
       }
-      dirac_encoder_load (dirac_enc->encoder, data, GST_BUFFER_SIZE (frame->sink_buffer));
+      dirac_encoder_load (dirac_enc->encoder, data,
+          GST_BUFFER_SIZE (frame->sink_buffer));
       g_free (data);
     }
       break;
@@ -905,7 +912,8 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
               bufdata[j * state->width * 2 + i * 4 + 2];
         }
       }
-      dirac_encoder_load (dirac_enc->encoder, data, GST_BUFFER_SIZE (frame->sink_buffer));
+      dirac_encoder_load (dirac_enc->encoder, data,
+          GST_BUFFER_SIZE (frame->sink_buffer));
       g_free (data);
     }
       break;
@@ -930,7 +938,8 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
               bufdata[j * state->width * 4 + i * 4 + 3];
         }
       }
-      dirac_encoder_load (dirac_enc->encoder, data, GST_BUFFER_SIZE (frame->sink_buffer));
+      dirac_encoder_load (dirac_enc->encoder, data,
+          GST_BUFFER_SIZE (frame->sink_buffer));
       g_free (data);
     }
       break;
@@ -938,7 +947,7 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
       g_assert_not_reached ();
   }
 
-  GST_DEBUG("handle frame");
+  GST_DEBUG ("handle frame");
 
   gst_buffer_unref (frame->sink_buffer);
   frame->sink_buffer = NULL;
@@ -1122,7 +1131,7 @@ gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
 
     switch (state) {
       case ENC_STATE_BUFFER:
-        GST_DEBUG("BUFFER");
+        GST_DEBUG ("BUFFER");
         gst_buffer_unref (outbuf);
         break;
       case ENC_STATE_INVALID:
@@ -1135,8 +1144,9 @@ gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
         frame->src_buffer = outbuf;
         GST_BUFFER_SIZE (outbuf) = dirac_enc->encoder->enc_buf.size;
 
-        ret = gst_base_video_encoder_finish_frame (
-            GST_BASE_VIDEO_ENCODER(dirac_enc), frame);
+        ret =
+            gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER
+            (dirac_enc), frame);
 
         if (ret != GST_FLOW_OK) {
           GST_DEBUG ("pad_push returned %d", ret);
@@ -1144,13 +1154,13 @@ gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
         }
         break;
       case ENC_STATE_AVAIL:
-        GST_DEBUG("AVAIL");
+        GST_DEBUG ("AVAIL");
         /* FIXME this doesn't reorder frames */
-        frame = gst_base_video_encoder_get_frame (
-            GST_BASE_VIDEO_ENCODER(dirac_enc),
-            dirac_enc->pull_frame_num);
+        frame =
+            gst_base_video_encoder_get_frame (GST_BASE_VIDEO_ENCODER
+            (dirac_enc), dirac_enc->pull_frame_num);
         if (frame == NULL) {
-          GST_ERROR("didn't get frame %d", dirac_enc->pull_frame_num);
+          GST_ERROR ("didn't get frame %d", dirac_enc->pull_frame_num);
         }
         dirac_enc->pull_frame_num++;
 
@@ -1169,8 +1179,9 @@ gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
         frame->src_buffer = outbuf;
         GST_BUFFER_SIZE (outbuf) = dirac_enc->encoder->enc_buf.size;
 
-        ret = gst_base_video_encoder_finish_frame (
-            GST_BASE_VIDEO_ENCODER(dirac_enc), frame);
+        ret =
+            gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER
+            (dirac_enc), frame);
 
         if (ret != GST_FLOW_OK) {
           GST_DEBUG ("pad_push returned %d", ret);
@@ -1315,13 +1326,13 @@ gst_dirac_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
 }
 
 static void
-gst_dirac_enc_create_codec_data (GstDiracEnc *dirac_enc,
-    GstBuffer *seq_header)
+gst_dirac_enc_create_codec_data (GstDiracEnc * dirac_enc,
+    GstBuffer * seq_header)
 {
   GstBuffer *buf;
   int size;
 
-  size = GST_READ_UINT32_BE (GST_BUFFER_DATA(seq_header) + 9);
+  size = GST_READ_UINT32_BE (GST_BUFFER_DATA (seq_header) + 9);
 
 #define DIRAC_PARSE_HEADER_SIZE 13
   buf = gst_buffer_new_and_alloc (size + DIRAC_PARSE_HEADER_SIZE);
@@ -1365,8 +1376,7 @@ gst_dirac_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
         state->fps_d,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, state->par_n,
         state->par_d,
-        "streamheader", GST_TYPE_BUFFER, dirac_enc->codec_data,
-        NULL);
+        "streamheader", GST_TYPE_BUFFER, dirac_enc->codec_data, NULL);
   } else if (dirac_enc->output_format == GST_DIRAC_ENC_OUTPUT_QUICKTIME) {
     caps = gst_caps_new_simple ("video/x-qt-part",
         "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'r', 'a', 'c'),
@@ -1409,4 +1419,3 @@ gst_dirac_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
 
   return caps;
 }
-
