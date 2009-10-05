@@ -1073,6 +1073,7 @@ gst_avdtp_sink_configure (GstAvdtpSink * self, GstCaps * caps)
   req->h.type = BT_REQUEST;
   req->h.name = BT_SET_CONFIGURATION;
   req->h.length = sizeof (*req);
+  memcpy (&req->codec, codec, sizeof (req->codec));
 
   if (codec->type == BT_A2DP_SBC_SINK)
     ret = gst_avdtp_sink_init_sbc_pkt_conf (self, caps, (void *) &req->codec);
