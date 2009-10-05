@@ -45,5 +45,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "multifile",
-    "Writes buffers to sequentially named files",
+    "Reads/Writes buffers from/to sequentially named files",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
