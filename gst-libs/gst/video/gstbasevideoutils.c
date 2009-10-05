@@ -128,7 +128,8 @@ gst_base_video_state_from_caps (GstVideoState * state, GstCaps * caps)
   gst_video_format_parse_caps (caps, &state->format,
       &state->width, &state->height);
 
-  gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d);
+  if (!gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d))
+    return FALSE;
 
   state->par_n = 1;
   state->par_d = 1;
