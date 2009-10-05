@@ -370,7 +370,7 @@ update_timestamps (GstDvdLpcmDec * dvdlpcmdec, GstBuffer * buf, int samples)
 static void
 parse_header (GstDvdLpcmDec * dec, guint32 header)
 {
-  /* We don't actually use 'dynamic range', 'mute', or 'emphasis' currently, 
+  /* We don't actually use 'dynamic range', 'mute', or 'emphasis' currently,
    * but parse them out */
   dec->dynamic_range = header & 0xff;
 
@@ -502,7 +502,7 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
 
     subbuf = gst_buffer_create_sub (buf, off, len);
 
-    /* If we don't have a stored timestamp from the last packet, 
+    /* If we don't have a stored timestamp from the last packet,
      * (it's straight after a new-segment, but we have one on the
      * first access buffer, then calculate the timestamp to align
      * this buffer to just before the first_access buffer */
@@ -595,12 +595,12 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf))
     dvdlpcmdec->timestamp = GST_BUFFER_TIMESTAMP (buf);
 
-  /* We don't currently do anything at all regarding emphasis, mute or 
+  /* We don't currently do anything at all regarding emphasis, mute or
    * dynamic_range - I'm not sure what they're for */
   switch (dvdlpcmdec->width) {
     case 16:
     {
-      /* We can just pass 16-bits straight through intact, once we set 
+      /* We can just pass 16-bits straight through intact, once we set
        * appropriate things on the buffer */
       samples = size / dvdlpcmdec->channels / 2;
       if (samples < 1)
@@ -636,7 +636,7 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
       src = data;
       dest = GST_BUFFER_DATA (outbuf);
 
-      /* Copy 20-bit LPCM format to 24-bit buffers, with 0x00 in the lowest 
+      /* Copy 20-bit LPCM format to 24-bit buffers, with 0x00 in the lowest
        * nibble. Note that the first 2 bytes are already correct */
       for (i = 0; i < count; i++) {
         dest[0] = src[0];
