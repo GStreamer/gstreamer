@@ -667,7 +667,7 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   wanted.tlength = spec->segtotal * spec->segsize;
   wanted.maxlength = -1;
   wanted.prebuf = 0;
-  wanted.minreq = -1;
+  wanted.minreq = spec->segsize;
 
   GST_INFO_OBJECT (psink, "tlength:   %d", wanted.tlength);
   GST_INFO_OBJECT (psink, "maxlength: %d", wanted.maxlength);
