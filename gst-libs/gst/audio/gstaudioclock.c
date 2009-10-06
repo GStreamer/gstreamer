@@ -186,7 +186,7 @@ gst_audio_clock_get_internal_time (GstClock * clock)
  * @clock: a #GstAudioClock
  *
  * Report the time as returned by the #GstAudioClockGetTimeFunc without applying
- * any offsets. 
+ * any offsets.
  *
  * Returns: the time as reported by the time function of the audio clock
  *
