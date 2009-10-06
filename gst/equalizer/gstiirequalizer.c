@@ -121,10 +121,6 @@ struct _GstIirEqualizerBandClass
 
 static GType gst_iir_equalizer_band_get_type (void);
 
-static void setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band);
-
-static void set_passthrough (GstIirEqualizer * equ);
-
 static void
 gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -357,12 +353,6 @@ gst_iir_equalizer_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static inline gdouble
-arg_to_scale (gdouble arg)
-{
-  return (pow (10.0, arg / 20.0));
-}
-
 /* Filter taken from
  *
  * The Equivalence of Various Methods of Computing
@@ -372,66 +362,163 @@ arg_to_scale (gdouble arg)
  *
  * http://www.aes.org/e-lib/browse.cfm?elib=6326
  * http://www.musicdsp.org/files/EQ-Coefficients.pdf
+ * http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
  *
  * The bandwidth method that we use here is the preferred
  * one from this article transformed from octaves to frequency
  * in Hz.
  */
+static inline gdouble
+arg_to_scale (gdouble arg)
+{
+  return (pow (10.0, arg / 40.0));
+}
+
+static gdouble
+calculate_omega (gdouble freq, gint rate)
+{
+  gdouble omega;
+
+  if (freq / rate >= 0.5)
+    omega = M_PI;
+  else if (freq <= 0.0)
+    omega = 0.0;
+  else
+    omega = 2.0 * M_PI * (freq / rate);
+
+  return omega;
+}
+
+static gdouble
+calculate_bw (GstIirEqualizerBand * band, gint rate)
+{
+  gdouble bw = 0.0;
+
+  if (band->width / rate >= 0.5) {
+    /* If bandwidth == 0.5 the calculation below fails as tan(M_PI/2)
+     * is undefined. So set the bandwidth to a slightly smaller value.
+     */
+    bw = M_PI - 0.00000001;
+  } else if (band->width <= 0.0) {
+    /* If bandwidth == 0 this band won't change anything so set
+     * the coefficients accordingly. The coefficient calculation
+     * below would create coefficients that for some reason amplify
+     * the band.
+     */
+    band->a0 = 1.0;
+    band->a1 = 0.0;
+    band->a2 = 0.0;
+    band->b1 = 0.0;
+    band->b2 = 0.0;
+  } else {
+    bw = 2.0 * M_PI * (band->width / rate);
+  }
+  return bw;
+}
+
 static void
-setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
+setup_peak_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
 {
   g_return_if_fail (GST_AUDIO_FILTER (equ)->format.rate);
 
-  /* FIXME: we need better filters
-   * - we need shelf-filter for 1st and last band
-   */
   {
     gdouble gain, omega, bw;
-    gdouble edge_gain, gamma;
-    gdouble alpha, beta;
+    gdouble alpha, alpha1, alpha2, b0;
 
     gain = arg_to_scale (band->gain);
-
-    if (band->freq / GST_AUDIO_FILTER (equ)->format.rate >= 0.5)
-      omega = M_PI;
-    else if (band->freq <= 0.0)
-      omega = 0.0;
-    else
-      omega = 2.0 * M_PI * (band->freq / GST_AUDIO_FILTER (equ)->format.rate);
-
-    if (band->width / GST_AUDIO_FILTER (equ)->format.rate >= 0.5) {
-      /* If bandwidth == 0.5 the calculation below fails as tan(M_PI/2)
-       * is undefined. So set the bandwidth to a slightly smaller value.
-       */
-      bw = M_PI - 0.00000001;
-    } else if (band->width <= 0.0) {
-      /* If bandwidth == 0 this band won't change anything so set
-       * the coefficients accordingly. The coefficient calculation
-       * below would create coefficients that for some reason amplify
-       * the band.
-       */
-      band->a0 = 1.0;
-      band->a1 = 0.0;
-      band->a2 = 0.0;
-      band->b1 = 0.0;
-      band->b2 = 0.0;
-      gain = 1.0;
+    omega = calculate_omega (band->freq, GST_AUDIO_FILTER (equ)->format.rate);
+    bw = calculate_bw (band, GST_AUDIO_FILTER (equ)->format.rate);
+    if (bw == 0.0)
       goto out;
-    } else {
-      bw = 2.0 * M_PI * (band->width / GST_AUDIO_FILTER (equ)->format.rate);
-    }
 
-    edge_gain = sqrt (gain);
-    gamma = tan (bw / 2.0);
+    alpha = tan (bw / 2.0);
 
-    alpha = gamma * edge_gain;
-    beta = gamma / edge_gain;
+    alpha1 = alpha * gain;
+    alpha2 = alpha / gain;
 
-    band->a0 = (1.0 + alpha) / (1.0 + beta);
-    band->a1 = (-2.0 * cos (omega)) / (1.0 + beta);
-    band->a2 = (1.0 - alpha) / (1.0 + beta);
-    band->b1 = (2.0 * cos (omega)) / (1.0 + beta);
-    band->b2 = -(1.0 - beta) / (1.0 + beta);
+    b0 = (1.0 + alpha2);
+
+    band->a0 = (1.0 + alpha1) / b0;
+    band->a1 = (-2.0 * cos (omega)) / b0;
+    band->a2 = (1.0 - alpha1) / b0;
+    band->b1 = (2.0 * cos (omega)) / b0;
+    band->b2 = -(1.0 - alpha2) / b0;
+
+  out:
+    GST_INFO
+        ("gain = %5.1f, width= %7.2f, freq = %7.2f, a0 = %7.5g, a1 = %7.5g, a2=%7.5g b1 = %7.5g, b2 = %7.5g",
+        band->gain, band->width, band->freq, band->a0, band->a1, band->a2,
+        band->b1, band->b2);
+  }
+}
+
+static void
+setup_low_shelf_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
+{
+  g_return_if_fail (GST_AUDIO_FILTER (equ)->format.rate);
+
+  {
+    gdouble gain, omega, bw;
+    gdouble alpha, delta, b0;
+    gdouble egp, egm;
+
+    gain = arg_to_scale (band->gain);
+    omega = calculate_omega (band->freq, GST_AUDIO_FILTER (equ)->format.rate);
+    bw = calculate_bw (band, GST_AUDIO_FILTER (equ)->format.rate);
+    if (bw == 0.0)
+      goto out;
+
+    egm = gain - 1.0;
+    egp = gain + 1.0;
+    alpha = tan (bw / 2.0);
+
+    delta = 2.0 * sqrt (gain) * alpha;
+    b0 = egp + egm * cos (omega) + delta;
+
+    band->a0 = ((egp - egm * cos (omega) + delta) * gain) / b0;
+    band->a1 = ((egm - egp * cos (omega)) * 2.0 * gain) / b0;
+    band->a2 = ((egp - egm * cos (omega) - delta) * gain) / b0;
+    band->b1 = ((egm + egp * cos (omega)) * 2.0) / b0;
+    band->b2 = -((egp + egm * cos (omega) - delta)) / b0;
+
+
+  out:
+    GST_INFO
+        ("gain = %5.1f, width= %7.2f, freq = %7.2f, a0 = %7.5g, a1 = %7.5g, a2=%7.5g b1 = %7.5g, b2 = %7.5g",
+        band->gain, band->width, band->freq, band->a0, band->a1, band->a2,
+        band->b1, band->b2);
+  }
+}
+
+static void
+setup_high_shelf_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
+{
+  g_return_if_fail (GST_AUDIO_FILTER (equ)->format.rate);
+
+  {
+    gdouble gain, omega, bw;
+    gdouble alpha, delta, b0;
+    gdouble egp, egm;
+
+    gain = arg_to_scale (band->gain);
+    omega = calculate_omega (band->freq, GST_AUDIO_FILTER (equ)->format.rate);
+    bw = calculate_bw (band, GST_AUDIO_FILTER (equ)->format.rate);
+    if (bw == 0.0)
+      goto out;
+
+    egm = gain - 1.0;
+    egp = gain + 1.0;
+    alpha = tan (bw / 2.0);
+
+    delta = 2.0 * sqrt (gain) * alpha;
+    b0 = egp - egm * cos (omega) + delta;
+
+    band->a0 = ((egp + egm * cos (omega) + delta) * gain) / b0;
+    band->a1 = ((egm + egp * cos (omega)) * -2.0 * gain) / b0;
+    band->a2 = ((egp + egm * cos (omega) - delta) * gain) / b0;
+    band->b1 = ((egm - egp * cos (omega)) * -2.0) / b0;
+    band->b2 = -((egp - egm * cos (omega) - delta)) / b0;
+
 
   out:
     GST_INFO
@@ -459,11 +546,14 @@ set_passthrough (GstIirEqualizer * equ)
 static void
 update_coefficients (GstIirEqualizer * equ)
 {
-  gint i;
+  gint i, n = equ->freq_band_count;
 
-  for (i = 0; i < equ->freq_band_count; i++) {
-    setup_filter (equ, equ->bands[i]);
+  setup_low_shelf_filter (equ, equ->bands[0]);
+  for (i = 1; i < n - 1; i++) {
+    setup_peak_filter (equ, equ->bands[i]);
   }
+  setup_high_shelf_filter (equ, equ->bands[n - 1]);
+
   equ->need_new_coefficients = FALSE;
 }
 
