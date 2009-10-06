@@ -734,7 +734,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
     guchar * last[3], guint width, guint height, gint r_v)
 {
   guchar **line[3];             /* the jpeg line buffer */
-  guchar *y[4 * DCTSIZE];       /* alloc enough for the lines */
+  guchar *y[4 * DCTSIZE];       /* alloc enough for the lines, r_v must be <4 */
   guchar *u[4 * DCTSIZE];
   guchar *v[4 * DCTSIZE];
   gint i, j, k;
@@ -748,18 +748,20 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
   GST_DEBUG_OBJECT (dec, "decoding directly into output buffer");
   for (i = 0; i < height; i += r_v * DCTSIZE) {
     for (j = 0, k = 0; j < (r_v * DCTSIZE); j += r_v, k++) {
+      /* init y component address */
       line[0][j] = base[0];
-      if (base[0] < last[0])
+      if (G_LIKELY (base[0] < last[0]))
         base[0] += I420_Y_ROWSTRIDE (width);
       if (r_v == 2) {
         line[0][j + 1] = base[0];
-        if (base[0] < last[0])
+        if (G_LIKELY (base[0] < last[0]))
           base[0] += I420_Y_ROWSTRIDE (width);
       }
+      /* init u,v component addresses */
       line[1][k] = base[1];
       line[2][k] = base[2];
       if (r_v == 2 || (k & 1) != 0) {
-        if (base[1] < last[1] && base[2] < last[2]) {
+        if (G_LIKELY (base[1] < last[1] && base[2] < last[2])) {
           base[1] += I420_U_ROWSTRIDE (width);
           base[2] += I420_V_ROWSTRIDE (width);
         }
@@ -1055,7 +1057,9 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   }
   GST_BUFFER_DURATION (outbuf) = duration;
 
-  /* mind the swap, jpeglib outputs blue chroma first */
+  /* mind the swap, jpeglib outputs blue chroma first
+   * ensonic: I see no swap?
+   */
   base[0] = outdata + I420_Y_OFFSET (width, height);
   base[1] = outdata + I420_U_OFFSET (width, height);
   base[2] = outdata + I420_V_OFFSET (width, height);
@@ -1070,8 +1074,8 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
       base[2] + (I420_V_ROWSTRIDE (width) * ((GST_ROUND_UP_2 (height) / 2) -
           1));
 
-  GST_LOG_OBJECT (dec, "decompressing %u", dec->cinfo.rec_outbuf_height);
-  GST_LOG_OBJECT (dec, "max_h_samp_factor=%u", dec->cinfo.max_h_samp_factor);
+  GST_LOG_OBJECT (dec, "decompressing (reqired scanline buffer height = %u)",
+      dec->cinfo.rec_outbuf_height);
 
   /* For some widths jpeglib requires more horizontal padding than I420 
    * provides. In those cases we need to decode into separate buffers and then
