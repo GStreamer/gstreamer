@@ -99,6 +99,8 @@ struct _GstDiracEnc
   GstBuffer *buffer;
   GstCaps *srccaps;
   int pull_frame_num;
+
+  int frame_index;
 };
 
 struct _GstDiracEncClass
@@ -326,7 +328,8 @@ gst_dirac_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   GstCaps *caps;
   GstStructure *structure;
 
-  GST_DEBUG ("set_output_caps");
+  GST_DEBUG ("set_format");
+
   caps =
       gst_pad_get_allowed_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
       (base_video_encoder));
@@ -847,7 +850,11 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 {
   GstDiracEnc *dirac_enc = GST_DIRAC_ENC (base_video_encoder);
   GstFlowReturn ret;
+  int r;
   const GstVideoState *state;
+  uint8_t *data;
+  gboolean copied = FALSE;
+  int size;
 
   state = gst_base_video_encoder_get_state (base_video_encoder);
 
@@ -860,17 +867,17 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 
   switch (state->format) {
     case GST_VIDEO_FORMAT_I420:
-      dirac_encoder_load (dirac_enc->encoder,
-          GST_BUFFER_DATA (frame->sink_buffer),
-          GST_BUFFER_SIZE (frame->sink_buffer));
+      data = GST_BUFFER_DATA (frame->sink_buffer);
+      size = GST_BUFFER_SIZE (frame->sink_buffer);
       break;
-    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_YUY2:
     {
-      uint8_t *data;
       uint8_t *bufdata = GST_BUFFER_DATA (frame->sink_buffer);
       int i, j;
 
       data = (uint8_t *) g_malloc (GST_BUFFER_SIZE (frame->sink_buffer));
+      copied = TRUE;
+      size = GST_BUFFER_SIZE (frame->sink_buffer);
       for (j = 0; j < state->height; j++) {
         for (i = 0; i < state->width; i++) {
           data[j * state->width + i] = bufdata[j * state->width * 2 + i * 2];
@@ -885,18 +892,16 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
               bufdata[j * state->width * 2 + i * 4 + 3];
         }
       }
-      dirac_encoder_load (dirac_enc->encoder, data,
-          GST_BUFFER_SIZE (frame->sink_buffer));
-      g_free (data);
     }
       break;
-    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
     {
-      uint8_t *data;
       uint8_t *bufdata = GST_BUFFER_DATA (frame->sink_buffer);
       int i, j;
 
       data = (uint8_t *) g_malloc (GST_BUFFER_SIZE (frame->sink_buffer));
+      copied = TRUE;
+      size = GST_BUFFER_SIZE (frame->sink_buffer);
       for (j = 0; j < state->height; j++) {
         for (i = 0; i < state->width; i++) {
           data[j * state->width + i] =
@@ -912,24 +917,20 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
               bufdata[j * state->width * 2 + i * 4 + 2];
         }
       }
-      dirac_encoder_load (dirac_enc->encoder, data,
-          GST_BUFFER_SIZE (frame->sink_buffer));
-      g_free (data);
     }
       break;
     case GST_VIDEO_FORMAT_AYUV:
     {
-      uint8_t *data;
       uint8_t *bufdata = GST_BUFFER_DATA (frame->sink_buffer);
       int i, j;
 
-      data = (uint8_t *) g_malloc (GST_BUFFER_SIZE (frame->sink_buffer));
+      size = state->height * state->width * 3;
+      data = (uint8_t *) g_malloc (size);
+      copied = TRUE;
       for (j = 0; j < state->height; j++) {
         for (i = 0; i < state->width; i++) {
           data[j * state->width + i] =
               bufdata[j * state->width * 4 + i * 4 + 1];
-        }
-        for (i = 0; i < state->width; i++) {
           data[state->height * state->width
               + j * state->width + i] =
               bufdata[j * state->width * 4 + i * 4 + 2];
@@ -938,19 +939,29 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
               bufdata[j * state->width * 4 + i * 4 + 3];
         }
       }
-      dirac_encoder_load (dirac_enc->encoder, data,
-          GST_BUFFER_SIZE (frame->sink_buffer));
-      g_free (data);
     }
       break;
     default:
       g_assert_not_reached ();
   }
 
+  r = dirac_encoder_load (dirac_enc->encoder, data,
+      GST_BUFFER_SIZE (frame->sink_buffer));
+  if (copied) {
+    g_free (data);
+  }
+  if (r != (int) GST_BUFFER_SIZE (frame->sink_buffer)) {
+    GST_ERROR ("failed to push picture");
+    return GST_FLOW_ERROR;
+  }
+
   GST_DEBUG ("handle frame");
 
   gst_buffer_unref (frame->sink_buffer);
   frame->sink_buffer = NULL;
+
+  frame->system_frame_number = dirac_enc->frame_index;
+  dirac_enc->frame_index++;
 
   ret = gst_dirac_enc_process (dirac_enc, FALSE);
 
