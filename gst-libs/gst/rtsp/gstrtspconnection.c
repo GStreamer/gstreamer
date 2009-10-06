@@ -446,7 +446,7 @@ accept_failed:
 getnameinfo_failed:
 wrong_family:
   {
-    close (fd);
+    CLOSE_SOCKET (fd);
     return GST_RTSP_ERROR;
   }
 }
