@@ -77,7 +77,7 @@ struct _GstRtpJitterBufferClass
   /* actions */
   void     (*clear_pt_map)   (GstRtpJitterBuffer *buffer);
 
-  void     (*set_active)     (GstRtpJitterBuffer *buffer, gboolean active, guint64 base_time);
+  void     (*set_active)     (GstRtpJitterBuffer *buffer, gboolean active, guint64 elapsed);
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];

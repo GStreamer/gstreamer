@@ -136,6 +136,7 @@ struct _GstRtpJitterBufferPrivate
   gboolean waiting;
   gboolean discont;
   gboolean active;
+  guint64 out_offset;
 
   /* properties */
   guint latency_ms;
@@ -648,17 +649,26 @@ gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer)
 
 static void
 gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jbuf, gboolean active,
-    guint64 base_time)
+    guint64 elapsed)
 {
   GstRtpJitterBufferPrivate *priv;
 
   priv = jbuf->priv;
 
   JBUF_LOCK (priv);
-  GST_DEBUG_OBJECT (jbuf, "setting active %d at time %" GST_TIME_FORMAT, active,
-      GST_TIME_ARGS (base_time));
-  priv->active = active;
-  JBUF_SIGNAL (priv);
+  GST_DEBUG_OBJECT (jbuf, "setting active %d with elapsed %" GST_TIME_FORMAT,
+      active, GST_TIME_ARGS (elapsed));
+
+  if (active != priv->active) {
+    /* add the amount of time spent in paused to the output offset. All
+     * outgoing buffers will have this offset applied to their timestamps in
+     * order to make them arrive in time in the sink. */
+    priv->out_offset += elapsed;
+    GST_DEBUG_OBJECT (jbuf, "out offset %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (priv->out_offset));
+    priv->active = active;
+    JBUF_SIGNAL (priv);
+  }
   JBUF_UNLOCK (priv);
 }
 
@@ -1392,8 +1402,10 @@ apply_offset (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
   if (timestamp == -1)
     return -1;
 
-  /* apply the timestamp offset */
+  /* apply the timestamp offset, this is used for inter stream sync */
   timestamp += priv->ts_offset;
+  /* add the offset, this is used when buffering */
+  timestamp += priv->out_offset;
 
   return timestamp;
 }
