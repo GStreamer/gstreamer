@@ -2303,7 +2303,13 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
   } else {
     // reserved
     encoding = NULL;
+    *start_text = 0;
+    *is_multibyte = FALSE;
   }
+
+  GST_DEBUG
+      ("Found encoding %s, first byte is 0x%02x, start_text: %u, is_multibyte: %d",
+      encoding, firstbyte, *start_text, *is_multibyte);
 
   return encoding;
 }
@@ -2340,23 +2346,10 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
         guint16 code = GST_READ_UINT16_BE (text);
 
         switch (code) {
-          case 0xE086:{
-            guint8 emph_on[] = { 0x3C, 0x00,    // <
-              0x62, 0x00,       // b
-              0x3E, 0x00        // >
-            };
-            g_byte_array_append (sb, emph_on, 6);
+          case 0xE086:         /* emphasis on */
+          case 0xE087:         /* emphasis off */
+            /* skip it */
             break;
-          }
-          case 0xE087:{
-            guint8 emph_on[] = { 0x3C, 0x00,    // <
-              0x2F, 0x00,       // /
-              0x62, 0x00,       // b
-              0x3E, 0x00        // >
-            };
-            g_byte_array_append (sb, emph_on, 8);
-            break;
-          }
           case 0xE08A:{
             guint8 nl[] = { 0x0A, 0x00 };       // new line
             g_byte_array_append (sb, nl, 2);
@@ -2374,23 +2367,10 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
         guint16 code = GST_READ_UINT16_BE (text);
 
         switch (code) {
-          case 0xE086:{
-            guint8 emph_on[] = { 0x3C, 0x00,    // <
-              0x62, 0x00,       // b
-              0x3E, 0x00        // >
-            };
-            g_byte_array_append (sb, emph_on, 6);
+          case 0xE086:         /* emphasis on */
+          case 0xE087:         /* emphasis off */
+            /* skip it */
             break;
-          }
-          case 0xE087:{
-            guint8 emph_on[] = { 0x3C, 0x00,    // <
-              0x2F, 0x00,       // /
-              0x62, 0x00,       // b
-              0x3E, 0x00        // >
-            };
-            g_byte_array_append (sb, emph_on, 8);
-            break;
-          }
           case 0xE08A:{
             guint8 nl[] = { 0x0A, 0x00 };       // new line
             g_byte_array_append (sb, nl, 2);
@@ -2410,11 +2390,9 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
         guint8 code = (guint8) (*text);
 
         switch (code) {
-          case 0x86:
-            g_byte_array_append (sb, (guint8 *) "<b>", 3);
-            break;
-          case 0x87:
-            g_byte_array_append (sb, (guint8 *) "</b>", 4);
+          case 0x86:           /* emphasis on */
+          case 0x87:           /* emphasis off */
+            /* skip it */
             break;
           case 0x8A:
             g_byte_array_append (sb, (guint8 *) "\n", 1);
@@ -2431,11 +2409,9 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
         guint8 code = (guint8) (*text);
 
         switch (code) {
-          case 0x86:
-            g_byte_array_append (sb, (guint8 *) "<b>", 3);
-            break;
-          case 0x87:
-            g_byte_array_append (sb, (guint8 *) "</b>", 4);
+          case 0x86:           /* emphasis on */
+          case 0x87:           /* emphasis off */
+            /* skip it */
             break;
           case 0x8A:
             g_byte_array_append (sb, (guint8 *) "\n", 1);
@@ -2480,19 +2456,47 @@ get_encoding_and_convert (const gchar * text, guint length)
   encoding = get_encoding (text, &start_text, &is_multibyte);
 
   if (encoding == NULL) {
+    GST_WARNING ("Could not detect encoding");
     converted_str = g_strndup (text, length);
   } else {
     converted_str = convert_to_utf8 (text, length - start_text, start_text,
         encoding, is_multibyte, &error);
     if (error != NULL) {
-      g_critical ("Could not convert string: %s", error->message);
+      GST_WARNING ("Could not convert string, encoding is %s: %s",
+          encoding, error->message);
       g_error_free (error);
-      text += start_text;
-      converted_str = g_strndup (text, length - start_text);
+      error = NULL;
+
+      /* The first part of ISO 6937 is identical to ISO 8859-9, but
+       * they differ in the second part. Some channels don't
+       * provide the first byte that indicates ISO 8859-9 encoding.
+       * If decoding from ISO 6937 failed, we try ISO 8859-9 here.
+       */
+      if (strcmp (encoding, "iso6937") == 0) {
+        GST_INFO ("Trying encoding ISO 8859-9");
+        converted_str = convert_to_utf8 (text, length, 0,
+            "iso8859-9", FALSE, &error);
+        if (error != NULL) {
+          GST_WARNING
+              ("Could not convert string while assuming encoding ISO 8859-9: %s",
+              error->message);
+          g_error_free (error);
+          goto failed;
+        }
+      } else {
+        goto failed;
+      }
     }
 
     g_free (encoding);
   }
 
   return converted_str;
+
+failed:
+  {
+    g_free (encoding);
+    text += start_text;
+    return g_strndup (text, length - start_text);
+  }
 }
