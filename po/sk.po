@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 12:38+0100\n"
+"POT-Creation-Date: 2009-10-07 00:46+0100\n"
 "PO-Revision-Date: 2009-09-21 10:11+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -81,7 +81,8 @@ msgstr "Zakázať zachytávanie chýb segmentácie počas načítania zásuvnéh
 msgid "Disable updating the registry"
 msgstr "Zakázať aktualizáciu registrov"
 
-msgid "Disable the use of fork() while scanning the registry"
+#, fuzzy
+msgid "Disable spawning a helper process while scanning the registry"
 msgstr "Zakázať používanie fork() počas skenovania registrov"
 
 msgid "GStreamer Options"
@@ -89,18 +90,6 @@ msgstr "Možnosti pre GStreamer"
 
 msgid "Show GStreamer Options"
 msgstr "Zobraziť možnosti pre GStreamer"
-
-#, c-format
-msgid "Error writing registry cache to %s: %s"
-msgstr "Chyba pri zápise vyrovnávacej pamäte registrov do %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s: %s"
-msgstr "Chyba pri opätovnom skenovaní registrov %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s"
-msgstr "Chyba pri opätovnom skenovaní registrov %s"
 
 msgid "Unknown option"
 msgstr "Neznáma možnosť"
@@ -804,8 +793,18 @@ msgstr "zapisovateľné"
 msgid "controllable"
 msgstr "ovládateľné"
 
+msgid "Blacklisted files:"
+msgstr ""
+
 msgid "Total count: "
 msgstr "Celkový počet:"
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #, c-format
 msgid "%d plugin"
@@ -813,6 +812,13 @@ msgid_plural "%d plugins"
 msgstr[0] "%d zásuvný modul"
 msgstr[1] "%d zásuvné moduly"
 msgstr[2] "%d zásuvných modulov"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #, c-format
 msgid "%d feature"
@@ -823,6 +829,9 @@ msgstr[2] "%d funkcií"
 
 msgid "Print all elements"
 msgstr "Vypísať všetky prvky"
+
+msgid "Print list of blacklisted files"
+msgstr ""
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
@@ -1038,6 +1047,15 @@ msgstr "Nastavujem rúru na NULOVÚ ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvoľňujem rúru ...\n"
+
+#~ msgid "Error writing registry cache to %s: %s"
+#~ msgstr "Chyba pri zápise vyrovnávacej pamäte registrov do %s: %s"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "Chyba pri opätovnom skenovaní registrov %s: %s"
+
+#~ msgid "Error re-scanning registry %s"
+#~ msgstr "Chyba pri opätovnom skenovaní registrov %s"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr ""

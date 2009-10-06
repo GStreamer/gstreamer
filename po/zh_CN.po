@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 12:38+0100\n"
+"POT-Creation-Date: 2009-10-07 00:46+0100\n"
 "PO-Revision-Date: 2009-05-01 11:53中国标准时间\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
@@ -72,7 +72,8 @@ msgstr "禁止跟踪装入插件时的段严重错误"
 msgid "Disable updating the registry"
 msgstr "禁止更新寄存器"
 
-msgid "Disable the use of fork() while scanning the registry"
+#, fuzzy
+msgid "Disable spawning a helper process while scanning the registry"
 msgstr "扫描寄存器时禁用 fork() 例程"
 
 msgid "GStreamer Options"
@@ -80,18 +81,6 @@ msgstr "GStreamer 选项"
 
 msgid "Show GStreamer Options"
 msgstr "显示 GStreamer 选项"
-
-#, c-format
-msgid "Error writing registry cache to %s: %s"
-msgstr "寄存器缓存写入 %s 时出错: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s: %s"
-msgstr "重新扫描寄存器 %s 时出错: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s"
-msgstr "重新扫描寄存器 %s 时出错"
 
 msgid "Unknown option"
 msgstr "未知选项"
@@ -773,13 +762,26 @@ msgstr "可写"
 msgid "controllable"
 msgstr "可控制"
 
+msgid "Blacklisted files:"
+msgstr ""
+
 msgid "Total count: "
 msgstr "总数:"
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d 个插件"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] ""
 
 #, c-format
 msgid "%d feature"
@@ -788,6 +790,9 @@ msgstr[0] "%d 个特性"
 
 msgid "Print all elements"
 msgstr "打印全部组件"
+
+msgid "Print list of blacklisted files"
+msgstr ""
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
@@ -997,6 +1002,15 @@ msgstr "设置 NULL 管道 ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "释放管道资源 ...\n"
+
+#~ msgid "Error writing registry cache to %s: %s"
+#~ msgstr "寄存器缓存写入 %s 时出错: %s"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "重新扫描寄存器 %s 时出错: %s"
+
+#~ msgid "Error re-scanning registry %s"
+#~ msgstr "重新扫描寄存器 %s 时出错"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "GStreamer 内部错误：状态更改失败。"

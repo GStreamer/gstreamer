@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 12:38+0100\n"
+"POT-Creation-Date: 2009-10-07 00:46+0100\n"
 "PO-Revision-Date: 2009-09-17 23:20+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -190,7 +190,8 @@ msgid "Disable updating the registry"
 msgstr "Disabilita l'aggiornamento del registro"
 
 # --gst-disable-registry-fork
-msgid "Disable the use of fork() while scanning the registry"
+#, fuzzy
+msgid "Disable spawning a helper process while scanning the registry"
 msgstr "Disabilita l'uso di fork() durante la scansione del registro"
 
 # intestazione categoria opzioni precendenti
@@ -200,18 +201,6 @@ msgstr "Opzioni di GStreamer"
 # --help-gst
 msgid "Show GStreamer Options"
 msgstr "Mostra le opzioni di GStreamer"
-
-#, c-format
-msgid "Error writing registry cache to %s: %s"
-msgstr "Errore nello scrivere la cache di registro su %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s: %s"
-msgstr "Errore nel ri-scansionare il registro %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s"
-msgstr "Errore nel ri-scansionare il registro %s"
 
 msgid "Unknown option"
 msgstr "Opzione sconosciuta"
@@ -930,16 +919,31 @@ msgstr "scrivibile"
 msgid "controllable"
 msgstr "controllabile"
 
+msgid "Blacklisted files:"
+msgstr ""
+
 # Esempio:
 #    Total count: 23 plugins, 34 feature
 msgid "Total count: "
 msgstr "In totale: "
 
 #, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d plugin"
 msgstr[1] "%d plugin"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d feature"
@@ -950,6 +954,9 @@ msgstr[1] "%d funzionalità"
 # -a, --print-all
 msgid "Print all elements"
 msgstr "Stampa tutti gli elementi"
+
+msgid "Print list of blacklisted files"
+msgstr ""
 
 # --print-plugin-auto-install-info
 msgid ""
@@ -1188,3 +1195,12 @@ msgstr "Impostazione della pipeline a NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Esecuzione di free sulla pipeline...\n"
+
+#~ msgid "Error writing registry cache to %s: %s"
+#~ msgstr "Errore nello scrivere la cache di registro su %s: %s"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "Errore nel ri-scansionare il registro %s: %s"
+
+#~ msgid "Error re-scanning registry %s"
+#~ msgstr "Errore nel ri-scansionare il registro %s"

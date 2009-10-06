@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 12:38+0100\n"
+"POT-Creation-Date: 2009-10-07 00:46+0100\n"
 "PO-Revision-Date: 2009-09-17 23:54+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -76,7 +76,8 @@ msgstr "Szegmentálási hibák elfogásának letiltása a bővítménybetöltés
 msgid "Disable updating the registry"
 msgstr "A nyilvántartás frissítésének letiltása"
 
-msgid "Disable the use of fork() while scanning the registry"
+#, fuzzy
+msgid "Disable spawning a helper process while scanning the registry"
 msgstr "A fork() hívás használatának letiltása a nyilvántartás elemzése közben"
 
 msgid "GStreamer Options"
@@ -84,18 +85,6 @@ msgstr "GStreamer beállításai"
 
 msgid "Show GStreamer Options"
 msgstr "A GStreamer beállításainak megjelenítése"
-
-#, c-format
-msgid "Error writing registry cache to %s: %s"
-msgstr "Hiba a nyilvántartás gyorsítótárának kiírása közben %s helyre: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s: %s"
-msgstr "Hiba a(z) %s nyilvántartás újraolvasása közben: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s"
-msgstr "Hiba a(z) %s nyilvántartás újraolvasása közben"
 
 msgid "Unknown option"
 msgstr "Ismeretlen beállítás"
@@ -789,14 +778,29 @@ msgstr "írható"
 msgid "controllable"
 msgstr "vezérelhető"
 
+msgid "Blacklisted files:"
+msgstr ""
+
 msgid "Total count: "
 msgstr "Teljes szám: "
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d bővítmény"
 msgstr[1] "%d bővítmény"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d feature"
@@ -806,6 +810,9 @@ msgstr[1] "%d szolgáltatás"
 
 msgid "Print all elements"
 msgstr "Az összes elem kiírása"
+
+msgid "Print list of blacklisted files"
+msgstr ""
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
@@ -1016,6 +1023,15 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
+
+#~ msgid "Error writing registry cache to %s: %s"
+#~ msgstr "Hiba a nyilvántartás gyorsítótárának kiírása közben %s helyre: %s"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "Hiba a(z) %s nyilvántartás újraolvasása közben: %s"
+
+#~ msgid "Error re-scanning registry %s"
+#~ msgstr "Hiba a(z) %s nyilvántartás újraolvasása közben"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Belső GStreamer hiba: az állapotváltás meghiúsult."

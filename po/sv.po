@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 12:38+0100\n"
+"POT-Creation-Date: 2009-10-07 00:46+0100\n"
 "PO-Revision-Date: 2009-09-18 17:34+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -77,7 +77,8 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Inaktivera uppdatering av registret"
 
-msgid "Disable the use of fork() while scanning the registry"
+#, fuzzy
+msgid "Disable spawning a helper process while scanning the registry"
 msgstr "Inaktivera användningen av fork() vid avsökning av registret"
 
 msgid "GStreamer Options"
@@ -85,18 +86,6 @@ msgstr "GStreamer-alternativ"
 
 msgid "Show GStreamer Options"
 msgstr "Visa GStreamer-alternativ"
-
-#, c-format
-msgid "Error writing registry cache to %s: %s"
-msgstr "Fel vid skrivning av registercache till %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s: %s"
-msgstr "Fel vid återsökning av registret %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s"
-msgstr "Fel vid återsökning av registret %s"
 
 msgid "Unknown option"
 msgstr "Okänt alternativ"
@@ -801,14 +790,29 @@ msgstr "skrivbar"
 msgid "controllable"
 msgstr "kontrollerbar"
 
+msgid "Blacklisted files:"
+msgstr ""
+
 msgid "Total count: "
 msgstr "Totalt antal: "
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d insticksmodul"
 msgstr[1] "%d insticksmoduler"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d feature"
@@ -818,6 +822,9 @@ msgstr[1] "%d funktioner"
 
 msgid "Print all elements"
 msgstr "Skriv ut alla element"
+
+msgid "Print list of blacklisted files"
+msgstr ""
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
@@ -1033,6 +1040,15 @@ msgstr "Ställer in rörledningen till NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Frigör rörledning ...\n"
+
+#~ msgid "Error writing registry cache to %s: %s"
+#~ msgstr "Fel vid skrivning av registercache till %s: %s"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "Fel vid återsökning av registret %s: %s"
+
+#~ msgid "Error re-scanning registry %s"
+#~ msgstr "Fel vid återsökning av registret %s"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Internt GStreamer-fel: tillståndsändring misslyckades."

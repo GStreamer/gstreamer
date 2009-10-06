@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 12:38+0100\n"
+"POT-Creation-Date: 2009-10-07 00:46+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -73,7 +73,7 @@ msgstr "Disable trapping of segmentation faults during plugin loading"
 msgid "Disable updating the registry"
 msgstr ""
 
-msgid "Disable the use of fork() while scanning the registry"
+msgid "Disable spawning a helper process while scanning the registry"
 msgstr ""
 
 msgid "GStreamer Options"
@@ -82,18 +82,6 @@ msgstr ""
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "Print the GStreamer version"
-
-#, c-format
-msgid "Error writing registry cache to %s: %s"
-msgstr ""
-
-#, c-format
-msgid "Error re-scanning registry %s: %s"
-msgstr ""
-
-#, c-format
-msgid "Error re-scanning registry %s"
-msgstr ""
 
 msgid "Unknown option"
 msgstr ""
@@ -800,13 +788,28 @@ msgstr "title"
 msgid "controllable"
 msgstr ""
 
+msgid "Blacklisted files:"
+msgstr ""
+
 #, fuzzy
 msgid "Total count: "
 msgstr "track count"
 
 #, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -819,6 +822,9 @@ msgstr[1] ""
 #, fuzzy
 msgid "Print all elements"
 msgstr "no element \"%s\""
+
+msgid "Print list of blacklisted files"
+msgstr ""
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"

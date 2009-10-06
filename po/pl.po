@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 12:38+0100\n"
+"POT-Creation-Date: 2009-10-07 00:46+0100\n"
 "PO-Revision-Date: 2009-09-17 18:34+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -77,7 +77,8 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Wyłączenie uaktualniania rejestru"
 
-msgid "Disable the use of fork() while scanning the registry"
+#, fuzzy
+msgid "Disable spawning a helper process while scanning the registry"
 msgstr "Wyłączenie użycia fork() przy przeszukiwaniu rejestru"
 
 msgid "GStreamer Options"
@@ -85,18 +86,6 @@ msgstr "Opcje GStreamera"
 
 msgid "Show GStreamer Options"
 msgstr "Pokazanie opcji GStreamera"
-
-#, c-format
-msgid "Error writing registry cache to %s: %s"
-msgstr "Błąd zapisu bufora rejestru do %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s: %s"
-msgstr "Błąd ponownego przeszukiwania rejestru %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s"
-msgstr "Błąd ponownego przeszukiwania rejestru %s"
 
 msgid "Unknown option"
 msgstr "Nieznana opcja"
@@ -789,8 +778,18 @@ msgstr "zapis"
 msgid "controllable"
 msgstr "sterowanie"
 
+msgid "Blacklisted files:"
+msgstr ""
+
 msgid "Total count: "
 msgstr "Całkowita liczba: "
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #, c-format
 msgid "%d plugin"
@@ -798,6 +797,13 @@ msgid_plural "%d plugins"
 msgstr[0] "%d wtyczka"
 msgstr[1] "%d wtyczki"
 msgstr[2] "%d wtyczek"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #, c-format
 msgid "%d feature"
@@ -808,6 +814,9 @@ msgstr[2] "%d cech"
 
 msgid "Print all elements"
 msgstr "Wypisanie wszystkich elementów"
+
+msgid "Print list of blacklisted files"
+msgstr ""
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
@@ -1020,3 +1029,12 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
+
+#~ msgid "Error writing registry cache to %s: %s"
+#~ msgstr "Błąd zapisu bufora rejestru do %s: %s"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "Błąd ponownego przeszukiwania rejestru %s: %s"
+
+#~ msgid "Error re-scanning registry %s"
+#~ msgstr "Błąd ponownego przeszukiwania rejestru %s"

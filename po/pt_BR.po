@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 12:38+0100\n"
+"POT-Creation-Date: 2009-10-07 00:46+0100\n"
 "PO-Revision-Date: 2009-04-16 21:51-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -88,7 +88,8 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Desabilitar atualização do registro"
 
-msgid "Disable the use of fork() while scanning the registry"
+#, fuzzy
+msgid "Disable spawning a helper process while scanning the registry"
 msgstr "Desabilitar o uso de fork() durante a análise do registro"
 
 msgid "GStreamer Options"
@@ -96,18 +97,6 @@ msgstr "Opções do GStreamer"
 
 msgid "Show GStreamer Options"
 msgstr "Exibir opções do GStreamer"
-
-#, c-format
-msgid "Error writing registry cache to %s: %s"
-msgstr "Erro ao escrever no cache do registro em %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s: %s"
-msgstr "Erro ao re-analisar o registro %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s"
-msgstr "Erro ao re-analisar o registro %s"
 
 msgid "Unknown option"
 msgstr "Opção desconhecida"
@@ -809,14 +798,29 @@ msgstr "gravável"
 msgid "controllable"
 msgstr "controlável"
 
+msgid "Blacklisted files:"
+msgstr ""
+
 msgid "Total count: "
 msgstr "Contagem total: "
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d plug-in"
 msgstr[1] "%d plug-ins"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d feature"
@@ -826,6 +830,9 @@ msgstr[1] "%d recursos"
 
 msgid "Print all elements"
 msgstr "Exibir todos elementos"
+
+msgid "Print list of blacklisted files"
+msgstr ""
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
@@ -1048,6 +1055,15 @@ msgstr "Definindo a fila de processamento para NULO...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a fila de processamento...\n"
+
+#~ msgid "Error writing registry cache to %s: %s"
+#~ msgstr "Erro ao escrever no cache do registro em %s: %s"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "Erro ao re-analisar o registro %s: %s"
+
+#~ msgid "Error re-scanning registry %s"
+#~ msgstr "Erro ao re-analisar o registro %s"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Erro interno no GStreamer: falha ao alterar estado."

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 12:38+0100\n"
+"POT-Creation-Date: 2009-10-07 00:46+0100\n"
 "PO-Revision-Date: 2009-09-19 11:43+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -79,7 +79,8 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Aktualisieren der Registry deaktivieren"
 
-msgid "Disable the use of fork() while scanning the registry"
+#, fuzzy
+msgid "Disable spawning a helper process while scanning the registry"
 msgstr "Die Verwendung von »fork()« beim Einlesen der Registry deaktivieren"
 
 msgid "GStreamer Options"
@@ -87,18 +88,6 @@ msgstr "Optionen von GStreamer"
 
 msgid "Show GStreamer Options"
 msgstr "Die Optionen von GStreamer anzeigen"
-
-#, c-format
-msgid "Error writing registry cache to %s: %s"
-msgstr "Fehler beim Schreiben des Zwischenspeichers der Registry nach %s: %s"
-
-#, c-format
-msgid "Error re-scanning registry %s: %s"
-msgstr "Fehler beim erneuten Einlesen der Registry %s : %s"
-
-#, c-format
-msgid "Error re-scanning registry %s"
-msgstr "Fehler beim erneuten Einlesen der Registry %s"
 
 msgid "Unknown option"
 msgstr "Unbekannte Option"
@@ -805,14 +794,29 @@ msgstr "schreibbar"
 msgid "controllable"
 msgstr "regelbar"
 
+msgid "Blacklisted files:"
+msgstr ""
+
 msgid "Total count: "
 msgstr "Gesamtzahl: "
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d Plugin"
 msgstr[1] "%d Plugins"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d feature"
@@ -822,6 +826,9 @@ msgstr[1] "%d Merkmale"
 
 msgid "Print all elements"
 msgstr "Alle Elemente ausgeben"
+
+msgid "Print list of blacklisted files"
+msgstr ""
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
@@ -1038,6 +1045,16 @@ msgstr "Leitung wird auf NULL gesetzt ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Leitung wird geleert ...\n"
+
+#~ msgid "Error writing registry cache to %s: %s"
+#~ msgstr ""
+#~ "Fehler beim Schreiben des Zwischenspeichers der Registry nach %s: %s"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "Fehler beim erneuten Einlesen der Registry %s : %s"
+
+#~ msgid "Error re-scanning registry %s"
+#~ msgstr "Fehler beim erneuten Einlesen der Registry %s"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Interner GStreamer-Fehler: Zustandswechsel fehlgeschlagen."

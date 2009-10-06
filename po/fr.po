@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 12:38+0100\n"
+"POT-Creation-Date: 2009-10-07 00:46+0100\n"
 "PO-Revision-Date: 2009-09-22 18:23+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -80,7 +80,8 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Désactive la mise à jour du registre"
 
-msgid "Disable the use of fork() while scanning the registry"
+#, fuzzy
+msgid "Disable spawning a helper process while scanning the registry"
 msgstr "Désactive l'utilisation de fork() lors de l'analyse du registre"
 
 msgid "GStreamer Options"
@@ -88,18 +89,6 @@ msgstr "Options de GStreamer"
 
 msgid "Show GStreamer Options"
 msgstr "Afficher les options de GStreamer"
-
-#, c-format
-msgid "Error writing registry cache to %s: %s"
-msgstr "Erreur lors de l'écriture du cache du registre vers %s : %s"
-
-#, c-format
-msgid "Error re-scanning registry %s: %s"
-msgstr "Erreur lors de la nouvelle analyse du registre %s : %s"
-
-#, c-format
-msgid "Error re-scanning registry %s"
-msgstr "Erreur lors de la nouvelle analyse du registre %s"
 
 msgid "Unknown option"
 msgstr "Option inconnue"
@@ -792,14 +781,29 @@ msgstr "accès en écriture"
 msgid "controllable"
 msgstr "contrôlable"
 
+msgid "Blacklisted files:"
+msgstr ""
+
 msgid "Total count: "
 msgstr "Nombre total :"
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d greffon"
 msgstr[1] "%d greffons"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] ""
+msgstr[1] ""
 
 #, c-format
 msgid "%d feature"
@@ -809,6 +813,9 @@ msgstr[1] "%d fonctionnalités"
 
 msgid "Print all elements"
 msgstr "Imprimer tous les éléments"
+
+msgid "Print list of blacklisted files"
+msgstr ""
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
@@ -1026,3 +1033,12 @@ msgstr "Définition du pipeline à NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Libération du pipeline...\n"
+
+#~ msgid "Error writing registry cache to %s: %s"
+#~ msgstr "Erreur lors de l'écriture du cache du registre vers %s : %s"
+
+#~ msgid "Error re-scanning registry %s: %s"
+#~ msgstr "Erreur lors de la nouvelle analyse du registre %s : %s"
+
+#~ msgid "Error re-scanning registry %s"
+#~ msgstr "Erreur lors de la nouvelle analyse du registre %s"
