@@ -45,7 +45,8 @@ struct _GstRtpBin {
 
   /*< private >*/
   /* default latency for sessions */
-  guint           latency;
+  guint           latency_ms;
+  guint64         latency_ns;
   gboolean        do_lost;
   gboolean        ignore_pt;
   RTPJitterBufferMode buffer_mode;

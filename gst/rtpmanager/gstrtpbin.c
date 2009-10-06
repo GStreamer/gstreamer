@@ -1180,7 +1180,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   g_object_set_data (G_OBJECT (buffer), "GstRTPBin.stream", stream);
 
   /* configure latency and packet lost */
-  g_object_set (buffer, "latency", rtpbin->latency, NULL);
+  g_object_set (buffer, "latency", rtpbin->latency_ms, NULL);
   g_object_set (buffer, "do-lost", rtpbin->do_lost, NULL);
   g_object_set (buffer, "mode", rtpbin->buffer_mode, NULL);
 
@@ -1576,7 +1576,8 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
   rtpbin->priv->bin_lock = g_mutex_new ();
   rtpbin->priv->dyn_lock = g_mutex_new ();
 
-  rtpbin->latency = DEFAULT_LATENCY_MS;
+  rtpbin->latency_ms = DEFAULT_LATENCY_MS;
+  rtpbin->latency_ns = DEFAULT_LATENCY_MS * GST_MSECOND;
   rtpbin->do_lost = DEFAULT_DO_LOST;
   rtpbin->ignore_pt = DEFAULT_IGNORE_PT;
   rtpbin->priv->autoremove = DEFAULT_AUTOREMOVE;
@@ -1673,7 +1674,8 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LATENCY:
       GST_RTP_BIN_LOCK (rtpbin);
-      rtpbin->latency = g_value_get_uint (value);
+      rtpbin->latency_ms = g_value_get_uint (value);
+      rtpbin->latency_ns = rtpbin->latency_ms * GST_MSECOND;
       GST_RTP_BIN_UNLOCK (rtpbin);
       /* propagate the property down to the jitterbuffer */
       gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin, "latency", value);
@@ -1717,7 +1719,7 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LATENCY:
       GST_RTP_BIN_LOCK (rtpbin);
-      g_value_set_uint (value, rtpbin->latency);
+      g_value_set_uint (value, rtpbin->latency_ms);
       GST_RTP_BIN_UNLOCK (rtpbin);
       break;
     case PROP_SDES:
@@ -1842,30 +1844,49 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
 
         if (G_UNLIKELY (change)) {
           GstClock *clock;
-          guint64 running_time, base_time, now;
+          guint64 running_time = 0;
+          guint64 elapsed = 0;
 
-          /* figure out a new base_time */
-          clock = gst_element_get_clock (GST_ELEMENT_CAST (bin));
-          if (G_LIKELY (clock)) {
+          /* figure out the running time when we have a clock */
+          if (G_LIKELY ((clock =
+                      gst_element_get_clock (GST_ELEMENT_CAST (bin))))) {
+            guint64 now, base_time;
+
             now = gst_clock_get_time (clock);
             base_time = gst_element_get_base_time (GST_ELEMENT_CAST (bin));
             running_time = now - base_time;
+          }
+
+          if (!active) {
+            /* remember the time when we started buffering */
+            rtpbin->buffer_start = running_time;
           } else {
-            running_time = 0;
+            /* calculate time spent in buffering */
+            if (running_time > rtpbin->buffer_start)
+              elapsed = running_time - rtpbin->buffer_start;
+            else
+              elapsed = 0;
+            /* subtract latency, if we paused for less time than the latency we
+             * are fine. */
+            if (elapsed > rtpbin->latency_ns)
+              elapsed -= rtpbin->latency_ns;
+            else
+              elapsed = 0;
           }
 
           while (G_LIKELY (elements)) {
             GstElement *element = elements->data;
 
-            GST_DEBUG_OBJECT (bin, "setting %p to %d", element, active);
-            g_signal_emit_by_name (element, "set-active", active, running_time,
+            GST_DEBUG_OBJECT (bin,
+                "setting %p to %d, elapsed %" GST_TIME_FORMAT, element, active,
+                GST_TIME_ARGS (elapsed));
+            g_signal_emit_by_name (element, "set-active", active, elapsed,
                 NULL);
             gst_object_unref (element);
             elements = g_slist_delete_link (elements, elements);
           }
         }
       }
-
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
       break;
     }
