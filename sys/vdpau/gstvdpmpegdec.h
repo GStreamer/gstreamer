@@ -50,6 +50,11 @@ struct _GstVdpMpegDec
   GstPad *src;
   GstPad *sink;
 
+  /* properties */
+  gchar *display_name;
+  
+  gboolean yuv_output;
+
   GstVdpDevice *device;
   VdpDecoderProfile profile;
   VdpDecoder decoder;
