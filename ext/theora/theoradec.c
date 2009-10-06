@@ -1313,6 +1313,9 @@ theora_handle_420_image (GstTheoraDec * dec, yuv_buffer * yuv, GstBuffer ** out)
       src_v += yuv->uv_stride;
     }
   }
+  return result;
+
+  /* ERRORS */
 no_buffer:
   {
     GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
