@@ -250,7 +250,7 @@ update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
     gint perc;
 
     if (jbuf->buffering) {
-      perc = (jbuf->level * 100 / jbuf->delay);
+      perc = (jbuf->level * 100 / jbuf->high_level);
       perc = MIN (perc, 100);
     } else {
       perc = 100;
