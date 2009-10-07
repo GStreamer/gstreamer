@@ -1645,11 +1645,11 @@ _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
 {
   guint off = 0;
 
-  gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "%s", "-----"
-      "----------------------------------------------------------------------");
+  gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "--------"
+      "-------------------------------------------------------------------");
 
   if (msg != NULL && *msg != '\0') {
-    gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "%s", msg);
+    gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, msg);
   }
 
   while (off < length) {
@@ -1661,8 +1661,8 @@ _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
     off += 16;
   }
 
-  gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "%s", "-----"
-      "----------------------------------------------------------------------");
+  gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "--------"
+      "-------------------------------------------------------------------");
 }
 
 #else /* !GST_DISABLE_GST_DEBUG */
