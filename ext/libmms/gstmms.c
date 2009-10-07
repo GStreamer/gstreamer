@@ -24,6 +24,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <stdio.h>
 #include <string.h>
 #include "gstmms.h"
 

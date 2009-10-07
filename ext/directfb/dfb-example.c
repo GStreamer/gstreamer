@@ -1,5 +1,6 @@
 
 #include <directfb.h>
+#include <stdio.h>
 #include <gst/gst.h>
 
 static IDirectFB *dfb = NULL;
