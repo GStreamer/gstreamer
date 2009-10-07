@@ -205,7 +205,7 @@ gst_bit_reader_get_remaining (const GstBitReader * reader)
  *
  * Returns: The total number of bits of @reader instance.
  * 
- * Since: 0.10.25
+ * Since: 0.10.26
  */
 guint
 gst_bit_reader_get_size (const GstBitReader * reader)

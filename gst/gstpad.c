@@ -2190,7 +2190,7 @@ done:
  *
  * Returns: the caps of the pad with incremented ref-count.
  *
- * Since: 0.10.25
+ * Since: 0.10.26
  */
 GstCaps *
 gst_pad_get_caps_refed (GstPad * pad)
@@ -2249,7 +2249,7 @@ gst_pad_get_caps (GstPad * pad)
  *
  * Returns: the caps of the pad with incremented ref-count.
  *
- * Since: 0.10.25
+ * Since: 0.10.26
  */
 GstCaps *
 gst_pad_peer_get_caps_refed (GstPad * pad)

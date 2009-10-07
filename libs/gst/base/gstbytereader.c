@@ -210,7 +210,7 @@ gst_byte_reader_get_remaining (const GstByteReader * reader)
  *
  * Returns: The total number of bytes of @reader instance.
  * 
- * Since: 0.10.25
+ * Since: 0.10.26
  */
 guint
 gst_byte_reader_get_size (const GstByteReader * reader)
