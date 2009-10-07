@@ -3558,12 +3558,14 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     if (stream->pending_tags)
       gst_tag_list_free (stream->pending_tags);
     stream->pending_tags = list;
-    /* post now, send event on pad later */
-    GST_DEBUG_OBJECT (qtdemux, "Posting tags %" GST_PTR_FORMAT,
-        stream->pending_tags);
-    gst_element_post_message (GST_ELEMENT (qtdemux),
-        gst_message_new_tag_full (GST_OBJECT (qtdemux), stream->pad,
-            gst_tag_list_copy (list)));
+    if (list) {
+      /* post now, send event on pad later */
+      GST_DEBUG_OBJECT (qtdemux, "Posting tags %" GST_PTR_FORMAT, list);
+      gst_element_post_message (GST_ELEMENT (qtdemux),
+          gst_message_new_tag_full (GST_OBJECT (qtdemux), stream->pad,
+              gst_tag_list_copy (list)));
+    }
+    /* global tags go on each pad anyway */
     stream->send_global_tags = TRUE;
   }
 done:
