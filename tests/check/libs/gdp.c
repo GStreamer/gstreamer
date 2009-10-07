@@ -50,7 +50,7 @@ GST_START_TEST (test_conversion)
     read_two = GST_READ_UINT16_BE (array + i);
     expect_two = array[i] * (1 << 8) + array[i + 1];
     fail_unless (read_two == expect_two,
-        "GST_READ_UINT16_BE %d: read %d != %d\n", i, read_two, expect_two);
+        "GST_READ_UINT16_BE %d: read %d != %d", i, read_two, expect_two);
   }
 
   /* write 8 16 bits */
@@ -66,7 +66,7 @@ GST_START_TEST (test_conversion)
     expect_four = array[i] * (1 << 24) + array[i + 1] * (1 << 16)
         + array[i + 2] * (1 << 8) + array[i + 3];
     fail_unless (read_four == expect_four,
-        "GST_READ_UINT32_BE %d: read %d != %d\n", i, read_four, expect_four);
+        "GST_READ_UINT32_BE %d: read %d != %d", i, read_four, expect_four);
   }
 
   /* read 2 64 bits */
@@ -78,7 +78,7 @@ GST_START_TEST (test_conversion)
         + array[i + 6] * (1 << 8) + array[i + 7];
     fail_unless (read_eight == expect_eight,
         "GST_READ_UINT64_BE %d: read %" G_GUINT64_FORMAT
-        " != %" G_GUINT64_FORMAT "\n", i, read_eight, expect_eight);
+        " != %" G_GUINT64_FORMAT, i, read_eight, expect_eight);
   }
 
   /* write 1 64 bit */
@@ -101,7 +101,7 @@ GST_START_TEST (test_buffer)
   guint8 *header;
 
   /* create buffer */
-  g_message ("Creating a new 8-byte buffer with ts 0.5 sec, dur 1 sec\n");
+  GST_DEBUG ("Creating a new 8-byte buffer with ts 0.5 sec, dur 1 sec");
   buffer = gst_buffer_new_and_alloc (8);
   GST_BUFFER_TIMESTAMP (buffer) = (GstClockTime) (GST_SECOND * 0.5);
   GST_BUFFER_DURATION (buffer) = (GstClockTime) GST_SECOND;
@@ -128,13 +128,13 @@ GST_START_TEST (test_buffer)
   fail_unless (gst_dp_validate_payload (header_length, header,
           GST_BUFFER_DATA (newbuffer)), "Could not validate payload");
 
-  g_message ("new buffer timestamp: %" GST_TIME_FORMAT "\n",
+  GST_DEBUG ("new buffer timestamp: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (newbuffer)));
-  g_message ("new buffer duration: %" GST_TIME_FORMAT "\n",
+  GST_DEBUG ("new buffer duration: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_DURATION (newbuffer)));
-  g_message ("new buffer offset: %" G_GUINT64_FORMAT "\n",
+  GST_DEBUG ("new buffer offset: %" G_GUINT64_FORMAT,
       GST_BUFFER_OFFSET (newbuffer));
-  g_message ("new buffer offset_end: %" G_GUINT64_FORMAT "\n",
+  GST_DEBUG ("new buffer offset_end: %" G_GUINT64_FORMAT,
       GST_BUFFER_OFFSET_END (newbuffer));
   fail_unless (GST_BUFFER_TIMESTAMP (newbuffer) ==
       GST_BUFFER_TIMESTAMP (buffer), "Timestamps don't match !");
@@ -168,7 +168,7 @@ GST_START_TEST (test_caps)
       "channels = (int) [ 1, 2 ], " "endianness = (int) BYTE_ORDER, "
       "width = (int) 32, " "buffer-frames = (int) 0");
   string = gst_caps_to_string (caps);
-  g_message ("Created caps: %s\n", string);
+  GST_DEBUG ("Created caps: %s", string);
   fail_unless (gst_dp_packet_from_caps (caps, 0, &header_length, &header,
           &payload), "Could not create packet from caps.");
 
@@ -179,7 +179,7 @@ GST_START_TEST (test_caps)
   fail_unless (newcaps != NULL, "Could not create caps from packet");
   fail_unless (GST_IS_CAPS (newcaps));
   newstring = gst_caps_to_string (newcaps);
-  g_message ("Received caps: %s\n", newstring);
+  GST_DEBUG ("Received caps: %s", newstring);
   fail_unless (strcmp (string, newstring) == 0,
       "Created caps do not match original caps");
 
@@ -201,7 +201,7 @@ GST_START_TEST (test_event)
   guint header_length;
   guint8 *header, *payload;
 
-  g_message ("Testing EOS event at 1s\n");
+  GST_DEBUG ("Testing EOS event at 1s");
   send = gst_event_new_eos ();
   GST_EVENT_TIMESTAMP (send) = GST_SECOND;
   fail_unless (gst_dp_packet_from_event (send, GST_DP_HEADER_FLAG_CRC,
@@ -210,7 +210,7 @@ GST_START_TEST (test_event)
 
   receive = gst_dp_event_from_packet (header_length, header, payload);
 
-  g_message ("EOS, timestamp %" GST_TIME_FORMAT "\n",
+  GST_DEBUG ("EOS, timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_EVENT_TIMESTAMP (receive)));
   fail_unless (GST_EVENT_TYPE (receive) == GST_EVENT_EOS,
       "Received event is not EOS");
@@ -223,7 +223,7 @@ GST_START_TEST (test_event)
   gst_event_unref (send);
   gst_event_unref (receive);
 
-  g_message ("Testing FLUSH event at 2s\n");
+  GST_DEBUG ("Testing FLUSH event at 2s");
   send = gst_event_new_flush_start ();
   GST_EVENT_TIMESTAMP (send) = GST_SECOND * 2;
   fail_unless (gst_dp_packet_from_event (send, GST_DP_HEADER_FLAG_CRC,
@@ -232,7 +232,7 @@ GST_START_TEST (test_event)
 
   receive = gst_dp_event_from_packet (header_length, header, payload);
 
-  g_message ("Flush, timestamp %" GST_TIME_FORMAT "\n",
+  GST_DEBUG ("Flush, timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_EVENT_TIMESTAMP (receive)));
   fail_unless (GST_EVENT_TYPE (receive) == GST_EVENT_FLUSH_START,
       "Received event is not flush");
@@ -245,7 +245,7 @@ GST_START_TEST (test_event)
   gst_event_unref (send);
   gst_event_unref (receive);
 
-  g_message ("Testing SEEK event with 1 second at 3 seconds\n");
+  GST_DEBUG ("Testing SEEK event with 1 second at 3 seconds");
   send =
       gst_event_new_seek (1.0, GST_FORMAT_TIME, 0, GST_SEEK_TYPE_SET,
       GST_SECOND, GST_SEEK_TYPE_NONE, 0);
@@ -266,9 +266,8 @@ GST_START_TEST (test_event)
     gst_event_parse_seek (receive, &rate, &format, &flags,
         &cur_type, &cur, &stop_type, &stop);
 
-    g_message ("Seek, timestamp %" GST_TIME_FORMAT ", to %" GST_TIME_FORMAT
-        "\n", GST_TIME_ARGS (GST_EVENT_TIMESTAMP (receive)),
-        GST_TIME_ARGS (cur));
+    GST_DEBUG ("Seek, timestamp %" GST_TIME_FORMAT ", to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_EVENT_TIMESTAMP (receive)), GST_TIME_ARGS (cur));
     fail_unless (GST_EVENT_TYPE (receive) == GST_EVENT_SEEK,
         "Returned event is not seek");
     fail_unless (GST_EVENT_TIMESTAMP (receive) == GST_SECOND * 3,
