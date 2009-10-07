@@ -110,7 +110,7 @@ _ilog (unsigned int v)
 #define THEORA_DEF_CENTER               TRUE
 #define THEORA_DEF_BORDER               BORDER_BLACK
 #define THEORA_DEF_BITRATE              0
-#define THEORA_DEF_QUALITY              16
+#define THEORA_DEF_QUALITY              48
 #define THEORA_DEF_QUICK                TRUE
 #define THEORA_DEF_KEYFRAME_AUTO        TRUE
 #define THEORA_DEF_KEYFRAME_FREQ        64
