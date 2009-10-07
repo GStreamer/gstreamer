@@ -1139,7 +1139,8 @@ gst_ximagesink_event_thread (GstXImageSink * ximagesink)
     if (ximagesink->xwindow) {
       gst_ximagesink_handle_xevents (ximagesink);
     }
-    g_usleep (100000);
+    /* FIXME: do we want to align this with the framerate or anything else? */
+    g_usleep (G_USEC_PER_SEC / 20);
 
     GST_OBJECT_LOCK (ximagesink);
   }
@@ -1147,6 +1148,45 @@ gst_ximagesink_event_thread (GstXImageSink * ximagesink)
 
   return NULL;
 }
+
+static void
+gst_ximagesink_manage_event_thread (GstXImageSink * ximagesink)
+{
+  GThread *thread = NULL;
+
+  /* don't start the thread too early */
+  if (ximagesink->xcontext == NULL) {
+    return;
+  }
+
+  GST_OBJECT_LOCK (ximagesink);
+  if (ximagesink->handle_expose || ximagesink->handle_events) {
+    if (!ximagesink->event_thread) {
+      /* Setup our event listening thread */
+      GST_DEBUG_OBJECT (ximagesink, "run xevent thread, expose %d, events %d",
+          ximagesink->handle_expose, ximagesink->handle_events);
+      ximagesink->running = TRUE;
+      ximagesink->event_thread = g_thread_create (
+          (GThreadFunc) gst_ximagesink_event_thread, ximagesink, TRUE, NULL);
+    }
+  } else {
+    if (ximagesink->event_thread) {
+      GST_DEBUG_OBJECT (ximagesink, "stop xevent thread, expose %d, events %d",
+          ximagesink->handle_expose, ximagesink->handle_events);
+      ximagesink->running = FALSE;
+      /* grab thread and mark it as NULL */
+      thread = ximagesink->event_thread;
+      ximagesink->event_thread = NULL;
+    }
+  }
+  GST_OBJECT_UNLOCK (ximagesink);
+
+  /* Wait for our event thread to finish */
+  if (thread)
+    g_thread_join (thread);
+
+}
+
 
 /* This function calculates the pixel aspect ratio based on the properties
  * in the xcontext structure and stores it there. */
@@ -1327,13 +1367,6 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
   }
 
   g_mutex_unlock (ximagesink->x_lock);
-
-  /* Setup our event listening thread */
-  GST_OBJECT_LOCK (ximagesink);
-  ximagesink->running = TRUE;
-  ximagesink->event_thread = g_thread_create (
-      (GThreadFunc) gst_ximagesink_event_thread, ximagesink, TRUE, NULL);
-  GST_OBJECT_UNLOCK (ximagesink);
 
   return xcontext;
 }
@@ -1564,6 +1597,7 @@ gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
       g_mutex_lock (ximagesink->x_lock);
       XSynchronize (ximagesink->xcontext->disp, ximagesink->synchronous);
       g_mutex_unlock (ximagesink->x_lock);
+      gst_ximagesink_manage_event_thread (ximagesink);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_mutex_lock (ximagesink->flow_lock);
@@ -2130,9 +2164,11 @@ gst_ximagesink_set_property (GObject * object, guint prop_id,
     case PROP_HANDLE_EVENTS:
       gst_ximagesink_set_event_handling (GST_X_OVERLAY (ximagesink),
           g_value_get_boolean (value));
+      gst_ximagesink_manage_event_thread (ximagesink);
       break;
     case PROP_HANDLE_EXPOSE:
       ximagesink->handle_expose = g_value_get_boolean (value);
+      gst_ximagesink_manage_event_thread (ximagesink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
