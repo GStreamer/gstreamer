@@ -71,6 +71,7 @@
 
 #include "gst_private.h"
 #include <gst/gst.h>
+#include <gobject/gvaluecollector.h>
 
 #define DEBUG_REFCOUNT
 
@@ -869,54 +870,105 @@ gst_caps_truncate (GstCaps * caps)
 }
 
 /**
+ * gst_caps_set_value:
+ * @caps: a writable caps
+ * @field: name of the field to set
+ * @value: value to set the field to
+ *
+ * Sets the given @field on all structures of @caps to the given @value.
+ * This is a convenience function for calling gst_structure_set_value() on
+ * all structures of @caps.
+ *
+ * Since: 0.10.26
+ **/
+void
+gst_caps_set_value (GstCaps * caps, const char *field, const GValue * value)
+{
+  guint i, len;
+
+  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_if_fail (IS_WRITABLE (caps));
+  g_return_if_fail (field != NULL);
+  g_return_if_fail (G_IS_VALUE (value));
+
+  len = caps->structs->len;
+  for (i = 0; i < len; i++) {
+    GstStructure *structure = gst_caps_get_structure_unchecked (caps, i);
+    gst_structure_set_value (structure, field, value);
+  }
+}
+
+/**
+ * gst_caps_set_simple_valist:
+ * @caps: the #GstCaps to set
+ * @field: first field to set
+ * @varargs: additional parameters
+ *
+ * Sets fields in a #GstCaps.  The arguments must be passed in the same
+ * manner as gst_structure_set(), and be NULL-terminated.
+ * <note>Prior to GStreamer version 0.10.26, this function failed when
+ * @caps was simple. If your code needs to work with those versions of
+ * GStreamer, you amy only call this function when GST_CAPS_IS_SIMPLE()
+ * returns %TRUE for @caps.</note>
+ */
+void
+gst_caps_set_simple_valist (GstCaps * caps, const char *field, va_list varargs)
+{
+  GValue value = { 0, };
+
+  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_if_fail (IS_WRITABLE (caps));
+
+  while (field) {
+    GType type;
+    char *err;
+
+    type = va_arg (varargs, GType);
+
+    if (G_UNLIKELY (type == G_TYPE_DATE)) {
+      g_warning ("Don't use G_TYPE_DATE, use GST_TYPE_DATE instead\n");
+      type = GST_TYPE_DATE;
+    }
+
+    g_value_init (&value, type);
+    G_VALUE_COLLECT (&value, varargs, 0, &err);
+    if (G_UNLIKELY (err)) {
+      g_critical ("%s", err);
+      return;
+    }
+
+    gst_caps_set_value (caps, field, &value);
+
+    g_value_unset (&value);
+
+    field = va_arg (varargs, const gchar *);
+  }
+}
+
+/**
  * gst_caps_set_simple:
  * @caps: the #GstCaps to set
  * @field: first field to set
  * @...: additional parameters
  *
- * Sets fields in a simple #GstCaps.  A simple #GstCaps is one that
- * only has one structure.  The arguments must be passed in the same
+ * Sets fields in a #GstCaps.  The arguments must be passed in the same
  * manner as gst_structure_set(), and be NULL-terminated.
+ * <note>Prior to GStreamer version 0.10.26, this function failed when
+ * @caps was simple. If your code needs to work with those versions of
+ * GStreamer, you amy only call this function when GST_CAPS_IS_SIMPLE()
+ * returns %TRUE for @caps.</note>
  */
 void
 gst_caps_set_simple (GstCaps * caps, const char *field, ...)
 {
-  GstStructure *structure;
   va_list var_args;
 
   g_return_if_fail (GST_IS_CAPS (caps));
-  g_return_if_fail (caps->structs->len == 1);
   g_return_if_fail (IS_WRITABLE (caps));
-
-  structure = gst_caps_get_structure_unchecked (caps, 0);
 
   va_start (var_args, field);
-  gst_structure_set_valist (structure, field, var_args);
+  gst_caps_set_simple_valist (caps, field, var_args);
   va_end (var_args);
-}
-
-/**
- * gst_caps_set_simple_valist:
- * @caps: the #GstCaps to copy
- * @field: first field to set
- * @varargs: additional parameters
- *
- * Sets fields in a simple #GstCaps.  A simple #GstCaps is one that
- * only has one structure.  The arguments must be passed in the same
- * manner as gst_structure_set(), and be NULL-terminated.
- */
-void
-gst_caps_set_simple_valist (GstCaps * caps, const char *field, va_list varargs)
-{
-  GstStructure *structure;
-
-  g_return_if_fail (GST_IS_CAPS (caps));
-  g_return_if_fail (caps->structs->len == 1);
-  g_return_if_fail (IS_WRITABLE (caps));
-
-  structure = gst_caps_get_structure_unchecked (caps, 0);
-
-  gst_structure_set_valist (structure, field, varargs);
 }
 
 /* tests */

@@ -291,6 +291,7 @@ gst_caps_remove_structure
 gst_caps_merge_structure
 gst_caps_get_size
 gst_caps_get_structure
+gst_caps_set_value
 gst_caps_set_simple
 gst_caps_set_simple_valist
 gst_caps_is_any
