@@ -24,6 +24,8 @@
 #ifndef __GST_FILE_SINK_H__
 #define __GST_FILE_SINK_H__
 
+#include <stdio.h>
+
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
 

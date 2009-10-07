@@ -35,6 +35,7 @@
 #include "gstregistry.h"
 #include "gstinfo.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING

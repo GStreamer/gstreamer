@@ -30,6 +30,7 @@
 #define DISABLE_FAULT_HANDLER
 #endif
 
+#include <stdio.h>
 #include <string.h>
 #include <signal.h>
 #ifdef HAVE_UNISTD_H

@@ -24,6 +24,7 @@
       <title>Initializing GStreamer</title>
       <programlisting>
 <!-- example-begin init.c -->
+#include &lt;stdio.h&gt;
 #include &lt;gst/gst.h&gt;
 
 int
