@@ -37,6 +37,7 @@
 #include <gst/riff/riff-media.h>
 #include <gst/tag/tag.h>
 #include <gst/gst-i18n-plugin.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
