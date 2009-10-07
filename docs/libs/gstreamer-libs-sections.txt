@@ -610,7 +610,10 @@ GstDataQueue
 GstDataQueueSize
 GstDataQueueCheckFullFunction
 GstDataQueueItem
+GstDataQueueEmptyCallback
+GstDataQueueFullCallback
 gst_data_queue_new
+gst_data_queue_new_full
 gst_data_queue_push
 gst_data_queue_pop
 gst_data_queue_flush
