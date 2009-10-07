@@ -24,6 +24,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "gstrtpjpegdepay.h"

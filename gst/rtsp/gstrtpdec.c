@@ -58,6 +58,7 @@
 #endif
 
 #include "gstrtpdec.h"
+#include <stdio.h>
 
 GST_DEBUG_CATEGORY_STATIC (rtpdec_debug);
 #define GST_CAT_DEFAULT (rtpdec_debug)

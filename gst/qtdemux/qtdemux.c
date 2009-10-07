@@ -57,6 +57,7 @@
 #include "qtdemux.h"
 #include "qtpalette.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

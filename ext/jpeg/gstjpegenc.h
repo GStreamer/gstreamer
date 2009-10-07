@@ -27,6 +27,7 @@
 #ifdef HAVE_STDLIB_H
 # undef HAVE_STDLIB_H
 #endif
+#include <stdio.h>
 #include <jpeglib.h>
 
 G_BEGIN_DECLS

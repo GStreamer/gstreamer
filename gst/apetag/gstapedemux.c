@@ -52,6 +52,7 @@
 
 #include "gstapedemux.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define APE_VERSION_MAJOR(ver)  ((ver)/1000)
