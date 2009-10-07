@@ -2131,7 +2131,7 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
 
   it = gst_pad_iterate_internal_links (sinkpad);
 
-  if (!it || (gst_iterator_next (it, (gpointer *) & srcpad)) != GST_ITERATOR_OK
+  if (!it || (gst_iterator_next (it, (gpointer) & srcpad)) != GST_ITERATOR_OK
       || srcpad == NULL) {
     GST_ERROR_OBJECT (dbin,
         "Couldn't get srcpad from multiqueue for sinkpad %" GST_PTR_FORMAT,
@@ -2267,9 +2267,8 @@ gst_decode_chain_handle_eos (GstDecodeChain * eos_chain)
     break;
   }
 
-  drained =
-      chain->active_group ? gst_decode_group_is_drained (chain->
-      active_group) : TRUE;
+  drained = chain->active_group ?
+      gst_decode_group_is_drained (chain->active_group) : TRUE;
 
   /* Now either group == NULL and chain == dbin->decode_chain
    * or chain is the lowest chain that has a non-drained group */
