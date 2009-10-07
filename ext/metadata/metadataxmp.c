@@ -385,11 +385,10 @@ metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
   if (!xmp_serialize (xmp, xmp_str_buf, 0, 2)) {
     GST_ERROR ("failed to serialize xmp into chunk\n");
   } else if (xmp_str_buf) {
-    unsigned int len = strlen (xmp_string_cstr (xmp_str_buf));
+    const gchar *text = xmp_string_cstr (xmp_str_buf);
 
-    *size = len + 1;
-    *buf = malloc (*size);
-    memcpy (*buf, xmp_string_cstr (xmp_str_buf), *size);
+    *buf = (guint8 *) g_strdup (text);
+    *size = strlen (text);
   } else {
     GST_ERROR ("failed to serialize xmp into chunk\n");
   }
