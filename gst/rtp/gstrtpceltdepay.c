@@ -195,7 +195,7 @@ gst_rtp_celt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   /* ERRORS */
 no_clockrate:
   {
-    GST_DEBUG_OBJECT (depayload, "no clock-rate specified");
+    GST_ERROR_OBJECT (depayload, "no clock-rate specified");
     return FALSE;
   }
 }
@@ -219,7 +219,7 @@ gst_rtp_celt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
-  GST_DEBUG_OBJECT (depayload, "process : got %d bytes, mark %d ts %u seqn %d",
+  GST_LOG_OBJECT (depayload, "got %d bytes, mark %d ts %u seqn %d",
       GST_BUFFER_SIZE (buf),
       gst_rtp_buffer_get_marker (buf),
       gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
