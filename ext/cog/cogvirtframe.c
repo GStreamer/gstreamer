@@ -1327,14 +1327,17 @@ color_matrix_YCbCr_to_RGB (CogFrame * frame, void *_dest, int component, int i)
       m2 = 0;
       m3 = 1.596;
       offset = -222.92;
-      orc_matrix2_u8 (dest, src1, src3, 75, 102, -14269 + 32, frame->width);
+      //orc_matrix2_u8 (dest, src1, src3, 75, 102, -14269 + 32, frame->width);
+      orc_matrix2_2_u8 (dest, src1, src3, 75, 102, 32, 6, frame->width);
       break;
     case 1:
       m1 = 1.1644;
       m2 = -0.39176;
       m3 = -0.81297;
       offset = 135.58;
-      orc_matrix3_u8 (dest, src1, src2, src3, 75, -25, -52, 8677 + 32,
+      //orc_matrix3_u8 (dest, src1, src2, src3, 75, -25, -52, 8677 + 32,
+      //    frame->width);
+      orc_matrix3_2_u8 (dest, src1, src2, src3, 75, -25, -52, 32, 6,
           frame->width);
       break;
     case 2:
@@ -1342,7 +1345,8 @@ color_matrix_YCbCr_to_RGB (CogFrame * frame, void *_dest, int component, int i)
       m2 = 2.0172;
       m3 = 0;
       offset = -276.84;
-      orc_matrix2_u8 (dest, src1, src2, 75, 129, -17718 + 32, frame->width);
+      //orc_matrix2_u8 (dest, src1, src2, 75, 129, -17718 + 32, frame->width);
+      orc_matrix2_2_u8 (dest, src1, src2, 75, 129, 32, 6, frame->width);
       break;
     default:
       m1 = 0.0;

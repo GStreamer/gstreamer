@@ -264,6 +264,29 @@ shrsw t1, t1, 6
 convsuswb d1, t1
 
 
+.function orc_matrix2_2_u8
+.dest 1 d1 uint8_t
+.source 1 s1 uint8_t
+.source 1 s2 uint8_t
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.temp 2 t1
+.temp 2 t2
+
+convubw t1, s1
+subw t1, t1, 16
+mullw t1, t1, p1
+convubw t2, s2
+subw t2, t2, 128
+mullw t2, t2, p2
+addw t1, t1, t2
+addw t1, t1, p3
+shrsw t1, t1, p4
+convsuswb d1, t1
+
+
 .function orc_matrix3_u8
 .dest 1 d1 uint8_t
 .source 1 s1 uint8_t
@@ -286,6 +309,35 @@ mullw t2, t2, p3
 addw t1, t1, t2
 addw t1, t1, p4
 shrsw t1, t1, 6
+convsuswb d1, t1
+
+
+.function orc_matrix3_2_u8
+.dest 1 d1 uint8_t
+.source 1 s1 uint8_t
+.source 1 s2 uint8_t
+.source 1 s3 uint8_t
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.param 2 p5
+.temp 2 t1
+.temp 2 t2
+
+convubw t1, s1
+subw t1, t1, 16
+mullw t1, t1, p1
+convubw t2, s2
+subw t2, t2, 128
+mullw t2, t2, p2
+addw t1, t1, t2
+convubw t2, s3
+subw t2, t2, 128
+mullw t2, t2, p3
+addw t1, t1, t2
+addw t1, t1, p4
+shrsw t1, t1, p5
 convsuswb d1, t1
 
 
