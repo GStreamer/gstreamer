@@ -129,6 +129,7 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_BLINK, "Blink", "blink"},
     {GST_VIDEO_TEST_SRC_SMPTE75, "SMPTE 75% color bars", "smpte75"},
     {GST_VIDEO_TEST_SRC_ZONE_PLATE, "Zone plate", "zone-plate"},
+    {GST_VIDEO_TEST_SRC_GAMUT, "Gamut checkers", "gamut"},
     {0, NULL, NULL}
   };
 
@@ -353,6 +354,9 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       break;
     case GST_VIDEO_TEST_SRC_ZONE_PLATE:
       videotestsrc->make_image = gst_video_test_src_zoneplate;
+      break;
+    case GST_VIDEO_TEST_SRC_GAMUT:
+      videotestsrc->make_image = gst_video_test_src_gamut;
       break;
     default:
       g_assert_not_reached ();

@@ -114,6 +114,8 @@ void    gst_video_test_src_circular     (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
 void    gst_video_test_src_zoneplate    (GstVideoTestSrc * v,
 		                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_gamut        (GstVideoTestSrc * v,
+		                         unsigned char *dest, int w, int h);
 extern struct fourcc_list_struct fourcc_list[];
 extern int n_fourccs;
 

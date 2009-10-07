@@ -54,8 +54,18 @@ G_BEGIN_DECLS
  * @GST_VIDEO_TEST_SRC_BLINK: Alternate between black and white
  * @GST_VIDEO_TEST_SRC_SMPTE75: SMPTE test pattern (75% color bars)
  * @GST_VIDEO_TEST_SRC_ZONE_PLATE: Zone plate
+ * @GST_VIDEO_TEST_SRC_GAMUT: Gamut checking pattern
  *
  * The test pattern to produce.
+ *
+ * The Gamut pattern creates a checkerboard pattern of colors at the
+ * edge of the YCbCr gamut and nearby colors that are out of gamut.
+ * The pattern is divided into 4 regions: black, white, red, and blue.
+ * After conversion to RGB, the out-of-gamut colors should be converted
+ * to the same value as their in-gamut neighbors.  If the checkerboard
+ * pattern is still visible after conversion, this indicates a faulty
+ * conversion.  Image manipulation, such as adjusting contrast or
+ * brightness, can also cause the pattern to be visible.
  */
 typedef enum {
   GST_VIDEO_TEST_SRC_SMPTE,
@@ -72,13 +82,14 @@ typedef enum {
   GST_VIDEO_TEST_SRC_CIRCULAR,
   GST_VIDEO_TEST_SRC_BLINK,
   GST_VIDEO_TEST_SRC_SMPTE75,
-  GST_VIDEO_TEST_SRC_ZONE_PLATE
+  GST_VIDEO_TEST_SRC_ZONE_PLATE,
+  GST_VIDEO_TEST_SRC_GAMUT
 } GstVideoTestSrcPattern;
 
 /**
  * GstVideoTestSrcColorSpec:
- * @GST_VIDEO_TEST_SRC_BT601: ITU-R Rec. BT.601
- * @GST_VIDEO_TEST_SRC_BT709: ITU-R Rec. BT.601
+ * @GST_VIDEO_TEST_SRC_BT601: ITU-R Rec. BT.601/BT.470 (SD)
+ * @GST_VIDEO_TEST_SRC_BT709: ITU-R Rec. BT.709 (HD)
  *
  * The color specification to use.
  */
