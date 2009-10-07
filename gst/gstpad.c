@@ -2170,10 +2170,43 @@ gst_pad_get_caps_unlocked (GstPad * pad)
     goto done;
   }
 
+  /* this almost never happens */
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "pad has no caps");
   result = gst_caps_new_empty ();
 
 done:
+  return result;
+}
+
+/* FIXME-0.11: what about making this the default and using
+ * gst_caps_make_writable() explicitely where needed
+ */
+/**
+ * gst_pad_get_caps_refed:
+ * @pad: a  #GstPad to get the capabilities of.
+ *
+ * Gets the capabilities this pad can produce or consume. Preferred function if
+ * one only wants to read or intersect the caps.
+ *
+ * Returns: the caps of the pad with incremented ref-count.
+ *
+ * Since: 0.10.25
+ */
+GstCaps *
+gst_pad_get_caps_refed (GstPad * pad)
+{
+  GstCaps *result = NULL;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  GST_OBJECT_LOCK (pad);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
+
+  result = gst_pad_get_caps_unlocked (pad);
+
+  GST_OBJECT_UNLOCK (pad);
+
   return result;
 }
 
@@ -2195,33 +2228,70 @@ done:
 GstCaps *
 gst_pad_get_caps (GstPad * pad)
 {
+  GstCaps *result = gst_pad_get_caps_refed (pad);
+
+  /* be sure that we have a copy */
+  if (G_LIKELY (result))
+    result = gst_caps_make_writable (result);
+
+  return result;
+}
+
+/* FIXME-0.11: what about making this the default and using
+ * gst_caps_make_writable() explicitely where needed
+ */
+/**
+ * gst_pad_peer_get_caps_refed:
+ * @pad: a  #GstPad to get the capabilities of.
+ *
+ * Gets the capabilities of the peer connected to this pad. Preferred function
+ * if one only wants to read or intersect the caps.
+ *
+ * Returns: the caps of the pad with incremented ref-count.
+ *
+ * Since: 0.10.25
+ */
+GstCaps *
+gst_pad_peer_get_caps_refed (GstPad * pad)
+{
+  GstPad *peerpad;
   GstCaps *result = NULL;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   GST_OBJECT_LOCK (pad);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get peer caps");
 
-  result = gst_pad_get_caps_unlocked (pad);
+  peerpad = GST_PAD_PEER (pad);
+  if (G_UNLIKELY (peerpad == NULL))
+    goto no_peer;
 
-  /* be sure that we have a copy */
-  if (result)
-    result = gst_caps_make_writable (result);
-
+  gst_object_ref (peerpad);
   GST_OBJECT_UNLOCK (pad);
 
+  result = gst_pad_get_caps_refed (peerpad);
+
+  gst_object_unref (peerpad);
+
   return result;
+
+no_peer:
+  {
+    GST_OBJECT_UNLOCK (pad);
+    return NULL;
+  }
 }
 
 /**
  * gst_pad_peer_get_caps:
  * @pad: a  #GstPad to get the peer capabilities of.
  *
- * Gets the capabilities of the peer connected to this pad.
+ * Gets the capabilities of the peer connected to this pad. Similar to
+ * gst_pad_get_caps().
  *
- * Returns: the #GstCaps of the peer pad. This function returns a new caps, so
- * use gst_caps_unref to get rid of it. this function returns NULL if there is
+ * Returns: a newly allocated copy of the #GstCaps of the peer pad. Use
+ * gst_caps_unref() to get rid of it. This function returns %NULL if there is
  * no peer pad.
  */
 GstCaps *
@@ -2367,7 +2437,7 @@ gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (pad, "caps %" GST_PTR_FORMAT, caps);
 
-  allowed = gst_pad_get_caps (pad);
+  allowed = gst_pad_get_caps_refed (pad);
   if (!allowed)
     goto nothing_allowed;
 
@@ -2703,9 +2773,9 @@ gst_pad_get_allowed_caps (GstPad * pad)
 
   gst_object_ref (peer);
   GST_OBJECT_UNLOCK (pad);
-  mycaps = gst_pad_get_caps (pad);
+  mycaps = gst_pad_get_caps_refed (pad);
 
-  peercaps = gst_pad_get_caps (peer);
+  peercaps = gst_pad_get_caps_refed (peer);
   gst_object_unref (peer);
 
   caps = gst_caps_intersect (mycaps, peercaps);
