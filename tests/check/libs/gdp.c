@@ -412,6 +412,7 @@ gst_dp_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_checked_fixture (tc_chain, gst_dp_init, NULL);
   tcase_add_test (tc_chain, test_conversion);
 #ifndef GST_REMOVE_DEPRECATED
   tcase_add_test (tc_chain, test_buffer);
