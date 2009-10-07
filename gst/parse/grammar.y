@@ -181,18 +181,14 @@ SET_ERROR (GError **error, gint type, const char *format, ...)
 /* #  define YYFPRINTF(a, ...) GST_CAT_DEBUG (GST_CAT_PIPELINE, __VA_ARGS__) */
 #    define YYFPRINTF(a, ...) \
 G_STMT_START { \
-     gchar *temp = g_strdup_printf (__VA_ARGS__); \
-     GST_CAT_LOG (GST_CAT_PIPELINE, temp); \
-     g_free (temp); \
+     GST_CAT_LOG (GST_CAT_PIPELINE, __VA_ARGS__); \
 } G_STMT_END
 
 #  elif defined(G_HAVE_GNUC_VARARGS)
 
 #    define YYFPRINTF(a, args...) \
 G_STMT_START { \
-     gchar *temp = g_strdup_printf ( args ); \
-     GST_CAT_LOG (GST_CAT_PIPELINE, temp); \
-     g_free (temp); \
+     GST_CAT_LOG (GST_CAT_PIPELINE, args); \
 } G_STMT_END
 
 #  else
