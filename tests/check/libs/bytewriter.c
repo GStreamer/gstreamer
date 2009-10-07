@@ -81,7 +81,7 @@ GST_END_TEST;
 GST_START_TEST (test_write_fixed)
 {
   GstByteWriter writer;
-  guint64 end_data = 0xff34567890abcdef;
+  guint64 end_data = G_GUINT64_CONSTANT (0xff34567890abcdef);
   guint8 *data;
   guint8 b = 0;
   guint64 l = 0;
@@ -109,12 +109,13 @@ GST_START_TEST (test_write_fixed)
   fail_if (gst_byte_writer_put_uint8 (&writer, 0x12));
   fail_unless (gst_byte_writer_set_pos (&writer, 0));
   fail_unless (gst_byte_reader_peek_uint64_be (GST_BYTE_READER (&writer), &l));
-  fail_unless_equals_uint64 (l, 0x1234567890abcdef);
+  fail_unless_equals_uint64 (l, G_GUINT64_CONSTANT (0x1234567890abcdef));
   fail_unless (gst_byte_writer_put_uint8 (&writer, 0xff));
   fail_unless (gst_byte_writer_set_pos (&writer, 0));
   fail_unless (gst_byte_reader_get_uint64_be (GST_BYTE_READER (&writer), &l));
-  fail_unless_equals_uint64 (l, 0xff34567890abcdef);
-  fail_if (gst_byte_writer_put_uint64_be (&writer, 0x1234567890abcdef));
+  fail_unless_equals_uint64 (l, G_GUINT64_CONSTANT (0xff34567890abcdef));
+  fail_if (gst_byte_writer_put_uint64_be (&writer,
+          G_GUINT64_CONSTANT (0x1234567890abcdef)));
 
   data = gst_byte_writer_reset_and_get_data (&writer);
   fail_unless (data != NULL);
@@ -127,7 +128,7 @@ GST_END_TEST;
 GST_START_TEST (test_write_non_fixed)
 {
   GstByteWriter writer;
-  guint64 end_data = 0xff34567890abcdef;
+  guint64 end_data = G_GUINT64_CONSTANT (0xff34567890abcdef);
   guint8 *data;
   guint64 l = 0;
 
@@ -152,18 +153,19 @@ GST_START_TEST (test_write_non_fixed)
           (&writer)), 0);
   fail_unless (gst_byte_writer_set_pos (&writer, 0));
   fail_unless (gst_byte_reader_peek_uint64_be (GST_BYTE_READER (&writer), &l));
-  fail_unless_equals_uint64 (l, 0x1234567890abcdef);
+  fail_unless_equals_uint64 (l, G_GUINT64_CONSTANT (0x1234567890abcdef));
   fail_unless (gst_byte_writer_put_uint8 (&writer, 0xff));
   fail_unless (gst_byte_writer_set_pos (&writer, 0));
   fail_unless (gst_byte_reader_get_uint64_be (GST_BYTE_READER (&writer), &l));
-  fail_unless_equals_uint64 (l, 0xff34567890abcdef);
+  fail_unless_equals_uint64 (l, G_GUINT64_CONSTANT (0xff34567890abcdef));
   fail_unless (gst_byte_writer_set_pos (&writer, 8));
-  fail_unless (gst_byte_writer_put_uint64_be (&writer, 0x1234567890abcdef));
+  fail_unless (gst_byte_writer_put_uint64_be (&writer,
+          G_GUINT64_CONSTANT (0x1234567890abcdef)));
 
   data = gst_byte_writer_reset_and_get_data (&writer);
   fail_unless (data != NULL);
   fail_unless (memcmp (&end_data, data, 8) == 0);
-  end_data = GUINT64_TO_BE (0x1234567890abcdef);
+  end_data = GUINT64_TO_BE (G_GUINT64_CONSTANT (0x1234567890abcdef));
   fail_unless (memcmp (&end_data, data + 8, 8) == 0);
   g_free (data);
 }
@@ -184,7 +186,8 @@ GST_START_TEST (test_from_data)
   fail_unless_equals_int (data[0], 0xff);
   fail_unless_equals_int (gst_byte_writer_get_remaining (&writer), 7);
   fail_unless_equals_int (gst_byte_writer_get_pos (&writer), 1);
-  fail_if (gst_byte_writer_put_uint64_be (&writer, 0x1234567890abcdef));
+  fail_if (gst_byte_writer_put_uint64_be (&writer,
+          G_GUINT64_CONSTANT (0x1234567890abcdef)));
   data2 = gst_byte_writer_reset_and_get_data (&writer);
   fail_unless (data2 != NULL);
   fail_if (data2 == data);
