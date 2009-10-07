@@ -237,9 +237,9 @@ paint_setup_Y41B (paintinfo * p, unsigned char *dest)
   p->yp = dest;
   p->ystride = GST_ROUND_UP_4 (p->width);
   p->up = p->yp + p->ystride * p->height;
-  p->ustride = GST_ROUND_UP_8 (p->width) / 4;
+  p->ustride = GST_ROUND_UP_16 (p->width) / 4;
   p->vp = p->up + p->ustride * p->height;
-  p->vstride = GST_ROUND_UP_8 (p->width) / 4;
+  p->vstride = GST_ROUND_UP_16 (p->width) / 4;
   p->endptr = p->vp + p->vstride * p->height;
 }
 
