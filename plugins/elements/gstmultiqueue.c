@@ -177,6 +177,7 @@ static void gst_single_queue_free (GstSingleQueue * squeue);
 static void wake_up_next_non_linked (GstMultiQueue * mq);
 static void compute_high_id (GstMultiQueue * mq);
 static void single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
+static void single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_PAD_SINK,
@@ -967,6 +968,13 @@ out_flushing:
     wake_up_next_non_linked (mq);
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
+    /* upstream needs to see fatal result ASAP to shut things down,
+     * but might be stuck in one of our other full queues;
+     * so empty this one and trigger dynamic queue growth */
+    if (GST_FLOW_IS_FATAL (sq->srcresult)) {
+      gst_data_queue_flush (sq->queue);
+      single_queue_underrun_cb (sq->queue, sq);
+    }
     gst_data_queue_set_flushing (sq->queue, TRUE);
     gst_pad_pause_task (sq->srcpad);
     GST_CAT_LOG_OBJECT (multi_queue_debug, mq,
