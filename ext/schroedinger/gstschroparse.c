@@ -27,7 +27,6 @@
 #include <gst/video/gstbasevideoparse.h>
 #include <string.h>
 #include <schroedinger/schro.h>
-#include <liboil/liboil.h>
 #include <math.h>
 
 #include <schroedinger/schroparse.h>
