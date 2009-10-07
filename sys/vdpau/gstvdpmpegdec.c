@@ -832,6 +832,31 @@ done:
   return ret;
 }
 
+static GstCaps *
+gst_vdp_mpeg_dec_src_getcaps (GstPad * pad)
+{
+  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (gst_pad_get_parent (pad));
+  GstElementClass *eclass = GST_ELEMENT_GET_CLASS (mpeg_dec);
+  GstCaps *caps, *templ_caps;
+
+  templ_caps =
+      gst_pad_template_get_caps (gst_element_class_get_pad_template (eclass,
+          "src"));
+
+  if (mpeg_dec->device) {
+    GstCaps *yuv_caps, *video_caps;
+
+    video_caps = gst_vdp_video_buffer_get_allowed_video_caps (mpeg_dec->device);
+    yuv_caps = gst_vdp_video_buffer_get_allowed_yuv_caps (mpeg_dec->device);
+    gst_caps_append (video_caps, yuv_caps);
+    caps = gst_caps_intersect (video_caps, templ_caps);
+    gst_caps_unref (video_caps);
+  } else
+    caps = gst_caps_copy (templ_caps);
+
+  return caps;
+}
+
 static gboolean
 gst_vdp_mpeg_dec_convert (GstVdpMpegDec * mpeg_dec,
     GstFormat src_format, gint64 src_value,
@@ -1202,7 +1227,8 @@ gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec, GstVdpMpegDecClass * gclass)
   mpeg_dec->src =
       gst_pad_new_from_template (gst_element_class_get_pad_template
       (GST_ELEMENT_CLASS (gclass), "src"), "src");
-  gst_pad_use_fixed_caps (mpeg_dec->src);
+  gst_pad_set_getcaps_function (mpeg_dec->src,
+      GST_DEBUG_FUNCPTR (gst_vdp_mpeg_dec_src_getcaps));
   gst_pad_set_event_function (mpeg_dec->src,
       GST_DEBUG_FUNCPTR (gst_vdp_mpeg_dec_src_event));
   gst_pad_set_query_function (mpeg_dec->src,
