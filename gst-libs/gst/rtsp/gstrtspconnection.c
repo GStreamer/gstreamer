@@ -917,12 +917,7 @@ auth_digest_compute_response (const gchar * method,
   memcpy (hex_a2, digest_string, strlen (digest_string));
 
   /* compute KD */
-#if GLIB_CHECK_VERSION (2, 18, 0)
   g_checksum_reset (md5_context);
-#else
-  g_checksum_free (md5_context);
-  md5_context = g_checksum_new (G_CHECKSUM_MD5);
-#endif
   g_checksum_update (md5_context, (const guchar *) hex_a1, strlen (hex_a1));
   g_checksum_update (md5_context, (const guchar *) ":", 1);
   g_checksum_update (md5_context, (const guchar *) nonce, strlen (nonce));
