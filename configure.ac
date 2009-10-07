@@ -348,7 +348,9 @@ dnl *** checks for compiler characteristics ***
 dnl check if the compiler supports __uint128_t (gcc)
 AC_CACHE_CHECK(for __uint128_t, gst_cv_uint128_t,
     AC_TRY_COMPILE([ ], [
-      __uint128_t u = 0;
+      unsigned long long v1 = 1024ULL;
+      unsigned long long v2 = 0x8000000000000000ULL;
+      __uint128_t u = ((__uint128_t)v1)*((__uint128_t)v2);
 
       return 0;
     ], [
