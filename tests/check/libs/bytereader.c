@@ -261,7 +261,7 @@ GST_START_TEST (test_get_int_le)
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 16);
-  gint8 a;
+  gint8 a = 0;
   gint16 b = 0;
   gint32 c = 0;
   gint64 d = 0;
@@ -305,7 +305,7 @@ GST_START_TEST (test_get_int_be)
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 16);
-  gint8 a;
+  gint8 a = 0;
   gint16 b = 0;
   gint32 c = 0;
   gint64 d = 0;
@@ -379,8 +379,8 @@ GST_START_TEST (test_get_float_le)
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0xbf,
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 24);
-  gfloat a;
-  gdouble b;
+  gfloat a = 0.0;
+  gdouble b = 0.0;
 
   PEEK_CHECK (&reader, a, 32, le, 1.0);
   GET_CHECK (&reader, a, 32, le, 1.0);
@@ -405,8 +405,8 @@ GST_START_TEST (test_get_float_be)
     0xbf, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 24);
-  gfloat a;
-  gdouble b;
+  gfloat a = 0.0;
+  gdouble b = 0.0;
 
   PEEK_CHECK (&reader, a, 32, be, 1.0);
   GET_CHECK (&reader, a, 32, be, 1.0);
@@ -433,7 +433,7 @@ GST_START_TEST (test_position_tracking)
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 16);
-  guint8 a;
+  guint8 a = 0;
 
   fail_unless_equals_int (gst_byte_reader_get_pos (&reader), 0);
   fail_unless_equals_int (gst_byte_reader_get_remaining (&reader), 16);
