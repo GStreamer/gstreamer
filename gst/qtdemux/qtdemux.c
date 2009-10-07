@@ -222,6 +222,9 @@ struct _QtDemuxStream
    * data */
   gboolean need_clip;
 
+  /* buffer needs some custom processing, e.g. subtitles */
+  gboolean need_process;
+
   /* current position */
   guint32 segment_index;
   guint32 sample_index;
@@ -283,8 +286,8 @@ GST_STATIC_PAD_TEMPLATE ("audio_%02d",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
-static GstStaticPadTemplate gst_qtdemux_subpsrc_template =
-GST_STATIC_PAD_TEMPLATE ("subp_%02d",
+static GstStaticPadTemplate gst_qtdemux_subsrc_template =
+GST_STATIC_PAD_TEMPLATE ("subtitle_%02d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -320,7 +323,7 @@ static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux,
 static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 fourcc, const guint8 * data, int len,
     gchar ** codec_name);
-static GstCaps *qtdemux_subp_caps (GstQTDemux * qtdemux,
+static GstCaps *qtdemux_sub_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 fourcc, const guint8 * data,
     gchar ** codec_name);
 
@@ -356,6 +359,8 @@ gst_qtdemux_base_init (GstQTDemuxClass * klass)
       gst_static_pad_template_get (&gst_qtdemux_videosrc_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_qtdemux_audiosrc_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_qtdemux_subsrc_template));
   gst_element_class_set_details (element_class, &gst_qtdemux_details);
 
   GST_DEBUG_CATEGORY_INIT (qtdemux_debug, "qtdemux", 0, "qtdemux plugin");
@@ -1429,7 +1434,7 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       qtdemux->n_streams = 0;
       qtdemux->n_video_streams = 0;
       qtdemux->n_audio_streams = 0;
-      qtdemux->n_subp_streams = 0;
+      qtdemux->n_sub_streams = 0;
       gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
       break;
     }
@@ -2244,6 +2249,49 @@ clipped:
   }
 }
 
+/* the input buffer metadata must be writable,
+ * but time/duration etc not yet set and need not be preserved */
+static GstBuffer *
+gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstBuffer * buf)
+{
+  guint8 *data;
+  guint size, nsize = 0;
+  gchar *str;
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  /* not many cases for now */
+  if (stream->fourcc != FOURCC_tx3g)
+    return buf;
+
+  if (G_LIKELY (size >= 2)) {
+    nsize = GST_READ_UINT16_BE (data);
+    nsize = MIN (nsize, size - 2);
+  }
+
+  GST_LOG_OBJECT (qtdemux, "3GPP timed text subtitle: %d/%d", nsize, size);
+
+  /* takes care of UTF-8 validation or UTF-16 recognition,
+   * no other encoding expected */
+  str = gst_tag_freeform_string_to_utf8 ((gchar *) data + 2, nsize, NULL);
+  if (str) {
+    gst_buffer_unref (buf);
+    buf = gst_buffer_new ();
+    GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = (guint8 *) str;
+    GST_BUFFER_SIZE (buf) = strlen (str);
+  } else {
+    /* may be 0-size subtitle, which is also sent to keep pipeline going */
+    GST_BUFFER_DATA (buf) = data + 2;
+    GST_BUFFER_SIZE (buf) = nsize;
+  }
+
+  /* FIXME ? convert optional subsequent style info to markup */
+
+  return buf;
+}
+
 static GstFlowReturn
 gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 {
@@ -2340,6 +2388,9 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   if (G_LIKELY (stream->pad)) {
     /* we're going to modify the metadata */
     buf = gst_buffer_make_metadata_writable (buf);
+
+    if (G_UNLIKELY (stream->need_process))
+      buf = gst_qtdemux_process_buffer (qtdemux, stream, buf);
 
     GST_BUFFER_TIMESTAMP (buf) = timestamp;
     GST_BUFFER_DURATION (buf) = duration;
@@ -3523,13 +3574,13 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     qtdemux->n_audio_streams++;
   } else if (stream->subtype == FOURCC_strm) {
     GST_DEBUG_OBJECT (qtdemux, "stream type, not creating pad");
-  } else if (stream->subtype == FOURCC_subp) {
-    gchar *name = g_strdup_printf ("subp_%02d", qtdemux->n_subp_streams);
+  } else if (stream->subtype == FOURCC_subp || stream->subtype == FOURCC_text) {
+    gchar *name = g_strdup_printf ("subtitle_%02d", qtdemux->n_sub_streams);
 
     stream->pad =
-        gst_pad_new_from_static_template (&gst_qtdemux_subpsrc_template, name);
+        gst_pad_new_from_static_template (&gst_qtdemux_subsrc_template, name);
     g_free (name);
-    qtdemux->n_subp_streams++;
+    qtdemux->n_sub_streams++;
   } else {
     GST_DEBUG_OBJECT (qtdemux, "unknown stream type");
     goto done;
@@ -4184,6 +4235,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   stream->discont = TRUE;
   /* we enable clipping for raw audio/video streams */
   stream->need_clip = FALSE;
+  stream->need_process = FALSE;
   stream->segment_index = -1;
   stream->time_position = 0;
   stream->sample_index = -1;
@@ -4768,7 +4820,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       goto unknown_stream;
     }
     stream->sampled = TRUE;
-  } else if (stream->subtype == FOURCC_subp) {
+  } else if (stream->subtype == FOURCC_subp || stream->subtype == FOURCC_text) {
     guint32 fourcc;
 
     stream->sampled = TRUE;
@@ -4779,7 +4831,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         GST_FOURCC_ARGS (fourcc));
 
     stream->caps =
-        qtdemux_subp_caps (qtdemux, stream, fourcc, stsd_data, &codec);
+        qtdemux_sub_caps (qtdemux, stream, fourcc, stsd_data, &codec);
+    if (codec) {
+      list = gst_tag_list_new ();
+      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+          GST_TAG_SUBTITLE_CODEC, codec, NULL);
+      g_free (codec);
+      codec = NULL;
+    }
   } else {
     goto unknown_stream;
   }
@@ -6390,7 +6449,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 }
 
 static GstCaps *
-qtdemux_subp_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
+qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     guint32 fourcc, const guint8 * stsd_data, gchar ** codec_name)
 {
   GstCaps *caps;
@@ -6402,11 +6461,17 @@ qtdemux_subp_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("DVD subtitle");
       caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
       break;
+    case GST_MAKE_FOURCC ('t', 'x', '3', 'g'):
+      _codec ("3GPP timed text");
+      caps = gst_caps_new_simple ("text/plain", NULL);
+      /* actual text piece needs to be extracted */
+      stream->need_process = TRUE;
+      break;
     default:
     {
       char *s;
 
-      s = g_strdup_printf ("audio/x-gst-fourcc-%" GST_FOURCC_FORMAT,
+      s = g_strdup_printf ("text/x-gst-fourcc-%" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (fourcc));
       caps = gst_caps_new_simple (s, NULL);
       break;

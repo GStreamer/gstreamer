@@ -146,6 +146,9 @@ G_BEGIN_DECLS
 #define FOURCC_keyw     GST_MAKE_FOURCC('k','e','y','w')
 #define FOURCC_kywd     GST_MAKE_FOURCC('k','y','w','d')
 #define FOURCC_agsm     GST_MAKE_FOURCC('a','g','s','m')
+#define FOURCC_text     GST_MAKE_FOURCC('t','e','x','t')
+#define FOURCC_tx3g     GST_MAKE_FOURCC('t','x','3','g')
+#define FOURCC_mp4s     GST_MAKE_FOURCC('m','p','4','s')
 
 /* 3gpp asset meta data fourcc */
 #define FOURCC_titl     GST_MAKE_FOURCC('t','i','t','l')
