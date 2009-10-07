@@ -1,5 +1,6 @@
 Makefile
 Makefile.in
+gstbufferstress
 caps
 complexity
 controller
