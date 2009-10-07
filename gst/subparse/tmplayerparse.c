@@ -19,6 +19,7 @@
 
 #include "tmplayerparse.h"
 
+#include <stdio.h>
 #include <string.h>
 
 /* From http://forum.doom9.org/archive/index.php/t-81059.html:

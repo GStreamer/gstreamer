@@ -19,6 +19,7 @@
 
 #include "mpl2parse.h"
 
+#include <stdio.h>
 #include <string.h>
 
 /* From http://lists.mplayerhq.hu/pipermail/mplayer-users/2003-February/030222.html
