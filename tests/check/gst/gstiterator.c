@@ -176,12 +176,12 @@ GST_START_TEST (test_single)
   it = gst_iterator_new_single (GST_TYPE_STRUCTURE, s,
       (GstCopyFunction) gst_structure_copy, (GFreeFunc) gst_structure_free);
 
-  fail_unless (gst_iterator_next (it, (gpointer *) & i) == GST_ITERATOR_OK);
+  fail_unless (gst_iterator_next (it, (gpointer) & i) == GST_ITERATOR_OK);
   fail_unless (strcmp (gst_structure_get_name (s),
           gst_structure_get_name (i)) == 0);
   gst_structure_free (i);
   i = NULL;
-  fail_unless (gst_iterator_next (it, (gpointer *) & i) == GST_ITERATOR_DONE);
+  fail_unless (gst_iterator_next (it, (gpointer) & i) == GST_ITERATOR_DONE);
   fail_unless (i == NULL);
 
   gst_iterator_free (it);
@@ -190,7 +190,7 @@ GST_START_TEST (test_single)
   it = gst_iterator_new_single (GST_TYPE_STRUCTURE, NULL,
       (GstCopyFunction) gst_structure_copy, (GFreeFunc) gst_structure_free);
 
-  fail_unless (gst_iterator_next (it, (gpointer *) & i) == GST_ITERATOR_DONE);
+  fail_unless (gst_iterator_next (it, (gpointer) & i) == GST_ITERATOR_DONE);
   fail_unless (i == NULL);
 
   gst_iterator_free (it);
