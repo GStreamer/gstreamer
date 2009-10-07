@@ -24,6 +24,7 @@
 #endif
 
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <gst/tag/tag.h>
 #include <gst/base/gsttypefindhelper.h>
