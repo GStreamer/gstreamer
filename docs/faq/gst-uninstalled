@@ -51,6 +51,7 @@ $GST/gstreamer/tools:\
 $GST/gst-plugins-base/tools:\
 $GST/gst-player/src:\
 $GST/gst-editor/src:\
+$GST/gstreamer-sharp/tools:\
 $GST/prefix/bin:\
 $PATH"
 
@@ -94,6 +95,7 @@ $GST/prefix/lib/pkgconfig\
 :$GST/gst-plugins-good/pkgconfig\
 :$GST/gst-python/pkgconfig\
 :$GST/gst-rtsp-server/pkgconfig\
+:$GST/gstreamer-sharp/pkgconfig\
 ${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 
 export GST_PLUGIN_PATH="\
@@ -141,6 +143,11 @@ export DYLD_LIBRARY_PATH=$GST/totem-pl-parser/plparse/.libs:$DYLD_LIBRARY_PATH
 
 # totem
 export PATH=$GST/totem/src:$PATH
+
+# gstreamer-sharp
+export MONO_PATH=$GST/gstreamer-sharp/gstreamer-sharp:$MONO_PATH
+export LD_LIBRARY_PATH=$GST/gstreamer-sharp/gstreamer-sharp/glue/.libs:$LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$GST/gstreamer-sharp/gstreamer-sharp/glue/.libs:$DYLD_LIBRARY_PATH
 
 # if we got a command, run it, else start a shell
 if test ! -z "$1";
