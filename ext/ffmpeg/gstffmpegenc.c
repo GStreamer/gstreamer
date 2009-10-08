@@ -189,7 +189,7 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
             GST_TYPE_ME_METHOD, ME_EPZS, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
         g_param_spec_ulong ("buffer-size", "Buffer Size",
-            "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READABLE));
+            "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass),
         ARG_RTP_PAYLOAD_SIZE, g_param_spec_ulong ("rtp-payload-size",
             "RTP Payload Size", "Target GOB length", 0, G_MAXULONG, 0,
@@ -1049,6 +1049,8 @@ gst_ffmpegenc_set_property (GObject * object,
       break;
     case ARG_ME_METHOD:
       ffmpegenc->me_method = g_value_get_enum (value);
+      break;
+    case ARG_BUFSIZE:
       break;
     case ARG_RTP_PAYLOAD_SIZE:
       ffmpegenc->rtp_payload_size = g_value_get_ulong (value);
