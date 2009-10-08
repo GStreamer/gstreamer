@@ -92,7 +92,10 @@ main (gint argc, gchar * argv[])
 
   start = gst_get_current_time ();
   if (gst_element_set_state (pipeline,
-          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS)
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
+    g_assert_not_reached ();
+  if (gst_element_get_state (pipeline, NULL, NULL,
+          GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_FAILURE)
     g_assert_not_reached ();
   end = gst_get_current_time ();
   g_print ("%" GST_TIME_FORMAT " - setting pipeline to playing\n",
@@ -105,6 +108,14 @@ main (gint argc, gchar * argv[])
   gst_message_unref (msg);
   g_print ("%" GST_TIME_FORMAT " - putting %u buffers through\n",
       GST_TIME_ARGS (end - start), buffers);
+
+  start = gst_get_current_time ();
+  if (gst_element_set_state (pipeline,
+          GST_STATE_NULL) != GST_STATE_CHANGE_SUCCESS)
+    g_assert_not_reached ();
+  end = gst_get_current_time ();
+  g_print ("%" GST_TIME_FORMAT " - setting pipeline to NULL\n",
+      GST_TIME_ARGS (end - start));
 
   start = gst_get_current_time ();
   g_object_unref (pipeline);
