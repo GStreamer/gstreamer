@@ -426,15 +426,42 @@ gboolean
 _gst_plugin_loader_client_run ()
 {
   GstPluginLoader *l;
+  int dup_fd;
 
   l = plugin_loader_new (NULL);
   if (l == NULL)
     return FALSE;
 
-  l->fd_w.fd = 1;               /* STDOUT */
-  gst_poll_add_fd (l->fdset, &l->fd_w);
+  /* On entry, the inward pipe is STDIN, and outward is STDOUT.
+   * Dup those somewhere better so that plugins printing things
+   * won't interfere with anything */
+#ifndef G_OS_WIN32
+  dup_fd = dup (0);             /* STDIN */
+  if (dup_fd == -1) {
+    GST_ERROR ("Failed to start. Could no dup STDIN, errno %d", errno);
+    return FALSE;
+  }
+  l->fd_r.fd = dup_fd;
+  close (0);
 
+  dup_fd = dup (1);             /* STDOUT */
+  if (dup_fd == -1) {
+    GST_ERROR ("Failed to start. Could no dup STDOUT, errno %d", errno);
+    return FALSE;
+  }
+  l->fd_w.fd = dup_fd;
+  close (1);
+
+  /* Dup stderr down to stdout so things that plugins print are visible,
+   * but don't care if it fails */
+  dup2 (2, 1);
+#else
+  /* FIXME: Use DuplicateHandle and friends on win32 */
+  l->fd_w.fd = 1;               /* STDOUT */
   l->fd_r.fd = 0;               /* STDIN */
+#endif
+
+  gst_poll_add_fd (l->fdset, &l->fd_w);
   gst_poll_add_fd (l->fdset, &l->fd_r);
   gst_poll_fd_ctl_read (l->fdset, &l->fd_r, TRUE);
 
