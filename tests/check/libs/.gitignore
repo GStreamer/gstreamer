@@ -3,6 +3,7 @@ adapter
 basesrc
 bitreader
 bytereader
+bytewriter
 gdp
 collectpads
 controller
