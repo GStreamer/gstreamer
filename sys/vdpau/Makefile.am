@@ -40,7 +40,7 @@ libgstvdp_@GST_MAJORMINOR@include_HEADERS = \
 	gstvdpoutputbuffer.h
  
 libgstvdp_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(VDPAU_CFLAGS) $(X11_CFLAGS)
-libgstvdp_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(VDPAU_LIBS) $(X11_LIBS)
+libgstvdp_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(VDPAU_LIBS) $(X11_LIBS) -lgstvideo-$(GST_MAJORMINOR)
 libgstvdp_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_LT_LDFLAGS) $(GST_ALL_LDFLAGS)
 libgstvdp_@GST_MAJORMINOR@_la_LIBTOOLFLAGS = --tag=disable-static
 	

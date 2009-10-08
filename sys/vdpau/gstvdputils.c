@@ -123,6 +123,23 @@ gst_vdp_yuv_to_video_caps (GstCaps * caps, GstVdpDevice * device)
 }
 
 GstCaps *
+gst_vdp_yuv_to_output_caps (GstCaps * caps)
+{
+  GstCaps *result;
+  gint i;
+
+  result = gst_caps_copy (caps);
+  for (i = 0; i < gst_caps_get_size (result); i++) {
+    GstStructure *structure = gst_caps_get_structure (result, i);
+
+    gst_structure_set_name (structure, "video/x-vdpau-output");
+    gst_structure_remove_field (structure, "format");
+  }
+
+  return result;
+}
+
+GstCaps *
 gst_vdp_video_to_output_caps (GstCaps * caps)
 {
   GstCaps *result;

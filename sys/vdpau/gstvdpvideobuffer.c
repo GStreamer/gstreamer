@@ -130,7 +130,7 @@ gst_vdp_video_buffer_get_caps (gboolean filter, VdpChromaType chroma_type)
     }
 
     structure = gst_structure_new ("video/x-vdpau-video",
-        "chroma-type", G_TYPE_INT, formats[i].chroma_type,
+        "chroma-type", G_TYPE_INT, chroma_types[i],
         "width", GST_TYPE_INT_RANGE, 1, 4096,
         "height", GST_TYPE_INT_RANGE, 1, 4096, NULL);
     gst_caps_append_structure (video_caps, structure);
@@ -307,8 +307,45 @@ gst_vdp_video_buffer_calculate_size (GstCaps * caps, guint * size)
 }
 
 gboolean
-gst_vdp_video_buffer_download (GstVdpVideoBuffer * inbuf, GstBuffer * outbuf,
-    GstCaps * outcaps)
+gst_vdp_video_buffer_parse_yuv_caps (GstCaps * yuv_caps,
+    VdpChromaType * chroma_type, gint * width, gint * height)
+{
+  GstStructure *structure;
+  guint32 fourcc;
+  gint i;
+
+  g_return_val_if_fail (GST_IS_CAPS (yuv_caps), FALSE);
+  g_return_val_if_fail (!gst_caps_is_empty (yuv_caps), FALSE);
+  g_return_val_if_fail (chroma_type, FALSE);
+  g_return_val_if_fail (width, FALSE);
+  g_return_val_if_fail (height, FALSE);
+
+  structure = gst_caps_get_structure (yuv_caps, 0);
+  if (!gst_structure_has_name (structure, "video/x-raw-yuv"))
+    return FALSE;
+
+  if (!gst_structure_get_fourcc (structure, "format", &fourcc) ||
+      !gst_structure_get_int (structure, "width", width) ||
+      !gst_structure_get_int (structure, "height", height))
+    return FALSE;
+
+  *chroma_type = -1;
+  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+    if (formats[i].fourcc == fourcc) {
+      *chroma_type = formats[i].chroma_type;
+      break;
+    }
+  }
+
+  if (*chroma_type == -1)
+    return FALSE;
+
+  return TRUE;
+}
+
+gboolean
+gst_vdp_video_buffer_download (GstVdpVideoBuffer * video_buf,
+    GstBuffer * outbuf, GstCaps * outcaps)
 {
   GstStructure *structure;
   gint width, height;
@@ -321,7 +358,7 @@ gst_vdp_video_buffer_download (GstVdpVideoBuffer * inbuf, GstBuffer * outbuf,
   VdpVideoSurface surface;
   VdpStatus status;
 
-  g_return_val_if_fail (GST_IS_VDP_VIDEO_BUFFER (inbuf), FALSE);
+  g_return_val_if_fail (GST_IS_VDP_VIDEO_BUFFER (video_buf), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (outbuf), FALSE);
   g_return_val_if_fail (GST_IS_CAPS (outcaps), FALSE);
 
@@ -416,18 +453,124 @@ gst_vdp_video_buffer_download (GstVdpVideoBuffer * inbuf, GstBuffer * outbuf,
       return FALSE;
   }
 
-  device = inbuf->device;
-  surface = inbuf->surface;
+  device = video_buf->device;
+  surface = video_buf->surface;
 
-  GST_LOG_OBJECT (inbuf, "Entering vdp_video_surface_get_bits_ycbcr");
+  GST_LOG_OBJECT (video_buf, "Entering vdp_video_surface_get_bits_ycbcr");
   status =
       device->vdp_video_surface_get_bits_ycbcr (surface,
       VDP_YCBCR_FORMAT_YV12, (void *) data, stride);
-  GST_LOG_OBJECT (inbuf,
+  GST_LOG_OBJECT (video_buf,
       "Got status %d from vdp_video_surface_get_bits_ycbcr", status);
   if (G_UNLIKELY (status != VDP_STATUS_OK)) {
-    GST_ERROR_OBJECT (inbuf,
+    GST_ERROR_OBJECT (video_buf,
         "Couldn't get data from vdpau, Error returned from vdpau was: %s",
+        device->vdp_get_error_string (status));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_vdp_video_buffer_upload (GstVdpVideoBuffer * video_buf, GstBuffer * src_buf,
+    guint fourcc, gint width, gint height)
+{
+  guint8 *data[3];
+  guint32 stride[3];
+  VdpYCbCrFormat format;
+  GstVdpDevice *device;
+  VdpStatus status;
+
+  g_return_val_if_fail (GST_IS_VDP_VIDEO_BUFFER (video_buf), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (src_buf), FALSE);
+
+  switch (fourcc) {
+    case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+    {
+      data[0] = GST_BUFFER_DATA (src_buf) +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
+          0, width, height);
+      data[1] = GST_BUFFER_DATA (src_buf) +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
+          2, width, height);
+      data[2] = GST_BUFFER_DATA (src_buf) +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
+          1, width, height);
+
+      stride[0] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_YV12,
+          0, width);
+      stride[1] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_YV12,
+          2, width);
+      stride[2] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_YV12,
+          1, width);
+
+      format = VDP_YCBCR_FORMAT_YV12;
+      break;
+    }
+    case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+    {
+      data[0] = GST_BUFFER_DATA (src_buf) +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+          0, width, height);
+      data[1] = GST_BUFFER_DATA (src_buf) +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+          2, width, height);
+      data[2] = GST_BUFFER_DATA (src_buf) +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+          1, width, height);
+
+      stride[0] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420,
+          0, width);
+      stride[1] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420,
+          2, width);
+      stride[2] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420,
+          1, width);
+
+      format = VDP_YCBCR_FORMAT_YV12;
+      break;
+    }
+    case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
+    {
+      data[0] = GST_BUFFER_DATA (src_buf);
+      data[1] = GST_BUFFER_DATA (src_buf) + width * height;
+
+      stride[0] = width;
+      stride[1] = width;
+
+      format = VDP_YCBCR_FORMAT_NV12;
+      break;
+    }
+    case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
+    {
+      data[0] = GST_BUFFER_DATA (src_buf);
+
+      stride[0] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_UYVY,
+          0, width);
+
+      format = VDP_YCBCR_FORMAT_UYVY;
+      break;
+    }
+    case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+    {
+      data[0] = GST_BUFFER_DATA (src_buf);
+
+      stride[0] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_YUY2,
+          0, width);
+
+      format = VDP_YCBCR_FORMAT_YUYV;
+      break;
+    }
+    default:
+      return FALSE;
+  }
+
+  device = video_buf->device;
+  status = device->vdp_video_surface_put_bits_ycbcr (video_buf->surface, format,
+      (void *) data, stride);
+  if (G_UNLIKELY (status != VDP_STATUS_OK)) {
+    GST_ERROR_OBJECT (video_buf, "Couldn't push YUV data to VDPAU, "
+        "Error returned from vdpau was: %s",
         device->vdp_get_error_string (status));
     return FALSE;
   }
