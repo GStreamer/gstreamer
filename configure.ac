@@ -175,8 +175,16 @@ dnl *** checks for library functions ***
 
 LIBS_SAVE=$LIBS
 LIBS="$LIBS $LIBM"
-AC_CHECK_FUNCS(rint sinh cosh asinh)
+AC_CHECK_FUNCS(rint sinh cosh asinh fpclass)
 LIBS=$LIBS_SAVE
+
+dnl Check whether isinf() is defined by math.h
+AC_CACHE_CHECK([for isinf], ac_cv_have_isinf,
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]], [[float f = 0.0; int i=isinf(f)]])],[ac_cv_have_isinf="yes"],[ac_cv_have_isinf="no"]))
+if test "$ac_cv_have_isinf" = "yes"
+then
+    AC_DEFINE(HAVE_ISINF, 1, [Define to 1 if you have the `isinf' function.])
+fi
 
 dnl Check for mmap (needed by electricfence plugin)
 AC_FUNC_MMAP

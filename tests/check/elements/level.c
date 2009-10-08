@@ -256,7 +256,11 @@ GST_START_TEST (test_int16_panned)
     value = gst_value_list_get_value (list, 0);
     dB = g_value_get_double (value);
     GST_DEBUG ("%s[0] is %lf", fields[j], dB);
-    fail_if (!isinf (dB));
+#ifdef HAVE_ISINF
+    fail_unless (isinf (dB));
+#elif HAVE_FPCLASS
+    fail_unless (fpclass (dB) == FP_NINF);
+#endif
   }
   /* block wave of half amplitude has -5.94 dB for rms, peak and decay */
   for (j = 0; j < 3; ++j) {
