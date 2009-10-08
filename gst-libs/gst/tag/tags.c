@@ -288,6 +288,52 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
     goto beach;
   }
 
+  /* check for and use byte-order-mark for UTF-16/32 cases */
+  if (size >= 2) {
+    gchar *c = NULL;
+    gint prefix, ssize;
+
+    if (size >= 4) {
+      prefix = 4;
+      ssize = GST_ROUND_DOWN_4 (size - 4);
+      switch (GST_READ_UINT32_BE (data)) {
+        case 0x0000FEFF:
+          c = "UTF-32BE";
+          break;
+        case 0xFFFE0000:
+          c = "UTF-32LE";
+          break;
+        default:
+          break;
+      }
+    }
+    if (!c) {
+      prefix = 2;
+      ssize = GST_ROUND_DOWN_2 (size - 2);
+      switch (GST_READ_UINT16_BE (data)) {
+        case 0xFEFF:
+          c = "UTF-16BE";
+          break;
+        case 0xFFFE:
+          c = "UTF-16LE";
+          break;
+        default:
+          break;
+      }
+    }
+    if (c) {
+      GST_LOG ("Trying to convert freeform string to UTF-8 from '%s'", c);
+      if ((utf8 =
+              g_convert (data + prefix, ssize, "UTF-8", c, &bytes_read, NULL,
+                  NULL))) {
+        if (bytes_read == ssize)
+          goto beach;
+        g_free (utf8);
+        utf8 = NULL;
+      }
+    }
+  }
+
   while (env_vars && *env_vars != NULL) {
     const gchar *env = NULL;
 
