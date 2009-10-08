@@ -2963,9 +2963,6 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
   ConvertEntry *ce;
   AVPicture tmp1, *tmp = &tmp1;
 
-  if (G_UNLIKELY (src_pix_fmt < 0 || src_pix_fmt >= PIX_FMT_NB ||
-          dst_pix_fmt < 0 || dst_pix_fmt >= PIX_FMT_NB))
-    return -1;
   if (G_UNLIKELY (src_width <= 0 || src_height <= 0))
     return 0;
 

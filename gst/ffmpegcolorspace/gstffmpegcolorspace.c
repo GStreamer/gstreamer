@@ -439,7 +439,9 @@ gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
   space = GST_FFMPEGCSP (btrans);
 
   GST_DEBUG ("from %d -> to %d", space->from_pixfmt, space->to_pixfmt);
-  if (space->from_pixfmt == PIX_FMT_NB || space->to_pixfmt == PIX_FMT_NB)
+
+  if (G_UNLIKELY (space->from_pixfmt == PIX_FMT_NB ||
+          space->to_pixfmt == PIX_FMT_NB))
     goto unknown_format;
 
   /* fill from with source data */
