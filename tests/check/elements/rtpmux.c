@@ -36,6 +36,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp"));
 
+typedef void (*check_cb) (GstPad * pad, int i);
+
 static GstCaps *
 getcaps_func (GstPad * pad)
 {
@@ -59,7 +61,7 @@ setcaps_func (GstPad * pad, GstCaps * caps)
 }
 
 static void
-test_basic (const gchar * elem_name, int count)
+test_basic (const gchar * elem_name, int count, check_cb cb)
 {
   GstElement *rtpmux = NULL;
   GstPad *reqpad1 = NULL;
@@ -138,11 +140,8 @@ test_basic (const gchar * elem_name, int count)
     gst_rtp_buffer_set_seq (inbuf, 2000 + i);
     fail_unless (gst_pad_push (src1, inbuf) == GST_FLOW_OK);
 
-    fail_unless (buffers && g_list_length (buffers) == 1);
-    fail_unless (gst_rtp_buffer_get_ssrc (buffers->data) == 55);
-    fail_unless (gst_rtp_buffer_get_timestamp (buffers->data) ==
-        200 - 57 + 1000 + i);
-    fail_unless (gst_rtp_buffer_get_seq (buffers->data) == 100 + 1 + i);
+    cb (src2, i);
+
     g_list_foreach (buffers, (GFunc) gst_buffer_unref, NULL);
     g_list_free (buffers);
     buffers = NULL;
@@ -170,18 +169,63 @@ test_basic (const gchar * elem_name, int count)
   gst_check_teardown_element (rtpmux);
 }
 
+void
+basic_check_cb (GstPad * pad, int i)
+{
+  fail_unless (buffers && g_list_length (buffers) == 1);
+  fail_unless (gst_rtp_buffer_get_ssrc (buffers->data) == 55);
+  fail_unless (gst_rtp_buffer_get_timestamp (buffers->data) ==
+      200 - 57 + 1000 + i);
+  fail_unless (gst_rtp_buffer_get_seq (buffers->data) == 100 + 1 + i);
+}
+
+
 GST_START_TEST (test_rtpmux_basic)
 {
-  test_basic ("rtpmux", 10);
+  test_basic ("rtpmux", 10, basic_check_cb);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_rtpdtmfmux_basic)
 {
-  test_basic ("rtpdtmfmux", 10);
+  test_basic ("rtpdtmfmux", 10, basic_check_cb);
 }
 
+GST_END_TEST;
+
+void
+lock_check_cb (GstPad * pad, int i)
+{
+  GstStructure *s;
+  GstEvent *event;
+
+  if (i % 2)
+    s = gst_structure_new ("stream-lock", "lock", G_TYPE_BOOLEAN, FALSE, NULL);
+  else
+    s = gst_structure_new ("stream-lock", "lock", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, s);
+  gst_pad_push_event (pad, event);
+
+  if (i % 2) {
+    fail_unless (buffers == NULL);
+  } else {
+    fail_unless (buffers && g_list_length (buffers) == 1);
+    fail_unless (gst_rtp_buffer_get_ssrc (buffers->data) == 55);
+    fail_unless (gst_rtp_buffer_get_timestamp (buffers->data) ==
+        200 - 57 + 1000 + i);
+    fail_unless (gst_rtp_buffer_get_seq (buffers->data) == 100 + 1 + (i / 2));
+    g_list_foreach (buffers, (GFunc) gst_buffer_unref, NULL);
+    g_list_free (buffers);
+    buffers = NULL;
+  }
+}
+
+GST_START_TEST (test_rtpdtmfmux_lock)
+{
+  test_basic ("rtpdtmfmux", 10, lock_check_cb);
+}
 
 GST_END_TEST;
 
@@ -197,6 +241,10 @@ rtpmux_suite (void)
 
   tc_chain = tcase_create ("rtpdtmfmux_basic");
   tcase_add_test (tc_chain, test_rtpdtmfmux_basic);
+  suite_add_tcase (s, tc_chain);
+
+  tc_chain = tcase_create ("rtpdtmfmux_lock");
+  tcase_add_test (tc_chain, test_rtpdtmfmux_lock);
   suite_add_tcase (s, tc_chain);
 
   return s;
