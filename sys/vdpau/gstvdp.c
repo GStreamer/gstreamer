@@ -6,8 +6,6 @@
 #include <gst/gst.h>
 
 #include "gstvdpmpegdec.h"
-#include "gstvdpvideoyuv.h"
-#include "gstvdpyuvvideo.h"
 #include "gstvdpvideopostprocess.h"
 #include "gstvdpsink.h"
 
@@ -18,10 +16,6 @@ vdpau_init (GstPlugin * vdpau_plugin)
    * least the generic/states test when there's no device available */
   gst_element_register (vdpau_plugin, "vdpaumpegdec",
       GST_RANK_NONE, GST_TYPE_VDP_MPEG_DEC);
-  gst_element_register (vdpau_plugin, "vdpauvideoyuv",
-      GST_RANK_NONE, GST_TYPE_VDP_VIDEO_YUV);
-  gst_element_register (vdpau_plugin, "vdpauyuvvideo",
-      GST_RANK_NONE, GST_TYPE_VDP_YUV_VIDEO);
   gst_element_register (vdpau_plugin, "vdpauvideopostprocess",
       GST_RANK_NONE, GST_TYPE_VDP_VIDEO_POST_PROCESS);
   gst_element_register (vdpau_plugin, "vdpausink",

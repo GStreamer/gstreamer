@@ -3,9 +3,7 @@ plugin_LTLIBRARIES = libgstvdpau.la
 libgstvdpau_la_SOURCES = \
 	gstvdpmpegdec.c \
 	mpegutil.c \
-	gstvdpvideoyuv.c \
 	gstvdp.c \
-	gstvdpyuvvideo.c \
 	gstvdputils.c \
 	gstvdpvideopostprocess.c \
 	gstvdpsink.c
@@ -20,8 +18,6 @@ libgstvdpau_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = \
 	gstvdpmpegdec.h \
 	mpegutil.h \
-	gstvdpvideoyuv.h \
-	gstvdpyuvvideo.h \
 	gstvdputils.h \
 	gstvdpvideopostprocess.h \
 	gstvdpsink.h
