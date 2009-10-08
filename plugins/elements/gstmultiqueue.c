@@ -828,8 +828,7 @@ gst_multi_queue_item_destroy (GstMultiQueueItem * item)
 
 /* takes ownership of passed mini object! */
 static GstMultiQueueItem *
-gst_multi_queue_item_new (GstMiniObject * object, guint32 curid,
-    gboolean isbuffer)
+gst_multi_queue_buffer_item_new (GstMiniObject * object, guint32 curid)
 {
   GstMultiQueueItem *item;
 
@@ -838,17 +837,27 @@ gst_multi_queue_item_new (GstMiniObject * object, guint32 curid,
   item->destroy = (GDestroyNotify) gst_multi_queue_item_destroy;
   item->posid = curid;
 
-  if (isbuffer) {
-    item->size = GST_BUFFER_SIZE (object);
-    item->duration = GST_BUFFER_DURATION (object);
-    if (item->duration == GST_CLOCK_TIME_NONE)
-      item->duration = 0;
-    item->visible = TRUE;
-  } else {
-    item->size = 0;
+  item->size = GST_BUFFER_SIZE (object);
+  item->duration = GST_BUFFER_DURATION (object);
+  if (item->duration == GST_CLOCK_TIME_NONE)
     item->duration = 0;
-    item->visible = FALSE;
-  }
+  item->visible = TRUE;
+  return item;
+}
+
+static GstMultiQueueItem *
+gst_multi_queue_event_item_new (GstMiniObject * object, guint32 curid)
+{
+  GstMultiQueueItem *item;
+
+  item = g_slice_new (GstMultiQueueItem);
+  item->object = object;
+  item->destroy = (GDestroyNotify) gst_multi_queue_item_destroy;
+  item->posid = curid;
+
+  item->size = 0;
+  item->duration = 0;
+  item->visible = FALSE;
   return item;
 }
 
@@ -1012,7 +1021,7 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
   GST_LOG_OBJECT (mq, "SingleQueue %d : about to enqueue buffer %p with id %d",
       sq->id, buffer, curid);
 
-  item = gst_multi_queue_item_new (GST_MINI_OBJECT_CAST (buffer), curid, TRUE);
+  item = gst_multi_queue_buffer_item_new (GST_MINI_OBJECT_CAST (buffer), curid);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
@@ -1108,7 +1117,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
   curid = mq->counter++;
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
-  item = gst_multi_queue_item_new ((GstMiniObject *) event, curid, FALSE);
+  item = gst_multi_queue_event_item_new ((GstMiniObject *) event, curid);
 
   GST_DEBUG_OBJECT (mq,
       "SingleQueue %d : Enqueuing event %p of type %s with id %d",
