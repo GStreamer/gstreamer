@@ -187,9 +187,13 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ME_METHOD,
         g_param_spec_enum ("me-method", "ME Method", "Motion Estimation Method",
             GST_TYPE_ME_METHOD, ME_EPZS, G_PARAM_READWRITE));
+
+    /* FIXME 0.11: Make this property read-only */
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
         g_param_spec_ulong ("buffer-size", "Buffer Size",
-            "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
+            "Size of the video buffers. "
+            "Note: Setting this property has no effect "
+            "and is deprecated!", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass),
         ARG_RTP_PAYLOAD_SIZE, g_param_spec_ulong ("rtp-payload-size",
             "RTP Payload Size", "Target GOB length", 0, G_MAXULONG, 0,
