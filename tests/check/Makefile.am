@@ -110,6 +110,7 @@ check_PROGRAMS = \
 	elements/aacparse \
 	elements/amrparse \
 	elements/asfmux \
+	elements/capssetter \
 	elements/legacyresample \
 	elements/qtmux \
 	elements/selector \
