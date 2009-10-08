@@ -52,7 +52,7 @@ source_pad_data_cb (GstPad * pad, GstMiniObject * data,
     fail_if (consist->eos, "Buffer received after EOS");
     /* Buffers need to be preceded by a newsegment event */
     fail_unless (consist->newsegment, "Buffer received without newsegment");
-  } else {
+  } else if (GST_IS_EVENT (data)) {
     GstEvent *event = (GstEvent *) data;
 
     GST_DEBUG_OBJECT (pad, "%s", GST_EVENT_TYPE_NAME (event));
