@@ -130,7 +130,7 @@ GST_START_TEST (test_get_uint_le)
     0xfe, 0xdc, 0xba, 0x09, 0x87, 0x65, 0x43, 0x21
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 16);
-  guint8 a;
+  guint8 a = 0;
   guint16 b = 0;
   guint32 c = 0;
   guint64 d = 0;
@@ -173,7 +173,7 @@ GST_START_TEST (test_get_uint_be)
     0xfe, 0xdc, 0xba, 0x09, 0x87, 0x65, 0x43, 0x21
   };
   GstByteReader reader = GST_BYTE_READER_INIT (data, 16);
-  guint8 a;
+  guint8 a = 0;
   guint16 b = 0;
   guint32 c = 0;
   guint64 d = 0;
