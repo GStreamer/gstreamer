@@ -245,6 +245,8 @@ struct _QtDemuxStream
   gboolean sent_eos;
   GstTagList *pending_tags;
   gboolean send_global_tags;
+
+  GstEvent *pending_event;
 };
 
 enum QtDemuxState
@@ -2263,8 +2265,18 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   size = GST_BUFFER_SIZE (buf);
 
   /* not many cases for now */
-  if (stream->fourcc != FOURCC_tx3g)
+  if (G_UNLIKELY (stream->fourcc == FOURCC_mp4s)) {
+    /* send a one time dvd clut event */
+    if (stream->pending_event && stream->pad)
+      gst_pad_push_event (stream->pad, stream->pending_event);
+    stream->pending_event = NULL;
+    /* no further processing needed */
+    stream->need_process = FALSE;
+  }
+
+  if (G_UNLIKELY (stream->fourcc != FOURCC_tx3g)) {
     return buf;
+  }
 
   if (G_LIKELY (size >= 2)) {
     nsize = GST_READ_UINT16_BE (data);
@@ -4838,6 +4850,55 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           GST_TAG_SUBTITLE_CODEC, codec, NULL);
       g_free (codec);
       codec = NULL;
+    }
+
+    /* hunt for sort-of codec data */
+    switch (fourcc) {
+      case FOURCC_mp4s:
+      {
+        guint len;
+        const guint8 *data;
+
+        /* look for palette */
+        /* target mp4s atom */
+        len = QT_UINT32 (stsd_data + offset);
+        data = stsd_data + offset;
+        /* verify sufficient length,
+         * and esds present with decConfigDescr of expected size and position */
+        if ((len >= 106 + 8) && (QT_FOURCC (data + 8 + 8 + 4) == FOURCC_esds) &&
+            (QT_UINT16 (data + 8 + 40) == 0x0540)) {
+          GstStructure *s;
+          guint32 clut[16];
+          gint i;
+
+          /* move to decConfigDescr data */
+          data = data + 8 + 42;
+          for (i = 0; i < 16; i++) {
+            clut[i] = QT_UINT32 (data);
+            data += 4;
+          }
+
+          s = gst_structure_new ("application/x-gst-dvd", "event",
+              G_TYPE_STRING, "dvd-spu-clut-change",
+              "clut00", G_TYPE_INT, clut[0], "clut01", G_TYPE_INT, clut[1],
+              "clut02", G_TYPE_INT, clut[2], "clut03", G_TYPE_INT, clut[3],
+              "clut04", G_TYPE_INT, clut[4], "clut05", G_TYPE_INT, clut[5],
+              "clut06", G_TYPE_INT, clut[6], "clut07", G_TYPE_INT, clut[7],
+              "clut08", G_TYPE_INT, clut[8], "clut09", G_TYPE_INT, clut[9],
+              "clut10", G_TYPE_INT, clut[10], "clut11", G_TYPE_INT, clut[11],
+              "clut12", G_TYPE_INT, clut[12], "clut13", G_TYPE_INT, clut[13],
+              "clut14", G_TYPE_INT, clut[14], "clut15", G_TYPE_INT, clut[15],
+              NULL);
+
+          /* store event and trigger custom processing */
+          stream->pending_event =
+              gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+          stream->need_process = TRUE;
+        }
+        break;
+      }
+      default:
+        break;
     }
   } else {
     goto unknown_stream;
