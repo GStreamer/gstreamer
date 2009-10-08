@@ -13,6 +13,10 @@ FORMATS=html
 html: html-build.stamp
 include $(top_srcdir)/common/upload-doc.mak
 
+# Extra environment needed for Core only...
+INSPECT_EXTRA_ENVIRONMENT= \
+    GST_PLUGIN_SCANNER=$(top_builddir)/libs/gst/helpers/plugin-scanner
+
 # generated basefiles
 #basefiles = \
 ##		$(DOC_MODULE).types \
