@@ -427,15 +427,18 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
   }
 
   frame = cog_virt_frame_new_unpack (frame);
+
+  if (gst_video_format_is_yuv (out_format) &&
+      gst_video_format_is_rgb (in_format)) {
+    frame = cog_virt_frame_new_color_matrix_RGB_to_YCbCr (frame);
+  }
+
   frame = cog_virt_frame_new_subsample (frame, new_subsample);
 
   if (gst_video_format_is_rgb (out_format) &&
       gst_video_format_is_yuv (in_format)) {
-    frame = cog_virt_frame_new_color_matrix_YCbCr_to_RGB (frame);
-  }
-  if (gst_video_format_is_yuv (out_format) &&
-      gst_video_format_is_rgb (in_format)) {
-    frame = cog_virt_frame_new_color_matrix_RGB_to_YCbCr (frame);
+    frame = cog_virt_frame_new_color_matrix_YCbCr_to_RGB (frame,
+        (compress->quality > 5) ? 8 : 6);
   }
 
   switch (out_format) {

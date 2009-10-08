@@ -264,7 +264,7 @@ shrsw t1, t1, 6
 convsuswb d1, t1
 
 
-.function orc_matrix2_2_u8
+.function orc_matrix2_11_u8
 .dest 1 d1 uint8_t
 .source 1 s1 uint8_t
 .source 1 s2 uint8_t
@@ -274,17 +274,49 @@ convsuswb d1, t1
 .param 2 p4
 .temp 2 t1
 .temp 2 t2
+.temp 2 t3
+.temp 2 t4
 
 convubw t1, s1
 subw t1, t1, 16
-mullw t1, t1, p1
+mullw t3, t1, p1
 convubw t2, s2
 subw t2, t2, 128
-mullw t2, t2, p2
-addw t1, t1, t2
-addw t1, t1, p3
-shrsw t1, t1, p4
-convsuswb d1, t1
+mullw t4, t2, p2
+addw t3, t3, t4
+addw t3, t3, p3
+shrsw t3, t3, p4
+addw t3, t3, t1
+addw t3, t3, t2
+convsuswb d1, t3
+
+
+.function orc_matrix2_12_u8
+.dest 1 d1 uint8_t
+.source 1 s1 uint8_t
+.source 1 s2 uint8_t
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.temp 2 t1
+.temp 2 t2
+.temp 2 t3
+.temp 2 t4
+
+convubw t1, s1
+subw t1, t1, 16
+mullw t3, t1, p1
+convubw t2, s2
+subw t2, t2, 128
+mullw t4, t2, p2
+addw t3, t3, t4
+addw t3, t3, p3
+shrsw t3, t3, p4
+addw t3, t3, t1
+addw t3, t3, t2
+addw t3, t3, t2
+convsuswb d1, t3
 
 
 .function orc_matrix3_u8
@@ -312,7 +344,7 @@ shrsw t1, t1, 6
 convsuswb d1, t1
 
 
-.function orc_matrix3_2_u8
+.function orc_matrix3_100_u8
 .dest 1 d1 uint8_t
 .source 1 s1 uint8_t
 .source 1 s2 uint8_t
@@ -324,20 +356,53 @@ convsuswb d1, t1
 .param 2 p5
 .temp 2 t1
 .temp 2 t2
+.temp 2 t3
+#.temp 2 t4
 
 convubw t1, s1
 subw t1, t1, 16
-mullw t1, t1, p1
+mullw t3, t1, p1
 convubw t2, s2
 subw t2, t2, 128
 mullw t2, t2, p2
-addw t1, t1, t2
+addw t3, t3, t2
 convubw t2, s3
 subw t2, t2, 128
+mullw t2, t2, p3
+addw t3, t3, t2
+addw t3, t3, p4
+shrsw t3, t3, p5
+addw t3, t3, t1
+convsuswb d1, t3
+
+
+.function orc_matrix3_000_u8
+.dest 1 d1 uint8_t
+.source 1 s1 uint8_t
+.source 1 s2 uint8_t
+.source 1 s3 uint8_t
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.param 2 p5
+.param 2 p6
+.temp 2 t1
+.temp 2 t2
+#.temp 2 t3
+#.temp 2 t4
+
+convubw t1, s1
+mullw t1, t1, p1
+convubw t2, s2
+mullw t2, t2, p2
+addw t1, t1, t2
+convubw t2, s3
 mullw t2, t2, p3
 addw t1, t1, t2
 addw t1, t1, p4
 shrsw t1, t1, p5
+addw t1, t1, p6
 convsuswb d1, t1
 
 

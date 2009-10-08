@@ -828,7 +828,7 @@ unpack_axyz (CogFrame * frame, void *_dest, int component, int i)
 
   src = cog_virt_frame_get_line (frame->virt_frame1, 0, i);
 
-  switch ((frame->param1>>(12-component*4))&0xf) {
+  switch ((frame->param1 >> (12 - component * 4)) & 0xf) {
     case 0:
       cogorc_unpack_axyz_0 (dest, src, frame->width);
       break;
@@ -1296,8 +1296,6 @@ color_matrix_RGB_to_YCbCr (CogFrame * frame, void *_dest, int component, int i)
   uint8_t *src1;
   uint8_t *src2;
   uint8_t *src3;
-  double m1, m2, m3;
-  double offset;
 
   src1 = cog_virt_frame_get_line (frame->virt_frame1, 0, i);
   src2 = cog_virt_frame_get_line (frame->virt_frame1, 1, i);
@@ -1306,45 +1304,40 @@ color_matrix_RGB_to_YCbCr (CogFrame * frame, void *_dest, int component, int i)
   /* for RGB -> YUV */
   switch (component) {
     case 0:
-      m1 = 0.25679;
-      m2 = 0.50413;
-      m3 = 0.097906;
-      offset = 16;
-      orc_matrix3_u8 (dest, src1, src2, src3, 16, 32, 6, 16, frame->width);
+      /* m1 = 0.25679;
+       * m2 = 0.50413;
+       * m3 = 0.097906; */
+      orc_matrix3_000_u8 (dest, src1, src2, src3,
+          66, 129, 25, 128, 8, 16, frame->width);
       break;
     case 1:
-      m1 = -0.14822;
-      m2 = -0.29099;
-      m3 = 0.43922;
-      offset = 128;
-      orc_matrix3_u8 (dest, src1, src2, src3, -9, -19, 28, 128, frame->width);
+      /* m1 = -0.14822;
+       * m2 = -0.29099;
+       * m3 = 0.43922; */
+      orc_matrix3_000_u8 (dest, src1, src2, src3,
+          -37, -74, 112, 128, 8, 128, frame->width);
       break;
     case 2:
-      m1 = 0.43922;
-      m2 = -0.36779;
-      m3 = -0.071427;
-      offset = 128;
-      orc_matrix3_u8 (dest, src1, src2, src3, 28, -24, -5, 128, frame->width);
+      /* m1 = 0.43922;
+       * m2 = -0.36779;
+       * m3 = -0.071427; */
+      orc_matrix3_000_u8 (dest, src1, src2, src3,
+          112, -94, 18, 128, 8, 128, frame->width);
       break;
     default:
-      m1 = 0.0;
-      m2 = 0.0;
-      m3 = 0.0;
-      offset = 0;
       break;
   }
 
 }
 
 static void
-color_matrix_YCbCr_to_RGB (CogFrame * frame, void *_dest, int component, int i)
+color_matrix_YCbCr_to_RGB_6bit (CogFrame * frame, void *_dest, int component,
+    int i)
 {
   uint8_t *dest = _dest;
   uint8_t *src1;
   uint8_t *src2;
   uint8_t *src3;
-  double m1, m2, m3;
-  double offset;
 
   src1 = cog_virt_frame_get_line (frame->virt_frame1, 0, i);
   src2 = cog_virt_frame_get_line (frame->virt_frame1, 1, i);
@@ -1352,50 +1345,80 @@ color_matrix_YCbCr_to_RGB (CogFrame * frame, void *_dest, int component, int i)
 
   switch (component) {
     case 0:
-      m1 = 1.1644;
-      m2 = 0;
-      m3 = 1.596;
-      offset = -222.92;
-      //orc_matrix2_u8 (dest, src1, src3, 75, 102, -14269 + 32, frame->width);
-      orc_matrix2_2_u8 (dest, src1, src3, 75, 102, 32, 6, frame->width);
+      /* m1 = 1.1644;
+       * m2 = 0;
+       * m3 = 1.596; */
+      orc_matrix2_u8 (dest, src1, src3, 75, 102, -14269 + 32, frame->width);
       break;
     case 1:
-      m1 = 1.1644;
-      m2 = -0.39176;
-      m3 = -0.81297;
-      offset = 135.58;
-      //orc_matrix3_u8 (dest, src1, src2, src3, 75, -25, -52, 8677 + 32,
-      //    frame->width);
-      orc_matrix3_2_u8 (dest, src1, src2, src3, 75, -25, -52, 32, 6,
+      /* m1 = 1.1644;
+       * m2 = -0.39176;
+       * m3 = -0.81297; */
+      orc_matrix3_u8 (dest, src1, src2, src3, 75, -25, -52, 8677 + 32,
           frame->width);
       break;
     case 2:
-      m1 = 1.1644;
-      m2 = 2.0172;
-      m3 = 0;
-      offset = -276.84;
-      //orc_matrix2_u8 (dest, src1, src2, 75, 129, -17718 + 32, frame->width);
-      orc_matrix2_2_u8 (dest, src1, src2, 75, 129, 32, 6, frame->width);
+      /* m1 = 1.1644;
+       * m2 = 2.0172;
+       * m3 = 0; */
+      orc_matrix2_u8 (dest, src1, src2, 75, 129, -17718 + 32, frame->width);
       break;
     default:
-      m1 = 0.0;
-      m2 = 0.0;
-      m3 = 0.0;
-      offset = 0;
       break;
   }
+}
 
+static void
+color_matrix_YCbCr_to_RGB_8bit (CogFrame * frame, void *_dest, int component,
+    int i)
+{
+  uint8_t *dest = _dest;
+  uint8_t *src1;
+  uint8_t *src2;
+  uint8_t *src3;
+
+  src1 = cog_virt_frame_get_line (frame->virt_frame1, 0, i);
+  src2 = cog_virt_frame_get_line (frame->virt_frame1, 1, i);
+  src3 = cog_virt_frame_get_line (frame->virt_frame1, 2, i);
+
+  switch (component) {
+    case 0:
+      /* m1 = 1.1644;
+       * m2 = 0;
+       * m3 = 1.596; */
+      orc_matrix2_11_u8 (dest, src1, src3, 42, 153, 128, 8, frame->width);
+      break;
+    case 1:
+      /* m1 = 1.1644;
+       * m2 = -0.39176;
+       * m3 = -0.81297; */
+      orc_matrix3_100_u8 (dest, src1, src2, src3, 42, -100, -208, 128, 8,
+          frame->width);
+      break;
+    case 2:
+      /* m1 = 1.1644;
+       * m2 = 2.0172;
+       * m3 = 0; */
+      orc_matrix2_12_u8 (dest, src1, src2, 42, 4, 128, 8, frame->width);
+      break;
+    default:
+      break;
+  }
 }
 
 CogFrame *
-cog_virt_frame_new_color_matrix_YCbCr_to_RGB (CogFrame * vf)
+cog_virt_frame_new_color_matrix_YCbCr_to_RGB (CogFrame * vf, int bits)
 {
   CogFrame *virt_frame;
 
   virt_frame = cog_frame_new_virtual (NULL, COG_FRAME_FORMAT_U8_444,
       vf->width, vf->height);
   virt_frame->virt_frame1 = vf;
-  virt_frame->render_line = color_matrix_YCbCr_to_RGB;
+  if (bits <= 6) {
+    virt_frame->render_line = color_matrix_YCbCr_to_RGB_6bit;
+  } else {
+    virt_frame->render_line = color_matrix_YCbCr_to_RGB_8bit;
+  }
 
   return virt_frame;
 }
