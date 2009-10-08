@@ -24,9 +24,6 @@
 #include <gst/gst.h>
 #include <gst/vdpau/gstvdpdevice.h>
 
-GstCaps  *gst_vdp_video_to_yuv_caps  (GstCaps *caps, GstVdpDevice *device);
-GstCaps  *gst_vdp_yuv_to_video_caps  (GstCaps *caps, GstVdpDevice *device);
-
 GstCaps *gst_vdp_video_to_output_caps (GstCaps * caps);
 GstCaps *gst_vdp_yuv_to_output_caps (GstCaps *caps);
 
