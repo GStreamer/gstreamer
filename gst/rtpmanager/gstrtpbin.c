@@ -1829,10 +1829,12 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
             change = TRUE;
           }
         } else {
-          /* pause the streams */
-          rtpbin->buffering = TRUE;
-          active = FALSE;
-          change = TRUE;
+          if (min_percent < 100) {
+            /* pause the streams */
+            rtpbin->buffering = TRUE;
+            active = FALSE;
+            change = TRUE;
+          }
         }
         GST_RTP_BIN_UNLOCK (rtpbin);
 
