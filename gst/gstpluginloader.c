@@ -525,6 +525,9 @@ put_chunk (GstPluginLoader * l, GstRegistryChunk * chunk, guint * pos)
   }
 
   out = l->tx_buf + l->tx_buf_write;
+  /* Clear the padding */
+  if (padsize)
+    memset (out, 0, padsize);
   memcpy (out + padsize, chunk->data, chunk->size);
 
   l->tx_buf_write += len;
