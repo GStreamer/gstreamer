@@ -2097,7 +2097,7 @@ done:
     wav->abort_buffering = FALSE;
     ret = GST_FLOW_ERROR;
     /* sort of demux/parse error */
-    GST_ELEMENT_ERROR (wav, STREAM, DEMUX, NULL, ("unhandled buffer size"));
+    GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL), ("unhandled buffer size"));
   }
 
   return ret;

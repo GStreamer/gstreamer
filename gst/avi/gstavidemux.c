@@ -4166,7 +4166,7 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
   if (G_UNLIKELY (avi->abort_buffering)) {
     avi->abort_buffering = FALSE;
     res = GST_FLOW_ERROR;
-    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, NULL, ("unhandled buffer size"));
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL), ("unhandled buffer size"));
   }
 
   return res;
