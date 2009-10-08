@@ -835,29 +835,31 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
     return GST_FLOW_ERROR;
   }
 
-  GST_LOG_OBJECT (src, "Reading %d bytes at offset 0x%" G_GINT64_MODIFIER "x",
-      length, offset);
-  ret = read (src->fd, GST_BUFFER_DATA (buf), length);
-  if (G_UNLIKELY (ret < 0))
-    goto could_not_read;
+  /* No need to read anything if length is 0 */
+  if (length > 0) {
+    GST_LOG_OBJECT (src, "Reading %d bytes at offset 0x%" G_GINT64_MODIFIER "x",
+        length, offset);
+    ret = read (src->fd, GST_BUFFER_DATA (buf), length);
+    if (G_UNLIKELY (ret < 0))
+      goto could_not_read;
 
-  /* seekable regular files should have given us what we expected */
-  if (G_UNLIKELY ((guint) ret < length && src->seekable))
-    goto unexpected_eos;
+    /* seekable regular files should have given us what we expected */
+    if (G_UNLIKELY ((guint) ret < length && src->seekable))
+      goto unexpected_eos;
 
-  /* other files should eos if they read 0 and more was requested */
-  if (G_UNLIKELY (ret == 0 && length > 0))
-    goto eos;
+    /* other files should eos if they read 0 and more was requested */
+    if (G_UNLIKELY (ret == 0 && length > 0))
+      goto eos;
 
-  length = ret;
+    length = ret;
+    GST_BUFFER_SIZE (buf) = length;
+    GST_BUFFER_OFFSET (buf) = offset;
+    GST_BUFFER_OFFSET_END (buf) = offset + length;
 
-  GST_BUFFER_SIZE (buf) = length;
-  GST_BUFFER_OFFSET (buf) = offset;
-  GST_BUFFER_OFFSET_END (buf) = offset + length;
+    src->read_position += length;
+  }
 
   *buffer = buf;
-
-  src->read_position += length;
 
   return GST_FLOW_OK;
 
