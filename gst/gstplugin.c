@@ -1605,7 +1605,13 @@ gst_plugin_add_dependency (GstPlugin * plugin, const gchar ** env_vars,
   GList *l;
 
   g_return_if_fail (GST_IS_PLUGIN (plugin));
-  g_return_if_fail (env_vars != NULL || paths != NULL);
+
+  if ((env_vars == NULL || env_vars[0] == NULL) &&
+      (paths == NULL || paths[0] == NULL)) {
+    GST_DEBUG_OBJECT (plugin,
+        "plugin registered empty dependency set. Ignoring");
+    return;
+  }
 
   for (l = plugin->priv->deps; l != NULL; l = l->next) {
     if (gst_plugin_ext_dep_equals (l->data, env_vars, paths, names, flags)) {
