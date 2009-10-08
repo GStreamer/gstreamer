@@ -31,6 +31,7 @@ GST_START_TEST (test_get)
 
   gst_child_proxy_get (GST_OBJECT (pipeline), "name", &name, NULL);
   fail_if (g_strcmp0 ("foo", name));
+  g_free (name);
 
   gst_object_unref (pipeline);
 }
@@ -52,6 +53,7 @@ GST_START_TEST (test_child_get)
 
   gst_child_proxy_get (GST_OBJECT (pipeline), "src::name", &name, NULL);
   fail_if (g_strcmp0 ("src", name));
+  g_free (name);
 
   gst_object_unref (pipeline);
 }
