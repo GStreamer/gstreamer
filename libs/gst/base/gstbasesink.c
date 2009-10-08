@@ -2086,12 +2086,8 @@ gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
     if (G_LIKELY (sink->need_preroll)) {
       /* block until the state changes, or we get a flush, or something */
       ret = gst_base_sink_wait_preroll (sink);
-      if (ret != GST_FLOW_OK) {
-        if (ret == GST_FLOW_STEP)
-          ret = GST_FLOW_OK;
-        else
-          goto preroll_failed;
-      }
+      if ((ret != GST_FLOW_OK) && (ret != GST_FLOW_STEP))
+        goto preroll_failed;
     }
   }
   return GST_FLOW_OK;
@@ -2139,12 +2135,8 @@ gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
     /* first wait for the playing state before we can continue */
     if (G_UNLIKELY (sink->need_preroll)) {
       ret = gst_base_sink_wait_preroll (sink);
-      if (ret != GST_FLOW_OK) {
-        if (ret == GST_FLOW_STEP)
-          ret = GST_FLOW_OK;
-        else
-          goto flushing;
-      }
+      if ((ret != GST_FLOW_OK) && (ret != GST_FLOW_STEP))
+        goto flushing;
     }
 
     /* preroll done, we can sync since we are in PLAYING now. */
