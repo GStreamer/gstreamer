@@ -573,6 +573,7 @@ gst_vdp_sink_setup_device (VdpSink * vdp_sink)
     return NULL;
 
   vdp_sink->caps = gst_vdp_sink_get_allowed_caps (device, vdp_sink->par);
+  GST_DEBUG ("runtime calculated caps: %" GST_PTR_FORMAT, vdp_sink->caps);
 
   /* call XSynchronize with the current value of synchronous */
   GST_DEBUG_OBJECT (vdp_sink, "XSynchronize called with %s",
