@@ -23,7 +23,8 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include <gst/vdpau/gstvdpdevice.h>
+
+#include "gstvdpdevice.h"
 
 G_BEGIN_DECLS
 

@@ -22,7 +22,8 @@
 #define __GST_VDP_VIDEO_POST_PROCESS_H__
 
 #include <gst/gst.h>
-#include <gst/vdpau/gstvdpdevice.h>
+
+#include "gstvdpdevice.h"
 #include "gstvdpvideobuffer.h"
 
 G_BEGIN_DECLS

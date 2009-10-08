@@ -38,11 +38,12 @@
 #include <gst/gst.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
-#include <gst/vdpau/gstvdpvideobuffer.h>
 #include <string.h>
 
 #include "mpegutil.h"
 #include "gstvdputils.h"
+#include "gstvdpvideobuffer.h"
+
 #include "gstvdpmpegdec.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdp_mpeg_dec_debug);
