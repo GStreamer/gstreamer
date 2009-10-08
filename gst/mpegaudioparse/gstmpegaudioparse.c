@@ -2086,7 +2086,7 @@ mp3parse_src_query (GstPad * pad, GstQuery * query)
 
         gst_query_parse_seeking (query, &format, &seekable, NULL, NULL);
         /* already OK if upstream takes care */
-        if (res && !seekable) {
+        if (!(res && seekable)) {
           gint64 pos;
 
           seekable = TRUE;
