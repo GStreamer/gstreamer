@@ -522,6 +522,10 @@ static GstPad *gst_play_bin_get_text_pad (GstPlayBin * playbin, gint stream);
 
 static gboolean setup_next_source (GstPlayBin * playbin, GstState target);
 
+static void no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group);
+static void pad_removed_cb (GstElement * decodebin, GstPad * pad,
+    GstSourceGroup * group);
+
 static GstElementClass *parent_class;
 
 static guint gst_play_bin_signals[LAST_SIGNAL] = { 0 };
@@ -531,6 +535,12 @@ GST_ELEMENT_DETAILS ("Player Bin 2",
     "Generic/Bin/Player",
     "Autoplug and play media from an uri",
     "Wim Taymans <wim.taymans@gmail.com>");
+
+#define REMOVE_SIGNAL(obj,id)            \
+if (id) {                                \
+  g_signal_handler_disconnect (obj, id); \
+  id = 0;                                \
+}
 
 static void
 gst_play_marshal_BUFFER__BOXED (GClosure * closure,
@@ -1800,9 +1810,38 @@ static const gchar *blacklisted_mimes[] = {
   "video/x-dvd-subpicture", "subpicture/x-pgs", NULL
 };
 
+
+/* Returns TRUE if child is object or any parent (transitive)
+ * of child is object */
+static gboolean
+_gst_object_contains_object (GstObject * object, GstObject * child)
+{
+  GstObject *parent, *tmp;
+
+  if (!object || !child)
+    return FALSE;
+
+  parent = gst_object_ref (child);
+  do {
+    if (parent == object) {
+      gst_object_unref (parent);
+      return TRUE;
+    }
+
+    tmp = gst_object_get_parent (parent);
+    gst_object_unref (parent);
+    parent = tmp;
+  } while (parent);
+
+  return FALSE;
+}
+
 static void
 gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
 {
+  GstPlayBin *playbin = GST_PLAY_BIN (bin);
+  GstSourceGroup *group;
+
   if (gst_is_missing_plugin_message (msg)) {
     gchar *detail;
     guint i;
@@ -1818,6 +1857,73 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
     }
     g_free (detail);
   }
+
+  group = playbin->curr_group;
+  /* If we get an error of the subtitle uridecodebin transform
+   * them into warnings and disable the subtitles */
+  if (group && group->pending && group->suburidecodebin) {
+    GstObject *srcparent = gst_object_get_parent (GST_OBJECT_CAST (msg->src));
+
+    if (G_UNLIKELY (_gst_object_contains_object (GST_OBJECT_CAST
+                (group->suburidecodebin), msg->src)
+            && GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)) {
+      GError *err;
+      gchar *debug = NULL;
+      GstMessage *new_msg;
+      GstIterator *it;
+      gboolean done = FALSE;
+
+      gst_message_parse_error (msg, &err, &debug);
+      new_msg = gst_message_new_warning (msg->src, err, debug);
+
+      gst_message_unref (msg);
+      msg = new_msg;
+
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
+
+      it = gst_element_iterate_src_pads (group->suburidecodebin);
+      while (it && !done) {
+        GstPad *p = NULL;
+        GstIteratorResult res;
+
+        res = gst_iterator_next (it, (gpointer) & p);
+
+        switch (res) {
+          case GST_ITERATOR_DONE:
+            done = TRUE;
+            break;
+          case GST_ITERATOR_OK:
+            pad_removed_cb (NULL, p, group);
+            gst_object_unref (p);
+            break;
+
+          case GST_ITERATOR_RESYNC:
+            gst_iterator_resync (it);
+            break;
+          case GST_ITERATOR_ERROR:
+            done = TRUE;
+            break;
+        }
+      }
+      if (it)
+        gst_iterator_free (it);
+
+      gst_object_ref (group->suburidecodebin);
+      gst_bin_remove (bin, group->suburidecodebin);
+      gst_element_set_locked_state (group->suburidecodebin, FALSE);
+      gst_element_set_state (group->suburidecodebin, GST_STATE_NULL);
+      gst_object_unref (group->suburidecodebin);
+      group->suburidecodebin = NULL;
+
+      no_more_pads_cb (NULL, group);
+    }
+
+    if (srcparent)
+      gst_object_unref (srcparent);
+  }
+
   GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
 }
 
@@ -2514,12 +2620,6 @@ group_set_locked_state_unlocked (GstPlayBin * playbin, GstSourceGroup * group,
     gst_element_set_locked_state (group->suburidecodebin, locked);
 
   return TRUE;
-}
-
-#define REMOVE_SIGNAL(obj,id)            \
-if (id) {                                \
-  g_signal_handler_disconnect (obj, id); \
-  id = 0;                                \
 }
 
 /* must be called with PLAY_BIN_LOCK */
