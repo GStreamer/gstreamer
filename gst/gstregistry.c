@@ -882,8 +882,10 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
     context->helper = _priv_gst_plugin_loader_funcs.create (context->registry);
     if (context->helper != NULL)
       context->helper_state = REGISTRY_SCAN_HELPER_RUNNING;
-    else
+    else {
+      GST_WARNING ("Failed starting plugin scanner. Scanning in-process");
       context->helper_state = REGISTRY_SCAN_HELPER_DISABLED;
+    }
   }
 
   if (context->helper_state == REGISTRY_SCAN_HELPER_RUNNING) {
@@ -898,7 +900,10 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
           "GST_PLUGIN_SCANNER environment variable gets set." : "");
       context->helper_state = REGISTRY_SCAN_HELPER_DISABLED;
     }
-  } else {
+  }
+
+  /* Check if the helper is disabled (or just got disabled above) */
+  if (context->helper_state == REGISTRY_SCAN_HELPER_DISABLED) {
     /* Load plugin the old fashioned way... */
 
     /* We don't use a GError here because a failure to load some shared
