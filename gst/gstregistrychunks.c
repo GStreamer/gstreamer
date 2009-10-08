@@ -63,8 +63,8 @@ _strnlen (const gchar * str, gint maxlen)
 #define unpack_element(inptr, outptr, element, endptr, error_label) G_STMT_START{ \
   if (inptr + sizeof(element) > endptr) { \
     GST_ERROR ("Failed reading element " G_STRINGIFY (element)  \
-        ". Have %" G_GSSIZE_FORMAT " bytes need %" G_GSSIZE_FORMAT, \
-        endptr - inptr, sizeof(element)); \
+        ". Have %d bytes need %" G_GSSIZE_FORMAT, \
+        (int) (endptr - inptr), sizeof(element)); \
     goto error_label; \
   } \
   outptr = (element *) inptr; \
