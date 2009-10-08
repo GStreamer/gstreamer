@@ -63,6 +63,7 @@ enum
 enum
 {
   PROP_0,
+  PROP_DISPLAY,
   PROP_FORCE_ASPECT_RATIO,
   PROP_DEINTERLACE_MODE,
   PROP_DEINTERLACE_METHOD,
@@ -448,7 +449,7 @@ gst_vdp_vpp_open_device (GstVdpVideoPostProcess * vpp)
     vpp->device = g_object_ref (outbuf->device);
     gst_buffer_unref (GST_BUFFER (outbuf));
   } else {
-    vpp->device = gst_vdp_get_device (vpp->display_name);
+    vpp->device = gst_vdp_get_device (vpp->display);
     if (!vpp->device)
       goto device_error;
   }
@@ -964,6 +965,9 @@ gst_vdp_vpp_get_property (GObject * object, guint property_id, GValue * value,
   GstVdpVideoPostProcess *vpp = GST_VDP_VIDEO_POST_PROCESS (object);
 
   switch (property_id) {
+    case PROP_DISPLAY:
+      g_value_set_string (value, vpp->display);
+      break;
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, vpp->force_aspect_ratio);
       break;
@@ -996,6 +1000,9 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
   GstVdpVideoPostProcess *vpp = GST_VDP_VIDEO_POST_PROCESS (object);
 
   switch (property_id) {
+    case PROP_DISPLAY:
+      vpp->display = g_value_dup_string (value);
+      break;
     case PROP_FORCE_ASPECT_RATIO:
       vpp->force_aspect_ratio = g_value_get_boolean (value);
       break;
@@ -1121,6 +1128,10 @@ gst_vdp_vpp_class_init (GstVdpVideoPostProcessClass * klass)
   gobject_class->set_property = gst_vdp_vpp_set_property;
   gobject_class->finalize = gst_vdp_vpp_finalize;
 
+  g_object_class_install_property (gobject_class, PROP_DISPLAY,
+      g_param_spec_string ("display", "Display", "X Display name",
+          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio", "Force aspect ratio",
           "When enabled, the plugin will only scale up the input surface to the"
@@ -1165,7 +1176,7 @@ gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
 
   vpp->device = NULL;
 
-  vpp->display_name = NULL;
+  vpp->display = NULL;
 
   vpp->force_aspect_ratio = FALSE;
   vpp->mode = GST_VDP_DEINTERLACE_MODE_AUTO;

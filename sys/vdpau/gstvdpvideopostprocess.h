@@ -91,7 +91,7 @@ struct _GstVdpVideoPostProcess
   GstVdpDeinterlaceMethods method;
 
   /* properties */
-  gchar *display_name;
+  gchar *display;
   gfloat noise_reduction;
   gfloat sharpening;
   gboolean inverse_telecine;
