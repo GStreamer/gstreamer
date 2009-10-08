@@ -61,8 +61,11 @@ _strnlen (const gchar * str, gint maxlen)
 
 /* Macros */
 #define unpack_element(inptr, outptr, element, endptr, error_label) G_STMT_START{ \
-  if (inptr + sizeof(element) >= endptr) \
+  if (inptr + sizeof(element) > endptr) { \
+    GST_ERROR ("Failed reading element " G_STRINGIFY (element)  \
+        ". Have %d bytes need %d", endptr - inptr, sizeof(element)); \
     goto error_label; \
+  } \
   outptr = (element *) inptr; \
   inptr += sizeof (element); \
 }G_STMT_END
@@ -335,7 +338,7 @@ gst_registry_chunks_save_plugin_dep (GList ** list, GstPluginDep * dep)
   GstRegistryChunk *chk;
   gchar **s;
 
-  ed = g_new0 (GstRegistryChunkDep, 1);
+  ed = g_malloc0 (sizeof (GstRegistryChunkDep));
   chk = gst_registry_chunks_make_data (ed, sizeof (GstRegistryChunkDep));
 
   ed->flags = dep->flags;
@@ -676,7 +679,7 @@ gst_registry_chunks_load_plugin_dep (GstPlugin * plugin, gchar ** in,
   GST_LOG_OBJECT (plugin, "Unpacking GstRegistryChunkDep from %p", *in);
   unpack_element (*in, d, GstRegistryChunkDep, end, fail);
 
-  dep = g_new0 (GstPluginDep, 1);
+  dep = g_malloc0 (sizeof (GstPluginDep));
 
   dep->env_hash = d->env_hash;
   dep->stat_hash = d->stat_hash;
@@ -776,7 +779,8 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   for (i = 0; i < n; i++) {
     if (G_UNLIKELY (!gst_registry_chunks_load_feature (registry, in, end,
                 plugin->desc.name))) {
-      GST_ERROR ("Error while loading binary feature");
+      GST_ERROR ("Error while loading binary feature for plugin '%s'",
+          GST_STR_NULL (plugin->desc.name));
       gst_registry_remove_plugin (registry, plugin);
       goto fail;
     }
@@ -785,7 +789,8 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   /* Load external plugin dependencies */
   for (i = 0; i < pe->n_deps; ++i) {
     if (G_UNLIKELY (!gst_registry_chunks_load_plugin_dep (plugin, in, end))) {
-      GST_ERROR_OBJECT (plugin, "Could not read external plugin dependency");
+      GST_ERROR_OBJECT (plugin, "Could not read external plugin dependency "
+          "for plugin '%s'", GST_STR_NULL (plugin->desc.name));
       gst_registry_remove_plugin (registry, plugin);
       goto fail;
     }
