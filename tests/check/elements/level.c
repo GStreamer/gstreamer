@@ -21,6 +21,7 @@
  */
 
 #include <unistd.h>
+#include <math.h>
 
 #include <gst/check/gstcheck.h>
 
