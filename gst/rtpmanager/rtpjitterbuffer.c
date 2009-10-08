@@ -596,19 +596,14 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
   rtptime = gst_rtp_buffer_get_timestamp (buf);
   switch (jbuf->mode) {
     case RTP_JITTER_BUFFER_MODE_NONE:
+    case RTP_JITTER_BUFFER_MODE_BUFFER:
       /* send 0 as the first timestamp and -1 for the other ones. This will
-       * interpollate them from the RTP timestamps with a 0 origin. */
+       * interpollate them from the RTP timestamps with a 0 origin. In buffering
+       * mode we will adjust the outgoing timestamps according to the amount of
+       * time we spent buffering. */
       if (jbuf->base_time == -1)
         time = 0;
       else
-        time = -1;
-      break;
-    case RTP_JITTER_BUFFER_MODE_BUFFER:
-      /* send -1 for all timestamps except the first one. This will make the
-       * timestamps increase according to the RTP timestamps. When in buffering
-       * mode we will adjust the outgoing timestamps relative with how long we
-       * buffered */
-      if (jbuf->base_time != -1)
         time = -1;
       break;
     case RTP_JITTER_BUFFER_MODE_SLAVE:

@@ -268,7 +268,7 @@ static gboolean gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query);
 
 static void
 gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer);
-static void
+static GstClockTime
 gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jitterbuffer,
     gboolean active, guint64 base_time);
 
@@ -412,12 +412,14 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    *
    * Start pushing out packets with the given base time. This signal is only
    * useful in buffering mode.
+   *
+   * Returns: the time of the last pushed packet.
    */
   gst_rtp_jitter_buffer_signals[SIGNAL_SET_ACTIVE] =
       g_signal_new ("set-active", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstRtpJitterBufferClass, set_active), NULL, NULL,
-      gst_rtp_bin_marshal_VOID__BOOL_UINT64, G_TYPE_NONE, 2, G_TYPE_BOOLEAN,
+      gst_rtp_bin_marshal_UINT64__BOOL_UINT64, G_TYPE_UINT64, 2, G_TYPE_BOOLEAN,
       G_TYPE_UINT64);
 
   gstelement_class->change_state =
@@ -647,29 +649,37 @@ gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer)
   JBUF_UNLOCK (priv);
 }
 
-static void
+static GstClockTime
 gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jbuf, gboolean active,
-    guint64 elapsed)
+    guint64 offset)
 {
   GstRtpJitterBufferPrivate *priv;
+  GstClockTime last_out;
+  GstBuffer *head;
 
   priv = jbuf->priv;
 
   JBUF_LOCK (priv);
-  GST_DEBUG_OBJECT (jbuf, "setting active %d with elapsed %" GST_TIME_FORMAT,
-      active, GST_TIME_ARGS (elapsed));
+  GST_DEBUG_OBJECT (jbuf, "setting active %d with offset %" GST_TIME_FORMAT,
+      active, GST_TIME_ARGS (offset));
 
   if (active != priv->active) {
     /* add the amount of time spent in paused to the output offset. All
      * outgoing buffers will have this offset applied to their timestamps in
      * order to make them arrive in time in the sink. */
-    priv->out_offset += elapsed;
+    priv->out_offset = offset;
     GST_DEBUG_OBJECT (jbuf, "out offset %" GST_TIME_FORMAT,
         GST_TIME_ARGS (priv->out_offset));
     priv->active = active;
     JBUF_SIGNAL (priv);
   }
+  if ((head = rtp_jitter_buffer_peek (priv->jbuf))) {
+    last_out = GST_BUFFER_TIMESTAMP (head);
+  } else
+    last_out = priv->last_out_time;
   JBUF_UNLOCK (priv);
+
+  return last_out;
 }
 
 static GstCaps *

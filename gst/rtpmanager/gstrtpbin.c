@@ -1783,6 +1783,7 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
       GSList *sessions, *streams, *elements = NULL;
       GstRtpBinStream *stream;
       gboolean change = FALSE, active = FALSE;
+      GstClockTime min_out_time;
 
       gst_message_parse_buffering (message, &percent);
 
@@ -1847,7 +1848,7 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
         if (G_UNLIKELY (change)) {
           GstClock *clock;
           guint64 running_time = 0;
-          guint64 elapsed = 0;
+          guint64 offset = 0;
 
           /* figure out the running time when we have a clock */
           if (G_LIKELY ((clock =
@@ -1858,35 +1859,52 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
             base_time = gst_element_get_base_time (GST_ELEMENT_CAST (bin));
             running_time = now - base_time;
           }
+          GST_DEBUG_OBJECT (bin,
+              "running time now %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (running_time));
 
-          if (!active) {
-            /* remember the time when we started buffering */
-            rtpbin->buffer_start = running_time;
-          } else {
-            /* calculate time spent in buffering */
-            if (running_time > rtpbin->buffer_start)
-              elapsed = running_time - rtpbin->buffer_start;
-            else
-              elapsed = 0;
-            /* subtract latency, if we paused for less time than the latency we
-             * are fine. */
-            if (elapsed > rtpbin->latency_ns)
-              elapsed -= rtpbin->latency_ns;
-            else
-              elapsed = 0;
+          /* when we reactivate, calculate the offsets so that all streams have
+           * an output time that is at least as big as the running_time */
+          offset = 0;
+          if (active) {
+            if (running_time > rtpbin->buffer_start) {
+              offset = running_time - rtpbin->buffer_start;
+              if (offset >= rtpbin->latency_ns)
+                offset -= rtpbin->latency_ns;
+              else
+                offset = 0;
+            }
           }
 
+          min_out_time = -1;
           while (G_LIKELY (elements)) {
             GstElement *element = elements->data;
+            GstClockTime last_out;
+
+            g_signal_emit_by_name (element, "set-active", active, offset,
+                &last_out);
+
+            if (!active) {
+              if (last_out == -1)
+                last_out = 0;
+              if (last_out < min_out_time)
+                min_out_time = last_out;
+            }
 
             GST_DEBUG_OBJECT (bin,
-                "setting %p to %d, elapsed %" GST_TIME_FORMAT, element, active,
-                GST_TIME_ARGS (elapsed));
-            g_signal_emit_by_name (element, "set-active", active, elapsed,
-                NULL);
+                "setting %p to %d, offset %" GST_TIME_FORMAT ", last %"
+                GST_TIME_FORMAT, element, active, GST_TIME_ARGS (offset),
+                GST_TIME_ARGS (last_out));
+
             gst_object_unref (element);
             elements = g_slist_delete_link (elements, elements);
           }
+          GST_DEBUG_OBJECT (bin,
+              "min out time %" GST_TIME_FORMAT, GST_TIME_ARGS (min_out_time));
+
+          /* the buffer_start is the min out time of all paused jitterbuffers */
+          if (!active)
+            rtpbin->buffer_start = min_out_time;
         }
       }
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
