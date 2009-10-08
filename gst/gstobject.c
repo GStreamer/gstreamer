@@ -461,7 +461,7 @@ have_parent:
         GST_OBJECT_NAME (object), GST_OBJECT_NAME (parent));
     GST_OBJECT_UNLOCK (object);
     /* ref the object again to revive it in this error case */
-    object = gst_object_ref (object);
+    gst_object_ref (object);
     return;
   }
 }
