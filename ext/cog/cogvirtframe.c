@@ -812,31 +812,34 @@ unpack_uyvy (CogFrame * frame, void *_dest, int component, int i)
       orc_unpack_uyvy_y (dest, (void *) src, frame->width);
       break;
     case 1:
-      orc_unpack_uyvy_u (dest, (void *) src, frame->width / 2);
+      cogorc_unpack_axyz_0 (dest, (void *) src, frame->width / 2);
       break;
     case 2:
-      orc_unpack_uyvy_v (dest, (void *) src, frame->width / 2);
+      cogorc_unpack_axyz_2 (dest, (void *) src, frame->width / 2);
       break;
   }
 }
 
 static void
-unpack_ayuv (CogFrame * frame, void *_dest, int component, int i)
+unpack_axyz (CogFrame * frame, void *_dest, int component, int i)
 {
   uint8_t *dest = _dest;
   uint32_t *src;
 
   src = cog_virt_frame_get_line (frame->virt_frame1, 0, i);
 
-  switch (component) {
+  switch ((frame->param1>>(12-component*4))&0xf) {
     case 0:
-      cogorc_unpack_ayuv_y (dest, src, frame->width);
+      cogorc_unpack_axyz_0 (dest, src, frame->width);
       break;
     case 1:
-      cogorc_unpack_ayuv_y (dest, src, frame->width);
+      cogorc_unpack_axyz_1 (dest, src, frame->width);
       break;
     case 2:
-      cogorc_unpack_ayuv_v (dest, src, frame->width);
+      cogorc_unpack_axyz_2 (dest, src, frame->width);
+      break;
+    case 3:
+      cogorc_unpack_axyz_3 (dest, src, frame->width);
       break;
   }
 }
@@ -973,6 +976,10 @@ cog_virt_frame_new_unpack (CogFrame * vf)
   CogFrame *virt_frame;
   CogFrameFormat format;
   CogFrameRenderFunc render_line;
+  int param1 = 0;
+
+  if (!COG_FRAME_IS_PACKED (vf->format))
+    return vf;
 
   switch (vf->format) {
     case COG_FRAME_FORMAT_YUYV:
@@ -983,10 +990,6 @@ cog_virt_frame_new_unpack (CogFrame * vf)
       format = COG_FRAME_FORMAT_U8_422;
       render_line = unpack_uyvy;
       break;
-    case COG_FRAME_FORMAT_AYUV:
-      format = COG_FRAME_FORMAT_U8_444;
-      render_line = unpack_ayuv;
-      break;
     case COG_FRAME_FORMAT_v210:
       format = COG_FRAME_FORMAT_U8_422;
       render_line = unpack_v210;
@@ -995,13 +998,39 @@ cog_virt_frame_new_unpack (CogFrame * vf)
       format = COG_FRAME_FORMAT_U8_422;
       render_line = unpack_v216;
       break;
+    case COG_FRAME_FORMAT_RGBx:
+    case COG_FRAME_FORMAT_RGBA:
+      format = COG_FRAME_FORMAT_U8_444;
+      render_line = unpack_axyz;
+      param1 = 0x0123;
+      break;
+    case COG_FRAME_FORMAT_BGRx:
+    case COG_FRAME_FORMAT_BGRA:
+      format = COG_FRAME_FORMAT_U8_444;
+      render_line = unpack_axyz;
+      param1 = 0x2103;
+      break;
+    case COG_FRAME_FORMAT_xRGB:
+    case COG_FRAME_FORMAT_ARGB:
+    case COG_FRAME_FORMAT_AYUV:
+      format = COG_FRAME_FORMAT_U8_444;
+      render_line = unpack_axyz;
+      param1 = 0x1230;
+      break;
+    case COG_FRAME_FORMAT_xBGR:
+    case COG_FRAME_FORMAT_ABGR:
+      format = COG_FRAME_FORMAT_U8_444;
+      render_line = unpack_axyz;
+      param1 = 0x3210;
+      break;
     default:
-      return vf;
+      g_return_val_if_reached (NULL);
   }
 
   virt_frame = cog_frame_new_virtual (NULL, format, vf->width, vf->height);
   virt_frame->virt_frame1 = vf;
   virt_frame->render_line = render_line;
+  virt_frame->param1 = param1;
 
   return virt_frame;
 }

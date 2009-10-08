@@ -417,30 +417,39 @@ shrsw t1, t1, 6
 convsuswb d1, t1
 
 
-.function cogorc_unpack_ayuv_y
+.function cogorc_unpack_axyz_0
 .dest 1 d1
 .source 4 s1
 .temp 2 t1
 
-select0lw t1, d1
-select1wb d1, s1
+select0lw t1, s1
+select0wb d1, t1
 
 
-.function cogorc_unpack_ayuv_u
+.function cogorc_unpack_axyz_1
 .dest 1 d1
 .source 4 s1
 .temp 2 t1
 
-select1lw t1, d1
-select0wb d1, s1
+select0lw t1, s1
+select1wb d1, t1
 
 
-.function cogorc_unpack_ayuv_v
+.function cogorc_unpack_axyz_2
 .dest 1 d1
 .source 4 s1
 .temp 2 t1
 
-select1lw t1, d1
-select1wb d1, s1
+select1lw t1, s1
+select0wb d1, t1
+
+
+.function cogorc_unpack_axyz_3
+.dest 1 d1
+.source 4 s1
+.temp 2 t1
+
+select1lw t1, s1
+select1wb d1, t1
 
 
