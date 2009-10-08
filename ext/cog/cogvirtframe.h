@@ -27,8 +27,8 @@ CogFrame *cog_virt_frame_new_pack_AYUV (CogFrame *vf);
 CogFrame *cog_virt_frame_new_pack_v216 (CogFrame *vf);
 CogFrame *cog_virt_frame_new_pack_v210 (CogFrame *vf);
 CogFrame *cog_virt_frame_new_pack_RGB (CogFrame *vf);
-CogFrame *cog_virt_frame_new_color_matrix_YCbCr_to_RGB (CogFrame *vf, int bits);
-CogFrame * cog_virt_frame_new_color_matrix_RGB_to_YCbCr (CogFrame * vf);
+CogFrame *cog_virt_frame_new_color_matrix_YCbCr_to_RGB (CogFrame *vf, CogColorMatrix color_matrix, int bits);
+CogFrame * cog_virt_frame_new_color_matrix_RGB_to_YCbCr (CogFrame * vf, CogColorMatrix color_matrix);
 CogFrame *cog_virt_frame_new_subsample (CogFrame *vf, CogFrameFormat format);
 
 CogFrame * cog_virt_frame_new_convert_u8 (CogFrame *vf);

@@ -57,6 +57,7 @@ struct _GstCogcolorspace
   GstBaseTransform base_transform;
 
   int quality;
+  CogColorMatrix color_matrix;
 };
 
 struct _GstCogcolorspaceClass
@@ -75,11 +76,13 @@ enum
 };
 
 #define DEFAULT_QUALITY 5
+#define DEFAULT_COLOR_MATRIX COG_COLOR_MATRIX_UNKNOWN
 
 enum
 {
   PROP_0,
-  PROP_QUALITY
+  PROP_QUALITY,
+  PROP_COLOR_MATRIX
 };
 
 static void gst_cogcolorspace_set_property (GObject * object, guint prop_id,
@@ -119,31 +122,26 @@ static GstStaticPadTemplate gst_cogcolorspace_src_template =
 GST_BOILERPLATE (GstCogcolorspace, gst_cogcolorspace, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 
-#if 0
 GType
-gst_cogcolorspace_get_type (void)
+gst_cog_color_matrix_get_type (void)
 {
-  static GType compress_type = 0;
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {COG_COLOR_MATRIX_UNKNOWN, "unknown",
+        "Unknown color matrix (works like sdtv)"},
+    {COG_COLOR_MATRIX_HDTV, "hdtv", "High Definition TV color matrix (BT.709)"},
+    {COG_COLOR_MATRIX_SDTV, "sdtv",
+        "Standard Definition TV color matrix (BT.470)"},
+    {0, NULL, NULL}
+  };
 
-  if (!compress_type) {
-    static const GTypeInfo compress_info = {
-      sizeof (GstCogcolorspaceClass),
-      gst_cogcolorspace_base_init,
-      NULL,
-      gst_cogcolorspace_class_init,
-      NULL,
-      NULL,
-      sizeof (GstCogcolorspace),
-      0,
-      gst_cogcolorspace_init,
-    };
-
-    compress_type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-        "GstCogcolorspace", &compress_info, 0);
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("CogColorMatrix", values);
+    g_once_init_leave (&id, tmp);
   }
-  return compress_type;
+
+  return (GType) id;
 }
-#endif
 
 static void
 gst_cogcolorspace_base_init (gpointer g_class)
@@ -178,7 +176,12 @@ gst_cogcolorspace_class_init (GstCogcolorspaceClass * colorspace_class)
 
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_int ("quality", "Quality", "Quality",
-          0, 10, DEFAULT_QUALITY, G_PARAM_READWRITE));
+          0, 10, DEFAULT_QUALITY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_COLOR_MATRIX,
+      g_param_spec_enum ("color-matrix", "Color Matrix",
+          "Color matrix for YCbCr <-> RGB conversion",
+          gst_cog_color_matrix_get_type (),
+          DEFAULT_COLOR_MATRIX, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   base_transform_class->transform = gst_cogcolorspace_transform;
   base_transform_class->transform_caps = gst_cogcolorspace_transform_caps;
@@ -194,6 +197,7 @@ gst_cogcolorspace_init (GstCogcolorspace * colorspace,
   GST_DEBUG ("gst_cogcolorspace_init");
 
   colorspace->quality = DEFAULT_QUALITY;
+  colorspace->color_matrix = DEFAULT_COLOR_MATRIX;
 }
 
 static void
@@ -210,6 +214,11 @@ gst_cogcolorspace_set_property (GObject * object, guint prop_id,
     case PROP_QUALITY:
       GST_OBJECT_LOCK (colorspace);
       colorspace->quality = g_value_get_int (value);
+      GST_OBJECT_UNLOCK (colorspace);
+      break;
+    case PROP_COLOR_MATRIX:
+      GST_OBJECT_LOCK (colorspace);
+      colorspace->color_matrix = g_value_get_enum (value);
       GST_OBJECT_UNLOCK (colorspace);
       break;
     default:
@@ -230,6 +239,11 @@ gst_cogcolorspace_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_QUALITY:
       GST_OBJECT_LOCK (colorspace);
       g_value_set_int (value, colorspace->quality);
+      GST_OBJECT_UNLOCK (colorspace);
+      break;
+    case PROP_COLOR_MATRIX:
+      GST_OBJECT_LOCK (colorspace);
+      g_value_set_enum (value, colorspace->color_matrix);
       GST_OBJECT_UNLOCK (colorspace);
       break;
     default:
@@ -430,7 +444,8 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
 
   if (gst_video_format_is_yuv (out_format) &&
       gst_video_format_is_rgb (in_format)) {
-    frame = cog_virt_frame_new_color_matrix_RGB_to_YCbCr (frame);
+    frame = cog_virt_frame_new_color_matrix_RGB_to_YCbCr (frame,
+        compress->color_matrix);
   }
 
   frame = cog_virt_frame_new_subsample (frame, new_subsample);
@@ -438,7 +453,7 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
   if (gst_video_format_is_rgb (out_format) &&
       gst_video_format_is_yuv (in_format)) {
     frame = cog_virt_frame_new_color_matrix_YCbCr_to_RGB (frame,
-        (compress->quality > 5) ? 8 : 6);
+        compress->color_matrix, (compress->quality >= 5) ? 8 : 6);
   }
 
   switch (out_format) {

@@ -1330,6 +1330,31 @@ color_matrix_RGB_to_YCbCr (CogFrame * frame, void *_dest, int component, int i)
 
 }
 
+
+static const int cog_ycbcr_to_rgb_matrix_6bit_sdtv[] = {
+  75, 0, 102, -14267,
+  75, -25, -52, 8677,
+  75, 129, 0, -17717,
+};
+
+static const int cog_ycbcr_to_rgb_matrix_8bit_sdtv[] = {
+  42, 0, 153, -57068,
+  42, -100, -208, 34707,
+  42, 4, 0, -70870,
+};
+
+static const int cog_ycbcr_to_rgb_matrix_6bit_hdtv[] = {
+  75, 0, 115, -15878,
+  75, -14, -34, 4920,
+  75, 135, 0, -18497,
+};
+
+static const int cog_ycbcr_to_rgb_matrix_8bit_hdtv[] = {
+  42, 0, 203, -63514,
+  42, -55, -136, 19681,
+  42, 29, 0, -73988,
+};
+
 static void
 color_matrix_YCbCr_to_RGB_6bit (CogFrame * frame, void *_dest, int component,
     int i)
@@ -1338,6 +1363,7 @@ color_matrix_YCbCr_to_RGB_6bit (CogFrame * frame, void *_dest, int component,
   uint8_t *src1;
   uint8_t *src2;
   uint8_t *src3;
+  int *matrix = frame->virt_priv2;
 
   src1 = cog_virt_frame_get_line (frame->virt_frame1, 0, i);
   src2 = cog_virt_frame_get_line (frame->virt_frame1, 1, i);
@@ -1348,20 +1374,22 @@ color_matrix_YCbCr_to_RGB_6bit (CogFrame * frame, void *_dest, int component,
       /* m1 = 1.1644;
        * m2 = 0;
        * m3 = 1.596; */
-      orc_matrix2_u8 (dest, src1, src3, 75, 102, -14269 + 32, frame->width);
+      orc_matrix2_u8 (dest, src1, src3, matrix[0], matrix[2], matrix[3] + 32,
+          frame->width);
       break;
     case 1:
       /* m1 = 1.1644;
        * m2 = -0.39176;
        * m3 = -0.81297; */
-      orc_matrix3_u8 (dest, src1, src2, src3, 75, -25, -52, 8677 + 32,
-          frame->width);
+      orc_matrix3_u8 (dest, src1, src2, src3, matrix[4], matrix[5], matrix[6],
+          matrix[7] + 32, frame->width);
       break;
     case 2:
       /* m1 = 1.1644;
        * m2 = 2.0172;
        * m3 = 0; */
-      orc_matrix2_u8 (dest, src1, src2, 75, 129, -17718 + 32, frame->width);
+      orc_matrix2_u8 (dest, src1, src2,
+          matrix[8], matrix[9], matrix[11] + 32, frame->width);
       break;
     default:
       break;
@@ -1376,6 +1404,7 @@ color_matrix_YCbCr_to_RGB_8bit (CogFrame * frame, void *_dest, int component,
   uint8_t *src1;
   uint8_t *src2;
   uint8_t *src3;
+  int *matrix = frame->virt_priv2;
 
   src1 = cog_virt_frame_get_line (frame->virt_frame1, 0, i);
   src2 = cog_virt_frame_get_line (frame->virt_frame1, 1, i);
@@ -1383,23 +1412,26 @@ color_matrix_YCbCr_to_RGB_8bit (CogFrame * frame, void *_dest, int component,
 
   switch (component) {
     case 0:
+
       /* m1 = 1.1644;
        * m2 = 0;
        * m3 = 1.596; */
-      orc_matrix2_11_u8 (dest, src1, src3, 42, 153, 128, 8, frame->width);
+      orc_matrix2_11_u8 (dest, src1, src3,
+          matrix[0], matrix[2], 128, 8, frame->width);
       break;
     case 1:
       /* m1 = 1.1644;
        * m2 = -0.39176;
        * m3 = -0.81297; */
-      orc_matrix3_100_u8 (dest, src1, src2, src3, 42, -100, -208, 128, 8,
-          frame->width);
+      orc_matrix3_100_u8 (dest, src1, src2, src3,
+          matrix[4], matrix[5], matrix[6], 128, 8, frame->width);
       break;
     case 2:
       /* m1 = 1.1644;
        * m2 = 2.0172;
        * m3 = 0; */
-      orc_matrix2_12_u8 (dest, src1, src2, 42, 4, 128, 8, frame->width);
+      orc_matrix2_12_u8 (dest, src1, src2,
+          matrix[8], matrix[9], 128, 8, frame->width);
       break;
     default:
       break;
@@ -1407,24 +1439,37 @@ color_matrix_YCbCr_to_RGB_8bit (CogFrame * frame, void *_dest, int component,
 }
 
 CogFrame *
-cog_virt_frame_new_color_matrix_YCbCr_to_RGB (CogFrame * vf, int bits)
+cog_virt_frame_new_color_matrix_YCbCr_to_RGB (CogFrame * vf,
+    CogColorMatrix color_matrix, int bits)
 {
   CogFrame *virt_frame;
+  //int *matrix = frame->virt_priv2;
 
   virt_frame = cog_frame_new_virtual (NULL, COG_FRAME_FORMAT_U8_444,
       vf->width, vf->height);
   virt_frame->virt_frame1 = vf;
   if (bits <= 6) {
     virt_frame->render_line = color_matrix_YCbCr_to_RGB_6bit;
+    if (color_matrix == COG_COLOR_MATRIX_HDTV) {
+      virt_frame->virt_priv2 = (void *) cog_ycbcr_to_rgb_matrix_6bit_hdtv;
+    } else {
+      virt_frame->virt_priv2 = (void *) cog_ycbcr_to_rgb_matrix_6bit_sdtv;
+    }
   } else {
     virt_frame->render_line = color_matrix_YCbCr_to_RGB_8bit;
+    if (color_matrix == COG_COLOR_MATRIX_HDTV) {
+      virt_frame->virt_priv2 = (void *) cog_ycbcr_to_rgb_matrix_8bit_hdtv;
+    } else {
+      virt_frame->virt_priv2 = (void *) cog_ycbcr_to_rgb_matrix_8bit_sdtv;
+    }
   }
 
   return virt_frame;
 }
 
 CogFrame *
-cog_virt_frame_new_color_matrix_RGB_to_YCbCr (CogFrame * vf)
+cog_virt_frame_new_color_matrix_RGB_to_YCbCr (CogFrame * vf,
+    CogColorMatrix color_matrix)
 {
   CogFrame *virt_frame;
 
@@ -1432,6 +1477,7 @@ cog_virt_frame_new_color_matrix_RGB_to_YCbCr (CogFrame * vf)
       vf->width, vf->height);
   virt_frame->virt_frame1 = vf;
   virt_frame->render_line = color_matrix_RGB_to_YCbCr;
+  virt_frame->param1 = color_matrix;
 
   return virt_frame;
 }
