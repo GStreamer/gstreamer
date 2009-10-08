@@ -1649,7 +1649,7 @@ _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
       "-------------------------------------------------------------------");
 
   if (msg != NULL && *msg != '\0') {
-    gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, msg);
+    gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "%s", msg);
   }
 
   while (off < length) {
