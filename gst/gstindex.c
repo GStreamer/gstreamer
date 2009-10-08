@@ -616,6 +616,8 @@ static gboolean
 gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
     gchar ** writer_string, gpointer data)
 {
+  g_return_val_if_fail (writer != NULL, FALSE);
+
   if (GST_IS_PAD (writer)) {
     GstElement *element =
         (GstElement *) gst_object_get_parent (GST_OBJECT (writer));
