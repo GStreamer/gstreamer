@@ -386,7 +386,7 @@ convsuswb d1, t3
 .param 2 p3
 .param 2 p4
 .param 2 p5
-.param 2 p6
+#.param 2 p6
 .temp 2 t1
 .temp 2 t2
 #.temp 2 t3
@@ -402,8 +402,8 @@ mullw t2, t2, p3
 addw t1, t1, t2
 addw t1, t1, p4
 shrsw t1, t1, p5
-addw t1, t1, p6
-convsuswb d1, t1
+#addw t1, t1, p6
+convwb d1, t1
 
 
 

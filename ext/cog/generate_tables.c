@@ -129,6 +129,57 @@ main (int argc, char *argv[])
     }
   }
 
+  {
+    int cm, bits;
+
+    for (cm = 0; cm < 2; cm++) {
+      for (bits = 8; bits <= 8; bits += 1) {
+
+        ColorMatrix matrix;
+
+        color_matrix_set_identity (&matrix);
+
+        color_matrix_scale_components (&matrix, (1 / 255.0), (1 / 255.0),
+            (1 / 255.0));
+
+        /* colour matrix, RGB -> YCbCr */
+        if (cm) {
+          color_matrix_RGB_to_YCbCr (&matrix, 0.2126, 0.0722);  /* HD */
+        } else {
+          color_matrix_RGB_to_YCbCr (&matrix, 0.2990, 0.1140);  /* SD */
+        }
+
+        /*
+         * We are now in YCbCr space
+         */
+
+        color_matrix_scale_components (&matrix, 219.0, 224.0, 224.0);
+
+        color_matrix_offset_components (&matrix, 16, 128, 128);
+
+        /* because we're doing 8-bit matrix coefficients */
+        color_matrix_scale_components (&matrix, 1 << bits, 1 << bits,
+            1 << bits);
+
+        g_print ("static const int cog_rgb_to_ycbcr_matrix_%dbit_%s[] = {\n",
+            bits, cm ? "hdtv" : "sdtv");
+        g_print ("  %d, %d, %d, %d,\n",
+            (int) rint (matrix.m[0][0]),
+            (int) rint (matrix.m[0][1]),
+            (int) rint (matrix.m[0][2]), (int) rint (matrix.m[0][3]));
+        g_print ("  %d, %d, %d, %d,\n",
+            (int) rint (matrix.m[1][0]),
+            (int) rint (matrix.m[1][1]),
+            (int) rint (matrix.m[1][2]), (int) rint (matrix.m[1][3]));
+        g_print ("  %d, %d, %d, %d,\n",
+            (int) rint (matrix.m[2][0]),
+            (int) rint (matrix.m[2][1]),
+            (int) rint (matrix.m[2][2]), (int) rint (matrix.m[2][3]));
+        g_print ("};\n");
+      }
+    }
+  }
+
 
   return 0;
 }
