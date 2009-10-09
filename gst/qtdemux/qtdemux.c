@@ -2253,7 +2253,7 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     stream->need_process = FALSE;
   }
 
-  if (G_UNLIKELY (stream->fourcc != FOURCC_tx3g)) {
+  if (G_UNLIKELY (stream->subtype != FOURCC_text)) {
     return buf;
   }
 
@@ -6539,8 +6539,12 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("DVD subtitle");
       caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
       break;
+    case GST_MAKE_FOURCC ('t', 'e', 'x', 't'):
+      _codec ("Quicktime timed text");
+      goto text;
     case GST_MAKE_FOURCC ('t', 'x', '3', 'g'):
       _codec ("3GPP timed text");
+    text:
       caps = gst_caps_new_simple ("text/plain", NULL);
       /* actual text piece needs to be extracted */
       stream->need_process = TRUE;
