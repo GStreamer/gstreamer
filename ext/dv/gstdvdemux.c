@@ -356,7 +356,8 @@ gst_dvdemux_src_convert (GstDVDemux * dvdemux, GstPad * pad,
   if (dvdemux->decoder == NULL)
     goto error;
 
-  GST_INFO_OBJECT (pad, "src_value:%lld, src_format:%d, dest_format:%d",
+  GST_INFO_OBJECT (pad,
+      "src_value:%" G_GINT64_FORMAT ", src_format:%d, dest_format:%d",
       src_value, src_format, *dest_format);
 
   switch (src_format) {
@@ -441,7 +442,8 @@ gst_dvdemux_src_convert (GstDVDemux * dvdemux, GstPad * pad,
   }
 
 done:
-  GST_INFO_OBJECT (pad, "Result : dest_format:%d, dest_value:%lld, res:%d",
+  GST_INFO_OBJECT (pad,
+      "Result : dest_format:%d, dest_value:%" G_GINT64_FORMAT ", res:%d",
       *dest_format, *dest_value, res);
   return res;
 
@@ -460,7 +462,8 @@ gst_dvdemux_sink_convert (GstDVDemux * dvdemux, GstFormat src_format,
   gboolean res = TRUE;
 
   GST_DEBUG_OBJECT (dvdemux, "%d -> %d", src_format, *dest_format);
-  GST_INFO_OBJECT (dvdemux, "src_value:%lld, src_format:%d, dest_format:%d",
+  GST_INFO_OBJECT (dvdemux,
+      "src_value:%" G_GINT64_FORMAT ", src_format:%d, dest_format:%d",
       src_value, src_format, *dest_format);
 
   if (*dest_format == GST_FORMAT_DEFAULT)
@@ -516,7 +519,8 @@ gst_dvdemux_sink_convert (GstDVDemux * dvdemux, GstFormat src_format,
     default:
       res = FALSE;
   }
-  GST_INFO_OBJECT (dvdemux, "Result : dest_format:%d, dest_value:%lld, res:%d",
+  GST_INFO_OBJECT (dvdemux,
+      "Result : dest_format:%d, dest_value:%" G_GINT64_FORMAT ", res:%d",
       *dest_format, *dest_value, res);
 
 done:
@@ -806,7 +810,7 @@ gst_dvdemux_convert_src_pair (GstDVDemux * dvdemux, GstPad * pad,
               src_format, src_start, &dst_format, dst_start))) {
     goto done;
   }
-  GST_INFO ("Finished conversion of start: %lld", *dst_start);
+  GST_INFO ("Finished conversion of start: %" G_GINT64_FORMAT, *dst_start);
 
   GST_INFO ("starting conversion of stop");
   /* bring the format to time on srcpad. */
@@ -815,7 +819,7 @@ gst_dvdemux_convert_src_pair (GstDVDemux * dvdemux, GstPad * pad,
     /* could not convert seek format to time offset */
     goto done;
   }
-  GST_INFO ("Finished conversion of stop: %lld", *dst_stop);
+  GST_INFO ("Finished conversion of stop: %" G_GINT64_FORMAT, *dst_stop);
 done:
   return res;
 }
@@ -834,7 +838,7 @@ gst_dvdemux_convert_sink_pair (GstDVDemux * dvdemux,
               src_format, src_start, &dst_format, dst_start))) {
     goto done;
   }
-  GST_INFO ("Finished conversion of start: %lld", *dst_start);
+  GST_INFO ("Finished conversion of start: %" G_GINT64_FORMAT, *dst_start);
 
   GST_INFO ("starting conversion of stop");
   /* bring the format to time on srcpad. */
@@ -843,7 +847,7 @@ gst_dvdemux_convert_sink_pair (GstDVDemux * dvdemux,
     /* could not convert seek format to time offset */
     goto done;
   }
-  GST_INFO ("Finished conversion of stop: %lld", *dst_stop);
+  GST_INFO ("Finished conversion of stop: %" G_GINT64_FORMAT, *dst_stop);
 done:
   return res;
 }
