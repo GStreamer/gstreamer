@@ -337,7 +337,8 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_position (query, format, value);
 
       GST_LOG_OBJECT (dec,
-          "query %p: we return %lld (format %u)", query, value, format);
+          "query %p: we return %" G_GINT64_FORMAT " (format %u)", query, value,
+          format);
 
       break;
     }
@@ -898,7 +899,8 @@ again:
       GstClockTime ts;
       GList *walk;
 
-      GST_DEBUG_OBJECT (dec, "first buffer with offset %lld", outoffset);
+      GST_DEBUG_OBJECT (dec, "first buffer with offset %" G_GINT64_FORMAT,
+          outoffset);
       ts = gst_util_uint64_scale_int (outoffset, GST_SECOND, dec->vi.rate);
 
       size = g_list_length (dec->queued);

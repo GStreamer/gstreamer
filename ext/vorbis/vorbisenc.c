@@ -938,8 +938,10 @@ gst_vorbis_enc_push_buffer (GstVorbisEnc * vorbisenc, GstBuffer * buffer)
 {
   vorbisenc->bytes_out += GST_BUFFER_SIZE (buffer);
 
-  GST_DEBUG_OBJECT (vorbisenc, "Pushing buffer with GP %lld, ts %lld",
-      GST_BUFFER_OFFSET_END (buffer), GST_BUFFER_TIMESTAMP (buffer));
+  GST_DEBUG_OBJECT (vorbisenc,
+      "Pushing buffer with GP %" G_GINT64_FORMAT ", ts %" GST_TIME_FORMAT,
+      GST_BUFFER_OFFSET_END (buffer),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
   return gst_pad_push (vorbisenc->srcpad, buffer);
 }
 
