@@ -470,9 +470,10 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
 #if 1
     GST_LOG
         ("Frame @ %d (0x%02x) id %s size %d, next=%d (0x%02x) obsolete=%d",
-        work->hdr.frame_data - start, work->hdr.frame_data - start, frame_id,
-        frame_size, work->hdr.frame_data + frame_hdr_size + frame_size - start,
-        work->hdr.frame_data + frame_hdr_size + frame_size - start,
+        (gint) (work->hdr.frame_data - start),
+        (gint) (work->hdr.frame_data - start), frame_id, frame_size,
+        (gint) (work->hdr.frame_data + frame_hdr_size + frame_size - start),
+        (gint) (work->hdr.frame_data + frame_hdr_size + frame_size - start),
         obsolete_id);
 #define flag_string(flag,str) \
         ((frame_flags & (flag)) ? (str) : "")
