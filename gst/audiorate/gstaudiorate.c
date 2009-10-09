@@ -533,7 +533,8 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (audiorate,
       "in_time:%" GST_TIME_FORMAT ", run_time:%" GST_TIME_FORMAT
       ", in_duration:%" GST_TIME_FORMAT
-      ", in_size:%u, in_offset:%lld, in_offset_end:%lld" ", ->next_offset:%lld",
+      ", in_size:%u, in_offset:%" G_GUINT64_FORMAT ", in_offset_end:%"
+      G_GUINT64_FORMAT ", ->next_offset:%" G_GUINT64_FORMAT,
       GST_TIME_ARGS (in_time), GST_TIME_ARGS (run_time),
       GST_TIME_ARGS (in_duration), in_size, in_offset, in_offset_end,
       audiorate->next_offset);
@@ -559,7 +560,8 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       /* FIXME, 0 might not be the silence byte for the negotiated format. */
       memset (GST_BUFFER_DATA (fill), 0, fillsize);
 
-      GST_DEBUG_OBJECT (audiorate, "inserting %lld samples", cursamples);
+      GST_DEBUG_OBJECT (audiorate, "inserting %" G_GUINT64_FORMAT " samples",
+          cursamples);
 
       GST_BUFFER_OFFSET (fill) = audiorate->next_offset;
       audiorate->next_offset += cursamples;
@@ -601,7 +603,8 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
       audiorate->drop += drop;
 
-      GST_DEBUG_OBJECT (audiorate, "dropping %lld samples", drop);
+      GST_DEBUG_OBJECT (audiorate, "dropping %" G_GUINT64_FORMAT " samples",
+          drop);
 
       /* we can drop the buffer completely */
       gst_buffer_unref (buf);
