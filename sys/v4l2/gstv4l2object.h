@@ -36,6 +36,7 @@
  * upstream, which I'll consider doing later on. If you get compiler
  * errors here, check your linux/time.h && sys/time.h header setup.
  */
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #ifndef __sun
 #include <linux/types.h>
